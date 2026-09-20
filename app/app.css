@@ -22,7 +22,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webki
 svg{display:block}
 
 /* ---------------------------------------------------------------- stage / phone frame */
-.stage{min-height:100%;display:flex;align-items:center;justify-content:center;gap:48px;padding:28px}
+.stage{min-height:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:48px;padding:28px}
 .phone{flex:0 0 auto}
 .bezel{
   position:relative;width:var(--pw);height:var(--ph);background:var(--night);
@@ -444,9 +444,9 @@ svg{display:block}
 
 /* ---------------------------------------------------------------- phone / responsive */
 @media (max-width:900px){
-  .stage{padding:0;gap:0}
+  .stage{padding:0;gap:0;height:100%}
   .stage-note{display:none}
-  .bezel{width:100vw;height:100dvh;border-radius:0;padding:0;box-shadow:none}
+  .bezel{width:100%;height:100%;border-radius:0;padding:0;box-shadow:none}
   .notch{display:none}
   .viewport{border-radius:0}
   .statusbar{display:none}

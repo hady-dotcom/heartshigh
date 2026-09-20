@@ -6,6 +6,9 @@ gestures, real transitions. Built to be opened on a phone and screen-recorded.
 Open `app/index.html`. On desktop it renders inside a phone frame; on a phone it goes
 full-screen and *is* the app.
 
+Also published for phone access: **https://claude.ai/artifact/3cz9WDw5imvFzmJfW1mpvX**
+(`app/artifact.html` is the same app with the wrapper tags removed for that host.)
+
 ---
 
 ## The Ladder
