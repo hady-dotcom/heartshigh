@@ -72,7 +72,7 @@
 
 <!-- Vendored so the demo does not depend on a CDN mid-recording; CDN is the fallback. -->
 <script src="vendor/hls.min.js"></script>
-<script>window.Hls||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.17/hls.min.js"><\/script>');</script>
+<script>if(!window.Hls){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.17/hls.min.js';document.head.appendChild(s);}</script>
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>
