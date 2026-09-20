@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#111018">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Hud-hud</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div class="stage">
+  <div class="phone" id="phone">
+    <div class="bezel">
+      <div class="notch"></div>
+
+      <div class="viewport" id="viewport">
+
+        <!-- status bar -->
+        <div class="statusbar" id="statusbar">
+          <span class="sb-time">9:41</span>
+          <span class="sb-right">
+            <svg width="17" height="11" viewBox="0 0 17 11" aria-hidden="true"><g fill="currentColor"><rect x="0" y="7" width="3" height="4" rx=".7"/><rect x="4.5" y="5" width="3" height="6" rx=".7"/><rect x="9" y="2.5" width="3" height="8.5" rx=".7"/><rect x="13.5" y="0" width="3" height="11" rx=".7"/></g></svg>
+            <svg width="25" height="12" viewBox="0 0 25 12" aria-hidden="true"><rect x=".5" y=".5" width="21" height="11" rx="3.2" fill="none" stroke="currentColor" stroke-opacity=".5"/><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"/><path d="M23 4v4a2.4 2.4 0 0 0 0-4z" fill="currentColor" fill-opacity=".5"/></svg>
+          </span>
+        </div>
+
+        <!-- screen stack -->
+        <main class="screens" id="screens"></main>
+
+        <!-- engagement / bio sheet -->
+        <div class="sheet-scrim" id="scrim"></div>
+        <section class="sheet" id="sheet" aria-hidden="true"></section>
+
+        <!-- tab bar: pinned throughout -->
+        <nav class="tabbar" id="tabbar">
+          <button class="tab" data-tab="home">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+            <span>Home</span>
+          </button>
+          <button class="tab" data-tab="lanes">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+            <span>Lanes</span>
+          </button>
+          <button class="tab" data-tab="grow">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21c0-5 2-8 6-9-1 5-3 7-6 9zm0 0c0-5-2-8-6-9 1 5 3 7 6 9zm0 0V10a4 4 0 1 1 0-6"/></svg>
+            <span>Garden</span>
+          </button>
+          <button class="tab" data-tab="me">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
+            <span>Me</span>
+          </button>
+        </nav>
+
+        <div class="home-indicator"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="stage-note" id="stageNote">
+    <div class="sn-brand">Hud-hud <span>· Hearts Together</span></div>
+    <p>Interactive demo. Open on a phone for the real thing — or drag inside the frame: swipe
+      <b>up</b> replay, <b>down</b> switch lanes, <b>left</b> more on this topic, <b>right</b> more from this speaker.</p>
+    <div class="sn-counts" id="snCounts"></div>
+  </aside>
+</div>
+
+<!-- Vendored so the demo does not depend on a CDN mid-recording; CDN is the fallback. -->
+<script src="vendor/hls.min.js"></script>
+<script>if(!window.Hls){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.17/hls.min.js';document.head.appendChild(s);}</script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

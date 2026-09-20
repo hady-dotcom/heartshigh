@@ -6,8 +6,25 @@ gestures, real transitions. Built to be opened on a phone and screen-recorded.
 Open `app/index.html`. On desktop it renders inside a phone frame; on a phone it goes
 full-screen and *is* the app.
 
-Also published for phone access: **https://claude.ai/artifact/3cz9WDw5imvFzmJfW1mpvX**
-(`app/artifact.html` is the same app with the wrapper tags removed for that host.)
+### Where to open it, and why it matters for video
+
+| Host | Video | Use it for |
+|---|---|---|
+| **GitHub Pages** (`docs/`) | ✅ CMS HLS **and** YouTube | the real demo — record here |
+| Local file / any web host | ✅ both | development |
+| [claude.ai artifact](https://claude.ai/artifact/3cz9WDw5imvFzmJfW1mpvX) | ❌ none | layout and flow only |
+
+**The artifact cannot play video, and never will.** Published artifacts run under a CSP
+that allows external *scripts* from a few CDNs and stylesheets from Google Fonts, and
+silently blocks everything else — media, images, and `fetch`/XHR. hls.js fetches the
+`.m3u8` and every segment over XHR, so CMS video, thumbnails and speaker photos are all
+blocked there. The URLs are correct; the host forbids them. It degrades to the branded
+fallback card, so the flow is still demonstrable, but record the real thing from Pages.
+
+**To turn Pages on:** repo Settings → Pages → Source: *Deploy from a branch* → branch
+`claude/hud-hud-interactive-demo-46bu1d`, folder `/docs`. It then serves at
+`https://hady-dotcom.github.io/heartshigh/`. `build/generate.py` mirrors `app/` into
+`docs/` on every run.
 
 ---
 
@@ -34,6 +51,12 @@ stays pinned throughout.
 Everything below marked **real** came out of the Hearts CMS or Leon's editorial sheets at
 build time and is baked into `app/data.js`. There are no runtime API calls.
 
+**Two playback sources**
+- **YouTube** — the 19 usable demo-10 bites, played from `youtube-nocookie.com` at their
+  real curated timestamps. No CORS, so these work on any host. The embed is
+  `pointer-events: none` so swipes pass straight through it.
+- **CMS HLS** — the 18 published talks, via hls.js, windowed to each clip.
+
 **Real**
 - **18 HLS streams** from the CMS (`cdn.hearts.foundation/hls/<id>/playlist.m3u8`), played with hls.js.
 - **90 reel clips** at real timestamps inside those talks, each with its editorial
@@ -45,9 +68,12 @@ build time and is baked into `app/data.js`. There are no runtime API calls.
   36 of 41 sections already have content, 221 covering places across 3,963 mapped clips.
 - **Harvest**: 14 āyāt and 3 aḥādīth with Arabic, translation, reference, grading, and real
   provenance — which talk they were met in, which speaker, at what timestamp.
-- **Engagement prompts**: real published CMS reflection questions, cited by id on screen.
-- **Engagement points**: real timestamps from the Fahmy Session 6 deep analysis plus that
-  talk's canon rows, spread one per ninth of the 2h49m part so the timeline reads properly.
+- **Engagement points**: the CMS **clip analysis** for the course part — 10 real clip
+  windows with their titles, Arabic overlays and hooks, at their real timestamps.
+- **Engagement questions**: written against each clip's own content (`build/questions.py`),
+  not matched on topic. The panel shows the clip's overlay and āyah above the question, so
+  it is obvious the question is about *that* moment. Provenance is labelled honestly on
+  screen — "Written for this clip · Hearts CMS clip #N".
 
 **Placeholder** (per the boards — "names, figures, āyāt and answers are placeholder")
 - Learner state: 38-day streak, 2 rest days, 1,140 hors d'oeuvres, 96 appetisers, 31 parts,
@@ -93,6 +119,13 @@ To refresh from the CMS, re-pull into `cms_snapshot.json` and re-run the generat
 - **hls.js is vendored** in `app/vendor/` rather than only CDN-loaded, so a flaky connection
   cannot break a screen recording. CDN remains the fallback.
 
+## Interaction notes
+
+- **Unfurl** is one gesture used by every box on Grow — Jibrīl branches, the General stat
+  cells, the streak, the Ghūniyya chapter, every Harvest entry and every Workbook entry.
+  Tap anywhere on a card; a chevron shows it opens. The stat cells unfurl to the banking
+  rule that governs them, which is where that rule is best explained.
+
 ## Still open
 
 1. Speaker bio as a full screen (built that way, per the video board) vs a bottom sheet.
@@ -107,8 +140,13 @@ no horizontal overflow, no CTA clipped by the tab bar, tap targets ≥44px, zero
 Playback was exercised end-to-end against local media — autoplay, seek to clip start, clip-window
 looping, progress, unmute, pause-on-cover, and auto-pause at an engagement point all pass.
 
-**Not verifiable from the build sandbox:** `cdn.hearts.foundation` is blocked by the egress
-proxy here, so the CMS video, thumbnails and speaker photos could not be loaded during testing.
-The URLs come straight from the CMS and are correct; they need one real-device check.
-Every one of them degrades gracefully if it fails — the clip falls back to a branded card and
-the text still reads, images fall back to painted gradients, avatars to initials.
+Unfurl was checked by measuring that each card actually grows when tapped, on all five
+Grow pages. The YouTube engine was checked against a stubbed API: correct video id, correct
+start/end window, `youtube-nocookie` host, and swipes still working over the embed.
+
+**Not verifiable from the build sandbox:** both `cdn.hearts.foundation` and `youtube.com`
+are blocked by the egress proxy here, so no real stream was ever fetched during testing.
+The URLs and player parameters are correct and were verified structurally, but first
+playback of both sources needs one real-device check. Everything degrades gracefully:
+video falls back to a branded card with the clip text still readable, images to painted
+gradients, avatars to initials.

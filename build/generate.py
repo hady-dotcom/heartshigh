@@ -20,6 +20,8 @@ XL_DEMO  = os.path.join(UP, "5ac5eece-demo10-CLIPS.xlsx")
 XL_FAHMY = os.path.join(UP, "863ff916-extract-fahmy-s6-dual-export.xlsx")
 
 import openpyxl
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from questions import QUESTIONS
 
 def sheet(path, name=None):
     wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
@@ -172,7 +174,9 @@ def main():
                 "form": clean(r.get("stage2_form")), "strength": clean(r.get("hang_strength")),
                 "appeal": clean(r.get("Appeal")), "why": clean(r.get("Why Use this?")),
                 "currency": clean(r.get("currency_note")),
-                "source": "canon",
+                "source": "hls",
+                "len": 18,
+                "source_sheet": "canon",
             })
 
     # Keep the reel varied: cap per video, balance lanes.
@@ -182,9 +186,12 @@ def main():
                                           c["videoId"], c["start"])):
         if per_video[c["videoId"]] >= 14: continue
         per_video[c["videoId"]] += 1; reel.append(c)
-    reel = settle_lanes(reel)
 
     # ---------------- Leon's curated demo-10 bites (editorial layer, kept distinct)
+    HANDLE = {"Yasir Fahmy":"yasirfahmy","Khalid Latif":"khalidlatif","Mikaeel Smith":"mikaeelsmith",
+              "Suleiman Hani":"suleimanhani","Sh. Mohammad Elshinawy":"shmohammadelshinawy",
+              "Mohammad Elshinawy":"shmohammadelshinawy","Shadee Elmasry":"shadeeelmasry",
+              "Amjad Tarsin":"amjadtarsin"}
     curated = []
     for r in demo:
         curated.append({
@@ -196,7 +203,26 @@ def main():
             "hook": clean(r.get("Hook")), "turn": clean(r.get("Turn")), "land": clean(r.get("Land")),
             "theme": clean(r.get("Theme")), "lane": lane_of(r.get("Theme")),
             "youtube": clean(r.get("Video ID")),
+            "speakerHandle": HANDLE.get(clean(r.get("Speaker")), ""),
+            "startSec": secs(r.get("Approx Time")),
         })
+
+    # Curated demo-10 bites are reel entries in their own right, played from YouTube.
+    # They need no CORS and work on any host, so they are the reliable playback path.
+    yt_reel = []
+    for c in curated:
+        if not (c["youtube"] and c["speakerHandle"] and whole_sentence(c["land"])): continue
+        yt_reel.append({
+            "id": "y" + c["clipId"], "source": "youtube", "youtube": c["youtube"],
+            "videoId": None, "speaker": c["speakerHandle"],
+            "start": c["startSec"], "len": max(12, min(30, c["seconds"])),
+            "hook": c["hook"], "turn": c["turn"], "land": c["land"],
+            "theme": c["theme"], "lane": lane_of(c["theme"]),
+            "clause": None, "clauseLabel": None, "seat": "", "form": "Direct Soundbite",
+            "strength": "strong", "appeal": c["twist"], "why": "", "currency": "",
+            "title": c["title"], "audience": c["audience"], "source_sheet": "demo10",
+        })
+    reel = settle_lanes(reel + yt_reel)
 
     # ---------------- Hadith Jibril map (real counts from the canon)
     clause_rows = defaultdict(list)
@@ -290,54 +316,38 @@ def main():
         for q in rq:
             if any(w in t for w in str(q["topic"]).lower().split()): return q
         return rq[i % len(rq)]
-    KINDS = ["Reflection", "Question", "Task", "Multi-choice"]
-
-    # Candidate engagement points: the deep Fahmy S6 analysis (richest) plus this talk's
-    # canon rows, so the dots can span the whole 2h49m rather than bunching in the first third.
-    cands = []
+    # Engagement points come from the CMS clip analysis for this talk: real clip windows,
+    # real titles and overlays. Each question is written against that clip's own content.
+    ca = json.load(open(os.path.join(HERE, "clips", "9.json")))
+    deep_by_ts = {}
     for r in fdeep:
-        t = secs(r.get("timestamp"))
-        if 0 < t < course_vid["durationSec"]:
-            m = re.match(r'\s*(\d+)\s*·\s*(.*)', str(r.get("clause_hang") or ''))
-            cands.append({"at": t, "rank": clean(r.get("rank")), "deep": True,
-                          "quote": clean(r.get("quote")), "theme": clean(r.get("theme")),
-                          "hook": clean(r.get("hook")), "turn": clean(r.get("turn")), "land": clean(r.get("land")),
-                          "why": clean(r.get("why_it_allures")), "seat": clean(r.get("seat_hint")),
-                          "currency": clean(r.get("currency_note")), "form": clean(r.get("stage2_form")),
-                          "clause": int(m.group(1)) if m else None,
-                          "clauseLabel": clean(m.group(2)).strip('… ') if m else None})
-    for r in canon_by_talk.get(norm(course_vid["title"]), []):
-        t = secs(r.get("timestamp"))
-        if not (0 < t < course_vid["durationSec"]): continue
-        m = re.match(r'\s*(\d+)\s*·\s*(.*)', str(r.get("Clause relevance to Hadeeth Jibreel") or ''))
-        cands.append({"at": t, "rank": "", "deep": False,
-                      "quote": clean(r.get("Example")) or clean(r.get("land")), "theme": clean(r.get("Theme")),
-                      "hook": clean(r.get("hook")), "turn": clean(r.get("turn")), "land": clean(r.get("land")),
-                      "why": clean(r.get("Appeal")), "seat": clean(r.get("Place against Ghunya course")),
-                      "currency": clean(r.get("currency_note")), "form": clean(r.get("stage2_form")),
-                      "clause": int(m.group(1)) if m else None,
-                      "clauseLabel": clean(m.group(2)).strip('… ') if m else None})
+        deep_by_ts[secs(r.get("timestamp")) // 60] = r
 
-    # One point per ninth of the talk; prefer the deep analysis inside each band.
-    N_POINTS = 9
-    band = course_vid["durationSec"] / N_POINTS
-    points, used = [], set()
-    for i in range(N_POINTS):
-        lo, hi = i * band, (i + 1) * band
-        inband = [c for c in cands if lo <= c["at"] < hi and c["at"] not in used and c["quote"]]
-        if not inband:
-            rest = [c for c in cands if c["at"] not in used and c["quote"]]
-            if not rest: continue
-            inband = [min(rest, key=lambda c: abs(c["at"] - (lo + hi) / 2))]
-        best = sorted(inband, key=lambda c: (0 if c["deep"] else 1, c["at"]))[0]
-        used.add(best["at"])
-        q = q_for(best["theme"], i)
-        best.update({"kind": KINDS[i % 4],
-                     "prompt": q["prompt"],
-                     "promptSource": "Hearts CMS · reflection question #%d" % q["id"],
-                     "answered": i < 5})
-        points.append(best)
+    points = []
+    for c in sorted(ca["clips"], key=lambda c: secs(c["start"])):
+        at = secs(c["start"])
+        if not (0 < at < course_vid["durationSec"]): continue
+        q = QUESTIONS.get(c["n"], {})
+        deep = deep_by_ts.get(at // 60)
+        m = re.match(r'\s*(\d+)\s*·\s*(.*)', str((deep or {}).get("clause_hang") or ''))
+        points.append({
+            "at": at, "end": secs(c["end"]), "dur": c["dur"], "clipNo": c["n"],
+            "kind": q.get("kind", "Reflection"),
+            "title": c["title"], "quote": c["overlay"], "arabic": c.get("arabic"),
+            "hook": c["hook"], "tags": c.get("tags", []), "caption": c.get("caption", ""),
+            "theme": clean((deep or {}).get("theme")) or "Ease",
+            "why": clean((deep or {}).get("why_it_allures")),
+            "seat": clean((deep or {}).get("seat_hint")),
+            "currency": clean((deep or {}).get("currency_note")),
+            "clause": int(m.group(1)) if m else None,
+            "clauseLabel": clean(m.group(2)).strip('… ') if m else None,
+            "prompt": q.get("prompt", ""), "options": q.get("options"),
+            "promptSource": "Written for this clip · Hearts CMS clip #%d" % c["n"],
+            "answered": False,
+        })
     points.sort(key=lambda p: p["at"])
+    for i, p in enumerate(points):
+        p["answered"] = i < 4
 
     # course parts from the real series
     course_parts = [
@@ -384,13 +394,25 @@ def main():
         json.dump(data, f, ensure_ascii=False, indent=1)
         f.write(";\n")
 
+    # Mirror the app into docs/ so GitHub Pages can serve it (Settings -> Pages -> /docs).
+    import shutil
+    docs = os.path.join(ROOT, "docs")
+    os.makedirs(os.path.join(docs, "vendor"), exist_ok=True)
+    for f in ("index.html", "app.css", "app.js", "data.js"):
+        src_f = os.path.join(ROOT, "app", f)
+        if os.path.exists(src_f): shutil.copy2(src_f, os.path.join(docs, f))
+    v = os.path.join(ROOT, "app", "vendor", "hls.min.js")
+    if os.path.exists(v): shutil.copy2(v, os.path.join(docs, "vendor", "hls.min.js"))
+
     print(f"wrote {out}  ({os.path.getsize(out)//1024} KB)")
+    print(f"mirrored to docs/ for GitHub Pages")
     print(f"  reel clips      : {len(reel)} across {len(per_video)} videos, {len(set(c['lane'] for c in reel))} lanes")
     print(f"  lanes           : {Counter(c['lane'] for c in reel).most_common()}")
     print(f"  jibril (user)   : {opened}/{total_sections} sections opened, {pieces} of {total_sections*PIECES_PER_SECTION} pieces")
     print(f"  jibril (library): {lib_sections}/{total_sections} sections have content, {lib_pieces} covering places, {len(canon)} clips")
     print(f"  harvest         : {len(harvest_with_source)}/{len(harvest)} entries with real provenance")
     print(f"  engagement pts  : {len(points)} on video 9 at {[p['at'] for p in points]}")
+    print(f"  youtube reel    : {len(yt_reel)} curated clips playable without CORS")
     print(f"  curated (demo10): {len(curated)}")
 
 main()
