@@ -1,0 +1,586 @@
+{
+  "_meta": {
+    "source": "Hearts CMS MCP connector (https://cms.hearts.foundation/api/mcp), environment=prod",
+    "pulled": "2026-09-20",
+    "stats": {
+      "videos": 702,
+      "clips": 5488,
+      "published": 388,
+      "creators": 16,
+      "series": 16
+    },
+    "note": "Baked at build time. The demo makes no runtime API calls."
+  },
+  "creators": [
+    {
+      "id": 4,
+      "handle": "yasirfahmy",
+      "name": "Yasir Fahmy",
+      "honorific": "Shaykh",
+      "videoCount": 56,
+      "shortBio": "Founder, Resident Scholar @ Prophetic Living",
+      "longBio": "Shaykh Yasir began the study of Arabic and Islamic Sciences in his high school years. At seventeen he travelled to Amman, studying at the Islamic University of Jordan, then completed a BSc at Rutgers. After three years in finance he enrolled at Al-Azhar in Cairo. After seven years of intensive study he received a degree in Islamic Studies and numerous ijazas in fiqh, hadith, aqida, usul al-fiqh, sirah, tazkiyyah, mantiq and Arabic grammar. He became the first American Azhari to teach in the Al-Azhar Mosque in 2013.",
+      "profilePhotoPath": "creators/4/b09ef454-3d59-4d27-8d71-294f5529ea7b.jpg"
+    },
+    {
+      "id": 7,
+      "handle": "khalidlatif",
+      "name": "Khalid Latif",
+      "honorific": "Imam",
+      "videoCount": 100,
+      "shortBio": "Director and Co-founder of ICNYC",
+      "longBio": "Imam Khalid Latif is an American Muslim leader who serves as the co-founder and Director of the Islamic Center of New York City. He is widely recognised for his long-standing role as the first Muslim chaplain at New York University and the youngest chaplain in NYPD history.",
+      "profilePhotoPath": "creators/7/9d51bdb9-e30f-4f5a-9f81-f79ebc88945c.jpg"
+    },
+    {
+      "id": 1,
+      "handle": "mikaeelsmith",
+      "name": "Mikaeel Smith",
+      "honorific": "Shaykh",
+      "videoCount": 169,
+      "shortBio": "Instructor @ Qalam",
+      "longBio": "An instructor at Qalam, teaching Tafsir, Seerah, Aqeedah and Hadith at the Qalam Seminary. He grew up in a deeply spiritual Christian home in Buffalo, NY. At eighteen he embraced Islam after reading the Qur'an and the Autobiography of Malcolm X, then completed his memorisation of the Qur'an. He continued his studies at Jami'a Abu Noor in Damascus and earned a degree in Islamic Studies at Dar ul-Uloom Canada. He is the author of With the Heart in Mind.",
+      "profilePhotoPath": "creators/1/0dfa0f4e-8365-4df0-8d07-0d450153798c.jpg"
+    },
+    {
+      "id": 3,
+      "handle": "suleimanhani",
+      "name": "Suleiman Hani",
+      "honorific": "Dr.",
+      "videoCount": 112,
+      "shortBio": "Dean of Academics @ AlMaghrib Institute · Harvard · NYU",
+      "longBio": "Dr. Suleiman Hani is the Dean of Academic Affairs at AlMaghrib Institute, a resident scholar in Michigan, and an international lecturer on Islam, philosophy, leadership and human rights. He holds master's degrees from Harvard University and the University of Jordan, and a doctorate in leadership from NYU. Over the past decade he has delivered lectures in more than fifty countries.",
+      "profilePhotoPath": "creators/3/7fe1a838-15c1-4dd4-b7c0-1a11c2f3bd8b.jpg"
+    },
+    {
+      "id": 13,
+      "handle": "shmohammadelshinawy",
+      "name": "Mohammad Elshinawy",
+      "honorific": "Shaykh",
+      "videoCount": 50,
+      "shortBio": "Religious Director at Islamic Society of Allentown",
+      "longBio": "Serves as full-time Religious Director at the Islamic Society of Allentown, where his primary passion lies in masjid orientation and community building. A graduate of English literature from Brooklyn College, he studied at the College of Hadith at the Islamic University of Madinah and completed a Bachelor's in Islamic studies. He serves as a research director at Yaqeen Institute and has translated 20+ Islamic books into English.",
+      "profilePhotoPath": "creators/13/0c3ac607-5c89-4526-9c71-6919ce69ea89.jpg"
+    },
+    {
+      "id": 6,
+      "handle": "shadeeelmasry",
+      "name": "Shadee Elmasry",
+      "honorific": "Dr.",
+      "videoCount": 95,
+      "shortBio": "Imam @ NBIC · Founder @ Safina Society",
+      "longBio": "Dr. Elmasry received his Ph.D. from the University of London in 2007. He is Scholar in Residence and Director of Education at the New Brunswick Islamic Center in New Jersey, and founder of Safina Society, an institution dedicated to traditional Islamic education in the West.",
+      "profilePhotoPath": "creators/6/0737b01c-d508-4d15-afd5-2fbd7f61ac18.jpg"
+    },
+    {
+      "id": 5,
+      "handle": "amjadtarsin",
+      "name": "Amjad Tarsin",
+      "honorific": "Ustadh",
+      "videoCount": 40,
+      "shortBio": "Faculty @ Al-Maqasid · Host of Soul Food FM",
+      "longBio": "Amjad Tarsin obtained his BA at the University of Michigan, then spent an intensive year at Dar al-Mustafa in Tarim, Yemen. He completed a Master's at Hartford Seminary's Islamic Chaplaincy program and served as Canada's first full-time Muslim university chaplain for seven years. He is full-time faculty at Al-Maqasid and hosts SoulFood FM.",
+      "profilePhotoPath": "creators/5/d4280ac4-38f7-4970-817a-94b6d5a8480f.jpg"
+    },
+    {
+      "id": 19,
+      "handle": "fatimalette",
+      "name": "Fatima Lette",
+      "honorific": "Ustadha",
+      "videoCount": 13,
+      "shortBio": "Instructor @ Qalam · Teacher @ The Roots Community Space",
+      "longBio": "Ustadha Fatima Lette is an instructor at Qalam and faculty at the Qalam Seminary where she teaches Ulum al-Qur'an, Usul al-Tafsir and Tafsir. She graduated from Kennesaw State University with a BA in Psychology and went on to graduate from the alimiyyah program at the Qalam Seminary.",
+      "profilePhotoPath": "creators/19/ceb27405-4157-469b-9b08-bdd2801f0da5.jpg"
+    }
+  ],
+  "series": [
+    {
+      "id": 2,
+      "title": "How to Live Like the Prophet ﷺ",
+      "videoCount": 7,
+      "thumb": "https://cdn.hearts.foundation/cms/videos/12/thumbnails/thumb_01.jpg"
+    },
+    {
+      "id": 13,
+      "title": "Reflections on \"My Dear Beloved Son\"",
+      "videoCount": 9,
+      "thumb": "https://cdn.hearts.foundation/cms/videos/64/thumbnails/thumb_01.jpg",
+      "description": "A multi-part reflection series by Shaykh Yasir Fahmy"
+    },
+    {
+      "id": 9,
+      "title": "Pursuing the Higher Self",
+      "videoCount": 34,
+      "thumb": "https://cdn.hearts.foundation/cms/videos/265/thumbnails/thumb_01.jpg"
+    },
+    {
+      "id": 10,
+      "title": "Seerah Studies: The Meccan Years",
+      "videoCount": 62,
+      "thumb": "https://cdn.hearts.foundation/cms/videos/156/thumbnails/thumb_01.jpg"
+    },
+    {
+      "id": 26,
+      "title": "Hurdles - Pathway of the Servant to Jannah",
+      "videoCount": 24,
+      "thumb": "https://cdn.hearts.foundation/cms/videos/462/thumbnails/thumb_01.jpg"
+    },
+    {
+      "id": 27,
+      "title": "The Refuge: Reflections on Surah Kahf",
+      "videoCount": 13,
+      "thumb": "https://cdn.hearts.foundation/cms/videos/486/thumbnails/thumb_01.jpg"
+    },
+    {
+      "id": 17,
+      "title": "Allah's Promises in the Quran — Explained",
+      "videoCount": 25,
+      "thumb": "https://cdn.hearts.foundation/cms/videos/209/thumbnails/thumb_01.jpg"
+    },
+    {
+      "id": 29,
+      "title": "The Blessing of Time",
+      "videoCount": 8,
+      "thumb": "https://cdn.hearts.foundation/cms/videos/512/thumbnails/thumb_01.jpg"
+    },
+    {
+      "id": 3,
+      "title": "Paradise Series by Dr. Suleiman Hani",
+      "videoCount": 10,
+      "thumb": "https://cdn.hearts.foundation/cms/videos/23/thumbnails/thumb_01.jpg"
+    },
+    {
+      "id": 23,
+      "title": "Manners of the Salaf",
+      "videoCount": 10,
+      "thumb": "https://cdn.hearts.foundation/cms/videos/376/thumbnails/thumb_01.jpg"
+    }
+  ],
+  "videos": [
+    {
+      "id": 9,
+      "title": "How to Live Like the Prophet ﷺ - Session 6",
+      "speaker": "yasirfahmy",
+      "durationSec": 10124,
+      "hls": "https://cdn.hearts.foundation/hls/9/playlist.m3u8",
+      "seriesId": 2,
+      "position": 6
+    },
+    {
+      "id": 11,
+      "title": "How to Live Like the Prophet ﷺ - Session 4",
+      "speaker": "yasirfahmy",
+      "durationSec": 7282,
+      "hls": "https://cdn.hearts.foundation/hls/11/playlist.m3u8",
+      "seriesId": 2,
+      "position": 4
+    },
+    {
+      "id": 15,
+      "title": "How to Live Like the Prophet ﷺ - Session 3",
+      "speaker": "yasirfahmy",
+      "durationSec": 7575,
+      "hls": "https://cdn.hearts.foundation/hls/15/master.m3u8",
+      "seriesId": 2,
+      "position": 3
+    },
+    {
+      "id": 64,
+      "title": "Reflections on \"My Dear Beloved Son\" — Part 1",
+      "speaker": "yasirfahmy",
+      "durationSec": 3420,
+      "hls": "https://cdn.hearts.foundation/hls/64/playlist.m3u8",
+      "seriesId": 13,
+      "position": 0
+    },
+    {
+      "id": 485,
+      "title": "Hurdles - Pathway of the Servant to Jannah — Class 24",
+      "speaker": "mikaeelsmith",
+      "durationSec": 3850,
+      "hls": "https://cdn.hearts.foundation/hls/485/playlist.m3u8",
+      "seriesId": 26,
+      "position": 23
+    },
+    {
+      "id": 478,
+      "title": "Hurdles - Pathway of the Servant to Jannah — Class 6",
+      "speaker": "mikaeelsmith",
+      "durationSec": 3199,
+      "hls": "https://cdn.hearts.foundation/hls/478/playlist.m3u8",
+      "seriesId": 26,
+      "position": 5
+    },
+    {
+      "id": 486,
+      "title": "The Refuge: Reflections on Surah Kahf — Class 4",
+      "speaker": "mikaeelsmith",
+      "durationSec": 3501,
+      "hls": "https://cdn.hearts.foundation/hls/486/playlist.m3u8",
+      "seriesId": 27,
+      "position": 2
+    },
+    {
+      "id": 489,
+      "title": "The Refuge: Reflections on Surah Kahf — Class 13",
+      "speaker": "mikaeelsmith",
+      "durationSec": 2214,
+      "hls": "https://cdn.hearts.foundation/hls/489/playlist.m3u8",
+      "seriesId": 27,
+      "position": 5
+    },
+    {
+      "id": 259,
+      "title": "Pursuing the Higher Self — Lesson 11",
+      "speaker": "khalidlatif",
+      "durationSec": 5201,
+      "hls": "https://cdn.hearts.foundation/hls/259/playlist.m3u8",
+      "seriesId": 9,
+      "position": 10
+    },
+    {
+      "id": 266,
+      "title": "Pursuing the Higher Self — Lesson 14",
+      "speaker": "khalidlatif",
+      "durationSec": 4706,
+      "hls": "https://cdn.hearts.foundation/hls/266/playlist.m3u8",
+      "seriesId": 9,
+      "position": 13
+    },
+    {
+      "id": 272,
+      "title": "Seerah Studies: The Meccan Years — Lesson 3",
+      "speaker": "khalidlatif",
+      "durationSec": 5468,
+      "hls": "https://cdn.hearts.foundation/hls/272/playlist.m3u8",
+      "seriesId": 10,
+      "position": 3
+    },
+    {
+      "id": 263,
+      "title": "Seerah Studies: The Meccan Years — Lesson 5",
+      "speaker": "khalidlatif",
+      "durationSec": 5977,
+      "hls": "https://cdn.hearts.foundation/hls/263/playlist.m3u8",
+      "seriesId": 10,
+      "position": 5
+    },
+    {
+      "id": 280,
+      "title": "How to Come Back to Allah After Falling Away",
+      "speaker": "suleimanhani",
+      "durationSec": 373,
+      "hls": "https://cdn.hearts.foundation/hls/280/playlist.m3u8",
+      "seriesId": 17,
+      "position": 17
+    },
+    {
+      "id": 279,
+      "title": "Does Allah Guide Everyone? The Truth About Hidayah",
+      "speaker": "suleimanhani",
+      "durationSec": 338,
+      "hls": "https://cdn.hearts.foundation/hls/279/playlist.m3u8",
+      "seriesId": 17,
+      "position": 9
+    },
+    {
+      "id": 275,
+      "title": "Allah Protects the Believers — But There's a Condition",
+      "speaker": "suleimanhani",
+      "durationSec": 440,
+      "hls": "https://cdn.hearts.foundation/hls/275/playlist.m3u8",
+      "seriesId": 17,
+      "position": 13
+    },
+    {
+      "id": 269,
+      "title": "Want More From Allah? The Quran's Formula for Abundance",
+      "speaker": "suleimanhani",
+      "durationSec": 527,
+      "hls": "https://cdn.hearts.foundation/hls/269/playlist.m3u8",
+      "seriesId": 17,
+      "position": 12
+    },
+    {
+      "id": 249,
+      "title": "Can Your Sins Be Completely Erased? Allah's Promise of Tawbah",
+      "speaker": "suleimanhani",
+      "durationSec": 484,
+      "hls": "https://cdn.hearts.foundation/hls/249/playlist.m3u8",
+      "seriesId": 17,
+      "position": 14
+    },
+    {
+      "id": 512,
+      "title": "The Blessing of Time - Introduction",
+      "speaker": "suleimanhani",
+      "durationSec": 205,
+      "hls": "https://cdn.hearts.foundation/hls/512/playlist.m3u8",
+      "seriesId": 29,
+      "position": 0
+    }
+  ],
+  "quran": [
+    {
+      "id": 971,
+      "surah": 83,
+      "ayah": 26,
+      "ref": "al-Mutaffifin 83:26",
+      "arabic": "خِتَٰمُهُۥ مِسۡكٞۚ وَفِي ذَٰلِكَ فَلۡيَتَنَافَسِ ٱلۡمُتَنَٰفِسُونَ",
+      "translation": "whose last sip will smell like musk. So let whoever aspires to this strive diligently",
+      "sourceVideoId": 11,
+      "ts": "3:19"
+    },
+    {
+      "id": 977,
+      "surah": 3,
+      "ayah": 92,
+      "ref": "Āl ʿImrān 3:92",
+      "arabic": "لَن تَنَالُواْ ٱلۡبِرَّ حَتَّىٰ تُنفِقُواْ مِمَّا تُحِبُّونَ",
+      "translation": "You will never achieve righteousness until you donate some of what you cherish. And whatever you give is certainly well known to Allah",
+      "sourceVideoId": 11,
+      "ts": "35:54"
+    },
+    {
+      "id": 978,
+      "surah": 3,
+      "ayah": 134,
+      "ref": "Āl ʿImrān 3:134",
+      "arabic": "ٱلَّذِينَ يُنفِقُونَ فِي ٱلسَّرَّآءِ وَٱلضَّرَّآءِ وَٱلۡكَٰظِمِينَ ٱلۡغَيۡظَ وَٱلۡعَافِينَ عَنِ ٱلنَّاسِ",
+      "translation": "They are those who donate in prosperity and adversity, control their anger, and pardon others. And Allah loves the good-doers",
+      "sourceVideoId": 11,
+      "ts": "74:38"
+    },
+    {
+      "id": 975,
+      "surah": 25,
+      "ayah": 63,
+      "ref": "al-Furqān 25:63",
+      "arabic": "وَعِبَادُ ٱلرَّحۡمَٰنِ ٱلَّذِينَ يَمۡشُونَ عَلَى ٱلۡأَرۡضِ هَوۡنٗا",
+      "translation": "The true servants of the Most Compassionate are those who walk on the earth humbly, and when the foolish address them improperly, they only respond with peace",
+      "sourceVideoId": 11,
+      "ts": "27:11"
+    },
+    {
+      "id": 945,
+      "surah": 18,
+      "ayah": 104,
+      "ref": "al-Kahf 18:104",
+      "arabic": "وَهُمۡ يَحۡسَبُونَ أَنَّهُمۡ يُحۡسِنُونَ صُنۡعًا",
+      "translation": "They are those whose efforts are in vain in this worldly life, while they think they are doing good!",
+      "sourceVideoId": 489,
+      "ts": "9:45"
+    },
+    {
+      "id": 956,
+      "surah": 18,
+      "ayah": 107,
+      "ref": "al-Kahf 18:107",
+      "arabic": "إِنَّ ٱلَّذِينَ ءَامَنُواْ وَعَمِلُواْ ٱلصَّٰلِحَٰتِ كَانَتۡ لَهُمۡ جَنَّٰتُ ٱلۡفِرۡدَوۡسِ نُزُلًا",
+      "translation": "Indeed, those who believe and do good will have the Gardens of Paradise as an accommodation",
+      "sourceVideoId": 489,
+      "ts": "22:07"
+    },
+    {
+      "id": 855,
+      "surah": 18,
+      "ayah": 13,
+      "ref": "al-Kahf 18:13",
+      "arabic": "نَّحۡنُ نَقُصُّ عَلَيۡكَ نَبَأَهُم بِٱلۡحَقِّ",
+      "translation": "We relate to you O Prophet their story in truth. They were youths who truly believed in their Lord, and We increased them in guidance",
+      "sourceVideoId": 470,
+      "ts": "17:57"
+    },
+    {
+      "id": 844,
+      "surah": 11,
+      "ayah": 114,
+      "ref": "Hūd 11:114",
+      "arabic": "إِنَّ ٱلۡحَسَنَٰتِ يُذۡهِبۡنَ ٱلسَّيِّـَٔاتِ",
+      "translation": "Establish prayer O Prophet at both ends of the day and in the early part of the night. Surely good deeds wipe out evil deeds. That is a reminder for the mindful",
+      "sourceVideoId": 464,
+      "ts": "25:11"
+    },
+    {
+      "id": 1018,
+      "surah": 17,
+      "ayah": 24,
+      "ref": "al-Isrāʾ 17:24",
+      "arabic": "وَقُل رَّبِّ ٱرۡحَمۡهُمَا كَمَا رَبَّيَانِي صَغِيرٗا",
+      "translation": "And be humble with them out of mercy, and pray, “My Lord! Be merciful to them as they raised me when I was young.”",
+      "sourceVideoId": 411,
+      "ts": "5:34"
+    },
+    {
+      "id": 995,
+      "surah": 68,
+      "ayah": 4,
+      "ref": "al-Qalam 68:4",
+      "arabic": "وَإِنَّكَ لَعَلَىٰ خُلُقٍ عَظِيمٖ",
+      "translation": "And you are truly a man of outstanding character",
+      "sourceVideoId": 417,
+      "ts": "9:09"
+    },
+    {
+      "id": 991,
+      "surah": 20,
+      "ayah": 2,
+      "ref": "Ṭā Hā 20:2",
+      "arabic": "مَآ أَنزَلۡنَا عَلَيۡكَ ٱلۡقُرۡءَانَ لِتَشۡقَىٰٓ",
+      "translation": "We have not revealed the Quran to you O Prophet to cause you distress",
+      "sourceVideoId": 421,
+      "ts": "3:11"
+    },
+    {
+      "id": 1013,
+      "surah": 17,
+      "ayah": 82,
+      "ref": "al-Isrāʾ 17:82",
+      "arabic": "وَنُنَزِّلُ مِنَ ٱلۡقُرۡءَانِ مَا هُوَ شِفَآءٞ وَرَحۡمَةٞ لِّلۡمُؤۡمِنِينَ",
+      "translation": "We send down the Quran as a healing and mercy for the believers",
+      "sourceVideoId": 408,
+      "ts": "5:44"
+    },
+    {
+      "id": 1479,
+      "surah": 2,
+      "ayah": 201,
+      "ref": "al-Baqarah 2:201",
+      "arabic": "رَبَّنَآ ءَاتِنَا فِي ٱلدُّنۡيَا حَسَنَةٗ وَفِي ٱلۡأٓخِرَةِ حَسَنَةٗ وَقِنَا عَذَابَ ٱلنَّارِ",
+      "translation": "“Our Lord! Grant us the good of this world and the Hereafter, and protect us from the torment of the Fire.”",
+      "sourceVideoId": 497,
+      "ts": "77:45"
+    },
+    {
+      "id": 854,
+      "surah": 6,
+      "ayah": 53,
+      "ref": "al-Anʿām 6:53",
+      "arabic": "أَلَيۡسَ ٱللَّهُ بِأَعۡلَمَ بِٱلشَّٰكِرِينَ",
+      "translation": "Does Allah not best recognize the grateful",
+      "sourceVideoId": 484,
+      "ts": "56:26"
+    }
+  ],
+  "hadith": [
+    {
+      "id": 419,
+      "collection": "Sunan Abi Dawud",
+      "ref": "Abu Dawud 4682",
+      "grading": "Hasan Sahih",
+      "arabic": "أَكْمَلُ الْمُؤْمِنِينَ إِيمَانًا أَحْسَنُهُمْ خُلُقًا",
+      "translation": "The most perfect believer in respect of faith is he who is best of them in manners",
+      "narrator": "Abu Hurayrah",
+      "sourceVideoId": 11,
+      "ts": "32:48"
+    },
+    {
+      "id": 421,
+      "collection": "Jami' at-Tirmidhi",
+      "ref": "Tirmidhi 664",
+      "grading": "Hasan",
+      "arabic": "الصدقة تطفئ غضب الرب",
+      "translation": "Indeed charity extinguishes the Lord's anger and it protects against the evil death",
+      "narrator": "Anas bin Malik",
+      "sourceVideoId": 11,
+      "ts": "42:09"
+    },
+    {
+      "id": 433,
+      "collection": "Sunan Abi Dawud",
+      "ref": "Abu Dawud 1493",
+      "grading": "Sahih",
+      "arabic": "اللهم إني أسألك أني أشهد أنك أنت الله لا إله إلا أنت الأحد الصمد",
+      "translation": "You have supplicated Allah using His Greatest Name; when asked with this name He gives, and when supplicated by this name He answers",
+      "narrator": "Buraydah ibn al-Hasib",
+      "sourceVideoId": 84,
+      "ts": "2:24"
+    }
+  ],
+  "reflectionQuestions": [
+    {
+      "id": 21,
+      "prompt": "How has witnessing someone age, fall ill, or pass away changed the way you understand your own journey back to Allah?",
+      "topic": "mortality and spiritual growth",
+      "sourceVideoId": 280
+    },
+    {
+      "id": 1260,
+      "prompt": "The Prophet ﷺ was described as someone who \"disarmed people with kindness.\" Think of a recent interaction where you could have responded with more gentleness. What held you back, and how might it have changed the outcome?",
+      "topic": "character",
+      "sourceVideoId": 11
+    },
+    {
+      "id": 1005,
+      "prompt": "When you make a mistake or commit a sin, what story do you tend to tell yourself about how Allah sees you — and how does that story affect your relationship with Him?",
+      "topic": "repentance",
+      "sourceVideoId": 190
+    },
+    {
+      "id": 1008,
+      "prompt": "The Prophet ﷺ was rejected by 26 tribes before receiving Allah's help. Recall a time you faced repeated setbacks — how did your opinion of Allah shape how you moved through that difficulty?",
+      "topic": "patience",
+      "sourceVideoId": 190
+    },
+    {
+      "id": 990,
+      "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
+      "topic": "trust in Allah",
+      "sourceVideoId": 395
+    },
+    {
+      "id": 992,
+      "prompt": "When your dua feels unanswered, what thoughts or emotions tend to surface first? How do you usually handle that inner conversation with yourself?",
+      "topic": "dua",
+      "sourceVideoId": 395
+    },
+    {
+      "id": 983,
+      "prompt": "What is one thing you consume regularly that you know is pulling your heart in the wrong direction?",
+      "topic": "self-awareness",
+      "sourceVideoId": 425
+    },
+    {
+      "id": 970,
+      "prompt": "Think of a time you felt truly alone in a difficult situation. Looking back, how did Allah show up for you in ways you didn't recognize at the time?",
+      "topic": "trust in Allah",
+      "sourceVideoId": 432
+    },
+    {
+      "id": 960,
+      "prompt": "When you face a difficulty, is your first instinct to ask 'Why is Allah testing me?' or 'What is Allah teaching me?' — and what difference does the framing make in how you experience the trial?",
+      "topic": "reframing trials through faith",
+      "sourceVideoId": 440
+    },
+    {
+      "id": 1265,
+      "prompt": "When you make du'a, how do you call upon Allah? Which names or phrases feel most meaningful to you, and why?",
+      "topic": "dua",
+      "sourceVideoId": 84
+    },
+    {
+      "id": 779,
+      "prompt": "Think of a time when someone's good character or etiquette left a lasting impression on you. What specifically did they do, and how did it change the way you see the importance of manners in Islam?",
+      "topic": "impact of good character",
+      "sourceVideoId": 46
+    },
+    {
+      "id": 800,
+      "prompt": "When was the last time you intentionally said a full, warm salaam to someone close to you — a sibling, parent, or spouse — and what did it feel like?",
+      "topic": "salam",
+      "sourceVideoId": 22
+    },
+    {
+      "id": 39,
+      "prompt": "Think about a moment in your life when you felt spiritually lost but were eventually guided to clarity. What role did your own effort play, and what felt like it came purely from Allah?",
+      "topic": "reflecting on divine guidance",
+      "sourceVideoId": 279
+    },
+    {
+      "id": 829,
+      "prompt": "Can you recall a time when a verse or passage from the Quran softened your heart or dissolved a doubt you were carrying? What happened in that moment?",
+      "topic": "faith",
+      "sourceVideoId": 196
+    }
+  ]
+}
