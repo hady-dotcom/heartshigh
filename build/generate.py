@@ -357,6 +357,21 @@ def main():
                                      key=lambda v: v["position"]))
     ]
 
+    # Real media shipped with the demo (from Drive: Hudhud-UX-Demo/media). Same-origin,
+    # so it plays on every host including sandboxes that block external media.
+    HERO = {
+        "id": "local-mikaeel", "source": "file", "src": "media/mikaeel-bait-fade.mp4",
+        "wholeFile": True, "speaker": "mikaeelsmith", "videoId": None, "start": 0, "len": 0,
+        "hook": "You have to help your brother regardless — whether they are the oppressor or the oppressed.",
+        "turn": "The Sahaba said: we understand helping the oppressed — but how do you help the oppressor?",
+        "land": "By grabbing their hand and stopping them.",
+        "theme": "Justice / Helping the oppressor", "lane": "The Prophet ﷺ",
+        "clause": None, "clauseLabel": None, "seat": "", "form": "Direct Soundbite",
+        "strength": "strong", "appeal": "", "why": "", "currency": "",
+        "title": "Help your brother, oppressor or oppressed", "source_sheet": "drive",
+    }
+    reel = [HERO] + reel
+
     data = {
         "meta": {
             "app": "Hud-hud", "brand": "Hearts Together",
@@ -378,7 +393,9 @@ def main():
                    "library": {"sectionsCovered": lib_sections, "pieces": lib_pieces,
                                "clips": len(canon)}},
         "ghuniyya": ghuniyya, "harvest": harvest,
+        "localMedia": {"hero": "media/mikaeel-bait-fade.mp4", "lecture": "media/lecture-sitting.mp4"},
         "course": {"videoId": 9, "seriesId": 2, "title": series[2]["title"],
+                   "localSrc": "media/lecture-sitting.mp4",
                    "partLabel": "Part 6 · Ease as the governing spirit",
                    "thesis": clean(fnotes.get("thesis")), "speaker": "yasirfahmy",
                    "hls": course_vid["hls"], "durationSec": course_vid["durationSec"],
@@ -403,6 +420,10 @@ def main():
         if os.path.exists(src_f): shutil.copy2(src_f, os.path.join(docs, f))
     v = os.path.join(ROOT, "app", "vendor", "hls.min.js")
     if os.path.exists(v): shutil.copy2(v, os.path.join(docs, "vendor", "hls.min.js"))
+    md = os.path.join(ROOT, "app", "media")
+    if os.path.isdir(md):
+        os.makedirs(os.path.join(docs, "media"), exist_ok=True)
+        for f in os.listdir(md): shutil.copy2(os.path.join(md, f), os.path.join(docs, "media", f))
 
     print(f"wrote {out}  ({os.path.getsize(out)//1024} KB)")
     print(f"mirrored to docs/ for GitHub Pages")

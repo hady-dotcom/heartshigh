@@ -13,7 +13,7 @@ window.HUDHUD = {
   "counts": {
    "canonClips": 3963,
    "playableVideos": 18,
-   "reelClips": 109,
+   "reelClips": 110,
    "curated": 22,
    "quran": 14,
    "hadith": 3
@@ -329,6 +329,31 @@ window.HUDHUD = {
   }
  ],
  "reel": [
+  {
+   "id": "local-mikaeel",
+   "source": "file",
+   "src": "media/mikaeel-bait-fade.mp4",
+   "wholeFile": true,
+   "speaker": "mikaeelsmith",
+   "videoId": null,
+   "start": 0,
+   "len": 0,
+   "hook": "You have to help your brother regardless — whether they are the oppressor or the oppressed.",
+   "turn": "The Sahaba said: we understand helping the oppressed — but how do you help the oppressor?",
+   "land": "By grabbing their hand and stopping them.",
+   "theme": "Justice / Helping the oppressor",
+   "lane": "The Prophet ﷺ",
+   "clause": null,
+   "clauseLabel": null,
+   "seat": "",
+   "form": "Direct Soundbite",
+   "strength": "strong",
+   "appeal": "",
+   "why": "",
+   "currency": "",
+   "title": "Help your brother, oppressor or oppressed",
+   "source_sheet": "drive"
+  },
   {
    "id": "c9-840",
    "videoId": 9,
@@ -4099,10 +4124,15 @@ window.HUDHUD = {
    "cta": "See the full ḥadīth"
   }
  ],
+ "localMedia": {
+  "hero": "media/mikaeel-bait-fade.mp4",
+  "lecture": "media/lecture-sitting.mp4"
+ },
  "course": {
   "videoId": 9,
   "seriesId": 2,
   "title": "How to Live Like the Prophet ﷺ",
+  "localSrc": "media/lecture-sitting.mp4",
   "partLabel": "Part 6 · Ease as the governing spirit",
   "thesis": "Religion's governing spirit is ease — never nafs-convenience, never harshness.",
   "speaker": "yasirfahmy",

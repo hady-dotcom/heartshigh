@@ -99,7 +99,8 @@ const VideoEngine = {
     container.appendChild(v);
 
     const state = { v, hls: null, dead: false, ok: false };
-    const start = opts.start || 0;
+    const start = opts.whole ? 0 : (opts.start || 0);
+    if (opts.whole) v.loop = true;
 
     // hls.js only for real HLS manifests; anything else goes straight to the element,
     // which also covers Safari's native HLS and any non-HLS source the CMS returns.
@@ -346,13 +347,14 @@ const APP_LEN  = CFG.appLen  || 95;
 function buildClipCard(clip, kind) {
   const isApp = kind === 'appetiser';
   const isYT = clip.source === 'youtube';
+  const isFile = clip.source === 'file';
   const len = isApp ? APP_LEN : (clip.len || HORS_LEN);
   const video = VIDEO[clip.videoId];
   const card = el('div', 'cardclip');
 
   const media = el('div', 'cc-media');
   const blur = el('div', 'cc-blur');
-  blur.style.backgroundImage = 'url(' + (isYT
+  if (!isFile) blur.style.backgroundImage = 'url(' + (isYT
     ? 'https://i.ytimg.com/vi/' + clip.youtube + '/hqdefault.jpg'
     : thumb(clip.videoId)) + ')';
   media.appendChild(blur);
@@ -364,7 +366,7 @@ function buildClipCard(clip, kind) {
 
   const top = el('div', 'cc-top');
   top.appendChild(el('span', 'pill lane', 'Lane · ' + esc(clip.lane)));
-  top.appendChild(el('span', 'pill dur', isApp ? 'Extended cut' : mmss(len)));
+  top.appendChild(el('span', 'pill dur', isApp ? 'Extended cut' : (clip.wholeFile ? 'Clip' : mmss(len))));
   if (clip.form && !isApp) top.appendChild(el('span', 'pill form', esc(clip.form)));
   card.appendChild(top);
 
@@ -379,7 +381,7 @@ function buildClipCard(clip, kind) {
   fav.onclick = e => { e.stopPropagation(); USER.faves.has(clip.id) ? USER.faves.delete(clip.id) : USER.faves.add(clip.id); fav.classList.toggle('on'); };
   const share = el('button', 'railbtn',
     '<svg viewBox="0 0 24 24"><path d="M12 15V4"/><path d="m8 8 4-4 4 4"/><path d="M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6"/></svg><span>Share</span>');
-  share.onclick = e => { e.stopPropagation(); toast('Link copied'); };
+  share.onclick = e => { e.stopPropagation(); shareClip(clip); };
   rail.appendChild(share); rail.appendChild(fav);
   card.appendChild(rail);
 
@@ -436,12 +438,17 @@ function buildClipCard(clip, kind) {
       });
       return;
     }
-    card.__player = VideoEngine.make(media, video, {
+    card.__player = VideoEngine.make(media, { hls: isFile ? clip.src : (video && video.hls) }, {
       start: clip.start,
+      whole: !!clip.wholeFile,
       onTime: t => {
-        const p = Math.min(1, Math.max(0, (t - clip.start) / len));
-        progBar.style.width = (p * 100) + '%';
-        if (t > clip.start + len || t < clip.start - 2) { try { card.__player.v.currentTime = clip.start; } catch (e) {} }
+        const v = card.__player && card.__player.v;
+        const span = clip.wholeFile ? ((v && v.duration) || len) : len;
+        const base = clip.wholeFile ? 0 : clip.start;
+        progBar.style.width = (Math.min(1, Math.max(0, (t - base) / span)) * 100) + '%';
+        if (!clip.wholeFile && (t > clip.start + len || t < clip.start - 2)) {
+          try { v.currentTime = clip.start; } catch (e) {}
+        }
       },
       onPlay: () => { card.__player.setMuted(GLOBAL_MUTED); setTimeout(() => card.classList.add('show-hint'), 2600); },
       onFail: () => { card.classList.add('show-hint', 'nomedia'); animateFallbackProgress(progBar, len); },
@@ -629,7 +636,7 @@ function openBio(handle) {
     const f = el('button', 'cta teal', USER.follows.has(handle) ? 'Following' : 'Follow');
     f.onclick = () => { USER.follows.has(handle) ? USER.follows.delete(handle) : USER.follows.add(handle); f.textContent = USER.follows.has(handle) ? 'Following' : 'Follow'; };
     const ask = el('button', 'ghost', 'Ask a question');
-    ask.onclick = () => toast('Your question goes to the sheikh’s team');
+    ask.onclick = () => askSheikh(handle);
     acts.appendChild(f); acts.appendChild(ask);
     s.appendChild(acts);
 
@@ -639,6 +646,20 @@ function openBio(handle) {
       const m = el('button', 'more', 'Read more');
       m.onclick = () => { bio.classList.toggle('clamp'); m.textContent = bio.classList.contains('clamp') ? 'Read more' : 'Read less'; };
       s.appendChild(m);
+    }
+
+    if (mine[0]) {
+      s.appendChild(el('div', 'section-title', 'Start here'));
+      const intro = el('button', 'rowcard');
+      intro.style.margin = '0 14px';
+      const it = el('img', 'thumb'); it.src = thumb(mine[0].id); imgFallback(it, 'var(--oasis)'); intro.appendChild(it);
+      intro.appendChild(el('div', 'meta', '<b>Watch the intro</b><i>' + esc(sname(handle)) + ' · 1:10 · what this teacher is for</i>'));
+      intro.appendChild(el('span', 'startbtn', 'Play'));
+      intro.onclick = () => {
+        const c = (bySpeaker[handle] || [])[0] || Pick.any();
+        pop(); setTimeout(() => openAppetiser(c), 320);
+      };
+      s.appendChild(intro);
     }
 
     s.appendChild(el('div', 'section-title', 'Courses by this speaker'));
@@ -658,6 +679,25 @@ function openBio(handle) {
   }, { chrome: 'dark' });
 }
 
+/* ------------------------------------------------------------------ ask the sheikh */
+function askSheikh(handle) {
+  contentSheet('Ask ' + sname(handle), () => {
+    const w = el('div', '');
+    const ta = el('textarea', 'answerbox');
+    ta.id = 'ask' + handle;
+    ta.placeholder = 'What would you like to ask?';
+    w.appendChild(ta);
+    w.appendChild(el('div', 'unf-note', 'Questions go to the teacher’s team, not to the teacher’s inbox. They answer the ones that come up most, on video.'));
+    $('.unf-note', w).style.margin = '11px 0 0';
+    const send = el('button', 'cta teal');
+    send.style.marginTop = '14px';
+    send.textContent = 'Send to the team';
+    send.onclick = () => { closeSheet(); toast(ta.value.trim() ? 'Sent — you will get the answer in your lane' : 'Write a question first'); };
+    w.appendChild(send);
+    return w;
+  });
+}
+
 /* ------------------------------------------------------------------ 03 Mains — course player */
 function openMains(fromClip) {
   const C = D.course;
@@ -665,6 +705,8 @@ function openMains(fromClip) {
   let player = null, rafId = 0, cooldownUntil = 0;
   const answered = new Set(C.points.filter(p => p.answered).map(p => p.at));
 
+  let current = { videoId: C.videoId, hls: C.localSrc || C.hls, durationSec: C.durationSec,
+                  title: C.partLabel, local: !!C.localSrc };
   push(() => {
     const s = el('div', 'mains');
     s.appendChild(navbar(SERIES[C.seriesId] ? SERIES[C.seriesId].title : 'Course', pop));
@@ -696,6 +738,10 @@ function openMains(fromClip) {
       tl.appendChild(d); dots.push({ p, d });
     });
     s.appendChild(tl);
+    const noPoints = el('div', 'note');
+    noPoints.style.cssText = 'display:none;margin:2px 20px 0;line-height:1.5';
+    noPoints.textContent = 'Engagement points for this part arrive with the tagging pass.';
+    s.appendChild(noPoints);
     const leg = el('div', 'tl-legend');
     leg.appendChild(el('span', '', '<span id="tlNow">0:00</span>'));
     leg.appendChild(el('span', '', esc(C.points.length + ' engagement points · ' + hhmm(C.durationSec))));
@@ -717,7 +763,7 @@ function openMains(fromClip) {
     gc.appendChild(el('div', 'bar', '<i style="width:' + (answered.size / C.points.length * 100) + '%"></i>'));
     const og = el('button', 'cta', 'Open garden');
     og.style.cssText = 'margin-top:14px;background:rgba(255,255,255,.14);color:#fff;box-shadow:none';
-    og.onclick = () => openGrow();
+    og.onclick = () => openCourseGarden(C, answered, at => { s.__seek(Math.max(0, at - 6)); });
     gc.appendChild(og);
     s.appendChild(gc);
 
@@ -726,24 +772,49 @@ function openMains(fromClip) {
     C.parts.forEach(p => {
       const row = el('button', 'rowcard');
       const im = el('img', 'thumb'); im.src = thumb(p.videoId); imgFallback(im, 'var(--oasis)'); row.appendChild(im);
-      const isNow = p.videoId === C.videoId;
-      row.appendChild(el('div', 'meta', '<b>' + esc(p.title.replace(/^.*?[-—]\s*/, '')) + '</b><i>' + hhmm(p.durationSec) + (isNow ? ' · playing now' : '') + '</i>'));
+      const isNow = p.videoId === current.videoId;
+      row.appendChild(el('div', 'meta', '<b>' + esc(p.title.replace(/^.*?[-—]\s*/, '')) + '</b><i>' + hhmm(p.durationSec) +
+        (isNow ? ' · playing now' : '') + '</i>'));
       row.appendChild(el('span', 'startbtn', isNow ? 'Now' : 'Start'));
+      row.onclick = () => { if (!isNow) loadPart(p); };
       list.appendChild(row);
     });
     s.appendChild(list);
 
+    /* Switching part reloads the player against that part's own stream. Engagement
+       points are mapped for this part only; others say so rather than faking dots. */
+    function loadPart(p) {
+      current = { videoId: p.videoId, hls: p.hls, durationSec: p.durationSec, title: p.title };
+      if (player) { player.destroy(); player = null; }
+      $('.part-label', pl).textContent = p.title.replace(/^.*?[-—]\s*/, '');
+      const mapped = p.videoId === C.videoId;
+      tl.style.display = mapped ? '' : 'none';
+      noPoints.style.display = mapped ? 'none' : '';
+      played.style.width = '0%';
+      mount();
+      resetTo === null;
+      toast('Now playing ' + p.title.replace(/^.*?[-—]\s*/, ''));
+      [...list.children].forEach((row, i) => {
+        const isNow = C.parts[i] && C.parts[i].videoId === p.videoId;
+        const st = $('.startbtn', row); if (st) st.textContent = isNow ? 'Now' : 'Start';
+        const it = $('.meta i', row);
+        if (it && C.parts[i]) it.textContent = hhmm(C.parts[i].durationSec) + (isNow ? ' · playing now' : '');
+      });
+    }
+
     // mount player
+    function mount() {
     requestAnimationFrame(() => {
-      player = VideoEngine.make(pl, video, {
-        start: 0,
+      player = VideoEngine.make(pl, { hls: current.hls }, {
+        start: 0, whole: !!current.local,
         onPlay: () => { playBtn.classList.add('hide'); player.setMuted(false); },
         onTime: t => {
-          played.style.width = (t / C.durationSec * 100) + '%';
+          played.style.width = (t / current.durationSec * 100) + '%';
           const now = $('#tlNow'); if (now) now.textContent = mmss(t);
           dots.forEach(o => o.d.classList.toggle('live', Math.abs(t - o.p.at) < 4));
           // pause and open the panel when an unanswered point is reached
-          const hit = C.points.find(p => !answered.has(p.at) && t >= p.at && t < p.at + 1.2);
+          const hit = current.videoId === C.videoId
+            ? C.points.find(p => !answered.has(p.at) && t >= p.at && t < p.at + 1.2) : null;
           if (hit && !sheetEl.classList.contains('on') && Date.now() > cooldownUntil) {
             try { player.v.pause(); } catch (e) {}
             const d = dots.find(o => o.p === hit);
@@ -753,6 +824,8 @@ function openMains(fromClip) {
         onFail: () => { playBtn.classList.remove('hide'); },
       });
     });
+    }
+    mount();
     playBtn.onclick = () => {
       if (!player) return;
       if (player.v.paused) { player.v.play().then(() => playBtn.classList.add('hide')).catch(() => {}); }
@@ -791,6 +864,43 @@ function blossomMark(on, tone) {
   return on
     ? '<svg viewBox="0 0 24 24"><g fill="' + c + '"><circle cx="12" cy="6.5" r="3.4"/><circle cx="17.5" cy="10.5" r="3.4"/><circle cx="15.4" cy="17" r="3.4"/><circle cx="8.6" cy="17" r="3.4"/><circle cx="6.5" cy="10.5" r="3.4"/></g><circle cx="12" cy="12" r="2.5" fill="#FFFDF8"/></svg>'
     : '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5.2" fill="none" stroke="#DBD0BC" stroke-width="1.7"/></svg>';
+}
+
+/* ------------------------------------------------------------------ share a clip */
+function shareClip(clip) {
+  const line = '“' + clip.land + '” — ' + sname(clip.speaker);
+  contentSheet('Share this clip', () => {
+    const w = el('div', '');
+    const card = el('div', 'card');
+    card.style.cssText = 'background:var(--dark);color:#fff;border:0;padding:18px;border-radius:18px';
+    card.innerHTML = '<div style="font-size:17px;font-weight:700;line-height:1.35;letter-spacing:-.02em">' +
+        esc(clip.land) + '</div>' +
+      '<div style="font-size:12.5px;color:rgba(255,255,255,.62);margin-top:11px">' +
+        esc(sname(clip.speaker)) + ' · ' + esc(clip.lane) + ' · Hud-hud</div>';
+    w.appendChild(card);
+    const row = el('div', '');
+    row.style.cssText = 'display:grid;gap:9px;margin-top:15px';
+    const nat = el('button', 'cta', 'Send to someone ›');
+    nat.onclick = () => {
+      if (navigator.share) {
+        navigator.share({ title: 'Hud-hud', text: line }).catch(() => {});
+      } else { copy(line); }
+      closeSheet();
+    };
+    const cp = el('button', 'ghost');
+    cp.style.cssText = 'padding:14px;border-radius:14px;font-weight:700;font-size:14px;text-align:center';
+    cp.textContent = 'Copy the line';
+    cp.onclick = () => { copy(line); closeSheet(); };
+    row.appendChild(nat); row.appendChild(cp);
+    w.appendChild(row);
+    w.appendChild(el('div', 'unf-note', 'Sharing a clip never shares your workbook or your answers.'));
+    $('.unf-note', w).style.marginTop = '13px';
+    return w;
+  });
+}
+function copy(t) {
+  try { navigator.clipboard && navigator.clipboard.writeText(t); } catch (e) {}
+  toast('Copied');
 }
 
 /* ------------------------------------------------------------------ 03b engagement + swarm */
@@ -849,9 +959,23 @@ function showEngagement(p, onShare, onSkip) {
   const rec = el('div', 'rec-row');
   if (p.kind === 'Multi-choice') rec.style.display = 'none';
   const rb = el('button', 'recbtn', '<svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z"/><path d="M6 11a6 6 0 0 0 12 0" stroke="#fff" stroke-width="1.8" fill="none"/><path d="M12 17v3" stroke="#fff" stroke-width="1.8"/></svg>');
-  rb.onclick = () => toast('Recording… (demo)');
+  let recording = false, recT = 0, recTimer = 0;
+  const recLbl = el('span', 'note', 'Or answer out loud — voice notes are kept the same way as text.');
+  rb.onclick = () => {
+    recording = !recording;
+    rb.classList.toggle('rec-on', recording);
+    if (recording) {
+      recT = 0;
+      recLbl.textContent = 'Recording  0:00';
+      recTimer = setInterval(() => { recT++; recLbl.textContent = 'Recording  ' + mmss(recT); }, 1000);
+    } else {
+      clearInterval(recTimer);
+      recLbl.textContent = 'Voice note ' + mmss(recT) + ' · ready to bank';
+      if (ta) ta.placeholder = 'Voice note attached — add a note if you like';
+    }
+  };
   rec.appendChild(rb);
-  rec.appendChild(el('span', 'note', 'Or answer out loud — voice notes are kept the same way as text.'));
+  rec.appendChild(recLbl);
   inr.appendChild(rec);
 
   const pv = el('div', 'privacy');
@@ -896,6 +1020,18 @@ function showEngagement(p, onShare, onSkip) {
   openSheet(onSkip);
 }
 
+/* A plain content sheet — used by share, ask, tafsir, hadith and the year card. */
+function contentSheet(title, build, opts) {
+  opts = opts || {};
+  sheetEl.innerHTML = '';
+  sheetEl.appendChild(el('div', 'grab'));
+  const inr = el('div', 'sheet-in');
+  if (title) inr.appendChild(el('div', 'eyebrow', esc(title)));
+  inr.appendChild(build());
+  sheetEl.appendChild(inr);
+  openSheet(opts.onDismiss);
+}
+
 function openSheet(onDismiss) {
   sheetEl.setAttribute('aria-hidden', 'false');
   sheetEl.classList.add('on'); scrim.classList.add('on');
@@ -904,6 +1040,80 @@ function openSheet(onDismiss) {
 function closeSheet() {
   sheetEl.classList.remove('on'); scrim.classList.remove('on');
   sheetEl.setAttribute('aria-hidden', 'true');
+}
+
+/* ------------------------------------------------------------------ course garden */
+function openCourseGarden(C, answered, onJump) {
+  push(() => {
+    const s = el('div', '');
+    s.appendChild(navbar('Course', pop));
+    const head = el('div', 'card');
+    head.style.cssText = 'margin:0 14px 14px;background:var(--dark);color:#fff;border:0;border-radius:20px;padding:18px';
+    head.innerHTML = '<div class="eyebrow" style="color:rgba(255,255,255,.5)">My garden</div>' +
+      '<div style="font-size:30px;font-weight:700;letter-spacing:-.03em;margin-top:7px">' +
+        answered.size + ' of ' + C.points.length + ' fruits</div>' +
+      '<div style="font-size:12.5px;color:rgba(255,255,255,.62);margin-top:5px">' +
+        esc(C.partLabel) + '</div>';
+    s.appendChild(head);
+    s.appendChild(el('div', 'note', '<span style="padding:0 18px;display:block;line-height:1.5">Every fruit is a moment in the talk. Tap one to go back to it.</span>'));
+    const list = el('div', 'list scroll-pad');
+    list.style.marginTop = '12px';
+    C.points.forEach(p => {
+      const done = answered.has(p.at);
+      const row = el('button', 'rowcard');
+      const f = el('div', 'fruit' + (done ? ' on' : ''), blossomSVG(done));
+      f.style.cssText += ';width:38px;height:38px;flex:0 0 auto';
+      row.appendChild(f);
+      row.appendChild(el('div', 'meta', '<b>' + esc(p.title) + '</b><i>' + mmss(p.at) + ' · ' + esc(p.kind) +
+        (done ? ' · answered' : ' · not yet') + '</i>'));
+      row.appendChild(el('span', 'startbtn', done ? 'Revisit' : 'Go'));
+      row.onclick = () => { pop(); setTimeout(() => onJump && onJump(p.at), 320); };
+      list.appendChild(row);
+    });
+    s.appendChild(list);
+    return s;
+  }, { chrome: 'dark' });
+}
+
+/* ------------------------------------------------------------------ the year card */
+function openYearCard(mode) {
+  const entries = buildWorkbook();
+  contentSheet(mode === 'read' ? 'Your year, in your own words' : 'Your year', () => {
+    const w = el('div', '');
+    const card = el('div', '');
+    card.style.cssText = 'border-radius:20px;padding:20px;color:#fff;background:var(--dusk);position:relative;overflow:hidden';
+    card.innerHTML =
+      '<div class="eyebrow" style="color:rgba(255,255,255,.6)">Since ' + esc(USER.since) + '</div>' +
+      '<div style="font-size:40px;font-weight:700;letter-spacing:-.035em;line-height:1.05;margin-top:9px">' +
+        Math.floor(USER.minutes / 60) + ' hours<br>with the ʿulamāʾ</div>' +
+      '<div style="font-size:13px;color:rgba(255,255,255,.78);margin-top:12px;line-height:1.5">' +
+        USER.hors.toLocaleString() + ' tastes · ' + USER.parts + ' course parts · ' +
+        D.jibril.sectionsOpened + ' of ' + D.jibril.sectionsTotal + ' sections of Ḥadīth Jibrīl opened</div>' +
+      '<div style="font-size:13px;color:rgba(255,255,255,.78);margin-top:6px;line-height:1.5">' +
+        entries.length + ' reflections written. ' + entries.filter(e => e.private).length + ' kept private.</div>';
+    w.appendChild(card);
+    if (mode === 'read') {
+      const l = el('div', '');
+      l.style.marginTop = '16px';
+      entries.slice(0, 6).forEach(e => {
+        const q = el('div', '');
+        q.style.cssText = 'padding:13px 0;border-bottom:1px solid var(--border)';
+        q.innerHTML = '<div class="eyebrow">' + e.date + '</div>' +
+          '<div style="font-size:15px;font-weight:600;color:var(--dark);line-height:1.4;margin-top:6px">“' + esc(e.a) + '”</div>';
+        l.appendChild(q);
+      });
+      w.appendChild(l);
+      w.appendChild(el('div', 'unf-note', 'Your own words, oldest first. Nothing here was scored.'));
+    } else {
+      const b = el('button', 'cta');
+      b.style.marginTop = '15px';
+      b.textContent = 'Copy this to share';
+      b.onclick = () => { copy(Math.floor(USER.minutes / 60) + ' hours with the ʿulamāʾ since ' + USER.since + ' — Hud-hud'); closeSheet(); };
+      w.appendChild(b);
+      w.appendChild(el('div', 'unf-note', 'One number, and nothing anyone can rank you against.'));
+    }
+    return w;
+  });
 }
 
 /* ------------------------------------------------------------------ 00 Home */
@@ -971,7 +1181,7 @@ function homeScreen() {
   const feed = el('div', 'list scroll-pad');
   const hero = el('button', '');
   hero.style.cssText = 'width:100%;border-radius:20px;overflow:hidden;position:relative;height:188px;background:var(--dusk);text-align:left;display:block';
-  const hc = Pick.any();
+  const hc = REEL.find(c => c.source === 'file') || Pick.any();
   const hi = el('img'); hi.src = thumb(hc.videoId);
   hi.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55';
   imgFallback(hi, 'var(--dusk)');
@@ -1103,7 +1313,7 @@ function growGeneral() {
   const share = el('button', 'cta');
   share.style.cssText = 'margin:18px 14px 0;width:calc(100% - 28px)';
   share.textContent = 'Share my year';
-  share.onclick = () => toast('One number, ready to screenshot');
+  share.onclick = () => openYearCard('share');
   s.appendChild(share);
   s.appendChild(el('div', 'scroll-pad'));
   return s;
@@ -1160,7 +1370,16 @@ function growJibril() {
   const cta = el('button', 'cta');
   cta.style.cssText = 'margin:18px 14px 0;width:calc(100% - 28px)';
   cta.textContent = 'Open the next piece ›';
-  cta.onclick = () => openHors(Pick.any());
+  cta.onclick = () => {
+    // the first section this learner has not opened that the library can actually teach
+    let want = null;
+    J.branches.forEach(b => b.sections.forEach(sec => {
+      if (!want && !sec.userOpened && sec.chefs > 0) want = sec;
+    }));
+    const pool = want ? REEL.filter(c => c.clause === want.n) : [];
+    toast(want ? 'Next: clause ' + want.n + ' · ' + want.label.toLowerCase() : 'Next piece');
+    openHors(pool.length ? rnd(pool) : Pick.any());
+  };
   s.appendChild(cta);
   s.appendChild(el('div', 'scroll-pad'));
   return s;
@@ -1224,7 +1443,7 @@ function growGhuniyya() {
   const cta = el('button', 'cta purple');
   cta.style.cssText = 'margin:16px 14px 0;width:calc(100% - 28px)';
   cta.textContent = 'Zoom into a chapter';
-  cta.onclick = () => toast('Chapter view comes with the tagging pass');
+  cta.onclick = () => openChapter(G);
   s.appendChild(cta);
   s.appendChild(el('div', 'scroll-pad'));
   return s;
@@ -1270,7 +1489,16 @@ function growHarvest() {
         d.appendChild(el('div', 'unf-note', 'You did not go looking for this one. It arrived inside something you were already watching.'));
       }
       const a = el('button', 'hc-act no-unfurl ' + (h.kind === 'quran' ? 'q' : 'h'), esc(h.cta));
-      a.onclick = ev => { ev.stopPropagation(); if (h.videoId && VIDEO[h.videoId]) openMains(); else toast('Opens the source lecture'); };
+      a.onclick = ev => {
+        ev.stopPropagation();
+        openMains();
+        const at = h.ts ? (String(h.ts).split(':').reduce((a, b) => a * 60 + (+b), 0)) : 0;
+        setTimeout(() => {
+          const top = stack[stack.length - 1];
+          if (top && top.node.__seek && at) top.node.__seek(Math.max(0, at - 5));
+          toast(h.metIn ? 'Jumping to ' + h.ts + ' in ' + h.metIn.replace(/^.*?[-—]\s*/, '') : 'Opening the lecture');
+        }, 420);
+      };
       d.appendChild(a);
       return d;
     });
@@ -1296,14 +1524,33 @@ function growWorkbook() {
   s.appendChild(head);
 
   const chips = el('div', 'chips'); chips.style.padding = '0 14px 12px';
+  const body = el('div', '');
+  const render = mode => {
+    body.innerHTML = '';
+    const groups = {};
+    entries.forEach(e => {
+      const k = mode === 'By course' ? e.where : mode === 'By sheikh' ? e.speaker : '';
+      (groups[k] = groups[k] || []).push(e);
+    });
+    Object.keys(groups).forEach(k => {
+      if (k) body.appendChild(el('div', 'section-title', k));
+      groups[k].forEach(e => body.appendChild(workbookCard(e)));
+    });
+  };
   ['All', 'By course', 'By sheikh'].forEach((t, i) => {
     const ch = el('button', 'chip' + (i === 0 ? ' on rose' : ''), t);
-    ch.onclick = () => { [...chips.children].forEach(x => x.className = 'chip'); ch.className = 'chip on rose'; toast('Grouped ' + t.toLowerCase()); };
+    ch.onclick = () => {
+      [...chips.children].forEach(x => x.className = 'chip');
+      ch.className = 'chip on rose';
+      render(t);
+    };
     chips.appendChild(ch);
   });
   s.appendChild(chips);
+  s.appendChild(body);
+  render('All');
 
-  entries.forEach(e => {
+  function workbookCard(e) {
     const c = el('div', 'wb');
     const head = el('div', 'unf-head');
     head.appendChild(el('div', 'hd', '<div class="date">' + e.date + ' · ' + e.kind + '</div>' +
@@ -1326,15 +1573,19 @@ function growWorkbook() {
       d.appendChild(el('div', 'unf-note', e.private
         ? 'Private is the default. You can change it on any entry, at any time, after the fact.'
         : 'Shared entries can be made private again whenever you want.'));
+      const back = el('button', 'hc-act no-unfurl h');
+      back.textContent = 'Back to the lecture ›';
+      back.onclick = ev => { ev.stopPropagation(); openMains(); };
+      d.appendChild(back);
       return d;
     });
-    s.appendChild(c);
-  });
+    return c;
+  }
 
   const cta = el('button', 'cta rose');
   cta.style.cssText = 'margin:16px 14px 0;width:calc(100% - 28px)';
   cta.textContent = 'Read my year back';
-  cta.onclick = () => toast('A year of your own words, in one sitting');
+  cta.onclick = () => openYearCard('read');
   s.appendChild(cta);
   s.appendChild(el('div', 'scroll-pad'));
   return s;
@@ -1380,6 +1631,50 @@ function buildWorkbook() {
     });
   }
   return out;
+}
+
+/* ------------------------------------------------------------------ a Ghuniyya chapter */
+function openChapter(G) {
+  push(() => {
+    const s = el('div', 'dark');
+    s.style.background = 'var(--night)';
+    const nb = navbar('Your plot', pop);
+    nb.style.background = 'linear-gradient(180deg,#111018 72%,rgba(17,16,24,0))';
+    $('.back', nb).style.color = '#fff';
+    s.appendChild(nb);
+
+    const p = el('div', 'plot');
+    p.appendChild(el('div', 'eyebrow', 'Chapter'));
+    p.appendChild(el('div', '', '<div style="font-size:24px;font-weight:700;letter-spacing:-.025em;margin-top:6px">' +
+      esc(G.chapter.title) + '</div>'));
+    p.appendChild(el('div', 'c', '3 of about 40 cells in bloom here'));
+    const grid = el('div', 'grid-cells');
+    grid.style.gridTemplateColumns = 'repeat(8,1fr)';
+    for (let i = 0; i < 40; i++) grid.appendChild(el('div', 'cell' + (i < 3 ? ' on' : '')));
+    p.appendChild(grid);
+    p.appendChild(el('div', 'c', G.note));
+    s.appendChild(p);
+
+    const t = el('div', 'section-title', 'The three you have lit');
+    t.style.color = 'rgba(255,255,255,.45)';
+    s.appendChild(t);
+    const wrap = el('div', ''); wrap.style.padding = '0 14px';
+    [['Water that has changed', 'Part 4 · Sabr in practice'],
+     ['What breaks wudūʾ', 'Part 4 · Sabr in practice'],
+     ['Washing over a dressing', 'Part 6 · Ease as the governing spirit']].forEach(([n, where]) => {
+      const r = el('button', 'rowcard');
+      r.style.cssText = 'background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)';
+      const f = el('div', 'fruit on', blossomSVG(true));
+      f.style.cssText += ';flex:0 0 auto';
+      r.appendChild(f);
+      r.appendChild(el('div', 'meta', '<b style="color:#fff">' + esc(n) + '</b><i style="color:rgba(255,255,255,.55)">lit from ' + esc(where) + '</i>'));
+      r.onclick = () => { pop(); setTimeout(() => openMains(), 320); };
+      wrap.appendChild(r);
+    });
+    s.appendChild(wrap);
+    s.appendChild(el('div', 'scroll-pad'));
+    return s;
+  }, { chrome: 'light', dark: true });
 }
 
 /* ------------------------------------------------------------------ Lanes + Me */
@@ -1435,15 +1730,32 @@ function meScreen() {
   s.appendChild(fl);
 
   s.appendChild(el('div', 'section-title', 'Settings'));
-  [['Answers are private by default', 'rgba(217,164,65,.16)', '#D9A441'],
-   ['Rest days: 2 left this month', 'rgba(31,138,132,.14)', '#1F8A84'],
-   ['My sheikh’s team can read shared answers', 'rgba(216,84,106,.14)', '#D8546A']]
-  .forEach(([t, bg, col]) => {
+  const SETTINGS = [
+    ['Answers are private by default', 'rgba(217,164,65,.16)', '#D9A441', true,
+     'New answers bank to your workbook and stay yours until you share them.'],
+    ['Rest days forgive a missed day', 'rgba(31,138,132,.14)', '#1F8A84', true,
+     '2 left this month. A missed day spends one instead of breaking the streak.'],
+    ['My sheikh’s team can read shared answers', 'rgba(216,84,106,.14)', '#D8546A', true,
+     'Only the entries you chose to share. Never the private ones.'],
+  ];
+  SETTINGS.forEach(([t, bg, col, on, why]) => {
     const r = el('div', 'settingrow');
     const i = el('div', 'ico'); i.style.background = bg;
     i.innerHTML = '<svg viewBox="0 0 24 24" style="stroke:' + col + '"><path d="M5 12l5 5L20 7"/></svg>';
-    r.appendChild(i); r.appendChild(el('span', '', esc(t)));
-    r.appendChild(el('span', 'ch', '›'));
+    r.appendChild(i);
+    r.appendChild(el('span', '', esc(t)));
+    const sw = el('button', 'switch no-unfurl' + (on ? ' on' : ' off'));
+    sw.appendChild(el('i'));
+    sw.style.marginLeft = 'auto';
+    sw.onclick = ev => {
+      ev.stopPropagation();
+      const now = sw.classList.toggle('on');
+      sw.classList.toggle('off', !now);
+      toast(now ? 'On · ' + why : 'Off');
+    };
+    r.appendChild(sw);
+    r.onclick = () => sw.click();          // the whole row is the control
+    r.style.cursor = 'pointer';
     s.appendChild(r);
   });
   s.appendChild(el('div', 'scroll-pad'));

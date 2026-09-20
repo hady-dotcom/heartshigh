@@ -150,3 +150,45 @@ The URLs and player parameters are correct and were verified structurally, but f
 playback of both sources needs one real-device check. Everything degrades gracefully:
 video falls back to a branded card with the clip text still readable, images to painted
 gradients, avatars to initials.
+
+---
+
+## Real media from Drive
+
+`Hudhud-UX-Demo/media` in Drive holds two short H.264/AAC MP4s, now shipped in
+`app/media/` and published with the demo:
+
+- `mikaeel-bait-fade.mp4` — the hero Hook/Turn/Land bait (Mikaeel Smith). First clip
+  on Home, so the demo opens on real video.
+- `lecture-sitting.mp4` — the lecture plate, used by the Mains course player.
+
+These are served **same-origin**, so unlike the CMS CDN they play everywhere the demo is
+hosted, including inside the claude.ai artifact. That makes three playback sources:
+local file → YouTube → CMS HLS, each with the branded fallback behind it.
+
+The folder's own README describes the intended recording path — Door (hoopoe) → Bait
+(Five Ways slides) → Hook/Turn/Land (Mikaeel) → lecture → curriculum (Jibrīl × Ghūniyya,
+Iḥsān seat, points pop) → mosque chapter — and notes that the semi-truck kinetics are
+being redone and that "cinema slide + Mikaeel fadeBreath is the hero bait". Not yet
+adopted here; see Still open.
+
+## Every control goes somewhere
+
+Audited with a script that walks all nine screens and fails on any control without a
+handler. Toast-only dead ends were replaced with real destinations:
+
+| Control | Now does |
+|---|---|
+| Course part rows | loads that part's own stream; timeline says when points are not mapped |
+| Open garden | the Course Garden — every point as fruit, tap to jump back to that moment |
+| Share my year | the year card, with a copyable line |
+| Read my year back | your own entries, oldest first |
+| Open the next piece | a clip from the first Jibrīl section you have not opened |
+| Zoom into a chapter | the chapter's cells, and the three you have lit |
+| Read the tafsīr / full ḥadīth | opens the lecture and seeks to where you met it |
+| Workbook All / By course / By sheikh | actually regroups the list |
+| Ask a question | a compose sheet |
+| Watch the intro (02b) | plays that teacher's opener |
+| Share (on a clip) | share sheet, native share where available |
+| Record | a real recording state with a timer |
+| Me settings | working toggles |
