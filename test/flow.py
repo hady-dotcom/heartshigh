@@ -51,7 +51,9 @@ with sync_playwright() as pw:
           pg.evaluate("getComputedStyle(document.querySelector('.tabbar')).display")=="none")
     pg.screenshot(path=SC+"/shots/90-welcome.png")
     pg.eval_on_selector(".wl-go","b=>b.click()"); pg.wait_for_timeout(900)
-    check("name carried through", "Leon" in (pg.evaluate("document.body.textContent") or ""))
+    check("lands straight on an hors d'oeuvre, not Home",
+          pg.eval_on_selector_all(".cardclip.slide","e=>e.length")==1 and
+          pg.eval_on_selector_all(".grow-banner","e=>e.length")==0)
     check("tab bar appears after onboarding",
           pg.evaluate("getComputedStyle(document.querySelector('.tabbar')).display")!="none")
     check("chosen lanes lead the feed",
@@ -59,7 +61,6 @@ with sync_playwright() as pw:
           pg.evaluate("window.HUDHUD.reel[0].lane"))
 
     print("\n== HORS D'OEUVRE slides")
-    pg.eval_on_selector_all(".list.scroll-pad button","e=>e[0].click()"); pg.wait_for_timeout(1200)
     check("a slide is showing, not a video",
           pg.eval_on_selector_all(".cardclip.slide","e=>e.length")==1 and
           pg.eval_on_selector_all(".cardclip video","e=>e.length")==0)
@@ -89,8 +90,7 @@ with sync_playwright() as pw:
         check("it banks to the workbook", n>0, "%d entries"%n)
         pg.screenshot(path=SC+"/shots/94-workbook.png")
         pg.eval_on_selector(".navbar .back","b=>b.click()"); pg.wait_for_timeout(400)
-        pg.eval_on_selector('[data-tab=home]',"b=>b.click()"); pg.wait_for_timeout(400)
-        pg.eval_on_selector_all(".list.scroll-pad button","e=>e[0].click()"); pg.wait_for_timeout(1200)
+        pg.evaluate("()=>{document.querySelector('[data-tab=home]').click()}"); pg.wait_for_timeout(500)
 
     print("\n== practical tasks")
     cap = pg.evaluate("window.HUDHUD.reel.filter(c=>c.capture).length")
@@ -99,8 +99,7 @@ with sync_playwright() as pw:
         i = pg.evaluate("window.HUDHUD.reel.findIndex(c=>c.capture==='%s')"%kind)
         if i < 0: continue
         pg.evaluate("(i)=>{const c=window.HUDHUD.reel.splice(i,1)[0];window.HUDHUD.reel.unshift(c);}", i)
-        pg.eval_on_selector('[data-tab=home]',"b=>b.click()"); pg.wait_for_timeout(400)
-        pg.eval_on_selector_all(".list.scroll-pad button","e=>e[0].click()")
+        pg.evaluate("()=>{document.querySelector('[data-tab=home]').click()}"); pg.wait_for_timeout(500)
         w=0; ok=False
         while w<16000 and not ok:
             pg.wait_for_timeout(1000); w+=1000
@@ -112,6 +111,26 @@ with sync_playwright() as pw:
             pg.evaluate("(s)=>document.querySelector(s).click()", sel)
             pg.eval_on_selector(".sheet .cta","b=>b.click()"); pg.wait_for_timeout(800)
     check("tasks banked to the workbook", pg.evaluate("window.__WB===undefined || true"))
+
+    print("\n== the arrows are tappable, not just labels")
+    for dir_, rule in (("right","same sheikh"),("left","same topic"),("down","both new"),("up","replay")):
+        before=pg.evaluate("""(()=>{const c=document.querySelector('.cardclip').__clip;return{lane:c.lane,sp:c.speaker,id:c.id}})()""")
+        btn=pg.eval_on_selector_all(".sl-arrow.%s"%dir_,"e=>e.length")
+        pg.evaluate("(d)=>document.querySelector('.sl-arrow.'+d).click()", dir_)
+        pg.wait_for_timeout(900)
+        after=pg.evaluate("""(()=>{const c=document.querySelector('.cardclip').__clip;return{lane:c.lane,sp:c.speaker,id:c.id}})()""")
+        if dir_=="up":
+            ok = after["id"]==before["id"]
+        elif dir_=="right":
+            ok = after["sp"]==before["sp"] and after["lane"]!=before["lane"]
+        elif dir_=="left":
+            ok = after["lane"]==before["lane"] and after["sp"]!=before["sp"]
+        else:
+            ok = after["lane"]!=before["lane"] and after["sp"]!=before["sp"]
+        check("tapping the %s arrow works (%s)"%(dir_,rule), btn==1 and ok, str(after))
+    sizes=pg.evaluate("""(()=>[...document.querySelectorAll('.sl-arrow')].map(a=>{const r=a.getBoundingClientRect();
+        return Math.round(Math.min(r.width,r.height))}))()""")
+    check("arrow hit areas are big enough", all(v>=44 for v in sizes), str(sizes))
 
     print("\n== swipe grammar")
     g=pg.evaluate("""(()=>{const c=document.querySelector('.cardclip').__clip;return{lane:c.lane,sp:c.speaker}})()""")
@@ -128,6 +147,14 @@ with sync_playwright() as pw:
     print("\n== on to the taste-of video, then the lecture")
     pg.eval_on_selector(".sl-cta","b=>b.click()"); pg.wait_for_timeout(2500)
     check("appetiser is footage", pg.eval_on_selector_all(".cardclip video, .cc-yt","e=>e.length")>=1)
+    ap = pg.evaluate("(()=>{const c=document.querySelector('.cardclip').__clip;return c.appetiser||null})()")
+    check("it is a real extracted CMS clip", bool(ap and ap.get("id","").count("-clip")),
+          (ap or {}).get("id","none"))
+    if ap: print("      clip:", ap["id"], "|", ap["title"][:52])
+    pg.wait_for_timeout(6000)
+    v = pg.evaluate("""(()=>{const v=document.querySelector('.cardclip video'); if(!v) return null;
+        return {file:(v.currentSrc||'').split('/').slice(-2).join('/'), paused:v.paused, w:v.videoWidth}})()""")
+    check("the appetiser is playing something", bool(v and not v["paused"] and v["w"]>0), str(v))
     pg.screenshot(path=SC+"/shots/92-appetiser.png")
     b.close()
 print("\n%d FAILURES"%len(fails))

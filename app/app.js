@@ -432,11 +432,17 @@ function buildSlideCard(clip) {
 
   /* Four directions, always on screen. Grammar fixed by the brief:
      up replay · right same sheikh new topic · left same topic new sheikh · down both new. */
+  /* Tappable as well as swipeable — a label you cannot press reads as broken. */
   const arrows = el('div', 'sl-arrows');
   [['up', '↑', 'replay'], ['right', '→', 'same sheikh'],
    ['down', '↓', 'something else'], ['left', '←', 'same topic']]
     .forEach(([dir, glyph, label]) => {
-      const a = el('div', 'sl-arrow ' + dir, '<b>' + glyph + '</b><span>' + esc(label) + '</span>');
+      const a = el('button', 'sl-arrow ' + dir, '<b>' + glyph + '</b><span>' + esc(label) + '</span>');
+      a.setAttribute('aria-label', label);
+      a.onclick = e => {
+        e.stopPropagation();
+        card.dispatchEvent(new CustomEvent('hudhud:nav', { detail: dir, bubbles: true }));
+      };
       arrows.appendChild(a);
     });
   card.appendChild(arrows);
@@ -549,13 +555,16 @@ function buildClipCard(clip, kind) {
   const isFile = clip.source === 'file';
   const len = isApp ? APP_LEN : (clip.len || HORS_LEN);
   const video = VIDEO[clip.videoId];
+  /* The appetiser is the CMS's own extracted portrait clip — a real 30-second cut,
+     not the lecture windowed down. */
+  const ap = isApp ? clip.appetiser : null;
   const card = el('div', 'cardclip' + (clip.burnedIn ? ' graded' : ''));
 
   const media = el('div', 'cc-media');
   const blur = el('div', 'cc-blur');
   if (!isFile) blur.style.backgroundImage = 'url(' + (isYT
     ? 'https://i.ytimg.com/vi/' + clip.youtube + '/hqdefault.jpg'
-    : thumb(clip.videoId)) + ')';
+    : (ap ? ap.thumb : thumb(clip.videoId))) + ')';
   media.appendChild(blur);
   card.appendChild(media);
 
@@ -564,7 +573,7 @@ function buildClipCard(clip, kind) {
   const progBar = $('i', prog);
 
   const top = el('div', 'cc-top');
-  top.appendChild(el('span', 'pill lane', 'Lane · ' + esc(clip.lane)));
+  top.appendChild(el('span', 'pill lane', isApp && ap ? 'Clip · ' + esc(sname(ap.speaker)) : 'Lane · ' + esc(clip.lane)));
   const durPill = el('span', 'pill dur', isApp ? 'Extended cut' : mmss(len));
   top.appendChild(durPill);
   if (clip.form && !isApp) top.appendChild(el('span', 'pill form', esc(clip.form)));
@@ -591,7 +600,8 @@ function buildClipCard(clip, kind) {
 
   if (!clip.burnedIn || isApp) {
     const q = el('p', 'cc-quote');
-    q.innerHTML = esc(clip.land) + (isApp && clip.turn ? '<span class="turn">' + esc(clip.turn) + '</span>' : '');
+    q.innerHTML = esc(isApp && ap ? ap.title : clip.land) +
+      (isApp && clip.land ? '<span class="turn">' + esc(clip.land) + '</span>' : '');
     body.appendChild(q);
   }
 
@@ -630,10 +640,14 @@ function buildClipCard(clip, kind) {
       });
       return;
     }
-    card.__player = VideoEngine.make(media, {
-      hls: isFile ? pickSrc(clip.src, clip.srcAlt) : (video && video.hls) }, {
-      start: clip.start,
-      whole: !!clip.wholeFile,
+    const srcUrl = isFile ? pickSrc(clip.src, clip.srcAlt)
+                 : ap ? ap.hls
+                 : (video && video.hls);
+    card.__player = VideoEngine.make(media, { hls: srcUrl }, {
+      start: ap ? 0 : clip.start,
+      whole: !!clip.wholeFile || !!ap,
+      // never a blank frame: the shipped footage stands in when the CDN is unreachable
+      fallbackSrc: isApp ? pickSrc(D.localMedia.hero, D.localMedia.heroAlt) : null,
       onTime: t => {
         const v = card.__player && card.__player.v;
         const span = clip.wholeFile ? ((v && v.duration) || len) : len;
@@ -757,6 +771,10 @@ function buildDeck(startClip, kind) {
     }, 390);
   }
 
+  wrap.addEventListener('hudhud:nav', e => {
+    const dir = e.detail;
+    if (dir === 'up') { current.__replay(); pulse('Replaying'); } else go(dir);
+  });
   wrap.addEventListener('pointerdown', onDown);
   wrap.addEventListener('pointermove', onMove);
   wrap.addEventListener('pointerup', onUp);
@@ -1540,7 +1558,8 @@ function welcomeScreen() {
   if (saved && saved.name) {
     Object.assign(USER, saved);
     applyTaste();
-    resetTo(homeScreen, { chrome: 'dark', tab: 'home' });
+    setChromeVisible(true);
+    openHors(REEL[0]);
   } else {
     setChromeVisible(false);
     resetTo(welcomeScreen, { chrome: 'light', dark: true, tab: 'home' });
@@ -2137,7 +2156,8 @@ document.querySelectorAll('.tab').forEach(t => {
   if (saved && saved.name) {
     Object.assign(USER, saved);
     applyTaste();
-    resetTo(homeScreen, { chrome: 'dark', tab: 'home' });
+    setChromeVisible(true);
+    openHors(REEL[0]);
   } else {
     setChromeVisible(false);
     resetTo(welcomeScreen, { chrome: 'light', dark: true, tab: 'home' });
@@ -2163,7 +2183,8 @@ $('#snCounts').innerHTML =
   if (saved && saved.name) {
     Object.assign(USER, saved);
     applyTaste();
-    resetTo(homeScreen, { chrome: 'dark', tab: 'home' });
+    setChromeVisible(true);
+    openHors(REEL[0]);
   } else {
     setChromeVisible(false);
     resetTo(welcomeScreen, { chrome: 'light', dark: true, tab: 'home' });

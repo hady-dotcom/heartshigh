@@ -353,7 +353,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "When did you last see this — in yourself, not in someone else?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "9-clip1",
+    "title": "You Were Sent to Bring Ease, Not Hardship",
+    "hls": "https://cdn.hearts.foundation/hls/9/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 9
+   }
   },
   {
    "id": "c9-1311",
@@ -381,7 +389,15 @@ window.HUDHUD = {
    "prompt": "Pray two rakʿah you were not obliged to pray. Do not tell anyone.",
    "capture": "tick",
    "actionId": "a05",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "9-clip3",
+    "title": "The Prophet ﷺ Shortened Prayer for a Crying Baby",
+    "hls": "https://cdn.hearts.foundation/hls/9/clip3_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 9
+   }
   },
   {
    "id": "c9-2409",
@@ -407,7 +423,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Name one thing that would change this week if you took this seriously.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "9-clip5",
+    "title": "Don't Die Without the Best Opinion of Allah",
+    "hls": "https://cdn.hearts.foundation/hls/9/clip5_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 9
+   }
   },
   {
    "id": "c9-3591",
@@ -433,7 +457,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "What excuse did your mind reach for just now, before you finished reading?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "9-clip7",
+    "title": "Don't Be a Semi-Truck to New Muslims",
+    "hls": "https://cdn.hearts.foundation/hls/9/clip7_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 9
+   }
   },
   {
    "id": "c9-3918",
@@ -461,7 +493,15 @@ window.HUDHUD = {
    "prompt": "Let one thing go today without correcting it.",
    "capture": "tick",
    "actionId": "a13",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "9-clip1",
+    "title": "You Were Sent to Bring Ease, Not Hardship",
+    "hls": "https://cdn.hearts.foundation/hls/9/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 9
+   }
   },
   {
    "id": "c9-5708",
@@ -487,7 +527,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Write the name of the person you should send this to — and why you have not.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "9-clip3",
+    "title": "The Prophet ﷺ Shortened Prayer for a Crying Baby",
+    "hls": "https://cdn.hearts.foundation/hls/9/clip3_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 9
+   }
   },
   {
    "id": "c9-6443",
@@ -513,7 +561,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "When did you last see this — in yourself, not in someone else?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "9-clip5",
+    "title": "Don't Die Without the Best Opinion of Allah",
+    "hls": "https://cdn.hearts.foundation/hls/9/clip5_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 9
+   }
   },
   {
    "id": "c9-6827",
@@ -541,7 +597,15 @@ window.HUDHUD = {
    "prompt": "Give something small where nobody will know it was you.",
    "capture": "tick",
    "actionId": "a15",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "9-clip7",
+    "title": "Don't Be a Semi-Truck to New Muslims",
+    "hls": "https://cdn.hearts.foundation/hls/9/clip7_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 9
+   }
   },
   {
    "id": "c15-2851",
@@ -567,7 +631,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Reflection",
    "prompt": "The Prophet ﷺ was described as someone who \"disarmed people with kindness.\" Think of a recent interaction where you could have responded with more gentleness. What held you back, and how might it have changed the outcome?",
-   "promptSource": "Hearts CMS · reflection question #1260"
+   "promptSource": "Hearts CMS · reflection question #1260",
+   "appetiser": {
+    "id": "15-clip2",
+    "title": "Best Character Starts at Home",
+    "hls": "https://cdn.hearts.foundation/hls/15/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/15/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 15
+   }
   },
   {
    "id": "c64-1724",
@@ -593,7 +665,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Reflection",
    "prompt": "What excuse did your mind reach for just now, before you finished reading?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "64-clip2",
+    "title": "The Average Muslim's Dhikr Is Themselves",
+    "hls": "https://cdn.hearts.foundation/hls/64/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/64/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 64
+   }
   },
   {
    "id": "c64-2007",
@@ -621,7 +701,15 @@ window.HUDHUD = {
    "prompt": "Before you sleep, write three things from today. Nothing large.",
    "capture": "note",
    "actionId": "a16",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "64-clip1",
+    "title": "Your Purpose Was Never to Become a Lawyer",
+    "hls": "https://cdn.hearts.foundation/hls/64/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/64/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 64
+   }
   },
   {
    "id": "c64-2168",
@@ -647,7 +735,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Write the name of the person you should send this to — and why you have not.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "64-clip2",
+    "title": "The Average Muslim's Dhikr Is Themselves",
+    "hls": "https://cdn.hearts.foundation/hls/64/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/64/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 64
+   }
   },
   {
    "id": "c64-2633",
@@ -673,7 +769,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "When did you last see this — in yourself, not in someone else?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "64-clip1",
+    "title": "Your Purpose Was Never to Become a Lawyer",
+    "hls": "https://cdn.hearts.foundation/hls/64/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/64/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 64
+   }
   },
   {
    "id": "c269-37",
@@ -701,7 +805,15 @@ window.HUDHUD = {
    "prompt": "Give something away today and photograph the empty space it left.",
    "capture": "photo",
    "actionId": "a14",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "266-clip1",
+    "title": "Stop Wasting Time Fighting Yourself",
+    "hls": "https://cdn.hearts.foundation/hls/266/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/266/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 266
+   }
   },
   {
    "id": "c269-195",
@@ -727,7 +839,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Name one thing that would change this week if you took this seriously.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "266-clip2",
+    "title": "Your Time Is Your Life",
+    "hls": "https://cdn.hearts.foundation/hls/266/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/266/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 266
+   }
   },
   {
    "id": "c275-54",
@@ -753,7 +873,15 @@ window.HUDHUD = {
    "treatment": "unfold",
    "kind": "Reflection",
    "prompt": "What excuse did your mind reach for just now, before you finished reading?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "272-clip1",
+    "title": "The Prophet Was Raised By 4 Mothers",
+    "hls": "https://cdn.hearts.foundation/hls/272/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/272/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 272
+   }
   },
   {
    "id": "c275-331",
@@ -781,7 +909,15 @@ window.HUDHUD = {
    "prompt": "Sit next to someone you do not know at the masjid. Ask their name.",
    "capture": "tick",
    "actionId": "a18",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "272-clip2",
+    "title": "You Are the Answer to Someone's Prayer",
+    "hls": "https://cdn.hearts.foundation/hls/272/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/272/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 272
+   }
   },
   {
    "id": "c279-15",
@@ -807,7 +943,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Write the name of the person you should send this to — and why you have not.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "263-clip1",
+    "title": "His Mother Felt No Pain",
+    "hls": "https://cdn.hearts.foundation/hls/263/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/263/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 263
+   }
   },
   {
    "id": "c279-54",
@@ -833,7 +977,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "When did you last see this — in yourself, not in someone else?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "263-clip2",
+    "title": "All of Us Are Children of a Black Woman",
+    "hls": "https://cdn.hearts.foundation/hls/263/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/263/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 263
+   }
   },
   {
    "id": "c280-22",
@@ -861,7 +1013,15 @@ window.HUDHUD = {
    "prompt": "Write the name of someone who has died and one thing you would thank them for.",
    "capture": "note",
    "actionId": "a30",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "113-clip2",
+    "title": "The Prophet ﷺ Went Home and Said 'I'm Scared'",
+    "hls": "https://cdn.hearts.foundation/hls/113/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/113/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 113
+   }
   },
   {
    "id": "c280-65",
@@ -887,7 +1047,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Name one thing that would change this week if you took this seriously.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "478-clip1",
+    "title": "You Can't Worship Until You Stop Caring What People Think",
+    "hls": "https://cdn.hearts.foundation/hls/478/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/478/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 478
+   }
   },
   {
    "id": "c280-204",
@@ -913,7 +1081,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "What excuse did your mind reach for just now, before you finished reading?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "478-clip2",
+    "title": "Abu Talib Knew the Truth But Couldn't Get Over This Hurdle",
+    "hls": "https://cdn.hearts.foundation/hls/478/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/478/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 478
+   }
   },
   {
    "id": "c280-332",
@@ -941,7 +1117,15 @@ window.HUDHUD = {
    "prompt": "Write the name of someone who has died and one thing you would thank them for.",
    "capture": "note",
    "actionId": "a30",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "486-clip1",
+    "title": "Trusting God Doesn't Mean Giving Up the Means",
+    "hls": "https://cdn.hearts.foundation/hls/486/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/486/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 486
+   }
   },
   {
    "id": "c478-1326",
@@ -967,7 +1151,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Task",
    "prompt": "Write the name of the person you should send this to — and why you have not.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "478-clip2",
+    "title": "Abu Talib Knew the Truth But Couldn't Get Over This Hurdle",
+    "hls": "https://cdn.hearts.foundation/hls/478/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/478/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 478
+   }
   },
   {
    "id": "c9-130",
@@ -993,7 +1185,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "When did you last see this — in yourself, not in someone else?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "9-clip1",
+    "title": "You Were Sent to Bring Ease, Not Hardship",
+    "hls": "https://cdn.hearts.foundation/hls/9/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 9
+   }
   },
   {
    "id": "c9-1248",
@@ -1021,7 +1221,15 @@ window.HUDHUD = {
    "prompt": "Before you sleep, write three things from today. Nothing large.",
    "capture": "note",
    "actionId": "a16",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "9-clip3",
+    "title": "The Prophet ﷺ Shortened Prayer for a Crying Baby",
+    "hls": "https://cdn.hearts.foundation/hls/9/clip3_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 9
+   }
   },
   {
    "id": "c9-1618",
@@ -1047,7 +1255,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Name one thing that would change this week if you took this seriously.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "9-clip5",
+    "title": "Don't Die Without the Best Opinion of Allah",
+    "hls": "https://cdn.hearts.foundation/hls/9/clip5_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 9
+   }
   },
   {
    "id": "c9-2797",
@@ -1073,7 +1289,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "What excuse did your mind reach for just now, before you finished reading?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "9-clip7",
+    "title": "Don't Be a Semi-Truck to New Muslims",
+    "hls": "https://cdn.hearts.foundation/hls/9/clip7_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 9
+   }
   },
   {
    "id": "c9-4499",
@@ -1101,7 +1325,15 @@ window.HUDHUD = {
    "prompt": "Greet three people first today, before they greet you.",
    "capture": "tick",
    "actionId": "a20",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "9-clip1",
+    "title": "You Were Sent to Bring Ease, Not Hardship",
+    "hls": "https://cdn.hearts.foundation/hls/9/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 9
+   }
   },
   {
    "id": "c9-6041",
@@ -1127,7 +1359,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Write the name of the person you should send this to — and why you have not.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "9-clip3",
+    "title": "The Prophet ﷺ Shortened Prayer for a Crying Baby",
+    "hls": "https://cdn.hearts.foundation/hls/9/clip3_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 9
+   }
   },
   {
    "id": "c11-1139",
@@ -1153,7 +1393,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "When did you last see this — in yourself, not in someone else?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "11-clip3",
+    "title": "When Abu Bakr's Tongue Made the Angels Leave",
+    "hls": "https://cdn.hearts.foundation/hls/11/clip3_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/11/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 11
+   }
   },
   {
    "id": "c11-1372",
@@ -1181,7 +1429,15 @@ window.HUDHUD = {
    "prompt": "Write one thing the Prophet ﷺ did that you have never tried. Try it this week.",
    "capture": "note",
    "actionId": "a27",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "11-clip6",
+    "title": "The Greatest Thing Allah Can Give You",
+    "hls": "https://cdn.hearts.foundation/hls/11/clip6_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/11/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 11
+   }
   },
   {
    "id": "c11-4043",
@@ -1207,7 +1463,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "The Prophet ﷺ was described as someone who \"disarmed people with kindness.\" Think of a recent interaction where you could have responded with more gentleness. What held you back, and how might it have changed the outcome?",
-   "promptSource": "Hearts CMS · reflection question #1260"
+   "promptSource": "Hearts CMS · reflection question #1260",
+   "appetiser": {
+    "id": "11-clip3",
+    "title": "When Abu Bakr's Tongue Made the Angels Leave",
+    "hls": "https://cdn.hearts.foundation/hls/11/clip3_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/11/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 11
+   }
   },
   {
    "id": "c64-2959",
@@ -1233,7 +1497,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "What excuse did your mind reach for just now, before you finished reading?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "64-clip2",
+    "title": "The Average Muslim's Dhikr Is Themselves",
+    "hls": "https://cdn.hearts.foundation/hls/64/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/64/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 64
+   }
   },
   {
    "id": "c259-736",
@@ -1261,7 +1533,15 @@ window.HUDHUD = {
    "prompt": "Photograph the page you stopped at. Start there tomorrow.",
    "capture": "photo",
    "actionId": "a06",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "259-clip1",
+    "title": "A 6-Year-Old Saw the Kaaba and Couldn't Stop Crying",
+    "hls": "https://cdn.hearts.foundation/hls/259/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/259/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 259
+   }
   },
   {
    "id": "c259-941",
@@ -1287,7 +1567,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Task",
    "prompt": "Write the name of the person you should send this to — and why you have not.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "259-clip2",
+    "title": "My 7-Year-Old Son Saw a Father Hit His Child in a Movie",
+    "hls": "https://cdn.hearts.foundation/hls/259/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/259/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 259
+   }
   },
   {
    "id": "c259-1934",
@@ -1313,7 +1601,15 @@ window.HUDHUD = {
    "treatment": "unfold",
    "kind": "Reflection",
    "prompt": "When did you last see this — in yourself, not in someone else?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "259-clip1",
+    "title": "A 6-Year-Old Saw the Kaaba and Couldn't Stop Crying",
+    "hls": "https://cdn.hearts.foundation/hls/259/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/259/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 259
+   }
   },
   {
    "id": "c259-1972",
@@ -1341,7 +1637,15 @@ window.HUDHUD = {
    "prompt": "Copy out one āyah by hand. Write underneath what you did not understand.",
    "capture": "note",
    "actionId": "a07",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "259-clip2",
+    "title": "My 7-Year-Old Son Saw a Father Hit His Child in a Movie",
+    "hls": "https://cdn.hearts.foundation/hls/259/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/259/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 259
+   }
   },
   {
    "id": "c259-2050",
@@ -1367,7 +1671,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Name one thing that would change this week if you took this seriously.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "259-clip1",
+    "title": "A 6-Year-Old Saw the Kaaba and Couldn't Stop Crying",
+    "hls": "https://cdn.hearts.foundation/hls/259/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/259/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 259
+   }
   },
   {
    "id": "c259-2400",
@@ -1393,7 +1705,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Reflection",
    "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
-   "promptSource": "Hearts CMS · reflection question #990"
+   "promptSource": "Hearts CMS · reflection question #990",
+   "appetiser": {
+    "id": "259-clip2",
+    "title": "My 7-Year-Old Son Saw a Father Hit His Child in a Movie",
+    "hls": "https://cdn.hearts.foundation/hls/259/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/259/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 259
+   }
   },
   {
    "id": "c263-228",
@@ -1421,7 +1741,15 @@ window.HUDHUD = {
    "prompt": "Teach one thing you learned today to one person, out loud.",
    "capture": "tick",
    "actionId": "a28",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "263-clip1",
+    "title": "His Mother Felt No Pain",
+    "hls": "https://cdn.hearts.foundation/hls/263/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/263/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 263
+   }
   },
   {
    "id": "c263-721",
@@ -1447,7 +1775,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Write the name of the person you should send this to — and why you have not.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "263-clip2",
+    "title": "All of Us Are Children of a Black Woman",
+    "hls": "https://cdn.hearts.foundation/hls/263/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/263/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 263
+   }
   },
   {
    "id": "c263-1254",
@@ -1473,7 +1809,15 @@ window.HUDHUD = {
    "treatment": "unfold",
    "kind": "Reflection",
    "prompt": "When did you last see this — in yourself, not in someone else?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "263-clip1",
+    "title": "His Mother Felt No Pain",
+    "hls": "https://cdn.hearts.foundation/hls/263/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/263/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 263
+   }
   },
   {
    "id": "c263-1835",
@@ -1501,7 +1845,15 @@ window.HUDHUD = {
    "prompt": "Sit next to someone you do not know at the masjid. Ask their name.",
    "capture": "tick",
    "actionId": "a18",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "263-clip2",
+    "title": "All of Us Are Children of a Black Woman",
+    "hls": "https://cdn.hearts.foundation/hls/263/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/263/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 263
+   }
   },
   {
    "id": "c263-2426",
@@ -1527,7 +1879,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Task",
    "prompt": "Name one thing that would change this week if you took this seriously.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "263-clip1",
+    "title": "His Mother Felt No Pain",
+    "hls": "https://cdn.hearts.foundation/hls/263/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/263/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 263
+   }
   },
   {
    "id": "c266-691",
@@ -1553,7 +1913,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Reflection",
    "prompt": "What excuse did your mind reach for just now, before you finished reading?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "266-clip2",
+    "title": "Your Time Is Your Life",
+    "hls": "https://cdn.hearts.foundation/hls/266/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/266/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 266
+   }
   },
   {
    "id": "c266-2729",
@@ -1581,7 +1949,15 @@ window.HUDHUD = {
    "prompt": "Photograph the spot where you pray. Tidy it first if it needs it.",
    "capture": "photo",
    "actionId": "a01",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "266-clip1",
+    "title": "Stop Wasting Time Fighting Yourself",
+    "hls": "https://cdn.hearts.foundation/hls/266/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/266/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 266
+   }
   },
   {
    "id": "c266-2970",
@@ -1607,7 +1983,15 @@ window.HUDHUD = {
    "treatment": "unfold",
    "kind": "Task",
    "prompt": "Write the name of the person you should send this to — and why you have not.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "266-clip2",
+    "title": "Your Time Is Your Life",
+    "hls": "https://cdn.hearts.foundation/hls/266/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/266/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 266
+   }
   },
   {
    "id": "c266-3356",
@@ -1633,7 +2017,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "When did you last see this — in yourself, not in someone else?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "266-clip1",
+    "title": "Stop Wasting Time Fighting Yourself",
+    "hls": "https://cdn.hearts.foundation/hls/266/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/266/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 266
+   }
   },
   {
    "id": "c269-455",
@@ -1661,7 +2053,15 @@ window.HUDHUD = {
    "prompt": "Give something away today and photograph the empty space it left.",
    "capture": "photo",
    "actionId": "a14",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "486-clip1",
+    "title": "Trusting God Doesn't Mean Giving Up the Means",
+    "hls": "https://cdn.hearts.foundation/hls/486/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/486/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 486
+   }
   },
   {
    "id": "c272-1147",
@@ -1687,7 +2087,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Task",
    "prompt": "Name one thing that would change this week if you took this seriously.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "272-clip1",
+    "title": "The Prophet Was Raised By 4 Mothers",
+    "hls": "https://cdn.hearts.foundation/hls/272/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/272/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 272
+   }
   },
   {
    "id": "c272-1161",
@@ -1713,7 +2121,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "What excuse did your mind reach for just now, before you finished reading?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "272-clip2",
+    "title": "You Are the Answer to Someone's Prayer",
+    "hls": "https://cdn.hearts.foundation/hls/272/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/272/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 272
+   }
   },
   {
    "id": "c272-1984",
@@ -1741,7 +2157,15 @@ window.HUDHUD = {
    "prompt": "Write one thing the Prophet ﷺ did that you have never tried. Try it this week.",
    "capture": "note",
    "actionId": "a27",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "272-clip1",
+    "title": "The Prophet Was Raised By 4 Mothers",
+    "hls": "https://cdn.hearts.foundation/hls/272/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/272/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 272
+   }
   },
   {
    "id": "c272-2184",
@@ -1767,7 +2191,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Write the name of the person you should send this to — and why you have not.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "272-clip2",
+    "title": "You Are the Answer to Someone's Prayer",
+    "hls": "https://cdn.hearts.foundation/hls/272/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/272/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 272
+   }
   },
   {
    "id": "c272-5275",
@@ -1793,7 +2225,15 @@ window.HUDHUD = {
    "treatment": "unfold",
    "kind": "Reflection",
    "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
-   "promptSource": "Hearts CMS · reflection question #990"
+   "promptSource": "Hearts CMS · reflection question #990",
+   "appetiser": {
+    "id": "272-clip1",
+    "title": "The Prophet Was Raised By 4 Mothers",
+    "hls": "https://cdn.hearts.foundation/hls/272/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/272/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 272
+   }
   },
   {
    "id": "c478-640",
@@ -1821,7 +2261,15 @@ window.HUDHUD = {
    "prompt": "Read two lines aloud to someone in your house.",
    "capture": "tick",
    "actionId": "a08",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "478-clip2",
+    "title": "Abu Talib Knew the Truth But Couldn't Get Over This Hurdle",
+    "hls": "https://cdn.hearts.foundation/hls/478/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/478/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 478
+   }
   },
   {
    "id": "c478-779",
@@ -1847,7 +2295,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Name one thing that would change this week if you took this seriously.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "478-clip1",
+    "title": "You Can't Worship Until You Stop Caring What People Think",
+    "hls": "https://cdn.hearts.foundation/hls/478/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/478/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 478
+   }
   },
   {
    "id": "c478-2283",
@@ -1873,7 +2329,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Reflection",
    "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
-   "promptSource": "Hearts CMS · reflection question #990"
+   "promptSource": "Hearts CMS · reflection question #990",
+   "appetiser": {
+    "id": "478-clip2",
+    "title": "Abu Talib Knew the Truth But Couldn't Get Over This Hurdle",
+    "hls": "https://cdn.hearts.foundation/hls/478/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/478/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 478
+   }
   },
   {
    "id": "c485-396",
@@ -1901,7 +2365,15 @@ window.HUDHUD = {
    "prompt": "Read two lines aloud to someone in your house.",
    "capture": "tick",
    "actionId": "a08",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "486-clip1",
+    "title": "Trusting God Doesn't Mean Giving Up the Means",
+    "hls": "https://cdn.hearts.foundation/hls/486/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/486/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 486
+   }
   },
   {
    "id": "c485-662",
@@ -1927,7 +2399,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
-   "promptSource": "Hearts CMS · reflection question #990"
+   "promptSource": "Hearts CMS · reflection question #990",
+   "appetiser": {
+    "id": "489-clip1",
+    "title": "The True Bankrupt Person",
+    "hls": "https://cdn.hearts.foundation/hls/489/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/489/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 489
+   }
   },
   {
    "id": "c485-704",
@@ -1953,7 +2433,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Reflection",
    "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
-   "promptSource": "Hearts CMS · reflection question #990"
+   "promptSource": "Hearts CMS · reflection question #990",
+   "appetiser": {
+    "id": "489-clip2",
+    "title": "Imam Ahmad's Forgiveness While Being Whipped",
+    "hls": "https://cdn.hearts.foundation/hls/489/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/489/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 489
+   }
   },
   {
    "id": "c485-2039",
@@ -1981,7 +2469,15 @@ window.HUDHUD = {
    "prompt": "Read two lines aloud to someone in your house.",
    "capture": "tick",
    "actionId": "a08",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "112-clip2",
+    "title": "Today Is Not the Day of Bloodshed — It's the Day of Mercy",
+    "hls": "https://cdn.hearts.foundation/hls/112/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/112/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 112
+   }
   },
   {
    "id": "c485-2702",
@@ -2007,7 +2503,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Reflection",
    "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
-   "promptSource": "Hearts CMS · reflection question #990"
+   "promptSource": "Hearts CMS · reflection question #990",
+   "appetiser": {
+    "id": "103-clip1",
+    "title": "The Prophet's Du'a That Would Make You Weep",
+    "hls": "https://cdn.hearts.foundation/hls/103/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/103/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 103
+   }
   },
   {
    "id": "c485-2759",
@@ -2033,7 +2537,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
-   "promptSource": "Hearts CMS · reflection question #990"
+   "promptSource": "Hearts CMS · reflection question #990",
+   "appetiser": {
+    "id": "478-clip1",
+    "title": "You Can't Worship Until You Stop Caring What People Think",
+    "hls": "https://cdn.hearts.foundation/hls/478/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/478/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 478
+   }
   },
   {
    "id": "c486-1381",
@@ -2061,7 +2573,15 @@ window.HUDHUD = {
    "prompt": "Read two lines aloud to someone in your house.",
    "capture": "tick",
    "actionId": "a08",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "486-clip1",
+    "title": "Trusting God Doesn't Mean Giving Up the Means",
+    "hls": "https://cdn.hearts.foundation/hls/486/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/486/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 486
+   }
   },
   {
    "id": "c486-2000",
@@ -2087,7 +2607,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Task",
    "prompt": "Write the name of the person you should send this to — and why you have not.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "486-clip1",
+    "title": "Trusting God Doesn't Mean Giving Up the Means",
+    "hls": "https://cdn.hearts.foundation/hls/486/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/486/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 486
+   }
   },
   {
    "id": "c486-2138",
@@ -2113,7 +2641,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "When did you last see this — in yourself, not in someone else?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "486-clip1",
+    "title": "Trusting God Doesn't Mean Giving Up the Means",
+    "hls": "https://cdn.hearts.foundation/hls/486/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/486/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 486
+   }
   },
   {
    "id": "c486-2374",
@@ -2141,7 +2677,15 @@ window.HUDHUD = {
    "prompt": "Come back to one thing you stopped doing. Once is enough to count.",
    "capture": "tick",
    "actionId": "a22",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "486-clip1",
+    "title": "Trusting God Doesn't Mean Giving Up the Means",
+    "hls": "https://cdn.hearts.foundation/hls/486/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/486/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 486
+   }
   },
   {
    "id": "c486-2574",
@@ -2167,7 +2711,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
-   "promptSource": "Hearts CMS · reflection question #990"
+   "promptSource": "Hearts CMS · reflection question #990",
+   "appetiser": {
+    "id": "486-clip1",
+    "title": "Trusting God Doesn't Mean Giving Up the Means",
+    "hls": "https://cdn.hearts.foundation/hls/486/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/486/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 486
+   }
   },
   {
    "id": "c486-2696",
@@ -2193,7 +2745,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
-   "promptSource": "Hearts CMS · reflection question #990"
+   "promptSource": "Hearts CMS · reflection question #990",
+   "appetiser": {
+    "id": "486-clip1",
+    "title": "Trusting God Doesn't Mean Giving Up the Means",
+    "hls": "https://cdn.hearts.foundation/hls/486/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/486/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 486
+   }
   },
   {
    "id": "c486-3145",
@@ -2221,7 +2781,15 @@ window.HUDHUD = {
    "prompt": "Sit next to someone you do not know at the masjid. Ask their name.",
    "capture": "tick",
    "actionId": "a18",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "486-clip1",
+    "title": "Trusting God Doesn't Mean Giving Up the Means",
+    "hls": "https://cdn.hearts.foundation/hls/486/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/486/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 486
+   }
   },
   {
    "id": "c486-3227",
@@ -2247,7 +2815,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Task",
    "prompt": "Write the name of the person you should send this to — and why you have not.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "486-clip1",
+    "title": "Trusting God Doesn't Mean Giving Up the Means",
+    "hls": "https://cdn.hearts.foundation/hls/486/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/486/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 486
+   }
   },
   {
    "id": "c489-592",
@@ -2273,7 +2849,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "When did you last see this — in yourself, not in someone else?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "489-clip1",
+    "title": "The True Bankrupt Person",
+    "hls": "https://cdn.hearts.foundation/hls/489/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/489/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 489
+   }
   },
   {
    "id": "c489-704",
@@ -2301,7 +2885,15 @@ window.HUDHUD = {
    "prompt": "Sit next to someone you do not know at the masjid. Ask their name.",
    "capture": "tick",
    "actionId": "a18",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "489-clip2",
+    "title": "Imam Ahmad's Forgiveness While Being Whipped",
+    "hls": "https://cdn.hearts.foundation/hls/489/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/489/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 489
+   }
   },
   {
    "id": "c489-1671",
@@ -2327,7 +2919,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Task",
    "prompt": "Name one thing that would change this week if you took this seriously.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "489-clip1",
+    "title": "The True Bankrupt Person",
+    "hls": "https://cdn.hearts.foundation/hls/489/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/489/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 489
+   }
   },
   {
    "id": "c489-1692",
@@ -2353,7 +2953,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "What excuse did your mind reach for just now, before you finished reading?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "489-clip2",
+    "title": "Imam Ahmad's Forgiveness While Being Whipped",
+    "hls": "https://cdn.hearts.foundation/hls/489/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/489/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 489
+   }
   },
   {
    "id": "c489-1773",
@@ -2381,7 +2989,15 @@ window.HUDHUD = {
    "prompt": "Write the name of someone who has died and one thing you would thank them for.",
    "capture": "note",
    "actionId": "a30",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "489-clip1",
+    "title": "The True Bankrupt Person",
+    "hls": "https://cdn.hearts.foundation/hls/489/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/489/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 489
+   }
   },
   {
    "id": "c489-1881",
@@ -2407,7 +3023,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Write the name of the person you should send this to — and why you have not.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "489-clip2",
+    "title": "Imam Ahmad's Forgiveness While Being Whipped",
+    "hls": "https://cdn.hearts.foundation/hls/489/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/489/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 489
+   }
   },
   {
    "id": "c15-1335",
@@ -2433,7 +3057,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "The Prophet ﷺ was described as someone who \"disarmed people with kindness.\" Think of a recent interaction where you could have responded with more gentleness. What held you back, and how might it have changed the outcome?",
-   "promptSource": "Hearts CMS · reflection question #1260"
+   "promptSource": "Hearts CMS · reflection question #1260",
+   "appetiser": {
+    "id": "15-clip2",
+    "title": "Best Character Starts at Home",
+    "hls": "https://cdn.hearts.foundation/hls/15/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/15/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 15
+   }
   },
   {
    "id": "c275-83",
@@ -2461,7 +3093,15 @@ window.HUDHUD = {
    "prompt": "Give something away today and photograph the empty space it left.",
    "capture": "photo",
    "actionId": "a14",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "112-clip2",
+    "title": "Today Is Not the Day of Bloodshed — It's the Day of Mercy",
+    "hls": "https://cdn.hearts.foundation/hls/112/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/112/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 112
+   }
   },
   {
    "id": "c275-400",
@@ -2487,7 +3127,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "Think of a time when someone's good character or etiquette left a lasting impression on you. What specifically did they do, and how did it change the way you see the importance of manners in Islam?",
-   "promptSource": "Hearts CMS · reflection question #779"
+   "promptSource": "Hearts CMS · reflection question #779",
+   "appetiser": {
+    "id": "103-clip1",
+    "title": "The Prophet's Du'a That Would Make You Weep",
+    "hls": "https://cdn.hearts.foundation/hls/103/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/103/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 103
+   }
   },
   {
    "id": "c279-157",
@@ -2513,7 +3161,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "What excuse did your mind reach for just now, before you finished reading?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "9-clip1",
+    "title": "You Were Sent to Bring Ease, Not Hardship",
+    "hls": "https://cdn.hearts.foundation/hls/9/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 9
+   }
   },
   {
    "id": "c263-2057",
@@ -2541,7 +3197,15 @@ window.HUDHUD = {
    "prompt": "Sit next to someone you do not know at the masjid. Ask their name.",
    "capture": "tick",
    "actionId": "a18",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "263-clip1",
+    "title": "His Mother Felt No Pain",
+    "hls": "https://cdn.hearts.foundation/hls/263/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/263/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 263
+   }
   },
   {
    "id": "yD10-01-A",
@@ -2573,7 +3237,15 @@ window.HUDHUD = {
    "treatment": "unfold",
    "kind": "Task",
    "prompt": "Write the name of the person you should send this to — and why you have not.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "11-clip6",
+    "title": "The Greatest Thing Allah Can Give You",
+    "hls": "https://cdn.hearts.foundation/hls/11/clip6_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/11/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 11
+   }
   },
   {
    "id": "yD10-01-B",
@@ -2605,7 +3277,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Reflection",
    "prompt": "When you face a difficulty, is your first instinct to ask 'Why is Allah testing me?' or 'What is Allah teaching me?' — and what difference does the framing make in how you experience the trial?",
-   "promptSource": "Hearts CMS · reflection question #960"
+   "promptSource": "Hearts CMS · reflection question #960",
+   "appetiser": {
+    "id": "64-clip1",
+    "title": "Your Purpose Was Never to Become a Lawyer",
+    "hls": "https://cdn.hearts.foundation/hls/64/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/64/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 64
+   }
   },
   {
    "id": "yD10-02-A",
@@ -2639,7 +3319,15 @@ window.HUDHUD = {
    "prompt": "Come back to one thing you stopped doing. Once is enough to count.",
    "capture": "tick",
    "actionId": "a22",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "64-clip2",
+    "title": "The Average Muslim's Dhikr Is Themselves",
+    "hls": "https://cdn.hearts.foundation/hls/64/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/64/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 64
+   }
   },
   {
    "id": "yD10-02-B",
@@ -2671,7 +3359,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Name one thing that would change this week if you took this seriously.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "10-clip2",
+    "title": "Gentleness Is Your Good Fortune",
+    "hls": "https://cdn.hearts.foundation/hls/10/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/10/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 10
+   }
   },
   {
    "id": "yD10-02-DX2",
@@ -2703,7 +3399,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Reflection",
    "prompt": "What excuse did your mind reach for just now, before you finished reading?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "10-clip10",
+    "title": "Be Like the Palm Tree",
+    "hls": "https://cdn.hearts.foundation/hls/10/clip10_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/10/thumbnails/thumb_01.jpg",
+    "speaker": "yasirfahmy",
+    "videoId": 10
+   }
   },
   {
    "id": "yD10-03-A",
@@ -2737,7 +3441,15 @@ window.HUDHUD = {
    "prompt": "Before you sleep, write three things from today. Nothing large.",
    "capture": "note",
    "actionId": "a16",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "263-clip2",
+    "title": "All of Us Are Children of a Black Woman",
+    "hls": "https://cdn.hearts.foundation/hls/263/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/263/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 263
+   }
   },
   {
    "id": "yD10-03-B",
@@ -2769,7 +3481,15 @@ window.HUDHUD = {
    "treatment": "unfold",
    "kind": "Reflection",
    "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
-   "promptSource": "Hearts CMS · reflection question #990"
+   "promptSource": "Hearts CMS · reflection question #990",
+   "appetiser": {
+    "id": "113-clip2",
+    "title": "The Prophet ﷺ Went Home and Said 'I'm Scared'",
+    "hls": "https://cdn.hearts.foundation/hls/113/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/113/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 113
+   }
   },
   {
    "id": "yD10-04-B",
@@ -2801,7 +3521,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Reflection",
    "prompt": "When did you last see this — in yourself, not in someone else?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "259-clip1",
+    "title": "A 6-Year-Old Saw the Kaaba and Couldn't Stop Crying",
+    "hls": "https://cdn.hearts.foundation/hls/259/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/259/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 259
+   }
   },
   {
    "id": "yD10-05-A",
@@ -2835,7 +3563,15 @@ window.HUDHUD = {
    "prompt": "Pray one prayer today at its first time, not its last.",
    "capture": "tick",
    "actionId": "a03",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "478-clip1",
+    "title": "You Can't Worship Until You Stop Caring What People Think",
+    "hls": "https://cdn.hearts.foundation/hls/478/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/478/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 478
+   }
   },
   {
    "id": "yD10-06-A",
@@ -2867,7 +3603,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Name one thing that would change this week if you took this seriously.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "478-clip2",
+    "title": "Abu Talib Knew the Truth But Couldn't Get Over This Hurdle",
+    "hls": "https://cdn.hearts.foundation/hls/478/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/478/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 478
+   }
   },
   {
    "id": "yD10-06-B",
@@ -2899,7 +3643,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Reflection",
    "prompt": "What excuse did your mind reach for just now, before you finished reading?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "486-clip1",
+    "title": "Trusting God Doesn't Mean Giving Up the Means",
+    "hls": "https://cdn.hearts.foundation/hls/486/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/486/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 486
+   }
   },
   {
    "id": "yD10-07-A",
@@ -2933,7 +3685,15 @@ window.HUDHUD = {
    "prompt": "Copy out one āyah by hand. Write underneath what you did not understand.",
    "capture": "note",
    "actionId": "a07",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "266-clip1",
+    "title": "Stop Wasting Time Fighting Yourself",
+    "hls": "https://cdn.hearts.foundation/hls/266/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/266/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 266
+   }
   },
   {
    "id": "yD10-07-B",
@@ -2965,7 +3725,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Task",
    "prompt": "Write the name of the person you should send this to — and why you have not.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "266-clip2",
+    "title": "Your Time Is Your Life",
+    "hls": "https://cdn.hearts.foundation/hls/266/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/266/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 266
+   }
   },
   {
    "id": "yD10-08-A",
@@ -2997,7 +3765,15 @@ window.HUDHUD = {
    "treatment": "conversation",
    "kind": "Reflection",
    "prompt": "When did you last see this — in yourself, not in someone else?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "272-clip1",
+    "title": "The Prophet Was Raised By 4 Mothers",
+    "hls": "https://cdn.hearts.foundation/hls/272/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/272/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 272
+   }
   },
   {
    "id": "yD10-08-B",
@@ -3031,7 +3807,15 @@ window.HUDHUD = {
    "prompt": "Give something small where nobody will know it was you.",
    "capture": "tick",
    "actionId": "a15",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "272-clip2",
+    "title": "You Are the Answer to Someone's Prayer",
+    "hls": "https://cdn.hearts.foundation/hls/272/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/272/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 272
+   }
   },
   {
    "id": "yD10-09-A",
@@ -3063,7 +3847,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Name one thing that would change this week if you took this seriously.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "263-clip1",
+    "title": "His Mother Felt No Pain",
+    "hls": "https://cdn.hearts.foundation/hls/263/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/263/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 263
+   }
   },
   {
    "id": "yD10-09-B",
@@ -3095,7 +3887,15 @@ window.HUDHUD = {
    "treatment": "unfold",
    "kind": "Reflection",
    "prompt": "What excuse did your mind reach for just now, before you finished reading?",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "263-clip2",
+    "title": "All of Us Are Children of a Black Woman",
+    "hls": "https://cdn.hearts.foundation/hls/263/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/263/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 263
+   }
   },
   {
    "id": "yD10-10-A",
@@ -3129,7 +3929,15 @@ window.HUDHUD = {
    "prompt": "Pray two rakʿah you were not obliged to pray. Do not tell anyone.",
    "capture": "tick",
    "actionId": "a05",
-   "promptSource": "Something to do"
+   "promptSource": "Something to do",
+   "appetiser": {
+    "id": "113-clip2",
+    "title": "The Prophet ﷺ Went Home and Said 'I'm Scared'",
+    "hls": "https://cdn.hearts.foundation/hls/113/clip2_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/113/thumbnails/thumb_01.jpg",
+    "speaker": "khalidlatif",
+    "videoId": 113
+   }
   },
   {
    "id": "yD10-10-B",
@@ -3161,7 +3969,15 @@ window.HUDHUD = {
    "treatment": "cinema",
    "kind": "Task",
    "prompt": "Write the name of the person you should send this to — and why you have not.",
-   "promptSource": "Asked of this clip"
+   "promptSource": "Asked of this clip",
+   "appetiser": {
+    "id": "478-clip1",
+    "title": "You Can't Worship Until You Stop Caring What People Think",
+    "hls": "https://cdn.hearts.foundation/hls/478/clip1_portrait/playlist.m3u8",
+    "thumb": "https://cdn.hearts.foundation/cms/videos/478/thumbnails/thumb_01.jpg",
+    "speaker": "mikaeelsmith",
+    "videoId": 478
+   }
   }
  ],
  "curated": [
@@ -3633,6 +4449,305 @@ window.HUDHUD = {
   "title": "Never let a sin become so big",
   "source_sheet": "drive"
  },
+ "cmsClips": [
+  {
+   "id": "9-clip1",
+   "videoId": 9,
+   "clipNum": 1,
+   "title": "You Were Sent to Bring Ease, Not Hardship",
+   "speaker": "yasirfahmy",
+   "hls": "https://cdn.hearts.foundation/hls/9/clip1_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_9_clip1.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "9-clip3",
+   "videoId": 9,
+   "clipNum": 3,
+   "title": "The Prophet ﷺ Shortened Prayer for a Crying Baby",
+   "speaker": "yasirfahmy",
+   "hls": "https://cdn.hearts.foundation/hls/9/clip3_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_9_clip3.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "9-clip5",
+   "videoId": 9,
+   "clipNum": 5,
+   "title": "Don't Die Without the Best Opinion of Allah",
+   "speaker": "yasirfahmy",
+   "hls": "https://cdn.hearts.foundation/hls/9/clip5_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_9_clip5.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "9-clip7",
+   "videoId": 9,
+   "clipNum": 7,
+   "title": "Don't Be a Semi-Truck to New Muslims",
+   "speaker": "yasirfahmy",
+   "hls": "https://cdn.hearts.foundation/hls/9/clip7_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_9_clip7.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "15-clip2",
+   "videoId": 15,
+   "clipNum": 2,
+   "title": "Best Character Starts at Home",
+   "speaker": "yasirfahmy",
+   "hls": "https://cdn.hearts.foundation/hls/15/clip2_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_15_clip2.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/15/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "11-clip3",
+   "videoId": 11,
+   "clipNum": 3,
+   "title": "When Abu Bakr's Tongue Made the Angels Leave",
+   "speaker": "yasirfahmy",
+   "hls": "https://cdn.hearts.foundation/hls/11/clip3_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_11_clip3.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/11/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "11-clip6",
+   "videoId": 11,
+   "clipNum": 6,
+   "title": "The Greatest Thing Allah Can Give You",
+   "speaker": "yasirfahmy",
+   "hls": "https://cdn.hearts.foundation/hls/11/clip6_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_11_clip6.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/11/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "64-clip1",
+   "videoId": 64,
+   "clipNum": 1,
+   "title": "Your Purpose Was Never to Become a Lawyer",
+   "speaker": "yasirfahmy",
+   "hls": "https://cdn.hearts.foundation/hls/64/clip1_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_64_clip1.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/64/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "64-clip2",
+   "videoId": 64,
+   "clipNum": 2,
+   "title": "The Average Muslim's Dhikr Is Themselves",
+   "speaker": "yasirfahmy",
+   "hls": "https://cdn.hearts.foundation/hls/64/clip2_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_64_clip2.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/64/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "10-clip2",
+   "videoId": 10,
+   "clipNum": 2,
+   "title": "Gentleness Is Your Good Fortune",
+   "speaker": "yasirfahmy",
+   "hls": "https://cdn.hearts.foundation/hls/10/clip2_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_10_clip2.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/10/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "10-clip10",
+   "videoId": 10,
+   "clipNum": 10,
+   "title": "Be Like the Palm Tree",
+   "speaker": "yasirfahmy",
+   "hls": "https://cdn.hearts.foundation/hls/10/clip10_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_10_clip10.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/10/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "259-clip1",
+   "videoId": 259,
+   "clipNum": 1,
+   "title": "A 6-Year-Old Saw the Kaaba and Couldn't Stop Crying",
+   "speaker": "khalidlatif",
+   "hls": "https://cdn.hearts.foundation/hls/259/clip1_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_259_clip1.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/259/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "259-clip2",
+   "videoId": 259,
+   "clipNum": 2,
+   "title": "My 7-Year-Old Son Saw a Father Hit His Child in a Movie",
+   "speaker": "khalidlatif",
+   "hls": "https://cdn.hearts.foundation/hls/259/clip2_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_259_clip2.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/259/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "266-clip1",
+   "videoId": 266,
+   "clipNum": 1,
+   "title": "Stop Wasting Time Fighting Yourself",
+   "speaker": "khalidlatif",
+   "hls": "https://cdn.hearts.foundation/hls/266/clip1_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_266_clip1.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/266/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "266-clip2",
+   "videoId": 266,
+   "clipNum": 2,
+   "title": "Your Time Is Your Life",
+   "speaker": "khalidlatif",
+   "hls": "https://cdn.hearts.foundation/hls/266/clip2_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_266_clip2.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/266/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "272-clip1",
+   "videoId": 272,
+   "clipNum": 1,
+   "title": "The Prophet Was Raised By 4 Mothers",
+   "speaker": "khalidlatif",
+   "hls": "https://cdn.hearts.foundation/hls/272/clip1_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_272_clip1.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/272/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "272-clip2",
+   "videoId": 272,
+   "clipNum": 2,
+   "title": "You Are the Answer to Someone's Prayer",
+   "speaker": "khalidlatif",
+   "hls": "https://cdn.hearts.foundation/hls/272/clip2_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_272_clip2.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/272/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "263-clip1",
+   "videoId": 263,
+   "clipNum": 1,
+   "title": "His Mother Felt No Pain",
+   "speaker": "khalidlatif",
+   "hls": "https://cdn.hearts.foundation/hls/263/clip1_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_263_clip1.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/263/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "263-clip2",
+   "videoId": 263,
+   "clipNum": 2,
+   "title": "All of Us Are Children of a Black Woman",
+   "speaker": "khalidlatif",
+   "hls": "https://cdn.hearts.foundation/hls/263/clip2_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_263_clip2.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/263/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "113-clip2",
+   "videoId": 113,
+   "clipNum": 2,
+   "title": "The Prophet ﷺ Went Home and Said 'I'm Scared'",
+   "speaker": "khalidlatif",
+   "hls": "https://cdn.hearts.foundation/hls/113/clip2_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_113_clip2.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/113/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "478-clip1",
+   "videoId": 478,
+   "clipNum": 1,
+   "title": "You Can't Worship Until You Stop Caring What People Think",
+   "speaker": "mikaeelsmith",
+   "hls": "https://cdn.hearts.foundation/hls/478/clip1_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_478_clip1.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/478/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "478-clip2",
+   "videoId": 478,
+   "clipNum": 2,
+   "title": "Abu Talib Knew the Truth But Couldn't Get Over This Hurdle",
+   "speaker": "mikaeelsmith",
+   "hls": "https://cdn.hearts.foundation/hls/478/clip2_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_478_clip2.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/478/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "486-clip1",
+   "videoId": 486,
+   "clipNum": 1,
+   "title": "Trusting God Doesn't Mean Giving Up the Means",
+   "speaker": "mikaeelsmith",
+   "hls": "https://cdn.hearts.foundation/hls/486/clip1_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_486_clip1.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/486/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "489-clip1",
+   "videoId": 489,
+   "clipNum": 1,
+   "title": "The True Bankrupt Person",
+   "speaker": "mikaeelsmith",
+   "hls": "https://cdn.hearts.foundation/hls/489/clip1_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_489_clip1.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/489/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "489-clip2",
+   "videoId": 489,
+   "clipNum": 2,
+   "title": "Imam Ahmad's Forgiveness While Being Whipped",
+   "speaker": "mikaeelsmith",
+   "hls": "https://cdn.hearts.foundation/hls/489/clip2_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_489_clip2.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/489/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "112-clip2",
+   "videoId": 112,
+   "clipNum": 2,
+   "title": "Today Is Not the Day of Bloodshed — It's the Day of Mercy",
+   "speaker": "mikaeelsmith",
+   "hls": "https://cdn.hearts.foundation/hls/112/clip2_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_112_clip2.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/112/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  },
+  {
+   "id": "103-clip1",
+   "videoId": 103,
+   "clipNum": 1,
+   "title": "The Prophet's Du'a That Would Make You Weep",
+   "speaker": "mikaeelsmith",
+   "hls": "https://cdn.hearts.foundation/hls/103/clip1_portrait/playlist.m3u8",
+   "audio": "https://cdn.hearts.foundation/audio/cms_103_clip1.mp3",
+   "thumb": "https://cdn.hearts.foundation/cms/videos/103/thumbnails/thumb_01.jpg",
+   "orientation": "portrait"
+  }
+ ],
  "jibril": {
   "branches": [
    {
@@ -4450,7 +5565,9 @@ window.HUDHUD = {
  ],
  "localMedia": {
   "hero": "media/mikaeel-bait-fade.mp4",
-  "lecture": "media/lecture-sitting.mp4"
+  "heroAlt": "media/mikaeel-bait-fade.webm",
+  "lecture": "media/lecture-sitting.mp4",
+  "lectureAlt": "media/lecture-sitting.webm"
  },
  "course": {
   "videoId": 9,

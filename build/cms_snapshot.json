@@ -582,5 +582,304 @@
       "topic": "faith",
       "sourceVideoId": 196
     }
+  ],
+  "clips": [
+    {
+      "id": "9-clip1",
+      "videoId": 9,
+      "clipNum": 1,
+      "title": "You Were Sent to Bring Ease, Not Hardship",
+      "speaker": "yasirfahmy",
+      "hls": "https://cdn.hearts.foundation/hls/9/clip1_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_9_clip1.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "9-clip3",
+      "videoId": 9,
+      "clipNum": 3,
+      "title": "The Prophet ﷺ Shortened Prayer for a Crying Baby",
+      "speaker": "yasirfahmy",
+      "hls": "https://cdn.hearts.foundation/hls/9/clip3_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_9_clip3.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "9-clip5",
+      "videoId": 9,
+      "clipNum": 5,
+      "title": "Don't Die Without the Best Opinion of Allah",
+      "speaker": "yasirfahmy",
+      "hls": "https://cdn.hearts.foundation/hls/9/clip5_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_9_clip5.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "9-clip7",
+      "videoId": 9,
+      "clipNum": 7,
+      "title": "Don't Be a Semi-Truck to New Muslims",
+      "speaker": "yasirfahmy",
+      "hls": "https://cdn.hearts.foundation/hls/9/clip7_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_9_clip7.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/9/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "15-clip2",
+      "videoId": 15,
+      "clipNum": 2,
+      "title": "Best Character Starts at Home",
+      "speaker": "yasirfahmy",
+      "hls": "https://cdn.hearts.foundation/hls/15/clip2_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_15_clip2.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/15/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "11-clip3",
+      "videoId": 11,
+      "clipNum": 3,
+      "title": "When Abu Bakr's Tongue Made the Angels Leave",
+      "speaker": "yasirfahmy",
+      "hls": "https://cdn.hearts.foundation/hls/11/clip3_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_11_clip3.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/11/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "11-clip6",
+      "videoId": 11,
+      "clipNum": 6,
+      "title": "The Greatest Thing Allah Can Give You",
+      "speaker": "yasirfahmy",
+      "hls": "https://cdn.hearts.foundation/hls/11/clip6_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_11_clip6.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/11/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "64-clip1",
+      "videoId": 64,
+      "clipNum": 1,
+      "title": "Your Purpose Was Never to Become a Lawyer",
+      "speaker": "yasirfahmy",
+      "hls": "https://cdn.hearts.foundation/hls/64/clip1_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_64_clip1.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/64/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "64-clip2",
+      "videoId": 64,
+      "clipNum": 2,
+      "title": "The Average Muslim's Dhikr Is Themselves",
+      "speaker": "yasirfahmy",
+      "hls": "https://cdn.hearts.foundation/hls/64/clip2_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_64_clip2.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/64/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "10-clip2",
+      "videoId": 10,
+      "clipNum": 2,
+      "title": "Gentleness Is Your Good Fortune",
+      "speaker": "yasirfahmy",
+      "hls": "https://cdn.hearts.foundation/hls/10/clip2_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_10_clip2.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/10/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "10-clip10",
+      "videoId": 10,
+      "clipNum": 10,
+      "title": "Be Like the Palm Tree",
+      "speaker": "yasirfahmy",
+      "hls": "https://cdn.hearts.foundation/hls/10/clip10_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_10_clip10.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/10/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "259-clip1",
+      "videoId": 259,
+      "clipNum": 1,
+      "title": "A 6-Year-Old Saw the Kaaba and Couldn't Stop Crying",
+      "speaker": "khalidlatif",
+      "hls": "https://cdn.hearts.foundation/hls/259/clip1_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_259_clip1.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/259/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "259-clip2",
+      "videoId": 259,
+      "clipNum": 2,
+      "title": "My 7-Year-Old Son Saw a Father Hit His Child in a Movie",
+      "speaker": "khalidlatif",
+      "hls": "https://cdn.hearts.foundation/hls/259/clip2_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_259_clip2.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/259/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "266-clip1",
+      "videoId": 266,
+      "clipNum": 1,
+      "title": "Stop Wasting Time Fighting Yourself",
+      "speaker": "khalidlatif",
+      "hls": "https://cdn.hearts.foundation/hls/266/clip1_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_266_clip1.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/266/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "266-clip2",
+      "videoId": 266,
+      "clipNum": 2,
+      "title": "Your Time Is Your Life",
+      "speaker": "khalidlatif",
+      "hls": "https://cdn.hearts.foundation/hls/266/clip2_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_266_clip2.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/266/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "272-clip1",
+      "videoId": 272,
+      "clipNum": 1,
+      "title": "The Prophet Was Raised By 4 Mothers",
+      "speaker": "khalidlatif",
+      "hls": "https://cdn.hearts.foundation/hls/272/clip1_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_272_clip1.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/272/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "272-clip2",
+      "videoId": 272,
+      "clipNum": 2,
+      "title": "You Are the Answer to Someone's Prayer",
+      "speaker": "khalidlatif",
+      "hls": "https://cdn.hearts.foundation/hls/272/clip2_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_272_clip2.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/272/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "263-clip1",
+      "videoId": 263,
+      "clipNum": 1,
+      "title": "His Mother Felt No Pain",
+      "speaker": "khalidlatif",
+      "hls": "https://cdn.hearts.foundation/hls/263/clip1_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_263_clip1.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/263/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "263-clip2",
+      "videoId": 263,
+      "clipNum": 2,
+      "title": "All of Us Are Children of a Black Woman",
+      "speaker": "khalidlatif",
+      "hls": "https://cdn.hearts.foundation/hls/263/clip2_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_263_clip2.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/263/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "113-clip2",
+      "videoId": 113,
+      "clipNum": 2,
+      "title": "The Prophet ﷺ Went Home and Said 'I'm Scared'",
+      "speaker": "khalidlatif",
+      "hls": "https://cdn.hearts.foundation/hls/113/clip2_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_113_clip2.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/113/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "478-clip1",
+      "videoId": 478,
+      "clipNum": 1,
+      "title": "You Can't Worship Until You Stop Caring What People Think",
+      "speaker": "mikaeelsmith",
+      "hls": "https://cdn.hearts.foundation/hls/478/clip1_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_478_clip1.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/478/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "478-clip2",
+      "videoId": 478,
+      "clipNum": 2,
+      "title": "Abu Talib Knew the Truth But Couldn't Get Over This Hurdle",
+      "speaker": "mikaeelsmith",
+      "hls": "https://cdn.hearts.foundation/hls/478/clip2_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_478_clip2.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/478/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "486-clip1",
+      "videoId": 486,
+      "clipNum": 1,
+      "title": "Trusting God Doesn't Mean Giving Up the Means",
+      "speaker": "mikaeelsmith",
+      "hls": "https://cdn.hearts.foundation/hls/486/clip1_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_486_clip1.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/486/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "489-clip1",
+      "videoId": 489,
+      "clipNum": 1,
+      "title": "The True Bankrupt Person",
+      "speaker": "mikaeelsmith",
+      "hls": "https://cdn.hearts.foundation/hls/489/clip1_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_489_clip1.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/489/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "489-clip2",
+      "videoId": 489,
+      "clipNum": 2,
+      "title": "Imam Ahmad's Forgiveness While Being Whipped",
+      "speaker": "mikaeelsmith",
+      "hls": "https://cdn.hearts.foundation/hls/489/clip2_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_489_clip2.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/489/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "112-clip2",
+      "videoId": 112,
+      "clipNum": 2,
+      "title": "Today Is Not the Day of Bloodshed — It's the Day of Mercy",
+      "speaker": "mikaeelsmith",
+      "hls": "https://cdn.hearts.foundation/hls/112/clip2_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_112_clip2.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/112/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    },
+    {
+      "id": "103-clip1",
+      "videoId": 103,
+      "clipNum": 1,
+      "title": "The Prophet's Du'a That Would Make You Weep",
+      "speaker": "mikaeelsmith",
+      "hls": "https://cdn.hearts.foundation/hls/103/clip1_portrait/playlist.m3u8",
+      "audio": "https://cdn.hearts.foundation/audio/cms_103_clip1.mp3",
+      "thumb": "https://cdn.hearts.foundation/cms/videos/103/thumbnails/thumb_01.jpg",
+      "orientation": "portrait"
+    }
   ]
 }

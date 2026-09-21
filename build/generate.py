@@ -290,6 +290,21 @@ def main():
         "strength": "strong", "appeal": "", "why": "", "currency": "",
         "title": "Never let a sin become so big", "source_sheet": "drive",
     }
+    # Every hors d'oeuvre needs a real extracted clip behind its CTA. The CMS publishes
+    # portrait clips as their own media; attach the best one for each slide.
+    cms_clips = snap.get("clips", [])
+    by_vid, by_spk = {}, {}
+    for cl in cms_clips:
+        by_vid.setdefault(cl["videoId"], []).append(cl)
+        by_spk.setdefault(cl["speaker"], []).append(cl)
+
+    def appetiser_for(c, i):
+        same = by_vid.get(c.get("videoId"))
+        if same: return same[i % len(same)]
+        mine = by_spk.get(c.get("speaker"))
+        if mine: return mine[i % len(mine)]
+        return cms_clips[i % len(cms_clips)] if cms_clips else None
+
     # The hors d'oeuvre layer is slides only - no footage. The Drive hero clip is a
     # taste-of video, so it belongs to the appetiser layer, not the opening loop.
     reel = settle_lanes(reel + yt_reel)
@@ -304,6 +319,11 @@ def main():
                       "actionId": act["id"], "promptSource": "Something to do"})
         else:
             c.update(question_for(c, rq, i))
+        ap = appetiser_for(c, i)
+        if ap:
+            c["appetiser"] = {"id": ap["id"], "title": ap["title"], "hls": ap["hls"],
+                              "thumb": ap["thumb"], "speaker": ap["speaker"],
+                              "videoId": ap["videoId"]}
     appetiser_hero = HERO
 
     # ---------------- Hadith Jibril map (real counts from the canon)
@@ -474,6 +494,7 @@ def main():
         },
         "creators": snap["creators"], "series": snap["series"], "videos": snap["videos"],
         "reel": reel, "curated": curated, "appetiserHero": appetiser_hero,
+        "cmsClips": snap.get("clips", []),
         "jibril": {"branches": jibril, "sectionsTotal": total_sections,
                    "sectionsOpened": opened, "piecesOpened": pieces,
                    "piecesTotal": total_sections * PIECES_PER_SECTION,
@@ -481,7 +502,8 @@ def main():
                    "library": {"sectionsCovered": lib_sections, "pieces": lib_pieces,
                                "clips": len(canon)}},
         "ghuniyya": ghuniyya, "harvest": harvest,
-        "localMedia": {"hero": "media/mikaeel-bait-fade.mp4", "lecture": "media/lecture-sitting.mp4"},
+        "localMedia": {"hero": "media/mikaeel-bait-fade.mp4", "heroAlt": "media/mikaeel-bait-fade.webm",
+                       "lecture": "media/lecture-sitting.mp4", "lectureAlt": "media/lecture-sitting.webm"},
         "course": {"videoId": 9, "seriesId": 2, "title": series[2]["title"],
                    "fallbackSrc": "media/lecture-sitting.mp4", "fallbackSrcAlt": "media/lecture-sitting.webm",
                    "partLabel": "Part 6 · Ease as the governing spirit",
@@ -527,6 +549,8 @@ def main():
     print(f"  treatments      : {dict(_C(c['treatment'] for c in reel))}")
     print(f"  questions       : {sum(1 for c in reel if c.get('prompt'))} of {len(reel)} clips carry one; "
           f"{sum(1 for c in reel if 'CMS' in c.get('promptSource',''))} from the CMS")
+    print(f"  extracted clips : {len(snap.get('clips', []))} portrait CMS clips; "
+          f"{sum(1 for c in reel if c.get('appetiser'))} of {len(reel)} slides have one behind the CTA")
     print(f"  practical tasks : {sum(1 for c in reel if c.get('capture'))} "
           f"({dict(_C2(c['capture'] for c in reel if c.get('capture')))})")
     print(f"  curated (demo10): {len(curated)}")
