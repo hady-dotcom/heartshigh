@@ -35,8 +35,11 @@ STATE="""(()=>{
   const r=card.getBoundingClientRect();
   const first=card.querySelector('.beat');
   const vis=first?parseFloat(getComputedStyle(first).opacity):0;
-  return {n:cs.length, id:c.id, lane:c.lane, speaker:c.speaker, txt, ar, vis,
-          w:r.width, h:r.height, sheet:document.querySelector('.sheet').classList.contains('up')};
+  const onscreen = r.width>0 && r.height>0 && r.right>8 && r.bottom>8 &&
+                   r.left<innerWidth-8 && r.top<innerHeight-8;
+  return {n:cs.length, id:c.id, lane:c.lane, speaker:c.speaker, txt, ar, vis, onscreen,
+          cx:Math.round(r.x), w:r.width, h:r.height,
+          sheet:document.querySelector('.sheet').classList.contains('up')};
 })()"""
 
 with sync_playwright() as pw:
@@ -57,7 +60,7 @@ with sync_playwright() as pw:
     check("deck opens on a slide", st["n"]==1, "n=%s"%st["n"])
 
     same=collections.Counter(); seen=set(); grammar=collections.Counter()
-    blank=0; dead=0; faint=0; stuck=[]
+    blank=0; dead=0; faint=0; offscreen=0; stuck=[]
     DIRS=["right","left","down","right","right","left","down","up"]
     print("\n== %d NAVIGATIONS"%ROUNDS)
     for i in range(ROUNDS):
@@ -67,15 +70,20 @@ with sync_playwright() as pw:
         if before.get("sheet"):
             pg.evaluate("()=>{const b=document.querySelector('.sheet .q-save,.sheet .q-skip');b&&b.click();}")
             pg.wait_for_timeout(250); before=pg.evaluate(STATE)
-        sel=".cardclip.slide:last-of-type .sl-arrow."+d
-        try: pg.eval_on_selector(sel,"a=>a.click()")
-        except Exception as e: dead+=1; continue
+        hit=pg.evaluate("""(()=>{const c=[...document.querySelectorAll('.cardclip.slide')].pop();
+            const a=c&&c.querySelector('.sl-arrow.%s'); if(!a) return null;
+            const r=a.getBoundingClientRect(); if(r.width<1) return null;
+            return {x:r.x+r.width/2, y:r.y+r.height/2}})()""" % d)
+        if not hit or not (0 < hit["x"] < 390 and 0 < hit["y"] < 844):
+            dead+=1; stuck.append((i,d,"arrow not reachable on screen")); continue
+        pg.mouse.click(hit["x"], hit["y"])
         pg.wait_for_timeout(200)
         landing=pg.evaluate(STATE)          # is the hook readable as it arrives?
         if landing.get("vis",0) < 0.5: faint+=1; stuck.append((i,d,"hook still invisible on arrival"))
         pg.wait_for_timeout(260)
         after=pg.evaluate(STATE)
         if after["n"]!=1: stuck.append((i,d,"cards=%s"%after["n"]))
+        if not after.get("onscreen"): offscreen+=1; stuck.append((i,d,"card parked at x=%s"%after.get("cx")))
         if d=="up":
             continue
         if after.get("id")==before.get("id"):
@@ -99,6 +107,7 @@ with sync_playwright() as pw:
           "repeats: %s"%dict(same))
     check("the hook is legible the moment the card lands", faint==0, "%d arrived blank"%faint)
     check("no blank cards", blank==0, "%d blank"%blank)
+    check("the card stays inside the phone", offscreen==0, "%d off-screen"%offscreen)
     check("no dead arrows", dead==0, "%d unclickable"%dead)
     check("exactly one card on screen throughout", not any("cards=" in s[2] for s in stuck))
     check("grammar held every time", not grammar, str(dict(grammar)))

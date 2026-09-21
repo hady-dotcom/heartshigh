@@ -393,7 +393,7 @@ window.HUDHUD = {
  ],
  "reel": [
   {
-   "id": "k61948-109",
+   "id": "k13656-109",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -420,7 +420,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k74616-651",
+   "id": "k53852-651",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -449,7 +449,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k4160-87",
+   "id": "k9115-87",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -476,7 +476,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k87148-125",
+   "id": "k54418-125",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -503,7 +503,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k86497-497",
+   "id": "k90803-497",
    "videoId": 15,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -532,7 +532,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k5560-141",
+   "id": "k4751-141",
    "videoId": 11,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -559,7 +559,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k97500-357",
+   "id": "k55530-357",
    "videoId": 11,
    "speaker": "fatimalette",
    "start": 0,
@@ -586,7 +586,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k44359-79",
+   "id": "k80228-79",
    "videoId": 64,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -615,7 +615,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k55062-408",
+   "id": "k22802-408",
    "videoId": 64,
    "speaker": "naeembaig",
    "start": 0,
@@ -642,7 +642,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84495-301",
+   "id": "k87116-301",
    "videoId": 10,
    "speaker": "drtesneem",
    "start": 0,
@@ -669,7 +669,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k53562-709",
+   "id": "k71344-709",
    "videoId": 10,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -698,7 +698,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9945-205",
+   "id": "k79072-205",
    "videoId": 259,
    "speaker": "umairhaseeb",
    "start": 0,
@@ -725,7 +725,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61953-597",
+   "id": "k48693-597",
    "videoId": 259,
    "speaker": "dawoodyasin",
    "start": 0,
@@ -752,7 +752,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k93909-274",
+   "id": "k68018-274",
    "videoId": 266,
    "speaker": "abdulmalikmerchant",
    "start": 0,
@@ -781,7 +781,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2341-435",
+   "id": "k52363-435",
    "videoId": 266,
    "speaker": "hamzaabdulmalik",
    "start": 0,
@@ -808,7 +808,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8781-634",
+   "id": "k33365-634",
    "videoId": 272,
    "speaker": "shaykhalaeddinalbakri",
    "start": 0,
@@ -835,7 +835,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k68329-136",
+   "id": "k86939-136",
    "videoId": 486,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -864,7 +864,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k95928-758",
+   "id": "k59317-758",
    "videoId": 113,
    "speaker": "khalidlatif",
    "start": 0,
@@ -891,7 +891,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k4160-88",
+   "id": "k9115-88",
    "videoId": 263,
    "speaker": "suleimanhani",
    "start": 0,
@@ -918,7 +918,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k87148-126",
+   "id": "k54418-126",
    "videoId": 113,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -947,7 +947,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k86497-498",
+   "id": "k90803-498",
    "videoId": 10,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -974,7 +974,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k5560-142",
+   "id": "k4751-142",
    "videoId": 478,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -1001,7 +1001,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k97500-358",
+   "id": "k55530-358",
    "videoId": 486,
    "speaker": "fatimalette",
    "start": 0,
@@ -1030,7 +1030,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k22657-81",
+   "id": "k34091-81",
    "videoId": 489,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -1057,7 +1057,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k29732-410",
+   "id": "k44807-410",
    "videoId": 489,
    "speaker": "naeembaig",
    "start": 0,
@@ -1084,7 +1084,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84495-302",
+   "id": "k87116-302",
    "videoId": 112,
    "speaker": "drtesneem",
    "start": 0,
@@ -1113,7 +1113,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k67159-660",
+   "id": "k70055-660",
    "videoId": 103,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -1140,7 +1140,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9945-206",
+   "id": "k79072-206",
    "videoId": 9,
    "speaker": "umairhaseeb",
    "start": 0,
@@ -1167,7 +1167,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99581-690",
+   "id": "k61711-690",
    "videoId": 9,
    "speaker": "dawoodyasin",
    "start": 0,
@@ -1196,7 +1196,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k93909-275",
+   "id": "k68018-275",
    "videoId": 9,
    "speaker": "abdulmalikmerchant",
    "start": 0,
@@ -1223,7 +1223,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2341-436",
+   "id": "k52363-436",
    "videoId": 9,
    "speaker": "hamzaabdulmalik",
    "start": 0,
@@ -1250,7 +1250,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8781-635",
+   "id": "k33365-635",
    "videoId": 15,
    "speaker": "shaykhalaeddinalbakri",
    "start": 0,
@@ -1279,7 +1279,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23033-527",
+   "id": "k73000-527",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -1306,7 +1306,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k95928-760",
+   "id": "k59317-760",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -1333,7 +1333,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k4160-89",
+   "id": "k9115-89",
    "videoId": 64,
    "speaker": "suleimanhani",
    "start": 0,
@@ -1362,7 +1362,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k87148-127",
+   "id": "k54418-127",
    "videoId": 64,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -1389,7 +1389,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k86497-499",
+   "id": "k90803-499",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -1416,7 +1416,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k5560-143",
+   "id": "k4751-143",
    "videoId": 10,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -1445,7 +1445,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k97500-359",
+   "id": "k55530-359",
    "videoId": 259,
    "speaker": "fatimalette",
    "start": 0,
@@ -1472,7 +1472,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k22657-82",
+   "id": "k34091-82",
    "videoId": 259,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -1499,7 +1499,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k53795-411",
+   "id": "k26694-411",
    "videoId": 266,
    "speaker": "naeembaig",
    "start": 0,
@@ -1528,7 +1528,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84495-303",
+   "id": "k87116-303",
    "videoId": 266,
    "speaker": "drtesneem",
    "start": 0,
@@ -1555,7 +1555,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k20019-661",
+   "id": "k34795-661",
    "videoId": 272,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -1582,7 +1582,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9945-207",
+   "id": "k79072-207",
    "videoId": 272,
    "speaker": "umairhaseeb",
    "start": 0,
@@ -1611,7 +1611,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99581-691",
+   "id": "k61711-691",
    "videoId": 263,
    "speaker": "dawoodyasin",
    "start": 0,
@@ -1638,7 +1638,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k93909-276",
+   "id": "k68018-276",
    "videoId": 263,
    "speaker": "abdulmalikmerchant",
    "start": 0,
@@ -1665,7 +1665,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2341-437",
+   "id": "k52363-437",
    "videoId": 113,
    "speaker": "hamzaabdulmalik",
    "start": 0,
@@ -1694,7 +1694,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8781-636",
+   "id": "k33365-636",
    "videoId": 478,
    "speaker": "shaykhalaeddinalbakri",
    "start": 0,
@@ -1721,7 +1721,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k58590-566",
+   "id": "k37798-566",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -1748,7 +1748,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k83822-761",
+   "id": "k31736-761",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -1777,7 +1777,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k4160-90",
+   "id": "k9115-90",
    "videoId": 489,
    "speaker": "suleimanhani",
    "start": 0,
@@ -1804,7 +1804,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9759-190",
+   "id": "k37118-190",
    "videoId": 489,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -1831,7 +1831,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k86497-500",
+   "id": "k90803-500",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -1860,7 +1860,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k15574-145",
+   "id": "k13819-145",
    "videoId": 103,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -1887,7 +1887,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k97500-360",
+   "id": "k55530-360",
    "videoId": 9,
    "speaker": "fatimalette",
    "start": 0,
@@ -1914,7 +1914,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k22657-83",
+   "id": "k34091-83",
    "videoId": 9,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -1943,7 +1943,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k53795-412",
+   "id": "k26694-412",
    "videoId": 9,
    "speaker": "naeembaig",
    "start": 0,
@@ -1970,7 +1970,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84495-304",
+   "id": "k87116-304",
    "videoId": 9,
    "speaker": "drtesneem",
    "start": 0,
@@ -1997,7 +1997,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k20019-662",
+   "id": "k34795-662",
    "videoId": 15,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -2026,7 +2026,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9945-208",
+   "id": "k79072-208",
    "videoId": 11,
    "speaker": "umairhaseeb",
    "start": 0,
@@ -2053,7 +2053,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99581-692",
+   "id": "k61711-692",
    "videoId": 11,
    "speaker": "dawoodyasin",
    "start": 0,
@@ -2080,7 +2080,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k93909-277",
+   "id": "k68018-277",
    "videoId": 64,
    "speaker": "abdulmalikmerchant",
    "start": 0,
@@ -2109,7 +2109,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2341-438",
+   "id": "k52363-438",
    "videoId": 64,
    "speaker": "hamzaabdulmalik",
    "start": 0,
@@ -2136,7 +2136,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8781-637",
+   "id": "k33365-637",
    "videoId": 10,
    "speaker": "shaykhalaeddinalbakri",
    "start": 0,
@@ -2163,7 +2163,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k15820-572",
+   "id": "k70367-572",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -2192,7 +2192,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k83822-762",
+   "id": "k31736-762",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -2219,7 +2219,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k4160-91",
+   "id": "k9115-91",
    "videoId": 259,
    "speaker": "suleimanhani",
    "start": 0,
@@ -2246,7 +2246,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9759-191",
+   "id": "k37118-191",
    "videoId": 266,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -2275,7 +2275,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k86497-501",
+   "id": "k90803-501",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -2302,7 +2302,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k92804-147",
+   "id": "k10131-147",
    "videoId": 272,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -2329,7 +2329,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k97500-361",
+   "id": "k55530-361",
    "videoId": 272,
    "speaker": "fatimalette",
    "start": 0,
@@ -2358,7 +2358,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k22657-84",
+   "id": "k34091-84",
    "videoId": 263,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -2385,7 +2385,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k53795-413",
+   "id": "k26694-413",
    "videoId": 263,
    "speaker": "naeembaig",
    "start": 0,
@@ -2412,7 +2412,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k4520-305",
+   "id": "k83638-305",
    "videoId": 113,
    "speaker": "drtesneem",
    "start": 0,
@@ -2441,7 +2441,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k20019-663",
+   "id": "k34795-663",
    "videoId": 478,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -2468,7 +2468,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9945-209",
+   "id": "k79072-209",
    "videoId": 478,
    "speaker": "umairhaseeb",
    "start": 0,
@@ -2495,7 +2495,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99581-693",
+   "id": "k61711-693",
    "videoId": 486,
    "speaker": "dawoodyasin",
    "start": 0,
@@ -2524,7 +2524,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2000-281",
+   "id": "k72150-281",
    "videoId": 489,
    "speaker": "abdulmalikmerchant",
    "start": 0,
@@ -2551,7 +2551,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2341-439",
+   "id": "k52363-439",
    "videoId": 489,
    "speaker": "hamzaabdulmalik",
    "start": 0,
@@ -2578,7 +2578,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8781-638",
+   "id": "k33365-638",
    "videoId": 112,
    "speaker": "shaykhalaeddinalbakri",
    "start": 0,
@@ -2634,7 +2634,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k83822-763",
+   "id": "k31736-763",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -2661,7 +2661,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k19586-115",
+   "id": "k2971-115",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -2690,7 +2690,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k37735-193",
+   "id": "k97042-193",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -2717,7 +2717,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k86497-502",
+   "id": "k90803-502",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -2744,7 +2744,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k92804-148",
+   "id": "k10131-148",
    "videoId": 15,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -2773,7 +2773,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k97500-362",
+   "id": "k55530-362",
    "videoId": 11,
    "speaker": "fatimalette",
    "start": 0,
@@ -2800,7 +2800,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k22657-85",
+   "id": "k34091-85",
    "videoId": 11,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -2827,7 +2827,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k53795-414",
+   "id": "k26694-414",
    "videoId": 64,
    "speaker": "naeembaig",
    "start": 0,
@@ -2856,7 +2856,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k5239-306",
+   "id": "k97647-306",
    "videoId": 64,
    "speaker": "drtesneem",
    "start": 0,
@@ -2883,7 +2883,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k97457-664",
+   "id": "k45474-664",
    "videoId": 10,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -2910,7 +2910,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9945-210",
+   "id": "k79072-210",
    "videoId": 10,
    "speaker": "umairhaseeb",
    "start": 0,
@@ -2939,7 +2939,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99581-694",
+   "id": "k61711-694",
    "videoId": 259,
    "speaker": "dawoodyasin",
    "start": 0,
@@ -2966,7 +2966,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2000-282",
+   "id": "k72150-282",
    "videoId": 259,
    "speaker": "abdulmalikmerchant",
    "start": 0,
@@ -2993,7 +2993,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k36554-688",
+   "id": "k45228-688",
    "videoId": 266,
    "speaker": "hamzaabdulmalik",
    "start": 0,
@@ -3022,7 +3022,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8781-639",
+   "id": "k33365-639",
    "videoId": 266,
    "speaker": "shaykhalaeddinalbakri",
    "start": 0,
@@ -3049,7 +3049,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k69816-629",
+   "id": "k69380-629",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -3076,7 +3076,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k83822-764",
+   "id": "k31736-764",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -3105,7 +3105,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k19586-116",
+   "id": "k2971-116",
    "videoId": 263,
    "speaker": "suleimanhani",
    "start": 0,
@@ -3132,7 +3132,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k53180-216",
+   "id": "k25971-216",
    "videoId": 263,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -3159,7 +3159,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k85583-503",
+   "id": "k56676-503",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -3188,7 +3188,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k92804-149",
+   "id": "k10131-149",
    "videoId": 478,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -3215,7 +3215,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k57235-363",
+   "id": "k55814-363",
    "videoId": 478,
    "speaker": "fatimalette",
    "start": 0,
@@ -3242,7 +3242,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k3066-678",
+   "id": "k59494-678",
    "videoId": 486,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -3271,7 +3271,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k59633-415",
+   "id": "k93391-415",
    "videoId": 489,
    "speaker": "naeembaig",
    "start": 0,
@@ -3298,7 +3298,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k5239-307",
+   "id": "k97647-307",
    "videoId": 489,
    "speaker": "drtesneem",
    "start": 0,
@@ -3325,7 +3325,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k17176-665",
+   "id": "k45860-665",
    "videoId": 112,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -3354,7 +3354,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28178-628",
+   "id": "k96558-628",
    "videoId": 103,
    "speaker": "umairhaseeb",
    "start": 0,
@@ -3381,7 +3381,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99581-695",
+   "id": "k61711-695",
    "videoId": 9,
    "speaker": "dawoodyasin",
    "start": 0,
@@ -3408,7 +3408,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k6431-283",
+   "id": "k18563-283",
    "videoId": 9,
    "speaker": "abdulmalikmerchant",
    "start": 0,
@@ -3437,7 +3437,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k36554-689",
+   "id": "k45228-689",
    "videoId": 9,
    "speaker": "hamzaabdulmalik",
    "start": 0,
@@ -3464,7 +3464,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k69816-630",
+   "id": "k69380-630",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -3491,7 +3491,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k83822-765",
+   "id": "k31736-765",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -3520,7 +3520,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k19586-117",
+   "id": "k2971-117",
    "videoId": 11,
    "speaker": "suleimanhani",
    "start": 0,
@@ -3547,7 +3547,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k46802-286",
+   "id": "k76925-286",
    "videoId": 11,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -3574,7 +3574,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k85583-504",
+   "id": "k56676-504",
    "videoId": 11,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -3603,7 +3603,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k27903-150",
+   "id": "k94333-150",
    "videoId": 64,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -3630,7 +3630,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k57235-364",
+   "id": "k55814-364",
    "videoId": 10,
    "speaker": "fatimalette",
    "start": 0,
@@ -3657,7 +3657,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k3066-679",
+   "id": "k59494-679",
    "videoId": 10,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -3686,7 +3686,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k59633-416",
+   "id": "k93391-416",
    "videoId": 259,
    "speaker": "naeembaig",
    "start": 0,
@@ -3713,7 +3713,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k5239-308",
+   "id": "k97647-308",
    "videoId": 259,
    "speaker": "drtesneem",
    "start": 0,
@@ -3740,7 +3740,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k17176-666",
+   "id": "k45860-666",
    "videoId": 266,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -3769,7 +3769,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84710-879",
+   "id": "k36303-879",
    "videoId": 266,
    "speaker": "umairhaseeb",
    "start": 0,
@@ -3796,7 +3796,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k18907-942",
+   "id": "k47679-942",
    "videoId": 272,
    "speaker": "dawoodyasin",
    "start": 0,
@@ -3823,7 +3823,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k6431-284",
+   "id": "k18563-284",
    "videoId": 272,
    "speaker": "abdulmalikmerchant",
    "start": 0,
@@ -3852,7 +3852,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k69816-631",
+   "id": "k69380-631",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -3879,7 +3879,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k83822-766",
+   "id": "k31736-766",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -3906,7 +3906,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k19586-118",
+   "id": "k2971-118",
    "videoId": 113,
    "speaker": "suleimanhani",
    "start": 0,
@@ -3935,7 +3935,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k46802-287",
+   "id": "k76925-287",
    "videoId": 478,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -3962,7 +3962,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k85583-505",
+   "id": "k56676-505",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -3989,7 +3989,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k82025-154",
+   "id": "k92166-154",
    "videoId": 486,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -4018,7 +4018,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k57235-365",
+   "id": "k55814-365",
    "videoId": 489,
    "speaker": "fatimalette",
    "start": 0,
@@ -4045,7 +4045,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k3066-680",
+   "id": "k59494-680",
    "videoId": 489,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -4072,7 +4072,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k59633-417",
+   "id": "k93391-417",
    "videoId": 112,
    "speaker": "naeembaig",
    "start": 0,
@@ -4101,7 +4101,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k5239-309",
+   "id": "k97647-309",
    "videoId": 103,
    "speaker": "drtesneem",
    "start": 0,
@@ -4128,7 +4128,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k17176-667",
+   "id": "k45860-667",
    "videoId": 9,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -4155,7 +4155,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84710-880",
+   "id": "k36303-880",
    "videoId": 9,
    "speaker": "umairhaseeb",
    "start": 0,
@@ -4184,7 +4184,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k18907-943",
+   "id": "k47679-943",
    "videoId": 9,
    "speaker": "dawoodyasin",
    "start": 0,
@@ -4211,7 +4211,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k6431-285",
+   "id": "k18563-285",
    "videoId": 9,
    "speaker": "abdulmalikmerchant",
    "start": 0,
@@ -4238,7 +4238,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k6394-615",
+   "id": "k95591-615",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -4267,7 +4267,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k96659-773",
+   "id": "k19670-773",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -4294,7 +4294,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k40335-120",
+   "id": "k24189-120",
    "videoId": 11,
    "speaker": "suleimanhani",
    "start": 0,
@@ -4321,7 +4321,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k46802-288",
+   "id": "k76925-288",
    "videoId": 64,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -4350,7 +4350,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k85583-507",
+   "id": "k56676-507",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -4377,7 +4377,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k82025-155",
+   "id": "k92166-155",
    "videoId": 10,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -4404,7 +4404,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k57235-366",
+   "id": "k55814-366",
    "videoId": 10,
    "speaker": "fatimalette",
    "start": 0,
@@ -4433,7 +4433,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k3066-681",
+   "id": "k59494-681",
    "videoId": 259,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -4460,7 +4460,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k29055-418",
+   "id": "k85337-418",
    "videoId": 259,
    "speaker": "naeembaig",
    "start": 0,
@@ -4487,7 +4487,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23343-310",
+   "id": "k85168-310",
    "videoId": 266,
    "speaker": "drtesneem",
    "start": 0,
@@ -4516,7 +4516,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k47061-668",
+   "id": "k3510-668",
    "videoId": 266,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -4543,7 +4543,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84710-881",
+   "id": "k36303-881",
    "videoId": 272,
    "speaker": "umairhaseeb",
    "start": 0,
@@ -4570,7 +4570,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k18907-944",
+   "id": "k47679-944",
    "videoId": 272,
    "speaker": "dawoodyasin",
    "start": 0,
@@ -4599,7 +4599,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k6394-616",
+   "id": "k95591-616",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -4626,7 +4626,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k42880-780",
+   "id": "k32566-780",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -4653,7 +4653,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k40335-121",
+   "id": "k24189-121",
    "videoId": 113,
    "speaker": "suleimanhani",
    "start": 0,
@@ -4682,7 +4682,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k6690-289",
+   "id": "k17125-289",
    "videoId": 478,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -4709,7 +4709,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k85583-508",
+   "id": "k56676-508",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -4736,7 +4736,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k82025-156",
+   "id": "k92166-156",
    "videoId": 486,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -4765,7 +4765,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k48911-367",
+   "id": "k15184-367",
    "videoId": 489,
    "speaker": "fatimalette",
    "start": 0,
@@ -4792,7 +4792,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k3066-682",
+   "id": "k59494-682",
    "videoId": 489,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -4819,7 +4819,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k29055-419",
+   "id": "k85337-419",
    "videoId": 112,
    "speaker": "naeembaig",
    "start": 0,
@@ -4848,7 +4848,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23343-311",
+   "id": "k85168-311",
    "videoId": 103,
    "speaker": "drtesneem",
    "start": 0,
@@ -4875,7 +4875,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k47061-669",
+   "id": "k3510-669",
    "videoId": 9,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -4902,7 +4902,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84710-882",
+   "id": "k36303-882",
    "videoId": 9,
    "speaker": "umairhaseeb",
    "start": 0,
@@ -4931,7 +4931,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k18907-945",
+   "id": "k47679-945",
    "videoId": 9,
    "speaker": "dawoodyasin",
    "start": 0,
@@ -4958,7 +4958,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k6394-617",
+   "id": "k95591-617",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -4985,7 +4985,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k42880-781",
+   "id": "k32566-781",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -5014,7 +5014,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k40335-122",
+   "id": "k24189-122",
    "videoId": 11,
    "speaker": "suleimanhani",
    "start": 0,
@@ -5041,7 +5041,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k85978-450",
+   "id": "k59888-450",
    "videoId": 11,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -5097,7 +5097,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k82025-157",
+   "id": "k92166-157",
    "videoId": 64,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -5124,7 +5124,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k48911-368",
+   "id": "k15184-368",
    "videoId": 10,
    "speaker": "fatimalette",
    "start": 0,
@@ -5151,7 +5151,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k63454-885",
+   "id": "k76829-885",
    "videoId": 10,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -5180,7 +5180,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k29055-420",
+   "id": "k85337-420",
    "videoId": 259,
    "speaker": "naeembaig",
    "start": 0,
@@ -5207,7 +5207,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23343-313",
+   "id": "k85168-313",
    "videoId": 259,
    "speaker": "drtesneem",
    "start": 0,
@@ -5234,7 +5234,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k47061-670",
+   "id": "k3510-670",
    "videoId": 266,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -5263,7 +5263,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84710-883",
+   "id": "k36303-883",
    "videoId": 266,
    "speaker": "umairhaseeb",
    "start": 0,
@@ -5290,7 +5290,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k18907-946",
+   "id": "k47679-946",
    "videoId": 272,
    "speaker": "dawoodyasin",
    "start": 0,
@@ -5317,7 +5317,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k6394-618",
+   "id": "k95591-618",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -5346,7 +5346,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k22876-790",
+   "id": "k11738-790",
    "videoId": 113,
    "speaker": "khalidlatif",
    "start": 0,
@@ -5373,7 +5373,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k40335-123",
+   "id": "k24189-123",
    "videoId": 263,
    "speaker": "suleimanhani",
    "start": 0,
@@ -5400,7 +5400,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k85978-451",
+   "id": "k59888-451",
    "videoId": 113,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -5429,7 +5429,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k67094-509",
+   "id": "k87504-509",
    "videoId": 11,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -5456,7 +5456,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k82025-158",
+   "id": "k92166-158",
    "videoId": 478,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -5483,7 +5483,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k48911-369",
+   "id": "k15184-369",
    "videoId": 486,
    "speaker": "fatimalette",
    "start": 0,
@@ -5512,7 +5512,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k63454-886",
+   "id": "k76829-886",
    "videoId": 489,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -5539,7 +5539,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k29055-421",
+   "id": "k85337-421",
    "videoId": 489,
    "speaker": "naeembaig",
    "start": 0,
@@ -5566,7 +5566,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k78140-322",
+   "id": "k50932-322",
    "videoId": 112,
    "speaker": "drtesneem",
    "start": 0,
@@ -5595,7 +5595,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k47061-671",
+   "id": "k3510-671",
    "videoId": 103,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -5622,7 +5622,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84710-884",
+   "id": "k36303-884",
    "videoId": 9,
    "speaker": "umairhaseeb",
    "start": 0,
@@ -5649,7 +5649,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k18907-947",
+   "id": "k47679-947",
    "videoId": 9,
    "speaker": "dawoodyasin",
    "start": 0,
@@ -5678,7 +5678,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k6394-619",
+   "id": "k95591-619",
    "videoId": 486,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -5705,7 +5705,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94630-793",
+   "id": "k470-793",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -5761,7 +5761,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k97838-453",
+   "id": "k72763-453",
    "videoId": 11,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -5815,7 +5815,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k97092-160",
+   "id": "k86647-160",
    "videoId": 64,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -5844,7 +5844,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k48911-370",
+   "id": "k15184-370",
    "videoId": 64,
    "speaker": "fatimalette",
    "start": 0,
@@ -5871,7 +5871,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k63454-887",
+   "id": "k76829-887",
    "videoId": 10,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -5898,7 +5898,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k29055-422",
+   "id": "k85337-422",
    "videoId": 10,
    "speaker": "naeembaig",
    "start": 0,
@@ -5927,7 +5927,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k21955-332",
+   "id": "k90333-332",
    "videoId": 259,
    "speaker": "drtesneem",
    "start": 0,
@@ -5954,7 +5954,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k47061-672",
+   "id": "k3510-672",
    "videoId": 259,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -5981,7 +5981,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k7209-133",
+   "id": "k12631-133",
    "videoId": 266,
    "speaker": "umairhaseeb",
    "start": 0,
@@ -6010,7 +6010,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k6394-620",
+   "id": "k95591-620",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -6037,7 +6037,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k65316-802",
+   "id": "k43189-802",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -6093,7 +6093,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k48977-463",
+   "id": "k87388-463",
    "videoId": 263,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -6147,7 +6147,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k97092-162",
+   "id": "k86647-162",
    "videoId": 113,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -6176,7 +6176,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k88516-371",
+   "id": "k62981-371",
    "videoId": 478,
    "speaker": "fatimalette",
    "start": 0,
@@ -6203,7 +6203,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k63454-888",
+   "id": "k76829-888",
    "videoId": 478,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -6230,7 +6230,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k29055-423",
+   "id": "k85337-423",
    "videoId": 486,
    "speaker": "naeembaig",
    "start": 0,
@@ -6259,7 +6259,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k21955-333",
+   "id": "k90333-333",
    "videoId": 489,
    "speaker": "drtesneem",
    "start": 0,
@@ -6286,7 +6286,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k70158-673",
+   "id": "k48644-673",
    "videoId": 489,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -6313,7 +6313,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k7209-134",
+   "id": "k12631-134",
    "videoId": 112,
    "speaker": "umairhaseeb",
    "start": 0,
@@ -6342,7 +6342,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k24960-97",
+   "id": "k4995-97",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -6369,7 +6369,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k65316-803",
+   "id": "k43189-803",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -6396,7 +6396,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99936-129",
+   "id": "k39525-129",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -6425,7 +6425,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k73630-623",
+   "id": "k56223-623",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -6479,7 +6479,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k65759-163",
+   "id": "k39411-163",
    "videoId": 15,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -6508,7 +6508,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k88516-372",
+   "id": "k62981-372",
    "videoId": 11,
    "speaker": "fatimalette",
    "start": 0,
@@ -6535,7 +6535,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k63454-889",
+   "id": "k76829-889",
    "videoId": 11,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -6562,7 +6562,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23510-424",
+   "id": "k58876-424",
    "videoId": 64,
    "speaker": "naeembaig",
    "start": 0,
@@ -6591,7 +6591,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k21955-334",
+   "id": "k90333-334",
    "videoId": 64,
    "speaker": "drtesneem",
    "start": 0,
@@ -6618,7 +6618,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k70158-674",
+   "id": "k48644-674",
    "videoId": 10,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -6645,7 +6645,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k7209-135",
+   "id": "k12631-135",
    "videoId": 10,
    "speaker": "umairhaseeb",
    "start": 0,
@@ -6674,7 +6674,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k24960-98",
+   "id": "k4995-98",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -6701,7 +6701,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k65316-804",
+   "id": "k43189-804",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -6728,7 +6728,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99936-130",
+   "id": "k39525-130",
    "videoId": 266,
    "speaker": "suleimanhani",
    "start": 0,
@@ -6757,7 +6757,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k73630-624",
+   "id": "k56223-624",
    "videoId": 266,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -6811,7 +6811,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k65759-164",
+   "id": "k39411-164",
    "videoId": 272,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -6840,7 +6840,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99604-373",
+   "id": "k10138-373",
    "videoId": 263,
    "speaker": "fatimalette",
    "start": 0,
@@ -6867,7 +6867,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8937-920",
+   "id": "k15686-920",
    "videoId": 263,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -6894,7 +6894,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23510-425",
+   "id": "k58876-425",
    "videoId": 113,
    "speaker": "naeembaig",
    "start": 0,
@@ -6923,7 +6923,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2501-344",
+   "id": "k69699-344",
    "videoId": 478,
    "speaker": "drtesneem",
    "start": 0,
@@ -6950,7 +6950,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k70158-675",
+   "id": "k48644-675",
    "videoId": 478,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -6977,7 +6977,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k11051-99",
+   "id": "k80968-99",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -7006,7 +7006,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k65316-805",
+   "id": "k43189-805",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -7033,7 +7033,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99936-131",
+   "id": "k39525-131",
    "videoId": 489,
    "speaker": "suleimanhani",
    "start": 0,
@@ -7060,7 +7060,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k73630-625",
+   "id": "k56223-625",
    "videoId": 112,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -7116,7 +7116,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k65759-165",
+   "id": "k39411-165",
    "videoId": 9,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -7143,7 +7143,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99604-374",
+   "id": "k10138-374",
    "videoId": 9,
    "speaker": "fatimalette",
    "start": 0,
@@ -7172,7 +7172,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8937-921",
+   "id": "k15686-921",
    "videoId": 9,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -7199,7 +7199,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23510-426",
+   "id": "k58876-426",
    "videoId": 9,
    "speaker": "naeembaig",
    "start": 0,
@@ -7226,7 +7226,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2501-345",
+   "id": "k69699-345",
    "videoId": 15,
    "speaker": "drtesneem",
    "start": 0,
@@ -7255,7 +7255,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k70158-676",
+   "id": "k48644-676",
    "videoId": 11,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -7282,7 +7282,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k11051-100",
+   "id": "k80968-100",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -7309,7 +7309,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k65316-806",
+   "id": "k43189-806",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -7365,7 +7365,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k80420-645",
+   "id": "k63990-645",
    "videoId": 10,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -7421,7 +7421,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k65759-166",
+   "id": "k39411-166",
    "videoId": 259,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -7448,7 +7448,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99604-375",
+   "id": "k10138-375",
    "videoId": 259,
    "speaker": "fatimalette",
    "start": 0,
@@ -7475,7 +7475,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8937-922",
+   "id": "k15686-922",
    "videoId": 266,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -7504,7 +7504,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23510-427",
+   "id": "k58876-427",
    "videoId": 266,
    "speaker": "naeembaig",
    "start": 0,
@@ -7531,7 +7531,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k35152-346",
+   "id": "k74194-346",
    "videoId": 272,
    "speaker": "drtesneem",
    "start": 0,
@@ -7558,7 +7558,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8149-998",
+   "id": "k59807-998",
    "videoId": 272,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -7587,7 +7587,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k11051-101",
+   "id": "k80968-101",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -7614,7 +7614,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k83094-807",
+   "id": "k64258-807",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -7670,7 +7670,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k10824-650",
+   "id": "k53344-650",
    "videoId": 478,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -7724,7 +7724,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k65759-167",
+   "id": "k39411-167",
    "videoId": 486,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -7753,7 +7753,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61393-376",
+   "id": "k94416-376",
    "videoId": 489,
    "speaker": "fatimalette",
    "start": 0,
@@ -7780,7 +7780,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8937-923",
+   "id": "k15686-923",
    "videoId": 489,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -7807,7 +7807,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23510-428",
+   "id": "k58876-428",
    "videoId": 112,
    "speaker": "naeembaig",
    "start": 0,
@@ -7836,7 +7836,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k55113-352",
+   "id": "k98528-352",
    "videoId": 103,
    "speaker": "drtesneem",
    "start": 0,
@@ -7863,7 +7863,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8149-999",
+   "id": "k59807-999",
    "videoId": 9,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -7890,7 +7890,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k92865-103",
+   "id": "k610-103",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -7919,7 +7919,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k83094-808",
+   "id": "k64258-808",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -7946,7 +7946,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k64956-241",
+   "id": "k10675-241",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -7973,7 +7973,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94159-703",
+   "id": "k70442-703",
    "videoId": 15,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -8029,7 +8029,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k51458-168",
+   "id": "k89269-168",
    "videoId": 11,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -8056,7 +8056,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k59528-377",
+   "id": "k68516-377",
    "videoId": 64,
    "speaker": "fatimalette",
    "start": 0,
@@ -8085,7 +8085,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8937-924",
+   "id": "k15686-924",
    "videoId": 64,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -8112,7 +8112,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23510-429",
+   "id": "k58876-429",
    "videoId": 10,
    "speaker": "naeembaig",
    "start": 0,
@@ -8139,7 +8139,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k55113-353",
+   "id": "k98528-353",
    "videoId": 10,
    "speaker": "drtesneem",
    "start": 0,
@@ -8168,7 +8168,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k12553-1001",
+   "id": "k90465-1001",
    "videoId": 259,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -8195,7 +8195,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k92865-104",
+   "id": "k610-104",
    "videoId": 486,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -8222,7 +8222,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k83094-809",
+   "id": "k64258-809",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -8251,7 +8251,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k64956-242",
+   "id": "k10675-242",
    "videoId": 266,
    "speaker": "suleimanhani",
    "start": 0,
@@ -8278,7 +8278,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k39996-705",
+   "id": "k1702-705",
    "videoId": 272,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -8334,7 +8334,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k51458-169",
+   "id": "k89269-169",
    "videoId": 263,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -8361,7 +8361,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k59528-378",
+   "id": "k68516-378",
    "videoId": 263,
    "speaker": "fatimalette",
    "start": 0,
@@ -8388,7 +8388,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8937-925",
+   "id": "k15686-925",
    "videoId": 113,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -8417,7 +8417,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k35126-430",
+   "id": "k4791-430",
    "videoId": 478,
    "speaker": "naeembaig",
    "start": 0,
@@ -8444,7 +8444,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k55113-354",
+   "id": "k98528-354",
    "videoId": 478,
    "speaker": "drtesneem",
    "start": 0,
@@ -8471,7 +8471,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k17198-997",
+   "id": "k66705-997",
    "videoId": 486,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -8500,7 +8500,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k92865-105",
+   "id": "k610-105",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -8527,7 +8527,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k83094-810",
+   "id": "k64258-810",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -8554,7 +8554,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k64956-243",
+   "id": "k10675-243",
    "videoId": 112,
    "speaker": "suleimanhani",
    "start": 0,
@@ -8583,7 +8583,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k39996-706",
+   "id": "k1702-706",
    "videoId": 103,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -8637,7 +8637,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k51458-170",
+   "id": "k89269-170",
    "videoId": 9,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -8666,7 +8666,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k59528-379",
+   "id": "k68516-379",
    "videoId": 9,
    "speaker": "fatimalette",
    "start": 0,
@@ -8693,7 +8693,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k22657-86",
+   "id": "k34091-86",
    "videoId": 9,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -8720,7 +8720,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k35126-431",
+   "id": "k4791-431",
    "videoId": 15,
    "speaker": "naeembaig",
    "start": 0,
@@ -8749,7 +8749,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23343-312",
+   "id": "k85168-312",
    "videoId": 11,
    "speaker": "drtesneem",
    "start": 0,
@@ -8776,7 +8776,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k6902-1000",
+   "id": "k84619-1000",
    "videoId": 11,
    "speaker": "amjadtarsin",
    "start": 0,
@@ -8803,7 +8803,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k92865-106",
+   "id": "k610-106",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -8832,7 +8832,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k83094-811",
+   "id": "k64258-811",
    "videoId": 113,
    "speaker": "khalidlatif",
    "start": 0,
@@ -8859,7 +8859,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k64956-244",
+   "id": "k10675-244",
    "videoId": 10,
    "speaker": "suleimanhani",
    "start": 0,
@@ -8886,7 +8886,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k3056-730",
+   "id": "k29052-730",
    "videoId": 10,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -8915,7 +8915,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k32223-225",
+   "id": "k16038-225",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -8942,7 +8942,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k51458-171",
+   "id": "k89269-171",
    "videoId": 259,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -8969,7 +8969,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k59528-380",
+   "id": "k68516-380",
    "videoId": 266,
    "speaker": "fatimalette",
    "start": 0,
@@ -8998,7 +8998,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k44359-76",
+   "id": "k80228-76",
    "videoId": 266,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -9025,7 +9025,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k35126-432",
+   "id": "k4791-432",
    "videoId": 272,
    "speaker": "naeembaig",
    "start": 0,
@@ -9052,7 +9052,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k78140-321",
+   "id": "k50932-321",
    "videoId": 272,
    "speaker": "drtesneem",
    "start": 0,
@@ -9081,7 +9081,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k92865-107",
+   "id": "k610-107",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -9108,7 +9108,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k83094-812",
+   "id": "k64258-812",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -9135,7 +9135,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k91596-323",
+   "id": "k99410-323",
    "videoId": 113,
    "speaker": "suleimanhani",
    "start": 0,
@@ -9164,7 +9164,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k3056-731",
+   "id": "k29052-731",
    "videoId": 478,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -9191,7 +9191,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k32223-226",
+   "id": "k16038-226",
    "videoId": 10,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -9218,7 +9218,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k51458-172",
+   "id": "k89269-172",
    "videoId": 486,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -9247,7 +9247,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k58071-381",
+   "id": "k60353-381",
    "videoId": 489,
    "speaker": "fatimalette",
    "start": 0,
@@ -9274,7 +9274,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k44359-77",
+   "id": "k80228-77",
    "videoId": 489,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -9301,7 +9301,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k35126-433",
+   "id": "k4791-433",
    "videoId": 112,
    "speaker": "naeembaig",
    "start": 0,
@@ -9330,7 +9330,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k92865-108",
+   "id": "k610-108",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -9357,7 +9357,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28860-813",
+   "id": "k7877-813",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -9384,7 +9384,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k91596-324",
+   "id": "k99410-324",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -9413,7 +9413,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k3056-732",
+   "id": "k29052-732",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -9440,7 +9440,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k32223-227",
+   "id": "k16038-227",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -9467,7 +9467,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k41162-174",
+   "id": "k13330-174",
    "videoId": 15,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -9496,7 +9496,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k58071-382",
+   "id": "k60353-382",
    "videoId": 11,
    "speaker": "fatimalette",
    "start": 0,
@@ -9523,7 +9523,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k44359-78",
+   "id": "k80228-78",
    "videoId": 11,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -9550,7 +9550,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k92640-434",
+   "id": "k61533-434",
    "videoId": 64,
    "speaker": "naeembaig",
    "start": 0,
@@ -9579,7 +9579,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61948-110",
+   "id": "k13656-110",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -9606,7 +9606,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28860-814",
+   "id": "k7877-814",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -9633,7 +9633,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k91596-325",
+   "id": "k99410-325",
    "videoId": 10,
    "speaker": "suleimanhani",
    "start": 0,
@@ -9662,7 +9662,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k26639-738",
+   "id": "k65597-738",
    "videoId": 259,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -9689,7 +9689,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k32223-228",
+   "id": "k16038-228",
    "videoId": 11,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -9716,7 +9716,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k62600-175",
+   "id": "k25647-175",
    "videoId": 266,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -9745,7 +9745,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k50201-384",
+   "id": "k85196-384",
    "videoId": 266,
    "speaker": "fatimalette",
    "start": 0,
@@ -9772,7 +9772,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k44359-80",
+   "id": "k80228-80",
    "videoId": 272,
    "speaker": "drumarfaruqabdallah",
    "start": 0,
@@ -9799,7 +9799,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k91538-409",
+   "id": "k58305-409",
    "videoId": 272,
    "speaker": "naeembaig",
    "start": 0,
@@ -9828,7 +9828,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61948-111",
+   "id": "k13656-111",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -9855,7 +9855,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28860-815",
+   "id": "k7877-815",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -9882,7 +9882,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k65321-327",
+   "id": "k32878-327",
    "videoId": 113,
    "speaker": "suleimanhani",
    "start": 0,
@@ -9911,7 +9911,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k89988-956",
+   "id": "k22370-956",
    "videoId": 478,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -9938,7 +9938,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k4506-229",
+   "id": "k93480-229",
    "videoId": 15,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -9965,7 +9965,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k62600-176",
+   "id": "k25647-176",
    "videoId": 486,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -9994,7 +9994,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94655-385",
+   "id": "k77172-385",
    "videoId": 489,
    "speaker": "fatimalette",
    "start": 0,
@@ -10021,7 +10021,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61948-112",
+   "id": "k13656-112",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -10048,7 +10048,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28860-816",
+   "id": "k7877-816",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -10077,7 +10077,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k5352-318",
+   "id": "k97504-318",
    "videoId": 103,
    "speaker": "suleimanhani",
    "start": 0,
@@ -10104,7 +10104,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k21479-967",
+   "id": "k29567-967",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -10131,7 +10131,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k4506-230",
+   "id": "k93480-230",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -10160,7 +10160,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k62600-177",
+   "id": "k25647-177",
    "videoId": 9,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -10187,7 +10187,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94655-386",
+   "id": "k77172-386",
    "videoId": 9,
    "speaker": "fatimalette",
    "start": 0,
@@ -10214,7 +10214,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61948-113",
+   "id": "k13656-113",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -10243,7 +10243,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28860-817",
+   "id": "k7877-817",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -10270,7 +10270,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k5352-319",
+   "id": "k97504-319",
    "videoId": 11,
    "speaker": "suleimanhani",
    "start": 0,
@@ -10297,7 +10297,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k76873-970",
+   "id": "k90965-970",
    "videoId": 64,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -10326,7 +10326,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k4506-231",
+   "id": "k93480-231",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -10353,7 +10353,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k87308-179",
+   "id": "k81299-179",
    "videoId": 10,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -10380,7 +10380,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94655-387",
+   "id": "k77172-387",
    "videoId": 10,
    "speaker": "fatimalette",
    "start": 0,
@@ -10409,7 +10409,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61948-114",
+   "id": "k13656-114",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -10436,7 +10436,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k16391-818",
+   "id": "k98091-818",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -10463,7 +10463,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k98629-460",
+   "id": "k88119-460",
    "videoId": 266,
    "speaker": "suleimanhani",
    "start": 0,
@@ -10492,7 +10492,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k76873-971",
+   "id": "k90965-971",
    "videoId": 266,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -10519,7 +10519,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k4506-232",
+   "id": "k93480-232",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -10546,7 +10546,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k87308-180",
+   "id": "k81299-180",
    "videoId": 272,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -10575,7 +10575,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94655-388",
+   "id": "k77172-388",
    "videoId": 263,
    "speaker": "fatimalette",
    "start": 0,
@@ -10602,7 +10602,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k68329-137",
+   "id": "k86939-137",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -10629,7 +10629,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k16391-821",
+   "id": "k98091-821",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -10658,7 +10658,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k98629-461",
+   "id": "k88119-461",
    "videoId": 478,
    "speaker": "suleimanhani",
    "start": 0,
@@ -10685,7 +10685,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k27245-983",
+   "id": "k60879-983",
    "videoId": 478,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -10712,7 +10712,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k4506-233",
+   "id": "k93480-233",
    "videoId": 10,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -10741,7 +10741,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k87308-181",
+   "id": "k81299-181",
    "videoId": 489,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -10768,7 +10768,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94655-389",
+   "id": "k77172-389",
    "videoId": 489,
    "speaker": "fatimalette",
    "start": 0,
@@ -10795,7 +10795,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k68329-138",
+   "id": "k86939-138",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -10824,7 +10824,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k71890-824",
+   "id": "k6431-824",
    "videoId": 113,
    "speaker": "khalidlatif",
    "start": 0,
@@ -10851,7 +10851,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k98629-462",
+   "id": "k88119-462",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -10878,7 +10878,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k77571-1027",
+   "id": "k37151-1027",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -10907,7 +10907,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k4506-234",
+   "id": "k93480-234",
    "videoId": 11,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -10934,7 +10934,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k87308-182",
+   "id": "k81299-182",
    "videoId": 9,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -10961,7 +10961,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94655-390",
+   "id": "k77172-390",
    "videoId": 15,
    "speaker": "fatimalette",
    "start": 0,
@@ -10990,7 +10990,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k68329-139",
+   "id": "k86939-139",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -11017,7 +11017,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k71890-825",
+   "id": "k6431-825",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -11044,7 +11044,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k12931-464",
+   "id": "k21825-464",
    "videoId": 64,
    "speaker": "suleimanhani",
    "start": 0,
@@ -11073,7 +11073,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k37511-1029",
+   "id": "k44795-1029",
    "videoId": 64,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -11100,7 +11100,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k13854-235",
+   "id": "k43391-235",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -11127,7 +11127,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k5560-144",
+   "id": "k4751-144",
    "videoId": 10,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -11156,7 +11156,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k81940-391",
+   "id": "k14374-391",
    "videoId": 259,
    "speaker": "fatimalette",
    "start": 0,
@@ -11183,7 +11183,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k68329-140",
+   "id": "k86939-140",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -11210,7 +11210,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k71890-826",
+   "id": "k6431-826",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -11239,7 +11239,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k75474-469",
+   "id": "k50718-469",
    "videoId": 266,
    "speaker": "suleimanhani",
    "start": 0,
@@ -11266,7 +11266,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k38554-1036",
+   "id": "k69586-1036",
    "videoId": 272,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -11293,7 +11293,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k13854-236",
+   "id": "k43391-236",
    "videoId": 10,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -11322,7 +11322,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k15574-146",
+   "id": "k13819-146",
    "videoId": 263,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -11349,7 +11349,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k81940-392",
+   "id": "k14374-392",
    "videoId": 263,
    "speaker": "fatimalette",
    "start": 0,
@@ -11376,7 +11376,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k73339-194",
+   "id": "k14010-194",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -11405,7 +11405,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k71890-827",
+   "id": "k6431-827",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -11432,7 +11432,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k24976-513",
+   "id": "k54970-513",
    "videoId": 478,
    "speaker": "suleimanhani",
    "start": 0,
@@ -11459,7 +11459,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k38554-1037",
+   "id": "k69586-1037",
    "videoId": 486,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -11488,7 +11488,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k13854-237",
+   "id": "k43391-237",
    "videoId": 11,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -11515,7 +11515,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k82025-159",
+   "id": "k92166-159",
    "videoId": 489,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -11542,7 +11542,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k81940-393",
+   "id": "k14374-393",
    "videoId": 112,
    "speaker": "fatimalette",
    "start": 0,
@@ -11571,7 +11571,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k73339-195",
+   "id": "k14010-195",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -11598,7 +11598,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k71890-828",
+   "id": "k6431-828",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -11654,7 +11654,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k34190-73",
+   "id": "k25396-73",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -11681,7 +11681,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k13854-238",
+   "id": "k43391-238",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -11708,7 +11708,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k87308-183",
+   "id": "k81299-183",
    "videoId": 15,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -11737,7 +11737,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k81940-394",
+   "id": "k14374-394",
    "videoId": 11,
    "speaker": "fatimalette",
    "start": 0,
@@ -11764,7 +11764,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k73339-196",
+   "id": "k14010-196",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -11791,7 +11791,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k71890-829",
+   "id": "k6431-829",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -11847,7 +11847,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k62035-75",
+   "id": "k51093-75",
    "videoId": 10,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -11874,7 +11874,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k13854-239",
+   "id": "k43391-239",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -11903,7 +11903,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k251-200",
+   "id": "k66742-200",
    "videoId": 259,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -11930,7 +11930,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k81940-395",
+   "id": "k14374-395",
    "videoId": 259,
    "speaker": "fatimalette",
    "start": 0,
@@ -11957,7 +11957,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k73339-197",
+   "id": "k14010-197",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -11986,7 +11986,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43467-846",
+   "id": "k93751-846",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -12040,7 +12040,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k63246-74",
+   "id": "k40743-74",
    "videoId": 272,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -12069,7 +12069,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k13854-240",
+   "id": "k43391-240",
    "videoId": 15,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -12096,7 +12096,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k251-201",
+   "id": "k66742-201",
    "videoId": 263,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -12123,7 +12123,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94490-396",
+   "id": "k36789-396",
    "videoId": 113,
    "speaker": "fatimalette",
    "start": 0,
@@ -12152,7 +12152,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k73339-198",
+   "id": "k14010-198",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -12179,7 +12179,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k89803-848",
+   "id": "k2559-848",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -12235,7 +12235,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k74136-93",
+   "id": "k5643-93",
    "videoId": 489,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -12262,7 +12262,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k42147-246",
+   "id": "k94731-246",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -12289,7 +12289,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k251-202",
+   "id": "k66742-202",
    "videoId": 112,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -12318,7 +12318,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94490-398",
+   "id": "k36789-398",
    "videoId": 103,
    "speaker": "fatimalette",
    "start": 0,
@@ -12345,7 +12345,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k73339-199",
+   "id": "k14010-199",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -12372,7 +12372,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k89803-849",
+   "id": "k2559-849",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -12401,7 +12401,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k13393-602",
+   "id": "k7838-602",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -12428,7 +12428,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k74136-94",
+   "id": "k5643-94",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -12455,7 +12455,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k42147-247",
+   "id": "k94731-247",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -12484,7 +12484,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k251-203",
+   "id": "k66742-203",
    "videoId": 11,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -12511,7 +12511,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94490-399",
+   "id": "k36789-399",
    "videoId": 11,
    "speaker": "fatimalette",
    "start": 0,
@@ -12538,7 +12538,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k34137-293",
+   "id": "k26829-293",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -12567,7 +12567,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k89803-850",
+   "id": "k2559-850",
    "videoId": 113,
    "speaker": "khalidlatif",
    "start": 0,
@@ -12594,7 +12594,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k13393-603",
+   "id": "k7838-603",
    "videoId": 10,
    "speaker": "suleimanhani",
    "start": 0,
@@ -12621,7 +12621,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k74136-95",
+   "id": "k5643-95",
    "videoId": 10,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -12650,7 +12650,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k42147-248",
+   "id": "k94731-248",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -12677,7 +12677,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k251-204",
+   "id": "k66742-204",
    "videoId": 259,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -12704,7 +12704,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94490-400",
+   "id": "k36789-400",
    "videoId": 266,
    "speaker": "fatimalette",
    "start": 0,
@@ -12733,7 +12733,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k34137-294",
+   "id": "k26829-294",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -12760,7 +12760,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k89803-851",
+   "id": "k2559-851",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -12787,7 +12787,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k98418-640",
+   "id": "k90551-640",
    "videoId": 272,
    "speaker": "suleimanhani",
    "start": 0,
@@ -12816,7 +12816,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k74136-96",
+   "id": "k5643-96",
    "videoId": 263,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -12843,7 +12843,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k70624-249",
+   "id": "k23302-249",
    "videoId": 10,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -12870,7 +12870,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k93190-314",
+   "id": "k21811-314",
    "videoId": 113,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -12899,7 +12899,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k40067-401",
+   "id": "k58678-401",
    "videoId": 478,
    "speaker": "fatimalette",
    "start": 0,
@@ -12926,7 +12926,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k34137-295",
+   "id": "k26829-295",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -12953,7 +12953,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k89803-852",
+   "id": "k2559-852",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -12982,7 +12982,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k98418-641",
+   "id": "k90551-641",
    "videoId": 489,
    "speaker": "suleimanhani",
    "start": 0,
@@ -13009,7 +13009,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k87148-128",
+   "id": "k54418-128",
    "videoId": 489,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -13036,7 +13036,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k70624-250",
+   "id": "k23302-250",
    "videoId": 11,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -13065,7 +13065,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k93190-315",
+   "id": "k21811-315",
    "videoId": 103,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -13092,7 +13092,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k40067-402",
+   "id": "k58678-402",
    "videoId": 9,
    "speaker": "fatimalette",
    "start": 0,
@@ -13119,7 +13119,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k34137-296",
+   "id": "k26829-296",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -13148,7 +13148,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k89803-853",
+   "id": "k2559-853",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -13175,7 +13175,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k98418-642",
+   "id": "k90551-642",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -13202,7 +13202,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k38741-184",
+   "id": "k99018-184",
    "videoId": 15,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -13231,7 +13231,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k32809-251",
+   "id": "k23735-251",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -13258,7 +13258,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k93190-316",
+   "id": "k21811-316",
    "videoId": 11,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -13285,7 +13285,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k40067-403",
+   "id": "k58678-403",
    "videoId": 64,
    "speaker": "fatimalette",
    "start": 0,
@@ -13314,7 +13314,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k38709-440",
+   "id": "k86309-440",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -13341,7 +13341,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k45588-857",
+   "id": "k38136-857",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -13368,7 +13368,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k98418-643",
+   "id": "k90551-643",
    "videoId": 10,
    "speaker": "suleimanhani",
    "start": 0,
@@ -13397,7 +13397,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k38741-185",
+   "id": "k99018-185",
    "videoId": 259,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -13424,7 +13424,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k32809-252",
+   "id": "k23735-252",
    "videoId": 10,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -13451,7 +13451,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k93190-317",
+   "id": "k21811-317",
    "videoId": 266,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -13480,7 +13480,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k7987-404",
+   "id": "k21655-404",
    "videoId": 266,
    "speaker": "fatimalette",
    "start": 0,
@@ -13507,7 +13507,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k38709-441",
+   "id": "k86309-441",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -13534,7 +13534,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k32700-859",
+   "id": "k10743-859",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -13563,7 +13563,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k98418-644",
+   "id": "k90551-644",
    "videoId": 263,
    "speaker": "suleimanhani",
    "start": 0,
@@ -13590,7 +13590,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9759-192",
+   "id": "k37118-192",
    "videoId": 263,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -13617,7 +13617,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k32809-253",
+   "id": "k23735-253",
    "videoId": 11,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -13646,7 +13646,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23118-455",
+   "id": "k64440-455",
    "videoId": 478,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -13673,7 +13673,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k7987-405",
+   "id": "k21655-405",
    "videoId": 478,
    "speaker": "fatimalette",
    "start": 0,
@@ -13700,7 +13700,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k38709-442",
+   "id": "k86309-442",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -13729,7 +13729,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k32700-860",
+   "id": "k10743-860",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -13756,7 +13756,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k36881-649",
+   "id": "k56605-649",
    "videoId": 489,
    "speaker": "suleimanhani",
    "start": 0,
@@ -13783,7 +13783,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99966-211",
+   "id": "k58336-211",
    "videoId": 112,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -13812,7 +13812,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k83032-254",
+   "id": "k90529-254",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -13839,7 +13839,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23118-456",
+   "id": "k64440-456",
    "videoId": 9,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -13866,7 +13866,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k97384-406",
+   "id": "k79858-406",
    "videoId": 9,
    "speaker": "fatimalette",
    "start": 0,
@@ -13895,7 +13895,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k38709-443",
+   "id": "k86309-443",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -13922,7 +13922,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23913-863",
+   "id": "k20738-863",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -13949,7 +13949,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8320-653",
+   "id": "k34367-653",
    "videoId": 15,
    "speaker": "suleimanhani",
    "start": 0,
@@ -13978,7 +13978,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99966-212",
+   "id": "k58336-212",
    "videoId": 11,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -14005,7 +14005,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k83032-255",
+   "id": "k90529-255",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -14032,7 +14032,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23118-457",
+   "id": "k64440-457",
    "videoId": 64,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -14061,7 +14061,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k97384-407",
+   "id": "k79858-407",
    "videoId": 64,
    "speaker": "fatimalette",
    "start": 0,
@@ -14088,7 +14088,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k38709-444",
+   "id": "k86309-444",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -14115,7 +14115,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23913-864",
+   "id": "k20738-864",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -14144,7 +14144,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8320-654",
+   "id": "k34367-654",
    "videoId": 259,
    "speaker": "suleimanhani",
    "start": 0,
@@ -14171,7 +14171,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99966-213",
+   "id": "k58336-213",
    "videoId": 259,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -14198,7 +14198,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k83032-256",
+   "id": "k90529-256",
    "videoId": 15,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -14227,7 +14227,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23118-458",
+   "id": "k64440-458",
    "videoId": 266,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -14254,7 +14254,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k50201-383",
+   "id": "k85196-383",
    "videoId": 272,
    "speaker": "fatimalette",
    "start": 0,
@@ -14281,7 +14281,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k38709-445",
+   "id": "k86309-445",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -14310,7 +14310,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23913-866",
+   "id": "k20738-866",
    "videoId": 113,
    "speaker": "khalidlatif",
    "start": 0,
@@ -14337,7 +14337,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99054-712",
+   "id": "k22760-712",
    "videoId": 263,
    "speaker": "suleimanhani",
    "start": 0,
@@ -14364,7 +14364,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99966-214",
+   "id": "k58336-214",
    "videoId": 113,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -14393,7 +14393,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k83032-257",
+   "id": "k90529-257",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -14420,7 +14420,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23118-459",
+   "id": "k64440-459",
    "videoId": 478,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -14447,7 +14447,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94490-397",
+   "id": "k36789-397",
    "videoId": 486,
    "speaker": "fatimalette",
    "start": 0,
@@ -14476,7 +14476,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k76332-470",
+   "id": "k71135-470",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -14503,7 +14503,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23913-867",
+   "id": "k20738-867",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -14530,7 +14530,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99054-713",
+   "id": "k22760-713",
    "videoId": 112,
    "speaker": "suleimanhani",
    "start": 0,
@@ -14559,7 +14559,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84454-215",
+   "id": "k70347-215",
    "videoId": 103,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -14586,7 +14586,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k82635-258",
+   "id": "k48969-258",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -14613,7 +14613,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k71073-514",
+   "id": "k20972-514",
    "videoId": 9,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -14642,7 +14642,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k76332-471",
+   "id": "k71135-471",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -14669,7 +14669,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8278-869",
+   "id": "k92241-869",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -14696,7 +14696,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99054-714",
+   "id": "k22760-714",
    "videoId": 15,
    "speaker": "suleimanhani",
    "start": 0,
@@ -14725,7 +14725,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2631-218",
+   "id": "k1373-218",
    "videoId": 11,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -14752,7 +14752,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k82635-259",
+   "id": "k48969-259",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -14779,7 +14779,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k71073-515",
+   "id": "k20972-515",
    "videoId": 64,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -14808,7 +14808,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k76332-472",
+   "id": "k71135-472",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -14835,7 +14835,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k31902-873",
+   "id": "k64956-873",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -14862,7 +14862,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28654-716",
+   "id": "k75716-716",
    "videoId": 10,
    "speaker": "suleimanhani",
    "start": 0,
@@ -14891,7 +14891,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2631-219",
+   "id": "k1373-219",
    "videoId": 259,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -14918,7 +14918,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k82635-260",
+   "id": "k48969-260",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -14945,7 +14945,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k71073-516",
+   "id": "k20972-516",
    "videoId": 266,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -14974,7 +14974,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k76332-473",
+   "id": "k71135-473",
    "videoId": 486,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -15001,7 +15001,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99367-907",
+   "id": "k46594-907",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -15028,7 +15028,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28654-717",
+   "id": "k75716-717",
    "videoId": 272,
    "speaker": "suleimanhani",
    "start": 0,
@@ -15057,7 +15057,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2631-220",
+   "id": "k1373-220",
    "videoId": 263,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -15084,7 +15084,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k16212-261",
+   "id": "k1446-261",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -15111,7 +15111,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k71073-517",
+   "id": "k20972-517",
    "videoId": 113,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -15140,7 +15140,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k76332-474",
+   "id": "k71135-474",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -15167,7 +15167,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99367-908",
+   "id": "k46594-908",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -15194,7 +15194,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23290-718",
+   "id": "k54930-718",
    "videoId": 486,
    "speaker": "suleimanhani",
    "start": 0,
@@ -15223,7 +15223,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k53180-217",
+   "id": "k25971-217",
    "videoId": 489,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -15250,7 +15250,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k16212-262",
+   "id": "k1446-262",
    "videoId": 10,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -15277,7 +15277,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k71073-518",
+   "id": "k20972-518",
    "videoId": 112,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -15306,7 +15306,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k76332-475",
+   "id": "k71135-475",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -15333,7 +15333,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99367-909",
+   "id": "k46594-909",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -15360,7 +15360,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23290-719",
+   "id": "k54930-719",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -15389,7 +15389,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k6690-290",
+   "id": "k17125-290",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -15416,7 +15416,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k95219-263",
+   "id": "k84557-263",
    "videoId": 15,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -15443,7 +15443,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k71073-519",
+   "id": "k20972-519",
    "videoId": 15,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -15472,7 +15472,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k93577-481",
+   "id": "k19735-481",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -15499,7 +15499,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99367-910",
+   "id": "k46594-910",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -15526,7 +15526,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k50241-721",
+   "id": "k91767-721",
    "videoId": 64,
    "speaker": "suleimanhani",
    "start": 0,
@@ -15555,7 +15555,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k16891-291",
+   "id": "k41311-291",
    "videoId": 64,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -15582,7 +15582,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k95219-264",
+   "id": "k84557-264",
    "videoId": 10,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -15609,7 +15609,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23181-655",
+   "id": "k83438-655",
    "videoId": 10,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -15638,7 +15638,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k93577-482",
+   "id": "k19735-482",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -15665,7 +15665,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99367-911",
+   "id": "k46594-911",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -15692,7 +15692,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k50241-722",
+   "id": "k91767-722",
    "videoId": 266,
    "speaker": "suleimanhani",
    "start": 0,
@@ -15721,7 +15721,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k16891-292",
+   "id": "k41311-292",
    "videoId": 266,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -15748,7 +15748,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k95219-265",
+   "id": "k84557-265",
    "videoId": 11,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -15775,7 +15775,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23181-656",
+   "id": "k83438-656",
    "videoId": 272,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -15804,7 +15804,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k93577-483",
+   "id": "k19735-483",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -15831,7 +15831,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43114-912",
+   "id": "k7147-912",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -15858,7 +15858,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k31643-724",
+   "id": "k70357-724",
    "videoId": 113,
    "speaker": "suleimanhani",
    "start": 0,
@@ -15887,7 +15887,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9422-355",
+   "id": "k14507-355",
    "videoId": 478,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -15914,7 +15914,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k95219-266",
+   "id": "k84557-266",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -15941,7 +15941,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23181-657",
+   "id": "k83438-657",
    "videoId": 486,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -15970,7 +15970,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k93577-484",
+   "id": "k19735-484",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -15997,7 +15997,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43114-914",
+   "id": "k7147-914",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -16024,7 +16024,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k31643-725",
+   "id": "k70357-725",
    "videoId": 112,
    "speaker": "suleimanhani",
    "start": 0,
@@ -16053,7 +16053,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9422-356",
+   "id": "k14507-356",
    "videoId": 103,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -16080,7 +16080,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k13911-267",
+   "id": "k78351-267",
    "videoId": 11,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -16107,7 +16107,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23181-658",
+   "id": "k83438-658",
    "videoId": 9,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -16136,7 +16136,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k93577-485",
+   "id": "k19735-485",
    "videoId": 486,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -16163,7 +16163,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43114-915",
+   "id": "k7147-915",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -16190,7 +16190,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k31643-726",
+   "id": "k70357-726",
    "videoId": 15,
    "speaker": "suleimanhani",
    "start": 0,
@@ -16219,7 +16219,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k45281-446",
+   "id": "k72185-446",
    "videoId": 11,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -16246,7 +16246,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k13911-268",
+   "id": "k78351-268",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -16273,7 +16273,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23181-659",
+   "id": "k83438-659",
    "videoId": 64,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -16302,7 +16302,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k93577-486",
+   "id": "k19735-486",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -16329,7 +16329,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k59034-918",
+   "id": "k29476-918",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -16356,7 +16356,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k52229-727",
+   "id": "k11537-727",
    "videoId": 10,
    "speaker": "suleimanhani",
    "start": 0,
@@ -16385,7 +16385,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k45281-447",
+   "id": "k72185-447",
    "videoId": 259,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -16412,7 +16412,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k26706-269",
+   "id": "k98258-269",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -16439,7 +16439,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k925-683",
+   "id": "k58466-683",
    "videoId": 266,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -16468,7 +16468,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k64628-520",
+   "id": "k16300-520",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -16495,7 +16495,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k59034-919",
+   "id": "k29476-919",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -16522,7 +16522,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k86837-728",
+   "id": "k45143-728",
    "videoId": 272,
    "speaker": "suleimanhani",
    "start": 0,
@@ -16551,7 +16551,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k45281-448",
+   "id": "k72185-448",
    "videoId": 263,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -16578,7 +16578,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k26706-270",
+   "id": "k98258-270",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -16605,7 +16605,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k925-684",
+   "id": "k58466-684",
    "videoId": 113,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -16634,7 +16634,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k64628-521",
+   "id": "k16300-521",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -16661,7 +16661,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k89616-751",
+   "id": "k11890-751",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -16688,7 +16688,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k29391-901",
+   "id": "k59141-901",
    "videoId": 486,
    "speaker": "suleimanhani",
    "start": 0,
@@ -16717,7 +16717,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k85978-452",
+   "id": "k59888-452",
    "videoId": 489,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -16744,7 +16744,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k26706-271",
+   "id": "k98258-271",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -16771,7 +16771,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k925-685",
+   "id": "k58466-685",
    "videoId": 112,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -16800,7 +16800,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k64628-522",
+   "id": "k16300-522",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -16827,7 +16827,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k89616-752",
+   "id": "k11890-752",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -16854,7 +16854,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k29391-902",
+   "id": "k59141-902",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -16883,7 +16883,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k19597-476",
+   "id": "k64794-476",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -16910,7 +16910,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k26706-272",
+   "id": "k98258-272",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -16937,7 +16937,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k925-686",
+   "id": "k58466-686",
    "videoId": 15,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -16966,7 +16966,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k64628-523",
+   "id": "k16300-523",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -16993,7 +16993,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k89616-753",
+   "id": "k11890-753",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -17020,7 +17020,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k29391-903",
+   "id": "k59141-903",
    "videoId": 64,
    "speaker": "suleimanhani",
    "start": 0,
@@ -17049,7 +17049,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k19597-477",
+   "id": "k64794-477",
    "videoId": 64,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -17076,7 +17076,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k12828-273",
+   "id": "k199-273",
    "videoId": 10,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -17103,7 +17103,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k925-687",
+   "id": "k58466-687",
    "videoId": 10,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -17132,7 +17132,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k64628-524",
+   "id": "k16300-524",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -17186,7 +17186,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k29391-904",
+   "id": "k59141-904",
    "videoId": 266,
    "speaker": "suleimanhani",
    "start": 0,
@@ -17215,7 +17215,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k19597-478",
+   "id": "k64794-478",
    "videoId": 266,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -17242,7 +17242,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k64203-278",
+   "id": "k11204-278",
    "videoId": 15,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -17269,7 +17269,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k15176-733",
+   "id": "k82255-733",
    "videoId": 272,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -17298,7 +17298,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k66498-525",
+   "id": "k17355-525",
    "videoId": 486,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -17352,7 +17352,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k29391-905",
+   "id": "k59141-905",
    "videoId": 113,
    "speaker": "suleimanhani",
    "start": 0,
@@ -17381,7 +17381,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k19597-479",
+   "id": "k64794-479",
    "videoId": 478,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -17408,7 +17408,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k64749-279",
+   "id": "k33109-279",
    "videoId": 10,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -17435,7 +17435,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k15176-734",
+   "id": "k82255-734",
    "videoId": 486,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -17464,7 +17464,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k66498-526",
+   "id": "k17355-526",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -17518,7 +17518,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k1392-939",
+   "id": "k19689-939",
    "videoId": 112,
    "speaker": "suleimanhani",
    "start": 0,
@@ -17547,7 +17547,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k44982-487",
+   "id": "k18655-487",
    "videoId": 103,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -17574,7 +17574,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k64749-280",
+   "id": "k33109-280",
    "videoId": 11,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -17601,7 +17601,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k15176-735",
+   "id": "k82255-735",
    "videoId": 9,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -17630,7 +17630,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23033-528",
+   "id": "k73000-528",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -17684,7 +17684,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k20035-982",
+   "id": "k24491-982",
    "videoId": 15,
    "speaker": "suleimanhani",
    "start": 0,
@@ -17713,7 +17713,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k44982-488",
+   "id": "k18655-488",
    "videoId": 11,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -17767,7 +17767,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k15176-736",
+   "id": "k82255-736",
    "videoId": 64,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -17796,7 +17796,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23033-529",
+   "id": "k73000-529",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -17879,7 +17879,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k44982-489",
+   "id": "k18655-489",
    "videoId": 259,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -17933,7 +17933,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k15176-737",
+   "id": "k82255-737",
    "videoId": 266,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -17962,7 +17962,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23033-530",
+   "id": "k73000-530",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -18045,7 +18045,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k68528-490",
+   "id": "k63047-490",
    "videoId": 263,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -18099,7 +18099,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k71168-747",
+   "id": "k98462-747",
    "videoId": 113,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -18128,7 +18128,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23033-531",
+   "id": "k73000-531",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -18182,7 +18182,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k77214-1002",
+   "id": "k48472-1002",
    "videoId": 486,
    "speaker": "suleimanhani",
    "start": 0,
@@ -18211,7 +18211,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k68528-491",
+   "id": "k63047-491",
    "videoId": 489,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -18238,7 +18238,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k67094-510",
+   "id": "k87504-510",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -18265,7 +18265,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k71168-748",
+   "id": "k98462-748",
    "videoId": 112,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -18294,7 +18294,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23033-532",
+   "id": "k73000-532",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -18348,7 +18348,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k17209-1003",
+   "id": "k46237-1003",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -18377,7 +18377,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k675-512",
+   "id": "k628-512",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -18404,7 +18404,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k19258-701",
+   "id": "k83686-701",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -18431,7 +18431,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k71168-749",
+   "id": "k98462-749",
    "videoId": 15,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -18460,7 +18460,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k13784-533",
+   "id": "k50070-533",
    "videoId": 486,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -18514,7 +18514,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k17209-1004",
+   "id": "k46237-1004",
    "videoId": 64,
    "speaker": "suleimanhani",
    "start": 0,
@@ -18543,7 +18543,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k49420-598",
+   "id": "k43483-598",
    "videoId": 64,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -18570,7 +18570,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k19258-702",
+   "id": "k83686-702",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -18597,7 +18597,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k38153-895",
+   "id": "k27194-895",
    "videoId": 10,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -18626,7 +18626,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k13784-534",
+   "id": "k50070-534",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -18680,7 +18680,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k17209-1005",
+   "id": "k46237-1005",
    "videoId": 266,
    "speaker": "suleimanhani",
    "start": 0,
@@ -18709,7 +18709,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k49420-599",
+   "id": "k43483-599",
    "videoId": 266,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -18736,7 +18736,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61715-741",
+   "id": "k29697-741",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -18763,7 +18763,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k38153-896",
+   "id": "k27194-896",
    "videoId": 272,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -18792,7 +18792,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k73777-535",
+   "id": "k8309-535",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -18819,7 +18819,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99250-776",
+   "id": "k54911-776",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -18846,7 +18846,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k17209-1006",
+   "id": "k46237-1006",
    "videoId": 113,
    "speaker": "suleimanhani",
    "start": 0,
@@ -18875,7 +18875,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k49420-600",
+   "id": "k43483-600",
    "videoId": 478,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -18902,7 +18902,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61715-742",
+   "id": "k29697-742",
    "videoId": 10,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -18929,7 +18929,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61848-930",
+   "id": "k97569-930",
    "videoId": 486,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -18958,7 +18958,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k73777-536",
+   "id": "k8309-536",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -18985,7 +18985,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99250-777",
+   "id": "k54911-777",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -19012,7 +19012,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k17209-1007",
+   "id": "k46237-1007",
    "videoId": 112,
    "speaker": "suleimanhani",
    "start": 0,
@@ -19041,7 +19041,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k49420-601",
+   "id": "k43483-601",
    "videoId": 103,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -19068,7 +19068,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61715-743",
+   "id": "k29697-743",
    "videoId": 15,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -19095,7 +19095,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61848-931",
+   "id": "k97569-931",
    "videoId": 9,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -19124,7 +19124,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k73777-537",
+   "id": "k8309-537",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -19151,7 +19151,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99250-778",
+   "id": "k54911-778",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -19178,7 +19178,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k17209-1008",
+   "id": "k46237-1008",
    "videoId": 15,
    "speaker": "suleimanhani",
    "start": 0,
@@ -19207,7 +19207,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k93498-621",
+   "id": "k6871-621",
    "videoId": 11,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -19234,7 +19234,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61715-744",
+   "id": "k29697-744",
    "videoId": 10,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -19261,7 +19261,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61848-932",
+   "id": "k97569-932",
    "videoId": 64,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -19290,7 +19290,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k73777-538",
+   "id": "k8309-538",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -19317,7 +19317,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99250-779",
+   "id": "k54911-779",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -19344,7 +19344,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k86857-1010",
+   "id": "k52463-1010",
    "videoId": 10,
    "speaker": "suleimanhani",
    "start": 0,
@@ -19373,7 +19373,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k93498-622",
+   "id": "k6871-622",
    "videoId": 259,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -19400,7 +19400,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61715-745",
+   "id": "k29697-745",
    "videoId": 11,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -19427,7 +19427,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61848-933",
+   "id": "k97569-933",
    "videoId": 266,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -19456,7 +19456,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61232-539",
+   "id": "k89094-539",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -19483,7 +19483,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94630-796",
+   "id": "k470-796",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -19510,7 +19510,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k44524-1015",
+   "id": "k67974-1015",
    "videoId": 272,
    "speaker": "suleimanhani",
    "start": 0,
@@ -19539,7 +19539,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k73630-627",
+   "id": "k56223-627",
    "videoId": 263,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -19566,7 +19566,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61715-746",
+   "id": "k29697-746",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -19593,7 +19593,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k92662-935",
+   "id": "k87568-935",
    "videoId": 113,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -19622,7 +19622,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61232-540",
+   "id": "k89094-540",
    "videoId": 486,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -19649,7 +19649,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k25869-798",
+   "id": "k59784-798",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -19676,7 +19676,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k50529-1032",
+   "id": "k82122-1032",
    "videoId": 486,
    "speaker": "suleimanhani",
    "start": 0,
@@ -19705,7 +19705,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k80420-647",
+   "id": "k63990-647",
    "videoId": 489,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -19759,7 +19759,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k92662-936",
+   "id": "k87568-936",
    "videoId": 112,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -19788,7 +19788,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61232-541",
+   "id": "k89094-541",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -19815,7 +19815,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k25869-799",
+   "id": "k59784-799",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -19842,7 +19842,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k4160-92",
+   "id": "k9115-92",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -19871,7 +19871,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k80420-648",
+   "id": "k63990-648",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -19898,7 +19898,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99351-926",
+   "id": "k52174-926",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -19925,7 +19925,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61960-973",
+   "id": "k78683-973",
    "videoId": 15,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -19954,7 +19954,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61232-542",
+   "id": "k89094-542",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -19981,7 +19981,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k25869-800",
+   "id": "k59784-800",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -20008,7 +20008,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k79101-102",
+   "id": "k38968-102",
    "videoId": 64,
    "speaker": "suleimanhani",
    "start": 0,
@@ -20037,7 +20037,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k38635-696",
+   "id": "k30813-696",
    "videoId": 64,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -20064,7 +20064,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99351-927",
+   "id": "k52174-927",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -20091,7 +20091,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61960-974",
+   "id": "k78683-974",
    "videoId": 10,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -20120,7 +20120,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61232-543",
+   "id": "k89094-543",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -20147,7 +20147,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k25869-801",
+   "id": "k59784-801",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -20174,7 +20174,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k19586-119",
+   "id": "k2971-119",
    "videoId": 266,
    "speaker": "suleimanhani",
    "start": 0,
@@ -20203,7 +20203,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k38635-697",
+   "id": "k30813-697",
    "videoId": 266,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -20230,7 +20230,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99351-928",
+   "id": "k52174-928",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -20257,7 +20257,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61960-975",
+   "id": "k78683-975",
    "videoId": 272,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -20286,7 +20286,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61232-544",
+   "id": "k89094-544",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -20313,7 +20313,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k32700-861",
+   "id": "k10743-861",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -20340,7 +20340,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k40335-124",
+   "id": "k24189-124",
    "videoId": 113,
    "speaker": "suleimanhani",
    "start": 0,
@@ -20369,7 +20369,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k38635-698",
+   "id": "k30813-698",
    "videoId": 478,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -20396,7 +20396,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99351-929",
+   "id": "k52174-929",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -20423,7 +20423,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54418-1024",
+   "id": "k61674-1024",
    "videoId": 486,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -20452,7 +20452,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54607-545",
+   "id": "k68900-545",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -20479,7 +20479,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k32700-862",
+   "id": "k10743-862",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -20506,7 +20506,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99936-132",
+   "id": "k39525-132",
    "videoId": 112,
    "speaker": "suleimanhani",
    "start": 0,
@@ -20535,7 +20535,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k51512-699",
+   "id": "k83568-699",
    "videoId": 103,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -20562,7 +20562,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54446-961",
+   "id": "k78150-961",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -20589,7 +20589,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54418-1025",
+   "id": "k61674-1025",
    "videoId": 9,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -20618,7 +20618,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54607-546",
+   "id": "k68900-546",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -20645,7 +20645,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23913-868",
+   "id": "k20738-868",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -20672,7 +20672,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k6824-186",
+   "id": "k92970-186",
    "videoId": 15,
    "speaker": "suleimanhani",
    "start": 0,
@@ -20701,7 +20701,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k51512-700",
+   "id": "k83568-700",
    "videoId": 11,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -20728,7 +20728,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54446-962",
+   "id": "k78150-962",
    "videoId": 10,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -20755,7 +20755,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54418-1026",
+   "id": "k61674-1026",
    "videoId": 64,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -20784,7 +20784,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54607-547",
+   "id": "k68900-547",
    "videoId": 486,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -20811,7 +20811,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8278-870",
+   "id": "k92241-870",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -20838,7 +20838,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k6824-187",
+   "id": "k92970-187",
    "videoId": 10,
    "speaker": "suleimanhani",
    "start": 0,
@@ -20867,7 +20867,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94159-704",
+   "id": "k70442-704",
    "videoId": 259,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -20894,7 +20894,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54446-963",
+   "id": "k78150-963",
    "videoId": 15,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -20921,7 +20921,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28789-151",
+   "id": "k19247-151",
    "videoId": 266,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -20950,7 +20950,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54607-548",
+   "id": "k68900-548",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -20977,7 +20977,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8278-871",
+   "id": "k92241-871",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -21004,7 +21004,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k6824-188",
+   "id": "k92970-188",
    "videoId": 272,
    "speaker": "suleimanhani",
    "start": 0,
@@ -21033,7 +21033,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k39996-707",
+   "id": "k1702-707",
    "videoId": 263,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -21060,7 +21060,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54446-964",
+   "id": "k78150-964",
    "videoId": 10,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -21087,7 +21087,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28789-152",
+   "id": "k19247-152",
    "videoId": 113,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -21116,7 +21116,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54607-549",
+   "id": "k68900-549",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -21143,7 +21143,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k8278-872",
+   "id": "k92241-872",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -21170,7 +21170,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k35094-221",
+   "id": "k43420-221",
    "videoId": 486,
    "speaker": "suleimanhani",
    "start": 0,
@@ -21199,7 +21199,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k39996-708",
+   "id": "k1702-708",
    "videoId": 489,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -21226,7 +21226,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54446-965",
+   "id": "k78150-965",
    "videoId": 11,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -21253,7 +21253,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28789-153",
+   "id": "k19247-153",
    "videoId": 112,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -21282,7 +21282,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54607-550",
+   "id": "k68900-550",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -21309,7 +21309,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k98027-890",
+   "id": "k6656-890",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -21336,7 +21336,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k35094-222",
+   "id": "k43420-222",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -21365,7 +21365,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k82359-934",
+   "id": "k65464-934",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -21392,7 +21392,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54446-966",
+   "id": "k78150-966",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -21419,7 +21419,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k97092-161",
+   "id": "k86647-161",
    "videoId": 15,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -21448,7 +21448,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k18757-551",
+   "id": "k20041-551",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -21475,7 +21475,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k98027-891",
+   "id": "k6656-891",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -21502,7 +21502,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k35094-223",
+   "id": "k43420-223",
    "videoId": 64,
    "speaker": "suleimanhani",
    "start": 0,
@@ -21531,7 +21531,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k51659-951",
+   "id": "k91328-951",
    "videoId": 64,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -21558,7 +21558,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k50002-492",
+   "id": "k59387-492",
    "videoId": 11,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -21585,7 +21585,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k51458-173",
+   "id": "k89269-173",
    "videoId": 10,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -21614,7 +21614,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k18757-552",
+   "id": "k20041-552",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -21641,7 +21641,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k98027-892",
+   "id": "k6656-892",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -21668,7 +21668,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k35094-224",
+   "id": "k43420-224",
    "videoId": 266,
    "speaker": "suleimanhani",
    "start": 0,
@@ -21697,7 +21697,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k57865-948",
+   "id": "k56152-948",
    "videoId": 266,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -21724,7 +21724,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k50002-493",
+   "id": "k59387-493",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -21751,7 +21751,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k87308-178",
+   "id": "k81299-178",
    "videoId": 272,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -21780,7 +21780,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k18757-553",
+   "id": "k20041-553",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -21807,7 +21807,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k98027-893",
+   "id": "k6656-893",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -21834,7 +21834,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k64956-245",
+   "id": "k10675-245",
    "videoId": 113,
    "speaker": "suleimanhani",
    "start": 0,
@@ -21863,7 +21863,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k57865-949",
+   "id": "k56152-949",
    "videoId": 478,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -21890,7 +21890,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k50002-494",
+   "id": "k59387-494",
    "videoId": 64,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -21917,7 +21917,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k71168-750",
+   "id": "k98462-750",
    "videoId": 486,
    "speaker": "shmohammadelshinawy",
    "start": 0,
@@ -21946,7 +21946,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k33009-554",
+   "id": "k54480-554",
    "videoId": 486,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -21973,7 +21973,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k98027-894",
+   "id": "k6656-894",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -22000,7 +22000,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k29809-297",
+   "id": "k12388-297",
    "videoId": 112,
    "speaker": "suleimanhani",
    "start": 0,
@@ -22029,7 +22029,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k57865-950",
+   "id": "k56152-950",
    "videoId": 103,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -22056,7 +22056,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k85583-506",
+   "id": "k56676-506",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -22083,7 +22083,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k33009-555",
+   "id": "k54480-555",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -22112,7 +22112,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k80603-906",
+   "id": "k35967-906",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -22139,7 +22139,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k29809-298",
+   "id": "k12388-298",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -22166,7 +22166,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k21479-968",
+   "id": "k29567-968",
    "videoId": 15,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -22222,7 +22222,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k33009-556",
+   "id": "k54480-556",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -22278,7 +22278,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k29809-299",
+   "id": "k12388-299",
    "videoId": 64,
    "speaker": "suleimanhani",
    "start": 0,
@@ -22305,7 +22305,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k21479-969",
+   "id": "k29567-969",
    "videoId": 10,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -22332,7 +22332,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k50002-495",
+   "id": "k59387-495",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -22361,7 +22361,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k33009-557",
+   "id": "k54480-557",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -22415,7 +22415,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k29809-300",
+   "id": "k12388-300",
    "videoId": 266,
    "speaker": "suleimanhani",
    "start": 0,
@@ -22444,7 +22444,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k76873-972",
+   "id": "k90965-972",
    "videoId": 266,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -22471,7 +22471,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k50002-496",
+   "id": "k59387-496",
    "videoId": 11,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -22498,7 +22498,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k33009-558",
+   "id": "k54480-558",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -22554,7 +22554,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k91596-326",
+   "id": "k99410-326",
    "videoId": 263,
    "speaker": "suleimanhani",
    "start": 0,
@@ -22581,7 +22581,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k52493-976",
+   "id": "k77694-976",
    "videoId": 113,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -22610,7 +22610,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k67094-511",
+   "id": "k87504-511",
    "videoId": 9,
    "speaker": "yasirfahmy",
    "start": 0,
@@ -22637,7 +22637,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k33009-559",
+   "id": "k54480-559",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -22693,7 +22693,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k65321-328",
+   "id": "k32878-328",
    "videoId": 489,
    "speaker": "suleimanhani",
    "start": 0,
@@ -22720,7 +22720,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k52493-977",
+   "id": "k77694-977",
    "videoId": 489,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -22747,7 +22747,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k92412-560",
+   "id": "k86682-560",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -22803,7 +22803,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61321-329",
+   "id": "k36538-329",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -22830,7 +22830,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k52493-978",
+   "id": "k77694-978",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -22859,7 +22859,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k92412-561",
+   "id": "k86682-561",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -22913,7 +22913,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61321-330",
+   "id": "k36538-330",
    "videoId": 15,
    "speaker": "suleimanhani",
    "start": 0,
@@ -22942,7 +22942,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k52493-979",
+   "id": "k77694-979",
    "videoId": 11,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -22969,7 +22969,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2195-562",
+   "id": "k17376-562",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -23025,7 +23025,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k61321-331",
+   "id": "k36538-331",
    "videoId": 64,
    "speaker": "suleimanhani",
    "start": 0,
@@ -23052,7 +23052,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k52493-980",
+   "id": "k77694-980",
    "videoId": 10,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -23079,7 +23079,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2195-563",
+   "id": "k17376-563",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -23135,7 +23135,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k80681-335",
+   "id": "k13122-335",
    "videoId": 259,
    "speaker": "suleimanhani",
    "start": 0,
@@ -23162,7 +23162,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k52493-981",
+   "id": "k77694-981",
    "videoId": 266,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -23191,7 +23191,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2195-564",
+   "id": "k17376-564",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -23245,7 +23245,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k80681-336",
+   "id": "k13122-336",
    "videoId": 272,
    "speaker": "suleimanhani",
    "start": 0,
@@ -23274,7 +23274,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k62661-985",
+   "id": "k8846-985",
    "videoId": 263,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -23301,7 +23301,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2195-565",
+   "id": "k17376-565",
    "videoId": 486,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -23357,7 +23357,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k80681-337",
+   "id": "k13122-337",
    "videoId": 478,
    "speaker": "suleimanhani",
    "start": 0,
@@ -23384,7 +23384,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k27245-984",
+   "id": "k60879-984",
    "videoId": 478,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -23411,7 +23411,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k58590-567",
+   "id": "k37798-567",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -23440,7 +23440,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k27417-754",
+   "id": "k38855-754",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -23467,7 +23467,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k80681-338",
+   "id": "k13122-338",
    "videoId": 489,
    "speaker": "suleimanhani",
    "start": 0,
@@ -23494,7 +23494,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k24236-988",
+   "id": "k97712-988",
    "videoId": 112,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -23523,7 +23523,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k58590-568",
+   "id": "k37798-568",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -23550,7 +23550,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k27417-755",
+   "id": "k38855-755",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -23577,7 +23577,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k80681-339",
+   "id": "k13122-339",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -23606,7 +23606,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k24236-989",
+   "id": "k97712-989",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -23633,7 +23633,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k58590-569",
+   "id": "k37798-569",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -23660,7 +23660,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k95928-756",
+   "id": "k59317-756",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -23689,7 +23689,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k37305-340",
+   "id": "k70956-340",
    "videoId": 11,
    "speaker": "suleimanhani",
    "start": 0,
@@ -23716,7 +23716,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k24236-990",
+   "id": "k97712-990",
    "videoId": 11,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -23743,7 +23743,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k58590-570",
+   "id": "k37798-570",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -23772,7 +23772,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k95928-757",
+   "id": "k59317-757",
    "videoId": 113,
    "speaker": "khalidlatif",
    "start": 0,
@@ -23799,7 +23799,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k37305-341",
+   "id": "k70956-341",
    "videoId": 10,
    "speaker": "suleimanhani",
    "start": 0,
@@ -23826,7 +23826,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k78632-994",
+   "id": "k98778-994",
    "videoId": 10,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -23855,7 +23855,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k58590-571",
+   "id": "k37798-571",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -23882,7 +23882,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k95928-759",
+   "id": "k59317-759",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -23909,7 +23909,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k37305-342",
+   "id": "k70956-342",
    "videoId": 266,
    "speaker": "suleimanhani",
    "start": 0,
@@ -23938,7 +23938,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k78632-995",
+   "id": "k98778-995",
    "videoId": 266,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -23992,7 +23992,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43649-767",
+   "id": "k22268-767",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -24021,7 +24021,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k37305-343",
+   "id": "k70956-343",
    "videoId": 263,
    "speaker": "suleimanhani",
    "start": 0,
@@ -24048,7 +24048,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k78632-996",
+   "id": "k98778-996",
    "videoId": 263,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -24104,7 +24104,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43649-768",
+   "id": "k22268-768",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -24131,7 +24131,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k66932-347",
+   "id": "k81009-347",
    "videoId": 478,
    "speaker": "suleimanhani",
    "start": 0,
@@ -24158,7 +24158,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k27661-1021",
+   "id": "k96970-1021",
    "videoId": 486,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -24214,7 +24214,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43649-769",
+   "id": "k22268-769",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -24241,7 +24241,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k96057-349",
+   "id": "k56740-349",
    "videoId": 112,
    "speaker": "suleimanhani",
    "start": 0,
@@ -24270,7 +24270,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k27661-1022",
+   "id": "k96970-1022",
    "videoId": 103,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -24324,7 +24324,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k96659-772",
+   "id": "k19670-772",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -24353,7 +24353,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k96057-350",
+   "id": "k56740-350",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -24380,7 +24380,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k77571-1028",
+   "id": "k37151-1028",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -24436,7 +24436,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k96659-774",
+   "id": "k19670-774",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -24463,7 +24463,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k96057-351",
+   "id": "k56740-351",
    "videoId": 11,
    "speaker": "suleimanhani",
    "start": 0,
@@ -24490,7 +24490,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k73927-1033",
+   "id": "k75320-1033",
    "videoId": 64,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -24546,7 +24546,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k42880-782",
+   "id": "k32566-782",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -24573,7 +24573,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k5352-320",
+   "id": "k97504-320",
    "videoId": 10,
    "speaker": "suleimanhani",
    "start": 0,
@@ -24602,7 +24602,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k52956-1038",
+   "id": "k26817-1038",
    "videoId": 259,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -24629,7 +24629,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k15820-573",
+   "id": "k70367-573",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -24656,7 +24656,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k70077-783",
+   "id": "k77786-783",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -24685,7 +24685,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k635-466",
+   "id": "k77794-466",
    "videoId": 266,
    "speaker": "suleimanhani",
    "start": 0,
@@ -24712,7 +24712,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k52956-1039",
+   "id": "k26817-1039",
    "videoId": 272,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -24739,7 +24739,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k15820-574",
+   "id": "k70367-574",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -24768,7 +24768,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k70077-784",
+   "id": "k77786-784",
    "videoId": 113,
    "speaker": "khalidlatif",
    "start": 0,
@@ -24795,7 +24795,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k635-467",
+   "id": "k77794-467",
    "videoId": 263,
    "speaker": "suleimanhani",
    "start": 0,
@@ -24822,7 +24822,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k52956-1040",
+   "id": "k26817-1040",
    "videoId": 113,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -24851,7 +24851,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k15820-575",
+   "id": "k70367-575",
    "videoId": 486,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -24878,7 +24878,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k70077-785",
+   "id": "k77786-785",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -24905,7 +24905,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k635-468",
+   "id": "k77794-468",
    "videoId": 486,
    "speaker": "suleimanhani",
    "start": 0,
@@ -24934,7 +24934,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k52956-1041",
+   "id": "k26817-1041",
    "videoId": 489,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -24961,7 +24961,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k15820-576",
+   "id": "k70367-576",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -24988,7 +24988,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k22876-786",
+   "id": "k11738-786",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -25017,7 +25017,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k14625-677",
+   "id": "k91226-677",
    "videoId": 103,
    "speaker": "suleimanhani",
    "start": 0,
@@ -25044,7 +25044,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54366-1042",
+   "id": "k50457-1042",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -25071,7 +25071,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k15820-577",
+   "id": "k70367-577",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -25100,7 +25100,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k22876-787",
+   "id": "k11738-787",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -25127,7 +25127,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k19220-711",
+   "id": "k19637-711",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -25154,7 +25154,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54366-1043",
+   "id": "k50457-1043",
    "videoId": 15,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -25183,7 +25183,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28756-578",
+   "id": "k90429-578",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -25210,7 +25210,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k22876-788",
+   "id": "k11738-788",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -25237,7 +25237,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k99054-715",
+   "id": "k22760-715",
    "videoId": 64,
    "speaker": "suleimanhani",
    "start": 0,
@@ -25266,7 +25266,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k54366-1044",
+   "id": "k50457-1044",
    "videoId": 64,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -25293,7 +25293,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28756-580",
+   "id": "k90429-580",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -25320,7 +25320,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k22876-789",
+   "id": "k11738-789",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -25349,7 +25349,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23290-720",
+   "id": "k54930-720",
    "videoId": 259,
    "speaker": "suleimanhani",
    "start": 0,
@@ -25376,7 +25376,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k70818-189",
+   "id": "k21572-189",
    "videoId": 259,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -25403,7 +25403,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28756-581",
+   "id": "k90429-581",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -25432,7 +25432,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k22876-791",
+   "id": "k11738-791",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -25459,7 +25459,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k50241-723",
+   "id": "k91767-723",
    "videoId": 272,
    "speaker": "suleimanhani",
    "start": 0,
@@ -25486,7 +25486,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k73630-626",
+   "id": "k56223-626",
    "videoId": 272,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -25542,7 +25542,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94630-792",
+   "id": "k470-792",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -25569,7 +25569,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k86837-729",
+   "id": "k45143-729",
    "videoId": 113,
    "speaker": "suleimanhani",
    "start": 0,
@@ -25598,7 +25598,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k80420-646",
+   "id": "k63990-646",
    "videoId": 478,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -25652,7 +25652,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94630-794",
+   "id": "k470-794",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -25681,7 +25681,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k35293-940",
+   "id": "k40945-940",
    "videoId": 489,
    "speaker": "suleimanhani",
    "start": 0,
@@ -25708,7 +25708,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k26639-739",
+   "id": "k65597-739",
    "videoId": 489,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -25764,7 +25764,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94630-795",
+   "id": "k470-795",
    "videoId": 113,
    "speaker": "khalidlatif",
    "start": 0,
@@ -25791,7 +25791,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k35293-941",
+   "id": "k40945-941",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -25818,7 +25818,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k77671-897",
+   "id": "k97985-897",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -25847,7 +25847,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k80999-583",
+   "id": "k35864-583",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -25874,7 +25874,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k16391-819",
+   "id": "k98091-819",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -25901,7 +25901,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k50854-953",
+   "id": "k31856-953",
    "videoId": 15,
    "speaker": "suleimanhani",
    "start": 0,
@@ -25930,7 +25930,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k77671-898",
+   "id": "k97985-898",
    "videoId": 11,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -25957,7 +25957,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k80999-584",
+   "id": "k35864-584",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -25984,7 +25984,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k16391-820",
+   "id": "k98091-820",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -26013,7 +26013,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k22646-954",
+   "id": "k23441-954",
    "videoId": 64,
    "speaker": "suleimanhani",
    "start": 0,
@@ -26040,7 +26040,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k77671-899",
+   "id": "k97985-899",
    "videoId": 10,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -26067,7 +26067,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k80999-585",
+   "id": "k35864-585",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -26096,7 +26096,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k16391-822",
+   "id": "k98091-822",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -26123,7 +26123,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k22646-955",
+   "id": "k23441-955",
    "videoId": 259,
    "speaker": "suleimanhani",
    "start": 0,
@@ -26150,7 +26150,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k78153-1011",
+   "id": "k22634-1011",
    "videoId": 266,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -26179,7 +26179,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k80999-586",
+   "id": "k35864-586",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -26206,7 +26206,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k16391-823",
+   "id": "k98091-823",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -26233,7 +26233,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k36066-958",
+   "id": "k95968-958",
    "videoId": 272,
    "speaker": "suleimanhani",
    "start": 0,
@@ -26262,7 +26262,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k78153-1012",
+   "id": "k22634-1012",
    "videoId": 263,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -26289,7 +26289,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k80999-587",
+   "id": "k35864-587",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -26316,7 +26316,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9986-830",
+   "id": "k66567-830",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -26345,7 +26345,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k36066-959",
+   "id": "k95968-959",
    "videoId": 478,
    "speaker": "suleimanhani",
    "start": 0,
@@ -26372,7 +26372,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k45281-449",
+   "id": "k72185-449",
    "videoId": 478,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -26399,7 +26399,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k80999-588",
+   "id": "k35864-588",
    "videoId": 486,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -26428,7 +26428,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9986-831",
+   "id": "k66567-831",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -26455,7 +26455,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k36066-960",
+   "id": "k95968-960",
    "videoId": 489,
    "speaker": "suleimanhani",
    "start": 0,
@@ -26482,7 +26482,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k97838-454",
+   "id": "k72763-454",
    "videoId": 112,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -26511,7 +26511,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k21791-589",
+   "id": "k1753-589",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -26538,7 +26538,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9986-832",
+   "id": "k66567-832",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -26565,7 +26565,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28144-986",
+   "id": "k23231-986",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -26594,7 +26594,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k26639-740",
+   "id": "k65597-740",
    "videoId": 9,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -26621,7 +26621,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k21791-590",
+   "id": "k1753-590",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -26648,7 +26648,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9986-833",
+   "id": "k66567-833",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -26677,7 +26677,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28144-987",
+   "id": "k23231-987",
    "videoId": 11,
    "speaker": "suleimanhani",
    "start": 0,
@@ -26704,7 +26704,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k77671-900",
+   "id": "k97985-900",
    "videoId": 11,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -26731,7 +26731,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k21791-591",
+   "id": "k1753-591",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -26760,7 +26760,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9986-834",
+   "id": "k66567-834",
    "videoId": 113,
    "speaker": "khalidlatif",
    "start": 0,
@@ -26787,7 +26787,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k67223-991",
+   "id": "k75163-991",
    "videoId": 10,
    "speaker": "suleimanhani",
    "start": 0,
@@ -26814,7 +26814,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k51659-952",
+   "id": "k91328-952",
    "videoId": 10,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -26843,7 +26843,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84720-592",
+   "id": "k32730-592",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -26870,7 +26870,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9986-835",
+   "id": "k66567-835",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -26897,7 +26897,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k67223-992",
+   "id": "k75163-992",
    "videoId": 266,
    "speaker": "suleimanhani",
    "start": 0,
@@ -26926,7 +26926,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k89988-957",
+   "id": "k22370-957",
    "videoId": 266,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -26953,7 +26953,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84720-593",
+   "id": "k32730-593",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -26980,7 +26980,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k85845-836",
+   "id": "k74374-836",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -27009,7 +27009,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k67223-993",
+   "id": "k75163-993",
    "videoId": 263,
    "speaker": "suleimanhani",
    "start": 0,
@@ -27036,7 +27036,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k78153-1013",
+   "id": "k22634-1013",
    "videoId": 263,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -27063,7 +27063,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84720-594",
+   "id": "k32730-594",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -27092,7 +27092,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k85845-837",
+   "id": "k74374-837",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -27146,7 +27146,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k78153-1014",
+   "id": "k22634-1014",
    "videoId": 486,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -27175,7 +27175,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84720-595",
+   "id": "k32730-595",
    "videoId": 486,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -27202,7 +27202,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k85845-838",
+   "id": "k74374-838",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -27229,7 +27229,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k68084-1034",
+   "id": "k26028-1034",
    "videoId": 112,
    "speaker": "suleimanhani",
    "start": 0,
@@ -27258,7 +27258,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k27661-1023",
+   "id": "k96970-1023",
    "videoId": 103,
    "speaker": "shadeeelmasry",
    "start": 0,
@@ -27285,7 +27285,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84720-596",
+   "id": "k32730-596",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -27312,7 +27312,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k85845-839",
+   "id": "k74374-839",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -27341,7 +27341,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k68084-1035",
+   "id": "k26028-1035",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -27368,7 +27368,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2982-604",
+   "id": "k2561-604",
    "videoId": 486,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -27395,7 +27395,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k85845-840",
+   "id": "k74374-840",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -27451,7 +27451,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2982-605",
+   "id": "k2561-605",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -27478,7 +27478,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k85845-841",
+   "id": "k74374-841",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -27534,7 +27534,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2982-606",
+   "id": "k2561-606",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -27561,7 +27561,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43467-842",
+   "id": "k93751-842",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -27617,7 +27617,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2982-607",
+   "id": "k2561-607",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -27644,7 +27644,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43467-843",
+   "id": "k93751-843",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -27673,7 +27673,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k40294-480",
+   "id": "k82921-480",
    "videoId": 266,
    "speaker": "suleimanhani",
    "start": 0,
@@ -27700,7 +27700,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k2982-608",
+   "id": "k2561-608",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -27727,7 +27727,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43467-844",
+   "id": "k93751-844",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -27756,7 +27756,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k19220-710",
+   "id": "k19637-710",
    "videoId": 263,
    "speaker": "suleimanhani",
    "start": 0,
@@ -27783,7 +27783,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k69816-632",
+   "id": "k69380-632",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -27810,7 +27810,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43467-845",
+   "id": "k93751-845",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -27839,7 +27839,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k1392-937",
+   "id": "k19689-937",
    "videoId": 478,
    "speaker": "suleimanhani",
    "start": 0,
@@ -27893,7 +27893,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43467-847",
+   "id": "k93751-847",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -27922,7 +27922,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k1392-938",
+   "id": "k19689-938",
    "videoId": 489,
    "speaker": "suleimanhani",
    "start": 0,
@@ -27976,7 +27976,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k45588-854",
+   "id": "k38136-854",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -28005,7 +28005,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k9712-1009",
+   "id": "k12286-1009",
    "videoId": 103,
    "speaker": "suleimanhani",
    "start": 0,
@@ -28059,7 +28059,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k45588-855",
+   "id": "k38136-855",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -28088,7 +28088,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k44524-1016",
+   "id": "k67974-1016",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -28142,7 +28142,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k45588-856",
+   "id": "k38136-856",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -28171,7 +28171,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k65467-1017",
+   "id": "k92543-1017",
    "videoId": 11,
    "speaker": "suleimanhani",
    "start": 0,
@@ -28225,7 +28225,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k45588-858",
+   "id": "k38136-858",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -28254,7 +28254,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k65467-1018",
+   "id": "k92543-1018",
    "videoId": 64,
    "speaker": "suleimanhani",
    "start": 0,
@@ -28308,7 +28308,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k23913-865",
+   "id": "k20738-865",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -28337,7 +28337,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k65467-1019",
+   "id": "k92543-1019",
    "videoId": 259,
    "speaker": "suleimanhani",
    "start": 0,
@@ -28391,7 +28391,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k31902-874",
+   "id": "k64956-874",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -28420,7 +28420,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k45157-1030",
+   "id": "k18261-1030",
    "videoId": 266,
    "speaker": "suleimanhani",
    "start": 0,
@@ -28474,7 +28474,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k31902-875",
+   "id": "k64956-875",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -28503,7 +28503,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k45157-1031",
+   "id": "k18261-1031",
    "videoId": 263,
    "speaker": "suleimanhani",
    "start": 0,
@@ -28557,7 +28557,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k31902-876",
+   "id": "k64956-876",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -28586,7 +28586,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k96057-348",
+   "id": "k56740-348",
    "videoId": 478,
    "speaker": "suleimanhani",
    "start": 0,
@@ -28640,7 +28640,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k31902-877",
+   "id": "k64956-877",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -28669,7 +28669,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k635-465",
+   "id": "k77794-465",
    "videoId": 489,
    "speaker": "suleimanhani",
    "start": 0,
@@ -28723,7 +28723,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k31902-878",
+   "id": "k64956-878",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -28752,7 +28752,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k60544-633",
+   "id": "k95893-633",
    "videoId": 103,
    "speaker": "suleimanhani",
    "start": 0,
@@ -28806,7 +28806,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43114-913",
+   "id": "k7147-913",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -28835,7 +28835,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k65467-1020",
+   "id": "k92543-1020",
    "videoId": 9,
    "speaker": "suleimanhani",
    "start": 0,
@@ -28862,7 +28862,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84447-609",
+   "id": "k96075-609",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -28889,7 +28889,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43114-916",
+   "id": "k7147-916",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -28918,7 +28918,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84447-610",
+   "id": "k96075-610",
    "videoId": 486,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -28945,7 +28945,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43114-917",
+   "id": "k7147-917",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -28972,7 +28972,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84447-611",
+   "id": "k96075-611",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -29001,7 +29001,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k74616-652",
+   "id": "k53852-652",
    "videoId": 113,
    "speaker": "khalidlatif",
    "start": 0,
@@ -29028,7 +29028,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84447-612",
+   "id": "k96075-612",
    "videoId": 103,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -29055,7 +29055,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43649-770",
+   "id": "k22268-770",
    "videoId": 259,
    "speaker": "khalidlatif",
    "start": 0,
@@ -29084,7 +29084,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84447-613",
+   "id": "k96075-613",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -29111,7 +29111,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k43649-771",
+   "id": "k22268-771",
    "videoId": 266,
    "speaker": "khalidlatif",
    "start": 0,
@@ -29138,7 +29138,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k84447-614",
+   "id": "k96075-614",
    "videoId": 489,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -29167,7 +29167,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k96659-775",
+   "id": "k19670-775",
    "videoId": 272,
    "speaker": "khalidlatif",
    "start": 0,
@@ -29194,7 +29194,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k28756-579",
+   "id": "k90429-579",
    "videoId": 112,
    "speaker": "mikaeelsmith",
    "start": 0,
@@ -29221,7 +29221,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k94630-797",
+   "id": "k470-797",
    "videoId": 263,
    "speaker": "khalidlatif",
    "start": 0,
@@ -29250,7 +29250,7 @@ window.HUDHUD = {
    }
   },
   {
-   "id": "k51264-582",
+   "id": "k23960-582",
    "videoId": 478,
    "speaker": "mikaeelsmith",
    "start": 0,

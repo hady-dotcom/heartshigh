@@ -776,15 +776,18 @@ function buildDeck(startClip, kind) {
     wrap.appendChild(incoming);
     // Mount now, not after the transition: a card that slides in empty reads as broken.
     incoming.__mount();
-    requestAnimationFrame(() => {
-      incoming.style.transition = 'transform .38s var(--ease)';
-      current.style.transition = 'transform .38s var(--ease), opacity .38s';
-      incoming.style.transform = 'translate3d(0,0,0)';
-      current.style.transform = 'translate3d(' + to.split(',')[0] + ',' + to.split(',')[1] + ',0)';
-      current.style.opacity = '.4';
-    });
+    // Hold the outgoing card in a local. `current` is reassigned on the next line, so a
+    // frame callback that reads it would put the OUTGOING transform on the card that just
+    // arrived and park the whole deck off-screen — a blank phone and dead arrows.
     const old = current;
     current = incoming;
+    requestAnimationFrame(() => {
+      incoming.style.transition = 'transform .38s var(--ease)';
+      old.style.transition = 'transform .38s var(--ease), opacity .38s';
+      incoming.style.transform = 'translate3d(0,0,0)';
+      old.style.transform = 'translate3d(' + to.split(',')[0] + ',' + to.split(',')[1] + ',0)';
+      old.style.opacity = '.4';
+    });
     setTimeout(() => {
       old.__unmount(); old.remove();
       incoming.style.transition = '';
