@@ -222,7 +222,20 @@ def main():
             "strength": "strong", "appeal": c["twist"], "why": "", "currency": "",
             "title": c["title"], "audience": c["audience"], "source_sheet": "demo10",
         })
-    reel = settle_lanes(reel + yt_reel)
+    HERO = {
+        "id": "local-mikaeel", "source": "file", "src": "media/mikaeel-bait-fade.mp4", "srcAlt": "media/mikaeel-bait-fade.webm",
+        "wholeFile": True, "burnedIn": True,   # the clip carries its own kinetic captions
+        "speaker": "mikaeelsmith", "videoId": None, "start": 0, "len": 18,
+        # transcribed from the clip's own on-screen typography
+        "hook": "This is so beautiful. He says\u2026",
+        "turn": "Never let a sin become so big in your mind\u2026",
+        "land": "\u2026that it stops you from expecting good from God.",
+        "theme": "Hope / Never let a sin become so big", "lane": "Return",
+        "clause": None, "clauseLabel": None, "seat": "", "form": "Direct Soundbite",
+        "strength": "strong", "appeal": "", "why": "", "currency": "",
+        "title": "Never let a sin become so big", "source_sheet": "drive",
+    }
+    reel = settle_lanes([HERO] + reel + yt_reel)
 
     # ---------------- Hadith Jibril map (real counts from the canon)
     clause_rows = defaultdict(list)
@@ -359,18 +372,7 @@ def main():
 
     # Real media shipped with the demo (from Drive: Hudhud-UX-Demo/media). Same-origin,
     # so it plays on every host including sandboxes that block external media.
-    HERO = {
-        "id": "local-mikaeel", "source": "file", "src": "media/mikaeel-bait-fade.mp4",
-        "wholeFile": True, "speaker": "mikaeelsmith", "videoId": None, "start": 0, "len": 0,
-        "hook": "You have to help your brother regardless — whether they are the oppressor or the oppressed.",
-        "turn": "The Sahaba said: we understand helping the oppressed — but how do you help the oppressor?",
-        "land": "By grabbing their hand and stopping them.",
-        "theme": "Justice / Helping the oppressor", "lane": "The Prophet ﷺ",
-        "clause": None, "clauseLabel": None, "seat": "", "form": "Direct Soundbite",
-        "strength": "strong", "appeal": "", "why": "", "currency": "",
-        "title": "Help your brother, oppressor or oppressed", "source_sheet": "drive",
-    }
-    reel = [HERO] + reel
+
 
     data = {
         "meta": {
@@ -395,7 +397,7 @@ def main():
         "ghuniyya": ghuniyya, "harvest": harvest,
         "localMedia": {"hero": "media/mikaeel-bait-fade.mp4", "lecture": "media/lecture-sitting.mp4"},
         "course": {"videoId": 9, "seriesId": 2, "title": series[2]["title"],
-                   "localSrc": "media/lecture-sitting.mp4",
+                   "fallbackSrc": "media/lecture-sitting.mp4", "fallbackSrcAlt": "media/lecture-sitting.webm",
                    "partLabel": "Part 6 · Ease as the governing spirit",
                    "thesis": clean(fnotes.get("thesis")), "speaker": "yasirfahmy",
                    "hls": course_vid["hls"], "durationSec": course_vid["durationSec"],

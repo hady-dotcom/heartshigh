@@ -19,6 +19,13 @@ const mmss = s => { s = Math.max(0, Math.floor(s)); const m = Math.floor(s / 60)
 const hhmm = s => { const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60); return h ? h + 'h ' + m + 'm' : m + 'm'; };
 const rnd = a => a[Math.floor(Math.random() * a.length)];
 
+/* Some desktop browsers ship without H.264. Where a WebM twin exists, use it there. */
+const CAN_H264 = (() => {
+  try { return !!document.createElement('video').canPlayType('video/mp4; codecs="avc1.42E01E"'); }
+  catch (e) { return true; }
+})();
+const pickSrc = (mp4, webm) => (CAN_H264 || !webm) ? mp4 : webm;
+
 const CREATOR = {}; D.creators.forEach(c => CREATOR[c.handle] = c);
 const VIDEO = {};   D.videos.forEach(v => VIDEO[v.id] = v);
 const SERIES = {};  D.series.forEach(s => SERIES[s.id] = s);
@@ -113,11 +120,20 @@ const VideoEngine = {
           startLevel: -1, backBufferLength: 12,
         });
         state.hls = hls;
+        let netRetries = 0, mediaRetries = 0;
         hls.on(window.Hls.Events.ERROR, (_, d) => {
           if (!d.fatal) return;
-          if (d.type === window.Hls.ErrorTypes.NETWORK_ERROR) { try { hls.startLoad(); } catch (e) { fail(); } }
-          else if (d.type === window.Hls.ErrorTypes.MEDIA_ERROR) { try { hls.recoverMediaError(); } catch (e) { fail(); } }
-          else fail();
+          // Retry a couple of times, then hand over to the fallback. Retrying forever
+          // leaves a dead frame on a blocked or offline network.
+          if (d.type === window.Hls.ErrorTypes.NETWORK_ERROR) {
+            if (netRetries++ < 2) { try { hls.startLoad(); return; } catch (e) {} }
+            return fail();
+          }
+          if (d.type === window.Hls.ErrorTypes.MEDIA_ERROR) {
+            if (mediaRetries++ < 1) { try { hls.recoverMediaError(); return; } catch (e) {} }
+            return fail();
+          }
+          fail();
         });
         hls.loadSource(video.hls);
         hls.attachMedia(v);
@@ -134,8 +150,34 @@ const VideoEngine = {
       const p = v.play();
       if (p && p.catch) p.catch(() => {});
     };
-    const fail = () => { state.ok = false; container.classList.add('novideo'); opts.onFail && opts.onFail(); };
+    let triedFallback = false;
+    const fail = () => {
+      // Primary source unreachable (blocked CDN, offline). Try the media that ships
+      // with the build before giving up on the frame entirely.
+      if (opts.fallbackSrc && !triedFallback) {
+        triedFallback = true;
+        if (state.hls) { try { state.hls.detachMedia(); state.hls.destroy(); } catch (e) {} state.hls = null; }
+        try {
+          v.removeAttribute('src');
+          v.load();
+          v.loop = true;
+          v.src = opts.fallbackSrc;
+          v.load();
+          const p = v.play(); p && p.catch && p.catch(() => {});
+        } catch (e) {}
+        return;
+      }
+      state.ok = false; container.classList.add('novideo'); opts.onFail && opts.onFail();
+    };
 
+    v.addEventListener('loadedmetadata', () => {
+      // A portrait source fills a portrait frame; a 16:9 lecture stays letterboxed
+      // over the blurred backdrop rather than being cropped to ribbons.
+      if (v.videoHeight > v.videoWidth) {
+        const card = container.closest('.cardclip');
+        if (card) card.dataset.fit = 'cover';
+      }
+    });
     v.addEventListener('playing', () => { state.ok = true; v.classList.add('on'); opts.onPlay && opts.onPlay(); }, { once: true });
     v.addEventListener('ended', () => {
       // Short or mis-tagged source: loop the clip instead of freezing on the last frame.
@@ -350,7 +392,7 @@ function buildClipCard(clip, kind) {
   const isFile = clip.source === 'file';
   const len = isApp ? APP_LEN : (clip.len || HORS_LEN);
   const video = VIDEO[clip.videoId];
-  const card = el('div', 'cardclip');
+  const card = el('div', 'cardclip' + (clip.burnedIn ? ' graded' : ''));
 
   const media = el('div', 'cc-media');
   const blur = el('div', 'cc-blur');
@@ -366,7 +408,8 @@ function buildClipCard(clip, kind) {
 
   const top = el('div', 'cc-top');
   top.appendChild(el('span', 'pill lane', 'Lane · ' + esc(clip.lane)));
-  top.appendChild(el('span', 'pill dur', isApp ? 'Extended cut' : (clip.wholeFile ? 'Clip' : mmss(len))));
+  const durPill = el('span', 'pill dur', isApp ? 'Extended cut' : mmss(len));
+  top.appendChild(durPill);
   if (clip.form && !isApp) top.appendChild(el('span', 'pill form', esc(clip.form)));
   card.appendChild(top);
 
@@ -399,9 +442,11 @@ function buildClipCard(clip, kind) {
   who.appendChild(el('div', '', '<b>' + esc((shon(clip.speaker) ? shon(clip.speaker) + ' ' : '') + sname(clip.speaker)) + '</b><i>on ' + esc(clip.theme.split('/')[0].trim()) + '</i>'));
   body.appendChild(who);
 
-  const q = el('p', 'cc-quote');
-  q.innerHTML = esc(clip.land) + (isApp && clip.turn ? '<span class="turn">' + esc(clip.turn) + '</span>' : '');
-  body.appendChild(q);
+  if (!clip.burnedIn || isApp) {
+    const q = el('p', 'cc-quote');
+    q.innerHTML = esc(clip.land) + (isApp && clip.turn ? '<span class="turn">' + esc(clip.turn) + '</span>' : '');
+    body.appendChild(q);
+  }
 
   if (isApp) {
     const bio = el('div', 'bio-bar');
@@ -438,7 +483,8 @@ function buildClipCard(clip, kind) {
       });
       return;
     }
-    card.__player = VideoEngine.make(media, { hls: isFile ? clip.src : (video && video.hls) }, {
+    card.__player = VideoEngine.make(media, {
+      hls: isFile ? pickSrc(clip.src, clip.srcAlt) : (video && video.hls) }, {
       start: clip.start,
       whole: !!clip.wholeFile,
       onTime: t => {
@@ -450,7 +496,12 @@ function buildClipCard(clip, kind) {
           try { v.currentTime = clip.start; } catch (e) {}
         }
       },
-      onPlay: () => { card.__player.setMuted(GLOBAL_MUTED); setTimeout(() => card.classList.add('show-hint'), 2600); },
+      onPlay: () => {
+        card.__player.setMuted(GLOBAL_MUTED);
+        const v = card.__player.v;
+        if (!isApp && clip.wholeFile && v && v.duration) durPill.textContent = mmss(v.duration);
+        setTimeout(() => card.classList.add('show-hint'), 2600);
+      },
       onFail: () => { card.classList.add('show-hint', 'nomedia'); animateFallbackProgress(progBar, len); },
     });
     card.__player.setMuted(GLOBAL_MUTED);
@@ -705,8 +756,7 @@ function openMains(fromClip) {
   let player = null, rafId = 0, cooldownUntil = 0;
   const answered = new Set(C.points.filter(p => p.answered).map(p => p.at));
 
-  let current = { videoId: C.videoId, hls: C.localSrc || C.hls, durationSec: C.durationSec,
-                  title: C.partLabel, local: !!C.localSrc };
+  let current = { videoId: C.videoId, hls: C.hls, durationSec: C.durationSec, title: C.partLabel };
   push(() => {
     const s = el('div', 'mains');
     s.appendChild(navbar(SERIES[C.seriesId] ? SERIES[C.seriesId].title : 'Course', pop));
@@ -806,7 +856,7 @@ function openMains(fromClip) {
     function mount() {
     requestAnimationFrame(() => {
       player = VideoEngine.make(pl, { hls: current.hls }, {
-        start: 0, whole: !!current.local,
+        start: 0, fallbackSrc: pickSrc(C.fallbackSrc, C.fallbackSrcAlt),
         onPlay: () => { playBtn.classList.add('hide'); player.setMuted(false); },
         onTime: t => {
           played.style.width = (t / current.durationSec * 100) + '%';
