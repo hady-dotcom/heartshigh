@@ -89,11 +89,11 @@ function unfurlable(card, headEl, buildDetail, opts) {
 
 /* ------------------------------------------------------------------ user state (mock, per the Grow board) */
 const USER = {
-  name: 'Leon', since: 'August', days: 38, restDays: 2,
+  name: 'friend', since: 'August', want: [], where: null, time: null, days: 38, restDays: 2,
   hors: 1140, appetisers: 96, parts: 31, coursesDone: 2, minutes: 31 * 60 + 40,
   week: [1, 1, 1, 0, 1, 1, 2],                 // 1 = done, 0 = not yet, 2 = rest day kept
   returned: [['Patience', 41, 1], ['Prayer', 28, .68], ['Family', 17, .41]],
-  faves: new Set(), follows: new Set(), answers: {},
+  faves: new Set(), follows: new Set(), answers: {}, workbook: [],
 };
 
 /* ------------------------------------------------------------------ video engine */
@@ -298,6 +298,7 @@ const YouTubeEngine = {
 /* ------------------------------------------------------------------ screen stack */
 const stack = [];
 function chrome(mode) { viewport.dataset.chrome = mode; }
+function setChromeVisible(on) { viewport.dataset.bare = on ? '' : '1'; }
 
 /* A covered screen must never keep playing — two talks at once kills the illusion. */
 function pauseMedia(node) {
@@ -375,12 +376,167 @@ function fresh(pool, cur) {
 }
 const Pick = {
   any:      () => fresh(REEL, null),
-  lane:     cur => { const others = LANES.filter(l => l !== cur.lane); return fresh(byLane[rnd(others)] || REEL, cur); },
+  // down: a different topic AND a different sheikh
+  lane:     cur => {
+    const pool = REEL.filter(c => c.lane !== cur.lane && c.speaker !== cur.speaker);
+    return fresh(pool.length ? pool : REEL.filter(c => c.lane !== cur.lane), cur);
+  },
   topic:    cur => { const same = (byLane[cur.lane] || []).filter(c => c.speaker !== cur.speaker); return fresh(same.length ? same : byLane[cur.lane], cur); },
   speaker:  cur => { const same = (bySpeaker[cur.speaker] || []).filter(c => c.lane !== cur.lane); return fresh(same.length ? same : bySpeaker[cur.speaker], cur); },
 };
 
-/* ------------------------------------------------------------------ 01 Hors d'oeuvre card */
+
+/* ------------------------------------------------------------------ 01 Hors d'oeuvre
+   Slides, not footage. Rendered live from each clip's hook / turn / land in one of the
+   three approved treatments. Silent by design: the thumb moves before sound is allowed. */
+const BEAT = 1700, HOLD = 2600;
+
+function buildSlideCard(clip) {
+  const card = el('div', 'cardclip slide t-' + (clip.treatment || 'cinema'));
+  const stage = el('div', 'sl-stage');
+  card.appendChild(stage);
+
+  const prog = el('div', 'cc-prog', '<i></i>');
+  card.appendChild(prog);
+  const progBar = $('i', prog);
+
+  const top = el('div', 'cc-top');
+  top.appendChild(el('span', 'pill lane', 'Lane · ' + esc(clip.lane)));
+  top.appendChild(el('span', 'pill dur', esc(sname(clip.speaker))));
+  card.appendChild(top);
+
+  const beats = [];
+  if (clip.treatment === 'conversation') {
+    stage.appendChild(el('div', 'sl-eyebrow', 'A conversation worth hearing'));
+    beats.push(el('div', 'sl-bubble a', esc(clip.hook)));
+    if (clip.turn) beats.push(el('div', 'sl-bubble b', esc(clip.turn)));
+    beats.push(el('div', 'sl-land', esc(clip.land)));
+  } else if (clip.treatment === 'unfold') {
+    stage.appendChild(el('div', 'sl-eyebrow', 'Open the thought'));
+    beats.push(el('div', 'sl-card', esc(clip.hook)));
+    if (clip.turn) beats.push(el('div', 'sl-card', esc(clip.turn)));
+    beats.push(el('div', 'sl-card last', esc(clip.land)));
+  } else {
+    beats.push(el('div', 'sl-cine-hook', esc(clip.hook)));
+    if (clip.turn) beats.push(el('div', 'sl-cine-tail', esc(clip.turn)));
+    beats.push(el('div', 'sl-cine-land', esc(clip.land)));
+  }
+  beats.forEach(b => { b.classList.add('beat'); stage.appendChild(b); });
+
+  const foot = el('div', 'sl-foot beat');
+  const cta = el('button', 'sl-cta', 'Learn more →');
+  cta.onclick = e => { e.stopPropagation(); openAppetiser(clip); };
+  foot.appendChild(cta);
+  card.appendChild(foot);
+  beats.push(foot);
+
+  /* Four directions, always on screen. Grammar fixed by the brief:
+     up replay · right same sheikh new topic · left same topic new sheikh · down both new. */
+  const arrows = el('div', 'sl-arrows');
+  [['up', '↑', 'replay'], ['right', '→', 'same sheikh'],
+   ['down', '↓', 'something else'], ['left', '←', 'same topic']]
+    .forEach(([dir, glyph, label]) => {
+      const a = el('div', 'sl-arrow ' + dir, '<b>' + glyph + '</b><span>' + esc(label) + '</span>');
+      arrows.appendChild(a);
+    });
+  card.appendChild(arrows);
+
+  let timers = [], raf = 0, asked = false;
+  function run() {
+    timers.forEach(clearTimeout); timers = [];
+    beats.forEach(b => b.classList.remove('in'));
+    const total = beats.length * BEAT + HOLD;
+    beats.forEach((b, i) => timers.push(setTimeout(() => b.classList.add('in'), 220 + i * BEAT)));
+    const t0 = performance.now();
+    cancelAnimationFrame(raf);
+    (function step(now) {
+      if (!card.isConnected) return;
+      const p = (now - t0) / total;
+      progBar.style.width = Math.min(100, p * 100) + '%';
+      if (p < 1) raf = requestAnimationFrame(step);
+      else {
+        // One full read, then the question — this is what fills the workbook.
+        if (!asked && clip.prompt) { asked = true; askAboutClip(clip, run); }
+        else run();
+      }
+    })(t0);
+  }
+
+  card.__clip = clip;
+  card.__mount = () => run();
+  card.__unmount = () => { timers.forEach(clearTimeout); cancelAnimationFrame(raf); };
+  card.__replay = () => { asked = false; run(); };
+  card.__ghost = el('div', 'swipe-ghost', '<b></b>');
+  card.appendChild(card.__ghost);
+  return card;
+}
+
+/* A question on an hors d'oeuvre banks straight to the workbook. */
+function askAboutClip(clip, onDone) {
+  let priv = true;
+  sheetEl.innerHTML = '';
+  sheetEl.appendChild(el('div', 'grab'));
+  const inr = el('div', 'sheet-in');
+  inr.appendChild(el('div', 'eyebrow', esc(clip.kind || 'Reflection') + ' · ' + esc(sname(clip.speaker))));
+  const q = el('div', '', '“' + esc(clip.land) + '”');
+  q.style.cssText = 'font-size:13.5px;line-height:1.5;color:var(--text);border-left:2.5px solid var(--purple);padding:3px 0 3px 11px;margin:9px 0 0';
+  inr.appendChild(q);
+  inr.appendChild(el('p', 'q-text', esc(clip.prompt)));
+  inr.appendChild(el('div', 'q-src', esc(clip.promptSource)));
+  /* Practical tasks close differently: a photo, a note, or simply done. */
+  let ta = null, done = false, photo = false;
+  if (clip.capture === 'photo') {
+    const drop = el('button', 'cap-photo',
+      '<svg viewBox="0 0 24 24"><path d="M4 8h3l1.4-2h7.2L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.4"/></svg>' +
+      '<span>Add a photo</span>');
+    drop.onclick = () => { photo = !photo; drop.classList.toggle('on', photo);
+      $('span', drop).textContent = photo ? 'Photo added' : 'Add a photo'; };
+    inr.appendChild(drop);
+    ta = el('textarea', 'answerbox');
+    ta.id = 'ho' + clip.id; ta.placeholder = 'A line about it, if you want to';
+    ta.style.minHeight = '58px';
+    inr.appendChild(ta);
+  } else if (clip.capture === 'tick') {
+    const tick = el('button', 'cap-tick',
+      '<svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg><span>Mark it done</span>');
+    tick.onclick = () => { done = !done; tick.classList.toggle('on', done);
+      $('span', tick).textContent = done ? 'Done' : 'Mark it done'; };
+    inr.appendChild(tick);
+  } else {
+    ta = el('textarea', 'answerbox');
+    ta.id = 'ho' + clip.id;
+    ta.placeholder = 'Type or record…';
+    inr.appendChild(ta);
+  }
+  const pv = el('div', 'privacy');
+  pv.appendChild(el('span', 'lbl', 'Keep my answer private'));
+  const sw = el('button', 'switch on'); sw.appendChild(el('i'));
+  sw.onclick = () => { priv = !priv; sw.classList.toggle('on', priv); sw.classList.toggle('off', !priv); };
+  pv.appendChild(sw); inr.appendChild(pv);
+  const save = el('button', 'cta purple',
+    clip.capture === 'tick' ? 'Bank it' : 'Add to my workbook');
+  save.style.marginTop = '13px';
+  save.onclick = () => {
+    const body = clip.capture === 'tick'
+      ? (done ? 'Done.' : 'Not yet.')
+      : ((ta && ta.value) || (photo ? 'Photo added.' : ''));
+    USER.workbook.unshift({ clipId: clip.id, text: body, private: priv, capture: clip.capture,
+      photo: photo, q: clip.prompt, where: clip.theme, speaker: clip.speaker, when: 'just now' });
+    closeSheet();
+    toast(clip.capture === 'tick' && done ? 'Banked · that one counts'
+        : priv ? 'Banked privately' : 'Shared with your sheikh’s team');
+    onDone && onDone();
+  };
+  inr.appendChild(save);
+  const skip = el('button', 'more', 'Not now');
+  skip.style.cssText = 'display:block;width:100%;text-align:center;margin-top:11px;padding:6px';
+  skip.onclick = () => { closeSheet(); onDone && onDone(); };
+  inr.appendChild(skip);
+  sheetEl.appendChild(inr);
+  openSheet(() => onDone && onDone());
+}
+
+/* ------------------------------------------------------------------ 02 Appetiser card (footage) */
 /* Clip windows. Board: hors d'oeuvre 15-20s, appetiser 30s-3min. Overridable so the
    harness can drive short windows without touching playback logic. */
 const CFG = window.HUDHUD_CONFIG || {};
@@ -418,16 +574,6 @@ function buildClipCard(clip, kind) {
     '<svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M19 6a8 8 0 0 1 0 12"/></svg><span>Tap for sound</span>');
   card.appendChild(unmute);
   if (!GLOBAL_MUTED) unmute.classList.add('hide');
-
-  const rail = el('div', 'cc-rail');
-  const fav = el('button', 'railbtn' + (USER.faves.has(clip.id) ? ' on' : ''),
-    '<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.2A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.8C19 15.6 12 20 12 20z"/></svg><span>Fave</span>');
-  fav.onclick = e => { e.stopPropagation(); USER.faves.has(clip.id) ? USER.faves.delete(clip.id) : USER.faves.add(clip.id); fav.classList.toggle('on'); };
-  const share = el('button', 'railbtn',
-    '<svg viewBox="0 0 24 24"><path d="M12 15V4"/><path d="m8 8 4-4 4 4"/><path d="M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6"/></svg><span>Share</span>');
-  share.onclick = e => { e.stopPropagation(); shareClip(clip); };
-  rail.appendChild(share); rail.appendChild(fav);
-  card.appendChild(rail);
 
   const hookCard = el('div', 'cc-hookcard',
     '<div class="mk">' + blossomMark(true, '#F6EFE3') + '</div><p>' + esc(clip.lane) + '</p>');
@@ -538,7 +684,8 @@ function animateFallbackProgress(bar, len) {
 /* ------------------------------------------------------------------ deck + gestures */
 function buildDeck(startClip, kind) {
   const wrap = el('div', 'deck');
-  let current = buildClipCard(startClip, kind);
+  const make = c => (kind === 'hors' ? buildSlideCard(c) : buildClipCard(c, kind));
+  let current = make(startClip);
   wrap.appendChild(current);
   requestAnimationFrame(() => current.__mount());
 
@@ -586,7 +733,7 @@ function buildDeck(startClip, kind) {
     if (busy) return; busy = true;
     const cur = current.__clip;
     const next = dir === 'down' ? Pick.lane(cur) : dir === 'left' ? Pick.topic(cur) : Pick.speaker(cur);
-    const incoming = buildClipCard(next, kind);
+    const incoming = make(next);
     const from = { left: '100%,0', right: '-100%,0', down: '0,100%', up: '0,-100%' }[dir];
     const to   = { left: '-100%,0', right: '100%,0', down: '0,-100%', up: '0,100%' }[dir];
     incoming.style.transform = 'translate3d(' + from.replace(',', 'px,').replace(/%px/g, '%') + ',0)';
@@ -1298,7 +1445,7 @@ function homeScreen() {
   const feed = el('div', 'list scroll-pad');
   const hero = el('button', '');
   hero.style.cssText = 'width:100%;border-radius:20px;overflow:hidden;position:relative;height:188px;background:var(--dusk);text-align:left;display:block';
-  const hc = REEL.find(c => c.source === 'file') || Pick.any();
+  const hc = REEL[0] || Pick.any();   // deterministic opener
   const hi = el('img'); hi.src = thumb(hc.videoId);
   hi.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55';
   imgFallback(hi, 'var(--dusk)');
@@ -1318,6 +1465,100 @@ function homeScreen() {
 }
 function blossomInline() {
   return '<svg width="12" height="12" viewBox="0 0 24 24" style="display:inline-block;vertical-align:-1px"><g fill="#D9A441"><circle cx="12" cy="6.5" r="3.4"/><circle cx="17.5" cy="10.5" r="3.4"/><circle cx="15.4" cy="17" r="3.4"/><circle cx="8.6" cy="17" r="3.4"/><circle cx="6.5" cy="10.5" r="3.4"/></g><circle cx="12" cy="12" r="2.5" fill="#2B2356"/></svg>';
+}
+
+
+/* ------------------------------------------------------------------ welcome
+   Name, then three questions that shape the feed. The answers pick which lanes
+   lead and how long the first sitting should be. */
+const ONBOARD = [
+  { key: 'where', q: 'Where are you with it right now?',
+    a: [['restarting', 'Starting again after a while'],
+        ['onoff',      'On and off'],
+        ['steady',     'Steady — I want more depth'],
+        ['quiet',      'Rather not say']] },
+  { key: 'want', q: 'What do you want more of?', multi: true,
+    a: [['Ease', 'Ease'], ['The Prophet ﷺ', 'The Prophet ﷺ'], ['Belief', 'Belief'],
+        ['Nearness', 'Nearness'], ['Presence', 'Presence'], ['The Last Day', 'The Last Day'],
+        ['Agency', 'Agency']] },
+  { key: 'time', q: 'How long have you got, most days?',
+    a: [['1', 'About a minute'], ['10', 'Ten minutes'], ['60', 'An hour, when I can']] },
+];
+
+function welcomeScreen() {
+  const s = el('div', 'welcome');
+  const in_ = el('div', 'wl-in');
+  in_.appendChild(el('div', 'wl-brand', 'Hud-hud <span>· Hearts Together</span>'));
+  in_.appendChild(el('h1', 'wl-h', 'Start where you are.'));
+  in_.appendChild(el('p', 'wl-sub', 'No streak to rebuild, no gap to explain. Three questions and we will know what to put in front of you.'));
+
+  const nameWrap = el('label', 'wl-field');
+  nameWrap.appendChild(el('span', 'wl-lab', 'What should we call you?'));
+  const nameIn = el('input', 'wl-input');
+  nameIn.id = 'wl-name'; nameIn.type = 'text'; nameIn.placeholder = 'Your name';
+  nameIn.setAttribute('autocomplete', 'given-name');
+  nameWrap.appendChild(nameIn);
+  in_.appendChild(nameWrap);
+
+  const picked = { where: null, want: [], time: null };
+  ONBOARD.forEach(block => {
+    const g = el('div', 'wl-block');
+    g.appendChild(el('div', 'wl-lab', esc(block.q)));
+    const opts = el('div', 'wl-opts');
+    block.a.forEach(([val, label]) => {
+      const b = el('button', 'wl-opt', esc(label));
+      b.onclick = () => {
+        if (block.multi) {
+          const i = picked.want.indexOf(val);
+          if (i < 0) picked.want.push(val); else picked.want.splice(i, 1);
+          b.classList.toggle('on');
+        } else {
+          picked[block.key] = val;
+          [...opts.children].forEach(x => x.classList.remove('on'));
+          b.classList.add('on');
+        }
+        go.disabled = !picked.where;
+        go.classList.toggle('ready', !!picked.where);
+      };
+      opts.appendChild(b);
+    });
+    g.appendChild(opts);
+    in_.appendChild(g);
+  });
+
+  const go = el('button', 'cta wl-go', 'Start →');
+  go.disabled = true;
+  go.onclick = () => {
+    setChromeVisible(true);
+    USER.name = (nameIn.value || '').trim() || 'friend';
+    USER.where = picked.where; USER.want = picked.want; USER.time = picked.time;
+    applyTaste();
+    try { localStorage.setItem('hudhud.user', JSON.stringify({ name: USER.name, where: USER.where, want: USER.want, time: USER.time })); } catch (e) {}
+    (function boot() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('hudhud.user') || 'null'); } catch (e) {}
+  if (saved && saved.name) {
+    Object.assign(USER, saved);
+    applyTaste();
+    resetTo(homeScreen, { chrome: 'dark', tab: 'home' });
+  } else {
+    setChromeVisible(false);
+    resetTo(welcomeScreen, { chrome: 'light', dark: true, tab: 'home' });
+  }
+})();
+    toast('Assalamu alaykum, ' + USER.name);
+  };
+  in_.appendChild(go);
+  in_.appendChild(el('div', 'wl-note', 'Answers stay on this device until you choose to share one.'));
+  s.appendChild(in_);
+  return s;
+}
+
+/* Preferred lanes lead the feed; everything else follows. */
+function applyTaste() {
+  if (!USER.want || !USER.want.length) return;
+  const want = new Set(USER.want);
+  REEL.sort((a, b) => (want.has(b.lane) ? 1 : 0) - (want.has(a.lane) ? 1 : 0));
 }
 
 /* ------------------------------------------------------------------ Grow hub + five pages */
@@ -1731,7 +1972,10 @@ const ANSWERS = [
 ];
 const KIND_ROTA = ['REFLECTION', 'TASK', 'QUESTION', 'REFLECTION', 'MULTI-CHOICE'];
 function buildWorkbook() {
-  const out = [];
+  const out = USER.workbook.map((w, i) => ({
+    date: 'TODAY', kind: 'REFLECTION', q: w.q, a: w.text || '(saved without a note)',
+    where: w.where || 'an hors d’oeuvre', videoId: D.course.videoId, private: w.private, mine: true,
+  }));
   const qs = D.reflectionQuestions;
   for (let i = 0; i < 18; i++) {
     const q = qs[i % qs.length];
@@ -1887,7 +2131,18 @@ document.querySelectorAll('.tab').forEach(t => {
   t.onclick = () => {
     closeSheet();
     const k = t.dataset.tab;
-    if (k === 'home') resetTo(homeScreen, { chrome: 'dark', tab: 'home' });
+    if (k === 'home') (function boot() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('hudhud.user') || 'null'); } catch (e) {}
+  if (saved && saved.name) {
+    Object.assign(USER, saved);
+    applyTaste();
+    resetTo(homeScreen, { chrome: 'dark', tab: 'home' });
+  } else {
+    setChromeVisible(false);
+    resetTo(welcomeScreen, { chrome: 'light', dark: true, tab: 'home' });
+  }
+})();
     if (k === 'lanes') resetTo(lanesScreen, { chrome: 'dark', tab: 'lanes' });
     if (k === 'grow') openGrow();
     if (k === 'me') resetTo(meScreen, { chrome: 'dark', tab: 'me' });
@@ -1902,7 +2157,18 @@ $('#snCounts').innerHTML =
   '<div><b>' + c.playableVideos + '</b> real HLS streams from Hearts CMS</div>' +
   '<div><b>' + c.quran + '</b> āyāt · <b>' + c.hadith + '</b> aḥādīth with real provenance</div>';
 
-resetTo(homeScreen, { chrome: 'dark', tab: 'home' });
+(function boot() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('hudhud.user') || 'null'); } catch (e) {}
+  if (saved && saved.name) {
+    Object.assign(USER, saved);
+    applyTaste();
+    resetTo(homeScreen, { chrome: 'dark', tab: 'home' });
+  } else {
+    setChromeVisible(false);
+    resetTo(welcomeScreen, { chrome: 'light', dark: true, tab: 'home' });
+  }
+})();
 window.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSheet(); pop(); } });
 
 })();

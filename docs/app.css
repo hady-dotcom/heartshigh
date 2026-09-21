@@ -520,3 +520,97 @@ svg{display:block}
 .player .part-label{bottom:auto;top:10px}
 .av-play{transition:opacity .25s var(--ease),transform .15s}
 .av-play.hide{opacity:0;pointer-events:none}
+
+/* ---------------------------------------------------------------- hors d'oeuvre slides
+   Palette sampled from the approved motion mocks. */
+:root{
+  --sl-ground:#16201D; --sl-paper:#F6F2E8; --sl-bubble:#26322E;
+  --sl-bubble2:#33413D; --sl-accent:#D6B67D;
+}
+.cardclip.slide{background:var(--sl-ground)}
+.cardclip.slide .cc-prog i{background:var(--sl-accent)}
+.sl-stage{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+  padding:96px 30px calc(var(--tab-h) + 104px);gap:0;z-index:3;overflow:hidden}
+.sl-eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--sl-accent);text-align:center;margin-bottom:20px}
+.beat{opacity:0;transform:translateY(12px);transition:opacity .55s var(--ease),transform .55s var(--ease)}
+.beat.in{opacity:1;transform:none}
+
+/* conversation — the beats as bubbles */
+.sl-bubble{background:var(--sl-paper);color:#1A241F;border-radius:14px;padding:14px 16px;
+  font-size:16px;line-height:1.4;margin-bottom:12px;max-width:86%}
+.sl-bubble.b{background:var(--sl-bubble);color:#EDE8DC;margin-left:auto;max-width:82%}
+.sl-land{font-size:23px;font-weight:700;line-height:1.28;letter-spacing:-.02em;
+  color:var(--sl-paper);margin-top:6px}
+
+/* unfold — cards opening in sequence */
+.t-unfold .sl-card{background:var(--sl-paper);color:#1A241F;border-radius:10px;padding:15px 17px;
+  font-size:15.5px;line-height:1.45;margin-bottom:11px;transform-origin:top center}
+.t-unfold .beat{transform:translateY(10px) scaleY(.96)}
+.t-unfold .beat.in{transform:none}
+.t-unfold .sl-card.last{font-size:19px;font-weight:700;line-height:1.32;letter-spacing:-.015em}
+
+/* cinema — one line at a time, the land arriving whole */
+.t-cinema .sl-stage{gap:14px}
+.sl-cine-hook{font-size:17px;color:rgba(246,242,232,.82);line-height:1.4}
+.sl-cine-land{font-size:34px;font-weight:700;line-height:1.14;letter-spacing:-.03em;color:var(--sl-accent)}
+.sl-cine-tail{font-size:16px;color:rgba(246,242,232,.72);line-height:1.45}
+
+.sl-foot{position:absolute;left:26px;right:26px;bottom:calc(var(--tab-h) + 44px);z-index:4}
+.sl-cta{display:block;width:100%;padding:14px;border-radius:4px;background:var(--sl-accent);
+  color:#1A241F;font-size:12.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.sl-cta:active{transform:scale(.98)}
+
+/* the four directions, always on screen */
+.sl-arrows{position:absolute;inset:0;z-index:5;pointer-events:none}
+.sl-arrow{position:absolute;display:flex;align-items:center;gap:5px;
+  color:rgba(246,242,232,.5);font-size:9.5px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;white-space:nowrap}
+.sl-arrow b{font-size:14px;line-height:1;font-weight:400}
+.sl-arrow.up{top:calc(var(--tab-h) + 4px);top:84px;left:50%;transform:translateX(-50%);flex-direction:column;gap:2px}
+.sl-arrow.down{bottom:calc(var(--tab-h) + 8px);left:50%;transform:translateX(-50%);flex-direction:column-reverse;gap:2px}
+.sl-arrow.left,.sl-arrow.right{top:50%;gap:7px;writing-mode:vertical-rl;text-orientation:mixed;
+  letter-spacing:.12em;font-size:8.5px}
+.sl-arrow.left{left:5px;transform:translateY(-50%) rotate(180deg)}
+.sl-arrow.right{right:5px;transform:translateY(-50%)}
+.sl-arrow.left b,.sl-arrow.right b{writing-mode:horizontal-tb}
+.sl-arrow span{opacity:.85}
+@media (max-width:900px){ .sl-arrow.up{top:calc(env(safe-area-inset-top,0px) + 74px)} }
+
+/* ---------------------------------------------------------------- welcome */
+.welcome{background:var(--sl-ground);overflow-y:auto}
+.wl-in{padding:72px 26px calc(var(--tab-h) + 40px);max-width:520px;margin:0 auto}
+.wl-brand{font-size:14px;font-weight:700;color:var(--sl-paper);letter-spacing:.01em}
+.wl-brand span{color:var(--sl-accent);font-weight:500}
+.wl-h{margin:22px 0 8px;font-size:32px;font-weight:700;line-height:1.1;letter-spacing:-.03em;
+  color:var(--sl-paper);text-wrap:balance}
+.wl-sub{margin:0 0 26px;font-size:14.5px;line-height:1.55;color:rgba(246,242,232,.68)}
+.wl-field{display:block;margin-bottom:24px}
+.wl-lab{display:block;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--sl-accent);margin-bottom:10px}
+.wl-input{width:100%;padding:14px 15px;border-radius:12px;border:1.5px solid rgba(246,242,232,.2);
+  background:rgba(246,242,232,.05);color:var(--sl-paper);font:inherit;font-size:16px;outline:none;
+  transition:border-color .2s}
+.wl-input:focus{border-color:var(--sl-accent)}
+.wl-input::placeholder{color:rgba(246,242,232,.35)}
+.wl-block{margin-bottom:24px}
+.wl-opts{display:flex;flex-wrap:wrap;gap:8px}
+.wl-opt{padding:11px 14px;border-radius:999px;font-size:13.5px;font-weight:600;
+  color:rgba(246,242,232,.82);box-shadow:inset 0 0 0 1.5px rgba(246,242,232,.22);transition:.18s var(--ease)}
+.wl-opt.on{background:var(--sl-accent);color:#1A241F;box-shadow:none}
+.wl-opt:active{transform:scale(.97)}
+.wl-go{margin-top:8px;background:rgba(246,242,232,.14);color:rgba(246,242,232,.45);box-shadow:none}
+.wl-go.ready{background:var(--sl-accent);color:#1A241F}
+.wl-note{margin-top:14px;font-size:11.5px;color:rgba(246,242,232,.45);text-align:center;line-height:1.5}
+.viewport[data-bare="1"] .tabbar,.viewport[data-bare="1"] .home-indicator{display:none}
+.viewport[data-bare="1"] .welcome .wl-in{padding-bottom:48px}
+
+/* practical capture */
+.cap-photo,.cap-tick{display:flex;align-items:center;gap:11px;width:100%;padding:16px;
+  border-radius:15px;background:var(--cream);box-shadow:inset 0 0 0 1.5px var(--border);
+  font-size:14.5px;font-weight:600;color:var(--dark);margin-bottom:10px;transition:.18s var(--ease)}
+.cap-photo svg,.cap-tick svg{width:21px;height:21px;fill:none;stroke:var(--purple);stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.cap-photo.on,.cap-tick.on{background:rgba(31,138,132,.1);box-shadow:inset 0 0 0 2px var(--teal);color:var(--teal)}
+.cap-photo.on svg,.cap-tick.on svg{stroke:var(--teal)}
+.cap-photo:active,.cap-tick:active{transform:scale(.99)}

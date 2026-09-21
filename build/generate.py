@@ -22,6 +22,7 @@ XL_FAHMY = os.path.join(UP, "863ff916-extract-fahmy-s6-dual-export.xlsx")
 import openpyxl
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from questions import QUESTIONS_BY_VIDEO
+from actions import ACTIONS
 
 def sheet(path, name=None):
     wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
@@ -92,6 +93,56 @@ def lane_of(theme):
         if re.search(pat, whole): return name
     return "Nearness"
 
+# The three hors d'oeuvre treatments, from the approved motion mocks.
+#   cinema       one line at a time, full screen, the land arriving whole
+#   conversation the beats as bubbles, for clips that address the viewer directly
+#   unfold       cards unfolding in sequence, for a story with a turn
+def treatment_for(c):
+    hook, turn, land = c.get("hook", ""), c.get("turn", ""), c.get("land", "")
+    # a line that lands whole carries the screen on its own
+    if c.get("arabic") or len(land) <= 80:
+        return "cinema"
+    # spoken straight at the viewer
+    if re.search(r"\b(you|your|yourself)\b", hook + " " + land, re.I):
+        return "conversation"
+    # a story with a turn in it
+    return "unfold"
+
+# Fallback prompts. They sit directly under the clip's own words on screen, so they
+# ask about that line rather than restating it.
+STEMS = [
+    ("Reflection", "When did you last see this \u2014 in yourself, not in someone else?"),
+    ("Question",   "Who does this describe in your life right now?"),
+    ("Task",       "Name one thing that would change this week if you took this seriously."),
+    ("Reflection", "What excuse did your mind reach for just now, before you finished reading?"),
+    ("Question",   "Say this back in your own words. What did you leave out?"),
+    ("Task",       "Write the name of the person you should send this to \u2014 and why you have not."),
+]
+
+def action_for(c, used):
+    """A practical action whose tags touch this clip, preferring one not used yet."""
+    hay = (str(c.get("lane", "")) + " " + str(c.get("theme", ""))).lower()
+    hits = [a for a in ACTIONS if any(t in hay for t in a["tags"])]
+    fresh = [a for a in hits if a["id"] not in used]
+    if fresh: return fresh[0]
+    if hits: return hits[len(used) % len(hits)]
+    spare = [a for a in ACTIONS if a["id"] not in used]
+    return spare[0] if spare else ACTIONS[len(used) % len(ACTIONS)]
+
+def question_for(c, rq, i):
+    """Prefer a real CMS reflection question whose topic touches this clip."""
+    words = set(re.findall(r"[a-z]{4,}", (str(c.get("theme", "")) + " " + str(c.get("lane", ""))).lower()))
+    best, score = None, 0
+    for q in rq:
+        t = set(re.findall(r"[a-z]{4,}", str(q["topic"]).lower()))
+        overlap = len(words & t)
+        if overlap > score: best, score = q, overlap
+    if best and score:
+        return {"kind": "Reflection", "prompt": best["prompt"],
+                "promptSource": "Hearts CMS \u00b7 reflection question #%d" % best["id"]}
+    kind, prompt = STEMS[i % len(STEMS)]
+    return {"kind": kind, "prompt": prompt, "promptSource": "Asked of this clip"}
+
 MIN_PER_LANE = 6      # enough depth that swipe-left never repeats immediately
 MIN_SPEAKERS = 2      # swipe-left means "same topic, different speaker"
 
@@ -141,6 +192,7 @@ def main():
     fdeep = fah["Deep why it works"]
     fnotes = {r["field"]: r["value"] for r in fah["Match notes"]}
 
+    rq     = snap["reflectionQuestions"]
     vids   = {v["id"]: v for v in snap["videos"]}
     by_t   = {norm(v["title"]): v for v in snap["videos"]}
     creators = {c["handle"]: c for c in snap["creators"]}
@@ -157,7 +209,10 @@ def main():
         rows.sort(key=lambda r: (0 if str(r.get("hang_strength")) == "strong" else 1, secs(r.get("timestamp"))))
         for r in rows:
             hook, turn, land = clean(r.get("hook")), clean(r.get("turn")), clean(r.get("land"))
+            # a slide shows all three beats, so each has to stand on its own
             if not (hook and land) or not whole_sentence(land): continue
+            if len(hook) < 16 or (turn and len(turn) < 12): continue
+            if hook.rstrip().endswith((':',)) or len(hook) > 150: continue
             t = secs(r.get("timestamp"))
             if t <= 0 or t > v["durationSec"] - 30: continue
             sig = (v["id"], t // 20)
@@ -235,7 +290,21 @@ def main():
         "strength": "strong", "appeal": "", "why": "", "currency": "",
         "title": "Never let a sin become so big", "source_sheet": "drive",
     }
-    reel = settle_lanes([HERO] + reel + yt_reel)
+    # The hors d'oeuvre layer is slides only - no footage. The Drive hero clip is a
+    # taste-of video, so it belongs to the appetiser layer, not the opening loop.
+    reel = settle_lanes(reel + yt_reel)
+    used_actions = set()
+    for i, c in enumerate(reel):
+        c["treatment"] = treatment_for(c)
+        # Every third clip asks for something done rather than something thought.
+        act = action_for(c, used_actions) if i % 3 == 1 else None
+        if act:
+            used_actions.add(act["id"])
+            c.update({"kind": "Task", "prompt": act["text"], "capture": act["capture"],
+                      "actionId": act["id"], "promptSource": "Something to do"})
+        else:
+            c.update(question_for(c, rq, i))
+    appetiser_hero = HERO
 
     # ---------------- Hadith Jibril map (real counts from the canon)
     clause_rows = defaultdict(list)
@@ -323,7 +392,6 @@ def main():
 
     # ---------------- Mains: the course + engagement points from the Fahmy S6 deep analysis
     course_vid = vids[9]
-    rq = snap["reflectionQuestions"]
     def q_for(theme, i):
         t = str(theme).lower()
         for q in rq:
@@ -405,7 +473,7 @@ def main():
                        "quran": len(snap["quran"]), "hadith": len(snap["hadith"])},
         },
         "creators": snap["creators"], "series": snap["series"], "videos": snap["videos"],
-        "reel": reel, "curated": curated,
+        "reel": reel, "curated": curated, "appetiserHero": appetiser_hero,
         "jibril": {"branches": jibril, "sectionsTotal": total_sections,
                    "sectionsOpened": opened, "piecesOpened": pieces,
                    "piecesTotal": total_sections * PIECES_PER_SECTION,
@@ -455,6 +523,12 @@ def main():
     for vid, pts in points_by_video.items():
         print(f"  engagement pts  : video {vid}: {len(pts)} at {[p['at'] for p in pts][:6]}...")
     print(f"  youtube reel    : {len(yt_reel)} curated clips playable without CORS")
+    from collections import Counter as _C, Counter as _C2
+    print(f"  treatments      : {dict(_C(c['treatment'] for c in reel))}")
+    print(f"  questions       : {sum(1 for c in reel if c.get('prompt'))} of {len(reel)} clips carry one; "
+          f"{sum(1 for c in reel if 'CMS' in c.get('promptSource',''))} from the CMS")
+    print(f"  practical tasks : {sum(1 for c in reel if c.get('capture'))} "
+          f"({dict(_C2(c['capture'] for c in reel if c.get('capture')))})")
     print(f"  curated (demo10): {len(curated)}")
 
 main()

@@ -13,7 +13,7 @@ window.HUDHUD = {
   "counts": {
    "canonClips": 3963,
    "playableVideos": 18,
-   "reelClips": 110,
+   "reelClips": 102,
    "curated": 22,
    "quran": 14,
    "hadith": 3
@@ -330,33 +330,6 @@ window.HUDHUD = {
  ],
  "reel": [
   {
-   "id": "local-mikaeel",
-   "source": "file",
-   "src": "media/mikaeel-bait-fade.mp4",
-   "srcAlt": "media/mikaeel-bait-fade.webm",
-   "wholeFile": true,
-   "burnedIn": true,
-   "speaker": "mikaeelsmith",
-   "videoId": null,
-   "start": 0,
-   "len": 18,
-   "hook": "This is so beautiful. He says…",
-   "turn": "Never let a sin become so big in your mind…",
-   "land": "…that it stops you from expecting good from God.",
-   "theme": "Hope / Never let a sin become so big",
-   "lane": "Ease",
-   "clause": null,
-   "clauseLabel": null,
-   "seat": "",
-   "form": "Direct Soundbite",
-   "strength": "strong",
-   "appeal": "",
-   "why": "",
-   "currency": "",
-   "title": "Never let a sin become so big",
-   "source_sheet": "drive"
-  },
-  {
    "id": "c9-840",
    "videoId": 9,
    "speaker": "yasirfahmy",
@@ -376,7 +349,11 @@ window.HUDHUD = {
    "currency": "Soft-banks sitting-with-the-Messenger chapter — identity as inheritors of ease.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "When did you last see this — in yourself, not in someone else?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c9-1311",
@@ -398,7 +375,13 @@ window.HUDHUD = {
    "currency": "Soft-banks ihsan / parenting-as-Path night — spirit before line-items.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Pray two rakʿah you were not obliged to pray. Do not tell anyone.",
+   "capture": "tick",
+   "actionId": "a05",
+   "promptSource": "Something to do"
   },
   {
    "id": "c9-2409",
@@ -420,7 +403,11 @@ window.HUDHUD = {
    "currency": "Banks toward ihsan night — ease vs nafs as clarifying hinge before Path density.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Name one thing that would change this week if you took this seriously.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c9-3591",
@@ -442,7 +429,11 @@ window.HUDHUD = {
    "currency": "Soft-banks strangers/welcome night — full story withheld behind the land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "What excuse did your mind reach for just now, before you finished reading?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c9-3918",
@@ -464,7 +455,13 @@ window.HUDHUD = {
    "currency": "Soft-banks Islam-door night — ease with halal/haram still bright lines.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Let one thing go today without correcting it.",
+   "capture": "tick",
+   "actionId": "a13",
+   "promptSource": "Something to do"
   },
   {
    "id": "c9-5708",
@@ -486,7 +483,11 @@ window.HUDHUD = {
    "currency": "Soft-banks Names / Believe-in-Allah night — speech about God under ease discourse.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Write the name of the person you should send this to — and why you have not.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c9-6443",
@@ -508,7 +509,11 @@ window.HUDHUD = {
    "currency": "Soft-banks Messengers / In His Footsteps night — truth without uptight.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "When did you last see this — in yourself, not in someone else?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c9-6827",
@@ -530,29 +535,13 @@ window.HUDHUD = {
    "currency": "Soft-banks Sitting/company night — salam as rite imprint.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
-  },
-  {
-   "id": "c15-2691",
-   "videoId": 15,
-   "speaker": "yasirfahmy",
-   "start": 2691,
-   "hook": "how to live like",
-   "turn": "I was sent",
-   "land": "I was sent to perfect character.",
-   "theme": "Messengers / Mission",
-   "lane": "The Prophet ﷺ",
-   "clause": 25,
-   "clauseLabel": "HIS MESSENGERS",
-   "seat": "Seat TBD",
-   "form": "C2 crumb",
-   "strength": "strong",
-   "appeal": "Mission = perfect character — title thesis.",
-   "why": "Messengers TEACHING — sent to perfect character as mission essence.",
-   "currency": "Banks Messengers — perfect character mission.",
-   "source": "hls",
-   "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Give something small where nobody will know it was you.",
+   "capture": "tick",
+   "actionId": "a15",
+   "promptSource": "Something to do"
   },
   {
    "id": "c15-2851",
@@ -574,7 +563,11 @@ window.HUDHUD = {
    "currency": "Banks Sitting — best to family.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Reflection",
+   "prompt": "The Prophet ﷺ was described as someone who \"disarmed people with kindness.\" Think of a recent interaction where you could have responded with more gentleness. What held you back, and how might it have changed the outcome?",
+   "promptSource": "Hearts CMS · reflection question #1260"
   },
   {
    "id": "c64-1724",
@@ -596,7 +589,11 @@ window.HUDHUD = {
    "currency": "Soft-banks ihsan / Beloved-Son night — purpose vs something-you-do as learner correction.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Reflection",
+   "prompt": "What excuse did your mind reach for just now, before you finished reading?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c64-2007",
@@ -618,7 +615,13 @@ window.HUDHUD = {
    "currency": "Soft-banks ihsan night — daily maximizing of servanthood as the benefit scale.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "unfold",
+   "kind": "Task",
+   "prompt": "Before you sleep, write three things from today. Nothing large.",
+   "capture": "note",
+   "actionId": "a16",
+   "promptSource": "Something to do"
   },
   {
    "id": "c64-2168",
@@ -640,7 +643,11 @@ window.HUDHUD = {
    "currency": "Soft-banks worship-as-seeing night — who gets the bulk of your remembrance.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Write the name of the person you should send this to — and why you have not.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c64-2633",
@@ -662,7 +669,11 @@ window.HUDHUD = {
    "currency": "Soft-banks ihsan / Beloved-Son chapter — theory vs registered good as next-councils bait.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "When did you last see this — in yourself, not in someone else?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c269-37",
@@ -684,7 +695,13 @@ window.HUDHUD = {
    "currency": "Banks Believe — certainty of shukr promise.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Give something away today and photograph the empty space it left.",
+   "capture": "photo",
+   "actionId": "a14",
+   "promptSource": "Something to do"
   },
   {
    "id": "c269-195",
@@ -706,29 +723,11 @@ window.HUDHUD = {
    "currency": "Banks Ihsan — ʿabdan shakūrā.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
-  },
-  {
-   "id": "c272-489",
-   "videoId": 272,
-   "speaker": "khalidlatif",
-   "start": 489,
-   "hook": "Someone is deemed to be a companion, a Sahaba of the prophet, if they meet the prophet in their lifetime and they die in a state of Iman, a state of faith.",
-   "turn": "There's a lot of people who met the prophet, but they weren't Muslim, so they wouldn't be called companions, Sahaba of the prophet.",
-   "land": "There's people who we know as individuals who might have lived at that time, but they didn't meet the prophet.",
-   "theme": "Messengers / Prophetic manners",
-   "lane": "The Prophet ﷺ",
-   "clause": 25,
-   "clauseLabel": "HIS MESSENGERS",
-   "seat": "Seat TBD — teacher brief; (page range not listed on map)",
-   "form": "mid sit",
-   "strength": "strong",
-   "appeal": "Stranger-cold timed land from in-talk device.",
-   "why": "Messengers TEACHING — prophetic exemplar, character, or invitation is the hang.",
-   "currency": "Soft-banks unit 25 from this talk's dual land.",
-   "source": "hls",
-   "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Name one thing that would change this week if you took this seriously.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c275-54",
@@ -750,7 +749,11 @@ window.HUDHUD = {
    "currency": "Banks Qadar — enemy cannot steal garden.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "unfold",
+   "kind": "Reflection",
+   "prompt": "What excuse did your mind reach for just now, before you finished reading?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c275-331",
@@ -772,7 +775,13 @@ window.HUDHUD = {
    "currency": "Banks Ihsan — comparison prison.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Sit next to someone you do not know at the masjid. Ask their name.",
+   "capture": "tick",
+   "actionId": "a18",
+   "promptSource": "Something to do"
   },
   {
    "id": "c279-15",
@@ -794,7 +803,11 @@ window.HUDHUD = {
    "currency": "Banks Believe — jihād fīnā→hidāyah.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Write the name of the person you should send this to — and why you have not.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c279-54",
@@ -816,7 +829,11 @@ window.HUDHUD = {
    "currency": "Banks Believe — step exchange.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "When did you last see this — in yourself, not in someone else?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c280-22",
@@ -838,7 +855,13 @@ window.HUDHUD = {
    "currency": "Banks Last Day — perish/return.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Write the name of someone who has died and one thing you would thank them for.",
+   "capture": "note",
+   "actionId": "a30",
+   "promptSource": "Something to do"
   },
   {
    "id": "c280-65",
@@ -860,7 +883,11 @@ window.HUDHUD = {
    "currency": "Banks Last Day — home first.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Name one thing that would change this week if you took this seriously.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c280-204",
@@ -882,7 +909,11 @@ window.HUDHUD = {
    "currency": "Banks Last Day — gone ahead.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "What excuse did your mind reach for just now, before you finished reading?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c280-332",
@@ -904,7 +935,13 @@ window.HUDHUD = {
    "currency": "Banks Last Day — walk home.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Write the name of someone who has died and one thing you would thank them for.",
+   "capture": "note",
+   "actionId": "a30",
+   "promptSource": "Something to do"
   },
   {
    "id": "c478-1326",
@@ -926,7 +963,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Write the name of the person you should send this to — and why you have not.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c9-130",
@@ -948,7 +989,11 @@ window.HUDHUD = {
    "currency": "Soft-banks with-the-Messenger night as practice crumb (salawat abundance).",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "When did you last see this — in yourself, not in someone else?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c9-1248",
@@ -970,7 +1015,13 @@ window.HUDHUD = {
    "currency": "Soft-banks trunk night as what kind of religion he came to teach.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Before you sleep, write three things from today. Nothing large.",
+   "capture": "note",
+   "actionId": "a16",
+   "promptSource": "Something to do"
   },
   {
    "id": "c9-1618",
@@ -992,7 +1043,11 @@ window.HUDHUD = {
    "currency": "Soft-banks Last Day night — husn al-zann + balanced fear.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Name one thing that would change this week if you took this seriously.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c9-2797",
@@ -1014,7 +1069,11 @@ window.HUDHUD = {
    "currency": "Soft-banks household Hour night — mahr/barriers as lived how the house turns.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "What excuse did your mind reach for just now, before you finished reading?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c9-4499",
@@ -1036,7 +1095,13 @@ window.HUDHUD = {
    "currency": "Soft-banks Islam-door + ihsan hinge — rules after welcome, not instead of it.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Greet three people first today, before they greet you.",
+   "capture": "tick",
+   "actionId": "a20",
+   "promptSource": "Something to do"
   },
   {
    "id": "c9-6041",
@@ -1058,7 +1123,11 @@ window.HUDHUD = {
    "currency": "Soft-banks character/muraqaba night — easygoing as faith, not nicety.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Write the name of the person you should send this to — and why you have not.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c11-1139",
@@ -1080,7 +1149,11 @@ window.HUDHUD = {
    "currency": "Banks walk-in night — character as worthiness for da'wah.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "When did you last see this — in yourself, not in someone else?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c11-1372",
@@ -1102,7 +1175,13 @@ window.HUDHUD = {
    "currency": "Soft-banks Messengers night — feelings as prophetic concern.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Write one thing the Prophet ﷺ did that you have never tried. Try it this week.",
+   "capture": "note",
+   "actionId": "a27",
+   "promptSource": "Something to do"
   },
   {
    "id": "c11-4043",
@@ -1124,7 +1203,11 @@ window.HUDHUD = {
    "currency": "Soft-banks ihsan — face as the endless-lives tool.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "The Prophet ﷺ was described as someone who \"disarmed people with kindness.\" Think of a recent interaction where you could have responded with more gentleness. What held you back, and how might it have changed the outcome?",
+   "promptSource": "Hearts CMS · reflection question #1260"
   },
   {
    "id": "c64-2959",
@@ -1146,7 +1229,11 @@ window.HUDHUD = {
    "currency": "Soft-banks zakat/wealth night — mountain-of-gold desire as the fitna tell.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "What excuse did your mind reach for just now, before you finished reading?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c259-736",
@@ -1168,7 +1255,13 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 22 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Photograph the page you stopped at. Start there tomorrow.",
+   "capture": "photo",
+   "actionId": "a06",
+   "promptSource": "Something to do"
   },
   {
    "id": "c259-941",
@@ -1190,7 +1283,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Write the name of the person you should send this to — and why you have not.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c259-1934",
@@ -1212,7 +1309,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "unfold",
+   "kind": "Reflection",
+   "prompt": "When did you last see this — in yourself, not in someone else?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c259-1972",
@@ -1234,7 +1335,13 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 22 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Copy out one āyah by hand. Write underneath what you did not understand.",
+   "capture": "note",
+   "actionId": "a07",
+   "promptSource": "Something to do"
   },
   {
    "id": "c259-2050",
@@ -1256,7 +1363,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Name one thing that would change this week if you took this seriously.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c259-2400",
@@ -1278,7 +1389,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 22 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Reflection",
+   "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
+   "promptSource": "Hearts CMS · reflection question #990"
   },
   {
    "id": "c263-228",
@@ -1300,7 +1415,13 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "unfold",
+   "kind": "Task",
+   "prompt": "Teach one thing you learned today to one person, out loud.",
+   "capture": "tick",
+   "actionId": "a28",
+   "promptSource": "Something to do"
   },
   {
    "id": "c263-721",
@@ -1322,29 +1443,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 27 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
-  },
-  {
-   "id": "c263-1148",
-   "videoId": 263,
-   "speaker": "khalidlatif",
-   "start": 1148,
-   "hook": "There's some people who are on one end of the spectrum that would say there is no basis of doing anything that is celebratory, that commemorates the birth of the prophet of God,…",
-   "turn": "And there's other people who would say we definitely should be in celebration of the birth of the prophet of God.",
-   "land": "Why would you not celebrate the birth of Muhammad?",
-   "theme": "Messengers / Prophetic manners",
-   "lane": "The Prophet ﷺ",
-   "clause": 25,
-   "clauseLabel": "HIS MESSENGERS",
-   "seat": "Seat TBD — teacher brief; (page range not listed on map)",
-   "form": "C2 crumb",
-   "strength": "medium",
-   "appeal": "Stranger-cold timed land from in-talk device.",
-   "why": "Messengers TEACHING — prophetic exemplar, character, or invitation is the hang.",
-   "currency": "Soft-banks unit 25 from this talk's dual land.",
-   "source": "hls",
-   "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Write the name of the person you should send this to — and why you have not.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c263-1254",
@@ -1366,7 +1469,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "unfold",
+   "kind": "Reflection",
+   "prompt": "When did you last see this — in yourself, not in someone else?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c263-1835",
@@ -1388,7 +1495,13 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Sit next to someone you do not know at the masjid. Ask their name.",
+   "capture": "tick",
+   "actionId": "a18",
+   "promptSource": "Something to do"
   },
   {
    "id": "c263-2426",
@@ -1410,7 +1523,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Name one thing that would change this week if you took this seriously.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c266-691",
@@ -1432,7 +1549,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 30 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Reflection",
+   "prompt": "What excuse did your mind reach for just now, before you finished reading?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c266-2729",
@@ -1454,7 +1575,13 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 1 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Photograph the spot where you pray. Tidy it first if it needs it.",
+   "capture": "photo",
+   "actionId": "a01",
+   "promptSource": "Something to do"
   },
   {
    "id": "c266-2970",
@@ -1476,29 +1603,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 32 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
-  },
-  {
-   "id": "c266-3284",
-   "videoId": 266,
-   "speaker": "khalidlatif",
-   "start": 3284,
-   "hook": "But in the reflective mode, I would say, Why is my day filled with things that necessitate me saying that I need to use my nights in these ways where I don't sleep?",
-   "turn": "Why do you think about what you do during the days in the ways that you do?",
-   "land": "Are they actually so abhorrent that you just need to not sleep because of the way your day is?",
-   "theme": "Time / One day",
-   "lane": "Presence",
-   "clause": 1,
-   "clauseLabel": "ONE DAY",
-   "seat": "Seat TBD — teacher brief; (page range not listed on map)",
-   "form": "C2 crumb",
-   "strength": "medium",
-   "appeal": "Stranger-cold timed land from in-talk device.",
-   "why": "One day TEACHING — the day as unit of time given.",
-   "currency": "Soft-banks unit 1 from this talk's dual land.",
-   "source": "hls",
-   "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "unfold",
+   "kind": "Task",
+   "prompt": "Write the name of the person you should send this to — and why you have not.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c266-3356",
@@ -1520,29 +1629,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 1 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
-  },
-  {
-   "id": "c266-3878",
-   "videoId": 266,
-   "speaker": "khalidlatif",
-   "start": 3878,
-   "hook": "So he's going to say in a later chapter or a later paragraph in this section, for example, if there's a defined sunnah practice at a certain time, then do that instead of doing …",
-   "turn": "So if the Prophet, peace be upon him, he, outside, and he mentions the sunnahs that go wrong with the five daily prayers, but if he prayed Ishraq, then pray Ishraq at that time.",
-   "land": "Don't invent a prayer like you do what the Prophet did.",
-   "theme": "Messengers / Prophetic manners",
-   "lane": "The Prophet ﷺ",
-   "clause": 25,
-   "clauseLabel": "HIS MESSENGERS",
-   "seat": "Seat TBD — teacher brief; (page range not listed on map)",
-   "form": "C2 crumb",
-   "strength": "medium",
-   "appeal": "Stranger-cold timed land from in-talk device.",
-   "why": "Messengers TEACHING — prophetic exemplar, character, or invitation is the hang.",
-   "currency": "Soft-banks unit 25 from this talk's dual land.",
-   "source": "hls",
-   "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "When did you last see this — in yourself, not in someone else?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c269-455",
@@ -1564,7 +1655,13 @@ window.HUDHUD = {
    "currency": "Banks Qadar — gift not entitlement.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Give something away today and photograph the empty space it left.",
+   "capture": "photo",
+   "actionId": "a14",
+   "promptSource": "Something to do"
   },
   {
    "id": "c272-1147",
@@ -1586,7 +1683,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Name one thing that would change this week if you took this seriously.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c272-1161",
@@ -1608,7 +1709,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "What excuse did your mind reach for just now, before you finished reading?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c272-1984",
@@ -1630,7 +1735,13 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "unfold",
+   "kind": "Task",
+   "prompt": "Write one thing the Prophet ﷺ did that you have never tried. Try it this week.",
+   "capture": "note",
+   "actionId": "a27",
+   "promptSource": "Something to do"
   },
   {
    "id": "c272-2184",
@@ -1652,7 +1763,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Write the name of the person you should send this to — and why you have not.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c272-5275",
@@ -1674,7 +1789,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 22 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "unfold",
+   "kind": "Reflection",
+   "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
+   "promptSource": "Hearts CMS · reflection question #990"
   },
   {
    "id": "c478-640",
@@ -1696,7 +1815,13 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 22 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Read two lines aloud to someone in your house.",
+   "capture": "tick",
+   "actionId": "a08",
+   "promptSource": "Something to do"
   },
   {
    "id": "c478-779",
@@ -1718,7 +1843,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Name one thing that would change this week if you took this seriously.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c478-2283",
@@ -1740,29 +1869,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 22 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
-  },
-  {
-   "id": "c478-3071",
-   "videoId": 478,
-   "speaker": "mikaeelsmith",
-   "start": 3071,
-   "hook": "And he tells us that you won't be able to move forward until you're able to take out of your heart a love for people that don't want your betterment to move you forward.",
-   "turn": "What does that mean?",
-   "land": "Does it mean that my brothers and sisters in this deen I need to distance myself?",
-   "theme": "Religion taught / Trunk",
-   "lane": "Nearness",
-   "clause": 41,
-   "clauseLabel": "HE CAME TO TEACH YOU YOUR RELIGION",
-   "seat": "Seat TBD — teacher brief; (page range not listed on map)",
-   "form": "C2 crumb",
-   "strength": "medium",
-   "appeal": "Stranger-cold timed land from in-talk device.",
-   "why": "Came to teach you your religion TEACHING — trunk for trees and branches.",
-   "currency": "Soft-banks unit 41 from this talk's dual land.",
-   "source": "hls",
-   "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Reflection",
+   "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
+   "promptSource": "Hearts CMS · reflection question #990"
   },
   {
    "id": "c485-396",
@@ -1784,7 +1895,13 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 22 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Read two lines aloud to someone in your house.",
+   "capture": "tick",
+   "actionId": "a08",
+   "promptSource": "Something to do"
   },
   {
    "id": "c485-662",
@@ -1806,7 +1923,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 22 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
+   "promptSource": "Hearts CMS · reflection question #990"
   },
   {
    "id": "c485-704",
@@ -1828,7 +1949,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 22 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Reflection",
+   "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
+   "promptSource": "Hearts CMS · reflection question #990"
   },
   {
    "id": "c485-2039",
@@ -1850,7 +1975,13 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 22 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Read two lines aloud to someone in your house.",
+   "capture": "tick",
+   "actionId": "a08",
+   "promptSource": "Something to do"
   },
   {
    "id": "c485-2702",
@@ -1872,7 +2003,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 22 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Reflection",
+   "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
+   "promptSource": "Hearts CMS · reflection question #990"
   },
   {
    "id": "c485-2759",
@@ -1894,7 +2029,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 22 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
+   "promptSource": "Hearts CMS · reflection question #990"
   },
   {
    "id": "c486-1381",
@@ -1916,7 +2055,13 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 22 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Read two lines aloud to someone in your house.",
+   "capture": "tick",
+   "actionId": "a08",
+   "promptSource": "Something to do"
   },
   {
    "id": "c486-2000",
@@ -1938,7 +2083,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Write the name of the person you should send this to — and why you have not.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c486-2138",
@@ -1960,7 +2109,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 23 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "When did you last see this — in yourself, not in someone else?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c486-2374",
@@ -1982,7 +2135,13 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 27 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Come back to one thing you stopped doing. Once is enough to count.",
+   "capture": "tick",
+   "actionId": "a22",
+   "promptSource": "Something to do"
   },
   {
    "id": "c486-2574",
@@ -2004,7 +2163,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 22 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
+   "promptSource": "Hearts CMS · reflection question #990"
   },
   {
    "id": "c486-2696",
@@ -2026,7 +2189,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 22 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
+   "promptSource": "Hearts CMS · reflection question #990"
   },
   {
    "id": "c486-3145",
@@ -2048,7 +2215,13 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Sit next to someone you do not know at the masjid. Ask their name.",
+   "capture": "tick",
+   "actionId": "a18",
+   "promptSource": "Something to do"
   },
   {
    "id": "c486-3227",
@@ -2070,7 +2243,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 18 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Write the name of the person you should send this to — and why you have not.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c489-592",
@@ -2092,7 +2269,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "When did you last see this — in yourself, not in someone else?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c489-704",
@@ -2114,7 +2295,13 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Sit next to someone you do not know at the masjid. Ask their name.",
+   "capture": "tick",
+   "actionId": "a18",
+   "promptSource": "Something to do"
   },
   {
    "id": "c489-1671",
@@ -2136,7 +2323,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 4 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Name one thing that would change this week if you took this seriously.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c489-1692",
@@ -2158,7 +2349,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 4 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "What excuse did your mind reach for just now, before you finished reading?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c489-1773",
@@ -2180,7 +2375,13 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 26 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Write the name of someone who has died and one thing you would thank them for.",
+   "capture": "note",
+   "actionId": "a30",
+   "promptSource": "Something to do"
   },
   {
    "id": "c489-1881",
@@ -2202,7 +2403,11 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 23 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Write the name of the person you should send this to — and why you have not.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c15-1335",
@@ -2224,7 +2429,11 @@ window.HUDHUD = {
    "currency": "Banks Last Day — character heaviest.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "The Prophet ﷺ was described as someone who \"disarmed people with kindness.\" Think of a recent interaction where you could have responded with more gentleness. What held you back, and how might it have changed the outcome?",
+   "promptSource": "Hearts CMS · reflection question #1260"
   },
   {
    "id": "c275-83",
@@ -2246,7 +2455,13 @@ window.HUDHUD = {
    "currency": "Banks Ihsan — inner garden.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "unfold",
+   "kind": "Task",
+   "prompt": "Give something away today and photograph the empty space it left.",
+   "capture": "photo",
+   "actionId": "a14",
+   "promptSource": "Something to do"
   },
   {
    "id": "c275-400",
@@ -2268,7 +2483,11 @@ window.HUDHUD = {
    "currency": "Banks Qadar — hayatan tayyiba.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "Think of a time when someone's good character or etiquette left a lasting impression on you. What specifically did they do, and how did it change the way you see the importance of manners in Islam?",
+   "promptSource": "Hearts CMS · reflection question #779"
   },
   {
    "id": "c279-157",
@@ -2290,29 +2509,11 @@ window.HUDHUD = {
    "currency": "Banks Prayer — rubble wudu.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
-  },
-  {
-   "id": "c15-1891",
-   "videoId": 15,
-   "speaker": "yasirfahmy",
-   "start": 1891,
-   "hook": "definition",
-   "turn": "two things",
-   "land": "Bestowing good And withholding harm",
-   "theme": "Character definition",
-   "lane": "The Prophet ﷺ",
-   "clause": 25,
-   "clauseLabel": "HIS MESSENGERS",
-   "seat": "Seat TBD",
-   "form": "C2 crumb",
-   "strength": "medium",
-   "appeal": "Bestow good + withhold harm — operative definition.",
-   "why": "Messengers TEACHING — prophetic character pattern as bestow/withhold.",
-   "currency": "Banks Messengers — bestow/withhold.",
-   "source": "hls",
-   "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "What excuse did your mind reach for just now, before you finished reading?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "c263-2057",
@@ -2334,7 +2535,13 @@ window.HUDHUD = {
    "currency": "Soft-banks unit 25 from this talk's dual land.",
    "source": "hls",
    "len": 18,
-   "source_sheet": "canon"
+   "source_sheet": "canon",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Sit next to someone you do not know at the masjid. Ask their name.",
+   "capture": "tick",
+   "actionId": "a18",
+   "promptSource": "Something to do"
   },
   {
    "id": "yD10-01-A",
@@ -2362,7 +2569,11 @@ window.HUDHUD = {
     "C2",
     "C1"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "unfold",
+   "kind": "Task",
+   "prompt": "Write the name of the person you should send this to — and why you have not.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "yD10-01-B",
@@ -2390,7 +2601,11 @@ window.HUDHUD = {
     "C1",
     "C2"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "conversation",
+   "kind": "Reflection",
+   "prompt": "When you face a difficulty, is your first instinct to ask 'Why is Allah testing me?' or 'What is Allah teaching me?' — and what difference does the framing make in how you experience the trial?",
+   "promptSource": "Hearts CMS · reflection question #960"
   },
   {
    "id": "yD10-02-A",
@@ -2418,7 +2633,13 @@ window.HUDHUD = {
     "C2",
     "C1"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Come back to one thing you stopped doing. Once is enough to count.",
+   "capture": "tick",
+   "actionId": "a22",
+   "promptSource": "Something to do"
   },
   {
    "id": "yD10-02-B",
@@ -2446,7 +2667,11 @@ window.HUDHUD = {
     "C1",
     "C2"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Name one thing that would change this week if you took this seriously.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "yD10-02-DX2",
@@ -2474,7 +2699,11 @@ window.HUDHUD = {
     "C1",
     "C2"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "cinema",
+   "kind": "Reflection",
+   "prompt": "What excuse did your mind reach for just now, before you finished reading?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "yD10-03-A",
@@ -2502,7 +2731,13 @@ window.HUDHUD = {
     "C3",
     "C1"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Before you sleep, write three things from today. Nothing large.",
+   "capture": "note",
+   "actionId": "a16",
+   "promptSource": "Something to do"
   },
   {
    "id": "yD10-03-B",
@@ -2530,7 +2765,11 @@ window.HUDHUD = {
     "C1",
     "C3"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "unfold",
+   "kind": "Reflection",
+   "prompt": "Think of a time when something you desperately wanted didn't work out. Looking back now, can you see any wisdom or mercy in how it turned out?",
+   "promptSource": "Hearts CMS · reflection question #990"
   },
   {
    "id": "yD10-04-B",
@@ -2558,7 +2797,11 @@ window.HUDHUD = {
     "C3",
     "C2"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "conversation",
+   "kind": "Reflection",
+   "prompt": "When did you last see this — in yourself, not in someone else?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "yD10-05-A",
@@ -2586,7 +2829,13 @@ window.HUDHUD = {
     "C1",
     "C2"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Pray one prayer today at its first time, not its last.",
+   "capture": "tick",
+   "actionId": "a03",
+   "promptSource": "Something to do"
   },
   {
    "id": "yD10-06-A",
@@ -2614,7 +2863,11 @@ window.HUDHUD = {
     "C1",
     "C3"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Name one thing that would change this week if you took this seriously.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "yD10-06-B",
@@ -2642,7 +2895,11 @@ window.HUDHUD = {
     "C3",
     "C1"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "conversation",
+   "kind": "Reflection",
+   "prompt": "What excuse did your mind reach for just now, before you finished reading?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "yD10-07-A",
@@ -2670,7 +2927,13 @@ window.HUDHUD = {
     "C3",
     "C1"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Copy out one āyah by hand. Write underneath what you did not understand.",
+   "capture": "note",
+   "actionId": "a07",
+   "promptSource": "Something to do"
   },
   {
    "id": "yD10-07-B",
@@ -2698,7 +2961,11 @@ window.HUDHUD = {
     "C1",
     "C2"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Write the name of the person you should send this to — and why you have not.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "yD10-08-A",
@@ -2726,7 +2993,11 @@ window.HUDHUD = {
     "C3",
     "C2"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "conversation",
+   "kind": "Reflection",
+   "prompt": "When did you last see this — in yourself, not in someone else?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "yD10-08-B",
@@ -2754,7 +3025,13 @@ window.HUDHUD = {
     "C1",
     "C3"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "conversation",
+   "kind": "Task",
+   "prompt": "Give something small where nobody will know it was you.",
+   "capture": "tick",
+   "actionId": "a15",
+   "promptSource": "Something to do"
   },
   {
    "id": "yD10-09-A",
@@ -2782,7 +3059,11 @@ window.HUDHUD = {
     "C3",
     "C1"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Name one thing that would change this week if you took this seriously.",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "yD10-09-B",
@@ -2810,7 +3091,11 @@ window.HUDHUD = {
     "C1",
     "C3"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "unfold",
+   "kind": "Reflection",
+   "prompt": "What excuse did your mind reach for just now, before you finished reading?",
+   "promptSource": "Asked of this clip"
   },
   {
    "id": "yD10-10-A",
@@ -2838,7 +3123,13 @@ window.HUDHUD = {
     "C2",
     "C1"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "unfold",
+   "kind": "Task",
+   "prompt": "Pray two rakʿah you were not obliged to pray. Do not tell anyone.",
+   "capture": "tick",
+   "actionId": "a05",
+   "promptSource": "Something to do"
   },
   {
    "id": "yD10-10-B",
@@ -2866,7 +3157,11 @@ window.HUDHUD = {
     "C1",
     "C2"
    ],
-   "source_sheet": "demo10"
+   "source_sheet": "demo10",
+   "treatment": "cinema",
+   "kind": "Task",
+   "prompt": "Write the name of the person you should send this to — and why you have not.",
+   "promptSource": "Asked of this clip"
   }
  ],
  "curated": [
@@ -3311,6 +3606,33 @@ window.HUDHUD = {
    "startSec": 469
   }
  ],
+ "appetiserHero": {
+  "id": "local-mikaeel",
+  "source": "file",
+  "src": "media/mikaeel-bait-fade.mp4",
+  "srcAlt": "media/mikaeel-bait-fade.webm",
+  "wholeFile": true,
+  "burnedIn": true,
+  "speaker": "mikaeelsmith",
+  "videoId": null,
+  "start": 0,
+  "len": 18,
+  "hook": "This is so beautiful. He says…",
+  "turn": "Never let a sin become so big in your mind…",
+  "land": "…that it stops you from expecting good from God.",
+  "theme": "Hope / Never let a sin become so big",
+  "lane": "Return",
+  "clause": null,
+  "clauseLabel": null,
+  "seat": "",
+  "form": "Direct Soundbite",
+  "strength": "strong",
+  "appeal": "",
+  "why": "",
+  "currency": "",
+  "title": "Never let a sin become so big",
+  "source_sheet": "drive"
+ },
  "jibril": {
   "branches": [
    {
