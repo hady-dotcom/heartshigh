@@ -1,6 +1,9 @@
 import os, threading, http.server, socketserver, functools
 os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", "/opt/pw-browsers")
 from playwright.sync_api import sync_playwright
+import sys as _s, os as _o
+_s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__)))
+from onboard import onboard, to_mains
 ROOT, PORT = "/home/user/heartshigh/app", 8768
 socketserver.TCPServer.allow_reuse_address = True
 httpd = socketserver.TCPServer(("127.0.0.1", PORT), functools.partial(http.server.SimpleHTTPRequestHandler, directory=ROOT))
@@ -20,6 +23,7 @@ with sync_playwright() as pw:
         pg.on("pageerror", lambda e: errs.append("%s: %s" % (name, e)))
         pg.goto("http://127.0.0.1:%d/index.html" % PORT, wait_until="domcontentloaded")
         pg.wait_for_timeout(700)
+        onboard(pg)
 
         def probe(label):
             ov = pg.evaluate("document.documentElement.scrollWidth > document.documentElement.clientWidth + 1")
@@ -48,9 +52,8 @@ with sync_playwright() as pw:
                   str(tb)+"px", ("OK " if info["ok"] else "CLIPPED ")+info["note"], small))
 
         probe("home")
-        pg.eval_on_selector_all(".list.scroll-pad button","e=>e[0].click()"); pg.wait_for_timeout(900); probe("hors")
-        pg.eval_on_selector('[data-tab=home]',"b=>b.click()"); pg.wait_for_timeout(500)
-        pg.eval_on_selector_all(".list .rowcard","e=>e[0].click()"); pg.wait_for_timeout(1100); probe("mains")
+        probe("hors")                                  # home is the reel
+        to_mains(pg); probe("mains")
         pg.eval_on_selector('[data-tab=grow]',"b=>b.click()"); pg.wait_for_timeout(600); probe("grow")
         for i,lab in [(1,"jibril"),(3,"harvest"),(4,"workbook")]:
             pg.eval_on_selector_all(".rowcard","(e,i)=>e[i].click()",i); pg.wait_for_timeout(700); probe(lab)
@@ -58,7 +61,7 @@ with sync_playwright() as pw:
         pg.eval_on_selector('[data-tab=lanes]',"b=>b.click()"); pg.wait_for_timeout(600); probe("lanes")
         if name=="iPhone 14":
             pg.eval_on_selector('[data-tab=home]',"b=>b.click()"); pg.wait_for_timeout(500)
-            pg.eval_on_selector_all(".list.scroll-pad button","e=>e[0].click()"); pg.wait_for_timeout(1000)
+            pg.eval_on_selector('[data-tab=home]',"b=>b.click()"); pg.wait_for_timeout(800)
             pg.screenshot(path="/tmp/claude-0/-home-user-heartshigh/3f25a5bb-9a14-5bb7-aeb3-0ad20b981de1/scratchpad/shots/14-iphone14-hors.png")
         pg.close()
     b.close()

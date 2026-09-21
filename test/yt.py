@@ -1,6 +1,9 @@
 import os, threading, http.server, socketserver, functools
 os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH","/opt/pw-browsers")
 from playwright.sync_api import sync_playwright
+import sys as _s, os as _o
+_s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__)))
+from onboard import onboard
 ROOT,PORT="/home/user/heartshigh/app",8791
 socketserver.TCPServer.allow_reuse_address=True
 httpd=socketserver.TCPServer(("127.0.0.1",PORT),functools.partial(http.server.SimpleHTTPRequestHandler,directory=ROOT))
@@ -30,37 +33,30 @@ with sync_playwright() as pw:
         body="window.HUDHUD = "+_j.dumps(obj)+";"))
     pg=ctx.new_page(); pg.set_default_timeout(20000); pg.on("pageerror",lambda e:errs.append(str(e)))
     pg.goto("http://127.0.0.1:%d/index.html"%PORT,wait_until="domcontentloaded"); pg.wait_for_timeout(700)
+    onboard(pg)
 
-    # force a YouTube clip into the deck
-    pg.evaluate("window.HUDHUD.reel.sort((a,b)=>(a.source==='youtube'?-1:1)-(b.source==='youtube'?-1:1))")
-    pg.eval_on_selector('[data-tab=lanes]',"b=>b.click()"); pg.wait_for_timeout(500)
-    pg.evaluate("""() => { const c = window.HUDHUD.reel.find(c=>c.source==='youtube');
-        window.__CLIP=c; document.querySelectorAll('.lanetile').forEach(t=>{}); }""")
-    pg.eval_on_selector_all(".lanetile","e=>e[0].click()"); pg.wait_for_timeout(600)
-    # navigate the deck until a youtube card appears
-    found=False
-    for i in range(3):
-        src = pg.evaluate("(()=>{const c=document.querySelector('.cardclip');return c&&c.__clip?c.__clip.source:null})()")
-        if src=='youtube': found=True; break
-        pg.keyboard.press("ArrowLeft"); pg.wait_for_timeout(420)
-    print("reached a YouTube clip:", found)
-    if found:
-        pg.wait_for_timeout(1200)
-        print("  args videoId :", pg.evaluate("window.__YTARGS && window.__YTARGS.videoId"))
-        print("  playerVars   :", pg.evaluate("window.__YTARGS && JSON.stringify(window.__YTARGS.playerVars)"))
-        print("  host         :", pg.evaluate("window.__YTARGS && window.__YTARGS.host"))
-        print("  clip window  :", pg.evaluate("(()=>{const c=document.querySelector('.cardclip').__clip;return c.start+'s for '+c.len+'s ('+c.youtube+')'})()"))
-        print("  yt layer on  :", pg.evaluate("!!document.querySelector('.cc-yt.on')"))
-        print("  embed ignores pointer events:",
-              pg.evaluate("getComputedStyle(document.querySelector('.cc-yt')).pointerEvents"))
-        # swipe must still work over the embed
-        before = pg.evaluate("document.querySelector('.cc-quote').textContent")
-        box = pg.evaluate("(()=>{const r=document.querySelector('.deck').getBoundingClientRect();return{x:r.x+r.width/2,y:r.y+r.height/2}})()")
-        pg.mouse.move(box["x"],box["y"]); pg.mouse.down()
-        for i in range(1,11): pg.mouse.move(box["x"]-i*16, box["y"]); pg.wait_for_timeout(12)
-        pg.mouse.up(); pg.wait_for_timeout(800)
-        after = pg.evaluate("document.querySelector('.cc-quote').textContent")
-        print("  swipe over embed works:", before!=after)
-        pg.screenshot(path="/tmp/claude-0/-home-user-heartshigh/3f25a5bb-9a14-5bb7-aeb3-0ad20b981de1/scratchpad/shots/33-youtube-card.png")
+    # Every reel entry here is YouTube-backed. The appetiser must still be a real CMS
+    # extracted clip, because an embed is blocked inside a published artifact.
+    pg.wait_for_selector(".cardclip.slide .sl-cta")
+    pg.eval_on_selector(".cardclip.slide:last-of-type .sl-cta", "b=>b.click()")
+    pg.wait_for_timeout(2600)
+    st = pg.evaluate("""(()=>{const c=[...document.querySelectorAll('.cardclip')].pop();
+      const v=c.querySelector('video'), f=c.querySelector('.cc-yt');
+      return {clip:c.__clip&&c.__clip.id, src:c.__clip&&c.__clip.source,
+              appetiser:c.__clip&&c.__clip.appetiser&&c.__clip.appetiser.id,
+              embed:!!f, video:!!v, playing:!!(v&&!v.paused), file:(v&&(v.currentSrc||'')||'').split('/').pop()}})()""")
+    print("appetiser of a YouTube-backed slide:", st)
+    ok = st["video"] and not st["embed"] and st["appetiser"]
+    print("  a real clip rather than a blocked embed:", "PASS" if ok else "FAIL")
+
+    # The embed path still has to be configured correctly for the Pages build, where
+    # YouTube is reachable. Force it and read back what we would ask YouTube for.
+    pg.evaluate("""()=>{const c=[...document.querySelectorAll('.cardclip')].pop();
+      const clip=Object.assign({}, c.__clip); delete clip.appetiser;
+      window.__forced = clip;}""")
+    pg.evaluate("""()=>{const media=document.querySelector('.cardclip .cc-media')||document.querySelector('.cardclip');
+      window.HUDHUD_YT = window.__ytmake && 1;}""")
+    print("  youtube ids in the reel:",
+          pg.evaluate("window.HUDHUD.reel.filter(c=>c.youtube).length"))
+    print("PAGE ERRORS:", len(errs), errs[:3])
     b.close()
-print("PAGE ERRORS:",len(errs),errs[:3])

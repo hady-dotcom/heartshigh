@@ -1,6 +1,9 @@
 import os, threading, http.server, socketserver, functools
 os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH","/opt/pw-browsers")
 from playwright.sync_api import sync_playwright
+import sys as _s, os as _o
+_s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__)))
+from onboard import onboard, to_mains
 ROOT,PORT="/home/user/heartshigh/app",8790
 socketserver.TCPServer.allow_reuse_address=True
 httpd=socketserver.TCPServer(("127.0.0.1",PORT),functools.partial(http.server.SimpleHTTPRequestHandler,directory=ROOT))
@@ -13,6 +16,7 @@ with sync_playwright() as pw:
     pg=b.new_page(viewport={"width":390,"height":844},device_scale_factor=2,has_touch=True,is_mobile=True)
     pg.set_default_timeout(20000); pg.on("pageerror",lambda e:errs.append(str(e)))
     pg.goto("http://127.0.0.1:%d/index.html"%PORT,wait_until="domcontentloaded"); pg.wait_for_timeout(900)
+    onboard(pg)
 
     print("== UNFURL on each Grow page")
     pg.eval_on_selector('[data-tab=grow]',"b=>b.click()"); pg.wait_for_timeout(600)
@@ -38,8 +42,7 @@ with sync_playwright() as pw:
     print("   sample:", pg.evaluate("(()=>{const c=window.HUDHUD.reel.find(c=>c.source==='youtube');return c.youtube+' @'+c.start+'s ('+c.len+'s) '+c.land.slice(0,50)})()"))
 
     print("== ENGAGEMENT: clip-grounded question")
-    pg.eval_on_selector('[data-tab=home]',"b=>b.click()"); pg.wait_for_timeout(500)
-    pg.eval_on_selector_all(".list .rowcard","e=>e[0].click()"); pg.wait_for_timeout(1100)
+    to_mains(pg)
     print("   dots:", pg.evaluate("%s.querySelectorAll('.tl-dot').length"%H(pg)))
     pg.eval_on_selector_all(".tl-dot","e=>e[0].click()"); pg.wait_for_timeout(800)
     print("   title :", pg.eval_on_selector(".sheet .eyebrow","e=>e.textContent"))

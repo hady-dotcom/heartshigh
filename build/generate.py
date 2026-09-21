@@ -111,12 +111,26 @@ def treatment_for(c):
 # Fallback prompts. They sit directly under the clip's own words on screen, so they
 # ask about that line rather than restating it.
 STEMS = [
-    ("Reflection", "When did you last see this \u2014 in yourself, not in someone else?"),
-    ("Question",   "Who does this describe in your life right now?"),
-    ("Task",       "Name one thing that would change this week if you took this seriously."),
-    ("Reflection", "What excuse did your mind reach for just now, before you finished reading?"),
-    ("Question",   "Say this back in your own words. What did you leave out?"),
-    ("Task",       "Write the name of the person you should send this to \u2014 and why you have not."),
+    # A friend sitting next to you, not an instructor setting homework. No "name one
+    # thing and write it down"; an opening, and room to say nothing.
+    ("Reflection", "When did you last see this in yourself — not in someone else?"),
+    ("Reflection", "Who does this describe in your life at the moment?"),
+    ("Reflection", "If you took this seriously, what would be different by the weekend?"),
+    ("Reflection", "What did your mind reach for just then, before you got to the end of it?"),
+    ("Reflection", "Say it back in your own words. What fell out on the way?"),
+    ("Reflection", "Is there someone you would send this to, and something stopping you?"),
+    ("Reflection", "Where did you first hear this? It lands differently depending on who said it."),
+    ("Reflection", "Is this one you already knew, or one you have been avoiding?"),
+    ("Reflection", "What would it cost you to act on this — honestly, not in principle?"),
+    ("Reflection", "Which part of that would your closest friend say you find hardest?"),
+    ("Reflection", "Has there been a week where this was obviously true for you?"),
+    ("Reflection", "If nothing changed after hearing this, what would be the reason?"),
+    ("Reflection", "What does this ask of you that you have not been giving?"),
+    ("Reflection", "Where does this sit uncomfortably? That is usually the useful bit."),
+    ("Reflection", "Who taught you the opposite of this, and did they mean to?"),
+    ("Reflection", "What small thing would you notice first if this were true of you?"),
+    ("Reflection", "Is there a version of this you have made too easy on yourself?"),
+    ("Reflection", "What would you want someone to say to you about this, if they knew?"),
 ]
 
 def action_for(c, used):
@@ -143,8 +157,21 @@ def question_for(c, rq, i):
     kind, prompt = STEMS[i % len(STEMS)]
     return {"kind": kind, "prompt": prompt, "promptSource": "Asked of this clip"}
 
-MIN_PER_LANE = 6      # enough depth that swipe-left never repeats immediately
-MIN_SPEAKERS = 2      # swipe-left means "same topic, different speaker"
+# Canon speakers the CMS has no creator record for. A slide must never show a handle.
+CANON_NAMES = {
+    "fatimalette":           "Fatima Lette",
+    "drumarfaruqabdallah":   "Dr. Umar Faruq Abd-Allah",
+    "naeembaig":             "Naeem Baig",
+    "drtesneem":             "Dr. Tesneem",
+    "umairhaseeb":           "Umair Haseeb",
+    "dawoodyasin":           "Dawood Yasin",
+    "abdulmalikmerchant":    "Imam Abdul-Malik Merchant",
+    "hamzaabdulmalik":       "Hamza Abdul Malik",
+    "shaykhalaeddinalbakri": "Shaykh Alaeddin Al-Bakri",
+}
+
+MIN_PER_LANE = 24     # enough depth that swipe-left never repeats immediately
+MIN_SPEAKERS = 3      # swipe-left means "same topic, different speaker"
 
 def settle_lanes(clips):
     """Fold lanes that are too thin (or single-speaker) into their merge target."""
@@ -184,6 +211,13 @@ CLAUSE_FALLBACK = {
     19: "… AND HAJJ …", 35: "… THE SHEPHERDS COMPETE …", 38: "… THEN HE LEFT …",
 }
 
+# Editorial columns the build reasons with but the app never renders. A thousand slides
+# times eight unused strings is a megabyte the phone downloads for nothing.
+DROP = ("appeal", "why", "currency", "clauseLabel", "seat", "strength", "talk",
+        "source_sheet", "audience", "twist")
+def slim(c):
+    return {k: v for k, v in c.items() if k not in DROP and v not in (None, "", [])}
+
 def main():
     snap = json.load(open(os.path.join(HERE, "cms_snapshot.json")))
     canon = sheet(XL_CANON, "dual")["dual"]
@@ -198,33 +232,62 @@ def main():
     creators = {c["handle"]: c for c in snap["creators"]}
     series = {s["id"]: s for s in snap["series"]}
 
-    # ---------------- canon clips joined to real playable videos
+    # ---------------- canon clips -> hors d'oeuvre slides
+    # An hors d'oeuvre is a SLIDE, rendered from hook / turn / land. It needs no footage
+    # of its own, so the whole canon is eligible, not only the talks the CMS can stream.
+    # Where a talk IS one of the streamable videos we keep its id and timestamp so
+    # "Learn more" lands on the real lecture; otherwise the appetiser behind the slide
+    # supplies the video, and the ladder still holds.
     canon_by_talk = defaultdict(list)
     for r in canon:
         canon_by_talk[norm(r["talk_title"])].append(r)
 
-    clips, seen = [], set()
-    for key, v in by_t.items():
-        rows = canon_by_talk.get(key, [])
-        rows.sort(key=lambda r: (0 if str(r.get("hang_strength")) == "strong" else 1, secs(r.get("timestamp"))))
+    PER_TALK, PER_SPEAKER = 6, 170
+    clips, seen, seen_land = [], set(), set()
+    spk_count = Counter()
+
+    def strength_key(r):
+        return (0 if str(r.get("hang_strength")) == "strong" else 1, secs(r.get("timestamp")))
+
+    # Talks the CMS can actually stream first, so the strongest slides keep a real lecture.
+    talks = sorted(canon_by_talk, key=lambda k: (0 if k in by_t else 1, k))
+    for key in talks:
+        rows = sorted(canon_by_talk[key], key=strength_key)
+        v = by_t.get(key)
+        took = 0
         for r in rows:
+            if took >= PER_TALK: break
             hook, turn, land = clean(r.get("hook")), clean(r.get("turn")), clean(r.get("land"))
             # a slide shows all three beats, so each has to stand on its own
             if not (hook and land) or not whole_sentence(land): continue
             if len(hook) < 16 or (turn and len(turn) < 12): continue
             if hook.rstrip().endswith((':',)) or len(hook) > 150: continue
+            talk = clean(r.get("talk_title"))
+            if re.match(r'^[0-9a-f-]{20,}\.\w+$', talk) or talk.lower().endswith(('.mp4', '.m4a', '.mp3')):
+                continue
+            speaker = clean(r.get("speaker")) or (v["speaker"] if v else "")
+            if not speaker or speaker == "unknown": continue
+            if spk_count[speaker] >= PER_SPEAKER: continue
+            # the same line often appears under several talks; show it once
+            lkey = re.sub(r'[^a-z]', '', land.lower())[:90]
+            if lkey in seen_land: continue
             t = secs(r.get("timestamp"))
-            if t <= 0 or t > v["durationSec"] - 30: continue
-            sig = (v["id"], t // 20)
-            if sig in seen: continue
-            seen.add(sig)
-            m = re.match(r'\s*(\d+)\s*·\s*(.*)', str(r.get("Clause relevance to Hadeeth Jibreel") or ''))
+            if v:
+                if t <= 0 or t > v["durationSec"] - 30: continue
+                sig = (v["id"], t // 20)
+                if sig in seen: continue
+                seen.add(sig)
+            seen_land.add(lkey)
+            took += 1; spk_count[speaker] += 1
+            m = re.match(r'\s*(\d+)\s*\u00b7\s*(.*)', str(r.get("Clause relevance to Hadeeth Jibreel") or ''))
             clips.append({
-                "id": f"c{v['id']}-{t}", "videoId": v["id"], "speaker": v["speaker"],
-                "start": t, "hook": hook, "turn": turn, "land": land,
+                "id": (f"c{v['id']}-{t}" if v else "k%d-%d" % (abs(hash(key)) % 99991, len(clips))),
+                "videoId": v["id"] if v else None, "speaker": speaker,
+                "talk": clean(r.get("talk_title")),
+                "start": t if v else 0, "hook": hook, "turn": turn, "land": land,
                 "theme": clean(r.get("Theme")), "lane": lane_of(r.get("Theme")),
                 "clause": int(m.group(1)) if m else None,
-                "clauseLabel": clean(m.group(2)).strip('… ') if m else None,
+                "clauseLabel": clean(m.group(2)).strip('\u2026 ') if m else None,
                 "seat": clean(r.get("Place against Ghunya course")),
                 "form": clean(r.get("stage2_form")), "strength": clean(r.get("hang_strength")),
                 "appeal": clean(r.get("Appeal")), "why": clean(r.get("Why Use this?")),
@@ -234,13 +297,18 @@ def main():
                 "source_sheet": "canon",
             })
 
-    # Keep the reel varied: cap per video, balance lanes.
-    per_video = Counter(); reel = []
+    # Interleave by speaker so consecutive slides are never the same voice, and so
+    # swipe-right ("same sheikh, different topic") always has somewhere to go.
+    by_spk_reel = defaultdict(list)
     for c in sorted(clips, key=lambda c: (0 if lands_well(c["land"]) else 1,
                                           0 if c["strength"] == "strong" else 1,
-                                          c["videoId"], c["start"])):
-        if per_video[c["videoId"]] >= 14: continue
-        per_video[c["videoId"]] += 1; reel.append(c)
+                                          c["talk"], c["start"])):
+        by_spk_reel[c["speaker"]].append(c)
+    order = sorted(by_spk_reel, key=lambda s: -len(by_spk_reel[s]))
+    reel = []
+    while any(by_spk_reel[s] for s in order):
+        for s in order:
+            if by_spk_reel[s]: reel.append(by_spk_reel[s].pop(0))
 
     # ---------------- Leon's curated demo-10 bites (editorial layer, kept distinct)
     HANDLE = {"Yasir Fahmy":"yasirfahmy","Khalid Latif":"khalidlatif","Mikaeel Smith":"mikaeelsmith",
@@ -324,6 +392,9 @@ def main():
             c["appetiser"] = {"id": ap["id"], "title": ap["title"], "hls": ap["hls"],
                               "thumb": ap["thumb"], "speaker": ap["speaker"],
                               "videoId": ap["videoId"]}
+            # A slide harvested from a talk the CMS cannot stream borrows the lecture the
+            # appetiser was cut from, so "Learn more" still opens something real.
+            if not c.get("videoId"): c["videoId"] = ap["videoId"]
     appetiser_hero = HERO
 
     # ---------------- Hadith Jibril map (real counts from the canon)
@@ -492,8 +563,10 @@ def main():
                        "reelClips": len(reel), "curated": len(curated),
                        "quran": len(snap["quran"]), "hadith": len(snap["hadith"])},
         },
-        "creators": snap["creators"], "series": snap["series"], "videos": snap["videos"],
-        "reel": reel, "curated": curated, "appetiserHero": appetiser_hero,
+        "creators": snap["creators"] + [
+            {"handle": h, "name": n, "bio": "", "avatar": "", "canonOnly": True}
+            for h, n in sorted(CANON_NAMES.items())], "series": snap["series"], "videos": snap["videos"],
+        "reel": [slim(c) for c in reel], "curated": curated, "appetiserHero": appetiser_hero,
         "cmsClips": snap.get("clips", []),
         "jibril": {"branches": jibril, "sectionsTotal": total_sections,
                    "sectionsOpened": opened, "piecesOpened": pieces,
@@ -537,7 +610,8 @@ def main():
 
     print(f"wrote {out}  ({os.path.getsize(out)//1024} KB)")
     print(f"mirrored to docs/ for GitHub Pages")
-    print(f"  reel clips      : {len(reel)} across {len(per_video)} videos, {len(set(c['lane'] for c in reel))} lanes")
+    ntalks = len(set(c.get('talk') or '' for c in reel)); nspk = len(set(c['speaker'] for c in reel))
+    print(f"  reel clips      : {len(reel)} from {ntalks} talks, {nspk} speakers, {len(set(c['lane'] for c in reel))} lanes")
     print(f"  lanes           : {Counter(c['lane'] for c in reel).most_common()}")
     print(f"  jibril (user)   : {opened}/{total_sections} sections opened, {pieces} of {total_sections*PIECES_PER_SECTION} pieces")
     print(f"  jibril (library): {lib_sections}/{total_sections} sections have content, {lib_pieces} covering places, {len(canon)} clips")

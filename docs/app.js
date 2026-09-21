@@ -95,6 +95,15 @@ const USER = {
   returned: [['Patience', 41, 1], ['Prayer', 28, .68], ['Family', 17, .41]],
   faves: new Set(), follows: new Set(), answers: {}, workbook: [],
 };
+/* Answers are the one thing in this demo that must not evaporate: they are banked to
+   the device and read back on the next open, so a reflection is still there tomorrow. */
+const BANK = 'hudhud.workbook';
+try { USER.workbook = JSON.parse(localStorage.getItem(BANK) || '[]') || []; } catch (e) {}
+function bank(entry) {
+  USER.workbook.unshift(entry);
+  try { localStorage.setItem(BANK, JSON.stringify(USER.workbook.slice(0, 200))); } catch (e) {}
+  return entry;
+}
 
 /* ------------------------------------------------------------------ video engine */
 const VideoEngine = {
@@ -126,7 +135,7 @@ const VideoEngine = {
           // Retry a couple of times, then hand over to the fallback. Retrying forever
           // leaves a dead frame on a blocked or offline network.
           if (d.type === window.Hls.ErrorTypes.NETWORK_ERROR) {
-            if (netRetries++ < 2) { try { hls.startLoad(); return; } catch (e) {} }
+            if (netRetries++ < 1) { try { hls.startLoad(); return; } catch (e) {} }
             return fail();
           }
           if (d.type === window.Hls.ErrorTypes.MEDIA_ERROR) {
@@ -186,8 +195,10 @@ const VideoEngine = {
     });
     v.addEventListener('timeupdate', () => { opts.onTime && opts.onTime(v.currentTime); });
 
-    // Never leave a dead frame: if nothing plays within 6s, fall back to the still.
-    const guard = setTimeout(() => { if (!state.ok) fail(); }, 6000);
+    // Never leave a dead frame. Six seconds of black while hls.js retried a blocked CDN
+    // is the difference between "the app is loading" and "the app is broken"; the
+    // fallback ships with the build, so handing over early costs nothing.
+    const guard = setTimeout(() => { if (!state.ok) fail(); }, 1800);
     v.addEventListener('playing', () => clearTimeout(guard), { once: true });
 
     attach();
@@ -304,10 +315,13 @@ function setChromeVisible(on) { viewport.dataset.bare = on ? '' : '1'; }
 function pauseMedia(node) {
   node.querySelectorAll('video').forEach(v => { try { v.pause(); } catch (e) {} });
   node.querySelectorAll('.cardclip').forEach(c => { c.__player && c.__player.pause && c.__player.pause(); });
+  // A slide left running behind another screen would throw its question over the top.
+  node.querySelectorAll('.cardclip.slide').forEach(c => { c.__unmount && c.__unmount(); });
 }
 function resumeMedia(node) {
   node.querySelectorAll('video').forEach(v => { try { const p = v.play(); p && p.catch && p.catch(() => {}); } catch (e) {} });
   node.querySelectorAll('.cardclip').forEach(c => { c.__player && c.__player.play && c.__player.play(); });
+  node.querySelectorAll('.cardclip.slide').forEach(c => { c.__mount && c.isConnected && c.__mount(); });
 }
 
 function push(builder, meta) {
@@ -369,9 +383,12 @@ REEL.forEach(c => { (byLane[c.lane] = byLane[c.lane] || []).push(c); (bySpeaker[
 const LANES = Object.keys(byLane).sort((a, b) => byLane[b].length - byLane[a].length);
 const recent = [];
 function fresh(pool, cur) {
-  const avail = pool.filter(c => c !== cur && recent.indexOf(c.id) < 0);
-  const pick = rnd(avail.length ? avail : pool.filter(c => c !== cur));
-  if (pick) { recent.push(pick.id); if (recent.length > 22) recent.shift(); }
+  const other = pool.filter(c => c !== cur);
+  const avail = other.filter(c => recent.indexOf(c.id) < 0);
+  // Never hand back the card you are already on — that reads as a dead button.
+  const pick = rnd(avail.length ? avail : other.length ? other
+                 : REEL.filter(c => c !== cur));
+  if (pick) { recent.push(pick.id); if (recent.length > 60) recent.shift(); }
   return pick || cur;
 }
 const Pick = {
@@ -452,7 +469,8 @@ function buildSlideCard(clip) {
     timers.forEach(clearTimeout); timers = [];
     beats.forEach(b => b.classList.remove('in'));
     const total = beats.length * BEAT + HOLD;
-    beats.forEach((b, i) => timers.push(setTimeout(() => b.classList.add('in'), 220 + i * BEAT)));
+    beats[0].classList.add('in');
+    beats.forEach((b, i) => { if (i) timers.push(setTimeout(() => b.classList.add('in'), i * BEAT)); });
     const t0 = performance.now();
     cancelAnimationFrame(raf);
     (function step(now) {
@@ -462,6 +480,7 @@ function buildSlideCard(clip) {
       if (p < 1) raf = requestAnimationFrame(step);
       else {
         // One full read, then the question — this is what fills the workbook.
+        if (!card.isConnected || card.closest('.screen') !== (stack[stack.length - 1] || {}).node) return;
         if (!asked && clip.prompt) { asked = true; askAboutClip(clip, run); }
         else run();
       }
@@ -526,7 +545,7 @@ function askAboutClip(clip, onDone) {
     const body = clip.capture === 'tick'
       ? (done ? 'Done.' : 'Not yet.')
       : ((ta && ta.value) || (photo ? 'Photo added.' : ''));
-    USER.workbook.unshift({ clipId: clip.id, text: body, private: priv, capture: clip.capture,
+    bank({ clipId: clip.id, text: body, private: priv, capture: clip.capture, kind: clip.kind,
       photo: photo, q: clip.prompt, where: clip.theme, speaker: clip.speaker, when: 'just now' });
     closeSheet();
     toast(clip.capture === 'tick' && done ? 'Banked · that one counts'
@@ -551,7 +570,9 @@ const APP_LEN  = CFG.appLen  || 95;
 
 function buildClipCard(clip, kind) {
   const isApp = kind === 'appetiser';
-  const isYT = clip.source === 'youtube';
+  // A YouTube embed is blocked inside a published artifact, so a real extracted CMS clip
+  // always wins when the slide has one; YouTube is the route only when it does not.
+  const isYT = clip.source === 'youtube' && !(isApp && clip.appetiser);
   const isFile = clip.source === 'file';
   const len = isApp ? APP_LEN : (clip.len || HORS_LEN);
   const video = VIDEO[clip.videoId];
@@ -753,6 +774,8 @@ function buildDeck(startClip, kind) {
     incoming.style.transform = 'translate3d(' + from.replace(',', 'px,').replace(/%px/g, '%') + ',0)';
     incoming.style.transform = 'translate3d(' + from.split(',')[0] + ',' + from.split(',')[1] + ',0)';
     wrap.appendChild(incoming);
+    // Mount now, not after the transition: a card that slides in empty reads as broken.
+    incoming.__mount();
     requestAnimationFrame(() => {
       incoming.style.transition = 'transform .38s var(--ease)';
       current.style.transition = 'transform .38s var(--ease), opacity .38s';
@@ -765,7 +788,6 @@ function buildDeck(startClip, kind) {
     setTimeout(() => {
       old.__unmount(); old.remove();
       incoming.style.transition = '';
-      incoming.__mount();
       busy = false;
       pulse(label[dir]);
     }, 390);
@@ -1264,18 +1286,24 @@ function showEngagement(p, onShare, onSkip) {
   pv.appendChild(el('span', 'lbl', 'Keep my answer private'));
   const sw = el('button', 'switch on');
   sw.appendChild(el('i'));
-  sw.onclick = () => { priv = !priv; sw.classList.toggle('on', priv); sw.classList.toggle('off', !priv); renderSwarm(); };
+  sw.onclick = () => { priv = !priv; sw.classList.toggle('on', priv); sw.classList.toggle('off', !priv);
+    renderSwarm(); relabel(); };
   pv.appendChild(sw);
   inr.appendChild(pv);
-  inr.appendChild(el('div', 'note', 'Private answers still bank to your workbook. Only sharing shows them to your sheikh’s team.'));
+  inr.appendChild(el('div', 'note', 'Either way it is saved to your workbook and will be there tomorrow. Sharing only adds your sheikh’s team.'));
 
-  const share = el('button', 'cta purple', 'Share my reflection');
+  const share = el('button', 'cta purple', 'Keep my reflection');
   share.style.marginTop = '15px';
+  // The button should say what it will actually do with the words you just wrote.
+  const relabel = () => share.textContent = priv ? 'Keep my reflection' : 'Share my reflection';
   share.onclick = () => {
     shared = true;
-    USER.answers[p.at] = { text: ta ? ta.value : chosen, private: priv };
+    const body = (ta ? ta.value : chosen) || '';
+    USER.answers[p.at] = { text: body, private: priv };
+    bank({ clipId: 'pt' + p.at, text: body, private: priv, kind: p.kind || 'Reflection',
+      q: p.prompt, where: p.title || 'the lecture', speaker: p.speaker || '', when: 'just now' });
     renderSwarm();
-    toast(priv ? 'Banked privately' : 'Shared with your sheikh’s team');
+    toast(priv ? 'Banked to your workbook' : 'Shared with your sheikh’s team');
     setTimeout(() => { closeSheet(); onShare && onShare(); }, 620);
   };
   inr.appendChild(share);
@@ -1992,7 +2020,7 @@ const ANSWERS = [
 const KIND_ROTA = ['REFLECTION', 'TASK', 'QUESTION', 'REFLECTION', 'MULTI-CHOICE'];
 function buildWorkbook() {
   const out = USER.workbook.map((w, i) => ({
-    date: 'TODAY', kind: 'REFLECTION', q: w.q, a: w.text || '(saved without a note)',
+    date: 'TODAY', kind: (w.kind || 'Reflection').toUpperCase(), q: w.q, a: w.text || '(saved without a note)',
     where: w.where || 'an hors d’oeuvre', videoId: D.course.videoId, private: w.private, mine: true,
   }));
   const qs = D.reflectionQuestions;

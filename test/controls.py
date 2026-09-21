@@ -2,6 +2,9 @@
 import os, threading, http.server, socketserver, functools, re, sys
 os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH","/opt/pw-browsers")
 from playwright.sync_api import sync_playwright
+import sys as _s, os as _o
+_s.path.insert(0,_o.path.dirname(_o.path.abspath(__file__)))
+from onboard import onboard, to_mains
 ROOT="/home/user/heartshigh/app"; PORT=8820
 class H(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -35,13 +38,17 @@ with sync_playwright() as pw:
     pg.set_default_timeout(30000)
     pg.on("pageerror", lambda e: fails.append("pageerror: %s"%e))
     pg.goto("http://127.0.0.1:%d/index.html"%PORT,wait_until="domcontentloaded"); pg.wait_for_timeout(800)
+    onboard(pg)
     pg.route("**/hls/**", lambda r: r.abort())   # the artifact's reality
-    pg.eval_on_selector_all(".list .rowcard","e=>e[0].click()")
-    pg.wait_for_timeout(9000)
+    to_mains(pg)
 
     print("\n== MAINS player controls, while it is playing")
     playing = pg.evaluate("(()=>{const v=%s.querySelector('video');return v&&!v.paused})()"%TOP)
-    check("video is playing", playing)
+    check("video is playing", playing,
+          pg.evaluate("""(()=>{const s=%s; const v=s.querySelector('video');
+            return JSON.stringify({cls:s.className, vids:document.querySelectorAll('video').length,
+              p:v&&v.paused, t:v&&+v.currentTime.toFixed(1), rs:v&&v.readyState,
+              sheet:document.querySelector('#sheet').classList.contains('on')})})()"""%TOP))
 
     # any reachable pause control counts: the centre button or the persistent bar button
     vis = pg.evaluate("""(()=>{const s=%s;
@@ -82,7 +89,8 @@ with sync_playwright() as pw:
     # reload clean, play, and wait for a panel without touching anything
     pg.evaluate("(()=>{const sc=document.querySelector('#scrim'); if(sc&&sc.classList.contains('on')) sc.click()})()")
     pg.goto("http://127.0.0.1:%d/index.html"%PORT, wait_until="domcontentloaded"); pg.wait_for_timeout(800)
-    pg.eval_on_selector_all(".list .rowcard","e=>e[0].click()"); pg.wait_for_timeout(9000)
+    onboard(pg)
+    to_mains(pg)
     popped, waited = False, 0
     while waited < 22000 and not popped:
         pg.wait_for_timeout(1000); waited += 1000
@@ -96,9 +104,11 @@ with sync_playwright() as pw:
         pg.screenshot(path="/tmp/claude-0/-home-user-heartshigh/3f25a5bb-9a14-5bb7-aeb3-0ad20b981de1/scratchpad/shots/71-live-popup.png")
         # answering resumes playback
         pg.eval_on_selector(".sheet .cta","b=>b.click()"); pg.wait_for_timeout(1600)
-        check("answering closes it and resumes",
-              pg.evaluate("!document.querySelector('#sheet').classList.contains('on')") and
-              pg.evaluate("(()=>{const v=%s.querySelector('video');return v&&!v.paused})()"%TOP))
+        closed = pg.evaluate("!document.querySelector('#sheet').classList.contains('on')")
+        resumed = pg.evaluate("(()=>{const v=%s.querySelector('video');return !!(v&&!v.paused)})()"%TOP)
+        check("answering closes the sheet", closed)
+        check("answering resumes playback", resumed,
+              pg.evaluate("(()=>{const v=%s.querySelector('video');return v?('paused='+v.paused+' err='+(v.error&&v.error.code)+' t='+v.currentTime.toFixed(1)):'no video'})()"%TOP))
 
     print("\n== switching part updates what is on screen")
     before = pg.evaluate("(()=>{const s=%s;return{label:s.querySelector('.part-label').textContent,"
