@@ -21,7 +21,7 @@ XL_FAHMY = os.path.join(UP, "863ff916-extract-fahmy-s6-dual-export.xlsx")
 
 import openpyxl
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from questions import QUESTIONS
+from questions import QUESTIONS_BY_VIDEO
 
 def sheet(path, name=None):
     wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
@@ -329,43 +329,61 @@ def main():
         for q in rq:
             if any(w in t for w in str(q["topic"]).lower().split()): return q
         return rq[i % len(rq)]
-    # Engagement points come from the CMS clip analysis for this talk: real clip windows,
+    # Engagement points come from the CMS clip analysis for each part: real clip windows,
     # real titles and overlays. Each question is written against that clip's own content.
-    ca = json.load(open(os.path.join(HERE, "clips", "9.json")))
     deep_by_ts = {}
     for r in fdeep:
         deep_by_ts[secs(r.get("timestamp")) // 60] = r
 
-    points = []
-    for c in sorted(ca["clips"], key=lambda c: secs(c["start"])):
-        at = secs(c["start"])
-        if not (0 < at < course_vid["durationSec"]): continue
-        q = QUESTIONS.get(c["n"], {})
-        deep = deep_by_ts.get(at // 60)
-        m = re.match(r'\s*(\d+)\s*·\s*(.*)', str((deep or {}).get("clause_hang") or ''))
-        points.append({
-            "at": at, "end": secs(c["end"]), "dur": c["dur"], "clipNo": c["n"],
-            "kind": q.get("kind", "Reflection"),
-            "title": c["title"], "quote": c["overlay"], "arabic": c.get("arabic"),
-            "hook": c["hook"], "tags": c.get("tags", []), "caption": c.get("caption", ""),
-            "theme": clean((deep or {}).get("theme")) or "Ease",
-            "why": clean((deep or {}).get("why_it_allures")),
-            "seat": clean((deep or {}).get("seat_hint")),
-            "currency": clean((deep or {}).get("currency_note")),
-            "clause": int(m.group(1)) if m else None,
-            "clauseLabel": clean(m.group(2)).strip('… ') if m else None,
-            "prompt": q.get("prompt", ""), "options": q.get("options"),
-            "promptSource": "Written for this clip · Hearts CMS clip #%d" % c["n"],
-            "answered": False,
-        })
-    points.sort(key=lambda p: p["at"])
-    for i, p in enumerate(points):
-        p["answered"] = i < 4
+    def points_for(vid):
+        path = os.path.join(HERE, "clips", "%d.json" % vid)
+        if not os.path.exists(path): return []
+        ca = json.load(open(path))
+        v = vids.get(vid)
+        out = []
+        for c in sorted(ca["clips"], key=lambda c: secs(c["start"])):
+            at = secs(c["start"])
+            if not (0 < at < (v["durationSec"] if v else 10 ** 9)): continue
+            q = QUESTIONS_BY_VIDEO.get(vid, {}).get(c["n"], {})
+            deep = deep_by_ts.get(at // 60) if vid == 9 else None
+            m = re.match(r'\s*(\d+)\s*·\s*(.*)', str((deep or {}).get("clause_hang") or ''))
+            out.append({
+                "at": at, "end": secs(c["end"]), "dur": c["dur"], "clipNo": c["n"],
+                "kind": q.get("kind", "Reflection"),
+                "title": c["title"], "quote": c["overlay"], "arabic": c.get("arabic"),
+                "hook": c["hook"], "tags": c.get("tags", []),
+                "theme": clean((deep or {}).get("theme")) or "",
+                "why": clean((deep or {}).get("why_it_allures")),
+                "seat": clean((deep or {}).get("seat_hint")),
+                "clause": int(m.group(1)) if m else None,
+                "clauseLabel": clean(m.group(2)).strip('… ') if m else None,
+                "prompt": q.get("prompt", ""), "options": q.get("options"),
+                "promptSource": "Written for this clip · Hearts CMS clip #%d" % c["n"],
+                "answered": False,
+            })
+        out.sort(key=lambda p: p["at"])
+        for i, p in enumerate(out): p["answered"] = i < 4
+        return out
+
+    points_by_video = {}
+    for f in sorted(os.listdir(os.path.join(HERE, "clips"))):
+        if f.endswith(".json"):
+            vid = int(f[:-5])
+            pts = points_for(vid)
+            if pts: points_by_video[vid] = pts
+    points = points_by_video.get(9, [])
 
     # course parts from the real series
+    PART_BLURB = {
+        9:  "Religion's governing spirit is ease — never nafs-convenience, never harshness.",
+        15: "Character is not a manner you put on outside. It is what your family meets at the door.",
+        11: "What the Prophet \ufdfa did with power, and what gentleness looked like when he had every reason not to be gentle.",
+    }
     course_parts = [
         {"n": v["position"] or i+1, "videoId": v["id"], "title": v["title"], "hls": v["hls"],
-         "durationSec": v["durationSec"]}
+         "durationSec": v["durationSec"], "blurb": PART_BLURB.get(v["id"], ""),
+         "label": "Part %s · %s" % (v["position"] or i+1, v["title"].split("-")[-1].strip()),
+         "points": len(points_by_video.get(v["id"], []))}
         for i, v in enumerate(sorted([v for v in snap["videos"] if v["seriesId"] == 2],
                                      key=lambda v: v["position"]))
     ]
@@ -401,7 +419,7 @@ def main():
                    "partLabel": "Part 6 · Ease as the governing spirit",
                    "thesis": clean(fnotes.get("thesis")), "speaker": "yasirfahmy",
                    "hls": course_vid["hls"], "durationSec": course_vid["durationSec"],
-                   "points": points, "parts": course_parts},
+                   "points": points, "pointsByVideo": points_by_video, "parts": course_parts},
         "reflectionQuestions": rq,
     }
 
@@ -434,7 +452,8 @@ def main():
     print(f"  jibril (user)   : {opened}/{total_sections} sections opened, {pieces} of {total_sections*PIECES_PER_SECTION} pieces")
     print(f"  jibril (library): {lib_sections}/{total_sections} sections have content, {lib_pieces} covering places, {len(canon)} clips")
     print(f"  harvest         : {len(harvest_with_source)}/{len(harvest)} entries with real provenance")
-    print(f"  engagement pts  : {len(points)} on video 9 at {[p['at'] for p in points]}")
+    for vid, pts in points_by_video.items():
+        print(f"  engagement pts  : video {vid}: {len(pts)} at {[p['at'] for p in pts][:6]}...")
     print(f"  youtube reel    : {len(yt_reel)} curated clips playable without CORS")
     print(f"  curated (demo10): {len(curated)}")
 

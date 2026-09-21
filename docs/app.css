@@ -505,3 +505,18 @@ svg{display:block}
   background:var(--cream);box-shadow:inset 0 0 0 1.5px var(--border);transition:.18s var(--ease)}
 .opt.on{background:rgba(122,79,163,.1);box-shadow:inset 0 0 0 2px var(--purple);color:var(--purple)}
 .opt:active{transform:scale(.985)}
+
+/* ---------------------------------------------------------------- player controls */
+.player{cursor:pointer}
+.pl-bar{position:absolute;left:0;right:0;bottom:0;z-index:6;display:flex;align-items:center;gap:9px;
+  padding:9px 11px;background:linear-gradient(180deg,transparent,rgba(17,16,24,.82));
+  pointer-events:none}
+.pl-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.18);
+  backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+  border:1px solid rgba(255,255,255,.3);pointer-events:auto}
+.pl-btn svg{width:15px;height:15px;fill:#fff}
+.pl-time{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.9);
+  font-variant-numeric:tabular-nums;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.player .part-label{bottom:auto;top:10px}
+.av-play{transition:opacity .25s var(--ease),transform .15s}
+.av-play.hide{opacity:0;pointer-events:none}

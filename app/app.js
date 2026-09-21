@@ -171,6 +171,7 @@ const VideoEngine = {
     };
 
     v.addEventListener('loadedmetadata', () => {
+      opts.onMeta && opts.onMeta(v.duration || 0);
       // A portrait source fills a portrait frame; a 16:9 lecture stays letterboxed
       // over the blurred backdrop rather than being cropped to ribbons.
       if (v.videoHeight > v.videoWidth) {
@@ -752,68 +753,66 @@ function askSheikh(handle) {
 /* ------------------------------------------------------------------ 03 Mains — course player */
 function openMains(fromClip) {
   const C = D.course;
-  const video = VIDEO[C.videoId];
-  let player = null, rafId = 0, cooldownUntil = 0;
-  const answered = new Set(C.points.filter(p => p.answered).map(p => p.at));
+  let player = null, cooldownUntil = 0;
+  let part = C.parts.find(p => p.videoId === C.videoId) || C.parts[0];
+  let points = (C.pointsByVideo && C.pointsByVideo[part.videoId]) || [];
+  let answered = new Set(points.filter(p => p.answered).map(p => p.at));
+  let fireAt = {};          // point.at -> the second it fires on the source actually playing
+  let scaled = false;       // true when playing a stand-in shorter than the real part
 
-  let current = { videoId: C.videoId, hls: C.hls, durationSec: C.durationSec, title: C.partLabel };
   push(() => {
     const s = el('div', 'mains');
     s.appendChild(navbar(SERIES[C.seriesId] ? SERIES[C.seriesId].title : 'Course', pop));
 
     const pl = el('div', 'player');
-    const playBtn = el('button', 'av-play', '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>');
-    pl.appendChild(el('div', 'part-label', esc(C.partLabel)));
+    const partLabel = el('div', 'part-label', esc(part.label || C.partLabel));
+    pl.appendChild(partLabel);
+    const playBtn = el('button', 'av-play', PLAY_ICON);
     pl.appendChild(playBtn);
+    const bar = el('div', 'pl-bar');
+    const barBtn = el('button', 'pl-btn', PLAY_ICON);
+    const barTime = el('span', 'pl-time', '0:00');
+    bar.appendChild(barBtn); bar.appendChild(barTime);
+    pl.appendChild(bar);
     s.appendChild(pl);
 
     const meta = el('div', '');
     meta.style.cssText = 'padding:13px 18px 0';
-    meta.appendChild(el('div', 'eyebrow', 'With ' + esc(sname(C.speaker))));
-    const th = el('p', '', esc(C.thesis));
+    const who = el('div', 'eyebrow', 'With ' + esc(sname(C.speaker)));
+    meta.appendChild(who);
+    const th = el('p', '', esc(part.blurb || C.thesis));
     th.style.cssText = 'margin:6px 0 0;font-size:14px;line-height:1.5;color:var(--text)';
     meta.appendChild(th);
     s.appendChild(meta);
 
-    // timeline with engagement dots at their real timestamps
     const tl = el('div', 'timeline');
     tl.appendChild(el('div', 'tl-track'));
     const played = el('div', 'tl-played'); tl.appendChild(played);
-    const dots = [];
-    C.points.forEach(p => {
-      const d = el('button', 'tl-dot' + (answered.has(p.at) ? ' done' : ''));
-      d.style.left = (p.at / C.durationSec * 100) + '%';
-      d.title = p.kind + ' · ' + mmss(p.at);
-      d.onclick = () => { seekTo(Math.max(0, p.at - 6)); openEngagement(p, d); };
-      tl.appendChild(d); dots.push({ p, d });
-    });
     s.appendChild(tl);
     const noPoints = el('div', 'note');
     noPoints.style.cssText = 'display:none;margin:2px 20px 0;line-height:1.5';
     noPoints.textContent = 'Engagement points for this part arrive with the tagging pass.';
     s.appendChild(noPoints);
     const leg = el('div', 'tl-legend');
-    leg.appendChild(el('span', '', '<span id="tlNow">0:00</span>'));
-    leg.appendChild(el('span', '', esc(C.points.length + ' engagement points · ' + hhmm(C.durationSec))));
+    const nowEl = el('span', '', '0:00');
+    const legRight = el('span', '');
+    leg.appendChild(nowEl); leg.appendChild(legRight);
     s.appendChild(leg);
 
-    // course garden
     const gc = el('div', 'garden-card');
-    const top = el('div', 'gc-top');
-    top.appendChild(el('div', 'eyebrow', 'My garden'));
-    top.appendChild(el('b', '', answered.size + ' of ' + C.points.length + ' fruits'));
-    gc.appendChild(top);
+    const gcTop = el('div', 'gc-top');
+    gcTop.appendChild(el('div', 'eyebrow', 'My garden'));
+    const gcCount = el('b', '', '');
+    gcTop.appendChild(gcCount);
+    gc.appendChild(gcTop);
     const fr = el('div', 'fruitrow');
-    C.points.forEach(p => {
-      const f = el('div', 'fruit' + (answered.has(p.at) ? ' on' : ''), blossomSVG(answered.has(p.at)));
-      f.title = p.kind + ' · ' + mmss(p.at);
-      fr.appendChild(f);
-    });
     gc.appendChild(fr);
-    gc.appendChild(el('div', 'bar', '<i style="width:' + (answered.size / C.points.length * 100) + '%"></i>'));
+    const progress = el('div', 'bar', '<i style="width:0%"></i>');
+    gc.appendChild(progress);
     const og = el('button', 'cta', 'Open garden');
     og.style.cssText = 'margin-top:14px;background:rgba(255,255,255,.14);color:#fff;box-shadow:none';
-    og.onclick = () => openCourseGarden(C, answered, at => { s.__seek(Math.max(0, at - 6)); });
+    og.onclick = () => openCourseGarden({ points: points, partLabel: part.label || C.partLabel },
+                                        answered, at => seekTo(Math.max(0, (fireAt[at] || at) - 4)));
     gc.appendChild(og);
     s.appendChild(gc);
 
@@ -822,87 +821,155 @@ function openMains(fromClip) {
     C.parts.forEach(p => {
       const row = el('button', 'rowcard');
       const im = el('img', 'thumb'); im.src = thumb(p.videoId); imgFallback(im, 'var(--oasis)'); row.appendChild(im);
-      const isNow = p.videoId === current.videoId;
-      row.appendChild(el('div', 'meta', '<b>' + esc(p.title.replace(/^.*?[-—]\s*/, '')) + '</b><i>' + hhmm(p.durationSec) +
-        (isNow ? ' · playing now' : '') + '</i>'));
-      row.appendChild(el('span', 'startbtn', isNow ? 'Now' : 'Start'));
-      row.onclick = () => { if (!isNow) loadPart(p); };
+      row.appendChild(el('div', 'meta', ''));
+      row.appendChild(el('span', 'startbtn', ''));
+      row.onclick = () => { if (p.videoId !== part.videoId) loadPart(p); };
+      row.__part = p;
       list.appendChild(row);
     });
     s.appendChild(list);
 
-    /* Switching part reloads the player against that part's own stream. Engagement
-       points are mapped for this part only; others say so rather than faking dots. */
-    function loadPart(p) {
-      current = { videoId: p.videoId, hls: p.hls, durationSec: p.durationSec, title: p.title };
-      if (player) { player.destroy(); player = null; }
-      $('.part-label', pl).textContent = p.title.replace(/^.*?[-—]\s*/, '');
-      const mapped = p.videoId === C.videoId;
-      tl.style.display = mapped ? '' : 'none';
-      noPoints.style.display = mapped ? 'none' : '';
-      played.style.width = '0%';
-      mount();
-      resetTo === null;
-      toast('Now playing ' + p.title.replace(/^.*?[-—]\s*/, ''));
-      [...list.children].forEach((row, i) => {
-        const isNow = C.parts[i] && C.parts[i].videoId === p.videoId;
-        const st = $('.startbtn', row); if (st) st.textContent = isNow ? 'Now' : 'Start';
-        const it = $('.meta i', row);
-        if (it && C.parts[i]) it.textContent = hhmm(C.parts[i].durationSec) + (isNow ? ' · playing now' : '');
+    let dots = [];
+    function buildTimeline() {
+      [...tl.querySelectorAll('.tl-dot')].forEach(d => d.remove());
+      dots = [];
+      const has = points.length > 0;
+      tl.style.display = has ? '' : 'none';
+      noPoints.style.display = has ? 'none' : '';
+      legRight.textContent = has
+        ? points.length + ' engagement points · ' + hhmm(part.durationSec)
+        : hhmm(part.durationSec);
+      points.forEach(p => {
+        const d = el('button', 'tl-dot' + (answered.has(p.at) ? ' done' : ''));
+        d.style.left = (p.at / part.durationSec * 100) + '%';
+        d.title = p.kind + ' · ' + mmss(p.at) + ' · ' + p.title;
+        d.onclick = () => { seekTo(Math.max(0, (fireAt[p.at] || p.at) - 4)); openEngagement(p, d); };
+        tl.appendChild(d); dots.push({ p, d });
+      });
+      fr.innerHTML = '';
+      points.forEach(p => {
+        const f = el('div', 'fruit' + (answered.has(p.at) ? ' on' : ''), blossomSVG(answered.has(p.at)));
+        f.title = p.kind + ' · ' + mmss(p.at);
+        fr.appendChild(f);
+      });
+      refreshGarden();
+      [...list.children].forEach(row => {
+        const p = row.__part, isNow = p.videoId === part.videoId;
+        $('.meta', row).innerHTML = '<b>' + esc(p.title.replace(/^.*?[-—]\s*/, '')) + '</b><i>' +
+          hhmm(p.durationSec) + (p.points ? ' · ' + p.points + ' points' : '') +
+          (isNow ? ' · playing now' : '') + '</i>';
+        $('.startbtn', row).textContent = isNow ? 'Now' : 'Start';
+      });
+    }
+    function refreshGarden() {
+      gcCount.textContent = answered.size + ' of ' + (points.length || 0) + ' fruits';
+      $('i', progress).style.width = (points.length ? answered.size / points.length * 100 : 0) + '%';
+    }
+
+    /* Map each point onto the source that is actually playing. When the real lecture
+       is unreachable and a short stand-in is playing, the demo still has to show the
+       mechanic, so unanswered points are spread across the clip that is really there. */
+    function planFires(realDuration) {
+      fireAt = {};
+      scaled = realDuration > 0 && realDuration < part.durationSec * 0.5;
+      if (!scaled) { points.forEach(p => fireAt[p.at] = p.at); return; }
+      const pending = points.filter(p => !answered.has(p.at));
+      // Leave room to watch between questions: a prompt every few seconds is not a demo,
+      // it is an interrogation.
+      const FIRST = 6, MIN_GAP = 9;
+      const gap = Math.max(MIN_GAP, (realDuration - FIRST) / Math.max(1, pending.length));
+      points.forEach(p => fireAt[p.at] = (p.at / part.durationSec) * realDuration);
+      pending.forEach((p, i) => {
+        const t = FIRST + i * gap;
+        fireAt[p.at] = t < realDuration - 1.5 ? t : Infinity;   // beyond this clip: waits for a loop
       });
     }
 
-    // mount player
-    function mount() {
-    requestAnimationFrame(() => {
-      player = VideoEngine.make(pl, { hls: current.hls }, {
-        start: 0, fallbackSrc: pickSrc(C.fallbackSrc, C.fallbackSrcAlt),
-        onPlay: () => { playBtn.classList.add('hide'); player.setMuted(false); },
-        onTime: t => {
-          played.style.width = (t / current.durationSec * 100) + '%';
-          const now = $('#tlNow'); if (now) now.textContent = mmss(t);
-          dots.forEach(o => o.d.classList.toggle('live', Math.abs(t - o.p.at) < 4));
-          // pause and open the panel when an unanswered point is reached
-          const hit = current.videoId === C.videoId
-            ? C.points.find(p => !answered.has(p.at) && t >= p.at && t < p.at + 1.2) : null;
-          if (hit && !sheetEl.classList.contains('on') && Date.now() > cooldownUntil) {
-            try { player.v.pause(); } catch (e) {}
-            const d = dots.find(o => o.p === hit);
-            openEngagement(hit, d && d.d);
-          }
-        },
-        onFail: () => { playBtn.classList.remove('hide'); },
-      });
-    });
+    function setPlayIcon(isPlaying) {
+      playBtn.innerHTML = isPlaying ? PAUSE_ICON : PLAY_ICON;
+      barBtn.innerHTML = isPlaying ? PAUSE_ICON : PLAY_ICON;
+      playBtn.classList.toggle('hide', isPlaying);
+      pl.classList.toggle('is-playing', isPlaying);
     }
-    mount();
-    playBtn.onclick = () => {
-      if (!player) return;
-      if (player.v.paused) { player.v.play().then(() => playBtn.classList.add('hide')).catch(() => {}); }
-      else { player.v.pause(); playBtn.classList.remove('hide'); }
-    };
-    function seekTo(t) { if (player) { try { player.v.currentTime = t; player.v.play().catch(() => {}); playBtn.classList.add('hide'); } catch (e) {} } }
+    function toggle() {
+      if (!player || !player.v) return;
+      const v = player.v;
+      if (v.paused) { const p = v.play(); p && p.catch && p.catch(() => {}); setPlayIcon(true); }
+      else { v.pause(); setPlayIcon(false); }
+    }
+    playBtn.onclick = e => { e.stopPropagation(); toggle(); };
+    barBtn.onclick  = e => { e.stopPropagation(); toggle(); };
+    pl.onclick = () => toggle();                 // the whole frame is the control
+    function seekTo(t) {
+      if (!player || !player.v) return;
+      try { player.v.currentTime = t; const p = player.v.play(); p && p.catch && p.catch(() => {}); setPlayIcon(true); } catch (e) {}
+    }
     s.__seek = seekTo;
-    s.__pause = () => { try { player && player.v.pause(); } catch (e) {} };
+    s.__pause = () => { try { player && player.v.pause(); setPlayIcon(false); } catch (e) {} };
 
     function openEngagement(p, dotEl) {
       s.__pause();
       showEngagement(p, () => {
         answered.add(p.at);
         dotEl && dotEl.classList.add('done');
-        const fruits = fr.children;
-        const idx = C.points.indexOf(p);
-        if (fruits[idx]) { fruits[idx].className = 'fruit on'; fruits[idx].innerHTML = blossomSVG(true); }
-        $('b', top).textContent = answered.size + ' of ' + C.points.length + ' fruits';
-        $('i', $('.bar', gc)).style.width = (answered.size / C.points.length * 100) + '%';
-        cooldownUntil = Date.now() + 2000;   // never stack two panels back to back
-        if (player) { try { player.v.play().catch(() => {}); } catch (e) {} }
-      }, () => { cooldownUntil = Date.now() + 2000; if (player) { try { player.v.play().catch(() => {}); } catch (e) {} } });
+        const i = points.indexOf(p);
+        if (fr.children[i]) { fr.children[i].className = 'fruit on'; fr.children[i].innerHTML = blossomSVG(true); }
+        refreshGarden();
+        cooldownUntil = Date.now() + 2500;
+        if (player) { try { const q = player.v.play(); q && q.catch && q.catch(() => {}); setPlayIcon(true); } catch (e) {} }
+      }, () => {
+        cooldownUntil = Date.now() + 2500;
+        if (player) { try { const q = player.v.play(); q && q.catch && q.catch(() => {}); setPlayIcon(true); } catch (e) {} }
+      });
     }
 
+    function mount() {
+      if (player) { player.destroy(); player = null; }
+      player = VideoEngine.make(pl, { hls: part.hls }, {
+        start: 0,
+        fallbackSrc: pickSrc(C.fallbackSrc, C.fallbackSrcAlt),
+        onMeta: d => planFires(d),
+        onPlay: () => { player.setMuted(false); setPlayIcon(true); },
+        onTime: t => {
+          const dur = (player && player.v && player.v.duration) || part.durationSec;
+          played.style.width = Math.min(100, t / dur * 100) + '%';
+          nowEl.textContent = scaled ? mmss(t / dur * part.durationSec) : mmss(t);
+          barTime.textContent = mmss(t) + ' / ' + mmss(dur);
+          dots.forEach(o => o.d.classList.toggle('live', Math.abs(t - (fireAt[o.p.at] ?? o.p.at)) < 1.5));
+          const hit = points.find(p => !answered.has(p.at) &&
+            t >= (fireAt[p.at] ?? p.at) && t < (fireAt[p.at] ?? p.at) + 1.3);
+          if (hit && !sheetEl.classList.contains('on') && Date.now() > cooldownUntil) {
+            try { player.v.pause(); } catch (e) {}
+            setPlayIcon(false);
+            const d = dots.find(o => o.p === hit);
+            openEngagement(hit, d && d.d);
+          }
+        },
+        onFail: () => setPlayIcon(false),
+      });
+      setPlayIcon(true);
+    }
+
+    function loadPart(p) {
+      part = p;
+      points = (C.pointsByVideo && C.pointsByVideo[p.videoId]) || [];
+      answered = new Set(points.filter(x => x.answered).map(x => x.at));
+      partLabel.textContent = p.label || p.title;
+      th.textContent = p.blurb || C.thesis;
+      played.style.width = '0%';
+      buildTimeline();
+      mount();
+      toast('Now playing ' + (p.label || p.title));
+    }
+
+    buildTimeline();
+    requestAnimationFrame(mount);
     return s;
-  }, { chrome: 'dark', onLeave: () => { player && player.destroy(); cancelAnimationFrame(rafId); closeSheet(); } });
+  }, { chrome: 'dark', onLeave: () => { player && player.destroy(); closeSheet(); } });
 }
+
+const PLAY_ICON  = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+const PAUSE_ICON = '<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
 
 function blossomSVG(on) {
   return on
