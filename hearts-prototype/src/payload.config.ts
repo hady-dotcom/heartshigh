@@ -1,3 +1,4 @@
+import { mkdirSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { sqliteAdapter } from '@payloadcms/db-sqlite'
@@ -8,6 +9,11 @@ import { collections } from './collections'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+const databaseUrl = process.env.DATABASE_URL || 'file:./data/hearts.db'
+if (databaseUrl.startsWith('file:')) {
+  mkdirSync(path.dirname(path.resolve(databaseUrl.slice('file:'.length))), { recursive: true })
+}
 
 export default buildConfig({
   admin: {
@@ -28,7 +34,7 @@ export default buildConfig({
   db: sqliteAdapter({
     push: true,
     client: {
-      url: process.env.DATABASE_URL || 'file:./data/hearts.db',
+      url: databaseUrl,
     },
   }),
   plugins: [

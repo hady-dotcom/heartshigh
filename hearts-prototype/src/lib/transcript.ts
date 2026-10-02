@@ -26,7 +26,7 @@ function stampToSeconds(token: string) {
 
 export function parseTranscript(raw: string): { cues: Cue[]; timed: boolean; estimated: boolean } {
   const text = raw.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n')
-  const estimated = /timestamps:\s*estimated/i.test(text.slice(0, 600))
+  const estimated = /timestamps:?\**:?\s*estimated/i.test(text.slice(0, 800))
   const vtt = parseVtt(text)
   if (vtt.length) return { cues: vtt, timed: true, estimated }
   const srt = parseSrt(text)
@@ -94,32 +94,50 @@ function parsePlain(text: string): Cue[] {
   })
 }
 
-export type Sentence = { start: number; end: number; text: string }
+/**
+ * `start`/`end` are estimated inside a cue. `cueStart`/`cueEnd` are the real marks from the file.
+ * `complete` is false for a piece that does not start a sentence or does not finish one.
+ */
+export type Sentence = { start: number; end: number; text: string; cueStart: number; cueEnd: number; complete: boolean }
 
-function splitSpoken(text: string): string[] {
+function splitSpoken(text: string): { text: string; complete: boolean }[] {
   const pieces = text
     .split(/(?<=[.?!])\s+/)
     .flatMap((piece) => {
       const words = piece.trim().split(/\s+/).filter(Boolean)
-      if (words.length <= 36) return [words.join(' ')]
-      const chunks: string[] = []
-      for (let index = 0; index < words.length; index += 28) chunks.push(words.slice(index, index + 28).join(' '))
+      if (words.length <= 40) return [{ text: words.join(' '), complete: /[.?!]["”']?$/.test(piece.trim()) }]
+      const chunks: { text: string; complete: boolean }[] = []
+      for (let index = 0; index < words.length; index += 30) chunks.push({ text: words.slice(index, index + 30).join(' '), complete: false })
       return chunks
     })
-  return pieces.map((piece) => piece.trim()).filter((piece) => piece.split(/\s+/).length >= 5)
+  return pieces.map((piece) => ({ ...piece, text: piece.text.trim() })).filter((piece) => piece.text.split(/\s+/).length >= 5)
 }
 
 export function cuesToSentences(cues: Cue[]): Sentence[] {
   const sentences: Sentence[] = []
   for (const cue of cues) {
     const parts = splitSpoken(cue.text)
-    const span = Math.max(parts.length, cue.end - cue.start)
     parts.forEach((part, index) => {
       const start = cue.start + ((cue.end - cue.start) * index) / Math.max(1, parts.length)
       const end = cue.start + ((cue.end - cue.start) * (index + 1)) / Math.max(1, parts.length)
-      sentences.push({ start, end: Math.max(end, start + 1), text: part })
+      sentences.push({ start, end: Math.max(end, start + 1), text: part.text, cueStart: cue.start, cueEnd: cue.end, complete: part.complete })
     })
-    void span
   }
   return sentences
+}
+
+export function normaliseForMatch(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/[’‘]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/\*\*\[[^\]]+\]\*\*/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/** True when `quote` appears word for word in the transcript, ignoring spacing, case and timestamp marks. */
+export function isVerbatim(quote: string, transcript: string) {
+  const needle = normaliseForMatch(quote)
+  return needle.length > 0 && normaliseForMatch(transcript).includes(needle)
 }

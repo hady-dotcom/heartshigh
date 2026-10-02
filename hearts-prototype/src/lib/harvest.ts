@@ -1,3 +1,5 @@
+import { formatTimestamp, parseTranscript } from './transcript'
+
 export type HarvestHit = {
   kind: 'quran' | 'hadith'
   text: string
@@ -6,47 +8,61 @@ export type HarvestHit = {
   context: string
 }
 
-const ARABIC = /[\u0600-\u06FF][\u0600-\u06FF\s\u064B-\u0652]{3,}/g
+const ARABIC = /[\u0600-\u06FF][\u0600-\u06FF\s\u064B-\u0652]{3,}/
+const QURAN_CUE = /\b(allah (subhanahu wa ta'?ala )?(says|said|tells us)|as allah says|in the qur'?an|the qur'?an says|the verse|surah\s+[a-z]|ayah|o you who believe)\b/i
+const HADITH_CUE = /\b((the )?(prophet|messenger)\b[^.?!]{0,70}\b(said|says)|in the hadith[^.?!]{0,40}\b(said|says|narrated)|narrated (in|by)|on the authority of|rawa)\b/i
+const OPENS_QUOTE = /\b(said|says|tells us|in the qur'?an),?\s*$/i
 
-function nearby(source: string, index: number) {
-  return source.slice(Math.max(0, index - 180), Math.min(source.length, index + 220)).replace(/\s+/g, ' ')
-}
-
-function timestampNear(window: string) {
-  const match = window.match(/\[(\d{1,2}:\d{2}(?::\d{2})?)\]/)
-  return match?.[1] || ''
+function sentencesOf(text: string) {
+  return text
+    .split(/(?<=[.?!])\s+/)
+    .map((piece) => piece.trim())
+    .filter(Boolean)
 }
 
 /**
- * Conservative harvest. Arabic is kept as transcribed.
- * A reference is stored only when the speaker states one. Nothing is guessed.
+ * Pull the Qur'an and hadith a speaker actually quotes. Every text is copied word for word from
+ * the transcript, with the timestamp of the line it sits in. A reference is kept only when the
+ * speaker names it (a surah, or a hadith collection). Nothing is looked up or guessed.
  */
 export function harvestTranscript(raw: string): HarvestHit[] {
+  const { cues } = parseTranscript(raw)
   const hits: HarvestHit[] = []
   const seen = new Set<string>()
-  let match: RegExpExecArray | null
-  const pattern = new RegExp(ARABIC.source, 'g')
-  while ((match = pattern.exec(raw))) {
-    const text = match[0].replace(/\s+/g, ' ').trim()
-    if (seen.has(text)) continue
-    seen.add(text)
-    const window = nearby(raw, match.index)
-    const quranCue = /allah says|the qur'?an|surah|ayah|verse/i.test(window)
-    const hadithCue = /prophet|messenger|hadith|narrat/i.test(window)
-    let kind: 'quran' | 'hadith' | null = null
-    if (quranCue && !hadithCue) kind = 'quran'
-    else if (hadithCue && !quranCue) kind = 'hadith'
-    else if (quranCue) kind = 'quran'
-    else continue
-    const surah = window.match(/surah\s+([A-Za-z][A-Za-z\-']+)/i)
-    const collection = window.match(/\b(Bukhari|Muslim|Tirmidhi|Abu Dawud|Nasa'?i|Ibn Majah)\b/i)
-    hits.push({
-      kind,
-      text,
-      reference: kind === 'quran' ? (surah ? `Surah ${surah[1]}` : '') : collection?.[1] || '',
-      timestamp: timestampNear(window),
-      context: window.slice(0, 280),
+  cues.forEach((cue, cueIndex) => {
+    const sentences = sentencesOf(cue.text)
+    sentences.forEach((sentence, index) => {
+      const quran = QURAN_CUE.exec(sentence)
+      const hadith = HADITH_CUE.exec(sentence)
+      const arabic = ARABIC.test(sentence)
+      if (!quran && !hadith && !arabic) return
+      let kind: HarvestHit['kind']
+      if (quran && hadith) kind = quran.index <= hadith.index ? 'quran' : 'hadith'
+      else if (quran) kind = 'quran'
+      else if (hadith) kind = 'hadith'
+      else {
+        const around = `${cues[cueIndex - 1]?.text || ''} ${cue.text}`
+        if (QURAN_CUE.test(around)) kind = 'quran'
+        else if (HADITH_CUE.test(around)) kind = 'hadith'
+        else return
+      }
+      let text = sentence
+      const next = sentences[index + 1] || cues[cueIndex + 1]?.text.split(/(?<=[.?!])\s+/)[0]
+      if ((OPENS_QUOTE.test(sentence) || sentence.split(/\s+/).length < 9) && next) text = `${sentence} ${next}`
+      const key = text.toLowerCase().replace(/\s+/g, ' ')
+      if (seen.has(key) || text.split(/\s+/).length < 5) return
+      seen.add(key)
+      const window = `${cues[cueIndex - 1]?.text || ''} ${cue.text} ${cues[cueIndex + 1]?.text || ''}`
+      const surah = window.match(/\bsurah\s+(al-|ali\s?'?|an-|ar-|as-|at-)?([A-Z][A-Za-z'-]+)/i)
+      const collection = window.match(/\b(Bukhari|Muslim(?= on| and|,|\.)|Tirmidhi|Abu Dawud|Nasa'?i|Ibn Majah)\b/)
+      hits.push({
+        kind,
+        text,
+        reference: kind === 'quran' ? (surah ? `Surah ${surah[0].replace(/^surah\s+/i, '')}` : '') : collection?.[1] || '',
+        timestamp: formatTimestamp(cue.start),
+        context: sentences.slice(Math.max(0, index - 1), index + 2).join(' ').slice(0, 400),
+      })
     })
-  }
-  return hits.slice(0, 40)
+  })
+  return hits.slice(0, 30)
 }

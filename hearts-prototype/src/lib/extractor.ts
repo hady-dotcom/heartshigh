@@ -139,6 +139,9 @@ function scoreSentence(sentence: Sentence, repeated: boolean, planted: Set<strin
   if (count >= 8 && count <= 32) score += 2
   else if (count < 6 || count > 40) score -= 2
   if (/^(as i|so anyway|as i was|like i said|you know,)/i.test(sentence.text)) score -= 4
+  if (/\b(you're like|he's like|she's like|i'm like|yo\b|subhanallah\.?$)/i.test(sentence.text)) score -= 4
+  if (/^(he|she|they) (said|says|goes)\b/i.test(sentence.text) || /^[A-Z][a-z]+ (said|says),/.test(sentence.text)) score -= 2
+  if (/^(mikael|mikaeel),/i.test(sentence.text)) score -= 5
   if (repeated) score += 2
   if (plantedHit) score += 3
   if (/semi-truck|easygoing|bullied into devotion|bring ease|day of judgment|ar-?rabb/i.test(sentence.text)) score += 2
@@ -147,18 +150,15 @@ function scoreSentence(sentence: Sentence, repeated: boolean, planted: Set<strin
 
 function windowFor(sentences: Sentence[], landIndex: number) {
   const land = sentences[landIndex]
-  const targetStart = Math.max(0, land.end - 170)
+  const targetStart = Math.max(0, land.cueEnd - 175)
   let startIndex = landIndex
   for (let index = landIndex; index >= 0; index--) {
-    if (sentences[index].start <= targetStart) {
-      startIndex = index
-      break
-    }
     startIndex = index
+    if (sentences[index].cueStart <= targetStart) break
   }
-  while (startIndex < landIndex && /^(and|but|so|because|that|which)\b/i.test(sentences[startIndex].text)) {
-    startIndex += 1
-  }
+  const opener = (sentence: Sentence) =>
+    sentence.complete && !/^(and|but|so|because|that|which|or|then|like)\b/i.test(sentence.text) && /^[A-Z"“']/.test(sentence.text)
+  while (startIndex < landIndex && !opener(sentences[startIndex])) startIndex += 1
   return { startIndex, endIndex: landIndex }
 }
 
@@ -204,20 +204,20 @@ function stageForm(duration: number) {
   return 'long sit bait'
 }
 
+export function transcriptConfidence(raw: string, parsed: { timed: boolean; estimated: boolean }): ExtractCut['quoteConfidence'] {
+  if (!parsed.timed || parsed.estimated) return 'low'
+  if (/recovery|verify quotes|ocr/i.test(raw.slice(0, 800))) return 'medium'
+  return 'high'
+}
+
 export function dualExtract(raw: string, clauses: ClauseCard[] = []): ExtractResult {
   const parsed = parseTranscript(raw)
   const notes: string[] = []
   if (!parsed.cues.length) {
-    return {
-      thesis: '',
-      cuts: [],
-      ladder: [],
-      engine: 'deterministic',
-      notes: ['No speech found in the transcript.'],
-    }
+    return { thesis: '', cuts: [], ladder: [], engine: 'deterministic', notes: ['No speech found in the transcript.'] }
   }
   if (!parsed.timed) notes.push('No timestamps were found. Times are estimated and confidence is low.')
-  if (parsed.estimated) notes.push('Timestamps are estimated or recovered. Check the audio before you ship a cut.')
+  if (parsed.estimated) notes.push('The file says its timestamps are estimated. Check the audio before you use a cut.')
 
   const sentences = cuesToSentences(parsed.cues)
   const counts = repetitionMap(sentences)
@@ -229,97 +229,99 @@ export function dualExtract(raw: string, clauses: ClauseCard[] = []): ExtractRes
       const scored = scoreSentence(sentence, repeated, planted)
       return { index, sentence, ...scored, repeated }
     })
-    .filter((row) => row.device && row.score >= 3)
+    .filter((row) => row.device && row.score >= 5 && row.sentence.complete && row.sentence.text.split(/\s+/).length >= 7)
     .sort((a, b) => b.score - a.score)
 
   const chosen: typeof ranked = []
   for (const row of ranked) {
-    const landEnd = row.sentence.end
-    const overlaps = chosen.some((other) => Math.abs(other.sentence.end - landEnd) < 100)
+    const overlaps = chosen.some((other) => Math.abs(other.sentence.cueEnd - row.sentence.cueEnd) < 100)
     if (overlaps) continue
     chosen.push(row)
-    if (chosen.length >= 12) break
+    if (chosen.length >= 14) break
   }
   chosen.sort((a, b) => a.sentence.start - b.sentence.start)
 
-  const confidence: ExtractCut['quoteConfidence'] = !parsed.timed || parsed.estimated ? 'low' : 'high'
-  const cuts: ExtractCut[] = chosen.map((row, ordinal) => {
+  const confidence = transcriptConfidence(raw, parsed)
+  const cuts: ExtractCut[] = []
+  for (const row of chosen) {
     const window = windowFor(sentences, row.index)
     const slice = sentences.slice(window.startIndex, window.endIndex + 1)
     const hookSentence = slice[0]
     const landSentence = slice[slice.length - 1]
-    const mid = slice[Math.min(slice.length - 1, Math.max(1, Math.floor(slice.length * 0.55)))]
-    const turnSentence = mid.text === landSentence.text ? slice[Math.max(0, slice.length - 2)] : mid
-    const duration = Math.max(1, landSentence.end - hookSentence.start)
+    const middle = slice.slice(1, -1).filter((sentence) => sentence.complete)
+    const turnSentence =
+      middle.find((sentence) => deviceOf(sentence, false) === 'contrast' || /\b(but|however|rather|instead|and then)\b/i.test(sentence.text)) ||
+      middle[Math.floor(middle.length / 2)] ||
+      null
+    const start = hookSentence.cueStart
+    const end = Math.max(landSentence.cueEnd, start + 1)
+    const duration = end - start
+    const landAt = slice.length - 1
     const context = slice
-      .slice(0, 4)
+      .slice(Math.max(0, landAt - 3), landAt + 1)
       .map((sentence) => sentence.text)
       .join(' ')
-    const hang = hangFor(`${hookSentence.text} ${landSentence.text}`, clauses)
-    const gateA = duration >= 20 && hookSentence.text !== landSentence.text
+    const hang = hangFor(`${hookSentence.text} ${turnSentence?.text || ''} ${landSentence.text}`, clauses)
+    if (duration < 60 || cuts.some((cut) => cut.start === start || cut.hook === hookSentence.text)) continue
+    const gateA = Boolean(turnSentence) && hookSentence.text !== landSentence.text
     const gateB = hang.hangStrength === 'strong' || hang.hangStrength === 'medium'
-    let kind: ExtractCut['kind'] = 'dual'
+    let kind: ExtractCut['kind'] | null = null
     if (gateA && gateB) kind = 'dual'
     else if (gateA) kind = 'allure-only'
     else if (gateB) kind = 'curriculum-extra'
-    const theme = pickTheme(landSentence.text, row.device!)
-    return {
-      id: `C${String(ordinal + 1).padStart(2, '0')}`,
-      start: hookSentence.start,
-      end: landSentence.end,
-      timestamp: formatTimestamp(landSentence.start),
-      endTimestamp: formatTimestamp(landSentence.end),
+    if (!kind || !turnSentence) continue
+    cuts.push({
+      id: `C${String(cuts.length + 1).padStart(2, '0')}`,
+      start,
+      end,
+      timestamp: formatTimestamp(landSentence.cueStart),
+      endTimestamp: formatTimestamp(landSentence.cueEnd),
       hook: hookSentence.text,
       turn: turnSentence.text,
       land: landSentence.text,
       verbatimQuote: landSentence.text,
       fullContext: context,
-      theme,
+      theme: pickTheme(`${turnSentence.text} ${landSentence.text}`, row.device!),
       device: row.device!,
       whyItAllures:
         row.device === 'repeated_thesis'
-          ? 'The speaker plants this line more than once, so a stranger can feel the point without the hour.'
-          : 'A cold listener can hear a complete turn: something opens, shifts, and lands.',
+          ? 'The speaker comes back to this line more than once, so a newcomer can feel the point without the whole hour.'
+          : 'Someone hearing it cold can follow it: it opens, shifts, and lands in under three minutes.',
       bestClause: hang.bestClause,
       clauseFragment: hang.fragment,
       hangStrength: hang.hangStrength,
       whyHang: hang.whyHang,
-      seatHint: hang.bestClause ? 'Seat hint follows the clause card. Page numbers only where the map already printed them.' : 'seat TBD — teacher brief',
+      seatHint: hang.bestClause ? 'Seat follows the clause card. Choose it when you confirm the tag.' : 'seat TBD, teacher brief',
       stage2Form: stageForm(duration),
       currencyNote: hang.bestClause
-        ? `Soft-banks a chapter night around clause ${hang.bestClause}, without a score or a lock.`
-        : 'An allure crumb only. It does not claim course currency.',
+        ? `Counts towards a chapter night on clause ${hang.bestClause}. No score and no lock.`
+        : 'A short clip only. It does not count towards the course.',
       quoteConfidence: confidence,
-      exemplarAffinity: row.repeated ? 'high — repeated thesis, close to the loved-line pattern' : 'medium — a complete cold line, new theme allowed',
+      exemplarAffinity: row.repeated ? 'high: a repeated line, close to the loved-line pattern' : 'medium: a complete line that works cold',
       kind,
-    }
-  })
+    })
+  }
 
   const thesis = cuts.find((cut) => cut.device === 'repeated_thesis')?.land || cuts[0]?.land || ''
-  const ladder = ladderFrom(cuts)
-  return { thesis, cuts, ladder, engine: 'deterministic', notes }
+  return { thesis, cuts, ladder: ladderFrom(cuts, sentences), engine: 'deterministic', notes }
 }
 
-function ladderFrom(cuts: ExtractCut[]): LadderItem[] {
+/**
+ * Hors d'oeuvre: 15 to 20 seconds from the start of the line the land sits in.
+ * Appetiser: 30 seconds to 3 minutes, from the turn's line to the end of the land's line.
+ * Both carry the land line as their caption, word for word.
+ */
+function ladderFrom(cuts: ExtractCut[], sentences: Sentence[]): LadderItem[] {
   const items: LadderItem[] = []
-  for (const cut of cuts.slice(0, 6)) {
-    const horsStart = Math.max(cut.start, cut.end - 18)
-    items.push({
-      kind: 'hors',
-      start: horsStart,
-      end: Math.max(horsStart + 15, Math.min(cut.end, horsStart + 20)),
-      quote: cut.land,
-      cutId: cut.id,
-    })
-    const appetiserStart = Math.max(cut.start, cut.end - 90)
-    const appetiserEnd = Math.max(appetiserStart + 30, Math.min(cut.end, appetiserStart + 180))
-    items.push({
-      kind: 'appetiser',
-      start: appetiserStart,
-      end: appetiserEnd,
-      quote: cut.turn || cut.land,
-      cutId: cut.id,
-    })
+  for (const cut of cuts) {
+    const land = sentences.find((sentence) => sentence.text === cut.land && sentence.cueEnd === cut.end) || sentences.find((sentence) => sentence.text === cut.land)
+    const turn = sentences.find((sentence) => sentence.text === cut.turn && sentence.cueStart >= cut.start)
+    const landStart = land?.cueStart ?? Math.max(cut.start, cut.end - 20)
+    const horsLength = Math.min(20, Math.max(15, (land?.cueEnd ?? landStart + 15) - landStart))
+    items.push({ kind: 'hors', start: landStart, end: landStart + horsLength, quote: cut.land, cutId: cut.id })
+    const appetiserStart = Math.min(turn?.cueStart ?? cut.start, Math.max(cut.start, cut.end - 30))
+    const appetiserEnd = Math.min(appetiserStart + 180, Math.max(appetiserStart + 30, cut.end))
+    items.push({ kind: 'appetiser', start: appetiserStart, end: appetiserEnd, quote: cut.land, cutId: cut.id })
   }
   return items
 }

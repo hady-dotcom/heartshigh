@@ -1,20 +1,18 @@
 import type { CollectionConfig } from 'payload'
 
-const staff = ({ req }: { req: { user?: { role?: string } | null } }) =>
-  req.user?.role === 'master' || req.user?.role === 'portal-admin'
+import { portalIdOf } from './lib/ids'
 
-const signedIn = ({ req }: { req: { user?: unknown } }) => Boolean(req.user)
+// The app's own screens and actions use the local API with explicit portal checks.
+// The REST and GraphQL endpoints that Payload mounts are for the master desk only.
+const master = ({ req }: { req: { user?: { role?: string } | null } }) => req.user?.role === 'master'
+
+const masterOnly = { read: master, create: master, update: master, delete: master }
 
 export const Portals: CollectionConfig = {
   slug: 'portals',
   labels: { singular: 'Portal', plural: 'Portals' },
   admin: { useAsTitle: 'name' },
-  access: {
-    read: signedIn,
-    create: ({ req }) => req.user?.role === 'master',
-    update: staff,
-    delete: ({ req }) => req.user?.role === 'master',
-  },
+  access: masterOnly,
   fields: [
     { name: 'name', type: 'text', required: true },
     { name: 'slug', type: 'text', required: true, unique: true, index: true },
@@ -74,13 +72,7 @@ export const Users: CollectionConfig = {
     ],
   },
   admin: { useAsTitle: 'email' },
-  access: {
-    admin: ({ req }) => req.user?.role === 'master',
-    read: signedIn,
-    create: () => true,
-    update: signedIn,
-    delete: ({ req }) => req.user?.role === 'master',
-  },
+  access: { admin: master, ...masterOnly },
   fields: [
     { name: 'name', type: 'text', required: true, saveToJWT: true },
     {
@@ -105,6 +97,8 @@ export const Users: CollectionConfig = {
     { name: 'extraCourses', type: 'relationship', relationTo: 'courses', hasMany: true },
     { name: 'audience', type: 'text' },
     { name: 'shareWatch', type: 'checkbox', defaultValue: false },
+    { name: 'joinedAt', type: 'date' },
+    { name: 'nightAlerts', type: 'checkbox', defaultValue: false },
   ],
 }
 
@@ -114,14 +108,26 @@ export const Media: CollectionConfig = {
     staticDir: 'media',
     mimeTypes: ['image/*', 'audio/*', 'video/*', 'application/pdf'],
   },
-  access: { read: () => true, create: signedIn, update: staff, delete: staff },
-  fields: [{ name: 'alt', type: 'text' }],
+  access: {
+    read: ({ req }) => {
+      if (req.user?.role === 'master') return true
+      const portal = portalIdOf(req.user as { tenants?: { tenant?: unknown }[] } | null)
+      return portal ? { portal: { equals: portal } } : false
+    },
+    create: master,
+    update: master,
+    delete: master,
+  },
+  fields: [
+    { name: 'alt', type: 'text' },
+    { name: 'portal', type: 'relationship', relationTo: 'portals' },
+  ],
 }
 
 export const Clauses: CollectionConfig = {
   slug: 'clauses',
   admin: { useAsTitle: 'fragment' },
-  access: { read: () => true, create: ({ req }) => req.user?.role === 'master', update: ({ req }) => req.user?.role === 'master', delete: ({ req }) => req.user?.role === 'master' },
+  access: masterOnly,
   fields: [
     { name: 'number', type: 'number', required: true, unique: true },
     { name: 'fragment', type: 'text', required: true },
@@ -133,7 +139,7 @@ export const Clauses: CollectionConfig = {
 
 export const Seats: CollectionConfig = {
   slug: 'seats',
-  access: { read: () => true, create: ({ req }) => req.user?.role === 'master', update: staff, delete: ({ req }) => req.user?.role === 'master' },
+  access: masterOnly,
   fields: [
     { name: 'clause', type: 'relationship', relationTo: 'clauses', required: true },
     { name: 'position', type: 'number', required: true },
@@ -143,7 +149,7 @@ export const Seats: CollectionConfig = {
 
 export const ShelfItems: CollectionConfig = {
   slug: 'shelf-items',
-  access: { read: () => true, create: ({ req }) => req.user?.role === 'master', update: staff, delete: ({ req }) => req.user?.role === 'master' },
+  access: masterOnly,
   fields: [
     { name: 'volume', type: 'text' },
     { name: 'section', type: 'text' },
@@ -156,12 +162,7 @@ export const ShelfItems: CollectionConfig = {
 export const Courses: CollectionConfig = {
   slug: 'courses',
   admin: { useAsTitle: 'title' },
-  access: {
-    read: signedIn,
-    create: staff,
-    update: staff,
-    delete: staff,
-  },
+  access: masterOnly,
   fields: [
     { name: 'title', type: 'text', required: true },
     { name: 'summary', type: 'textarea' },
@@ -196,7 +197,7 @@ export const Courses: CollectionConfig = {
 export const Units: CollectionConfig = {
   slug: 'units',
   admin: { useAsTitle: 'title' },
-  access: { read: signedIn, create: staff, update: staff, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'title', type: 'text', required: true },
     { name: 'course', type: 'relationship', relationTo: 'courses', required: true },
@@ -207,7 +208,7 @@ export const Units: CollectionConfig = {
 export const Lessons: CollectionConfig = {
   slug: 'lessons',
   admin: { useAsTitle: 'title' },
-  access: { read: signedIn, create: staff, update: staff, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'title', type: 'text', required: true },
     { name: 'unit', type: 'relationship', relationTo: 'units', required: true },
@@ -239,7 +240,7 @@ export const Lessons: CollectionConfig = {
 
 export const Resources: CollectionConfig = {
   slug: 'resources',
-  access: { read: signedIn, create: staff, update: staff, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true },
     { name: 'name', type: 'text', required: true },
@@ -261,7 +262,7 @@ export const Packs: CollectionConfig = {
   slug: 'packs',
   labels: { singular: 'Course pack', plural: 'Course packs' },
   admin: { useAsTitle: 'title' },
-  access: { read: signedIn, create: staff, update: staff, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'title', type: 'text', required: true },
     { name: 'summary', type: 'textarea' },
@@ -283,7 +284,7 @@ export const Packs: CollectionConfig = {
 export const Cuts: CollectionConfig = {
   slug: 'cuts',
   admin: { useAsTitle: 'land' },
-  access: { read: signedIn, create: staff, update: staff, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true },
     { name: 'course', type: 'relationship', relationTo: 'courses' },
@@ -318,12 +319,13 @@ export const Cuts: CollectionConfig = {
     { name: 'exemplarAffinity', type: 'text' },
     { name: 'kind', type: 'text' },
     { name: 'engine', type: 'text' },
+    { name: 'seat', type: 'relationship', relationTo: 'seats' },
   ],
 }
 
 export const LadderItems: CollectionConfig = {
   slug: 'ladder-items',
-  access: { read: signedIn, create: staff, update: staff, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true },
     { name: 'cut', type: 'relationship', relationTo: 'cuts' },
@@ -338,12 +340,22 @@ export const LadderItems: CollectionConfig = {
     { name: 'start', type: 'number' },
     { name: 'end', type: 'number' },
     { name: 'quote', type: 'textarea' },
+    {
+      name: 'status',
+      type: 'select',
+      defaultValue: 'draft',
+      options: [
+        { label: 'Draft', value: 'draft' },
+        { label: 'Approved', value: 'approved' },
+        { label: 'Rejected', value: 'rejected' },
+      ],
+    },
   ],
 }
 
 export const EngagementPoints: CollectionConfig = {
   slug: 'engagement-points',
-  access: { read: signedIn, create: staff, update: staff, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true },
     { name: 'second', type: 'number', required: true, defaultValue: 0 },
@@ -402,7 +414,7 @@ export const EngagementPoints: CollectionConfig = {
 
 export const Answers: CollectionConfig = {
   slug: 'answers',
-  access: { read: signedIn, create: signedIn, update: signedIn, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'point', type: 'relationship', relationTo: 'engagement-points', required: true },
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
@@ -419,7 +431,7 @@ export const Answers: CollectionConfig = {
 
 export const WorkbookEntries: CollectionConfig = {
   slug: 'workbook-entries',
-  access: { read: signedIn, create: signedIn, update: signedIn, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
     { name: 'answer', type: 'relationship', relationTo: 'answers' },
@@ -435,7 +447,7 @@ export const WorkbookEntries: CollectionConfig = {
 
 export const Notifications: CollectionConfig = {
   slug: 'notifications',
-  access: { read: signedIn, create: signedIn, update: signedIn, delete: signedIn },
+  access: masterOnly,
   fields: [
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
     { name: 'title', type: 'text', required: true },
@@ -443,6 +455,7 @@ export const Notifications: CollectionConfig = {
     { name: 'href', type: 'text' },
     { name: 'read', type: 'checkbox', defaultValue: false },
     { name: 'channel', type: 'text', defaultValue: 'in-app' },
+    { name: 'key', type: 'text', index: true },
   ],
 }
 
@@ -450,7 +463,7 @@ export const AccessCodes: CollectionConfig = {
   slug: 'access-codes',
   labels: { singular: 'Access code', plural: 'Access codes' },
   admin: { useAsTitle: 'code' },
-  access: { read: signedIn, create: staff, update: staff, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'code', type: 'text', required: true, unique: true, index: true },
     {
@@ -473,7 +486,7 @@ export const AccessCodes: CollectionConfig = {
 
 export const Adoptions: CollectionConfig = {
   slug: 'adoptions',
-  access: { read: signedIn, create: staff, update: staff, delete: staff },
+  access: masterOnly,
   fields: [
     {
       name: 'kind',
@@ -493,7 +506,7 @@ export const Adoptions: CollectionConfig = {
 
 export const PlacingQuestions: CollectionConfig = {
   slug: 'placing-questions',
-  access: { read: () => true, create: staff, update: staff, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'prompt', type: 'textarea', required: true },
     { name: 'why', type: 'text' },
@@ -505,7 +518,7 @@ export const PlacingQuestions: CollectionConfig = {
 
 export const PlacingAnswers: CollectionConfig = {
   slug: 'placing-answers',
-  access: { read: signedIn, create: signedIn, update: signedIn, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
     { name: 'question', type: 'relationship', relationTo: 'placing-questions', required: true },
@@ -515,7 +528,7 @@ export const PlacingAnswers: CollectionConfig = {
 
 export const Tags: CollectionConfig = {
   slug: 'tags',
-  access: { read: signedIn, create: staff, update: staff, delete: staff },
+  access: masterOnly,
   fields: [
     {
       name: 'item',
@@ -540,7 +553,7 @@ export const Tags: CollectionConfig = {
 
 export const HarvestEntries: CollectionConfig = {
   slug: 'harvest-entries',
-  access: { read: signedIn, create: signedIn, update: signedIn, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
     { name: 'lesson', type: 'relationship', relationTo: 'lessons' },
@@ -561,7 +574,7 @@ export const HarvestEntries: CollectionConfig = {
 
 export const Schedules: CollectionConfig = {
   slug: 'schedules',
-  access: { read: signedIn, create: signedIn, update: signedIn, delete: signedIn },
+  access: masterOnly,
   fields: [
     { name: 'name', type: 'text', required: true },
     { name: 'owner', type: 'relationship', relationTo: 'users' },
@@ -585,7 +598,7 @@ export const Schedules: CollectionConfig = {
 
 export const Events: CollectionConfig = {
   slug: 'events',
-  access: { read: signedIn, create: staff, update: staff, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'title', type: 'text', required: true },
     { name: 'startsAt', type: 'date' },
@@ -596,27 +609,38 @@ export const Events: CollectionConfig = {
 
 export const Rsvps: CollectionConfig = {
   slug: 'rsvps',
-  access: { read: signedIn, create: signedIn, update: signedIn, delete: signedIn },
+  access: masterOnly,
   fields: [
     { name: 'event', type: 'relationship', relationTo: 'events', required: true },
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
     { name: 'status', type: 'text', defaultValue: 'going' },
+    { name: 'ticket', type: 'text' },
+    {
+      name: 'ticketKind',
+      type: 'select',
+      defaultValue: 'held',
+      options: [
+        { label: 'Earned this week', value: 'earned' },
+        { label: 'Held for a host to welcome', value: 'held' },
+      ],
+    },
   ],
 }
 
 export const Checkins: CollectionConfig = {
   slug: 'checkins',
-  access: { read: signedIn, create: signedIn, update: staff, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'event', type: 'relationship', relationTo: 'events', required: true },
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
     { name: 'override', type: 'checkbox', defaultValue: false },
+    { name: 'byStaff', type: 'relationship', relationTo: 'users' },
   ],
 }
 
 export const Messages: CollectionConfig = {
   slug: 'messages',
-  access: { read: signedIn, create: signedIn, update: staff, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'author', type: 'relationship', relationTo: 'users' },
     { name: 'body', type: 'textarea', required: true },
@@ -625,7 +649,7 @@ export const Messages: CollectionConfig = {
 
 export const Completions: CollectionConfig = {
   slug: 'completions',
-  access: { read: signedIn, create: signedIn, update: signedIn, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
     { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true },
@@ -636,7 +660,7 @@ export const Completions: CollectionConfig = {
 
 export const FeedbackNotes: CollectionConfig = {
   slug: 'feedback-notes',
-  access: { read: signedIn, create: staff, update: staff, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'answer', type: 'relationship', relationTo: 'answers', required: true },
     { name: 'author', type: 'relationship', relationTo: 'users', required: true },
@@ -648,7 +672,7 @@ export const FeedbackNotes: CollectionConfig = {
 
 export const WatchSessions: CollectionConfig = {
   slug: 'watch-sessions',
-  access: { read: signedIn, create: signedIn, update: staff, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
     { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true },
@@ -658,7 +682,7 @@ export const WatchSessions: CollectionConfig = {
 
 export const LessonVisits: CollectionConfig = {
   slug: 'lesson-visits',
-  access: { read: signedIn, create: signedIn, update: signedIn, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
     { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true },
@@ -667,7 +691,7 @@ export const LessonVisits: CollectionConfig = {
 
 export const SeatVisits: CollectionConfig = {
   slug: 'seat-visits',
-  access: { read: signedIn, create: signedIn, update: signedIn, delete: staff },
+  access: masterOnly,
   fields: [
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
     { name: 'seat', type: 'relationship', relationTo: 'seats', required: true },
@@ -677,7 +701,7 @@ export const SeatVisits: CollectionConfig = {
 
 export const Rituals: CollectionConfig = {
   slug: 'rituals',
-  access: { read: signedIn, create: signedIn, update: signedIn, delete: signedIn },
+  access: masterOnly,
   fields: [
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
     { name: 'note', type: 'text', required: true },
