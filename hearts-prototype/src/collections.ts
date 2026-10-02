@@ -144,6 +144,7 @@ export const Seats: CollectionConfig = {
     { name: 'clause', type: 'relationship', relationTo: 'clauses', required: true },
     { name: 'position', type: 'number', required: true },
     { name: 'text', type: 'textarea', required: true },
+    { name: 'note', type: 'textarea' },
   ],
 }
 

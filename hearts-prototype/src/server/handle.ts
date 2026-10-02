@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import type { Where } from 'payload'
 import { dualExtract, type ClauseCard } from '@/lib/extractor'
 import { harvestTranscript } from '@/lib/harvest'
 import { idOf, portalIdOf } from '@/lib/ids'
@@ -6,12 +7,20 @@ import { extractWithFallback, llmStatus } from '@/lib/llm'
 import { flattenSlots, splitEvenly, studyDates } from '@/lib/schedule'
 import { setTestNow } from '@/lib/clock'
 import { ingestYoutubeUrl } from '@/lib/youtube'
-import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, type SessionUser } from './context'
+import { now } from '@/lib/clock'
+import { startingClause } from '@/lib/placing'
+import { delayToMs, unlockState } from '@/lib/unlock'
+import { randomUUID } from 'node:crypto'
+import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourseIds, type SessionUser } from './context'
+
+type Payload = Awaited<ReturnType<typeof getSession>>['payload']
+type Doc = Record<string, unknown> & { id: number }
 
 function redirectTo(req: Request, path: string, error?: string, notice?: string) {
   const host = req.headers.get('x-forwarded-host') || req.headers.get('host')
   const proto = req.headers.get('x-forwarded-proto') || 'http'
-  const url = new URL(path, host ? `${proto}://${host}` : req.url)
+  const safe = path.startsWith('/') && !path.startsWith('//') && !path.startsWith('/\\') ? path : '/'
+  const url = new URL(safe, host ? `${proto}://${host}` : req.url)
   if (error) url.searchParams.set('error', error)
   if (notice) url.searchParams.set('notice', notice)
   return NextResponse.redirect(url, 303)
@@ -76,6 +85,66 @@ function libraryLocked(user: SessionUser, course: { origin?: string } | null) {
   return Boolean(course && course.origin === 'master' && user.role !== 'master')
 }
 
+const LOCKED = 'This course is linked from the library. You can view it or remove the link. You cannot edit the original.'
+
+/** A portal admin edits only the local courses of their own portal. Master edits library courses. */
+function editError(user: SessionUser, course: Record<string, unknown> | null) {
+  if (!course) return 'That course could not be found.'
+  if (user.role === 'master') return null
+  if (user.role !== 'portal-admin') return 'Only a portal admin can change a course.'
+  if (course.origin === 'master') return LOCKED
+  if (idOf(course.portal) !== portalIdOf(user)) return 'That course is not in your portal.'
+  return null
+}
+
+async function findDoc(payload: Payload, collection: string, id: number): Promise<Doc | null> {
+  if (!Number.isInteger(id) || id <= 0) return null
+  try {
+    return (await payload.findByID({ collection: collection as 'users', id, overrideAccess: true, depth: 0 })) as unknown as Doc
+  } catch {
+    return null
+  }
+}
+
+/** Packs a portal may hand out: its own packs, and master packs it has adopted. */
+async function packUsable(payload: Payload, user: SessionUser, portalId: number, packId: number) {
+  const pack = await findDoc(payload, 'packs', packId)
+  if (!pack) return false
+  if (user.role === 'master') return true
+  if (pack.owner === 'portal') return idOf(pack.portal) === portalId
+  const adopted = await payload.find({
+    collection: 'adoptions',
+    overrideAccess: true,
+    depth: 0,
+    limit: 1,
+    where: { and: [{ portal: { equals: portalId } }, { pack: { equals: packId } }] },
+  })
+  return adopted.docs.length > 0
+}
+
+async function notify(payload: Payload, data: { user: number; portal?: number | null; title: string; body?: string; href?: string; key?: string }) {
+  if (data.key) {
+    const existing = await payload.find({ collection: 'notifications', overrideAccess: true, limit: 1, where: { and: [{ user: { equals: data.user } }, { key: { equals: data.key } }] } })
+    if (existing.docs.length) return
+  }
+  await payload.create({
+    collection: 'notifications',
+    overrideAccess: true,
+    data: { user: data.user, portal: data.portal || undefined, title: data.title, body: data.body, href: data.href || '/', channel: 'in-app', key: data.key },
+  })
+}
+
+async function saveUpload(payload: Payload, file: File, portal: number | null, fallbackType: string) {
+  const ext = (file.name.match(/\.[a-z0-9]{1,5}$/i)?.[0] || '').toLowerCase()
+  const media = await payload.create({
+    collection: 'media',
+    overrideAccess: true,
+    data: { alt: file.name.slice(0, 120), portal: portal || undefined },
+    file: { data: Buffer.from(await file.arrayBuffer()), mimetype: file.type || fallbackType, name: `${randomUUID()}${ext}`, size: file.size },
+  })
+  return media.id as number
+}
+
 async function clauseCards(payload: Awaited<ReturnType<typeof getSession>>['payload']): Promise<ClauseCard[]> {
   const found = await payload.find({ collection: 'clauses', overrideAccess: true, depth: 0, limit: 50, sort: 'number' })
   return found.docs.map((doc) => {
@@ -119,7 +188,21 @@ async function orderedLessons(payload: Awaited<ReturnType<typeof getSession>>['p
 }
 
 export async function handlePost(req: Request) {
-  const form = await req.formData()
+  let form: FormData
+  try {
+    form = await req.formData()
+  } catch {
+    return redirectTo(req, '/', 'That form could not be read. Please try again.')
+  }
+  try {
+    return await handleForm(req, form)
+  } catch (error) {
+    console.error('[hearts] action failed', text(form, 'action'), error)
+    return redirectTo(req, text(form, 'next') || '/', 'Something went wrong with that. Nothing was saved. Please try again.')
+  }
+}
+
+async function handleForm(req: Request, form: FormData) {
   const action = text(form, 'action')
   const { payload, user } = await getSession()
 
@@ -194,6 +277,13 @@ export async function handlePost(req: Request) {
 
   if (!user) return redirectTo(req, '/login', 'Please sign in first.')
 
+  if (user.role !== 'master') {
+    const mine = portalIdOf(user)
+    const home = mine ? await findDoc(payload, 'portals', mine) : null
+    if (!home) return redirectTo(req, '/', 'Your account is not in a portal.')
+    if (home.closed) return redirectTo(req, '/', 'This portal has been paused by the master desk, so changes cannot be saved at the moment.')
+  }
+
   if (action === 'create-portal') {
     if (user.role !== 'master') return redirectTo(req, '/', 'Only the master desk can open a portal.')
     const name = text(form, 'name')
@@ -207,7 +297,7 @@ export async function handlePost(req: Request) {
       data: {
         name,
         slug,
-        kind: text(form, 'kind') || 'mosque',
+        kind: (['mosque', 'church', 'synagogue', 'other'].includes(text(form, 'kind')) ? text(form, 'kind') : 'mosque') as 'mosque',
         welcome: text(form, 'welcome') || `${name} keeps a gentle room for whoever is sent.`,
         colour: text(form, 'colour') || '#1f4d3a',
         watchHistoryOptIn: false,
@@ -220,7 +310,7 @@ export async function handlePost(req: Request) {
     if (user.role !== 'master' && user.role !== 'portal-admin') return redirectTo(req, '/', 'You cannot make a course pack.')
     const title = text(form, 'title')
     if (!title) return redirectTo(req, text(form, 'next') || '/master', 'Give the course pack a name.')
-    const wantsMasterPack = text(form, 'owner') === 'master' || (user.role === 'master' && !text(form, 'portalSlug'))
+    const wantsMasterPack = user.role === 'master' && (text(form, 'owner') === 'master' || !text(form, 'portalSlug'))
     let portalId: number | undefined
     if (!wantsMasterPack) {
       const acting = await actingPortal(payload, user, form)
@@ -249,6 +339,16 @@ export async function handlePost(req: Request) {
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/master', acting.error)
     if (!code || !role || !packId) return redirectTo(req, text(form, 'next') || '/master', 'An access code needs a code, a role and a course pack.')
+    if (!['admin', 'teacher', 'learner', 'parent'].includes(role)) return redirectTo(req, text(form, 'next') || '/master', 'Choose who the code is for.')
+    if (!/^[A-Z0-9-]{4,32}$/.test(code)) return redirectTo(req, text(form, 'next') || '/master', 'Use 4 to 32 letters, numbers or dashes for the code.')
+    if (!(await packUsable(payload, user, acting.portal.id, packId))) return redirectTo(req, text(form, 'next') || '/master', 'That course pack is not available in this portal.')
+    const linkedId = Number(text(form, 'linkedTeacherCode') || 0)
+    if (linkedId) {
+      const teacherCode = await findDoc(payload, 'access-codes', linkedId)
+      if (!teacherCode || teacherCode.role !== 'teacher' || idOf(teacherCode.portal) !== acting.portal.id) {
+        return redirectTo(req, text(form, 'next') || '/master', 'Link the code to a teacher code from this portal.')
+      }
+    }
     if ((role === 'learner' || role === 'parent') && !text(form, 'linkedTeacherCode')) {
       return redirectTo(req, text(form, 'next') || '/master', 'A learner code needs a teacher code, so someone can see their progress.')
     }
@@ -265,7 +365,7 @@ export async function handlePost(req: Request) {
       overrideAccess: true,
       data: {
         code,
-        role,
+        role: role as 'learner',
         packs: [packId],
         portal: acting.portal.id,
         linkedTeacherCode: linked ? Number(linked) : undefined,
@@ -281,7 +381,7 @@ export async function handlePost(req: Request) {
     const title = text(form, 'title')
     const next = text(form, 'next') || '/master'
     if (!title) return redirectTo(req, next, 'Give the course a name.')
-    const origin = text(form, 'origin') === 'local' ? 'local' : 'master'
+    const origin = user.role !== 'master' || text(form, 'origin') === 'local' ? 'local' : 'master'
     let portal: number | null = null
     if (origin === 'local') {
       const acting = await actingPortal(payload, user, form)
@@ -298,7 +398,7 @@ export async function handlePost(req: Request) {
         origin,
         portal: portal || undefined,
         importable: origin === 'master',
-        visibility: text(form, 'visibility') || 'published',
+        visibility: text(form, 'visibility') === 'draft' ? 'draft' : 'published',
       },
     })
     const unit = await payload.create({
@@ -323,7 +423,7 @@ export async function handlePost(req: Request) {
       },
     })
     const packId = Number(text(form, 'pack') || 0)
-    if (packId) {
+    if (packId && (await packUsable(payload, user, portal || 0, packId))) {
       const pack = await payload.findByID({ collection: 'packs', id: packId, overrideAccess: true, depth: 0 })
       const existing = ((pack as { courses?: unknown[] }).courses || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
       await payload.update({
@@ -341,10 +441,9 @@ export async function handlePost(req: Request) {
     const courseId = Number(text(form, 'course'))
     const title = text(form, 'title')
     if (!courseId || !title) return redirectTo(req, text(form, 'next') || '/', 'A lesson needs a name.')
-    const courseDoc = await payload.findByID({ collection: 'courses', id: courseId, overrideAccess: true, depth: 0 })
-    if (libraryLocked(user, courseDoc as { origin?: string })) {
-      return redirectTo(req, text(form, 'next') || '/', 'This course is linked from the library. You can view it or remove the link. You cannot edit the original.')
-    }
+    const courseDoc = await findDoc(payload, 'courses', courseId)
+    const denied = editError(user, courseDoc)
+    if (denied) return redirectTo(req, text(form, 'next') || '/', denied)
     const units = await payload.find({ collection: 'units', overrideAccess: true, limit: 1, where: { course: { equals: courseId } }, sort: 'order' })
     const unit = units.docs[0]
     if (!unit) return redirectTo(req, text(form, 'next') || '/', 'That course has no unit yet.')
@@ -374,11 +473,16 @@ export async function handlePost(req: Request) {
     const portal = acting.portal.id
     const kind = text(form, 'kind') === 'course' ? 'course' : 'pack'
     if (kind === 'course') {
-      const course = await payload.findByID({ collection: 'courses', id: Number(text(form, 'course')), overrideAccess: true, depth: 0 })
-      if (!(course as { importable?: boolean }).importable && (course as { origin?: string }).origin === 'master') {
-        return redirectTo(req, text(form, 'next') || '/', 'That course is not marked importable.')
-      }
+      const course = await findDoc(payload, 'courses', Number(text(form, 'course')))
+      if (!course || course.origin !== 'master') return redirectTo(req, text(form, 'next') || '/', 'Only library courses can be adopted.')
+      if (!course.importable) return redirectTo(req, text(form, 'next') || '/', 'That course is not marked importable.')
+    } else {
+      const pack = await findDoc(payload, 'packs', Number(text(form, 'pack')))
+      if (!pack || pack.owner !== 'master') return redirectTo(req, text(form, 'next') || '/', 'Only library packs can be adopted.')
     }
+    const target: Where = kind === 'pack' ? { pack: { equals: Number(text(form, 'pack')) } } : { course: { equals: Number(text(form, 'course')) } }
+    const twice = await payload.find({ collection: 'adoptions', overrideAccess: true, limit: 1, where: { and: [{ portal: { equals: portal } }, target] } })
+    if (twice.docs.length) return redirectTo(req, text(form, 'next') || '/', undefined, 'That is already linked in this portal.')
     await payload.create({
       collection: 'adoptions',
       overrideAccess: true,
@@ -400,6 +504,8 @@ export async function handlePost(req: Request) {
     const title = text(form, 'title')
     const courseIds = form.getAll('course').map((value) => Number(value)).filter(Boolean)
     if (!title || !courseIds.length) return redirectTo(req, text(form, 'next') || '/', 'Name the new pack and tick at least one course.')
+    const allowed = new Set(user.role === 'master' ? courseIds : await visibleCourseIds(payload, user))
+    if (courseIds.some((id) => !allowed.has(id))) return redirectTo(req, text(form, 'next') || '/', 'One of those courses is not in this portal.')
     const pack = await payload.create({
       collection: 'packs',
       overrideAccess: true,
@@ -417,13 +523,21 @@ export async function handlePost(req: Request) {
     if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot ingest a film.')
     const lessonId = Number(text(form, 'lesson'))
     const next = text(form, 'next') || '/'
+    if (!(await findDoc(payload, 'lessons', lessonId))) return redirectTo(req, next, 'That lesson could not be found.')
     const owned = await courseOfLesson(payload, lessonId)
-    if (libraryLocked(user, owned.course as { origin?: string } | null)) {
-      return redirectTo(req, next, 'This course is linked from the library. You can view it or remove the link. You cannot edit the original.')
-    }
+    const denied = editError(user, owned.course as Doc | null)
+    if (denied) return redirectTo(req, next, denied)
     const url = text(form, 'url')
+    if (!url) return redirectTo(req, next, 'Paste a YouTube link first.')
+    let parsedUrl: URL | null = null
+    try {
+      parsedUrl = new URL(url)
+    } catch {
+      parsedUrl = null
+    }
+    if (!parsedUrl || !/^https?:$/.test(parsedUrl.protocol)) return redirectTo(req, next, 'That is not a web link. Paste a link that starts with https://')
     const result = await ingestYoutubeUrl(url)
-    if (!result.meta && /^https?:\/\//i.test(url)) {
+    if (!result.ok && !result.id && !/youtu\.?be/i.test(parsedUrl.hostname)) {
       await payload.update({
         collection: 'lessons',
         id: lessonId,
@@ -432,25 +546,26 @@ export async function handlePost(req: Request) {
       })
       return redirectTo(req, next, 'The link is saved. This server did not fetch the file. Upload a transcript, or paste a YouTube link.')
     }
-    if (!result.meta && result.error) return redirectTo(req, next, result.error)
-    if (result.meta) {
+    if (!result.ok && !result.id) return redirectTo(req, next, result.error)
+    if (result.id) {
+      const meta = result.meta
       await payload.update({
         collection: 'lessons',
         id: lessonId,
         overrideAccess: true,
         data: {
-          youtubeId: result.meta.id,
-          youtubeUrl: `https://www.youtube.com/watch?v=${result.meta.id}`,
-          title: text(form, 'keepTitle') ? undefined : result.meta.title,
-          speaker: result.meta.author,
+          youtubeId: result.id,
+          youtubeUrl: `https://www.youtube.com/watch?v=${result.id}`,
+          ...(meta && !text(form, 'keepTitle') ? { title: meta.title } : {}),
+          ...(meta ? { speaker: meta.author } : {}),
           ...(result.ok
-            ? { transcript: result.transcript, transcriptSource: 'youtube', transcriptNote: 'Captions fetched from YouTube.' }
+            ? { transcript: result.transcript, transcriptSource: 'youtube' as const, transcriptNote: `Captions fetched by ${result.provider}.` }
             : { transcriptNote: result.error }),
         },
       })
     }
     if (!result.ok) return redirectTo(req, next, result.error)
-    return redirectTo(req, next, undefined, 'YouTube film and captions saved.')
+    return redirectTo(req, next, undefined, `The YouTube film and its captions are saved (fetched by ${result.provider}).`)
   }
 
   if (action === 'upload-transcript') {
@@ -459,10 +574,11 @@ export async function handlePost(req: Request) {
     const next = text(form, 'next') || '/'
     if (!(file instanceof File) || file.size === 0) return redirectTo(req, next, 'Choose a .vtt, .srt or .txt transcript.')
     if (tooBig(file)) return redirectTo(req, next, 'That file is over 200 MB. Compress it, or upload a transcript instead.')
+    if (!(await findDoc(payload, 'lessons', Number(text(form, 'lesson'))))) return redirectTo(req, next, 'That lesson could not be found.')
     const owned = await courseOfLesson(payload, Number(text(form, 'lesson')))
-    if (libraryLocked(user, owned.course as { origin?: string } | null)) {
-      return redirectTo(req, next, 'This course is linked from the library. You can view it or remove the link. You cannot edit the original.')
-    }
+    const denied = editError(user, owned.course as Doc | null)
+    if (denied) return redirectTo(req, next, denied)
+    if (file.size > 5 * 1024 * 1024) return redirectTo(req, next, 'A transcript should be under 5 MB. That file looks like a video or audio file.')
     const name = file.name.toLowerCase()
     if (!name.endsWith('.vtt') && !name.endsWith('.srt') && !name.endsWith('.txt') && !name.endsWith('.md')) {
       return redirectTo(req, next, 'Use a .vtt, .srt or .txt file.')
@@ -486,10 +602,10 @@ export async function handlePost(req: Request) {
     if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot run the extractor.')
     const lessonId = Number(text(form, 'lesson'))
     const next = text(form, 'next') || '/'
+    if (!(await findDoc(payload, 'lessons', lessonId))) return redirectTo(req, next, 'That lesson could not be found.')
     const owned = await courseOfLesson(payload, lessonId)
-    if (libraryLocked(user, owned.course as { origin?: string } | null)) {
-      return redirectTo(req, next, 'This course is linked from the library. You can view it or remove the link. You cannot edit the original.')
-    }
+    const denied = editError(user, owned.course as Doc | null)
+    if (denied) return redirectTo(req, next, denied)
     const lesson = owned.lesson
     const transcript = (lesson as { transcript?: string }).transcript || ''
     if (!transcript.trim()) return redirectTo(req, next, 'This lesson has no transcript yet. Paste a YouTube link that has captions, or upload a .vtt, .srt or .txt file.')
@@ -544,8 +660,7 @@ export async function handlePost(req: Request) {
           },
         })
       }
-      void clauseByNumber
-    }
+          }
     for (const item of result.ladder) {
       await payload.create({
         collection: 'ladder-items',
@@ -556,31 +671,61 @@ export async function handlePost(req: Request) {
           start: Math.round(item.start),
           end: Math.round(item.end),
           quote: item.quote,
+          status: 'draft',
         },
       })
     }
-    return redirectTo(req, next, undefined, `${result.cuts.length} cuts drafted (${llmStatus()}).`)
+    const engineNote = result.engine === 'llm' ? `by ${llmStatus().replace('live:', '')}` : 'by the built-in extractor'
+    return redirectTo(req, next, undefined, `${result.cuts.length} cuts and ${result.ladder.length} short clips drafted ${engineNote}. Review them below.`)
   }
 
   if (action === 'cut-status') {
     if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot review cuts.')
-    const cut = await payload.findByID({ collection: 'cuts', id: Number(text(form, 'cut')), overrideAccess: true, depth: 0 })
-    const courseId = idOf((cut as { course?: unknown }).course)
-    const course = courseId ? await payload.findByID({ collection: 'courses', id: courseId, overrideAccess: true, depth: 0 }) : null
-    if (libraryLocked(user, course as { origin?: string } | null)) {
-      return redirectTo(req, text(form, 'next') || '/', 'This course is linked from the library. You can view it or remove the link. You cannot edit the original.')
+    const cut = await findDoc(payload, 'cuts', Number(text(form, 'cut')))
+    if (!cut) return redirectTo(req, text(form, 'next') || '/', 'That cut could not be found.')
+    const courseId = idOf(cut.course)
+    const course = courseId ? await findDoc(payload, 'courses', courseId) : null
+    const denied = editError(user, course)
+    if (denied) return redirectTo(req, text(form, 'next') || '/', denied)
+    const status = (['draft', 'approved', 'rejected'].includes(text(form, 'status')) ? text(form, 'status') : cut.status) as 'draft' | 'approved' | 'rejected'
+    const clauseNumber = Number(text(form, 'clause') || 0)
+    const seatId = Number(text(form, 'seat') || 0)
+    let clauseDocId: number | undefined
+    if (clauseNumber) {
+      const found = await payload.find({ collection: 'clauses', overrideAccess: true, limit: 1, where: { number: { equals: clauseNumber } } })
+      clauseDocId = found.docs[0]?.id as number | undefined
+      if (!clauseDocId) return redirectTo(req, text(form, 'next') || '/', 'Choose a clause between 1 and 41.')
+    }
+    if (seatId) {
+      const seat = await findDoc(payload, 'seats', seatId)
+      if (!seat) return redirectTo(req, text(form, 'next') || '/', 'That seat could not be found.')
     }
     await payload.update({
       collection: 'cuts',
-      id: Number(text(form, 'cut')),
+      id: cut.id,
       overrideAccess: true,
       data: {
-        status: text(form, 'status'),
-        hook: text(form, 'hook') || undefined,
-        turn: text(form, 'turn') || undefined,
-        land: text(form, 'land') || undefined,
+        status,
+        ...(clauseNumber ? { bestClause: clauseNumber } : {}),
+        ...(seatId ? { seat: seatId } : {}),
       },
     })
+    if (status !== cut.status) {
+      const ladder = await payload.find({ collection: 'ladder-items', overrideAccess: true, limit: 20, where: { and: [{ lesson: { equals: idOf(cut.lesson) } }, { start: { greater_than_equal: Number(cut.start) } }, { end: { less_than_equal: Number(cut.end) + 1 } }] } })
+      for (const item of ladder.docs) {
+        if ((item as { status?: string }).status === 'draft' || status !== 'approved') {
+          await payload.update({ collection: 'ladder-items', id: item.id, overrideAccess: true, data: { status } })
+        }
+      }
+    }
+    if (clauseDocId) {
+      const tags = await payload.find({ collection: 'tags', overrideAccess: true, limit: 20, where: { and: [{ 'item.value': { equals: cut.id } }, { 'item.relationTo': { equals: 'cuts' } }] } })
+      if (tags.docs.length) {
+        for (const tag of tags.docs) await payload.update({ collection: 'tags', id: tag.id, overrideAccess: true, data: { clause: clauseDocId, seat: seatId || undefined, state: 'confirmed' } })
+      } else {
+        await payload.create({ collection: 'tags', overrideAccess: true, data: { item: { relationTo: 'cuts', value: cut.id }, clause: clauseDocId, seat: seatId || undefined, state: 'confirmed', note: 'Chosen by an admin.' } })
+      }
+    }
     if (text(form, 'confirm') === 'yes') {
       const cutId = Number(text(form, 'cut'))
       const tags = await payload.find({
@@ -593,7 +738,19 @@ export async function handlePost(req: Request) {
         await payload.update({ collection: 'tags', id: tag.id, overrideAccess: true, data: { state: 'confirmed' } })
       }
     }
-    return redirectTo(req, text(form, 'next') || '/', undefined, 'Cut updated.')
+    return redirectTo(req, text(form, 'next') || '/', undefined, status === 'approved' ? 'Cut approved. Learners can now see it in their feed.' : status === 'rejected' ? 'Cut set aside.' : 'Cut saved.')
+  }
+
+  if (action === 'ladder-status') {
+    if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot review clips.')
+    const item = await findDoc(payload, 'ladder-items', Number(text(form, 'item')))
+    if (!item) return redirectTo(req, text(form, 'next') || '/', 'That clip could not be found.')
+    const owned = await courseOfLesson(payload, idOf(item.lesson) || 0)
+    const denied = editError(user, owned.course as Doc | null)
+    if (denied) return redirectTo(req, text(form, 'next') || '/', denied)
+    const status = text(form, 'status') === 'approved' ? 'approved' : text(form, 'status') === 'rejected' ? 'rejected' : 'draft'
+    await payload.update({ collection: 'ladder-items', id: item.id, overrideAccess: true, data: { status } })
+    return redirectTo(req, text(form, 'next') || '/', undefined, status === 'approved' ? 'Clip approved for the feed.' : status === 'rejected' ? 'Clip set aside.' : 'Clip moved back to draft.')
   }
 
   if (action === 'create-point') {
@@ -602,8 +759,16 @@ export async function handlePost(req: Request) {
     const next = text(form, 'next') || '/'
     if (!prompt) return redirectTo(req, next, 'Write the question first.')
     const lessonId = Number(text(form, 'lesson'))
+    if (!(await findDoc(payload, 'lessons', lessonId))) return redirectTo(req, next, 'That film could not be found.')
     const owned = await courseOfLesson(payload, lessonId)
     const course = owned.course as { id: number; origin?: string; portal?: unknown } | null
+    const second = Number(text(form, 'second') || 0)
+    if (!Number.isFinite(second) || second < 0) return redirectTo(req, next, 'The second needs to be 0 or more.')
+    const kind = ['reflection', 'question', 'multiple_choice', 'task'].includes(text(form, 'kind')) ? text(form, 'kind') : 'reflection'
+    if (kind === 'multiple_choice' && text(form, 'options').split('\n').filter((line) => line.trim()).length < 2) {
+      return redirectTo(req, next, 'A multiple choice question needs at least two answers, one per line.')
+    }
+    const delayUnit = ['second', 'minute', 'hour', 'day', 'week'].includes(text(form, 'delayUnit')) ? text(form, 'delayUnit') : 'week'
     if (user.role !== 'master') {
       const portal = portalIdOf(user)
       const localHere = course?.origin === 'local' && idOf(course.portal) === portal
@@ -624,13 +789,13 @@ export async function handlePost(req: Request) {
       overrideAccess: true,
       data: {
         lesson: lessonId,
-        second: Number(text(form, 'second') || 0),
-        kind: text(form, 'kind') || 'reflection',
+        second: Math.round(second),
+        kind: kind as 'reflection',
         prompt,
         options: options.length ? options : undefined,
         timing: onLibrary ? 'immediate' : text(form, 'timing') === 'future' ? 'future' : 'immediate',
         delayAmount: onLibrary ? 0 : Number(text(form, 'delayAmount') || 0),
-        delayUnit: text(form, 'delayUnit') || 'week',
+        delayUnit: delayUnit as 'week',
         contingent: onLibrary ? undefined : text(form, 'contingent') ? Number(text(form, 'contingent')) : undefined,
         link: text(form, 'link') || undefined,
         timeLimit: text(form, 'timeLimit') ? Number(text(form, 'timeLimit')) : undefined,
@@ -644,10 +809,39 @@ export async function handlePost(req: Request) {
 
   if (action === 'answer') {
     const pointId = Number(text(form, 'point'))
-    const point = await payload.findByID({ collection: 'engagement-points', id: pointId, overrideAccess: true, depth: 0 })
-    const lessonId = idOf((point as { lesson?: unknown }).lesson)
+    const point = await findDoc(payload, 'engagement-points', pointId)
+    if (!point) return redirectTo(req, text(form, 'next') || '/', 'That question could not be found.')
+    const lessonId = idOf(point.lesson)
     const portal = portalIdOf(user)
     if (!portal) return redirectTo(req, '/', 'Your account is not in a portal.')
+    const lessonDoc = lessonId ? await findDoc(payload, 'lessons', lessonId) : null
+    const courseOfPoint = lessonDoc ? idOf(lessonDoc.course) : null
+    const mayAnswer = courseOfPoint && (await visibleCourseIds(payload, user)).includes(courseOfPoint)
+    if (!mayAnswer) return redirectTo(req, '/', 'That question is not in your portal.')
+    const authorPortal = point.author ? portalIdOf((await findDoc(payload, 'users', idOf(point.author) || 0)) as SessionUser | null) : null
+    if (point.audience === 'self' && idOf(point.author) !== user.id) return redirectTo(req, '/', 'That question is not for you.')
+    if (point.audience === 'selected' && !((point.audienceUsers as unknown[]) || []).map((row) => idOf(row)).includes(user.id)) {
+      return redirectTo(req, '/', 'That question is not for you.')
+    }
+    if (authorPortal && authorPortal !== portal) return redirectTo(req, '/', 'That question is not in your portal.')
+    if (point.timing === 'future') {
+      const contingentId = idOf(point.contingent)
+      const mine = await payload.find({ collection: 'answers', overrideAccess: true, depth: 0, limit: 50, where: { user: { equals: user.id } } })
+      const answeredAt = (id: number | null) => {
+        const row = mine.docs.find((doc) => idOf((doc as { point?: unknown }).point) === id)
+        return row ? new Date((row as { createdAt: string }).createdAt) : null
+      }
+      const seen = await payload.find({ collection: 'lesson-visits', overrideAccess: true, depth: 0, limit: 1, where: { and: [{ user: { equals: user.id } }, { lesson: { equals: lessonId } }] }, sort: 'createdAt' })
+      const state = unlockState({
+        timing: 'future',
+        delayMs: delayToMs(Number(point.delayAmount || 0), String(point.delayUnit || 'week')),
+        hasContingent: Boolean(contingentId),
+        contingentAnsweredAt: answeredAt(contingentId),
+        seenAt: seen.docs[0] ? new Date((seen.docs[0] as { createdAt: string }).createdAt) : null,
+        at: now(),
+      })
+      if (state.state !== 'open') return redirectTo(req, text(form, 'next') || '/', 'This question has not opened yet. The countdown shows when it will.')
+    }
     const body = text(form, 'body')
     const choice = text(form, 'choice')
     const image = form.get('image')
@@ -664,42 +858,33 @@ export async function handlePost(req: Request) {
     let imageId: number | undefined
     if (image instanceof File && image.size > 0) {
       if (!image.type.startsWith('image/')) return redirectTo(req, text(form, 'next') || '/', 'That file needs to be an image.')
-      const media = await payload.create({
-        collection: 'media',
-        overrideAccess: true,
-        data: { alt: image.name },
-        file: {
-          data: Buffer.from(await image.arrayBuffer()),
-          mimetype: image.type,
-          name: image.name,
-          size: image.size,
-        },
-      })
-      imageId = media.id
+      imageId = await saveUpload(payload, image, portal, 'image/jpeg')
     }
     const audio = audioFile
     let audioId: number | undefined
     if (audio instanceof File && audio.size > 0) {
-      const media = await payload.create({
-        collection: 'media',
-        overrideAccess: true,
-        data: { alt: audio.name },
-        file: { data: Buffer.from(await audio.arrayBuffer()), mimetype: audio.type || 'audio/webm', name: audio.name, size: audio.size },
-      })
-      audioId = media.id
+      audioId = await saveUpload(payload, audio, portal, 'audio/webm')
     }
     let videoId: number | undefined
     if (video instanceof File && video.size > 0) {
-      const media = await payload.create({
-        collection: 'media',
-        overrideAccess: true,
-        data: { alt: video.name },
-        file: { data: Buffer.from(await video.arrayBuffer()), mimetype: video.type || 'video/mp4', name: video.name, size: video.size },
-      })
-      videoId = media.id
+      videoId = await saveUpload(payload, video, portal, 'video/mp4')
     }
     const keepPrivate = form.get('keepPrivate') === 'on'
     const shareWithTeacher = form.get('shareWithTeacher') === 'on'
+    const earlier = await payload.find({ collection: 'answers', overrideAccess: true, depth: 0, limit: 1, where: { and: [{ point: { equals: pointId } }, { user: { equals: user.id } }] } })
+    if (earlier.docs.length) {
+      await payload.update({
+        collection: 'answers',
+        id: earlier.docs[0].id,
+        overrideAccess: true,
+        data: { body, choice, keepPrivate, shareWithTeacher, ...(imageId ? { image: imageId } : {}), ...(audioId ? { audio: audioId } : {}), ...(videoId ? { video: videoId } : {}) },
+      })
+      const entry = await payload.find({ collection: 'workbook-entries', overrideAccess: true, depth: 0, limit: 1, where: { answer: { equals: earlier.docs[0].id } } })
+      if (entry.docs[0]) {
+        await payload.update({ collection: 'workbook-entries', id: entry.docs[0].id, overrideAccess: true, data: { body: body || choice, consent: shareWithTeacher, ...(imageId ? { image: imageId } : {}) } })
+      }
+      return redirectTo(req, text(form, 'next') || '/', undefined, 'Your answer is updated in your workbook.')
+    }
     const answer = await payload.create({
       collection: 'answers',
       overrideAccess: true,
@@ -732,37 +917,48 @@ export async function handlePost(req: Request) {
         portal,
       },
     })
-    return redirectTo(req, text(form, 'next') || '/', undefined, 'Saved. It is in your workbook.')
+    if (shareWithTeacher) await notifyTeachers(payload, user, portal, 'A learner shared an answer', `${user.name || 'A learner'} shared an answer with you.`)
+    const followers = await payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 20, where: { contingent: { equals: pointId } } })
+    for (const follower of followers.docs) {
+      await notify(payload, {
+        user: user.id,
+        portal,
+        title: 'A follow-up question is on its way',
+        body: `A follow-up to "${String(point.prompt).slice(0, 60)}" opens after its waiting time. You will see a countdown on the film.`,
+        key: `queued-${follower.id}`,
+      })
+    }
+    return redirectTo(req, text(form, 'next') || '/', undefined, keepPrivate ? 'Saved privately in your workbook.' : 'Saved in your workbook and shared with the circle.')
   }
 
   if (action === 'placing') {
     const portal = portalIdOf(user)
-    const questions = await payload.find({ collection: 'placing-questions', overrideAccess: true, limit: 20, sort: 'order' })
-    const choices: string[] = []
-    for (const question of questions.docs) {
+    const questions = await payload.find({
+      collection: 'placing-questions',
+      overrideAccess: true,
+      limit: 20,
+      sort: 'order',
+      where: { or: [{ portal: { exists: false } }, { portal: { equals: portal } }] },
+    })
+    const answers: { options: unknown; choice: string }[] = []
+    for (const question of questions.docs as { id: number; options?: unknown }[]) {
       const choice = text(form, `q-${question.id}`)
-      if (!choice) return redirectTo(req, text(form, 'next') || '/', 'Sit with each question. One is still open.')
-      choices.push(choice)
-      await payload.create({
-        collection: 'placing-answers',
-        overrideAccess: true,
-        data: { user: user.id, question: question.id, choice, portal: portal || undefined },
-      })
+      if (!choice) return redirectTo(req, text(form, 'next') || '/', 'Please choose an answer for each question. One is still empty.')
+      answers.push({ options: question.options, choice })
     }
-    const blob = choices.join(' ').toLowerCase()
-    let starting = 13
-    if (blob.includes('prayer')) starting = 15
-    else if (blob.includes('allah') || blob.includes('lord')) starting = 22
-    else if (blob.includes('prophet')) starting = 3
-    else if (blob.includes('people') || blob.includes('treat')) starting = 4
-    else if (blob.includes('flux') || blob.includes('tender')) starting = 2
+    const old = await payload.find({ collection: 'placing-answers', overrideAccess: true, limit: 50, where: { user: { equals: user.id } } })
+    for (const row of old.docs) await payload.delete({ collection: 'placing-answers', id: row.id, overrideAccess: true })
+    for (const [index, question] of questions.docs.entries()) {
+      await payload.create({ collection: 'placing-answers', overrideAccess: true, data: { user: user.id, question: question.id, choice: answers[index].choice, portal: portal || undefined } })
+    }
+    const starting = startingClause(answers)
     await payload.update({
       collection: 'users',
       id: user.id,
       overrideAccess: true,
       data: { onboarded: true, startingClause: starting },
     })
-    return redirectTo(req, text(form, 'next') || '/', undefined, 'We have a gentle place to begin.')
+    return redirectTo(req, text(form, 'next') || '/', undefined, `Thank you. We have chosen a first sitting for you, starting from clause ${starting}.`)
   }
 
   if (action === 'schedule') {
@@ -773,11 +969,15 @@ export async function handlePost(req: Request) {
     const targetType = text(form, 'targetType') === 'pack' ? 'pack' : 'course'
     let courseIds: number[] = []
     if (targetType === 'pack') {
-      const pack = await payload.findByID({ collection: 'packs', id: Number(text(form, 'pack')), overrideAccess: true, depth: 0 })
-      courseIds = ((pack as { courses?: unknown[] }).courses || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
+      const pack = await findDoc(payload, 'packs', Number(text(form, 'pack')))
+      if (!pack) return redirectTo(req, text(form, 'next') || '/', 'Choose a course pack.')
+      courseIds = ((pack.courses as unknown[]) || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
     } else {
-      courseIds = [Number(text(form, 'course'))]
+      courseIds = [Number(text(form, 'course'))].filter(Boolean)
     }
+    if (!courseIds.length) return redirectTo(req, text(form, 'next') || '/', 'Choose a course to plan.')
+    const visible = new Set(await visibleCourseIds(payload, user))
+    if (courseIds.some((id) => !visible.has(id))) return redirectTo(req, text(form, 'next') || '/', 'That course is not in your portal.')
     const lessons = await orderedLessons(payload, courseIds)
     if (!lessons.length) return redirectTo(req, text(form, 'next') || '/', 'There are no lessons to split yet.')
     let dates: string[]
@@ -787,7 +987,14 @@ export async function handlePost(req: Request) {
       return redirectTo(req, text(form, 'next') || '/', error instanceof Error ? error.message : 'Those dates did not work.')
     }
     const slots = flattenSlots(splitEvenly(lessons.map((lesson) => ({ id: lesson.id, title: lesson.title || 'Sitting' })), dates))
-    const learnerIds = form.getAll('learner').map((value) => Number(value)).filter(Boolean)
+    const learnerIds = [...new Set(form.getAll('learner').map((value) => Number(value)).filter(Boolean))]
+    if (learnerIds.length && user.role === 'learner') return redirectTo(req, text(form, 'next') || '/', 'You can plan your own days. A teacher plans for others.')
+    if (learnerIds.length) {
+      const people = await payload.find({ collection: 'users', overrideAccess: true, depth: 0, limit: learnerIds.length, where: { id: { in: learnerIds } } })
+      if (people.docs.length !== learnerIds.length || people.docs.some((person) => portalIdOf(person as SessionUser) !== portal)) {
+        return redirectTo(req, text(form, 'next') || '/', 'One of those learners is not in this portal.')
+      }
+    }
     await payload.create({
       collection: 'schedules',
       overrideAccess: true,
@@ -805,12 +1012,19 @@ export async function handlePost(req: Request) {
         portal,
       },
     })
-    return redirectTo(req, text(form, 'next') || '/', undefined, 'The plan is spread across the days you chose. It is a guide, not a lock.')
+    for (const learnerId of learnerIds) {
+      if (learnerId === user.id) continue
+      await notify(payload, { user: learnerId, portal, title: 'A study plan was made for you', body: `${name}: ${slots.length} sittings between ${text(form, 'start')} and ${text(form, 'end')}.`, href: `/p/${acting.portal.slug}/me/plan` })
+    }
+    return redirectTo(req, text(form, 'next') || '/', undefined, `The ${slots.length} sittings are spread evenly across ${dates.length} study days. You can still watch at your own pace.`)
   }
 
   if (action === 'rsvp' || action === 'checkin') {
     const portal = portalIdOf(user)
     const eventId = Number(text(form, 'event'))
+    const event = await findDoc(payload, 'events', eventId)
+    if (!event || (user.role !== 'master' && idOf(event.portal) !== portal)) return redirectTo(req, '/', 'That night is not in your portal.')
+    const eventPortal = idOf(event.portal)
     if (action === 'rsvp') {
       const existing = await payload.find({
         collection: 'rsvps',
@@ -818,19 +1032,40 @@ export async function handlePost(req: Request) {
         limit: 1,
         where: { and: [{ event: { equals: eventId } }, { user: { equals: user.id } }] },
       })
-      if (!existing.docs.length) {
-        await payload.create({ collection: 'rsvps', overrideAccess: true, data: { event: eventId, user: user.id, status: 'going', portal: portal || undefined } })
-      }
-      return redirectTo(req, text(form, 'next') || '/', undefined, 'You are down for the night.')
+      if (existing.docs.length) return redirectTo(req, text(form, 'next') || '/', undefined, 'You already have a place for this night.')
+      const weekAgo = new Date(now().getTime() - 7 * 86_400_000).toISOString()
+      const recent = await payload.count({ collection: 'completions', overrideAccess: true, where: { and: [{ user: { equals: user.id } }, { createdAt: { greater_than: weekAgo } }] } })
+      const ticketKind = recent.totalDocs > 0 ? 'earned' : 'held'
+      const ticket = `${String(event.title || 'NIGHT').replace(/[^A-Za-z]/g, '').slice(0, 4).toUpperCase() || 'NGHT'}-${randomUUID().slice(0, 6).toUpperCase()}`
+      await payload.create({ collection: 'rsvps', overrideAccess: true, data: { event: eventId, user: user.id, status: 'going', ticket, ticketKind, portal: eventPortal || undefined } })
+      return redirectTo(
+        req,
+        text(form, 'next') || '/',
+        undefined,
+        ticketKind === 'earned'
+          ? `You have a place. Your ticket is ${ticket}. Show it at the door.`
+          : `You have a place. Your ticket is ${ticket}. The teacher will welcome you in at the door.`,
+      )
     }
-    const override = form.get('override') === 'on'
-    if (override && user.role === 'learner') return redirectTo(req, text(form, 'next') || '/', 'Only a teacher or admin can override the soft ticket.')
+    const staff = user.role !== 'learner'
+    const learnerId = staff ? Number(text(form, 'learner') || 0) : user.id
+    if (!learnerId) return redirectTo(req, text(form, 'next') || '/', 'Choose who is arriving.')
+    const learner = await findDoc(payload, 'users', learnerId)
+    if (!learner || portalIdOf(learner as SessionUser) !== eventPortal) return redirectTo(req, text(form, 'next') || '/', 'That person is not in this portal.')
+    const rsvp = await payload.find({ collection: 'rsvps', overrideAccess: true, limit: 1, where: { and: [{ event: { equals: eventId } }, { user: { equals: learnerId } }] } })
+    const ticket = rsvp.docs[0] as { ticketKind?: string } | undefined
+    const override = staff && form.get('override') === 'on'
+    if (!staff && form.get('override') === 'on') return redirectTo(req, text(form, 'next') || '/', 'Only a teacher or admin can let someone in without a ticket.')
+    if (!ticket && !override) return redirectTo(req, text(form, 'next') || '/', staff ? 'They have no ticket yet. Tick "Let them in anyway" to welcome them.' : 'Please reserve a place first.')
+    if (!staff && ticket?.ticketKind !== 'earned') return redirectTo(req, text(form, 'next') || '/', 'Your place is held. A teacher will check you in at the door.')
+    const already = await payload.find({ collection: 'checkins', overrideAccess: true, limit: 1, where: { and: [{ event: { equals: eventId } }, { user: { equals: learnerId } }] } })
+    if (already.docs.length) return redirectTo(req, text(form, 'next') || '/', undefined, 'Already checked in.')
     await payload.create({
       collection: 'checkins',
       overrideAccess: true,
-      data: { event: eventId, user: override ? Number(text(form, 'learner') || user.id) : user.id, override, portal: portal || undefined },
+      data: { event: eventId, user: learnerId, override, byStaff: staff ? user.id : undefined, portal: eventPortal || undefined },
     })
-    return redirectTo(req, text(form, 'next') || '/', undefined, override ? 'Checked in with an override.' : 'Checked in. Welcome.')
+    return redirectTo(req, text(form, 'next') || '/', undefined, override ? 'Welcomed in by a teacher.' : 'Checked in. Welcome.')
   }
 
   if (action === 'board') {
@@ -846,10 +1081,12 @@ export async function handlePost(req: Request) {
     const entryId = Number(text(form, 'entry'))
     const reply = text(form, 'reply')
     if (!reply) return redirectTo(req, text(form, 'next') || '/', 'Write a reply first.')
-    const entry = await payload.findByID({ collection: 'workbook-entries', id: entryId, overrideAccess: true, depth: 0 })
-    if (user.role !== 'master' && idOf((entry as { portal?: unknown }).portal) !== portalIdOf(user)) {
+    const entry = await findDoc(payload, 'workbook-entries', entryId)
+    if (!entry) return redirectTo(req, text(form, 'next') || '/', 'That workbook entry could not be found.')
+    if (user.role !== 'master' && idOf(entry.portal) !== portalIdOf(user)) {
       return redirectTo(req, '/', 'That workbook is not in your portal.')
     }
+    if (!entry.consent) return redirectTo(req, text(form, 'next') || '/', 'The learner has kept this entry to themselves, so it cannot be replied to.')
     await payload.update({
       collection: 'workbook-entries',
       id: entryId,
@@ -868,7 +1105,7 @@ export async function handlePost(req: Request) {
           title: 'Your teacher replied',
           body: reply,
           href: text(form, 'href') || '/',
-          channel: 'in-app',
+          channel: 'in-app' as const,
         },
       })
       await payload.create({
@@ -880,7 +1117,7 @@ export async function handlePost(req: Request) {
           title: 'Email not sent',
           body: 'Email is stubbed in this prototype. The reply is waiting in the bell.',
           href: text(form, 'href') || '/',
-          channel: 'email-stub',
+          channel: 'email-stub' as const,
         },
       })
     }
@@ -890,7 +1127,8 @@ export async function handlePost(req: Request) {
   if (action === 'complete') {
     const lessonId = Number(text(form, 'lesson'))
     const portal = portalIdOf(user)
-    const lesson = await payload.findByID({ collection: 'lessons', id: lessonId, overrideAccess: true, depth: 0 })
+    const lesson = await findDoc(payload, 'lessons', lessonId)
+    if (!lesson || !(await visibleCourseIds(payload, user)).includes(idOf(lesson.course) || 0)) return redirectTo(req, '/', 'That film is not in your portal.')
     const duration = Number((lesson as { durationSeconds?: number }).durationSeconds || 0)
     const seconds = Number(text(form, 'seconds') || 0)
     const ended = text(form, 'ended') === 'yes'
@@ -908,7 +1146,7 @@ export async function handlePost(req: Request) {
         limit: 20,
         where: { and: [{ portal: { equals: portal } }, { learners: { contains: user.id } }] },
       })
-      const today = new Date().toISOString().slice(0, 10)
+      const today = now().toISOString().slice(0, 10)
       for (const plan of plans.docs as { slots?: { date?: string; lessonId?: number }[] }[]) {
         const slot = (plan.slots || []).find((row) => row.lessonId === lessonId)
         if (slot?.date && today <= slot.date) onTime = true
@@ -953,12 +1191,13 @@ export async function handlePost(req: Request) {
         }
       }
     }
-    return redirectTo(req, text(form, 'next') || '/', undefined, 'Marked as sat with. Your Grow page can see it.')
+    return redirectTo(req, text(form, 'next') || '/', undefined, 'Marked as watched. You will see it in your Garden.')
   }
 
   if (action === 'seat') {
     const seatId = Number(text(form, 'seat'))
     const portal = portalIdOf(user)
+    if (!(await findDoc(payload, 'seats', seatId))) return redirectTo(req, text(form, 'next') || '/', 'That seat could not be found.')
     const existing = await payload.find({
       collection: 'seat-visits',
       overrideAccess: true,
@@ -970,16 +1209,16 @@ export async function handlePost(req: Request) {
     } else if (text(form, 'returned') === 'yes') {
       await payload.update({ collection: 'seat-visits', id: existing.docs[0].id, overrideAccess: true, data: { returned: true } })
     }
-    return redirectTo(req, text(form, 'next') || '/', undefined, 'Seat noted.')
+    return redirectTo(req, text(form, 'next') || '/', undefined, 'Noted in your Garden.')
   }
 
   if (action === 'ritual') {
     await payload.create({
       collection: 'rituals',
       overrideAccess: true,
-      data: { user: user.id, note: text(form, 'note') || 'I held back a harsh word.', portal: portalIdOf(user) || undefined },
+      data: { user: user.id, note: text(form, 'note').slice(0, 280) || 'I held back a harsh word.', portal: portalIdOf(user) || undefined },
     })
-    return redirectTo(req, text(form, 'next') || '/', undefined, 'That small act is banked. It is not a streak.')
+    return redirectTo(req, text(form, 'next') || '/', undefined, 'Thank you. That is noted in your Garden.')
   }
 
   if (action === 'settings') {
@@ -990,6 +1229,11 @@ export async function handlePost(req: Request) {
     const data: Record<string, unknown> = {}
     for (const key of ['welcome', 'colour', 'organisationName', 'description', 'logoUrl', 'calendarUrl', 'notificationEmails', 'learnerWelcomeUrl', 'learnerIntroUrl', 'teacherWelcomeUrl', 'teacherIntroUrl', 'learnerLabel', 'teacherLabel']) {
       if (form.has(key)) data[key] = text(form, key)
+    }
+    if (typeof data.colour === 'string' && !/^#[0-9a-f]{6}$/i.test(data.colour)) return redirectTo(req, text(form, 'next') || '/', 'The colour needs to look like #1f4d3a.')
+    for (const key of ['logoUrl', 'calendarUrl', 'learnerWelcomeUrl', 'learnerIntroUrl', 'teacherWelcomeUrl', 'teacherIntroUrl']) {
+      const value = data[key]
+      if (typeof value === 'string' && value && !/^https:\/\//i.test(value)) return redirectTo(req, text(form, 'next') || '/', 'Links need to start with https://')
     }
     if (form.has('theme')) data.theme = text(form, 'theme') === 'dark' ? 'dark' : 'light'
     if (form.get('settingsForm') === 'yes') {
@@ -1011,6 +1255,12 @@ export async function handlePost(req: Request) {
     const prompt = text(form, 'prompt')
     const options = text(form, 'options').split('\n').map((line) => line.trim()).filter(Boolean)
     if (!prompt || options.length < 2) return redirectTo(req, text(form, 'next') || '/', 'A question needs words and at least two answers.')
+    let placingPortal: number | null = null
+    if (user.role !== 'master' || text(form, 'portalSlug')) {
+      const acting = await actingPortal(payload, user, form)
+      if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
+      placingPortal = acting.portal.id
+    }
     await payload.create({
       collection: 'placing-questions',
       overrideAccess: true,
@@ -1019,7 +1269,7 @@ export async function handlePost(req: Request) {
         why: text(form, 'why'),
         options,
         order: Number(text(form, 'order') || 10),
-        portal: text(form, 'portal') ? Number(text(form, 'portal')) : undefined,
+        portal: placingPortal || undefined,
       },
     })
     return redirectTo(req, text(form, 'next') || '/master', undefined, 'Question saved.')
@@ -1031,6 +1281,7 @@ export async function handlePost(req: Request) {
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
     const portal = acting.portal.id
     if (!text(form, 'title')) return redirectTo(req, text(form, 'next') || '/', 'Give the night a name.')
+    if (text(form, 'startsAt') && Number.isNaN(Date.parse(text(form, 'startsAt')))) return redirectTo(req, text(form, 'next') || '/', 'That date and time could not be read.')
     await payload.create({
       collection: 'events',
       overrideAccess: true,
@@ -1038,10 +1289,14 @@ export async function handlePost(req: Request) {
         title: text(form, 'title'),
         place: text(form, 'place'),
         note: text(form, 'note'),
-        startsAt: text(form, 'startsAt') || undefined,
+        startsAt: text(form, 'startsAt') ? new Date(text(form, 'startsAt')).toISOString() : undefined,
         portal,
       },
     })
+    const alerted = await payload.find({ collection: 'users', overrideAccess: true, depth: 0, limit: 500, where: { and: [{ 'tenants.tenant': { equals: portal } }, { nightAlerts: { equals: true } }] } })
+    for (const person of alerted.docs) {
+      await notify(payload, { user: person.id, portal, title: 'A new night is open', body: `${text(form, 'title')}${text(form, 'place') ? ` at ${text(form, 'place')}` : ''}.`, href: `/p/${acting.portal.slug}/chapter` })
+    }
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Night saved.')
   }
 
@@ -1106,9 +1361,10 @@ export async function handlePost(req: Request) {
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
     const codeId = Number(text(form, 'codeId'))
-    const code = await payload.findByID({ collection: 'access-codes', id: codeId, overrideAccess: true, depth: 0 })
-    if (idOf((code as { portal?: unknown }).portal) !== acting.portal.id) return redirectTo(req, '/', 'That access code is not in your portal.')
+    const code = await findDoc(payload, 'access-codes', codeId)
+    if (!code || idOf(code.portal) !== acting.portal.id) return redirectTo(req, '/', 'That access code is not in your portal.')
     const packId = Number(text(form, 'pack') || 0)
+    if (packId && !(await packUsable(payload, user, acting.portal.id, packId))) return redirectTo(req, text(form, 'next') || '/', 'That course pack is not available in this portal.')
     const packIds = packId ? [packId] : ((code as { packs?: unknown[] }).packs || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
     if (packId) {
       await payload.update({ collection: 'access-codes', id: codeId, overrideAccess: true, data: { packs: packIds } })
@@ -1141,10 +1397,11 @@ export async function handlePost(req: Request) {
     if (user.role === 'learner') return redirectTo(req, '/', 'Learners cannot grant courses.')
     const learnerId = Number(text(form, 'learner'))
     const courseId = Number(text(form, 'course'))
-    const learner = await payload.findByID({ collection: 'users', id: learnerId, overrideAccess: true, depth: 0 })
-    if (user.role !== 'master' && portalIdOf(learner as SessionUser) !== portalIdOf(user)) {
+    const learner = await findDoc(payload, 'users', learnerId)
+    if (!learner || (user.role !== 'master' && portalIdOf(learner as SessionUser) !== portalIdOf(user))) {
       return redirectTo(req, '/', 'That learner is not in your portal.')
     }
+    if (!(await visibleCourseIds(payload, user)).includes(courseId)) return redirectTo(req, text(form, 'next') || '/', 'That course is not in your portal.')
     const existing = ((learner as { extraCourses?: unknown[] }).extraCourses || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
     await payload.update({
       collection: 'users',
@@ -1157,8 +1414,9 @@ export async function handlePost(req: Request) {
 
   if (action === 'feedback') {
     if (user.role === 'learner') return redirectTo(req, '/', 'Learners do not leave this kind of feedback.')
-    const answer = await payload.findByID({ collection: 'answers', id: Number(text(form, 'answer')), overrideAccess: true, depth: 0 })
-    if (user.role !== 'master' && idOf((answer as { portal?: unknown }).portal) !== portalIdOf(user)) {
+    const answer = await findDoc(payload, 'answers', Number(text(form, 'answer')))
+    if (!answer) return redirectTo(req, text(form, 'next') || '/', 'That answer could not be found.')
+    if (user.role !== 'master' && idOf(answer.portal) !== portalIdOf(user)) {
       return redirectTo(req, '/', 'That answer is not in your portal.')
     }
     const body = text(form, 'body')
@@ -1167,13 +1425,7 @@ export async function handlePost(req: Request) {
     let audioId: number | undefined
     if (audio instanceof File && audio.size > 0) {
       if (tooBig(audio)) return redirectTo(req, text(form, 'next') || '/', 'That file is over 200 MB.')
-      const media = await payload.create({
-        collection: 'media',
-        overrideAccess: true,
-        data: { alt: audio.name },
-        file: { data: Buffer.from(await audio.arrayBuffer()), mimetype: audio.type || 'audio/webm', name: audio.name, size: audio.size },
-      })
-      audioId = media.id
+      audioId = await saveUpload(payload, audio, idOf(answer.portal), 'audio/webm')
     }
     await payload.create({
       collection: 'feedback-notes',
@@ -1216,13 +1468,9 @@ export async function handlePost(req: Request) {
 
   if (action === 'rename-course') {
     if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot rename that course.')
-    const course = await payload.findByID({ collection: 'courses', id: Number(text(form, 'course')), overrideAccess: true, depth: 0 })
-    if (libraryLocked(user, course as { origin?: string })) {
-      return redirectTo(req, text(form, 'next') || '/', 'This course is linked from the library. You can view it or remove the link. You cannot edit the original.')
-    }
-    if (user.role !== 'master' && idOf((course as { portal?: unknown }).portal) !== portalIdOf(user)) {
-      return redirectTo(req, '/', 'That course is not in your portal.')
-    }
+    const course = await findDoc(payload, 'courses', Number(text(form, 'course')))
+    const denied = editError(user, course)
+    if (denied || !course) return redirectTo(req, text(form, 'next') || '/', denied || 'That course could not be found.')
     await payload.update({
       collection: 'courses',
       id: course.id,
@@ -1232,7 +1480,46 @@ export async function handlePost(req: Request) {
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Course updated.')
   }
 
+  if (action === 'workbook-consent') {
+    const entry = await findDoc(payload, 'workbook-entries', Number(text(form, 'entry')))
+    if (!entry || idOf(entry.user) !== user.id) return redirectTo(req, text(form, 'next') || '/', 'That entry is not yours.')
+    const consent = text(form, 'consent') === 'yes'
+    await payload.update({ collection: 'workbook-entries', id: entry.id, overrideAccess: true, data: { consent } })
+    const answerId = idOf(entry.answer)
+    if (answerId) await payload.update({ collection: 'answers', id: answerId, overrideAccess: true, data: { shareWithTeacher: consent } })
+    if (consent) await notifyTeachers(payload, user, portalIdOf(user), 'A learner shared a workbook entry', `${user.name || 'A learner'} shared a workbook entry with you.`)
+    return redirectTo(req, text(form, 'next') || '/', undefined, consent ? 'Your teacher can now read this entry and reply.' : 'This entry is back to being just for you.')
+  }
+
+  if (action === 'night-alerts') {
+    const on = form.get('nightAlerts') === 'on'
+    await payload.update({ collection: 'users', id: user.id, overrideAccess: true, data: { nightAlerts: on } })
+    return redirectTo(req, text(form, 'next') || '/', undefined, on ? 'We will let you know when a new night opens.' : 'Night alerts are off.')
+  }
+
+  if (action === 'visit') {
+    const lessonId = Number(text(form, 'lesson'))
+    const lesson = await findDoc(payload, 'lessons', lessonId)
+    if (!lesson || !(await visibleCourseIds(payload, user)).includes(idOf(lesson.course) || 0)) return redirectTo(req, '/', 'That film is not in your portal.')
+    return redirectTo(req, text(form, 'next') || '/')
+  }
+
   return redirectTo(req, '/', 'That action is not known.')
+}
+
+async function notifyTeachers(payload: Payload, learner: SessionUser, portal: number | null, title: string, body: string) {
+  if (!portal) return
+  const codeId = idOf(learner.accessCode)
+  const code = codeId ? await findDoc(payload, 'access-codes', codeId) : null
+  const teacherCode = code ? idOf(code.linkedTeacherCode) : null
+  const where: Where = teacherCode
+    ? { and: [{ accessCode: { equals: teacherCode } }, { role: { equals: 'teacher' } }] }
+    : { and: [{ 'tenants.tenant': { equals: portal } }, { role: { equals: 'teacher' } }] }
+  const teachers = await payload.find({ collection: 'users', overrideAccess: true, depth: 0, limit: 50, where })
+  const slug = ((await findDoc(payload, 'portals', portal))?.slug as string) || ''
+  for (const teacher of teachers.docs) {
+    await notify(payload, { user: teacher.id, portal, title, body, href: `/p/${slug}/admin/teach` })
+  }
 }
 
 export { dualExtract }

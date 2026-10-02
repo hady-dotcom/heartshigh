@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { dualExtract, type ClauseCard, type ExtractResult } from './extractor'
+import { dualExtract, ladderFrom, type ClauseCard, type ExtractCut, type ExtractResult } from './extractor'
+import { cuesToSentences, formatTimestamp, isVerbatim, normaliseForMatch, parseTranscript } from './transcript'
 
 export type LlmRequest = { system: string; user: string }
 
@@ -99,12 +100,50 @@ export async function extractWithFallback(raw: string, clauses: ClauseCard[]): P
     const jsonStart = reply.indexOf('{')
     const jsonEnd = reply.lastIndexOf('}')
     if (jsonStart === -1 || jsonEnd === -1) return deterministic
-    const parsed = JSON.parse(reply.slice(jsonStart, jsonEnd + 1)) as { cuts?: Record<string, string>[] }
-    if (!parsed.cuts?.length) return deterministic
+    const parsed = JSON.parse(reply.slice(jsonStart, jsonEnd + 1)) as { cuts?: Record<string, unknown>[] }
+    const sentences = cuesToSentences(parseTranscript(raw).cues)
+    const findLine = (quote: unknown) => {
+      const wanted = normaliseForMatch(String(quote || ''))
+      if (!wanted) return null
+      return sentences.find((sentence) => normaliseForMatch(sentence.text).includes(wanted)) || null
+    }
+    const kept: ExtractCut[] = []
+    for (const row of parsed.cuts || []) {
+      const hook = findLine(row.hook)
+      const turn = findLine(row.turn)
+      const land = findLine(row.land)
+      if (!hook || !turn || !land || !isVerbatim(String(row.land), raw) || land.cueEnd <= hook.cueStart) continue
+      const base = deterministic.cuts[0]
+      const clause = Number(row.bestClause) || null
+      kept.push({
+        ...(base || ({} as ExtractCut)),
+        id: `L${String(kept.length + 1).padStart(2, '0')}`,
+        start: hook.cueStart,
+        end: land.cueEnd,
+        timestamp: formatTimestamp(land.cueStart),
+        endTimestamp: formatTimestamp(land.cueEnd),
+        hook: String(row.hook),
+        turn: String(row.turn),
+        land: String(row.land),
+        verbatimQuote: String(row.land),
+        fullContext: String(row.fullContext || land.text),
+        whyItAllures: String(row.whyItAllures || ''),
+        bestClause: clause && clause >= 1 && clause <= 41 ? clause : null,
+        whyHang: String(row.whyHang || ''),
+        hangStrength: clause ? 'medium' : 'no_clean_hang',
+        kind: clause ? 'dual' : 'allure-only',
+      })
+    }
+    const dropped = (parsed.cuts?.length || 0) - kept.length
+    if (!kept.length) {
+      return { ...deterministic, notes: [`${client.name} returned no cuts whose quotes match the transcript word for word, so the built-in extractor was used.`, ...deterministic.notes] }
+    }
     return {
       ...deterministic,
+      cuts: kept,
+      ladder: ladderFrom(kept, sentences),
       engine: 'llm',
-      notes: [`LLM pass used ${client.name}. Deterministic cuts are kept where the model omitted a field.`, ...deterministic.notes],
+      notes: [`${client.name} drafted these cuts. ${dropped} were dropped because their quotes were not found in the transcript.`, ...deterministic.notes],
     }
   } catch (error) {
     return {

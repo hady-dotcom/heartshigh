@@ -311,7 +311,7 @@ export function dualExtract(raw: string, clauses: ClauseCard[] = []): ExtractRes
  * Appetiser: 30 seconds to 3 minutes, from the turn's line to the end of the land's line.
  * Both carry the land line as their caption, word for word.
  */
-function ladderFrom(cuts: ExtractCut[], sentences: Sentence[]): LadderItem[] {
+export function ladderFrom(cuts: ExtractCut[], sentences: Sentence[]): LadderItem[] {
   const items: LadderItem[] = []
   for (const cut of cuts) {
     const land = sentences.find((sentence) => sentence.text === cut.land && sentence.cueEnd === cut.end) || sentences.find((sentence) => sentence.text === cut.land)

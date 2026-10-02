@@ -2,7 +2,6 @@ node_modules
 .next
 data
 media
-payload-types.ts
 playwright-report
 test-results
 *.log
