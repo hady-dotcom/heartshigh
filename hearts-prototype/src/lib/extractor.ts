@@ -71,17 +71,17 @@ const HANGS: { clause: number; phrases: RegExp[]; why: string }[] = [
   { clause: 3, phrases: [/messenger/i, /bring ease/i, /commissioned/i, /salawat/i, /like the prophet/i], why: 'It hangs on being with the Messenger, and on the ease he was sent with.' },
   { clause: 4, phrases: [/appeared/i, /stranger/i, /walk-?in/i, /semi-truck/i, /newcomer/i, /coming into/i, /sent her/i], why: 'The teaching is how a circle receives the one who just appeared.' },
   { clause: 6, phrases: [/overlooked/i, /full attention/i, /easygoing person you pass/i], why: 'Character here is how you attend to someone who is easy to miss.' },
-  { clause: 13, phrases: [/condition of ease/i, /tell me about islam/i, /not committing a sin/i, /rules and regulations/i, /classified/i], why: 'Islam is named as classified acts, and ease is the spirit of approach, not the erasure of them.' },
+  { clause: 13, phrases: [/condition of ease/i, /tell me about islam/i, /not committing a sin/i, /rules and regulations/i, /classified/i], why: 'Islam is named as a set of acts, and ease is how you approach them while the acts themselves remain.' },
   { clause: 15, phrases: [/fajr/i, /the prayer/i, /salat|salah/i, /qibla/i], why: 'The line is doing the work of establishing the prayer.' },
-  { clause: 22, phrases: [/believe in allah/i, /who allah is/i, /ar-?rabb/i, /\brabb\b/i, /you don't tell god/i, /god tells you/i, /al-?nur/i, /source of (all )?light/i], why: 'The line is about who Allah is, not a side remark that happens to say the name.' },
+  { clause: 22, phrases: [/believe in allah/i, /who allah is/i, /ar-?rabb/i, /\brabb\b/i, /you don't tell god/i, /god tells you/i, /al-?nur/i, /source of (all )?light/i], why: 'The line is about who Allah is, which is the heart of belief in Allah.' },
   { clause: 24, phrases: [/qur'?an/i, /the book/i, /ayah|verse/i], why: 'It treats revelation as something to be received, which is the books clause.' },
   { clause: 25, phrases: [/his messengers/i, /moses/i, /never uptight/i, /messengers/i], why: 'A messengerly pattern: truth without harshness, or the story of a messenger.' },
-  { clause: 26, phrases: [/day of judgment/i, /last day/i, /akhira/i, /light on the day/i], why: 'Last things stay inside iman. The line is about that day, not a date for the Hour.' },
+  { clause: 26, phrases: [/day of judgment/i, /last day/i, /akhira/i, /light on the day/i], why: 'Last things stay inside iman. The line is about the Last Day itself.' },
   { clause: 29, phrases: [/ihsan/i, /\bnafs\b/i, /bullied into devotion/i, /lower self/i, /excellence/i], why: 'Ihsan here is lived, and the lower self is not allowed to rename itself as ease.' },
   { clause: 30, phrases: [/as though you see/i, /worship/i, /become the light/i, /make me nur/i], why: 'The act is done as seeing, or as becoming light for someone else.' },
   { clause: 31, phrases: [/he sees you/i, /easygoing/i, /approachable/i, /when nobody is watching/i], why: 'Character under being seen: the disposition that remains when praise is absent.' },
-  { clause: 34, phrases: [/marriage/i, /household/i, /best of marriages/i], why: 'The household seat under the Hour, not a signs checklist.' },
-  { clause: 41, phrases: [/your religion/i, /conceive of religion/i, /language of hardship/i, /teach you your religion/i], why: 'The trunk: what kind of religion was being taught, not a dump of later volumes.' },
+  { clause: 34, phrases: [/marriage/i, /household/i, /best of marriages/i], why: 'The household seat under the Hour, about how a home is lived.' },
+  { clause: 41, phrases: [/your religion/i, /conceive of religion/i, /language of hardship/i, /teach you your religion/i], why: 'The trunk: the kind of religion that was being taught.' },
 ]
 
 function words(text: string) {
