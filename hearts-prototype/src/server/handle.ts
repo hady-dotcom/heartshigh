@@ -271,7 +271,7 @@ async function handleForm(req: Request, form: FormData) {
         onboarded: codeRole !== 'learner' && codeRole !== 'parent',
       },
     })
-    const next = codeRole === 'learner' || codeRole === 'parent' ? `/p/${slug}/about` : `/p/${slug}/admin`
+    const next = codeRole === 'learner' || codeRole === 'parent' ? `/p/${slug}/welcome` : `/p/${slug}/admin`
     return loginResponse(req, email, password, next)
   }
 
@@ -1069,9 +1069,10 @@ async function handleForm(req: Request, form: FormData) {
   }
 
   if (action === 'board') {
-    const body = text(form, 'body')
+    const written = text(form, 'body').slice(0, 2000)
     const portal = portalIdOf(user)
-    if (!body) return redirectTo(req, text(form, 'next') || '/', 'Write a note for the board.')
+    if (!written) return redirectTo(req, text(form, 'next') || '/', 'Write a note for the board.')
+    const body = text(form, 'prefix') ? `A question for ${text(form, 'prefix').slice(0, 80)}: ${written}` : written
     await payload.create({ collection: 'messages', overrideAccess: true, data: { body, author: user.id, portal: portal || undefined } })
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Posted to the board.')
   }
@@ -1295,9 +1296,22 @@ async function handleForm(req: Request, form: FormData) {
     })
     const alerted = await payload.find({ collection: 'users', overrideAccess: true, depth: 0, limit: 500, where: { and: [{ 'tenants.tenant': { equals: portal } }, { nightAlerts: { equals: true } }] } })
     for (const person of alerted.docs) {
-      await notify(payload, { user: person.id, portal, title: 'A new night is open', body: `${text(form, 'title')}${text(form, 'place') ? ` at ${text(form, 'place')}` : ''}.`, href: `/p/${acting.portal.slug}/chapter` })
+      await notify(payload, { user: person.id, portal, title: 'A new night is open', body: `${text(form, 'title')}${text(form, 'place') ? ` at ${text(form, 'place')}` : ''}.`, href: `/p/${acting.portal.slug}/me/circle` })
     }
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Night saved.')
+  }
+
+  if (action === 'pack-courses') {
+    if (user.role !== 'master') return redirectTo(req, '/', 'Only the master desk can change a library pack.')
+    const pack = await findDoc(payload, 'packs', Number(text(form, 'pack')))
+    if (!pack || pack.owner !== 'master') return redirectTo(req, text(form, 'next') || '/master/packs', 'That library pack could not be found.')
+    const courseIds = [...new Set(form.getAll('course').map((value) => Number(value)).filter(Boolean))]
+    if (courseIds.length) {
+      const found = await payload.find({ collection: 'courses', overrideAccess: true, depth: 0, limit: courseIds.length, where: { and: [{ id: { in: courseIds } }, { origin: { equals: 'master' } }] } })
+      if (found.docs.length !== courseIds.length) return redirectTo(req, text(form, 'next') || '/master/packs', 'Only library courses can go in a library pack.')
+    }
+    await payload.update({ collection: 'packs', id: pack.id, overrideAccess: true, data: { courses: courseIds } })
+    return redirectTo(req, text(form, 'next') || '/master/packs', undefined, 'Pack updated. Portals that linked it see the change now.')
   }
 
   if (action === 'read-notes') {
