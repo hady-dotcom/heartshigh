@@ -5,7 +5,7 @@ export async function Qr({ value, testId = 'qr' }: { value: string; testId?: str
     type: 'svg',
     margin: 1,
     width: 132,
-    color: { dark: '#1f4d3a', light: '#fffaf2' },
+    color: { dark: '#1f1d36', light: '#ffffff' },
   })
   return <div className="qr" data-testid={testId} data-value={value} dangerouslySetInnerHTML={{ __html: svg }} />
 }
