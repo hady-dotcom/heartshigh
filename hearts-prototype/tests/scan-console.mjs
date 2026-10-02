@@ -1,20 +1,29 @@
 import { chromium } from '@playwright/test'
 
 const base = process.env.BASE_URL || 'http://127.0.0.1:3000'
+const elm = '/p/east-london'
+const learnerPaths = ['', '/lanes', '/speaker/mikaeel-smith', '/course/3', '/course/1', '/garden', '/garden/general', '/garden/jibril', '/garden/jibril/22', '/garden/ghunya', '/garden/harvest', '/garden/workbook', '/me', '/me/plan', '/me/circle', '/me/settings', '/welcome?step=placing', '/welcome?step=done'].map((path) => `${elm}${path}`)
+const adminPaths = ['', '/content', '/content/3', '/content/4', '/library', '/access', '/teach', '/plans', '/nights', '/settings', '/wizard'].map((path) => `${elm}/admin${path}`)
 const visits = [
-  ['elm-learner@hearts.test', 'portal-learner', ['/p/east-london/feed', '/p/east-london/path', '/p/east-london/grow', '/p/east-london/chapter', '/p/east-london/schedule', '/p/east-london/night', '/p/east-london/notifications', '/p/east-london/watch/1']],
-  ['elm-admin@hearts.test', 'portal-admin', ['/p/east-london/admin', '/p/east-london/admin/courses', '/p/east-london/admin/adopt', '/p/east-london/admin/codes', '/p/east-london/admin/teach', '/p/east-london/admin/settings', '/p/east-london/schedule', '/p/east-london/night']],
-  ['master@hearts.test', 'hearts-master', ['/master', '/master/questions']],
+  ['elm-learner@hearts.test', 'portal-learner', learnerPaths, { width: 390, height: 844 }],
+  ['elm-admin@hearts.test', 'portal-admin', adminPaths, { width: 1440, height: 900 }],
+  ['elm-teacher@hearts.test', 'portal-teacher', [`${elm}/admin`, `${elm}/admin/teach`, `${elm}/admin/plans`, `${elm}/admin/nights`], { width: 1440, height: 900 }],
+  ['master@hearts.test', 'hearts-master', ['/master', '/master/library', '/master/library/3', '/master/packs', '/master/questions'], { width: 1440, height: 900 }],
 ]
 
 const browser = await chromium.launch()
 let problems = 0
-for (const [email, password, paths] of visits) {
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 } })
+let thirdPartyCount = 0
+for (const [email, password, paths, viewport] of visits) {
+  const context = await browser.newContext({ viewport })
   const page = await context.newPage()
   const log = []
   page.on('console', (msg) => {
-    if (msg.type() === 'error' || msg.type() === 'warning') log.push(`${msg.type()}: ${msg.text().slice(0, 400)}`)
+    if (msg.type() !== 'error' && msg.type() !== 'warning') return
+    const where = msg.location()?.url || ''
+    const thirdParty = /youtube(-nocookie)?\.com|ytimg\.com|googlevideo\.com/.test(where) || (!where && /web-share|No available adapters|compute-pressure/.test(msg.text()))
+    if (thirdParty) thirdPartyCount += 1
+    else log.push(`${msg.type()}: ${msg.text().slice(0, 400)} ${where}`)
   })
   page.on('pageerror', (error) => log.push(`pageerror: ${error.message.slice(0, 400)}`))
   await page.goto(`${base}/login`)
@@ -34,14 +43,16 @@ for (const [email, password, paths] of visits) {
       return match ? match[0] : ''
     })
     const status = response?.status()
-    if (log.length || issues || (status && status >= 400)) {
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)
+    if (log.length || issues || overflow || (status && status >= 400)) {
       problems += 1
-      console.log(`\n${email} ${path} status=${status} ${issues}`)
+      console.log(`\n${email} ${path} status=${status} ${issues}${overflow ? ' horizontal-overflow' : ''}`)
       for (const line of log) console.log('  ', line)
     }
   }
   await context.close()
 }
 await browser.close()
-console.log(problems ? `\n${problems} screens with problems` : 'No console or runtime problems found.')
+console.log(problems ? `\n${problems} screens with problems` : 'No console or runtime problems found in our code.')
+if (thirdPartyCount) console.log(`${thirdPartyCount} messages came from inside the YouTube embed and are not ours to fix.`)
 process.exit(problems ? 1 : 0)
