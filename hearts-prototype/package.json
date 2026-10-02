@@ -1,0 +1,43 @@
+{
+  "name": "hearts-prototype",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "HEARTS prototype: Payload CMS portals and a phone-friendly learner app.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "seed": "tsx src/seed/seed.ts",
+    "generate:importmap": "payload generate:importmap",
+    "generate:types": "payload generate:types",
+    "test:unit": "tsx --test src/lib/extractor.test.ts src/lib/schedule.test.ts",
+    "test:e2e": "playwright test",
+    "test": "npm run test:unit && npm run test:e2e",
+    "screenshots": "playwright test tests/e2e/screenshots.spec.ts"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@payloadcms/db-sqlite": "^3.90.2",
+    "@payloadcms/next": "^3.90.2",
+    "@payloadcms/plugin-multi-tenant": "^3.90.2",
+    "@payloadcms/richtext-lexical": "^3.90.2",
+    "@payloadcms/ui": "^3.90.2",
+    "graphql": "^16.11.0",
+    "next": "^15.4.11",
+    "payload": "^3.90.2",
+    "qrcode": "^1.5.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.4",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.8.3"
+  }
+}
