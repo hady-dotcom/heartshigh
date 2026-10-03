@@ -3,6 +3,7 @@ import { now } from '@/lib/clock'
 import { idOf, portalIdOf } from '@/lib/ids'
 import type { SessionUser } from './context'
 import { recordOpeningAttempt } from './compass'
+import { partTitle } from '@/lib/talk-title'
 import { pointVisibleWhere, showUncheckedTalks } from './opening'
 
 type Row = Record<string, unknown> & { id: number }
@@ -141,7 +142,7 @@ export async function workbookFor(payload: Payload, learner: SessionUser, reader
       atSecond: typeof row.atSecond === 'number' ? (row.atSecond as number) : point ? Number(point.second || 0) : null,
       course: course ? { id: course.id, title: String(course.title) } : null,
       topic: String(unit?.title || 'The talk'),
-      video: lesson ? { id: lesson.id, title: String(lesson.title) } : null,
+      video: lesson ? { id: lesson.id, title: partTitle(lesson, course ? String(course.title) : '') } : null,
       pointId: idOf(row.point) || 0,
       question: String(point?.prompt || ''),
       answer: String(row.body || row.choice || (row.image ? 'A photo' : row.audio ? 'A voice note' : '')),
@@ -160,7 +161,11 @@ export async function workbookFor(payload: Payload, learner: SessionUser, reader
           pointId: point.id,
           question: String(point.prompt),
           lessonId: idOf(point.lesson) || 0,
-          video: String(lessonRows.find((item) => item.id === idOf(point.lesson))?.title || ''),
+          video: (() => {
+            const lesson = lessonRows.find((item) => item.id === idOf(point.lesson))
+            const course = (courses.docs as unknown as Row[]).find((item) => item.id === idOf(lesson?.course))
+            return lesson ? partTitle(lesson, course ? String(course.title) : '') : ''
+          })(),
           kind: String(point.kind || ''),
           family: String(point.family || ''),
           evidence: String(point.evidence || 'none'),

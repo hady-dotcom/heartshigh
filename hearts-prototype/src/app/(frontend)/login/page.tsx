@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Flash, Hidden } from '@/components/app/shell'
-import { BrandMark } from '@/components/brand'
+import { BrandLockup } from '@/components/brand'
 
 export default async function Login({ searchParams }: { searchParams: Promise<{ error?: string; next?: string }> }) {
   const query = await searchParams
@@ -8,7 +8,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   return (
     <main className="door" data-testid="login">
       <div className="door-card">
-        <BrandMark size={72} />
+        <BrandLockup size={72} />
         <h1>Welcome back</h1>
         <p className="lede">Sign in and we will take you to where you left off.</p>
         <Flash error={query.error} />

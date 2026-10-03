@@ -176,7 +176,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
 
   const piece = mode === 'hors' ? item.hors : item.appetiser
   const length = piece.end - piece.start
-  const backdrop = item.poster || (item.style ? ART[item.style] : null)
+  const backdrop = (item.poster && !/i\.ytimg\.com|img\.youtube\.com/i.test(item.poster) ? item.poster : null) || (item.style ? ART[item.style] : null)
   const showSlide = mode === 'hors' && item.style
   const motionClass = motion === 'from-bottom' ? '' : motion
   const course = `${base}/course/${item.courseId}?part=${item.lessonId}&t=0`

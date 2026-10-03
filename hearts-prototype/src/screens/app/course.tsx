@@ -10,7 +10,8 @@ import { doorLabel, doorOfClause, groupByDoor, type Door } from '@/lib/doors'
 import { loadDoors } from '@/server/doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { visibleCourseIds } from '@/server/context'
-import { courseCards, portraitFor, posterFor, slugify } from '@/server/learner'
+import { partTitle } from '@/lib/talk-title'
+import { courseCards, portraitFor, posterFor, shownPoster, slugify } from '@/server/learner'
 import { speakerPage } from '@/server/speakers'
 import { learnerClips, pointVisibleWhere } from '@/server/opening'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
@@ -24,6 +25,12 @@ import { circleForPoints, circleSettings } from '@/server/circle'
 
 const START = ['orange', 'gold', 'teal']
 
+function partHeading(index: number, lesson: Row, courseTitle: string, sep: string) {
+  const name = partTitle(lesson, courseTitle)
+  if (/· Part \d+$/.test(name) || /^Part \d+$/.test(name)) return name
+  return `Part ${index}${sep}${name}`
+}
+
 export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx, speakerSlug: string) {
   const [courses, { items }, unread, speaker] = await Promise.all([courseCards(payload, user), learnerClips(payload, portal, user), unreadCount(payload, user), speakerPage(payload, speakerSlug)])
   const drawn = await rows(payload, 'drawn-to', { and: [{ user: { equals: user.id } }, { speakerSlug: { in: [speakerSlug, speaker?.slug, ...(speaker?.aliasSlugs || [])].filter(Boolean) } }] }, { limit: 5 })
@@ -33,7 +40,7 @@ export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx,
   if (!speaker && !theirs.length && !clips.length) notFound()
   const name = speaker?.displayName || clips[0]?.speaker || theirs[0]?.speaker || speakerSlug
   const portrait = speaker?.portrait || portraitFor(speaker?.slug || speakerSlug)
-  const cover = theirs.find((course) => course.poster)?.poster || clips.find((clip) => clip.poster)?.poster || null
+  const cover = shownPoster(theirs.find((course) => course.poster)?.poster) || shownPoster(clips.find((clip) => clip.poster)?.poster) || null
   const intro = clips.find((clip) => clip.youtubeId && !clip.style) || clips[0]
   const lanes = [...new Set(clips.map((clip) => clip.laneLabel))]
   return (
@@ -61,7 +68,7 @@ export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx,
         </div>
         {intro ? (
           <Link className="intro-card" href={`${base}/feed?clip=${intro.cutId}&play=appetiser`} data-testid="watch-intro" data-start={intro.appetiser.start} data-stop={appetiserStop(intro.appetiser)}>
-            {intro.poster ? <span className="poster" style={{ backgroundImage: `url(${intro.poster})` }} /> : null}
+            {shownPoster(intro.poster) ? <span className="poster" style={{ backgroundImage: `url(${shownPoster(intro.poster)})` }} /> : null}
             <span className="play-circle"><PlayIcon size={26} /></span>
             <span><b>Watch intro</b><small>{clock(appetiserStop(intro.appetiser) - intro.appetiser.start)} · from {intro.courseTitle}</small></span>
           </Link>
@@ -69,7 +76,7 @@ export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx,
         <p className="eyebrow">Courses</p>
         {theirs.map((course, index) => (
           <div className="course-row" key={course.id} data-testid="speaker-course">
-            <span className="thumb" style={course.poster ? { backgroundImage: `url(${course.poster})` } : undefined} />
+            <span className="thumb" style={shownPoster(course.poster) ? { backgroundImage: `url(${shownPoster(course.poster)})` } : undefined} />
             <span className="t"><b>{course.title}</b><small>{course.parts} part{course.parts === 1 ? '' : 's'}{course.open ? '' : ` · opens on day ${course.opensOnDay}`}</small><DoorChips doors={course.doors} max={1} /></span>
             <Link className={`start ${course.open ? START[index % START.length] : 'soft'}`} href={`${base}/course/${course.id}`}>{course.open ? 'Start' : 'Peek'}</Link>
           </div>
@@ -244,7 +251,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
           courseTitle={str(course.title)}
           backHref={`${base}/lanes`}
           lessonId={lessonId}
-          partLabel={`Part ${partIndex + 1} · ${str(lesson.title)}`}
+          partLabel={partHeading(partIndex + 1, lesson, str(course.title), ' · ')}
           youtubeId={youtubeId}
           film={film}
           poster={posterFor(youtubeId) || portraitFor(slugify(str(lesson.speaker || course.speaker)))}
@@ -279,7 +286,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
               return (
                 <div key={row.id}>
                   <Link className="list-link" href={`${base}/course/${courseId}?part=${row.id}`} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
-                    <span className="grow">Part {index + 1}. {str(row.title)}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small></span>
+                    <span className="grow">{partHeading(index + 1, row, str(course.title), '. ')}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small></span>
                     {row.id === lessonId ? <span className="badge" style={{ color: 'var(--purple)', fontWeight: 700, fontSize: 13 }}>Playing</span> : '›'}
                   </Link>
                   {tier ? (

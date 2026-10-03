@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import { DoorChips } from '@/components/app/doors'
+import { InstallCard } from '@/components/app/install-card'
 import { redirect } from 'next/navigation'
 import { Avatar } from '@/components/app/feed'
 import { AppFrame, Flash, TabBar } from '@/components/app/shell'
 import { PlayIcon } from '@/components/icons'
-import { courseCards, dayNumber, portalName, portraitFor, posterFor, slugify } from '@/server/learner'
+import { displayTalkTitle } from '@/lib/talk-title'
+import { courseCards, dayNumber, portalName, posterFor, shownPoster } from '@/server/learner'
 import { recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
 import { lanesWithClips } from '@/lib/lanes'
@@ -39,12 +41,20 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
       const progress = sessions.find((row) => ref(row.lesson) === lesson.id)
       const seconds = Number(lesson.durationSeconds || 0)
       const percent = seconds && progress ? Math.min(100, (Number(progress.seconds || 0) / seconds) * 100) : Number(g.completions.find((row) => ref(row.lesson) === lesson.id)?.percent || 0)
+      const part = Number(lesson.order || 1)
       return {
         id: lesson.id,
         href: `${base}/course/${ref(lesson.course)}?part=${lesson.id}`,
-        title: `Part ${Number(lesson.order || 1)} · ${str(lesson.title)}`,
+        title: displayTalkTitle({
+          title: str(lesson.title),
+          sourceTitle: str(lesson.sourceTitle),
+          courseTitle: str(course?.title),
+          part,
+          youtubeId: str(lesson.youtubeId),
+          vimeoId: str(lesson.vimeoId),
+        }),
         sub: minutesLeft(seconds, percent) || str(course?.title),
-        thumb: posterFor(str(lesson.youtubeId) || null) || portraitFor(slugify(str(lesson.speaker))),
+        thumb: shownPoster(posterFor(str(lesson.youtubeId) || null)),
       }
     })
   const fallback = carryOn.length ? [] : courses.filter((course) => course.open).slice(0, 2)
@@ -59,10 +69,11 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         </div>
         <span className="sr-only">{portalName(portal)}</span>
         <Flash error={query.error} notice={query.notice} />
+        <InstallCard />
         <section className="grow-banner" data-testid="grow-banner">
           <p className="eyebrow">Your growth</p>
           <h2 data-testid="days-count">{days ? `${days} day${days === 1 ? '' : 's'} with us so far` : 'Your garden starts today'}</h2>
-          <span className="tree-art"><img src="/brand/hoopoe-perched.png" alt="" /></span>
+          <span className="tree-art" aria-hidden />
           <p className="grow-sub">Five ways to see it</p>
           <Rings g={g} base={base} />
           <Link className="pill gold block" href={`${base}/garden`} data-testid="see-sown">See what you&apos;ve sown</Link>
@@ -84,7 +95,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
           ))}
           {fallback.map((course) => (
             <Link key={course.id} className="continue-row" href={`${base}/course/${course.id}`} data-testid="continue-row">
-              <span className="thumb" style={course.poster ? { backgroundImage: `url(${course.poster})` } : undefined} />
+              <span className="thumb" style={shownPoster(course.poster) ? { backgroundImage: `url(${shownPoster(course.poster)})` } : undefined} />
               <span className="t"><b>{course.title}</b><span className="sr-only">. </span><small>{course.speaker} · {plural(course.parts, 'part')}</small><DoorChips doors={course.doors} max={1} /></span>
             </Link>
           ))}
@@ -94,7 +105,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         <Link className="feed-door" href={`${base}/feed`} data-testid="open-feed">
           <span className="strip">
             {clips.map((clip) => (
-              <span key={clip.id} className="mini" style={clip.poster || clip.portrait ? { backgroundImage: `url(${clip.poster || clip.portrait})` } : undefined} />
+              <span key={clip.id} className="mini" style={shownPoster(clip.poster) || shownPoster(clip.portrait) ? { backgroundImage: `url(${shownPoster(clip.poster) || shownPoster(clip.portrait)})` } : undefined} />
             ))}
           </span>
           <span className="go"><PlayIcon size={22} /> Watch today&apos;s clips</span>
@@ -135,7 +146,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
               data-testid="lane-card"
               data-lane={lane.key}
               data-first-cut={first.cutId}
-              style={first.poster || first.portrait ? { backgroundImage: `url(${first.poster || first.portrait})` } : undefined}
+              style={shownPoster(first.poster) || shownPoster(first.portrait) ? { backgroundImage: `url(${shownPoster(first.poster) || shownPoster(first.portrait)})` } : undefined}
             >
               <div>
                 <small>Lane</small>
@@ -152,7 +163,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
           const href = `${base}/course/${course.id}`
           return (
             <div key={course.id} className="course-row" data-testid="path-course" data-open={course.open ? 'yes' : 'no'}>
-              <span className="thumb" style={course.poster ? { backgroundImage: `url(${course.poster})` } : undefined} />
+              <span className="thumb" style={shownPoster(course.poster) ? { backgroundImage: `url(${shownPoster(course.poster)})` } : undefined} />
               <span className="t">
                 <b>{course.title}</b>
                 <small>

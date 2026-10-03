@@ -8,6 +8,7 @@ import { CodeLimits, CodeStatus } from '@/components/desk/codes'
 import { PointPicker } from '@/components/desk/tools'
 import { Qr } from '@/components/qr'
 import { adoptedCourseIds, type PortalDoc, type SessionUser } from '@/server/context'
+import { partTitle } from '@/lib/talk-title'
 import { type Ctx, type Row, clock, one, portalPeople, ref, rows, str } from '../common'
 import { AdminFrame } from './overview'
 
@@ -149,7 +150,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                   <div className="unit">{str(unit.title)}</div>
                   {items.map((row) => (
                     <Link key={row.id} href={`${editorHref}?part=${row.id}`} className={row.id === lesson?.id ? 'on' : ''} data-testid="tree-lesson">
-                      ▶ {str(row.title)}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : ''}</small>
+                      ▶ {partTitle(row, str(course.title))}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : ''}</small>
                     </Link>
                   ))}
                 </div>
@@ -178,10 +179,10 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
         <div style={{ display: 'grid', gap: 18, minWidth: 0 }}>
           {lesson ? (
             <section className="panel" data-testid="lesson-row">
-              <header><div><h2>Film: {str(lesson.title)}</h2><p>{youtubeId ? `YouTube ${youtubeId}` : 'No film link yet'}{lesson.durationSeconds ? ` · ${clock(Number(lesson.durationSeconds))}` : ''}</p></div></header>
+              <header><div><h2>Film: {partTitle(lesson, str(course.title))}</h2><p>{youtubeId ? `YouTube ${youtubeId}` : 'No film link yet'}{lesson.durationSeconds ? ` · ${clock(Number(lesson.durationSeconds))}` : ''}</p></div></header>
               <div className="body" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)', gap: 18 }}>
                 <div>
-                  {str(lesson.videoProvider) === 'vimeo' && str(lesson.vimeoId) ? <iframe className="film-preview" style={{ padding: 0 }} title={str(lesson.title)} src={`https://player.vimeo.com/video/${str(lesson.vimeoId)}`} allow="fullscreen; picture-in-picture" /> : str(lesson.videoProvider) === 'file' ? <video className="film-preview" style={{ padding: 0 }} controls src={`/api/hearts/film/${lesson.id}`} /> : youtubeId ? <iframe className="film-preview" style={{ padding: 0 }} title={str(lesson.title)} src={`https://www.youtube-nocookie.com/embed/${youtubeId}`} allow="encrypted-media" /> : <div className="film-preview">{locked ? 'This film has no YouTube link.' : 'Paste a YouTube link to attach the film.'}</div>}
+                  {str(lesson.videoProvider) === 'vimeo' && str(lesson.vimeoId) ? <iframe className="film-preview" style={{ padding: 0 }} title={partTitle(lesson, str(course.title))} src={`https://player.vimeo.com/video/${str(lesson.vimeoId)}`} allow="fullscreen; picture-in-picture" /> : str(lesson.videoProvider) === 'file' ? <video className="film-preview" style={{ padding: 0 }} controls src={`/api/hearts/film/${lesson.id}`} /> : youtubeId ? <iframe className="film-preview" style={{ padding: 0 }} title={partTitle(lesson, str(course.title))} src={`https://www.youtube-nocookie.com/embed/${youtubeId}`} allow="encrypted-media" /> : <div className="film-preview">{locked ? 'This film has no YouTube link.' : 'Paste a YouTube link to attach the film.'}</div>}
                   <p className="hint" style={{ marginTop: 10 }}>
                     {lesson.transcript ? <span data-testid="has-transcript">Transcript attached. </span> : <span>No transcript yet. </span>}
                     {lesson.transcriptNote ? <span data-testid="transcript-note">{str(lesson.transcriptNote)}</span> : null}

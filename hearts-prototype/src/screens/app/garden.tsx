@@ -9,7 +9,8 @@ import { now } from '@/lib/clock'
 import { getSession, type SessionUser, visibleCourseIds } from '@/server/context'
 import { workbookFor } from '@/server/workbook'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
-import { posterFor } from '@/server/learner'
+import { partTitle } from '@/lib/talk-title'
+import { posterFor, shownPoster } from '@/server/learner'
 import { loadDoors } from '@/server/doors'
 import { doorByNumber, doorCode, doorFromPath, doorOfClause, type Door } from '@/lib/doors'
 import { answerCounts } from '@/lib/nesting'
@@ -100,11 +101,11 @@ function seatsOf(g: Growth, door: Door) {
 export function Rings({ g, base }: { g: Growth; base: string }) {
   const sections = SECTIONS.filter((section) => sectionOf(g.doors, section.key).some((door) => g.lit.has(door.number))).length
   const items: [string, number, string, string, number?][] = [
-    ['Watched', g.completions.length, '#f0b44c', `${base}/garden/general`],
-    ['Sections', sections, '#e98fb0', `${base}/garden/jibril`],
-    ['Field', g.seatVisits.length, '#7fc4a8', `${base}/garden/ghunya`],
-    ['Harvest', g.harvest.length, '#6fa8dc', `${base}/garden/harvest`, g.harvest.filter((row) => !row.seenAt).length],
-    ['Workbook', g.workbook.length, '#a98bd6', `${base}/garden/workbook`],
+    ['Watched', g.completions.length, '#e2c27a', `${base}/garden/general`],
+    ['Sections', sections, '#f0e2c4', `${base}/garden/jibril`],
+    ['Field', g.seatVisits.length, '#b7c7a4', `${base}/garden/ghunya`],
+    ['Harvest', g.harvest.length, '#8fbfb4', `${base}/garden/harvest`, g.harvest.filter((row) => !row.seenAt).length],
+    ['Workbook', g.workbook.length, '#e2b08a', `${base}/garden/workbook`],
   ]
   return (
     <div className="rings" data-testid="rings">
@@ -138,7 +139,7 @@ export async function coursePath(payload: Payload, user: SessionUser, base: stri
     title: str(course.title),
     nodes: lessons.map((lesson) => ({
       id: lesson.id,
-      title: str(lesson.title),
+      title: partTitle(lesson, str(course.title)),
       href: `${base}/course/${id}?part=${lesson.id}`,
       state: (done.has(lesson.id) ? 'done' : lesson.id === active?.id ? 'active' : 'next') as 'done' | 'active' | 'next',
     })),
@@ -311,6 +312,9 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, token: str
     shownIds.length ? rows(payload, 'engagement-points', { and: [{ lesson: { in: shownIds } }, { status: { not_equals: 'draft' } }, { audience: { equals: 'everyone' } }] }, { sort: 'second', limit: 80 }) : Promise.resolve([] as Row[]),
     shownIds.length ? rows(payload, 'talk-tiers', { and: [{ lesson: { in: shownIds } }, { status: { not_equals: 'rejected' } }] }) : Promise.resolve([] as Row[]),
   ])
+  const courseIds = [...new Set(lessons.map((lesson) => ref(lesson.course)).filter((id): id is number => Boolean(id)))]
+  const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }) : []
+  const talkName = (lesson: Row) => partTitle(lesson, str(courses.find((course) => course.id === ref(lesson.course))?.title))
   const lessonOf = (id: number | null) => lessons.find((lesson) => lesson.id === id)
   const here = `${base}/garden/jibril/${door.number}`
   const teachings = clauses.map((clause) => str(clause.teaching)).filter(Boolean)
@@ -361,8 +365,8 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, token: str
         const cut = cuts.find((row) => ref(row.lesson) === lesson.id)
         return (
           <Link key={lesson.id} className="course-row" href={`${base}/course/${ref(lesson.course)}?part=${lesson.id}&t=${Math.floor(Number(cut?.start || 0))}`} data-testid="door-talk">
-            <span className="thumb" style={posterFor(str(lesson.youtubeId) || null) ? { backgroundImage: `url(${posterFor(str(lesson.youtubeId))})` } : undefined} />
-            <span className="t"><b>{str(lesson.title)}</b><small>From {clock(Number(cut?.start || 0))} · {str(lesson.speaker)}</small></span>
+            <span className="thumb" style={shownPoster(posterFor(str(lesson.youtubeId) || null)) ? { backgroundImage: `url(${shownPoster(posterFor(str(lesson.youtubeId)))})` } : undefined} />
+            <span className="t"><b>{talkName(lesson)}</b><small>From {clock(Number(cut?.start || 0))} · {str(lesson.speaker)}</small></span>
             <span className="start teal">Watch</span>
           </Link>
         )
@@ -374,7 +378,7 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, token: str
         const start = Number(tier.appetiserStart || 0)
         return (
           <Link key={tier.id} className="course-row" href={`${base}/course/${ref(lesson.course)}?part=${lesson.id}&t=${Math.floor(start)}`} data-testid="door-appetiser">
-            <span className="t"><b>Appetiser</b><small>{str(lesson.title)} · from {clock(start)}</small></span>
+            <span className="t"><b>Appetiser</b><small>{talkName(lesson)} · from {clock(start)}</small></span>
             <span className="start teal">Watch</span>
           </Link>
         )
@@ -385,7 +389,7 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, token: str
         if (!lesson) return null
         return (
           <Link key={point.id} className="course-row" href={`${base}/course/${ref(lesson.course)}?part=${lesson.id}&t=${Math.floor(Number(point.second || 0))}`} data-testid="door-question">
-            <span className="t"><b>{str(point.prompt)}</b><small>{str(lesson.title)}</small></span>
+            <span className="t"><b>{str(point.prompt)}</b><small>{talkName(lesson)}</small></span>
             <span className="start teal">Open</span>
           </Link>
         )
@@ -495,7 +499,7 @@ export async function GardenWorkbook({ payload, user, base, query }: Ctx) {
                         {owner && row.entryId ? (
                           <form action="/api/hearts" method="post" style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                             <Hidden fields={{ action: 'workbook-consent', entry: row.entryId, consent: row.shared ? 'no' : 'yes', next: here }} />
-                            <span className="consent-chip" style={row.shared ? undefined : { background: '#efebe3', color: 'var(--ink-2)' }} data-testid="consent-state">{row.shared ? 'Shared with your teacher' : 'Kept private'}</span>
+                            <span className={row.shared ? 'consent-chip' : 'consent-chip quiet'} data-testid="consent-state">{row.shared ? 'Shared with your teacher' : 'Kept private'}</span>
                             <button className="mini-btn" type="submit" data-testid="consent-toggle">{row.shared ? 'Make private' : 'Share with my teacher'}</button>
                           </form>
                         ) : null}

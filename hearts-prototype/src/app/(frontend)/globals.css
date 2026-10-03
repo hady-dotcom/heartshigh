@@ -93,12 +93,10 @@ button { cursor: pointer; }
 .door-links a { text-decoration: none; border-bottom: 1px solid var(--line); }
 .door-hint { font-size: 13px; color: var(--muted); margin-top: 18px; line-height: 1.5; }
 
-.brand-mark { display: inline-grid; place-items: center; border-radius: 50%; overflow: hidden; background: var(--paper); }
-.brand-mark img { width: 100%; height: 100%; object-fit: contain; }
-.brand-mark.art img { object-fit: cover; }
-.mascot { display: inline-block; border-radius: 22px; box-shadow: 0 10px 26px rgba(31, 29, 54, 0.18); }
-.brand-mark.mono { background: radial-gradient(circle at 35% 30%, #f0c46a, var(--gold-deep)); color: var(--ink); font-family: var(--serif); font-weight: 700; }
-.brand-word { font-family: var(--serif); font-weight: 600; letter-spacing: 0.02em; }
+.brand-mark { display: inline-grid; place-items: center; border-radius: 50%; overflow: hidden; background: var(--evening, #123f3a); color: var(--gold, #dca643); }
+.brand-lockup { display: grid; justify-items: center; gap: 8px; margin-bottom: 8px; }
+.splash-arch { display: flex; justify-content: center; color: var(--gold, #dca643); }
+.brand-word { margin: 0; font-family: var(--serif); font-weight: 600; letter-spacing: 0.18em; font-size: 15px; color: var(--gold, #dca643); }
 
 /* View as (spec 6A): ink on gold, sticky, pushes the layout down. */
 body:has(.viewas-bar) { --viewas-h: 46px; }

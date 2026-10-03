@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { newViewingId, POLL_MS, PopupWatcher, type PopupPoint } from '@/lib/popups'
 import { createPlayer, destroyPlayer, getPlayer, resume, STATE, UNPLAYABLE } from '@/lib/yt'
-import { GardenTree, HeartIcon, ImageIcon, LockIcon, MicIcon, PauseIcon, PlayIcon } from '../icons'
+import { HeartIcon, ImageIcon, LockIcon, MicIcon, PauseIcon, PlayIcon } from '../icons'
 
 export type PointView = {
   id: number
@@ -38,7 +38,7 @@ function clock(total: number) {
 
 const KIND_LABEL: Record<PointView['kind'], string> = { question: 'Question', task: 'Task', reflection: 'Reflection', multiple_choice: 'Multi-choice' }
 const SUBMIT: Record<PointView['kind'], string> = { question: 'answer', task: 'task', reflection: 'reflection', multiple_choice: 'choice' }
-const DOTS = ['#ef7b4a', '#1f8a78', '#7a4fa8', '#dca643', '#d94f68']
+const DOTS = ['#ef7b4a', '#1f8a78', '#7a4fa8', '#dca643', '#c47a45']
 
 const PLAYER_ID = 'lesson'
 /** The longest jump between two time readings that still counts as playing; anything longer is a seek. */
@@ -309,14 +309,16 @@ export function CoursePlayer({
   const open = views.find((point) => point.id === openId) || null
   const total = length || Math.max(60, ...views.map((point) => point.second + 30))
   const filmed = mode === 'youtube' || mode === 'vimeo' || mode === 'file'
+  const scenicPoster = !poster || /i\.ytimg\.com|img\.youtube\.com/i.test(poster)
 
   return (
     <div data-testid="player" data-mode={mode} data-popup-layout={overPlayer ? 'over' : 'strict'}>
       <div className="app-head" style={{ marginBottom: 6 }}>
         <Link className="back" href={backHref} data-testid="back">‹ {courseTitle}</Link>
       </div>
-      <div ref={card} className={`player-card${filmed ? ' yt-on' : ''}`} data-testid="player-card">
-        {poster && !filmed ? <div className="poster" style={{ backgroundImage: `url(${poster})` }} /> : null}
+      <div ref={card} className={`player-card${filmed ? ' yt-on' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
+        {!filmed ? <div className={`poster${scenicPoster ? ' scenic' : ''}`} style={scenicPoster ? undefined : { backgroundImage: `url(${poster})` }} /> : null}
+        {mode === 'loading' ? <div className="player-veil" data-testid="player-veil" aria-hidden><span className="gold-spin" /></div> : null}
         {youtubeId ? <div className="yt" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
         {vimeoId ? (
           <div className="yt" ref={filmBox} style={{ visibility: mode === 'vimeo' ? 'visible' : 'hidden' }}>
@@ -337,9 +339,9 @@ export function CoursePlayer({
         <span className="time-read" data-testid="player-time">{clock(time)}</span>
         {open && !filmed ? (
           <p className="paused-note" data-testid="paused-note">❚❚ Paused at question {open.number}</p>
-        ) : !filmed ? (
+        ) : !filmed && mode !== 'loading' ? (
           <button type="button" className="big-play" aria-label={playing ? 'Pause' : 'Play'} onClick={togglePlay} data-testid="player-play">
-            {playing ? <PauseIcon size={30} /> : <PlayIcon size={30} />}
+            {playing ? <PauseIcon size={22} /> : <PlayIcon size={22} />}
           </button>
         ) : null}
         <div className="timeline" data-testid="timeline">
@@ -384,7 +386,8 @@ export function CoursePlayer({
       <section className="garden-card" data-testid="course-garden">
         <p className="eyebrow">Course garden</p>
         <div className="garden-grid">
-          <GardenTree done={garden.done} total={garden.total} />
+          {/* TODO: swap this crop for the painterly tree stage PR #13 adds at public/garden/trees/<lane>/stage-N.webp after that branch merges. */}
+          <span className="course-tree" role="img" aria-label={`${garden.done} of ${garden.total} fruits`} />
           <div>
             <h3>What&apos;s done</h3>
             <small data-testid="fruit-count">{garden.done} of {garden.total} fruits</small>

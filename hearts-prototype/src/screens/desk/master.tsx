@@ -15,9 +15,15 @@ import { DeskFrame, masterNav } from './shell'
 
 type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string; part?: string } }
 
+function kindLabel(value: unknown) {
+  const text = str(value).replace(/[_-]+/g, ' ').trim()
+  if (!text) return ''
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
 function MasterFrame({ ctx, active, title, intro, children, testId }: { ctx: MasterCtx; active: string; title: string; intro?: ReactNode; children: ReactNode; testId?: string }) {
   return (
-    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="Hudhud" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
+    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
       {children}
     </DeskFrame>
   )
@@ -43,7 +49,7 @@ export async function MasterPortals(ctx: MasterCtx) {
                 <tr key={portal.id} data-testid="portal-card">
                   <td><b>{str(portal.organisationName) || str(portal.name)}</b></td>
                   <td style={{ fontFamily: 'ui-monospace, monospace' }}>/p/{str(portal.slug)}</td>
-                  <td>{str(portal.kind)}</td>
+                  <td>{kindLabel(portal.kind)}</td>
                   <td>{portal.closed ? <span className="badge rose">Deactivated</span> : <span className="badge teal">Active</span>}</td>
                   <td className="num">{people.filter((person) => inPortal(person, portal.id)).length}</td>
                   <td className="num">{codes.filter((code) => ref(code.portal) === portal.id).length}</td>

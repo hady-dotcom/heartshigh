@@ -3,7 +3,8 @@ import { Journey } from '@/components/journey/journey'
 import { OPENER } from '@/lib/opening-data'
 import { idOf } from '@/lib/ids'
 import type { PortalDoc, SessionUser } from '@/server/context'
-import { posterFor } from '@/server/learner'
+import { partTitle } from '@/lib/talk-title'
+import { posterFor, shownPoster } from '@/server/learner'
 import { loadOpening } from '@/server/opening'
 import { loadDoors } from '@/server/doors'
 import { doorNumberOfClause } from '@/lib/doors'
@@ -21,9 +22,9 @@ async function mainsShelf(payload: Payload) {
   const shelf: Record<string, { courseId: number; lessonId: number; title: string; poster: string | null }> = {}
   for (const lane of lanes.docs as { key?: string; starters?: { lesson?: unknown; role?: string }[] }[]) {
     const lessonId = idOf((lane.starters || []).find((row) => row.role === 'mains')?.lesson)
-    const lesson = lessons.find((row) => row.id === lessonId) as { id: number; course?: unknown; title?: string; sourceTitle?: string; youtubeId?: string } | undefined
+    const lesson = lessons.find((row) => row.id === lessonId) as { id: number; course?: unknown; title?: string; sourceTitle?: string; order?: number; youtubeId?: string; vimeoId?: string } | undefined
     const courseId = idOf(lesson?.course)
-    if (lane.key && lesson && courseId) shelf[lane.key] = { courseId, lessonId: lesson.id, title: lesson.title || lesson.sourceTitle || '', poster: posterFor(lesson.youtubeId) }
+    if (lane.key && lesson && courseId) shelf[lane.key] = { courseId, lessonId: lesson.id, title: partTitle(lesson), poster: shownPoster(posterFor(lesson.youtubeId)) }
   }
   return shelf
 }

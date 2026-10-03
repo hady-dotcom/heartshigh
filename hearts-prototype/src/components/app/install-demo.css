@@ -1,0 +1,179 @@
+/* Drawn phone. The picture teaches the tap, so the chrome stays familiar in both themes.
+   Swipes must not select the caption, the mock, or the home-screen name. */
+.install-card,
+.install-card *,
+.install-stage,
+.install-slide,
+.demo-phone,
+.demo-phone * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.install-card ::selection,
+.install-card *::selection {
+  background: transparent;
+  color: inherit;
+}
+.install-stage { overflow: hidden; touch-action: none; margin: 0 0 4px; outline: none; }
+.install-track { display: flex; transition: transform 0.35s ease; }
+.install-slide { flex: 0 0 100%; min-width: 0; }
+.install-card .install-caption { margin: 10px 0 0; text-align: center; font-size: 15px; font-weight: 650; line-height: 1.35; color: var(--ink); }
+.install-nav { display: grid; grid-template-columns: 76px 1fr 76px; align-items: center; margin-top: 2px; }
+.install-nav > button { min-height: 44px; background: none; border: 0; padding: 8px; font-weight: 700; color: var(--ink); }
+.install-nav > button:disabled { opacity: 0.35; }
+.install-dots { display: flex; justify-content: center; gap: 0; }
+.install-dots button { width: 28px; height: 44px; border: 0; padding: 0; background: transparent; display: grid; place-items: center; }
+.install-dots button::before { content: ''; width: 8px; height: 8px; border-radius: 99px; background: var(--line); }
+.install-dots button[aria-current='true']::before { width: 18px; background: var(--gold, #d4a84b); }
+.install-again { display: inline-flex; align-items: center; min-height: 44px; margin: 0 4px 6px; padding: 8px 0; background: none; border: 0; color: var(--ink-2); font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+
+.demo-phone { width: 210px; height: 372px; margin: 4px auto 0; border-radius: 32px; padding: 8px; background: #1c1c1e; box-shadow: 0 10px 24px rgba(14, 28, 26, 0.28); }
+.demo-screen { position: relative; isolation: isolate; height: 100%; border-radius: 24px; overflow: hidden; background: #f4efe4; color: #1c1c1e; }
+.demo-island { position: absolute; z-index: 3; top: 8px; left: 50%; width: 64px; height: 16px; margin-left: -32px; border-radius: 10px; background: #1c1c1e; }
+.demo-homebar { position: absolute; z-index: 4; left: 50%; bottom: 6px; width: 78px; height: 4px; margin-left: -39px; border-radius: 4px; background: rgba(28, 28, 30, 0.45); }
+.demo-page { position: absolute; inset: 0; }
+.demo-page.is-dim .demo-site,
+.demo-page.is-dim .demo-address { filter: brightness(0.55); }
+.demo-address { position: absolute; top: 32px; left: 16px; right: 16px; height: 26px; border-radius: 13px; background: #fff; color: #3a3a3c; font-size: 12px; font-weight: 650; display: grid; place-items: center; }
+.demo-site { position: absolute; z-index: 1; top: 70px; left: 0; right: 0; display: grid; justify-items: center; }
+.demo-site.android { top: 78px; }
+.demo-site.is-dim { opacity: 0.45; }
+.demo-badge { width: 54px; height: 54px; border-radius: 14px; background: #0F3B3A; color: #D4A84B; display: grid; place-items: center; }
+.demo-badge.big { width: 74px; height: 74px; border-radius: 18px; }
+.demo-arch { width: 70%; height: 70%; }
+.demo-toolbar { position: absolute; left: 0; right: 0; bottom: 16px; height: 44px; display: flex; align-items: center; justify-content: space-around; background: rgba(255, 255, 255, 0.94); border-top: 1px solid rgba(0, 0, 0, 0.08); }
+.demo-tool { position: relative; width: 28px; height: 28px; display: grid; place-items: center; color: #007aff; font-size: 22px; font-weight: 500; }
+.demo-share svg { width: 22px; height: 22px; }
+.demo-book { border: 1.6px solid #007aff; border-radius: 3px; width: 16px; height: 18px; }
+.demo-tabs { border: 1.6px solid #007aff; border-radius: 4px; width: 16px; height: 16px; }
+.demo-finger { position: absolute; z-index: 6; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffd7bf, #e0a37a 62%, #c4845c); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25); opacity: 0; pointer-events: none; }
+.demo-share .demo-finger,
+.demo-add .demo-finger,
+.demo-dots .demo-finger { left: 50%; top: 50%; }
+.demo-target { position: relative; }
+.demo-target .demo-finger { left: 46%; top: 50%; }
+.demo-sheet { position: absolute; z-index: 5; left: 0; right: 0; bottom: 0; height: 74%; background: #f2f2f7; border-radius: 16px 16px 0 0; padding: 8px 10px 0; transform: translateY(110%); }
+.demo-grab { display: block; width: 36px; height: 4px; border-radius: 4px; background: #c7c7cc; margin: 2px auto 8px; }
+.demo-people { display: flex; gap: 8px; justify-content: center; margin-bottom: 8px; }
+.demo-people i { width: 28px; height: 28px; border-radius: 50%; background: #d1d1d6; display: block; }
+.demo-row { background: #fff; border-radius: 10px; margin-bottom: 6px; min-height: 32px; display: flex; align-items: center; padding: 0 10px; font-size: 12px; font-weight: 650; color: #1c1c1e; }
+.demo-addbar { position: absolute; z-index: 2; top: 0; left: 0; right: 0; height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0; color: #007aff; font-size: 14px; font-weight: 600; background: #f4efe4; }
+.demo-add { position: relative; font-size: 16px; border-radius: 8px; padding: 4px 8px; }
+.demo-preview { position: absolute; inset: 64px 16px auto; display: grid; justify-items: center; gap: 6px; text-align: center; }
+.demo-preview strong { font-size: 15px; }
+.demo-preview small { color: #6e6e73; font-size: 12px; }
+.demo-homescreen { position: absolute; inset: 0; background: linear-gradient(180deg, #1a4a52, #0e2a2b); display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 58px; align-content: start; gap: 14px 8px; padding: 36px 14px 0; }
+.demo-blob { width: 36px; height: 36px; border-radius: 10px; justify-self: center; }
+.demo-blob.sage { background: #8fa36a; }
+.demo-blob.gold { background: #d4a84b; }
+.demo-blob.mist { background: #d7cbb8; }
+.demo-landing { display: grid; justify-items: center; gap: 3px; }
+.demo-landing .demo-badge { width: 40px; height: 40px; border-radius: 12px; box-shadow: 0 0 0 2px #D4A84B; }
+.demo-landing small { color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; line-height: 1.1; text-transform: none; white-space: nowrap; }
+.demo-homescreen.is-round .demo-blob,
+.demo-homescreen.is-round .demo-landing .demo-badge { border-radius: 50%; }
+.demo-dock { position: absolute; left: 10px; right: 10px; bottom: 16px; height: 48px; border-radius: 16px; background: rgba(255, 255, 255, 0.16); display: flex; align-items: center; justify-content: space-around; grid-column: 1 / -1; }
+.demo-dock i { width: 28px; height: 28px; border-radius: 8px; background: rgba(255, 255, 255, 0.55); display: block; }
+.demo-android-top { position: absolute; z-index: 2; top: 0; left: 0; right: 0; height: 52px; background: #fff; display: flex; align-items: center; gap: 8px; padding: 10px 8px 0 10px; }
+.demo-omni { flex: 1; height: 28px; border-radius: 14px; background: #f1f3f4; color: #3c4043; font-size: 12px; font-weight: 650; display: grid; place-items: center; }
+.demo-dots { position: relative; width: 28px; height: 28px; display: grid; justify-items: center; align-content: center; gap: 2px; }
+.demo-dots i { width: 4px; height: 4px; border-radius: 50%; background: #3c4043; display: block; }
+.demo-menu { position: absolute; z-index: 30; top: 48px; right: 6px; width: 78%; background: #fff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18); padding: 6px; transform-origin: top right; }
+
+/* Playing. Each clip loops while its slide is the one on screen. */
+.demo-phone[data-playing='yes'][data-scene='ios-share'] .demo-finger { animation: finger-on 3.6s ease-in-out infinite; }
+.demo-phone[data-playing='yes'][data-scene='ios-share'] .demo-share { animation: share-flash 3.6s ease-in-out infinite; }
+.demo-phone[data-playing='yes'][data-scene='ios-sheet'] .demo-sheet { animation: sheet-up 3.8s ease infinite; }
+.demo-phone[data-playing='yes'][data-scene='ios-sheet'] .demo-finger { animation: finger-late 3.8s ease-in-out infinite; }
+.demo-phone[data-playing='yes'][data-scene='ios-sheet'] .demo-target { animation: row-flash 3.8s ease-in-out infinite; }
+.demo-phone[data-playing='yes'][data-scene='ios-add'] .demo-finger { animation: finger-up 3.4s ease-in-out infinite; }
+.demo-phone[data-playing='yes'][data-scene='ios-home'] .demo-landing,
+.demo-phone[data-playing='yes'][data-scene='android-home'] .demo-landing { animation: icon-land 3.6s ease infinite; }
+.demo-phone[data-playing='yes'][data-scene='android-menu'] .demo-finger { animation: finger-up 3.6s ease-in-out infinite; }
+.demo-phone[data-playing='yes'][data-scene='android-menu'] .demo-dots { animation: dots-flash 3.6s ease-in-out infinite; }
+.demo-phone[data-playing='yes'][data-scene='android-install'] .demo-menu { animation: menu-in 3.8s ease infinite; }
+.demo-phone[data-playing='yes'][data-scene='android-install'] .demo-finger { animation: finger-late 3.8s ease-in-out infinite; }
+.demo-phone[data-playing='yes'][data-scene='android-install'] .demo-target { animation: row-flash 3.8s ease-in-out infinite; }
+
+@keyframes finger-on {
+  0% { transform: translate(-8px, -72px) scale(1); opacity: 0; }
+  16% { opacity: 1; }
+  42% { transform: translate(0, 0) scale(1); }
+  52% { transform: translate(0, 2px) scale(0.86); }
+  64% { transform: translate(0, 0) scale(1); opacity: 1; }
+  88% { opacity: 1; }
+  100% { transform: translate(0, 0) scale(1); opacity: 0; }
+}
+@keyframes finger-up {
+  0% { transform: translate(0, 78px) scale(1); opacity: 0; }
+  16% { opacity: 1; }
+  42% { transform: translate(0, 0) scale(1); }
+  52% { transform: translate(0, 2px) scale(0.86); }
+  64% { transform: translate(0, 0) scale(1); opacity: 1; }
+  88% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes finger-late {
+  0%, 26% { transform: translate(0, -64px) scale(1); opacity: 0; }
+  38% { opacity: 1; }
+  56% { transform: translate(0, 0) scale(1); }
+  64% { transform: translate(0, 2px) scale(0.86); }
+  76% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes share-flash {
+  0%, 40% { background: transparent; color: #007aff; border-radius: 8px; }
+  50%, 74% { background: #007aff; color: #fff; border-radius: 8px; }
+  100% { background: transparent; color: #007aff; }
+}
+@keyframes sheet-up {
+  0% { transform: translateY(110%); }
+  28% { transform: translateY(0); }
+  88% { transform: translateY(0); }
+  100% { transform: translateY(110%); }
+}
+@keyframes row-flash {
+  0%, 50% { background: #fff; }
+  62%, 84% { background: #d6ebff; }
+  100% { background: #fff; }
+}
+@keyframes icon-land {
+  0% { transform: translateY(-72px) scale(0.4); opacity: 0; }
+  34% { transform: translateY(8px) scale(1.08); opacity: 1; }
+  48% { transform: translateY(0) scale(1); }
+  88% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-12px) scale(0.85); opacity: 0; }
+}
+@keyframes dots-flash {
+  0%, 40% { background: transparent; border-radius: 14px; }
+  50%, 74% { background: #e8f0fe; border-radius: 14px; }
+  100% { background: transparent; }
+}
+@keyframes menu-in {
+  0% { transform: translateY(-10px) scale(0.96); opacity: 0; }
+  26% { transform: none; opacity: 1; }
+  88% { transform: none; opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .install-track { transition: none; }
+  .demo-phone[data-playing='yes'] .demo-finger,
+  .demo-phone[data-playing='yes'] .demo-share,
+  .demo-phone[data-playing='yes'] .demo-sheet,
+  .demo-phone[data-playing='yes'] .demo-target,
+  .demo-phone[data-playing='yes'] .demo-add,
+  .demo-phone[data-playing='yes'] .demo-landing,
+  .demo-phone[data-playing='yes'] .demo-dots,
+  .demo-phone[data-playing='yes'] .demo-menu { animation: none; }
+  .demo-phone[data-playing='yes'] .demo-finger { opacity: 1; transform: none; }
+  .demo-phone[data-playing='yes'][data-scene='ios-share'] .demo-share { background: #007aff; color: #fff; border-radius: 8px; }
+  .demo-phone[data-playing='yes'][data-scene='ios-sheet'] .demo-sheet,
+  .demo-phone[data-playing='yes'][data-scene='android-install'] .demo-menu { transform: none; opacity: 1; }
+  .demo-phone[data-playing='yes'] .demo-target { background: #d6ebff; }
+  .demo-phone[data-playing='yes'][data-scene='ios-add'] .demo-add { color: #007aff; background: transparent; }
+  .demo-phone[data-playing='yes'][data-scene='android-menu'] .demo-dots { background: #e8f0fe; border-radius: 14px; }
+  .demo-phone[data-playing='yes'] .demo-landing { transform: none; opacity: 1; }
+}

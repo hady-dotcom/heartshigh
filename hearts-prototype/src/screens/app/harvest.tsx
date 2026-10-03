@@ -11,6 +11,7 @@ import { type Ctx, type Row, ref, rows, str, unreadCount } from '../common'
 import { Frame } from './garden'
 import { loadDoors } from '@/server/doors'
 import { doorByNumber, doorCode, doorNumberOfClause, type Door } from '@/lib/doors'
+import { partTitle } from '@/lib/talk-title'
 import { resourcesFor, sampleHarvest } from '@/server/harvest'
 
 export const REPLAY_LEAD_SECONDS = 5
@@ -79,6 +80,9 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
     doorsOfLessons(payload, lessonIds, doors),
     resourcesFor(payload, lessonIds),
   ])
+  const courseIds = [...new Set(lessons.map((lesson) => ref(lesson.course)).filter((id): id is number => Boolean(id)))]
+  const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }) : []
+  const talkName = (lesson: Row | undefined) => lesson ? partTitle(lesson, str(courses.find((course) => course.id === ref(lesson.course))?.title)) : 'A talk'
   const doorOf = (entry: Row) => Number(entry.door) || doorOfLesson.get(ref(entry.lesson) || 0) || null
   const speakerOf = (entry: Row) => str(entry.speaker) || str(lessons.find((row) => row.id === ref(entry.lesson))?.speaker)
   const counts = { all: entries.length, quran: entries.filter((row) => row.kind === 'quran').length, hadith: entries.filter((row) => row.kind === 'hadith').length, line: entries.filter((row) => row.kind === 'line').length }
@@ -105,7 +109,7 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
     const lessonId = ref(entry.lesson)
     const lesson = lessons.find((row) => row.id === lessonId)
     let key = `talk-${lessonId || 0}`
-    let title = lesson ? str(lesson.title) : 'A talk'
+    let title = talkName(lesson)
     let order = 0
     if (group === 'door') {
       const door = doorByNumber(doorOf(entry), doors)
@@ -135,7 +139,7 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
           {drawn.map((row) => (
             <p key={row.id} data-testid="drawn-speaker" style={{ margin: '6px 0' }}>
               <Link href={`${base}/speaker/${str(row.speakerSlug)}`}><b>{str(row.speaker)}</b></Link>
-              <small className="muted"> · stayed {Number(row.linger) || 0} · learned more {Number(row.learnMore) || 0}</small>
+              <span className="drawn-meta"> · stayed {Number(row.linger) || 0} · learned more {Number(row.learnMore) || 0}</span>
             </p>
           ))}
         </section>
@@ -186,7 +190,7 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
                 <HarvestCard
                   key={entry.id}
                   entry={entry}
-                  lesson={lesson}
+                  talkTitle={talkName(lesson)}
                   speaker={speakerOf(entry)}
                   door={doorByNumber(doorOf(entry), doors)}
                   commentary={commentary}
@@ -214,9 +218,9 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
   )
 }
 
-function HarvestCard({ entry, lesson, speaker, door, commentary, context, fresh, replay, href, open, panel }: {
+function HarvestCard({ entry, talkTitle, speaker, door, commentary, context, fresh, replay, href, open, panel }: {
   entry: Row
-  lesson?: Row
+  talkTitle: string
   speaker: string
   door: Door | null
   commentary: ScholarCitation | null
@@ -238,7 +242,7 @@ function HarvestCard({ entry, lesson, speaker, door, commentary, context, fresh,
       <blockquote data-testid="harvest-quote">{str(entry.text)}</blockquote>
       <small className="harvest-when">
         {replay ? <span className="play" aria-hidden="true">▶</span> : null}
-        {lesson ? str(lesson.title) : 'The talk'}
+        {talkTitle}
         {speaker ? ` · ${speaker}` : ''}
         {entry.timestamp ? ` · at ${str(entry.timestamp)}` : ''}
       </small>
