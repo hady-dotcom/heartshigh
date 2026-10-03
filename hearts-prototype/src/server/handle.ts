@@ -13,7 +13,9 @@ import { slugProblem } from '@/lib/text-safety'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
 import { ingestYoutubeUrl } from '@/lib/youtube'
 import { now } from '@/lib/clock'
-import { startingClause } from '@/lib/placing'
+import { normaliseOption, startingClause } from '@/lib/placing'
+import { doorOfClause } from '@/lib/doors'
+import { loadDoors } from './doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { killListHits } from '@/lib/opening-data'
 import { tierTimings } from '@/lib/tiers'
@@ -1121,14 +1123,16 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     for (const [index, question] of questions.docs.entries()) {
       await payload.create({ collection: 'placing-answers', overrideAccess: true, data: { user: user.id, question: question.id, choice: answers[index].choice, portal: portal || undefined } })
     }
-    const starting = startingClause(answers)
+    const doors = await loadDoors(payload)
+    const starting = startingClause(answers, doors)
+    const startDoor = doorOfClause(starting, doors)
     await payload.update({
       collection: 'users',
       id: user.id,
       overrideAccess: true,
       data: { onboarded: true, startingClause: starting },
     })
-    return redirectTo(req, text(form, 'next') || '/', undefined, `Thank you. We have chosen a first sitting for you, starting from clause ${starting}.`)
+    return redirectTo(req, text(form, 'next') || '/', undefined, startDoor ? `Thank you. We have chosen a first sitting for you, starting from door ${startDoor.number}: ${startDoor.title}.` : 'Thank you. We have chosen a first sitting for you.')
   }
 
   if (action === 'schedule') {
@@ -1416,7 +1420,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   if (action === 'placing-question') {
     if (user.role !== 'master' && user.role !== 'portal-admin') return redirectTo(req, '/', 'You cannot edit the questions.')
     const prompt = text(form, 'prompt')
-    const options = text(form, 'options').split('\n').map((line) => line.trim()).filter(Boolean)
+    const placingDoors = await loadDoors(payload)
+    const options = text(form, 'options').split('\n').map((line) => normaliseOption(line.trim(), placingDoors)).filter(Boolean)
     if (!prompt || options.length < 2) return redirectTo(req, text(form, 'next') || '/', 'A question needs words and at least two answers.')
     let placingPortal: number | null = null
     if (user.role !== 'master' || text(form, 'portalSlug')) {

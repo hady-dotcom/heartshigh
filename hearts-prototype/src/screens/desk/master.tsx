@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { loadDoors } from '@/server/doors'
+import { doorLabel, doorOfClause } from '@/lib/doors'
 import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 import type { Payload } from 'payload'
@@ -249,15 +251,19 @@ export async function MasterPacks(ctx: MasterCtx) {
 export async function MasterQuestions(ctx: MasterCtx) {
   const { payload } = ctx
   const [questions, portals] = await Promise.all([rows(payload, 'placing-questions', undefined, { sort: 'order', limit: 60 }), rows(payload, 'portals')])
-  const clauses = await rows(payload, 'clauses', undefined, { sort: 'number', limit: 50 })
-  const fragment = (n: number | null) => (n ? `${n}. ${str(clauses.find((row) => Number(row.number) === n)?.fragment)}` : 'No clause')
+  const [clauses, doors] = await Promise.all([rows(payload, 'clauses', undefined, { sort: 'number', limit: 50 }), loadDoors(payload)])
+  const fragment = (n: number | null) => {
+    const door = doorOfClause(n, doors)
+    if (!n || !door) return 'No door'
+    return <><span data-testid="placing-door">{doorLabel(door)}</span> <span style={{ opacity: 0.75 }}>(clause {n}. {str(clauses.find((row) => Number(row.number) === n)?.fragment)})</span></>
+  }
   return (
-    <MasterFrame ctx={ctx} active="questions" title="Placing questions" intro="Asked once when someone joins, so their first talk is a gentle place to start. Each answer points to a clause of Hadith Jibril; the clause with most answers chooses the first course." testId="master-questions">
+    <MasterFrame ctx={ctx} active="questions" title="Placing questions" intro="Asked once when someone joins, so their first talk is a gentle place to start. Each answer points to a door of Hadith Jibril; the door with most answers chooses the first course." testId="master-questions">
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.7fr) minmax(320px, 1fr)', alignItems: 'start' }}>
         <section className="panel">
           <div className="table-wrap">
             <table className="data">
-              <thead><tr><th className="num">Order</th><th>Question</th><th>Answers and the clause each points to</th><th>Shown in</th></tr></thead>
+              <thead><tr><th className="num">Order</th><th>Question</th><th>Answers and the door each points to</th><th>Shown in</th></tr></thead>
               <tbody>
                 {questions.map((question) => (
                   <tr key={question.id} data-testid="placing-row">
@@ -272,7 +278,7 @@ export async function MasterQuestions(ctx: MasterCtx) {
           </div>
         </section>
         <section className="panel">
-          <header><div><h2>New question</h2><p>Put the clause number after a bar, for example: With prayer | 15</p></div></header>
+          <header><div><h2>New question</h2><p>Put the door after a bar, for example: With prayer | W5. A clause number still works: With prayer | 15</p></div></header>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'placing-question', next: '/master/questions' }} />
             <label className="stack">Question<textarea data-testid="placing-prompt" name="prompt" required /></label>

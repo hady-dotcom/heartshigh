@@ -5,10 +5,11 @@ import { youtubeIdFromUrl } from './extractor'
 import { DRAFT_NOTE, horsCapOf, horsVerdict, normaliseSpans, saidInTalk, tierProblem, timingProblems, type AppetiserSpan } from './tiers'
 import { authorTextProblems, markupProblems } from './opening-data'
 import { hasMarkup, httpsHref } from './text-safety'
+import { DOORS, clauseForDoor, doorCode, doorNumberOfClause, parseDoor, type Door } from './doors'
 import { CIRCLE_COLUMNS, CIRCLE_NOTE, CIRCLE_TAB, circleSheetValues, readCircleRow, type CircleColumn } from './circle-sheet'
 
 export const TALK_COLUMNS = [
-  'talk_key', 'youtube_id', 'title', 'speaker', 'channel', 'course', 'part', 'order', 'lane', 'jibril_clause', 'ghunya_seat',
+  'talk_key', 'youtube_id', 'title', 'speaker', 'channel', 'course', 'part', 'order', 'lane', 'jibril_door', 'jibril_clause', 'ghunya_seat',
   'hors_in', 'hors_out', 'app_in', 'app_out', 'hook_in', 'hook_out', 'turn_in', 'turn_out', 'land_in', 'land_out',
   'hook_text', 'turn_text', 'land_text', 'status', 'notes',
   'provider', 'vimeo_id', 'media_id', 'duration', 'transcript', 'pack',
@@ -24,7 +25,7 @@ export const QUESTION_COLUMNS = [
 export const RESOURCE_COLUMNS = ['talk_key', 'label', 'url', 'kind', 'status', 'body', 'media_id'] as const
 
 export const TALK_NOTE =
-  "HEARTS talks. One row is one talk. talk_key is how a later import finds the same talk, so keep it stable. Leave a cell blank to leave that field as it is. Times can be seconds (90), minutes and seconds (1:30) or hours (1:02:03). status is draft, checked or live. rejected keeps a talk hidden from learners. delete removes the talk. youtube_id is the 11-character YouTube id. provider is youtube, vimeo or file. A Vimeo talk puts the number in vimeo_id. An uploaded film puts the media id in media_id. duration is the length in seconds. transcript is the speaker's words and is only for captions that fit in the cell (under 30,000 characters); a longer transcript is a Resources row with kind transcript and a media_id. hook_text, turn_text, land_text and transcript are the speaker's words: the kill list is not applied to them. notes is our own writing and may contain plain text such as conf=high. A hors d'oeuvre is usually 15 to 20 seconds. Up to the cap on the master desk (45 seconds unless that cap is changed) is allowed and only warned about. Shorter than 15, or longer than the cap, is refused. app_in and app_out are one continuous appetiser. hook_in and hook_out, turn_in and turn_out, land_in and land_out are up to three separate cuts. The player plays them in that order, and their lengths together stay within about 3 minutes (195 seconds). pack is optional: the name or number of a course pack that already exists, and the talk's course joins it, so people who join with that pack's codes get the course. A portal admin can only name their own portal's packs. A blank pack leaves packs as they are, and the export leaves it blank."
+  "HEARTS talks. One row is one talk. talk_key is how a later import finds the same talk, so keep it stable. Leave a cell blank to leave that field as it is. Times can be seconds (90), minutes and seconds (1:30) or hours (1:02:03). status is draft, checked or live. rejected keeps a talk hidden from learners. delete removes the talk. youtube_id is the 11-character YouTube id. provider is youtube, vimeo or file. A Vimeo talk puts the number in vimeo_id. An uploaded film puts the media id in media_id. duration is the length in seconds. transcript is the speaker's words and is only for captions that fit in the cell (under 30,000 characters); a longer transcript is a Resources row with kind transcript and a media_id. hook_text, turn_text, land_text and transcript are the speaker's words: the kill list is not applied to them. notes is our own writing and may contain plain text such as conf=high. A hors d'oeuvre is usually 15 to 20 seconds. Up to the cap on the master desk (45 seconds unless that cap is changed) is allowed and only warned about. Shorter than 15, or longer than the cap, is refused. app_in and app_out are one continuous appetiser. hook_in and hook_out, turn_in and turn_out, land_in and land_out are up to three separate cuts. The player plays them in that order, and their lengths together stay within about 3 minutes (195 seconds). pack is optional: the name or number of a course pack that already exists, and the talk's course joins it, so people who join with that pack's codes get the course. A portal admin can only name their own portal's packs. A blank pack leaves packs as they are, and the export leaves it blank. jibril_door is the door learners see, W1 to W20 (a bare 1 to 20 also works); jibril_clause is the clause underneath, 1 to 41. The export fills both. Fill either one: a door alone keeps the talk's clause when it already sits in that door, and otherwise takes the door's first clause. W3 in the jibril_clause column is read as a door too. If both are filled, the clause must sit in that door."
 
 export const QUESTION_NOTE =
   'HEARTS questions. Name the talk with talk_key or youtube_id. The export writes question_id, and an import with that id updates the same question. A row with no question_id is matched to a question on the same talk with the same time and the same text, so importing the same file again does not add a copy. Leave question_id blank only when the question is new. type is free text, multiple choice, reflection or task. status is draft or approved (approved is what learners meet). source is ai or human. A blank cell leaves that field as it is. delete removes the question. Times use the same forms as the Talks tab and must fall inside the talk. type task is an activation task: due_days is how many days the learner has (1 to 366), evidence is none, note or photo, and show_imam is yes when the imam should see it. place is popup or workbook. A workbook row is a reflection kept in the workbook rather than a pop-up in the film. Questions, choices and notes are our own writing. Notes may contain plain text such as conf=high.'
@@ -40,7 +41,7 @@ const HEADER_ALIASES: Record<string, string> = {
   question_id: 'question_id', questionid: 'question_id', type: 'type', time: 'time', timestamp: 'time', text: 'text', question: 'text', question_text: 'text',
   correct: 'correct_choice', correct_choice: 'correct_choice', source: 'source', status: 'status', notes: 'notes', note: 'notes',
   title: 'title', speaker: 'speaker', channel: 'channel', course: 'course', part: 'part', order: 'order', lane: 'lane',
-  jibril_clause: 'jibril_clause', clause: 'jibril_clause', ghunya_seat: 'ghunya_seat', seat: 'ghunya_seat',
+  jibril_clause: 'jibril_clause', clause: 'jibril_clause', jibril_door: 'jibril_door', door: 'jibril_door', working_door: 'jibril_door', ghunya_seat: 'ghunya_seat', seat: 'ghunya_seat',
   hors_in: 'hors_in', hors_out: 'hors_out', app_in: 'app_in', app_out: 'app_out',
   hook_in: 'hook_in', hook_out: 'hook_out', turn_in: 'turn_in', turn_out: 'turn_out', land_in: 'land_in', land_out: 'land_out',
   hook: 'hook_text', hook_text: 'hook_text', turn: 'turn_text', turn_text: 'turn_text', land: 'land_text', land_text: 'land_text',
@@ -112,7 +113,7 @@ export type SeatRow = { id: number; clause: number; position: number }
 export type CircleRow = { id: number; point: number; lesson: number; portal: number | null; name: string; body: string; tone: string; length: string; origin: string; enabled: boolean }
 export type PackRow = { id: number; title: string; owner: string; portal: number | null; courses: number[] }
 /** packPortal is set on a portal desk, which may only add courses to that portal's own packs. */
-export type SheetCatalogue = { scopeKind: 'library' | 'portal' | 'course'; portalId: number | null; courseId: number | null; courses: CourseRow[]; units: UnitRow[]; lessons: LessonRow[]; tiers: TierRow[]; points: PointRow[]; resources: ResourceRow[]; keys: KeyRow[]; cuts: CutRow[]; seats: SeatRow[]; horsMaxSeconds?: number; circle?: CircleRow[]; circlePortal?: number | null; packs?: PackRow[]; packPortal?: number | null }
+export type SheetCatalogue = { scopeKind: 'library' | 'portal' | 'course'; portalId: number | null; courseId: number | null; courses: CourseRow[]; units: UnitRow[]; lessons: LessonRow[]; tiers: TierRow[]; points: PointRow[]; resources: ResourceRow[]; keys: KeyRow[]; cuts: CutRow[]; seats: SeatRow[]; doors?: Door[]; horsMaxSeconds?: number; circle?: CircleRow[]; circlePortal?: number | null; packs?: PackRow[]; packPortal?: number | null }
 
 type Cell = { text: string; raw: unknown; numFmt?: string }
 type InputRow = { row: number; cells: Record<string, Cell> }
@@ -380,6 +381,11 @@ function talkStatusOf(lesson: LessonRow, catalogue: SheetCatalogue) {
   return null
 }
 
+function doorCodeOf(clause: number, doors: Door[] = DOORS) {
+  const door = doorNumberOfClause(clause, doors)
+  return door ? doorCode(door) : null
+}
+
 function seatLabel(cut: CutRow | null) {
   if (!cut?.seatClause || !cut.seatPosition) return null
   return `${cut.seatClause}.${cut.seatPosition}`
@@ -402,6 +408,7 @@ export function talkSheetValues(lesson: LessonRow, catalogue: SheetCatalogue): R
     part: unit?.title || null,
     order: numOrNull(lesson.order),
     lane: lesson.starterLane || null,
+    jibril_door: cut?.bestClause ? doorCodeOf(cut.bestClause, catalogue.doors) : null,
     jibril_clause: cut?.bestClause ? cut.bestClause : null,
     ghunya_seat: seatLabel(cut),
     hors_in: tier ? numOrNull(tier.horsStart) : null,
@@ -736,10 +743,28 @@ function planTalks(working: Working, rows: InputRow[]) {
       order = parseOrder(textOf(row, 'order'))
       if (order == null || order < 0) fail('order', 'Order is a whole number, starting at 1 for the first talk in the part.')
     }
+    const doors = working.catalogue.doors || DOORS
     let clause: number | null = null
+    let door: number | null = null
     if (present(row, 'jibril_clause')) {
-      clause = parseClause(textOf(row, 'jibril_clause'))
-      if (clause == null) fail('jibril_clause', 'A Jibril clause is a number from 1 to 41.')
+      const raw = textOf(row, 'jibril_clause')
+      if (/^\s*w/i.test(raw)) {
+        door = parseDoor(raw, doors)
+        if (door == null) fail('jibril_clause', 'A door in the clause column is W1 to W20.')
+      } else {
+        clause = parseClause(raw)
+        if (clause == null) fail('jibril_clause', 'A Jibril clause is a number from 1 to 41, or write a door as W1 to W20.')
+      }
+    }
+    if (present(row, 'jibril_door')) {
+      const named = parseDoor(textOf(row, 'jibril_door'), doors)
+      if (named == null) fail('jibril_door', 'A Jibril door is W1 to W20, or a number from 1 to 20.')
+      else if (door != null && door !== named) fail('jibril_door', `The clause column names door ${doorCode(door)} and this column names ${doorCode(named)}. Keep one.`)
+      else door = named
+    }
+    if (clause != null && door != null) {
+      const holds = doorNumberOfClause(clause, doors)
+      if (holds !== door) fail('jibril_door', `Clause ${clause} is in door ${holds ? doorCode(holds) : 'none'}, not ${doorCode(door)}. Change one of them, or clear jibril_clause to place the talk by its door.`)
     }
     const times: Record<string, number> = {}
     const rowWarnings: SheetIssue[] = []
@@ -823,7 +848,7 @@ function planTalks(working: Working, rows: InputRow[]) {
       if (textOf(row, 'channel') || status === 'live' || !derived || talkKey !== derived) {
         working.ops.push({ op: 'key.upsert', lesson: { temp }, talkKey, channel: textOf(row, 'channel') || null, sheetStatus: status === 'live' ? 'live' : null })
       }
-      placeCut(working, null, { temp }, course.ref, clause, textOf(row, 'ghunya_seat'), title, row, problems)
+      placeCut(working, null, { temp }, course.ref, clause, door, textOf(row, 'ghunya_seat'), title, row, problems)
       if (problems.length) {
         rollback(working, mark)
         working.errors.push(...problems)
@@ -885,7 +910,7 @@ function planTalks(working: Working, rows: InputRow[]) {
       ])) fail(message.includes('appetiser') ? (message.includes('ends') ? 'app_out' : 'app_in') : message.includes('ends') ? 'hors_out' : 'hors_in', message)
     }
     const beforeCuts = working.ops.length
-    placeCut(working, lesson, null, courseMove || { id: lesson.course }, clause, present(row, 'ghunya_seat') ? textOf(row, 'ghunya_seat') : '', String(lessonPatch.title || lesson.title), row, problems)
+    placeCut(working, lesson, null, courseMove || { id: lesson.course }, clause, door, present(row, 'ghunya_seat') ? textOf(row, 'ghunya_seat') : '', String(lessonPatch.title || lesson.title), row, problems)
     const cutWritten = working.ops.length > beforeCuts
     const keyOp = keyPatch(working, lesson, talkKey, present(row, 'channel') ? textOf(row, 'channel') : null, status)
     if (problems.length) {
@@ -908,7 +933,7 @@ function planTalks(working: Working, rows: InputRow[]) {
       working.ops.push(keyOp)
       detail.push('the sheet key')
     }
-    if (cutWritten) detail.push('the clause')
+    if (cutWritten) detail.push('the door and clause')
     working.warnings.push(...rowWarnings)
     const packCourse = courseMove || { id: lesson.course }
     const packTitle = present(row, 'course') ? textOf(row, 'course').trim() : working.catalogue.courses.find((item) => item.id === lesson.course)?.title || lesson.title
@@ -1043,9 +1068,16 @@ function keyPatch(working: Working, lesson: LessonRow, talkKey: string, channel:
   }
 }
 
-function placeCut(working: Working, lesson: LessonRow | null, temp: { temp: string } | null, course: Ref, clause: number | null, seatText: string, title: string, row: InputRow, problems: SheetIssue[]) {
-  if (clause == null && !seatText) return
+function placeCut(working: Working, lesson: LessonRow | null, temp: { temp: string } | null, course: Ref, clause: number | null, door: number | null, seatText: string, title: string, row: InputRow, problems: SheetIssue[]) {
+  if (clause == null && door == null && !seatText) return
   const fail = (column: string, message: string) => problems.push({ tab: 'Talks', row: row.row, column, message })
+  const cut = lesson ? carrier(working.catalogue.cuts, lesson.id) : null
+  if (clause == null && door != null) {
+    // A door alone keeps the clause already held when it sits in that door, or the clause a seat names.
+    const doors = working.catalogue.doors || DOORS
+    const seatClause = Number(seatText.trim().match(/^(\d+)\./)?.[1] || 0)
+    clause = seatClause && doorNumberOfClause(seatClause, doors) === door ? seatClause : clauseForDoor(door, cut?.bestClause ?? null, doors)
+  }
   let seatId: number | null = null
   let seatClause: number | null = null
   if (seatText) {
@@ -1063,8 +1095,7 @@ function placeCut(working: Working, lesson: LessonRow | null, temp: { temp: stri
       }
     }
   }
-  if (problems.some((issue) => issue.row === row.row && (issue.column === 'ghunya_seat' || issue.column === 'jibril_clause'))) return
-  const cut = lesson ? carrier(working.catalogue.cuts, lesson.id) : null
+  if (problems.some((issue) => issue.row === row.row && (issue.column === 'ghunya_seat' || issue.column === 'jibril_clause' || issue.column === 'jibril_door'))) return
   if (!cut) {
     if (!temp && !lesson) return
     const lessonRef: Ref = temp || { id: lesson!.id }

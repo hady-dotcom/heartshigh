@@ -1,4 +1,5 @@
 // Loads the library, applies a master-sheet plan, and puts the last import back.
+import { loadDoors } from './doors'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { APIError, type Payload, type Where } from 'payload'
@@ -78,7 +79,7 @@ function num(value: unknown) {
 }
 
 export async function loadCatalogue(payload: Payload, scope: SheetScope): Promise<SheetCatalogue> {
-  const [courses, units, lessons, tiers, points, resources, keys, cuts, seats, clauses, circle, packs] = await Promise.all([
+  const [courses, units, lessons, tiers, points, resources, keys, cuts, seats, clauses, circle, packs, doors] = await Promise.all([
     allDocs(payload, 'courses'),
     allDocs(payload, 'units'),
     allDocs(payload, 'lessons'),
@@ -91,6 +92,7 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
     allDocs(payload, 'clauses'),
     allDocs(payload, 'circle-answers', scope.desk === 'portal' ? { or: [{ portal: { exists: false } }, { portal: { equals: scope.portalId } }] } : undefined),
     allDocs(payload, 'packs'),
+    loadDoors(payload),
   ])
   const clauseNumber = new Map(clauses.map((clause) => [clause.id, Number(clause.number)]))
   const inScope = (course: Doc) => {
@@ -153,7 +155,7 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
     }]
   })
   return {
-    scopeKind: scope.kind, portalId: scope.portalId, courseId: scope.courseId, courses: courseRows, units: unitRows, lessons: lessonRows, tiers: tierRows, points: pointRows, resources: resourceRows, keys: keyRows, cuts: cutRows, seats: seatRows,
+    scopeKind: scope.kind, portalId: scope.portalId, courseId: scope.courseId, courses: courseRows, units: unitRows, lessons: lessonRows, tiers: tierRows, points: pointRows, resources: resourceRows, keys: keyRows, cuts: cutRows, seats: seatRows, doors,
     circle: circleRows, circlePortal: scope.desk === 'portal' ? scope.portalId : null,
     packs: packs.map((pack): PackRow => ({
       id: pack.id, title: String(pack.title || ''), owner: String(pack.owner || 'master'), portal: num(pack.portal),

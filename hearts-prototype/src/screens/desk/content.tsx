@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { loadDoors } from '@/server/doors'
+import { doorCode, doorLabel, doorOfClause } from '@/lib/doors'
 import { notFound, redirect } from 'next/navigation'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
@@ -115,13 +117,14 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
   ])
   const lesson = lessons.find((row) => row.id === Number(part)) || lessons[0]
   const here = `${editorHref}${lesson ? `?part=${lesson.id}` : ''}`
-  const [cuts, ladder, points, clauses, seats, people] = await Promise.all([
+  const [cuts, ladder, points, clauses, seats, people, doors] = await Promise.all([
     lesson ? rows(payload, 'cuts', { lesson: { equals: lesson.id } }, { sort: 'start' }) : Promise.resolve([]),
     lesson ? rows(payload, 'ladder-items', { lesson: { equals: lesson.id } }, { sort: 'start' }) : Promise.resolve([]),
     lesson ? rows(payload, 'engagement-points', { lesson: { equals: lesson.id } }, { sort: 'second', depth: 1 }) : Promise.resolve([]),
     rows(payload, 'clauses', undefined, { sort: 'number', limit: 50 }),
     rows(payload, 'seats', undefined, { sort: 'position', limit: 400 }),
     portal ? portalPeople(payload, portal.id) : Promise.resolve([]),
+    loadDoors(payload),
   ])
   const visiblePoints = points.filter((point) => {
     const author = point.author as { role?: string; tenants?: { tenant?: unknown }[] } | null
@@ -215,6 +218,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                   const clause = Number(cut.bestClause || 0)
                   const clauseDoc = clauses.find((row) => Number(row.number) === clause)
                   const clauseSeats = clauseDoc ? seats.filter((seat) => ref(seat.clause) === clauseDoc.id) : []
+                  const door = doorOfClause(clause, doors)
                   return (
                     <article key={cut.id} className={`cut-row ${str(cut.status)}`} data-testid="cut-draft" data-status={str(cut.status)} data-cut={cut.id}>
                       <div className="time">{clock(Number(cut.start))}<small>{Math.round(Number(cut.end) - Number(cut.start))} s long</small><small><span className={`badge ${cut.status === 'approved' ? 'teal' : cut.status === 'rejected' ? 'grey' : 'gold'}`}>{cut.status === 'approved' ? 'Approved' : cut.status === 'rejected' ? 'Set aside' : 'Draft'}</span></small></div>
@@ -224,7 +228,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                         <p className="land"><b>Land</b>{str(cut.land)}</p>
                         <div className="meta">
                           {cut.theme ? <>Theme: {str(cut.theme)}. </> : null}
-                          {clause ? <>Suggested clause {clause}{cut.clauseFragment ? ` (${str(cut.clauseFragment)})` : ''}. </> : null}
+                          {door ? <>Door <b data-testid="cut-door" style={{ display: 'inline', textTransform: 'none', letterSpacing: 0 }}>{doorLabel(door)}</b> <span className="hint" data-testid="cut-door-clause">(clause {clause}{cut.clauseFragment ? `: ${str(cut.clauseFragment)}` : ''})</span>. </> : null}
                           {cut.whyHang ? <>{str(cut.whyHang)} </> : null}
                           Quote check: {str(cut.quoteConfidence, 'not run')}. Made by {cut.engine === 'llm' ? 'the language model' : 'the built-in extractor'}.
                         </div>
@@ -232,15 +236,22 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                       {!locked ? (
                         <form action="/api/hearts" method="post">
                           <Hidden fields={{ action: 'cut-status', cut: cut.id, confirm: 'yes', next: here }} />
-                          <label className="stack" style={{ fontSize: 12.5 }}>Clause
+                          <label className="stack" style={{ fontSize: 12.5 }}>Door, then clause
                             <select name="clause" defaultValue={clause || ''} data-testid="cut-clause">
-                              <option value="">No clause</option>
-                              {clauses.map((row) => <option key={row.id} value={str(row.number)}>{str(row.number)}. {str(row.fragment)}</option>)}
+                              <option value="">No door</option>
+                              {doors.map((row) => (
+                                <optgroup key={row.number} label={doorLabel(row)}>
+                                  {row.clauses.map((number) => {
+                                    const doc = clauses.find((item) => Number(item.number) === number)
+                                    return <option key={number} value={number}>{doorCode(row.number)} · clause {number}{doc ? `: ${str(doc.fragment)}` : ''}</option>
+                                  })}
+                                </optgroup>
+                              ))}
                             </select>
                           </label>
                           <label className="stack" style={{ fontSize: 12.5 }}>Seat
                             <select name="seat" defaultValue={ref(cut.seat) || ''} data-testid="cut-seat">
-                              <option value="">{clauseSeats.length ? 'No seat yet' : 'Choose a clause first'}</option>
+                              <option value="">{clauseSeats.length ? 'No seat yet' : 'Choose a door first'}</option>
                               {clauseSeats.map((seat) => <option key={seat.id} value={seat.id}>({str(seat.position)}) {str(seat.text).slice(0, 70)}</option>)}
                             </select>
                           </label>
@@ -249,7 +260,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                             <button className="btn ghost small" name="status" value="rejected" data-testid="reject-cut" type="submit">Set aside</button>
                           </div>
                         </form>
-                      ) : <div className="hint">{clause ? `Clause ${clause}` : ''}</div>}
+                      ) : <div className="hint" data-testid="cut-door-readonly">{door ? <><b>{doorLabel(door)}</b><br />clause {clause}</> : ''}</div>}
                     </article>
                   )
                 }) : <p className="empty">No cuts yet. Attach a transcript, then run the extractor.</p>}

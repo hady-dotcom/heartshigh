@@ -1,3 +1,4 @@
+import { doorCode, doorNumberOfClause } from './doors'
 import { cuesToSentences, formatTimestamp, parseTranscript, type Sentence } from './transcript'
 
 export type ClauseCard = {
@@ -294,7 +295,7 @@ export function dualExtract(raw: string, clauses: ClauseCard[] = []): ExtractRes
       seatHint: hang.bestClause ? 'Seat follows the clause card. Choose it when you confirm the tag.' : 'seat TBD, teacher brief',
       stage2Form: stageForm(duration),
       currencyNote: hang.bestClause
-        ? `Counts towards a chapter night on clause ${hang.bestClause}. No score and no lock.`
+        ? `Counts towards a chapter night in door ${doorCode(doorNumberOfClause(hang.bestClause) || 0)} (clause ${hang.bestClause}). No score and no lock.`
         : 'A short clip only. It does not count towards the course.',
       quoteConfidence: confidence,
       exemplarAffinity: row.repeated ? 'high: a repeated line, close to the loved-line pattern' : 'medium: a complete line that works cold',

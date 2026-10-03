@@ -1,6 +1,7 @@
 // Drafts a master-sheet talk from a chosen film. There is no AI-steps registry in this tree, so the steps live
 // here: cuts from the caption lines, Jibril and Ghunya tags, resources, and question drafts. A test can pass its
 // own resources step. Nothing is published; every row stays a draft for the normal preview and apply.
+import { doorCode, doorNumberOfClause } from './doors'
 import { readFileSync } from 'node:fs'
 import { dualExtract } from './extractor'
 import { mulberry32, seedFrom, shuffleChoices } from './choices'
@@ -149,6 +150,7 @@ export function draftTalk(source: DraftSource, request: DraftRequest, steps?: { 
     transcript: sheetTranscript || null,
     status: 'draft',
     notes: needsTranscript ? NEEDS : 'Draft from the captions. A person still checks the cuts.',
+    jibril_door: clause ? doorCode(doorNumberOfClause(clause) || 0) : null,
     jibril_clause: clause,
     ghunya_seat: seat ? `${seat.clause}.${seat.position}` : null,
     hors_in: timed ? tiers!.hors.start : null,

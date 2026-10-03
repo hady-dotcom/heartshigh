@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { doorCode } from '@/lib/doors'
 import { applyTap, freshState, pickSignals, routeFeed, type HeartState, type LaneDef, type CutInfo, type ScaleDef, type SceneDef } from '@/lib/heart'
 
 type Props = {
@@ -95,7 +96,7 @@ export function Simulator({ scenes, scales, route, scaleNames, cutTitles }: Prop
           <ol className="body" style={{ margin: 0, paddingLeft: 36 }} data-testid="sim-feed">
             {result.feed.items.map((item, index) => (
               <li key={`${item.cutId}-${index}`} data-testid="sim-feed-item" data-lane={item.laneKey || ''}>
-                <b>{cutTitles[item.cutId] || `Clip ${item.cutId}`}</b> <span className="hint">{laneTitle(item.laneKey)}{item.clause ? ` · clause ${item.clause}` : ''}</span>
+                <b>{cutTitles[item.cutId] || `Clip ${item.cutId}`}</b> <span className="hint">{laneTitle(item.laneKey)}{item.door ? ` · ${doorCode(item.door)}` : ''}{item.clause ? ` (clause ${item.clause})` : ''}</span>
               </li>
             ))}
           </ol>
