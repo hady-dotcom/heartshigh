@@ -144,6 +144,7 @@ export function Journey(props: JourneyProps) {
   const clipRef = useRef<HTMLDivElement>(null)
   const slotRef = useRef<HTMLDivElement>(null)
   const gesture = useRef<{ x: number; y: number; t: number; moved: boolean; timer: number | null } | null>(null)
+  const captionDrag = useRef(false)
   const counter = useRef(0)
 
   const setHeart = useCallback((next: HeartState) => {
@@ -1151,8 +1152,32 @@ export function Journey(props: JourneyProps) {
         data-expanded={captionOpen ? 'true' : 'false'}
         aria-expanded={captionOpen}
         key={mode}
-        onPointerDown={(event) => event.stopPropagation()}
-        onClick={() => setCaptionOpen((open) => !open)}
+        onPointerDown={(event) => {
+          event.stopPropagation()
+          captionDrag.current = false
+          event.currentTarget.setPointerCapture(event.pointerId)
+          onDown(event)
+        }}
+        onPointerMove={onMove}
+        onPointerUp={(event) => {
+          const start = gesture.current
+          if (!start) return
+          const far = Math.max(Math.abs(event.clientX - start.x), Math.abs(event.clientY - start.y))
+          if (far >= 40) {
+            captionDrag.current = true
+            onUp(event)
+            return
+          }
+          if (start.timer) window.clearTimeout(start.timer)
+          gesture.current = null
+        }}
+        onClick={() => {
+          if (captionDrag.current) {
+            captionDrag.current = false
+            return
+          }
+          setCaptionOpen((open) => !open)
+        }}
       >
         {captionText || item.lessonTitle || item.courseTitle}
       </button>
