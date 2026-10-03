@@ -112,6 +112,8 @@ export interface Config {
     'view-as-sessions': ViewAsSession;
     'audit-log': AuditLog;
     'persona-bands': PersonaBand;
+    'compass-settings': CompassSetting;
+    'compass-attempts': CompassAttempt;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -164,6 +166,8 @@ export interface Config {
     'view-as-sessions': ViewAsSessionsSelect<false> | ViewAsSessionsSelect<true>;
     'audit-log': AuditLogSelect<false> | AuditLogSelect<true>;
     'persona-bands': PersonaBandsSelect<false> | PersonaBandsSelect<true>;
+    'compass-settings': CompassSettingsSelect<false> | CompassSettingsSelect<true>;
+    'compass-attempts': CompassAttemptsSelect<false> | CompassAttemptsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -795,6 +799,10 @@ export interface Tag {
   clause?: (number | null) | Clause;
   seat?: (number | null) | Seat;
   lane?: (number | null) | Lane;
+  /**
+   * The heart scale this talk serves. The compass steers with it.
+   */
+  scale?: (number | null) | HeartScale;
   weight?: number | null;
   state?: ('suggested' | 'confirmed') | null;
   note?: string | null;
@@ -853,6 +861,10 @@ export interface HeartScale {
   leonName: string;
   room?: ('appetites' | 'heat' | 'unsettled' | 'lights') | null;
   polishLabel?: string | null;
+  /**
+   * The short word in “Focusing on”. Learners see this, never the desk name.
+   */
+  focusName?: string | null;
   season?: ('youth' | 'health' | 'wealth' | 'freeTime' | 'life') | null;
   firstOpenRead?: boolean | null;
   /**
@@ -989,6 +1001,10 @@ export interface Completion {
   lesson: number | Lesson;
   percent?: number | null;
   onTime?: boolean | null;
+  /**
+   * When the learner watched this, if that is not the row time. The compass uses it.
+   */
+  watchedAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1104,6 +1120,23 @@ export interface OpeningScene {
   status?: ('draft' | 'published') | null;
   version?: number | null;
   adaptedFrom?: string | null;
+  /**
+   * Wording for the monthly look. Same options, different words.
+   */
+  monthCaption?: string | null;
+  monthSubline?: string | null;
+  /**
+   * Option key to this month’s label.
+   */
+  monthLabels?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1303,7 +1336,7 @@ export interface PersonaBand {
   key: string;
   title: string;
   status?: ('draft' | 'published') | null;
-  source?: ('unassigned' | 'doc-a' | 'doc-b' | 'doc-c' | 'ux-draft') | null;
+  source?: ('unassigned' | 'doc-a' | 'doc-b' | 'doc-c' | 'ux-draft' | 'balanced') | null;
   /**
    * Stand-in numbers. Publishing stays closed while this is ticked.
    */
@@ -1334,6 +1367,84 @@ export interface PersonaBand {
         max?: number | null;
         id?: string | null;
       }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The warm words a learner sees. The rung bounds stay on this desk.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "compass-settings".
+ */
+export interface CompassSetting {
+  id: number;
+  key: string;
+  frame?: ('both' | 'focusing' | 'places') | null;
+  focusLead?: string | null;
+  movementUp?: string | null;
+  movementSame?: string | null;
+  movementOnward?: string | null;
+  lifeCaption?: string | null;
+  lifeSubline?: string | null;
+  places?:
+    | {
+        key?: ('growing' | 'steady' | 'flourishing') | null;
+        label: string;
+        low?: number | null;
+        high?: number | null;
+        forward?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  lifeOptions?:
+    | {
+        key: string;
+        label: string;
+        boost?:
+          | (
+              | 'desire'
+              | 'greed'
+              | 'anger'
+              | 'ego'
+              | 'worry'
+              | 'belonging'
+              | 'gratitude'
+              | 'faith'
+              | 'compassion'
+              | 'discipline'
+            )
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Each opening and each monthly look. The signed readings are for the portal admin, the imam and the master.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "compass-attempts".
+ */
+export interface CompassAttempt {
+  id: number;
+  user: number | User;
+  portal: number | Portal;
+  at: string;
+  bank?: ('opening' | 'month') | null;
+  lifeKey?: string | null;
+  /**
+   * Device readings from −1 to +1. Not shown to the learner.
+   */
+  scales?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
     | null;
   updatedAt: string;
   createdAt: string;
@@ -1541,6 +1652,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'persona-bands';
         value: number | PersonaBand;
+      } | null)
+    | ({
+        relationTo: 'compass-settings';
+        value: number | CompassSetting;
+      } | null)
+    | ({
+        relationTo: 'compass-attempts';
+        value: number | CompassAttempt;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2040,6 +2159,7 @@ export interface TagsSelect<T extends boolean = true> {
   clause?: T;
   seat?: T;
   lane?: T;
+  scale?: T;
   weight?: T;
   state?: T;
   note?: T;
@@ -2142,6 +2262,7 @@ export interface CompletionsSelect<T extends boolean = true> {
   lesson?: T;
   percent?: T;
   onTime?: T;
+  watchedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2214,6 +2335,7 @@ export interface HeartScalesSelect<T extends boolean = true> {
   leonName?: T;
   room?: T;
   polishLabel?: T;
+  focusName?: T;
   season?: T;
   firstOpenRead?: T;
   anchors?: T;
@@ -2287,6 +2409,9 @@ export interface OpeningScenesSelect<T extends boolean = true> {
   status?: T;
   version?: T;
   adaptedFrom?: T;
+  monthCaption?: T;
+  monthSubline?: T;
+  monthLabels?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2430,6 +2555,54 @@ export interface PersonaBandsSelect<T extends boolean = true> {
         max?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "compass-settings_select".
+ */
+export interface CompassSettingsSelect<T extends boolean = true> {
+  key?: T;
+  frame?: T;
+  focusLead?: T;
+  movementUp?: T;
+  movementSame?: T;
+  movementOnward?: T;
+  lifeCaption?: T;
+  lifeSubline?: T;
+  places?:
+    | T
+    | {
+        key?: T;
+        label?: T;
+        low?: T;
+        high?: T;
+        forward?: T;
+        id?: T;
+      };
+  lifeOptions?:
+    | T
+    | {
+        key?: T;
+        label?: T;
+        boost?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "compass-attempts_select".
+ */
+export interface CompassAttemptsSelect<T extends boolean = true> {
+  user?: T;
+  portal?: T;
+  at?: T;
+  bank?: T;
+  lifeKey?: T;
+  scales?: T;
   updatedAt?: T;
   createdAt?: T;
 }

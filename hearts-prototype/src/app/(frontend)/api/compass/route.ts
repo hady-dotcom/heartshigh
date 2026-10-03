@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
-import { json, portalOf, readBody } from '@/server/api'
+import { json, portalOf, readBody, viewAsRefusal } from '@/server/api'
 import { getSession } from '@/server/context'
 import { learnerPath, monthMoments, recordAttempt, readingFromTaps, staffLearner, staffPortal } from '@/server/compass'
-import { viewAsRefusal } from '@/server/viewas'
 import type { SessionUser } from '@/server/context'
 
 export const dynamic = 'force-dynamic'
