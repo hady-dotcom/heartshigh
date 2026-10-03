@@ -122,6 +122,13 @@ export async function circleForPoints(payload: Payload, pointIds: number[], port
   return byPoint
 }
 
+/** How many circle answers sit on these talks: all of them for the master desk, the master's and its own for a portal. */
+export async function circleAnswerCount(payload: Payload, lessonIds: number[], portalId: number | null) {
+  if (!lessonIds.length) return 0
+  const where = { and: [{ lesson: { in: lessonIds } }, ...(portalId ? [{ or: [{ portal: { exists: false } }, { portal: { equals: portalId } }] }] : [])] }
+  return (await payload.count({ collection: 'circle-answers' as never, overrideAccess: true, where: where as never })).totalDocs
+}
+
 function chosen<T extends string>(form: FormData, key: string, allowed: readonly T[]) {
   return form.getAll(key).map(String).filter((value): value is T => (allowed as readonly string[]).includes(value))
 }

@@ -64,7 +64,7 @@ test('template downloads as xlsx and the seeded library round-trips with no chan
   expect(templateBytes[0]).toBe(0x50)
   const templateBook = new ExcelJS.Workbook()
   await templateBook.xlsx.load(templateBytes as unknown as ExcelJS.Buffer)
-  expect(templateBook.worksheets.map((sheet) => sheet.name)).toEqual(['Talks', 'Questions', 'Resources'])
+  expect(templateBook.worksheets.map((sheet) => sheet.name)).toEqual(['Talks', 'Questions', 'Resources', 'CircleAnswers'])
   expect(templateBook.getWorksheet('Talks')?.getRow(2).values).toEqual(expect.arrayContaining([...TALK_COLUMNS]))
 
   const exported = await master.get('/api/hearts/sheet?kind=export&scope=library&desk=master')

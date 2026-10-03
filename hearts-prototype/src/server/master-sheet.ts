@@ -14,7 +14,9 @@ import {
   planCounts,
   planSheet,
   readWorkbook,
+  remapRefs,
   rowsFromCatalogue,
+  type CircleRow,
   type CourseRow,
   type CutRow,
   type KeyRow,
@@ -37,10 +39,10 @@ type Doc = Record<string, unknown> & { id: number }
 export type SheetSnapshot = {
   created: Record<string, number[]>
   updated: { collection: string; id: number; before: Record<string, unknown> }[]
-  deleted: { collection: string; data: Record<string, unknown> }[]
+  deleted: { collection: string; data: Record<string, unknown>; formerId?: number }[]
 }
 
-const CHILD_ORDER = ['engagement-points', 'resources', 'talk-tiers', 'sheet-keys', 'cuts', 'ladder-items', 'lessons', 'units', 'courses']
+const CHILD_ORDER = ['circle-answers', 'engagement-points', 'resources', 'talk-tiers', 'sheet-keys', 'cuts', 'ladder-items', 'lessons', 'units', 'courses']
 
 function emptySnapshot(): SheetSnapshot {
   return { created: {}, updated: [], deleted: [] }
@@ -70,7 +72,7 @@ function num(value: unknown) {
 }
 
 export async function loadCatalogue(payload: Payload, scope: SheetScope): Promise<SheetCatalogue> {
-  const [courses, units, lessons, tiers, points, resources, keys, cuts, seats, clauses] = await Promise.all([
+  const [courses, units, lessons, tiers, points, resources, keys, cuts, seats, clauses, circle] = await Promise.all([
     allDocs(payload, 'courses'),
     allDocs(payload, 'units'),
     allDocs(payload, 'lessons'),
@@ -81,6 +83,7 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
     allDocs(payload, 'cuts'),
     allDocs(payload, 'seats'),
     allDocs(payload, 'clauses'),
+    allDocs(payload, 'circle-answers', scope.desk === 'portal' ? { or: [{ portal: { exists: false } }, { portal: { equals: scope.portalId } }] } : undefined),
   ])
   const clauseNumber = new Map(clauses.map((clause) => [clause.id, Number(clause.number)]))
   const inScope = (course: Doc) => {
@@ -132,7 +135,20 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
       placeholder: Boolean(cut.placeholder), status: String(cut.status || ''), start: Number(cut.start || 0), course: num(cut.course),
     }
   })
-  return { scopeKind: scope.kind, portalId: scope.portalId, courseId: scope.courseId, courses: courseRows, units: unitRows, lessons: lessonRows, tiers: tierRows, points: pointRows, resources: resourceRows, keys: keyRows, cuts: cutRows, seats: seatRows }
+  const pointLesson = new Map(pointRows.map((point) => [point.id, point.lesson]))
+  const circleRows: CircleRow[] = circle.flatMap((answer) => {
+    const point = num(answer.point) || 0
+    const lesson = pointLesson.get(point)
+    if (!lesson) return []
+    return [{
+      id: answer.id, point, lesson, portal: num(answer.portal), name: String(answer.name || ''), body: String(answer.body || ''),
+      tone: String(answer.tone || ''), length: String(answer.length || ''), origin: String(answer.origin || 'staff'), enabled: answer.enabled !== false,
+    }]
+  })
+  return {
+    scopeKind: scope.kind, portalId: scope.portalId, courseId: scope.courseId, courses: courseRows, units: unitRows, lessons: lessonRows, tiers: tierRows, points: pointRows, resources: resourceRows, keys: keyRows, cuts: cutRows, seats: seatRows,
+    circle: circleRows, circlePortal: scope.desk === 'portal' ? scope.portalId : null,
+  }
 }
 
 export async function exportBuffer(payload: Payload, scope: SheetScope) {
@@ -187,10 +203,20 @@ async function remember(payload: Payload, snapshot: SheetSnapshot, collection: s
 
 const STRIP = new Set(['id', 'createdAt', 'updatedAt', 'collection'])
 
+async function removeDoc(payload: Payload, snapshot: SheetSnapshot, collection: string, id: number) {
+  const doc = (await payload.findByID({ collection: collection as never, id, depth: 0, overrideAccess: true })) as unknown as Doc
+  const data = { ...doc }
+  for (const key of STRIP) delete data[key]
+  snapshot.deleted.push({ collection, data, formerId: id })
+  await payload.delete({ collection: collection as never, id, overrideAccess: true })
+}
+
 async function wipeLesson(payload: Payload, snapshot: SheetSnapshot, lessonId: number) {
   const answers = await payload.count({ collection: 'answers', overrideAccess: true, where: { lesson: { equals: lessonId } } })
   if (answers.totalDocs) throw new Error('Learners have answered a question on this talk, so the sheet will not delete it.')
+  const pointIds = (await allDocs(payload, 'engagement-points', { lesson: { equals: lessonId } })).map((point) => point.id)
   const groups: [string, Where][] = [
+    ['circle-answers', pointIds.length ? { or: [{ lesson: { equals: lessonId } }, { point: { in: pointIds } }] } : { lesson: { equals: lessonId } }],
     ['engagement-points', { lesson: { equals: lessonId } }],
     ['resources', { lesson: { equals: lessonId } }],
     ['talk-tiers', { lesson: { equals: lessonId } }],
@@ -203,14 +229,14 @@ async function wipeLesson(payload: Payload, snapshot: SheetSnapshot, lessonId: n
     for (const doc of docs) {
       const data = { ...doc }
       for (const key of STRIP) delete data[key]
-      snapshot.deleted.push({ collection, data })
+      snapshot.deleted.push({ collection, data, formerId: doc.id })
       await payload.delete({ collection: collection as never, id: doc.id, overrideAccess: true })
     }
   }
   const lesson = (await payload.findByID({ collection: 'lessons', id: lessonId, depth: 0, overrideAccess: true })) as unknown as Doc
   const data = { ...lesson }
   for (const key of STRIP) delete data[key]
-  snapshot.deleted.push({ collection: 'lessons', data })
+  snapshot.deleted.push({ collection: 'lessons', data, formerId: lessonId })
   await payload.delete({ collection: 'lessons', id: lessonId, overrideAccess: true })
 }
 
@@ -286,7 +312,7 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
     const doc = (await payload.findByID({ collection: 'talk-tiers', id: op.id, depth: 0, overrideAccess: true })) as unknown as Doc
     const data = { ...doc }
     for (const key of STRIP) delete data[key]
-    snapshot.deleted.push({ collection: 'talk-tiers', data })
+    snapshot.deleted.push({ collection: 'talk-tiers', data, formerId: op.id })
     await payload.delete({ collection: 'talk-tiers', id: op.id, overrideAccess: true })
     return
   }
@@ -305,10 +331,11 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
   if (op.op === 'point.delete') {
     const answers = await payload.count({ collection: 'answers', overrideAccess: true, where: { point: { equals: op.id } } })
     if (answers.totalDocs) throw new Error('Learners have answered this question, so the sheet will not delete it.')
+    for (const answer of await allDocs(payload, 'circle-answers', { point: { equals: op.id } })) await removeDoc(payload, snapshot, 'circle-answers', answer.id)
     const doc = (await payload.findByID({ collection: 'engagement-points', id: op.id, depth: 0, overrideAccess: true })) as unknown as Doc
     const data = { ...doc }
     for (const key of STRIP) delete data[key]
-    snapshot.deleted.push({ collection: 'engagement-points', data })
+    snapshot.deleted.push({ collection: 'engagement-points', data, formerId: op.id })
     await payload.delete({ collection: 'engagement-points', id: op.id, overrideAccess: true })
     return
   }
@@ -332,7 +359,7 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
     const doc = (await payload.findByID({ collection: 'resources', id: op.id, depth: 0, overrideAccess: true })) as unknown as Doc
     const data = { ...doc }
     for (const key of STRIP) delete data[key]
-    snapshot.deleted.push({ collection: 'resources', data })
+    snapshot.deleted.push({ collection: 'resources', data, formerId: op.id })
     await payload.delete({ collection: 'resources', id: op.id, overrideAccess: true })
     return
   }
@@ -351,7 +378,7 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
     const doc = (await payload.findByID({ collection: 'sheet-keys', id: op.id, depth: 0, overrideAccess: true })) as unknown as Doc
     const data = { ...doc }
     for (const key of STRIP) delete data[key]
-    snapshot.deleted.push({ collection: 'sheet-keys', data })
+    snapshot.deleted.push({ collection: 'sheet-keys', data, formerId: op.id })
     await payload.delete({ collection: 'sheet-keys', id: op.id, overrideAccess: true })
     return
   }
@@ -365,12 +392,26 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
     await payload.update({ collection: 'cuts', id: op.id, overrideAccess: true, data: op.patch as never })
     return
   }
+  if (op.op === 'circle.create') {
+    const doc = (await payload.create({ collection: 'circle-answers' as never, overrideAccess: true, data: { ...op.data, point: op.point, lesson: op.lesson, author: actorId || undefined } as never })) as unknown as Doc
+    rememberCreated(snapshot, 'circle-answers', doc.id)
+    return
+  }
+  if (op.op === 'circle.update') {
+    await remember(payload, snapshot, 'circle-answers', op.id, op.patch)
+    await payload.update({ collection: 'circle-answers' as never, id: op.id, overrideAccess: true, data: op.patch as never })
+    return
+  }
+  if (op.op === 'circle.delete') {
+    await removeDoc(payload, snapshot, 'circle-answers', op.id)
+    return
+  }
   if (op.op === 'child.delete') {
     await payload.delete({ collection: op.collection, id: op.id, overrideAccess: true })
   }
 }
 
-const RESTORE_ORDER = ['courses', 'units', 'lessons', 'talk-tiers', 'cuts', 'engagement-points', 'resources', 'sheet-keys', 'ladder-items']
+const RESTORE_ORDER = ['courses', 'units', 'lessons', 'talk-tiers', 'cuts', 'engagement-points', 'circle-answers', 'resources', 'sheet-keys', 'ladder-items']
 
 /** A created talk or question that a learner has already answered stays. Undo must not remove their work. */
 export async function undoBlockedReason(payload: Payload, snapshot: SheetSnapshot): Promise<string | null> {
@@ -390,17 +431,34 @@ export async function undoBlockedReason(payload: Payload, snapshot: SheetSnapsho
 export async function undoSnapshot(payload: Payload, snapshot: SheetSnapshot) {
   const blocked = await undoBlockedReason(payload, snapshot)
   if (blocked) throw new Error(blocked)
+  const createdPoints = snapshot.created['engagement-points'] || []
+  const createdLessons = snapshot.created.lessons || []
+  if (createdPoints.length || createdLessons.length) {
+    // Circle answers written since for a question this import added go with it, so none is left under nothing.
+    const where: Where = { or: [...(createdPoints.length ? [{ point: { in: createdPoints } }] : []), ...(createdLessons.length ? [{ lesson: { in: createdLessons } }] : [])] }
+    for (const answer of await allDocs(payload, 'circle-answers', where)) {
+      await payload.delete({ collection: 'circle-answers' as never, id: answer.id, overrideAccess: true }).catch(() => undefined)
+    }
+  }
   for (const collection of CHILD_ORDER) {
     for (const id of snapshot.created[collection] || []) {
       await payload.delete({ collection: collection as never, id, overrideAccess: true }).catch(() => undefined)
     }
   }
   const deleted = [...snapshot.deleted].sort((a, b) => RESTORE_ORDER.indexOf(a.collection) - RESTORE_ORDER.indexOf(b.collection))
+  // Postgres gives a restored row a new id, so rows restored after it are pointed at the new one.
+  const moved = new Map<string, Map<number, number>>()
   for (const row of deleted) {
-    await payload.create({ collection: row.collection as never, overrideAccess: true, data: row.data as never })
+    const doc = (await payload.create({ collection: row.collection as never, overrideAccess: true, data: remapRefs(row.data, moved) as never })) as unknown as Doc
+    if (row.formerId) {
+      const ids = moved.get(row.collection) || new Map<number, number>()
+      ids.set(row.formerId, doc.id)
+      moved.set(row.collection, ids)
+    }
   }
   for (const row of snapshot.updated) {
-    await payload.update({ collection: row.collection as never, id: row.id, overrideAccess: true, data: row.before as never })
+    const id = moved.get(row.collection)?.get(row.id) ?? row.id
+    await payload.update({ collection: row.collection as never, id, overrideAccess: true, data: remapRefs(row.before, moved) as never })
   }
 }
 

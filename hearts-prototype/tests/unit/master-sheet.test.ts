@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import ExcelJS from 'exceljs'
 import { test } from 'node:test'
 import { DRAFT_NOTE } from '../../src/lib/tiers'
+import { CIRCLE_COLUMNS } from '../../src/lib/circle-sheet'
 import {
   QUESTION_COLUMNS,
   TALK_COLUMNS,
@@ -12,6 +13,7 @@ import {
   planCounts,
   planSheet,
   readWorkbook,
+  remapRefs,
   rowsFromCatalogue,
   templateWorkbook,
   type InputRow,
@@ -51,6 +53,10 @@ function fixture(): SheetCatalogue {
     resources: [{ id: 4, lesson: 10, name: 'Further reading', url: 'https://example.com/light', kind: 'link', body: '' }],
     cuts: [{ id: 2, lesson: 10, bestClause: 12, seatId: 5, seatClause: 12, seatPosition: 2, placeholder: true, status: 'suggested', start: 0, course: 1 }],
     seats: [{ id: 5, clause: 12, position: 2 }],
+    circle: [
+      { id: 21, point: 7, lesson: 10, portal: null, name: 'Amina', body: 'This landed gently for me.', tone: 'warm', length: 'short', origin: 'ai', enabled: true },
+      { id: 22, point: 9, lesson: 10, portal: null, name: 'Yusuf', body: 'Did it straight after Maghrib so it would not slip.', tone: 'practical', length: 'short', origin: 'staff', enabled: false },
+    ],
   })
 }
 
@@ -73,14 +79,22 @@ test('round-trip: export then import with no edits makes no changes', async () =
   const parsed = await readWorkbook(await buildWorkbook(rows))
   const plan = planSheet(parsed, catalogue)
   assert.deepEqual(plan.errors, [])
-  assert.deepEqual(planCounts(plan), { create: 0, update: 0, delete: 0, unchanged: rows.talks.length + rows.questions.length + rows.resources.length, skipped: 0, errors: 0 })
+  assert.deepEqual(planCounts(plan), { create: 0, update: 0, delete: 0, unchanged: rows.talks.length + rows.questions.length + rows.resources.length + rows.circle.length, skipped: 0, errors: 0 })
+  assert.equal(rows.circle.length, 2)
   assert.equal(plan.ops.length, 0)
 })
 
-test('the blank template has three tabs, a note and the header row', async () => {
-  const parsed = await readWorkbook(await templateWorkbook())
+test('the blank template has four tabs, a note and the header row', async () => {
+  const buffer = await templateWorkbook()
+  const parsed = await readWorkbook(buffer)
   assert.deepEqual(parsed.errors, [])
   assert.deepEqual(parsed.talks, [])
+  assert.deepEqual(parsed.circle, [])
+  const book = new ExcelJS.Workbook()
+  await book.xlsx.load(buffer as unknown as Parameters<typeof book.xlsx.load>[0])
+  assert.deepEqual(book.worksheets.map((sheet) => sheet.name), ['Talks', 'Questions', 'Resources', 'CircleAnswers'])
+  assert.match(String(book.getWorksheet('CircleAnswers')?.getRow(1).getCell(1).value), /never counted/)
+  assert.deepEqual((book.getWorksheet('CircleAnswers')?.getRow(2).values as unknown[]).slice(1), [...CIRCLE_COLUMNS])
   assert.equal(TALK_COLUMNS.includes('talk_key'), true)
   assert.equal(QUESTION_COLUMNS.includes('question_id'), true)
 })
@@ -229,4 +243,105 @@ test('500 rows are planned quickly', async () => {
   assert.equal(parsed.talks.length, 500)
   assert.equal(planCounts(plan).create, 500)
   assert.ok(elapsed < 5000, `500 rows took ${elapsed}ms`)
+})
+
+const noRows = { talks: [], questions: [], resources: [], errors: [] }
+
+test('CircleAnswers: name and length keep their own meaning on that tab', async () => {
+  const parsed = await readWorkbook(await buildWorkbook({ circle: [{ talk_key: 'yt-NIR88RRpat4', question_id: 7, name: 'Hana', body: 'Sitting with it.', length: 'short', tone: 'quiet' }] }))
+  assert.deepEqual(parsed.errors, [])
+  assert.equal(parsed.circle.length, 1)
+  assert.deepEqual(Object.keys(parsed.circle[0].cells).sort(), ['body', 'length', 'name', 'question_id', 'talk_key', 'tone'])
+})
+
+test('CircleAnswers: adds, updates, switches off and removes, and only ever touches circle answers', () => {
+  const catalogue = fixture()
+  const plan = planSheet({
+    ...noRows,
+    circle: [
+      cells(3, { talk_key: 'yt-NIR88RRpat4', question_id: 9, name: 'Bilal', body: 'Missed the first day, managed the second.', tone: 'honest', length: 'short', origin: 'ai' }),
+      cells(4, { talk_key: 'yt-NIR88RRpat4', question_id: 7, circle_id: 21, name: 'Amina', body: 'This landed gently for me.', enabled: 'no' }),
+      cells(5, { talk_key: 'yt-NIR88RRpat4', question_id: 9, circle_id: 22, status: 'delete' }),
+      cells(6, { talk_key: 'yt-NIR88RRpat4', question_id: 7, name: 'Amina', body: 'This  landed gently for me.' }),
+      cells(7, { youtube_id: 'NIR88RRpat4', question_id: 8, body: 'I went with the first one. It just fitted.' }),
+    ],
+  }, catalogue)
+  assert.deepEqual(plan.errors, [])
+  assert.deepEqual(planCounts(plan), { create: 2, update: 1, delete: 1, unchanged: 1, skipped: 0, errors: 0 })
+  assert.deepEqual(new Set(plan.ops.map((op) => op.op)), new Set(['circle.create', 'circle.update', 'circle.delete']))
+  const task = plan.ops.find((op) => op.op === 'circle.create' && op.point === 9)
+  assert.ok(task && task.op === 'circle.create')
+  assert.deepEqual(task.data, { name: 'Bilal', body: 'Missed the first day, managed the second.', tone: 'honest', length: 'short', origin: 'ai', enabled: true, portal: undefined })
+  assert.equal(task.lesson, 10)
+  const anonymous = plan.ops.find((op) => op.op === 'circle.create' && op.point === 8)
+  assert.ok(anonymous && anonymous.op === 'circle.create' && anonymous.data.name === 'Someone in the circle')
+  const update = plan.ops.find((op) => op.op === 'circle.update')
+  assert.ok(update && update.op === 'circle.update')
+  assert.deepEqual(update.patch, { enabled: false })
+  assert.ok(plan.changes.every((change) => change.tab !== 'CircleAnswers' || change.action !== 'create' || /never counted/.test(change.detail)))
+})
+
+test('CircleAnswers: every bad row names the column, and nothing is saved from it', () => {
+  const catalogue = fixture()
+  catalogue.points.push({ id: 11, lesson: 10, second: 90, kind: 'reflection', prompt: 'Write one line for your workbook.', options: [], correctOption: '', status: 'published', draftNote: '', dueDays: null, evidence: '', showImam: false, family: 'workbook' })
+  const plan = planSheet({
+    ...noRows,
+    questions: [cells(3, { talk_key: 'yt-NIR88RRpat4', question_id: 8, status: 'delete' })],
+    circle: [
+      cells(3, { talk_key: 'yt-NIR88RRpat4', question_id: 7, body: 'Take the quiz with me on this one' }),
+      cells(4, { talk_key: 'yt-NIR88RRpat4', question_id: 4040, body: 'A gentle line about the light.' }),
+      cells(5, { talk_key: 'yt-NIR88RRpat4', question_id: 11, body: 'A gentle line about the light.' }),
+      cells(6, { talk_key: 'yt-NIR88RRpat4', question_id: 8, body: 'A gentle line about the light.' }),
+      cells(7, { talk_key: 'someone-else', question_id: 7, body: 'A gentle line about the light.' }),
+      cells(8, { talk_key: 'yt-NIR88RRpat4', question_id: 9, circle_id: 21, body: 'A gentle line about the light.' }),
+      cells(9, { talk_key: 'yt-NIR88RRpat4', question_id: 7, circle_id: 999, body: 'A gentle line about the light.' }),
+      cells(10, { talk_key: 'yt-NIR88RRpat4', question_id: 7, body: 'A gentle line about the light.', tone: 'angry', length: 'huge', enabled: 'maybe' }),
+      cells(11, { talk_key: 'yt-NIR88RRpat4', question_id: 7, body: 'A <b>bold</b> line about the light.' }),
+    ],
+  }, catalogue)
+  const circleErrors = plan.errors.filter((issue) => issue.tab === 'CircleAnswers')
+  const at = (row: number) => circleErrors.filter((issue) => issue.row === row).map((issue) => issue.column)
+  assert.deepEqual(at(3), ['body'])
+  assert.match(circleErrors.find((issue) => issue.row === 3)!.message, /quiz/i)
+  assert.deepEqual(at(4), ['question_id'])
+  assert.deepEqual(at(5), ['question_id'])
+  assert.match(circleErrors.find((issue) => issue.row === 5)!.message, /workbook/)
+  assert.deepEqual(at(6), ['question_id'])
+  assert.match(circleErrors.find((issue) => issue.row === 6)!.message, /deletes that question/)
+  assert.deepEqual(at(7), ['talk_key'])
+  assert.deepEqual(at(8), ['question_id'])
+  assert.deepEqual(at(9), ['circle_id'])
+  assert.deepEqual(at(10).sort(), ['enabled', 'length', 'tone'])
+  assert.deepEqual(at(11), ['body'])
+  assert.equal(plan.ops.filter((op) => op.op.startsWith('circle.')).length, 0)
+})
+
+test('CircleAnswers: a portal import adds its own answers on its own courses only', () => {
+  const catalogue = fixture()
+  catalogue.scopeKind = 'portal'
+  catalogue.portalId = 9
+  catalogue.circlePortal = 9
+  catalogue.courses = catalogue.courses.map((course) => ({ ...course, inScope: course.id === 2 }))
+  catalogue.lessons = [
+    ...catalogue.lessons.map((lesson) => ({ ...lesson, inScope: false })),
+    { ...catalogue.lessons[0], id: 30, course: 2, unit: null, youtubeId: 'ElmLocal001', inScope: true },
+  ]
+  catalogue.points.push({ ...catalogue.points[0], id: 31, lesson: 30 })
+  const plan = planSheet({
+    ...noRows,
+    circle: [
+      cells(3, { question_id: 31, body: 'A small yes from me.' }),
+      cells(4, { question_id: 7, body: 'A small yes from me.' }),
+    ],
+  }, catalogue)
+  assert.deepEqual(plan.errors.map((issue) => `${issue.row}:${issue.column}`), ['4:question_id'])
+  const created = plan.ops.find((op) => op.op === 'circle.create')
+  assert.ok(created && created.op === 'circle.create' && created.data.portal === 9 && created.point === 31)
+  assert.equal(rowsFromCatalogue(catalogue).circle.length, 0)
+})
+
+test('undo points restored rows at the new ids Postgres gives their parents', () => {
+  const moved = new Map([['engagement-points', new Map([[7, 70]])], ['lessons', new Map([[10, 100]])]])
+  assert.deepEqual(remapRefs({ point: 7, lesson: 10, portal: 7, name: 'Amina' }, moved), { point: 70, lesson: 100, portal: 7, name: 'Amina' })
+  assert.deepEqual(remapRefs({ point: 8, lesson: 11 }, moved), { point: 8, lesson: 11 })
 })

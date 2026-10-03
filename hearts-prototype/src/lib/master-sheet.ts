@@ -5,6 +5,7 @@ import { youtubeIdFromUrl } from './extractor'
 import { DRAFT_NOTE, horsCapOf, horsVerdict, normaliseSpans, saidInTalk, tierProblem, timingProblems, type AppetiserSpan } from './tiers'
 import { authorTextProblems, markupProblems } from './opening-data'
 import { hasMarkup, httpsHref } from './text-safety'
+import { CIRCLE_COLUMNS, CIRCLE_NOTE, CIRCLE_TAB, circleSheetValues, readCircleRow, type CircleColumn } from './circle-sheet'
 
 export const TALK_COLUMNS = [
   'talk_key', 'youtube_id', 'title', 'speaker', 'channel', 'course', 'part', 'order', 'lane', 'jibril_clause', 'ghunya_seat',
@@ -31,7 +32,7 @@ export const QUESTION_NOTE =
 export const RESOURCE_NOTE =
   "HEARTS resources, one row per item. talk_key names the talk. The same talk_key and label updates that row next time. kind is link, file, summary, quote, reading, guide or transcript. url must start with https:// for a link, and for a file that is not an upload. A file row may instead put an uploaded file's number in media_id. kind transcript points at an uploaded text file (media_id) so a transcript longer than 30,000 characters can come in as a file rather than a cell; that file is copied onto the talk. summary, reading and guide are our own writing. quote and transcript are the speaker's words, so the kill list is not applied to them. A reading row is a suggestion to verify, not a link that has been checked. Leave status blank to keep the row, or put delete to remove it."
 
-const TABS = ['Talks', 'Questions', 'Resources'] as const
+const TABS = ['Talks', 'Questions', 'Resources', CIRCLE_TAB] as const
 export type SheetTab = (typeof TABS)[number]
 
 const HEADER_ALIASES: Record<string, string> = {
@@ -86,6 +87,9 @@ export type SheetOp =
   | { op: 'key.delete'; id: number }
   | { op: 'cut.create'; lesson: Ref; course: Ref; data: Record<string, unknown> }
   | { op: 'cut.update'; id: number; patch: Record<string, unknown> }
+  | { op: 'circle.create'; point: number; lesson: number; data: Record<string, unknown> }
+  | { op: 'circle.update'; id: number; patch: Record<string, unknown> }
+  | { op: 'circle.delete'; id: number }
   | { op: 'child.delete'; collection: 'engagement-points' | 'resources' | 'talk-tiers' | 'cuts' | 'ladder-items' | 'sheet-keys'; id: number }
 
 export type SheetPlan = { errors: SheetIssue[]; warnings: SheetIssue[]; changes: SheetChange[]; unchanged: number; skipped: number; ops: SheetOp[] }
@@ -103,7 +107,8 @@ export type ResourceRow = { id: number; lesson: number; name: string; url: strin
 export type KeyRow = { id: number; talkKey: string; lesson: number; channel: string; sheetStatus: string }
 export type CutRow = { id: number; lesson: number; bestClause: number | null; seatId: number | null; seatClause: number | null; seatPosition: number | null; placeholder: boolean; status: string; start: number; course: number | null }
 export type SeatRow = { id: number; clause: number; position: number }
-export type SheetCatalogue = { scopeKind: 'library' | 'portal' | 'course'; portalId: number | null; courseId: number | null; courses: CourseRow[]; units: UnitRow[]; lessons: LessonRow[]; tiers: TierRow[]; points: PointRow[]; resources: ResourceRow[]; keys: KeyRow[]; cuts: CutRow[]; seats: SeatRow[]; horsMaxSeconds?: number }
+export type CircleRow = { id: number; point: number; lesson: number; portal: number | null; name: string; body: string; tone: string; length: string; origin: string; enabled: boolean }
+export type SheetCatalogue = { scopeKind: 'library' | 'portal' | 'course'; portalId: number | null; courseId: number | null; courses: CourseRow[]; units: UnitRow[]; lessons: LessonRow[]; tiers: TierRow[]; points: PointRow[]; resources: ResourceRow[]; keys: KeyRow[]; cuts: CutRow[]; seats: SeatRow[]; horsMaxSeconds?: number; circle?: CircleRow[]; circlePortal?: number | null }
 
 type Cell = { text: string; raw: unknown; numFmt?: string }
 type InputRow = { row: number; cells: Record<string, Cell> }
@@ -117,13 +122,26 @@ export function derivedTalkKey(lesson: { id: number; youtubeId?: string | null }
   return id ? `yt-${id}` : `lesson-${lesson.id}`
 }
 
+const REF_FIELDS: Record<string, string> = { course: 'courses', unit: 'units', lesson: 'lessons', point: 'engagement-points', contingent: 'engagement-points' }
+
+/** A restored row's links, with any row restored before it swapped for its new id. */
+export function remapRefs(data: Record<string, unknown>, moved: Map<string, Map<number, number>>) {
+  const out = { ...data }
+  for (const [field, collection] of Object.entries(REF_FIELDS)) {
+    const ids = moved.get(collection)
+    const value = out[field]
+    if (ids && typeof value === 'number' && ids.has(value)) out[field] = ids.get(value)
+  }
+  return out
+}
+
 export function planCounts(plan: SheetPlan) {
   const count = (action: SheetChange['action']) => plan.changes.filter((change) => change.action === action).length
   return { create: count('create'), update: count('update'), delete: count('delete'), unchanged: plan.unchanged, skipped: plan.skipped, errors: plan.errors.length }
 }
 
 export function emptyCatalogue(scope: Partial<SheetCatalogue> = {}): SheetCatalogue {
-  return { scopeKind: 'library', portalId: null, courseId: null, courses: [], units: [], lessons: [], tiers: [], points: [], resources: [], keys: [], cuts: [], seats: [], ...scope }
+  return { scopeKind: 'library', portalId: null, courseId: null, courses: [], units: [], lessons: [], tiers: [], points: [], resources: [], keys: [], cuts: [], seats: [], circle: [], ...scope }
 }
 
 /** Seconds from a cell: a number of seconds, m:ss, h:mm:ss, or an Excel/Google time. */
@@ -224,7 +242,14 @@ function readCell(cell: ExcelJS.Cell): Cell | null {
   return { text: text.trim(), raw: value, numFmt: cell.numFmt }
 }
 
-function headerOf(sheet: ExcelJS.Worksheet, columns: readonly string[]) {
+// The CircleAnswers tab has its own names (name, body, length), so the Talks and Resources aliases do not apply to it.
+function circleCanonical(header: string) {
+  const key = normHeader(header)
+  if ((CIRCLE_COLUMNS as readonly string[]).includes(key)) return key
+  return ({ key: 'talk_key', video_id: 'youtube_id', youtube: 'youtube_id', answer: 'body', text: 'body', id: 'circle_id' } as Record<string, string>)[key] || null
+}
+
+function headerOf(sheet: ExcelJS.Worksheet, columns: readonly string[], canon: (header: string) => string | null = canonical) {
   let found: { row: number; map: Map<number, string> } | null = null
   const known = new Set(columns)
   sheet.eachRow({ includeEmpty: false }, (row) => {
@@ -232,7 +257,7 @@ function headerOf(sheet: ExcelJS.Worksheet, columns: readonly string[]) {
     const map = new Map<number, string>()
     for (let index = 1; index <= row.cellCount; index += 1) {
       const cell = readCell(row.getCell(index))
-      const name = cell ? canonical(cell.text) : null
+      const name = cell ? canon(cell.text) : null
       if (name && known.has(name)) map.set(index, name)
     }
     if (map.size >= 2) found = { row: row.number, map }
@@ -251,21 +276,21 @@ function sheetNamed(workbook: ExcelJS.Workbook, name: SheetTab) {
 }
 
 /** Read an .xlsx, including one that Google Sheets has exported. */
-export async function readWorkbook(buffer: Buffer): Promise<{ talks: InputRow[]; questions: InputRow[]; resources: InputRow[]; errors: SheetIssue[] }> {
+export async function readWorkbook(buffer: Buffer): Promise<{ talks: InputRow[]; questions: InputRow[]; resources: InputRow[]; circle: InputRow[]; errors: SheetIssue[] }> {
   const errors: SheetIssue[] = []
   if (buffer.length < 4 || buffer[0] !== 0x50 || buffer[1] !== 0x4b) {
-    return { talks: [], questions: [], resources: [], errors: [{ tab: 'Talks', row: 1, column: 'file', message: 'This file is not an Excel workbook. Download the template and save it as .xlsx. In Google Sheets use File, Download, Microsoft Excel.' }] }
+    return { talks: [], questions: [], resources: [], circle: [], errors: [{ tab: 'Talks', row: 1, column: 'file', message: 'This file is not an Excel workbook. Download the template and save it as .xlsx. In Google Sheets use File, Download, Microsoft Excel.' }] }
   }
   let workbook: ExcelJS.Workbook
   try {
     workbook = await workbookOf(buffer)
   } catch {
-    return { talks: [], questions: [], resources: [], errors: [{ tab: 'Talks', row: 1, column: 'file', message: 'That workbook could not be opened. Save it again as .xlsx and upload that file.' }] }
+    return { talks: [], questions: [], resources: [], circle: [], errors: [{ tab: 'Talks', row: 1, column: 'file', message: 'That workbook could not be opened. Save it again as .xlsx and upload that file.' }] }
   }
   const read = (tab: SheetTab, columns: readonly string[]) => {
     const sheet = sheetNamed(workbook, tab)
     if (!sheet) return []
-    const header = headerOf(sheet, columns)
+    const header = headerOf(sheet, columns, tab === CIRCLE_TAB ? circleCanonical : canonical)
     if (!header) {
       errors.push({ tab, row: 1, column: columns[0], message: `The ${tab} tab needs its header row. Download a fresh template and keep that row.` })
       return []
@@ -285,10 +310,11 @@ export async function readWorkbook(buffer: Buffer): Promise<{ talks: InputRow[];
   const talks = read('Talks', TALK_COLUMNS)
   const questions = read('Questions', QUESTION_COLUMNS)
   const resources = read('Resources', RESOURCE_COLUMNS)
-  if (!sheetNamed(workbook, 'Talks') && !sheetNamed(workbook, 'Questions') && !sheetNamed(workbook, 'Resources')) {
-    errors.push({ tab: 'Talks', row: 1, column: 'file', message: 'The workbook needs a Talks, Questions or Resources tab. Download the template to start from.' })
+  const circle = read(CIRCLE_TAB, CIRCLE_COLUMNS)
+  if (!TABS.some((tab) => sheetNamed(workbook, tab))) {
+    errors.push({ tab: 'Talks', row: 1, column: 'file', message: `The workbook needs a Talks, Questions, Resources or ${CIRCLE_TAB} tab. Download the template to start from.` })
   }
-  return { talks, questions, resources, errors }
+  return { talks, questions, resources, circle, errors }
 }
 
 function addSheet(workbook: ExcelJS.Workbook, name: SheetTab, note: string, columns: readonly string[], rows: Record<string, string | number | null>[]) {
@@ -315,12 +341,13 @@ function addSheet(workbook: ExcelJS.Workbook, name: SheetTab, note: string, colu
   return sheet
 }
 
-export async function buildWorkbook(sheets: { talks?: Record<string, string | number | null>[]; questions?: Record<string, string | number | null>[]; resources?: Record<string, string | number | null>[] }) {
+export async function buildWorkbook(sheets: { talks?: Record<string, string | number | null>[]; questions?: Record<string, string | number | null>[]; resources?: Record<string, string | number | null>[]; circle?: Record<string, string | number | null>[] }) {
   const workbook = new ExcelJS.Workbook()
   workbook.creator = 'HEARTS'
   addSheet(workbook, 'Talks', TALK_NOTE, TALK_COLUMNS, sheets.talks || [])
   addSheet(workbook, 'Questions', QUESTION_NOTE, QUESTION_COLUMNS, sheets.questions || [])
   addSheet(workbook, 'Resources', RESOURCE_NOTE, RESOURCE_COLUMNS, sheets.resources || [])
+  addSheet(workbook, CIRCLE_TAB, CIRCLE_NOTE, CIRCLE_COLUMNS, sheets.circle || [])
   const out = await workbook.xlsx.writeBuffer()
   return Buffer.from(out)
 }
@@ -447,7 +474,18 @@ export function rowsFromCatalogue(catalogue: SheetCatalogue) {
     talks: lessons.map((lesson) => talkSheetValues(lesson, catalogue)),
     questions: catalogue.points.filter((point) => ids.has(point.lesson)).map((point) => questionSheetValues(point, catalogue)),
     resources: catalogue.resources.filter((resource) => ids.has(resource.lesson)).map((resource) => resourceSheetValues(resource, catalogue)),
+    circle: (catalogue.circle || []).filter((answer) => ids.has(answer.lesson)).map((answer) => circleRowValues(answer, catalogue)),
   }
+}
+
+function talkOf(lessonId: number, catalogue: SheetCatalogue) {
+  const lesson = catalogue.lessons.find((row) => row.id === lessonId)
+  const key = lesson ? catalogue.keys.find((row) => row.lesson === lesson.id) : null
+  return { talkKey: lesson ? key?.talkKey || derivedTalkKey(lesson) : null, youtubeId: lesson?.youtubeId || null }
+}
+
+export function circleRowValues(answer: CircleRow, catalogue: SheetCatalogue): Record<string, string | number | null> {
+  return circleSheetValues(answer, talkOf(answer.lesson, catalogue))
 }
 
 function textOf(row: InputRow, column: string) {
@@ -1332,13 +1370,103 @@ function planResources(working: Working, rows: InputRow[]) {
   }
 }
 
+const foldBody = (value: string) => value.normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim()
+
+// Circle answers sit under a question as examples and are never counted: no answer, completion or task is made here.
+function planCircle(working: Working, rows: InputRow[]) {
+  const catalogue = working.catalogue
+  const answers = catalogue.circle || []
+  const goingPoints = new Set(working.ops.flatMap((op) => (op.op === 'point.delete' ? [op.id] : [])))
+  const goingLessons = new Set(working.ops.flatMap((op) => (op.op === 'lesson.delete' ? [op.id] : [])))
+  const seenIds = new Set<number>()
+  const seenNew = new Set<string>()
+  for (const row of rows) {
+    const cells: Partial<Record<CircleColumn, string>> = {}
+    for (const column of CIRCLE_COLUMNS) if (present(row, column)) cells[column] = textOf(row, column)
+    const read = readCircleRow(cells)
+    const problems: SheetIssue[] = read.ok ? [] : read.issues.map((issue) => ({ tab: CIRCLE_TAB, row: row.row, column: issue.column, message: issue.message }))
+    const fail = (column: string, message: string) => problems.push({ tab: CIRCLE_TAB, row: row.row, column, message })
+    const giveUp = () => {
+      working.errors.push(...problems)
+      working.skipped += 1
+    }
+    if (!read.ok) {
+      giveUp()
+      continue
+    }
+    const value = read.value
+    const point = catalogue.points.find((item) => item.id === value.questionId) || null
+    const lesson = point ? catalogue.lessons.find((item) => item.id === point.lesson) || null : null
+    if (!point || !lesson || !lesson.inScope) {
+      fail('question_id', `No question in this import has id ${value.questionId}. Import new questions first, then add their circle answers with the question_id from a fresh export.`)
+      giveUp()
+      continue
+    }
+    const talkKey = textOf(row, 'talk_key')
+    const youtubeText = textOf(row, 'youtube_id')
+    const talk = talkOf(lesson.id, catalogue)
+    const knownKey = talkKey && (talkKey === talk.talkKey || talkKey === derivedTalkKey(lesson))
+    if ((talkKey && !knownKey) || (youtubeText && youtubeText !== lesson.youtubeId && youtubeIdFromUrl(youtubeText) !== lesson.youtubeId)) {
+      fail(talkKey && !knownKey ? 'talk_key' : 'youtube_id', `Question ${point.id} belongs to ${talk.talkKey}, not to this talk.`)
+    }
+    if (goingPoints.has(point.id) || goingLessons.has(lesson.id)) fail('question_id', 'This sheet also deletes that question, so it can have no circle answers.')
+    else if (point.family === 'workbook') fail('question_id', `Question ${point.id} is a workbook reflection. Nobody sees “What others said” in the workbook, so a circle answer there would never be shown.`)
+    else if (point.status === 'rejected') fail('question_id', `Question ${point.id} is rejected, so learners never meet it.`)
+    const existing = value.circleId ? answers.find((answer) => answer.id === value.circleId) || null : null
+    if (value.circleId && !existing) fail('circle_id', `No circle answer here has id ${value.circleId}. Leave circle_id blank to add an answer.`)
+    if (existing && existing.point !== point.id) fail('question_id', `Circle answer ${existing.id} is under question ${existing.point}. Move it in the circle desk instead.`)
+    if (value.circleId && seenIds.has(value.circleId)) fail('circle_id', 'This circle answer is already on an earlier row of this sheet.')
+    if (problems.length) {
+      giveUp()
+      continue
+    }
+    const label = `${value.name}: ${value.body}`.slice(0, 80)
+    if (value.remove) {
+      seenIds.add(existing!.id)
+      working.ops.push({ op: 'circle.delete', id: existing!.id })
+      working.changes.push({ tab: CIRCLE_TAB, row: row.row, action: 'delete', label, detail: `The circle answer under question ${point.id} will be removed.` })
+      continue
+    }
+    if (!existing) {
+      const signature = `${point.id}:${foldBody(value.body)}`
+      if (seenNew.has(signature) || answers.some((answer) => answer.point === point.id && foldBody(answer.body) === foldBody(value.body))) {
+        working.unchanged += 1
+        continue
+      }
+      seenNew.add(signature)
+      working.ops.push({
+        op: 'circle.create', point: point.id, lesson: lesson.id,
+        data: { name: value.name, body: value.body, tone: value.tone || undefined, length: value.length || undefined, origin: value.origin, enabled: value.enabled, portal: catalogue.circlePortal || undefined },
+      })
+      working.changes.push({ tab: CIRCLE_TAB, row: row.row, action: 'create', label, detail: `New circle answer under question ${point.id}${value.enabled ? '' : ', switched off'}. It is never counted as an answer.` })
+      continue
+    }
+    seenIds.add(existing.id)
+    const patch: Record<string, unknown> = {}
+    if (present(row, 'name') && value.name !== existing.name) patch.name = value.name
+    if (value.body !== existing.body) patch.body = value.body
+    if (present(row, 'tone') && (value.tone || '') !== (existing.tone || '')) patch.tone = value.tone
+    if (present(row, 'length') && (value.length || '') !== (existing.length || '')) patch.length = value.length
+    if (present(row, 'origin') && value.origin !== (existing.origin === 'ai' ? 'ai' : 'staff')) patch.origin = value.origin
+    if (present(row, 'enabled') && value.enabled !== existing.enabled) patch.enabled = value.enabled
+    if (!Object.keys(patch).length) {
+      working.unchanged += 1
+      continue
+    }
+    working.ops.push({ op: 'circle.update', id: existing.id, patch })
+    const switched = 'enabled' in patch ? (patch.enabled ? ' Switched on.' : ' Switched off.') : ''
+    working.changes.push({ tab: CIRCLE_TAB, row: row.row, action: 'update', label: `Circle answer ${existing.id}`, detail: `The circle answer will be updated.${switched}` })
+  }
+}
+
 /** Dry-run. Nothing is written. Rows with errors are skipped and listed; the rest are creates, updates, deletes or unchanged. */
-export function planSheet(parsed: { talks: InputRow[]; questions: InputRow[]; resources: InputRow[]; errors?: SheetIssue[] }, catalogue: SheetCatalogue): SheetPlan {
+export function planSheet(parsed: { talks: InputRow[]; questions: InputRow[]; resources: InputRow[]; circle?: InputRow[]; errors?: SheetIssue[] }, catalogue: SheetCatalogue): SheetPlan {
   const working = indexCatalogue(catalogue)
   working.errors.push(...(parsed.errors || []))
   planTalks(working, parsed.talks)
   planQuestions(working, parsed.questions)
   planResources(working, parsed.resources)
+  planCircle(working, parsed.circle || [])
   return { errors: working.errors, warnings: working.warnings, changes: working.changes, unchanged: working.unchanged, skipped: working.skipped, ops: working.ops }
 }
 

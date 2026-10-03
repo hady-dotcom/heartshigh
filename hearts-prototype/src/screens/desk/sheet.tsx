@@ -1,5 +1,6 @@
 import type { Payload } from 'payload'
 import { idOf } from '@/lib/ids'
+import { circleAnswerCount } from '@/server/circle'
 import type { SessionUser } from '@/server/context'
 import type { Ctx, Row } from '../common'
 import { rows, str } from '../common'
@@ -54,7 +55,7 @@ function SheetBody({
   portals: { slug: string; name: string }[]
   preview: { id: number; summary: Summary } | null
   last: { id: number; fileName?: string } | null
-  libraryCounts: { talks: number; questions: number; resources: number }
+  libraryCounts: { talks: number; questions: number; resources: number; circle: number }
 }) {
   const summary = preview?.summary
   const counts = summary?.counts
@@ -72,6 +73,7 @@ function SheetBody({
         <div className="stat-chip"><b>{libraryCounts.talks}</b><span>Talks in this export</span></div>
         <div className="stat-chip"><b>{libraryCounts.questions}</b><span>Questions</span></div>
         <div className="stat-chip"><b>{libraryCounts.resources}</b><span>Resources</span></div>
+        <div className="stat-chip" data-testid="sheet-circle-count"><b>{libraryCounts.circle}</b><span>Circle answers (never counted)</span></div>
         <div className="stat-chip"><b>{last ? '1' : '0'}</b><span>Import waiting to undo</span></div>
       </div>
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.1fr) minmax(280px, 0.9fr)', alignItems: 'start' }}>
@@ -103,7 +105,7 @@ function SheetBody({
             <label className="stack">Workbook (.xlsx)
               <input type="file" name="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required data-testid="sheet-file" />
             </label>
-            <p className="hint">A blank cell leaves that field as it is. To remove a row, set its status to delete. Times can be seconds, m:ss or h:mm:ss.</p>
+            <p className="hint">A blank cell leaves that field as it is. To remove a row, set its status to delete. Times can be seconds, m:ss or h:mm:ss. The CircleAnswers tab adds example answers under a question; they are never counted as answers or tasks.</p>
             <div className="actions"><button className="btn ink" type="submit" data-testid="sheet-preview-submit">Preview import</button></div>
           </form>
         </section>
@@ -237,17 +239,18 @@ function SheetBody({
   )
 }
 
-async function catalogueCounts(payload: Payload, where: Record<string, unknown>) {
+async function catalogueCounts(payload: Payload, where: Record<string, unknown>, portalId: number | null) {
   const courses = await rows(payload, 'courses', where as never, { limit: 500 })
   const ids = courses.map((course) => course.id)
-  if (!ids.length) return { talks: 0, questions: 0, resources: 0 }
+  if (!ids.length) return { talks: 0, questions: 0, resources: 0, circle: 0 }
   const lessons = await rows(payload, 'lessons', { course: { in: ids } }, { limit: 2000 })
   const lessonIds = lessons.map((lesson) => lesson.id)
-  const [questions, resources] = await Promise.all([
+  const [questions, resources, circle] = await Promise.all([
     lessonIds.length ? payload.count({ collection: 'engagement-points', overrideAccess: true, where: { lesson: { in: lessonIds } } }) : Promise.resolve({ totalDocs: 0 }),
     lessonIds.length ? payload.count({ collection: 'resources', overrideAccess: true, where: { lesson: { in: lessonIds } } }) : Promise.resolve({ totalDocs: 0 }),
+    circleAnswerCount(payload, lessonIds, portalId),
   ])
-  return { talks: lessons.length, questions: questions.totalDocs, resources: resources.totalDocs }
+  return { talks: lessons.length, questions: questions.totalDocs, resources: resources.totalDocs, circle }
 }
 
 export async function MasterSheetScreen({ payload, user, query }: { payload: Payload; user: SessionUser; query: Query }) {
@@ -256,7 +259,7 @@ export async function MasterSheetScreen({ payload, user, query }: { payload: Pay
     rows(payload, 'portals', undefined, { sort: 'name', limit: 200 }),
     query.preview ? loadPreview(payload, query.preview, 'master', null) : Promise.resolve(null),
     lastImport(payload, 'master', null),
-    catalogueCounts(payload, { origin: { equals: 'master' } }),
+    catalogueCounts(payload, { origin: { equals: 'master' } }, null),
   ])
   return (
     <DeskFrame payload={payload} user={user} title="Master sheet" intro="Upload one workbook to add talks and place pop-up questions, or download what is already here. A dry run shows every add, change and problem before anything is saved." active="sheet" nav={masterNav()} brand="Hudhud" subBrand="Master desk" brandHref="/master" query={query} testId="master-sheet">
@@ -281,7 +284,7 @@ export async function PortalSheetScreen(ctx: Ctx) {
     rows(payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }] }, { sort: 'title', limit: 500 }),
     query.preview ? loadPreview(payload, query.preview, 'portal', portal.id) : Promise.resolve(null),
     lastImport(payload, 'portal', portal.id),
-    catalogueCounts(payload, { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }] }),
+    catalogueCounts(payload, { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }] }, portal.id),
   ])
   return (
     <AdminFrame ctx={ctx} active="sheet" title="Master sheet" intro="Load talks and pop-up questions into courses made in this portal. The master library stays as it is." testId="portal-sheet">
