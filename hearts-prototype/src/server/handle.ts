@@ -24,6 +24,7 @@ import { HORS_MAX, HORS_MIN, tierTimings } from '@/lib/tiers'
 import { completionVerdict } from '@/lib/nesting'
 import { placeOfLesson } from './harvest'
 import { importedSheetDraftIds } from './imported-questions'
+import { finishedBySchedule } from '@/lib/on-time'
 import { showUncheckedTalks, tierVisible } from './opening'
 import { tierSourceText } from './tier-source'
 import { handleCircle } from './circle'
@@ -761,7 +762,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (kind === 'course') {
       const course = await findDoc(payload, 'courses', Number(text(form, 'course')))
       if (!course || course.origin !== 'master') return redirectTo(req, text(form, 'next') || '/', 'Only library courses can be adopted.')
-      if (!course.importable) return redirectTo(req, text(form, 'next') || '/', 'That course is not marked importable.')
+      if (!course.importable) return redirectTo(req, text(form, 'next') || '/', 'That course is not available to add.')
     } else {
       const pack = await findDoc(payload, 'packs', Number(text(form, 'pack')))
       if (!pack || pack.owner !== 'master') return redirectTo(req, text(form, 'next') || '/', 'Only library packs can be adopted.')
@@ -1353,10 +1354,13 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         where: { and: [{ portal: { equals: portal } }, { learners: { contains: user.id } }] },
       })
       const today = now().toISOString().slice(0, 10)
+      const dates: string[] = []
       for (const plan of plans.docs as { slots?: { date?: string; lessonId?: number }[] }[]) {
-        const slot = (plan.slots || []).find((row) => row.lessonId === lessonId)
-        if (slot?.date && today <= slot.date) onTime = true
+        for (const slot of plan.slots || []) {
+          if (slot.lessonId === lessonId && slot.date) dates.push(String(slot.date))
+        }
       }
+      onTime = finishedBySchedule(dates, today)
     }
     const existing = await payload.find({
       collection: 'completions',
@@ -1554,7 +1558,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const token = text(form, 'token')
     const found = await payload.find({ collection: 'courses', overrideAccess: true, limit: 1, where: { importToken: { equals: token } } })
     const course = found.docs[0] as { id: number; importable?: boolean; title?: string } | undefined
-    if (!course || course.importable === false) return redirectTo(req, text(form, 'next') || '/', 'That import token was not recognised.')
+    if (!course || course.importable === false) return redirectTo(req, text(form, 'next') || '/', 'That share code was not recognised.')
     const already = await payload.find({
       collection: 'adoptions',
       overrideAccess: true,

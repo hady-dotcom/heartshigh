@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Payload } from 'payload'
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
-import { Mascot } from '@/components/brand'
+import { EmptyState } from '@/components/app/empty'
 import { GardenPath } from '@/components/app/garden-path'
 import { Flower, LockIcon } from '@/components/icons'
 import { now } from '@/lib/clock'
@@ -159,10 +159,9 @@ export async function GardenScreen({ payload, user, base, query }: Ctx) {
           <Rings g={g} base={base} />
         </section>
         {path ? <GardenPath title={path.title} nodes={path.nodes} /> : (
-          <div className="empty-state" data-testid="garden-empty">
-            <Mascot width={110} />
-            <p>Start a course from Lanes and its path will grow here, one lesson at a time.</p>
-          </div>
+          <EmptyState testId="garden-empty" action={{ href: `${base}/lanes`, label: 'Browse courses' }}>
+            Start a course from Lanes and its path will grow here, one lesson at a time.
+          </EmptyState>
         )}
         {starting ? (
           <>
@@ -189,9 +188,9 @@ export async function GardenScreen({ payload, user, base, query }: Ctx) {
   )
 }
 
-export function Frame({ base, title, testId, children, unread, dark }: { base: string; title: string; testId: string; children: React.ReactNode; unread: number; dark?: boolean }) {
+export function Frame({ base, title, testId, children, unread, dark, evening }: { base: string; title: string; testId: string; children: React.ReactNode; unread: number; dark?: boolean; evening?: boolean }) {
   return (
-    <AppFrame testId={testId} dark={dark}>
+    <AppFrame testId={testId} dark={dark} evening={evening}>
       <div className="app-scroll">
         {dark ? children : (
           <>
@@ -201,7 +200,7 @@ export function Frame({ base, title, testId, children, unread, dark }: { base: s
           </>
         )}
       </div>
-      <TabBar base={base} active="garden" unread={unread} dark={dark} />
+      <TabBar base={base} active="garden" unread={unread} dark={dark} evening={evening} />
     </AppFrame>
   )
 }
@@ -452,7 +451,7 @@ export async function GardenWorkbook({ payload, user, base, query }: Ctx) {
     videos.get(video)!.push(row)
   }
   return (
-    <Frame base={base} title="Workbook" testId="garden-workbook" unread={unread}>
+    <Frame base={base} title="Workbook" testId="garden-workbook" unread={unread} evening>
       <Flash error={query.error} notice={query.notice} />
       {book.opening.length ? (
         <section className="wb-start" data-testid="where-you-started">
@@ -509,10 +508,12 @@ export async function GardenWorkbook({ payload, user, base, query }: Ctx) {
           </section>
         ))}
         {!answers.length ? (
-          <div className="empty-state" data-testid="workbook-empty">
-            <Mascot width={110} />
-            <p>{filter === 'all' ? 'Your answers to the questions in each film are kept here, whether you share them or not.' : 'Nothing here with this filter.'}</p>
-          </div>
+          <EmptyState
+            testId="workbook-empty"
+            action={filter === 'all' ? { href: `${base}/lanes`, label: 'Open a course' } : { href: `${base}/garden/workbook`, label: 'Show every answer' }}
+          >
+            {filter === 'all' ? 'Your answers to the questions in each film are kept here, whether you share them or not.' : 'Nothing here with this filter.'}
+          </EmptyState>
         ) : null}
       </div>
       {book.open.length ? (

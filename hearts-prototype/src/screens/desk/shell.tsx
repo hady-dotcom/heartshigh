@@ -81,6 +81,7 @@ export async function DeskFrame({
   tools,
   query,
   testId,
+  evening,
   children,
 }: {
   payload: Payload
@@ -96,6 +97,7 @@ export async function DeskFrame({
   tools?: ReactNode
   query: { error?: string; notice?: string }
   testId?: string
+  evening?: boolean
   children: ReactNode
 }) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 12 })).filter((note) => note.channel !== 'email-stub')
@@ -111,7 +113,7 @@ export async function DeskFrame({
         <button type="submit" className="btn ghost">Sign out</button>
       </form>
     </div>
-    <div className="desk" data-testid={testId}>
+    <div className={evening ? 'desk evening' : 'desk'} data-testid={testId}>
       <aside className="side">
         <Link className="side-brand" href={brandHref}>
           <BrandMark size={40} />

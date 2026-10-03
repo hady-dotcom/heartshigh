@@ -1,5 +1,6 @@
 /* Desktop CMS for the master desk and portal admins. Sidebar layout; collapses to a top bar under 900px. */
 .desk { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; background: #f4efe5; color: var(--ink); }
+.desk .body.grid.two { align-items: start; }
 .side { position: sticky; top: 0; height: 100vh; background: #fbf8f1; border-right: 1px solid var(--line); padding: 22px 16px; display: flex; flex-direction: column; gap: 4px; }
 .side-brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 20px; text-decoration: none; }
 .side-brand b { display: block; font-size: 15px; line-height: 1.2; }
@@ -242,3 +243,137 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .type-card-head { display: flex; align-items: center; gap: 8px; font-size: 14px; }
 .type-card video { width: 100%; aspect-ratio: 9 / 16; border-radius: 10px; background: #14120e; max-height: 280px; object-fit: contain; }
 @media (max-width: 1180px) { .type-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.pack-counts { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.pack-fold { margin-top: 4px; }
+.pack-fold > summary, .door-group > summary, .seat-group > summary, .tree-door > summary { cursor: pointer; font-weight: 650; }
+.pack-contents { display: grid; gap: 8px; margin-top: 10px; }
+.door-group, .seat-group, .tree-door { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 8px 10px; }
+.seat-group { margin-top: 8px; background: #fbf7ef; }
+.door-group > summary, .seat-group > summary, .tree-door > summary { display: flex; align-items: center; gap: 8px; }
+.door-group > summary .hint, .seat-group > summary .hint, .tree-door > summary .hint { margin-left: auto; font-weight: 600; }
+.door-group-body, .tree-door-body { display: grid; gap: 6px; margin-top: 8px; }
+.pack-course, .tree-course { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
+.pack-course { justify-content: space-between; flex-wrap: wrap; padding: 4px 2px; }
+.door-tags { display: inline-flex; gap: 4px; margin-left: 6px; vertical-align: middle; }
+.door-tag { font-size: 11px; font-weight: 700; letter-spacing: 0.02em; color: var(--gold-ink, #2a2414); background: color-mix(in srgb, var(--gold, #dca643) 32%, white); border-radius: 999px; padding: 1px 7px; }
+.course-tree { display: grid; gap: 8px; }
+.tree-search { width: 100%; border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; }
+.tree-selected { margin: 0; }
+.tree-seat-name { font-size: 12.5px; color: var(--ink-2); font-weight: 650; margin: 4px 0; }
+.tree-door-name { font-weight: 700; }
+abbr.tip { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
+
+/*
+ * Every desk (portal admin, teacher, master). Same token names as the Dawn/Evening theme:
+ * dark sidebar and card header bars, warm parchment page and cards, gold primary buttons.
+ * --paper #EFE3C8, --card #F7EEDB, --ink #1F2A2A, headings --teal-deep #0F3B3A.
+ */
+.desk {
+  --paper: #efe3c8;
+  --card: #f7eedb;
+  --glass: #f7eedb;
+  --glass-solid: #f7eedb;
+  --field: #fbf6ea;
+  --ink: #1f2a2a;
+  --ink-2: #243433;
+  --muted: #3d524e;
+  --line: #d4c4a4;
+  --gold: #d4a84b;
+  --gold-deep: #6b4e12;
+  --gold-ink: #1a1408;
+  --teal: #1f6f62;
+  --teal-deep: #0f3b3a;
+  --teal-fill: #0f3b3a;
+  --mint: #e5f2ec;
+  --night: #0f3b3a;
+  --parchment: #f6eedc;
+  background: var(--paper);
+  color: var(--ink);
+  color-scheme: light;
+}
+.desk .side { background: var(--night); color: var(--parchment); border-right-color: rgba(212, 168, 75, 0.28); }
+.desk .side-brand,
+.desk .side-brand b,
+.desk .side-foot .who,
+.desk .side-foot .who b,
+.desk .side a.nav,
+.desk .side-foot button { color: var(--parchment); }
+.desk .side-brand small,
+.desk .side .group { color: #e7dcc8; }
+.desk .side-foot { border-top-color: rgba(212, 168, 75, 0.28); }
+.desk .side a.nav:hover,
+.desk .side-foot button:hover { background: rgba(212, 168, 75, 0.16); color: var(--parchment); }
+.desk .side a.nav.on { background: var(--gold); color: var(--gold-ink); }
+.desk .main-head h1,
+.desk .lib-card h3,
+.desk .tree-door-name,
+.desk .door-group > summary,
+.desk .seat-group > summary,
+.desk .tree-door > summary {
+  color: var(--teal-deep);
+  font-family: var(--serif);
+}
+.desk .main-head h1 { font-size: 40px; font-weight: 650; line-height: 1.05; }
+.desk .main-head p,
+.desk .hint,
+.desk .check,
+.desk .form label.stack,
+.desk .form .row > span,
+.desk .lib-card p,
+.desk .tree-seat-name,
+.desk .pack-counts { color: var(--ink); }
+.desk .hint,
+.desk .tree-seat-name { color: var(--muted); }
+.desk .lib-card h3 { font-size: 26px; font-weight: 650; line-height: 1.15; }
+.desk .door-group > summary,
+.desk .seat-group > summary,
+.desk .tree-door > summary { font-size: 18px; font-weight: 650; }
+.desk .panel,
+.desk .lib-card,
+.desk .type-card,
+.desk .count-tile,
+.desk .circle-list li { background: var(--card); color: var(--ink); border-color: var(--line); }
+.desk .door-group,
+.desk .tree-door { background: var(--field); color: var(--ink); border-color: var(--line); }
+.desk .seat-group { background: var(--paper); border-color: var(--line); }
+.desk .panel > header,
+.desk .panel > header.light,
+.desk .org-band,
+.desk .stat-chip { background: var(--teal-fill); color: var(--parchment); border-bottom-color: rgba(212, 168, 75, 0.28); }
+.desk .panel > header h2,
+.desk .panel > header p,
+.desk .org-band h2,
+.desk .org-band .lbl,
+.desk .org-band .status,
+.desk .stat-chip { color: var(--parchment); opacity: 1; }
+.desk .panel > header h2 { font-size: 20px; font-weight: 650; }
+.desk table.data th { background: transparent; color: var(--teal-deep); border-bottom-color: var(--line); }
+.desk table.data td { color: var(--ink); border-bottom-color: #e4d5b8; }
+.desk .input,
+.desk select,
+.desk textarea,
+.desk input[type='text'],
+.desk input[type='number'],
+.desk input[type='search'],
+.desk input[type='email'],
+.desk input[type='password'],
+.desk input[type='date'],
+.desk input[type='url'],
+.desk .tree-search,
+.desk .address,
+.desk .bell summary { background: var(--field); color: var(--ink); border-color: var(--line); }
+.desk .btn,
+.desk .btn.ink,
+.desk .btn.teal { background: var(--gold); color: var(--gold-ink); border-color: transparent; }
+.desk .btn.ghost,
+.desk .btn.danger { background: transparent; color: var(--ink); border-color: var(--teal-deep); }
+.desk .bell .count { background: var(--gold); color: var(--gold-ink); }
+.desk .badge.teal,
+.desk .badge.purple,
+.desk .badge.grey,
+.desk .badge.ink { background: var(--mint); color: var(--teal-deep); border: 0; }
+.desk .badge.gold,
+.desk .badge.rose { background: #f3e0b0; color: var(--gold-ink); border: 0; }
+.desk .check input { accent-color: var(--gold); }
+.desk .door-tag { color: var(--gold-ink); background: var(--gold); }

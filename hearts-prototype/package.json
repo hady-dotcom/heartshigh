@@ -16,6 +16,7 @@
     "bootstrap": "tsx scripts/bootstrap.ts",
     "seed": "tsx src/seed/seed.ts",
     "seed:starters": "tsx src/seed/seed.ts --starters",
+    "demo:timed-learners": "tsx src/seed/timed-learners.ts",
     "reseed": "tsx src/seed/seed.ts --reset",
     "generate:importmap": "tsx scripts/generate-importmap.ts",
     "generate:types": "tsx scripts/generate-types.ts",

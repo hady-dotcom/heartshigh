@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { Payload } from 'payload'
-import { Mascot } from '@/components/brand'
+import { EmptyState } from '@/components/app/empty'
 import { COLLECTION_NAMES, commentaryFor, isNewMoment, type ScholarCitation } from '@/lib/harvest'
 import { ayahId as idOfAyah, ayahWindow, surahLabel } from '@/lib/quran-match'
 import { TAFSIR_CREDIT } from '@/lib/tafsir'
@@ -202,10 +202,9 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
           </section>
         ))}
         {!entries.length ? (
-          <div className="empty-state" data-testid="harvest-empty">
-            <Mascot width={110} />
-            <p>Nothing gathered yet. Lines you watch in the feed, and the verses and hadith of talks you finish, are collected here.</p>
-          </div>
+          <EmptyState testId="harvest-empty" action={{ href: `${base}/lanes`, label: 'Watch a talk' }}>
+            Nothing gathered yet. When you finish a talk, the verses and hadith it quotes are collected here.
+          </EmptyState>
         ) : !shown.length ? (
           <p className="muted" data-testid="harvest-none">Nothing of this kind yet.</p>
         ) : null}

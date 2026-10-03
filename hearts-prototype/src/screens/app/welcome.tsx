@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { loadDoors } from '@/server/doors'
 import { doorOfClause } from '@/lib/doors'
 import { AppFrame, Flash, Hidden } from '@/components/app/shell'
-import { Mascot } from '@/components/brand'
+import { Arch } from '@/components/arch'
 import { optionLabels } from '@/lib/placing'
 import { courseCards, portalName } from '@/server/learner'
 import { type Ctx, embedUrl, rows, str } from '../common'
@@ -19,7 +19,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
       <AppFrame testId="welcome">
         <div className="splash" data-testid="splash">
           <div>
-            <Mascot width={260} pose="hero" alt="Hudhud, the hoopoe" />
+            <span className="splash-arch" aria-hidden><Arch size={96} /></span>
             <h1>{portal.welcome ? 'Welcome' : 'Someone wanted good for you'}</h1>
             <p>{portal.welcome || `${portalName(portal)} has opened a door for you: short films from real lectures, a few questions to think about, and a circle to sit with.`}</p>
             <Flash error={query.error} notice={query.notice} />
@@ -86,7 +86,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
       <div className="app-scroll">
         <Journey at={2} />
         <Flash error={query.error} notice={query.notice} />
-        <div style={{ textAlign: 'center', margin: '10px 0 6px' }}><Mascot width={96} /></div>
+        <div style={{ textAlign: 'center', margin: '10px 0 6px', color: 'var(--gold)' }}><Arch size={64} /></div>
         <h1 style={{ fontFamily: 'var(--serif)', fontSize: 34, textAlign: 'center', margin: '6px 0 14px', fontWeight: 600 }}>A good place to start</h1>
         {door ? (
           <article className="clause-card" data-testid="starting-door" data-door={door.number}>
