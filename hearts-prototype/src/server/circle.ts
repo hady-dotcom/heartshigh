@@ -56,11 +56,15 @@ export async function circleScope(payload: Payload, user: SessionUser, lessonId:
   return { ok: true, lesson, course, portal: mine }
 }
 
-/** Points a desk user may see on a talk: master and own-portal questions, never another portal's. */
+/**
+ * Questions on a talk that can carry circle answers for this desk user: master and own-portal questions, never
+ * another portal's, and never a workbook reflection, which has no "What others said" to show them in.
+ */
 export function pointsInScope(points: Doc[], user: SessionUser) {
-  if (user.role === 'master') return points
+  const shown = points.filter((point) => point.family !== 'workbook')
+  if (user.role === 'master') return shown
   const mine = portalIdOf(user)
-  return points.filter((point) => {
+  return shown.filter((point) => {
     const author = point.author as { role?: string; tenants?: { tenant?: unknown }[] } | null
     if (!author || typeof author !== 'object' || author.role === 'master') return true
     return (author.tenants || []).some((row) => idOf(row.tenant) === mine)
@@ -205,6 +209,7 @@ export async function handleCircle(action: string, form: FormData, payload: Payl
   if (action === 'circle-add') {
     const point = await find(payload, 'engagement-points', Number(text(form, 'point')))
     if (!point) return back(next, 'That question was not found.')
+    if (point.family === 'workbook') return back(next, 'That question is a workbook reflection. Nobody sees “What others said” there, so a circle answer would never be shown.')
     const scope = await circleScope(payload, user, idOf(point.lesson) || 0)
     if (!scope.ok) return back(next, scope.error)
     const name = text(form, 'name').slice(0, CIRCLE_NAME_MAX) || (user.name || '').split(' ')[0] || 'Someone in the circle'
