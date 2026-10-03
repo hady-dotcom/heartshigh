@@ -18,6 +18,7 @@ import { databaseKind, seedRefusal } from '../lib/env'
 import { clearDevPushMarker } from '../lib/prepare-db'
 import { FILMS } from './films'
 import { seedOpening, seedPeople, timingCheck } from './opening'
+import { seedSpeakers } from './speakers'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
@@ -512,6 +513,7 @@ async function main() {
   }
 
   const opening = await seedOpening(payload, { clauseIds, portalIds, now: new Date(), showUnchecked: !startersOnly })
+  await seedSpeakers(payload)
   if (!startersOnly) await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...courseIds, ...opening.starterCourseIds] })
   await seedHarvest(payload, { now: new Date(), demo: !startersOnly })
   if (!startersOnly) {

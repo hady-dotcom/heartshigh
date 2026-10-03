@@ -11,6 +11,7 @@ import { loadDoors } from '@/server/doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { visibleCourseIds } from '@/server/context'
 import { courseCards, portraitFor, posterFor, slugify } from '@/server/learner'
+import { speakerPage } from '@/server/speakers'
 import { learnerClips } from '@/server/opening'
 import { appetiserStop } from '@/lib/tiers'
 import { lineAt } from '@/lib/harvest'
@@ -23,12 +24,13 @@ import { circleForPoints, circleSettings } from '@/server/circle'
 const START = ['orange', 'gold', 'teal']
 
 export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx, speakerSlug: string) {
-  const [courses, { items }, unread] = await Promise.all([courseCards(payload, user), learnerClips(payload, portal, user), unreadCount(payload, user)])
-  const theirs = courses.filter((course) => course.speakerSlug === speakerSlug)
-  const clips = items.filter((item) => item.speakerSlug === speakerSlug)
-  if (!theirs.length && !clips.length) notFound()
-  const name = clips[0]?.speaker || theirs[0]?.speaker || speakerSlug
-  const portrait = portraitFor(speakerSlug)
+  const [courses, { items }, unread, speaker] = await Promise.all([courseCards(payload, user), learnerClips(payload, portal, user), unreadCount(payload, user), speakerPage(payload, speakerSlug)])
+  const addresses = new Set([speakerSlug, speaker?.slug, ...(speaker?.aliasSlugs || [])].filter((value): value is string => Boolean(value)))
+  const theirs = courses.filter((course) => addresses.has(course.speakerSlug))
+  const clips = items.filter((item) => addresses.has(item.speakerSlug))
+  if (!speaker && !theirs.length && !clips.length) notFound()
+  const name = speaker?.displayName || clips[0]?.speaker || theirs[0]?.speaker || speakerSlug
+  const portrait = speaker?.portrait || portraitFor(speaker?.slug || speakerSlug)
   const cover = theirs.find((course) => course.poster)?.poster || clips.find((clip) => clip.poster)?.poster || null
   const intro = clips.find((clip) => clip.youtubeId && !clip.style) || clips[0]
   const lanes = [...new Set(clips.map((clip) => clip.laneLabel))]
@@ -41,10 +43,17 @@ export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx,
         </div>
         <div className="bio-portrait">{portrait ? <img src={portrait} alt="" /> : <Avatar name={name} portrait={null} size={108} />}</div>
         <h1 className="bio-name" data-testid="speaker-name">{name}</h1>
-        <p className="bio-role">{theirs.length} course{theirs.length === 1 ? '' : 's'} here{lanes.length ? ` · ${lanes.join(', ')}` : ''}</p>
+        <p className="bio-role">{speaker?.honorific && !name.startsWith(speaker.honorific) ? `${speaker.honorific} · ` : ''}{theirs.length} course{theirs.length === 1 ? '' : 's'} here{lanes.length ? ` · ${lanes.join(', ')}` : ''}</p>
+        {speaker?.bio ? <p className="bio-copy" data-testid="speaker-bio">{speaker.bio}</p> : null}
+        {speaker?.links.length ? (
+          <div className="bio-links" data-testid="speaker-links">
+            {speaker.links.map((link) => <a key={link.url} href={link.url}>{link.label}</a>)}
+          </div>
+        ) : null}
+        {speaker?.sources ? <pre className="bio-sources" data-testid="speaker-sources">{speaker.sources}</pre> : null}
         <Flash error={query.error} notice={query.notice} />
         <div className="bio-actions">
-          <FollowButton slug={speakerSlug} className="follow teal" />
+          <FollowButton slug={speaker?.slug || speakerSlug} className="follow teal" />
           <a className="ask" href="#ask" data-testid="ask-question">Ask a question</a>
         </div>
         {intro ? (
