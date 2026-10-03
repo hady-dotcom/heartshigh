@@ -40,8 +40,8 @@ test('a week of use, so the garden has something in it', async ({ page }) => {
   await page.getByTestId('answer-share').check()
   await page.getByTestId('answer-submit').click()
   await expect(page.getByTestId('notice')).toBeVisible()
-  await page.goto('/p/east-london/garden/jibril/22')
-  await expect(page.getByText('Three seats.')).toBeVisible()
+  await page.goto('/p/east-london/garden/jibril/10')
+  await expect(page.getByText('Seats from al-Ghuniyya.')).toBeVisible()
   if (await page.getByTestId('seat-read').count()) await page.getByTestId('seat-read').first().click()
   await page.setViewportSize({ width: 1440, height: 900 })
   await signIn(page, 'elm-teacher@hearts.test', 'portal-teacher', '/p/east-london/admin/teach')
@@ -68,7 +68,7 @@ test('learner app at phone size', async ({ page }) => {
     ['04-garden', `${base}/garden`],
     ['04-garden-general', `${base}/garden/general`],
     ['04-garden-jibril', `${base}/garden/jibril`],
-    ['04-garden-clause', `${base}/garden/jibril/22`],
+    ['04-garden-door', `${base}/garden/jibril/10`],
     ['04-garden-ghunya', `${base}/garden/ghunya`],
     ['04-garden-harvest', `${base}/garden/harvest`],
     ['04-garden-workbook', `${base}/garden/workbook`],

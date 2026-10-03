@@ -2,7 +2,7 @@ import { chromium } from '@playwright/test'
 
 const base = process.env.BASE_URL || 'http://127.0.0.1:3000'
 const elm = '/p/east-london'
-const learnerPaths = ['', '/lanes', '/speaker/mikaeel-smith', '/course/3', '/course/1', '/garden', '/garden/general', '/garden/jibril', '/garden/jibril/22', '/garden/ghunya', '/garden/harvest', '/garden/workbook', '/me', '/me/plan', '/me/circle', '/me/settings', '/welcome?step=placing', '/welcome?step=done'].map((path) => `${elm}${path}`)
+const learnerPaths = ['', '/lanes', '/speaker/mikaeel-smith', '/course/3', '/course/1', '/garden', '/garden/general', '/garden/jibril', '/garden/jibril/10', '/garden/ghunya', '/garden/harvest', '/garden/workbook', '/me', '/me/plan', '/me/circle', '/me/settings', '/welcome?step=placing', '/welcome?step=done'].map((path) => `${elm}${path}`)
 const adminPaths = ['', '/content', '/content/3', '/content/4', '/library', '/access', '/teach', '/plans', '/nights', '/settings', '/wizard'].map((path) => `${elm}/admin${path}`)
 const visits = [
   ['elm-learner@hearts.test', 'portal-learner', learnerPaths, { width: 390, height: 844 }],

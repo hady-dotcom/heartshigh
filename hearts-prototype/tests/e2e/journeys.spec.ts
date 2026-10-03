@@ -43,7 +43,7 @@ async function placing(page: Page, picks: string[]) {
   await expect(questions).toHaveCount(picks.length)
   for (const [index, pick] of picks.entries()) await questions.nth(index).getByLabel(pick, { exact: true }).check()
   await page.getByTestId('placing-submit').click()
-  await expect(page.getByTestId('starting-clause')).toBeVisible()
+  await expect(page.getByTestId('starting-door')).toBeVisible()
 }
 
 async function masterRequest() {
@@ -192,11 +192,13 @@ test.describe.serial('HEARTS journeys', () => {
 
     await join(page, seedCode('elm-learner'), 'Placed by Prophet', `p1-${suffix}@hearts.test`, 'placing-one')
     await placing(page, BY_PROPHET)
-    await expect(page.getByTestId('starting-clause')).toContainText('3')
+    await expect(page.getByTestId('starting-door')).toHaveAttribute('data-door', '2')
+    await expect(page.getByTestId('starting-door')).toContainText('The sitting')
     await expect(page.getByTestId('first-course')).toContainText('How to Live Like the Prophet')
     await join(page, ` ${seedCode('elm-learner').toLowerCase()} `, 'Placed by Names', `p2-${suffix}@hearts.test`, 'placing-two')
     await placing(page, BY_NAMES)
-    await expect(page.getByTestId('starting-clause')).toContainText('22')
+    await expect(page.getByTestId('starting-door')).toHaveAttribute('data-door', '10')
+    await expect(page.getByTestId('starting-door')).toContainText('Believe in Allah')
     await expect(page.getByTestId('first-course')).toContainText('Ar-Rabb')
   })
 
@@ -440,7 +442,7 @@ test.describe.serial('HEARTS journeys', () => {
     })
     page.on('pageerror', (error) => errors.push(`${page.url()}: ${error.message}`))
     await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london')
-    for (const screen of ['', '/feed', '/lanes', '/garden', '/garden/jibril', '/garden/jibril/22', '/garden/ghunya', '/garden/workbook', '/me', '/me/circle', '/me/plan', '/course/4']) {
+    for (const screen of ['', '/feed', '/lanes', '/garden', '/garden/jibril', '/garden/jibril/10', '/garden/ghunya', '/garden/workbook', '/me', '/me/circle', '/me/plan', '/course/4']) {
       await page.goto(`/p/east-london${screen}`)
       await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => undefined)
     }

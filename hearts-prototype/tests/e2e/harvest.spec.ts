@@ -140,16 +140,17 @@ test.describe('harvest', () => {
     await expect(page.getByTestId('harvest-item')).toHaveCount(5)
     await expect(page.getByTestId('harvest-group')).toHaveCount(1)
     await expect(page.getByTestId('harvest-group').locator('h3')).toHaveText(TITLE)
-    await page.getByTestId('harvest-group-clause').click()
-    await expect(page).toHaveURL(/group=clause/)
-    await expect(page.getByTestId('harvest-group')).toHaveAttribute('data-group', 'clause-none')
+    await page.getByTestId('harvest-group-door').click()
+    await expect(page).toHaveURL(/group=door/)
+    await expect(page.getByTestId('harvest-group')).toHaveAttribute('data-group', 'door-none')
     await expect(page.getByTestId('harvest-item')).toHaveCount(5)
   })
 
-  test('a seeded learner’s harvest groups under the clauses of the hadith of Jibril', async ({ page }) => {
-    await signIn(page, 'elm-learner@hearts.test', 'portal-learner', `${BASE}/garden/harvest?group=clause`)
+  test('a seeded learner’s harvest groups under the doors of the hadith of Jibril', async ({ page }) => {
+    await signIn(page, 'elm-learner@hearts.test', 'portal-learner', `${BASE}/garden/harvest?group=door`)
     const groups = await page.getByTestId('harvest-group').evaluateAll((rows) => rows.map((row) => row.getAttribute('data-group')))
-    expect(groups.some((key) => key && /^clause-\d+$/.test(key))).toBe(true)
+    expect(groups.some((key) => key && /^door-\d+$/.test(key))).toBe(true)
+    for (const title of await page.locator('.harvest-group-title').allTextContents()) expect(title).toMatch(/^(Door \d{1,2} · .+|Not yet placed on the hadith)$/)
     expect(await page.getByTestId('harvest-item').count()).toBeGreaterThan(5)
   })
 
