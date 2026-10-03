@@ -1,91 +1,151 @@
-/* The Garden tab: an evening garden, one living tree per area. Painted layers swap in when the files exist. */
+/* The Garden tab. Painted evening (or dawn) scene, one tree per area. */
 
-.garden-home.app-scroll { padding-top: 0; padding-left: 0; padding-right: 0; }
+.garden-home.app-scroll { padding: 0 0 calc(104px + var(--safe-bottom)); }
 .garden-rest { padding: 8px 18px 0; }
 
 .garden-scene {
   position: relative;
-  min-height: calc(100dvh - 92px);
+  height: 100dvh;
   overflow: hidden;
   color: #fff8ee;
   background: #1a1428;
 }
-.garden-scene-bg, .garden-sky { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.garden-sky {
-  background:
-    radial-gradient(90% 42% at 72% 12%, rgba(255, 186, 110, 0.38), transparent 62%),
-    radial-gradient(50% 36% at 18% 8%, rgba(120, 86, 180, 0.45), transparent 70%),
-    linear-gradient(180deg, #161226 0%, #3a2748 34%, #7a4d3a 62%, #243526 100%);
-}
-.garden-sky::after {
-  content: '';
+.garden-scene-bg {
   position: absolute;
-  left: -10%; right: -10%; bottom: 0; height: 42%;
-  background:
-    radial-gradient(60% 80% at 18% 100%, #1c3a28 0%, transparent 70%),
-    radial-gradient(70% 90% at 78% 110%, #1a3324 0%, transparent 72%),
-    linear-gradient(180deg, transparent, rgba(16, 28, 18, 0.2));
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
 }
 
-.garden-top { position: relative; z-index: 2; padding: calc(18px + var(--safe-top)) 22px 0; text-align: center; }
-.garden-top h1 { margin: 0; font-size: 15px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; color: #f3d38e; }
-.garden-motto { margin: 10px 0 0; font-family: var(--serif); font-weight: 600; font-size: 28px; line-height: 1.15; text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35); }
-.garden-motto.quiet { margin-top: 4px; font-size: 16px; font-weight: 500; color: rgba(255, 248, 238, 0.82); }
-
-.garden-prop { position: absolute; z-index: 2; }
-.garden-prop.lantern.left { left: 16px; top: 28%; }
-.garden-prop.lantern.right { right: 14px; top: 24%; }
-.garden-prop.can { left: 18px; bottom: 18px; width: 54px; }
-.lantern {
-  display: block; width: 22px; height: 32px; border-radius: 4px 4px 8px 8px;
-  background: radial-gradient(circle at 50% 40%, #ffe7a8, #e0a04a 70%);
-  box-shadow: 0 0 18px 6px rgba(255, 196, 110, 0.55);
-  animation: lantern 2.8s ease-in-out infinite;
+.garden-top {
+  position: absolute;
+  z-index: 6;
+  left: 28px;
+  right: 28px;
+  top: calc(58px + var(--safe-top));
+  text-align: center;
 }
-.lantern::before { content: ''; display: block; height: 8px; margin: -8px auto 0; width: 2px; background: #c9b48a; }
-.watering-can {
-  display: block; width: 48px; height: 32px; border-radius: 0 0 10px 10px;
-  background: linear-gradient(180deg, #d7c4a2, #8d7352);
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.2);
+.garden-top h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 26px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #fff8ee;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
 }
-.watering-can::before { content: ''; position: absolute; left: 40px; top: 6px; width: 16px; height: 8px; border: 3px solid #8d7352; border-left: 0; border-radius: 0 8px 8px 0; }
-
-.garden-trees {
-  position: absolute; left: 0; right: 0; bottom: 28px; z-index: 2;
-  height: 62%;
+.gold-mark {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  background: #e7c56a;
+  vertical-align: 2px;
 }
-.garden-tree { position: absolute; width: 118px; text-align: center; }
-.garden-tree[data-area='quran'] { left: 6%; bottom: 8%; }
-.garden-tree[data-area='hadith'] { right: 4%; bottom: 12%; }
-.garden-tree[data-area='character'] { left: 36%; bottom: 2%; }
-.garden-tree[data-area='society'] { left: 18%; bottom: 34%; }
-.garden-tree[data-area='spirituality'] { right: 16%; bottom: 36%; }
-.tree-art, .tree-svg { width: 118px; height: 148px; display: block; margin: 0 auto; object-fit: contain; }
-.tree-svg .canopy { transform-origin: 60px 120px; animation: sway 3.2s ease-in-out infinite; }
-.garden-tree[data-area='hadith'] .canopy, .garden-tree[data-area='spirituality'] .canopy { animation-delay: -1.6s; }
-.garden-tree[data-area='society'] .canopy { animation-delay: -3s; }
 
-.plaque {
-  margin: -6px auto 0; width: max-content; max-width: 130px;
-  background: linear-gradient(180deg, #efe4cf, #d9c7a4);
-  color: #3a2c1a; border-radius: 8px; padding: 4px 8px 5px;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
+.garden-prop { position: absolute; z-index: 6; pointer-events: none; }
+.garden-prop.can { left: 2%; bottom: 12%; width: 78px; height: auto; }
+.garden-prop.lantern {
+  right: 3%;
+  bottom: 13%;
+  width: 54px;
+  height: auto;
+  animation: lantern-pulse 2.8s ease-in-out infinite;
 }
-.plaque b { display: block; font-size: 12px; letter-spacing: 0.04em; }
-.plaque small { display: block; font-size: 10px; color: #6a5438; line-height: 1.2; }
 
-.garden-fruits { list-style: none; margin: 0; padding: 0; position: absolute; left: 8px; right: 8px; top: 18px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
-.garden-fruit { animation: bloom 0.7s ease both; }
-.garden-fruit a { display: block; }
-.fruit-art, .garden-fruit svg { width: 28px; height: 28px; filter: drop-shadow(0 0 6px rgba(240, 195, 106, 0.8)); }
-.tree-book { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 700; color: #f3d38e; text-decoration: none; }
+/* Trees share one canvas. The anchor (256, 622) sits on the stone pad. */
+.garden-trees { position: absolute; inset: 0; z-index: 3; }
+.garden-tree {
+  position: absolute;
+  left: var(--pad-x);
+  top: var(--pad-y);
+  width: 50%;
+  aspect-ratio: 512 / 640;
+  transform: translate(-50%, -97.1875%);
+  z-index: var(--z);
+}
+.tree-planter, .tree-canopy { position: absolute; inset: 0; }
+.tree-planter { z-index: 1; }
+.tree-planter img, .tree-canopy > img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: block;
+  pointer-events: none;
+}
+/* Dawn tints the trees only. The dawn painting is already the background. */
+.garden-scene[data-theme='dawn'] .tree-planter img,
+.garden-scene[data-theme='dawn'] .tree-canopy > img {
+  filter: sepia(0.28) hue-rotate(292deg) saturate(0.72) brightness(1.08);
+}
 
-@keyframes lantern { 50% { opacity: 0.45; box-shadow: 0 0 26px 10px rgba(255, 210, 120, 0.95); } }
-@keyframes sway { 50% { transform: rotate(-5deg); } }
-@keyframes bloom { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
+/* Canopy origin is the trunk base. It sways only once the split layer is in use. */
+.tree-canopy {
+  z-index: 2;
+  transform-origin: var(--pivot-x, 50%) var(--pivot-y, 93.75%);
+  pointer-events: none;
+}
+.garden-scene[data-sway='canopy'] .tree-canopy.sway {
+  animation: canopy-sway var(--sway-dur, 5.4s) ease-in-out infinite;
+  animation-delay: var(--sway-delay, 0s);
+}
+@keyframes canopy-sway {
+  0%, 100% { transform: rotate(var(--sway, 0.8deg)); }
+  50% { transform: rotate(calc(var(--sway, 0.8deg) * -1)); }
+}
+
+.plaque-name {
+  position: absolute;
+  left: 50%;
+  top: 91.4%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 2px;
+  font-family: Cinzel, 'Times New Roman', serif;
+  font-weight: 600;
+  font-size: 9.5pt;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: #f6e7c3;
+  text-decoration: none;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+}
+
+.garden-fruits { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; }
+.medallion {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  pointer-events: auto;
+}
+.medallion a { display: grid; place-items: center; width: 44px; height: 44px; }
+.medallion img { width: 32px; height: 32px; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35)); }
+.medallion.bloom { animation: bloom 0.8s ease both; }
+
+@keyframes lantern-pulse {
+  50% { filter: drop-shadow(0 0 14px rgba(255, 196, 110, 0.95)) brightness(1.18); }
+}
+@keyframes bloom {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .lantern, .tree-svg .canopy, .garden-fruit { animation: none; }
+  .garden-prop.lantern,
+  .tree-canopy,
+  .medallion.bloom { animation: none; }
 }
 
 .garden-card {

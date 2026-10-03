@@ -23,6 +23,8 @@ export type GardenAreaId = 'quran' | 'hadith' | 'character' | 'society' | 'spiri
 export type GardenArea = {
   id: GardenAreaId
   title: string
+  /** Painted on the blank plaque. Cinzel, with a real apostrophe in Qur’an. */
+  plaque: string
   /** One line under the plaque. */
   note: string
   doors: number[]
@@ -32,11 +34,11 @@ export type GardenArea = {
 }
 
 export const GARDEN_AREAS: GardenArea[] = [
-  { id: 'quran', title: "Qur'an", note: 'His Books', doors: [12], leaf: '#1f6b45', blossom: '#f0d78c' },
-  { id: 'hadith', title: 'Hadith', note: 'How he came and taught', doors: [1, 2, 19, 20], leaf: '#3d6b3a', blossom: '#f2a3c0' },
-  { id: 'character', title: 'Character', note: 'Ihsan', doors: [16], leaf: '#2f6a32', blossom: '#f0a04a' },
-  { id: 'society', title: 'Society', note: 'Islam, lived together', doors: [3, 4, 5, 6, 7, 8], leaf: '#3a5c38', blossom: '#c9a6e8' },
-  { id: 'spirituality', title: 'Spirituality', note: 'Iman and the Hour', doors: [9, 10, 11, 13, 14, 15, 17, 18], leaf: '#4a6230', blossom: '#d6e27a' },
+  { id: 'quran', title: "Qur'an", plaque: 'QUR’AN', note: 'His Books', doors: [12], leaf: '#1f6b45', blossom: '#f0d78c' },
+  { id: 'hadith', title: 'Hadith', plaque: 'HADITH', note: 'How he came and taught', doors: [1, 2, 19, 20], leaf: '#3d6b3a', blossom: '#f2a3c0' },
+  { id: 'character', title: 'Character', plaque: 'CHARACTER', note: 'Ihsan', doors: [16], leaf: '#2f6a32', blossom: '#f0a04a' },
+  { id: 'society', title: 'Society', plaque: 'SOCIETY', note: 'Islam, lived together', doors: [3, 4, 5, 6, 7, 8], leaf: '#3a5c38', blossom: '#c9a6e8' },
+  { id: 'spirituality', title: 'Spirituality', plaque: 'SPIRITUALITY', note: 'Iman and the Hour', doors: [9, 10, 11, 13, 14, 15, 17, 18], leaf: '#4a6230', blossom: '#d6e27a' },
 ]
 
 export type GrowthStage = 0 | 1 | 2 | 3 | 4
@@ -58,18 +60,31 @@ export function areaOfDoor(door: number | null | undefined): GardenArea | null {
 }
 
 export type AreaLesson = { id: number; courseId: number; title: string; door: number | null }
-export type AreaFruit = { id: string; kind: 'talk' | 'course'; title: string; href: string; workbookHref: string }
+export type AreaFruit = {
+  id: string
+  kind: 'talk' | 'course'
+  title: string
+  href: string
+  workbookHref: string
+  /** Glow when the talk or course is finished. Empty when it is still to come. */
+  earned: boolean
+}
 
 export type AreaView = {
   id: GardenAreaId
   title: string
+  plaque: string
   note: string
   leaf: string
   blossom: string
   done: number
   total: number
   stage: GrowthStage
+  /** Finished talks, and a course once every lesson of it in this tree is finished. */
   fruits: AreaFruit[]
+  /** The same talks and courses, still to finish. */
+  pending: AreaFruit[]
+  workbookHref: string
 }
 
 /**
@@ -103,7 +118,18 @@ export function areaGrowth(input: {
       title: lesson.title,
       href: input.hrefForLesson(lesson.id, lesson.courseId),
       workbookHref: input.workbookHref,
+      earned: true,
     }))
+    const pending: AreaFruit[] = lessons
+      .filter((lesson) => !doneLessons.has(lesson.id))
+      .map((lesson) => ({
+        id: `pending-talk-${lesson.id}`,
+        kind: 'talk' as const,
+        title: lesson.title,
+        href: input.hrefForLesson(lesson.id, lesson.courseId),
+        workbookHref: input.workbookHref,
+        earned: false,
+      }))
     const byCourse = new Map<number, AreaLesson[]>()
     for (const lesson of lessons) {
       const list = byCourse.get(lesson.courseId) || []
@@ -111,20 +137,23 @@ export function areaGrowth(input: {
       byCourse.set(lesson.courseId, list)
     }
     for (const [courseId, own] of byCourse) {
-      if (own.length && own.every((lesson) => doneLessons.has(lesson.id))) {
-        const course = input.courses.find((row) => row.id === courseId)
-        fruits.push({
-          id: `course-${courseId}`,
-          kind: 'course',
-          title: course?.title || 'This course',
-          href: input.hrefForCourse(courseId),
-          workbookHref: input.workbookHref,
-        })
+      if (!own.length) continue
+      const course = input.courses.find((row) => row.id === courseId)
+      const item: AreaFruit = {
+        id: `course-${courseId}`,
+        kind: 'course',
+        title: course?.title || 'This course',
+        href: input.hrefForCourse(courseId),
+        workbookHref: input.workbookHref,
+        earned: own.every((lesson) => doneLessons.has(lesson.id)),
       }
+      if (item.earned) fruits.push(item)
+      else pending.push({ ...item, id: `pending-course-${courseId}` })
     }
     return {
       id: area.id,
       title: area.title,
+      plaque: area.plaque,
       note: area.note,
       leaf: area.leaf,
       blossom: area.blossom,
@@ -132,6 +161,8 @@ export function areaGrowth(input: {
       total,
       stage: growthStage(done, total),
       fruits,
+      pending,
+      workbookHref: input.workbookHref,
     }
   })
 }

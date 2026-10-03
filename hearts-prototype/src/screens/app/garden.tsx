@@ -12,6 +12,7 @@ import { posterFor } from '@/server/learner'
 import { loadDoors } from '@/server/doors'
 import { doorByNumber, doorNumberOfClause, doorOfClause, type Door } from '@/lib/doors'
 import { areaGrowth, type AreaView } from '@/lib/garden-areas'
+import type { GardenTheme } from '@/lib/garden-art'
 import { GardenScene } from '@/components/app/garden-scene'
 import { answerCounts } from '@/lib/nesting'
 import { type Ctx, type Row, clock, ref, rows, shortDate, str, unreadCount } from '../common'
@@ -205,7 +206,7 @@ export async function GardenScreen({ payload, user, base, query }: Ctx) {
   return (
     <AppFrame testId="garden">
       <div className="app-scroll garden-home">
-        <GardenScene areas={areas} />
+        <GardenScene areas={areas} theme={query.theme === 'dawn' ? 'dawn' satisfies GardenTheme : 'evening'} />
         <div className="garden-rest">
         <Flash error={query.error} notice={query.notice} />
         <section className="garden-rings card" data-testid="garden-rings">

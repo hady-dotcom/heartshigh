@@ -16,6 +16,8 @@ export type Query = {
   group?: string
   item?: string
   view?: string
+  /** Garden painting: `dawn` or `evening`. Another theme pass can set this. */
+  theme?: string
 }
 
 export type Ctx = {
