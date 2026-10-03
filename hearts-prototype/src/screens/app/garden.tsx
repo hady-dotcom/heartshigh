@@ -75,19 +75,20 @@ function sectionOf(clauses: Row[], key: string) {
 
 export function Rings({ g, base }: { g: Growth; base: string }) {
   const sections = SECTIONS.filter((section) => sectionOf(g.clauses, section.key).some((clause) => g.lit.has(Number(clause.number)))).length
-  const items: [string, number, string, string][] = [
+  const items: [string, number, string, string, number?][] = [
     ['Watched', g.completions.length, '#f0b44c', `${base}/garden/general`],
     ['Sections', sections, '#e98fb0', `${base}/garden/jibril`],
     ['Field', g.seatVisits.length, '#7fc4a8', `${base}/garden/ghunya`],
-    ['Harvest', g.harvest.length, '#6fa8dc', `${base}/garden/harvest`],
+    ['Harvest', g.harvest.length, '#6fa8dc', `${base}/garden/harvest`, g.harvest.filter((row) => !row.seenAt).length],
     ['Workbook', g.workbook.length, '#a98bd6', `${base}/garden/workbook`],
   ]
   return (
     <div className="rings" data-testid="rings">
-      {items.map(([label, value, colour, href]) => (
+      {items.map(([label, value, colour, href, fresh]) => (
         <Link key={label} className="ring-stat" href={href} data-testid={`ring-${label.toLowerCase()}`}>
           <span className="r" style={{ borderColor: colour }}>{value}</span>
           {label}
+          {fresh ? <em className="ring-new" data-testid={`ring-${label.toLowerCase()}-new`}>{fresh} new</em> : null}
         </Link>
       ))}
     </div>
@@ -164,7 +165,7 @@ export async function GardenScreen({ payload, user, base, query }: Ctx) {
   )
 }
 
-function Frame({ base, title, testId, children, unread, dark }: { base: string; title: string; testId: string; children: React.ReactNode; unread: number; dark?: boolean }) {
+export function Frame({ base, title, testId, children, unread, dark }: { base: string; title: string; testId: string; children: React.ReactNode; unread: number; dark?: boolean }) {
   return (
     <AppFrame testId={testId} dark={dark}>
       <div className="app-scroll">
@@ -353,35 +354,6 @@ export async function GardenGhunya({ payload, user, base }: Ctx) {
         {recent.length ? recent.map((seat) => (
           <div className="card" key={seat.id}><p>{str(seat.text)}</p></div>
         )) : <div className="card"><p>Open any clause and mark a seat once you have read it. It will light up here.</p></div>}
-      </div>
-    </Frame>
-  )
-}
-
-export async function GardenHarvest({ payload, user, base }: Ctx) {
-  const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
-  const lessonIds = [...new Set(g.harvest.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))]
-  const lessons = lessonIds.length ? await rows(payload, 'lessons', { id: { in: lessonIds } }) : []
-  return (
-    <Frame base={base} title="Harvest" testId="garden-harvest" unread={unread}>
-      <p className="lead">Verses and hadith quoted in the talks you finished, gathered for you.</p>
-      <div data-testid="harvest">
-        {g.harvest.length ? g.harvest.map((hit) => {
-          const lesson = lessons.find((row) => row.id === ref(hit.lesson))
-          const quran = str(hit.kind) === 'quran'
-          return (
-            <article className="harvest-card" key={hit.id} data-testid="harvest-item">
-              <header><span className={`tag ${quran ? 'quran' : 'hadith'}`}>{quran ? "Qur'an" : 'Hadith'}</span><small>{str(hit.reference)}</small></header>
-              <blockquote>{str(hit.text)}</blockquote>
-              <small>{lesson ? `${str(lesson.title)}${hit.timestamp ? ` · at ${str(hit.timestamp)}` : ''}` : str(hit.timestamp)}</small>
-            </article>
-          )
-        }) : (
-          <div className="empty-state" data-testid="harvest-empty">
-            <Mascot width={110} />
-            <p>Nothing gathered yet. When you finish a talk, the verses and hadith it quotes are collected here.</p>
-          </div>
-        )}
       </div>
     </Frame>
   )

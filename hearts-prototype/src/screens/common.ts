@@ -12,6 +12,10 @@ export type Query = {
   answer?: string
   course?: string
   filter?: string
+  kind?: string
+  group?: string
+  item?: string
+  view?: string
 }
 
 export type Ctx = {
