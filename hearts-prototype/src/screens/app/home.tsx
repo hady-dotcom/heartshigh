@@ -4,6 +4,7 @@ import { Avatar } from '@/components/app/feed'
 import { AppFrame, Flash, TabBar } from '@/components/app/shell'
 import { PlayIcon } from '@/components/icons'
 import { courseCards, dayNumber, loadFeed, portalName, portraitFor, posterFor, slugify } from '@/server/learner'
+import { plural } from '@/lib/schedule'
 import { growth, Rings } from './garden'
 import { type Ctx, ref, rows, str, unreadCount } from '../common'
 
@@ -67,13 +68,13 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
           {carryOn.map((row) => (
             <Link key={row.id} className="continue-row" href={row.href} data-testid="continue-row">
               <span className="thumb" style={row.thumb ? { backgroundImage: `url(${row.thumb})` } : undefined} />
-              <span className="t"><b>{row.title}</b><small>{row.sub}</small></span>
+              <span className="t"><b>{row.title}</b><span className="sr-only">. </span><small>{row.sub}</small></span>
             </Link>
           ))}
           {fallback.map((course) => (
             <Link key={course.id} className="continue-row" href={`${base}/course/${course.id}`} data-testid="continue-row">
               <span className="thumb" style={course.poster ? { backgroundImage: `url(${course.poster})` } : undefined} />
-              <span className="t"><b>{course.title}</b><small>{course.speaker} · {course.parts} part{course.parts === 1 ? '' : 's'}</small></span>
+              <span className="t"><b>{course.title}</b><span className="sr-only">. </span><small>{course.speaker} · {plural(course.parts, 'part')}</small></span>
             </Link>
           ))}
           {!carryOn.length && !fallback.length ? <p className="muted">Start a course from Lanes and it will wait for you here.</p> : null}

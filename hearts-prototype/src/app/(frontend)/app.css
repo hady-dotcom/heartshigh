@@ -185,6 +185,11 @@
 .course-row .t { flex: 1; min-width: 0; }
 .course-row b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .course-row small { color: var(--muted); font-size: 12.5px; }
+.continue-row { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 10px; margin-bottom: 10px; text-decoration: none; color: var(--ink); min-height: 64px; }
+.continue-row .thumb { width: 52px; height: 52px; border-radius: 10px; background: #2b2723 center/cover; flex: none; }
+.continue-row .t { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.continue-row b { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.continue-row small { color: var(--muted); font-size: 12.5px; }
 .start { border-radius: 999px; padding: 8px 16px; font-weight: 700; font-size: 13px; color: #fff; border: 0; text-decoration: none; min-height: 34px; display: inline-flex; align-items: center; }
 .start.orange { background: var(--orange); } .start.gold { background: var(--gold); color: var(--gold-ink); } .start.teal { background: var(--teal); }
 .start.soft { background: var(--lavender); color: var(--purple); }
