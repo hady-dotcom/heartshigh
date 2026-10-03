@@ -775,7 +775,7 @@ export interface TalkTier {
     | boolean
     | null;
   /**
-   * The hors d'oeuvre's sentences with their times: [{ at, text }].
+   * The hors d'oeuvre's sentences with their times: [{ at, text }]. text is the raw caption, kept for timing.
    */
   horsLines?:
     | {
@@ -787,7 +787,7 @@ export interface TalkTier {
     | boolean
     | null;
   /**
-   * Tidied learner-facing lines. Raw captions stay on the fields above.
+   * Tidied learner-facing lines. Raw captions stay on horsQuote, hook, turn, land and horsLines. Shape: { version, source, quote, hook, turn, land, horsLines: [{ at, raw, text }] }.
    */
   lineTidy?:
     | {
@@ -2528,6 +2528,7 @@ export interface TalkTiersSelect<T extends boolean = true> {
   landAt?: T;
   appetiserSpans?: T;
   horsLines?: T;
+  lineTidy?: T;
   offerResume?: T;
   status?: T;
   checkedAt?: T;
