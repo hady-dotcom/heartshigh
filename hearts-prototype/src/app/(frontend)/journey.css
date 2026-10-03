@@ -114,7 +114,7 @@
   pointer-events: auto; cursor: pointer; background: none; border: 0; padding: 0; text-align: left;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; max-height: 22vh;
 }
-.j-chrome .caption[data-expanded='true'] { display: block; -webkit-line-clamp: unset; overflow: auto; max-height: min(36vh, 260px); }
+.j-chrome .caption[data-expanded='true'] { display: block; -webkit-line-clamp: unset; line-clamp: unset; overflow: auto; max-height: min(36vh, 260px); }
 .j-hairline-row { position: absolute; top: calc(12px + var(--safe-top)); left: 16px; right: 16px; }
 .j-hairline { height: 3px; border-radius: 3px; background: rgba(255, 255, 255, 0.28); overflow: hidden; }
 .j-hairline > i { display: block; height: 100%; width: 0; background: #fff; }
@@ -135,6 +135,7 @@
  */
 .journey[data-mode='appetiser'] .j-chrome { display: flex; flex-direction: column; gap: 12px; padding: calc(52px + var(--safe-top)) 16px calc(92px + var(--safe-bottom)); }
 .journey[data-mode='appetiser'] .j-chrome .caption { position: static; flex: 0 1 auto; align-self: stretch; min-height: 0; margin: 0; padding: 0 6px; font-size: 25px; justify-content: flex-start; }
+.journey[data-mode='appetiser'] .j-chrome .caption[data-expanded='true'] { flex: 1 1 auto; overflow: auto; }
 .journey[data-mode='appetiser'] .j-chrome .caption.long { font-size: 21px; }
 .journey[data-mode='appetiser'] .j-chrome .rail { position: static; flex: none; display: flex; justify-content: flex-end; gap: 6px; }
 .journey[data-mode='appetiser'] .j-chrome .rail .bubble { width: 40px; height: 40px; }

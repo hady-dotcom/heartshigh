@@ -1113,7 +1113,7 @@ export function Journey(props: JourneyProps) {
   const captionRole = mode === 'appetiser' ? piece?.lines?.[lineShown]?.role || null : null
   useEffect(() => {
     setCaptionOpen(false)
-  }, [item?.id, mode, lineShown])
+  }, [item?.id, mode])
   const slide = phase === 'feed' && item?.style ? item.style : null
   const mains = item?.laneKey ? props.mains[item.laneKey] : undefined
   const course = item ? `${base}/course/${item.courseId}?part=${item.lessonId}&t=0` : base
@@ -1147,7 +1147,7 @@ export function Journey(props: JourneyProps) {
         data-role={captionRole || undefined}
         data-expanded={captionOpen ? 'true' : 'false'}
         aria-expanded={captionOpen}
-        key={`${mode}-${lineShown}`}
+        key={mode}
         onPointerDown={(event) => event.stopPropagation()}
         onClick={() => setCaptionOpen((open) => !open)}
       >

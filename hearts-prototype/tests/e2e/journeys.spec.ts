@@ -44,7 +44,11 @@ async function placing(page: Page, picks: string[]) {
   for (const [index, pick] of picks.entries()) await questions.nth(index).getByLabel(pick, { exact: true }).check()
   await page.getByTestId('placing-submit').click()
   await expect(page.getByTestId('lets-play')).toBeVisible()
-  await page.getByTestId('lets-play').click()
+  // The opener is in the first HTML. A click before the page is hydrated does nothing, so retry until the first scene is up.
+  await expect(async () => {
+    if (await page.getByTestId('lets-play').isVisible()) await page.getByTestId('lets-play').click()
+    await expect(page.locator('[data-testid="scene"][data-scene="extra"]')).toBeVisible({ timeout: 1500 })
+  }).toPass({ timeout: 20_000 })
   for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'doors']) {
     await expect(page.locator(`[data-testid="scene"][data-scene="${scene}"]`)).toBeVisible()
     await page.getByTestId('pass').click()
