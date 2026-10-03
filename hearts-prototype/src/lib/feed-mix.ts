@@ -21,9 +21,9 @@ function beatsOf(item: FeedItem): CardBeat[] {
 /**
  * After each talk, a face film or a scenic card, then a question.
  * Face films and cards alternate through the session. A return visit swaps which
- * one a talk leads with, and steps the card's style and background.
- * The background starts from the card's own setting. A neighbour that shares a
- * tag steps on. Learn more always opens that piece's appetiser.
+ * one a talk leads with, and steps the card's style.
+ * The background is the card's own setting. A neighbour that shares a tag steps on.
+ * Learn more always opens that piece's appetiser.
  */
 export function mixFeed(items: FeedItem[], visit = 0): FeedItem[] {
   const out: FeedItem[] = []
@@ -43,7 +43,7 @@ export function mixFeed(items: FeedItem[], visit = 0): FeedItem[] {
       if (beats.length) {
         const styleBase = Math.max(0, STYLE_LIST.indexOf((item.cardStyle || 'kinetic') as (typeof STYLE_LIST)[number]))
         const style = pickStyle(index, visit, previousStyle, styleBase)
-        const scene = pickScene(item.cardScene || 'road', visit, previousScene)
+        const scene = pickScene(item.cardScene || 'road', 0, previousScene)
         previousStyle = style
         previousScene = scene
         out.push({

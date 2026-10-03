@@ -89,5 +89,5 @@ test('a card keeps its own background, neighbours skip a shared tag, and learn m
   assert.notEqual(mixed[1].scene?.scene, mixed[2].scene?.scene)
   const returned = mixFeed(talks, 2).filter((row) => row.card === 'scene')
   assert.ok(returned.every((row) => row.scene?.destination === 'clip'))
-  assert.notEqual(returned[0].scene?.scene, mixed[0].scene?.scene)
+  assert.equal(returned[0].scene?.scene, mixed[0].scene?.scene)
 })

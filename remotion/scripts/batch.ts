@@ -54,6 +54,7 @@ function writeCatalogue(films: FilmRecord[]) {
 }
 
 function clipFile(name: string) {
+  if (!name.trim()) return null
   const named = path.resolve(name)
   const local = path.join(here, 'public', 'footage', path.basename(name))
   if (existsSync(local)) return local

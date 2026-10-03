@@ -99,7 +99,7 @@ export function parseManifest(csv: string): ManifestRow[] {
     const beat = raw.beat as BeatId
     const start = Number(raw.start)
     const end = Number(raw.end)
-    if (!raw.youtubeId || !BEATS.has(beat) || !raw.quote || !raw.clip) continue
+    if (!raw.youtubeId || !BEATS.has(beat) || !raw.quote) continue
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) continue
     rows.push({
       title: raw.title || raw.youtubeId,

@@ -36,10 +36,12 @@ test('a manifest row becomes one film, and neighbours in a course do not share a
     'Ar-Rabb,Shaykh Mikaeel Smith,ECaTWkof57E,turn,889.73,895.48,But it is certainty.,ECaT-turn.mp4,yes,Names',
     'Al-Nur,Shaykh Mikaeel Smith,NIR88RRpat4,hook,253.6,259.5,The only source.,NIR-hook.mp4,no,Names',
     'Other,A speaker,abc12345678,land,1,4,A different course lands here.,other.mp4,,Elsewhere',
+    'No file yet,A speaker,def12345678,hook,2,5,A line with no clip yet.,,,Elsewhere',
     'skip me',
   ].join('\n')
   const rows = parseManifest(csv)
-  assert.equal(rows.length, 4)
+  assert.equal(rows.length, 5)
+  assert.equal(rows[4].clip, '')
   assert.equal(rows[0].quote, 'Has Allah brought you, truly?')
   assert.equal(rows[0].face, true)
   assert.equal(rows[2].face, false)
