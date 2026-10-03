@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { test } from 'node:test'
 import { codeRefusal, randomCode } from '../../src/lib/access-codes'
@@ -34,11 +34,16 @@ test('Bug 2: seed and generated codes are long and random, not words', () => {
     seen.add(code)
   }
   assert.equal(seen.size, 500)
-  const seeded = path.join(root, 'data', 'seed-codes.json')
-  const codes = Object.values(JSON.parse(readFileSync(seeded, 'utf8')) as Record<string, string>)
-  assert.ok(codes.length >= 6)
-  for (const code of codes) assert.match(code, /^[A-Z]+-[A-Z0-9]{4}-[A-Z0-9]{4}$/, code)
-  assert.ok(!codes.some((code) => /LEARN|ADMIN|TEACH|PARENT/.test(code)))
+  const seed = readFileSync(path.join(root, 'src', 'seed', 'seed.ts'), 'utf8')
+  assert.match(seed, /code: randomCode\(spec\.prefix\)/, 'every seeded code is generated')
+  assert.doesNotMatch(seed, /['"][A-Z]+-(LEARN|ADMIN|TEACH|PARENT)/, 'no word codes are written into the seed')
+  // A clean checkout has not been seeded yet; once it has, the printed codes are checked too.
+  for (const file of ['seed-codes.json', 'seed-codes-test.json'].map((name) => path.join(root, 'data', name)).filter((name) => existsSync(name))) {
+    const codes = Object.values(JSON.parse(readFileSync(file, 'utf8')) as Record<string, string>)
+    assert.ok(codes.length >= 6, file)
+    for (const code of codes) assert.match(code, /^[A-Z]+-[A-Z0-9]{4}-[A-Z0-9]{4}$/, code)
+    assert.ok(!codes.some((code) => /LEARN|ADMIN|TEACH|PARENT/.test(code)), file)
+  }
 })
 
 test('Bug 13: help contacts render only tel: and https: targets, and plain text', () => {
