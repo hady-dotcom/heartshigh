@@ -5,6 +5,11 @@ import { existsSync, renameSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+if (process.env.NODE_ENV === 'production') {
+  console.error('Refusing to seed demo data because NODE_ENV is production. Use npm run bootstrap and npm run seed:starters.')
+  process.exit(1)
+}
+
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const run = (command, { optional = false, note = 'the app still runs, only the browser tests need it' } = {}) => {
   console.log(`\n> ${command}`)

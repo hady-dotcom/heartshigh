@@ -32,7 +32,7 @@ async function upsert(payload: Payload, collection: string, where: Record<string
 
 const slugOf = (text: string) => text.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40)
 
-export async function seedOpening(payload: Payload, opts: { clauseIds: Map<number, number>; portalIds: Map<string, number>; now: Date }) {
+export async function seedOpening(payload: Payload, opts: { clauseIds: Map<number, number>; portalIds: Map<string, number>; now: Date; showUnchecked?: boolean }) {
   const { clauseIds, portalIds } = opts
   const scaleIds = new Map<string, number>()
   for (const scale of SCALES) {
@@ -237,22 +237,24 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
   }
   void clauseNumber
 
-  // This demo shows the machine drafts to learners while they wait for review. Production starts with this off.
-  await payload.updateGlobal({ slug: 'master-flags', overrideAccess: true, data: { showUnchecked: true } as never })
+  // The local demo shows machine drafts to learners while they wait for review. A starter load for production leaves this off.
+  await payload.updateGlobal({ slug: 'master-flags', overrideAccess: true, data: { showUnchecked: opts.showUnchecked !== false } as never })
 
   await upsert(payload, 'opening-configs', { portal: { exists: false } }, { defaultClip: d0CutId, helpContacts: DEFAULT_HELP_CONTACTS, trendsContributionPrompt: true })
-  const elm = portalIds.get('east-london')!
-  const leeds = portalIds.get('leeds')!
-  await upsert(payload, 'opening-configs', { portal: { equals: elm } }, {
-    portal: elm,
-    defaultClip: d0CutId,
-    helpContacts: [
-      { label: 'Samaritans, free from any phone, any time', phone: '116 123', url: 'https://www.samaritans.org', hours: '24 hours, every day' },
-      { label: 'Muslim Youth Helpline, faith and culture aware', phone: '0808 808 2008', url: 'https://myh.org.uk', hours: 'Every day, 4pm to 10pm' },
-      { label: 'If you are in danger right now, call 999', phone: '999' },
-    ],
-    trendsContributionPrompt: true,
-  })
+  const elm = portalIds.get('east-london')
+  const leeds = portalIds.get('leeds')
+  if (elm) {
+    await upsert(payload, 'opening-configs', { portal: { equals: elm } }, {
+      portal: elm,
+      defaultClip: d0CutId,
+      helpContacts: [
+        { label: 'Samaritans, free from any phone, any time', phone: '116 123', url: 'https://www.samaritans.org', hours: '24 hours, every day' },
+        { label: 'Muslim Youth Helpline, faith and culture aware', phone: '0808 808 2008', url: 'https://myh.org.uk', hours: 'Every day, 4pm to 10pm' },
+        { label: 'If you are in danger right now, call 999', phone: '999' },
+      ],
+      trendsContributionPrompt: true,
+    })
+  }
 
   let starterPack = await one(payload, 'packs', { title: { equals: 'Starter map' } })
   if (!starterPack) {
@@ -262,7 +264,7 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
       data: { title: 'Starter map', summary: 'The first talk, the next talk and a longer course for each lane of the opening.', owner: 'master', courses: starterCourseIds } as never,
     })) as unknown as Doc
   }
-  for (const portalId of [elm, leeds]) {
+  for (const portalId of [elm, leeds].filter((id): id is number => Boolean(id))) {
     const already = await one(payload, 'adoptions', { and: [{ portal: { equals: portalId } }, { pack: { equals: starterPack.id } }] })
     if (!already) await payload.create({ collection: 'adoptions', overrideAccess: true, data: { kind: 'pack', portal: portalId, pack: starterPack.id } as never })
   }

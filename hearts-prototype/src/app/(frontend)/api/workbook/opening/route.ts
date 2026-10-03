@@ -3,6 +3,7 @@ import { json, portalOf, readBody, viewAsRefusal } from '@/server/api'
 import { catalogueCourseIds } from '@/server/opening'
 import { writeOpening, type OpeningTap } from '@/server/workbook'
 import { now } from '@/lib/clock'
+import { authCookie } from '@/lib/cookies'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,7 +70,7 @@ export async function POST(req: Request) {
     })
     const login = await payload.login({ collection: 'users', data: { email, password } })
     if (!login.token || !login.user) return json({ error: 'Your account was made but signing in failed. Try signing in.' }, 500)
-    cookie = `${payload.config.cookiePrefix}-token=${login.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=7200`
+    cookie = authCookie(`${payload.config.cookiePrefix}-token`, login.token, 7200)
     user = (await payload.findByID({ collection: 'users', id: login.user.id, overrideAccess: true, depth: 0 })) as unknown as SessionUser
   } else if (user.role !== 'learner') {
     return json({ error: 'Only learners keep an opening.' }, 403)

@@ -10,6 +10,8 @@ import { parseJibrilMap } from '../lib/seats'
 import { alignToCaptions } from '../lib/tiers'
 import { parseTranscript } from '../lib/transcript'
 import type { User } from '../payload-types'
+import { databaseKind, seedRefusal } from '../lib/env'
+import { clearDevPushMarker } from '../lib/prepare-db'
 import { FILMS } from './films'
 import { seedOpening, seedPeople, timingCheck } from './opening'
 
@@ -98,7 +100,23 @@ function codesFile() {
 }
 
 async function wipe() {
+  const refusal = seedRefusal(['--reset'])
+  if (refusal) throw new Error(refusal)
   const url = process.env.DATABASE_URL || `file:${path.join(root, 'data/hearts.db')}`
+  if (databaseKind() === 'postgres') {
+    const { default: pg } = await import('pg')
+    const pool = new pg.Pool({ connectionString: url, max: 1 })
+    try {
+      await pool.query('DROP SCHEMA IF EXISTS public CASCADE')
+      await pool.query('CREATE SCHEMA public')
+      await pool.query('GRANT ALL ON SCHEMA public TO CURRENT_USER')
+      await pool.query('GRANT ALL ON SCHEMA public TO public')
+    } finally {
+      await pool.end()
+    }
+    console.log('Wiped the Postgres database (dropped the public schema).')
+    return
+  }
   const client = createClient({ url })
   const objects = (await client.execute("SELECT type, name FROM sqlite_master WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%'")).rows as unknown as { type: string; name: string }[]
   await client.execute('PRAGMA foreign_keys = OFF')
@@ -109,9 +127,17 @@ async function wipe() {
 }
 
 async function main() {
+  const startersOnly = process.argv.includes('--starters')
+  const refusal = seedRefusal(process.argv)
+  if (refusal) {
+    console.error(refusal)
+    process.exit(1)
+  }
   mkdirSync(path.join(root, 'data'), { recursive: true })
   if (process.argv.includes('--reset')) await wipe()
+  await clearDevPushMarker()
   const payload = await getPayload({ config })
+  if (databaseKind() === 'postgres') await payload.db.migrate()
   const clauseIds = new Map<number, number>()
   const map = parseJibrilMap(readFileSync(path.join(root, 'content/jibril-map.txt'), 'utf8'))
   for (const [number, fragment, core, fallbackTeaching] of CLAUSES) {
@@ -156,14 +182,16 @@ async function main() {
     }
   }
 
-  await ensureUser(payload, {
-    email: 'master@hearts.test',
-    password: 'hearts-master',
-    name: 'Master desk',
-    role: 'master',
-    onboarded: true,
-    seenWelcome: true,
-  })
+  if (!startersOnly) {
+    await ensureUser(payload, {
+      email: 'master@hearts.test',
+      password: 'hearts-master',
+      name: 'Master desk',
+      role: 'master',
+      onboarded: true,
+      seenWelcome: true,
+    })
+  }
 
   const portals: { name: string; slug: string; kind: 'mosque'; welcome: string; organisationName: string; wizardDone: boolean; colour: string; [key: string]: unknown }[] = [
     {
@@ -192,7 +220,7 @@ async function main() {
     },
   ]
   const portalIds = new Map<string, number>()
-  for (const portal of portals) {
+  for (const portal of startersOnly ? [] : portals) {
     const found = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: portal.slug } } })
     const doc = found.docs[0] || (await payload.create({ collection: 'portals', overrideAccess: true, data: portal }))
     portalIds.set(portal.slug, doc.id)
@@ -317,8 +345,8 @@ async function main() {
     courseIds.push(course.id)
   }
 
-  const elm = portalIds.get('east-london')!
-  const leeds = portalIds.get('leeds')!
+  const elm = portalIds.get('east-london')
+  const leeds = portalIds.get('leeds')
   let pack = (await payload.find({ collection: 'packs', overrideAccess: true, limit: 1, where: { title: { equals: 'Jibril sittings' } } })).docs[0]
   if (!pack) {
     pack = await payload.create({
@@ -329,7 +357,7 @@ async function main() {
   }
   const parentCourse = courseIds[2]
   let parentPack = (await payload.find({ collection: 'packs', overrideAccess: true, limit: 1, where: { title: { equals: 'One Names class' } } })).docs[0]
-  if (!parentPack) {
+  if (!startersOnly && elm && !parentPack) {
     parentPack = await payload.create({
       collection: 'packs',
       overrideAccess: true,
@@ -337,7 +365,7 @@ async function main() {
     })
   }
 
-  for (const portalId of [elm, leeds]) {
+  for (const portalId of [elm, leeds].filter((id): id is number => Boolean(id))) {
     const already = await payload.find({
       collection: 'adoptions',
       overrideAccess: true,
@@ -350,6 +378,9 @@ async function main() {
   }
 
   // Codes are random on every fresh seed, so nobody can guess them from the source. They are found again by label.
+  // Starter loads skip this whole block: it creates the demo portals' codes and the accounts whose passwords are in the README.
+  const codeValues: Record<string, string> = {}
+  if (!startersOnly && elm && leeds && parentPack) {
   const codeSpecs = [
     { label: 'elm-teacher', prefix: 'ELM', role: 'teacher', portal: elm, packs: [pack.id] },
     { label: 'elm-admin', prefix: 'ELM', role: 'admin', portal: elm, packs: [pack.id], maxUses: 1, uses: 1 },
@@ -359,7 +390,6 @@ async function main() {
     { label: 'leeds-learner', prefix: 'LEEDS', role: 'learner', portal: leeds, packs: [pack.id], link: 'leeds-teacher' },
   ]
   const codeIds = new Map<string, number>()
-  const codeValues: Record<string, string> = {}
   for (const spec of codeSpecs) {
     const found = await payload.find({ collection: 'access-codes', overrideAccess: true, limit: 1, where: { and: [{ label: { equals: spec.label } }, { portal: { equals: spec.portal } }] } })
     if (found.docs[0]) {
@@ -437,6 +467,9 @@ async function main() {
     courseList: learnerList,
   })
 
+  }
+
+  if (!startersOnly && elm) {
   const nights = await payload.find({ collection: 'events', overrideAccess: true, limit: 1, where: { title: { equals: 'Thursday circle' } } })
   if (!nights.docs.length) {
     await payload.create({
@@ -461,17 +494,23 @@ async function main() {
     })
   }
 
-  const opening = await seedOpening(payload, { clauseIds, portalIds, now: new Date() })
-  await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...courseIds, ...opening.starterCourseIds] })
+  }
+
+  const opening = await seedOpening(payload, { clauseIds, portalIds, now: new Date(), showUnchecked: !startersOnly })
+  if (!startersOnly) await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...courseIds, ...opening.starterCourseIds] })
 
   const problems = await timingCheck(payload)
   if (problems.length) {
     console.error(`Timing check failed:\n${problems.join('\n')}`)
     process.exit(1)
   }
-  console.log('Seeded HEARTS. Master: master@hearts.test / hearts-master')
-  console.log(`Access codes (also on the master desk, and in ${codesFile()}):`)
-  for (const [label, value] of Object.entries(codeValues)) console.log(`  ${label.padEnd(14)} ${value}`)
+  if (startersOnly) {
+    console.log('Loaded the starter talks and the library. No demo accounts were created.')
+  } else {
+    console.log('Seeded HEARTS. Master: master@hearts.test / hearts-master')
+    console.log(`Access codes (also on the master desk, and in ${codesFile()}):`)
+    for (const [label, value] of Object.entries(codeValues)) console.log(`  ${label.padEnd(14)} ${value}`)
+  }
   process.exit(0)
 }
 

@@ -6,6 +6,8 @@ import { idOf, portalIdOf } from '@/lib/ids'
 import { extractWithFallback, llmStatus } from '@/lib/llm'
 import { defaultPlanName, flattenSlots, plural, splitEvenly, studyDates } from '@/lib/schedule'
 import { clockEnabled, setTestNow } from '@/lib/clock'
+import { authCookie } from '@/lib/cookies'
+import { logError } from '@/lib/log'
 import { clientIp, hit, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
 import { slugProblem } from '@/lib/text-safety'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
@@ -72,10 +74,7 @@ async function loginResponse(req: Request, email: string, password: string, next
     const result = await payload.login({ collection: 'users', data: { email, password } })
     if (!result.token) return redirectTo(req, '/login', 'That email or password did not match.')
     const response = redirectTo(req, next)
-    response.headers.append(
-      'Set-Cookie',
-      `${payload.config.cookiePrefix}-token=${result.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=7200`,
-    )
+    response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, result.token, 7200))
     return response
   } catch {
     return redirectTo(req, '/login', 'That email or password did not match.')
@@ -419,7 +418,7 @@ export async function handlePost(req: Request) {
     if (action === 'logout' && cookieValue(req.headers.get('cookie'))) response.headers.append('Set-Cookie', viewAsCookie(null, req))
     return response
   } catch (error) {
-    console.error('[hearts] action failed', text(form, 'action'), error)
+    logError('action failed', error, { action: text(form, 'action') })
     return redirectTo(req, text(form, 'next') || '/', 'Something went wrong with that. Nothing was saved. Please try again.')
   }
 }
@@ -435,10 +434,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
 
   if (action === 'logout') {
     const response = redirectTo(req, '/')
-    response.headers.append(
-      'Set-Cookie',
-      `${payload.config.cookiePrefix}-token=; Path=/; HttpOnly; Max-Age=0; SameSite=Lax`,
-    )
+    response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, '', 0))
     return response
   }
 
