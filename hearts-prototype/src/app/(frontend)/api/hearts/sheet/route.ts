@@ -90,8 +90,9 @@ export async function POST(req: Request) {
   let buffer: Buffer
   let fileName = 'sheet.xlsx'
   let importId = Number(form.get('import') || 0) || null
+  let approveQuestions = form.get('approveQuestions') === 'on' || form.get('approveQuestions') === 'true' || form.get('approveQuestions') === '1'
   if (intent === 'apply' && importId) {
-    const stored = await payload.findByID({ collection: 'sheet-imports', id: importId, depth: 0, overrideAccess: true }).catch(() => null) as { workbook?: string; fileName?: string; desk?: string; portal?: unknown; summary?: { scope?: string; portalId?: number | null; courseId?: number | null } } | null
+    const stored = await payload.findByID({ collection: 'sheet-imports', id: importId, depth: 0, overrideAccess: true }).catch(() => null) as { workbook?: string; fileName?: string; desk?: string; portal?: unknown; summary?: { scope?: string; portalId?: number | null; courseId?: number | null; approveQuestions?: boolean } } | null
     if (!stored?.workbook) return fail('Upload the sheet again. That preview is no longer here.')
     if (stored.desk !== scope.desk) return fail('That preview belongs to another desk.')
     if (stored.summary?.scope === 'library' || stored.summary?.scope === 'portal' || stored.summary?.scope === 'course') {
@@ -99,6 +100,7 @@ export async function POST(req: Request) {
       scope.portalId = stored.summary.portalId ?? scope.portalId
       scope.courseId = stored.summary.courseId ?? null
     }
+    if (stored.summary?.approveQuestions) approveQuestions = true
     buffer = Buffer.from(stored.workbook, 'base64')
     fileName = stored.fileName || fileName
   } else {
@@ -108,8 +110,8 @@ export async function POST(req: Request) {
     fileName = upload.name!
   }
 
-  const { plan, counts } = await planBuffer(payload, scope, buffer)
-  const summary = { ...summaryOf(plan, fileName), scope: scope.kind, portalId: scope.portalId, courseId: scope.courseId }
+  const { plan, counts } = await planBuffer(payload, scope, buffer, { approveQuestions })
+  const summary = { ...summaryOf(plan, fileName), scope: scope.kind, portalId: scope.portalId, courseId: scope.courseId, approveQuestions }
   if (intent !== 'apply') {
     const doc = await payload.create({
       collection: 'sheet-imports', overrideAccess: true,

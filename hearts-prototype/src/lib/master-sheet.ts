@@ -27,7 +27,7 @@ export const TALK_NOTE =
   "HEARTS talks. One row is one talk. talk_key is how a later import finds the same talk, so keep it stable. Leave a cell blank to leave that field as it is. Times can be seconds (90), minutes and seconds (1:30) or hours (1:02:03). status is draft, checked or live. rejected keeps a talk hidden from learners. delete removes the talk. youtube_id is the 11-character YouTube id. provider is youtube, vimeo or file. A Vimeo talk puts the number in vimeo_id. An uploaded film puts the media id in media_id. duration is the length in seconds. transcript is the speaker's words and is only for captions that fit in the cell (under 30,000 characters); a longer transcript is a Resources row with kind transcript and a media_id. hook_text, turn_text, land_text and transcript are the speaker's words: the kill list is not applied to them. notes is our own writing and may contain plain text such as conf=high. A hors d'oeuvre is usually 15 to 20 seconds. Up to the cap on the master desk (45 seconds unless that cap is changed) is allowed and only warned about. Shorter than 15, or longer than the cap, is refused. app_in and app_out are one continuous appetiser. hook_in and hook_out, turn_in and turn_out, land_in and land_out are up to three separate cuts. The player plays them in that order, and their lengths together stay within about 3 minutes (195 seconds)."
 
 export const QUESTION_NOTE =
-  'HEARTS questions. Name the talk with talk_key or youtube_id. The export writes question_id, and an import with that id updates the same question. A row with no question_id is matched to a question on the same talk with the same time and the same text, so importing the same file again does not add a copy. Leave question_id blank only when the question is new. type is free text, multiple choice, reflection or task. status is draft or approved (approved is what learners meet). source is ai or human. A blank cell leaves that field as it is. delete removes the question. Times use the same forms as the Talks tab and must fall inside the talk. type task is an activation task: due_days is how many days the learner has (1 to 366), evidence is none, note or photo, and show_imam is yes when the imam should see it. place is popup or workbook. A workbook row is a reflection kept in the workbook rather than a pop-up in the film. Questions, choices and notes are our own writing. Notes may contain plain text such as conf=high.'
+  'HEARTS questions. Name the talk with talk_key or youtube_id. The export writes question_id, and an import with that id updates the same question. A row with no question_id is matched to a question on the same talk with the same time and the same text, so importing the same file again does not add a copy. Leave question_id blank only when the question is new. type is free text, multiple choice, reflection or task. status is draft, approved or rejected (approved is what learners meet; rejected stays hidden). source is ai or human. A blank cell leaves that field as it is. The desk can approve new questions whose status is blank; a status written here still wins. delete removes the question. Times use the same forms as the Talks tab and must fall inside the talk. type task is an activation task: due_days is how many days the learner has (1 to 366), evidence is none, note or photo, and show_imam is yes when the imam should see it. place is popup or workbook. A workbook row is a reflection kept in the workbook rather than a pop-up in the film. Questions, choices and notes are our own writing. Notes may contain plain text such as conf=high.'
 
 export const RESOURCE_NOTE =
   "HEARTS resources, one row per item. talk_key names the talk. The same talk_key and label updates that row next time. kind is link, file, summary, quote, reading, guide or transcript. url must start with https:// for a link, and for a file that is not an upload. A file row may instead put an uploaded file's number in media_id. kind transcript points at an uploaded text file (media_id) so a transcript longer than 30,000 characters can come in as a file rather than a cell; that file is copied onto the talk. summary, reading and guide are our own writing. quote and transcript are the speaker's words, so the kill list is not applied to them. A reading row is a suggestion to verify, not a link that has been checked. Leave status blank to keep the row, or put delete to remove it."
@@ -70,7 +70,8 @@ export type Ref = { id: number } | { temp: string }
 
 export type SheetOp =
   | { op: 'course.create'; temp: string; title: string; speaker?: string; origin: 'master' | 'local'; portal: number | null }
-  | { op: 'unit.create'; temp: string; course: Ref; title: string }
+  | { op: 'unit.create'; temp: string; course: Ref; title: string; order: number }
+  | { op: 'unit.update'; id: number; patch: { order: number } }
   | { op: 'lesson.create'; temp: string; course: Ref; unit: Ref; title: string; speaker?: string; youtubeId?: string; order?: number; lane?: string; portal: number | null; master: boolean; provider?: string; vimeoId?: string; mediaId?: number; durationSeconds?: number | null; transcript?: string; transcriptSource?: string; transcriptNote?: string }
   | { op: 'lesson.update'; id: number; patch: Record<string, unknown> }
   | { op: 'lesson.delete'; id: number }
@@ -517,6 +518,10 @@ type Working = {
   handledQuestions: Set<number>
   courses: Map<string, { temp: string; title: string; speaker?: string }>
   units: Map<string, { temp: string; title: string }>
+  /** Unit tokens in the order their part first appears in this course. */
+  partSequence: Map<string, string[]>
+  handledUnits: Set<number>
+  approveQuestions: boolean
   lessons: Map<string, { temp: string; title: string; youtubeId: string; duration: number | null; transcript: string; course: Ref; unit: Ref }>
   byKey: Map<string, LessonRow>
   byYoutube: Map<string, LessonRow[]>
@@ -528,7 +533,7 @@ type Working = {
 function indexCatalogue(catalogue: SheetCatalogue): Working {
   const working: Working = {
     catalogue, errors: [], warnings: [], changes: [], ops: [], unchanged: 0, skipped: 0, pendingQuestions: new Map(), handledQuestions: new Set(),
-    courses: new Map(), units: new Map(), lessons: new Map(),
+    courses: new Map(), units: new Map(), partSequence: new Map(), handledUnits: new Set(), approveQuestions: false, lessons: new Map(),
     byKey: new Map(), byYoutube: new Map(), outsideKey: new Map(), outsideYoutube: new Map(), questionIds: new Map(),
   }
   const addKey = (map: Map<string, LessonRow>, key: string, lesson: LessonRow) => {
@@ -595,17 +600,39 @@ function courseRef(working: Working, title: string, speaker: string | undefined,
   return { ref: { temp }, created: true }
 }
 
+function courseTokenOf(course: Ref) {
+  return 'id' in course ? `id:${course.id}` : course.temp
+}
+
+/** Parts take their order from the first time that part name appears in the course, starting at 1. */
+function partOrder(working: Working, courseToken: string, token: string) {
+  let list = working.partSequence.get(courseToken)
+  if (!list) {
+    list = []
+    working.partSequence.set(courseToken, list)
+  }
+  if (!list.includes(token)) list.push(token)
+  return list.indexOf(token) + 1
+}
+
 function unitRef(working: Working, course: Ref, title: string): Ref {
-  const courseToken = 'id' in course ? `id:${course.id}` : course.temp
+  const courseToken = courseTokenOf(course)
   const token = `${courseToken}:${foldName(title)}`
+  const order = partOrder(working, courseToken, token)
   const pending = working.units.get(token)
   if (pending) return { temp: pending.temp }
   if ('id' in course) {
     const found = working.catalogue.units.find((unit) => unit.course === course.id && foldName(unit.title) === foldName(title))
-    if (found) return { id: found.id }
+    if (found) {
+      if (!working.handledUnits.has(found.id)) {
+        if (found.order !== order) working.ops.push({ op: 'unit.update', id: found.id, patch: { order } })
+        working.handledUnits.add(found.id)
+      }
+      return { id: found.id }
+    }
   }
   const temp = `unit:${token}`
-  working.ops.push({ op: 'unit.create', temp, course, title: title.trim() })
+  working.ops.push({ op: 'unit.create', temp, course, title: title.trim(), order })
   working.units.set(token, { temp, title: title.trim() })
   return { temp }
 }
@@ -814,10 +841,10 @@ function planTalks(working: Working, rows: InputRow[]) {
         if ('id' in course.ref) lessonPatch.course = course.ref.id
       }
     }
-    if (present(row, 'part') && !sameScalar(current.part, textOf(row, 'part'))) {
+    if (present(row, 'part') && textOf(row, 'part')) {
       const course = courseMove || { id: lesson.course }
       const unit = unitRef(working, course, textOf(row, 'part'))
-      if ('id' in unit) lessonPatch.unit = unit.id
+      if ('id' in unit && unit.id !== lesson.unit) lessonPatch.unit = unit.id
     }
     const tier = working.catalogue.tiers.find((item) => item.lesson === lesson.id) || null
     const tierData = tierPatch(tier, times, row, present(row, 'transcript') ? transcriptText : lesson.transcript, String(current.status || ''), problems, rowWarnings, horsCapOf(working.catalogue.horsMaxSeconds))
@@ -845,6 +872,8 @@ function planTalks(working: Working, rows: InputRow[]) {
       continue
     }
     const detail: string[] = []
+    const partOrders = working.ops.slice(mark.ops).filter((op): op is Extract<SheetOp, { op: 'unit.update' }> => op.op === 'unit.update')
+    if (partOrders.length) detail.push(`part order ${partOrders.map((op) => op.patch.order).join(' and ')}`)
     if (Object.keys(lessonPatch).length) {
       working.ops.push({ op: 'lesson.update', id: lesson.id, patch: lessonPatch })
       detail.push('the talk')
@@ -866,13 +895,21 @@ function planTalks(working: Working, rows: InputRow[]) {
 }
 
 function checkpoint(working: Working) {
-  return { ops: working.ops.length, courses: new Map(working.courses), units: new Map(working.units) }
+  return {
+    ops: working.ops.length,
+    courses: new Map(working.courses),
+    units: new Map(working.units),
+    partSequence: new Map([...working.partSequence].map(([key, list]) => [key, [...list]])),
+    handledUnits: new Set(working.handledUnits),
+  }
 }
 
-function rollback(working: Working, mark: { ops: number; courses: Map<string, { temp: string; title: string; speaker?: string }>; units: Map<string, { temp: string; title: string }> }) {
+function rollback(working: Working, mark: ReturnType<typeof checkpoint>) {
   working.ops.length = mark.ops
   working.courses = mark.courses
   working.units = mark.units
+  working.partSequence = mark.partSequence
+  working.handledUnits = mark.handledUnits
 }
 
 function readSpans(tier: TierRow | null, times: Record<string, number>, row: InputRow, fail: (column: string, message: string) => void): AppetiserSpan[] | null {
@@ -1039,7 +1076,7 @@ function planQuestions(working: Working, rows: InputRow[]) {
     if (idText && !/^\d+$/.test(idText)) fail('question_id', 'question_id is the number from an export. Leave it blank to add a new question.')
     if (idText && (seen.get(idText) || 0) > 1) fail('question_id', `question_id ${idText} is used on more than one row. Each question keeps its own id.`)
     const status = textOf(row, 'status').toLowerCase()
-    if (present(row, 'status') && !['draft', 'approved', 'rejected', 'delete'].includes(status)) fail('status', 'Status is draft, approved, rejected or delete.')
+    if (present(row, 'status') && status && !['draft', 'approved', 'published', 'rejected', 'delete'].includes(status)) fail('status', 'Status is draft, approved, rejected or delete.')
     const source = textOf(row, 'source').toLowerCase()
     if (present(row, 'source') && !['ai', 'human'].includes(source)) fail('source', 'Source is ai or human.')
     let kind = ''
@@ -1139,7 +1176,7 @@ function planQuestions(working: Working, rows: InputRow[]) {
     if (creating && !kind) fail('type', 'A new question needs a type: free text, multiple choice, reflection or task.')
     if ((creating || present(row, 'text')) && prompt && prompt.trim().length < 10) fail('text', 'Write the question in at least 10 characters.')
     const textChanged = creating || (present(row, 'text') && prompt !== (point?.prompt || '')) || choicesTouched || present(row, 'correct_choice')
-    const publishing = status === 'approved' && point?.status !== 'published' && point?.status !== ''
+    const publishing = (status === 'approved' || status === 'published') && point?.status !== 'published' && point?.status !== ''
     if (textChanged || publishing) {
       for (const message of questionTextProblems(prompt, choices.filter(Boolean), correct)) {
         const choice = message.match(/^Choice (\d+)/)
@@ -1179,7 +1216,8 @@ function planQuestions(working: Working, rows: InputRow[]) {
       working.skipped += 1
       continue
     }
-    const nextStatus = status === 'approved' ? 'published' : status === 'rejected' ? 'rejected' : status === 'draft' ? 'draft' : null
+    const namedStatus = status === 'approved' || status === 'published' ? 'published' : status === 'rejected' ? 'rejected' : status === 'draft' ? 'draft' : null
+    const nextStatus = namedStatus || (creating && working.approveQuestions ? 'published' : null)
     const data: Record<string, unknown> = {}
     if (seconds != null && !sameScalar(point ? numOrNull(point.second) : null, seconds)) data.second = seconds
     if (kind && kind !== (point?.kind || '')) data.kind = kind
@@ -1460,8 +1498,9 @@ function planCircle(working: Working, rows: InputRow[]) {
 }
 
 /** Dry-run. Nothing is written. Rows with errors are skipped and listed; the rest are creates, updates, deletes or unchanged. */
-export function planSheet(parsed: { talks: InputRow[]; questions: InputRow[]; resources: InputRow[]; circle?: InputRow[]; errors?: SheetIssue[] }, catalogue: SheetCatalogue): SheetPlan {
+export function planSheet(parsed: { talks: InputRow[]; questions: InputRow[]; resources: InputRow[]; circle?: InputRow[]; errors?: SheetIssue[] }, catalogue: SheetCatalogue, options?: { approveQuestions?: boolean }): SheetPlan {
   const working = indexCatalogue(catalogue)
+  working.approveQuestions = Boolean(options?.approveQuestions)
   working.errors.push(...(parsed.errors || []))
   planTalks(working, parsed.talks)
   planQuestions(working, parsed.questions)

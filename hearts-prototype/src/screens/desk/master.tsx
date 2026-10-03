@@ -223,7 +223,15 @@ export async function MasterPacks(ctx: MasterCtx) {
                             <div className="checks">{library.map((course) => <label className="check" key={course.id}><input type="checkbox" name="course" value={course.id} defaultChecked={inside.includes(course.id)} /> {str(course.title)}</label>)}</div>
                             <div><button className="btn ghost small" type="submit" data-testid="pack-save">Save courses</button></div>
                           </form>
-                        ) : courses.filter((course) => inside.includes(course.id)).map((course) => str(course.title)).join(', ') || <span className="hint">Empty</span>}
+                        ) : (() => {
+                          const named = courses.filter((course) => inside.includes(course.id))
+                          return named.length ? (
+                            <details data-testid="pack-courses">
+                              <summary>{named.length} course{named.length === 1 ? '' : 's'}</summary>
+                              <ul>{named.map((course) => <li key={course.id}>{str(course.title)}</li>)}</ul>
+                            </details>
+                          ) : <span className="hint">Empty</span>
+                        })()}
                       </td>
                     </tr>
                   )

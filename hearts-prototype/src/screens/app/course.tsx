@@ -8,7 +8,7 @@ import { clockEnabled, now } from '@/lib/clock'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { visibleCourseIds } from '@/server/context'
 import { courseCards, portraitFor, posterFor, slugify } from '@/server/learner'
-import { learnerClips } from '@/server/opening'
+import { learnerClips, pointVisibleWhere } from '@/server/opening'
 import { appetiserStop } from '@/lib/tiers'
 import { type Ctx, clock, one, ref, rows, str, unreadCount } from '../common'
 import { masterFlags } from './journey'
@@ -85,7 +85,13 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
   if (!course) notFound()
   const visible = await visibleCourseIds(payload, user)
   if (!visible.includes(courseId)) redirect(`${base}/lanes?error=${encodeURIComponent('That course is not in your pack. Ask your teacher if you would like it.')}`)
-  const lessons = await rows(payload, 'lessons', { course: { equals: courseId } }, { sort: 'order' })
+  const [lessonRows, units, flags] = await Promise.all([
+    rows(payload, 'lessons', { course: { equals: courseId } }, { sort: 'order' }),
+    rows(payload, 'units', { course: { equals: courseId } }, { sort: 'order' }),
+    masterFlags(payload),
+  ])
+  const unitRank = new Map(units.map((unit, index) => [unit.id, index]))
+  const lessons = [...lessonRows].sort((a, b) => (unitRank.get(ref(a.unit) || 0) ?? 99) - (unitRank.get(ref(b.unit) || 0) ?? 99) || Number(a.order || 0) - Number(b.order || 0) || a.id - b.id)
   if (!lessons.length) redirect(`${base}/lanes?error=${encodeURIComponent('That course has no parts yet.')}`)
   const partIndex = Math.max(0, lessons.findIndex((lesson) => lesson.id === Number(query.part)))
   const lesson = lessons[partIndex]
@@ -96,7 +102,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
   const seenAt = visits[0]?.createdAt ? new Date(visits[0].createdAt) : now()
 
   const lessonIds = lessons.map((row) => row.id)
-  const allPoints = (await rows(payload, 'engagement-points', { and: [{ lesson: { in: lessonIds } }, { or: [{ status: { not_equals: 'draft' } }, { status: { exists: false } }] }] }, { sort: 'second', depth: 1 }))
+  const allPoints = (await rows(payload, 'engagement-points', { and: [{ lesson: { in: lessonIds } }, pointVisibleWhere(flags.showUnchecked)] }, { sort: 'second', depth: 1 }))
     .filter((point) => {
       const author = point.author as { id?: number; role?: string; tenants?: { tenant?: unknown }[] } | null
       if (!author || author.role === 'master') return true
@@ -183,7 +189,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
   const youtubeId = provider === 'vimeo' || provider === 'file' ? null : str(lesson.youtubeId) || null
   const film = provider === 'vimeo' && vimeoId ? { provider: 'vimeo' as const, vimeoId } : provider === 'file' ? { provider: 'file' as const, src: `/api/hearts/film/${lessonId}` } : null
   const startAt = Math.max(0, Number(query.t || 0)) || 0
-  const [unread, flags] = await Promise.all([unreadCount(payload, user), masterFlags(payload)])
+  const unread = await unreadCount(payload, user)
   const here = `${base}/course/${courseId}?part=${lessonId}`
 
   return (

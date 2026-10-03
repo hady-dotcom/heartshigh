@@ -21,7 +21,7 @@ async function mainsShelf(payload: Payload) {
     const lessonId = idOf((lane.starters || []).find((row) => row.role === 'mains')?.lesson)
     const lesson = lessons.find((row) => row.id === lessonId) as { id: number; course?: unknown; title?: string; sourceTitle?: string; youtubeId?: string } | undefined
     const courseId = idOf(lesson?.course)
-    if (lane.key && lesson && courseId) shelf[lane.key] = { courseId, lessonId: lesson.id, title: lesson.sourceTitle || lesson.title || '', poster: posterFor(lesson.youtubeId) }
+    if (lane.key && lesson && courseId) shelf[lane.key] = { courseId, lessonId: lesson.id, title: lesson.title || lesson.sourceTitle || '', poster: posterFor(lesson.youtubeId) }
   }
   return shelf
 }
@@ -49,6 +49,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
           lane={typeof query.lane === 'string' && /^[a-z-]{2,40}$/.test(query.lane) ? query.lane : null}
           clip={Number(query.clip) || null}
           play={query.play === 'appetiser' ? 'appetiser' : null}
+          afterPlacing={query.after === 'placing'}
         />
       </main>
     </div>

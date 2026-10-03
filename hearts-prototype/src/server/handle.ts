@@ -247,7 +247,8 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
   const fail = (status: number, error: string) => ({ ok: false as const, status, error })
     const pointId = input.pointId
     const point = await findDoc(payload, 'engagement-points', pointId)
-    if (!point || point.status === 'draft') return fail(404, 'That question could not be found.')
+    if (!point || point.status === 'rejected') return fail(404, 'That question could not be found.')
+    if (point.status === 'draft' && !(await showUncheckedTalks(payload))) return fail(404, 'That question could not be found.')
     const lessonId = idOf(point.lesson)
     const portal = portalIdOf(user)
     if (!portal) return fail(403, 'Your account is not in a portal.')
@@ -552,6 +553,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         welcome: text(form, 'welcome') || `${name} keeps a gentle room for whoever is sent.`,
         colour: text(form, 'colour') || '#1f4d3a',
         watchHistoryOptIn: false,
+        wizardDone: true,
       },
     })
     return redirectTo(req, '/master', undefined, `${name} is open.`)
@@ -1122,11 +1124,12 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       await payload.create({ collection: 'placing-answers', overrideAccess: true, data: { user: user.id, question: question.id, choice: answers[index].choice, portal: portal || undefined } })
     }
     const starting = startingClause(answers)
+    const learner = user.role === 'learner'
     await payload.update({
       collection: 'users',
       id: user.id,
       overrideAccess: true,
-      data: { onboarded: true, startingClause: starting },
+      data: learner ? { startingClause: starting } : { onboarded: true, startingClause: starting },
     })
     return redirectTo(req, text(form, 'next') || '/', undefined, `Thank you. We have chosen a first sitting for you, starting from clause ${starting}.`)
   }
@@ -1809,12 +1812,27 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, back, undefined, status === 'published' ? 'Approved and published. Learners meet it in the main.' : status === 'rejected' ? 'Rejected. Learners never see it.' : 'Back to draft.')
   }
 
+  if (action === 'popup-approve-all') {
+    const back = text(form, 'next') || '/master/review/popups'
+    if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk reviews pop-ups.')
+    let approved = 0
+    for (let page = 0; page < 20; page += 1) {
+      const found = await payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 100, page: 1, where: { status: { equals: 'draft' } } })
+      if (!found.docs.length) break
+      for (const doc of found.docs) {
+        await payload.update({ collection: 'engagement-points', id: doc.id, overrideAccess: true, data: { status: 'published', reviewedBy: user.id } as never })
+        approved += 1
+      }
+    }
+    return redirectTo(req, back, undefined, approved ? `${approved} pop-up${approved === 1 ? '' : 's'} approved and published.` : 'No draft pop-ups were waiting.')
+  }
+
   if (action === 'show-unchecked') {
     const back = text(form, 'next') || '/master/review'
     if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk changes this.')
     const on = text(form, 'value') === 'on'
     await payload.updateGlobal({ slug: 'master-flags', overrideAccess: true, data: { showUnchecked: on } as never })
-    return redirectTo(req, back, undefined, on ? 'Unchecked talks are shown to learners.' : 'Only approved talks are shown to learners.')
+    return redirectTo(req, back, undefined, on ? 'Unchecked talks and their draft questions are shown to learners.' : 'Only approved talks and published questions are shown to learners.')
   }
 
   if (action === 'hors-max') {

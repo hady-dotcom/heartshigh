@@ -12,6 +12,7 @@ const ARABIC = /[\u0600-\u06FF][\u0600-\u06FF\s\u064B-\u0652]{3,}/
 const QURAN_CUE = /\b(allah (subhanahu wa ta'?ala )?(says|said|tells us)|as allah says|in the qur'?an|the qur'?an says|the verse|surah\s+[a-z]|ayah|o you who believe)\b/i
 const HADITH_CUE = /\b((the )?(prophet|messenger)\b[^.?!]{0,70}\b(said|says)|in the hadith[^.?!]{0,40}\b(said|says|narrated)|narrated (in|by)|on the authority of|rawa)\b/i
 const OPENS_QUOTE = /\b(said|says|tells us|in the qur'?an),?\s*$/i
+const ASIDE = /\b(description|subscribe|housekeeping|like and share|patreon|sponsors?|notification bell|comment below|thanks for watching|thank you for watching|link in the description)\b/i
 
 function sentencesOf(text: string) {
   return text
@@ -32,6 +33,7 @@ export function harvestTranscript(raw: string): HarvestHit[] {
   cues.forEach((cue, cueIndex) => {
     const sentences = sentencesOf(cue.text)
     sentences.forEach((sentence, index) => {
+      if (ASIDE.test(sentence)) return
       const quran = QURAN_CUE.exec(sentence)
       const hadith = HADITH_CUE.exec(sentence)
       const arabic = ARABIC.test(sentence)
@@ -48,7 +50,8 @@ export function harvestTranscript(raw: string): HarvestHit[] {
       }
       let text = sentence
       const next = sentences[index + 1] || cues[cueIndex + 1]?.text.split(/(?<=[.?!])\s+/)[0]
-      if ((OPENS_QUOTE.test(sentence) || sentence.split(/\s+/).length < 9) && next) text = `${sentence} ${next}`
+      if ((OPENS_QUOTE.test(sentence) || sentence.split(/\s+/).length < 9) && next && !ASIDE.test(next)) text = `${sentence} ${next}`
+      if (ASIDE.test(text)) return
       const key = text.toLowerCase().replace(/\s+/g, ' ')
       if (seen.has(key) || text.split(/\s+/).length < 5) return
       seen.add(key)

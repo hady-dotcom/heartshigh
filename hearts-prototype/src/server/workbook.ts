@@ -3,6 +3,7 @@ import { now } from '@/lib/clock'
 import { idOf, portalIdOf } from '@/lib/ids'
 import type { SessionUser } from './context'
 import { recordOpeningAttempt } from './compass'
+import { pointVisibleWhere, showUncheckedTalks } from './opening'
 
 type Row = Record<string, unknown> & { id: number }
 
@@ -113,8 +114,9 @@ export async function workbookFor(payload: Payload, learner: SessionUser, reader
   const pointIds = [...new Set(answers.map((row) => idOf(row.point)).filter((id): id is number => Boolean(id)))]
   const visits = (await payload.find({ collection: 'lesson-visits', overrideAccess: true, depth: 0, limit: 200, where: { user: { equals: learner.id } } })).docs as unknown as Row[]
   const lessonIds = [...new Set([...answers.map((row) => idOf(row.lesson)), ...visits.map((row) => idOf(row.lesson))].filter((id): id is number => Boolean(id)))]
+  const showUnchecked = await showUncheckedTalks(payload)
   const [points, lessons, entries] = await Promise.all([
-    lessonIds.length ? payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 500, where: { or: [{ id: { in: pointIds.length ? pointIds : [0] } }, { and: [{ lesson: { in: lessonIds } }, { or: [{ status: { not_equals: 'draft' } }, { status: { exists: false } }] }] }] } }) : Promise.resolve({ docs: [] }),
+    lessonIds.length ? payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 500, where: { or: [{ id: { in: pointIds.length ? pointIds : [0] } }, { and: [{ lesson: { in: lessonIds } }, pointVisibleWhere(showUnchecked)] }] } }) : Promise.resolve({ docs: [] }),
     lessonIds.length ? payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: 200, where: { id: { in: lessonIds } } }) : Promise.resolve({ docs: [] }),
     payload.find({ collection: 'workbook-entries', overrideAccess: true, depth: 0, limit: 500, where: { user: { equals: learner.id } } }),
   ])
@@ -153,7 +155,7 @@ export async function workbookFor(payload: Payload, learner: SessionUser, reader
   const answered = new Set(list.map((row) => row.pointId))
   const open = owner
     ? pointRows
-        .filter((point) => !answered.has(point.id) && visits.some((visit) => idOf(visit.lesson) === idOf(point.lesson)))
+        .filter((point) => !answered.has(point.id) && point.status !== 'rejected' && (showUnchecked || point.status !== 'draft') && visits.some((visit) => idOf(visit.lesson) === idOf(point.lesson)))
         .map((point) => ({
           pointId: point.id,
           question: String(point.prompt),

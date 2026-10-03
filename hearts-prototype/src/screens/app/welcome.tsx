@@ -58,7 +58,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
           <Flash error={query.error} notice={query.notice} />
           <p className="lead">A few short questions so your first talk is a gentle place to start. There are no wrong answers.</p>
           <form action="/api/hearts" method="post">
-            <Hidden fields={{ action: 'placing', next: `${base}/welcome?step=done` }} />
+            <Hidden fields={{ action: 'placing', next: user.role === 'learner' ? `${base}/start?after=placing` : `${base}/welcome?step=done` }} />
             {questions.map((question, index) => (
               <fieldset className="q-card" key={question.id} data-testid="placing-question" style={{ border: '1px solid #e5dccb' }}>
                 <span className="n">{String(index + 1).padStart(2, '0')} of {String(questions.length).padStart(2, '0')}</span>

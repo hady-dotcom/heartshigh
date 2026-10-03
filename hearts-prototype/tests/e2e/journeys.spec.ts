@@ -43,6 +43,12 @@ async function placing(page: Page, picks: string[]) {
   await expect(questions).toHaveCount(picks.length)
   for (const [index, pick] of picks.entries()) await questions.nth(index).getByLabel(pick, { exact: true }).check()
   await page.getByTestId('placing-submit').click()
+  await expect(page.getByTestId('lets-play')).toBeVisible()
+  await page.getByTestId('lets-play').click()
+  for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'doors']) {
+    await expect(page.locator(`[data-testid="scene"][data-scene="${scene}"]`)).toBeVisible()
+    await page.getByTestId('pass').click()
+  }
   await expect(page.getByTestId('starting-clause')).toBeVisible()
 }
 

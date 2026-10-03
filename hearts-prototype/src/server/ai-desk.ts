@@ -309,7 +309,7 @@ async function talkContext(payload: Payload, lesson: Doc, promptOverride?: { rub
     })
     .join('\n\n')
   return {
-    title: String(lesson.sourceTitle || lesson.title || 'A talk'),
+    title: String(lesson.title || lesson.sourceTitle || 'A talk'),
     speaker: String(lesson.speaker || ''),
     duration: Number(lesson.durationSeconds || 0),
     transcript,
@@ -644,7 +644,7 @@ export async function processJob(payload: Payload, jobId: number, actor: Person,
       return {
         ok: failed.length === 0,
         error: failed[0]?.error,
-        detail: { title: String(fresh.sourceTitle || fresh.title || 'A talk'), steps: stepResults },
+        detail: { title: String(fresh.title || fresh.sourceTitle || 'A talk'), steps: stepResults },
       }
     }, async (state) => {
       await payload.update({

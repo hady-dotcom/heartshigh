@@ -69,6 +69,25 @@ test('harvest copies verses and hadith word for word with the real timestamp', (
   assert.deepEqual(harvestTranscript('**[0:01]** We went to the shop and bought bread for the family.'), [])
 })
 
+test('harvest rejects description, subscribe and housekeeping lines', () => {
+  const raw = `WEBVTT
+
+00:00:05.440 --> 00:00:09.900
+check the description for the full dua the prophet salallahu said as part of this
+
+00:00:10.000 --> 00:00:14.000
+please subscribe and the prophet said this is only a reminder to the channel
+
+00:00:15.000 --> 00:00:19.000
+just a little bit of housekeeping before the prophet said bismillah to begin
+
+00:00:20.000 --> 00:00:28.000
+the prophet said the best of you are those who learn the quran and teach it`
+  const hits = harvestTranscript(raw)
+  assert.equal(hits.length, 1)
+  assert.match(hits[0].text, /best of you/)
+})
+
 test('delayed and contingent questions unlock at the right moment', () => {
   const seen = new Date('2026-10-01T10:00:00Z')
   const day = delayToMs(1, 'day')

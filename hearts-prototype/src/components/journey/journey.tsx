@@ -42,6 +42,8 @@ export type JourneyProps = {
   /** /feed?clip=<cut id>&play=appetiser: open on that clip, optionally straight into its appetiser. */
   clip?: number | null
   play?: 'appetiser' | null
+  /** After placing, the quiz returns to the first-talk screen instead of the feed. */
+  afterPlacing?: boolean
 }
 
 const TAB_DELAY = 200
@@ -110,6 +112,7 @@ export function Journey(props: JourneyProps) {
   const indexRef = useRef(0)
   const [mode, setMode] = useState<Mode>('hors')
   const modeRef = useRef<Mode>('hors')
+  const [captionOpen, setCaptionOpen] = useState(false)
   const spanJoin = useRef<number | null>(null)
   const hosts = useRef<[Host, Host]>([
     { spec: null, playerId: null, ready: false, state: -1 },
@@ -587,6 +590,24 @@ export function Journey(props: JourneyProps) {
     async (justShow: boolean, doorEl: HTMLElement | null) => {
       const state = heartRef.current
       if (!state) return
+      if (props.afterPlacing && props.signedIn && props.learner) {
+        const handed = { ...state, handedOffAt: Date.now(), synced: true }
+        setHeart(handed)
+        if (!props.viewAs) {
+          document.cookie = `hearts_opened=1; Path=/p/${opening.portal}; Max-Age=31536000; SameSite=Lax`
+          try {
+            await fetch(`/api/workbook/opening?portal=${opening.portal}`, {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ scenesVersion: state.scenesVersion, taps: state.taps.map((tap) => ({ sceneKey: tap.scene, optionKey: tap.option, answeredAt: tap.at })) }),
+            })
+          } catch {
+            // The result screen still opens. Home sends them back to the quiz if the opening was not saved.
+          }
+        }
+        window.location.assign(`${base}/welcome?step=done`)
+        return
+      }
       preloadApi()
       const route = routeFeed(state, ctx, { justShow })
       const first = route.items[0]
@@ -1090,6 +1111,9 @@ export function Journey(props: JourneyProps) {
   const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
   const captionText = (piece?.lines?.length ? piece.lines[lineShown]?.text : piece?.quote) || ''
   const captionRole = mode === 'appetiser' ? piece?.lines?.[lineShown]?.role || null : null
+  useEffect(() => {
+    setCaptionOpen(false)
+  }, [item?.id, mode, lineShown])
   const slide = phase === 'feed' && item?.style ? item.style : null
   const mains = item?.laneKey ? props.mains[item.laneKey] : undefined
   const course = item ? `${base}/course/${item.courseId}?part=${item.lessonId}&t=0` : base
@@ -1104,19 +1128,31 @@ export function Journey(props: JourneyProps) {
         {mode === 'hors' ? (
           <div className="clip-row">
             {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
+            {muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
             <span className="chip dark">{clock(item.hors.end - item.hors.start)}</span>
           </div>
         ) : (
           <div className="clip-row">
             <button type="button" className="chip white" onClick={() => window.history.back()} data-testid="appetiser-back">‹ Back</button>
+            {muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
             <span className="chip gold">Extended cut</span>
           </div>
         )}
       </div>
-      {muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
-      <p className={`caption${captionText.length > 120 ? ' long' : ''}${captionText ? '' : ' title-only'}`} data-testid="caption" data-line={lineShown} data-role={captionRole || undefined} key={`${mode}-${lineShown}`}>
+      <button
+        type="button"
+        className={`caption${captionText.length > 120 ? ' long' : ''}${captionText ? '' : ' title-only'}`}
+        data-testid="caption"
+        data-line={lineShown}
+        data-role={captionRole || undefined}
+        data-expanded={captionOpen ? 'true' : 'false'}
+        aria-expanded={captionOpen}
+        key={`${mode}-${lineShown}`}
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={() => setCaptionOpen((open) => !open)}
+      >
         {captionText || item.lessonTitle || item.courseTitle}
-      </p>
+      </button>
       <div className="rail">
         <button type="button" onClick={share} data-testid="share"><span className="bubble"><ShareIcon /></span>Share</button>
         <button type="button" aria-pressed={faves.includes(item.id)} onClick={fave} data-testid="fave"><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
