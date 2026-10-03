@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { dualExtract, ladderFrom, type ClauseCard, type ExtractCut, type ExtractResult } from './extractor'
+import { REWRITE_VOICE } from './human-voice'
 import { cuesToSentences, formatTimestamp, isVerbatim, normaliseForMatch, parseTranscript } from './transcript'
 
 export type LlmRequest = { system: string; user: string }
@@ -153,16 +154,25 @@ export async function extractWithFallback(raw: string, clauses: ClauseCard[]): P
   }
 }
 
+export const REFLECTION_FALLBACK = [
+  'Which bit stayed with you on the bus home?',
+  'Anything in there from your own week, at work or at home?',
+]
+
+/** The reflection drafter: the file, then the same voice as a question rewrite. */
+export function reflectionSystem() {
+  const file = loadPrompt('reflection-prompts.txt')
+  const base = file || 'Suggest two short reflection questions as JSON {"questions":[{"prompt":""}]}'
+  return `${base.trim()}\n\n${REWRITE_VOICE}`
+}
+
 export async function suggestReflection(transcript: string): Promise<string[]> {
   const client = getLlmClient()
-  const fallback = [
-    'Which line stayed with you, and where might it meet your week?',
-    'Was there a moment you recognised from your own life?',
-  ]
+  const fallback = REFLECTION_FALLBACK
   if (!client) return fallback
   try {
     const reply = await client.complete({
-      system: loadPrompt('reflection-prompts.txt') || 'Suggest two short reflection questions as JSON {"questions":[{"prompt":""}]}',
+      system: reflectionSystem(),
       user: transcript.slice(0, 8000),
     })
     const start = reply.indexOf('{')

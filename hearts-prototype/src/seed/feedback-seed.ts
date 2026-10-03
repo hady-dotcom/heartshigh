@@ -3,11 +3,12 @@ import { feedbackDemoSeedAllowed } from '@/lib/feedback'
 
 type Doc = Record<string, unknown> & { id: number }
 
-const SHARED = 'I put my phone in the other room after isha and sat with my uncle.'
-const PRIVATE = 'Kept this for my own workbook and nobody else.'
-const HAMZA = 'On the bus home I noticed I had not greeted the person beside me, and I did the next day.'
-const LEEDS = 'In Leeds I walked to fajr with my brother and we did not hurry the last part.'
-const CIRCLE = 'The Thursday circle is bringing tea again. Come if you can.'
+const SHARED = 'Phone went in the other room after isha. Then I sat with my uncle. He was half asleep.'
+const PRIVATE = "Just for me. I'm not putting this where anyone else can read it."
+const HAMZA = "On the bus home I clocked I hadn't said salaam to the man next to me. Did it the next morning. Felt a bit late."
+const LEEDS = "Walked to fajr with my brother. We didn't rush the last bit. It was cold, though."
+const CIRCLE = "Tea on Thursday if you're about. I'll bring the biscuits."
+const REPLY = 'Love this. The bit with your uncle made me smile. Thursday?'
 const WEAK = 'Did you like the talk?'
 const MARKER = SHARED
 
@@ -77,7 +78,7 @@ export async function seedFeedbackDemo(payload: Payload, opts: { startersOnly?: 
           body: input.body,
           consent: true,
           portal: input.portal,
-          teacherReply: input.body === SHARED ? 'Thank you for writing this down. I will sit with it before Thursday.' : '',
+          teacherReply: input.body === SHARED ? REPLY : '',
         } as never,
       })
     }
@@ -86,7 +87,7 @@ export async function seedFeedbackDemo(payload: Payload, opts: { startersOnly?: 
   await answer({ point: popup, user: maryam, portal: elm.id, body: SHARED, choice: popup.kind === 'multiple_choice' ? String((popup.options as string[] | undefined)?.[0] || '') : '', share: true, ago: 2 })
   await answer({ point: reflection, user: maryam, portal: elm.id, body: PRIVATE, keepPrivate: true, ago: 3 })
   await answer({ point: reflection, user: hamza, portal: elm.id, body: HAMZA, share: true, ago: 1 })
-  if (task) await answer({ point: task, user: hamza, portal: elm.id, body: 'I left my phone in the kitchen for one meal and told my sister why.', share: true, ago: 4 })
+  if (task) await answer({ point: task, user: hamza, portal: elm.id, body: 'Left my phone in the kitchen for one meal. Told my sister why. She laughed.', share: true, ago: 4 })
   if (yusuf && leeds) await answer({ point: popup, user: yusuf, portal: leeds.id, body: LEEDS, choice: popup.kind === 'multiple_choice' ? String((popup.options as string[] | undefined)?.[0] || '') : '', share: true, ago: 2 })
   await payload.create({
     collection: 'messages',

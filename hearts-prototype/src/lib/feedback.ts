@@ -161,7 +161,7 @@ export function assessQuestion(input: { prompt: string; talk?: string; options?:
 
 export function suggestRewrite(talk: string) {
   const name = talk.replace(/\s+/g, ' ').trim() || 'this talk'
-  return `One line from ${name} stayed with you. Name one ordinary moment this week where you met it, and what you did next.`
+  return `What from ${name} stayed with you on the way home, or while you were at work?`
 }
 
 /** Rewrites stay drafts. Nothing here is a published question. */
@@ -690,15 +690,13 @@ export function themesFromAnswers(text: string): { themes: string[]; quotes: str
     .split('\n')
     .map((line) => line.replace(/\s+/g, ' ').trim())
     .filter((line) => line.length > 8)
-  if (!lines.length) return { themes: ['There are no shared answers to summarise yet.'], quotes: [] }
+  if (!lines.length) return { themes: ['Nothing shared to read yet.'], quotes: [] }
+  const clip = (line: string) => (line.length > 90 ? `${line.slice(0, 87)}...` : line)
   const quotes = lines.slice(0, 3).map((line) => (line.length > 180 ? `${line.slice(0, 177)}...` : line))
-  const themes = [
-    'People wrote about a particular moment, not a general opinion.',
-    `A repeated note: ${lines[0].slice(0, 90)}`,
-    lines[1] ? `Another thread: ${lines[1].slice(0, 90)}` : 'The answers stay close to the question that was asked.',
-  ]
-  if (lines.length > 3) themes.push('More than one person came back to the same kind of moment.')
-  if (lines.length > 6) themes.push(`${lines.length} shared answers are enough to see a pattern, and not enough to speak for everyone.`)
+  const themes = [`One person wrote: ${clip(lines[0])}`]
+  if (lines[1]) themes.push(`Someone else: ${clip(lines[1])}`)
+  if (lines.length > 2) themes.push('A couple more said something close to that.')
+  if (lines.length > 4) themes.push('A few answers are only a line. Those ones stuck.')
   return { themes: themes.slice(0, 5), quotes }
 }
 

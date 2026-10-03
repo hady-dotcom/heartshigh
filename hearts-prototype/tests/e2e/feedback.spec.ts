@@ -6,10 +6,11 @@ const DESK = { width: 1440, height: 900 }
 const SHOTS = '/opt/cursor/artifacts/screenshots'
 const REVIEW = '/opt/cursor/artifacts/feedback-review'
 const ARTIFACTS = '/opt/cursor/artifacts'
-const SHARED = 'I put my phone in the other room after isha and sat with my uncle.'
-const PRIVATE = 'Kept this for my own workbook and nobody else.'
-const HAMZA = 'On the bus home I noticed I had not greeted the person beside me, and I did the next day.'
-const LEEDS = 'In Leeds I walked to fajr with my brother and we did not hurry the last part.'
+const SHARED = 'Phone went in the other room after isha. Then I sat with my uncle. He was half asleep.'
+const PRIVATE = "Just for me. I'm not putting this where anyone else can read it."
+const HAMZA = "On the bus home I clocked I hadn't said salaam to the man next to me. Did it the next morning. Felt a bit late."
+const LEEDS = "Walked to fajr with my brother. We didn't rush the last bit. It was cold, though."
+const REPLY = 'Love this. The bit with your uncle made me smile. Thursday?'
 const WEAK = 'Did you like the talk?'
 
 let master: APIRequestContext
@@ -53,14 +54,14 @@ test.beforeAll(async () => {
       const created = await json(await master.post('/api/answers', { data: { point: point.id, user, lesson: point.lesson, body, portal, keepPrivate, shareWithTeacher: share && !keepPrivate, answeredAt: '2026-09-20T09:00:00.000Z' } }))
       expect(created.doc?.id || created.id, body).toBeTruthy()
       if (share) {
-        await master.post('/api/workbook-entries', { data: { user, answer: created.doc?.id || created.id, lesson: point.lesson, body, consent: true, portal, teacherReply: body === SHARED ? 'Thank you for writing this down. I will sit with it before Thursday.' : '' } })
+        await master.post('/api/workbook-entries', { data: { user, answer: created.doc?.id || created.id, lesson: point.lesson, body, consent: true, portal, teacherReply: body === SHARED ? REPLY : '' } })
       }
     }
     await make(maryam.id, elm.id, SHARED, true)
     await make(maryam.id, elm.id, PRIVATE, false, true)
     await make(hamza.id, elm.id, HAMZA, true)
     await make(yusuf.id, leeds.id, LEEDS, true)
-    await master.post('/api/messages', { data: { body: 'The Thursday circle is bringing tea again. Come if you can.', author: maryam.id, portal: elm.id } })
+    await master.post('/api/messages', { data: { body: "Tea on Thursday if you're about. I'll bring the biscuits.", author: maryam.id, portal: elm.id } })
   }
   const weak = await doc('engagement-points', `where[prompt][equals]=${encodeURIComponent(WEAK)}`)
   if (!weak && point) {
@@ -111,8 +112,9 @@ test.describe('Feedback for teachers', () => {
     const group = page.getByTestId('door-group').filter({ hasText: SHARED })
     await group.scrollIntoViewIfNeeded()
     await expect(group.getByTestId('question-group').filter({ hasText: SHARED })).toBeVisible()
+    await expect(group).toContainText(REPLY)
     await page.screenshot({ path: `${SHOTS}/feedback-grouped.png` })
-    await page.screenshot({ path: `${REVIEW}/feedback-grouped.png` })
+    await page.screenshot({ path: `${REVIEW}/feedback-grouped-voice.png` })
 
     await page.getByTestId('export-dialog').locator('summary').click()
     await expect(page.getByTestId('export-mode')).toContainText('Anonymise is on')
@@ -137,11 +139,13 @@ test.describe('Feedback for teachers', () => {
     const pdf = await page.request.get('/api/feedback?portal=east-london&format=pdf')
     expect(pdf.ok()).toBeTruthy()
     const pdfBytes = Buffer.from(await pdf.body())
-    writeFileSync(`${ARTIFACTS}/feedback-digest.pdf`, pdfBytes)
-    writeFileSync(`${REVIEW}/feedback-digest.pdf`, pdfBytes)
+    writeFileSync(`${ARTIFACTS}/feedback-digest-voice.pdf`, pdfBytes)
+    writeFileSync(`${REVIEW}/feedback-digest-voice.pdf`, pdfBytes)
     expect(pdfBytes.subarray(0, 5).toString()).toBe('%PDF-')
     const pdfText = pdfBytes.toString('latin1')
     expect(pdfText).toContain('sat with my uncle')
+    expect(pdfText).toContain('Thursday?')
+    expect(pdfText).not.toContain(PRIVATE)
     expect(pdfText).not.toContain('Kept this')
 
     await page.reload()
@@ -174,7 +178,7 @@ test.describe('Feedback for teachers', () => {
     await expect(page.getByTestId('weak-question').filter({ hasText: WEAK })).toBeVisible()
     const weakCard = page.getByTestId('weak-question').filter({ hasText: WEAK })
     await expect(weakCard).toContainText('Draft')
-    await expect(weakCard.getByTestId('weak-rewrite')).toContainText('ordinary moment')
+    await expect(weakCard.getByTestId('weak-rewrite')).toContainText('way home')
     const still = await json(await master.get(`/api/engagement-points?where[prompt][equals]=${encodeURIComponent(WEAK)}&depth=0`))
     expect(still.docs[0].status).toBe('draft')
     const report = page.getByTestId('weak-questions')

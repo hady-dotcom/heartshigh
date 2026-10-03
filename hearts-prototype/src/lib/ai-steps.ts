@@ -7,6 +7,7 @@
  */
 import { dualExtract } from './extractor'
 import { assessQuestion, themesFromAnswers } from './feedback'
+import { ANSWER_VOICE, REWRITE_VOICE, TEACHER_REPLY_VOICE } from './human-voice'
 import { harvestTranscript } from './harvest'
 import { draftTiers, sentencesOf, type TierDraft } from './tiers'
 
@@ -427,6 +428,8 @@ Draw each question from one specific thing the speaker actually urges or lands o
 
 Do not write a quiz, a score, a rating, or an agree-to-disagree scale. Those words are refused before a learner can see them. Prefer an open question. kind is "question" or "task". options is an empty list unless kind is "multiple_choice", and even then the options are concrete acts, not a scale.
 
+Each prompt: ${REWRITE_VOICE}
+
 Return JSON: {"points": [{"second": 120, "kind": "question", "prompt": "", "options": []}]}
 Two or three points, each prompt a sentence the listener can answer from their own week. If the talk supports none, return {"points": []}. No text outside the JSON.`,
   },
@@ -564,6 +567,8 @@ It is said at {{LAND_AT}} seconds. A question that draws on it appears at or aft
 
 Anchor each prompt on a different line the speaker actually develops. Quote the speaker only with words that appear in the transcript. Do not write a knowledge question, a leading question, or anything that shames. Do not use the words of a quiz, a score, a rating or a scale.
 
+Each prompt: ${REWRITE_VOICE}
+
 Return JSON: {"questions": [{"prompt": "", "second": 90, "topic": "a short theme"}]}
 Two or three prompts. If the talk supports none, return {"questions": []}. No text outside the JSON.`,
   },
@@ -687,15 +692,15 @@ Score each axis on its own. Do not average as you go. Most clips are 3s. The cla
     fillsPoints: null,
     fills: 'Feedback desk: a draft summary under one question. It is not included in a download until a person includes it.',
     outputSchema: obj({ themes: { type: 'array', items: str }, quotes: { type: 'array', items: str } }, ['themes', 'quotes']),
-    prompt: `You summarise answers learners chose to share, for a sheikh, imam or teacher to read. Do not invent answers. Do not name people. Do not add advice.
+    prompt: `You jot what a sheikh would notice in answers learners chose to share. Do not invent answers. Do not name people. Do not add advice. ${ANSWER_VOICE}
 
 The talk is: {{TALK}}
 The question is: {{QUESTION}}
 The answers, one per line:
 {{ANSWERS}}
 
-Return JSON: {"themes": ["three to five short themes"], "quotes": ["up to three short quotes copied from the answers"]}
-themes has 3 to 5 items when there are answers, or one item saying there is nothing to summarise. quotes are copied from the answers, not paraphrased, and may be an empty list. No text outside the JSON.`,
+Return JSON: {"themes": ["a few uneven notes, not a tidy set of three"], "quotes": ["up to three short quotes copied from the answers"]}
+themes has 3 to 5 items when there are answers, or one item saying there is nothing to read. Write them as notes, not a polished summary. quotes are copied from the answers, not paraphrased, and may be an empty list. No text outside the JSON.`,
   },
   {
     slug: 'question-value',
@@ -725,10 +730,13 @@ The talk is: {{TALK}}
 The question family is: {{FAMILY}}
 The question is: {{QUESTION}}
 
-Flag it when the answers would be yes or no, generic, or unhelpful to a sheikh. A useful question invites a specific, personal, reflective answer tied to this talk.
+Flag it when the answers would be yes or no, generic, or unhelpful to a sheikh. A useful question asks for something specific from the person's own week.
+
+When you rewrite, follow this: ${REWRITE_VOICE}
+A teacher replying to an answer would follow this: ${TEACHER_REPLY_VOICE}
 
 Return JSON: {"weak": true, "reasons": ["one plain sentence"], "rewrite": "one question"}
-weak is false when the question already does that work. reasons is an empty list when it is not weak. rewrite is "" when it is not weak, otherwise one question in plain words, with no order and no shame. No text outside the JSON.`,
+weak is false when the question already does that work. reasons is an empty list when it is not weak. rewrite is "" when it is not weak, otherwise the one question. No text outside the JSON.`,
   },
 ]
 
@@ -842,7 +850,7 @@ function popupPoints(draft: TierDraft, shift: number, kind: 'question' | 'reflec
   return ordered.map((row) => ({
     second: row.second,
     kind,
-    prompt: row.prompt || `The speaker says: “${row.quote}” What does that line ask of you this week?`,
+    prompt: row.prompt || `The speaker says: “${row.quote}” What from that stayed with you on the way home?`,
     options: [] as string[],
   }))
 }
