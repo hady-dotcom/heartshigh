@@ -463,7 +463,7 @@ export async function LibraryScreen(ctx: Ctx) {
             <header className="light"><h2>Library courses</h2></header>
             <div className="table-wrap">
               <table className="data">
-                <thead><tr><th>Course</th><th>Speaker</th><th>Here</th><th /></tr></thead>
+                <thead><tr><th>Course</th><th>Speaker</th><th>Added</th><th /></tr></thead>
                 <tbody>
                   {courses.map((course) => {
                     const direct = linkedCourse(course.id)

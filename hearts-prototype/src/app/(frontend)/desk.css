@@ -262,3 +262,58 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .tree-seat-name { font-size: 12.5px; color: var(--ink-2); font-weight: 650; margin: 4px 0; }
 .tree-door-name { font-weight: 700; }
 abbr.tip { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
+
+/* Library, access codes and Teach: deep teal, parchment text, gold. Other desk pages stay as they are. */
+.desk.evening { background: var(--evening, #123f3a); color: var(--parchment, #f6f1e4); }
+.desk.evening .side { background: #0e322e; border-right-color: rgba(224, 177, 90, 0.28); }
+.desk.evening .side-brand small,
+.desk.evening .side .group,
+.desk.evening .main-head p,
+.desk.evening .hint,
+.desk.evening .muted,
+.desk.evening .empty { color: rgba(246, 241, 228, 0.72); }
+.desk.evening .side a.nav { color: rgba(246, 241, 228, 0.86); }
+.desk.evening .side a.nav:hover,
+.desk.evening .side-foot button:hover { background: rgba(246, 241, 228, 0.06); }
+.desk.evening .side a.nav.on { background: var(--gold, #dca643); color: #1c160c; }
+.desk.evening .side-foot { border-top-color: rgba(224, 177, 90, 0.28); }
+.desk.evening .side-foot button,
+.desk.evening .side-foot .who b { color: var(--parchment, #f6f1e4); }
+.desk.evening .panel,
+.desk.evening .lib-card,
+.desk.evening .door-group,
+.desk.evening .tree-door { background: rgba(246, 241, 228, 0.05); border-color: rgba(224, 177, 90, 0.35); color: var(--parchment, #f6f1e4); }
+.desk.evening .seat-group { background: rgba(0, 0, 0, 0.16); border-color: rgba(224, 177, 90, 0.28); }
+.desk.evening .panel > header,
+.desk.evening .panel > header.light { background: transparent; color: var(--parchment, #f6f1e4); border-bottom-color: rgba(224, 177, 90, 0.28); }
+.desk.evening .panel > header h2,
+.desk.evening .lib-card h3,
+.desk.evening .pack-counts,
+.desk.evening .lib-card p,
+.desk.evening .tree-seat-name,
+.desk.evening .check,
+.desk.evening .form label.stack,
+.desk.evening .form .row > span { color: var(--parchment, #f6f1e4); }
+.desk.evening table.data th { background: transparent; color: rgba(246, 241, 228, 0.7); border-bottom-color: rgba(224, 177, 90, 0.28); }
+.desk.evening table.data td { color: var(--parchment, #f6f1e4); border-bottom-color: rgba(224, 177, 90, 0.16); }
+.desk.evening .input,
+.desk.evening select,
+.desk.evening textarea,
+.desk.evening input[type='text'],
+.desk.evening input[type='number'],
+.desk.evening input[type='search'],
+.desk.evening input[type='email'],
+.desk.evening .tree-search,
+.desk.evening .address,
+.desk.evening .count-tile { background: rgba(0, 0, 0, 0.18); color: var(--parchment, #f6f1e4); border-color: rgba(224, 177, 90, 0.4); }
+.desk.evening .btn.ghost,
+.desk.evening .btn.danger { background: transparent; color: var(--parchment, #f6f1e4); border-color: rgba(224, 177, 90, 0.5); }
+.desk.evening .bell summary { background: transparent; color: var(--parchment, #f6f1e4); border-color: rgba(224, 177, 90, 0.4); }
+.desk.evening .bell .count { background: var(--gold, #dca643); color: #1c160c; }
+.desk.evening .badge.teal,
+.desk.evening .badge.purple,
+.desk.evening .badge.grey,
+.desk.evening .badge.gold { background: transparent; color: var(--gold, #e0b15a); border: 1px solid rgba(224, 177, 90, 0.55); }
+.desk.evening .badge.rose { background: transparent; color: var(--gold, #e0b15a); border: 1px solid rgba(224, 177, 90, 0.55); }
+.desk.evening .check input { accent-color: var(--gold, #dca643); }
+.desk.evening .door-tag { color: #1c160c; background: var(--gold, #dca643); }
