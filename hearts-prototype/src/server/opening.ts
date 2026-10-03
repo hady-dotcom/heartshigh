@@ -5,6 +5,7 @@ import { idOf } from '@/lib/ids'
 import { now } from '@/lib/clock'
 import { adoptedCourseIds, visibleCourseIds, type PortalDoc, type SessionUser } from './context'
 import { normaliseSpans, type AppetiserSpan } from '@/lib/tiers'
+import { ladderParentRef, talkChain, type PieceRef } from '@/lib/nesting'
 import { laneOf, portraitFor, posterFor, slugify, type FeedItem, type SlideStyle } from './learner'
 
 type Row = Record<string, unknown> & { id: number }
@@ -210,6 +211,29 @@ function laneTagsOf(data: Loaded, cutId: number) {
   return [...byLane.values()]
 }
 
+function parentsFor(lessonId: number, ladder: Row[]): { hors: PieceRef; appetiser: PieceRef } {
+  const chain = talkChain(lessonId)
+  const appetisers = ladder
+    .filter((row) => row.kind === 'appetiser')
+    .map((row) => ({ id: row.id, kind: 'appetiser', start: Number(row.start || 0), end: Number(row.end || 0) }))
+  const hors = ladder.find((row) => row.kind === 'hors')
+  const appetiser = appetisers[0]
+  return {
+    hors: {
+      ...chain.hors,
+      id: hors ? `hors:${hors.id}` : chain.hors.id,
+      parentId: hors ? ladderParentRef({ kind: 'hors', start: Number(hors.start || 0), end: Number(hors.end || 0) }, appetisers, lessonId) : chain.hors.parentId,
+      parentLevel: 'appetiser',
+    },
+    appetiser: {
+      ...chain.appetiser,
+      id: appetiser?.id ? `appetiser:${appetiser.id}` : chain.appetiser.id,
+      parentId: `talk:${lessonId}`,
+      parentLevel: 'talk',
+    },
+  }
+}
+
 const lineList = (value: unknown) =>
   Array.isArray(value) ? (value as { at?: unknown; text?: unknown }[]).filter((row) => Number.isFinite(Number(row?.at)) && typeof row?.text === 'string').map((row) => ({ at: Number(row.at), text: String(row.text) })) : []
 
@@ -283,6 +307,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
       placeholder: false,
       tierStatus: tier.status === 'checked' ? 'checked' : 'draft',
       offerResume: tier.offerResume !== false,
+      parents: parentsFor(lesson.id, data.ladder.filter((item) => idOf(item.lesson) === lesson.id)),
     }
   }
   const start = Number(cut.start)
@@ -302,6 +327,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     placeholder,
     tierStatus: null,
     offerResume: true,
+    parents: parentsFor(lesson.id, data.ladder.filter((item) => idOf(item.lesson) === lesson.id)),
   }
 }
 

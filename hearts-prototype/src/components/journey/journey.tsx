@@ -277,7 +277,7 @@ export function Journey(props: JourneyProps) {
 
   // ---------- players ----------
   const specFor = useCallback((item: FeedItem | undefined, kind: Mode): Spec | null => {
-    if (!item || !item.youtubeId || item.style) return null
+    if (!item || !item.youtubeId || (item.style && kind === 'hors')) return null
     if (kind === 'appetiser') {
       const spans = item.appetiser.spans
       const multi = Boolean(spans && spans.length > 1)
@@ -772,6 +772,26 @@ export function Journey(props: JourneyProps) {
     [laneTags, setHeart],
   )
 
+  const noteBrowse = useCallback((event: 'linger' | 'learn-more') => {
+    if (!signedIn) return
+    const current = itemsRef.current[indexRef.current]
+    const level = modeRef.current
+    if (!current || (level !== 'hors' && level !== 'appetiser')) return
+    const piece = level === 'hors' ? current.hors : current.appetiser
+    const parent = (level === 'hors' ? current.parents?.hors.parentId : current.parents?.appetiser.parentId) || ''
+    const form = new FormData()
+    form.set('action', 'browse')
+    form.set('level', level)
+    form.set('event', event)
+    form.set('lesson', String(current.lessonId))
+    form.set('speaker', current.speaker)
+    form.set('speakerSlug', current.speakerSlug)
+    form.set('start', String(Math.floor(piece.start)))
+    form.set('end', String(Math.ceil(piece.end)))
+    form.set('parent', parent)
+    void fetch('/api/hearts', { method: 'POST', headers: { accept: 'application/json' }, body: form }).catch(() => undefined)
+  }, [signedIn])
+
   const leaveSignal = useCallback(() => {
     const seen = watch.current
     if (!seen.key || seen.done90 || modeRef.current !== 'hors') return
@@ -800,7 +820,7 @@ export function Journey(props: JourneyProps) {
         await finished(animate(clipRef.current, [{ transform: 'translateY(0)' }, { transform: 'translateY(-100%)' }], T.snap, EASE.standard, { id: 'snap' }))
       }
       setFirstEver(false)
-      await showItem(target)
+      await showItem(target, modeRef.current)
       if (clipRef.current) clipRef.current.getAnimations().forEach((animation) => animation.cancel())
       void refill()
     },
@@ -877,11 +897,19 @@ export function Journey(props: JourneyProps) {
         if (join.action === 'stop') {
           player.pauseVideo()
           player.seekTo(spans[spans.length - 1].end, true)
+          if (!seen.done90) {
+            seen.done90 = true
+            noteBrowse('linger')
+          }
           return
         }
       } else if (modeRef.current === 'appetiser' && time >= appetiserEnd(current) - 0.25) {
         player.pauseVideo()
         player.seekTo(appetiserEnd(current), true)
+        if (!seen.done90) {
+          seen.done90 = true
+          noteBrowse('linger')
+        }
         return
       }
       // The player's own end mark is a whole second; the clip stops at its real out point, between sentences.
@@ -890,6 +918,7 @@ export function Journey(props: JourneyProps) {
         if (!seen.done90) {
           seen.done90 = true
           signal('watched90')
+          noteBrowse('linger')
         }
         window.dispatchEvent(new CustomEvent('hearts:ended'))
         return
@@ -899,11 +928,12 @@ export function Journey(props: JourneyProps) {
         if (length > 0 && seen.furthest >= 0.9 * length) {
           seen.done90 = true
           signal('watched90')
+          noteBrowse('linger')
         }
       }
     }, 250)
     return () => window.clearInterval(timer)
-  }, [phase, signal])
+  }, [phase, signal, noteBrowse])
 
   const needsAccount = (reason: SheetReason) => {
     if (signedIn) return false
@@ -913,49 +943,40 @@ export function Journey(props: JourneyProps) {
 
   const replay = () => {
     signal('replay')
-    void showItem(indexRef.current)
+    void showItem(indexRef.current, modeRef.current)
     const host = hosts.current[visibleRef.current]
     if (host.playerId && host.spec) getPlayer(host.playerId)?.seekTo(host.spec.start, true)
     setToast('Playing this clip again')
   }
-  const nextLane = () => {
-    if (!item) return
+  const stepLoop = (direction: 1 | -1) => {
     const list = itemsRef.current
-    const order = list.map((_, offset) => (index + 1 + offset) % list.length)
-    const target = order.find((at) => list[at].lane !== item.lane) ?? (index + 1) % list.length
-    setToast(`Lane · ${list[target]?.laneLabel || ''}`)
-    void advance(target)
-  }
-  const moreLikeThis = () => {
-    setToast('More on this topic')
-    void advance(index + 1)
-  }
-  const moreFromSpeaker = () => {
-    if (!item) return
-    const list = itemsRef.current
-    const order = list.map((_, offset) => (index + 1 + offset) % list.length).filter((at) => at !== index)
-    const target = order.find((at) => list[at].speaker === item.speaker)
-    if (target === undefined) return setToast(`That is everything from ${item.speaker} for now`)
-    setToast(`More from ${item.speaker}`)
-    void advance(target)
+    if (list.length < 2) return setToast(modeRef.current === 'hors' ? "That is the only hors d'oeuvre here" : 'That is the only appetiser here')
+    void advance(indexRef.current + direction)
   }
 
-  const watchFull = () => {
-    if (!item) return
-    signal('watch-full')
-    push(window.location.pathname, { appetiser: item.cutId })
-    void showItem(index, 'appetiser')
-  }
-
-  const startCourse = async (event: React.MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault()
-    if (!item) return
-    haptic(10)
-    const href = event.currentTarget.getAttribute('href') || ''
+  const learnMore = async (event?: React.MouseEvent<HTMLAnchorElement>) => {
+    const current = itemsRef.current[indexRef.current]
+    if (!current) return
+    if (modeRef.current === 'hors') {
+      const parent = current.parents?.hors
+      if (!parent || parent.parentLevel !== 'appetiser') return
+      signal('watch-full')
+      noteBrowse('learn-more')
+      push(window.location.pathname, { appetiser: current.cutId })
+      void showItem(indexRef.current, 'appetiser')
+      return
+    }
+    event?.preventDefault()
+    const parent = current.parents?.appetiser
+    if (!parent || parent.parentLevel !== 'talk') return
+    const href = `${base}/course/${current.courseId}?part=${current.lessonId}&t=0`
     if (needsAccount('save')) return
     signal('start-course')
+    noteBrowse('learn-more')
+    haptic(10)
     stopVisible()
-    await finished(animate(event.currentTarget, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.6)', opacity: 0 }], 500, EASE.enter, { id: 'mains-transform' }))
+    const node = event?.currentTarget
+    if (node) await finished(animate(node, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.6)', opacity: 0 }], 500, EASE.enter, { id: 'mains-transform' }))
     router.push(href)
   }
 
@@ -1048,11 +1069,7 @@ export function Journey(props: JourneyProps) {
       }
       return
     }
-    if (Math.abs(dy) > Math.abs(dx)) {
-      if (dy < 0) replay()
-      else nextLane()
-    } else if (dx < 0) moreLikeThis()
-    else moreFromSpeaker()
+    stepLoop(Math.abs(dy) > Math.abs(dx) ? (dy < 0 ? 1 : -1) : dx < 0 ? 1 : -1)
   }
 
   // ---------- sign-up from the sheet ----------
@@ -1090,10 +1107,10 @@ export function Journey(props: JourneyProps) {
   const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
   const captionText = (piece?.lines?.length ? piece.lines[lineShown]?.text : piece?.quote) || ''
   const captionRole = mode === 'appetiser' ? piece?.lines?.[lineShown]?.role || null : null
-  const slide = phase === 'feed' && item?.style ? item.style : null
-  const mains = item?.laneKey ? props.mains[item.laneKey] : undefined
+  const slide = phase === 'feed' && mode === 'hors' && item?.style ? item.style : null
   const course = item ? `${base}/course/${item.courseId}?part=${item.lessonId}&t=0` : base
-  const resumeMain = item && item.offerResume !== false ? `${base}/course/${item.courseId}?part=${item.lessonId}&t=${Math.floor(appetiserEnd(item))}` : null
+  const horsParent = item?.parents?.hors
+  const appetiserParent = item?.parents?.appetiser
   const laneVisible = Boolean(item) && !firstEver
   void readyTick
 
@@ -1132,18 +1149,11 @@ export function Journey(props: JourneyProps) {
               </a>
               <span onClickCapture={(event) => { if (needsAccount('save')) { event.preventDefault(); event.stopPropagation() } }}><FollowButton slug={item.speakerSlug} /></span>
             </div>
-            <button type="button" className="pill gold block" data-testid="watch-full" onClick={watchFull}>Watch the full clip ›</button>
+            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" onClick={() => void learnMore()}>Learn more</button>
           </>
         ) : (
           <>
-            <a className="pill gold block" href={course} onClick={startCourse} data-testid="start-course">Watch the whole talk from the start ›</a>
-            {resumeMain ? <a className="j-resume" href={resumeMain} onClick={startCourse} data-testid="resume-main">Resume from where the appetiser ended ({clock(appetiserEnd(item))})</a> : null}
-            {mains && mains.lessonId !== item.lessonId ? (
-              <a className="j-mains" href={`${base}/course/${mains.courseId}?part=${mains.lessonId}`} onClick={startCourse} data-testid="mains-shelf">
-                <span className="thumb" style={mains.poster ? { backgroundImage: `url(${mains.poster})` } : undefined} />
-                <span><small>Next on this lane</small><b>{mains.title}</b></span>
-              </a>
-            ) : null}
+            <a className="pill gold block" href={course} onClick={(event) => void learnMore(event)} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk">Learn more</a>
             <div className="speaker-card">
               <Avatar name={item.speaker} portrait={item.portrait} />
               <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b><small>{item.courseTitle}</small></a>
@@ -1156,7 +1166,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-index={index} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-chrome={overlay ? 'over' : 'around'}>
+    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-index={index} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'}>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />
@@ -1194,7 +1204,7 @@ export function Journey(props: JourneyProps) {
         </div>
         {slide && item ? (
           <div className="j-slide" data-testid="gesture-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}>
-            <Slide item={item} style={slide} onMore={watchFull} />
+            <Slide item={item} style={slide} onMore={() => void learnMore()} />
           </div>
         ) : null}
         <div className="j-chrome" onPointerDown={overlay ? undefined : onDown} onPointerMove={overlay ? undefined : onMove} onPointerUp={overlay ? undefined : onUp}>
@@ -1248,9 +1258,8 @@ export function Journey(props: JourneyProps) {
         {phase === 'feed' ? (
           <>
             <button type="button" data-testid="gesture-up" onClick={replay}>Replay this clip</button>
-            <button type="button" data-testid="gesture-down" onClick={nextLane}>Switch lane</button>
-            <button type="button" data-testid="gesture-left" onClick={moreLikeThis}>Next clip</button>
-            <button type="button" data-testid="gesture-right" onClick={moreFromSpeaker}>More from this speaker</button>
+            <button type="button" data-testid="gesture-next" onClick={() => stepLoop(1)}>Next clip on this level</button>
+            <button type="button" data-testid="gesture-prev" onClick={() => stepLoop(-1)}>Previous clip on this level</button>
           </>
         ) : null}
       </div>

@@ -146,7 +146,7 @@ test('N3: trends count only accounts that have finished a video and are at least
 })
 
 test('L1: each lane opens its own clips: its starters in order, then clips confirmed for it', () => {
-  const clip = (cutId: number): FeedItem => ({ id: String(cutId), cutId, lane: 'x', laneLabel: 'x', speaker: 's', speakerSlug: 's', portrait: null, poster: null, youtubeId: null, courseId: 1, courseTitle: 'c', lessonId: cutId, hors: { start: 0, end: 15, quote: '' }, appetiser: { start: 0, end: 60, quote: '' }, hook: '', turn: '', land: '', style: null, clause: null })
+  const clip = (cutId: number): FeedItem => ({ id: String(cutId), cutId, lane: 'x', laneLabel: 'x', speaker: 's', speakerSlug: 's', portrait: null, poster: null, youtubeId: null, courseId: 1, courseTitle: 'c', lessonId: cutId, hors: { start: 0, end: 15, quote: '' }, appetiser: { start: 0, end: 60, quote: '' }, hook: '', turn: '', land: '', style: null, clause: null, parents: { hors: { id: `hors:${cutId}`, level: 'hors', parentId: `appetiser:${cutId}`, parentLevel: 'appetiser' }, appetiser: { id: `appetiser:${cutId}`, level: 'appetiser', parentId: `talk:${cutId}`, parentLevel: 'talk' } } })
   const cut = (id: number, extra: Partial<CutInfo>): CutInfo => ({ id, clause: null, lanes: [], approved: true, hasHors: true, portalOwn: false, ...extra })
   const cuts = [
     cut(1, { starter: { lane: 'trust', role: 'mains' } }),

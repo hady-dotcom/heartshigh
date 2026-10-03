@@ -4,6 +4,7 @@ import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
 import { idOf } from '@/lib/ids'
 import { recommendLesson } from '@/lib/placing'
+import type { PieceRef } from '@/lib/nesting'
 import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
 
 export type SlideStyle = 'kinetic' | 'cinema' | 'windows' | 'conversation' | 'unfold'
@@ -41,6 +42,8 @@ export type FeedItem = {
   tierStatus?: 'draft' | 'checked' | null
   /** Show "Resume from where the appetiser ended" beside the main, which opens at 0:00. */
   offerResume?: boolean
+  /** Hors d'oeuvre -> its appetiser -> its full talk. Learn more uses the current piece's parent only. */
+  parents: { hors: PieceRef; appetiser: PieceRef }
 }
 
 export type CourseCard = {

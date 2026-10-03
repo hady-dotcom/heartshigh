@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FeedItem, SlideStyle } from '@/server/learner'
 import { ArrowIcon, HeartIcon, LockIcon, PlayIcon, SaveIcon, ShareIcon } from '../icons'
 
@@ -74,7 +74,6 @@ export function FollowButton({ slug, className = 'follow' }: { slug: string; cla
 }
 
 export function Feed({ items, base, startLane }: { items: FeedItem[]; base: string; startLane?: string }) {
-  const lanes = useMemo(() => [...new Set(items.map((item) => item.lane))], [items])
   const firstIndex = Math.max(0, startLane ? items.findIndex((item) => item.lane === startLane) : 0)
   const [index, setIndex] = useState(firstIndex)
   const [mode, setMode] = useState<Mode>('hors')
@@ -89,14 +88,16 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
   const swiped = useRef(false)
   const item = items[index]
 
-  const show = useCallback((nextIndex: number, nextMotion: Motion, message?: string) => {
-    setIndex(nextIndex)
-    setMode('hors')
-    setMotion(nextMotion)
+  const step = useCallback((direction: 1 | -1) => {
+    if (items.length < 2) {
+      setToast(mode === 'hors' ? "That is the only hors d'oeuvre here" : 'That is the only appetiser here')
+      return
+    }
+    setIndex((current) => (current + direction + items.length) % items.length)
+    setMotion(direction > 0 ? 'from-bottom' : 'from-top')
     setTurn((value) => value + 1)
     setPlaying(false)
-    if (message) setToast(message)
-  }, [])
+  }, [items.length, mode])
 
   useEffect(() => {
     if (!toast) return
@@ -111,42 +112,15 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
     setToast('Playing this clip again')
   }, [item])
 
-  const nextLane = useCallback(() => {
-    if (!item) return
-    const at = lanes.indexOf(item.lane)
-    const lane = lanes[(at + 1) % lanes.length]
-    const target = items.findIndex((row) => row.lane === lane && row.speaker !== item.speaker)
-    const fallback = items.findIndex((row) => row.lane === lane)
-    show(target >= 0 ? target : fallback, 'from-top', `Lane · ${items[target >= 0 ? target : fallback].laneLabel}`)
-  }, [item, items, lanes, show])
-
-  const moreOnTopic = useCallback(() => {
-    if (!item) return
-    const order = items.map((_, offset) => (index + 1 + offset) % items.length).filter((at) => at !== index)
-    const target = order.find((at) => items[at].lane === item.lane && items[at].speaker !== item.speaker) ?? order.find((at) => items[at].lane === item.lane)
-    if (target === undefined) return setToast(`That is everything on ${item.laneLabel.toLowerCase()} for now`)
-    show(target, 'from-right', `More on ${item.laneLabel.toLowerCase()}`)
-  }, [index, item, items, show])
-
-  const moreFromSpeaker = useCallback(() => {
-    if (!item) return
-    const order = items.map((_, offset) => (index + 1 + offset) % items.length).filter((at) => at !== index)
-    const target = order.find((at) => items[at].speaker === item.speaker && items[at].lane !== item.lane) ?? order.find((at) => items[at].speaker === item.speaker)
-    if (target === undefined) return setToast(`That is everything from ${item.speaker} for now`)
-    show(target, 'from-left', `More from ${item.speaker}`)
-  }, [index, item, items, show])
-
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if ((event.target as HTMLElement | null)?.closest('input, textarea, select')) return
-      if (event.key === 'ArrowUp') replay()
-      if (event.key === 'ArrowDown') nextLane()
-      if (event.key === 'ArrowLeft') moreOnTopic()
-      if (event.key === 'ArrowRight') moreFromSpeaker()
+      if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') step(1)
+      if (event.key === 'ArrowDown' || event.key === 'ArrowRight') step(-1)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [replay, nextLane, moreOnTopic, moreFromSpeaker])
+  }, [step])
 
   const onPointerDown = (event: ReactPointerEvent) => {
     start.current = { x: event.clientX, y: event.clientY }
@@ -161,11 +135,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
       start.current = null
       if (Math.max(Math.abs(dx), Math.abs(dy)) < 60) return
       swiped.current = true
-      if (Math.abs(dy) > Math.abs(dx)) {
-        if (dy < 0) replay()
-        else nextLane()
-      } else if (dx < 0) moreOnTopic()
-      else moreFromSpeaker()
+      step(Math.abs(dy) > Math.abs(dx) ? (dy < 0 ? 1 : -1) : dx < 0 ? 1 : -1)
     }
     const onCancel = () => (start.current = null)
     window.addEventListener('pointerup', onPointerUp)
@@ -174,7 +144,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
       window.removeEventListener('pointerup', onPointerUp)
       window.removeEventListener('pointercancel', onCancel)
     }
-  }, [replay, nextLane, moreOnTopic, moreFromSpeaker])
+  }, [step])
 
   const share = async () => {
     if (!item) return
@@ -286,13 +256,13 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
                     </Link>
                     <FollowButton slug={item.speakerSlug} />
                   </div>
-                  <button type="button" className="pill gold block" data-testid="watch-full" onClick={() => { setMode('appetiser'); setMotion('from-bottom'); setTurn((value) => value + 1); setPlaying(false) }}>
-                    Watch the full clip ›
+                  <button type="button" className="pill gold block" data-testid="learn-more" data-parent={item.parents?.hors.parentId || ''} data-parent-level="appetiser" onClick={() => { setMode('appetiser'); setMotion('from-bottom'); setTurn((value) => value + 1); setPlaying(false) }}>
+                    Learn more
                   </button>
                 </>
               ) : (
                 <>
-                  <Link className="pill gold block" href={course} data-testid="start-course">Start this course ›</Link>
+                  <Link className="pill gold block" href={course} data-testid="learn-more" data-parent={item.parents?.appetiser.parentId || ''} data-parent-level="talk">Learn more</Link>
                   <div className="speaker-card">
                     <Avatar name={item.speaker} portrait={item.portrait} />
                     <Link className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link">
@@ -309,21 +279,19 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
       </div>
       <div className="sr-only">
         <button type="button" data-testid="gesture-up" onClick={replay}>Replay this clip</button>
-        <button type="button" data-testid="gesture-down" onClick={nextLane}>Switch lane</button>
-        <button type="button" data-testid="gesture-left" onClick={moreOnTopic}>More on this topic</button>
-        <button type="button" data-testid="gesture-right" onClick={moreFromSpeaker}>More from this speaker</button>
+        <button type="button" data-testid="gesture-next" onClick={() => step(1)}>Next clip on this level</button>
+        <button type="button" data-testid="gesture-prev" onClick={() => step(-1)}>Previous clip on this level</button>
       </div>
       {toast ? <div className="lane-switch" data-testid="toast"><span key={toast + turn}>{toast}</span></div> : null}
       {help ? (
         <div className="gesture-help" data-testid="gesture-card" onClick={() => setHelp(false)}>
           <div className="gesture-card">
             <h2>Finding your way</h2>
-            <p className="lead">Every swipe brings another short clip. The tabs at the bottom stay where they are.</p>
+            <p className="lead">A swipe stays on this length. Learn more is the only way further, into this clip&apos;s own longer piece.</p>
             <div className="gesture-grid">
-              <div><b>Swipe up</b>Play this clip again</div>
-              <div><b>Swipe down</b>Switch to a new lane, with a different teacher and topic</div>
-              <div><b>Swipe left</b>More on this topic from someone else</div>
-              <div><b>Swipe right</b>More from this speaker on another topic</div>
+              <div><b>Swipe up or left</b>The next clip at this length</div>
+              <div><b>Swipe down or right</b>The previous clip at this length</div>
+              <div><b>Learn more</b>This clip&apos;s own parent, one step only</div>
             </div>
             <button type="button" className="pill ink block">Got it</button>
           </div>
@@ -335,7 +303,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
 
 export function Slide({ item, style, onMore }: { item: FeedItem; style: SlideStyle; onMore: () => void }) {
   const cta = (cls: string) => (
-    <button type="button" className={`pill ${cls}`} onClick={onMore} data-testid="learn-more">
+    <button type="button" className={`pill ${cls}`} onClick={onMore} data-testid="learn-more" data-parent={item.parents?.hors.parentId || ''} data-parent-level="appetiser">
       Learn more <ArrowIcon />
     </button>
   )

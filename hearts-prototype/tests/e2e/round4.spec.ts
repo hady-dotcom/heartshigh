@@ -260,17 +260,17 @@ test.describe('round 4 screens', () => {
     await signIn(page, 'elm-learner@hearts.test', 'portal-learner', `/p/${PORTAL}/feed?clip=${clip.cutId}&play=appetiser`)
     await page.goto(`/p/${PORTAL}/feed?clip=${clip.cutId}&play=appetiser`)
     await expect(page.getByTestId('journey')).toHaveAttribute('data-mode', 'appetiser', { timeout: 20_000 })
-    await expect(page.getByTestId('start-course')).toBeVisible()
+    await expect(page.getByTestId('learn-more')).toBeVisible()
     const caption = page.getByTestId('caption')
     await expect(caption).toHaveAttribute('data-role', 'hook')
     await expect(caption).toHaveText(clip.hook)
-    const parts = ['caption', 'share', 'fave', 'save', 'start-course', 'resume-main', 'mains-shelf', 'speaker-bio-link']
+    const parts = ['caption', 'share', 'fave', 'save', 'learn-more', 'speaker-bio-link']
     const boxes: Record<string, { x: number; y: number; width: number; height: number }> = {}
     for (const id of parts) {
       const box = (await page.getByTestId(id).count()) ? await page.getByTestId(id).boundingBox() : null
       if (box) boxes[id] = box
     }
-    for (const id of ['caption', 'share', 'start-course', 'resume-main']) expect(boxes[id], id).toBeTruthy()
+    for (const id of ['caption', 'share', 'learn-more']) expect(boxes[id], id).toBeTruthy()
     const speakerCard = (await page.locator('.speaker-card').count()) ? await page.locator('.speaker-card').boundingBox() : null
     if (speakerCard) boxes['speaker-card'] = speakerCard
     delete boxes['speaker-bio-link']
@@ -279,10 +279,7 @@ test.describe('round 4 screens', () => {
       for (let j = i + 1; j < names.length; j++) expect(overlaps(boxes[names[i]], boxes[names[j]]), `${names[i]} overlaps ${names[j]}`).toBeFalsy()
     }
     for (const box of Object.values(boxes)) expect(box.y + box.height).toBeLessThanOrEqual(844)
-    if (await page.getByTestId('mains-shelf').count()) {
-      const background = await page.getByTestId('mains-shelf').evaluate((el) => getComputedStyle(el).backgroundColor)
-      expect(background).not.toMatch(/rgba\([^)]*,\s*0?\.\d+\)/)
-    }
+    expect(await page.getByTestId('learn-more').getAttribute('data-parent-level')).toBe('talk')
     expect(clip.appetiser.lines?.map((line) => line.role)).toEqual(['hook', 'turn', 'land'])
     const film = await page.locator('.yt-host iframe').first().evaluate((el) => {
       const box = el.getBoundingClientRect()

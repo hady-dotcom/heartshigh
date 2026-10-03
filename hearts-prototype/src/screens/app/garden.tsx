@@ -8,6 +8,7 @@ import { Flower, LockIcon } from '@/components/icons'
 import { now } from '@/lib/clock'
 import { getSession, type SessionUser, visibleCourseIds } from '@/server/context'
 import { workbookFor } from '@/server/workbook'
+import { countsTowardProgress, pieceLevel } from '@/lib/progress'
 import { posterFor } from '@/server/learner'
 import { type Ctx, type Row, clock, ref, rows, shortDate, str, unreadCount } from '../common'
 
@@ -49,9 +50,12 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
     rows(payload, 'lesson-visits', mine),
     rows(payload, 'tags', { state: { equals: 'confirmed' } }, { limit: 1000 }),
   ])
-  const lessonIds = [...new Set([...completions, ...visits].map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))]
+  const lessonIds = [...new Set([...completions, ...visits, ...answers].map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))]
   const lessons = lessonIds.length ? await rows(payload, 'lessons', { id: { in: lessonIds } }) : []
-  const done = new Set(completions.map((row) => ref(row.lesson)))
+  const inCourse = (lessonId: number | null) => Boolean(lessonId && ref(lessons.find((row) => row.id === lessonId)?.course))
+  const countedCompletions = completions.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'watch' }))
+  const countedAnswers = answers.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'question' }))
+  const done = new Set(countedCompletions.map((row) => ref(row.lesson)))
   const cutIds = tags.map((tag) => ref((tag.item as { value?: unknown } | undefined)?.value)).filter((id): id is number => Boolean(id))
   const cuts = cutIds.length ? await rows(payload, 'cuts', { id: { in: cutIds } }, { limit: 1000 }) : []
   const lit = new Set<number>()
@@ -61,12 +65,12 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
     const clause = clauses.find((row) => row.id === ref(tag.clause))
     if (clause) lit.add(Number(clause.number))
   }
-  const activeDays = new Set([...completions, ...answers, ...visits, ...rituals, ...seatVisits].map((row) => str(row.createdAt).slice(0, 10)).filter(Boolean))
-  const secondsGiven = completions.reduce((sum, row) => {
+  const activeDays = new Set([...countedCompletions, ...countedAnswers, ...visits, ...rituals, ...seatVisits].map((row) => str(row.createdAt).slice(0, 10)).filter(Boolean))
+  const secondsGiven = countedCompletions.reduce((sum, row) => {
     const lesson = lessons.find((item) => item.id === ref(row.lesson))
     return sum + (Number(lesson?.durationSeconds || 0) * Number(row.percent || 100)) / 100
   }, 0)
-  return { clauses, seats, lit, completions, lessons, seatVisits, harvest, workbook, answers, rituals, activeDays, secondsGiven }
+  return { clauses, seats, lit, completions: countedCompletions, lessons, seatVisits, harvest, workbook, answers: countedAnswers, rituals, activeDays, secondsGiven }
 }
 
 function sectionOf(clauses: Row[], key: string) {
@@ -359,12 +363,27 @@ export async function GardenGhunya({ payload, user, base }: Ctx) {
 }
 
 export async function GardenHarvest({ payload, user, base }: Ctx) {
-  const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
+  const [g, unread, drawn] = await Promise.all([
+    growth(payload, user),
+    unreadCount(payload, user),
+    rows(payload, 'drawn-to', { user: { equals: user.id } }, { sort: '-learnMore', limit: 12 }),
+  ])
   const lessonIds = [...new Set(g.harvest.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))]
   const lessons = lessonIds.length ? await rows(payload, 'lessons', { id: { in: lessonIds } }) : []
   return (
     <Frame base={base} title="Harvest" testId="garden-harvest" unread={unread}>
-      <p className="lead">Verses and hadith quoted in the talks you finished, gathered for you.</p>
+      <p className="lead">Verses and hadith you met in a short clip, or in a talk you finished.</p>
+      {drawn.length ? (
+        <section className="card" data-testid="drawn-to" style={{ marginBottom: 16 }}>
+          <p className="eyebrow">Drawn to</p>
+          {drawn.map((row) => (
+            <p key={row.id} data-testid="drawn-speaker" style={{ margin: '6px 0' }}>
+              <b>{str(row.speaker)}</b>
+              <small className="muted"> · stayed {Number(row.linger) || 0} · learned more {Number(row.learnMore) || 0}</small>
+            </p>
+          ))}
+        </section>
+      ) : null}
       <div data-testid="harvest">
         {g.harvest.length ? g.harvest.map((hit) => {
           const lesson = lessons.find((row) => row.id === ref(hit.lesson))
@@ -379,7 +398,7 @@ export async function GardenHarvest({ payload, user, base }: Ctx) {
         }) : (
           <div className="empty-state" data-testid="harvest-empty">
             <Mascot width={110} />
-            <p>Nothing gathered yet. When you finish a talk, the verses and hadith it quotes are collected here.</p>
+            <p>Nothing gathered yet. Lingering on a short clip, or finishing a talk, gathers the verses and hadith it quotes.</p>
           </div>
         )}
       </div>

@@ -83,7 +83,7 @@ test('learner app at phone size', async ({ page }) => {
   for (const [name, path] of screens) await shot(page, `learner-${name}`, path)
   await page.goto(`${base}/feed`)
   await expect(async () => {
-    await page.getByTestId('watch-full').click()
+    await page.getByTestId('learn-more').click()
     await expect(page.getByTestId('journey')).toHaveAttribute('data-mode', 'appetiser', { timeout: 1000 })
   }).toPass({ timeout: 15_000 })
   await page.waitForTimeout(600)

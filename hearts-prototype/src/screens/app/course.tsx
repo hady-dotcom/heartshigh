@@ -9,6 +9,7 @@ import { delayToMs, unlockState } from '@/lib/unlock'
 import { visibleCourseIds } from '@/server/context'
 import { courseCards, portraitFor, posterFor, slugify } from '@/server/learner'
 import { learnerClips } from '@/server/opening'
+import { countsTowardProgress, pieceLevel } from '@/lib/progress'
 import { appetiserStop } from '@/lib/tiers'
 import { type Ctx, clock, one, ref, rows, str, unreadCount } from '../common'
 import { masterFlags } from './journey'
@@ -18,7 +19,12 @@ import { circleForPoints, circleSettings } from '@/server/circle'
 const START = ['orange', 'gold', 'teal']
 
 export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx, speakerSlug: string) {
-  const [courses, { items }, unread] = await Promise.all([courseCards(payload, user), learnerClips(payload, portal, user), unreadCount(payload, user)])
+  const [courses, { items }, unread, drawn] = await Promise.all([
+    courseCards(payload, user),
+    learnerClips(payload, portal, user),
+    unreadCount(payload, user),
+    rows(payload, 'drawn-to', { and: [{ user: { equals: user.id } }, { speakerSlug: { equals: speakerSlug } }] }, { limit: 1 }),
+  ])
   const theirs = courses.filter((course) => course.speakerSlug === speakerSlug)
   const clips = items.filter((item) => item.speakerSlug === speakerSlug)
   if (!theirs.length && !clips.length) notFound()
@@ -37,6 +43,7 @@ export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx,
         <div className="bio-portrait">{portrait ? <img src={portrait} alt="" /> : <Avatar name={name} portrait={null} size={108} />}</div>
         <h1 className="bio-name" data-testid="speaker-name">{name}</h1>
         <p className="bio-role">{theirs.length} course{theirs.length === 1 ? '' : 's'} here{lanes.length ? ` · ${lanes.join(', ')}` : ''}</p>
+        {(Number(drawn[0]?.linger) || 0) + (Number(drawn[0]?.learnMore) || 0) > 0 ? <p data-testid="drawn-to">You&apos;re drawn to {name}.</p> : null}
         <Flash error={query.error} notice={query.notice} />
         <div className="bio-actions">
           <FollowButton slug={speakerSlug} className="follow teal" />
@@ -170,7 +177,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
   }
 
   const completions = await rows(payload, 'completions', { and: [{ user: { equals: user.id } }, { lesson: { in: lessonIds } }] })
-  const doneLessons = new Set(completions.map((row) => ref(row.lesson)))
+  const doneLessons = new Set(completions.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: true, event: 'watch' })).map((row) => ref(row.lesson)))
   const answeredPoints = new Set(mine.map((row) => ref(row.point)))
   const done = doneLessons.size + allPoints.filter((point) => answeredPoints.has(point.id)).length
   const total = lessons.length + allPoints.length

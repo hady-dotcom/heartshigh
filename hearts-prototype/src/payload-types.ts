@@ -91,6 +91,7 @@ export interface Config {
     'placing-answers': PlacingAnswer;
     tags: Tag;
     'harvest-entries': HarvestEntry;
+    'drawn-to': DrawnTo;
     schedules: Schedule;
     events: Event;
     rsvps: Rsvp;
@@ -153,6 +154,7 @@ export interface Config {
     'placing-answers': PlacingAnswersSelect<false> | PlacingAnswersSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
     'harvest-entries': HarvestEntriesSelect<false> | HarvestEntriesSelect<true>;
+    'drawn-to': DrawnToSelect<false> | DrawnToSelect<true>;
     schedules: SchedulesSelect<false> | SchedulesSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
     rsvps: RsvpsSelect<false> | RsvpsSelect<true>;
@@ -568,6 +570,10 @@ export interface LadderItem {
   start?: number | null;
   end?: number | null;
   quote?: string | null;
+  /**
+   * This piece's own parent. An appetiser points at its full talk (talk:<lesson id>). A hors d'oeuvre points at its appetiser (appetiser:<id>), never straight at the talk.
+   */
+  parentRef?: string | null;
   status?: ('draft' | 'approved' | 'rejected') | null;
   updatedAt: string;
   createdAt: string;
@@ -672,6 +678,10 @@ export interface Answer {
   answeredAt?: string | null;
   pendingSync?: boolean | null;
   correct?: boolean | null;
+  /**
+   * Questions on a hors d'oeuvre or appetiser do not count toward the grow page. Only questions on a full talk do.
+   */
+  sourceLevel?: ('talk' | 'hors' | 'appetiser') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -768,6 +778,18 @@ export interface TalkTier {
   source?: string | null;
   note?: string | null;
   checkedBy?: (number | null) | User;
+  /**
+   * hors d'oeuvre -> its appetiser -> its full talk. Written on every save from the lesson this tier belongs to.
+   */
+  parents?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -948,6 +970,23 @@ export interface HarvestEntry {
   createdAt: string;
 }
 /**
+ * Speakers a learner lingers on, or steps down from, while browsing short clips. Not a course completion.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "drawn-to".
+ */
+export interface DrawnTo {
+  id: number;
+  portal?: (number | null) | Portal;
+  user: number | User;
+  speaker: string;
+  speakerSlug: string;
+  linger?: number | null;
+  learnMore?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "schedules".
  */
@@ -1053,6 +1092,10 @@ export interface Completion {
    * When the learner watched this, if that is not the row time. The compass uses it.
    */
   watchedAt?: string | null;
+  /**
+   * Only a full talk inside a course counts toward completion and the grow page.
+   */
+  sourceLevel?: ('talk' | 'hors' | 'appetiser') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2278,6 +2321,7 @@ export interface LadderItemsSelect<T extends boolean = true> {
   start?: T;
   end?: T;
   quote?: T;
+  parentRef?: T;
   status?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2340,6 +2384,7 @@ export interface AnswersSelect<T extends boolean = true> {
   answeredAt?: T;
   pendingSync?: T;
   correct?: T;
+  sourceLevel?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2422,6 +2467,7 @@ export interface TalkTiersSelect<T extends boolean = true> {
   source?: T;
   note?: T;
   checkedBy?: T;
+  parents?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2493,6 +2539,20 @@ export interface HarvestEntriesSelect<T extends boolean = true> {
   reference?: T;
   timestamp?: T;
   context?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "drawn-to_select".
+ */
+export interface DrawnToSelect<T extends boolean = true> {
+  portal?: T;
+  user?: T;
+  speaker?: T;
+  speakerSlug?: T;
+  linger?: T;
+  learnMore?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2577,6 +2637,7 @@ export interface CompletionsSelect<T extends boolean = true> {
   percent?: T;
   onTime?: T;
   watchedAt?: T;
+  sourceLevel?: T;
   updatedAt?: T;
   createdAt?: T;
 }
