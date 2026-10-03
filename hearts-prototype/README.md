@@ -164,8 +164,8 @@ The icon, splash, empty states and logo mark use the artwork in `public/brand/`.
 ## Tests
 
 ```bash
-npm run test:unit      # 80 tests
-npm run test:e2e       # 119: 13 journey, 38 opening, 28 round 3, 15 round 4, 12 view-as, 6 circle and 7 screenshot tests
+npm run test:unit      # 112 tests
+npm run test:e2e       # 129: 13 journey, 43 opening, 28 round 3, 15 round 4, 12 view-as, 6 circle, 4 AI steps, 1 security and 7 screenshot tests
 npm run screenshots    # screenshots only
 ```
 
@@ -218,3 +218,7 @@ Payload CMS 3, Next.js 15 and SQLite on your own computer. A public server uses 
 The steps for a public site are in [DEPLOY.md](DEPLOY.md), written for someone who is not a programmer. Railway is the host that guide uses. `render.yaml` (at the repository root) and `fly.toml` are the notes for the other two.
 
 `npm start` is the production server: it checks the variables, applies migrations, and refuses to boot if a demo `@hearts.test` account is present. It does not seed. `npm run bootstrap` creates the first master admin from `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD`, once. `npm run seed:starters` loads the talks without those demo passwords. `npm run reseed` still wipes a database on this computer only, SQLite or Postgres, and it refuses in production.
+
+- **The first account comes only from `npm run bootstrap`.** Payload's own "create first user" screen (`/admin/create-first-user`) sends people to the sign-in page, and its endpoint (`/api/users/first-register`) answers 403, on every install. On top of that, the users collection refuses any new account that does not come from the server itself (joining with an access code, the seed, bootstrap) or from a signed-in master. So an empty database cannot be claimed by whoever finds the address first, and no outside request can make an account with admin access. `tests/unit/first-user.test.ts` and `tests/e2e/security.spec.ts` cover this.
+- **The image carries no secret.** The Dockerfile passes no `PAYLOAD_SECRET` or `DATABASE_URL` as `ARG` or `ENV`. While `next build` runs, the config uses its build-only fallback and a throwaway SQLite path, which is deleted before the image is finished. The running server refuses to start without real values from the host's variables, and refuses the fallback too.
+- **Schema changes need a Postgres migration.** SQLite on your computer follows the code by itself, but Postgres changes only through `src/migrations`. After adding or changing a collection, run `npx payload migrate:create <name>` with `DATABASE_URL` pointing at a local Postgres that has the earlier migrations applied, and commit the new files. A unit test fails if the latest migration is missing a table for any collection.
