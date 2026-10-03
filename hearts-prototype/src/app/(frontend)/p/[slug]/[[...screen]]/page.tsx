@@ -1,3 +1,4 @@
+import { PortalOpeningScreen } from '@/screens/desk/opening'
 import { cookies, headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { AppFrame } from '@/components/app/shell'
@@ -93,6 +94,9 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       case 'wizard':
         guardAdmin(ctx)
         return WizardScreen(ctx)
+      case 'opening':
+        guardAdmin(ctx)
+        return PortalOpeningScreen(ctx)
       case 'courses':
         redirect(b ? `${base}/admin/content/${b}` : `${base}/admin/content`)
       case 'codes':

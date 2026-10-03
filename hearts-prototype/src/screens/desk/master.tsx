@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
+import { ViewAsButton } from '@/components/desk/view-as-button'
 import { parseOption } from '@/lib/placing'
 import type { SessionUser } from '@/server/context'
 import { one, ref, rows, str } from '../common'
@@ -45,6 +46,10 @@ export async function MasterPortals(ctx: MasterCtx) {
                   <td className="num">{codes.filter((code) => ref(code.portal) === portal.id).length}</td>
                   <td style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                     <Link className="btn ghost small" href={`/p/${str(portal.slug)}/admin`}>Open admin</Link>
+                    {(() => {
+                      const admin = people.find((person) => person.role === 'portal-admin' && inPortal(person, portal.id))
+                      return admin ? <ViewAsButton targetId={admin.id} name={str(admin.name) || 'the portal admin'} landing={`/p/${str(portal.slug)}/admin`} /> : null
+                    })()}
                     <form action="/api/hearts" method="post">
                       <Hidden fields={{ action: 'deactivate', portalSlug: str(portal.slug), closed: portal.closed ? 'no' : 'yes', next: '/master' }} />
                       <button className={`btn ${portal.closed ? 'teal' : 'danger'} small`} data-testid="deactivate-portal" type="submit">{portal.closed ? 'Activate' : 'Deactivate'}</button>

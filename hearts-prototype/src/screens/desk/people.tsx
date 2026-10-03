@@ -1,3 +1,4 @@
+import { ViewAsButton } from '@/components/desk/view-as-button'
 import Link from 'next/link'
 import { Hidden } from '@/components/app/shell'
 import { EvidencePlayer } from '@/components/desk/tools'
@@ -31,7 +32,7 @@ export async function TeachScreen(ctx: Ctx) {
         <header className="light"><h2>Learners ({learners.length})</h2></header>
         <div className="table-wrap">
           <table className="data">
-            <thead><tr><th>Name</th><th>E-mail</th><th className="num">Day</th><th className="num">Parts watched</th><th className="num">On time</th><th className="num">Answers</th><th>Give a course</th></tr></thead>
+            <thead><tr><th>Name</th><th>E-mail</th><th className="num">Day</th><th className="num">Parts watched</th><th className="num">On time</th><th className="num">Answers</th><th>Give a course</th><th /></tr></thead>
             <tbody>
               {learners.map((learner) => {
                 const done = completions.filter((row) => ref(row.user) === learner.id)
@@ -50,10 +51,14 @@ export async function TeachScreen(ctx: Ctx) {
                         <button className="btn small" data-testid="grant-course" type="submit">Give</button>
                       </form>
                     </td>
+                    <td style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'start' }}>
+                      <a className="btn ghost small" href={`/api/workbook/${learner.id}?format=csv`} data-testid="workbook-csv">Workbook</a>
+                      {user.role !== 'teacher' ? <ViewAsButton targetId={learner.id} name={str(learner.name) || 'this learner'} landing={`${base}`} /> : null}
+                    </td>
                   </tr>
                 )
               })}
-              {!learners.length ? <tr><td colSpan={7} className="empty">Nobody has joined with a learner code yet.</td></tr> : null}
+              {!learners.length ? <tr><td colSpan={8} className="empty">Nobody has joined with a learner code yet.</td></tr> : null}
             </tbody>
           </table>
         </div>

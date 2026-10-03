@@ -10,6 +10,7 @@ import { ingestYoutubeUrl } from '@/lib/youtube'
 import { now } from '@/lib/clock'
 import { startingClause } from '@/lib/placing'
 import { delayToMs, unlockState } from '@/lib/unlock'
+import { killListHits } from '@/lib/opening-data'
 import { randomUUID } from 'node:crypto'
 import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourseIds, type Session, type SessionUser } from './context'
 import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCookie, wrote } from './viewas'
@@ -1616,6 +1617,81 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     }
     if (name === 'keepPlace' && !value) await payload.delete({ collection: 'heart-states', overrideAccess: true, where: { user: { equals: user.id } } })
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Saved.')
+  }
+
+  if (action === 'scene-wording') {
+    const back = text(form, 'next') || '/master/opening'
+    if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk edits the opening scenes.')
+    const scene = await findDoc(payload, 'opening-scenes', Number(text(form, 'scene')))
+    if (!scene) return redirectTo(req, back, 'That scene was not found.')
+    const caption = text(form, 'caption').slice(0, 140)
+    if (!caption) return redirectTo(req, back, 'A scene needs a caption.')
+    const status = text(form, 'status') === 'published' ? 'published' : 'draft'
+    try {
+      await payload.update({ collection: 'opening-scenes', id: scene.id, overrideAccess: true, data: { caption, subline: text(form, 'subline').slice(0, 200), status } as never })
+    } catch (error) {
+      return redirectTo(req, back, error instanceof Error ? error.message : 'That could not be saved.')
+    }
+    return redirectTo(req, back, undefined, status === 'published' ? 'Scene saved and published.' : 'Scene saved as a draft.')
+  }
+
+  if (action === 'master-flags') {
+    const back = text(form, 'next') || '/master/opening'
+    if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk changes these.')
+    await payload.updateGlobal({ slug: 'master-flags', overrideAccess: true, data: { popupOverPlayer: form.get('popupOverPlayer') === 'on', chromeOverPlayer: form.get('chromeOverPlayer') === 'on' } as never })
+    return redirectTo(req, back, undefined, 'Player layout saved.')
+  }
+
+  if (action === 'lane-tag') {
+    const back = text(form, 'next') || '/master/lanes'
+    if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk tags lanes.')
+    const tag = await findDoc(payload, 'tags', Number(text(form, 'tag')))
+    if (!tag || !idOf(tag.lane)) return redirectTo(req, back, 'That suggestion was not found.')
+    if (text(form, 'decision') === 'reject') {
+      await payload.delete({ collection: 'tags', id: tag.id, overrideAccess: true })
+      return redirectTo(req, back, undefined, 'Suggestion taken off.')
+    }
+    const weight = Math.min(1, Math.max(0, Number(text(form, 'weight') || tag.weight || 1)))
+    await payload.update({ collection: 'tags', id: tag.id, overrideAccess: true, data: { state: 'confirmed', weight } as never })
+    return redirectTo(req, back, undefined, 'Lane confirmed. The clip can now be routed in that lane.')
+  }
+
+  if (action === 'opening-config' || action === 'help-contact' || action === 'help-contact-remove') {
+    const back = text(form, 'next') || '/'
+    if (user.role !== 'master' && user.role !== 'portal-admin') return redirectTo(req, back, 'Only a portal admin changes the opening.')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, back, acting.error)
+    const portalId = acting.portal.id
+    const found = await payload.find({ collection: 'opening-configs', overrideAccess: true, depth: 0, limit: 1, where: { portal: { equals: portalId } } })
+    const config = (found.docs[0] as unknown as (Record<string, unknown> & { id: number }) | undefined) || ((await payload.create({ collection: 'opening-configs', overrideAccess: true, data: { portal: portalId } as never })) as unknown as Record<string, unknown> & { id: number })
+    if (action === 'opening-config') {
+      const sceneId = Number(text(form, 'scene'))
+      const scene = await findDoc(payload, 'opening-scenes', sceneId)
+      if (!scene) return redirectTo(req, back, 'That scene was not found.')
+      const caption = text(form, 'caption').slice(0, 140)
+      const subline = text(form, 'subline').slice(0, 200)
+      const hits = killListHits(`${caption} ${subline}`)
+      if (hits.length) return redirectTo(req, back, `These words are not used with learners: ${hits.join(', ')}.`)
+      const wording = ((config.wording as { scene?: unknown; caption?: string; subline?: string }[]) || []).filter((row) => idOf(row.scene) !== sceneId).map((row) => ({ ...row, scene: idOf(row.scene) }))
+      if (caption || subline) wording.push({ scene: sceneId, caption: caption || undefined, subline: subline || undefined })
+      const hidden = ((config.hiddenScenes as unknown[]) || []).map((row) => idOf(row)).filter((id): id is number => Boolean(id) && id !== sceneId)
+      if (form.get('hidden') === 'on') {
+        const sceneRow = scene as { options?: { crisis?: boolean }[] }
+        if ((sceneRow.options || []).some((option) => option.crisis)) return redirectTo(req, back, 'The scene with the help option cannot be hidden.')
+        hidden.push(sceneId)
+      }
+      await payload.update({ collection: 'opening-configs', id: config.id, overrideAccess: true, data: { wording, hiddenScenes: hidden } as never })
+      return redirectTo(req, back, undefined, 'Opening saved for your portal.')
+    }
+    const contacts = ((config.helpContacts as { label?: string; phone?: string; url?: string; hours?: string }[]) || []).map(({ label, phone, url, hours }) => ({ label, phone, url, hours }))
+    if (action === 'help-contact-remove') contacts.splice(Number(text(form, 'index')), 1)
+    else {
+      const label = text(form, 'label').slice(0, 80)
+      if (!label || (!text(form, 'phone') && !text(form, 'url'))) return redirectTo(req, back, 'A help contact needs a name and a phone number or a link.')
+      contacts.push({ label, phone: text(form, 'phone') || undefined, url: text(form, 'url') || undefined, hours: text(form, 'hours') || undefined })
+    }
+    await payload.update({ collection: 'opening-configs', id: config.id, overrideAccess: true, data: { helpContacts: contacts } as never })
+    return redirectTo(req, back, undefined, 'Help contacts saved.')
   }
 
   if (action === 'visit') {

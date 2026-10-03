@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import type { Payload } from 'payload'
 import { BrandMark } from '@/components/brand'
 import { Flash, Hidden } from '@/components/app/shell'
-import { BellIcon, BookIcon, CalendarIcon, CogIcon, GlobeIcon, HomeIcon, KeyIcon, LibraryIcon, MoonIcon, PeopleIcon, QuestionIcon } from '@/components/icons'
+import { BellIcon, BookIcon, HeartIcon, CalendarIcon, CogIcon, GlobeIcon, HomeIcon, KeyIcon, LibraryIcon, MoonIcon, PeopleIcon, QuestionIcon } from '@/components/icons'
 import type { SessionUser } from '@/server/context'
 import { rows, shortDate, str } from '../common'
 
@@ -24,6 +24,7 @@ export function portalNav(base: string, user: SessionUser): { group: string; ite
         { key: 'content', label: 'Content', href: `${base}/admin/content`, icon: <BookIcon /> },
         { key: 'library', label: 'Library', href: `${base}/admin/library`, icon: <LibraryIcon /> },
         { key: 'access', label: 'Access codes', href: `${base}/admin/access`, icon: <KeyIcon /> },
+        { key: 'opening', label: 'Opening', href: `${base}/admin/opening`, icon: <HeartIcon /> },
       ],
     },
     { group: 'People', items: teach },
@@ -40,6 +41,15 @@ export function masterNav(): { group: string; items: NavItem[] }[] {
         { key: 'library', label: 'Library', href: '/master/library', icon: <LibraryIcon /> },
         { key: 'packs', label: 'Course packs', href: '/master/packs', icon: <BookIcon /> },
         { key: 'questions', label: 'Placing questions', href: '/master/questions', icon: <QuestionIcon /> },
+      ],
+    },
+    {
+      group: 'Opening',
+      items: [
+        { key: 'opening', label: 'Scenes', href: '/master/opening', icon: <HeartIcon /> },
+        { key: 'lanes', label: 'Lanes', href: '/master/lanes', icon: <BookIcon /> },
+        { key: 'simulator', label: 'Simulator', href: '/master/simulator', icon: <CogIcon /> },
+        { key: 'trends', label: 'Network trends', href: '/master/trends', icon: <GlobeIcon /> },
       ],
     },
   ]
