@@ -6,9 +6,9 @@ import { idOf, portalIdOf } from '@/lib/ids'
 import { extractWithFallback, llmStatus } from '@/lib/llm'
 import { defaultPlanName, flattenSlots, plural, splitEvenly, studyDates } from '@/lib/schedule'
 import { clockEnabled, setTestNow } from '@/lib/clock'
-import { clientIp, hit, peek, resetLimits } from '@/lib/rate-limit'
+import { clientIp, hit, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
 import { slugProblem } from '@/lib/text-safety'
-import { JOIN_FAILS_ALL, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
+import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
 import { ingestYoutubeUrl } from '@/lib/youtube'
 import { now } from '@/lib/clock'
 import { startingClause } from '@/lib/placing'
@@ -449,8 +449,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const password = text(form, 'password')
     if (!name || !email || !password) return redirectTo(req, `/join?code=${encodeURIComponent(codeValue)}`, 'Name, email and a password are all needed.')
     if (password.length < 8) return redirectTo(req, `/join?code=${encodeURIComponent(codeValue)}`, 'Use at least 8 characters for the password.')
-    const ipKey = `join-fail:${clientIp(req)}`
-    if (!peek(ipKey, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS).allowed || !peek('join-fail:all', JOIN_FAILS_ALL, JOIN_WINDOW_MS).allowed) return tooManyJoins()
+    const keys = joinFailKeys(clientIp(req), codeValue)
+    if (!peek(keys.pair, JOIN_FAILS_PER_CODE, JOIN_WINDOW_MS).allowed || (keys.address && !peek(keys.address, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS).allowed)) return tooManyJoins()
     const found = await payload.find({
       collection: 'access-codes',
       overrideAccess: true,
@@ -463,8 +463,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       | undefined
     const refusal = codeRefusal(access, now())
     if (refusal) {
-      hit(ipKey, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS)
-      hit('join-fail:all', JOIN_FAILS_ALL, JOIN_WINDOW_MS)
+      hit(keys.pair, JOIN_FAILS_PER_CODE, JOIN_WINDOW_MS)
+      if (keys.address) hit(keys.address, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS)
       return redirectTo(req, '/join', refusal)
     }
     if (!access) return redirectTo(req, '/join', 'That access code was not recognised.')
@@ -594,6 +594,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const maxUsesText = text(form, 'maxUses')
     const maxUses = maxUsesText ? Number(maxUsesText) : role === 'admin' ? 1 : null
     if (maxUses !== null && (!Number.isInteger(maxUses) || maxUses < 1 || maxUses > 10000)) return redirectTo(req, text(form, 'next') || '/master', 'Uses must be a whole number from 1 to 10,000, or empty for no limit.')
+    // An admin code hands over the whole portal, so only the master desk may let one be used more than once.
+    if (role === 'admin' && maxUses !== 1 && user.role !== 'master') return redirectTo(req, text(form, 'next') || '/master', 'An admin code works once. Make one code for each new admin, or ask the master desk for a shared one.')
     const daysText = text(form, 'expiresInDays')
     const days = daysText ? Number(daysText) : null
     if (days !== null && (!Number.isInteger(days) || days < 1 || days > 366)) return redirectTo(req, text(form, 'next') || '/master', 'Expiry must be 1 to 366 days, or empty for none.')
