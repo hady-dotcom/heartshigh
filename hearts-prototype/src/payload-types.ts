@@ -263,6 +263,7 @@ export interface User {
   shareOpening?: boolean | null;
   keepPlace?: boolean | null;
   trendsOptIn?: boolean | null;
+  shareWithLearners?: boolean | null;
   haptics?: boolean | null;
   removed?: boolean | null;
   updatedBy?: (number | null) | User;
@@ -597,6 +598,10 @@ export interface Answer {
   video?: (number | null) | Media;
   keepPrivate?: boolean | null;
   shareWithTeacher?: boolean | null;
+  /**
+   * The learner chose to let other learners on this video read it. Separate from sharing with their teacher.
+   */
+  shareWithLearners?: boolean | null;
   cut?: (number | null) | Cut;
   atSecond?: number | null;
   viewingId?: string | null;
@@ -1503,6 +1508,7 @@ export interface UsersSelect<T extends boolean = true> {
   shareOpening?: T;
   keepPlace?: T;
   trendsOptIn?: T;
+  shareWithLearners?: T;
   haptics?: T;
   removed?: T;
   updatedBy?: T;
@@ -1766,6 +1772,7 @@ export interface AnswersSelect<T extends boolean = true> {
   video?: T;
   keepPrivate?: T;
   shareWithTeacher?: T;
+  shareWithLearners?: T;
   cut?: T;
   atSecond?: T;
   viewingId?: T;

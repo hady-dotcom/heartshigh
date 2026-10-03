@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { now } from '@/lib/clock'
 import { getSession } from '@/server/context'
-import { IDLE_MS, MAX_MS, cookieValue, endSession, setWrite, startViewAs, viewAsCookie } from '@/server/viewas'
+import { IDLE_MS, MAX_MS, MIN_REASON, cookieValue, endSession, setWrite, startViewAs, viewAsCookie } from '@/server/viewas'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,9 +32,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ action: 
   const { action } = await params
   if (action === 'exit-redirect') {
     const { payload, viewAs } = await getSession({ touch: false })
-    const target = new URL(viewAs?.returnTo || '/admin', req.url)
+    const returnTo = viewAs?.returnTo || '/admin'
+    const path = returnTo.startsWith('/') && !returnTo.startsWith('//') && !returnTo.startsWith('/\\') ? returnTo : '/admin'
     if (viewAs) await endSession(payload, (await payload.findByID({ collection: 'view-as-sessions', id: viewAs.id, overrideAccess: true, depth: 0 })) as never, 'exit')
-    const response = NextResponse.redirect(target, 303)
+    // A relative Location keeps the browser on whichever host it used, behind a proxy or not.
+    const response = new NextResponse(null, { status: 303, headers: { Location: path, 'cache-control': 'no-store' } })
     response.headers.append('Set-Cookie', viewAsCookie(null, req))
     return response
   }
@@ -93,7 +95,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ action:
   if (action === 'write') {
     const on = input.on === true || input.on === 'true' || input.on === 'on'
     const reason = String(input.reason || '').trim()
-    if (on && reason.length < 3) return NextResponse.json({ error: 'Say why changes are needed.' }, { status: 400 })
+    if (on && (reason.length < MIN_REASON || reason.length > 500)) return NextResponse.json({ error: `Say why changes are needed, in ${MIN_REASON} to 500 characters.` }, { status: 400 })
     await setWrite(payload, viewAs, on, reason)
     return NextResponse.json({ ok: true, writeEnabled: on })
   }

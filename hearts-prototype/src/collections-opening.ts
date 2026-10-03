@@ -1,7 +1,8 @@
-import type { Access, CollectionConfig, GlobalConfig, Where } from 'payload'
+import { APIError, type Access, type CollectionConfig, type GlobalConfig, type Where } from 'payload'
 import { idOf, portalIdOf } from './lib/ids'
 import { killListHits } from './lib/opening-data'
 import { SCALE_KEYS } from './lib/heart'
+import { hasMarkup, helpContactProblems } from './lib/text-safety'
 
 type U = { id?: number; role?: string; tenants?: { tenant?: unknown }[] } | null | undefined
 const userOf = (req: { user?: unknown }) => req.user as U
@@ -155,10 +156,63 @@ export const OpeningScenes: CollectionConfig = {
   ],
 }
 
+/** A portal may hide at most this many scenes, and never the one carrying the help option. */
+export const MAX_HIDDEN_SCENES = 2
+
+type ConfigData = {
+  portal?: unknown
+  wording?: { scene?: unknown; caption?: string | null; subline?: string | null; labels?: unknown }[] | null
+  hiddenScenes?: unknown[] | null
+  helpContacts?: { label?: string | null; phone?: string | null; url?: string | null; hours?: string | null }[] | null
+}
+
+type Finder = { find: (args: Record<string, unknown>) => Promise<{ docs: unknown[] }> }
+
+/**
+ * Every rule the portal opening screen applies, enforced on the collection so REST, the admin panel and the
+ * custom forms all meet the same checks. Returns plain-English problems.
+ */
+export async function openingConfigProblems(payload: Finder, data: ConfigData, original: ConfigData | null) {
+  const problems: string[] = []
+  if (original && 'portal' in data && (idOf(data.portal) || null) !== (idOf(original.portal) || null)) problems.push('The portal of an opening setup cannot be changed.')
+  const next: ConfigData = { ...(original || {}), ...data }
+  const hidden = [...new Set(((next.hiddenScenes as unknown[]) || []).map((row) => idOf(row)).filter((id): id is number => Boolean(id)))]
+  if (hidden.length > MAX_HIDDEN_SCENES) problems.push(`A portal can hide at most ${MAX_HIDDEN_SCENES} scenes. This would hide ${hidden.length}.`)
+  if (hidden.length) {
+    const scenes = (await payload.find({ collection: 'opening-scenes', overrideAccess: true, depth: 0, limit: 50, where: { id: { in: hidden } } })).docs as { id: number; options?: { crisis?: boolean }[] }[]
+    if (scenes.some((scene) => (scene.options || []).some((option) => option.crisis))) problems.push('The scene with the help option cannot be hidden.')
+  }
+  for (const row of next.wording || []) {
+    const labels = row.labels && typeof row.labels === 'object' ? Object.values(row.labels as Record<string, unknown>).map(String) : []
+    const words = [row.caption || '', row.subline || '', ...labels]
+    if (words.some(hasMarkup)) problems.push('Scene wording is plain text: no HTML or script.')
+    const hits = killListHits(words.join(' \n '))
+    if (hits.length) problems.push(`These words are not used with learners: ${hits.join(', ')}.`)
+    if ((row.caption || '').length > 140 || (row.subline || '').length > 200 || labels.some((label) => label.length > 80)) problems.push('Keep captions under 140 characters, sublines under 200 and labels under 80.')
+  }
+  if ('helpContacts' in data) {
+    const contacts = next.helpContacts || []
+    if (!contacts.length && (original?.helpContacts || []).length) problems.push('Keep at least one help contact. The help screen must always offer someone to call.')
+    contacts.forEach((contact, index) => {
+      for (const problem of helpContactProblems(contact)) problems.push(`Help contact ${index + 1}: ${problem}`)
+    })
+  }
+  return [...new Set(problems)]
+}
+
 export const OpeningConfigs: CollectionConfig = {
   slug: 'opening-configs',
   labels: { singular: 'Opening setup', plural: 'Opening setups' },
   access: { read: ownPortal, create: master, update: ownPortal, delete: master },
+  hooks: {
+    beforeChange: [
+      async ({ data, originalDoc, req }) => {
+        const problems = await openingConfigProblems(req.payload as never, data as ConfigData, (originalDoc as ConfigData) || null)
+        if (problems.length) throw new APIError(problems.join(' '), 400, null, true)
+        return data
+      },
+    ],
+  },
   fields: [
     { name: 'portal', type: 'relationship', relationTo: 'portals', unique: true, admin: { description: 'Empty for the master default.' } },
     {
@@ -183,6 +237,20 @@ const ownerOnly: Access = ({ req }) => (req.user ? ({ user: { equals: (req.user 
 export const HeartStates: CollectionConfig = {
   slug: 'heart-states',
   access: { read: ownerOnly, update: ownerOnly, delete: ownerOnly, create: signedIn },
+  hooks: {
+    beforeChange: [
+      // P3: the row is always the signed-in owner's own, and only while Keep my place across devices is on.
+      async ({ data, req, operation }) => {
+        if (req.payloadAPI === 'local' && !req.user) return data
+        const user = req.user as { id: number; keepPlace?: boolean | null } | null
+        if (!user) throw new APIError('Sign in first.', 401, null, true)
+        const fresh = (await req.payload.findByID({ collection: 'users', id: user.id, overrideAccess: true, depth: 0 })) as { keepPlace?: boolean | null }
+        if (!fresh.keepPlace) throw new APIError('Turn on Keep my place across devices first.', 403, null, true)
+        if (operation === 'create' || 'user' in data) data.user = user.id
+        return data
+      },
+    ],
+  },
   fields: [
     { name: 'user', type: 'relationship', relationTo: 'users', required: true, unique: true },
     { name: 'state', type: 'json', required: true },
@@ -296,7 +364,7 @@ export const AuditLog: CollectionConfig = {
 export const MasterFlags: GlobalConfig = {
   slug: 'master-flags',
   label: 'Master flags',
-  access: { read: () => true, update: ({ req }) => isMaster(userOf(req)) },
+  access: { read: master, update: master },
   fields: [
     {
       name: 'popupOverPlayer',

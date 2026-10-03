@@ -14,16 +14,18 @@ const masterOnly = { read: master, create: master, update: master, delete: maste
  * P9: a learner reads their own rows; staff read their portal's rows; the master reads everything.
  * Teachers see answers only where the learner chose to share them.
  */
-function ownerOrStaff(teacherNeedsShare: boolean): Access {
+function ownerOrStaff(teacherNeedsShare: boolean, privateField?: string): Access {
   return ({ req }) => {
     const user = req.user as { id: number; role?: string; tenants?: { tenant?: unknown }[] } | null
     if (!user) return false
-    if (user.role === 'master') return true
     const own: Where = { user: { equals: user.id } }
+    // Rows the learner kept private go to their owner alone: never the master, a portal admin or a teacher.
+    const notPrivate: Where[] = privateField ? [{ [privateField]: { not_equals: true } }] : []
+    if (user.role === 'master') return privateField ? { or: [own, { and: notPrivate }] } : true
     if (user.role === 'learner') return own
     const portal = portalIdOf(user)
     if (!portal) return own
-    const scoped: Where[] = [{ portal: { equals: portal } }]
+    const scoped: Where[] = [{ portal: { equals: portal } }, ...notPrivate]
     if (user.role === 'teacher' && teacherNeedsShare) scoped.push({ shareWithTeacher: { equals: true } })
     return { or: [own, { and: scoped }] }
   }
@@ -123,6 +125,7 @@ export const Users: CollectionConfig = {
     { name: 'shareOpening', type: 'checkbox', defaultValue: false, label: 'Share my opening answers with my mentor' },
     { name: 'keepPlace', type: 'checkbox', defaultValue: false, label: 'Keep my place across devices' },
     { name: 'trendsOptIn', type: 'checkbox', defaultValue: false, label: 'Add my taps to the chapter’s trends' },
+    { name: 'shareWithLearners', type: 'checkbox', defaultValue: false, label: 'Share answers with other learners, and see the answers they share' },
     { name: 'haptics', type: 'checkbox', defaultValue: true },
     { name: 'removed', type: 'checkbox', defaultValue: false },
     { name: 'updatedBy', type: 'relationship', relationTo: 'users' },
@@ -464,7 +467,7 @@ export const EngagementPoints: CollectionConfig = {
 
 export const Answers: CollectionConfig = {
   slug: 'answers',
-  access: { read: ownerOrStaff(true), create: master, update: master, delete: master },
+  access: { read: ownerOrStaff(true, 'keepPrivate'), create: master, update: master, delete: master },
   fields: [
     { name: 'point', type: 'relationship', relationTo: 'engagement-points', required: true },
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
@@ -476,6 +479,7 @@ export const Answers: CollectionConfig = {
     { name: 'video', type: 'upload', relationTo: 'media' },
     { name: 'keepPrivate', type: 'checkbox', defaultValue: false },
     { name: 'shareWithTeacher', type: 'checkbox', defaultValue: false },
+    { name: 'shareWithLearners', type: 'checkbox', defaultValue: false, admin: { description: 'The learner chose to let other learners on this video read it. Separate from sharing with their teacher.' } },
     { name: 'cut', type: 'relationship', relationTo: 'cuts' },
     { name: 'atSecond', type: 'number' },
     { name: 'viewingId', type: 'text' },

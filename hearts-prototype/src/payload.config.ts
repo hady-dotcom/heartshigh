@@ -7,7 +7,7 @@ import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
 import { buildConfig } from 'payload'
 import { collections } from './collections'
 import { MasterFlags } from './collections-opening'
-import { viewAsGuard } from './server/viewas'
+import { viewAsGlobalGuard, viewAsGuard } from './server/viewas'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -34,7 +34,7 @@ export default buildConfig({
     ...collection,
     hooks: { ...collection.hooks, beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never] },
   })),
-  globals: [MasterFlags],
+  globals: [MasterFlags].map((global) => ({ ...global, hooks: { ...global.hooks, beforeChange: [viewAsGlobalGuard as never, ...(global.hooks?.beforeChange || [])] } })),
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || 'hearts-prototype-dev-secret',
   typescript: {

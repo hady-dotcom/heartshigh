@@ -7,6 +7,7 @@ export const VIEWAS_COOKIE = 'hearts_viewas'
 export const IDLE_MS = 15 * 60_000
 export const MAX_MS = 60 * 60_000
 export const WRITE_MS = 10 * 60_000
+export const MIN_REASON = 10
 export const READ_ONLY = 'VIEW_AS_READ_ONLY'
 
 type Person = { id: number; role?: string | null; name?: string | null; email?: string | null; tenants?: { tenant?: unknown }[]; removed?: boolean | null }
@@ -170,7 +171,7 @@ export async function startViewAs(
   input: { targetId: number; reason: string; returnTo?: string; ip?: string | null; userAgent?: string | null },
 ): Promise<{ status: number; error?: string; token?: string; session?: Row }> {
   const reason = (input.reason || '').trim()
-  if (reason.length < 10 || reason.length > 500) return { status: 400, error: 'Give a reason of 10 to 500 characters.' }
+  if (reason.length < MIN_REASON || reason.length > 500) return { status: 400, error: `Give a reason of ${MIN_REASON} to 500 characters.` }
   const target = (await payload.findByID({ collection: 'users', id: input.targetId, overrideAccess: true, depth: 0 }).catch(() => null)) as Person | null
   const refused = refusal(actor, target)
   const portal = actor.role === 'master' ? portalIdOf(target) : portalIdOf(actor)
@@ -217,7 +218,7 @@ export async function setWrite(payload: Payload, viewAs: ViewAs, on: boolean, re
 }
 
 /** Things a viewer may never do as the learner, whether or not changes are allowed (spec 6A). */
-export const NEVER_ACTIONS = new Set(['answer', 'reply', 'start-again', 'keep-place', 'share-opening', 'delete-account', 'change-email', 'change-password', 'opening-answers', 'heart-state', 'popup-answer', 'workbook-consent'])
+export const NEVER_ACTIONS = new Set(['join', 'answer', 'reply', 'start-again', 'keep-place', 'share-opening', 'delete-account', 'change-email', 'change-password', 'opening-answers', 'heart-state', 'popup-answer', 'workbook-consent'])
 export const NEVER_COLLECTIONS = new Set(['heart-states', 'opening-answers', 'answers', 'workbook-entries'])
 
 export async function blocked(payload: Payload, viewAs: ViewAs, what: Record<string, unknown>) {
@@ -242,4 +243,15 @@ export const viewAsGuard = async ({ operation, req, collection }: { operation: s
     throw new APIError(READ_ONLY, 403)
   }
   await wrote(req.payload, viewAs, { collection: slug, operation, via: 'rest' })
+}
+
+/** Globals have no beforeOperation hook, so this runs before every global change: none while viewing as someone. */
+export const viewAsGlobalGuard = async ({ data, req, global }: { data: Record<string, unknown>; req: { headers?: Headers; user?: unknown; payload: Payload }; global?: { slug?: string } }) => {
+  const token = cookieValue(req.headers?.get?.('cookie'))
+  if (!token || !req.user) return data
+  const { viewAs } = await loadViewAs(req.payload, req.user as Person, token, false)
+  if (!viewAs) return data
+  await blocked(req.payload, viewAs, { global: global?.slug || '', operation: 'update', via: 'rest', never: true })
+  const { APIError } = await import('payload')
+  throw new APIError(READ_ONLY, 403)
 }

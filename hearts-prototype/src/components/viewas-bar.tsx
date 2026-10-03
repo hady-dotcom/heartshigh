@@ -117,10 +117,10 @@ export function ViewAsBar({ name, sessionId, writeEnabled, leftMs, returnTo }: {
             Why do you need to make changes for {name}?
             <textarea value={reason} onChange={(event) => setReason(event.target.value)} rows={2} data-testid="viewas-write-reason" />
           </label>
-          <p>Changes stay on for 10 minutes at most, and each one is written to the audit log.</p>
+          <p>At least 10 characters. Changes stay on for 10 minutes at most, and each one is written to the audit log.</p>
           <div className="viewas-actions">
             <button type="button" className="viewas-link" onClick={() => setAsking(false)}>Cancel</button>
-            <button type="button" className="viewas-confirm" disabled={!reason.trim() || busy} onClick={() => toggleWrite(true)} data-testid="viewas-write-confirm">Allow changes</button>
+            <button type="button" className="viewas-confirm" disabled={reason.trim().length < 10 || busy} onClick={() => toggleWrite(true)} data-testid="viewas-write-confirm">Allow changes</button>
           </div>
         </div>
       ) : null}

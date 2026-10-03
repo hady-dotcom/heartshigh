@@ -9,7 +9,7 @@ export function ViewAsButton({ targetId, name, landing }: { targetId: number; na
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const start = async () => {
-    if (reason.trim().length < 3) return setError('Say why, in a few words.')
+    if (reason.trim().length < 10) return setError('Say why, in at least 10 characters.')
     setBusy(true)
     setError('')
     const response = await fetch('/api/view-as/start', {
