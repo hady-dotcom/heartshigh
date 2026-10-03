@@ -53,6 +53,7 @@ Access codes are random on every seed, in the form `ELM-7KQX-M4TD`. The seed pri
 - The opening, "Shine and dust": six scenes with their options, reply lines and privacy, the lanes, and the starter map of 31 talks across the lanes. Help contacts for the scene with the help option (Samaritans, Muslim Youth Helpline, 999).
 - Timed English captions for all 30 starter videos in `content/transcripts/starters/`. Every starter's length is the end of its last caption, and the seed fails if any cut, tier or pop-up falls after the end of its talk.
 - A three-tier record for each of the 31 starters, drafted from those captions and marked "Draft, needs a human check", with 2 or 3 draft pop-ups per talk. Learners never see a draft pop-up.
+- Five HEARTS circle answers on each question of courses 1 to 3, from the built-in drafts, so the swarm is not empty on day one.
 
 ## What is real, what is a stand-in
 
@@ -81,6 +82,14 @@ Access codes are random on every seed, in the form `ELM-7KQX-M4TD`. The seed pri
 - **Unplayable clips.** When the player refuses a clip, the feed moves on and reports it. A clip is only taken off the feed when YouTube's own oEmbed answer confirms it cannot be embedded.
 - **Points and unlocks.** A point can wait on an earlier one, with a countdown in days. The server refuses an early answer even if the form is forged.
 - **Answers.** Private by default. A learner can share an answer to the portal's board.
+- **HEARTS circle answers** (`/master/circle`, and `/p/<portal>/admin/circle` for portal admins). Answers that sit in a question's "What others said" beside real learners' shared answers, so nobody meets an empty list.
+  - **Drafting.** Per talk or per question, choose how many (1 to 12), which tones (warm, honest, practical, searching, quiet) and which lengths (short, medium, long). The AI writes them when a key is set, using the question, its choices and what the speaker says around that moment. Otherwise, or when the AI reply fails the checks, the built-in drafts fill the count.
+  - **Looking after them.** Staff can write their own (marked "Written by staff"), edit, delete, and switch any answer off or on, one at a time or all at once for a talk or a whole course. An answer that is switched off stays on the desk.
+  - **What learners see.** The answers are mixed in among real ones, in the same style, with a light label under the name. The label is "From the HEARTS circle" by default, and the master can change it on the circle page.
+  - **Stepping back.** As real shared answers arrive, fewer circle answers are shown (at most six at a time). At the threshold (default 8, set by the master) none are shown, though they stay available on the desk. The talk page tells the admin how many a learner sees right now. Which answers a learner sees, and where they sit, stays the same for that learner on reload.
+  - **Scope.** The master desk can add them to any talk, and they show in every portal. A portal admin can add them only to their own portal's courses, and those show only in that portal. Teachers do not get the page.
+  - **Checks.** Every name and answer goes through the kill list and the plain-text check, on the desk and in the collection hook, and so does the label.
+  - **Never counted.** They live in their own `circle-answers` collection, which only the swarm, the circle desk and the seed read. Analytics, trends, the profile, the workbook, the CSV and the teacher's and imam's progress views read `answers`, so circle answers never reach them. Learners only see them when they have opted in to the swarm.
 - **Teacher replies** raise an unread badge and an in-app notification, and land in the learner's workbook.
 - **Schedule.** Lessons are spread in order across the weekdays you pick. Earlier days take the remainder, so 6 sittings over 4 days come out as 2, 2, 1, 1. It is a guide, and missing a day does not lock the course. A sitting counts at 80% watched, or when the film ends. A plan covers a year at most, and an unnamed plan takes the season's name, such as "Autumn study days".
 - **Nights and RSVP.** A ticket is earned by finishing a lesson in the last 7 days, and is held otherwise. Self check-in needs an earned ticket. Staff can check anyone in.
@@ -90,7 +99,8 @@ Access codes are random on every seed, in the form `ELM-7KQX-M4TD`. The seed pri
 ### Stand-ins
 
 - **Email is not sent.** Replies and feedback create an in-app notification and an "email not sent" note. Payload logs mail to the console.
-- **AI is optional.** With `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` set, the extractor asks the model for suggestions and checks them against the transcript. Without a key it uses its own rules, which is how the seed and the tests run.
+- **AI is optional.** With `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` set, the extractor asks the model for suggestions and checks them against the transcript, and HEARTS circle answers are drafted by the model. Without a key the extractor uses its own rules and circle answers come from the built-in drafts, which is how the seed and the tests run.
+- **The master sheet has no CircleAnswers tab yet.** The master sheet import and export is on its own branch ([PR #4](https://github.com/hady-dotcom/heartshigh/pull/4)), not merged here. The tab's columns, note, row checks and export rows are ready in `src/lib/circle-sheet.ts`. The columns are talk_key, youtube_id, question_id, circle_id, name, body, tone, length, origin, enabled and status. When the two branches meet, add `CircleAnswers` to the sheet's tab list, read its rows with `readCircleRow`, and write them with `circleSheetValues`.
 - **YouTube captions** are often refused from cloud machines. See the transcript chain below. When every step fails, the title is still saved from YouTube, and you can upload a `.vtt`, `.srt` or `.txt` transcript to run the extractor.
 - **Video files.** Mux is not wired up. A non-YouTube share link is stored but not downloaded. Uploads over 200 MB are refused.
 - **Follow, like and save** in the feed are kept on the device only.
@@ -134,6 +144,8 @@ None are needed to run locally.
 | `PAYLOAD_SECRET` | Session signing. Set your own outside local use |
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Optional AI help for the extractor (default model `claude-sonnet-4-5`) |
 | `OPENAI_API_KEY`, `OPENAI_MODEL` | The same through OpenAI (default model `gpt-4o-mini`) |
+
+The circle label and threshold are not environment variables. They are fields on the `master-flags` global (`circleLabel`, `circleThreshold`), set on `/master/circle`.
 | `TRANSCRIPT_SERVICE_URL`, `TRANSCRIPT_SERVICE_TOKEN` | Your own transcript service, as above |
 | `YT_DLP_PATH`, `HEARTS_DISABLE_YTDLP` | Where yt-dlp is (default `bin/yt-dlp`, then the PATH), or skip it |
 | `HEARTS_TRUSTED_PROXY_HOPS` | How many proxies of yours sit in front of the app. Unset, `X-Forwarded-For` is ignored |
@@ -150,8 +162,8 @@ The icon, splash, empty states and logo mark use the artwork in `public/brand/`.
 ## Tests
 
 ```bash
-npm run test:unit      # 75 tests
-npm run test:e2e       # 112: 13 journey, 38 opening, 28 round 3, 15 round 4, 12 view-as and 6 screenshot tests
+npm run test:unit      # 80 tests
+npm run test:e2e       # 119: 13 journey, 38 opening, 28 round 3, 15 round 4, 12 view-as, 6 circle and 7 screenshot tests
 npm run screenshots    # screenshots only
 ```
 
@@ -171,6 +183,14 @@ npm run screenshots    # screenshots only
 - **Opening tests** (`tests/e2e/opening.spec.ts`) follow section 8 of the opening build spec, numbered 1 to 37 to match it: the flow, the privacy checks (no request carries taps before sign-up, the feed request carries lane scores only, nothing from YouTube before a choice), help, the sheet, the workbook and its privacy, the CSV, the Me tab, Start again, reduced motion, pop-ups and the desks.
 - **View-as tests** (`tests/e2e/view-as.spec.ts`) are 38 to 49: reasons, read-only refusals, private rows, device keys, exit, who may view as whom, the audit log, allowing changes, and what stays closed.
 - The e2e run **reseeds its own test database** before it starts.
+- **Circle tests** (`tests/unit/circle.test.ts` and `tests/e2e/circle.spec.ts`) cover:
+  - built-in drafting against the word checks;
+  - the label and its CMS wording;
+  - fading out at the threshold while the desk keeps the answers;
+  - exclusion from analytics, trends, the profile, the workbook CSV and progress;
+  - portal scope;
+  - kill-list refusals and bulk on and off;
+  - the CircleAnswers sheet rows.
 - **Round 4 tests** (`tests/unit/round4.test.ts` and `tests/e2e/round4.spec.ts`) hold one regression test per item from the round 4 retest, named by its label (N4, L1, K1 and so on), including sentence boundaries, hook choice and turns over all 31 talks.
 - **Round 3 tests** (`tests/unit/round3.test.ts` and `tests/e2e/round3.spec.ts`) hold one regression test per bug from the round 3 report, each named "Bug N: ...", plus the section T checks over all shipped transcripts. `tests/unit/safety.test.ts` and `tests/unit/config.test.ts` cover the kill list, reserved addresses, contact links, the clock rules and the e2e server settings.
 - The e2e run starts its own server on port 3100 with `HEARTS_TEST_CLOCK=1`, its own database (`data/hearts-test.db`) and its own build folder (`.next-e2e`), so it does not touch `npm run dev` or your demo data. Set `HEARTS_E2E_REUSE=1` to reuse a server you started yourself on that port.

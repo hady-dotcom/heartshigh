@@ -22,7 +22,7 @@ export type PointView = {
   timeLimitSec?: number | null
 }
 
-export type SwarmItem = { name: string; body: string; image?: string | null }
+export type SwarmItem = { name: string; body: string; image?: string | null; circle?: boolean }
 
 function clock(total: number) {
   const value = Math.max(0, Math.floor(total))
@@ -54,6 +54,7 @@ export function CoursePlayer({
   points,
   swarm,
   swarmOn = false,
+  circleLabel = '',
   serverNow,
   next,
   garden,
@@ -71,6 +72,8 @@ export function CoursePlayer({
   swarm: Record<number, SwarmItem[]>
   /** The learner opted in to sharing with other learners, so the swarm and its share box are shown. */
   swarmOn?: boolean
+  /** The light label under HEARTS circle answers (master flag circleLabel). */
+  circleLabel?: string
   serverNow: string
   next: string
   garden: { done: number; total: number; links: { label: string; href: string }[]; gardenHref: string }
@@ -344,6 +347,7 @@ export function CoursePlayer({
           top={sheetTop}
           swarm={swarm[open.id] || []}
           swarmOn={swarmOn}
+          circleLabel={circleLabel}
           now={now}
           onClose={close}
         />
@@ -378,6 +382,7 @@ function Sheet({
   top,
   swarm,
   swarmOn,
+  circleLabel,
   now,
   onClose,
 }: {
@@ -389,6 +394,7 @@ function Sheet({
   top: number | null
   swarm: SwarmItem[]
   swarmOn: boolean
+  circleLabel: string
   now: number
   onClose: (saved?: Saved) => void
 }) {
@@ -558,10 +564,11 @@ function Sheet({
           <p className="eyebrow">What others said</p>
           {swarm.length ? (
             swarm.map((item, at) => (
-              <div className="other" key={at} data-testid="swarm-item">
+              <div className="other" key={at} data-testid="swarm-item" data-source={item.circle ? 'circle' : 'learner'}>
                 <span className="dot" style={{ background: DOTS[at % DOTS.length] }} />
                 <div>
                   <b>{item.name}</b>
+                  {item.circle && circleLabel ? <small className="circle-note" data-testid="circle-label">{circleLabel}</small> : null}
                   <p>“{item.body}”</p>
                   {item.image ? <img src={item.image} alt={`Shared by ${item.name}`} /> : null}
                 </div>

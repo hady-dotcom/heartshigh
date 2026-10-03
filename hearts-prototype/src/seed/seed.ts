@@ -5,6 +5,7 @@ import { createClient } from '@libsql/client'
 import { getPayload } from 'payload'
 import config from '../payload.config'
 import { randomCode } from '../lib/access-codes'
+import { CIRCLE_LENGTHS, CIRCLE_TONES, mockCircleAnswers } from '../lib/circle'
 import { dualExtract } from '../lib/extractor'
 import { parseJibrilMap } from '../lib/seats'
 import { alignToCaptions } from '../lib/tiers'
@@ -313,6 +314,13 @@ async function main() {
         },
       })
       pointIds.push(created.id)
+      for (const draft of mockCircleAnswers({ prompt: point.prompt, kind: point.kind, options: point.options }, 5, CIRCLE_TONES, CIRCLE_LENGTHS, created.id)) {
+        await payload.create({
+          collection: 'circle-answers',
+          overrideAccess: true,
+          data: { point: created.id, lesson: lesson.id, name: draft.name, body: draft.body, tone: draft.tone, length: draft.length, origin: 'ai', enabled: true },
+        })
+      }
     }
     courseIds.push(course.id)
   }

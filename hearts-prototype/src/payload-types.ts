@@ -102,6 +102,7 @@ export interface Config {
     'lesson-visits': LessonVisit;
     'seat-visits': SeatVisit;
     rituals: Ritual;
+    'circle-answers': CircleAnswer;
     'heart-scales': HeartScale;
     lanes: Lane;
     'opening-scenes': OpeningScene;
@@ -153,6 +154,7 @@ export interface Config {
     'lesson-visits': LessonVisitsSelect<false> | LessonVisitsSelect<true>;
     'seat-visits': SeatVisitsSelect<false> | SeatVisitsSelect<true>;
     rituals: RitualsSelect<false> | RitualsSelect<true>;
+    'circle-answers': CircleAnswersSelect<false> | CircleAnswersSelect<true>;
     'heart-scales': HeartScalesSelect<false> | HeartScalesSelect<true>;
     lanes: LanesSelect<false> | LanesSelect<true>;
     'opening-scenes': OpeningScenesSelect<false> | OpeningScenesSelect<true>;
@@ -1056,6 +1058,30 @@ export interface Ritual {
   createdAt: string;
 }
 /**
+ * Shown in the swarm with the circle label. Never counted in analytics, trends, profiles or progress.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "circle-answers".
+ */
+export interface CircleAnswer {
+  id: number;
+  point: number | EngagementPoint;
+  lesson?: (number | null) | Lesson;
+  /**
+   * Empty: every portal with this question. Set: that portal only.
+   */
+  portal?: (number | null) | Portal;
+  name: string;
+  body: string;
+  tone?: string | null;
+  length?: string | null;
+  origin?: ('ai' | 'staff') | null;
+  enabled?: boolean | null;
+  author?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "opening-scenes".
  */
@@ -1453,6 +1479,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'rituals';
         value: number | Ritual;
+      } | null)
+    | ({
+        relationTo: 'circle-answers';
+        value: number | CircleAnswer;
       } | null)
     | ({
         relationTo: 'heart-scales';
@@ -2155,6 +2185,24 @@ export interface RitualsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "circle-answers_select".
+ */
+export interface CircleAnswersSelect<T extends boolean = true> {
+  point?: T;
+  lesson?: T;
+  portal?: T;
+  name?: T;
+  body?: T;
+  tone?: T;
+  length?: T;
+  origin?: T;
+  enabled?: T;
+  author?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "heart-scales_select".
  */
 export interface HeartScalesSelect<T extends boolean = true> {
@@ -2415,6 +2463,14 @@ export interface MasterFlag {
    * Show unchecked talks to learners. On, draft tiers play in the feed. Off (the default for production), only talks a person has approved on the review desk play.
    */
   showUnchecked?: boolean | null;
+  /**
+   * The light label under each HEARTS circle answer in the swarm.
+   */
+  circleLabel?: string | null;
+  /**
+   * Circle answers show less often as real shared answers arrive, and step back once a question has this many.
+   */
+  circleThreshold?: number | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2426,6 +2482,8 @@ export interface MasterFlagsSelect<T extends boolean = true> {
   popupOverPlayer?: T;
   chromeOverPlayer?: T;
   showUnchecked?: T;
+  circleLabel?: T;
+  circleThreshold?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
