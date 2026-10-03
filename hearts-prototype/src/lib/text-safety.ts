@@ -27,6 +27,17 @@ function joinSpelledOut(text: string) {
   return text.replace(/\b[a-z](?:[.\-_*·•|/]+[a-z]\b){2,}/g, (run) => run.replace(/[^a-z]/g, ''))
 }
 
+/** Joins three or more single letters set apart by spaces: "q u i z" becomes "quiz". */
+function joinSpacedLetters(text: string) {
+  return text.replace(/(?<![a-z0-9'])[a-z](?:[\s.,\-_*·•|/]+[a-z](?![a-z0-9'])){2,}/g, (run) => run.replace(/[^a-z]/g, ''))
+}
+
+/**
+ * Kill-list words caught by their start as well, so brand names and coinages built on them ("quizlet", "surveying",
+ * "assessor", "diagnosis") are refused. Only applies when the list carries the word.
+ */
+const PREFIX_ROOTS: Record<string, string> = { quiz: 'quiz', survey: 'survey', assessment: 'assess', diagnostic: 'diagnos', archetype: 'archetyp', questionnaire: 'questionnair' }
+
 /** Every reading of a word worth checking: as written, and with common English endings taken off. */
 function stems(word: string) {
   const out = new Set([word])
@@ -35,6 +46,11 @@ function stems(word: string) {
     if (stem.length < 2) return
     out.add(stem)
     out.add(undouble(stem))
+  }
+  // Stretched spellings: "quizz" and "quizzzz" read as "quiz", "testtt" as "test".
+  if (/([a-z])\1/.test(word)) {
+    add(word.replace(/([a-z])\1+/g, '$1'))
+    add(word.replace(/([a-z])\1{2,}/g, '$1$1'))
   }
   if (word.endsWith("'s")) add(word.slice(0, -2))
   if (word.endsWith('ies')) add(`${word.slice(0, -3)}y`)
@@ -74,7 +90,7 @@ export function killHits(text: string, list: string[]) {
     cache.set(list, prepared)
   }
   const folded = joinSpelledOut(foldText(text.replace(/\*\*/g, '')))
-  const variants = [folded.replace(/[^a-z0-9' ]+/g, ' '), folded.replace(/[-‐‑–]/g, '').replace(/[^a-z0-9' ]+/g, ' ')]
+  const variants = [folded.replace(/[^a-z0-9' ]+/g, ' '), folded.replace(/[-‐‑–]/g, '').replace(/[^a-z0-9' ]+/g, ' '), joinSpacedLetters(folded).replace(/[^a-z0-9' ]+/g, ' ')]
   const tokenSets = variants.map((variant) =>
     variant
       .split(/\s+/)
@@ -94,6 +110,8 @@ export function killHits(text: string, list: string[]) {
       }
       if (hits.has(list[index])) break
     }
+    const root = PREFIX_ROOTS[entry.phrase]
+    if (root && !hits.has(list[index]) && tokenSets.some((tokens) => tokens.some((readings) => readings.some((reading) => reading.startsWith(root))))) hits.add(list[index])
   }
   return [...hits]
 }

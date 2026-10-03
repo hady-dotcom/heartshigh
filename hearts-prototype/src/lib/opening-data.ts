@@ -155,6 +155,7 @@ export const KILL_LIST = [
   'devout', 'traditionalist', 'cultural', 'secular', 'seeker', 'activist', 'progressive', 'academic', 'family-centered', 'family-centred', 'new muslim', 'convert',
   'heart behind the habit', 'why we do what we do', 'roots for the search', 'calm for the long haul', 'freedom in the lines', 'mercy first', 'head to heart', 'a corner for you', 'not on your own', 'healing focus',
   'weakness', 'struggle', 'fix', 'improve', 'cure', 'disease', 'sick heart', 'sin', 'haram', 'should', 'must', 'need to',
+  'rating', 'rate yourself', 'rate your', 'rate you', 'rate me', 'rate them', 'rate how', 'rate each', 'out of 10', 'out of ten', 'on a scale',
   'you are a', 'your heart is', 'based on your answers', "we've analysed", 'your results', 'matched you with',
   'correct', 'incorrect', 'right answer', 'wrong answer', 'agree', 'disagree', 'strongly', 'rarely', 'sometimes', 'often',
   'sign up to continue', 'account required', 'unlock', 'finish setup', "you'll miss out", 'are you sure', "nobody's watching",
