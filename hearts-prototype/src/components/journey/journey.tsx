@@ -1018,17 +1018,25 @@ export function Journey(props: JourneyProps) {
     if (!item) return
     const list = itemsRef.current
     const order = list.map((_, offset) => (index + 1 + offset) % list.length)
-    const target = order.find((at) => list[at].lane !== item.lane) ?? (index + 1) % list.length
+    const talks = order.filter((at) => list[at].cutId !== item.cutId && !isInterstitial(list[at]))
+    const target = talks.find((at) => list[at].lane !== item.lane) ?? talks[0] ?? (index + 1) % list.length
     setToast(`Lane · ${list[target]?.laneLabel || ''}`)
     void advance(target)
   }
+  // A swipe moves to another talk; the cards that follow a talk share its cut and are met by letting it play on.
   const moreLikeThis = () => {
-    void advance(index + 1)
+    if (!item) return
+    const list = itemsRef.current
+    const order = list.map((_, offset) => (index + 1 + offset) % list.length)
+    const target = order.find((at) => list[at].cutId !== item.cutId && !isInterstitial(list[at]))
+    if (target === undefined) return setToast('That is everything on this topic for now')
+    setToast('More on this topic')
+    void advance(target)
   }
   const moreFromSpeaker = () => {
     if (!item) return
     const list = itemsRef.current
-    const order = list.map((_, offset) => (index + 1 + offset) % list.length).filter((at) => at !== index)
+    const order = list.map((_, offset) => (index + 1 + offset) % list.length).filter((at) => list[at].cutId !== item.cutId && !isInterstitial(list[at]))
     const target = order.find((at) => list[at].speaker === item.speaker)
     if (target === undefined) return setToast(`That is everything from ${item.speaker} for now`)
     setToast(`More from ${item.speaker}`)
