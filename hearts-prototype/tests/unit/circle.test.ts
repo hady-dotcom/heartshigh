@@ -15,6 +15,7 @@ import {
   parseCircleReply,
 } from '../../src/lib/circle'
 import { killListHits } from '../../src/lib/opening-data'
+import { CIRCLE_COLUMNS, circleSheetValues, readCircleRow } from '../../src/lib/circle-sheet'
 
 const POINTS = [
   { prompt: 'What is one small thing you could carry from this talk into tomorrow?', kind: 'reflection' },
@@ -111,4 +112,24 @@ test('Circle: only the swarm, the circle desk and the seed read circle answers, 
     const text = readFileSync(file, 'utf8')
     if (/circleForPoints/.test(text)) assert.ok(['server/circle.ts', 'screens/app/course.tsx'].includes(path.relative(root, file)), `${file} reads circle answers`)
   }
+})
+
+test('Circle: the CircleAnswers sheet tab reads rows through the same checks and exports round-trip', () => {
+  const good = readCircleRow({ talk_key: 'al-nur', question_id: '12', name: 'Amina', body: 'This landed gently for me.', tone: 'Warm', length: 'short', origin: 'ai', enabled: 'no' })
+  assert.ok(good.ok)
+  if (good.ok) assert.deepEqual(good.value, { circleId: null, questionId: 12, name: 'Amina', body: 'This landed gently for me.', tone: 'warm', length: 'short', origin: 'ai', enabled: false, remove: false })
+  const columns = (row: Record<string, string>) => {
+    const read = readCircleRow(row)
+    return read.ok ? [] : read.issues.map((issue) => issue.column)
+  }
+  assert.deepEqual(columns({ question_id: '3', body: 'You should pray more.' }), ['body'])
+  assert.deepEqual(columns({ question_id: '3', name: '<b>Sam</b>', body: 'Fine.' }), ['name'])
+  assert.deepEqual(columns({ question_id: 'x', body: 'Fine.', tone: 'loud', length: 'huge', origin: 'robot', enabled: 'maybe' }), ['question_id', 'tone', 'length', 'origin', 'enabled'])
+  assert.deepEqual(columns({ question_id: '3', status: 'delete' }), ['circle_id'])
+  assert.deepEqual(columns({ question_id: '3', circle_id: '9', status: 'delete' }), [])
+  const exported = circleSheetValues({ id: 9, point: 3, name: 'Omar', body: 'Small, but it is a start.', tone: 'practical', length: 'long', origin: 'ai', enabled: true }, { talkKey: 'al-nur', youtubeId: 'NIR88RRpat4' })
+  assert.deepEqual(Object.keys(exported), [...CIRCLE_COLUMNS])
+  const back = readCircleRow(Object.fromEntries(Object.entries(exported).map(([key, value]) => [key, value == null ? '' : String(value)])))
+  assert.ok(back.ok)
+  if (back.ok) assert.deepEqual([back.value.circleId, back.value.questionId, back.value.body, back.value.enabled], [9, 3, 'Small, but it is a start.', true])
 })
