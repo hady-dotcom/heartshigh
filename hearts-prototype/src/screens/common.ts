@@ -16,6 +16,9 @@ export type Query = {
   group?: string
   item?: string
   view?: string
+  door?: string
+  speaker?: string
+  context?: string
 }
 
 export type Ctx = {

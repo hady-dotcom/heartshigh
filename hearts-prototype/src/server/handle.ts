@@ -20,6 +20,7 @@ import { delayToMs, unlockState } from '@/lib/unlock'
 import { killListHits } from '@/lib/opening-data'
 import { HORS_MAX, HORS_MIN, tierTimings } from '@/lib/tiers'
 import { completionVerdict } from '@/lib/nesting'
+import { placeOfLesson } from './harvest'
 import { showUncheckedTalks, tierVisible } from './opening'
 import { tierSourceText } from './tier-source'
 import { handleCircle } from './circle'
@@ -1352,9 +1353,12 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         collection: 'harvest-entries',
         overrideAccess: true,
         limit: 1,
-        where: { and: [{ user: { equals: user.id } }, { lesson: { equals: lessonId } }] },
+        where: { and: [{ user: { equals: user.id } }, { lesson: { equals: lessonId } }, { or: [{ surface: { exists: false } }, { surface: { equals: 'talk' } }] }] },
       })
-      if (!already.docs.length) await giveHarvest(payload, user.id, lessonId, transcript, portal || undefined)
+      if (!already.docs.length) {
+        const place = await placeOfLesson(payload, lessonId)
+        await giveHarvest(payload, user.id, lessonId, transcript, portal || undefined, { speaker: place?.speaker || undefined, door: place?.door || undefined, surface: 'talk', gatheredAt: now().toISOString() })
+      }
     }
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Marked as watched. You will see it in your Garden.')
   }

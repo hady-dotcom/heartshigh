@@ -379,10 +379,23 @@
 .forest .card { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.12); color: #fff; }
 .forest .card p { color: rgba(255,255,255,0.8); }
 .harvest-card { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 16px; margin-bottom: 12px; }
-.harvest-card header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.harvest-card header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+.harvest-card header > span { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.harvest-new { background: var(--gold); color: var(--gold-ink); font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; border-radius: 999px; padding: 4px 8px; }
+.harvest-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.harvest-group h2 { font-size: 16px; margin: 8px 0 10px; }
+.harvest-card details { margin-top: 12px; }
+.harvest-card summary { cursor: pointer; color: var(--teal); font-weight: 750; font-size: 14px; }
+.harvest-card details blockquote { margin-top: 8px; font-size: 16px; }
+.demo-note { background: #f7f1e4; border-radius: 14px; padding: 10px 12px; font-size: 14px; line-height: 1.45; margin: 0 0 12px; }
+.context-block { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 14px; margin: 0 0 12px; }
+.context-block .context-side { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0 0 8px; overflow-wrap: anywhere; }
+.context-block blockquote { margin: 8px 0 12px; font-size: 16px; line-height: 1.4; overflow-wrap: anywhere; }
+.chip-row.quiet a, .chip-row.quiet span { background: #efebe3; color: var(--ink); }
+.chip-row.quiet a.on { background: var(--ink); color: #fff; }
 .tag { border-radius: 999px; padding: 5px 12px; font-size: 11.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; }
-.tag.quran { background: var(--teal); } .tag.hadith { background: var(--gold); color: var(--gold-ink); }
-.harvest-card blockquote { margin: 0 0 10px; font-size: 18px; font-weight: 700; line-height: 1.35; }
+.tag.quran { background: var(--teal); } .tag.hadith { background: var(--gold); color: var(--gold-ink); } .tag.line { background: #5c6b73; }
+.harvest-card blockquote { margin: 0 0 10px; font-size: 18px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
 .harvest-card small { color: var(--muted); display: block; line-height: 1.5; }
 .wb-entry { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 16px; margin-bottom: 12px; }
 .wb-entry .when { font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }

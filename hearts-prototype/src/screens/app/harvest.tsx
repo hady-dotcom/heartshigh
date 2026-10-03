@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Payload } from 'payload'
 import { Mascot } from '@/components/brand'
-import { COLLECTION_NAMES } from '@/lib/harvest'
+import { COLLECTION_NAMES, commentaryFor, isNewMoment, type ScholarCitation } from '@/lib/harvest'
 import { ayahId as idOfAyah, ayahWindow, surahLabel } from '@/lib/quran-match'
 import { TAFSIR_CREDIT } from '@/lib/tafsir'
 import { getSession } from '@/server/context'
@@ -10,7 +10,8 @@ import { now } from '@/lib/clock'
 import { type Ctx, type Row, ref, rows, str, unreadCount } from '../common'
 import { Frame } from './garden'
 import { loadDoors } from '@/server/doors'
-import { doorByNumber, doorNumberOfClause, type Door } from '@/lib/doors'
+import { doorByNumber, doorCode, doorNumberOfClause, type Door } from '@/lib/doors'
+import { resourcesFor, sampleHarvest } from '@/server/harvest'
 
 export const REPLAY_LEAD_SECONDS = 5
 
@@ -58,31 +59,41 @@ type View = 'context' | 'scholars' | 'summary' | 'tafsir'
 export async function GardenHarvest({ payload, user, base, query }: Ctx) {
   const session = await getSession()
   const reader = session.actor || user
-  const [entries, unread] = await Promise.all([
+  const [own, unread] = await Promise.all([
     rows(payload, 'harvest-entries', { user: { equals: user.id } }, { sort: '-createdAt', limit: 1000 }),
     unreadCount(payload, user),
   ])
-  const kind = query.kind === 'quran' || query.kind === 'hadith' ? query.kind : 'all'
-  const group = query.group === 'door' || query.group === 'clause' ? 'door' : 'talk'
+  const sample = own.length ? [] : await sampleHarvest(payload)
+  const entries: Row[] = own.length ? own : sample.map((item) => ({ ...item, sample: true, lesson: item.lessonId, createdAt: item.gatheredAt } as unknown as Row))
+  const kind = query.kind === 'quran' || query.kind === 'hadith' || query.kind === 'line' ? query.kind : 'all'
+  const group = query.group === 'door' || query.group === 'clause' ? 'door' : query.group === 'speaker' ? 'speaker' : 'talk'
+  const doorFilter = Number(query.door) || null
+  const speakerFilter = query.speaker ? String(query.speaker) : null
   const openId = Number(query.item) || null
   const view = (['context', 'scholars', 'summary', 'tafsir'] as View[]).includes(query.view as View) ? (query.view as View) : null
   const lessonIds = [...new Set(entries.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))]
-  const doors = group === 'door' ? await loadDoors(payload) : []
-  const [lessons, doorOf] = await Promise.all([
+  const doors = await loadDoors(payload)
+  const [lessons, doorOfLesson, resources] = await Promise.all([
     lessonIds.length ? rows(payload, 'lessons', { id: { in: lessonIds } }) : Promise.resolve([] as Row[]),
-    group === 'door' ? doorsOfLessons(payload, lessonIds, doors) : Promise.resolve(new Map<number, number>()),
+    doorsOfLessons(payload, lessonIds, doors),
+    resourcesFor(payload, lessonIds),
   ])
-  const counts = { all: entries.length, quran: entries.filter((row) => row.kind === 'quran').length, hadith: entries.filter((row) => row.kind === 'hadith').length }
-  const shown = entries.filter((row) => kind === 'all' || row.kind === kind)
-  const fresh = new Set(entries.filter((row) => !row.seenAt).map((row) => row.id))
-  if (fresh.size && reader.id === user.id) {
+  const doorOf = (entry: Row) => Number(entry.door) || doorOfLesson.get(ref(entry.lesson) || 0) || null
+  const speakerOf = (entry: Row) => str(entry.speaker) || str(lessons.find((row) => row.id === ref(entry.lesson))?.speaker)
+  const counts = { all: entries.length, quran: entries.filter((row) => row.kind === 'quran').length, hadith: entries.filter((row) => row.kind === 'hadith').length, line: entries.filter((row) => row.kind === 'line').length }
+  const shown = entries.filter((row) => (kind === 'all' || row.kind === kind) && (!doorFilter || doorOf(row) === doorFilter) && (!speakerFilter || speakerOf(row) === speakerFilter))
+  const doorsHere = [...new Set(entries.map(doorOf).filter((n): n is number => Boolean(n)))].sort((a, b) => a - b)
+  const speakersHere = [...new Set(entries.map(speakerOf).filter(Boolean))].sort()
+  const at = now()
+  const fresh = new Set(entries.filter((row) => !row.seenAt && (row.sample ? isNewMoment(str(row.gatheredAt), null, at) : true)).map((row) => row.id))
+  if (fresh.size && own.length && reader.id === user.id) {
     const at = now().toISOString()
     await payload.update({ collection: 'harvest-entries', overrideAccess: true, where: { and: [{ user: { equals: user.id } }, { id: { in: [...fresh] } }] }, data: { seenAt: at } as never })
   }
 
   const href = (params: Record<string, string | number | null | undefined>, anchor?: string) => {
     const merged: Record<string, string> = {}
-    const next = { kind: kind === 'all' ? null : kind, group: group === 'talk' ? null : group, ...params }
+    const next = { kind: kind === 'all' ? null : kind, group: group === 'talk' ? null : group, door: doorFilter, speaker: speakerFilter, ...params }
     for (const [key, value] of Object.entries(next)) if (value !== null && value !== undefined && value !== '') merged[key] = String(value)
     const search = new URLSearchParams(merged).toString()
     return `${base}/garden/harvest${search ? `?${search}` : ''}${anchor ? `#${anchor}` : ''}`
@@ -96,15 +107,19 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
     let title = lesson ? str(lesson.title) : 'A talk'
     let order = 0
     if (group === 'door') {
-      const door = doorByNumber(lessonId ? doorOf.get(lessonId) : null, doors)
+      const door = doorByNumber(doorOf(entry), doors)
       key = door ? `door-${door.number}` : 'door-none'
       title = door ? `Door ${door.number} · ${door.title}` : 'Not yet placed on the hadith'
       order = door ? door.number : 999
+    } else if (group === 'speaker') {
+      const speaker = speakerOf(entry)
+      key = `speaker-${speaker || 'none'}`
+      title = speaker || 'Speaker not named'
     }
     if (!groups.has(key)) groups.set(key, { key, title, order, items: [] })
     groups.get(key)!.items.push(entry)
   }
-  const sections = [...groups.values()].sort((a, b) => (group === 'door' ? a.order - b.order : 0))
+  const sections = [...groups.values()].sort((a, b) => (group === 'door' ? a.order - b.order : group === 'speaker' ? a.title.localeCompare(b.title) : 0))
   for (const section of sections) section.items.sort((a, b) => secondsOf(a) - secondsOf(b))
 
   const opened = openId ? shown.find((row) => row.id === openId) : null
@@ -112,20 +127,38 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
 
   return (
     <Frame base={base} title="Harvest" testId="garden-harvest" unread={unread}>
-      <p className="lead">Verses and hadith quoted in the talks you finished, in the speaker’s own words. Tap a card to hear that moment again.</p>
+      <p className="lead">Verses, hadith and lines from the talks you watch, in the speaker’s own words. Tap a card to hear that moment again.</p>
+      {!own.length && sample.length ? <p className="demo-note" data-testid="harvest-sample">A sample from real talks. Lines you watch in the feed, and the verses and hadith of talks you finish, will replace it.</p> : null}
       {entries.length ? (
         <>
           <div className="chip-row" data-testid="harvest-filters">
-            {(['all', 'quran', 'hadith'] as const).map((key) => (
+            {(['all', 'quran', 'hadith', 'line'] as const).filter((key) => key !== 'line' || counts.line).map((key) => (
               <Link key={key} className={kind === key ? 'on' : ''} href={href({ kind: key === 'all' ? null : key })} data-testid={`harvest-filter-${key}`}>
-                {key === 'all' ? 'All' : key === 'quran' ? 'Qur’an' : 'Hadith'} <span className="count">{counts[key]}</span>
+                {key === 'all' ? 'All' : key === 'quran' ? 'Qur’an' : key === 'hadith' ? 'Hadith' : 'Lines'} <span className="count">{counts[key]}</span>
               </Link>
             ))}
           </div>
           <div className="chip-row soft" data-testid="harvest-grouping">
             <Link className={group === 'talk' ? 'on' : ''} href={href({ group: null })} data-testid="harvest-group-talk">By talk</Link>
             <Link className={group === 'door' ? 'on' : ''} href={href({ group: 'door' })} data-testid="harvest-group-door">By the doors of Jibril</Link>
+            <Link className={group === 'speaker' ? 'on' : ''} href={href({ group: 'speaker' })} data-testid="harvest-group-speaker">By speaker</Link>
           </div>
+          {doorsHere.length > 1 ? (
+            <div className="chip-row quiet" data-testid="harvest-door-filter">
+              <Link className={!doorFilter ? 'on' : ''} href={href({ door: null })}>Every door</Link>
+              {doorsHere.map((number) => (
+                <Link key={number} className={doorFilter === number ? 'on' : ''} href={href({ door: number })} data-testid="harvest-door" data-door={number} title={doorByNumber(number, doors)?.title}>{doorCode(number)}</Link>
+              ))}
+            </div>
+          ) : null}
+          {speakersHere.length > 1 ? (
+            <div className="chip-row quiet" data-testid="harvest-speaker-filter">
+              <Link className={!speakerFilter ? 'on' : ''} href={href({ speaker: null })}>Every speaker</Link>
+              {speakersHere.map((name) => (
+                <Link key={name} className={speakerFilter === name ? 'on' : ''} href={href({ speaker: name })} data-testid="harvest-speaker" data-speaker={name}>{name}</Link>
+              ))}
+            </div>
+          ) : null}
         </>
       ) : null}
       <div data-testid="harvest">
@@ -135,11 +168,17 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
             {section.items.map((entry) => {
               const lessonId = ref(entry.lesson)
               const lesson = lessons.find((row) => row.id === lessonId)
+              const commentary = entry.kind === 'line' || !entry.reference ? ((entry.commentary as ScholarCitation | undefined) ?? commentaryFor(str(lesson?.transcript), secondsOf(entry), resources.get(lessonId || 0) || [])) : null
+              const courseId = lesson ? ref(lesson.course) : null
               return (
                 <HarvestCard
                   key={entry.id}
                   entry={entry}
                   lesson={lesson}
+                  speaker={speakerOf(entry)}
+                  door={doorByNumber(doorOf(entry), doors)}
+                  commentary={commentary}
+                  context={courseId && lessonId && lesson?.transcript ? `${base}/course/${courseId}?part=${lessonId}&t=${Math.floor(secondsOf(entry))}&context=1` : null}
                   fresh={fresh.has(entry.id)}
                   replay={replayHref(base, lesson ? ref(lesson.course) : null, lessonId, secondsOf(entry))}
                   href={href}
@@ -153,7 +192,7 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
         {!entries.length ? (
           <div className="empty-state" data-testid="harvest-empty">
             <Mascot width={110} />
-            <p>Nothing gathered yet. When you finish a talk, the verses and hadith it quotes are collected here.</p>
+            <p>Nothing gathered yet. Lines you watch in the feed, and the verses and hadith of talks you finish, are collected here.</p>
           </div>
         ) : !shown.length ? (
           <p className="muted" data-testid="harvest-none">Nothing of this kind yet.</p>
@@ -163,9 +202,13 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
   )
 }
 
-function HarvestCard({ entry, lesson, fresh, replay, href, open, panel }: {
+function HarvestCard({ entry, lesson, speaker, door, commentary, context, fresh, replay, href, open, panel }: {
   entry: Row
   lesson?: Row
+  speaker: string
+  door: Door | null
+  commentary: ScholarCitation | null
+  context: string | null
   fresh: boolean
   replay: string | null
   href: (params: Record<string, string | number | null | undefined>, anchor?: string) => string
@@ -173,6 +216,7 @@ function HarvestCard({ entry, lesson, fresh, replay, href, open, panel }: {
   panel: React.ReactNode
 }) {
   const quran = entry.kind === 'quran'
+  const line = entry.kind === 'line'
   const index = quran && entry.surah && entry.ayah ? quranIndex() : null
   const ayahId = index ? idOfAyah(index, Number(entry.surah), Number(entry.ayah)) : -1
   const hadithMatched = !quran && Boolean(entry.collection && entry.hadithText)
@@ -183,14 +227,16 @@ function HarvestCard({ entry, lesson, fresh, replay, href, open, panel }: {
       <small className="harvest-when">
         {replay ? <span className="play" aria-hidden="true">▶</span> : null}
         {lesson ? str(lesson.title) : 'The talk'}
+        {speaker ? ` · ${speaker}` : ''}
         {entry.timestamp ? ` · at ${str(entry.timestamp)}` : ''}
       </small>
+      {door ? <small className="harvest-door" data-testid="harvest-item-door" data-door={door.number}>{doorCode(door.number)} · {door.title}</small> : null}
     </>
   )
   return (
-    <article id={anchor} className={`harvest-card${fresh ? ' fresh' : ''}`} data-testid="harvest-item" data-kind={str(entry.kind)} data-matched={index || hadithMatched ? 'yes' : 'no'}>
+    <article id={anchor} className={`harvest-card${fresh ? ' fresh' : ''}`} data-testid="harvest-item" data-kind={str(entry.kind)} data-matched={index || hadithMatched ? 'yes' : 'no'} data-door={door?.number || ''} data-speaker={speaker} data-surface={str(entry.surface)}>
       <header>
-        <span className={`tag ${quran ? 'quran' : 'hadith'}`}>{quran ? 'Qur’an' : 'Hadith'}</span>
+        <span className={`tag ${quran ? 'quran' : line ? 'line' : 'hadith'}`}>{quran ? 'Qur’an' : line ? 'Line' : 'Hadith'}</span>
         {fresh ? <span className="harvest-new" data-testid="harvest-new">New</span> : null}
         <small data-testid="harvest-reference">{str(entry.reference)}</small>
       </header>
@@ -215,6 +261,18 @@ function HarvestCard({ entry, lesson, fresh, replay, href, open, panel }: {
             <Link className={open && open !== 'context' ? 'on' : ''} href={open && open !== 'context' ? href({}, anchor) : href({ item: entry.id, view: 'scholars' }, anchor)} data-testid="harvest-scholars">What do the scholars say?</Link>
           ) : null}
         </div>
+      ) : null}
+      {!index && !hadithMatched && (context || commentary) ? (
+        <div className="harvest-actions">
+          {context ? <Link href={context} data-testid="harvest-line-context">See it in context</Link> : null}
+        </div>
+      ) : null}
+      {!index && commentary ? (
+        <details data-testid="harvest-commentary">
+          <summary>What do the scholars say?</summary>
+          <blockquote data-testid="harvest-commentary-text">{commentary.text}</blockquote>
+          <small data-testid="harvest-commentary-source">{commentary.citation}</small>
+        </details>
       ) : null}
       {panel}
     </article>

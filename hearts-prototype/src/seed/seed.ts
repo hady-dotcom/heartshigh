@@ -514,6 +514,10 @@ async function main() {
   const opening = await seedOpening(payload, { clauseIds, portalIds, now: new Date(), showUnchecked: !startersOnly })
   if (!startersOnly) await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...courseIds, ...opening.starterCourseIds] })
   await seedHarvest(payload, { now: new Date(), demo: !startersOnly })
+  if (!startersOnly) {
+    const { seedDemoHarvest } = await import('./harvest-seed')
+    await seedDemoHarvest(payload)
+  }
 
   const problems = await timingCheck(payload)
   if (problems.length) {

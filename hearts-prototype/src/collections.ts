@@ -833,6 +833,7 @@ export const HarvestEntries: CollectionConfig = {
       options: [
         { label: "Qur'an", value: 'quran' },
         { label: 'Hadith', value: 'hadith' },
+        { label: 'Spoken line', value: 'line' },
       ],
     },
     { name: 'text', type: 'textarea' },
@@ -849,6 +850,19 @@ export const HarvestEntries: CollectionConfig = {
     { name: 'hadithArabic', type: 'textarea' },
     { name: 'grading', type: 'text', admin: { description: 'Only as given by the hadith source. Never filled in by hand.' } },
     { name: 'seenAt', type: 'date', admin: { description: 'When the learner first opened Harvest with this item in it. Empty means new.' } },
+    { name: 'speaker', type: 'text' },
+    { name: 'door', type: 'number', min: 1, max: 20, admin: { description: 'The Hadith Jibril working door (1 to 20) of the talk, worked out from its clause.' } },
+    {
+      name: 'surface',
+      type: 'select',
+      admin: { description: 'Where it was kept. A short clip fills the harvest only; it never counts towards progress.' },
+      options: [
+        { label: "Hors d'oeuvre", value: 'hors' },
+        { label: 'Appetiser', value: 'appetiser' },
+        { label: 'Whole talk', value: 'talk' },
+      ],
+    },
+    { name: 'gatheredAt', type: 'date' },
   ],
 }
 

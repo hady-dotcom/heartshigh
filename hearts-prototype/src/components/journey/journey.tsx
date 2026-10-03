@@ -143,6 +143,7 @@ export function Journey(props: JourneyProps) {
   const slotRef = useRef<HTMLDivElement>(null)
   const gesture = useRef<{ x: number; y: number; t: number; moved: boolean; timer: number | null } | null>(null)
   const counter = useRef(0)
+  const gathered = useRef(new Set<string>())
 
   const setHeart = useCallback((next: HeartState) => {
     heartRef.current = next
@@ -512,6 +513,30 @@ export function Journey(props: JourneyProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // A short clip keeps the transcript line at the timestamp on screen. The server copies the words; this only sends the time.
+  useEffect(() => {
+    if (!signedIn || props.viewAs || phase !== 'feed') return
+    const current = items[index]
+    if (!current?.lessonId) return
+    const piece = mode === 'hors' ? current.hors : current.appetiser
+    const line = piece.lines?.[Math.min(lineAt, Math.max(0, (piece.lines?.length || 1) - 1))]
+    const at = line?.at
+    const seconds = typeof at === 'number' && Number.isFinite(at) ? at : mode === 'hors' ? current.hors.start : current.appetiser.start
+    if (!Number.isFinite(seconds)) return
+    const key = `${current.lessonId}:${mode}:${Math.round(seconds)}`
+    if (gathered.current.has(key)) return
+    gathered.current.add(key)
+    void fetch('/api/hearts/harvest', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ lessonId: current.lessonId, seconds, surface: mode }),
+    }).then((response) => {
+      if (!response.ok) gathered.current.delete(key)
+    }).catch(() => {
+      gathered.current.delete(key)
+    })
+  }, [signedIn, props.viewAs, phase, items, index, mode, lineAt])
 
   // ---------- opening flow ----------
   const sceneEnter = useCallback((direction: 'up' | 'back' | 'fade') => {

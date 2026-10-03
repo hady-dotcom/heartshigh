@@ -231,7 +231,7 @@ export async function GardenGeneral({ payload, user, base }: Ctx) {
         <div className="stat-box"><b data-testid="stat-sittings">{g.completions.length}</b><small>parts watched</small></div>
         <div className="stat-box"><b data-testid="stat-answers">{g.answers.length}</b><small>questions answered</small></div>
         <div className="stat-box"><b>{g.seatVisits.length}</b><small>seats read</small></div>
-        <div className="stat-box"><b data-testid="stat-harvest">{g.harvest.length}</b><small>verses and hadith</small></div>
+        <div className="stat-box"><b data-testid="stat-harvest">{g.harvest.length}</b><small>verses, hadith and lines</small></div>
       </div>
       <section className="days-card" data-testid="days-card">
         <h3>Days you came</h3>

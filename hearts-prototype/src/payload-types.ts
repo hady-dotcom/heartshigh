@@ -969,7 +969,7 @@ export interface HarvestEntry {
   portal?: (number | null) | Portal;
   user: number | User;
   lesson?: (number | null) | Lesson;
-  kind?: ('quran' | 'hadith') | null;
+  kind?: ('quran' | 'hadith' | 'line') | null;
   text?: string | null;
   reference?: string | null;
   timestamp?: string | null;
@@ -1002,6 +1002,16 @@ export interface HarvestEntry {
    * When the learner first opened Harvest with this item in it. Empty means new.
    */
   seenAt?: string | null;
+  speaker?: string | null;
+  /**
+   * The Hadith Jibril working door (1 to 20) of the talk, worked out from its clause.
+   */
+  door?: number | null;
+  /**
+   * Where it was kept. A short clip fills the harvest only; it never counts towards progress.
+   */
+  surface?: ('hors' | 'appetiser' | 'talk') | null;
+  gatheredAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2603,6 +2613,10 @@ export interface HarvestEntriesSelect<T extends boolean = true> {
   hadithArabic?: T;
   grading?: T;
   seenAt?: T;
+  speaker?: T;
+  door?: T;
+  surface?: T;
+  gatheredAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
