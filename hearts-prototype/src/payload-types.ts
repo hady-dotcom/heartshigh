@@ -484,8 +484,12 @@ export interface Resource {
   id: number;
   lesson: number | Lesson;
   name: string;
-  kind?: ('link' | 'file' | 'summary' | 'quote' | 'reading' | 'guide') | null;
+  kind?: ('link' | 'file' | 'summary' | 'quote' | 'reading' | 'guide' | 'transcript') | null;
   url?: string | null;
+  /**
+   * An uploaded file. A transcript row uses this instead of pasting the words into a cell.
+   */
+  file?: (number | null) | Media;
   body?: string | null;
   showAtEnd?: boolean | null;
   updatedAt: string;
@@ -708,6 +712,18 @@ export interface TalkTier {
   hookAt?: number | null;
   turnAt?: number | null;
   landAt?: number | null;
+  /**
+   * Up to three appetiser cuts, played hook then turn then land: [{ role, start, end }]. Their lengths add up to at most about 3 minutes.
+   */
+  appetiserSpans?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
    * The hors d'oeuvre's sentences with their times: [{ at, text }].
    */
@@ -1810,6 +1826,7 @@ export interface ResourcesSelect<T extends boolean = true> {
   name?: T;
   kind?: T;
   url?: T;
+  file?: T;
   body?: T;
   showAtEnd?: T;
   updatedAt?: T;
@@ -2012,6 +2029,7 @@ export interface TalkTiersSelect<T extends boolean = true> {
   hookAt?: T;
   turnAt?: T;
   landAt?: T;
+  appetiserSpans?: T;
   horsLines?: T;
   offerResume?: T;
   status?: T;
@@ -2527,6 +2545,10 @@ export interface MasterFlag {
    * Show unchecked talks to learners. On, draft tiers play in the feed. Off (the default for production), only talks a person has approved on the review desk play.
    */
   showUnchecked?: boolean | null;
+  /**
+   * Longest hors d'oeuvre the desk will save, in seconds. 15 to 20 is the usual length and only a warning. Longer than this is refused.
+   */
+  horsMaxSeconds?: number | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2538,6 +2560,7 @@ export interface MasterFlagsSelect<T extends boolean = true> {
   popupOverPlayer?: T;
   chromeOverPlayer?: T;
   showUnchecked?: T;
+  horsMaxSeconds?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

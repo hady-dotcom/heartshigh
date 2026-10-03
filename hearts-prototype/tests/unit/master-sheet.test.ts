@@ -145,7 +145,8 @@ test('every error type names the tab, row and column', () => {
     assert.ok(issue.message.length > 8, issue.message)
     assert.equal(issue.message.includes('undefined'), false)
   }
-  assert.ok(plan.errors.some((issue) => issue.column === 'hook_text' && /quiz/.test(issue.message)))
+  assert.equal(plan.errors.some((issue) => issue.column === 'hook_text' && /quiz/.test(issue.message)), false)
+  assert.ok(plan.errors.some((issue) => issue.column === 'hook_text' && /plain text|markup/i.test(issue.message)))
   assert.ok(plan.errors.some((issue) => issue.column === 'text' && /quiz/.test(issue.message)))
   assert.ok(plan.errors.some((issue) => issue.column === 'time' && /after the end/.test(issue.message)))
 })

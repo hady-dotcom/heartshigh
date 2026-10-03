@@ -3,6 +3,7 @@
 // own resources step. Nothing is published; every row stays a draft for the normal preview and apply.
 import { readFileSync } from 'node:fs'
 import { dualExtract } from './extractor'
+import { mulberry32, seedFrom, shuffleChoices } from './choices'
 import { killListHits } from './opening-data'
 import { parseTranscript } from './transcript'
 import { draftTiers } from './tiers'
@@ -100,10 +101,20 @@ function talkKey(source: DraftSource) {
   return `yt-${source.id}`
 }
 
-function keepLine(line: string, transcript: string) {
-  if (!line.trim()) return null
-  if (transcript.trim()) return line.trim()
-  return killListHits(line).length ? null : line.trim()
+/** Hook, turn and land are the speaker's words. The kill list does not cut them. */
+function keepLine(line: string) {
+  return line.trim() || null
+}
+
+/** An AI multiple-choice draft. The right answer starts in slot 2 and is then shuffled, so a batch is not stuck there. */
+export function draftMultipleChoice(seedText: string) {
+  const prompt = 'Which line from this talk would you want to hear again?'
+  const shuffled = shuffleChoices(
+    ['A line I would rather leave', 'The line I want to hear again', 'A line from another sitting', 'A line I did not catch'],
+    1,
+    mulberry32(seedFrom(`${seedText}:${prompt}`)),
+  )
+  return { prompt, choices: shuffled.choices, correct: String(shuffled.correctIndex + 1) }
 }
 
 /** One talk, its draft questions and its draft resources. Questions stay status draft. */
@@ -117,9 +128,9 @@ export function draftTalk(source: DraftSource, request: DraftRequest, steps?: { 
   const clause = extracted?.cuts.find((cut) => cut.bestClause)?.bestClause ?? null
   const seat = clause ? request.seats?.find((item) => item.clause === clause) : undefined
   const duration = source.durationSeconds ?? tiers?.duration ?? null
-  const hook = tiers ? keepLine(tiers.hook, sheetTranscript) : null
-  const turn = tiers ? keepLine(tiers.turn, sheetTranscript) : null
-  const land = tiers ? keepLine(tiers.land, sheetTranscript) : null
+  const hook = tiers ? keepLine(tiers.hook) : null
+  const turn = tiers ? keepLine(tiers.turn) : null
+  const land = tiers ? keepLine(tiers.land) : null
   const fits = !duration || !tiers || (tiers.hors.end <= duration + 0.05 && tiers.appetiser.end <= duration + 0.05)
   const timed = Boolean(tiers && hook && turn && land && fits)
   const talk: Record<string, string | number | null> = {
@@ -155,8 +166,13 @@ export function draftTalk(source: DraftSource, request: DraftRequest, steps?: { 
   const popupAt = clamp(tiers ? tiers.hookAt : duration && duration > 20 ? 15 : 0)
   const reflectAt = clamp(tiers ? tiers.turnAt : popupAt)
   const taskAt = clamp(tiers ? tiers.landAt : duration && duration > 5 ? Math.min(duration - 1, 30) : 0)
+  const choice = draftMultipleChoice(String(talk.talk_key))
   const questions: Record<string, string | number | null>[] = [
     { talk_key: talk.talk_key, type: 'free text', time: popupAt, text: 'What stayed with you in this part of the talk?', source: 'ai', status: 'draft', place: 'popup' },
+    {
+      talk_key: talk.talk_key, type: 'multiple choice', time: popupAt, text: choice.prompt, source: 'ai', status: 'draft', place: 'popup',
+      choice_1: choice.choices[0], choice_2: choice.choices[1], choice_3: choice.choices[2], choice_4: choice.choices[3], correct_choice: choice.correct,
+    },
     { talk_key: talk.talk_key, type: 'reflection', time: reflectAt, text: 'Which line would you want to sit with again?', source: 'ai', status: 'draft', place: 'popup' },
     { talk_key: talk.talk_key, type: 'reflection', time: 0, text: 'Write a few lines on what you will carry from this talk into the coming days.', source: 'ai', status: 'draft', place: 'workbook' },
     {

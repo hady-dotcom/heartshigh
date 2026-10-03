@@ -384,6 +384,14 @@ export const MasterFlags: GlobalConfig = {
       defaultValue: false,
       admin: { description: 'Show unchecked talks to learners. On, draft tiers play in the feed. Off (the default for production), only talks a person has approved on the review desk play.' },
     },
+    {
+      name: 'horsMaxSeconds',
+      type: 'number',
+      defaultValue: 45,
+      min: 20,
+      max: 180,
+      admin: { description: "Longest hors d'oeuvre the desk will save, in seconds. 15 to 20 is the usual length and only a warning. Longer than this is refused." },
+    },
   ],
 }
 

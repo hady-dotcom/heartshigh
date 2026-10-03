@@ -12,6 +12,8 @@ type Summary = {
   counts?: { create: number; update: number; delete: number; unchanged: number; skipped: number; errors: number }
   errors?: { tab: string; row: number; column: string; message: string }[]
   errorTotal?: number
+  warnings?: { tab: string; row: number; column: string; message: string }[]
+  warningTotal?: number
   changes?: { tab: string; row: number; action: string; label: string; detail: string }[]
   changeTotal?: number
 }
@@ -184,6 +186,24 @@ function SheetBody({
               </div>
             ) : null}
             {(summary.errorTotal || 0) > (summary.errors?.length || 0) ? <p className="hint">Showing the first {summary.errors?.length} problems of {summary.errorTotal}.</p> : null}
+            {summary.warnings?.length ? (
+              <div className="table-wrap" style={{ marginTop: 16 }}>
+                <table className="data" data-testid="sheet-warnings">
+                  <thead><tr><th>Tab</th><th className="num">Row</th><th>Column</th><th>Check this</th></tr></thead>
+                  <tbody>
+                    {summary.warnings.map((issue, index) => (
+                      <tr key={`${issue.tab}-${issue.row}-${issue.column}-${index}`} data-testid="sheet-warning-row">
+                        <td>{issue.tab}</td>
+                        <td className="num">{issue.row}</td>
+                        <td><code>{issue.column}</code></td>
+                        <td>{issue.message}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+            {summary.warnings?.length ? <p className="hint" data-testid="sheet-warning-note">These rows can still be applied. A warning is not a reason to skip the row.</p> : null}
             {summary.changes?.length ? (
               <div className="table-wrap" style={{ marginTop: 16 }}>
                 <table className="data" data-testid="sheet-changes">

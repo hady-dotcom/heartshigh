@@ -118,7 +118,8 @@ export function killHits(text: string, list: string[]) {
 
 /** True when the text carries HTML, an entity, or a script URL. Learner-facing words are plain text only. */
 export function hasMarkup(text: string) {
-  return /<\s*\/?\s*[a-z!]|&(#\d+|#x[0-9a-f]+|[a-z]+);|javascript\s*:|data\s*:|vbscript\s*:|on[a-z]+\s*=/i.test(foldText(text))
+  // The event-handler check is a whole word, so a note such as conf=high is not read as code.
+  return /<\s*\/?\s*[a-z!]|&(#\d+|#x[0-9a-f]+|[a-z]+);|javascript\s*:|data\s*:|vbscript\s*:|\bon[a-z]+\s*=/i.test(foldText(text))
 }
 
 export type HelpContactInput = { label?: string | null; phone?: string | null; url?: string | null; hours?: string | null }

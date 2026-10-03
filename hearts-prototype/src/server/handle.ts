@@ -1817,6 +1817,15 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, back, undefined, on ? 'Unchecked talks are shown to learners.' : 'Only approved talks are shown to learners.')
   }
 
+  if (action === 'hors-max') {
+    const back = text(form, 'next') || '/master/review'
+    if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk changes this.')
+    const raw = Number(text(form, 'horsMaxSeconds'))
+    if (!Number.isInteger(raw) || raw < 20 || raw > 180) return redirectTo(req, back, "The hors d'oeuvre cap is a whole number of seconds from 20 to 180.")
+    await payload.updateGlobal({ slug: 'master-flags', overrideAccess: true, data: { horsMaxSeconds: raw } as never })
+    return redirectTo(req, back, undefined, `Hors d'oeuvre cap saved at ${raw} seconds. 15 to 20 is still the usual length.`)
+  }
+
   if (action === 'popup-save' || action === 'popup-publish') {
     const back = text(form, 'next') || '/master/tiers'
     if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk edits these pop-ups.')

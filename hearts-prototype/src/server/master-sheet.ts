@@ -1,8 +1,12 @@
 // Loads the library, applies a master-sheet plan, and puts the last import back.
-import type { Payload, Where } from 'payload'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+import { APIError, type Payload, type Where } from 'payload'
 import { idOf } from '@/lib/ids'
 import { now } from '@/lib/clock'
 import { audit } from '@/server/viewas'
+import { horsCapOf, normaliseSpans, type AppetiserSpan } from '@/lib/tiers'
+import { transcriptFileKind, transcriptFromFile } from '@/lib/transcript-file'
 import { tierSourceText } from '@/server/tier-source'
 import {
   buildWorkbook,
@@ -108,6 +112,7 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
   }))
   const tierRows: TierRow[] = tiers.map((tier) => ({
     id: tier.id, lesson: num(tier.lesson) || 0, horsStart: Number(tier.horsStart), horsEnd: Number(tier.horsEnd), appetiserStart: Number(tier.appetiserStart), appetiserEnd: Number(tier.appetiserEnd),
+    appetiserSpans: spansOf(tier.appetiserSpans),
     hook: String(tier.hook || ''), turn: String(tier.turn || ''), land: String(tier.land || ''), note: String(tier.note || ''), status: String(tier.status || 'draft'),
   }))
   const pointRows: PointRow[] = points.map((point) => ({
@@ -115,7 +120,7 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
     options: Array.isArray(point.options) ? (point.options as unknown[]).map(String) : [], correctOption: String(point.correctOption || ''), status: String(point.status || 'published'), draftNote: String(point.draftNote || ''),
     dueDays: point.dueDays == null || point.dueDays === '' ? null : Number(point.dueDays), evidence: String(point.evidence || ''), showImam: Boolean(point.showImam), family: String(point.family || ''),
   }))
-  const resourceRows: ResourceRow[] = resources.map((resource) => ({ id: resource.id, lesson: num(resource.lesson) || 0, name: String(resource.name || ''), url: String(resource.url || ''), kind: String(resource.kind || 'link'), body: String(resource.body || '') }))
+  const resourceRows: ResourceRow[] = resources.map((resource) => ({ id: resource.id, lesson: num(resource.lesson) || 0, name: String(resource.name || ''), url: String(resource.url || ''), kind: String(resource.kind || 'link'), body: String(resource.body || ''), mediaId: num(resource.file) }))
   const keyRows: KeyRow[] = keys.map((key) => ({ id: key.id, talkKey: String(key.talkKey || ''), lesson: num(key.lesson) || 0, channel: String(key.channel || ''), sheetStatus: String(key.sheetStatus || '') }))
   const seatRows: SeatRow[] = seats.map((seat) => ({ id: seat.id, clause: clauseNumber.get(num(seat.clause) || 0) || 0, position: Number(seat.position || 0) }))
   const seatById = new Map(seats.map((seat) => [seat.id, seat]))
@@ -135,8 +140,28 @@ export async function exportBuffer(payload: Payload, scope: SheetScope) {
   return buildWorkbook(rowsFromCatalogue(catalogue))
 }
 
+function spansOf(value: unknown): AppetiserSpan[] | null {
+  if (!Array.isArray(value)) return null
+  const spans: AppetiserSpan[] = []
+  for (const item of value) {
+    if (!item || typeof item !== 'object') continue
+    const row = item as { role?: string; start?: unknown; end?: unknown }
+    if (row.role !== 'hook' && row.role !== 'turn' && row.role !== 'land') continue
+    const start = Number(row.start)
+    const end = Number(row.end)
+    if (!Number.isFinite(start) || !Number.isFinite(end)) continue
+    spans.push({ role: row.role, start, end })
+  }
+  return spans.length ? normaliseSpans(spans) : null
+}
+
 export async function planBuffer(payload: Payload, scope: SheetScope, buffer: Buffer) {
-  const [parsed, catalogue] = await Promise.all([readWorkbook(buffer), loadCatalogue(payload, scope)])
+  const [parsed, catalogue, flags] = await Promise.all([
+    readWorkbook(buffer),
+    loadCatalogue(payload, scope),
+    payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null) as Promise<{ horsMaxSeconds?: number } | null>,
+  ])
+  catalogue.horsMaxSeconds = horsCapOf(flags?.horsMaxSeconds)
   const plan = planSheet(parsed, catalogue)
   return { plan, counts: planCounts(plan) }
 }
@@ -288,13 +313,19 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
     return
   }
   if (op.op === 'resource.create') {
-    const doc = (await payload.create({ collection: 'resources', overrideAccess: true, data: { ...op.data, lesson: resolveRef(op.lesson, temps) } as never })) as unknown as Doc
+    const lessonId = resolveRef(op.lesson, temps)
+    const doc = (await payload.create({ collection: 'resources', overrideAccess: true, data: { ...op.data, lesson: lessonId } as never })) as unknown as Doc
     rememberCreated(snapshot, 'resources', doc.id)
+    await ingestResourceFile(payload, snapshot, lessonId, String(op.data.kind || ''), op.data.file)
     return
   }
   if (op.op === 'resource.update') {
     await remember(payload, snapshot, 'resources', op.id, op.patch)
     await payload.update({ collection: 'resources', id: op.id, overrideAccess: true, data: op.patch as never })
+    if (op.patch.kind === 'transcript' || op.patch.file) {
+      const resource = (await payload.findByID({ collection: 'resources', id: op.id, depth: 0, overrideAccess: true })) as unknown as Doc
+      await ingestResourceFile(payload, snapshot, num(resource.lesson) || 0, String(resource.kind || ''), resource.file)
+    }
     return
   }
   if (op.op === 'resource.delete') {
@@ -373,6 +404,31 @@ export async function undoSnapshot(payload: Payload, snapshot: SheetSnapshot) {
   }
 }
 
+async function ingestResourceFile(payload: Payload, snapshot: SheetSnapshot, lessonId: number, kind: string, file: unknown) {
+  const mediaId = num(file)
+  if (!lessonId || !mediaId || (kind !== 'transcript' && kind !== 'file')) return
+  const media = (await payload.findByID({ collection: 'media', id: mediaId, depth: 0, overrideAccess: true }).catch(() => null)) as { filename?: string; mimeType?: string } | null
+  if (!media?.filename) {
+    if (kind === 'transcript') throw new APIError('That transcript file was not found. Upload it first, then put its media id on the row.', 400, null, true)
+    return
+  }
+  if (!transcriptFileKind(kind, media.mimeType || '', media.filename)) {
+    if (kind === 'transcript') throw new APIError('A transcript resource needs a text file, such as .txt or .vtt.', 400, null, true)
+    return
+  }
+  let bytes: Buffer
+  try {
+    bytes = readFileSync(path.join(process.cwd(), 'media', media.filename))
+  } catch {
+    throw new APIError('That transcript file was not found on disk.', 400, null, true)
+  }
+  const parsed = transcriptFromFile(bytes)
+  if (!parsed.ok) throw new APIError(parsed.message, 400, null, true)
+  const patch = { transcript: parsed.text, transcriptSource: 'upload' }
+  await remember(payload, snapshot, 'lessons', lessonId, patch)
+  await payload.update({ collection: 'lessons', id: lessonId, overrideAccess: true, data: patch as never })
+}
+
 export function summaryOf(plan: SheetPlan, fileName: string) {
   const counts = planCounts(plan)
   return {
@@ -380,6 +436,8 @@ export function summaryOf(plan: SheetPlan, fileName: string) {
     counts,
     errors: plan.errors.slice(0, 200),
     errorTotal: plan.errors.length,
+    warnings: (plan.warnings || []).slice(0, 200),
+    warningTotal: plan.warnings?.length || 0,
     changes: plan.changes.slice(0, 200),
     changeTotal: plan.changes.length,
   }

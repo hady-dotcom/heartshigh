@@ -3,8 +3,8 @@ import type { CollectionConfig } from 'payload'
 import type { Access, Where } from 'payload'
 import { portalIdOf } from './lib/ids'
 import { slugProblem } from './lib/text-safety'
-import { authorTextProblems, killListHits, markupProblems } from './lib/opening-data'
-import { saidInTalk, tierProblem, timingProblems } from './lib/tiers'
+import { authorTextProblems, markupProblems } from './lib/opening-data'
+import { horsCapOf, saidInTalk, tierProblem, timingProblems } from './lib/tiers'
 import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
 
@@ -161,7 +161,7 @@ export const Media: CollectionConfig = {
   slug: 'media',
   upload: {
     staticDir: 'media',
-    mimeTypes: ['image/*', 'audio/*', 'video/*', 'application/pdf'],
+    mimeTypes: ['image/*', 'audio/*', 'video/*', 'application/pdf', 'text/*'],
   },
   access: {
     read: ({ req }) => {
@@ -328,9 +328,11 @@ export const Resources: CollectionConfig = {
         { label: 'Quote', value: 'quote' },
         { label: 'Further reading', value: 'reading' },
         { label: 'Discussion guide', value: 'guide' },
+        { label: 'Transcript file', value: 'transcript' },
       ],
     },
     { name: 'url', type: 'text' },
+    { name: 'file', type: 'upload', relationTo: 'media', admin: { description: 'An uploaded file. A transcript row uses this instead of pasting the words into a cell.' } },
     { name: 'body', type: 'textarea', maxLength: 20000 },
     { name: 'showAtEnd', type: 'checkbox', defaultValue: false },
   ],
@@ -577,6 +579,7 @@ export const TalkTiers: CollectionConfig = {
     { name: 'hookAt', type: 'number', min: 0, admin: { description: 'When the hook is said, for the appetiser captions.' } },
     { name: 'turnAt', type: 'number', min: 0 },
     { name: 'landAt', type: 'number', min: 0 },
+    { name: 'appetiserSpans', type: 'json', admin: { description: "Up to three appetiser cuts, played hook then turn then land: [{ role, start, end }]. Their lengths add up to at most about 3 minutes." } },
     { name: 'horsLines', type: 'json', admin: { description: "The hors d'oeuvre's sentences with their times: [{ at, text }]." } },
     { name: 'offerResume', type: 'checkbox', defaultValue: true, admin: { description: 'Offer "Resume from where the appetiser ended" next to the main, which always opens at 0:00.' } },
     {
@@ -598,7 +601,8 @@ export const TalkTiers: CollectionConfig = {
     beforeChange: [
       async ({ data, originalDoc, req }) => {
         const merged = { ...(originalDoc || {}), ...data } as Record<string, unknown>
-        const problem = tierProblem(merged)
+        const flags = (await req.payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null)) as { horsMaxSeconds?: number } | null
+        const problem = tierProblem(merged, horsCapOf(flags?.horsMaxSeconds))
         if (problem) throw new APIError(problem, 400, null, true)
         const lessonId = typeof merged.lesson === 'object' && merged.lesson ? (merged.lesson as { id: number }).id : Number(merged.lesson)
         const lesson = lessonId ? await req.payload.findByID({ collection: 'lessons', id: lessonId, depth: 0, overrideAccess: true }).catch(() => null) : null
@@ -608,8 +612,8 @@ export const TalkTiers: CollectionConfig = {
           { label: 'The appetiser', start: Number(merged.appetiserStart), end: Number(merged.appetiserEnd) },
         ])
         if (duration && late.length) throw new APIError(late[0], 400, null, true)
-        // The hook, turn, land and hors d'oeuvre line are the speaker's words: plain text, word for word from the
-        // talk. Without a transcript to check against, they are held to the kill list like any author's words.
+        // The hook, turn, land and hors d'oeuvre line are the speaker's words. Markup is refused. The kill list
+        // governs our own writing, not a quote or a transcript, so it is not applied here.
         const lines: [string, string][] = [
           ["The hors d'oeuvre line", String(merged.horsQuote || '')],
           ['The hook', String(merged.hook || '')],
@@ -620,10 +624,8 @@ export const TalkTiers: CollectionConfig = {
         const { tierSourceText } = await import('./server/tier-source')
         const source = tierSourceText(lesson as { youtubeId?: string; transcript?: string } | null)
         for (const [label, line] of lines) {
-          if (!line.trim()) continue
-          if (source) {
-            if (!saidInTalk(line, source)) throw new APIError(`${label} has to be the speaker's words, word for word from the transcript.`, 400, null, true)
-          } else if (killListHits(line).length) throw new APIError(`${label} uses words learners never see from us: ${killListHits(line).join(', ')}.`, 400, null, true)
+          if (!line.trim() || !source) continue
+          if (!saidInTalk(line, source)) throw new APIError(`${label} has to be the speaker's words, word for word from the transcript.`, 400, null, true)
         }
         return data
       },

@@ -6,7 +6,7 @@ import { codeRefusal, randomCode } from '../../src/lib/access-codes'
 import { killListHits } from '../../src/lib/opening-data'
 import { MAX_RANGE_DAYS, defaultPlanName, plural, seasonName, studyDates } from '../../src/lib/schedule'
 import { httpsHref, plainText, telHref } from '../../src/lib/text-safety'
-import { APPETISER_MAX, HORS_MAX, HORS_MIN, alignToCaptions, appetiserStop, draftTiers, linesFromWords, tierProblem, timingProblems, wordTimeline } from '../../src/lib/tiers'
+import { APPETISER_MAX, HORS_MAX, HORS_MIN, alignToCaptions, appetiserStop, draftTiers, linesFromWords, tierHorsWarning, tierProblem, timingProblems, wordTimeline } from '../../src/lib/tiers'
 import { isVerbatim, parseTranscript } from '../../src/lib/transcript'
 import { FILMS } from '../../src/seed/films'
 import { STARTERS } from '../../src/seed/starters-data'
@@ -119,7 +119,9 @@ test('Section T: rolling auto captions become each word once, in order, without 
 
 test('Section T: tier rules hold the hors to 15-20 seconds and the appetiser to about 3 minutes', () => {
   assert.equal(tierProblem({ horsStart: 10, horsEnd: 28, appetiserStart: 0, appetiserEnd: 170 }), null)
-  assert.match(tierProblem({ horsStart: 10, horsEnd: 40, appetiserStart: 0, appetiserEnd: 170 }) || '', /between 15 and 20/)
+  assert.equal(tierProblem({ horsStart: 10, horsEnd: 40, appetiserStart: 0, appetiserEnd: 170 }), null)
+  assert.match(tierHorsWarning({ horsStart: 10, horsEnd: 40 }) || '', /between 15 and 20/)
+  assert.match(tierProblem({ horsStart: 10, horsEnd: 70, appetiserStart: 0, appetiserEnd: 170 }) || '', /45/)
   assert.match(tierProblem({ horsStart: 10, horsEnd: 26, appetiserStart: 100, appetiserEnd: 90 }) || '', /end after it starts/)
   assert.match(tierProblem({ horsStart: 10, horsEnd: 26, appetiserStart: 0, appetiserEnd: 400 }) || '', /about 3 minutes/)
 })

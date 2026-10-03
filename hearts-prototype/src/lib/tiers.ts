@@ -7,7 +7,63 @@ import { formatTimestamp, parseTranscript, type Cue } from './transcript'
 
 export const HORS_MIN = 15
 export const HORS_MAX = 20
+/** Hard cap unless the master desk sets another. 15–20 is the usual length and only a warning past that. */
+export const HORS_CAP = 45
 export const APPETISER_MAX = 180
+
+export function horsCapOf(value: unknown) {
+  const number = Number(value)
+  if (!Number.isFinite(number)) return HORS_CAP
+  return Math.min(180, Math.max(HORS_MAX, Math.round(number)))
+}
+
+export type AppetiserSpan = { role: 'hook' | 'turn' | 'land'; start: number; end: number }
+
+const SPAN_ORDER = ['hook', 'turn', 'land'] as const
+
+export function normaliseSpans(spans: AppetiserSpan[]) {
+  return [...spans].sort((a, b) => SPAN_ORDER.indexOf(a.role) - SPAN_ORDER.indexOf(b.role))
+}
+
+/** Usual length is a warning. Shorter than 15 seconds, or longer than the desk cap, is refused. */
+export function horsVerdict(length: number, cap = HORS_CAP): { error: string | null; warning: string | null } {
+  const limit = horsCapOf(cap)
+  const shown = Number.isFinite(length) ? Math.round(length) : 0
+  if (!Number.isFinite(length) || length < HORS_MIN) {
+    return { error: `The hors d'oeuvre runs ${shown} seconds. Keep it at least ${HORS_MIN} seconds, and usually between ${HORS_MIN} and ${HORS_MAX}.`, warning: null }
+  }
+  if (length > limit) return { error: `The hors d'oeuvre runs ${shown} seconds. Keep it to ${limit} seconds.`, warning: null }
+  if (length > HORS_MAX) return { error: null, warning: `The hors d'oeuvre runs ${shown} seconds. The usual length is between ${HORS_MIN} and ${HORS_MAX}. Up to ${limit} seconds is allowed.` }
+  return { error: null, warning: null }
+}
+
+export function spanProblem(spans: AppetiserSpan[]): string | null {
+  if (!spans.length) return null
+  if (spans.length > 3) return "An appetiser has at most three cuts: hook, turn and land."
+  const roles = spans.map((span) => span.role)
+  if (new Set(roles).size !== roles.length || roles.some((role) => !SPAN_ORDER.includes(role))) return 'Each appetiser cut is used once: hook, turn or land.'
+  let total = 0
+  for (const span of spans) {
+    if (!Number.isFinite(span.start) || !Number.isFinite(span.end) || span.start < 0 || span.end <= span.start) return 'Each appetiser cut has to end after it starts.'
+    total += span.end - span.start
+  }
+  if (total > APPETISER_MAX + 15) return `The appetiser cuts run ${formatTimestamp(total)} together. Keep them to about 3 minutes.`
+  return null
+}
+
+/**
+ * Where the appetiser player is inside a multi-cut clip.
+ * `seek` is the soft join: the cut has finished and the next one should start, without treating the appetiser as over.
+ */
+export function appetiserJoin(spans: { start: number; end: number }[], time: number): { action: 'play' | 'seek' | 'stop'; at?: number } {
+  if (!spans.length) return { action: 'play' }
+  for (const span of spans) {
+    if (time >= span.end - 0.25) continue
+    if (time < span.start - 0.15) return { action: 'seek', at: span.start }
+    return { action: 'play' }
+  }
+  return { action: 'stop' }
+}
 export const DRAFT_NOTE = 'Draft, needs a human check. Times and lines come from the captions by machine.'
 
 type Word = { at: number; text: string }
@@ -577,15 +633,23 @@ export function alignToCaptions(marked: string, captions: string) {
   return { text, matched: found.filter((value) => value !== null).length, total: marks.length }
 }
 
-/** The shape rules for a tier record, in plain English, or null when it holds. */
-export function tierProblem(tier: Record<string, unknown>) {
+/** The shape rules for a tier record, in plain English, or null when it holds. A hors d'oeuvre between 15 and the desk cap is allowed; only past the cap is refused. */
+export function tierProblem(tier: Record<string, unknown>, cap = HORS_CAP) {
   const num = (key: string) => Number(tier[key])
   const [hs, he, as, ae] = [num('horsStart'), num('horsEnd'), num('appetiserStart'), num('appetiserEnd')]
   if ([hs, he, as, ae].some((value) => !Number.isFinite(value) || value < 0)) return 'Every in and out point needs a time of 0 seconds or more.'
-  if (he - hs < HORS_MIN || he - hs > HORS_MAX) return `The hors d'oeuvre runs ${Math.round(he - hs)} seconds. Keep it between ${HORS_MIN} and ${HORS_MAX}.`
+  const hors = horsVerdict(he - hs, cap)
+  if (hors.error) return hors.error
+  const spans = Array.isArray(tier.appetiserSpans) ? (tier.appetiserSpans as AppetiserSpan[]) : []
+  if (spans.length) return spanProblem(spans)
   if (ae <= as) return 'The appetiser has to end after it starts.'
   if (ae - as > APPETISER_MAX + 15) return `The appetiser runs ${formatTimestamp(ae - as)}. Keep it to about 3 minutes.`
   return null
+}
+
+/** The usual-length note for a hors d'oeuvre that is allowed but longer than 20 seconds. */
+export function tierHorsWarning(tier: { horsStart: number; horsEnd: number }, cap = HORS_CAP) {
+  return horsVerdict(tier.horsEnd - tier.horsStart, cap).warning
 }
 
 /** Which timed caption is showing at `time`: the last line already said (the first until then). */
@@ -598,8 +662,10 @@ export function captionIndex(lines: { at: number }[] | undefined, time: number) 
   return at
 }
 
-/** Where the appetiser player stops: its out point, never more than about 3 minutes after its in point. */
-export function appetiserStop(appetiser: { start: number; end: number }) {
+/** Where the appetiser player stops: the last cut when the appetiser is several spans, otherwise its out point. */
+export function appetiserStop(appetiser: { start: number; end: number; spans?: { start: number; end: number }[] }) {
+  const spans = appetiser.spans
+  if (spans?.length) return spans[spans.length - 1].end
   const longest = appetiser.start + APPETISER_MAX + 15
   return appetiser.end > appetiser.start ? Math.min(appetiser.end, longest) : appetiser.start + APPETISER_MAX
 }

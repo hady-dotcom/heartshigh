@@ -2,13 +2,14 @@
 // Pure module. The desk and the tests share it, and nothing here touches the database.
 import ExcelJS from 'exceljs'
 import { youtubeIdFromUrl } from './extractor'
-import { DRAFT_NOTE, saidInTalk, tierProblem, timingProblems } from './tiers'
-import { authorTextProblems, killListHits, markupProblems } from './opening-data'
+import { DRAFT_NOTE, horsCapOf, horsVerdict, normaliseSpans, saidInTalk, tierProblem, timingProblems, type AppetiserSpan } from './tiers'
+import { authorTextProblems, markupProblems } from './opening-data'
 import { hasMarkup, httpsHref } from './text-safety'
 
 export const TALK_COLUMNS = [
   'talk_key', 'youtube_id', 'title', 'speaker', 'channel', 'course', 'part', 'order', 'lane', 'jibril_clause', 'ghunya_seat',
-  'hors_in', 'hors_out', 'app_in', 'app_out', 'hook_text', 'turn_text', 'land_text', 'status', 'notes',
+  'hors_in', 'hors_out', 'app_in', 'app_out', 'hook_in', 'hook_out', 'turn_in', 'turn_out', 'land_in', 'land_out',
+  'hook_text', 'turn_text', 'land_text', 'status', 'notes',
   'provider', 'vimeo_id', 'media_id', 'duration', 'transcript',
 ] as const
 
@@ -19,16 +20,16 @@ export const QUESTION_COLUMNS = [
   'due_days', 'evidence', 'show_imam', 'place',
 ] as const
 
-export const RESOURCE_COLUMNS = ['talk_key', 'label', 'url', 'kind', 'status', 'body'] as const
+export const RESOURCE_COLUMNS = ['talk_key', 'label', 'url', 'kind', 'status', 'body', 'media_id'] as const
 
 export const TALK_NOTE =
-  'HEARTS talks. One row is one talk. talk_key is how a later import finds the same talk, so keep it stable. Leave a cell blank to leave that field as it is. Times can be seconds (90), minutes and seconds (1:30) or hours (1:02:03). status is draft, checked or live. rejected keeps a talk hidden from learners. delete removes the talk. youtube_id is the 11-character YouTube id. provider is youtube, vimeo or file. A Vimeo talk puts the number in vimeo_id. An uploaded film puts the media id in media_id. duration is the length in seconds. transcript is optional and only used when the captions fit in the cell.'
+  "HEARTS talks. One row is one talk. talk_key is how a later import finds the same talk, so keep it stable. Leave a cell blank to leave that field as it is. Times can be seconds (90), minutes and seconds (1:30) or hours (1:02:03). status is draft, checked or live. rejected keeps a talk hidden from learners. delete removes the talk. youtube_id is the 11-character YouTube id. provider is youtube, vimeo or file. A Vimeo talk puts the number in vimeo_id. An uploaded film puts the media id in media_id. duration is the length in seconds. transcript is the speaker's words and is only for captions that fit in the cell (under 30,000 characters); a longer transcript is a Resources row with kind transcript and a media_id. hook_text, turn_text, land_text and transcript are the speaker's words: the kill list is not applied to them. notes is our own writing and may contain plain text such as conf=high. A hors d'oeuvre is usually 15 to 20 seconds. Up to the cap on the master desk (45 seconds unless that cap is changed) is allowed and only warned about. Shorter than 15, or longer than the cap, is refused. app_in and app_out are one continuous appetiser. hook_in and hook_out, turn_in and turn_out, land_in and land_out are up to three separate cuts. The player plays them in that order, and their lengths together stay within about 3 minutes (195 seconds)."
 
 export const QUESTION_NOTE =
-  'HEARTS questions. Name the talk with talk_key or youtube_id. Leave question_id blank to add a question, or fill it in to change that question. type is free text, multiple choice, reflection or task. status is draft or approved (approved is what learners meet). source is ai or human. A blank cell leaves that field as it is. delete removes the question. Times use the same forms as the Talks tab and must fall inside the talk. type task is an activation task: due_days is how many days the learner has (1 to 366), evidence is none, note or photo, and show_imam is yes when the imam should see it. place is popup or workbook. A workbook row is a reflection kept in the workbook rather than a pop-up in the film.'
+  'HEARTS questions. Name the talk with talk_key or youtube_id. The export writes question_id, and an import with that id updates the same question. A row with no question_id is matched to a question on the same talk with the same time and the same text, so importing the same file again does not add a copy. Leave question_id blank only when the question is new. type is free text, multiple choice, reflection or task. status is draft or approved (approved is what learners meet). source is ai or human. A blank cell leaves that field as it is. delete removes the question. Times use the same forms as the Talks tab and must fall inside the talk. type task is an activation task: due_days is how many days the learner has (1 to 366), evidence is none, note or photo, and show_imam is yes when the imam should see it. place is popup or workbook. A workbook row is a reflection kept in the workbook rather than a pop-up in the film. Questions, choices and notes are our own writing. Notes may contain plain text such as conf=high.'
 
 export const RESOURCE_NOTE =
-  'HEARTS resources, one row per item. talk_key names the talk. The same talk_key and label updates that row next time. url must start with https:// when kind is link or file. kind can also be summary, quote, reading or guide: those rows put the words in body, and the url can be left blank. A reading row is a suggestion to verify, not a link that has been checked. Leave status blank to keep the row, or put delete to remove it.'
+  "HEARTS resources, one row per item. talk_key names the talk. The same talk_key and label updates that row next time. kind is link, file, summary, quote, reading, guide or transcript. url must start with https:// for a link, and for a file that is not an upload. A file row may instead put an uploaded file's number in media_id. kind transcript points at an uploaded text file (media_id) so a transcript longer than 30,000 characters can come in as a file rather than a cell; that file is copied onto the talk. summary, reading and guide are our own writing. quote and transcript are the speaker's words, so the kill list is not applied to them. A reading row is a suggestion to verify, not a link that has been checked. Leave status blank to keep the row, or put delete to remove it."
 
 const TABS = ['Talks', 'Questions', 'Resources'] as const
 export type SheetTab = (typeof TABS)[number]
@@ -40,6 +41,7 @@ const HEADER_ALIASES: Record<string, string> = {
   title: 'title', speaker: 'speaker', channel: 'channel', course: 'course', part: 'part', order: 'order', lane: 'lane',
   jibril_clause: 'jibril_clause', clause: 'jibril_clause', ghunya_seat: 'ghunya_seat', seat: 'ghunya_seat',
   hors_in: 'hors_in', hors_out: 'hors_out', app_in: 'app_in', app_out: 'app_out',
+  hook_in: 'hook_in', hook_out: 'hook_out', turn_in: 'turn_in', turn_out: 'turn_out', land_in: 'land_in', land_out: 'land_out',
   hook: 'hook_text', hook_text: 'hook_text', turn: 'turn_text', turn_text: 'turn_text', land: 'land_text', land_text: 'land_text',
   label: 'label', name: 'label', url: 'url', kind: 'kind', body: 'body', summary: 'body',
   provider: 'provider', vimeo_id: 'vimeo_id', vimeo: 'vimeo_id', media_id: 'media_id', media: 'media_id', duration: 'duration', length: 'duration', transcript: 'transcript',
@@ -86,7 +88,7 @@ export type SheetOp =
   | { op: 'cut.update'; id: number; patch: Record<string, unknown> }
   | { op: 'child.delete'; collection: 'engagement-points' | 'resources' | 'talk-tiers' | 'cuts' | 'ladder-items' | 'sheet-keys'; id: number }
 
-export type SheetPlan = { errors: SheetIssue[]; changes: SheetChange[]; unchanged: number; skipped: number; ops: SheetOp[] }
+export type SheetPlan = { errors: SheetIssue[]; warnings: SheetIssue[]; changes: SheetChange[]; unchanged: number; skipped: number; ops: SheetOp[] }
 
 export type CourseRow = { id: number; title: string; origin: string; portal: number | null; speaker: string; inScope: boolean }
 export type UnitRow = { id: number; course: number; title: string; order: number }
@@ -95,13 +97,13 @@ export type LessonRow = {
   youtubeId: string; durationSeconds: number | null; starterLane: string; transcript: string; transcriptNote: string
   provider: string; vimeoId: string; mediaId: number | null; inScope: boolean
 }
-export type TierRow = { id: number; lesson: number; horsStart: number; horsEnd: number; appetiserStart: number; appetiserEnd: number; hook: string; turn: string; land: string; note: string; status: string }
+export type TierRow = { id: number; lesson: number; horsStart: number; horsEnd: number; appetiserStart: number; appetiserEnd: number; appetiserSpans?: AppetiserSpan[] | null; hook: string; turn: string; land: string; note: string; status: string }
 export type PointRow = { id: number; lesson: number; second: number; kind: string; prompt: string; options: string[]; correctOption: string; status: string; draftNote: string; dueDays: number | null; evidence: string; showImam: boolean; family: string }
-export type ResourceRow = { id: number; lesson: number; name: string; url: string; kind: string; body: string }
+export type ResourceRow = { id: number; lesson: number; name: string; url: string; kind: string; body: string; mediaId?: number | null }
 export type KeyRow = { id: number; talkKey: string; lesson: number; channel: string; sheetStatus: string }
 export type CutRow = { id: number; lesson: number; bestClause: number | null; seatId: number | null; seatClause: number | null; seatPosition: number | null; placeholder: boolean; status: string; start: number; course: number | null }
 export type SeatRow = { id: number; clause: number; position: number }
-export type SheetCatalogue = { scopeKind: 'library' | 'portal' | 'course'; portalId: number | null; courseId: number | null; courses: CourseRow[]; units: UnitRow[]; lessons: LessonRow[]; tiers: TierRow[]; points: PointRow[]; resources: ResourceRow[]; keys: KeyRow[]; cuts: CutRow[]; seats: SeatRow[] }
+export type SheetCatalogue = { scopeKind: 'library' | 'portal' | 'course'; portalId: number | null; courseId: number | null; courses: CourseRow[]; units: UnitRow[]; lessons: LessonRow[]; tiers: TierRow[]; points: PointRow[]; resources: ResourceRow[]; keys: KeyRow[]; cuts: CutRow[]; seats: SeatRow[]; horsMaxSeconds?: number }
 
 type Cell = { text: string; raw: unknown; numFmt?: string }
 type InputRow = { row: number; cells: Record<string, Cell> }
@@ -181,13 +183,22 @@ function plainProblems(pairs: [string, string][]) {
   return markupProblems(pairs)
 }
 
+/** Speaker lines: markup is refused, and a transcript must contain the words. The kill list is for our own writing, not for quotes. */
 function tierLineProblems(label: string, text: string, transcript: string) {
   const problems = plainProblems([[label, text]])
   if (!text.trim() || problems.length) return problems
-  if (transcript.trim()) {
-    if (!saidInTalk(text, transcript)) problems.push(`${label} has to be the speaker's words, word for word from the transcript.`)
-  } else if (killListHits(text).length) problems.push(`${label} uses words learners never see from us: ${killListHits(text).join(', ')}.`)
+  if (transcript.trim() && !saidInTalk(text, transcript)) problems.push(`${label} has to be the speaker's words, word for word from the transcript.`)
   return problems
+}
+
+function resourceBodyProblems(kind: string, body: string) {
+  if (kind === 'summary' || kind === 'reading' || kind === 'guide') return authorTextProblems([['Body', body]])
+  return plainProblems([['Body', body]])
+}
+
+function spanCell(tier: TierRow | undefined, role: AppetiserSpan['role'], edge: 'start' | 'end') {
+  const span = tier?.appetiserSpans?.find((item) => item.role === role)
+  return span ? numOrNull(span[edge]) : null
 }
 
 function questionTextProblems(prompt: string, choices: string[], correct: string) {
@@ -366,6 +377,12 @@ export function talkSheetValues(lesson: LessonRow, catalogue: SheetCatalogue): R
     hors_out: tier ? numOrNull(tier.horsEnd) : null,
     app_in: tier ? numOrNull(tier.appetiserStart) : null,
     app_out: tier ? numOrNull(tier.appetiserEnd) : null,
+    hook_in: spanCell(tier, 'hook', 'start'),
+    hook_out: spanCell(tier, 'hook', 'end'),
+    turn_in: spanCell(tier, 'turn', 'start'),
+    turn_out: spanCell(tier, 'turn', 'end'),
+    land_in: spanCell(tier, 'land', 'start'),
+    land_out: spanCell(tier, 'land', 'end'),
     hook_text: tier?.hook || null,
     turn_text: tier?.turn || null,
     land_text: tier?.land || null,
@@ -420,7 +437,7 @@ export function questionSheetValues(point: PointRow, catalogue: SheetCatalogue):
 export function resourceSheetValues(resource: ResourceRow, catalogue: SheetCatalogue): Record<string, string | number | null> {
   const lesson = catalogue.lessons.find((row) => row.id === resource.lesson)
   const key = lesson ? catalogue.keys.find((row) => row.lesson === lesson.id) : null
-  return { talk_key: lesson ? key?.talkKey || derivedTalkKey(lesson) : null, label: resource.name, url: resource.url || null, kind: resource.kind || 'link', status: null, body: resource.body || null }
+  return { talk_key: lesson ? key?.talkKey || derivedTalkKey(lesson) : null, label: resource.name, url: resource.url || null, kind: resource.kind || 'link', status: null, body: resource.body || null, media_id: resource.mediaId || null }
 }
 
 export function rowsFromCatalogue(catalogue: SheetCatalogue) {
@@ -455,8 +472,11 @@ type Working = {
   errors: SheetIssue[]
   changes: SheetChange[]
   ops: SheetOp[]
+  warnings: SheetIssue[]
   unchanged: number
   skipped: number
+  pendingQuestions: Map<string, string>
+  handledQuestions: Set<number>
   courses: Map<string, { temp: string; title: string; speaker?: string }>
   units: Map<string, { temp: string; title: string }>
   lessons: Map<string, { temp: string; title: string; youtubeId: string; duration: number | null; transcript: string; course: Ref; unit: Ref }>
@@ -469,7 +489,7 @@ type Working = {
 
 function indexCatalogue(catalogue: SheetCatalogue): Working {
   const working: Working = {
-    catalogue, errors: [], changes: [], ops: [], unchanged: 0, skipped: 0,
+    catalogue, errors: [], warnings: [], changes: [], ops: [], unchanged: 0, skipped: 0, pendingQuestions: new Map(), handledQuestions: new Set(),
     courses: new Map(), units: new Map(), lessons: new Map(),
     byKey: new Map(), byYoutube: new Map(), outsideKey: new Map(), outsideYoutube: new Map(), questionIds: new Map(),
   }
@@ -617,7 +637,7 @@ function planTalks(working: Working, rows: InputRow[]) {
     let transcriptText = ''
     if (present(row, 'transcript')) {
       transcriptText = textOf(row, 'transcript')
-      if (transcriptText.length > 30_000) fail('transcript', 'The transcript cell is too long for a sheet. Keep it under 30,000 characters, or leave it off and mark the talk as needing a transcript.')
+      if (transcriptText.length > 30_000) fail('transcript', 'The transcript cell is too long for a sheet. Keep it under 30,000 characters, or add a Resources row with kind transcript and the media_id of the uploaded file.')
     }
     for (const [column, label] of [['title', 'Title'], ['speaker', 'Speaker'], ['channel', 'Channel'], ['course', 'Course'], ['part', 'Part'], ['lane', 'Lane'], ['notes', 'Notes']] as const) {
       if (present(row, column)) problems.push(...plainProblems([[label, textOf(row, column)]]).map((message) => ({ tab: 'Talks' as const, row: row.row, column, message })))
@@ -635,7 +655,8 @@ function planTalks(working: Working, rows: InputRow[]) {
       if (clause == null) fail('jibril_clause', 'A Jibril clause is a number from 1 to 41.')
     }
     const times: Record<string, number> = {}
-    for (const column of ['hors_in', 'hors_out', 'app_in', 'app_out'] as const) {
+    const rowWarnings: SheetIssue[] = []
+    for (const column of ['hors_in', 'hors_out', 'app_in', 'app_out', 'hook_in', 'hook_out', 'turn_in', 'turn_out', 'land_in', 'land_out'] as const) {
       const parsed = timeCell(row, column)
       if (!parsed) continue
       if (!parsed.ok) fail(column, parsed.message)
@@ -704,7 +725,7 @@ function planTalks(working: Working, rows: InputRow[]) {
         op: 'lesson.create', temp, course: course.ref, unit, title, speaker: textOf(row, 'speaker') || undefined, youtubeId: youtubeId || undefined, order: order ?? undefined, lane: textOf(row, 'lane') || undefined, portal, master,
         provider: provider || undefined, vimeoId: vimeoId || undefined, mediaId: mediaId || undefined, durationSeconds, transcript: transcriptText || undefined, transcriptSource: source,
       })
-      const tier = tierPatch(null, times, row, transcriptText, null, problems)
+      const tier = tierPatch(null, times, row, transcriptText, null, problems, rowWarnings, horsCapOf(working.catalogue.horsMaxSeconds))
       if (tier) working.ops.push({ op: 'tier.create', lesson: { temp }, data: tier })
       else if (status === 'checked' || status === 'live') fail('status', 'A checked or live talk needs the hors d\'oeuvre and appetiser times.')
       else if (present(row, 'notes') && textOf(row, 'notes')) {
@@ -723,6 +744,7 @@ function planTalks(working: Working, rows: InputRow[]) {
         continue
       }
       working.lessons.set(talkKey, { temp, title, youtubeId, duration: durationSeconds, transcript: transcriptText, course: course.ref, unit })
+      working.warnings.push(...rowWarnings)
       working.changes.push({ tab: 'Talks', row: row.row, action: 'create', label: title, detail: course.created ? `New talk in a new course, “${courseTitle.trim()}”.` : `New talk in “${courseTitle.trim()}”.` })
       continue
     }
@@ -760,7 +782,7 @@ function planTalks(working: Working, rows: InputRow[]) {
       if ('id' in unit) lessonPatch.unit = unit.id
     }
     const tier = working.catalogue.tiers.find((item) => item.lesson === lesson.id) || null
-    const tierData = tierPatch(tier, times, row, present(row, 'transcript') ? transcriptText : lesson.transcript, String(current.status || ''), problems)
+    const tierData = tierPatch(tier, times, row, present(row, 'transcript') ? transcriptText : lesson.transcript, String(current.status || ''), problems, rowWarnings, horsCapOf(working.catalogue.horsMaxSeconds))
     if (!tier && present(row, 'notes') && textOf(row, 'notes') !== (lesson.transcriptNote || '')) lessonPatch.transcriptNote = textOf(row, 'notes')
     const duration = lesson.durationSeconds
     const timesChanged = Boolean(tierData && ['horsStart', 'horsEnd', 'appetiserStart', 'appetiserEnd'].some((key) => key in tierData))
@@ -799,6 +821,7 @@ function planTalks(working: Working, rows: InputRow[]) {
       detail.push('the sheet key')
     }
     if (cutWritten) detail.push('the clause')
+    working.warnings.push(...rowWarnings)
     if (!detail.length) working.unchanged += 1
     else working.changes.push({ tab: 'Talks', row: row.row, action: 'update', label: lesson.title, detail: `Updates ${detail.join(', ')}.` })
   }
@@ -814,7 +837,28 @@ function rollback(working: Working, mark: { ops: number; courses: Map<string, { 
   working.units = mark.units
 }
 
-function tierPatch(tier: TierRow | null, times: Record<string, number>, row: InputRow, transcript: string, currentStatus: string | null, problems: SheetIssue[]) {
+function readSpans(tier: TierRow | null, times: Record<string, number>, row: InputRow, fail: (column: string, message: string) => void): AppetiserSpan[] | null {
+  const roles = ['hook', 'turn', 'land'] as const
+  const touched = roles.some((role) => `${role}_in` in times || `${role}_out` in times)
+  if (!touched) return null
+  const spans = (tier?.appetiserSpans || []).filter((span) => !roles.some((role) => role === span.role && (`${role}_in` in times || `${role}_out` in times)))
+  let broken = false
+  for (const role of roles) {
+    const inn = `${role}_in`
+    const out = `${role}_out`
+    if (!(inn in times) && !(out in times)) continue
+    if (!(inn in times) || !(out in times)) {
+      fail(inn in times ? out : inn, `The ${role} cut needs both an in point and an out point.`)
+      broken = true
+      continue
+    }
+    spans.push({ role, start: times[inn], end: times[out] })
+  }
+  if (broken) return null
+  return normaliseSpans(spans)
+}
+
+function tierPatch(tier: TierRow | null, times: Record<string, number>, row: InputRow, transcript: string, currentStatus: string | null, problems: SheetIssue[], warnings: SheetIssue[], cap: number) {
   const fail = (column: string, message: string) => problems.push({ tab: 'Talks', row: row.row, column, message })
   const data: Record<string, unknown> = {}
   const take = (column: string, key: string, current: number | string | null | undefined) => {
@@ -826,6 +870,21 @@ function tierPatch(tier: TierRow | null, times: Record<string, number>, row: Inp
   take('hors_out', 'horsEnd', tier?.horsEnd)
   take('app_in', 'appetiserStart', tier?.appetiserStart)
   take('app_out', 'appetiserEnd', tier?.appetiserEnd)
+  const spans = readSpans(tier, times, row, fail)
+  if (spans) {
+    const previous = normaliseSpans(tier?.appetiserSpans || [])
+    if (JSON.stringify(spans) !== JSON.stringify(previous)) {
+      data.appetiserSpans = spans
+      const hook = spans.find((span) => span.role === 'hook')
+      const turn = spans.find((span) => span.role === 'turn')
+      const land = spans.find((span) => span.role === 'land')
+      if (hook) data.hookAt = hook.start
+      if (turn) data.turnAt = turn.start
+      if (land) data.landAt = land.start
+      if (!('app_in' in times)) data.appetiserStart = spans[0].start
+      if (!('app_out' in times)) data.appetiserEnd = spans[spans.length - 1].end
+    }
+  }
   const status = textOf(row, 'status').toLowerCase()
   const promoting = (status === 'checked' || status === 'live') && status !== (currentStatus || '')
   for (const [column, key, label] of [['hook_text', 'hook', 'The hook'], ['turn_text', 'turn', 'The turn'], ['land_text', 'land', 'The land'], ['notes', 'note', 'Notes']] as const) {
@@ -839,12 +898,12 @@ function tierPatch(tier: TierRow | null, times: Record<string, number>, row: Inp
   if (status && status !== 'delete' && status !== (currentStatus || '')) {
     data.status = status === 'live' || status === 'checked' ? 'checked' : status === 'rejected' ? 'rejected' : 'draft'
   }
-  if (!tier && !Object.keys(data).length) return null
+  if (!tier && !Object.keys(data).length && !spans) return null
   if (!tier) {
-    const ready = ['horsStart', 'horsEnd', 'appetiserStart', 'appetiserEnd'].every((key) => key in data)
+    const ready = ['horsStart', 'horsEnd'].every((key) => key in data) && (Boolean(spans?.length) || ['appetiserStart', 'appetiserEnd'].every((key) => key in data))
     if (!ready) {
       const extra = Object.keys(data).filter((key) => key !== 'note' && key !== 'status')
-      if (extra.length) fail('hors_in', 'A new talk\'s tiers need hors_in, hors_out, app_in and app_out together.')
+      if (extra.length || spans) fail('hors_in', spans ? "A new talk's tiers need hors_in and hors_out, plus either app_in and app_out or the hook, turn and land cuts." : "A new talk's tiers need hors_in, hors_out, app_in and app_out together.")
       return null
     }
     data.status = data.status || 'draft'
@@ -854,11 +913,16 @@ function tierPatch(tier: TierRow | null, times: Record<string, number>, row: Inp
     horsEnd: Number(data.horsEnd ?? tier?.horsEnd ?? 0),
     appetiserStart: Number(data.appetiserStart ?? tier?.appetiserStart ?? 0),
     appetiserEnd: Number(data.appetiserEnd ?? tier?.appetiserEnd ?? 0),
+    appetiserSpans: (data.appetiserSpans as AppetiserSpan[] | undefined) || tier?.appetiserSpans || undefined,
   }
-  const timesChanged = ['horsStart', 'horsEnd', 'appetiserStart', 'appetiserEnd'].some((key) => key in data)
+  const timesChanged = ['horsStart', 'horsEnd', 'appetiserStart', 'appetiserEnd', 'appetiserSpans'].some((key) => key in data)
   if (timesChanged || !tier) {
-    const problem = tierProblem(merged)
-    if (problem) fail(problem.includes('appetiser') ? 'app_out' : 'hors_out', problem)
+    const problem = tierProblem(merged, cap)
+    if (problem) fail(/hors d'oeuvre/i.test(problem) ? 'hors_out' : 'hook_out' in times ? 'hook_out' : 'app_out', problem)
+    else if ('hors_in' in times || 'hors_out' in times || !tier) {
+      const warning = horsVerdict(merged.horsEnd - merged.horsStart, cap).warning
+      if (warning) warnings.push({ tab: 'Talks', row: row.row, column: 'hors_out', message: warning })
+    }
   }
   return Object.keys(data).length ? data : null
 }
@@ -960,7 +1024,7 @@ function planQuestions(working: Working, rows: InputRow[]) {
     }
     if (!talkKey && !youtubeId && !idText) fail('talk_key', 'Name the talk with talk_key or youtube_id.')
     const questionId = idText ? Number(idText) : null
-    const point = questionId ? working.catalogue.points.find((item) => item.id === questionId) || null : null
+    let point = questionId ? working.catalogue.points.find((item) => item.id === questionId) || null : null
     const giveUp = (column: string, message: string) => {
       fail(column, message)
       working.errors.push(...problems)
@@ -1025,6 +1089,11 @@ function planQuestions(working: Working, rows: InputRow[]) {
       else correct = raw
     }
     const prompt = present(row, 'text') ? textOf(row, 'text') : point?.prompt || ''
+    if (!point && status !== 'delete' && lesson && seconds != null && prompt.trim()) {
+      point = working.catalogue.points
+        .filter((item) => item.lesson === lesson.id && round2(item.second) === round2(seconds) && item.prompt.trim() === prompt.trim())
+        .sort((a, b) => a.id - b.id)[0] || null
+    }
     const creating = !point
     if (creating && !prompt) fail('text', 'A new question needs its text.')
     if (creating && seconds == null) fail('time', 'A new question needs a time.')
@@ -1095,7 +1164,31 @@ function planQuestions(working: Working, rows: InputRow[]) {
     if (source === 'human' && currentSource !== 'human' && !HUMAN_NOTE.test(note) && (!present(row, 'notes') || !textOf(row, 'notes'))) note = 'Written by a person on the master sheet.'
     if (nextSource === 'ai' && creating && !present(row, 'notes')) note = DRAFT_NOTE
     if (note !== (point?.draftNote || '') && (present(row, 'notes') || source !== currentSource || creating)) data.draftNote = note
+    const lessonToken = lesson ? `id:${lesson.id}` : `pending:${found.pending || talkKey}`
+    const matchKey = seconds == null ? '' : `${lessonToken}|${round2(seconds)}|${prompt.trim()}`
+    const signature = JSON.stringify({ second: seconds, kind: kind || point?.kind || '', prompt: prompt.trim(), choices, correct, dueDays, evidence, showImam, place, status: nextStatus, note, source: nextSource })
+    if (creating && matchKey && working.pendingQuestions.has(matchKey)) {
+      if (working.pendingQuestions.get(matchKey) === signature) {
+        working.unchanged += 1
+        continue
+      }
+      fail('text', 'Another row in this sheet already adds this question, with the same talk, time and text, but different details. Keep one row.')
+      working.errors.push(...problems)
+      working.skipped += 1
+      continue
+    }
+    if (point && working.handledQuestions.has(point.id)) {
+      if (!Object.keys(data).length) {
+        working.unchanged += 1
+        continue
+      }
+      fail('text', 'This question is already on an earlier row of this sheet. A second row would change it again.')
+      working.errors.push(...problems)
+      working.skipped += 1
+      continue
+    }
     if (creating) {
+      if (matchKey) working.pendingQuestions.set(matchKey, signature)
       const lessonRef: Ref = found.pending ? { temp: working.lessons.get(found.pending)!.temp } : { id: lesson!.id }
       const family = kind === 'task' ? 'task' : place === 'workbook' ? 'workbook' : 'popup'
       working.ops.push({
@@ -1112,6 +1205,7 @@ function planQuestions(working: Working, rows: InputRow[]) {
       working.changes.push({ tab: 'Questions', row: row.row, action: 'create', label: prompt.slice(0, 80), detail: nextStatus === 'published' ? 'New question, approved for learners.' : 'New question, kept as a draft until it is approved.' })
       continue
     }
+    if (point) working.handledQuestions.add(point.id)
     if (!Object.keys(data).length) {
       working.unchanged += 1
       continue
@@ -1131,21 +1225,27 @@ function planResources(working: Working, rows: InputRow[]) {
     const status = textOf(row, 'status').toLowerCase()
     if (present(row, 'status') && status !== 'delete') fail('status', 'Leave status blank to keep the resource, or put delete to remove it.')
     if (present(row, 'label')) for (const message of plainProblems([['Label', textOf(row, 'label')]])) fail('label', message)
-    const CONTENT_KINDS = new Set(['summary', 'quote', 'reading', 'guide'])
+    const WORD_KINDS = new Set(['summary', 'quote', 'reading', 'guide'])
     let url = ''
     if (present(row, 'url')) {
       url = textOf(row, 'url')
       if (url && !httpsHref(url)) fail('url', 'Resource links have to be full https:// addresses.')
     }
+    let mediaId: number | null = null
+    if (present(row, 'media_id')) {
+      const raw = textOf(row, 'media_id')
+      if (!/^\d+$/.test(raw) || Number(raw) < 1) fail('media_id', 'media_id is the number of an uploaded file.')
+      else mediaId = Number(raw)
+    }
     let kind = ''
     if (present(row, 'kind')) {
       const raw = textOf(row, 'kind').toLowerCase()
-      kind = raw === 'file' || raw === 'document' || raw === 'pdf' ? 'file' : raw === 'link' || raw === 'url' ? 'link' : CONTENT_KINDS.has(raw) ? raw : ''
-      if (!kind) fail('kind', 'Kind is link, file, summary, quote, reading or guide.')
+      kind = raw === 'file' || raw === 'document' || raw === 'pdf' ? 'file' : raw === 'link' || raw === 'url' ? 'link' : raw === 'transcript' || raw === 'captions' ? 'transcript' : WORD_KINDS.has(raw) ? raw : ''
+      if (!kind) fail('kind', 'Kind is link, file, summary, quote, reading, guide or transcript.')
     }
     const body = present(row, 'body') ? textOf(row, 'body') : ''
-    if (present(row, 'body')) for (const message of plainProblems([['Body', body]])) fail('body', message)
-    const content = CONTENT_KINDS.has(kind)
+    if (present(row, 'body') && kind) for (const message of resourceBodyProblems(kind, body)) fail('body', message)
+    const content = WORD_KINDS.has(kind)
     if (problems.length) {
       working.errors.push(...problems)
       working.skipped += 1
@@ -1176,23 +1276,33 @@ function planResources(working: Working, rows: InputRow[]) {
       continue
     }
     const needsWords = content
+    const resourceData = { name: label, url: url || undefined, kind: kind || 'link', ...(body ? { body } : {}), ...(mediaId ? { file: mediaId } : {}) }
+    const missing = !label
+      ? { column: 'label', message: 'Name the resource with its label.' }
+      : kind === 'transcript' && !mediaId
+        ? { column: 'media_id', message: 'A transcript resource needs the media_id of an uploaded text file, so a long transcript does not have to fit in a cell.' }
+        : needsWords && !body
+          ? { column: 'body', message: 'A summary, quote, reading or guide needs its words in the body column.' }
+          : !needsWords && kind !== 'transcript' && !url && !mediaId
+            ? { column: 'url', message: 'A new resource needs an https link, or a media_id when the file is already uploaded.' }
+            : null
     if (!lesson && found.pending) {
-      if (!label || (needsWords ? !body : !url)) {
-        skip(working, 'Resources', row.row, !label ? 'label' : needsWords ? 'body' : 'url', needsWords ? 'A summary, quote, reading or guide needs its words in the body column.' : 'A new resource needs a label and an https link.')
+      if (missing) {
+        skip(working, 'Resources', row.row, missing.column, missing.message)
         working.skipped += 1
         continue
       }
-      working.ops.push({ op: 'resource.create', lesson: { temp: working.lessons.get(found.pending)!.temp }, data: { name: label, url: url || undefined, kind: kind || 'link', ...(body ? { body } : {}) } })
+      working.ops.push({ op: 'resource.create', lesson: { temp: working.lessons.get(found.pending)!.temp }, data: resourceData })
       working.changes.push({ tab: 'Resources', row: row.row, action: 'create', label, detail: 'New resource on the new talk.' })
       continue
     }
     if (!own.length) {
-      if (!label || (needsWords ? !body : !url)) {
-        skip(working, 'Resources', row.row, !label ? 'label' : needsWords ? 'body' : 'url', needsWords ? 'A summary, quote, reading or guide needs its words in the body column.' : 'A new resource needs a label and an https link.')
+      if (missing) {
+        skip(working, 'Resources', row.row, missing.column, missing.message)
         working.skipped += 1
         continue
       }
-      working.ops.push({ op: 'resource.create', lesson: { id: lesson!.id }, data: { name: label, url: url || undefined, kind: kind || 'link', ...(body ? { body } : {}) } })
+      working.ops.push({ op: 'resource.create', lesson: { id: lesson!.id }, data: resourceData })
       working.changes.push({ tab: 'Resources', row: row.row, action: 'create', label, detail: 'New resource.' })
       continue
     }
@@ -1202,10 +1312,17 @@ function planResources(working: Working, rows: InputRow[]) {
       working.skipped += 1
       continue
     }
+    if (present(row, 'body') && !kind) for (const message of resourceBodyProblems(resource.kind || 'link', body)) fail('body', message)
+    if (problems.length) {
+      working.errors.push(...problems)
+      working.skipped += 1
+      continue
+    }
     const patch: Record<string, unknown> = {}
     if (url && url !== (resource.url || '')) patch.url = url
     if (kind && kind !== (resource.kind || 'link')) patch.kind = kind
     if (present(row, 'body') && body !== (resource.body || '')) patch.body = body
+    if (mediaId && mediaId !== (resource.mediaId || 0)) patch.file = mediaId
     if (!Object.keys(patch).length) working.unchanged += 1
     else {
       working.ops.push({ op: 'resource.update', id: resource.id, patch })
@@ -1221,7 +1338,7 @@ export function planSheet(parsed: { talks: InputRow[]; questions: InputRow[]; re
   planTalks(working, parsed.talks)
   planQuestions(working, parsed.questions)
   planResources(working, parsed.resources)
-  return { errors: working.errors, changes: working.changes, unchanged: working.unchanged, skipped: working.skipped, ops: working.ops }
+  return { errors: working.errors, warnings: working.warnings, changes: working.changes, unchanged: working.unchanged, skipped: working.skipped, ops: working.ops }
 }
 
 export type { InputRow }
