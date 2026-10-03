@@ -139,8 +139,8 @@ The icon, splash, empty states and logo mark use the artwork in `public/brand/`.
 ## Tests
 
 ```bash
-npm run test:unit      # 37 tests
-npm run test:e2e       # 13 journey, 38 opening, 12 view-as and 6 screenshot tests
+npm run test:unit      # 56 tests
+npm run test:e2e       # 13 journey, 38 opening, 28 round 3, 12 view-as and 6 screenshot tests
 npm run screenshots    # screenshots only
 ```
 
