@@ -8,6 +8,7 @@ import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFr
 import { deviceKey, haptic, readHeart, readPending, sessionFlags, setSessionFlags, viewAsId, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
+import { learnMore } from '@/lib/nesting'
 import { laneClips } from '@/lib/lanes'
 import { isoWeek } from '@/lib/trends'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, lowData, playOnly, preloadApi, setHidden, soundOn, type PlayerKind } from '@/lib/yt'
@@ -277,7 +278,7 @@ export function Journey(props: JourneyProps) {
 
   // ---------- players ----------
   const specFor = useCallback((item: FeedItem | undefined, kind: Mode): Spec | null => {
-    if (!item || !item.youtubeId || item.style) return null
+    if (!item || !item.youtubeId || (item.style && kind === 'hors')) return null
     if (kind === 'appetiser') {
       const spans = item.appetiser.spans
       const multi = Boolean(spans && spans.length > 1)
@@ -800,7 +801,8 @@ export function Journey(props: JourneyProps) {
         await finished(animate(clipRef.current, [{ transform: 'translateY(0)' }, { transform: 'translateY(-100%)' }], T.snap, EASE.standard, { id: 'snap' }))
       }
       setFirstEver(false)
-      await showItem(target)
+      // A swipe moves along the level being watched; only "Learn more" goes up a level.
+      await showItem(target, modeRef.current)
       if (clipRef.current) clipRef.current.getAnimations().forEach((animation) => animation.cancel())
       void refill()
     },
@@ -913,7 +915,7 @@ export function Journey(props: JourneyProps) {
 
   const replay = () => {
     signal('replay')
-    void showItem(indexRef.current)
+    void showItem(indexRef.current, modeRef.current)
     const host = hosts.current[visibleRef.current]
     if (host.playerId && host.spec) getPlayer(host.playerId)?.seekTo(host.spec.start, true)
     setToast('Playing this clip again')
@@ -1090,9 +1092,9 @@ export function Journey(props: JourneyProps) {
   const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
   const captionText = (piece?.lines?.length ? piece.lines[lineShown]?.text : piece?.quote) || ''
   const captionRole = mode === 'appetiser' ? piece?.lines?.[lineShown]?.role || null : null
-  const slide = phase === 'feed' && item?.style ? item.style : null
+  const slide = phase === 'feed' && mode === 'hors' && item?.style ? item.style : null
   const mains = item?.laneKey ? props.mains[item.laneKey] : undefined
-  const course = item ? `${base}/course/${item.courseId}?part=${item.lessonId}&t=0` : base
+  const course = (item && learnMore(item, 'appetiser', base)?.href) || base
   const resumeMain = item && item.offerResume !== false ? `${base}/course/${item.courseId}?part=${item.lessonId}&t=${Math.floor(appetiserEnd(item))}` : null
   const laneVisible = Boolean(item) && !firstEver
   void readyTick
@@ -1156,7 +1158,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-index={index} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-chrome={overlay ? 'over' : 'around'}>
+    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-index={index} data-lesson={item?.lessonId || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-chrome={overlay ? 'over' : 'around'}>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />
