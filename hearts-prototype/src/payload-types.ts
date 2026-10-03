@@ -71,6 +71,7 @@ export interface Config {
     users: User;
     media: Media;
     clauses: Clause;
+    doors: Door;
     seats: Seat;
     'shelf-items': ShelfItem;
     courses: Course;
@@ -134,6 +135,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     clauses: ClausesSelect<false> | ClausesSelect<true>;
+    doors: DoorsSelect<false> | DoorsSelect<true>;
     seats: SeatsSelect<false> | SeatsSelect<true>;
     'shelf-items': ShelfItemsSelect<false> | ShelfItemsSelect<true>;
     courses: CoursesSelect<false> | CoursesSelect<true>;
@@ -416,6 +418,32 @@ export interface Clause {
   core?: string | null;
   teaching?: string | null;
   series?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The 20 working doors learners see. Each absorbs one or more of the 41 clauses; a talk’s door comes from its clause.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "doors".
+ */
+export interface Door {
+  id: number;
+  number: number;
+  section: 'Sitting' | 'Islam' | 'Iman' | 'Ihsan' | 'Hour' | 'Trunk';
+  title: string;
+  /**
+   * The clause numbers this door absorbs, for example [13, 19, 20].
+   */
+  clauses:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1812,6 +1840,10 @@ export interface PayloadLockedDocument {
         value: number | Clause;
       } | null)
     | ({
+        relationTo: 'doors';
+        value: number | Door;
+      } | null)
+    | ({
         relationTo: 'seats';
         value: number | Seat;
       } | null)
@@ -2171,6 +2203,18 @@ export interface ClausesSelect<T extends boolean = true> {
   core?: T;
   teaching?: T;
   series?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "doors_select".
+ */
+export interface DoorsSelect<T extends boolean = true> {
+  number?: T;
+  section?: T;
+  title?: T;
+  clauses?: T;
   updatedAt?: T;
   createdAt?: T;
 }

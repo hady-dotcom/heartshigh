@@ -50,6 +50,10 @@ async function main() {
   const clauseBody = await clauses.json().catch(() => ({}))
   console.log('clauses', clauses.status, 'total', clauseBody.totalDocs)
   if (!clauses.ok || !(clauseBody.totalDocs >= 41)) fail(`expected the 41 clauses, got ${clauseBody.totalDocs}`)
+  const doors = await fetch(`${base}/api/doors?limit=1`, { headers: auth })
+  const doorBody = await doors.json().catch(() => ({}))
+  console.log('doors', doors.status, 'total', doorBody.totalDocs)
+  if (!doors.ok || doorBody.totalDocs !== 20) fail(`expected the 20 Jibril doors from the migration, got ${doorBody.totalDocs}`)
 
   const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
   const form = new FormData()

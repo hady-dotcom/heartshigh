@@ -9,6 +9,7 @@ import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
 import { circleProblems } from './lib/circle'
 import { cookiesSecure } from './lib/env'
+import { DOOR_SECTIONS } from './lib/doors'
 
 // The app's own screens and actions use the local API with explicit portal checks.
 // The REST and GraphQL endpoints that Payload mounts are for the master desk only.
@@ -209,6 +210,19 @@ export const Clauses: CollectionConfig = {
     { name: 'core', type: 'text' },
     { name: 'teaching', type: 'textarea' },
     { name: 'series', type: 'textarea' },
+  ],
+}
+
+export const Doors: CollectionConfig = {
+  slug: 'doors',
+  admin: { useAsTitle: 'title', defaultColumns: ['number', 'section', 'title', 'clauses'], description: 'The 20 working doors learners see. Each absorbs one or more of the 41 clauses; a talk’s door comes from its clause.' },
+  access: masterOnly,
+  hooks: { beforeChange: [plainFields('title')] },
+  fields: [
+    { name: 'number', type: 'number', required: true, unique: true, min: 1, max: 20 },
+    { name: 'section', type: 'select', required: true, options: DOOR_SECTIONS.map((value) => ({ label: value, value })) },
+    { name: 'title', type: 'text', required: true },
+    { name: 'clauses', type: 'json', required: true, admin: { description: 'The clause numbers this door absorbs, for example [13, 19, 20].' } },
   ],
 }
 
@@ -1031,6 +1045,7 @@ export const collections = [
   Users,
   Media,
   Clauses,
+  Doors,
   Seats,
   ShelfItems,
   Courses,

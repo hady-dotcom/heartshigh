@@ -11,6 +11,7 @@ import { parseJibrilMap } from '../lib/seats'
 import { alignToCaptions } from '../lib/tiers'
 import { parseTranscript } from '../lib/transcript'
 import { seedHarvest } from './harvest'
+import { seedDoors } from '../server/doors'
 import type { User } from '../payload-types'
 import { databaseKind, seedRefusal } from '../lib/env'
 import { clearDevPushMarker } from '../lib/prepare-db'
@@ -158,6 +159,7 @@ async function main() {
       else await payload.create({ collection: 'seats', overrideAccess: true, data: { clause: doc.id, position: index + 1, text } })
     }
   }
+  await seedDoors(payload)
 
   const shelf = readFileSync(path.join(root, 'content/ghunya-shelf.txt'), 'utf8')
   const existingShelf = await payload.count({ collection: 'shelf-items', overrideAccess: true })
