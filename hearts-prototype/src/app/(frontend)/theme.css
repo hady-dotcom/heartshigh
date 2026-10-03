@@ -24,7 +24,7 @@
   --ease-rise: cubic-bezier(0.16, 1, 0.3, 1);
   --t-lantern: 3.4s;
   --blossom-quran: #f6eedc;
-  --blossom-hadith: #e7a0b4;
+  --blossom-hadith: #e2a07a;
   --blossom-character: #e8a15a;
   --blossom-society: #c4a6e0;
   --blossom-spirit: #8fa36a;
@@ -72,47 +72,47 @@ html[data-theme='evening'] {
   color-scheme: dark;
 }
 
-/* —— Dawn: pale teal mist, rose-gold light, deep teal ink —— */
+/* —— Dawn: pale misty teal, rose-gold light, deep teal ink —— */
 html[data-theme='dawn'] {
-  --cream: #f6efe6;
-  --paper: #fbf6ef;
-  --card: #fff9f2;
-  --ink: #142e2c;
-  --ink-2: #2c4744;
-  --muted: #4a615c;
-  --line: #e4d3c0;
-  --gold: #c4922e;
-  --gold-deep: #6b4e12;
-  --gold-glow: #e2b56a;
-  --gold-ink: #1a1408;
-  --teal: #1f6f62;
-  --teal-deep: #14564c;
+  --cream: #dceee9;
+  --paper: #e7f3f0;
+  --card: #f4faf8;
+  --ink: #102e2c;
+  --ink-2: #1e4540;
+  --muted: #3d5c57;
+  --line: #b7d4cc;
+  --gold: #c47a45;
+  --gold-deep: #7a3f28;
+  --gold-glow: #e8b089;
+  --gold-ink: #1a120c;
+  --teal: #1a6b5e;
+  --teal-deep: #0f4f46;
   --teal-fill: #1f6f62;
-  --mint: #e7f3ee;
-  --purple: #6e4e92;
-  --lavender: #f3e8f6;
-  --orange: #b86a28;
-  --rose: #a33d52;
-  --rose-bg: #f8e4e8;
+  --mint: #d5ebe4;
+  --purple: #6a4a86;
+  --lavender: #f4e8ee;
+  --orange: #a85a32;
+  --rose: #8f3d4a;
+  --rose-bg: #f3e4e2;
   --indigo: #1b3b38;
   --night: #12302f;
   --red-clause: #8f2f2a;
-  --bg-solid: #f4ebe0;
-  --scrim: rgba(246, 239, 230, 0.88);
-  --scrim-deep: rgba(251, 246, 239, 0.94);
-  --glass: rgba(255, 249, 242, 0.84);
-  --glass-solid: #fff9f2;
-  --field: #fffdf8;
-  --ring-from: #4a3540;
-  --ring-to: #1e3c3a;
+  --bg-solid: #d7ebe6;
+  --scrim: rgba(220, 236, 232, 0.84);
+  --scrim-deep: rgba(236, 210, 198, 0.78);
+  --glass: rgba(244, 250, 248, 0.78);
+  --glass-solid: #f4faf8;
+  --field: #f7fbfa;
+  --ring-from: #6a4038;
+  --ring-to: #1a4a44;
   --scene: url('/theme/dawn-courtyard.jpg');
-  --focus: #142e2c;
+  --focus: #102e2c;
   color: var(--ink);
   background: var(--bg-solid);
   color-scheme: light;
 }
 
-/* Scenic wash. The lattice sits at the opacity baked into the file, under a scrim so type stays readable. */
+/* Scenic wash. The star lattice stays off the page itself: 7% in the file, and only on headers and empty states. */
 html[data-theme] body {
   background: var(--bg-solid);
   color: var(--ink);
@@ -127,24 +127,32 @@ html[data-theme] .app-stage {
 
 html[data-theme] .app {
   background-color: var(--bg-solid);
-  background-image: var(--lattice), linear-gradient(180deg, var(--scrim), var(--scrim-deep)), var(--scene);
-  background-size: 220px, cover, cover;
-  background-position: center, center, center top;
+  background-image: linear-gradient(180deg, var(--scrim), var(--scrim-deep)), var(--scene);
+  background-size: cover, cover;
+  background-position: center, center top;
   color: var(--ink);
 }
 
 html[data-theme] .app.dark {
   background-color: #0e2a2b;
-  background-image: var(--lattice), linear-gradient(180deg, rgba(14, 42, 43, 0.72), rgba(14, 42, 43, 0.88)), var(--scene);
+  background-image: linear-gradient(180deg, rgba(14, 42, 43, 0.72), rgba(14, 42, 43, 0.88)), var(--scene);
   color: #f6eedc;
+}
+
+html[data-theme] .app-head,
+html[data-theme] .main-head {
+  background-image: var(--lattice);
+  background-size: 140px;
+  background-repeat: repeat;
+  border-radius: 12px;
 }
 
 /* Door, join, sign-in */
 html[data-theme] .door,
 html[data-theme] .splash {
   background-color: var(--bg-solid);
-  background-image: var(--lattice), linear-gradient(180deg, var(--scrim), var(--scrim-deep)), var(--scene);
-  background-size: 220px, cover, cover;
+  background-image: linear-gradient(180deg, var(--scrim), var(--scrim-deep)), var(--scene);
+  background-size: cover, cover;
   background-position: center;
   color: var(--ink);
 }
@@ -348,13 +356,13 @@ html[data-theme] .tabbar.dark {
   box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.18);
 }
 html[data-theme='dawn'] .tabbar:not(.dark) {
-  background: rgba(251, 246, 239, 0.9);
-  border-top-color: rgba(166, 124, 34, 0.45);
+  background: rgba(220, 236, 232, 0.92);
+  border-top-color: rgba(196, 122, 69, 0.55);
 }
 html[data-theme] .tab { color: #d7cbb8; position: relative; }
-html[data-theme='dawn'] .tabbar:not(.dark) .tab { color: #4a615c; }
+html[data-theme='dawn'] .tabbar:not(.dark) .tab { color: #2a4a46; }
 html[data-theme] .tab.on { color: #f1d58a; }
-html[data-theme='dawn'] .tabbar:not(.dark) .tab.on { color: #8a5e12; }
+html[data-theme='dawn'] .tabbar:not(.dark) .tab.on { color: #7a3f28; }
 html[data-theme] .tab .tab-icon { position: relative; z-index: 1; }
 html[data-theme] .tab.on .tab-icon {
   filter: drop-shadow(0 0 6px rgba(241, 213, 138, 0.85));
@@ -481,7 +489,7 @@ html[data-theme] .garden-path ol::before { border-left-color: rgba(212, 168, 75,
 
 /* Blossom tags for the five areas */
 html[data-theme] .tag.quran { background: var(--blossom-quran); color: #1a1408; }
-html[data-theme] .tag.hadith { background: var(--blossom-hadith); color: #2a1218; }
+html[data-theme] .tag.hadith { background: var(--blossom-hadith); color: #1a1408; }
 html[data-theme] .tag.character { background: var(--blossom-character); color: #1a1408; }
 html[data-theme] .tag.society { background: var(--blossom-society); color: #1a1408; }
 html[data-theme] .tag.spirituality,
@@ -544,7 +552,24 @@ html[data-theme] .kind-tabs span {
 html[data-theme] .kind-tabs span.on { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); }
 html[data-theme] .slot .date { background: var(--teal-fill); color: #f6eedc; }
 html[data-theme] .start.soft { background: transparent; color: var(--gold-deep, var(--gold)); border: 1.5px solid var(--gold); }
-html[data-theme] .desk .badge.rose { background: #f6eedc; color: #7a2430; }
+html[data-theme] .desk .badge.rose { background: rgba(196, 146, 46, 0.18); color: #6b4e12; }
+html[data-theme] .wb-entry .asked { color: var(--gold-glow); }
+html[data-theme='dawn'] .wb-entry .asked { color: var(--gold-deep); }
+html[data-theme] .answer-btn,
+html[data-theme] .share-btn { background: var(--gold); color: var(--gold-ink); }
+html[data-theme] .answer-btn[disabled] { background: rgba(212, 168, 75, 0.35); color: var(--muted); }
+html[data-theme] .tab .badge { background: var(--gold); color: var(--gold-ink); }
+html[data-theme] .part-chip,
+html[data-theme] .chip.dark {
+  background: rgba(14, 42, 43, 0.78);
+  color: #f6eedc;
+  border: 1px solid rgba(212, 168, 75, 0.4);
+}
+html[data-theme] .consent-chip.quiet {
+  background: transparent;
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+}
 html[data-theme] .desk .badge.purple { background: var(--mint); color: var(--teal-deep); }
 html[data-theme] .desk .badge.gold { background: rgba(212, 168, 75, 0.2); color: #6b4e12; }
 html[data-theme] .consent-chip { background: var(--mint); color: var(--teal-deep); }
@@ -581,11 +606,11 @@ html[data-theme='dawn'] .j-sky-layer.s2 { background: radial-gradient(120% 70% a
 html[data-theme='dawn'] .j-sky-layer.s3 { background: radial-gradient(120% 65% at 50% 105%, #e2a07a 0%, transparent 70%), linear-gradient(180deg, #2e4844, #6a4038); }
 html[data-theme='dawn'] .j-sky-layer.s4 { background: radial-gradient(120% 60% at 50% 105%, #e2b56a 0%, transparent 70%), linear-gradient(180deg, #34504c, #7a5040); }
 html[data-theme='dawn'] .j-sky-layer.s5 { background: radial-gradient(120% 60% at 50% 108%, #f1d58a 0%, transparent 72%), linear-gradient(180deg, #3a5854, #8a5848); }
-html[data-theme='dawn'] .j-sky-layer.s6 { background: radial-gradient(120% 60% at 50% 110%, #f6eedc 0%, transparent 72%), linear-gradient(180deg, #40605c, #a07058); }
-html[data-theme='dawn'] .j-sky-layer.s7 { background: radial-gradient(130% 62% at 50% 112%, #fff6ea 0%, transparent 74%), linear-gradient(180deg, #4a6a64, #c49070); }
+html[data-theme='dawn'] .j-sky-layer.s6 { background: radial-gradient(120% 60% at 50% 110%, #e8b089 0%, transparent 72%), linear-gradient(180deg, #1e3c3a, #6a4038); }
+html[data-theme='dawn'] .j-sky-layer.s7 { background: radial-gradient(130% 62% at 50% 112%, #e8b089 0%, transparent 74%), linear-gradient(180deg, #24524c, #6a4038); }
 html[data-theme='dawn'] .j-tile {
-  background: rgba(255, 249, 242, 0.16);
-  border-color: rgba(241, 213, 138, 0.45);
+  background: rgba(220, 236, 232, 0.2);
+  border-color: rgba(196, 122, 69, 0.55);
 }
 html[data-theme] .j-caption em { color: #f1d58a; }
 
@@ -600,60 +625,75 @@ html[data-theme='dawn'] .journey[data-mode='appetiser'] .j-mains {
   color: #f6eedc;
 }
 
-/* Desk: a calmer, lighter room of the same house, still shifting with the day. */
+/* Desk: calm room of the same house. Dark sidebar, parchment (or mist) content, gold buttons, teal headers. */
 html[data-theme] .desk {
   --cream: #f3ebdd;
   --paper: #f7f1e6;
-  --card: #fffbf5;
+  --card: #fffbf4;
   --ink: #142e2c;
   --ink-2: #2c4744;
   --muted: #4e635e;
   --line: #e0d2ba;
-  --gold: #6b4e12;
+  --gold: #c4922e;
   --gold-deep: #6b4e12;
-  --gold-glow: #c4922e;
+  --gold-glow: #e2b56a;
   --gold-ink: #1a1408;
   --teal: #1f6f62;
   --teal-deep: #14564c;
-  --teal-fill: #1f6f62;
+  --teal-fill: #1b3b38;
   --mint: #e5f2ec;
   --purple: #6e4e92;
   --lavender: #f0e6f6;
   --orange: #b86a28;
-  --rose: #a33d52;
-  --rose-bg: #f8e6ea;
+  --rose: #8f3d4a;
+  --rose-bg: #f3e6dc;
   --indigo: #1b3b38;
   --night: #0e2a2b;
   --red-clause: #8f2f2a;
   --focus: #142e2c;
-  --glass: #fffbf5;
-  --glass-solid: #fffbf5;
+  --glass: #fffbf4;
+  --glass-solid: #fffbf4;
   --field: #fffdf8;
   color: var(--ink);
-  background-color: #efe6d4;
-  background-image: var(--lattice), linear-gradient(180deg, rgba(239, 230, 212, 0.92), rgba(239, 230, 212, 0.94)), var(--scene);
-  background-size: 280px, cover, cover;
-  background-position: center;
+  background-color: #f3ebdd;
+  background-image: none;
   color-scheme: light;
 }
 html[data-theme='dawn'] .desk {
-  --line: #e7d5d0;
-  background-color: #f6efe8;
-  background-image: var(--lattice), linear-gradient(180deg, rgba(246, 239, 232, 0.9), rgba(248, 236, 232, 0.92)), var(--scene);
+  --cream: #e7f3f0;
+  --paper: #eef6f4;
+  --card: #f7fbfa;
+  --line: #c5ddd6;
+  --gold: #c47a45;
+  --gold-deep: #7a3f28;
+  --gold-glow: #e8b089;
+  --glass: #f7fbfa;
+  --glass-solid: #f7fbfa;
+  --field: #f7fbfa;
+  background-color: #e7f3f0;
+  background-image: linear-gradient(180deg, rgba(231, 243, 240, 0.2), rgba(232, 176, 137, 0.18));
 }
 html[data-theme] .desk .side {
-  background: rgba(255, 251, 245, 0.92);
-  border-right: 1px solid var(--line);
-  backdrop-filter: blur(10px);
+  background: #0e2a2b;
+  color: #f6eedc;
+  border-right: 1px solid rgba(212, 168, 75, 0.28);
 }
-html[data-theme='dawn'] .desk .side { background: rgba(255, 247, 244, 0.92); }
+html[data-theme] .desk .side-brand,
+html[data-theme] .desk .side-brand b,
+html[data-theme] .desk .side-foot .who { color: #f6eedc; }
+html[data-theme] .desk .side-brand small,
+html[data-theme] .desk .side .group { color: #e7dcc8; }
+html[data-theme] .desk .side a.nav,
+html[data-theme] .desk .side-foot button { color: #e7dcc8; }
+html[data-theme] .desk .side-foot { border-top-color: rgba(212, 168, 75, 0.28); }
 html[data-theme] .desk .side a.nav:hover,
-html[data-theme] .desk .side-foot button:hover { background: rgba(212, 168, 75, 0.12); }
-html[data-theme] .desk .side a.nav.on { background: #1b3b38; color: #f6eedc; }
+html[data-theme] .desk .side-foot button:hover { background: rgba(212, 168, 75, 0.16); color: #f6eedc; }
+html[data-theme] .desk .side a.nav.on { background: #d4a84b; color: #1a1408; }
+html[data-theme='dawn'] .desk .side a.nav.on { background: #c47a45; color: #1a120c; }
 html[data-theme] .desk .side-brand b { font-family: var(--serif); font-size: 18px; font-weight: 600; }
-html[data-theme] .desk .main-head h1 { font-family: var(--serif); font-weight: 600; font-size: 34px; }
+html[data-theme] .desk .main-head h1 { font-family: var(--serif); font-weight: 600; font-size: 34px; color: #142e2c; }
 html[data-theme] .desk .panel {
-  background: #fffbf5;
+  background: var(--glass-solid);
   border-color: var(--line);
   box-shadow: var(--shadow-soft);
 }
@@ -663,20 +703,22 @@ html[data-theme] .desk .stat-chip {
   background: #1b3b38;
   color: #f6eedc;
 }
-html[data-theme] .desk .panel > header.light { background: #fffbf5; color: #142e2c; }
+html[data-theme] .desk .panel > header.light { background: var(--glass-solid); color: #142e2c; }
 html[data-theme] .desk .panel > header p { color: #e7dcc8; }
+html[data-theme] .desk .panel > header.light p { color: #2c4744; }
 html[data-theme] .desk .btn.ink,
 html[data-theme] .desk .badge.ink { background: #1b3b38; color: #f6eedc; }
 html[data-theme] .desk .btn:not(.ghost):not(.ink):not(.teal):not(.danger):not(.line-light),
 html[data-theme] .desk .pill.gold {
-  background: #c4922e;
-  color: #1a1408;
+  background: var(--gold);
+  color: var(--gold-ink);
 }
-html[data-theme] .desk .btn.ghost { background: #fffbf5; color: #142e2c; border-color: var(--line); }
+html[data-theme] .desk .btn.ghost { background: var(--glass-solid); color: #142e2c; border-color: var(--line); }
+html[data-theme] .desk .bell .count { background: var(--gold); color: var(--gold-ink); }
 html[data-theme] .desk .count-tile,
 html[data-theme] .desk .address,
-html[data-theme] .desk table.data th { background: #f7f1e6; color: #142e2c; }
-html[data-theme] .desk table.data td { border-bottom-color: #efe4d2; }
+html[data-theme] .desk table.data th { background: var(--paper); color: #142e2c; }
+html[data-theme] .desk table.data td { border-bottom-color: var(--line); }
 html[data-theme] .desk .pill.ink,
 html[data-theme] .desk .mini-btn { color: #14564c; }
 html[data-theme] .desk .input,
@@ -689,7 +731,7 @@ html[data-theme] .desk input[type='datetime-local'],
 html[data-theme] .desk input[type='url'],
 html[data-theme] .desk input[type='email'],
 html[data-theme] .desk input[type='password'] {
-  background: #fffdf8;
+  background: var(--field);
   color: #142e2c;
   border-color: var(--line);
 }

@@ -30,7 +30,7 @@
 .diff { font: 12.5px/1.5 ui-monospace, monospace; background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: auto; max-height: 480px; }
 .diff div { padding: 1px 12px; white-space: pre-wrap; }
 .add { background: #e5f6ec; }
-.del { background: #fdecef; }
+.del { background: #f6efe4; }
 .pipe { display: grid; gap: 8px; }
 .pipe article {
   display: grid;

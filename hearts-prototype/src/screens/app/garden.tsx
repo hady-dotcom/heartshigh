@@ -495,7 +495,7 @@ export async function GardenWorkbook({ payload, user, base, query }: Ctx) {
                         {owner && row.entryId ? (
                           <form action="/api/hearts" method="post" style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                             <Hidden fields={{ action: 'workbook-consent', entry: row.entryId, consent: row.shared ? 'no' : 'yes', next: here }} />
-                            <span className="consent-chip" style={row.shared ? undefined : { background: '#efebe3', color: 'var(--ink-2)' }} data-testid="consent-state">{row.shared ? 'Shared with your teacher' : 'Kept private'}</span>
+                            <span className={row.shared ? 'consent-chip' : 'consent-chip quiet'} data-testid="consent-state">{row.shared ? 'Shared with your teacher' : 'Kept private'}</span>
                             <button className="mini-btn" type="submit" data-testid="consent-toggle">{row.shared ? 'Make private' : 'Share with my teacher'}</button>
                           </form>
                         ) : null}

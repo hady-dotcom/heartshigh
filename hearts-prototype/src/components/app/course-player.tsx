@@ -38,7 +38,7 @@ function clock(total: number) {
 
 const KIND_LABEL: Record<PointView['kind'], string> = { question: 'Question', task: 'Task', reflection: 'Reflection', multiple_choice: 'Multi-choice' }
 const SUBMIT: Record<PointView['kind'], string> = { question: 'answer', task: 'task', reflection: 'reflection', multiple_choice: 'choice' }
-const DOTS = ['#ef7b4a', '#1f8a78', '#7a4fa8', '#dca643', '#d94f68']
+const DOTS = ['#ef7b4a', '#1f8a78', '#7a4fa8', '#dca643', '#c47a45']
 
 const PLAYER_ID = 'lesson'
 /** The longest jump between two time readings that still counts as playing; anything longer is a seek. */

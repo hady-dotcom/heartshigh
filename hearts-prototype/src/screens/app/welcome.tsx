@@ -62,7 +62,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
           <form action="/api/hearts" method="post">
             <Hidden fields={{ action: 'placing', next: user.role === 'learner' ? `${base}/start?after=placing` : `${base}/welcome?step=done` }} />
             {questions.map((question, index) => (
-              <fieldset className="q-card" key={question.id} data-testid="placing-question" style={{ border: '1px solid #e5dccb' }}>
+              <fieldset className="q-card" key={question.id} data-testid="placing-question">
                 <span className="n">{String(index + 1).padStart(2, '0')} of {String(questions.length).padStart(2, '0')}</span>
                 <legend className="sr-only">{str(question.prompt)}</legend>
                 <h2 aria-hidden>{str(question.prompt)}</h2>
