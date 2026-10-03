@@ -18,7 +18,7 @@ export default async function Door({ searchParams }: { searchParams: Promise<{ e
   return (
     <main className="door" data-testid="door">
       <div className="door-card">
-        <Mascot width={140} alt="Hudhud" />
+        <Mascot width={260} pose="hero" alt="Hudhud, the hoopoe" />
         <h1>Someone wanted good for you</h1>
         <p className="lede">Short films from real lectures, a few questions to sit with, and a circle of people to meet in person.</p>
         <Flash error={query.error} notice={query.notice} />
