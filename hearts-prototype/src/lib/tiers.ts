@@ -449,9 +449,10 @@ export function draftTiers(source: string | Cue[], durationHint?: number | null)
   if (pick.land >= hors.a && pick.land <= hors.b) hors = bestHors(pick.land) || hors
   const chosen = pick
   const popups: TierDraft['popups'] = []
+  const popupSecond = (index: number) => Math.min(Math.ceil(all[index].end), Math.max(0, duration - 1))
   const addPopup = (index: number) => {
     const quote = capitalise(all[index].text)
-    popups.push({ second: Math.min(Math.ceil(all[index].end), Math.max(0, duration - 1)), quote, prompt: `The speaker says: “${quote}” What does that line ask of you this week?` })
+    popups.push({ second: popupSecond(index), quote, prompt: `The speaker says: “${quote}” What does that line ask of you this week?` })
   }
   const popupOk = (index: number) => scores[index] > 0 && all[index].words >= 7 && all[index].words <= 40 && closes(index) && !killListHits(all[index].text).length && !noisy(all[index])
   const ranked = all.map((_, index) => index).sort((x, y) => scores[y] - scores[x] || all[x].start - all[y].start)
@@ -463,7 +464,7 @@ export function draftTiers(source: string | Cue[], durationHint?: number | null)
         all[index].start >= from &&
         all[index].end <= to &&
         (all[index].end < chosen.start || all[index].start > chosen.end) &&
-        !popups.some((other) => Math.abs(other.second - all[index].end) < 60),
+        !popups.some((other) => Math.abs(other.second - popupSecond(index)) < 60),
     )
     if (found !== undefined) addPopup(found)
   }
@@ -471,15 +472,15 @@ export function draftTiers(source: string | Cue[], durationHint?: number | null)
   for (const index of ranked) {
     if (popups.length >= 2) break
     const gap = Math.max(12, duration / 6)
-    if (popupOk(index) && !popups.some((other) => Math.abs(other.second - all[index].end) < gap)) addPopup(index)
+    if (popupOk(index) && !popups.some((other) => Math.abs(other.second - popupSecond(index)) < gap)) addPopup(index)
   }
   for (const index of ranked) {
     if (popups.length >= 2) break
-    if (scores[index] > -5 && all[index].words >= 5 && !DANGLING.test(all[index].text) && !killListHits(all[index].text).length && !noisy(all[index]) && !popups.some((other) => Math.abs(other.second - all[index].end) < 8)) addPopup(index)
+    if (scores[index] > -5 && all[index].words >= 5 && !DANGLING.test(all[index].text) && !killListHits(all[index].text).length && !noisy(all[index]) && !popups.some((other) => Math.abs(other.second - popupSecond(index)) < 8)) addPopup(index)
   }
   for (const index of ranked) {
     if (popups.length >= 2) break
-    if (!blocked(index) && all[index].words >= 5 && !killListHits(all[index].text).length && !popups.some((other) => Math.abs(other.second - all[index].end) < 8)) addPopup(index)
+    if (!blocked(index) && all[index].words >= 5 && !killListHits(all[index].text).length && !popups.some((other) => Math.abs(other.second - popupSecond(index)) < 8)) addPopup(index)
   }
   popups.sort((a, b) => a.second - b.second)
   const horsLines = all.slice(hors.a, hors.b + 1).map((sentence) => ({ at: tenth(sentence.start, 'down'), text: capitalise(sentence.text) }))

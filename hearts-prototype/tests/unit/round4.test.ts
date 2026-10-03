@@ -25,6 +25,15 @@ test('Extraction: every one of the 31 talks has a draft', () => {
   for (const { talk, draft } of drafts) assert.ok(draft, `${talk.id} has no draft`)
 })
 
+test('Extraction: the seed path drafts two or three pop-ups for every talk, at least 8 seconds apart and clear of the kill list', () => {
+  for (const { talk, draft } of drafts) {
+    const popups = draft!.popups
+    assert.ok(popups.length >= 2 && popups.length <= 3, `${talk.id} has ${popups.length} pop-ups`)
+    for (let i = 1; i < popups.length; i++) assert.ok(popups[i].second - popups[i - 1].second >= 8, `${talk.id} pop-ups ${popups[i - 1].second} and ${popups[i].second}`)
+    for (const popup of popups) assert.deepEqual(killListHits(popup.prompt), [], `${talk.id}: ${popup.prompt}`)
+  }
+})
+
 test('Extraction: every tier boundary falls on a sentence boundary, inside the silence around it', () => {
   for (const { talk, draft, sentences } of drafts) {
     const length = talk.seconds || Infinity
