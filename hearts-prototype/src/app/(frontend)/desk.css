@@ -216,3 +216,20 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 .desk .code-joins { margin: 6px 0 0; padding-left: 18px; text-align: left; font-size: 12px; white-space: nowrap; }
 .desk [data-testid='code-joins'] summary { cursor: pointer; }
+
+.desk .circle-generate { border-top: 1px solid var(--line); }
+.desk .circle-count { max-width: 160px; }
+.desk .circle-spread { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.desk .circle-spread legend { font-size: 13.5px; font-weight: 600; color: var(--ink-2); padding: 0; margin-bottom: 6px; width: 100%; }
+.desk .circle-list { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; }
+.desk .circle-list li { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: start; padding: 12px 14px; border: 1px solid #f0e9da; border-radius: 12px; background: #fff; }
+.desk .circle-list li.off { background: #faf7f0; }
+.desk .circle-list li.off .circle-text { opacity: 0.55; }
+.desk .circle-text p { margin: 4px 0 0; font-size: 14.5px; line-height: 1.5; }
+.desk .circle-tools { display: flex; gap: 8px; align-items: start; flex-wrap: wrap; justify-content: flex-end; max-width: 320px; }
+.desk .circle-tools details[open] { flex-basis: 100%; }
+.desk .circle-tools summary { list-style: none; cursor: pointer; }
+.desk .circle-tools summary::-webkit-details-marker { display: none; }
+.desk .circle-forms { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; border-top: 1px solid var(--line); padding-top: 16px; }
+.desk .circle-forms .form { align-content: start; }
+.desk .circle-settings { grid-template-columns: 1fr 260px auto; align-items: end; }

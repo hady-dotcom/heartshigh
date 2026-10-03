@@ -17,6 +17,7 @@ import { WelcomeScreen } from '@/screens/app/welcome'
 import { OverviewScreen, PortalSettingsScreen, WizardScreen } from '@/screens/desk/overview'
 import { AccessScreen, ContentScreen, CourseEditorScreen, LibraryScreen, guardAdmin } from '@/screens/desk/content'
 import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
+import { PortalCircle } from '@/screens/desk/circle'
 
 function originOf(reqHeaders: Headers) {
   const host = reqHeaders.get('x-forwarded-host') || reqHeaders.get('host') || 'localhost:3000'
@@ -97,6 +98,9 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       case 'opening':
         guardAdmin(ctx)
         return PortalOpeningScreen(ctx)
+      case 'circle':
+        guardAdmin(ctx)
+        return PortalCircle(ctx)
       case 'courses':
         redirect(b ? `${base}/admin/content/${b}` : `${base}/admin/content`)
       case 'codes':

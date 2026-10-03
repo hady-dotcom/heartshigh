@@ -17,6 +17,7 @@ import { killListHits } from '@/lib/opening-data'
 import { tierTimings } from '@/lib/tiers'
 import { showUncheckedTalks, tierVisible } from './opening'
 import { tierSourceText } from './tier-source'
+import { handleCircle } from './circle'
 import { randomUUID } from 'node:crypto'
 import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourseIds, type Session, type SessionUser } from './context'
 import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCookie, wrote } from './viewas'
@@ -1915,6 +1916,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (!lesson || !(await visibleCourseIds(payload, user)).includes(idOf(lesson.course) || 0)) return redirectTo(req, '/', 'That film is not in your portal.')
     return redirectTo(req, text(form, 'next') || '/')
   }
+
+  if (action.startsWith('circle-')) return handleCircle(action, form, payload, user, (path, error, notice) => redirectTo(req, path, error, notice))
 
   return redirectTo(req, '/', 'That action is not known.')
 }
