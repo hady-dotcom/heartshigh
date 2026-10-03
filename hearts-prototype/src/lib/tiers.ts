@@ -169,6 +169,8 @@ export function wordsOf(source: string | Cue[]): Word[] {
   return wordsFromCues(parseTranscript(source).cues)
 }
 
+/** Words a spoken sentence does not end on. */
+const TRAILING_WORD = /^(and|but|so|or|the|a|an|of|to|for|with|is|was|are|were|be|been|have|has|had|will|would|can|could|should|may|might|must|that|which|who|when|where|if|because|like|um|uh|in|on|at|by|from|into|about|than|as|just|really|very|not|my|your|his|her|their|our|its|it's|i'm|we're|you're|they're|this|these|those|i|we|you|he|she|they|what's|there's)[,]?$/i
 const ends = (text: string) => /[.?!]["”')\]]*$/.test(text)
 
 /**
@@ -185,7 +187,8 @@ export function sentencesOf(source: string | Cue[]): Spoken[] {
   let from = 0
   for (let index = 0; index < words.length; index++) {
     const pause = pauseAfter(index)
-    const boundary = punctuated ? (ends(words[index].text) && index - from >= 1) || pause >= 1.5 : pause >= SENTENCE_PAUSE
+    // Without punctuation, a pause after a word that leaves the thought hanging ("the", "and", "of") is a hesitation.
+    const boundary = punctuated ? (ends(words[index].text) && index - from >= 1) || pause >= 1.5 : (pause >= SENTENCE_PAUSE && !TRAILING_WORD.test(words[index].text)) || pause >= 1.5
     if (boundary || index === words.length - 1) {
       runs.push([from, index])
       from = index + 1
@@ -216,7 +219,7 @@ export function sentencesOf(source: string | Cue[]): Spoken[] {
         .map((word) => word.text)
         .join(' '),
       words: b - a + 1,
-      complete: ends(last.text) || pauseAfter(b) >= SENTENCE_PAUSE,
+      complete: ends(last.text) || (pauseAfter(b) >= SENTENCE_PAUSE && !TRAILING_WORD.test(last.text)),
       capital: /^["“'(]?[A-Z]/.test(words[a].text),
     }
   })
@@ -254,6 +257,9 @@ const plainWords = (text: string) =>
 const NOISE =
   /subscribe|description|donat|qr code|the link|thank you for watching|thanks for watching|watching our|patreon|sponsor|notification|comment below|like and share|launchgood|\bclick\b|follow us|website|download|e-?books?|\.org|\.com|our channel|our series|next episode|next video|see you (next|in the)|this video is|this episode is|brought to you|support (us|our|this)/i
 const INTRO = /^(assalam|as-?salam|salaam|salam|bismillah|alhamdulillah,? wa|welcome (back|to|everyone)|hello (everyone|and welcome)|good (evening|morning)|testing)|music|applause|people are (still )?joining|apologi[sz]e for|wait a (moment|few|minute)|can (you|everyone) hear|before we (begin|start|get started)|let's (begin|get started)|housekeeping/i
+/** Closing formulas: the salaam, the closing du'a and thanks. They end a talk; they are never its hook, turn or land. */
+const OUTRO =
+  /as-?salamu?\s?(a|')?lai?kum|salaam?u? ?alaikum|wa ?rahmatullah|rabb?il? ?'?a+l[ae]+mee?n|jazak(um|a)? ?allah|baraka? ?llahu? ?f[ie]+kum|subhanaka? ?llahumm?a|forgive (us|me) (if|for anything)|anything (wrong|incorrect)|until next time|i (also )?bear witness|any (more )?questions|asked a question|question and answer|q ?& ?a\b|see you (all )?(next|soon)|take care (everyone|all)|that's all (we have|for today)|(and )?may allah (forgive|accept|reward|bless|guide) (us|you|all)/i
 const TURNING = /\b(but|however|rather|instead|actually|the problem|the question|isn't|is not|don't|do not|never|not just|not only|yet|until|the opposite|the reality|the truth|what if)\b/i
 const TEACHING = /\b(allah|prophet|qur'?an|heart|dua|mercy|trust|patience|grateful|gratitude|prayer|forgive|soul|light|love|peace|anger|time|humility|purpose|akhira|dunya|iman|sabr|tawakkul|rabb|lord|death|jannah)\b/i
 const GRIP = /\b(imagine|did you know|have you ever|the only|never|every single|the secret|the reason|what if|think about|here's the thing|the truth is|the problem is|the question is|the key|remember this|listen)\b/i
@@ -267,7 +273,7 @@ function capitalise(text: string) {
 }
 
 function noisy(sentence: Spoken) {
-  return NOISE.test(sentence.text)
+  return NOISE.test(sentence.text) || OUTRO.test(sentence.text)
 }
 
 /**
@@ -321,6 +327,7 @@ export function draftTiers(source: string | Cue[], durationHint?: number | null)
     if (/\?["”']?$/.test(text) || /^(what|why|how|did you|have you|do you|is it|are you|can you|who)\b/i.test(text)) total += 3
     if (GRIP.test(text)) total += 2
     total += opens(index) ? 1 : CONNECTIVE.test(text) ? -6 : -3
+    if (DANGLING.test(text)) total -= 4
     return total + startStrength(index)
   }
   const closes = (index: number) => all[index].complete && !DANGLING.test(all[index].text) && (index + 1 >= all.length || !/^(of|to|the|a|an|and|is|was|that|which)\b/i.test(all[index + 1].text))
@@ -372,13 +379,24 @@ export function draftTiers(source: string | Cue[], durationHint?: number | null)
   type Pick = { hook: number; turn: number; land: number; start: number; end: number; score: number }
   let pick: Pick | null = null
   let loosePick: Pick | null = null
-  const landScore = (index: number) => scores[index] + (closes(index) ? 3 : -6) + endStrength(index) + (TEACHING.test(all[index].text) ? 1 : 0)
+  const landScore = (index: number) => scores[index] + (closes(index) ? 3 : -6) + endStrength(index) + (TEACHING.test(all[index].text) ? 1 : 0) + (opens(index) ? 2 : CONNECTIVE.test(all[index].text) ? -2 : -3)
+  const turnValue = (index: number) => scores[index] + (TURNING.test(all[index].text) ? 4 : 0) + (opens(index) || /^but\b/i.test(all[index].text) ? 2 : -3) + (DANGLING.test(all[index].text) ? -3 : 0)
+  // A turn that only says the hook again is no turn.
+  const echoes = (a: number, b: number) => {
+    const x = new Set(plainWords(all[a].text))
+    const y = plainWords(all[b].text)
+    return y.length > 0 && y.filter((word) => x.has(word)).length / y.length >= 0.6
+  }
   if (spokenEnd < 120) {
+    // A short talk is nearly all appetiser: the hook is the best opening in its first half, the land the last finished
+    // thought, and the turn sits well clear of the hook, at least a quarter of the talk (up to 15 seconds) later.
     const usable = all.map((_, index) => index).filter((index) => !blocked(index))
-    const hook = usable.find((index) => opens(index)) ?? usable[0]
+    const early = usable.filter((index) => all[index].start <= spokenEnd / 2 && all[index].words >= 4)
+    const hook = [...early].sort((x, y) => hookScore(y) + (opens(y) && !DANGLING.test(all[y].text) ? 3 : 0) - (hookScore(x) + (opens(x) && !DANGLING.test(all[x].text) ? 3 : 0)) || x - y)[0] ?? usable[0]
     const land = [...usable].reverse().find((index) => closes(index) && index > hook) ?? usable[usable.length - 1]
-    const middle = usable.filter((index) => index > hook + 1 && index < land)
-    const turn = middle.sort((x, y) => scores[y] + (TURNING.test(all[y].text) ? 4 : 0) - (scores[x] + (TURNING.test(all[x].text) ? 4 : 0)))[0] ?? Math.min(land, hook + 1)
+    const gap = Math.min(15, spokenEnd * 0.25)
+    const middle = usable.filter((index) => index > hook + 1 && index < land && all[index].start - all[hook].start >= gap && all[index].words >= 4 && !echoes(hook, index))
+    const turn = middle.sort((x, y) => turnValue(y) - turnValue(x))[0] ?? usable.find((index) => index > hook && index < land && all[index].start - all[hook].start >= gap) ?? Math.min(land, hook + 1)
     const window = fit(hook, land, 1, APPETISER_MAX)
     if (window) pick = { hook, turn, land, ...window, score: 0 }
   } else {
@@ -396,9 +414,9 @@ export function draftTiers(source: string | Cue[], durationHint?: number | null)
         let turn = -1
         let turnBest = -Infinity
         for (let index = hook + 2; index < land; index++) {
-          if (blocked(index) || all[index].words < 5) continue
+          if (blocked(index) || all[index].words < 5 || echoes(hook, index)) continue
           if (all[index].start - all[hook].start < 20 || all[land].start - all[index].end < 8) continue
-          const value = scores[index] + (TURNING.test(all[index].text) ? 4 : 0) + (opens(index) || /^but\b/i.test(all[index].text) ? 1 : 0)
+          const value = turnValue(index)
           if (value > turnBest) {
             turnBest = value
             turn = index
@@ -407,7 +425,7 @@ export function draftTiers(source: string | Cue[], durationHint?: number | null)
         if (turn === -1) continue
         const length = window.end - window.start
         const score = landScore(land) * 1.2 + hookScore(hook) * 1.5 + turnBest + (length >= 90 ? 2 : 0) - (all.slice(hook, land + 1).some((sentence) => noisy(sentence)) ? 30 : 0)
-        const strict = opens(hook) && closes(land)
+        const strict = opens(hook) && !DANGLING.test(all[hook].text) && closes(land)
         if (strict && (!pick || score > pick.score)) pick = { hook, turn, land, ...window, score }
         if (!loosePick || score > loosePick.score) loosePick = { hook, turn, land, ...window, score }
       }
@@ -425,7 +443,7 @@ export function draftTiers(source: string | Cue[], durationHint?: number | null)
     const quote = capitalise(all[index].text)
     popups.push({ second: Math.min(Math.ceil(all[index].end), Math.max(0, duration - 1)), quote, prompt: `The speaker says: “${quote}” What does that line ask of you this week?` })
   }
-  const popupOk = (index: number) => scores[index] > 0 && all[index].words >= 7 && all[index].words <= 40 && closes(index) && !killListHits(all[index].text).length && !NOISE.test(all[index].text)
+  const popupOk = (index: number) => scores[index] > 0 && all[index].words >= 7 && all[index].words <= 40 && closes(index) && !killListHits(all[index].text).length && !noisy(all[index])
   const ranked = all.map((_, index) => index).sort((x, y) => scores[y] - scores[x] || all[x].start - all[y].start)
   const thirds = [0, 1, 2].map((part) => [duration * (part / 3), duration * ((part + 1) / 3)])
   for (const [from, to] of thirds) {
@@ -447,7 +465,11 @@ export function draftTiers(source: string | Cue[], durationHint?: number | null)
   }
   for (const index of ranked) {
     if (popups.length >= 2) break
-    if (scores[index] > -5 && all[index].words >= 5 && !killListHits(all[index].text).length && !NOISE.test(all[index].text) && !popups.some((other) => Math.abs(other.second - all[index].end) < 8)) addPopup(index)
+    if (scores[index] > -5 && all[index].words >= 5 && !DANGLING.test(all[index].text) && !killListHits(all[index].text).length && !noisy(all[index]) && !popups.some((other) => Math.abs(other.second - all[index].end) < 8)) addPopup(index)
+  }
+  for (const index of ranked) {
+    if (popups.length >= 2) break
+    if (!blocked(index) && all[index].words >= 5 && !killListHits(all[index].text).length && !popups.some((other) => Math.abs(other.second - all[index].end) < 8)) addPopup(index)
   }
   popups.sort((a, b) => a.second - b.second)
   const horsLines = all.slice(hors.a, hors.b + 1).map((sentence) => ({ at: tenth(sentence.start, 'down'), text: capitalise(sentence.text) }))
