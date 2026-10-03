@@ -284,6 +284,12 @@ test.describe('round 4 screens', () => {
       expect(background).not.toMatch(/rgba\([^)]*,\s*0?\.\d+\)/)
     }
     expect(clip.appetiser.lines?.map((line) => line.role)).toEqual(['hook', 'turn', 'land'])
+    const film = await page.locator('.yt-host iframe').first().evaluate((el) => {
+      const box = el.getBoundingClientRect()
+      return { top: box.top, bottom: box.bottom }
+    })
+    expect(film.top, 'YouTube’s title bar sits above the screen').toBeLessThanOrEqual(-60)
+    expect(film.bottom, 'YouTube’s control bar sits below the screen').toBeGreaterThanOrEqual(844 + 60)
   })
 
   test('G1: the Garden rings are readable and Your path is styled with one number per lesson', async ({ page }) => {
