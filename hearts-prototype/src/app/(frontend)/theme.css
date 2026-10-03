@@ -1,0 +1,699 @@
+/*
+ * HEARTS look: one token set, two themes.
+ * Evening is the deep teal and lantern gold. Dawn is the same garden in rose-gold mist.
+ * Components read the tokens. Screens do not restyle themselves.
+ * Garden rings stay a gradient with white figures (the path layout is untouched).
+ * The appetiser's next-talk card stays an opaque colour.
+ */
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 22px;
+  --space-6: 28px;
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 26px;
+  --radius-arch: 36px 36px 18px 18px;
+  --shadow-soft: 0 12px 32px rgba(14, 28, 26, 0.16);
+  --shadow-glow: 0 0 18px rgba(212, 168, 75, 0.45);
+  --hairline: 1px solid var(--line);
+  --glass-blur: 16px;
+  --ease-rise: cubic-bezier(0.16, 1, 0.3, 1);
+  --t-lantern: 3.4s;
+  --blossom-quran: #f6eedc;
+  --blossom-hadith: #e7a0b4;
+  --blossom-character: #e8a15a;
+  --blossom-society: #c4a6e0;
+  --blossom-spirit: #8fa36a;
+  --scene: url('/theme/evening-courtyard.jpg');
+  --lattice: url('/theme/lattice.svg');
+}
+
+/* —— Evening: night teal, lantern gold, parchment type —— */
+html[data-theme='evening'] {
+  --cream: #0e2a2b;
+  --paper: #102e2c;
+  --card: #163633;
+  --ink: #f6eedc;
+  --ink-2: #e7dcc8;
+  --muted: #d7cbb8;
+  --line: rgba(212, 168, 75, 0.42);
+  --gold: #d4a84b;
+  --gold-deep: #c4923a;
+  --gold-glow: #f1d58a;
+  --gold-ink: #1a1408;
+  --teal: #c9d6b0;
+  --teal-deep: #e7f3ec;
+  --teal-fill: #245e54;
+  --mint: #1a3f38;
+  --purple: #e4d4f4;
+  --lavender: #2a2436;
+  --orange: #e8a15a;
+  --rose: #e7a0b4;
+  --rose-bg: #3a242c;
+  --indigo: #12302f;
+  --night: #0e2a2b;
+  --red-clause: #f0b4b0;
+  --bg-solid: #0e2a2b;
+  --scrim: rgba(14, 42, 43, 0.86);
+  --scrim-deep: rgba(14, 42, 43, 0.93);
+  --glass: rgba(18, 48, 47, 0.8);
+  --glass-solid: #163633;
+  --field: rgba(8, 26, 26, 0.72);
+  --ring-from: #1b4a46;
+  --ring-to: #0e2a2b;
+  --scene: url('/theme/evening-courtyard.jpg');
+  --focus: #f1d58a;
+  color: var(--ink);
+  background: var(--bg-solid);
+  color-scheme: dark;
+}
+
+/* —— Dawn: pale teal mist, rose-gold light, deep teal ink —— */
+html[data-theme='dawn'] {
+  --cream: #f6efe6;
+  --paper: #fbf6ef;
+  --card: #fff9f2;
+  --ink: #142e2c;
+  --ink-2: #2c4744;
+  --muted: #4a615c;
+  --line: #e4d3c0;
+  --gold: #c4922e;
+  --gold-deep: #6b4e12;
+  --gold-glow: #e2b56a;
+  --gold-ink: #1a1408;
+  --teal: #1f6f62;
+  --teal-deep: #14564c;
+  --teal-fill: #1f6f62;
+  --mint: #e7f3ee;
+  --purple: #6e4e92;
+  --lavender: #f3e8f6;
+  --orange: #b86a28;
+  --rose: #a33d52;
+  --rose-bg: #f8e4e8;
+  --indigo: #1b3b38;
+  --night: #12302f;
+  --red-clause: #8f2f2a;
+  --bg-solid: #f4ebe0;
+  --scrim: rgba(246, 239, 230, 0.88);
+  --scrim-deep: rgba(251, 246, 239, 0.94);
+  --glass: rgba(255, 249, 242, 0.84);
+  --glass-solid: #fff9f2;
+  --field: #fffdf8;
+  --ring-from: #4a3540;
+  --ring-to: #1e3c3a;
+  --scene: url('/theme/dawn-courtyard.jpg');
+  --focus: #142e2c;
+  color: var(--ink);
+  background: var(--bg-solid);
+  color-scheme: light;
+}
+
+/* Scenic wash. The lattice sits at the opacity baked into the file, under a scrim so type stays readable. */
+html[data-theme] body {
+  background: var(--bg-solid);
+  color: var(--ink);
+}
+
+html[data-theme] .app-stage {
+  background-color: var(--bg-solid);
+  background-image: var(--scene);
+  background-size: cover;
+  background-position: center;
+}
+
+html[data-theme] .app {
+  background-color: var(--bg-solid);
+  background-image: var(--lattice), linear-gradient(180deg, var(--scrim), var(--scrim-deep)), var(--scene);
+  background-size: 220px, cover, cover;
+  background-position: center, center, center top;
+  color: var(--ink);
+}
+
+html[data-theme] .app.dark {
+  background-color: #0e2a2b;
+  background-image: var(--lattice), linear-gradient(180deg, rgba(14, 42, 43, 0.72), rgba(14, 42, 43, 0.88)), var(--scene);
+  color: #f6eedc;
+}
+
+/* Door, join, sign-in */
+html[data-theme] .door,
+html[data-theme] .splash {
+  background-color: var(--bg-solid);
+  background-image: var(--lattice), linear-gradient(180deg, var(--scrim), var(--scrim-deep)), var(--scene);
+  background-size: 220px, cover, cover;
+  background-position: center;
+  color: var(--ink);
+}
+
+html[data-theme] .door-card {
+  background: var(--glass);
+  border: var(--hairline);
+  border-radius: var(--radius-lg);
+  padding: 28px 22px 26px;
+  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(241, 213, 138, 0.18);
+  backdrop-filter: blur(var(--glass-blur));
+}
+
+html[data-theme] .door-card h1,
+html[data-theme] .splash h1,
+html[data-theme] .app h1,
+html[data-theme] .app h2,
+html[data-theme] .q-card h2,
+html[data-theme] .sheet h2,
+html[data-theme] .grow-banner h2,
+html[data-theme] .main-head h1,
+html[data-theme] .j-caption,
+html[data-theme] .j-sheet h2 {
+  font-family: var(--serif);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+html[data-theme] .app h1 { font-size: 32px; line-height: 1.05; }
+html[data-theme] .eyebrow {
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gold);
+}
+html[data-theme='dawn'] .eyebrow { color: var(--gold-deep); }
+html[data-theme] .clause-card .lbl { text-transform: none; }
+
+/* Glass cards, lists, empty states. Garden rings are excluded so their gradient stays. */
+html[data-theme] .card:not(.garden-rings),
+html[data-theme] .q-card,
+html[data-theme] .note,
+html[data-theme] .ticket,
+html[data-theme] .harvest-card,
+html[data-theme] .wb-entry,
+html[data-theme] .wb-start,
+html[data-theme] .wb-open,
+html[data-theme] .stat-box,
+html[data-theme] .grow-tile,
+html[data-theme] .course-row,
+html[data-theme] .continue-row,
+html[data-theme] .door-cell,
+html[data-theme] .clause-card,
+html[data-theme] .summary-card,
+html[data-theme] .days-card,
+html[data-theme] .gesture-card,
+html[data-theme] .window-card {
+  background: var(--glass);
+  color: var(--ink);
+  border: var(--hairline);
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 1px 0 rgba(241, 213, 138, 0.12), var(--shadow-soft);
+  backdrop-filter: blur(var(--glass-blur));
+}
+
+html[data-theme] .card h3,
+html[data-theme] .card p,
+html[data-theme] .note p,
+html[data-theme] .harvest-card small,
+html[data-theme] .clause-card p,
+html[data-theme] .summary-card p { color: var(--ink-2); }
+html[data-theme] .card h3,
+html[data-theme] .days-card h3,
+html[data-theme] .theme-pin h3 { color: var(--ink); font-family: var(--serif); font-weight: 600; }
+
+html[data-theme] .empty-state,
+html[data-theme] .feed-empty,
+html[data-theme] .desk .empty {
+  background-color: var(--glass);
+  background-image: var(--lattice);
+  background-size: 180px;
+  border: var(--hairline);
+  border-radius: var(--radius-lg);
+  color: var(--ink-2);
+}
+
+html[data-theme] .list-link { color: var(--ink); border-bottom-color: var(--line); }
+html[data-theme] .list-link small { color: var(--muted); }
+
+/* Fields, chips, toggles */
+html[data-theme] .field,
+html[data-theme] .app select.field,
+html[data-theme] .app textarea.field,
+html[data-theme] .compose {
+  background: var(--field);
+  color: var(--ink);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+html[data-theme] .field::placeholder,
+html[data-theme] textarea::placeholder { color: var(--muted); }
+html[data-theme] .field:focus,
+html[data-theme] .desk input:focus,
+html[data-theme] .desk select:focus,
+html[data-theme] .desk textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(212, 168, 75, 0.28);
+}
+html[data-theme] :focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+html[data-theme] .chip {
+  border: 1px solid transparent;
+}
+html[data-theme] .chip.white { background: var(--glass-solid); color: var(--ink); border-color: var(--line); }
+html[data-theme] .chip.gold { background: var(--gold); color: var(--gold-ink); }
+html[data-theme] .theme-pin-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+html[data-theme] .theme-choice {
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--gold);
+  min-height: 40px;
+}
+html[data-theme] .theme-choice.on {
+  background: var(--gold);
+  color: var(--gold-ink);
+  box-shadow: var(--shadow-glow);
+}
+html[data-theme] .theme-now { margin: 10px 0 0; font-size: 13px; }
+
+/* Buttons */
+html[data-theme] .pill.gold,
+html[data-theme] .btn:not(.ghost):not(.ink):not(.teal):not(.danger):not(.line-light) {
+  background: var(--gold);
+  color: var(--gold-ink);
+  box-shadow: 0 8px 22px rgba(196, 143, 44, 0.28);
+}
+html[data-theme] .pill.outline,
+html[data-theme] .pill.outline-light {
+  background: transparent;
+  color: var(--gold-glow, var(--gold));
+  border: 1.5px solid var(--gold);
+}
+html[data-theme='dawn'] .pill.outline,
+html[data-theme='dawn'] .pill.outline-light { color: var(--gold-deep); border-color: var(--gold-deep); }
+html[data-theme] .pill.ink {
+  background: var(--glass-solid);
+  color: var(--ink);
+  border: 1.5px solid var(--line);
+}
+html[data-theme='evening'] .pill.ink { background: #f6eedc; color: #142e2c; border-color: transparent; }
+html[data-theme] .pill.teal,
+html[data-theme] .start.teal,
+html[data-theme] .follow.teal,
+html[data-theme] .btn.teal {
+  background: var(--teal-fill);
+  color: #f6eedc;
+  border-color: transparent;
+}
+html[data-theme] .pill.purple,
+html[data-theme] .answer-btn,
+html[data-theme] .share-btn {
+  background: var(--gold);
+  color: var(--gold-ink);
+}
+html[data-theme] .answer-btn[disabled] { background: #8c8272; color: #1a1408; }
+html[data-theme] .mini-btn {
+  background: transparent;
+  color: var(--gold-glow, var(--gold));
+  border-color: var(--gold);
+}
+html[data-theme='dawn'] .mini-btn { color: var(--gold-deep); border-color: var(--gold-deep); }
+html[data-theme] .link-btn,
+html[data-theme] .garden-link,
+html[data-theme] .harvest-actions a,
+html[data-theme] .scholar-choices a,
+html[data-theme] .harvest-panel > a,
+html[data-theme] .ask {
+  color: var(--gold-glow, var(--gold));
+  border-color: var(--gold);
+  background: transparent;
+}
+html[data-theme='dawn'] .link-btn,
+html[data-theme='dawn'] .garden-link,
+html[data-theme='dawn'] .harvest-actions a,
+html[data-theme='dawn'] .scholar-choices a,
+html[data-theme='dawn'] .harvest-panel > a,
+html[data-theme='dawn'] .ask { color: var(--teal-deep); border-color: var(--teal); }
+html[data-theme] .harvest-actions a.on { background: var(--teal-fill); color: #f6eedc; border-color: transparent; }
+
+/* Tab bar: glassy, with a gold ring on the active tab */
+html[data-theme] .tabbar,
+html[data-theme] .tabbar.dark {
+  background: rgba(14, 42, 43, 0.82);
+  border-top: 1px solid rgba(212, 168, 75, 0.4);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.18);
+}
+html[data-theme='dawn'] .tabbar:not(.dark) {
+  background: rgba(251, 246, 239, 0.9);
+  border-top-color: rgba(166, 124, 34, 0.45);
+}
+html[data-theme] .tab { color: #d7cbb8; position: relative; }
+html[data-theme='dawn'] .tabbar:not(.dark) .tab { color: #4a615c; }
+html[data-theme] .tab.on { color: #f1d58a; }
+html[data-theme='dawn'] .tabbar:not(.dark) .tab.on { color: #8a5e12; }
+html[data-theme] .tab .tab-icon { position: relative; z-index: 1; }
+html[data-theme] .tab.on .tab-icon {
+  filter: drop-shadow(0 0 6px rgba(241, 213, 138, 0.85));
+}
+html[data-theme] .tab.on::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid #d4a84b;
+  box-shadow: 0 0 12px rgba(212, 168, 75, 0.55);
+  animation: lantern var(--t-lantern) var(--ease-rise) infinite;
+}
+@keyframes lantern {
+  50% { box-shadow: 0 0 18px rgba(241, 213, 138, 0.85); }
+}
+
+/* Sheets and pop-ups */
+html[data-theme] .sheet,
+html[data-theme] .j-sheet {
+  background: var(--glass-solid);
+  color: var(--ink);
+  border: var(--hairline);
+  border-bottom: 0;
+  box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.28);
+}
+html[data-theme='evening'] .sheet,
+html[data-theme='evening'] .j-sheet {
+  background: rgba(14, 36, 35, 0.96);
+}
+html[data-theme] .sheet .handle,
+html[data-theme] .j-sheet .handle { background: var(--gold); opacity: 0.7; }
+html[data-theme] .sheet-close {
+  background: var(--field);
+  color: var(--ink);
+}
+html[data-theme] .kind-tabs span.on { background: var(--gold); color: var(--gold-ink); }
+html[data-theme] .choice {
+  background: var(--field);
+  color: var(--ink);
+  border-color: var(--line);
+}
+html[data-theme] .choice:has(input:checked) {
+  border-color: var(--gold);
+  background: rgba(212, 168, 75, 0.16);
+}
+html[data-theme] .other {
+  background: var(--field);
+  color: var(--ink);
+}
+html[data-theme] .compose textarea { color: var(--ink); }
+html[data-theme] .toggle input { background: #8c8272; }
+html[data-theme] .toggle input:checked { background: var(--gold); }
+html[data-theme] .weekdays span {
+  background: var(--field);
+  color: var(--ink);
+  border-color: var(--line);
+}
+html[data-theme] .weekdays input:checked + span {
+  background: var(--gold);
+  color: var(--gold-ink);
+  border-color: var(--gold);
+}
+html[data-theme] .q-strip .done { background: var(--teal-fill); color: #f6eedc; }
+html[data-theme] .q-strip .open { background: rgba(232, 161, 90, 0.2); color: var(--orange); }
+html[data-theme] .flash.error { background: var(--rose-bg); color: var(--red-clause); border-color: transparent; }
+html[data-theme] .flash.notice { background: var(--mint); color: var(--teal-deep); border-color: transparent; }
+html[data-theme='evening'] .flash.error { color: #ffd0d4; }
+html[data-theme='evening'] .flash.notice { color: #e7f3ec; }
+html[data-theme] .j-sheet-error { color: #ffd0d4 !important; }
+html[data-theme='dawn'] .j-sheet-error { color: #7a2430 !important; }
+
+/* Home growth banner and lanes, framed like an arch. Rings stay white. */
+html[data-theme] .grow-banner,
+html[data-theme] .time-card,
+html[data-theme] .forest {
+  background-color: #0e2a2b;
+  background-image: linear-gradient(180deg, rgba(14, 42, 43, 0.82), rgba(14, 42, 43, 0.9)), var(--scene);
+  background-size: cover;
+  background-position: center 30%;
+  color: #f6eedc;
+  border: 1px solid rgba(212, 168, 75, 0.45);
+  border-radius: var(--radius-arch);
+  box-shadow: inset 0 1px 0 rgba(241, 213, 138, 0.2);
+}
+html[data-theme='dawn'] .grow-banner,
+html[data-theme='dawn'] .time-card {
+  background-image: linear-gradient(180deg, rgba(62, 36, 40, 0.84), rgba(20, 46, 44, 0.92)), var(--scene);
+}
+html[data-theme] .grow-banner .eyebrow,
+html[data-theme] .time-card .eyebrow,
+html[data-theme] .forest .eyebrow { color: #f1d58a; }
+html[data-theme] .time-card .big,
+html[data-theme] .forest .big { color: #f1d58a; font-family: var(--serif); font-weight: 600; }
+html[data-theme] .lane-card { border-radius: var(--radius-arch); border: 1px solid rgba(212, 168, 75, 0.35); }
+html[data-theme] .lane-card::after {
+  background: linear-gradient(90deg, rgba(14, 42, 43, 0.82), rgba(14, 42, 43, 0.15));
+}
+html[data-theme] .player-card {
+  border-radius: var(--radius-arch);
+  border: 1px solid rgba(212, 168, 75, 0.35);
+}
+
+/* Garden rings: gradient plus white figures, in both themes. Do not flatten this. */
+html[data-theme] .garden-rings.card {
+  background-color: var(--ring-to);
+  background-image: linear-gradient(165deg, var(--ring-from), var(--ring-to));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+html[data-theme] .garden-rings .eyebrow { color: #f1d58a; }
+html[data-theme] .ring-stat { color: rgba(255, 255, 255, 0.92); }
+html[data-theme] .ring-stat .r { color: #fff; }
+
+/* Path dots pick up the theme colours without moving. */
+html[data-theme='evening'] .gp-dot { background: #163633; border-color: rgba(212, 168, 75, 0.45); color: #d7cbb8; }
+html[data-theme='evening'] .gp-node.done .gp-dot { background: #1a3f38; border-color: #c9d6b0; color: #f6eedc; }
+html[data-theme] .gp-node.active .gp-dot { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
+html[data-theme] .garden-path ol::before { border-left-color: rgba(212, 168, 75, 0.45); }
+
+/* Blossom tags for the five areas */
+html[data-theme] .tag.quran { background: var(--blossom-quran); color: #1a1408; }
+html[data-theme] .tag.hadith { background: var(--blossom-hadith); color: #2a1218; }
+html[data-theme] .tag.character { background: var(--blossom-character); color: #1a1408; }
+html[data-theme] .tag.society { background: var(--blossom-society); color: #1a1408; }
+html[data-theme] .tag.spirituality,
+html[data-theme] .tag.spirit { background: var(--blossom-spirit); color: #1a1408; }
+
+html[data-theme] .summary-card.gold { background: rgba(212, 168, 75, 0.16); border-color: var(--gold); }
+html[data-theme] .summary-card.mint { background: var(--mint); border-color: transparent; }
+html[data-theme] .summary-card.rose { background: rgba(212, 168, 75, 0.12); border-color: var(--gold); }
+html[data-theme] .door-cell[data-lit='yes'] { border-color: var(--gold); background: rgba(212, 168, 75, 0.12); }
+html[data-theme] .note.unread { border-color: var(--gold); background: rgba(212, 168, 75, 0.12); }
+html[data-theme] .wb-entry .from-lesson { background: var(--field); color: var(--ink); }
+html[data-theme] .wb-entry .from-lesson small { color: var(--gold); }
+html[data-theme='dawn'] .wb-entry .from-lesson small { color: var(--teal-deep); }
+html[data-theme] .door-chip { background: var(--field); color: var(--ink-2); }
+html[data-theme] .gesture-grid div { background: var(--field); color: var(--ink); border-color: var(--line); }
+html[data-theme='evening'] .clause-card,
+html[data-theme='evening'] .clause-card .clause-num,
+html[data-theme='evening'] .clause-card .lbl,
+html[data-theme='evening'] .clause-card .door-words { color: #f6eedc; }
+html[data-theme] .wb-entry .reply { background: var(--mint); color: var(--ink); }
+html[data-theme] .wb-entry .reply b { color: var(--teal-deep); }
+html[data-theme] .harvest-ayah,
+html[data-theme] .tafsir-text,
+html[data-theme] .context-ayah.focus { background: var(--field); color: var(--ink); }
+/* Filter chips: gold hairline, parchment or ink type, gold when chosen. Not the old rose wash. */
+html[data-theme] .chip-row a,
+html[data-theme] .chip-row span {
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--gold);
+}
+html[data-theme='dawn'] .chip-row a,
+html[data-theme='dawn'] .chip-row span { color: var(--gold-deep); border-color: var(--gold-deep); }
+html[data-theme] .chip-row .on,
+html[data-theme] .chip-row a.on,
+html[data-theme] .chip-row span.on {
+  background: var(--gold);
+  color: var(--gold-ink);
+  border-color: var(--gold);
+}
+html[data-theme] .chip-row.soft a,
+html[data-theme] .chip-row.soft span {
+  background: transparent;
+  color: var(--teal);
+  border-color: var(--teal-fill);
+}
+html[data-theme='dawn'] .chip-row.soft a,
+html[data-theme='dawn'] .chip-row.soft span { color: var(--teal-deep); }
+html[data-theme] .chip-row.soft .on,
+html[data-theme] .chip-row.soft a.on {
+  background: var(--teal-fill);
+  color: #f6eedc;
+  border-color: var(--teal-fill);
+}
+html[data-theme] .kind-tabs span {
+  background: transparent;
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+}
+html[data-theme] .kind-tabs span.on { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); }
+html[data-theme] .slot .date { background: var(--teal-fill); color: #f6eedc; }
+html[data-theme] .start.soft { background: transparent; color: var(--gold-deep, var(--gold)); border: 1.5px solid var(--gold); }
+html[data-theme] .desk .badge.rose { background: #f6eedc; color: #7a2430; }
+html[data-theme] .desk .badge.purple { background: var(--mint); color: var(--teal-deep); }
+html[data-theme] .desk .badge.gold { background: rgba(212, 168, 75, 0.2); color: #6b4e12; }
+html[data-theme] .consent-chip { background: var(--mint); color: var(--teal-deep); }
+html[data-theme] .mic { background: var(--gold); color: var(--gold-ink); }
+html[data-theme] .mic.on { background: var(--gold-deep); color: #f6eedc; }
+html[data-theme] .other .heart { color: var(--gold); }
+/* Empty states carry the lattice only. They do not depend on an illustration. */
+html[data-theme] .empty-state p { margin-top: 0; }
+html[data-theme] .speaker-card {
+  background: var(--glass-solid);
+  color: var(--ink);
+  border: var(--hairline);
+}
+html[data-theme='evening'] .speaker-card small { color: #f1d58a; }
+html[data-theme] .follow { border-color: #f6eedc; color: #f6eedc; }
+html[data-theme] .follow[aria-pressed='true'] { background: #f6eedc; color: #142e2c; }
+html[data-theme] .step-bar span { background: rgba(212, 168, 75, 0.28); }
+html[data-theme] .step-bar span.on { background: var(--gold); }
+html[data-theme] .back { color: var(--ink-2); }
+html[data-theme] .profile .avatar { background: var(--indigo); color: #f6eedc; }
+
+/* Opening sky, retinted toward the courtyard. White type stays, so the feed caption is untouched. */
+html[data-theme='evening'] .j-sky-layer.s0 { background: radial-gradient(120% 70% at 50% 0%, #1b4a46 0%, #0e2a2b 70%); }
+html[data-theme='evening'] .j-sky-layer.s1 { background: radial-gradient(120% 70% at 50% 100%, #245e54 0%, transparent 70%), linear-gradient(180deg, #0e2a2b, #12302f); }
+html[data-theme='evening'] .j-sky-layer.s2 { background: radial-gradient(120% 70% at 50% 100%, #3a4a32 0%, transparent 70%), linear-gradient(180deg, #102e2c, #1b3b38); }
+html[data-theme='evening'] .j-sky-layer.s3 { background: radial-gradient(120% 65% at 50% 105%, #6a4a32 0%, transparent 70%), linear-gradient(180deg, #12302f, #1b3b38); }
+html[data-theme='evening'] .j-sky-layer.s4 { background: radial-gradient(120% 60% at 50% 105%, #c4923a 0%, transparent 70%), linear-gradient(180deg, #143230, #3a3428); }
+html[data-theme='evening'] .j-sky-layer.s5 { background: radial-gradient(120% 60% at 50% 108%, #e2b56a 0%, transparent 72%), linear-gradient(180deg, #16322e, #5a4630); }
+html[data-theme='evening'] .j-sky-layer.s6 { background: radial-gradient(120% 60% at 50% 110%, #f1d58a 0%, transparent 72%), linear-gradient(180deg, #1b3b38, #6a5438); }
+html[data-theme='evening'] .j-sky-layer.s7 { background: radial-gradient(130% 62% at 50% 112%, #f6eedc 0%, transparent 74%), linear-gradient(180deg, #1b3b38, #8a6a40); }
+html[data-theme='dawn'] .j-sky-layer.s0 { background: radial-gradient(120% 70% at 50% 0%, #8a5048 0%, #1e3c3a 72%); }
+html[data-theme='dawn'] .j-sky-layer.s1 { background: radial-gradient(120% 70% at 50% 100%, #a86858 0%, transparent 70%), linear-gradient(180deg, #2a403e, #4a3038); }
+html[data-theme='dawn'] .j-sky-layer.s2 { background: radial-gradient(120% 70% at 50% 100%, #c4886a 0%, transparent 70%), linear-gradient(180deg, #2c4542, #5a3838); }
+html[data-theme='dawn'] .j-sky-layer.s3 { background: radial-gradient(120% 65% at 50% 105%, #e2a07a 0%, transparent 70%), linear-gradient(180deg, #2e4844, #6a4038); }
+html[data-theme='dawn'] .j-sky-layer.s4 { background: radial-gradient(120% 60% at 50% 105%, #e2b56a 0%, transparent 70%), linear-gradient(180deg, #34504c, #7a5040); }
+html[data-theme='dawn'] .j-sky-layer.s5 { background: radial-gradient(120% 60% at 50% 108%, #f1d58a 0%, transparent 72%), linear-gradient(180deg, #3a5854, #8a5848); }
+html[data-theme='dawn'] .j-sky-layer.s6 { background: radial-gradient(120% 60% at 50% 110%, #f6eedc 0%, transparent 72%), linear-gradient(180deg, #40605c, #a07058); }
+html[data-theme='dawn'] .j-sky-layer.s7 { background: radial-gradient(130% 62% at 50% 112%, #fff6ea 0%, transparent 74%), linear-gradient(180deg, #4a6a64, #c49070); }
+html[data-theme='dawn'] .j-tile {
+  background: rgba(255, 249, 242, 0.16);
+  border-color: rgba(241, 213, 138, 0.45);
+}
+html[data-theme] .j-caption em { color: #f1d58a; }
+
+/* Appetiser next-talk card stays opaque in both themes. */
+html[data-theme] .journey[data-mode='appetiser'] .j-mains {
+  background-color: #1b3b38;
+  background-image: none;
+  color: #f6eedc;
+}
+html[data-theme='dawn'] .journey[data-mode='appetiser'] .j-mains {
+  background-color: #24524c;
+  color: #f6eedc;
+}
+
+/* Desk: a calmer, lighter room of the same house, still shifting with the day. */
+html[data-theme] .desk {
+  --cream: #f3ebdd;
+  --paper: #f7f1e6;
+  --card: #fffbf5;
+  --ink: #142e2c;
+  --ink-2: #2c4744;
+  --muted: #4e635e;
+  --line: #e0d2ba;
+  --gold: #6b4e12;
+  --gold-deep: #6b4e12;
+  --gold-glow: #c4922e;
+  --gold-ink: #1a1408;
+  --teal: #1f6f62;
+  --teal-deep: #14564c;
+  --teal-fill: #1f6f62;
+  --mint: #e5f2ec;
+  --purple: #6e4e92;
+  --lavender: #f0e6f6;
+  --orange: #b86a28;
+  --rose: #a33d52;
+  --rose-bg: #f8e6ea;
+  --indigo: #1b3b38;
+  --night: #0e2a2b;
+  --red-clause: #8f2f2a;
+  --focus: #142e2c;
+  --glass: #fffbf5;
+  --glass-solid: #fffbf5;
+  --field: #fffdf8;
+  color: var(--ink);
+  background-color: #efe6d4;
+  background-image: var(--lattice), linear-gradient(180deg, rgba(239, 230, 212, 0.92), rgba(239, 230, 212, 0.94)), var(--scene);
+  background-size: 280px, cover, cover;
+  background-position: center;
+  color-scheme: light;
+}
+html[data-theme='dawn'] .desk {
+  --line: #e7d5d0;
+  background-color: #f6efe8;
+  background-image: var(--lattice), linear-gradient(180deg, rgba(246, 239, 232, 0.9), rgba(248, 236, 232, 0.92)), var(--scene);
+}
+html[data-theme] .desk .side {
+  background: rgba(255, 251, 245, 0.92);
+  border-right: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+}
+html[data-theme='dawn'] .desk .side { background: rgba(255, 247, 244, 0.92); }
+html[data-theme] .desk .side a.nav:hover,
+html[data-theme] .desk .side-foot button:hover { background: rgba(212, 168, 75, 0.12); }
+html[data-theme] .desk .side a.nav.on { background: #1b3b38; color: #f6eedc; }
+html[data-theme] .desk .side-brand b { font-family: var(--serif); font-size: 18px; font-weight: 600; }
+html[data-theme] .desk .main-head h1 { font-family: var(--serif); font-weight: 600; font-size: 34px; }
+html[data-theme] .desk .panel {
+  background: #fffbf5;
+  border-color: var(--line);
+  box-shadow: var(--shadow-soft);
+}
+html[data-theme] .desk .panel > header,
+html[data-theme] .desk .org-band,
+html[data-theme] .desk .stat-chip {
+  background: #1b3b38;
+  color: #f6eedc;
+}
+html[data-theme] .desk .panel > header.light { background: #fffbf5; color: #142e2c; }
+html[data-theme] .desk .panel > header p { color: #e7dcc8; }
+html[data-theme] .desk .btn.ink,
+html[data-theme] .desk .badge.ink { background: #1b3b38; color: #f6eedc; }
+html[data-theme] .desk .btn:not(.ghost):not(.ink):not(.teal):not(.danger):not(.line-light),
+html[data-theme] .desk .pill.gold {
+  background: #c4922e;
+  color: #1a1408;
+}
+html[data-theme] .desk .btn.ghost { background: #fffbf5; color: #142e2c; border-color: var(--line); }
+html[data-theme] .desk .count-tile,
+html[data-theme] .desk .address,
+html[data-theme] .desk table.data th { background: #f7f1e6; color: #142e2c; }
+html[data-theme] .desk table.data td { border-bottom-color: #efe4d2; }
+html[data-theme] .desk .pill.ink,
+html[data-theme] .desk .mini-btn { color: #14564c; }
+html[data-theme] .desk .input,
+html[data-theme] .desk select,
+html[data-theme] .desk textarea,
+html[data-theme] .desk input[type='text'],
+html[data-theme] .desk input[type='number'],
+html[data-theme] .desk input[type='date'],
+html[data-theme] .desk input[type='datetime-local'],
+html[data-theme] .desk input[type='url'],
+html[data-theme] .desk input[type='email'],
+html[data-theme] .desk input[type='password'] {
+  background: #fffdf8;
+  color: #142e2c;
+  border-color: var(--line);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .tab.on::before { animation: none; }
+}

@@ -3,6 +3,8 @@ import './app.css'
 import './desk.css'
 import './motion.css'
 import './journey.css'
+import './theme.css'
+import { themeBootScript } from '@/lib/daypart'
 import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import { ViewAsBanner } from '@/components/viewas-banner'
@@ -32,8 +34,9 @@ export const viewport: Viewport = {
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en-GB">
+    <html lang="en-GB" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript() }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
