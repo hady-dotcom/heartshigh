@@ -153,7 +153,9 @@ export function Journey(props: JourneyProps) {
   useEffect(() => {
     const stored = readHeart()
     let state = stored && stored.portal === opening.portal ? stored : null
-    if (props.initial === 'opener' && state && !(state as HeartState & { handedOffAt?: number }).handedOffAt) state = null
+    const handedOff = Boolean((state as (HeartState & { handedOffAt?: number }) | null)?.handedOffAt)
+    if (props.initial === 'opener' && state && !handedOff && state.scenesVersion !== opening.scenesVersion) state = null
+    const unfinished = props.initial === 'opener' && state && !handedOff && state.taps.length ? state : null
     if (!state) {
       state = freshState(opening.portal, opening.scenesVersion)
       state.spinePointer = spineStart(props.startingClause)
@@ -163,7 +165,19 @@ export function Journey(props: JourneyProps) {
     setHeartState(state)
     if (props.initial !== 'opener' || stored) writeHeart(state)
     setSessionFlags({ ...sessionFlags() })
-    if (window.location.pathname.match(/\/start\/\d+$/)) window.history.replaceState(window.history.state, '', `${base}/start`)
+    const startAt = window.location.pathname.match(/\/start\/(\d+)$/)
+    if (startAt) {
+      // A reload mid-opening carries on with every tap kept, never past the first unanswered scene.
+      const answered = new Set(unfinished?.taps.map((tap) => tap.scene) || [])
+      const firstOpen = scenes.findIndex((scene) => !answered.has(scene.key))
+      const next = firstOpen < 0 ? -1 : Math.min(firstOpen, Math.max(0, Number(startAt[1]) - 1))
+      if (unfinished && next >= 0) {
+        window.history.replaceState({ ...window.history.state, hearts: { scene: next } }, '', `${base}/start/${next + 1}`)
+        pendingEnter.current = 'fade'
+        setSceneAt(next)
+        setPhase('scene')
+      } else window.history.replaceState(window.history.state, '', `${base}/start`)
+    }
     if (!viewAsId() && 'serviceWorker' in navigator && process.env.NODE_ENV === 'production') navigator.serviceWorker.register('/sw.js').catch(() => undefined)
     setOffline(!navigator.onLine)
     const on = () => setOffline(false)
@@ -524,7 +538,19 @@ export function Journey(props: JourneyProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, sceneAt])
 
+  // One tap moves one scene: further taps are ignored until the next scene (or phase) is on screen.
+  const tapLock = useRef(false)
+  useEffect(() => {
+    tapLock.current = false
+  }, [sceneAt, phase])
+  const takeTap = () => {
+    if (tapLock.current) return false
+    tapLock.current = true
+    return true
+  }
+
   const letsPlay = () => {
+    if (!takeTap()) return
     haptic(10)
     preloadApi()
     depth.current += 1
@@ -608,7 +634,7 @@ export function Journey(props: JourneyProps) {
   const pick = async (option: SceneOption, el: HTMLElement) => {
     const state = heartRef.current
     const scene = scenes[sceneAt]
-    if (!state || !scene) return
+    if (!state || !scene || !takeTap()) return
     const outcome = applyTap(state, scene.key, option.key, scenes, opening.scales)
     if (outcome.crisis) {
       push(`${base}/help`, { help: true })
@@ -637,7 +663,7 @@ export function Journey(props: JourneyProps) {
   const pass = async () => {
     const state = heartRef.current
     const scene = scenes[sceneAt]
-    if (!state || !scene) return
+    if (!state || !scene || !takeTap()) return
     setHeart(applyTap(state, scene.key, 'pass', scenes, opening.scales).state)
     if (sceneAt === scenes.length - 1) return void handOff(false, null)
     await finished(animate(document.querySelector('.j-choices'), [{ transform: 'translateX(0)', opacity: 1 }, { transform: 'translateX(-110%)', opacity: 0 }], 200, EASE.exit, { id: 'pass' }))
@@ -655,6 +681,7 @@ export function Journey(props: JourneyProps) {
   const resume = () => {
     const answered = new Set(heartRef.current?.taps.map((tap) => tap.scene) || [])
     const next = Math.max(0, scenes.findIndex((scene) => !answered.has(scene.key)))
+    if (!takeTap()) return
     haptic(10)
     preloadApi()
     depth.current += 1
