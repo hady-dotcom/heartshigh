@@ -86,7 +86,14 @@ test('a learner sees the 20 doors with their titles and never a clause number', 
   await page.goto(`${BASE}/garden/ghunya`)
   await expect(page.getByTestId('seat-group')).toHaveCount(20)
 
-  expect((await page.goto(`${BASE}/garden/jibril/21`))?.status()).toBe(404)
+  await page.goto(`${BASE}/garden/jibril/w10`)
+  await expect(page.getByTestId('door-card')).toHaveAttribute('data-door', '10')
+  await expect(page.getByTestId('door-teaching')).toHaveText('Knowledge of the Creator.')
+  // An old clause link (clauses run past 20) opens that clause's door.
+  await page.goto(`${BASE}/garden/jibril/22`)
+  await expect(page.getByTestId('door-card')).toHaveAttribute('data-door', '10')
+  expect((await page.goto(`${BASE}/garden/jibril/42`))?.status()).toBe(404)
+  expect((await page.goto(`${BASE}/garden/jibril/w21`))?.status()).toBe(404)
 })
 
 test('every learner screen that shows the spine speaks in doors', async ({ page }) => {
