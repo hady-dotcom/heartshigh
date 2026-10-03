@@ -592,10 +592,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (!['admin', 'teacher', 'learner', 'parent'].includes(role)) return redirectTo(req, text(form, 'next') || '/master', 'Choose who the code is for.')
     if (!/^[A-Z0-9-]{8,32}$/.test(code)) return redirectTo(req, text(form, 'next') || '/master', 'Use 8 to 32 letters, numbers or dashes for the code, or leave it empty for a random one.')
     const maxUsesText = text(form, 'maxUses')
-    const maxUses = maxUsesText ? Number(maxUsesText) : role === 'admin' ? 1 : null
+    const maxUses = maxUsesText ? Number(maxUsesText) : null
     if (maxUses !== null && (!Number.isInteger(maxUses) || maxUses < 1 || maxUses > 10000)) return redirectTo(req, text(form, 'next') || '/master', 'Uses must be a whole number from 1 to 10,000, or empty for no limit.')
-    // An admin code hands over the whole portal, so only the master desk may let one be used more than once.
-    if (role === 'admin' && maxUses !== 1 && user.role !== 'master') return redirectTo(req, text(form, 'next') || '/master', 'An admin code works once. Make one code for each new admin, or ask the master desk for a shared one.')
     const daysText = text(form, 'expiresInDays')
     const days = daysText ? Number(daysText) : null
     if (days !== null && (!Number.isInteger(days) || days < 1 || days > 366)) return redirectTo(req, text(form, 'next') || '/master', 'Expiry must be 1 to 366 days, or empty for none.')

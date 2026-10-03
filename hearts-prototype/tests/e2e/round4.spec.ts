@@ -102,18 +102,46 @@ test.describe('round 4 API', () => {
     expect((await tierOf(lesson.id)).hook).toBe(tier.hook)
   })
 
-  test('N2: a portal admin cannot make an admin code with more than one use; the master can', async () => {
+  test('N2: a portal admin sets any use limit on an admin code, including none; it grants admin in their own portal only, can be switched off, and shows who joined', async () => {
     const admin = await as('elm-admin@hearts.test', 'portal-admin')
-    const refused = await form(admin, { action: 'create-code', portalSlug: PORTAL, role: 'admin', pack: '1', maxUses: '5', label: `r4-shared-${sfx}`, next: `/p/${PORTAL}/admin/access` })
-    expect(loc(refused)).toContain('An admin code works once')
-    const single = await form(admin, { action: 'create-code', portalSlug: PORTAL, role: 'admin', pack: '1', label: `r4-single-${sfx}`, next: `/p/${PORTAL}/admin/access` })
-    expect(loc(single)).not.toContain('error=')
-    const shared = await form(master, { action: 'create-code', portalSlug: PORTAL, role: 'admin', pack: '1', maxUses: '5', label: `r4-master-${sfx}`, next: '/master' })
-    expect(loc(shared)).not.toContain('error=')
-    const codes = (await json(await master.get(`/api/access-codes?where[label][like]=r4-&limit=20&depth=0`))).docs as { label: string; maxUses: number }[]
-    expect(codes.find((code) => code.label === `r4-single-${sfx}`)?.maxUses).toBe(1)
-    expect(codes.find((code) => code.label === `r4-master-${sfx}`)?.maxUses).toBe(5)
-    expect(codes.find((code) => code.label === `r4-shared-${sfx}`)).toBeUndefined()
+    const access = `/p/${PORTAL}/admin/access`
+    const five = await form(admin, { action: 'create-code', portalSlug: PORTAL, role: 'admin', pack: '1', maxUses: '5', expiresInDays: '30', label: `r4-five-${sfx}`, next: access })
+    expect(loc(five)).not.toContain('error=')
+    const open = await form(admin, { action: 'create-code', portalSlug: PORTAL, role: 'admin', pack: '1', label: `r4-open-${sfx}`, next: access })
+    expect(loc(open)).not.toContain('error=')
+    expect(loc(await form(admin, { action: 'create-code', portalSlug: 'leeds', role: 'admin', pack: '1', label: `r4-leeds-${sfx}`, next: access }))).toContain('not yours')
+    const codes = (await json(await master.get(`/api/access-codes?where[label][like]=r4-&limit=20&depth=0`))).docs as { id: number; code: string; label: string; maxUses: number | null; expiresAt: string | null; portal: number; uses: number }[]
+    const fiveCode = codes.find((code) => code.label === `r4-five-${sfx}`)!
+    const openCode = codes.find((code) => code.label === `r4-open-${sfx}`)!
+    expect(fiveCode.maxUses).toBe(5)
+    expect(fiveCode.expiresAt).toBeTruthy()
+    expect(openCode.maxUses ?? null).toBeNull()
+    expect(codes.find((code) => code.label === `r4-leeds-${sfx}`)).toBeUndefined()
+    const elm = (await json(await master.get(`/api/portals?where[slug][equals]=${PORTAL}&depth=0`))).docs[0]
+    expect(openCode.portal).toBe(elm.id)
+
+    const names: string[] = []
+    for (let i = 0; i < 3; i++) {
+      const name = `R4 Co-admin ${i} ${sfx}`
+      const joiner = await as(undefined, undefined, { 'x-forwarded-for': `10.9.0.${i + 1}` })
+      expect(loc(await form(joiner, { action: 'join', code: openCode.code, name, email: `r4-coadmin${i}-${sfx}@hearts.test`, password: 'round-four-1' }))).toContain(`/p/${PORTAL}/admin`)
+      await joiner.dispose()
+      names.push(name)
+    }
+    const made = (await json(await master.get(`/api/users?where[accessCode][equals]=${openCode.id}&depth=0&limit=10`))).docs as { role: string; tenants: { tenant: number }[] }[]
+    expect(made).toHaveLength(3)
+    for (const person of made) {
+      expect(person.role).toBe('portal-admin')
+      expect(person.tenants.map((row) => row.tenant)).toEqual([elm.id])
+    }
+    expect((await json(await master.get(`/api/access-codes/${openCode.id}?depth=0`))).uses).toBe(3)
+    const page = await (await admin.get(access)).text()
+    for (const name of names) expect(page).toContain(name)
+
+    expect(loc(await form(admin, { action: 'code-switch', id: String(openCode.id), disabled: 'true', next: access }))).not.toContain('error=')
+    const late = await as(undefined, undefined, { 'x-forwarded-for': '10.9.0.9' })
+    expect(loc(await form(late, { action: 'join', code: openCode.code, name: 'Too late', email: `r4-coadmin-late-${sfx}@hearts.test`, password: 'round-four-1' }))).toContain('error=')
+    await late.dispose()
     await admin.dispose()
   })
 

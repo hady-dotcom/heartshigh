@@ -32,7 +32,7 @@ export function CodeLimits() {
     <>
       <label className="stack">Label (for the desk only)<input type="text" name="label" maxLength={80} placeholder="Spring term learners" /></label>
       <div className="cols">
-        <label className="stack">Uses<input type="number" data-testid="code-max-uses" name="maxUses" min={1} max={10000} placeholder="No limit (admin: 1)" /></label>
+        <label className="stack">Uses<input type="number" data-testid="code-max-uses" name="maxUses" min={1} max={10000} placeholder="No limit" /></label>
         <label className="stack">Works for (days)<input type="number" data-testid="code-expiry-days" name="expiresInDays" min={1} max={366} placeholder="No expiry" /></label>
       </div>
     </>

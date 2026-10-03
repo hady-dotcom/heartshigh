@@ -318,7 +318,7 @@ export interface AccessCode {
    */
   expiresAt?: string | null;
   /**
-   * Leave empty for no limit. Admin codes are single-use unless you say otherwise.
+   * Leave empty for no limit.
    */
   maxUses?: number | null;
   uses?: number | null;

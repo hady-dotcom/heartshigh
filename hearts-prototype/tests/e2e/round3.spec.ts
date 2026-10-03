@@ -72,7 +72,7 @@ test.describe('round 3 API', () => {
     await resetClockAndLimits()
   })
 
-  test('Bug 2: codes have expiry, max uses and a switch; admin codes are single-use; guessing is throttled; seed codes are random', async () => {
+  test('Bug 2: codes have expiry, max uses and a switch; a one-use code refuses a second person; guessing is throttled; seed codes are random', async () => {
     const codes = (await json(await master.get('/api/access-codes?limit=100&depth=0'))).docs as Record<string, any>[]
     expect(codes.length).toBeGreaterThan(0)
     for (const key of ['expiresAt', 'maxUses', 'uses', 'disabled']) expect(Object.keys(codes[0])).toContain(key)
@@ -82,7 +82,7 @@ test.describe('round 3 API', () => {
 
     const elm = codes.find((code) => code.code === seedCode('elm-learner'))!
     const portalSlug = PORTAL
-    const made = await form(master, { action: 'create-code', portalSlug, role: 'admin', pack: '1', label: `r3-admin-${sfx}`, next: '/master' })
+    const made = await form(master, { action: 'create-code', portalSlug, role: 'admin', pack: '1', maxUses: '1', label: `r3-admin-${sfx}`, next: '/master' })
     const adminCode = /(?:code|Code) ([A-Z0-9-]{8,})/.exec(loc(made))?.[1]
     expect(adminCode, loc(made)).toBeTruthy()
     const first = await form(await as(), { action: 'join', code: adminCode!, name: 'First admin', email: `r3-adm1-${sfx}@hearts.test`, password: 'round-three-1' })

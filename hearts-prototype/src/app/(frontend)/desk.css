@@ -213,3 +213,6 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .desk-narrow h1 { font-size: 24px; line-height: 1.25; margin: 8px 0 0; }
   .desk-narrow p { margin: 0; font-size: 16px; line-height: 1.5; max-width: 32rem; }
 }
+
+.desk .code-joins { margin: 6px 0 0; padding-left: 18px; text-align: left; font-size: 12px; white-space: nowrap; }
+.desk [data-testid='code-joins'] summary { cursor: pointer; }

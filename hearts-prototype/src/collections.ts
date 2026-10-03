@@ -673,18 +673,10 @@ export const AccessCodes: CollectionConfig = {
     { name: 'parentMentorCode', type: 'relationship', relationTo: 'access-codes' },
     { name: 'label', type: 'text', admin: { description: 'A name for the desk, so codes can be found without printing them.' } },
     { name: 'expiresAt', type: 'date', admin: { description: 'After this moment the code stops working.' } },
-    { name: 'maxUses', type: 'number', min: 1, admin: { description: 'Leave empty for no limit. Admin codes are single-use unless you say otherwise.' } },
+    { name: 'maxUses', type: 'number', min: 1, admin: { description: 'Leave empty for no limit.' } },
     { name: 'uses', type: 'number', defaultValue: 0, admin: { readOnly: true } },
     { name: 'disabled', type: 'checkbox', defaultValue: false },
   ],
-  hooks: {
-    beforeChange: [
-      ({ data, operation }) => {
-        if (operation === 'create' && data.role === 'admin' && (data.maxUses === undefined || data.maxUses === null)) data.maxUses = 1
-        return data
-      },
-    ],
-  },
 }
 
 export const Adoptions: CollectionConfig = {

@@ -490,6 +490,24 @@ export async function LibraryScreen(ctx: Ctx) {
   )
 }
 
+function CodeJoins({ people }: { people: Row[] }) {
+  if (!people.length) return <>0</>
+  const joined = [...people].sort((a, b) => str(a.createdAt).localeCompare(str(b.createdAt)))
+  return (
+    <details data-testid="code-joins">
+      <summary>{joined.length}</summary>
+      <ol className="code-joins">
+        {joined.map((person) => (
+          <li key={str(person.id)} data-testid="code-join">
+            {str(person.name) || str(person.email)}
+            <span className="hint"> {new Date(str(person.createdAt)).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}</span>
+          </li>
+        ))}
+      </ol>
+    </details>
+  )
+}
+
 export async function AccessScreen(ctx: Ctx) {
   guardAdmin(ctx)
   const { payload, portal, base, origin } = ctx
@@ -520,7 +538,7 @@ export async function AccessScreen(ctx: Ctx) {
                     <td><span className={`badge ${roleBadge[str(code.role)] || 'grey'}`}>{str(code.role)[0]?.toUpperCase() + str(code.role).slice(1)}</span></td>
                     <td>{usable.filter((pack) => packIds.includes(pack.id)).map((pack) => str(pack.title)).join(', ') || <span className="hint">None</span>}</td>
                     <td>{str(teachers.find((row) => row.id === ref(code.linkedTeacherCode))?.code) || <span className="hint">None</span>}</td>
-                    <td className="num">{people.filter((person) => ref(person.accessCode) === code.id).length}</td>
+                    <td className="num"><CodeJoins people={people.filter((person) => ref(person.accessCode) === code.id)} /></td>
                     <td><CodeStatus code={code} next={here} portalSlug={portal.slug} /></td>
                     <td><div className="address" style={{ fontSize: 12 }} data-testid="share-url">{share}</div></td>
                     <td><div style={{ width: 84 }} className="qr-small"><Qr value={share} testId="code-qr" /></div></td>
