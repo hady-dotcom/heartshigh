@@ -600,7 +600,7 @@
     "mood": "fresh"
   },
   {
-    "file": "B-01-dunes-predawn-silver.jpg",
+    "file": "jpg/B-01-dunes-predawn-silver.jpg",
     "slice": "B",
     "landscape": "dunes",
     "time": "predawn",
@@ -610,7 +610,7 @@
     "mood": "hushed"
   },
   {
-    "file": "B-02-ripples-dawn-rose.jpg",
+    "file": "jpg/B-02-ripples-dawn-rose.jpg",
     "slice": "B",
     "landscape": "ripples",
     "time": "dawn",
@@ -620,7 +620,7 @@
     "mood": "tender"
   },
   {
-    "file": "B-03-canyon-morning-amber.jpg",
+    "file": "jpg/B-03-canyon-morning-amber.jpg",
     "slice": "B",
     "landscape": "canyon",
     "time": "morning",
@@ -630,7 +630,7 @@
     "mood": "majestic"
   },
   {
-    "file": "B-04-mesa-golden-gold.jpg",
+    "file": "jpg/B-04-mesa-golden-gold.jpg",
     "slice": "B",
     "landscape": "mesa",
     "time": "golden",
@@ -640,7 +640,7 @@
     "mood": "steadfast"
   },
   {
-    "file": "B-05-oasis-dusk-violet.jpg",
+    "file": "jpg/B-05-oasis-dusk-violet.jpg",
     "slice": "B",
     "landscape": "oasis",
     "time": "dusk",
@@ -650,7 +650,7 @@
     "mood": "peaceful"
   },
   {
-    "file": "B-06-saltflat-noon-ivory.jpg",
+    "file": "jpg/B-06-saltflat-noon-ivory.jpg",
     "slice": "B",
     "landscape": "saltflat",
     "time": "noon",
@@ -660,7 +660,7 @@
     "mood": "open"
   },
   {
-    "file": "B-07-milkyway-starry-nightblue.jpg",
+    "file": "jpg/B-07-milkyway-starry-nightblue.jpg",
     "slice": "B",
     "landscape": "milkyway",
     "time": "starry",
@@ -670,7 +670,7 @@
     "mood": "awe"
   },
   {
-    "file": "B-08-cloudscape-morning-ivory.jpg",
+    "file": "jpg/B-08-cloudscape-morning-ivory.jpg",
     "slice": "B",
     "landscape": "cloudscape",
     "time": "morning",
@@ -680,7 +680,7 @@
     "mood": "uplifted"
   },
   {
-    "file": "B-09-rays-dawn-gold.jpg",
+    "file": "jpg/B-09-rays-dawn-gold.jpg",
     "slice": "B",
     "landscape": "rays",
     "time": "dawn",
@@ -690,7 +690,7 @@
     "mood": "hopeful"
   },
   {
-    "file": "B-10-moonrise-bluehour-teal.jpg",
+    "file": "jpg/B-10-moonrise-bluehour-teal.jpg",
     "slice": "B",
     "landscape": "moonrise",
     "time": "bluehour",
@@ -700,7 +700,7 @@
     "mood": "serene"
   },
   {
-    "file": "B-11-aurora-starry-teal.jpg",
+    "file": "jpg/B-11-aurora-starry-teal.jpg",
     "slice": "B",
     "landscape": "aurora",
     "time": "starry",
@@ -710,7 +710,7 @@
     "mood": "wonder"
   },
   {
-    "file": "B-12-crackedearth-golden-amber.jpg",
+    "file": "jpg/B-12-crackedearth-golden-amber.jpg",
     "slice": "B",
     "landscape": "crackedearth",
     "time": "golden",
@@ -720,7 +720,7 @@
     "mood": "patient"
   },
   {
-    "file": "B-13-wadi-morning-silver.jpg",
+    "file": "jpg/B-13-wadi-morning-silver.jpg",
     "slice": "B",
     "landscape": "wadi",
     "time": "morning",
@@ -730,7 +730,7 @@
     "mood": "renewed"
   },
   {
-    "file": "B-14-dunes-bluehour-violet.jpg",
+    "file": "jpg/B-14-dunes-bluehour-violet.jpg",
     "slice": "B",
     "landscape": "dunes",
     "time": "bluehour",
@@ -740,7 +740,7 @@
     "mood": "calm"
   },
   {
-    "file": "B-15-rockdesert-moonlit-silver.jpg",
+    "file": "jpg/B-15-rockdesert-moonlit-silver.jpg",
     "slice": "B",
     "landscape": "rockdesert",
     "time": "moonlit",
@@ -750,7 +750,7 @@
     "mood": "still"
   },
   {
-    "file": "B-16-skyhorizon-predawn-nightblue.jpg",
+    "file": "jpg/B-16-skyhorizon-predawn-nightblue.jpg",
     "slice": "B",
     "landscape": "skyhorizon",
     "time": "predawn",
@@ -760,7 +760,7 @@
     "mood": "expectant"
   },
   {
-    "file": "B-17-canyon-dusk-rose.jpg",
+    "file": "jpg/B-17-canyon-dusk-rose.jpg",
     "slice": "B",
     "landscape": "canyon",
     "time": "dusk",
@@ -770,7 +770,7 @@
     "mood": "reflective"
   },
   {
-    "file": "B-18-oasis-morning-teal.jpg",
+    "file": "jpg/B-18-oasis-morning-teal.jpg",
     "slice": "B",
     "landscape": "oasis",
     "time": "morning",
@@ -780,7 +780,7 @@
     "mood": "fresh"
   },
   {
-    "file": "B-19-saltflat-bluehour-rose.jpg",
+    "file": "jpg/B-19-saltflat-bluehour-rose.jpg",
     "slice": "B",
     "landscape": "saltflat",
     "time": "bluehour",
@@ -790,7 +790,7 @@
     "mood": "dreamlike"
   },
   {
-    "file": "B-20-ripples-noon-ivory.jpg",
+    "file": "jpg/B-20-ripples-noon-ivory.jpg",
     "slice": "B",
     "landscape": "ripples",
     "time": "noon",
@@ -800,7 +800,7 @@
     "mood": "gentle"
   },
   {
-    "file": "B-21-starfield-starry-violet.jpg",
+    "file": "jpg/B-21-starfield-starry-violet.jpg",
     "slice": "B",
     "landscape": "starfield",
     "time": "starry",
@@ -810,7 +810,7 @@
     "mood": "infinite"
   },
   {
-    "file": "B-22-mesa-dusk-amber.jpg",
+    "file": "jpg/B-22-mesa-dusk-amber.jpg",
     "slice": "B",
     "landscape": "mesa",
     "time": "dusk",
@@ -820,7 +820,7 @@
     "mood": "relieved"
   },
   {
-    "file": "B-23-cloudscape-golden-gold.jpg",
+    "file": "jpg/B-23-cloudscape-golden-gold.jpg",
     "slice": "B",
     "landscape": "cloudscape",
     "time": "golden",
@@ -830,7 +830,7 @@
     "mood": "radiant"
   },
   {
-    "file": "B-24-dunes-moonlit-nightblue.jpg",
+    "file": "jpg/B-24-dunes-moonlit-nightblue.jpg",
     "slice": "B",
     "landscape": "dunes",
     "time": "moonlit",
@@ -840,7 +840,7 @@
     "mood": "tranquil"
   },
   {
-    "file": "B-25-wadi-golden-amber.jpg",
+    "file": "jpg/B-25-wadi-golden-amber.jpg",
     "slice": "B",
     "landscape": "wadi",
     "time": "golden",
@@ -850,7 +850,7 @@
     "mood": "warm"
   },
   {
-    "file": "B-26-crackedearth-predawn-violet.jpg",
+    "file": "jpg/B-26-crackedearth-predawn-violet.jpg",
     "slice": "B",
     "landscape": "crackedearth",
     "time": "predawn",
@@ -860,7 +860,7 @@
     "mood": "quiet"
   },
   {
-    "file": "B-27-rays-golden-amber.jpg",
+    "file": "jpg/B-27-rays-golden-amber.jpg",
     "slice": "B",
     "landscape": "rays",
     "time": "golden",
@@ -870,7 +870,7 @@
     "mood": "glowing"
   },
   {
-    "file": "B-28-moonrise-dusk-rose.jpg",
+    "file": "jpg/B-28-moonrise-dusk-rose.jpg",
     "slice": "B",
     "landscape": "moonrise",
     "time": "dusk",
@@ -880,7 +880,7 @@
     "mood": "tender"
   },
   {
-    "file": "B-29-aurora-bluehour-violet.jpg",
+    "file": "jpg/B-29-aurora-bluehour-violet.jpg",
     "slice": "B",
     "landscape": "aurora",
     "time": "bluehour",
@@ -890,7 +890,7 @@
     "mood": "mysterious"
   },
   {
-    "file": "B-30-skyhorizon-noon-silver.jpg",
+    "file": "jpg/B-30-skyhorizon-noon-silver.jpg",
     "slice": "B",
     "landscape": "skyhorizon",
     "time": "noon",
@@ -900,7 +900,7 @@
     "mood": "contemplative"
   },
   {
-    "file": "B-31-dunes-golden-gold.jpg",
+    "file": "jpg/B-31-dunes-golden-gold.jpg",
     "slice": "B",
     "landscape": "dunes",
     "time": "golden",
@@ -910,7 +910,7 @@
     "mood": "abundant"
   },
   {
-    "file": "B-32-canyon-predawn-teal.jpg",
+    "file": "jpg/B-32-canyon-predawn-teal.jpg",
     "slice": "B",
     "landscape": "canyon",
     "time": "predawn",
@@ -920,7 +920,7 @@
     "mood": "solemn"
   },
   {
-    "file": "B-33-oasis-starry-nightblue.jpg",
+    "file": "jpg/B-33-oasis-starry-nightblue.jpg",
     "slice": "B",
     "landscape": "oasis",
     "time": "starry",
@@ -930,7 +930,7 @@
     "mood": "sheltered"
   },
   {
-    "file": "B-34-saltflat-dawn-gold.jpg",
+    "file": "jpg/B-34-saltflat-dawn-gold.jpg",
     "slice": "B",
     "landscape": "saltflat",
     "time": "dawn",
@@ -940,7 +940,7 @@
     "mood": "awakening"
   },
   {
-    "file": "B-35-ripples-bluehour-teal.jpg",
+    "file": "jpg/B-35-ripples-bluehour-teal.jpg",
     "slice": "B",
     "landscape": "ripples",
     "time": "bluehour",
@@ -950,7 +950,7 @@
     "mood": "cool"
   },
   {
-    "file": "B-36-rockdesert-noon-amber.jpg",
+    "file": "jpg/B-36-rockdesert-noon-amber.jpg",
     "slice": "B",
     "landscape": "rockdesert",
     "time": "noon",
@@ -960,7 +960,7 @@
     "mood": "sun-warmed"
   },
   {
-    "file": "B-37-mesa-moonlit-teal.jpg",
+    "file": "jpg/B-37-mesa-moonlit-teal.jpg",
     "slice": "B",
     "landscape": "mesa",
     "time": "moonlit",
@@ -970,7 +970,7 @@
     "mood": "watchful"
   },
   {
-    "file": "B-38-cloudscape-dusk-violet.jpg",
+    "file": "jpg/B-38-cloudscape-dusk-violet.jpg",
     "slice": "B",
     "landscape": "cloudscape",
     "time": "dusk",
@@ -980,7 +980,7 @@
     "mood": "gentle"
   },
   {
-    "file": "B-39-milkyway-starry-silver.jpg",
+    "file": "jpg/B-39-milkyway-starry-silver.jpg",
     "slice": "B",
     "landscape": "milkyway",
     "time": "starry",
@@ -990,7 +990,7 @@
     "mood": "vast"
   },
   {
-    "file": "B-40-skyhorizon-golden-rose.jpg",
+    "file": "jpg/B-40-skyhorizon-golden-rose.jpg",
     "slice": "B",
     "landscape": "skyhorizon",
     "time": "golden",
@@ -1000,7 +1000,7 @@
     "mood": "warm"
   },
   {
-    "file": "B-41-wadi-dawn-rose.jpg",
+    "file": "jpg/B-41-wadi-dawn-rose.jpg",
     "slice": "B",
     "landscape": "wadi",
     "time": "dawn",
@@ -1010,7 +1010,7 @@
     "mood": "soft"
   },
   {
-    "file": "B-42-crackedearth-morning-teal.jpg",
+    "file": "jpg/B-42-crackedearth-morning-teal.jpg",
     "slice": "B",
     "landscape": "crackedearth",
     "time": "morning",
@@ -1020,7 +1020,7 @@
     "mood": "restored"
   },
   {
-    "file": "B-43-dunes-dawn-ivory.jpg",
+    "file": "jpg/B-43-dunes-dawn-ivory.jpg",
     "slice": "B",
     "landscape": "dunes",
     "time": "dawn",
@@ -1030,7 +1030,7 @@
     "mood": "cleansed"
   },
   {
-    "file": "B-44-rays-morning-silver.jpg",
+    "file": "jpg/B-44-rays-morning-silver.jpg",
     "slice": "B",
     "landscape": "rays",
     "time": "morning",
@@ -1040,7 +1040,7 @@
     "mood": "lifting"
   },
   {
-    "file": "B-45-moonrise-bluehour-nightblue.jpg",
+    "file": "jpg/B-45-moonrise-bluehour-nightblue.jpg",
     "slice": "B",
     "landscape": "moonrise",
     "time": "bluehour",
@@ -1050,7 +1050,7 @@
     "mood": "serene"
   },
   {
-    "file": "B-46-oasis-golden-amber.jpg",
+    "file": "jpg/B-46-oasis-golden-amber.jpg",
     "slice": "B",
     "landscape": "oasis",
     "time": "golden",
@@ -1060,7 +1060,7 @@
     "mood": "welcoming"
   },
   {
-    "file": "B-47-canyon-noon-ivory.jpg",
+    "file": "jpg/B-47-canyon-noon-ivory.jpg",
     "slice": "B",
     "landscape": "canyon",
     "time": "noon",
@@ -1070,7 +1070,7 @@
     "mood": "airy"
   },
   {
-    "file": "B-48-rockdesert-dawn-violet.jpg",
+    "file": "jpg/B-48-rockdesert-dawn-violet.jpg",
     "slice": "B",
     "landscape": "rockdesert",
     "time": "dawn",
@@ -1080,7 +1080,7 @@
     "mood": "resolute"
   },
   {
-    "file": "B-49-starfield-starry-nightblue.jpg",
+    "file": "jpg/B-49-starfield-starry-nightblue.jpg",
     "slice": "B",
     "landscape": "starfield",
     "time": "starry",
@@ -1090,7 +1090,7 @@
     "mood": "boundless"
   },
   {
-    "file": "B-50-cloudscape-golden-gold.jpg",
+    "file": "jpg/B-50-cloudscape-golden-gold.jpg",
     "slice": "B",
     "landscape": "cloudscape",
     "time": "golden",
@@ -1100,7 +1100,7 @@
     "mood": "grace"
   },
   {
-    "file": "B-51-mesa-predawn-rose.jpg",
+    "file": "jpg/B-51-mesa-predawn-rose.jpg",
     "slice": "B",
     "landscape": "mesa",
     "time": "predawn",
@@ -1110,7 +1110,7 @@
     "mood": "waiting"
   },
   {
-    "file": "B-52-ripples-moonlit-silver.jpg",
+    "file": "jpg/B-52-ripples-moonlit-silver.jpg",
     "slice": "B",
     "landscape": "ripples",
     "time": "moonlit",
@@ -1120,7 +1120,7 @@
     "mood": "quiet"
   },
   {
-    "file": "B-53-skyhorizon-dusk-amber.jpg",
+    "file": "jpg/B-53-skyhorizon-dusk-amber.jpg",
     "slice": "B",
     "landscape": "skyhorizon",
     "time": "dusk",
@@ -1130,7 +1130,7 @@
     "mood": "closing"
   },
   {
-    "file": "B-54-dunes-noon-ivory.jpg",
+    "file": "jpg/B-54-dunes-noon-ivory.jpg",
     "slice": "B",
     "landscape": "dunes",
     "time": "noon",
@@ -1140,7 +1140,7 @@
     "mood": "pure"
   },
   {
-    "file": "B-55-wadi-moonlit-nightblue.jpg",
+    "file": "jpg/B-55-wadi-moonlit-nightblue.jpg",
     "slice": "B",
     "landscape": "wadi",
     "time": "moonlit",
@@ -1150,7 +1150,7 @@
     "mood": "consoling"
   },
   {
-    "file": "B-56-dunes-dusk-rose.jpg",
+    "file": "jpg/B-56-dunes-dusk-rose.jpg",
     "slice": "B",
     "landscape": "dunes",
     "time": "dusk",
@@ -1160,7 +1160,7 @@
     "mood": "wistful"
   },
   {
-    "file": "B-57-crackedearth-moonlit-silver.jpg",
+    "file": "jpg/B-57-crackedearth-moonlit-silver.jpg",
     "slice": "B",
     "landscape": "crackedearth",
     "time": "moonlit",
@@ -1170,7 +1170,7 @@
     "mood": "solitary"
   },
   {
-    "file": "B-58-oasis-predawn-silver.jpg",
+    "file": "jpg/B-58-oasis-predawn-silver.jpg",
     "slice": "B",
     "landscape": "oasis",
     "time": "predawn",
@@ -1180,7 +1180,7 @@
     "mood": "hushed"
   },
   {
-    "file": "B-59-canyon-bluehour-nightblue.jpg",
+    "file": "jpg/B-59-canyon-bluehour-nightblue.jpg",
     "slice": "B",
     "landscape": "canyon",
     "time": "bluehour",
@@ -1190,7 +1190,7 @@
     "mood": "deep"
   },
   {
-    "file": "B-60-skyhorizon-morning-teal.jpg",
+    "file": "jpg/B-60-skyhorizon-morning-teal.jpg",
     "slice": "B",
     "landscape": "skyhorizon",
     "time": "morning",
@@ -1200,7 +1200,7 @@
     "mood": "clear-minded"
   },
   {
-    "file": "C-01-snowpeaks-dawn-rose.jpg",
+    "file": "jpg/C-01-snowpeaks-dawn-rose.jpg",
     "slice": "C",
     "landscape": "snow peaks",
     "time": "dawn",
@@ -1210,7 +1210,7 @@
     "mood": "serene"
   },
   {
-    "file": "C-02-ridges-predawn-violet.jpg",
+    "file": "jpg/C-02-ridges-predawn-violet.jpg",
     "slice": "C",
     "landscape": "layered ridges",
     "time": "predawn",
@@ -1220,7 +1220,7 @@
     "mood": "contemplative"
   },
   {
-    "file": "C-03-cloudsea-morning-gold.jpg",
+    "file": "jpg/C-03-cloudsea-morning-gold.jpg",
     "slice": "C",
     "landscape": "sea of clouds",
     "time": "morning",
@@ -1230,7 +1230,7 @@
     "mood": "uplifting"
   },
   {
-    "file": "C-04-rollinghills-golden-gold.jpg",
+    "file": "jpg/C-04-rollinghills-golden-gold.jpg",
     "slice": "C",
     "landscape": "rolling green hills",
     "time": "golden",
@@ -1240,7 +1240,7 @@
     "mood": "warm"
   },
   {
-    "file": "C-05-terraces-morning-sage.jpg",
+    "file": "jpg/C-05-terraces-morning-sage.jpg",
     "slice": "C",
     "landscape": "terraced hills",
     "time": "morning",
@@ -1250,7 +1250,7 @@
     "mood": "fresh"
   },
   {
-    "file": "C-06-alpinemeadow-noonhaze-sage.jpg",
+    "file": "jpg/C-06-alpinemeadow-noonhaze-sage.jpg",
     "slice": "C",
     "landscape": "alpine meadow",
     "time": "noonhaze",
@@ -1260,7 +1260,7 @@
     "mood": "peaceful"
   },
   {
-    "file": "C-07-wildflowers-golden-rose.jpg",
+    "file": "jpg/C-07-wildflowers-golden-rose.jpg",
     "slice": "C",
     "landscape": "wildflower slope",
     "time": "golden",
@@ -1270,7 +1270,7 @@
     "mood": "tender"
   },
   {
-    "file": "C-08-pinefog-morning-rust.jpg",
+    "file": "jpg/C-08-pinefog-morning-rust.jpg",
     "slice": "C",
     "landscape": "pine forest in fog",
     "time": "morning",
@@ -1280,7 +1280,7 @@
     "mood": "hushed"
   },
   {
-    "file": "C-09-autumnwoods-golden-rust.jpg",
+    "file": "jpg/C-09-autumnwoods-golden-rust.jpg",
     "slice": "C",
     "landscape": "autumn woods",
     "time": "golden",
@@ -1290,7 +1290,7 @@
     "mood": "warm"
   },
   {
-    "file": "C-10-birch-noonhaze-silver.jpg",
+    "file": "jpg/C-10-birch-noonhaze-silver.jpg",
     "slice": "C",
     "landscape": "birch grove",
     "time": "noonhaze",
@@ -1300,7 +1300,7 @@
     "mood": "pure"
   },
   {
-    "file": "C-11-olivegrove-dusk-sage.jpg",
+    "file": "jpg/C-11-olivegrove-dusk-sage.jpg",
     "slice": "C",
     "landscape": "olive grove",
     "time": "dusk",
@@ -1310,7 +1310,7 @@
     "mood": "calm"
   },
   {
-    "file": "C-12-cedars-morning-teal.jpg",
+    "file": "jpg/C-12-cedars-morning-teal.jpg",
     "slice": "C",
     "landscape": "cedar forest",
     "time": "morning",
@@ -1320,7 +1320,7 @@
     "mood": "majestic"
   },
   {
-    "file": "C-13-palmgrove-noonhaze-gold.jpg",
+    "file": "jpg/C-13-palmgrove-noonhaze-gold.jpg",
     "slice": "C",
     "landscape": "palm grove",
     "time": "noonhaze",
@@ -1330,7 +1330,7 @@
     "mood": "warm"
   },
   {
-    "file": "C-14-lonetree-bluehour-nightblue.jpg",
+    "file": "jpg/C-14-lonetree-bluehour-nightblue.jpg",
     "slice": "C",
     "landscape": "lone tree on a hill",
     "time": "bluehour",
@@ -1340,7 +1340,7 @@
     "mood": "solitary"
   },
   {
-    "file": "C-15-sunbeams-morning-gold.jpg",
+    "file": "jpg/C-15-sunbeams-morning-gold.jpg",
     "slice": "C",
     "landscape": "sunbeams through trees",
     "time": "morning",
@@ -1350,7 +1350,7 @@
     "mood": "hopeful"
   },
   {
-    "file": "C-16-snowyforest-moonlit-nightblue.jpg",
+    "file": "jpg/C-16-snowyforest-moonlit-nightblue.jpg",
     "slice": "C",
     "landscape": "snowy forest",
     "time": "moonlit",
@@ -1360,7 +1360,7 @@
     "mood": "still"
   },
   {
-    "file": "C-17-valley-dawn-teal.jpg",
+    "file": "jpg/C-17-valley-dawn-teal.jpg",
     "slice": "C",
     "landscape": "valley",
     "time": "dawn",
@@ -1370,7 +1370,7 @@
     "mood": "awakening"
   },
   {
-    "file": "C-18-snowpeaks-moonlit-silver.jpg",
+    "file": "jpg/C-18-snowpeaks-moonlit-silver.jpg",
     "slice": "C",
     "landscape": "snow peaks",
     "time": "moonlit",
@@ -1380,7 +1380,7 @@
     "mood": "majestic"
   },
   {
-    "file": "C-19-ridges-noonhaze-teal.jpg",
+    "file": "jpg/C-19-ridges-noonhaze-teal.jpg",
     "slice": "C",
     "landscape": "layered ridges",
     "time": "noonhaze",
@@ -1390,7 +1390,7 @@
     "mood": "expansive"
   },
   {
-    "file": "C-20-cloudsea-dusk-violet.jpg",
+    "file": "jpg/C-20-cloudsea-dusk-violet.jpg",
     "slice": "C",
     "landscape": "sea of clouds",
     "time": "dusk",
@@ -1400,7 +1400,7 @@
     "mood": "reflective"
   },
   {
-    "file": "C-21-rollinghills-predawn-nightblue.jpg",
+    "file": "jpg/C-21-rollinghills-predawn-nightblue.jpg",
     "slice": "C",
     "landscape": "rolling green hills",
     "time": "predawn",
@@ -1410,7 +1410,7 @@
     "mood": "quiet"
   },
   {
-    "file": "C-22-terraces-golden-rust.jpg",
+    "file": "jpg/C-22-terraces-golden-rust.jpg",
     "slice": "C",
     "landscape": "terraced hills",
     "time": "golden",
@@ -1420,7 +1420,7 @@
     "mood": "grateful"
   },
   {
-    "file": "C-23-alpinemeadow-dawn-rose.jpg",
+    "file": "jpg/C-23-alpinemeadow-dawn-rose.jpg",
     "slice": "C",
     "landscape": "alpine meadow",
     "time": "dawn",
@@ -1430,7 +1430,7 @@
     "mood": "gentle"
   },
   {
-    "file": "C-24-wildflowers-morning-sage.jpg",
+    "file": "jpg/C-24-wildflowers-morning-sage.jpg",
     "slice": "C",
     "landscape": "wildflower slope",
     "time": "morning",
@@ -1440,7 +1440,7 @@
     "mood": "joyful"
   },
   {
-    "file": "C-25-pinefog-bluehour-teal.jpg",
+    "file": "jpg/C-25-pinefog-bluehour-teal.jpg",
     "slice": "C",
     "landscape": "pine forest in fog",
     "time": "bluehour",
@@ -1450,7 +1450,7 @@
     "mood": "mysterious"
   },
   {
-    "file": "C-26-autumnwoods-predawn-violet.jpg",
+    "file": "jpg/C-26-autumnwoods-predawn-violet.jpg",
     "slice": "C",
     "landscape": "autumn woods",
     "time": "predawn",
@@ -1460,7 +1460,7 @@
     "mood": "wistful"
   },
   {
-    "file": "C-27-birch-dawn-gold.jpg",
+    "file": "jpg/C-27-birch-dawn-gold.jpg",
     "slice": "C",
     "landscape": "birch grove",
     "time": "dawn",
@@ -1470,7 +1470,7 @@
     "mood": "warm"
   },
   {
-    "file": "C-28-olivegrove-morning-silver.jpg",
+    "file": "jpg/C-28-olivegrove-morning-silver.jpg",
     "slice": "C",
     "landscape": "olive grove",
     "time": "morning",
@@ -1480,7 +1480,7 @@
     "mood": "peaceful"
   },
   {
-    "file": "C-29-cedars-dusk-rust.jpg",
+    "file": "jpg/C-29-cedars-dusk-rust.jpg",
     "slice": "C",
     "landscape": "cedar forest",
     "time": "dusk",
@@ -1490,7 +1490,7 @@
     "mood": "solemn"
   },
   {
-    "file": "C-30-palmgrove-bluehour-violet.jpg",
+    "file": "jpg/C-30-palmgrove-bluehour-violet.jpg",
     "slice": "C",
     "landscape": "palm grove",
     "time": "bluehour",
@@ -1500,7 +1500,7 @@
     "mood": "tranquil"
   },
   {
-    "file": "C-31-lonetree-dawn-gold.jpg",
+    "file": "jpg/C-31-lonetree-dawn-gold.jpg",
     "slice": "C",
     "landscape": "lone tree on a hill",
     "time": "dawn",
@@ -1510,7 +1510,7 @@
     "mood": "hopeful"
   },
   {
-    "file": "C-32-sunbeams-golden-rust.jpg",
+    "file": "jpg/C-32-sunbeams-golden-rust.jpg",
     "slice": "C",
     "landscape": "sunbeams through trees",
     "time": "golden",
@@ -1520,7 +1520,7 @@
     "mood": "reverent"
   },
   {
-    "file": "C-33-snowyforest-dawn-rose.jpg",
+    "file": "jpg/C-33-snowyforest-dawn-rose.jpg",
     "slice": "C",
     "landscape": "snowy forest",
     "time": "dawn",
@@ -1530,7 +1530,7 @@
     "mood": "pure"
   },
   {
-    "file": "C-34-valley-moonlit-silver.jpg",
+    "file": "jpg/C-34-valley-moonlit-silver.jpg",
     "slice": "C",
     "landscape": "valley",
     "time": "moonlit",
@@ -1540,7 +1540,7 @@
     "mood": "calm"
   },
   {
-    "file": "C-35-snowpeaks-golden-gold.jpg",
+    "file": "jpg/C-35-snowpeaks-golden-gold.jpg",
     "slice": "C",
     "landscape": "snow peaks",
     "time": "golden",
@@ -1550,7 +1550,7 @@
     "mood": "majestic"
   },
   {
-    "file": "C-36-ridges-dusk-rose.jpg",
+    "file": "jpg/C-36-ridges-dusk-rose.jpg",
     "slice": "C",
     "landscape": "layered ridges",
     "time": "dusk",
@@ -1560,7 +1560,7 @@
     "mood": "wistful"
   },
   {
-    "file": "C-37-cloudsea-moonlit-nightblue.jpg",
+    "file": "jpg/C-37-cloudsea-moonlit-nightblue.jpg",
     "slice": "C",
     "landscape": "sea of clouds",
     "time": "moonlit",
@@ -1570,7 +1570,7 @@
     "mood": "transcendent"
   },
   {
-    "file": "C-38-rollinghills-noonhaze-sage.jpg",
+    "file": "jpg/C-38-rollinghills-noonhaze-sage.jpg",
     "slice": "C",
     "landscape": "rolling green hills",
     "time": "noonhaze",
@@ -1580,7 +1580,7 @@
     "mood": "soft"
   },
   {
-    "file": "C-39-terraces-predawn-teal.jpg",
+    "file": "jpg/C-39-terraces-predawn-teal.jpg",
     "slice": "C",
     "landscape": "terraced hills",
     "time": "predawn",
@@ -1590,7 +1590,7 @@
     "mood": "mystical"
   },
   {
-    "file": "C-40-alpinemeadow-bluehour-violet.jpg",
+    "file": "jpg/C-40-alpinemeadow-bluehour-violet.jpg",
     "slice": "C",
     "landscape": "alpine meadow",
     "time": "bluehour",
@@ -1600,7 +1600,7 @@
     "mood": "serene"
   },
   {
-    "file": "C-41-wildflowers-dusk-violet.jpg",
+    "file": "jpg/C-41-wildflowers-dusk-violet.jpg",
     "slice": "C",
     "landscape": "wildflower slope",
     "time": "dusk",
@@ -1610,7 +1610,7 @@
     "mood": "dreamy"
   },
   {
-    "file": "C-42-pinefog-predawn-silver.jpg",
+    "file": "jpg/C-42-pinefog-predawn-silver.jpg",
     "slice": "C",
     "landscape": "pine forest in fog",
     "time": "predawn",
@@ -1620,7 +1620,7 @@
     "mood": "hushed"
   },
   {
-    "file": "C-43-autumnwoods-dusk-rose.jpg",
+    "file": "jpg/C-43-autumnwoods-dusk-rose.jpg",
     "slice": "C",
     "landscape": "autumn woods",
     "time": "dusk",
@@ -1630,7 +1630,7 @@
     "mood": "nostalgic"
   },
   {
-    "file": "C-44-birch-moonlit-nightblue.jpg",
+    "file": "jpg/C-44-birch-moonlit-nightblue.jpg",
     "slice": "C",
     "landscape": "birch grove",
     "time": "moonlit",
@@ -1640,7 +1640,7 @@
     "mood": "quiet"
   },
   {
-    "file": "C-45-olivegrove-moonlit-silver.jpg",
+    "file": "jpg/C-45-olivegrove-moonlit-silver.jpg",
     "slice": "C",
     "landscape": "olive grove",
     "time": "moonlit",
@@ -1650,7 +1650,7 @@
     "mood": "peaceful"
   },
   {
-    "file": "C-46-cedars-predawn-nightblue.jpg",
+    "file": "jpg/C-46-cedars-predawn-nightblue.jpg",
     "slice": "C",
     "landscape": "cedar forest",
     "time": "predawn",
@@ -1660,7 +1660,7 @@
     "mood": "ancient"
   },
   {
-    "file": "C-47-palmgrove-dawn-rose.jpg",
+    "file": "jpg/C-47-palmgrove-dawn-rose.jpg",
     "slice": "C",
     "landscape": "palm grove",
     "time": "dawn",
@@ -1670,7 +1670,7 @@
     "mood": "gentle"
   },
   {
-    "file": "C-48-lonetree-golden-rust.jpg",
+    "file": "jpg/C-48-lonetree-golden-rust.jpg",
     "slice": "C",
     "landscape": "lone tree on a hill",
     "time": "golden",
@@ -1680,7 +1680,7 @@
     "mood": "reflective"
   },
   {
-    "file": "C-49-sunbeams-noonhaze-teal.jpg",
+    "file": "jpg/C-49-sunbeams-noonhaze-teal.jpg",
     "slice": "C",
     "landscape": "sunbeams through trees",
     "time": "noonhaze",
@@ -1690,7 +1690,7 @@
     "mood": "fresh"
   },
   {
-    "file": "C-50-snowyforest-noonhaze-silver.jpg",
+    "file": "jpg/C-50-snowyforest-noonhaze-silver.jpg",
     "slice": "C",
     "landscape": "snowy forest",
     "time": "noonhaze",
@@ -1700,7 +1700,7 @@
     "mood": "still"
   },
   {
-    "file": "C-51-valley-bluehour-teal.jpg",
+    "file": "jpg/C-51-valley-bluehour-teal.jpg",
     "slice": "C",
     "landscape": "valley",
     "time": "bluehour",
@@ -1710,7 +1710,7 @@
     "mood": "calm"
   },
   {
-    "file": "C-52-snowpeaks-bluehour-violet.jpg",
+    "file": "jpg/C-52-snowpeaks-bluehour-violet.jpg",
     "slice": "C",
     "landscape": "snow peaks",
     "time": "bluehour",
@@ -1720,7 +1720,7 @@
     "mood": "awe"
   },
   {
-    "file": "C-53-ridges-golden-rust.jpg",
+    "file": "jpg/C-53-ridges-golden-rust.jpg",
     "slice": "C",
     "landscape": "layered ridges",
     "time": "golden",
@@ -1730,7 +1730,7 @@
     "mood": "warm"
   },
   {
-    "file": "C-54-cloudsea-predawn-violet.jpg",
+    "file": "jpg/C-54-cloudsea-predawn-violet.jpg",
     "slice": "C",
     "landscape": "sea of clouds",
     "time": "predawn",
@@ -1740,7 +1740,7 @@
     "mood": "expectant"
   },
   {
-    "file": "C-55-rollinghills-dusk-rose.jpg",
+    "file": "jpg/C-55-rollinghills-dusk-rose.jpg",
     "slice": "C",
     "landscape": "rolling green hills",
     "time": "dusk",
@@ -1750,7 +1750,7 @@
     "mood": "tender"
   },
   {
-    "file": "C-56-valley-morning-sage.jpg",
+    "file": "jpg/C-56-valley-morning-sage.jpg",
     "slice": "C",
     "landscape": "valley",
     "time": "morning",
@@ -1760,7 +1760,7 @@
     "mood": "renewal"
   },
   {
-    "file": "C-57-lonetree-moonlit-silver.jpg",
+    "file": "jpg/C-57-lonetree-moonlit-silver.jpg",
     "slice": "C",
     "landscape": "lone tree on a hill",
     "time": "moonlit",
@@ -1770,7 +1770,7 @@
     "mood": "solitary"
   },
   {
-    "file": "C-58-snowhills-bluehour-nightblue.jpg",
+    "file": "jpg/C-58-snowhills-bluehour-nightblue.jpg",
     "slice": "C",
     "landscape": "snowy rolling hills",
     "time": "bluehour",
@@ -1780,7 +1780,7 @@
     "mood": "still"
   },
   {
-    "file": "C-59-larchforest-dusk-gold.jpg",
+    "file": "jpg/C-59-larchforest-dusk-gold.jpg",
     "slice": "C",
     "landscape": "larch forest",
     "time": "dusk",
@@ -1790,7 +1790,7 @@
     "mood": "grateful"
   },
   {
-    "file": "C-60-beechsunbeams-dawn-sage.jpg",
+    "file": "jpg/C-60-beechsunbeams-dawn-sage.jpg",
     "slice": "C",
     "landscape": "sunbeams through trees",
     "time": "dawn",
