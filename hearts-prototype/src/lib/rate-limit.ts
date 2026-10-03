@@ -28,6 +28,30 @@ export function resetLimits() {
   store().clear()
 }
 
-export function clientIp(req: Request) {
-  return req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'local'
+/** How many proxies of ours sit in front of the app, from HEARTS_TRUSTED_PROXY_HOPS. 0 means none is trusted. */
+export function trustedProxyHops(env: Record<string, string | undefined> = process.env) {
+  const hops = Number(env.HEARTS_TRUSTED_PROXY_HOPS || 0)
+  return Number.isInteger(hops) && hops > 0 && hops < 10 ? hops : 0
+}
+
+/**
+ * The visitor's address as our own proxy saw it, or null when it cannot be known. X-Forwarded-For is only read behind
+ * a configured trusted proxy, and then from the right: each proxy appends the address it was reached from, so the
+ * entry our outermost proxy wrote is the last `hops` from the end. Anything to its left was sent by the visitor and
+ * can say anything.
+ */
+export function clientIp(req: Request, hops = trustedProxyHops()) {
+  if (!hops) return null
+  const chain = (req.headers.get('x-forwarded-for') || '').split(',').map((part) => part.trim()).filter(Boolean)
+  const seen = chain[chain.length - hops]
+  return seen && /^[0-9a-f.:]{2,45}$/i.test(seen) ? seen : null
+}
+
+/**
+ * Keys for counting failed join attempts. Always the address (or "unknown") with the code that was tried, so one
+ * person retrying a typo is slowed; and the address alone only when it is trustworthy, so a guesser is stopped
+ * without strangers sharing a key and blocking each other.
+ */
+export function joinFailKeys(ip: string | null, code: string) {
+  return { pair: `join-fail:${ip || 'unknown'}:${code}`, address: ip ? `join-fail:${ip}` : null }
 }

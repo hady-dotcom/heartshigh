@@ -31,6 +31,7 @@ export default defineConfig({
       HEARTS_E2E: '1',
       DATABASE_URL: E2E_DATABASE,
       HEARTS_DIST_DIR: '.next-e2e',
+      HEARTS_TRUSTED_PROXY_HOPS: '1',
     } as Record<string, string>,
   },
 })

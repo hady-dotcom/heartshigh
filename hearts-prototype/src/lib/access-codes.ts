@@ -1,7 +1,7 @@
 import { randomInt } from 'node:crypto'
 
 export const JOIN_FAILS_PER_IP = 10
-export const JOIN_FAILS_ALL = 200
+export const JOIN_FAILS_PER_CODE = 5
 export const JOIN_WINDOW_MS = 10 * 60 * 1000
 
 export type CodeState = {
