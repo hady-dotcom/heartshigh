@@ -228,7 +228,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                         <p className="land"><b>Land</b>{str(cut.land)}</p>
                         <div className="meta">
                           {cut.theme ? <>Theme: {str(cut.theme)}. </> : null}
-                          {door ? <>Door <b data-testid="cut-door" style={{ display: 'inline', textTransform: 'none', letterSpacing: 0 }}>{doorLabel(door)}</b> <span className="hint" data-testid="cut-door-clause">(clause {clause}{cut.clauseFragment ? `: ${str(cut.clauseFragment)}` : ''})</span>. </> : null}
+                          {door ? <>Door <strong data-testid="cut-door" style={{ color: 'var(--ink)' }}>{doorLabel(door)}</strong> <span className="hint" data-testid="cut-door-clause">(clause {clause}{cut.clauseFragment ? `: ${str(cut.clauseFragment)}` : ''})</span>. </> : null}
                           {cut.whyHang ? <>{str(cut.whyHang)} </> : null}
                           Quote check: {str(cut.quoteConfidence, 'not run')}. Made by {cut.engine === 'llm' ? 'the language model' : 'the built-in extractor'}.
                         </div>

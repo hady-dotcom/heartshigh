@@ -83,6 +83,8 @@ function clausesOf(g: Growth, door: Door) {
   return door.clauses.map((number) => g.clauses.find((row) => Number(row.number) === number)).filter((row): row is Row => Boolean(row))
 }
 
+const SEATS_SHOWN = 6
+
 function seatsOf(g: Growth, door: Door) {
   return clausesOf(g, door).flatMap((clause) => g.seats.filter((seat) => ref(seat.clause) === clause.id).sort((a, b) => Number(a.position) - Number(b.position)))
 }
@@ -302,6 +304,19 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, number: nu
   const section = SECTIONS.find((row) => row.key === door.section)
   const prev = doorByNumber(door.number - 1, g.doors)
   const next = doorByNumber(door.number + 1, g.doors)
+  const seatLine = (seat: Row, index: number) => (
+    <div className="seat-line" key={seat.id} data-testid="seat">
+      <p style={{ margin: 0 }}>({index + 1}) {str(seat.text)}</p>
+      {read.has(seat.id) ? (
+        <span className="seat-done" data-testid="seat-done">Read</span>
+      ) : (
+        <form action="/api/hearts" method="post">
+          <Hidden fields={{ action: 'seat', seat: seat.id, next: here }} />
+          <button className="mini-btn" type="submit" data-testid="seat-read">I&apos;ve read this</button>
+        </form>
+      )}
+    </div>
+  )
   return (
     <Frame base={base} title={`Door ${door.number}`} testId="garden-door" unread={unread}>
       <Flash error={query.error} notice={query.notice} />
@@ -317,19 +332,13 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, number: nu
           </>
         ) : null}
         {seats.length ? <p className="lbl" style={{ margin: '14px 0 4px' }}>Seats from al-Ghuniyya.</p> : null}
-        {seats.map((seat, index) => (
-          <div className="seat-line" key={seat.id} data-testid="seat">
-            <p style={{ margin: 0 }}>({index + 1}) {str(seat.text)}</p>
-            {read.has(seat.id) ? (
-              <span className="seat-done" data-testid="seat-done">Read</span>
-            ) : (
-              <form action="/api/hearts" method="post">
-                <Hidden fields={{ action: 'seat', seat: seat.id, next: here }} />
-                <button className="mini-btn" type="submit" data-testid="seat-read">I&apos;ve read this</button>
-              </form>
-            )}
-          </div>
-        ))}
+        {seats.slice(0, SEATS_SHOWN).map(seatLine)}
+        {seats.length > SEATS_SHOWN ? (
+          <details data-testid="seat-more">
+            <summary className="hint" style={{ cursor: 'pointer', margin: '8px 0' }}>Show all {seats.length} seats</summary>
+            {seats.slice(SEATS_SHOWN).map((seat, index) => seatLine(seat, index + SEATS_SHOWN))}
+          </details>
+        ) : null}
         {series.length ? <p style={{ marginTop: 14 }}><span className="lbl">From the series.</span> {series.join(' ')}</p> : null}
       </article>
       <p className="eyebrow">Talks in this door</p>
