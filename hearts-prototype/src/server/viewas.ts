@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
+import { cookiesSecure } from '@/lib/env'
 import { idOf, portalIdOf } from '@/lib/ids'
 
 export const VIEWAS_COOKIE = 'hearts_viewas'
@@ -43,10 +44,10 @@ export function cookieValue(header: string | null | undefined, name = VIEWAS_COO
   return null
 }
 
-/** Secure follows the request, so the cookie also reaches plain-http local servers and test clients. */
+/** Secure in production, and also when the request itself is https. Plain-http local servers and test clients still receive the cookie. */
 export function viewAsCookie(token: string | null, req?: Request) {
   const proto = req?.headers.get('x-forwarded-proto') || (req ? new URL(req.url).protocol.replace(':', '') : 'https')
-  const secure = proto === 'https' ? ' Secure;' : ''
+  const secure = cookiesSecure() || proto === 'https' ? ' Secure;' : ''
   return token
     ? `${VIEWAS_COOKIE}=${token}; Path=/; HttpOnly;${secure} SameSite=Strict; Max-Age=3600`
     : `${VIEWAS_COOKIE}=; Path=/; HttpOnly;${secure} SameSite=Strict; Max-Age=0`

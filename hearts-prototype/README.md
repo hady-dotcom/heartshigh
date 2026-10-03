@@ -211,4 +211,10 @@ The build passes with no type errors. Stop the dev server first. After a build, 
 
 ## Shape
 
-Payload CMS 3, Next.js 15 and SQLite. The multi-tenant plugin hangs portal data off `portals`. Forms post to `/api/hearts`, which checks the account and the portal, then redirects back with a notice or an error. Learner screens are in `src/screens/app`, desk screens in `src/screens/desk`, and server logic in `src/server`.
+Payload CMS 3, Next.js 15 and SQLite on your own computer. A public server uses Postgres, chosen by `DATABASE_URL` (a `postgres://` address) or `DATABASE_ADAPTER=postgres`. The multi-tenant plugin hangs portal data off `portals`. Forms post to `/api/hearts`, which checks the account and the portal, then redirects back with a notice or an error. Learner screens are in `src/screens/app`, desk screens in `src/screens/desk`, and server logic in `src/server`.
+
+## Hosting
+
+The steps for a public site are in [DEPLOY.md](DEPLOY.md), written for someone who is not a programmer. Railway is the host that guide uses. `render.yaml` (at the repository root) and `fly.toml` are the notes for the other two.
+
+`npm start` is the production server: it checks the variables, applies migrations, and refuses to boot if a demo `@hearts.test` account is present. It does not seed. `npm run bootstrap` creates the first master admin from `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD`, once. `npm run seed:starters` loads the talks without those demo passwords. `npm run reseed` still wipes a database on this computer only, SQLite or Postgres, and it refuses in production.

@@ -8,6 +8,7 @@ import { saidInTalk, tierProblem, timingProblems } from './lib/tiers'
 import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
 import { circleProblems } from './lib/circle'
+import { cookiesSecure } from './lib/env'
 
 // The app's own screens and actions use the local API with explicit portal checks.
 // The REST and GraphQL endpoints that Payload mounts are for the master desk only.
@@ -105,7 +106,7 @@ export const Users: CollectionConfig = {
   slug: 'users',
   auth: {
     cookies: {
-      secure: false,
+      secure: cookiesSecure(),
       sameSite: 'Lax',
     },
   },
