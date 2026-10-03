@@ -22,7 +22,7 @@ function wantsJson(req: Request, form?: FormData) {
   return form?.get('response') === 'json' || (req.headers.get('accept') || '').includes('application/json')
 }
 
-async function resolveScope(form: FormData | URLSearchParams): Promise<{ scope: SheetScope } | { error: string; status: number }> {
+export async function resolveScope(form: FormData | URLSearchParams): Promise<{ scope: SheetScope } | { error: string; status: number }> {
   const { payload, user, viewAs } = await getSession()
   if (!user) return { error: 'Sign in first.', status: 401 }
   if (viewAs) return { error: 'Sign out of view-as before using the master sheet.', status: 403 }
@@ -114,8 +114,9 @@ export async function POST(req: Request) {
     if (!row?.snapshot) return fail('There is no import to undo.')
     try {
       await undoSnapshot(payload, row.snapshot as never)
-    } catch {
-      return fail('The last import could not be undone.')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : ''
+      return fail(message.includes('answered') ? message : 'The last import could not be undone.')
     }
     await payload.update({ collection: 'sheet-imports', id: row.id, overrideAccess: true, data: { state: 'undone' } as never })
     await writeAudit(payload, 'sheet.undo', user, scope.portalId, { importId: row.id, fileName: row.fileName || '' })

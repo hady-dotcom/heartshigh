@@ -451,6 +451,9 @@ export interface Lesson {
   speaker?: string | null;
   youtubeUrl?: string | null;
   youtubeId?: string | null;
+  videoProvider?: ('youtube' | 'vimeo' | 'file') | null;
+  vimeoId?: string | null;
+  film?: (number | null) | Media;
   /**
    * Mux-ready. Unused until a Mux asset is attached.
    */
@@ -481,8 +484,9 @@ export interface Resource {
   id: number;
   lesson: number | Lesson;
   name: string;
-  kind?: ('link' | 'file') | null;
+  kind?: ('link' | 'file' | 'summary' | 'quote' | 'reading' | 'guide') | null;
   url?: string | null;
+  body?: string | null;
   showAtEnd?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -604,6 +608,16 @@ export interface EngagementPoint {
   status?: ('published' | 'draft' | 'rejected') | null;
   draftNote?: string | null;
   reviewedBy?: (number | null) | User;
+  family?: ('popup' | 'workbook' | 'task') | null;
+  /**
+   * Activation tasks: days the learner has, counted from when they first open the talk.
+   */
+  dueDays?: number | null;
+  evidence?: ('none' | 'note' | 'photo') | null;
+  /**
+   * When set, the learner’s answer is visible to their imam and the portal admin.
+   */
+  showImam?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1771,6 +1785,9 @@ export interface LessonsSelect<T extends boolean = true> {
   speaker?: T;
   youtubeUrl?: T;
   youtubeId?: T;
+  videoProvider?: T;
+  vimeoId?: T;
+  film?: T;
   muxAssetId?: T;
   muxPlaybackId?: T;
   durationSeconds?: T;
@@ -1793,6 +1810,7 @@ export interface ResourcesSelect<T extends boolean = true> {
   name?: T;
   kind?: T;
   url?: T;
+  body?: T;
   showAtEnd?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1890,6 +1908,10 @@ export interface EngagementPointsSelect<T extends boolean = true> {
   status?: T;
   draftNote?: T;
   reviewedBy?: T;
+  family?: T;
+  dueDays?: T;
+  evidence?: T;
+  showImam?: T;
   updatedAt?: T;
   createdAt?: T;
 }

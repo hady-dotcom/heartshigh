@@ -1,3 +1,4 @@
+import { NextResponse } from 'next/server'
 import config from '@payload-config'
 import { REST_GET } from '@payloadcms/next/routes'
 import { getSession } from '@/server/context'
@@ -63,6 +64,16 @@ export async function POST(req: Request) {
   }
 
   const result = await saveAnswer(payload, user, inputOf(body, false))
+  const accept = req.headers.get('accept') || ''
+  const page = accept.includes('text/html') && !accept.includes('application/json')
+  const next = typeof body.next === 'string' && body.next.startsWith('/') && !body.next.startsWith('//') ? body.next : ''
+  if (page && next) {
+    const host = req.headers.get('x-forwarded-host') || req.headers.get('host')
+    const proto = req.headers.get('x-forwarded-proto') || 'http'
+    const url = new URL(next, host ? `${proto}://${host}` : req.url)
+    url.searchParams.set(result.ok ? 'notice' : 'error', result.ok ? 'Saved in your workbook.' : result.error)
+    return NextResponse.redirect(url, 303)
+  }
   if (!result.ok) return json({ error: result.error }, result.status)
   return json(result, result.updated ? 200 : 201)
 }

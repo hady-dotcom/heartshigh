@@ -100,6 +100,10 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
     durationSeconds: lesson.durationSeconds == null || lesson.durationSeconds === '' ? null : Number(lesson.durationSeconds),
     starterLane: String(lesson.starterLane || ''),
     transcript: tierSourceText(lesson as { youtubeId?: string; transcript?: string }) || String(lesson.transcript || ''),
+    transcriptNote: String(lesson.transcriptNote || ''),
+    provider: String(lesson.videoProvider || ''),
+    vimeoId: String(lesson.vimeoId || ''),
+    mediaId: num(lesson.film),
     inScope: scoped.has(num(lesson.course) || 0),
   }))
   const tierRows: TierRow[] = tiers.map((tier) => ({
@@ -109,8 +113,9 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
   const pointRows: PointRow[] = points.map((point) => ({
     id: point.id, lesson: num(point.lesson) || 0, second: Number(point.second || 0), kind: String(point.kind || 'reflection'), prompt: String(point.prompt || ''),
     options: Array.isArray(point.options) ? (point.options as unknown[]).map(String) : [], correctOption: String(point.correctOption || ''), status: String(point.status || 'published'), draftNote: String(point.draftNote || ''),
+    dueDays: point.dueDays == null || point.dueDays === '' ? null : Number(point.dueDays), evidence: String(point.evidence || ''), showImam: Boolean(point.showImam), family: String(point.family || ''),
   }))
-  const resourceRows: ResourceRow[] = resources.map((resource) => ({ id: resource.id, lesson: num(resource.lesson) || 0, name: String(resource.name || ''), url: String(resource.url || ''), kind: String(resource.kind || 'link') }))
+  const resourceRows: ResourceRow[] = resources.map((resource) => ({ id: resource.id, lesson: num(resource.lesson) || 0, name: String(resource.name || ''), url: String(resource.url || ''), kind: String(resource.kind || 'link'), body: String(resource.body || '') }))
   const keyRows: KeyRow[] = keys.map((key) => ({ id: key.id, talkKey: String(key.talkKey || ''), lesson: num(key.lesson) || 0, channel: String(key.channel || ''), sheetStatus: String(key.sheetStatus || '') }))
   const seatRows: SeatRow[] = seats.map((seat) => ({ id: seat.id, clause: clauseNumber.get(num(seat.clause) || 0) || 0, position: Number(seat.position || 0) }))
   const seatById = new Map(seats.map((seat) => [seat.id, seat]))
@@ -217,7 +222,9 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
       collection: 'lessons', overrideAccess: true,
       data: {
         title: op.title, sourceTitle: op.title, course: resolveRef(op.course, temps), unit: resolveRef(op.unit, temps), speaker: op.speaker, youtubeId: op.youtubeId,
-        youtubeUrl: op.youtubeId ? `https://www.youtube.com/watch?v=${op.youtubeId}` : undefined, order: op.order ?? 1, starterLane: op.lane, portal: op.portal || undefined, master: op.master, transcriptSource: 'none',
+        youtubeUrl: op.youtubeId ? `https://www.youtube.com/watch?v=${op.youtubeId}` : undefined, order: op.order ?? 1, starterLane: op.lane, portal: op.portal || undefined, master: op.master,
+        transcriptSource: op.transcriptSource || 'none', videoProvider: op.provider || undefined, vimeoId: op.vimeoId || undefined, film: op.mediaId || undefined,
+        durationSeconds: op.durationSeconds ?? undefined, transcript: op.transcript || undefined, transcriptNote: op.transcriptNote || undefined,
       } as never,
     })) as unknown as Doc
     temps.set(op.temp, doc.id)
@@ -334,7 +341,24 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
 
 const RESTORE_ORDER = ['courses', 'units', 'lessons', 'talk-tiers', 'cuts', 'engagement-points', 'resources', 'sheet-keys', 'ladder-items']
 
+/** A created talk or question that a learner has already answered stays. Undo must not remove their work. */
+export async function undoBlockedReason(payload: Payload, snapshot: SheetSnapshot): Promise<string | null> {
+  const lessonIds = snapshot.created.lessons || []
+  const pointIds = snapshot.created['engagement-points'] || []
+  if (lessonIds.length) {
+    const answers = await payload.count({ collection: 'answers', overrideAccess: true, where: { lesson: { in: lessonIds } } })
+    if (answers.totalDocs) return 'Learners have answered a question on this talk, so the sheet will not delete it.'
+  }
+  if (pointIds.length) {
+    const answers = await payload.count({ collection: 'answers', overrideAccess: true, where: { point: { in: pointIds } } })
+    if (answers.totalDocs) return 'Learners have answered this question, so the sheet will not delete it.'
+  }
+  return null
+}
+
 export async function undoSnapshot(payload: Payload, snapshot: SheetSnapshot) {
+  const blocked = await undoBlockedReason(payload, snapshot)
+  if (blocked) throw new Error(blocked)
   for (const collection of CHILD_ORDER) {
     for (const id of snapshot.created[collection] || []) {
       await payload.delete({ collection: collection as never, id, overrideAccess: true }).catch(() => undefined)

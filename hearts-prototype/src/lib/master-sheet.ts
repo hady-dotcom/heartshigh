@@ -9,24 +9,26 @@ import { hasMarkup, httpsHref } from './text-safety'
 export const TALK_COLUMNS = [
   'talk_key', 'youtube_id', 'title', 'speaker', 'channel', 'course', 'part', 'order', 'lane', 'jibril_clause', 'ghunya_seat',
   'hors_in', 'hors_out', 'app_in', 'app_out', 'hook_text', 'turn_text', 'land_text', 'status', 'notes',
+  'provider', 'vimeo_id', 'media_id', 'duration', 'transcript',
 ] as const
 
 export const QUESTION_COLUMNS = [
   'talk_key', 'youtube_id', 'question_id', 'type', 'time', 'text',
   'choice_1', 'choice_2', 'choice_3', 'choice_4', 'choice_5', 'choice_6',
   'correct_choice', 'source', 'status', 'notes',
+  'due_days', 'evidence', 'show_imam', 'place',
 ] as const
 
-export const RESOURCE_COLUMNS = ['talk_key', 'label', 'url', 'kind', 'status'] as const
+export const RESOURCE_COLUMNS = ['talk_key', 'label', 'url', 'kind', 'status', 'body'] as const
 
 export const TALK_NOTE =
-  'HEARTS talks. One row is one talk. talk_key is how a later import finds the same talk, so keep it stable. Leave a cell blank to leave that field as it is. Times can be seconds (90), minutes and seconds (1:30) or hours (1:02:03). status is draft, checked or live. rejected keeps a talk hidden from learners. delete removes the talk. youtube_id is the 11-character YouTube id.'
+  'HEARTS talks. One row is one talk. talk_key is how a later import finds the same talk, so keep it stable. Leave a cell blank to leave that field as it is. Times can be seconds (90), minutes and seconds (1:30) or hours (1:02:03). status is draft, checked or live. rejected keeps a talk hidden from learners. delete removes the talk. youtube_id is the 11-character YouTube id. provider is youtube, vimeo or file. A Vimeo talk puts the number in vimeo_id. An uploaded film puts the media id in media_id. duration is the length in seconds. transcript is optional and only used when the captions fit in the cell.'
 
 export const QUESTION_NOTE =
-  'HEARTS pop-up questions. Name the talk with talk_key or youtube_id. Leave question_id blank to add a question, or fill it in to change that question. type is free text, multiple choice, reflection or task. status is draft or approved (approved is what learners meet in the main). source is ai or human. A blank cell leaves that field as it is. delete removes the question. Times use the same forms as the Talks tab and must fall inside the talk.'
+  'HEARTS questions. Name the talk with talk_key or youtube_id. Leave question_id blank to add a question, or fill it in to change that question. type is free text, multiple choice, reflection or task. status is draft or approved (approved is what learners meet). source is ai or human. A blank cell leaves that field as it is. delete removes the question. Times use the same forms as the Talks tab and must fall inside the talk. type task is an activation task: due_days is how many days the learner has (1 to 366), evidence is none, note or photo, and show_imam is yes when the imam should see it. place is popup or workbook. A workbook row is a reflection kept in the workbook rather than a pop-up in the film.'
 
 export const RESOURCE_NOTE =
-  'HEARTS resources, one link per row. talk_key names the talk. The same talk_key and label updates that link next time. url must start with https://. kind is link or file. Leave status blank to keep the link, or put delete to remove it.'
+  'HEARTS resources, one row per item. talk_key names the talk. The same talk_key and label updates that row next time. url must start with https:// when kind is link or file. kind can also be summary, quote, reading or guide: those rows put the words in body, and the url can be left blank. A reading row is a suggestion to verify, not a link that has been checked. Leave status blank to keep the row, or put delete to remove it.'
 
 const TABS = ['Talks', 'Questions', 'Resources'] as const
 export type SheetTab = (typeof TABS)[number]
@@ -39,7 +41,9 @@ const HEADER_ALIASES: Record<string, string> = {
   jibril_clause: 'jibril_clause', clause: 'jibril_clause', ghunya_seat: 'ghunya_seat', seat: 'ghunya_seat',
   hors_in: 'hors_in', hors_out: 'hors_out', app_in: 'app_in', app_out: 'app_out',
   hook: 'hook_text', hook_text: 'hook_text', turn: 'turn_text', turn_text: 'turn_text', land: 'land_text', land_text: 'land_text',
-  label: 'label', name: 'label', url: 'url', kind: 'kind',
+  label: 'label', name: 'label', url: 'url', kind: 'kind', body: 'body', summary: 'body',
+  provider: 'provider', vimeo_id: 'vimeo_id', vimeo: 'vimeo_id', media_id: 'media_id', media: 'media_id', duration: 'duration', length: 'duration', transcript: 'transcript',
+  due_days: 'due_days', due: 'due_days', evidence: 'evidence', show_imam: 'show_imam', showimam: 'show_imam', place: 'place', family: 'place',
   choice1: 'choice_1', choice_1: 'choice_1', choices_1: 'choice_1', ac_1: 'choice_1', ac1: 'choice_1',
   choice2: 'choice_2', choice_2: 'choice_2', choices_2: 'choice_2', ac_2: 'choice_2', ac2: 'choice_2',
   choice3: 'choice_3', choice_3: 'choice_3', choices_3: 'choice_3', ac_3: 'choice_3', ac3: 'choice_3',
@@ -64,7 +68,7 @@ export type Ref = { id: number } | { temp: string }
 export type SheetOp =
   | { op: 'course.create'; temp: string; title: string; speaker?: string; origin: 'master' | 'local'; portal: number | null }
   | { op: 'unit.create'; temp: string; course: Ref; title: string }
-  | { op: 'lesson.create'; temp: string; course: Ref; unit: Ref; title: string; speaker?: string; youtubeId?: string; order?: number; lane?: string; portal: number | null; master: boolean }
+  | { op: 'lesson.create'; temp: string; course: Ref; unit: Ref; title: string; speaker?: string; youtubeId?: string; order?: number; lane?: string; portal: number | null; master: boolean; provider?: string; vimeoId?: string; mediaId?: number; durationSeconds?: number | null; transcript?: string; transcriptSource?: string; transcriptNote?: string }
   | { op: 'lesson.update'; id: number; patch: Record<string, unknown> }
   | { op: 'lesson.delete'; id: number }
   | { op: 'tier.create'; lesson: Ref; data: Record<string, unknown> }
@@ -88,11 +92,12 @@ export type CourseRow = { id: number; title: string; origin: string; portal: num
 export type UnitRow = { id: number; course: number; title: string; order: number }
 export type LessonRow = {
   id: number; title: string; course: number; unit: number | null; order: number; speaker: string
-  youtubeId: string; durationSeconds: number | null; starterLane: string; transcript: string; inScope: boolean
+  youtubeId: string; durationSeconds: number | null; starterLane: string; transcript: string; transcriptNote: string
+  provider: string; vimeoId: string; mediaId: number | null; inScope: boolean
 }
 export type TierRow = { id: number; lesson: number; horsStart: number; horsEnd: number; appetiserStart: number; appetiserEnd: number; hook: string; turn: string; land: string; note: string; status: string }
-export type PointRow = { id: number; lesson: number; second: number; kind: string; prompt: string; options: string[]; correctOption: string; status: string; draftNote: string }
-export type ResourceRow = { id: number; lesson: number; name: string; url: string; kind: string }
+export type PointRow = { id: number; lesson: number; second: number; kind: string; prompt: string; options: string[]; correctOption: string; status: string; draftNote: string; dueDays: number | null; evidence: string; showImam: boolean; family: string }
+export type ResourceRow = { id: number; lesson: number; name: string; url: string; kind: string; body: string }
 export type KeyRow = { id: number; talkKey: string; lesson: number; channel: string; sheetStatus: string }
 export type CutRow = { id: number; lesson: number; bestClause: number | null; seatId: number | null; seatClause: number | null; seatPosition: number | null; placeholder: boolean; status: string; start: number; course: number | null }
 export type SeatRow = { id: number; clause: number; position: number }
@@ -136,6 +141,23 @@ export function parseSheetTime(raw: unknown, numFmt?: string): { ok: true; secon
   const parts = text.split(':')
   if (parts.slice(1).some((part) => Number(part) >= 60)) return { ok: false, message: `“${text}” is not a time. Minutes and seconds stay under 60.` }
   return { ok: true, seconds: round2(parts.reduce((total, part) => total * 60 + Number(part), 0)) }
+}
+
+/** A Vimeo id, or a vimeo.com / player.vimeo.com link. */
+export function parseVimeoId(raw: string): { ok: true; id: string } | { ok: false; message: string } {
+  const text = raw.trim()
+  if (/^\d{6,12}$/.test(text)) return { ok: true, id: text }
+  try {
+    const url = new URL(text)
+    const host = url.hostname.replace(/^www\./, '')
+    if (host === 'vimeo.com' || host === 'player.vimeo.com') {
+      const id = url.pathname.split('/').filter(Boolean).reverse().find((part) => /^\d{6,12}$/.test(part))
+      if (id) return { ok: true, id }
+    }
+  } catch {
+    /* not a url */
+  }
+  return { ok: false, message: `“${text}” is not a Vimeo id. Use the number from the film’s link, such as 76979871.` }
 }
 
 export function parseYoutubeId(raw: string): { ok: true; id: string } | { ok: false; message: string } {
@@ -348,7 +370,11 @@ export function talkSheetValues(lesson: LessonRow, catalogue: SheetCatalogue): R
     turn_text: tier?.turn || null,
     land_text: tier?.land || null,
     status: talkStatusOf(lesson, catalogue),
-    notes: tier?.note || null,
+    notes: tier?.note || lesson.transcriptNote || null,
+    provider: lesson.provider === 'vimeo' || lesson.provider === 'file' ? lesson.provider : null,
+    vimeo_id: lesson.vimeoId || null,
+    media_id: lesson.mediaId || null,
+    duration: numOrNull(lesson.durationSeconds),
   }
 }
 
@@ -382,6 +408,10 @@ export function questionSheetValues(point: PointRow, catalogue: SheetCatalogue):
     source: questionSource(point),
     status: questionStatus(point),
     notes: point.draftNote || null,
+    due_days: point.dueDays ?? null,
+    evidence: point.evidence || null,
+    show_imam: point.showImam ? 'yes' : null,
+    place: point.family === 'workbook' ? 'workbook' : null,
   }
   for (let index = 0; index < 6; index += 1) values[`choice_${index + 1}`] = choices[index] || null
   return values
@@ -390,7 +420,7 @@ export function questionSheetValues(point: PointRow, catalogue: SheetCatalogue):
 export function resourceSheetValues(resource: ResourceRow, catalogue: SheetCatalogue): Record<string, string | number | null> {
   const lesson = catalogue.lessons.find((row) => row.id === resource.lesson)
   const key = lesson ? catalogue.keys.find((row) => row.lesson === lesson.id) : null
-  return { talk_key: lesson ? key?.talkKey || derivedTalkKey(lesson) : null, label: resource.name, url: resource.url || null, kind: resource.kind || 'link', status: null }
+  return { talk_key: lesson ? key?.talkKey || derivedTalkKey(lesson) : null, label: resource.name, url: resource.url || null, kind: resource.kind || 'link', status: null, body: resource.body || null }
 }
 
 export function rowsFromCatalogue(catalogue: SheetCatalogue) {
@@ -558,6 +588,37 @@ function planTalks(working: Working, rows: InputRow[]) {
       if (!parsed.ok) fail('youtube_id', parsed.message)
       else youtubeId = parsed.id
     }
+    let provider = ''
+    if (present(row, 'provider')) {
+      const raw = textOf(row, 'provider').toLowerCase()
+      if (raw !== 'youtube' && raw !== 'vimeo' && raw !== 'file') fail('provider', 'Provider is youtube, vimeo or file.')
+      else provider = raw
+    }
+    let vimeoId = ''
+    if (present(row, 'vimeo_id')) {
+      const parsed = parseVimeoId(textOf(row, 'vimeo_id'))
+      if (!parsed.ok) fail('vimeo_id', parsed.message)
+      else vimeoId = parsed.id
+    }
+    let mediaId: number | null = null
+    if (present(row, 'media_id')) {
+      const raw = textOf(row, 'media_id')
+      if (!/^\d+$/.test(raw) || Number(raw) < 1) fail('media_id', 'media_id is the number of an uploaded film.')
+      else mediaId = Number(raw)
+    }
+    if (provider === 'vimeo' && !vimeoId) fail('vimeo_id', 'A Vimeo talk needs its vimeo_id.')
+    if (provider === 'file' && !mediaId) fail('media_id', 'An uploaded talk needs its media_id.')
+    let durationSeconds: number | null = null
+    const parsedDuration = timeCell(row, 'duration')
+    if (parsedDuration) {
+      if (!parsedDuration.ok) fail('duration', parsedDuration.message)
+      else durationSeconds = parsedDuration.seconds
+    }
+    let transcriptText = ''
+    if (present(row, 'transcript')) {
+      transcriptText = textOf(row, 'transcript')
+      if (transcriptText.length > 30_000) fail('transcript', 'The transcript cell is too long for a sheet. Keep it under 30,000 characters, or leave it off and mark the talk as needing a transcript.')
+    }
     for (const [column, label] of [['title', 'Title'], ['speaker', 'Speaker'], ['channel', 'Channel'], ['course', 'Course'], ['part', 'Part'], ['lane', 'Lane'], ['notes', 'Notes']] as const) {
       if (present(row, column)) problems.push(...plainProblems([[label, textOf(row, column)]]).map((message) => ({ tab: 'Talks' as const, row: row.row, column, message })))
     }
@@ -638,10 +699,18 @@ function planTalks(working: Working, rows: InputRow[]) {
       const temp = `lesson:${talkKey}`
       const portal = working.catalogue.scopeKind === 'portal' || (working.catalogue.scopeKind === 'course' && working.catalogue.portalId) ? working.catalogue.portalId : null
       const master = !portal
-      working.ops.push({ op: 'lesson.create', temp, course: course.ref, unit, title, speaker: textOf(row, 'speaker') || undefined, youtubeId: youtubeId || undefined, order: order ?? undefined, lane: textOf(row, 'lane') || undefined, portal, master })
-      const tier = tierPatch(null, times, row, '', null, problems)
+      const source = transcriptText ? (provider === 'file' || provider === 'vimeo' ? 'upload' : 'youtube') : undefined
+      working.ops.push({
+        op: 'lesson.create', temp, course: course.ref, unit, title, speaker: textOf(row, 'speaker') || undefined, youtubeId: youtubeId || undefined, order: order ?? undefined, lane: textOf(row, 'lane') || undefined, portal, master,
+        provider: provider || undefined, vimeoId: vimeoId || undefined, mediaId: mediaId || undefined, durationSeconds, transcript: transcriptText || undefined, transcriptSource: source,
+      })
+      const tier = tierPatch(null, times, row, transcriptText, null, problems)
       if (tier) working.ops.push({ op: 'tier.create', lesson: { temp }, data: tier })
       else if (status === 'checked' || status === 'live') fail('status', 'A checked or live talk needs the hors d\'oeuvre and appetiser times.')
+      else if (present(row, 'notes') && textOf(row, 'notes')) {
+        const created = working.ops.find((op) => op.op === 'lesson.create' && op.temp === temp)
+        if (created && created.op === 'lesson.create') created.transcriptNote = textOf(row, 'notes')
+      }
       const derived = youtubeId ? `yt-${youtubeId}` : ''
       if (textOf(row, 'channel') || status === 'live' || !derived || talkKey !== derived) {
         working.ops.push({ op: 'key.upsert', lesson: { temp }, talkKey, channel: textOf(row, 'channel') || null, sheetStatus: status === 'live' ? 'live' : null })
@@ -653,7 +722,7 @@ function planTalks(working: Working, rows: InputRow[]) {
         working.skipped += 1
         continue
       }
-      working.lessons.set(talkKey, { temp, title, youtubeId, duration: null, transcript: '', course: course.ref, unit })
+      working.lessons.set(talkKey, { temp, title, youtubeId, duration: durationSeconds, transcript: transcriptText, course: course.ref, unit })
       working.changes.push({ tab: 'Talks', row: row.row, action: 'create', label: title, detail: course.created ? `New talk in a new course, “${courseTitle.trim()}”.` : `New talk in “${courseTitle.trim()}”.` })
       continue
     }
@@ -669,6 +738,11 @@ function planTalks(working: Working, rows: InputRow[]) {
     if (present(row, 'title') && !sameScalar(current.title, textOf(row, 'title'))) lessonPatch.title = textOf(row, 'title')
     if (present(row, 'speaker') && !sameScalar(current.speaker, textOf(row, 'speaker'))) lessonPatch.speaker = textOf(row, 'speaker')
     if (youtubeId && !sameScalar(current.youtube_id, youtubeId)) lessonPatch.youtubeId = youtubeId
+    if (provider && provider !== (lesson.provider || '')) lessonPatch.videoProvider = provider
+    if (vimeoId && vimeoId !== (lesson.vimeoId || '')) lessonPatch.vimeoId = vimeoId
+    if (mediaId && mediaId !== (lesson.mediaId || 0)) lessonPatch.film = mediaId
+    if (durationSeconds != null && !sameScalar(numOrNull(lesson.durationSeconds), durationSeconds)) lessonPatch.durationSeconds = durationSeconds
+    if (present(row, 'transcript') && transcriptText !== (lesson.transcript || '')) lessonPatch.transcript = transcriptText
     if (order != null && !sameScalar(current.order, order)) lessonPatch.order = order
     if (present(row, 'lane') && !sameScalar(current.lane, textOf(row, 'lane'))) lessonPatch.starterLane = textOf(row, 'lane')
     let courseMove: Ref | null = null
@@ -686,7 +760,8 @@ function planTalks(working: Working, rows: InputRow[]) {
       if ('id' in unit) lessonPatch.unit = unit.id
     }
     const tier = working.catalogue.tiers.find((item) => item.lesson === lesson.id) || null
-    const tierData = tierPatch(tier, times, row, lesson.transcript, String(current.status || ''), problems)
+    const tierData = tierPatch(tier, times, row, present(row, 'transcript') ? transcriptText : lesson.transcript, String(current.status || ''), problems)
+    if (!tier && present(row, 'notes') && textOf(row, 'notes') !== (lesson.transcriptNote || '')) lessonPatch.transcriptNote = textOf(row, 'notes')
     const duration = lesson.durationSeconds
     const timesChanged = Boolean(tierData && ['horsStart', 'horsEnd', 'appetiserStart', 'appetiserEnd'].some((key) => key in tierData))
     if (duration && timesChanged && tierData) {
@@ -767,9 +842,11 @@ function tierPatch(tier: TierRow | null, times: Record<string, number>, row: Inp
   if (!tier && !Object.keys(data).length) return null
   if (!tier) {
     const ready = ['horsStart', 'horsEnd', 'appetiserStart', 'appetiserEnd'].every((key) => key in data)
-    if (!ready && Object.keys(data).some((key) => key !== 'note' && key !== 'status')) fail('hors_in', 'A new talk\'s tiers need hors_in, hors_out, app_in and app_out together.')
-    if (!ready && ('note' in data || 'status' in data)) fail('hors_in', 'Notes and status sit with the tiers. Add hors_in, hors_out, app_in and app_out as well.')
-    if (!ready) return null
+    if (!ready) {
+      const extra = Object.keys(data).filter((key) => key !== 'note' && key !== 'status')
+      if (extra.length) fail('hors_in', 'A new talk\'s tiers need hors_in, hors_out, app_in and app_out together.')
+      return null
+    }
     data.status = data.status || 'draft'
   }
   const merged = {
@@ -963,6 +1040,31 @@ function planQuestions(working: Working, rows: InputRow[]) {
       }
     }
     if (present(row, 'notes')) for (const message of plainProblems([['Notes', textOf(row, 'notes')]])) fail('notes', message)
+    let dueDays: number | null = null
+    if (present(row, 'due_days')) {
+      const raw = textOf(row, 'due_days')
+      const days = Number(raw)
+      if (!/^\d+$/.test(raw) || !Number.isInteger(days) || days < 1 || days > 366) fail('due_days', 'Due days is a whole number from 1 to 366.')
+      else dueDays = days
+    }
+    let evidence = ''
+    if (present(row, 'evidence')) {
+      const raw = textOf(row, 'evidence').toLowerCase()
+      if (raw !== 'none' && raw !== 'note' && raw !== 'photo') fail('evidence', 'Evidence is none, note or photo.')
+      else evidence = raw
+    }
+    let showImam: boolean | null = null
+    if (present(row, 'show_imam')) {
+      const raw = textOf(row, 'show_imam').toLowerCase()
+      if (!['yes', 'no', 'true', 'false'].includes(raw)) fail('show_imam', 'show_imam is yes or no.')
+      else showImam = raw === 'yes' || raw === 'true'
+    }
+    let place = ''
+    if (present(row, 'place')) {
+      const raw = textOf(row, 'place').toLowerCase()
+      if (raw !== 'popup' && raw !== 'workbook') fail('place', 'Place is popup or workbook.')
+      else place = raw
+    }
     void transcript
     if (problems.length) {
       working.errors.push(...problems)
@@ -976,6 +1078,11 @@ function planQuestions(working: Working, rows: InputRow[]) {
     if (present(row, 'text') && prompt !== (point?.prompt || '')) data.prompt = prompt
     if (choicesTouched && JSON.stringify(choices) !== JSON.stringify(existingChoices)) data.options = choices
     if (present(row, 'correct_choice') && correct !== (point?.correctOption || '')) data.correctOption = correct
+    if (dueDays != null && dueDays !== (point?.dueDays ?? null)) data.dueDays = dueDays
+    if (evidence && evidence !== (point?.evidence || '')) data.evidence = evidence
+    if (showImam != null && showImam !== Boolean(point?.showImam)) data.showImam = showImam
+    const nextFamily = (kind || point?.kind) === 'task' ? 'task' : place === 'workbook' ? 'workbook' : place === 'popup' ? 'popup' : ''
+    if (nextFamily && nextFamily !== (point?.family || '')) data.family = nextFamily
     if (nextStatus && nextStatus !== (point ? (point.status || 'published') : '')) data.status = nextStatus
     let note = point?.draftNote || ''
     if (present(row, 'notes') && textOf(row, 'notes') !== note) note = textOf(row, 'notes')
@@ -986,9 +1093,17 @@ function planQuestions(working: Working, rows: InputRow[]) {
     if (note !== (point?.draftNote || '') && (present(row, 'notes') || source !== currentSource || creating)) data.draftNote = note
     if (creating) {
       const lessonRef: Ref = found.pending ? { temp: working.lessons.get(found.pending)!.temp } : { id: lesson!.id }
+      const family = kind === 'task' ? 'task' : place === 'workbook' ? 'workbook' : 'popup'
       working.ops.push({
         op: 'point.create', lesson: lessonRef,
-        data: { second: seconds, kind: kind || 'reflection', prompt, options: choices.length ? choices : undefined, correctOption: correct || undefined, triggerType: 'timestamp', timing: 'immediate', delayAmount: 0, audience: 'everyone', status: nextStatus || (nextSource === 'ai' ? 'draft' : 'draft'), draftNote: note || (nextSource === 'ai' ? DRAFT_NOTE : 'Written by a person on the master sheet.') },
+        data: {
+          second: seconds, kind: kind || 'reflection', prompt, options: choices.length ? choices : undefined, correctOption: correct || undefined,
+          triggerType: 'timestamp', timing: 'immediate', delayAmount: 0, audience: 'everyone', family,
+          status: nextStatus || (nextSource === 'ai' ? 'draft' : 'draft'), draftNote: note || (nextSource === 'ai' ? DRAFT_NOTE : 'Written by a person on the master sheet.'),
+          ...(dueDays != null ? { dueDays } : {}),
+          ...(evidence || kind === 'task' ? { evidence: evidence || 'none' } : {}),
+          ...(showImam != null || kind === 'task' ? { showImam: showImam ?? true } : {}),
+        },
       })
       working.changes.push({ tab: 'Questions', row: row.row, action: 'create', label: prompt.slice(0, 80), detail: nextStatus === 'published' ? 'New question, approved for learners.' : 'New question, kept as a draft until it is approved.' })
       continue
@@ -1012,17 +1127,21 @@ function planResources(working: Working, rows: InputRow[]) {
     const status = textOf(row, 'status').toLowerCase()
     if (present(row, 'status') && status !== 'delete') fail('status', 'Leave status blank to keep the resource, or put delete to remove it.')
     if (present(row, 'label')) for (const message of plainProblems([['Label', textOf(row, 'label')]])) fail('label', message)
+    const CONTENT_KINDS = new Set(['summary', 'quote', 'reading', 'guide'])
     let url = ''
     if (present(row, 'url')) {
       url = textOf(row, 'url')
-      if (!httpsHref(url)) fail('url', 'Resource links have to be full https:// addresses.')
+      if (url && !httpsHref(url)) fail('url', 'Resource links have to be full https:// addresses.')
     }
     let kind = ''
     if (present(row, 'kind')) {
       const raw = textOf(row, 'kind').toLowerCase()
-      kind = raw === 'file' || raw === 'document' || raw === 'pdf' ? 'file' : raw === 'link' || raw === 'url' ? 'link' : ''
-      if (!kind) fail('kind', 'Kind is link or file.')
+      kind = raw === 'file' || raw === 'document' || raw === 'pdf' ? 'file' : raw === 'link' || raw === 'url' ? 'link' : CONTENT_KINDS.has(raw) ? raw : ''
+      if (!kind) fail('kind', 'Kind is link, file, summary, quote, reading or guide.')
     }
+    const body = present(row, 'body') ? textOf(row, 'body') : ''
+    if (present(row, 'body')) for (const message of plainProblems([['Body', body]])) fail('body', message)
+    const content = CONTENT_KINDS.has(kind)
     if (problems.length) {
       working.errors.push(...problems)
       working.skipped += 1
@@ -1052,23 +1171,24 @@ function planResources(working: Working, rows: InputRow[]) {
       working.changes.push({ tab: 'Resources', row: row.row, action: 'delete', label, detail: 'The resource will be removed.' })
       continue
     }
+    const needsWords = content
     if (!lesson && found.pending) {
-      if (!label || !url) {
-        skip(working, 'Resources', row.row, label ? 'url' : 'label', 'A new resource needs a label and an https link.')
+      if (!label || (needsWords ? !body : !url)) {
+        skip(working, 'Resources', row.row, !label ? 'label' : needsWords ? 'body' : 'url', needsWords ? 'A summary, quote, reading or guide needs its words in the body column.' : 'A new resource needs a label and an https link.')
         working.skipped += 1
         continue
       }
-      working.ops.push({ op: 'resource.create', lesson: { temp: working.lessons.get(found.pending)!.temp }, data: { name: label, url, kind: kind || 'link' } })
+      working.ops.push({ op: 'resource.create', lesson: { temp: working.lessons.get(found.pending)!.temp }, data: { name: label, url: url || undefined, kind: kind || 'link', ...(body ? { body } : {}) } })
       working.changes.push({ tab: 'Resources', row: row.row, action: 'create', label, detail: 'New resource on the new talk.' })
       continue
     }
     if (!own.length) {
-      if (!label || !url) {
-        skip(working, 'Resources', row.row, label ? 'url' : 'label', 'A new resource needs a label and an https link.')
+      if (!label || (needsWords ? !body : !url)) {
+        skip(working, 'Resources', row.row, !label ? 'label' : needsWords ? 'body' : 'url', needsWords ? 'A summary, quote, reading or guide needs its words in the body column.' : 'A new resource needs a label and an https link.')
         working.skipped += 1
         continue
       }
-      working.ops.push({ op: 'resource.create', lesson: { id: lesson!.id }, data: { name: label, url, kind: kind || 'link' } })
+      working.ops.push({ op: 'resource.create', lesson: { id: lesson!.id }, data: { name: label, url: url || undefined, kind: kind || 'link', ...(body ? { body } : {}) } })
       working.changes.push({ tab: 'Resources', row: row.row, action: 'create', label, detail: 'New resource.' })
       continue
     }
@@ -1081,6 +1201,7 @@ function planResources(working: Working, rows: InputRow[]) {
     const patch: Record<string, unknown> = {}
     if (url && url !== (resource.url || '')) patch.url = url
     if (kind && kind !== (resource.kind || 'link')) patch.kind = kind
+    if (present(row, 'body') && body !== (resource.body || '')) patch.body = body
     if (!Object.keys(patch).length) working.unchanged += 1
     else {
       working.ops.push({ op: 'resource.update', id: resource.id, patch })

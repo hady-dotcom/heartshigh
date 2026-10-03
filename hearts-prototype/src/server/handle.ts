@@ -279,13 +279,17 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
       })
       if (state.state !== 'open') return fail(409, 'This question has not opened yet. The countdown shows when it will.')
     }
-    const body = (input.body || '').trim()
+    let body = (input.body || '').trim()
     const choice = (input.choice || '').trim()
     const image = input.image
     const video = input.video
     const audioFile = input.audio
     const hasVideo = video instanceof File && video.size > 0
     const hasAudio = audioFile instanceof File && audioFile.size > 0
+    const evidence = String(point.evidence || 'none')
+    if (point.kind === 'task' && evidence === 'note' && body.length < 2) return fail(400, 'Write a short note about what you did.')
+    if (point.kind === 'task' && evidence === 'photo' && !(image instanceof File && image.size > 0)) return fail(400, 'Add a photo of what you did.')
+    if (point.kind === 'task' && evidence === 'none' && !body && !choice && !(image instanceof File && image.size > 0)) body = 'Done'
     if (!body && !choice && !(image instanceof File && image.size > 0) && !hasVideo && !hasAudio) {
       return fail(400, 'Write a few words, or add an image, a sound, or a video.')
     }
@@ -307,7 +311,7 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
       videoId = await saveUpload(payload, video, portal, 'video/mp4')
     }
     const keepPrivate = Boolean(input.keepPrivate)
-    const shareWithTeacher = Boolean(input.shareWithTeacher)
+    const shareWithTeacher = Boolean(input.shareWithTeacher) || Boolean(point.showImam)
     // Other learners read an answer only when its author opted in to sharing with learners and chose it here.
     const shareWithLearners = !keepPrivate && Boolean(input.shareWithLearners) && Boolean(user.shareWithLearners)
     const correct = point.kind === 'multiple_choice' && point.correctOption ? choice === point.correctOption : null

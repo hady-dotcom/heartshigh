@@ -16,6 +16,7 @@ import { CircleScreen, MeScreen, PlanScreen, SettingsScreen } from '@/screens/ap
 import { WelcomeScreen } from '@/screens/app/welcome'
 import { OverviewScreen, PortalSettingsScreen, WizardScreen } from '@/screens/desk/overview'
 import { AccessScreen, ContentScreen, CourseEditorScreen, LibraryScreen, guardAdmin } from '@/screens/desk/content'
+import { PortalCreatorScreen } from '@/screens/desk/creator-screen'
 import { PortalSheetScreen } from '@/screens/desk/sheet'
 import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
 
@@ -100,6 +101,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         return PortalOpeningScreen(ctx)
       case 'sheet':
         guardAdmin(ctx)
+        if (b === 'create') return PortalCreatorScreen(ctx)
         return PortalSheetScreen(ctx)
       case 'courses':
         redirect(b ? `${base}/admin/content/${b}` : `${base}/admin/content`)

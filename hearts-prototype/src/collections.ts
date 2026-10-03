@@ -277,6 +277,17 @@ export const Lessons: CollectionConfig = {
     { name: 'speaker', type: 'text' },
     { name: 'youtubeUrl', type: 'text' },
     { name: 'youtubeId', type: 'text' },
+    {
+      name: 'videoProvider',
+      type: 'select',
+      options: [
+        { label: 'YouTube', value: 'youtube' },
+        { label: 'Vimeo', value: 'vimeo' },
+        { label: 'Uploaded file', value: 'file' },
+      ],
+    },
+    { name: 'vimeoId', type: 'text' },
+    { name: 'film', type: 'upload', relationTo: 'media' },
     { name: 'muxAssetId', type: 'text', admin: { description: 'Mux-ready. Unused until a Mux asset is attached.' } },
     { name: 'muxPlaybackId', type: 'text' },
     { name: 'durationSeconds', type: 'number' },
@@ -313,9 +324,14 @@ export const Resources: CollectionConfig = {
       options: [
         { label: 'Link', value: 'link' },
         { label: 'File', value: 'file' },
+        { label: 'Summary', value: 'summary' },
+        { label: 'Quote', value: 'quote' },
+        { label: 'Further reading', value: 'reading' },
+        { label: 'Discussion guide', value: 'guide' },
       ],
     },
     { name: 'url', type: 'text' },
+    { name: 'body', type: 'textarea', maxLength: 20000 },
     { name: 'showAtEnd', type: 'checkbox', defaultValue: false },
   ],
 }
@@ -503,6 +519,26 @@ export const EngagementPoints: CollectionConfig = {
     },
     { name: 'draftNote', type: 'text' },
     { name: 'reviewedBy', type: 'relationship', relationTo: 'users' },
+    {
+      name: 'family',
+      type: 'select',
+      options: [
+        { label: 'Pop-up in the film', value: 'popup' },
+        { label: 'Workbook reflection', value: 'workbook' },
+        { label: 'Activation task', value: 'task' },
+      ],
+    },
+    { name: 'dueDays', type: 'number', min: 1, max: 366, admin: { description: 'Activation tasks: days the learner has, counted from when they first open the talk.' } },
+    {
+      name: 'evidence',
+      type: 'select',
+      options: [
+        { label: 'None', value: 'none' },
+        { label: 'A note', value: 'note' },
+        { label: 'A photo', value: 'photo' },
+      ],
+    },
+    { name: 'showImam', type: 'checkbox', defaultValue: false, admin: { description: 'When set, the learner’s answer is visible to their imam and the portal admin.' } },
   ],
   hooks: {
     beforeChange: [

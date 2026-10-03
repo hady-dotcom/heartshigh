@@ -77,6 +77,7 @@ export async function TeachScreen(ctx: Ctx) {
                 <article key={entry.id} className="lib-card" data-testid="workbook-review">
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}><b>{(entry.user as { name?: string } | null)?.name || 'A learner'}</b><span className="hint">{shortDate(entry.createdAt)}</span></div>
                   {prompt ? <p className="hint" style={{ margin: 0 }}>Question: {prompt}</p> : null}
+                  {(answer?.point as { kind?: string } | undefined)?.kind === 'task' ? <p className="badge" data-testid="activation-task">Activation task</p> : null}
                   <p style={{ fontSize: 15, color: 'var(--ink)' }}>{str(entry.body) || 'A photo or recording'}</p>
                   {entry.teacherReply ? <p className="count-tile" style={{ display: 'block', background: 'var(--mint)' }} data-testid="teacher-reply">Your reply: {str(entry.teacherReply)}</p> : null}
                   <form className="form" action="/api/hearts" method="post">

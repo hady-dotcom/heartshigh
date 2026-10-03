@@ -104,7 +104,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
   const points = allPoints.filter((point) => ref(point.lesson) === lessonId)
   const mine = await rows(payload, 'answers', { and: [{ user: { equals: user.id } }, { lesson: { in: lessonIds } }] })
   const at = now()
-  const views: PointView[] = points.map((point, index) => {
+  const views: PointView[] = points.filter((point) => str(point.family) !== 'workbook').map((point, index) => {
     const contingentId = ref(point.contingent)
     const contingentAnswer = contingentId ? mine.find((answer) => ref(answer.point) === contingentId) : null
     const state = unlockState({
@@ -123,6 +123,10 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
       prompt: str(point.prompt),
       kind: (['reflection', 'question', 'multiple_choice', 'task'].includes(str(point.kind)) ? point.kind : 'reflection') as PointView['kind'],
       options: Array.isArray(point.options) ? (point.options as unknown[]).map(String) : [],
+      dueDays: point.dueDays == null || point.dueDays === '' ? null : Number(point.dueDays),
+      evidence: (['none', 'note', 'photo'].includes(str(point.evidence)) ? str(point.evidence) : null) as PointView['evidence'],
+      showImam: Boolean(point.showImam),
+      family: str(point.family) || null,
       state: state.state,
       unlocksAt: state.unlocksAt ? state.unlocksAt.toISOString() : null,
       contingentPrompt: contingentId ? str(allPoints.find((row) => row.id === contingentId)?.prompt) : undefined,
@@ -163,7 +167,10 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
   const marks = mine.length
     ? await rows(payload, 'feedback-notes', { answer: { in: mine.map((row) => row.id) } }, { sort: 'second' })
     : []
-  const youtubeId = str(lesson.youtubeId) || null
+  const provider = str(lesson.videoProvider)
+  const vimeoId = str(lesson.vimeoId) || null
+  const youtubeId = provider === 'vimeo' || provider === 'file' ? null : str(lesson.youtubeId) || null
+  const film = provider === 'vimeo' && vimeoId ? { provider: 'vimeo' as const, vimeoId } : provider === 'file' ? { provider: 'file' as const, src: `/api/hearts/film/${lessonId}` } : null
   const startAt = Math.max(0, Number(query.t || 0)) || 0
   const [unread, flags] = await Promise.all([unreadCount(payload, user), masterFlags(payload)])
   const here = `${base}/course/${courseId}?part=${lessonId}`
@@ -178,6 +185,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
           lessonId={lessonId}
           partLabel={`Part ${partIndex + 1} · ${str(lesson.title)}`}
           youtubeId={youtubeId}
+          film={film}
           poster={posterFor(youtubeId) || portraitFor(slugify(str(lesson.speaker || course.speaker)))}
           duration={Number(lesson.durationSeconds || 0)}
           startAt={startAt}

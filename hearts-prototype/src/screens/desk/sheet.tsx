@@ -65,6 +65,7 @@ function SheetBody({
   )
   return (
     <>
+      <p style={{ marginTop: 0 }}><a className="btn" href={desk === 'portal' ? `/p/${portalSlug}/admin/sheet/create` : '/master/sheet/create'} data-testid="sheet-create-link">Build a sheet from a topic</a></p>
       <div className="stats-strip" data-testid="sheet-library-counts">
         <div className="stat-chip"><b>{libraryCounts.talks}</b><span>Talks in this export</span></div>
         <div className="stat-chip"><b>{libraryCounts.questions}</b><span>Questions</span></div>
@@ -201,6 +202,7 @@ function SheetBody({
               </div>
             ) : null}
             {(summary.changeTotal || 0) > (summary.changes?.length || 0) ? <p className="hint">Showing the first {summary.changes?.length} changes of {summary.changeTotal}.</p> : null}
+            {preview?.id ? <p style={{ marginTop: 12 }}><a className="btn ghost" href={`/api/hearts/sheet/create?preview=${preview.id}`} data-testid="sheet-draft-download">Download this draft</a></p> : null}
             <form action={action} method="post" style={{ marginTop: 16 }}>
               {hidden}
               <input type="hidden" name="intent" value="apply" />
