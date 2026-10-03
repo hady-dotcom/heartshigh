@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
-import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
+import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readHeart, readPending, sessionFlags, setSessionFlags, viewAsId, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
@@ -33,7 +33,7 @@ export type JourneyProps = {
   viewAs: boolean
   keepPlace: boolean
   trendsOptIn: boolean
-  startingClause: number | null
+  startingDoor: number | null
   flags: { popupOverPlayer: boolean; chromeOverPlayer: boolean }
   mains: Record<string, Mains>
   unread: number
@@ -165,9 +165,9 @@ export function Journey(props: JourneyProps) {
     const unfinished = props.initial === 'opener' && state && !handedOff && state.taps.length ? state : null
     if (!state) {
       state = freshState(opening.portal, opening.scenesVersion)
-      state.spinePointer = spineStart(props.startingClause)
+      state.spinePointer = spineStart(props.startingDoor)
     }
-    state = decay(state)
+    state = decay(upgradeSpine(state))
     heartRef.current = state
     setHeartState(state)
     if (props.initial !== 'opener' || stored) writeHeart(state)

@@ -13,6 +13,8 @@ import {
   pickSignals,
   routeFeed,
   scoreLanes,
+  spineStart,
+  upgradeSpine,
   type CutInfo,
   type HeartState,
   type RouteContext,
@@ -31,7 +33,7 @@ function context(extra: CutInfo[] = []): RouteContext {
   for (const row of STARTERS) {
     cuts.push({ id: id++, clause: null, lanes: row.lane === 'default' ? [] : [{ lane: row.lane, weight: 1, confirmed: true }], approved: false, hasHors: true, portalOwn: false, starter: { lane: row.lane, role: row.role } })
   }
-  for (let clause = 1; clause <= 12; clause += 1) {
+  for (let clause = 1; clause <= 20; clause += 1) {
     cuts.push({ id: clause, clause, lanes: clause === 2 ? [{ lane: 'company', weight: 1, confirmed: true }] : [], approved: true, hasHors: true, portalOwn: false })
   }
   cuts.push({ id: 27, clause: 27, lanes: [{ lane: 'trust', weight: 1, confirmed: true }], approved: true, hasHors: true, portalOwn: false })
@@ -65,7 +67,8 @@ test('1. the worked example in 3.5 gives trust 0.86, the others 0.2525, and a fe
   assert.equal(route.L1, 'trust')
   assert.equal(route.L2, null)
   assert.deepEqual(route.items.map((item) => item.laneKey), ['trust', 'trust', 'trust', 'trust', null, null, null])
-  assert.deepEqual(route.items.slice(4).map((item) => item.clause), [1, 2, 3])
+  assert.deepEqual(route.items.slice(4).map((item) => item.door), [1, 2, 3], 'the spine walks the doors, one talk per door')
+  assert.deepEqual(route.items.slice(4).map((item) => item.clause), [1, 2, 13])
   assert.equal(route.spinePointer, 3)
 })
 
@@ -91,7 +94,7 @@ test('2. the day-2 example in section 4 gives trust 0.92, company 0.545, and a r
   const refill = routeFeed(state, dayTwo)
   assert.equal(refill.L2, 'company')
   assert.deepEqual(refill.items.slice(0, 4).map((item) => item.laneKey), ['trust', 'company', 'trust', 'company'])
-  assert.ok(refill.items.slice(4).every((item) => item.laneKey === null && (item.clause || 0) >= 4), 'the spine carries on from clause 4')
+  assert.ok(refill.items.slice(4).every((item) => item.laneKey === null && (item.door || 0) >= 4), 'the spine carries on from door 4')
 })
 
 test('3. the desire guard: an opening option that nudges desire changes nothing', () => {
@@ -123,7 +126,7 @@ test('6. all passes give the default clip then six from the spine; starting from
   const passes = play(SCENES.map((scene) => [scene.key, 'pass'] as [string, string]))
   const route = routeFeed(passes, ctx)
   assert.equal(route.items[0].cutId, ctx.d0CutId)
-  assert.deepEqual(route.items.slice(1).map((item) => item.clause), [1, 2, 3, 4, 5, 6])
+  assert.deepEqual(route.items.slice(1).map((item) => item.door), [1, 2, 3, 4, 5, 6])
   const beginning = routeFeed(play([['extra', 'treat'], ['queue', 'replay'], ['doors', 'beginning']]), ctx)
   assert.equal(beginning.items.length, 7)
   assert.ok(beginning.items.slice(1).every((item) => item.laneKey === null))
@@ -133,7 +136,7 @@ test('6. all passes give the default clip then six from the spine; starting from
   assert.equal(fewTaps.items[0].cutId, ctx.d0CutId)
 })
 
-test('7. the trust lane leaves out clauses 26, 31 and 32 to 35 in the first seven days', () => {
+test('7. the trust lane leaves out the doors of clauses 26, 31 and 32 to 35 in the first seven days', () => {
   const extra = [26, 31, 33, 35].map((clause) => ({ id: 6000 + clause, clause, lanes: [{ lane: 'trust', weight: 1, confirmed: true }], approved: true, hasHors: true, portalOwn: true }))
   const ctx = context(extra)
   const taken = new Set(ctx.cuts.filter((cut) => cut.starter?.lane === 'trust' || cut.id === 27 || cut.id === 22).map((cut) => cut.id))
@@ -234,4 +237,47 @@ test('buildFeed takes lane scores alone, as the server does', () => {
   const ctx = context()
   const feed = buildFeed({ laneScores: { trust: 0.86, patience: 0.2525 }, served: [], spinePointer: 0 }, ctx)
   assert.deepEqual(feed.items.map((item) => item.laneKey), ['trust', 'trust', 'trust', 'trust', null, null, null])
+})
+
+test('a lane ranks every talk in a door by its best clause there, so a Sitting talk ranks with the clauses the lane names', () => {
+  // The company lane names clauses 2, 4, 8 (rank 1 and 2) and 9, 37 (rank 3). Clause 5 is not named, but it sits in door 2.
+  const ctx = context([
+    { id: 7005, clause: 5, lanes: [{ lane: 'company', weight: 1, confirmed: true }], approved: true, hasHors: true, portalOwn: false },
+    { id: 7038, clause: 38, lanes: [{ lane: 'company', weight: 1, confirmed: true }], approved: true, hasHors: true, portalOwn: false },
+  ])
+  const taken = new Set(ctx.cuts.filter((cut) => cut.starter || cut.id === 2).map((cut) => cut.id))
+  assert.equal(bestCut('company', ctx, taken, new Set(), false)?.id, 7005, 'door 2 (rank 1) comes before door 19 (rank 3)')
+  taken.add(7005)
+  assert.equal(bestCut('company', ctx, taken, new Set(), false)?.id, 7038)
+})
+
+test('first-week exclusions cover the whole door: clause 29 shares door 16 with excluded clause 31', () => {
+  const ctx = context([{ id: 7029, clause: 29, lanes: [{ lane: 'trust', weight: 1, confirmed: true }], approved: true, hasHors: true, portalOwn: true }])
+  const taken = new Set(ctx.cuts.filter((cut) => cut.starter?.lane === 'trust' || cut.id === 27 || cut.id === 22).map((cut) => cut.id))
+  assert.equal(bestCut('trust', ctx, taken, new Set(), true), null)
+  assert.equal(bestCut('trust', ctx, taken, new Set(), false)?.id, 7029)
+})
+
+test('explicit door fields from the server win over the built-in map', () => {
+  const ctx = context()
+  const custom = { ...ctx, cuts: ctx.cuts.map((cut) => (cut.id === 13 ? { ...cut, door: 1 } : cut)) }
+  const feed = buildFeed({ laneScores: {}, served: [], spinePointer: 0 }, custom)
+  assert.deepEqual(feed.items.slice(1, 3).map((item) => item.door), [1, 2])
+})
+
+test('the spine starts at the door before the starting door, and an older clause pointer moves to doors', () => {
+  assert.equal(spineStart(null), 0)
+  assert.equal(spineStart(10), 9)
+  assert.equal(spineStart(25), 19)
+  const fresh = freshState('p', 1, NOW)
+  assert.equal(fresh.spineIn, 'door')
+  assert.equal(upgradeSpine(fresh), fresh)
+  const old = { ...fresh, spineIn: undefined }
+  assert.equal(upgradeSpine({ ...old, spinePointer: 0 }).spinePointer, 0)
+  assert.equal(upgradeSpine({ ...old, spinePointer: 1 }).spinePointer, 1, 'clause 1 closes door 1')
+  assert.equal(upgradeSpine({ ...old, spinePointer: 5 }).spinePointer, 1, 'clause 5 is inside door 2, so door 2 is not yet done')
+  assert.equal(upgradeSpine({ ...old, spinePointer: 12 }).spinePointer, 2)
+  assert.equal(upgradeSpine({ ...old, spinePointer: 21 }).spinePointer, 8, 'clause 21 opens door 9')
+  assert.equal(upgradeSpine({ ...old, spinePointer: 41 }).spinePointer, 20)
+  assert.equal(upgradeSpine({ ...old, spinePointer: 41 }).spineIn, 'door')
 })

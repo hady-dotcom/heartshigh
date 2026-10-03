@@ -2,6 +2,8 @@ import type { Payload } from 'payload'
 import { buildFeed, type CutInfo, type FeedPlan, type FeedSlot, type LaneDef, type ScaleDef, type SceneDef, type SceneOption } from '@/lib/heart'
 import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE } from '@/lib/opening-data'
 import { idOf } from '@/lib/ids'
+import { doorNumberOfClause, type Door } from '@/lib/doors'
+import { loadDoors } from './doors'
 import { now } from '@/lib/clock'
 import { adoptedCourseIds, visibleCourseIds, type PortalDoc, type SessionUser } from './context'
 import { normaliseSpans, type AppetiserSpan } from '@/lib/tiers'
@@ -59,6 +61,7 @@ type Loaded = {
   tags: Row[]
   ladder: Row[]
   clauses: Row[]
+  doors: Door[]
   tiers: Row[]
   /** Old cut ids that now stand for their talk's one tier clip. */
   alias: Map<number, number>
@@ -99,8 +102,8 @@ function carrierCut(cuts: Row[], lessonId: number) {
 }
 
 async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
-  const [lanes, scales, clauses] = await Promise.all([all(payload, 'lanes'), all(payload, 'heart-scales'), all(payload, 'clauses')])
-  if (!courseIds.length) return { lanes, scales, clauses, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [], alias: new Map() }
+  const [lanes, scales, clauses, doors] = await Promise.all([all(payload, 'lanes'), all(payload, 'heart-scales'), all(payload, 'clauses'), loadDoors(payload)])
+  if (!courseIds.length) return { lanes, scales, clauses, doors, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [], alias: new Map() }
   const [courses, lessons, showUnchecked] = await Promise.all([all(payload, 'courses', { id: { in: courseIds } }), all(payload, 'lessons', { course: { in: courseIds } }), showUncheckedTalks(payload)])
   const lessonIds = lessons.map((row) => row.id)
   const [rawCuts, tiers] = await Promise.all([
@@ -138,7 +141,7 @@ async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
       const value = idOf((tag.item as { value?: unknown }).value) || 0
       return alias.has(value) ? { ...tag, item: { relationTo: 'cuts', value: alias.get(value) } } : tag
     })
-  return { lanes, scales, clauses, cuts, lessons, courses, tags: cutTags, ladder, tiers: tiers.filter((tier) => tierVisible(tier, showUnchecked)), alias }
+  return { lanes, scales, clauses, doors, cuts, lessons, courses, tags: cutTags, ladder, tiers: tiers.filter((tier) => tierVisible(tier, showUnchecked)), alias }
 }
 
 function laneDefs(data: Loaded): LaneDef[] {
@@ -146,16 +149,22 @@ function laneDefs(data: Loaded): LaneDef[] {
   const scaleKey = new Map(data.scales.map((row) => [row.id, String(row.key)]))
   return data.lanes
     .filter((lane) => !lane.pseudo)
-    .map((lane) => ({
-      key: String(lane.key),
-      title: String(lane.title),
-      scale: (scaleKey.get(idOf(lane.scale) || 0) as LaneDef['scale']) || null,
-      fit: (lane.fit as LaneDef['fit']) || 'workable',
-      clauses: ((lane.clauses as { clause?: unknown; rank?: number }[]) || []).map((row) => ({ clause: clauseNumber.get(idOf(row.clause) || 0) || 0, rank: Number(row.rank || 1) })),
-      excludeClauses: ((lane.excludeClauses as unknown[]) || []).map((row) => clauseNumber.get(idOf(row) || 0) || 0).filter(Boolean),
-      optInOnly: Boolean(lane.optInOnly),
-      order: Number(lane.order || 1),
-    }))
+    .map((lane) => {
+      const clauses = ((lane.clauses as { clause?: unknown; rank?: number }[]) || []).map((row) => ({ clause: clauseNumber.get(idOf(row.clause) || 0) || 0, rank: Number(row.rank || 1) }))
+      const excludeClauses = ((lane.excludeClauses as unknown[]) || []).map((row) => clauseNumber.get(idOf(row) || 0) || 0).filter(Boolean)
+      return {
+        key: String(lane.key),
+        title: String(lane.title),
+        scale: (scaleKey.get(idOf(lane.scale) || 0) as LaneDef['scale']) || null,
+        fit: (lane.fit as LaneDef['fit']) || 'workable',
+        clauses,
+        excludeClauses,
+        doors: clauses.map((row) => ({ door: doorNumberOfClause(row.clause, data.doors) || 0, rank: row.rank })).filter((row) => row.door),
+        excludeDoors: [...new Set(excludeClauses.map((clause) => doorNumberOfClause(clause, data.doors) || 0).filter(Boolean))],
+        optInOnly: Boolean(lane.optInOnly),
+        order: Number(lane.order || 1),
+      }
+    })
     .sort((a, b) => a.order - b.order)
 }
 
@@ -181,9 +190,11 @@ function cutInfos(data: Loaded, portal: PortalDoc): CutInfo[] {
       const confirmedClause = tags.find((tag) => tag.state === 'confirmed' && idOf(tag.clause))
       const lesson = data.lessons.find((row) => row.id === idOf(cut.lesson))
       const course = data.courses.find((row) => row.id === idOf(lesson?.course))
+      const clause = confirmedClause ? clauseNumber.get(idOf(confirmedClause.clause) || 0) || null : Number(cut.bestClause || 0) || null
       return {
         id: cut.id,
-        clause: confirmedClause ? clauseNumber.get(idOf(confirmedClause.clause) || 0) || null : Number(cut.bestClause || 0) || null,
+        clause,
+        door: doorNumberOfClause(clause, data.doors),
         lanes,
         approved: cut.status === 'approved',
         hasHors: data.tiers.some((tier) => idOf(tier.lesson) === idOf(cut.lesson)) || data.ladder.some((item) => item.kind === 'hors' && idOf(item.lesson) === idOf(cut.lesson) && Number(item.start) >= Number(cut.start) - 1 && Number(item.end) <= Number(cut.end) + 1),
@@ -248,6 +259,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     lessonTitle: String(lesson.sourceTitle || lesson.title || ''),
     style: slide ? STYLES[index % STYLES.length] : null,
     clause: (cut.bestClause as number) || null,
+    door: doorNumberOfClause((cut.bestClause as number) || null, data.doors),
     transcriptReady: Boolean(lesson.transcript) && lesson.transcriptSource !== 'pending',
   }
   const tier = data.tiers.find((row) => idOf(row.lesson) === lesson.id)

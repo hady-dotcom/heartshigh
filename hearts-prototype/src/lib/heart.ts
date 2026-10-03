@@ -1,5 +1,7 @@
 // Heart state and routing for the opening (build spec sections 2.6, 3 and 4).
 // Pure functions shared by the browser, the server, the master simulator and the tests. No path aliases here.
+// Lanes and talks keep their Jibril clause; routing and the spine work in the 20 doors those clauses fold into.
+import { DOOR_COUNT, doorNumberOfClause, doorOfClause } from './doors'
 
 export type ScaleKey = 'desire' | 'greed' | 'anger' | 'ego' | 'worry' | 'belonging' | 'gratitude' | 'faith' | 'compassion' | 'discipline'
 export const SCALE_KEYS: ScaleKey[] = ['desire', 'greed', 'anger', 'ego', 'worry', 'belonging', 'gratitude', 'faith', 'compassion', 'discipline']
@@ -32,6 +34,9 @@ export type LaneDef = {
   fit: 'natural' | 'workable' | 'weak'
   clauses: { clause: number; rank: number }[]
   excludeClauses: number[]
+  /** The lane's ranks and exclusions in doors. Derived from the clauses when absent. */
+  doors?: { door: number; rank: number }[]
+  excludeDoors?: number[]
   optInOnly: boolean
   order: number
 }
@@ -50,7 +55,10 @@ export type HeartState = {
   u: Record<string, number>
   served: string[]
   optInLanes: string[]
+  /** The last door the spine has served, 0 to 20. */
   spinePointer: number
+  /** Set once spinePointer counts doors. Older devices counted clauses. */
+  spineIn?: 'door'
   updatedAt: number
   /** Device time of the first open; the first-7-days exclusions count from here. */
   firstOpenAt?: number
@@ -72,7 +80,7 @@ const clamp = (value: number, low: number, high: number) => Math.min(high, Math.
 const round = (value: number) => Math.round(value * 1e6) / 1e6
 
 export function freshState(portal: string, scenesVersion: number, at = Date.now()): HeartState {
-  return { v: 1, scenesVersion, portal, s: {}, c: {}, taps: [], u: {}, served: [], optInLanes: [], spinePointer: 0, updatedAt: at, firstOpenAt: at }
+  return { v: 1, scenesVersion, portal, s: {}, c: {}, taps: [], u: {}, served: [], optInLanes: [], spinePointer: 0, spineIn: 'door', updatedAt: at, firstOpenAt: at }
 }
 
 /** Applies one scale nudge. In the opening, scales with firstOpenRead = false are skipped (the desire guard). */
@@ -157,6 +165,8 @@ export type LaneScore = { lane: string; score: number; stateL: number; order: nu
 export type CutInfo = {
   id: number
   clause: number | null
+  /** The talk's door. Derived from the clause when absent. */
+  door?: number | null
   lanes: { lane: string; weight: number; confirmed: boolean }[]
   approved: boolean
   hasHors: boolean
@@ -211,7 +221,7 @@ export function pickSignals(ranked: LaneScore[]) {
   return { L1, L2 }
 }
 
-export type FeedSlot = { cutId: number; laneKey: string | null; clause: number | null; kind: 'hors' }
+export type FeedSlot = { cutId: number; laneKey: string | null; clause: number | null; door: number | null; kind: 'hors' }
 
 export type FeedPlan = {
   /** Lane scores as the device worked them out (P2: the only personal thing a feed request carries). */
@@ -223,9 +233,24 @@ export type FeedPlan = {
   firstOpenAt?: number
 }
 
-function clauseRank(lane: LaneDef, clause: number | null) {
-  const hit = clause == null ? null : lane.clauses.find((row) => row.clause === clause)
-  return hit ? hit.rank : 99
+export function cutDoor(cut: Pick<CutInfo, 'clause' | 'door'>): number | null {
+  return cut.door !== undefined ? cut.door : doorNumberOfClause(cut.clause)
+}
+
+export function laneDoors(lane: LaneDef): { door: number; rank: number }[] {
+  if (lane.doors) return lane.doors
+  return lane.clauses.map((row) => ({ door: doorNumberOfClause(row.clause) || 0, rank: row.rank })).filter((row) => row.door)
+}
+
+export function laneExcludedDoors(lane: LaneDef): number[] {
+  if (lane.excludeDoors) return lane.excludeDoors
+  return [...new Set(lane.excludeClauses.map((clause) => doorNumberOfClause(clause) || 0).filter(Boolean))]
+}
+
+/** A lane ranks a door by the best rank of any of its clauses in that door. */
+function doorRank(lane: LaneDef, door: number | null) {
+  if (door == null) return 99
+  return Math.min(99, ...laneDoors(lane).filter((row) => row.door === door).map((row) => row.rank))
 }
 
 /** best(L) from section 3.4. */
@@ -234,39 +259,44 @@ export function bestCut(laneKey: string, ctx: RouteContext, taken: Set<number>, 
   if (!lane) return null
   const starter = ctx.cuts.find((cut) => cut.starter?.lane === laneKey && cut.starter.role === 'first')
   if (starter && !taken.has(starter.id) && !served.has(String(starter.id))) return starter
+  const excluded = laneExcludedDoors(lane)
   const pool = ctx.cuts.filter((cut) => {
     if (taken.has(cut.id)) return false
     if (!laneTagged(cut, laneKey, ctx.allowSuggested)) return false
     if (!cut.approved && !cut.starter) return false
     if (!cut.hasHors && !cut.starter) return false
-    if (firstWeek && cut.clause != null && lane.excludeClauses.includes(cut.clause)) return false
+    const door = cutDoor(cut)
+    if (firstWeek && door != null && excluded.includes(door)) return false
     return true
   })
   pool.sort(
     (a, b) =>
       Number(b.portalOwn) - Number(a.portalOwn) ||
-      clauseRank(lane, a.clause) - clauseRank(lane, b.clause) ||
-      (a.clause ?? 99) - (b.clause ?? 99) ||
+      doorRank(lane, cutDoor(a)) - doorRank(lane, cutDoor(b)) ||
+      (cutDoor(a) ?? 99) - (cutDoor(b) ?? 99) ||
       Number(served.has(String(a.id))) - Number(served.has(String(b.id))) ||
       a.id - b.id,
   )
   return pool[0] || null
 }
 
-/** spine(n) from section 3.4: approved hors cuts in clause order after the pointer. */
+/** spine(n) from section 3.4: approved hors cuts in door order after the pointer, one door at a time. */
 export function spine(n: number, ctx: RouteContext, pointer: number, taken: Set<number>, served: Set<string>) {
   const pool = ctx.cuts
-    .filter((cut) => cut.approved && cut.hasHors && cut.clause != null && cut.clause > pointer && !taken.has(cut.id))
-    .sort((a, b) => (a.clause! - b.clause!) || Number(served.has(String(a.id))) - Number(served.has(String(b.id))) || a.id - b.id)
+    .map((cut) => ({ cut, door: cutDoor(cut) }))
+    .filter(({ cut, door }) => cut.approved && cut.hasHors && door != null && door > pointer && !taken.has(cut.id))
+    .sort((a, b) => (a.door! - b.door!) || (a.cut.clause ?? 99) - (b.cut.clause ?? 99) || Number(served.has(String(a.cut.id))) - Number(served.has(String(b.cut.id))) || a.cut.id - b.cut.id)
+    .map(({ cut }) => cut)
   const picked: CutInfo[] = []
-  const usedClauses = new Set<number>()
+  const usedDoors = new Set<number>()
   for (const cut of pool) {
     if (picked.length >= n) break
-    if (usedClauses.has(cut.clause!)) continue
-    usedClauses.add(cut.clause!)
+    const door = cutDoor(cut)!
+    if (usedDoors.has(door)) continue
+    usedDoors.add(door)
     picked.push(cut)
   }
-  // Fewer distinct clauses than slots: fill with the remaining cuts in the same order.
+  // Fewer distinct doors than slots: fill with the remaining cuts in the same order.
   for (const cut of pool) {
     if (picked.length >= n) break
     if (!picked.includes(cut)) picked.push(cut)
@@ -291,7 +321,7 @@ export function buildFeed(plan: FeedPlan, ctx: RouteContext): { items: FeedSlot[
   const push = (cut: CutInfo | null, laneKey: string | null) => {
     if (!cut) return false
     taken.add(cut.id)
-    items.push({ cutId: cut.id, laneKey, clause: cut.clause, kind: 'hors' })
+    items.push({ cutId: cut.id, laneKey, clause: cut.clause, door: cutDoor(cut), kind: 'hors' })
     return true
   }
   const d0 = ctx.cuts.find((cut) => cut.id === ctx.d0CutId) || null
@@ -299,7 +329,7 @@ export function buildFeed(plan: FeedPlan, ctx: RouteContext): { items: FeedSlot[
   const addSpine = (count: number) => {
     for (const cut of spine(count, ctx, pointer, taken, served)) {
       push(cut, null)
-      pointer = Math.max(pointer, cut.clause || pointer)
+      pointer = Math.max(pointer, cutDoor(cut) || pointer)
     }
   }
   const lane = (key: string) => {
@@ -356,7 +386,19 @@ export function markServed(state: HeartState, items: FeedSlot[], spinePointer: n
   return { ...state, served: [...state.served, ...ids].slice(-50), recent: { day, ids: [...before, ...ids].slice(-20) }, spinePointer, updatedAt: at }
 }
 
-/** Starting clause from portal placing (section 3.6): the hand-off begins at that clause. */
-export function spineStart(startingClause: number | null | undefined) {
-  return startingClause ? Math.max(0, startingClause - 1) : 0
+/** Starting door from portal placing (section 3.6): the hand-off begins at that door. */
+export function spineStart(startingDoor: number | null | undefined) {
+  return startingDoor ? Math.max(0, Math.min(DOOR_COUNT, startingDoor) - 1) : 0
+}
+
+/**
+ * A device saved before doors kept its spine pointer as a clause. The pointer moves to the door before the one that
+ * clause opens, unless the clause closed its door, so nothing already reached is skipped.
+ */
+export function upgradeSpine(state: HeartState): HeartState {
+  if (state.spineIn === 'door') return state
+  const clause = Math.max(0, Math.min(41, Math.floor(state.spinePointer || 0)))
+  const door = doorOfClause(clause)
+  const pointer = !door ? 0 : clause >= Math.max(...door.clauses) ? door.number : door.number - 1
+  return { ...state, spinePointer: pointer, spineIn: 'door' }
 }

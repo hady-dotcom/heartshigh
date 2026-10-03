@@ -1,6 +1,7 @@
 import { getSession } from '@/server/context'
 import { json, portalOf, readBody } from '@/server/api'
 import { serveFeed } from '@/server/opening'
+import { DOOR_COUNT } from '@/lib/doors'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,9 +28,9 @@ export async function POST(req: Request) {
     lead: typeof body.lead === 'string' ? body.lead : undefined,
     spineFirst: body.spineFirst === true,
     served: Array.isArray(body.served) ? (body.served as unknown[]).map(String).slice(-50) : [],
-    spinePointer: Math.max(0, Math.min(41, number(body.spinePointer))),
+    spinePointer: Math.max(0, Math.min(DOOR_COUNT, number(body.spinePointer))),
     firstOpenAt: typeof body.firstOpenAt === 'number' ? body.firstOpenAt : undefined,
   }
   const { items, slots, spinePointer } = await serveFeed(session.payload, portal, session.user, plan)
-  return json({ items: slots.map((slot) => ({ cutId: slot.cutId, laneKey: slot.laneKey, clause: slot.clause, kind: slot.kind })), clips: items, spinePointer })
+  return json({ items: slots.map((slot) => ({ cutId: slot.cutId, laneKey: slot.laneKey, clause: slot.clause, door: slot.door, kind: slot.kind })), clips: items, spinePointer })
 }

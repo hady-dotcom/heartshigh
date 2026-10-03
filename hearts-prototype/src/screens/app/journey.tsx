@@ -5,6 +5,8 @@ import { idOf } from '@/lib/ids'
 import type { PortalDoc, SessionUser } from '@/server/context'
 import { posterFor } from '@/server/learner'
 import { loadOpening } from '@/server/opening'
+import { loadDoors } from '@/server/doors'
+import { doorNumberOfClause } from '@/lib/doors'
 import { unreadCount } from '../common'
 
 export async function masterFlags(payload: Payload) {
@@ -28,7 +30,7 @@ async function mainsShelf(payload: Payload) {
 
 /** The one continuous learner surface: opener, six scenes, the door, and the feed (spec 7 and 7A). */
 export async function JourneyScreen({ payload, portal, user, base, initial, viewAs, query = {} }: { payload: Payload; portal: PortalDoc; user: SessionUser | null; base: string; initial: 'opener' | 'help' | 'feed'; viewAs: boolean; query?: Record<string, string | undefined> }) {
-  const [opening, flags, mains, unread] = await Promise.all([loadOpening(payload, portal, user), masterFlags(payload), mainsShelf(payload), user ? unreadCount(payload, user) : Promise.resolve(0)])
+  const [opening, flags, mains, unread, doors] = await Promise.all([loadOpening(payload, portal, user), masterFlags(payload), mainsShelf(payload), user ? unreadCount(payload, user) : Promise.resolve(0), loadDoors(payload)])
   return (
     <div className="app-stage dusk">
       <main className="app dark journey-frame" data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
@@ -42,7 +44,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
           viewAs={viewAs}
           keepPlace={Boolean(user?.keepPlace)}
           trendsOptIn={Boolean(user?.trendsOptIn)}
-          startingClause={user?.startingClause ?? null}
+          startingDoor={doorNumberOfClause(user?.startingClause, doors)}
           flags={flags}
           mains={mains}
           unread={unread}
