@@ -40,7 +40,7 @@
   display: block; width: 22px; height: 32px; border-radius: 4px 4px 8px 8px;
   background: radial-gradient(circle at 50% 40%, #ffe7a8, #e0a04a 70%);
   box-shadow: 0 0 18px 6px rgba(255, 196, 110, 0.55);
-  animation: lantern 3.4s ease-in-out infinite;
+  animation: lantern 2.8s ease-in-out infinite;
 }
 .lantern::before { content: ''; display: block; height: 8px; margin: -8px auto 0; width: 2px; background: #c9b48a; }
 .watering-can {
@@ -61,7 +61,7 @@
 .garden-tree[data-area='society'] { left: 18%; bottom: 34%; }
 .garden-tree[data-area='spirituality'] { right: 16%; bottom: 36%; }
 .tree-art, .tree-svg { width: 118px; height: 148px; display: block; margin: 0 auto; object-fit: contain; }
-.tree-svg .canopy { transform-origin: 60px 120px; animation: sway 5s ease-in-out infinite; }
+.tree-svg .canopy { transform-origin: 60px 120px; animation: sway 3.2s ease-in-out infinite; }
 .garden-tree[data-area='hadith'] .canopy, .garden-tree[data-area='spirituality'] .canopy { animation-delay: -1.6s; }
 .garden-tree[data-area='society'] .canopy { animation-delay: -3s; }
 
@@ -80,8 +80,8 @@
 .fruit-art, .garden-fruit svg { width: 28px; height: 28px; filter: drop-shadow(0 0 6px rgba(240, 195, 106, 0.8)); }
 .tree-book { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 700; color: #f3d38e; text-decoration: none; }
 
-@keyframes lantern { 50% { opacity: 0.72; box-shadow: 0 0 10px 2px rgba(255, 196, 110, 0.35); } }
-@keyframes sway { 50% { transform: rotate(-2.2deg); } }
+@keyframes lantern { 50% { opacity: 0.45; box-shadow: 0 0 26px 10px rgba(255, 210, 120, 0.95); } }
+@keyframes sway { 50% { transform: rotate(-5deg); } }
 @keyframes bloom { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
 
 @media (prefers-reduced-motion: reduce) {
