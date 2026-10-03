@@ -1,3 +1,5 @@
+import { defaultPlanName, plural } from '@/lib/schedule'
+import { now as clockNow } from '@/lib/clock'
 import Link from 'next/link'
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
 import { Avatar } from '@/components/app/feed'
@@ -93,7 +95,7 @@ export async function PlanScreen({ payload, user, portal, base, query }: Ctx) {
         <p className="lead">Pick a course, the dates and the days of the week. The parts are shared out evenly, in order, so no day is left empty at the end. It is a guide only; you can always watch at your own pace.</p>
         <form className="card form-stack" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'schedule', portalSlug: portal.slug, targetType: 'course', next: `${base}/me/plan` }} />
-          <label>Name<input className="field" name="name" defaultValue="My study days" /></label>
+          <label>Name<input className="field" name="name" defaultValue={defaultPlanName(clockNow())} /></label>
           <label>Course
             <select className="field" data-testid="schedule-course" name="course">{courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}</select>
           </label>
@@ -114,7 +116,7 @@ export async function PlanScreen({ payload, user, portal, base, query }: Ctx) {
           return (
             <section key={plan.id} data-testid="schedule-plan" style={{ marginTop: 18 }}>
               <h2 style={{ fontSize: 19, margin: '0 0 4px' }}>{str(plan.name)}</h2>
-              <p className="muted" style={{ margin: 0, fontSize: 13 }}>{slots.length} parts · {str(plan.startDate)} to {str(plan.endDate)}{ref(plan.owner) !== user.id ? ' · made by your teacher' : ''}</p>
+              <p className="muted" style={{ margin: 0, fontSize: 13 }}>{plural(slots.length, 'part')} · {str(plan.startDate)} to {str(plan.endDate)}{ref(plan.owner) !== user.id ? ' · made by your teacher' : ''}</p>
               {slots.map((slot, index) => (
                 <div className="slot" key={index} data-testid="schedule-slot">
                   <span className="date">{slot.date ? new Date(`${slot.date}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', timeZone: 'UTC' }) : ''}<small>{slot.date ? new Date(`${slot.date}T12:00:00Z`).toLocaleDateString('en-GB', { month: 'short', weekday: 'short', timeZone: 'UTC' }) : ''}</small></span>

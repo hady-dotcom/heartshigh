@@ -478,7 +478,8 @@ export async function LibraryScreen(ctx: Ctx) {
               <Hidden fields={{ action: 'split-pack', portalSlug: portal.slug, next: here }} />
               <label className="stack">New pack name<input type="text" name="title" required /></label>
               <div className="checks" style={{ flexDirection: 'column' }}>
-                {courses.filter((course) => adoptedIds.includes(course.id)).map((course) => <label className="check" key={course.id}><input type="checkbox" name="course" value={course.id} /> {str(course.title)}</label>)}
+                {courses.filter((course) => adoptedIds.includes(course.id) || course.importable !== false).map((course) => <label className="check" key={course.id} data-testid="split-course"><input type="checkbox" name="course" value={course.id} /> {str(course.title)}{adoptedIds.includes(course.id) ? '' : <span className="hint"> (from the library)</span>}</label>)}
+                {!courses.length ? <p className="hint">The library has no courses yet.</p> : null}
               </div>
               <div className="actions"><button className="btn ghost small" type="submit">Make pack</button></div>
             </form>

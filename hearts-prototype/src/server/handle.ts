@@ -4,7 +4,7 @@ import { dualExtract, type ClauseCard } from '@/lib/extractor'
 import { harvestTranscript } from '@/lib/harvest'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { extractWithFallback, llmStatus } from '@/lib/llm'
-import { flattenSlots, splitEvenly, studyDates } from '@/lib/schedule'
+import { defaultPlanName, flattenSlots, plural, splitEvenly, studyDates } from '@/lib/schedule'
 import { clockEnabled, setTestNow } from '@/lib/clock'
 import { clientIp, hit, peek, resetLimits } from '@/lib/rate-limit'
 import { slugProblem } from '@/lib/text-safety'
@@ -761,19 +761,20 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const title = text(form, 'title')
     const courseIds = form.getAll('course').map((value) => Number(value)).filter(Boolean)
     if (!title || !courseIds.length) return redirectTo(req, text(form, 'next') || '/', 'Name the new pack and tick at least one course.')
-    const allowed = new Set(user.role === 'master' ? courseIds : await visibleCourseIds(payload, user))
-    if (courseIds.some((id) => !allowed.has(id))) return redirectTo(req, text(form, 'next') || '/', 'One of those courses is not in this portal.')
+    const library = await payload.find({ collection: 'courses', overrideAccess: true, depth: 0, limit: 0, pagination: false, where: { and: [{ origin: { equals: 'master' } }, { importable: { not_equals: false } }] } })
+    const allowed = new Set(user.role === 'master' ? courseIds : [...(await visibleCourseIds(payload, user)), ...library.docs.map((course) => course.id)])
+    if (courseIds.some((id) => !allowed.has(id))) return redirectTo(req, text(form, 'next') || '/', 'One of those courses is not in this portal or the library.')
     const pack = await payload.create({
       collection: 'packs',
       overrideAccess: true,
-      data: { title, owner: 'portal', portal, courses: courseIds, summary: 'Split from a master pack.' },
+      data: { title, owner: 'portal', portal, courses: courseIds, summary: 'Chosen from the library.' },
     })
     await payload.create({
       collection: 'adoptions',
       overrideAccess: true,
       data: { kind: 'pack', portal, pack: pack.id },
     })
-    return redirectTo(req, text(form, 'next') || '/', undefined, 'Pack split. Only the courses you ticked came across.')
+    return redirectTo(req, text(form, 'next') || '/', undefined, `${title} is ready with ${plural(courseIds.length, 'course')}. Only the courses you ticked came across.`)
   }
 
   if (action === 'ingest') {
@@ -1117,7 +1118,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
     const portal = acting.portal.id
-    const name = text(form, 'name') || 'My study days'
+    const name = text(form, 'name').slice(0, 80) || defaultPlanName(now())
     const targetType = text(form, 'targetType') === 'pack' ? 'pack' : 'course'
     let courseIds: number[] = []
     if (targetType === 'pack') {
@@ -1166,9 +1167,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     })
     for (const learnerId of learnerIds) {
       if (learnerId === user.id) continue
-      await notify(payload, { user: learnerId, portal, title: 'A study plan was made for you', body: `${name}: ${slots.length} sittings between ${text(form, 'start')} and ${text(form, 'end')}.`, href: `/p/${acting.portal.slug}/me/plan` })
+      await notify(payload, { user: learnerId, portal, title: 'A study plan was made for you', body: `${name}: ${plural(slots.length, 'sitting')} between ${text(form, 'start')} and ${text(form, 'end')}.`, href: `/p/${acting.portal.slug}/me/plan` })
     }
-    return redirectTo(req, text(form, 'next') || '/', undefined, `The ${slots.length} sittings are spread evenly across ${dates.length} study days. You can still watch at your own pace.`)
+    return redirectTo(req, text(form, 'next') || '/', undefined, `${slots.length === 1 ? 'The 1 sitting is' : `The ${slots.length} sittings are`} spread across ${plural(dates.length, 'study day')}. You can still watch at your own pace.`)
   }
 
   if (action === 'rsvp' || action === 'checkin') {

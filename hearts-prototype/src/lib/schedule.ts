@@ -18,12 +18,30 @@ export function toISODate(date: Date) {
   return date.toISOString().slice(0, 10)
 }
 
+export const MAX_RANGE_DAYS = 366
+
+/** "1 sitting", "3 sittings". */
+export function plural(count: number, one: string, many = `${one}s`) {
+  return `${count} ${count === 1 ? one : many}`
+}
+
+/** Meteorological seasons for the UK: winter is December to February. */
+export function seasonName(date: Date) {
+  const month = date.getUTCMonth()
+  return month === 11 || month <= 1 ? 'Winter' : month <= 4 ? 'Spring' : month <= 7 ? 'Summer' : 'Autumn'
+}
+
+export function defaultPlanName(date: Date) {
+  return `${seasonName(date)} study days`
+}
+
 /** Study days inside a range. `weekdays` uses JS numbering: 0 Sunday … 6 Saturday. */
 export function studyDates(start: string, end: string, weekdays: number[]): string[] {
   if (!weekdays.length) throw new Error('Choose at least one day of the week.')
   const from = parseISODate(start)
   const to = parseISODate(end)
   if (to.getTime() < from.getTime()) throw new Error('The end date needs to be on or after the start.')
+  if ((to.getTime() - from.getTime()) / 86_400_000 + 1 > MAX_RANGE_DAYS) throw new Error(`Keep a plan to a year or less (${MAX_RANGE_DAYS} days). Make another plan for the year after.`)
   const wanted = new Set(weekdays)
   const dates: string[] = []
   for (let cursor = from.getTime(); cursor <= to.getTime(); cursor += 86_400_000) {

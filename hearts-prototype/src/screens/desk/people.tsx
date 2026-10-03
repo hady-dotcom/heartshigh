@@ -1,3 +1,5 @@
+import { defaultPlanName } from '@/lib/schedule'
+import { now as clockNow } from '@/lib/clock'
 import { ViewAsButton } from '@/components/desk/view-as-button'
 import Link from 'next/link'
 import { Hidden } from '@/components/app/shell'
@@ -156,7 +158,7 @@ export async function PlansScreen(ctx: Ctx) {
           <header><div><h2>New plan</h2></div></header>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'schedule', portalSlug: portal.slug, targetType: 'course', next: here }} />
-            <label className="stack">Name<input type="text" name="name" defaultValue="Spring study days" /></label>
+            <label className="stack">Name<input type="text" name="name" defaultValue={defaultPlanName(clockNow())} /></label>
             <label className="stack">Course<select data-testid="schedule-course" name="course">{courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}</select></label>
             <div className="cols">
               <label className="stack">From<input data-testid="schedule-start" type="date" name="start" defaultValue={today} /></label>
