@@ -169,9 +169,13 @@ export function CoursePlayer({
     if (openId === null) return
     const frame = window.requestAnimationFrame(placeSheet)
     window.addEventListener('resize', placeSheet)
+    const watcher = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => placeSheet())
+    if (card.current) watcher?.observe(card.current)
+    watcher?.observe(document.body)
     return () => {
       window.cancelAnimationFrame(frame)
       window.removeEventListener('resize', placeSheet)
+      watcher?.disconnect()
     }
   }, [openId, placeSheet])
 
