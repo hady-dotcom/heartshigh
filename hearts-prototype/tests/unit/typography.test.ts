@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { test } from 'node:test'
 import { captionPage, draftTiers, saidInTalk, sentencesOf, wordsOf } from '../../src/lib/tiers'
+import { restoreSpokenTail } from '../../../remotion/src/emphasis'
 import { BREATH, cardAt, isVerbatim, scheduleTalk, snapBeat, sourceWindow, textNeverEarly, visibleIsPrefix, WINDOW_PAD, WORDS_PER_CARD, wordsVisibleAt } from '../../../remotion/src/timing'
 
 const root = path.resolve(import.meta.dirname, '../..')
@@ -78,9 +79,10 @@ test('every appetiser beat opens and closes on the pause around a whole sentence
     const sentences = sentencesOf(raw)
     for (const beat of talk.beats) {
       const beatId = beat.beat as 'hook' | 'turn' | 'land'
-      assert.equal(beat.text, draft[beatId], `${talk.id} ${beat.beat} stays verbatim`)
-      assert.equal(saidInTalk(beat.text, raw), true, `${talk.id} ${beat.beat}`)
-      const sentence = sentences.find((row) => row.text === beat.text)
+      const caption = draft[beatId]
+      assert.equal(beat.text, restoreSpokenTail(talk.id, beat.beat, caption), `${talk.id} ${beat.beat} stays verbatim`)
+      assert.equal(saidInTalk(caption, raw), true, `${talk.id} ${beat.beat}`)
+      const sentence = sentences.find((row) => row.text === caption)
       assert.ok(sentence, `${talk.id} ${beat.beat} is a whole caption sentence`)
       assert.equal(sentence.complete, true, `${talk.id} ${beat.beat} ends on a sentence`)
       assert.equal(round(sentence.start), beat.sentenceStart)

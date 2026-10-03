@@ -16,7 +16,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { bundle } from '@remotion/bundler'
 import { renderMedia, selectComposition } from '@remotion/renderer'
-import { keyPhrasesFor } from '../src/emphasis'
+import { keyPhrasesFor, restoreSpokenTail } from '../src/emphasis'
 import { assignStyles, filmSrc, parseManifest, sameFilm, type FilmRecord } from '../src/manifest'
 import { scheduleFootage } from '../src/timing'
 import { buildCards, writeCardCatalogue } from '../../hearts-prototype/src/lib/cards'
@@ -77,11 +77,12 @@ let waiting = 0
 const serveUrl = dryRun ? '' : await bundle({ entryPoint: path.join(here, 'src', 'index.ts') })
 
 for (const row of planned) {
+  const quote = restoreSpokenTail(row.youtubeId, row.beat, row.quote)
   const src = filmSrc(row.youtubeId, row.beat)
-  const record: FilmRecord = { ...row, src, face: row.face }
+  const record: FilmRecord = { ...row, quote, src, face: row.face }
   const output = path.join(hearts, 'public', src)
   const held = catalogue.films.find((film) => film.youtubeId === row.youtubeId && film.beat === row.beat)
-  const phrases = keyPhrasesFor(row.youtubeId, row.beat, row.quote)
+  const phrases = keyPhrasesFor(row.youtubeId, row.beat, quote)
   console.log(`plan ${row.youtubeId} ${row.beat} ${row.style}: ${phrases.join(' / ') || row.quote}`)
   if (!row.face) {
     console.log(`  skip: face not visible`)
@@ -103,7 +104,7 @@ for (const row of planned) {
     rendered += 1
     continue
   }
-  const span = prepareSentence(file, row.beat, row.quote, row.start, row.end, phrases)
+  const span = prepareSentence(file, row.beat, quote, row.start, row.end, phrases)
   const schedule = scheduleFootage([span])
   const inputProps = {
     ...schedule,

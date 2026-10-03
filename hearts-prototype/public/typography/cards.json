@@ -188,69 +188,73 @@
         },
         {
           "beat": "land",
-          "quote": "I told you that transitions are the time that you need to know this name.",
-          "gold": "know this name",
+          "quote": "I told you that transitions are the time that you need to know this name Ar-Rabb.",
+          "gold": "Ar-Rabb",
           "audio": "/typography/audio/ECaTWkof57E-land.m4a",
           "words": [
             {
               "text": "I",
-              "at": 0.8460000000000036
+              "at": 0.8500000000000227
             },
             {
               "text": "told",
-              "at": 1.2049333333333152
+              "at": 2.3999999999999773
             },
             {
               "text": "you",
-              "at": 1.5638666666666268
+              "at": 2.605000000000018
             },
             {
               "text": "that",
-              "at": 1.922800000000052
+              "at": 2.8099999999999454
             },
             {
               "text": "transitions",
-              "at": 2.2817333333333636
+              "at": 3.0149999999999864
             },
             {
               "text": "are",
-              "at": 2.640666666666675
+              "at": 3.2200000000000273
             },
             {
               "text": "the",
-              "at": 2.9995999999999867
+              "at": 3.4249999999999545
             },
             {
               "text": "time",
-              "at": 3.3585333333332983
+              "at": 3.6299999999999955
             },
             {
               "text": "that",
-              "at": 3.7174666666667235
+              "at": 3.8350000000000364
             },
             {
               "text": "you",
-              "at": 4.076400000000035
+              "at": 4.039999999999964
             },
             {
               "text": "need",
-              "at": 4.435333333333347
+              "at": 4.2450000000000045
             },
             {
               "text": "to",
-              "at": 4.794266666666658
+              "at": 4.4500000000000455
             },
             {
               "text": "know",
-              "at": 5.15319999999997
+              "at": 4.654999999999973
             },
             {
               "text": "this",
-              "at": 5.512133333333395
+              "at": 4.860000000000014
             },
             {
-              "text": "name.",
-              "at": 5.871066666666707
+              "text": "name",
+              "at": 5.065000000000055
+            },
+            {
+              "text": "Ar-Rabb.",
+              "at": 5.269999999999982
             }
           ],
           "verse": null

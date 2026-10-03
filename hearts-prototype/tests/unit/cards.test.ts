@@ -6,6 +6,7 @@ import { test } from 'node:test'
 import { readFileSync } from 'node:fs'
 import { parseManifest } from '../../../remotion/src/manifest'
 import { landedGold, revealedQuote, spreadWords } from '../../src/lib/card-voice'
+import { restoreSpokenTail } from '../../../remotion/src/emphasis'
 import { buildCards, readCardCatalogue, writeCardCatalogue } from '../../src/lib/cards'
 import { pickScene } from '../../src/lib/scenes'
 
@@ -23,10 +24,25 @@ test('cards are one per talk, with the verbatim quote and the last gold landing'
   assert.deepEqual(first.beats.map((beat) => beat.beat), ['hook', 'turn', 'land'])
   assert.equal(first.beats[0].quote, 'Has Allah brought you from one stage to the next stage to the places you never thought you would be?')
   assert.equal(first.beats[0].quote.includes('to to'), false)
-  assert.deepEqual(first.beats.map((beat) => beat.gold), ['never thought', "Allah's plan is real", 'know this name'])
+  assert.equal(first.beats[1].quote, "But it's at that moment that you got to lock in and have true certainty that Allah's plan is real.")
+  assert.equal(first.beats[2].quote, 'I told you that transitions are the time that you need to know this name Ar-Rabb.')
+  assert.equal(second.beats[0].quote, "What we're saying is that Allah ﷻ is the only source for clarity in your life.")
+  assert.equal(second.beats[1].quote, "Without light, you walk in a room that's dark.")
+  assert.equal(second.beats[2].quote, "Now Allah subhanahu wa ta'ala, He says, and many of us, we can relate to this verse.")
+  assert.deepEqual(first.beats.map((beat) => beat.gold), ['never thought', "Allah's plan is real", 'Ar-Rabb'])
   assert.ok(first.beats[0].words && first.beats[0].words.length > 3)
   assert.equal(first.beats[0].words!.map((word) => word.text).join(' '), first.beats[0].quote)
   assert.ok(first.beats[0].words!.every((word, index, list) => index === 0 || word.at >= list[index - 1].at))
+  const land = first.beats[2].words
+  assert.ok(land && land.length > 3)
+  assert.equal(land.map((word) => word.text).join(' '), first.beats[2].quote)
+  assert.equal(land[land.length - 1].text, 'Ar-Rabb.')
+  assert.ok(land[land.length - 1].at > land[land.length - 2].at)
+  assert.ok(land[land.length - 1].at < 5.65, 'Ar-Rabb is spoken before the land audio ends')
+  assert.equal(restoreSpokenTail('ECaTWkof57E', 'land', 'I told you that transitions are the time that you need to know this name.'), first.beats[2].quote)
+  assert.equal(restoreSpokenTail('ECaTWkof57E', 'land', first.beats[2].quote), first.beats[2].quote)
+  assert.equal(restoreSpokenTail('ECaTWkof57E', 'hook', first.beats[0].quote), first.beats[0].quote)
+  assert.equal(restoreSpokenTail('NIR88RRpat4', 'land', second.beats[2].quote), second.beats[2].quote)
   assert.deepEqual(second.beats.map((beat) => beat.gold), ['clarity', 'dark', 'made for him light'])
   assert.match(second.beats[2].verse || '', /made for him light/)
   assert.match(second.beats[2].verse || '', /مَيْتًا/)

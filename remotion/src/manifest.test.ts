@@ -7,7 +7,7 @@ import { isVerbatim } from './timing'
 const QUOTES = [
   ['ECaTWkof57E', 'hook', 'Has Allah brought you from one stage to the next stage to to the places you never thought you would be?'],
   ['ECaTWkof57E', 'turn', "But it's at that moment that you got to lock in and have true certainty that Allah's plan is real."],
-  ['ECaTWkof57E', 'land', 'I told you that transitions are the time that you need to know this name.'],
+  ['ECaTWkof57E', 'land', 'I told you that transitions are the time that you need to know this name Ar-Rabb.'],
   ['NIR88RRpat4', 'hook', "What we're saying is that Allah ﷻ is the only source for clarity in your life."],
   ['NIR88RRpat4', 'turn', "Without light, you walk in a room that's dark."],
   ['NIR88RRpat4', 'land', "Now Allah subhanahu wa ta'ala, He says, and many of us, we can relate to this verse."],
@@ -22,6 +22,7 @@ test('key phrases are verbatim pieces of the quote, and the known talks keep the
     assert.equal(phraseSpans(words.map((text) => ({ text })), phrases).length, phrases.length)
   }
   assert.deepEqual(keyPhrasesFor('ECaTWkof57E', 'hook', QUOTES[0][2]), ['never thought'])
+  assert.deepEqual(keyPhrasesFor('ECaTWkof57E', 'land', QUOTES[2][2]), ['Ar-Rabb'])
   assert.deepEqual(keyPhrasesFor('NIR88RRpat4', 'turn', QUOTES[4][2]), ['dark'])
   const fresh = chooseKeyPhrases('The heart settles when the next step is clear.')
   assert.ok(fresh.every((phrase) => isVerbatim(phrase, 'The heart settles when the next step is clear.')))

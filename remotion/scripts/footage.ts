@@ -2,7 +2,7 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
-import { EMPHASIS, phraseSpans } from '../src/emphasis'
+import { EMPHASIS, phraseSpans, restoreSpokenTail } from '../src/emphasis'
 import { leanOnStress, placeOnSpeech, speechRuns, type FootageSpan } from '../src/timing'
 
 export type WindowBeat = {
@@ -61,11 +61,12 @@ export function prepareFootage(remotionRoot: string, id: string) {
     const until = Math.min(beat.window.end, beat.speechEnd + 0.2)
     const levels = levelsOf(footageFile(remotionRoot, id, beat.beat), origin - beat.window.start, until - origin, origin)
     const runs = speechRuns(levels.map((row) => row.level), origin).filter((run) => run.end > beat.speechStart - 0.05 && run.start < beat.speechEnd + 0.05)
-    const placed = placeOnSpeech(beat.text, runs.length ? runs : [{ start: beat.speechStart, end: beat.speechEnd }])
+    const text = restoreSpokenTail(id, beat.beat, beat.text)
+    const placed = placeOnSpeech(text, runs.length ? runs : [{ start: beat.speechStart, end: beat.speechEnd }])
     const times = leanOnStress(placed.map((word) => word.talkAt), phraseSpans(placed, EMPHASIS[id]?.[beat.beat] || []), levels)
     const words = placed.map((word, index) => ({ text: word.text, talkAt: Math.min(beat.out - 0.04, Math.max(beat.in + 0.02, times[index])) }))
     for (let index = 1; index < words.length; index++) if (words[index].talkAt < words[index - 1].talkAt + 0.05) words[index].talkAt = words[index - 1].talkAt + 0.05
-    return { beat: beat.beat, text: beat.text, in: beat.in, out: beat.out, words }
+    return { beat: beat.beat, text, in: beat.in, out: beat.out, words }
   })
   const clips: ClipRef[] = talk.beats.map((beat) => ({
     beat: beat.beat,

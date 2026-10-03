@@ -1,11 +1,30 @@
 import { isVerbatim, type BeatId } from './timing'
 
+/**
+ * A caption sentence that stops before the name the speaker lands on.
+ * The other seeded lines already end on their last spoken word.
+ */
+const SPOKEN_TAIL: Record<string, Partial<Record<BeatId, string>>> = {
+  ECaTWkof57E: { land: 'Ar-Rabb' },
+}
+
+/** Put a missing closing name back on the line. A quote that already says it is left as it is. */
+export function restoreSpokenTail(youtubeId: string, beat: string, quote: string) {
+  const tail = SPOKEN_TAIL[youtubeId]?.[beat as BeatId]
+  if (!tail) return quote
+  const have = quote.toLowerCase().replace(/[’‘]/g, "'").replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ')
+  const want = tail.toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim()
+  if (!want || have.includes(want)) return quote
+  const punct = quote.match(/[.?!]+$/)?.[0] ?? '.'
+  return `${quote.replace(/[.?!]+$/, '').trim()} ${tail}${punct}`
+}
+
 /** The words that carry the beat. Everything else stays small and quick. */
 export const EMPHASIS: Record<string, Partial<Record<BeatId, string[]>>> = {
   ECaTWkof57E: {
     hook: ['never thought'],
     turn: ['certainty', "Allah's plan is real"],
-    land: ['know this name'],
+    land: ['Ar-Rabb'],
   },
   NIR88RRpat4: {
     hook: ['only source', 'clarity'],

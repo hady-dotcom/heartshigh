@@ -1,9 +1,11 @@
+import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
-import { keyPhrasesFor } from '../../../remotion/src/emphasis'
+import { keyPhrasesFor, restoreSpokenTail } from '../../../remotion/src/emphasis'
 import { withoutStutters } from '../../../remotion/src/lines'
 import type { ManifestRow, StyleId } from '../../../remotion/src/manifest'
 import { assignStyles } from '../../../remotion/src/manifest'
+import { placeOnSpeech, speechRuns } from '../../../remotion/src/timing'
 import { cleanSpokenQuote, type SpokenWord } from './card-voice'
 import { pickScene, SCENES, sceneById, type SceneId } from './scenes'
 
@@ -79,19 +81,60 @@ function wordTimes(heartsRoot: string, youtubeId: string, beat: string, quote: s
   const talks = path.resolve(heartsRoot, '..', 'remotion', 'talks')
   const talkFile = path.join(talks, `${youtubeId}.json`)
   const windowsFile = path.join(talks, 'windows.json')
-  if (!existsSync(talkFile) || !existsSync(windowsFile)) return undefined
+  if (!existsSync(windowsFile)) return undefined
   try {
-    const talk = JSON.parse(readFileSync(talkFile, 'utf8')) as { words?: { text: string; talkAt: number; beat: string }[] }
     const windows = JSON.parse(readFileSync(windowsFile, 'utf8')) as { talks: { id: string; beats: { beat: string; in: number }[] }[] }
     const origin = windows.talks.find((row) => row.id === youtubeId)?.beats.find((row) => row.beat === beat)?.in
-    if (origin === undefined || !talk.words?.length) return undefined
-    const raw = talk.words.filter((word) => word.beat === beat).map((word) => ({ text: word.text, at: Math.max(0, word.talkAt - origin) }))
+    if (origin === undefined) return undefined
+    const talk = existsSync(talkFile) ? JSON.parse(readFileSync(talkFile, 'utf8')) as { words?: { text: string; talkAt: number; beat: string }[] } : { words: [] }
+    const raw = (talk.words || []).filter((word) => word.beat === beat).map((word) => ({ text: word.text, at: Math.max(0, word.talkAt - origin) }))
     const cleaned = withoutStutters(raw)
-    if (!sameLine(cleaned.map((word) => word.text).join(' '), quote)) return undefined
-    return cleaned
+    const line = cleaned.map((word) => word.text).join(' ')
+    // Captions that stop early have no clock for the closing name, so place the whole line on the speech.
+    if (!line || restoreSpokenTail(youtubeId, beat, line) !== line) {
+      const placed = placeExtendedLine(heartsRoot, youtubeId, beat, quote, origin)
+      if (placed && sameLine(placed.map((word) => word.text).join(' '), quote)) return placed
+    }
+    if (line && sameLine(line, quote)) return cleaned
+    return undefined
   } catch {
     return undefined
   }
+}
+
+type WindowBeat = {
+  beat: string
+  in: number
+  speechStart: number
+  speechEnd: number
+  sentenceStart?: number
+  window: { start: number; end: number }
+}
+
+/** Lay a restored line on this beat's speech, so the last word appears as it is said. */
+function placeExtendedLine(heartsRoot: string, youtubeId: string, beat: string, quote: string, origin: number): SpokenWord[] | undefined {
+  const remotionRoot = path.resolve(heartsRoot, '..', 'remotion')
+  const footage = path.join(remotionRoot, 'public', 'footage', `${youtubeId}-${beat}.mp4`)
+  const windowsFile = path.join(remotionRoot, 'talks', 'windows.json')
+  if (!existsSync(footage) || !existsSync(windowsFile)) return undefined
+  const windows = JSON.parse(readFileSync(windowsFile, 'utf8')) as { talks: { id: string; beats: WindowBeat[] }[] }
+  const row = windows.talks.find((talk) => talk.id === youtubeId)?.beats.find((item) => item.beat === beat)
+  if (!row) return undefined
+  const from = Math.max(row.window.start, row.speechStart - 0.2)
+  const until = Math.min(row.window.end, row.speechEnd + 0.2)
+  const raw = execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-i', footage, '-ss', Math.max(0, from - row.window.start).toFixed(3), '-t', Math.max(0.2, until - from).toFixed(3), '-ac', '1', '-ar', '16000', '-f', 'f32le', '-'], { maxBuffer: 32_000_000 })
+  const step = 800
+  const levels: number[] = []
+  for (let index = 0; index + step <= raw.length / 4; index += step) {
+    let sum = 0
+    for (let sample = 0; sample < step; sample++) sum += Math.abs(raw.readFloatLE((index + sample) * 4))
+    levels.push(sum / step)
+  }
+  const runs = speechRuns(levels, from).filter((run) => run.end > row.speechStart - 0.05 && run.start < row.speechEnd + 0.05)
+  const placed = placeOnSpeech(quote, runs.length ? runs : [{ start: row.speechStart, end: row.speechEnd }])
+  if (placed[0] && row.sentenceStart && placed[0].talkAt < row.sentenceStart) placed[0].talkAt = row.sentenceStart
+  for (let index = 1; index < placed.length; index++) if (placed[index].talkAt < placed[index - 1].talkAt + 0.05) placed[index].talkAt = placed[index - 1].talkAt + 0.05
+  return placed.map((word) => ({ text: word.text, at: Math.max(0, word.talkAt - origin) }))
 }
 
 /**
@@ -128,7 +171,7 @@ export function buildCards(rows: ManifestRow[], heartsRoot: string): StoredCard[
       style: talk.style,
       scene: scene.id,
       beats: talk.beats.filter((beat) => BEATS.has(beat.beat)).map((beat) => {
-        const quote = cleanSpokenQuote(beat.quote)
+        const quote = cleanSpokenQuote(restoreSpokenTail(talk.youtubeId, beat.beat, beat.quote))
         const phrases = keyPhrasesFor(talk.youtubeId, beat.beat, quote)
         const verse = beat.beat === 'land' && /\bthis verse\b/i.test(quote) ? VERSE_FOR[talk.youtubeId] : undefined
         return {
