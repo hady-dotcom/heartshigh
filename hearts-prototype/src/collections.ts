@@ -102,6 +102,18 @@ export const Portals: CollectionConfig = {
   ],
 }
 
+/**
+ * Accounts are made by the server itself (joining with an access code, the seed, `npm run bootstrap`) or by a
+ * signed-in master. Anything else, including Payload's first-register endpoint on an empty database, is refused,
+ * because that endpoint would otherwise let whoever finds it first create an account with admin rights.
+ */
+export function refuseOutsideAccountCreation({ operation, req }: { operation: string; req: { payloadAPI?: string; user?: { role?: string | null } | null } }) {
+  if (operation !== 'create') return
+  if (req.payloadAPI === 'local') return
+  if (req.user?.role === 'master') return
+  throw new APIError('New accounts are made with an access code, or once with npm run bootstrap.', 403, undefined, true)
+}
+
 export const Users: CollectionConfig = {
   slug: 'users',
   auth: {
@@ -111,6 +123,12 @@ export const Users: CollectionConfig = {
     },
   },
   hooks: {
+    beforeOperation: [
+      ({ args, operation, req }) => {
+        refuseOutsideAccountCreation({ operation, req })
+        return args
+      },
+    ],
     beforeValidate: [
       ({ data, operation, req }) => {
         if (operation === 'create' && data?.role === 'master' && req.payloadAPI !== 'local' && req.user?.role !== 'master') {
