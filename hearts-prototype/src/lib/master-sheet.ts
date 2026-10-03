@@ -1106,6 +1106,12 @@ function planQuestions(working: Working, rows: InputRow[]) {
     const duration = lesson?.durationSeconds ?? pending?.duration ?? null
     const transcript = lesson?.transcript || ''
     if (seconds != null && duration && seconds > duration) fail('time', `That time is ${clock(seconds)}, after the end of the talk (${clock(duration)}).`)
+    const prompt = present(row, 'text') ? textOf(row, 'text') : point?.prompt || ''
+    if (!point && lesson && seconds != null && prompt.trim()) {
+      point = working.catalogue.points
+        .filter((item) => item.lesson === lesson.id && round2(item.second) === round2(seconds) && item.prompt.trim() === prompt.trim())
+        .sort((a, b) => a.id - b.id)[0] || null
+    }
     const choices: string[] = []
     const existingChoices = point?.options || []
     let choicesTouched = false
@@ -1126,12 +1132,6 @@ function planQuestions(working: Working, rows: InputRow[]) {
         else correct = choice
       } else if (choices.length && !choices.includes(raw)) fail('correct_choice', 'The correct choice has to be one of the choices, or its number from 1 to 6.')
       else correct = raw
-    }
-    const prompt = present(row, 'text') ? textOf(row, 'text') : point?.prompt || ''
-    if (!point && status !== 'delete' && lesson && seconds != null && prompt.trim()) {
-      point = working.catalogue.points
-        .filter((item) => item.lesson === lesson.id && round2(item.second) === round2(seconds) && item.prompt.trim() === prompt.trim())
-        .sort((a, b) => a.id - b.id)[0] || null
     }
     const creating = !point
     if (creating && !prompt) fail('text', 'A new question needs its text.')

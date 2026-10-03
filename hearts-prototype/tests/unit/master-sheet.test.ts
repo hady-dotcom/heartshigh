@@ -84,6 +84,21 @@ test('round-trip: export then import with no edits makes no changes', async () =
   assert.equal(plan.ops.length, 0)
 })
 
+test('a multiple-choice row with no question_id is matched before its choices are compared, so re-applying it changes nothing', () => {
+  const row = {
+    talk_key: 'yt-NIR88RRpat4', type: 'multiple choice', time: 40, status: 'approved',
+    text: 'What does the Shaykh say is the first sign that light is entering?',
+    choice_1: 'You start to incline towards the next life', choice_2: 'You feel no more sadness', correct_choice: 1,
+  }
+  const same = planSheet({ talks: [], questions: [cells(3, row)], resources: [], errors: [] }, fixture())
+  assert.deepEqual(same.errors, [])
+  assert.deepEqual(planCounts(same), { create: 0, update: 0, delete: 0, unchanged: 1, skipped: 0, errors: 0 })
+  assert.equal(same.ops.length, 0)
+
+  const edited = planSheet({ talks: [], questions: [cells(3, { ...row, choice_2: 'You feel no sadness at all' })], resources: [], errors: [] }, fixture())
+  assert.deepEqual(edited.ops, [{ op: 'point.update', id: 8, patch: { options: ['You start to incline towards the next life', 'You feel no sadness at all'] } }])
+})
+
 test('the blank template has four tabs, a note and the header row', async () => {
   const buffer = await templateWorkbook()
   const parsed = await readWorkbook(buffer)
