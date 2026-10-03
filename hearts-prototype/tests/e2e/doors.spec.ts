@@ -121,7 +121,8 @@ test('the feed walks the spine door by door and the lanes push talks by door', a
   expect([...trust.excludeDoors].sort((a, b) => a - b)).toEqual([14, 16, 17, 18])
 
   const spine = await json(await learner.post(`/api/hearts/feed?portal=${PORTAL}`, { data: { laneScores: {}, served: [], spinePointer: 0, firstOpenAt: Date.now() } }))
-  const spineDoors = (spine.items as { laneKey: string | null; door: number | null; clause: number | null }[]).filter((item) => item.laneKey === null && item.door)
+  const d0 = opening.d0CutId as number | null
+  const spineDoors = (spine.items as { cutId: number; laneKey: string | null; door: number | null; clause: number | null }[]).filter((item) => item.laneKey === null && item.door && item.cutId !== d0)
   expect(spineDoors.length).toBeGreaterThan(0)
   for (const item of spineDoors) expect(item.door).toBe(doorNumberOfClause(item.clause))
   const firstOfEach = spineDoors.map((item) => item.door!).filter((door, index, list) => list.indexOf(door) === index)
@@ -130,7 +131,7 @@ test('the feed walks the spine door by door and the lanes push talks by door', a
   expect(spine.spinePointer).toBeLessThanOrEqual(20)
 
   const later = await json(await learner.post(`/api/hearts/feed?portal=${PORTAL}`, { data: { laneScores: {}, served: [], spinePointer: spine.spinePointer, firstOpenAt: Date.now() } }))
-  for (const item of (later.items as { laneKey: string | null; door: number | null }[]).filter((row) => row.laneKey === null && row.door)) expect(item.door!).toBeGreaterThan(spine.spinePointer)
+  for (const item of (later.items as { cutId: number; laneKey: string | null; door: number | null }[]).filter((row) => row.laneKey === null && row.door && row.cutId !== d0)) expect(item.door!).toBeGreaterThan(spine.spinePointer)
 
   // A worry deficit routes to the trust lane; in the first week nothing it serves sits in an excluded door.
   const pushed = await json(await learner.post(`/api/hearts/feed?portal=${PORTAL}`, { data: { laneScores: { trust: 0.86 }, served: [], spinePointer: 0, firstOpenAt: Date.now() } }))
