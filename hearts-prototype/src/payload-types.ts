@@ -3253,7 +3253,7 @@ export interface MasterFlag {
    */
   circleThreshold?: number | null;
   /**
-   * Longest hors d'oeuvre the desk will save, in seconds. 15 to 20 is the usual length and only a warning. Longer than this is refused.
+   * Longest hors d'oeuvre the desk will save, in seconds. 15 to 30 is the usual length; longer is only a warning. Longer than this is refused.
    */
   horsMaxSeconds?: number | null;
   updatedAt?: string | null;
