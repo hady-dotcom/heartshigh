@@ -100,6 +100,7 @@ Access codes are random on every seed, in the form `ELM-7KQX-M4TD`. The seed pri
 - **Auto captions without punctuation give weaker cuts.** Where YouTube's captions have no full stops, the extractor guesses sentence ends from pauses and from words that cannot end a sentence ("and", "the", "a"). On about five of the 31 talks (HfIT8TSoHiE, UGuKJLZnbi8, N_-YiwIb-u0, FAxIZIqwfd8 and Rd0e9kXdPvI) a hook or turn still starts or ends mid-thought. They stay drafts until someone trims them on Review.
 - **YouTube blocks yt-dlp from cloud machines.** On the build machine every request was refused, even as the `web_embedded` player, so new talks there need a transcript upload or your own transcript service. The shipped talks use captions saved in `content/`.
 - **The paused-player scrim test** is skipped when YouTube's player does not load in the test browser, because there is no film to pause.
+- **Video does not stream on the build machine.** YouTube's player loads there but plays no frames, so the e2e tests check captions, crops and layout with the film paused at its in point. Timed captions moving through hook, turn and land were checked against a stand-in player clock, not a playing film.
 - **Some caption times are estimates.** Rolling auto captions repeat each line; the importer keeps the first full appearance, so a cut can be a second or two off.
 - **Trends** count each person once per week, only for people who opted in, and hold back any week under ten people. The seed has no contributions, so the trends screens start empty.
 - **Rate limits live in memory.** Join failures and the "won't play" report are counted inside one server process. They reset on restart and are not shared between servers. Behind a proxy, set `HEARTS_TRUSTED_PROXY_HOPS`; a school sharing one address could hit the 10-per-address limit together.
@@ -149,8 +150,8 @@ The icon, splash, empty states and logo mark use the artwork in `public/brand/`.
 ## Tests
 
 ```bash
-npm run test:unit      # 56 tests
-npm run test:e2e       # 13 journey, 38 opening, 28 round 3, 12 view-as and 6 screenshot tests
+npm run test:unit      # 75 tests
+npm run test:e2e       # 112: 13 journey, 38 opening, 28 round 3, 15 round 4, 12 view-as and 6 screenshot tests
 npm run screenshots    # screenshots only
 ```
 
