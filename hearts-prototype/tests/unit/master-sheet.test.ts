@@ -345,3 +345,19 @@ test('undo points restored rows at the new ids Postgres gives their parents', ()
   assert.deepEqual(remapRefs({ point: 7, lesson: 10, portal: 7, name: 'Amina' }, moved), { point: 70, lesson: 100, portal: 7, name: 'Amina' })
   assert.deepEqual(remapRefs({ point: 8, lesson: 11 }, moved), { point: 8, lesson: 11 })
 })
+
+test('the example workbook in content/ reads cleanly, circle answers included', async () => {
+  const { readFileSync } = await import('node:fs')
+  const { readCircleRow } = await import('../../src/lib/circle-sheet')
+  for (const name of ['hearts-master-sheet-example.xlsx', 'hearts-master-sheet-template.xlsx']) {
+    const parsed = await readWorkbook(readFileSync(new URL(`../../content/${name}`, import.meta.url)))
+    assert.deepEqual(parsed.errors, [], name)
+    if (name.includes('example')) {
+      assert.ok(parsed.talks.length > 5 && parsed.circle.length > 5, name)
+      for (const row of parsed.circle) {
+        const values = Object.fromEntries(Object.entries(row.cells).map(([key, cell]) => [key, cell.text]))
+        assert.ok(readCircleRow(values).ok, JSON.stringify(values))
+      }
+    } else assert.equal(parsed.circle.length, 0)
+  }
+})
