@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
-import { E2E_BASE, E2E_PORT } from './tests/env'
+import { E2E_BASE, E2E_DATABASE, E2E_PORT } from './tests/env'
+
+// The suite seeds and serves its own database file, so `npm run go` data and the codes it printed stay as they were.
+process.env.DATABASE_URL = E2E_DATABASE
 
 // The suite starts its own server on its own port with the test clock on, so a `npm run go` server on :3000
 // (which runs without the test clock) is never picked up by mistake. HEARTS_E2E_REUSE=1 reuses a server that is
@@ -26,6 +29,8 @@ export default defineConfig({
       ...process.env,
       HEARTS_TEST_CLOCK: '1',
       HEARTS_E2E: '1',
+      DATABASE_URL: E2E_DATABASE,
+      HEARTS_DIST_DIR: '.next-e2e',
     } as Record<string, string>,
   },
 })

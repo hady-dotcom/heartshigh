@@ -92,6 +92,11 @@ async function ensureUser(payload: Awaited<ReturnType<typeof getPayload>>, data:
  * Drops every table in place before Payload starts, so the schema is pushed fresh and a running dev server, which
  * holds the same file open, sees the new data rather than a deleted file.
  */
+/** The e2e database keeps its codes in its own file, so the codes `npm run go` printed stay true. */
+function codesFile() {
+  return /hearts-test\.db/.test(process.env.DATABASE_URL || '') ? 'data/seed-codes-test.json' : 'data/seed-codes.json'
+}
+
 async function wipe() {
   const url = process.env.DATABASE_URL || `file:${path.join(root, 'data/hearts.db')}`
   const client = createClient({ url })
@@ -381,7 +386,7 @@ async function main() {
     codeIds.set(spec.label, created.id)
     codeValues[spec.label] = created.code
   }
-  writeFileSync(path.join(root, 'data/seed-codes.json'), `${JSON.stringify(codeValues, null, 2)}\n`)
+  writeFileSync(path.join(root, codesFile()), `${JSON.stringify(codeValues, null, 2)}\n`)
 
   const learnerList = courseIds
   await ensureUser(payload, {
@@ -465,7 +470,7 @@ async function main() {
     process.exit(1)
   }
   console.log('Seeded HEARTS. Master: master@hearts.test / hearts-master')
-  console.log('Access codes (also on the master desk, and in data/seed-codes.json):')
+  console.log(`Access codes (also on the master desk, and in ${codesFile()}):`)
   for (const [label, value] of Object.entries(codeValues)) console.log(`  ${label.padEnd(14)} ${value}`)
   process.exit(0)
 }
