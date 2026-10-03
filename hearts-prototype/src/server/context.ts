@@ -27,6 +27,7 @@ export type SessionUser = {
   shareOpening?: boolean | null
   keepPlace?: boolean | null
   trendsOptIn?: boolean | null
+  shareWithLearners?: boolean | null
   haptics?: boolean | null
   removed?: boolean | null
 }

@@ -5,7 +5,8 @@ import { harvestTranscript } from '@/lib/harvest'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { extractWithFallback, llmStatus } from '@/lib/llm'
 import { flattenSlots, splitEvenly, studyDates } from '@/lib/schedule'
-import { setTestNow } from '@/lib/clock'
+import { clockEnabled, setTestNow } from '@/lib/clock'
+import { resetLimits } from '@/lib/rate-limit'
 import { ingestYoutubeUrl } from '@/lib/youtube'
 import { now } from '@/lib/clock'
 import { startingClause } from '@/lib/placing'
@@ -198,6 +199,7 @@ export type AnswerInput = {
   audio?: FormDataEntryValue | null
   keepPrivate?: boolean
   shareWithTeacher?: boolean
+  shareWithLearners?: boolean
   answeredAt?: string
   atSecond?: number
   viewingId?: string
@@ -205,7 +207,7 @@ export type AnswerInput = {
   pendingSync?: boolean
 }
 
-export type AnswerResult = { ok: true; answerId: number; updated: boolean; keepPrivate: boolean; correct: boolean | null } | { ok: false; status: number; error: string }
+export type AnswerResult = { ok: true; answerId: number; updated: boolean; keepPrivate: boolean; sharedWithLearners: boolean; correct: boolean | null } | { ok: false; status: number; error: string }
 
 /** Saves one pop-up answer and its workbook entry, for the answer sheet and for POST /api/answers. */
 export async function saveAnswer(payload: Payload, user: SessionUser, input: AnswerInput): Promise<AnswerResult> {
@@ -273,6 +275,8 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
     }
     const keepPrivate = Boolean(input.keepPrivate)
     const shareWithTeacher = Boolean(input.shareWithTeacher)
+    // Other learners read an answer only when its author opted in to sharing with learners and chose it here.
+    const shareWithLearners = !keepPrivate && Boolean(input.shareWithLearners) && Boolean(user.shareWithLearners)
     const correct = point.kind === 'multiple_choice' && point.correctOption ? choice === point.correctOption : null
     const extra = {
       answeredAt: input.answeredAt || now().toISOString(),
@@ -288,13 +292,13 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
         collection: 'answers',
         id: earlier.docs[0].id,
         overrideAccess: true,
-        data: { body, choice, keepPrivate, shareWithTeacher, ...extra, ...(imageId ? { image: imageId } : {}), ...(audioId ? { audio: audioId } : {}), ...(videoId ? { video: videoId } : {}) },
+        data: { body, choice, keepPrivate, shareWithTeacher, shareWithLearners, ...extra, ...(imageId ? { image: imageId } : {}), ...(audioId ? { audio: audioId } : {}), ...(videoId ? { video: videoId } : {}) },
       })
       const entry = await payload.find({ collection: 'workbook-entries', overrideAccess: true, depth: 0, limit: 1, where: { answer: { equals: earlier.docs[0].id } } })
       if (entry.docs[0]) {
         await payload.update({ collection: 'workbook-entries', id: entry.docs[0].id, overrideAccess: true, data: { body: body || choice, consent: shareWithTeacher, ...(imageId ? { image: imageId } : {}) } })
       }
-      return { ok: true as const, answerId: earlier.docs[0].id, updated: true, keepPrivate, correct }
+      return { ok: true as const, answerId: earlier.docs[0].id, updated: true, keepPrivate, sharedWithLearners: shareWithLearners, correct }
     }
     const answer = await payload.create({
       collection: 'answers',
@@ -310,6 +314,7 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
         video: videoId,
         keepPrivate,
         shareWithTeacher,
+        shareWithLearners,
         portal,
         ...extra,
       },
@@ -340,8 +345,13 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
         key: `queued-${follower.id}`,
       })
     }
-    return { ok: true as const, answerId: answer.id, updated: false, keepPrivate, correct }
+    return { ok: true as const, answerId: answer.id, updated: false, keepPrivate, sharedWithLearners: shareWithLearners, correct }
   }
+
+export function answerSavedMessage(result: { keepPrivate: boolean; sharedWithLearners: boolean }) {
+  if (result.keepPrivate) return 'Saved privately in your workbook.'
+  return result.sharedWithLearners ? 'Saved in your workbook and shared with other learners.' : 'Saved in your workbook.'
+}
 
 export async function handlePost(req: Request) {
   let form: FormData
@@ -358,7 +368,7 @@ export async function handlePost(req: Request) {
     if (live.docs[0]) await endSession(payload, live.docs[0] as never, 'actor-signed-out')
   }
   if (viewAs && !['logout', 'login', 'clock'].includes(action)) {
-    const settingsTouchPrivate = action === 'me-pref' && ['keepPlace', 'shareOpening'].includes(text(form, 'name'))
+    const settingsTouchPrivate = action === 'me-pref' && ['keepPlace', 'shareOpening', 'shareWithLearners'].includes(text(form, 'name'))
     if (NEVER_ACTIONS.has(action) || settingsTouchPrivate || !viewAs.writeEnabled) {
       await blocked(payload, viewAs, { action, via: 'form', never: NEVER_ACTIONS.has(action) || settingsTouchPrivate })
       return NextResponse.json({ error: READ_ONLY, message: 'Read-only while viewing as someone else.' }, { status: 403 })
@@ -447,9 +457,12 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   if (!user) return redirectTo(req, '/login', 'Please sign in first.')
 
   if (action === 'clock') {
+    if (!clockEnabled()) return redirectTo(req, text(form, 'next') || '/', 'The test clock is off.')
+    if (session.actor?.role !== 'master') return NextResponse.json({ error: 'The test clock is for the master desk.' }, { status: 403 })
     try {
       const iso = text(form, 'iso')
       setTestNow(iso || null)
+      resetLimits()
       return redirectTo(req, text(form, 'next') || '/', undefined, 'Clock moved.')
     } catch (error) {
       return redirectTo(req, text(form, 'next') || '/', error instanceof Error ? error.message : 'Clock refused.')
@@ -996,12 +1009,13 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       audio: form.get('audio'),
       keepPrivate: form.get('keepPrivate') === 'on',
       shareWithTeacher: form.get('shareWithTeacher') === 'on',
+      shareWithLearners: form.get('shareWithLearners') === 'on',
       viewingId: text(form, 'viewingId') || undefined,
       atSecond: text(form, 'atSecond') ? Number(text(form, 'atSecond')) : undefined,
     })
     if (!result.ok) return redirectTo(req, result.status === 400 || result.status === 409 ? text(form, 'next') || '/' : '/', result.error)
     if (result.updated) return redirectTo(req, text(form, 'next') || '/', undefined, 'Your answer is updated in your workbook.')
-    return redirectTo(req, text(form, 'next') || '/', undefined, result.keepPrivate ? 'Saved privately in your workbook.' : 'Saved in your workbook and shared with the circle.')
+    return redirectTo(req, text(form, 'next') || '/', undefined, answerSavedMessage(result))
   }
 
   if (action === 'placing') {
@@ -1607,13 +1621,16 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   if (action === 'me-pref') {
     const name = text(form, 'name')
     const value = text(form, 'value') === 'on'
-    if (!['keepPlace', 'shareOpening', 'trendsOptIn', 'haptics'].includes(name)) return redirectTo(req, text(form, 'next') || '/', 'That setting is not known.')
+    if (!['keepPlace', 'shareOpening', 'trendsOptIn', 'haptics', 'shareWithLearners'].includes(name)) return redirectTo(req, text(form, 'next') || '/', 'That setting is not known.')
     await payload.update({ collection: 'users', id: user.id, overrideAccess: true, data: { [name]: value } as never })
     if (name === 'shareOpening') {
       const rows = await payload.find({ collection: 'opening-answers', overrideAccess: true, depth: 0, limit: 50, where: { user: { equals: user.id } } })
       for (const row of rows.docs as { id: number; private?: boolean }[]) {
         await payload.update({ collection: 'opening-answers', id: row.id, overrideAccess: true, data: { staffVisible: value && !row.private } as never })
       }
+    }
+    if (name === 'shareWithLearners' && !value) {
+      await payload.update({ collection: 'answers', overrideAccess: true, where: { user: { equals: user.id } }, data: { shareWithLearners: false } as never })
     }
     if (name === 'keepPlace' && !value) await payload.delete({ collection: 'heart-states', overrideAccess: true, where: { user: { equals: user.id } } })
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Saved.')

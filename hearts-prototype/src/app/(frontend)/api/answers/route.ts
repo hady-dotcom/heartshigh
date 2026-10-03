@@ -25,6 +25,7 @@ function inputOf(row: Record<string, unknown>, pending: boolean): AnswerInput {
     video: row.video instanceof File ? row.video : null,
     keepPrivate: row.keepPrivate === true || row.keepPrivate === 'on',
     shareWithTeacher: row.shareWithTeacher === true || row.shareWithTeacher === 'on',
+    shareWithLearners: row.shareWithLearners === true || row.shareWithLearners === 'on',
     answeredAt: answeredAt && !Number.isNaN(answeredAt.getTime()) ? answeredAt.toISOString() : undefined,
     atSecond: number(row.atSecond),
     viewingId: typeof row.viewingId === 'string' ? row.viewingId.slice(0, 64) : undefined,

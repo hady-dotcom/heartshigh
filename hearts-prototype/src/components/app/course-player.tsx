@@ -53,6 +53,7 @@ export function CoursePlayer({
   startAt,
   points,
   swarm,
+  swarmOn = false,
   serverNow,
   next,
   garden,
@@ -68,6 +69,8 @@ export function CoursePlayer({
   startAt: number
   points: PointView[]
   swarm: Record<number, SwarmItem[]>
+  /** The learner opted in to sharing with other learners, so the swarm and its share box are shown. */
+  swarmOn?: boolean
   serverNow: string
   next: string
   garden: { done: number; total: number; links: { label: string; href: string }[]; gardenHref: string }
@@ -304,6 +307,7 @@ export function CoursePlayer({
           triggered={fromTrigger}
           top={sheetTop}
           swarm={swarm[open.id] || []}
+          swarmOn={swarmOn}
           now={now}
           onClose={close}
         />
@@ -337,6 +341,7 @@ function Sheet({
   triggered,
   top,
   swarm,
+  swarmOn,
   now,
   onClose,
 }: {
@@ -347,6 +352,7 @@ function Sheet({
   triggered: boolean
   top: number | null
   swarm: SwarmItem[]
+  swarmOn: boolean
   now: number
   onClose: (saved?: Saved) => void
 }) {
@@ -392,14 +398,14 @@ function Sheet({
     form.set('viewingId', viewingId)
     try {
       const response = await fetch('/api/answers', { method: 'POST', body: form })
-      const result = (await response.json().catch(() => ({}))) as { error?: string; keepPrivate?: boolean }
+      const result = (await response.json().catch(() => ({}))) as { error?: string; keepPrivate?: boolean; sharedWithLearners?: boolean }
       if (!response.ok) {
         setError(result.error || 'That did not save. Try once more.')
         setSending(false)
         return
       }
       const text = String(form.get('body') || form.get('choice') || 'Saved in your workbook.')
-      leave({ pointId: point.id, text, message: result.keepPrivate ? 'Saved privately in your workbook.' : 'Saved in your workbook and shared with the circle.' })
+      leave({ pointId: point.id, text, message: result.keepPrivate ? 'Saved privately in your workbook.' : result.sharedWithLearners ? 'Saved in your workbook and shared with other learners.' : 'Saved in your workbook.' })
     } catch {
       setError('You seem to be offline. Your answer is still here; try again in a moment.')
       setSending(false)
@@ -494,6 +500,9 @@ function Sheet({
             </label>
             <label className="toggle"><input type="checkbox" name="keepPrivate" checked={keepPrivate} onChange={(event) => setKeepPrivate(event.target.checked)} data-testid="answer-private" /> Keep my answer private</label>
             <label className="toggle"><input type="checkbox" name="shareWithTeacher" data-testid="answer-share" /> Let my teacher read it</label>
+            {swarmOn ? (
+              <label className="toggle"><input type="checkbox" name="shareWithLearners" disabled={keepPrivate} data-testid="answer-share-learners" /> Let other learners on this video read it</label>
+            ) : null}
             <button className="share-btn" type="submit" disabled={sending} data-testid="answer-submit">
               {sending ? 'Saving…' : `${keepPrivate ? 'Save' : 'Share'} my ${SUBMIT[point.kind]}`}
             </button>
@@ -501,6 +510,7 @@ function Sheet({
             {!point.answered ? <button type="button" className="link-btn" onClick={later} data-testid="answer-later" style={{ width: '100%' }}>Answer later</button> : null}
           </form>
         ) : null}
+        {swarmOn ? (
         <div className="others" data-testid="swarm">
           <p className="eyebrow">What others said</p>
           {swarm.length ? (
@@ -519,6 +529,7 @@ function Sheet({
             <p className="muted" style={{ fontSize: 14 }} data-testid="swarm-empty">Nobody has shared an answer here yet. Private answers never appear in this list.</p>
           )}
         </div>
+        ) : null}
       </section>
     </>
   )

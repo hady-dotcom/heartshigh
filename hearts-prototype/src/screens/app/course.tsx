@@ -131,18 +131,22 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
   })
 
   const swarm: Record<number, SwarmItem[]> = {}
-  if (portal.showOthersAnswers !== false && points.length) {
+  // The swarm is opt-in: a learner sees other learners' answers only after choosing to share with learners
+  // themselves, and only answers whose authors chose the same and ticked "Let other learners read it".
+  const swarmOn = user.role === 'learner' && Boolean(user.shareWithLearners) && portal.showOthersAnswers !== false
+  if (swarmOn && points.length) {
     const shared = await rows(
       payload,
       'answers',
-      { and: [{ point: { in: points.map((point) => point.id) } }, { portal: { equals: portal.id } }] },
+      { and: [{ point: { in: points.map((point) => point.id) } }, { portal: { equals: portal.id } }, { shareWithLearners: { equals: true } }, { keepPrivate: { not_equals: true } }] },
       { depth: 1, sort: '-createdAt', limit: 200 },
     )
     for (const answer of shared) {
-      if (answer.keepPrivate === true || ref(answer.user) === user.id) continue
+      if (answer.keepPrivate === true || answer.shareWithLearners !== true || ref(answer.user) === user.id) continue
       const pointId = ref(answer.point)
       if (!pointId) continue
-      const author = answer.user as { name?: string } | null
+      const author = answer.user as { name?: string; shareWithLearners?: boolean } | null
+      if (!author?.shareWithLearners) continue
       const image = answer.image as { url?: string } | null
       ;(swarm[pointId] ||= []).push({ name: author?.name || 'Someone in your circle', body: str(answer.body) || str(answer.choice) || 'Shared a photo', image: image?.url || null })
     }
@@ -177,6 +181,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
           startAt={startAt}
           points={views}
           swarm={swarm}
+          swarmOn={swarmOn}
           serverNow={at.toISOString()}
           next={here}
           overPlayer={flags.popupOverPlayer}
@@ -197,7 +202,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
             {row.id === lessonId ? <span className="badge" style={{ color: 'var(--purple)', fontWeight: 700, fontSize: 13 }}>Playing</span> : '›'}
           </Link>
         ))}
-        {clockEnabled() ? (
+        {clockEnabled() && user.role === 'master' ? (
           <details className="card" style={{ marginTop: 16 }}>
             <summary style={{ fontWeight: 700 }}>Test clock</summary>
             <form className="form-stack" action="/api/hearts" method="post" style={{ marginTop: 10 }}>
