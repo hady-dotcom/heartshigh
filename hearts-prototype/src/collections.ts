@@ -825,6 +825,27 @@ export const HarvestEntries: CollectionConfig = {
     { name: 'reference', type: 'text' },
     { name: 'timestamp', type: 'text' },
     { name: 'context', type: 'textarea' },
+    { name: 'seconds', type: 'number', admin: { description: 'Where the quote starts in the talk. Harvest replays from a few seconds before.' } },
+    { name: 'surah', type: 'number', admin: { description: 'Set only when the speaker’s words matched the Qur’an text clearly.' } },
+    { name: 'ayah', type: 'number' },
+    { name: 'matchedBy', type: 'text', admin: { description: 'arabic, transliteration or english: how the quote was recognised.' } },
+    { name: 'collection', type: 'text', admin: { description: 'Hadith collection the speaker named, when a hadith in it matched clearly.' } },
+    { name: 'hadithNumber', type: 'text' },
+    { name: 'hadithText', type: 'textarea' },
+    { name: 'hadithArabic', type: 'textarea' },
+    { name: 'grading', type: 'text', admin: { description: 'Only as given by the hadith source. Never filled in by hand.' } },
+    { name: 'seenAt', type: 'date', admin: { description: 'When the learner first opened Harvest with this item in it. Empty means new.' } },
+  ],
+}
+
+export const ScriptureCache: CollectionConfig = {
+  slug: 'scripture-cache',
+  access: masterOnly,
+  admin: { description: 'Tafsir, hadith and summaries fetched from open sources, kept so each is fetched once.' },
+  fields: [
+    { name: 'key', type: 'text', required: true, unique: true, index: true },
+    { name: 'kind', type: 'text' },
+    { name: 'data', type: 'json' },
   ],
 }
 
@@ -1042,5 +1063,6 @@ export const collections = [
   SeatVisits,
   Rituals,
   CircleAnswers,
+  ScriptureCache,
   ...openingCollections,
 ]

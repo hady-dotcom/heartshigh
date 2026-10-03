@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { Where } from 'payload'
 import { dualExtract, type ClauseCard } from '@/lib/extractor'
-import { harvestTranscript } from '@/lib/harvest'
+import { giveHarvest } from './scripture'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { extractWithFallback, llmStatus } from '@/lib/llm'
 import { defaultPlanName, flattenSlots, plural, splitEvenly, studyDates } from '@/lib/schedule'
@@ -1352,15 +1352,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         limit: 1,
         where: { and: [{ user: { equals: user.id } }, { lesson: { equals: lessonId } }] },
       })
-      if (!already.docs.length) {
-        for (const hit of harvestTranscript(transcript)) {
-          await payload.create({
-            collection: 'harvest-entries',
-            overrideAccess: true,
-            data: { user: user.id, lesson: lessonId, portal: portal || undefined, ...hit },
-          })
-        }
-      }
+      if (!already.docs.length) await giveHarvest(payload, user.id, lessonId, transcript, portal || undefined)
     }
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Marked as watched. You will see it in your Garden.')
   }

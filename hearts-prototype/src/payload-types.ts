@@ -103,6 +103,7 @@ export interface Config {
     'seat-visits': SeatVisit;
     rituals: Ritual;
     'circle-answers': CircleAnswer;
+    'scripture-cache': ScriptureCache;
     'heart-scales': HeartScale;
     lanes: Lane;
     'opening-scenes': OpeningScene;
@@ -165,6 +166,7 @@ export interface Config {
     'seat-visits': SeatVisitsSelect<false> | SeatVisitsSelect<true>;
     rituals: RitualsSelect<false> | RitualsSelect<true>;
     'circle-answers': CircleAnswersSelect<false> | CircleAnswersSelect<true>;
+    'scripture-cache': ScriptureCacheSelect<false> | ScriptureCacheSelect<true>;
     'heart-scales': HeartScalesSelect<false> | HeartScalesSelect<true>;
     lanes: LanesSelect<false> | LanesSelect<true>;
     'opening-scenes': OpeningScenesSelect<false> | OpeningScenesSelect<true>;
@@ -944,6 +946,34 @@ export interface HarvestEntry {
   reference?: string | null;
   timestamp?: string | null;
   context?: string | null;
+  /**
+   * Where the quote starts in the talk. Harvest replays from a few seconds before.
+   */
+  seconds?: number | null;
+  /**
+   * Set only when the speaker’s words matched the Qur’an text clearly.
+   */
+  surah?: number | null;
+  ayah?: number | null;
+  /**
+   * arabic, transliteration or english: how the quote was recognised.
+   */
+  matchedBy?: string | null;
+  /**
+   * Hadith collection the speaker named, when a hadith in it matched clearly.
+   */
+  collection?: string | null;
+  hadithNumber?: string | null;
+  hadithText?: string | null;
+  hadithArabic?: string | null;
+  /**
+   * Only as given by the hadith source. Never filled in by hand.
+   */
+  grading?: string | null;
+  /**
+   * When the learner first opened Harvest with this item in it. Empty means new.
+   */
+  seenAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1142,6 +1172,28 @@ export interface CircleAnswer {
   origin?: ('ai' | 'staff') | null;
   enabled?: boolean | null;
   author?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Tafsir, hadith and summaries fetched from open sources, kept so each is fetched once.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "scripture-cache".
+ */
+export interface ScriptureCache {
+  id: number;
+  key: string;
+  kind?: string | null;
+  data?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1888,6 +1940,10 @@ export interface PayloadLockedDocument {
         value: number | CircleAnswer;
       } | null)
     | ({
+        relationTo: 'scripture-cache';
+        value: number | ScriptureCache;
+      } | null)
+    | ({
         relationTo: 'heart-scales';
         value: number | HeartScale;
       } | null)
@@ -2493,6 +2549,16 @@ export interface HarvestEntriesSelect<T extends boolean = true> {
   reference?: T;
   timestamp?: T;
   context?: T;
+  seconds?: T;
+  surah?: T;
+  ayah?: T;
+  matchedBy?: T;
+  collection?: T;
+  hadithNumber?: T;
+  hadithText?: T;
+  hadithArabic?: T;
+  grading?: T;
+  seenAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2655,6 +2721,17 @@ export interface CircleAnswersSelect<T extends boolean = true> {
   origin?: T;
   enabled?: T;
   author?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "scripture-cache_select".
+ */
+export interface ScriptureCacheSelect<T extends boolean = true> {
+  key?: T;
+  kind?: T;
+  data?: T;
   updatedAt?: T;
   createdAt?: T;
 }
