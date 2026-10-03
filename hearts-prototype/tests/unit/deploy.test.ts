@@ -10,6 +10,8 @@ import {
   cookiesSecure,
   databaseKind,
   DEMO_PASSWORDS,
+  DEV_SECRET,
+  payloadSecret,
   productionProblems,
   readS3,
   seedRefusal,
@@ -128,4 +130,28 @@ test('production startup does not seed, and dev startup refuses to seed when NOD
   const setup = run('scripts/setup.mjs')
   assert.notEqual(setup, 0)
   assert.match(String(setup && setup.text), /production/)
+})
+
+test('the Dockerfile bakes no secret or database address into the image', () => {
+  const dockerfile = readFileSync(path.join(root, 'Dockerfile'), 'utf8')
+  const declared = dockerfile.split('\n').filter((line) => /^\s*(ARG|ENV)\s/i.test(line))
+  for (const line of declared) assert.doesNotMatch(line, /SECRET|PASSWORD|TOKEN|KEY|DATABASE_URL/i, line)
+  assert.doesNotMatch(dockerfile, /build-time-placeholder/)
+  assert.match(dockerfile, /npm run build[\s\S]*rm -rf data/, 'the throwaway build database does not ship')
+  assert.equal(payloadSecret({ NODE_ENV: 'production', NEXT_PHASE: 'phase-production-build' }).length > 0, true, 'next build compiles with no secret set')
+  assert.throws(() => payloadSecret({ NODE_ENV: 'production' }), /PAYLOAD_SECRET/, 'the running server never falls back to it')
+  assert.throws(() => payloadSecret({ NODE_ENV: 'production', PAYLOAD_SECRET: DEV_SECRET }), /sample value/)
+})
+
+test('the latest Postgres migration has a table for every collection and global', async () => {
+  const { readdirSync } = await import('node:fs')
+  const { collections } = await import('../../src/collections')
+  const { aiCollections } = await import('../../src/collections-ai')
+  const { MasterFlags } = await import('../../src/collections-opening')
+  const dir = path.join(root, 'src/migrations')
+  const latest = readdirSync(dir).filter((name) => name.endsWith('.json')).sort().at(-1)!
+  const tables = new Set(Object.keys(JSON.parse(readFileSync(path.join(dir, latest), 'utf8')).tables).map((name) => name.replace(/^public\./, '')))
+  const slugs = [...collections, ...aiCollections, MasterFlags].map((item) => item.slug.replace(/-/g, '_'))
+  const missing = slugs.filter((slug) => !tables.has(slug))
+  assert.deepEqual(missing, [], `run npx payload migrate:create against Postgres; ${latest} lacks ${missing.join(', ')}`)
 })

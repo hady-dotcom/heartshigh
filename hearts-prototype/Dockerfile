@@ -13,18 +13,13 @@ RUN npm ci
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
-# These let `next build` load the config. They are cleared before the image is run, and boot rejects them if they leak through.
-ARG PAYLOAD_SECRET=build-time-placeholder-not-for-runtime-use-32
-ARG DATABASE_URL=file:./data/hearts.db
-ENV PAYLOAD_SECRET=$PAYLOAD_SECRET
-ENV DATABASE_URL=$DATABASE_URL
-
+# No secret is passed into the image. While `next build` runs, the config sees the build phase and uses its own
+# build-only placeholder and a throwaway SQLite path; boot refuses to start without a real PAYLOAD_SECRET and
+# DATABASE_URL from the host's runtime variables. The throwaway database folder is removed so it never ships.
 RUN HEARTS_BUILD=1 NODE_OPTIONS=--max-old-space-size=3072 npm run build \
+  && rm -rf data \
   && npm prune --omit=dev
 
-ENV PAYLOAD_SECRET=""
-ENV DATABASE_URL=""
-ENV HEARTS_BUILD=""
 ENV NODE_ENV=production
 ENV PORT=3000
 
