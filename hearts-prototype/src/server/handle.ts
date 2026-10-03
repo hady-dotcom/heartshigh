@@ -31,6 +31,12 @@ function redirectTo(req: Request, path: string, error?: string, notice?: string)
   return NextResponse.redirect(url, 303)
 }
 
+/** The message of an error a hook meant people to read (APIError with isPublic), otherwise the fallback. */
+function publicMessage(error: unknown, fallback: string) {
+  const candidate = error as { isPublic?: boolean; message?: string } | null
+  return candidate?.isPublic && candidate.message ? candidate.message : fallback
+}
+
 function tooManyJoins() {
   const body =
     '<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Too many tries</title></head>' +
@@ -1756,7 +1762,11 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         if ((sceneRow.options || []).some((option) => option.crisis)) return redirectTo(req, back, 'The scene with the help option cannot be hidden.')
         hidden.push(sceneId)
       }
-      await payload.update({ collection: 'opening-configs', id: config.id, overrideAccess: true, data: { wording, hiddenScenes: hidden } as never })
+      try {
+        await payload.update({ collection: 'opening-configs', id: config.id, overrideAccess: true, data: { wording, hiddenScenes: hidden } as never })
+      } catch (error) {
+        return redirectTo(req, back, publicMessage(error, 'That change to the opening was not saved.'))
+      }
       return redirectTo(req, back, undefined, 'Opening saved for your portal.')
     }
     const contacts = ((config.helpContacts as { label?: string; phone?: string; url?: string; hours?: string }[]) || []).map(({ label, phone, url, hours }) => ({ label, phone, url, hours }))
@@ -1766,7 +1776,11 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       if (!label || (!text(form, 'phone') && !text(form, 'url'))) return redirectTo(req, back, 'A help contact needs a name and a phone number or a link.')
       contacts.push({ label, phone: text(form, 'phone') || undefined, url: text(form, 'url') || undefined, hours: text(form, 'hours') || undefined })
     }
-    await payload.update({ collection: 'opening-configs', id: config.id, overrideAccess: true, data: { helpContacts: contacts } as never })
+    try {
+      await payload.update({ collection: 'opening-configs', id: config.id, overrideAccess: true, data: { helpContacts: contacts } as never })
+    } catch (error) {
+      return redirectTo(req, back, publicMessage(error, 'Those help contacts were not saved.'))
+    }
     return redirectTo(req, back, undefined, 'Help contacts saved.')
   }
 

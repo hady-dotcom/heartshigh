@@ -3,6 +3,7 @@
 import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react'
 import type { SceneDef, SceneOption } from '@/lib/heart'
 import { EASE, T, animate } from '@/lib/motion'
+import { httpsHref, plainText, telHref } from '@/lib/text-safety'
 import { BUBBLE_TINTS, DOOR_TINTS, Glyph } from './glyphs'
 
 export function Caption({ text, className = 'j-caption', testId }: { text: string; className?: string; testId?: string }) {
@@ -166,10 +167,10 @@ export function HelpScreen({ contacts, onBack }: { contacts: HelpContact[]; onBa
       <ul className="j-contacts" data-testid="help-contacts">
         {contacts.map((contact) => (
           <li key={contact.label} data-testid="help-contact">
-            <b>{contact.label}</b>
-            {contact.phone ? <a href={`tel:${contact.phone.replace(/\s+/g, '')}`}>{contact.phone}</a> : null}
-            {contact.url ? <a href={contact.url} target="_blank" rel="noreferrer">{contact.url.replace(/^https?:\/\//, '')}</a> : null}
-            {contact.hours ? <small>{contact.hours}</small> : null}
+            <b>{plainText(contact.label)}</b>
+            {contact.phone && telHref(contact.phone) ? <a href={telHref(contact.phone)!} data-testid="help-phone">{plainText(contact.phone)}</a> : null}
+            {httpsHref(contact.url) ? <a href={httpsHref(contact.url)!} target="_blank" rel="noreferrer" data-testid="help-link">{httpsHref(contact.url)!.replace(/^https:\/\//, '').replace(/\/$/, '')}</a> : null}
+            {contact.hours ? <small>{plainText(contact.hours)}</small> : null}
           </li>
         ))}
       </ul>

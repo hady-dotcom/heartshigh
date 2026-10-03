@@ -130,6 +130,22 @@ export function helpContactProblems(contact: HelpContactInput) {
   return problems
 }
 
+/** The address only when it is a well-formed https link, otherwise null. */
+export function httpsHref(url: string | null | undefined) {
+  if (!url) return null
+  try {
+    const parsed = new URL(url.trim())
+    return parsed.protocol === 'https:' && !hasMarkup(url) ? parsed.toString() : null
+  } catch {
+    return null
+  }
+}
+
+/** What to show for a contact field: tags and angle brackets removed, so stored markup reads as nothing. */
+export function plainText(value: string | null | undefined) {
+  return (value || '').replace(/<[^>]*>/g, '').replace(/[<>]/g, '').trim()
+}
+
 /** The tel: target for a validated phone number: digits and a leading + only. */
 export function telHref(phone: string) {
   const digits = phone.replace(/[^0-9+]/g, '').replace(/(?!^)\+/g, '')
