@@ -42,10 +42,13 @@ export function cookieValue(header: string | null | undefined, name = VIEWAS_COO
   return null
 }
 
-export function viewAsCookie(token: string | null) {
+/** Secure follows the request, so the cookie also reaches plain-http local servers and test clients. */
+export function viewAsCookie(token: string | null, req?: Request) {
+  const proto = req?.headers.get('x-forwarded-proto') || (req ? new URL(req.url).protocol.replace(':', '') : 'https')
+  const secure = proto === 'https' ? ' Secure;' : ''
   return token
-    ? `${VIEWAS_COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=3600`
-    : `${VIEWAS_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`
+    ? `${VIEWAS_COOKIE}=${token}; Path=/; HttpOnly;${secure} SameSite=Strict; Max-Age=3600`
+    : `${VIEWAS_COOKIE}=; Path=/; HttpOnly;${secure} SameSite=Strict; Max-Age=0`
 }
 
 export function hashIp(ip: string | null | undefined) {

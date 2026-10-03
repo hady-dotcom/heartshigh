@@ -35,14 +35,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ action: 
     const target = new URL(viewAs?.returnTo || '/admin', req.url)
     if (viewAs) await endSession(payload, (await payload.findByID({ collection: 'view-as-sessions', id: viewAs.id, overrideAccess: true, depth: 0 })) as never, 'exit')
     const response = NextResponse.redirect(target, 303)
-    response.headers.append('Set-Cookie', viewAsCookie(null))
+    response.headers.append('Set-Cookie', viewAsCookie(null, req))
     return response
   }
   if (action !== 'status') return NextResponse.json({ error: 'Not found.' }, { status: 404 })
   const { viewAs, viewAsEnded } = await getSession({ touch: false })
   if (!viewAs) {
     const response = NextResponse.json({ active: false, ended: viewAsEnded })
-    if (cookieValue(req.headers.get('cookie'))) response.headers.append('Set-Cookie', viewAsCookie(null))
+    if (cookieValue(req.headers.get('cookie'))) response.headers.append('Set-Cookie', viewAsCookie(null, req))
     return response
   }
   return NextResponse.json(status(viewAs))
@@ -66,19 +66,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ action:
     })
     if (!result.token) return NextResponse.json({ error: result.error }, { status: result.status })
     const response = NextResponse.json({ ok: true, sessionId: String(result.session!.id) }, { status: 201 })
-    response.headers.append('Set-Cookie', viewAsCookie(result.token))
+    response.headers.append('Set-Cookie', viewAsCookie(result.token, req))
     return response
   }
 
   if (action === 'clear') {
     const response = NextResponse.json({ ok: true })
-    response.headers.append('Set-Cookie', viewAsCookie(null))
+    response.headers.append('Set-Cookie', viewAsCookie(null, req))
     return response
   }
 
   if (!viewAs) {
     const response = NextResponse.json({ active: false, ended: session.viewAsEnded }, { status: action === 'stop' ? 200 : 410 })
-    response.headers.append('Set-Cookie', viewAsCookie(null))
+    response.headers.append('Set-Cookie', viewAsCookie(null, req))
     return response
   }
 
@@ -86,7 +86,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ action:
     const live = await payload.findByID({ collection: 'view-as-sessions', id: viewAs.id, overrideAccess: true, depth: 0 })
     await endSession(payload, live as never, 'exit')
     const response = NextResponse.json({ ok: true, returnTo: viewAs.returnTo })
-    response.headers.append('Set-Cookie', viewAsCookie(null))
+    response.headers.append('Set-Cookie', viewAsCookie(null, req))
     return response
   }
 

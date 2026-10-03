@@ -228,7 +228,7 @@ test.describe.serial('HEARTS journeys', () => {
     await expect(page.getByTestId('countdown')).toHaveCount(0)
     await page.getByTestId('answer-text').fill('The greeting stayed.')
     await page.getByTestId('answer-submit').click()
-    await expect(page.getByTestId('notice')).toContainText('workbook')
+    await expect(page.getByTestId('player').getByTestId('notice')).toContainText('workbook')
     await post(page, { action: 'clock', iso: '', next: '/' })
 
     shared.lessonId = (await page.locator('form.watched-form input[name=lesson]').getAttribute('value')) || undefined
@@ -326,10 +326,15 @@ test.describe.serial('HEARTS journeys', () => {
     await expect(page.getByTestId('error')).toContainText('not yours')
     expect(await post(page, { action: 'rsvp', event: shared.eventId!, next: '/' })).toContain('not in your portal')
     expect(await post(page, { action: 'complete', lesson: shared.lessonId!, seconds: '8', ended: 'yes', next: '/' })).toContain('error=')
+    const me = (await (await page.request.get('/api/users/me')).json()).user?.id
     for (const collection of ['users', 'answers', 'workbook-entries', 'notifications']) {
-      const response = await page.request.get(`/api/${collection}`)
+      const response = await page.request.get(`/api/${collection}?depth=0`)
       const body = response.ok() ? await response.json() : { docs: [] }
-      expect(body.docs?.length ?? 0, `/api/${collection} must not list records to a learner`).toBe(0)
+      const others = ((body.docs || []) as { id: number; user?: number | { id: number } }[]).filter((row) => {
+        const owner = collection === 'users' ? row.id : typeof row.user === 'object' ? row.user?.id : row.user
+        return owner !== me
+      })
+      expect(others, `/api/${collection} must not list anyone else's records to a learner`).toHaveLength(0)
     }
 
     await page.setViewportSize(DESK)

@@ -36,7 +36,9 @@ async function startAsAdmin(page: Page, learner = 'Maryam Begum') {
   await row.getByTestId('view-as').click()
   await row.getByTestId('view-as-reason').fill('Checking what she sees in her workbook')
   await row.getByTestId('view-as-start').click()
+  await page.waitForURL((url) => !url.pathname.includes('/admin'))
   await expect(page.getByTestId('viewas-banner')).toBeVisible()
+  await page.waitForLoadState('networkidle')
 }
 
 async function auditEvents(event: string) {
@@ -116,20 +118,20 @@ test.describe('view as', () => {
     await signIn(page, 'elm-teacher@hearts.test', 'portal-teacher', `/p/${PORTAL}/admin/teach`)
     await expect(page.getByTestId('learner-row').first()).toBeVisible()
     await expect(page.getByTestId('view-as')).toHaveCount(0)
-    const refused = await page.request.post('/api/view-as/start', { data: { targetUserId: await userId('elm-learner@hearts.test'), reason: 'Trying' } })
+    const refused = await page.request.post('/api/view-as/start', { data: { targetUserId: await userId('elm-learner@hearts.test'), reason: 'Trying to look in' } })
     expect(refused.status()).toBe(403)
   })
 
   test('45. a portal admin cannot view as a learner in another portal', async ({ page }) => {
     await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `/p/${PORTAL}/admin`)
-    const refused = await page.request.post('/api/view-as/start', { data: { targetUserId: await userId('leeds-learner@hearts.test'), reason: 'Trying' } })
+    const refused = await page.request.post('/api/view-as/start', { data: { targetUserId: await userId('leeds-learner@hearts.test'), reason: 'Trying to look in' } })
     expect(refused.status()).toBe(403)
     expect((await refused.json()).error).toContain('another portal')
   })
 
   test('46. the master views as a portal admin, but never as another master', async ({ page }) => {
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master')
-    const refused = await page.request.post('/api/view-as/start', { data: { targetUserId: await userId('master2@hearts.test'), reason: 'Trying' } })
+    const refused = await page.request.post('/api/view-as/start', { data: { targetUserId: await userId('master2@hearts.test'), reason: 'Trying to look in' } })
     expect(refused.status()).toBe(403)
     const card = page.getByTestId('portal-card').filter({ hasText: `/p/${PORTAL}` })
     await card.getByTestId('view-as').click()
@@ -155,7 +157,9 @@ test.describe('view as', () => {
     await page.getByTestId('viewas-allow').click()
     await expect(page.getByTestId('viewas-write-confirm')).toBeDisabled()
     await page.getByTestId('viewas-write-reason').fill('She asked me to turn on haptics')
+    const reloaded = page.waitForEvent('load')
     await page.getByTestId('viewas-write-confirm').click()
+    await reloaded
     await expect(page.getByTestId('viewas-banner')).toHaveAttribute('data-mode', 'write')
     const pref = await page.request.post('/api/hearts', { form: { action: 'me-pref', name: 'haptics', value: 'on', next: `/p/${PORTAL}/me` }, maxRedirects: 0 })
     expect(pref.status()).toBe(303)

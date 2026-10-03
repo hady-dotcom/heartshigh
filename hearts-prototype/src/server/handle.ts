@@ -373,7 +373,7 @@ export async function handlePost(req: Request) {
         await wrote(payload, viewAs, { action, collection: 'users', id: viewAs.target.id, via: 'form' })
       }
     }
-    if (action === 'logout' && cookieValue(req.headers.get('cookie'))) response.headers.append('Set-Cookie', viewAsCookie(null))
+    if (action === 'logout' && cookieValue(req.headers.get('cookie'))) response.headers.append('Set-Cookie', viewAsCookie(null, req))
     return response
   } catch (error) {
     console.error('[hearts] action failed', text(form, 'action'), error)

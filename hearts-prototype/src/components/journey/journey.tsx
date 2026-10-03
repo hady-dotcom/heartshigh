@@ -995,7 +995,6 @@ export function Journey(props: JourneyProps) {
     setSignedIn(true)
     sheetRef.current = null
     setSheet(null)
-    router.refresh()
     setToast('Your place is kept.')
     window.setTimeout(() => tryPlay(), 300)
     return null

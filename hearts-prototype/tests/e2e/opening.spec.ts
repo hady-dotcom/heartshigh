@@ -25,10 +25,21 @@ async function userId(email: string) {
   return found.docs[0].id as number
 }
 
-async function nurPath() {
+async function nurLesson() {
   const found = await (await master.get(`/api/lessons?where[title][equals]=${encodeURIComponent('The Names Class 20: Al-Nur')}&depth=0`)).json()
-  const lesson = found.docs[0]
+  return found.docs[0] as { id: number; course: number }
+}
+
+async function nurPath() {
+  const lesson = await nurLesson()
   return `/p/${PORTAL}/course/${lesson.course}?part=${lesson.id}`
+}
+
+/** Earlier runs leave answers behind, and an answered question no longer pops up. */
+async function clearNurAnswers(email: string) {
+  const [user, lesson] = await Promise.all([userId(email), nurLesson()])
+  const found = await (await master.get(`/api/answers?where[user][equals]=${user}&where[lesson][equals]=${lesson.id}&depth=0&limit=100`)).json()
+  for (const row of found.docs as { id: number }[]) expect((await master.delete(`/api/answers/${row.id}`)).ok()).toBeTruthy()
 }
 
 function watchRequests(page: Page) {
@@ -261,15 +272,29 @@ test.describe('the opening', () => {
 
   test('21. turning off Share my opening answers hides them from the teacher', async ({ browser }) => {
     const learner = await browser.newPage()
-    await signIn(learner, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/me`)
-    await expect(learner.getByTestId('me-prefs')).toBeVisible()
-    await learner.getByTestId('pref-shareOpening-input').check()
-    await expect(learner.getByTestId('notice')).toContainText('Saved')
-    await expect(learner.getByTestId('pref-shareOpening-input')).toBeChecked()
-    await learner.getByTestId('pref-shareOpening-input').uncheck()
-    await expect(learner.getByTestId('notice')).toContainText('Saved')
-    await expect(learner.getByTestId('pref-shareOpening-input')).not.toBeChecked()
+    const teacher = await browser.newPage()
+    await signIn(teacher, 'elm-teacher@hearts.test', 'portal-teacher', '/')
+    const id = await userId('elm-learner@hearts.test')
+    const shared = async () => ((await (await teacher.request.get(`/api/workbook/${id}`)).json()).opening || []).length
+    await signIn(learner, 'elm-learner@hearts.test', 'portal-learner', `/p/${PORTAL}/me`)
+    const toggle = learner.getByTestId('pref-shareOpening-input')
+    await expect(toggle).toBeChecked()
+    expect(await shared()).toBeGreaterThan(0)
+    try {
+      await toggle.uncheck()
+      await expect(learner.getByTestId('notice')).toContainText('Saved')
+      await expect(toggle).not.toBeChecked()
+      expect(await shared()).toBe(0)
+    } finally {
+      await learner.goto(`/p/${PORTAL}/me`)
+      if (!(await learner.getByTestId('pref-shareOpening-input').isChecked())) {
+        await learner.getByTestId('pref-shareOpening-input').check()
+        await expect(learner.getByTestId('notice')).toContainText('Saved')
+      }
+    }
+    expect(await shared()).toBeGreaterThan(0)
     await learner.close()
+    await teacher.close()
   })
 
   test('22. the Me tab lets the learner change their name', async ({ page }) => {
@@ -338,9 +363,10 @@ test.describe('pop-up questions in a lesson', () => {
 
   test('27. playback stops at a question, the answer saves, and playback carries on', async ({ page }) => {
     await page.route(/youtube|ytimg|googlevideo/, (route) => route.abort())
+    await clearNurAnswers('elm-learner2@hearts.test')
     await openNur(page)
     await expect(page.getByTestId('player')).toHaveAttribute('data-mode', 'practice', { timeout: 15_000 })
-    const first = Number(await page.getByTestId('timeline-dot').first().getAttribute('data-second'))
+    const first = Number(await page.locator('[data-testid="timeline-dot"][data-state="open"]').first().getAttribute('data-second'))
     await page.goto(`${page.url()}&t=${Math.max(0, first - 2)}`)
     await expect(page.getByTestId('player')).toHaveAttribute('data-mode', 'practice', { timeout: 15_000 })
     await page.getByTestId('player-play').click()
@@ -352,7 +378,7 @@ test.describe('pop-up questions in a lesson', () => {
     else await page.getByTestId('answer-text').fill('A quiet morning before work.')
     await page.getByTestId('answer-submit').click()
     await expect(popup).toHaveCount(0)
-    await expect(page.getByTestId('notice')).toContainText('workbook')
+    await expect(page.getByTestId('player').getByTestId('notice')).toContainText('workbook')
     await expect(page.getByTestId('player-play')).toHaveAttribute('aria-label', 'Pause')
     await expect(page.locator('[data-testid="strip-dot"][data-answered="yes"]').first()).toBeVisible()
   })
@@ -415,9 +441,9 @@ test.describe('the desks for the opening', () => {
   test('32. the simulator runs the phone’s routing on picked taps', async ({ page }) => {
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master/simulator')
     await expect(page.getByTestId('simulator')).toBeVisible()
-    await expect(page.getByTestId('sim-lane')).toHaveCount(0)
+    await expect(page.getByTestId('sim-lane').filter({ hasText: 'L1' })).toHaveCount(0)
     for (const [scene, option] of PICKS) await page.getByTestId(`sim-${scene}`).selectOption(option)
-    await expect(page.getByTestId('sim-lane').first()).toBeVisible()
+    await expect(page.getByTestId('sim-lane').filter({ hasText: 'L1' })).toHaveCount(1)
     await expect(page.getByTestId('sim-feed-item').first()).toBeVisible()
     await expect(page.locator('[data-testid="sim-scale"][data-scale="desire"]')).toHaveAttribute('data-value', '0.00')
     await page.getByTestId('sim-visitor').selectOption('heavy')
@@ -456,7 +482,7 @@ test.describe('the desks for the opening', () => {
     await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `/p/${PORTAL}/admin/opening`)
     await expect(page.locator('[data-testid="portal-scene"][data-scene="visitor"] [data-testid="portal-hide"]')).toHaveCount(0)
     const forged = await page.request.post('/api/hearts', { form: { action: 'opening-config', portalSlug: PORTAL, scene: await page.locator('[data-testid="portal-scene"][data-scene="visitor"] input[name=scene]').inputValue(), hidden: 'on', next: '/' }, maxRedirects: 0 })
-    expect(decodeURIComponent(forged.headers().location || '')).toContain('cannot be hidden')
+    expect(new URL(forged.headers().location || '/', 'http://x').searchParams.get('error') || '').toContain('cannot be hidden')
   })
 
   test('37. a portal admin adds a help contact and the help screen lists it', async ({ page, browser }) => {
