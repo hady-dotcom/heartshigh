@@ -6,6 +6,7 @@ import { CIRCLE_COLUMNS } from '../../src/lib/circle-sheet'
 import {
   QUESTION_COLUMNS,
   TALK_COLUMNS,
+  addNewCoursesToPack,
   buildWorkbook,
   emptyCatalogue,
   parseSheetTime,
@@ -97,6 +98,78 @@ test('a multiple-choice row with no question_id is matched before its choices ar
 
   const edited = planSheet({ talks: [], questions: [cells(3, { ...row, choice_2: 'You feel no sadness at all' })], resources: [], errors: [] }, fixture())
   assert.deepEqual(edited.ops, [{ op: 'point.update', id: 8, patch: { options: ['You start to incline towards the next life', 'You feel no sadness at all'] } }])
+})
+
+function withPacks(scope: Partial<SheetCatalogue> = {}): SheetCatalogue {
+  return {
+    ...fixture(),
+    packs: [
+      { id: 1, title: 'Starter pack', owner: 'master', portal: null, courses: [1] },
+      { id: 2, title: 'Elm pack', owner: 'portal', portal: 9, courses: [] },
+      { id: 3, title: 'Leeds pack', owner: 'portal', portal: 4, courses: [] },
+      { id: 4, title: 'Twin', owner: 'master', portal: null, courses: [] },
+      { id: 5, title: 'Twin', owner: 'master', portal: null, courses: [] },
+    ],
+    ...scope,
+  }
+}
+const newTalk = (row: number, extra: Record<string, string | number>) => cells(row, { talk_key: `t-${row}`, title: `A fresh sitting ${row}`, course: 'Imported course', speaker: 'Mikaeel Smith', ...extra })
+
+test('pack column: a new course joins the named pack, by name or number, once however many rows name it', () => {
+  const plan = planSheet({ talks: [newTalk(3, { pack: 'starter PACK' }), newTalk(4, { pack: 1 })], questions: [], resources: [], errors: [] }, withPacks())
+  assert.deepEqual(plan.errors, [])
+  const created = plan.ops.find((op) => op.op === 'course.create')!
+  const links = plan.ops.filter((op) => op.op === 'pack.add')
+  assert.deepEqual(links, [{ op: 'pack.add', pack: 1, course: { temp: created.op === 'course.create' ? created.temp : '' } }])
+  assert.ok(plan.changes.some((change) => change.label === 'Starter pack' && /Imported course/.test(change.detail)))
+})
+
+test('pack column: an existing course already in the pack changes nothing; one not in it joins', () => {
+  const inPack = planSheet({ talks: [cells(3, { talk_key: 'yt-NIR88RRpat4', pack: 'Starter pack' })], questions: [], resources: [], errors: [] }, withPacks())
+  assert.deepEqual(planCounts(inPack), { create: 0, update: 0, delete: 0, unchanged: 1, skipped: 0, errors: 0 })
+  const joins = planSheet({ talks: [cells(3, { talk_key: 'yt-NIR88RRpat4', pack: 4 })], questions: [], resources: [], errors: [] }, withPacks())
+  assert.deepEqual(joins.ops, [{ op: 'pack.add', pack: 4, course: { id: 1 } }])
+  assert.equal(planCounts(joins).update, 1)
+  assert.equal(planCounts(joins).unchanged, 0)
+})
+
+test('pack column: an unknown pack, a pack name used twice, and another portal’s pack are refused on that cell', () => {
+  const plan = planSheet({ talks: [newTalk(3, { pack: 'No such pack' }), newTalk(4, { pack: 'Twin' })], questions: [], resources: [], errors: [] }, withPacks())
+  assert.deepEqual(plan.errors.map((issue) => [issue.tab, issue.row, issue.column]), [['Talks', 3, 'pack'], ['Talks', 4, 'pack']])
+  assert.match(plan.errors[0].message, /No course pack is called/)
+  assert.match(plan.errors[1].message, /More than one pack/)
+  assert.equal(plan.ops.length, 0, 'a refused row saves nothing')
+
+  const portal = withPacks({ scopeKind: 'portal', portalId: 9, packPortal: 9, courses: [{ id: 2, title: 'Elm local', origin: 'local', portal: 9, speaker: 'Bushra', inScope: true }] })
+  const elm = planSheet({ talks: [cells(3, { talk_key: 'e-1', title: 'An Elm sitting', course: 'Elm local', pack: 'Elm pack' })], questions: [], resources: [], errors: [] }, portal)
+  assert.deepEqual(elm.errors, [])
+  assert.deepEqual(elm.ops.filter((op) => op.op === 'pack.add'), [{ op: 'pack.add', pack: 2, course: { id: 2 } }])
+  for (const name of ['Starter pack', 'Leeds pack']) {
+    const refused = planSheet({ talks: [cells(3, { talk_key: 'e-1', title: 'An Elm sitting', course: 'Elm local', pack: name })], questions: [], resources: [], errors: [] }, portal)
+    assert.equal(refused.errors[0]?.column, 'pack', name)
+    assert.match(refused.errors[0].message, /not one of this portal’s own packs/)
+  }
+})
+
+test('preview choice: every course the import creates joins the chosen pack, and only a pack this desk may use', () => {
+  const catalogue = withPacks()
+  const plan = planSheet({ talks: [newTalk(3, {}), cells(4, { talk_key: 't-4', title: 'Another', course: 'Second course' }), cells(5, { talk_key: 'yt-NIR88RRpat4', title: 'Al-Nur, renamed' })], questions: [], resources: [], errors: [] }, catalogue)
+  assert.deepEqual(addNewCoursesToPack(plan, catalogue, 4), { added: 2 })
+  assert.deepEqual(plan.ops.filter((op) => op.op === 'pack.add').map((op) => (op.op === 'pack.add' ? [op.pack, 'temp' in op.course] : [])), [[4, true], [4, true]])
+  assert.deepEqual(addNewCoursesToPack(plan, catalogue, 4), { added: 0 }, 'a second pass adds nothing')
+
+  const portal = withPacks({ scopeKind: 'portal', portalId: 9, packPortal: 9 })
+  const local = planSheet({ talks: [cells(3, { talk_key: 'e-1', title: 'An Elm sitting', course: 'New Elm course' })], questions: [], resources: [], errors: [] }, portal)
+  assert.match(String((addNewCoursesToPack(local, portal, 1) as { error?: string }).error), /not one of this portal’s own packs/)
+  assert.deepEqual(addNewCoursesToPack(local, portal, 2), { added: 1 })
+})
+
+test('the pack column is optional, exported blank, and a blank cell leaves packs alone', async () => {
+  assert.equal(TALK_COLUMNS[TALK_COLUMNS.length - 1], 'pack')
+  const catalogue = withPacks()
+  const rows = rowsFromCatalogue(catalogue)
+  const plan = planSheet(await readWorkbook(await buildWorkbook(rows)), catalogue)
+  assert.equal(plan.ops.length, 0)
 })
 
 test('the blank template has four tabs, a note and the header row', async () => {

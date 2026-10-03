@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { templateWorkbook } from '@/lib/master-sheet'
 import { getSession } from '@/server/context'
-import { applyPlan, exportBuffer, planBuffer, summaryOf, undoSnapshot, writeAudit } from '@/server/master-sheet'
+import { applyPlan, exportBuffer, planBuffer, pushPackCourses, summaryOf, undoSnapshot, writeAudit } from '@/server/master-sheet'
 import { resolveScope } from '@/server/sheet-scope'
 
 export const dynamic = 'force-dynamic'
@@ -108,8 +108,10 @@ export async function POST(req: Request) {
     fileName = upload.name!
   }
 
-  const { plan, counts } = await planBuffer(payload, scope, buffer)
-  const summary = { ...summaryOf(plan, fileName), scope: scope.kind, portalId: scope.portalId, courseId: scope.courseId }
+  const newCoursesPack = intent === 'apply' ? Number(form.get('newCoursesPack') || 0) || null : null
+  const push = intent === 'apply' && form.get('push') === 'on'
+  const { plan, counts } = await planBuffer(payload, scope, buffer, { newCoursesPack })
+  const summary = { ...summaryOf(plan, fileName), scope: scope.kind, portalId: scope.portalId, courseId: scope.courseId, newCoursesPack, push }
   if (intent !== 'apply') {
     const doc = await payload.create({
       collection: 'sheet-imports', overrideAccess: true,
@@ -138,10 +140,19 @@ export async function POST(req: Request) {
     }
     return fail(error instanceof Error ? error.message : 'The import stopped before it finished. Undo is there if any rows were saved.')
   }
+  const pushed = push && snapshot.packs?.length ? await pushPackCourses(payload, snapshot) : null
   const saved = importId
     ? await payload.update({ collection: 'sheet-imports', id: importId, overrideAccess: true, data: { state: 'applied', at: new Date().toISOString(), summary, snapshot } as never })
     : await payload.create({ collection: 'sheet-imports', overrideAccess: true, data: { desk: scope.desk, portal: scope.portalId || undefined, actor: user.id, actorRole: user.role, fileName, state: 'applied', at: new Date().toISOString(), summary, snapshot, workbook: buffer.toString('base64') } as never })
-  await writeAudit(payload, 'sheet.import', user, scope.portalId, { importId: saved.id, fileName, scope: scope.kind, counts })
-  const notice = `Imported ${fileName}: ${counts.create} added, ${counts.update} updated, ${counts.delete} removed.`
-  return json ? NextResponse.json({ ok: true, notice, importId: saved.id, ...summary }) : redirectTo(req, next, undefined, notice)
+  const packLinks = snapshot.packs || []
+  await writeAudit(payload, 'sheet.import', user, scope.portalId, { importId: saved.id, fileName, scope: scope.kind, counts, newCoursesPack, packLinks, push })
+  if (push) {
+    await writeAudit(payload, 'sheet.pack_push', user, scope.portalId, {
+      importId: saved.id, fileName, packs: [...new Set(packLinks.map((link) => link.pack))], courses: [...new Set(packLinks.map((link) => link.course))],
+      learners: pushed?.learners || 0, users: (snapshot.pushed || []).map((row) => row.user),
+    })
+  }
+  const packNote = packLinks.length ? ` ${packLinks.length} course${packLinks.length === 1 ? '' : 's'} added to a pack${push ? `, and given to ${pushed?.learners || 0} existing learner${pushed?.learners === 1 ? '' : 's'}` : '; existing learners were left as they are'}.` : ''
+  const notice = `Imported ${fileName}: ${counts.create} added, ${counts.update} updated, ${counts.delete} removed.${packNote}`
+  return json ? NextResponse.json({ ok: true, notice, importId: saved.id, ...summary, packLinks, pushedLearners: pushed?.learners ?? 0 }) : redirectTo(req, next, undefined, notice)
 }

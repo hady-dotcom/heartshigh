@@ -9,6 +9,7 @@ import { horsCapOf, normaliseSpans, type AppetiserSpan } from '@/lib/tiers'
 import { transcriptFileKind, transcriptFromFile } from '@/lib/transcript-file'
 import { tierSourceText } from '@/server/tier-source'
 import {
+  addNewCoursesToPack,
   buildWorkbook,
   emptyCatalogue,
   planCounts,
@@ -21,6 +22,7 @@ import {
   type CutRow,
   type KeyRow,
   type LessonRow,
+  type PackRow,
   type PointRow,
   type Ref,
   type ResourceRow,
@@ -40,6 +42,10 @@ export type SheetSnapshot = {
   created: Record<string, number[]>
   updated: { collection: string; id: number; before: Record<string, unknown> }[]
   deleted: { collection: string; data: Record<string, unknown>; formerId?: number }[]
+  /** Courses this import put in a pack. Undo takes exactly these out again. */
+  packs?: { pack: number; course: number }[]
+  /** Courses pushed into existing learners' lists. Undo takes exactly these out again. */
+  pushed?: { user: number; courses: number[] }[]
 }
 
 const CHILD_ORDER = ['circle-answers', 'engagement-points', 'resources', 'talk-tiers', 'sheet-keys', 'cuts', 'ladder-items', 'lessons', 'units', 'courses']
@@ -72,7 +78,7 @@ function num(value: unknown) {
 }
 
 export async function loadCatalogue(payload: Payload, scope: SheetScope): Promise<SheetCatalogue> {
-  const [courses, units, lessons, tiers, points, resources, keys, cuts, seats, clauses, circle] = await Promise.all([
+  const [courses, units, lessons, tiers, points, resources, keys, cuts, seats, clauses, circle, packs] = await Promise.all([
     allDocs(payload, 'courses'),
     allDocs(payload, 'units'),
     allDocs(payload, 'lessons'),
@@ -84,6 +90,7 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
     allDocs(payload, 'seats'),
     allDocs(payload, 'clauses'),
     allDocs(payload, 'circle-answers', scope.desk === 'portal' ? { or: [{ portal: { exists: false } }, { portal: { equals: scope.portalId } }] } : undefined),
+    allDocs(payload, 'packs'),
   ])
   const clauseNumber = new Map(clauses.map((clause) => [clause.id, Number(clause.number)]))
   const inScope = (course: Doc) => {
@@ -148,6 +155,11 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
   return {
     scopeKind: scope.kind, portalId: scope.portalId, courseId: scope.courseId, courses: courseRows, units: unitRows, lessons: lessonRows, tiers: tierRows, points: pointRows, resources: resourceRows, keys: keyRows, cuts: cutRows, seats: seatRows,
     circle: circleRows, circlePortal: scope.desk === 'portal' ? scope.portalId : null,
+    packs: packs.map((pack): PackRow => ({
+      id: pack.id, title: String(pack.title || ''), owner: String(pack.owner || 'master'), portal: num(pack.portal),
+      courses: (Array.isArray(pack.courses) ? pack.courses : []).map((course) => num(course)).filter((id): id is number => Boolean(id)),
+    })),
+    packPortal: scope.desk === 'portal' ? scope.portalId : null,
   }
 }
 
@@ -171,7 +183,7 @@ function spansOf(value: unknown): AppetiserSpan[] | null {
   return spans.length ? normaliseSpans(spans) : null
 }
 
-export async function planBuffer(payload: Payload, scope: SheetScope, buffer: Buffer) {
+export async function planBuffer(payload: Payload, scope: SheetScope, buffer: Buffer, options: { newCoursesPack?: number | null } = {}) {
   const [parsed, catalogue, flags] = await Promise.all([
     readWorkbook(buffer),
     loadCatalogue(payload, scope),
@@ -179,7 +191,45 @@ export async function planBuffer(payload: Payload, scope: SheetScope, buffer: Bu
   ])
   catalogue.horsMaxSeconds = horsCapOf(flags?.horsMaxSeconds)
   const plan = planSheet(parsed, catalogue)
-  return { plan, counts: planCounts(plan) }
+  if (options.newCoursesPack) {
+    const added = addNewCoursesToPack(plan, catalogue, options.newCoursesPack)
+    if ('error' in added) plan.errors.push({ tab: 'Talks', row: 0, column: 'pack', message: added.error })
+  }
+  return { plan, counts: planCounts(plan), catalogue }
+}
+
+/**
+ * Gives the courses this import put in a pack to the learners who already hold that pack, through
+ * their code or a personal grant. Only learners whose course list is a snapshot need it; the rest
+ * read their packs live. Returns how many learners got something.
+ */
+export async function pushPackCourses(payload: Payload, snapshot: SheetSnapshot) {
+  const byPack = new Map<number, number[]>()
+  for (const link of snapshot.packs || []) byPack.set(link.pack, [...(byPack.get(link.pack) || []), link.course])
+  const gained = new Map<number, Set<number>>()
+  for (const [packId, courseIds] of byPack) {
+    const codes = await allDocs(payload, 'access-codes', { packs: { in: [packId] } })
+    const holders = await allDocs(payload, 'users', {
+      and: [{ role: { equals: 'learner' } }, { or: [...(codes.length ? [{ accessCode: { in: codes.map((code) => code.id) } }] : []), { extraPacks: { in: [packId] } }] }],
+    })
+    for (const holder of holders) {
+      const list = Array.isArray(holder.courseList) ? (holder.courseList as unknown[]).map(Number).filter(Boolean) : null
+      if (!list) continue
+      const fresh = courseIds.filter((id) => !list.includes(id) && !gained.get(holder.id)?.has(id))
+      if (!fresh.length) continue
+      const set = gained.get(holder.id) || new Set<number>()
+      for (const id of fresh) set.add(id)
+      gained.set(holder.id, set)
+    }
+  }
+  snapshot.pushed = []
+  for (const [userId, courses] of gained) {
+    const holder = (await payload.findByID({ collection: 'users', id: userId, depth: 0, overrideAccess: true })) as unknown as Doc
+    const list = (holder.courseList as unknown[]).map(Number).filter(Boolean)
+    await payload.update({ collection: 'users', id: userId, overrideAccess: true, data: { courseList: [...list, ...courses] } as never })
+    snapshot.pushed.push({ user: userId, courses: [...courses] })
+  }
+  return { learners: gained.size, courses: [...new Set([...byPack.values()].flat())].length }
 }
 
 function resolveRef(ref: Ref, temps: Map<string, number>) {
@@ -406,9 +456,25 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
     await removeDoc(payload, snapshot, 'circle-answers', op.id)
     return
   }
+  if (op.op === 'pack.add') {
+    const course = resolveRef(op.course, temps)
+    const pack = (await payload.findByID({ collection: 'packs', id: op.pack, depth: 0, overrideAccess: true })) as unknown as Doc
+    const current = (Array.isArray(pack.courses) ? pack.courses : []).map((item) => num(item)).filter((id): id is number => Boolean(id))
+    if (current.includes(course)) return
+    await payload.update({ collection: 'packs', id: op.pack, overrideAccess: true, data: { courses: [...current, course] } as never })
+    snapshot.packs = [...(snapshot.packs || []), { pack: op.pack, course }]
+    return
+  }
   if (op.op === 'child.delete') {
     await payload.delete({ collection: op.collection, id: op.id, overrideAccess: true })
   }
+}
+
+async function takeOut(payload: Payload, collection: 'packs' | 'users', id: number, field: 'courses' | 'courseList', remove: number[]) {
+  const doc = (await payload.findByID({ collection, id, depth: 0, overrideAccess: true }).catch(() => null)) as unknown as Doc | null
+  if (!doc || !Array.isArray(doc[field])) return
+  const kept = (doc[field] as unknown[]).map((item) => num(item) ?? Number(item)).filter((value): value is number => Boolean(value) && !remove.includes(value as number))
+  await payload.update({ collection, id, overrideAccess: true, data: { [field]: kept } as never })
 }
 
 const RESTORE_ORDER = ['courses', 'units', 'lessons', 'talk-tiers', 'cuts', 'engagement-points', 'circle-answers', 'resources', 'sheet-keys', 'ladder-items']
@@ -431,6 +497,8 @@ export async function undoBlockedReason(payload: Payload, snapshot: SheetSnapsho
 export async function undoSnapshot(payload: Payload, snapshot: SheetSnapshot) {
   const blocked = await undoBlockedReason(payload, snapshot)
   if (blocked) throw new Error(blocked)
+  for (const row of snapshot.pushed || []) await takeOut(payload, 'users', row.user, 'courseList', row.courses)
+  for (const link of snapshot.packs || []) await takeOut(payload, 'packs', link.pack, 'courses', [link.course])
   const createdPoints = snapshot.created['engagement-points'] || []
   const createdLessons = snapshot.created.lessons || []
   if (createdPoints.length || createdLessons.length) {
@@ -498,6 +566,8 @@ export function summaryOf(plan: SheetPlan, fileName: string) {
     warningTotal: plan.warnings?.length || 0,
     changes: plan.changes.slice(0, 200),
     changeTotal: plan.changes.length,
+    newCourses: plan.ops.filter((op) => op.op === 'course.create').length,
+    packLinks: plan.ops.filter((op) => op.op === 'pack.add').length,
   }
 }
 

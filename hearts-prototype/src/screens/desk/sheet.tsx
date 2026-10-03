@@ -17,6 +17,8 @@ type Summary = {
   warningTotal?: number
   changes?: { tab: string; row: number; action: string; label: string; detail: string }[]
   changeTotal?: number
+  newCourses?: number
+  packLinks?: number
 }
 
 async function loadPreview(payload: Payload, id: string, desk: 'master' | 'portal', portalId: number | null) {
@@ -46,7 +48,9 @@ function SheetBody({
   preview,
   last,
   libraryCounts,
+  packs,
 }: {
+  packs: { id: number; title: string }[]
   action: string
   next: string
   desk: 'master' | 'portal'
@@ -230,6 +234,23 @@ function SheetBody({
               <input type="hidden" name="intent" value="apply" />
               <input type="hidden" name="import" value={preview?.id || ''} />
               <input type="hidden" name="scope" value={desk === 'portal' ? 'portal' : 'library'} />
+              {!(counts.errors || counts.skipped) && (summary.newCourses || summary.packLinks) ? (
+                <div className="form" style={{ marginBottom: 12 }} data-testid="sheet-pack-options">
+                  {summary.newCourses ? (
+                    <label className="stack">Add the {summary.newCourses} new course{summary.newCourses === 1 ? '' : 's'} to a pack
+                      <select name="newCoursesPack" defaultValue="" data-testid="sheet-new-courses-pack">
+                        <option value="">Do not add them to a pack</option>
+                        {packs.map((pack) => <option key={pack.id} value={pack.id}>{pack.title}</option>)}
+                      </select>
+                    </label>
+                  ) : null}
+                  <label className="check">
+                    <input type="checkbox" name="push" data-testid="sheet-push" />
+                    {' '}Also give these courses to existing learners who already hold that pack
+                  </label>
+                  <p className="hint">Off, only people who join with the pack’s codes from now on get the courses. On, learners who already hold the pack get them straight away. Either way the choice is logged, and undo takes them back out.</p>
+                </div>
+              ) : null}
               {counts.errors || counts.skipped ? <p data-testid="sheet-blocked">Fix the rows above and upload the sheet again. Apply stays off while any row has a problem.</p> : <button className="btn teal" type="submit" data-testid="sheet-apply">Apply this import</button>}
             </form>
           </div>
@@ -254,12 +275,13 @@ async function catalogueCounts(payload: Payload, where: Record<string, unknown>,
 }
 
 export async function MasterSheetScreen({ payload, user, query }: { payload: Payload; user: SessionUser; query: Query }) {
-  const [courses, portals, preview, last, libraryCounts] = await Promise.all([
+  const [courses, portals, preview, last, libraryCounts, packs] = await Promise.all([
     rows(payload, 'courses', { origin: { equals: 'master' } }, { sort: 'title', limit: 500 }),
     rows(payload, 'portals', undefined, { sort: 'name', limit: 200 }),
     query.preview ? loadPreview(payload, query.preview, 'master', null) : Promise.resolve(null),
     lastImport(payload, 'master', null),
     catalogueCounts(payload, { origin: { equals: 'master' } }, null),
+    rows(payload, 'packs', undefined, { sort: 'title', limit: 500 }),
   ])
   return (
     <DeskFrame payload={payload} user={user} title="Master sheet" intro="Upload one workbook to add talks and place pop-up questions, or download what is already here. A dry run shows every add, change and problem before anything is saved." active="sheet" nav={masterNav()} brand="Hudhud" subBrand="Master desk" brandHref="/master" query={query} testId="master-sheet">
@@ -272,6 +294,7 @@ export async function MasterSheetScreen({ payload, user, query }: { payload: Pay
         preview={preview ? { id: preview.id, summary: (preview.summary || {}) as Summary } : null}
         last={last ? { id: last.id, fileName: str(last.fileName) } : null}
         libraryCounts={libraryCounts}
+        packs={packs.map((pack) => ({ id: pack.id, title: str(pack.title) }))}
       />
     </DeskFrame>
   )
@@ -280,11 +303,12 @@ export async function MasterSheetScreen({ payload, user, query }: { payload: Pay
 export async function PortalSheetScreen(ctx: Ctx) {
   const { payload, portal, base } = ctx
   const query = ctx.query as Ctx['query'] & { preview?: string }
-  const [courses, preview, last, libraryCounts] = await Promise.all([
+  const [courses, preview, last, libraryCounts, packs] = await Promise.all([
     rows(payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }] }, { sort: 'title', limit: 500 }),
     query.preview ? loadPreview(payload, query.preview, 'portal', portal.id) : Promise.resolve(null),
     lastImport(payload, 'portal', portal.id),
     catalogueCounts(payload, { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }] }, portal.id),
+    rows(payload, 'packs', { and: [{ owner: { equals: 'portal' } }, { portal: { equals: portal.id } }] }, { sort: 'title', limit: 500 }),
   ])
   return (
     <AdminFrame ctx={ctx} active="sheet" title="Master sheet" intro="Load talks and pop-up questions into courses made in this portal. The master library stays as it is." testId="portal-sheet">
@@ -298,6 +322,7 @@ export async function PortalSheetScreen(ctx: Ctx) {
         preview={preview ? { id: preview.id, summary: (preview.summary || {}) as Summary } : null}
         last={last ? { id: last.id, fileName: str(last.fileName) } : null}
         libraryCounts={libraryCounts}
+        packs={packs.map((pack) => ({ id: pack.id, title: str(pack.title) }))}
       />
     </AdminFrame>
   )

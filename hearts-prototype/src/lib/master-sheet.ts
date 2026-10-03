@@ -11,7 +11,7 @@ export const TALK_COLUMNS = [
   'talk_key', 'youtube_id', 'title', 'speaker', 'channel', 'course', 'part', 'order', 'lane', 'jibril_clause', 'ghunya_seat',
   'hors_in', 'hors_out', 'app_in', 'app_out', 'hook_in', 'hook_out', 'turn_in', 'turn_out', 'land_in', 'land_out',
   'hook_text', 'turn_text', 'land_text', 'status', 'notes',
-  'provider', 'vimeo_id', 'media_id', 'duration', 'transcript',
+  'provider', 'vimeo_id', 'media_id', 'duration', 'transcript', 'pack',
 ] as const
 
 export const QUESTION_COLUMNS = [
@@ -24,7 +24,7 @@ export const QUESTION_COLUMNS = [
 export const RESOURCE_COLUMNS = ['talk_key', 'label', 'url', 'kind', 'status', 'body', 'media_id'] as const
 
 export const TALK_NOTE =
-  "HEARTS talks. One row is one talk. talk_key is how a later import finds the same talk, so keep it stable. Leave a cell blank to leave that field as it is. Times can be seconds (90), minutes and seconds (1:30) or hours (1:02:03). status is draft, checked or live. rejected keeps a talk hidden from learners. delete removes the talk. youtube_id is the 11-character YouTube id. provider is youtube, vimeo or file. A Vimeo talk puts the number in vimeo_id. An uploaded film puts the media id in media_id. duration is the length in seconds. transcript is the speaker's words and is only for captions that fit in the cell (under 30,000 characters); a longer transcript is a Resources row with kind transcript and a media_id. hook_text, turn_text, land_text and transcript are the speaker's words: the kill list is not applied to them. notes is our own writing and may contain plain text such as conf=high. A hors d'oeuvre is usually 15 to 20 seconds. Up to the cap on the master desk (45 seconds unless that cap is changed) is allowed and only warned about. Shorter than 15, or longer than the cap, is refused. app_in and app_out are one continuous appetiser. hook_in and hook_out, turn_in and turn_out, land_in and land_out are up to three separate cuts. The player plays them in that order, and their lengths together stay within about 3 minutes (195 seconds)."
+  "HEARTS talks. One row is one talk. talk_key is how a later import finds the same talk, so keep it stable. Leave a cell blank to leave that field as it is. Times can be seconds (90), minutes and seconds (1:30) or hours (1:02:03). status is draft, checked or live. rejected keeps a talk hidden from learners. delete removes the talk. youtube_id is the 11-character YouTube id. provider is youtube, vimeo or file. A Vimeo talk puts the number in vimeo_id. An uploaded film puts the media id in media_id. duration is the length in seconds. transcript is the speaker's words and is only for captions that fit in the cell (under 30,000 characters); a longer transcript is a Resources row with kind transcript and a media_id. hook_text, turn_text, land_text and transcript are the speaker's words: the kill list is not applied to them. notes is our own writing and may contain plain text such as conf=high. A hors d'oeuvre is usually 15 to 20 seconds. Up to the cap on the master desk (45 seconds unless that cap is changed) is allowed and only warned about. Shorter than 15, or longer than the cap, is refused. app_in and app_out are one continuous appetiser. hook_in and hook_out, turn_in and turn_out, land_in and land_out are up to three separate cuts. The player plays them in that order, and their lengths together stay within about 3 minutes (195 seconds). pack is optional: the name or number of a course pack that already exists, and the talk's course joins it, so people who join with that pack's codes get the course. A portal admin can only name their own portal's packs. A blank pack leaves packs as they are, and the export leaves it blank."
 
 export const QUESTION_NOTE =
   'HEARTS questions. Name the talk with talk_key or youtube_id. The export writes question_id, and an import with that id updates the same question. A row with no question_id is matched to a question on the same talk with the same time and the same text, so importing the same file again does not add a copy. Leave question_id blank only when the question is new. type is free text, multiple choice, reflection or task. status is draft or approved (approved is what learners meet). source is ai or human. A blank cell leaves that field as it is. delete removes the question. Times use the same forms as the Talks tab and must fall inside the talk. type task is an activation task: due_days is how many days the learner has (1 to 366), evidence is none, note or photo, and show_imam is yes when the imam should see it. place is popup or workbook. A workbook row is a reflection kept in the workbook rather than a pop-up in the film. Questions, choices and notes are our own writing. Notes may contain plain text such as conf=high.'
@@ -46,6 +46,7 @@ const HEADER_ALIASES: Record<string, string> = {
   hook: 'hook_text', hook_text: 'hook_text', turn: 'turn_text', turn_text: 'turn_text', land: 'land_text', land_text: 'land_text',
   label: 'label', name: 'label', url: 'url', kind: 'kind', body: 'body', summary: 'body',
   provider: 'provider', vimeo_id: 'vimeo_id', vimeo: 'vimeo_id', media_id: 'media_id', media: 'media_id', duration: 'duration', length: 'duration', transcript: 'transcript',
+  pack: 'pack', course_pack: 'pack',
   due_days: 'due_days', due: 'due_days', evidence: 'evidence', show_imam: 'show_imam', showimam: 'show_imam', place: 'place', family: 'place',
   choice1: 'choice_1', choice_1: 'choice_1', choices_1: 'choice_1', ac_1: 'choice_1', ac1: 'choice_1',
   choice2: 'choice_2', choice_2: 'choice_2', choices_2: 'choice_2', ac_2: 'choice_2', ac2: 'choice_2',
@@ -90,6 +91,7 @@ export type SheetOp =
   | { op: 'circle.create'; point: number; lesson: number; data: Record<string, unknown> }
   | { op: 'circle.update'; id: number; patch: Record<string, unknown> }
   | { op: 'circle.delete'; id: number }
+  | { op: 'pack.add'; pack: number; course: Ref }
   | { op: 'child.delete'; collection: 'engagement-points' | 'resources' | 'talk-tiers' | 'cuts' | 'ladder-items' | 'sheet-keys'; id: number }
 
 export type SheetPlan = { errors: SheetIssue[]; warnings: SheetIssue[]; changes: SheetChange[]; unchanged: number; skipped: number; ops: SheetOp[] }
@@ -108,7 +110,9 @@ export type KeyRow = { id: number; talkKey: string; lesson: number; channel: str
 export type CutRow = { id: number; lesson: number; bestClause: number | null; seatId: number | null; seatClause: number | null; seatPosition: number | null; placeholder: boolean; status: string; start: number; course: number | null }
 export type SeatRow = { id: number; clause: number; position: number }
 export type CircleRow = { id: number; point: number; lesson: number; portal: number | null; name: string; body: string; tone: string; length: string; origin: string; enabled: boolean }
-export type SheetCatalogue = { scopeKind: 'library' | 'portal' | 'course'; portalId: number | null; courseId: number | null; courses: CourseRow[]; units: UnitRow[]; lessons: LessonRow[]; tiers: TierRow[]; points: PointRow[]; resources: ResourceRow[]; keys: KeyRow[]; cuts: CutRow[]; seats: SeatRow[]; horsMaxSeconds?: number; circle?: CircleRow[]; circlePortal?: number | null }
+export type PackRow = { id: number; title: string; owner: string; portal: number | null; courses: number[] }
+/** packPortal is set on a portal desk, which may only add courses to that portal's own packs. */
+export type SheetCatalogue = { scopeKind: 'library' | 'portal' | 'course'; portalId: number | null; courseId: number | null; courses: CourseRow[]; units: UnitRow[]; lessons: LessonRow[]; tiers: TierRow[]; points: PointRow[]; resources: ResourceRow[]; keys: KeyRow[]; cuts: CutRow[]; seats: SeatRow[]; horsMaxSeconds?: number; circle?: CircleRow[]; circlePortal?: number | null; packs?: PackRow[]; packPortal?: number | null }
 
 type Cell = { text: string; raw: unknown; numFmt?: string }
 type InputRow = { row: number; cells: Record<string, Cell> }
@@ -523,13 +527,14 @@ type Working = {
   outsideKey: Map<string, LessonRow>
   outsideYoutube: Map<string, LessonRow>
   questionIds: Map<number, number>
+  packLinks: Set<string>
 }
 
 function indexCatalogue(catalogue: SheetCatalogue): Working {
   const working: Working = {
     catalogue, errors: [], warnings: [], changes: [], ops: [], unchanged: 0, skipped: 0, pendingQuestions: new Map(), handledQuestions: new Set(),
     courses: new Map(), units: new Map(), lessons: new Map(),
-    byKey: new Map(), byYoutube: new Map(), outsideKey: new Map(), outsideYoutube: new Map(), questionIds: new Map(),
+    byKey: new Map(), byYoutube: new Map(), outsideKey: new Map(), outsideYoutube: new Map(), questionIds: new Map(), packLinks: new Set(),
   }
   const addKey = (map: Map<string, LessonRow>, key: string, lesson: LessonRow) => {
     if (!map.has(key)) map.set(key, lesson)
@@ -593,6 +598,44 @@ function courseRef(working: Working, title: string, speaker: string | undefined,
   working.ops.push({ op: 'course.create', temp, title: title.trim(), speaker, origin, portal: origin === 'local' ? working.catalogue.portalId : null })
   working.courses.set(name, { temp, title: title.trim(), speaker })
   return { ref: { temp }, created: true }
+}
+
+/** A course pack that already exists, by number or name. A portal desk only gets its own portal's packs. */
+export function resolvePack(catalogue: SheetCatalogue, raw: string): { pack: PackRow } | { error: string } {
+  const text = raw.trim()
+  const all = catalogue.packs || []
+  const allowed = (pack: PackRow) => catalogue.packPortal == null || (pack.owner === 'portal' && pack.portal === catalogue.packPortal)
+  const matches = /^\d+$/.test(text) ? all.filter((pack) => pack.id === Number(text)) : all.filter((pack) => foldName(pack.title) === foldName(text))
+  if (!matches.length) return { error: `No course pack is called “${text}”. Name a pack that already exists, or its number.` }
+  const usable = matches.filter(allowed)
+  if (!usable.length) return { error: `“${text}” is not one of this portal’s own packs. A portal admin can only add courses to packs made in their portal.` }
+  if (usable.length > 1) return { error: `More than one pack is called “${text}”. Use the pack’s number instead.` }
+  return { pack: usable[0] }
+}
+
+function addToPack(working: Working, pack: PackRow, course: Ref, courseTitle: string, row: number) {
+  const token = `${pack.id}|${'id' in course ? `id:${course.id}` : course.temp}`
+  if (working.packLinks.has(token)) return false
+  working.packLinks.add(token)
+  if ('id' in course && pack.courses.includes(course.id)) return false
+  working.ops.push({ op: 'pack.add', pack: pack.id, course })
+  working.changes.push({ tab: 'Talks', row, action: 'update', label: pack.title, detail: `“${courseTitle}” joins the pack. People who join with its codes from now on get the course.` })
+  return true
+}
+
+/** The preview's "add new courses to pack" choice: every course this import creates joins that pack. */
+export function addNewCoursesToPack(plan: SheetPlan, catalogue: SheetCatalogue, packId: number): { added: number } | { error: string } {
+  const found = resolvePack(catalogue, String(packId))
+  if ('error' in found) return found
+  const already = new Set(plan.ops.flatMap((op) => (op.op === 'pack.add' && op.pack === packId && 'temp' in op.course ? [op.course.temp] : [])))
+  let added = 0
+  for (const op of [...plan.ops]) {
+    if (op.op !== 'course.create' || already.has(op.temp)) continue
+    plan.ops.push({ op: 'pack.add', pack: packId, course: { temp: op.temp } })
+    plan.changes.push({ tab: 'Talks', row: 0, action: 'update', label: found.pack.title, detail: `New course “${op.title}” joins the pack.` })
+    added += 1
+  }
+  return { added }
 }
 
 function unitRef(working: Working, course: Ref, title: string): Ref {
@@ -679,6 +722,12 @@ function planTalks(working: Working, rows: InputRow[]) {
     }
     for (const [column, label] of [['title', 'Title'], ['speaker', 'Speaker'], ['channel', 'Channel'], ['course', 'Course'], ['part', 'Part'], ['lane', 'Lane'], ['notes', 'Notes']] as const) {
       if (present(row, column)) problems.push(...plainProblems([[label, textOf(row, column)]]).map((message) => ({ tab: 'Talks' as const, row: row.row, column, message })))
+    }
+    let pack: PackRow | null = null
+    if (present(row, 'pack')) {
+      const found = resolvePack(working.catalogue, textOf(row, 'pack'))
+      if ('error' in found) fail('pack', found.error)
+      else pack = found.pack
     }
     const status = textOf(row, 'status').toLowerCase()
     if (present(row, 'status') && !['draft', 'checked', 'live', 'rejected', 'delete'].includes(status)) fail('status', 'Status is draft, checked, live, rejected or delete.')
@@ -784,6 +833,7 @@ function planTalks(working: Working, rows: InputRow[]) {
       working.lessons.set(talkKey, { temp, title, youtubeId, duration: durationSeconds, transcript: transcriptText, course: course.ref, unit })
       working.warnings.push(...rowWarnings)
       working.changes.push({ tab: 'Talks', row: row.row, action: 'create', label: title, detail: course.created ? `New talk in a new course, “${courseTitle.trim()}”.` : `New talk in “${courseTitle.trim()}”.` })
+      if (pack) addToPack(working, pack, course.ref, courseTitle.trim(), row.row)
       continue
     }
     if (found.pending) {
@@ -860,7 +910,11 @@ function planTalks(working: Working, rows: InputRow[]) {
     }
     if (cutWritten) detail.push('the clause')
     working.warnings.push(...rowWarnings)
-    if (!detail.length) working.unchanged += 1
+    const packCourse = courseMove || { id: lesson.course }
+    const packTitle = present(row, 'course') ? textOf(row, 'course').trim() : working.catalogue.courses.find((item) => item.id === lesson.course)?.title || lesson.title
+    const packed = pack ? addToPack(working, pack, packCourse, packTitle, row.row) : false
+    if (!detail.length && !packed) working.unchanged += 1
+    else if (!detail.length) continue
     else working.changes.push({ tab: 'Talks', row: row.row, action: 'update', label: lesson.title, detail: `Updates ${detail.join(', ')}.` })
   }
 }
