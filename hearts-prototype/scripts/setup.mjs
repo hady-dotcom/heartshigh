@@ -6,18 +6,19 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const run = (command, { optional = false } = {}) => {
+const run = (command, { optional = false, note = 'the app still runs, only the browser tests need it' } = {}) => {
   console.log(`\n> ${command}`)
   try {
     execSync(command, { cwd: root, stdio: 'inherit', env: process.env })
   } catch (error) {
     if (!optional) throw error
-    console.warn(`(skipped: ${command} did not finish; the app still runs, only the browser tests need it)`)
+    console.warn(`(skipped: ${command} did not finish; ${note})`)
   }
 }
 
 if (!existsSync(join(root, 'node_modules', '.package-lock.json'))) run(existsSync(join(root, 'package-lock.json')) ? 'npm ci' : 'npm install')
 run('npx playwright install chromium', { optional: true })
+run('node scripts/get-yt-dlp.mjs', { optional: true, note: 'the app still runs; the caption import falls back to the watch page or TRANSCRIPT_SERVICE_URL' })
 try {
   run('npx tsx src/seed/seed.ts')
 } catch (error) {

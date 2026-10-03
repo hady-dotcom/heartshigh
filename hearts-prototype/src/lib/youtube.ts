@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -17,6 +18,8 @@ export type YoutubeMeta = {
 export type TranscriptProvider = {
   name: string
   fetch(id: string): Promise<string | null>
+  /** Why the last fetch came back empty, in plain English, when the provider can tell. */
+  lastProblem?: string | null
 }
 
 export type YoutubeIngest =
@@ -56,25 +59,54 @@ function isCaptionText(text: string | null | undefined): text is string {
   return Boolean(text && text.includes('-->') && !/<html/i.test(text))
 }
 
-/** 1. yt-dlp, when it is installed. Works from most home and office machines. */
+/** Where yt-dlp is: YT_DLP_PATH, else the pinned copy setup puts in bin/, else whatever is on the PATH. */
+export function ytDlpBinary() {
+  if (process.env.YT_DLP_PATH) return process.env.YT_DLP_PATH
+  const local = path.join(process.cwd(), 'bin', process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp')
+  return existsSync(local) ? local : 'yt-dlp'
+}
+
+/** The arguments for one caption fetch. The web_embedded player client is the one YouTube blocks least from servers. */
+export function ytDlpArgs(id: string, dir: string) {
+  return [
+    '--skip-download', '--write-subs', '--write-auto-subs', '--sub-langs', 'en.*,en', '--sub-format', 'vtt',
+    '--extractor-args', 'youtube:player_client=web_embedded',
+    '-o', path.join(dir, '%(id)s.%(ext)s'), `https://www.youtube.com/watch?v=${id}`,
+  ]
+}
+
+/** A plain-English reason from yt-dlp's error output. */
+export function ytDlpProblem(stderr: string, missing = false) {
+  if (missing) return 'yt-dlp is not installed. Run npm run setup (it puts a pinned copy in bin/) or set YT_DLP_PATH.'
+  if (/not a bot|sign in to confirm|429|too many requests|blocked|forbidden|403/i.test(stderr)) {
+    return 'YouTube blocked yt-dlp from this network, even with the web_embedded player. Run the import from a home connection, or set TRANSCRIPT_SERVICE_URL to a caption service that YouTube does not block.'
+  }
+  if (/no subtitles|there are no subtitles|no captions/i.test(stderr)) return 'This film has no English captions on YouTube.'
+  const line = stderr.split('\n').map((row) => row.trim()).filter((row) => /^ERROR/.test(row))[0]
+  return line ? `yt-dlp could not fetch the captions: ${line.replace(/^ERROR:\s*/, '').slice(0, 200)}` : 'yt-dlp could not fetch the captions.'
+}
+
+/** 1. yt-dlp, from bin/ (setup fetches a pinned copy) or the PATH. */
 export const ytDlpProvider: TranscriptProvider = {
   name: 'yt-dlp',
+  lastProblem: null,
   async fetch(id) {
+    ytDlpProvider.lastProblem = null
     if (process.env.HEARTS_DISABLE_YTDLP === '1') return null
-    const binary = process.env.YT_DLP_PATH || 'yt-dlp'
     const dir = await mkdtemp(path.join(tmpdir(), 'hearts-ytdlp-'))
     try {
-      await execFileAsync(
-        binary,
-        ['--skip-download', '--write-subs', '--write-auto-subs', '--sub-langs', 'en.*,en', '--sub-format', 'vtt', '-o', path.join(dir, '%(id)s.%(ext)s'), `https://www.youtube.com/watch?v=${id}`],
-        { timeout: 60_000 },
-      )
+      await execFileAsync(ytDlpBinary(), ytDlpArgs(id, dir), { timeout: 60_000 })
       const files = (await readdir(dir)).filter((file) => file.endsWith('.vtt'))
       const preferred = files.find((file) => /\.en\.vtt$/.test(file)) || files[0]
-      if (!preferred) return null
+      if (!preferred) {
+        ytDlpProvider.lastProblem = 'This film has no English captions on YouTube.'
+        return null
+      }
       const text = await readFile(path.join(dir, preferred), 'utf8')
       return isCaptionText(text) ? text : null
-    } catch {
+    } catch (error) {
+      const failure = error as { code?: string; stderr?: string }
+      ytDlpProvider.lastProblem = ytDlpProblem(String(failure.stderr || ''), failure.code === 'ENOENT')
       return null
     } finally {
       await rm(dir, { recursive: true, force: true }).catch(() => {})
@@ -156,12 +188,14 @@ export const defaultProviders = [ytDlpProvider, watchPageProvider, serviceProvid
 
 export async function transcriptFor(id: string, providers: TranscriptProvider[] = defaultProviders) {
   const tried: string[] = []
+  const problems: string[] = []
   for (const provider of providers) {
     tried.push(provider.name)
     const text = await provider.fetch(id)
-    if (text && text.trim()) return { transcript: text, provider: provider.name, tried }
+    if (text && text.trim()) return { transcript: text, provider: provider.name, tried, problems }
+    if (provider.lastProblem) problems.push(provider.lastProblem)
   }
-  return { transcript: null, provider: null, tried }
+  return { transcript: null, provider: null, tried, problems }
 }
 
 export async function ingestYoutubeUrl(
@@ -191,7 +225,7 @@ export async function ingestYoutubeUrl(
       ok: false,
       meta: meta || null,
       id,
-      error: `The film is saved, but its captions could not be fetched from this server (tried ${found.tried.join(', ')}). Upload a .vtt, .srt or .txt transcript below and the extractor will use that instead.`,
+      error: `The film is saved, but its captions could not be fetched from this server (tried ${found.tried.join(', ')}).${found.problems.length ? ` ${found.problems.join(' ')}` : ''} Upload a .vtt, .srt or .txt transcript below and the extractor will use that instead.`,
       needsTranscript: true,
       tried: found.tried,
     }
