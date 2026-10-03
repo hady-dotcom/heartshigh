@@ -398,9 +398,16 @@ function Sheet({
   const recorder = useRef<MediaRecorder | null>(null)
   const audioInput = useRef<HTMLInputElement>(null)
 
+  const leaveTimer = useRef<number | null>(null)
+  // The timeline stays tappable above the sheet, so another card can open inside the slide-out; a late close
+  // from this card must not shut that one.
+  useEffect(() => () => {
+    if (leaveTimer.current) window.clearTimeout(leaveTimer.current)
+  }, [])
+
   const leave = (saved?: Saved) => {
     setLeaving(true)
-    window.setTimeout(() => onClose(saved), 180)
+    leaveTimer.current = window.setTimeout(() => onClose(saved), 180)
   }
 
   const later = () => {
