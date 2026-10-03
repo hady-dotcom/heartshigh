@@ -244,6 +244,12 @@ html[data-theme] .drawn-meta { color: var(--ink-2); font-size: 13px; font-weight
 html[data-theme] .card h3,
 html[data-theme] .days-card h3,
 html[data-theme] .theme-pin h3 { color: var(--ink); font-family: var(--serif); font-weight: 600; }
+html[data-theme] .install-card h2 { color: var(--ink); font-family: var(--serif); font-weight: 600; }
+html[data-theme] .install-card .install-lead,
+html[data-theme] .install-card .install-note,
+html[data-theme] .install-card .install-manual { color: var(--ink-2); font-size: 16px; line-height: 1.45; }
+html[data-theme] .install-card .install-step p { color: var(--ink); font-size: 16px; font-weight: 600; line-height: 1.35; }
+html[data-theme] .install-skip { color: var(--ink-2); }
 
 html[data-theme] .empty-state,
 html[data-theme] .feed-empty,

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { DoorChips } from '@/components/app/doors'
+import { InstallCard } from '@/components/app/install-card'
 import { redirect } from 'next/navigation'
 import { Avatar } from '@/components/app/feed'
 import { AppFrame, Flash, TabBar } from '@/components/app/shell'
@@ -68,6 +69,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         </div>
         <span className="sr-only">{portalName(portal)}</span>
         <Flash error={query.error} notice={query.notice} />
+        <InstallCard />
         <section className="grow-banner" data-testid="grow-banner">
           <p className="eyebrow">Your growth</p>
           <h2 data-testid="days-count">{days ? `${days} day${days === 1 ? '' : 's'} with us so far` : 'Your garden starts today'}</h2>

@@ -330,8 +330,20 @@
 .card h3 { margin: 0 0 6px; font-size: 17px; }
 .card p { margin: 0; line-height: 1.5; color: var(--ink-2); font-size: 14.5px; }
 .list-link { display: flex; align-items: center; gap: 12px; padding: 14px 4px; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); min-height: 56px; font-weight: 600; }
+button.list-link { width: 100%; background: none; border-left: 0; border-right: 0; border-top: 0; text-align: left; }
 .list-link span.grow { flex: 1; }
 .list-link small { color: var(--muted); font-weight: 500; display: block; }
+.install-card h2 { font-family: var(--serif); font-weight: 600; font-size: 26px; line-height: 1.15; margin: 0 0 8px; color: var(--ink); }
+.install-card .install-lead,
+.install-card .install-note,
+.install-card .install-manual { margin: 0 0 14px; font-size: 16px; line-height: 1.45; }
+.install-card .install-note { font-weight: 600; }
+.install-steps { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 12px; }
+.install-step { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center; }
+.install-glyph { width: 64px; height: 64px; border-radius: 18px; background: #0F3B3A; color: #D4A84B; display: grid; place-items: center; }
+.install-step p { margin: 0; color: var(--ink); font-weight: 600; font-size: 16px; line-height: 1.35; }
+.install-actions { display: grid; gap: 4px; }
+.install-skip { justify-self: center; min-height: 44px; padding: 8px 16px; background: none; border: 0; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
 
 /* Garden (Grow board) */
 .grow-banner { background: linear-gradient(160deg, #2a2552, #1e1a3c); color: #fff; border-radius: 24px; padding: 20px 18px; position: relative; overflow: hidden; }
