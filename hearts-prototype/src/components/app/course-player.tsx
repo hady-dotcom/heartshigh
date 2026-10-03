@@ -145,26 +145,40 @@ export function CoursePlayer({
     }
   }, [youtubeId, startAt])
 
+  // The sheet never covers the film: default keeps the paused video in view above it, strict keeps the whole player clear.
+  const placeSheet = useCallback(() => {
+    // Lock scrolling before measuring: dropping the scrollbar can reflow the player by a few pixels.
+    document.documentElement.style.overflow = 'hidden'
+    card.current?.scrollIntoView({ block: 'start' })
+    const rect = card.current?.getBoundingClientRect()
+    const film = mode === 'youtube' ? holder.current?.getBoundingClientRect() : null
+    setSheetTop(rect ? Math.max(8, overPlayer && film ? film.bottom : rect.bottom) : null)
+  }, [overPlayer, mode])
+
   const show = useCallback(
     (id: number, triggered: boolean) => {
-      // The sheet never covers the film: default keeps the paused video in view above it, strict keeps the whole player clear.
-      card.current?.scrollIntoView({ block: 'start' })
-      const rect = card.current?.getBoundingClientRect()
-      const film = mode === 'youtube' ? holder.current?.getBoundingClientRect() : null
-      setSheetTop(rect ? Math.max(8, overPlayer && film ? film.bottom : rect.bottom) : null)
+      placeSheet()
       setFromTrigger(triggered)
       setOpenId(id)
     },
-    [overPlayer, mode],
+    [placeSheet],
   )
+
+  // The player changes shape once YouTube is ready, so a sheet opened before that moves with it.
+  useEffect(() => {
+    if (openId === null) return
+    const frame = window.requestAnimationFrame(placeSheet)
+    window.addEventListener('resize', placeSheet)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener('resize', placeSheet)
+    }
+  }, [openId, placeSheet])
 
   useEffect(() => {
     if (openId === null) return
-    const root = document.documentElement
-    const before = root.style.overflow
-    root.style.overflow = 'hidden'
     return () => {
-      root.style.overflow = before
+      document.documentElement.style.overflow = ''
     }
   }, [openId])
 
