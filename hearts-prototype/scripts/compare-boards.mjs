@@ -6,7 +6,8 @@ import sharp from 'sharp'
 
 const [panels = '/tmp', shots = 'artifacts/screenshots', out = 'artifacts/compare'] = process.argv.slice(2)
 const pairs = [
-  ['panel1.png', 'learner-01-home-feed.png', '01 Hors d’oeuvre (feed)'],
+  ['panel1.png', 'learner-01c-feed.png', '01 Hors d’oeuvre (feed)'],
+  ['panel1.png', 'opening-08-feed.png', '01 Hors d’oeuvre, first feed after the opening'],
   ['panel2.png', 'learner-01b-appetiser.png', '02 Appetiser'],
   ['panel3.png', 'learner-02b-speaker.png', '02b Speaker'],
   ['panel4.png', 'learner-03-course-player-youtube.png', '03 Mains, course player'],

@@ -53,10 +53,11 @@ test('a week of use, so the garden has something in it', async ({ page }) => {
 test('learner app at phone size', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london')
-  await expect(page.getByTestId('feed')).toBeVisible()
+  await expect(page.getByTestId('home')).toBeVisible()
   const base = '/p/east-london'
   const screens: [string, string][] = [
-    ['01-home-feed', base],
+    ['01-home', base],
+    ['01c-feed', `${base}/feed`],
     ['02-lanes', `${base}/lanes`],
     ['02b-speaker', `${base}/speaker/mikaeel-smith`],
     ['03-course-player', `${base}/course/1`],
@@ -77,10 +78,10 @@ test('learner app at phone size', async ({ page }) => {
     ['06-welcome-splash', `${base}/welcome?step=start`],
   ]
   for (const [name, path] of screens) await shot(page, `learner-${name}`, path)
-  await page.goto(base)
+  await page.goto(`${base}/feed`)
   await expect(async () => {
     await page.getByTestId('watch-full').click()
-    await expect(page.getByTestId('appetiser')).toBeVisible({ timeout: 1000 })
+    await expect(page.getByTestId('journey')).toHaveAttribute('data-mode', 'appetiser', { timeout: 1000 })
   }).toPass({ timeout: 15_000 })
   await page.waitForTimeout(600)
   await page.screenshot({ path: `${dir}/learner-01b-appetiser.png`, caret: 'initial' })
@@ -108,6 +109,7 @@ test('portal desk at desktop size', async ({ page }) => {
     ['plans', `${base}/plans`],
     ['nights', `${base}/nights`],
     ['settings', `${base}/settings`],
+    ['opening', `${base}/opening`],
   ]) await shot(page, `admin-${name}`, path)
   await signIn(page, 'master@hearts.test', 'hearts-master', '/master')
   for (const [name, path] of [
@@ -116,7 +118,54 @@ test('portal desk at desktop size', async ({ page }) => {
     ['library-course', '/master/library/2'],
     ['packs', '/master/packs'],
     ['questions', '/master/questions'],
+    ['opening', '/master/opening'],
+    ['lanes', '/master/lanes'],
+    ['trends', '/master/trends'],
   ]) await shot(page, `master-${name}`, path)
+  await shot(page, 'master-simulator', '/master/simulator')
+  for (const [scene, option] of [['extra', 'pause'], ['queue', 'let-go'], ['thumb', 'lives'], ['visitor', 'spin'], ['news', 'nobody'], ['doors', 'calmer']]) {
+    await page.getByTestId(`sim-${scene}`).selectOption(option)
+  }
+  await page.waitForTimeout(400)
+  await page.screenshot({ path: `${dir}/master-simulator-picked.png`, caret: 'initial' })
+})
+
+test('the opening at phone size', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.route(/youtube\.com\/(embed|iframe_api)|googlevideo/, (route) => route.abort())
+  await shot(page, 'opening-01-opener', '/p/east-london/start')
+  await page.getByTestId('lets-play').click()
+  const picks: [string, string][] = [['extra', 'pause'], ['queue', 'let-go'], ['thumb', 'lives'], ['visitor', 'spin'], ['news', 'nobody'], ['doors', 'calmer']]
+  for (const [at, [scene, option]] of picks.entries()) {
+    await expect(page.locator(`[data-testid="scene"][data-scene="${scene}"]`)).toBeVisible()
+    await page.waitForTimeout(700)
+    await page.screenshot({ path: `${dir}/opening-0${at + 2}-${scene}.png`, caret: 'initial' })
+    await page.locator(`[data-testid="scene"][data-scene="${scene}"] [data-testid="tile"][data-option="${option}"]`).click()
+  }
+  await expect(page.getByTestId('journey')).toHaveAttribute('data-phase', 'feed', { timeout: 15_000 })
+  await page.waitForTimeout(1200)
+  await page.screenshot({ path: `${dir}/opening-08-feed.png`, caret: 'initial' })
+  await page.getByTestId('fave').click()
+  await expect(page.getByTestId('keep-sheet')).toBeVisible()
+  await page.waitForTimeout(500)
+  await page.screenshot({ path: `${dir}/opening-09-keep-sheet.png`, caret: 'initial' })
+  await shot(page, 'opening-10-help', '/p/east-london/help')
+})
+
+test('view as, from the portal desk', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await signIn(page, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin/teach')
+  const row = page.getByTestId('learner-row').filter({ hasText: 'Maryam Begum' })
+  await row.getByTestId('view-as').click()
+  await row.getByTestId('view-as-reason').fill('Checking what she sees in her workbook')
+  await page.screenshot({ path: `${dir}/viewas-01-ask.png`, caret: 'initial' })
+  await row.getByTestId('view-as-start').click()
+  await page.waitForURL((url) => !url.pathname.includes('/admin'))
+  await expect(page.getByTestId('viewas-banner')).toBeVisible()
+  await page.setViewportSize({ width: 390, height: 844 })
+  await shot(page, 'viewas-02-workbook', '/p/east-london/garden/workbook')
+  await page.getByTestId('viewas-exit').click()
+  await page.waitForURL(/admin\/teach/)
 })
 
 test('door, sign-in and join', async ({ page }) => {

@@ -326,7 +326,8 @@ test.describe.serial('HEARTS journeys', () => {
     await expect(page.getByTestId('error')).toContainText('not yours')
     expect(await post(page, { action: 'rsvp', event: shared.eventId!, next: '/' })).toContain('not in your portal')
     expect(await post(page, { action: 'complete', lesson: shared.lessonId!, seconds: '8', ended: 'yes', next: '/' })).toContain('error=')
-    const me = (await (await page.request.get('/api/users/me')).json()).user?.id
+    const me = (await (await page.request.get('/api/workbook')).json()).learner?.id
+    expect(me).toBeTruthy()
     for (const collection of ['users', 'answers', 'workbook-entries', 'notifications']) {
       const response = await page.request.get(`/api/${collection}?depth=0`)
       const body = response.ok() ? await response.json() : { docs: [] }

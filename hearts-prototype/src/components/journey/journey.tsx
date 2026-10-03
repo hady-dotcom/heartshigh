@@ -933,6 +933,7 @@ export function Journey(props: JourneyProps) {
 
   // Gestures on the clip. In overlay mode the gesture layer covers the player; in strict mode only the chrome.
   const onDown = (event: ReactPointerEvent) => {
+    if (!(event.target as HTMLElement).closest('button, a')) (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId)
     const timer = window.setTimeout(() => {
       if (gesture.current && !gesture.current.moved) setNotForMe(true)
     }, 650)
@@ -959,7 +960,7 @@ export function Journey(props: JourneyProps) {
     const far = Math.max(Math.abs(dx), Math.abs(dy))
     const quick = far / elapsed >= 0.5
     if (far < 40 || (far < width * 0.25 && !quick)) {
-      if (!start.moved && overlay) {
+      if (!start.moved && overlay && !slide) {
         const host = hosts.current[visibleRef.current]
         const player = host.playerId ? getPlayer(host.playerId) : null
         if (player && host.state === STATE.PLAYING) player.pauseVideo()
@@ -1107,7 +1108,7 @@ export function Journey(props: JourneyProps) {
           {overlay && phase === 'feed' && !slide ? <div className="j-gesture" data-testid="gesture-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} /> : null}
         </div>
         {slide && item ? (
-          <div className="j-slide">
+          <div className="j-slide" data-testid="gesture-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}>
             <Slide item={item} style={slide} onMore={watchFull} />
           </div>
         ) : null}
