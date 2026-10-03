@@ -265,6 +265,7 @@ export async function seedPeople(payload: Payload, opts: { portalIds: Map<string
     return (await payload.create({ collection: 'users', overrideAccess: true, data: data as never })) as unknown as Doc
   }
   await ensure({ email: 'leeds-admin@hearts.test', password: 'portal-admin', name: 'Bushra Iqbal', role: 'portal-admin', tenants: [{ tenant: leeds }], onboarded: true, seenWelcome: true, courseList: opts.courseList })
+  await ensure({ email: 'master2@hearts.test', password: 'hearts-master', name: 'Idris Rahman', role: 'master', onboarded: true, seenWelcome: true })
   await ensure({ email: 'elm-learner2@hearts.test', password: 'portal-learner', name: 'Hamza Ali', role: 'learner', audience: 'learner', accessCode: await code('ELM-LEARN'), tenants: [{ tenant: elm }], onboarded: true, seenWelcome: true, courseList: opts.courseList })
 
   // Maryam (L1 in the view-as tests): a finished opening with private answers, sharing on, and two pop-up answers.
