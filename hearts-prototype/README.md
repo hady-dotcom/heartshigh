@@ -54,6 +54,15 @@ Access codes are random on every seed, in the form `ELM-7KQX-M4TD`. The seed pri
 - Timed English captions for all 30 starter videos in `content/transcripts/starters/`. Every starter's length is the end of its last caption, and the seed fails if any cut, tier or pop-up falls after the end of its talk.
 - A three-tier record for each of the 31 starters, drafted from those captions and marked "Draft, needs a human check", with 2 or 3 draft pop-ups per talk. Learners never see a draft pop-up.
 - Five HEARTS circle answers on each question of courses 1 to 3, from the built-in drafts, so the swarm is not empty on day one.
+- The harvest of every talk with a transcript, worked out at seed time. 27 of the 31 talks quote the Qur'an or a hadith. The other four genuinely quote neither, so they give nothing: Gems from Ibn Ata'illah ep. 1 (`rb2EkzjgO98`), Amjad Tarsin on anger (`fBzrLN77gng`), and Khalid Latif's *Moments of Solitude* (`f-3OxXUp9jc`) and *On Mosques, Companionship, & Knowledge* (`N_-YiwIb-u0`). Maryam (the East London learner) has finished three talks with their harvest in her Garden, the latest still marked New.
+
+### Scripture sources
+
+Everything is bundled in `content/scripture/`, so Harvest works offline.
+
+- `quran.json.gz`: the full Qur'an, from the open Quran API by fawazahmed0 (github.com/fawazahmed0/quran-api, Unlicense). The Arabic is the Tanzil Simple text (tanzil.net, which asks that it be shown unchanged and credited), and the English is Saheeh International. Tanzil's transliteration, Yusuf Ali and Pickthall are there only to recognise a quotation and are never shown.
+- `fallback.json.gz`: the tafsir of every ayah the bundled talks quote, from the open tafsir API by spa5k (github.com/spa5k/tafsir_api, MIT), which takes it from quran.com and Tarteel's QUL; and the hadith they quote from a named collection, with Arabic and grading, from the open hadith API by fawazahmed0 (Unlicense). When the network is up, other ayahs and collections are fetched from the same APIs and cached.
+- `npx tsx scripts/scripture-fallback.ts` rebuilds the fallback from the shipped transcripts. It needs the network.
 
 ## What is real, what is a stand-in
 
@@ -101,6 +110,14 @@ Access codes are random on every seed, in the form `ELM-7KQX-M4TD`. The seed pri
 - **Schedule.** Lessons are spread in order across the weekdays you pick. Earlier days take the remainder, so 6 sittings over 4 days come out as 2, 2, 1, 1. It is a guide, and missing a day does not lock the course. A sitting counts at 80% watched, or when the film ends. A plan covers a year at most, and an unnamed plan takes the season's name, such as "Autumn study days".
 - **Nights and RSVP.** A ticket is earned by finishing a lesson in the last 7 days, and is held otherwise. Self check-in needs an earned ticket. Staff can check anyone in.
 - **Garden.** A 14-day chart drawn from real completions.
+- **Harvest** (`/p/<portal>/garden/harvest`). When a learner finishes a talk, the verses and hadith the speaker quotes are added to their Garden automatically, in the speaker's own words. Nobody reviews them first.
+  - **Each card** shows the quote, the talk and the time. Tapping it replays the talk from 5 seconds before the quote. A placed ayah shows the Arabic above the Saheeh International translation.
+  - **Filters and grouping.** Filter by Qur'an or hadith. Group by talk, or by the clause of the hadith of Jibril the talk sits under. Cards the learner has not opened yet are marked New, and the Garden's Harvest ring shows how many. View-as never clears the marker.
+  - **Which ayah.** `src/lib/quran-match.ts` matches the speaker's words against the full Qur'an: first the Arabic they recite, then their transliteration, then their English against Saheeh International, Yusuf Ali and Pickthall. A match must beat every other ayah outright. With no confident match the card shows the quote only, with no reference, and "See it in context" is hidden. Al-Fatiha 1:2, for example, also occurs word for word at 39:75 and 40:65, so it is left unplaced.
+  - **Which hadith.** A hadith is placed only when the speaker names the collection (Bukhari, Muslim, Tirmidhi, Abu Dawud, Nasa'i, Ibn Majah, Malik or Nawawi's Forty) and one hadith in it matches clearly; a named narrator must match too. When a collection repeats the same hadith in several chapters, the first one is cited (Sahih al-Bukhari 1 rather than 54).
+  - **See it in context.** The ayah with three either side, Arabic and English; for a placed hadith, its full English and Arabic text, reference and grading.
+  - **What do the scholars say?** Either "Read the tafsir", which shows the full text of each source under its own title (Tafsir Ibn Kathir and Tafsir al-Jalalayn in English and Arabic, and Tafsir al-Sa'di in Arabic), or "A short summary". The summary is written by the AI only from those texts, labelled "AI summary of" and the names of the sources it used, with a link to the full tafsir. Without an AI key it says so and shows Tafsir al-Jalalayn, itself a short tafsir, in its own words. Nothing is ever made up: a source that cannot be fetched is left out.
+  - **Caching.** A talk's matches, each ayah's tafsir and each summary are stored in the `scripture-cache` collection (master-only), so the network and the AI are asked once.
 - **The extractor** (`src/lib/extractor.ts`). It reads a timed transcript and proposes cuts. Every hook, turn, land and quote must match the transcript word for word, every timestamp must be a real cue start, and estimated timestamps are never marked high confidence. A reworded line is rejected.
 
 ### Stand-ins
@@ -159,6 +176,7 @@ The circle label and threshold are not environment variables. They are fields on
 | `HEARTS_TRUSTED_PROXY_HOPS` | How many proxies of yours sit in front of the app. Unset, `X-Forwarded-For` is ignored |
 | `HEARTS_TEST_CLOCK` | `1` turns on the test clock. Only the master desk can move it, signed-out reads are refused, and a production build ignores it |
 | `HEARTS_E2E_PORT`, `HEARTS_E2E_REUSE` | Port for the server the e2e run starts (default 3100), or `1` to reuse one already running there |
+| `HEARTS_SCRIPTURE_OFFLINE` | `1` reads only the bundled scripture and never fetches. The seed and the e2e server always work this way |
 | `HEARTS_NOW` | Pins the app's idea of "now" to a date, such as `2026-10-01T09:00:00Z`. For demos and tests |
 
 On a Cloud Agent, put keys in the Cursor Dashboard under Cloud Agents, then Secrets. Do not commit them.
@@ -200,6 +218,7 @@ npm run screenshots    # screenshots only
   - kill-list refusals and bulk on and off;
   - the CircleAnswers sheet rows.
 - **Master sheet tests** (`tests/unit/master-sheet.test.ts`, `tests/unit/sheet-load.test.ts`, `tests/unit/sheet-creator.test.ts`, `tests/e2e/master-sheet.spec.ts`, `tests/e2e/sheet-creator.spec.ts` and `tests/e2e/circle-sheet.spec.ts`) cover the template, round trips, every error by tab, row and column, portal scope, undo, 500 rows, the sheet builder, and the CircleAnswers tab: adding circle answers to an activation task without counting them, deleting a question with its circle answers and undoing it, and portal-owned answers.
+- **Harvest tests** (`tests/unit/harvest.test.ts` and `tests/e2e/harvest.spec.ts`) cover matching by Arabic, transliteration and English; no reference when the match is not sure (including the Fatiha); quotes kept word for word; a hadith placed only from a named collection with the right narrator; the tafsir bundle; the summary's source label, its cache and the no-AI fallback; replay from 5 seconds before; and a learner finishing a talk and using the whole screen: the Garden count, New, filters, grouping, replay, context, the scholars choices and portal scope. The e2e uses `tests/fixtures/harvest-talk.vtt`, a short talk written for the test.
 - **Round 4 tests** (`tests/unit/round4.test.ts` and `tests/e2e/round4.spec.ts`) hold one regression test per item from the round 4 retest, named by its label (N4, L1, K1 and so on), including sentence boundaries, hook choice and turns over all 31 talks.
 - **Round 3 tests** (`tests/unit/round3.test.ts` and `tests/e2e/round3.spec.ts`) hold one regression test per bug from the round 3 report, each named "Bug N: ...", plus the section T checks over all shipped transcripts. `tests/unit/safety.test.ts` and `tests/unit/config.test.ts` cover the kill list, reserved addresses, contact links, the clock rules and the e2e server settings.
 - The e2e run starts its own server on port 3100 with `HEARTS_TEST_CLOCK=1`, its own database (`data/hearts-test.db`) and its own build folder (`.next-e2e`), so it does not touch `npm run dev` or your demo data. Set `HEARTS_E2E_REUSE=1` to reuse a server you started yourself on that port.
