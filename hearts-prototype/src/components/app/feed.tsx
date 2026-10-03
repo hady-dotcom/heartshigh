@@ -152,19 +152,29 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
     start.current = { x: event.clientX, y: event.clientY }
     swiped.current = false
   }
-  const onPointerUp = (event: ReactPointerEvent) => {
-    if (!start.current) return
-    const dx = event.clientX - start.current.x
-    const dy = event.clientY - start.current.y
-    start.current = null
-    if (Math.max(Math.abs(dx), Math.abs(dy)) < 60) return
-    swiped.current = true
-    if (Math.abs(dy) > Math.abs(dx)) {
-      if (dy < 0) replay()
-      else nextLane()
-    } else if (dx < 0) moreOnTopic()
-    else moreFromSpeaker()
-  }
+  // A swipe often ends past the edge of the screen, where the feed no longer receives pointerup.
+  useEffect(() => {
+    const onPointerUp = (event: PointerEvent) => {
+      if (!start.current) return
+      const dx = event.clientX - start.current.x
+      const dy = event.clientY - start.current.y
+      start.current = null
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 60) return
+      swiped.current = true
+      if (Math.abs(dy) > Math.abs(dx)) {
+        if (dy < 0) replay()
+        else nextLane()
+      } else if (dx < 0) moreOnTopic()
+      else moreFromSpeaker()
+    }
+    const onCancel = () => (start.current = null)
+    window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointercancel', onCancel)
+    return () => {
+      window.removeEventListener('pointerup', onPointerUp)
+      window.removeEventListener('pointercancel', onCancel)
+    }
+  }, [replay, nextLane, moreOnTopic, moreFromSpeaker])
 
   const share = async () => {
     if (!item) return
@@ -206,12 +216,11 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
       className="feed"
       data-testid="feed"
       data-index={index}
+      data-cuts={items.map((row) => row.cutId).join(' ')}
       data-lane={item.lane}
       data-speaker={item.speakerSlug}
       data-mode={mode}
       onPointerDown={onPointerDown}
-      onPointerUp={onPointerUp}
-      onPointerCancel={() => (start.current = null)}
       onClickCapture={(event) => {
         if (swiped.current) {
           event.preventDefault()

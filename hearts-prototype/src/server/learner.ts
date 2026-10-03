@@ -129,7 +129,6 @@ export async function loadFeed(payload: Payload, user: SessionUser): Promise<Fee
     const within = ladder.filter((item) => idOf(item.lesson) === lesson.id && Number(item.start) >= start - 1 && Number(item.end) <= end + 1)
     const hors = within.find((item) => item.kind === 'hors')
     const appetiser = within.find((item) => item.kind === 'appetiser')
-    if (!hors && !appetiser) continue
     const speaker = String(lesson.speaker || course.speaker || 'The speaker')
     const slug = slugify(speaker)
     const youtubeId = (lesson.youtubeId as string) || null
