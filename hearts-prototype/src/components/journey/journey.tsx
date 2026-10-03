@@ -8,6 +8,7 @@ import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFr
 import { deviceKey, haptic, readHeart, readPending, sessionFlags, setSessionFlags, viewAsId, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
 import { appetiserStop } from '@/lib/tiers'
+import { laneClips } from '@/lib/lanes'
 import { isoWeek } from '@/lib/trends'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, lowData, playOnly, preloadApi, setHidden, soundOn, type PlayerKind } from '@/lib/yt'
 import { TabBar } from '../app/shell'
@@ -36,12 +37,27 @@ export type JourneyProps = {
   flags: { popupOverPlayer: boolean; chromeOverPlayer: boolean }
   mains: Record<string, Mains>
   unread: number
+  /** /feed?lane=<key>: that lane's clips first. */
+  lane?: string | null
+  /** /feed?clip=<cut id>&play=appetiser: open on that clip, optionally straight into its appetiser. */
+  clip?: number | null
+  play?: 'appetiser' | null
 }
 
 const TAB_DELAY = 200
 const HOLD = 700
 
 const appetiserEnd = (item: FeedItem) => appetiserStop(item.appetiser)
+
+/** Which timed caption is showing at `time`: the last line already said (the first until then). */
+export function captionIndex(lines: { at: number }[] | undefined, time: number) {
+  if (!lines?.length) return 0
+  let at = 0
+  lines.forEach((line, index) => {
+    if (time >= line.at - 0.15) at = index
+  })
+  return at
+}
 
 function clock(total: number) {
   const value = Math.max(0, Math.round(total))
@@ -128,6 +144,7 @@ export function Journey(props: JourneyProps) {
   const [faves, toggleFave] = useStoredSet('hearts.faves.v1')
   const [saved, toggleSave] = useStoredSet('hearts.saved.v1')
   const [firstEver, setFirstEver] = useState(false)
+  const [lineAt, setLineAt] = useState(0)
   const watch = useRef<{ key: string; start: number; furthest: number; done90: boolean }>({ key: '', start: 0, furthest: 0, done90: false })
   const refilling = useRef(false)
   const clipRef = useRef<HTMLDivElement>(null)
@@ -388,6 +405,7 @@ export function Journey(props: JourneyProps) {
       setErrorNote(null)
       setSlow('none')
       setBuffering(false)
+      setLineAt(0)
       watch.current = { key: `${item?.cutId}:${kind}`, start: kind === 'hors' ? item?.hors.start || 0 : item?.appetiser.start || 0, furthest: 0, done90: false }
       const spec = specFor(item, kind)
       if (!spec) {
@@ -473,8 +491,19 @@ export function Journey(props: JourneyProps) {
       try {
         const data = await fetchFeed(state)
         if (cancelled) return
-        adopt(data.clips, data.items, data.spinePointer, true)
-        await showItem(0)
+        let clips = data.clips
+        let firstMode: Mode = 'hors'
+        if (props.lane) {
+          const own = laneClips(opening.clips, opening.route.cuts, props.lane, opening.laneTitles[props.lane] || props.lane)
+          if (own.length) clips = [...own, ...clips.filter((clip) => !own.some((row) => row.cutId === clip.cutId))]
+        }
+        const asked = props.clip ? opening.clips[String(props.clip)] : undefined
+        if (asked) {
+          clips = [{ ...asked, laneKey: null }, ...clips.filter((clip) => clip.cutId !== asked.cutId)]
+          if (props.play === 'appetiser') firstMode = 'appetiser'
+        }
+        adopt(clips, data.items, data.spinePointer, true)
+        await showItem(0, firstMode)
         if (!data.clips[0]?.youtubeId || data.clips[0]?.style) window.setTimeout(() => setTabs(true), 1200)
       } catch {
         setOffline(!navigator.onLine)
@@ -836,9 +865,22 @@ export function Journey(props: JourneyProps) {
       const seen = watch.current
       seen.furthest = Math.max(seen.furthest, time - seen.start)
       // The player's own end mark is skipped when someone seeks past it, so the appetiser stops here as well.
+      const lines = modeRef.current === 'hors' ? current.hors.lines : current.appetiser.lines
+      const showing = captionIndex(lines, time)
+      setLineAt((held) => (held === showing ? held : showing))
       if (modeRef.current === 'appetiser' && time >= appetiserEnd(current) - 0.25) {
         player.pauseVideo()
         player.seekTo(appetiserEnd(current), true)
+        return
+      }
+      // The player's own end mark is a whole second; the clip stops at its real out point, between sentences.
+      if (modeRef.current === 'hors' && current.hors.end > current.hors.start && time >= current.hors.end) {
+        player.pauseVideo()
+        if (!seen.done90) {
+          seen.done90 = true
+          signal('watched90')
+        }
+        window.dispatchEvent(new CustomEvent('hearts:ended'))
         return
       }
       if (modeRef.current === 'hors' && !seen.done90) {
@@ -1034,6 +1076,9 @@ export function Journey(props: JourneyProps) {
   const playerReady = Boolean(currentSpec && host.ready && host.spec?.key === currentSpec.key && revealed)
   const showPoster = phase === 'handoff' || (phase === 'feed' && (!playerReady || Boolean(errorNote) || offline))
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
+  const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
+  const captionText = (piece?.lines?.length ? piece.lines[lineShown]?.text : piece?.quote) || ''
+  const captionRole = mode === 'appetiser' && piece?.lines?.length === 3 ? (['hook', 'turn', 'land'] as const)[lineShown] : null
   const slide = phase === 'feed' && item?.style ? item.style : null
   const mains = item?.laneKey ? props.mains[item.laneKey] : undefined
   const course = item ? `${base}/course/${item.courseId}?part=${item.lessonId}&t=0` : base
@@ -1058,8 +1103,8 @@ export function Journey(props: JourneyProps) {
         )}
       </div>
       {muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
-      <p className={`caption${piece && piece.quote.length > 120 ? ' long' : ''}${piece?.quote ? '' : ' title-only'}`} data-testid="caption">
-        {piece?.quote || item.lessonTitle || item.courseTitle}
+      <p className={`caption${captionText.length > 120 ? ' long' : ''}${captionText ? '' : ' title-only'}`} data-testid="caption" data-line={lineShown} data-role={captionRole || undefined} key={`${mode}-${lineShown}`}>
+        {captionText || item.lessonTitle || item.courseTitle}
       </p>
       <div className="rail">
         <button type="button" onClick={share} data-testid="share"><span className="bubble"><ShareIcon /></span>Share</button>

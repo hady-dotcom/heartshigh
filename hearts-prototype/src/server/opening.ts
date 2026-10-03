@@ -59,23 +59,70 @@ type Loaded = {
   ladder: Row[]
   clauses: Row[]
   tiers: Row[]
+  /** Old cut ids that now stand for their talk's one tier clip. */
+  alias: Map<number, number>
+}
+
+/** Whether learners may see a talk's tier: checked always, a draft only while the master flag says so, rejected never. */
+export function tierVisible(tier: Row | undefined, showUnchecked: boolean) {
+  if (!tier) return true
+  if (tier.status === 'checked') return true
+  if (tier.status === 'rejected') return false
+  return showUnchecked
+}
+
+export async function showUncheckedTalks(payload: Payload) {
+  const flags = (await payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null)) as { showUnchecked?: boolean } | null
+  return Boolean(flags?.showUnchecked)
+}
+
+/** The cut that carries a talk with a tier record: its starter placeholder, or its earliest approved cut. */
+function carrierCut(cuts: Row[], lessonId: number) {
+  const own = cuts.filter((cut) => idOf(cut.lesson) === lessonId)
+  return own.find((cut) => cut.placeholder) || own.filter((cut) => cut.status === 'approved').sort((a, b) => Number(a.start) - Number(b.start) || a.id - b.id)[0] || null
 }
 
 async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
   const [lanes, scales, clauses] = await Promise.all([all(payload, 'lanes'), all(payload, 'heart-scales'), all(payload, 'clauses')])
-  if (!courseIds.length) return { lanes, scales, clauses, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [] }
-  const [courses, lessons] = await Promise.all([all(payload, 'courses', { id: { in: courseIds } }), all(payload, 'lessons', { course: { in: courseIds } })])
+  if (!courseIds.length) return { lanes, scales, clauses, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [], alias: new Map() }
+  const [courses, lessons, showUnchecked] = await Promise.all([all(payload, 'courses', { id: { in: courseIds } }), all(payload, 'lessons', { course: { in: courseIds } }), showUncheckedTalks(payload)])
   const lessonIds = lessons.map((row) => row.id)
-  const cuts = lessonIds.length
-    ? await all(payload, 'cuts', { and: [{ lesson: { in: lessonIds } }, { or: [{ status: { equals: 'approved' } }, { placeholder: { equals: true } }] }] })
-    : []
-  const cutIds = cuts.map((row) => row.id)
-  const [tags, ladder, tiers] = await Promise.all([
-    cutIds.length ? all(payload, 'tags', { 'item.value': { in: cutIds } }) : Promise.resolve([] as Row[]),
-    lessonIds.length ? all(payload, 'ladder-items', { and: [{ lesson: { in: lessonIds } }, { status: { equals: 'approved' } }] }) : Promise.resolve([] as Row[]),
+  const [rawCuts, tiers] = await Promise.all([
+    lessonIds.length
+      ? all(payload, 'cuts', { and: [{ lesson: { in: lessonIds } }, { or: [{ status: { equals: 'approved' } }, { placeholder: { equals: true } }] }] })
+      : Promise.resolve([] as Row[]),
     lessonIds.length ? all(payload, 'talk-tiers', { lesson: { in: lessonIds } }) : Promise.resolve([] as Row[]),
   ])
-  return { lanes, scales, clauses, cuts, lessons, courses, tags: tags.filter((tag) => (tag.item as { relationTo?: string } | undefined)?.relationTo === 'cuts'), ladder, tiers }
+  // A talk with a tier record is one clip, timed by that record alone. Its other cuts lend it their lane tags and
+  // are not served, and a tier learners may not see takes the talk out of the feed.
+  const tierLessons = new Map(tiers.map((tier) => [idOf(tier.lesson) || 0, tier]))
+  const alias = new Map<number, number>()
+  const cuts: Row[] = []
+  for (const cut of rawCuts) {
+    const lessonId = idOf(cut.lesson) || 0
+    const tier = tierLessons.get(lessonId)
+    if (!tier) {
+      if (cut.status === 'approved') cuts.push(cut)
+      continue
+    }
+    if (!tierVisible(tier, showUnchecked)) continue
+    const carrier = carrierCut(rawCuts, lessonId)
+    if (!carrier) continue
+    if (carrier.id === cut.id) cuts.push(cut)
+    else alias.set(cut.id, carrier.id)
+  }
+  const cutIds = [...cuts.map((row) => row.id), ...alias.keys()]
+  const [tags, ladder] = await Promise.all([
+    cutIds.length ? all(payload, 'tags', { 'item.value': { in: cutIds } }) : Promise.resolve([] as Row[]),
+    lessonIds.length ? all(payload, 'ladder-items', { and: [{ lesson: { in: lessonIds } }, { status: { equals: 'approved' } }] }) : Promise.resolve([] as Row[]),
+  ])
+  const cutTags = tags
+    .filter((tag) => (tag.item as { relationTo?: string } | undefined)?.relationTo === 'cuts')
+    .map((tag) => {
+      const value = idOf((tag.item as { value?: unknown }).value) || 0
+      return alias.has(value) ? { ...tag, item: { relationTo: 'cuts', value: alias.get(value) } } : tag
+    })
+  return { lanes, scales, clauses, cuts, lessons, courses, tags: cutTags, ladder, tiers: tiers.filter((tier) => tierVisible(tier, showUnchecked)), alias }
 }
 
 function laneDefs(data: Loaded): LaneDef[] {
@@ -97,8 +144,7 @@ function laneDefs(data: Loaded): LaneDef[] {
 }
 
 function starterCut(data: Loaded, lessonId: number) {
-  const own = data.cuts.filter((cut) => idOf(cut.lesson) === lessonId)
-  return own.find((cut) => cut.placeholder) || own.filter((cut) => cut.status === 'approved').sort((a, b) => Number(a.start) - Number(b.start))[0] || null
+  return carrierCut(data.cuts, lessonId)
 }
 
 function cutInfos(data: Loaded, portal: PortalDoc): CutInfo[] {
@@ -115,18 +161,16 @@ function cutInfos(data: Loaded, portal: PortalDoc): CutInfo[] {
     .filter((cut) => cut.playable !== false)
     .map((cut) => {
       const tags = data.tags.filter((tag) => idOf((tag.item as { value?: unknown }).value) === cut.id)
+      const lanes = laneTagsOf(data, cut.id)
       const confirmedClause = tags.find((tag) => tag.state === 'confirmed' && idOf(tag.clause))
       const lesson = data.lessons.find((row) => row.id === idOf(cut.lesson))
       const course = data.courses.find((row) => row.id === idOf(lesson?.course))
       return {
         id: cut.id,
         clause: confirmedClause ? clauseNumber.get(idOf(confirmedClause.clause) || 0) || null : Number(cut.bestClause || 0) || null,
-        lanes: tags
-          .filter((tag) => idOf(tag.lane))
-          .map((tag) => ({ lane: laneKey.get(idOf(tag.lane) || 0) || '', weight: Number(tag.weight ?? 1), confirmed: tag.state === 'confirmed' }))
-          .filter((tag) => tag.lane && tag.lane !== DEFAULT_LANE),
+        lanes,
         approved: cut.status === 'approved',
-        hasHors: data.ladder.some((item) => item.kind === 'hors' && idOf(item.lesson) === idOf(cut.lesson) && Number(item.start) >= Number(cut.start) - 1 && Number(item.end) <= Number(cut.end) + 1),
+        hasHors: data.tiers.some((tier) => idOf(tier.lesson) === idOf(cut.lesson)) || data.ladder.some((item) => item.kind === 'hors' && idOf(item.lesson) === idOf(cut.lesson) && Number(item.start) >= Number(cut.start) - 1 && Number(item.end) <= Number(cut.end) + 1),
         portalOwn: Boolean(course && course.origin === 'local' && idOf(course.portal) === portal.id),
         starter: starters.get(cut.id),
       }
@@ -135,64 +179,42 @@ function cutInfos(data: Loaded, portal: PortalDoc): CutInfo[] {
 
 const STYLES: SlideStyle[] = ['kinetic', 'cinema', 'windows', 'conversation', 'unfold']
 
+/** A cut's lane tags, one per lane (the strongest), with tags from the talk's other cuts folded in. */
+function laneTagsOf(data: Loaded, cutId: number) {
+  const laneKeyMap = new Map(data.lanes.map((row) => [row.id, String(row.key)]))
+  const byLane = new Map<string, { lane: string; weight: number; confirmed: boolean }>()
+  for (const tag of data.tags) {
+    if (idOf((tag.item as { value?: unknown }).value) !== cutId || !idOf(tag.lane)) continue
+    const lane = laneKeyMap.get(idOf(tag.lane) || 0) || ''
+    if (!lane || lane === DEFAULT_LANE) continue
+    const row = { lane, weight: Number(tag.weight ?? 1), confirmed: tag.state === 'confirmed' }
+    const held = byLane.get(lane)
+    if (!held || (row.confirmed && !held.confirmed) || (row.confirmed === held.confirmed && row.weight > held.weight)) byLane.set(lane, row)
+  }
+  return [...byLane.values()]
+}
+
+const lineList = (value: unknown) =>
+  Array.isArray(value) ? (value as { at?: unknown; text?: unknown }[]).filter((row) => Number.isFinite(Number(row?.at)) && typeof row?.text === 'string').map((row) => ({ at: Number(row.at), text: String(row.text) })) : []
+
+/**
+ * The display item for a cut. A talk with a tier record is timed and worded by that record alone: the hors
+ * d'oeuvre, the appetiser and where it stops, the hook, turn and land, and the resume point. A talk without one
+ * (a portal's own course cut by the extractor) keeps its cut and ladder.
+ */
 function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Record<string, string>, index: number): FeedItem | null {
   const lesson = data.lessons.find((row) => row.id === idOf(cut.lesson))
   if (!lesson) return null
   const course = data.courses.find((row) => row.id === idOf(lesson.course))
   if (!course) return null
-  const start = Number(cut.start)
-  const end = Number(cut.end)
-  const within = data.ladder.filter((item) => idOf(item.lesson) === lesson.id && Number(item.start) >= start - 1 && Number(item.end) <= end + 1)
-  const hors = within.find((item) => item.kind === 'hors')
-  const appetiser = within.find((item) => item.kind === 'appetiser')
   const speaker = String(lesson.speaker || course.speaker || 'The speaker')
   const slug = slugify(speaker)
   const youtubeId = (lesson.youtubeId as string) || null
-  const laneKeyMap = new Map(data.lanes.map((row) => [row.id, String(row.key)]))
-  const tagged = data.tags
-    .filter((tag) => idOf((tag.item as { value?: unknown }).value) === cut.id && idOf(tag.lane))
-    .map((tag) => ({ lane: laneKeyMap.get(idOf(tag.lane) || 0) || '', weight: Number(tag.weight ?? 1), confirmed: tag.state === 'confirmed' }))
-    .filter((tag) => tag.lane && tag.lane !== DEFAULT_LANE)
+  const tagged = laneTagsOf(data, cut.id)
   const shownLane = laneKey || tagged.find((tag) => tag.confirmed)?.lane || null
   const fallback = laneOf(cut.theme as string)
   const slide = cut.presentation === 'slide' || !youtubeId
-  // A starter talk's tier record replaces the placeholder times; a cut the extractor made keeps its own ladder.
-  const tier = cut.placeholder ? data.tiers.find((row) => idOf(row.lesson) === lesson.id) : undefined
-  const tierRest = data.tiers.find((row) => idOf(row.lesson) === lesson.id)
-  const placeholder = Boolean(cut.placeholder) && !tier
-  const quote = placeholder ? '' : String(hors?.quote || cut.land || '')
-  if (tier) {
-    const land = String(tier.land || '')
-    return {
-      id: `cut-${cut.id}`,
-      cutId: cut.id,
-      lane: shownLane || fallback.key,
-      laneLabel: shownLane ? laneTitles[shownLane] || fallback.label : fallback.label,
-      laneKey,
-      laneTags: tagged.filter((tag) => tag.confirmed).map(({ lane, weight }) => ({ lane, weight })),
-      speaker,
-      speakerSlug: slug,
-      portrait: portraitFor(slug),
-      poster: posterFor(youtubeId),
-      youtubeId,
-      courseId: course.id,
-      courseTitle: String(course.title || ''),
-      lessonId: lesson.id,
-      lessonTitle: String(lesson.sourceTitle || lesson.title || ''),
-      hors: { start: Number(tier.horsStart), end: Number(tier.horsEnd), quote: String(tier.horsQuote || land) },
-      appetiser: { start: Number(tier.appetiserStart), end: Number(tier.appetiserEnd), quote: land },
-      hook: String(tier.hook || ''),
-      turn: String(tier.turn || ''),
-      land,
-      style: slide ? STYLES[index % STYLES.length] : null,
-      clause: (cut.bestClause as number) || null,
-      placeholder: false,
-      transcriptReady: Boolean(lesson.transcript) && lesson.transcriptSource !== 'pending',
-      tierStatus: tier.status === 'checked' ? 'checked' : 'draft',
-      offerResume: tier.offerResume !== false,
-    }
-  }
-  return {
+  const base = {
     id: `cut-${cut.id}`,
     cutId: cut.id,
     lane: shownLane || fallback.key,
@@ -208,17 +230,55 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     courseTitle: String(course.title || ''),
     lessonId: lesson.id,
     lessonTitle: String(lesson.sourceTitle || lesson.title || ''),
+    style: slide ? STYLES[index % STYLES.length] : null,
+    clause: (cut.bestClause as number) || null,
+    transcriptReady: Boolean(lesson.transcript) && lesson.transcriptSource !== 'pending',
+  }
+  const tier = data.tiers.find((row) => idOf(row.lesson) === lesson.id)
+  if (tier) {
+    const land = String(tier.land || '')
+    const appetiser = { start: Number(tier.appetiserStart), end: Number(tier.appetiserEnd), quote: land }
+    const hookAt = Number.isFinite(Number(tier.hookAt)) && tier.hookAt !== null ? Number(tier.hookAt) : appetiser.start
+    const landAt = Number.isFinite(Number(tier.landAt)) && tier.landAt !== null ? Number(tier.landAt) : appetiser.start + (appetiser.end - appetiser.start) * 0.75
+    const turnAt = Number.isFinite(Number(tier.turnAt)) && tier.turnAt !== null ? Number(tier.turnAt) : (hookAt + landAt) / 2
+    const horsQuote = String(tier.horsQuote || land)
+    const horsLines = lineList(tier.horsLines)
+    return {
+      ...base,
+      hors: { start: Number(tier.horsStart), end: Number(tier.horsEnd), quote: horsQuote, lines: horsLines.length ? horsLines : [{ at: Number(tier.horsStart), text: horsQuote }] },
+      appetiser: {
+        ...appetiser,
+        lines: [
+          { at: hookAt, text: String(tier.hook || '') },
+          { at: turnAt, text: String(tier.turn || '') },
+          { at: landAt, text: land },
+        ].filter((line) => line.text),
+      },
+      hook: String(tier.hook || ''),
+      turn: String(tier.turn || ''),
+      land,
+      placeholder: false,
+      tierStatus: tier.status === 'checked' ? 'checked' : 'draft',
+      offerResume: tier.offerResume !== false,
+    }
+  }
+  const start = Number(cut.start)
+  const end = Number(cut.end)
+  const within = data.ladder.filter((item) => idOf(item.lesson) === lesson.id && Number(item.start) >= start - 1 && Number(item.end) <= end + 1)
+  const hors = within.find((item) => item.kind === 'hors')
+  const appetiser = within.find((item) => item.kind === 'appetiser')
+  const placeholder = Boolean(cut.placeholder)
+  const quote = placeholder ? '' : String(hors?.quote || cut.land || '')
+  return {
+    ...base,
     hors: hors && !placeholder ? { start: Number(hors.start), end: Number(hors.end), quote } : { start: placeholder ? start : Math.max(start, end - 18), end, quote },
     appetiser: appetiser ? { start: Number(appetiser.start), end: Number(appetiser.end), quote: String(appetiser.quote || cut.land) } : { start: placeholder ? end : start, end: placeholder ? end + 600 : end, quote },
     hook: placeholder ? '' : String(cut.hook || ''),
     turn: placeholder ? '' : String(cut.turn || ''),
     land: placeholder ? '' : String(cut.land || ''),
-    style: slide ? STYLES[index % STYLES.length] : null,
-    clause: (cut.bestClause as number) || null,
     placeholder,
-    transcriptReady: Boolean(lesson.transcript) && lesson.transcriptSource !== 'pending',
-    tierStatus: tierRest ? (tierRest.status === 'checked' ? 'checked' : 'draft') : null,
-    offerResume: tierRest ? tierRest.offerResume !== false : true,
+    tierStatus: null,
+    offerResume: true,
   }
 }
 
@@ -266,7 +326,8 @@ export async function loadOpening(payload: Payload, portal: PortalDoc, user: Ses
   const sceneRows = await all(payload, 'opening-scenes')
   const scenes = effectiveScenes(sceneRows, laneKey, own)
   const contacts = ((own?.helpContacts as HelpContact[]) || []).length ? (own!.helpContacts as HelpContact[]) : ((master?.helpContacts as HelpContact[]) || []).length ? (master!.helpContacts as HelpContact[]) : DEFAULT_HELP_CONTACTS
-  const d0CutId = idOf(own?.defaultClip) || idOf(master?.defaultClip) || null
+  const d0Raw = idOf(own?.defaultClip) || idOf(master?.defaultClip) || null
+  const d0CutId = d0Raw ? data.alias.get(d0Raw) || d0Raw : null
   const lanes = laneDefs(data)
   const cuts = cutInfos(data, portal)
   const laneTitles = laneTitleMap(data)
@@ -304,7 +365,8 @@ export async function serveFeed(payload: Payload, portal: PortalDoc, user: Sessi
   const courseIds = await routeCourseIds(payload, portal, user)
   const data = await loadAll(payload, courseIds)
   const { own, master } = await openingConfig(payload, portal.id)
-  const d0CutId = idOf(own?.defaultClip) || idOf(master?.defaultClip) || null
+  const d0Raw = idOf(own?.defaultClip) || idOf(master?.defaultClip) || null
+  const d0CutId = d0Raw ? data.alias.get(d0Raw) || d0Raw : null
   const ctx = { lanes: laneDefs(data), scales: [], cuts: cutInfos(data, portal), d0CutId, now: now().getTime(), allowSuggested: process.env.HEARTS_ALLOW_SUGGESTED_LANES === '1' }
   const built = buildFeed(plan, ctx)
   let slots: FeedSlot[] = built.items
@@ -329,4 +391,13 @@ export async function mainsFor(payload: Payload, laneKeyValue: string) {
   if (!lessonId) return null
   const lesson = await payload.findByID({ collection: 'lessons', id: lessonId, overrideAccess: true, depth: 0 }).catch(() => null)
   return lesson ? { lessonId, courseId: idOf((lesson as { course?: unknown }).course), title: String((lesson as { sourceTitle?: string; title?: string }).sourceTitle || (lesson as { title?: string }).title) } : null
+}
+
+/**
+ * Every clip this learner may see, built exactly as the feed builds them, so Lanes, Home and the speaker page show
+ * the same tier times as the feed.
+ */
+export async function learnerClips(payload: Payload, portal: PortalDoc, user: SessionUser | null) {
+  const opening = await loadOpening(payload, portal, user)
+  return { opening, items: Object.values(opening.clips) }
 }

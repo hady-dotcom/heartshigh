@@ -7,21 +7,23 @@ import { PlayIcon } from '@/components/icons'
 import { clockEnabled, now } from '@/lib/clock'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { visibleCourseIds } from '@/server/context'
-import { courseCards, loadFeed, portraitFor, posterFor, slugify } from '@/server/learner'
+import { courseCards, portraitFor, posterFor, slugify } from '@/server/learner'
+import { learnerClips } from '@/server/opening'
+import { appetiserStop } from '@/lib/tiers'
 import { type Ctx, clock, one, ref, rows, str, unreadCount } from '../common'
 import { masterFlags } from './journey'
 
 const START = ['orange', 'gold', 'teal']
 
-export async function SpeakerScreen({ payload, user, base, query }: Ctx, speakerSlug: string) {
-  const [courses, items, unread] = await Promise.all([courseCards(payload, user), loadFeed(payload, user), unreadCount(payload, user)])
+export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx, speakerSlug: string) {
+  const [courses, { items }, unread] = await Promise.all([courseCards(payload, user), learnerClips(payload, portal, user), unreadCount(payload, user)])
   const theirs = courses.filter((course) => course.speakerSlug === speakerSlug)
   const clips = items.filter((item) => item.speakerSlug === speakerSlug)
   if (!theirs.length && !clips.length) notFound()
   const name = clips[0]?.speaker || theirs[0]?.speaker || speakerSlug
   const portrait = portraitFor(speakerSlug)
   const cover = theirs.find((course) => course.poster)?.poster || clips.find((clip) => clip.poster)?.poster || null
-  const intro = clips[0]
+  const intro = clips.find((clip) => clip.youtubeId && !clip.style) || clips[0]
   const lanes = [...new Set(clips.map((clip) => clip.laneLabel))]
   return (
     <AppFrame testId="speaker">
@@ -39,10 +41,10 @@ export async function SpeakerScreen({ payload, user, base, query }: Ctx, speaker
           <a className="ask" href="#ask" data-testid="ask-question">Ask a question</a>
         </div>
         {intro ? (
-          <Link className="intro-card" href={`${base}/course/${intro.courseId}?part=${intro.lessonId}&t=${Math.floor(intro.appetiser.start)}`} data-testid="watch-intro">
+          <Link className="intro-card" href={`${base}/feed?clip=${intro.cutId}&play=appetiser`} data-testid="watch-intro" data-start={intro.appetiser.start} data-stop={appetiserStop(intro.appetiser)}>
             {intro.poster ? <span className="poster" style={{ backgroundImage: `url(${intro.poster})` }} /> : null}
             <span className="play-circle"><PlayIcon size={26} /></span>
-            <span><b>Watch intro</b><small>{clock(intro.appetiser.end - intro.appetiser.start)} · from {intro.courseTitle}</small></span>
+            <span><b>Watch intro</b><small>{clock(appetiserStop(intro.appetiser) - intro.appetiser.start)} · from {intro.courseTitle}</small></span>
           </Link>
         ) : null}
         <p className="eyebrow">Courses</p>

@@ -46,7 +46,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       if (!visitor) redirect((await cookies()).get('hearts_opened')?.value === '1' ? `${base}/feed` : `${base}/start`)
       if (visitor.role === 'learner' && !visitor.onboarded) redirect(`${base}/start`)
     } else if (!shut) {
-      return JourneyScreen({ payload: session.payload, portal, user: visitor, base, initial: area === 'feed' ? 'feed' : area === 'help' ? 'help' : 'opener', viewAs: Boolean(session.viewAs) })
+      return JourneyScreen({ payload: session.payload, portal, user: visitor, base, initial: area === 'feed' ? 'feed' : area === 'help' ? 'help' : 'opener', viewAs: Boolean(session.viewAs), query: query as Record<string, string | undefined> })
     }
   }
 

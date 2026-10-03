@@ -8,6 +8,8 @@ import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
 
 export type SlideStyle = 'kinetic' | 'cinema' | 'windows' | 'conversation' | 'unfold'
 
+export type TimedCaption = { at: number; text: string }
+
 export type FeedItem = {
   id: string
   cutId: number
@@ -21,8 +23,9 @@ export type FeedItem = {
   courseId: number
   courseTitle: string
   lessonId: number
-  hors: { start: number; end: number; quote: string }
-  appetiser: { start: number; end: number; quote: string }
+  /** `lines` are the captions with when each is said, so the caption follows the speaker. */
+  hors: { start: number; end: number; quote: string; lines?: TimedCaption[] }
+  appetiser: { start: number; end: number; quote: string; lines?: TimedCaption[] }
   hook: string
   turn: string
   land: string
@@ -115,57 +118,6 @@ export async function lessonsFor(payload: Payload, courseIds: number[]) {
   if (!courseIds.length) return [] as Row[]
   const found = await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: 400, where: { course: { in: courseIds } }, sort: 'order' })
   return found.docs as unknown as Row[]
-}
-
-export async function loadFeed(payload: Payload, user: SessionUser): Promise<FeedItem[]> {
-  const courseIds = await visibleCourseIds(payload, user)
-  if (!courseIds.length) return []
-  const courses = (await payload.find({ collection: 'courses', overrideAccess: true, depth: 0, limit: 200, where: { id: { in: courseIds } } })).docs as unknown as Row[]
-  const lessons = await lessonsFor(payload, courseIds)
-  const lessonIds = lessons.map((lesson) => lesson.id)
-  if (!lessonIds.length) return []
-  const cuts = (await payload.find({ collection: 'cuts', overrideAccess: true, depth: 0, limit: 200, where: { and: [{ lesson: { in: lessonIds } }, { status: { equals: 'approved' } }] }, sort: 'start' })).docs as unknown as Row[]
-  const ladder = (await payload.find({ collection: 'ladder-items', overrideAccess: true, depth: 0, limit: 400, where: { and: [{ lesson: { in: lessonIds } }, { status: { equals: 'approved' } }] } })).docs as unknown as Row[]
-  const styles: SlideStyle[] = ['kinetic', 'cinema', 'windows', 'conversation', 'unfold']
-  let slideCount = 0
-  const items: FeedItem[] = []
-  for (const cut of cuts) {
-    const lesson = lessons.find((row) => row.id === idOf(cut.lesson))
-    if (!lesson) continue
-    const course = courses.find((row) => row.id === idOf(lesson.course))
-    if (!course) continue
-    const start = Number(cut.start)
-    const end = Number(cut.end)
-    const within = ladder.filter((item) => idOf(item.lesson) === lesson.id && Number(item.start) >= start - 1 && Number(item.end) <= end + 1)
-    const hors = within.find((item) => item.kind === 'hors')
-    const appetiser = within.find((item) => item.kind === 'appetiser')
-    const speaker = String(lesson.speaker || course.speaker || 'The speaker')
-    const slug = slugify(speaker)
-    const youtubeId = (lesson.youtubeId as string) || null
-    const lane = laneOf(cut.theme as string)
-    items.push({
-      id: `cut-${cut.id}`,
-      cutId: cut.id,
-      lane: lane.key,
-      laneLabel: lane.label,
-      speaker,
-      speakerSlug: slug,
-      portrait: portraitFor(slug),
-      poster: posterFor(youtubeId),
-      youtubeId,
-      courseId: course.id,
-      courseTitle: String(course.title || ''),
-      lessonId: lesson.id,
-      hors: hors ? { start: Number(hors.start), end: Number(hors.end), quote: String(hors.quote || cut.land) } : { start: Math.max(start, end - 18), end, quote: String(cut.land) },
-      appetiser: appetiser ? { start: Number(appetiser.start), end: Number(appetiser.end), quote: String(appetiser.quote || cut.land) } : { start, end, quote: String(cut.land) },
-      hook: String(cut.hook || ''),
-      turn: String(cut.turn || ''),
-      land: String(cut.land || ''),
-      style: youtubeId ? null : styles[slideCount++ % styles.length],
-      clause: (cut.bestClause as number) || null,
-    })
-  }
-  return items
 }
 
 export async function courseCards(payload: Payload, user: SessionUser): Promise<CourseCard[]> {

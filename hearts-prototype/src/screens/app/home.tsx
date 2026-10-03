@@ -3,7 +3,9 @@ import { redirect } from 'next/navigation'
 import { Avatar } from '@/components/app/feed'
 import { AppFrame, Flash, TabBar } from '@/components/app/shell'
 import { PlayIcon } from '@/components/icons'
-import { courseCards, dayNumber, loadFeed, portalName, portraitFor, posterFor, slugify } from '@/server/learner'
+import { courseCards, dayNumber, portalName, portraitFor, posterFor, slugify } from '@/server/learner'
+import { learnerClips } from '@/server/opening'
+import { lanesWithClips } from '@/lib/lanes'
 import { plural } from '@/lib/schedule'
 import { growth, Rings } from './garden'
 import { type Ctx, ref, rows, str, unreadCount } from '../common'
@@ -17,7 +19,7 @@ function minutesLeft(seconds: number, percent: number) {
 /** Home: the growth banner, what to carry on with, then the way into today's clips (board 00). */
 export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   if (user.role === 'learner' && !user.onboarded) redirect(`${base}/start`)
-  const [g, unread, items, courses] = await Promise.all([growth(payload, user), unreadCount(payload, user), loadFeed(payload, user), courseCards(payload, user)])
+  const [g, unread, { items }, courses] = await Promise.all([growth(payload, user), unreadCount(payload, user), learnerClips(payload, portal, user), courseCards(payload, user)])
   const [visits, sessions] = await Promise.all([
     rows(payload, 'lesson-visits', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 40 }),
     rows(payload, 'watch-sessions', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 80 }),
@@ -103,9 +105,9 @@ function snippet(text: string, max: number) {
   return `${(space > max * 0.6 ? cut.slice(0, space) : cut).replace(/[\s,;:.]+$/, '')}…`
 }
 
-export async function LanesScreen({ payload, user, base, query }: Ctx) {
-  const [items, courses, unread] = await Promise.all([loadFeed(payload, user), courseCards(payload, user), unreadCount(payload, user)])
-  const lanes = [...new Map(items.map((item) => [item.lane, item])).values()]
+export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
+  const [{ opening }, courses, unread] = await Promise.all([learnerClips(payload, portal, user), courseCards(payload, user), unreadCount(payload, user)])
+  const lanes = lanesWithClips(opening.route, opening.clips, opening.laneTitles)
   const today = dayNumber(user)
   return (
     <AppFrame testId="lanes">
@@ -113,21 +115,24 @@ export async function LanesScreen({ payload, user, base, query }: Ctx) {
         <div className="app-head"><h1>Lanes</h1><span className="muted" style={{ fontSize: 13, fontWeight: 600 }} data-testid="day-number">Day {today}</span></div>
         <Flash error={query.error} notice={query.notice} />
         <p className="lead">Each lane is one theme. Tap a lane to watch its clips, or start a full course below.</p>
-        {lanes.map((item) => {
-          const count = items.filter((row) => row.lane === item.lane).length
+        {lanes.map((lane) => {
+          const first = lane.clips[0]
+          const count = lane.clips.length
           return (
             <Link
-              key={item.lane}
+              key={lane.key}
               className="lane-card"
-              href={`${base}/feed?lane=${item.lane}`}
+              href={`${base}/feed?lane=${lane.key}`}
               data-testid="lane-card"
-              style={item.poster || item.portrait ? { backgroundImage: `url(${item.poster || item.portrait})` } : undefined}
+              data-lane={lane.key}
+              data-first-cut={first.cutId}
+              style={first.poster || first.portrait ? { backgroundImage: `url(${first.poster || first.portrait})` } : undefined}
             >
               <div>
                 <small>Lane</small>
-                <h3>{item.laneLabel}</h3>
-                <p>{snippet(item.land, 64)}</p>
-                <p>{item.speaker} · {count} {count === 1 ? 'clip' : 'clips'}</p>
+                <h3>{lane.title}</h3>
+                <p>{snippet(first.hook || first.land || first.lessonTitle || '', 64)}</p>
+                <p>{first.speaker} · {count} {count === 1 ? 'clip' : 'clips'}</p>
               </div>
             </Link>
           )

@@ -121,6 +121,8 @@ export async function createPlayer(options: CreateOptions): Promise<YTPlayer> {
       events: {
         onReady: () => {
           players.set(options.id, player)
+          // playerVars only take whole seconds; clips open and close between sentences, so cue the exact times.
+          if (options.start % 1 || (options.end && options.end % 1)) player.cueVideoById({ videoId: options.videoId, startSeconds: options.start, ...(options.end ? { endSeconds: options.end } : {}) })
           resolve(player)
           options.onReady?.(player)
         },
