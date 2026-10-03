@@ -155,6 +155,7 @@ export function InstallSlides({ kind }: { kind: InstallKind }) {
       onPointerDown={(event) => {
         if (event.button !== 0) return
         if ((event.target as HTMLElement).closest('button')) return
+        event.preventDefault()
         startX.current = event.clientX
       }}
       onPointerUp={(event) => {
