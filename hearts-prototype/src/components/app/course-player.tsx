@@ -255,6 +255,7 @@ export function CoursePlayer({
       <div ref={card} className={`player-card${mode === 'youtube' ? ' yt-on' : ''}`} data-testid="player-card">
         {poster && mode !== 'youtube' ? <div className="poster" style={{ backgroundImage: `url(${poster})` }} /> : null}
         {youtubeId ? <div className="yt" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
+        {open && mode === 'youtube' && overPlayer ? <div className="yt-scrim" data-testid="paused-scrim" aria-hidden /> : null}
         {open && mode === 'youtube' ? (
           <span className="part-chip paused" data-testid="paused-note">❚❚ Paused at question {open.number}</span>
         ) : (
