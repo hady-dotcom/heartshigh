@@ -57,9 +57,10 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
   if (lesson) {
-    await master.delete(`/api/harvest-entries?where[lesson][equals]=${lesson.id}`)
-    await master.delete(`/api/completions?where[lesson][equals]=${lesson.id}`)
-    await master.delete(`/api/lessons/${lesson.id}`)
+    for (const collection of ['harvest-entries', 'completions', 'lesson-visits', 'watch-sessions']) {
+      await master.delete(`/api/${collection}?where[lesson][equals]=${lesson.id}`)
+    }
+    expect((await master.delete(`/api/lessons/${lesson.id}`)).ok(), 'the test talk is removed').toBeTruthy()
   }
   await master?.dispose()
 })
