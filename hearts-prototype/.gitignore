@@ -13,3 +13,5 @@ tsconfig.tsbuildinfo
 artifacts/
 .next-e2e
 bin/
+content/audio/*
+!content/audio/.gitkeep

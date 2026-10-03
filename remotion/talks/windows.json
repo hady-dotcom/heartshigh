@@ -1,0 +1,177 @@
+{
+  "breathSeconds": 0.3,
+  "padSeconds": 10,
+  "talks": [
+    {
+      "id": "ECaTWkof57E",
+      "title": "Ar-Rabb",
+      "beats": [
+        {
+          "beat": "hook",
+          "text": "Has Allah brought you from one stage to the next stage to to the places you never thought you would be?",
+          "sentenceStart": 776.58,
+          "sentenceEnd": 782.7,
+          "nextCaption": 782.7,
+          "speechStart": 776.83,
+          "speechEnd": 781.78,
+          "before": 776.13,
+          "after": 782.63,
+          "in": 776.53,
+          "out": 782.08,
+          "window": {
+            "start": 766.53,
+            "end": 792.08
+          }
+        },
+        {
+          "beat": "turn",
+          "text": "But it's at that moment that you got to lock in and have true certainty that Allah's plan is real.",
+          "sentenceStart": 889.68,
+          "sentenceEnd": 895.46,
+          "nextCaption": 895.46,
+          "speechStart": 890.03,
+          "speechEnd": 895.18,
+          "before": 889.18,
+          "after": 896.08,
+          "in": 889.73,
+          "out": 895.48,
+          "window": {
+            "start": 879.73,
+            "end": 905.48
+          }
+        },
+        {
+          "beat": "land",
+          "text": "I told you that transitions are the time that you need to know this name Ar-Rabb.",
+          "sentenceStart": 923.66,
+          "sentenceEnd": 929.04,
+          "nextCaption": 929.04,
+          "speechStart": 923.11,
+          "speechEnd": 928.16,
+          "before": 922.21,
+          "after": 929.06,
+          "in": 922.81,
+          "out": 928.46,
+          "window": {
+            "start": 912.81,
+            "end": 938.46
+          }
+        }
+      ]
+    },
+    {
+      "id": "NIR88RRpat4",
+      "title": "Al-Nur",
+      "beats": [
+        {
+          "beat": "hook",
+          "text": "What we're saying is that Allah ﷻ is the only source for clarity in your life.",
+          "sentenceStart": 253,
+          "sentenceEnd": 259.57,
+          "nextCaption": 260,
+          "speechStart": 253.9,
+          "speechEnd": 259.2,
+          "before": 253.45,
+          "after": 260.1,
+          "in": 253.6,
+          "out": 259.5,
+          "window": {
+            "start": 243.6,
+            "end": 269.5
+          }
+        },
+        {
+          "beat": "turn",
+          "text": "Without light, you walk in a room that's dark.",
+          "sentenceStart": 335,
+          "sentenceEnd": 338.86,
+          "nextCaption": 339,
+          "speechStart": 336,
+          "speechEnd": 338.9,
+          "before": 334.95,
+          "after": 339.9,
+          "in": 335.7,
+          "out": 339.2,
+          "window": {
+            "start": 325.7,
+            "end": 349.2
+          }
+        },
+        {
+          "beat": "land",
+          "text": "Now Allah subhanahu wa ta'ala, He says, and many of us, we can relate to this verse.",
+          "sentenceStart": 426,
+          "sentenceEnd": 431,
+          "nextCaption": 431,
+          "speechStart": 426.25,
+          "speechEnd": 431.25,
+          "before": 425.5,
+          "after": 431.35,
+          "in": 425.95,
+          "out": 431.35,
+          "window": {
+            "start": 415.95,
+            "end": 441.35
+          }
+        }
+      ]
+    },
+    {
+      "id": "TLCGBj4AlB0",
+      "title": "How to Live Like the Prophet",
+      "beats": [
+        {
+          "beat": "hook",
+          "text": "I was like, \"Oh, I think God's curse is enough to like compel you to stay away from something, right?",
+          "sentenceStart": 5625.04,
+          "sentenceEnd": 5632.44,
+          "nextCaption": 5633.16,
+          "speechStart": 5625.19,
+          "speechEnd": 5633.04,
+          "before": 5622.84,
+          "after": 5633.99,
+          "in": 5624.89,
+          "out": 5633.34,
+          "window": {
+            "start": 5614.89,
+            "end": 5643.34
+          }
+        },
+        {
+          "beat": "turn",
+          "text": "You don't you don't assume or project that God cares or doesn't care.",
+          "sentenceStart": 5719.44,
+          "sentenceEnd": 5723.87,
+          "nextCaption": 5724.16,
+          "speechStart": 5719.49,
+          "speechEnd": 5722.64,
+          "before": 5718.99,
+          "after": 5724.14,
+          "in": 5719.19,
+          "out": 5722.94,
+          "window": {
+            "start": 5709.19,
+            "end": 5732.94
+          }
+        },
+        {
+          "beat": "land",
+          "text": "I hope what I'm saying is clear because I'm trying to identify the faulty usages of ease in religion that people talk about all the time which is somehow an elimination of standards and boundaries and halal and haram.",
+          "sentenceStart": 5753.29,
+          "sentenceEnd": 5766.59,
+          "nextCaption": 5768.56,
+          "speechStart": 5754.04,
+          "speechEnd": 5765.64,
+          "before": 5752.39,
+          "after": 5766.79,
+          "in": 5753.74,
+          "out": 5765.94,
+          "window": {
+            "start": 5743.74,
+            "end": 5775.94
+          }
+        }
+      ]
+    }
+  ]
+}

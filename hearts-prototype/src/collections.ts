@@ -662,6 +662,19 @@ export const TalkTiers: CollectionConfig = {
     { name: 'landAt', type: 'number', min: 0 },
     { name: 'appetiserSpans', type: 'json', admin: { description: "Up to three appetiser cuts, played hook then turn then land: [{ role, start, end }]. Their lengths add up to at most about 3 minutes." } },
     { name: 'horsLines', type: 'json', admin: { description: "The hors d'oeuvre's sentences with their times: [{ at, text }]." } },
+    {
+      name: 'typographyStyle',
+      type: 'select',
+      options: [
+        { label: 'Kinetic', value: 'kinetic' },
+        { label: 'Windows', value: 'windows' },
+        { label: 'Conversation', value: 'conversation' },
+        { label: 'Cinema', value: 'cinema' },
+        { label: 'Unfold', value: 'unfold' },
+      ],
+      admin: { description: 'The typography style that can stand in for the hors d\'oeuvre clip.' },
+    },
+    { name: 'typographyInPlace', type: 'checkbox', defaultValue: false, admin: { description: 'Typography in place of the clip. Learners see the rendered video instead of the hors d\'oeuvre.' } },
     { name: 'offerResume', type: 'checkbox', defaultValue: true, admin: { description: 'Offer "Resume from where the appetiser ended" next to the main, which always opens at 0:00.' } },
     {
       name: 'status',

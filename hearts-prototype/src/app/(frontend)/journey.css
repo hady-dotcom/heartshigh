@@ -144,6 +144,19 @@
 .journey[data-mode='appetiser'] .j-chrome .caption[data-expanded='true'] {
   display: block; -webkit-line-clamp: unset; line-clamp: unset; flex: 1 1 auto; overflow: auto; max-height: min(32vh, 240px);
 }
+.journey[data-mode='appetiser'] .j-chrome .beat-stack { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; }
+.journey[data-mode='appetiser'] .beat-card { flex: 0 1 auto; min-width: 0; background: rgba(20, 18, 14, 0.9); color: #f6f0e4; border-radius: 18px; padding: 10px 12px 12px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+.journey[data-mode='appetiser'] .beat-card .beat-rail { background: rgba(255, 255, 255, 0.1); }
+.journey[data-mode='appetiser'] .j-chrome .beat-card .caption { flex: none; overflow: visible; margin: 0; padding: 8px 2px 0; color: #f6f0e4; text-shadow: none; font-size: 18px; line-height: 1.3; font-weight: 600; }
+.beat-rail { --i: 0; display: grid; grid-template-columns: 1fr 1fr 1fr; position: relative; height: 34px; border-radius: 999px; background: rgba(0, 0, 0, 0.38); overflow: hidden; flex: none; }
+.beat-rail .glide { position: absolute; inset: 0 auto 0 0; width: 33.333%; background: var(--gold); transform: translateX(calc(var(--i) * 100%)); transition: transform 0.45s ease; }
+.beat-rail span { position: relative; z-index: 1; display: grid; place-items: center; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255, 255, 255, 0.78); }
+.beat-rail span.on { color: var(--gold-ink); }
+.typography-player { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #14120e; z-index: 2; }
+.feed-card { position: absolute; inset: 0; z-index: 4; background: #f6f0e4; color: #1c1914; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: calc(72px + var(--safe-top)) 36px 120px; }
+.feed-card .kicker { letter-spacing: 0.18em; text-transform: uppercase; font-size: 13px; font-weight: 700; color: #c48f2c; }
+.feed-card h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; font-size: 34px; line-height: 1.15; margin: 16px 0; }
+.feed-card p { margin: 0 0 28px; font-size: 16px; }
 .journey[data-mode='appetiser'] .j-chrome .rail { position: static; flex: none; display: flex; justify-content: flex-end; gap: 6px; }
 .journey[data-mode='appetiser'] .j-chrome .rail .bubble { width: 40px; height: 40px; }
 .journey[data-mode='appetiser'] .j-chrome .clip-foot { position: static; flex: none; gap: 8px; }
@@ -152,7 +165,7 @@
 .journey[data-mode='appetiser'] .j-mains .thumb { width: 60px; height: 38px; }
 .journey[data-mode='appetiser'] .speaker-card { padding: 8px 12px; }
 .strict.journey[data-mode='appetiser'] .j-chrome { padding-top: calc(60px + var(--safe-top) + min(430px, 100vw) * 9 / 16); }
-.strict.journey[data-mode='appetiser'] .j-chrome .caption { font-size: 20px; }
+.strict.journey[data-mode='appetiser'] .j-chrome .beat-card .caption { font-size: 18px; color: #f6f0e4; }
 
 /* Strict layout: the player keeps its own 16:9 band and nothing sits over it. */
 .strict .j-slot { top: calc(48px + var(--safe-top)); bottom: auto; height: calc(min(430px, 100vw) * 9 / 16); }

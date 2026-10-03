@@ -8,6 +8,10 @@ import { now } from '@/lib/clock'
 import { adoptedCourseIds, visibleCourseIds, type PortalDoc, type SessionUser } from './context'
 import { normaliseSpans, type AppetiserSpan } from '@/lib/tiers'
 import { ladderParentRef, talkChain, type PieceRef } from '@/lib/nesting'
+import { readBackgroundsBaseUrl } from '@/lib/backgrounds'
+import { cardForTalk, readCardCatalogue, type StoredCard } from '@/lib/cards'
+import { filmsForTalk, mixFeed, readFilmCatalogue, type BeatFilm } from '@/lib/films'
+import { filesForTalk, isTypographyStyle, readTypographyManifest, type TypographyManifest } from '@/lib/typography'
 import { laneOf, portraitFor, posterFor, slugify, type FeedItem, type SlideStyle } from './learner'
 
 type Row = Record<string, unknown> & { id: number }
@@ -33,6 +37,8 @@ export type OpeningData = {
   clips: Record<string, FeedItem>
   laneTitles: Record<string, string>
   trendsPrompt: boolean
+  /** Bucket origin for the photographic stills. Empty in local dev, which keeps the six bundled stills. */
+  backgroundsBaseUrl: string | null
 }
 
 export async function openingConfig(payload: Payload, portalId: number | null) {
@@ -67,6 +73,9 @@ type Loaded = {
   showUnchecked: boolean
   /** Old cut ids that now stand for their talk's one tier clip. */
   alias: Map<number, number>
+  typography: TypographyManifest
+  films: { films: (BeatFilm & { youtubeId: string })[] }
+  cards: { cards: StoredCard[] }
 }
 
 /** Learner questions: rejected stays hidden. Drafts are included only while show-unchecked is on. */
@@ -116,7 +125,10 @@ function carrierCut(cuts: Row[], lessonId: number) {
 
 async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
   const [lanes, scales, clauses, doors] = await Promise.all([all(payload, 'lanes'), all(payload, 'heart-scales'), all(payload, 'clauses'), loadDoors(payload)])
-  if (!courseIds.length) return { lanes, scales, clauses, doors, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [], showUnchecked: false, alias: new Map() }
+  const typography = readTypographyManifest()
+  const films = readFilmCatalogue()
+  const cards = readCardCatalogue()
+  if (!courseIds.length) return { lanes, scales, clauses, doors, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [], showUnchecked: false, alias: new Map(), typography, films, cards }
   const [courses, lessons, showUnchecked] = await Promise.all([all(payload, 'courses', { id: { in: courseIds } }), all(payload, 'lessons', { course: { in: courseIds } }), showUncheckedTalks(payload)])
   const lessonIds = lessons.map((row) => row.id)
   const [rawCuts, tiers] = await Promise.all([
@@ -154,7 +166,7 @@ async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
       const value = idOf((tag.item as { value?: unknown }).value) || 0
       return alias.has(value) ? { ...tag, item: { relationTo: 'cuts', value: alias.get(value) } } : tag
     })
-  return { lanes, scales, clauses, doors, cuts, lessons, courses, tags: cutTags, ladder, tiers: tiers.filter((tier) => tierVisible(tier, showUnchecked)), showUnchecked, alias }
+  return { lanes, scales, clauses, doors, cuts, lessons, courses, tags: cutTags, ladder, tiers: tiers.filter((tier) => tierVisible(tier, showUnchecked)), showUnchecked, alias, typography, films, cards }
 }
 
 function laneDefs(data: Loaded): LaneDef[] {
@@ -220,6 +232,14 @@ function cutInfos(data: Loaded, portal: PortalDoc): CutInfo[] {
 }
 
 const STYLES: SlideStyle[] = ['kinetic', 'cinema', 'windows', 'conversation', 'unfold']
+
+function typographyFor(data: Loaded, lesson: Row, tier: Row | undefined) {
+  const chosen = String(tier?.typographyStyle || '')
+  if (!tier?.typographyInPlace || !isTypographyStyle(chosen)) return null
+  const files = filesForTalk(data.typography, (lesson.youtubeId as string) || null, String(lesson.sourceTitle || lesson.title || ''))
+  const src = files?.styles?.[chosen]
+  return src ? { style: chosen, inPlace: true as const, src } : null
+}
 
 /** A cut's lane tags, one per lane (the strongest), with tags from the talk's other cuts folded in. */
 function laneTagsOf(data: Loaded, cutId: number) {
@@ -296,6 +316,12 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     lessonId: lesson.id,
     lessonTitle: String(lesson.title || lesson.sourceTitle || ''),
     style: slide ? STYLES[index % STYLES.length] : null,
+    typography: typographyFor(data, lesson, data.tiers.find((row) => idOf(row.lesson) === lesson.id)),
+    films: filmsForTalk(data.films, youtubeId),
+    beats: cardForTalk(data.cards, youtubeId)?.beats,
+    cardStyle: cardForTalk(data.cards, youtubeId)?.style || null,
+    cardScene: cardForTalk(data.cards, youtubeId)?.scene || null,
+    cardBackground: cardForTalk(data.cards, youtubeId)?.background || null,
     clause: (cut.bestClause as number) || null,
     door: doorNumberOfClause((cut.bestClause as number) || null, data.doors),
     transcriptReady: Boolean(lesson.transcript) && lesson.transcriptSource !== 'pending',
@@ -436,6 +462,7 @@ export async function loadOpening(payload: Payload, portal: PortalDoc, user: Ses
     clips,
     laneTitles,
     trendsPrompt: own?.trendsContributionPrompt !== false && master?.trendsContributionPrompt !== false,
+    backgroundsBaseUrl: readBackgroundsBaseUrl(),
   }
 }
 
@@ -452,12 +479,13 @@ export async function serveFeed(payload: Payload, portal: PortalDoc, user: Sessi
   // Once the learner has seen everything, start the spine again rather than leave the feed empty.
   if (!slots.length) slots = buildFeed({ ...plan, served: [], spinePointer: 0 }, ctx).items
   const laneTitles = laneTitleMap(data)
-  const items = slots
+  const talks = slots
     .map((slot, index) => {
       const row = data.cuts.find((cut) => cut.id === slot.cutId)
       return row ? itemFor(data, row, slot.laneKey, laneTitles, index) : null
     })
     .filter((item): item is FeedItem => Boolean(item))
+  const items = mixFeed(talks, plan.served.length, readBackgroundsBaseUrl())
   return { slots, items, spinePointer: built.spinePointer }
 }
 

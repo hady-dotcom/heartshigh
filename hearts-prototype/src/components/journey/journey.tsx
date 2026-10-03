@@ -4,10 +4,11 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
+import { mixFeed } from '@/lib/feed-mix'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readHeart, readPending, sessionFlags, setSessionFlags, viewAsId, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
-import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
+import { appetiserJoin, appetiserStop, captionIndex, captionPage } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { laneClips } from '@/lib/lanes'
 import { isoWeek } from '@/lib/trends'
@@ -16,6 +17,7 @@ import { TabBar } from '../app/shell'
 import { Avatar, FollowButton, Slide } from '../app/feed'
 import { HeartIcon, SaveIcon, ShareIcon } from '../icons'
 import { HelpScreen, Opener, SceneCard } from './scenes'
+import { TeachingCard } from './teaching-card'
 import { KeepPlaceSheet, type SheetReason } from './sheet'
 
 type Phase = 'opener' | 'scene' | 'help' | 'handoff' | 'feed'
@@ -51,6 +53,7 @@ const TAB_DELAY = 200
 const HOLD = 700
 
 const appetiserEnd = (item: FeedItem) => appetiserStop(item.appetiser)
+const isInterstitial = (item: FeedItem | undefined) => Boolean(item?.card && item.card !== 'talk')
 
 function clock(total: number) {
   const value = Math.max(0, Math.round(total))
@@ -91,6 +94,7 @@ export function Journey(props: JourneyProps) {
   const ctx = useMemo(() => ({ ...opening.route, scales: opening.scales }), [opening])
   const scenes = opening.scenes
   const loginHref = `/login?next=${encodeURIComponent(`${base}/feed`)}`
+  const backgroundsBase = opening.backgroundsBaseUrl || null
 
   const [phase, setPhase] = useState<Phase>(props.initial === 'feed' ? 'feed' : props.initial)
   const [sceneAt, setSceneAt] = useState(0)
@@ -128,6 +132,7 @@ export function Journey(props: JourneyProps) {
   const [tabs, setTabs] = useState(false)
   const firstPlaying = useRef(false)
   const [muted, setMuted] = useState(true)
+  const typeRef = useRef<HTMLVideoElement>(null)
   const [buffering, setBuffering] = useState(false)
   const [slow, setSlow] = useState<'none' | 'breathe' | 'retry'>('none')
   const [offline, setOffline] = useState(false)
@@ -140,6 +145,7 @@ export function Journey(props: JourneyProps) {
   const [saved, toggleSave] = useStoredSet('hearts.saved.v1')
   const [firstEver, setFirstEver] = useState(false)
   const [lineAt, setLineAt] = useState(0)
+  const [spokenAt, setSpokenAt] = useState<number | null>(null)
   const watch = useRef<{ key: string; start: number; furthest: number; done90: boolean }>({ key: '', start: 0, furthest: 0, done90: false })
   const refilling = useRef(false)
   const clipRef = useRef<HTMLDivElement>(null)
@@ -283,7 +289,9 @@ export function Journey(props: JourneyProps) {
 
   // ---------- players ----------
   const specFor = useCallback((item: FeedItem | undefined, kind: Mode): Spec | null => {
-    if (!item || !item.youtubeId || (item.style && kind === 'hors')) return null
+    if (!item || !item.youtubeId) return null
+    if (item.card === 'film' || item.card === 'text' || item.card === 'question') return null
+    if (kind === 'hors' && (item.style || item.card === 'scene' || item.typography?.src)) return null
     if (kind === 'appetiser') {
       const spans = item.appetiser.spans
       const multi = Boolean(spans && spans.length > 1)
@@ -456,7 +464,7 @@ export function Journey(props: JourneyProps) {
 
   const adopt = useCallback(
     (clips: FeedItem[], slots: FeedSlot[], spinePointer: number, replace: boolean) => {
-      const merged = replace ? clips : [...itemsRef.current, ...clips.filter((clip) => !itemsRef.current.some((row) => row.cutId === clip.cutId))]
+      const merged = replace ? clips : [...itemsRef.current, ...clips.filter((clip) => !itemsRef.current.some((row) => row.id === clip.id))]
       itemsRef.current = merged
       setItems(merged)
       if (heartRef.current) setHeart(markServed(heartRef.current, slots, spinePointer))
@@ -470,13 +478,13 @@ export function Journey(props: JourneyProps) {
     refilling.current = true
     try {
       const data = await fetchFeed(heartRef.current)
-      adopt(data.clips, data.items, data.spinePointer, false)
+      adopt(mixFeed(data.clips, heartRef.current?.served.length || 0, backgroundsBase), data.items, data.spinePointer, false)
     } catch {
       // Offline: carry on with what is here.
     } finally {
       refilling.current = false
     }
-  }, [adopt, fetchFeed])
+  }, [adopt, backgroundsBase, fetchFeed])
 
   // Arriving straight at the feed (a returning visitor, or Home › feed).
   useEffect(() => {
@@ -503,6 +511,7 @@ export function Journey(props: JourneyProps) {
           clips = [{ ...asked, laneKey: null }, ...clips.filter((clip) => clip.cutId !== asked.cutId)]
           if (props.play === 'appetiser') firstMode = 'appetiser'
         }
+        clips = mixFeed(clips, state.served.length, backgroundsBase)
         adopt(clips, data.items, data.spinePointer, true)
         await showItem(0, firstMode)
         if (!data.clips[0]?.youtubeId || data.clips[0]?.style) window.setTimeout(() => setTabs(true), 1200)
@@ -861,8 +870,15 @@ export function Journey(props: JourneyProps) {
 
   const advance = useCallback(
     async (to: number, how: 'swipe' | 'auto' = 'swipe') => {
-      if (!itemsRef.current.length) return
-      const target = ((to % itemsRef.current.length) + itemsRef.current.length) % itemsRef.current.length
+      const list = itemsRef.current
+      if (!list.length) return
+      const wrap = (at: number) => ((at % list.length) + list.length) % list.length
+      let target = wrap(to)
+      // Film, scene and question cards sit between hors d'oeuvres; an appetiser swipe passes over them.
+      if (modeRef.current === 'appetiser') {
+        const step = to < indexRef.current ? -1 : 1
+        for (let tries = 0; tries < list.length && isInterstitial(list[target]); tries++) target = wrap(target + step)
+      }
       if (how === 'swipe') leaveSignal()
       if (how === 'swipe' && clipRef.current) {
         await finished(animate(clipRef.current, [{ transform: 'translateY(0)' }, { transform: 'translateY(-100%)' }], T.snap, EASE.standard, { id: 'snap' }))
@@ -932,6 +948,7 @@ export function Journey(props: JourneyProps) {
       const lines = modeRef.current === 'hors' ? current.hors.lines : current.appetiser.lines
       const showing = captionIndex(lines, time)
       setLineAt((held) => (held === showing ? held : showing))
+      setSpokenAt((held) => (held !== null && Math.abs(held - time) < 0.35 ? held : time))
       const spans = current.appetiser.spans
       if (modeRef.current === 'appetiser' && spans && spans.length > 1) {
         const join = appetiserJoin(spans, time)
@@ -1006,7 +1023,6 @@ export function Journey(props: JourneyProps) {
     void advance(target)
   }
   const moreLikeThis = () => {
-    setToast('More on this topic')
     void advance(index + 1)
   }
   const moreFromSpeaker = () => {
@@ -1030,13 +1046,15 @@ export function Journey(props: JourneyProps) {
     if (modeRef.current === 'hors') {
       const parent = current.parents?.hors
       if (parent && parent.parentLevel !== 'appetiser') return
+      const own = isInterstitial(current) ? itemsRef.current.findIndex((row) => row.cutId === current.cutId && !isInterstitial(row)) : indexRef.current
+      const at = own >= 0 ? own : indexRef.current
       signal('watch-full')
       noteBrowse('learn-more')
       const url = new URL(window.location.href)
       url.searchParams.set('clip', String(current.cutId))
       url.searchParams.set('play', 'appetiser')
       push(`${url.pathname}${url.search}`, { appetiser: current.cutId })
-      void showItem(indexRef.current, 'appetiser')
+      void showItem(at, 'appetiser')
       return
     }
     event?.preventDefault()
@@ -1077,6 +1095,7 @@ export function Journey(props: JourneyProps) {
   const tapSound = () => {
     const host = hosts.current[visibleRef.current]
     if (host.playerId) soundOn(host.playerId)
+    if (typeRef.current) typeRef.current.muted = false
     setMuted(false)
   }
 
@@ -1104,6 +1123,15 @@ export function Journey(props: JourneyProps) {
     const timer = window.setTimeout(() => setToast(null), 1600)
     return () => window.clearTimeout(timer)
   }, [toast])
+
+  useEffect(() => {
+    for (const row of items.slice(index + 1, index + 6)) {
+      const src = row.scene?.scene
+      if (!src) continue
+      const image = new Image()
+      image.src = src
+    }
+  }, [items, index])
 
   // Gestures on the clip. In overlay mode the gesture layer covers the player; in strict mode only the chrome.
   const onDown = (event: ReactPointerEvent) => {
@@ -1179,22 +1207,70 @@ export function Journey(props: JourneyProps) {
   const host = hosts.current[visibleHost]
   const currentSpec = specFor(item, mode)
   const playerReady = Boolean(currentSpec && host.ready && host.spec?.key === currentSpec.key && revealed)
-  const showPoster = phase === 'handoff' || (phase === 'feed' && (!playerReady || Boolean(errorNote) || offline))
+  const cardKind = item?.card === 'film' || item?.card === 'text' || item?.card === 'question' || item?.card === 'scene' ? item.card : null
+  const typeSrc = cardKind === 'film' ? item?.film?.src : item?.typography?.src
+  const typeClip = Boolean(phase === 'feed' && mode === 'hors' && typeSrc && cardKind !== 'text' && cardKind !== 'question' && cardKind !== 'scene')
+  const scenic = Boolean(phase === 'feed' && cardKind === 'scene' && mode === 'hors' && item?.scene)
+  const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (!playerReady || Boolean(errorNote) || offline)))
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
-  const captionText = (piece?.lines?.length ? piece.lines[lineShown]?.text : piece?.quote) || ''
-  const captionRole = mode === 'appetiser' ? piece?.lines?.[lineShown]?.role || null : null
+  const captionLine = piece?.lines?.[lineShown]
+  const until = piece?.lines?.[lineShown + 1]?.at ?? (item && mode === 'appetiser' ? appetiserEnd(item) : (captionLine?.at ?? 0) + 8)
+  const captionText = (piece?.lines?.length
+    ? (mode === 'appetiser' && captionLine ? captionPage(captionLine.text, captionLine.at, until, spokenAt ?? captionLine.at).text : captionLine?.text || '')
+    : piece?.quote) || ''
+  const captionRole = mode === 'appetiser' ? captionLine?.role || null : null
   useEffect(() => {
     setCaptionOpen(false)
   }, [item?.id, mode])
-  const slide = phase === 'feed' && mode === 'hors' && item?.style ? item.style : null
+  const slide = phase === 'feed' && mode === 'hors' && item?.style && !typeClip ? item.style : null
   const course = (item && learnMore(item, 'appetiser', base)?.href) || base
   const horsParent = item?.parents?.hors
   const appetiserParent = item?.parents?.appetiser
+  const captionButton = item ? (
+    <button
+      type="button"
+      className={`caption${captionText.length > 120 ? ' long' : ''}${captionText ? '' : ' title-only'}`}
+      data-testid="caption"
+      data-line={lineShown}
+      data-role={captionRole || undefined}
+      data-expanded={captionOpen ? 'true' : 'false'}
+      aria-expanded={captionOpen}
+      key={mode}
+      onPointerDown={(event) => {
+        event.stopPropagation()
+        captionDrag.current = false
+        event.currentTarget.setPointerCapture(event.pointerId)
+        onDown(event)
+      }}
+      onPointerMove={onMove}
+      onPointerUp={(event) => {
+        const start = gesture.current
+        if (!start) return
+        const far = Math.max(Math.abs(event.clientX - start.x), Math.abs(event.clientY - start.y))
+        if (far >= 40) {
+          captionDrag.current = true
+          onUp(event)
+          return
+        }
+        if (start.timer) window.clearTimeout(start.timer)
+        gesture.current = null
+      }}
+      onClick={() => {
+        if (captionDrag.current) {
+          captionDrag.current = false
+          return
+        }
+        setCaptionOpen((open) => !open)
+      }}
+    >
+      {captionText || item.lessonTitle || item.courseTitle}
+    </button>
+  ) : null
   const laneVisible = Boolean(item) && !firstEver
   void readyTick
 
-  const chrome = item && phase === 'feed' && !slide ? (
+  const chrome = item && phase === 'feed' && !slide && !scenic ? (
     <>
       <div className="j-hairline-row">
         <div className={`j-hairline${buffering ? ' shimmer' : ''}`} data-testid="hairline"><i /></div>
@@ -1212,44 +1288,26 @@ export function Journey(props: JourneyProps) {
           </div>
         )}
       </div>
-      <button
-        type="button"
-        className={`caption${captionText.length > 120 ? ' long' : ''}${captionText ? '' : ' title-only'}`}
-        data-testid="caption"
-        data-line={lineShown}
-        data-role={captionRole || undefined}
-        data-expanded={captionOpen ? 'true' : 'false'}
-        aria-expanded={captionOpen}
-        key={mode}
-        onPointerDown={(event) => {
-          event.stopPropagation()
-          captionDrag.current = false
-          event.currentTarget.setPointerCapture(event.pointerId)
-          onDown(event)
-        }}
-        onPointerMove={onMove}
-        onPointerUp={(event) => {
-          const start = gesture.current
-          if (!start) return
-          const far = Math.max(Math.abs(event.clientX - start.x), Math.abs(event.clientY - start.y))
-          if (far >= 40) {
-            captionDrag.current = true
-            onUp(event)
-            return
-          }
-          if (start.timer) window.clearTimeout(start.timer)
-          gesture.current = null
-        }}
-        onClick={() => {
-          if (captionDrag.current) {
-            captionDrag.current = false
-            return
-          }
-          setCaptionOpen((open) => !open)
-        }}
-      >
-        {captionText || item.lessonTitle || item.courseTitle}
-      </button>
+      {typeClip && muted ? (
+        <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button>
+      ) : muted && !hasSound() && playerReady ? (
+        <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button>
+      ) : null}
+      {(cardKind && cardKind !== 'scene') || typeClip ? null : mode === 'appetiser' ? (
+        <div className="beat-stack">
+          <div className="beat-card" data-testid="caption-panel">
+            {(piece?.lines?.length || 0) > 1 ? (
+              <div className="beat-rail" data-testid="beat-rail" data-beat={captionRole || 'hook'} style={{ ['--i' as string]: lineShown }}>
+                <i className="glide" />
+                {(['hook', 'turn', 'land'] as const).map((role) => (
+                  <span key={role} className={captionRole === role ? 'on' : ''}>{role === 'hook' ? 'Hook' : role === 'turn' ? 'Turn' : 'Land'}</span>
+                ))}
+              </div>
+            ) : null}
+            {captionButton}
+          </div>
+        </div>
+      ) : captionButton}
       <div className="rail">
         <button type="button" onClick={share} data-testid="share"><span className="bubble"><ShareIcon /></span>Share</button>
         <button type="button" aria-pressed={faves.includes(item.id)} onClick={fave} data-testid="fave"><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
@@ -1282,7 +1340,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-index={index} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'}>
+    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'}>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />
@@ -1295,11 +1353,41 @@ export function Journey(props: JourneyProps) {
             <div
               key={at}
               ref={(el) => { hostEls.current[at] = el }}
-              className={`yt-host ${at === visibleHost && revealed && !slide ? 'on' : 'off'}`}
+              className={`yt-host ${at === visibleHost && revealed && !slide && !scenic ? 'on' : 'off'}`}
               data-testid={at === visibleHost && revealed ? 'player-visible' : 'player-hidden'}
               style={{ visibility: at === visibleHost && playerReady && !showPoster ? 'visible' : 'hidden' }}
             />
           ))}
+          {typeClip && typeSrc ? (
+            <video
+              key={item?.id}
+              ref={typeRef}
+              className="typography-player"
+              src={typeSrc}
+              poster={item?.poster || undefined}
+              playsInline
+              muted
+              autoPlay
+              data-testid="typography-player"
+              data-style={cardKind === 'film' ? item?.film?.style : item?.typography?.style}
+              onEnded={() => window.dispatchEvent(new CustomEvent('hearts:ended'))}
+            />
+          ) : null}
+          {phase === 'feed' && cardKind === 'question' && item ? (
+            <div className="feed-card" data-testid="feed-question">
+              <div className="kicker">Question</div>
+              <h2>{item.prompt}</h2>
+              <p>{item.speaker}</p>
+              <button type="button" className="pill gold" onClick={() => void advance(index + 1)} data-testid="feed-card-next">Continue</button>
+            </div>
+          ) : phase === 'feed' && cardKind === 'text' && item?.film ? (
+            <div className="feed-card" data-testid="feed-text">
+              <div className="kicker">{item.film.beat === 'hook' ? 'Hook' : item.film.beat === 'turn' ? 'Turn' : 'Land'}</div>
+              <h2>{item.film.quote}</h2>
+              <p>{item.speaker}</p>
+              <button type="button" className="pill gold" onClick={() => void advance(index + 1)} data-testid="feed-card-next">Continue</button>
+            </div>
+          ) : null}
           {showPoster && item && !slide ? (
             <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}`} data-testid="poster-frame">
               {item.poster ? <img src={item.poster} alt="" /> : null}
@@ -1316,11 +1404,16 @@ export function Journey(props: JourneyProps) {
               ) : null}
             </div>
           ) : null}
-          {overlay && phase === 'feed' && !slide ? <div className="j-gesture" data-testid="gesture-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} /> : null}
+          {overlay && phase === 'feed' && !slide && !scenic ? <div className="j-gesture" data-testid="gesture-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} /> : null}
         </div>
         {slide && item ? (
           <div className="j-slide" data-testid="gesture-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}>
             <Slide item={item} style={slide} onMore={() => void stepUp()} />
+          </div>
+        ) : null}
+        {scenic && item?.scene ? (
+          <div className="j-slide" data-testid="gesture-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}>
+            <TeachingCard key={item.id} scene={item.scene} speaker={item.speaker} course={item.courseTitle} lane={item.laneLabel} onClip={() => void stepUp()} />
           </div>
         ) : null}
         <div className="j-chrome" onPointerDown={overlay ? undefined : onDown} onPointerMove={overlay ? undefined : onMove} onPointerUp={overlay ? undefined : onUp}>

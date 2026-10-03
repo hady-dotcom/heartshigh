@@ -688,6 +688,24 @@ export function captionIndex(lines: { at: number }[] | undefined, time: number) 
   return at
 }
 
+/** How many words of one beat sit on a single caption card. A longer beat turns the page. */
+export const CAPTION_PAGE = 22
+
+/**
+ * The words of the current beat that belong on the card at `time`.
+ * A beat of more than {@link CAPTION_PAGE} words is split into consecutive cards
+ * across the beat, so the caption never holds the whole paragraph at once.
+ */
+export function captionPage(text: string, at: number, until: number, time: number, size = CAPTION_PAGE) {
+  const words = text.trim().split(/\s+/).filter(Boolean)
+  if (words.length <= size) return { index: 0, pages: 1, text: words.join(' ') }
+  const pages = Math.ceil(words.length / size)
+  const span = Math.max(0.4, until - at)
+  const into = Math.min(0.999, Math.max(0, (time - at) / span))
+  const index = Math.min(pages - 1, Math.floor(into * pages))
+  return { index, pages, text: words.slice(index * size, (index + 1) * size).join(' ') }
+}
+
 /** Where the appetiser player stops: the last cut when the appetiser is several spans, otherwise its out point. */
 export function appetiserStop(appetiser: { start: number; end: number; spans?: { start: number; end: number }[] }) {
   const spans = appetiser.spans

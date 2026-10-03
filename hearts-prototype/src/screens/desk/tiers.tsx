@@ -5,6 +5,8 @@ import { Hidden } from '@/components/app/shell'
 import { TierEditor } from '@/components/desk/tier-editor'
 import { idOf } from '@/lib/ids'
 import { gapAfter, gapBefore, horsCapOf, PRE_ROLL, sentencesOf, TAIL, timingProblems } from '@/lib/tiers'
+import { filmsForTalk, readFilmCatalogue } from '@/lib/films'
+import { filesForTalk, readTypographyManifest, TYPOGRAPHY_LABEL, TYPOGRAPHY_STYLES, isTypographyStyle } from '@/lib/typography'
 import { tierSourceText } from '@/server/tier-source'
 import type { SessionUser } from '@/server/context'
 import { rows, str } from '../common'
@@ -18,6 +20,58 @@ function clock(total: number) {
   const minutes = Math.floor((seconds % 3600) / 60)
   const rest = String(seconds % 60).padStart(2, '0')
   return hours ? `${hours}:${String(minutes).padStart(2, '0')}:${rest}` : `${minutes}:${rest}`
+}
+
+function TypographyPanel({ tierId, lesson, chosen, inPlace, next }: { tierId: number; lesson: Record<string, unknown>; chosen: string; inPlace: boolean; next: string }) {
+  const files = filesForTalk(readTypographyManifest(), str(lesson.youtubeId) || null, str(lesson.sourceTitle) || str(lesson.title))
+  const style = isTypographyStyle(chosen) ? chosen : ''
+  return (
+    <section className="panel" style={{ marginTop: 18 }} data-testid="typography-panel">
+      <header className="light"><h2>Typography</h2><span className="hint">Five ways into the same words</span></header>
+      <form className="body form" action="/api/hearts" method="post">
+        <Hidden fields={{ action: 'typography-save', tier: tierId, next }} />
+        <p className="hint" style={{ marginTop: 0 }}>A rendered typography video can stand in for the hors d&apos;oeuvre clip. The words are the speaker&apos;s, timed from the transcript.</p>
+        <div className="type-grid" data-testid="typography-styles">
+          {TYPOGRAPHY_STYLES.map((name) => {
+            const src = files?.styles?.[name]
+            return (
+              <label key={name} className={`type-card${style === name ? ' on' : ''}`}>
+                <span className="type-card-head">
+                  <input type="radio" name="typographyStyle" value={name} defaultChecked={style === name} data-testid={`typography-style-${name}`} />
+                  <b>{TYPOGRAPHY_LABEL[name]}</b>
+                </span>
+                {src ? <video src={src} controls preload="metadata" data-testid={`typography-preview-${name}`} /> : <span className="hint">Not rendered yet</span>}
+              </label>
+            )
+          })}
+        </div>
+        <label className="check" style={{ marginTop: 12 }}>
+          <input type="checkbox" name="typographyInPlace" defaultChecked={inPlace} data-testid="typography-in-place" />
+          Typography in place of the clip
+        </label>
+        <div className="actions"><button className="btn ink small" type="submit" data-testid="typography-save">Save typography</button></div>
+      </form>
+      <BeatFilms lesson={lesson} />
+    </section>
+  )
+}
+
+function BeatFilms({ lesson }: { lesson: Record<string, unknown> }) {
+  const films = filmsForTalk(readFilmCatalogue(), str(lesson.youtubeId) || null)
+  if (!films.length) return null
+  return (
+    <div className="body" data-testid="typography-beats">
+      <p className="hint" style={{ marginTop: 0 }}>One film for each beat. The feed mixes these with the talk, the line, and a question.</p>
+      <ul className="plain">
+        {films.map((film) => (
+          <li key={film.beat}>
+            <a href={film.src}>{film.beat === 'hook' ? 'Hook' : film.beat === 'turn' ? 'Turn' : 'Land'}</a>
+            <span className="hint"> {TYPOGRAPHY_LABEL[film.style]}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
 }
 
 function Frame({ ctx, title, intro, children, testId }: { ctx: MasterCtx; title: string; intro: string; children: React.ReactNode; testId: string }) {
@@ -118,6 +172,7 @@ export async function MasterTier(ctx: MasterCtx, tierId: number) {
         next={next}
         horsMax={horsMax}
       />
+      <TypographyPanel tierId={Number(tier.id)} lesson={lesson} chosen={str(tier.typographyStyle)} inPlace={Boolean(tier.typographyInPlace)} next={next} />
       <section className="panel" style={{ marginTop: 18 }} data-testid="tier-popups">
         <header className="light"><h2>Pop-ups in the main ({points.length})</h2><span className="hint">Drafts are never shown to learners</span></header>
         {late.length ? <ul className="hint tier-warn" data-testid="popup-late">{late.map((problem) => <li key={problem}>{problem}</li>)}</ul> : null}

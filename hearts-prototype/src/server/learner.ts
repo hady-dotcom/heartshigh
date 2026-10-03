@@ -33,6 +33,21 @@ export type FeedItem = {
   turn: string
   land: string
   style: SlideStyle | null
+  /** Rendered typography standing in for the hors d'oeuvre, when an admin has chosen one. */
+  typography?: { style: SlideStyle; inPlace: true; src: string } | null
+  /** Beat films rendered for this talk. The feed alternates one of them with a scenic card. */
+  films?: { beat: 'hook' | 'turn' | 'land'; style: SlideStyle; src: string; quote: string }[]
+  /** Verbatim hook, turn and land for the scenic card, when the sheet has them. */
+  beats?: { beat: 'hook' | 'turn' | 'land'; quote: string; gold: string; audio: string | null; words?: { text: string; at: number }[]; verse?: string | null }[]
+  /** Catalogue style, local still, and stored photographic still. A return visit keeps the stored still. */
+  cardStyle?: SlideStyle | null
+  cardScene?: string | null
+  cardBackground?: string | null
+  /** Set when this card is a film, a scenic card, a line of the talk, or a question rather than the talk itself. */
+  card?: 'talk' | 'film' | 'text' | 'question' | 'scene'
+  film?: { beat: 'hook' | 'turn' | 'land'; style: SlideStyle; src: string; quote: string }
+  scene?: { style: SlideStyle; scene: string; destination: 'clip' | 'talk'; brightness?: 'light' | 'mid' | 'dark' | null; beats: { beat: 'hook' | 'turn' | 'land'; quote: string; gold: string; audio: string | null; words?: { text: string; at: number }[]; verse?: string | null }[] }
+  prompt?: string
   clause: number | null
   door?: number | null
   /** The lane this slot was routed for; null for spine clips and D0. */

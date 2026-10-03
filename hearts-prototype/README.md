@@ -190,6 +190,7 @@ The circle label and threshold are not environment variables. They are fields on
 | `HEARTS_E2E_PORT`, `HEARTS_E2E_REUSE` | Port for the server the e2e run starts (default 3100), or `1` to reuse one already running there |
 | `HEARTS_SCRIPTURE_OFFLINE` | `1` reads only the bundled scripture and never fetches. The seed and the e2e server always work this way |
 | `HEARTS_NOW` | Pins the app's idea of "now" to a date, such as `2026-10-01T09:00:00Z`. For demos and tests |
+| `BACKGROUNDS_BASE_URL` | Bucket origin for the scenic catalogue. Stills are fetched from `{origin}/backgrounds/` plus the catalogue filename. Unset, the six local stills in `public/slides/` are used |
 
 On a Cloud Agent, put keys in the Cursor Dashboard under Cloud Agents, then Secrets. Do not commit them.
 
