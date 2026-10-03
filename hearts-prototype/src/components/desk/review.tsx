@@ -44,6 +44,7 @@ export function ReviewPlayer({ youtubeId, segments, autoplay }: { youtubeId: str
 /** Keyboard shortcuts for the review screens: each key clicks the element marked with data-key, arrows follow j and k. */
 export function ReviewKeys() {
   useEffect(() => {
+    document.documentElement.dataset.reviewKeys = 'on'
     const onKey = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return
       const target = event.target as HTMLElement | null
@@ -55,7 +56,10 @@ export function ReviewKeys() {
       element.click()
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    return () => {
+      delete document.documentElement.dataset.reviewKeys
+      window.removeEventListener('keydown', onKey)
+    }
   }, [])
   return null
 }

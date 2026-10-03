@@ -379,6 +379,7 @@ test.describe('round 4 screens', () => {
     await page.goto('/master/review/popups')
     await expect(page.getByTestId('review-counts')).toContainText('pop-ups are live')
     const point = await page.getByTestId('review-card').getAttribute('data-point')
+    await page.waitForFunction(() => document.documentElement.dataset.reviewKeys === 'on')
     await page.keyboard.press('a')
     await expect(page.getByTestId('notice')).toContainText('published')
     expect((await json(await master.get(`/api/engagement-points/${point}?depth=0`))).status).toBe('published')
