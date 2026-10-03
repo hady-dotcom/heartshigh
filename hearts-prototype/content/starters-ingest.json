@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-03T00:39:42.270Z",
+  "checkedAt": "2026-10-03T06:05:47.296Z",
   "results": [
     {
       "youtubeId": "FAxIZIqwfd8",
@@ -7,13 +7,11 @@
       "oembedTitle": "Quranic Connection #26: A Cure for Anxiety | Shaykh Suleiman Hani",
       "channel": "Suleiman Hani",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/FAxIZIqwfd8.vtt"
     },
     {
       "youtubeId": "RDlKjwPKgPM",
@@ -21,13 +19,11 @@
       "oembedTitle": "Tawakkul: Supreme Trust in Allah - Khutbah by Sh. Mohammad Elshinawy",
       "channel": "Islamic Society of Allentown",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/RDlKjwPKgPM.vtt"
     },
     {
       "youtubeId": "UGuKJLZnbi8",
@@ -35,13 +31,11 @@
       "oembedTitle": "Dua 1: O Allah, I am Your Servant | Prophetic Dua | Shaykh Yasir Fahmy",
       "channel": "Prophetic Living",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/UGuKJLZnbi8.vtt"
     },
     {
       "youtubeId": "N_-YiwIb-u0",
@@ -49,13 +43,11 @@
       "oembedTitle": "On Mosques, Companionship, & Knowledge",
       "channel": "Safina Society",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/N_-YiwIb-u0.vtt"
     },
     {
       "youtubeId": "45XUrfJS68Q",
@@ -63,13 +55,11 @@
       "oembedTitle": "Still Lonely in a Full Masjid? | Imam Khalid Latif & Imam Ahmad Saleem | Muslim Wellness Center",
       "channel": "Muslim Wellness Center",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/45XUrfJS68Q.vtt"
     },
     {
       "youtubeId": "rUIMxBh3aqo",
@@ -77,13 +67,11 @@
       "oembedTitle": "How to Give Good Advice - In Good Company ft. Shaykh Umair Haseeb",
       "channel": "Mozaic",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/rUIMxBh3aqo.vtt"
     },
     {
       "youtubeId": "v42oVXo20VY",
@@ -91,13 +79,11 @@
       "oembedTitle": "The BEST Islamic Approach To Wealth | Dr Shadee Elmasry",
       "channel": "Safina Society",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/v42oVXo20VY.vtt"
     },
     {
       "youtubeId": "RZmsvGE785o",
@@ -105,13 +91,11 @@
       "oembedTitle": "Contagious Generosity: How To Help Yourself By Helping Others | Imam Khalid | Jummah Reflection",
       "channel": "NYU Islamic Center",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/RZmsvGE785o.vtt"
     },
     {
       "youtubeId": "U_tCg-U0QSY",
@@ -119,13 +103,11 @@
       "oembedTitle": "Why Wealth Won't Give You Peace | The Names Class 21: Ar - Razzaq | Shaykh Mikaeel Smith",
       "channel": "Qalam Institute",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/U_tCg-U0QSY.vtt"
     },
     {
       "youtubeId": "ja7eQxc9BR8",
@@ -133,13 +115,11 @@
       "oembedTitle": "When Knowledge Inflates the Ego | Qur’anic Leadership Ep. 22 | Ramadan Series",
       "channel": "Suleiman Hani",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/ja7eQxc9BR8.vtt"
     },
     {
       "youtubeId": "GLOD742Tzbs",
@@ -147,13 +127,11 @@
       "oembedTitle": "[Ep 2] Humility In Practice | Manners of the Salaf | Sh. Mohammad Elshinawy",
       "channel": "Islamic Society of Allentown",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/GLOD742Tzbs.vtt"
     },
     {
       "youtubeId": "WZySKAmC8go",
@@ -161,13 +139,11 @@
       "oembedTitle": "Purification of the Heart w/ Ustadha Fatima Lette | Session 1",
       "channel": "Nueces Mosque",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/WZySKAmC8go.vtt"
     },
     {
       "youtubeId": "JImcAYzp4D4",
@@ -175,13 +151,11 @@
       "oembedTitle": "What is Dua? | EP. 1 | Ramadan 2024 with Dr. Shadee Elmasry",
       "channel": "Safina Society",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/JImcAYzp4D4.vtt"
     },
     {
       "youtubeId": "f-3OxXUp9jc",
@@ -189,13 +163,23 @@
       "oembedTitle": "Moments of Solitude: Closeness to God | Jummah Khutbah | Imam Khalid Latif | 3.11.2022",
       "channel": "NYU Islamic Center",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/f-3OxXUp9jc.vtt"
+    },
+    {
+      "youtubeId": "NIR88RRpat4",
+      "specTitle": "Why You Feel Empty… And How Ramadan Fixes It | The Names Class 20: An-Nūr | Shaykh Mikaeel Smith",
+      "oembedTitle": "Why You Feel Empty… And How Ramadan Fixes It | The Names Class 20: An-Nūr | Shaykh Mikaeel Smith",
+      "channel": "Qalam Institute",
+      "titleMatches": true,
+      "transcript": "ready",
+      "tried": [
+        "shipped transcript"
+      ],
+      "transcriptFile": "content/transcripts/mikaeel-al-nur.md"
     },
     {
       "youtubeId": "MK5q_zMiX1g",
@@ -203,13 +187,11 @@
       "oembedTitle": "The Names Class 20: Al-Nūr | Shaykh Mikaeel Smith",
       "channel": "Qalam Institute",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/MK5q_zMiX1g.vtt"
     },
     {
       "youtubeId": "qB3lRpEJwi8",
@@ -217,13 +199,11 @@
       "oembedTitle": "Using Your Time Wisely - Episode 01 | The Blessing of Time with Shaykh Suleiman Hani",
       "channel": "Miftaah Institute",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/qB3lRpEJwi8.vtt"
     },
     {
       "youtubeId": "xY7hvYifpxo",
@@ -231,13 +211,11 @@
       "oembedTitle": "Self Purification and Discipline methods of Sahaba  - Dr.Umar Faruq Abd Allah",
       "channel": "Rawdah of Islam",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/xY7hvYifpxo.vtt"
     },
     {
       "youtubeId": "BnU535dqG6U",
@@ -245,13 +223,11 @@
       "oembedTitle": "Ep. 1: Know Your Purpose | Habits To Win Here and Hereafter | Dr. Tesneem Alkiek",
       "channel": "Yaqeen Institute",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/BnU535dqG6U.vtt"
     },
     {
       "youtubeId": "9k7QxXtCzaQ",
@@ -259,13 +235,11 @@
       "oembedTitle": "What Is The Difference Between Patience And Complaining? | Shaykh Suleiman Hani | Faith IQ",
       "channel": "FaithIQ",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/9k7QxXtCzaQ.vtt"
     },
     {
       "youtubeId": "fBzrLN77gng",
@@ -273,13 +247,11 @@
       "oembedTitle": "How to Manage Your Anger - Amjad Tarsin",
       "channel": "Al-Maqasid",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/fBzrLN77gng.vtt"
     },
     {
       "youtubeId": "Rd0e9kXdPvI",
@@ -287,13 +259,11 @@
       "oembedTitle": "Anger Management (p. 1) :: Khutbah by Sh Mohammad Elshinawy",
       "channel": "Islamic Society of Allentown",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/Rd0e9kXdPvI.vtt"
     },
     {
       "youtubeId": "rb2EkzjgO98",
@@ -301,13 +271,11 @@
       "oembedTitle": "Gratitude is the Greatest Blessing | Gems from Ibn Ata Illah Ep. 1 | Shaykh Mikaeel Ahmed Smith",
       "channel": "Mikaeel Ahmed Smith",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/rb2EkzjgO98.vtt"
     },
     {
       "youtubeId": "S0-rlAoc__Q",
@@ -315,13 +283,11 @@
       "oembedTitle": "\"Ramadan Muslims\" - Ep. 10: Grateful | Ustadh Naeem Baig",
       "channel": "Rawdah",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/S0-rlAoc__Q.vtt"
     },
     {
       "youtubeId": "HfIT8TSoHiE",
@@ -329,13 +295,11 @@
       "oembedTitle": "Finding Contentment Within | Jum'uah Khutbah | Imam Khalid Latif | 10.7.2022",
       "channel": "NYU Islamic Center",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/HfIT8TSoHiE.vtt"
     },
     {
       "youtubeId": "QOpIvu1uJx0",
@@ -343,13 +307,11 @@
       "oembedTitle": "Which People Receive Allah's Mercy?",
       "channel": "Safina Society",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/QOpIvu1uJx0.vtt"
     },
     {
       "youtubeId": "HZgblQ00z1U",
@@ -357,13 +319,11 @@
       "oembedTitle": "The Servant Prophet ﷺ | Episode 1 - His Mercy",
       "channel": "Prophetic Living",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/HZgblQ00z1U.vtt"
     },
     {
       "youtubeId": "9kvuzeMaiIs",
@@ -371,13 +331,11 @@
       "oembedTitle": "Our Character - Ustadh Amjad Tarsin | Day 1",
       "channel": "Al-Maqasid",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/9kvuzeMaiIs.vtt"
     },
     {
       "youtubeId": "ECaTWkof57E",
@@ -385,13 +343,11 @@
       "oembedTitle": "Who Is Truly Nurturing You? | The Names Class 19: Ar-Rabb | Shaykh Mikaeel Smith",
       "channel": "Qalam Institute",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/ECaTWkof57E.vtt"
     },
     {
       "youtubeId": "TLCGBj4AlB0",
@@ -399,13 +355,11 @@
       "oembedTitle": "How to Live Like the Prophet ﷺ | Sixth Session",
       "channel": "Prophetic Living",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/TLCGBj4AlB0.vtt"
     },
     {
       "youtubeId": "tidGQC4SrgA",
@@ -413,13 +367,11 @@
       "oembedTitle": "Alhamdulillah! Allah Chose You to Be a Believer | Imam Dawood Yasin",
       "channel": "MCC East Bay (Muslim Community Center)",
       "titleMatches": true,
-      "transcript": "pending",
+      "transcript": "ready",
       "tried": [
-        "yt-dlp",
-        "youtube-transcript",
-        "transcript-service"
+        "shipped captions (scripts/import-transcripts.ts)"
       ],
-      "reason": "Captions refused from this machine (tried yt-dlp, youtube-transcript, transcript-service)."
+      "transcriptFile": "content/transcripts/starters/tidGQC4SrgA.vtt"
     }
   ]
 }

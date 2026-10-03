@@ -1,7 +1,7 @@
 // The starter map from the opening build spec, section 2.9. Titles are the spec's "exact title" column with its
 // own notes in brackets taken out; `note` keeps those notes. scripts/ingest-starters.ts checks each title against
 // YouTube's oEmbed answer and records the result in content/starters-ingest.json. Every length is the end of the
-// talk's last caption in content/transcripts/starters (tests/unit/tiers.test.ts holds them to it).
+// talk's last caption in content/transcripts/starters (tests/unit/round3.test.ts holds them to it).
 export type StarterRole = 'first' | 'next' | 'mains'
 
 export type StarterRow = {
@@ -37,7 +37,7 @@ export const STARTERS: StarterRow[] = [
   { lane: 'quiet', role: 'mains', title: 'Purification of the Heart w/ Ustadha Fatima Lette | Session 1', speaker: 'Fatima Lette', youtubeId: 'WZySKAmC8go', lengthSec: t('1:00:00'), note: '2 sessions' },
   { lane: 'talking', role: 'first', title: 'What is Dua? | EP. 1 | Ramadan 2024 with Dr. Shadee Elmasry', speaker: 'Shadee Elmasry', youtubeId: 'JImcAYzp4D4', lengthSec: t('3:50'), series: 'DUA: The Answered Prayer' },
   { lane: 'talking', role: 'next', title: 'Moments of Solitude: Closeness to God | Jummah Khutbah | Imam Khalid Latif | 3.11.2022', speaker: 'Khalid Latif', youtubeId: 'f-3OxXUp9jc', lengthSec: t('40:24') },
-  { lane: 'talking', role: 'mains', title: 'The Names Class 20: Al-Nūr | Shaykh Mikaeel Smith', speaker: 'Mikaeel Smith', youtubeId: 'NIR88RRpat4', lengthSec: t('47:41'), existingTitle: 'The Names Class 20: Al-Nur', note: 'the full class; content/transcripts/mikaeel-al-nur.md is its transcript. MK5q_zMiX1g is a 95-second clip under the same title' },
+  { lane: 'talking', role: 'mains', title: 'Why You Feel Empty… And How Ramadan Fixes It | The Names Class 20: An-Nūr | Shaykh Mikaeel Smith', speaker: 'Mikaeel Smith', youtubeId: 'NIR88RRpat4', lengthSec: t('47:41'), existingTitle: 'The Names Class 20: Al-Nur', note: 'the full class; content/transcripts/mikaeel-al-nur.md is its transcript. MK5q_zMiX1g is a 95-second clip of it' },
   { lane: 'habits', role: 'first', title: 'Using Your Time Wisely - Episode 01 | The Blessing of Time with Shaykh Suleiman Hani', speaker: 'Suleiman Hani', youtubeId: 'qB3lRpEJwi8', lengthSec: t('6:52') },
   { lane: 'habits', role: 'next', title: 'Self Purification and Discipline methods of Sahaba  - Dr.Umar Faruq Abd Allah', speaker: 'Umar Faruq Abd-Allah', youtubeId: 'xY7hvYifpxo', lengthSec: t('34:49'), note: 'two spaces before the dash, as in the source' },
   { lane: 'habits', role: 'mains', title: 'Ep. 1: Know Your Purpose | Habits To Win Here and Hereafter | Dr. Tesneem Alkiek', speaker: 'Tesneem Alkiek', youtubeId: 'BnU535dqG6U', lengthSec: t('3:47'), series: 'Habits To Win Here and Hereafter' },

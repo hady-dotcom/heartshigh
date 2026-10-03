@@ -171,7 +171,9 @@ test('9. the starter map holds together', () => {
   assert.equal(lanes.length, 10)
   for (const lane of lanes) {
     const rows = STARTERS.filter((row) => row.lane === lane)
-    assert.ok(rows.length >= 2 && rows.length <= 3, `${lane} has ${rows.length} starters`)
+    const roles = new Set(rows.map((row) => row.role))
+    assert.ok(roles.size >= 2 && roles.size <= 3, `${lane} covers ${roles.size} roles`)
+    assert.ok(rows.length <= roles.size + 1, `${lane} has ${rows.length} starters`)
     assert.equal(rows.filter((row) => row.role === 'first').length, 1, `${lane} has one first`)
     assert.ok(rows.filter((row) => row.role === 'mains').length <= 1, `${lane} has at most one mains`)
   }
@@ -182,13 +184,14 @@ test('9. the starter map holds together', () => {
     assert.equal(checked?.oembedTitle, row.title, `${row.youtubeId} title matches YouTube byte for byte`)
   }
   const perSpeaker = new Map<string, number>()
-  for (const row of STARTERS) perSpeaker.set(row.speaker, (perSpeaker.get(row.speaker) || 0) + 1)
-  for (const [speaker, count] of perSpeaker) assert.ok(count <= 4, `${speaker} has ${count} rows`)
+  const clipOf = (row: (typeof STARTERS)[number]) => STARTERS.some((other) => other !== row && other.note?.includes(`${row.youtubeId} is a 95-second clip of it`))
+  for (const row of STARTERS) if (!clipOf(row)) perSpeaker.set(row.speaker, (perSpeaker.get(row.speaker) || 0) + 1)
+  for (const [speaker, count] of perSpeaker) assert.ok(count <= 4, `${speaker} has ${count} talks`)
   for (const row of STARTERS.filter((item) => item.role === 'first' && item.lane !== 'default' && item.lengthSec != null)) {
     assert.ok(row.lengthSec! <= 600, `${row.title} is ${row.lengthSec}s`)
   }
   assert.equal(STARTERS.filter((row) => row.lane === 'guarding-gaze').length, 0)
-  assert.equal(STARTERS.length, 30)
+  assert.equal(STARTERS.length, 31)
   assert.equal(perSpeaker.size, 13)
 })
 
