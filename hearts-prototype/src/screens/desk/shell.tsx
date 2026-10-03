@@ -89,6 +89,16 @@ export async function DeskFrame({
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 12 })).filter((note) => note.channel !== 'email-stub')
   const unread = notes.filter((note) => !note.read).length
   return (
+    <>
+    <div className="desk-narrow" data-testid="desk-narrow" role="note">
+      <BrandMark size={44} />
+      <h1>Open this on a laptop or desktop</h1>
+      <p>The {subBrand.toLowerCase()} needs a wider screen than this. Your work is saved, so you can carry on from a computer.</p>
+      <form action="/api/hearts" method="post">
+        <Hidden fields={{ action: 'logout' }} />
+        <button type="submit" className="btn ghost">Sign out</button>
+      </form>
+    </div>
     <div className="desk" data-testid={testId}>
       <aside className="side">
         <Link className="side-brand" href={brandHref}>
@@ -156,6 +166,7 @@ export async function DeskFrame({
         {children}
       </main>
     </div>
+    </>
   )
 }
 
