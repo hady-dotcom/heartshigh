@@ -454,6 +454,11 @@ html[data-theme='dawn'] .grow-banner,
 html[data-theme='dawn'] .time-card {
   background-image: linear-gradient(180deg, rgba(62, 36, 40, 0.84), rgba(20, 46, 44, 0.92)), var(--scene);
 }
+html[data-theme='dawn'] .grow-banner .tree-art,
+html[data-theme='dawn'] .continue-row .thumb,
+html[data-theme='dawn'] .feed-door .mini {
+  background-image: url('/theme/dawn-courtyard.jpg');
+}
 html[data-theme] .grow-banner .eyebrow,
 html[data-theme] .time-card .eyebrow,
 html[data-theme] .forest .eyebrow { color: #f1d58a; }
@@ -627,13 +632,13 @@ html[data-theme='dawn'] .journey[data-mode='appetiser'] .j-mains {
 
 /* Desk: calm room of the same house. Dark sidebar, parchment (or mist) content, gold buttons, teal headers. */
 html[data-theme] .desk {
-  --cream: #f3ebdd;
-  --paper: #f7f1e6;
-  --card: #fffbf4;
+  --cream: #dcc4a0;
+  --paper: #e3cda6;
+  --card: #e8d4b0;
   --ink: #142e2c;
   --ink-2: #2c4744;
-  --muted: #4e635e;
-  --line: #e0d2ba;
+  --muted: #3d524c;
+  --line: #c4ae84;
   --gold: #c4922e;
   --gold-deep: #6b4e12;
   --gold-glow: #e2b56a;
@@ -651,27 +656,19 @@ html[data-theme] .desk {
   --night: #0e2a2b;
   --red-clause: #8f2f2a;
   --focus: #142e2c;
-  --glass: #fffbf4;
-  --glass-solid: #fffbf4;
-  --field: #fffdf8;
+  --glass: #e8d4b0;
+  --glass-solid: #e8d4b0;
+  --field: #f0e2c8;
   color: var(--ink);
-  background-color: #f3ebdd;
+  background-color: #dcc4a0;
   background-image: none;
   color-scheme: light;
 }
 html[data-theme='dawn'] .desk {
-  --cream: #e7f3f0;
-  --paper: #eef6f4;
-  --card: #f7fbfa;
-  --line: #c5ddd6;
   --gold: #c47a45;
   --gold-deep: #7a3f28;
   --gold-glow: #e8b089;
-  --glass: #f7fbfa;
-  --glass-solid: #f7fbfa;
-  --field: #f7fbfa;
-  background-color: #e7f3f0;
-  background-image: linear-gradient(180deg, rgba(231, 243, 240, 0.2), rgba(232, 176, 137, 0.18));
+  --line: #c9a888;
 }
 html[data-theme] .desk .side {
   background: #0e2a2b;

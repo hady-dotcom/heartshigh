@@ -100,11 +100,11 @@ function seatsOf(g: Growth, door: Door) {
 export function Rings({ g, base }: { g: Growth; base: string }) {
   const sections = SECTIONS.filter((section) => sectionOf(g.doors, section.key).some((door) => g.lit.has(door.number))).length
   const items: [string, number, string, string, number?][] = [
-    ['Watched', g.completions.length, '#f0b44c', `${base}/garden/general`],
-    ['Sections', sections, '#e98fb0', `${base}/garden/jibril`],
-    ['Field', g.seatVisits.length, '#7fc4a8', `${base}/garden/ghunya`],
-    ['Harvest', g.harvest.length, '#6fa8dc', `${base}/garden/harvest`, g.harvest.filter((row) => !row.seenAt).length],
-    ['Workbook', g.workbook.length, '#a98bd6', `${base}/garden/workbook`],
+    ['Watched', g.completions.length, '#e2c27a', `${base}/garden/general`],
+    ['Sections', sections, '#f0e2c4', `${base}/garden/jibril`],
+    ['Field', g.seatVisits.length, '#b7c7a4', `${base}/garden/ghunya`],
+    ['Harvest', g.harvest.length, '#8fbfb4', `${base}/garden/harvest`, g.harvest.filter((row) => !row.seenAt).length],
+    ['Workbook', g.workbook.length, '#e2b08a', `${base}/garden/workbook`],
   ]
   return (
     <div className="rings" data-testid="rings">

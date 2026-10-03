@@ -223,7 +223,7 @@
 .course-row b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .course-row small { color: var(--muted); font-size: 12.5px; }
 .continue-row { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 10px; margin-bottom: 10px; text-decoration: none; color: var(--ink); min-height: 64px; }
-.continue-row .thumb { width: 52px; height: 52px; border-radius: 10px; background: #2b2723 center/cover; flex: none; }
+.continue-row .thumb { width: 52px; height: 52px; border-radius: 10px; background: #1b3b38 url('/theme/evening-courtyard.jpg') center/cover; flex: none; }
 .continue-row .t { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 .continue-row b { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .continue-row small { color: var(--muted); font-size: 12.5px; }
@@ -332,7 +332,11 @@
 .grow-banner { background: linear-gradient(160deg, #2a2552, #1e1a3c); color: #fff; border-radius: 24px; padding: 20px 18px; position: relative; overflow: hidden; }
 .grow-banner .eyebrow { color: var(--gold); margin: 0 0 8px; }
 .grow-banner h2 { font-size: 28px; line-height: 1.12; margin: 0 0 16px; max-width: 60%; }
-.grow-banner .tree-art { position: absolute; right: 14px; top: 16px; width: 120px; }
+.grow-banner .tree-art { position: absolute; right: 14px; top: 16px; width: 108px; height: 108px; border-radius: 18px; background: #0e2a2b url('/theme/evening-courtyard.jpg') center 32% / cover no-repeat; border: 1px solid rgba(212, 168, 75, 0.55); }
+.feed-door { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 8px; padding: 14px; border-radius: 18px; text-decoration: none; color: inherit; background: var(--glass, rgba(22, 54, 51, 0.82)); border: 1px solid var(--line, rgba(212, 168, 75, 0.42)); }
+.feed-door .strip { display: flex; gap: 8px; }
+.feed-door .mini { flex: 1; min-width: 0; height: 64px; border-radius: 12px; background: #1b3b38 url('/theme/evening-courtyard.jpg') center/cover no-repeat; }
+.feed-door .go { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border-radius: 14px; background: var(--gold, #d4a84b); color: var(--gold-ink, #1a1408); font-weight: 700; font-size: 16px; }
 .rings { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 10px 0 18px; }
 .ring-stat { display: grid; justify-items: center; gap: 6px; font-size: 11.5px; color: rgba(255,255,255,0.85); text-decoration: none; }
 .ring-stat .r { width: 52px; height: 52px; border-radius: 50%; border: 3px solid; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
