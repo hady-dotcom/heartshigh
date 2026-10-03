@@ -170,7 +170,7 @@ test('a portal admin searches for their own course and cannot draft the master l
   const admin = await as('elm-admin@hearts.test', 'portal-admin')
   const search = await json(await admin.post('/api/hearts/sheet/create', { data: { intent: 'search', topic: 'the light of the name', speaker: 'Mikaeel Smith', count: 3, minSeconds: 60, maxSeconds: 3600 } }))
   expect(search.via).toBe('fixture')
-  expect(search.candidates).toHaveLength(3)
+  expect((search.candidates as { id: string }[]).map((item) => item.id)).toEqual(['ccccccccccc'])
   const masterCourse = (await json(await master.get('/api/courses?where[title][equals]=The%20Names%20Class%2020%3A%20Al-Nur&limit=1&depth=0'))).docs?.[0] as { id: number }
   const refused = await admin.post('/api/hearts/sheet/create', {
     data: { intent: 'draft', course: String(masterCourse.id), topic: 'the light of the name', part: 'Notes', sources: [{ provider: 'vimeo', id: '76979871', title: 'A vimeo film' }] },

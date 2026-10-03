@@ -1081,8 +1081,12 @@ function planQuestions(working: Working, rows: InputRow[]) {
     if (dueDays != null && dueDays !== (point?.dueDays ?? null)) data.dueDays = dueDays
     if (evidence && evidence !== (point?.evidence || '')) data.evidence = evidence
     if (showImam != null && showImam !== Boolean(point?.showImam)) data.showImam = showImam
-    const nextFamily = (kind || point?.kind) === 'task' ? 'task' : place === 'workbook' ? 'workbook' : place === 'popup' ? 'popup' : ''
-    if (nextFamily && nextFamily !== (point?.family || '')) data.family = nextFamily
+    const storedKind = point?.kind || ''
+    const kindNow = kind || storedKind
+    const storedFamily = point?.family || (storedKind === 'task' ? 'task' : '')
+    let nextFamily = ''
+    if (present(row, 'place') || (kind && kind !== storedKind)) nextFamily = kindNow === 'task' ? 'task' : place === 'workbook' ? 'workbook' : 'popup'
+    if (nextFamily && nextFamily !== storedFamily) data.family = nextFamily
     if (nextStatus && nextStatus !== (point ? (point.status || 'published') : '')) data.status = nextStatus
     let note = point?.draftNote || ''
     if (present(row, 'notes') && textOf(row, 'notes') !== note) note = textOf(row, 'notes')

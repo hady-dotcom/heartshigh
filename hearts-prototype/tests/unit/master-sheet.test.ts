@@ -46,6 +46,7 @@ function fixture(): SheetCatalogue {
     points: [
       { id: 7, lesson: 10, second: 22, kind: 'reflection', prompt: 'When did you last feel the quiet before suhoor?', options: [], correctOption: '', status: 'draft', draftNote: DRAFT_NOTE },
       { id: 8, lesson: 10, second: 40, kind: 'multiple_choice', prompt: 'What does the Shaykh say is the first sign that light is entering?', options: ['You start to incline towards the next life', 'You feel no more sadness'], correctOption: 'You start to incline towards the next life', status: 'published', draftNote: '' },
+      { id: 9, lesson: 10, second: 80, kind: 'task', prompt: 'Call a parent this week and ask how they are.', options: [], correctOption: '', status: 'published', draftNote: '', dueDays: null, evidence: '', showImam: false, family: '' },
     ],
     resources: [{ id: 4, lesson: 10, name: 'Further reading', url: 'https://example.com/light', kind: 'link' }],
     cuts: [{ id: 2, lesson: 10, bestClause: 12, seatId: 5, seatClause: 12, seatPosition: 2, placeholder: true, status: 'suggested', start: 0, course: 1 }],
