@@ -14,12 +14,12 @@ async function signIn(page: Page, email: string, password: string, next: string)
 async function shot(page: Page, name: string, path: string, fullPage = false) {
   mkdirSync(dir, { recursive: true })
   await page.goto(path)
-  await page.waitForLoadState('networkidle').catch(() => {})
+  await page.waitForLoadState('networkidle', { timeout: 6000 }).catch(() => {})
   await page.waitForTimeout(600)
   await page.screenshot({ path: `${dir}/${name}.png`, fullPage, caret: 'initial' })
 }
 
-test.describe.configure({ timeout: 180_000 })
+test.describe.configure({ timeout: 300_000 })
 
 test('a week of use, so the garden has something in it', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })

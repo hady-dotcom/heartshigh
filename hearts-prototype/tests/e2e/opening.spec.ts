@@ -397,6 +397,16 @@ test.describe('pop-up questions in a lesson', () => {
     await expect(open).toHaveCount(before)
   })
 
+  test('29a. a clip the player refuses is reported, and a report alone never hides it', async ({ page }) => {
+    const cut = (await (await master.get('/api/cuts?where[playable][not_equals]=false&limit=1&depth=0')).json()).docs[0]
+    expect((await page.request.post('/api/hearts/unplayable', { data: { cutId: cut.id, code: 42 } })).status()).toBe(400)
+    const reported = await page.request.post('/api/hearts/unplayable', { data: { cutId: cut.id, code: 5 } })
+    expect(await reported.json()).toMatchObject({ ok: true, hidden: false })
+    const after = await (await master.get(`/api/cuts/${cut.id}?depth=0`)).json()
+    expect(after.playable).not.toBe(false)
+    expect(after.lastError).toMatch(/^5 at /)
+  })
+
   test('29. the strict layout keeps the paused player in view above the card', async ({ page }) => {
     await page.route(/youtube|ytimg|googlevideo/, (route) => route.abort())
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master/opening')
