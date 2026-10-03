@@ -69,8 +69,8 @@ export function RemotionRoot() {
           calculateMetadata={({ props }) => ({
             durationInFrames: frameCount(props),
             fps: FPS,
-            width: WIDTH,
-            height: HEIGHT,
+            width: props.width || WIDTH,
+            height: props.height || HEIGHT,
           })}
         />
       ))}

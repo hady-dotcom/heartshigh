@@ -36,7 +36,9 @@ The six clips already in `public/footage/` are the padded windows for the five-s
 
 ## Face footage
 
-The films for Ar-Rabb and Al-Nur play the speaker, cropped 9:16 and centred. Each beat is only the snapped sentence from `talks/windows.json` (the in and out, with about 0.3s of breath). Time 0 in a clip is that beat's window start. The picture and the voice come from the same file, so a word cannot appear before it is spoken. After the voice ends, the last frame holds for half a second so the landing word can be read. That hold is not more of the talk.
+The films for Ar-Rabb and Al-Nur play the speaker. Each beat is only the snapped sentence from `talks/windows.json` (the in and out, with about 0.3s of breath). Time 0 in a clip is that beat's window start. The picture and the voice come from the same file, so a word cannot appear before it is spoken. After the voice ends, the last frame holds for half a second so the landing word can be read. That hold is not more of the talk.
+
+The words sit on the footage, in the upper space beside the head, and the face is shifted to leave that side clear. Ordinary words are large. A gold landing is larger still, and only the latest landing stays up. A repeated word in the transcript is shown once. The Learn more card holds for a second and a half. Approval renders stay 540×960. The batch command renders at 720×1280.
 
 The clips are the windows Leon downloaded from the permitted talks, 720p, and they live in git because each one is about 3MB:
 

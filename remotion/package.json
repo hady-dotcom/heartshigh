@@ -7,7 +7,7 @@
   "scripts": {
     "render": "tsx scripts/render.ts",
     "batch": "tsx scripts/batch.ts",
-    "test": "tsx --test src/timing.test.ts src/manifest.test.ts src/render-smoke.test.ts",
+    "test": "tsx --test src/timing.test.ts src/manifest.test.ts src/lines.test.ts src/render-smoke.test.ts",
     "studio": "remotion studio src/index.ts"
   },
   "dependencies": {

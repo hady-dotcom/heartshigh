@@ -6,8 +6,9 @@ import '@fontsource/noto-naskh-arabic/400.css'
 import type { ReactNode } from 'react'
 import { AbsoluteFill, Audio, Freeze, OffthreadVideo, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig } from 'remotion'
 import { EMPHASIS, phraseSpans } from './emphasis'
+import { lineWords, linesOnScreen, phraseLines, withoutStutters } from './lines'
 import { UI } from './copy'
-import { BLACK, CREAM, GOLD, GOLD_DEEP, GOLD_INK, HEIGHT, INK, SAFE, SANS, SERIF, WIDTH } from './theme'
+import { BLACK, CREAM, GOLD, GOLD_DEEP, GOLD_INK, INK, SAFE, SANS, SERIF, WIDTH } from './theme'
 import { cardAt, type BeatId, type BeatSpan, type ScheduledTalk, type ScheduledWord } from './timing'
 
 export type StyleId = 'kinetic' | 'windows' | 'conversation' | 'cinema' | 'unfold'
@@ -33,12 +34,52 @@ export type TalkProps = ScheduledTalk & {
   footage?: FootageClip[] | null
   /** Gold phrases for this render. When a beat is missing here, the editorial list is used. */
   emphasis?: Partial<Record<BeatId, string[]>> | null
+  /** Batch renders are 720×1280. The approval films stay 540×960. */
+  width?: number
+  height?: number
 }
 
-const SMALL = 34
-const KEY = 68
-const PHRASE = 56
-const LINE = 42
+/** Ordinary words. Larger than the old caption size, still smaller than a landing. */
+const BODY = 64
+/** Width of the column beside the head, in a 540-wide frame. */
+const COLUMN = 336
+/** Top of that column. The headroom above the eyes, not the lap. */
+const TOP = 48
+
+/** Rough Inter-bold width, in ems, so a landing can grow until it fills the column. */
+function ems(text: string) {
+  let width = 0
+  for (const ch of text) {
+    const c = ch.toLowerCase()
+    if ("ilj.,'!|’".includes(c)) width += 0.32
+    else if (c === 'm' || c === 'w') width += 0.92
+    else if ('rft'.includes(c)) width += 0.44
+    else if (c === ' ') width += 0.28
+    else width += 0.6
+  }
+  return Math.max(0.8, width)
+}
+
+function goldPixelSize(words: { text: string }[]) {
+  const longest = Math.max(...words.map((word) => ems(word.text)))
+  const fit = Math.floor((COLUMN * 0.98) / longest)
+  const want = words.length <= 1 ? 156 : words.length === 2 ? 128 : words.length === 3 ? 112 : 96
+  return Math.min(want, Math.max(fit, BODY + 12))
+}
+
+function blockHeight(words: { text: string }[], size: number) {
+  let line = 0
+  let lines = 1
+  const gap = size * 0.26
+  for (const word of words) {
+    const width = ems(word.text) * size + gap
+    if (line > 0 && line + width > COLUMN) {
+      lines += 1
+      line = width
+    } else line += width
+  }
+  return lines * size * 1.08
+}
 
 function Hoopoe({ size = 72 }: { size?: number }) {
   return (
@@ -54,16 +95,17 @@ function Hoopoe({ size = 72 }: { size?: number }) {
 }
 
 function LearnMore({ talk }: { talk: TalkProps }) {
+  const scale = useScale()
   return (
     <AbsoluteFill style={{ background: CREAM, fontFamily: SANS, color: INK }}>
-      <div style={{ position: 'absolute', top: SAFE.top, right: SAFE.side, bottom: SAFE.bottom, left: SAFE.side, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-        <Hoopoe size={84} />
-        <div style={{ marginTop: 28, fontSize: 14, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: GOLD_DEEP }}>{talk.lane}</div>
-        <h1 style={{ fontFamily: SERIF, fontWeight: 600, fontSize: 64, lineHeight: 0.98, margin: '18px 0 12px', color: INK }}>{UI.learnMore}</h1>
-        <div style={{ width: 56, height: 2, background: GOLD, marginBottom: 18 }} />
-        <p style={{ fontFamily: SERIF, fontSize: 32, lineHeight: 1.2, margin: 0, color: INK }}>{talk.title}</p>
-        <p style={{ marginTop: 'auto', marginBottom: 8, fontSize: 18, fontWeight: 650 }}>{talk.speaker}</p>
-        <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: GOLD_DEEP }}>{UI.fullTalk}</div>
+      <div style={{ position: 'absolute', top: SAFE.top * scale, right: SAFE.side * scale, bottom: SAFE.bottom * scale, left: SAFE.side * scale, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+        <Hoopoe size={84 * scale} />
+        <div style={{ marginTop: 28 * scale, fontSize: 14 * scale, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: GOLD_DEEP }}>{talk.lane}</div>
+        <h1 style={{ fontFamily: SERIF, fontWeight: 600, fontSize: 64 * scale, lineHeight: 0.98, margin: `${18 * scale}px 0 ${12 * scale}px`, color: INK }}>{UI.learnMore}</h1>
+        <div style={{ width: 56 * scale, height: 2, background: GOLD, marginBottom: 18 * scale }} />
+        <p style={{ fontFamily: SERIF, fontSize: 32 * scale, lineHeight: 1.2, margin: 0, color: INK }}>{talk.title}</p>
+        <p style={{ marginTop: 'auto', marginBottom: 8 * scale, fontSize: 18 * scale, fontWeight: 650 }}>{talk.speaker}</p>
+        <div style={{ fontSize: 14 * scale, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: GOLD_DEEP }}>{UI.fullTalk}</div>
       </div>
     </AbsoluteFill>
   )
@@ -144,89 +186,97 @@ function Footage({ talk, time, holds, position = 'center center' }: { talk: Talk
   )
 }
 
-function keyed(card: ScheduledWord[], talk: TalkProps, beat: BeatId) {
+function linesFor(card: ScheduledWord[], talk: TalkProps, beat: BeatId) {
+  const words = withoutStutters(card)
   const chosen = talk.emphasis?.[beat]
-  return phraseSpans(card, chosen?.length ? chosen : EMPHASIS[talk.id]?.[beat] || [])
+  const phrases = chosen?.length ? chosen : EMPHASIS[talk.id]?.[beat] || []
+  return phraseLines(words, phraseSpans(words, phrases))
 }
 
-function shown(card: ScheduledWord[], time: number) {
-  return card.map((word, index) => ({ word, index })).filter((row) => row.word.showAt <= time + 1e-4)
+function useScale() {
+  const { width } = useVideoConfig()
+  return width / WIDTH
+}
+
+/** Even beats leave the left side clear. Odd beats leave the right. The face parks on the other side. */
+function wordsOnLeft(talk: TalkProps, time: number) {
+  const { beat } = shotAt(talk, time)
+  if (!beat) return true
+  return talk.beats.findIndex((row) => row.beat === beat.beat) % 2 === 0
+}
+
+function faceShift(talk: TalkProps, time: number) {
+  return wordsOnLeft(talk, time) ? '32% 42%' : '68% 42%'
+}
+
+/**
+ * Type in the upper negative space beside the head. Gold, when it has landed,
+ * takes the top of that column and is larger than the words around it.
+ * Nothing is placed over the lap.
+ */
+function UpperWords({ talk, time, font, bubbles = false, stack = false }: { talk: TalkProps; time: number; font: string; bubbles?: boolean; stack?: boolean }) {
+  const scale = useScale()
+  const { beat } = shotAt(talk, time)
+  if (!beat) return null
+  const lines = linesOnScreen(linesFor(beatCard(talk, beat.beat, time), talk, beat.beat), time, stack)
+  const left = wordsOnLeft(talk, time)
+  const column = COLUMN * scale
+  let cursor = TOP * scale
+  const shadow = '0 2px 18px rgba(20,18,14,0.9)'
+  const painted: ReactNode[] = []
+  for (const line of lines) {
+    const words = lineWords(line, time)
+    const size = (line.gold ? goldPixelSize(line.words) : BODY) * scale
+    const height = blockHeight(words, size / scale) * scale
+    if (cursor > 500 * scale) break
+    const top = cursor
+    cursor += height + (bubbles ? 18 : 12) * scale
+    const color = bubbles ? (line.gold ? GOLD_INK : CREAM) : line.gold ? GOLD : CREAM
+    const body = words.map((word) => (
+      <Punch key={`${line.phrase}-${word.showAt}-${word.text}`} time={time} at={word.showAt} gold={line.gold} size={size} font={font} color={color} fade={!line.gold && !bubbles && !stack}>
+        {word.text}
+      </Punch>
+    ))
+    painted.push(
+      <div key={`${line.phrase}-${line.words[0].showAt}-${line.gold}`} style={{ position: 'absolute', top, width: column, left: left ? 16 * scale : undefined, right: left ? undefined : 16 * scale, textAlign: left ? 'left' : 'right', color: CREAM, textShadow: bubbles ? undefined : shadow }}>
+        {bubbles ? (
+          <div style={{ display: 'inline-block', maxWidth: column, background: line.gold ? 'rgba(220,166,67,0.94)' : 'rgba(20,18,14,0.82)', color, borderRadius: line.gold ? 18 * scale : 16 * scale, padding: `${8 * scale}px ${12 * scale}px` }}>
+            {body}
+          </div>
+        ) : (
+          body
+        )}
+      </div>,
+    )
+  }
+  return <>{painted}</>
+}
+
+function holdsFor(talk: TalkProps, time: number, beat: BeatId) {
+  return linesFor(beatCard(talk, beat, time), talk, beat).filter((line) => line.gold).map((line) => line.words[0].showAt)
 }
 
 function Kinetic({ talk, time }: { talk: TalkProps; time: number }) {
   const { beat } = shotAt(talk, time)
   if (!beat) return <AbsoluteFill style={{ background: BLACK }} />
-  const card = beatCard(talk, beat.beat, time)
-  const spans = keyed(card, talk, beat.beat)
-  const inSpan = (index: number) => spans.find((span) => index >= span.from && index <= span.to)
-  const visible = shown(card, time)
-  const lastKey = [...spans].reverse().find((span) => card[span.from].showAt <= time + 1e-4)
-  const connectors = visible.filter((row) => !inSpan(row.index) && (!lastKey || row.index > lastKey.to)).slice(-5)
-  const side = talk.beats.findIndex((row) => row.beat === beat.beat) % 2 === 0 ? 'flex-start' : 'flex-end'
   return (
     <AbsoluteFill>
-      <Footage talk={talk} time={time} holds={spans.map((span) => card[span.from].showAt)} />
-      <div style={{ position: 'absolute', left: SAFE.side, right: SAFE.side, bottom: SAFE.bottom, display: 'flex', flexDirection: 'column', alignItems: side, textAlign: side === 'flex-start' ? 'left' : 'right' }}>
-        <div style={{ maxWidth: 280, color: CREAM, textShadow: '0 2px 14px rgba(20,18,14,0.9)' }}>
-          {connectors.map((row) => (
-            <Punch key={`${row.index}-${row.word.showAt}`} time={time} at={row.word.showAt} gold={false} size={SMALL} font={SANS} fade>
-              {row.word.text}
-            </Punch>
-          ))}
-        </div>
-        <div style={{ maxWidth: 460, marginTop: 8 }}>
-          {spans.map((span) => {
-            const words = card.slice(span.from, span.to + 1).filter((word) => word.showAt <= time + 1e-4)
-            if (!words.length) return null
-            const size = words.length > 2 ? PHRASE : KEY
-            return (
-              <div key={span.phrase} style={{ textShadow: '0 2px 16px rgba(20,18,14,0.85)' }}>
-                {words.map((word) => (
-                  <Punch key={`${span.phrase}-${word.showAt}`} time={time} at={word.showAt} gold size={size} font={SANS}>
-                    {word.text}
-                  </Punch>
-                ))}
-              </div>
-            )
-          })}
-        </div>
-      </div>
+      <Footage talk={talk} time={time} holds={holdsFor(talk, time, beat.beat)} position={faceShift(talk, time)} />
+      <UpperWords talk={talk} time={time} font={SANS} />
     </AbsoluteFill>
   )
 }
 
 function Windows({ talk, time }: { talk: TalkProps; time: number }) {
+  const scale = useScale()
   const { beat } = shotAt(talk, time)
-  const card = beat ? beatCard(talk, beat.beat, time) : []
-  const spans = beat ? keyed(card, talk, beat.beat) : []
-  const inSpan = (index: number) => spans.find((span) => index >= span.from && index <= span.to)
-  const visible = shown(card, time)
+  if (!beat) return <AbsoluteFill style={{ background: CREAM }} />
+  const inset = 14 * scale
   return (
     <AbsoluteFill style={{ background: CREAM }}>
-      <div style={{ position: 'absolute', top: 108, left: 36, width: 468, height: 500, overflow: 'hidden', borderRadius: 22, border: `3px solid ${GOLD}`, boxShadow: '0 16px 40px rgba(20,18,14,0.18)', background: BLACK }}>
-        <Footage talk={talk} time={time} holds={spans.map((span) => card[span.from].showAt)} />
-      </div>
-      <div style={{ position: 'absolute', left: SAFE.side, right: SAFE.side, top: 624, bottom: SAFE.bottom, overflow: 'hidden' }}>
-        <div style={{ color: INK, fontFamily: SERIF }}>
-          {visible.filter((row) => !inSpan(row.index)).slice(-8).map((row) => (
-            <Punch key={`${row.index}-${row.word.showAt}`} time={time} at={row.word.showAt} gold={false} size={SMALL} font={SERIF}>
-              {row.word.text}
-            </Punch>
-          ))}
-        </div>
-        {spans.map((span) => {
-          const words = card.slice(span.from, span.to + 1).filter((word) => word.showAt <= time + 1e-4)
-          if (!words.length) return null
-          return (
-            <div key={span.phrase}>
-              {words.map((word) => (
-                <Punch key={`${span.phrase}-${word.showAt}`} time={time} at={word.showAt} gold color={GOLD_DEEP} size={span.to - span.from > 1 ? PHRASE : KEY} font={SERIF}>
-                  {word.text}
-                </Punch>
-              ))}
-            </div>
-          )
-        })}
+      <div style={{ position: 'absolute', top: inset, right: inset, bottom: inset, left: inset, overflow: 'hidden', borderRadius: 26 * scale, border: `${3 * scale}px solid ${GOLD}`, background: BLACK }}>
+        <Footage talk={talk} time={time} holds={holdsFor(talk, time, beat.beat)} position={faceShift(talk, time)} />
+        <UpperWords talk={talk} time={time} font={SERIF} />
       </div>
     </AbsoluteFill>
   )
@@ -235,91 +285,35 @@ function Windows({ talk, time }: { talk: TalkProps; time: number }) {
 function Conversation({ talk, time }: { talk: TalkProps; time: number }) {
   const { beat } = shotAt(talk, time)
   if (!beat) return <AbsoluteFill style={{ background: BLACK }} />
-  const card = beatCard(talk, beat.beat, time)
-  const spans = keyed(card, talk, beat.beat)
-  const bubbles: { key: string; words: ScheduledWord[]; gold: boolean; at: number }[] = []
-  let run: ScheduledWord[] = []
-  const flush = () => {
-    if (!run.length) return
-    bubbles.push({ key: `run-${run[0].showAt}`, words: run, gold: false, at: run[0].showAt })
-    run = []
-  }
-  card.forEach((word, index) => {
-    const span = spans.find((row) => index >= row.from && index <= row.to)
-    if (span && index === span.from) {
-      flush()
-      bubbles.push({ key: span.phrase, words: card.slice(span.from, span.to + 1), gold: true, at: word.showAt })
-    } else if (!span) {
-      run.push(word)
-      if (run.length === 4) flush()
-    }
-  })
-  flush()
-  const open = bubbles.filter((bubble) => time + 1e-4 >= bubble.at).slice(-2)
   return (
     <AbsoluteFill>
-      <Footage talk={talk} time={time} holds={spans.map((span) => card[span.from].showAt)} />
-      <div style={{ position: 'absolute', left: SAFE.side, right: 120, bottom: SAFE.bottom, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start' }}>
-        {open.map((bubble) => (
-          <div key={bubble.key} style={{ maxWidth: 300, background: bubble.gold ? 'rgba(220,166,67,0.94)' : 'rgba(20,18,14,0.78)', color: bubble.gold ? GOLD_INK : CREAM, borderRadius: '20px 20px 20px 6px', padding: '12px 14px', fontFamily: SANS }}>
-            {bubble.words.filter((word) => word.showAt <= time + 1e-4).map((word) => (
-              <Punch key={`${bubble.key}-${word.showAt}`} time={time} at={word.showAt} gold={false} size={bubble.gold ? PHRASE : SMALL} font={SANS}>
-                {word.text}
-              </Punch>
-            ))}
-          </div>
-        ))}
-      </div>
+      <Footage talk={talk} time={time} holds={holdsFor(talk, time, beat.beat)} position={faceShift(talk, time)} />
+      <UpperWords talk={talk} time={time} font={SANS} bubbles />
     </AbsoluteFill>
   )
 }
 
 function Cinema({ talk, time }: { talk: TalkProps; time: number }) {
+  const scale = useScale()
   const breakAt = titleBreak(talk, time)
   if (breakAt >= 0) {
     const numeral = ['I', 'II', 'III'][breakAt] || ''
     return (
       <AbsoluteFill style={{ background: BLACK, color: CREAM, fontFamily: SERIF, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ fontSize: 18, letterSpacing: '0.42em' }}>{numeral}</div>
-        <div style={{ width: 56, height: 2, background: GOLD, margin: '20px 0' }} />
-        <div style={{ fontSize: 72, fontWeight: 600, lineHeight: 0.95 }}>{talk.title}</div>
+        <div style={{ fontSize: 18 * scale, letterSpacing: '0.42em' }}>{numeral}</div>
+        <div style={{ width: 56 * scale, height: 2, background: GOLD, margin: `${20 * scale}px 0` }} />
+        <div style={{ fontSize: 72 * scale, fontWeight: 600, lineHeight: 0.95, textAlign: 'center', padding: `0 ${32 * scale}px` }}>{talk.title}</div>
       </AbsoluteFill>
     )
   }
   const { beat } = shotAt(talk, time)
   if (!beat) return <AbsoluteFill style={{ background: BLACK }} />
-  const card = beatCard(talk, beat.beat, time)
-  const spans = keyed(card, talk, beat.beat)
-  const inSpan = (index: number) => spans.some((span) => index >= span.from && index <= span.to)
-  const visible = shown(card, time)
-  const landed = spans.filter((span) => card[span.from].showAt <= time + 1e-4)
+  const bar = 56 * scale
   return (
     <AbsoluteFill style={{ background: BLACK }}>
-      <div style={{ position: 'absolute', top: 118, right: 0, bottom: 176, left: 0, overflow: 'hidden' }}>
-        <Footage talk={talk} time={time} holds={spans.map((span) => card[span.from].showAt)} />
-      </div>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 118, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 16 }}>
-        <div style={{ color: CREAM, fontFamily: SERIF, fontSize: 16, letterSpacing: '0.28em', textTransform: 'uppercase' }}>{talk.title}</div>
-      </div>
-      <div style={{ position: 'absolute', left: SAFE.side, right: SAFE.side, bottom: 28, height: 136, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-        {landed.length ? null : (
-          <div style={{ color: CREAM, fontFamily: SERIF }}>
-            {visible.filter((row) => !inSpan(row.index)).slice(-6).map((row) => (
-              <Punch key={`${row.index}-${row.word.showAt}`} time={time} at={row.word.showAt} gold={false} size={SMALL} font={SERIF}>
-                {row.word.text}
-              </Punch>
-            ))}
-          </div>
-        )}
-        {landed.slice(-1).map((span) => (
-          <div key={span.phrase}>
-            {card.slice(span.from, span.to + 1).filter((word) => word.showAt <= time + 1e-4).map((word) => (
-              <Punch key={`${span.phrase}-${word.showAt}`} time={time} at={word.showAt} gold size={span.to - span.from > 1 ? PHRASE : KEY} font={SERIF}>
-                {word.text}
-              </Punch>
-            ))}
-          </div>
-        ))}
+      <div style={{ position: 'absolute', top: bar, right: 0, bottom: bar, left: 0, overflow: 'hidden' }}>
+        <Footage talk={talk} time={time} holds={holdsFor(talk, time, beat.beat)} position={faceShift(talk, time)} />
+        <UpperWords talk={talk} time={time} font={SERIF} />
       </div>
     </AbsoluteFill>
   )
@@ -327,50 +321,18 @@ function Cinema({ talk, time }: { talk: TalkProps; time: number }) {
 
 function Unfold({ talk, time }: { talk: TalkProps; time: number }) {
   const { beat } = shotAt(talk, time)
-  const card = beat ? beatCard(talk, beat.beat, time) : []
-  const spans = beat ? keyed(card, talk, beat.beat) : []
-  const lines: { key: string; words: ScheduledWord[]; gold: boolean }[] = []
-  let run: ScheduledWord[] = []
-  const flush = () => {
-    if (!run.length) return
-    lines.push({ key: `line-${run[0].showAt}`, words: run, gold: false })
-    run = []
-  }
-  card.forEach((word, index) => {
-    const span = spans.find((row) => index >= row.from && index <= row.to)
-    if (span && index === span.from) {
-      flush()
-      lines.push({ key: span.phrase, words: card.slice(span.from, span.to + 1), gold: true })
-    } else if (!span) {
-      run.push(word)
-      if (run.length === 3) flush()
-    }
-  })
-  flush()
-  const open = lines.filter((line) => line.words.some((word) => word.showAt <= time + 1e-4))
+  if (!beat) return <AbsoluteFill style={{ background: BLACK }} />
   return (
-    <AbsoluteFill style={{ background: CREAM }}>
-      <div style={{ position: 'absolute', top: 0, bottom: 0, left: 214, right: 0, overflow: 'hidden', background: BLACK }}>
-        <Footage talk={talk} time={time} holds={spans.map((span) => card[span.from].showAt)} position="center 42%" />
-      </div>
-      <div style={{ position: 'absolute', top: SAFE.top, bottom: SAFE.bottom, left: 18, width: 186, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
-        {open.map((line) => (
-          <div key={line.key} style={{ color: line.gold ? GOLD_DEEP : INK }}>
-            {line.words.filter((word) => word.showAt <= time + 1e-4).map((word) => (
-              <Punch key={`${line.key}-${word.showAt}`} time={time} at={word.showAt} gold={line.gold} color={line.gold ? GOLD_DEEP : INK} size={line.gold ? LINE : SMALL} font={SERIF}>
-                {word.text}
-              </Punch>
-            ))}
-          </div>
-        ))}
-      </div>
+    <AbsoluteFill>
+      <Footage talk={talk} time={time} holds={holdsFor(talk, time, beat.beat)} position={faceShift(talk, time)} />
+      <UpperWords talk={talk} time={time} font={SERIF} stack />
     </AbsoluteFill>
   )
 }
 
 export function TypographyFilm(talk: TalkProps) {
   const frame = useCurrentFrame()
-  const { fps } = useVideoConfig()
+  const { fps, width, height } = useVideoConfig()
   const time = frame / fps
   const sit = talk.spokenSeconds
   if (time >= sit) return <LearnMore talk={talk} />
@@ -382,7 +344,7 @@ export function TypographyFilm(talk: TalkProps) {
     unfold: <Unfold talk={talk} time={time} />,
   }[talk.style]
   return (
-    <AbsoluteFill style={{ width: WIDTH, height: HEIGHT, background: BLACK }}>
+    <AbsoluteFill style={{ width, height, background: BLACK }}>
       {picture}
       {!talk.footage?.length && talk.audio ? <Audio src={staticFile(talk.audio)} /> : null}
     </AbsoluteFill>

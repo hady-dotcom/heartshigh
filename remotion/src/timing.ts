@@ -30,7 +30,7 @@ export type ScheduledTalk = {
 
 export const LEAD_IN = 0.4
 export const BEAT_GAP = 0.32
-export const LEARN_MORE_SECONDS = 4.5
+export const LEARN_MORE_SECONDS = 1.5
 /** Cinema is a full-frame sit of about one minute, including the closing card. */
 export const CINEMA_SIT = 56
 /** A card holds at most this many words. A longer beat turns the page on the next cue. */

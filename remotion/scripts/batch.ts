@@ -114,6 +114,8 @@ for (const row of planned) {
     audio: null,
     footage: [{ beat: row.beat, src: `footage/${path.basename(file)}`, windowStart: row.start, in: row.start, out: row.end }],
     emphasis: { [row.beat]: phrases },
+    width: 720,
+    height: 1280,
   }
   const composition = await selectComposition({ serveUrl, id: row.style, inputProps })
   mkdirSync(path.dirname(output), { recursive: true })
