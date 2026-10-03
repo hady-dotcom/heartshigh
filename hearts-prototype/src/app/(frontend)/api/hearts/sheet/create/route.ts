@@ -5,7 +5,7 @@ import { parsePastedSources, searchTalks } from '@/lib/sheet-search'
 import { getSession } from '@/server/context'
 import { planBuffer, summaryOf, writeAudit, type SheetScope } from '@/server/master-sheet'
 import { draftWorkbook, type CreatorSource } from '@/server/sheet-creator'
-import { resolveScope } from '../route'
+import { resolveScope } from '@/server/sheet-scope'
 
 export const dynamic = 'force-dynamic'
 
