@@ -226,7 +226,7 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .desk .circle-list li.off { background: #faf7f0; }
 .desk .circle-list li.off .circle-text { opacity: 0.55; }
 .desk .circle-text p { margin: 4px 0 0; font-size: 14.5px; line-height: 1.5; }
-.desk .circle-tools { display: flex; gap: 8px; align-items: start; flex-wrap: wrap; justify-content: flex-end; max-width: 320px; }
+.desk .circle-tools { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; justify-content: flex-end; max-width: 320px; }
 .desk .circle-tools details[open] { flex-basis: 100%; }
 .desk .circle-tools summary { list-style: none; cursor: pointer; }
 .desk .circle-tools summary::-webkit-details-marker { display: none; }
