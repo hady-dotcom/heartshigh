@@ -2,6 +2,7 @@
 // Copy comes from ux-first-run.md and the build spec (sections 2.1, 2.7, 2.8). Plain module, no path aliases,
 // so the seed, the server, the browser and the tests can all import it.
 import type { LaneDef, ScaleDef, ScaleKey, SceneDef } from './heart'
+import { killHits } from './text-safety'
 
 export const SCALES: (ScaleDef & {
   leonName: string
@@ -147,7 +148,7 @@ export const DEFAULT_HELP_CONTACTS = [
   { label: 'If you are in danger right now, call 999 in the UK or 911 in the US', phone: '999' },
 ]
 
-// ux-first-run.md section 7. Matched as whole words or phrases, ignoring case.
+// ux-first-run.md section 7. Matched as whole words or phrases after folding (see killHits in text-safety.ts).
 export const KILL_LIST = [
   'survey', 'quiz', 'test', 'assessment', 'questionnaire', 'diagnostic', 'profile', 'result', 'results', 'score', 'points', 'level', 'rank', 'type', 'persona', 'archetype', 'category',
   'desire', 'sexuality', 'lust', 'greed', 'wealth attachment', 'anger', 'resentment', 'ego', 'pride', 'fear', 'anxiety', 'loneliness', 'belonging', 'gratitude', 'contentment', 'faith score', 'compassion', 'empathy', 'discipline', 'self-control',
@@ -161,6 +162,5 @@ export const KILL_LIST = [
 ]
 
 export function killListHits(text: string) {
-  const plain = text.replace(/\*\*/g, '').replace(/[’‘]/g, "'").toLowerCase()
-  return KILL_LIST.filter((word) => new RegExp(`(^|[^a-z'-])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^a-z'-])`).test(plain))
+  return killHits(text, KILL_LIST)
 }
