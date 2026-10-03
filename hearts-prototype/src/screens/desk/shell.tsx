@@ -22,6 +22,7 @@ export function portalNav(base: string, user: SessionUser): { group: string; ite
       items: [
         { key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> },
         { key: 'content', label: 'Content', href: `${base}/admin/content`, icon: <BookIcon /> },
+        { key: 'sheet', label: 'Master sheet', href: `${base}/admin/sheet`, icon: <BookIcon /> },
         { key: 'library', label: 'Library', href: `${base}/admin/library`, icon: <LibraryIcon /> },
         { key: 'access', label: 'Access codes', href: `${base}/admin/access`, icon: <KeyIcon /> },
         { key: 'opening', label: 'Opening', href: `${base}/admin/opening`, icon: <HeartIcon /> },
@@ -42,6 +43,7 @@ export function masterNav(): { group: string; items: NavItem[] }[] {
         { key: 'review', label: 'Review', href: '/master/review', icon: <QuestionIcon /> },
         { key: 'tiers', label: 'Talk tiers', href: '/master/tiers', icon: <BookIcon /> },
         { key: 'packs', label: 'Course packs', href: '/master/packs', icon: <BookIcon /> },
+        { key: 'sheet', label: 'Master sheet', href: '/master/sheet', icon: <BookIcon /> },
         { key: 'questions', label: 'Placing questions', href: '/master/questions', icon: <QuestionIcon /> },
       ],
     },

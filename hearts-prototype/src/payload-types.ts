@@ -111,6 +111,8 @@ export interface Config {
     'heart-contributions': HeartContribution;
     'view-as-sessions': ViewAsSession;
     'audit-log': AuditLog;
+    'sheet-keys': SheetKey;
+    'sheet-imports': SheetImport;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -162,6 +164,8 @@ export interface Config {
     'heart-contributions': HeartContributionsSelect<false> | HeartContributionsSelect<true>;
     'view-as-sessions': ViewAsSessionsSelect<false> | ViewAsSessionsSelect<true>;
     'audit-log': AuditLogSelect<false> | AuditLogSelect<true>;
+    'sheet-keys': SheetKeysSelect<false> | SheetKeysSelect<true>;
+    'sheet-imports': SheetImportsSelect<false> | SheetImportsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1292,6 +1296,54 @@ export interface AuditLog {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sheet-keys".
+ */
+export interface SheetKey {
+  id: number;
+  talkKey: string;
+  lesson: number | Lesson;
+  channel?: string | null;
+  sheetStatus?: ('draft' | 'checked' | 'live') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sheet-imports".
+ */
+export interface SheetImport {
+  id: number;
+  desk: 'master' | 'portal';
+  portal?: (number | null) | Portal;
+  actor?: (number | null) | User;
+  actorRole?: string | null;
+  fileName?: string | null;
+  state: 'preview' | 'applied' | 'undone';
+  at?: string | null;
+  summary?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  snapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  workbook?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -1489,6 +1541,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'audit-log';
         value: number | AuditLog;
+      } | null)
+    | ({
+        relationTo: 'sheet-keys';
+        value: number | SheetKey;
+      } | null)
+    | ({
+        relationTo: 'sheet-imports';
+        value: number | SheetImport;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2354,6 +2414,36 @@ export interface AuditLogSelect<T extends boolean = true> {
   at?: T;
   ipHash?: T;
   detail?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sheet-keys_select".
+ */
+export interface SheetKeysSelect<T extends boolean = true> {
+  talkKey?: T;
+  lesson?: T;
+  channel?: T;
+  sheetStatus?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sheet-imports_select".
+ */
+export interface SheetImportsSelect<T extends boolean = true> {
+  desk?: T;
+  portal?: T;
+  actor?: T;
+  actorRole?: T;
+  fileName?: T;
+  state?: T;
+  at?: T;
+  summary?: T;
+  snapshot?: T;
+  workbook?: T;
   updatedAt?: T;
   createdAt?: T;
 }

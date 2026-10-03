@@ -6,6 +6,7 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
 import { buildConfig } from 'payload'
 import { collections } from './collections'
+import { sheetCollections } from './collections-sheet'
 import { MasterFlags } from './collections-opening'
 import { viewAsGlobalGuard, viewAsGuard } from './server/viewas'
 
@@ -30,7 +31,7 @@ export default buildConfig({
       header: ['/components/viewas-admin-banner#ViewAsAdminBanner'],
     },
   },
-  collections: collections.map((collection) => ({
+  collections: [...collections, ...sheetCollections].map((collection) => ({
     ...collection,
     hooks: { ...collection.hooks, beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never] },
   })),
