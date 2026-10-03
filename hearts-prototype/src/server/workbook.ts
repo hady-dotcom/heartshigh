@@ -71,6 +71,8 @@ export async function startAgain(payload: Payload, userId: number) {
 export type WorkbookOpeningRow = { sceneKey: string; caption: string; label: string; state: 'answered' | 'passed' | 'not-reached'; private: boolean }
 export type WorkbookAnswer = {
   id: number
+  entryId: number | null
+  atSecond: number | null
   course: { id: number; title: string } | null
   topic: string
   video: { id: number; title: string } | null
@@ -129,6 +131,8 @@ export async function workbookFor(payload: Payload, learner: SessionUser, reader
     const entry = (entries.docs as unknown as Row[]).find((item) => idOf(item.answer) === row.id)
     return {
       id: row.id,
+      entryId: entry ? entry.id : null,
+      atSecond: typeof row.atSecond === 'number' ? (row.atSecond as number) : point ? Number(point.second || 0) : null,
       course: course ? { id: course.id, title: String(course.title) } : null,
       topic: String(unit?.title || 'The talk'),
       video: lesson ? { id: lesson.id, title: String(lesson.title) } : null,

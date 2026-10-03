@@ -1,19 +1,94 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { Feed } from '@/components/app/feed'
+import { Avatar } from '@/components/app/feed'
 import { AppFrame, Flash, TabBar } from '@/components/app/shell'
-import { courseCards, dayNumber, loadFeed, portalName } from '@/server/learner'
-import { type Ctx, unreadCount } from '../common'
+import { PlayIcon } from '@/components/icons'
+import { courseCards, dayNumber, loadFeed, portalName, portraitFor, posterFor, slugify } from '@/server/learner'
+import { growth, Rings } from './garden'
+import { type Ctx, ref, rows, str, unreadCount } from '../common'
 
+function minutesLeft(seconds: number, percent: number) {
+  if (!seconds) return null
+  const left = Math.max(1, Math.round((seconds * (1 - percent / 100)) / 60))
+  return `${left} min left`
+}
+
+/** Home: the growth banner, what to carry on with, then the way into today's clips (board 00). */
 export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
-  if (user.role === 'learner' && !user.onboarded) redirect(`${base}/welcome`)
-  const [items, unread] = await Promise.all([loadFeed(payload, user), unreadCount(payload, user)])
+  if (user.role === 'learner' && !user.onboarded) redirect(`${base}/start`)
+  const [g, unread, items, courses] = await Promise.all([growth(payload, user), unreadCount(payload, user), loadFeed(payload, user), courseCards(payload, user)])
+  const [visits, sessions] = await Promise.all([
+    rows(payload, 'lesson-visits', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 40 }),
+    rows(payload, 'watch-sessions', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 80 }),
+  ])
+  const done = new Set(g.completions.filter((row) => Number(row.percent ?? 100) >= 90).map((row) => ref(row.lesson)))
+  const openIds = [...new Set(visits.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id) && !done.has(id)))].slice(0, 3)
+  const openLessons = openIds.length ? await rows(payload, 'lessons', { id: { in: openIds } }) : []
+  const courseIds = [...new Set(openLessons.map((row) => ref(row.course)).filter((id): id is number => Boolean(id)))]
+  const openCourses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }) : []
+  const carryOn = openIds
+    .map((id) => openLessons.find((row) => row.id === id))
+    .filter((row): row is NonNullable<typeof row> => Boolean(row))
+    .map((lesson) => {
+      const course = openCourses.find((row) => row.id === ref(lesson.course))
+      const progress = sessions.find((row) => ref(row.lesson) === lesson.id)
+      const seconds = Number(lesson.durationSeconds || 0)
+      const percent = seconds && progress ? Math.min(100, (Number(progress.seconds || 0) / seconds) * 100) : Number(g.completions.find((row) => ref(row.lesson) === lesson.id)?.percent || 0)
+      return {
+        id: lesson.id,
+        href: `${base}/course/${ref(lesson.course)}?part=${lesson.id}`,
+        title: `Part ${Number(lesson.order || 1)} · ${str(lesson.title)}`,
+        sub: minutesLeft(seconds, percent) || str(course?.title),
+        thumb: posterFor(str(lesson.youtubeId) || null) || portraitFor(slugify(str(lesson.speaker))),
+      }
+    })
+  const fallback = carryOn.length ? [] : courses.filter((course) => course.open).slice(0, 2)
+  const days = g.activeDays.size
+  const clips = items.slice(0, 3)
   return (
-    <AppFrame dark testId="home">
-      <h1 className="sr-only">{portalName(portal)}</h1>
-      <Flash error={query.error} notice={query.notice} />
-      <Feed items={items} base={base} startLane={query.lane} />
-      <TabBar base={base} active="home" dark unread={unread} />
+    <AppFrame testId="home">
+      <div className="app-scroll">
+        <div className="app-head">
+          <h1>Home</h1>
+          <Link href={`${base}/me`} aria-label="Me" data-testid="home-avatar"><Avatar name={user.name || 'You'} portrait={null} size={40} /></Link>
+        </div>
+        <span className="sr-only">{portalName(portal)}</span>
+        <Flash error={query.error} notice={query.notice} />
+        <section className="grow-banner" data-testid="grow-banner">
+          <p className="eyebrow">Your growth</p>
+          <h2 data-testid="days-count">{days ? `${days} day${days === 1 ? '' : 's'} with us so far` : 'Your garden starts today'}</h2>
+          <span className="tree-art"><img src="/brand/hoopoe-perched.png" alt="" /></span>
+          <p className="grow-sub">Five ways to see it</p>
+          <Rings g={g} base={base} />
+          <Link className="pill gold block" href={`${base}/garden`} data-testid="see-sown">See what you&apos;ve sown</Link>
+        </section>
+        <p className="eyebrow">Continue</p>
+        <div data-testid="continue">
+          {carryOn.map((row) => (
+            <Link key={row.id} className="continue-row" href={row.href} data-testid="continue-row">
+              <span className="thumb" style={row.thumb ? { backgroundImage: `url(${row.thumb})` } : undefined} />
+              <span className="t"><b>{row.title}</b><small>{row.sub}</small></span>
+            </Link>
+          ))}
+          {fallback.map((course) => (
+            <Link key={course.id} className="continue-row" href={`${base}/course/${course.id}`} data-testid="continue-row">
+              <span className="thumb" style={course.poster ? { backgroundImage: `url(${course.poster})` } : undefined} />
+              <span className="t"><b>{course.title}</b><small>{course.speaker} · {course.parts} part{course.parts === 1 ? '' : 's'}</small></span>
+            </Link>
+          ))}
+          {!carryOn.length && !fallback.length ? <p className="muted">Start a course from Lanes and it will wait for you here.</p> : null}
+        </div>
+        <p className="eyebrow">Today&apos;s clips <span className="muted" style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }} data-testid="day-number">· Day {dayNumber(user)}</span></p>
+        <Link className="feed-door" href={`${base}/feed`} data-testid="open-feed">
+          <span className="strip">
+            {clips.map((clip) => (
+              <span key={clip.id} className="mini" style={clip.poster || clip.portrait ? { backgroundImage: `url(${clip.poster || clip.portrait})` } : undefined} />
+            ))}
+          </span>
+          <span className="go"><PlayIcon size={22} /> Watch today&apos;s clips</span>
+        </Link>
+      </div>
+      <TabBar base={base} active="home" unread={unread} />
     </AppFrame>
   )
 }
@@ -43,7 +118,7 @@ export async function LanesScreen({ payload, user, base, query }: Ctx) {
             <Link
               key={item.lane}
               className="lane-card"
-              href={`${base}?lane=${item.lane}`}
+              href={`${base}/feed?lane=${item.lane}`}
               data-testid="lane-card"
               style={item.poster || item.portrait ? { backgroundImage: `url(${item.poster || item.portrait})` } : undefined}
             >

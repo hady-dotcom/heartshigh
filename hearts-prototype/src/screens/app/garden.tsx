@@ -3,9 +3,11 @@ import { notFound } from 'next/navigation'
 import type { Payload } from 'payload'
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
 import { Mascot } from '@/components/brand'
-import { Flower, GardenTree } from '@/components/icons'
+import { GardenPath } from '@/components/app/garden-path'
+import { Flower, LockIcon } from '@/components/icons'
 import { now } from '@/lib/clock'
-import { type SessionUser, visibleCourseIds } from '@/server/context'
+import { getSession, type SessionUser, visibleCourseIds } from '@/server/context'
+import { workbookFor } from '@/server/workbook'
 import { posterFor } from '@/server/learner'
 import { type Ctx, type Row, clock, ref, rows, shortDate, str, unreadCount } from '../common'
 
@@ -18,7 +20,7 @@ const SECTIONS: { key: string; title: string; colour: string }[] = [
   { key: 'Trunk', title: 'He came to teach you your religion', colour: '#6fa8dc' },
 ]
 
-type Growth = {
+export type Growth = {
   clauses: Row[]
   seats: Row[]
   lit: Set<number>
@@ -33,7 +35,7 @@ type Growth = {
   secondsGiven: number
 }
 
-async function growth(payload: Payload, user: SessionUser): Promise<Growth> {
+export async function growth(payload: Payload, user: SessionUser): Promise<Growth> {
   const mine = { user: { equals: user.id } }
   const [clauses, seats, completions, seatVisits, harvest, workbook, answers, rituals, visits, tags] = await Promise.all([
     rows(payload, 'clauses', undefined, { sort: 'number', limit: 50 }),
@@ -71,7 +73,7 @@ function sectionOf(clauses: Row[], key: string) {
   return clauses.filter((clause) => str(clause.core) === key)
 }
 
-function Rings({ g, base }: { g: Growth; base: string }) {
+export function Rings({ g, base }: { g: Growth; base: string }) {
   const sections = SECTIONS.filter((section) => sectionOf(g.clauses, section.key).some((clause) => g.lit.has(Number(clause.number)))).length
   const items: [string, number, string, string][] = [
     ['Watched', g.completions.length, '#f0b44c', `${base}/garden/general`],
@@ -92,35 +94,51 @@ function Rings({ g, base }: { g: Growth; base: string }) {
   )
 }
 
+/** The lessons of the course the learner is in now, as one path with the active lesson marked. */
+export async function coursePath(payload: Payload, user: SessionUser, base: string, g: Growth, courseId?: number | null) {
+  let id = courseId || null
+  if (!id) {
+    const visits = await rows(payload, 'lesson-visits', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 1 })
+    const lesson = visits[0] ? g.lessons.find((row) => row.id === ref(visits[0].lesson)) : null
+    id = lesson ? ref(lesson.course) : null
+  }
+  if (!id) id = (await visibleCourseIds(payload, user))[0] || null
+  if (!id) return null
+  const course = (await rows(payload, 'courses', { id: { equals: id } }))[0]
+  const lessons = await rows(payload, 'lessons', { course: { equals: id } }, { sort: 'order', limit: 60 })
+  if (!course || !lessons.length) return null
+  const done = new Set(g.completions.filter((row) => Number(row.percent ?? 100) >= 90).map((row) => ref(row.lesson)))
+  const active = lessons.find((lesson) => !done.has(lesson.id))
+  return {
+    title: str(course.title),
+    nodes: lessons.map((lesson) => ({
+      id: lesson.id,
+      title: str(lesson.title),
+      href: `${base}/course/${id}?part=${lesson.id}`,
+      state: (done.has(lesson.id) ? 'done' : lesson.id === active?.id ? 'active' : 'next') as 'done' | 'active' | 'next',
+    })),
+  }
+}
+
 export async function GardenScreen({ payload, user, base, query }: Ctx) {
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
   const starting = user.startingClause ? g.clauses.find((clause) => Number(clause.number) === Number(user.startingClause)) : null
-  const tiles: [string, string, string, string, string][] = [
-    ['general', 'General', 'Time given, days you came and what you returned to', '#25214a', 'G'],
-    ['jibril', 'Against Hadith Jibril', `${g.lit.size} of 41 clauses have a talk you finished`, '#8f2f2a', 'J'],
-    ['ghunya', 'Against al-Ghuniyya', `${g.seatVisits.length} of ${g.seats.length} seats read`, '#1f8a78', 'G'],
-    ['harvest', 'Harvest', `${g.harvest.length} verses and hadith gathered from your talks`, '#dca643', 'H'],
-    ['workbook', 'Workbook', `${g.workbook.length} answers kept`, '#7a4fa8', 'W'],
-  ]
+  const path = await coursePath(payload, user, base, g)
   return (
     <AppFrame testId="garden">
       <div className="app-scroll">
         <div className="app-head"><h1>Garden</h1></div>
         <Flash error={query.error} notice={query.notice} />
-        <section className="grow-banner" data-testid="grow-banner">
-          <p className="eyebrow">Your growth</p>
-          <h2 data-testid="days-count">{g.activeDays.size} day{g.activeDays.size === 1 ? '' : 's'} in the garden</h2>
-          <span className="tree-art"><GardenTree done={Math.min(12, g.completions.length + g.answers.length)} total={12} width={120} /></span>
+        <section className="garden-rings card" data-testid="garden-rings">
+          <p className="eyebrow" style={{ margin: '0 0 8px' }}>Five ways to see it</p>
           <Rings g={g} base={base} />
-          <Link className="pill gold block" href={`${base}/garden/general`} data-testid="see-sown">See what you&apos;ve sown</Link>
         </section>
-        <p className="eyebrow">Look closer</p>
-        {tiles.map(([key, title, sub, colour, letter]) => (
-          <Link key={key} className="grow-tile" href={`${base}/garden/${key}`} data-testid={`tile-${key}`}>
-            <span className="sw" style={{ background: colour }}>{letter}</span>
-            <span><b>{title}</b><small>{sub}</small></span>
-          </Link>
-        ))}
+        {path ? <GardenPath title={path.title} nodes={path.nodes} /> : (
+          <div className="empty-state" data-testid="garden-empty">
+            <Mascot width={110} />
+            <p>Start a course from Lanes and its path will grow here, one lesson at a time.</p>
+          </div>
+        )}
         {starting ? (
           <>
             <p className="eyebrow">Where you began</p>
@@ -370,53 +388,99 @@ export async function GardenHarvest({ payload, user, base }: Ctx) {
 }
 
 export async function GardenWorkbook({ payload, user, base, query }: Ctx) {
-  const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
+  const session = await getSession()
+  const reader = session.actor || user
+  const [book, unread] = await Promise.all([workbookFor(payload, user, reader), unreadCount(payload, user)])
+  const owner = reader.id === user.id
   const filter = query.filter || 'all'
-  const entries = g.workbook.filter((entry) => (filter === 'shared' ? entry.consent : filter === 'private' ? !entry.consent : filter === 'replied' ? Boolean(entry.teacherReply) : true))
-  const answerIds = entries.map((entry) => ref(entry.answer)).filter((id): id is number => Boolean(id))
-  const answers = answerIds.length ? await rows(payload, 'answers', { id: { in: answerIds } }, { depth: 1 }) : []
-  const lessonIds = [...new Set(entries.map((entry) => ref(entry.lesson)).filter((id): id is number => Boolean(id)))]
-  const lessons = lessonIds.length ? await rows(payload, 'lessons', { id: { in: lessonIds } }) : []
+  const answers = book.answers.filter((row) => (filter === 'shared' ? row.shared : filter === 'private' ? !row.shared : filter === 'replied' ? Boolean(row.reply) : true))
   const here = `${base}/garden/workbook${filter !== 'all' ? `?filter=${filter}` : ''}`
+  const groups = new Map<string, { course: string; topics: Map<string, Map<string, typeof answers>> }>()
+  for (const row of answers) {
+    const courseKey = row.course?.title || 'Other talks'
+    if (!groups.has(courseKey)) groups.set(courseKey, { course: courseKey, topics: new Map() })
+    const topics = groups.get(courseKey)!.topics
+    if (!topics.has(row.topic)) topics.set(row.topic, new Map())
+    const videos = topics.get(row.topic)!
+    const video = row.video?.title || 'The talk'
+    if (!videos.has(video)) videos.set(video, [])
+    videos.get(video)!.push(row)
+  }
   return (
     <Frame base={base} title="Workbook" testId="garden-workbook" unread={unread}>
       <Flash error={query.error} notice={query.notice} />
+      {book.opening.length ? (
+        <section className="wb-start" data-testid="where-you-started">
+          <p className="eyebrow">Where you started</p>
+          {book.opening.map((row) => (
+            <div className="wb-start-row" key={row.sceneKey} data-testid="opening-row" data-scene={row.sceneKey} data-state={row.state} data-private={row.private ? 'yes' : 'no'}>
+              <span className="q">{row.caption}</span>
+              <b>{row.label}</b>
+              {row.private ? <small className="lock" data-testid="private-lock"><LockIcon size={14} /> Only you can see this</small> : null}
+            </div>
+          ))}
+        </section>
+      ) : null}
       <div className="chip-row">
         {['all', 'shared', 'private', 'replied'].map((key) => (
           <Link key={key} className={filter === key ? 'on' : ''} href={`${base}/garden/workbook${key === 'all' ? '' : `?filter=${key}`}`}>{key[0].toUpperCase() + key.slice(1)}</Link>
         ))}
       </div>
       <div data-testid="workbook">
-        {entries.length ? entries.map((entry) => {
-          const answer = answers.find((row) => row.id === ref(entry.answer))
-          const point = answer?.point as { prompt?: string; second?: number } | undefined
-          const lesson = lessons.find((row) => row.id === ref(entry.lesson))
-          return (
-            <article className="wb-entry" key={entry.id} data-testid="workbook-entry" data-consent={entry.consent ? 'yes' : 'no'}>
-              <div className="when">{shortDate(entry.createdAt)}</div>
-              {point?.prompt ? <><p className="asked">Video question was:</p><p className="q">{point.prompt}</p></> : null}
-              <blockquote>{str(entry.body) || 'A photo or voice note'}</blockquote>
-              {lesson ? (
-                <Link className="from-lesson" href={`${base}/course/${ref(lesson.course)}?part=${lesson.id}&t=${Math.max(0, Number(point?.second || 0) - 5)}`}>
-                  <span className="thumb" style={posterFor(str(lesson.youtubeId) || null) ? { backgroundImage: `url(${posterFor(str(lesson.youtubeId))})` } : undefined} />
-                  <span>{str(lesson.title)}<small>Back to the moment</small></span>
-                </Link>
-              ) : null}
-              <form action="/api/hearts" method="post" style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <Hidden fields={{ action: 'workbook-consent', entry: entry.id, consent: entry.consent ? 'no' : 'yes', next: here }} />
-                <span className="consent-chip" style={entry.consent ? undefined : { background: '#efebe3', color: 'var(--ink-2)' }} data-testid="consent-state">{entry.consent ? 'Shared with your teacher' : 'Kept private'}</span>
-                <button className="mini-btn" type="submit" data-testid="consent-toggle">{entry.consent ? 'Make private' : 'Share with my teacher'}</button>
-              </form>
-              {entry.teacherReply ? <div className="reply" data-testid="teacher-reply"><b>Your teacher replied</b>{str(entry.teacherReply)}</div> : null}
-            </article>
-          )
-        }) : (
+        {[...groups.values()].map((group) => (
+          <section className="wb-course" key={group.course} data-testid="workbook-course">
+            <h2>{group.course}</h2>
+            {[...group.topics.entries()].map(([topic, videos]) => (
+              <div className="wb-topic" key={topic} data-testid="workbook-topic">
+                <h3>{topic}</h3>
+                {[...videos.entries()].map(([video, rowsHere]) => (
+                  <div className="wb-video" key={video} data-testid="workbook-video">
+                    <p className="wb-video-title">{video}</p>
+                    {rowsHere.map((row) => (
+                      <article className="wb-entry" key={row.id} data-testid="workbook-entry" data-consent={row.shared ? 'yes' : 'no'} data-point={row.pointId}>
+                        <div className="when">{shortDate(row.answeredAt)}</div>
+                        <p className="asked">Video question was:</p>
+                        <p className="q">{row.question}</p>
+                        <blockquote data-testid="workbook-answer">{row.answer}</blockquote>
+                        {row.video && row.course ? (
+                          <Link className="from-lesson" href={`${base}/course/${row.course.id}?part=${row.video.id}&t=${Math.max(0, Number(row.atSecond || 0) - 5)}`}>
+                            <span>Back to the moment</span>
+                          </Link>
+                        ) : null}
+                        {owner && row.entryId ? (
+                          <form action="/api/hearts" method="post" style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                            <Hidden fields={{ action: 'workbook-consent', entry: row.entryId, consent: row.shared ? 'no' : 'yes', next: here }} />
+                            <span className="consent-chip" style={row.shared ? undefined : { background: '#efebe3', color: 'var(--ink-2)' }} data-testid="consent-state">{row.shared ? 'Shared with your teacher' : 'Kept private'}</span>
+                            <button className="mini-btn" type="submit" data-testid="consent-toggle">{row.shared ? 'Make private' : 'Share with my teacher'}</button>
+                          </form>
+                        ) : null}
+                        {row.reply ? <div className="reply" data-testid="teacher-reply"><b>Your teacher replied</b>{row.reply}</div> : null}
+                      </article>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </section>
+        ))}
+        {!answers.length ? (
           <div className="empty-state" data-testid="workbook-empty">
             <Mascot width={110} />
             <p>{filter === 'all' ? 'Your answers to the questions in each film are kept here, whether you share them or not.' : 'Nothing here with this filter.'}</p>
           </div>
-        )}
+        ) : null}
       </div>
+      {book.open.length ? (
+        <section data-testid="open-questions">
+          <p className="eyebrow">Still open</p>
+          {book.open.map((row) => (
+            <div className="wb-open" key={row.pointId} data-testid="open-question" data-point={row.pointId}>
+              <span>{row.question}</span>
+              <small>{row.video}</small>
+            </div>
+          ))}
+        </section>
+      ) : null}
     </Frame>
   )
 }
