@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
+import { seedCode } from '../env'
 
 const dir = process.env.SCREENSHOT_DIR || 'artifacts/screenshots'
 
@@ -173,5 +174,5 @@ test('door, sign-in and join', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await shot(page, 'door', '/')
   await shot(page, 'login', '/login')
-  await shot(page, 'join', '/join?code=ELM-LEARN')
+  await shot(page, 'join', `/join?code=${seedCode('elm-learner')}`)
 })

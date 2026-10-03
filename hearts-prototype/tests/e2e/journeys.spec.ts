@@ -1,5 +1,5 @@
 import { expect, request as playwrightRequest, test, type Page } from '@playwright/test'
-import { E2E_BASE } from '../env'
+import { E2E_BASE, seedCode } from '../env'
 import path from 'node:path'
 
 const suffix = Date.now().toString().slice(-7)
@@ -190,11 +190,11 @@ test.describe.serial('HEARTS journeys', () => {
     await expect(page.getByTestId('path-course')).toHaveCount(1)
     await expect(page.getByText('How to Live Like the Prophet')).toHaveCount(0)
 
-    await join(page, 'ELM-LEARN', 'Placed by Prophet', `p1-${suffix}@hearts.test`, 'placing-one')
+    await join(page, seedCode('elm-learner'), 'Placed by Prophet', `p1-${suffix}@hearts.test`, 'placing-one')
     await placing(page, BY_PROPHET)
     await expect(page.getByTestId('starting-clause')).toContainText('3')
     await expect(page.getByTestId('first-course')).toContainText('How to Live Like the Prophet')
-    await join(page, ' elm-learn ', 'Placed by Names', `p2-${suffix}@hearts.test`, 'placing-two')
+    await join(page, ` ${seedCode('elm-learner').toLowerCase()} `, 'Placed by Names', `p2-${suffix}@hearts.test`, 'placing-two')
     await placing(page, BY_NAMES)
     await expect(page.getByTestId('starting-clause')).toContainText('22')
     await expect(page.getByTestId('first-course')).toContainText('Ar-Rabb')
