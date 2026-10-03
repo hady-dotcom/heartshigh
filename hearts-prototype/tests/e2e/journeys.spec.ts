@@ -177,8 +177,8 @@ test.describe.serial('HEARTS journeys', () => {
     await placing(page, BY_PROPHET)
     await expect(page.getByTestId('first-course')).toContainText('Night class')
     await page.getByTestId('go-feed').click()
-    await expect(page.getByTestId('feed')).toHaveAttribute('data-cuts', new RegExp(`(^| )${shared.cutId}( |$)`))
-    await page.getByTestId('tab-lanes').click()
+    await expect(page.getByTestId('journey')).toHaveAttribute('data-cuts', new RegExp(`(^| )${shared.cutId}( |$)`))
+    await page.goto(`/p/${slug}/lanes`)
     await expect(page.getByTestId('visible-courses')).toContainText('1 course open to you')
     await expect(page.getByTestId('path-course')).toHaveCount(1)
     await expect(page.getByText('How to Live Like the Prophet')).toHaveCount(0)
@@ -372,10 +372,12 @@ test.describe.serial('HEARTS journeys', () => {
   })
 
   test('feed gestures: up replays, down changes lane, left more on the topic, right more from the speaker', async ({ page }) => {
-    await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london')
-    const feed = page.getByTestId('feed')
-    await expect(feed).toBeVisible()
-    const box = (await feed.boundingBox())!
+    await page.route(/youtube|ytimg|googlevideo/, (route) => route.abort())
+    await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london/feed')
+    const feed = page.getByTestId('journey')
+    await expect(feed).toHaveAttribute('data-phase', 'feed')
+    await expect(feed).toHaveAttribute('data-cuts', /\d+ \d+/)
+    const box = (await page.getByTestId('gesture-layer').boundingBox())!
     const cx = box.x + box.width / 2
     const cy = box.y + box.height / 2
     const swipe = async (dx: number, dy: number) => {
@@ -408,13 +410,13 @@ test.describe.serial('HEARTS journeys', () => {
     })
     page.on('pageerror', (error) => errors.push(`${page.url()}: ${error.message}`))
     await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london')
-    for (const screen of ['', '/lanes', '/garden', '/garden/jibril', '/garden/jibril/22', '/garden/ghunya', '/garden/workbook', '/me', '/me/circle', '/me/plan', '/course/4']) {
+    for (const screen of ['', '/feed', '/lanes', '/garden', '/garden/jibril', '/garden/jibril/22', '/garden/ghunya', '/garden/workbook', '/me', '/me/circle', '/me/plan', '/course/4']) {
       await page.goto(`/p/east-london${screen}`)
       await page.waitForLoadState('networkidle')
     }
     await page.setViewportSize(DESK)
     await signIn(page, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin')
-    for (const screen of ['', '/content', '/content/4', '/library', '/access', '/teach', '/plans', '/nights', '/settings']) {
+    for (const screen of ['', '/content', '/content/4', '/library', '/access', '/teach', '/plans', '/nights', '/settings', '/opening']) {
       await page.goto(`/p/east-london/admin${screen}`)
       await page.waitForLoadState('networkidle')
     }

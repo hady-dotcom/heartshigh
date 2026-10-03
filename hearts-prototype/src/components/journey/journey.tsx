@@ -846,7 +846,10 @@ export function Journey(props: JourneyProps) {
     setToast(`Lane · ${list[target]?.laneLabel || ''}`)
     void advance(target)
   }
-  const moreLikeThis = () => void advance(index + 1)
+  const moreLikeThis = () => {
+    setToast('More on this topic')
+    void advance(index + 1)
+  }
   const moreFromSpeaker = () => {
     if (!item) return
     const list = itemsRef.current
@@ -1068,7 +1071,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-index={index} data-cuts={items.map((row) => row.cutId).join(' ')} data-chrome={overlay ? 'over' : 'around'}>
+    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-index={index} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-chrome={overlay ? 'over' : 'around'}>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />

@@ -1,6 +1,8 @@
 import './globals.css'
 import './app.css'
 import './desk.css'
+import './motion.css'
+import './journey.css'
 import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import { ViewAsBanner } from '@/components/viewas-banner'

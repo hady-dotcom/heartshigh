@@ -367,10 +367,10 @@
 .q-card .why { font-size: 13.5px; color: var(--muted); line-height: 1.5; margin: 0 0 12px; }
 .q-card fieldset { border: 0; padding: 0; margin: 0; }
 .film-frame { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 18px; background: #1c1b19; }
-.journey { display: flex; gap: 6px; margin: 4px 0 16px; }
-.journey span { flex: 1; height: 5px; border-radius: 5px; background: #e6dece; }
-.journey span.on { background: var(--gold); }
-.journey-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: -10px; margin-bottom: 14px; }
+.step-bar { display: flex; gap: 6px; margin: 4px 0 16px; }
+.step-bar span { flex: 1; height: 5px; border-radius: 5px; background: #e6dece; }
+.step-bar span.on { background: var(--gold); }
+.step-bar-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: -10px; margin-bottom: 14px; }
 
 /* Lanes */
 .lane-card { position: relative; display: block; border-radius: 22px; overflow: hidden; min-height: 150px; margin-bottom: 12px; color: #fff; text-decoration: none; background: #1c1b19 center/cover; }

@@ -101,7 +101,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
             <Link className="pill gold block" href={`${base}/course/${first.id}`} style={{ marginTop: 12 }} data-testid="start-first">Start this course</Link>
           </section>
         ) : null}
-        <Link className="pill outline block" href={base} style={{ marginTop: 10 }} data-testid="go-feed">Go to my feed</Link>
+        <Link className="pill outline block" href={`${base}/feed`} style={{ marginTop: 10 }} data-testid="go-feed">Go to my feed</Link>
       </div>
     </AppFrame>
   )
@@ -110,8 +110,8 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
 function Journey({ at }: { at: number }) {
   return (
     <>
-      <div className="journey" aria-hidden>{[0, 1, 2].map((index) => <span key={index} className={index <= at ? 'on' : ''} />)}</div>
-      <div className="journey-labels"><span>Welcome</span><span>A few questions</span><span>Your first talk</span></div>
+      <div className="step-bar" aria-hidden>{[0, 1, 2].map((index) => <span key={index} className={index <= at ? 'on' : ''} />)}</div>
+      <div className="step-bar-labels"><span>Welcome</span><span>A few questions</span><span>Your first talk</span></div>
     </>
   )
 }
