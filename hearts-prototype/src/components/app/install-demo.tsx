@@ -176,10 +176,10 @@ export function InstallSlides({ kind }: { kind: InstallKind }) {
         {slides.map((slide, i) => (
           <div className="install-slide" key={slide.id} aria-hidden={i === index ? undefined : true}>
             <PhoneDemo scene={slide.id} playing={i === index} key={i === index ? `${slide.id}-${play}` : slide.id} />
-            <p className="install-caption">{i === index ? <span className="sr-only">Step {i + 1} of {slides.length}. </span> : null}{slide.caption}</p>
           </div>
         ))}
       </div>
+      <p className="install-caption" aria-live="polite"><span className="sr-only">Step {index + 1} of {slides.length}. </span>{slides[index].caption}</p>
       <div className="install-nav">
         <button type="button" data-testid="install-back" onClick={() => go(index - 1)} disabled={index === 0}>Back</button>
         <div className="install-dots">
