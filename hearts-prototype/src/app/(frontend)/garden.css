@@ -67,6 +67,9 @@
   aspect-ratio: 512 / 640;
   transform: translate(-50%, -97.1875%);
   z-index: var(--z);
+  /* The canvas is mostly clear. Only the plaque and the medallions take a tap,
+     so a nearer sapling does not block a medallion hanging behind it. */
+  pointer-events: none;
 }
 .tree-planter, .tree-canopy { position: absolute; inset: 0; }
 .tree-planter { z-index: 1; }
@@ -120,6 +123,7 @@
   text-decoration: none;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
   white-space: nowrap;
+  pointer-events: auto;
 }
 
 .garden-fruits { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; }
