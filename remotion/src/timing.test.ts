@@ -2,7 +2,8 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { UI } from './copy'
-import { BREATH, cardAt, cardsOf, isVerbatim, normaliseWords, scheduleTalk, snapBeat, sourceWindow, textNeverEarly, visibleIsPrefix, WINDOW_PAD, WORDS_PER_CARD, wordsVisibleAt, type CueWord } from './timing'
+import { EMPHASIS, phraseSpans } from './emphasis'
+import { BREATH, cardAt, cardsOf, INTERTITLE, isVerbatim, leanOnStress, normaliseWords, PHRASE_HOLD, placeOnSpeech, scheduleFootage, scheduleTalk, snapBeat, sourceWindow, textNeverEarly, visibleIsPrefix, WINDOW_PAD, WORDS_PER_CARD, wordsVisibleAt, type CueWord } from './timing'
 
 const cues: CueWord[] = [
   { text: 'Patience', talkAt: 10 },
@@ -129,6 +130,50 @@ test('a beat opens and closes on the pause around a whole sentence', () => {
   const later = sourceWindow(snapBeat(100, 104, 99, 105))
   assert.equal(later.start, 89.7)
   assert.equal(later.end, 114.3)
+})
+
+test('a paused sentence waits for the next phrase, and the cut is only that sentence', () => {
+  const runs = [{ start: 10, end: 10.6 }, { start: 12.1, end: 15 }]
+  const placed = placeOnSpeech('I told you that transitions are the time that you need to know this name.', runs)
+  assert.equal(placed[0].text, 'I')
+  assert.ok(placed[0].talkAt < 10.6)
+  assert.ok(placed[1].talkAt >= 12.1)
+  assert.ok(placed.every((word, index) => index === 0 || word.talkAt > placed[index - 1].talkAt))
+  const schedule = scheduleFootage([
+    { beat: 'hook', text: 'Has Allah brought you here?', in: 1, out: 3, words: placeOnSpeech('Has Allah brought you here?', [{ start: 1.3, end: 2.7 }]) },
+    { beat: 'land', text: placed.map((word) => word.text).join(' '), in: 9.7, out: 15.3, words: placed },
+  ])
+  assert.ok(Math.abs(schedule.beats[0].duration - (2 + PHRASE_HOLD)) < 1e-9)
+  assert.ok(Math.abs(schedule.beats[1].duration - (5.6 + PHRASE_HOLD)) < 1e-9)
+  assert.ok(textNeverEarly(schedule))
+  const landWords = schedule.words.filter((row) => row.beat === 'land')
+  for (const word of landWords) {
+    assert.ok(Math.abs(word.showAt - (schedule.beats[1].videoAt + word.talkAt - 9.7)) < 1e-6)
+    assert.ok(word.showAt >= schedule.beats[1].videoAt)
+  }
+  const landEnd = schedule.beats[1].videoAt + schedule.beats[1].duration
+  assert.ok(landEnd - landWords[landWords.length - 1].showAt >= PHRASE_HOLD - 1e-6)
+  const gapped = scheduleFootage(schedule.beats.map((beat) => ({ beat: beat.beat, text: beat.text, in: beat.talkAt, out: beat.talkAt + beat.duration, words: schedule.words.filter((word) => word.beat === beat.beat) })), INTERTITLE)
+  assert.ok(gapped.beats[1].videoAt >= gapped.beats[0].videoAt + gapped.beats[0].duration + INTERTITLE - 1e-6)
+  const stressed = leanOnStress([1, 1.4, 1.8], [{ from: 1, to: 1 }], [{ at: 1.55, level: 0.2 }, { at: 1.2, level: 0.04 }])
+  assert.ok(stressed[1] > stressed[0])
+  assert.ok(Math.abs(stressed[1] - 1.55) < 0.02)
+})
+
+test('the landed phrases are verbatim, and the film does not name its style', () => {
+  const windows = JSON.parse(readFileSync(new URL('../talks/windows.json', import.meta.url), 'utf8')) as { talks: { id: string; beats: { beat: 'hook' | 'turn' | 'land'; text: string }[] }[] }
+  for (const talk of windows.talks) {
+    for (const beat of talk.beats) {
+      const phrases = EMPHASIS[talk.id]?.[beat.beat] || []
+      for (const phrase of phrases) assert.equal(isVerbatim(phrase, beat.text), true, `${talk.id} ${beat.beat} ${phrase}`)
+      const words = beat.text.split(/\s+/).map((text) => ({ text }))
+      const spans = phraseSpans(words, phrases)
+      assert.equal(spans.length, phrases.length, `${talk.id} ${beat.beat}`)
+    }
+  }
+  const film = readFileSync(new URL('./Film.tsx', import.meta.url), 'utf8')
+  assert.doesNotMatch(film, /UI\.(kinetic|windows|conversation|cinema|unfold)/)
+  assert.match(film, /UI\.learnMore/)
 })
 
 test('British English labels stay on the allowlist', () => {

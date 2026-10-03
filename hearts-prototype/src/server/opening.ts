@@ -4,6 +4,7 @@ import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE } from '@/lib/opening-data'
 import { idOf } from '@/lib/ids'
 import { now } from '@/lib/clock'
 import { adoptedCourseIds, visibleCourseIds, type PortalDoc, type SessionUser } from './context'
+import { filmsForTalk, mixFeed, readFilmCatalogue, type BeatFilm } from '@/lib/films'
 import { filesForTalk, isTypographyStyle, readTypographyManifest, type TypographyManifest } from '@/lib/typography'
 import { laneOf, portraitFor, posterFor, slugify, type FeedItem, type SlideStyle } from './learner'
 
@@ -63,6 +64,7 @@ type Loaded = {
   /** Old cut ids that now stand for their talk's one tier clip. */
   alias: Map<number, number>
   typography: TypographyManifest
+  films: { films: (BeatFilm & { youtubeId: string })[] }
 }
 
 /** Whether learners may see a talk's tier: checked always, a draft only while the master flag says so, rejected never. */
@@ -87,7 +89,8 @@ function carrierCut(cuts: Row[], lessonId: number) {
 async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
   const [lanes, scales, clauses] = await Promise.all([all(payload, 'lanes'), all(payload, 'heart-scales'), all(payload, 'clauses')])
   const typography = readTypographyManifest()
-  if (!courseIds.length) return { lanes, scales, clauses, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [], alias: new Map(), typography }
+  const films = readFilmCatalogue()
+  if (!courseIds.length) return { lanes, scales, clauses, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [], alias: new Map(), typography, films }
   const [courses, lessons, showUnchecked] = await Promise.all([all(payload, 'courses', { id: { in: courseIds } }), all(payload, 'lessons', { course: { in: courseIds } }), showUncheckedTalks(payload)])
   const lessonIds = lessons.map((row) => row.id)
   const [rawCuts, tiers] = await Promise.all([
@@ -125,7 +128,7 @@ async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
       const value = idOf((tag.item as { value?: unknown }).value) || 0
       return alias.has(value) ? { ...tag, item: { relationTo: 'cuts', value: alias.get(value) } } : tag
     })
-  return { lanes, scales, clauses, cuts, lessons, courses, tags: cutTags, ladder, tiers: tiers.filter((tier) => tierVisible(tier, showUnchecked)), alias, typography }
+  return { lanes, scales, clauses, cuts, lessons, courses, tags: cutTags, ladder, tiers: tiers.filter((tier) => tierVisible(tier, showUnchecked)), alias, typography, films }
 }
 
 function laneDefs(data: Loaded): LaneDef[] {
@@ -243,6 +246,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     lessonTitle: String(lesson.sourceTitle || lesson.title || ''),
     style: slide ? STYLES[index % STYLES.length] : null,
     typography: typographyFor(data, lesson, data.tiers.find((row) => idOf(row.lesson) === lesson.id)),
+    films: filmsForTalk(data.films, youtubeId),
     clause: (cut.bestClause as number) || null,
     transcriptReady: Boolean(lesson.transcript) && lesson.transcriptSource !== 'pending',
   }
@@ -385,12 +389,13 @@ export async function serveFeed(payload: Payload, portal: PortalDoc, user: Sessi
   // Once the learner has seen everything, start the spine again rather than leave the feed empty.
   if (!slots.length) slots = buildFeed({ ...plan, served: [], spinePointer: 0 }, ctx).items
   const laneTitles = laneTitleMap(data)
-  const items = slots
+  const talks = slots
     .map((slot, index) => {
       const row = data.cuts.find((cut) => cut.id === slot.cutId)
       return row ? itemFor(data, row, slot.laneKey, laneTitles, index) : null
     })
     .filter((item): item is FeedItem => Boolean(item))
+  const items = mixFeed(talks, plan.served.length)
   return { slots, items, spinePointer: built.spinePointer }
 }
 

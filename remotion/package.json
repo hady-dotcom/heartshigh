@@ -6,7 +6,8 @@
   "description": "Vertical typography videos for HEARTS talks: Kinetic, Windows, Conversation, Cinema and Unfold.",
   "scripts": {
     "render": "tsx scripts/render.ts",
-    "test": "tsx --test src/timing.test.ts src/render-smoke.test.ts",
+    "batch": "tsx scripts/batch.ts",
+    "test": "tsx --test src/timing.test.ts src/manifest.test.ts src/render-smoke.test.ts",
     "studio": "remotion studio src/index.ts"
   },
   "dependencies": {

@@ -13,7 +13,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { bundle } from '@remotion/bundler'
 import { renderMedia, selectComposition } from '@remotion/renderer'
-import { BEAT_GAP, LEAD_IN, type BeatSpan, type ScheduledWord } from '../src/timing'
+import { EMPHASIS, phraseSpans } from '../src/emphasis'
+import { prepareFootage } from './footage'
+import { BEAT_GAP, INTERTITLE, LEAD_IN, scheduleFootage, type BeatSpan, type ScheduledTalk, type ScheduledWord } from '../src/timing'
 
 const STYLES = ['kinetic', 'windows', 'conversation', 'cinema', 'unfold'] as const
 type StyleId = (typeof STYLES)[number]
@@ -25,6 +27,7 @@ type TalkProps = {
   courseTitle: string
   lane: string
   audio: string | null
+  footage?: { beat: 'hook' | 'turn' | 'land'; src: string; windowStart: number; in: number; out: number }[] | null
   words: ScheduledWord[]
   beats: BeatSpan[]
   spokenSeconds: number
@@ -287,7 +290,8 @@ function contactSheet(style: string, rows: string[][]) {
     filters.push(`${cells}hstack=inputs=${across}[r${row}]`)
     hstacks.push(`[r${row}]`)
   }
-  filters.push(`${hstacks.join('')}vstack=inputs=${rows.length}[out]`)
+  if (rows.length === 1) filters.push(`${hstacks[0]}copy[out]`)
+  else filters.push(`${hstacks.join('')}vstack=inputs=${rows.length}[out]`)
   const dest = path.join(artifacts, `contact-${style}.png`)
   ffmpeg([...inputs, '-filter_complex', filters.join(';'), '-map', '[out]', dest])
   return dest
@@ -297,7 +301,16 @@ exportTalks()
 const talks = talkFiles()
 if (!talks.length) throw new Error('No talks to render. Run the export first.')
 
+const footageById = new Map<string, NonNullable<ReturnType<typeof prepareFootage>>>()
 for (const talk of talks) {
+  const footage = prepareFootage(here, talk.id)
+  if (footage) {
+    footageById.set(talk.id, footage)
+    talk.audio = null
+    talk.footage = footage.clips
+    console.log(`${talk.id}: face clips, ${footage.beats.map((beat) => beat.beat).join(' ')}`)
+    continue
+  }
   if (!audioOnly && talk.audio && existsSync(path.join(here, 'public', talk.audio))) continue
   talk.audio = tryAudio(talk)
   writeFileSync(path.join(here, 'talks', `${talk.id}.json`), JSON.stringify(talk))
@@ -319,7 +332,9 @@ const manifest: { talks: { id: string; title: string; speaker: string; styles: R
 for (const talk of talks) {
   const stylesOut: Record<string, string> = {}
   for (const style of styles) {
-    const inputProps: TalkProps = { ...talk, style, audio: talk.audio }
+    const footage = footageById.get(talk.id)
+    const schedule = footage ? scheduleFootage(footage.beats, style === 'cinema' ? INTERTITLE : 0) : talk
+    const inputProps: TalkProps = { ...talk, ...schedule, style, audio: footage ? null : talk.audio, footage: footage ? footage.clips : null }
     const composition = await selectComposition({ serveUrl, id: style, inputProps })
     const folder = path.join(publicDir, talk.id)
     mkdirSync(folder, { recursive: true })
@@ -339,18 +354,36 @@ for (const talk of talks) {
     const artifact = path.join(artifacts, `${talk.id}-${style}.mp4`)
     copyFileSync(output, artifact)
     stylesOut[style] = `/typography/${talk.id}/${style}.mp4`
-    const sit = style === 'cinema' ? talk.cinemaSeconds : talk.spokenSeconds
+    const sit = schedule.spokenSeconds
+    const beatEnd = (schedule: ScheduledTalk, beat: string) => {
+      const span = schedule.beats.find((row) => row.beat === beat)
+      return span ? span.videoAt + span.duration : schedule.spokenSeconds
+    }
     const beatTime = (id: 'hook' | 'turn' | 'land') => {
-      const beat = talk.beats.find((row) => row.beat === id)
-      return beat ? beat.videoAt + Math.max(0.2, beat.duration - 0.18) : 1
+      const group = schedule.words.filter((word) => word.beat === id)
+      const spans = phraseSpans(group, EMPHASIS[talk.id]?.[id] || [])
+      const span = spans[spans.length - 1]
+      const at = span ? group[span.to].showAt + 0.16 : (() => {
+        const beat = schedule.beats.find((row) => row.beat === id)
+        return beat ? beat.videoAt + Math.max(0.2, beat.duration - 0.18) : 1
+      })()
+      return Math.min(at, beatEnd(schedule, id) - 0.06)
     }
     const moments = [
-      ['lead', 0.08],
       ['hook', beatTime('hook')],
       ['turn', beatTime('turn')],
       ['land', beatTime('land')],
       ['card', sit + 0.35],
     ] as const
+    for (const beat of ['hook', 'turn', 'land'] as const) {
+      const group = schedule.words.filter((word) => word.beat === beat)
+      for (const span of phraseSpans(group, EMPHASIS[talk.id]?.[beat] || [])) {
+        const slug = span.phrase.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+        const frame = path.join(artifacts, 'frames', `${talk.id}-${style}-${beat}-${slug}.jpg`)
+        mkdirSync(path.dirname(frame), { recursive: true })
+        still(output, Math.min(group[span.to].showAt + 0.14, beatEnd(schedule, beat) - 0.06), frame)
+      }
+    }
     const row: string[] = []
     for (const [name, at] of moments) {
       const frame = path.join(artifacts, 'frames', `${talk.id}-${style}-${name}.jpg`)

@@ -5,6 +5,7 @@ import { Hidden } from '@/components/app/shell'
 import { TierEditor } from '@/components/desk/tier-editor'
 import { idOf } from '@/lib/ids'
 import { gapAfter, gapBefore, PRE_ROLL, sentencesOf, TAIL, timingProblems } from '@/lib/tiers'
+import { filmsForTalk, readFilmCatalogue } from '@/lib/films'
 import { filesForTalk, readTypographyManifest, TYPOGRAPHY_LABEL, TYPOGRAPHY_STYLES, isTypographyStyle } from '@/lib/typography'
 import { tierSourceText } from '@/server/tier-source'
 import type { SessionUser } from '@/server/context'
@@ -50,7 +51,26 @@ function TypographyPanel({ tierId, lesson, chosen, inPlace, next }: { tierId: nu
         </label>
         <div className="actions"><button className="btn ink small" type="submit" data-testid="typography-save">Save typography</button></div>
       </form>
+      <BeatFilms lesson={lesson} />
     </section>
+  )
+}
+
+function BeatFilms({ lesson }: { lesson: Record<string, unknown> }) {
+  const films = filmsForTalk(readFilmCatalogue(), str(lesson.youtubeId) || null)
+  if (!films.length) return null
+  return (
+    <div className="body" data-testid="typography-beats">
+      <p className="hint" style={{ marginTop: 0 }}>One film for each beat. The feed mixes these with the talk, the line, and a question.</p>
+      <ul className="plain">
+        {films.map((film) => (
+          <li key={film.beat}>
+            <a href={film.src}>{film.beat === 'hook' ? 'Hook' : film.beat === 'turn' ? 'Turn' : 'Land'}</a>
+            <span className="hint"> {TYPOGRAPHY_LABEL[film.style]}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 

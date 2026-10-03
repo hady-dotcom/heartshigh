@@ -15,6 +15,37 @@ One talk, one style, from this folder:
 npm run render -- ECaTWkof57E --style kinetic
 ```
 
+## Batch manifest
+
+One command renders a whole course list, and it is safe to stop and run again. A row that already has a film, with the same style and the same quote, is kept.
+
+```text
+npm run batch -- manifest.csv
+npm run batch -- manifest.csv --dry-run
+npm run batch -- manifest.csv --force
+npm run batch -- manifest.csv --limit 8
+```
+
+`manifest.csv` is one film per row. The columns are talk title, speaker, youtube id, beat (`hook`, `turn` or `land`), start, end, verbatim quote, clip file name and face-visible flag. An optional `course` column groups rows so neighbouring films in that course never share a style. Without it, the file is one sequence. See `manifest.example.csv`.
+
+Each clip is a 720p face file already cut on the sentence, with about 0.3s of breath, and time 0 in the file is `start`. Put the files in `remotion/public/footage/`, or pass a path and the script links them there. `face-visible` of `no` is skipped. A missing clip is skipped too, so a later run picks it up when the file arrives.
+
+The style is chosen from the five, cycling inside the course, and the gold words are chosen from the quote (the two seeded talks keep the landings already agreed). The film is written to `hearts-prototype/public/typography/{youtubeId}/{beat}.mp4` and listed in `public/typography/films.json`, which is what the learner feed mixes with talks, the line of text, and a question.
+
+The six clips already in `public/footage/` are the padded windows for the five-style approval films (`npm run render`). They are not the sentence cuts this command expects.
+
+## Face footage
+
+The films for Ar-Rabb and Al-Nur play the speaker, cropped 9:16 and centred. Each beat is only the snapped sentence from `talks/windows.json` (the in and out, with about 0.3s of breath). Time 0 in a clip is that beat's window start. The picture and the voice come from the same file, so a word cannot appear before it is spoken. After the voice ends, the last frame holds for half a second so the landing word can be read. That hold is not more of the talk.
+
+The clips are the windows Leon downloaded from the permitted talks, 720p, and they live in git because each one is about 3MB:
+
+```text
+remotion/public/footage/{youtubeId}-{hook|turn|land}.mp4
+```
+
+How to Live Like the Prophet is still the previous silent-of-picture render until those three windows are in the same folder. Without a clip, the render falls back to the sliced talk audio.
+
 ## Speaker audio
 
 Source audio stays out of git. `hearts-prototype/.gitignore` ignores `content/audio/*` except `.gitkeep`.

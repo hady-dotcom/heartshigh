@@ -209,6 +209,134 @@ export function visibleIsPrefix(words: ScheduledWord[], time: number) {
   return visible.every((word, index) => word === words[index])
 }
 
+export type SpeechRun = { start: number; end: number }
+
+/** Speech runs in a level envelope. A gap under 0.42s stays inside the phrase. */
+export function speechRuns(levels: number[], origin: number, step = 0.05, threshold = 0.02): SpeechRun[] {
+  const raw: SpeechRun[] = []
+  let open = -1
+  levels.forEach((level, index) => {
+    const spoken = level >= threshold
+    if (spoken && open < 0) open = index
+    if (!spoken && open >= 0) {
+      raw.push({ start: origin + open * step, end: origin + index * step })
+      open = -1
+    }
+  })
+  if (open >= 0) raw.push({ start: origin + open * step, end: origin + levels.length * step })
+  const kept = raw.filter((run, index) => {
+    if (run.end - run.start >= 0.1) return true
+    const before = index > 0 ? run.start - raw[index - 1].end : 9
+    const after = index + 1 < raw.length ? raw[index + 1].start - run.end : 9
+    return before < 0.4 || after < 0.4
+  })
+  const merged: SpeechRun[] = []
+  for (const run of kept) {
+    const prev = merged[merged.length - 1]
+    if (prev && run.start - prev.end < 0.42) prev.end = run.end
+    else merged.push({ ...run })
+  }
+  return merged
+}
+
+/**
+ * Lay the sentence across the speech, in order. A short burst before a real pause
+ * takes one word, so the rest of the line waits through the silence instead of
+ * arriving while he is still quiet.
+ */
+export function placeOnSpeech(text: string, runs: SpeechRun[]): CueWord[] {
+  const pieces = text.split(/\s+/).filter(Boolean)
+  if (!pieces.length) return []
+  if (!runs.length) return pieces.map((word, index) => ({ text: word, talkAt: index * 0.28 }))
+  const groups: string[][] = runs.map(() => [])
+  let cursor = 0
+  for (let index = 0; index < runs.length && cursor < pieces.length; index++) {
+    const later = runs.slice(index + 1)
+    const duration = runs[index].end - runs[index].start
+    const pauseAfter = later.length ? later[0].start - runs[index].end : 0
+    const remaining = pieces.length - cursor
+    let take: number
+    if (!later.length) take = remaining
+    else if (duration < 1.05 && pauseAfter >= 1) take = 1
+    else {
+      const rest = [runs[index], ...later].reduce((sum, run) => sum + (run.end - run.start), 0)
+      const rateCap = Math.max(1, Math.floor(duration / 0.28))
+      take = Math.max(1, Math.round((remaining * duration) / rest))
+      take = Math.min(take, rateCap, remaining - later.length)
+      take = Math.max(1, take)
+    }
+    groups[index] = pieces.slice(cursor, cursor + take)
+    cursor += take
+  }
+  if (cursor < pieces.length) groups[groups.length - 1].push(...pieces.slice(cursor))
+  const placed: CueWord[] = []
+  groups.forEach((group, index) => {
+    const run = runs[index]
+    const span = Math.max(0.04, run.end - run.start - 0.08)
+    group.forEach((word, at) => {
+      const talkAt = group.length === 1 ? run.start : run.start + (span * at) / (group.length - 1)
+      placed.push({ text: word, talkAt })
+    })
+  })
+  return placed
+}
+
+export type Level = { at: number; level: number }
+
+/** Nudge a whole key phrase onto the stress nearest its even placement, without leaving the pause. */
+export function leanOnStress(times: number[], spans: { from: number; to: number }[], levels: Level[]) {
+  const next = [...times]
+  for (const span of spans) {
+    const estimate = times[span.from]
+    const prev = span.from > 0 ? next[span.from - 1] + 0.08 : estimate - 0.35
+    const cap = span.to + 1 < times.length ? times[span.to + 1] - 0.08 : times[span.to] + 0.35
+    const window = levels.filter((row) => row.level >= 0.02 && row.at >= Math.max(prev, estimate - 0.25) && row.at <= Math.min(cap, estimate + 0.3))
+    if (!window.length) continue
+    const peak = window.reduce((best, row) => (row.level > best.level ? row : best))
+    const shift = peak.at - estimate
+    if (Math.abs(shift) < 0.04) continue
+    for (let index = span.from; index <= span.to; index++) next[index] = times[index] + shift
+  }
+  for (let index = 1; index < next.length; index++) if (next[index] < next[index - 1] + 0.05) next[index] = next[index - 1] + 0.05
+  return next
+}
+
+/** A film title card between cinema shots. */
+export const INTERTITLE = 1.7
+
+/**
+ * The picture stays after the sentence so the last word can be read.
+ * The voice still ends at `out`; this hold is a frozen frame, not more of the talk.
+ */
+export const PHRASE_HOLD = 0.5
+
+export type FootageSpan = {
+  beat: BeatId
+  text: string
+  in: number
+  out: number
+  words: CueWord[]
+}
+
+/** Play each snapped sentence back to back. `gap` is the quiet title between shots. */
+export function scheduleFootage(beats: FootageSpan[], gap = 0): ScheduledTalk {
+  const words: ScheduledWord[] = []
+  const spans: BeatSpan[] = []
+  let videoAt = 0
+  beats.forEach((beat, index) => {
+    const spoken = beat.words.length ? beat.words : [{ text: beat.text, talkAt: beat.in }]
+    const duration = Math.max(0.4, beat.out - beat.in) + PHRASE_HOLD
+    spans.push({ beat: beat.beat, text: beat.text, talkAt: spoken[0].talkAt, videoAt, duration })
+    for (const word of spoken) {
+      const at = Math.min(beat.out, Math.max(word.talkAt, beat.in))
+      words.push({ text: word.text, talkAt: at, beat: beat.beat, showAt: videoAt + (at - beat.in) })
+    }
+    videoAt += duration
+    if (gap > 0 && index < beats.length - 1) videoAt += gap
+  })
+  return { words, beats: spans, spokenSeconds: videoAt, cinemaSeconds: videoAt, learnMoreSeconds: LEARN_MORE_SECONDS }
+}
+
 export function durationSeconds(schedule: ScheduledTalk, cinema: boolean) {
   return (cinema ? schedule.cinemaSeconds : schedule.spokenSeconds) + schedule.learnMoreSeconds
 }

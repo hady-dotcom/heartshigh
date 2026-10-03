@@ -32,6 +32,12 @@ export type FeedItem = {
   style: SlideStyle | null
   /** Rendered typography standing in for the hors d'oeuvre, when an admin has chosen one. */
   typography?: { style: SlideStyle; inPlace: true; src: string } | null
+  /** Beat films rendered for this talk. The feed mixes one of them with the talk, a line, and a question. */
+  films?: { beat: 'hook' | 'turn' | 'land'; style: SlideStyle; src: string; quote: string }[]
+  /** Set when this card is a film, a line of the talk, or a question rather than the talk itself. */
+  card?: 'talk' | 'film' | 'text' | 'question'
+  film?: { beat: 'hook' | 'turn' | 'land'; style: SlideStyle; src: string; quote: string }
+  prompt?: string
   clause: number | null
   /** The lane this slot was routed for; null for spine clips and D0. */
   laneKey?: string | null
