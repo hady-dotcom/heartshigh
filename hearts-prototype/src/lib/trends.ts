@@ -1,6 +1,16 @@
 // Network and chapter trends from opted-in contributions (spec 5.4). No path aliases: the unit tests run this directly.
 import { idOf } from './ids'
 
+/** ISO 8601 week, such as 2026-W40, in UTC. */
+export function isoWeek(date: Date) {
+  const day = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
+  const weekday = day.getUTCDay() || 7
+  day.setUTCDate(day.getUTCDate() + 4 - weekday)
+  const start = new Date(Date.UTC(day.getUTCFullYear(), 0, 1))
+  const week = Math.ceil(((day.getTime() - start.getTime()) / 86_400_000 + 1) / 7)
+  return `${day.getUTCFullYear()}-W${String(week).padStart(2, '0')}`
+}
+
 /** Contributions are shown only where at least this many people took part. */
 export const TRENDS_MIN = 10
 

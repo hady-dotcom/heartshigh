@@ -7,6 +7,7 @@ import type { OpeningData } from '@/server/opening'
 import { applySignal, applyTap, decay, freshState, markServed, planFrom, routeFeed, spineStart, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readHeart, readPending, sessionFlags, setSessionFlags, viewAsId, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
+import { isoWeek } from '@/lib/trends'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, lowData, playOnly, preloadApi, setHidden, soundOn, type PlayerKind } from '@/lib/yt'
 import { TabBar } from '../app/shell'
 import { Avatar, FollowButton, Slide } from '../app/feed'
@@ -44,19 +45,6 @@ function clock(total: number) {
   return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`
 }
 
-function isoWeek(date: Date) {
-  const day = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
-  const weekday = day.getUTCDay() || 7
-  day.setUTCDate(day.getUTCDate() + 4 - weekday)
-  const start = new Date(Date.UTC(day.getUTCFullYear(), 0, 1))
-  const week = Math.ceil(((day.getTime() - start.getTime()) / 86_400_000 + 1) / 7)
-  return `${day.getUTCFullYear()}-W${String(week).padStart(2, '0')}`
-}
-
-async function sha256(text: string) {
-  const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
-  return [...new Uint8Array(bytes)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
-}
 
 function useStoredSet(name: string) {
   const [values, setValues] = useState<string[]>([])
@@ -218,29 +206,26 @@ export function Journey(props: JourneyProps) {
     if (!signedIn || !props.trendsOptIn || props.viewAs || !heart || !heart.taps.length) return
     const week = isoWeek(new Date())
     const key = deviceKey('hearts.trends.v1')
-    let stored: { week: string; nonce: string; sent?: boolean } | null = null
+    let stored: { week: string; sent?: boolean } | null = null
     try {
       stored = JSON.parse(window.localStorage.getItem(key) || 'null')
     } catch {
       stored = null
     }
     if (stored?.week === week && stored.sent) return
-    const nonce = stored?.week === week ? stored.nonce : crypto.getRandomValues(new Uint32Array(4)).join('-')
-    void sha256(`${week}:${nonce}`).then((nonceHash) => {
-      const top = routeFeed(heart, ctx)
-      return fetch('/api/hearts/contribute', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          portal: opening.portal,
-          isoWeek: week,
-          doorKey: heart.taps.find((tap) => tap.scene === 'doors' && tap.option !== 'pass')?.option,
-          scenePasses: heart.taps.filter((tap) => tap.option === 'pass').map((tap) => tap.scene),
-          laneTop2: [top.L1, top.L2].filter(Boolean),
-          nonceHash: nonceHash.slice(0, 32),
-        }),
-      }).then(() => window.localStorage.setItem(key, JSON.stringify({ week, nonce, sent: true })))
-    }).catch(() => undefined)
+    // The server keeps one row per account per week whatever is sent; this only saves a repeat request.
+    const top = routeFeed(heart, ctx)
+    void fetch('/api/hearts/contribute', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        doorKey: heart.taps.find((tap) => tap.scene === 'doors' && tap.option !== 'pass')?.option,
+        scenePasses: heart.taps.filter((tap) => tap.option === 'pass').map((tap) => tap.scene),
+        laneTop2: [top.L1, top.L2].filter(Boolean),
+      }),
+    })
+      .then(() => window.localStorage.setItem(key, JSON.stringify({ week, sent: true })))
+      .catch(() => undefined)
   }, [signedIn, props.trendsOptIn, props.viewAs, heart, ctx, opening.portal])
 
   // ---------- sky: dusk to first light, the only progress cue ----------
@@ -780,7 +765,7 @@ export function Journey(props: JourneyProps) {
       if (at !== visibleRef.current || !UNPLAYABLE.has(code)) return
       const current = itemsRef.current[indexRef.current]
       setErrorNote("This one can't play here")
-      if (current) void fetch('/api/hearts/unplayable', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cutId: current.cutId, code }) }).catch(() => undefined)
+      if (current && signedIn) void fetch('/api/hearts/unplayable', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cutId: current.cutId, code }) }).catch(() => undefined)
       window.setTimeout(() => void advance(indexRef.current + 1, 'auto'), 900)
     }
     window.addEventListener('hearts:ended', onEnded)
