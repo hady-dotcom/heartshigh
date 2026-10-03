@@ -30,6 +30,20 @@
   --blossom-spirit: #8fa36a;
   --scene: url('/theme/evening-courtyard.jpg');
   --lattice: url('/theme/lattice.svg');
+  /* Shared desk tokens. Same values in src/lib/desk-tokens.ts. */
+  --desk-page: #EFE3C8;
+  --desk-card: #F7EEDB;
+  --desk-ink: #1F2A2A;
+  --desk-heading: #0F3B3A;
+  --desk-sidebar: #0E2A2B;
+  --desk-header: #0F3B3A;
+  --desk-on-dark: #F6EEDC;
+  --desk-gold: #D4A84B;
+  --desk-gold-ink: #1A1408;
+  --desk-teal: #14564C;
+  --desk-muted: #3A4E48;
+  --desk-line: #7A6238;
+  --desk-field: #FBF6E8;
 }
 
 /* —— Evening: night teal, lantern gold, parchment type —— */
@@ -557,7 +571,8 @@ html[data-theme] .kind-tabs span {
 html[data-theme] .kind-tabs span.on { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); }
 html[data-theme] .slot .date { background: var(--teal-fill); color: #f6eedc; }
 html[data-theme] .start.soft { background: transparent; color: var(--gold-deep, var(--gold)); border: 1.5px solid var(--gold); }
-html[data-theme] .desk .badge.rose { background: rgba(196, 146, 46, 0.18); color: #6b4e12; }
+html[data-theme] .desk .badge.rose,
+html[data-theme] .desk .badge.gold { background: var(--desk-gold); color: var(--desk-gold-ink); }
 html[data-theme] .wb-entry .asked { color: var(--gold-glow); }
 html[data-theme='dawn'] .wb-entry .asked { color: var(--gold-deep); }
 html[data-theme] .answer-btn,
@@ -575,8 +590,9 @@ html[data-theme] .consent-chip.quiet {
   color: var(--ink-2);
   border: 1px solid var(--line);
 }
-html[data-theme] .desk .badge.purple { background: var(--mint); color: var(--teal-deep); }
-html[data-theme] .desk .badge.gold { background: rgba(212, 168, 75, 0.2); color: #6b4e12; }
+html[data-theme] .desk .badge.purple,
+html[data-theme] .desk .badge.grey,
+html[data-theme] .desk .badge.teal { background: var(--desk-teal); color: var(--desk-on-dark); }
 html[data-theme] .consent-chip { background: var(--mint); color: var(--teal-deep); }
 html[data-theme] .mic { background: var(--gold); color: var(--gold-ink); }
 html[data-theme] .mic.on { background: var(--gold-deep); color: #f6eedc; }
@@ -630,94 +646,117 @@ html[data-theme='dawn'] .journey[data-mode='appetiser'] .j-mains {
   color: #f6eedc;
 }
 
-/* Desk: calm room of the same house. Dark sidebar, parchment (or mist) content, gold buttons, teal headers. */
+/* Desk. Dark teal is only the sidebar and the card header bars. Page and cards are the shared parchment tokens. */
 html[data-theme] .desk {
-  --cream: #dcc4a0;
-  --paper: #e3cda6;
-  --card: #e8d4b0;
-  --ink: #142e2c;
-  --ink-2: #2c4744;
-  --muted: #3d524c;
-  --line: #c4ae84;
-  --gold: #c4922e;
-  --gold-deep: #6b4e12;
-  --gold-glow: #e2b56a;
-  --gold-ink: #1a1408;
-  --teal: #1f6f62;
-  --teal-deep: #14564c;
-  --teal-fill: #1b3b38;
-  --mint: #e5f2ec;
-  --purple: #6e4e92;
-  --lavender: #f0e6f6;
-  --orange: #b86a28;
-  --rose: #8f3d4a;
-  --rose-bg: #f3e6dc;
-  --indigo: #1b3b38;
-  --night: #0e2a2b;
-  --red-clause: #8f2f2a;
-  --focus: #142e2c;
-  --glass: #e8d4b0;
-  --glass-solid: #e8d4b0;
-  --field: #f0e2c8;
-  color: var(--ink);
-  background-color: #dcc4a0;
+  --cream: var(--desk-page);
+  --paper: var(--desk-page);
+  --card: var(--desk-card);
+  --ink: var(--desk-ink);
+  --ink-2: var(--desk-ink);
+  --muted: var(--desk-muted);
+  --line: var(--desk-line);
+  --gold: var(--desk-gold);
+  --gold-deep: var(--desk-heading);
+  --gold-glow: var(--desk-gold);
+  --gold-ink: var(--desk-gold-ink);
+  --teal: var(--desk-teal);
+  --teal-deep: var(--desk-on-dark);
+  --teal-fill: var(--desk-teal);
+  --mint: var(--desk-card);
+  --heading: var(--desk-heading);
+  --focus: var(--desk-heading);
+  --glass: var(--desk-card);
+  --glass-solid: var(--desk-card);
+  --field: var(--desk-field);
+  color: var(--desk-ink);
+  background-color: var(--desk-page);
   background-image: none;
   color-scheme: light;
 }
-html[data-theme='dawn'] .desk {
-  --gold: #c47a45;
-  --gold-deep: #7a3f28;
-  --gold-glow: #e8b089;
-  --line: #c9a888;
+html[data-theme] .desk h1,
+html[data-theme] .desk h2,
+html[data-theme] .desk h3 {
+  color: var(--desk-heading);
+  font-family: var(--serif);
+  font-weight: 600;
 }
+html[data-theme] .desk h1 { font-size: 40px; line-height: 1.1; }
+html[data-theme] .desk h2 { font-size: 26px; line-height: 1.2; }
 html[data-theme] .desk .side {
-  background: #0e2a2b;
-  color: #f6eedc;
+  background: var(--desk-sidebar);
+  color: var(--desk-on-dark);
   border-right: 1px solid rgba(212, 168, 75, 0.28);
 }
 html[data-theme] .desk .side-brand,
 html[data-theme] .desk .side-brand b,
-html[data-theme] .desk .side-foot .who { color: #f6eedc; }
+html[data-theme] .desk .side-foot .who { color: var(--desk-on-dark); }
 html[data-theme] .desk .side-brand small,
-html[data-theme] .desk .side .group { color: #e7dcc8; }
+html[data-theme] .desk .side .group,
 html[data-theme] .desk .side a.nav,
-html[data-theme] .desk .side-foot button { color: #e7dcc8; }
+html[data-theme] .desk .side-foot button { color: var(--desk-on-dark); }
 html[data-theme] .desk .side-foot { border-top-color: rgba(212, 168, 75, 0.28); }
 html[data-theme] .desk .side a.nav:hover,
-html[data-theme] .desk .side-foot button:hover { background: rgba(212, 168, 75, 0.16); color: #f6eedc; }
-html[data-theme] .desk .side a.nav.on { background: #d4a84b; color: #1a1408; }
-html[data-theme='dawn'] .desk .side a.nav.on { background: #c47a45; color: #1a120c; }
+html[data-theme] .desk .side-foot button:hover { background: rgba(212, 168, 75, 0.16); color: var(--desk-on-dark); }
+html[data-theme] .desk .side a.nav.on { background: var(--desk-gold); color: var(--desk-gold-ink); }
 html[data-theme] .desk .side-brand b { font-family: var(--serif); font-size: 18px; font-weight: 600; }
-html[data-theme] .desk .main-head h1 { font-family: var(--serif); font-weight: 600; font-size: 34px; color: #142e2c; }
+html[data-theme] .desk .main-head h1 { font-size: 40px; }
 html[data-theme] .desk .panel {
-  background: var(--glass-solid);
-  border-color: var(--line);
+  background: var(--desk-card);
+  border-color: var(--desk-line);
   box-shadow: var(--shadow-soft);
 }
-html[data-theme] .desk .panel > header,
-html[data-theme] .desk .org-band,
-html[data-theme] .desk .stat-chip {
-  background: #1b3b38;
-  color: #f6eedc;
+html[data-theme] .desk .panel > header {
+  background: var(--desk-header);
+  color: var(--desk-on-dark);
 }
-html[data-theme] .desk .panel > header.light { background: var(--glass-solid); color: #142e2c; }
-html[data-theme] .desk .panel > header p { color: #e7dcc8; }
-html[data-theme] .desk .panel > header.light p { color: #2c4744; }
+html[data-theme] .desk .panel > header h2,
+html[data-theme] .desk .panel > header p {
+  color: var(--desk-on-dark);
+  font-size: 18px;
+}
+html[data-theme] .desk .panel > header.light {
+  background: var(--desk-card);
+  color: var(--desk-heading);
+}
+html[data-theme] .desk .panel > header.light h2,
+html[data-theme] .desk .panel > header.light p { color: var(--desk-heading); }
+html[data-theme] .desk .org-band {
+  background: var(--desk-card);
+  color: var(--desk-ink);
+}
+html[data-theme] .desk .org-band h2 { color: var(--desk-heading); font-size: 28px; }
+html[data-theme] .desk .org-band .lbl { color: var(--desk-muted); opacity: 1; }
+html[data-theme] .desk .org-band .status {
+  background: var(--desk-teal);
+  color: var(--desk-on-dark);
+}
+html[data-theme] .desk .stat-chip {
+  background: var(--desk-teal);
+  color: var(--desk-on-dark);
+}
+html[data-theme] .desk .stat-chip span,
+html[data-theme] .desk .stat-chip b {
+  background: transparent;
+  color: var(--desk-on-dark);
+  opacity: 1;
+}
 html[data-theme] .desk .btn.ink,
-html[data-theme] .desk .badge.ink { background: #1b3b38; color: #f6eedc; }
+html[data-theme] .desk .badge.ink { background: var(--desk-teal); color: var(--desk-on-dark); }
+html[data-theme] .desk .btn.teal { background: var(--desk-teal); color: var(--desk-on-dark); }
 html[data-theme] .desk .btn:not(.ghost):not(.ink):not(.teal):not(.danger):not(.line-light),
 html[data-theme] .desk .pill.gold {
-  background: var(--gold);
-  color: var(--gold-ink);
+  background: var(--desk-gold);
+  color: var(--desk-gold-ink);
 }
-html[data-theme] .desk .btn.ghost { background: var(--glass-solid); color: #142e2c; border-color: var(--line); }
-html[data-theme] .desk .bell .count { background: var(--gold); color: var(--gold-ink); }
+html[data-theme] .desk .btn.ghost { background: var(--desk-card); color: var(--desk-ink); border-color: var(--desk-line); }
+html[data-theme] .desk .btn.danger { background: var(--desk-card); color: #8F2F2A; border-color: #8F2F2A; }
+html[data-theme] .desk .bell .count { background: var(--desk-gold); color: var(--desk-gold-ink); }
 html[data-theme] .desk .count-tile,
 html[data-theme] .desk .address,
-html[data-theme] .desk table.data th { background: var(--paper); color: #142e2c; }
-html[data-theme] .desk table.data td { border-bottom-color: var(--line); }
+html[data-theme] .desk table.data th { background: var(--desk-page); color: var(--desk-ink); }
+html[data-theme] .desk table.data td { border-bottom-color: var(--desk-line); color: var(--desk-ink); }
 html[data-theme] .desk .pill.ink,
-html[data-theme] .desk .mini-btn { color: #14564c; }
+html[data-theme] .desk .mini-btn { color: var(--desk-heading); border-color: var(--desk-teal); }
 html[data-theme] .desk .input,
 html[data-theme] .desk select,
 html[data-theme] .desk textarea,
@@ -728,9 +767,9 @@ html[data-theme] .desk input[type='datetime-local'],
 html[data-theme] .desk input[type='url'],
 html[data-theme] .desk input[type='email'],
 html[data-theme] .desk input[type='password'] {
-  background: var(--field);
-  color: #142e2c;
-  border-color: var(--line);
+  background: var(--desk-field);
+  color: var(--desk-ink);
+  border-color: var(--desk-line);
 }
 
 @media (prefers-reduced-motion: reduce) {
