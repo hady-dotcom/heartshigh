@@ -519,6 +519,8 @@ async function main() {
   if (!startersOnly) {
     const { seedDemoHarvest } = await import('./harvest-seed')
     await seedDemoHarvest(payload)
+    const { seedFeedbackDemo } = await import('./feedback-seed')
+    await seedFeedbackDemo(payload, { startersOnly })
   }
 
   const problems = await timingCheck(payload)

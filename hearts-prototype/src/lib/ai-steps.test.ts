@@ -46,7 +46,7 @@ const transcript = [
 ].join('\n')
 
 test('every seeded step names its placeholders, and the prompt uses them', () => {
-  assert.equal(STEP_SPECS.length, 10)
+  assert.equal(STEP_SPECS.length, 12)
   for (const step of STEP_SPECS) {
     assert.equal(placeholderProblems(step.prompt, step.placeholders).join('; '), '', step.slug)
     assert.ok(step.description.length > 40, step.slug)

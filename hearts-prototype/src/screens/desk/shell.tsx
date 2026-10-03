@@ -12,6 +12,7 @@ type NavItem = { key: string; label: string; href: string; icon: ReactNode }
 export function portalNav(base: string, user: SessionUser): { group: string; items: NavItem[] }[] {
   const teach: NavItem[] = [
     { key: 'teach', label: 'Teach', href: `${base}/admin/teach`, icon: <PeopleIcon /> },
+    { key: 'feedback', label: 'Feedback', href: `${base}/admin/feedback`, icon: <QuestionIcon /> },
     { key: 'compass', label: 'Compass', href: `${base}/admin/compass`, icon: <HeartIcon /> },
     { key: 'plans', label: 'Study plans', href: `${base}/admin/plans`, icon: <CalendarIcon /> },
     { key: 'nights', label: 'Nights', href: `${base}/admin/nights`, icon: <MoonIcon /> },
