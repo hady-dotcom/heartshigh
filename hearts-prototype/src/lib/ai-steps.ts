@@ -695,7 +695,8 @@ export function mockOutput(step: StepSpec, talk: TalkContext, prompt: string): u
   const drafted = draftTiers(talk.transcript, talk.duration || null)
   if (step.slug === 'language-inference') return { language: languageOf(talk.transcript) }
   if (!drafted) throw new Error('There is not enough speech in this transcript to draft from.')
-  const shift = salt(`${step.slug}\n${prompt}`, 5)
+  // Browsers submit textarea newlines as CR LF. Fold them so the same words always pick the same cut.
+  const shift = salt(`${step.slug}\n${prompt.replace(/\r\n/g, '\n')}`, 97)
   if (step.slug === 'hors-doeuvre') return horsOf(talk.transcript, drafted, shift)
   if (step.slug === 'appetiser-cut') return appetiserOf(drafted, shift)
   if (step.slug === 'popup-drafter') return { points: popupPoints(drafted, shift, 'question') }
