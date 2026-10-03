@@ -9,6 +9,7 @@ import { delayToMs, unlockState } from '@/lib/unlock'
 import { visibleCourseIds } from '@/server/context'
 import { courseCards, loadFeed, portraitFor, posterFor, slugify } from '@/server/learner'
 import { type Ctx, clock, one, ref, rows, str, unreadCount } from '../common'
+import { masterFlags } from './journey'
 
 const START = ['orange', 'gold', 'teal']
 
@@ -125,6 +126,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
       contingentPrompt: contingentId ? str(allPoints.find((row) => row.id === contingentId)?.prompt) : undefined,
       answered: Boolean(answer),
       myAnswer: answer ? str(answer.body) || str(answer.choice) : undefined,
+      timeLimitSec: Number(point.timeLimitSec || 0) || null,
     }
   })
 
@@ -157,7 +159,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
     : []
   const youtubeId = str(lesson.youtubeId) || null
   const startAt = Math.max(0, Number(query.t || 0)) || 0
-  const unread = await unreadCount(payload, user)
+  const [unread, flags] = await Promise.all([unreadCount(payload, user), masterFlags(payload)])
   const here = `${base}/course/${courseId}?part=${lessonId}`
 
   return (
@@ -177,6 +179,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
           swarm={swarm}
           serverNow={at.toISOString()}
           next={here}
+          overPlayer={flags.popupOverPlayer}
           garden={{ done, total, gardenHref: `${base}/garden`, links: [{ label: "See what you've sown", href: `${base}/garden/general` }, { label: 'Your workbook', href: `${base}/garden/workbook` }] }}
         />
         {marks.length ? (

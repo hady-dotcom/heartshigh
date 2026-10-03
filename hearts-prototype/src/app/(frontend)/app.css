@@ -264,6 +264,14 @@
 .lock-box p { color: var(--ink-2); line-height: 1.5; }
 .countdown { display: flex; justify-content: center; gap: 12px; margin: 10px 0 4px; font-size: 14px; color: var(--ink-2); }
 .countdown b { color: var(--orange); font-size: 26px; font-weight: 800; margin-right: 3px; }
+.sheet.pinned { border-radius: 22px 22px 0 0; }
+.sheet.leaving { opacity: 0; transform: translate(-50%, 24px); transition: opacity 0.18s ease, transform 0.18s ease; }
+.time-left { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: var(--orange); }
+.q-strip { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 2px 0; }
+.q-strip span { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; }
+.q-strip .done { background: var(--teal); color: #fff; }
+.q-strip .open { background: #fbe3d6; color: var(--orange); }
+@media (prefers-reduced-motion: reduce) { .sheet, .sheet.leaving { animation: none; transform: translateX(-50%); } }
 .sheet-close { position: absolute; right: 14px; top: 12px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: #f2ede3; font-size: 20px; }
 
 /* Cards and lists */
