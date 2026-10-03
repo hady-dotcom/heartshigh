@@ -445,6 +445,10 @@ export interface Lesson {
    */
   csvSeq?: number | null;
   starterLane?: string | null;
+  /**
+   * The title exactly as YouTube and the links list have it.
+   */
+  sourceTitle?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -548,6 +552,11 @@ export interface EngagementPoint {
     | boolean
     | null;
   crisisOption?: string | null;
+  /**
+   * For multiple choice: the option that is right, if any. Shown only after answering.
+   */
+  correctOption?: string | null;
+  timeLimitSec?: number | null;
   kind?: ('question' | 'multiple_choice' | 'reflection' | 'task') | null;
   prompt: string;
   options?:
@@ -1631,6 +1640,7 @@ export interface LessonsSelect<T extends boolean = true> {
   sourceUrl?: T;
   csvSeq?: T;
   starterLane?: T;
+  sourceTitle?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1723,6 +1733,8 @@ export interface EngagementPointsSelect<T extends boolean = true> {
   second?: T;
   nudges?: T;
   crisisOption?: T;
+  correctOption?: T;
+  timeLimitSec?: T;
   kind?: T;
   prompt?: T;
   options?: T;

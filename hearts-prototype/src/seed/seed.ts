@@ -7,6 +7,7 @@ import { dualExtract } from '../lib/extractor'
 import { parseJibrilMap } from '../lib/seats'
 import { parseTranscript } from '../lib/transcript'
 import type { User } from '../payload-types'
+import { seedOpening, seedPeople } from './opening'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
@@ -461,6 +462,9 @@ async function main() {
       data: { title: 'How we sit', unit: unit.id, course: course.id, portal: elm, order: 1, durationSeconds: 8, transcriptSource: 'none' },
     })
   }
+
+  const opening = await seedOpening(payload, { clauseIds, portalIds, now: new Date() })
+  await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...courseIds, ...opening.starterCourseIds] })
 
   console.log('Seeded HEARTS. Master: master@hearts.test / hearts-master')
   process.exit(0)

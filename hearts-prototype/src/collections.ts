@@ -267,6 +267,7 @@ export const Lessons: CollectionConfig = {
     { name: 'sourceUrl', type: 'text' },
     { name: 'csvSeq', type: 'number', admin: { description: 'Seq in HEARTS-8k-LINKS-for-bots.csv, for audit.' } },
     { name: 'starterLane', type: 'text' },
+    { name: 'sourceTitle', type: 'text', admin: { description: 'The title exactly as YouTube and the links list have it.' } },
   ],
 }
 
@@ -406,6 +407,8 @@ export const EngagementPoints: CollectionConfig = {
     { name: 'second', type: 'number', required: true, defaultValue: 0, admin: { description: 'Seconds into the source film (so the same question fires in the Hors and the Appetiser).' } },
     { name: 'nudges', type: 'json', admin: { description: 'Check-in nudges: [{ "option": "...", "scale": "belonging", "delta": -1 }]' } },
     { name: 'crisisOption', type: 'text' },
+    { name: 'correctOption', type: 'text', admin: { description: 'For multiple choice: the option that is right, if any. Shown only after answering.' } },
+    { name: 'timeLimitSec', type: 'number' },
     {
       name: 'kind',
       type: 'select',

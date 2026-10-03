@@ -28,6 +28,12 @@ export type FeedItem = {
   land: string
   style: SlideStyle | null
   clause: number | null
+  /** The lane this slot was routed for; null for spine clips and D0. */
+  laneKey?: string | null
+  laneTags?: { lane: string; weight: number }[]
+  lessonTitle?: string
+  placeholder?: boolean
+  transcriptReady?: boolean
 }
 
 export type CourseCard = {
