@@ -2,7 +2,8 @@
 // land) and the main (the whole talk from 0:00, with pop-ups). Drafts come from the transcript in "line mode": the
 // captions are cut into short spoken lines, and every quote is one of those lines, word for word. A person still has
 // to check each draft before it counts as checked.
-import { formatTimestamp, type Cue } from './transcript'
+import { killListHits } from './opening-data'
+import { formatTimestamp, parseTranscript, type Cue } from './transcript'
 
 export const HORS_MIN = 15
 export const HORS_MAX = 20
@@ -72,25 +73,32 @@ export function wordTimeline(raw: string): Word[] {
   return words
 }
 
-/** Short spoken lines: a break at a pause, at the end of a sentence, or every 16 words. */
+/** A rough spoken length for a word, so a sentence can end when its last word does rather than at the next one. */
+const spokenLength = (word: string) => Math.min(0.6, Math.max(0.2, 0.06 * word.length + 0.12))
+
+/**
+ * Short spoken lines for the shipped caption files: a break at every pause of half a second or more, at the end of a
+ * sentence, or every 16 words. Each line ends when its last word does, so the gaps between lines are the real pauses.
+ */
 export function linesFromWords(words: Word[], talkEnd?: number): Cue[] {
   const lines: Cue[] = []
   let current: Word[] = []
   const flush = (nextAt?: number) => {
     if (!current.length) return
     const last = current[current.length - 1]
-    lines.push({ start: current[0].at, end: nextAt ?? last.at + 0.8, text: current.map((word) => word.text).join(' ') })
+    const end = Math.min(last.at + spokenLength(last.text) + 0.1, nextAt ?? talkEnd ?? Infinity)
+    lines.push({ start: current[0].at, end: Number.isFinite(end) ? end : last.at + 0.6, text: current.map((word) => word.text).join(' ') })
     current = []
   }
   for (const [index, word] of words.entries()) {
-    const previous = words[index - 1]
-    if (current.length && previous && word.at - previous.at > 1.2) flush(word.at)
+    const next = words[index + 1]
     current.push(word)
-    const sentenceEnd = /[.?!]["”']?$/.test(word.text) && current.length >= 4
-    if (sentenceEnd || current.length >= 16) flush(words[index + 1]?.at)
+    const pause = next ? next.at - word.at - spokenLength(word.text) : Infinity
+    const sentenceEnd = /[.?!]["”']?$/.test(word.text) && current.length >= 3
+    if (sentenceEnd || pause >= 0.45 || current.length >= 16) flush(next?.at)
   }
   flush(talkEnd)
-  return lines.map((line) => ({ ...line, end: Math.max(line.end, line.start + 0.4) }))
+  return lines.map((line) => ({ ...line, end: Math.max(line.end, line.start + 0.3) }))
 }
 
 function vttStamp(seconds: number) {
@@ -112,15 +120,125 @@ export function lastSecond(cues: Cue[]) {
   return cues.length ? Math.ceil(Math.max(...cues.map((cue) => cue.end))) : 0
 }
 
+export type TimedLine = { at: number; text: string }
+
 export type TierDraft = {
   hors: { start: number; end: number; quote: string }
   appetiser: { start: number; end: number }
   hook: string
   turn: string
   land: string
+  /** When each line is said, so the appetiser can caption the hook, then the turn, then the land. */
+  hookAt: number
+  turnAt: number
+  landAt: number
+  /** The hors d'oeuvre's sentences with their times, for its captions. */
+  horsLines: TimedLine[]
   popups: { second: number; quote: string; prompt: string }[]
   duration: number
   note: string
+}
+
+/** A clip opens this long before its first word and closes this long after its last, inside the silence around it. */
+export const PRE_ROLL = 0.4
+export const TAIL = 0.6
+/** In captions without punctuation, a pause this long ends a sentence. */
+export const SENTENCE_PAUSE = 0.7
+const LONGEST_SENTENCE = 40
+
+export type Spoken = { start: number; end: number; text: string; words: number; complete: boolean; capital: boolean }
+
+/** Words spread through each cue at an ordinary speaking pace, for transcripts that only mark when a line starts. */
+function wordsFromCues(cues: Cue[]): Word[] {
+  const words: Word[] = []
+  for (const [index, cue] of cues.entries()) {
+    const tokens = cue.text.replace(/\*\*/g, '').split(/\s+/).filter(Boolean)
+    if (!tokens.length) continue
+    const next = cues[index + 1]?.start ?? cue.end
+    const until = Math.max(cue.start + 0.3, Math.min(cue.end, next, cue.start + tokens.length / 2.6 + 0.3))
+    tokens.forEach((text, at) => words.push({ at: cue.start + ((until - cue.start) * at) / tokens.length, text }))
+  }
+  for (let index = 1; index < words.length; index++) if (words[index].at < words[index - 1].at) words[index].at = words[index - 1].at
+  return words
+}
+
+/** Every spoken word with its start, from a caption file, a timed transcript, or cues already parsed. */
+export function wordsOf(source: string | Cue[]): Word[] {
+  if (typeof source !== 'string') return wordsFromCues(source)
+  if (source.includes('-->')) return wordTimeline(source)
+  return wordsFromCues(parseTranscript(source).cues)
+}
+
+const ends = (text: string) => /[.?!]["”')\]]*$/.test(text)
+
+/**
+ * Sentences from caption timing plus punctuation. Where the captions are punctuated, a sentence ends at its full
+ * stop, question mark or exclamation mark (or at a pause of 1.5 seconds). Where they are not, it ends at a pause of
+ * SENTENCE_PAUSE seconds. A run longer than 40 words is split at its longest pause.
+ */
+export function sentencesOf(source: string | Cue[]): Spoken[] {
+  const words = wordsOf(source)
+  if (!words.length) return []
+  const punctuated = words.filter((word) => ends(word.text)).length >= words.length / 40
+  const pauseAfter = (index: number) => (index + 1 < words.length ? words[index + 1].at - words[index].at - spokenLength(words[index].text) : Infinity)
+  const runs: [number, number][] = []
+  let from = 0
+  for (let index = 0; index < words.length; index++) {
+    const pause = pauseAfter(index)
+    const boundary = punctuated ? (ends(words[index].text) && index - from >= 1) || pause >= 1.5 : pause >= SENTENCE_PAUSE
+    if (boundary || index === words.length - 1) {
+      runs.push([from, index])
+      from = index + 1
+    }
+  }
+  const split = (run: [number, number]): [number, number][] => {
+    const [a, b] = run
+    if (b - a + 1 <= LONGEST_SENTENCE) return [run]
+    let best = a + Math.floor((b - a) / 2)
+    let widest = -Infinity
+    for (let index = a + 5; index <= b - 5; index++) {
+      const pause = pauseAfter(index)
+      if (pause > widest) {
+        widest = pause
+        best = index
+      }
+    }
+    return [...split([a, best]), ...split([best + 1, b])]
+  }
+  return runs.flatMap(split).map(([a, b]) => {
+    const last = words[b]
+    const nextAt = words[b + 1]?.at ?? Infinity
+    return {
+      start: words[a].at,
+      end: Math.min(last.at + spokenLength(last.text) + 0.1, nextAt),
+      text: words
+        .slice(a, b + 1)
+        .map((word) => word.text)
+        .join(' '),
+      words: b - a + 1,
+      complete: ends(last.text) || pauseAfter(b) >= SENTENCE_PAUSE,
+      capital: /^["“'(]?[A-Z]/.test(words[a].text),
+    }
+  })
+}
+
+const tenth = (value: number, way: 'down' | 'up') => (way === 'down' ? Math.floor(value * 10 + 1e-6) / 10 : Math.ceil(value * 10 - 1e-6) / 10)
+const hundredth = (value: number) => Math.round(value * 100) / 100
+
+/** The silence before sentence `index`, where a clip may open, and the silence after it, where a clip may close. */
+export function gapBefore(sentences: Spoken[], index: number) {
+  return { from: index > 0 ? sentences[index - 1].end : 0, to: sentences[index].start }
+}
+export function gapAfter(sentences: Spoken[], index: number, duration = Infinity) {
+  return { from: sentences[index].end, to: index + 1 < sentences.length ? sentences[index + 1].start : duration }
+}
+
+/** True when `at` sits in the silence before a sentence starts (as an in point) or after one ends (as an out point). */
+export function onSentenceBoundary(sentences: Spoken[], at: number, kind: 'in' | 'out', duration = Infinity, slack = 0.15) {
+  return sentences.some((_, index) => {
+    const gap = kind === 'in' ? gapBefore(sentences, index) : gapAfter(sentences, index, duration)
+    return at >= gap.from - slack && at <= gap.to + slack
+  })
 }
 
 const STOP = new Set(
@@ -133,107 +251,253 @@ const plainWords = (text: string) =>
     .split(/\s+/)
     .filter((word) => word.length > 3 && !STOP.has(word))
 
-const NOISE = /subscribe|description|donat|qr code|the link|thank you for watching|watching our|patreon|sponsor|notification|comment below|like and share|launchgood|\bclick\b|follow us|website|download|e-?books?|\.org|\.com|our channel|our series/i
-const TURNING = /\b(but|however|rather|instead|actually|the problem|the question|isn't|is not|don't|do not|never|not just|not only)\b/i
-const TEACHING = /\b(allah|prophet|qur'?an|heart|dua|mercy|trust|patience|grateful|gratitude|prayer|forgive|soul|light|love|peace|anger|time|humility|purpose)\b/i
+const NOISE =
+  /subscribe|description|donat|qr code|the link|thank you for watching|thanks for watching|watching our|patreon|sponsor|notification|comment below|like and share|launchgood|\bclick\b|follow us|website|download|e-?books?|\.org|\.com|our channel|our series|next episode|next video|see you (next|in the)|this video is|this episode is|brought to you|support (us|our|this)/i
+const INTRO = /^(assalam|as-?salam|salaam|salam|bismillah|alhamdulillah,? wa|welcome (back|to|everyone)|hello (everyone|and welcome)|good (evening|morning)|testing)|music|applause|people are (still )?joining|apologi[sz]e for|wait a (moment|few|minute)|can (you|everyone) hear|before we (begin|start|get started)|let's (begin|get started)|housekeeping/i
+const TURNING = /\b(but|however|rather|instead|actually|the problem|the question|isn't|is not|don't|do not|never|not just|not only|yet|until|the opposite|the reality|the truth|what if)\b/i
+const TEACHING = /\b(allah|prophet|qur'?an|heart|dua|mercy|trust|patience|grateful|gratitude|prayer|forgive|soul|light|love|peace|anger|time|humility|purpose|akhira|dunya|iman|sabr|tawakkul|rabb|lord|death|jannah)\b/i
+const GRIP = /\b(imagine|did you know|have you ever|the only|never|every single|the secret|the reason|what if|think about|here's the thing|the truth is|the problem is|the question is|the key|remember this|listen)\b/i
+const CONNECTIVE = /^(and|but|so|or|because|cause|'cause|which|who|whom|that|then|like|uh|um|yeah|yes|no|okay|ok|right|of|to|for|with|is|was|are|were|in|on|at|as|if|than|also|plus|even)\b/i
+const PRONOUN = /^(he|she|it|they|him|them|his|her|its|their|this|these|those|there)\b/i
+const OPENER_WORD = /^(i|we|you|now|the|allah|what|when|if|imagine|there's|this is|my|our|one|every|how|why|do|did|have|let|look|think|listen|remember|brothers|sisters|people|whoever|whatever|sometimes|never|always)\b/i
+const DANGLING = /\b(and|but|so|or|the|a|an|of|to|for|with|is|was|are|were|be|been|have|has|had|will|would|can|could|should|may|might|must|shall|that|which|who|what|when|where|if|because|like|um|uh|in|on|at|by|from|into|about|than|as|just|really|very|not|my|your|his|her|their|our|its|it's|i'm|we're|you're|they're|this|these|those)[,]?$/i
 
 function capitalise(text: string) {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
+function noisy(sentence: Spoken) {
+  return NOISE.test(sentence.text)
+}
+
 /**
- * Line mode. The land is the line that best carries the talk's repeated words; the appetiser runs from a pause up to
- * 3 minutes before it to the end of the land; the hors d'oeuvre is 15 to 20 seconds from the start of the land.
- * Pop-ups are other strong lines spread across the main, outside the appetiser.
+ * Line mode, sentence by sentence. Every boundary is a sentence boundary with a small pre-roll and tail inside the
+ * silence around it. The hors d'oeuvre is the most gripping self-contained 15 to 20 seconds in the talk. The
+ * appetiser opens on a strong hook, passes a real turn (a later sentence that shifts the thought, not the next few
+ * seconds of the hook) and ends when its land sentence ends. Greetings, sponsor and outro lines are left out.
  */
-export function draftTiers(lines: Cue[], durationHint?: number | null): TierDraft | null {
-  const usable = lines.filter((line) => line.text.split(/\s+/).length >= 3)
-  if (usable.length < 3) return null
-  const duration = Math.max(durationHint || 0, lastSecond(lines))
+export function draftTiers(source: string | Cue[], durationHint?: number | null): TierDraft | null {
+  const all = sentencesOf(source)
+  if (all.filter((sentence) => sentence.words >= 3).length < 3) return null
+  const spokenEnd = all[all.length - 1].end
+  const duration = Math.max(durationHint || 0, Math.ceil(spokenEnd))
+  const usableCount = all.filter((sentence) => sentence.words >= 3).length
   const counts = new Map<string, number>()
-  for (const line of usable) for (const word of new Set(plainWords(line.text))) counts.set(word, (counts.get(word) || 0) + 1)
-  const planted = new Set([...counts.entries()].filter(([, count]) => count >= Math.max(3, Math.round(usable.length / 60))).map(([word]) => word))
-  const score = (line: Cue) => {
-    const size = line.text.split(/\s+/).length
-    if (NOISE.test(line.text)) return -10
-    let total = plainWords(line.text).filter((word) => planted.has(word)).length * 2
-    if (size >= 8 && size <= 18) total += 3
-    else if (size < 6) total -= 3
-    if (TEACHING.test(line.text)) total += 2
-    if (TURNING.test(line.text)) total += 1
-    if (/^(and|so|but|or|uh|um|like|because)\b/i.test(line.text)) total -= 2
-    // The first seconds are usually a greeting and the last are thanks or a call to give.
-    if (line.start < Math.min(20, duration * 0.08)) total -= 4
-    if (line.end > duration * 0.95) total -= 6
+  for (const sentence of all) for (const word of new Set(plainWords(sentence.text))) counts.set(word, (counts.get(word) || 0) + 1)
+  const planted = new Set([...counts.entries()].filter(([, count]) => count >= Math.max(3, Math.round(usableCount / 60))).map(([word]) => word))
+  // An outro starts at the first sponsor, giving or channel line in the last stretch; nothing after it is used.
+  const outroFrom = all.findIndex((sentence) => sentence.start > Math.min(spokenEnd * 0.8, spokenEnd - 20) && noisy(sentence))
+  const lastUsable = outroFrom === -1 ? all.length - 1 : outroFrom - 1
+  const firstUsable = Math.max(0, all.findIndex((sentence) => !INTRO.test(sentence.text) && !noisy(sentence) && sentence.words >= 3))
+  const blocked = (index: number) => index < firstUsable || index > lastUsable || noisy(all[index]) || INTRO.test(all[index].text)
+
+  const lineScore = (index: number) => {
+    const sentence = all[index]
+    if (blocked(index)) return -20
+    const text = sentence.text
+    let total = Math.min(3, plainWords(text).filter((word) => planted.has(word)).length) * 2
+    if (TEACHING.test(text)) total += 2
+    if (sentence.words >= 7 && sentence.words <= 28) total += 2
+    else if (sentence.words < 5) total -= 3
+    else if (sentence.words > 36) total -= 2
+    if (/\b(you|your)\b/i.test(text)) total += 1
+    total -= (text.match(/\b(uh|um|erm|you know|i mean)\b/gi) || []).length
+    if (killListHits(text).length) total -= 1
+    if (sentence.end > spokenEnd * 0.96) total -= 4
+    if (spokenEnd > 300 && sentence.start < Math.min(90, spokenEnd * 0.04)) total -= 3
     return total
   }
-  const ranked = usable.map((line, index) => ({ line, index, score: score(line) })).sort((a, b) => b.score - a.score || a.line.start - b.line.start)
-  const landRow = ranked.find((row) => row.line.start >= Math.min(30, duration * 0.15) && row.line.end >= Math.min(usable[0].start + 60, duration * 0.6)) || ranked[0]
-  const land = landRow.line
-
-  const windowLength = Math.min(APPETISER_MAX - 5, Math.max(45, duration < 200 ? duration : 150))
-  const target = Math.max(0, land.end - windowLength)
-  let hookIndex = landRow.index
-  for (let index = landRow.index; index >= 0; index--) {
-    if (usable[index].start < target) break
-    hookIndex = index
+  // Punctuated captions capitalise the start of a real sentence, so a lower-case start there is a mid-sentence piece.
+  const cased = all.filter((sentence) => sentence.capital).length >= all.length / 3
+  const pauseBefore = (index: number) => (index > 0 ? all[index].start - all[index - 1].end : 3)
+  const pauseAfterSentence = (index: number) => (index + 1 < all.length ? all[index + 1].start - all[index].end : 3)
+  // Without punctuation, a long pause and a previous line that does not trail off are the best signs a sentence starts.
+  const opens = (index: number) => !CONNECTIVE.test(all[index].text) && !PRONOUN.test(all[index].text) && (index === 0 || !DANGLING.test(all[index - 1].text)) && (!cased || all[index].capital)
+  const startStrength = (index: number) => Math.min(3, pauseBefore(index) * 2) + (index > 0 && DANGLING.test(all[index - 1].text) ? -4 : 0) + (OPENER_WORD.test(all[index].text) ? 1 : 0)
+  const endStrength = (index: number) => Math.min(3, pauseAfterSentence(index) * 2) + (index + 1 < all.length && CONNECTIVE.test(all[index + 1].text) && pauseAfterSentence(index) < 1 ? -2 : 0)
+  const hookScore = (index: number) => {
+    const text = all[index].text
+    let total = lineScore(index)
+    if (/\?["”']?$/.test(text) || /^(what|why|how|did you|have you|do you|is it|are you|can you|who)\b/i.test(text)) total += 3
+    if (GRIP.test(text)) total += 2
+    total += opens(index) ? 1 : CONNECTIVE.test(text) ? -6 : -3
+    return total + startStrength(index)
   }
-  const pauseBefore = (index: number) => index === 0 || usable[index].start - usable[index - 1].end > 0.6
-  const opener = (index: number) => pauseBefore(index) && !/^(and|but|so|or|because|uh|um)\b/i.test(usable[index].text)
-  const sized = (index: number) => usable[index].text.split(/\s+/).length >= 5
-  const reach = usable[hookIndex].start + 30
-  let snapped = hookIndex
-  for (let index = hookIndex; index < landRow.index && usable[index].start <= reach; index++) {
-    if (opener(index) && sized(index)) {
-      snapped = index
-      break
+  const closes = (index: number) => all[index].complete && !DANGLING.test(all[index].text) && (index + 1 >= all.length || !/^(of|to|the|a|an|and|is|was|that|which)\b/i.test(all[index + 1].text))
+  const scores = all.map((_, index) => lineScore(index))
+
+  /** In and out points for sentences a..b with the pre-roll and tail, fitted to [min, max] seconds where possible. */
+  const fit = (a: number, b: number, min: number, max: number) => {
+    const before = gapBefore(all, a)
+    const after = gapAfter(all, b, duration)
+    const inLatest = before.to - 0.1
+    const inEarliest = Math.max(before.from, before.to - 1.5, 0)
+    const outEarliest = after.from + 0.2
+    const outLatest = Math.min(after.to, after.from + 2.5, duration)
+    let start = Math.max(inEarliest, before.to - PRE_ROLL)
+    let end = Math.min(outLatest, Math.max(outEarliest, after.from + TAIL))
+    if (end - start < min) end = Math.min(outLatest, start + min)
+    if (end - start < min) start = Math.max(inEarliest, end - min)
+    if (end - start > max) end = Math.max(outEarliest, start + max)
+    if (end - start > max) start = Math.min(inLatest, end - max)
+    start = hundredth(Math.max(start, inEarliest))
+    end = hundredth(Math.min(end, outLatest))
+    const length = end - start
+    return length >= min - 1e-6 && length <= max + 1e-6 && start <= before.to + 0.01 && end >= after.from - 0.01 ? { start, end } : null
+  }
+
+  // Hors d'oeuvre: the best window of whole sentences that fits 15 to 20 seconds.
+  type Window = { a: number; b: number; start: number; end: number; score: number }
+  // A window that starts cleanly after a pause and ends on a finished sentence wins over any that does not.
+  let hors: Window | null = null
+  let loose: Window | null = null
+  for (let a = firstUsable; a <= lastUsable; a++) {
+    if (blocked(a) || all[a].words < 5) continue
+    for (let b = a; b <= lastUsable; b++) {
+      if (blocked(b)) break
+      if (all[b].end - all[a].start > HORS_MAX + 0.5) break
+      const window = fit(a, b, HORS_MIN, HORS_MAX)
+      if (!window) continue
+      const inside = scores.slice(a, b + 1)
+      const score = hookScore(a) * 1.5 + inside.reduce((sum, value) => sum + value, 0) / inside.length + (closes(b) ? 3 : -4) + endStrength(b) + (b - a > 4 ? -1 : 0)
+      const strict = opens(a) && pauseBefore(a) >= (cased ? 0.3 : SENTENCE_PAUSE - 0.05) && closes(b)
+      if (strict && (!hors || score > hors.score)) hors = { a, b, ...window, score }
+      if (!loose || score > loose.score) loose = { a, b, ...window, score }
     }
   }
-  if (snapped === hookIndex) while (snapped < landRow.index - 1 && !sized(snapped)) snapped += 1
-  const hook = usable[snapped]
-  const appetiserStart = Math.floor(hook.start)
-  const appetiserEnd = Math.min(Math.ceil(land.end), appetiserStart + APPETISER_MAX, duration || Infinity)
-  const middle = usable.slice(snapped + 1, landRow.index)
-  const turn = middle.find((line) => TURNING.test(line.text) && line.text.split(/\s+/).length >= 5) || middle[Math.floor(middle.length / 2)] || hook
+  hors ||= loose
+  if (!hors) return null
 
-  const horsEnd = Math.min(Math.floor(land.start) + HORS_MAX, Math.max(Math.floor(land.start) + HORS_MIN, Math.ceil(land.end)), duration || Infinity)
-  const horsStart = Math.max(0, Math.min(Math.floor(land.start), horsEnd - HORS_MIN))
-
-  const popups: TierDraft['popups'] = []
-  const addPopup = (line: Cue) => {
-    const quote = capitalise(line.text)
-    popups.push({ second: Math.min(Math.ceil(line.end), Math.max(0, duration - 1)), quote, prompt: `The speaker says: “${quote}” What does that line ask of you this week?` })
+  // Appetiser: a hook, a turn and a land inside about 3 minutes, all on sentence boundaries.
+  type Pick = { hook: number; turn: number; land: number; start: number; end: number; score: number }
+  let pick: Pick | null = null
+  let loosePick: Pick | null = null
+  const landScore = (index: number) => scores[index] + (closes(index) ? 3 : -6) + endStrength(index) + (TEACHING.test(all[index].text) ? 1 : 0)
+  if (spokenEnd < 120) {
+    const usable = all.map((_, index) => index).filter((index) => !blocked(index))
+    const hook = usable.find((index) => opens(index)) ?? usable[0]
+    const land = [...usable].reverse().find((index) => closes(index) && index > hook) ?? usable[usable.length - 1]
+    const middle = usable.filter((index) => index > hook + 1 && index < land)
+    const turn = middle.sort((x, y) => scores[y] + (TURNING.test(all[y].text) ? 4 : 0) - (scores[x] + (TURNING.test(all[x].text) ? 4 : 0)))[0] ?? Math.min(land, hook + 1)
+    const window = fit(hook, land, 1, APPETISER_MAX)
+    if (window) pick = { hook, turn, land, ...window, score: 0 }
+  } else {
+    const lands = all
+      .map((_, index) => index)
+      .filter((index) => !blocked(index) && all[index].words >= 6 && all[index].start >= Math.min(45, spokenEnd * 0.1))
+      .sort((x, y) => landScore(y) - landScore(x))
+      .slice(0, 30)
+    for (const land of lands) {
+      for (let hook = land - 2; hook >= firstUsable; hook--) {
+        if (all[land].end - all[hook].start > APPETISER_MAX - 2) break
+        if (blocked(hook) || all[hook].words < 4 || all[land].start - all[hook].start < 45) continue
+        const window = fit(hook, land, 1, APPETISER_MAX)
+        if (!window) continue
+        let turn = -1
+        let turnBest = -Infinity
+        for (let index = hook + 2; index < land; index++) {
+          if (blocked(index) || all[index].words < 5) continue
+          if (all[index].start - all[hook].start < 20 || all[land].start - all[index].end < 8) continue
+          const value = scores[index] + (TURNING.test(all[index].text) ? 4 : 0) + (opens(index) || /^but\b/i.test(all[index].text) ? 1 : 0)
+          if (value > turnBest) {
+            turnBest = value
+            turn = index
+          }
+        }
+        if (turn === -1) continue
+        const length = window.end - window.start
+        const score = landScore(land) * 1.2 + hookScore(hook) * 1.5 + turnBest + (length >= 90 ? 2 : 0) - (all.slice(hook, land + 1).some((sentence) => noisy(sentence)) ? 30 : 0)
+        const strict = opens(hook) && closes(land)
+        if (strict && (!pick || score > pick.score)) pick = { hook, turn, land, ...window, score }
+        if (!loosePick || score > loosePick.score) loosePick = { hook, turn, land, ...window, score }
+      }
+    }
+    pick ||= loosePick
   }
+  if (!pick) {
+    const window = fit(hors.a, hors.b, 1, APPETISER_MAX)!
+    pick = { hook: hors.a, turn: Math.min(hors.b, hors.a + 1), land: hors.b, ...window, score: 0 }
+  }
+
+  const chosen = pick
+  const popups: TierDraft['popups'] = []
+  const addPopup = (index: number) => {
+    const quote = capitalise(all[index].text)
+    popups.push({ second: Math.min(Math.ceil(all[index].end), Math.max(0, duration - 1)), quote, prompt: `The speaker says: “${quote}” What does that line ask of you this week?` })
+  }
+  const popupOk = (index: number) => scores[index] > 0 && all[index].words >= 7 && all[index].words <= 40 && closes(index) && !killListHits(all[index].text).length && !NOISE.test(all[index].text)
+  const ranked = all.map((_, index) => index).sort((x, y) => scores[y] - scores[x] || all[x].start - all[y].start)
   const thirds = [0, 1, 2].map((part) => [duration * (part / 3), duration * ((part + 1) / 3)])
   for (const [from, to] of thirds) {
-    const pick = ranked.find(
-      (row) =>
-        row.score > 0 &&
-        row.line.start >= from &&
-        row.line.end <= to &&
-        (row.line.end < appetiserStart || row.line.start > appetiserEnd) &&
-        row.line.text.split(/\s+/).length >= 7 &&
-        !popups.some((other) => Math.abs(other.second - row.line.end) < 60),
+    const found = ranked.find(
+      (index) =>
+        popupOk(index) &&
+        all[index].start >= from &&
+        all[index].end <= to &&
+        (all[index].end < chosen.start || all[index].start > chosen.end) &&
+        !popups.some((other) => Math.abs(other.second - all[index].end) < 60),
     )
-    if (pick) addPopup(pick.line)
+    if (found !== undefined) addPopup(found)
   }
   // Short talks are mostly appetiser; the main still plays them whole, so a pop-up may sit inside that stretch.
-  for (const row of ranked) {
+  for (const index of ranked) {
     if (popups.length >= 2) break
-    const gap = Math.max(20, duration / 6)
-    if (row.score > 0 && row.line.text.split(/\s+/).length >= 7 && !popups.some((other) => Math.abs(other.second - row.line.end) < gap)) addPopup(row.line)
+    const gap = Math.max(12, duration / 6)
+    if (popupOk(index) && !popups.some((other) => Math.abs(other.second - all[index].end) < gap)) addPopup(index)
+  }
+  for (const index of ranked) {
+    if (popups.length >= 2) break
+    if (scores[index] > -5 && all[index].words >= 5 && !killListHits(all[index].text).length && !NOISE.test(all[index].text) && !popups.some((other) => Math.abs(other.second - all[index].end) < 8)) addPopup(index)
   }
   popups.sort((a, b) => a.second - b.second)
+  const horsLines = all.slice(hors.a, hors.b + 1).map((sentence) => ({ at: tenth(sentence.start, 'down'), text: capitalise(sentence.text) }))
   return {
-    hors: { start: horsStart, end: horsEnd, quote: capitalise(land.text) },
-    appetiser: { start: appetiserStart, end: appetiserEnd },
-    hook: capitalise(hook.text),
-    turn: capitalise(turn.text),
-    land: capitalise(land.text),
+    hors: { start: hors.start, end: hors.end, quote: capitalise(all.slice(hors.a, hors.b + 1).map((sentence) => sentence.text).join(' ')) },
+    appetiser: { start: pick.start, end: pick.end },
+    hook: capitalise(all[pick.hook].text),
+    turn: capitalise(all[pick.turn].text),
+    land: capitalise(all[pick.land].text),
+    hookAt: tenth(all[pick.hook].start, 'down'),
+    turnAt: tenth(all[pick.turn].start, 'down'),
+    landAt: tenth(all[pick.land].start, 'down'),
+    horsLines,
     popups: popups.slice(0, 3),
     duration,
-    note: `${DRAFT_NOTE} Appetiser ${formatTimestamp(appetiserStart)} to ${formatTimestamp(appetiserEnd)}.`,
+    note: `${DRAFT_NOTE} Appetiser ${formatTimestamp(pick.start)} to ${formatTimestamp(pick.end)}.`,
   }
+}
+
+/**
+ * Caption timings for a tier a person has edited: the hors d'oeuvre's sentences between its in and out points, and
+ * when the hook, turn and land are said inside the appetiser (found by their words, or spread through it if not).
+ */
+export function tierTimings(source: string | Cue[], tier: { horsStart: number; horsEnd: number; appetiserStart: number; appetiserEnd: number; hook?: string; turn?: string; land?: string }) {
+  const all = sentencesOf(source)
+  const key = (text: string) => text.toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim()
+  const inside = (from: number, to: number) => all.filter((sentence) => sentence.start >= from - 0.2 && sentence.start < to)
+  const horsLines = inside(tier.horsStart, tier.horsEnd).map((sentence) => ({ at: tenth(sentence.start, 'down'), text: capitalise(sentence.text) }))
+  const span = inside(tier.appetiserStart, tier.appetiserEnd)
+  const find = (text: string | undefined, fallback: number) => {
+    const wanted = key(text || '')
+    if (!wanted) return fallback
+    const head = wanted.split(' ').slice(0, 6).join(' ')
+    const hit = span.find((sentence) => key(sentence.text).includes(head) || wanted.includes(key(sentence.text).split(' ').slice(0, 6).join(' ')))
+    return hit ? tenth(hit.start, 'down') : fallback
+  }
+  const length = tier.appetiserEnd - tier.appetiserStart
+  const hookAt = find(tier.hook, tier.appetiserStart)
+  const landAt = find(tier.land, tier.appetiserStart + length * 0.75)
+  const turnAt = find(tier.turn, tier.appetiserStart + length * 0.4)
+  return { horsLines, hookAt, turnAt: Math.max(hookAt, Math.min(turnAt, landAt)), landAt: Math.max(hookAt, landAt) }
+}
+
+const plainKey = (text: string) => text.toLowerCase().replace(/[’‘]/g, "'").replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim()
+
+/** True when `line` is the speaker's words in order, ignoring case and punctuation. */
+export function saidInTalk(line: string, source: string | Cue[]) {
+  const wanted = plainKey(line)
+  if (!wanted) return true
+  return ` ${plainKey(wordsOf(source).map((word) => word.text).join(' '))} `.includes(` ${wanted} `)
 }
 
 const matchWord = (word: string) => word.toLowerCase().replace(/[’‘]/g, "'").replace(/[^a-z0-9']/g, '')
