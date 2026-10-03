@@ -1160,6 +1160,13 @@ export function Journey(props: JourneyProps) {
     } else if (dx < 0) moreLikeThis()
     else moreFromSpeaker()
   }
+  const onCancel = () => {
+    const start = gesture.current
+    gesture.current = null
+    if (start?.timer) window.clearTimeout(start.timer)
+    if (clipRef.current) clipRef.current.style.transform = ''
+  }
+  const swipe = { onPointerDown: onDown, onPointerMove: onMove, onPointerUp: onUp, onPointerCancel: onCancel }
 
   // ---------- sign-up from the sheet ----------
   const signUp = async (account: { name: string; email: string; password: string }) => {
@@ -1228,6 +1235,7 @@ export function Journey(props: JourneyProps) {
         onDown(event)
       }}
       onPointerMove={onMove}
+      onPointerCancel={onCancel}
       onPointerUp={(event) => {
         const start = gesture.current
         if (!start) return
@@ -1388,19 +1396,19 @@ export function Journey(props: JourneyProps) {
               ) : null}
             </div>
           ) : null}
-          {overlay && phase === 'feed' && !slide && !scenic ? <div className="j-gesture" data-testid="gesture-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} /> : null}
+          {overlay && phase === 'feed' && !slide && !scenic ? <div className="j-gesture" data-testid="gesture-layer" {...swipe} /> : null}
         </div>
         {slide && item ? (
-          <div className="j-slide" data-testid="gesture-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}>
+          <div className="j-slide" data-testid="gesture-layer" {...swipe}>
             <Slide item={item} style={slide} onMore={() => void stepUp()} />
           </div>
         ) : null}
         {scenic && item?.scene ? (
-          <div className="j-slide" data-testid="gesture-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}>
+          <div className="j-slide" data-testid="gesture-layer" {...swipe}>
             <TeachingCard key={item.id} scene={item.scene} speaker={item.speaker} course={item.courseTitle} lane={item.laneLabel} onClip={() => void stepUp()} />
           </div>
         ) : null}
-        <div className="j-chrome" onPointerDown={overlay ? undefined : onDown} onPointerMove={overlay ? undefined : onMove} onPointerUp={overlay ? undefined : onUp}>
+        <div className="j-chrome" data-swipe={overlay ? undefined : ''} {...(overlay ? {} : swipe)}>
           {chrome}
         </div>
       </div>
