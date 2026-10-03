@@ -7,6 +7,7 @@ import type { OpeningData } from '@/server/opening'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readHeart, readPending, sessionFlags, setSessionFlags, viewAsId, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
+import { appetiserStop } from '@/lib/tiers'
 import { isoWeek } from '@/lib/trends'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, lowData, playOnly, preloadApi, setHidden, soundOn, type PlayerKind } from '@/lib/yt'
 import { TabBar } from '../app/shell'
@@ -40,9 +41,7 @@ export type JourneyProps = {
 const TAB_DELAY = 200
 const HOLD = 700
 
-function appetiserEnd(item: FeedItem) {
-  return item.appetiser.end > item.appetiser.start ? item.appetiser.end : item.appetiser.start + 180
-}
+const appetiserEnd = (item: FeedItem) => appetiserStop(item.appetiser)
 
 function clock(total: number) {
   const value = Math.max(0, Math.round(total))

@@ -291,6 +291,12 @@ export function tierProblem(tier: Record<string, unknown>) {
   return null
 }
 
+/** Where the appetiser player stops: its out point, never more than about 3 minutes after its in point. */
+export function appetiserStop(appetiser: { start: number; end: number }) {
+  const longest = appetiser.start + APPETISER_MAX + 15
+  return appetiser.end > appetiser.start ? Math.min(appetiser.end, longest) : appetiser.start + APPETISER_MAX
+}
+
 export type TimingRow = { label: string; start: number; end?: number | null }
 
 /** Things that fall outside the talk: a cut, pop-up or tier that starts or ends after the real duration. */
