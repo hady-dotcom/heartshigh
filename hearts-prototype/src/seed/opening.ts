@@ -7,7 +7,7 @@ import type { Payload } from 'payload'
 import { idOf } from '../lib/ids'
 import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE, LANES, SCALES, SCENES } from '../lib/opening-data'
 import { DRAFT_NOTE, draftTiers, timingProblems, type TimingRow } from '../lib/tiers'
-import { formatTimestamp, parseTranscript } from '../lib/transcript'
+import { formatTimestamp } from '../lib/transcript'
 import { STARTERS } from './starters-data'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
@@ -198,12 +198,12 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
     await payload.update({ collection: 'lanes', id: laneIds.get(key)!, overrideAccess: true, data: { starters } as never })
   }
 
-  // Fahmy's approved cuts keep the board's slides while the talk now has a YouTube id.
+  // Lesson 1 (Fahmy, session 6) now has its YouTube id, so its cuts play as video like every other talk.
   const fahmy = await one(payload, 'lessons', { title: { equals: 'How to Live Like the Prophet, Session 6' } })
   if (fahmy) {
     const cuts = await payload.find({ collection: 'cuts', overrideAccess: true, depth: 0, limit: 200, where: { lesson: { equals: fahmy.id } } })
     for (const cut of cuts.docs as unknown as Doc[]) {
-      if (cut.presentation !== 'slide') await payload.update({ collection: 'cuts', id: cut.id, overrideAccess: true, data: { presentation: 'slide' } as never })
+      if (cut.presentation !== 'video') await payload.update({ collection: 'cuts', id: cut.id, overrideAccess: true, data: { presentation: 'video' } as never })
     }
   }
 
@@ -236,6 +236,9 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
     }
   }
   void clauseNumber
+
+  // This demo shows the machine drafts to learners while they wait for review. Production starts with this off.
+  await payload.updateGlobal({ slug: 'master-flags', overrideAccess: true, data: { showUnchecked: true } as never })
 
   await upsert(payload, 'opening-configs', { portal: { exists: false } }, { defaultClip: d0CutId, helpContacts: DEFAULT_HELP_CONTACTS, trendsContributionPrompt: true })
   const elm = portalIds.get('east-london')!
@@ -287,11 +290,11 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
 async function seedTier(payload: Payload, lesson: Doc, youtubeId: string, lengthSec: number | null) {
   const raw = starterTranscript(youtubeId) || (typeof lesson.transcript === 'string' ? lesson.transcript : '')
   if (!raw) return null
-  const draft = draftTiers(parseTranscript(raw).cues, lengthSec ?? (Number(lesson.durationSeconds) || null))
+  const draft = draftTiers(raw, lengthSec ?? (Number(lesson.durationSeconds) || null))
   if (!draft) return null
   const existing = await one(payload, 'talk-tiers', { lesson: { equals: lesson.id } })
   if (existing?.status === 'checked') {
-    return { hors: { start: Number(existing.horsStart), end: Number(existing.horsEnd), quote: String(existing.horsQuote || '') }, appetiser: { start: Number(existing.appetiserStart), end: Number(existing.appetiserEnd) }, hook: String(existing.hook || ''), turn: String(existing.turn || ''), land: String(existing.land || ''), popups: [], duration: draft.duration, note: String(existing.note || '') }
+    return { ...draft, hors: { start: Number(existing.horsStart), end: Number(existing.horsEnd), quote: String(existing.horsQuote || '') }, appetiser: { start: Number(existing.appetiserStart), end: Number(existing.appetiserEnd) }, hook: String(existing.hook || ''), turn: String(existing.turn || ''), land: String(existing.land || ''), popups: [], note: String(existing.note || '') }
   }
   const data = {
     lesson: lesson.id,
@@ -303,6 +306,10 @@ async function seedTier(payload: Payload, lesson: Doc, youtubeId: string, length
     hook: draft.hook,
     turn: draft.turn,
     land: draft.land,
+    hookAt: draft.hookAt,
+    turnAt: draft.turnAt,
+    landAt: draft.landAt,
+    horsLines: draft.horsLines,
     status: 'draft',
     offerResume: true,
     source: starterTranscript(youtubeId) ? `content/transcripts/starters/${youtubeId}.vtt` : 'the lesson transcript',

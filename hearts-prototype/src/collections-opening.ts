@@ -378,6 +378,12 @@ export const MasterFlags: GlobalConfig = {
       defaultValue: true,
       admin: { description: 'The board’s full-bleed look: caption, right rail, speaker bar and gold pill over the clip. Off: all of it sits around the player.' },
     },
+    {
+      name: 'showUnchecked',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: { description: 'Show unchecked talks to learners. On, draft tiers play in the feed. Off (the default for production), only talks a person has approved on the review desk play.' },
+    },
   ],
 }
 

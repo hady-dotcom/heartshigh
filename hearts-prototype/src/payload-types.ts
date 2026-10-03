@@ -597,8 +597,9 @@ export interface EngagementPoint {
   /**
    * Learners only see published pop-ups. Drafts from the transcript wait here for a person.
    */
-  status?: ('published' | 'draft') | null;
+  status?: ('published' | 'draft' | 'rejected') | null;
   draftNote?: string | null;
+  reviewedBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -684,10 +685,29 @@ export interface TalkTier {
   turn?: string | null;
   land?: string | null;
   /**
+   * When the hook is said, for the appetiser captions.
+   */
+  hookAt?: number | null;
+  turnAt?: number | null;
+  landAt?: number | null;
+  /**
+   * The hors d'oeuvre's sentences with their times: [{ at, text }].
+   */
+  horsLines?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
    * Offer "Resume from where the appetiser ended" next to the main, which always opens at 0:00.
    */
   offerResume?: boolean | null;
-  status?: ('draft' | 'checked') | null;
+  status?: ('draft' | 'checked' | 'rejected') | null;
+  checkedAt?: string | null;
   /**
    * Where the draft came from, for example the caption file.
    */
@@ -1809,6 +1829,7 @@ export interface EngagementPointsSelect<T extends boolean = true> {
   audienceUsers?: T;
   status?: T;
   draftNote?: T;
+  reviewedBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1906,8 +1927,13 @@ export interface TalkTiersSelect<T extends boolean = true> {
   hook?: T;
   turn?: T;
   land?: T;
+  hookAt?: T;
+  turnAt?: T;
+  landAt?: T;
+  horsLines?: T;
   offerResume?: T;
   status?: T;
+  checkedAt?: T;
   source?: T;
   note?: T;
   checkedBy?: T;
@@ -2385,6 +2411,10 @@ export interface MasterFlag {
    * The board’s full-bleed look: caption, right rail, speaker bar and gold pill over the clip. Off: all of it sits around the player.
    */
   chromeOverPlayer?: boolean | null;
+  /**
+   * Show unchecked talks to learners. On, draft tiers play in the feed. Off (the default for production), only talks a person has approved on the review desk play.
+   */
+  showUnchecked?: boolean | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2395,6 +2425,7 @@ export interface MasterFlag {
 export interface MasterFlagsSelect<T extends boolean = true> {
   popupOverPlayer?: T;
   chromeOverPlayer?: T;
+  showUnchecked?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

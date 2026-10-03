@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react'
 
-type Line = { start: number; end: number; text: string }
+/** A sentence of the talk, with where a clip may open before it and close after it. */
+type Line = { start: number; end: number; text: string; inAt: number; outAt: number }
 type Tier = {
   id: number
   horsStart: number
@@ -30,14 +31,17 @@ function clock(total: number) {
   return hours ? `${hours}:${String(minutes).padStart(2, '0')}:${rest}` : `${minutes}:${rest}`
 }
 
+const seconds = (value: number) => `${Math.round(value * 10) / 10} s`
+
 function Scrub({ label, name, value, max, onChange, testId }: { label: string; name: string; value: number; max: number; onChange: (value: number) => void; testId: string }) {
   return (
-    <div className="scrub" data-testid={testId}>
-      <label className="stack">
-        {label} <span className="hint">{clock(value)}</span>
-        <input type="number" name={name} min={0} max={max} step={1} value={value} onChange={(event) => onChange(Math.max(0, Math.min(max, Number(event.target.value) || 0)))} data-testid={`${testId}-seconds`} />
+    <div className="tier-scrub" data-testid={testId}>
+      <label className="tier-scrub-label" htmlFor={`${testId}-seconds`}>
+        <b>{label}</b>
+        <span className="hint">{clock(value)}</span>
       </label>
-      <input type="range" min={0} max={max} step={1} value={value} aria-label={`${label}, scrub`} onChange={(event) => onChange(Number(event.target.value))} data-testid={`${testId}-range`} />
+      <input id={`${testId}-seconds`} type="number" name={name} min={0} max={max} step="any" value={value} onChange={(event) => onChange(Math.max(0, Math.min(max, Number(event.target.value) || 0)))} data-testid={`${testId}-seconds`} />
+      <input type="range" min={0} max={max} step={0.1} value={value} aria-label={`${label}, scrub`} onChange={(event) => onChange(Number(event.target.value))} data-testid={`${testId}-range`} />
     </div>
   )
 }
@@ -56,13 +60,14 @@ export function TierEditor({ tier, youtubeId, duration, lines, next }: { tier: T
   const horsLength = he - hs
   const appetiserLength = ae - as
   const warnings = [
-    horsLength < HORS_MIN || horsLength > HORS_MAX ? `The hors d'oeuvre runs ${horsLength} seconds. Keep it between ${HORS_MIN} and ${HORS_MAX}.` : null,
+    horsLength < HORS_MIN || horsLength > HORS_MAX ? `The hors d'oeuvre runs ${seconds(horsLength)}. Keep it between ${HORS_MIN} and ${HORS_MAX}.` : null,
     appetiserLength <= 0 ? 'The appetiser has to end after it starts.' : appetiserLength > APPETISER_MAX + 15 ? `The appetiser runs ${clock(appetiserLength)}. Keep it to about 3 minutes.` : null,
     duration && (he > duration || ae > duration) ? `An out point is after the end of the talk (${clock(duration)}).` : null,
   ].filter((value): value is string => Boolean(value))
 
   const shown = useMemo(() => (near ? lines.filter((line) => line.end >= Math.min(hs, as) - 20 && line.start <= Math.max(he, ae) + 20) : lines), [lines, near, hs, he, as, ae])
   const play = (start: number, end: number) => setPreview({ start: Math.floor(start), end: Math.ceil(end), nonce: Date.now() })
+  const round = (value: number) => Math.round(value * 100) / 100
   const field = (key: keyof typeof text) => ({ name: key, value: text[key], onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => setText({ ...text, [key]: event.target.value }) })
 
   return (
@@ -100,13 +105,13 @@ export function TierEditor({ tier, youtubeId, duration, lines, next }: { tier: T
         <section className="panel">
           <header className="light"><h2>In and out points</h2><span className={`badge ${tier.checked ? 'teal' : 'grey'}`}>{tier.checked ? 'Checked' : 'Draft, needs a human check'}</span></header>
           <div className="body form">
-            <h3 className="tier-h">Hors d&apos;oeuvre <span className="hint">{horsLength} s</span></h3>
+            <h3 className="tier-h">Hors d&apos;oeuvre <span className="hint">{seconds(horsLength)}</span></h3>
             <Scrub label="In" name="horsStart" value={hs} max={max} onChange={setHs} testId="hors-start" />
             <Scrub label="Out" name="horsEnd" value={he} max={max} onChange={setHe} testId="hors-end" />
             <h3 className="tier-h">Appetiser <span className="hint">{clock(appetiserLength)}</span></h3>
             <Scrub label="In" name="appetiserStart" value={as} max={max} onChange={setAs} testId="appetiser-start" />
             <Scrub label="Out" name="appetiserEnd" value={ae} max={max} onChange={setAe} testId="appetiser-end" />
-            <p className="hint" style={{ margin: 0 }}>The main always opens at 0:00. The appetiser stops at its out point.</p>
+            <p className="hint tier-note">The main always opens at 0:00. The appetiser stops at its out point. In and out points sit in the pause between sentences: use the In and Out buttons beside each caption line.</p>
             <label className="check"><input type="checkbox" name="offerResume" defaultChecked={tier.offerResume} data-testid="tier-offer-resume" /> Offer &quot;Resume from where the appetiser ended&quot; next to the main</label>
             {warnings.length ? <ul className="hint tier-warn" data-testid="tier-warnings">{warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul> : <p className="hint" style={{ margin: 0 }} data-testid="tier-ok">Both tiers are within their lengths.</p>}
           </div>
@@ -147,8 +152,10 @@ export function TierEditor({ tier, youtubeId, duration, lines, next }: { tier: T
                     {(['hook', 'turn', 'land'] as const).map((key) => (
                       <button key={key} type="button" className="btn ghost small" onClick={() => setText({ ...text, [key]: line.text })} data-testid={`use-${key}`}>{key[0].toUpperCase() + key.slice(1)}</button>
                     ))}
-                    <button type="button" className="btn ghost small" onClick={() => setAs(Math.floor(line.start))} data-testid="use-in">In</button>
-                    <button type="button" className="btn ghost small" onClick={() => setAe(Math.ceil(line.end))} data-testid="use-out">Out</button>
+                    <button type="button" className="btn ghost small" onClick={() => setHs(round(line.inAt))} data-testid="use-hors-in">Hors in</button>
+                    <button type="button" className="btn ghost small" onClick={() => setHe(round(line.outAt))} data-testid="use-hors-out">Hors out</button>
+                    <button type="button" className="btn ghost small" onClick={() => setAs(round(line.inAt))} data-testid="use-in">In</button>
+                    <button type="button" className="btn ghost small" onClick={() => setAe(round(line.outAt))} data-testid="use-out">Out</button>
                   </td>
                 </tr>
               ))}

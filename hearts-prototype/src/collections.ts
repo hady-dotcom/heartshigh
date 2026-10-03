@@ -3,7 +3,8 @@ import type { CollectionConfig } from 'payload'
 import type { Access, Where } from 'payload'
 import { portalIdOf } from './lib/ids'
 import { slugProblem } from './lib/text-safety'
-import { tierProblem, timingProblems } from './lib/tiers'
+import { authorTextProblems, killListHits, markupProblems } from './lib/opening-data'
+import { saidInTalk, tierProblem, timingProblems } from './lib/tiers'
 import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
 
@@ -12,6 +13,19 @@ import { openingCollections } from './collections-opening'
 const master = ({ req }: { req: { user?: { role?: string } | null } }) => req.user?.role === 'master'
 
 const masterOnly = { read: master, create: master, update: master, delete: master }
+
+function refuse(problems: string[]) {
+  if (problems.length) throw new APIError(problems[0], 400, null, true)
+}
+
+/** Markup is refused on every save of these fields: they reach learners as text. */
+function plainFields(...names: string[]) {
+  return ({ data, originalDoc }: { data: Record<string, unknown>; originalDoc?: Record<string, unknown> }) => {
+    const merged = { ...(originalDoc || {}), ...data }
+    refuse(markupProblems(names.map((name) => [name.charAt(0).toUpperCase() + name.slice(1), typeof merged[name] === 'string' ? (merged[name] as string) : ''])))
+    return data
+  }
+}
 
 /**
  * P9: a learner reads their own rows; staff read their portal's rows; the master reads everything.
@@ -205,6 +219,7 @@ export const Courses: CollectionConfig = {
   slug: 'courses',
   admin: { useAsTitle: 'title' },
   access: masterOnly,
+  hooks: { beforeChange: [plainFields('title', 'summary', 'speaker')] },
   fields: [
     { name: 'title', type: 'text', required: true },
     { name: 'summary', type: 'textarea' },
@@ -251,6 +266,7 @@ export const Lessons: CollectionConfig = {
   slug: 'lessons',
   admin: { useAsTitle: 'title' },
   access: masterOnly,
+  hooks: { beforeChange: [plainFields('title', 'sourceTitle', 'speaker')] },
   fields: [
     { name: 'title', type: 'text', required: true },
     { name: 'unit', type: 'relationship', relationTo: 'units', required: true },
@@ -331,6 +347,7 @@ export const Cuts: CollectionConfig = {
   slug: 'cuts',
   admin: { useAsTitle: 'land' },
   access: masterOnly,
+  hooks: { beforeChange: [plainFields('hook', 'turn', 'land')] },
   fields: [
     { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true },
     { name: 'course', type: 'relationship', relationTo: 'courses' },
@@ -377,6 +394,7 @@ export const Cuts: CollectionConfig = {
 export const LadderItems: CollectionConfig = {
   slug: 'ladder-items',
   access: masterOnly,
+  hooks: { beforeChange: [plainFields('quote')] },
   fields: [
     { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true },
     { name: 'cut', type: 'relationship', relationTo: 'cuts' },
@@ -479,11 +497,30 @@ export const EngagementPoints: CollectionConfig = {
       options: [
         { label: 'Published', value: 'published' },
         { label: 'Draft, needs a human check', value: 'draft' },
+        { label: 'Rejected', value: 'rejected' },
       ],
       admin: { description: 'Learners only see published pop-ups. Drafts from the transcript wait here for a person.' },
     },
     { name: 'draftNote', type: 'text' },
+    { name: 'reviewedBy', type: 'relationship', relationTo: 'users' },
   ],
+  hooks: {
+    beforeChange: [
+      ({ data, originalDoc }) => {
+        const merged = { ...(originalDoc || {}), ...data } as Record<string, unknown>
+        const options = Array.isArray(merged.options) ? (merged.options as unknown[]).map(String) : []
+        refuse(
+          authorTextProblems([
+            ['The question', typeof merged.prompt === 'string' ? merged.prompt : ''],
+            ...options.map((option, index): [string, string] => [`Option ${index + 1}`, option]),
+            ['The right answer', typeof merged.correctOption === 'string' ? merged.correctOption : ''],
+            ['The crisis option', typeof merged.crisisOption === 'string' ? merged.crisisOption : ''],
+          ]),
+        )
+        return data
+      },
+    ],
+  },
 }
 
 /** One per talk: the hors d'oeuvre, the appetiser (hook, turn, land) and how the main opens. */
@@ -501,6 +538,10 @@ export const TalkTiers: CollectionConfig = {
     { name: 'hook', type: 'textarea' },
     { name: 'turn', type: 'textarea' },
     { name: 'land', type: 'textarea' },
+    { name: 'hookAt', type: 'number', min: 0, admin: { description: 'When the hook is said, for the appetiser captions.' } },
+    { name: 'turnAt', type: 'number', min: 0 },
+    { name: 'landAt', type: 'number', min: 0 },
+    { name: 'horsLines', type: 'json', admin: { description: "The hors d'oeuvre's sentences with their times: [{ at, text }]." } },
     { name: 'offerResume', type: 'checkbox', defaultValue: true, admin: { description: 'Offer "Resume from where the appetiser ended" next to the main, which always opens at 0:00.' } },
     {
       name: 'status',
@@ -509,8 +550,10 @@ export const TalkTiers: CollectionConfig = {
       options: [
         { label: 'Draft, needs a human check', value: 'draft' },
         { label: 'Checked by a person', value: 'checked' },
+        { label: 'Rejected: learners never see this talk', value: 'rejected' },
       ],
     },
+    { name: 'checkedAt', type: 'date' },
     { name: 'source', type: 'text', admin: { description: 'Where the draft came from, for example the caption file.' } },
     { name: 'note', type: 'textarea' },
     { name: 'checkedBy', type: 'relationship', relationTo: 'users' },
@@ -529,6 +572,23 @@ export const TalkTiers: CollectionConfig = {
           { label: 'The appetiser', start: Number(merged.appetiserStart), end: Number(merged.appetiserEnd) },
         ])
         if (duration && late.length) throw new APIError(late[0], 400, null, true)
+        // The hook, turn, land and hors d'oeuvre line are the speaker's words: plain text, word for word from the
+        // talk. Without a transcript to check against, they are held to the kill list like any author's words.
+        const lines: [string, string][] = [
+          ["The hors d'oeuvre line", String(merged.horsQuote || '')],
+          ['The hook', String(merged.hook || '')],
+          ['The turn', String(merged.turn || '')],
+          ['The land', String(merged.land || '')],
+        ]
+        refuse(markupProblems(lines))
+        const { tierSourceText } = await import('./server/tier-source')
+        const source = tierSourceText(lesson as { youtubeId?: string; transcript?: string } | null)
+        for (const [label, line] of lines) {
+          if (!line.trim()) continue
+          if (source) {
+            if (!saidInTalk(line, source)) throw new APIError(`${label} has to be the speaker's words, word for word from the transcript.`, 400, null, true)
+          } else if (killListHits(line).length) throw new APIError(`${label} uses words learners never see from us: ${killListHits(line).join(', ')}.`, 400, null, true)
+        }
         return data
       },
     ],

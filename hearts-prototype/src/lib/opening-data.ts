@@ -2,7 +2,7 @@
 // Copy comes from ux-first-run.md and the build spec (sections 2.1, 2.7, 2.8). Plain module, no path aliases,
 // so the seed, the server, the browser and the tests can all import it.
 import type { LaneDef, ScaleDef, ScaleKey, SceneDef } from './heart'
-import { killHits } from './text-safety'
+import { hasMarkup, killHits } from './text-safety'
 
 export const SCALES: (ScaleDef & {
   leonName: string
@@ -163,4 +163,25 @@ export const KILL_LIST = [
 
 export function killListHits(text: string) {
   return killHits(text, KILL_LIST)
+}
+
+/**
+ * The one check for words an author writes and a learner reads: plain text only (no HTML, entities or script) and no
+ * kill-list words, after the same folding as killHits. Returns plain-English problems, empty when the words are fine.
+ */
+export function authorTextProblems(fields: [label: string, text: string | null | undefined][]) {
+  const problems: string[] = []
+  for (const [label, value] of fields) {
+    const text = value || ''
+    if (!text.trim()) continue
+    if (hasMarkup(text)) problems.push(`${label} is plain text: no HTML, script or code.`)
+    const hits = killListHits(text)
+    if (hits.length) problems.push(`${label} uses words learners never see from us: ${hits.join(', ')}.`)
+  }
+  return problems
+}
+
+/** Markup alone, for words that are the speaker's own (quotes from a transcript), which the kill list does not govern. */
+export function markupProblems(fields: [label: string, text: string | null | undefined][]) {
+  return fields.filter(([, value]) => hasMarkup(value || '')).map(([label]) => `${label} is plain text: no HTML, script or code.`)
 }

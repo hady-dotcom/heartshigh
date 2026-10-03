@@ -4,8 +4,8 @@ import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { TierEditor } from '@/components/desk/tier-editor'
 import { idOf } from '@/lib/ids'
-import { timingProblems } from '@/lib/tiers'
-import { parseTranscript } from '@/lib/transcript'
+import { gapAfter, gapBefore, PRE_ROLL, sentencesOf, TAIL, timingProblems } from '@/lib/tiers'
+import { tierSourceText } from '@/server/tier-source'
 import type { SessionUser } from '@/server/context'
 import { rows, str } from '../common'
 import { DeskFrame, masterNav } from './shell'
@@ -83,7 +83,12 @@ export async function MasterTier(ctx: MasterCtx, tierId: number) {
   if (!lesson) notFound()
   const points = (await rows(payload, 'engagement-points', { lesson: { equals: lesson.id } }, { limit: 100 })).sort((a, b) => Number(a.second) - Number(b.second))
   const duration = Number(lesson.durationSeconds || 0)
-  const lines = parseTranscript(str(lesson.transcript)).cues.map((cue) => ({ start: cue.start, end: cue.end, text: cue.text }))
+  const sentences = sentencesOf(tierSourceText(lesson as { youtubeId?: string; transcript?: string }))
+  const lines = sentences.map((sentence, index) => {
+    const before = gapBefore(sentences, index)
+    const after = gapAfter(sentences, index, duration || Infinity)
+    return { start: sentence.start, end: sentence.end, text: sentence.text, inAt: Math.max(before.from, before.to - PRE_ROLL), outAt: Math.min(after.to, after.from + TAIL) }
+  })
   const late = timingProblems(duration || null, points.map((point) => ({ label: `The pop-up at ${clock(Number(point.second))}`, start: Number(point.second) })))
   const next = `/master/tiers/${tier.id}`
   const title = str(lesson.sourceTitle) || str(lesson.title) || 'A talk'

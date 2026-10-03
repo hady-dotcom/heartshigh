@@ -14,6 +14,9 @@ import { now } from '@/lib/clock'
 import { startingClause } from '@/lib/placing'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { killListHits } from '@/lib/opening-data'
+import { tierTimings } from '@/lib/tiers'
+import { showUncheckedTalks, tierVisible } from './opening'
+import { tierSourceText } from './tier-source'
 import { randomUUID } from 'node:crypto'
 import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourseIds, type Session, type SessionUser } from './context'
 import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCookie, wrote } from './viewas'
@@ -33,9 +36,15 @@ function redirectTo(req: Request, path: string, error?: string, notice?: string)
 
 /** "2:05", "1:02:05" or "125" as whole seconds; null when it is not a time. */
 function secondsFrom(value: string) {
+  const exact = exactSecondsFrom(value)
+  return exact === null ? null : Math.round(exact)
+}
+
+/** Seconds to the hundredth, for tier in and out points that sit between sentences. */
+function exactSecondsFrom(value: string) {
   const trimmed = value.trim()
   if (!/^\d+(:\d{1,2}){0,2}(\.\d+)?$/.test(trimmed)) return null
-  return Math.round(trimmed.split(':').reduce((total, part) => total * 60 + Number(part), 0))
+  return Math.round(trimmed.split(':').reduce((total, part) => total * 60 + Number(part), 0) * 100) / 100
 }
 
 /** The message of an error a hook meant people to read (APIError with isPublic), otherwise the fallback. */
@@ -1730,7 +1739,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk edits talk tiers.')
     const tier = await findDoc(payload, 'talk-tiers', Number(text(form, 'tier')))
     if (!tier) return redirectTo(req, back, 'That talk was not found.')
-    const times = ['horsStart', 'horsEnd', 'appetiserStart', 'appetiserEnd'].map((key) => secondsFrom(text(form, key)))
+    const times = ['horsStart', 'horsEnd', 'appetiserStart', 'appetiserEnd'].map((key) => exactSecondsFrom(text(form, key)))
     if (times.some((value) => value === null)) return redirectTo(req, back, 'Times are minutes and seconds, for example 2:05, or plain seconds.')
     const [horsStart, horsEnd, appetiserStart, appetiserEnd] = times as number[]
     const checking = text(form, 'check') === 'yes'
@@ -1746,14 +1755,62 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       offerResume: form.get('offerResume') === 'on',
       note: text(form, 'note').slice(0, 1000),
     }
-    if (checking) Object.assign(data, { status: 'checked', checkedBy: user.id })
-    else if (text(form, 'reopen') === 'yes') Object.assign(data, { status: 'draft', checkedBy: null })
+    if (checking) Object.assign(data, { status: 'checked', checkedBy: user.id, checkedAt: now().toISOString() })
+    else if (text(form, 'reopen') === 'yes') Object.assign(data, { status: 'draft', checkedBy: null, checkedAt: null })
+    const lesson = await findDoc(payload, 'lessons', idOf(tier.lesson) || 0)
+    const source = tierSourceText(lesson as { youtubeId?: string; transcript?: string } | null)
+    if (source) Object.assign(data, tierTimings(source, data as Parameters<typeof tierTimings>[1]))
     try {
       await payload.update({ collection: 'talk-tiers', id: tier.id, overrideAccess: true, data: data as never })
     } catch (error) {
       return redirectTo(req, back, publicMessage(error, 'Those times were not saved.'))
     }
-    return redirectTo(req, back, undefined, checking ? 'Saved and marked as checked by you.' : 'Saved. Learners see the new times straight away.')
+    const live = tierVisible({ ...tier, ...data, id: tier.id }, await showUncheckedTalks(payload))
+    return redirectTo(req, back, undefined, `${checking ? 'Saved and marked as checked by you.' : 'Saved.'} ${live ? 'Learners see the new times straight away.' : 'Learners see this talk once it is approved.'}`)
+  }
+
+  if (action === 'tier-review') {
+    const back = text(form, 'next') || '/master/review'
+    if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk reviews talk tiers.')
+    const tier = await findDoc(payload, 'talk-tiers', Number(text(form, 'tier')))
+    if (!tier) return redirectTo(req, back, 'That talk was not found.')
+    const decision = text(form, 'decision')
+    const data =
+      decision === 'approve'
+        ? { status: 'checked', checkedBy: user.id, checkedAt: now().toISOString() }
+        : decision === 'reject'
+          ? { status: 'rejected', checkedBy: user.id, checkedAt: now().toISOString() }
+          : { status: 'draft', checkedBy: null, checkedAt: null }
+    try {
+      await payload.update({ collection: 'talk-tiers', id: tier.id, overrideAccess: true, data: data as never })
+    } catch (error) {
+      return redirectTo(req, back, publicMessage(error, 'That review was not saved.'))
+    }
+    const notice = decision === 'approve' ? 'Approved. Learners see this talk.' : decision === 'reject' ? 'Rejected. Learners no longer see this talk.' : 'Back to draft.'
+    return redirectTo(req, back, undefined, notice)
+  }
+
+  if (action === 'popup-review') {
+    const back = text(form, 'next') || '/master/review/popups'
+    if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk reviews pop-ups.')
+    const point = await findDoc(payload, 'engagement-points', Number(text(form, 'point')))
+    if (!point) return redirectTo(req, back, 'That pop-up was not found.')
+    const decision = text(form, 'decision')
+    const status = decision === 'approve' ? 'published' : decision === 'reject' ? 'rejected' : 'draft'
+    try {
+      await payload.update({ collection: 'engagement-points', id: point.id, overrideAccess: true, data: { status, reviewedBy: user.id } as never })
+    } catch (error) {
+      return redirectTo(req, back, publicMessage(error, 'That review was not saved.'))
+    }
+    return redirectTo(req, back, undefined, status === 'published' ? 'Approved and published. Learners meet it in the main.' : status === 'rejected' ? 'Rejected. Learners never see it.' : 'Back to draft.')
+  }
+
+  if (action === 'show-unchecked') {
+    const back = text(form, 'next') || '/master/review'
+    if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk changes this.')
+    const on = text(form, 'value') === 'on'
+    await payload.updateGlobal({ slug: 'master-flags', overrideAccess: true, data: { showUnchecked: on } as never })
+    return redirectTo(req, back, undefined, on ? 'Unchecked talks are shown to learners.' : 'Only approved talks are shown to learners.')
   }
 
   if (action === 'popup-save' || action === 'popup-publish') {
