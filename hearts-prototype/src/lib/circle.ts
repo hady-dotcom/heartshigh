@@ -1,3 +1,4 @@
+import { ANSWER_VOICE } from './human-voice'
 import { authorTextProblems } from './opening-data'
 
 // HEARTS circle answers: written answers that sit in a question's swarm beside real learners' shared answers, so
@@ -26,38 +27,38 @@ const NAMES = ['Amina', 'Yusuf', 'Maryam', 'Bilal', 'Hana', 'Idris', 'Safiya', '
 
 // Opening lines by tone; middles and endings add length. Kept clear of the kill list ("should", "fix", "struggle"...).
 const OPENERS: Record<CircleTone, string[]> = {
-  warm: ['This one landed gently for me.', 'I smiled at this, because it felt close to home.', 'What a kind way to put it.', 'This reminded me of my grandmother.'],
-  honest: ['Honestly, I had not thought about it until now.', 'I will be straight: this one was hard to answer.', 'If I am truthful, I keep putting this off.', 'I nearly skipped this one, then came back.'],
-  practical: ['I wrote it on a sticky note by the kettle.', 'I set a reminder on my phone for after Fajr.', 'I tried it on the bus to work this morning.', 'I picked one small thing and did it the same day.'],
-  searching: ['I am still turning this over.', 'I do not have a neat answer yet.', 'This raised a question for me more than an answer.', 'I keep coming back to the words he used.'],
-  quiet: ['Just this: slow down.', 'A small yes from me.', 'Saying less tonight, but this stayed with me.', 'Sitting with it.'],
+  warm: ['Yeah, this one got me.', 'I smiled. Reminded me of home.', 'He put that kindly.', 'Thought of my nan straight away.'],
+  honest: ["Honestly, I hadn't thought about this till now.", "I'll be straight. Hard one to answer.", "If I'm honest, I keep putting this off.", 'I nearly skipped this, then came back.'],
+  practical: ['Wrote it on a sticky note by the kettle.', 'Set a reminder for after fajr.', 'Tried it on the bus this morning.', 'Picked one small thing. Did it the same day.'],
+  searching: ['Still turning this over.', "Haven't got a neat answer.", 'More of a question than an answer, for me.', 'Keep coming back to the words he used.'],
+  quiet: ["Slow down. That's it.", 'A small yes.', 'Not much tonight. This stayed, though.', 'Sitting with it.'],
 }
 const MIDDLES: Record<CircleTone, string[]> = {
-  warm: ['It made me think of the people who make room for me without being asked.', 'I thought of my mum, who never makes a fuss about the good she does.'],
-  honest: ['My days are full and this is the first thing that slips.', 'I talk about it more than I live it, and this caught me out.'],
-  practical: ['Two minutes, no more, so it is easy to keep going.', 'I tied it to something I already do every day, so I do not forget.'],
-  searching: ['Part of me wonders what it would look like on an ordinary Tuesday.', 'I want to understand what he meant before I say more.'],
-  quiet: ['The line about the heart is the one I wrote down.', 'I listened to that part twice.'],
+  warm: ['Thought of the people who make room for me without being asked.', 'Thought of my mum. She never makes a fuss.'],
+  honest: ['Days are full. This is the first thing that slips.', 'I talk about it more than I live it. Caught me out.'],
+  practical: ["Two minutes. That's it, so I'll actually do it.", "Tied it to making tea, so I don't forget."],
+  searching: ['What does this even look like on a Tuesday?', 'Want to get what he meant before I say more.'],
+  quiet: ['Wrote down the line about the heart.', 'Listened to that bit twice on the way to work.'],
 }
 const ENDINGS: Record<CircleTone, string[]> = {
-  warm: ['May it stay with all of us this week.', 'Grateful to be listening alongside everyone here.'],
-  honest: ['I am going to try again tomorrow and see.', 'Writing it here so I keep my word.'],
-  practical: ['Day two went better than day one.', 'Small, but it is a start.'],
-  searching: ['I will come back to this after the next part.', 'Maybe the answer is in the doing.'],
-  quiet: ['That is all for now.', 'Ameen.'],
+  warm: ['Hope it stays with me this week.', 'Glad I caught this one.'],
+  honest: ["I'll try again tomorrow and see.", "Writing it here so I don't forget I said it."],
+  practical: ['Day two went better than day one.', "Small. But it's a start."],
+  searching: ["I'll come back after the next bit.", "Maybe I'll only get it by doing it."],
+  quiet: ["That's all for now.", 'Ameen.'],
 }
 const CHOICE_REASONS: Record<CircleTone, string> = {
-  warm: 'It felt like the kindest reading of what he said.',
-  honest: 'I went back and forth, but this is the one I can stand behind.',
-  practical: 'It is the one I can actually act on this week.',
-  searching: 'I am not certain, but it matched the part I replayed.',
+  warm: 'Kindest way I could read what he said.',
+  honest: "Went back and forth. This is the one I'll stand by.",
+  practical: "It's the one I can actually do this week.",
+  searching: 'Not sure. It matched the bit I replayed.',
   quiet: 'It just fitted.',
 }
 const TASK_OPENERS: Record<CircleTone, string> = {
-  warm: 'Did this with my little brother, which made it easier.',
-  honest: 'Missed the first day, managed the second.',
-  practical: 'Did it straight after Maghrib so it would not slip.',
-  searching: 'Tried it once and noticed I was rushing it.',
+  warm: 'Did it with my little brother. Easier that way.',
+  honest: 'Missed the first day. Managed the second.',
+  practical: "Did it straight after maghrib so it wouldn't slip.",
+  searching: 'Tried it once. I was rushing.',
   quiet: 'Done, quietly.',
 }
 
@@ -128,10 +129,11 @@ export function parseCircleReply(reply: string, spread: { tone: CircleTone; leng
 
 export function circleRequest(point: CirclePoint, spread: { tone: CircleTone; length: CircleLength }[]) {
   const system = [
-    'You write short answers that ordinary British Muslim learners might share under a question after watching an Islamic talk.',
-    'Each answer is in the first person, plain and specific, in British English. No preaching, no clichés, no emojis, no HTML.',
+    'You write short answers that ordinary British Muslim learners might share under a question after watching an Islamic talk. The label on these is From the HEARTS circle.',
+    ANSWER_VOICE,
+    'No preaching, no clichés, no emojis, no HTML.',
     'Never use these words: should, must, need to, fix, improve, struggle, test, quiz, score, result, level, type, fear, anxiety, anger, pride, gratitude, sometimes, often, rarely.',
-    'Lengths: short is one sentence, medium is two or three sentences, long is four or five sentences.',
+    'Lengths: short is one sentence, medium is two sentences, long is three or four. Do not make them the same length.',
     'Return JSON only: {"answers":[{"name":"a first name","tone":"...","length":"...","text":"..."}]}.',
   ].join('\n')
   const lines = [

@@ -22,6 +22,7 @@ import { AccessScreen, ContentScreen, CourseEditorScreen, LibraryScreen, guardAd
 import { PortalCompassScreen, StaffLearnerCompass } from '@/screens/desk/compass'
 import { PortalCreatorScreen } from '@/screens/desk/creator-screen'
 import { PortalSheetScreen } from '@/screens/desk/sheet'
+import { FeedbackScreen } from '@/screens/desk/feedback'
 import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
 import { PortalCircle } from '@/screens/desk/circle'
 
@@ -91,6 +92,8 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         return AccessScreen(ctx)
       case 'teach':
         return TeachScreen(ctx)
+      case 'feedback':
+        return FeedbackScreen(ctx)
       case 'compass':
         return b ? StaffLearnerCompass(ctx, Number(b)) : PortalCompassScreen(ctx)
       case 'plans':

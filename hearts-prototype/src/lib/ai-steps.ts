@@ -6,6 +6,8 @@
  * a real model read ANTHROPIC_API_KEY or OPENAI_API_KEY from the environment themselves.
  */
 import { dualExtract } from './extractor'
+import { assessQuestion, themesFromAnswers } from './feedback'
+import { ANSWER_VOICE, REWRITE_VOICE, TEACHER_REPLY_VOICE } from './human-voice'
 import { harvestTranscript } from './harvest'
 import { draftTiers, sentencesOf, type TierDraft } from './tiers'
 
@@ -426,6 +428,8 @@ Draw each question from one specific thing the speaker actually urges or lands o
 
 Do not write a quiz, a score, a rating, or an agree-to-disagree scale. Those words are refused before a learner can see them. Prefer an open question. kind is "question" or "task". options is an empty list unless kind is "multiple_choice", and even then the options are concrete acts, not a scale.
 
+Each prompt: ${REWRITE_VOICE}
+
 Return JSON: {"points": [{"second": 120, "kind": "question", "prompt": "", "options": []}]}
 Two or three points, each prompt a sentence the listener can answer from their own week. If the talk supports none, return {"points": []}. No text outside the JSON.`,
   },
@@ -563,6 +567,8 @@ It is said at {{LAND_AT}} seconds. A question that draws on it appears at or aft
 
 Anchor each prompt on a different line the speaker actually develops. Quote the speaker only with words that appear in the transcript. Do not write a knowledge question, a leading question, or anything that shames. Do not use the words of a quiz, a score, a rating or a scale.
 
+Each prompt: ${REWRITE_VOICE}
+
 Return JSON: {"questions": [{"prompt": "", "second": 90, "topic": "a short theme"}]}
 Two or three prompts. If the talk supports none, return {"questions": []}. No text outside the JSON.`,
   },
@@ -667,6 +673,71 @@ Is there a line a viewer would repeat?
 
 Score each axis on its own. Do not average as you go. Most clips are 3s. The clause hang is not an axis and cannot rescue a weak clip.`,
   },
+  {
+    slug: 'feedback-summary',
+    name: 'Feedback summary',
+    description: 'Reads the answers a community chose to share on one question and drafts the top themes, with a few quotes copied from those answers. The draft is labelled as an AI summary and stays off the digest until a person includes it. It does not name learners.',
+    placeholders: [
+      { token: 'TALK', meaning: 'The talk title.', required: true },
+      { token: 'QUESTION', meaning: 'The question learners answered.', required: true },
+      { token: 'ANSWERS', meaning: 'The shared answers, one on each line. Private answers are never included.', required: true },
+    ],
+    provider: 'anthropic',
+    model: 'claude-sonnet-4-5',
+    temperature: 0.2,
+    maxTokens: 800,
+    pipelineOrder: 100,
+    inPipeline: false,
+    fillsTier: null,
+    fillsPoints: null,
+    fills: 'Feedback desk: a draft summary under one question. It is not included in a download until a person includes it.',
+    outputSchema: obj({ themes: { type: 'array', items: str }, quotes: { type: 'array', items: str } }, ['themes', 'quotes']),
+    prompt: `You jot what a sheikh would notice in answers learners chose to share. Do not invent answers. Do not name people. Do not add advice. ${ANSWER_VOICE}
+
+The talk is: {{TALK}}
+The question is: {{QUESTION}}
+The answers, one per line:
+{{ANSWERS}}
+
+Return JSON: {"themes": ["a few uneven notes, not a tidy set of three"], "quotes": ["up to three short quotes copied from the answers"]}
+themes has 3 to 5 items when there are answers, or one item saying there is nothing to read. Write them as notes, not a polished summary. quotes are copied from the answers, not paraphrased, and may be an empty list. No text outside the JSON.`,
+  },
+  {
+    slug: 'question-value',
+    name: 'Check question for teacher value',
+    description: 'Flags a question whose answers would be yes or no, generic, or unhelpful to a sheikh, and suggests a rewrite that asks for a specific, personal, reflective answer tied to the talk. The rewrite is a draft on the weak-questions report. The question learners see is left as it is.',
+    placeholders: [
+      { token: 'TALK', meaning: 'The talk the question belongs to.', required: true },
+      { token: 'FAMILY', meaning: 'Pop-up, reflection, or activation task.', required: true },
+      { token: 'QUESTION', meaning: 'The question as it is written now.', required: true },
+    ],
+    provider: 'anthropic',
+    model: 'claude-sonnet-4-5',
+    temperature: 0,
+    maxTokens: 600,
+    pipelineOrder: 110,
+    inPipeline: false,
+    fillsTier: null,
+    fillsPoints: null,
+    fills: 'Weak-questions report: a draft rewrite. It is never published over the live question.',
+    outputSchema: obj(
+      { weak: { type: 'boolean' }, reasons: { type: 'array', items: str }, rewrite: str },
+      ['weak', 'reasons', 'rewrite'],
+    ),
+    prompt: `You check one question that learners answer after a talk. A sheikh, imam or teacher will read the answers to understand their community.
+
+The talk is: {{TALK}}
+The question family is: {{FAMILY}}
+The question is: {{QUESTION}}
+
+Flag it when the answers would be yes or no, generic, or unhelpful to a sheikh. A useful question asks for something specific from the person's own week.
+
+When you rewrite, follow this: ${REWRITE_VOICE}
+A teacher replying to an answer would follow this: ${TEACHER_REPLY_VOICE}
+
+Return JSON: {"weak": true, "reasons": ["one plain sentence"], "rewrite": "one question"}
+weak is false when the question already does that work. reasons is an empty list when it is not weak. rewrite is "" when it is not weak, otherwise the one question. No text outside the JSON.`,
+  },
 ]
 
 export function stepBySlug(slug: string) {
@@ -687,10 +758,19 @@ export type TalkContext = {
   clauseCards: string
   rubric: string
   clip: string
+  /** Set when the feedback summary or the question check runs. The ingest pipeline leaves these empty. */
+  question?: string
+  answers?: string
+  family?: string
 }
 
 export function mockOutput(step: StepSpec, talk: TalkContext, prompt: string): unknown {
   if (step.slug === 'rubric') return { note: prompt.trim().slice(0, 280) || 'The rubric is empty.' }
+  if (step.slug === 'question-value') {
+    const checked = assessQuestion({ prompt: talk.question || talk.land || talk.title, talk: talk.title })
+    return { weak: checked.weak, reasons: checked.reasons, rewrite: checked.rewrite }
+  }
+  if (step.slug === 'feedback-summary') return themesFromAnswers(talk.answers || talk.transcript)
   if (!talk.transcript.trim()) {
     if (step.slug === 'language-inference') return { language: null }
     throw new Error('This talk has no transcript yet, so the step has nothing to read.')
@@ -770,7 +850,7 @@ function popupPoints(draft: TierDraft, shift: number, kind: 'question' | 'reflec
   return ordered.map((row) => ({
     second: row.second,
     kind,
-    prompt: row.prompt || `The speaker says: “${row.quote}” What does that line ask of you this week?`,
+    prompt: row.prompt || `The speaker says: “${row.quote}” What from that stayed with you on the way home?`,
     options: [] as string[],
   }))
 }

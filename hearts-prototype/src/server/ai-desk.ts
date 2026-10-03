@@ -338,6 +338,10 @@ function varsFor(talk: TalkContext): Record<string, string> {
     CLAUSE_CARDS: talk.clauseCards.slice(0, 24_000),
     RUBRIC: talk.rubric,
     CLIP: talk.clip,
+    TALK: talk.title,
+    QUESTION: talk.question || talk.land || talk.title,
+    ANSWERS: talk.answers || '',
+    FAMILY: talk.family || '',
   }
 }
 
@@ -364,6 +368,35 @@ async function completeLive(spec: StepSpec, system: string, user: string, keys: 
   if (!response.ok) throw new Error(`OpenAI returned ${response.status}.`)
   const body = (await response.json()) as { choices?: { message?: { content?: string } }[] }
   return body.choices?.[0]?.message?.content || ''
+}
+
+/** Runs one registered step, using the live prompt, for callers outside the ingest pipeline. */
+export async function runRegisteredStep(payload: Payload, slug: string, talk: TalkContext) {
+  await ensureSteps(payload)
+  return runPreparedStep(payload, slug, talk)
+}
+
+/** Loads the live prompt once, so a report can run the same step over many questions. */
+export async function loadLiveStep(payload: Payload, slug: string) {
+  const step = await one(payload, 'ai-steps', { slug: { equals: slug } })
+  if (!step) throw new Error('That step is not in the registry.')
+  const spec = specOf(step)
+  const version = await one(payload, 'ai-step-versions', { and: [{ step: { equals: step.id } }, { live: { equals: true } }] })
+  const prompt = version ? String(version.prompt || spec.prompt) : spec.prompt
+  const versionNumber = version ? Number(version.number) : Number(step.liveVersion || 1)
+  return {
+    versionNumber,
+    spec,
+    run(talk: TalkContext) {
+      return runSpec(spec, prompt, talk).then((result) => ({ ...result, versionNumber, spec }))
+    },
+  }
+}
+
+/** Same as runRegisteredStep after the registry is already in place, so a report can reuse it. */
+export async function runPreparedStep(payload: Payload, slug: string, talk: TalkContext) {
+  const live = await loadLiveStep(payload, slug)
+  return live.run(talk)
 }
 
 async function runSpec(spec: StepSpec, prompt: string, talk: TalkContext) {

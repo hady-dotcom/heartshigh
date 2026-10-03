@@ -17,6 +17,17 @@ export type Query = {
   item?: string
   view?: string
   door?: string
+  seat?: string
+  talk?: string
+  question?: string
+  family?: string
+  learner?: string
+  from?: string
+  to?: string
+  cohort?: string
+  anonymise?: string
+  filters?: string
+  named?: string
   speaker?: string
   context?: string
 }
