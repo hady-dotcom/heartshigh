@@ -91,7 +91,8 @@
 .j-slot { position: absolute; inset: 0; overflow: hidden; }
 .yt-host { position: absolute; inset: 0; }
 .yt-host.off { left: -200vw; right: auto; width: 100%; }
-.yt-host iframe { position: absolute; top: 0; left: 50%; height: 100%; width: max(100%, calc(100dvh * 16 / 9)); transform: translateX(-50%); border: 0; }
+/* The film is cropped to fill the phone; the extra 64px above and below keep YouTube's title and control bars off screen. */
+.yt-host iframe { position: absolute; top: -64px; left: 50%; height: calc(100% + 128px); width: max(100%, calc((100dvh + 128px) * 16 / 9)); transform: translateX(-50%); border: 0; }
 .overlay .yt-host iframe { pointer-events: none; }
 .j-poster { position: absolute; inset: 0; background: #0c0b14; }
 .j-poster img { position: absolute; left: 0; top: -17%; width: 100%; height: 134%; max-width: none; object-fit: cover; opacity: 0.8; }
@@ -143,7 +144,7 @@
 
 /* Strict layout: the player keeps its own 16:9 band and nothing sits over it. */
 .strict .j-slot { top: calc(48px + var(--safe-top)); bottom: auto; height: calc(min(430px, 100vw) * 9 / 16); }
-.strict .yt-host iframe { width: 100%; height: 100%; left: 0; transform: none; }
+.strict .yt-host iframe { top: 0; width: 100%; height: 100%; left: 0; transform: none; }
 .strict .j-chrome .caption { top: calc(64px + var(--safe-top) + min(430px, 100vw) * 9 / 16); font-size: 26px; }
 .strict .j-hairline-row { top: calc(20px + var(--safe-top)); }
 
