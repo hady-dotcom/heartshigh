@@ -12,6 +12,8 @@ import { learnerClips } from '@/server/opening'
 import { appetiserStop } from '@/lib/tiers'
 import { type Ctx, clock, one, ref, rows, str, unreadCount } from '../common'
 import { masterFlags } from './journey'
+import { mixSwarm } from '@/lib/circle'
+import { circleForPoints, circleSettings } from '@/server/circle'
 
 const START = ['orange', 'gold', 'teal']
 
@@ -133,6 +135,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
   })
 
   const swarm: Record<number, SwarmItem[]> = {}
+  let circleLabel = ''
   // The swarm is opt-in: a learner sees other learners' answers only after choosing to share with learners
   // themselves, and only answers whose authors chose the same and ticked "Let other learners read it".
   const swarmOn = user.role === 'learner' && Boolean(user.shareWithLearners) && portal.showOthersAnswers !== false
@@ -151,6 +154,14 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
       if (!author?.shareWithLearners) continue
       const image = answer.image as { url?: string } | null
       ;(swarm[pointId] ||= []).push({ name: author?.name || 'Someone in your circle', body: str(answer.body) || str(answer.choice) || 'Shared a photo', image: image?.url || null })
+    }
+    // HEARTS circle answers fill the swarm while it is quiet and step back as real shared answers arrive.
+    const [circle, settings] = await Promise.all([circleForPoints(payload, points.map((point) => point.id), portal.id), circleSettings(payload)])
+    circleLabel = settings.label
+    for (const point of points) {
+      const extra = (circle.get(point.id) || []).map((row): SwarmItem => ({ name: row.name, body: row.body, circle: true }))
+      const mixed = mixSwarm(swarm[point.id] || [], extra, `${user.id}:${point.id}`, settings.threshold)
+      if (mixed.length) swarm[point.id] = mixed
     }
   }
 
@@ -184,6 +195,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
           points={views}
           swarm={swarm}
           swarmOn={swarmOn}
+          circleLabel={circleLabel}
           serverNow={at.toISOString()}
           next={here}
           overPlayer={flags.popupOverPlayer}
