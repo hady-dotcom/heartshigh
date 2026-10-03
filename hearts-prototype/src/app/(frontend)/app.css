@@ -332,7 +332,7 @@
 .grow-banner { background: linear-gradient(160deg, #2a2552, #1e1a3c); color: #fff; border-radius: 24px; padding: 20px 18px; position: relative; overflow: hidden; }
 .grow-banner .eyebrow { color: var(--gold); margin: 0 0 8px; }
 .grow-banner h2 { font-size: 28px; line-height: 1.12; margin: 0 0 16px; max-width: 60%; }
-.grow-banner .tree-art { position: absolute; right: 14px; top: 16px; width: 108px; height: 108px; border-radius: 18px; background: #0e2a2b url('/theme/evening-courtyard.jpg') center 32% / cover no-repeat; border: 1px solid rgba(212, 168, 75, 0.55); }
+.grow-banner .tree-art { position: absolute; right: 14px; top: 16px; width: 108px; height: 108px; border-radius: 18px; background: #0e2a2b url('/theme/evening-courtyard.jpg') center 52% / cover no-repeat; border: 1px solid rgba(212, 168, 75, 0.55); }
 .feed-door { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 8px; padding: 14px; border-radius: 18px; text-decoration: none; color: inherit; background: var(--glass, rgba(22, 54, 51, 0.82)); border: 1px solid var(--line, rgba(212, 168, 75, 0.42)); }
 .feed-door .strip { display: flex; gap: 8px; }
 .feed-door .mini { flex: 1; min-width: 0; height: 64px; border-radius: 12px; background: #1b3b38 url('/theme/evening-courtyard.jpg') center/cover no-repeat; }
