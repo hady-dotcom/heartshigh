@@ -130,22 +130,27 @@ test('hook, turn and land can be three spans whose lengths add up to at most 195
   assert.deepEqual(appetiserJoin(spans, 50), { action: 'stop' })
 })
 
-test("a hors d'oeuvre of 15 to 20 seconds is the usual length, and up to the desk cap is a warning", () => {
-  const warned = planSheet({ talks: [cells(3, { talk_key: 'yt-NIR88RRpat4', hors_in: 0, hors_out: 30 })], questions: [], resources: [], errors: [] }, catalogue())
+test("a hors d'oeuvre of 15 to 30 seconds is the usual length, and up to the desk cap is a warning", () => {
+  const usual = planSheet({ talks: [cells(3, { talk_key: 'yt-NIR88RRpat4', hors_in: 0, hors_out: 30 })], questions: [], resources: [], errors: [] }, catalogue())
+  assert.equal(usual.errors.length, 0)
+  assert.equal(usual.warnings.length, 0)
+
+  const warned = planSheet({ talks: [cells(3, { talk_key: 'yt-NIR88RRpat4', hors_in: 0, hors_out: 40 })], questions: [], resources: [], errors: [] }, catalogue())
   assert.equal(warned.errors.length, 0)
   assert.equal(warned.warnings.length, 1)
-  assert.match(warned.warnings[0].message, /between 15 and 20/)
+  assert.match(warned.warnings[0].message, /between 15 and 30/)
   assert.equal(planCounts(warned).update, 1)
 
   const refused = planSheet({ talks: [cells(3, { talk_key: 'yt-NIR88RRpat4', hors_in: 0, hors_out: 60 })], questions: [], resources: [], errors: [] }, catalogue())
   assert.ok(refused.errors.some((issue) => /45/.test(issue.message)))
   assert.equal(tierProblem({ horsStart: 0, horsEnd: 30, appetiserStart: 0, appetiserEnd: 40 }), null)
-  assert.ok(tierHorsWarning({ horsStart: 0, horsEnd: 30 }))
+  assert.equal(tierHorsWarning({ horsStart: 0, horsEnd: 30 }), null)
+  assert.ok(tierHorsWarning({ horsStart: 0, horsEnd: 31 }))
 
   const tight = catalogue()
-  tight.horsMaxSeconds = 25
-  const capped = planSheet({ talks: [cells(3, { talk_key: 'yt-NIR88RRpat4', hors_in: 0, hors_out: 30 })], questions: [], resources: [], errors: [] }, tight)
-  assert.ok(capped.errors.some((issue) => /25/.test(issue.message)))
+  tight.horsMaxSeconds = 35
+  const capped = planSheet({ talks: [cells(3, { talk_key: 'yt-NIR88RRpat4', hors_in: 0, hors_out: 40 })], questions: [], resources: [], errors: [] }, tight)
+  assert.ok(capped.errors.some((issue) => /35/.test(issue.message)))
 })
 
 test('notes may contain an equals sign', () => {

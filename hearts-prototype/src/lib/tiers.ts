@@ -1,13 +1,15 @@
-// Three tiers per talk: the hors d'oeuvre (15 to 20 seconds), the appetiser (up to about 3 minutes, hook, turn and
-// land) and the main (the whole talk from 0:00, with pop-ups). Drafts come from the transcript in "line mode": the
-// captions are cut into short spoken lines, and every quote is one of those lines, word for word. A person still has
-// to check each draft before it counts as checked.
+// Three tiers per talk, each inside the one above it: the hors d'oeuvre (15 to 30 seconds) sits inside the appetiser
+// (up to about 3 minutes, hook, turn and land), which sits inside the main (the whole talk from 0:00, with pop-ups).
+// Drafts come from the transcript in "line mode": the captions are cut into short spoken lines, and every quote is one
+// of those lines, word for word. A person still has to check each draft before it counts as checked.
 import { killListHits } from './opening-data'
 import { formatTimestamp, parseTranscript, type Cue } from './transcript'
 
 export const HORS_MIN = 15
-export const HORS_MAX = 20
-/** Hard cap unless the master desk sets another. 15–20 is the usual length and only a warning past that. */
+export const HORS_MAX = 30
+/** The drafter tries for a hors this short first, and only reaches for HORS_MAX when nothing fits inside the appetiser. */
+export const HORS_DRAFT_MAX = 20
+/** Hard cap unless the master desk sets another. 15–30 is the usual length and only a warning past that. */
 export const HORS_CAP = 45
 export const APPETISER_MAX = 180
 
@@ -339,7 +341,7 @@ function noisy(sentence: Spoken) {
 
 /**
  * Line mode, sentence by sentence. Every boundary is a sentence boundary with a small pre-roll and tail inside the
- * silence around it. The hors d'oeuvre is the most gripping self-contained 15 to 20 seconds in the talk. The
+ * silence around it. The hors d'oeuvre is the most gripping self-contained 15 to 20 seconds inside the appetiser. The
  * appetiser opens on a strong hook, passes a real turn (a later sentence that shifts the thought, not the next few
  * seconds of the hook) and ends when its land sentence ends. Greetings, sponsor and outro lines are left out.
  */
@@ -414,19 +416,21 @@ export function draftTiers(source: string | Cue[], durationHint?: number | null)
     return length >= min - 1e-6 && length <= max + 1e-6 && start <= before.to + 0.01 && end >= after.from - 0.01 ? { start, end } : null
   }
 
-  // Hors d'oeuvre: the best window of whole sentences that fits 15 to 20 seconds.
+  // Hors d'oeuvre: the best window of whole sentences that fits 15 to 20 seconds (up to 30 when it must).
   type Window = { a: number; b: number; start: number; end: number; score: number }
+  type HorsSearch = { skip?: number; from?: number; to?: number; max?: number; within?: { start: number; end: number } }
   // A window that starts cleanly after a pause and ends on a finished sentence wins over any that does not.
-  const bestHors = (skip?: number): Window | null => {
+  const bestHors = ({ skip, from = firstUsable, to = lastUsable, max = HORS_DRAFT_MAX, within }: HorsSearch = {}): Window | null => {
     let strictBest: Window | null = null
     let loose: Window | null = null
-    for (let a = firstUsable; a <= lastUsable; a++) {
+    for (let a = Math.max(firstUsable, from); a <= Math.min(lastUsable, to); a++) {
       if (blocked(a) || all[a].words < 5) continue
-      for (let b = a; b <= lastUsable; b++) {
+      for (let b = a; b <= Math.min(lastUsable, to); b++) {
         if (blocked(b) || b === skip) break
-        if (all[b].end - all[a].start > HORS_MAX + 0.5) break
-        const window = fit(a, b, HORS_MIN, HORS_MAX)
+        if (all[b].end - all[a].start > max + 0.5) break
+        const window = fit(a, b, HORS_MIN, max)
         if (!window) continue
+        if (within && (window.start < within.start - 0.01 || window.end > within.end + 0.01)) continue
         const inside = scores.slice(a, b + 1)
         const score = hookScore(a) * 1.5 + inside.reduce((sum, value) => sum + value, 0) / inside.length + (closes(b) ? 3 : -4) + endStrength(b) + (b - a > 4 ? -1 : 0)
         const strict = opens(a) && pauseBefore(a) >= (cased ? 0.3 : SENTENCE_PAUSE - 0.05) && closes(b)
@@ -436,8 +440,8 @@ export function draftTiers(source: string | Cue[], durationHint?: number | null)
     }
     return strictBest || loose
   }
-  let hors = bestHors()
-  if (!hors) return null
+  const free = bestHors() || bestHors({ max: HORS_MAX })
+  if (!free) return null
 
   // Appetiser: a hook, a turn and a land inside about 3 minutes, all on sentence boundaries.
   type Pick = { hook: number; turn: number; land: number; start: number; end: number; score: number }
@@ -497,12 +501,15 @@ export function draftTiers(source: string | Cue[], durationHint?: number | null)
     pick ||= loosePick
   }
   if (!pick) {
-    const window = fit(hors.a, hors.b, 1, APPETISER_MAX)!
-    pick = { hook: hors.a, turn: Math.min(hors.b, hors.a + 1), land: hors.b, ...window, score: 0 }
+    const window = fit(free.a, free.b, 1, APPETISER_MAX)!
+    pick = { hook: free.a, turn: Math.min(free.b, free.a + 1), land: free.b, ...window, score: 0 }
   }
 
-  // The hors is its own moment: when the appetiser's land falls inside it, the next best window without the land is used.
-  if (pick.land >= hors.a && pick.land <= hors.b) hors = bestHors(pick.land) || hors
+  // The hors is part of the appetiser: the best window inside it, ending before the land so the land keeps its moment.
+  const within = { start: pick.start, end: pick.end }
+  const nested = (max: number, skip?: number) => bestHors({ from: pick!.hook, to: pick!.land, skip, max, within })
+  const hors = nested(HORS_DRAFT_MAX, pick.land) || nested(HORS_MAX, pick.land) || nested(HORS_MAX)
+  if (!hors) return null
   const chosen = pick
   const popups: TierDraft['popups'] = []
   const popupSecond = (index: number) => Math.min(Math.ceil(all[index].end), Math.max(0, duration - 1))
@@ -641,13 +648,32 @@ export function tierProblem(tier: Record<string, unknown>, cap = HORS_CAP) {
   const hors = horsVerdict(he - hs, cap)
   if (hors.error) return hors.error
   const spans = Array.isArray(tier.appetiserSpans) ? (tier.appetiserSpans as AppetiserSpan[]) : []
-  if (spans.length) return spanProblem(spans)
-  if (ae <= as) return 'The appetiser has to end after it starts.'
-  if (ae - as > APPETISER_MAX + 15) return `The appetiser runs ${formatTimestamp(ae - as)}. Keep it to about 3 minutes.`
-  return null
+  if (spans.length) {
+    const problem = spanProblem(spans)
+    if (problem) return problem
+  } else {
+    if (ae <= as) return 'The appetiser has to end after it starts.'
+    if (ae - as > APPETISER_MAX + 15) return `The appetiser runs ${formatTimestamp(ae - as)}. Keep it to about 3 minutes.`
+  }
+  return horsNestingProblem({ horsStart: hs, horsEnd: he, appetiserStart: as, appetiserEnd: ae, appetiserSpans: spans })
 }
 
-/** The usual-length note for a hors d'oeuvre that is allowed but longer than 20 seconds. */
+/** Small slack for in and out points rounded to the hundredth on either side. */
+const NEST_SLACK = 0.05
+
+/**
+ * The hors d'oeuvre is part of the appetiser: it plays inside the appetiser's in and out points, or inside one of its
+ * cuts when the appetiser is made of hook, turn and land cuts.
+ */
+export function horsNestingProblem(tier: { horsStart: number; horsEnd: number; appetiserStart: number; appetiserEnd: number; appetiserSpans?: { start: number; end: number }[] | null }) {
+  const spans = tier.appetiserSpans?.length ? tier.appetiserSpans : [{ start: tier.appetiserStart, end: tier.appetiserEnd }]
+  const inside = spans.some((span) => tier.horsStart >= span.start - NEST_SLACK && tier.horsEnd <= span.end + NEST_SLACK)
+  if (inside) return null
+  const where = spans.map((span) => `${formatTimestamp(span.start)} to ${formatTimestamp(span.end)}`).join(', ')
+  return `The hors d'oeuvre (${formatTimestamp(tier.horsStart)} to ${formatTimestamp(tier.horsEnd)}) has to sit inside the appetiser${spans.length > 1 ? ', within one of its cuts' : ''} (${where}).`
+}
+
+/** The usual-length note for a hors d'oeuvre that is allowed but longer than 30 seconds. */
 export function tierHorsWarning(tier: { horsStart: number; horsEnd: number }, cap = HORS_CAP) {
   return horsVerdict(tier.horsEnd - tier.horsStart, cap).warning
 }

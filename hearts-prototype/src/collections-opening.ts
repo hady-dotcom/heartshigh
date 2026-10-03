@@ -435,7 +435,7 @@ export const MasterFlags: GlobalConfig = {
       defaultValue: 45,
       min: 20,
       max: 180,
-      admin: { description: "Longest hors d'oeuvre the desk will save, in seconds. 15 to 20 is the usual length and only a warning. Longer than this is refused." },
+      admin: { description: "Longest hors d'oeuvre the desk will save, in seconds. 15 to 30 is the usual length; longer is only a warning. Longer than this is refused." },
     },
   ],
 }

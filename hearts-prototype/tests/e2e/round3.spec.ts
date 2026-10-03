@@ -56,7 +56,7 @@ test.describe('round 3 API', () => {
     const pack = await json(await master.get('/api/packs/1?depth=0'))
     const course = (pack.courses as (number | { id: number })[]).map((row) => (typeof row === 'number' ? row : row.id))[0]
     const part = (await json(await master.get(`/api/lessons?where[course][equals]=${course}&limit=1&depth=0`))).docs[0]
-    await form(learner, { action: 'complete', lesson: String(part.id), ended: 'yes', next: '/' })
+    await form(learner, { action: 'complete', lesson: String(part.id), seconds: String(part.durationSeconds || 1), ended: 'yes', next: '/' })
     await form(master, { action: 'clock', iso: new Date(Date.now() + 2 * 86_400_000).toISOString(), next: '/' })
     let created = 0
     let repeats = 0
@@ -463,7 +463,9 @@ test.describe('round 3 screens', () => {
     expect(at).toBe(Math.floor(tier.appetiserEnd))
     expect(tier.appetiserEnd - tier.appetiserStart).toBeLessThanOrEqual(195)
     expect(tier.horsEnd - tier.horsStart).toBeGreaterThanOrEqual(15)
-    expect(tier.horsEnd - tier.horsStart).toBeLessThanOrEqual(20)
+    expect(tier.horsEnd - tier.horsStart).toBeLessThanOrEqual(30)
+    expect(tier.horsStart).toBeGreaterThanOrEqual(tier.appetiserStart - 0.05)
+    expect(tier.horsEnd).toBeLessThanOrEqual(tier.appetiserEnd + 0.05)
 
     const tiers = (await json(await master.get('/api/talk-tiers?limit=100&depth=0'))).docs as { status: string; note?: string }[]
     expect(tiers.length).toBeGreaterThanOrEqual(31)
@@ -483,14 +485,15 @@ test.describe('round 3 screens', () => {
     await page.getByTestId('tier-open').first().click()
     await expect(page.getByTestId('tier-editor')).toBeVisible()
     const start = Number(await page.getByTestId('hors-start-seconds').inputValue())
-    await page.getByTestId('hors-end-seconds').fill(String(start + 30))
-    await expect(page.getByTestId('tier-warnings')).toContainText('between 15 and 20')
+    const end = Number(await page.getByTestId('hors-end-seconds').inputValue())
+    await page.getByTestId('hors-end-seconds').fill(String(start + 40))
+    await expect(page.getByTestId('tier-warnings')).toContainText('between 15 and 30')
     await page.getByTestId('hors-end-seconds').fill(String(start + 60))
     await expect(page.getByTestId('tier-warnings')).toContainText('Keep it to')
     await page.getByTestId('tier-save').click()
     await expect(page.getByTestId('error')).toContainText('Keep it to')
     await expect(async () => {
-      await page.getByTestId('hors-end-seconds').fill(String(start + 18))
+      await page.getByTestId('hors-end-seconds').fill(String(end))
       await page.getByTestId('preview-appetiser').click()
       await expect(page.getByTestId('tier-preview-frame')).toHaveAttribute('src', /start=\d+&end=\d+/, { timeout: 2000 })
     }).toPass()

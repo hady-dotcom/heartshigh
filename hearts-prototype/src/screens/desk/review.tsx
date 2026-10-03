@@ -4,7 +4,7 @@ import { Hidden } from '@/components/app/shell'
 import { ReviewKeys, ReviewPlayer } from '@/components/desk/review'
 import { idOf } from '@/lib/ids'
 import { pendingForLesson } from '@/server/ai-desk'
-import { horsCapOf } from '@/lib/tiers'
+import { HORS_MAX, horsCapOf } from '@/lib/tiers'
 import { showUncheckedTalks } from '@/server/opening'
 import type { SessionUser } from '@/server/context'
 import { rows, str } from '../common'
@@ -108,12 +108,12 @@ export async function MasterReview(ctx: MasterCtx) {
         <form className="body review-flag-body" action="/api/hearts" method="post">
           <div>
             <b>Hors d&apos;oeuvre cap</b>
-            <p className="hint" style={{ margin: 0 }}>15 to 20 seconds is the usual length and only a warning. Longer than this cap is refused. The cap is {horsMax} seconds.</p>
+            <p className="hint" style={{ margin: 0 }}>15 to 30 seconds is the usual length; longer is only a warning. It always sits inside the appetiser. Longer than this cap is refused. The cap is {horsMax} seconds.</p>
           </div>
           <Hidden fields={{ action: 'hors-max', next: tier ? `/master/review?tier=${tier.id}` : '/master/review' }} />
           <label className="stack" style={{ margin: 0 }}>
             Seconds
-            <input name="horsMaxSeconds" type="number" min={20} max={180} step={1} defaultValue={horsMax} data-testid="hors-max" />
+            <input name="horsMaxSeconds" type="number" min={HORS_MAX} max={180} step={1} defaultValue={horsMax} data-testid="hors-max" />
           </label>
           <button className="btn small ghost" type="submit" data-testid="hors-max-save">Save cap</button>
         </form>

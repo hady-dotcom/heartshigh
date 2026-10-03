@@ -331,25 +331,26 @@ Return a single JSON object: {"language": "en"}
   {
     slug: 'hors-doeuvre',
     name: "Hors d'oeuvre picker",
-    description: 'Picks one 15 to 20 second clip that can be heard cold: the short first rung of the ladder, before any longer sitting. It fills the hors d’oeuvre in-point, out-point, quote and caption lines on the talk’s tier. A person still approves it on Review before learners see it.',
+    description: 'Picks one 15 to 30 second clip that can be heard cold, from inside the appetiser: the short first rung of the ladder, before any longer sitting. It fills the hors d’oeuvre in-point, out-point, quote and caption lines on the talk’s tier. A person still approves it on Review before learners see it.',
     placeholders: [
       { token: 'TITLE', meaning: 'The talk title.', required: true },
       { token: 'DURATION', meaning: 'The talk length in seconds.', required: true },
+      { token: 'APPETISER', meaning: 'The appetiser’s in and out points. The hors d’oeuvre has to sit inside them.', required: false },
       { token: 'TRANSCRIPT', meaning: 'The talk transcript.', required: true },
     ],
     provider: 'anthropic',
     model: 'claude-sonnet-4-5',
     temperature: 0.2,
     maxTokens: 1200,
-    pipelineOrder: 20,
+    pipelineOrder: 30,
     inPipeline: true,
     fillsTier: 'hors',
     fillsPoints: null,
     fills: "Talk tier: hors d'oeuvre start, end, quote and caption lines. Review, talk tiers.",
     outputSchema: horsSchema,
-    prompt: `You pick a single hors d'oeuvre from this talk: one clip of 15 to 20 seconds that a stranger can hear with no setup.
+    prompt: `You pick a single hors d'oeuvre from this talk: one clip of 15 to 30 seconds that a stranger can hear with no setup.
 
-{{TITLE}} lasts {{DURATION}} seconds.
+{{TITLE}} lasts {{DURATION}} seconds. The hors d'oeuvre is part of the appetiser, so it starts and ends inside the appetiser: {{APPETISER}}.
 {{TRANSCRIPT}}
 
 What to look for, in this order: a thesis the speaker repeats (about 8 to 15 words); a verse followed by one line of application; a contrast ("not this, but this"); a puzzle then its answer; the turn of a story, not the whole story. Laughter or "amen" is a label for the line just before it. The clip starts on the first words of a complete sentence and ends just after that sentence, not on the next one.
@@ -359,7 +360,7 @@ Leave out greetings, link phrases ("as I mentioned"), anything that needs the ro
 The quote and every caption line must be the speaker's words, copied from the transcript, not paraphrased. Times are seconds.
 
 Return JSON: {"start": 0, "end": 18, "quote": "", "lines": [{"at": 0, "text": ""}]}
-start and end are seconds, and end - start is between 15 and 20. No text outside the JSON.`,
+start and end are seconds inside the appetiser, and end - start is between 15 and 30. No text outside the JSON.`,
   },
   {
     slug: 'appetiser-cut',
@@ -374,7 +375,7 @@ start and end are seconds, and end - start is between 15 and 20. No text outside
     model: 'claude-sonnet-4-5',
     temperature: 0.2,
     maxTokens: 1500,
-    pipelineOrder: 30,
+    pipelineOrder: 20,
     inPipeline: true,
     fillsTier: 'appetiser',
     fillsPoints: null,
@@ -637,7 +638,7 @@ Every evidence id is one of the clip's sentence ids. No text outside the JSON.`,
 
 A clip is watched on its own, with sound on, by someone who did not choose it and will leave if the opening does not hold. Nothing outside the clip earns patience. A weak opening cannot be rescued by a strong ending. A title or a stated idea is the clipper's claim and never raises a score.
 
-Judge the hors d'oeuvre (15 to 20 seconds) and the appetiser (hook, turn and land, up to about three minutes) with the same four axes.
+Judge the hors d'oeuvre (15 to 30 seconds, inside the appetiser) and the appetiser (hook, turn and land, up to about three minutes) with the same four axes.
 
 ### 1. Standalone
 Would a stranger take away only what the speaker said?
@@ -681,6 +682,8 @@ export type TalkContext = {
   turn: string
   land: string
   landAt: number
+  /** The tier's appetiser, when the talk has one. The hors d'oeuvre is drafted inside it. */
+  appetiser?: { start: number; end: number } | null
   clauseCards: string
   rubric: string
   clip: string
@@ -697,7 +700,7 @@ export function mockOutput(step: StepSpec, talk: TalkContext, prompt: string): u
   if (!drafted) throw new Error('There is not enough speech in this transcript to draft from.')
   // Browsers submit textarea newlines as CR LF. Fold them so the same words always pick the same cut.
   const shift = salt(`${step.slug}\n${prompt.replace(/\r\n/g, '\n')}`, 97)
-  if (step.slug === 'hors-doeuvre') return horsOf(talk.transcript, drafted, shift)
+  if (step.slug === 'hors-doeuvre') return horsOf(talk.transcript, drafted, shift, talk.appetiser)
   if (step.slug === 'appetiser-cut') return appetiserOf(drafted, shift)
   if (step.slug === 'popup-drafter') return { points: popupPoints(drafted, shift, 'question') }
   if (step.slug === 'reflection-prompts') return { questions: reflectionsOf(drafted, shift) }
@@ -716,23 +719,24 @@ function languageOf(transcript: string) {
   return 'en'
 }
 
-function horsOf(transcript: string, draft: TierDraft, shift: number) {
-  const windows = horsWindows(transcript, draft)
+function horsOf(transcript: string, draft: TierDraft, shift: number, appetiser?: { start: number; end: number } | null) {
+  const windows = horsWindows(transcript, draft, appetiser)
   return windows[shift % windows.length]
 }
 
-function horsWindows(transcript: string, draft: TierDraft) {
+function horsWindows(transcript: string, draft: TierDraft, within?: { start: number; end: number } | null) {
   const base = {
     start: draft.hors.start,
     end: draft.hors.end,
     quote: draft.hors.quote,
     lines: draft.horsLines.length ? draft.horsLines.map((line) => ({ at: line.at, text: line.text })) : [{ at: draft.hors.start, text: draft.hors.quote }],
   }
-  const windows = [base]
-  const room = draft.duration || base.end + 30
+  const appetiser = within || draft.appetiser
+  const fits = (start: number, end: number) => start >= appetiser.start && end <= appetiser.end
+  const windows = fits(base.start, base.end) ? [base] : []
   for (const sentence of sentencesOf(transcript)) {
     if (sentence.words < 5 || !sentence.complete) continue
-    if (sentence.start + 17 > room) continue
+    if (!fits(round1(sentence.start), round1(sentence.start + 17))) continue
     if (windows.some((window) => window.quote === sentence.text)) continue
     windows.push({
       start: round1(sentence.start),
@@ -742,7 +746,7 @@ function horsWindows(transcript: string, draft: TierDraft) {
     })
     if (windows.length >= 6) break
   }
-  return windows
+  return windows.length ? windows : [base]
 }
 
 function appetiserOf(draft: TierDraft, shift: number) {

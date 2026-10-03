@@ -42,7 +42,7 @@ export async function MasterTiers(ctx: MasterCtx) {
     <Frame
       ctx={ctx}
       title="Talk tiers"
-      intro="Each talk is served three ways: a hors d'oeuvre of 15 to 20 seconds, an appetiser of up to about 3 minutes built on a hook, a turn and a land, and the main, which is the whole talk from 0:00 with pop-up questions. The drafts come from the captions by machine and stay drafts until a person checks them here."
+      intro="Each talk is served three ways: a hors d'oeuvre of 15 to 30 seconds inside an appetiser of up to about 3 minutes built on a hook, a turn and a land, inside the main, which is the whole talk from 0:00 with pop-up questions. The drafts come from the captions by machine and stay drafts until a person checks them here."
       testId="master-tiers"
     >
       <p className="hint" data-testid="tiers-count">{checked} of {tiers.length} talks checked by a person.</p>

@@ -270,7 +270,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
 
           {lesson && ladder.length ? (
             <section className="panel" data-testid="ladder-panel">
-              <header className="light"><h2>Short clips for the feed ({ladder.length})</h2><span className="hint">Short opening clips of 15 to 20 seconds, and longer extended clips</span></header>
+              <header className="light"><h2>Short clips for the feed ({ladder.length})</h2><span className="hint">Short opening clips of 15 to 20 seconds, each inside its longer extended clip</span></header>
               <div className="table-wrap">
                 <table className="data">
                   <thead><tr><th>Kind</th><th>Time</th><th>Caption</th><th>Status</th>{!locked ? <th /> : null}</tr></thead>

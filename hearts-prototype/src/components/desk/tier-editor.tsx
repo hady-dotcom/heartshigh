@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { APPETISER_MAX, HORS_MAX, HORS_MIN, horsNestingProblem } from '@/lib/tiers'
 
 /** A sentence of the talk, with where a clip may open before it and close after it. */
 type Line = { start: number; end: number; text: string; inAt: number; outAt: number }
@@ -18,10 +19,6 @@ type Tier = {
   note: string
   checked: boolean
 }
-
-const HORS_MIN = 15
-const HORS_MAX = 20
-const APPETISER_MAX = 180
 
 function clock(total: number) {
   const seconds = Math.max(0, Math.round(total))
@@ -64,6 +61,7 @@ export function TierEditor({ tier, youtubeId, duration, lines, next, horsMax = 4
     horsLength > horsMax ? `The hors d'oeuvre runs ${seconds(horsLength)}. Keep it to ${horsMax} seconds.` : horsLength > HORS_MAX ? `The hors d'oeuvre runs ${seconds(horsLength)}. The usual length is between ${HORS_MIN} and ${HORS_MAX} seconds. Up to ${horsMax} seconds is allowed.` : null,
     appetiserLength <= 0 ? 'The appetiser has to end after it starts.' : appetiserLength > APPETISER_MAX + 15 ? `The appetiser runs ${clock(appetiserLength)}. Keep it to about 3 minutes.` : null,
     duration && (he > duration || ae > duration) ? `An out point is after the end of the talk (${clock(duration)}).` : null,
+    horsNestingProblem({ horsStart: hs, horsEnd: he, appetiserStart: as, appetiserEnd: ae }),
   ].filter((value): value is string => Boolean(value))
 
   const shown = useMemo(() => (near ? lines.filter((line) => line.end >= Math.min(hs, as) - 20 && line.start <= Math.max(he, ae) + 20) : lines), [lines, near, hs, he, as, ae])

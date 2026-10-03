@@ -304,10 +304,14 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
   const appetiser = within.find((item) => item.kind === 'appetiser')
   const placeholder = Boolean(cut.placeholder)
   const quote = placeholder ? '' : String(hors?.quote || cut.land || '')
+  const shown = appetiser ? { start: Number(appetiser.start), end: Number(appetiser.end), quote: String(appetiser.quote || cut.land) } : { start, end: placeholder ? end + 600 : end, quote }
+  const rough = hors && !placeholder ? { start: Number(hors.start), end: Number(hors.end) } : { start: placeholder ? start : Math.max(start, end - 18), end }
+  // The hors d'oeuvre is part of the appetiser, so a ladder rung that strays outside it is pulled back in.
+  const horsStart = Math.max(shown.start, Math.min(rough.start, shown.end - 1))
   return {
     ...base,
-    hors: hors && !placeholder ? { start: Number(hors.start), end: Number(hors.end), quote } : { start: placeholder ? start : Math.max(start, end - 18), end, quote },
-    appetiser: appetiser ? { start: Number(appetiser.start), end: Number(appetiser.end), quote: String(appetiser.quote || cut.land) } : { start: placeholder ? end : start, end: placeholder ? end + 600 : end, quote },
+    hors: { start: horsStart, end: Math.min(shown.end, Math.max(rough.end, horsStart + 1)), quote },
+    appetiser: shown,
     hook: placeholder ? '' : String(cut.hook || ''),
     turn: placeholder ? '' : String(cut.turn || ''),
     land: placeholder ? '' : String(cut.land || ''),

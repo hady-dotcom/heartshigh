@@ -308,7 +308,8 @@ export function dualExtract(raw: string, clauses: ClauseCard[] = []): ExtractRes
 }
 
 /**
- * Hors d'oeuvre: 15 to 20 seconds from the start of the line the land sits in.
+ * Hors d'oeuvre: 15 to 20 seconds from the start of the line the land sits in, moved back if it would run past the
+ * appetiser, so it always plays inside it.
  * Appetiser: 30 seconds to 3 minutes, from the turn's line to the end of the land's line.
  * Both carry the land line as their caption, word for word.
  */
@@ -319,9 +320,10 @@ export function ladderFrom(cuts: ExtractCut[], sentences: Sentence[]): LadderIte
     const turn = sentences.find((sentence) => sentence.text === cut.turn && sentence.cueStart >= cut.start)
     const landStart = land?.cueStart ?? Math.max(cut.start, cut.end - 20)
     const horsLength = Math.min(20, Math.max(15, (land?.cueEnd ?? landStart + 15) - landStart))
-    items.push({ kind: 'hors', start: landStart, end: landStart + horsLength, quote: cut.land, cutId: cut.id })
-    const appetiserStart = Math.min(turn?.cueStart ?? cut.start, Math.max(cut.start, cut.end - 30))
+    const appetiserStart = Math.min(turn?.cueStart ?? cut.start, Math.max(cut.start, cut.end - 30), landStart)
     const appetiserEnd = Math.min(appetiserStart + 180, Math.max(appetiserStart + 30, cut.end))
+    const horsStart = Math.max(appetiserStart, Math.min(landStart, appetiserEnd - horsLength))
+    items.push({ kind: 'hors', start: horsStart, end: Math.min(appetiserEnd, horsStart + horsLength), quote: cut.land, cutId: cut.id })
     items.push({ kind: 'appetiser', start: appetiserStart, end: appetiserEnd, quote: cut.land, cutId: cut.id })
   }
   return items

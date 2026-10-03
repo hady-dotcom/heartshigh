@@ -122,10 +122,10 @@ test('Section T: rolling auto captions become each word once, in order, without 
   assert.equal(words[4].at, 3.5)
 })
 
-test('Section T: tier rules hold the hors to 15-20 seconds and the appetiser to about 3 minutes', () => {
+test('Section T: tier rules hold the hors to 15-30 seconds and the appetiser to about 3 minutes', () => {
   assert.equal(tierProblem({ horsStart: 10, horsEnd: 28, appetiserStart: 0, appetiserEnd: 170 }), null)
-  assert.equal(tierProblem({ horsStart: 10, horsEnd: 40, appetiserStart: 0, appetiserEnd: 170 }), null)
-  assert.match(tierHorsWarning({ horsStart: 10, horsEnd: 40 }) || '', /between 15 and 20/)
+  assert.equal(tierProblem({ horsStart: 10, horsEnd: 50, appetiserStart: 0, appetiserEnd: 170 }), null)
+  assert.match(tierHorsWarning({ horsStart: 10, horsEnd: 50 }) || '', /between 15 and 30/)
   assert.match(tierProblem({ horsStart: 10, horsEnd: 70, appetiserStart: 0, appetiserEnd: 170 }) || '', /45/)
   assert.match(tierProblem({ horsStart: 10, horsEnd: 26, appetiserStart: 100, appetiserEnd: 90 }) || '', /end after it starts/)
   assert.match(tierProblem({ horsStart: 10, horsEnd: 26, appetiserStart: 0, appetiserEnd: 400 }) || '', /about 3 minutes/)
