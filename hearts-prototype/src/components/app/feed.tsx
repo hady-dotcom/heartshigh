@@ -124,8 +124,8 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
     if (!item) return
     const order = items.map((_, offset) => (index + 1 + offset) % items.length).filter((at) => at !== index)
     const target = order.find((at) => items[at].lane === item.lane && items[at].speaker !== item.speaker) ?? order.find((at) => items[at].lane === item.lane)
-    if (target === undefined) return setToast(`That is everything on ${item.laneLabel.toLowerCase()} for now`)
-    show(target, 'from-right', `More on ${item.laneLabel.toLowerCase()}`)
+    if (target === undefined) return setToast(`That is everything on ${item.laneLabel} for now`)
+    show(target, 'from-right', `More on ${item.laneLabel}`)
   }, [index, item, items, show])
 
   const moreFromSpeaker = useCallback(() => {
@@ -268,9 +268,17 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
               <button type="button" className="play-hit" aria-label={playing ? 'Pause the clip' : 'Play the clip'} data-testid="play-clip" onClick={() => setPlaying((value) => !value)} />
             ) : null}
             {item.youtubeId && !playing ? <span className="play-badge"><PlayIcon size={28} /></span> : null}
-            <p className={`caption${piece.quote.length > 120 ? ' long' : ''}`} data-testid="caption">
-              <Emphasis text={piece.quote} />
-            </p>
+            {mode === 'hors' ? (
+              <p className={`caption${(piece.lines?.[0]?.tidy || piece.quote).length > 120 ? ' long' : ''}`} data-testid="caption">
+                <Emphasis text={piece.lines?.[0]?.tidy || piece.quote} />
+              </p>
+            ) : item.youtubeId ? null : (
+              <div className="scenic-lines" data-testid="scenic-lines">
+                {[item.scenic?.hook, item.scenic?.turn, item.scenic?.land].filter(Boolean).map((line) => (
+                  <p key={line}>{line}</p>
+                ))}
+              </div>
+            )}
             <div className="rail">
               <button type="button" onClick={share} data-testid="share"><span className="bubble"><ShareIcon /></span>Share</button>
               <button type="button" aria-pressed={faves.includes(item.id)} onClick={() => toggleFave(item.id)} data-testid="fave"><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
@@ -282,7 +290,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Link className="speaker-row" href={`${base}/speaker/${item.speakerSlug}`} style={{ flex: 1 }} data-testid="speaker-link">
                       <Avatar name={item.speaker} portrait={item.portrait} />
-                      <span className="who"><b>{item.speaker}</b><small>on {item.laneLabel}</small></span>
+                      <span className="who"><b>{item.speaker}</b><small>On {item.laneLabel}</small></span>
                     </Link>
                     <FollowButton slug={item.speakerSlug} />
                   </div>
@@ -334,6 +342,9 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
 }
 
 export function Slide({ item, style, onMore }: { item: FeedItem; style: SlideStyle; onMore: () => void }) {
+  const hook = item.hookTidy || item.hook
+  const turn = item.turnTidy || item.turn
+  const land = item.landTidy || item.land
   const cta = (cls: string) => (
     <button type="button" className={`pill ${cls}`} onClick={onMore} data-testid="learn-more">
       Learn more <ArrowIcon />
@@ -345,10 +356,10 @@ export function Slide({ item, style, onMore }: { item: FeedItem; style: SlideSty
       <div className="slide cinema" data-style="cinema">
         <div className="bg" style={{ backgroundImage: `url(${ART.cinema})` }} />
         <div className="slide-label"><span>01 · {lane}</span><span>{Math.max(1, Math.round((item.appetiser.end - item.appetiser.start) / 60))} min</span></div>
-        <h2 className="serif"><Emphasis text={item.land} /></h2>
+        <h2 className="serif"><Emphasis text={land} /></h2>
         <div className="rule-line" />
-        <p>{item.hook}</p>
-        <p className="indent">{item.turn}</p>
+        <p>{hook}</p>
+        <p className="indent">{turn}</p>
         <div className="slide-cta">{cta('')}<div className="slide-foot">{item.speaker}<br />{item.courseTitle}</div></div>
       </div>
     )
@@ -361,9 +372,9 @@ export function Slide({ item, style, onMore }: { item: FeedItem; style: SlideSty
         <div className="kinetic-body">
           <div className="kinetic-steps"><span className="on">1</span><i /><span>2</span><i /><span>3</span></div>
           <div>
-            <h2 className="serif"><Emphasis text={item.hook} /></h2>
-            <p className="serif">{item.turn}</p>
-            <p className="serif">{item.land}</p>
+            <h2 className="serif"><Emphasis text={hook} /></h2>
+            <p className="serif">{turn}</p>
+            <p className="serif">{land}</p>
           </div>
         </div>
         <div className="slide-cta"><div className="slide-foot">{item.courseTitle}</div>{cta('')}</div>
@@ -374,18 +385,18 @@ export function Slide({ item, style, onMore }: { item: FeedItem; style: SlideSty
     return (
       <div className="slide conversation" data-style="conversation">
         <div className="bg" style={{ backgroundImage: `url(${ART.conversation})` }} />
-        <div className="slide-label"><span>A conversation<br />on {lane.toLowerCase()}</span><span>···</span></div>
+        <div className="slide-label"><span>A conversation<br />On {lane}</span><span>···</span></div>
         <div style={{ marginTop: 34 }}>
-          <div className="bubble-row"><span className="bubble-face" style={{ backgroundImage: `url(${ART.cinema})`, backgroundSize: 'cover' }} /><div className="bubble-text">{item.hook}</div></div>
-          <div className="bubble-row"><span className="bubble-face">❦</span><div className="bubble-text">{item.turn}</div></div>
-          <div className="bubble-row"><span className="bubble-face">☾</span><div className="bubble-text dim">{item.land}</div></div>
+          <div className="bubble-row"><span className="bubble-face" style={{ backgroundImage: `url(${ART.cinema})`, backgroundSize: 'cover' }} /><div className="bubble-text">{hook}</div></div>
+          <div className="bubble-row"><span className="bubble-face">❦</span><div className="bubble-text">{turn}</div></div>
+          <div className="bubble-row"><span className="bubble-face">☾</span><div className="bubble-text dim">{land}</div></div>
         </div>
         <p className="serif" style={{ textAlign: 'center', fontSize: 20, margin: '10px 0 0' }}>There is more to this in the full talk.</p>
         <div className="slide-cta">{cta('')}<div className="slide-foot">{item.speaker} · {item.courseTitle}</div></div>
       </div>
     )
   }
-  const lines = [item.hook, item.turn, item.land]
+  const lines = [hook, turn, land]
   if (style === 'windows') {
     return (
       <div className="slide windows" data-style="windows">

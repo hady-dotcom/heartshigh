@@ -10,7 +10,10 @@ import { getSession, type SessionUser, visibleCourseIds } from '@/server/context
 import { workbookFor } from '@/server/workbook'
 import { posterFor } from '@/server/learner'
 import { loadDoors } from '@/server/doors'
-import { doorByNumber, doorOfClause, type Door } from '@/lib/doors'
+import { doorByNumber, doorNumberOfClause, doorOfClause, type Door } from '@/lib/doors'
+import { areaGrowth, type AreaView } from '@/lib/garden-areas'
+import type { GardenTheme } from '@/lib/garden-art'
+import { GardenScene } from '@/components/app/garden-scene'
 import { answerCounts } from '@/lib/nesting'
 import { type Ctx, type Row, clock, ref, rows, shortDate, str, unreadCount } from '../common'
 
@@ -141,14 +144,70 @@ export async function coursePath(payload: Payload, user: SessionUser, base: stri
   }
 }
 
+/** Trees for the garden screen. Lessons are placed by a cut's best clause, then by a confirmed tag. */
+async function areaViews(payload: Payload, user: SessionUser, base: string, g: Growth): Promise<AreaView[]> {
+  const courseIds = await visibleCourseIds(payload, user)
+  const empty = areaGrowth({
+    lessons: [],
+    completions: [],
+    points: [],
+    answers: [],
+    courses: [],
+    hrefForLesson: () => base,
+    hrefForCourse: () => base,
+    workbookHref: `${base}/garden/workbook`,
+  })
+  if (!courseIds.length) return empty
+  const [lessons, courses] = await Promise.all([
+    rows(payload, 'lessons', { course: { in: courseIds } }, { limit: 500 }),
+    rows(payload, 'courses', { id: { in: courseIds } }, { limit: 80 }),
+  ])
+  const lessonIds = lessons.map((lesson) => lesson.id)
+  const cuts = lessonIds.length ? await rows(payload, 'cuts', { lesson: { in: lessonIds } }, { limit: 2000 }) : []
+  const tags = await rows(payload, 'tags', { state: { equals: 'confirmed' } }, { limit: 2000 })
+  const doorFor = (lessonId: number) => {
+    const own = cuts.filter((cut) => ref(cut.lesson) === lessonId)
+    for (const cut of own) {
+      const door = doorNumberOfClause(Number(cut.bestClause || 0), g.doors)
+      if (door) return door
+    }
+    for (const cut of own) {
+      const tag = tags.find((row) => ref((row.item as { value?: unknown } | undefined)?.value) === cut.id && ref(row.clause))
+      const clause = tag ? g.clauses.find((row) => row.id === ref(tag.clause)) : null
+      const door = doorNumberOfClause(Number(clause?.number || 0), g.doors)
+      if (door) return door
+    }
+    return null
+  }
+  const points = lessonIds.length
+    ? await rows(payload, 'engagement-points', { and: [{ lesson: { in: lessonIds } }, { or: [{ status: { not_equals: 'draft' } }, { status: { exists: false } }] }] }, { limit: 2000 })
+    : []
+  return areaGrowth({
+    lessons: lessons.map((lesson) => ({
+      id: lesson.id,
+      courseId: ref(lesson.course) || 0,
+      title: str(lesson.sourceTitle) || str(lesson.title),
+      door: doorFor(lesson.id),
+    })),
+    completions: g.completions.map((row) => ({ lessonId: ref(row.lesson) || 0 })).filter((row) => row.lessonId),
+    points: points.map((point) => ({ id: point.id, lessonId: ref(point.lesson) || 0 })),
+    answers: g.answers.map((row) => ({ pointId: ref(row.point) || 0 })).filter((row) => row.pointId),
+    courses: courses.map((course) => ({ id: course.id, title: str(course.title) })),
+    hrefForLesson: (lessonId, courseId) => `${base}/course/${courseId}?part=${lessonId}`,
+    hrefForCourse: (courseId) => `${base}/course/${courseId}`,
+    workbookHref: `${base}/garden/workbook`,
+  })
+}
+
 export async function GardenScreen({ payload, user, base, query }: Ctx) {
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
+  const [areas, path] = await Promise.all([areaViews(payload, user, base, g), coursePath(payload, user, base, g)])
   const starting = doorOfClause(Number(user.startingClause || 0), g.doors)
-  const path = await coursePath(payload, user, base, g)
   return (
     <AppFrame testId="garden">
-      <div className="app-scroll">
-        <div className="app-head"><h1>Garden</h1></div>
+      <div className="app-scroll garden-home">
+        <GardenScene areas={areas} theme={query.theme === 'dawn' ? 'dawn' satisfies GardenTheme : 'evening'} />
+        <div className="garden-rest">
         <Flash error={query.error} notice={query.notice} />
         <section className="garden-rings card" data-testid="garden-rings">
           <p className="eyebrow" style={{ margin: '0 0 8px' }}>Five ways to see it</p>
@@ -179,6 +238,7 @@ export async function GardenScreen({ payload, user, base, query }: Ctx) {
           </form>
           <p className="muted" style={{ fontSize: 13, marginTop: 10 }} data-testid="ritual-count">{g.rituals.length} small act{g.rituals.length === 1 ? '' : 's'} kept so far.</p>
         </section>
+        </div>
       </div>
       <TabBar base={base} active="garden" unread={unread} />
     </AppFrame>
@@ -228,10 +288,10 @@ export async function GardenGeneral({ payload, user, base }: Ctx) {
         <p style={{ margin: 0, opacity: 0.8, fontSize: 14 }}>Counted from the parts you marked as watched.</p>
       </section>
       <div className="stat-grid">
-        <div className="stat-box"><b data-testid="stat-sittings">{g.completions.length}</b><small>parts watched</small></div>
-        <div className="stat-box"><b data-testid="stat-answers">{g.answers.length}</b><small>questions answered</small></div>
-        <div className="stat-box"><b>{g.seatVisits.length}</b><small>seats read</small></div>
-        <div className="stat-box"><b data-testid="stat-harvest">{g.harvest.length}</b><small>verses and hadith</small></div>
+        <div className="stat-box"><b data-testid="stat-sittings">{g.completions.length}</b><small>Parts watched</small></div>
+        <div className="stat-box"><b data-testid="stat-answers">{g.answers.length}</b><small>Questions answered</small></div>
+        <div className="stat-box"><b>{g.seatVisits.length}</b><small>Seats read</small></div>
+        <div className="stat-box"><b data-testid="stat-harvest">{g.harvest.length}</b><small>Verses and hadith</small></div>
       </div>
       <section className="days-card" data-testid="days-card">
         <h3>Days you came</h3>

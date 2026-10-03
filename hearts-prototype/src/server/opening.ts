@@ -7,6 +7,7 @@ import { loadDoors } from './doors'
 import { now } from '@/lib/clock'
 import { adoptedCourseIds, visibleCourseIds, type PortalDoc, type SessionUser } from './context'
 import { normaliseSpans, type AppetiserSpan } from '@/lib/tiers'
+import { clipWords, displayLine, parseLineTidy } from '@/lib/tidy-caption'
 import { laneOf, portraitFor, posterFor, slugify, type FeedItem, type SlideStyle } from './learner'
 
 type Row = Record<string, unknown> & { id: number }
@@ -224,6 +225,27 @@ function laneTagsOf(data: Loaded, cutId: number) {
 const lineList = (value: unknown) =>
   Array.isArray(value) ? (value as { at?: unknown; text?: unknown }[]).filter((row) => Number.isFinite(Number(row?.at)) && typeof row?.text === 'string').map((row) => ({ at: Number(row.at), text: String(row.text) })) : []
 
+/** Tidied lines for the screen. The raw hook, turn, land and caption text are left as said. */
+function tidyOf(speaker: string, stored: unknown, raw: { hook: string; turn: string; land: string; horsLines: { at: number; text: string }[] }) {
+  const tidy = parseLineTidy(stored)
+  const hints = { speakers: speaker ? [speaker] : [] }
+  const line = (text: string, saved?: { raw?: string; text?: string } | null) => displayLine(text, saved, hints)
+  const hookTidy = line(raw.hook, tidy?.hook)
+  const turnTidy = line(raw.turn, tidy?.turn)
+  const landTidy = line(raw.land, tidy?.land)
+  return {
+    hookTidy,
+    turnTidy,
+    landTidy,
+    scenic: { hook: clipWords(hookTidy), turn: clipWords(turnTidy), land: clipWords(landTidy) },
+    horsLines: raw.horsLines.map((row) => ({
+      at: row.at,
+      text: row.text,
+      tidy: line(row.text, tidy?.horsLines.find((item) => item.raw === row.text && (item.at === undefined || Number(item.at) === row.at))),
+    })),
+  }
+}
+
 /**
  * The display item for a cut. A talk with a tier record is timed and worded by that record alone: the hors
  * d'oeuvre, the appetiser and where it stops, the hook, turn and land, and the resume point. A talk without one
@@ -278,9 +300,14 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     const turnAt = atSpan('turn', Number.isFinite(Number(tier.turnAt)) && tier.turnAt !== null ? Number(tier.turnAt) : (hookAt + landAt) / 2)
     const horsQuote = String(tier.horsQuote || land)
     const horsLines = lineList(tier.horsLines)
+    const tidy = tidyOf(speaker, tier.lineTidy, { hook: String(tier.hook || ''), turn: String(tier.turn || ''), land, horsLines: horsLines.length ? horsLines : [{ at: Number(tier.horsStart), text: horsQuote }] })
     return {
       ...base,
-      hors: { start: Number(tier.horsStart), end: Number(tier.horsEnd), quote: horsQuote, lines: horsLines.length ? horsLines : [{ at: Number(tier.horsStart), text: horsQuote }] },
+      hookTidy: tidy.hookTidy,
+      turnTidy: tidy.turnTidy,
+      landTidy: tidy.landTidy,
+      scenic: tidy.scenic,
+      hors: { start: Number(tier.horsStart), end: Number(tier.horsEnd), quote: horsQuote, lines: tidy.horsLines },
       appetiser: {
         ...appetiser,
         lines: [
@@ -308,13 +335,22 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
   const rough = hors && !placeholder ? { start: Number(hors.start), end: Number(hors.end) } : { start: placeholder ? start : Math.max(start, end - 18), end }
   // The hors d'oeuvre is part of the appetiser, so a ladder rung that strays outside it is pulled back in.
   const horsStart = Math.max(shown.start, Math.min(rough.start, shown.end - 1))
+  const hook = placeholder ? '' : String(cut.hook || '')
+  const turn = placeholder ? '' : String(cut.turn || '')
+  const landLine = placeholder ? '' : String(cut.land || '')
+  const horsEnd = Math.min(shown.end, Math.max(rough.end, horsStart + 1))
+  const tidy = tidyOf(speaker, null, { hook, turn, land: landLine, horsLines: quote ? [{ at: horsStart, text: quote }] : [] })
   return {
     ...base,
-    hors: { start: horsStart, end: Math.min(shown.end, Math.max(rough.end, horsStart + 1)), quote },
+    hookTidy: tidy.hookTidy,
+    turnTidy: tidy.turnTidy,
+    landTidy: tidy.landTidy,
+    scenic: tidy.scenic,
+    hors: { start: horsStart, end: horsEnd, quote, lines: tidy.horsLines.length ? tidy.horsLines : undefined },
     appetiser: shown,
-    hook: placeholder ? '' : String(cut.hook || ''),
-    turn: placeholder ? '' : String(cut.turn || ''),
-    land: placeholder ? '' : String(cut.land || ''),
+    hook,
+    turn,
+    land: landLine,
     placeholder,
     tierStatus: null,
     offerResume: true,

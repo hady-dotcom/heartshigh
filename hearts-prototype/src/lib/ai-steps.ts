@@ -7,6 +7,7 @@
  */
 import { dualExtract } from './extractor'
 import { harvestTranscript } from './harvest'
+import { buildLineTidy, type TidyLine } from './tidy-caption'
 import { draftTiers, sentencesOf, type TierDraft } from './tiers'
 
 export type ProviderName = 'anthropic' | 'openai'
@@ -430,6 +431,43 @@ Return JSON: {"points": [{"second": 120, "kind": "question", "prompt": "", "opti
 Two or three points, each prompt a sentence the listener can answer from their own week. If the talk supports none, return {"points": []}. No text outside the JSON.`,
   },
   {
+    slug: 'tidy-caption-line',
+    name: 'Tidy caption line',
+    description: 'Turns each hors d’oeuvre and appetiser caption, which arrives from YouTube in lowercase and without punctuation, into a line a learner can read. It keeps the speaker’s words, adds sentence case and punctuation, and capitalises Allah, the Prophet, Qur’an, hadith names, names of Allah, the Day of Judgement, the speaker and I. British spelling. The raw caption stays for timing. With no model key the same rules run in code, and nothing is sent out.',
+    placeholders: [
+      { token: 'LINES', meaning: 'The caption lines to tidy, one per line, still in the speaker’s words.', required: true },
+      { token: 'SPEAKER', meaning: 'The speaker’s name, capitalised when it appears in a line.', required: false },
+    ],
+    provider: 'openai',
+    model: 'gpt-4o-mini',
+    temperature: 0,
+    maxTokens: 2000,
+    pipelineOrder: 35,
+    inPipeline: true,
+    fillsTier: null,
+    fillsPoints: null,
+    fills: 'Talk tier: the tidied hors d’oeuvre lines and the tidied hook, turn and land. The raw captions and their times stay as they are.',
+    outputSchema: obj(
+      {
+        lines: {
+          type: 'array',
+          items: obj({ role: str, raw: str, text: str, at: num }, ['role', 'raw', 'text']),
+        },
+      },
+      ['lines'],
+    ),
+    prompt: `You tidy caption lines for a learner. The lines are YouTube auto-captions: often all lowercase, and often with no punctuation. The speaker is {{SPEAKER}}.
+
+{{LINES}}
+
+For each line, return the same words in the same order. You may add capitals, full stops, question marks, commas and apostrophes. You may not add, drop or swap a word, and you may not translate.
+
+Capitalise Allah, the Prophet, Qur'an, hadith collections (Bukhari, Muslim, Abu Dawud, Tirmidhi, Nasa'i, Ibn Majah), names of Allah (Ar-Rabb, Al-Nur, Ar-Rahman and the rest), the Day of Judgement, the Last Day, the speaker's name, and the word I. Use British spelling (judgement, honour, colour).
+
+Return JSON: {"lines": [{"role": "hors", "raw": "the line you were given", "text": "The tidied line.", "at": 0}]}
+role is hors, hook, turn, land or quote. raw is the line exactly as given. text is the tidied line. Copy at from the input when it is present. No text outside the JSON.`,
+  },
+  {
     slug: 'jibril-seat',
     name: 'Jibril and Ghunya tagger',
     description: 'Says which of the 41 Hadith Jibril clauses this talk is teaching, and which Ghunya seat that clause already prints. It hangs by the teaching, not by a shared word. It never invents a page. The tag is kept on the ingest card for the reviewer; it does not by itself change what learners play.',
@@ -687,6 +725,8 @@ export type TalkContext = {
   clauseCards: string
   rubric: string
   clip: string
+  /** Caption lines for the tidy step, one per line. */
+  captionLines?: string
 }
 
 export function mockOutput(step: StepSpec, talk: TalkContext, prompt: string): unknown {
@@ -708,7 +748,21 @@ export function mockOutput(step: StepSpec, talk: TalkContext, prompt: string): u
   if (step.slug === 'hadith-extraction') return { mentions: mentionsOf(talk.transcript, 'hadith') }
   if (step.slug === 'jibril-seat') return tagOf(talk, shift)
   if (step.slug === 'clip-critic') return criticOf(talk, drafted, shift)
+  if (step.slug === 'tidy-caption-line') return tidyOf(talk, drafted)
   throw new Error(`There is no mock for ${step.slug}.`)
+}
+
+function tidyOf(talk: TalkContext, draft: TierDraft) {
+  const stored = buildLineTidy({
+    speaker: talk.speaker,
+    quote: draft.hors.quote,
+    hook: draft.hook || talk.hook,
+    turn: draft.turn || talk.turn,
+    land: draft.land || talk.land,
+    horsLines: draft.horsLines,
+  })
+  const lines: TidyLine[] = [stored.quote, stored.hook, stored.turn, stored.land, ...stored.horsLines]
+  return { lines: lines.filter((line) => line.raw.trim()).map((line) => ({ role: line.role || 'hors', raw: line.raw, text: line.text, at: line.at || 0 })) }
 }
 
 function languageOf(transcript: string) {
