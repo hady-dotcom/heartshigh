@@ -11,7 +11,11 @@ const S3_ENV = {
   S3_ENDPOINT: 'https://storage.example.test',
   S3_REGION: 'auto',
 }
-const S3_NAMES = [...Object.keys(S3_ENV), 'AWS_S3_BUCKET_NAME', 'BUCKET', 'AWS_ACCESS_KEY_ID', 'ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'SECRET_ACCESS_KEY', 'AWS_ENDPOINT_URL', 'ENDPOINT']
+const S3_NAMES = [
+  ...Object.keys(S3_ENV),
+  'AWS_S3_BUCKET_NAME', 'BUCKET', 'AWS_ACCESS_KEY_ID', 'ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'SECRET_ACCESS_KEY',
+  'AWS_ENDPOINT_URL', 'ENDPOINT', 'AWS_DEFAULT_REGION', 'AWS_REGION', 'REGION', 'S3_FORCE_PATH_STYLE',
+]
 
 async function withEnv<T>(values: Record<string, string>, run: () => Promise<T>) {
   const saved = Object.fromEntries(S3_NAMES.map((name) => [name, process.env[name]]))
@@ -53,15 +57,19 @@ test('the route redirects every catalogue still to a short-lived signed GET for 
       assert.equal(response.status, 302, row.file)
       assert.equal(response.headers.get('cache-control'), 'public, max-age=600, s-maxage=600')
       const location = new URL(response.headers.get('location')!)
-      assert.equal(location.origin, 'https://storage.example.test')
-      assert.ok(location.pathname.endsWith(`/backgrounds/jpg/${basename(row.file)}`), location.pathname)
-      assert.ok(location.pathname.includes('hearts-bucket') || location.hostname.startsWith('hearts-bucket'))
+      assert.equal(location.origin, 'https://hearts-bucket.storage.example.test', 'virtual-hosted, as the Railway bucket needs')
+      assert.equal(location.pathname, `/backgrounds/jpg/${basename(row.file)}`)
       assert.ok(location.searchParams.get('X-Amz-Signature'))
       assert.equal(location.searchParams.get('X-Amz-Expires'), '3600')
     }
     const bare = await call([basename(CATALOGUE[90].file)])
     assert.equal(bare.status, 302)
     assert.ok(new URL(bare.headers.get('location')!).pathname.endsWith(`/backgrounds/jpg/${basename(CATALOGUE[90].file)}`))
+  })
+  await withEnv({ ...S3_ENV, S3_FORCE_PATH_STYLE: '1' }, async () => {
+    const location = new URL((await call(CATALOGUE[0].file.split('/'))).headers.get('location')!)
+    assert.equal(location.origin, 'https://storage.example.test')
+    assert.equal(location.pathname, `/hearts-bucket/backgrounds/jpg/${basename(CATALOGUE[0].file)}`)
   })
 })
 
