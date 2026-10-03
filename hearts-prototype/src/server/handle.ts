@@ -31,6 +31,13 @@ function redirectTo(req: Request, path: string, error?: string, notice?: string)
   return NextResponse.redirect(url, 303)
 }
 
+/** "2:05", "1:02:05" or "125" as whole seconds; null when it is not a time. */
+function secondsFrom(value: string) {
+  const trimmed = value.trim()
+  if (!/^\d+(:\d{1,2}){0,2}(\.\d+)?$/.test(trimmed)) return null
+  return Math.round(trimmed.split(':').reduce((total, part) => total * 60 + Number(part), 0))
+}
+
 /** The message of an error a hook meant people to read (APIError with isPublic), otherwise the fallback. */
 function publicMessage(error: unknown, fallback: string) {
   const candidate = error as { isPublic?: boolean; message?: string } | null
@@ -1716,6 +1723,66 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       return redirectTo(req, back, error instanceof Error ? error.message : 'That could not be saved.')
     }
     return redirectTo(req, back, undefined, status === 'published' ? 'Scene saved and published.' : 'Scene saved as a draft.')
+  }
+
+  if (action === 'tier-save') {
+    const back = text(form, 'next') || '/master/tiers'
+    if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk edits talk tiers.')
+    const tier = await findDoc(payload, 'talk-tiers', Number(text(form, 'tier')))
+    if (!tier) return redirectTo(req, back, 'That talk was not found.')
+    const times = ['horsStart', 'horsEnd', 'appetiserStart', 'appetiserEnd'].map((key) => secondsFrom(text(form, key)))
+    if (times.some((value) => value === null)) return redirectTo(req, back, 'Times are minutes and seconds, for example 2:05, or plain seconds.')
+    const [horsStart, horsEnd, appetiserStart, appetiserEnd] = times as number[]
+    const checking = text(form, 'check') === 'yes'
+    const data: Record<string, unknown> = {
+      horsStart,
+      horsEnd,
+      appetiserStart,
+      appetiserEnd,
+      horsQuote: text(form, 'horsQuote').slice(0, 400),
+      hook: text(form, 'hook').slice(0, 400),
+      turn: text(form, 'turn').slice(0, 400),
+      land: text(form, 'land').slice(0, 400),
+      offerResume: form.get('offerResume') === 'on',
+      note: text(form, 'note').slice(0, 1000),
+    }
+    if (checking) Object.assign(data, { status: 'checked', checkedBy: user.id })
+    else if (text(form, 'reopen') === 'yes') Object.assign(data, { status: 'draft', checkedBy: null })
+    try {
+      await payload.update({ collection: 'talk-tiers', id: tier.id, overrideAccess: true, data: data as never })
+    } catch (error) {
+      return redirectTo(req, back, publicMessage(error, 'Those times were not saved.'))
+    }
+    return redirectTo(req, back, undefined, checking ? 'Saved and marked as checked by you.' : 'Saved. Learners see the new times straight away.')
+  }
+
+  if (action === 'popup-save' || action === 'popup-publish') {
+    const back = text(form, 'next') || '/master/tiers'
+    if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk edits these pop-ups.')
+    const lesson = await findDoc(payload, 'lessons', Number(text(form, 'lesson')))
+    if (!lesson) return redirectTo(req, back, 'That talk was not found.')
+    const point = text(form, 'point') ? await findDoc(payload, 'engagement-points', Number(text(form, 'point'))) : null
+    if (point && idOf(point.lesson) !== lesson.id) return redirectTo(req, back, 'That pop-up belongs to another talk.')
+    if (action === 'popup-publish') {
+      if (!point) return redirectTo(req, back, 'That pop-up was not found.')
+      const publish = text(form, 'status') !== 'draft'
+      await payload.update({ collection: 'engagement-points', id: point.id, overrideAccess: true, data: { status: publish ? 'published' : 'draft' } as never })
+      return redirectTo(req, back, undefined, publish ? 'Pop-up published. Learners meet it in the main.' : 'Pop-up back to draft. Learners no longer see it.')
+    }
+    const second = secondsFrom(text(form, 'second'))
+    const prompt = text(form, 'prompt').slice(0, 400)
+    const duration = Number(lesson.durationSeconds || 0)
+    if (second === null) return redirectTo(req, back, 'The time is minutes and seconds, for example 12:30.')
+    if (duration && second > duration) return redirectTo(req, back, `That time is after the end of the talk (${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}).`)
+    if (prompt.length < 10) return redirectTo(req, back, 'Write the question in at least 10 characters.')
+    const kind = ['reflection', 'task', 'question'].includes(text(form, 'kind')) ? text(form, 'kind') : String(point?.kind || 'reflection')
+    try {
+      if (point) await payload.update({ collection: 'engagement-points', id: point.id, overrideAccess: true, data: { second, prompt, kind } as never })
+      else await payload.create({ collection: 'engagement-points', overrideAccess: true, data: { lesson: lesson.id, second, prompt, kind, triggerType: 'timestamp', timing: 'immediate', status: 'draft', draftNote: 'Written on the master desk.' } as never })
+    } catch (error) {
+      return redirectTo(req, back, publicMessage(error, 'That pop-up was not saved.'))
+    }
+    return redirectTo(req, back, undefined, point ? 'Pop-up saved.' : 'Pop-up added as a draft. Publish it when it reads right.')
   }
 
   if (action === 'master-flags') {

@@ -39,6 +39,7 @@ export function masterNav(): { group: string; items: NavItem[] }[] {
       items: [
         { key: 'portals', label: 'Portals', href: '/master', icon: <GlobeIcon /> },
         { key: 'library', label: 'Library', href: '/master/library', icon: <LibraryIcon /> },
+        { key: 'tiers', label: 'Talk tiers', href: '/master/tiers', icon: <BookIcon /> },
         { key: 'packs', label: 'Course packs', href: '/master/packs', icon: <BookIcon /> },
         { key: 'questions', label: 'Placing questions', href: '/master/questions', icon: <QuestionIcon /> },
       ],

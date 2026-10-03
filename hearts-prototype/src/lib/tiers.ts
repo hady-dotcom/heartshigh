@@ -133,7 +133,7 @@ const plainWords = (text: string) =>
     .split(/\s+/)
     .filter((word) => word.length > 3 && !STOP.has(word))
 
-const NOISE = /subscribe|description|donat|qr code|the link|thank you for watching|patreon|sponsor|notification|comment below|like and share|launchgood|\bclick\b|follow us/i
+const NOISE = /subscribe|description|donat|qr code|the link|thank you for watching|watching our|patreon|sponsor|notification|comment below|like and share|launchgood|\bclick\b|follow us|website|download|e-?books?|\.org|\.com|our channel|our series/i
 const TURNING = /\b(but|however|rather|instead|actually|the problem|the question|isn't|is not|don't|do not|never|not just|not only)\b/i
 const TEACHING = /\b(allah|prophet|qur'?an|heart|dua|mercy|trust|patience|grateful|gratitude|prayer|forgive|soul|light|love|peace|anger|time|humility|purpose)\b/i
 

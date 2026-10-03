@@ -174,6 +174,17 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .sim-bar i { position: absolute; top: 0; bottom: 0; border-radius: 8px; }
 .sim-scale b { text-align: right; font-variant-numeric: tabular-nums; }
 
+.tier-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.tier-player { aspect-ratio: 16 / 9; background: #1c1b19; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 12px; }
+.tier-player iframe { width: 100%; height: 100%; border: 0; }
+.tier-player .hint { color: #d8d2c4; padding: 0 24px; text-align: center; }
+.tier-h { margin: 6px 0 0; font-size: 15px; display: flex; gap: 8px; align-items: baseline; }
+.scrub { display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: end; }
+.scrub input[type='range'] { width: 100%; accent-color: var(--gold); margin-bottom: 10px; }
+.tier-warn { color: #a3324a; margin: 0; padding-left: 18px; }
+.popup-edit .cols { display: flex; gap: 10px; align-items: flex-start; }
+@media (max-width: 1180px) { .tier-grid { grid-template-columns: 1fr; } }
+
 /* The desks need room for a sidebar and tables; on a phone they say so instead of squeezing. */
 .desk-narrow { display: none; }
 @media (max-width: 899px) {
