@@ -21,6 +21,35 @@ async function shot(page: Page, name: string, path: string, fullPage = false) {
 
 test.describe.configure({ timeout: 180_000 })
 
+test('a week of use, so the garden has something in it', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london/lanes')
+  for (const course of [1, 2, 3]) {
+    await page.goto(`/p/east-london/course/${course}`)
+    const lesson = await page.locator('form.watched-form input[name=lesson]').getAttribute('value')
+    await page.request.post('/api/hearts', { form: { action: 'complete', lesson: lesson!, seconds: '99999', ended: 'yes', next: '/' } })
+  }
+  await page.goto('/p/east-london/course/1')
+  await expect(async () => {
+    await page.getByTestId('timeline-dot').first().click()
+    await expect(page.getByTestId('answer-form')).toBeVisible({ timeout: 1000 })
+  }).toPass({ timeout: 15_000 })
+  await page.getByTestId('answer-text').fill('Sending salawat after Fajr, before I pick up my phone.')
+  await page.getByTestId('answer-private').uncheck()
+  await page.getByTestId('answer-share').check()
+  await page.getByTestId('answer-submit').click()
+  await expect(page.getByTestId('notice')).toBeVisible()
+  await page.goto('/p/east-london/garden/jibril/22')
+  await page.getByTestId('seat-read').first().click()
+  await signIn(page, 'elm-teacher@hearts.test', 'portal-teacher', '/p/east-london/admin/teach')
+  const entry = page.getByTestId('workbook-review').filter({ hasText: 'salawat after Fajr' }).first()
+  if (await entry.getByTestId('teacher-reply').count() === 0) {
+    await entry.getByTestId('reply-text').fill('A lovely habit, Maryam. Try ten each morning this week.')
+    await entry.getByTestId('reply-submit').click()
+    await expect(page.getByTestId('notice')).toBeVisible()
+  }
+})
+
 test('learner app at phone size', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london')
@@ -48,6 +77,13 @@ test('learner app at phone size', async ({ page }) => {
     ['06-welcome-splash', `${base}/welcome?step=start`],
   ]
   for (const [name, path] of screens) await shot(page, `learner-${name}`, path)
+  await page.goto(base)
+  await expect(async () => {
+    await page.getByTestId('watch-full').click()
+    await expect(page.getByTestId('appetiser')).toBeVisible({ timeout: 1000 })
+  }).toPass({ timeout: 15_000 })
+  await page.waitForTimeout(600)
+  await page.screenshot({ path: `${dir}/learner-01b-appetiser.png`, caret: 'initial' })
   await page.goto(`${base}/course/1`)
   await expect(async () => {
     await page.getByTestId('timeline-dot').first().click()
