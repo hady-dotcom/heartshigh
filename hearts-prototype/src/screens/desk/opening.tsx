@@ -7,6 +7,7 @@ import { sceneProblems } from '@/collections-opening'
 import { idOf } from '@/lib/ids'
 import { SCALES } from '@/lib/opening-data'
 import { TRENDS_MIN, trendsFrom, type Contribution } from '@/lib/trends'
+import { loadPersonaLens } from '@/server/persona'
 import { loadPortal, type SessionUser } from '@/server/context'
 import { loadOpening } from '@/server/opening'
 import { type Ctx, ref, rows, str } from '../common'
@@ -53,31 +54,48 @@ export async function MasterOpening(ctx: MasterCtx) {
               <div><h2>{str(scene.order)}. {plainCaption(str(scene.caption))}</h2><p>{str(scene.key)} · {str(scene.layout)} · version {str(scene.version) || '1'}</p></div>
               <span className={`badge ${scene.status === 'published' ? 'teal' : 'grey'}`}>{scene.status === 'published' ? 'Published' : 'Draft'}</span>
             </header>
-            <div className="table-wrap">
-              <table className="data">
-                <thead><tr><th>Option</th><th>Reply</th><th>Nudges</th><th>Intent lane</th><th>Flags</th></tr></thead>
-                <tbody>
-                  {options.map((option) => (
-                    <tr key={option.key} data-testid="scene-option">
-                      <td><b>{option.label}</b><div className="hint">{option.key}</div></td>
-                      <td>{option.replyPill || ''}</td>
-                      <td>{(option.nudges || []).filter((row) => Number(row.delta)).map((row) => `${scaleName(row.scale)} ${Number(row.delta) > 0 ? '+' : '−'}1`).join(', ') || 'None'}</td>
-                      <td>{laneTitle(option.intentLane)}</td>
-                      <td style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {option.crisis ? <span className="badge rose">Help screen</span> : null}
-                        {option.spineFirst ? <span className="badge purple">Spine first</span> : null}
-                        {option.sensitivity === 'private' ? <span className="badge ink" data-testid="private-option">Private</span> : null}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <form action="/api/hearts/persona" method="post">
+              <Hidden fields={{ action: 'nudges', scene: scene.id, next: '/master/opening' }} />
+              <div className="table-wrap">
+                <table className="data">
+                  <thead><tr><th>Option</th><th>Reply</th><th>Nudges</th><th>Intent lane</th><th>Flags</th></tr></thead>
+                  <tbody>
+                    {options.map((option) => (
+                      <tr key={option.key} data-testid="scene-option">
+                        <td><b>{option.label}</b><div className="hint">{option.key}</div></td>
+                        <td>{option.replyPill || ''}</td>
+                        <td>
+                          {(option.nudges || []).length ? (option.nudges || []).map((row) => (
+                            <label key={`${option.key}-${row.scale}`} className="stack" style={{ marginBottom: 6 }}>
+                              {scaleName(row.scale)}
+                              <select name={`d__${option.key}__${row.scale}`} defaultValue={String(row.delta ?? 0)} data-testid="nudge" data-option={option.key} data-scale={row.scale}>
+                                <option value="-1">−1</option>
+                                <option value="0">0</option>
+                                <option value="1">+1</option>
+                              </select>
+                            </label>
+                          )) : <span className="hint">None</span>}
+                        </td>
+                        <td>{laneTitle(option.intentLane)}</td>
+                        <td style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {option.crisis ? <span className="badge rose">Help screen</span> : null}
+                          {option.spineFirst ? <span className="badge purple">Spine first</span> : null}
+                          {option.sensitivity === 'private' ? <span className="badge ink" data-testid="private-option">Private</span> : null}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="body actions" style={{ paddingTop: 0 }}><button className="btn ghost small" type="submit" data-testid="nudges-save">Save nudges</button></div>
+            </form>
             <form className="body form" action="/api/hearts" method="post">
               <Hidden fields={{ action: 'scene-wording', scene: scene.id, next: '/master/opening' }} />
               <div className="cols">
                 <label className="stack">Caption<input type="text" name="caption" defaultValue={str(scene.caption)} data-testid="scene-caption" /></label>
                 <label className="stack">Second line<input type="text" name="subline" defaultValue={str(scene.subline)} /></label>
+                <label className="stack">This month’s caption<input type="text" name="monthCaption" defaultValue={str(scene.monthCaption)} data-testid="month-caption" /></label>
+                <label className="stack">This month’s second line<input type="text" name="monthSubline" defaultValue={str(scene.monthSubline)} /></label>
               </div>
               {problems[index].length ? (
                 <ul className="hint" data-testid="scene-problems" style={{ color: '#a3324a', margin: 0 }}>{problems[index].map((problem) => <li key={problem}>{problem}</li>)}</ul>
@@ -198,9 +216,23 @@ async function laneTitleMap(payload: Payload) {
 
 export async function MasterTrends(ctx: MasterCtx) {
   const { payload } = ctx
-  const [all, portals, laneTitles] = await Promise.all([contributions(payload), rows(payload, 'portals', undefined, { sort: 'name' }), laneTitleMap(payload)])
+  const [all, portals, laneTitles, lens] = await Promise.all([contributions(payload), rows(payload, 'portals', undefined, { sort: 'name' }), laneTitleMap(payload), loadPersonaLens(payload)])
+  const bandTitle = Object.fromEntries(lens.bands.map((band) => [band.key, band.title]))
   return (
     <Frame ctx={ctx} active="trends" title="Network trends" intro={`Counts from learners who chose to add their taps. No names, no answers to private scenes, and nothing shown for a group under ${TRENDS_MIN}.`} testId="master-trends">
+      <section className="panel" style={{ marginBottom: 18 }} data-testid="persona-lens">
+        <header className="light"><h2>Persona lens</h2><span className="badge grey">Staff only</span></header>
+        <div className="body">
+          <p style={{ marginTop: 0 }}>Balanced ranges, still editable. It counts people in a portal and never names them. Portal desks do not see it. {lens.published} of {lens.bands.length} bands are published.</p>
+          {lens.published === 0 ? <p data-testid="persona-held">Nothing is counted yet. Every band is still a draft.</p> : null}
+          {lens.tallies.map((cell) => (
+            <p key={`${cell.group}-${cell.persona}`} data-testid="persona-cell" data-shown={cell.shown ? 'yes' : 'no'}>
+              {cell.shown ? `${bandTitle[cell.persona] || cell.persona} in ${cell.group}: ${cell.share}%` : 'Not enough people yet'}
+            </p>
+          ))}
+          <p className="hint" style={{ marginBottom: 0 }}><a href="/master/personas">Edit the bands</a></p>
+        </div>
+      </section>
       <section className="panel" style={{ marginBottom: 18 }}>
         <header className="light"><h2>Every portal</h2></header>
         <TrendsTable trends={trendsFrom(all)} laneTitles={laneTitles} />

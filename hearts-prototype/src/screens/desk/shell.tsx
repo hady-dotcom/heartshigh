@@ -12,6 +12,7 @@ type NavItem = { key: string; label: string; href: string; icon: ReactNode }
 export function portalNav(base: string, user: SessionUser): { group: string; items: NavItem[] }[] {
   const teach: NavItem[] = [
     { key: 'teach', label: 'Teach', href: `${base}/admin/teach`, icon: <PeopleIcon /> },
+    { key: 'compass', label: 'Compass', href: `${base}/admin/compass`, icon: <HeartIcon /> },
     { key: 'plans', label: 'Study plans', href: `${base}/admin/plans`, icon: <CalendarIcon /> },
     { key: 'nights', label: 'Nights', href: `${base}/admin/nights`, icon: <MoonIcon /> },
   ]
@@ -53,6 +54,7 @@ export function masterNav(): { group: string; items: NavItem[] }[] {
         { key: 'opening', label: 'Scenes', href: '/master/opening', icon: <HeartIcon /> },
         { key: 'lanes', label: 'Lanes', href: '/master/lanes', icon: <BookIcon /> },
         { key: 'simulator', label: 'Simulator', href: '/master/simulator', icon: <CogIcon /> },
+        { key: 'personas', label: 'Scales and bands', href: '/master/personas', icon: <HeartIcon /> },
         { key: 'trends', label: 'Network trends', href: '/master/trends', icon: <GlobeIcon /> },
       ],
     },

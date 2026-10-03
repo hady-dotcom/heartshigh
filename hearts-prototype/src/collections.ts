@@ -735,6 +735,7 @@ export const Tags: CollectionConfig = {
     { name: 'clause', type: 'relationship', relationTo: 'clauses' },
     { name: 'seat', type: 'relationship', relationTo: 'seats' },
     { name: 'lane', type: 'relationship', relationTo: 'lanes' },
+    { name: 'scale', type: 'relationship', relationTo: 'heart-scales', admin: { description: 'The heart scale this talk serves. The compass steers with it.' } },
     { name: 'weight', type: 'number', defaultValue: 1, min: 0, max: 1 },
     {
       name: 'state',
@@ -853,6 +854,7 @@ export const Completions: CollectionConfig = {
     { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true },
     { name: 'percent', type: 'number', defaultValue: 100 },
     { name: 'onTime', type: 'checkbox' },
+    { name: 'watchedAt', type: 'date', admin: { description: 'When the learner watched this, if that is not the row time. The compass uses it.' } },
   ],
 }
 

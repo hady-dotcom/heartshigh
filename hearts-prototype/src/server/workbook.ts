@@ -2,6 +2,7 @@ import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
 import { idOf, portalIdOf } from '@/lib/ids'
 import type { SessionUser } from './context'
+import { recordOpeningAttempt } from './compass'
 
 type Row = Record<string, unknown> & { id: number }
 
@@ -49,6 +50,7 @@ export async function writeOpening(payload: Payload, user: SessionUser, portalId
     })
     written += 1
   }
+  if (written) await recordOpeningAttempt(payload, user.id, portalId, taps)
   return { written, already: false }
 }
 

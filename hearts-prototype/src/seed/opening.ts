@@ -5,7 +5,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Payload } from 'payload'
 import { idOf } from '../lib/ids'
+import { DEFAULT_COPY, FOCUS_NAMES, LIFE_OPTIONS, LIFE_PROMPT, MONTH_WORDING } from '../lib/compass-data'
 import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE, LANES, SCALES, SCENES } from '../lib/opening-data'
+import { PERSONA_BANDS } from '../lib/persona-data'
 import { DRAFT_NOTE, draftTiers, timingProblems, type TimingRow } from '../lib/tiers'
 import { formatTimestamp } from '../lib/transcript'
 import { STARTERS } from './starters-data'
@@ -41,11 +43,38 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
       leonName: scale.leonName,
       room: scale.room,
       polishLabel: scale.polishLabel,
+      focusName: FOCUS_NAMES[scale.key],
       firstOpenRead: scale.firstOpenRead,
       anchors: scale.anchors,
     })
     scaleIds.set(scale.key, doc.id)
   }
+
+  for (const band of PERSONA_BANDS) {
+    await upsert(payload, 'persona-bands', { key: { equals: band.key } }, {
+      key: band.key,
+      title: band.title,
+      status: band.status,
+      source: band.source,
+      placeholder: band.placeholder,
+      identicalGroup: band.identicalGroup,
+      note: band.note,
+      ranges: band.ranges.map((row) => ({ scale: row.scale, present: row.present, ...(row.min == null ? {} : { min: row.min }), ...(row.max == null ? {} : { max: row.max }) })),
+    })
+  }
+
+  await upsert(payload, 'compass-settings', { key: { equals: 'default' } }, {
+    key: 'default',
+    frame: DEFAULT_COPY.frame,
+    focusLead: DEFAULT_COPY.focusLead,
+    movementUp: DEFAULT_COPY.movementUp,
+    movementSame: DEFAULT_COPY.movementSame,
+    movementOnward: DEFAULT_COPY.movementOnward,
+    lifeCaption: LIFE_PROMPT.caption,
+    lifeSubline: LIFE_PROMPT.subline,
+    places: DEFAULT_COPY.places,
+    lifeOptions: LIFE_OPTIONS,
+  })
 
   const laneIds = new Map<string, number>()
   for (const lane of LANES) {
@@ -77,6 +106,9 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
       subline: scene.subline,
       layout: scene.layout,
       adaptedFrom: scene.adaptedFrom,
+      monthCaption: MONTH_WORDING[scene.key]?.caption,
+      monthSubline: MONTH_WORDING[scene.key]?.subline,
+      monthLabels: MONTH_WORDING[scene.key]?.labels,
       options: scene.options.map((option) => ({
         key: option.key,
         label: option.label,
@@ -185,7 +217,7 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
       }
       const tagged = await one(payload, 'tags', { and: [{ 'item.value': { equals: cut.id } }, { lane: { equals: laneIds.get(row.lane) } }] })
       if (!tagged && row.lane !== DEFAULT_LANE) {
-        await payload.create({ collection: 'tags', overrideAccess: true, data: { item: { relationTo: 'cuts', value: cut.id }, lane: laneIds.get(row.lane), state: 'confirmed', weight: 1, note: 'Starter map' } as never })
+        await payload.create({ collection: 'tags', overrideAccess: true, data: { item: { relationTo: 'cuts', value: cut.id }, lane: laneIds.get(row.lane), scale: LANES.find((lane) => lane.key === row.lane)?.scale ? scaleIds.get(LANES.find((lane) => lane.key === row.lane)!.scale!) : undefined, state: 'confirmed', weight: 1, note: 'Starter map' } as never })
       }
     }
     if (row.existingTitle) await seedTier(payload, lesson, row.youtubeId, row.lengthSec)
@@ -221,13 +253,18 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
       .slice(0, 2)
     for (const match of matches) {
       const existing = await one(payload, 'tags', { and: [{ 'item.value': { equals: cut.id } }, { lane: { equals: laneIds.get(match.lane.key) } }] })
-      if (existing) continue
+      const scale = match.lane.scale ? scaleIds.get(match.lane.scale) : undefined
+      if (existing) {
+        if (scale && !idOf(existing.scale)) await payload.update({ collection: 'tags', id: existing.id, overrideAccess: true, data: { scale } as never })
+        continue
+      }
       await payload.create({
         collection: 'tags',
         overrideAccess: true,
         data: {
           item: { relationTo: 'cuts', value: cut.id },
           lane: laneIds.get(match.lane.key),
+          scale,
           weight: match.rank === 1 ? 1 : 0.6,
           state: cut.status === 'approved' ? 'confirmed' : 'suggested',
           note: `Clause ${clause} sits in ${match.lane.title} at rank ${match.rank}.`,
@@ -355,6 +392,39 @@ export async function timingCheck(payload: Payload) {
 
 const ACTIVITY_NAMES = ['Aisha Patel', 'Bilal Ahmed', 'Fatima Noor', 'Hamza Ali', 'Khadija Rahman', 'Musa Hassan', 'Nadia Karim', 'Omar Siddiqui', 'Ruqayyah Shah', 'Sami Chowdhury', 'Zainab Uddin', 'Yahya Begum']
 
+/** Two looks for Maryam, a talk in between, and an older look for Hamza so the monthly card is due. */
+async function seedCompassHistory(payload: Payload, maryam: Doc | null, hamza: Doc | null, portalId: number, now: Date) {
+  const day = 86_400_000
+  if (maryam && !(await one(payload, 'compass-attempts', { user: { equals: maryam.id } }))) {
+    await payload.create({ collection: 'compass-attempts', overrideAccess: true, data: { user: maryam.id, portal: portalId, bank: 'opening', at: new Date(now.getTime() - 40 * day).toISOString(), scales: { anger: -0.8, gratitude: -0.6, worry: 0.4 } } as never })
+    await payload.create({ collection: 'compass-attempts', overrideAccess: true, data: { user: maryam.id, portal: portalId, bank: 'month', lifeKey: 'people', at: new Date(now.getTime() - day).toISOString(), scales: { anger: 0.1, gratitude: -0.5, worry: 0.4 } } as never })
+    const lesson = await lessonForScale(payload, 'anger')
+    if (lesson) {
+      const watchedAt = new Date(now.getTime() - 20 * day).toISOString()
+      await payload.create({ collection: 'completions', overrideAccess: true, data: { user: maryam.id, lesson: lesson.id, percent: 100, onTime: true, portal: portalId, watchedAt } as never })
+    }
+  }
+  if (hamza && !(await one(payload, 'compass-attempts', { user: { equals: hamza.id } }))) {
+    await payload.create({ collection: 'compass-attempts', overrideAccess: true, data: { user: hamza.id, portal: portalId, bank: 'opening', at: new Date(now.getTime() - 40 * day).toISOString(), scales: { worry: -0.5 } } as never })
+  }
+}
+
+async function lessonForScale(payload: Payload, scaleKey: string) {
+  const scale = await one(payload, 'heart-scales', { key: { equals: scaleKey } })
+  if (!scale) return null
+  const lane = await one(payload, 'lanes', { scale: { equals: scale.id } })
+  if (!lane) return null
+  const tag = await one(payload, 'tags', { lane: { equals: lane.id } })
+  if (!tag) return null
+  const item = tag.item as { relationTo?: string; value?: unknown }
+  const value = idOf(item?.value)
+  if (!value) return null
+  if (item.relationTo === 'lessons') return one(payload, 'lessons', { id: { equals: value } })
+  const cut = (await payload.findByID({ collection: 'cuts', id: value, overrideAccess: true, depth: 0 }).catch(() => null)) as Doc | null
+  const lessonId = cut ? idOf(cut.lesson) : null
+  return lessonId ? one(payload, 'lessons', { id: { equals: lessonId } }) : null
+}
+
 /** The people the view-as tests use, and twelve learners with two weeks of ordinary use for the charts. */
 export async function seedPeople(payload: Payload, opts: { portalIds: Map<string, number>; sceneIds: Map<string, number>; now: Date; courseList: number[] }) {
   const elm = opts.portalIds.get('east-london')!
@@ -416,6 +486,9 @@ export async function seedPeople(payload: Payload, opts: { portalIds: Map<string
       }
     }
   }
+
+  const hamza = await one(payload, 'users', { email: { equals: 'elm-learner2@hearts.test' } })
+  await seedCompassHistory(payload, maryam, hamza, elm, opts.now)
 
   // Twelve learners, each coming back on a few of the last fourteen days.
   const first = await one(payload, 'users', { email: { equals: 'activity-1@hearts.test' } })

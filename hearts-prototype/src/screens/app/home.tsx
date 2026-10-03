@@ -4,6 +4,7 @@ import { Avatar } from '@/components/app/feed'
 import { AppFrame, Flash, TabBar } from '@/components/app/shell'
 import { PlayIcon } from '@/components/icons'
 import { courseCards, dayNumber, portalName, portraitFor, posterFor, slugify } from '@/server/learner'
+import { recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
 import { lanesWithClips } from '@/lib/lanes'
 import { plural } from '@/lib/schedule'
@@ -19,7 +20,7 @@ function minutesLeft(seconds: number, percent: number) {
 /** Home: the growth banner, what to carry on with, then the way into today's clips (board 00). */
 export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   if (user.role === 'learner' && !user.onboarded) redirect(`${base}/start`)
-  const [g, unread, { items }, courses] = await Promise.all([growth(payload, user), unreadCount(payload, user), learnerClips(payload, portal, user), courseCards(payload, user)])
+  const [g, unread, { items }, courses, due] = await Promise.all([growth(payload, user), unreadCount(payload, user), learnerClips(payload, portal, user), courseCards(payload, user), user.role === 'learner' ? recalibrationDueFor(payload, user.id) : Promise.resolve(false)])
   const [visits, sessions] = await Promise.all([
     rows(payload, 'lesson-visits', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 40 }),
     rows(payload, 'watch-sessions', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 80 }),
@@ -65,6 +66,13 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
           <Rings g={g} base={base} />
           <Link className="pill gold block" href={`${base}/garden`} data-testid="see-sown">See what you&apos;ve sown</Link>
         </section>
+        {due ? (
+          <section className="card" data-testid="recalibrate-card" style={{ marginBottom: 16 }}>
+            <h2 style={{ marginTop: 0 }}>A fresh look, when you have a moment</h2>
+            <p>A few new moments, in slightly different words, so this month stays close to your life.</p>
+            <Link className="pill ink" href={`${base}/recalibrate`} data-testid="recalibrate-open">Take a few moments</Link>
+          </section>
+        ) : null}
         <p className="eyebrow">Continue</p>
         <div data-testid="continue">
           {carryOn.map((row) => (
