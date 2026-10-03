@@ -1,7 +1,7 @@
 import { createHmac } from 'node:crypto'
 import { portalIdOf } from '@/lib/ids'
 import { now } from '@/lib/clock'
-import { isoWeek } from '@/lib/trends'
+import { countsTowardsTrends, isoWeek, TRENDS_MIN_AGE_HOURS } from '@/lib/trends'
 import { getSession } from '@/server/context'
 import { json, readBody, viewAsRefusal } from '@/server/api'
 
@@ -26,6 +26,13 @@ export async function POST(req: Request) {
   if (!session.actor.trendsOptIn) return json({ error: 'Trends are off for this account.' }, 403)
   const portal = portalIdOf(session.actor)
   if (!portal) return json({ error: 'Your account is not in a portal.' }, 403)
+  const [account, finished] = await Promise.all([
+    session.payload.findByID({ collection: 'users', id: session.actor.id, overrideAccess: true, depth: 0 }),
+    session.payload.count({ collection: 'completions', overrideAccess: true, where: { user: { equals: session.actor.id } } }),
+  ])
+  if (!countsTowardsTrends({ createdAt: (account as { createdAt?: string }).createdAt, finishedVideos: finished.totalDocs }, now())) {
+    return json({ ok: true, counted: false, reason: `Trends count accounts that have finished a video and are at least ${TRENDS_MIN_AGE_HOURS} hours old.` }, 202)
+  }
   const body = await readBody(req)
   const week = isoWeek(now())
   const nonceHash = weeklyKey(session.actor.id, week)

@@ -14,6 +14,19 @@ export function isoWeek(date: Date) {
 /** Contributions are shown only where at least this many people took part. */
 export const TRENDS_MIN = 10
 
+/** An account has to be at least this old before it counts towards trends. */
+export const TRENDS_MIN_AGE_HOURS = 24
+
+/**
+ * Real use, the rule for counting an account in trends: it has finished at least one video (a completion row) and was
+ * made at least TRENDS_MIN_AGE_HOURS ago. Accounts made in bulk to tilt the trends count for nothing until both hold.
+ */
+export function countsTowardsTrends(account: { createdAt?: string | null; finishedVideos: number }, at: Date) {
+  const made = account.createdAt ? new Date(account.createdAt).getTime() : Number.NaN
+  if (!Number.isFinite(made)) return false
+  return account.finishedVideos >= 1 && at.getTime() - made >= TRENDS_MIN_AGE_HOURS * 3_600_000
+}
+
 export type Contribution = { portal?: unknown; isoWeek?: string; doorKey?: string; scenePasses?: string[] | null; laneTop2?: string[] | null }
 
 /** Counts per week and portal, with every group under TRENDS_MIN held back. */
