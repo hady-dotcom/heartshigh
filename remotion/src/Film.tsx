@@ -210,6 +210,15 @@ function faceShift(talk: TalkProps, time: number) {
 }
 
 /**
+ * Full-bleed cover sees only a narrow slice of a 16:9 frame.
+ * Pushing that slice to 68% parks a left-of-frame face on the edge, and the
+ * push-in then clips it. Cinema's letterbox is wider, so it keeps faceShift.
+ */
+function fullBleedShift(talk: TalkProps, time: number) {
+  return wordsOnLeft(talk, time) ? '38% 42%' : '50% 42%'
+}
+
+/**
  * Type in the upper negative space beside the head. Gold, when it has landed,
  * takes the top of that column and is larger than the words around it.
  * Nothing is placed over the lap.
@@ -261,7 +270,7 @@ function Kinetic({ talk, time }: { talk: TalkProps; time: number }) {
   if (!beat) return <AbsoluteFill style={{ background: BLACK }} />
   return (
     <AbsoluteFill>
-      <Footage talk={talk} time={time} holds={holdsFor(talk, time, beat.beat)} position={faceShift(talk, time)} />
+      <Footage talk={talk} time={time} holds={holdsFor(talk, time, beat.beat)} position={fullBleedShift(talk, time)} />
       <UpperWords talk={talk} time={time} font={SANS} />
     </AbsoluteFill>
   )
@@ -275,7 +284,7 @@ function Windows({ talk, time }: { talk: TalkProps; time: number }) {
   return (
     <AbsoluteFill style={{ background: CREAM }}>
       <div style={{ position: 'absolute', top: inset, right: inset, bottom: inset, left: inset, overflow: 'hidden', borderRadius: 26 * scale, border: `${3 * scale}px solid ${GOLD}`, background: BLACK }}>
-        <Footage talk={talk} time={time} holds={holdsFor(talk, time, beat.beat)} position={faceShift(talk, time)} />
+        <Footage talk={talk} time={time} holds={holdsFor(talk, time, beat.beat)} position={fullBleedShift(talk, time)} />
         <UpperWords talk={talk} time={time} font={SERIF} />
       </div>
     </AbsoluteFill>
@@ -287,7 +296,7 @@ function Conversation({ talk, time }: { talk: TalkProps; time: number }) {
   if (!beat) return <AbsoluteFill style={{ background: BLACK }} />
   return (
     <AbsoluteFill>
-      <Footage talk={talk} time={time} holds={holdsFor(talk, time, beat.beat)} position={faceShift(talk, time)} />
+      <Footage talk={talk} time={time} holds={holdsFor(talk, time, beat.beat)} position={fullBleedShift(talk, time)} />
       <UpperWords talk={talk} time={time} font={SANS} bubbles />
     </AbsoluteFill>
   )
@@ -324,7 +333,7 @@ function Unfold({ talk, time }: { talk: TalkProps; time: number }) {
   if (!beat) return <AbsoluteFill style={{ background: BLACK }} />
   return (
     <AbsoluteFill>
-      <Footage talk={talk} time={time} holds={holdsFor(talk, time, beat.beat)} position={faceShift(talk, time)} />
+      <Footage talk={talk} time={time} holds={holdsFor(talk, time, beat.beat)} position={fullBleedShift(talk, time)} />
       <UpperWords talk={talk} time={time} font={SERIF} stack />
     </AbsoluteFill>
   )

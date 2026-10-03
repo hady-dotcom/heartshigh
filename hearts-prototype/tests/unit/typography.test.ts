@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { test } from 'node:test'
 import { captionPage, draftTiers, saidInTalk, sentencesOf, wordsOf } from '../../src/lib/tiers'
-import { BREATH, cardAt, isVerbatim, scheduleTalk, snapBeat, sourceWindow, textNeverEarly, visibleIsPrefix, WINDOW_PAD, WORDS_PER_CARD, wordsVisibleAt } from '../../../remotion/src/timing.ts'
+import { BREATH, cardAt, isVerbatim, scheduleTalk, snapBeat, sourceWindow, textNeverEarly, visibleIsPrefix, WINDOW_PAD, WORDS_PER_CARD, wordsVisibleAt } from '../../../remotion/src/timing'
 
 const root = path.resolve(import.meta.dirname, '../..')
 const SEEDED = ['TLCGBj4AlB0', 'ECaTWkof57E', 'NIR88RRpat4']
@@ -77,7 +77,8 @@ test('every appetiser beat opens and closes on the pause around a whole sentence
     const { raw, draft } = loadTalk(talk.id)
     const sentences = sentencesOf(raw)
     for (const beat of talk.beats) {
-      assert.equal(beat.text, draft[beat.beat], `${talk.id} ${beat.beat} stays verbatim`)
+      const beatId = beat.beat as 'hook' | 'turn' | 'land'
+      assert.equal(beat.text, draft[beatId], `${talk.id} ${beat.beat} stays verbatim`)
       assert.equal(saidInTalk(beat.text, raw), true, `${talk.id} ${beat.beat}`)
       const sentence = sentences.find((row) => row.text === beat.text)
       assert.ok(sentence, `${talk.id} ${beat.beat} is a whole caption sentence`)

@@ -10,21 +10,250 @@
       "beats": [
         {
           "beat": "hook",
-          "quote": "Has Allah brought you from one stage to the next stage to to the places you never thought you would be?",
+          "quote": "Has Allah brought you from one stage to the next stage to the places you never thought you would be?",
           "gold": "never thought",
-          "audio": "/typography/audio/ECaTWkof57E-hook.m4a"
+          "audio": "/typography/audio/ECaTWkof57E-hook.m4a",
+          "words": [
+            {
+              "text": "Has",
+              "at": 0.04600000000004911
+            },
+            {
+              "text": "Allah",
+              "at": 0.33568750000006276
+            },
+            {
+              "text": "brought",
+              "at": 0.6253750000000764
+            },
+            {
+              "text": "you",
+              "at": 0.91506250000009
+            },
+            {
+              "text": "from",
+              "at": 1.2047500000001037
+            },
+            {
+              "text": "one",
+              "at": 1.4944375000000036
+            },
+            {
+              "text": "stage",
+              "at": 1.7841250000000173
+            },
+            {
+              "text": "to",
+              "at": 2.073812500000031
+            },
+            {
+              "text": "the",
+              "at": 2.3635000000000446
+            },
+            {
+              "text": "next",
+              "at": 2.653187500000058
+            },
+            {
+              "text": "stage",
+              "at": 2.942875000000072
+            },
+            {
+              "text": "to",
+              "at": 3.5222499999999854
+            },
+            {
+              "text": "the",
+              "at": 3.811937499999999
+            },
+            {
+              "text": "places",
+              "at": 4.101625000000013
+            },
+            {
+              "text": "you",
+              "at": 4.391312500000026
+            },
+            {
+              "text": "never",
+              "at": 4.68100000000004
+            },
+            {
+              "text": "thought",
+              "at": 4.979600000000005
+            },
+            {
+              "text": "you",
+              "at": 5.27819999999997
+            },
+            {
+              "text": "would",
+              "at": 5.576800000000048
+            },
+            {
+              "text": "be?",
+              "at": 5.875400000000013
+            }
+          ],
+          "verse": null
         },
         {
           "beat": "turn",
           "quote": "But it's at that moment that you got to lock in and have true certainty that Allah's plan is real.",
           "gold": "Allah's plan is real",
-          "audio": "/typography/audio/ECaTWkof57E-turn.m4a"
+          "audio": "/typography/audio/ECaTWkof57E-turn.m4a",
+          "words": [
+            {
+              "text": "But",
+              "at": 0
+            },
+            {
+              "text": "it's",
+              "at": 0.22793749999993906
+            },
+            {
+              "text": "at",
+              "at": 0.5058749999999463
+            },
+            {
+              "text": "that",
+              "at": 0.7838124999999536
+            },
+            {
+              "text": "moment",
+              "at": 1.061749999999961
+            },
+            {
+              "text": "that",
+              "at": 1.3396874999999682
+            },
+            {
+              "text": "you",
+              "at": 1.6176249999999754
+            },
+            {
+              "text": "got",
+              "at": 1.8955624999999827
+            },
+            {
+              "text": "to",
+              "at": 2.1734999999998763
+            },
+            {
+              "text": "lock",
+              "at": 2.4514374999998836
+            },
+            {
+              "text": "in",
+              "at": 2.729374999999891
+            },
+            {
+              "text": "and",
+              "at": 3.007312499999898
+            },
+            {
+              "text": "have",
+              "at": 3.2852499999999054
+            },
+            {
+              "text": "true",
+              "at": 3.5631874999999127
+            },
+            {
+              "text": "certainty",
+              "at": 3.84112499999992
+            },
+            {
+              "text": "that",
+              "at": 4.119062499999927
+            },
+            {
+              "text": "Allah's",
+              "at": 4.3969999999999345
+            },
+            {
+              "text": "plan",
+              "at": 4.730249999999955
+            },
+            {
+              "text": "is",
+              "at": 5.063499999999976
+            },
+            {
+              "text": "real.",
+              "at": 5.396749999999997
+            }
+          ],
+          "verse": null
         },
         {
           "beat": "land",
           "quote": "I told you that transitions are the time that you need to know this name.",
           "gold": "know this name",
-          "audio": "/typography/audio/ECaTWkof57E-land.m4a"
+          "audio": "/typography/audio/ECaTWkof57E-land.m4a",
+          "words": [
+            {
+              "text": "I",
+              "at": 0.8460000000000036
+            },
+            {
+              "text": "told",
+              "at": 1.2049333333333152
+            },
+            {
+              "text": "you",
+              "at": 1.5638666666666268
+            },
+            {
+              "text": "that",
+              "at": 1.922800000000052
+            },
+            {
+              "text": "transitions",
+              "at": 2.2817333333333636
+            },
+            {
+              "text": "are",
+              "at": 2.640666666666675
+            },
+            {
+              "text": "the",
+              "at": 2.9995999999999867
+            },
+            {
+              "text": "time",
+              "at": 3.3585333333332983
+            },
+            {
+              "text": "that",
+              "at": 3.7174666666667235
+            },
+            {
+              "text": "you",
+              "at": 4.076400000000035
+            },
+            {
+              "text": "need",
+              "at": 4.435333333333347
+            },
+            {
+              "text": "to",
+              "at": 4.794266666666658
+            },
+            {
+              "text": "know",
+              "at": 5.15319999999997
+            },
+            {
+              "text": "this",
+              "at": 5.512133333333395
+            },
+            {
+              "text": "name.",
+              "at": 5.871066666666707
+            }
+          ],
+          "verse": null
         }
       ]
     },
@@ -40,19 +269,196 @@
           "beat": "hook",
           "quote": "What we're saying is that Allah ﷻ is the only source for clarity in your life.",
           "gold": "clarity",
-          "audio": "/typography/audio/NIR88RRpat4-hook.m4a"
+          "audio": "/typography/audio/NIR88RRpat4-hook.m4a",
+          "words": [
+            {
+              "text": "What",
+              "at": 0
+            },
+            {
+              "text": "we're",
+              "at": 0
+            },
+            {
+              "text": "saying",
+              "at": 0.2067307692307736
+            },
+            {
+              "text": "is",
+              "at": 0.6100961538461718
+            },
+            {
+              "text": "that",
+              "at": 1.0134615384615415
+            },
+            {
+              "text": "Allah",
+              "at": 1.4168269230769113
+            },
+            {
+              "text": "ﷻ",
+              "at": 1.8201923076923094
+            },
+            {
+              "text": "is",
+              "at": 2.2235576923077076
+            },
+            {
+              "text": "the",
+              "at": 2.6269230769230774
+            },
+            {
+              "text": "only",
+              "at": 3.030288461538447
+            },
+            {
+              "text": "source",
+              "at": 3.433653846153817
+            },
+            {
+              "text": "for",
+              "at": 3.8370192307692434
+            },
+            {
+              "text": "clarity",
+              "at": 4.240384615384613
+            },
+            {
+              "text": "in",
+              "at": 4.643749999999983
+            },
+            {
+              "text": "your",
+              "at": 5.0471153846154095
+            },
+            {
+              "text": "life.",
+              "at": 5.450480769230779
+            }
+          ],
+          "verse": null
         },
         {
           "beat": "turn",
           "quote": "Without light, you walk in a room that's dark.",
           "gold": "dark",
-          "audio": "/typography/audio/NIR88RRpat4-turn.m4a"
+          "audio": "/typography/audio/NIR88RRpat4-turn.m4a",
+          "words": [
+            {
+              "text": "Without",
+              "at": 0
+            },
+            {
+              "text": "light,",
+              "at": 0
+            },
+            {
+              "text": "you",
+              "at": 0.13589743589744785
+            },
+            {
+              "text": "walk",
+              "at": 0.5538461538461661
+            },
+            {
+              "text": "in",
+              "at": 0.9717948717948843
+            },
+            {
+              "text": "a",
+              "at": 1.3897435897436026
+            },
+            {
+              "text": "room",
+              "at": 1.8076923076923208
+            },
+            {
+              "text": "that's",
+              "at": 2.225641025641039
+            },
+            {
+              "text": "dark.",
+              "at": 2.6435897435897573
+            }
+          ],
+          "verse": null
         },
         {
           "beat": "land",
           "quote": "Now Allah subhanahu wa ta'ala, He says, and many of us, we can relate to this verse.",
-          "gold": "this verse",
-          "audio": "/typography/audio/NIR88RRpat4-land.m4a"
+          "gold": "made for him light",
+          "audio": "/typography/audio/NIR88RRpat4-land.m4a",
+          "words": [
+            {
+              "text": "Now",
+              "at": 0.05000000000001137
+            },
+            {
+              "text": "Allah",
+              "at": 0.3441176470588516
+            },
+            {
+              "text": "subhanahu",
+              "at": 0.638235294117635
+            },
+            {
+              "text": "wa",
+              "at": 0.9323529411764753
+            },
+            {
+              "text": "ta'ala,",
+              "at": 1.2264705882353155
+            },
+            {
+              "text": "He",
+              "at": 1.5205882352941558
+            },
+            {
+              "text": "says,",
+              "at": 1.8147058823529392
+            },
+            {
+              "text": "and",
+              "at": 2.1088235294117794
+            },
+            {
+              "text": "many",
+              "at": 2.4029411764706197
+            },
+            {
+              "text": "of",
+              "at": 2.697058823529403
+            },
+            {
+              "text": "us,",
+              "at": 2.9911764705882433
+            },
+            {
+              "text": "we",
+              "at": 3.2852941176470836
+            },
+            {
+              "text": "can",
+              "at": 3.579411764705867
+            },
+            {
+              "text": "relate",
+              "at": 3.873529411764707
+            },
+            {
+              "text": "to",
+              "at": 4.1676470588235475
+            },
+            {
+              "text": "this",
+              "at": 4.461764705882388
+            },
+            {
+              "text": "verse.",
+              "at": 4.755882352941171
+            }
+          ],
+          "verse": "أَوَمَن كَانَ مَيْتًا فَأَحْيَيْنَاهُ وَجَعَلْنَا لَهُ نُورًا يَمْشِي بِهِ فِي النَّاسِ كَمَن مَّثَلُهُ فِي الظُّلُمَاتِ لَيْسَ بِخَارِجٍ مِّنْهَا — And is one who was dead and We gave him life and made for him light by which to walk among the people like one who is in darkness, never to emerge therefrom?"
         }
       ]
     }

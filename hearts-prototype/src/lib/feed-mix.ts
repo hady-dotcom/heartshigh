@@ -1,4 +1,4 @@
-import { pickScene, SCENES } from '@/lib/scenes'
+import { pickScene } from '@/lib/scenes'
 import type { FeedItem, SlideStyle } from '@/server/learner'
 
 type CardBeat = NonNullable<FeedItem['beats']>[number]
@@ -21,14 +21,14 @@ function beatsOf(item: FeedItem): CardBeat[] {
 /**
  * After each talk, a face film or a scenic card, then a question.
  * Face films and cards alternate through the session. A return visit swaps which
- * one a talk leads with, and moves the card's style, background and destination.
- * Neighbouring cards do not share a background.
+ * one a talk leads with, and steps the card's style and background.
+ * The background starts from the card's own setting. A neighbour that shares a
+ * tag steps on. Learn more always opens that piece's appetiser.
  */
 export function mixFeed(items: FeedItem[], visit = 0): FeedItem[] {
   const out: FeedItem[] = []
   let previousStyle = ''
-  let previousScene = ''
-  let cardCount = 0
+  let previousScene: { id: string; tags: readonly string[] } | null = null
   items.forEach((item, index) => {
     out.push(item)
     if (item.card && item.card !== 'talk') return
@@ -42,19 +42,15 @@ export function mixFeed(items: FeedItem[], visit = 0): FeedItem[] {
       const beats = beatsOf(item)
       if (beats.length) {
         const styleBase = Math.max(0, STYLE_LIST.indexOf((item.cardStyle || 'kinetic') as (typeof STYLE_LIST)[number]))
-        const sceneBase = Math.max(0, SCENES.findIndex((scene) => scene.id === item.cardScene))
         const style = pickStyle(index, visit, previousStyle, styleBase)
-        const scene = pickScene(index, visit, previousScene, sceneBase)
+        const scene = pickScene(item.cardScene || 'road', visit, previousScene)
         previousStyle = style
-        previousScene = scene.id
-        // floor(visit / 2) still flips the lead-in when a card only appears on odd visits.
-        const destination = Math.abs(Math.floor(visit / 2) + cardCount) % 2 === 0 ? 'clip' : 'talk'
-        cardCount += 1
+        previousScene = scene
         out.push({
           ...item,
           id: `scene-${item.cutId}`,
           card: 'scene',
-          scene: { style, scene: scene.src, destination, beats },
+          scene: { style, scene: scene.src, destination: 'clip', beats },
         })
       }
     }

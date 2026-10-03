@@ -70,10 +70,10 @@ test('a session alternates a face film and a scenic card, then a question, and a
   assert.notEqual(again[1].scene?.style, first[4].scene?.style)
 })
 
-test('neighbouring scenic cards do not share a background, and the lead-in alternates', () => {
+test('a card keeps its own background, neighbours skip a shared tag, and learn more stays on the clip', () => {
   const talks = [1, 2, 3].map((cutId) => item(cutId, [], {
     cardStyle: 'kinetic',
-    cardScene: 'road',
+    cardScene: cutId === 2 ? 'sky' : 'road',
     beats: [
       { beat: 'hook', quote: `Hook ${cutId}`, gold: 'Hook', audio: null },
       { beat: 'turn', quote: `Turn ${cutId}`, gold: 'Turn', audio: null },
@@ -82,10 +82,12 @@ test('neighbouring scenic cards do not share a background, and the lead-in alter
   }))
   const mixed = mixFeed(talks, 0).filter((row) => row.card === 'scene')
   assert.equal(mixed.length, 3)
+  assert.equal(mixed[0].scene?.scene, '/slides/bg-cinema-road.jpg')
+  assert.equal(mixed[0].scene?.destination, 'clip')
+  assert.ok(mixed.every((row) => row.scene?.destination === 'clip'))
   assert.notEqual(mixed[0].scene?.scene, mixed[1].scene?.scene)
   assert.notEqual(mixed[1].scene?.scene, mixed[2].scene?.scene)
-  assert.deepEqual(mixed.map((row) => row.scene?.destination), ['clip', 'talk', 'clip'])
   const returned = mixFeed(talks, 2).filter((row) => row.card === 'scene')
-  assert.deepEqual(returned.map((row) => row.scene?.destination), ['talk', 'clip', 'talk'])
+  assert.ok(returned.every((row) => row.scene?.destination === 'clip'))
   assert.notEqual(returned[0].scene?.scene, mixed[0].scene?.scene)
 })

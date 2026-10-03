@@ -125,7 +125,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
     const order = items.map((_, offset) => (index + 1 + offset) % items.length).filter((at) => at !== index)
     const target = order.find((at) => items[at].lane === item.lane && items[at].speaker !== item.speaker) ?? order.find((at) => items[at].lane === item.lane)
     if (target === undefined) return setToast(`That is everything on ${item.laneLabel.toLowerCase()} for now`)
-    show(target, 'from-right', `More on ${item.laneLabel.toLowerCase()}`)
+    show(target, 'from-right', 'Next clip')
   }, [index, item, items, show])
 
   const moreFromSpeaker = useCallback(() => {
@@ -287,7 +287,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
                     <FollowButton slug={item.speakerSlug} />
                   </div>
                   <button type="button" className="pill gold block" data-testid="watch-full" onClick={() => { setMode('appetiser'); setMotion('from-bottom'); setTurn((value) => value + 1); setPlaying(false) }}>
-                    Watch the full clip ›
+                    Learn more
                   </button>
                 </>
               ) : (
@@ -310,7 +310,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
       <div className="sr-only">
         <button type="button" data-testid="gesture-up" onClick={replay}>Replay this clip</button>
         <button type="button" data-testid="gesture-down" onClick={nextLane}>Switch lane</button>
-        <button type="button" data-testid="gesture-left" onClick={moreOnTopic}>More on this topic</button>
+        <button type="button" data-testid="gesture-left" onClick={moreOnTopic}>Next clip</button>
         <button type="button" data-testid="gesture-right" onClick={moreFromSpeaker}>More from this speaker</button>
       </div>
       {toast ? <div className="lane-switch" data-testid="toast"><span key={toast + turn}>{toast}</span></div> : null}
@@ -322,7 +322,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
             <div className="gesture-grid">
               <div><b>Swipe up</b>Play this clip again</div>
               <div><b>Swipe down</b>Switch to a new lane, with a different teacher and topic</div>
-              <div><b>Swipe left</b>More on this topic from someone else</div>
+              <div><b>Swipe left</b>Another short clip</div>
               <div><b>Swipe right</b>More from this speaker on another topic</div>
             </div>
             <button type="button" className="pill ink block">Got it</button>

@@ -1,8 +1,10 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { keyPhrasesFor } from '../../../remotion/src/emphasis'
+import { withoutStutters } from '../../../remotion/src/lines'
 import type { ManifestRow, StyleId } from '../../../remotion/src/manifest'
 import { assignStyles } from '../../../remotion/src/manifest'
+import { cleanSpokenQuote, type SpokenWord } from './card-voice'
 import { pickScene, SCENES, sceneById, type SceneId } from './scenes'
 
 export type CardBeat = {
@@ -10,6 +12,18 @@ export type CardBeat = {
   quote: string
   gold: string
   audio: string | null
+  /** Word starts, in seconds from the start of this beat's audio. */
+  words?: SpokenWord[]
+  /** Shown after the spoken line when that line only points at a verse. */
+  verse?: string | null
+}
+
+/** Qur'an 6:122, the verse Al-Nur's land line is talking about. */
+const VERSE_FOR: Record<string, { gold: string; text: string }> = {
+  NIR88RRpat4: {
+    gold: 'made for him light',
+    text: 'أَوَمَن كَانَ مَيْتًا فَأَحْيَيْنَاهُ وَجَعَلْنَا لَهُ نُورًا يَمْشِي بِهِ فِي النَّاسِ كَمَن مَّثَلُهُ فِي الظُّلُمَاتِ لَيْسَ بِخَارِجٍ مِّنْهَا — And is one who was dead and We gave him life and made for him light by which to walk among the people like one who is in darkness, never to emerge therefrom?',
+  },
 }
 
 export type StoredCard = {
@@ -53,6 +67,33 @@ function audioSrc(heartsRoot: string, youtubeId: string, beat: string) {
   return existsSync(file) ? `/typography/audio/${youtubeId}-${beat}.m4a` : null
 }
 
+const bare = (text: string) => text.toLowerCase().replace(/[’‘]/g, "'").replace(/[^a-z0-9'\u0600-\u06FF]/g, '')
+
+function sameLine(a: string, b: string) {
+  const norm = (value: string) => value.split(/\s+/).map(bare).filter(Boolean).join(' ')
+  return norm(a) === norm(b)
+}
+
+/** Word times from the talk schedule, measured from the beat's audio in-point. */
+function wordTimes(heartsRoot: string, youtubeId: string, beat: string, quote: string): SpokenWord[] | undefined {
+  const talks = path.resolve(heartsRoot, '..', 'remotion', 'talks')
+  const talkFile = path.join(talks, `${youtubeId}.json`)
+  const windowsFile = path.join(talks, 'windows.json')
+  if (!existsSync(talkFile) || !existsSync(windowsFile)) return undefined
+  try {
+    const talk = JSON.parse(readFileSync(talkFile, 'utf8')) as { words?: { text: string; talkAt: number; beat: string }[] }
+    const windows = JSON.parse(readFileSync(windowsFile, 'utf8')) as { talks: { id: string; beats: { beat: string; in: number }[] }[] }
+    const origin = windows.talks.find((row) => row.id === youtubeId)?.beats.find((row) => row.beat === beat)?.in
+    if (origin === undefined || !talk.words?.length) return undefined
+    const raw = talk.words.filter((word) => word.beat === beat).map((word) => ({ text: word.text, at: Math.max(0, word.talkAt - origin) }))
+    const cleaned = withoutStutters(raw)
+    if (!sameLine(cleaned.map((word) => word.text).join(' '), quote)) return undefined
+    return cleaned
+  } catch {
+    return undefined
+  }
+}
+
 /**
  * One scenic card per talk, built from the same manifest rows as the face films.
  * Neighbouring talks in a course do not share a style or a background.
@@ -75,10 +116,10 @@ export function buildCards(rows: ManifestRow[], heartsRoot: string): StoredCard[
       beats: [...beats].sort((a, b) => ORDER[a.beat] - ORDER[b.beat]),
     }
   })
-  let previous = ''
+  let previous: { id: string; tags: readonly string[] } | null = null
   return assignStyles(talks).map((talk, index) => {
-    const scene = pickScene(index, 0, previous, 0)
-    previous = scene.id
+    const scene = pickScene(SCENES[index % SCENES.length].id, 0, previous)
+    previous = scene
     return {
       youtubeId: talk.youtubeId,
       title: talk.title,
@@ -87,12 +128,16 @@ export function buildCards(rows: ManifestRow[], heartsRoot: string): StoredCard[
       style: talk.style,
       scene: scene.id,
       beats: talk.beats.filter((beat) => BEATS.has(beat.beat)).map((beat) => {
-        const phrases = keyPhrasesFor(talk.youtubeId, beat.beat, beat.quote)
+        const quote = cleanSpokenQuote(beat.quote)
+        const phrases = keyPhrasesFor(talk.youtubeId, beat.beat, quote)
+        const verse = beat.beat === 'land' && /\bthis verse\b/i.test(quote) ? VERSE_FOR[talk.youtubeId] : undefined
         return {
           beat: beat.beat,
-          quote: beat.quote,
-          gold: phrases[phrases.length - 1] || '',
+          quote,
+          gold: verse?.gold || phrases[phrases.length - 1] || '',
           audio: audioSrc(heartsRoot, talk.youtubeId, beat.beat),
+          words: wordTimes(heartsRoot, talk.youtubeId, beat.beat, quote),
+          verse: verse?.text || null,
         }
       }),
     }

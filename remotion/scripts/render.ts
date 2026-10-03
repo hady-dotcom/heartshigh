@@ -334,7 +334,7 @@ for (const talk of talks) {
   for (const style of styles) {
     const footage = footageById.get(talk.id)
     const schedule = footage ? scheduleFootage(footage.beats, style === 'cinema' ? INTERTITLE : 0) : talk
-    const inputProps: TalkProps = { ...talk, ...schedule, style, audio: footage ? null : talk.audio, footage: footage ? footage.clips : null }
+    const inputProps: TalkProps = { ...talk, ...schedule, style, width: 720, height: 1280, audio: footage ? null : talk.audio, footage: footage ? footage.clips : null }
     const composition = await selectComposition({ serveUrl, id: style, inputProps })
     const folder = path.join(publicDir, talk.id)
     mkdirSync(folder, { recursive: true })

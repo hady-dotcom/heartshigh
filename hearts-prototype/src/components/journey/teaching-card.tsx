@@ -1,12 +1,13 @@
 'use client'
 
-import { Fragment, useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react'
+import { Fragment, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import type { FeedItem } from '@/server/learner'
-import { LockIcon } from '../icons'
+import { landedGold, revealedQuote, spreadWords, type SpokenWord } from '@/lib/card-voice'
 
 type Scene = NonNullable<FeedItem['scene']>
 type Beat = Scene['beats'][number]
 
+const VOICE_KEY = 'hearts.cardVoice'
 const MARKS = ['/brand/hoopoe-mark.png', '', '']
 
 function Gold({ quote, gold }: { quote: string; gold: string }) {
@@ -22,6 +23,22 @@ function Gold({ quote, gold }: { quote: string; gold: string }) {
   )
 }
 
+function readVoice() {
+  try {
+    return localStorage.getItem(VOICE_KEY) !== 'off'
+  } catch {
+    return true
+  }
+}
+
+function rememberVoice(on: boolean) {
+  try {
+    localStorage.setItem(VOICE_KEY, on ? 'on' : 'off')
+  } catch {
+    /* private mode */
+  }
+}
+
 function useReducedMotion() {
   const [reduced, setReduced] = useState(false)
   useEffect(() => {
@@ -34,94 +51,249 @@ function useReducedMotion() {
   return reduced
 }
 
+function lineWords(beat: Beat, duration: number): SpokenWord[] {
+  if (beat.words?.length) return beat.words
+  const count = beat.quote.split(/\s+/).filter(Boolean).length
+  return spreadWords(beat.quote, duration || Math.max(2.2, count / 2.5))
+}
+
+function Spoken({ beat, elapsed, done, duration }: { beat: Beat; elapsed: number; done: boolean; duration: number }) {
+  const words = lineWords(beat, duration)
+  const shown = done ? beat.quote : revealedQuote(words, elapsed)
+  const gold = landedGold(shown, beat.gold)
+  return (
+    <>
+      <Gold quote={shown || '\u00a0'} gold={gold} />
+      {done && beat.verse ? (
+        <span className="verse">
+          <Gold quote={beat.verse} gold={landedGold(beat.verse, beat.gold)} />
+        </span>
+      ) : null}
+    </>
+  )
+}
+
 export function TeachingCard({
   scene,
   speaker,
   course,
   lane,
   onClip,
-  talkHref,
-  onTalk,
 }: {
   scene: Scene
   speaker: string
   course: string
   lane: string
   onClip: () => void
-  talkHref: string
-  onTalk?: (event: MouseEvent<HTMLAnchorElement>) => void
 }) {
   const reduced = useReducedMotion()
   const [step, setStep] = useState(0)
-  const [voice, setVoice] = useState(false)
-  const [peeled, setPeeled] = useState(false)
+  const [pref, setPref] = useState<'unknown' | 'on' | 'off'>('unknown')
+  const [blocked, setBlocked] = useState(false)
+  const [elapsed, setElapsed] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [lineDone, setLineDone] = useState(false)
+  const [opened, setOpened] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const quoteRef = useRef<HTMLHeadingElement | null>(null)
   const beats = scene.beats
   const at = Math.min(step, beats.length - 1)
   const current = beats[at]
   const heard = beats.some((beat) => beat.audio)
+  const sound = pref === 'on'
+  const holdLand = scene.style === 'unfold' && current?.beat === 'land' && !opened
+  const reward = Boolean(lineDone && current?.beat === 'land' && !holdLand)
 
   useEffect(() => {
-    if (reduced) setStep(beats.length - 1)
-  }, [reduced, beats.length])
+    setPref(readVoice() ? 'on' : 'off')
+  }, [])
 
   useEffect(() => {
-    if (reduced || at >= beats.length - 1) return
-    const timer = window.setTimeout(() => setStep((value) => Math.min(beats.length - 1, value + 1)), voice ? 7000 : 4200)
-    return () => window.clearTimeout(timer)
-  }, [at, beats.length, reduced, voice])
+    if (reduced) setOpened(true)
+  }, [reduced])
 
   useEffect(() => {
-    setPeeled(false)
-    if (scene.style !== 'unfold' || current?.beat !== 'land') return
-    const timer = window.setTimeout(() => setPeeled(true), reduced ? 0 : 700)
-    return () => window.clearTimeout(timer)
-  }, [current?.beat, reduced, scene.style])
+    quoteRef.current?.scrollIntoView({ block: 'nearest' })
+  }, [at, lineDone])
+
+  useEffect(() => {
+    const next = beats[at + 1]
+    if (!next?.audio) return
+    const preload = new Audio()
+    preload.preload = 'auto'
+    preload.src = next.audio
+  }, [at, beats])
 
   useEffect(() => {
     const audio = audioRef.current
-    if (!audio) return
-    audio.pause()
-    if (!voice || !current?.audio) return
-    audio.src = current.audio
-    void audio.play().catch(() => undefined)
-    return () => audio.pause()
-  }, [current?.audio, voice])
+    if (audio) audio.muted = pref !== 'on'
+  }, [pref])
 
-  const next = scene.destination === 'clip'
-    ? <button type="button" className="pill gold" onClick={onClip} data-testid="scene-next">Watch the 3-minute clip</button>
-    : <a className="pill gold" href={talkHref} onClick={onTalk} data-testid="scene-next">Watch the full talk</a>
+  useEffect(() => {
+    setElapsed(0)
+    setLineDone(false)
+    setDuration(0)
+    if (!current || holdLand || pref === 'unknown') return
+    let cancelled = false
+    let raf = 0
+    const audio = audioRef.current
+    const finish = () => {
+      if (cancelled) return
+      cancelled = true
+      setLineDone(true)
+      if (at < beats.length - 1) setStep((value) => Math.min(beats.length - 1, value + 1))
+    }
+
+    if (current.audio && audio) {
+      let started = false
+      const watch = () => {
+        if (cancelled) return
+        setElapsed(audio.currentTime)
+        if (!audio.ended && !audio.paused) raf = requestAnimationFrame(watch)
+      }
+      const start = () => {
+        if (started || cancelled) return
+        started = true
+        setDuration(Number.isFinite(audio.duration) ? audio.duration : 0)
+        const pending = audio.play()
+        pending?.then(() => {
+          if (cancelled) return
+          setBlocked(false)
+          raf = requestAnimationFrame(watch)
+        }).catch(() => {
+          if (cancelled || pref !== 'on') return
+          setBlocked(true)
+          audio.pause()
+        })
+      }
+      const onEnd = () => {
+        setElapsed(Number.isFinite(audio.duration) ? audio.duration : audio.currentTime)
+        finish()
+      }
+      audio.pause()
+      audio.muted = pref !== 'on'
+      audio.addEventListener('loadedmetadata', start)
+      audio.addEventListener('ended', onEnd)
+      audio.src = current.audio
+      audio.load()
+      return () => {
+        cancelled = true
+        cancelAnimationFrame(raf)
+        audio.removeEventListener('loadedmetadata', start)
+        audio.removeEventListener('ended', onEnd)
+        audio.pause()
+      }
+    }
+
+    const words = lineWords(current, 0)
+    const span = Math.max(1.4, (words[words.length - 1]?.at || 0) + 0.55)
+    setDuration(span)
+    const t0 = performance.now()
+    const tick = (now: number) => {
+      if (cancelled) return
+      const t = (now - t0) / 1000
+      setElapsed(t)
+      if (t >= span) {
+        finish()
+        return
+      }
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(raf)
+    }
+    // Mute toggles the element in place. Restarting here would replay the beat.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [at, beats.length, current?.audio, current?.quote, holdLand, pref === 'unknown'])
+
+  const unlock = () => {
+    rememberVoice(true)
+    setPref('on')
+    setBlocked(false)
+    const audio = audioRef.current
+    if (!audio) return
+    audio.muted = false
+    void audio.play().catch(() => undefined)
+  }
+
+  const toggleVoice = () => {
+    if (blocked || pref !== 'on') {
+      unlock()
+      return
+    }
+    rememberVoice(false)
+    setPref('off')
+  }
+
+  const openThought = () => {
+    setOpened(true)
+    if (blocked || pref !== 'on') unlock()
+  }
+
+  const next = reward ? (
+    <button type="button" className="pill gold" onClick={onClip} data-testid="scene-next">Learn more</button>
+  ) : null
 
   const voiceButton = (
-    <button type="button" className="scene-voice" aria-pressed={voice} disabled={!heard} onClick={() => setVoice((on) => !on)} data-testid="scene-voice">
-      {voice ? 'Voice on' : 'Voice'}
+    <button type="button" className="scene-voice" aria-pressed={sound && !blocked} disabled={!heard} onClick={toggleVoice} data-testid="scene-voice">
+      {blocked ? 'Tap for voice' : sound ? 'Mute' : 'Voice'}
     </button>
   )
 
+  const spoken = current ? <Spoken beat={current} elapsed={elapsed} done={lineDone} duration={duration} /> : null
+
   return (
-    <div className={`slide scene-${scene.style} ${scene.style}`} data-testid="scene-card" data-style={scene.style} data-scene={scene.scene} data-destination={scene.destination} data-beat={current?.beat || ''} data-voice={voice ? 'on' : 'off'}>
-      {scene.style !== 'windows' && scene.style !== 'unfold' ? <div className="bg drift" style={{ backgroundImage: `url(${scene.scene})` }} /> : null}
-      <audio ref={audioRef} preload="none" data-testid="scene-audio" />
-      {scene.style === 'kinetic' ? <Kinetic beats={beats} at={at} lane={lane} speaker={speaker} course={course} voice={voiceButton} next={next} /> : null}
-      {scene.style === 'windows' ? <Windows beats={beats} at={at} scene={scene.scene} lane={lane} speaker={speaker} course={course} voice={voiceButton} next={next} /> : null}
-      {scene.style === 'conversation' ? <Conversation beats={beats} at={at} lane={lane} speaker={speaker} course={course} voice={voiceButton} next={next} /> : null}
-      {scene.style === 'cinema' ? <Cinema beat={current} at={at} count={beats.length} lane={lane} speaker={speaker} course={course} voice={voiceButton} next={next} /> : null}
-      {scene.style === 'unfold' ? <Unfold beats={beats} at={at} peeled={peeled} scene={scene.scene} lane={lane} speaker={speaker} course={course} voice={voiceButton} next={next} /> : null}
+    <div
+      className={`slide scene-${scene.style} ${scene.style}`}
+      data-testid="scene-card"
+      data-style={scene.style}
+      data-scene={scene.scene}
+      data-destination="clip"
+      data-beat={current?.beat || ''}
+      data-voice={blocked ? 'blocked' : sound ? 'on' : 'off'}
+      data-cta={reward ? 'shown' : 'hidden'}
+      onClick={(event) => {
+        if (!blocked) return
+        if ((event.target as HTMLElement).closest('button, a')) return
+        unlock()
+      }}
+    >
+      <div className="bg drift" style={{ backgroundImage: `url(${scene.scene})` }} />
+      <audio ref={audioRef} preload="auto" data-testid="scene-audio" />
+      {scene.style === 'kinetic' ? <Kinetic beats={beats} at={at} lane={lane} speaker={speaker} course={course} voice={voiceButton} next={next} spoken={spoken} quoteRef={quoteRef} /> : null}
+      {scene.style === 'windows' ? <Windows beats={beats} at={at} lane={lane} speaker={speaker} course={course} voice={voiceButton} next={next} spoken={spoken} /> : null}
+      {scene.style === 'conversation' ? <Conversation beats={beats} at={at} lane={lane} speaker={speaker} course={course} voice={voiceButton} next={next} spoken={spoken} /> : null}
+      {scene.style === 'cinema' ? <Cinema beat={current} at={at} count={beats.length} lane={lane} speaker={speaker} course={course} voice={voiceButton} next={next} spoken={spoken} quoteRef={quoteRef} /> : null}
+      {scene.style === 'unfold' ? <Unfold beats={beats} at={at} opened={opened} onOpen={openThought} lane={lane} speaker={speaker} course={course} voice={voiceButton} next={next} spoken={spoken} /> : null}
     </div>
   )
 }
 
-function Foot({ speaker, course, next, voice }: { speaker: string; course: string; next: ReactNode; voice: ReactNode }) {
+function Foot({ course, next, voice, scrim }: { course: string; next: ReactNode; voice: ReactNode; scrim?: boolean }) {
   return (
-    <div className="slide-cta">
+    <div className={`slide-cta${scrim ? ' scrim' : ''}`}>
       {next}
-      {speaker || course ? <div className="slide-foot">{speaker}{speaker && course ? <br /> : null}{course}</div> : null}
+      {course ? <div className="slide-foot">{course}</div> : null}
       {voice}
     </div>
   )
 }
 
-function Kinetic({ beats, at, lane, speaker, course, voice, next }: { beats: Beat[]; at: number; lane: string; speaker: string; course: string; voice: ReactNode; next: ReactNode }) {
+function Kinetic({
+  beats, at, lane, speaker, course, voice, next, spoken, quoteRef,
+}: {
+  beats: Beat[]
+  at: number
+  lane: string
+  speaker: string
+  course: string
+  voice: ReactNode
+  next: ReactNode
+  spoken: ReactNode
+  quoteRef: RefObject<HTMLHeadingElement | null>
+}) {
   const current = beats[at]
   return (
     <>
@@ -137,39 +309,66 @@ function Kinetic({ beats, at, lane, speaker, course, voice, next }: { beats: Bea
         </div>
         <div>
           {beats.slice(0, at).map((beat) => (
-            <p key={beat.beat} className="serif dim-line">{beat.quote}</p>
+            <p key={beat.beat} className="serif dim-line"><Gold quote={beat.quote} gold={beat.gold} />{beat.verse ? <span className="verse"><Gold quote={beat.verse} gold={beat.gold} /></span> : null}</p>
           ))}
           {current ? (
-            <h2 className={`serif beat-in${current.quote.length > 90 ? ' long' : ''}`} key={current.beat} data-testid="scene-quote">
-              <Gold quote={current.quote} gold={current.gold} />
+            <h2 className={`serif beat-in${current.quote.length > 90 ? ' long' : ''}`} key={current.beat} data-testid="scene-quote" ref={quoteRef}>
+              {spoken}
             </h2>
           ) : null}
         </div>
       </div>
-      <Foot speaker="" course={course} next={next} voice={voice} />
+      <Foot course={course} next={next} voice={voice} scrim />
     </>
   )
 }
 
-function Windows({ beats, at, scene, lane, speaker, course, voice, next }: { beats: Beat[]; at: number; scene: string; lane: string; speaker: string; course: string; voice: ReactNode; next: ReactNode }) {
+function Windows({
+  beats, at, lane, speaker, course, voice, next, spoken,
+}: {
+  beats: Beat[]
+  at: number
+  lane: string
+  speaker: string
+  course: string
+  voice: ReactNode
+  next: ReactNode
+  spoken: ReactNode
+}) {
   return (
     <>
       <div className="slide-label"><span>{lane}<span className="rule" /></span>{voice}</div>
       <div className="scene-stack">
-        {beats.slice(0, at + 1).map((beat, index) => (
-          <div key={beat.beat} className={`window-card beat-in${index === 2 ? ' locked' : ''}`}>
-            {index < 2 ? <span className="art" style={{ backgroundImage: `url(${scene})` }} /> : <span className="lock"><LockIcon /></span>}
-            <div className="n">0{index + 1}</div>
-            <div className={`serif${beat.quote.length > 90 ? ' long' : ''}`} data-testid={index === at ? 'scene-quote' : undefined}>{beat.quote}</div>
-          </div>
-        ))}
+        {beats.map((beat, index) => {
+          const locked = index > at
+          const live = index === at
+          return (
+            <div key={beat.beat} className={`window-card${locked ? ' locked' : ''}${live ? ' beat-in' : ''}`} aria-hidden={locked || undefined}>
+              <div className="n">0{index + 1}</div>
+              <div className={`serif${beat.quote.length > 110 ? ' long' : ''}`} data-testid={live ? 'scene-quote' : undefined}>
+                {locked ? beat.quote : live ? spoken : <Gold quote={beat.quote} gold={beat.gold} />}
+              </div>
+            </div>
+          )
+        })}
       </div>
-      <Foot speaker={speaker} course={course} next={next} voice={null} />
+      <Foot course={speaker && course ? `${speaker} · ${course}` : speaker || course} next={next} voice={null} />
     </>
   )
 }
 
-function Conversation({ beats, at, lane, speaker, course, voice, next }: { beats: Beat[]; at: number; lane: string; speaker: string; course: string; voice: ReactNode; next: ReactNode }) {
+function Conversation({
+  beats, at, lane, speaker, course, voice, next, spoken,
+}: {
+  beats: Beat[]
+  at: number
+  lane: string
+  speaker: string
+  course: string
+  voice: ReactNode
+  next: ReactNode
+  spoken: ReactNode
+}) {
   return (
     <>
       <div className="slide-label"><span>A conversation<br />on {lane.toLowerCase()}</span>{voice}</div>
@@ -179,56 +378,79 @@ function Conversation({ beats, at, lane, speaker, course, voice, next }: { beats
             <span className="bubble-face">
               {index === 0 ? <img src={MARKS[0]} alt="" /> : index === 1 ? '❦' : '☾'}
             </span>
-            <div className={`bubble-text${index === at ? '' : ' dim'}`} data-testid={index === at ? 'scene-quote' : undefined}>
-              <Gold quote={beat.quote} gold={beat.gold} />
+            <div className={`bubble-text${index === at ? '' : ' earlier'}`} data-testid={index === at ? 'scene-quote' : undefined}>
+              {index === at ? spoken : <Gold quote={beat.quote} gold={beat.gold} />}
             </div>
           </div>
         ))}
       </div>
-      <Foot speaker={speaker} course={course} next={next} voice={null} />
+      <Foot course={speaker && course ? `${speaker} · ${course}` : speaker || course} next={next} voice={null} />
     </>
   )
 }
 
-function Cinema({ beat, at, count, lane, speaker, course, voice, next }: { beat: Beat | undefined; at: number; count: number; lane: string; speaker: string; course: string; voice: ReactNode; next: ReactNode }) {
+function Cinema({
+  at, count, lane, speaker, course, voice, next, spoken, quoteRef,
+}: {
+  beat: Beat | undefined
+  at: number
+  count: number
+  lane: string
+  speaker: string
+  course: string
+  voice: ReactNode
+  next: ReactNode
+  spoken: ReactNode
+  quoteRef: RefObject<HTMLHeadingElement | null>
+}) {
   return (
     <>
       <div className="slide-label"><span>0{at + 1} · {lane}</span>{voice}</div>
-      {beat ? (
-        <h2 className={`serif beat-in${beat.quote.length > 90 ? ' long' : ''}`} key={beat.beat} data-testid="scene-quote">
-          <Gold quote={beat.quote} gold={beat.gold} />
-        </h2>
-      ) : null}
+      <h2 className="serif beat-in" data-testid="scene-quote" ref={quoteRef}>{spoken}</h2>
       <div className="rule-line" />
-      <p className="slide-foot" style={{ textAlign: 'left' }}>{at + 1} of {count}</p>
-      <Foot speaker={speaker} course={course} next={next} voice={null} />
+      <p className="count-line">{at + 1} of {count}</p>
+      <Foot course={`${speaker}${speaker && course ? ' · ' : ''}${course}`} next={next} voice={null} />
     </>
   )
 }
 
-function Unfold({ beats, at, peeled, scene, lane, speaker, course, voice, next }: { beats: Beat[]; at: number; peeled: boolean; scene: string; lane: string; speaker: string; course: string; voice: ReactNode; next: ReactNode }) {
+function Unfold({
+  beats, at, opened, onOpen, lane, speaker, course, voice, next, spoken,
+}: {
+  beats: Beat[]
+  at: number
+  opened: boolean
+  onOpen: () => void
+  lane: string
+  speaker: string
+  course: string
+  voice: ReactNode
+  next: ReactNode
+  spoken: ReactNode
+}) {
   return (
     <>
       <div className="slide-label"><span>{lane}<span className="rule" /></span>{voice}</div>
       <div className="scene-stack">
-        {beats.slice(0, at + 1).map((beat, index) => {
-          const last = index === at
+        {beats.map((beat, index) => {
+          const locked = index > at
+          const live = index === at
+          const cover = live && beat.beat === 'land' && !opened
           return (
-            <div key={beat.beat} className={`window-card beat-in${last && beat.beat === 'land' ? ' peel-card' : ''}${peeled && last ? ' open' : ''}`}>
-              {beat.beat !== 'land' ? <span className="art" style={{ backgroundImage: `url(${scene})`, width: '28%' }} /> : null}
+            <div key={beat.beat} className={`window-card${locked ? ' locked' : ''}${live ? ' beat-in' : ''}`} aria-hidden={locked || undefined}>
               <div className="n">0{index + 1}</div>
-              <div className={`serif${beat.quote.length > 90 ? ' long' : ''}`} data-testid={last ? 'scene-quote' : undefined}>{beat.quote}</div>
-              {last && beat.beat === 'land' ? (
-                <>
-                  <span className="peel" />
-                  <span className="peel-label">Open the thought</span>
-                </>
-              ) : null}
+              {cover ? (
+                <button type="button" className="peel-open" onClick={onOpen} data-testid="peel-open">Open the thought</button>
+              ) : (
+                <div className={`serif${beat.quote.length > 110 ? ' long' : ''}`} data-testid={live ? 'scene-quote' : undefined}>
+                  {locked ? beat.quote : live ? spoken : <Gold quote={beat.quote} gold={beat.gold} />}
+                </div>
+              )}
             </div>
           )
         })}
       </div>
-      <Foot speaker={speaker} course={course} next={next} voice={null} />
+      <Foot course={speaker && course ? `${speaker} · ${course}` : speaker || course} next={next} voice={null} />
     </>
   )
 }

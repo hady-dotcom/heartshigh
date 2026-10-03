@@ -915,7 +915,6 @@ export function Journey(props: JourneyProps) {
     void advance(target)
   }
   const moreLikeThis = () => {
-    setToast('More on this topic')
     void advance(index + 1)
   }
   const moreFromSpeaker = () => {
@@ -999,6 +998,15 @@ export function Journey(props: JourneyProps) {
     const timer = window.setTimeout(() => setToast(null), 1600)
     return () => window.clearTimeout(timer)
   }, [toast])
+
+  useEffect(() => {
+    for (const row of items.slice(index + 1, index + 6)) {
+      const src = row.scene?.scene
+      if (!src) continue
+      const image = new Image()
+      image.src = src
+    }
+  }, [items, index])
 
   // Gestures on the clip. In overlay mode the gesture layer covers the player; in strict mode only the chrome.
   const onDown = (event: ReactPointerEvent) => {
@@ -1151,7 +1159,7 @@ export function Journey(props: JourneyProps) {
               </a>
               <span onClickCapture={(event) => { if (needsAccount('save')) { event.preventDefault(); event.stopPropagation() } }}><FollowButton slug={item.speakerSlug} /></span>
             </div>
-            <button type="button" className="pill gold block" data-testid="watch-full" onClick={watchFull}>Watch the full clip ›</button>
+            <button type="button" className="pill gold block" data-testid="watch-full" onClick={watchFull}>Learn more</button>
           </>
         ) : (
           <>
@@ -1248,7 +1256,7 @@ export function Journey(props: JourneyProps) {
         ) : null}
         {scenic && item?.scene ? (
           <div className="j-slide" data-testid="gesture-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}>
-            <TeachingCard key={item.id} scene={item.scene} speaker={item.speaker} course={item.courseTitle} lane={item.laneLabel} onClip={watchFull} talkHref={course} onTalk={startCourse} />
+            <TeachingCard key={item.id} scene={item.scene} speaker={item.speaker} course={item.courseTitle} lane={item.laneLabel} onClip={watchFull} />
           </div>
         ) : null}
         <div className="j-chrome" onPointerDown={overlay ? undefined : onDown} onPointerMove={overlay ? undefined : onMove} onPointerUp={overlay ? undefined : onUp}>
