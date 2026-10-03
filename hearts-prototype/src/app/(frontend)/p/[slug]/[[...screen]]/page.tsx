@@ -14,6 +14,7 @@ import { CourseScreen, SpeakerScreen } from '@/screens/app/course'
 import { GardenClause, GardenGeneral, GardenGhunya, GardenHarvest, GardenJibril, GardenScreen, GardenWorkbook } from '@/screens/app/garden'
 import { CircleScreen, MeScreen, PlanScreen, SettingsScreen } from '@/screens/app/me'
 import { WelcomeScreen } from '@/screens/app/welcome'
+import { AiPages } from '@/screens/desk/ai'
 import { OverviewScreen, PortalSettingsScreen, WizardScreen } from '@/screens/desk/overview'
 import { AccessScreen, ContentScreen, CourseEditorScreen, LibraryScreen, guardAdmin } from '@/screens/desk/content'
 import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
@@ -97,6 +98,9 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       case 'opening':
         guardAdmin(ctx)
         return PortalOpeningScreen(ctx)
+      case 'ai':
+        guardAdmin(ctx)
+        return AiPages({ ctx, path: screen.slice(2) })
       case 'courses':
         redirect(b ? `${base}/admin/content/${b}` : `${base}/admin/content`)
       case 'codes':

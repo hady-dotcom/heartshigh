@@ -1754,6 +1754,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       land: text(form, 'land').slice(0, 400),
       offerResume: form.get('offerResume') === 'on',
       note: text(form, 'note').slice(0, 1000),
+      source: 'human',
     }
     if (checking) Object.assign(data, { status: 'checked', checkedBy: user.id, checkedAt: now().toISOString() })
     else if (text(form, 'reopen') === 'yes') Object.assign(data, { status: 'draft', checkedBy: null, checkedAt: null })
@@ -1834,8 +1835,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (prompt.length < 10) return redirectTo(req, back, 'Write the question in at least 10 characters.')
     const kind = ['reflection', 'task', 'question'].includes(text(form, 'kind')) ? text(form, 'kind') : String(point?.kind || 'reflection')
     try {
-      if (point) await payload.update({ collection: 'engagement-points', id: point.id, overrideAccess: true, data: { second, prompt, kind } as never })
-      else await payload.create({ collection: 'engagement-points', overrideAccess: true, data: { lesson: lesson.id, second, prompt, kind, triggerType: 'timestamp', timing: 'immediate', status: 'draft', draftNote: 'Written on the master desk.' } as never })
+      if (point) await payload.update({ collection: 'engagement-points', id: point.id, overrideAccess: true, data: { second, prompt, kind, author: user.id } as never })
+      else await payload.create({ collection: 'engagement-points', overrideAccess: true, data: { lesson: lesson.id, second, prompt, kind, triggerType: 'timestamp', timing: 'immediate', status: 'draft', draftNote: 'Written on the master desk.', author: user.id } as never })
     } catch (error) {
       return redirectTo(req, back, publicMessage(error, 'That pop-up was not saved.'))
     }

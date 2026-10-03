@@ -5,6 +5,7 @@ import { sqliteAdapter } from '@payloadcms/db-sqlite'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
 import { buildConfig } from 'payload'
+import { aiCollections } from './collections-ai'
 import { collections } from './collections'
 import { MasterFlags } from './collections-opening'
 import { viewAsGlobalGuard, viewAsGuard } from './server/viewas'
@@ -30,7 +31,7 @@ export default buildConfig({
       header: ['/components/viewas-admin-banner#ViewAsAdminBanner'],
     },
   },
-  collections: collections.map((collection) => ({
+  collections: [...collections, ...aiCollections].map((collection) => ({
     ...collection,
     hooks: { ...collection.hooks, beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never] },
   })),

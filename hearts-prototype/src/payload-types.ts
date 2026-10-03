@@ -111,6 +111,11 @@ export interface Config {
     'heart-contributions': HeartContribution;
     'view-as-sessions': ViewAsSession;
     'audit-log': AuditLog;
+    'ai-steps': AiStep;
+    'ai-step-versions': AiStepVersion;
+    'ai-step-outputs': AiStepOutput;
+    'ai-step-jobs': AiStepJob;
+    'ai-desk': AiDesk;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -162,6 +167,11 @@ export interface Config {
     'heart-contributions': HeartContributionsSelect<false> | HeartContributionsSelect<true>;
     'view-as-sessions': ViewAsSessionsSelect<false> | ViewAsSessionsSelect<true>;
     'audit-log': AuditLogSelect<false> | AuditLogSelect<true>;
+    'ai-steps': AiStepsSelect<false> | AiStepsSelect<true>;
+    'ai-step-versions': AiStepVersionsSelect<false> | AiStepVersionsSelect<true>;
+    'ai-step-outputs': AiStepOutputsSelect<false> | AiStepOutputsSelect<true>;
+    'ai-step-jobs': AiStepJobsSelect<false> | AiStepJobsSelect<true>;
+    'ai-desk': AiDeskSelect<false> | AiDeskSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1292,6 +1302,156 @@ export interface AuditLog {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-steps".
+ */
+export interface AiStep {
+  id: number;
+  slug: string;
+  name: string;
+  description: string;
+  placeholders:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  prompt: string;
+  provider?: ('anthropic' | 'openai') | null;
+  model?: string | null;
+  temperature?: number | null;
+  maxTokens?: number | null;
+  outputSchema?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  fills?: string | null;
+  pipelineOrder?: number | null;
+  inPipeline?: boolean | null;
+  fillsTier?: string | null;
+  fillsPoints?: string | null;
+  liveVersion?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-step-versions".
+ */
+export interface AiStepVersion {
+  id: number;
+  step: number | AiStep;
+  number: number;
+  prompt: string;
+  provider?: ('anthropic' | 'openai') | null;
+  model?: string | null;
+  temperature?: number | null;
+  maxTokens?: number | null;
+  note: string;
+  author?: (number | null) | User;
+  authorName?: string | null;
+  authorRole?: string | null;
+  live?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-step-outputs".
+ */
+export interface AiStepOutput {
+  id: number;
+  step?: (number | null) | AiStep;
+  stepSlug: string;
+  versionNumber?: number | null;
+  lesson?: (number | null) | Lesson;
+  mode?: ('try' | 'run') | null;
+  disposition?: ('preview' | 'applied' | 'pending' | 'failed') | null;
+  output?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  written?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  error?: string | null;
+  job?: (number | null) | AiStepJob;
+  protectsKind?: string | null;
+  protectsId?: number | null;
+  protectsReason?: string | null;
+  mock?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-step-jobs".
+ */
+export interface AiStepJob {
+  id: number;
+  stepSlug: string;
+  scope?: ('talk' | 'selection' | 'course' | 'all') | null;
+  lessonIds?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  course?: (number | null) | Course;
+  status?: ('queued' | 'running' | 'done' | 'failed') | null;
+  total?: number | null;
+  finished?: number | null;
+  failedCount?: number | null;
+  results?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  actor?: (number | null) | User;
+  actorName?: string | null;
+  note?: string | null;
+  error?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-desk".
+ */
+export interface AiDesk {
+  id: number;
+  key: string;
+  portalMayEdit?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -1489,6 +1649,26 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'audit-log';
         value: number | AuditLog;
+      } | null)
+    | ({
+        relationTo: 'ai-steps';
+        value: number | AiStep;
+      } | null)
+    | ({
+        relationTo: 'ai-step-versions';
+        value: number | AiStepVersion;
+      } | null)
+    | ({
+        relationTo: 'ai-step-outputs';
+        value: number | AiStepOutput;
+      } | null)
+    | ({
+        relationTo: 'ai-step-jobs';
+        value: number | AiStepJob;
+      } | null)
+    | ({
+        relationTo: 'ai-desk';
+        value: number | AiDesk;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2354,6 +2534,103 @@ export interface AuditLogSelect<T extends boolean = true> {
   at?: T;
   ipHash?: T;
   detail?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-steps_select".
+ */
+export interface AiStepsSelect<T extends boolean = true> {
+  slug?: T;
+  name?: T;
+  description?: T;
+  placeholders?: T;
+  prompt?: T;
+  provider?: T;
+  model?: T;
+  temperature?: T;
+  maxTokens?: T;
+  outputSchema?: T;
+  fills?: T;
+  pipelineOrder?: T;
+  inPipeline?: T;
+  fillsTier?: T;
+  fillsPoints?: T;
+  liveVersion?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-step-versions_select".
+ */
+export interface AiStepVersionsSelect<T extends boolean = true> {
+  step?: T;
+  number?: T;
+  prompt?: T;
+  provider?: T;
+  model?: T;
+  temperature?: T;
+  maxTokens?: T;
+  note?: T;
+  author?: T;
+  authorName?: T;
+  authorRole?: T;
+  live?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-step-outputs_select".
+ */
+export interface AiStepOutputsSelect<T extends boolean = true> {
+  step?: T;
+  stepSlug?: T;
+  versionNumber?: T;
+  lesson?: T;
+  mode?: T;
+  disposition?: T;
+  output?: T;
+  written?: T;
+  error?: T;
+  job?: T;
+  protectsKind?: T;
+  protectsId?: T;
+  protectsReason?: T;
+  mock?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-step-jobs_select".
+ */
+export interface AiStepJobsSelect<T extends boolean = true> {
+  stepSlug?: T;
+  scope?: T;
+  lessonIds?: T;
+  course?: T;
+  status?: T;
+  total?: T;
+  finished?: T;
+  failedCount?: T;
+  results?: T;
+  actor?: T;
+  actorName?: T;
+  note?: T;
+  error?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ai-desk_select".
+ */
+export interface AiDeskSelect<T extends boolean = true> {
+  key?: T;
+  portalMayEdit?: T;
   updatedAt?: T;
   createdAt?: T;
 }
