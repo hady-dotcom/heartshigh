@@ -147,13 +147,26 @@ export function CoursePlayer({
 
   const show = useCallback(
     (id: number, triggered: boolean) => {
+      // The sheet never covers the film: default keeps the paused video in view above it, strict keeps the whole player clear.
+      card.current?.scrollIntoView({ block: 'start' })
       const rect = card.current?.getBoundingClientRect()
-      setSheetTop(rect ? Math.max(8, overPlayer ? rect.top + 8 : rect.bottom) : null)
+      const film = mode === 'youtube' ? holder.current?.getBoundingClientRect() : null
+      setSheetTop(rect ? Math.max(8, overPlayer && film ? film.bottom : rect.bottom) : null)
       setFromTrigger(triggered)
       setOpenId(id)
     },
-    [overPlayer],
+    [overPlayer, mode],
   )
+
+  useEffect(() => {
+    if (openId === null) return
+    const root = document.documentElement
+    const before = root.style.overflow
+    root.style.overflow = 'hidden'
+    return () => {
+      root.style.overflow = before
+    }
+  }, [openId])
 
   const pause = () => {
     getPlayer(PLAYER_ID)?.pauseVideo()
@@ -228,10 +241,14 @@ export function CoursePlayer({
       <div ref={card} className={`player-card${mode === 'youtube' ? ' yt-on' : ''}`} data-testid="player-card">
         {poster && mode !== 'youtube' ? <div className="poster" style={{ backgroundImage: `url(${poster})` }} /> : null}
         {youtubeId ? <div className="yt" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
-        <span className="part-chip" data-testid="part-label">{partLabel}</span>
+        {open && mode === 'youtube' ? (
+          <span className="part-chip paused" data-testid="paused-note">❚❚ Paused at question {open.number}</span>
+        ) : (
+          <span className="part-chip" data-testid="part-label">{partLabel}</span>
+        )}
         <span className="time-read" data-testid="player-time">{clock(time)}</span>
-        {open ? (
-          <p className="paused-note">❚❚ paused at question {open.number}</p>
+        {open && mode !== 'youtube' ? (
+          <p className="paused-note" data-testid="paused-note">❚❚ Paused at question {open.number}</p>
         ) : mode !== 'youtube' ? (
           <button type="button" className="big-play" aria-label={playing ? 'Pause' : 'Play'} onClick={togglePlay} data-testid="player-play">
             {playing ? <PauseIcon size={30} /> : <PlayIcon size={30} />}
@@ -441,7 +458,7 @@ function Sheet({
 
   return (
     <>
-      <div className="sheet-scrim" onClick={() => leave()} />
+      <div className="sheet-scrim" style={top !== null ? { top } : undefined} onClick={() => leave()} data-testid="popup-scrim" />
       <section
         className={`sheet${top !== null ? ' pinned' : ''}${leaving ? ' leaving' : ''}`}
         style={top !== null ? { top, maxHeight: 'none' } : undefined}
