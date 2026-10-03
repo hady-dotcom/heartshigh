@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { InstallSlides } from '@/components/app/install-demo'
 import {
+  INSTALL_AGAIN,
   INSTALL_DISMISSED_KEY,
   INSTALL_INSTALLED_KEY,
   INSTALL_SKIP,
@@ -9,12 +11,12 @@ import {
   installCopy,
   installEntry,
   installKind,
+  installSlides,
   isDisplayStandalone,
   offersInstallButton,
   readInstallFlags,
   shouldShowInstall,
   type HeldInstallPrompt,
-  type InstallGlyph,
   type InstallKind,
 } from '@/lib/install-prompt'
 
@@ -53,33 +55,6 @@ function useInstallState() {
     }
   }, [])
   return [state, setState] as const
-}
-
-function Glyph({ name }: { name: InstallGlyph }) {
-  if (name === 'share') {
-    return (
-      <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M8 10.5H6.2A1.7 1.7 0 0 0 4.5 12.2v6.1A1.7 1.7 0 0 0 6.2 20h11.6a1.7 1.7 0 0 0 1.7-1.7v-6.1a1.7 1.7 0 0 0-1.7-1.7H16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-        <path d="M12 15.2V4.2" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-        <path d="M8.2 7.4 12 3.8l3.8 3.6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    )
-  }
-  if (name === 'menu') {
-    return (
-      <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="12" cy="5.5" r="1.6" fill="currentColor" />
-        <circle cx="12" cy="12" r="1.6" fill="currentColor" />
-        <circle cx="12" cy="18.5" r="1.6" fill="currentColor" />
-      </svg>
-    )
-  }
-  return (
-    <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3.5" y="3.5" width="17" height="17" rx="4" fill="none" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M12 8v8M8 12h8" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-    </svg>
-  )
 }
 
 /** The first-open card. Pass forced when Me opens it again after a dismissal. */
@@ -123,16 +98,7 @@ export function InstallCard({ forced = false, onDismiss }: { forced?: boolean; o
       <h2>{copy.heading}</h2>
       <p className="install-lead">{copy.lead}</p>
       {copy.note ? <p className="install-note">{copy.note}</p> : null}
-      {copy.steps.length ? (
-        <ol className="install-steps">
-          {copy.steps.map((step, index) => (
-            <li className="install-step" key={step.glyph}>
-              <span className="install-glyph" aria-hidden="true"><Glyph name={step.glyph} /></span>
-              <p><span className="sr-only">Step {index + 1}. </span>{step.text}</p>
-            </li>
-          ))}
-        </ol>
-      ) : null}
+      {installSlides(state.kind).length ? <InstallSlides kind={state.kind} /> : null}
       {copy.manual ? <p className="install-manual">{copy.manual}</p> : null}
       <div className="install-actions">
         {copy.action ? (
@@ -148,9 +114,14 @@ export function InstallCard({ forced = false, onDismiss }: { forced?: boolean; o
 export function KeepHearts() {
   const [state] = useInstallState()
   const [open, setOpen] = useState(false)
+  const [run, setRun] = useState(0)
   if (!state) return null
   const installed = state.installed || state.standalone
   const entry = installEntry(state.kind, installed)
+  const show = () => {
+    setRun((n) => n + 1)
+    setOpen(true)
+  }
   return (
     <>
       {installed ? (
@@ -158,12 +129,15 @@ export function KeepHearts() {
           <span className="grow">{entry.title}<small>{entry.hint}</small></span>
         </div>
       ) : (
-        <button type="button" className="list-link" data-testid="keep-hearts" data-state={open ? 'open' : 'ready'} aria-expanded={open} onClick={() => setOpen(true)}>
+        <button type="button" className="list-link" data-testid="keep-hearts" data-state={open ? 'open' : 'ready'} aria-expanded={open} onClick={show}>
           <span className="grow">{entry.title}<small>{entry.hint}</small></span>
           <span aria-hidden="true">›</span>
         </button>
       )}
-      {open && !installed ? <InstallCard forced onDismiss={() => setOpen(false)} /> : null}
+      {!installed ? (
+        <button type="button" className="install-again" data-testid="show-again" onClick={show}>{INSTALL_AGAIN}</button>
+      ) : null}
+      {open && !installed ? <InstallCard key={run} forced onDismiss={() => setOpen(false)} /> : null}
     </>
   )
 }

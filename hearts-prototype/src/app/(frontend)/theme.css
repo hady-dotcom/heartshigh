@@ -248,7 +248,10 @@ html[data-theme] .install-card h2 { color: var(--ink); font-family: var(--serif)
 html[data-theme] .install-card .install-lead,
 html[data-theme] .install-card .install-note,
 html[data-theme] .install-card .install-manual { color: var(--ink-2); font-size: 16px; line-height: 1.45; }
-html[data-theme] .install-card .install-step p { color: var(--ink); font-size: 16px; font-weight: 600; line-height: 1.35; }
+html[data-theme] .install-card .install-step p,
+html[data-theme] .install-card .install-caption { color: var(--ink); font-size: 15px; font-weight: 650; line-height: 1.35; }
+html[data-theme] .install-nav > button { color: var(--ink); }
+html[data-theme] .install-again { color: var(--ink-2); }
 html[data-theme] .install-skip { color: var(--ink-2); }
 
 html[data-theme] .empty-state,

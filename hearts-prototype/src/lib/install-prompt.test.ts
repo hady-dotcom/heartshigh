@@ -6,6 +6,7 @@ import {
   installCopy,
   installEntry,
   installKind,
+  installSlides,
   offersInstallButton,
   shouldShowInstall,
 } from './install-prompt'
@@ -68,6 +69,22 @@ test('copy is the two iPhone steps, an Android install button, or the menu', () 
   assert.equal(installEntry('ios-safari', false).title, 'Keep HEARTS on your phone')
   assert.equal(installEntry('ios-safari', true).title, 'HEARTS is on this phone')
   assert.equal(installEntry('desktop', true).title, 'HEARTS is on this computer')
+})
+
+test('a phone card is a row of pictured steps, one slide each', () => {
+  const ios = installSlides('ios-safari')
+  assert.deepEqual(ios.map((slide) => slide.id), ['ios-share', 'ios-sheet', 'ios-add', 'ios-home'])
+  assert.match(ios[0].caption, /Share/)
+  assert.match(ios[1].caption, /Add to Home Screen/)
+  assert.match(ios[2].caption, /^Tap Add/)
+  assert.match(ios[3].caption, /home screen/)
+  assert.equal(installSlides('ios-other').length, 4)
+  const android = installSlides('android-chrome')
+  assert.deepEqual(android.map((slide) => slide.id), ['android-menu', 'android-install', 'android-home'])
+  assert.match(android[0].caption, /three dots/)
+  assert.match(android[1].caption, /Install app/)
+  assert.match(installSlides('android-other')[0].caption, /menu/)
+  assert.equal(installSlides('desktop').length, 0)
 })
 
 test('the boot script holds the install prompt and remembers when the app is installed', () => {

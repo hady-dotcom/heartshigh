@@ -7,6 +7,11 @@
 export const INSTALL_DISMISSED_KEY = 'hearts.install.dismissed'
 export const INSTALL_INSTALLED_KEY = 'hearts.install.installed'
 export const INSTALL_SKIP = 'Not now'
+export const INSTALL_AGAIN = 'Show me again'
+
+export type InstallSlideId = 'ios-share' | 'ios-sheet' | 'ios-add' | 'ios-home' | 'android-menu' | 'android-install' | 'android-home'
+
+export type InstallSlide = { id: InstallSlideId; caption: string }
 
 export type InstallKind = 'ios-safari' | 'ios-other' | 'android-chrome' | 'android-other' | 'desktop'
 export type InstallGlyph = 'share' | 'add' | 'menu'
@@ -109,6 +114,33 @@ export function installCopy(kind: InstallKind, prompt: boolean): InstallCopy {
     note: kind === 'ios-other' ? 'Open this page in Safari first. That is the browser that can add it.' : undefined,
     steps: IOS_STEPS,
   }
+}
+
+/** One pictured step per slide. Desktop has no phone to draw. */
+export function installSlides(kind: InstallKind): InstallSlide[] {
+  if (kind === 'ios-safari' || kind === 'ios-other') {
+    return [
+      { id: 'ios-share', caption: 'Tap Share at the bottom of Safari.' },
+      { id: 'ios-sheet', caption: 'Tap Add to Home Screen.' },
+      { id: 'ios-add', caption: 'Tap Add.' },
+      { id: 'ios-home', caption: 'HEARTS lands on your home screen.' },
+    ]
+  }
+  if (kind === 'android-chrome') {
+    return [
+      { id: 'android-menu', caption: 'Tap the menu, the three dots at the top.' },
+      { id: 'android-install', caption: 'Tap Install app.' },
+      { id: 'android-home', caption: 'HEARTS lands on your home screen.' },
+    ]
+  }
+  if (kind === 'android-other') {
+    return [
+      { id: 'android-menu', caption: 'Tap the menu in your browser.' },
+      { id: 'android-install', caption: 'Tap Install app, or Add to Home screen.' },
+      { id: 'android-home', caption: 'HEARTS lands on your home screen.' },
+    ]
+  }
+  return []
 }
 
 export function installEntry(kind: InstallKind, installed: boolean) {
