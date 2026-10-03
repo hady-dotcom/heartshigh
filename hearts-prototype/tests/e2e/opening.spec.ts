@@ -179,14 +179,18 @@ test.describe('the opening', () => {
     expect(state.taps.map((tap: { scene: string; option: string }) => [tap.scene, tap.option])).toEqual(PICKS)
   })
 
-  test('12. the feed request carries lane scores and nothing more personal (P2)', async ({ page }) => {
-    const feedRequest = page.waitForRequest((request) => request.url().includes('/api/hearts/feed'))
+  test('12. before sign-up the feed is chosen on the device, so no request carries lane scores (P2)', async ({ page }) => {
+    const sent: string[] = []
+    page.on('request', (request) => {
+      if (request.method() !== 'GET' || request.url().includes('/api/hearts/feed')) sent.push(`${request.url()} ${request.postData() || ''}`)
+    })
     await playThrough(page)
-    const body = JSON.parse((await feedRequest).postData() || '{}')
-    expect(Object.keys(body.plan || body).sort()).toEqual(expect.arrayContaining(['laneScores']))
-    const text = JSON.stringify(body)
-    expect(text).not.toContain('"s":')
-    expect(text).not.toContain('taps')
+    await expect(page.getByTestId('journey')).not.toHaveAttribute('data-cuts', '')
+    for (const line of sent) {
+      expect(line).not.toContain('laneScores')
+      expect(line).not.toContain('"s":')
+      expect(line).not.toContain('taps')
+    }
   })
 
   test('13. Just show me something goes straight to a clip with its own line', async ({ page }) => {
@@ -412,16 +416,19 @@ test.describe('pop-up questions in a lesson', () => {
 
   test('29. the strict layout keeps the paused player in view above the card', async ({ page }) => {
     await page.route(/youtube|ytimg|googlevideo/, (route) => route.abort())
+    await page.setViewportSize({ width: 1440, height: 900 })
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master/opening')
     await page.getByTestId('flag-popup').uncheck()
     await page.getByTestId('flags-save').click()
     await expect(page.getByTestId('notice')).toContainText('Player layout saved')
+    await page.setViewportSize({ width: 390, height: 844 })
     await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', await nurPath())
     await expect(page.getByTestId('player')).toHaveAttribute('data-popup-layout', 'strict')
     await page.getByTestId('answer-point').click()
     const card = await page.getByTestId('player-card').boundingBox()
     const sheet = await page.getByTestId('popup').boundingBox()
     expect(sheet!.y).toBeGreaterThanOrEqual(card!.y + card!.height - 1)
+    await page.setViewportSize({ width: 1440, height: 900 })
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master/opening')
     await page.getByTestId('flag-popup').check()
     await page.getByTestId('flags-save').click()
