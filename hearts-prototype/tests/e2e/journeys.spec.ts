@@ -187,7 +187,7 @@ test.describe.serial('HEARTS journeys', () => {
     await placing(page, BY_PROPHET)
     await expect(page.getByTestId('starting-clause')).toContainText('3')
     await expect(page.getByTestId('first-course')).toContainText('How to Live Like the Prophet')
-    await join(page, 'ELM-LEARN', 'Placed by Names', `p2-${suffix}@hearts.test`, 'placing-two')
+    await join(page, ' elm-learn ', 'Placed by Names', `p2-${suffix}@hearts.test`, 'placing-two')
     await placing(page, BY_NAMES)
     await expect(page.getByTestId('starting-clause')).toContainText('22')
     await expect(page.getByTestId('first-course')).toContainText('Ar-Rabb')
@@ -349,8 +349,14 @@ test.describe.serial('HEARTS journeys', () => {
   })
 
   test('a learner on an admin address is sent back, and a closed portal shows the closed page', async ({ page }) => {
+    const stranger = await page.context().browser()!.newContext({ baseURL: 'http://127.0.0.1:3000' })
+    const anonymous = await stranger.request.post('/api/hearts', { form: { action: 'clock', iso: '2030-01-01T00:00:00Z', next: '/' }, maxRedirects: 0 })
+    expect(anonymous.headers().location).toContain('/login')
+    await stranger.close()
     await signIn(page, learnerEmail, 'harbour-learner', `/p/${slug}/admin/content`)
     await expect(page.getByTestId('error')).toContainText('portal team')
+    await page.goto('/admin')
+    await expect(page.getByTestId('error')).toContainText('master desk')
     await page.setViewportSize(DESK)
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master')
     await page.getByTestId('portal-card').filter({ hasText: `/p/${slug}` }).getByTestId('deactivate-portal').click()

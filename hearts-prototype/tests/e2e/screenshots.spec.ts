@@ -1,43 +1,91 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 
-const dir = 'artifacts/screenshots'
+const dir = process.env.SCREENSHOT_DIR || 'artifacts/screenshots'
 
-async function shot(page: import('@playwright/test').Page, name: string) {
-  mkdirSync(dir, { recursive: true })
-  await page.screenshot({ path: `${dir}/${name}.png`, fullPage: true })
+async function signIn(page: Page, email: string, password: string, next: string) {
+  await page.goto(`/login?next=${encodeURIComponent(next)}`)
+  await page.getByTestId('login-email').fill(email)
+  await page.getByTestId('login-password').fill(password)
+  await page.getByTestId('login-submit').click()
+  await page.waitForURL((url) => !url.pathname.startsWith('/login'))
 }
 
-test('mobile screens of the seeded portal', async ({ page }) => {
+async function shot(page: Page, name: string, path: string, fullPage = false) {
+  mkdirSync(dir, { recursive: true })
+  await page.goto(path)
+  await page.waitForLoadState('networkidle').catch(() => {})
+  await page.waitForTimeout(600)
+  await page.screenshot({ path: `${dir}/${name}.png`, fullPage, caret: 'initial' })
+}
+
+test.describe.configure({ timeout: 180_000 })
+
+test('learner app at phone size', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/login?next=/p/east-london/admin')
-  await page.getByTestId('login-email').fill('elm-admin@hearts.test')
-  await page.getByTestId('login-password').fill('portal-admin')
-  await page.getByTestId('login-submit').click()
-  await expect(page.getByTestId('admin-overview')).toBeVisible()
-  await shot(page, 'admin-overview')
-  await page.goto('/p/east-london/admin/courses')
-  await shot(page, 'admin-courses')
-  await page.goto('/p/east-london/admin/codes')
-  await shot(page, 'admin-codes')
-  await page.goto('/p/east-london/admin/settings')
-  await shot(page, 'admin-settings')
-  await page.goto('/login?next=/p/east-london/feed')
-  await page.getByTestId('login-email').fill('elm-learner@hearts.test')
-  await page.getByTestId('login-password').fill('portal-learner')
-  await page.getByTestId('login-submit').click()
-  await expect(page.getByTestId('feed-cut').first()).toBeVisible()
-  await shot(page, 'learner-feed')
-  await page.goto('/p/east-london/path')
-  await shot(page, 'learner-path')
-  await page.goto('/p/east-london/grow')
-  await shot(page, 'learner-grow')
-  await page.goto('/p/east-london/schedule')
-  await shot(page, 'learner-schedule')
-  await page.goto('/p/east-london/night')
-  await shot(page, 'learner-night')
-  const lesson = page.locator('[data-testid=lesson-link]').first()
-  await page.goto('/p/east-london/path')
-  await lesson.click()
-  await shot(page, 'learner-player')
+  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london')
+  await expect(page.getByTestId('feed')).toBeVisible()
+  const base = '/p/east-london'
+  const screens: [string, string][] = [
+    ['01-home-feed', base],
+    ['02-lanes', `${base}/lanes`],
+    ['02b-speaker', `${base}/speaker/mikaeel-smith`],
+    ['03-course-player', `${base}/course/1`],
+    ['03-course-player-youtube', `${base}/course/3`],
+    ['04-garden', `${base}/garden`],
+    ['04-garden-general', `${base}/garden/general`],
+    ['04-garden-jibril', `${base}/garden/jibril`],
+    ['04-garden-clause', `${base}/garden/jibril/22`],
+    ['04-garden-ghunya', `${base}/garden/ghunya`],
+    ['04-garden-harvest', `${base}/garden/harvest`],
+    ['04-garden-workbook', `${base}/garden/workbook`],
+    ['05-me', `${base}/me`],
+    ['05-me-circle', `${base}/me/circle`],
+    ['05-me-plan', `${base}/me/plan`],
+    ['05-me-settings', `${base}/me/settings`],
+    ['06-welcome-result', `${base}/welcome`],
+    ['06-welcome-placing', `${base}/welcome?step=placing`],
+    ['06-welcome-splash', `${base}/welcome?step=start`],
+  ]
+  for (const [name, path] of screens) await shot(page, `learner-${name}`, path)
+  await page.goto(`${base}/course/1`)
+  await expect(async () => {
+    await page.getByTestId('timeline-dot').first().click()
+    await expect(page.getByTestId('popup')).toBeVisible({ timeout: 1000 })
+  }).toPass({ timeout: 15_000 })
+  await page.waitForTimeout(800)
+  await page.screenshot({ path: `${dir}/learner-03b-answer-sheet.png`, caret: 'initial' })
+})
+
+test('portal desk at desktop size', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await signIn(page, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin')
+  const base = '/p/east-london/admin'
+  for (const [name, path] of [
+    ['overview', base],
+    ['content', `${base}/content`],
+    ['course-builder', `${base}/content/4`],
+    ['library-course-editor', `${base}/content/1`],
+    ['library', `${base}/library`],
+    ['access', `${base}/access`],
+    ['teach', `${base}/teach`],
+    ['plans', `${base}/plans`],
+    ['nights', `${base}/nights`],
+    ['settings', `${base}/settings`],
+  ]) await shot(page, `admin-${name}`, path)
+  await signIn(page, 'master@hearts.test', 'hearts-master', '/master')
+  for (const [name, path] of [
+    ['portals', '/master'],
+    ['library', '/master/library'],
+    ['library-course', '/master/library/2'],
+    ['packs', '/master/packs'],
+    ['questions', '/master/questions'],
+  ]) await shot(page, `master-${name}`, path)
+})
+
+test('door, sign-in and join', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await shot(page, 'door', '/')
+  await shot(page, 'login', '/login')
+  await shot(page, 'join', '/join?code=ELM-LEARN')
 })
