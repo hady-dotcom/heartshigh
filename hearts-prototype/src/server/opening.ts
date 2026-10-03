@@ -4,6 +4,7 @@ import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE } from '@/lib/opening-data'
 import { idOf } from '@/lib/ids'
 import { now } from '@/lib/clock'
 import { adoptedCourseIds, visibleCourseIds, type PortalDoc, type SessionUser } from './context'
+import { readBackgroundsBaseUrl } from '@/lib/backgrounds'
 import { cardForTalk, readCardCatalogue, type StoredCard } from '@/lib/cards'
 import { filmsForTalk, mixFeed, readFilmCatalogue, type BeatFilm } from '@/lib/films'
 import { filesForTalk, isTypographyStyle, readTypographyManifest, type TypographyManifest } from '@/lib/typography'
@@ -32,6 +33,8 @@ export type OpeningData = {
   clips: Record<string, FeedItem>
   laneTitles: Record<string, string>
   trendsPrompt: boolean
+  /** Bucket origin for the photographic stills. Empty in local dev, which keeps the six bundled stills. */
+  backgroundsBaseUrl: string | null
 }
 
 export async function openingConfig(payload: Payload, portalId: number | null) {
@@ -253,6 +256,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     beats: cardForTalk(data.cards, youtubeId)?.beats,
     cardStyle: cardForTalk(data.cards, youtubeId)?.style || null,
     cardScene: cardForTalk(data.cards, youtubeId)?.scene || null,
+    cardBackground: cardForTalk(data.cards, youtubeId)?.background || null,
     clause: (cut.bestClause as number) || null,
     transcriptReady: Boolean(lesson.transcript) && lesson.transcriptSource !== 'pending',
   }
@@ -379,6 +383,7 @@ export async function loadOpening(payload: Payload, portal: PortalDoc, user: Ses
     clips,
     laneTitles,
     trendsPrompt: own?.trendsContributionPrompt !== false && master?.trendsContributionPrompt !== false,
+    backgroundsBaseUrl: readBackgroundsBaseUrl(),
   }
 }
 
@@ -401,7 +406,7 @@ export async function serveFeed(payload: Payload, portal: PortalDoc, user: Sessi
       return row ? itemFor(data, row, slot.laneKey, laneTitles, index) : null
     })
     .filter((item): item is FeedItem => Boolean(item))
-  const items = mixFeed(talks, plan.served.length)
+  const items = mixFeed(talks, plan.served.length, readBackgroundsBaseUrl())
   return { slots, items, spinePointer: built.spinePointer }
 }
 

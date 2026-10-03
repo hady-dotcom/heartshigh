@@ -172,6 +172,9 @@
 .slide.cinema, .slide.kinetic, .slide.conversation { background: #1a140f; }
 .slide.windows .bg, .slide.unfold .bg { position: absolute; inset: 0; background-size: cover; background-position: center; z-index: 0; }
 .slide.windows .bg::after, .slide.unfold .bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(16,10,4,0.55), rgba(16,10,4,0.4) 48%, rgba(16,10,4,0.74)); }
+.slide.tone-light .bg::after { background: linear-gradient(180deg, rgba(16,10,4,0.9), rgba(16,10,4,0.84) 46%, rgba(16,10,4,0.92)); }
+.slide .bg.fallback { background-image: none; background: linear-gradient(165deg, #3d342c 0%, #241c16 46%, #1a140f 100%); }
+.slide .bg.fallback::after { background: linear-gradient(180deg, rgba(16,10,4,0.28), rgba(16,10,4,0.12) 50%, rgba(16,10,4,0.36)); }
 .slide .bg.drift { inset: -6%; animation: scene-drift 22s ease-in-out infinite alternate; }
 @keyframes scene-drift { from { transform: scale(1.04); } to { transform: scale(1.12) translate3d(-1.6%, -1%, 0); } }
 .beat-in { animation: beat-in 0.55s ease both; }

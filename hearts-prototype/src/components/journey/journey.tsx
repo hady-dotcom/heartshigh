@@ -90,6 +90,7 @@ export function Journey(props: JourneyProps) {
   const ctx = useMemo(() => ({ ...opening.route, scales: opening.scales }), [opening])
   const scenes = opening.scenes
   const loginHref = `/login?next=${encodeURIComponent(`${base}/feed`)}`
+  const backgroundsBase = opening.backgroundsBaseUrl || null
 
   const [phase, setPhase] = useState<Phase>(props.initial === 'feed' ? 'feed' : props.initial)
   const [sceneAt, setSceneAt] = useState(0)
@@ -466,13 +467,13 @@ export function Journey(props: JourneyProps) {
     refilling.current = true
     try {
       const data = await fetchFeed(heartRef.current)
-      adopt(mixFeed(data.clips, heartRef.current?.served.length || 0), data.items, data.spinePointer, false)
+      adopt(mixFeed(data.clips, heartRef.current?.served.length || 0, backgroundsBase), data.items, data.spinePointer, false)
     } catch {
       // Offline: carry on with what is here.
     } finally {
       refilling.current = false
     }
-  }, [adopt, fetchFeed])
+  }, [adopt, backgroundsBase, fetchFeed])
 
   // Arriving straight at the feed (a returning visitor, or Home › feed).
   useEffect(() => {
@@ -499,7 +500,7 @@ export function Journey(props: JourneyProps) {
           clips = [{ ...asked, laneKey: null }, ...clips.filter((clip) => clip.cutId !== asked.cutId)]
           if (props.play === 'appetiser') firstMode = 'appetiser'
         }
-        clips = mixFeed(clips, state.served.length)
+        clips = mixFeed(clips, state.served.length, backgroundsBase)
         adopt(clips, data.items, data.spinePointer, true)
         await showItem(0, firstMode)
         if (!data.clips[0]?.youtubeId || data.clips[0]?.style) window.setTimeout(() => setTabs(true), 1200)

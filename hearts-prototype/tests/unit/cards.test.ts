@@ -8,6 +8,7 @@ import { parseManifest } from '../../../remotion/src/manifest'
 import { landedGold, revealedQuote, spreadWords } from '../../src/lib/card-voice'
 import { restoreSpokenTail } from '../../../remotion/src/emphasis'
 import { buildCards, readCardCatalogue, writeCardCatalogue } from '../../src/lib/cards'
+import { backgroundByFile, sharesLook } from '../../src/lib/backgrounds'
 import { pickScene } from '../../src/lib/scenes'
 
 const root = path.resolve(import.meta.dirname, '../..')
@@ -26,6 +27,12 @@ test('cards are one per talk, with the verbatim quote and the last gold landing'
   assert.equal(first.beats[0].quote.includes('to to'), false)
   assert.equal(first.beats[1].quote, "But it's at that moment that you got to lock in and have true certainty that Allah's plan is real.")
   assert.equal(first.beats[2].quote, 'I told you that transitions are the time that you need to know this name Ar-Rabb.')
+  assert.equal(first.background, 'jpg/A-01-lake-predawn-violet.jpg')
+  assert.equal(second.background, 'jpg/A-02-fjord-dawn-rose.jpg')
+  const firstStill = backgroundByFile(first.background)
+  const secondStill = backgroundByFile(second.background)
+  assert.ok(firstStill && secondStill)
+  assert.equal(sharesLook(firstStill, secondStill), false)
   assert.equal(second.beats[0].quote, "What we're saying is that Allah ﷻ is the only source for clarity in your life.")
   assert.equal(second.beats[1].quote, "Without light, you walk in a room that's dark.")
   assert.equal(second.beats[2].quote, "Now Allah subhanahu wa ta'ala, He says, and many of us, we can relate to this verse.")

@@ -2,7 +2,8 @@
  * Scenic stills for the teaching cards. No people, and no figurative figures.
  * Desert, sky and mountain are original pictures made for this set.
  * Road, mist and night are the stills already used behind the teaching slides.
- * Tags are how a larger catalogue (a few hundred stills) will avoid similar neighbours.
+ * Tags keep these six from sitting next to a similar neighbour in local dev.
+ * The photographic catalogue (landscape, palette, time) lives in backgrounds.ts.
  */
 export const SCENES = [
   { id: 'road', src: '/slides/bg-cinema-road.jpg', tags: ['road', 'day'] },

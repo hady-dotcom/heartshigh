@@ -7,6 +7,7 @@ import type { ManifestRow, StyleId } from '../../../remotion/src/manifest'
 import { assignStyles } from '../../../remotion/src/manifest'
 import { placeOnSpeech, speechRuns } from '../../../remotion/src/timing'
 import { cleanSpokenQuote, type SpokenWord } from './card-voice'
+import { CATALOGUE, pickBackground } from './backgrounds'
 import { pickScene, SCENES, sceneById, type SceneId } from './scenes'
 
 export type CardBeat = {
@@ -34,7 +35,10 @@ export type StoredCard = {
   speaker: string
   course: string
   style: StyleId
+  /** Local still, used when BACKGROUNDS_BASE_URL is unset. */
   scene: SceneId
+  /** Catalogue file, stable for this card. Served from the bucket when the base URL is set. */
+  background?: string | null
   beats: CardBeat[]
 }
 
@@ -160,9 +164,12 @@ export function buildCards(rows: ManifestRow[], heartsRoot: string): StoredCard[
     }
   })
   let previous: { id: string; tags: readonly string[] } | null = null
+  let previousBackground: (typeof CATALOGUE)[number] | null = null
   return assignStyles(talks).map((talk, index) => {
     const scene = pickScene(SCENES[index % SCENES.length].id, 0, previous)
     previous = scene
+    const background = CATALOGUE.length ? pickBackground(CATALOGUE, index, previousBackground) : null
+    previousBackground = background
     return {
       youtubeId: talk.youtubeId,
       title: talk.title,
@@ -170,6 +177,7 @@ export function buildCards(rows: ManifestRow[], heartsRoot: string): StoredCard[
       course: talk.course,
       style: talk.style,
       scene: scene.id,
+      background: background?.file || null,
       beats: talk.beats.filter((beat) => BEATS.has(beat.beat)).map((beat) => {
         const quote = cleanSpokenQuote(restoreSpokenTail(talk.youtubeId, beat.beat, beat.quote))
         const phrases = keyPhrasesFor(talk.youtubeId, beat.beat, quote)

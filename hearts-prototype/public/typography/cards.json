@@ -7,6 +7,7 @@
       "course": "The Names",
       "style": "kinetic",
       "scene": "road",
+      "background": "jpg/A-01-lake-predawn-violet.jpg",
       "beats": [
         {
           "beat": "hook",
@@ -268,6 +269,7 @@
       "course": "The Names",
       "style": "windows",
       "scene": "mist",
+      "background": "jpg/A-02-fjord-dawn-rose.jpg",
       "beats": [
         {
           "beat": "hook",

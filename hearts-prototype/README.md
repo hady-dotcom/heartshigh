@@ -139,6 +139,7 @@ None are needed to run locally.
 | `HEARTS_TEST_CLOCK` | `1` turns on the test clock. Only the master desk can move it, signed-out reads are refused, and a production build ignores it |
 | `HEARTS_E2E_PORT`, `HEARTS_E2E_REUSE` | Port for the server the e2e run starts (default 3100), or `1` to reuse one already running there |
 | `HEARTS_NOW` | Pins the app's idea of "now" to a date, such as `2026-10-01T09:00:00Z`. For demos and tests |
+| `BACKGROUNDS_BASE_URL` | Bucket origin for the scenic catalogue. Stills are fetched from `{origin}/backgrounds/` plus the catalogue filename. Unset, the six local stills in `public/slides/` are used |
 
 On a Cloud Agent, put keys in the Cursor Dashboard under Cloud Agents, then Secrets. Do not commit them.
 

@@ -94,8 +94,23 @@ export function TeachingCard({
   const [duration, setDuration] = useState(0)
   const [lineDone, setLineDone] = useState(false)
   const [opened, setOpened] = useState(false)
+  const [missing, setMissing] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const quoteRef = useRef<HTMLHeadingElement | null>(null)
+  useEffect(() => {
+    const src = scene.scene
+    if (!src) {
+      setMissing(true)
+      return
+    }
+    let cancelled = false
+    const image = new Image()
+    image.onload = () => { if (!cancelled) setMissing(false) }
+    image.onerror = () => { if (!cancelled) setMissing(true) }
+    image.src = src
+    return () => { cancelled = true }
+  }, [scene.scene])
+
   const beats = scene.beats
   const at = Math.min(step, beats.length - 1)
   const current = beats[at]
@@ -246,10 +261,12 @@ export function TeachingCard({
 
   return (
     <div
-      className={`slide scene-${scene.style} ${scene.style}`}
+      className={`slide scene-${scene.style} ${scene.style}${scene.brightness === 'light' && !missing ? ' tone-light' : ''}${missing ? ' tone-missing' : ''}`}
       data-testid="scene-card"
       data-style={scene.style}
       data-scene={scene.scene}
+      data-brightness={scene.brightness || undefined}
+      data-picture={missing ? 'missing' : 'ready'}
       data-destination="clip"
       data-beat={current?.beat || ''}
       data-voice={blocked ? 'blocked' : sound ? 'on' : 'off'}
@@ -260,7 +277,7 @@ export function TeachingCard({
         unlock()
       }}
     >
-      <div className="bg drift" style={{ backgroundImage: `url(${scene.scene})` }} />
+      <div className={`bg drift${missing ? ' fallback' : ''}`} style={missing ? undefined : { backgroundImage: `url(${scene.scene})` }} />
       <audio ref={audioRef} preload="auto" data-testid="scene-audio" />
       {scene.style === 'kinetic' ? <Kinetic beats={beats} at={at} lane={lane} speaker={speaker} course={course} voice={voiceButton} next={next} spoken={spoken} quoteRef={quoteRef} /> : null}
       {scene.style === 'windows' ? <Windows beats={beats} at={at} lane={lane} speaker={speaker} course={course} voice={voiceButton} next={next} spoken={spoken} /> : null}

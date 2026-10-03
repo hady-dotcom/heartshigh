@@ -1,3 +1,4 @@
+import { CATALOGUE, backgroundSrc, pickBackground, type Background } from '@/lib/backgrounds'
 import { pickScene } from '@/lib/scenes'
 import type { FeedItem, SlideStyle } from '@/server/learner'
 
@@ -22,13 +23,16 @@ function beatsOf(item: FeedItem): CardBeat[] {
  * After each talk, a face film or a scenic card, then a question.
  * Face films and cards alternate through the session. A return visit swaps which
  * one a talk leads with, and steps the card's style.
- * The background is the card's own setting. A neighbour that shares a tag steps on.
- * Learn more always opens that piece's appetiser.
+ * Without BACKGROUNDS_BASE_URL the six local stills are used, and a shared tag steps on.
+ * With the bucket URL, the card's stored catalogue still is used. A neighbour that
+ * shares landscape, palette or time steps on. Learn more always opens the appetiser.
  */
-export function mixFeed(items: FeedItem[], visit = 0): FeedItem[] {
+export function mixFeed(items: FeedItem[], visit = 0, backgroundsBaseUrl: string | null = null): FeedItem[] {
   const out: FeedItem[] = []
   let previousStyle = ''
   let previousScene: { id: string; tags: readonly string[] } | null = null
+  let previousBackground: Background | null = null
+  const base = (backgroundsBaseUrl || '').trim()
   items.forEach((item, index) => {
     out.push(item)
     if (item.card && item.card !== 'talk') return
@@ -43,14 +47,22 @@ export function mixFeed(items: FeedItem[], visit = 0): FeedItem[] {
       if (beats.length) {
         const styleBase = Math.max(0, STYLE_LIST.indexOf((item.cardStyle || 'kinetic') as (typeof STYLE_LIST)[number]))
         const style = pickStyle(index, visit, previousStyle, styleBase)
-        const scene = pickScene(item.cardScene || 'road', 0, previousScene)
         previousStyle = style
-        previousScene = scene
+        const local = pickScene(item.cardScene || 'road', 0, previousScene)
+        previousScene = local
+        const chosen = base && CATALOGUE.length ? pickBackground(CATALOGUE, item.cardBackground || index, previousBackground) : null
+        if (chosen) previousBackground = chosen
         out.push({
           ...item,
           id: `scene-${item.cutId}`,
           card: 'scene',
-          scene: { style, scene: scene.src, destination: 'clip', beats },
+          scene: {
+            style,
+            scene: (chosen && backgroundSrc(chosen.file, base)) || local.src,
+            destination: 'clip',
+            beats,
+            brightness: chosen?.brightness || null,
+          },
         })
       }
     }
