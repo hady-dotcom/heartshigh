@@ -15,7 +15,7 @@ export function displayTalkTitle(input: {
   const course = (input.courseTitle || '').trim()
   const fallback = course ? `${course} · Part ${part}` : `Part ${part}`
   const ids = new Set([input.youtubeId, input.vimeoId].map((value) => (value || '').trim()).filter(Boolean))
-  for (const raw of [input.sourceTitle, input.title]) {
+  for (const raw of [input.title, input.sourceTitle]) {
     const text = (raw || '').replace(/\s+/g, ' ').trim()
     if (!text || isMachineTitle(text, ids)) continue
     return text
