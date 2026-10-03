@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import type { AreaFruit, AreaView } from '@/lib/garden-areas'
-import { CANOPY_SPLIT, TREE_FRAME, TREE_PADS, TRUNK_PIVOT, medallionSpots, sceneBackground, treeDepth, treeSources, type GardenTheme } from '@/lib/garden-art'
+import { CANOPY_SPLIT, TREE_FRAME, TREE_PADS, medallionSpots, sceneBackground, treeDepth, treeSources, trunkPivot, type GardenTheme } from '@/lib/garden-art'
 
 const MEDALLION_CAP = 6
 const SEEN_KEY = 'hearts-garden-bloom'
@@ -39,8 +39,9 @@ function Tree({ area }: { area: AreaView }) {
   const marks = hanging(area)
   const spots = medallionSpots(marks.length, area.stage)
   const fresh = useFreshBloom(marks.filter((mark) => mark.earned).map((mark) => mark.id))
-  const pivotX = `${(TRUNK_PIVOT.x / TREE_FRAME.width) * 100}%`
-  const pivotY = `${(TRUNK_PIVOT.y / TREE_FRAME.height) * 100}%`
+  const pivot = trunkPivot(area.id, area.stage)
+  const pivotX = `${(pivot.x / TREE_FRAME.width) * 100}%`
+  const pivotY = `${(pivot.y / TREE_FRAME.height) * 100}%`
   return (
     <article
       className="garden-tree"
@@ -105,7 +106,6 @@ export function GardenScene({ areas, theme = 'evening' }: { areas: AreaView[]; t
       <header className="garden-top">
         <h1><span className="gold-mark" aria-hidden="true" />Small steps. A fuller you.</h1>
       </header>
-      <img className="garden-prop can" src="/garden/props/watering-can.webp" alt="" />
       <img className="garden-prop lantern" src="/garden/props/lantern.webp" alt="" />
       <div className="garden-trees">
         {areas.map((area) => <Tree key={area.id} area={area} />)}

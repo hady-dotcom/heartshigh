@@ -29,21 +29,24 @@ The five pads are a smile. Qur’an is back-left, Spirituality back-right, Hadit
 
 ## Split layers and sway
 
-Planters, soil and plaques stay still. Only the trunk and canopy sway, a small rotation of about 0.6–1.2 degrees, each tree on its own timing, around the trunk base where it meets the soil.
+Planters, soil and plaques stay still. Only the trunk and canopy sway. The angle is `A·sin(2πt/T + φ)`, with A between 0.6° and 1.2°, and T between 4s and 6.5s. Each tree has its own angle, period and phase. The ease is a sine.
 
-The component already draws two layers:
-
-- `.tree-planter` is static. It holds the planter image and the plaque name.
-- `.tree-canopy` holds the canopy image and the medallions. Its `transform-origin` is the trunk-base pivot.
-
-Until the split files arrive, the planter layer uses the combined file and the canopy layer has no image, so nothing sways (`data-sway="off"`). When these files are added, set `CANOPY_SPLIT` in `src/lib/garden-art.ts` and put the measured pivot in `TRUNK_PIVOT` (today a stand-in at **(256, 600)**, just above the anchor):
+The page draws the planter first, then the canopy. Both use the same canvas and the same anchor. The canopy's `transform-origin` is that stage's pivot from `trees/pivots.json`: x is the trunk centre at the soil, y is the soil line, and the canopy has no pixels at or below y. Scene position is tree origin plus pivot times scale.
 
 | File | Role |
 | --- | --- |
 | `/garden/trees/{area}/stage-{stage}-planter.webp` | Planter, soil, blank plaque. Still. |
-| `/garden/trees/{area}/stage-{stage}-canopy.webp` | Trunk and canopy. Same canvas and anchor. Sways. |
+| `/garden/trees/{area}/stage-{stage}-canopy.webp` | Trunk, root flare and canopy. Sways about the pivot. |
 
-Medallions are children of the canopy layer, so they move with it once sway is on.
+Medallions are children of the canopy, so they sway with it. `prefers-reduced-motion: reduce` leaves the canopy still. The lantern keeps its glow pulse unless reduced motion is on.
+
+| Area | stage 0 | stage 1 | stage 2 | stage 3 | stage 4 |
+| --- | --- | --- | --- | --- | --- |
+| Qur’an | 265.5, 506 | 263, 506 | 267, 506 | 262.5, 506 | 262, 506 |
+| Hadith | 257, 505 | 257, 505 | 263.5, 506 | 267.5, 505 | 267.5, 506 |
+| Character | 257, 504 | 262, 506 | 265, 506 | 266.5, 506 | 266, 506 |
+| Society | 258, 506 | 251.5, 505 | 268.5, 506 | 268.5, 507 | 268.5, 507 |
+| Spirituality | 257.3, 506 | 261, 506 | 262.5, 506 | 264, 506 | 264, 506 |
 
 ## Medallions and props
 
@@ -52,7 +55,6 @@ Medallions are children of the canopy layer, so they move with it once sway is o
 | `/garden/fruit/medallion-glow.webp` | 256 × 256 | Transparent. A finished talk or course. |
 | `/garden/fruit/medallion-empty.webp` | 256 × 256 | Transparent. Still to finish. |
 | `/garden/props/lantern.webp` | 244 × 512 | Transparent |
-| `/garden/props/watering-can.webp` | 512 × 395 | Transparent |
 
 A glow medallion links to what was sown. An empty one links to the talk or course still to come. The plaque name links to the workbook. At most six medallions hang in a crown, earned ones first. A glow medallion blooms the first time this browser shows it.
 

@@ -48,7 +48,6 @@
 }
 
 .garden-prop { position: absolute; z-index: 6; pointer-events: none; }
-.garden-prop.can { left: 2%; bottom: 12%; width: 78px; height: auto; }
 .garden-prop.lantern {
   right: 3%;
   bottom: 13%;
@@ -86,19 +85,24 @@
   filter: sepia(0.28) hue-rotate(292deg) saturate(0.72) brightness(1.08);
 }
 
-/* Canopy origin is the trunk base. It sways only once the split layer is in use. */
+/* Canopy origin is the trunk centre on the soil line. The planter is not transformed. */
 .tree-canopy {
   z-index: 2;
-  transform-origin: var(--pivot-x, 50%) var(--pivot-y, 93.75%);
+  transform-origin: var(--pivot-x, 50%) var(--pivot-y, 79%);
   pointer-events: none;
 }
+/* Half the sine period each way, so a full swing and return takes --sway-dur. */
 .garden-scene[data-sway='canopy'] .tree-canopy.sway {
-  animation: canopy-sway var(--sway-dur, 5.4s) ease-in-out infinite;
+  animation-name: canopy-sway;
+  animation-duration: calc(var(--sway-dur, 5.4s) / 2);
+  animation-timing-function: cubic-bezier(0.445, 0.05, 0.55, 0.95);
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
   animation-delay: var(--sway-delay, 0s);
 }
 @keyframes canopy-sway {
-  0%, 100% { transform: rotate(var(--sway, 0.8deg)); }
-  50% { transform: rotate(calc(var(--sway, 0.8deg) * -1)); }
+  from { transform: rotate(calc(var(--sway, 0.8deg) * -1)); }
+  to { transform: rotate(var(--sway, 0.8deg)); }
 }
 
 .plaque-name {
@@ -148,7 +152,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .garden-prop.lantern,
-  .tree-canopy,
+  .garden-scene[data-sway='canopy'] .tree-canopy.sway,
   .medallion.bloom { animation: none; }
 }
 
