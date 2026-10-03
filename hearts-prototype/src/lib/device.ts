@@ -5,6 +5,7 @@ import { PENDING_KEY, STORAGE_KEY, type HeartState } from './heart'
 declare global {
   interface Window {
     __HEARTS_VIEWAS?: string
+    __HEARTS_VIEWAS_WIPED?: boolean
   }
 }
 
@@ -27,6 +28,8 @@ function read<T>(key: string): T | null {
 }
 
 function write(key: string, value: unknown) {
+  // The page keeps running until the exit navigation lands; nothing may refill a wiped view.
+  if (viewAsId() && window.__HEARTS_VIEWAS_WIPED) return
   try {
     if (value == null) window.localStorage.removeItem(deviceKey(key))
     else window.localStorage.setItem(deviceKey(key), JSON.stringify(value))
@@ -51,6 +54,7 @@ export function sessionFlags(): SessionFlags {
   }
 }
 export function setSessionFlags(flags: SessionFlags) {
+  if (viewAsId() && window.__HEARTS_VIEWAS_WIPED) return
   try {
     window.sessionStorage.setItem(deviceKey('hearts.session.v1'), JSON.stringify(flags))
   } catch {
@@ -66,6 +70,7 @@ export const writePref = (name: string, value: boolean) => write(`hearts.pref.${
 
 /** Removes every view-as key (or one session's), on exit, on timeout and when a stale namespace is found. */
 export function wipeViewAs(sessionId?: string) {
+  if (viewAsId()) window.__HEARTS_VIEWAS_WIPED = true
   try {
     for (const store of [window.localStorage, window.sessionStorage]) {
       const doomed: string[] = []
