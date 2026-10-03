@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
 import { Avatar } from '@/components/app/feed'
+import { OptInLane, PrefToggle, StartAgain } from '@/components/app/me-controls'
 import { Mascot } from '@/components/brand'
 import { Qr } from '@/components/qr'
 import { now } from '@/lib/clock'
@@ -27,11 +28,28 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
           <Avatar name={user.name || user.email} portrait={null} size={58} />
           <span><b data-testid="me-name">{user.name || user.email}</b><small className="muted">{portalName(portal)} · day {dayNumber(user)}</small></span>
         </div>
+        <details className="card name-edit" data-testid="name-edit">
+          <summary>Change the name we use</summary>
+          <form className="form-stack" action="/api/hearts" method="post" style={{ marginTop: 10 }}>
+            <Hidden fields={{ action: 'profile', next: `${base}/me` }} />
+            <input className="field" name="name" defaultValue={user.name || ''} maxLength={80} data-testid="name-input" aria-label="Your name" />
+            <button className="pill ink small" type="submit" data-testid="name-save">Save name</button>
+          </form>
+        </details>
         {links.map(([key, title, sub, href]) => (
           <Link key={key} className="list-link" href={`${base}/${href}`} data-testid={`me-${key}`}>
             <span className="grow">{title}<small>{sub}</small></span>›
           </Link>
         ))}
+        <p className="eyebrow" style={{ marginTop: 18 }}>Your opening and this phone</p>
+        <section className="card prefs" data-testid="me-prefs">
+          <PrefToggle name="keepPlace" label="Keep my place" hint="Saves where you are on our side, so another phone picks up from here. Off keeps it on this phone only." checked={Boolean(user.keepPlace)} next={`${base}/me`} />
+          <PrefToggle name="shareOpening" label="Share my opening answers with my mentor" hint="Private answers stay with you either way." checked={Boolean(user.shareOpening)} next={`${base}/me`} />
+          <PrefToggle name="trendsOptIn" label="Add my taps to my chapter’s trends" hint="Only counts across ten or more people, never your name." checked={Boolean(user.trendsOptIn)} next={`${base}/me`} />
+          <PrefToggle name="haptics" label="Haptics" hint="A small buzz when you tap an answer." checked={user.haptics !== false} next={`${base}/me`} />
+          <OptInLane lane="guarding-gaze" label="Private lanes: Guarding the gaze" hint="Clips on this appear only if you turn this on. It is kept on this phone and never shown to anyone." portal={portal.slug || ''} />
+        </section>
+        <StartAgain base={base} />
         <div className="app-head" style={{ marginTop: 18 }}>
           <h2 style={{ margin: 0, fontSize: 19 }}>Notifications</h2>
           {unread ? (

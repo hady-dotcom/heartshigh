@@ -415,3 +415,8 @@
 .app .note { display: block; }
 
 .app p, .app h2, .app h3, .app b { overflow-wrap: anywhere; }
+
+.prefs { padding: 6px 16px; }
+.pref-row { border-bottom: 1px solid var(--line); padding: 12px 0; margin: 0; }
+.prefs > :last-child { border-bottom: 0; }
+.name-edit summary { font-weight: 700; cursor: pointer; }
