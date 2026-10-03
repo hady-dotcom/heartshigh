@@ -7,7 +7,7 @@ import type { OpeningData } from '@/server/opening'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readHeart, readPending, sessionFlags, setSessionFlags, viewAsId, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
-import { appetiserStop } from '@/lib/tiers'
+import { appetiserStop, captionIndex } from '@/lib/tiers'
 import { laneClips } from '@/lib/lanes'
 import { isoWeek } from '@/lib/trends'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, lowData, playOnly, preloadApi, setHidden, soundOn, type PlayerKind } from '@/lib/yt'
@@ -48,16 +48,6 @@ const TAB_DELAY = 200
 const HOLD = 700
 
 const appetiserEnd = (item: FeedItem) => appetiserStop(item.appetiser)
-
-/** Which timed caption is showing at `time`: the last line already said (the first until then). */
-export function captionIndex(lines: { at: number }[] | undefined, time: number) {
-  if (!lines?.length) return 0
-  let at = 0
-  lines.forEach((line, index) => {
-    if (time >= line.at - 0.15) at = index
-  })
-  return at
-}
 
 function clock(total: number) {
   const value = Math.max(0, Math.round(total))

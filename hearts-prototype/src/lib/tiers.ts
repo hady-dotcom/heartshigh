@@ -116,6 +116,11 @@ export function cleanVtt(raw: string, note = '') {
   return [...head, '', ...lines.map((line) => `${vttStamp(line.start)} --> ${vttStamp(line.end)}\n${line.text}\n`)].join('\n')
 }
 
+/** A talk's length from its captions: the last word's start plus 0.8 seconds, rounded up. */
+export function talkSeconds(words: Word[]) {
+  return words.length ? Math.ceil(words[words.length - 1].at + 0.8) : 0
+}
+
 export function lastSecond(cues: Cue[]) {
   return cues.length ? Math.ceil(Math.max(...cues.map((cue) => cue.end))) : 0
 }
@@ -356,23 +361,26 @@ export function draftTiers(source: string | Cue[], durationHint?: number | null)
   // Hors d'oeuvre: the best window of whole sentences that fits 15 to 20 seconds.
   type Window = { a: number; b: number; start: number; end: number; score: number }
   // A window that starts cleanly after a pause and ends on a finished sentence wins over any that does not.
-  let hors: Window | null = null
-  let loose: Window | null = null
-  for (let a = firstUsable; a <= lastUsable; a++) {
-    if (blocked(a) || all[a].words < 5) continue
-    for (let b = a; b <= lastUsable; b++) {
-      if (blocked(b)) break
-      if (all[b].end - all[a].start > HORS_MAX + 0.5) break
-      const window = fit(a, b, HORS_MIN, HORS_MAX)
-      if (!window) continue
-      const inside = scores.slice(a, b + 1)
-      const score = hookScore(a) * 1.5 + inside.reduce((sum, value) => sum + value, 0) / inside.length + (closes(b) ? 3 : -4) + endStrength(b) + (b - a > 4 ? -1 : 0)
-      const strict = opens(a) && pauseBefore(a) >= (cased ? 0.3 : SENTENCE_PAUSE - 0.05) && closes(b)
-      if (strict && (!hors || score > hors.score)) hors = { a, b, ...window, score }
-      if (!loose || score > loose.score) loose = { a, b, ...window, score }
+  const bestHors = (skip?: number): Window | null => {
+    let strictBest: Window | null = null
+    let loose: Window | null = null
+    for (let a = firstUsable; a <= lastUsable; a++) {
+      if (blocked(a) || all[a].words < 5) continue
+      for (let b = a; b <= lastUsable; b++) {
+        if (blocked(b) || b === skip) break
+        if (all[b].end - all[a].start > HORS_MAX + 0.5) break
+        const window = fit(a, b, HORS_MIN, HORS_MAX)
+        if (!window) continue
+        const inside = scores.slice(a, b + 1)
+        const score = hookScore(a) * 1.5 + inside.reduce((sum, value) => sum + value, 0) / inside.length + (closes(b) ? 3 : -4) + endStrength(b) + (b - a > 4 ? -1 : 0)
+        const strict = opens(a) && pauseBefore(a) >= (cased ? 0.3 : SENTENCE_PAUSE - 0.05) && closes(b)
+        if (strict && (!strictBest || score > strictBest.score)) strictBest = { a, b, ...window, score }
+        if (!loose || score > loose.score) loose = { a, b, ...window, score }
+      }
     }
+    return strictBest || loose
   }
-  hors ||= loose
+  let hors = bestHors()
   if (!hors) return null
 
   // Appetiser: a hook, a turn and a land inside about 3 minutes, all on sentence boundaries.
@@ -437,6 +445,8 @@ export function draftTiers(source: string | Cue[], durationHint?: number | null)
     pick = { hook: hors.a, turn: Math.min(hors.b, hors.a + 1), land: hors.b, ...window, score: 0 }
   }
 
+  // The hors is its own moment: when the appetiser's land falls inside it, the next best window without the land is used.
+  if (pick.land >= hors.a && pick.land <= hors.b) hors = bestHors(pick.land) || hors
   const chosen = pick
   const popups: TierDraft['popups'] = []
   const addPopup = (index: number) => {
@@ -575,6 +585,16 @@ export function tierProblem(tier: Record<string, unknown>) {
   if (ae <= as) return 'The appetiser has to end after it starts.'
   if (ae - as > APPETISER_MAX + 15) return `The appetiser runs ${formatTimestamp(ae - as)}. Keep it to about 3 minutes.`
   return null
+}
+
+/** Which timed caption is showing at `time`: the last line already said (the first until then). */
+export function captionIndex(lines: { at: number }[] | undefined, time: number) {
+  if (!lines?.length) return 0
+  let at = 0
+  lines.forEach((line, index) => {
+    if (time >= line.at - 0.15) at = index
+  })
+  return at
 }
 
 /** Where the appetiser player stops: its out point, never more than about 3 minutes after its in point. */

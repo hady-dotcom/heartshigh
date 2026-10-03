@@ -4,7 +4,7 @@
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { cleanVtt, lastSecond, linesFromWords, wordTimeline } from '../src/lib/tiers'
+import { cleanVtt, linesFromWords, talkSeconds, wordTimeline } from '../src/lib/tiers'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const source = process.argv[2] || '/tmp/tx/transcripts'
@@ -18,7 +18,7 @@ for (const file of readdirSync(source).filter((name) => /^[\w-]{11}\.vtt$/.test(
   const words = wordTimeline(raw)
   const lines = linesFromWords(words)
   writeFileSync(path.join(target, `${id}.vtt`), cleanVtt(raw, `English captions for https://www.youtube.com/watch?v=${id}, from YouTube, repeats removed.`))
-  index[id] = { seconds: lastSecond(lines), lines: lines.length, words: words.length }
+  index[id] = { seconds: talkSeconds(words), lines: lines.length, words: words.length }
 }
 writeFileSync(path.join(target, 'index.json'), `${JSON.stringify(index, null, 2)}\n`)
 console.log(`Imported ${Object.keys(index).length} transcripts into ${path.relative(root, target)}`)
