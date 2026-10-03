@@ -1,11 +1,13 @@
-let overrideMs: number | null = null
+// The override lives on globalThis so every route bundle in one server process reads the same clock.
+const store = globalThis as typeof globalThis & { __heartsClockMs?: number | null }
 
+/** The test clock is for development and the test suite only: never in a production build. */
 export function clockEnabled() {
-  return process.env.HEARTS_TEST_CLOCK === '1'
+  return process.env.HEARTS_TEST_CLOCK === '1' && process.env.NODE_ENV !== 'production'
 }
 
 export function now(): Date {
-  if (overrideMs != null) return new Date(overrideMs)
+  if (store.__heartsClockMs != null && clockEnabled()) return new Date(store.__heartsClockMs)
   if (process.env.HEARTS_NOW) {
     const parsed = new Date(process.env.HEARTS_NOW)
     if (!Number.isNaN(parsed.getTime())) return parsed
@@ -18,13 +20,13 @@ export function setTestNow(iso: string | null) {
     throw new Error('The test clock is off.')
   }
   if (!iso) {
-    overrideMs = null
+    store.__heartsClockMs = null
     return now()
   }
   const parsed = new Date(iso)
   if (Number.isNaN(parsed.getTime())) throw new Error('That time could not be read.')
-  overrideMs = parsed.getTime()
-  return new Date(overrideMs)
+  store.__heartsClockMs = parsed.getTime()
+  return new Date(parsed.getTime())
 }
 
 export function daysBetween(earlier: Date, later: Date) {

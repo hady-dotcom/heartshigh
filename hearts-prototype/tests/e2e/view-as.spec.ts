@@ -1,4 +1,5 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext, type Page } from '@playwright/test'
+import { E2E_BASE } from '../env'
 
 // View as (psychometric-opening-build-spec 6A, browser tests 38 to 49).
 
@@ -9,7 +10,7 @@ let master: APIRequestContext
 test.use({ viewport: DESK })
 
 test.beforeAll(async () => {
-  master = await playwrightRequest.newContext({ baseURL: 'http://127.0.0.1:3000' })
+  master = await playwrightRequest.newContext({ baseURL: E2E_BASE })
   expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
 })
 

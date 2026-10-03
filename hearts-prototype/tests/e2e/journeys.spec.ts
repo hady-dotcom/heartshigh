@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, request as playwrightRequest, test, type Page } from '@playwright/test'
+import { E2E_BASE } from '../env'
 import path from 'node:path'
 
 const suffix = Date.now().toString().slice(-7)
@@ -43,6 +44,12 @@ async function placing(page: Page, picks: string[]) {
   for (const [index, pick] of picks.entries()) await questions.nth(index).getByLabel(pick, { exact: true }).check()
   await page.getByTestId('placing-submit').click()
   await expect(page.getByTestId('starting-clause')).toBeVisible()
+}
+
+async function masterRequest() {
+  const master = await playwrightRequest.newContext({ baseURL: E2E_BASE })
+  expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
+  return master
 }
 
 async function post(page: Page, form: Record<string, string>) {
@@ -206,11 +213,21 @@ test.describe.serial('HEARTS journeys', () => {
       await page.getByTestId('answer-point').click()
       await expect(page.getByTestId('popup-prompt')).toContainText('one manner', { timeout: 1000 })
     }).toPass({ timeout: 15_000 })
+    await expect(page.getByTestId('swarm')).toHaveCount(0)
+    await expect(page.getByTestId('answer-share-learners')).toHaveCount(0)
+    await page.getByTestId('popup-close').click()
+    await post(page, { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: `/p/${slug}/course/${shared.courseId}` })
+    await page.reload()
+    await expect(async () => {
+      await page.getByTestId('answer-point').click()
+      await expect(page.getByTestId('popup-prompt')).toContainText('one manner', { timeout: 1000 })
+    }).toPass({ timeout: 15_000 })
     await page.getByTestId('answer-text').fill('I want to keep a soft greeting.')
     await page.getByTestId('answer-private').uncheck()
     await page.getByTestId('answer-share').check()
+    await page.getByTestId('answer-share-learners').check()
     await page.getByTestId('answer-submit').click()
-    await expect(page.getByTestId('notice')).toContainText('shared with the circle')
+    await expect(page.getByTestId('notice')).toContainText('shared with other learners')
 
     const countdown = await openPoint(page, /two days/)
     await expect(countdown).toHaveAttribute('data-state', 'countdown')
@@ -220,16 +237,18 @@ test.describe.serial('HEARTS journeys', () => {
     await page.getByTestId('popup-close').click()
 
     const later = new Date(Date.now() + 3 * 86_400_000).toISOString()
-    await page.getByText('Test clock').click()
-    await page.getByTestId('clock-iso').fill(later)
-    await page.getByTestId('clock-submit').click()
+    const master = await masterRequest()
+    await expect(page.getByText('Test clock')).toHaveCount(0)
+    expect((await master.post('/api/hearts', { form: { action: 'clock', iso: later, next: '/' }, maxRedirects: 0 })).status()).toBe(303)
+    await page.reload()
     const open = await openPoint(page, /two days/)
     await expect(open).toHaveAttribute('data-state', 'open')
     await expect(page.getByTestId('countdown')).toHaveCount(0)
     await page.getByTestId('answer-text').fill('The greeting stayed.')
     await page.getByTestId('answer-submit').click()
     await expect(page.getByTestId('player').getByTestId('notice')).toContainText('workbook')
-    await post(page, { action: 'clock', iso: '', next: '/' })
+    await master.post('/api/hearts', { form: { action: 'clock', iso: '', next: '/' }, maxRedirects: 0 })
+    await master.dispose()
 
     shared.lessonId = (await page.locator('form.watched-form input[name=lesson]').getAttribute('value')) || undefined
     const tooSoon = await post(page, { action: 'complete', lesson: shared.lessonId!, seconds: '1', next: `/p/${slug}/course/${shared.courseId}` })
@@ -242,6 +261,11 @@ test.describe.serial('HEARTS journeys', () => {
     await join(page, learnerCode, 'Second Learner', otherEmail, 'harbour-learner')
     await placing(page, BY_NAMES)
     await page.goto(`/p/${slug}/course/${shared.courseId}`)
+    const before = await openPoint(page, /one manner/)
+    await expect(before.getByTestId('swarm')).toHaveCount(0)
+    await page.getByTestId('popup-close').click()
+    await post(page, { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: `/p/${slug}/course/${shared.courseId}` })
+    await page.reload()
     const sheet = await openPoint(page, /one manner/)
     await expect(sheet.getByTestId('swarm-item').filter({ hasText: 'soft greeting' })).toBeVisible()
     await page.getByTestId('answer-text').fill('This one stays with me.')
@@ -355,7 +379,7 @@ test.describe.serial('HEARTS journeys', () => {
   })
 
   test('a learner on an admin address is sent back, and a closed portal shows the closed page', async ({ page }) => {
-    const stranger = await page.context().browser()!.newContext({ baseURL: 'http://127.0.0.1:3000' })
+    const stranger = await page.context().browser()!.newContext({ baseURL: E2E_BASE })
     const anonymous = await stranger.request.post('/api/hearts', { form: { action: 'clock', iso: '2030-01-01T00:00:00Z', next: '/' }, maxRedirects: 0 })
     expect(anonymous.headers().location).toContain('/login')
     await stranger.close()

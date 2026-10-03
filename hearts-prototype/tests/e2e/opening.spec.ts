@@ -1,4 +1,5 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext, type Page, type Request } from '@playwright/test'
+import { E2E_BASE } from '../env'
 
 // The opening, "Shine and dust" (psychometric-opening-build-spec section 8, browser tests).
 // Every test starts in a fresh browser context, so the device holds nothing until the test taps.
@@ -11,7 +12,7 @@ const suffix = Date.now().toString().slice(-7)
 let master: APIRequestContext
 
 test.beforeAll(async () => {
-  master = await playwrightRequest.newContext({ baseURL: 'http://127.0.0.1:3000' })
+  master = await playwrightRequest.newContext({ baseURL: E2E_BASE })
   const login = await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })
   expect(login.ok()).toBeTruthy()
 })
@@ -399,6 +400,8 @@ test.describe('pop-up questions in a lesson', () => {
 
   test('29a. a clip the player refuses is reported, and a report alone never hides it', async ({ page }) => {
     const cut = (await (await master.get('/api/cuts?where[playable][not_equals]=false&limit=1&depth=0')).json()).docs[0]
+    expect((await page.request.post('/api/hearts/unplayable', { data: { cutId: cut.id, code: 5 } })).status()).toBe(401)
+    await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/me`)
     expect((await page.request.post('/api/hearts/unplayable', { data: { cutId: cut.id, code: 42 } })).status()).toBe(400)
     const reported = await page.request.post('/api/hearts/unplayable', { data: { cutId: cut.id, code: 5 } })
     expect(await reported.json()).toMatchObject({ ok: true, hidden: false })

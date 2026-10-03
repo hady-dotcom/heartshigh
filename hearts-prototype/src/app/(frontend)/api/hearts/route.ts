@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { now } from '@/lib/clock'
+import { clockEnabled, now } from '@/lib/clock'
 import { portalIdOf } from '@/lib/ids'
 import { getSession, loadPortal } from '@/server/context'
 import { handlePost } from '@/server/handle'
@@ -15,9 +15,11 @@ export async function GET(req: Request) {
   const probe = url.searchParams.get('probe')
   const { payload, user } = await getSession()
   if (url.searchParams.get('clock') === '1') {
+    if (!clockEnabled()) return NextResponse.json({ error: 'The test clock is off.' }, { status: 404 })
+    if (user?.role !== 'master') return NextResponse.json({ error: 'The test clock is for the master desk.' }, { status: 403 })
     return NextResponse.json({ now: now().toISOString() })
   }
-  if (!probe) return NextResponse.json({ ok: true, user: user?.email || null })
+  if (!probe) return NextResponse.json({ ok: true, user: user?.email || null, testClock: clockEnabled() })
   if (!user) return NextResponse.json({ error: 'Sign in first.' }, { status: 401 })
   const portal = await loadPortal(payload, probe)
   if (!portal) return NextResponse.json({ error: 'Missing portal.' }, { status: 404 })
