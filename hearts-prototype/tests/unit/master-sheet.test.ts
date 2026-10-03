@@ -187,6 +187,30 @@ test('the blank template has four tabs, a note and the header row', async () => 
   assert.equal(QUESTION_COLUMNS.includes('question_id'), true)
 })
 
+test('a clause number on a sheet resolves to the working door', () => {
+  const created = planSheet({
+    talks: [cells(3, { talk_key: 'zakat-talk', title: 'On zakat', course: 'The Names', speaker: 'Mikaeel Smith', jibril_clause: 16 })],
+    questions: [],
+    resources: [],
+    errors: [],
+  }, emptyCatalogue({ courses: [{ id: 1, title: 'The Names', origin: 'master', portal: null, speaker: 'Mikaeel Smith', inScope: true }] }))
+  assert.equal(created.errors.length, 0)
+  const cut = created.ops.find((op) => op.op === 'cut.create')
+  assert.ok(cut && cut.op === 'cut.create')
+  assert.equal(cut.data.bestClause, 16)
+  assert.equal(cut.data.clauseFragment, 'W6 · Zakat')
+  const moved = planSheet({
+    talks: [cells(3, { talk_key: 'yt-NIR88RRpat4', jibril_clause: 22 })],
+    questions: [],
+    resources: [],
+    errors: [],
+  }, fixture())
+  const update = moved.ops.find((op) => op.op === 'cut.update')
+  assert.ok(update && update.op === 'cut.update')
+  assert.equal(update.patch.bestClause, 22)
+  assert.equal(update.patch.clauseFragment, 'W10 · Believe in Allah')
+})
+
 test('dry-run counts creates, updates and skips', () => {
   const catalogue = fixture()
   const plan = planSheet({
@@ -466,20 +490,20 @@ test('the export writes the door beside the clause, and a door alone or a door i
   for (const door of ['W3', '3', 'w3']) {
     const moved = plan({ jibril_door: door })
     assert.deepEqual(moved.errors, [], door)
-    assert.deepEqual(moved.ops, [{ op: 'cut.update', id: 2, patch: { bestClause: 13 } }], `${door} takes door 3's first clause`)
+    assert.deepEqual(moved.ops, [{ op: 'cut.update', id: 2, patch: { bestClause: 13, clauseFragment: 'W3 · About Islam' } }], `${door} takes door 3's first clause`)
     assert.match(moved.changes[0].detail, /door and clause/)
   }
 
   const inClauseColumn = plan({ jibril_clause: 'W10' })
   assert.deepEqual(inClauseColumn.errors, [])
-  assert.deepEqual(inClauseColumn.ops, [{ op: 'cut.update', id: 2, patch: { bestClause: 22 } }])
+  assert.deepEqual(inClauseColumn.ops, [{ op: 'cut.update', id: 2, patch: { bestClause: 22, clauseFragment: 'W10 · Believe in Allah' } }])
 
   const legacy = plan({ jibril_clause: 19 })
-  assert.deepEqual(legacy.ops, [{ op: 'cut.update', id: 2, patch: { bestClause: 19 } }], 'a plain clause still imports as before')
+  assert.deepEqual(legacy.ops, [{ op: 'cut.update', id: 2, patch: { bestClause: 19, clauseFragment: 'W3 · About Islam' } }], 'a plain clause still imports as before')
 
   const both = plan({ jibril_door: 'W3', jibril_clause: 19 })
   assert.deepEqual(both.errors, [])
-  assert.deepEqual(both.ops, [{ op: 'cut.update', id: 2, patch: { bestClause: 19 } }])
+  assert.deepEqual(both.ops, [{ op: 'cut.update', id: 2, patch: { bestClause: 19, clauseFragment: 'W3 · About Islam' } }])
 
   const clash = plan({ jibril_door: 'W4', jibril_clause: 19 })
   assert.equal(clash.errors[0]?.column, 'jibril_door')
@@ -497,7 +521,7 @@ test('a door alone keeps the clause a seat names inside that door', () => {
   const catalogue = { ...fixture(), seats: [{ id: 5, clause: 12, position: 2 }, { id: 6, clause: 9, position: 1 }] }
   const plan = planSheet({ talks: [cells(3, { talk_key: 'yt-NIR88RRpat4', jibril_door: 'W2', ghunya_seat: '9.1' })], questions: [], resources: [], errors: [] }, catalogue)
   assert.deepEqual(plan.errors, [])
-  assert.deepEqual(plan.ops, [{ op: 'cut.update', id: 2, patch: { bestClause: 9, seat: 6 } }])
+  assert.deepEqual(plan.ops, [{ op: 'cut.update', id: 2, patch: { bestClause: 9, clauseFragment: 'W2 · The sitting: how he came and sat with the Messenger', seat: 6 } }])
 })
 
 test('a sheet with no door column imports exactly as before', async () => {

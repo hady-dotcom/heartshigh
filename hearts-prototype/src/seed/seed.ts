@@ -7,6 +7,7 @@ import config from '../payload.config'
 import { randomCode } from '../lib/access-codes'
 import { CIRCLE_LENGTHS, CIRCLE_TONES, mockCircleAnswers } from '../lib/circle'
 import { dualExtract } from '../lib/extractor'
+import { DOORS, doorLabel, doorOfClause } from '../lib/doors'
 import { parseJibrilMap } from '../lib/seats'
 import { alignToCaptions } from '../lib/tiers'
 import { parseTranscript } from '../lib/transcript'
@@ -142,6 +143,9 @@ async function main() {
   const payload = await getPayload({ config })
   if (databaseKind() === 'postgres') await payload.db.migrate()
   const clauseIds = new Map<number, number>()
+  const covered = new Set(DOORS.flatMap((door) => door.clauses))
+  if (DOORS.length !== 20 || covered.size !== 41) throw new Error('Working doors must be W1 to W20 and cover clauses 1 to 41.')
+  for (const [number] of CLAUSES) if (!doorOfClause(number)) throw new Error(`Clause ${number} is not on a working door.`)
   const map = parseJibrilMap(readFileSync(path.join(root, 'content/jibril-map.txt'), 'utf8'))
   for (const [number, fragment, core, fallbackTeaching] of CLAUSES) {
     const entry = map.get(number)
@@ -315,7 +319,7 @@ async function main() {
         await payload.create({
           collection: 'tags',
           overrideAccess: true,
-          data: { item: { relationTo: 'cuts', value: cut.id }, clause: clauseIds.get(item.bestClause), state: approved ? 'confirmed' : 'suggested', note: item.whyHang },
+          data: { item: { relationTo: 'cuts', value: cut.id }, clause: clauseIds.get(item.bestClause), state: approved ? 'confirmed' : 'suggested', note: [doorOfClause(item.bestClause) ? `${doorLabel(doorOfClause(item.bestClause)!)}.` : '', item.whyHang].filter(Boolean).join(' ') },
         })
       }
       for (const rung of extracted.ladder.filter((row) => row.cutId === item.id)) {

@@ -10,7 +10,7 @@ import { getSession, type SessionUser, visibleCourseIds } from '@/server/context
 import { workbookFor } from '@/server/workbook'
 import { posterFor } from '@/server/learner'
 import { loadDoors } from '@/server/doors'
-import { doorByNumber, doorOfClause, type Door } from '@/lib/doors'
+import { doorByNumber, doorCode, doorFromPath, doorOfClause, type Door } from '@/lib/doors'
 import { answerCounts } from '@/lib/nesting'
 import { type Ctx, type Row, clock, ref, rows, shortDate, str, unreadCount } from '../common'
 
@@ -291,9 +291,9 @@ export async function GardenJibril({ payload, user, base }: Ctx) {
   )
 }
 
-export async function GardenDoor({ payload, user, base, query }: Ctx, number: number) {
+export async function GardenDoor({ payload, user, base, query }: Ctx, token: string) {
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
-  const door = Number.isInteger(number) ? doorByNumber(number, g.doors) : null
+  const door = doorFromPath(token, g.doors)
   if (!door) notFound()
   const clauses = clausesOf(g, door)
   const seats = seatsOf(g, door)
@@ -302,6 +302,12 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, number: nu
   const visible = new Set(await visibleCourseIds(payload, user))
   const lessonIds = [...new Set(cuts.map((cut) => ref(cut.lesson)).filter((id): id is number => Boolean(id)))]
   const lessons = lessonIds.length ? (await rows(payload, 'lessons', { id: { in: lessonIds } })).filter((lesson) => visible.has(ref(lesson.course) || 0)) : []
+  const shownIds = lessons.map((lesson) => lesson.id)
+  const [points, tiers] = await Promise.all([
+    shownIds.length ? rows(payload, 'engagement-points', { and: [{ lesson: { in: shownIds } }, { status: { not_equals: 'draft' } }, { audience: { equals: 'everyone' } }] }, { sort: 'second', limit: 80 }) : Promise.resolve([] as Row[]),
+    shownIds.length ? rows(payload, 'talk-tiers', { and: [{ lesson: { in: shownIds } }, { status: { not_equals: 'rejected' } }] }) : Promise.resolve([] as Row[]),
+  ])
+  const lessonOf = (id: number | null) => lessons.find((lesson) => lesson.id === id)
   const here = `${base}/garden/jibril/${door.number}`
   const teachings = clauses.map((clause) => str(clause.teaching)).filter(Boolean)
   const series = [...new Set(clauses.map((clause) => str(clause.series)).filter(Boolean))]
@@ -328,6 +334,7 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, number: nu
         <div className="clause-num">{door.number}</div>
         <p className="lbl" style={{ margin: '0 0 4px' }}>{section?.title || door.section}</p>
         <h3 data-testid="door-title">{door.title}</h3>
+        {door.teaching ? <p data-testid="door-teaching">{door.teaching}</p> : null}
         {clauses.length ? <p className="door-words" data-testid="door-words">{clauses.map((clause) => str(clause.fragment)).join(' … ')}</p> : null}
         {teachings.length ? (
           <>
@@ -356,6 +363,29 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, number: nu
           </Link>
         )
       }) : <p className="muted">No talk in your courses has been placed in this door yet.</p>}
+      {tiers.length ? <p className="eyebrow">Appetisers</p> : null}
+      {tiers.map((tier) => {
+        const lesson = lessonOf(ref(tier.lesson))
+        if (!lesson) return null
+        const start = Number(tier.appetiserStart || 0)
+        return (
+          <Link key={tier.id} className="course-row" href={`${base}/course/${ref(lesson.course)}?part=${lesson.id}&t=${Math.floor(start)}`} data-testid="door-appetiser">
+            <span className="t"><b>Appetiser</b><small>{str(lesson.title)} · from {clock(start)}</small></span>
+            <span className="start teal">Watch</span>
+          </Link>
+        )
+      })}
+      {points.length ? <p className="eyebrow">Questions</p> : null}
+      {points.map((point) => {
+        const lesson = lessonOf(ref(point.lesson))
+        if (!lesson) return null
+        return (
+          <Link key={point.id} className="course-row" href={`${base}/course/${ref(lesson.course)}?part=${lesson.id}&t=${Math.floor(Number(point.second || 0))}`} data-testid="door-question">
+            <span className="t"><b>{str(point.prompt)}</b><small>{str(lesson.title)}</small></span>
+            <span className="start teal">Open</span>
+          </Link>
+        )
+      })}
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 16 }}>
         {prev ? <Link className="pill outline small" href={`${base}/garden/jibril/${prev.number}`} data-testid="prev-door">‹ Door {prev.number}</Link> : <span />}
         {next ? <Link className="pill outline small" href={`${base}/garden/jibril/${next.number}`} data-testid="next-door">Door {next.number} ›</Link> : null}
@@ -385,7 +415,7 @@ export async function GardenGhunya({ payload, user, base }: Ctx) {
           {g.doors.map((door) => (
             <Link key={door.number} className="sg" href={`${base}/garden/jibril/${door.number}`} title={`Door ${door.number}: ${door.title}`} data-testid="seat-group" data-door={door.number}>
               <span className="dots">{seatsOf(g, door).map((seat) => <i key={seat.id} className={read.has(seat.id) ? 'lit' : ''} data-testid="seat-dot" />)}</span>
-              <small>{door.number}</small>
+              <small>{doorCode(door.number)} · {door.title}</small>
             </Link>
           ))}
         </div>

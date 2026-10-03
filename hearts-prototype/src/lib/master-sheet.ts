@@ -5,7 +5,7 @@ import { youtubeIdFromUrl } from './extractor'
 import { DRAFT_NOTE, horsCapOf, horsVerdict, normaliseSpans, saidInTalk, tierProblem, timingProblems, type AppetiserSpan } from './tiers'
 import { authorTextProblems, markupProblems } from './opening-data'
 import { hasMarkup, httpsHref } from './text-safety'
-import { DOORS, clauseForDoor, doorCode, doorNumberOfClause, parseDoor, type Door } from './doors'
+import { DOORS, clauseForDoor, doorCode, doorLabel, doorNumberOfClause, doorOfClause, parseDoor, type Door } from './doors'
 import { CIRCLE_COLUMNS, CIRCLE_NOTE, CIRCLE_TAB, circleSheetValues, readCircleRow, type CircleColumn } from './circle-sheet'
 
 export const TALK_COLUMNS = [
@@ -671,6 +671,11 @@ function parseClause(raw: string) {
   return number >= 1 && number <= 41 ? number : null
 }
 
+function doorLabelFor(clause: number) {
+  const door = doorOfClause(clause)
+  return door ? doorLabel(door) : ''
+}
+
 function timeCell(row: InputRow, column: string): { ok: true; seconds: number } | { ok: false; message: string } | null {
   if (!present(row, column)) return null
   const cell = row.cells[column]
@@ -1101,12 +1106,15 @@ function placeCut(working: Working, lesson: LessonRow | null, temp: { temp: stri
     const lessonRef: Ref = temp || { id: lesson!.id }
     working.ops.push({
       op: 'cut.create', lesson: lessonRef, course,
-      data: { status: 'suggested', placeholder: true, presentation: 'video', start: 0, end: 20, timestamp: '0:00', hook: title, turn: title, land: title, kind: 'hors', engine: 'master sheet', ...(clause ? { bestClause: clause } : {}), ...(seatId ? { seat: seatId } : {}) },
+      data: { status: 'suggested', placeholder: true, presentation: 'video', start: 0, end: 20, timestamp: '0:00', hook: title, turn: title, land: title, kind: 'hors', engine: 'master sheet', ...(clause ? { bestClause: clause, clauseFragment: doorLabelFor(clause) } : {}), ...(seatId ? { seat: seatId } : {}) },
     })
     return
   }
   const patch: Record<string, unknown> = {}
-  if (clause && clause !== cut.bestClause) patch.bestClause = clause
+  if (clause && clause !== cut.bestClause) {
+    patch.bestClause = clause
+    patch.clauseFragment = doorLabelFor(clause)
+  }
   if (seatId && seatId !== cut.seatId) patch.seat = seatId
   if (Object.keys(patch).length) working.ops.push({ op: 'cut.update', id: cut.id, patch })
 }

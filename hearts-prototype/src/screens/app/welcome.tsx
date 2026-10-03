@@ -93,6 +93,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
             <div className="clause-num">{door.number}</div>
             <p className="lbl" style={{ margin: '0 0 4px' }}>A door of the hadith of Jibril</p>
             <h3>{door.title}</h3>
+            {door.teaching ? <p data-testid="starting-door-teaching">{door.teaching}</p> : null}
           </article>
         ) : null}
         {first ? (
