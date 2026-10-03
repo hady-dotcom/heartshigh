@@ -100,10 +100,29 @@ export function pickBackground(catalogue: readonly Background[], preferred: stri
   return catalogue[origin]
 }
 
+/** Every catalogue row is written `jpg/<basename>`, and its bucket key is `backgrounds/jpg/<basename>`. */
+export const BACKGROUND_FOLDER = 'jpg'
+
+const BASENAMES = new Set(CATALOGUE.map((row) => row.file.split('/').pop() || ''))
+const SAFE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]*\.jpg$/
+
 /**
- * Bucket root, read when a request is served so a deploy can set it.
- * `BACKGROUNDS_BASE_URL` is the bucket origin. Files live under `backgrounds/`
- * with the catalogue filename, for example `backgrounds/jpg/A-01-lake-predawn-violet.jpg`.
+ * The bucket key for a requested background path, or null for anything that is not a catalogue still.
+ * Accepts `jpg/<basename>` (what the app links to) or a bare `<basename>`; nothing else, so no other key can be reached.
+ */
+export function backgroundKey(path: string | readonly string[] | null | undefined): string | null {
+  const segments = (Array.isArray(path) ? path : String(path || '').split('/')) as string[]
+  if (!segments.length || segments.length > 2) return null
+  if (segments.length === 2 && segments[0] !== BACKGROUND_FOLDER) return null
+  const name = segments[segments.length - 1]
+  if (!SAFE_NAME.test(name) || name.includes('..') || !BASENAMES.has(name)) return null
+  return `backgrounds/${BACKGROUND_FOLDER}/${name}`
+}
+
+/**
+ * Where the browser fetches stills, read when a request is served so a deploy can set it.
+ * `BACKGROUNDS_BASE_URL` is the app's own origin: `/backgrounds/jpg/<basename>` redirects to a short-lived
+ * signed link into the private bucket. Unset, the cards use the local stills, with the gradient behind them.
  */
 export function readBackgroundsBaseUrl(env: Record<string, string | undefined> = process.env) {
   return (env.BACKGROUNDS_BASE_URL || '').trim().replace(/\/$/, '') || null
