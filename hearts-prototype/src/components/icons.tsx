@@ -35,19 +35,23 @@ export function Flower({ size = 22, colour = '#e98fb0' }: { size?: number; colou
   )
 }
 
-/** The Course Garden tree: one fruit per thing done, empty spots for what is still to come. */
+/** The Course Garden tree: fuller as more of the course is done, one fruit per thing done. */
 export function GardenTree({ done, total, width = 120 }: { done: number; total: number; width?: number }) {
   const spots = [
     [38, 34], [62, 26], [80, 44], [28, 56], [52, 52], [74, 66], [40, 74], [60, 80], [86, 30], [20, 40], [66, 46], [48, 30],
   ]
   const count = Math.min(spots.length, Math.max(total, 1))
+  const share = total > 0 ? done / total : done > 0 ? 1 : 0
+  const scale = done <= 0 ? 0.55 : share >= 0.95 ? 1 : share >= 0.6 ? 0.9 : share >= 0.3 ? 0.78 : 0.66
   return (
     <svg width={width} viewBox="0 0 110 130" aria-label={`${done} of ${total} fruits`}>
       <rect x="49" y="78" width="12" height="48" rx="5" fill="#8a5a3b" />
-      <circle cx="34" cy="58" r="26" fill="#2f9a86" />
-      <circle cx="74" cy="56" r="26" fill="#2f9a86" />
-      <circle cx="55" cy="38" r="30" fill="#36a690" />
-      <circle cx="56" cy="70" r="22" fill="#2f9a86" />
+      <g style={{ transform: `translate(55px, 58px) scale(${scale}) translate(-55px, -58px)` }}>
+      <circle cx="34" cy="58" r="26" fill="#2f6b45" />
+      <circle cx="74" cy="56" r="26" fill="#245c3c" />
+      <circle cx="55" cy="38" r="30" fill="#1f6b45" />
+      <circle cx="56" cy="70" r="22" fill="#2a7048" />
+      </g>
       {spots.slice(0, count).map(([x, y], index) => (
         <circle key={index} cx={x} cy={y} r="5.5" fill={index < done ? (index % 3 === 1 ? '#e9b44c' : '#ef7b4a') : 'rgba(255,255,255,0.35)'} stroke={index < done ? '#fff' : 'none'} strokeWidth="1.5" />
       ))}

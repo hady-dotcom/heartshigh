@@ -76,7 +76,7 @@ export function playerVars(kind: PlayerKind, start: number, end?: number | null)
     rel: 0,
     iv_load_policy: 3,
     modestbranding: 1,
-    cc_load_policy: 1,
+    cc_load_policy: 0,
     cc_lang_pref: 'en',
     enablejsapi: 1,
     origin: typeof window === 'undefined' ? undefined : window.location.origin,

@@ -787,6 +787,18 @@ export interface TalkTier {
     | boolean
     | null;
   /**
+   * Tidied learner-facing lines. Raw captions stay on the fields above.
+   */
+  lineTidy?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
    * Offer "Resume from where the appetiser ended" next to the main, which always opens at 0:00.
    */
   offerResume?: boolean | null;

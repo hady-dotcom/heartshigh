@@ -945,6 +945,10 @@ export function Journey(props: JourneyProps) {
   const watchFull = () => {
     if (!item) return
     signal('watch-full')
+    // The click is the gesture that turns voice on. The appetiser player is built after this,
+    // and it reads the same flag, so the clip opens with sound.
+    const host = hosts.current[visibleRef.current]
+    soundOn(host.playerId || '')
     push(window.location.pathname, { appetiser: item.cutId })
     void showItem(index, 'appetiser')
   }
@@ -1090,8 +1094,11 @@ export function Journey(props: JourneyProps) {
   const showPoster = phase === 'handoff' || (phase === 'feed' && (!playerReady || Boolean(errorNote) || offline))
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
-  const captionText = (piece?.lines?.length ? piece.lines[lineShown]?.text : piece?.quote) || ''
-  const captionRole = mode === 'appetiser' ? piece?.lines?.[lineShown]?.role || null : null
+  const horsLine = mode === 'hors' ? piece?.lines?.[lineShown] : null
+  const captionText = (horsLine ? horsLine.tidy || horsLine.text : mode === 'hors' ? piece?.quote : '') || ''
+  const videoAppetiser = mode === 'appetiser' && Boolean(item?.youtubeId)
+  const scenicAppetiser = mode === 'appetiser' && !item?.youtubeId
+  const scenicLines = scenicAppetiser ? [item?.scenic?.hook, item?.scenic?.turn, item?.scenic?.land].filter((line): line is string => Boolean(line)) : []
   const slide = phase === 'feed' && mode === 'hors' && item?.style ? item.style : null
   const mains = item?.laneKey ? props.mains[item.laneKey] : undefined
   const course = (item && learnMore(item, 'appetiser', base)?.href) || base
@@ -1116,9 +1123,18 @@ export function Journey(props: JourneyProps) {
         )}
       </div>
       {muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
-      <p className={`caption${captionText.length > 120 ? ' long' : ''}${captionText ? '' : ' title-only'}`} data-testid="caption" data-line={lineShown} data-role={captionRole || undefined} key={`${mode}-${lineShown}`}>
-        {captionText || item.lessonTitle || item.courseTitle}
-      </p>
+      {mode === 'hors' ? (
+        <p className={`caption${captionText.length > 120 ? ' long' : ''}${captionText ? '' : ' title-only'}`} data-testid="caption" data-line={lineShown} key={`${mode}-${lineShown}`}>
+          {captionText || item.lessonTitle || item.courseTitle}
+        </p>
+      ) : null}
+      {scenicAppetiser ? (
+        <div className="scenic-lines" data-testid="scenic-lines">
+          {(scenicLines.length ? scenicLines : [item.lessonTitle || item.courseTitle]).map((line) => (
+            <p key={line}>{line}</p>
+          ))}
+        </div>
+      ) : null}
       <div className="rail">
         <button type="button" onClick={share} data-testid="share"><span className="bubble"><ShareIcon /></span>Share</button>
         <button type="button" aria-pressed={faves.includes(item.id)} onClick={fave} data-testid="fave"><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
@@ -1130,7 +1146,7 @@ export function Journey(props: JourneyProps) {
             <div className="j-speaker">
               <a className="speaker-row" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-link" onClick={(event) => { if (needsAccount('save')) event.preventDefault() }}>
                 <Avatar name={item.speaker} portrait={item.portrait} />
-                <span className="who"><b>{item.speaker}</b><small>{laneVisible ? `on ${item.laneLabel}` : item.courseTitle}</small></span>
+                <span className="who"><b>{item.speaker}</b><small>{laneVisible ? `On ${item.laneLabel}` : item.courseTitle}</small></span>
               </a>
               <span onClickCapture={(event) => { if (needsAccount('save')) { event.preventDefault(); event.stopPropagation() } }}><FollowButton slug={item.speakerSlug} /></span>
             </div>
@@ -1158,7 +1174,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-index={index} data-lesson={item?.lessonId || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-chrome={overlay ? 'over' : 'around'}>
+    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-lesson={item?.lessonId || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-chrome={overlay ? 'over' : 'around'}>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />
@@ -1177,7 +1193,7 @@ export function Journey(props: JourneyProps) {
             />
           ))}
           {showPoster && item && !slide ? (
-            <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}`} data-testid="poster-frame">
+            <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}${scenicAppetiser ? ' scenic' : ''}`} data-testid="poster-frame">
               {item.poster ? <img src={item.poster} alt="" /> : null}
               <span className="j-poster-mark"><img src="/brand/hoopoe-mark.png" alt="" /></span>
               <span className="j-poster-who">{item.speaker}</span>

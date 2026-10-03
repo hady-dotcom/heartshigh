@@ -432,7 +432,7 @@ function Countdown({ unlocksAt, now }: { unlocksAt: string; now: number }) {
   const seconds = Math.floor((remaining - minutes * 60_000) / 1000)
   return (
     <div className="countdown" data-testid="countdown">
-      <span><b>{days}</b>days</span><span><b>{hours}</b>hours</span><span><b>{minutes}</b>min</span><span><b>{seconds}</b>s</span>
+      <span><b>{days}</b>Days</span><span><b>{hours}</b>Hours</span><span><b>{minutes}</b>Min</span><span><b>{seconds}</b>S</span>
     </div>
   )
 }

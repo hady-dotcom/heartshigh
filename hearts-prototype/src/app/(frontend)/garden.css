@@ -1,0 +1,99 @@
+/* The Garden tab: an evening garden, one living tree per area. Painted layers swap in when the files exist. */
+
+.garden-home.app-scroll { padding-top: 0; padding-left: 0; padding-right: 0; }
+.garden-rest { padding: 8px 18px 0; }
+
+.garden-scene {
+  position: relative;
+  min-height: calc(100dvh - 92px);
+  overflow: hidden;
+  color: #fff8ee;
+  background: #1a1428;
+}
+.garden-scene-bg, .garden-sky { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.garden-sky {
+  background:
+    radial-gradient(90% 42% at 72% 12%, rgba(255, 186, 110, 0.38), transparent 62%),
+    radial-gradient(50% 36% at 18% 8%, rgba(120, 86, 180, 0.45), transparent 70%),
+    linear-gradient(180deg, #161226 0%, #3a2748 34%, #7a4d3a 62%, #243526 100%);
+}
+.garden-sky::after {
+  content: '';
+  position: absolute;
+  left: -10%; right: -10%; bottom: 0; height: 42%;
+  background:
+    radial-gradient(60% 80% at 18% 100%, #1c3a28 0%, transparent 70%),
+    radial-gradient(70% 90% at 78% 110%, #1a3324 0%, transparent 72%),
+    linear-gradient(180deg, transparent, rgba(16, 28, 18, 0.2));
+}
+
+.garden-top { position: relative; z-index: 2; padding: calc(18px + var(--safe-top)) 22px 0; text-align: center; }
+.garden-top h1 { margin: 0; font-size: 15px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; color: #f3d38e; }
+.garden-motto { margin: 10px 0 0; font-family: var(--serif); font-weight: 600; font-size: 28px; line-height: 1.15; text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35); }
+.garden-motto.quiet { margin-top: 4px; font-size: 16px; font-weight: 500; color: rgba(255, 248, 238, 0.82); }
+
+.garden-prop { position: absolute; z-index: 2; }
+.garden-prop.lantern.left { left: 16px; top: 28%; }
+.garden-prop.lantern.right { right: 14px; top: 24%; }
+.garden-prop.can { left: 18px; bottom: 18px; width: 54px; }
+.lantern {
+  display: block; width: 22px; height: 32px; border-radius: 4px 4px 8px 8px;
+  background: radial-gradient(circle at 50% 40%, #ffe7a8, #e0a04a 70%);
+  box-shadow: 0 0 18px 6px rgba(255, 196, 110, 0.55);
+  animation: lantern 3.4s ease-in-out infinite;
+}
+.lantern::before { content: ''; display: block; height: 8px; margin: -8px auto 0; width: 2px; background: #c9b48a; }
+.watering-can {
+  display: block; width: 48px; height: 32px; border-radius: 0 0 10px 10px;
+  background: linear-gradient(180deg, #d7c4a2, #8d7352);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.2);
+}
+.watering-can::before { content: ''; position: absolute; left: 40px; top: 6px; width: 16px; height: 8px; border: 3px solid #8d7352; border-left: 0; border-radius: 0 8px 8px 0; }
+
+.garden-trees {
+  position: absolute; left: 0; right: 0; bottom: 28px; z-index: 2;
+  height: 62%;
+}
+.garden-tree { position: absolute; width: 118px; text-align: center; }
+.garden-tree[data-area='quran'] { left: 6%; bottom: 8%; }
+.garden-tree[data-area='hadith'] { right: 4%; bottom: 12%; }
+.garden-tree[data-area='character'] { left: 36%; bottom: 2%; }
+.garden-tree[data-area='society'] { left: 18%; bottom: 34%; }
+.garden-tree[data-area='spirituality'] { right: 16%; bottom: 36%; }
+.tree-art, .tree-svg { width: 118px; height: 148px; display: block; margin: 0 auto; object-fit: contain; }
+.tree-svg .canopy { transform-origin: 60px 120px; animation: sway 5s ease-in-out infinite; }
+.garden-tree[data-area='hadith'] .canopy, .garden-tree[data-area='spirituality'] .canopy { animation-delay: -1.6s; }
+.garden-tree[data-area='society'] .canopy { animation-delay: -3s; }
+
+.plaque {
+  margin: -6px auto 0; width: max-content; max-width: 130px;
+  background: linear-gradient(180deg, #efe4cf, #d9c7a4);
+  color: #3a2c1a; border-radius: 8px; padding: 4px 8px 5px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
+}
+.plaque b { display: block; font-size: 12px; letter-spacing: 0.04em; }
+.plaque small { display: block; font-size: 10px; color: #6a5438; line-height: 1.2; }
+
+.garden-fruits { list-style: none; margin: 0; padding: 0; position: absolute; left: 8px; right: 8px; top: 18px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.garden-fruit { animation: bloom 0.7s ease both; }
+.garden-fruit a { display: block; }
+.fruit-art, .garden-fruit svg { width: 28px; height: 28px; filter: drop-shadow(0 0 6px rgba(240, 195, 106, 0.8)); }
+.tree-book { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 700; color: #f3d38e; text-decoration: none; }
+
+@keyframes lantern { 50% { opacity: 0.72; box-shadow: 0 0 10px 2px rgba(255, 196, 110, 0.35); } }
+@keyframes sway { 50% { transform: rotate(-2.2deg); } }
+@keyframes bloom { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .lantern, .tree-svg .canopy, .garden-fruit { animation: none; }
+}
+
+.garden-card {
+  background: linear-gradient(165deg, #2a2448 0%, #1c2830 58%, #243628 100%);
+  color: #fff8ee;
+  border: 0;
+}
+.garden-card .eyebrow { color: #f3d38e; }
+.garden-card h3, .garden-card small, .garden-card .garden-link { color: #fff8ee; }
+.garden-card .bar { background: rgba(255, 255, 255, 0.16); }
+.garden-card .bar > i { background: #f0c36a; }
