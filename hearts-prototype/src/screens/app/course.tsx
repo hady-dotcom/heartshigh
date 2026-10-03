@@ -13,6 +13,7 @@ import { visibleCourseIds } from '@/server/context'
 import { courseCards, portraitFor, posterFor, slugify } from '@/server/learner'
 import { speakerPage } from '@/server/speakers'
 import { learnerClips } from '@/server/opening'
+import { countsTowardProgress, pieceLevel } from '@/lib/progress'
 import { appetiserStop } from '@/lib/tiers'
 import { lineAt } from '@/lib/harvest'
 import { answerCounts, courseProgress } from '@/lib/nesting'
@@ -25,6 +26,7 @@ const START = ['orange', 'gold', 'teal']
 
 export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx, speakerSlug: string) {
   const [courses, { items }, unread, speaker] = await Promise.all([courseCards(payload, user), learnerClips(payload, portal, user), unreadCount(payload, user), speakerPage(payload, speakerSlug)])
+  const drawn = await rows(payload, 'drawn-to', { and: [{ user: { equals: user.id } }, { speakerSlug: { in: [speakerSlug, speaker?.slug, ...(speaker?.aliasSlugs || [])].filter(Boolean) } }] }, { limit: 5 })
   const addresses = new Set([speakerSlug, speaker?.slug, ...(speaker?.aliasSlugs || [])].filter((value): value is string => Boolean(value)))
   const theirs = courses.filter((course) => addresses.has(course.speakerSlug))
   const clips = items.filter((item) => addresses.has(item.speakerSlug))
@@ -51,6 +53,7 @@ export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx,
           </div>
         ) : null}
         {speaker?.sources ? <pre className="bio-sources" data-testid="speaker-sources">{speaker.sources}</pre> : null}
+        {drawn.some((row) => (Number(row.linger) || 0) + (Number(row.learnMore) || 0) > 0) ? <p data-testid="drawn-to">You&apos;re drawn to {name}.</p> : null}
         <Flash error={query.error} notice={query.notice} />
         <div className="bio-actions">
           <FollowButton slug={speaker?.slug || speakerSlug} className="follow teal" />
@@ -199,7 +202,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
     lessonIds.length ? rows(payload, 'talk-tiers', { and: [{ lesson: { in: lessonIds } }, { status: { not_equals: 'rejected' } }] }) : Promise.resolve([] as Row[]),
     loadDoors(payload),
   ])
-  const { doneLessons, done, total } = courseProgress({ lessonIds, completions, pointIds: allPoints.map((point) => point.id), answers: mine })
+  const { doneLessons, done, total } = courseProgress({ lessonIds, completions: completions.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: true, event: 'watch' })), pointIds: allPoints.map((point) => point.id), answers: mine })
 
   const marks = mine.length
     ? await rows(payload, 'feedback-notes', { answer: { in: mine.map((row) => row.id) } }, { sort: 'second' })

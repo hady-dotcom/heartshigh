@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import type { Where } from 'payload'
 import { dualExtract, type ClauseCard } from '@/lib/extractor'
 import { giveHarvest } from './scripture'
+import { countsTowardProgress, pieceLevel } from '@/lib/progress'
+import { recordShortBrowse } from './browse'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { extractWithFallback, llmStatus } from '@/lib/llm'
 import { defaultPlanName, flattenSlots, plural, splitEvenly, studyDates } from '@/lib/schedule'
@@ -241,6 +243,8 @@ export type AnswerInput = {
   atSecond?: number
   viewingId?: string
   cutId?: number | null
+  /** The short level the answer was given on, when it came from the feed. */
+  level?: 'hors' | 'appetiser'
   pendingSync?: boolean
 }
 
@@ -324,6 +328,7 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
       atSecond: input.atSecond ?? Number(point.second),
       viewingId: input.viewingId,
       cut: input.cutId || null,
+      sourceLevel: (input.cutId ? input.level || 'appetiser' : 'talk') as 'hors' | 'appetiser' | 'talk',
       pendingSync: Boolean(input.pendingSync),
       correct: correct ?? undefined,
     }
@@ -1301,8 +1306,31 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Reply saved.')
   }
 
+  if (action === 'browse') {
+    const result = await recordShortBrowse(payload, user, {
+      level: text(form, 'level'),
+      event: text(form, 'event'),
+      lessonId: Number(text(form, 'lesson')),
+      speaker: text(form, 'speaker'),
+      speakerSlug: text(form, 'speakerSlug'),
+      start: Number(text(form, 'start') || 0),
+      end: Number(text(form, 'end') || 0),
+      parent: text(form, 'parent'),
+    })
+    const asJson = (req.headers.get('accept') || '').includes('application/json')
+    if (!result.ok) {
+      if (asJson) return NextResponse.json({ error: result.error, counted: false }, { status: result.status })
+      return redirectTo(req, text(form, 'next') || '/', result.error)
+    }
+    if (asJson) return NextResponse.json(result)
+    return redirectTo(req, text(form, 'next') || '/', undefined, 'Kept with the speakers you are drawn to.')
+  }
+
   if (action === 'complete') {
     const lessonId = Number(text(form, 'lesson'))
+    if (!countsTowardProgress({ level: pieceLevel(text(form, 'level') || 'talk'), inCourse: true, event: 'watch' })) {
+      return redirectTo(req, text(form, 'next') || '/', 'A short clip does not finish a talk.')
+    }
     const portal = portalIdOf(user)
     const lesson = await findDoc(payload, 'lessons', lessonId)
     if (!lesson || !(await visibleCourseIds(payload, user)).includes(idOf(lesson.course) || 0)) return redirectTo(req, '/', 'That film is not in your portal.')
@@ -1336,7 +1364,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       await payload.create({
         collection: 'completions',
         overrideAccess: true,
-        data: { user: user.id, lesson: lessonId, portal: portal || undefined, percent, onTime },
+        data: { user: user.id, lesson: lessonId, portal: portal || undefined, percent, onTime, sourceLevel: 'talk' },
       })
     }
     const fullUser = await payload.findByID({ collection: 'users', id: user.id, overrideAccess: true, depth: 0 })

@@ -59,9 +59,10 @@ type View = 'context' | 'scholars' | 'summary' | 'tafsir'
 export async function GardenHarvest({ payload, user, base, query }: Ctx) {
   const session = await getSession()
   const reader = session.actor || user
-  const [own, unread] = await Promise.all([
+  const [own, unread, drawn] = await Promise.all([
     rows(payload, 'harvest-entries', { user: { equals: user.id } }, { sort: '-createdAt', limit: 1000 }),
     unreadCount(payload, user),
+    rows(payload, 'drawn-to', { user: { equals: user.id } }, { sort: '-learnMore', limit: 12 }),
   ])
   const sample = own.length ? [] : await sampleHarvest(payload)
   const entries: Row[] = own.length ? own : sample.map((item) => ({ ...item, sample: true, lesson: item.lessonId, createdAt: item.gatheredAt } as unknown as Row))
@@ -128,6 +129,17 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
   return (
     <Frame base={base} title="Harvest" testId="garden-harvest" unread={unread}>
       <p className="lead">Verses, hadith and lines from the talks you watch, in the speaker’s own words. Tap a card to hear that moment again.</p>
+      {drawn.length ? (
+        <section className="card" data-testid="drawn-to" style={{ marginBottom: 16 }}>
+          <p className="eyebrow">Drawn to</p>
+          {drawn.map((row) => (
+            <p key={row.id} data-testid="drawn-speaker" style={{ margin: '6px 0' }}>
+              <Link href={`${base}/speaker/${str(row.speakerSlug)}`}><b>{str(row.speaker)}</b></Link>
+              <small className="muted"> · stayed {Number(row.linger) || 0} · learned more {Number(row.learnMore) || 0}</small>
+            </p>
+          ))}
+        </section>
+      ) : null}
       {!own.length && sample.length ? <p className="demo-note" data-testid="harvest-sample">A sample from real talks. Lines you watch in the feed, and the verses and hadith of talks you finish, will replace it.</p> : null}
       {entries.length ? (
         <>

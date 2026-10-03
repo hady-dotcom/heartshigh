@@ -5,6 +5,8 @@ import { portalIdOf } from './lib/ids'
 import { slugProblem } from './lib/text-safety'
 import { authorTextProblems, markupProblems } from './lib/opening-data'
 import { horsCapOf, saidInTalk, tierProblem, timingProblems } from './lib/tiers'
+import { talkChain } from './lib/nesting'
+import { linkLadderParents } from './server/piece-parents'
 import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
 import { circleProblems } from './lib/circle'
@@ -477,7 +479,6 @@ export const Cuts: CollectionConfig = {
 export const LadderItems: CollectionConfig = {
   slug: 'ladder-items',
   access: masterOnly,
-  hooks: { beforeChange: [plainFields('quote')] },
   fields: [
     { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true },
     { name: 'cut', type: 'relationship', relationTo: 'cuts' },
@@ -493,6 +494,12 @@ export const LadderItems: CollectionConfig = {
     { name: 'end', type: 'number' },
     { name: 'quote', type: 'textarea' },
     {
+      name: 'parentRef',
+      type: 'text',
+      index: true,
+      admin: { description: "This piece's own parent. An appetiser points at its full talk (talk:<lesson id>). A hors d'oeuvre points at its appetiser (appetiser:<id>), never straight at the talk." },
+    },
+    {
       name: 'status',
       type: 'select',
       defaultValue: 'draft',
@@ -503,6 +510,15 @@ export const LadderItems: CollectionConfig = {
       ],
     },
   ],
+  hooks: {
+    beforeChange: [plainFields('quote')],
+    afterChange: [
+      async ({ doc, req }) => {
+        await linkLadderParents(req, doc as { id: number; lesson?: unknown; kind?: string | null; start?: number | null; end?: number | null; parentRef?: string | null })
+        return doc
+      },
+    ],
+  },
 }
 
 export const EngagementPoints: CollectionConfig = {
@@ -661,6 +677,11 @@ export const TalkTiers: CollectionConfig = {
     { name: 'source', type: 'text', admin: { description: 'Where the draft came from, for example the caption file.' } },
     { name: 'note', type: 'textarea' },
     { name: 'checkedBy', type: 'relationship', relationTo: 'users' },
+    {
+      name: 'parents',
+      type: 'json',
+      admin: { description: "hors d'oeuvre -> its appetiser -> its full talk. Written on every save from the lesson this tier belongs to." },
+    },
   ],
   hooks: {
     beforeChange: [
@@ -670,6 +691,7 @@ export const TalkTiers: CollectionConfig = {
         const problem = tierProblem(merged, horsCapOf(flags?.horsMaxSeconds))
         if (problem) throw new APIError(problem, 400, null, true)
         const lessonId = typeof merged.lesson === 'object' && merged.lesson ? (merged.lesson as { id: number }).id : Number(merged.lesson)
+        if (data && lessonId) data.parents = talkChain(lessonId)
         const lesson = lessonId ? await req.payload.findByID({ collection: 'lessons', id: lessonId, depth: 0, overrideAccess: true }).catch(() => null) : null
         const duration = Number((lesson as { durationSeconds?: number } | null)?.durationSeconds || 0)
         const late = timingProblems(duration || null, [
@@ -719,6 +741,16 @@ export const Answers: CollectionConfig = {
     { name: 'answeredAt', type: 'date' },
     { name: 'pendingSync', type: 'checkbox', defaultValue: false },
     { name: 'correct', type: 'checkbox' },
+    {
+      name: 'sourceLevel',
+      type: 'select',
+      options: [
+        { label: 'Full talk', value: 'talk' },
+        { label: "Hors d'oeuvre", value: 'hors' },
+        { label: 'Appetiser', value: 'appetiser' },
+      ],
+      admin: { description: 'Questions on a hors d\'oeuvre or appetiser do not count toward the grow page. Only questions on a full talk do.' },
+    },
   ],
 }
 
@@ -908,6 +940,20 @@ export const ScriptureCache: CollectionConfig = {
   ],
 }
 
+/** Speakers a learner lingers on, or steps down from, while browsing short clips. Not a course completion. */
+export const DrawnTo: CollectionConfig = {
+  slug: 'drawn-to',
+  labels: { singular: 'Drawn to', plural: 'Drawn to' },
+  access: masterOnly,
+  fields: [
+    { name: 'user', type: 'relationship', relationTo: 'users', required: true, index: true },
+    { name: 'speaker', type: 'text', required: true },
+    { name: 'speakerSlug', type: 'text', required: true, index: true },
+    { name: 'linger', type: 'number', defaultValue: 0 },
+    { name: 'learnMore', type: 'number', defaultValue: 0 },
+  ],
+}
+
 export const Schedules: CollectionConfig = {
   slug: 'schedules',
   access: masterOnly,
@@ -991,6 +1037,17 @@ export const Completions: CollectionConfig = {
     { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true },
     { name: 'percent', type: 'number', defaultValue: 100 },
     { name: 'onTime', type: 'checkbox' },
+    {
+      name: 'sourceLevel',
+      type: 'select',
+      defaultValue: 'talk',
+      options: [
+        { label: 'Full talk', value: 'talk' },
+        { label: "Hors d'oeuvre", value: 'hors' },
+        { label: 'Appetiser', value: 'appetiser' },
+      ],
+      admin: { description: 'Only a full talk inside a course counts toward completion and the grow page.' },
+    },
     { name: 'watchedAt', type: 'date', admin: { description: 'When the learner watched this, if that is not the row time. The compass uses it.' } },
   ],
 }
@@ -1112,6 +1169,7 @@ export const collections = [
   PlacingAnswers,
   Tags,
   HarvestEntries,
+  DrawnTo,
   Schedules,
   Events,
   Rsvps,

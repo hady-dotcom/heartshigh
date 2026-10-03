@@ -88,6 +88,7 @@ export default buildConfig({
         'watch-sessions': {},
         adoptions: {},
         'harvest-entries': {},
+        'drawn-to': {},
         'lesson-visits': {},
         'seat-visits': {},
         rituals: {},

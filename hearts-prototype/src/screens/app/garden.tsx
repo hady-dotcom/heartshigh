@@ -8,6 +8,7 @@ import { Flower, LockIcon } from '@/components/icons'
 import { now } from '@/lib/clock'
 import { getSession, type SessionUser, visibleCourseIds } from '@/server/context'
 import { workbookFor } from '@/server/workbook'
+import { countsTowardProgress, pieceLevel } from '@/lib/progress'
 import { posterFor } from '@/server/learner'
 import { loadDoors } from '@/server/doors'
 import { doorByNumber, doorCode, doorFromPath, doorOfClause, type Door } from '@/lib/doors'
@@ -58,9 +59,12 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
   const answers = allAnswers.filter(answerCounts)
   const browsed = new Set(allAnswers.filter((row) => !answerCounts(row)).map((row) => row.id))
   const workbook = allWorkbook.filter((row) => !browsed.has(ref(row.answer) || 0))
-  const lessonIds = [...new Set([...completions, ...visits].map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))]
+  const lessonIds = [...new Set([...completions, ...visits, ...answers].map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))]
   const lessons = lessonIds.length ? await rows(payload, 'lessons', { id: { in: lessonIds } }) : []
-  const done = new Set(completions.map((row) => ref(row.lesson)))
+  const inCourse = (lessonId: number | null) => Boolean(lessonId && ref(lessons.find((row) => row.id === lessonId)?.course))
+  const countedCompletions = completions.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'watch' }))
+  const countedAnswers = answers.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'question' }))
+  const done = new Set(countedCompletions.map((row) => ref(row.lesson)))
   const cutIds = tags.map((tag) => ref((tag.item as { value?: unknown } | undefined)?.value)).filter((id): id is number => Boolean(id))
   const cuts = cutIds.length ? await rows(payload, 'cuts', { id: { in: cutIds } }, { limit: 1000 }) : []
   const lit = new Set<number>()
@@ -71,12 +75,12 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
     const door = clause ? doorOfClause(Number(clause.number), doors) : null
     if (door) lit.add(door.number)
   }
-  const activeDays = new Set([...completions, ...answers, ...visits, ...rituals, ...seatVisits].map((row) => str(row.createdAt).slice(0, 10)).filter(Boolean))
-  const secondsGiven = completions.reduce((sum, row) => {
+  const activeDays = new Set([...countedCompletions, ...countedAnswers, ...visits, ...rituals, ...seatVisits].map((row) => str(row.createdAt).slice(0, 10)).filter(Boolean))
+  const secondsGiven = countedCompletions.reduce((sum, row) => {
     const lesson = lessons.find((item) => item.id === ref(row.lesson))
     return sum + (Number(lesson?.durationSeconds || 0) * Number(row.percent || 100)) / 100
   }, 0)
-  return { clauses, doors, seats, lit, completions, lessons, seatVisits, harvest, workbook, answers, rituals, activeDays, secondsGiven }
+  return { clauses, doors, seats, lit, completions: countedCompletions, lessons, seatVisits, harvest, workbook, answers: countedAnswers, rituals, activeDays, secondsGiven }
 }
 
 function sectionOf(doors: Door[], key: string) {

@@ -180,13 +180,13 @@ test('swipes stay on the level being watched, and "Learn more" goes to the paren
   await expect(feed).toHaveAttribute('data-mode', 'hors')
 
   const lesson = await feed.getAttribute('data-lesson')
-  await page.getByTestId('watch-full').click()
+  await page.getByTestId('learn-more').click()
   await expect(feed).toHaveAttribute('data-mode', 'appetiser')
   await expect(feed).toHaveAttribute('data-lesson', lesson!)
   await page.getByTestId('appetiser-back').click()
   await expect(feed).toHaveAttribute('data-mode', 'hors')
 
-  await page.getByTestId('watch-full').click()
+  await page.getByTestId('learn-more').click()
   await expect(feed).toHaveAttribute('data-mode', 'appetiser')
   for (const gesture of ['gesture-left', 'gesture-down', 'gesture-up', 'gesture-right']) {
     const at = await feed.getAttribute('data-index')
@@ -194,6 +194,6 @@ test('swipes stay on the level being watched, and "Learn more" goes to the paren
     if (gesture === 'gesture-left') await expect(feed).not.toHaveAttribute('data-index', at!)
     await expect(feed, `${gesture} keeps the appetiser level`).toHaveAttribute('data-mode', 'appetiser')
     const shownLesson = await feed.getAttribute('data-lesson')
-    await expect(page.getByTestId('start-course')).toHaveAttribute('href', new RegExp(`/course/\\d+\\?part=${shownLesson}&t=0$`))
+    await expect(page.getByTestId('learn-more')).toHaveAttribute('href', new RegExp(`/course/\\d+\\?part=${shownLesson}&t=0$`))
   }
 })

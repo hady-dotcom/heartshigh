@@ -403,33 +403,54 @@ test.describe.serial('HEARTS journeys', () => {
     await expect(page.getByTestId('portal-card').filter({ hasText: `/p/${slug}` })).toContainText('Active')
   })
 
-  test('feed gestures: up replays, down changes lane, left more on the topic, right more from the speaker', async ({ page }) => {
+  test('feed swipes stay on one level, and learn more steps to that clip’s own parent', async ({ page }) => {
+    await page.setViewportSize(PHONE)
     await page.route(/youtube|ytimg|googlevideo/, (route) => route.abort())
     await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london/feed')
     const feed = page.getByTestId('journey')
     await expect(feed).toHaveAttribute('data-phase', 'feed')
+    await expect(feed).toHaveAttribute('data-mode', 'hors')
     await expect(feed).toHaveAttribute('data-cuts', /\d+ \d+/)
-    const box = (await page.getByTestId('gesture-layer').boundingBox())!
-    const cx = box.x + box.width / 2
-    const cy = box.y + box.height / 2
     const swipe = async (dx: number, dy: number) => {
+      const box = (await page.getByTestId('gesture-layer').boundingBox())!
+      const cx = box.x + box.width / 2
+      const cy = box.y + box.height / 2
       await page.mouse.move(cx, cy)
       await page.mouse.down()
-      await page.mouse.move(cx + dx, cy + dy, { steps: 6 })
+      await page.mouse.move(cx + dx, cy + dy, { steps: 8 })
       await page.mouse.up()
     }
-    await swipe(0, -200)
+    await swipe(0, -220)
     await expect(page.getByTestId('toast')).toContainText('again')
     const lane = await feed.getAttribute('data-lane')
-    await swipe(0, 200)
+    await swipe(0, 220)
     await expect(feed).not.toHaveAttribute('data-lane', lane!)
-    await expect(page.getByTestId('toast')).toContainText('Lane')
-    await swipe(-200, 0)
+    await expect(feed).toHaveAttribute('data-mode', 'hors')
+    await swipe(-220, 0)
     await expect(page.getByTestId('toast')).toContainText(/More on|everything on/)
+    await expect(feed).toHaveAttribute('data-mode', 'hors')
+    const first = await feed.getAttribute('data-cut')
+    const horsMore = page.getByTestId('learn-more')
+    expect(await horsMore.getAttribute('data-parent')).toMatch(/^appetiser:/)
+    expect(await horsMore.getAttribute('data-parent-level')).toBe('appetiser')
+    await horsMore.click()
+    await expect(feed).toHaveAttribute('data-mode', 'appetiser')
+    await expect(feed).toHaveAttribute('data-cut', first!)
+    await swipe(-220, 0)
+    await expect(feed).toHaveAttribute('data-mode', 'appetiser')
+    await expect(feed).not.toHaveAttribute('data-cut', first!)
     const speaker = await feed.getAttribute('data-speaker')
-    await swipe(200, 0)
-    await expect(page.getByTestId('toast')).toContainText(/More from|everything from/)
+    await swipe(220, 0)
+    await expect(feed).toHaveAttribute('data-mode', 'appetiser')
     await expect(feed).toHaveAttribute('data-speaker', speaker!)
+    const lesson = await feed.getAttribute('data-lesson')
+    const talkMore = page.getByTestId('learn-more')
+    expect(await talkMore.getAttribute('data-parent-level')).toBe('talk')
+    expect(await talkMore.getAttribute('data-parent')).toMatch(/^talk:/)
+    expect(await talkMore.getAttribute('href')).toContain(`part=${lesson}`)
+    expect(await talkMore.getAttribute('href')).toMatch(/[?&]t=0$/)
+    await expect(page.getByTestId('resume-main')).toHaveCount(0)
+    await expect(page.getByTestId('mains-shelf')).toHaveCount(0)
   })
 
   test('the main screens load without console errors', async ({ page }) => {

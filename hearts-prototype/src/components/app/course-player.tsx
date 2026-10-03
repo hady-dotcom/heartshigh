@@ -396,6 +396,7 @@ export function CoursePlayer({
       </section>
       <form className="watched-form" action="/api/hearts" method="post">
         <input type="hidden" name="action" value="complete" />
+        <input type="hidden" name="level" value="talk" />
         <input type="hidden" name="lesson" value={lessonId} />
         <input type="hidden" name="seconds" value={Math.floor(watched)} />
         {ended ? <input type="hidden" name="ended" value="yes" /> : null}

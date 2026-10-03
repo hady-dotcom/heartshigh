@@ -175,8 +175,15 @@ export async function talkHarvest(payload: Payload, lessonId: number, transcript
 }
 
 /** Copy a talk's harvest into one learner's Garden. */
-export async function giveHarvest(payload: Payload, userId: number, lessonId: number, transcript: string, portal?: number, extra: Record<string, unknown> = {}) {
-  const items = await talkHarvest(payload, lessonId, transcript)
+export async function giveHarvest(payload: Payload, userId: number, lessonId: number, transcript: string, portal?: number, extra: Record<string, unknown> = {}, window?: { start: number; end: number }) {
+  let items = await talkHarvest(payload, lessonId, transcript)
+  if (window) {
+    if (!(window.end > window.start)) return 0
+    const held = await payload.find({ collection: 'harvest-entries', overrideAccess: true, depth: 0, limit: 300, where: { and: [{ user: { equals: userId } }, { lesson: { equals: lessonId } }] } })
+    const rows = held.docs as unknown as { text?: string; seconds?: number }[]
+    items = items.filter((item) => item.seconds >= window.start - 1 && item.seconds <= window.end + 1)
+      .filter((item) => !rows.some((row) => row.text === item.text || Math.abs(Number(row.seconds) - item.seconds) < 1.5))
+  }
   for (const item of items) {
     await payload.create({
       collection: 'harvest-entries',

@@ -31,6 +31,7 @@ function inputOf(row: Record<string, unknown>, pending: boolean): AnswerInput {
     atSecond: number(row.atSecond),
     viewingId: typeof row.viewingId === 'string' ? row.viewingId.slice(0, 64) : undefined,
     cutId: number(row.cutId) || null,
+    level: row.level === 'hors' || row.level === 'appetiser' ? row.level : undefined,
     pendingSync: pending,
   }
 }
