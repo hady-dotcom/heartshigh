@@ -85,6 +85,7 @@ export interface Config {
     'workbook-entries': WorkbookEntry;
     notifications: Notification;
     'access-codes': AccessCode;
+    'talk-tiers': TalkTier;
     adoptions: Adoption;
     'placing-questions': PlacingQuestion;
     'placing-answers': PlacingAnswer;
@@ -135,6 +136,7 @@ export interface Config {
     'workbook-entries': WorkbookEntriesSelect<false> | WorkbookEntriesSelect<true>;
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
     'access-codes': AccessCodesSelect<false> | AccessCodesSelect<true>;
+    'talk-tiers': TalkTiersSelect<false> | TalkTiersSelect<true>;
     adoptions: AdoptionsSelect<false> | AdoptionsSelect<true>;
     'placing-questions': PlacingQuestionsSelect<false> | PlacingQuestionsSelect<true>;
     'placing-answers': PlacingAnswersSelect<false> | PlacingAnswersSelect<true>;
@@ -307,6 +309,20 @@ export interface AccessCode {
   requiredCourses?: (number | Course)[] | null;
   linkedTeacherCode?: (number | null) | AccessCode;
   parentMentorCode?: (number | null) | AccessCode;
+  /**
+   * A name for the desk, so codes can be found without printing them.
+   */
+  label?: string | null;
+  /**
+   * After this moment the code stops working.
+   */
+  expiresAt?: string | null;
+  /**
+   * Leave empty for no limit. Admin codes are single-use unless you say otherwise.
+   */
+  maxUses?: number | null;
+  uses?: number | null;
+  disabled?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -578,6 +594,11 @@ export interface EngagementPoint {
   author?: (number | null) | User;
   audience?: ('everyone' | 'self' | 'selected') | null;
   audienceUsers?: (number | User)[] | null;
+  /**
+   * Learners only see published pop-ups. Drafts from the transcript wait here for a person.
+   */
+  status?: ('published' | 'draft') | null;
+  draftNote?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -644,6 +665,35 @@ export interface Notification {
   read?: boolean | null;
   channel?: string | null;
   key?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "talk-tiers".
+ */
+export interface TalkTier {
+  id: number;
+  lesson: number | Lesson;
+  horsStart: number;
+  horsEnd: number;
+  horsQuote?: string | null;
+  appetiserStart: number;
+  appetiserEnd: number;
+  hook?: string | null;
+  turn?: string | null;
+  land?: string | null;
+  /**
+   * Offer "Resume from where the appetiser ended" next to the main, which always opens at 0:00.
+   */
+  offerResume?: boolean | null;
+  status?: ('draft' | 'checked') | null;
+  /**
+   * Where the draft came from, for example the caption file.
+   */
+  source?: string | null;
+  note?: string | null;
+  checkedBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -1317,6 +1367,10 @@ export interface PayloadLockedDocument {
         value: number | AccessCode;
       } | null)
     | ({
+        relationTo: 'talk-tiers';
+        value: number | TalkTier;
+      } | null)
+    | ({
         relationTo: 'adoptions';
         value: number | Adoption;
       } | null)
@@ -1753,6 +1807,8 @@ export interface EngagementPointsSelect<T extends boolean = true> {
   author?: T;
   audience?: T;
   audienceUsers?: T;
+  status?: T;
+  draftNote?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1828,6 +1884,33 @@ export interface AccessCodesSelect<T extends boolean = true> {
   requiredCourses?: T;
   linkedTeacherCode?: T;
   parentMentorCode?: T;
+  label?: T;
+  expiresAt?: T;
+  maxUses?: T;
+  uses?: T;
+  disabled?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "talk-tiers_select".
+ */
+export interface TalkTiersSelect<T extends boolean = true> {
+  lesson?: T;
+  horsStart?: T;
+  horsEnd?: T;
+  horsQuote?: T;
+  appetiserStart?: T;
+  appetiserEnd?: T;
+  hook?: T;
+  turn?: T;
+  land?: T;
+  offerResume?: T;
+  status?: T;
+  source?: T;
+  note?: T;
+  checkedBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
+import { CodeLimits, CodeStatus } from '@/components/desk/codes'
 import { PointPicker } from '@/components/desk/tools'
 import { Qr } from '@/components/qr'
 import { adoptedCourseIds, type PortalDoc, type SessionUser } from '@/server/context'
@@ -507,18 +508,19 @@ export async function AccessScreen(ctx: Ctx) {
       <section className="panel" style={{ marginBottom: 18 }}>
         <div className="table-wrap">
           <table className="data">
-            <thead><tr><th>Code</th><th>For</th><th>Course pack</th><th>Teacher code</th><th className="num">Joined</th><th>Link to send</th><th>QR</th><th>Change</th></tr></thead>
+            <thead><tr><th>Code</th><th>For</th><th>Course pack</th><th>Teacher code</th><th className="num">Joined</th><th>Works</th><th>Link to send</th><th>QR</th><th>Change</th></tr></thead>
             <tbody>
               {codes.map((code) => {
                 const share = `${origin}/join?code=${encodeURIComponent(str(code.code))}`
                 const packIds = ((code.packs as unknown[]) || []).map((item) => ref(item))
                 return (
                   <tr key={code.id} data-testid="code-card">
-                    <td style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 700 }}>{str(code.code)}</td>
+                    <td><div style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 700 }} data-testid="code-value-cell">{str(code.code)}</div>{str(code.label) ? <div className="hint">{str(code.label)}</div> : null}</td>
                     <td><span className={`badge ${roleBadge[str(code.role)] || 'grey'}`}>{str(code.role)[0]?.toUpperCase() + str(code.role).slice(1)}</span></td>
                     <td>{usable.filter((pack) => packIds.includes(pack.id)).map((pack) => str(pack.title)).join(', ') || <span className="hint">None</span>}</td>
                     <td>{str(teachers.find((row) => row.id === ref(code.linkedTeacherCode))?.code) || <span className="hint">None</span>}</td>
                     <td className="num">{people.filter((person) => ref(person.accessCode) === code.id).length}</td>
+                    <td><CodeStatus code={code} next={here} portalSlug={portal.slug} /></td>
                     <td><div className="address" style={{ fontSize: 12 }} data-testid="share-url">{share}</div></td>
                     <td><div style={{ width: 84 }} className="qr-small"><Qr value={share} testId="code-qr" /></div></td>
                     <td>
@@ -540,7 +542,7 @@ export async function AccessScreen(ctx: Ctx) {
                   </tr>
                 )
               })}
-              {!codes.length ? <tr><td colSpan={8} className="empty">No codes yet.</td></tr> : null}
+              {!codes.length ? <tr><td colSpan={9} className="empty">No codes yet.</td></tr> : null}
             </tbody>
           </table>
         </div>
@@ -551,7 +553,7 @@ export async function AccessScreen(ctx: Ctx) {
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-code', portalSlug: portal.slug, next: here }} />
             <div className="cols">
-              <label className="stack">Code<input type="text" data-testid="new-code" name="code" placeholder="ELM-SPRING" required /></label>
+              <label className="stack">Code<input type="text" data-testid="new-code" name="code" placeholder="Leave empty for a random code" /></label>
               <label className="stack">For
                 <select data-testid="new-code-role" name="role" defaultValue="learner">
                   <option value="learner">Learner</option><option value="teacher">Teacher</option><option value="admin">Admin</option><option value="parent">Parent (one course)</option>
@@ -569,6 +571,7 @@ export async function AccessScreen(ctx: Ctx) {
                 </select>
               </label>
             </div>
+            <CodeLimits />
             {courses.length ? (
               <div>
                 <div className="hint" style={{ marginBottom: 6 }}>Courses everyone on this code is asked to finish (optional)</div>

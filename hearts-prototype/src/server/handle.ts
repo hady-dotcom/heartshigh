@@ -6,7 +6,9 @@ import { idOf, portalIdOf } from '@/lib/ids'
 import { extractWithFallback, llmStatus } from '@/lib/llm'
 import { flattenSlots, splitEvenly, studyDates } from '@/lib/schedule'
 import { clockEnabled, setTestNow } from '@/lib/clock'
-import { resetLimits } from '@/lib/rate-limit'
+import { clientIp, hit, peek, resetLimits } from '@/lib/rate-limit'
+import { slugProblem } from '@/lib/text-safety'
+import { JOIN_FAILS_ALL, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
 import { ingestYoutubeUrl } from '@/lib/youtube'
 import { now } from '@/lib/clock'
 import { startingClause } from '@/lib/placing'
@@ -27,6 +29,15 @@ function redirectTo(req: Request, path: string, error?: string, notice?: string)
   if (error) url.searchParams.set('error', error)
   if (notice) url.searchParams.set('notice', notice)
   return NextResponse.redirect(url, 303)
+}
+
+function tooManyJoins() {
+  const body =
+    '<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Too many tries</title></head>' +
+    '<body style="font-family:system-ui,sans-serif;max-width:32rem;margin:3rem auto;padding:0 1rem;line-height:1.5">' +
+    '<h1>Too many tries</h1><p>Several access codes from here were not recognised, so joining is paused for a few minutes. Check the code with whoever gave it to you, then try again.</p>' +
+    '<p><a href="/join">Back to joining</a></p></body></html>'
+  return new NextResponse(body, { status: 429, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Retry-After': String(JOIN_WINDOW_MS / 1000) } })
 }
 
 function text(form: FormData, key: string) {
@@ -214,7 +225,7 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
   const fail = (status: number, error: string) => ({ ok: false as const, status, error })
     const pointId = input.pointId
     const point = await findDoc(payload, 'engagement-points', pointId)
-    if (!point) return fail(404, 'That question could not be found.')
+    if (!point || point.status === 'draft') return fail(404, 'That question could not be found.')
     const lessonId = idOf(point.lesson)
     const portal = portalIdOf(user)
     if (!portal) return fail(403, 'Your account is not in a portal.')
@@ -416,6 +427,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const password = text(form, 'password')
     if (!name || !email || !password) return redirectTo(req, `/join?code=${encodeURIComponent(codeValue)}`, 'Name, email and a password are all needed.')
     if (password.length < 8) return redirectTo(req, `/join?code=${encodeURIComponent(codeValue)}`, 'Use at least 8 characters for the password.')
+    const ipKey = `join-fail:${clientIp(req)}`
+    if (!peek(ipKey, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS).allowed || !peek('join-fail:all', JOIN_FAILS_ALL, JOIN_WINDOW_MS).allowed) return tooManyJoins()
     const found = await payload.find({
       collection: 'access-codes',
       overrideAccess: true,
@@ -423,7 +436,15 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       limit: 1,
       where: { code: { equals: codeValue } },
     })
-    const access = found.docs[0] as { id: number; role?: string; portal?: unknown; packs?: unknown[] } | undefined
+    const access = found.docs[0] as
+      | { id: number; role?: string; portal?: unknown; packs?: unknown[]; disabled?: boolean; expiresAt?: string | null; maxUses?: number | null; uses?: number | null }
+      | undefined
+    const refusal = codeRefusal(access, now())
+    if (refusal) {
+      hit(ipKey, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS)
+      hit('join-fail:all', JOIN_FAILS_ALL, JOIN_WINDOW_MS)
+      return redirectTo(req, '/join', refusal)
+    }
     if (!access) return redirectTo(req, '/join', 'That access code was not recognised.')
     const portal = idOf(access.portal)
     if (!portal) return redirectTo(req, '/join', 'That access code is not attached to a portal.')
@@ -435,21 +456,34 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const packIds = (access.packs || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
     const courseList = await coursesInPacks(payload, packIds)
     const codeRole = access.role || 'learner'
-    await payload.create({
-      collection: 'users',
+    const usesBefore = access.uses || 0
+    const claimed = await payload.update({
+      collection: 'access-codes',
       overrideAccess: true,
-      data: {
-        email,
-        password,
-        name,
-        role: roleFromCode(codeRole),
-        audience: codeRole === 'parent' ? 'parent' : codeRole,
-        accessCode: access.id,
-        courseList,
-        tenants: [{ tenant: portal }],
-        onboarded: codeRole !== 'learner' && codeRole !== 'parent',
-      },
+      where: { and: [{ id: { equals: access.id } }, usesBefore ? { uses: { equals: usesBefore } } : { or: [{ uses: { equals: 0 } }, { uses: { exists: false } }] }] },
+      data: { uses: usesBefore + 1 },
     })
+    if (!claimed.docs.length) return redirectTo(req, '/join', 'That access code was just used by someone else. Please try again.')
+    try {
+      await payload.create({
+        collection: 'users',
+        overrideAccess: true,
+        data: {
+          email,
+          password,
+          name,
+          role: roleFromCode(codeRole),
+          audience: codeRole === 'parent' ? 'parent' : codeRole,
+          accessCode: access.id,
+          courseList,
+          tenants: [{ tenant: portal }],
+          onboarded: codeRole !== 'learner' && codeRole !== 'parent',
+        },
+      })
+    } catch (error) {
+      await payload.update({ collection: 'access-codes', id: access.id, overrideAccess: true, data: { uses: usesBefore } })
+      throw error
+    }
     const next = codeRole === 'learner' || codeRole === 'parent' ? `/p/${slug}/welcome` : `/p/${slug}/admin`
     return loginResponse(req, email, password, next)
   }
@@ -479,8 +513,10 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   if (action === 'create-portal') {
     if (user.role !== 'master') return redirectTo(req, '/', 'Only the master desk can open a portal.')
     const name = text(form, 'name')
-    const slug = text(form, 'slug').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-|-$/g, '')
+    const slug = text(form, 'slug').toLowerCase().replace(/\s+/g, '-')
     if (!name || !slug) return redirectTo(req, '/master', 'A portal needs a name and a short address.')
+    const slugIssue = slugProblem(slug)
+    if (slugIssue) return redirectTo(req, '/master', slugIssue)
     const clash = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: slug } } })
     if (clash.docs.length) return redirectTo(req, '/master', 'That address is already in use.')
     await payload.create({
@@ -525,14 +561,21 @@ async function handleForm(req: Request, form: FormData, session: Session) {
 
   if (action === 'create-code') {
     if (user.role !== 'master' && user.role !== 'portal-admin') return redirectTo(req, '/', 'You cannot make an access code.')
-    const code = text(form, 'code').toUpperCase().replace(/\s+/g, '')
     const role = text(form, 'role')
     const packId = Number(text(form, 'pack'))
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/master', acting.error)
-    if (!code || !role || !packId) return redirectTo(req, text(form, 'next') || '/master', 'An access code needs a code, a role and a course pack.')
+    const code = text(form, 'code').toUpperCase().replace(/\s+/g, '') || randomCode(acting.portal.slug || '')
+    if (!role || !packId) return redirectTo(req, text(form, 'next') || '/master', 'An access code needs a role and a course pack.')
     if (!['admin', 'teacher', 'learner', 'parent'].includes(role)) return redirectTo(req, text(form, 'next') || '/master', 'Choose who the code is for.')
-    if (!/^[A-Z0-9-]{4,32}$/.test(code)) return redirectTo(req, text(form, 'next') || '/master', 'Use 4 to 32 letters, numbers or dashes for the code.')
+    if (!/^[A-Z0-9-]{8,32}$/.test(code)) return redirectTo(req, text(form, 'next') || '/master', 'Use 8 to 32 letters, numbers or dashes for the code, or leave it empty for a random one.')
+    const maxUsesText = text(form, 'maxUses')
+    const maxUses = maxUsesText ? Number(maxUsesText) : role === 'admin' ? 1 : null
+    if (maxUses !== null && (!Number.isInteger(maxUses) || maxUses < 1 || maxUses > 10000)) return redirectTo(req, text(form, 'next') || '/master', 'Uses must be a whole number from 1 to 10,000, or empty for no limit.')
+    const daysText = text(form, 'expiresInDays')
+    const days = daysText ? Number(daysText) : null
+    if (days !== null && (!Number.isInteger(days) || days < 1 || days > 366)) return redirectTo(req, text(form, 'next') || '/master', 'Expiry must be 1 to 366 days, or empty for none.')
+    const expiresAt = days ? new Date(now().getTime() + days * 86_400_000).toISOString() : null
     if (!(await packUsable(payload, user, acting.portal.id, packId))) return redirectTo(req, text(form, 'next') || '/master', 'That course pack is not available in this portal.')
     const linkedId = Number(text(form, 'linkedTeacherCode') || 0)
     if (linkedId) {
@@ -563,9 +606,25 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         linkedTeacherCode: linked ? Number(linked) : undefined,
         parentMentorCode: role === 'parent' && linked ? Number(linked) : undefined,
         requiredCourses: required,
+        label: text(form, 'label').slice(0, 80) || undefined,
+        maxUses,
+        expiresAt,
+        uses: 0,
+        disabled: false,
       },
     })
     return redirectTo(req, text(form, 'next') || '/master', undefined, `Access code ${code} is ready.`)
+  }
+
+  if (action === 'code-switch') {
+    if (user.role !== 'master' && user.role !== 'portal-admin') return redirectTo(req, '/', 'You cannot change an access code.')
+    const next = text(form, 'next') || '/master'
+    const target = await findDoc(payload, 'access-codes', Number(text(form, 'id')))
+    if (!target) return redirectTo(req, next, 'That access code was not found.')
+    if (user.role !== 'master' && idOf(target.portal) !== portalIdOf(user)) return redirectTo(req, next, 'That access code belongs to another portal.')
+    const disabled = text(form, 'disabled') === 'true'
+    await payload.update({ collection: 'access-codes', id: target.id, overrideAccess: true, data: { disabled } })
+    return redirectTo(req, next, undefined, disabled ? `Access code ${target.code} is switched off.` : `Access code ${target.code} works again.`)
   }
 
   if (action === 'create-course') {

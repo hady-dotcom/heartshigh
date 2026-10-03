@@ -2,6 +2,9 @@ import type { CollectionConfig } from 'payload'
 
 import type { Access, Where } from 'payload'
 import { portalIdOf } from './lib/ids'
+import { slugProblem } from './lib/text-safety'
+import { tierProblem, timingProblems } from './lib/tiers'
+import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
 
 // The app's own screens and actions use the local API with explicit portal checks.
@@ -38,7 +41,14 @@ export const Portals: CollectionConfig = {
   access: masterOnly,
   fields: [
     { name: 'name', type: 'text', required: true },
-    { name: 'slug', type: 'text', required: true, unique: true, index: true },
+    {
+      name: 'slug',
+      type: 'text',
+      required: true,
+      unique: true,
+      index: true,
+      validate: (value: unknown) => slugProblem(String(value || '')) || true,
+    },
     {
       name: 'kind',
       type: 'select',
@@ -462,7 +472,67 @@ export const EngagementPoints: CollectionConfig = {
       ],
     },
     { name: 'audienceUsers', type: 'relationship', relationTo: 'users', hasMany: true },
+    {
+      name: 'status',
+      type: 'select',
+      defaultValue: 'published',
+      options: [
+        { label: 'Published', value: 'published' },
+        { label: 'Draft, needs a human check', value: 'draft' },
+      ],
+      admin: { description: 'Learners only see published pop-ups. Drafts from the transcript wait here for a person.' },
+    },
+    { name: 'draftNote', type: 'text' },
   ],
+}
+
+/** One per talk: the hors d'oeuvre, the appetiser (hook, turn, land) and how the main opens. */
+export const TalkTiers: CollectionConfig = {
+  slug: 'talk-tiers',
+  labels: { singular: 'Talk tiers', plural: 'Talk tiers' },
+  access: masterOnly,
+  fields: [
+    { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true, unique: true, index: true },
+    { name: 'horsStart', type: 'number', required: true, min: 0 },
+    { name: 'horsEnd', type: 'number', required: true, min: 0 },
+    { name: 'horsQuote', type: 'textarea' },
+    { name: 'appetiserStart', type: 'number', required: true, min: 0 },
+    { name: 'appetiserEnd', type: 'number', required: true, min: 0 },
+    { name: 'hook', type: 'textarea' },
+    { name: 'turn', type: 'textarea' },
+    { name: 'land', type: 'textarea' },
+    { name: 'offerResume', type: 'checkbox', defaultValue: true, admin: { description: 'Offer "Resume from where the appetiser ended" next to the main, which always opens at 0:00.' } },
+    {
+      name: 'status',
+      type: 'select',
+      defaultValue: 'draft',
+      options: [
+        { label: 'Draft, needs a human check', value: 'draft' },
+        { label: 'Checked by a person', value: 'checked' },
+      ],
+    },
+    { name: 'source', type: 'text', admin: { description: 'Where the draft came from, for example the caption file.' } },
+    { name: 'note', type: 'textarea' },
+    { name: 'checkedBy', type: 'relationship', relationTo: 'users' },
+  ],
+  hooks: {
+    beforeChange: [
+      async ({ data, originalDoc, req }) => {
+        const merged = { ...(originalDoc || {}), ...data } as Record<string, unknown>
+        const problem = tierProblem(merged)
+        if (problem) throw new APIError(problem, 400, null, true)
+        const lessonId = typeof merged.lesson === 'object' && merged.lesson ? (merged.lesson as { id: number }).id : Number(merged.lesson)
+        const lesson = lessonId ? await req.payload.findByID({ collection: 'lessons', id: lessonId, depth: 0, overrideAccess: true }).catch(() => null) : null
+        const duration = Number((lesson as { durationSeconds?: number } | null)?.durationSeconds || 0)
+        const late = timingProblems(duration || null, [
+          { label: "The hors d'oeuvre", start: Number(merged.horsStart), end: Number(merged.horsEnd) },
+          { label: 'The appetiser', start: Number(merged.appetiserStart), end: Number(merged.appetiserEnd) },
+        ])
+        if (duration && late.length) throw new APIError(late[0], 400, null, true)
+        return data
+      },
+    ],
+  },
 }
 
 export const Answers: CollectionConfig = {
@@ -541,7 +611,20 @@ export const AccessCodes: CollectionConfig = {
     { name: 'requiredCourses', type: 'relationship', relationTo: 'courses', hasMany: true },
     { name: 'linkedTeacherCode', type: 'relationship', relationTo: 'access-codes' },
     { name: 'parentMentorCode', type: 'relationship', relationTo: 'access-codes' },
+    { name: 'label', type: 'text', admin: { description: 'A name for the desk, so codes can be found without printing them.' } },
+    { name: 'expiresAt', type: 'date', admin: { description: 'After this moment the code stops working.' } },
+    { name: 'maxUses', type: 'number', min: 1, admin: { description: 'Leave empty for no limit. Admin codes are single-use unless you say otherwise.' } },
+    { name: 'uses', type: 'number', defaultValue: 0, admin: { readOnly: true } },
+    { name: 'disabled', type: 'checkbox', defaultValue: false },
   ],
+  hooks: {
+    beforeChange: [
+      ({ data, operation }) => {
+        if (operation === 'create' && data.role === 'admin' && (data.maxUses === undefined || data.maxUses === null)) data.maxUses = 1
+        return data
+      },
+    ],
+  },
 }
 
 export const Adoptions: CollectionConfig = {
@@ -789,6 +872,7 @@ export const collections = [
   WorkbookEntries,
   Notifications,
   AccessCodes,
+  TalkTiers,
   Adoptions,
   PlacingQuestions,
   PlacingAnswers,

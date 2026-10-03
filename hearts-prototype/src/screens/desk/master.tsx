@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
+import { CodeLimits, CodeStatus } from '@/components/desk/codes'
 import { ViewAsButton } from '@/components/desk/view-as-button'
 import { parseOption } from '@/lib/placing'
 import type { SessionUser } from '@/server/context'
@@ -61,6 +62,25 @@ export async function MasterPortals(ctx: MasterCtx) {
           </table>
         </div>
       </section>
+      <section className="panel" style={{ marginBottom: 18 }}>
+        <header><div><h2>Access codes</h2><p>Seeded codes are random each time the demo is reseeded; the seed prints them too</p></div></header>
+        <div className="table-wrap">
+          <table className="data" data-testid="master-codes">
+            <thead><tr><th>Portal</th><th>Code</th><th>Label</th><th>For</th><th>Works</th></tr></thead>
+            <tbody>
+              {codes.map((code) => (
+                <tr key={code.id} data-testid="master-code-row" data-label={str(code.label)}>
+                  <td>{str(portals.find((portal) => portal.id === ref(code.portal))?.name)}</td>
+                  <td style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 700 }}>{str(code.code)}</td>
+                  <td>{str(code.label)}</td>
+                  <td>{str(code.role)}</td>
+                  <td><CodeStatus code={code} next="/master" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
       <div className="grid three" style={{ alignItems: 'start' }}>
         <section className="panel">
           <header><div><h2>Open a portal</h2></div></header>
@@ -80,7 +100,7 @@ export async function MasterPortals(ctx: MasterCtx) {
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-code', next: '/master' }} />
             <label className="stack">Portal<select name="portalSlug" data-testid="code-portal">{portals.map((portal) => <option key={portal.id} value={str(portal.slug)}>{str(portal.name)}</option>)}</select></label>
-            <label className="stack">Code<input type="text" data-testid="code-value" name="code" placeholder="HARBOUR-ADMIN" required /></label>
+            <label className="stack">Code<input type="text" data-testid="code-value" name="code" placeholder="Leave empty for a random code" /></label>
             <label className="stack">For
               <select data-testid="code-role" name="role" defaultValue="admin"><option value="admin">Admin</option><option value="teacher">Teacher</option><option value="learner">Learner</option><option value="parent">Parent</option></select>
             </label>
@@ -93,6 +113,7 @@ export async function MasterPortals(ctx: MasterCtx) {
             <label className="stack">Course pack
               <select data-testid="code-pack" name="pack">{packs.map((pack) => <option key={pack.id} value={pack.id}>{str(pack.title)}{pack.owner === 'master' ? ' (library)' : ''}</option>)}</select>
             </label>
+            <CodeLimits />
             <div className="actions"><button className="btn ink" data-testid="create-code" type="submit">Make code</button></div>
             <p className="hint">Join links look like /join?code=THE-CODE</p>
           </form>
