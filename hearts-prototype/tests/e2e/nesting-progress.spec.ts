@@ -1,6 +1,14 @@
+import { mkdirSync } from 'node:fs'
 import { expect, test, type Page } from '@playwright/test'
 
 const PHONE = { width: 390, height: 844 }
+const SHOTS = process.env.HEARTS_SHOTS
+
+async function shot(page: Page, name: string) {
+  if (!SHOTS) return
+  mkdirSync(SHOTS, { recursive: true })
+  await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false })
+}
 
 async function signIn(page: Page, email: string, password: string, next: string) {
   await page.goto(`/login?next=${encodeURIComponent(next)}`)
@@ -40,16 +48,19 @@ test('at phone size, short clips stay off the grow page and a full talk in a cou
   await expect(feed).not.toHaveAttribute('data-cut', first!)
   await swipe(200, 0)
   await expect(feed).toHaveAttribute('data-cut', first!)
+  await shot(page, 'hors-loop')
 
   await page.getByTestId('learn-more').click()
   await expect(feed).toHaveAttribute('data-mode', 'appetiser')
   await expect(feed).toHaveAttribute('data-cut', first!)
   await swipe(0, -200)
   await expect(feed).toHaveAttribute('data-mode', 'appetiser')
+  await shot(page, 'appetiser-loop')
   await page.getByTestId('learn-more').click()
   await page.waitForURL(/\/course\/\d+/)
   expect(page.url()).toContain(`part=`)
   expect(page.url()).toContain('t=0')
+  await shot(page, 'full-talk')
 
   await page.goto('/p/east-london/garden/general')
   await expect(sittings).toHaveText(String(before))
@@ -76,14 +87,16 @@ test('at phone size, short clips stay off the grow page and a full talk in a cou
     maxRedirects: 0,
   })
   expect(skipped.status()).toBe(303)
-  expect(decodeURIComponent(skipped.headers()['location'] || '')).toMatch(/short clip/i)
+  expect(decodeURIComponent((skipped.headers()['location'] || '').replace(/\+/g, ' '))).toMatch(/short clip/i)
   await page.goto('/p/east-london/garden/general')
   await expect(sittings).toHaveText(String(before))
+  await shot(page, 'grow-unchanged')
 
   await expect(async () => {
     await page.goto(`/p/east-london/speaker/${slug}`)
     await expect(page.getByTestId('drawn-to')).toBeVisible()
   }).toPass({ timeout: 15_000 })
+  await shot(page, 'drawn-to')
 
   await page.goto('/p/east-london/lanes')
   await page.getByTestId('path-course').first().getByRole('link', { name: 'Start' }).click()
@@ -103,7 +116,8 @@ test('at phone size, short clips stay off the grow page and a full talk in a cou
     maxRedirects: 0,
   })
   expect(finished.status()).toBe(303)
-  expect(decodeURIComponent(finished.headers()['location'] || '')).not.toMatch(/error=/)
+  expect(decodeURIComponent((finished.headers()['location'] || '').replace(/\+/g, ' '))).not.toMatch(/error=/)
   await page.goto('/p/east-london/garden/general')
   await expect(sittings).toHaveText(String(before + 1))
+  await shot(page, 'grow-after-talk')
 })
