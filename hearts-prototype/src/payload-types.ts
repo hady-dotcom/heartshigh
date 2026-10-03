@@ -101,6 +101,15 @@ export interface Config {
     'lesson-visits': LessonVisit;
     'seat-visits': SeatVisit;
     rituals: Ritual;
+    'heart-scales': HeartScale;
+    lanes: Lane;
+    'opening-scenes': OpeningScene;
+    'opening-configs': OpeningConfig;
+    'heart-states': HeartState;
+    'opening-answers': OpeningAnswer;
+    'heart-contributions': HeartContribution;
+    'view-as-sessions': ViewAsSession;
+    'audit-log': AuditLog;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -142,6 +151,15 @@ export interface Config {
     'lesson-visits': LessonVisitsSelect<false> | LessonVisitsSelect<true>;
     'seat-visits': SeatVisitsSelect<false> | SeatVisitsSelect<true>;
     rituals: RitualsSelect<false> | RitualsSelect<true>;
+    'heart-scales': HeartScalesSelect<false> | HeartScalesSelect<true>;
+    lanes: LanesSelect<false> | LanesSelect<true>;
+    'opening-scenes': OpeningScenesSelect<false> | OpeningScenesSelect<true>;
+    'opening-configs': OpeningConfigsSelect<false> | OpeningConfigsSelect<true>;
+    'heart-states': HeartStatesSelect<false> | HeartStatesSelect<true>;
+    'opening-answers': OpeningAnswersSelect<false> | OpeningAnswersSelect<true>;
+    'heart-contributions': HeartContributionsSelect<false> | HeartContributionsSelect<true>;
+    'view-as-sessions': ViewAsSessionsSelect<false> | ViewAsSessionsSelect<true>;
+    'audit-log': AuditLogSelect<false> | AuditLogSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -151,8 +169,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'master-flags': MasterFlag;
+  };
+  globalsSelect: {
+    'master-flags': MasterFlagsSelect<false> | MasterFlagsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -238,6 +260,13 @@ export interface User {
   shareWatch?: boolean | null;
   joinedAt?: string | null;
   nightAlerts?: boolean | null;
+  shareOpening?: boolean | null;
+  keepPlace?: boolean | null;
+  trendsOptIn?: boolean | null;
+  haptics?: boolean | null;
+  removed?: boolean | null;
+  updatedBy?: (number | null) | User;
+  onBehalfOf?: (number | null) | User;
   tenants?:
     | {
         tenant: number | Portal;
@@ -408,9 +437,14 @@ export interface Lesson {
   muxPlaybackId?: string | null;
   durationSeconds?: number | null;
   transcript?: string | null;
-  transcriptSource?: ('none' | 'youtube' | 'upload') | null;
+  transcriptSource?: ('none' | 'youtube' | 'upload' | 'pending') | null;
   transcriptNote?: string | null;
   sourceUrl?: string | null;
+  /**
+   * Seq in HEARTS-8k-LINKS-for-bots.csv, for audit.
+   */
+  csvSeq?: number | null;
+  starterLane?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -436,7 +470,14 @@ export interface Cut {
   id: number;
   lesson: number | Lesson;
   course?: (number | null) | Course;
-  status?: ('draft' | 'approved' | 'rejected') | null;
+  status?: ('draft' | 'suggested' | 'approved' | 'rejected') | null;
+  /**
+   * A 0:00 to 0:20 stand-in until the cutting pass sets real in and out points.
+   */
+  placeholder?: boolean | null;
+  presentation?: ('video' | 'slide') | null;
+  playable?: boolean | null;
+  lastError?: string | null;
   start: number;
   end: number;
   timestamp?: string | null;
@@ -485,7 +526,28 @@ export interface LadderItem {
 export interface EngagementPoint {
   id: number;
   lesson: number | Lesson;
+  cut?: (number | null) | Cut;
+  /**
+   * Only timestamps for now. Other ways to set when a question appears can be added here.
+   */
+  triggerType?: 'timestamp' | null;
+  /**
+   * Seconds into the source film (so the same question fires in the Hors and the Appetiser).
+   */
   second: number;
+  /**
+   * Check-in nudges: [{ "option": "...", "scale": "belonging", "delta": -1 }]
+   */
+  nudges?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  crisisOption?: string | null;
   kind?: ('question' | 'multiple_choice' | 'reflection' | 'task') | null;
   prompt: string;
   options?:
@@ -526,6 +588,12 @@ export interface Answer {
   video?: (number | null) | Media;
   keepPrivate?: boolean | null;
   shareWithTeacher?: boolean | null;
+  cut?: (number | null) | Cut;
+  atSecond?: number | null;
+  viewingId?: string | null;
+  answeredAt?: string | null;
+  pendingSync?: boolean | null;
+  correct?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -640,8 +708,79 @@ export interface Tag {
       };
   clause?: (number | null) | Clause;
   seat?: (number | null) | Seat;
+  lane?: (number | null) | Lane;
+  weight?: number | null;
   state?: ('suggested' | 'confirmed') | null;
   note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lanes".
+ */
+export interface Lane {
+  id: number;
+  key: string;
+  title: string;
+  scale?: (number | null) | HeartScale;
+  fit?: ('natural' | 'workable' | 'weak') | null;
+  clauses?:
+    | {
+        clause: number | Clause;
+        rank: number;
+        id?: string | null;
+      }[]
+    | null;
+  seats?: (number | Seat)[] | null;
+  seriesNote?: string | null;
+  optInOnly?: boolean | null;
+  /**
+   * Never served in this lane during a learner’s first 7 days.
+   */
+  excludeClauses?: (number | Clause)[] | null;
+  order?: number | null;
+  reachPhrase?: string | null;
+  /**
+   * The default lane behind “Just show me something”. Never scored or shown.
+   */
+  pseudo?: boolean | null;
+  starters?:
+    | {
+        lesson: number | Lesson;
+        role: 'first' | 'next' | 'mains';
+        order?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "heart-scales".
+ */
+export interface HeartScale {
+  id: number;
+  key:
+    'desire' | 'greed' | 'anger' | 'ego' | 'worry' | 'belonging' | 'gratitude' | 'faith' | 'compassion' | 'discipline';
+  leonName: string;
+  room?: ('appetites' | 'heat' | 'unsettled' | 'lights') | null;
+  polishLabel?: string | null;
+  season?: ('youth' | 'health' | 'wealth' | 'freeTime' | 'life') | null;
+  firstOpenRead?: boolean | null;
+  /**
+   * Leon’s rung texts, for authors only.
+   */
+  anchors?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -834,6 +973,241 @@ export interface Ritual {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "opening-scenes".
+ */
+export interface OpeningScene {
+  id: number;
+  key: string;
+  order?: number | null;
+  /**
+   * Mark one word with **double stars** to emphasise it.
+   */
+  caption: string;
+  subline?: string | null;
+  scene?: (number | null) | Media;
+  layout?: ('grid4' | 'bubbles' | 'doorsCarousel') | null;
+  options?:
+    | {
+        key: string;
+        label: string;
+        replyPill?: string | null;
+        nudges?:
+          | {
+              scale:
+                | 'desire'
+                | 'greed'
+                | 'anger'
+                | 'ego'
+                | 'worry'
+                | 'belonging'
+                | 'gratitude'
+                | 'faith'
+                | 'compassion'
+                | 'discipline';
+              delta?: number | null;
+              id?: string | null;
+            }[]
+          | null;
+        intentLane?: (number | null) | Lane;
+        spineFirst?: boolean | null;
+        crisis?: boolean | null;
+        sensitivity?: ('normal' | 'private') | null;
+        id?: string | null;
+      }[]
+    | null;
+  status?: ('draft' | 'published') | null;
+  version?: number | null;
+  adaptedFrom?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "opening-configs".
+ */
+export interface OpeningConfig {
+  id: number;
+  /**
+   * Empty for the master default.
+   */
+  portal?: (number | null) | Portal;
+  wording?:
+    | {
+        scene: number | OpeningScene;
+        caption?: string | null;
+        subline?: string | null;
+        labels?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  hiddenScenes?: (number | OpeningScene)[] | null;
+  defaultClip?: (number | null) | Cut;
+  helpContacts?:
+    | {
+        label: string;
+        phone?: string | null;
+        url?: string | null;
+        hours?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  trendsContributionPrompt?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "heart-states".
+ */
+export interface HeartState {
+  id: number;
+  user: number | User;
+  state:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "opening-answers".
+ */
+export interface OpeningAnswer {
+  id: number;
+  user: number | User;
+  portal?: (number | null) | Portal;
+  scene?: (number | null) | OpeningScene;
+  sceneKey: string;
+  /**
+   * The option key, or pass, or not-reached.
+   */
+  optionKey: string;
+  labelSnapshot?: string | null;
+  private?: boolean | null;
+  /**
+   * Set by the server: not private, and the learner shares opening answers with their mentor.
+   */
+  staffVisible?: boolean | null;
+  mentors?: (number | User)[] | null;
+  scenesVersion?: number | null;
+  answeredAt?: string | null;
+  recordedAt?: string | null;
+  supersededAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "heart-contributions".
+ */
+export interface HeartContribution {
+  id: number;
+  portal: number | Portal;
+  isoWeek: string;
+  doorKey?: string | null;
+  scenePasses?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  laneTop2?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  nonceHash?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "view-as-sessions".
+ */
+export interface ViewAsSession {
+  id: number;
+  actor: number | User;
+  actorRole?: string | null;
+  target: number | User;
+  targetRole?: string | null;
+  portal?: (number | null) | Portal;
+  reason: string;
+  token?: string | null;
+  startedAt?: string | null;
+  lastSeenAt?: string | null;
+  expiresAt?: string | null;
+  endedAt?: string | null;
+  endReason?:
+    | (
+        | 'exit'
+        | 'idle-timeout'
+        | 'max-timeout'
+        | 'replaced'
+        | 'actor-signed-out'
+        | 'role-changed'
+        | 'target-removed'
+        | 'portal-closed'
+      )
+    | null;
+  writeEnabled?: boolean | null;
+  writeUntil?: string | null;
+  returnTo?: string | null;
+  ipHash?: string | null;
+  userAgent?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-log".
+ */
+export interface AuditLog {
+  id: number;
+  event: string;
+  actor?: (number | null) | User;
+  actorRole?: string | null;
+  target?: (number | null) | User;
+  targetRole?: string | null;
+  portal?: (number | null) | Portal;
+  sessionId?: string | null;
+  reason?: string | null;
+  at: string;
+  ipHash?: string | null;
+  detail?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -991,6 +1365,42 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'rituals';
         value: number | Ritual;
+      } | null)
+    | ({
+        relationTo: 'heart-scales';
+        value: number | HeartScale;
+      } | null)
+    | ({
+        relationTo: 'lanes';
+        value: number | Lane;
+      } | null)
+    | ({
+        relationTo: 'opening-scenes';
+        value: number | OpeningScene;
+      } | null)
+    | ({
+        relationTo: 'opening-configs';
+        value: number | OpeningConfig;
+      } | null)
+    | ({
+        relationTo: 'heart-states';
+        value: number | HeartState;
+      } | null)
+    | ({
+        relationTo: 'opening-answers';
+        value: number | OpeningAnswer;
+      } | null)
+    | ({
+        relationTo: 'heart-contributions';
+        value: number | HeartContribution;
+      } | null)
+    | ({
+        relationTo: 'view-as-sessions';
+        value: number | ViewAsSession;
+      } | null)
+    | ({
+        relationTo: 'audit-log';
+        value: number | AuditLog;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1081,6 +1491,13 @@ export interface UsersSelect<T extends boolean = true> {
   shareWatch?: T;
   joinedAt?: T;
   nightAlerts?: T;
+  shareOpening?: T;
+  keepPlace?: T;
+  trendsOptIn?: T;
+  haptics?: T;
+  removed?: T;
+  updatedBy?: T;
+  onBehalfOf?: T;
   tenants?:
     | T
     | {
@@ -1212,6 +1629,8 @@ export interface LessonsSelect<T extends boolean = true> {
   transcriptSource?: T;
   transcriptNote?: T;
   sourceUrl?: T;
+  csvSeq?: T;
+  starterLane?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1249,6 +1668,10 @@ export interface CutsSelect<T extends boolean = true> {
   lesson?: T;
   course?: T;
   status?: T;
+  placeholder?: T;
+  presentation?: T;
+  playable?: T;
+  lastError?: T;
   start?: T;
   end?: T;
   timestamp?: T;
@@ -1295,7 +1718,11 @@ export interface LadderItemsSelect<T extends boolean = true> {
  */
 export interface EngagementPointsSelect<T extends boolean = true> {
   lesson?: T;
+  cut?: T;
+  triggerType?: T;
   second?: T;
+  nudges?: T;
+  crisisOption?: T;
   kind?: T;
   prompt?: T;
   options?: T;
@@ -1327,6 +1754,12 @@ export interface AnswersSelect<T extends boolean = true> {
   video?: T;
   keepPrivate?: T;
   shareWithTeacher?: T;
+  cut?: T;
+  atSecond?: T;
+  viewingId?: T;
+  answeredAt?: T;
+  pendingSync?: T;
+  correct?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1426,6 +1859,8 @@ export interface TagsSelect<T extends boolean = true> {
   item?: T;
   clause?: T;
   seat?: T;
+  lane?: T;
+  weight?: T;
   state?: T;
   note?: T;
   updatedAt?: T;
@@ -1592,6 +2027,210 @@ export interface RitualsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "heart-scales_select".
+ */
+export interface HeartScalesSelect<T extends boolean = true> {
+  key?: T;
+  leonName?: T;
+  room?: T;
+  polishLabel?: T;
+  season?: T;
+  firstOpenRead?: T;
+  anchors?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lanes_select".
+ */
+export interface LanesSelect<T extends boolean = true> {
+  key?: T;
+  title?: T;
+  scale?: T;
+  fit?: T;
+  clauses?:
+    | T
+    | {
+        clause?: T;
+        rank?: T;
+        id?: T;
+      };
+  seats?: T;
+  seriesNote?: T;
+  optInOnly?: T;
+  excludeClauses?: T;
+  order?: T;
+  reachPhrase?: T;
+  pseudo?: T;
+  starters?:
+    | T
+    | {
+        lesson?: T;
+        role?: T;
+        order?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "opening-scenes_select".
+ */
+export interface OpeningScenesSelect<T extends boolean = true> {
+  key?: T;
+  order?: T;
+  caption?: T;
+  subline?: T;
+  scene?: T;
+  layout?: T;
+  options?:
+    | T
+    | {
+        key?: T;
+        label?: T;
+        replyPill?: T;
+        nudges?:
+          | T
+          | {
+              scale?: T;
+              delta?: T;
+              id?: T;
+            };
+        intentLane?: T;
+        spineFirst?: T;
+        crisis?: T;
+        sensitivity?: T;
+        id?: T;
+      };
+  status?: T;
+  version?: T;
+  adaptedFrom?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "opening-configs_select".
+ */
+export interface OpeningConfigsSelect<T extends boolean = true> {
+  portal?: T;
+  wording?:
+    | T
+    | {
+        scene?: T;
+        caption?: T;
+        subline?: T;
+        labels?: T;
+        id?: T;
+      };
+  hiddenScenes?: T;
+  defaultClip?: T;
+  helpContacts?:
+    | T
+    | {
+        label?: T;
+        phone?: T;
+        url?: T;
+        hours?: T;
+        id?: T;
+      };
+  trendsContributionPrompt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "heart-states_select".
+ */
+export interface HeartStatesSelect<T extends boolean = true> {
+  user?: T;
+  state?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "opening-answers_select".
+ */
+export interface OpeningAnswersSelect<T extends boolean = true> {
+  user?: T;
+  portal?: T;
+  scene?: T;
+  sceneKey?: T;
+  optionKey?: T;
+  labelSnapshot?: T;
+  private?: T;
+  staffVisible?: T;
+  mentors?: T;
+  scenesVersion?: T;
+  answeredAt?: T;
+  recordedAt?: T;
+  supersededAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "heart-contributions_select".
+ */
+export interface HeartContributionsSelect<T extends boolean = true> {
+  portal?: T;
+  isoWeek?: T;
+  doorKey?: T;
+  scenePasses?: T;
+  laneTop2?: T;
+  nonceHash?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "view-as-sessions_select".
+ */
+export interface ViewAsSessionsSelect<T extends boolean = true> {
+  actor?: T;
+  actorRole?: T;
+  target?: T;
+  targetRole?: T;
+  portal?: T;
+  reason?: T;
+  token?: T;
+  startedAt?: T;
+  lastSeenAt?: T;
+  expiresAt?: T;
+  endedAt?: T;
+  endReason?: T;
+  writeEnabled?: T;
+  writeUntil?: T;
+  returnTo?: T;
+  ipHash?: T;
+  userAgent?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-log_select".
+ */
+export interface AuditLogSelect<T extends boolean = true> {
+  event?: T;
+  actor?: T;
+  actorRole?: T;
+  target?: T;
+  targetRole?: T;
+  portal?: T;
+  sessionId?: T;
+  reason?: T;
+  at?: T;
+  ipHash?: T;
+  detail?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -1629,6 +2268,34 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "master-flags".
+ */
+export interface MasterFlag {
+  id: number;
+  /**
+   * Pop-up questions sit over the YouTube player, as in the old system. Off: the card fills the screen below the paused player (YouTube’s embed rules).
+   */
+  popupOverPlayer?: boolean | null;
+  /**
+   * The board’s full-bleed look: caption, right rail, speaker bar and gold pill over the clip. Off: all of it sits around the player.
+   */
+  chromeOverPlayer?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "master-flags_select".
+ */
+export interface MasterFlagsSelect<T extends boolean = true> {
+  popupOverPlayer?: T;
+  chromeOverPlayer?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

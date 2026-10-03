@@ -1,12 +1,33 @@
 import type { CollectionConfig } from 'payload'
 
+import type { Access, Where } from 'payload'
 import { portalIdOf } from './lib/ids'
+import { openingCollections } from './collections-opening'
 
 // The app's own screens and actions use the local API with explicit portal checks.
 // The REST and GraphQL endpoints that Payload mounts are for the master desk only.
 const master = ({ req }: { req: { user?: { role?: string } | null } }) => req.user?.role === 'master'
 
 const masterOnly = { read: master, create: master, update: master, delete: master }
+
+/**
+ * P9: a learner reads their own rows; staff read their portal's rows; the master reads everything.
+ * Teachers see answers only where the learner chose to share them.
+ */
+function ownerOrStaff(teacherNeedsShare: boolean): Access {
+  return ({ req }) => {
+    const user = req.user as { id: number; role?: string; tenants?: { tenant?: unknown }[] } | null
+    if (!user) return false
+    if (user.role === 'master') return true
+    const own: Where = { user: { equals: user.id } }
+    if (user.role === 'learner') return own
+    const portal = portalIdOf(user)
+    if (!portal) return own
+    const scoped: Where[] = [{ portal: { equals: portal } }]
+    if (user.role === 'teacher' && teacherNeedsShare) scoped.push({ shareWithTeacher: { equals: true } })
+    return { or: [own, { and: scoped }] }
+  }
+}
 
 export const Portals: CollectionConfig = {
   slug: 'portals',
@@ -99,6 +120,13 @@ export const Users: CollectionConfig = {
     { name: 'shareWatch', type: 'checkbox', defaultValue: false },
     { name: 'joinedAt', type: 'date' },
     { name: 'nightAlerts', type: 'checkbox', defaultValue: false },
+    { name: 'shareOpening', type: 'checkbox', defaultValue: false, label: 'Share my opening answers with my mentor' },
+    { name: 'keepPlace', type: 'checkbox', defaultValue: false, label: 'Keep my place across devices' },
+    { name: 'trendsOptIn', type: 'checkbox', defaultValue: false, label: 'Add my taps to the chapter’s trends' },
+    { name: 'haptics', type: 'checkbox', defaultValue: true },
+    { name: 'removed', type: 'checkbox', defaultValue: false },
+    { name: 'updatedBy', type: 'relationship', relationTo: 'users' },
+    { name: 'onBehalfOf', type: 'relationship', relationTo: 'users' },
   ],
 }
 
@@ -232,10 +260,13 @@ export const Lessons: CollectionConfig = {
         { label: 'None', value: 'none' },
         { label: 'YouTube', value: 'youtube' },
         { label: 'Upload', value: 'upload' },
+        { label: 'Pending', value: 'pending' },
       ],
     },
     { name: 'transcriptNote', type: 'textarea' },
     { name: 'sourceUrl', type: 'text' },
+    { name: 'csvSeq', type: 'number', admin: { description: 'Seq in HEARTS-8k-LINKS-for-bots.csv, for audit.' } },
+    { name: 'starterLane', type: 'text' },
   ],
 }
 
@@ -295,10 +326,15 @@ export const Cuts: CollectionConfig = {
       defaultValue: 'draft',
       options: [
         { label: 'Draft', value: 'draft' },
+        { label: 'Suggested', value: 'suggested' },
         { label: 'Approved', value: 'approved' },
         { label: 'Rejected', value: 'rejected' },
       ],
     },
+    { name: 'placeholder', type: 'checkbox', defaultValue: false, admin: { description: 'A 0:00 to 0:20 stand-in until the cutting pass sets real in and out points.' } },
+    { name: 'presentation', type: 'select', defaultValue: 'video', options: [{ label: 'Video', value: 'video' }, { label: 'Slide', value: 'slide' }] },
+    { name: 'playable', type: 'checkbox', defaultValue: true },
+    { name: 'lastError', type: 'text' },
     { name: 'start', type: 'number', required: true },
     { name: 'end', type: 'number', required: true },
     { name: 'timestamp', type: 'text' },
@@ -359,7 +395,17 @@ export const EngagementPoints: CollectionConfig = {
   access: masterOnly,
   fields: [
     { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true },
-    { name: 'second', type: 'number', required: true, defaultValue: 0 },
+    { name: 'cut', type: 'relationship', relationTo: 'cuts' },
+    {
+      name: 'triggerType',
+      type: 'select',
+      defaultValue: 'timestamp',
+      options: [{ label: 'At a moment in the film', value: 'timestamp' }],
+      admin: { description: 'Only timestamps for now. Other ways to set when a question appears can be added here.' },
+    },
+    { name: 'second', type: 'number', required: true, defaultValue: 0, admin: { description: 'Seconds into the source film (so the same question fires in the Hors and the Appetiser).' } },
+    { name: 'nudges', type: 'json', admin: { description: 'Check-in nudges: [{ "option": "...", "scale": "belonging", "delta": -1 }]' } },
+    { name: 'crisisOption', type: 'text' },
     {
       name: 'kind',
       type: 'select',
@@ -415,7 +461,7 @@ export const EngagementPoints: CollectionConfig = {
 
 export const Answers: CollectionConfig = {
   slug: 'answers',
-  access: masterOnly,
+  access: { read: ownerOrStaff(true), create: master, update: master, delete: master },
   fields: [
     { name: 'point', type: 'relationship', relationTo: 'engagement-points', required: true },
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
@@ -427,6 +473,12 @@ export const Answers: CollectionConfig = {
     { name: 'video', type: 'upload', relationTo: 'media' },
     { name: 'keepPrivate', type: 'checkbox', defaultValue: false },
     { name: 'shareWithTeacher', type: 'checkbox', defaultValue: false },
+    { name: 'cut', type: 'relationship', relationTo: 'cuts' },
+    { name: 'atSecond', type: 'number' },
+    { name: 'viewingId', type: 'text' },
+    { name: 'answeredAt', type: 'date' },
+    { name: 'pendingSync', type: 'checkbox', defaultValue: false },
+    { name: 'correct', type: 'checkbox' },
   ],
 }
 
@@ -519,7 +571,7 @@ export const PlacingQuestions: CollectionConfig = {
 
 export const PlacingAnswers: CollectionConfig = {
   slug: 'placing-answers',
-  access: masterOnly,
+  access: { read: ownerOrStaff(false), create: master, update: master, delete: master },
   fields: [
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
     { name: 'question', type: 'relationship', relationTo: 'placing-questions', required: true },
@@ -539,6 +591,8 @@ export const Tags: CollectionConfig = {
     },
     { name: 'clause', type: 'relationship', relationTo: 'clauses' },
     { name: 'seat', type: 'relationship', relationTo: 'seats' },
+    { name: 'lane', type: 'relationship', relationTo: 'lanes' },
+    { name: 'weight', type: 'number', defaultValue: 1, min: 0, max: 1 },
     {
       name: 'state',
       type: 'select',
@@ -744,4 +798,5 @@ export const collections = [
   LessonVisits,
   SeatVisits,
   Rituals,
+  ...openingCollections,
 ]

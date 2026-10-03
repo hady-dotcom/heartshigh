@@ -13,7 +13,7 @@
     "start": "next start",
     "seed": "tsx src/seed/seed.ts",
     "generate:importmap": "payload generate:importmap",
-    "generate:types": "payload generate:types",
+    "generate:types": "tsx scripts/generate-types.ts",
     "test:unit": "tsx --test src/lib/*.test.ts",
     "test:e2e": "playwright test",
     "test": "npm run test:unit && npm run test:e2e",

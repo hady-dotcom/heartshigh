@@ -6,6 +6,7 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
 import { buildConfig } from 'payload'
 import { collections } from './collections'
+import { MasterFlags } from './collections-opening'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -26,6 +27,7 @@ export default buildConfig({
     },
   },
   collections,
+  globals: [MasterFlags],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || 'hearts-prototype-dev-secret',
   typescript: {
