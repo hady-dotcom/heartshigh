@@ -970,8 +970,6 @@ export interface HarvestEntry {
   createdAt: string;
 }
 /**
- * Speakers a learner lingers on, or steps down from, while browsing short clips. Not a course completion.
- *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "drawn-to".
  */
@@ -1089,13 +1087,13 @@ export interface Completion {
   percent?: number | null;
   onTime?: boolean | null;
   /**
-   * When the learner watched this, if that is not the row time. The compass uses it.
-   */
-  watchedAt?: string | null;
-  /**
    * Only a full talk inside a course counts toward completion and the grow page.
    */
   sourceLevel?: ('talk' | 'hors' | 'appetiser') | null;
+  /**
+   * When the learner watched this, if that is not the row time. The compass uses it.
+   */
+  watchedAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1883,6 +1881,10 @@ export interface PayloadLockedDocument {
         value: number | HarvestEntry;
       } | null)
     | ({
+        relationTo: 'drawn-to';
+        value: number | DrawnTo;
+      } | null)
+    | ({
         relationTo: 'schedules';
         value: number | Schedule;
       } | null)
@@ -2636,8 +2638,8 @@ export interface CompletionsSelect<T extends boolean = true> {
   lesson?: T;
   percent?: T;
   onTime?: T;
-  watchedAt?: T;
   sourceLevel?: T;
+  watchedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
