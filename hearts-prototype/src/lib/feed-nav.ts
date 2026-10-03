@@ -1,0 +1,80 @@
+import { learnMore } from '@/lib/nesting'
+import type { FeedItem } from '@/server/learner'
+
+/**
+ * Feed navigation keeps to one level. On hors d'oeuvres (talk clips, typography films, scenic and question cards)
+ * a swipe stays in the hors d'oeuvre loop; on appetisers, in the appetiser loop. Only "Learn more" goes down a level,
+ * and only to the parent of the item being watched.
+ */
+export type FeedLevel = 'hors' | 'appetiser'
+export type Swipe = 'topic' | 'speaker' | 'lane' | 'next' | 'prev'
+
+type NavItem = Pick<FeedItem, 'cutId' | 'lane' | 'speaker' | 'card' | 'courseId' | 'lessonId' | 'parents'>
+
+/** Film, scene, text and question cards that follow a talk and share its cut. They live only at the hors d'oeuvre level. */
+export function isInterstitial(item: Pick<FeedItem, 'card'> | undefined) {
+  return Boolean(item?.card && item.card !== 'talk')
+}
+
+/** Whether an item can be shown at this level. */
+export function onLevel(item: NavItem | undefined, level: FeedLevel) {
+  return Boolean(item) && (level === 'hors' || !isInterstitial(item))
+}
+
+function ring(length: number, from: number, step: 1 | -1) {
+  return Array.from({ length: Math.max(0, length - 1) }, (_, offset) => (((from + step * (offset + 1)) % length) + length) % length)
+}
+
+/** The nearest index at or after `to`, in the direction of travel, that belongs on this level. */
+export function settleOnLevel(list: NavItem[], to: number, level: FeedLevel, step: 1 | -1 = 1) {
+  if (!list.length) return null
+  let at = ((to % list.length) + list.length) % list.length
+  for (let tries = 0; tries < list.length; tries++) {
+    if (onLevel(list[at], level)) return at
+    at = (((at + step) % list.length) + list.length) % list.length
+  }
+  return null
+}
+
+/**
+ * Where a swipe lands, or null when there is nowhere else on this level. The level never changes:
+ * topic, speaker and lane move to another talk; next and previous step through the loop, and the
+ * appetiser loop passes over the cards that only exist as hors d'oeuvres.
+ */
+export function swipeTarget(list: NavItem[], index: number, level: FeedLevel, swipe: Swipe): number | null {
+  const item = list[index]
+  if (!item || list.length < 2) return null
+  if (swipe === 'next' || swipe === 'prev') {
+    const step = swipe === 'next' ? 1 : -1
+    const target = ring(list.length, index, step).find((at) => onLevel(list[at], level))
+    return target === undefined ? null : target
+  }
+  const talks = ring(list.length, index, 1).filter((at) => list[at].cutId !== item.cutId && !isInterstitial(list[at]))
+  if (swipe === 'topic') return talks[0] ?? null
+  if (swipe === 'speaker') return talks.find((at) => list[at].speaker === item.speaker) ?? null
+  return talks.find((at) => list[at].lane !== item.lane) ?? talks[0] ?? null
+}
+
+export type LearnMoreStep =
+  | { level: 'appetiser'; index: number; cutId: number }
+  | { level: 'talk'; cutId: number; lessonId: number; href: string }
+
+/**
+ * "Learn more" from the item being watched: an hors d'oeuvre (or one of its cards) opens its own appetiser,
+ * and an appetiser opens its own full talk. Null when the item's parent is not the next level down.
+ */
+export function learnMoreTarget(list: NavItem[], index: number, level: FeedLevel, base: string): LearnMoreStep | null {
+  const item = list[index]
+  if (!item) return null
+  if (level === 'hors') {
+    const parent = item.parents?.hors
+    if (parent && parent.parentLevel !== 'appetiser') return null
+    const own = isInterstitial(item) ? list.findIndex((row) => row.cutId === item.cutId && !isInterstitial(row)) : index
+    return { level: 'appetiser', index: own >= 0 ? own : index, cutId: item.cutId }
+  }
+  const parent = item.parents?.appetiser
+  if (parent && parent.parentLevel !== 'talk') return null
+  const step = learnMore(item, 'appetiser', base)
+  if (!step?.href) return null
+  return { level: 'talk', cutId: item.cutId, lessonId: item.lessonId, href: step.href }
+}

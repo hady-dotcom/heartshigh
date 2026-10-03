@@ -5,6 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
 import { mixFeed } from '@/lib/feed-mix'
+import { learnMoreTarget, settleOnLevel, swipeTarget, type Swipe } from '@/lib/feed-nav'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readHeart, readPending, sessionFlags, setSessionFlags, viewAsId, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
@@ -53,7 +54,6 @@ const TAB_DELAY = 200
 const HOLD = 700
 
 const appetiserEnd = (item: FeedItem) => appetiserStop(item.appetiser)
-const isInterstitial = (item: FeedItem | undefined) => Boolean(item?.card && item.card !== 'talk')
 
 function clock(total: number) {
   const value = Math.max(0, Math.round(total))
@@ -290,7 +290,7 @@ export function Journey(props: JourneyProps) {
   // ---------- players ----------
   const specFor = useCallback((item: FeedItem | undefined, kind: Mode): Spec | null => {
     if (!item || !item.youtubeId) return null
-    if (item.card === 'film' || item.card === 'text' || item.card === 'question') return null
+    if (kind === 'hors' && (item.card === 'film' || item.card === 'text' || item.card === 'question')) return null
     if (kind === 'hors' && (item.style || item.card === 'scene' || item.typography?.src)) return null
     if (kind === 'appetiser') {
       const spans = item.appetiser.spans
@@ -872,13 +872,9 @@ export function Journey(props: JourneyProps) {
     async (to: number, how: 'swipe' | 'auto' = 'swipe') => {
       const list = itemsRef.current
       if (!list.length) return
-      const wrap = (at: number) => ((at % list.length) + list.length) % list.length
-      let target = wrap(to)
-      // Film, scene and question cards sit between hors d'oeuvres; an appetiser swipe passes over them.
-      if (modeRef.current === 'appetiser') {
-        const step = to < indexRef.current ? -1 : 1
-        for (let tries = 0; tries < list.length && isInterstitial(list[target]); tries++) target = wrap(target + step)
-      }
+      // Whatever moves the feed, it stays on the level being watched.
+      const target = settleOnLevel(list, to, modeRef.current, to < indexRef.current ? -1 : 1)
+      if (target === null) return
       if (how === 'swipe') leaveSignal()
       if (how === 'swipe' && clipRef.current) {
         await finished(animate(clipRef.current, [{ transform: 'translateY(0)' }, { transform: 'translateY(-100%)' }], T.snap, EASE.standard, { id: 'snap' }))
@@ -1014,61 +1010,41 @@ export function Journey(props: JourneyProps) {
     if (host.playerId && host.spec) getPlayer(host.playerId)?.seekTo(host.spec.start, true)
     setToast('Playing this clip again')
   }
-  const nextLane = () => {
-    if (!item) return
-    const list = itemsRef.current
-    const order = list.map((_, offset) => (index + 1 + offset) % list.length)
-    const talks = order.filter((at) => list[at].cutId !== item.cutId && !isInterstitial(list[at]))
-    const target = talks.find((at) => list[at].lane !== item.lane) ?? talks[0] ?? (index + 1) % list.length
-    setToast(`Lane · ${list[target]?.laneLabel || ''}`)
+  const swipeTo = (swipe: Swipe) => {
+    const current = itemsRef.current[indexRef.current]
+    if (!current) return
+    const target = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, swipe)
+    if (target === null) {
+      if (swipe === 'speaker') return setToast(`That is everything from ${current.speaker} for now`)
+      if (swipe === 'topic') return setToast('That is everything on this topic for now')
+      return setToast(modeRef.current === 'hors' ? "That is the only hors d'oeuvre here" : 'That is the only appetiser here')
+    }
+    if (swipe === 'lane') setToast(`Lane · ${itemsRef.current[target]?.laneLabel || ''}`)
+    if (swipe === 'topic') setToast('More on this topic')
+    if (swipe === 'speaker') setToast(`More from ${current.speaker}`)
     void advance(target)
   }
-  // A swipe moves to another talk; the cards that follow a talk share its cut and are met by letting it play on.
-  const moreLikeThis = () => {
-    if (!item) return
-    const list = itemsRef.current
-    const order = list.map((_, offset) => (index + 1 + offset) % list.length)
-    const target = order.find((at) => list[at].cutId !== item.cutId && !isInterstitial(list[at]))
-    if (target === undefined) return setToast('That is everything on this topic for now')
-    setToast('More on this topic')
-    void advance(target)
-  }
-  const moreFromSpeaker = () => {
-    if (!item) return
-    const list = itemsRef.current
-    const order = list.map((_, offset) => (index + 1 + offset) % list.length).filter((at) => list[at].cutId !== item.cutId && !isInterstitial(list[at]))
-    const target = order.find((at) => list[at].speaker === item.speaker)
-    if (target === undefined) return setToast(`That is everything from ${item.speaker} for now`)
-    setToast(`More from ${item.speaker}`)
-    void advance(target)
-  }
-  const stepLoop = (direction: 1 | -1) => {
-    const list = itemsRef.current
-    if (list.length < 2) return setToast(modeRef.current === 'hors' ? "That is the only hors d'oeuvre here" : 'That is the only appetiser here')
-    void advance(indexRef.current + direction)
-  }
+  const nextLane = () => swipeTo('lane')
+  const moreLikeThis = () => swipeTo('topic')
+  const moreFromSpeaker = () => swipeTo('speaker')
+  const stepLoop = (direction: 1 | -1) => swipeTo(direction === 1 ? 'next' : 'prev')
 
   const stepUp = async (event?: React.MouseEvent<HTMLAnchorElement>) => {
     const current = itemsRef.current[indexRef.current]
     if (!current) return
-    if (modeRef.current === 'hors') {
-      const parent = current.parents?.hors
-      if (parent && parent.parentLevel !== 'appetiser') return
-      const own = isInterstitial(current) ? itemsRef.current.findIndex((row) => row.cutId === current.cutId && !isInterstitial(row)) : indexRef.current
-      const at = own >= 0 ? own : indexRef.current
+    const step = learnMoreTarget(itemsRef.current, indexRef.current, modeRef.current, base)
+    if (!step) return
+    if (step.level === 'appetiser') {
       signal('watch-full')
       noteBrowse('learn-more')
       const url = new URL(window.location.href)
-      url.searchParams.set('clip', String(current.cutId))
+      url.searchParams.set('clip', String(step.cutId))
       url.searchParams.set('play', 'appetiser')
-      push(`${url.pathname}${url.search}`, { appetiser: current.cutId })
-      void showItem(at, 'appetiser')
+      push(`${url.pathname}${url.search}`, { appetiser: step.cutId })
+      void showItem(step.index, 'appetiser')
       return
     }
     event?.preventDefault()
-    const parent = current.parents?.appetiser
-    if (parent && parent.parentLevel !== 'talk') return
-    const href = learnMore(current, 'appetiser', base)?.href || base
     if (needsAccount('save')) return
     signal('start-course')
     noteBrowse('learn-more')
@@ -1076,7 +1052,7 @@ export function Journey(props: JourneyProps) {
     stopVisible()
     const node = event?.currentTarget
     if (node) await finished(animate(node, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.6)', opacity: 0 }], 500, EASE.enter, { id: 'mains-transform' }))
-    router.push(href)
+    router.push(step.href)
   }
 
   const fave = () => {
@@ -1215,7 +1191,7 @@ export function Journey(props: JourneyProps) {
   const host = hosts.current[visibleHost]
   const currentSpec = specFor(item, mode)
   const playerReady = Boolean(currentSpec && host.ready && host.spec?.key === currentSpec.key && revealed)
-  const cardKind = item?.card === 'film' || item?.card === 'text' || item?.card === 'question' || item?.card === 'scene' ? item.card : null
+  const cardKind = mode === 'hors' && (item?.card === 'film' || item?.card === 'text' || item?.card === 'question' || item?.card === 'scene') ? item!.card : null
   const typeSrc = cardKind === 'film' ? item?.film?.src : item?.typography?.src
   const typeClip = Boolean(phase === 'feed' && mode === 'hors' && typeSrc && cardKind !== 'text' && cardKind !== 'question' && cardKind !== 'scene')
   const scenic = Boolean(phase === 'feed' && cardKind === 'scene' && mode === 'hors' && item?.scene)
