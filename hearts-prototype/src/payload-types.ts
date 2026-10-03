@@ -111,6 +111,7 @@ export interface Config {
     'heart-contributions': HeartContribution;
     'view-as-sessions': ViewAsSession;
     'audit-log': AuditLog;
+    'persona-bands': PersonaBand;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -162,6 +163,7 @@ export interface Config {
     'heart-contributions': HeartContributionsSelect<false> | HeartContributionsSelect<true>;
     'view-as-sessions': ViewAsSessionsSelect<false> | ViewAsSessionsSelect<true>;
     'audit-log': AuditLogSelect<false> | AuditLogSelect<true>;
+    'persona-bands': PersonaBandsSelect<false> | PersonaBandsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1291,6 +1293,52 @@ export interface AuditLog {
   createdAt: string;
 }
 /**
+ * Master-only rough guide. Drafts are not counted. A persona is never stored on a learner.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "persona-bands".
+ */
+export interface PersonaBand {
+  id: number;
+  key: string;
+  title: string;
+  status?: ('draft' | 'published') | null;
+  source?: ('unassigned' | 'doc-a' | 'doc-b' | 'doc-c' | 'ux-draft') | null;
+  /**
+   * Stand-in numbers. Publishing stays closed while this is ticked.
+   */
+  placeholder?: boolean | null;
+  /**
+   * Bands that arrived with the same ranges share a group name.
+   */
+  identicalGroup?: string | null;
+  note?: string | null;
+  ranges?:
+    | {
+        scale:
+          | 'desire'
+          | 'greed'
+          | 'anger'
+          | 'ego'
+          | 'worry'
+          | 'belonging'
+          | 'gratitude'
+          | 'faith'
+          | 'compassion'
+          | 'discipline';
+        /**
+         * Unticked: the source table has no row for this scale.
+         */
+        present?: boolean | null;
+        min?: number | null;
+        max?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1489,6 +1537,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'audit-log';
         value: number | AuditLog;
+      } | null)
+    | ({
+        relationTo: 'persona-bands';
+        value: number | PersonaBand;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2354,6 +2406,30 @@ export interface AuditLogSelect<T extends boolean = true> {
   at?: T;
   ipHash?: T;
   detail?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "persona-bands_select".
+ */
+export interface PersonaBandsSelect<T extends boolean = true> {
+  key?: T;
+  title?: T;
+  status?: T;
+  source?: T;
+  placeholder?: T;
+  identicalGroup?: T;
+  note?: T;
+  ranges?:
+    | T
+    | {
+        scale?: T;
+        present?: T;
+        min?: T;
+        max?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }

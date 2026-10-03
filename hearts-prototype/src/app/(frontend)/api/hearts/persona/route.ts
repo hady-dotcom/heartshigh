@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 
 const ROOMS = new Set(['appetites', 'heat', 'unsettled', 'lights'])
 const SEASONS = new Set(['youth', 'health', 'wealth', 'freeTime', 'life'])
-const SOURCES = new Set<PersonaSource>(['doc-a', 'doc-b', 'doc-c', 'ux-draft', 'unassigned'])
+const SOURCES = new Set<PersonaSource>(['doc-a', 'doc-b', 'doc-c', 'ux-draft', 'unassigned', 'balanced'])
 
 function redirectTo(req: Request, path: string, error?: string, notice?: string) {
   const host = req.headers.get('x-forwarded-host') || req.headers.get('host')
@@ -94,7 +94,8 @@ export async function POST(req: Request) {
       if (!leonName) return redirectTo(req, next, 'A scale needs its name.')
       if (hasMarkup(leonName)) return redirectTo(req, next, 'The scale name is plain text.')
       const polishLabel = text(form, 'polishLabel')
-      const wording = authorTextProblems([['The learner-safe name', polishLabel]])
+      const focusName = text(form, 'focusName')
+      const wording = authorTextProblems([['The learner-safe name', polishLabel], ['The focus word', focusName]])
       if (wording.length) return redirectTo(req, next, wording[0])
       const room = text(form, 'room')
       if (room && !ROOMS.has(room)) return redirectTo(req, next, 'That room is not one of the four.')
@@ -109,6 +110,7 @@ export async function POST(req: Request) {
         data: {
           leonName,
           polishLabel,
+          focusName,
           room: room || null,
           season: season || null,
           firstOpenRead: form.get('firstOpenRead') === 'on',
@@ -163,6 +165,32 @@ export async function POST(req: Request) {
         },
       } as never)
       return redirectTo(req, next, undefined, status === 'published' ? 'Band published.' : 'Band saved as a draft.')
+    }
+
+    if (action === 'copy') {
+      const frame = text(form, 'frame')
+      if (frame !== 'both' && frame !== 'focusing' && frame !== 'places') return redirectTo(req, next, 'That framing is not in the list.')
+      const places = (['growing', 'steady', 'flourishing'] as const).map((key) => ({
+        key,
+        label: text(form, `label-${key}`),
+        low: Number(text(form, `low-${key}`)),
+        high: Number(text(form, `high-${key}`)),
+        forward: text(form, `forward-${key}`),
+      }))
+      if (places.some((place) => !place.label || !Number.isInteger(place.low) || !Number.isInteger(place.high))) return redirectTo(req, next, 'Each place needs a word and a whole-number range.')
+      const existing = await payload.find({ collection: 'compass-settings', overrideAccess: true, depth: 0, limit: 1, where: { key: { equals: 'default' } } })
+      const data = {
+        key: 'default',
+        frame,
+        focusLead: text(form, 'focusLead'),
+        movementUp: text(form, 'movementUp'),
+        movementSame: text(form, 'movementSame'),
+        movementOnward: text(form, 'movementOnward'),
+        places,
+      }
+      if (existing.docs[0]) await payload.update({ collection: 'compass-settings', id: existing.docs[0].id, overrideAccess: true, data: data as never })
+      else await payload.create({ collection: 'compass-settings', overrideAccess: true, data: data as never })
+      return redirectTo(req, next, undefined, 'Wording saved.')
     }
   } catch (error) {
     return redirectTo(req, next, readable(error))

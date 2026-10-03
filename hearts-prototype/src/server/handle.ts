@@ -1728,8 +1728,10 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const caption = text(form, 'caption').slice(0, 140)
     if (!caption) return redirectTo(req, back, 'A scene needs a caption.')
     const status = text(form, 'status') === 'published' ? 'published' : 'draft'
+    const monthCaption = text(form, 'monthCaption').slice(0, 140)
+    const monthSubline = text(form, 'monthSubline').slice(0, 200)
     try {
-      await payload.update({ collection: 'opening-scenes', id: scene.id, overrideAccess: true, data: { caption, subline: text(form, 'subline').slice(0, 200), status } as never })
+      await payload.update({ collection: 'opening-scenes', id: scene.id, overrideAccess: true, data: { caption, subline: text(form, 'subline').slice(0, 200), monthCaption, monthSubline, status } as never })
     } catch (error) {
       return redirectTo(req, back, error instanceof Error ? error.message : 'That could not be saved.')
     }

@@ -1,7 +1,7 @@
 import type { Payload } from 'payload'
 import type { ReactNode } from 'react'
 import { Hidden } from '@/components/app/shell'
-import { OPEN_QUESTIONS } from '@/lib/persona-data'
+import { BALANCE_NOTES } from '@/lib/persona-data'
 import { publishProblems, sameRangeAs, bandFromRow, type PersonaBand } from '@/lib/persona'
 import { SCALE_KEYS } from '@/lib/heart'
 import type { SessionUser } from '@/server/context'
@@ -31,6 +31,7 @@ const SOURCES = [
   ['doc-b', 'Doc B'],
   ['doc-c', 'Doc C (incomplete)'],
   ['ux-draft', 'UX draft'],
+  ['balanced', 'Balanced reading'],
 ] as const
 
 function Frame({ ctx, title, intro, children }: { ctx: MasterCtx; title: string; intro?: ReactNode; children: ReactNode }) {
@@ -52,24 +53,27 @@ function formatAnchors(value: unknown) {
 
 export async function MasterPersonas(ctx: MasterCtx) {
   const { payload } = ctx
-  const [scaleRows, bandRows] = await Promise.all([
+  const [scaleRows, bandRows, copyRows] = await Promise.all([
     rows(payload, 'heart-scales', undefined, { limit: 20 }),
     rows(payload, 'persona-bands', undefined, { sort: 'title', limit: 50 }),
+    rows(payload, 'compass-settings', { key: { equals: 'default' } }, { limit: 1 }),
   ])
+  const copy = copyRows[0]
   const bands = bandRows.map((row) => ({ id: row.id, band: bandFromRow(row as unknown as Parameters<typeof bandFromRow>[0]) }))
   const order = new Map(SCALE_KEYS.map((key, index) => [key, index]))
   scaleRows.sort((a, b) => (order.get(str(a.key) as never) ?? 99) - (order.get(str(b.key) as never) ?? 99))
   const nameOf = (key: string) => str(scaleRows.find((scale) => scale.key === key)?.leonName) || key
   return (
-    <Frame ctx={ctx} title="Scales and persona bands" intro="Scales are the ten readings the opening nudges. Persona bands are a rough guide for the master desk only. They do not choose a learner’s clips. Where a source table has a gap, the row is a draft.">
+    <Frame ctx={ctx} title="Scales and persona bands" intro="Scales are the ten readings the opening nudges. Persona bands are a balanced reading, editable here, and they never choose a learner’s clips. Learners see only the warm words below.">
       <section className="panel" style={{ marginBottom: 18 }} data-testid="persona-questions">
-        <header className="light"><h2>Open questions</h2><span className="hint">Nothing here was guessed into a published band</span></header>
+        <header className="light"><h2>Balancing choices</h2><span className="hint">Distinct ranges, still editable</span></header>
         <div className="body">
           <ol style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 8 }}>
-            {OPEN_QUESTIONS.map((item) => <li key={item.id} data-testid={`question-${item.id}`}>{item.text}</li>)}
+            {BALANCE_NOTES.map((item) => <li key={item.id} data-testid={`balance-${item.id}`}>{item.text}</li>)}
           </ol>
         </div>
       </section>
+      {copy ? <CopyEditor copy={copy} /> : null}
 
       <section className="panel" style={{ marginBottom: 18 }} data-testid="scale-list">
         <header className="light"><h2>Heart scales</h2><span className="hint">Season is blank until the pairing table is in</span></header>
@@ -80,6 +84,7 @@ export async function MasterPersonas(ctx: MasterCtx) {
               <div className="cols">
                 <label className="stack">Name used on this desk<input type="text" name="leonName" defaultValue={str(scale.leonName)} /></label>
                 <label className="stack">Learner-safe name<input type="text" name="polishLabel" defaultValue={str(scale.polishLabel)} data-testid="polish-label" /></label>
+                <label className="stack">Focus word<input type="text" name="focusName" defaultValue={str(scale.focusName)} data-testid="focus-name" /></label>
                 <label className="stack">Room
                   <select name="room" defaultValue={str(scale.room)}>
                     <option value="">Not set</option>
@@ -103,6 +108,41 @@ export async function MasterPersonas(ctx: MasterCtx) {
 
       {bands.map(({ id, band }) => <BandEditor key={id} id={id} band={band} bands={bands.map((item) => item.band)} nameOf={nameOf} />)}
     </Frame>
+  )
+}
+
+function CopyEditor({ copy }: { copy: Record<string, unknown> }) {
+  const places = (copy.places as { key?: string; label?: string; low?: number; high?: number; forward?: string }[]) || []
+  const place = (key: string) => places.find((row) => row.key === key)
+  return (
+    <section className="panel" style={{ marginBottom: 18 }} data-testid="compass-copy">
+      <header className="light"><h2>Words a learner sees</h2><span className="hint">No numbers leave this form for them</span></header>
+      <form className="body form" action="/api/hearts/persona" method="post">
+        <Hidden fields={{ action: 'copy', next: '/master/personas' }} />
+        <div className="cols">
+          <label className="stack">Framing
+            <select name="frame" defaultValue={str(copy.frame) || 'both'} data-testid="compass-frame">
+              <option value="both">Place words and Focusing on</option>
+              <option value="focusing">Focusing on only</option>
+              <option value="places">Place words only</option>
+            </select>
+          </label>
+          <label className="stack">Focus line<input type="text" name="focusLead" defaultValue={str(copy.focusLead)} data-testid="focus-lead" /></label>
+        </div>
+        {(['growing', 'steady', 'flourishing'] as const).map((key) => (
+          <div key={key} className="cols">
+            <label className="stack">{key}<input type="text" name={`label-${key}`} defaultValue={place(key)?.label || ''} data-testid={`place-${key}`} /></label>
+            <label className="stack">From<input type="number" name={`low-${key}`} defaultValue={place(key)?.low ?? ''} /></label>
+            <label className="stack">To<input type="number" name={`high-${key}`} defaultValue={place(key)?.high ?? ''} /></label>
+            <label className="stack">Next step<input type="text" name={`forward-${key}`} defaultValue={place(key)?.forward || ''} /></label>
+          </div>
+        ))}
+        <label className="stack">When it has moved on<input type="text" name="movementUp" defaultValue={str(copy.movementUp)} /></label>
+        <label className="stack">When it is holding<input type="text" name="movementSame" defaultValue={str(copy.movementSame)} /></label>
+        <label className="stack">When it wants more time<input type="text" name="movementOnward" defaultValue={str(copy.movementOnward)} /></label>
+        <div className="actions"><button className="btn ink small" type="submit" data-testid="copy-save">Save wording</button></div>
+      </form>
+    </section>
   )
 }
 

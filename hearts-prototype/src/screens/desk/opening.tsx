@@ -94,6 +94,8 @@ export async function MasterOpening(ctx: MasterCtx) {
               <div className="cols">
                 <label className="stack">Caption<input type="text" name="caption" defaultValue={str(scene.caption)} data-testid="scene-caption" /></label>
                 <label className="stack">Second line<input type="text" name="subline" defaultValue={str(scene.subline)} /></label>
+                <label className="stack">This month’s caption<input type="text" name="monthCaption" defaultValue={str(scene.monthCaption)} data-testid="month-caption" /></label>
+                <label className="stack">This month’s second line<input type="text" name="monthSubline" defaultValue={str(scene.monthSubline)} /></label>
               </div>
               {problems[index].length ? (
                 <ul className="hint" data-testid="scene-problems" style={{ color: '#a3324a', margin: 0 }}>{problems[index].map((problem) => <li key={problem}>{problem}</li>)}</ul>
@@ -219,9 +221,9 @@ export async function MasterTrends(ctx: MasterCtx) {
   return (
     <Frame ctx={ctx} active="trends" title="Network trends" intro={`Counts from learners who chose to add their taps. No names, no answers to private scenes, and nothing shown for a group under ${TRENDS_MIN}.`} testId="master-trends">
       <section className="panel" style={{ marginBottom: 18 }} data-testid="persona-lens">
-        <header className="light"><h2>Persona lens</h2><span className="badge grey">Rough guide, unvalidated</span></header>
+        <header className="light"><h2>Persona lens</h2><span className="badge grey">Staff only</span></header>
         <div className="body">
-          <p style={{ marginTop: 0 }}>A rough guide, unvalidated. It counts people in a portal and never names them. Portal desks do not see it. {lens.published} of {lens.bands.length} bands are published.</p>
+          <p style={{ marginTop: 0 }}>Balanced ranges, still editable. It counts people in a portal and never names them. Portal desks do not see it. {lens.published} of {lens.bands.length} bands are published.</p>
           {lens.published === 0 ? <p data-testid="persona-held">Nothing is counted yet. Every band is still a draft.</p> : null}
           {lens.tallies.map((cell) => (
             <p key={`${cell.group}-${cell.persona}`} data-testid="persona-cell" data-shown={cell.shown ? 'yes' : 'no'}>

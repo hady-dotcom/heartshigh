@@ -9,6 +9,7 @@ import { getSession, loadPortal, requirePortal } from '@/server/context'
 import { JourneyScreen } from '@/screens/app/journey'
 import { portalName } from '@/server/learner'
 import type { Ctx, Query } from '@/screens/common'
+import { LearnerPathScreen, RecalibrateScreen } from '@/screens/app/compass'
 import { HomeScreen, LanesScreen } from '@/screens/app/home'
 import { CourseScreen, SpeakerScreen } from '@/screens/app/course'
 import { GardenClause, GardenGeneral, GardenGhunya, GardenHarvest, GardenJibril, GardenScreen, GardenWorkbook } from '@/screens/app/garden'
@@ -16,6 +17,7 @@ import { CircleScreen, MeScreen, PlanScreen, SettingsScreen } from '@/screens/ap
 import { WelcomeScreen } from '@/screens/app/welcome'
 import { OverviewScreen, PortalSettingsScreen, WizardScreen } from '@/screens/desk/overview'
 import { AccessScreen, ContentScreen, CourseEditorScreen, LibraryScreen, guardAdmin } from '@/screens/desk/content'
+import { PortalCompassScreen, StaffLearnerCompass } from '@/screens/desk/compass'
 import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
 
 function originOf(reqHeaders: Headers) {
@@ -84,6 +86,8 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         return AccessScreen(ctx)
       case 'teach':
         return TeachScreen(ctx)
+      case 'compass':
+        return b ? StaffLearnerCompass(ctx, Number(b)) : PortalCompassScreen(ctx)
       case 'plans':
         return PlansScreen(ctx)
       case 'nights':
@@ -132,7 +136,10 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       if (a === 'plan') return PlanScreen(ctx)
       if (a === 'circle') return CircleScreen(ctx)
       if (a === 'settings') return SettingsScreen(ctx)
+      if (a === 'path') return LearnerPathScreen(ctx)
       notFound()
+    case 'recalibrate':
+      return RecalibrateScreen(ctx)
     case 'welcome':
       return WelcomeScreen(ctx)
     case 'about':

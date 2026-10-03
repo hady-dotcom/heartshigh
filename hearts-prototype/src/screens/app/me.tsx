@@ -15,6 +15,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 30 })).filter((note) => note.channel !== 'email-stub')
   const unread = notes.filter((note) => !note.read).length
   const links: [string, string, string, string][] = [
+    ['path', 'Your path', 'Where a little time will help, in plain words', 'me/path'],
     ['plan', 'My study plan', 'Spread a course across the days that suit you', 'me/plan'],
     ['circle', 'Circle and nights', 'Your board, and the evenings you can come to', 'me/circle'],
     ['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'],

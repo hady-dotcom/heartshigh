@@ -13,7 +13,7 @@ export type RangeRow = {
   max: number | null
 }
 
-export type PersonaSource = 'doc-a' | 'doc-b' | 'doc-c' | 'ux-draft' | 'unassigned'
+export type PersonaSource = 'doc-a' | 'doc-b' | 'doc-c' | 'ux-draft' | 'unassigned' | 'balanced'
 
 export type PersonaBand = {
   key: string
@@ -65,7 +65,7 @@ export function sameRangeAs(band: PersonaBand, others: PersonaBand[]) {
 
 /**
  * Why a band cannot be published. Drafts are allowed to be incomplete; this list is what the publish step refuses.
- * The step-2 rule itself is a stand-in: see OPEN_QUESTIONS in persona-data.ts.
+ * The step-2 rule asks for every included scale to have been read. See BALANCE_NOTES in persona-data.ts.
  */
 export function publishProblems(band: PersonaBand, others: PersonaBand[]) {
   const problems: string[] = []

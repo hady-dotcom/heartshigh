@@ -1,6 +1,6 @@
 import { APIError, type Access, type CollectionConfig, type GlobalConfig, type Where } from 'payload'
 import { idOf, portalIdOf } from './lib/ids'
-import { killListHits } from './lib/opening-data'
+import { authorTextProblems, killListHits } from './lib/opening-data'
 import { SCALE_KEYS } from './lib/heart'
 import { bandFromRow, publishProblems } from './lib/persona'
 import { hasMarkup, helpContactProblems } from './lib/text-safety'
@@ -51,6 +51,7 @@ export const HeartScales: CollectionConfig = {
     { name: 'leonName', type: 'text', required: true },
     { name: 'room', type: 'select', options: ['appetites', 'heat', 'unsettled', 'lights'].map((value) => ({ label: value, value })) },
     { name: 'polishLabel', type: 'text' },
+    { name: 'focusName', type: 'text', admin: { description: 'The short word in “Focusing on”. Learners see this, never the desk name.' } },
     { name: 'season', type: 'select', options: ['youth', 'health', 'wealth', 'freeTime', 'life'].map((value) => ({ label: value, value })) },
     { name: 'firstOpenRead', type: 'checkbox', defaultValue: true },
     { name: 'anchors', type: 'json', admin: { description: 'Leon’s rung texts, for authors only.' } },
@@ -104,7 +105,7 @@ type OptionData = { key?: string; label?: string; replyPill?: string; nudges?: {
 /** Publish rules from spec 5.1.3. Returns a list of plain-English problems. */
 export async function sceneProblems(
   payload: { find: (args: Record<string, unknown>) => Promise<{ docs: unknown[] }> },
-  scene: { id?: number; key?: string; status?: string; caption?: string; subline?: string; options?: OptionData[] },
+  scene: { id?: number; key?: string; status?: string; caption?: string; subline?: string; monthCaption?: string; monthSubline?: string; monthLabels?: unknown; options?: OptionData[] },
 ) {
   const problems: string[] = []
   const options = scene.options || []
@@ -117,7 +118,8 @@ export async function sceneProblems(
       if (item.scale && closed.has(item.scale) && Number(item.delta || 0) !== 0) problems.push(`“${option.label}” nudges ${item.scale}, which is never read at first open.`)
     }
   }
-  const text = [scene.caption, scene.subline, ...options.flatMap((option) => [option.label, option.replyPill])].filter(Boolean).join(' \n ')
+  const monthLabels = scene.monthLabels && typeof scene.monthLabels === 'object' ? Object.values(scene.monthLabels as Record<string, unknown>).map(String) : []
+  const text = [scene.caption, scene.subline, scene.monthCaption, scene.monthSubline, ...monthLabels, ...options.flatMap((option) => [option.label, option.replyPill])].filter(Boolean).join(' \n ')
   const hits = killListHits(text)
   if (hits.length) problems.push(`Learner-facing words on the kill list: ${hits.join(', ')}.`)
   const others = (await payload.find({ collection: 'opening-scenes', overrideAccess: true, depth: 0, limit: 50, where: { status: { equals: 'published' } } })).docs as { id: number; key?: string; options?: OptionData[] }[]
@@ -170,6 +172,9 @@ export const OpeningScenes: CollectionConfig = {
     { name: 'status', type: 'select', defaultValue: 'draft', options: [{ label: 'Draft', value: 'draft' }, { label: 'Published', value: 'published' }] },
     { name: 'version', type: 'number', defaultValue: 1 },
     { name: 'adaptedFrom', type: 'textarea' },
+    { name: 'monthCaption', type: 'text', admin: { description: 'Wording for the monthly look. Same options, different words.' } },
+    { name: 'monthSubline', type: 'text' },
+    { name: 'monthLabels', type: 'json', admin: { description: 'Option key to this month’s label.' } },
   ],
 }
 
@@ -410,6 +415,7 @@ const personaSources = [
   { label: 'Doc B', value: 'doc-b' },
   { label: 'Doc C (incomplete)', value: 'doc-c' },
   { label: 'UX draft', value: 'ux-draft' },
+  { label: 'Balanced reading', value: 'balanced' },
 ]
 
 export const PersonaBands: CollectionConfig = {
@@ -460,4 +466,87 @@ export const PersonaBands: CollectionConfig = {
   ],
 }
 
-export const openingCollections = [HeartScales, Lanes, OpeningScenes, OpeningConfigs, HeartStates, OpeningAnswers, HeartContributions, ViewAsSessions, AuditLog, PersonaBands]
+/** Rows of the caller's own portal for the people who guide learners: master, portal admin, teacher. */
+const guiding: Access = ({ req }) => {
+  const user = userOf(req)
+  if (isMaster(user)) return true
+  const portal = portalIdOf(user)
+  if ((user?.role === 'portal-admin' || user?.role === 'teacher') && portal) return { portal: { equals: portal } } as Where
+  return false
+}
+
+export const CompassSettings: CollectionConfig = {
+  slug: 'compass-settings',
+  labels: { singular: 'Compass wording', plural: 'Compass wording' },
+  admin: { useAsTitle: 'key', description: 'The warm words a learner sees. The rung bounds stay on this desk.' },
+  access: { read: master, create: master, update: master, delete: master },
+  hooks: {
+    beforeChange: [
+      ({ data }) => {
+        if (!data) return data
+        const places = (data.places as { label?: string; forward?: string }[]) || []
+        const life = (data.lifeOptions as { label?: string }[]) || []
+        const fields: [string, string | null | undefined][] = [
+          ['The focus line', data.focusLead],
+          ['Grown', data.movementUp],
+          ['Holding', data.movementSame],
+          ['A little more time', data.movementOnward],
+          ['Life caption', data.lifeCaption],
+          ['Life line', data.lifeSubline],
+          ...places.flatMap((place, index) => [[`Place ${index + 1}`, place.label], [`Place ${index + 1} step`, place.forward]] as [string, string | undefined][]),
+          ...life.map((option, index) => [`Life option ${index + 1}`, option.label] as [string, string | undefined]),
+        ]
+        const problems = authorTextProblems(fields)
+        if (problems.length) throw new APIError(problems[0], 400, null, true)
+        return data
+      },
+    ],
+  },
+  fields: [
+    { name: 'key', type: 'text', required: true, unique: true },
+    { name: 'frame', type: 'select', defaultValue: 'both', options: [{ label: 'Place words and Focusing on', value: 'both' }, { label: 'Focusing on only', value: 'focusing' }, { label: 'Place words only', value: 'places' }] },
+    { name: 'focusLead', type: 'text', defaultValue: 'Focusing on' },
+    { name: 'movementUp', type: 'text' },
+    { name: 'movementSame', type: 'text' },
+    { name: 'movementOnward', type: 'text' },
+    { name: 'lifeCaption', type: 'text' },
+    { name: 'lifeSubline', type: 'text' },
+    {
+      name: 'places',
+      type: 'array',
+      fields: [
+        { name: 'key', type: 'select', options: ['growing', 'steady', 'flourishing'].map((value) => ({ label: value, value })) },
+        { name: 'label', type: 'text', required: true },
+        { name: 'low', type: 'number', min: -10, max: 10 },
+        { name: 'high', type: 'number', min: -10, max: 10 },
+        { name: 'forward', type: 'textarea' },
+      ],
+    },
+    {
+      name: 'lifeOptions',
+      type: 'array',
+      fields: [
+        { name: 'key', type: 'text', required: true },
+        { name: 'label', type: 'text', required: true },
+        { name: 'boost', type: 'select', options: scaleOptions },
+      ],
+    },
+  ],
+}
+
+export const CompassAttempts: CollectionConfig = {
+  slug: 'compass-attempts',
+  labels: { singular: 'Compass attempt', plural: 'Compass attempts' },
+  admin: { description: 'Each opening and each monthly look. The signed readings are for the portal admin, the imam and the master.' },
+  access: { read: guiding, create: nobody, update: nobody, delete: nobody },
+  fields: [
+    { name: 'user', type: 'relationship', relationTo: 'users', required: true, index: true },
+    { name: 'portal', type: 'relationship', relationTo: 'portals', required: true, index: true },
+    { name: 'at', type: 'date', required: true },
+    { name: 'bank', type: 'select', defaultValue: 'opening', options: [{ label: 'Opening', value: 'opening' }, { label: 'Month', value: 'month' }] },
+    { name: 'lifeKey', type: 'text' },
+    { name: 'scales', type: 'json', admin: { description: 'Device readings from −1 to +1. Not shown to the learner.' } },
+  ],
+}
+
+export const openingCollections = [HeartScales, Lanes, OpeningScenes, OpeningConfigs, HeartStates, OpeningAnswers, HeartContributions, ViewAsSessions, AuditLog, PersonaBands, CompassSettings, CompassAttempts]
