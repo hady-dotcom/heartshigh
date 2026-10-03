@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { DoorChips } from '@/components/app/doors'
 import { redirect } from 'next/navigation'
 import { Avatar } from '@/components/app/feed'
 import { AppFrame, Flash, TabBar } from '@/components/app/shell'
@@ -84,7 +85,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
           {fallback.map((course) => (
             <Link key={course.id} className="continue-row" href={`${base}/course/${course.id}`} data-testid="continue-row">
               <span className="thumb" style={course.poster ? { backgroundImage: `url(${course.poster})` } : undefined} />
-              <span className="t"><b>{course.title}</b><span className="sr-only">. </span><small>{course.speaker} · {plural(course.parts, 'part')}</small></span>
+              <span className="t"><b>{course.title}</b><span className="sr-only">. </span><small>{course.speaker} · {plural(course.parts, 'part')}</small><DoorChips doors={course.doors} max={1} /></span>
             </Link>
           ))}
           {!carryOn.length && !fallback.length ? <p className="muted">Start a course from Lanes and it will wait for you here.</p> : null}
@@ -158,6 +159,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
                   {course.recommended ? <span className="drip" data-testid="recommended">Chosen for you · </span> : null}
                   {course.open ? `${course.parts} part${course.parts === 1 ? '' : 's'} · ${course.speaker}` : <span className="drip" data-testid="opens-on">Opens on day {course.opensOnDay}</span>}
                 </small>
+                <DoorChips doors={course.doors} />
               </span>
               {course.open ? (
                 <Link className={`start ${START[index % START.length]}`} href={href} data-testid="lesson-link">Start</Link>

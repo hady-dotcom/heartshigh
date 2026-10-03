@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { DoorChips } from '@/components/app/doors'
 import { notFound, redirect } from 'next/navigation'
 import { CoursePlayer, type PointView, type SwarmItem } from '@/components/app/course-player'
 import { Avatar, FollowButton } from '@/components/app/feed'
@@ -53,7 +54,7 @@ export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx,
         {theirs.map((course, index) => (
           <div className="course-row" key={course.id} data-testid="speaker-course">
             <span className="thumb" style={course.poster ? { backgroundImage: `url(${course.poster})` } : undefined} />
-            <span className="t"><b>{course.title}</b><small>{course.parts} part{course.parts === 1 ? '' : 's'}{course.open ? '' : ` · opens on day ${course.opensOnDay}`}</small></span>
+            <span className="t"><b>{course.title}</b><small>{course.parts} part{course.parts === 1 ? '' : 's'}{course.open ? '' : ` · opens on day ${course.opensOnDay}`}</small><DoorChips doors={course.doors} max={1} /></span>
             <Link className={`start ${course.open ? START[index % START.length] : 'soft'}`} href={`${base}/course/${course.id}`}>{course.open ? 'Start' : 'Peek'}</Link>
           </div>
         ))}

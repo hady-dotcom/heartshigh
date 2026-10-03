@@ -9,6 +9,8 @@ import { now } from '@/lib/clock'
 import { getSession, type SessionUser, visibleCourseIds } from '@/server/context'
 import { workbookFor } from '@/server/workbook'
 import { posterFor } from '@/server/learner'
+import { loadDoors } from '@/server/doors'
+import { doorByNumber, doorOfClause, type Door } from '@/lib/doors'
 import { type Ctx, type Row, clock, ref, rows, shortDate, str, unreadCount } from '../common'
 
 const SECTIONS: { key: string; title: string; colour: string }[] = [
@@ -22,7 +24,9 @@ const SECTIONS: { key: string; title: string; colour: string }[] = [
 
 export type Growth = {
   clauses: Row[]
+  doors: Door[]
   seats: Row[]
+  /** Doors that have flowered: a finished talk sits on one of their clauses. */
   lit: Set<number>
   completions: Row[]
   lessons: Row[]
@@ -37,7 +41,7 @@ export type Growth = {
 
 export async function growth(payload: Payload, user: SessionUser): Promise<Growth> {
   const mine = { user: { equals: user.id } }
-  const [clauses, seats, completions, seatVisits, harvest, workbook, answers, rituals, visits, tags] = await Promise.all([
+  const [clauses, seats, completions, seatVisits, harvest, workbook, answers, rituals, visits, tags, doors] = await Promise.all([
     rows(payload, 'clauses', undefined, { sort: 'number', limit: 50 }),
     rows(payload, 'seats', undefined, { sort: 'position', limit: 400 }),
     rows(payload, 'completions', mine),
@@ -48,6 +52,7 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
     rows(payload, 'rituals', mine, { sort: '-createdAt' }),
     rows(payload, 'lesson-visits', mine),
     rows(payload, 'tags', { state: { equals: 'confirmed' } }, { limit: 1000 }),
+    loadDoors(payload),
   ])
   const lessonIds = [...new Set([...completions, ...visits].map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))]
   const lessons = lessonIds.length ? await rows(payload, 'lessons', { id: { in: lessonIds } }) : []
@@ -59,22 +64,31 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
     const cut = cuts.find((row) => row.id === ref((tag.item as { value?: unknown } | undefined)?.value))
     if (!cut || !done.has(ref(cut.lesson))) continue
     const clause = clauses.find((row) => row.id === ref(tag.clause))
-    if (clause) lit.add(Number(clause.number))
+    const door = clause ? doorOfClause(Number(clause.number), doors) : null
+    if (door) lit.add(door.number)
   }
   const activeDays = new Set([...completions, ...answers, ...visits, ...rituals, ...seatVisits].map((row) => str(row.createdAt).slice(0, 10)).filter(Boolean))
   const secondsGiven = completions.reduce((sum, row) => {
     const lesson = lessons.find((item) => item.id === ref(row.lesson))
     return sum + (Number(lesson?.durationSeconds || 0) * Number(row.percent || 100)) / 100
   }, 0)
-  return { clauses, seats, lit, completions, lessons, seatVisits, harvest, workbook, answers, rituals, activeDays, secondsGiven }
+  return { clauses, doors, seats, lit, completions, lessons, seatVisits, harvest, workbook, answers, rituals, activeDays, secondsGiven }
 }
 
-function sectionOf(clauses: Row[], key: string) {
-  return clauses.filter((clause) => str(clause.core) === key)
+function sectionOf(doors: Door[], key: string) {
+  return doors.filter((door) => door.section === key)
+}
+
+function clausesOf(g: Growth, door: Door) {
+  return door.clauses.map((number) => g.clauses.find((row) => Number(row.number) === number)).filter((row): row is Row => Boolean(row))
+}
+
+function seatsOf(g: Growth, door: Door) {
+  return clausesOf(g, door).flatMap((clause) => g.seats.filter((seat) => ref(seat.clause) === clause.id).sort((a, b) => Number(a.position) - Number(b.position)))
 }
 
 export function Rings({ g, base }: { g: Growth; base: string }) {
-  const sections = SECTIONS.filter((section) => sectionOf(g.clauses, section.key).some((clause) => g.lit.has(Number(clause.number)))).length
+  const sections = SECTIONS.filter((section) => sectionOf(g.doors, section.key).some((door) => g.lit.has(door.number))).length
   const items: [string, number, string, string, number?][] = [
     ['Watched', g.completions.length, '#f0b44c', `${base}/garden/general`],
     ['Sections', sections, '#e98fb0', `${base}/garden/jibril`],
@@ -123,7 +137,7 @@ export async function coursePath(payload: Payload, user: SessionUser, base: stri
 
 export async function GardenScreen({ payload, user, base, query }: Ctx) {
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
-  const starting = user.startingClause ? g.clauses.find((clause) => Number(clause.number) === Number(user.startingClause)) : null
+  const starting = doorOfClause(Number(user.startingClause || 0), g.doors)
   const path = await coursePath(payload, user, base, g)
   return (
     <AppFrame testId="garden">
@@ -143,9 +157,9 @@ export async function GardenScreen({ payload, user, base, query }: Ctx) {
         {starting ? (
           <>
             <p className="eyebrow">Where you began</p>
-            <Link className="card" href={`${base}/garden/jibril/${starting.number}`} style={{ display: 'block', textDecoration: 'none' }} data-testid="starting-clause">
-              <h3>Clause {str(starting.number)}: {str(starting.fragment)}</h3>
-              <p>Your answers when you joined pointed here. Your first course was chosen from the talks that sit on this line.</p>
+            <Link className="card" href={`${base}/garden/jibril/${starting.number}`} style={{ display: 'block', textDecoration: 'none' }} data-testid="starting-door" data-door={starting.number}>
+              <h3>Door {starting.number}: {starting.title}</h3>
+              <p>Your answers when you joined pointed here. Your first course was chosen from the talks that sit in this door.</p>
             </Link>
           </>
         ) : null}
@@ -234,27 +248,30 @@ export async function GardenGeneral({ payload, user, base }: Ctx) {
 
 export async function GardenJibril({ payload, user, base }: Ctx) {
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
+  const startDoor = doorOfClause(Number(user.startingClause || 0), g.doors)?.number
   return (
     <Frame base={base} title="Against Hadith Jibril" testId="garden-jibril" unread={unread}>
       <section className="summary-card gold">
-        <h2 data-testid="lit-count">{g.lit.size} of 41 clauses</h2>
-        <p>A clause flowers when you finish a talk that a teacher has placed on it. Tap any clause to read it.</p>
+        <h2 data-testid="lit-count">{g.lit.size} of {g.doors.length} doors</h2>
+        <p>A door flowers when you finish a talk that a teacher has placed in it. Tap any door to read it.</p>
       </section>
-      <div data-testid="clause-map">
+      <div data-testid="door-map">
         {SECTIONS.map((section) => {
-          const clauses = sectionOf(g.clauses, section.key)
-          const litHere = clauses.filter((clause) => g.lit.has(Number(clause.number))).length
+          const doors = sectionOf(g.doors, section.key)
+          if (!doors.length) return null
+          const litHere = doors.filter((door) => g.lit.has(door.number)).length
           return (
             <div className="section-row" key={section.key} data-testid="section-row">
-              <header><span>{section.title}</span><small>{litHere} of {clauses.length}</small></header>
-              <div className="flowers">
-                {clauses.map((clause) => {
-                  const n = Number(clause.number)
-                  const on = g.lit.has(n)
-                  const start = Number(user.startingClause) === n
+              <header><span>{section.title}</span><small>{litHere} of {doors.length}</small></header>
+              <div className="door-grid">
+                {doors.map((door) => {
+                  const on = g.lit.has(door.number)
+                  const start = startDoor === door.number
                   return (
-                    <Link key={clause.id} href={`${base}/garden/jibril/${n}`} title={`${n}. ${str(clause.fragment)}`} data-testid="clause-cell" data-lit={on ? 'yes' : 'no'} data-start={start ? 'yes' : 'no'}>
-                      {on ? <Flower colour={section.colour} /> : <span className="empty-dot" style={start ? { borderColor: 'var(--gold)', borderWidth: 3 } : undefined} />}
+                    <Link key={door.number} className={`door-cell${start ? ' start' : ''}`} href={`${base}/garden/jibril/${door.number}`} data-testid="door-cell" data-door={door.number} data-lit={on ? 'yes' : 'no'} data-start={start ? 'yes' : 'no'}>
+                      <span className="mark">{on ? <Flower colour={section.colour} /> : <span className="empty-dot" />}</span>
+                      <span className="n">{door.number}</span>
+                      <span className="t">{door.title}</span>
                     </Link>
                   )
                 })}
@@ -263,31 +280,43 @@ export async function GardenJibril({ payload, user, base }: Ctx) {
           )
         })}
       </div>
-      <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>A gold ring marks the clause your answers pointed to when you joined.</p>
+      <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>A gold ring marks the door your answers pointed to when you joined.</p>
     </Frame>
   )
 }
 
-export async function GardenClause({ payload, user, base, query }: Ctx, number: number) {
-  if (!Number.isInteger(number) || number < 1 || number > 41) notFound()
+export async function GardenDoor({ payload, user, base, query }: Ctx, number: number) {
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
-  const clause = g.clauses.find((row) => Number(row.number) === number)
-  if (!clause) notFound()
-  const seats = g.seats.filter((seat) => ref(seat.clause) === clause.id).sort((a, b) => Number(a.position) - Number(b.position))
+  const door = Number.isInteger(number) ? doorByNumber(number, g.doors) : null
+  if (!door) notFound()
+  const clauses = clausesOf(g, door)
+  const seats = seatsOf(g, door)
   const read = new Set(g.seatVisits.map((visit) => ref(visit.seat)))
-  const cuts = await rows(payload, 'cuts', { and: [{ bestClause: { equals: number } }, { status: { equals: 'approved' } }] }, { limit: 20 })
+  const cuts = await rows(payload, 'cuts', { and: [{ bestClause: { in: door.clauses } }, { status: { equals: 'approved' } }] }, { limit: 40 })
   const visible = new Set(await visibleCourseIds(payload, user))
   const lessonIds = [...new Set(cuts.map((cut) => ref(cut.lesson)).filter((id): id is number => Boolean(id)))]
   const lessons = lessonIds.length ? (await rows(payload, 'lessons', { id: { in: lessonIds } })).filter((lesson) => visible.has(ref(lesson.course) || 0)) : []
-  const here = `${base}/garden/jibril/${number}`
+  const here = `${base}/garden/jibril/${door.number}`
+  const teachings = clauses.map((clause) => str(clause.teaching)).filter(Boolean)
+  const series = [...new Set(clauses.map((clause) => str(clause.series)).filter(Boolean))]
+  const section = SECTIONS.find((row) => row.key === door.section)
+  const prev = doorByNumber(door.number - 1, g.doors)
+  const next = doorByNumber(door.number + 1, g.doors)
   return (
-    <Frame base={base} title={`Clause ${number}`} testId="garden-clause" unread={unread}>
+    <Frame base={base} title={`Door ${door.number}`} testId="garden-door" unread={unread}>
       <Flash error={query.error} notice={query.notice} />
-      <article className="clause-card" data-testid="clause-card">
-        <div className="clause-num">{number}</div>
-        <h3 data-testid="clause-fragment">{str(clause.fragment)}</h3>
-        {clause.teaching ? <p><span className="lbl">Teaching.</span> {str(clause.teaching)}</p> : null}
-        <p className="lbl" style={{ margin: '14px 0 4px' }}>Three seats.</p>
+      <article className="clause-card" data-testid="door-card" data-door={door.number}>
+        <div className="clause-num">{door.number}</div>
+        <p className="lbl" style={{ margin: '0 0 4px' }}>{section?.title || door.section}</p>
+        <h3 data-testid="door-title">{door.title}</h3>
+        {clauses.length ? <p className="door-words" data-testid="door-words">{clauses.map((clause) => str(clause.fragment)).join(' … ')}</p> : null}
+        {teachings.length ? (
+          <>
+            <p className="lbl" style={{ margin: '14px 0 4px' }}>Teaching.</p>
+            {teachings.map((line, index) => <p key={index}>{line}</p>)}
+          </>
+        ) : null}
+        {seats.length ? <p className="lbl" style={{ margin: '14px 0 4px' }}>Seats from al-Ghuniyya.</p> : null}
         {seats.map((seat, index) => (
           <div className="seat-line" key={seat.id} data-testid="seat">
             <p style={{ margin: 0 }}>({index + 1}) {str(seat.text)}</p>
@@ -301,22 +330,22 @@ export async function GardenClause({ payload, user, base, query }: Ctx, number: 
             )}
           </div>
         ))}
-        {clause.series ? <p style={{ marginTop: 14 }}><span className="lbl">From the series.</span> {str(clause.series)}</p> : null}
+        {series.length ? <p style={{ marginTop: 14 }}><span className="lbl">From the series.</span> {series.join(' ')}</p> : null}
       </article>
-      <p className="eyebrow">Talks on this clause</p>
+      <p className="eyebrow">Talks in this door</p>
       {lessons.length ? lessons.map((lesson) => {
         const cut = cuts.find((row) => ref(row.lesson) === lesson.id)
         return (
-          <Link key={lesson.id} className="course-row" href={`${base}/course/${ref(lesson.course)}?part=${lesson.id}&t=${Math.floor(Number(cut?.start || 0))}`} data-testid="clause-talk">
+          <Link key={lesson.id} className="course-row" href={`${base}/course/${ref(lesson.course)}?part=${lesson.id}&t=${Math.floor(Number(cut?.start || 0))}`} data-testid="door-talk">
             <span className="thumb" style={posterFor(str(lesson.youtubeId) || null) ? { backgroundImage: `url(${posterFor(str(lesson.youtubeId))})` } : undefined} />
             <span className="t"><b>{str(lesson.title)}</b><small>From {clock(Number(cut?.start || 0))} · {str(lesson.speaker)}</small></span>
             <span className="start teal">Watch</span>
           </Link>
         )
-      }) : <p className="muted">No talk in your courses has been placed on this clause yet.</p>}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16 }}>
-        {number > 1 ? <Link className="pill outline small" href={`${base}/garden/jibril/${number - 1}`}>‹ Clause {number - 1}</Link> : <span />}
-        {number < 41 ? <Link className="pill outline small" href={`${base}/garden/jibril/${number + 1}`} data-testid="next-clause">Clause {number + 1} ›</Link> : null}
+      }) : <p className="muted">No talk in your courses has been placed in this door yet.</p>}
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginTop: 16 }}>
+        {prev ? <Link className="pill outline small" href={`${base}/garden/jibril/${prev.number}`} data-testid="prev-door">‹ Door {prev.number}</Link> : <span />}
+        {next ? <Link className="pill outline small" href={`${base}/garden/jibril/${next.number}`} data-testid="next-door">Door {next.number} ›</Link> : null}
       </div>
     </Frame>
   )
@@ -338,22 +367,19 @@ export async function GardenGhunya({ payload, user, base }: Ctx) {
         <p className="eyebrow" style={{ color: 'var(--gold)', marginTop: 10 }}>Against al-Ghuniyya</p>
         <h1 style={{ margin: 0, fontSize: 26 }}>The seats you have read</h1>
         <p className="big" data-testid="seat-count">{read.size} <span style={{ fontSize: 18, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>of {g.seats.length}</span></p>
-        <p style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, margin: '6px 0 0', fontSize: 14 }}>Each clause of the hadith opens onto three seats from al-Ghuniyya. One group of dots per clause.</p>
+        <p style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, margin: '6px 0 0', fontSize: 14 }}>Each door of the hadith opens onto seats from al-Ghuniyya. One group of dots per door.</p>
         <div className="seat-groups" data-testid="seat-grid">
-          {g.clauses.map((clause) => {
-            const seats = g.seats.filter((seat) => ref(seat.clause) === clause.id).sort((a, b) => Number(a.position) - Number(b.position))
-            return (
-              <Link key={clause.id} className="sg" href={`${base}/garden/jibril/${clause.number}`} title={`${clause.number}. ${str(clause.fragment)}`} data-testid="seat-group">
-                <span className="dots">{seats.map((seat) => <i key={seat.id} className={read.has(seat.id) ? 'lit' : ''} data-testid="seat-dot" />)}</span>
-                <small>{str(clause.number)}</small>
-              </Link>
-            )
-          })}
+          {g.doors.map((door) => (
+            <Link key={door.number} className="sg" href={`${base}/garden/jibril/${door.number}`} title={`Door ${door.number}: ${door.title}`} data-testid="seat-group" data-door={door.number}>
+              <span className="dots">{seatsOf(g, door).map((seat) => <i key={seat.id} className={read.has(seat.id) ? 'lit' : ''} data-testid="seat-dot" />)}</span>
+              <small>{door.number}</small>
+            </Link>
+          ))}
         </div>
         <p className="eyebrow" style={{ color: 'rgba(255,255,255,0.7)' }}>Read most recently</p>
         {recent.length ? recent.map((seat) => (
           <div className="card" key={seat.id}><p>{str(seat.text)}</p></div>
-        )) : <div className="card"><p>Open any clause and mark a seat once you have read it. It will light up here.</p></div>}
+        )) : <div className="card"><p>Open any door and mark a seat once you have read it. It will light up here.</p></div>}
       </div>
     </Frame>
   )

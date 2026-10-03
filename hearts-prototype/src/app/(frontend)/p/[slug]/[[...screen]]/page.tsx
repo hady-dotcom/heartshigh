@@ -12,7 +12,7 @@ import type { Ctx, Query } from '@/screens/common'
 import { LearnerPathScreen, RecalibrateScreen } from '@/screens/app/compass'
 import { HomeScreen, LanesScreen } from '@/screens/app/home'
 import { CourseScreen, SpeakerScreen } from '@/screens/app/course'
-import { GardenClause, GardenGeneral, GardenGhunya, GardenJibril, GardenScreen, GardenWorkbook } from '@/screens/app/garden'
+import { GardenDoor, GardenGeneral, GardenGhunya, GardenJibril, GardenScreen, GardenWorkbook } from '@/screens/app/garden'
 import { GardenHarvest } from '@/screens/app/harvest'
 import { CircleScreen, MeScreen, PlanScreen, SettingsScreen } from '@/screens/app/me'
 import { WelcomeScreen } from '@/screens/app/welcome'
@@ -141,7 +141,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
     case 'garden':
       if (!a) return GardenScreen(ctx)
       if (a === 'general') return GardenGeneral(ctx)
-      if (a === 'jibril') return b ? GardenClause(ctx, Number(b)) : GardenJibril(ctx)
+      if (a === 'jibril') return b ? GardenDoor(ctx, Number(b)) : GardenJibril(ctx)
       if (a === 'ghunya') return GardenGhunya(ctx)
       if (a === 'harvest') return GardenHarvest(ctx)
       if (a === 'workbook') return GardenWorkbook(ctx)

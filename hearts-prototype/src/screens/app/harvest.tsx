@@ -9,6 +9,8 @@ import { quranIndex, tafsirFor, tafsirSummary } from '@/server/scripture'
 import { now } from '@/lib/clock'
 import { type Ctx, type Row, ref, rows, str, unreadCount } from '../common'
 import { Frame } from './garden'
+import { loadDoors } from '@/server/doors'
+import { doorByNumber, doorNumberOfClause, type Door } from '@/lib/doors'
 
 export const REPLAY_LEAD_SECONDS = 5
 
@@ -24,8 +26,8 @@ function secondsOf(entry: Row) {
   return parts.reduce((total, part) => total * 60 + part, 0)
 }
 
-/** Which Jibril clause each talk sits under: its confirmed tags first, then its cuts' best clause. */
-async function clausesOfLessons(payload: Payload, lessonIds: number[]) {
+/** Which Jibril door each talk sits in: its confirmed tags first, then its cuts' best clause, counted by door. */
+async function doorsOfLessons(payload: Payload, lessonIds: number[], doors: Door[]) {
   const out = new Map<number, number>()
   if (!lessonIds.length) return out
   const cuts = await rows(payload, 'cuts', { lesson: { in: lessonIds } }, { limit: 2000 })
@@ -38,10 +40,13 @@ async function clausesOfLessons(payload: Payload, lessonIds: number[]) {
     for (const tag of tags) {
       const cutId = ref((tag.item as { value?: unknown } | undefined)?.value)
       if (!mine.some((cut) => cut.id === cutId)) continue
-      const number = numberOf.get(ref(tag.clause) || 0)
-      if (number) counts.set(number, (counts.get(number) || 0) + 2)
+      const door = doorNumberOfClause(numberOf.get(ref(tag.clause) || 0), doors)
+      if (door) counts.set(door, (counts.get(door) || 0) + 2)
     }
-    for (const cut of mine) if (Number(cut.bestClause)) counts.set(Number(cut.bestClause), (counts.get(Number(cut.bestClause)) || 0) + (cut.status === 'approved' ? 1 : 0.5))
+    for (const cut of mine) {
+      const door = doorNumberOfClause(Number(cut.bestClause || 0), doors)
+      if (door) counts.set(door, (counts.get(door) || 0) + (cut.status === 'approved' ? 1 : 0.5))
+    }
     const best = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0]
     if (best) out.set(lessonId, best[0])
   }
@@ -58,14 +63,14 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
     unreadCount(payload, user),
   ])
   const kind = query.kind === 'quran' || query.kind === 'hadith' ? query.kind : 'all'
-  const group = query.group === 'clause' ? 'clause' : 'talk'
+  const group = query.group === 'door' || query.group === 'clause' ? 'door' : 'talk'
   const openId = Number(query.item) || null
   const view = (['context', 'scholars', 'summary', 'tafsir'] as View[]).includes(query.view as View) ? (query.view as View) : null
   const lessonIds = [...new Set(entries.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))]
-  const [lessons, clauseOf, clauses] = await Promise.all([
+  const doors = group === 'door' ? await loadDoors(payload) : []
+  const [lessons, doorOf] = await Promise.all([
     lessonIds.length ? rows(payload, 'lessons', { id: { in: lessonIds } }) : Promise.resolve([] as Row[]),
-    group === 'clause' ? clausesOfLessons(payload, lessonIds) : Promise.resolve(new Map<number, number>()),
-    group === 'clause' ? rows(payload, 'clauses', undefined, { limit: 50 }) : Promise.resolve([] as Row[]),
+    group === 'door' ? doorsOfLessons(payload, lessonIds, doors) : Promise.resolve(new Map<number, number>()),
   ])
   const counts = { all: entries.length, quran: entries.filter((row) => row.kind === 'quran').length, hadith: entries.filter((row) => row.kind === 'hadith').length }
   const shown = entries.filter((row) => kind === 'all' || row.kind === kind)
@@ -90,17 +95,16 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
     let key = `talk-${lessonId || 0}`
     let title = lesson ? str(lesson.title) : 'A talk'
     let order = 0
-    if (group === 'clause') {
-      const number = lessonId ? clauseOf.get(lessonId) : undefined
-      const clause = number ? clauses.find((row) => Number(row.number) === number) : null
-      key = clause ? `clause-${number}` : 'clause-none'
-      title = clause ? str(clause.fragment) : 'Not yet placed on the hadith'
-      order = clause ? Number(number) : 999
+    if (group === 'door') {
+      const door = doorByNumber(lessonId ? doorOf.get(lessonId) : null, doors)
+      key = door ? `door-${door.number}` : 'door-none'
+      title = door ? `Door ${door.number} · ${door.title}` : 'Not yet placed on the hadith'
+      order = door ? door.number : 999
     }
     if (!groups.has(key)) groups.set(key, { key, title, order, items: [] })
     groups.get(key)!.items.push(entry)
   }
-  const sections = [...groups.values()].sort((a, b) => (group === 'clause' ? a.order - b.order : 0))
+  const sections = [...groups.values()].sort((a, b) => (group === 'door' ? a.order - b.order : 0))
   for (const section of sections) section.items.sort((a, b) => secondsOf(a) - secondsOf(b))
 
   const opened = openId ? shown.find((row) => row.id === openId) : null
@@ -120,7 +124,7 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
           </div>
           <div className="chip-row soft" data-testid="harvest-grouping">
             <Link className={group === 'talk' ? 'on' : ''} href={href({ group: null })} data-testid="harvest-group-talk">By talk</Link>
-            <Link className={group === 'clause' ? 'on' : ''} href={href({ group: 'clause' })} data-testid="harvest-group-clause">By the hadith of Jibril</Link>
+            <Link className={group === 'door' ? 'on' : ''} href={href({ group: 'door' })} data-testid="harvest-group-door">By the doors of Jibril</Link>
           </div>
         </>
       ) : null}

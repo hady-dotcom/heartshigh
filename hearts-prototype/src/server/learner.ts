@@ -4,6 +4,8 @@ import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
 import { idOf } from '@/lib/ids'
 import { recommendLesson } from '@/lib/placing'
+import { doorOfClause } from '@/lib/doors'
+import { loadDoors } from './doors'
 import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
 
 export type SlideStyle = 'kinetic' | 'cinema' | 'windows' | 'conversation' | 'unfold'
@@ -31,6 +33,7 @@ export type FeedItem = {
   land: string
   style: SlideStyle | null
   clause: number | null
+  door?: number | null
   /** The lane this slot was routed for; null for spine clips and D0. */
   laneKey?: string | null
   laneTags?: { lane: string; weight: number }[]
@@ -55,6 +58,8 @@ export type CourseCard = {
   opensOnDay: number
   open: boolean
   recommended: boolean
+  /** The Jibril doors this course's talks sit in, in door order. */
+  doors: { number: number; title: string }[]
 }
 
 const LANES: [RegExp, string, string][] = [
@@ -129,11 +134,13 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
   const cuts = lessons.length
     ? ((await payload.find({ collection: 'cuts', overrideAccess: true, depth: 0, limit: 400, where: { lesson: { in: lessons.map((lesson) => lesson.id) } } })).docs as unknown as Row[])
     : []
+  const doors = await loadDoors(payload)
   const firstPick = user.startingClause
     ? recommendLesson(
         Number(user.startingClause),
         cuts.map((cut) => ({ lessonId: idOf(cut.lesson) || 0, bestClause: (cut.bestClause as number) || null, approved: cut.status === 'approved' })),
         lessonOrder,
+        doors,
       )
     : null
   const recommendedCourse = firstPick ? idOf(lessons.find((lesson) => lesson.id === firstPick)?.course) : null
@@ -142,6 +149,13 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
   return ordered.map((course, index) => {
     const own = lessons.filter((lesson) => idOf(lesson.course) === course.id)
     const speaker = String(course.speaker || own[0]?.speaker || '')
+    const ownIds = new Set(own.map((lesson) => lesson.id))
+    const courseDoors = new Map<number, string>()
+    for (const cut of cuts) {
+      if (!ownIds.has(idOf(cut.lesson) || 0) || (cut.status !== 'approved' && !cut.placeholder)) continue
+      const door = doorOfClause(Number(cut.bestClause || 0), doors)
+      if (door) courseDoors.set(door.number, door.title)
+    }
     return {
       id: course.id,
       title: String(course.title || ''),
@@ -154,6 +168,7 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
       opensOnDay: index + 1,
       open: index + 1 <= today,
       recommended: course.id === recommendedCourse,
+      doors: [...courseDoors.entries()].sort((a, b) => a[0] - b[0]).map(([number, title]) => ({ number, title })),
     }
   })
 }
