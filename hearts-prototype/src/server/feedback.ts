@@ -192,10 +192,10 @@ export async function recordExport(payload: Payload, actor: FeedbackActor, porta
   })
 }
 
-export async function renderExport(built: BuiltFeedback, format: string, summaries: DigestSummary[]) {
+export async function renderExport(built: BuiltFeedback, format: string, summaries: DigestSummary[], digest: { portal: string; from?: string | null; to?: string | null } = { portal: 'This portal' }) {
   if (format === 'csv') return { body: feedbackCsv(built), type: 'text/csv; charset=utf-8', ext: 'csv' }
   if (format === 'xlsx') return { body: await feedbackXlsx(built), type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', ext: 'xlsx' }
-  if (format === 'pdf') return { body: feedbackPdf(built, summaries), type: 'application/pdf', ext: 'pdf' }
+  if (format === 'pdf') return { body: feedbackPdf(built, summaries, digest), type: 'application/pdf', ext: 'pdf' }
   return null
 }
 

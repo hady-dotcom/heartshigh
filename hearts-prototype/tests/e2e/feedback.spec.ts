@@ -4,6 +4,7 @@ import { E2E_BASE } from '../env'
 
 const DESK = { width: 1440, height: 900 }
 const SHOTS = '/opt/cursor/artifacts/screenshots'
+const REVIEW = '/opt/cursor/artifacts/feedback-review'
 const ARTIFACTS = '/opt/cursor/artifacts'
 const SHARED = 'I put my phone in the other room after isha and sat with my uncle.'
 const PRIVATE = 'Kept this for my own workbook and nobody else.'
@@ -36,6 +37,7 @@ async function doc(collection: string, where: string) {
 
 test.beforeAll(async () => {
   mkdirSync(SHOTS, { recursive: true })
+  mkdirSync(REVIEW, { recursive: true })
   mkdirSync(ARTIFACTS, { recursive: true })
   master = await as('master@hearts.test', 'hearts-master')
   const maryam = await doc('users', 'where[email][equals]=elm-learner@hearts.test')
@@ -73,8 +75,26 @@ test.afterAll(async () => {
 
 test.describe('Feedback for teachers', () => {
   test('anonymised export, private answers left out, and a draft question check', async ({ page }) => {
+    const consoleErrors: string[] = []
+    page.on('console', (message) => {
+      if (message.type() === 'error') consoleErrors.push(message.text())
+    })
     await page.setViewportSize(DESK)
     await signIn(page, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin/feedback')
+    await expect(page.getByTestId('filter-from')).toHaveAttribute('placeholder', 'dd/mm/yyyy')
+    await expect(page.getByTestId('filter-to')).toHaveAttribute('placeholder', 'dd/mm/yyyy')
+    await expect(page.getByTestId('door-counts')).toContainText('shared,')
+    await expect(page.getByTestId('question-counts')).toContainText('kept private')
+    const issueBox = await page.evaluate(() => {
+      const portal = document.querySelector('nextjs-portal')
+      const root = portal && 'shadowRoot' in portal ? portal.shadowRoot : null
+      const button = root?.querySelector('button[aria-label="Open issues overlay"]') as HTMLElement | null
+      if (!button) return { width: 0, height: 0 }
+      const box = button.getBoundingClientRect()
+      return { width: box.width, height: box.height }
+    })
+    expect(issueBox).toEqual({ width: 0, height: 0 })
+    expect(consoleErrors.join('\n')).not.toContain('same key')
     await expect(page.getByTestId('feedback-desk')).toBeVisible()
     await expect(page.getByTestId('nav-feedback')).toHaveAttribute('aria-current', 'page')
     await expect(page.getByTestId('private-count')).not.toHaveText('0')
@@ -88,14 +108,16 @@ test.describe('Feedback for teachers', () => {
     await expect(page.getByTestId('feedback-desk')).toContainText(/Learner [A-Z]/)
     await page.screenshot({ path: `${SHOTS}/feedback-summary.png` })
 
-    const group = page.getByTestId('door-group').first()
+    const group = page.getByTestId('door-group').filter({ hasText: SHARED })
     await group.scrollIntoViewIfNeeded()
-    await expect(group.getByTestId('question-group').first()).toBeVisible()
+    await expect(group.getByTestId('question-group').filter({ hasText: SHARED })).toBeVisible()
     await page.screenshot({ path: `${SHOTS}/feedback-grouped.png` })
+    await page.screenshot({ path: `${REVIEW}/feedback-grouped.png` })
 
     await page.getByTestId('export-dialog').locator('summary').click()
     await expect(page.getByTestId('export-mode')).toContainText('Anonymise is on')
     await page.screenshot({ path: `${SHOTS}/feedback-export.png` })
+    await page.screenshot({ path: `${REVIEW}/feedback-export.png` })
 
     const csvResponse = await page.request.get('/api/feedback?portal=east-london&format=csv')
     expect(csvResponse.ok()).toBeTruthy()
@@ -116,6 +138,7 @@ test.describe('Feedback for teachers', () => {
     expect(pdf.ok()).toBeTruthy()
     const pdfBytes = Buffer.from(await pdf.body())
     writeFileSync(`${ARTIFACTS}/feedback-digest.pdf`, pdfBytes)
+    writeFileSync(`${REVIEW}/feedback-digest.pdf`, pdfBytes)
     expect(pdfBytes.subarray(0, 5).toString()).toBe('%PDF-')
     const pdfText = pdfBytes.toString('latin1')
     expect(pdfText).toContain('sat with my uncle')

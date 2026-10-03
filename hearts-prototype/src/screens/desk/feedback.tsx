@@ -7,6 +7,8 @@ import {
   assignPseudonyms,
   buildFeedback,
   canNameExport,
+  countPhrase,
+  displayDay,
   filterQuery,
   parseFilters,
   sharingDecision,
@@ -79,7 +81,7 @@ export async function FeedbackScreen(ctx: Ctx) {
             <header><h2>By door</h2></header>
             <div className="body">
               {built.doorCounts.length ? built.doorCounts.map((row) => (
-                <div className={styles.doorRow} key={row.key}><span>{row.label}</span><b>{row.shared} shared{row.privateCount ? ` · ${row.privateCount} kept private` : ''}</b></div>
+                <div className={styles.doorRow} key={row.key}><span>{row.label}</span><b>{countPhrase(row.shared, row.privateCount)}</b></div>
               )) : <p className="hint">No door has an answer in this view yet.</p>}
             </div>
           </section>
@@ -87,7 +89,7 @@ export async function FeedbackScreen(ctx: Ctx) {
             <header><h2>By question</h2></header>
             <div className="body">
               {built.questionCounts.length ? built.questionCounts.map((row) => (
-                <div className={styles.questionRow} key={row.key}><span>{row.label}</span><b>{row.shared}{row.privateCount ? ` · ${row.privateCount} kept private` : ''}</b></div>
+                <div className={styles.questionRow} key={row.key}><span>{row.label}</span><b>{countPhrase(row.shared, row.privateCount)}</b></div>
               )) : <p className="hint">No question has an answer in this view yet.</p>}
             </div>
           </section>
@@ -147,8 +149,8 @@ export async function FeedbackScreen(ctx: Ctx) {
                   {codes.map((code) => <option key={code.id} value={code.id}>{str(code.label) || str(code.code)}</option>)}
                 </select>
               </label>
-              <label>From<input type="date" name="from" defaultValue={filters.from || ''} /></label>
-              <label>To<input type="date" name="to" defaultValue={filters.to || ''} /></label>
+              <label>From<input type="text" name="from" lang="en-GB" inputMode="numeric" placeholder="dd/mm/yyyy" autoComplete="off" spellCheck={false} defaultValue={displayDay(filters.from || '')} data-testid="filter-from" /></label>
+              <label>To<input type="text" name="to" lang="en-GB" inputMode="numeric" placeholder="dd/mm/yyyy" autoComplete="off" spellCheck={false} defaultValue={displayDay(filters.to || '')} data-testid="filter-to" /></label>
               <label className="check" style={{ alignSelf: 'center' }}>
                 <input type="checkbox" name="anonymise" value="1" defaultChecked={anonymised} data-testid="anonymise" /> Anonymise
               </label>
@@ -188,9 +190,9 @@ export async function FeedbackScreen(ctx: Ctx) {
         ) : (
           <div className={styles.group} data-testid="grouped-view">
             {built.doors.map((door) => (
-              <section key={door.door} data-testid="door-group">
+              <section key={door.key} data-testid="door-group">
                 <h2 className={styles.doorTitle}>{door.door}</h2>
-                <p className="hint">{door.shared} shared. {door.privateCount} kept private.</p>
+                <p className="hint">{countPhrase(door.shared, door.privateCount)}</p>
                 {door.talks.map((talk) => (
                   <article className={styles.talk} key={talk.key} data-testid="talk-group">
                     <header><h3>{talk.talk || 'Talk'}</h3>{talk.course ? <p>{talk.course}</p> : null}</header>

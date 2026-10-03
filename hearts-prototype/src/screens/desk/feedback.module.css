@@ -5,6 +5,7 @@
 .tile span { color: var(--ink-2); font-size: 13.5px; font-weight: 650; }
 .counts { display: grid; grid-template-columns: 1fr 1.4fr; gap: 14px; }
 .doorRow, .questionRow { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.doorRow b, .questionRow b { white-space: nowrap; text-align: right; }
 .doorRow:last-child, .questionRow:last-child { border-bottom: 0; }
 .filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 12px; align-items: end; }
 .filters label { display: grid; gap: 4px; font-size: 12.5px; font-weight: 700; color: var(--ink-2); }

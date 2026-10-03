@@ -7,11 +7,14 @@ import {
   assignPseudonyms,
   buildFeedback,
   canNameExport,
+  countPhrase,
   feedbackCsv,
   feedbackDemoSeedAllowed,
   feedbackPdf,
   feedbackXlsx,
+  formatBritishDay,
   learnerPseudonym,
+  parseDay,
   sharingDecision,
   type RawFeedback,
 } from '../../src/lib/feedback'
@@ -115,6 +118,13 @@ test('answers group under door, then talk, then question, and a cohort filter ho
   const cohort = buildFeedback([shared, otherQuestion], 1, { door: null, seatId: null, courseId: null, talkId: null, questionId: null, family: '', learnerId: null, from: null, to: null, accessCodeId: 7 }, true)
   assert.equal(cohort.sharedCount, 1)
   assert.equal(cohort.rows[0].text, shared.text)
+  const circle = row({ id: 'c1', learnerId: 5, family: 'circle', doorNumber: null, door: '', talkId: null, talk: '', courseId: null, course: '', questionId: null, question: 'A note for the circle', text: 'Tea on Thursday.' })
+  const undoor = row({ id: 'n1', learnerId: 20, doorNumber: null, door: '', text: 'No door on this one yet.' })
+  const mixed = buildFeedback([circle, undoor], 1, { door: null, seatId: null, courseId: null, talkId: null, questionId: null, family: '', learnerId: null, from: null, to: null, accessCodeId: null }, true)
+  const keys = mixed.doorCounts.map((door) => door.key)
+  assert.equal(new Set(keys).size, keys.length)
+  assert.equal(keys.includes('circle'), true)
+  assert.equal(keys.includes('none'), true)
 })
 
 test('a yes or no question is weak, and a personal one is left alone', () => {
@@ -133,6 +143,12 @@ test('a yes or no question is weak, and a personal one is left alone', () => {
   assert.equal(recall.weak, true)
   assert.equal(sound.rewrite, '')
   assert.equal(asDraft({ status: 'published', rewrite: sound.rewrite }).status, 'draft')
+  assert.equal(countPhrase(2, 6), '2 shared, 6 kept private')
+  assert.equal(parseDay('03/10/2026'), '2026-10-03')
+  assert.equal(parseDay('3/10/2026'), '2026-10-03')
+  assert.equal(parseDay('2026-10-03'), '2026-10-03')
+  assert.equal(parseDay('31/02/2026'), null)
+  assert.equal(formatBritishDay('2026-10-03'), '03/10/2026')
 })
 
 test('the demo seed stays off in production and on a starters load', () => {
@@ -153,9 +169,14 @@ test('the spreadsheet and the PDF carry the shared answer and leave the private 
   assert.match(text, /I sat with my uncle/)
   assert.equal(text.includes('Kept this'), false)
   assert.equal(text.includes('maryam@'), false)
-  const pdf = feedbackPdf(built).toString('latin1')
+  const pdf = feedbackPdf(built, [], { portal: 'East London', from: '2026-09-01', to: '2026-09-30' }).toString('latin1')
   assert.match(pdf, /^%PDF-1\.4/)
   assert.match(pdf, /I sat with my uncle/)
   assert.equal(pdf.includes('Kept this'), false)
-  assert.match(pdf, /kept private/)
+  assert.match(pdf, /1 shared, 1 kept private/)
+  assert.match(pdf, /Anonymised/)
+  assert.match(pdf, /East London/)
+  assert.match(pdf, /Teacher reply/)
+  assert.match(pdf, /0\.059 0\.231 0\.227/)
+  assert.match(pdf, /0\.878 0\.667 0\.271/)
 })

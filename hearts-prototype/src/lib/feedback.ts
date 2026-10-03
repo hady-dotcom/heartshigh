@@ -110,6 +110,7 @@ export type TalkGroup = {
 }
 
 export type DoorGroup = {
+  key: string
   doorNumber: number | null
   door: string
   talks: TalkGroup[]
@@ -221,8 +222,8 @@ export function parseFilters(query: Record<string, string | undefined>): Feedbac
     questionId: positive(query.question),
     family: family === 'popup' || family === 'reflection' || family === 'task' || family === 'circle' ? family : '',
     learnerId: positive(query.learner),
-    from: day(query.from),
-    to: day(query.to),
+    from: parseDay(query.from),
+    to: parseDay(query.to),
     accessCodeId: positive(query.cohort),
   }
 }
@@ -239,8 +240,39 @@ function positive(value: string | undefined) {
   return Number.isInteger(number) && number > 0 ? number : null
 }
 
-function day(value: string | undefined) {
-  return value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null
+/** Accepts a British day (dd/mm/yyyy) or an ISO day, and returns YYYY-MM-DD. */
+export function parseDay(value: string | undefined) {
+  const raw = String(value || '').trim()
+  if (!raw) return null
+  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (iso) return validDate(iso[1], iso[2], iso[3])
+  const british = raw.match(/^(\d{1,2})[/.](\d{1,2})[/.](\d{4})$/)
+  if (british) return validDate(british[3], british[2].padStart(2, '0'), british[1].padStart(2, '0'))
+  return null
+}
+
+function validDate(year: string, month: string, day: string) {
+  const y = Number(year)
+  const m = Number(month)
+  const d = Number(day)
+  if (!Number.isInteger(y) || m < 1 || m > 12 || d < 1 || d > 31) return null
+  const date = new Date(Date.UTC(y, m - 1, d))
+  if (date.getUTCFullYear() !== y || date.getUTCMonth() !== m - 1 || date.getUTCDate() !== d) return null
+  return `${year}-${month}-${day}`
+}
+
+/** The value shown in the filter boxes: 03/10/2026. */
+export function formatBritishDay(iso: string | null | undefined) {
+  const match = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/)
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : ''
+}
+
+export function displayDay(value: string | undefined) {
+  return formatBritishDay(parseDay(value))
+}
+
+export function countPhrase(shared: number, privateCount: number) {
+  return `${shared} shared, ${privateCount} kept private`
 }
 
 function doorNumber(value: string | undefined) {
@@ -335,7 +367,7 @@ export function buildFeedback(rows: RawFeedback[], portalId: number, filters: Fe
     const doorKey = doorKeyOf(sample)
     const talkKey = `${doorKey}|${sample.courseId ?? 0}|${sample.talkId ?? 0}|${sample.course}|${sample.talk}`
     if (!doorMap.has(doorKey)) {
-      doorMap.set(doorKey, { doorNumber: sample.family === 'circle' ? null : sample.doorNumber, door: doorTitle(sample), talks: [], shared: 0, privateCount: 0 })
+      doorMap.set(doorKey, { key: doorKey, doorNumber: sample.family === 'circle' ? null : sample.doorNumber, door: doorTitle(sample), talks: [], shared: 0, privateCount: 0 })
     }
     if (!talkMap.has(talkKey)) {
       const talk: TalkGroup = { key: talkKey, talkId: sample.talkId, talk: sample.talk || 'Circle board', courseId: sample.courseId, course: sample.course, questions: [] }
@@ -380,7 +412,7 @@ export function buildFeedback(rows: RawFeedback[], portalId: number, filters: Fe
     rows: shown,
     doors,
     learners,
-    doorCounts: doors.map((door) => ({ key: String(door.doorNumber ?? 'circle'), label: door.door, shared: door.shared, privateCount: door.privateCount })),
+    doorCounts: doors.map((door) => ({ key: door.key, label: door.door, shared: door.shared, privateCount: door.privateCount })),
     questionCounts: [...questionMap.entries()]
       .map(([key, bucket]) => ({ key, label: bucket.sample.question, shared: bucket.shared.length, privateCount: bucket.privateCount }))
       .sort((a, b) => b.shared - a.shared || a.label.localeCompare(b.label)),
@@ -431,54 +463,158 @@ export async function feedbackXlsx(built: BuiltFeedback) {
 
 export type DigestSummary = { questionKey: string; themes: string[]; quotes: string[] }
 
-export function digestLines(built: BuiltFeedback, summaries: DigestSummary[] = []) {
+export type PdfDigest = { portal?: string; from?: string | null; to?: string | null }
+
+const PAPER = '0.937 0.890 0.784'
+const TEAL = '0.059 0.231 0.227'
+const GOLD = '0.878 0.667 0.271'
+const INK = '0.078 0.133 0.122'
+const CREAM = '0.969 0.933 0.859'
+const MUTED = '0.243 0.333 0.318'
+
+export function feedbackPdf(built: BuiltFeedback, summaries: DigestSummary[] = [], digest: PdfDigest = {}) {
+  const portal = (digest.portal || 'This portal').replace(/\s+/g, ' ').trim() || 'This portal'
+  const pages: string[][] = [coverPage(built, portal, digest.from, digest.to)]
+  const content = contentPages(built, summaries, portal)
+  return assemblePdf([...pages, ...content].map((ops) => ops.join('\n')))
+}
+
+function coverPage(built: BuiltFeedback, portal: string, from?: string | null, to?: string | null) {
+  const ops = paper()
+  ops.push(`${TEAL} rg`, '0 520 595 322 re f', `${GOLD} rg`, '0 512 595 8 re f')
+  text(ops, 56, 760, 'HEARTS', 'F2', 12, GOLD)
+  text(ops, 56, 718, 'Feedback for teachers', 'F2', 28, CREAM)
+  for (const [index, line] of wrap(portal, 32).entries()) text(ops, 56, 672 - index * 26, line, 'F2', 20, CREAM)
+  text(ops, 56, 460, dateRange(built, from, to), 'F1', 14, INK)
+  text(ops, 56, 418, built.anonymised ? 'Anonymised' : 'Named', 'F2', 22, TEAL)
+  text(ops, 56, 384, built.anonymised ? 'Names are Learner A, Learner B, and so on. Emails are left out.' : 'Names are included for this portal only. Emails are left out.', 'F1', 12, MUTED)
+  text(ops, 56, 348, countPhrase(built.sharedCount, built.privateCount), 'F2', 14, INK)
+  text(ops, 56, 322, 'Answers kept private are counted on this page and left out of the ones that follow.', 'F1', 11, MUTED)
+  return ops
+}
+
+function dateRange(built: BuiltFeedback, from?: string | null, to?: string | null) {
+  const dates = built.rows.map((row) => row.date.slice(0, 10)).filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value)).sort()
+  const start = from || dates[0] || ''
+  const end = to || dates[dates.length - 1] || ''
+  const label = (iso: string) => britishDate(`${iso}T12:00:00.000Z`)
+  if (start && end && start !== end) return `${label(start)} to ${label(end)}`
+  if (start || end) return label(start || end)
+  return 'All dates'
+}
+
+function contentPages(built: BuiltFeedback, summaries: DigestSummary[], portal: string) {
   const byQuestion = new Map(summaries.map((summary) => [summary.questionKey, summary]))
-  const lines: { text: string; bold?: boolean; size: number }[] = [
-    { text: 'Feedback for teachers', bold: true, size: 18 },
-    { text: built.anonymised ? 'Anonymised digest. Names are Learner A, Learner B, and so on. Emails are left out.' : 'Named digest for this portal only. Emails are left out.', size: 11 },
-    { text: `${built.sharedCount} shared answers. ${built.privateCount} kept private, and left out of this digest.`, size: 11 },
-    { text: ' ', size: 8 },
-  ]
+  const pages: string[][] = []
+  let ops = contentHeader(portal)
+  let y = 748
+  const next = () => {
+    pages.push(ops)
+    ops = contentHeader(portal)
+    y = 748
+  }
+  const need = (height: number) => {
+    if (y - height < 56) next()
+  }
   if (!built.doors.length) {
-    lines.push({ text: 'Nothing shared matches these filters.', size: 12 })
-    return lines
+    text(ops, 56, y, 'Nothing shared matches these filters.', 'F1', 13, INK)
+    pages.push(ops)
+    return pages
   }
   for (const door of built.doors) {
-    lines.push({ text: door.door, bold: true, size: 14 })
-    lines.push({ text: `${door.shared} shared. ${door.privateCount} kept private.`, size: 10 })
+    const doorLines = wrap(door.door || 'Door', 42)
+    need(36 + doorLines.length * 22)
+    ops.push(`${GOLD} rg`, `48 ${y - 16} 8 18 re f`)
+    doorLines.forEach((line, index) => text(ops, 66, y - index * 22, line, 'F2', 16, TEAL))
+    y -= doorLines.length * 22 + 6
+    text(ops, 66, y, countPhrase(door.shared, door.privateCount), 'F1', 10, MUTED)
+    y -= 26
     for (const talk of door.talks) {
       const heading = talk.course && talk.course !== talk.talk ? `${talk.course} - ${talk.talk}` : talk.talk || talk.course || 'Talk'
-      lines.push({ text: heading || 'Talk', bold: true, size: 12 })
+      const talkLines = wrap(heading, 70)
+      need(18 + talkLines.length * 16)
+      talkLines.forEach((line, index) => text(ops, 56, y - index * 16, line, 'F2', 12, INK))
+      y -= talkLines.length * 16 + 12
       for (const question of talk.questions) {
-        lines.push({ text: `${question.familyLabel}. ${question.question}`, bold: true, size: 11 })
-        if (question.privateCount) lines.push({ text: `${question.privateCount} kept private.`, size: 10 })
+        const questionLines = wrap(question.question, 68)
+        need(28 + questionLines.length * 16)
+        text(ops, 56, y, question.familyLabel, 'F2', 9, TEAL)
+        y -= 16
+        questionLines.forEach((line, index) => text(ops, 56, y - index * 16, line, 'F2', 12, INK))
+        y -= questionLines.length * 16 + 4
+        if (question.privateCount) {
+          text(ops, 56, y, countPhrase(question.answers.length, question.privateCount), 'F1', 10, MUTED)
+          y -= 16
+        }
         const summary = byQuestion.get(question.key)
         if (summary) {
-          lines.push({ text: 'AI summary', bold: true, size: 11 })
-          for (const theme of summary.themes.slice(0, 5)) lines.push({ text: `• ${theme}`, size: 10 })
-          for (const quote of summary.quotes.slice(0, 3)) lines.push({ text: `“${quote}”`, size: 10 })
+          const themes = summary.themes.slice(0, 5)
+          need(20 + themes.length * 14)
+          text(ops, 56, y, 'AI summary', 'F2', 10, TEAL)
+          y -= 14
+          for (const theme of themes) {
+            const bits = wrap(theme, 74)
+            need(bits.length * 13)
+            bits.forEach((bit) => {
+              text(ops, 68, y, `- ${bit}`, 'F1', 10, INK)
+              y -= 13
+            })
+          }
+          y -= 6
+        }
+        if (!question.answers.length) {
+          need(18)
+          text(ops, 68, y, 'No shared answer under this question.', 'F1', 10, MUTED)
+          y -= 20
         }
         for (const answer of question.answers) {
-          lines.push({ text: `${answer.learner} - ${answer.dateLabel}`, size: 10 })
-          for (const bit of wrap(answer.text, 92)) lines.push({ text: bit, size: 11 })
-          if (answer.reply) {
-            lines.push({ text: `Teacher reply: ${answer.reply}`, size: 10 })
+          const quote = wrap(`"${answer.text}"`, 72)
+          const replyLines = answer.reply ? wrap(answer.reply, 64) : []
+          const block = 22 + quote.length * 15 + (replyLines.length ? 16 + replyLines.length * 13 : 0) + 14
+          need(block)
+          const top = y + 12
+          const bottom = y - block + 18
+          ops.push(`${CREAM} rg`, `52 ${bottom.toFixed(1)} 491 ${(top - bottom).toFixed(1)} re f`)
+          ops.push(`${GOLD} rg`, `52 ${bottom.toFixed(1)} 4 ${(top - bottom).toFixed(1)} re f`)
+          quote.forEach((line) => {
+            text(ops, 68, y, line, 'F3', 12, INK)
+            y -= 15
+          })
+          text(ops, 68, y, `${answer.learner}, ${answer.dateLabel}`, 'F1', 9, MUTED)
+          y -= 14
+          if (replyLines.length) {
+            text(ops, 84, y, 'Teacher reply', 'F2', 10, TEAL)
+            y -= 13
+            replyLines.forEach((line) => {
+              text(ops, 84, y, line, 'F1', 10, TEAL)
+              y -= 13
+            })
           }
+          y -= 12
         }
-        if (!question.answers.length) lines.push({ text: 'No shared answer under this question.', size: 10 })
-        lines.push({ text: ' ', size: 6 })
+        y -= 8
       }
     }
+    y -= 8
   }
-  return lines
+  pages.push(ops)
+  return pages
 }
 
-export function feedbackPdf(built: BuiltFeedback, summaries: DigestSummary[] = []) {
-  return renderPdf(digestLines(built, summaries))
+function paper() {
+  return [`${PAPER} rg`, '0 0 595 842 re f']
 }
 
-function wrap(text: string, width: number) {
-  const words = text.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean)
+function contentHeader(portal: string) {
+  const ops = paper()
+  ops.push(`${TEAL} rg`, '0 786 595 56 re f', `${GOLD} rg`, '0 782 595 4 re f')
+  text(ops, 48, 808, 'Feedback for teachers', 'F2', 12, CREAM)
+  text(ops, 220, 808, wrap(portal, 42)[0] || portal, 'F1', 11, CREAM)
+  return ops
+}
+
+function wrap(value: string, width: number) {
+  const words = value.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean)
   if (!words.length) return ['']
   const lines: string[] = []
   let line = ''
@@ -493,41 +629,24 @@ function wrap(text: string, width: number) {
   return lines
 }
 
-function pdfEscape(text: string) {
-  return text.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)')
-}
-
-function winAnsi(text: string) {
-  return text
-    .replace(/·/g, ' - ')
+function pdfLiteral(value: string) {
+  const mapped = value
     .replace(/[‘’]/g, "'")
     .replace(/[“”]/g, '"')
     .replace(/[–—]/g, '-')
     .replace(/…/g, '...')
-    .replace(/[^\x20-\x7E]/g, '')
+  let out = ''
+  for (const ch of mapped) {
+    const code = ch.codePointAt(0) || 32
+    if (ch === '\\' || ch === '(' || ch === ')') out += `\\${ch}`
+    else if (code === 0xb7) out += '\\267'
+    else if (code >= 32 && code <= 126) out += ch
+  }
+  return out || ' '
 }
 
-export function renderPdf(lines: { text: string; bold?: boolean; size: number }[]) {
-  const pages: string[] = []
-  let ops: string[] = []
-  let y = 790
-  const flush = () => {
-    if (!ops.length) return
-    pages.push(ops.join('\n'))
-    ops = []
-    y = 790
-  }
-  for (const line of lines) {
-    const step = line.size + 5
-    if (y - step < 46) flush()
-    const font = line.bold ? 'F2' : 'F1'
-    const shown = winAnsi(line.text) || ' '
-    ops.push(`BT /${font} ${line.size} Tf 48 ${y.toFixed(1)} Td (${pdfEscape(shown)}) Tj ET`)
-    y -= step
-  }
-  flush()
-  if (!pages.length) pages.push('BT /F1 12 Tf 48 790 Td (Empty) Tj ET')
-  return assemblePdf(pages)
+function text(ops: string[], x: number, y: number, value: string, font: 'F1' | 'F2' | 'F3', size: number, color: string) {
+  ops.push(`${color} rg`, `BT /${font} ${size} Tf ${x.toFixed(1)} ${y.toFixed(1)} Td (${pdfLiteral(value)}) Tj ET`)
 }
 
 function assemblePdf(pages: string[]) {
@@ -536,16 +655,18 @@ function assemblePdf(pages: string[]) {
   objects.push('<< /Type /Catalog /Pages 2 0 R >>')
   objects.push('')
   const fontRegular = objects.length + 1
-  objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>')
+  objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>')
   const fontBold = objects.length + 1
-  objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>')
+  objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>')
+  const fontOblique = objects.length + 1
+  objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding >>')
   pages.forEach((content) => {
     const stream = `<< /Length ${Buffer.byteLength(content)} >>\nstream\n${content}\nendstream`
     const contentId = objects.length + 1
     objects.push(stream)
     pageObjectAt.push(objects.length + 1)
     objects.push(
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents ${contentId} 0 R /Resources << /Font << /F1 ${fontRegular} 0 R /F2 ${fontBold} 0 R >> >> >>`,
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents ${contentId} 0 R /Resources << /Font << /F1 ${fontRegular} 0 R /F2 ${fontBold} 0 R /F3 ${fontOblique} 0 R >> >> >>`,
     )
   })
   const kids = pageObjectAt.map((id) => `${id} 0 R`).join(' ')
