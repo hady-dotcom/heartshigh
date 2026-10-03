@@ -190,7 +190,6 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .popup-edit .cols { display: flex; gap: 10px; align-items: flex-start; }
 @media (max-width: 1180px) { .tier-grid { grid-template-columns: 1fr; } }
 
-.badge.red { background: #f8e1e4; color: #8e2236; }
 .desk kbd { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border: 1px solid currentColor; border-radius: 4px; font: 600 11px/16px ui-monospace, monospace; text-align: center; opacity: 0.7; }
 .review-tabs { margin: 0 0 14px; }
 .review-flag { margin-bottom: 12px; }

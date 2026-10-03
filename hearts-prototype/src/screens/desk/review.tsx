@@ -104,7 +104,7 @@ export async function MasterReview(ctx: MasterCtx) {
         <section className="panel review-card" data-testid="review-card" data-tier={tier.id} data-status={status}>
           <header className="light">
             <h2>{str(lesson.sourceTitle) || str(lesson.title) || 'A talk'}</h2>
-            <span className={`badge ${status === 'checked' ? 'teal' : status === 'rejected' ? 'red' : 'grey'}`} data-testid="review-status">{status === 'checked' ? 'Approved' : status === 'rejected' ? 'Rejected' : 'Waiting for review'}</span>
+            <span className={`badge ${status === 'checked' ? 'teal' : status === 'rejected' ? 'rose' : 'grey'}`} data-testid="review-status">{status === 'checked' ? 'Approved' : status === 'rejected' ? 'Rejected' : 'Waiting for review'}</span>
           </header>
           <div className="body review-grid">
             <div>
@@ -177,7 +177,7 @@ export async function MasterReviewPopups(ctx: MasterCtx) {
         <section className="panel review-card" data-testid="review-card" data-point={point.id} data-status={status}>
           <header className="light">
             <h2>{str(lesson.sourceTitle) || str(lesson.title) || 'A talk'}</h2>
-            <span className={`badge ${status === 'published' ? 'teal' : status === 'rejected' ? 'red' : 'grey'}`} data-testid="review-status">{status === 'published' ? 'Live' : status === 'rejected' ? 'Rejected' : 'Waiting for review'}</span>
+            <span className={`badge ${status === 'published' ? 'teal' : status === 'rejected' ? 'rose' : 'grey'}`} data-testid="review-status">{status === 'published' ? 'Live' : status === 'rejected' ? 'Rejected' : 'Waiting for review'}</span>
           </header>
           <div className="body review-grid">
             <div>

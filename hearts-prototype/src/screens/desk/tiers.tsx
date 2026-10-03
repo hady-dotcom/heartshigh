@@ -61,7 +61,7 @@ export async function MasterTiers(ctx: MasterCtx) {
                     <td>{clock(Number(tier.horsStart))} to {clock(Number(tier.horsEnd))}</td>
                     <td>{clock(Number(tier.appetiserStart))} to {clock(Number(tier.appetiserEnd))}</td>
                     <td className="num">{own.length}{drafts ? <div className="hint">{drafts} in draft</div> : null}</td>
-                    <td>{tier.status === 'checked' ? <span className="badge teal">Checked</span> : tier.status === 'rejected' ? <span className="badge red">Rejected</span> : <span className="badge grey">Draft, needs a human check</span>}</td>
+                    <td>{tier.status === 'checked' ? <span className="badge teal">Checked</span> : tier.status === 'rejected' ? <span className="badge rose">Rejected</span> : <span className="badge grey">Draft, needs a human check</span>}</td>
                     <td><Link className="btn ghost small" href={`/master/tiers/${tier.id}`} data-testid="tier-open">Check</Link></td>
                   </tr>
                 )
