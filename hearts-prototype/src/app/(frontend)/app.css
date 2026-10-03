@@ -348,6 +348,15 @@
 .section-row header { display: flex; justify-content: space-between; font-weight: 700; font-size: 15px; margin-bottom: 8px; }
 .section-row header small { color: var(--muted); font-weight: 600; }
 .section-row .flowers a { display: inline-grid; text-decoration: none; }
+.door-row { display: flex; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); text-decoration: none; color: inherit; }
+.door-row.start { box-shadow: inset 0 0 0 2px var(--gold); border-radius: 14px; padding-left: 8px; padding-right: 8px; }
+.door-row .code { width: 36px; flex: none; font-weight: 800; font-size: 14px; }
+.door-row .body { flex: 1; min-width: 0; }
+.door-row b { display: block; font-size: 16px; }
+.door-row small { display: block; color: var(--muted); font-size: 13px; line-height: 1.35; margin-top: 2px; }
+.door-course { margin: 4px 0 16px; }
+.door-course h2 { font-family: var(--serif); font-size: 22px; font-weight: 600; margin: 8px 0 4px; }
+.door-course > p { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0 0 8px; }
 .empty-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #ddd2bd; display: inline-block; }
 .clause-card { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 18px; margin-bottom: 14px; font-family: 'Libre Caslon Text', Georgia, serif; }
 .clause-card h3 { font-family: 'Libre Caslon Text', Georgia, serif; font-weight: 400; font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--red-clause); margin: 0 0 12px; }
@@ -447,9 +456,9 @@
 
 /* Clause card number (Jibril card style), Ghunya seat groups, empty states */
 .clause-card .clause-num { font-family: 'Libre Caslon Text', Georgia, serif; font-size: 44px; line-height: 1; color: #2b2622; margin-bottom: 8px; }
-.seat-groups { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px 6px; margin: 18px 0 8px; }
-.sg { display: grid; justify-items: center; gap: 4px; text-decoration: none; color: rgba(255,255,255,0.6); font-size: 10px; font-weight: 600; }
-.sg .dots { display: flex; gap: 3px; }
+.seat-groups { display: flex; flex-direction: column; gap: 14px; margin: 18px 0 8px; }
+.sg { display: flex; gap: 12px; align-items: flex-start; text-decoration: none; color: rgba(255,255,255,0.78); font-size: 13px; font-weight: 600; }
+.sg .dots { display: flex; flex-wrap: wrap; gap: 3px; width: 92px; flex: none; }
 .sg i { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,0.18); display: block; }
 .sg i.lit { background: var(--gold); box-shadow: 0 0 8px rgba(220,166,67,0.7); }
 .empty-state { text-align: center; padding: 22px 12px; color: var(--ink-2); }

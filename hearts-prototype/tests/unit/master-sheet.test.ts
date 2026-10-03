@@ -99,6 +99,37 @@ test('the blank template has four tabs, a note and the header row', async () => 
   assert.equal(QUESTION_COLUMNS.includes('question_id'), true)
 })
 
+test('a clause number on a sheet resolves to the working door', () => {
+  const created = planSheet({
+    talks: [cells(3, { talk_key: 'zakat-talk', title: 'On zakat', course: 'The Names', speaker: 'Mikaeel Smith', jibril_clause: 16 })],
+    questions: [],
+    resources: [],
+    errors: [],
+  }, emptyCatalogue({ courses: [{ id: 1, title: 'The Names', origin: 'master', portal: null, speaker: 'Mikaeel Smith', inScope: true }] }))
+  assert.equal(created.errors.length, 0)
+  const cut = created.ops.find((op) => op.op === 'cut.create')
+  assert.ok(cut && cut.op === 'cut.create')
+  assert.equal(cut.data.bestClause, 16)
+  assert.equal(cut.data.clauseFragment, 'W6 · Zakat')
+  const moved = planSheet({
+    talks: [cells(3, { talk_key: 'yt-NIR88RRpat4', jibril_clause: 22 })],
+    questions: [],
+    resources: [],
+    errors: [],
+  }, fixture())
+  const update = moved.ops.find((op) => op.op === 'cut.update')
+  assert.ok(update && update.op === 'cut.update')
+  assert.equal(update.patch.bestClause, 22)
+  assert.equal(update.patch.clauseFragment, 'W10 · Believe in Allah')
+  const refused = planSheet({
+    talks: [cells(3, { talk_key: 'bad-talk', title: 'Outside', course: 'The Names', jibril_clause: 'W5' })],
+    questions: [],
+    resources: [],
+    errors: [],
+  }, emptyCatalogue({ courses: [{ id: 1, title: 'The Names', origin: 'master', portal: null, speaker: '', inScope: true }] }))
+  assert.ok(refused.errors.some((issue) => issue.column === 'jibril_clause' && issue.message.includes('1 to 41')))
+})
+
 test('dry-run counts creates, updates and skips', () => {
   const catalogue = fixture()
   const plan = planSheet({

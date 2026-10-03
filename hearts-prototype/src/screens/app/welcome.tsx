@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { AppFrame, Flash, Hidden } from '@/components/app/shell'
 import { Mascot } from '@/components/brand'
+import { doorForClause, doorLabel } from '@/lib/doors'
 import { optionLabels } from '@/lib/placing'
 import { courseCards, portalName } from '@/server/learner'
 import { type Ctx, embedUrl, rows, str } from '../common'
@@ -77,7 +78,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
     )
   }
 
-  const clause = user.startingClause ? (await rows(payload, 'clauses', { number: { equals: user.startingClause } }, { limit: 1 }))[0] : null
+  const door = doorForClause(Number(user.startingClause))
   const first = (await courseCards(payload, user))[0]
   return (
     <AppFrame testId="placing-result">
@@ -86,11 +87,12 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
         <Flash error={query.error} notice={query.notice} />
         <div style={{ textAlign: 'center', margin: '10px 0 6px' }}><Mascot width={96} /></div>
         <h1 style={{ fontFamily: 'var(--serif)', fontSize: 34, textAlign: 'center', margin: '6px 0 14px', fontWeight: 600 }}>A good place to start</h1>
-        {clause ? (
-          <article className="clause-card" data-testid="starting-clause">
-            <div className="clause-num">{str(clause.number)}</div>
-            <h3>{str(clause.fragment)}</h3>
-            {clause.teaching ? <p><span className="lbl">Teaching.</span> {str(clause.teaching)}</p> : null}
+        {door ? (
+          <article className="clause-card" data-testid="starting-clause" data-door={door.code}>
+            <div className="clause-num">{door.code}</div>
+            <h3>{door.name}</h3>
+            <p><span className="lbl">Teaching.</span> {door.teaching}</p>
+            <p className="muted" style={{ fontFamily: 'var(--sans)', fontSize: 13 }}>{doorLabel(door)}</p>
           </article>
         ) : null}
         {first ? (

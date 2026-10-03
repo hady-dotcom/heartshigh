@@ -5,6 +5,7 @@ import { Hidden } from '@/components/app/shell'
 import { CodeLimits, CodeStatus } from '@/components/desk/codes'
 import { PointPicker } from '@/components/desk/tools'
 import { Qr } from '@/components/qr'
+import { doorForClause } from '@/lib/doors'
 import { adoptedCourseIds, type PortalDoc, type SessionUser } from '@/server/context'
 import { type Ctx, type Row, clock, one, portalPeople, ref, rows, str } from '../common'
 import { AdminFrame } from './overview'
@@ -213,6 +214,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
               <div className="body">
                 {cuts.length ? cuts.map((cut) => {
                   const clause = Number(cut.bestClause || 0)
+                  const door = doorForClause(clause)
                   const clauseDoc = clauses.find((row) => Number(row.number) === clause)
                   const clauseSeats = clauseDoc ? seats.filter((seat) => ref(seat.clause) === clauseDoc.id) : []
                   return (
@@ -224,7 +226,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                         <p className="land"><b>Land</b>{str(cut.land)}</p>
                         <div className="meta">
                           {cut.theme ? <>Theme: {str(cut.theme)}. </> : null}
-                          {clause ? <>Suggested clause {clause}{cut.clauseFragment ? ` (${str(cut.clauseFragment)})` : ''}. </> : null}
+                          {clause ? <>Suggested clause {clause}{cut.clauseFragment ? ` (${str(cut.clauseFragment)})` : ''}{door ? `, door ${door.code} · ${door.name}` : ''}. </> : null}
                           {cut.whyHang ? <>{str(cut.whyHang)} </> : null}
                           Quote check: {str(cut.quoteConfidence, 'not run')}. Made by {cut.engine === 'llm' ? 'the language model' : 'the built-in extractor'}.
                         </div>
@@ -235,7 +237,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                           <label className="stack" style={{ fontSize: 12.5 }}>Clause
                             <select name="clause" defaultValue={clause || ''} data-testid="cut-clause">
                               <option value="">No clause</option>
-                              {clauses.map((row) => <option key={row.id} value={str(row.number)}>{str(row.number)}. {str(row.fragment)}</option>)}
+                              {clauses.map((row) => { const mapped = doorForClause(Number(row.number)); return <option key={row.id} value={str(row.number)}>{str(row.number)}. {str(row.fragment)}{mapped ? ` · ${mapped.code}` : ''}</option> })}
                             </select>
                           </label>
                           <label className="stack" style={{ fontSize: 12.5 }}>Seat
@@ -249,7 +251,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                             <button className="btn ghost small" name="status" value="rejected" data-testid="reject-cut" type="submit">Set aside</button>
                           </div>
                         </form>
-                      ) : <div className="hint">{clause ? `Clause ${clause}` : ''}</div>}
+                      ) : <div className="hint">{clause ? `Clause ${clause}${door ? ` · door ${door.code}` : ''}` : ''}</div>}
                     </article>
                   )
                 }) : <p className="empty">No cuts yet. Attach a transcript, then run the extractor.</p>}

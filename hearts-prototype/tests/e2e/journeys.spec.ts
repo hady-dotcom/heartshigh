@@ -192,11 +192,11 @@ test.describe.serial('HEARTS journeys', () => {
 
     await join(page, seedCode('elm-learner'), 'Placed by Prophet', `p1-${suffix}@hearts.test`, 'placing-one')
     await placing(page, BY_PROPHET)
-    await expect(page.getByTestId('starting-clause')).toContainText('3')
+    await expect(page.getByTestId('starting-clause')).toContainText('The sitting')
     await expect(page.getByTestId('first-course')).toContainText('How to Live Like the Prophet')
     await join(page, ` ${seedCode('elm-learner').toLowerCase()} `, 'Placed by Names', `p2-${suffix}@hearts.test`, 'placing-two')
     await placing(page, BY_NAMES)
-    await expect(page.getByTestId('starting-clause')).toContainText('22')
+    await expect(page.getByTestId('starting-clause')).toContainText('Believe in Allah')
     await expect(page.getByTestId('first-course')).toContainText('Ar-Rabb')
   })
 

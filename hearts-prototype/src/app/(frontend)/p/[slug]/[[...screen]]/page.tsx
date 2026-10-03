@@ -140,7 +140,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
     case 'garden':
       if (!a) return GardenScreen(ctx)
       if (a === 'general') return GardenGeneral(ctx)
-      if (a === 'jibril') return b ? GardenClause(ctx, Number(b)) : GardenJibril(ctx)
+      if (a === 'jibril') return b ? GardenClause(ctx, b) : GardenJibril(ctx)
       if (a === 'ghunya') return GardenGhunya(ctx)
       if (a === 'harvest') return GardenHarvest(ctx)
       if (a === 'workbook') return GardenWorkbook(ctx)

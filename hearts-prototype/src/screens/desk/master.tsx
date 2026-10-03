@@ -5,6 +5,7 @@ import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { CodeLimits, CodeStatus } from '@/components/desk/codes'
 import { ViewAsButton } from '@/components/desk/view-as-button'
+import { doorForClause } from '@/lib/doors'
 import { parseOption } from '@/lib/placing'
 import type { SessionUser } from '@/server/context'
 import { one, ref, rows, str } from '../common'
@@ -250,7 +251,11 @@ export async function MasterQuestions(ctx: MasterCtx) {
   const { payload } = ctx
   const [questions, portals] = await Promise.all([rows(payload, 'placing-questions', undefined, { sort: 'order', limit: 60 }), rows(payload, 'portals')])
   const clauses = await rows(payload, 'clauses', undefined, { sort: 'number', limit: 50 })
-  const fragment = (n: number | null) => (n ? `${n}. ${str(clauses.find((row) => Number(row.number) === n)?.fragment)}` : 'No clause')
+  const fragment = (n: number | null) => {
+    if (!n) return 'No clause'
+    const door = doorForClause(n)
+    return `${n}. ${str(clauses.find((row) => Number(row.number) === n)?.fragment)}${door ? ` · ${door.code}` : ''}`
+  }
   return (
     <MasterFrame ctx={ctx} active="questions" title="Placing questions" intro="Asked once when someone joins, so their first talk is a gentle place to start. Each answer points to a clause of Hadith Jibril; the clause with most answers chooses the first course." testId="master-questions">
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.7fr) minmax(320px, 1fr)', alignItems: 'start' }}>

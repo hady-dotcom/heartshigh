@@ -1,6 +1,7 @@
 // The HEARTS master sheet: three tabs that load talks, pop-up questions and resources in bulk.
 // Pure module. The desk and the tests share it, and nothing here touches the database.
 import ExcelJS from 'exceljs'
+import { doorForClause, parseImportedClause } from './doors'
 import { youtubeIdFromUrl } from './extractor'
 import { DRAFT_NOTE, horsCapOf, horsVerdict, normaliseSpans, saidInTalk, tierProblem, timingProblems, type AppetiserSpan } from './tiers'
 import { authorTextProblems, markupProblems } from './opening-data'
@@ -616,9 +617,12 @@ function parseOrder(raw: string) {
 }
 
 function parseClause(raw: string) {
-  if (!/^\d+$/.test(raw.trim())) return null
-  const number = Number(raw)
-  return number >= 1 && number <= 41 ? number : null
+  return parseImportedClause(raw)?.clause ?? null
+}
+
+function doorLabelFor(clause: number) {
+  const door = doorForClause(clause)
+  return door ? `${door.code} · ${door.name}` : ''
 }
 
 function timeCell(row: InputRow, column: string): { ok: true; seconds: number } | { ok: false; message: string } | null {
@@ -1016,12 +1020,15 @@ function placeCut(working: Working, lesson: LessonRow | null, temp: { temp: stri
     const lessonRef: Ref = temp || { id: lesson!.id }
     working.ops.push({
       op: 'cut.create', lesson: lessonRef, course,
-      data: { status: 'suggested', placeholder: true, presentation: 'video', start: 0, end: 20, timestamp: '0:00', hook: title, turn: title, land: title, kind: 'hors', engine: 'master sheet', ...(clause ? { bestClause: clause } : {}), ...(seatId ? { seat: seatId } : {}) },
+      data: { status: 'suggested', placeholder: true, presentation: 'video', start: 0, end: 20, timestamp: '0:00', hook: title, turn: title, land: title, kind: 'hors', engine: 'master sheet', ...(clause ? { bestClause: clause, clauseFragment: doorLabelFor(clause) } : {}), ...(seatId ? { seat: seatId } : {}) },
     })
     return
   }
   const patch: Record<string, unknown> = {}
-  if (clause && clause !== cut.bestClause) patch.bestClause = clause
+  if (clause && clause !== cut.bestClause) {
+    patch.bestClause = clause
+    patch.clauseFragment = doorLabelFor(clause)
+  }
   if (seatId && seatId !== cut.seatId) patch.seat = seatId
   if (Object.keys(patch).length) working.ops.push({ op: 'cut.update', id: cut.id, patch })
 }

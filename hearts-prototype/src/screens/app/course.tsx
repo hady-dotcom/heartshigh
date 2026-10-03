@@ -5,12 +5,13 @@ import { Avatar, FollowButton } from '@/components/app/feed'
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
 import { PlayIcon } from '@/components/icons'
 import { clockEnabled, now } from '@/lib/clock'
+import { doorForClause, doorLabel, groupByDoor } from '@/lib/doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { visibleCourseIds } from '@/server/context'
 import { courseCards, portraitFor, posterFor, slugify } from '@/server/learner'
 import { learnerClips } from '@/server/opening'
 import { appetiserStop } from '@/lib/tiers'
-import { type Ctx, clock, one, ref, rows, str, unreadCount } from '../common'
+import { type Ctx, type Row, clock, one, ref, rows, str, unreadCount } from '../common'
 import { masterFlags } from './journey'
 import { mixSwarm } from '@/lib/circle'
 import { circleForPoints, circleSettings } from '@/server/circle'
@@ -70,6 +71,15 @@ export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx,
       <TabBar base={base} active="home" unread={unread} />
     </AppFrame>
   )
+}
+
+function courseDoors(lessons: Row[], cuts: Row[]) {
+  return groupByDoor(lessons, (lesson) => {
+    const own = cuts.filter((cut) => ref(cut.lesson) === lesson.id && Number(cut.bestClause))
+    const approved = own.filter((cut) => cut.status === 'approved')
+    const pool = (approved.length ? approved : own).slice().sort((a, b) => Number(a.start) - Number(b.start))
+    return doorForClause(Number(pool[0]?.bestClause))
+  })
 }
 
 function canSeePoint(point: Record<string, unknown>, userId: number) {
@@ -169,7 +179,11 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
     }
   }
 
-  const completions = await rows(payload, 'completions', { and: [{ user: { equals: user.id } }, { lesson: { in: lessonIds } }] })
+  const [completions, cuts, tiers] = await Promise.all([
+    rows(payload, 'completions', { and: [{ user: { equals: user.id } }, { lesson: { in: lessonIds } }] }),
+    rows(payload, 'cuts', { lesson: { in: lessonIds } }, { limit: 200 }),
+    rows(payload, 'talk-tiers', { lesson: { in: lessonIds } }),
+  ])
   const doneLessons = new Set(completions.map((row) => ref(row.lesson)))
   const answeredPoints = new Set(mine.map((row) => ref(row.point)))
   const done = doneLessons.size + allPoints.filter((point) => answeredPoints.has(point.id)).length
@@ -218,11 +232,34 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
           </section>
         ) : null}
         <p className="eyebrow">Parts of this course</p>
-        {lessons.map((row, index) => (
-          <Link key={row.id} className="list-link" href={`${base}/course/${courseId}?part=${row.id}`} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
-            <span className="grow">Part {index + 1}. {str(row.title)}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small></span>
-            {row.id === lessonId ? <span className="badge" style={{ color: 'var(--purple)', fontWeight: 700, fontSize: 13 }}>Playing</span> : '›'}
-          </Link>
+        {courseDoors(lessons, cuts).map((group) => (
+          <section key={group.door?.code || 'open'} className="door-course" data-testid="course-door" data-door={group.door?.code || ''}>
+            <h2>{group.door ? doorLabel(group.door) : 'This course'}</h2>
+            {group.door ? <p>{group.door.teaching}</p> : null}
+            {group.items.map((row) => {
+              const index = lessons.findIndex((lesson) => lesson.id === row.id)
+              const tier = tiers.find((item) => ref(item.lesson) === row.id && Number(item.appetiserEnd) > Number(item.appetiserStart))
+              const questions = allPoints.filter((point) => ref(point.lesson) === row.id)
+              return (
+                <div key={row.id}>
+                  <Link className="list-link" href={`${base}/course/${courseId}?part=${row.id}`} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
+                    <span className="grow">Part {index + 1}. {str(row.title)}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small></span>
+                    {row.id === lessonId ? <span className="badge" style={{ color: 'var(--purple)', fontWeight: 700, fontSize: 13 }}>Playing</span> : '›'}
+                  </Link>
+                  {tier ? (
+                    <Link className="list-link" href={`${base}/course/${courseId}?part=${row.id}&t=${Math.floor(Number(tier.appetiserStart || 0))}`} data-testid="course-appetiser">
+                      <span className="grow">Appetiser<small>From {clock(Number(tier.appetiserStart || 0))}</small></span>›
+                    </Link>
+                  ) : null}
+                  {questions.map((point) => (
+                    <Link key={point.id} className="list-link" href={`${base}/course/${courseId}?part=${row.id}&t=${Math.floor(Number(point.second || 0))}`} data-testid="course-question">
+                      <span className="grow">{str(point.prompt)}<small>Question</small></span>›
+                    </Link>
+                  ))}
+                </div>
+              )
+            })}
+          </section>
         ))}
         {clockEnabled() && user.role === 'master' ? (
           <details className="card" style={{ marginTop: 16 }}>
