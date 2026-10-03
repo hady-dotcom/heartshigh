@@ -1,6 +1,6 @@
 import { APIError, type Access, type CollectionConfig, type GlobalConfig, type Where } from 'payload'
 import { idOf, portalIdOf } from './lib/ids'
-import { killListHits } from './lib/opening-data'
+import { authorTextProblems, killListHits } from './lib/opening-data'
 import { SCALE_KEYS } from './lib/heart'
 import { hasMarkup, helpContactProblems } from './lib/text-safety'
 
@@ -365,6 +365,15 @@ export const MasterFlags: GlobalConfig = {
   slug: 'master-flags',
   label: 'Master flags',
   access: { read: master, update: master },
+  hooks: {
+    beforeChange: [
+      ({ data }) => {
+        const problems = typeof data?.circleLabel === 'string' ? authorTextProblems([['The circle label', data.circleLabel]]) : []
+        if (problems.length) throw new APIError(problems[0], 400, null, true)
+        return data
+      },
+    ],
+  },
   fields: [
     {
       name: 'popupOverPlayer',
@@ -383,6 +392,20 @@ export const MasterFlags: GlobalConfig = {
       type: 'checkbox',
       defaultValue: false,
       admin: { description: 'Show unchecked talks to learners. On, draft tiers play in the feed. Off (the default for production), only talks a person has approved on the review desk play.' },
+    },
+    {
+      name: 'circleLabel',
+      type: 'text',
+      defaultValue: 'From the HEARTS circle',
+      admin: { description: 'The light label under each HEARTS circle answer in the swarm.' },
+    },
+    {
+      name: 'circleThreshold',
+      type: 'number',
+      defaultValue: 8,
+      min: 1,
+      max: 100,
+      admin: { description: 'Circle answers show less often as real shared answers arrive, and step back once a question has this many.' },
     },
   ],
 }

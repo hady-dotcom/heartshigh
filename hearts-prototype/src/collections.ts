@@ -7,6 +7,7 @@ import { authorTextProblems, killListHits, markupProblems } from './lib/opening-
 import { saidInTalk, tierProblem, timingProblems } from './lib/tiers'
 import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
+import { circleProblems } from './lib/circle'
 
 // The app's own screens and actions use the local API with explicit portal checks.
 // The REST and GraphQL endpoints that Payload mounts are for the master desk only.
@@ -905,6 +906,46 @@ export const Rituals: CollectionConfig = {
   ],
 }
 
+/**
+ * HEARTS circle answers: written by staff or drafted by AI, shown in a question's swarm with a light label, and never
+ * counted as answers. With no portal they show in every portal that has the question; otherwise in that portal only.
+ */
+export const CircleAnswers: CollectionConfig = {
+  slug: 'circle-answers',
+  labels: { singular: 'Circle answer', plural: 'Circle answers' },
+  admin: { useAsTitle: 'name', description: 'Shown in the swarm with the circle label. Never counted in analytics, trends, profiles or progress.' },
+  access: masterOnly,
+  fields: [
+    { name: 'point', type: 'relationship', relationTo: 'engagement-points', required: true, index: true },
+    { name: 'lesson', type: 'relationship', relationTo: 'lessons', index: true },
+    { name: 'portal', type: 'relationship', relationTo: 'portals', admin: { description: 'Empty: every portal with this question. Set: that portal only.' } },
+    { name: 'name', type: 'text', required: true },
+    { name: 'body', type: 'textarea', required: true },
+    { name: 'tone', type: 'text' },
+    { name: 'length', type: 'text' },
+    {
+      name: 'origin',
+      type: 'select',
+      defaultValue: 'staff',
+      options: [
+        { label: 'Drafted by AI', value: 'ai' },
+        { label: 'Written by staff', value: 'staff' },
+      ],
+    },
+    { name: 'enabled', type: 'checkbox', defaultValue: true, index: true },
+    { name: 'author', type: 'relationship', relationTo: 'users' },
+  ],
+  hooks: {
+    beforeChange: [
+      ({ data, originalDoc }) => {
+        const merged = { ...(originalDoc || {}), ...data } as Record<string, unknown>
+        refuse(circleProblems(String(merged.name || ''), String(merged.body || '')))
+        return data
+      },
+    ],
+  },
+}
+
 export const collections = [
   Portals,
   Users,
@@ -941,5 +982,6 @@ export const collections = [
   LessonVisits,
   SeatVisits,
   Rituals,
+  CircleAnswers,
   ...openingCollections,
 ]
