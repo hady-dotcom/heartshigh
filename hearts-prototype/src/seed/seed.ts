@@ -1,13 +1,17 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { createClient } from '@libsql/client'
 import { getPayload } from 'payload'
 import config from '../payload.config'
+import { randomCode } from '../lib/access-codes'
 import { dualExtract } from '../lib/extractor'
 import { parseJibrilMap } from '../lib/seats'
+import { alignToCaptions } from '../lib/tiers'
 import { parseTranscript } from '../lib/transcript'
 import type { User } from '../payload-types'
-import { seedOpening, seedPeople } from './opening'
+import { FILMS } from './films'
+import { seedOpening, seedPeople, timingCheck } from './opening'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
@@ -84,7 +88,24 @@ async function ensureUser(payload: Awaited<ReturnType<typeof getPayload>>, data:
   return payload.create({ collection: 'users', overrideAccess: true, data: data as User & { password: string } })
 }
 
+/**
+ * Drops every table in place before Payload starts, so the schema is pushed fresh and a running dev server, which
+ * holds the same file open, sees the new data rather than a deleted file.
+ */
+async function wipe() {
+  const url = process.env.DATABASE_URL || `file:${path.join(root, 'data/hearts.db')}`
+  const client = createClient({ url })
+  const objects = (await client.execute("SELECT type, name FROM sqlite_master WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%'")).rows as unknown as { type: string; name: string }[]
+  await client.execute('PRAGMA foreign_keys = OFF')
+  for (const row of objects) await client.execute(`DROP ${row.type === 'view' ? 'VIEW' : 'TABLE'} IF EXISTS "${row.name.replace(/"/g, '""')}"`)
+  await client.execute('PRAGMA foreign_keys = ON')
+  client.close()
+  console.log(`Wiped the database (${objects.length} tables).`)
+}
+
 async function main() {
+  mkdirSync(path.join(root, 'data'), { recursive: true })
+  if (process.argv.includes('--reset')) await wipe()
   const payload = await getPayload({ config })
   const clauseIds = new Map<number, number>()
   const map = parseJibrilMap(readFileSync(path.join(root, 'content/jibril-map.txt'), 'utf8'))
@@ -172,55 +193,19 @@ async function main() {
     portalIds.set(portal.slug, doc.id)
   }
 
-  const films = [
-    {
-      title: 'How to Live Like the Prophet, Session 6',
-      speaker: 'Shaykh Yasir Fahmy',
-      file: 'fahmy-session6.md',
-      youtubeUrl: '',
-      youtubeId: '',
-      importToken: 'FAHMY-S6',
-      summary: 'Shaykh Yasir Fahmy on sending blessings on the Prophet, and on the ease he was sent with.',
-      points: [
-        { second: 300, kind: 'reflection', prompt: 'Which one manner of the Prophet would you like to carry with you this week?' },
-      ],
-    },
-    {
-      title: 'The Names Class 19: Ar-Rabb',
-      speaker: 'Shaykh Mikaeel Smith',
-      file: 'mikaeel-ar-rabb.md',
-      youtubeUrl: 'https://www.youtube.com/watch?v=ECaTWkof57E',
-      youtubeId: 'ECaTWkof57E',
-      importToken: 'AR-RABB',
-      summary: 'Shaykh Mikaeel Smith on Ar-Rabb, the Lord who owns, nurtures and raises you from one stage to the next.',
-      points: [
-        { second: 120, kind: 'reflection', prompt: 'What is one thing you have that you could see as Allah\'s rather than yours?' },
-      ],
-    },
-    {
-      title: 'The Names Class 20: Al-Nur',
-      speaker: 'Shaykh Mikaeel Smith',
-      file: 'mikaeel-al-nur.md',
-      youtubeUrl: 'https://www.youtube.com/watch?v=MK5q_zMiX1g',
-      youtubeId: 'MK5q_zMiX1g',
-      importToken: 'AL-NUR',
-      summary: 'Shaykh Mikaeel Smith on Al-Nur, the light that enters the heart and changes how you see.',
-      points: [
-        { second: 45, kind: 'reflection', prompt: 'When did you last feel the change that comes in Ramadan? What did it feel like?' },
-        { second: 150, kind: 'multiple_choice', prompt: 'What does the Shaykh say is the first sign that light is entering the heart?', options: ['You start to lean towards Allah', 'You feel no more sadness', 'You stop making mistakes'] },
-        { second: 260, kind: 'task', prompt: 'Call on Allah by the name Al-Nur once a day this week. Note one moment it changed how you saw something.', future: true },
-      ],
-    },
-  ]
-
   const courseIds: number[] = []
-  for (const film of films) {
+  for (const film of FILMS) {
     const found = await payload.find({ collection: 'courses', overrideAccess: true, limit: 1, where: { importToken: { equals: film.importToken } } })
     if (found.docs[0]) {
       courseIds.push(found.docs[0].id)
       continue
     }
-    const transcript = readFileSync(path.join(root, 'content/transcripts', film.file), 'utf8')
+    let transcript = readFileSync(path.join(root, 'content/transcripts', film.file), 'utf8')
+    const captionsFile = film.youtubeId ? path.join(root, 'content/transcripts/starters', `${film.youtubeId}.vtt`) : ''
+    if (captionsFile && existsSync(captionsFile) && /timestamps:?\**:?\s*estimated/i.test(transcript.slice(0, 800))) {
+      const aligned = alignToCaptions(transcript, readFileSync(captionsFile, 'utf8'))
+      transcript = aligned.text.replace(/(\*\*Timestamps:\*\*)\s*estimated/i, `$1 aligned to the YouTube captions (${aligned.matched} of ${aligned.total} lines matched by their opening words; the rest placed between them)`)
+    }
     const course = await payload.create({
       collection: 'courses',
       overrideAccess: true,
@@ -248,7 +233,7 @@ async function main() {
         speaker: film.speaker,
         youtubeUrl: film.youtubeUrl || undefined,
         youtubeId: film.youtubeId || undefined,
-        durationSeconds: Math.round(Math.max(...parseTranscript(transcript).cues.map((cue) => cue.end))),
+        durationSeconds: film.durationSeconds ?? Math.round(Math.max(...parseTranscript(transcript).cues.map((cue) => cue.end))),
         transcript,
         transcriptSource: 'upload',
         transcriptNote: 'Seeded from the transcript file. YouTube captions are often blocked from cloud machines, so the upload path is what the extractor uses.',
@@ -359,19 +344,22 @@ async function main() {
     }
   }
 
+  // Codes are random on every fresh seed, so nobody can guess them from the source. They are found again by label.
   const codeSpecs = [
-    { code: 'ELM-TEACH', role: 'teacher', portal: elm, packs: [pack.id] },
-    { code: 'ELM-ADMIN', role: 'admin', portal: elm, packs: [pack.id] },
-    { code: 'ELM-LEARN', role: 'learner', portal: elm, packs: [pack.id], link: 'ELM-TEACH' },
-    { code: 'ELM-PARENT', role: 'parent', portal: elm, packs: [parentPack.id], link: 'ELM-TEACH' },
-    { code: 'LEEDS-TEACH', role: 'teacher', portal: leeds, packs: [pack.id] },
-    { code: 'LEEDS-LEARN', role: 'learner', portal: leeds, packs: [pack.id], link: 'LEEDS-TEACH' },
+    { label: 'elm-teacher', prefix: 'ELM', role: 'teacher', portal: elm, packs: [pack.id] },
+    { label: 'elm-admin', prefix: 'ELM', role: 'admin', portal: elm, packs: [pack.id], maxUses: 1, uses: 1 },
+    { label: 'elm-learner', prefix: 'ELM', role: 'learner', portal: elm, packs: [pack.id], link: 'elm-teacher' },
+    { label: 'elm-parent', prefix: 'ELM', role: 'parent', portal: elm, packs: [parentPack.id], link: 'elm-teacher' },
+    { label: 'leeds-teacher', prefix: 'LEEDS', role: 'teacher', portal: leeds, packs: [pack.id] },
+    { label: 'leeds-learner', prefix: 'LEEDS', role: 'learner', portal: leeds, packs: [pack.id], link: 'leeds-teacher' },
   ]
   const codeIds = new Map<string, number>()
+  const codeValues: Record<string, string> = {}
   for (const spec of codeSpecs) {
-    const found = await payload.find({ collection: 'access-codes', overrideAccess: true, limit: 1, where: { code: { equals: spec.code } } })
+    const found = await payload.find({ collection: 'access-codes', overrideAccess: true, limit: 1, where: { and: [{ label: { equals: spec.label } }, { portal: { equals: spec.portal } }] } })
     if (found.docs[0]) {
-      codeIds.set(spec.code, found.docs[0].id)
+      codeIds.set(spec.label, found.docs[0].id)
+      codeValues[spec.label] = found.docs[0].code
       continue
     }
     const linked = spec.link ? codeIds.get(spec.link) : undefined
@@ -379,16 +367,21 @@ async function main() {
       collection: 'access-codes',
       overrideAccess: true,
       data: {
-        code: spec.code,
+        code: randomCode(spec.prefix),
+        label: spec.label,
         role: spec.role as 'learner',
         portal: spec.portal,
         packs: spec.packs,
         linkedTeacherCode: linked,
         parentMentorCode: spec.role === 'parent' ? linked : undefined,
+        maxUses: spec.maxUses ?? null,
+        uses: spec.uses ?? 0,
       },
     })
-    codeIds.set(spec.code, created.id)
+    codeIds.set(spec.label, created.id)
+    codeValues[spec.label] = created.code
   }
+  writeFileSync(path.join(root, 'data/seed-codes.json'), `${JSON.stringify(codeValues, null, 2)}\n`)
 
   const learnerList = courseIds
   await ensureUser(payload, {
@@ -396,7 +389,7 @@ async function main() {
     password: 'portal-admin',
     name: 'Amina Yusuf',
     role: 'portal-admin',
-    accessCode: codeIds.get('ELM-ADMIN'),
+    accessCode: codeIds.get('elm-admin'),
     tenants: [{ tenant: elm }],
     onboarded: true,
     seenWelcome: true,
@@ -407,7 +400,7 @@ async function main() {
     password: 'portal-teacher',
     name: 'Idris Rahman',
     role: 'teacher',
-    accessCode: codeIds.get('ELM-TEACH'),
+    accessCode: codeIds.get('elm-teacher'),
     tenants: [{ tenant: elm }],
     onboarded: true,
     seenWelcome: true,
@@ -419,7 +412,7 @@ async function main() {
     name: 'Maryam Begum',
     role: 'learner',
     audience: 'learner' as const,
-    accessCode: codeIds.get('ELM-LEARN'),
+    accessCode: codeIds.get('elm-learner'),
     tenants: [{ tenant: elm }],
     onboarded: true,
     seenWelcome: true,
@@ -432,7 +425,7 @@ async function main() {
     password: 'portal-learner',
     name: 'Yusuf Khan',
     role: 'learner',
-    accessCode: codeIds.get('LEEDS-LEARN'),
+    accessCode: codeIds.get('leeds-learner'),
     tenants: [{ tenant: leeds }],
     onboarded: true,
     seenWelcome: true,
@@ -466,7 +459,14 @@ async function main() {
   const opening = await seedOpening(payload, { clauseIds, portalIds, now: new Date() })
   await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...courseIds, ...opening.starterCourseIds] })
 
+  const problems = await timingCheck(payload)
+  if (problems.length) {
+    console.error(`Timing check failed:\n${problems.join('\n')}`)
+    process.exit(1)
+  }
   console.log('Seeded HEARTS. Master: master@hearts.test / hearts-master')
+  console.log('Access codes (also on the master desk, and in data/seed-codes.json):')
+  for (const [label, value] of Object.entries(codeValues)) console.log(`  ${label.padEnd(14)} ${value}`)
   process.exit(0)
 }
 

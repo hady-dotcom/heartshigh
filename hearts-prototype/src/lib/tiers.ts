@@ -236,6 +236,50 @@ export function draftTiers(lines: Cue[], durationHint?: number | null): TierDraf
   }
 }
 
+const matchWord = (word: string) => word.toLowerCase().replace(/[’‘]/g, "'").replace(/[^a-z0-9']/g, '')
+
+/**
+ * A transcript whose `**[m:ss]**` marks were estimated gets real times from the talk's captions: each line is found
+ * in the caption words by its opening words, and lines that cannot be found are placed between their neighbours.
+ */
+export function alignToCaptions(marked: string, captions: string) {
+  const words = wordTimeline(captions).map((word) => ({ at: word.at, key: matchWord(word.text) })).filter((word) => word.key)
+  const pattern = /\*\*\[(\d{1,2}:\d{2}(?::\d{2})?)\]\*\*/g
+  const marks = [...marked.matchAll(pattern)]
+  if (!marks.length || !words.length) return { text: marked, matched: 0, total: marks.length }
+  const found: (number | null)[] = []
+  let cursor = 0
+  for (const [index, mark] of marks.entries()) {
+    const from = mark.index! + mark[0].length
+    const to = marks[index + 1]?.index ?? marked.length
+    const opening = marked.slice(from, to).split(/\s+/).map(matchWord).filter(Boolean).slice(0, 6)
+    let hit: number | null = null
+    if (opening.length >= 3) {
+      const limit = Math.min(words.length - opening.length, cursor + 1500)
+      for (let at = cursor; at <= limit; at++) {
+        let same = 0
+        for (let k = 0; k < opening.length; k++) if (words[at + k]?.key === opening[k]) same += 1
+        if (same >= Math.max(3, opening.length - 1)) {
+          hit = at
+          break
+        }
+      }
+    }
+    found.push(hit === null ? null : words[hit].at)
+    if (hit !== null) cursor = hit + 1
+  }
+  const times = found.map((value, index) => {
+    if (value !== null) return value
+    const before = found.slice(0, index).reverse().find((item) => item !== null) ?? 0
+    const after = found.slice(index + 1).find((item) => item !== null) ?? words[words.length - 1].at
+    return before + (after - before) / 2
+  })
+  for (let index = 1; index < times.length; index++) times[index] = Math.max(times[index], times[index - 1])
+  let position = 0
+  const text = marked.replace(pattern, () => `**[${formatTimestamp(Math.floor(times[position++]))}]**`)
+  return { text, matched: found.filter((value) => value !== null).length, total: marks.length }
+}
+
 /** The shape rules for a tier record, in plain English, or null when it holds. */
 export function tierProblem(tier: Record<string, unknown>) {
   const num = (key: string) => Number(tier[key])

@@ -206,8 +206,8 @@ export const OpeningConfigs: CollectionConfig = {
   access: { read: ownPortal, create: master, update: ownPortal, delete: master },
   hooks: {
     beforeChange: [
-      async ({ data, originalDoc, req }) => {
-        const problems = await openingConfigProblems(req.payload as never, data as ConfigData, (originalDoc as ConfigData) || null)
+      async ({ data, originalDoc, operation, req }) => {
+        const problems = await openingConfigProblems(req.payload as never, data as ConfigData, operation === 'update' ? (originalDoc as ConfigData) || null : null)
         if (problems.length) throw new APIError(problems.join(' '), 400, null, true)
         return data
       },

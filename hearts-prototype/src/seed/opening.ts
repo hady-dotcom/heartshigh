@@ -1,9 +1,21 @@
 // Seeds the opening: Leon's scales, the Jibril lanes, the six scenes, the starter map (spec 2.9), the opening
 // setups, lane tags, the people the view-as tests need, and two weeks of ordinary use for the admin charts.
+import { existsSync, readFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import type { Payload } from 'payload'
 import { idOf } from '../lib/ids'
 import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE, LANES, SCALES, SCENES } from '../lib/opening-data'
+import { DRAFT_NOTE, draftTiers, timingProblems, type TimingRow } from '../lib/tiers'
+import { formatTimestamp, parseTranscript } from '../lib/transcript'
 import { STARTERS } from './starters-data'
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+
+function starterTranscript(youtubeId: string) {
+  const file = path.join(root, 'content/transcripts/starters', `${youtubeId}.vtt`)
+  return existsSync(file) ? readFileSync(file, 'utf8') : null
+}
 
 type Doc = Record<string, unknown> & { id: number }
 
@@ -102,11 +114,18 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
           collection: 'lessons',
           id: lesson.id,
           overrideAccess: true,
-          data: { youtubeId: (lesson.youtubeId as string) || row.youtubeId, youtubeUrl: (lesson.youtubeUrl as string) || `https://www.youtube.com/watch?v=${row.youtubeId}`, sourceTitle: row.title, starterLane: row.lane } as never,
+          data: { youtubeId: (lesson.youtubeId as string) || row.youtubeId, youtubeUrl: (lesson.youtubeUrl as string) || `https://www.youtube.com/watch?v=${row.youtubeId}`, sourceTitle: row.title, starterLane: row.lane, ...(row.lengthSec ? { durationSeconds: row.lengthSec } : {}) } as never,
         })) as unknown as Doc
       }
     }
     if (!lesson) lesson = await one(payload, 'lessons', { youtubeId: { equals: row.youtubeId } })
+    const captions = starterTranscript(row.youtubeId)
+    const captionFields = captions
+      ? { transcript: captions, transcriptSource: 'youtube', transcriptNote: `English captions from YouTube, repeats removed (content/transcripts/starters/${row.youtubeId}.vtt).` }
+      : { transcriptSource: 'pending', transcriptNote: 'No captions are shipped for this talk yet. The talk plays; the transcript is pending.' }
+    if (lesson && !row.existingTitle) {
+      lesson = (await payload.update({ collection: 'lessons', id: lesson.id, overrideAccess: true, data: { ...captionFields, durationSeconds: row.lengthSec ?? undefined } as never })) as unknown as Doc
+    }
     if (!lesson) {
       const courseTitle = row.series || row.title
       const token = `STARTER-${slugOf(courseTitle)}`
@@ -134,8 +153,7 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
           youtubeUrl: `https://www.youtube.com/watch?v=${row.youtubeId}`,
           youtubeId: row.youtubeId,
           durationSeconds: row.lengthSec ?? undefined,
-          transcriptSource: 'pending',
-          transcriptNote: 'Captions could not be fetched from this machine (YouTube asked it to sign in). The talk plays; the transcript is pending.',
+          ...captionFields,
           starterLane: row.lane,
         } as never,
       })) as unknown as Doc
@@ -156,11 +174,21 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
           data: { lesson: lesson.id, course: courseId, status: 'suggested', placeholder: true, presentation: 'video', start: 0, end: 20, timestamp: '0:00', hook: row.title, turn: row.title, land: row.title, theme: row.lane, kind: 'hors', engine: 'starter map' } as never,
         })) as unknown as Doc
       }
+      const tier = await seedTier(payload, lesson, row.youtubeId, row.lengthSec)
+      if (tier) {
+        cut = (await payload.update({
+          collection: 'cuts',
+          id: cut.id,
+          overrideAccess: true,
+          data: { start: tier.appetiser.start, end: tier.appetiser.end, timestamp: formatTimestamp(tier.appetiser.start), hook: tier.hook, turn: tier.turn, land: tier.land, engine: 'line-mode draft' } as never,
+        })) as unknown as Doc
+      }
       const tagged = await one(payload, 'tags', { and: [{ 'item.value': { equals: cut.id } }, { lane: { equals: laneIds.get(row.lane) } }] })
       if (!tagged && row.lane !== DEFAULT_LANE) {
         await payload.create({ collection: 'tags', overrideAccess: true, data: { item: { relationTo: 'cuts', value: cut.id }, lane: laneIds.get(row.lane), state: 'confirmed', weight: 1, note: 'Starter map' } as never })
       }
     }
+    if (row.existingTitle) await seedTier(payload, lesson, row.youtubeId, row.lengthSec)
     if (row.lane === DEFAULT_LANE && row.role === 'first' && cut) d0CutId = cut.id
     const list = laneStarters.get(row.lane) || []
     list.push({ lesson: lesson.id, role: row.role, order: list.length + 1 })
@@ -235,8 +263,8 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
     const already = await one(payload, 'adoptions', { and: [{ portal: { equals: portalId } }, { pack: { equals: starterPack.id } }] })
     if (!already) await payload.create({ collection: 'adoptions', overrideAccess: true, data: { kind: 'pack', portal: portalId, pack: starterPack.id } as never })
   }
-  for (const code of ['ELM-LEARN', 'LEEDS-LEARN', 'ELM-TEACH', 'LEEDS-TEACH', 'ELM-ADMIN']) {
-    const doc = await one(payload, 'access-codes', { code: { equals: code } })
+  for (const label of ['elm-learner', 'leeds-learner', 'elm-teacher', 'leeds-teacher', 'elm-admin']) {
+    const doc = await one(payload, 'access-codes', { label: { equals: label } })
     if (!doc) continue
     const packs = ((doc.packs as unknown[]) || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
     if (!packs.includes(starterPack.id)) await payload.update({ collection: 'access-codes', id: doc.id, overrideAccess: true, data: { packs: [...packs, starterPack.id] } as never })
@@ -252,13 +280,79 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
   return { laneIds, sceneIds, d0CutId, starterCourseIds, starterPackId: starterPack.id }
 }
 
+/**
+ * The talk's tier record, drafted from its captions in line mode, and 2 or 3 draft pop-ups for the main. A record a
+ * person has checked is left alone.
+ */
+async function seedTier(payload: Payload, lesson: Doc, youtubeId: string, lengthSec: number | null) {
+  const raw = starterTranscript(youtubeId) || (typeof lesson.transcript === 'string' ? lesson.transcript : '')
+  if (!raw) return null
+  const draft = draftTiers(parseTranscript(raw).cues, lengthSec ?? (Number(lesson.durationSeconds) || null))
+  if (!draft) return null
+  const existing = await one(payload, 'talk-tiers', { lesson: { equals: lesson.id } })
+  if (existing?.status === 'checked') {
+    return { hors: { start: Number(existing.horsStart), end: Number(existing.horsEnd), quote: String(existing.horsQuote || '') }, appetiser: { start: Number(existing.appetiserStart), end: Number(existing.appetiserEnd) }, hook: String(existing.hook || ''), turn: String(existing.turn || ''), land: String(existing.land || ''), popups: [], duration: draft.duration, note: String(existing.note || '') }
+  }
+  const data = {
+    lesson: lesson.id,
+    horsStart: draft.hors.start,
+    horsEnd: draft.hors.end,
+    horsQuote: draft.hors.quote,
+    appetiserStart: draft.appetiser.start,
+    appetiserEnd: draft.appetiser.end,
+    hook: draft.hook,
+    turn: draft.turn,
+    land: draft.land,
+    status: 'draft',
+    offerResume: true,
+    source: starterTranscript(youtubeId) ? `content/transcripts/starters/${youtubeId}.vtt` : 'the lesson transcript',
+    note: draft.note,
+  }
+  if (existing) await payload.update({ collection: 'talk-tiers', id: existing.id, overrideAccess: true, data: data as never })
+  else await payload.create({ collection: 'talk-tiers', overrideAccess: true, data: data as never })
+  const drafts = await payload.count({ collection: 'engagement-points', overrideAccess: true, where: { and: [{ lesson: { equals: lesson.id } }, { status: { equals: 'draft' } }] } })
+  if (!drafts.totalDocs) {
+    for (const popup of draft.popups) {
+      await payload.create({
+        collection: 'engagement-points',
+        overrideAccess: true,
+        data: { lesson: lesson.id, second: popup.second, kind: 'reflection', prompt: popup.prompt, timing: 'immediate', delayAmount: 0, audience: 'everyone', status: 'draft', draftNote: DRAFT_NOTE } as never,
+      })
+    }
+  }
+  return draft
+}
+
+/** Every cut, ladder rung, pop-up and tier must sit inside its talk's real duration (bug 15). */
+export async function timingCheck(payload: Payload) {
+  const all = async (collection: string) => (await payload.find({ collection: collection as never, overrideAccess: true, depth: 0, limit: 0, pagination: false })).docs as unknown as Doc[]
+  const [lessons, cuts, ladder, points, tiers] = await Promise.all([all('lessons'), all('cuts'), all('ladder-items'), all('engagement-points'), all('talk-tiers')])
+  const problems: string[] = []
+  for (const lesson of lessons) {
+    const rows: TimingRow[] = [
+      ...cuts.filter((row) => idOf(row.lesson) === lesson.id).map((row) => ({ label: `Cut ${row.id}`, start: Number(row.start), end: Number(row.end) })),
+      ...ladder.filter((row) => idOf(row.lesson) === lesson.id).map((row) => ({ label: `${String(row.kind)} ${row.id}`, start: Number(row.start), end: Number(row.end) })),
+      ...points.filter((row) => idOf(row.lesson) === lesson.id).map((row) => ({ label: `Pop-up ${row.id}`, start: Number(row.second) })),
+      ...tiers
+        .filter((row) => idOf(row.lesson) === lesson.id)
+        .flatMap((row) => [
+          { label: "Hors d'oeuvre", start: Number(row.horsStart), end: Number(row.horsEnd) },
+          { label: 'Appetiser', start: Number(row.appetiserStart), end: Number(row.appetiserEnd) },
+        ]),
+    ]
+    if (!rows.length) continue
+    for (const problem of timingProblems(Number(lesson.durationSeconds) || null, rows)) problems.push(`${String(lesson.title)}: ${problem}`)
+  }
+  return problems
+}
+
 const ACTIVITY_NAMES = ['Aisha Patel', 'Bilal Ahmed', 'Fatima Noor', 'Hamza Ali', 'Khadija Rahman', 'Musa Hassan', 'Nadia Karim', 'Omar Siddiqui', 'Ruqayyah Shah', 'Sami Chowdhury', 'Zainab Uddin', 'Yahya Begum']
 
 /** The people the view-as tests use, and twelve learners with two weeks of ordinary use for the charts. */
 export async function seedPeople(payload: Payload, opts: { portalIds: Map<string, number>; sceneIds: Map<string, number>; now: Date; courseList: number[] }) {
   const elm = opts.portalIds.get('east-london')!
   const leeds = opts.portalIds.get('leeds')!
-  const code = async (value: string) => (await one(payload, 'access-codes', { code: { equals: value } }))?.id
+  const code = async (label: string) => (await one(payload, 'access-codes', { label: { equals: label } }))?.id
   const ensure = async (data: Record<string, unknown>) => {
     const found = await one(payload, 'users', { email: { equals: data.email } })
     if (found) return found
@@ -266,7 +360,7 @@ export async function seedPeople(payload: Payload, opts: { portalIds: Map<string
   }
   await ensure({ email: 'leeds-admin@hearts.test', password: 'portal-admin', name: 'Bushra Iqbal', role: 'portal-admin', tenants: [{ tenant: leeds }], onboarded: true, seenWelcome: true, courseList: opts.courseList })
   await ensure({ email: 'master2@hearts.test', password: 'hearts-master', name: 'Idris Rahman', role: 'master', onboarded: true, seenWelcome: true })
-  await ensure({ email: 'elm-learner2@hearts.test', password: 'portal-learner', name: 'Hamza Ali', role: 'learner', audience: 'learner', accessCode: await code('ELM-LEARN'), tenants: [{ tenant: elm }], onboarded: true, seenWelcome: true, courseList: opts.courseList })
+  await ensure({ email: 'elm-learner2@hearts.test', password: 'portal-learner', name: 'Hamza Ali', role: 'learner', audience: 'learner', accessCode: await code('elm-learner'), tenants: [{ tenant: elm }], onboarded: true, seenWelcome: true, courseList: opts.courseList })
 
   // Maryam (L1 in the view-as tests): a finished opening with private answers, sharing on, and two pop-up answers.
   const maryam = await one(payload, 'users', { email: { equals: 'elm-learner@hearts.test' } })
@@ -301,15 +395,17 @@ export async function seedPeople(payload: Payload, opts: { portalIds: Map<string
       }
       const nur = await one(payload, 'lessons', { title: { equals: 'The Names Class 20: Al-Nur' } })
       const points = nur ? ((await payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 10, sort: 'second', where: { lesson: { equals: nur.id } } })).docs as unknown as Doc[]) : []
-      const bodies = ['The first week of Ramadan, when the house goes quiet before suhoor.', 'You start to lean towards Allah']
-      for (const [index, point] of points.slice(0, 2).entries()) {
+      const reflection = 'The first week of Ramadan, when the house goes quiet before suhoor.'
+      const picked = 'You start to incline towards the Akhira'
+      for (const point of points.filter((row) => row.status !== 'draft').slice(0, 2)) {
         const choice = point.kind === 'multiple_choice'
+        const body = choice ? picked : reflection
         const answer = (await payload.create({
           collection: 'answers',
           overrideAccess: true,
-          data: { point: point.id, user: maryam.id, lesson: nur!.id, body: choice ? '' : bodies[index], choice: choice ? bodies[index] : '', portal: elm, shareWithTeacher: true, answeredAt: new Date(opts.now.getTime() - 86_400_000).toISOString(), atSecond: point.second } as never,
+          data: { point: point.id, user: maryam.id, lesson: nur!.id, body: choice ? '' : body, choice: choice ? body : '', portal: elm, shareWithTeacher: true, answeredAt: new Date(opts.now.getTime() - 86_400_000).toISOString(), atSecond: point.second } as never,
         })) as unknown as Doc
-        await payload.create({ collection: 'workbook-entries', overrideAccess: true, data: { user: maryam.id, answer: answer.id, lesson: nur!.id, course: idOf(nur!.course), body: bodies[index], consent: true, portal: elm } as never })
+        await payload.create({ collection: 'workbook-entries', overrideAccess: true, data: { user: maryam.id, answer: answer.id, lesson: nur!.id, course: idOf(nur!.course), body, consent: true, portal: elm } as never })
       }
     }
   }
@@ -318,8 +414,8 @@ export async function seedPeople(payload: Payload, opts: { portalIds: Map<string
   const first = await one(payload, 'users', { email: { equals: 'activity-1@hearts.test' } })
   if (first) return
   const lessons = (await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: 40, where: { course: { in: opts.courseList } } })).docs as unknown as Doc[]
-  const points = (await payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 20 })).docs as unknown as Doc[]
-  const learnCode = await code('ELM-LEARN')
+  const points = (await payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 20, where: { status: { not_equals: 'draft' } } })).docs as unknown as Doc[]
+  const learnCode = await code('elm-learner')
   let seed = 7
   const random = () => {
     seed = (seed * 9301 + 49297) % 233280

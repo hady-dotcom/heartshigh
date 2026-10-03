@@ -12,6 +12,7 @@
     "build": "next build",
     "start": "next start",
     "seed": "tsx src/seed/seed.ts",
+    "reseed": "tsx src/seed/seed.ts --reset",
     "generate:importmap": "tsx scripts/generate-importmap.ts",
     "generate:types": "tsx scripts/generate-types.ts",
     "test:unit": "tsx --test src/lib/*.test.ts tests/unit/*.test.ts",
