@@ -964,7 +964,10 @@ export function Journey(props: JourneyProps) {
   const watchFull = () => {
     if (!item) return
     signal('watch-full')
-    push(window.location.pathname, { appetiser: item.cutId })
+    const url = new URL(window.location.href)
+    url.searchParams.set('clip', String(item.cutId))
+    url.searchParams.set('play', 'appetiser')
+    push(`${url.pathname}${url.search}`, { appetiser: item.cutId })
     void showItem(index, 'appetiser')
   }
 
