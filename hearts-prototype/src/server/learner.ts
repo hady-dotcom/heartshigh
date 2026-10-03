@@ -25,7 +25,7 @@ export type FeedItem = {
   lessonId: number
   /** `lines` are the captions with when each is said, so the caption follows the speaker. */
   hors: { start: number; end: number; quote: string; lines?: TimedCaption[] }
-  appetiser: { start: number; end: number; quote: string; lines?: TimedCaption[] }
+  appetiser: { start: number; end: number; quote: string; lines?: TimedCaption[]; spans?: { role?: 'hook' | 'turn' | 'land'; start: number; end: number }[] }
   hook: string
   turn: string
   land: string

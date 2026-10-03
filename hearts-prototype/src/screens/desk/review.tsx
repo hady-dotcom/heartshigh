@@ -4,6 +4,7 @@ import { Hidden } from '@/components/app/shell'
 import { ReviewKeys, ReviewPlayer } from '@/components/desk/review'
 import { idOf } from '@/lib/ids'
 import { pendingForLesson } from '@/server/ai-desk'
+import { horsCapOf } from '@/lib/tiers'
 import { showUncheckedTalks } from '@/server/opening'
 import type { SessionUser } from '@/server/context'
 import { rows, str } from '../common'
@@ -64,11 +65,13 @@ function Shortcuts({ extra }: { extra: string }) {
 
 export async function MasterReview(ctx: MasterCtx) {
   const { payload, query } = ctx
-  const [tiers, showUnchecked, drafts] = await Promise.all([
+  const [tiers, showUnchecked, drafts, flags] = await Promise.all([
     rows(payload, 'talk-tiers', undefined, { limit: 500, depth: 0 }),
     showUncheckedTalks(payload),
     payload.count({ collection: 'engagement-points', overrideAccess: true, where: { status: { equals: 'draft' } } }),
+    payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null) as Promise<{ horsMaxSeconds?: number } | null>,
   ])
+  const horsMax = horsCapOf(flags?.horsMaxSeconds)
   const sorted = [...tiers].sort((a, b) => (STATUS_ORDER[str(a.status) || 'draft'] ?? 0) - (STATUS_ORDER[str(b.status) || 'draft'] ?? 0) || Number(a.id) - Number(b.id))
   const waiting = tiers.filter((tier) => (tier.status || 'draft') === 'draft').length
   const approved = tiers.filter((tier) => tier.status === 'checked').length
@@ -100,6 +103,20 @@ export async function MasterReview(ctx: MasterCtx) {
             <button className={`btn small ${showUnchecked ? 'ghost' : 'teal'}`} type="submit" data-testid="show-unchecked" data-state={showUnchecked ? 'on' : 'off'}>{showUnchecked ? 'Turn off' : 'Turn on'}</button>
           </form>
         </div>
+      </section>
+      <section className="panel review-flag" data-testid="hors-cap">
+        <form className="body review-flag-body" action="/api/hearts" method="post">
+          <div>
+            <b>Hors d&apos;oeuvre cap</b>
+            <p className="hint" style={{ margin: 0 }}>15 to 20 seconds is the usual length and only a warning. Longer than this cap is refused. The cap is {horsMax} seconds.</p>
+          </div>
+          <Hidden fields={{ action: 'hors-max', next: tier ? `/master/review?tier=${tier.id}` : '/master/review' }} />
+          <label className="stack" style={{ margin: 0 }}>
+            Seconds
+            <input name="horsMaxSeconds" type="number" min={20} max={180} step={1} defaultValue={horsMax} data-testid="hors-max" />
+          </label>
+          <button className="btn small ghost" type="submit" data-testid="hors-max-save">Save cap</button>
+        </form>
       </section>
       <p className="hint" data-testid="review-counts">{approved} approved, {waiting} waiting, {rejected} rejected, of {tiers.length} talks.</p>
       {tier && lesson ? (

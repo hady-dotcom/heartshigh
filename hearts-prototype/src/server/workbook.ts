@@ -85,8 +85,10 @@ export type WorkbookAnswer = {
   correct: boolean | null
   shared: boolean
   reply: string | null
+  kind: string
 }
-export type Workbook = { learner: { id: number; name: string }; opening: WorkbookOpeningRow[]; answers: WorkbookAnswer[]; open: { pointId: number; question: string; video: string; lessonId: number }[] }
+export type WorkbookOpen = { pointId: number; question: string; video: string; lessonId: number; kind: string; family: string; evidence: string; dueDays: number | null; showImam: boolean }
+export type Workbook = { learner: { id: number; name: string }; opening: WorkbookOpeningRow[]; answers: WorkbookAnswer[]; open: WorkbookOpen[] }
 
 const plainCaption = (text: string) => text.replace(/\*\*/g, '')
 
@@ -145,13 +147,24 @@ export async function workbookFor(payload: Payload, learner: SessionUser, reader
       correct: typeof row.correct === 'boolean' ? (row.correct as boolean) : null,
       shared: Boolean(row.shareWithTeacher),
       reply: owner || row.shareWithTeacher ? ((entry?.teacherReply as string) || null) : null,
+      kind: String(point?.kind || ''),
     }
   })
   const answered = new Set(list.map((row) => row.pointId))
   const open = owner
     ? pointRows
         .filter((point) => !answered.has(point.id) && visits.some((visit) => idOf(visit.lesson) === idOf(point.lesson)))
-        .map((point) => ({ pointId: point.id, question: String(point.prompt), lessonId: idOf(point.lesson) || 0, video: String(lessonRows.find((item) => item.id === idOf(point.lesson))?.title || '') }))
+        .map((point) => ({
+          pointId: point.id,
+          question: String(point.prompt),
+          lessonId: idOf(point.lesson) || 0,
+          video: String(lessonRows.find((item) => item.id === idOf(point.lesson))?.title || ''),
+          kind: String(point.kind || ''),
+          family: String(point.family || ''),
+          evidence: String(point.evidence || 'none'),
+          dueDays: point.dueDays == null || point.dueDays === '' ? null : Number(point.dueDays),
+          showImam: Boolean(point.showImam),
+        }))
     : []
   return { learner: { id: learner.id, name: learner.name || 'Learner' }, opening, answers: list, open }
 }

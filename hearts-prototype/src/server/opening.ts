@@ -4,6 +4,7 @@ import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE } from '@/lib/opening-data'
 import { idOf } from '@/lib/ids'
 import { now } from '@/lib/clock'
 import { adoptedCourseIds, visibleCourseIds, type PortalDoc, type SessionUser } from './context'
+import { normaliseSpans, type AppetiserSpan } from '@/lib/tiers'
 import { laneOf, portraitFor, posterFor, slugify, type FeedItem, type SlideStyle } from './learner'
 
 type Row = Record<string, unknown> & { id: number }
@@ -69,6 +70,21 @@ export function tierVisible(tier: Row | undefined, showUnchecked: boolean) {
   if (tier.status === 'checked') return true
   if (tier.status === 'rejected') return false
   return showUnchecked
+}
+
+function spansOf(value: unknown): AppetiserSpan[] {
+  if (!Array.isArray(value)) return []
+  const spans: AppetiserSpan[] = []
+  for (const item of value) {
+    if (!item || typeof item !== 'object') continue
+    const row = item as { role?: string; start?: unknown; end?: unknown }
+    if (row.role !== 'hook' && row.role !== 'turn' && row.role !== 'land') continue
+    const start = Number(row.start)
+    const end = Number(row.end)
+    if (!Number.isFinite(start) || !Number.isFinite(end)) continue
+    spans.push({ role: row.role, start, end })
+  }
+  return normaliseSpans(spans)
 }
 
 export async function showUncheckedTalks(payload: Payload) {
@@ -237,10 +253,17 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
   const tier = data.tiers.find((row) => idOf(row.lesson) === lesson.id)
   if (tier) {
     const land = String(tier.land || '')
-    const appetiser = { start: Number(tier.appetiserStart), end: Number(tier.appetiserEnd), quote: land }
-    const hookAt = Number.isFinite(Number(tier.hookAt)) && tier.hookAt !== null ? Number(tier.hookAt) : appetiser.start
-    const landAt = Number.isFinite(Number(tier.landAt)) && tier.landAt !== null ? Number(tier.landAt) : appetiser.start + (appetiser.end - appetiser.start) * 0.75
-    const turnAt = Number.isFinite(Number(tier.turnAt)) && tier.turnAt !== null ? Number(tier.turnAt) : (hookAt + landAt) / 2
+    const spans = spansOf(tier.appetiserSpans)
+    const appetiser = {
+      start: spans[0]?.start ?? Number(tier.appetiserStart),
+      end: spans.length ? spans[spans.length - 1].end : Number(tier.appetiserEnd),
+      quote: land,
+      ...(spans.length ? { spans } : {}),
+    }
+    const atSpan = (role: 'hook' | 'turn' | 'land', fallback: number) => spans.find((span) => span.role === role)?.start ?? fallback
+    const hookAt = atSpan('hook', Number.isFinite(Number(tier.hookAt)) && tier.hookAt !== null ? Number(tier.hookAt) : appetiser.start)
+    const landAt = atSpan('land', Number.isFinite(Number(tier.landAt)) && tier.landAt !== null ? Number(tier.landAt) : appetiser.start + (appetiser.end - appetiser.start) * 0.75)
+    const turnAt = atSpan('turn', Number.isFinite(Number(tier.turnAt)) && tier.turnAt !== null ? Number(tier.turnAt) : (hookAt + landAt) / 2)
     const horsQuote = String(tier.horsQuote || land)
     const horsLines = lineList(tier.horsLines)
     return {

@@ -429,6 +429,14 @@ export const MasterFlags: GlobalConfig = {
       max: 100,
       admin: { description: 'Circle answers show less often as real shared answers arrive, and step back once a question has this many.' },
     },
+    {
+      name: 'horsMaxSeconds',
+      type: 'number',
+      defaultValue: 45,
+      min: 20,
+      max: 180,
+      admin: { description: "Longest hors d'oeuvre the desk will save, in seconds. 15 to 20 is the usual length and only a warning. Longer than this is refused." },
+    },
   ],
 }
 

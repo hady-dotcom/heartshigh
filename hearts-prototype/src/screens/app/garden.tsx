@@ -437,7 +437,7 @@ export async function GardenWorkbook({ payload, user, base, query }: Ctx) {
                   <div className="wb-video" key={video} data-testid="workbook-video">
                     <p className="wb-video-title">{video}</p>
                     {rowsHere.map((row) => (
-                      <article className="wb-entry" key={row.id} data-testid="workbook-entry" data-consent={row.shared ? 'yes' : 'no'} data-point={row.pointId}>
+                      <article className="wb-entry" key={row.id} data-testid="workbook-entry" data-consent={row.shared ? 'yes' : 'no'} data-point={row.pointId} data-kind={row.kind || 'question'}>
                         <div className="when">{shortDate(row.answeredAt)}</div>
                         <p className="asked">Video question was:</p>
                         <p className="q">{row.question}</p>
@@ -474,9 +474,20 @@ export async function GardenWorkbook({ payload, user, base, query }: Ctx) {
         <section data-testid="open-questions">
           <p className="eyebrow">Still open</p>
           {book.open.map((row) => (
-            <div className="wb-open" key={row.pointId} data-testid="open-question" data-point={row.pointId}>
+            <div className="wb-open" key={row.pointId} data-testid="open-question" data-point={row.pointId} data-kind={row.kind || 'question'}>
               <span>{row.question}</span>
               <small>{row.video}</small>
+              {row.kind === 'task' || row.family === 'workbook' ? (
+                <form action="/api/answers" method="post" encType="multipart/form-data" data-testid="workbook-task" style={{ marginTop: 8 }}>
+                  <input type="hidden" name="pointId" value={row.pointId} />
+                  <input type="hidden" name="next" value={here} />
+                  {row.kind === 'task' && row.dueDays ? <p data-testid="task-due">Due within {row.dueDays} days of opening this talk.</p> : null}
+                  {row.evidence === 'photo' ? null : <textarea name="body" rows={2} required={row.evidence === 'note' || row.family === 'workbook'} placeholder={row.kind === 'task' ? 'What did you do?' : 'Your reflection'} data-testid="workbook-task-note" />}
+                  {row.kind === 'task' ? <input type="file" name="image" accept="image/*" required={row.evidence === 'photo'} /> : null}
+                  {row.showImam || row.kind === 'task' ? <input type="hidden" name="shareWithTeacher" value="on" /> : null}
+                  <button className="mini-btn" type="submit" data-testid="workbook-task-done">{row.kind === 'task' ? 'I have done this' : 'Save in my workbook'}</button>
+                </form>
+              ) : null}
             </div>
           ))}
         </section>

@@ -37,6 +37,10 @@ test('Bug 10: markup in learner-facing words is refused', () => {
   assert.ok(hasMarkup('&lt;b&gt;'))
   assert.ok(!hasMarkup('A worry turns up at **2am**, uninvited.'))
   assert.ok(!hasMarkup('Tea & biscuits after Maghrib'))
+  assert.ok(!hasMarkup('conf=high'))
+  assert.ok(!hasMarkup('Notes for the desk: conf=high, source=captions'))
+  assert.ok(hasMarkup('onclick=alert(1)'))
+  assert.ok(hasMarkup('onerror=alert(1)'))
 })
 
 test('Bug 13: help contacts accept tel-safe numbers and https links only, with plain labels', () => {

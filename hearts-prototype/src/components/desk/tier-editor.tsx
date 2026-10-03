@@ -47,7 +47,7 @@ function Scrub({ label, name, value, max, onChange, testId }: { label: string; n
 }
 
 /** The in and out points of one talk's hors d'oeuvre and appetiser, with a preview and the caption lines to choose hook, turn and land from. */
-export function TierEditor({ tier, youtubeId, duration, lines, next }: { tier: Tier; youtubeId: string | null; duration: number; lines: Line[]; next: string }) {
+export function TierEditor({ tier, youtubeId, duration, lines, next, horsMax = 45 }: { tier: Tier; youtubeId: string | null; duration: number; lines: Line[]; next: string; horsMax?: number }) {
   const max = Math.max(1, Math.ceil(duration || Math.max(tier.appetiserEnd, tier.horsEnd) + 60))
   const [hs, setHs] = useState(tier.horsStart)
   const [he, setHe] = useState(tier.horsEnd)
@@ -60,7 +60,8 @@ export function TierEditor({ tier, youtubeId, duration, lines, next }: { tier: T
   const horsLength = he - hs
   const appetiserLength = ae - as
   const warnings = [
-    horsLength < HORS_MIN || horsLength > HORS_MAX ? `The hors d'oeuvre runs ${seconds(horsLength)}. Keep it between ${HORS_MIN} and ${HORS_MAX}.` : null,
+    horsLength < HORS_MIN ? `The hors d'oeuvre runs ${seconds(horsLength)}. Keep it at least ${HORS_MIN} seconds.` : null,
+    horsLength > horsMax ? `The hors d'oeuvre runs ${seconds(horsLength)}. Keep it to ${horsMax} seconds.` : horsLength > HORS_MAX ? `The hors d'oeuvre runs ${seconds(horsLength)}. The usual length is between ${HORS_MIN} and ${HORS_MAX} seconds. Up to ${horsMax} seconds is allowed.` : null,
     appetiserLength <= 0 ? 'The appetiser has to end after it starts.' : appetiserLength > APPETISER_MAX + 15 ? `The appetiser runs ${clock(appetiserLength)}. Keep it to about 3 minutes.` : null,
     duration && (he > duration || ae > duration) ? `An out point is after the end of the talk (${clock(duration)}).` : null,
   ].filter((value): value is string => Boolean(value))

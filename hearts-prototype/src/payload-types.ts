@@ -120,6 +120,8 @@ export interface Config {
     'ai-step-outputs': AiStepOutput;
     'ai-step-jobs': AiStepJob;
     'ai-desk': AiDesk;
+    'sheet-keys': SheetKey;
+    'sheet-imports': SheetImport;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -180,6 +182,8 @@ export interface Config {
     'ai-step-outputs': AiStepOutputsSelect<false> | AiStepOutputsSelect<true>;
     'ai-step-jobs': AiStepJobsSelect<false> | AiStepJobsSelect<true>;
     'ai-desk': AiDeskSelect<false> | AiDeskSelect<true>;
+    'sheet-keys': SheetKeysSelect<false> | SheetKeysSelect<true>;
+    'sheet-imports': SheetImportsSelect<false> | SheetImportsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -467,6 +471,9 @@ export interface Lesson {
   speaker?: string | null;
   youtubeUrl?: string | null;
   youtubeId?: string | null;
+  videoProvider?: ('youtube' | 'vimeo' | 'file') | null;
+  vimeoId?: string | null;
+  film?: (number | null) | Media;
   /**
    * Mux-ready. Unused until a Mux asset is attached.
    */
@@ -497,8 +504,13 @@ export interface Resource {
   id: number;
   lesson: number | Lesson;
   name: string;
-  kind?: ('link' | 'file') | null;
+  kind?: ('link' | 'file' | 'summary' | 'quote' | 'reading' | 'guide' | 'transcript') | null;
   url?: string | null;
+  /**
+   * An uploaded file. A transcript row uses this instead of pasting the words into a cell.
+   */
+  file?: (number | null) | Media;
+  body?: string | null;
   showAtEnd?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -620,6 +632,16 @@ export interface EngagementPoint {
   status?: ('published' | 'draft' | 'rejected') | null;
   draftNote?: string | null;
   reviewedBy?: (number | null) | User;
+  family?: ('popup' | 'workbook' | 'task') | null;
+  /**
+   * Activation tasks: days the learner has, counted from when they first open the talk.
+   */
+  dueDays?: number | null;
+  evidence?: ('none' | 'note' | 'photo') | null;
+  /**
+   * When set, the learner’s answer is visible to their imam and the portal admin.
+   */
+  showImam?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -710,6 +732,18 @@ export interface TalkTier {
   hookAt?: number | null;
   turnAt?: number | null;
   landAt?: number | null;
+  /**
+   * Up to three appetiser cuts, played hook then turn then land: [{ role, start, end }]. Their lengths add up to at most about 3 minutes.
+   */
+  appetiserSpans?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
    * The hors d'oeuvre's sentences with their times: [{ at, text }].
    */
@@ -1639,6 +1673,54 @@ export interface AiDesk {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sheet-keys".
+ */
+export interface SheetKey {
+  id: number;
+  talkKey: string;
+  lesson: number | Lesson;
+  channel?: string | null;
+  sheetStatus?: ('draft' | 'checked' | 'live') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sheet-imports".
+ */
+export interface SheetImport {
+  id: number;
+  desk: 'master' | 'portal';
+  portal?: (number | null) | Portal;
+  actor?: (number | null) | User;
+  actorRole?: string | null;
+  fileName?: string | null;
+  state: 'preview' | 'applied' | 'undone';
+  at?: string | null;
+  summary?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  snapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  workbook?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -1872,6 +1954,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'ai-desk';
         value: number | AiDesk;
+      } | null)
+    | ({
+        relationTo: 'sheet-keys';
+        value: number | SheetKey;
+      } | null)
+    | ({
+        relationTo: 'sheet-imports';
+        value: number | SheetImport;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2096,6 +2186,9 @@ export interface LessonsSelect<T extends boolean = true> {
   speaker?: T;
   youtubeUrl?: T;
   youtubeId?: T;
+  videoProvider?: T;
+  vimeoId?: T;
+  film?: T;
   muxAssetId?: T;
   muxPlaybackId?: T;
   durationSeconds?: T;
@@ -2118,6 +2211,8 @@ export interface ResourcesSelect<T extends boolean = true> {
   name?: T;
   kind?: T;
   url?: T;
+  file?: T;
+  body?: T;
   showAtEnd?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2215,6 +2310,10 @@ export interface EngagementPointsSelect<T extends boolean = true> {
   status?: T;
   draftNote?: T;
   reviewedBy?: T;
+  family?: T;
+  dueDays?: T;
+  evidence?: T;
+  showImam?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2315,6 +2414,7 @@ export interface TalkTiersSelect<T extends boolean = true> {
   hookAt?: T;
   turnAt?: T;
   landAt?: T;
+  appetiserSpans?: T;
   horsLines?: T;
   offerResume?: T;
   status?: T;
@@ -2937,6 +3037,36 @@ export interface AiDeskSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sheet-keys_select".
+ */
+export interface SheetKeysSelect<T extends boolean = true> {
+  talkKey?: T;
+  lesson?: T;
+  channel?: T;
+  sheetStatus?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sheet-imports_select".
+ */
+export interface SheetImportsSelect<T extends boolean = true> {
+  desk?: T;
+  portal?: T;
+  actor?: T;
+  actorRole?: T;
+  fileName?: T;
+  state?: T;
+  at?: T;
+  summary?: T;
+  snapshot?: T;
+  workbook?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -3001,6 +3131,10 @@ export interface MasterFlag {
    * Circle answers show less often as real shared answers arrive, and step back once a question has this many.
    */
   circleThreshold?: number | null;
+  /**
+   * Longest hors d'oeuvre the desk will save, in seconds. 15 to 20 is the usual length and only a warning. Longer than this is refused.
+   */
+  horsMaxSeconds?: number | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -3014,6 +3148,7 @@ export interface MasterFlagsSelect<T extends boolean = true> {
   showUnchecked?: T;
   circleLabel?: T;
   circleThreshold?: T;
+  horsMaxSeconds?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

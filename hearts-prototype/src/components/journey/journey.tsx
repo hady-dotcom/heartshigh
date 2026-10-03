@@ -7,7 +7,7 @@ import type { OpeningData } from '@/server/opening'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readHeart, readPending, sessionFlags, setSessionFlags, viewAsId, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
-import { appetiserStop, captionIndex } from '@/lib/tiers'
+import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { laneClips } from '@/lib/lanes'
 import { isoWeek } from '@/lib/trends'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, lowData, playOnly, preloadApi, setHidden, soundOn, type PlayerKind } from '@/lib/yt'
@@ -110,6 +110,7 @@ export function Journey(props: JourneyProps) {
   const indexRef = useRef(0)
   const [mode, setMode] = useState<Mode>('hors')
   const modeRef = useRef<Mode>('hors')
+  const spanJoin = useRef<number | null>(null)
   const hosts = useRef<[Host, Host]>([
     { spec: null, playerId: null, ready: false, state: -1 },
     { spec: null, playerId: null, ready: false, state: -1 },
@@ -277,7 +278,11 @@ export function Journey(props: JourneyProps) {
   // ---------- players ----------
   const specFor = useCallback((item: FeedItem | undefined, kind: Mode): Spec | null => {
     if (!item || !item.youtubeId || item.style) return null
-    if (kind === 'appetiser') return { key: `${item.cutId}:appetiser`, videoId: item.youtubeId, start: item.appetiser.start, end: appetiserEnd(item), kind: 'full' }
+    if (kind === 'appetiser') {
+      const spans = item.appetiser.spans
+      const multi = Boolean(spans && spans.length > 1)
+      return { key: `${item.cutId}:appetiser`, videoId: item.youtubeId, start: spans?.length ? spans[0].start : item.appetiser.start, end: multi ? null : appetiserEnd(item), kind: 'full' }
+    }
     return { key: `${item.cutId}:hors`, videoId: item.youtubeId, start: item.hors.start, end: item.hors.end, kind: 'hors' }
   }, [])
 
@@ -858,7 +863,23 @@ export function Journey(props: JourneyProps) {
       const lines = modeRef.current === 'hors' ? current.hors.lines : current.appetiser.lines
       const showing = captionIndex(lines, time)
       setLineAt((held) => (held === showing ? held : showing))
-      if (modeRef.current === 'appetiser' && time >= appetiserEnd(current) - 0.25) {
+      const spans = current.appetiser.spans
+      if (modeRef.current === 'appetiser' && spans && spans.length > 1) {
+        const join = appetiserJoin(spans, time)
+        if (join.action === 'seek' && join.at != null) {
+          if (spanJoin.current !== join.at) {
+            spanJoin.current = join.at
+            player.seekTo(join.at, true)
+          }
+          return
+        }
+        spanJoin.current = null
+        if (join.action === 'stop') {
+          player.pauseVideo()
+          player.seekTo(spans[spans.length - 1].end, true)
+          return
+        }
+      } else if (modeRef.current === 'appetiser' && time >= appetiserEnd(current) - 0.25) {
         player.pauseVideo()
         player.seekTo(appetiserEnd(current), true)
         return

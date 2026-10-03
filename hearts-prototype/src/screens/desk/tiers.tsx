@@ -4,7 +4,7 @@ import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { TierEditor } from '@/components/desk/tier-editor'
 import { idOf } from '@/lib/ids'
-import { gapAfter, gapBefore, PRE_ROLL, sentencesOf, TAIL, timingProblems } from '@/lib/tiers'
+import { gapAfter, gapBefore, horsCapOf, PRE_ROLL, sentencesOf, TAIL, timingProblems } from '@/lib/tiers'
 import { tierSourceText } from '@/server/tier-source'
 import type { SessionUser } from '@/server/context'
 import { rows, str } from '../common'
@@ -83,6 +83,8 @@ export async function MasterTier(ctx: MasterCtx, tierId: number) {
   if (!lesson) notFound()
   const points = (await rows(payload, 'engagement-points', { lesson: { equals: lesson.id } }, { limit: 100 })).sort((a, b) => Number(a.second) - Number(b.second))
   const duration = Number(lesson.durationSeconds || 0)
+  const flags = (await payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null)) as { horsMaxSeconds?: number } | null
+  const horsMax = horsCapOf(flags?.horsMaxSeconds)
   const sentences = sentencesOf(tierSourceText(lesson as { youtubeId?: string; transcript?: string }))
   const lines = sentences.map((sentence, index) => {
     const before = gapBefore(sentences, index)
@@ -114,6 +116,7 @@ export async function MasterTier(ctx: MasterCtx, tierId: number) {
         duration={duration}
         lines={lines}
         next={next}
+        horsMax={horsMax}
       />
       <section className="panel" style={{ marginTop: 18 }} data-testid="tier-popups">
         <header className="light"><h2>Pop-ups in the main ({points.length})</h2><span className="hint">Drafts are never shown to learners</span></header>

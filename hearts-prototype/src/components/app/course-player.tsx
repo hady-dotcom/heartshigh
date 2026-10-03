@@ -20,6 +20,10 @@ export type PointView = {
   answered: boolean
   myAnswer?: string
   timeLimitSec?: number | null
+  dueDays?: number | null
+  evidence?: 'none' | 'note' | 'photo' | null
+  showImam?: boolean
+  family?: string | null
 }
 
 export type SwarmItem = { name: string; body: string; image?: string | null; circle?: boolean }
@@ -59,6 +63,7 @@ export function CoursePlayer({
   next,
   garden,
   overPlayer = true,
+  film = null,
 }: {
   courseTitle: string
   backHref: string
@@ -79,14 +84,20 @@ export function CoursePlayer({
   garden: { done: number; total: number; links: { label: string; href: string }[]; gardenHref: string }
   /** Master flag popupOverPlayer. Off is the strict layout: the paused player stays fully in view. */
   overPlayer?: boolean
+  film?: { provider: 'vimeo' | 'file'; vimeoId?: string | null; src?: string | null } | null
 }) {
   const router = useRouter()
   const card = useRef<HTMLDivElement>(null)
   const holder = useRef<HTMLDivElement>(null)
+  const filmBox = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const vimeoTime = useRef(startAt)
   const watcher = useRef<PopupWatcher | null>(null)
   const viewing = useRef('')
   const queue = useRef<number[]>([])
-  const [mode, setMode] = useState<'loading' | 'youtube' | 'practice'>(youtubeId ? 'loading' : 'practice')
+  const vimeoId = film?.provider === 'vimeo' ? film.vimeoId || null : null
+  const fileSrc = film?.provider === 'file' ? film.src || null : null
+  const [mode, setMode] = useState<'loading' | 'youtube' | 'vimeo' | 'file' | 'practice'>(vimeoId ? 'vimeo' : fileSrc ? 'file' : youtubeId ? 'loading' : 'practice')
   const [time, setTime] = useState(startAt)
   const [furthest, setFurthest] = useState(startAt)
   const [length, setLength] = useState(duration)
@@ -148,13 +159,37 @@ export function CoursePlayer({
     }
   }, [youtubeId, startAt])
 
+  useEffect(() => {
+    if (!vimeoId) return
+    const onMessage = (event: MessageEvent) => {
+      if (!String(event.origin).includes('vimeo.com')) return
+      let data = event.data as { event?: string; method?: string; value?: number; data?: { seconds?: number } }
+      if (typeof event.data === 'string') {
+        try { data = JSON.parse(event.data) } catch { return }
+      }
+      const seconds = data?.data?.seconds ?? (typeof data?.value === 'number' ? data.value : null)
+      if (typeof seconds === 'number') vimeoTime.current = seconds
+      if (data?.event === 'play') setPlaying(true)
+      if (data?.event === 'pause' || data?.event === 'finish') setPlaying(false)
+      if (data?.event === 'finish') setEnded(true)
+      if (data?.event === 'ready') {
+        filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'addEventListener', value: 'playProgress' }), '*')
+        filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'addEventListener', value: 'play' }), '*')
+        filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'addEventListener', value: 'pause' }), '*')
+      }
+    }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [vimeoId])
+
   // The sheet never covers the film: default keeps the paused video in view above it, strict keeps the whole player clear.
   const placeSheet = useCallback(() => {
     // Lock scrolling before measuring: dropping the scrollbar can reflow the player by a few pixels.
     document.documentElement.style.overflow = 'hidden'
     card.current?.scrollIntoView({ block: 'start' })
     const rect = card.current?.getBoundingClientRect()
-    const film = mode === 'youtube' ? holder.current?.getBoundingClientRect() : null
+    const filmed = mode === 'youtube' || mode === 'vimeo' || mode === 'file'
+    const film = filmed ? (mode === 'youtube' ? holder.current : filmBox.current)?.getBoundingClientRect() : null
     setSheetTop(rect ? Math.max(8, overPlayer && film ? film.bottom : rect.bottom) : null)
   }, [overPlayer, mode])
 
@@ -191,13 +226,16 @@ export function CoursePlayer({
 
   const pause = () => {
     getPlayer(PLAYER_ID)?.pauseVideo()
+    videoRef.current?.pause()
+    filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'pause' }), '*')
     setPlaying(false)
   }
 
   useEffect(() => {
     if (!playing || openId !== null) return
     const timer = window.setInterval(() => {
-      const at = mode === 'youtube' ? getPlayer(PLAYER_ID)?.getCurrentTime() || 0 : null
+      if (mode === 'vimeo') filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'getCurrentTime' }), '*')
+      const at = mode === 'youtube' ? getPlayer(PLAYER_ID)?.getCurrentTime() || 0 : mode === 'file' ? videoRef.current?.currentTime ?? null : mode === 'vimeo' ? vimeoTime.current : null
       setTime((value) => {
         const current = at ?? Math.min(length || Infinity, value + POLL_MS / 1000)
         const due = watcher.current?.tick(current) || []
@@ -226,6 +264,15 @@ export function CoursePlayer({
       else resume(PLAYER_ID)
       return
     }
+    if (mode === 'file') {
+      if (playing) videoRef.current?.pause()
+      else void videoRef.current?.play()
+      return
+    }
+    if (mode === 'vimeo') {
+      filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: playing ? 'pause' : 'play' }), '*')
+      return
+    }
     setPlaying((value) => !value)
   }
 
@@ -245,6 +292,8 @@ export function CoursePlayer({
     setFromTrigger(false)
     if (wasTriggered) {
       if (mode === 'youtube') window.setTimeout(() => resume(PLAYER_ID), 120)
+      else if (mode === 'file') void videoRef.current?.play()
+      else if (mode === 'vimeo') filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'play' }), '*')
       else setPlaying(true)
     }
     if (saved) router.refresh()
@@ -253,25 +302,36 @@ export function CoursePlayer({
   const nextPoint = views.find((point) => point.state === 'open' && !point.answered) || views.find((point) => !point.answered) || null
   const open = views.find((point) => point.id === openId) || null
   const total = length || Math.max(60, ...views.map((point) => point.second + 30))
+  const filmed = mode === 'youtube' || mode === 'vimeo' || mode === 'file'
 
   return (
     <div data-testid="player" data-mode={mode} data-popup-layout={overPlayer ? 'over' : 'strict'}>
       <div className="app-head" style={{ marginBottom: 6 }}>
         <Link className="back" href={backHref} data-testid="back">‹ {courseTitle}</Link>
       </div>
-      <div ref={card} className={`player-card${mode === 'youtube' ? ' yt-on' : ''}`} data-testid="player-card">
-        {poster && mode !== 'youtube' ? <div className="poster" style={{ backgroundImage: `url(${poster})` }} /> : null}
+      <div ref={card} className={`player-card${filmed ? ' yt-on' : ''}`} data-testid="player-card">
+        {poster && !filmed ? <div className="poster" style={{ backgroundImage: `url(${poster})` }} /> : null}
         {youtubeId ? <div className="yt" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
-        {open && mode === 'youtube' && overPlayer ? <div className="yt-scrim" data-testid="paused-scrim" aria-hidden /> : null}
-        {open && mode === 'youtube' ? (
+        {vimeoId ? (
+          <div className="yt" ref={filmBox} style={{ visibility: mode === 'vimeo' ? 'visible' : 'hidden' }}>
+            <iframe title={partLabel} src={`https://player.vimeo.com/video/${vimeoId}?api=1`} allow="autoplay; fullscreen; picture-in-picture" data-testid="vimeo-player" />
+          </div>
+        ) : null}
+        {fileSrc ? (
+          <div className="yt" ref={filmBox} style={{ visibility: mode === 'file' ? 'visible' : 'hidden' }}>
+            <video ref={videoRef} src={fileSrc} controls playsInline data-testid="file-player" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => { setPlaying(false); setEnded(true) }} />
+          </div>
+        ) : null}
+        {open && filmed && overPlayer ? <div className="yt-scrim" data-testid="paused-scrim" aria-hidden /> : null}
+        {open && filmed ? (
           <span className="part-chip paused" data-testid="paused-note">❚❚ Paused at question {open.number}</span>
         ) : (
           <span className="part-chip" data-testid="part-label">{partLabel}</span>
         )}
         <span className="time-read" data-testid="player-time">{clock(time)}</span>
-        {open && mode !== 'youtube' ? (
+        {open && !filmed ? (
           <p className="paused-note" data-testid="paused-note">❚❚ Paused at question {open.number}</p>
-        ) : mode !== 'youtube' ? (
+        ) : !filmed ? (
           <button type="button" className="big-play" aria-label={playing ? 'Pause' : 'Play'} onClick={togglePlay} data-testid="player-play">
             {playing ? <PauseIcon size={30} /> : <PlayIcon size={30} />}
           </button>
@@ -530,7 +590,14 @@ function Sheet({
         {point.state === 'open' ? (
           <form onSubmit={submit} data-testid="answer-form">
             <input type="hidden" name="pointId" value={point.id} />
-            {point.kind === 'multiple_choice' && point.options.length ? (
+            {point.kind === 'task' ? (
+              <div data-testid="task-form" data-evidence={point.evidence || 'none'}>
+                {point.dueDays ? <p data-testid="task-due">Due within {point.dueDays} days of opening this talk.</p> : null}
+                {point.evidence === 'photo' ? <p>Add a photo of what you did.</p> : (
+                  <textarea name="body" rows={3} required={point.evidence === 'note'} placeholder={point.evidence === 'note' ? 'What did you do?' : 'A note is optional'} data-testid="answer-text" defaultValue={point.answered ? point.myAnswer : ''} />
+                )}
+              </div>
+            ) : point.kind === 'multiple_choice' && point.options.length ? (
               point.options.map((option) => (
                 <label key={option} className="choice"><input type="radio" name="choice" value={option} required defaultChecked={point.myAnswer === option} /> {option}</label>
               ))
@@ -543,17 +610,18 @@ function Sheet({
             <input ref={audioInput} type="file" name="audio" accept="audio/*" hidden />
             <label className="attach">
               <ImageIcon /> Add a photo
-              <input type="file" name="image" accept="image/*" data-testid="answer-image" onChange={(event) => setImageName(event.target.files?.[0]?.name || '')} />
+              <input type="file" name="image" accept="image/*" required={point.kind === 'task' && point.evidence === 'photo'} data-testid="answer-image" onChange={(event) => setImageName(event.target.files?.[0]?.name || '')} />
               {imageName ? <span className="attach-name">{imageName}</span> : null}
               {audioName ? <span className="attach-name">{audioName}</span> : null}
             </label>
             <label className="toggle"><input type="checkbox" name="keepPrivate" checked={keepPrivate} onChange={(event) => setKeepPrivate(event.target.checked)} data-testid="answer-private" /> Keep my answer private</label>
-            <label className="toggle"><input type="checkbox" name="shareWithTeacher" data-testid="answer-share" /> Let my teacher read it</label>
+            {point.showImam ? <input type="hidden" name="shareWithTeacher" value="on" /> : null}
+            {point.showImam ? <p data-testid="task-imam">Your imam and the portal admin can see this.</p> : <label className="toggle"><input type="checkbox" name="shareWithTeacher" data-testid="answer-share" /> Let my teacher read it</label>}
             {swarmOn ? (
               <label className="toggle"><input type="checkbox" name="shareWithLearners" disabled={keepPrivate} data-testid="answer-share-learners" /> Let other learners on this video read it</label>
             ) : null}
             <button className="share-btn" type="submit" disabled={sending} data-testid="answer-submit">
-              {sending ? 'Saving…' : `${keepPrivate ? 'Save' : 'Share'} my ${SUBMIT[point.kind]}`}
+              {sending ? 'Saving…' : point.kind === 'task' ? 'I have done this' : `${keepPrivate ? 'Save' : 'Share'} my ${SUBMIT[point.kind]}`}
             </button>
             {error ? <p className="flash error" data-testid="answer-error" role="alert">{error}</p> : null}
             {!point.answered ? <button type="button" className="link-btn" onClick={later} data-testid="answer-later" style={{ width: '100%' }}>Answer later</button> : null}
