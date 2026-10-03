@@ -96,9 +96,9 @@ export async function MasterPortals(ctx: MasterCtx) {
           <header><div><h2>Course pack for a portal</h2></div></header>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-pack', next: '/master' }} />
-            <label className="stack">Portal<select name="portalSlug">{portals.map((portal) => <option key={portal.id} value={str(portal.slug)}>{str(portal.name)}</option>)}</select></label>
+            <label className="stack">Portal<select name="portalSlug" data-testid="pack-portal">{portals.map((portal) => <option key={portal.id} value={str(portal.slug)}>{str(portal.name)}</option>)}</select></label>
             <label className="stack">Pack name<input type="text" data-testid="portal-pack-title" name="title" placeholder="Harbour sittings" required /></label>
-            <div className="actions"><button className="btn ghost" type="submit">Save pack</button></div>
+            <div className="actions"><button className="btn ghost" type="submit" data-testid="portal-pack-save">Save pack</button></div>
           </form>
         </section>
       </div>

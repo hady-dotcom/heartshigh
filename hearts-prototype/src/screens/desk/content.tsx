@@ -215,7 +215,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                   const clauseDoc = clauses.find((row) => Number(row.number) === clause)
                   const clauseSeats = clauseDoc ? seats.filter((seat) => ref(seat.clause) === clauseDoc.id) : []
                   return (
-                    <article key={cut.id} className={`cut-row ${str(cut.status)}`} data-testid="cut-draft" data-status={str(cut.status)}>
+                    <article key={cut.id} className={`cut-row ${str(cut.status)}`} data-testid="cut-draft" data-status={str(cut.status)} data-cut={cut.id}>
                       <div className="time">{clock(Number(cut.start))}<small>{Math.round(Number(cut.end) - Number(cut.start))} s long</small><small><span className={`badge ${cut.status === 'approved' ? 'teal' : cut.status === 'rejected' ? 'grey' : 'gold'}`}>{cut.status === 'approved' ? 'Approved' : cut.status === 'rejected' ? 'Set aside' : 'Draft'}</span></small></div>
                       <div className="htl">
                         <p><b>Hook</b>{str(cut.hook)}</p>
