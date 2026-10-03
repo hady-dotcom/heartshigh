@@ -34,6 +34,10 @@ export type FeedItem = {
   lessonTitle?: string
   placeholder?: boolean
   transcriptReady?: boolean
+  /** The talk's tier record: a machine draft until a person checks it. */
+  tierStatus?: 'draft' | 'checked' | null
+  /** Show "Resume from where the appetiser ended" beside the main, which opens at 0:00. */
+  offerResume?: boolean
 }
 
 export type CourseCard = {

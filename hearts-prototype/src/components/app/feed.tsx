@@ -209,7 +209,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
   const backdrop = item.poster || (item.style ? ART[item.style] : null)
   const showSlide = mode === 'hors' && item.style
   const motionClass = motion === 'from-bottom' ? '' : motion
-  const course = `${base}/course/${item.courseId}?part=${item.lessonId}&t=${Math.floor(item.appetiser.start)}`
+  const course = `${base}/course/${item.courseId}?part=${item.lessonId}&t=0`
 
   return (
     <div

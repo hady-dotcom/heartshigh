@@ -118,6 +118,7 @@
 .j-sound { position: absolute; left: 50%; top: 24%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.6); color: #fff; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 999px; padding: 10px 18px; font-weight: 700; font-size: 14px; }
 .j-speaker { display: flex; align-items: center; gap: 10px; }
 .j-speaker .speaker-row { flex: 1; min-width: 0; }
+.j-resume { display: block; text-align: center; color: #fff; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; padding: 6px 0 10px; }
 .j-mains { display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 8px; color: #fff; text-decoration: none; backdrop-filter: blur(8px); }
 .j-mains .thumb { width: 72px; height: 44px; border-radius: 10px; background: #2a2640 center / cover; flex: none; }
 .j-mains small { display: block; font-size: 12px; color: rgba(255, 255, 255, 0.72); }

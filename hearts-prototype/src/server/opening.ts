@@ -25,6 +25,8 @@ export type OpeningData = {
   route: { lanes: LaneDef[]; cuts: CutInfo[]; d0CutId: number | null; allowSuggested: boolean }
   /** Display data for the clips the opening might hand off to (D0 and every lane's first starter). */
   starters: Record<string, FeedItem>
+  /** Display data for every routable clip, so the device can build its own feed and keep its taps to itself. */
+  clips: Record<string, FeedItem>
   laneTitles: Record<string, string>
   trendsPrompt: boolean
 }
@@ -56,22 +58,24 @@ type Loaded = {
   tags: Row[]
   ladder: Row[]
   clauses: Row[]
+  tiers: Row[]
 }
 
 async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
   const [lanes, scales, clauses] = await Promise.all([all(payload, 'lanes'), all(payload, 'heart-scales'), all(payload, 'clauses')])
-  if (!courseIds.length) return { lanes, scales, clauses, cuts: [], lessons: [], courses: [], tags: [], ladder: [] }
+  if (!courseIds.length) return { lanes, scales, clauses, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [] }
   const [courses, lessons] = await Promise.all([all(payload, 'courses', { id: { in: courseIds } }), all(payload, 'lessons', { course: { in: courseIds } })])
   const lessonIds = lessons.map((row) => row.id)
   const cuts = lessonIds.length
     ? await all(payload, 'cuts', { and: [{ lesson: { in: lessonIds } }, { or: [{ status: { equals: 'approved' } }, { placeholder: { equals: true } }] }] })
     : []
   const cutIds = cuts.map((row) => row.id)
-  const [tags, ladder] = await Promise.all([
+  const [tags, ladder, tiers] = await Promise.all([
     cutIds.length ? all(payload, 'tags', { 'item.value': { in: cutIds } }) : Promise.resolve([] as Row[]),
     lessonIds.length ? all(payload, 'ladder-items', { and: [{ lesson: { in: lessonIds } }, { status: { equals: 'approved' } }] }) : Promise.resolve([] as Row[]),
+    lessonIds.length ? all(payload, 'talk-tiers', { lesson: { in: lessonIds } }) : Promise.resolve([] as Row[]),
   ])
-  return { lanes, scales, clauses, cuts, lessons, courses, tags: tags.filter((tag) => (tag.item as { relationTo?: string } | undefined)?.relationTo === 'cuts'), ladder }
+  return { lanes, scales, clauses, cuts, lessons, courses, tags: tags.filter((tag) => (tag.item as { relationTo?: string } | undefined)?.relationTo === 'cuts'), ladder, tiers }
 }
 
 function laneDefs(data: Loaded): LaneDef[] {
@@ -152,8 +156,42 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
   const shownLane = laneKey || tagged.find((tag) => tag.confirmed)?.lane || null
   const fallback = laneOf(cut.theme as string)
   const slide = cut.presentation === 'slide' || !youtubeId
-  const placeholder = Boolean(cut.placeholder)
+  // A starter talk's tier record replaces the placeholder times; a cut the extractor made keeps its own ladder.
+  const tier = cut.placeholder ? data.tiers.find((row) => idOf(row.lesson) === lesson.id) : undefined
+  const tierRest = data.tiers.find((row) => idOf(row.lesson) === lesson.id)
+  const placeholder = Boolean(cut.placeholder) && !tier
   const quote = placeholder ? '' : String(hors?.quote || cut.land || '')
+  if (tier) {
+    const land = String(tier.land || '')
+    return {
+      id: `cut-${cut.id}`,
+      cutId: cut.id,
+      lane: shownLane || fallback.key,
+      laneLabel: shownLane ? laneTitles[shownLane] || fallback.label : fallback.label,
+      laneKey,
+      laneTags: tagged.filter((tag) => tag.confirmed).map(({ lane, weight }) => ({ lane, weight })),
+      speaker,
+      speakerSlug: slug,
+      portrait: portraitFor(slug),
+      poster: posterFor(youtubeId),
+      youtubeId,
+      courseId: course.id,
+      courseTitle: String(course.title || ''),
+      lessonId: lesson.id,
+      lessonTitle: String(lesson.sourceTitle || lesson.title || ''),
+      hors: { start: Number(tier.horsStart), end: Number(tier.horsEnd), quote: String(tier.horsQuote || land) },
+      appetiser: { start: Number(tier.appetiserStart), end: Number(tier.appetiserEnd), quote: land },
+      hook: String(tier.hook || ''),
+      turn: String(tier.turn || ''),
+      land,
+      style: slide ? STYLES[index % STYLES.length] : null,
+      clause: (cut.bestClause as number) || null,
+      placeholder: false,
+      transcriptReady: Boolean(lesson.transcript) && lesson.transcriptSource !== 'pending',
+      tierStatus: tier.status === 'checked' ? 'checked' : 'draft',
+      offerResume: tier.offerResume !== false,
+    }
+  }
   return {
     id: `cut-${cut.id}`,
     cutId: cut.id,
@@ -179,6 +217,8 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     clause: (cut.bestClause as number) || null,
     placeholder,
     transcriptReady: Boolean(lesson.transcript) && lesson.transcriptSource !== 'pending',
+    tierStatus: tierRest ? (tierRest.status === 'checked' ? 'checked' : 'draft') : null,
+    offerResume: tierRest ? tierRest.offerResume !== false : true,
   }
 }
 
@@ -238,6 +278,12 @@ export async function loadOpening(payload: Payload, portal: PortalDoc, user: Ses
     const item = row ? itemFor(data, row, info?.starter?.lane || null, laneTitles, index) : null
     if (item) starters[String(id)] = item
   }
+  const clips: Record<string, FeedItem> = {}
+  for (const [index, info] of cuts.entries()) {
+    const row = data.cuts.find((cut) => cut.id === info.id)
+    const item = row ? itemFor(data, row, info.starter?.lane || null, laneTitles, index) : null
+    if (item) clips[String(info.id)] = item
+  }
   return {
     portal: portal.slug,
     scenesVersion: Math.max(1, ...scenes.map((scene) => (scene as SceneDef & { version: number }).version)),
@@ -247,6 +293,7 @@ export async function loadOpening(payload: Payload, portal: PortalDoc, user: Ses
     d0CutId,
     route: { lanes, cuts, d0CutId, allowSuggested: process.env.HEARTS_ALLOW_SUGGESTED_LANES === '1' },
     starters,
+    clips,
     laneTitles,
     trendsPrompt: own?.trendsContributionPrompt !== false && master?.trendsContributionPrompt !== false,
   }

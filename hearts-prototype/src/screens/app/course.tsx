@@ -92,7 +92,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
   const seenAt = visits[0]?.createdAt ? new Date(visits[0].createdAt) : now()
 
   const lessonIds = lessons.map((row) => row.id)
-  const allPoints = (await rows(payload, 'engagement-points', { lesson: { in: lessonIds } }, { sort: 'second', depth: 1 }))
+  const allPoints = (await rows(payload, 'engagement-points', { and: [{ lesson: { in: lessonIds } }, { or: [{ status: { not_equals: 'draft' } }, { status: { exists: false } }] }] }, { sort: 'second', depth: 1 }))
     .filter((point) => {
       const author = point.author as { id?: number; role?: string; tenants?: { tenant?: unknown }[] } | null
       if (!author || author.role === 'master') return true

@@ -7,11 +7,13 @@ export const dynamic = 'force-dynamic'
 const number = (value: unknown, fallback = 0) => (typeof value === 'number' && Number.isFinite(value) ? value : fallback)
 
 /**
- * P2: the body carries lane scores, the lead lane, the spine-first choice, served clip ids and the spine pointer.
+ * Signed in only: before sign-up the device routes its own feed from GET /api/hearts/opening, so nothing derived
+ * from taps leaves it. P2: the body carries lane scores, the lead lane, the spine-first choice, served clip ids and the spine pointer.
  * No taps and no scales. The body is not logged.
  */
 export async function POST(req: Request) {
   const session = await getSession({ touch: false })
+  if (!session.user) return json({ error: 'Sign in first. Before that, the feed is routed on your device.' }, 401)
   const portal = await portalOf(session, req)
   if (!portal) return json({ error: 'That portal could not be found.' }, 404)
   const body = await readBody(req)

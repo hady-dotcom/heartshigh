@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
-import { applySignal, applyTap, decay, freshState, markServed, planFrom, routeFeed, spineStart, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
+import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readHeart, readPending, sessionFlags, setSessionFlags, viewAsId, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
 import { isoWeek } from '@/lib/trends'
@@ -39,6 +39,10 @@ export type JourneyProps = {
 
 const TAB_DELAY = 200
 const HOLD = 700
+
+function appetiserEnd(item: FeedItem) {
+  return item.appetiser.end > item.appetiser.start ? item.appetiser.end : item.appetiser.start + 180
+}
 
 function clock(total: number) {
   const value = Math.max(0, Math.round(total))
@@ -253,7 +257,7 @@ export function Journey(props: JourneyProps) {
   // ---------- players ----------
   const specFor = useCallback((item: FeedItem | undefined, kind: Mode): Spec | null => {
     if (!item || !item.youtubeId || item.style) return null
-    if (kind === 'appetiser') return { key: `${item.cutId}:full`, videoId: item.youtubeId, start: item.appetiser.start, end: null, kind: 'full' }
+    if (kind === 'appetiser') return { key: `${item.cutId}:appetiser`, videoId: item.youtubeId, start: item.appetiser.start, end: appetiserEnd(item), kind: 'full' }
     return { key: `${item.cutId}:hors`, videoId: item.youtubeId, start: item.hors.start, end: item.hors.end, kind: 'hors' }
   }, [])
 
@@ -398,18 +402,24 @@ export function Journey(props: JourneyProps) {
   }, [readyTick, revealed, tryPlay])
 
   // ---------- feed data ----------
+  // The feed is routed here on the device from the bundled clip map: lane scores, the lead lane and served clips
+  // never leave it (P1 and P2).
   const fetchFeed = useCallback(
     async (state: HeartState, justShow = false) => {
-      const plan = planFrom(state, ctx, { justShow })
-      const response = await fetch(`/api/hearts/feed?portal=${opening.portal}`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ portal: opening.portal, laneScores: plan.laneScores, lead: plan.lead, spineFirst: plan.spineFirst, served: plan.served, spinePointer: plan.spinePointer, firstOpenAt: plan.firstOpenAt }),
-      })
-      if (!response.ok) throw new Error('feed')
-      return (await response.json()) as { items: FeedSlot[]; clips: FeedItem[]; spinePointer: number }
+      const local = { ...ctx, now: Date.now() }
+      let route: { items: FeedSlot[]; spinePointer: number } = routeFeed(state, local, { justShow })
+      // Once the learner has seen everything, start the spine again rather than leave the feed empty.
+      if (!route.items.length) route = buildFeed({ ...planFrom(state, local, { justShow }), served: [], spinePointer: 0 }, local)
+      const clips = route.items
+        .map((slot): FeedItem | null => {
+          const clip = opening.clips[String(slot.cutId)]
+          if (!clip) return null
+          return slot.laneKey ? { ...clip, laneKey: slot.laneKey, lane: slot.laneKey, laneLabel: opening.laneTitles[slot.laneKey] || clip.laneLabel } : { ...clip, laneKey: null }
+        })
+        .filter((clip): clip is FeedItem => Boolean(clip))
+      return { items: route.items, clips, spinePointer: route.spinePointer }
     },
-    [ctx, opening.portal],
+    [ctx, opening.clips, opening.laneTitles],
   )
 
   const adopt = useCallback(
@@ -799,6 +809,12 @@ export function Journey(props: JourneyProps) {
       const time = player.getCurrentTime()
       const seen = watch.current
       seen.furthest = Math.max(seen.furthest, time - seen.start)
+      // The player's own end mark is skipped when someone seeks past it, so the appetiser stops here as well.
+      if (modeRef.current === 'appetiser' && time >= appetiserEnd(current) - 0.25) {
+        player.pauseVideo()
+        player.seekTo(appetiserEnd(current), true)
+        return
+      }
       if (modeRef.current === 'hors' && !seen.done90) {
         const length = current.hors.end - current.hors.start
         if (length > 0 && seen.furthest >= 0.9 * length) {
@@ -994,7 +1010,8 @@ export function Journey(props: JourneyProps) {
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const slide = phase === 'feed' && item?.style ? item.style : null
   const mains = item?.laneKey ? props.mains[item.laneKey] : undefined
-  const course = item ? `${base}/course/${item.courseId}?part=${item.lessonId}&t=${Math.floor(item.appetiser.start)}` : base
+  const course = item ? `${base}/course/${item.courseId}?part=${item.lessonId}&t=0` : base
+  const resumeMain = item && item.offerResume !== false ? `${base}/course/${item.courseId}?part=${item.lessonId}&t=${Math.floor(appetiserEnd(item))}` : null
   const laneVisible = Boolean(item) && !firstEver
   void readyTick
 
@@ -1037,7 +1054,8 @@ export function Journey(props: JourneyProps) {
           </>
         ) : (
           <>
-            <a className="pill gold block" href={course} onClick={startCourse} data-testid="start-course">Start this course ›</a>
+            <a className="pill gold block" href={course} onClick={startCourse} data-testid="start-course">Watch the whole talk from the start ›</a>
+            {resumeMain ? <a className="j-resume" href={resumeMain} onClick={startCourse} data-testid="resume-main">Resume from where the appetiser ended ({clock(appetiserEnd(item))})</a> : null}
             {mains && mains.lessonId !== item.lessonId ? (
               <a className="j-mains" href={`${base}/course/${mains.courseId}?part=${mains.lessonId}`} onClick={startCourse} data-testid="mains-shelf">
                 <span className="thumb" style={mains.poster ? { backgroundImage: `url(${mains.poster})` } : undefined} />
