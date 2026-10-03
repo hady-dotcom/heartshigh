@@ -1,5 +1,6 @@
 import { mkdirSync } from 'node:fs'
-import { expect, test, type Page } from '@playwright/test'
+import { expect, request as playwrightRequest, test, type Page } from '@playwright/test'
+import { E2E_BASE } from '../env'
 
 const PHONE = { width: 390, height: 844 }
 const SHOTS = process.env.HEARTS_SHOTS
@@ -46,7 +47,9 @@ test('at phone size, short clips stay off the grow page and a full talk in a cou
   await swipe(-200, 0)
   await expect(feed).toHaveAttribute('data-mode', 'hors')
   await expect(feed).not.toHaveAttribute('data-cut', opening!)
+  const beforeDown = await feed.getAttribute('data-cut')
   await swipe(0, 200)
+  await expect(feed).not.toHaveAttribute('data-cut', beforeDown!)
   await expect(feed).toHaveAttribute('data-mode', 'hors')
   await shot(page, 'hors-loop')
   const first = await feed.getAttribute('data-cut')
@@ -99,25 +102,25 @@ test('at phone size, short clips stay off the grow page and a full talk in a cou
   }).toPass({ timeout: 15_000 })
   await shot(page, 'drawn-to')
 
-  await page.goto('/p/east-london/lanes')
-  await page.getByTestId('path-course').first().getByRole('link', { name: 'Start' }).click()
-  await expect(page.getByTestId('part-link').first()).toBeVisible()
-  const links = page.getByTestId('part-link')
-  const count = await links.count()
+  // The seed has this learner through the Day 1 courses, so look for a part of any open course not yet watched.
+  const master = await playwrightRequest.newContext({ baseURL: E2E_BASE })
+  expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
+  const learner = (await (await master.get('/api/users?where[email][equals]=elm-learner@hearts.test&depth=0')).json()).docs[0] as { id: number }
+  const watched = new Set(((await (await master.get(`/api/completions?where[user][equals]=${learner.id}&depth=0&limit=200`)).json()).docs as { lesson: number }[]).map((row) => Number(row.lesson)))
+  const lessons = ((await (await master.get('/api/lessons?depth=0&limit=200&sort=id')).json()).docs as { id: number }[]).filter((row) => !watched.has(row.id))
+  await master.dispose()
   let fresh = ''
-  for (let index = 0; index < count; index += 1) {
-    const text = (await links.nth(index).innerText()) || ''
-    if (/watched/i.test(text)) continue
-    fresh = /part=(\d+)/.exec((await links.nth(index).getAttribute('href')) || '')?.[1] || ''
-    if (fresh) break
+  for (const row of lessons) {
+    const tried = await page.request.post('/api/hearts', {
+      form: { action: 'complete', level: 'talk', lesson: String(row.id), seconds: '99999', ended: 'yes', next: '/p/east-london/garden/general' },
+      maxRedirects: 0,
+    })
+    expect(tried.status()).toBe(303)
+    if (/error=/.test(tried.headers()['location'] || '')) continue
+    fresh = String(row.id)
+    break
   }
   expect(fresh, 'a course part that has not been watched').toBeTruthy()
-  const finished = await page.request.post('/api/hearts', {
-    form: { action: 'complete', level: 'talk', lesson: fresh, seconds: '99999', ended: 'yes', next: '/p/east-london/garden/general' },
-    maxRedirects: 0,
-  })
-  expect(finished.status()).toBe(303)
-  expect(decodeURIComponent((finished.headers()['location'] || '').replace(/\+/g, ' '))).not.toMatch(/error=/)
   await page.goto('/p/east-london/garden/general')
   await expect(sittings).toHaveText(String(before + 1))
   await shot(page, 'grow-after-talk')
