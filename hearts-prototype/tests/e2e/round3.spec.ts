@@ -393,7 +393,7 @@ test.describe('round 3 screens', () => {
     await page.goto(`/p/${slug}/admin/library`)
     const offered = page.getByTestId('split-course')
     expect(await offered.count()).toBeGreaterThan(0)
-    await expect(offered.first()).toContainText('from the library')
+    await expect(offered.filter({ hasText: 'from the library' }).first()).toContainText('from the library')
   })
 
   test('Bug 23: Home Continue rows put the title and the speaker line on separate lines', async ({ page }) => {

@@ -1,5 +1,6 @@
 import { defaultPlanName } from '@/lib/schedule'
 import { now as clockNow } from '@/lib/clock'
+import { dateKey, formatOnTime, onTimeProgress, ON_TIME_HINT, type PlanSlot } from '@/lib/on-time'
 import { ViewAsButton } from '@/components/desk/view-as-button'
 import Link from 'next/link'
 import { Hidden } from '@/components/app/shell'
@@ -14,13 +15,14 @@ export async function TeachScreen(ctx: Ctx) {
   const { payload, user, portal, base, query } = ctx
   const people = await portalPeople(payload, portal.id)
   const learners = people.filter((person) => person.role === 'learner')
-  const [entries, answers, completions, notes, watches, courseIds] = await Promise.all([
+  const [entries, answers, completions, notes, watches, courseIds, plans] = await Promise.all([
     rows(payload, 'workbook-entries', { portal: { equals: portal.id } }, { depth: 1, sort: '-createdAt' }),
     rows(payload, 'answers', { portal: { equals: portal.id } }, { depth: 1, sort: '-createdAt', limit: 500 }),
     rows(payload, 'completions', { portal: { equals: portal.id } }, { limit: 2000 }),
     rows(payload, 'feedback-notes', { portal: { equals: portal.id } }, { depth: 1, sort: 'second' }),
     rows(payload, 'watch-sessions', { portal: { equals: portal.id } }, { depth: 1, sort: '-createdAt', limit: 50 }),
     visibleCourseIds(payload, user),
+    rows(payload, 'schedules', { portal: { equals: portal.id } }, { limit: 200 }),
   ])
   const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }, { sort: 'title' }) : []
   const shared = entries.filter((entry) => entry.consent)
@@ -28,24 +30,38 @@ export async function TeachScreen(ctx: Ctx) {
   const evidence = answers.filter((answer) => answer.video || answer.audio)
   const picked = evidence.find((answer) => answer.id === Number(query.answer)) || evidence[0]
   const here = `${base}/admin/teach`
+  const today = dateKey(now())
+  const slotsFor = (learnerId: number): PlanSlot[] => {
+    const slots: PlanSlot[] = []
+    for (const plan of plans) {
+      const members = ((plan.learners as unknown[]) || []).map((item) => ref(item))
+      if (!members.includes(learnerId)) continue
+      for (const slot of (plan.slots as { date?: string; lessonId?: number }[]) || []) {
+        if (slot.lessonId && slot.date) slots.push({ lessonId: Number(slot.lessonId), date: String(slot.date) })
+      }
+    }
+    return slots
+  }
   return (
     <AdminFrame ctx={ctx} active="teach" title="Teach" intro="See how each learner is getting on, reply to what they have shared, and leave notes on their recordings." testId="admin-teach">
       <section className="panel" style={{ marginBottom: 18 }}>
         <header className="light"><h2>Learners ({learners.length})</h2></header>
         <div className="table-wrap">
           <table className="data">
-            <thead><tr><th>Name</th><th>E-mail</th><th className="num">Day</th><th className="num">Parts watched</th><th className="num">On time</th><th className="num">Answers</th><th>Give a course</th><th /></tr></thead>
+            <thead><tr><th>Name</th><th>E-mail</th><th className="num">Day</th><th className="num">Parts watched</th><th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr></th><th className="num">Answers</th><th>Give a course</th><th /></tr></thead>
             <tbody>
               {learners.map((learner) => {
                 const done = completions.filter((row) => ref(row.user) === learner.id)
+                const progress = onTimeProgress(slotsFor(learner.id), done.map((row) => ({ lessonId: ref(row.lesson) || 0, watchedOn: dateKey(row.watchedAt || row.createdAt) })), today)
+                const onTime = formatOnTime(progress)
                 return (
                   <tr key={learner.id} data-testid="learner-row">
                     <td><b>{str(learner.name)}</b>{learner.audience && learner.audience !== 'learner' ? <div className="hint">{str(learner.audience)}</div> : null}</td>
                     <td>{str(learner.email)}</td>
                     <td className="num">{dayNumber(learner as never)}</td>
                     <td className="num" data-testid="learner-progress">{done.length}</td>
-                    <td className="num">{done.filter((row) => row.onTime).length}</td>
-                    <td className="num">{answers.filter((row) => ref(row.user) === learner.id).length}</td>
+                    <td className="num" data-testid="on-time" title={progress.planned ? ON_TIME_HINT : 'No study plan yet'}>{onTime}</td>
+                    <td className="num" data-testid="learner-answers">{answers.filter((row) => ref(row.user) === learner.id).length}</td>
                     <td>
                       <form action="/api/hearts" method="post" style={{ display: 'flex', gap: 8 }}>
                         <Hidden fields={{ action: 'grant', learner: learner.id, next: here }} />

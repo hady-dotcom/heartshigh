@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { Avatar } from '@/components/app/feed'
 import { AppFrame, Flash, TabBar } from '@/components/app/shell'
 import { PlayIcon } from '@/components/icons'
+import { Arch } from '@/components/arch'
 import { courseCards, dayNumber, portalName, portraitFor, posterFor, slugify } from '@/server/learner'
 import { recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
@@ -62,7 +63,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         <section className="grow-banner" data-testid="grow-banner">
           <p className="eyebrow">Your growth</p>
           <h2 data-testid="days-count">{days ? `${days} day${days === 1 ? '' : 's'} with us so far` : 'Your garden starts today'}</h2>
-          <span className="tree-art"><img src="/brand/hoopoe-perched.png" alt="" /></span>
+          <span className="tree-art" aria-hidden><Arch size={72} /></span>
           <p className="grow-sub">Five ways to see it</p>
           <Rings g={g} base={base} />
           <Link className="pill gold block" href={`${base}/garden`} data-testid="see-sown">See what you&apos;ve sown</Link>

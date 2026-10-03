@@ -1,6 +1,10 @@
 import Link from 'next/link'
 import { loadDoors } from '@/server/doors'
 import { doorCode, doorLabel, doorOfClause } from '@/lib/doors'
+import { countLine, describeGroups, subsetGroups } from '@/lib/curriculum-groups'
+import { groupThese, listDocs } from '@/server/curriculum'
+import { CourseTree } from '@/components/desk/course-tree'
+import { PackContents } from '@/components/desk/pack-contents'
 import { notFound, redirect } from 'next/navigation'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
@@ -46,7 +50,7 @@ export async function ContentScreen(ctx: Ctx) {
       </div>
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.7fr) minmax(320px, 1fr)', alignItems: 'start' }}>
         <section className="panel">
-          <header className="light"><h2>Courses in this portal</h2><Link className="btn ghost small" href={`${base}/admin/library`}>Link from the library</Link></header>
+          <header className="light"><h2>Courses in this portal</h2><Link className="btn ghost small" href={`${base}/admin/library`}>Add from the library</Link></header>
           <div className="table-wrap">
             <table className="data">
               <thead><tr><th>Subject</th><th>Speaker</th><th>From</th><th className="num">Films</th><th className="num">Questions</th><th className="num">Cuts live</th><th /></tr></thead>
@@ -169,7 +173,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
               <form className="body form" action="/api/hearts" method="post">
                 <Hidden fields={{ action: 'rename-course', course: courseId, portalSlug: portal?.slug, next: here }} />
                 <label className="stack">Name<input type="text" name="title" defaultValue={str(course.title)} /></label>
-                <label className="check"><input type="checkbox" name="importable" defaultChecked={Boolean(course.importable)} /> Other portals may link this course</label>
+                <label className="check"><input type="checkbox" name="importable" defaultChecked={Boolean(course.importable)} /> Other portals may add this course</label>
                 <div className="actions"><button className="btn ghost small" type="submit">Save</button></div>
               </form>
             </section>
@@ -402,41 +406,52 @@ export async function CourseEditorScreen(ctx: Ctx, courseId: number) {
   )
 }
 
+const ADOPT_HELP = 'Your portal gets these courses and any updates to them from the main library. Learners only see them once an access code or a personal grant includes them.'
+
 export async function LibraryScreen(ctx: Ctx) {
   guardAdmin(ctx)
   const { payload, portal, base } = ctx
-  const [packs, courses, adoptions, adoptedIds] = await Promise.all([
-    rows(payload, 'packs', { owner: { equals: 'master' } }, { sort: 'title' }),
-    rows(payload, 'courses', { origin: { equals: 'master' } }, { sort: 'title' }),
+  const [packs, courseDocs, adoptions, adoptedIds] = await Promise.all([
+    rows(payload, 'packs', { owner: { equals: 'master' } }, { sort: 'title', limit: 100 }),
+    listDocs(payload, 'courses', { origin: { equals: 'master' } }),
     rows(payload, 'adoptions', { portal: { equals: portal.id } }),
     adoptedCourseIds(payload, portal.id),
   ])
+  const courses = [...courseDocs].sort((a, b) => str(a.title).localeCompare(str(b.title)))
+  const catalogue = courses.map((course) => ({ id: course.id, title: str(course.title), summary: str(course.summary) }))
+  const grouped = await groupThese(payload, catalogue)
   const linkedPack = (id: number) => adoptions.find((row) => row.kind === 'pack' && ref(row.pack) === id)
   const linkedCourse = (id: number) => adoptions.find((row) => row.kind === 'course' && ref(row.course) === id)
   const here = `${base}/admin/library`
+  const pickable = courses.filter((course) => adoptedIds.includes(course.id) || course.importable !== false)
+  const pickGroups = subsetGroups(grouped, new Set(pickable.map((course) => course.id)))
+  const pickHints = Object.fromEntries(pickable.filter((course) => !adoptedIds.includes(course.id)).map((course) => [course.id, '(from the library)']))
   return (
-    <AdminFrame ctx={ctx} active="library" title="Library" intro="Courses from the master library. Linking keeps one living copy: when the library updates, your portal sees it too. Nobody here sees a linked course until an access code or a personal grant includes it." testId="admin-library">
+    <AdminFrame ctx={ctx} active="library" title="Library" intro="Courses from the main library. Adding a pack keeps one living copy: when the library updates, your portal sees it too. Nobody here sees an added course until an access code or a personal grant includes it." testId="admin-library">
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.6fr) minmax(300px, 1fr)', alignItems: 'start' }}>
         <div style={{ display: 'grid', gap: 18 }}>
           <section className="panel">
             <header className="light"><h2>Library packs</h2></header>
             <div className="body grid two">
               {packs.map((pack) => {
-                const inside = courses.filter((course) => ((pack.courses as unknown[]) || []).some((item) => ref(item) === course.id))
+                const ids = new Set(((pack.courses as unknown[]) || []).map((item) => ref(item)).filter((id): id is number => Boolean(id)))
+                const inside = subsetGroups(grouped, ids)
+                const talkTotal = inside.reduce((sum, group) => sum + group.talkCount, 0)
                 const linked = linkedPack(pack.id)
                 return (
                   <div className="lib-card" key={pack.id} data-testid="library-pack">
                     <h3>{str(pack.title)}</h3>
-                    {inside.length ? (
-                      <details data-testid="pack-courses">
-                        <summary>{inside.length} course{inside.length === 1 ? '' : 's'}</summary>
-                        <ul>{inside.map((course) => <li key={course.id}>{str(course.title)}</li>)}</ul>
-                      </details>
-                    ) : <p>Empty for now</p>}
-                    {linked ? <span className="badge teal">Linked</span> : (
+                    <p className="pack-counts" data-testid="pack-counts">{countLine(talkTotal, ids.size)}</p>
+                    <p data-testid="pack-summary">{describeGroups(inside, str(pack.summary))}</p>
+                    <details className="pack-fold" data-testid="pack-fold">
+                      <summary>Show the courses</summary>
+                      <PackContents groups={inside} />
+                    </details>
+                    <p className="hint" data-testid="adopt-help">{ADOPT_HELP}</p>
+                    {linked ? <span className="badge teal">In this portal</span> : (
                       <form action="/api/hearts" method="post">
                         <Hidden fields={{ action: 'adopt', kind: 'pack', pack: pack.id, portalSlug: portal.slug, next: here }} />
-                        <button className="btn small" data-testid="adopt-pack" type="submit">Link this pack</button>
+                        <button className="btn small" data-testid="adopt-pack" type="submit">Add to this portal (stays in sync)</button>
                       </form>
                     )}
                   </div>
@@ -457,17 +472,17 @@ export async function LibraryScreen(ctx: Ctx) {
                       <tr key={course.id} data-testid="library-course">
                         <td><b>{str(course.title)}</b>{course.summary ? <div className="hint">{str(course.summary).slice(0, 140)}</div> : null}</td>
                         <td>{str(course.speaker)}</td>
-                        <td>{direct ? <span className="badge teal">Linked</span> : viaPack ? <span className="badge purple">In a linked pack</span> : <span className="badge grey">Not linked</span>}</td>
+                        <td>{direct ? <span className="badge teal">In this portal</span> : viaPack ? <span className="badge purple">Comes with a pack</span> : <span className="badge grey">Not added yet</span>}</td>
                         <td style={{ whiteSpace: 'nowrap' }}>
                           {direct ? (
                             <form action="/api/hearts" method="post">
                               <Hidden fields={{ action: 'remove-adoption', adoption: direct.id, portalSlug: portal.slug, next: here }} />
-                              <button className="btn danger small" data-testid="remove-link" type="submit">Remove link</button>
+                              <button className="btn danger small" data-testid="remove-link" type="submit">Remove from this portal</button>
                             </form>
                           ) : !viaPack && course.importable !== false ? (
                             <form action="/api/hearts" method="post">
                               <Hidden fields={{ action: 'adopt', kind: 'course', course: course.id, portalSlug: portal.slug, next: here }} />
-                              <button className="btn small" data-testid="adopt-course" type="submit">Link this course</button>
+                              <button className="btn small" data-testid="adopt-course" type="submit">Add this course (stays in sync)</button>
                             </form>
                           ) : null}
                         </td>
@@ -481,23 +496,20 @@ export async function LibraryScreen(ctx: Ctx) {
         </div>
         <div style={{ display: 'grid', gap: 18 }}>
           <section className="panel">
-            <header><div><h2>Import with a token</h2><p>For a course someone has shared with you</p></div></header>
+            <header><div><h2>Add a shared course</h2><p>For a course someone has sent you a code for</p></div></header>
             <form className="body form" action="/api/hearts" method="post">
               <Hidden fields={{ action: 'import-token', portalSlug: portal.slug, next: here }} />
-              <label className="stack">Import token<input type="text" data-testid="import-token" name="token" required /></label>
-              <div className="actions"><button className="btn ink small" type="submit">Import</button></div>
+              <label className="stack">Share code<input type="text" data-testid="import-token" name="token" required /></label>
+              <div className="actions"><button className="btn ink small" type="submit">Add it here</button></div>
             </form>
           </section>
-          <section className="panel">
+          <section className="panel" data-testid="smaller-pack">
             <header><div><h2>Make a smaller pack</h2><p>Take only some courses from the library into a pack of your own</p></div></header>
             <form className="body form" action="/api/hearts" method="post">
               <Hidden fields={{ action: 'split-pack', portalSlug: portal.slug, next: here }} />
               <label className="stack">New pack name<input type="text" name="title" required /></label>
-              <div className="checks" style={{ flexDirection: 'column' }}>
-                {courses.filter((course) => adoptedIds.includes(course.id) || course.importable !== false).map((course) => <label className="check" key={course.id} data-testid="split-course"><input type="checkbox" name="course" value={course.id} /> {str(course.title)}{adoptedIds.includes(course.id) ? '' : <span className="hint"> (from the library)</span>}</label>)}
-                {!courses.length ? <p className="hint">The library has no courses yet.</p> : null}
-              </div>
-              <div className="actions"><button className="btn ghost small" type="submit">Make pack</button></div>
+              {pickGroups.length ? <CourseTree groups={pickGroups} name="course" hints={pickHints} testId="split-tree" courseTestId="split-course" /> : <p className="hint">The library has no courses yet.</p>}
+              <div className="actions"><button className="btn ghost small" type="submit">Save this smaller pack</button></div>
             </form>
           </section>
         </div>
@@ -537,13 +549,14 @@ export async function AccessScreen(ctx: Ctx) {
   const here = `${base}/admin/access`
   const roleBadge: Record<string, string> = { admin: 'ink', teacher: 'purple', learner: 'teal', parent: 'gold' }
   const courseIds = [...new Set(usable.flatMap((pack) => ((pack.courses as unknown[]) || []).map((item) => ref(item)).filter((id): id is number => Boolean(id))))]
-  const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }) : []
+  const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }, { limit: 500, sort: 'title' }) : []
+  const requiredGroups = await groupThese(payload, courses.map((course) => ({ id: course.id, title: str(course.title), summary: str(course.summary) })))
   return (
     <AdminFrame ctx={ctx} active="access" title="Access codes" intro="A code says who someone is in the portal and which course pack they see. Send the link rather than the code, so nobody has to type it." testId="admin-access">
       <section className="panel" style={{ marginBottom: 18 }}>
         <div className="table-wrap">
           <table className="data">
-            <thead><tr><th>Code</th><th>For</th><th>Course pack</th><th>Teacher code</th><th className="num">Joined</th><th>Works</th><th>Link to send</th><th>QR</th><th>Change</th></tr></thead>
+            <thead><tr><th>Code</th><th>For</th><th>Courses</th><th>Teacher code</th><th className="num">Joined</th><th>Works</th><th>Link to send</th><th>QR</th><th>Change</th></tr></thead>
             <tbody>
               {codes.map((code) => {
                 const share = `${origin}/join?code=${encodeURIComponent(str(code.code))}`
@@ -596,7 +609,7 @@ export async function AccessScreen(ctx: Ctx) {
               </label>
             </div>
             <div className="cols">
-              <label className="stack">Course pack
+              <label className="stack">Courses they can open
                 <select data-testid="new-code-pack" name="pack">{usable.map((pack) => <option key={pack.id} value={pack.id}>{str(pack.title)}</option>)}</select>
               </label>
               <label className="stack">Teacher code
@@ -607,21 +620,21 @@ export async function AccessScreen(ctx: Ctx) {
               </label>
             </div>
             <CodeLimits />
-            {courses.length ? (
-              <div>
+            {requiredGroups.length ? (
+              <div data-testid="required-courses">
                 <div className="hint" style={{ marginBottom: 6 }}>Courses everyone on this code is asked to finish (optional)</div>
-                <div className="checks">{courses.map((course) => <label className="check" key={course.id}><input type="checkbox" name="requiredCourse" value={course.id} /> {str(course.title)}</label>)}</div>
+                <CourseTree groups={requiredGroups} name="requiredCourse" testId="required-tree" courseTestId="required-course" />
               </div>
             ) : null}
             <div className="actions"><button className="btn ink" data-testid="new-code-submit" type="submit">Create access code</button></div>
           </form>
         </section>
         <section className="panel">
-          <header><div><h2>New course pack</h2><p>A pack is a set of courses a code can open</p></div></header>
+          <header><div><h2>New set of courses</h2><p>A set of courses a code can open</p></div></header>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-pack', portalSlug: portal.slug, next: here }} />
-            <label className="stack">Pack name<input type="text" data-testid="portal-pack-title" name="title" required /></label>
-            <div className="actions"><button className="btn ghost" data-testid="portal-pack-submit" type="submit">Save pack</button></div>
+            <label className="stack">Name<input type="text" data-testid="portal-pack-title" name="title" required /></label>
+            <div className="actions"><button className="btn ghost" data-testid="portal-pack-submit" type="submit">Save this set</button></div>
           </form>
         </section>
       </div>

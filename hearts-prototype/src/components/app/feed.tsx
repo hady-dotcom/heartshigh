@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FeedItem, SlideStyle } from '@/server/learner'
 import { ArrowIcon, HeartIcon, LockIcon, PlayIcon, SaveIcon, ShareIcon } from '../icons'
+import { Arch } from '@/components/arch'
 
 type Mode = 'hors' | 'appetiser'
 type Motion = 'from-bottom' | 'from-left' | 'from-right' | 'from-top' | 'replay'
@@ -165,6 +166,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
       <div className="feed" data-testid="feed-empty">
         <div className="feed-empty">
           <div>
+            <span className="feed-arch" aria-hidden><Arch size={64} /></span>
             <p style={{ fontFamily: 'var(--serif)', fontSize: 30, margin: '0 0 10px' }}>Nothing here yet</p>
             <p style={{ opacity: 0.8, lineHeight: 1.5 }}>When your teachers approve short clips from the talks, they will appear here. The full courses are already open in Lanes.</p>
             <Link className="pill gold" href={`${base}/lanes`} style={{ marginTop: 16 }}>Open Lanes</Link>

@@ -14,6 +14,7 @@ import { laneClips } from '@/lib/lanes'
 import { isoWeek } from '@/lib/trends'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, lowData, playOnly, preloadApi, setHidden, soundOn, type PlayerKind } from '@/lib/yt'
 import { TabBar } from '../app/shell'
+import { Arch } from '@/components/arch'
 import { Avatar, FollowButton, Slide } from '../app/feed'
 import { HeartIcon, SaveIcon, ShareIcon } from '../icons'
 import { HelpScreen, Opener, SceneCard } from './scenes'
@@ -1399,7 +1400,7 @@ export function Journey(props: JourneyProps) {
           {showPoster && item && !slide ? (
             <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}`} data-testid="poster-frame">
               {item.poster ? <img src={item.poster} alt="" /> : null}
-              <span className="j-poster-mark"><img src="/brand/hoopoe-mark.png" alt="" /></span>
+              <span className="j-poster-mark"><Arch size={30} /></span>
               <span className="j-poster-who">{item.speaker}</span>
               {offline ? <p className="j-poster-note" data-testid="offline-note">{phase === 'handoff' || index === 0 ? "You're offline. Your first clip will play as soon as you're back." : "You're offline. We'll carry on from here when you're back."}</p> : null}
               {errorNote ? <p className="j-poster-note" data-testid="cannot-play">{errorNote}</p> : null}
