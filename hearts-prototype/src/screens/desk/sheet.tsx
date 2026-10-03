@@ -285,7 +285,7 @@ export async function MasterSheetScreen({ payload, user, query }: { payload: Pay
     rows(payload, 'packs', undefined, { sort: 'title', limit: 500 }),
   ])
   return (
-    <DeskFrame payload={payload} user={user} title="Master sheet" intro="Upload one workbook to add talks and place pop-up questions, or download what is already here. A dry run shows every add, change and problem before anything is saved." active="sheet" nav={masterNav()} brand="Hudhud" subBrand="Master desk" brandHref="/master" query={query} testId="master-sheet">
+    <DeskFrame payload={payload} user={user} title="Master sheet" intro="Upload one workbook to add talks and place pop-up questions, or download what is already here. A dry run shows every add, change and problem before anything is saved." active="sheet" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="master-sheet">
       <SheetBody
         action="/api/hearts/sheet"
         next="/master/sheet"

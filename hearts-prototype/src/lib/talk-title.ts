@@ -23,6 +23,27 @@ export function displayTalkTitle(input: {
   return fallback
 }
 
+function plain(value: unknown) {
+  if (value == null) return ''
+  return String(value)
+}
+
+/** The title a learner or a desk should show for one part. Stored slugs stay in the database. */
+export function partTitle(
+  lesson: { title?: unknown; sourceTitle?: unknown; order?: unknown; youtubeId?: unknown; vimeoId?: unknown } | null | undefined,
+  courseTitle?: unknown,
+) {
+  const part = Number(lesson?.order)
+  return displayTalkTitle({
+    title: plain(lesson?.title),
+    sourceTitle: plain(lesson?.sourceTitle),
+    courseTitle: plain(courseTitle),
+    part: Number.isFinite(part) && part > 0 ? part : 1,
+    youtubeId: plain(lesson?.youtubeId),
+    vimeoId: plain(lesson?.vimeoId),
+  })
+}
+
 function isMachineTitle(text: string, ids: Set<string>) {
   if (ids.has(text)) return true
   if (/\.(mp4|webm|mov|m4v|mp3)$/i.test(text)) return true

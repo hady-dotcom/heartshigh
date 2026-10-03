@@ -12,10 +12,10 @@ import { ViewAsBanner } from '@/components/viewas-banner'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Hudhud Hearts',
+  title: 'HEARTS',
   description: 'Short clips from real talks, full courses, and a circle that meets in person.',
   manifest: '/manifest.webmanifest',
-  appleWebApp: { capable: true, title: 'Hudhud', statusBarStyle: 'black-translucent' },
+  appleWebApp: { capable: true, title: 'HEARTS', statusBarStyle: 'black-translucent' },
   icons: {
     icon: [
       { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },

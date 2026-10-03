@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { loadDoors } from '@/server/doors'
 import { doorOfClause } from '@/lib/doors'
 import { AppFrame, Flash, Hidden } from '@/components/app/shell'
-import { Mascot } from '@/components/brand'
+import { BrandLockup, Mascot } from '@/components/brand'
 import { optionLabels } from '@/lib/placing'
 import { courseCards, portalName } from '@/server/learner'
 import { type Ctx, embedUrl, rows, str } from '../common'
@@ -19,7 +19,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
       <AppFrame testId="welcome">
         <div className="splash" data-testid="splash">
           <div>
-            <Mascot width={260} pose="hero" alt="Hudhud, the hoopoe" />
+            <BrandLockup size={88} />
             <h1>{portal.welcome ? 'Welcome' : 'Someone wanted good for you'}</h1>
             <p>{portal.welcome || `${portalName(portal)} has opened a door for you: short films from real lectures, a few questions to think about, and a circle to sit with.`}</p>
             <Flash error={query.error} notice={query.notice} />

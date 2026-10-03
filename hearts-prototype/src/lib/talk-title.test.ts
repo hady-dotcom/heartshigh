@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { displayTalkTitle } from './talk-title'
+import { displayTalkTitle, partTitle } from './talk-title'
 
 test('a real title is kept, and a slug or video id falls back to the course and part', () => {
   assert.equal(displayTalkTitle({ title: 'The heart of the matter', courseTitle: 'Names', part: 2 }), 'The heart of the matter')
@@ -11,4 +11,6 @@ test('a real title is kept, and a slug or video id falls back to the course and 
   assert.equal(displayTalkTitle({ title: 'NIR88RRpat4', youtubeId: 'NIR88RRpat4', courseTitle: 'Nur', part: 1 }), 'Nur · Part 1')
   assert.equal(displayTalkTitle({ title: 'Tawhid', courseTitle: 'Names', part: 4 }), 'Tawhid')
   assert.equal(displayTalkTitle({ title: '', courseTitle: '', part: 2 }), 'Part 2')
+  assert.equal(partTitle({ title: 'circle-recording', order: 3, vimeoId: '76979871' }, 'The names'), 'The names · Part 3')
+  assert.equal(partTitle({ title: 'Vimeo 76979871', order: 2, vimeoId: '76979871' }, 'Light'), 'Light · Part 2')
 })

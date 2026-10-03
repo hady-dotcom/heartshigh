@@ -9,6 +9,7 @@ import { filmsForTalk, readFilmCatalogue } from '@/lib/films'
 import { filesForTalk, readTypographyManifest, TYPOGRAPHY_LABEL, TYPOGRAPHY_STYLES, isTypographyStyle } from '@/lib/typography'
 import { tierSourceText } from '@/server/tier-source'
 import type { SessionUser } from '@/server/context'
+import { partTitle } from '@/lib/talk-title'
 import { rows, str } from '../common'
 import { DeskFrame, masterNav } from './shell'
 
@@ -76,7 +77,7 @@ function BeatFilms({ lesson }: { lesson: Record<string, unknown> }) {
 
 function Frame({ ctx, title, intro, children, testId }: { ctx: MasterCtx; title: string; intro: string; children: React.ReactNode; testId: string }) {
   return (
-    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active="tiers" nav={masterNav()} brand="Hudhud" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
+    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active="tiers" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
       {children}
     </DeskFrame>
   )
@@ -111,7 +112,7 @@ export async function MasterTiers(ctx: MasterCtx) {
                 const drafts = own.filter((point) => point.status === 'draft').length
                 return (
                   <tr key={tier.id} data-testid="tier-row" data-status={str(tier.status) || 'draft'}>
-                    <td><b>{str(lesson?.title) || str(lesson?.sourceTitle) || 'A talk'}</b><div className="hint">{str(lesson?.speaker)}{lesson?.durationSeconds ? ` · ${clock(Number(lesson.durationSeconds))}` : ''}</div></td>
+                    <td><b>{partTitle(lesson)}</b><div className="hint">{str(lesson?.speaker)}{lesson?.durationSeconds ? ` · ${clock(Number(lesson.durationSeconds))}` : ''}</div></td>
                     <td>{clock(Number(tier.horsStart))} to {clock(Number(tier.horsEnd))}</td>
                     <td>{clock(Number(tier.appetiserStart))} to {clock(Number(tier.appetiserEnd))}</td>
                     <td className="num">{own.length}{drafts ? <div className="hint">{drafts} in draft</div> : null}</td>
@@ -147,7 +148,7 @@ export async function MasterTier(ctx: MasterCtx, tierId: number) {
   })
   const late = timingProblems(duration || null, points.map((point) => ({ label: `The pop-up at ${clock(Number(point.second))}`, start: Number(point.second) })))
   const next = `/master/tiers/${tier.id}`
-  const title = str(lesson.title) || str(lesson.sourceTitle) || 'A talk'
+  const title = partTitle(lesson)
   return (
     <Frame ctx={ctx} title={title} intro={`${str(lesson.speaker)}. ${str(tier.note) || 'Times and lines come from the captions by machine. Watch each tier and fix what reads wrong before marking it checked.'}`} testId="master-tier">
       <p style={{ marginTop: 0 }}><Link href="/master/tiers" data-testid="tiers-back">‹ All talk tiers</Link></p>

@@ -237,9 +237,10 @@ html[data-theme] .window-card {
 html[data-theme] .card h3,
 html[data-theme] .card p,
 html[data-theme] .note p,
-html[data-theme] .harvest-card small,
 html[data-theme] .clause-card p,
 html[data-theme] .summary-card p { color: var(--ink-2); }
+html[data-theme] .harvest-card small,
+html[data-theme] .drawn-meta { color: var(--ink-2); font-size: 13px; font-weight: 600; line-height: 1.45; }
 html[data-theme] .card h3,
 html[data-theme] .days-card h3,
 html[data-theme] .theme-pin h3 { color: var(--ink); font-family: var(--serif); font-weight: 600; }
@@ -470,7 +471,13 @@ html[data-theme='dawn'] .time-card {
 }
 html[data-theme='dawn'] .grow-banner .tree-art,
 html[data-theme='dawn'] .continue-row .thumb,
-html[data-theme='dawn'] .feed-door .mini {
+html[data-theme='dawn'] .feed-door .mini,
+html[data-theme='dawn'] .course-tree,
+html[data-theme='dawn'] .course-row .thumb,
+html[data-theme='dawn'] .player-card .poster.scenic,
+html[data-theme='dawn'] .clip-bg,
+html[data-theme='dawn'] .bio-cover,
+html[data-theme='dawn'] .lane-card {
   background-image: url('/theme/dawn-courtyard.jpg');
 }
 html[data-theme] .grow-banner .eyebrow,

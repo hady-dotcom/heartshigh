@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Flash, Hidden } from '@/components/app/shell'
-import { BrandMark } from '@/components/brand'
+import { BrandLockup } from '@/components/brand'
 
 export default async function Join({ searchParams }: { searchParams: Promise<{ error?: string; code?: string }> }) {
   const query = await searchParams
@@ -8,7 +8,7 @@ export default async function Join({ searchParams }: { searchParams: Promise<{ e
   return (
     <main className="door" data-testid="join">
       <div className="door-card">
-        <BrandMark size={72} />
+        <BrandLockup size={72} />
         <h1>Come in</h1>
         <p className="lede">{code ? 'Your link already holds the code. Add your name and you are in.' : 'Type the access code you were given, then your name.'}</p>
         <Flash error={query.error} />

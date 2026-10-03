@@ -9,7 +9,8 @@ import { now } from '@/lib/clock'
 import { getSession, type SessionUser, visibleCourseIds } from '@/server/context'
 import { workbookFor } from '@/server/workbook'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
-import { posterFor } from '@/server/learner'
+import { partTitle } from '@/lib/talk-title'
+import { posterFor, shownPoster } from '@/server/learner'
 import { loadDoors } from '@/server/doors'
 import { doorByNumber, doorCode, doorFromPath, doorOfClause, type Door } from '@/lib/doors'
 import { answerCounts } from '@/lib/nesting'
@@ -138,7 +139,7 @@ export async function coursePath(payload: Payload, user: SessionUser, base: stri
     title: str(course.title),
     nodes: lessons.map((lesson) => ({
       id: lesson.id,
-      title: str(lesson.title),
+      title: partTitle(lesson, str(course.title)),
       href: `${base}/course/${id}?part=${lesson.id}`,
       state: (done.has(lesson.id) ? 'done' : lesson.id === active?.id ? 'active' : 'next') as 'done' | 'active' | 'next',
     })),
@@ -311,6 +312,9 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, token: str
     shownIds.length ? rows(payload, 'engagement-points', { and: [{ lesson: { in: shownIds } }, { status: { not_equals: 'draft' } }, { audience: { equals: 'everyone' } }] }, { sort: 'second', limit: 80 }) : Promise.resolve([] as Row[]),
     shownIds.length ? rows(payload, 'talk-tiers', { and: [{ lesson: { in: shownIds } }, { status: { not_equals: 'rejected' } }] }) : Promise.resolve([] as Row[]),
   ])
+  const courseIds = [...new Set(lessons.map((lesson) => ref(lesson.course)).filter((id): id is number => Boolean(id)))]
+  const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }) : []
+  const talkName = (lesson: Row) => partTitle(lesson, str(courses.find((course) => course.id === ref(lesson.course))?.title))
   const lessonOf = (id: number | null) => lessons.find((lesson) => lesson.id === id)
   const here = `${base}/garden/jibril/${door.number}`
   const teachings = clauses.map((clause) => str(clause.teaching)).filter(Boolean)
@@ -361,8 +365,8 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, token: str
         const cut = cuts.find((row) => ref(row.lesson) === lesson.id)
         return (
           <Link key={lesson.id} className="course-row" href={`${base}/course/${ref(lesson.course)}?part=${lesson.id}&t=${Math.floor(Number(cut?.start || 0))}`} data-testid="door-talk">
-            <span className="thumb" style={posterFor(str(lesson.youtubeId) || null) ? { backgroundImage: `url(${posterFor(str(lesson.youtubeId))})` } : undefined} />
-            <span className="t"><b>{str(lesson.title)}</b><small>From {clock(Number(cut?.start || 0))} · {str(lesson.speaker)}</small></span>
+            <span className="thumb" style={shownPoster(posterFor(str(lesson.youtubeId) || null)) ? { backgroundImage: `url(${shownPoster(posterFor(str(lesson.youtubeId)))})` } : undefined} />
+            <span className="t"><b>{talkName(lesson)}</b><small>From {clock(Number(cut?.start || 0))} · {str(lesson.speaker)}</small></span>
             <span className="start teal">Watch</span>
           </Link>
         )
@@ -374,7 +378,7 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, token: str
         const start = Number(tier.appetiserStart || 0)
         return (
           <Link key={tier.id} className="course-row" href={`${base}/course/${ref(lesson.course)}?part=${lesson.id}&t=${Math.floor(start)}`} data-testid="door-appetiser">
-            <span className="t"><b>Appetiser</b><small>{str(lesson.title)} · from {clock(start)}</small></span>
+            <span className="t"><b>Appetiser</b><small>{talkName(lesson)} · from {clock(start)}</small></span>
             <span className="start teal">Watch</span>
           </Link>
         )
@@ -385,7 +389,7 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, token: str
         if (!lesson) return null
         return (
           <Link key={point.id} className="course-row" href={`${base}/course/${ref(lesson.course)}?part=${lesson.id}&t=${Math.floor(Number(point.second || 0))}`} data-testid="door-question">
-            <span className="t"><b>{str(point.prompt)}</b><small>{str(lesson.title)}</small></span>
+            <span className="t"><b>{str(point.prompt)}</b><small>{talkName(lesson)}</small></span>
             <span className="start teal">Open</span>
           </Link>
         )

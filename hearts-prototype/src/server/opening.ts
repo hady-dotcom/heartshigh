@@ -12,6 +12,7 @@ import { readBackgroundsBaseUrl } from '@/lib/backgrounds'
 import { cardForTalk, readCardCatalogue, type StoredCard } from '@/lib/cards'
 import { filmsForTalk, mixFeed, readFilmCatalogue, type BeatFilm } from '@/lib/films'
 import { filesForTalk, isTypographyStyle, readTypographyManifest, type TypographyManifest } from '@/lib/typography'
+import { partTitle } from '@/lib/talk-title'
 import { laneOf, portraitFor, posterFor, slugify, type FeedItem, type SlideStyle } from './learner'
 
 type Row = Record<string, unknown> & { id: number }
@@ -314,7 +315,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     courseId: course.id,
     courseTitle: String(course.title || ''),
     lessonId: lesson.id,
-    lessonTitle: String(lesson.title || lesson.sourceTitle || ''),
+    lessonTitle: partTitle(lesson, String(course.title || '')),
     style: slide ? STYLES[index % STYLES.length] : null,
     typography: typographyFor(data, lesson, data.tiers.find((row) => idOf(row.lesson) === lesson.id)),
     films: filmsForTalk(data.films, youtubeId),
