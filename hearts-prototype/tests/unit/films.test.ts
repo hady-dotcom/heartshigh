@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { filmsForTalk, mixFeed } from '../../src/lib/films'
 import type { FeedItem } from '../../src/server/learner'
 
-function item(cutId: number, films: FeedItem['films'] = []): FeedItem {
+function item(cutId: number, films: FeedItem['films'] = [], extra: Partial<FeedItem> = {}): FeedItem {
   return {
     id: `cut-${cutId}`,
     cutId,
@@ -25,6 +25,7 @@ function item(cutId: number, films: FeedItem['films'] = []): FeedItem {
     style: null,
     clause: null,
     films,
+    ...extra,
   }
 }
 
@@ -42,20 +43,49 @@ test('films attach to a talk in hook, turn, land order', () => {
   assert.equal(filmsForTalk(catalogue, 'missing').length, 0)
 })
 
-test('the feed mixes a film, the line and a question after the talk, and a return visit changes the order', () => {
-  const talk = item(1, filmsForTalk(catalogue, 'ECaTWkof57E'))
-  const plain = item(2)
-  const first = mixFeed([talk, plain], 0)
-  assert.equal(first[0].id, 'cut-1')
-  assert.equal(first[0].card, undefined)
-  assert.deepEqual(first.slice(1, 4).map((row) => row.card), ['film', 'text', 'question'])
+test('a talk with no sheet row still plays the rendered face films, and the prophet films stay out', () => {
+  const rendered = filmsForTalk({ films: [] }, 'ECaTWkof57E')
+  assert.deepEqual(rendered.map((film) => film.style), ['kinetic', 'windows', 'conversation', 'cinema', 'unfold'])
+  assert.equal(rendered[0].src, '/typography/ECaTWkof57E/kinetic.mp4')
+  assert.equal(filmsForTalk({ films: [] }, 'TLCGBj4AlB0').length, 0)
+})
+
+test('a session alternates a face film and a scenic card, then a question, and a return visit swaps them', () => {
+  const talk = item(1, filmsForTalk(catalogue, 'ECaTWkof57E'), { cardStyle: 'kinetic', cardScene: 'road' })
+  const second = item(2, filmsForTalk(catalogue, 'NIR88RRpat4'), { cardStyle: 'windows', cardScene: 'mist' })
+  const first = mixFeed([talk, second], 0)
+  assert.deepEqual(first.map((row) => row.card || 'talk'), ['talk', 'film', 'question', 'talk', 'scene', 'question'])
   assert.equal(first[1].film?.src, '/typography/ECaTWkof57E/hook.mp4')
-  assert.equal(first[3].prompt, 'What stays with you from this?')
-  assert.equal(first[4].id, 'cut-2')
-  assert.equal(first.length, 5)
-  const again = mixFeed([talk], 1)
-  assert.deepEqual(again.slice(1).map((row) => row.card), ['text', 'film', 'question'])
-  assert.notEqual(again[1].card, first[1].card)
+  assert.equal(first[2].prompt, 'What stays with you from this?')
+  assert.equal(first[4].scene?.destination, 'clip')
+  assert.equal(first[4].scene?.beats.length, 3)
+  assert.notEqual(first[1].film?.style, first[4].scene?.style)
   const ids = new Set(first.map((row) => row.id))
   assert.equal(ids.size, first.length)
+
+  const again = mixFeed([talk, second], 1)
+  assert.deepEqual(again.map((row) => row.card || 'talk'), ['talk', 'scene', 'question', 'talk', 'film', 'question'])
+  assert.equal(again[1].scene?.destination, 'clip')
+  assert.notEqual(again[1].card, first[1].card)
+  assert.notEqual(again[1].scene?.style, first[4].scene?.style)
+})
+
+test('neighbouring scenic cards do not share a background, and the lead-in alternates', () => {
+  const talks = [1, 2, 3].map((cutId) => item(cutId, [], {
+    cardStyle: 'kinetic',
+    cardScene: 'road',
+    beats: [
+      { beat: 'hook', quote: `Hook ${cutId}`, gold: 'Hook', audio: null },
+      { beat: 'turn', quote: `Turn ${cutId}`, gold: 'Turn', audio: null },
+      { beat: 'land', quote: `Land ${cutId}`, gold: 'Land', audio: null },
+    ],
+  }))
+  const mixed = mixFeed(talks, 0).filter((row) => row.card === 'scene')
+  assert.equal(mixed.length, 3)
+  assert.notEqual(mixed[0].scene?.scene, mixed[1].scene?.scene)
+  assert.notEqual(mixed[1].scene?.scene, mixed[2].scene?.scene)
+  assert.deepEqual(mixed.map((row) => row.scene?.destination), ['clip', 'talk', 'clip'])
+  const returned = mixFeed(talks, 2).filter((row) => row.card === 'scene')
+  assert.deepEqual(returned.map((row) => row.scene?.destination), ['talk', 'clip', 'talk'])
+  assert.notEqual(returned[0].scene?.scene, mixed[0].scene?.scene)
 })

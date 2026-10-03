@@ -4,6 +4,7 @@ import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE } from '@/lib/opening-data'
 import { idOf } from '@/lib/ids'
 import { now } from '@/lib/clock'
 import { adoptedCourseIds, visibleCourseIds, type PortalDoc, type SessionUser } from './context'
+import { cardForTalk, readCardCatalogue, type StoredCard } from '@/lib/cards'
 import { filmsForTalk, mixFeed, readFilmCatalogue, type BeatFilm } from '@/lib/films'
 import { filesForTalk, isTypographyStyle, readTypographyManifest, type TypographyManifest } from '@/lib/typography'
 import { laneOf, portraitFor, posterFor, slugify, type FeedItem, type SlideStyle } from './learner'
@@ -65,6 +66,7 @@ type Loaded = {
   alias: Map<number, number>
   typography: TypographyManifest
   films: { films: (BeatFilm & { youtubeId: string })[] }
+  cards: { cards: StoredCard[] }
 }
 
 /** Whether learners may see a talk's tier: checked always, a draft only while the master flag says so, rejected never. */
@@ -90,7 +92,8 @@ async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
   const [lanes, scales, clauses] = await Promise.all([all(payload, 'lanes'), all(payload, 'heart-scales'), all(payload, 'clauses')])
   const typography = readTypographyManifest()
   const films = readFilmCatalogue()
-  if (!courseIds.length) return { lanes, scales, clauses, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [], alias: new Map(), typography, films }
+  const cards = readCardCatalogue()
+  if (!courseIds.length) return { lanes, scales, clauses, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [], alias: new Map(), typography, films, cards }
   const [courses, lessons, showUnchecked] = await Promise.all([all(payload, 'courses', { id: { in: courseIds } }), all(payload, 'lessons', { course: { in: courseIds } }), showUncheckedTalks(payload)])
   const lessonIds = lessons.map((row) => row.id)
   const [rawCuts, tiers] = await Promise.all([
@@ -128,7 +131,7 @@ async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
       const value = idOf((tag.item as { value?: unknown }).value) || 0
       return alias.has(value) ? { ...tag, item: { relationTo: 'cuts', value: alias.get(value) } } : tag
     })
-  return { lanes, scales, clauses, cuts, lessons, courses, tags: cutTags, ladder, tiers: tiers.filter((tier) => tierVisible(tier, showUnchecked)), alias, typography, films }
+  return { lanes, scales, clauses, cuts, lessons, courses, tags: cutTags, ladder, tiers: tiers.filter((tier) => tierVisible(tier, showUnchecked)), alias, typography, films, cards }
 }
 
 function laneDefs(data: Loaded): LaneDef[] {
@@ -247,6 +250,9 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     style: slide ? STYLES[index % STYLES.length] : null,
     typography: typographyFor(data, lesson, data.tiers.find((row) => idOf(row.lesson) === lesson.id)),
     films: filmsForTalk(data.films, youtubeId),
+    beats: cardForTalk(data.cards, youtubeId)?.beats,
+    cardStyle: cardForTalk(data.cards, youtubeId)?.style || null,
+    cardScene: cardForTalk(data.cards, youtubeId)?.scene || null,
     clause: (cut.bestClause as number) || null,
     transcriptReady: Boolean(lesson.transcript) && lesson.transcriptSource !== 'pending',
   }

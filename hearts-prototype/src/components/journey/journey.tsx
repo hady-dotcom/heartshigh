@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
-import { mixFeed } from '@/lib/films'
+import { mixFeed } from '@/lib/feed-mix'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readHeart, readPending, sessionFlags, setSessionFlags, viewAsId, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
@@ -16,6 +16,7 @@ import { TabBar } from '../app/shell'
 import { Avatar, FollowButton, Slide } from '../app/feed'
 import { HeartIcon, SaveIcon, ShareIcon } from '../icons'
 import { HelpScreen, Opener, SceneCard } from './scenes'
+import { TeachingCard } from './teaching-card'
 import { KeepPlaceSheet, type SheetReason } from './sheet'
 
 type Phase = 'opener' | 'scene' | 'help' | 'handoff' | 'feed'
@@ -281,6 +282,7 @@ export function Journey(props: JourneyProps) {
   const specFor = useCallback((item: FeedItem | undefined, kind: Mode): Spec | null => {
     if (!item || !item.youtubeId || item.style) return null
     if (item.card === 'film' || item.card === 'text' || item.card === 'question') return null
+    if (item.card === 'scene' && kind !== 'appetiser') return null
     if (kind === 'hors' && item.typography?.src) return null
     if (kind === 'appetiser') return { key: `${item.cutId}:appetiser`, videoId: item.youtubeId, start: item.appetiser.start, end: appetiserEnd(item), kind: 'full' }
     return { key: `${item.cutId}:hors`, videoId: item.youtubeId, start: item.hors.start, end: item.hors.end, kind: 'hors' }
@@ -1072,10 +1074,11 @@ export function Journey(props: JourneyProps) {
   const host = hosts.current[visibleHost]
   const currentSpec = specFor(item, mode)
   const playerReady = Boolean(currentSpec && host.ready && host.spec?.key === currentSpec.key && revealed)
-  const cardKind = item?.card === 'film' || item?.card === 'text' || item?.card === 'question' ? item.card : null
+  const cardKind = item?.card === 'film' || item?.card === 'text' || item?.card === 'question' || item?.card === 'scene' ? item.card : null
   const typeSrc = cardKind === 'film' ? item?.film?.src : item?.typography?.src
-  const typeClip = Boolean(phase === 'feed' && mode === 'hors' && typeSrc && cardKind !== 'text' && cardKind !== 'question')
-  const showPoster = !typeClip && (phase === 'handoff' || (phase === 'feed' && (!playerReady || Boolean(errorNote) || offline)))
+  const typeClip = Boolean(phase === 'feed' && mode === 'hors' && typeSrc && cardKind !== 'text' && cardKind !== 'question' && cardKind !== 'scene')
+  const scenic = Boolean(phase === 'feed' && cardKind === 'scene' && mode === 'hors' && item?.scene)
+  const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (!playerReady || Boolean(errorNote) || offline)))
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
   const captionLine = piece?.lines?.[lineShown]
@@ -1091,7 +1094,7 @@ export function Journey(props: JourneyProps) {
   const laneVisible = Boolean(item) && !firstEver
   void readyTick
 
-  const chrome = item && phase === 'feed' && !slide ? (
+  const chrome = item && phase === 'feed' && !slide && !scenic ? (
     <>
       <div className="j-hairline-row">
         <div className={`j-hairline${buffering ? ' shimmer' : ''}`} data-testid="hairline"><i /></div>
@@ -1112,7 +1115,7 @@ export function Journey(props: JourneyProps) {
       ) : muted && !hasSound() && playerReady ? (
         <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button>
       ) : null}
-      {cardKind ? null : typeClip ? null : mode === 'appetiser' ? (
+      {(cardKind && cardKind !== 'scene') || typeClip ? null : mode === 'appetiser' ? (
         <div className="beat-stack">
           <div className="beat-card" data-testid="caption-panel">
             {(piece?.lines?.length || 0) > 1 ? (
@@ -1185,7 +1188,7 @@ export function Journey(props: JourneyProps) {
             <div
               key={at}
               ref={(el) => { hostEls.current[at] = el }}
-              className={`yt-host ${at === visibleHost && revealed && !slide ? 'on' : 'off'}`}
+              className={`yt-host ${at === visibleHost && revealed && !slide && !scenic ? 'on' : 'off'}`}
               data-testid={at === visibleHost && revealed ? 'player-visible' : 'player-hidden'}
               style={{ visibility: at === visibleHost && playerReady && !showPoster ? 'visible' : 'hidden' }}
             />
@@ -1205,10 +1208,17 @@ export function Journey(props: JourneyProps) {
               onEnded={() => window.dispatchEvent(new CustomEvent('hearts:ended'))}
             />
           ) : null}
-          {phase === 'feed' && (cardKind === 'text' || cardKind === 'question') && item?.film ? (
-            <div className="feed-card" data-testid={`feed-${cardKind}`}>
-              <div className="kicker">{cardKind === 'question' ? 'Question' : item.film.beat === 'hook' ? 'Hook' : item.film.beat === 'turn' ? 'Turn' : 'Land'}</div>
-              <h2>{cardKind === 'question' ? item.prompt : item.film.quote}</h2>
+          {phase === 'feed' && cardKind === 'question' && item ? (
+            <div className="feed-card" data-testid="feed-question">
+              <div className="kicker">Question</div>
+              <h2>{item.prompt}</h2>
+              <p>{item.speaker}</p>
+              <button type="button" className="pill gold" onClick={() => void advance(index + 1)} data-testid="feed-card-next">Continue</button>
+            </div>
+          ) : phase === 'feed' && cardKind === 'text' && item?.film ? (
+            <div className="feed-card" data-testid="feed-text">
+              <div className="kicker">{item.film.beat === 'hook' ? 'Hook' : item.film.beat === 'turn' ? 'Turn' : 'Land'}</div>
+              <h2>{item.film.quote}</h2>
               <p>{item.speaker}</p>
               <button type="button" className="pill gold" onClick={() => void advance(index + 1)} data-testid="feed-card-next">Continue</button>
             </div>
@@ -1229,11 +1239,16 @@ export function Journey(props: JourneyProps) {
               ) : null}
             </div>
           ) : null}
-          {overlay && phase === 'feed' && !slide ? <div className="j-gesture" data-testid="gesture-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} /> : null}
+          {overlay && phase === 'feed' && !slide && !scenic ? <div className="j-gesture" data-testid="gesture-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} /> : null}
         </div>
         {slide && item ? (
           <div className="j-slide" data-testid="gesture-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}>
             <Slide item={item} style={slide} onMore={watchFull} />
+          </div>
+        ) : null}
+        {scenic && item?.scene ? (
+          <div className="j-slide" data-testid="gesture-layer" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}>
+            <TeachingCard key={item.id} scene={item.scene} speaker={item.speaker} course={item.courseTitle} lane={item.laneLabel} onClip={watchFull} talkHref={course} onTalk={startCourse} />
           </div>
         ) : null}
         <div className="j-chrome" onPointerDown={overlay ? undefined : onDown} onPointerMove={overlay ? undefined : onMove} onPointerUp={overlay ? undefined : onUp}>

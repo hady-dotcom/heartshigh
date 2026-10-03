@@ -30,7 +30,7 @@ npm run batch -- manifest.csv --limit 8
 
 Each clip is a 720p face file already cut on the sentence, with about 0.3s of breath, and time 0 in the file is `start`. Put the files in `remotion/public/footage/`, or pass a path and the script links them there. `face-visible` of `no` is skipped. A missing clip is skipped too, so a later run picks it up when the file arrives.
 
-The style is chosen from the five, cycling inside the course, and the gold words are chosen from the quote (the two seeded talks keep the landings already agreed). The film is written to `hearts-prototype/public/typography/{youtubeId}/{beat}.mp4` and listed in `public/typography/films.json`, which is what the learner feed mixes with talks, the line of text, and a question.
+The style is chosen from the five, cycling inside the course, and the gold words are chosen from the quote (the two seeded talks keep the landings already agreed). The film is written to `hearts-prototype/public/typography/{youtubeId}/{beat}.mp4` and listed in `public/typography/films.json`. The same rows also write one scenic card per talk to `public/typography/cards.json`: the three beats, the gold landing, and a background that the next card does not reuse. A missing face clip skips that film and still writes the card. The learner feed alternates the face film and the card, with the talk and a question between them.
 
 The six clips already in `public/footage/` are the padded windows for the five-style approval films (`npm run render`). They are not the sentence cuts this command expects.
 

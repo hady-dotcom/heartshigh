@@ -1,0 +1,60 @@
+{
+  "cards": [
+    {
+      "youtubeId": "ECaTWkof57E",
+      "title": "Ar-Rabb",
+      "speaker": "Shaykh Mikaeel Smith",
+      "course": "The Names",
+      "style": "kinetic",
+      "scene": "road",
+      "beats": [
+        {
+          "beat": "hook",
+          "quote": "Has Allah brought you from one stage to the next stage to to the places you never thought you would be?",
+          "gold": "never thought",
+          "audio": "/typography/audio/ECaTWkof57E-hook.m4a"
+        },
+        {
+          "beat": "turn",
+          "quote": "But it's at that moment that you got to lock in and have true certainty that Allah's plan is real.",
+          "gold": "Allah's plan is real",
+          "audio": "/typography/audio/ECaTWkof57E-turn.m4a"
+        },
+        {
+          "beat": "land",
+          "quote": "I told you that transitions are the time that you need to know this name.",
+          "gold": "know this name",
+          "audio": "/typography/audio/ECaTWkof57E-land.m4a"
+        }
+      ]
+    },
+    {
+      "youtubeId": "NIR88RRpat4",
+      "title": "Al-Nur",
+      "speaker": "Shaykh Mikaeel Smith",
+      "course": "The Names",
+      "style": "windows",
+      "scene": "mist",
+      "beats": [
+        {
+          "beat": "hook",
+          "quote": "What we're saying is that Allah ﷻ is the only source for clarity in your life.",
+          "gold": "clarity",
+          "audio": "/typography/audio/NIR88RRpat4-hook.m4a"
+        },
+        {
+          "beat": "turn",
+          "quote": "Without light, you walk in a room that's dark.",
+          "gold": "dark",
+          "audio": "/typography/audio/NIR88RRpat4-turn.m4a"
+        },
+        {
+          "beat": "land",
+          "quote": "Now Allah subhanahu wa ta'ala, He says, and many of us, we can relate to this verse.",
+          "gold": "this verse",
+          "audio": "/typography/audio/NIR88RRpat4-land.m4a"
+        }
+      ]
+    }
+  ]
+}

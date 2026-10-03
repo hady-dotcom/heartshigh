@@ -19,6 +19,7 @@ import { renderMedia, selectComposition } from '@remotion/renderer'
 import { keyPhrasesFor } from '../src/emphasis'
 import { assignStyles, filmSrc, parseManifest, sameFilm, type FilmRecord } from '../src/manifest'
 import { scheduleFootage } from '../src/timing'
+import { buildCards, writeCardCatalogue } from '../../hearts-prototype/src/lib/cards'
 import { prepareSentence } from './footage'
 
 const here = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -135,6 +136,15 @@ for (const row of planned) {
   writeCatalogue(catalogue.films)
   rendered += 1
   console.log(`  ${output}`)
+}
+
+const cards = buildCards(rows, hearts)
+for (const card of cards) {
+  console.log(`card ${card.youtubeId} ${card.style} ${card.scene} → ${card.beats.map((beat) => beat.gold || beat.beat).join(' / ')}`)
+}
+if (!dryRun) {
+  const file = writeCardCatalogue(cards, hearts)
+  console.log(`cards ${file}`)
 }
 
 console.log(`${dryRun ? 'Planned' : 'Rendered'} ${rendered}, kept ${skipped}, waiting ${waiting}, of ${planned.length}`)
