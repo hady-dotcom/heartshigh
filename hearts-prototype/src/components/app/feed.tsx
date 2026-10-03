@@ -333,7 +333,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
   )
 }
 
-function Slide({ item, style, onMore }: { item: FeedItem; style: SlideStyle; onMore: () => void }) {
+export function Slide({ item, style, onMore }: { item: FeedItem; style: SlideStyle; onMore: () => void }) {
   const cta = (cls: string) => (
     <button type="button" className={`pill ${cls}`} onClick={onMore} data-testid="learn-more">
       Learn more <ArrowIcon />

@@ -1,9 +1,11 @@
-import { headers } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { AppFrame } from '@/components/app/shell'
 import { Mascot } from '@/components/brand'
 import { Hidden } from '@/components/app/shell'
-import { requirePortal } from '@/server/context'
+import { portalIdOf } from '@/lib/ids'
+import { getSession, loadPortal, requirePortal } from '@/server/context'
+import { JourneyScreen } from '@/screens/app/journey'
 import { portalName } from '@/server/learner'
 import type { Ctx, Query } from '@/screens/common'
 import { HomeScreen, LanesScreen } from '@/screens/app/home'
@@ -23,13 +25,32 @@ function originOf(reqHeaders: Headers) {
 
 const plain = (value: string) => encodeURIComponent(value)
 
+const OPEN_TO_ALL = new Set(['start', 'help', 'feed'])
+
 export default async function PortalScreen({ params, searchParams }: { params: Promise<{ slug: string; screen?: string[] }>; searchParams: Promise<Query> }) {
   const { slug, screen = [] } = await params
   const query = await searchParams
-  const { payload, user, portal } = await requirePortal(slug)
-  const base = `/p/${slug}`
-  const ctx: Ctx = { payload, user, portal, slug, base, origin: originOf(await headers()), query }
   const [area, a, b] = screen
+  const base = `/p/${slug}`
+
+  // The opening and the feed work before an account exists (spec 7, P1). Everything else needs one.
+  if (area === undefined || OPEN_TO_ALL.has(area)) {
+    const session = await getSession()
+    const portal = await loadPortal(session.payload, slug)
+    if (!portal) notFound()
+    const visitor = session.user
+    if (visitor && visitor.role !== 'master' && portalIdOf(visitor) !== portal.id) redirect('/?error=That portal is not yours.')
+    const shut = portal.closed && (!visitor || visitor.role === 'learner')
+    if (!shut && area === undefined) {
+      if (!visitor) redirect((await cookies()).get('hearts_opened')?.value === '1' ? `${base}/feed` : `${base}/start`)
+      if (visitor.role === 'learner' && !visitor.onboarded) redirect(`${base}/start`)
+    } else if (!shut) {
+      return JourneyScreen({ payload: session.payload, portal, user: visitor, base, initial: area === 'feed' ? 'feed' : area === 'help' ? 'help' : 'opener', viewAs: Boolean(session.viewAs) })
+    }
+  }
+
+  const { payload, user, portal } = await requirePortal(slug)
+  const ctx: Ctx = { payload, user, portal, slug, base, origin: originOf(await headers()), query }
 
   if (portal.closed && user.role === 'learner') {
     return (
@@ -110,8 +131,6 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       notFound()
     case 'welcome':
       return WelcomeScreen(ctx)
-    case 'feed':
-      redirect(base)
     case 'about':
       redirect(`${base}/welcome`)
     case 'path':
