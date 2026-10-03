@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { LANES } from '../src/lib/opening-data'
 import { draftTiers, wordsOf } from '../src/lib/tiers'
 import { STARTERS } from '../src/seed/starters-data'
-import { scheduleTalk } from '../../remotion/src/timing'
+import { scheduleTalk } from '../src/lib/typography/timing'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const hearts = path.join(root, 'hearts-prototype')

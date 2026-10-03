@@ -1,4 +1,4 @@
-import { withoutStutters } from '../../../remotion/src/lines'
+import { withoutStutters } from './typography/lines'
 
 export type SpokenWord = { text: string; at: number }
 

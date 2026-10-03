@@ -3,8 +3,8 @@ import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { test } from 'node:test'
 import { captionPage, draftTiers, saidInTalk, sentencesOf, wordsOf } from '../../src/lib/tiers'
-import { restoreSpokenTail } from '../../../remotion/src/emphasis'
-import { BREATH, cardAt, isVerbatim, scheduleTalk, snapBeat, sourceWindow, textNeverEarly, visibleIsPrefix, WINDOW_PAD, WORDS_PER_CARD, wordsVisibleAt } from '../../../remotion/src/timing'
+import { restoreSpokenTail } from '../../src/lib/typography/emphasis'
+import { BREATH, cardAt, isVerbatim, scheduleTalk, snapBeat, sourceWindow, textNeverEarly, visibleIsPrefix, WINDOW_PAD, WORDS_PER_CARD, wordsVisibleAt } from '../../src/lib/typography/timing'
 
 const root = path.resolve(import.meta.dirname, '../..')
 const SEEDED = ['TLCGBj4AlB0', 'ECaTWkof57E', 'NIR88RRpat4']
