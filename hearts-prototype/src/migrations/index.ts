@@ -1,6 +1,7 @@
 import * as migration_20261003_103330_initial from './20261003_103330_initial';
 import * as migration_20261003_124500_integration_part1 from './20261003_124500_integration_part1';
 import * as migration_20261003_131651_integration_part2 from './20261003_131651_integration_part2';
+import * as migration_20261003_150000_speakers from './20261003_150000_speakers';
 
 export const migrations = [
   {
@@ -17,5 +18,10 @@ export const migrations = [
     up: migration_20261003_131651_integration_part2.up,
     down: migration_20261003_131651_integration_part2.down,
     name: '20261003_131651_integration_part2'
+  },
+  {
+    up: migration_20261003_150000_speakers.up,
+    down: migration_20261003_150000_speakers.down,
+    name: '20261003_150000_speakers',
   },
 ];

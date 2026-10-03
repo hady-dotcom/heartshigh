@@ -73,6 +73,7 @@ export interface Config {
     clauses: Clause;
     seats: Seat;
     'shelf-items': ShelfItem;
+    speakers: Speaker;
     courses: Course;
     units: Unit;
     lessons: Lesson;
@@ -135,6 +136,7 @@ export interface Config {
     clauses: ClausesSelect<false> | ClausesSelect<true>;
     seats: SeatsSelect<false> | SeatsSelect<true>;
     'shelf-items': ShelfItemsSelect<false> | ShelfItemsSelect<true>;
+    speakers: SpeakersSelect<false> | SpeakersSelect<true>;
     courses: CoursesSelect<false> | CoursesSelect<true>;
     units: UnitsSelect<false> | UnitsSelect<true>;
     lessons: LessonsSelect<false> | LessonsSelect<true>;
@@ -371,6 +373,7 @@ export interface Course {
   title: string;
   summary?: string | null;
   speaker?: string | null;
+  speakerProfile?: (number | null) | Speaker;
   origin: 'master' | 'local';
   portal?: (number | null) | Portal;
   importable?: boolean | null;
@@ -378,6 +381,55 @@ export interface Course {
   importToken?: string | null;
   hidden?: boolean | null;
   visibility?: ('draft' | 'published') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "speakers".
+ */
+export interface Speaker {
+  id: number;
+  name: string;
+  honorific?: string | null;
+  displayName?: string | null;
+  slug: string;
+  /**
+   * Other ways this speaker is named, so an import maps them here.
+   */
+  aliases?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  bio?: string | null;
+  photo?: (number | null) | Media;
+  /**
+   * An https address of an image, when the photo is not an upload.
+   */
+  photoUrl?: string | null;
+  /**
+   * Where the photo was found, when it is not an image address.
+   */
+  photoSource?: string | null;
+  /**
+   * [{ "label": "Site", "url": "https://…" }]
+   */
+  links?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  sources?: string | null;
+  status?: ('draft' | 'published') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -469,6 +521,7 @@ export interface Lesson {
   master?: boolean | null;
   order?: number | null;
   speaker?: string | null;
+  speakerProfile?: (number | null) | Speaker;
   youtubeUrl?: string | null;
   youtubeId?: string | null;
   videoProvider?: ('youtube' | 'vimeo' | 'file') | null;
@@ -1768,6 +1821,10 @@ export interface PayloadLockedDocument {
         value: number | ShelfItem;
       } | null)
     | ({
+        relationTo: 'speakers';
+        value: number | Speaker;
+      } | null)
+    | ({
         relationTo: 'courses';
         value: number | Course;
       } | null)
@@ -2145,12 +2202,33 @@ export interface ShelfItemsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "speakers_select".
+ */
+export interface SpeakersSelect<T extends boolean = true> {
+  name?: T;
+  honorific?: T;
+  displayName?: T;
+  slug?: T;
+  aliases?: T;
+  bio?: T;
+  photo?: T;
+  photoUrl?: T;
+  photoSource?: T;
+  links?: T;
+  sources?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "courses_select".
  */
 export interface CoursesSelect<T extends boolean = true> {
   title?: T;
   summary?: T;
   speaker?: T;
+  speakerProfile?: T;
   origin?: T;
   portal?: T;
   importable?: T;
@@ -2184,6 +2262,7 @@ export interface LessonsSelect<T extends boolean = true> {
   master?: T;
   order?: T;
   speaker?: T;
+  speakerProfile?: T;
   youtubeUrl?: T;
   youtubeId?: T;
   videoProvider?: T;

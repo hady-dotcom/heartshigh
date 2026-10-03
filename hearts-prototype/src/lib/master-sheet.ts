@@ -1,9 +1,10 @@
-// The HEARTS master sheet: three tabs that load talks, pop-up questions and resources in bulk.
+// The HEARTS master sheet: talks, pop-up questions, resources, circle answers and speakers in bulk.
 // Pure module. The desk and the tests share it, and nothing here touches the database.
 import ExcelJS from 'exceljs'
 import { youtubeIdFromUrl } from './extractor'
 import { DRAFT_NOTE, horsCapOf, horsVerdict, normaliseSpans, saidInTalk, tierProblem, timingProblems, type AppetiserSpan } from './tiers'
 import { authorTextProblems, markupProblems } from './opening-data'
+import { citationUrl, resolveSpeaker, speakerSlug, imageUrl, type SpeakerIdentity, type SpeakerLink } from './speakers'
 import { hasMarkup, httpsHref } from './text-safety'
 import { CIRCLE_COLUMNS, CIRCLE_NOTE, CIRCLE_TAB, circleSheetValues, readCircleRow, type CircleColumn } from './circle-sheet'
 
@@ -11,7 +12,7 @@ export const TALK_COLUMNS = [
   'talk_key', 'youtube_id', 'title', 'speaker', 'channel', 'course', 'part', 'order', 'lane', 'jibril_clause', 'ghunya_seat',
   'hors_in', 'hors_out', 'app_in', 'app_out', 'hook_in', 'hook_out', 'turn_in', 'turn_out', 'land_in', 'land_out',
   'hook_text', 'turn_text', 'land_text', 'status', 'notes',
-  'provider', 'vimeo_id', 'media_id', 'duration', 'transcript',
+  'provider', 'vimeo_id', 'media_id', 'duration', 'transcript', 'pack',
 ] as const
 
 export const QUESTION_COLUMNS = [
@@ -23,8 +24,11 @@ export const QUESTION_COLUMNS = [
 
 export const RESOURCE_COLUMNS = ['talk_key', 'label', 'url', 'kind', 'status', 'body', 'media_id'] as const
 
+export const SPEAKER_TAB = 'Speakers' as const
+export const SPEAKER_COLUMNS = ['slug', 'name', 'honorific', 'display_name', 'aliases', 'bio', 'photo_url', 'links', 'sources', 'status'] as const
+
 export const TALK_NOTE =
-  "HEARTS talks. One row is one talk. talk_key is how a later import finds the same talk, so keep it stable. Leave a cell blank to leave that field as it is. Times can be seconds (90), minutes and seconds (1:30) or hours (1:02:03). status is draft, checked or live. rejected keeps a talk hidden from learners. delete removes the talk. youtube_id is the 11-character YouTube id. provider is youtube, vimeo or file. A Vimeo talk puts the number in vimeo_id. An uploaded film puts the media id in media_id. duration is the length in seconds. transcript is the speaker's words and is only for captions that fit in the cell (under 30,000 characters); a longer transcript is a Resources row with kind transcript and a media_id. hook_text, turn_text, land_text and transcript are the speaker's words: the kill list is not applied to them. notes is our own writing and may contain plain text such as conf=high. A hors d'oeuvre is usually 15 to 20 seconds. Up to the cap on the master desk (45 seconds unless that cap is changed) is allowed and only warned about. Shorter than 15, or longer than the cap, is refused. app_in and app_out are one continuous appetiser. hook_in and hook_out, turn_in and turn_out, land_in and land_out are up to three separate cuts. The player plays them in that order, and their lengths together stay within about 3 minutes (195 seconds)."
+  "HEARTS talks. One row is one talk. talk_key is how a later import finds the same talk, so keep it stable. Leave a cell blank to leave that field as it is. Times can be seconds (90), minutes and seconds (1:30) or hours (1:02:03). status is draft, checked or live. rejected keeps a talk hidden from learners. delete removes the talk. youtube_id is the 11-character YouTube id. provider is youtube, vimeo or file. A Vimeo talk puts the number in vimeo_id. An uploaded film puts the media id in media_id. duration is the length in seconds. transcript is the speaker's words and is only for captions that fit in the cell (under 30,000 characters); a longer transcript is a Resources row with kind transcript and a media_id. hook_text, turn_text, land_text and transcript are the speaker's words: the kill list is not applied to them. notes is our own writing and may contain plain text such as conf=high. A hors d'oeuvre is usually 15 to 20 seconds. Up to the cap on the master desk (45 seconds unless that cap is changed) is allowed and only warned about. Shorter than 15, or longer than the cap, is refused. app_in and app_out are one continuous appetiser. hook_in and hook_out, turn_in and turn_out, land_in and land_out are up to three separate cuts. The player plays them in that order, and their lengths together stay within about 3 minutes (195 seconds). pack names a course pack that already exists. The course is added to that pack and is not taken out of any pack. Several packs are separated with a semicolon."
 
 export const QUESTION_NOTE =
   'HEARTS questions. Name the talk with talk_key or youtube_id. The export writes question_id, and an import with that id updates the same question. A row with no question_id is matched to a question on the same talk with the same time and the same text, so importing the same file again does not add a copy. Leave question_id blank only when the question is new. type is free text, multiple choice, reflection or task. status is draft or approved (approved is what learners meet). source is ai or human. A blank cell leaves that field as it is. delete removes the question. Times use the same forms as the Talks tab and must fall inside the talk. type task is an activation task: due_days is how many days the learner has (1 to 366), evidence is none, note or photo, and show_imam is yes when the imam should see it. place is popup or workbook. A workbook row is a reflection kept in the workbook rather than a pop-up in the film. Questions, choices and notes are our own writing. Notes may contain plain text such as conf=high.'
@@ -32,7 +36,10 @@ export const QUESTION_NOTE =
 export const RESOURCE_NOTE =
   "HEARTS resources, one row per item. talk_key names the talk. The same talk_key and label updates that row next time. kind is link, file, summary, quote, reading, guide or transcript. url must start with https:// for a link, and for a file that is not an upload. A file row may instead put an uploaded file's number in media_id. kind transcript points at an uploaded text file (media_id) so a transcript longer than 30,000 characters can come in as a file rather than a cell; that file is copied onto the talk. summary, reading and guide are our own writing. quote and transcript are the speaker's words, so the kill list is not applied to them. A reading row is a suggestion to verify, not a link that has been checked. Leave status blank to keep the row, or put delete to remove it."
 
-const TABS = ['Talks', 'Questions', 'Resources', CIRCLE_TAB] as const
+export const SPEAKER_NOTE =
+  "HEARTS speakers. One row is one person. slug is the page address and is how a later import finds the same speaker, so keep it stable. Leave slug blank on a new row and it is taken from the name. aliases are other names for the same person, separated with a semicolon or a new line, and a talk that uses one of those names is linked here. links are http or https addresses, one per line, as the address itself or as label | https://…. photo_url is an https address of an image. status is draft or published. A blank cell leaves that field as it is. Names, the short bio and sources are our own writing."
+
+const TABS = ['Talks', 'Questions', 'Resources', CIRCLE_TAB, SPEAKER_TAB] as const
 export type SheetTab = (typeof TABS)[number]
 
 const HEADER_ALIASES: Record<string, string> = {
@@ -46,6 +53,7 @@ const HEADER_ALIASES: Record<string, string> = {
   hook: 'hook_text', hook_text: 'hook_text', turn: 'turn_text', turn_text: 'turn_text', land: 'land_text', land_text: 'land_text',
   label: 'label', name: 'label', url: 'url', kind: 'kind', body: 'body', summary: 'body',
   provider: 'provider', vimeo_id: 'vimeo_id', vimeo: 'vimeo_id', media_id: 'media_id', media: 'media_id', duration: 'duration', length: 'duration', transcript: 'transcript',
+  pack: 'pack', packs: 'pack',
   due_days: 'due_days', due: 'due_days', evidence: 'evidence', show_imam: 'show_imam', showimam: 'show_imam', place: 'place', family: 'place',
   choice1: 'choice_1', choice_1: 'choice_1', choices_1: 'choice_1', ac_1: 'choice_1', ac1: 'choice_1',
   choice2: 'choice_2', choice_2: 'choice_2', choices_2: 'choice_2', ac_2: 'choice_2', ac2: 'choice_2',
@@ -63,15 +71,22 @@ const QUESTION_KINDS: Record<string, string> = {
 const KIND_LABEL: Record<string, string> = { question: 'free text', multiple_choice: 'multiple choice', reflection: 'reflection', task: 'task' }
 const HUMAN_NOTE = /written (on the master desk|by a person)/i
 const MACHINE_NOTE = /machine|captions/i
+const HUMAN_SENTENCE = 'Written by a person on the master sheet.'
+const NOTE_MARKERS = new Set([DRAFT_NOTE, HUMAN_SENTENCE, 'Written by a person on the master desk.', 'Written on the master desk.'])
+const markerNote = (note: string) => !note.trim() || NOTE_MARKERS.has(note.trim())
 
 export type SheetIssue = { tab: SheetTab; row: number; column: string; message: string }
 export type SheetChange = { tab: SheetTab; row: number; action: 'create' | 'update' | 'delete'; label: string; detail: string }
 export type Ref = { id: number } | { temp: string }
 
 export type SheetOp =
-  | { op: 'course.create'; temp: string; title: string; speaker?: string; origin: 'master' | 'local'; portal: number | null }
+  | { op: 'speaker.create'; temp: string; data: Record<string, unknown> }
+  | { op: 'speaker.update'; id: number; patch: Record<string, unknown> }
+  | { op: 'course.create'; temp: string; title: string; speaker?: string; speakerProfile?: Ref; origin: 'master' | 'local'; portal: number | null }
+  | { op: 'course.update'; id: number; patch: Record<string, unknown> }
   | { op: 'unit.create'; temp: string; course: Ref; title: string }
-  | { op: 'lesson.create'; temp: string; course: Ref; unit: Ref; title: string; speaker?: string; youtubeId?: string; order?: number; lane?: string; portal: number | null; master: boolean; provider?: string; vimeoId?: string; mediaId?: number; durationSeconds?: number | null; transcript?: string; transcriptSource?: string; transcriptNote?: string }
+  | { op: 'lesson.create'; temp: string; course: Ref; unit: Ref; title: string; speaker?: string; speakerProfile?: Ref; youtubeId?: string; order?: number; lane?: string; portal: number | null; master: boolean; provider?: string; vimeoId?: string; mediaId?: number; durationSeconds?: number | null; transcript?: string; transcriptSource?: string; transcriptNote?: string }
+  | { op: 'pack.add'; id: number; course: Ref }
   | { op: 'lesson.update'; id: number; patch: Record<string, unknown> }
   | { op: 'lesson.delete'; id: number }
   | { op: 'tier.create'; lesson: Ref; data: Record<string, unknown> }
@@ -94,10 +109,12 @@ export type SheetOp =
 
 export type SheetPlan = { errors: SheetIssue[]; warnings: SheetIssue[]; changes: SheetChange[]; unchanged: number; skipped: number; ops: SheetOp[] }
 
-export type CourseRow = { id: number; title: string; origin: string; portal: number | null; speaker: string; inScope: boolean }
+export type CourseRow = { id: number; title: string; origin: string; portal: number | null; speaker: string; speakerId?: number | null; inScope: boolean }
+export type SpeakerRow = { id: number; name: string; honorific: string; displayName: string; slug: string; aliases: string[]; bio: string; photoUrl: string; links: SpeakerLink[]; sources: string; status: string }
+export type PackRow = { id: number; title: string; owner: string; portal: number | null; courseIds: number[]; inScope: boolean }
 export type UnitRow = { id: number; course: number; title: string; order: number }
 export type LessonRow = {
-  id: number; title: string; course: number; unit: number | null; order: number; speaker: string
+  id: number; title: string; course: number; unit: number | null; order: number; speaker: string; speakerId?: number | null
   youtubeId: string; durationSeconds: number | null; starterLane: string; transcript: string; transcriptNote: string
   provider: string; vimeoId: string; mediaId: number | null; inScope: boolean
 }
@@ -108,7 +125,7 @@ export type KeyRow = { id: number; talkKey: string; lesson: number; channel: str
 export type CutRow = { id: number; lesson: number; bestClause: number | null; seatId: number | null; seatClause: number | null; seatPosition: number | null; placeholder: boolean; status: string; start: number; course: number | null }
 export type SeatRow = { id: number; clause: number; position: number }
 export type CircleRow = { id: number; point: number; lesson: number; portal: number | null; name: string; body: string; tone: string; length: string; origin: string; enabled: boolean }
-export type SheetCatalogue = { scopeKind: 'library' | 'portal' | 'course'; portalId: number | null; courseId: number | null; courses: CourseRow[]; units: UnitRow[]; lessons: LessonRow[]; tiers: TierRow[]; points: PointRow[]; resources: ResourceRow[]; keys: KeyRow[]; cuts: CutRow[]; seats: SeatRow[]; horsMaxSeconds?: number; circle?: CircleRow[]; circlePortal?: number | null }
+export type SheetCatalogue = { scopeKind: 'library' | 'portal' | 'course'; portalId: number | null; courseId: number | null; courses: CourseRow[]; units: UnitRow[]; lessons: LessonRow[]; tiers: TierRow[]; points: PointRow[]; resources: ResourceRow[]; keys: KeyRow[]; cuts: CutRow[]; seats: SeatRow[]; horsMaxSeconds?: number; circle?: CircleRow[]; circlePortal?: number | null; speakers?: SpeakerRow[]; packs?: PackRow[] }
 
 type Cell = { text: string; raw: unknown; numFmt?: string }
 type InputRow = { row: number; cells: Record<string, Cell> }
@@ -141,7 +158,7 @@ export function planCounts(plan: SheetPlan) {
 }
 
 export function emptyCatalogue(scope: Partial<SheetCatalogue> = {}): SheetCatalogue {
-  return { scopeKind: 'library', portalId: null, courseId: null, courses: [], units: [], lessons: [], tiers: [], points: [], resources: [], keys: [], cuts: [], seats: [], circle: [], ...scope }
+  return { scopeKind: 'library', portalId: null, courseId: null, courses: [], units: [], lessons: [], tiers: [], points: [], resources: [], keys: [], cuts: [], seats: [], circle: [], speakers: [], packs: [], ...scope }
 }
 
 /** Seconds from a cell: a number of seconds, m:ss, h:mm:ss, or an Excel/Google time. */
@@ -249,6 +266,22 @@ function circleCanonical(header: string) {
   return ({ key: 'talk_key', video_id: 'youtube_id', youtube: 'youtube_id', answer: 'body', text: 'body', id: 'circle_id' } as Record<string, string>)[key] || null
 }
 
+// The Speakers tab has its own names. `name` on Resources means the label, so that alias must not apply here.
+function speakerCanonical(header: string) {
+  const key = normHeader(header)
+  return ({
+    slug: 'slug', name: 'name', honorific: 'honorific', display_name: 'display_name', displayname: 'display_name',
+    aliases: 'aliases', alias: 'aliases', bio: 'bio', short_bio: 'bio', photo_url: 'photo_url', photourl: 'photo_url',
+    links: 'links', sources: 'sources', status: 'status',
+  } as Record<string, string>)[key] || null
+}
+
+function canonFor(tab: SheetTab) {
+  if (tab === CIRCLE_TAB) return circleCanonical
+  if (tab === SPEAKER_TAB) return speakerCanonical
+  return canonical
+}
+
 function headerOf(sheet: ExcelJS.Worksheet, columns: readonly string[], canon: (header: string) => string | null = canonical) {
   let found: { row: number; map: Map<number, string> } | null = null
   const known = new Set(columns)
@@ -279,18 +312,18 @@ function sheetNamed(workbook: ExcelJS.Workbook, name: SheetTab) {
 export async function readWorkbook(buffer: Buffer): Promise<{ talks: InputRow[]; questions: InputRow[]; resources: InputRow[]; circle: InputRow[]; errors: SheetIssue[] }> {
   const errors: SheetIssue[] = []
   if (buffer.length < 4 || buffer[0] !== 0x50 || buffer[1] !== 0x4b) {
-    return { talks: [], questions: [], resources: [], circle: [], errors: [{ tab: 'Talks', row: 1, column: 'file', message: 'This file is not an Excel workbook. Download the template and save it as .xlsx. In Google Sheets use File, Download, Microsoft Excel.' }] }
+    return { talks: [], questions: [], resources: [], circle: [], speakers: [], errors: [{ tab: 'Talks', row: 1, column: 'file', message: 'This file is not an Excel workbook. Download the template and save it as .xlsx. In Google Sheets use File, Download, Microsoft Excel.' }] }
   }
   let workbook: ExcelJS.Workbook
   try {
     workbook = await workbookOf(buffer)
   } catch {
-    return { talks: [], questions: [], resources: [], circle: [], errors: [{ tab: 'Talks', row: 1, column: 'file', message: 'That workbook could not be opened. Save it again as .xlsx and upload that file.' }] }
+    return { talks: [], questions: [], resources: [], circle: [], speakers: [], errors: [{ tab: 'Talks', row: 1, column: 'file', message: 'That workbook could not be opened. Save it again as .xlsx and upload that file.' }] }
   }
   const read = (tab: SheetTab, columns: readonly string[]) => {
     const sheet = sheetNamed(workbook, tab)
     if (!sheet) return []
-    const header = headerOf(sheet, columns, tab === CIRCLE_TAB ? circleCanonical : canonical)
+    const header = headerOf(sheet, columns, canonFor(tab))
     if (!header) {
       errors.push({ tab, row: 1, column: columns[0], message: `The ${tab} tab needs its header row. Download a fresh template and keep that row.` })
       return []
@@ -311,10 +344,11 @@ export async function readWorkbook(buffer: Buffer): Promise<{ talks: InputRow[];
   const questions = read('Questions', QUESTION_COLUMNS)
   const resources = read('Resources', RESOURCE_COLUMNS)
   const circle = read(CIRCLE_TAB, CIRCLE_COLUMNS)
+  const speakers = read(SPEAKER_TAB, SPEAKER_COLUMNS)
   if (!TABS.some((tab) => sheetNamed(workbook, tab))) {
-    errors.push({ tab: 'Talks', row: 1, column: 'file', message: `The workbook needs a Talks, Questions, Resources or ${CIRCLE_TAB} tab. Download the template to start from.` })
+    errors.push({ tab: 'Talks', row: 1, column: 'file', message: `The workbook needs a Talks, Questions, Resources, ${CIRCLE_TAB} or ${SPEAKER_TAB} tab. Download the template to start from.` })
   }
-  return { talks, questions, resources, circle, errors }
+  return { talks, questions, resources, circle, speakers, errors }
 }
 
 function addSheet(workbook: ExcelJS.Workbook, name: SheetTab, note: string, columns: readonly string[], rows: Record<string, string | number | null>[]) {
@@ -341,13 +375,14 @@ function addSheet(workbook: ExcelJS.Workbook, name: SheetTab, note: string, colu
   return sheet
 }
 
-export async function buildWorkbook(sheets: { talks?: Record<string, string | number | null>[]; questions?: Record<string, string | number | null>[]; resources?: Record<string, string | number | null>[]; circle?: Record<string, string | number | null>[] }) {
+export async function buildWorkbook(sheets: { talks?: Record<string, string | number | null>[]; questions?: Record<string, string | number | null>[]; resources?: Record<string, string | number | null>[]; circle?: Record<string, string | number | null>[]; speakers?: Record<string, string | number | null>[] }) {
   const workbook = new ExcelJS.Workbook()
   workbook.creator = 'HEARTS'
   addSheet(workbook, 'Talks', TALK_NOTE, TALK_COLUMNS, sheets.talks || [])
   addSheet(workbook, 'Questions', QUESTION_NOTE, QUESTION_COLUMNS, sheets.questions || [])
   addSheet(workbook, 'Resources', RESOURCE_NOTE, RESOURCE_COLUMNS, sheets.resources || [])
   addSheet(workbook, CIRCLE_TAB, CIRCLE_NOTE, CIRCLE_COLUMNS, sheets.circle || [])
+  addSheet(workbook, SPEAKER_TAB, SPEAKER_NOTE, SPEAKER_COLUMNS, sheets.speakers || [])
   const out = await workbook.xlsx.writeBuffer()
   return Buffer.from(out)
 }
@@ -419,6 +454,47 @@ export function talkSheetValues(lesson: LessonRow, catalogue: SheetCatalogue): R
     vimeo_id: lesson.vimeoId || null,
     media_id: lesson.mediaId || null,
     duration: numOrNull(lesson.durationSeconds),
+    pack: packCell(catalogue, lesson.course),
+  }
+}
+
+function packCell(catalogue: SheetCatalogue, courseId: number) {
+  const titles = (catalogue.packs || []).filter((pack) => pack.inScope && pack.courseIds.includes(courseId)).map((pack) => pack.title).sort()
+  return titles.length ? titles.join('; ') : null
+}
+
+function splitList(value: string) {
+  return value.split(/[;\n]/).map((part) => part.trim()).filter(Boolean)
+}
+
+function sameStrings(left: string[], right: string[]) {
+  const a = [...left].map((item) => item.trim()).filter(Boolean).sort()
+  const b = [...right].map((item) => item.trim()).filter(Boolean).sort()
+  return a.length === b.length && a.every((item, index) => item === b[index])
+}
+
+function linkKey(link: SpeakerLink) {
+  return `${link.label.trim()}|${citationUrl(link.url) || link.url.trim()}`
+}
+
+function sameLinks(left: SpeakerLink[], right: SpeakerLink[]) {
+  const a = left.map(linkKey).sort()
+  const b = right.map(linkKey).sort()
+  return a.length === b.length && a.every((item, index) => item === b[index])
+}
+
+export function speakerSheetValues(speaker: SpeakerRow): Record<string, string | number | null> {
+  return {
+    slug: speaker.slug,
+    name: speaker.name,
+    honorific: speaker.honorific || null,
+    display_name: speaker.displayName || null,
+    aliases: speaker.aliases.length ? speaker.aliases.join('; ') : null,
+    bio: speaker.bio || null,
+    photo_url: speaker.photoUrl || null,
+    links: speaker.links.length ? speaker.links.map((link) => `${link.label} | ${link.url}`).join('\n') : null,
+    sources: speaker.sources || null,
+    status: speaker.status || 'draft',
   }
 }
 
@@ -475,6 +551,7 @@ export function rowsFromCatalogue(catalogue: SheetCatalogue) {
     questions: catalogue.points.filter((point) => ids.has(point.lesson)).map((point) => questionSheetValues(point, catalogue)),
     resources: catalogue.resources.filter((resource) => ids.has(resource.lesson)).map((resource) => resourceSheetValues(resource, catalogue)),
     circle: (catalogue.circle || []).filter((answer) => ids.has(answer.lesson)).map((answer) => circleRowValues(answer, catalogue)),
+    speakers: (catalogue.speakers || []).map((speaker) => speakerSheetValues(speaker)),
   }
 }
 
@@ -517,6 +594,8 @@ type Working = {
   handledQuestions: Set<number>
   courses: Map<string, { temp: string; title: string; speaker?: string }>
   units: Map<string, { temp: string; title: string }>
+  speakers: Map<string, { temp: string; name: string; slug: string; displayName: string; aliases: string[] }>
+  packAdds: Set<string>
   lessons: Map<string, { temp: string; title: string; youtubeId: string; duration: number | null; transcript: string; course: Ref; unit: Ref }>
   byKey: Map<string, LessonRow>
   byYoutube: Map<string, LessonRow[]>
@@ -528,7 +607,7 @@ type Working = {
 function indexCatalogue(catalogue: SheetCatalogue): Working {
   const working: Working = {
     catalogue, errors: [], warnings: [], changes: [], ops: [], unchanged: 0, skipped: 0, pendingQuestions: new Map(), handledQuestions: new Set(),
-    courses: new Map(), units: new Map(), lessons: new Map(),
+    courses: new Map(), units: new Map(), lessons: new Map(), speakers: new Map(), packAdds: new Set(),
     byKey: new Map(), byYoutube: new Map(), outsideKey: new Map(), outsideYoutube: new Map(), questionIds: new Map(),
   }
   const addKey = (map: Map<string, LessonRow>, key: string, lesson: LessonRow) => {
@@ -575,7 +654,7 @@ function skip(working: Working, tab: SheetTab, row: number, column: string, mess
   working.errors.push({ tab, row, column, message })
 }
 
-function courseRef(working: Working, title: string, speaker: string | undefined, row: number): { ref: Ref; created: boolean } | { error: string } {
+function courseRef(working: Working, title: string, speaker: string | undefined, speakerProfile: Ref | undefined, row: number): { ref: Ref; created: boolean } | { error: string } {
   const name = foldName(title)
   const pending = working.courses.get(name)
   if (pending) return { ref: { temp: pending.temp }, created: false }
@@ -590,7 +669,7 @@ function courseRef(working: Working, title: string, speaker: string | undefined,
   if (working.catalogue.scopeKind === 'course') return { error: 'This import is for one course. The course column has to name that course, or be left blank.' }
   const temp = `course:${name}:${row}`
   const origin = working.catalogue.scopeKind === 'portal' ? 'local' : 'master'
-  working.ops.push({ op: 'course.create', temp, title: title.trim(), speaker, origin, portal: origin === 'local' ? working.catalogue.portalId : null })
+  working.ops.push({ op: 'course.create', temp, title: title.trim(), speaker, speakerProfile, origin, portal: origin === 'local' ? working.catalogue.portalId : null })
   working.courses.set(name, { temp, title: title.trim(), speaker })
   return { ref: { temp }, created: true }
 }
@@ -625,6 +704,186 @@ function timeCell(row: InputRow, column: string): { ok: true; seconds: number } 
   if (!present(row, column)) return null
   const cell = row.cells[column]
   return parseSheetTime(cell.raw instanceof Date || typeof cell.raw === 'number' ? cell.raw : cell.text, cell.numFmt)
+}
+
+function speakerIdentities(working: Working): SpeakerIdentity[] {
+  const pending = [...working.speakers.values()].map((speaker) => ({ name: speaker.name, slug: speaker.slug, displayName: speaker.displayName, aliases: speaker.aliases }))
+  return [...(working.catalogue.speakers || []), ...pending]
+}
+
+/** The speaker a talk cell names. The stored words change only when the public address would otherwise split. */
+function speakerLink(working: Working, raw: string): { name: string; slug: string; ref: Ref | null; rewrite: boolean } | null {
+  const resolved = resolveSpeaker(raw, speakerIdentities(working))
+  if (!resolved) return null
+  const stored = (working.catalogue.speakers || []).find((speaker) => speaker.slug === resolved.slug)
+  const pending = working.speakers.get(resolved.slug)
+  const ref: Ref | null = stored ? { id: stored.id } : pending ? { temp: pending.temp } : resolved.id ? { id: resolved.id } : null
+  return { name: resolved.name, slug: resolved.slug, ref, rewrite: speakerSlug(raw) !== resolved.slug }
+}
+
+function sameSpeakerRef(current: number | null | undefined, ref: Ref | null) {
+  if (!ref || 'temp' in ref) return false
+  return (current || null) === ref.id
+}
+
+function linkCourseSpeaker(working: Working, course: Ref, link: { name: string; ref: Ref | null; rewrite: boolean } | null) {
+  if (!link?.ref || 'temp' in course || 'temp' in link.ref) return
+  const stored = working.catalogue.courses.find((row) => row.id === course.id)
+  if (!stored || stored.speakerId) return
+  if (working.ops.some((op) => op.op === 'course.update' && op.id === stored.id)) return
+  const patch: Record<string, unknown> = { speakerProfile: link.ref.id }
+  if (link.rewrite && stored.speaker && speakerSlug(stored.speaker) !== speakerSlug(link.name)) patch.speaker = link.name
+  else if (!stored.speaker) patch.speaker = link.name
+  working.ops.push({ op: 'course.update', id: stored.id, patch })
+}
+
+function stagePackAdds(working: Working, raw: string, course: Ref): { ok: true; ops: SheetOp[]; keys: string[]; titles: string[] } | { ok: false; message: string } {
+  const ops: SheetOp[] = []
+  const keys: string[] = []
+  const titles: string[] = []
+  const packs = (working.catalogue.packs || []).filter((pack) => pack.inScope)
+  for (const name of splitList(raw)) {
+    const matches = packs.filter((pack) => foldName(pack.title) === foldName(name))
+    if (!matches.length) return { ok: false, message: `No pack in this import is called “${name}”. The pack column adds a course to a pack that already exists.` }
+    if (matches.length > 1) return { ok: false, message: `More than one pack is called “${name}”. Rename one in the editor first.` }
+    const pack = matches[0]
+    const token = 'id' in course ? `id:${course.id}` : course.temp
+    const key = `${pack.id}:${token}`
+    const already = 'id' in course && pack.courseIds.includes(course.id)
+    if (already || working.packAdds.has(key) || keys.includes(key)) continue
+    keys.push(key)
+    titles.push(pack.title)
+    ops.push({ op: 'pack.add', id: pack.id, course })
+  }
+  return { ok: true, ops, keys, titles }
+}
+
+function rememberPacks(working: Working, keys: string[], ops: SheetOp[]) {
+  for (const key of keys) working.packAdds.add(key)
+  for (const op of ops) {
+    if (op.op !== 'pack.add' || !('id' in op.course)) continue
+    const pack = (working.catalogue.packs || []).find((row) => row.id === op.id)
+    if (pack && !pack.courseIds.includes(op.course.id)) pack.courseIds.push(op.course.id)
+  }
+}
+
+function parseLinks(text: string): { ok: true; links: SpeakerLink[] } | { ok: false; message: string } {
+  const links: SpeakerLink[] = []
+  for (const part of splitList(text)) {
+    const pieces = part.split('|')
+    const urlText = (pieces.length >= 2 ? pieces.pop() : part)!.trim()
+    const label = pieces.length ? pieces.join('|').trim() || 'Link' : 'Link'
+    const href = citationUrl(urlText)
+    if (!href) return { ok: false, message: pieces.length ? `“${urlText}” has to be an http:// or https:// link.` : `“${part}” has to be an http:// or https:// link, or “label | https://…”.` }
+    links.push({ label, url: href })
+  }
+  return { ok: true, links }
+}
+
+function planSpeakers(working: Working, rows: InputRow[]) {
+  const seen = new Map<string, number>()
+  for (const row of rows) {
+    const name = textOf(row, 'name')
+    const slugText = textOf(row, 'slug')
+    const list = working.catalogue.speakers || []
+    const resolved = !slugText && name ? resolveSpeaker(name, list) : null
+    const slug = slugText || resolved?.slug || (name ? speakerSlug(name) : '')
+    if (slug) seen.set(slug, (seen.get(slug) || 0) + 1)
+  }
+  for (const row of rows) {
+    const problems: SheetIssue[] = []
+    const fail = (column: string, message: string) => problems.push({ tab: SPEAKER_TAB, row: row.row, column, message })
+    const name = textOf(row, 'name')
+    const slugText = textOf(row, 'slug')
+    const status = textOf(row, 'status').toLowerCase()
+    if (present(row, 'status') && status !== 'draft' && status !== 'published') fail('status', 'Status is draft or published.')
+    for (const [column, label] of [['name', 'Name'], ['honorific', 'Honorific'], ['display_name', 'Display name'], ['bio', 'Bio'], ['sources', 'Sources']] as const) {
+      if (present(row, column)) problems.push(...plainProblems([[label, textOf(row, column)]]).map((message) => ({ tab: SPEAKER_TAB, row: row.row, column, message })))
+    }
+    let aliases: string[] | null = null
+    if (present(row, 'aliases')) aliases = splitList(textOf(row, 'aliases'))
+    let links: SpeakerLink[] | null = null
+    if (present(row, 'links') && textOf(row, 'links')) {
+      const parsed = parseLinks(textOf(row, 'links'))
+      if (!parsed.ok) fail('links', parsed.message)
+      else links = parsed.links
+    }
+    let photoUrl: string | null = null
+    if (present(row, 'photo_url') && textOf(row, 'photo_url')) {
+      photoUrl = imageUrl(textOf(row, 'photo_url'))
+      if (!photoUrl) fail('photo_url', 'photo_url is an https address of an image, such as a .jpg. Put a page address in links.')
+    }
+    const existing = (() => {
+      const list = working.catalogue.speakers || []
+      if (slugText) {
+        const bySlug = list.find((speaker) => speaker.slug === slugText)
+        if (bySlug) return bySlug
+      }
+      if (!name) return null
+      const resolved = resolveSpeaker(name, list)
+      return resolved?.id ? list.find((speaker) => speaker.id === resolved.id) || null : null
+    })()
+    const slug = slugText || existing?.slug || (name ? speakerSlug(name) : '')
+    if (slug && (seen.get(slug) || 0) > 1) fail('slug', `The slug “${slug}” is used on more than one row. Each speaker needs one row.`)
+    if (problems.length) {
+      working.errors.push(...problems)
+      working.skipped += 1
+      continue
+    }
+    if (!existing) {
+      if (!name) {
+        fail('name', 'A new speaker needs a name.')
+        working.errors.push(...problems)
+        working.skipped += 1
+        continue
+      }
+      if (!slug) {
+        fail('slug', 'A speaker needs a slug, or a name that can make one.')
+        working.errors.push(...problems)
+        working.skipped += 1
+        continue
+      }
+      const taken = (working.catalogue.speakers || []).some((speaker) => speaker.slug === slug) || working.speakers.has(slug)
+      if (taken) {
+        fail('slug', `A speaker already uses the slug “${slug}”.`)
+        working.errors.push(...problems)
+        working.skipped += 1
+        continue
+      }
+      const temp = `speaker:${slug}`
+      const data: Record<string, unknown> = {
+        name, slug, status: status || 'draft',
+        honorific: textOf(row, 'honorific') || undefined,
+        displayName: textOf(row, 'display_name') || undefined,
+        aliases: aliases || [],
+        bio: textOf(row, 'bio') || undefined,
+        photoUrl: photoUrl || undefined,
+        links: links || [],
+        sources: textOf(row, 'sources') || undefined,
+      }
+      working.ops.push({ op: 'speaker.create', temp, data })
+      working.speakers.set(slug, { temp, name, slug, displayName: textOf(row, 'display_name') || name, aliases: aliases || [] })
+      working.changes.push({ tab: SPEAKER_TAB, row: row.row, action: 'create', label: name, detail: status === 'published' ? 'New speaker, published.' : 'New speaker, kept as a draft.' })
+      continue
+    }
+    const patch: Record<string, unknown> = {}
+    if (present(row, 'name') && name !== existing.name) patch.name = name
+    if (slugText && slugText !== existing.slug) patch.slug = slugText
+    if (present(row, 'honorific') && textOf(row, 'honorific') !== (existing.honorific || '')) patch.honorific = textOf(row, 'honorific')
+    if (present(row, 'display_name') && textOf(row, 'display_name') !== (existing.displayName || '')) patch.displayName = textOf(row, 'display_name')
+    if (aliases && !sameStrings(aliases, existing.aliases)) patch.aliases = aliases
+    if (present(row, 'bio') && textOf(row, 'bio') !== (existing.bio || '')) patch.bio = textOf(row, 'bio')
+    if (photoUrl && photoUrl !== (existing.photoUrl || '')) patch.photoUrl = photoUrl
+    if (links && !sameLinks(links, existing.links)) patch.links = links
+    if (present(row, 'sources') && textOf(row, 'sources') !== (existing.sources || '')) patch.sources = textOf(row, 'sources')
+    if (status && status !== (existing.status || 'draft')) patch.status = status
+    if (!Object.keys(patch).length) {
+      working.unchanged += 1
+      continue
+    }
+    working.ops.push({ op: 'speaker.update', id: existing.id, patch })
+    working.changes.push({ tab: SPEAKER_TAB, row: row.row, action: 'update', label: existing.name, detail: 'The speaker will be updated.' })
+  }
 }
 
 function planTalks(working: Working, rows: InputRow[]) {
@@ -745,7 +1004,10 @@ function planTalks(working: Working, rows: InputRow[]) {
         continue
       }
       const mark = checkpoint(working)
-      const course = courseRef(working, courseTitle, textOf(row, 'speaker') || undefined, row.row)
+      const rawSpeaker = textOf(row, 'speaker')
+      const linked = rawSpeaker ? speakerLink(working, rawSpeaker) : null
+      const speakerText = linked ? (linked.rewrite ? linked.name : rawSpeaker) : rawSpeaker
+      const course = courseRef(working, courseTitle, speakerText || undefined, linked?.ref || undefined, row.row)
       if ('error' in course) {
         rollback(working, mark)
         fail('course', course.error)
@@ -760,9 +1022,10 @@ function planTalks(working: Working, rows: InputRow[]) {
       const master = !portal
       const source = transcriptText ? (provider === 'file' || provider === 'vimeo' ? 'upload' : 'youtube') : undefined
       working.ops.push({
-        op: 'lesson.create', temp, course: course.ref, unit, title, speaker: textOf(row, 'speaker') || undefined, youtubeId: youtubeId || undefined, order: order ?? undefined, lane: textOf(row, 'lane') || undefined, portal, master,
+        op: 'lesson.create', temp, course: course.ref, unit, title, speaker: speakerText || undefined, speakerProfile: linked?.ref || undefined, youtubeId: youtubeId || undefined, order: order ?? undefined, lane: textOf(row, 'lane') || undefined, portal, master,
         provider: provider || undefined, vimeoId: vimeoId || undefined, mediaId: mediaId || undefined, durationSeconds, transcript: transcriptText || undefined, transcriptSource: source,
       })
+      linkCourseSpeaker(working, course.ref, linked)
       const tier = tierPatch(null, times, row, transcriptText, null, problems, rowWarnings, horsCapOf(working.catalogue.horsMaxSeconds))
       if (tier) working.ops.push({ op: 'tier.create', lesson: { temp }, data: tier })
       else if (status === 'checked' || status === 'live') fail('status', 'A checked or live talk needs the hors d\'oeuvre and appetiser times.')
@@ -775,15 +1038,30 @@ function planTalks(working: Working, rows: InputRow[]) {
         working.ops.push({ op: 'key.upsert', lesson: { temp }, talkKey, channel: textOf(row, 'channel') || null, sheetStatus: status === 'live' ? 'live' : null })
       }
       placeCut(working, null, { temp }, course.ref, clause, textOf(row, 'ghunya_seat'), title, row, problems)
+      let packOps: SheetOp[] = []
+      let packKeys: string[] = []
+      let packTitles: string[] = []
+      if (present(row, 'pack')) {
+        const staged = stagePackAdds(working, textOf(row, 'pack'), course.ref)
+        if (!staged.ok) fail('pack', staged.message)
+        else {
+          packOps = staged.ops
+          packKeys = staged.keys
+          packTitles = staged.titles
+          working.ops.push(...packOps)
+        }
+      }
       if (problems.length) {
         rollback(working, mark)
         working.errors.push(...problems)
         working.skipped += 1
         continue
       }
+      rememberPacks(working, packKeys, packOps)
       working.lessons.set(talkKey, { temp, title, youtubeId, duration: durationSeconds, transcript: transcriptText, course: course.ref, unit })
       working.warnings.push(...rowWarnings)
-      working.changes.push({ tab: 'Talks', row: row.row, action: 'create', label: title, detail: course.created ? `New talk in a new course, “${courseTitle.trim()}”.` : `New talk in “${courseTitle.trim()}”.` })
+      const packNote = packTitles.length ? ` Adds the course to ${packTitles.join(', ')}.` : ''
+      working.changes.push({ tab: 'Talks', row: row.row, action: 'create', label: title, detail: `${course.created ? `New talk in a new course, “${courseTitle.trim()}”.` : `New talk in “${courseTitle.trim()}”.`}${packNote}` })
       continue
     }
     if (found.pending) {
@@ -796,7 +1074,14 @@ function planTalks(working: Working, rows: InputRow[]) {
     const current = talkSheetValues(lesson, working.catalogue)
     const lessonPatch: Record<string, unknown> = {}
     if (present(row, 'title') && !sameScalar(current.title, textOf(row, 'title'))) lessonPatch.title = textOf(row, 'title')
-    if (present(row, 'speaker') && !sameScalar(current.speaker, textOf(row, 'speaker'))) lessonPatch.speaker = textOf(row, 'speaker')
+    let linkedSpeaker: ReturnType<typeof speakerLink> = null
+    if (present(row, 'speaker')) {
+      const raw = textOf(row, 'speaker')
+      linkedSpeaker = speakerLink(working, raw)
+      const nextText = linkedSpeaker?.rewrite ? linkedSpeaker.name : raw
+      if (!sameScalar(current.speaker, nextText)) lessonPatch.speaker = nextText
+      if (linkedSpeaker?.ref && !sameSpeakerRef(lesson.speakerId, linkedSpeaker.ref)) lessonPatch.speakerProfile = linkedSpeaker.ref
+    }
     if (youtubeId && !sameScalar(current.youtube_id, youtubeId)) lessonPatch.youtubeId = youtubeId
     if (provider && provider !== (lesson.provider || '')) lessonPatch.videoProvider = provider
     if (vimeoId && vimeoId !== (lesson.vimeoId || '')) lessonPatch.vimeoId = vimeoId
@@ -807,7 +1092,7 @@ function planTalks(working: Working, rows: InputRow[]) {
     if (present(row, 'lane') && !sameScalar(current.lane, textOf(row, 'lane'))) lessonPatch.starterLane = textOf(row, 'lane')
     let courseMove: Ref | null = null
     if (present(row, 'course') && !sameScalar(current.course, textOf(row, 'course'))) {
-      const course = courseRef(working, textOf(row, 'course'), undefined, row.row)
+      const course = courseRef(working, textOf(row, 'course'), undefined, undefined, row.row)
       if ('error' in course) fail('course', course.error)
       else if ('temp' in course.ref || course.ref.id !== lesson.course) {
         courseMove = course.ref
@@ -838,12 +1123,27 @@ function planTalks(working: Working, rows: InputRow[]) {
     placeCut(working, lesson, null, courseMove || { id: lesson.course }, clause, present(row, 'ghunya_seat') ? textOf(row, 'ghunya_seat') : '', String(lessonPatch.title || lesson.title), row, problems)
     const cutWritten = working.ops.length > beforeCuts
     const keyOp = keyPatch(working, lesson, talkKey, present(row, 'channel') ? textOf(row, 'channel') : null, status)
+    linkCourseSpeaker(working, courseMove || { id: lesson.course }, linkedSpeaker)
+    let packOps: SheetOp[] = []
+    let packKeys: string[] = []
+    let packTitles: string[] = []
+    if (present(row, 'pack')) {
+      const staged = stagePackAdds(working, textOf(row, 'pack'), courseMove || { id: lesson.course })
+      if (!staged.ok) fail('pack', staged.message)
+      else {
+        packOps = staged.ops
+        packKeys = staged.keys
+        packTitles = staged.titles
+        working.ops.push(...packOps)
+      }
+    }
     if (problems.length) {
       rollback(working, mark)
       working.errors.push(...problems)
       working.skipped += 1
       continue
     }
+    rememberPacks(working, packKeys, packOps)
     const detail: string[] = []
     if (Object.keys(lessonPatch).length) {
       working.ops.push({ op: 'lesson.update', id: lesson.id, patch: lessonPatch })
@@ -859,9 +1159,13 @@ function planTalks(working: Working, rows: InputRow[]) {
       detail.push('the sheet key')
     }
     if (cutWritten) detail.push('the clause')
+    const courseSpeaker = working.ops.slice(mark.ops).some((op) => op.op === 'course.update')
+    if (courseSpeaker) detail.push('the course speaker')
     working.warnings.push(...rowWarnings)
-    if (!detail.length) working.unchanged += 1
-    else working.changes.push({ tab: 'Talks', row: row.row, action: 'update', label: lesson.title, detail: `Updates ${detail.join(', ')}.` })
+    const packNote = packTitles.length ? `Adds the course to ${packTitles.join(', ')}.` : ''
+    if (!detail.length && !packNote) working.unchanged += 1
+    else if (!detail.length) working.changes.push({ tab: 'Talks', row: row.row, action: 'update', label: lesson.title, detail: packNote })
+    else working.changes.push({ tab: 'Talks', row: row.row, action: 'update', label: lesson.title, detail: `Updates ${detail.join(', ')}.${packNote ? ` ${packNote}` : ''}` })
   }
 }
 
@@ -1137,9 +1441,14 @@ function planQuestions(working: Working, rows: InputRow[]) {
     if (creating && !prompt) fail('text', 'A new question needs its text.')
     if (creating && seconds == null) fail('time', 'A new question needs a time.')
     if (creating && !kind) fail('type', 'A new question needs a type: free text, multiple choice, reflection or task.')
-    if ((creating || present(row, 'text')) && prompt && prompt.trim().length < 10) fail('text', 'Write the question in at least 10 characters.')
-    const textChanged = creating || (present(row, 'text') && prompt !== (point?.prompt || '')) || choicesTouched || present(row, 'correct_choice')
+    if ((creating || (present(row, 'text') && prompt !== (point?.prompt || ''))) && prompt && prompt.trim().length < 10) fail('text', 'Write the question in at least 10 characters.')
+    const storedChoices = [...(point?.options || [])]
+    while (storedChoices.length && !storedChoices[storedChoices.length - 1]) storedChoices.pop()
+    const promptChanged = creating || (present(row, 'text') && prompt !== (point?.prompt || ''))
+    const choicesChanged = Boolean(point) && choicesTouched && JSON.stringify(choices) !== JSON.stringify(storedChoices)
+    const correctChanged = Boolean(point) && present(row, 'correct_choice') && correct !== (point?.correctOption || '')
     const publishing = status === 'approved' && point?.status !== 'published' && point?.status !== ''
+    const textChanged = promptChanged || choicesChanged || correctChanged || creating
     if (textChanged || publishing) {
       for (const message of questionTextProblems(prompt, choices.filter(Boolean), correct)) {
         const choice = message.match(/^Choice (\d+)/)
@@ -1184,25 +1493,30 @@ function planQuestions(working: Working, rows: InputRow[]) {
     if (seconds != null && !sameScalar(point ? numOrNull(point.second) : null, seconds)) data.second = seconds
     if (kind && kind !== (point?.kind || '')) data.kind = kind
     if (present(row, 'text') && prompt !== (point?.prompt || '')) data.prompt = prompt
-    if (choicesTouched && JSON.stringify(choices) !== JSON.stringify(existingChoices)) data.options = choices
+    if (choicesChanged) data.options = choices
     if (present(row, 'correct_choice') && correct !== (point?.correctOption || '')) data.correctOption = correct
     if (dueDays != null && dueDays !== (point?.dueDays ?? null)) data.dueDays = dueDays
-    if (evidence && evidence !== (point?.evidence || '')) data.evidence = evidence
+    if (evidence && !(evidence === (point?.evidence || '') || (evidence === 'none' && !(point?.evidence || '')))) data.evidence = evidence
     if (showImam != null && showImam !== Boolean(point?.showImam)) data.showImam = showImam
     const storedKind = point?.kind || ''
     const kindNow = kind || storedKind
-    const storedFamily = point?.family || (storedKind === 'task' ? 'task' : '')
+    const storedFamily = point?.family || ''
     let nextFamily = ''
     if (present(row, 'place') || (kind && kind !== storedKind)) nextFamily = kindNow === 'task' ? 'task' : place === 'workbook' ? 'workbook' : 'popup'
-    if (nextFamily && nextFamily !== storedFamily) data.family = nextFamily
+    const familySame = !nextFamily || nextFamily === storedFamily || (nextFamily === 'popup' && storedFamily === '' && kindNow !== 'task') || (nextFamily === 'task' && storedFamily === '' && kindNow === 'task')
+    if (nextFamily && !familySame) data.family = nextFamily
     if (nextStatus && nextStatus !== (point ? (point.status || 'published') : '')) data.status = nextStatus
-    let note = point?.draftNote || ''
-    if (present(row, 'notes') && textOf(row, 'notes') !== note) note = textOf(row, 'notes')
+    const storedNote = point?.draftNote || ''
+    let note = storedNote
+    const notesText = present(row, 'notes') ? textOf(row, 'notes') : null
     const currentSource = point ? questionSource(point) : ''
     const nextSource = source || currentSource || 'human'
-    if (source === 'human' && currentSource !== 'human' && !HUMAN_NOTE.test(note) && (!present(row, 'notes') || !textOf(row, 'notes'))) note = 'Written by a person on the master sheet.'
+    // A standard marker in the notes cell is the source column's label, not a new sentence. Two markers do not fight.
+    const realNoteEdit = notesText != null && notesText !== storedNote && !(markerNote(notesText) && markerNote(storedNote))
+    if (realNoteEdit && notesText != null) note = notesText
+    else if (source && source !== currentSource && markerNote(storedNote)) note = source === 'human' ? HUMAN_SENTENCE : DRAFT_NOTE
     if (nextSource === 'ai' && creating && !present(row, 'notes')) note = DRAFT_NOTE
-    if (note !== (point?.draftNote || '') && (present(row, 'notes') || source !== currentSource || creating)) data.draftNote = note
+    if (note !== storedNote && (realNoteEdit || (source && source !== currentSource) || creating)) data.draftNote = note
     const lessonToken = lesson ? `id:${lesson.id}` : `pending:${found.pending || talkKey}`
     const matchKey = seconds == null ? '' : `${lessonToken}|${round2(seconds)}|${prompt.trim()}`
     const signature = JSON.stringify({ second: seconds, kind: kind || point?.kind || '', prompt: prompt.trim(), choices, correct, dueDays, evidence, showImam, place, status: nextStatus, note, source: nextSource })
@@ -1460,9 +1774,10 @@ function planCircle(working: Working, rows: InputRow[]) {
 }
 
 /** Dry-run. Nothing is written. Rows with errors are skipped and listed; the rest are creates, updates, deletes or unchanged. */
-export function planSheet(parsed: { talks: InputRow[]; questions: InputRow[]; resources: InputRow[]; circle?: InputRow[]; errors?: SheetIssue[] }, catalogue: SheetCatalogue): SheetPlan {
+export function planSheet(parsed: { talks: InputRow[]; questions: InputRow[]; resources: InputRow[]; circle?: InputRow[]; speakers?: InputRow[]; errors?: SheetIssue[] }, catalogue: SheetCatalogue): SheetPlan {
   const working = indexCatalogue(catalogue)
   working.errors.push(...(parsed.errors || []))
+  planSpeakers(working, parsed.speakers || [])
   planTalks(working, parsed.talks)
   planQuestions(working, parsed.questions)
   planResources(working, parsed.resources)

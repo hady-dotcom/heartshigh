@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { templateWorkbook } from '@/lib/master-sheet'
 import { getSession } from '@/server/context'
-import { applyPlan, exportBuffer, planBuffer, summaryOf, undoSnapshot, writeAudit } from '@/server/master-sheet'
+import { applyImportedPlan, exportBuffer, planBuffer, summaryOf, undoSnapshot, writeAudit } from '@/server/master-sheet'
 import { resolveScope } from '@/server/sheet-scope'
 
 export const dynamic = 'force-dynamic'
@@ -124,13 +124,15 @@ export async function POST(req: Request) {
     if (json) return NextResponse.json({ ok: false, ...summary }, { status: 422 })
     return redirectTo(req, next, 'The sheet still has rows to fix. Nothing was saved.')
   }
+  const pushLearners = form.get('pushLearners') === 'yes'
   if (!plan.ops.length) {
+    if (pushLearners) await writeAudit(payload, 'sheet.push-learners', user, scope.portalId, { importId, fileName, pushedLearners: 0 })
     const notice = 'Nothing to change. The sheet matches what is already here.'
     return json ? NextResponse.json({ ok: true, notice, ...summary }) : redirectTo(req, next, undefined, notice)
   }
   let snapshot
   try {
-    snapshot = await applyPlan(payload, plan, user.id)
+    snapshot = await applyImportedPlan(payload, plan, user, scope.portalId, { pushLearners, fileName, importId })
   } catch (error) {
     const partial = (error as { snapshot?: unknown }).snapshot
     if (partial) {

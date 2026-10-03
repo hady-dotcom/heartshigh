@@ -235,6 +235,35 @@ export const ShelfItems: CollectionConfig = {
   ],
 }
 
+export const Speakers: CollectionConfig = {
+  slug: 'speakers',
+  admin: { useAsTitle: 'displayName' },
+  access: masterOnly,
+  hooks: { beforeChange: [plainFields('name', 'honorific', 'displayName', 'bio')] },
+  fields: [
+    { name: 'name', type: 'text', required: true },
+    { name: 'honorific', type: 'text' },
+    { name: 'displayName', type: 'text' },
+    { name: 'slug', type: 'text', required: true, unique: true, index: true },
+    { name: 'aliases', type: 'json', admin: { description: 'Other ways this speaker is named, so an import maps them here.' } },
+    { name: 'bio', type: 'textarea' },
+    { name: 'photo', type: 'upload', relationTo: 'media' },
+    { name: 'photoUrl', type: 'text', admin: { description: 'An https address of an image, when the photo is not an upload.' } },
+    { name: 'photoSource', type: 'text', admin: { description: 'Where the photo was found, when it is not an image address.' } },
+    { name: 'links', type: 'json', admin: { description: '[{ "label": "Site", "url": "https://…" }]' } },
+    { name: 'sources', type: 'textarea' },
+    {
+      name: 'status',
+      type: 'select',
+      defaultValue: 'draft',
+      options: [
+        { label: 'Draft', value: 'draft' },
+        { label: 'Published', value: 'published' },
+      ],
+    },
+  ],
+}
+
 export const Courses: CollectionConfig = {
   slug: 'courses',
   admin: { useAsTitle: 'title' },
@@ -244,6 +273,7 @@ export const Courses: CollectionConfig = {
     { name: 'title', type: 'text', required: true },
     { name: 'summary', type: 'textarea' },
     { name: 'speaker', type: 'text' },
+    { name: 'speakerProfile', type: 'relationship', relationTo: 'speakers' },
     {
       name: 'origin',
       type: 'select',
@@ -295,6 +325,7 @@ export const Lessons: CollectionConfig = {
     { name: 'master', type: 'checkbox', defaultValue: false },
     { name: 'order', type: 'number', defaultValue: 1 },
     { name: 'speaker', type: 'text' },
+    { name: 'speakerProfile', type: 'relationship', relationTo: 'speakers' },
     { name: 'youtubeUrl', type: 'text' },
     { name: 'youtubeId', type: 'text' },
     {
@@ -1012,6 +1043,7 @@ export const collections = [
   Clauses,
   Seats,
   ShelfItems,
+  Speakers,
   Courses,
   Units,
   Lessons,

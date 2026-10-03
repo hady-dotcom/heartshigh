@@ -84,7 +84,7 @@ test('round-trip: export then import with no edits makes no changes', async () =
   assert.equal(plan.ops.length, 0)
 })
 
-test('the blank template has four tabs, a note and the header row', async () => {
+test('the blank template has five tabs, a note and the header row', async () => {
   const buffer = await templateWorkbook()
   const parsed = await readWorkbook(buffer)
   assert.deepEqual(parsed.errors, [])
@@ -92,7 +92,7 @@ test('the blank template has four tabs, a note and the header row', async () => 
   assert.deepEqual(parsed.circle, [])
   const book = new ExcelJS.Workbook()
   await book.xlsx.load(buffer as unknown as Parameters<typeof book.xlsx.load>[0])
-  assert.deepEqual(book.worksheets.map((sheet) => sheet.name), ['Talks', 'Questions', 'Resources', 'CircleAnswers'])
+  assert.deepEqual(book.worksheets.map((sheet) => sheet.name), ['Talks', 'Questions', 'Resources', 'CircleAnswers', 'Speakers'])
   assert.match(String(book.getWorksheet('CircleAnswers')?.getRow(1).getCell(1).value), /never counted/)
   assert.deepEqual((book.getWorksheet('CircleAnswers')?.getRow(2).values as unknown[]).slice(1), [...CIRCLE_COLUMNS])
   assert.equal(TALK_COLUMNS.includes('talk_key'), true)

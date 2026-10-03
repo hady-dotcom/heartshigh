@@ -55,7 +55,7 @@ function SheetBody({
   portals: { slug: string; name: string }[]
   preview: { id: number; summary: Summary } | null
   last: { id: number; fileName?: string } | null
-  libraryCounts: { talks: number; questions: number; resources: number; circle: number }
+  libraryCounts: { talks: number; questions: number; resources: number; circle: number; speakers: number }
 }) {
   const summary = preview?.summary
   const counts = summary?.counts
@@ -74,6 +74,7 @@ function SheetBody({
         <div className="stat-chip"><b>{libraryCounts.questions}</b><span>Questions</span></div>
         <div className="stat-chip"><b>{libraryCounts.resources}</b><span>Resources</span></div>
         <div className="stat-chip" data-testid="sheet-circle-count"><b>{libraryCounts.circle}</b><span>Circle answers (never counted)</span></div>
+        <div className="stat-chip" data-testid="sheet-speaker-count"><b>{libraryCounts.speakers}</b><span>Speakers</span></div>
         <div className="stat-chip"><b>{last ? '1' : '0'}</b><span>Import waiting to undo</span></div>
       </div>
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.1fr) minmax(280px, 0.9fr)', alignItems: 'start' }}>
@@ -105,7 +106,7 @@ function SheetBody({
             <label className="stack">Workbook (.xlsx)
               <input type="file" name="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required data-testid="sheet-file" />
             </label>
-            <p className="hint">A blank cell leaves that field as it is. To remove a row, set its status to delete. Times can be seconds, m:ss or h:mm:ss. The CircleAnswers tab adds example answers under a question; they are never counted as answers or tasks.</p>
+            <p className="hint">A blank cell leaves that field as it is. To remove a row, set its status to delete. Times can be seconds, m:ss or h:mm:ss. The Speakers tab names one person, and a talk’s speaker cell is matched to that person, including a known alias. The pack column adds the course to a pack that already exists. The CircleAnswers tab adds example answers under a question; they are never counted as answers or tasks.</p>
             <div className="actions"><button className="btn ink" type="submit" data-testid="sheet-preview-submit">Preview import</button></div>
           </form>
         </section>
@@ -230,6 +231,10 @@ function SheetBody({
               <input type="hidden" name="intent" value="apply" />
               <input type="hidden" name="import" value={preview?.id || ''} />
               <input type="hidden" name="scope" value={desk === 'portal' ? 'portal' : 'library'} />
+              <label className="check" style={{ display: 'flex', gap: 8, alignItems: 'flex-start', margin: '12px 0' }}>
+                <input type="checkbox" name="pushLearners" value="yes" data-testid="sheet-push-learners" />
+                <span>Push to existing learners <small style={{ display: 'block', color: 'var(--muted)' }}>Off unless you tick it. Courses added to a pack are also added for learners who already have a saved course list on an access code for that pack. Using the tick is written to the audit log.</small></span>
+              </label>
               {counts.errors || counts.skipped ? <p data-testid="sheet-blocked">Fix the rows above and upload the sheet again. Apply stays off while any row has a problem.</p> : <button className="btn teal" type="submit" data-testid="sheet-apply">Apply this import</button>}
             </form>
           </div>
@@ -242,15 +247,17 @@ function SheetBody({
 async function catalogueCounts(payload: Payload, where: Record<string, unknown>, portalId: number | null) {
   const courses = await rows(payload, 'courses', where as never, { limit: 500 })
   const ids = courses.map((course) => course.id)
-  if (!ids.length) return { talks: 0, questions: 0, resources: 0, circle: 0 }
+  const speakersOnly = await payload.count({ collection: 'speakers', overrideAccess: true })
+  if (!ids.length) return { talks: 0, questions: 0, resources: 0, circle: 0, speakers: speakersOnly.totalDocs }
   const lessons = await rows(payload, 'lessons', { course: { in: ids } }, { limit: 2000 })
   const lessonIds = lessons.map((lesson) => lesson.id)
-  const [questions, resources, circle] = await Promise.all([
+  const [questions, resources, circle, speakers] = await Promise.all([
     lessonIds.length ? payload.count({ collection: 'engagement-points', overrideAccess: true, where: { lesson: { in: lessonIds } } }) : Promise.resolve({ totalDocs: 0 }),
     lessonIds.length ? payload.count({ collection: 'resources', overrideAccess: true, where: { lesson: { in: lessonIds } } }) : Promise.resolve({ totalDocs: 0 }),
     circleAnswerCount(payload, lessonIds, portalId),
+    Promise.resolve(speakersOnly),
   ])
-  return { talks: lessons.length, questions: questions.totalDocs, resources: resources.totalDocs, circle }
+  return { talks: lessons.length, questions: questions.totalDocs, resources: resources.totalDocs, circle, speakers: speakers.totalDocs }
 }
 
 export async function MasterSheetScreen({ payload, user, query }: { payload: Payload; user: SessionUser; query: Query }) {

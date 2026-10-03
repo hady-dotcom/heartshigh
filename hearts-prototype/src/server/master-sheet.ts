@@ -25,9 +25,11 @@ import {
   type Ref,
   type ResourceRow,
   type SeatRow,
+  type PackRow,
   type SheetCatalogue,
   type SheetOp,
   type SheetPlan,
+  type SpeakerRow,
   type TierRow,
   type UnitRow,
 } from '@/lib/master-sheet'
@@ -40,9 +42,10 @@ export type SheetSnapshot = {
   created: Record<string, number[]>
   updated: { collection: string; id: number; before: Record<string, unknown> }[]
   deleted: { collection: string; data: Record<string, unknown>; formerId?: number }[]
+  pushedLearners?: number
 }
 
-const CHILD_ORDER = ['circle-answers', 'engagement-points', 'resources', 'talk-tiers', 'sheet-keys', 'cuts', 'ladder-items', 'lessons', 'units', 'courses']
+const CHILD_ORDER = ['circle-answers', 'engagement-points', 'resources', 'talk-tiers', 'sheet-keys', 'cuts', 'ladder-items', 'lessons', 'units', 'courses', 'speakers']
 
 function emptySnapshot(): SheetSnapshot {
   return { created: {}, updated: [], deleted: [] }
@@ -72,7 +75,7 @@ function num(value: unknown) {
 }
 
 export async function loadCatalogue(payload: Payload, scope: SheetScope): Promise<SheetCatalogue> {
-  const [courses, units, lessons, tiers, points, resources, keys, cuts, seats, clauses, circle] = await Promise.all([
+  const [courses, units, lessons, tiers, points, resources, keys, cuts, seats, clauses, circle, speakers, packs] = await Promise.all([
     allDocs(payload, 'courses'),
     allDocs(payload, 'units'),
     allDocs(payload, 'lessons'),
@@ -84,6 +87,8 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
     allDocs(payload, 'seats'),
     allDocs(payload, 'clauses'),
     allDocs(payload, 'circle-answers', scope.desk === 'portal' ? { or: [{ portal: { exists: false } }, { portal: { equals: scope.portalId } }] } : undefined),
+    allDocs(payload, 'speakers'),
+    allDocs(payload, 'packs'),
   ])
   const clauseNumber = new Map(clauses.map((clause) => [clause.id, Number(clause.number)]))
   const inScope = (course: Doc) => {
@@ -92,7 +97,7 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
     return course.origin === 'master'
   }
   const courseRows: CourseRow[] = courses.map((course) => ({
-    id: course.id, title: String(course.title || ''), origin: String(course.origin || 'master'), portal: num(course.portal), speaker: String(course.speaker || ''), inScope: inScope(course),
+    id: course.id, title: String(course.title || ''), origin: String(course.origin || 'master'), portal: num(course.portal), speaker: String(course.speaker || ''), speakerId: num(course.speakerProfile), inScope: inScope(course),
   }))
   const scoped = new Set(courseRows.filter((course) => course.inScope).map((course) => course.id))
   const unitRows: UnitRow[] = units.map((unit) => ({ id: unit.id, course: num(unit.course) || 0, title: String(unit.title || ''), order: Number(unit.order || 1) }))
@@ -103,6 +108,7 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
     unit: num(lesson.unit),
     order: Number(lesson.order || 1),
     speaker: String(lesson.speaker || ''),
+    speakerId: num(lesson.speakerProfile),
     youtubeId: String(lesson.youtubeId || ''),
     durationSeconds: lesson.durationSeconds == null || lesson.durationSeconds === '' ? null : Number(lesson.durationSeconds),
     starterLane: String(lesson.starterLane || ''),
@@ -145,10 +151,32 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
       tone: String(answer.tone || ''), length: String(answer.length || ''), origin: String(answer.origin || 'staff'), enabled: answer.enabled !== false,
     }]
   })
+  const speakerRows: SpeakerRow[] = speakers.map((speaker) => ({
+    id: speaker.id, name: String(speaker.name || ''), honorific: String(speaker.honorific || ''), displayName: String(speaker.displayName || ''), slug: String(speaker.slug || ''),
+    aliases: Array.isArray(speaker.aliases) ? (speaker.aliases as unknown[]).map(String) : [], bio: String(speaker.bio || ''), photoUrl: String(speaker.photoUrl || ''),
+    links: linkRows(speaker.links), sources: String(speaker.sources || ''), status: String(speaker.status || 'draft'),
+  }))
+  const packScope = scope.kind === 'portal' || (scope.kind === 'course' && scope.portalId)
+  const packRows: PackRow[] = packs.map((pack) => ({
+    id: pack.id, title: String(pack.title || ''), owner: String(pack.owner || ''), portal: num(pack.portal),
+    courseIds: Array.isArray(pack.courses) ? (pack.courses as unknown[]).map((course) => num(course) || 0).filter(Boolean) : [],
+    inScope: packScope ? pack.owner === 'portal' && num(pack.portal) === scope.portalId : pack.owner === 'master',
+  }))
   return {
     scopeKind: scope.kind, portalId: scope.portalId, courseId: scope.courseId, courses: courseRows, units: unitRows, lessons: lessonRows, tiers: tierRows, points: pointRows, resources: resourceRows, keys: keyRows, cuts: cutRows, seats: seatRows,
-    circle: circleRows, circlePortal: scope.desk === 'portal' ? scope.portalId : null,
+    circle: circleRows, circlePortal: scope.desk === 'portal' ? scope.portalId : null, speakers: speakerRows, packs: packRows,
   }
+}
+
+function linkRows(value: unknown) {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') return []
+    const row = item as { label?: unknown; url?: unknown }
+    const url = String(row.url || '')
+    if (!url) return []
+    return [{ label: String(row.label || 'Link'), url }]
+  })
 }
 
 export async function exportBuffer(payload: Payload, scope: SheetScope) {
@@ -240,7 +268,7 @@ async function wipeLesson(payload: Payload, snapshot: SheetSnapshot, lessonId: n
   await payload.delete({ collection: 'lessons', id: lessonId, overrideAccess: true })
 }
 
-export async function applyPlan(payload: Payload, plan: SheetPlan, actorId: number | null): Promise<SheetSnapshot> {
+export async function applyPlan(payload: Payload, plan: SheetPlan, actorId: number | null, options?: { pushLearners?: boolean }): Promise<SheetSnapshot> {
   const snapshot = emptySnapshot()
   const temps = new Map<string, number>()
   for (const op of plan.ops) {
@@ -252,14 +280,62 @@ export async function applyPlan(payload: Payload, plan: SheetPlan, actorId: numb
       throw wrapped
     }
   }
+  if (options?.pushLearners) snapshot.pushedLearners = await pushAddedCourses(payload, plan, temps, snapshot)
   return snapshot
 }
 
+function relationId(value: unknown, temps: Map<string, number>) {
+  if (value && typeof value === 'object' && ('id' in value || 'temp' in value)) return resolveRef(value as Ref, temps)
+  return value
+}
+
+async function pushAddedCourses(payload: Payload, plan: SheetPlan, temps: Map<string, number>, snapshot: SheetSnapshot) {
+  const pushed = new Set<number>()
+  for (const op of plan.ops) {
+    if (op.op !== 'pack.add') continue
+    const courseId = resolveRef(op.course, temps)
+    const codes = await allDocs(payload, 'access-codes')
+    const codeIds = codes.filter((code) => ((code.packs as unknown[]) || []).some((pack) => num(pack) === op.id)).map((code) => code.id)
+    if (!codeIds.length) continue
+    const users = await allDocs(payload, 'users', { accessCode: { in: codeIds } })
+    for (const user of users) {
+      if (!Array.isArray(user.courseList)) continue
+      const list = (user.courseList as unknown[]).map((item) => Number(item)).filter((item) => Number.isFinite(item) && item > 0)
+      if (list.includes(courseId)) continue
+      const remembered = snapshot.updated.find((row) => row.collection === 'users' && row.id === user.id && Object.prototype.hasOwnProperty.call(row.before, 'courseList'))
+      if (!remembered) snapshot.updated.push({ collection: 'users', id: user.id, before: { courseList: list } })
+      const next = [...list, courseId]
+      user.courseList = next
+      await payload.update({ collection: 'users', id: user.id, overrideAccess: true, data: { courseList: next } as never })
+      pushed.add(user.id)
+    }
+  }
+  return pushed.size
+}
+
 async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>, snapshot: SheetSnapshot, actorId: number | null) {
+  if (op.op === 'speaker.create') {
+    const doc = (await payload.create({ collection: 'speakers', overrideAccess: true, data: op.data as never })) as unknown as Doc
+    temps.set(op.temp, doc.id)
+    rememberCreated(snapshot, 'speakers', doc.id)
+    return
+  }
+  if (op.op === 'speaker.update') {
+    await remember(payload, snapshot, 'speakers', op.id, op.patch)
+    await payload.update({ collection: 'speakers', id: op.id, overrideAccess: true, data: op.patch as never })
+    return
+  }
   if (op.op === 'course.create') {
-    const doc = (await payload.create({ collection: 'courses', overrideAccess: true, data: { title: op.title, speaker: op.speaker, origin: op.origin, portal: op.portal || undefined, importable: op.origin === 'master', visibility: 'published' } as never })) as unknown as Doc
+    const doc = (await payload.create({ collection: 'courses', overrideAccess: true, data: { title: op.title, speaker: op.speaker, speakerProfile: op.speakerProfile ? resolveRef(op.speakerProfile, temps) : undefined, origin: op.origin, portal: op.portal || undefined, importable: op.origin === 'master', visibility: 'published' } as never })) as unknown as Doc
     temps.set(op.temp, doc.id)
     rememberCreated(snapshot, 'courses', doc.id)
+    return
+  }
+  if (op.op === 'course.update') {
+    const patch = { ...op.patch }
+    if ('speakerProfile' in patch) patch.speakerProfile = relationId(patch.speakerProfile, temps)
+    await remember(payload, snapshot, 'courses', op.id, patch)
+    await payload.update({ collection: 'courses', id: op.id, overrideAccess: true, data: patch as never })
     return
   }
   if (op.op === 'unit.create') {
@@ -272,7 +348,7 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
     const doc = (await payload.create({
       collection: 'lessons', overrideAccess: true,
       data: {
-        title: op.title, sourceTitle: op.title, course: resolveRef(op.course, temps), unit: resolveRef(op.unit, temps), speaker: op.speaker, youtubeId: op.youtubeId,
+        title: op.title, sourceTitle: op.title, course: resolveRef(op.course, temps), unit: resolveRef(op.unit, temps), speaker: op.speaker, speakerProfile: op.speakerProfile ? resolveRef(op.speakerProfile, temps) : undefined, youtubeId: op.youtubeId,
         youtubeUrl: op.youtubeId ? `https://www.youtube.com/watch?v=${op.youtubeId}` : undefined, order: op.order ?? 1, starterLane: op.lane, portal: op.portal || undefined, master: op.master,
         transcriptSource: op.transcriptSource || 'none', videoProvider: op.provider || undefined, vimeoId: op.vimeoId || undefined, film: op.mediaId || undefined,
         durationSeconds: op.durationSeconds ?? undefined, transcript: op.transcript || undefined, transcriptNote: op.transcriptNote || undefined,
@@ -282,8 +358,19 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
     rememberCreated(snapshot, 'lessons', doc.id)
     return
   }
+  if (op.op === 'pack.add') {
+    const courseId = resolveRef(op.course, temps)
+    const pack = (await payload.findByID({ collection: 'packs', id: op.id, depth: 0, overrideAccess: true })) as unknown as Doc
+    const current = Array.isArray(pack.courses) ? (pack.courses as unknown[]).map((course) => num(course) || 0).filter(Boolean) : []
+    if (current.includes(courseId)) return
+    const remembered = snapshot.updated.find((row) => row.collection === 'packs' && row.id === op.id && Object.prototype.hasOwnProperty.call(row.before, 'courses'))
+    if (!remembered) snapshot.updated.push({ collection: 'packs', id: op.id, before: { courses: current } })
+    await payload.update({ collection: 'packs', id: op.id, overrideAccess: true, data: { courses: [...current, courseId] } as never })
+    return
+  }
   if (op.op === 'lesson.update') {
     const patch = { ...op.patch }
+    if ('speakerProfile' in patch) patch.speakerProfile = relationId(patch.speakerProfile, temps)
     if (typeof patch.youtubeId === 'string') patch.youtubeUrl = `https://www.youtube.com/watch?v=${patch.youtubeId}`
     await remember(payload, snapshot, 'lessons', op.id, patch)
     await payload.update({ collection: 'lessons', id: op.id, overrideAccess: true, data: patch as never })
@@ -499,6 +586,15 @@ export function summaryOf(plan: SheetPlan, fileName: string) {
     changes: plan.changes.slice(0, 200),
     changeTotal: plan.changes.length,
   }
+}
+
+/** Applies a preview and, when the desk ticked it, records that learners with a saved course list were updated. */
+export async function applyImportedPlan(payload: Payload, plan: SheetPlan, user: { id: number; role?: string } | null, portalId: number | null, options: { pushLearners: boolean; fileName: string; importId?: number | null }) {
+  const snapshot = await applyPlan(payload, plan, user?.id ?? null, { pushLearners: options.pushLearners })
+  if (options.pushLearners) {
+    await writeAudit(payload, 'sheet.push-learners', user, portalId, { importId: options.importId ?? null, fileName: options.fileName, pushedLearners: snapshot.pushedLearners || 0 })
+  }
+  return snapshot
 }
 
 export async function writeAudit(payload: Payload, event: string, actor: { id: number; role?: string } | null, portal: number | null, detail: Record<string, unknown>) {
