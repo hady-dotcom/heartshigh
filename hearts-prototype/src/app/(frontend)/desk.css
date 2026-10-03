@@ -178,8 +178,7 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .tier-player { aspect-ratio: 16 / 9; background: #1c1b19; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 12px; }
 .tier-player iframe { width: 100%; height: 100%; border: 0; }
 .tier-player .hint { color: #d8d2c4; padding: 0 24px; text-align: center; }
-.tier-h { margin: 6px 0 0; font-size: 15px; display: flex; gap: 8px; align-items: baseline; }
-.tier-h { margin: 14px 0 4px; }
+.tier-h { margin: 14px 0 4px; font-size: 15px; display: flex; gap: 8px; align-items: baseline; }
 .tier-h:first-child { margin-top: 0; }
 .tier-scrub { display: grid; grid-template-columns: 74px 120px minmax(0, 1fr); gap: 12px; align-items: center; margin: 6px 0; }
 .tier-scrub-label { display: grid; gap: 2px; font-size: 13px; line-height: 1.2; }
@@ -190,6 +189,22 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .tier-warn { color: #a3324a; margin: 0; padding-left: 18px; }
 .popup-edit .cols { display: flex; gap: 10px; align-items: flex-start; }
 @media (max-width: 1180px) { .tier-grid { grid-template-columns: 1fr; } }
+
+.badge.red { background: #f8e1e4; color: #8e2236; }
+.desk kbd { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border: 1px solid currentColor; border-radius: 4px; font: 600 11px/16px ui-monospace, monospace; text-align: center; opacity: 0.7; }
+.review-tabs { margin: 0 0 14px; }
+.review-flag { margin-bottom: 12px; }
+.review-flag-body { display: flex; gap: 16px; align-items: center; justify-content: space-between; }
+.review-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+.review-lines { margin: 0; display: grid; gap: 4px; }
+.review-lines dt { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 10px; display: flex; gap: 8px; align-items: baseline; }
+.review-lines dt:first-child { margin-top: 0; }
+.review-lines dd { margin: 0; font-size: 16px; line-height: 1.45; }
+.review-options { margin: 0; padding-left: 18px; }
+.review-decide { margin-top: 18px; }
+.review-step { margin-top: 14px; align-items: center; }
+.review-keys { margin-top: 12px; }
+@media (max-width: 1180px) { .review-grid { grid-template-columns: 1fr; } }
 
 /* The desks need room for a sidebar and tables; on a phone they say so instead of squeezing. */
 .desk-narrow { display: none; }
