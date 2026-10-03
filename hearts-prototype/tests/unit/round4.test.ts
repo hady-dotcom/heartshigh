@@ -10,6 +10,7 @@ import { clientIp, joinFailKeys, trustedProxyHops } from '../../src/lib/rate-lim
 import { APPETISER_MAX, HORS_MAX, HORS_MIN, captionIndex, draftTiers, onSentenceBoundary, saidInTalk, sentencesOf } from '../../src/lib/tiers'
 import { countsTowardsTrends, TRENDS_MIN_AGE_HOURS } from '../../src/lib/trends'
 import { ytDlpArgs, ytDlpProblem } from '../../src/lib/youtube'
+import { playerVars } from '../../src/lib/yt'
 import type { FeedItem } from '../../src/server/learner'
 
 // Round 4: one test per item from the retest, named by its label. Each one failed before its fix.
@@ -165,4 +166,12 @@ test('LOW: the browser tests run against their own database file, never the demo
   assert.match(env, /E2E_DATABASE = 'file:\.\/data\/hearts-test\.db'/)
   assert.match(config, /DATABASE_URL: E2E_DATABASE/)
   assert.match(readFileSync(path.join(root, 'tests/global-setup.ts'), 'utf8'), /E2E_DATABASE/)
+})
+
+test('LOW: the main player keeps YouTube’s own overlays to a minimum when it pauses at a question', () => {
+  const vars = playerVars('full', 0) as Record<string, unknown>
+  assert.equal(vars.rel, 0)
+  assert.equal(vars.iv_load_policy, 3)
+  assert.equal(vars.modestbranding, 1)
+  assert.match(readFileSync(path.join(root, 'src/components/app/course-player.tsx'), 'utf8'), /paused-scrim/)
 })

@@ -249,9 +249,9 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
       appetiser: {
         ...appetiser,
         lines: [
-          { at: hookAt, text: String(tier.hook || '') },
-          { at: turnAt, text: String(tier.turn || '') },
-          { at: landAt, text: land },
+          { at: hookAt, text: String(tier.hook || ''), role: 'hook' as const },
+          { at: turnAt, text: String(tier.turn || ''), role: 'turn' as const },
+          { at: landAt, text: land, role: 'land' as const },
         ].filter((line) => line.text),
       },
       hook: String(tier.hook || ''),

@@ -1068,7 +1068,7 @@ export function Journey(props: JourneyProps) {
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
   const captionText = (piece?.lines?.length ? piece.lines[lineShown]?.text : piece?.quote) || ''
-  const captionRole = mode === 'appetiser' && piece?.lines?.length === 3 ? (['hook', 'turn', 'land'] as const)[lineShown] : null
+  const captionRole = mode === 'appetiser' ? piece?.lines?.[lineShown]?.role || null : null
   const slide = phase === 'feed' && item?.style ? item.style : null
   const mains = item?.laneKey ? props.mains[item.laneKey] : undefined
   const course = item ? `${base}/course/${item.courseId}?part=${item.lessonId}&t=0` : base

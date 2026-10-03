@@ -8,7 +8,7 @@ import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
 
 export type SlideStyle = 'kinetic' | 'cinema' | 'windows' | 'conversation' | 'unfold'
 
-export type TimedCaption = { at: number; text: string }
+export type TimedCaption = { at: number; text: string; role?: 'hook' | 'turn' | 'land' }
 
 export type FeedItem = {
   id: string

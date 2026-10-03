@@ -52,6 +52,12 @@ test.describe('round 3 API', () => {
   test('Bug 1: one account adds at most one trend row a week, whatever nonce it sends', async () => {
     const learner = await as('elm-learner2@hearts.test', 'portal-learner')
     await form(learner, { action: 'me-pref', name: 'trendsOptIn', value: 'on', next: '/' })
+    // Round 4 N3: only an account with a finished video that is at least a day old counts towards trends.
+    const pack = await json(await master.get('/api/packs/1?depth=0'))
+    const course = (pack.courses as (number | { id: number })[]).map((row) => (typeof row === 'number' ? row : row.id))[0]
+    const part = (await json(await master.get(`/api/lessons?where[course][equals]=${course}&limit=1&depth=0`))).docs[0]
+    await form(learner, { action: 'complete', lesson: String(part.id), ended: 'yes', next: '/' })
+    await form(master, { action: 'clock', iso: new Date(Date.now() + 2 * 86_400_000).toISOString(), next: '/' })
     let created = 0
     let repeats = 0
     for (let i = 0; i < 6; i++) {
@@ -63,6 +69,7 @@ test.describe('round 3 API', () => {
     expect(created).toBeLessThanOrEqual(1)
     expect(repeats).toBeGreaterThanOrEqual(5)
     await form(learner, { action: 'me-pref', name: 'trendsOptIn', value: 'off', next: '/' })
+    await resetClockAndLimits()
   })
 
   test('Bug 2: codes have expiry, max uses and a switch; admin codes are single-use; guessing is throttled; seed codes are random', async () => {
