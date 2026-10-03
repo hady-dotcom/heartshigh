@@ -12,6 +12,7 @@
     "build": "next build",
     "start": "tsx scripts/start-production.ts",
     "migrate": "tsx scripts/migrate.ts",
+    "approve:imported": "tsx scripts/approve-imported-questions.ts",
     "bootstrap": "tsx scripts/bootstrap.ts",
     "seed": "tsx src/seed/seed.ts",
     "seed:starters": "tsx src/seed/seed.ts --starters",

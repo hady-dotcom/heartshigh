@@ -1,4 +1,4 @@
-import type { Payload } from 'payload'
+import type { Payload, Where } from 'payload'
 import { buildFeed, type CutInfo, type FeedPlan, type FeedSlot, type LaneDef, type ScaleDef, type SceneDef, type SceneOption } from '@/lib/heart'
 import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE } from '@/lib/opening-data'
 import { idOf } from '@/lib/ids'
@@ -23,7 +23,7 @@ export type OpeningData = {
   scales: ScaleDef[]
   helpContacts: HelpContact[]
   d0CutId: number | null
-  route: { lanes: LaneDef[]; cuts: CutInfo[]; d0CutId: number | null; allowSuggested: boolean }
+  route: { lanes: LaneDef[]; cuts: CutInfo[]; d0CutId: number | null; allowSuggested: boolean; showUnchecked: boolean }
   /** Display data for the clips the opening might hand off to (D0 and every lane's first starter). */
   starters: Record<string, FeedItem>
   /** Display data for every routable clip, so the device can build its own feed and keep its taps to itself. */
@@ -66,7 +66,7 @@ type Loaded = {
 }
 
 /** Learner questions: rejected stays hidden. Drafts are included only while show-unchecked is on. */
-export function pointVisibleWhere(showUnchecked: boolean) {
+export function pointVisibleWhere(showUnchecked: boolean): Where {
   if (showUnchecked) return { or: [{ status: { not_equals: 'rejected' } }, { status: { exists: false } }] }
   return {
     and: [

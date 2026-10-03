@@ -17,6 +17,7 @@ import { startingClause } from '@/lib/placing'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { killListHits } from '@/lib/opening-data'
 import { tierTimings } from '@/lib/tiers'
+import { importedSheetDraftIds } from './imported-questions'
 import { showUncheckedTalks, tierVisible } from './opening'
 import { tierSourceText } from './tier-source'
 import { handleCircle } from './circle'
@@ -1815,16 +1816,12 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   if (action === 'popup-approve-all') {
     const back = text(form, 'next') || '/master/review/popups'
     if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk reviews pop-ups.')
-    let approved = 0
-    for (let page = 0; page < 20; page += 1) {
-      const found = await payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 100, page: 1, where: { status: { equals: 'draft' } } })
-      if (!found.docs.length) break
-      for (const doc of found.docs) {
-        await payload.update({ collection: 'engagement-points', id: doc.id, overrideAccess: true, data: { status: 'published', reviewedBy: user.id } as never })
-        approved += 1
-      }
+    const ids = await importedSheetDraftIds(payload)
+    for (const id of ids) {
+      await payload.update({ collection: 'engagement-points', id, overrideAccess: true, data: { status: 'published', reviewedBy: user.id } as never })
     }
-    return redirectTo(req, back, undefined, approved ? `${approved} pop-up${approved === 1 ? '' : 's'} approved and published.` : 'No draft pop-ups were waiting.')
+    const approved = ids.length
+    return redirectTo(req, back, undefined, approved ? `${approved} imported question${approved === 1 ? '' : 's'} approved and published.` : 'No imported drafts were waiting.')
   }
 
   if (action === 'show-unchecked') {

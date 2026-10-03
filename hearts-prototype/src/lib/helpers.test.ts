@@ -88,6 +88,27 @@ the prophet said the best of you are those who learn the quran and teach it`
   assert.match(hits[0].text, /best of you/)
 })
 
+test('harvest leaves the Quranic Connection description line out, even when a caption splits it', () => {
+  const file = readFileSync(new URL('../../content/transcripts/starters/FAxIZIqwfd8.vtt', import.meta.url), 'utf8')
+  for (const hit of harvestTranscript(file)) {
+    assert.doesNotMatch(hit.text, /description|full dua|subscribe|housekeeping/i)
+  }
+  const split = `WEBVTT
+
+00:00:05.000 --> 00:00:07.000
+check the description for the full dua
+
+00:00:07.000 --> 00:00:09.900
+the prophet salallahu said as part of this
+
+00:00:20.000 --> 00:00:28.000
+the prophet said the best of you are those who learn the quran and teach it`
+  const hits = harvestTranscript(split)
+  assert.equal(hits.length, 1)
+  assert.match(hits[0].text, /best of you/)
+  assert.doesNotMatch(hits[0].text, /description|salallahu|as part of this/)
+})
+
 test('delayed and contingent questions unlock at the right moment', () => {
   const seen = new Date('2026-10-01T10:00:00Z')
   const day = delayToMs(1, 'day')

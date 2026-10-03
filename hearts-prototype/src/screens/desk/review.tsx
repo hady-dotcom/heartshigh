@@ -3,6 +3,7 @@ import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { ReviewKeys, ReviewPlayer } from '@/components/desk/review'
 import { idOf } from '@/lib/ids'
+import { isImportedSheetDraft } from '@/lib/imported-questions'
 import { pendingForLesson } from '@/server/ai-desk'
 import { horsCapOf } from '@/lib/tiers'
 import { showUncheckedTalks } from '@/server/opening'
@@ -171,6 +172,7 @@ export async function MasterReviewPopups(ctx: MasterCtx) {
   const sorted = [...own].sort((a, b) => (STATUS_ORDER[str(a.status) || 'draft'] ?? 0) - (STATUS_ORDER[str(b.status) || 'draft'] ?? 0) || Number(idOf(a.lesson)) - Number(idOf(b.lesson)) || Number(a.second) - Number(b.second))
   const live = own.filter((point) => point.status === 'published').length
   const waiting = own.filter((point) => (point.status || 'draft') === 'draft').length
+  const imported = points.filter((point) => isImportedSheetDraft(point)).length
   const withLive = new Set(own.filter((point) => point.status === 'published').map((point) => idOf(point.lesson)))
   const bare = tiers.filter((tier) => !withLive.has(idOf(tier.lesson))).length
   const tiersWaiting = tiers.filter((tier) => (tier.status || 'draft') === 'draft').length
@@ -194,10 +196,11 @@ export async function MasterReviewPopups(ctx: MasterCtx) {
     >
       <Tabs active="popups" tiers={tiersWaiting} popups={waiting} />
       <p className="hint" data-testid="review-counts">{live} of {own.length} pop-ups are live. {bare} of {tiers.length} talks have none live yet.</p>
-      {waiting > 0 ? (
+      {imported > 0 ? (
         <form action="/api/hearts" method="post" style={{ margin: '0 0 14px' }}>
           <Hidden fields={{ action: 'popup-approve-all', next: '/master/review/popups' }} />
-          <button className="btn teal small" type="submit" data-testid="popup-approve-all">Approve all {waiting} drafts</button>
+          <button className="btn teal small" type="submit" data-testid="popup-approve-all">Approve {imported} imported question{imported === 1 ? '' : 's'}</button>
+          <p className="hint">Only drafts that came in on the master sheet. Machine drafts and questions written on the desk stay waiting. Running it again changes nothing.</p>
         </form>
       ) : null}
       {point && lesson ? (

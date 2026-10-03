@@ -50,8 +50,9 @@ async function placing(page: Page, picks: string[]) {
     await expect(page.locator('[data-testid="scene"][data-scene="extra"]')).toBeVisible({ timeout: 1500 })
   }).toPass({ timeout: 20_000 })
   for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'doors']) {
-    await expect(page.locator(`[data-testid="scene"][data-scene="${scene}"]`)).toBeVisible()
-    await page.getByTestId('pass').click()
+    const sceneCard = page.locator(`[data-testid="scene"][data-scene="${scene}"]`)
+    await expect(sceneCard.first()).toBeVisible()
+    await sceneCard.last().getByTestId('pass').click()
   }
   await expect(page.getByTestId('starting-clause')).toBeVisible()
 }

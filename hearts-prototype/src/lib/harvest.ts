@@ -12,7 +12,7 @@ const ARABIC = /[\u0600-\u06FF][\u0600-\u06FF\s\u064B-\u0652]{3,}/
 const QURAN_CUE = /\b(allah (subhanahu wa ta'?ala )?(says|said|tells us)|as allah says|in the qur'?an|the qur'?an says|the verse|surah\s+[a-z]|ayah|o you who believe)\b/i
 const HADITH_CUE = /\b((the )?(prophet|messenger)\b[^.?!]{0,70}\b(said|says)|in the hadith[^.?!]{0,40}\b(said|says|narrated)|narrated (in|by)|on the authority of|rawa)\b/i
 const OPENS_QUOTE = /\b(said|says|tells us|in the qur'?an),?\s*$/i
-const ASIDE = /\b(description|subscribe|housekeeping|like and share|patreon|sponsors?|notification bell|comment below|thanks for watching|thank you for watching|link in the description)\b/i
+const ASIDE = /\b(description|subscribe|housekeeping|like and share|patreon|sponsors?|notification bell|comment below|thanks for watching|thank you for watching|link in the description|full dua|link below|pinned comment)\b/i
 
 function sentencesOf(text: string) {
   return text
@@ -34,6 +34,10 @@ export function harvestTranscript(raw: string): HarvestHit[] {
     const sentences = sentencesOf(cue.text)
     sentences.forEach((sentence, index) => {
       if (ASIDE.test(sentence)) return
+      // Captions often split one aside across cues: "check the description for the full dua" / "the prophet said…".
+      // A full quote that follows a finished aside is kept; only the short continuation is dropped.
+      const previous = (sentences[index - 1] || cues[cueIndex - 1]?.text || '').trim()
+      if (previous && ASIDE.test(previous) && !/[.?!]["']?\s*$/.test(previous) && sentence.split(/\s+/).length < 12) return
       const quran = QURAN_CUE.exec(sentence)
       const hadith = HADITH_CUE.exec(sentence)
       const arabic = ARABIC.test(sentence)

@@ -134,9 +134,16 @@
  * in one column (caption, a row of side buttons, then the foot) and nothing can run under anything else.
  */
 .journey[data-mode='appetiser'] .j-chrome { display: flex; flex-direction: column; gap: 12px; padding: calc(52px + var(--safe-top)) 16px calc(92px + var(--safe-bottom)); }
-.journey[data-mode='appetiser'] .j-chrome .caption { position: static; flex: 0 1 auto; align-self: stretch; min-height: 0; margin: 0; padding: 0 6px; font-size: 25px; justify-content: flex-start; }
-.journey[data-mode='appetiser'] .j-chrome .caption[data-expanded='true'] { flex: 1 1 auto; overflow: auto; }
-.journey[data-mode='appetiser'] .j-chrome .caption.long { font-size: 21px; }
+.journey[data-mode='appetiser'] .j-chrome .caption {
+  position: static; flex: 1 1 0; align-self: stretch; min-height: 0; margin: 0; padding: 0 6px;
+  font-size: 25px; line-height: 1.2; justify-content: flex-start;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; line-clamp: 5;
+  overflow: hidden; max-height: min(28vh, 220px);
+}
+.journey[data-mode='appetiser'] .j-chrome .caption.long { font-size: 18px; -webkit-line-clamp: 6; line-clamp: 6; }
+.journey[data-mode='appetiser'] .j-chrome .caption[data-expanded='true'] {
+  display: block; -webkit-line-clamp: unset; line-clamp: unset; flex: 1 1 auto; overflow: auto; max-height: min(32vh, 240px);
+}
 .journey[data-mode='appetiser'] .j-chrome .rail { position: static; flex: none; display: flex; justify-content: flex-end; gap: 6px; }
 .journey[data-mode='appetiser'] .j-chrome .rail .bubble { width: 40px; height: 40px; }
 .journey[data-mode='appetiser'] .j-chrome .clip-foot { position: static; flex: none; gap: 8px; }
