@@ -2,5 +2,6 @@ node_modules
 .remotion
 out
 public/audio
-talks
+talks/*
+!talks/windows.json
 *.log

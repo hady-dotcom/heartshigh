@@ -35,6 +35,43 @@ export const LEARN_MORE_SECONDS = 4.5
 export const CINEMA_SIT = 56
 /** A card holds at most this many words. A longer beat turns the page on the next cue. */
 export const WORDS_PER_CARD = 22
+/** Silence kept before the first word of a sentence and after the last. */
+export const BREATH = 0.3
+/** Extra footage either side of a snapped beat, so a clip can be framed without cutting the line. */
+export const WINDOW_PAD = 10
+
+export type BeatEdge = {
+  /** Talk time where the cut opens, in the pause before the sentence. */
+  in: number
+  /** Talk time where the cut closes, in the pause after the sentence. */
+  out: number
+  speechStart: number
+  speechEnd: number
+}
+
+/**
+ * Open and close a beat on the pause around a whole sentence, about {@link BREATH} seconds
+ * clear of the words. `before` is when the previous sentence has finished. `after` is when
+ * the next one starts. A shorter pause keeps the whole pause, so the cut never lands
+ * inside either sentence.
+ */
+export function snapBeat(speechStart: number, speechEnd: number, before: number, after: number, breath = BREATH): BeatEdge {
+  const lead = Math.min(breath, Math.max(0, speechStart - before))
+  const tail = Math.min(breath, Math.max(0, after - speechEnd))
+  return {
+    in: speechStart - lead,
+    out: speechEnd + tail,
+    speechStart,
+    speechEnd,
+  }
+}
+
+/** Download window: {@link WINDOW_PAD} seconds either side of the snapped beat. */
+export function sourceWindow(edge: BeatEdge, pad = WINDOW_PAD, talkEnd = Infinity) {
+  const start = Math.max(0, Math.round((edge.in - pad) * 100) / 100)
+  const end = Math.round(Math.min(talkEnd, edge.out + pad) * 100) / 100
+  return { start, end }
+}
 
 const spokenLength = (word: string) => Math.min(0.55, Math.max(0.18, 0.05 * word.length + 0.12))
 

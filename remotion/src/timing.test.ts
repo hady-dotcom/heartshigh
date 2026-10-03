@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { UI } from './copy'
-import { cardAt, cardsOf, isVerbatim, normaliseWords, scheduleTalk, textNeverEarly, visibleIsPrefix, WORDS_PER_CARD, wordsVisibleAt, type CueWord } from './timing'
+import { BREATH, cardAt, cardsOf, isVerbatim, normaliseWords, scheduleTalk, snapBeat, sourceWindow, textNeverEarly, visibleIsPrefix, WINDOW_PAD, WORDS_PER_CARD, wordsVisibleAt, type CueWord } from './timing'
 
 const cues: CueWord[] = [
   { text: 'Patience', talkAt: 10 },
@@ -103,6 +103,32 @@ test('a long beat turns the page at 22 words instead of shrinking', () => {
   const film = readFileSync(new URL('./Film.tsx', import.meta.url), 'utf8')
   assert.doesNotMatch(film, /fitted\(/)
   assert.doesNotMatch(film, /size=\{(?:[1-2]?\d|3[0-3])\}/)
+})
+
+test('a beat opens and closes on the pause around a whole sentence', () => {
+  // The cue that used to be the cut sits on the third word, in the middle of the sentence.
+  const speechStart = 10
+  const speechEnd = 11.6
+  const edge = snapBeat(speechStart, speechEnd, 9.2, 12.4)
+  assert.ok(edge.in <= speechStart)
+  assert.ok(edge.out >= speechEnd)
+  assert.ok(edge.in >= 9.2)
+  assert.ok(edge.out <= 12.4)
+  assert.ok(Math.abs(speechStart - edge.in - BREATH) < 1e-9)
+  assert.ok(Math.abs(edge.out - speechEnd - BREATH) < 1e-9)
+  assert.ok(edge.in < 10.8 && edge.out > 10.8)
+  const tight = snapBeat(20, 23, 19.85, 23.12)
+  assert.ok(tight.in >= 19.85)
+  assert.ok(tight.out <= 23.12)
+  assert.ok(tight.in < 20 && tight.out > 23)
+  assert.ok(20 - tight.in < BREATH)
+  assert.ok(tight.out - 23 < BREATH)
+  const window = sourceWindow(edge)
+  assert.equal(window.start, 0)
+  assert.equal(window.end, Math.round((edge.out + WINDOW_PAD) * 100) / 100)
+  const later = sourceWindow(snapBeat(100, 104, 99, 105))
+  assert.equal(later.start, 89.7)
+  assert.equal(later.end, 114.3)
 })
 
 test('British English labels stay on the allowlist', () => {

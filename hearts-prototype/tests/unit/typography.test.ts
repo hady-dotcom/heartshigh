@@ -2,13 +2,13 @@ import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { test } from 'node:test'
-import { captionPage, draftTiers, saidInTalk, wordsOf } from '../../src/lib/tiers'
-import { cardAt, isVerbatim, scheduleTalk, textNeverEarly, visibleIsPrefix, WORDS_PER_CARD, wordsVisibleAt } from '../../../remotion/src/timing.ts'
+import { captionPage, draftTiers, saidInTalk, sentencesOf, wordsOf } from '../../src/lib/tiers'
+import { BREATH, cardAt, isVerbatim, scheduleTalk, snapBeat, sourceWindow, textNeverEarly, visibleIsPrefix, WINDOW_PAD, WORDS_PER_CARD, wordsVisibleAt } from '../../../remotion/src/timing.ts'
 
 const root = path.resolve(import.meta.dirname, '../..')
 const SEEDED = ['TLCGBj4AlB0', 'ECaTWkof57E', 'NIR88RRpat4']
 
-function talk(id: string) {
+function loadTalk(id: string) {
   const vtt = path.join(root, 'content/transcripts/starters', `${id}.vtt`)
   const marked = id === 'NIR88RRpat4' ? path.join(root, 'content/transcripts/mikaeel-al-nur.md') : ''
   const raw = existsSync(vtt) ? readFileSync(vtt, 'utf8') : readFileSync(marked, 'utf8')
@@ -28,7 +28,7 @@ function talk(id: string) {
 
 test('typography: the three seeded talks put only the speaker’s words on screen, and never early', () => {
   for (const id of SEEDED) {
-    const { raw, draft, schedule } = talk(id)
+    const { raw, draft, schedule } = loadTalk(id)
     for (const line of [draft.hook, draft.turn, draft.land]) assert.ok(saidInTalk(line, raw), `${id} beat`)
     for (const beat of schedule.beats) {
       const spoken = schedule.words.filter((word) => word.beat === beat.beat).map((word) => word.text).join(' ')
@@ -56,6 +56,46 @@ test('typography: the three seeded talks put only the speaker’s words on scree
       const opened = cardAt(land, land[WORDS_PER_CARD].showAt)
       assert.equal(opened[0], land[WORDS_PER_CARD])
       assert.ok(!opened.includes(land[0]))
+    }
+  }
+})
+
+const round = (value: number) => Math.round(value * 100) / 100
+
+test('every appetiser beat opens and closes on the pause around a whole sentence', () => {
+  const windows = JSON.parse(readFileSync(path.join(root, '../remotion/talks/windows.json'), 'utf8'))
+  assert.equal(windows.breathSeconds, BREATH)
+  assert.equal(windows.padSeconds, WINDOW_PAD)
+  // Footage windows checked against the waveform: each cut sits in the pause, about 0.3s clear of the words.
+  const footage = {
+    ECaTWkof57E: { hook: [766.53, 792.08], turn: [879.73, 905.48], land: [912.81, 938.46] },
+    NIR88RRpat4: { hook: [243.6, 269.5], turn: [325.7, 349.2], land: [415.95, 441.35] },
+    TLCGBj4AlB0: { hook: [5614.89, 5643.34], turn: [5709.19, 5732.94], land: [5743.74, 5775.94] },
+  }
+  assert.deepEqual(windows.talks.map((talk: { id: string }) => talk.id), Object.keys(footage))
+  for (const talk of windows.talks) {
+    const { raw, draft } = loadTalk(talk.id)
+    const sentences = sentencesOf(raw)
+    for (const beat of talk.beats) {
+      assert.equal(beat.text, draft[beat.beat], `${talk.id} ${beat.beat} stays verbatim`)
+      assert.equal(saidInTalk(beat.text, raw), true, `${talk.id} ${beat.beat}`)
+      const sentence = sentences.find((row) => row.text === beat.text)
+      assert.ok(sentence, `${talk.id} ${beat.beat} is a whole caption sentence`)
+      assert.equal(sentence.complete, true, `${talk.id} ${beat.beat} ends on a sentence`)
+      assert.equal(round(sentence.start), beat.sentenceStart)
+      assert.equal(round(sentence.end), beat.sentenceEnd)
+      const edge = snapBeat(beat.speechStart, beat.speechEnd, beat.before, beat.after)
+      assert.equal(round(edge.in), beat.in, `${talk.id} ${beat.beat} in`)
+      assert.equal(round(edge.out), beat.out, `${talk.id} ${beat.beat} out`)
+      assert.ok(beat.in < beat.speechStart && beat.speechStart <= beat.speechEnd && beat.speechEnd < beat.out, `${talk.id} ${beat.beat} is not cut on a word`)
+      assert.ok(beat.speechStart - beat.in <= BREATH + 1e-9, `${talk.id} ${beat.beat} lead`)
+      assert.ok(beat.out - beat.speechEnd <= BREATH + 1e-9, `${talk.id} ${beat.beat} tail`)
+      assert.ok(beat.in >= beat.before - 1e-9, `${talk.id} ${beat.beat} starts after the previous sentence`)
+      assert.ok(beat.out <= beat.after + 1e-9, `${talk.id} ${beat.beat} ends before the next sentence`)
+      const window = sourceWindow({ in: beat.in, out: beat.out, speechStart: beat.speechStart, speechEnd: beat.speechEnd })
+      assert.deepEqual(beat.window, window)
+      assert.deepEqual([beat.window.start, beat.window.end], footage[talk.id as keyof typeof footage][beat.beat as 'hook' | 'turn' | 'land'])
+      assert.ok(beat.window.end - beat.window.start <= 36, `${talk.id} ${beat.beat} window`)
     }
   }
 })
