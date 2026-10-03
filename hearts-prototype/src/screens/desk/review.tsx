@@ -3,6 +3,7 @@ import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { ReviewKeys, ReviewPlayer } from '@/components/desk/review'
 import { idOf } from '@/lib/ids'
+import { pendingForLesson } from '@/server/ai-desk'
 import { showUncheckedTalks } from '@/server/opening'
 import type { SessionUser } from '@/server/context'
 import { rows, str } from '../common'
@@ -79,6 +80,7 @@ export async function MasterReview(ctx: MasterCtx) {
   const href = (at: number) => (sorted[at] ? `/master/review?tier=${sorted[at].id}` : null)
   const following = href(index + 1) || href(0) || '/master/review'
   const status = str(tier?.status) || 'draft'
+  const pending = lesson ? (await pendingForLesson(payload, lesson.id)).filter((row) => row.protectsKind === 'talk-tier' || row.stepSlug === 'hors-doeuvre' || row.stepSlug === 'appetiser-cut') : []
   return (
     <Frame
       ctx={ctx}
@@ -119,6 +121,7 @@ export async function MasterReview(ctx: MasterCtx) {
               <p className="hint">{str(lesson.speaker)}{lesson.durationSeconds ? `, talk length ${clock(Number(lesson.durationSeconds))}` : ''}</p>
             </div>
             <div>
+              {pending.length ? <p className="hint" data-testid="new-draft-available">New draft available. The approved cut is unchanged. <Link href={`/master/ai/ingest/${lesson.id}`}>Read it on the ingest view</Link>.</p> : null}
               <dl className="review-lines" data-testid="review-lines">
                 <dt>Hors d&apos;oeuvre line</dt><dd data-testid="review-hors">{str(tier.horsQuote)}</dd>
                 <dt>Hook <span className="hint">{clock(Number(tier.hookAt ?? tier.appetiserStart))}</span></dt><dd data-testid="review-hook">{str(tier.hook)}</dd>
@@ -164,6 +167,7 @@ export async function MasterReviewPopups(ctx: MasterCtx) {
   const status = str(point?.status) || 'draft'
   const options = Array.isArray(point?.options) ? (point.options as unknown[]).map((option) => (typeof option === 'string' ? option : str((option as { label?: string })?.label))).filter(Boolean) : []
   const second = Number(point?.second || 0)
+  const pending = lesson ? (await pendingForLesson(payload, lesson.id)).filter((row) => row.protectsKind === 'engagement-point' && Number(row.protectsId) === Number(point?.id)) : []
   return (
     <Frame
       ctx={ctx}
@@ -185,6 +189,7 @@ export async function MasterReviewPopups(ctx: MasterCtx) {
               <p className="hint">{str(lesson.speaker)}. The main pauses at {clock(second)}.</p>
             </div>
             <div>
+              {pending.length ? <p className="hint" data-testid="new-draft-available">New draft available. This pop-up was left as it is. <Link href={`/master/ai/ingest/${lesson.id}`}>Read the draft on the ingest view</Link>.</p> : null}
               <dl className="review-lines">
                 <dt>Question <span className="hint">{clock(second)}, {str(point.kind) || 'reflection'}</span></dt>
                 <dd data-testid="review-prompt">{str(point.prompt)}</dd>
