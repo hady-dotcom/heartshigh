@@ -819,12 +819,26 @@ export const HarvestEntries: CollectionConfig = {
       options: [
         { label: "Qur'an", value: 'quran' },
         { label: 'Hadith', value: 'hadith' },
+        { label: 'Line', value: 'line' },
       ],
     },
     { name: 'text', type: 'textarea' },
     { name: 'reference', type: 'text' },
     { name: 'timestamp', type: 'text' },
     { name: 'context', type: 'textarea' },
+    { name: 'seconds', type: 'number', admin: { description: 'Where the line starts in the talk, in seconds.' } },
+    { name: 'speaker', type: 'text' },
+    { name: 'door', type: 'text', admin: { description: 'Hadith Jibril working door: Sitting, Islam, Iman, Ihsan, Hour or Trunk.' } },
+    {
+      name: 'surface',
+      type: 'select',
+      options: [
+        { label: "Hors d'oeuvre", value: 'hors' },
+        { label: 'Appetiser', value: 'appetiser' },
+        { label: 'Whole talk', value: 'talk' },
+      ],
+    },
+    { name: 'gatheredAt', type: 'date', admin: { description: 'When this line was kept. New compares it with the last visit to Harvest.' } },
   ],
 }
 

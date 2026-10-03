@@ -10,6 +10,7 @@ import { visibleCourseIds } from '@/server/context'
 import { courseCards, portraitFor, posterFor, slugify } from '@/server/learner'
 import { learnerClips } from '@/server/opening'
 import { appetiserStop } from '@/lib/tiers'
+import { lineAt } from '@/lib/harvest'
 import { type Ctx, clock, one, ref, rows, str, unreadCount } from '../common'
 import { masterFlags } from './journey'
 import { mixSwarm } from '@/lib/circle'
@@ -183,6 +184,8 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
   const youtubeId = provider === 'vimeo' || provider === 'file' ? null : str(lesson.youtubeId) || null
   const film = provider === 'vimeo' && vimeoId ? { provider: 'vimeo' as const, vimeoId } : provider === 'file' ? { provider: 'file' as const, src: `/api/hearts/film/${lessonId}` } : null
   const startAt = Math.max(0, Number(query.t || 0)) || 0
+  const contextOn = query.context === '1'
+  const spoken = contextOn ? lineAt(str(lesson.transcript), startAt) : null
   const [unread, flags] = await Promise.all([unreadCount(payload, user), masterFlags(payload)])
   const here = `${base}/course/${courseId}?part=${lessonId}`
 
@@ -190,6 +193,19 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
     <AppFrame testId="course">
       <div className="app-scroll">
         <Flash error={query.error} notice={query.notice} />
+        {contextOn ? (
+          <section className="context-block" data-testid="context-transcript">
+            <p className="eyebrow">Around this moment</p>
+            {spoken ? (
+              <>
+                {spoken.before.map((row) => <p className="context-side" key={`b-${row.seconds}`}>{row.timestamp} {row.text}</p>)}
+                <blockquote data-testid="context-line">{spoken.timestamp} {spoken.text}</blockquote>
+                {spoken.after.map((row) => <p className="context-side" key={`a-${row.seconds}`}>{row.timestamp} {row.text}</p>)}
+              </>
+            ) : <p data-testid="context-missing">This talk has no transcript at that moment.</p>}
+            <Link className="pill outline small" href={`${base}/garden/harvest`}>Back to harvest</Link>
+          </section>
+        ) : null}
         <CoursePlayer
           courseTitle={str(course.title)}
           backHref={`${base}/lanes`}

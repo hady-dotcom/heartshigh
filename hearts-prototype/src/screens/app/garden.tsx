@@ -210,7 +210,7 @@ export async function GardenGeneral({ payload, user, base }: Ctx) {
         <div className="stat-box"><b data-testid="stat-sittings">{g.completions.length}</b><small>parts watched</small></div>
         <div className="stat-box"><b>{g.answers.length}</b><small>questions answered</small></div>
         <div className="stat-box"><b>{g.seatVisits.length}</b><small>seats read</small></div>
-        <div className="stat-box"><b>{g.harvest.length}</b><small>verses and hadith</small></div>
+        <div className="stat-box"><b>{g.harvest.length}</b><small>moments kept</small></div>
       </div>
       <section className="days-card" data-testid="days-card">
         <h3>Days you came</h3>
@@ -353,35 +353,6 @@ export async function GardenGhunya({ payload, user, base }: Ctx) {
         {recent.length ? recent.map((seat) => (
           <div className="card" key={seat.id}><p>{str(seat.text)}</p></div>
         )) : <div className="card"><p>Open any clause and mark a seat once you have read it. It will light up here.</p></div>}
-      </div>
-    </Frame>
-  )
-}
-
-export async function GardenHarvest({ payload, user, base }: Ctx) {
-  const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
-  const lessonIds = [...new Set(g.harvest.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))]
-  const lessons = lessonIds.length ? await rows(payload, 'lessons', { id: { in: lessonIds } }) : []
-  return (
-    <Frame base={base} title="Harvest" testId="garden-harvest" unread={unread}>
-      <p className="lead">Verses and hadith quoted in the talks you finished, gathered for you.</p>
-      <div data-testid="harvest">
-        {g.harvest.length ? g.harvest.map((hit) => {
-          const lesson = lessons.find((row) => row.id === ref(hit.lesson))
-          const quran = str(hit.kind) === 'quran'
-          return (
-            <article className="harvest-card" key={hit.id} data-testid="harvest-item">
-              <header><span className={`tag ${quran ? 'quran' : 'hadith'}`}>{quran ? "Qur'an" : 'Hadith'}</span><small>{str(hit.reference)}</small></header>
-              <blockquote>{str(hit.text)}</blockquote>
-              <small>{lesson ? `${str(lesson.title)}${hit.timestamp ? ` · at ${str(hit.timestamp)}` : ''}` : str(hit.timestamp)}</small>
-            </article>
-          )
-        }) : (
-          <div className="empty-state" data-testid="harvest-empty">
-            <Mascot width={110} />
-            <p>Nothing gathered yet. When you finish a talk, the verses and hadith it quotes are collected here.</p>
-          </div>
-        )}
       </div>
     </Frame>
   )

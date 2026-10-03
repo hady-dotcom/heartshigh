@@ -939,11 +939,25 @@ export interface HarvestEntry {
   portal?: (number | null) | Portal;
   user: number | User;
   lesson?: (number | null) | Lesson;
-  kind?: ('quran' | 'hadith') | null;
+  kind?: ('quran' | 'hadith' | 'line') | null;
   text?: string | null;
   reference?: string | null;
   timestamp?: string | null;
   context?: string | null;
+  /**
+   * Where the line starts in the talk, in seconds.
+   */
+  seconds?: number | null;
+  speaker?: string | null;
+  /**
+   * Hadith Jibril working door: Sitting, Islam, Iman, Ihsan, Hour or Trunk.
+   */
+  door?: string | null;
+  surface?: ('hors' | 'appetiser' | 'talk') | null;
+  /**
+   * When this line was kept. New compares it with the last visit to Harvest.
+   */
+  gatheredAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2493,6 +2507,11 @@ export interface HarvestEntriesSelect<T extends boolean = true> {
   reference?: T;
   timestamp?: T;
   context?: T;
+  seconds?: T;
+  speaker?: T;
+  door?: T;
+  surface?: T;
+  gatheredAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
