@@ -11,6 +11,7 @@ import { visibleCourseIds } from '@/server/context'
 import { courseCards, portraitFor, posterFor, slugify } from '@/server/learner'
 import { learnerClips } from '@/server/opening'
 import { appetiserStop } from '@/lib/tiers'
+import { answerCounts, courseProgress } from '@/lib/nesting'
 import { type Ctx, clock, one, ref, rows, str, unreadCount } from '../common'
 import { masterFlags } from './journey'
 import { mixSwarm } from '@/lib/circle'
@@ -118,7 +119,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
       seenAt,
       at,
     })
-    const answer = mine.find((row) => ref(row.point) === point.id)
+    const answer = mine.find((row) => ref(row.point) === point.id && answerCounts(row))
     return {
       id: point.id,
       number: index + 1,
@@ -171,10 +172,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
   }
 
   const completions = await rows(payload, 'completions', { and: [{ user: { equals: user.id } }, { lesson: { in: lessonIds } }] })
-  const doneLessons = new Set(completions.map((row) => ref(row.lesson)))
-  const answeredPoints = new Set(mine.map((row) => ref(row.point)))
-  const done = doneLessons.size + allPoints.filter((point) => answeredPoints.has(point.id)).length
-  const total = lessons.length + allPoints.length
+  const { doneLessons, done, total } = courseProgress({ lessonIds, completions, pointIds: allPoints.map((point) => point.id), answers: mine })
 
   const marks = mine.length
     ? await rows(payload, 'feedback-notes', { answer: { in: mine.map((row) => row.id) } }, { sort: 'second' })

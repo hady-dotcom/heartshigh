@@ -180,7 +180,7 @@ test.describe('round 4 API', () => {
     const pack = await json(await master.get('/api/packs/1?depth=0'))
     const course = (pack.courses as (number | { id: number })[]).map((row) => (typeof row === 'number' ? row : row.id))[0]
     const part = (await json(await master.get(`/api/lessons?where[course][equals]=${course}&limit=1&depth=0`))).docs[0]
-    expect(loc(await form(learner, { action: 'complete', lesson: String(part.id), ended: 'yes', next: '/' }))).not.toContain('error=')
+    expect(loc(await form(learner, { action: 'complete', lesson: String(part.id), seconds: String(part.durationSeconds || 1), ended: 'yes', next: '/' }))).not.toContain('error=')
     const unaged = await learner.post(`/api/hearts/contribute?portal=${PORTAL}`, { data: { doorKey: 'calmer', laneTop2: ['trust', 'company'] } })
     expect(unaged.status()).toBe(202)
     await form(master, { action: 'clock', iso: new Date(Date.now() + 2 * 86_400_000).toISOString(), next: '/' })

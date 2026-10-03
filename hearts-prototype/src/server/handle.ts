@@ -18,7 +18,8 @@ import { doorOfClause } from '@/lib/doors'
 import { loadDoors } from './doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { killListHits } from '@/lib/opening-data'
-import { tierTimings } from '@/lib/tiers'
+import { HORS_MAX, HORS_MIN, tierTimings } from '@/lib/tiers'
+import { completionVerdict } from '@/lib/nesting'
 import { showUncheckedTalks, tierVisible } from './opening'
 import { tierSourceText } from './tier-source'
 import { handleCircle } from './circle'
@@ -321,7 +322,7 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
       answeredAt: input.answeredAt || now().toISOString(),
       atSecond: input.atSecond ?? Number(point.second),
       viewingId: input.viewingId,
-      cut: input.cutId || undefined,
+      cut: input.cutId || null,
       pendingSync: Boolean(input.pendingSync),
       correct: correct ?? undefined,
     }
@@ -1306,12 +1307,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (!lesson || !(await visibleCourseIds(payload, user)).includes(idOf(lesson.course) || 0)) return redirectTo(req, '/', 'That film is not in your portal.')
     const duration = Number((lesson as { durationSeconds?: number }).durationSeconds || 0)
     const seconds = Number(text(form, 'seconds') || 0)
-    const ended = text(form, 'ended') === 'yes'
-    const ratio = duration > 0 ? seconds / duration : seconds > 0 ? 1 : 0
-    if (!ended && ratio < 0.8) {
-      return redirectTo(req, text(form, 'next') || '/', 'A sitting counts once most of the film has played, or when it ends.')
-    }
-    const percent = Math.min(100, Math.round((ended && ratio < 0.8 ? 100 : ratio) * 100))
+    const verdict = completionVerdict({ duration, watched: seconds, ended: text(form, 'ended') === 'yes' })
+    if (!verdict.counts) return redirectTo(req, text(form, 'next') || '/', verdict.reason)
+    const percent = verdict.percent
     let onTime = false
     if (portal) {
       const plans = await payload.find({
@@ -1818,9 +1816,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const back = text(form, 'next') || '/master/review'
     if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk changes this.')
     const raw = Number(text(form, 'horsMaxSeconds'))
-    if (!Number.isInteger(raw) || raw < 20 || raw > 180) return redirectTo(req, back, "The hors d'oeuvre cap is a whole number of seconds from 20 to 180.")
+    if (!Number.isInteger(raw) || raw < HORS_MAX || raw > 180) return redirectTo(req, back, `The hors d'oeuvre cap is a whole number of seconds from ${HORS_MAX} to 180.`)
     await payload.updateGlobal({ slug: 'master-flags', overrideAccess: true, data: { horsMaxSeconds: raw } as never })
-    return redirectTo(req, back, undefined, `Hors d'oeuvre cap saved at ${raw} seconds. 15 to 20 is still the usual length.`)
+    return redirectTo(req, back, undefined, `Hors d'oeuvre cap saved at ${raw} seconds. ${HORS_MIN} to ${HORS_MAX} is still the usual length.`)
   }
 
   if (action === 'popup-save' || action === 'popup-publish') {

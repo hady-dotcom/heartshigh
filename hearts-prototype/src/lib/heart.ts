@@ -65,7 +65,6 @@ export type HeartState = {
   /** Lanes resting after 'Not for me', keyed to the time they come back. */
   cool?: Record<string, number>
   lastDecayAt?: number
-  watched?: number
   /** Clips served today, for the fatigue term. A new day starts afresh. */
   recent?: { day: string; ids: string[] }
 }
@@ -138,7 +137,10 @@ export const SIGNAL_DELTA: Record<Signal, number> = {
 }
 export const COOLDOWN_MS = 72 * 3_600_000
 
-/** Section 4: behaviour moves lane interest only, scaled by each lane tag's weight. */
+/**
+ * Section 4: behaviour moves lane interest only, scaled by each lane tag's weight. This is the soft "drawn to"
+ * signal: it steers which clips come next and never counts towards completion, the Garden or time given.
+ */
 export function applySignal(state: HeartState, lanes: { lane: string; weight: number }[], signal: Signal, at = Date.now()): HeartState {
   const u = { ...state.u }
   const cool = { ...(state.cool || {}) }
@@ -146,7 +148,7 @@ export function applySignal(state: HeartState, lanes: { lane: string; weight: nu
     u[tag.lane] = round(clamp((u[tag.lane] || 0) + SIGNAL_DELTA[signal] * (tag.weight ?? 1), -1, 1))
     if (signal === 'not-for-me') cool[tag.lane] = at + COOLDOWN_MS
   }
-  return { ...state, u, cool, updatedAt: at, watched: (state.watched || 0) + (signal === 'watched90' ? 1 : 0) }
+  return { ...state, u, cool, updatedAt: at }
 }
 
 /** Weekly decay: taps describe lately, so interest and confidence fade by 10% a week. */

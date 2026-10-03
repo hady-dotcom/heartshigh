@@ -11,6 +11,7 @@ import { workbookFor } from '@/server/workbook'
 import { posterFor } from '@/server/learner'
 import { loadDoors } from '@/server/doors'
 import { doorByNumber, doorOfClause, type Door } from '@/lib/doors'
+import { answerCounts } from '@/lib/nesting'
 import { type Ctx, type Row, clock, ref, rows, shortDate, str, unreadCount } from '../common'
 
 const SECTIONS: { key: string; title: string; colour: string }[] = [
@@ -41,7 +42,7 @@ export type Growth = {
 
 export async function growth(payload: Payload, user: SessionUser): Promise<Growth> {
   const mine = { user: { equals: user.id } }
-  const [clauses, seats, completions, seatVisits, harvest, workbook, answers, rituals, visits, tags, doors] = await Promise.all([
+  const [clauses, seats, completions, seatVisits, harvest, allWorkbook, allAnswers, rituals, visits, tags, doors] = await Promise.all([
     rows(payload, 'clauses', undefined, { sort: 'number', limit: 50 }),
     rows(payload, 'seats', undefined, { sort: 'position', limit: 400 }),
     rows(payload, 'completions', mine),
@@ -54,6 +55,9 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
     rows(payload, 'tags', { state: { equals: 'confirmed' } }, { limit: 1000 }),
     loadDoors(payload),
   ])
+  const answers = allAnswers.filter(answerCounts)
+  const browsed = new Set(allAnswers.filter((row) => !answerCounts(row)).map((row) => row.id))
+  const workbook = allWorkbook.filter((row) => !browsed.has(ref(row.answer) || 0))
   const lessonIds = [...new Set([...completions, ...visits].map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))]
   const lessons = lessonIds.length ? await rows(payload, 'lessons', { id: { in: lessonIds } }) : []
   const done = new Set(completions.map((row) => ref(row.lesson)))
@@ -225,9 +229,9 @@ export async function GardenGeneral({ payload, user, base }: Ctx) {
       </section>
       <div className="stat-grid">
         <div className="stat-box"><b data-testid="stat-sittings">{g.completions.length}</b><small>parts watched</small></div>
-        <div className="stat-box"><b>{g.answers.length}</b><small>questions answered</small></div>
+        <div className="stat-box"><b data-testid="stat-answers">{g.answers.length}</b><small>questions answered</small></div>
         <div className="stat-box"><b>{g.seatVisits.length}</b><small>seats read</small></div>
-        <div className="stat-box"><b>{g.harvest.length}</b><small>verses and hadith</small></div>
+        <div className="stat-box"><b data-testid="stat-harvest">{g.harvest.length}</b><small>verses and hadith</small></div>
       </div>
       <section className="days-card" data-testid="days-card">
         <h3>Days you came</h3>

@@ -41,6 +41,8 @@ const SUBMIT: Record<PointView['kind'], string> = { question: 'answer', task: 't
 const DOTS = ['#ef7b4a', '#1f8a78', '#7a4fa8', '#dca643', '#d94f68']
 
 const PLAYER_ID = 'lesson'
+/** The longest jump between two time readings that still counts as playing; anything longer is a seek. */
+const MAX_STEP = 2
 
 function asPopup(point: PointView, lessonId: number): PopupPoint {
   return { ...point, triggerType: 'timestamp', atSecond: point.second, lessonId }
@@ -99,7 +101,8 @@ export function CoursePlayer({
   const fileSrc = film?.provider === 'file' ? film.src || null : null
   const [mode, setMode] = useState<'loading' | 'youtube' | 'vimeo' | 'file' | 'practice'>(vimeoId ? 'vimeo' : fileSrc ? 'file' : youtubeId ? 'loading' : 'practice')
   const [time, setTime] = useState(startAt)
-  const [furthest, setFurthest] = useState(startAt)
+  const [watched, setWatched] = useState(0)
+  const lastTime = useRef(startAt)
   const [length, setLength] = useState(duration)
   const [playing, setPlaying] = useState(false)
   const [ended, setEnded] = useState(false)
@@ -250,8 +253,11 @@ export function CoursePlayer({
     return () => window.clearInterval(timer)
   }, [mode, playing, openId, length, show])
 
+  // Only seconds that played count towards the sitting: a seek, or opening where the appetiser ended, adds nothing.
   useEffect(() => {
-    setFurthest((value) => Math.max(value, time))
+    const step = time - lastTime.current
+    lastTime.current = time
+    if (step > 0 && step <= MAX_STEP) setWatched((value) => value + step)
     if (length && time >= length) {
       setEnded(true)
       if (mode === 'practice') setPlaying(false)
@@ -391,7 +397,7 @@ export function CoursePlayer({
       <form className="watched-form" action="/api/hearts" method="post">
         <input type="hidden" name="action" value="complete" />
         <input type="hidden" name="lesson" value={lessonId} />
-        <input type="hidden" name="seconds" value={Math.floor(furthest)} />
+        <input type="hidden" name="seconds" value={Math.floor(watched)} />
         {ended ? <input type="hidden" name="ended" value="yes" /> : null}
         <input type="hidden" name="next" value={next} />
         <button className="link-btn" type="submit" data-testid="mark-watched">I have watched this part</button>
