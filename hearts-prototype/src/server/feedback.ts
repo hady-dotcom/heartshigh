@@ -18,7 +18,7 @@ import {
 import { doorLabel, doorOfClause, type Door } from '@/lib/doors'
 import { idOf } from '@/lib/ids'
 import { schemaProblems, type TalkContext } from '@/lib/ai-steps'
-import { ensureSteps, runPreparedStep } from './ai-desk'
+import { ensureSteps, loadLiveStep, runPreparedStep } from './ai-desk'
 import { loadDoors } from './doors'
 import { audit } from './viewas'
 
@@ -299,6 +299,7 @@ export async function weakQuestions(payload: Payload): Promise<WeakQuestion[]> {
 /** Runs the question-value step over imported questions and stores suggested rewrites as drafts only. */
 export async function checkQuestions(payload: Payload, actor: FeedbackActor) {
   await ensureSteps(payload)
+  const live = await loadLiveStep(payload, 'question-value')
   const points = await many(payload, 'engagement-points', { status: { not_equals: 'rejected' } }, 800)
   const lessonIds = [...new Set(points.map((point) => idOf(point.lesson)).filter((id): id is number => Boolean(id)))]
   const lessons = lessonIds.length ? await many(payload, 'lessons', { id: { in: lessonIds } }) : []
@@ -313,7 +314,7 @@ export async function checkQuestions(payload: Payload, actor: FeedbackActor) {
     const talkTitle = lessonTitle.get(idOf(point.lesson) || 0) || 'A talk'
     if (already.has(`${point.id}|${prompt}`)) continue
     const talk: TalkContext = { ...EMPTY_TALK, title: talkTitle, transcript: prompt, question: prompt, family: FAMILY_LABEL[family] }
-    const ran = await runPreparedStep(payload, 'question-value', talk)
+    const ran = await live.run(talk)
     const output = ran.output as { weak?: unknown; reasons?: unknown; rewrite?: unknown }
     const problems = schemaProblems({ type: 'object', properties: { weak: { type: 'boolean' }, reasons: { type: 'array', items: { type: 'string' } }, rewrite: { type: 'string' } }, required: ['weak', 'reasons', 'rewrite'] }, output)
     const fallback = assessQuestion({ prompt, talk: talkTitle, options: Array.isArray(point.options) ? point.options.map(String) : [] })

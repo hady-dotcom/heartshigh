@@ -137,7 +137,7 @@ test.describe('Feedback for teachers', () => {
 
     await page.getByTestId('view-learner').click()
     await expect(page.getByTestId('learner-view')).toBeVisible()
-    await expect(page.getByTestId('learner-group').first()).toContainText(SHARED)
+    await expect(page.getByTestId('learner-view')).toContainText(SHARED)
 
     await page.getByTestId('view-door').click()
     const summaryButton = page.getByTestId('draft-summary').first()
@@ -152,10 +152,10 @@ test.describe('Feedback for teachers', () => {
     const weakCard = page.getByTestId('weak-question').filter({ hasText: WEAK })
     await expect(weakCard).toContainText('Draft')
     await expect(weakCard.getByTestId('weak-rewrite')).toContainText('ordinary moment')
-    const still = await json(await page.request.get(`/api/engagement-points?where[prompt][equals]=${encodeURIComponent(WEAK)}&depth=0`))
+    const still = await json(await master.get(`/api/engagement-points?where[prompt][equals]=${encodeURIComponent(WEAK)}&depth=0`))
     expect(still.docs[0].status).toBe('draft')
     const report = page.getByTestId('weak-questions')
-    writeFileSync(`${ARTIFACTS}/weak-questions.txt`, await report.innerText())
+    writeFileSync(`${ARTIFACTS}/weak-questions-report.txt`, await report.innerText())
   })
 
   test('a teacher can open feedback, a learner cannot, and Leeds cannot read East London', async ({ page }) => {

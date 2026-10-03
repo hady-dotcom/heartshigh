@@ -139,7 +139,7 @@ export type BuiltFeedback = {
 
 const YES_NO = /^(do|does|did|is|are|was|were|have|has|had|can|could|will|would|am)\b/i
 const GENERIC = /\b(what do you think|any thoughts|how did (this|that|it) make you feel|did you (like|enjoy)|what did you learn|do you agree|any comments)\b/i
-const PERSONAL = /\b(this week|your own|one moment|ordinary|name one|when did you|where did you|what did you do|a time when)\b/i
+const PERSONAL = /\b(this week|your own|one moment|ordinary|name one|when did you|where did you|what did you do|a time when|you|your|yours)\b/i
 const YES_NO_OPTION = /^(yes|no|maybe|agree|disagree|true|false)$/i
 
 export type QuestionAssessment = { weak: boolean; reasons: string[]; rewrite: string }

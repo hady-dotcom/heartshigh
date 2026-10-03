@@ -376,15 +376,27 @@ export async function runRegisteredStep(payload: Payload, slug: string, talk: Ta
   return runPreparedStep(payload, slug, talk)
 }
 
-/** Same as runRegisteredStep after the registry is already in place, so a report can reuse it. */
-export async function runPreparedStep(payload: Payload, slug: string, talk: TalkContext) {
+/** Loads the live prompt once, so a report can run the same step over many questions. */
+export async function loadLiveStep(payload: Payload, slug: string) {
   const step = await one(payload, 'ai-steps', { slug: { equals: slug } })
   if (!step) throw new Error('That step is not in the registry.')
   const spec = specOf(step)
   const version = await one(payload, 'ai-step-versions', { and: [{ step: { equals: step.id } }, { live: { equals: true } }] })
   const prompt = version ? String(version.prompt || spec.prompt) : spec.prompt
-  const result = await runSpec(spec, prompt, talk)
-  return { ...result, versionNumber: version ? Number(version.number) : Number(step.liveVersion || 1), spec }
+  const versionNumber = version ? Number(version.number) : Number(step.liveVersion || 1)
+  return {
+    versionNumber,
+    spec,
+    run(talk: TalkContext) {
+      return runSpec(spec, prompt, talk).then((result) => ({ ...result, versionNumber, spec }))
+    },
+  }
+}
+
+/** Same as runRegisteredStep after the registry is already in place, so a report can reuse it. */
+export async function runPreparedStep(payload: Payload, slug: string, talk: TalkContext) {
+  const live = await loadLiveStep(payload, slug)
+  return live.run(talk)
 }
 
 async function runSpec(spec: StepSpec, prompt: string, talk: TalkContext) {

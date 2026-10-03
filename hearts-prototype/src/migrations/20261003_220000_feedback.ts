@@ -39,8 +39,16 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "feedback_summaries" ADD CONSTRAINT "feedback_summaries_author_id_users_id_fk" FOREIGN KEY ("author_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "question_rewrites" ADD CONSTRAINT "question_rewrites_point_id_engagement_points_id_fk" FOREIGN KEY ("point_id") REFERENCES "public"."engagement_points"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "question_rewrites" ADD CONSTRAINT "question_rewrites_author_id_users_id_fk" FOREIGN KEY ("author_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+  CREATE INDEX "feedback_summaries_portal_idx" ON "feedback_summaries" USING btree ("portal_id");
+  CREATE INDEX "feedback_summaries_point_idx" ON "feedback_summaries" USING btree ("point_id");
   CREATE INDEX "feedback_summaries_question_key_idx" ON "feedback_summaries" USING btree ("question_key");
+  CREATE INDEX "feedback_summaries_author_idx" ON "feedback_summaries" USING btree ("author_id");
+  CREATE INDEX "feedback_summaries_updated_at_idx" ON "feedback_summaries" USING btree ("updated_at");
+  CREATE INDEX "feedback_summaries_created_at_idx" ON "feedback_summaries" USING btree ("created_at");
   CREATE INDEX "question_rewrites_point_idx" ON "question_rewrites" USING btree ("point_id");
+  CREATE INDEX "question_rewrites_author_idx" ON "question_rewrites" USING btree ("author_id");
+  CREATE INDEX "question_rewrites_updated_at_idx" ON "question_rewrites" USING btree ("updated_at");
+  CREATE INDEX "question_rewrites_created_at_idx" ON "question_rewrites" USING btree ("created_at");
   `)
 }
 
