@@ -26,7 +26,7 @@ export default async function Door({ searchParams }: { searchParams: Promise<{ e
           <Link className="pill gold block" href={user ? home : '/join'} data-testid="door-primary">{user ? 'Continue' : 'I have an access code'}</Link>
           {user ? null : <Link className="pill outline block" href="/login" data-testid="door-login">Sign in</Link>}
         </div>
-        <p className="door-hint">Portal admins and the master desk sign in with the addresses in the README.</p>
+        {user ? null : <p className="door-hint">Teachers and portal admins sign in here too.</p>}
       </div>
     </main>
   )

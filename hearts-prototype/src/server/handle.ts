@@ -220,18 +220,8 @@ async function handleForm(req: Request, form: FormData) {
     return response
   }
 
-  if (action === 'clock') {
-    try {
-      const iso = text(form, 'iso')
-      setTestNow(iso || null)
-      return redirectTo(req, text(form, 'next') || '/', undefined, 'Clock moved.')
-    } catch (error) {
-      return redirectTo(req, text(form, 'next') || '/', error instanceof Error ? error.message : 'Clock refused.')
-    }
-  }
-
   if (action === 'join') {
-    const codeValue = text(form, 'code')
+    const codeValue = text(form, 'code').toUpperCase().replace(/\s+/g, '')
     const name = text(form, 'name')
     const email = text(form, 'email').toLowerCase()
     const password = text(form, 'password')
@@ -276,6 +266,16 @@ async function handleForm(req: Request, form: FormData) {
   }
 
   if (!user) return redirectTo(req, '/login', 'Please sign in first.')
+
+  if (action === 'clock') {
+    try {
+      const iso = text(form, 'iso')
+      setTestNow(iso || null)
+      return redirectTo(req, text(form, 'next') || '/', undefined, 'Clock moved.')
+    } catch (error) {
+      return redirectTo(req, text(form, 'next') || '/', error instanceof Error ? error.message : 'Clock refused.')
+    }
+  }
 
   if (user.role !== 'master') {
     const mine = portalIdOf(user)

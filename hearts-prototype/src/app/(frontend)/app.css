@@ -405,3 +405,5 @@
 .empty-state { text-align: center; padding: 22px 12px; color: var(--ink-2); }
 .empty-state p { line-height: 1.55; font-size: 14.5px; margin: 12px auto 0; max-width: 300px; }
 .app .note { display: block; }
+
+.app p, .app h2, .app h3, .app b { overflow-wrap: anywhere; }

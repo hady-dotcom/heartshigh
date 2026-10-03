@@ -165,3 +165,5 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .qr-small svg { width: 84px; height: 84px; }
 .desk details > summary { list-style: none; cursor: pointer; }
 .desk details > summary::-webkit-details-marker { display: none; }
+
+.desk p, .desk td { overflow-wrap: break-word; word-break: break-word; }

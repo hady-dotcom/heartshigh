@@ -177,7 +177,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
               <header><div><h2>Film: {str(lesson.title)}</h2><p>{youtubeId ? `YouTube ${youtubeId}` : 'No film link yet'}{lesson.durationSeconds ? ` · ${clock(Number(lesson.durationSeconds))}` : ''}</p></div></header>
               <div className="body" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)', gap: 18 }}>
                 <div>
-                  {youtubeId ? <iframe className="film-preview" style={{ padding: 0 }} title={str(lesson.title)} src={`https://www.youtube-nocookie.com/embed/${youtubeId}`} allow="encrypted-media" /> : <div className="film-preview">Paste a YouTube link to attach the film.</div>}
+                  {youtubeId ? <iframe className="film-preview" style={{ padding: 0 }} title={str(lesson.title)} src={`https://www.youtube-nocookie.com/embed/${youtubeId}`} allow="encrypted-media" /> : <div className="film-preview">{locked ? 'This film has no YouTube link.' : 'Paste a YouTube link to attach the film.'}</div>}
                   <p className="hint" style={{ marginTop: 10 }}>
                     {lesson.transcript ? <span data-testid="has-transcript">Transcript attached. </span> : <span>No transcript yet. </span>}
                     {lesson.transcriptNote ? <span data-testid="transcript-note">{str(lesson.transcriptNote)}</span> : null}
