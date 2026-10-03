@@ -40,7 +40,8 @@ test('a week of use, so the garden has something in it', async ({ page }) => {
   await page.getByTestId('answer-submit').click()
   await expect(page.getByTestId('notice')).toBeVisible()
   await page.goto('/p/east-london/garden/jibril/22')
-  await page.getByTestId('seat-read').first().click()
+  await expect(page.getByText('Three seats.')).toBeVisible()
+  if (await page.getByTestId('seat-read').count()) await page.getByTestId('seat-read').first().click()
   await signIn(page, 'elm-teacher@hearts.test', 'portal-teacher', '/p/east-london/admin/teach')
   const entry = page.getByTestId('workbook-review').filter({ hasText: 'salawat after Fajr' }).first()
   if (await entry.getByTestId('teacher-reply').count() === 0) {

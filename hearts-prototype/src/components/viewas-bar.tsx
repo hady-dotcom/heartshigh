@@ -13,6 +13,7 @@ export function ViewAsBar({ name, sessionId, writeEnabled, leftMs, returnTo }: {
   const [reason, setReason] = useState('')
   const [busy, setBusy] = useState(false)
   const timer = useRef<number | null>(null)
+  const exiting = useRef(false)
 
   useEffect(() => {
     document.body.dataset.viewas = write ? 'write' : 'read-only'
@@ -39,7 +40,7 @@ export function ViewAsBar({ name, sessionId, writeEnabled, leftMs, returnTo }: {
     const poll = async () => {
       const response = await fetch('/api/view-as/status', { cache: 'no-store' }).catch(() => null)
       const data = (await response?.json().catch(() => null)) as Status | null
-      if (!data) return
+      if (!data || exiting.current) return
       if (!data.active) {
         wipeViewAs()
         window.location.reload()
@@ -56,6 +57,8 @@ export function ViewAsBar({ name, sessionId, writeEnabled, leftMs, returnTo }: {
   }, [])
 
   const exit = async () => {
+    exiting.current = true
+    if (timer.current) window.clearInterval(timer.current)
     setBusy(true)
     const response = await fetch('/api/view-as/stop', { method: 'POST' })
     const data = (await response.json().catch(() => ({}))) as { returnTo?: string }

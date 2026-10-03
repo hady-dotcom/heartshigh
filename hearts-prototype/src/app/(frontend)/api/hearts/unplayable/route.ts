@@ -1,5 +1,4 @@
-import { getPayload } from 'payload'
-import config from '@payload-config'
+import { getPayloadClient } from '@/server/context'
 import { json, readBody } from '@/server/api'
 import { now } from '@/lib/clock'
 
@@ -27,7 +26,7 @@ export async function POST(req: Request) {
   const cutId = Number(body.cutId)
   const code = Number(body.code)
   if (!cutId || !(VIDEO_GONE.has(code) || CLIENT_SIDE.has(code))) return json({ error: 'That report could not be read.' }, 400)
-  const payload = await getPayload({ config })
+  const payload = await getPayloadClient()
   const cut = (await payload.findByID({ collection: 'cuts', id: cutId, overrideAccess: true, depth: 1 }).catch(() => null)) as { id: number; playable?: boolean; lesson?: { youtubeId?: string } | number } | null
   if (!cut) return json({ error: 'No such clip.' }, 404)
   const youtubeId = typeof cut.lesson === 'object' ? cut.lesson?.youtubeId : undefined

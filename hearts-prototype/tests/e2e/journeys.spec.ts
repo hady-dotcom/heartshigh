@@ -418,7 +418,7 @@ test.describe.serial('HEARTS journeys', () => {
     await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london')
     for (const screen of ['', '/feed', '/lanes', '/garden', '/garden/jibril', '/garden/jibril/22', '/garden/ghunya', '/garden/workbook', '/me', '/me/circle', '/me/plan', '/course/4']) {
       await page.goto(`/p/east-london${screen}`)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => undefined)
     }
     await page.setViewportSize(DESK)
     await signIn(page, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin')

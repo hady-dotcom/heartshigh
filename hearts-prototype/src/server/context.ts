@@ -56,8 +56,15 @@ export type PortalDoc = {
   wizardDone?: boolean | null
 }
 
+/**
+ * Screens pass `ctx` (and so this instance) as props to server components. In development React serialises
+ * those props for its debug tools, and once /admin has loaded the instance holds admin client components the
+ * app's routes cannot resolve, which turns every desk page into a 500. A placeholder keeps it out of that stream.
+ */
 export async function getPayloadClient() {
-  return getPayload({ config })
+  const payload = await getPayload({ config })
+  if (!Object.prototype.hasOwnProperty.call(payload, 'toJSON')) Object.defineProperty(payload, 'toJSON', { value: () => '[Payload]', enumerable: false })
+  return payload
 }
 
 export type Session = {
