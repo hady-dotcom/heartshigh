@@ -123,6 +123,7 @@ export function Journey(props: JourneyProps) {
   const [tabs, setTabs] = useState(false)
   const firstPlaying = useRef(false)
   const [muted, setMuted] = useState(true)
+  const typeRef = useRef<HTMLVideoElement>(null)
   const [buffering, setBuffering] = useState(false)
   const [slow, setSlow] = useState<'none' | 'breathe' | 'retry'>('none')
   const [offline, setOffline] = useState(false)
@@ -277,6 +278,7 @@ export function Journey(props: JourneyProps) {
   // ---------- players ----------
   const specFor = useCallback((item: FeedItem | undefined, kind: Mode): Spec | null => {
     if (!item || !item.youtubeId || item.style) return null
+    if (kind === 'hors' && item.typography?.src) return null
     if (kind === 'appetiser') return { key: `${item.cutId}:appetiser`, videoId: item.youtubeId, start: item.appetiser.start, end: appetiserEnd(item), kind: 'full' }
     return { key: `${item.cutId}:hors`, videoId: item.youtubeId, start: item.hors.start, end: item.hors.end, kind: 'hors' }
   }, [])
@@ -962,6 +964,7 @@ export function Journey(props: JourneyProps) {
   const tapSound = () => {
     const host = hosts.current[visibleRef.current]
     if (host.playerId) soundOn(host.playerId)
+    if (typeRef.current) typeRef.current.muted = false
     setMuted(false)
   }
 
@@ -1064,12 +1067,13 @@ export function Journey(props: JourneyProps) {
   const host = hosts.current[visibleHost]
   const currentSpec = specFor(item, mode)
   const playerReady = Boolean(currentSpec && host.ready && host.spec?.key === currentSpec.key && revealed)
-  const showPoster = phase === 'handoff' || (phase === 'feed' && (!playerReady || Boolean(errorNote) || offline))
+  const typeClip = Boolean(phase === 'feed' && mode === 'hors' && item?.typography?.src)
+  const showPoster = !typeClip && (phase === 'handoff' || (phase === 'feed' && (!playerReady || Boolean(errorNote) || offline)))
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
   const captionText = (piece?.lines?.length ? piece.lines[lineShown]?.text : piece?.quote) || ''
   const captionRole = mode === 'appetiser' ? piece?.lines?.[lineShown]?.role || null : null
-  const slide = phase === 'feed' && item?.style ? item.style : null
+  const slide = phase === 'feed' && item?.style && !typeClip ? item.style : null
   const mains = item?.laneKey ? props.mains[item.laneKey] : undefined
   const course = item ? `${base}/course/${item.courseId}?part=${item.lessonId}&t=0` : base
   const resumeMain = item && item.offerResume !== false ? `${base}/course/${item.courseId}?part=${item.lessonId}&t=${Math.floor(appetiserEnd(item))}` : null
@@ -1092,10 +1096,26 @@ export function Journey(props: JourneyProps) {
           </div>
         )}
       </div>
-      {muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
-      <p className={`caption${captionText.length > 120 ? ' long' : ''}${captionText ? '' : ' title-only'}`} data-testid="caption" data-line={lineShown} data-role={captionRole || undefined} key={`${mode}-${lineShown}`}>
-        {captionText || item.lessonTitle || item.courseTitle}
-      </p>
+      {typeClip && muted ? (
+        <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button>
+      ) : muted && !hasSound() && playerReady ? (
+        <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button>
+      ) : null}
+      {typeClip ? null : (
+        <div className="beat-stack">
+          {mode === 'appetiser' && (piece?.lines?.length || 0) > 1 ? (
+            <div className="beat-rail" data-testid="beat-rail" data-beat={captionRole || 'hook'} style={{ ['--i' as string]: lineShown }}>
+              <i className="glide" />
+              {(['hook', 'turn', 'land'] as const).map((role) => (
+                <span key={role} className={captionRole === role ? 'on' : ''}>{role === 'hook' ? 'Hook' : role === 'turn' ? 'Turn' : 'Land'}</span>
+              ))}
+            </div>
+          ) : null}
+          <p className={`caption${captionText.length > 120 ? ' long' : ''}${captionText ? '' : ' title-only'}`} data-testid="caption" data-line={lineShown} data-role={captionRole || undefined} key={`${mode}-${lineShown}`}>
+            {captionText || item.lessonTitle || item.courseTitle}
+          </p>
+        </div>
+      )}
       <div className="rail">
         <button type="button" onClick={share} data-testid="share"><span className="bubble"><ShareIcon /></span>Share</button>
         <button type="button" aria-pressed={faves.includes(item.id)} onClick={fave} data-testid="fave"><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
@@ -1153,6 +1173,20 @@ export function Journey(props: JourneyProps) {
               style={{ visibility: at === visibleHost && playerReady && !showPoster ? 'visible' : 'hidden' }}
             />
           ))}
+          {typeClip && item?.typography ? (
+            <video
+              ref={typeRef}
+              className="typography-player"
+              src={item.typography.src}
+              poster={item.poster || undefined}
+              playsInline
+              muted
+              autoPlay
+              data-testid="typography-player"
+              data-style={item.typography.style}
+              onEnded={() => window.dispatchEvent(new CustomEvent('hearts:ended'))}
+            />
+          ) : null}
           {showPoster && item && !slide ? (
             <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}`} data-testid="poster-frame">
               {item.poster ? <img src={item.poster} alt="" /> : null}

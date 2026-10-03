@@ -4,6 +4,7 @@ import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE } from '@/lib/opening-data'
 import { idOf } from '@/lib/ids'
 import { now } from '@/lib/clock'
 import { adoptedCourseIds, visibleCourseIds, type PortalDoc, type SessionUser } from './context'
+import { filesForTalk, isTypographyStyle, readTypographyManifest, type TypographyManifest } from '@/lib/typography'
 import { laneOf, portraitFor, posterFor, slugify, type FeedItem, type SlideStyle } from './learner'
 
 type Row = Record<string, unknown> & { id: number }
@@ -61,6 +62,7 @@ type Loaded = {
   tiers: Row[]
   /** Old cut ids that now stand for their talk's one tier clip. */
   alias: Map<number, number>
+  typography: TypographyManifest
 }
 
 /** Whether learners may see a talk's tier: checked always, a draft only while the master flag says so, rejected never. */
@@ -84,7 +86,8 @@ function carrierCut(cuts: Row[], lessonId: number) {
 
 async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
   const [lanes, scales, clauses] = await Promise.all([all(payload, 'lanes'), all(payload, 'heart-scales'), all(payload, 'clauses')])
-  if (!courseIds.length) return { lanes, scales, clauses, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [], alias: new Map() }
+  const typography = readTypographyManifest()
+  if (!courseIds.length) return { lanes, scales, clauses, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [], alias: new Map(), typography }
   const [courses, lessons, showUnchecked] = await Promise.all([all(payload, 'courses', { id: { in: courseIds } }), all(payload, 'lessons', { course: { in: courseIds } }), showUncheckedTalks(payload)])
   const lessonIds = lessons.map((row) => row.id)
   const [rawCuts, tiers] = await Promise.all([
@@ -122,7 +125,7 @@ async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
       const value = idOf((tag.item as { value?: unknown }).value) || 0
       return alias.has(value) ? { ...tag, item: { relationTo: 'cuts', value: alias.get(value) } } : tag
     })
-  return { lanes, scales, clauses, cuts, lessons, courses, tags: cutTags, ladder, tiers: tiers.filter((tier) => tierVisible(tier, showUnchecked)), alias }
+  return { lanes, scales, clauses, cuts, lessons, courses, tags: cutTags, ladder, tiers: tiers.filter((tier) => tierVisible(tier, showUnchecked)), alias, typography }
 }
 
 function laneDefs(data: Loaded): LaneDef[] {
@@ -179,6 +182,14 @@ function cutInfos(data: Loaded, portal: PortalDoc): CutInfo[] {
 
 const STYLES: SlideStyle[] = ['kinetic', 'cinema', 'windows', 'conversation', 'unfold']
 
+function typographyFor(data: Loaded, lesson: Row, tier: Row | undefined) {
+  const chosen = String(tier?.typographyStyle || '')
+  if (!tier?.typographyInPlace || !isTypographyStyle(chosen)) return null
+  const files = filesForTalk(data.typography, (lesson.youtubeId as string) || null, String(lesson.sourceTitle || lesson.title || ''))
+  const src = files?.styles?.[chosen]
+  return src ? { style: chosen, inPlace: true as const, src } : null
+}
+
 /** A cut's lane tags, one per lane (the strongest), with tags from the talk's other cuts folded in. */
 function laneTagsOf(data: Loaded, cutId: number) {
   const laneKeyMap = new Map(data.lanes.map((row) => [row.id, String(row.key)]))
@@ -231,6 +242,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     lessonId: lesson.id,
     lessonTitle: String(lesson.sourceTitle || lesson.title || ''),
     style: slide ? STYLES[index % STYLES.length] : null,
+    typography: typographyFor(data, lesson, data.tiers.find((row) => idOf(row.lesson) === lesson.id)),
     clause: (cut.bestClause as number) || null,
     transcriptReady: Boolean(lesson.transcript) && lesson.transcriptSource !== 'pending',
   }

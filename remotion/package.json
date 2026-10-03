@@ -1,0 +1,30 @@
+{
+  "name": "hearts-typography",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Vertical typography videos for HEARTS talks: Kinetic, Windows, Conversation, Cinema and Unfold.",
+  "scripts": {
+    "render": "tsx scripts/render.ts",
+    "test": "tsx --test src/timing.test.ts src/render-smoke.test.ts",
+    "studio": "remotion studio src/index.ts"
+  },
+  "dependencies": {
+    "@fontsource/cormorant-garamond": "5.2.8",
+    "@fontsource/inter": "5.2.8",
+    "@fontsource/noto-naskh-arabic": "^5.2.8",
+    "@remotion/bundler": "4.0.532",
+    "@remotion/cli": "4.0.532",
+    "@remotion/renderer": "4.0.532",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "remotion": "4.0.532"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.0",
+    "@types/react": "19.1.0",
+    "@types/react-dom": "19.1.0",
+    "tsx": "4.23.15",
+    "typescript": "5.8.3"
+  }
+}

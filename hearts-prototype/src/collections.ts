@@ -542,6 +542,19 @@ export const TalkTiers: CollectionConfig = {
     { name: 'turnAt', type: 'number', min: 0 },
     { name: 'landAt', type: 'number', min: 0 },
     { name: 'horsLines', type: 'json', admin: { description: "The hors d'oeuvre's sentences with their times: [{ at, text }]." } },
+    {
+      name: 'typographyStyle',
+      type: 'select',
+      options: [
+        { label: 'Kinetic', value: 'kinetic' },
+        { label: 'Windows', value: 'windows' },
+        { label: 'Conversation', value: 'conversation' },
+        { label: 'Cinema', value: 'cinema' },
+        { label: 'Unfold', value: 'unfold' },
+      ],
+      admin: { description: 'The typography style that can stand in for the hors d\'oeuvre clip.' },
+    },
+    { name: 'typographyInPlace', type: 'checkbox', defaultValue: false, admin: { description: 'Typography in place of the clip. Learners see the rendered video instead of the hors d\'oeuvre.' } },
     { name: 'offerResume', type: 'checkbox', defaultValue: true, admin: { description: 'Offer "Resume from where the appetiser ended" next to the main, which always opens at 0:00.' } },
     {
       name: 'status',

@@ -30,6 +30,8 @@ export type FeedItem = {
   turn: string
   land: string
   style: SlideStyle | null
+  /** Rendered typography standing in for the hors d'oeuvre, when an admin has chosen one. */
+  typography?: { style: SlideStyle; inPlace: true; src: string } | null
   clause: number | null
   /** The lane this slot was routed for; null for spine clips and D0. */
   laneKey?: string | null

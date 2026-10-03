@@ -1734,6 +1734,24 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, back, undefined, status === 'published' ? 'Scene saved and published.' : 'Scene saved as a draft.')
   }
 
+  if (action === 'typography-save') {
+    const back = text(form, 'next') || '/master/tiers'
+    if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk edits typography.')
+    const tier = await findDoc(payload, 'talk-tiers', Number(text(form, 'tier')))
+    if (!tier) return redirectTo(req, back, 'That talk was not found.')
+    const style = text(form, 'typographyStyle')
+    const allowed = ['kinetic', 'windows', 'conversation', 'cinema', 'unfold']
+    if (style && !allowed.includes(style)) return redirectTo(req, back, 'Choose Kinetic, Windows, Conversation, Cinema or Unfold.')
+    const inPlace = form.get('typographyInPlace') === 'on'
+    if (inPlace && !style) return redirectTo(req, back, 'Choose a style before using typography in place of the clip.')
+    try {
+      await payload.update({ collection: 'talk-tiers', id: tier.id, overrideAccess: true, data: { typographyStyle: style || null, typographyInPlace: inPlace } as never })
+    } catch (error) {
+      return redirectTo(req, back, publicMessage(error, 'That typography choice was not saved.'))
+    }
+    return redirectTo(req, back, undefined, inPlace ? 'Typography in place of the clip.' : 'Typography saved.')
+  }
+
   if (action === 'tier-save') {
     const back = text(form, 'next') || '/master/tiers'
     if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk edits talk tiers.')

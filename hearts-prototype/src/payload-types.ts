@@ -703,6 +703,14 @@ export interface TalkTier {
     | boolean
     | null;
   /**
+   * The typography style that can stand in for the hors d'oeuvre clip.
+   */
+  typographyStyle?: ('kinetic' | 'windows' | 'conversation' | 'cinema' | 'unfold') | null;
+  /**
+   * Typography in place of the clip. Learners see the rendered video instead of the hors d'oeuvre.
+   */
+  typographyInPlace?: boolean | null;
+  /**
    * Offer "Resume from where the appetiser ended" next to the main, which always opens at 0:00.
    */
   offerResume?: boolean | null;
@@ -1931,6 +1939,8 @@ export interface TalkTiersSelect<T extends boolean = true> {
   turnAt?: T;
   landAt?: T;
   horsLines?: T;
+  typographyStyle?: T;
+  typographyInPlace?: T;
   offerResume?: T;
   status?: T;
   checkedAt?: T;

@@ -216,3 +216,10 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 .desk .code-joins { margin: 6px 0 0; padding-left: 18px; text-align: left; font-size: 12px; white-space: nowrap; }
 .desk [data-testid='code-joins'] summary { cursor: pointer; }
+
+.type-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.type-card { display: grid; gap: 8px; align-content: start; border: 1px solid var(--line); border-radius: 14px; padding: 10px; background: #fff; min-width: 0; }
+.type-card.on { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(220, 166, 67, 0.35); }
+.type-card-head { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.type-card video { width: 100%; aspect-ratio: 9 / 16; border-radius: 10px; background: #14120e; max-height: 280px; object-fit: contain; }
+@media (max-width: 1180px) { .type-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

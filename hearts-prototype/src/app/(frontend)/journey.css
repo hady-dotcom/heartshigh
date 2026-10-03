@@ -129,7 +129,14 @@
  * in one column (caption, a row of side buttons, then the foot) and nothing can run under anything else.
  */
 .journey[data-mode='appetiser'] .j-chrome { display: flex; flex-direction: column; gap: 12px; padding: calc(52px + var(--safe-top)) 16px calc(92px + var(--safe-bottom)); }
+.journey[data-mode='appetiser'] .j-chrome .beat-stack { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; }
+.journey[data-mode='appetiser'] .j-chrome .beat-stack .caption { flex: 0 1 auto; }
 .journey[data-mode='appetiser'] .j-chrome .caption { position: static; flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; margin: 0; padding: 0 6px; font-size: 25px; }
+.beat-rail { --i: 0; display: grid; grid-template-columns: 1fr 1fr 1fr; position: relative; height: 34px; border-radius: 999px; background: rgba(0, 0, 0, 0.38); overflow: hidden; flex: none; }
+.beat-rail .glide { position: absolute; inset: 0 auto 0 0; width: 33.333%; background: var(--gold); transform: translateX(calc(var(--i) * 100%)); transition: transform 0.45s ease; }
+.beat-rail span { position: relative; z-index: 1; display: grid; place-items: center; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255, 255, 255, 0.78); }
+.beat-rail span.on { color: var(--gold-ink); }
+.typography-player { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #14120e; z-index: 2; }
 .journey[data-mode='appetiser'] .j-chrome .caption.long { font-size: 21px; }
 .journey[data-mode='appetiser'] .j-chrome .rail { position: static; flex: none; display: flex; justify-content: flex-end; gap: 6px; }
 .journey[data-mode='appetiser'] .j-chrome .rail .bubble { width: 40px; height: 40px; }

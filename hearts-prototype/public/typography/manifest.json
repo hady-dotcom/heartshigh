@@ -1,0 +1,40 @@
+{
+  "talks": [
+    {
+      "id": "ECaTWkof57E",
+      "title": "Ar-Rabb",
+      "speaker": "Shaykh Mikaeel Smith",
+      "styles": {
+        "kinetic": "/typography/ECaTWkof57E/kinetic.mp4",
+        "windows": "/typography/ECaTWkof57E/windows.mp4",
+        "conversation": "/typography/ECaTWkof57E/conversation.mp4",
+        "cinema": "/typography/ECaTWkof57E/cinema.mp4",
+        "unfold": "/typography/ECaTWkof57E/unfold.mp4"
+      }
+    },
+    {
+      "id": "NIR88RRpat4",
+      "title": "Al-Nur",
+      "speaker": "Shaykh Mikaeel Smith",
+      "styles": {
+        "kinetic": "/typography/NIR88RRpat4/kinetic.mp4",
+        "windows": "/typography/NIR88RRpat4/windows.mp4",
+        "conversation": "/typography/NIR88RRpat4/conversation.mp4",
+        "cinema": "/typography/NIR88RRpat4/cinema.mp4",
+        "unfold": "/typography/NIR88RRpat4/unfold.mp4"
+      }
+    },
+    {
+      "id": "TLCGBj4AlB0",
+      "title": "How to Live Like the Prophet",
+      "speaker": "Shaykh Yasir Fahmy",
+      "styles": {
+        "kinetic": "/typography/TLCGBj4AlB0/kinetic.mp4",
+        "windows": "/typography/TLCGBj4AlB0/windows.mp4",
+        "conversation": "/typography/TLCGBj4AlB0/conversation.mp4",
+        "cinema": "/typography/TLCGBj4AlB0/cinema.mp4",
+        "unfold": "/typography/TLCGBj4AlB0/unfold.mp4"
+      }
+    }
+  ]
+}
