@@ -11,7 +11,8 @@ import { now } from '@/lib/clock'
 import { startingClause } from '@/lib/placing'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { randomUUID } from 'node:crypto'
-import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourseIds, type SessionUser } from './context'
+import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourseIds, type Session, type SessionUser } from './context'
+import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCookie, wrote } from './viewas'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
@@ -187,6 +188,160 @@ async function orderedLessons(payload: Awaited<ReturnType<typeof getSession>>['p
   }) as { id: number; title?: string; course?: unknown }[]
 }
 
+export type AnswerInput = {
+  pointId: number
+  body?: string
+  choice?: string
+  image?: FormDataEntryValue | null
+  video?: FormDataEntryValue | null
+  audio?: FormDataEntryValue | null
+  keepPrivate?: boolean
+  shareWithTeacher?: boolean
+  answeredAt?: string
+  atSecond?: number
+  viewingId?: string
+  cutId?: number | null
+  pendingSync?: boolean
+}
+
+export type AnswerResult = { ok: true; answerId: number; updated: boolean; keepPrivate: boolean; correct: boolean | null } | { ok: false; status: number; error: string }
+
+/** Saves one pop-up answer and its workbook entry, for the answer sheet and for POST /api/answers. */
+export async function saveAnswer(payload: Payload, user: SessionUser, input: AnswerInput): Promise<AnswerResult> {
+  const fail = (status: number, error: string) => ({ ok: false as const, status, error })
+    const pointId = input.pointId
+    const point = await findDoc(payload, 'engagement-points', pointId)
+    if (!point) return fail(404, 'That question could not be found.')
+    const lessonId = idOf(point.lesson)
+    const portal = portalIdOf(user)
+    if (!portal) return fail(403, 'Your account is not in a portal.')
+    const lessonDoc = lessonId ? await findDoc(payload, 'lessons', lessonId) : null
+    const courseOfPoint = lessonDoc ? idOf(lessonDoc.course) : null
+    const mayAnswer = courseOfPoint && (await visibleCourseIds(payload, user)).includes(courseOfPoint)
+    if (!mayAnswer) return fail(403, 'That question is not in your portal.')
+    const authorPortal = point.author ? portalIdOf((await findDoc(payload, 'users', idOf(point.author) || 0)) as SessionUser | null) : null
+    if (point.audience === 'self' && idOf(point.author) !== user.id) return fail(403, 'That question is not for you.')
+    if (point.audience === 'selected' && !((point.audienceUsers as unknown[]) || []).map((row) => idOf(row)).includes(user.id)) {
+      return fail(403, 'That question is not for you.')
+    }
+    if (authorPortal && authorPortal !== portal) return fail(403, 'That question is not in your portal.')
+    if (point.timing === 'future') {
+      const contingentId = idOf(point.contingent)
+      const mine = await payload.find({ collection: 'answers', overrideAccess: true, depth: 0, limit: 50, where: { user: { equals: user.id } } })
+      const answeredAt = (id: number | null) => {
+        const row = mine.docs.find((doc) => idOf((doc as { point?: unknown }).point) === id)
+        return row ? new Date((row as { createdAt: string }).createdAt) : null
+      }
+      const seen = await payload.find({ collection: 'lesson-visits', overrideAccess: true, depth: 0, limit: 1, where: { and: [{ user: { equals: user.id } }, { lesson: { equals: lessonId } }] }, sort: 'createdAt' })
+      const state = unlockState({
+        timing: 'future',
+        delayMs: delayToMs(Number(point.delayAmount || 0), String(point.delayUnit || 'week')),
+        hasContingent: Boolean(contingentId),
+        contingentAnsweredAt: answeredAt(contingentId),
+        seenAt: seen.docs[0] ? new Date((seen.docs[0] as { createdAt: string }).createdAt) : null,
+        at: now(),
+      })
+      if (state.state !== 'open') return fail(409, 'This question has not opened yet. The countdown shows when it will.')
+    }
+    const body = (input.body || '').trim()
+    const choice = (input.choice || '').trim()
+    const image = input.image
+    const video = input.video
+    const audioFile = input.audio
+    const hasVideo = video instanceof File && video.size > 0
+    const hasAudio = audioFile instanceof File && audioFile.size > 0
+    if (!body && !choice && !(image instanceof File && image.size > 0) && !hasVideo && !hasAudio) {
+      return fail(400, 'Write a few words, or add an image, a sound, or a video.')
+    }
+    for (const file of [image, video, audioFile]) {
+      if (file instanceof File && tooBig(file)) return fail(400, 'That file is over 200 MB.')
+    }
+    let imageId: number | undefined
+    if (image instanceof File && image.size > 0) {
+      if (!image.type.startsWith('image/')) return fail(400, 'That file needs to be an image.')
+      imageId = await saveUpload(payload, image, portal, 'image/jpeg')
+    }
+    const audio = audioFile
+    let audioId: number | undefined
+    if (audio instanceof File && audio.size > 0) {
+      audioId = await saveUpload(payload, audio, portal, 'audio/webm')
+    }
+    let videoId: number | undefined
+    if (video instanceof File && video.size > 0) {
+      videoId = await saveUpload(payload, video, portal, 'video/mp4')
+    }
+    const keepPrivate = Boolean(input.keepPrivate)
+    const shareWithTeacher = Boolean(input.shareWithTeacher)
+    const correct = point.kind === 'multiple_choice' && point.correctOption ? choice === point.correctOption : null
+    const extra = {
+      answeredAt: input.answeredAt || now().toISOString(),
+      atSecond: input.atSecond ?? Number(point.second),
+      viewingId: input.viewingId,
+      cut: input.cutId || undefined,
+      pendingSync: Boolean(input.pendingSync),
+      correct: correct ?? undefined,
+    }
+    const earlier = await payload.find({ collection: 'answers', overrideAccess: true, depth: 0, limit: 1, where: { and: [{ point: { equals: pointId } }, { user: { equals: user.id } }] } })
+    if (earlier.docs.length) {
+      await payload.update({
+        collection: 'answers',
+        id: earlier.docs[0].id,
+        overrideAccess: true,
+        data: { body, choice, keepPrivate, shareWithTeacher, ...extra, ...(imageId ? { image: imageId } : {}), ...(audioId ? { audio: audioId } : {}), ...(videoId ? { video: videoId } : {}) },
+      })
+      const entry = await payload.find({ collection: 'workbook-entries', overrideAccess: true, depth: 0, limit: 1, where: { answer: { equals: earlier.docs[0].id } } })
+      if (entry.docs[0]) {
+        await payload.update({ collection: 'workbook-entries', id: entry.docs[0].id, overrideAccess: true, data: { body: body || choice, consent: shareWithTeacher, ...(imageId ? { image: imageId } : {}) } })
+      }
+      return { ok: true as const, answerId: earlier.docs[0].id, updated: true, keepPrivate, correct }
+    }
+    const answer = await payload.create({
+      collection: 'answers',
+      overrideAccess: true,
+      data: {
+        point: pointId,
+        user: user.id,
+        lesson: lessonId || undefined,
+        body,
+        choice,
+        image: imageId,
+        audio: audioId,
+        video: videoId,
+        keepPrivate,
+        shareWithTeacher,
+        portal,
+        ...extra,
+      },
+    })
+    const lesson = lessonId ? await payload.findByID({ collection: 'lessons', id: lessonId, overrideAccess: true, depth: 0 }) : null
+    await payload.create({
+      collection: 'workbook-entries',
+      overrideAccess: true,
+      data: {
+        user: user.id,
+        answer: answer.id,
+        lesson: lessonId || undefined,
+        course: lesson ? idOf((lesson as { course?: unknown }).course) || undefined : undefined,
+        body: body || choice,
+        image: imageId,
+        consent: shareWithTeacher,
+        portal,
+      },
+    })
+    if (shareWithTeacher) await notifyTeachers(payload, user, portal, 'A learner shared an answer', `${user.name || 'A learner'} shared an answer with you.`)
+    const followers = await payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 20, where: { contingent: { equals: pointId } } })
+    for (const follower of followers.docs) {
+      await notify(payload, {
+        user: user.id,
+        portal,
+        title: 'A follow-up question is on its way',
+        body: `A follow-up to "${String(point.prompt).slice(0, 60)}" opens after its waiting time. You will see a countdown on the film.`,
+        key: `queued-${follower.id}`,
+      })
+    }
+    return { ok: true as const, answerId: answer.id, updated: false, keepPrivate, correct }
+  }
+
 export async function handlePost(req: Request) {
   let form: FormData
   try {
@@ -194,17 +349,40 @@ export async function handlePost(req: Request) {
   } catch {
     return redirectTo(req, '/', 'That form could not be read. Please try again.')
   }
+  const action = text(form, 'action')
+  const session = await getSession({ touch: action !== 'clock' })
+  const { payload, viewAs } = session
+  if (viewAs && action === 'logout') {
+    const live = await payload.find({ collection: 'view-as-sessions', overrideAccess: true, depth: 0, limit: 1, where: { id: { equals: viewAs.id } } })
+    if (live.docs[0]) await endSession(payload, live.docs[0] as never, 'actor-signed-out')
+  }
+  if (viewAs && !['logout', 'login', 'clock'].includes(action)) {
+    const settingsTouchPrivate = action === 'me-pref' && ['keepPlace', 'shareOpening'].includes(text(form, 'name'))
+    if (NEVER_ACTIONS.has(action) || settingsTouchPrivate || !viewAs.writeEnabled) {
+      await blocked(payload, viewAs, { action, via: 'form', never: NEVER_ACTIONS.has(action) || settingsTouchPrivate })
+      return NextResponse.json({ error: READ_ONLY, message: 'Read-only while viewing as someone else.' }, { status: 403 })
+    }
+  }
   try {
-    return await handleForm(req, form)
+    const response = await handleForm(req, form, session)
+    if (viewAs && !['logout', 'login', 'clock'].includes(action) && response.status < 400) {
+      const location = response.headers.get('location') || ''
+      if (!location.includes('error=')) {
+        await payload.update({ collection: 'users', id: viewAs.target.id, overrideAccess: true, data: { updatedBy: viewAs.actorId, onBehalfOf: viewAs.target.id } as never })
+        await wrote(payload, viewAs, { action, collection: 'users', id: viewAs.target.id, via: 'form' })
+      }
+    }
+    if (action === 'logout' && cookieValue(req.headers.get('cookie'))) response.headers.append('Set-Cookie', viewAsCookie(null))
+    return response
   } catch (error) {
     console.error('[hearts] action failed', text(form, 'action'), error)
     return redirectTo(req, text(form, 'next') || '/', 'Something went wrong with that. Nothing was saved. Please try again.')
   }
 }
 
-async function handleForm(req: Request, form: FormData) {
+async function handleForm(req: Request, form: FormData, session: Session) {
   const action = text(form, 'action')
-  const { payload, user } = await getSession()
+  const { payload, user } = session
 
   if (action === 'login') {
     const next = text(form, 'next') || '/'
@@ -808,127 +986,21 @@ async function handleForm(req: Request, form: FormData) {
   }
 
   if (action === 'answer') {
-    const pointId = Number(text(form, 'point'))
-    const point = await findDoc(payload, 'engagement-points', pointId)
-    if (!point) return redirectTo(req, text(form, 'next') || '/', 'That question could not be found.')
-    const lessonId = idOf(point.lesson)
-    const portal = portalIdOf(user)
-    if (!portal) return redirectTo(req, '/', 'Your account is not in a portal.')
-    const lessonDoc = lessonId ? await findDoc(payload, 'lessons', lessonId) : null
-    const courseOfPoint = lessonDoc ? idOf(lessonDoc.course) : null
-    const mayAnswer = courseOfPoint && (await visibleCourseIds(payload, user)).includes(courseOfPoint)
-    if (!mayAnswer) return redirectTo(req, '/', 'That question is not in your portal.')
-    const authorPortal = point.author ? portalIdOf((await findDoc(payload, 'users', idOf(point.author) || 0)) as SessionUser | null) : null
-    if (point.audience === 'self' && idOf(point.author) !== user.id) return redirectTo(req, '/', 'That question is not for you.')
-    if (point.audience === 'selected' && !((point.audienceUsers as unknown[]) || []).map((row) => idOf(row)).includes(user.id)) {
-      return redirectTo(req, '/', 'That question is not for you.')
-    }
-    if (authorPortal && authorPortal !== portal) return redirectTo(req, '/', 'That question is not in your portal.')
-    if (point.timing === 'future') {
-      const contingentId = idOf(point.contingent)
-      const mine = await payload.find({ collection: 'answers', overrideAccess: true, depth: 0, limit: 50, where: { user: { equals: user.id } } })
-      const answeredAt = (id: number | null) => {
-        const row = mine.docs.find((doc) => idOf((doc as { point?: unknown }).point) === id)
-        return row ? new Date((row as { createdAt: string }).createdAt) : null
-      }
-      const seen = await payload.find({ collection: 'lesson-visits', overrideAccess: true, depth: 0, limit: 1, where: { and: [{ user: { equals: user.id } }, { lesson: { equals: lessonId } }] }, sort: 'createdAt' })
-      const state = unlockState({
-        timing: 'future',
-        delayMs: delayToMs(Number(point.delayAmount || 0), String(point.delayUnit || 'week')),
-        hasContingent: Boolean(contingentId),
-        contingentAnsweredAt: answeredAt(contingentId),
-        seenAt: seen.docs[0] ? new Date((seen.docs[0] as { createdAt: string }).createdAt) : null,
-        at: now(),
-      })
-      if (state.state !== 'open') return redirectTo(req, text(form, 'next') || '/', 'This question has not opened yet. The countdown shows when it will.')
-    }
-    const body = text(form, 'body')
-    const choice = text(form, 'choice')
-    const image = form.get('image')
-    const video = form.get('video')
-    const audioFile = form.get('audio')
-    const hasVideo = video instanceof File && video.size > 0
-    const hasAudio = audioFile instanceof File && audioFile.size > 0
-    if (!body && !choice && !(image instanceof File && image.size > 0) && !hasVideo && !hasAudio) {
-      return redirectTo(req, text(form, 'next') || '/', 'Write a few words, or add an image, a sound, or a video.')
-    }
-    for (const file of [image, video, audioFile]) {
-      if (file instanceof File && tooBig(file)) return redirectTo(req, text(form, 'next') || '/', 'That file is over 200 MB.')
-    }
-    let imageId: number | undefined
-    if (image instanceof File && image.size > 0) {
-      if (!image.type.startsWith('image/')) return redirectTo(req, text(form, 'next') || '/', 'That file needs to be an image.')
-      imageId = await saveUpload(payload, image, portal, 'image/jpeg')
-    }
-    const audio = audioFile
-    let audioId: number | undefined
-    if (audio instanceof File && audio.size > 0) {
-      audioId = await saveUpload(payload, audio, portal, 'audio/webm')
-    }
-    let videoId: number | undefined
-    if (video instanceof File && video.size > 0) {
-      videoId = await saveUpload(payload, video, portal, 'video/mp4')
-    }
-    const keepPrivate = form.get('keepPrivate') === 'on'
-    const shareWithTeacher = form.get('shareWithTeacher') === 'on'
-    const earlier = await payload.find({ collection: 'answers', overrideAccess: true, depth: 0, limit: 1, where: { and: [{ point: { equals: pointId } }, { user: { equals: user.id } }] } })
-    if (earlier.docs.length) {
-      await payload.update({
-        collection: 'answers',
-        id: earlier.docs[0].id,
-        overrideAccess: true,
-        data: { body, choice, keepPrivate, shareWithTeacher, ...(imageId ? { image: imageId } : {}), ...(audioId ? { audio: audioId } : {}), ...(videoId ? { video: videoId } : {}) },
-      })
-      const entry = await payload.find({ collection: 'workbook-entries', overrideAccess: true, depth: 0, limit: 1, where: { answer: { equals: earlier.docs[0].id } } })
-      if (entry.docs[0]) {
-        await payload.update({ collection: 'workbook-entries', id: entry.docs[0].id, overrideAccess: true, data: { body: body || choice, consent: shareWithTeacher, ...(imageId ? { image: imageId } : {}) } })
-      }
-      return redirectTo(req, text(form, 'next') || '/', undefined, 'Your answer is updated in your workbook.')
-    }
-    const answer = await payload.create({
-      collection: 'answers',
-      overrideAccess: true,
-      data: {
-        point: pointId,
-        user: user.id,
-        lesson: lessonId || undefined,
-        body,
-        choice,
-        image: imageId,
-        audio: audioId,
-        video: videoId,
-        keepPrivate,
-        shareWithTeacher,
-        portal,
-      },
+    const result = await saveAnswer(payload, user, {
+      pointId: Number(text(form, 'point')),
+      body: text(form, 'body'),
+      choice: text(form, 'choice'),
+      image: form.get('image'),
+      video: form.get('video'),
+      audio: form.get('audio'),
+      keepPrivate: form.get('keepPrivate') === 'on',
+      shareWithTeacher: form.get('shareWithTeacher') === 'on',
+      viewingId: text(form, 'viewingId') || undefined,
+      atSecond: text(form, 'atSecond') ? Number(text(form, 'atSecond')) : undefined,
     })
-    const lesson = lessonId ? await payload.findByID({ collection: 'lessons', id: lessonId, overrideAccess: true, depth: 0 }) : null
-    await payload.create({
-      collection: 'workbook-entries',
-      overrideAccess: true,
-      data: {
-        user: user.id,
-        answer: answer.id,
-        lesson: lessonId || undefined,
-        course: lesson ? idOf((lesson as { course?: unknown }).course) || undefined : undefined,
-        body: body || choice,
-        image: imageId,
-        consent: shareWithTeacher,
-        portal,
-      },
-    })
-    if (shareWithTeacher) await notifyTeachers(payload, user, portal, 'A learner shared an answer', `${user.name || 'A learner'} shared an answer with you.`)
-    const followers = await payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 20, where: { contingent: { equals: pointId } } })
-    for (const follower of followers.docs) {
-      await notify(payload, {
-        user: user.id,
-        portal,
-        title: 'A follow-up question is on its way',
-        body: `A follow-up to "${String(point.prompt).slice(0, 60)}" opens after its waiting time. You will see a countdown on the film.`,
-        key: `queued-${follower.id}`,
-      })
-    }
-    return redirectTo(req, text(form, 'next') || '/', undefined, keepPrivate ? 'Saved privately in your workbook.' : 'Saved in your workbook and shared with the circle.')
+    if (!result.ok) return redirectTo(req, result.status === 400 || result.status === 409 ? text(form, 'next') || '/' : '/', result.error)
+    if (result.updated) return redirectTo(req, text(form, 'next') || '/', undefined, 'Your answer is updated in your workbook.')
+    return redirectTo(req, text(form, 'next') || '/', undefined, result.keepPrivate ? 'Saved privately in your workbook.' : 'Saved in your workbook and shared with the circle.')
   }
 
   if (action === 'placing') {
@@ -1509,6 +1581,41 @@ async function handleForm(req: Request, form: FormData) {
     const on = form.get('nightAlerts') === 'on'
     await payload.update({ collection: 'users', id: user.id, overrideAccess: true, data: { nightAlerts: on } })
     return redirectTo(req, text(form, 'next') || '/', undefined, on ? 'We will let you know when a new night opens.' : 'Night alerts are off.')
+  }
+
+  if (action === 'my-list') {
+    const courseId = Number(text(form, 'course'))
+    const next = text(form, 'next') || '/'
+    const portalId = portalIdOf(user)
+    const allowed = portalId ? [...(await adoptedCourseIds(payload, portalId)), ...(await visibleCourseIds(payload, user))] : []
+    if (!courseId || !allowed.includes(courseId)) return redirectTo(req, next, 'That course is not in your portal.')
+    const existing = (user.extraCourses || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
+    const remove = text(form, 'remove') === 'yes'
+    const extraCourses = remove ? existing.filter((id) => id !== courseId) : [...new Set([...existing, courseId])]
+    await payload.update({ collection: 'users', id: user.id, overrideAccess: true, data: { extraCourses } as never })
+    return redirectTo(req, next, undefined, remove ? 'Taken out of your list.' : 'Kept in your list.')
+  }
+
+  if (action === 'profile') {
+    const name = text(form, 'name').slice(0, 80)
+    if (!name) return redirectTo(req, text(form, 'next') || '/', 'Write the name you would like us to use.')
+    await payload.update({ collection: 'users', id: user.id, overrideAccess: true, data: { name } as never })
+    return redirectTo(req, text(form, 'next') || '/', undefined, 'Name saved.')
+  }
+
+  if (action === 'me-pref') {
+    const name = text(form, 'name')
+    const value = text(form, 'value') === 'on'
+    if (!['keepPlace', 'shareOpening', 'trendsOptIn', 'haptics'].includes(name)) return redirectTo(req, text(form, 'next') || '/', 'That setting is not known.')
+    await payload.update({ collection: 'users', id: user.id, overrideAccess: true, data: { [name]: value } as never })
+    if (name === 'shareOpening') {
+      const rows = await payload.find({ collection: 'opening-answers', overrideAccess: true, depth: 0, limit: 50, where: { user: { equals: user.id } } })
+      for (const row of rows.docs as { id: number; private?: boolean }[]) {
+        await payload.update({ collection: 'opening-answers', id: row.id, overrideAccess: true, data: { staffVisible: value && !row.private } as never })
+      }
+    }
+    if (name === 'keepPlace' && !value) await payload.delete({ collection: 'heart-states', overrideAccess: true, where: { user: { equals: user.id } } })
+    return redirectTo(req, text(form, 'next') || '/', undefined, 'Saved.')
   }
 
   if (action === 'visit') {

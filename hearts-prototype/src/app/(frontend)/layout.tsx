@@ -3,6 +3,7 @@ import './app.css'
 import './desk.css'
 import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
+import { ViewAsBanner } from '@/components/viewas-banner'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,7 +39,10 @@ export default function Layout({ children }: { children: ReactNode }) {
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <ViewAsBanner />
+        {children}
+      </body>
     </html>
   )
 }

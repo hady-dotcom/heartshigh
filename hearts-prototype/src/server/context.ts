@@ -1,8 +1,10 @@
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { cache } from 'react'
 import { getPayload, type Payload } from 'payload'
 import config from '@payload-config'
 import { idOf, portalIdOf } from '@/lib/ids'
+import { cookieValue, loadViewAs, type EndReason, type ViewAs } from './viewas'
 
 export type SessionUser = {
   id: number
@@ -22,6 +24,11 @@ export type SessionUser = {
   joinedAt?: string | null
   nightAlerts?: boolean | null
   createdAt?: string
+  shareOpening?: boolean | null
+  keepPlace?: boolean | null
+  trendsOptIn?: boolean | null
+  haptics?: boolean | null
+  removed?: boolean | null
 }
 
 export type PortalDoc = {
@@ -53,17 +60,42 @@ export async function getPayloadClient() {
   return getPayload({ config })
 }
 
-export async function getSession(): Promise<{ payload: Payload; user: SessionUser | null }> {
+export type Session = {
+  payload: Payload
+  /** Who the screens are for: the view-as target while a session is live, otherwise the signed-in account. */
+  user: SessionUser | null
+  /** Who is acting: always the signed-in account. */
+  actor: SessionUser | null
+  viewAs: ViewAs | null
+  viewAsEnded: EndReason | null
+}
+
+async function readSession(touch: boolean): Promise<Session> {
   const payload = await getPayloadClient()
-  const result = await payload.auth({ headers: await headers() })
-  if (!result.user) return { payload, user: null }
-  const full = await payload.findByID({
+  const reqHeaders = await headers()
+  const result = await payload.auth({ headers: reqHeaders })
+  if (!result.user) return { payload, user: null, actor: null, viewAs: null, viewAsEnded: null }
+  const full = (await payload.findByID({
     collection: 'users',
     id: result.user.id,
     overrideAccess: true,
     depth: 0,
-  })
-  return { payload, user: full as unknown as SessionUser }
+  })) as unknown as SessionUser
+  const token = cookieValue(reqHeaders.get('cookie'))
+  const { viewAs, ended } = await loadViewAs(payload, full, token, touch)
+  let viewAsEnded = ended
+  if (!viewAs && !ended && token) {
+    const old = await payload.find({ collection: 'view-as-sessions', overrideAccess: true, depth: 0, limit: 1, where: { token: { equals: token } } })
+    viewAsEnded = ((old.docs[0] as { endReason?: EndReason } | undefined)?.endReason as EndReason) || null
+  }
+  const user = viewAs ? (viewAs.target as unknown as SessionUser) : full
+  return { payload, user, actor: full, viewAs, viewAsEnded }
+}
+
+const touchedSession = cache(() => readSession(true))
+
+export async function getSession(options: { touch?: boolean } = {}): Promise<Session> {
+  return options.touch === false ? readSession(false) : touchedSession()
 }
 
 export async function visibleCourseIds(payload: Payload, user: SessionUser): Promise<number[]> {
@@ -218,7 +250,7 @@ export async function adoptedCourseIds(payload: Payload, portalId: number) {
 export async function requireUser() {
   const session = await getSession()
   if (!session.user) redirect(`/login?next=${encodeURIComponent((await headers()).get('x-hearts-path') || '/')}`)
-  return session as { payload: Payload; user: SessionUser }
+  return session as Session & { user: SessionUser; actor: SessionUser }
 }
 
 export async function requireMaster() {

@@ -99,3 +99,20 @@ button { cursor: pointer; }
 .mascot { display: inline-block; border-radius: 22px; box-shadow: 0 10px 26px rgba(31, 29, 54, 0.18); }
 .brand-mark.mono { background: radial-gradient(circle at 35% 30%, #f0c46a, var(--gold-deep)); color: var(--ink); font-family: var(--serif); font-weight: 700; }
 .brand-word { font-family: var(--serif); font-weight: 600; letter-spacing: 0.02em; }
+
+/* View as (spec 6A): ink on gold, sticky, pushes the layout down. */
+body:has(.viewas-bar) { --viewas-h: 46px; }
+.viewas-bar { position: sticky; top: 0; z-index: 400; min-height: 46px; background: #e3b23c; color: #1f1d36; font: 600 14px/1.35 var(--sans, system-ui), sans-serif; box-shadow: 0 1px 0 rgba(31, 29, 54, 0.25); }
+.viewas-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 12px 16px; max-width: 1440px; margin: 0 auto; }
+.viewas-exit, .viewas-link { background: none; border: 0; padding: 0; font: inherit; color: #1f1d36; text-decoration: underline; cursor: pointer; }
+.viewas-link { margin-left: 10px; }
+.viewas-meta { font-weight: 500; }
+.viewas-toast, .viewas-dialog { position: absolute; left: 50%; transform: translateX(-50%); top: 100%; width: min(420px, calc(100% - 24px)); background: #fff8e6; color: #1f1d36; border: 1px solid #c9a03a; border-radius: 12px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18); }
+.viewas-dialog label { display: grid; gap: 6px; }
+.viewas-dialog textarea { font: inherit; border: 1px solid #c9a03a; border-radius: 8px; padding: 8px; }
+.viewas-dialog p { font-weight: 400; margin: 8px 0; }
+.viewas-actions { display: flex; justify-content: flex-end; gap: 12px; align-items: center; }
+.viewas-confirm { background: #1f1d36; color: #fff; border: 0; border-radius: 999px; padding: 8px 16px; font: inherit; cursor: pointer; }
+.viewas-confirm:disabled { opacity: 0.45; cursor: not-allowed; }
+.viewas-ended { background: #1f1d36; color: #f4efe5; padding: 10px 16px; font: 600 14px/1.4 var(--sans, system-ui), sans-serif; text-align: center; }
+[data-viewas-disabled] { opacity: 0.5; cursor: not-allowed; }

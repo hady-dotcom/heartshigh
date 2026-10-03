@@ -44,7 +44,7 @@
 .tab .badge { position: absolute; margin: -4px 0 0 22px; background: var(--rose); color: #fff; border-radius: 999px; font-size: 10px; padding: 1px 5px; }
 
 /* Full-bleed feed */
-.feed { position: fixed; inset: 0; width: min(430px, 100%); margin: 0 auto; background: var(--night); overflow: hidden; touch-action: none; user-select: none; }
+.feed { position: fixed; inset: var(--viewas-h, 0px) 0 0 0; width: min(430px, 100%); margin: 0 auto; background: var(--night); overflow: hidden; touch-action: none; user-select: none; }
 .feed a, .feed img { -webkit-user-drag: none; }
 .slide-in { animation: slideIn 0.32s ease both; }
 .slide-in.from-left { animation-name: slideFromLeft; }
