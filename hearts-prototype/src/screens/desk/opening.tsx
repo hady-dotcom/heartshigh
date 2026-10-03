@@ -129,7 +129,7 @@ export async function MasterLanes(ctx: MasterCtx) {
     if (item?.relationTo === 'lessons') return str(doc.title)
     const lesson = lessons.find((row) => row.id === idOf(doc.lesson))
     const start = Number(doc.start || 0)
-    return `${str(lesson?.sourceTitle) || str(lesson?.title) || 'A talk'} at ${Math.floor(start / 60)}:${String(Math.floor(start % 60)).padStart(2, '0')}`
+    return `${str(lesson?.title) || str(lesson?.sourceTitle) || 'A talk'} at ${Math.floor(start / 60)}:${String(Math.floor(start % 60)).padStart(2, '0')}`
   }
   const laneTitle = (value: unknown) => str(lanes.find((lane) => lane.id === idOf(value))?.title)
   return (
@@ -257,7 +257,7 @@ export async function MasterSimulator(ctx: MasterCtx) {
   const [cuts, lessons] = await Promise.all([rows(payload, 'cuts', { id: { in: opening.route.cuts.map((cut) => cut.id) } }, { limit: 2000 }), rows(payload, 'lessons', undefined, { limit: 2000 })])
   const cutTitles = Object.fromEntries(cuts.map((cut) => {
     const lesson = lessons.find((row) => row.id === idOf(cut.lesson))
-    return [cut.id, str(lesson?.sourceTitle) || str(lesson?.title) || `Clip ${cut.id}`]
+    return [cut.id, str(lesson?.title) || str(lesson?.sourceTitle) || `Clip ${cut.id}`]
   }))
   const scaleNames = Object.fromEntries(SCALES.map((scale) => [scale.key, scale.leonName]))
   return (

@@ -109,6 +109,7 @@ function SheetBody({
             <label className="stack">Workbook (.xlsx)
               <input type="file" name="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required data-testid="sheet-file" />
             </label>
+            <label className="check" data-testid="sheet-approve-questions"><input type="checkbox" name="approveQuestions" value="on" /> Import questions as approved. A status in the sheet still wins: draft stays a draft, and rejected stays hidden.</label>
             <p className="hint">A blank cell leaves that field as it is. To remove a row, set its status to delete. Times can be seconds, m:ss or h:mm:ss. The CircleAnswers tab adds example answers under a question; they are never counted as answers or tasks.</p>
             <div className="actions"><button className="btn ink" type="submit" data-testid="sheet-preview-submit">Preview import</button></div>
           </form>

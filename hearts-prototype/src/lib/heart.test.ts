@@ -8,11 +8,13 @@ import {
   applyTap,
   bestCut,
   buildFeed,
+  clipUsable,
   freshState,
   markServed,
   pickSignals,
   routeFeed,
   scoreLanes,
+  spine,
   spineStart,
   upgradeSpine,
   type CutInfo,
@@ -231,6 +233,24 @@ test('every complete tap path stays away from guarding the gaze, and going back 
   const crisis = applyTap(changed, 'visitor', 'heavy', SCENES, SCALES)
   assert.equal(crisis.crisis, true)
   assert.equal(crisis.state.taps.some((tap) => tap.option === 'heavy'), false)
+})
+
+test('a placeholder clip joins the spine only while unchecked talks are shown, and a withheld clip never does', () => {
+  // The spine pointer is a door. Clauses 1 to 20 sit in doors up to 8; clause 21 is door 9, 22 door 10, 23 door 11.
+  const placeholder: CutInfo = { id: 80, clause: 21, lanes: [{ lane: 'patience', weight: 1, confirmed: true }], approved: false, placeholder: true, hasHors: true, portalOwn: false }
+  const withheld: CutInfo = { id: 81, clause: 23, lanes: [{ lane: 'patience', weight: 1, confirmed: true }], approved: false, placeholder: true, withheld: true, hasHors: true, portalOwn: false }
+  const off = context([placeholder, withheld])
+  assert.equal(clipUsable(placeholder, false), false)
+  assert.equal(clipUsable(placeholder, true), true)
+  assert.equal(clipUsable(withheld, true), false)
+  assert.equal(spine(1, off, 8, new Set(), new Set())[0]?.clause, 22)
+  const on = { ...off, showUnchecked: true }
+  assert.deepEqual(spine(2, on, 8, new Set(), new Set()).map((cut) => cut.clause), [21, 22])
+  assert.equal(spine(5, on, 8, new Set(), new Set()).some((cut) => cut.id === 81), false)
+  const first = off.cuts.find((cut) => cut.starter?.lane === 'patience' && cut.starter.role === 'first')!
+  const served = new Set([String(first.id)])
+  assert.notEqual(bestCut('patience', off, new Set(), served, false)?.id, 80)
+  assert.equal(bestCut('patience', on, new Set(), served, false)?.id, 80)
 })
 
 test('buildFeed takes lane scores alone, as the server does', () => {

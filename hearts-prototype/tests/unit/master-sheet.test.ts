@@ -304,6 +304,73 @@ test('approving an ai draft publishes it, and a new ai draft stays a draft', () 
   assert.match(String(created && created.op === 'point.create' ? created.data.draftNote : ''), /machine|Draft/)
 })
 
+test('course parts take the order they first appear, and a failed row does not keep a number', () => {
+  const plan = planSheet({
+    talks: [
+      cells(3, { talk_key: 'p1', youtube_id: 'AAAAAAAAAAA', title: 'First sitting', course: 'Fresh', part: 'Opening', order: 1 }),
+      cells(4, { talk_key: 'p2', youtube_id: 'BBBBBBBBBBB', title: 'Second sitting', course: 'Fresh', part: 'Middle', order: 1 }),
+      cells(5, { talk_key: 'p3', youtube_id: 'CCCCCCCCCCC', title: 'Third sitting', course: 'Fresh', part: 'Opening', order: 2 }),
+    ],
+    questions: [], resources: [], errors: [],
+  }, emptyCatalogue())
+  assert.deepEqual(plan.errors, [])
+  const units = plan.ops.filter((op) => op.op === 'unit.create')
+  assert.deepEqual(units.map((op) => (op.op === 'unit.create' ? [op.title, op.order] : [])), [['Opening', 1], ['Middle', 2]])
+
+  const failed = planSheet({
+    talks: [
+      cells(3, { talk_key: 'bad', youtube_id: 'EEEEEEEEEEE', title: 'Broken', course: 'Fresh', part: 'Opening', status: 'checked' }),
+      cells(4, { talk_key: 'ok', youtube_id: 'DDDDDDDDDDD', title: 'Kept', course: 'Fresh', part: 'Middle' }),
+    ],
+    questions: [], resources: [], errors: [],
+  }, emptyCatalogue())
+  const kept = failed.ops.filter((op) => op.op === 'unit.create')
+  assert.equal(kept.length, 1)
+  assert.equal(kept[0] && kept[0].op === 'unit.create' ? kept[0].title : '', 'Middle')
+  assert.equal(kept[0] && kept[0].op === 'unit.create' ? kept[0].order : 0, 1)
+})
+
+test('a reimport writes the real part order when every part was stored as 1', () => {
+  const catalogue = fixture()
+  catalogue.units = [
+    { id: 1, course: 1, title: 'Opening', order: 1 },
+    { id: 2, course: 1, title: 'Middle', order: 1 },
+  ]
+  catalogue.lessons = [
+    { ...catalogue.lessons[0], unit: 1 },
+    { ...catalogue.lessons[0], id: 11, title: 'Second', youtubeId: 'BBBBBBBBBBB', unit: 2, order: 1 },
+  ]
+  const plan = planSheet({
+    talks: [
+      cells(3, { talk_key: 'yt-NIR88RRpat4', part: 'Opening' }),
+      cells(4, { talk_key: 'yt-BBBBBBBBBBB', part: 'Middle' }),
+    ],
+    questions: [], resources: [], errors: [],
+  }, catalogue)
+  assert.deepEqual(plan.errors, [])
+  assert.deepEqual(plan.ops.filter((op) => op.op === 'unit.update'), [{ op: 'unit.update', id: 2, patch: { order: 2 } }])
+})
+
+test('the sheet status wins, and approving new questions publishes only a blank status', () => {
+  const catalogue = fixture()
+  const plan = planSheet({
+    talks: [],
+    questions: [
+      cells(3, { talk_key: 'yt-NIR88RRpat4', type: 'reflection', time: 30, text: 'What line would you carry into the week?', source: 'human' }),
+      cells(4, { talk_key: 'yt-NIR88RRpat4', type: 'reflection', time: 50, text: 'What would you leave as a draft on purpose?', source: 'human', status: 'draft' }),
+      cells(5, { talk_key: 'yt-NIR88RRpat4', type: 'reflection', time: 70, text: 'What stays hidden from learners here?', source: 'human', status: 'rejected' }),
+      cells(6, { talk_key: 'yt-NIR88RRpat4', type: 'reflection', time: 90, text: 'What does published mean on this sheet?', source: 'human', status: 'published' }),
+      cells(7, { talk_key: 'yt-NIR88RRpat4', question_id: 7 }),
+    ],
+    resources: [],
+    errors: [],
+  }, catalogue, { approveQuestions: true })
+  assert.deepEqual(plan.errors, [])
+  const created = plan.ops.filter((op) => op.op === 'point.create')
+  assert.deepEqual(created.map((op) => (op.op === 'point.create' ? op.data.status : '')), ['published', 'draft', 'rejected', 'published'])
+  assert.equal(plan.ops.some((op) => op.op === 'point.update'), false)
+})
+
 test('portal scope refuses another portal and the master library', () => {
   const catalogue = fixture()
   catalogue.scopeKind = 'portal'

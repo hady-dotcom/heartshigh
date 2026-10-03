@@ -134,11 +134,17 @@ test('applying an ai draft keeps it off the learner page until a person approves
   expect(created.status).toBe('draft')
   expect(created.draftNote || '').toMatch(/machine|Draft/)
 
-  const learner = await as('elm-learner@hearts.test', 'portal-learner')
-  const hidden = await learner.get(`/p/east-london/course/${lesson.course}?part=${lesson.id}`)
-  expect(hidden.ok()).toBeTruthy()
-  expect(await hidden.text()).not.toContain(prompt)
-  await learner.dispose()
+  const flags = await json(await master.get('/api/globals/master-flags'))
+  await master.post('/api/globals/master-flags', { data: { showUnchecked: false } })
+  try {
+    const learner = await as('elm-learner@hearts.test', 'portal-learner')
+    const hidden = await learner.get(`/p/east-london/course/${lesson.course}?part=${lesson.id}`)
+    expect(hidden.ok()).toBeTruthy()
+    expect(await hidden.text()).not.toContain(prompt)
+    await learner.dispose()
+  } finally {
+    await master.post('/api/globals/master-flags', { data: { showUnchecked: flags.showUnchecked !== false } })
+  }
 
   const audit = (await json(await master.get('/api/audit-log?where[event][equals]=sheet.import&sort=-createdAt&limit=1'))).docs[0]
   expect(audit?.event).toBe('sheet.import')

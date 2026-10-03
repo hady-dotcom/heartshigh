@@ -478,9 +478,15 @@ test.describe('round 3 screens', () => {
     const drafts = (await json(await master.get(`/api/engagement-points?where[lesson][equals]=${lessonId}&where[status][equals]=draft&depth=0`))).docs as unknown[]
     expect(drafts.length).toBeGreaterThanOrEqual(2)
     const lesson = await lessonBy(`where[id][equals]=${lessonId}`)
-    await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/course/${lesson.course}?part=${lessonId}`)
-    await expect(page.getByTestId('player')).toBeVisible()
-    await expect(page.getByTestId('timeline-dot')).toHaveCount(0)
+    const flags = await json(await master.get('/api/globals/master-flags'))
+    await master.post('/api/globals/master-flags', { data: { showUnchecked: false } })
+    try {
+      await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/course/${lesson.course}?part=${lessonId}`)
+      await expect(page.getByTestId('player')).toBeVisible()
+      await expect(page.getByTestId('timeline-dot')).toHaveCount(0)
+    } finally {
+      await master.post('/api/globals/master-flags', { data: { showUnchecked: flags.showUnchecked !== false } })
+    }
   })
 
   test('Section T: the master checks a talk in the tier editor and publishes a pop-up', async ({ page }) => {

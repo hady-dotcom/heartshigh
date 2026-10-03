@@ -1,4 +1,4 @@
-import type { Payload } from 'payload'
+import type { Payload, Where } from 'payload'
 import { buildFeed, type CutInfo, type FeedPlan, type FeedSlot, type LaneDef, type ScaleDef, type SceneDef, type SceneOption } from '@/lib/heart'
 import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE } from '@/lib/opening-data'
 import { idOf } from '@/lib/ids'
@@ -26,7 +26,7 @@ export type OpeningData = {
   scales: ScaleDef[]
   helpContacts: HelpContact[]
   d0CutId: number | null
-  route: { lanes: LaneDef[]; cuts: CutInfo[]; d0CutId: number | null; allowSuggested: boolean }
+  route: { lanes: LaneDef[]; cuts: CutInfo[]; d0CutId: number | null; allowSuggested: boolean; showUnchecked: boolean }
   /** Display data for the clips the opening might hand off to (D0 and every lane's first starter). */
   starters: Record<string, FeedItem>
   /** Display data for every routable clip, so the device can build its own feed and keep its taps to itself. */
@@ -64,8 +64,20 @@ type Loaded = {
   clauses: Row[]
   doors: Door[]
   tiers: Row[]
+  showUnchecked: boolean
   /** Old cut ids that now stand for their talk's one tier clip. */
   alias: Map<number, number>
+}
+
+/** Learner questions: rejected stays hidden. Drafts are included only while show-unchecked is on. */
+export function pointVisibleWhere(showUnchecked: boolean): Where {
+  if (showUnchecked) return { or: [{ status: { not_equals: 'rejected' } }, { status: { exists: false } }] }
+  return {
+    and: [
+      { or: [{ status: { not_equals: 'draft' } }, { status: { exists: false } }] },
+      { or: [{ status: { not_equals: 'rejected' } }, { status: { exists: false } }] },
+    ],
+  }
 }
 
 /** Whether learners may see a talk's tier: checked always, a draft only while the master flag says so, rejected never. */
@@ -104,7 +116,7 @@ function carrierCut(cuts: Row[], lessonId: number) {
 
 async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
   const [lanes, scales, clauses, doors] = await Promise.all([all(payload, 'lanes'), all(payload, 'heart-scales'), all(payload, 'clauses'), loadDoors(payload)])
-  if (!courseIds.length) return { lanes, scales, clauses, doors, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [], alias: new Map() }
+  if (!courseIds.length) return { lanes, scales, clauses, doors, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [], showUnchecked: false, alias: new Map() }
   const [courses, lessons, showUnchecked] = await Promise.all([all(payload, 'courses', { id: { in: courseIds } }), all(payload, 'lessons', { course: { in: courseIds } }), showUncheckedTalks(payload)])
   const lessonIds = lessons.map((row) => row.id)
   const [rawCuts, tiers] = await Promise.all([
@@ -142,7 +154,7 @@ async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
       const value = idOf((tag.item as { value?: unknown }).value) || 0
       return alias.has(value) ? { ...tag, item: { relationTo: 'cuts', value: alias.get(value) } } : tag
     })
-  return { lanes, scales, clauses, doors, cuts, lessons, courses, tags: cutTags, ladder, tiers: tiers.filter((tier) => tierVisible(tier, showUnchecked)), alias }
+  return { lanes, scales, clauses, doors, cuts, lessons, courses, tags: cutTags, ladder, tiers: tiers.filter((tier) => tierVisible(tier, showUnchecked)), showUnchecked, alias }
 }
 
 function laneDefs(data: Loaded): LaneDef[] {
@@ -198,6 +210,8 @@ function cutInfos(data: Loaded, portal: PortalDoc): CutInfo[] {
         door: doorNumberOfClause(clause, data.doors),
         lanes,
         approved: cut.status === 'approved',
+        placeholder: Boolean(cut.placeholder),
+        withheld: cut.status === 'rejected',
         hasHors: data.tiers.some((tier) => idOf(tier.lesson) === idOf(cut.lesson)) || data.ladder.some((item) => item.kind === 'hors' && idOf(item.lesson) === idOf(cut.lesson) && Number(item.start) >= Number(cut.start) - 1 && Number(item.end) <= Number(cut.end) + 1),
         portalOwn: Boolean(course && course.origin === 'local' && idOf(course.portal) === portal.id),
         starter: starters.get(cut.id),
@@ -280,7 +294,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     courseId: course.id,
     courseTitle: String(course.title || ''),
     lessonId: lesson.id,
-    lessonTitle: String(lesson.sourceTitle || lesson.title || ''),
+    lessonTitle: String(lesson.title || lesson.sourceTitle || ''),
     style: slide ? STYLES[index % STYLES.length] : null,
     clause: (cut.bestClause as number) || null,
     door: doorNumberOfClause((cut.bestClause as number) || null, data.doors),
@@ -417,7 +431,7 @@ export async function loadOpening(payload: Payload, portal: PortalDoc, user: Ses
     scales: data.scales.map((row) => ({ key: row.key as ScaleDef['key'], firstOpenRead: row.firstOpenRead !== false })),
     helpContacts: contacts.map(({ label, phone, url, hours }) => ({ label, phone: phone || null, url: url || null, hours: hours || null })),
     d0CutId,
-    route: { lanes, cuts, d0CutId, allowSuggested: process.env.HEARTS_ALLOW_SUGGESTED_LANES === '1' },
+    route: { lanes, cuts, d0CutId, allowSuggested: process.env.HEARTS_ALLOW_SUGGESTED_LANES === '1', showUnchecked: data.showUnchecked },
     starters,
     clips,
     laneTitles,
@@ -432,7 +446,7 @@ export async function serveFeed(payload: Payload, portal: PortalDoc, user: Sessi
   const { own, master } = await openingConfig(payload, portal.id)
   const d0Raw = idOf(own?.defaultClip) || idOf(master?.defaultClip) || null
   const d0CutId = d0Raw ? data.alias.get(d0Raw) || d0Raw : null
-  const ctx = { lanes: laneDefs(data), scales: [], cuts: cutInfos(data, portal), d0CutId, now: now().getTime(), allowSuggested: process.env.HEARTS_ALLOW_SUGGESTED_LANES === '1' }
+  const ctx = { lanes: laneDefs(data), scales: [], cuts: cutInfos(data, portal), d0CutId, now: now().getTime(), allowSuggested: process.env.HEARTS_ALLOW_SUGGESTED_LANES === '1', showUnchecked: data.showUnchecked }
   const built = buildFeed(plan, ctx)
   let slots: FeedSlot[] = built.items
   // Once the learner has seen everything, start the spine again rather than leave the feed empty.
@@ -455,7 +469,7 @@ export async function mainsFor(payload: Payload, laneKeyValue: string) {
   const lessonId = idOf(row?.lesson)
   if (!lessonId) return null
   const lesson = await payload.findByID({ collection: 'lessons', id: lessonId, overrideAccess: true, depth: 0 }).catch(() => null)
-  return lesson ? { lessonId, courseId: idOf((lesson as { course?: unknown }).course), title: String((lesson as { sourceTitle?: string; title?: string }).sourceTitle || (lesson as { title?: string }).title) } : null
+  return lesson ? { lessonId, courseId: idOf((lesson as { course?: unknown }).course), title: String((lesson as { title?: string; sourceTitle?: string }).title || (lesson as { sourceTitle?: string }).sourceTitle) } : null
 }
 
 /**

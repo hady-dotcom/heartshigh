@@ -171,6 +171,10 @@ export type CutInfo = {
   door?: number | null
   lanes: { lane: string; weight: number; confirmed: boolean }[]
   approved: boolean
+  /** Imported clips arrive as suggested placeholders. Usable only while show-unchecked is on. */
+  placeholder?: boolean
+  /** Safeguarding: a rejected clip never enters the feed. */
+  withheld?: boolean
   hasHors: boolean
   portalOwn: boolean
   starter?: { lane: string; role: 'first' | 'next' | 'mains' }
@@ -183,6 +187,15 @@ export type RouteContext = {
   d0CutId: number | null
   now?: number
   allowSuggested?: boolean
+  /** Master flag: draft talks, and their placeholder clips, may be served. */
+  showUnchecked?: boolean
+}
+
+/** An approved clip is usable. A placeholder on a visible talk is usable only while show-unchecked is on. Rejected clips stay out. */
+export function clipUsable(cut: CutInfo, showUnchecked?: boolean) {
+  if (cut.withheld) return false
+  if (cut.approved) return true
+  return Boolean(showUnchecked && cut.placeholder)
 }
 
 function laneTagged(cut: CutInfo, lane: string, allowSuggested?: boolean) {
@@ -265,7 +278,7 @@ export function bestCut(laneKey: string, ctx: RouteContext, taken: Set<number>, 
   const pool = ctx.cuts.filter((cut) => {
     if (taken.has(cut.id)) return false
     if (!laneTagged(cut, laneKey, ctx.allowSuggested)) return false
-    if (!cut.approved && !cut.starter) return false
+    if (!cut.starter && !clipUsable(cut, ctx.showUnchecked)) return false
     if (!cut.hasHors && !cut.starter) return false
     const door = cutDoor(cut)
     if (firstWeek && door != null && excluded.includes(door)) return false
@@ -282,11 +295,11 @@ export function bestCut(laneKey: string, ctx: RouteContext, taken: Set<number>, 
   return pool[0] || null
 }
 
-/** spine(n) from section 3.4: approved hors cuts in door order after the pointer, one door at a time. */
+/** spine(n) from section 3.4: usable hors cuts in door order after the pointer, one door at a time. */
 export function spine(n: number, ctx: RouteContext, pointer: number, taken: Set<number>, served: Set<string>) {
   const pool = ctx.cuts
     .map((cut) => ({ cut, door: cutDoor(cut) }))
-    .filter(({ cut, door }) => cut.approved && cut.hasHors && door != null && door > pointer && !taken.has(cut.id))
+    .filter(({ cut, door }) => clipUsable(cut, ctx.showUnchecked) && cut.hasHors && door != null && door > pointer && !taken.has(cut.id))
     .sort((a, b) => (a.door! - b.door!) || (a.cut.clause ?? 99) - (b.cut.clause ?? 99) || Number(served.has(String(a.cut.id))) - Number(served.has(String(b.cut.id))) || a.cut.id - b.cut.id)
     .map(({ cut }) => cut)
   const picked: CutInfo[] = []

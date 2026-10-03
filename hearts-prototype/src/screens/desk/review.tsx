@@ -3,6 +3,7 @@ import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { ReviewKeys, ReviewPlayer } from '@/components/desk/review'
 import { idOf } from '@/lib/ids'
+import { isImportedSheetDraft } from '@/lib/imported-questions'
 import { pendingForLesson } from '@/server/ai-desk'
 import { HORS_MAX, horsCapOf } from '@/lib/tiers'
 import { showUncheckedTalks } from '@/server/opening'
@@ -96,7 +97,7 @@ export async function MasterReview(ctx: MasterCtx) {
         <div className="body review-flag-body">
           <div>
             <b>Show unchecked talks to learners</b>
-            <p className="hint" style={{ margin: 0 }}>{showUnchecked ? 'On: drafts are served as well as approved talks. This is on for the demo; it is off by default in production.' : 'Off: learners see approved talks only. This is the default in production.'}</p>
+            <p className="hint" style={{ margin: 0 }}>{showUnchecked ? 'On: draft talks and their draft questions are served as well as approved ones. This is on for the demo; it is off by default in production.' : 'Off: learners see approved talks and published questions only. This is the default in production.'}</p>
           </div>
           <form action="/api/hearts" method="post">
             <Hidden fields={{ action: 'show-unchecked', value: showUnchecked ? 'off' : 'on', next: tier ? `/master/review?tier=${tier.id}` : '/master/review' }} />
@@ -122,7 +123,7 @@ export async function MasterReview(ctx: MasterCtx) {
       {tier && lesson ? (
         <section className="panel review-card" data-testid="review-card" data-tier={tier.id} data-status={status}>
           <header className="light">
-            <h2>{str(lesson.sourceTitle) || str(lesson.title) || 'A talk'}</h2>
+            <h2>{str(lesson.title) || str(lesson.sourceTitle) || 'A talk'}</h2>
             <span className={`badge ${status === 'checked' ? 'teal' : status === 'rejected' ? 'rose' : 'grey'}`} data-testid="review-status">{status === 'checked' ? 'Approved' : status === 'rejected' ? 'Rejected' : 'Waiting for review'}</span>
           </header>
           <div className="body review-grid">
@@ -171,6 +172,7 @@ export async function MasterReviewPopups(ctx: MasterCtx) {
   const sorted = [...own].sort((a, b) => (STATUS_ORDER[str(a.status) || 'draft'] ?? 0) - (STATUS_ORDER[str(b.status) || 'draft'] ?? 0) || Number(idOf(a.lesson)) - Number(idOf(b.lesson)) || Number(a.second) - Number(b.second))
   const live = own.filter((point) => point.status === 'published').length
   const waiting = own.filter((point) => (point.status || 'draft') === 'draft').length
+  const imported = points.filter((point) => isImportedSheetDraft(point)).length
   const withLive = new Set(own.filter((point) => point.status === 'published').map((point) => idOf(point.lesson)))
   const bare = tiers.filter((tier) => !withLive.has(idOf(tier.lesson))).length
   const tiersWaiting = tiers.filter((tier) => (tier.status || 'draft') === 'draft').length
@@ -189,15 +191,22 @@ export async function MasterReviewPopups(ctx: MasterCtx) {
     <Frame
       ctx={ctx}
       title="Review pop-ups"
-      intro="Each pop-up pauses the main at its moment and asks the learner one thing. Watch the lead-in, read the question, then approve and publish, adjust or reject. Only published pop-ups reach learners."
+      intro="Each pop-up pauses the main at its moment and asks the learner one thing. Watch the lead-in, read the question, then approve and publish, adjust or reject. Only published pop-ups reach learners, unless show-unchecked is on."
       testId="master-review-popups"
     >
       <Tabs active="popups" tiers={tiersWaiting} popups={waiting} />
       <p className="hint" data-testid="review-counts">{live} of {own.length} pop-ups are live. {bare} of {tiers.length} talks have none live yet.</p>
+      {imported > 0 ? (
+        <form action="/api/hearts" method="post" style={{ margin: '0 0 14px' }}>
+          <Hidden fields={{ action: 'popup-approve-all', next: '/master/review/popups' }} />
+          <button className="btn teal small" type="submit" data-testid="popup-approve-all">Approve {imported} imported question{imported === 1 ? '' : 's'}</button>
+          <p className="hint">Only drafts that came in on the master sheet. Machine drafts and questions written on the desk stay waiting. Running it again changes nothing.</p>
+        </form>
+      ) : null}
       {point && lesson ? (
         <section className="panel review-card" data-testid="review-card" data-point={point.id} data-status={status}>
           <header className="light">
-            <h2>{str(lesson.sourceTitle) || str(lesson.title) || 'A talk'}</h2>
+            <h2>{str(lesson.title) || str(lesson.sourceTitle) || 'A talk'}</h2>
             <span className={`badge ${status === 'published' ? 'teal' : status === 'rejected' ? 'rose' : 'grey'}`} data-testid="review-status">{status === 'published' ? 'Live' : status === 'rejected' ? 'Rejected' : 'Waiting for review'}</span>
           </header>
           <div className="body review-grid">

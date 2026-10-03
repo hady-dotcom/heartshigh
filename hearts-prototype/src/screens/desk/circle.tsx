@@ -86,7 +86,7 @@ async function Index(ctx: CircleCtx) {
             {talks.map(({ lesson, course, questions, on, all }) => (
               <tr key={lesson.id} data-testid="circle-talk" data-lesson={lesson.id}>
                 <td>{str(course?.title)}</td>
-                <td>{str(lesson.sourceTitle) || str(lesson.title)}</td>
+                <td>{str(lesson.title) || str(lesson.sourceTitle)}</td>
                 <td className="num">{questions}</td>
                 <td className="num">{on} of {all}</td>
                 <td><Link className="btn ghost small" href={`${ctx.here}?lesson=${lesson.id}`} data-testid="circle-open">Open</Link></td>
@@ -121,7 +121,7 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
       <p><Link href={here} className="hint">‹ All talks</Link></p>
       <section className="panel" style={{ marginBottom: 18 }}>
         <header className="light">
-          <div><h2>{str(lesson.sourceTitle) || str(lesson.title)}</h2><p>{str(course.title)}{lesson.speaker ? `, ${str(lesson.speaker)}` : ''}</p></div>
+          <div><h2>{str(lesson.title) || str(lesson.sourceTitle)}</h2><p>{str(course.title)}{lesson.speaker ? `, ${str(lesson.speaker)}` : ''}</p></div>
           <div className="actions">
             <Bulk lesson={lesson.id} scope="talk" enabled here={back} label="All on for this talk" />
             <Bulk lesson={lesson.id} scope="talk" enabled={false} here={back} label="All off for this talk" />

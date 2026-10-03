@@ -218,7 +218,8 @@ test('Seed: the starter talks with transcripts give harvest items', async () => 
   const { payload } = fakePayload()
   let withItems = 0
   for (const file of starters) if ((await talkHarvest(payload, 1, read(`content/transcripts/starters/${file}`))).length) withItems++
-  assert.ok(withItems >= starters.length - 4, `${withItems} of ${starters.length} starter talks have items`)
+  // FAxIZIqwfd8 quotes the Prophet only inside a YouTube aside ("check the description for the full dua"), which is not harvested.
+  assert.ok(withItems >= starters.length - 5, `${withItems} of ${starters.length} starter talks have items`)
 })
 
 function pick(match: ReturnType<typeof matchQuran>) {

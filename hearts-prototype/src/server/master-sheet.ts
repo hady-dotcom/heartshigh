@@ -204,14 +204,14 @@ function spansOf(value: unknown): AppetiserSpan[] | null {
   return spans.length ? normaliseSpans(spans) : null
 }
 
-export async function planBuffer(payload: Payload, scope: SheetScope, buffer: Buffer, options: { newCoursesPack?: number | null } = {}) {
+export async function planBuffer(payload: Payload, scope: SheetScope, buffer: Buffer, options: { newCoursesPack?: number | null; approveQuestions?: boolean } = {}) {
   const [parsed, catalogue, flags] = await Promise.all([
     readWorkbook(buffer),
     loadCatalogue(payload, scope),
     payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null) as Promise<{ horsMaxSeconds?: number } | null>,
   ])
   catalogue.horsMaxSeconds = horsCapOf(flags?.horsMaxSeconds)
-  const plan = planSheet(parsed, catalogue)
+  const plan = planSheet(parsed, catalogue, { approveQuestions: options.approveQuestions })
   if (options.newCoursesPack) {
     const added = addNewCoursesToPack(plan, catalogue, options.newCoursesPack)
     if ('error' in added) plan.errors.push({ tab: 'Talks', row: 0, column: 'pack', message: added.error })
@@ -357,16 +357,21 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
     return
   }
   if (op.op === 'unit.create') {
-    const doc = (await payload.create({ collection: 'units', overrideAccess: true, data: { title: op.title, course: resolveRef(op.course, temps), order: 1 } as never })) as unknown as Doc
+    const doc = (await payload.create({ collection: 'units', overrideAccess: true, data: { title: op.title, course: resolveRef(op.course, temps), order: op.order } as never })) as unknown as Doc
     temps.set(op.temp, doc.id)
     rememberCreated(snapshot, 'units', doc.id)
+    return
+  }
+  if (op.op === 'unit.update') {
+    await remember(payload, snapshot, 'units', op.id, op.patch)
+    await payload.update({ collection: 'units', id: op.id, overrideAccess: true, data: op.patch as never })
     return
   }
   if (op.op === 'lesson.create') {
     const doc = (await payload.create({
       collection: 'lessons', overrideAccess: true,
       data: {
-        title: op.title, sourceTitle: op.title, course: resolveRef(op.course, temps), unit: resolveRef(op.unit, temps), speaker: op.speaker, speakerProfile: op.speakerProfile ? resolveRef(op.speakerProfile, temps) : undefined, youtubeId: op.youtubeId,
+        title: op.title, course: resolveRef(op.course, temps), unit: resolveRef(op.unit, temps), speaker: op.speaker, speakerProfile: op.speakerProfile ? resolveRef(op.speakerProfile, temps) : undefined, youtubeId: op.youtubeId,
         youtubeUrl: op.youtubeId ? `https://www.youtube.com/watch?v=${op.youtubeId}` : undefined, order: op.order ?? 1, starterLane: op.lane, portal: op.portal || undefined, master: op.master,
         transcriptSource: op.transcriptSource || 'none', videoProvider: op.provider || undefined, vimeoId: op.vimeoId || undefined, film: op.mediaId || undefined,
         durationSeconds: op.durationSeconds ?? undefined, transcript: op.transcript || undefined, transcriptNote: op.transcriptNote || undefined,

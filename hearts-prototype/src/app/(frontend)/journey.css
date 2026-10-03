@@ -107,16 +107,20 @@
 .j-gesture { position: absolute; inset: 0; z-index: 3; }
 .j-slide { position: absolute; inset: 0; z-index: 2; }
 
-/* Chrome over (or around) the clip. Only controls take taps; the caption never blocks what sits on top of it. */
+/* Chrome over (or around) the clip. Controls and the caption take taps; the rest falls through to the film. */
 .j-chrome { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
 .j-chrome .rail, .j-chrome .clip-foot, .j-chrome .chip, .j-chrome .j-sound, .j-chrome button, .j-chrome a { pointer-events: auto; }
-.j-chrome .caption { pointer-events: none; }
+.j-chrome .caption {
+  pointer-events: auto; cursor: pointer; background: none; border: 0; padding: 0; text-align: left;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; max-height: 22vh;
+}
+.j-chrome .caption[data-expanded='true'] { display: block; -webkit-line-clamp: unset; line-clamp: unset; overflow: auto; max-height: min(36vh, 260px); }
 .j-hairline-row { position: absolute; top: calc(12px + var(--safe-top)); left: 16px; right: 16px; }
 .j-hairline { height: 3px; border-radius: 3px; background: rgba(255, 255, 255, 0.28); overflow: hidden; }
 .j-hairline > i { display: block; height: 100%; width: 0; background: #fff; }
 .j-hairline.shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.55), rgba(255,255,255,0.2)); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
-.j-sound { position: absolute; left: 50%; top: 24%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.6); color: #fff; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 999px; padding: 10px 18px; font-weight: 700; font-size: 14px; }
+.j-sound { position: static; transform: none; background: rgba(0, 0, 0, 0.6); color: #fff; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; }
 .j-speaker { display: flex; align-items: center; gap: 10px; }
 .j-speaker .speaker-row { flex: 1; min-width: 0; }
 .j-resume { display: block; text-align: center; color: #fff; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; padding: 6px 0 10px; }
@@ -130,8 +134,16 @@
  * in one column (caption, a row of side buttons, then the foot) and nothing can run under anything else.
  */
 .journey[data-mode='appetiser'] .j-chrome { display: flex; flex-direction: column; gap: 12px; padding: calc(52px + var(--safe-top)) 16px calc(92px + var(--safe-bottom)); }
-.journey[data-mode='appetiser'] .j-chrome .caption { position: static; flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; margin: 0; padding: 0 6px; font-size: 25px; }
-.journey[data-mode='appetiser'] .j-chrome .caption.long { font-size: 21px; }
+.journey[data-mode='appetiser'] .j-chrome .caption {
+  position: static; flex: 1 1 0; align-self: stretch; min-height: 0; margin: 0; padding: 0 6px;
+  font-size: 25px; line-height: 1.2; justify-content: flex-start;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; line-clamp: 5;
+  overflow: hidden; max-height: min(28vh, 220px);
+}
+.journey[data-mode='appetiser'] .j-chrome .caption.long { font-size: 18px; -webkit-line-clamp: 6; line-clamp: 6; }
+.journey[data-mode='appetiser'] .j-chrome .caption[data-expanded='true'] {
+  display: block; -webkit-line-clamp: unset; line-clamp: unset; flex: 1 1 auto; overflow: auto; max-height: min(32vh, 240px);
+}
 .journey[data-mode='appetiser'] .j-chrome .rail { position: static; flex: none; display: flex; justify-content: flex-end; gap: 6px; }
 .journey[data-mode='appetiser'] .j-chrome .rail .bubble { width: 40px; height: 40px; }
 .journey[data-mode='appetiser'] .j-chrome .clip-foot { position: static; flex: none; gap: 8px; }

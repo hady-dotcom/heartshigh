@@ -7,7 +7,7 @@ import { applyTap, freshState, pickSignals, routeFeed, type HeartState, type Lan
 type Props = {
   scenes: SceneDef[]
   scales: ScaleDef[]
-  route: { lanes: LaneDef[]; cuts: CutInfo[]; d0CutId: number | null; allowSuggested: boolean }
+  route: { lanes: LaneDef[]; cuts: CutInfo[]; d0CutId: number | null; allowSuggested: boolean; showUnchecked?: boolean }
   scaleNames: Record<string, string>
   cutTitles: Record<number, string>
 }

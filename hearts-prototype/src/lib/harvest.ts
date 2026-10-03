@@ -46,6 +46,7 @@ export const COLLECTION_NAMES: Record<string, string> = {
 export function collectionsNamed(text: string) {
   return COLLECTIONS.filter(([pattern]) => pattern.test(text)).map(([, slug]) => slug)
 }
+const ASIDE = /\b(description|subscribe|housekeeping|like and share|patreon|sponsors?|notification bell|comment below|thanks for watching|thank you for watching|link in the description|full dua|link below|pinned comment)\b/i
 
 function sentencesOf(text: string) {
   return text
@@ -82,6 +83,11 @@ export function harvestTranscript(raw: string, quran?: QuranIndex): HarvestHit[]
   cues.forEach((cue, cueIndex) => {
     const sentences = sentencesOf(cue.text)
     sentences.forEach((sentence, index) => {
+      if (ASIDE.test(sentence)) return
+      // Captions often split one aside across cues: "check the description for the full dua" / "the prophet said…".
+      // A full quote that follows a finished aside is kept; only the short continuation is dropped.
+      const previous = (sentences[index - 1] || cues[cueIndex - 1]?.text || '').trim()
+      if (previous && ASIDE.test(previous) && !/[.?!]["']?\s*$/.test(previous) && sentence.split(/\s+/).length < 12) return
       // Captions break mid-sentence, so a line that starts mid-sentence is read with the end of the line before.
       const before = index === 0 ? cues[cueIndex - 1]?.text || '' : ''
       const lead = before && !/[.?!]["”']?$/.test(before.trim()) ? before.split(/\s+/).slice(-14).join(' ') : ''
@@ -105,9 +111,10 @@ export function harvestTranscript(raw: string, quran?: QuranIndex): HarvestHit[]
       let text = sentence
       const following = [...sentences.slice(index + 1), ...[1, 2, 3].flatMap((step) => (cues[cueIndex + step] ? sentencesOf(cues[cueIndex + step].text) : []))]
       for (const next of following.slice(0, 3)) {
-        if (!(OPENS_QUOTE.test(text) || TRAILING_QUOTE.test(text) || text.split(/\s+/).length < 9)) break
+        if (!(OPENS_QUOTE.test(text) || TRAILING_QUOTE.test(text) || text.split(/\s+/).length < 9) || ASIDE.test(next)) break
         text = `${text} ${next}`
       }
+      if (ASIDE.test(text)) return
       const key = text.toLowerCase().replace(/\s+/g, ' ')
       if (seen.has(key) || text.split(/\s+/).length < 5) return
       if (hits.length && hits[hits.length - 1].text.includes(sentence)) return

@@ -427,7 +427,12 @@ export async function LibraryScreen(ctx: Ctx) {
                 return (
                   <div className="lib-card" key={pack.id} data-testid="library-pack">
                     <h3>{str(pack.title)}</h3>
-                    <p>{inside.map((course) => str(course.title)).join(', ') || 'Empty for now'}</p>
+                    {inside.length ? (
+                      <details data-testid="pack-courses">
+                        <summary>{inside.length} course{inside.length === 1 ? '' : 's'}</summary>
+                        <ul>{inside.map((course) => <li key={course.id}>{str(course.title)}</li>)}</ul>
+                      </details>
+                    ) : <p>Empty for now</p>}
                     {linked ? <span className="badge teal">Linked</span> : (
                       <form action="/api/hearts" method="post">
                         <Hidden fields={{ action: 'adopt', kind: 'pack', pack: pack.id, portalSlug: portal.slug, next: here }} />
