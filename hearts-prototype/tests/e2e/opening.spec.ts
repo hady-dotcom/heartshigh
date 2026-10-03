@@ -519,4 +519,68 @@ test.describe('the desks for the opening', () => {
     await row.getByRole('button', { name: 'Remove' }).click()
     await expect(page.getByTestId('notice')).toContainText('Help contacts saved')
   })
+
+  test('38. persona bands stay drafts while rows are missing or identical', async ({ page }) => {
+    await signIn(page, 'master@hearts.test', 'hearts-master', '/master/personas')
+    await expect(page.getByTestId('persona-questions')).toContainText('Anger')
+    await expect(page.getByTestId('question-identical')).toContainText('Traditionalist')
+    await expect(page.getByTestId('question-doc-c')).toContainText('Doc C')
+    const devout = page.locator('[data-testid="persona-band"][data-persona="devout"]')
+    await expect(devout).toContainText('Draft')
+    await expect(devout.getByTestId('same-ranges')).toContainText('Traditionalist')
+    await expect(devout.locator('[data-testid="range-row"][data-scale="anger"]')).toContainText('No source row')
+    await expect(devout.locator('[data-testid="range-row"][data-scale="greed"]')).toContainText('No source row')
+    await expect(page.locator('[data-testid="persona-band"][data-persona="new-muslim"] [data-testid="range-min"]').first()).toHaveValue('')
+    await devout.getByTestId('band-status').selectOption('published')
+    await devout.getByTestId('band-save').click()
+    await expect(page.getByTestId('error')).toBeVisible()
+    await expect(page.locator('[data-testid="persona-band"][data-persona="devout"] [data-testid="band-status"]')).toHaveValue('draft')
+    await signIn(page, 'master@hearts.test', 'hearts-master', '/master/trends')
+    await expect(page.getByTestId('persona-lens')).toContainText('Rough guide, unvalidated')
+    await expect(page.getByTestId('persona-held')).toContainText('draft')
+  })
+
+  test('39. the master edits a scale and a nudge, and a portal admin cannot see the bands', async ({ page }) => {
+    await signIn(page, 'master@hearts.test', 'hearts-master', '/master/personas')
+    const worry = page.locator('[data-testid="scale-editor"][data-scale="worry"]')
+    await worry.getByTestId('first-open-read').uncheck()
+    await worry.getByTestId('scale-save').click()
+    await expect(page.getByTestId('error')).toContainText('worry')
+    await expect(page.locator('[data-testid="scale-editor"][data-scale="worry"] [data-testid="first-open-read"]')).toBeChecked()
+    await page.locator('[data-testid="scale-editor"][data-scale="worry"] [data-testid="scale-season"]').selectOption('youth')
+    await page.locator('[data-testid="scale-editor"][data-scale="worry"] [data-testid="scale-save"]').click()
+    await expect(page.getByTestId('notice')).toContainText('Scale saved')
+    try {
+      await expect(page.locator('[data-testid="scale-editor"][data-scale="worry"] [data-testid="scale-season"]')).toHaveValue('youth')
+      await page.goto('/master/opening')
+      const nudge = page.locator('[data-testid="scene-panel"][data-scene="extra"] [data-testid="nudge"][data-option="treat"][data-scale="greed"]')
+      await expect(nudge).toHaveValue('-1')
+      await nudge.selectOption('0')
+      await page.locator('[data-testid="scene-panel"][data-scene="extra"] [data-testid="nudges-save"]').click()
+      await expect(page.getByTestId('notice')).toContainText('Nudges saved')
+      await page.locator('[data-testid="scene-panel"][data-scene="extra"] [data-testid="nudge"][data-option="treat"][data-scale="greed"]').selectOption('-1')
+      await page.locator('[data-testid="scene-panel"][data-scene="extra"] [data-testid="nudges-save"]').click()
+      await expect(page.locator('[data-testid="scene-panel"][data-scene="extra"] [data-testid="nudge"][data-option="treat"][data-scale="greed"]')).toHaveValue('-1')
+    } finally {
+      await page.goto('/master/personas')
+      const season = page.locator('[data-testid="scale-editor"][data-scale="worry"] [data-testid="scale-season"]')
+      if ((await season.inputValue()) !== '') {
+        await season.selectOption('')
+        await page.locator('[data-testid="scale-editor"][data-scale="worry"] [data-testid="scale-save"]').click()
+        await expect(page.locator('[data-testid="scale-editor"][data-scale="worry"] [data-testid="scale-season"]')).toHaveValue('')
+      }
+      const restored = page.locator('[data-testid="scene-panel"][data-scene="extra"] [data-testid="nudge"][data-option="treat"][data-scale="greed"]')
+      await page.goto('/master/opening')
+      if ((await restored.inputValue()) !== '-1') {
+        await restored.selectOption('-1')
+        await page.locator('[data-testid="scene-panel"][data-scene="extra"] [data-testid="nudges-save"]').click()
+      }
+    }
+
+    await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `/p/${PORTAL}/admin/opening`)
+    await expect(page.getByText('Devout Practitioner')).toHaveCount(0)
+    await expect(page.getByText('Rough guide, unvalidated')).toHaveCount(0)
+    const refused = await page.request.get('/api/persona-bands?limit=1')
+    expect(refused.status()).toBe(403)
+  })
 })

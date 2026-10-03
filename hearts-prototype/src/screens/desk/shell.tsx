@@ -51,6 +51,7 @@ export function masterNav(): { group: string; items: NavItem[] }[] {
         { key: 'opening', label: 'Scenes', href: '/master/opening', icon: <HeartIcon /> },
         { key: 'lanes', label: 'Lanes', href: '/master/lanes', icon: <BookIcon /> },
         { key: 'simulator', label: 'Simulator', href: '/master/simulator', icon: <CogIcon /> },
+        { key: 'personas', label: 'Scales and bands', href: '/master/personas', icon: <HeartIcon /> },
         { key: 'trends', label: 'Network trends', href: '/master/trends', icon: <GlobeIcon /> },
       ],
     },

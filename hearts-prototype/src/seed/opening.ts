@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import type { Payload } from 'payload'
 import { idOf } from '../lib/ids'
 import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE, LANES, SCALES, SCENES } from '../lib/opening-data'
+import { PERSONA_BANDS } from '../lib/persona-data'
 import { DRAFT_NOTE, draftTiers, timingProblems, type TimingRow } from '../lib/tiers'
 import { formatTimestamp } from '../lib/transcript'
 import { STARTERS } from './starters-data'
@@ -45,6 +46,19 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
       anchors: scale.anchors,
     })
     scaleIds.set(scale.key, doc.id)
+  }
+
+  for (const band of PERSONA_BANDS) {
+    await upsert(payload, 'persona-bands', { key: { equals: band.key } }, {
+      key: band.key,
+      title: band.title,
+      status: band.status,
+      source: band.source,
+      placeholder: band.placeholder,
+      identicalGroup: band.identicalGroup,
+      note: band.note,
+      ranges: band.ranges.map((row) => ({ scale: row.scale, present: row.present, ...(row.min == null ? {} : { min: row.min }), ...(row.max == null ? {} : { max: row.max }) })),
+    })
   }
 
   const laneIds = new Map<string, number>()
