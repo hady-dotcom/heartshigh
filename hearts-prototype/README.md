@@ -90,7 +90,13 @@ Access codes are random on every seed, in the form `ELM-7KQX-M4TD`. The seed pri
   - **Stepping back.** As real shared answers arrive, fewer circle answers are shown (at most six at a time). At the threshold (default 8, set by the master) none are shown, though they stay available on the desk. The talk page tells the admin how many a learner sees right now. Which answers a learner sees, and where they sit, stays the same for that learner on reload.
   - **Scope.** The master desk can add them to any talk, and they show in every portal. A portal admin can add them only to their own portal's courses, and those show only in that portal. Teachers do not get the page.
   - **Checks.** Every name and answer goes through the kill list and the plain-text check, on the desk and in the collection hook, and so does the label.
-  - **Never counted.** They live in their own `circle-answers` collection, which only the swarm, the circle desk and the seed read. Analytics, trends, the profile, the workbook, the CSV and the teacher's and imam's progress views read `answers`, so circle answers never reach them. Learners only see them when they have opted in to the swarm.
+  - **Never counted.** They live in their own `circle-answers` collection, which only the swarm, the circle desk, the master sheet and the seed read. Analytics, trends, the profile, the workbook, the CSV and the teacher's and imam's progress views read `answers`, so circle answers never reach them. Learners only see them when they have opted in to the swarm.
+  - **Activation tasks.** A task can carry circle answers like any other question, so "What others said" under it is not empty. They never mark a task done, never reach the imam's view of who did it, and never count towards progress. A workbook reflection takes none, because nobody sees a swarm in the workbook.
+- **Master sheet** (`/master/sheet`, and `/p/<portal>/admin/sheet` for portal admins). One Excel workbook loads talks, pop-up questions, activation tasks, resources and circle answers in bulk, and the same workbook comes back out as an export. Google Sheets can open it.
+  - **Tabs.** Talks, Questions, Resources and CircleAnswers. Each tab starts with a note row that explains its columns. The blank template and an example export of the seeded library are in `content/` (`npx tsx scripts/sheet-examples.ts` writes them again).
+  - **Dry run first.** An upload shows every add, change, removal and problem by tab, row and column. Nothing is saved until the preview is applied, and apply stays off while any row has a problem. The last import can be undone.
+  - **CircleAnswers tab.** One row is one circle answer under a question, named by the question_id from the Questions tab. Leave circle_id blank to add one, fill it in to change that answer, or put delete in status to remove it. Rows go through the same kill list and plain-text checks as the circle desk. A row is refused when the question is a workbook reflection, is rejected, or is deleted by the same sheet. Re-importing a row with no circle_id does not add a copy. Deleting a question or a talk through the sheet takes its circle answers with it, and undo brings them back under the restored question.
+  - **Scope.** A portal admin can only import into courses made in their own portal. Circle answers they add belong to that portal.
 - **Teacher replies** raise an unread badge and an in-app notification, and land in the learner's workbook.
 - **Schedule.** Lessons are spread in order across the weekdays you pick. Earlier days take the remainder, so 6 sittings over 4 days come out as 2, 2, 1, 1. It is a guide, and missing a day does not lock the course. A sitting counts at 80% watched, or when the film ends. A plan covers a year at most, and an unnamed plan takes the season's name, such as "Autumn study days".
 - **Nights and RSVP.** A ticket is earned by finishing a lesson in the last 7 days, and is held otherwise. Self check-in needs an earned ticket. Staff can check anyone in.
@@ -101,7 +107,7 @@ Access codes are random on every seed, in the form `ELM-7KQX-M4TD`. The seed pri
 
 - **Email is not sent.** Replies and feedback create an in-app notification and an "email not sent" note. Payload logs mail to the console.
 - **AI is optional.** With `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` set, the extractor asks the model for suggestions and checks them against the transcript, and HEARTS circle answers are drafted by the model. Without a key the extractor uses its own rules and circle answers come from the built-in drafts, which is how the seed and the tests run.
-- **The master sheet has no CircleAnswers tab yet.** The master sheet import and export is on its own branch ([PR #4](https://github.com/hady-dotcom/heartshigh/pull/4)), not merged here. The tab's columns, note, row checks and export rows are ready in `src/lib/circle-sheet.ts`. The columns are talk_key, youtube_id, question_id, circle_id, name, body, tone, length, origin, enabled and status. When the two branches meet, add `CircleAnswers` to the sheet's tab list, read its rows with `readCircleRow`, and write them with `circleSheetValues`.
+- **A new question's circle answers come in a second upload.** The CircleAnswers tab names questions by question_id, and a new question has no id until its import is applied. Import the question, export again, then add its circle answers.
 - **YouTube captions** are often refused from cloud machines. See the transcript chain below. When every step fails, the title is still saved from YouTube, and you can upload a `.vtt`, `.srt` or `.txt` transcript to run the extractor.
 - **Video files.** Mux is not wired up. A non-YouTube share link is stored but not downloaded. Uploads over 200 MB are refused.
 - **Follow, like and save** in the feed are kept on the device only.
@@ -164,8 +170,8 @@ The icon, splash, empty states and logo mark use the artwork in `public/brand/`.
 ## Tests
 
 ```bash
-npm run test:unit      # 112 tests
-npm run test:e2e       # 129: 13 journey, 43 opening, 28 round 3, 15 round 4, 12 view-as, 6 circle, 4 AI steps, 1 security and 7 screenshot tests
+npm run test:unit      # 140 tests
+npm run test:e2e       # 140: 13 journey, 43 opening, 28 round 3, 15 round 4, 12 view-as, 6 circle, 4 AI steps, 6 master sheet, 2 sheet builder, 3 circle sheet, 1 security and 7 screenshot tests
 npm run screenshots    # screenshots only
 ```
 
@@ -193,6 +199,7 @@ npm run screenshots    # screenshots only
   - portal scope;
   - kill-list refusals and bulk on and off;
   - the CircleAnswers sheet rows.
+- **Master sheet tests** (`tests/unit/master-sheet.test.ts`, `tests/unit/sheet-load.test.ts`, `tests/unit/sheet-creator.test.ts`, `tests/e2e/master-sheet.spec.ts`, `tests/e2e/sheet-creator.spec.ts` and `tests/e2e/circle-sheet.spec.ts`) cover the template, round trips, every error by tab, row and column, portal scope, undo, 500 rows, the sheet builder, and the CircleAnswers tab: adding circle answers to an activation task without counting them, deleting a question with its circle answers and undoing it, and portal-owned answers.
 - **Round 4 tests** (`tests/unit/round4.test.ts` and `tests/e2e/round4.spec.ts`) hold one regression test per item from the round 4 retest, named by its label (N4, L1, K1 and so on), including sentence boundaries, hook choice and turns over all 31 talks.
 - **Round 3 tests** (`tests/unit/round3.test.ts` and `tests/e2e/round3.spec.ts`) hold one regression test per bug from the round 3 report, each named "Bug N: ...", plus the section T checks over all shipped transcripts. `tests/unit/safety.test.ts` and `tests/unit/config.test.ts` cover the kill list, reserved addresses, contact links, the clock rules and the e2e server settings.
 - The e2e run starts its own server on port 3100 with `HEARTS_TEST_CLOCK=1`, its own database (`data/hearts-test.db`) and its own build folder (`.next-e2e`), so it does not touch `npm run dev` or your demo data. Set `HEARTS_E2E_REUSE=1` to reuse a server you started yourself on that port.
