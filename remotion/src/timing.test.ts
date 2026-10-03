@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { UI } from './copy'
-import { isVerbatim, normaliseWords, scheduleTalk, textNeverEarly, visibleIsPrefix, wordsVisibleAt, type CueWord } from './timing'
+import { cardAt, cardsOf, isVerbatim, normaliseWords, scheduleTalk, textNeverEarly, visibleIsPrefix, WORDS_PER_CARD, wordsVisibleAt, type CueWord } from './timing'
 
 const cues: CueWord[] = [
   { text: 'Patience', talkAt: 10 },
@@ -70,6 +70,39 @@ test('a later beat stays off screen until its own cue', () => {
   const atTurn = wordsVisibleAt(talk.words, turn.videoAt + 0.02)
   assert.ok(atTurn.some((word) => word.beat === 'turn'))
   assert.ok(atTurn.every((word) => word.beat !== 'land'))
+})
+
+test('a long beat turns the page at 22 words instead of shrinking', () => {
+  const words = Array.from({ length: 39 }, (_, index) => ({ text: `word${index}`, talkAt: 30 + index * 0.3 }))
+  const talk = scheduleTalk({
+    hook: 'Patience is a light in the heart.',
+    turn: 'But the turn is sharper than that.',
+    land: words.map((word) => word.text).join(' '),
+    hookAt: 10,
+    turnAt: 20,
+    landAt: 30,
+    cues: [
+      ...cues.filter((cue) => cue.talkAt < 30),
+      ...words,
+    ],
+  })
+  const land = talk.words.filter((word) => word.beat === 'land')
+  const cards = cardsOf(land)
+  assert.equal(cards.length, 2)
+  assert.ok(cards.every((card) => card.length <= WORDS_PER_CARD))
+  const first = cardAt(land, land[0].showAt)
+  assert.equal(first.length, WORDS_PER_CARD)
+  assert.equal(first[0].text, 'word0')
+  const secondCue = land[WORDS_PER_CARD]
+  const before = cardAt(land, secondCue.showAt - 0.05)
+  assert.ok(before.every((word) => word.showAt < secondCue.showAt))
+  assert.ok(!before.some((word) => word.text === secondCue.text))
+  const onPage = cardAt(land, secondCue.showAt)
+  assert.equal(onPage[0].text, secondCue.text)
+  assert.ok(onPage.length <= WORDS_PER_CARD)
+  const film = readFileSync(new URL('./Film.tsx', import.meta.url), 'utf8')
+  assert.doesNotMatch(film, /fitted\(/)
+  assert.doesNotMatch(film, /size=\{(?:[1-2]?\d|3[0-3])\}/)
 })
 
 test('British English labels stay on the allowlist', () => {

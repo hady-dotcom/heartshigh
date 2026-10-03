@@ -33,6 +33,8 @@ export const BEAT_GAP = 0.32
 export const LEARN_MORE_SECONDS = 4.5
 /** Cinema is a full-frame sit of about one minute, including the closing card. */
 export const CINEMA_SIT = 56
+/** A card holds at most this many words. A longer beat turns the page on the next cue. */
+export const WORDS_PER_CARD = 22
 
 const spokenLength = (word: string) => Math.min(0.55, Math.max(0.18, 0.05 * word.length + 0.12))
 
@@ -178,4 +180,21 @@ export function activeBeat(schedule: ScheduledTalk, time: number): BeatId {
   let beat: BeatId = 'hook'
   for (const span of schedule.beats) if (time >= span.videoAt - 1e-4) beat = span.beat
   return beat
+}
+
+/** Split one beat's words into consecutive cards. The page turns on the first cue of the next card. */
+export function cardsOf(words: ScheduledWord[], size = WORDS_PER_CARD) {
+  const cards: ScheduledWord[][] = []
+  for (let index = 0; index < words.length; index += size) cards.push(words.slice(index, index + size))
+  return cards
+}
+
+/** The card whose first word has been reached, and none of the next card. */
+export function cardAt(words: ScheduledWord[], time: number, size = WORDS_PER_CARD) {
+  const cards = cardsOf(words, size)
+  let card = cards[0] || []
+  for (const next of cards) {
+    if (next[0] && time + 1e-4 >= next[0].showAt) card = next
+  }
+  return card
 }

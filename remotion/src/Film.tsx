@@ -7,7 +7,7 @@ import type { ReactNode } from 'react'
 import { AbsoluteFill, Audio, interpolate, staticFile, useCurrentFrame, useVideoConfig } from 'remotion'
 import { BEAT_LABEL, UI } from './copy'
 import { BLACK, CREAM, GOLD, GOLD_DEEP, GOLD_INK, HEIGHT, INK, PAPER, SAFE, SANS, SERIF, WIDTH } from './theme'
-import { activeBeat, wordsVisibleAt, type BeatId, type ScheduledTalk, type ScheduledWord } from './timing'
+import { activeBeat, cardAt, wordsVisibleAt, type BeatId, type ScheduledTalk, type ScheduledWord } from './timing'
 
 export type StyleId = 'kinetic' | 'windows' | 'conversation' | 'cinema' | 'unfold'
 
@@ -111,17 +111,16 @@ function LearnMore({ talk }: { talk: TalkProps }) {
   )
 }
 
-/** Long beats (the 39-word land) shrink so the whole spoken line stays inside the safe area. */
-function fitted(text: string, preferred: number) {
-  const chars = text.length
-  const scale = chars > 200 ? 0.62 : chars > 150 ? 0.74 : chars > 110 ? 0.86 : 1
-  return Math.max(30, Math.round(preferred * scale))
+/** Spoken type stays at least this large on the 540×960 frame. Long beats turn the page instead of shrinking. */
+const TYPE = 40
+
+function beatWords(talk: TalkProps, beat: BeatId) {
+  return talk.words.filter((word) => word.beat === beat)
 }
 
 function Kinetic({ talk, time }: { talk: TalkProps; time: number }) {
   const beat = activeBeat(talk, time)
-  const words = talk.words.filter((word) => word.beat === beat)
-  const line = talk.beats.find((span) => span.beat === beat)?.text || ''
+  const words = cardAt(beatWords(talk, beat), time)
   return (
     <Safe color={BLACK}>
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', color: CREAM }}>
@@ -133,7 +132,7 @@ function Kinetic({ talk, time }: { talk: TalkProps; time: number }) {
           <BeatRail talk={talk} time={time} light={false} />
         </div>
         <div style={{ marginTop: 48, flex: 1 }}>
-          <Words words={words} time={time} size={fitted(line, 56)} color={CREAM} />
+          <Words words={words} time={time} size={TYPE + 12} color={CREAM} />
         </div>
         <div style={{ fontSize: 16, fontWeight: 650, opacity: 0.8 }}>{talk.speaker}</div>
       </div>
@@ -154,15 +153,21 @@ function Windows({ talk, time }: { talk: TalkProps; time: number }) {
           {talk.beats.map((span, index) => {
             const open = time >= span.videoAt
             const current = span.beat === beat && open
+            const page = cardAt(beatWords(talk, span.beat), time)
             return (
-              <div key={span.beat} style={{ minHeight: current ? 250 : 108, borderRadius: 22, background: PAPER, border: `1px solid ${open ? GOLD : '#e4d9c4'}`, padding: '16px 18px', boxShadow: open ? '0 10px 24px rgba(40, 30, 10, 0.06)' : 'none', overflow: 'hidden' }}>
-                <div style={{ fontFamily: SERIF, fontSize: 18, color: GOLD_DEEP }}>0{index + 1}</div>
-                {open ? (
-                  <div style={{ marginTop: 8 }}>
-                    <Words words={talk.words.filter((word) => word.beat === span.beat)} time={time} size={current ? 36 : 22} color={INK} highlight={GOLD_DEEP} />
+              <div key={span.beat} style={{ borderRadius: 22, background: PAPER, border: `1px solid ${current ? GOLD : '#e4d9c4'}`, padding: current ? '18px 18px 16px' : '14px 18px', boxShadow: current ? '0 10px 24px rgba(40, 30, 10, 0.06)' : 'none' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <span style={{ fontFamily: SERIF, fontSize: 18, color: GOLD_DEEP }}>0{index + 1}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: GOLD_DEEP }}>{BEAT_LABEL[span.beat]}</span>
+                </div>
+                {current ? (
+                  <div style={{ marginTop: 12 }}>
+                    <Words words={page} time={time} size={TYPE} color={INK} highlight={GOLD_DEEP} />
                   </div>
+                ) : open ? (
+                  <div style={{ marginTop: 10, height: 2, width: 36, background: GOLD }} />
                 ) : (
-                  <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
+                  <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
                     <span style={{ width: 28, height: 22, border: `2px solid ${INK}`, borderRadius: 6, position: 'relative' }}>
                       <span style={{ position: 'absolute', top: -10, left: 6, width: 12, height: 10, border: `2px solid ${INK}`, borderBottom: 0, borderRadius: '8px 8px 0 0' }} />
                     </span>
@@ -178,24 +183,27 @@ function Windows({ talk, time }: { talk: TalkProps; time: number }) {
 }
 
 function Conversation({ talk, time }: { talk: TalkProps; time: number }) {
+  const bubbles = talk.beats.flatMap((span) => {
+    if (time < span.videoAt) return []
+    const page = cardAt(beatWords(talk, span.beat), time)
+    if (!page.length || time + 1e-4 < page[0].showAt) return []
+    return [{ beat: span.beat, page }]
+  }).slice(-2)
   return (
     <Safe color={BLACK}>
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', color: CREAM }}>
         <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase' }}>{UI.conversation}</div>
         <div style={{ marginTop: 8, fontFamily: SERIF, fontSize: 28 }}>{talk.speaker}</div>
         <div style={{ marginTop: 28, display: 'grid', gap: 16 }}>
-          {talk.beats.map((span) => {
-            if (time < span.videoAt) return null
-            return (
-              <div key={span.beat} style={{ display: 'grid', gridTemplateColumns: '52px 1fr', gap: 12, alignItems: 'end' }}>
-                <Hoopoe size={52} />
-                <div style={{ background: 'rgba(253,250,243,0.1)', border: '1px solid rgba(220,166,67,0.45)', borderRadius: '22px 22px 22px 8px', padding: '14px 16px' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: GOLD, marginBottom: 6 }}>{BEAT_LABEL[span.beat]}</div>
-                  <Words words={talk.words.filter((word) => word.beat === span.beat)} time={time} size={28} color={CREAM} />
-                </div>
+          {bubbles.map(({ beat, page }) => (
+            <div key={`${beat}-${page[0].showAt}`} style={{ display: 'grid', gridTemplateColumns: '52px 1fr', gap: 12, alignItems: 'end' }}>
+              <Hoopoe size={52} />
+              <div style={{ background: 'rgba(253,250,243,0.1)', border: '1px solid rgba(220,166,67,0.45)', borderRadius: '22px 22px 22px 8px', padding: '14px 16px' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: GOLD, marginBottom: 6 }}>{BEAT_LABEL[beat]}</div>
+                <Words words={page} time={time} size={TYPE - 4} color={CREAM} />
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
       </div>
     </Safe>
@@ -203,6 +211,7 @@ function Conversation({ talk, time }: { talk: TalkProps; time: number }) {
 }
 
 function Cinema({ talk, time }: { talk: TalkProps; time: number }) {
+  const beat = activeBeat(talk, time)
   return (
     <Safe color={BLACK}>
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', color: CREAM }}>
@@ -211,10 +220,8 @@ function Cinema({ talk, time }: { talk: TalkProps; time: number }) {
           <span>{talk.lane}</span>
         </div>
         <div style={{ width: 64, height: 2, background: GOLD, margin: '22px 0 28px' }} />
-        <div style={{ display: 'grid', gap: 26, flex: 1, alignContent: 'center' }}>
-          {talk.beats.map((span, index) => (
-            <Words key={span.beat} words={talk.words.filter((word) => word.beat === span.beat)} time={time} size={index === 0 ? 48 : 34} color={CREAM} align="left" />
-          ))}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+          <Words words={cardAt(beatWords(talk, beat), time)} time={time} size={TYPE + 6} color={CREAM} align="left" />
         </div>
         <div style={{ fontSize: 16, fontWeight: 650 }}>{talk.speaker}</div>
       </div>
@@ -236,7 +243,7 @@ function Unfold({ talk, time }: { talk: TalkProps; time: number }) {
         <div style={{ marginTop: 36, position: 'relative', flex: 1, borderRadius: 28, background: PAPER, border: '1px solid #e4d9c4', padding: 28, overflow: 'hidden' }}>
           <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: GOLD_DEEP }}>{span ? BEAT_LABEL[span.beat] : UI.hook}</div>
           <div style={{ marginTop: 18 }}>
-            <Words words={talk.words.filter((word) => word.beat === beat)} time={time} size={46} color={INK} highlight={GOLD_DEEP} />
+            <Words words={cardAt(beatWords(talk, beat), time)} time={time} size={TYPE + 8} color={INK} highlight={GOLD_DEEP} />
           </div>
           {peel < 0.98 ? (
             <div style={{ position: 'absolute', right: 0, bottom: 0, width: 150, height: 150, background: `linear-gradient(225deg, ${GOLD} 0%, ${CREAM} 48%, transparent 50%)`, transform: `scale(${1.15 - peel})`, transformOrigin: '100% 100%' }} />

@@ -1,5 +1,11 @@
 // Renders the five typography styles for seeded talks (or the ids you pass).
-// Usage: npm run render -- [youtube-id ...] [--style kinetic]
+// Usage:
+//   npm run render -- [youtube-id ...] [--style kinetic]
+//   npm run render -- ECaTWkof57E --audio ../hearts-prototype/content/audio/ECaTWkof57E.m4a
+//   npm run render -- --audio ECaTWkof57E=../hearts-prototype/content/audio/ECaTWkof57E.m4a
+// A file at hearts-prototype/content/audio/{youtubeId}.m4a (or .mp3, .wav, .aac) is used
+// with no flag. The beats are sliced from that file. If no file is there, the script
+// tries yt-dlp and otherwise renders silent. TYPOGRAPHY_SILENT=1 skips the download.
 import { execFileSync } from 'node:child_process'
 import { availableParallelism } from 'node:os'
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
@@ -32,9 +38,92 @@ const artifacts = '/opt/cursor/artifacts/typography'
 const publicDir = path.join(hearts, 'public', 'typography')
 
 const args = process.argv.slice(2)
-const styleFlag = args.includes('--style') ? args[args.indexOf('--style') + 1] : ''
-const ids = args.filter((arg) => !arg.startsWith('--') && arg !== styleFlag)
+const audioById = new Map<string, string>()
+let styleFlag = ''
+let audioOnly = false
+const ids: string[] = []
+for (let index = 0; index < args.length; index++) {
+  const arg = args[index]
+  if (arg === '--style') {
+    styleFlag = args[++index] || ''
+    continue
+  }
+  if (arg === '--audio-only') {
+    audioOnly = true
+    continue
+  }
+  if (arg === '--audio') {
+    const value = args[++index] || ''
+    const eq = value.indexOf('=')
+    if (eq > 0) audioById.set(value.slice(0, eq), value.slice(eq + 1))
+    else audioById.set('*', value)
+    continue
+  }
+  if (!arg.startsWith('--')) ids.push(arg)
+}
 const styles = (styleFlag ? [styleFlag] : [...STYLES]).filter((style): style is StyleId => (STYLES as string[]).includes(style))
+
+const AUDIO_EXT = ['.m4a', '.mp3', '.wav', '.aac', '.m4b']
+/** Click-removal at each beat join. Short enough that the first syllable is still the cue. */
+const JOIN_FADE = 0.06
+
+type AudioSpan = { file: string; start: number; end: number }
+
+function mediaDuration(file: string) {
+  const out = execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=nw=1:nk=1', file], { encoding: 'utf8' })
+  const duration = Number(out.trim())
+  if (!Number.isFinite(duration) || duration <= 0) throw new Error(`No duration for ${file}`)
+  return duration
+}
+
+function partPaths(id: string) {
+  const dir = path.join(hearts, 'content', 'audio')
+  if (!existsSync(dir)) return []
+  return readdirSync(dir)
+    .filter((name) => {
+      const stem = name.slice(0, name.lastIndexOf('.'))
+      return stem.startsWith(`${id}-part`) && AUDIO_EXT.some((ext) => name.endsWith(ext))
+    })
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+    .map((name) => path.join(dir, name))
+}
+
+/** One full recording, or consecutive parts laid end to end from 0. */
+function timelineFor(id: string): AudioSpan[] | null {
+  const named = audioById.get(id) || (ids.length === 1 ? audioById.get('*') || '' : '')
+  const single = (() => {
+    if (named) {
+      const file = path.resolve(named)
+      if (!existsSync(file)) {
+        console.warn(`${id}: audio file not found at ${file}.`)
+        return null
+      }
+      return file
+    }
+    const dir = path.join(hearts, 'content', 'audio')
+    for (const ext of AUDIO_EXT) {
+      const file = path.join(dir, `${id}${ext}`)
+      if (existsSync(file)) return file
+    }
+    return null
+  })()
+  if (single) {
+    const duration = mediaDuration(single)
+    return [{ file: single, start: 0, end: duration }]
+  }
+  const parts = partPaths(id)
+  if (!parts.length) return null
+  let cursor = 0
+  const spans = parts.map((file) => {
+    const duration = mediaDuration(file)
+    const span = { file, start: cursor, end: cursor + duration }
+    cursor += duration
+    return span
+  })
+  console.log(`${id}: ${spans.length} parts, ${cursor.toFixed(3)}s end to end`)
+  spans.forEach((span, index) => console.log(`  part${index} ${span.start.toFixed(3)}–${span.end.toFixed(3)} ${path.basename(span.file)}`))
+  return spans
+}
 
 function run(cmd: string, cmdArgs: string[], opts: { cwd?: string; timeout?: number } = {}) {
   execFileSync(cmd, cmdArgs, { stdio: 'inherit', ...opts })
@@ -58,8 +147,13 @@ function ffmpeg(args: string[]) {
 }
 
 function tryAudio(talk: TalkProps): string | null {
+  const local = timelineFor(talk.id)
+  if (local) {
+    console.log(`${talk.id}: slicing beats from ${local.map((span) => path.basename(span.file)).join(' + ')}`)
+    return assemble(local, talk)
+  }
   if (process.env.TYPOGRAPHY_SILENT === '1') {
-    console.warn(`${talk.id}: TYPOGRAPHY_SILENT is set, so this render is silent.`)
+    console.warn(`${talk.id}: no local audio and TYPOGRAPHY_SILENT is set, so this render is silent.`)
     return null
   }
   const bin = existsSync(path.join(hearts, 'bin', 'yt-dlp')) ? path.join(hearts, 'bin', 'yt-dlp') : 'yt-dlp'
@@ -96,6 +190,11 @@ function tryAudio(talk: TalkProps): string | null {
     console.warn(`${talk.id}: yt-dlp wrote no audio file. Rendering silent.`)
     return null
   }
+  return assemble([{ file: raw, start: rangeStart, end: rangeEnd }], talk)
+}
+
+/** Slice each beat to its cue. A part boundary is only crossed when a beat actually straddles it. */
+function assemble(spans: AudioSpan[], talk: TalkProps): string | null {
   const pieces: string[] = []
   const scratch = path.join(here, 'public', 'audio', talk.id)
   mkdirSync(scratch, { recursive: true })
@@ -105,14 +204,49 @@ function tryAudio(talk: TalkProps): string | null {
     ffmpeg(['-f', 'lavfi', '-t', seconds.toFixed(3), '-i', 'anullsrc=channel_layout=mono:sample_rate=44100', '-ac', '1', file])
     pieces.push(file)
   }
-  const slice = (offset: number, duration: number) => {
+  const cut = (file: string, offset: number, duration: number, dest: string, fade: boolean) => {
+    const length = Math.max(0.2, duration)
+    const preroll = Math.min(1, Math.max(0, offset))
+    const fast = Math.max(0, offset - preroll)
+    const fine = offset - fast
+    const fadeD = Math.min(JOIN_FADE, length / 4)
+    const args = ['-ss', fast.toFixed(3), '-i', file, '-ss', fine.toFixed(3), '-t', length.toFixed(3), '-vn', '-ac', '1', '-ar', '44100']
+    if (fade) args.push('-af', `afade=t=in:st=0:d=${fadeD.toFixed(3)},afade=t=out:st=${Math.max(0, length - fadeD).toFixed(3)}:d=${fadeD.toFixed(3)}`)
+    ffmpeg([...args, dest])
+  }
+  const slice = (talkAt: number, duration: number) => {
+    const end = talkAt + duration
+    const hits = spans.filter((span) => talkAt < span.end - 0.001 && end > span.start + 0.001)
     const file = path.join(scratch, `b${pieces.length}.wav`)
-    ffmpeg(['-ss', Math.max(0, offset).toFixed(3), '-t', Math.max(0.2, duration).toFixed(3), '-i', raw, '-vn', '-ac', '1', '-ar', '44100', file])
+    if (!hits.length) {
+      console.warn(`${talk.id}: beat at ${talkAt.toFixed(2)}s is outside the audio. Inserting silence.`)
+      silence(duration)
+      return
+    }
+    if (hits.length === 1) {
+      cut(hits[0].file, talkAt - hits[0].start, duration, file, true)
+      pieces.push(file)
+      return
+    }
+    const chunks: string[] = []
+    for (const span of hits) {
+      const from = Math.max(talkAt, span.start)
+      const to = Math.min(end, span.end)
+      const chunk = path.join(scratch, `c${pieces.length}-${chunks.length}.wav`)
+      cut(span.file, from - span.start, to - from, chunk, false)
+      chunks.push(chunk)
+    }
+    const list = path.join(scratch, `j${pieces.length}.txt`)
+    const joined = path.join(scratch, `j${pieces.length}.wav`)
+    writeFileSync(list, chunks.map((chunk) => `file '${chunk.replace(/'/g, "'\\''")}'`).join('\n'))
+    ffmpeg(['-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', joined])
+    const fadeD = Math.min(JOIN_FADE, duration / 4)
+    ffmpeg(['-i', joined, '-af', `afade=t=in:st=0:d=${fadeD.toFixed(3)},afade=t=out:st=${Math.max(0, duration - fadeD).toFixed(3)}:d=${fadeD.toFixed(3)}`, file])
     pieces.push(file)
   }
   silence(LEAD_IN)
   talk.beats.forEach((beat, index) => {
-    slice(beat.talkAt - rangeStart, beat.duration)
+    slice(beat.talkAt, beat.duration)
     if (index < talk.beats.length - 1) silence(BEAT_GAP)
   })
   const spokenEnd = talk.beats[talk.beats.length - 1].videoAt + talk.beats[talk.beats.length - 1].duration
@@ -164,9 +298,14 @@ const talks = talkFiles()
 if (!talks.length) throw new Error('No talks to render. Run the export first.')
 
 for (const talk of talks) {
-  if (talk.audio && existsSync(path.join(here, 'public', talk.audio))) continue
+  if (!audioOnly && talk.audio && existsSync(path.join(here, 'public', talk.audio))) continue
   talk.audio = tryAudio(talk)
   writeFileSync(path.join(here, 'talks', `${talk.id}.json`), JSON.stringify(talk))
+}
+
+if (audioOnly) {
+  for (const talk of talks) console.log(`${talk.id}: ${talk.audio ? `mixed ${talk.audio}` : 'silent'}`)
+  process.exit(0)
 }
 
 console.log('Bundling the Remotion project…')
