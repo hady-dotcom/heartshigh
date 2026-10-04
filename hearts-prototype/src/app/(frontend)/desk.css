@@ -546,6 +546,7 @@ table.data th [data-testid='desk-help'] { margin-left: 4px; vertical-align: midd
 .feature-switch small { display: block; margin-top: 4px; color: var(--muted); font-size: 13.5px; line-height: 1.4; }
 .studio-courses { display: grid; gap: 8px; }
 .studio-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.portal-studio [hidden] { display: none !important; }
 .saved-toast { margin: 0 0 12px; padding: 10px 14px; background: var(--card, #f7eedb); border: 1px solid var(--line, #d7c6a4); border-radius: 12px; font-size: 14px; }
 .saved-list { display: grid; gap: 8px; }
 .saved-item { display: flex; justify-content: space-between; gap: 10px; }
