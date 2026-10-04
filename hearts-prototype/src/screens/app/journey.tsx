@@ -39,25 +39,25 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
       <main className="app dark journey-frame" data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
         <PageHelp page={initial === 'feed' ? 'feed' : 'start'} />
         <JourneyErrorBoundary homeHref={base}>
-        <Journey>
-          base={base}
-          opening={opening}
-          opener={OPENER}
-          initial={initial}
-          signedIn={Boolean(user)}
-          learner={user?.role === 'learner'}
-          viewAs={viewAs}
-          keepPlace={Boolean(user?.keepPlace)}
-          trendsOptIn={Boolean(user?.trendsOptIn)}
-          startingDoor={doorNumberOfClause(user?.startingClause, doors)}
-          flags={flags}
-          mains={mains}
-          unread={unread}
-          lane={typeof query.lane === 'string' && /^[a-z-]{2,40}$/.test(query.lane) ? query.lane : null}
-          clip={Number(query.clip) || null}
-          play={query.play === 'appetiser' ? 'appetiser' : null}
-          afterPlacing={query.after === 'placing'}
-        />
+          <Journey
+            base={base}
+            opening={opening}
+            opener={OPENER}
+            initial={initial}
+            signedIn={Boolean(user)}
+            learner={user?.role === 'learner'}
+            viewAs={viewAs}
+            keepPlace={Boolean(user?.keepPlace)}
+            trendsOptIn={Boolean(user?.trendsOptIn)}
+            startingDoor={doorNumberOfClause(user?.startingClause, doors)}
+            flags={flags}
+            mains={mains}
+            unread={unread}
+            lane={typeof query.lane === 'string' && /^[a-z-]{2,40}$/.test(query.lane) ? query.lane : null}
+            clip={Number(query.clip) || null}
+            play={query.play === 'appetiser' ? 'appetiser' : null}
+            afterPlacing={query.after === 'placing'}
+          />
         </JourneyErrorBoundary>
       </main>
     </div>
