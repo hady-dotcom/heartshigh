@@ -129,7 +129,18 @@ test.describe('courses and planning', () => {
 
   test('a short course is spaced across the study-day span, not bunched in week one', async ({ page }) => {
     await page.setViewportSize(PHONE)
-    const { courseId, lessons } = await aCourse()
+    const picked = await aCourse()
+    const byCount = new Map<number, typeof picked.lessons>()
+    const lessons = ((await json('/api/lessons?limit=80&depth=0')).docs || []) as { id: number; course: number }[]
+    for (const lesson of lessons) {
+      const list = byCount.get(lesson.course) || []
+      list.push(lesson)
+      byCount.set(lesson.course, list)
+    }
+    const short = [...byCount.entries()].find(([, own]) => own.length >= 2 && own.length <= 4)
+    const courseId = short?.[0] || picked.courseId
+    const own = short?.[1] || picked.lessons
+    const span = Array.from({ length: 12 }, (_, index) => `2026-10-${String(index + 5).padStart(2, '0')}`)
     await signIn(page, `${BASE}/week?course=${courseId}&view=new&start=2026-10-05&end=2026-10-16&days=0,1,2,3,4,5,6&minutes=20`)
     await expect(page.getByTestId('schedule-course')).toHaveValue(String(courseId))
     await expect(page.getByTestId('weekday-1')).toBeChecked()
@@ -137,13 +148,15 @@ test.describe('courses and planning', () => {
     await expect(page.getByTestId('schedule-plan')).toBeVisible()
     await expect(page.getByTestId('schedule-course')).toHaveValue(String(courseId))
     const slots = page.getByTestId('schedule-plan').first().getByTestId('schedule-slot')
-    await expect(slots).toHaveCount(lessons.length)
-    if (lessons.length === 1) {
+    await expect(slots).toHaveCount(own.length)
+    const dates = await slots.evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-date') || ''))
+    if (own.length === 1) {
       await expect(page.getByTestId('spread-note')).toContainText('1 talk')
-    } else if (lessons.length < 12) {
+      expect(dates).toEqual([span[0]])
+    } else if (own.length < 12) {
       await expect(page.getByTestId('spread-note')).toContainText('spaced across the span')
-      const texts = await slots.allTextContents()
-      expect(texts.join(' ')).not.toMatch(/5 Oct[\s\S]*6 Oct[\s\S]*7 Oct/)
+      const expected = own.map((_, index) => span[Math.floor((index * 12) / own.length)])
+      expect(dates).toEqual(expected)
     }
     await expect(page.getByTestId('plan-calendar')).toBeVisible()
     await expect(page.getByTestId('plan-ics')).toBeVisible()

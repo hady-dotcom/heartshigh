@@ -66,11 +66,11 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
                   </>
                 )
                 return slot.href ? (
-                  <Link className="slot" key={`${plan.id}-${index}`} href={slot.href} data-testid="schedule-slot">
+                  <Link className="slot" key={`${plan.id}-${index}`} href={slot.href} data-testid="schedule-slot" data-date={slot.date}>
                     {inner}
                   </Link>
                 ) : (
-                  <div className="slot" key={`${plan.id}-${index}`} data-testid="schedule-slot">
+                  <div className="slot" key={`${plan.id}-${index}`} data-testid="schedule-slot" data-date={slot.date}>
                     {inner}
                   </div>
                 )
