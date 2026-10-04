@@ -75,10 +75,30 @@ async function audit(page: Page, route: string): Promise<ContrastRow[]> {
       const a = fg[3] == null || Number.isNaN(fg[3]) ? 1 : fg[3]
       return [0, 1, 2].map((i) => fg[i] * a + bg[i] * (1 - a))
     }
+    const hexRgb = (hex: string) => {
+      const raw = hex.replace('#', '')
+      const full = raw.length === 3 ? raw.split('').map((c) => c + c).join('') : raw.slice(0, 6)
+      return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16))
+    }
+    const paint = (style: CSSStyleDeclaration): number[] | null => {
+      const [r, g, b, a = 1] = rgb(style.backgroundColor)
+      if (a > 0.6) return [r, g, b]
+      const img = style.backgroundImage || ''
+      if (img && img !== 'none') {
+        const rgba = img.match(/rgba?\(([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,\s\/]+([\d.]+))?\)/)
+        if (rgba) {
+          const aa = rgba[4] == null ? 1 : Number(rgba[4])
+          if (aa > 0.45) return [Number(rgba[1]), Number(rgba[2]), Number(rgba[3])]
+        }
+        const hex = img.match(/#([0-9a-f]{3,8})\b/i)
+        if (hex) return hexRgb(hex[0])
+      }
+      return null
+    }
     const backing = (el: Element | null): number[] => {
       for (let at = el; at; at = at.parentElement) {
-        const [r, g, b, a = 1] = rgb(getComputedStyle(at).backgroundColor)
-        if (a > 0.6) return [r, g, b]
+        const found = paint(getComputedStyle(at))
+        if (found) return found
       }
       return [14, 42, 43]
     }

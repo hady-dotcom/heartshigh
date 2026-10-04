@@ -180,7 +180,7 @@ html[data-theme] .app.gather-shell form.gather-card textarea.field::placeholder 
   background: rgba(14, 42, 43, 0.96);
   border-top-color: rgba(212, 168, 75, 0.35);
 }
-:is(html, html[data-theme]) .app.gather-shell .tabbar .tab { color: rgba(247, 238, 219, 0.72); }
+:is(html, html[data-theme]) .app.gather-shell .tabbar .tab { color: #d7cbb8; }
 :is(html, html[data-theme]) .app.gather-shell .tabbar .tab.on { color: var(--g-gold); }
 
 .gather .flash.error, .public-gather .flash.error {

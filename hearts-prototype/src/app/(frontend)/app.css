@@ -90,10 +90,10 @@
   border-top: 1px solid rgba(212, 175, 90, 0.38);
   backdrop-filter: blur(12px);
 }
-.tab { display: grid; justify-items: center; gap: 4px; min-height: 56px; padding-top: 6px; text-decoration: none; font-size: 12px; font-weight: 600; color: rgba(232, 214, 170, 0.55); }
+.tab { display: grid; justify-items: center; gap: 4px; min-height: 56px; padding-top: 6px; text-decoration: none; font-size: 12px; font-weight: 600; color: #d7cbb8; }
 .tab .tab-icon { display: block; }
 .tab.on, .tabbar.dark .tab.on { color: #f3d38e; }
-.tabbar.dark .tab { color: rgba(232, 214, 170, 0.55); }
+.tabbar.dark .tab { color: #d7cbb8; }
 .tab.on .tab-icon { filter: drop-shadow(0 0 6px rgba(243, 211, 142, 0.45)); }
 .tab.on[data-testid='tab-garden'] .tab-icon {
   background: #c6a15a;
@@ -290,8 +290,8 @@
 .continue-row .t { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 .continue-row b { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .continue-row small { color: var(--muted); font-size: 12.5px; }
-.start { border-radius: 999px; padding: 8px 16px; font-weight: 700; font-size: 13px; color: #fff; border: 0; text-decoration: none; min-height: 34px; display: inline-flex; align-items: center; }
-.start.orange { background: var(--orange); } .start.gold { background: var(--gold); color: var(--gold-ink); } .start.teal { background: var(--teal); }
+.start { border-radius: 999px; padding: 8px 16px; font-weight: 700; font-size: 13px; color: #1a1408; border: 0; text-decoration: none; min-height: 34px; display: inline-flex; align-items: center; }
+.start.orange { background: var(--orange); color: #1a1408; } .start.gold { background: var(--gold); color: var(--gold-ink); } .start.teal { background: var(--teal); color: #1a1408; }
 .start.soft { background: var(--lavender); color: var(--purple); }
 
 /* Mains course player (03) and engagement sheet (03b) */
@@ -628,7 +628,7 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .app.evening .wb-start-row b { color: var(--parchment, #f6f1e4); }
 .app.evening .wb-start-row .lock { color: var(--gold, #e0b15a); }
 .tabbar.evening { background: #0e322e; border-top-color: rgba(224, 177, 90, 0.35); }
-.tabbar.evening .tab { color: rgba(246, 241, 228, 0.62); }
+.tabbar.evening .tab { color: #d7cbb8; }
 .tabbar.evening .tab.on { color: var(--gold, #e0b15a); }
 .grow-banner .tree-art { color: var(--gold, #e0b15a); display: flex; justify-content: flex-end; }
 .app .note { display: block; }

@@ -403,6 +403,8 @@ html[data-theme='dawn'] .tabbar:not(.dark) {
   border-top-color: rgba(196, 122, 69, 0.55);
 }
 html[data-theme] .tab { color: #d7cbb8; position: relative; }
+html[data-theme] .tabbar.dark .tab,
+html[data-theme] .tabbar.evening .tab { color: #d7cbb8; }
 html[data-theme='dawn'] .tabbar:not(.dark) .tab { color: #2a4a46; }
 html[data-theme] .tab.on { color: #f1d58a; }
 html[data-theme='dawn'] .tabbar:not(.dark) .tab.on { color: #7a3f28; }
@@ -579,7 +581,8 @@ html[data-theme='dawn'] .chip-row a,
 html[data-theme='dawn'] .chip-row span { color: var(--gold-deep); border-color: var(--gold-deep); }
 html[data-theme] .chip-row .on,
 html[data-theme] .chip-row a.on,
-html[data-theme] .chip-row span.on {
+html[data-theme] .chip-row span.on,
+html[data-theme] .chip-row span.on .count {
   background: var(--gold);
   color: var(--gold-ink);
   border-color: var(--gold);
@@ -864,7 +867,7 @@ html[data-theme] .desk input[type='password'] {
   color: var(--gd-gold);
   box-shadow: 0 0 0 2px var(--gd-gold), 0 10px 26px rgba(14, 47, 46, 0.35);
 }
-:is(html, html[data-theme]) .garden-door .brand-word { color: var(--gd-gold-deep); font-weight: 700; }
+:is(html, html[data-theme]) .garden-door .brand-word { color: #5c3f10; font-weight: 700; }
 :is(html, html[data-theme]) .garden-door .door-form label { color: #23443f; }
 :is(html, html[data-theme]) .garden-door .field {
   background: #fbf5e6;
