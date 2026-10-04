@@ -9,7 +9,7 @@ import { learnMoreTarget, settleOnLevel, swipeTarget, type Swipe } from '@/lib/f
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readHeart, readPending, sessionFlags, setSessionFlags, viewAsId, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
-import { appetiserJoin, appetiserStop, captionIndex, captionPage } from '@/lib/tiers'
+import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { laneClips } from '@/lib/lanes'
 import { isoWeek } from '@/lib/trends'
@@ -1036,6 +1036,8 @@ export function Journey(props: JourneyProps) {
     if (!step) return
     if (step.level === 'appetiser') {
       signal('watch-full')
+      // The tap is the gesture that turns voice on. The appetiser player is built after this and reads the same flag.
+      soundOn(hosts.current[visibleRef.current].playerId || '')
       noteBrowse('learn-more')
       const url = new URL(window.location.href)
       url.searchParams.set('clip', String(step.cutId))
@@ -1205,12 +1207,11 @@ export function Journey(props: JourneyProps) {
   const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (!playerReady || Boolean(errorNote) || offline)))
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
-  const captionLine = piece?.lines?.[lineShown]
-  const until = piece?.lines?.[lineShown + 1]?.at ?? (item && mode === 'appetiser' ? appetiserEnd(item) : (captionLine?.at ?? 0) + 8)
-  const captionText = (piece?.lines?.length
-    ? (mode === 'appetiser' && captionLine ? captionPage(captionLine.text, captionLine.at, until, spokenAt ?? captionLine.at).text : captionLine?.text || '')
-    : piece?.quote) || ''
-  const captionRole = mode === 'appetiser' ? captionLine?.role || null : null
+  const horsLine = mode === 'hors' ? piece?.lines?.[lineShown] : null
+  const captionText = (horsLine ? horsLine.tidy || horsLine.text : mode === 'hors' ? piece?.quote : '') || ''
+  const videoAppetiser = mode === 'appetiser' && Boolean(item?.youtubeId)
+  const scenicAppetiser = mode === 'appetiser' && !item?.youtubeId
+  const scenicLines = scenicAppetiser ? [item?.scenic?.hook, item?.scenic?.turn, item?.scenic?.land].filter((line): line is string => Boolean(line)) : []
   useEffect(() => {
     setCaptionOpen(false)
   }, [item?.id, mode])
@@ -1224,7 +1225,6 @@ export function Journey(props: JourneyProps) {
       className={`caption${captionText.length > 120 ? ' long' : ''}${captionText ? '' : ' title-only'}`}
       data-testid="caption"
       data-line={lineShown}
-      data-role={captionRole || undefined}
       data-expanded={captionOpen ? 'true' : 'false'}
       aria-expanded={captionOpen}
       key={mode}
@@ -1283,21 +1283,14 @@ export function Journey(props: JourneyProps) {
       {typeClip && muted ? (
         <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button>
       ) : null}
-      {(cardKind && cardKind !== 'scene') || typeClip ? null : mode === 'appetiser' ? (
-        <div className="beat-stack">
-          <div className="beat-card" data-testid="caption-panel">
-            {(piece?.lines?.length || 0) > 1 ? (
-              <div className="beat-rail" data-testid="beat-rail" data-beat={captionRole || 'hook'} style={{ ['--i' as string]: lineShown }}>
-                <i className="glide" />
-                {(['hook', 'turn', 'land'] as const).map((role) => (
-                  <span key={role} className={captionRole === role ? 'on' : ''}>{role === 'hook' ? 'Hook' : role === 'turn' ? 'Turn' : 'Land'}</span>
-                ))}
-              </div>
-            ) : null}
-            {captionButton}
-          </div>
+      {(cardKind && cardKind !== 'scene') || typeClip || mode !== 'hors' ? null : captionButton}
+      {scenicAppetiser ? (
+        <div className="scenic-lines" data-testid="scenic-lines">
+          {(scenicLines.length ? scenicLines : [item.lessonTitle || item.courseTitle]).map((line) => (
+            <p key={line}>{line}</p>
+          ))}
         </div>
-      ) : captionButton}
+      ) : null}
       <div className="rail">
         <button type="button" onClick={share} data-testid="share"><span className="bubble"><ShareIcon /></span>Share</button>
         <button type="button" aria-pressed={faves.includes(item.id)} onClick={fave} data-testid="fave"><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
@@ -1309,7 +1302,7 @@ export function Journey(props: JourneyProps) {
             <div className="j-speaker">
               <a className="speaker-row" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-link" onClick={(event) => { if (needsAccount('save')) event.preventDefault() }}>
                 <Avatar name={item.speaker} portrait={item.portrait} />
-                <span className="who"><b>{item.speaker}</b><small>{laneVisible ? `on ${item.laneLabel}` : item.courseTitle}</small></span>
+                <span className="who"><b>{item.speaker}</b><small>{laneVisible ? `On ${item.laneLabel}` : item.courseTitle}</small></span>
               </a>
               <span onClickCapture={(event) => { if (needsAccount('save')) { event.preventDefault(); event.stopPropagation() } }}><FollowButton slug={item.speakerSlug} /></span>
             </div>
@@ -1330,7 +1323,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'}>
+    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'}>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />
@@ -1379,7 +1372,7 @@ export function Journey(props: JourneyProps) {
             </div>
           ) : null}
           {showPoster && item && !slide ? (
-            <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}`} data-testid="poster-frame">
+            <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}${scenicAppetiser ? ' scenic' : ''}`} data-testid="poster-frame">
               {item.poster ? <img src={item.poster} alt="" /> : null}
               <span className="j-poster-mark"><img src="/brand/hoopoe-mark.png" alt="" /></span>
               <span className="j-poster-who">{item.speaker}</span>

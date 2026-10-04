@@ -253,24 +253,26 @@ test.describe('round 4 screens', () => {
     await expect(page.getByTestId('journey')).toHaveAttribute('data-mode', 'appetiser', { timeout: 20_000 })
   })
 
-  test('A1 and A2: at 390 by 844 nothing in the appetiser overlaps, the next-talk card is opaque, and the caption opens on the hook', async ({ page }) => {
+  test('A1 and A2: at 390 by 844 the appetiser plays its clip with nothing overlapping, and no transcript over the picture', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     const lesson = await lessonOf('TLCGBj4AlB0')
     const clip = (await clips()).find((row) => row.lessonId === lesson.id)!
+    expect(clip.youtubeId).toBeTruthy()
     await signIn(page, 'elm-learner@hearts.test', 'portal-learner', `/p/${PORTAL}/feed?clip=${clip.cutId}&play=appetiser`)
     await page.goto(`/p/${PORTAL}/feed?clip=${clip.cutId}&play=appetiser`)
-    await expect(page.getByTestId('journey')).toHaveAttribute('data-mode', 'appetiser', { timeout: 20_000 })
-    await expect(page.getByTestId('learn-more')).toBeVisible()
-    const caption = page.getByTestId('caption')
-    await expect(caption).toHaveAttribute('data-role', 'hook')
-    await expect(caption).toHaveText(clip.hook)
-    const parts = ['caption', 'share', 'fave', 'save', 'learn-more', 'speaker-bio-link']
+    const journey = page.getByTestId('journey')
+    await expect(journey).toHaveAttribute('data-mode', 'appetiser', { timeout: 20_000 })
+    await expect(journey).toHaveAttribute('data-appetiser-video', 'yes')
+    await expect(page.getByTestId('start-course')).toBeVisible()
+    await expect(page.getByTestId('caption')).toHaveCount(0)
+    await expect(page.getByTestId('scenic-lines')).toHaveCount(0)
+    const parts = ['share', 'fave', 'save', 'start-course', 'resume-main', 'mains-shelf', 'speaker-bio-link']
     const boxes: Record<string, { x: number; y: number; width: number; height: number }> = {}
     for (const id of parts) {
       const box = (await page.getByTestId(id).count()) ? await page.getByTestId(id).boundingBox() : null
       if (box) boxes[id] = box
     }
-    for (const id of ['caption', 'share', 'learn-more']) expect(boxes[id], id).toBeTruthy()
+    for (const id of ['share', 'start-course', 'resume-main']) expect(boxes[id], id).toBeTruthy()
     const speakerCard = (await page.locator('.speaker-card').count()) ? await page.locator('.speaker-card').boundingBox() : null
     if (speakerCard) boxes['speaker-card'] = speakerCard
     delete boxes['speaker-bio-link']

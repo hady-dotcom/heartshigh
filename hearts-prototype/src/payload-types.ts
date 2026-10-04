@@ -838,7 +838,7 @@ export interface TalkTier {
     | boolean
     | null;
   /**
-   * The hors d'oeuvre's sentences with their times: [{ at, text }].
+   * The hors d'oeuvre's sentences with their times: [{ at, text }]. text is the raw caption, kept for timing.
    */
   horsLines?:
     | {
@@ -857,6 +857,18 @@ export interface TalkTier {
    * Typography in place of the clip. Learners see the rendered video instead of the hors d'oeuvre.
    */
   typographyInPlace?: boolean | null;
+  /**
+   * Tidied learner-facing lines. Raw captions stay on horsQuote, hook, turn, land and horsLines. Shape: { version, source, quote, hook, turn, land, horsLines: [{ at, raw, text }] }.
+   */
+  lineTidy?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
    * Offer "Resume from where the appetiser ended" next to the main, which always opens at 0:00.
    */
@@ -2662,6 +2674,7 @@ export interface TalkTiersSelect<T extends boolean = true> {
   horsLines?: T;
   typographyStyle?: T;
   typographyInPlace?: T;
+  lineTidy?: T;
   offerResume?: T;
   status?: T;
   checkedAt?: T;

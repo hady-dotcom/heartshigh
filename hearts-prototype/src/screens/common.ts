@@ -19,6 +19,8 @@ export type Query = {
   door?: string
   speaker?: string
   context?: string
+  /** Garden painting: `dawn` or `evening`. Another theme pass can set this. */
+  theme?: string
 }
 
 export type Ctx = {

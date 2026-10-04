@@ -34,20 +34,10 @@ test('Typography panel lists the five styles and can stand in for the hors d’o
     await page.setViewportSize(size)
     await page.goto(`/p/${PORTAL}/feed?clip=${clip.cutId}&play=appetiser`)
     await expect(page.getByTestId('journey')).toHaveAttribute('data-mode', 'appetiser', { timeout: 20_000 })
-    const rail = page.getByTestId('beat-rail')
-    await expect(rail).toBeVisible()
-    await expect(rail).toHaveAttribute('data-beat', 'hook')
-    await expect(rail).toContainText('Hook')
-    await expect(rail).toContainText('Turn')
-    await expect(rail).toContainText('Land')
-    const caption = page.getByTestId('caption')
-    await expect(caption).toHaveAttribute('data-role', 'hook')
-    await expect(caption).toHaveText(clip.hook)
-    expect((await caption.innerText()).trim().split(/\s+/).length).toBeLessThanOrEqual(22)
-    const panel = page.getByTestId('caption-panel')
-    const backing = await panel.evaluate((el) => getComputedStyle(el).backgroundColor)
-    expect(backing).toMatch(/rgba?\(20,\s*18,\s*14(?:,\s*0\.9)?\)/)
-    const parts = ['caption-panel', 'caption', 'share', 'fave', 'save', 'learn-more']
+    await expect(page.getByTestId('journey')).toHaveAttribute('data-appetiser-video', 'yes')
+    await expect(page.getByTestId('beat-rail')).toHaveCount(0)
+    await expect(page.getByTestId('caption')).toHaveCount(0)
+    const parts = ['share', 'fave', 'save', 'start-course', 'resume-main']
     const boxes: Record<string, { x: number; y: number; width: number; height: number }> = {}
     for (const id of parts) {
       const box = (await page.getByTestId(id).count()) ? await page.getByTestId(id).boundingBox() : null
@@ -59,8 +49,6 @@ test('Typography panel lists the five styles and can stand in for the hors d’o
     const overlaps = (a: (typeof boxes)[string], b: (typeof boxes)[string]) => a.x < b.x + b.width - 1 && a.x + a.width - 1 > b.x && a.y < b.y + b.height - 1 && a.y + a.height - 1 > b.y
     for (let i = 0; i < names.length; i++) {
       for (let j = i + 1; j < names.length; j++) {
-        if (names[i] === 'caption-panel' && names[j] === 'caption') continue
-        if (names[j] === 'caption-panel' && names[i] === 'caption') continue
         expect(overlaps(boxes[names[i]], boxes[names[j]]), `${size.width}x${size.height} ${names[i]} overlaps ${names[j]}`).toBeFalsy()
       }
     }

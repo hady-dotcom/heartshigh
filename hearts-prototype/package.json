@@ -14,6 +14,7 @@
     "migrate": "tsx scripts/migrate.ts",
     "approve:imported": "tsx scripts/approve-imported-questions.ts",
     "bootstrap": "tsx scripts/bootstrap.ts",
+    "tidy:lines": "tsx scripts/tidy-lines.ts",
     "seed": "tsx src/seed/seed.ts",
     "seed:starters": "tsx src/seed/seed.ts --starters",
     "reseed": "tsx src/seed/seed.ts --reset",

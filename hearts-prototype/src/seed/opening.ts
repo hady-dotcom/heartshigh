@@ -9,6 +9,7 @@ import { DEFAULT_COPY, FOCUS_NAMES, LIFE_OPTIONS, LIFE_PROMPT, MONTH_WORDING } f
 import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE, LANES, SCALES, SCENES } from '../lib/opening-data'
 import { PERSONA_BANDS } from '../lib/persona-data'
 import { DRAFT_NOTE, draftTiers, timingProblems, type TimingRow } from '../lib/tiers'
+import { buildLineTidy } from '../lib/tidy-caption'
 import { formatTimestamp } from '../lib/transcript'
 import { STARTERS } from './starters-data'
 
@@ -349,6 +350,14 @@ async function seedTier(payload: Payload, lesson: Doc, youtubeId: string, length
     turnAt: draft.turnAt,
     landAt: draft.landAt,
     horsLines: draft.horsLines,
+    lineTidy: buildLineTidy({
+      speaker: String(lesson.speaker || ''),
+      quote: draft.hors.quote,
+      hook: draft.hook,
+      turn: draft.turn,
+      land: draft.land,
+      horsLines: draft.horsLines,
+    }),
     status: 'draft',
     offerResume: true,
     source: starterTranscript(youtubeId) ? `content/transcripts/starters/${youtubeId}.vtt` : 'the lesson transcript',

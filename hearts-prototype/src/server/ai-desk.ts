@@ -31,6 +31,7 @@ import {
   type VersionState,
 } from '@/lib/ai-steps'
 import { saidInTalk } from '@/lib/tiers'
+import { buildLineTidy, type TidyLine } from '@/lib/tidy-caption'
 import type { SessionUser } from './context'
 import { tierSourceText } from './tier-source'
 import { audit } from './viewas'
@@ -321,7 +322,20 @@ async function talkContext(payload: Payload, lesson: Doc, promptOverride?: { rub
     clauseCards: cards || 'No clause cards are loaded.',
     rubric: promptOverride?.rubric ?? String(rubricStep?.prompt || ''),
     clip: clipText(hook, turn, land),
+    captionLines: captionLinesOf(tier, hook, turn, land),
   }
+}
+
+function captionLinesOf(tier: Doc | null, hook: string, turn: string, land: string) {
+  const hors = Array.isArray(tier?.horsLines) ? (tier.horsLines as { at?: number; text?: string }[]) : []
+  const rows = [
+    ...hors.filter((line) => line?.text).map((line) => `hors\t${Number(line.at) || 0}\t${line.text}`),
+    hook ? `hook\t${Number(tier?.hookAt) || 0}\t${hook}` : '',
+    turn ? `turn\t${Number(tier?.turnAt) || 0}\t${turn}` : '',
+    land ? `land\t${Number(tier?.landAt) || 0}\t${land}` : '',
+    tier?.horsQuote ? `quote\t0\t${tier.horsQuote}` : '',
+  ]
+  return rows.filter(Boolean).join('\n') || '(no caption lines yet)'
 }
 
 function varsFor(talk: TalkContext): Record<string, string> {
@@ -338,6 +352,7 @@ function varsFor(talk: TalkContext): Record<string, string> {
     CLAUSE_CARDS: talk.clauseCards.slice(0, 24_000),
     RUBRIC: talk.rubric,
     CLIP: talk.clip,
+    LINES: talk.captionLines || '(no caption lines yet)',
   }
 }
 
@@ -426,9 +441,34 @@ type ApplyResult = { disposition: 'applied' | 'pending' | 'failed'; error?: stri
 
 export async function applyToTalk(payload: Payload, spec: StepSpec, lesson: Doc, output: unknown, versionNumber: number): Promise<ApplyResult> {
   const transcript = tierSourceText(lesson as { youtubeId?: string | null; transcript?: string | null })
+  if (spec.slug === 'tidy-caption-line') return applyTidy(payload, lesson, output as Record<string, unknown>)
   if (spec.fillsTier) return applyTier(payload, spec, lesson, output as Record<string, unknown>, versionNumber, transcript)
   if (spec.fillsPoints) return applyPoints(payload, spec, lesson, output as Record<string, unknown>, versionNumber)
   return { disposition: 'applied', written: {} }
+}
+
+async function applyTidy(payload: Payload, lesson: Doc, output: Record<string, unknown>): Promise<ApplyResult> {
+  const existing = await one(payload, 'talk-tiers', { lesson: { equals: lesson.id } })
+  if (!existing) return { disposition: 'failed', error: "No hors d'oeuvre or appetiser lines to tidy yet." }
+  const horsLines = (Array.isArray(existing.horsLines) ? existing.horsLines : []) as { at?: number; text?: string }[]
+  const sources = {
+    speaker: String(lesson.speaker || ''),
+    quote: String(existing.horsQuote || ''),
+    hook: String(existing.hook || ''),
+    turn: String(existing.turn || ''),
+    land: String(existing.land || ''),
+    horsLines: horsLines.filter((line) => typeof line?.text === 'string').map((line) => ({ at: Number(line.at) || 0, text: String(line.text) })),
+  }
+  if (!sources.quote && !sources.hook && !sources.turn && !sources.land && !sources.horsLines.length) {
+    return { disposition: 'failed', error: "No hors d'oeuvre or appetiser lines to tidy yet." }
+  }
+  const chosen = (Array.isArray(output.lines) ? output.lines : []) as TidyLine[]
+  const pure = buildLineTidy(sources)
+  const mixed = buildLineTidy(sources, chosen, 'fallback')
+  const usedModel = JSON.stringify({ ...mixed, source: '' }) !== JSON.stringify({ ...pure, source: '' })
+  const lineTidy = { ...mixed, source: usedModel ? 'ai' : 'fallback' }
+  await payload.update({ collection: 'talk-tiers', id: existing.id, overrideAccess: true, data: { lineTidy } as never })
+  return { disposition: 'applied', written: { lineTidy } }
 }
 
 async function applyTier(payload: Payload, spec: StepSpec, lesson: Doc, output: Record<string, unknown>, versionNumber: number, transcript: string): Promise<ApplyResult> {

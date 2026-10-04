@@ -11,7 +11,7 @@ import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
 
 export type SlideStyle = 'kinetic' | 'cinema' | 'windows' | 'conversation' | 'unfold'
 
-export type TimedCaption = { at: number; text: string; role?: 'hook' | 'turn' | 'land' }
+export type TimedCaption = { at: number; text: string; role?: 'hook' | 'turn' | 'land'; tidy?: string }
 
 export type FeedItem = {
   id: string
@@ -32,6 +32,12 @@ export type FeedItem = {
   hook: string
   turn: string
   land: string
+  /** Tidied lines for display. `hook`, `turn` and `land` stay word for word. */
+  hookTidy?: string
+  turnTidy?: string
+  landTidy?: string
+  /** Short tidied lines for an appetiser that has no film. Never the whole transcript. */
+  scenic?: { hook: string; turn: string; land: string }
   style: SlideStyle | null
   /** Rendered typography standing in for the hors d'oeuvre, when an admin has chosen one. */
   typography?: { style: SlideStyle; inPlace: true; src: string } | null
