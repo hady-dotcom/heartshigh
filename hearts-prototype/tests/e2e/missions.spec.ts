@@ -13,11 +13,12 @@ async function assertNoIssuesBadge(page: Page) {
   const issues = await page.evaluate(() => {
     const portal = document.querySelector('nextjs-portal')
     const root = portal && 'shadowRoot' in portal ? portal.shadowRoot : null
-    const visible = [...(root?.querySelectorAll('button, [data-next-badge-root], [data-nextjs-toast]') || [])]
-      .map((el) => (el as HTMLElement).getBoundingClientRect())
-      .filter((box) => box.width > 1 && box.height > 1)
-    const label = (root?.textContent || '').match(/(\d+)\s+Issues?/)?.[0] || ''
-    return { label, visible: visible.length }
+    const painted = [...(root?.querySelectorAll('button, [data-next-badge-root], [data-nextjs-toast]') || [])].filter((el) => {
+      const box = (el as HTMLElement).getBoundingClientRect()
+      return box.width > 1 && box.height > 1
+    })
+    const label = painted.map((el) => (el.getAttribute('aria-label') || el.textContent || '').trim()).join(' ').match(/\b(\d+)\s+Issues?\b/)?.[0] || ''
+    return { label, visible: painted.length }
   })
   expect(issues, `Next.js Issues badge is visible (${issues.label || 'overlay'})`).toEqual({ label: '', visible: 0 })
 }

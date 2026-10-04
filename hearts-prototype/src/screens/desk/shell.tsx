@@ -7,6 +7,7 @@ import { DefaultDeskHelp } from '@/components/desk/help'
 import { BellIcon, BeakerIcon, BookIcon, CalendarIcon, ChartIcon, ClapperIcon, CogIcon, CompassIcon, FilmIcon, FlagIcon, FrameIcon, GlobeIcon, HeartIcon, HomeIcon, KeyIcon, LibraryIcon, MoonIcon, NetworkIcon, PathIcon, PeopleIcon, QuestionIcon, ScaleIcon, SheetIcon, SparkIcon } from '@/components/icons'
 import type { SessionUser } from '@/server/context'
 import { rows, shortDate, str } from '../common'
+import { DeskNav } from './desk-nav'
 
 type NavItem = { key: string; label: string; href: string; icon: ReactNode }
 export type NavGroup = { group: string; description?: string; items: NavItem[] }
@@ -165,23 +166,7 @@ export async function DeskFrame({
           <BrandMark size={40} />
           <span><b>{brand}</b><small>{subBrand}</small></span>
         </Link>
-        <nav className="side-nav" aria-label="Desk" data-testid="desk-nav">
-          {nav.map((group) => {
-            const open = group.items.some((item) => item.key === active)
-            return (
-              <details key={group.group} className="nav-group" open={open} data-testid={`nav-group-${group.group.toLowerCase().replace(/\s+/g, '-')}`}>
-                <summary className="group">{group.group}</summary>
-                {group.description ? <p className="group-desc">{group.description}</p> : null}
-                {group.items.map((item) => (
-                  <Link key={item.key} className={`nav${item.key === active ? ' on' : ''}`} href={item.href} aria-current={item.key === active ? 'page' : undefined} data-testid={`nav-${item.key}`}>
-                    {item.icon}
-                    {item.label}
-                  </Link>
-                ))}
-              </details>
-            )
-          })}
-        </nav>
+        <DeskNav groups={nav} active={active} />
         <div className="side-foot">
           {extraLinks.length ? <div className="group">Elsewhere</div> : null}
           {extraLinks.map((link) => (
