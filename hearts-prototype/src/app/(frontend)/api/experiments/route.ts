@@ -130,7 +130,7 @@ export async function POST(req: Request) {
   const device = await deviceId()
   const portal = portalIdOf(user)
 
-  const fail = (message: string, status = 400) => (wantsJson ? NextResponse.json({ error: message }, { status }) : redirectTo(req, next, message, undefined, action === 'create' || action === 'update' ? form : undefined))
+  const fail = (message: string, status = 400) => (wantsJson ? NextResponse.json({ ok: false, error: message }, { status: action === 'create' || action === 'update' || action === 'suggest' ? 200 : status }) : redirectTo(req, next, message, undefined, action === 'create' || action === 'update' ? form : undefined))
   const ok = (notice: string, extra?: unknown) => (wantsJson ? NextResponse.json({ ok: true, notice, ...(extra && typeof extra === 'object' ? extra : {}) }) : redirectTo(req, next, undefined, notice))
 
   try {

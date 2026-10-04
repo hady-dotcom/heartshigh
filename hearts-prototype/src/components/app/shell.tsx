@@ -41,7 +41,7 @@ export function Back({ href, label }: { href: string; label: string }) {
 export function Hidden({ fields }: { fields: Record<string, string | number | undefined | null> }) {
   return (
     <>
-      {Object.entries(fields).map(([name, value]) => (value === undefined || value === null ? null : <input key={name} type="hidden" name={name} value={String(value)} />))}
+      {Object.entries(fields).map(([name, value]) => (value === undefined || value === null ? null : <input key={name} type="hidden" name={name} value={String(value)} suppressHydrationWarning />))}
     </>
   )
 }

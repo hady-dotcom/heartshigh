@@ -43,8 +43,8 @@ export function ExperimentForm({ draft }: { draft: ExperimentFormDraft }) {
         headers: { accept: 'application/json' },
         body: new FormData(form),
       })
-      const data = (await response.json().catch(() => ({}))) as { error?: unknown; id?: number; notice?: string }
-      if (!response.ok) {
+      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: unknown; id?: number; notice?: string }
+      if (!response.ok || data.ok === false) {
         setError(typeof data.error === 'string' ? data.error : 'That did not work.')
         return
       }
@@ -67,7 +67,7 @@ export function ExperimentForm({ draft }: { draft: ExperimentFormDraft }) {
         {error ? <div className="flash error" role="alert" data-testid="error">{error}</div> : null}
         <Hidden fields={{ action: draft.action, id: draft.id || '', next: draft.next }} />
         <label>Key
-          <input name="key" defaultValue={draft.key} required pattern="[a-z][a-z0-9-]{1,58}[a-z0-9]" disabled={draft.existing} data-testid="experiment-key" />
+          <input name="key" defaultValue={draft.key} required autoComplete="off" disabled={draft.existing} data-testid="experiment-key" />
         </label>
         <label>Name
           <input name="name" defaultValue={draft.name} required data-testid="experiment-name" />
