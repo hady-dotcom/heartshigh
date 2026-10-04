@@ -1,4 +1,6 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext, type Page } from '@playwright/test'
+import { mkdirSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
 import { E2E_BASE } from '../env'
 import { fakeYouTube } from './fake-youtube'
 
@@ -6,6 +8,12 @@ const PORTAL = 'east-london'
 const BASE = `/p/${PORTAL}`
 const PHONE = { width: 390, height: 844 }
 const DESK = { width: 1440, height: 900 }
+const PROOF = path.join(process.cwd(), 'test-results', 'r5b-proof')
+
+function proofShot(page: Page, name: string) {
+  mkdirSync(PROOF, { recursive: true })
+  return page.screenshot({ path: path.join(PROOF, `${name}.png`), fullPage: false })
+}
 
 let master: APIRequestContext
 
@@ -72,6 +80,7 @@ test.describe('courses and planning', () => {
     await expect(page.getByTestId('schedule-all')).toBeVisible()
     await expect(page.getByTestId('course-question')).toHaveCount(0)
     await expect(page.locator('body')).not.toContainText('questions coming up')
+    await proofShot(page, 'buffet-long-sittings')
     await page.getByTestId('schedule-all').click()
     await expect(page.getByTestId('plan')).toBeVisible()
     await expect(page.getByTestId('schedule-course')).toHaveValue(String(courseId))
@@ -171,9 +180,13 @@ test.describe('courses and planning', () => {
     expect(calendar).toContain('BEGIN:VEVENT')
     expect(calendar).toContain('DTSTART;VALUE=DATE:')
     expect(calendar).toContain('SUMMARY:')
+    mkdirSync(PROOF, { recursive: true })
+    writeFileSync(path.join(PROOF, 'week.ics'), calendar)
     await expect(page.getByTestId('schedule-slot').first()).toContainText('›')
+    await proofShot(page, 'plan-row-tappable')
     await page.getByTestId('schedule-slot').first().click()
     await expect(page.getByTestId('player')).toBeVisible()
+    await proofShot(page, 'plan-row-opened-talk')
   })
 
   test('Long sittings splits 3,3,2,2 and keeps the days row after sharing out', async ({ page }) => {
@@ -196,6 +209,8 @@ test.describe('courses and planning', () => {
     expect([...counts.values()]).toEqual([3, 3, 2, 2])
     await expect(page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' }).getByTestId('over-minutes')).toBeVisible()
     await expect(page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' }).getByTestId('spread-note')).toHaveCount(0)
+    await expect(page.getByTestId('week-days')).toBeVisible()
+    await proofShot(page, 'split-3322-days-kept')
   })
 
   test('a teacher plan locks against another teacher and tells the learner', async ({ page }) => {
@@ -232,11 +247,14 @@ test.describe('courses and planning', () => {
     await page.locator('label:has([data-testid=plan-learner])').filter({ hasText: 'Maryam' }).click()
     await page.getByTestId('schedule-submit').click()
     await expect(page.getByTestId('error')).toContainText('another teacher')
+    await proofShot(page, 'teacher-lock-refused')
 
     await page.setViewportSize(PHONE)
     await signIn(page, `${BASE}/week`)
     await expect(page.getByTestId('plan-locked')).toBeVisible()
+    await proofShot(page, 'teacher-plan-locked')
     await page.goto(`${BASE}/me`)
     await expect(page.getByTestId('notification').filter({ hasText: 'A study plan was made for you' })).toBeVisible()
+    await proofShot(page, 'teacher-plan-notified')
   })
 })

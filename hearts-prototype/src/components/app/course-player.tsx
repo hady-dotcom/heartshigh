@@ -424,7 +424,8 @@ export function CoursePlayer({
   const open = views.find((point) => point.id === openId) || null
   const total = length || Math.max(60, ...views.map((point) => point.second + 30))
   const filmed = mode === 'youtube' || mode === 'vimeo' || mode === 'file'
-  const scenicPoster = !poster
+  const ownPoster = Boolean(poster && !/i\.ytimg\.com|img\.youtube\.com/i.test(poster))
+  const scenicPoster = !ownPoster
   const places = new Map(placeDots(views.map((row) => ({ id: row.id, second: row.second })), total, trackWidth).map((row) => [row.id, row]))
 
   return (
@@ -433,7 +434,7 @@ export function CoursePlayer({
         <Link className="back" href={backHref} data-testid="back">‹ {courseTitle}</Link>
       </div>
       <div ref={card} className={`player-card${filmed ? ' yt-on' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
-        {!filmed || !lit ? <div className={`poster${scenicPoster ? ' scenic' : ''}${mode === 'loading' ? ' skeleton' : ''}`} style={poster && !scenicPoster ? { backgroundImage: `url(${poster})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : undefined} /> : null}
+        {!filmed || !lit ? <div className={`poster${scenicPoster ? ' scenic' : ''}${mode === 'loading' ? ' skeleton' : ''}`} style={ownPoster ? { backgroundImage: `url(${poster})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : 'player-poster'} /> : null}
         {mode === 'loading' && !failed ? <div className="player-veil" data-testid="player-veil" aria-hidden><span className="gold-spin" /></div> : null}
         {failed ? (
           <div className="player-retry" data-testid="player-retry">

@@ -108,7 +108,7 @@ export function parseWeekdays(raw: string | string[] | undefined | null): number
 /** Keep the course, days and dates on the plan form after it is shared out, so they can be adjusted. */
 export function planKeepPath(
   path: string,
-  draft: { course?: number | null; start: string; end: string; weekdays: number[]; minutes: number },
+  draft: { course?: number | null; start: string; end: string; weekdays: number[]; minutes: number; from?: string | null },
 ) {
   const safe = path.startsWith('/') && !path.startsWith('//') ? path : '/'
   const url = new URL(safe, 'https://hearts.local')
@@ -118,5 +118,6 @@ export function planKeepPath(
   url.searchParams.set('days', draft.weekdays.join(','))
   url.searchParams.set('minutes', String(draft.minutes))
   url.searchParams.set('view', 'new')
+  if (draft.from) url.searchParams.set('from', draft.from)
   return `${url.pathname}${url.search}`
 }

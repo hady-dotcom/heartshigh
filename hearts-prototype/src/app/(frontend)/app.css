@@ -262,7 +262,7 @@
 .timeline .track { position: absolute; left: 0; right: 0; top: 22px; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.3); }
 .timeline .fill { position: absolute; left: 0; top: 22px; height: 4px; border-radius: 4px; background: #fff; }
 .timeline .dot { position: absolute; top: 2px; width: 44px; height: 44px; margin-left: -22px; border: 0; border-radius: 0; background: transparent; padding: 0; z-index: 7; pointer-events: auto; }
-.timeline .dot i { display: grid; place-items: center; width: 18px; height: 18px; margin: 13px auto 0; border-radius: 50%; border: 2px solid #fff; background: #1c1b19; color: #F1E4C6; font-size: 10px; font-weight: 800; line-height: 1; }
+.timeline .dot i { display: grid; place-items: center; width: 20px; height: 20px; margin: 12px auto 0; border-radius: 50%; border: 2px solid #F1E4C6; background: #0F2E2C; color: #F1E4C6; font-size: 11px; font-weight: 800; line-height: 1; font-style: normal; }
 .timeline .dot.done i { background: var(--gold); border-color: #f6e2b0; }
 .timeline .dot.locked i { background: #4a4740; border-color: #8b877c; }
 .time-read { position: absolute; right: 14px; top: 14px; z-index: 3; font-size: 12px; font-weight: 700; background: rgba(0,0,0,0.6); border-radius: 999px; padding: 5px 10px; }

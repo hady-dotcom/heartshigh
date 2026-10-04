@@ -45,4 +45,8 @@ test('the plan form path keeps the chosen course and days', () => {
     planKeepPath('/p/east-london/week', { course: 12, start: '2026-10-07', end: '2026-10-16', weekdays: [3, 5], minutes: 20 }),
     '/p/east-london/week?course=12&start=2026-10-07&end=2026-10-16&days=3%2C5&minutes=20&view=new',
   )
+  assert.equal(
+    planKeepPath('/p/east-london/week?from=course', { course: 12, start: '2026-10-07', end: '2026-10-16', weekdays: [3, 5], minutes: 20, from: 'course' }),
+    '/p/east-london/week?from=course&course=12&start=2026-10-07&end=2026-10-16&days=3%2C5&minutes=20&view=new',
+  )
 })

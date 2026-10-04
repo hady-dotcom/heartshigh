@@ -23,13 +23,16 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
   const keptDays = weekdays.length ? weekdays : latest?.weekdays || []
   const minutes = minutesADay(query.minutes) || 20
   const showForm = !view.plans.length || query.course != null || query.view === 'new' || Boolean(query.notice)
+  const from = String(query.from || '')
+  const back = from === 'course' && selected
+    ? { href: `${base}/course/${selected}`, label: 'Course' }
+    : from === 'me'
+      ? { href: `${base}/me`, label: 'Me' }
+      : { href: `${base}/lanes`, label: 'Lanes' }
   return (
     <AppFrame testId="plan">
       <div className="app-scroll">
-        <Back
-          href={String(query.from) === 'course' && selected ? `${base}/course/${selected}` : String(query.from) === 'lanes' ? `${base}/lanes` : `${base}/me`}
-          label={String(query.from) === 'course' ? 'Course' : String(query.from) === 'lanes' ? 'Lanes' : 'Me'}
-        />
+        <Back href={back.href} label={back.label} />
         <div className="app-head"><h1>My week</h1></div>
         <Flash error={query.error} notice={query.notice} />
         <WeekStrip days={view.days} today={view.today} href={`${base}/week`} emptyHref={`${base}/week?view=new`} />
@@ -85,7 +88,7 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
           end={end}
           weekdays={keptDays}
           minutes={minutes}
-          next={`${base}/week`}
+          next={from ? `${base}/week?from=${encodeURIComponent(from)}` : `${base}/week`}
           portalSlug={String(portal.slug || '')}
           open={showForm}
         />

@@ -88,6 +88,9 @@ test.describe('planner shots', () => {
       },
     })
     expect(scheduleRes.ok()).toBeTruthy()
+    await page.goto('/login')
+    await expect(page.getByTestId('login-submit')).toBeVisible()
+    await page.screenshot({ path: path.join(SHOTS, 'sign-in-390x844.png'), fullPage: false })
     await signIn(page, `${BASE}/week`)
     const plan = page.getByTestId('schedule-plan').filter({ hasText: 'Three sittings' })
     await expect(plan).toBeVisible()

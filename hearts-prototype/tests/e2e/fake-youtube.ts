@@ -27,6 +27,8 @@ export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean
         gate.__playerVars!.push(options.playerVars)
         this.frame = document.createElement('iframe')
         this.frame.dataset.fake = 'youtube'
+        this.frame.setAttribute('title', 'Talk film')
+        this.frame.style.cssText = 'width:100%;height:100%;border:0;background:#0e2a2b url("/theme/evening-courtyard.jpg") center 40% / cover no-repeat'
         el.replaceWith(this.frame)
         if (gate.__failFirst && !gate.__fails) {
           gate.__fails = 1

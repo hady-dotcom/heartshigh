@@ -349,7 +349,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           partLabel={partHeading(partIndex + 1, lesson, str(course.title), ' · ')}
           youtubeId={youtubeId}
           film={film}
-          poster={posterFor(youtubeId) || portraitFor(slugify(str(lesson.speaker || course.speaker)))}
+          poster={shownPoster(posterFor(youtubeId)) || portraitFor(slugify(str(lesson.speaker || course.speaker)))}
           duration={Number(lesson.durationSeconds || 0)}
           startAt={startAt}
           points={withGather}
