@@ -133,9 +133,22 @@ test('the library puts each course on the door its clips carry', async ({ page }
 
   await page.setViewportSize(DESK)
   await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${PORTAL}/admin/library`)
-  const placed = await page.locator('[data-testid="door-group"] [data-testid="pack-course"]').evaluateAll((rows) =>
-    rows.map((row) => ({ course: Number(row.getAttribute('data-course')), door: row.closest('[data-testid="door-group"]')!.getAttribute('data-door') || '' })),
-  )
+  const placed: { course: number; door: string }[] = []
+  for (const href of await page.getByTestId('pack-fold').evaluateAll((links) => links.map((link) => link.getAttribute('href') || ''))) {
+    await page.goto(href)
+    const opened = page.getByTestId('pack-open')
+    await expect(opened).toBeVisible()
+    const tiles = opened.locator('[data-testid=door-tile][data-empty=no]')
+    for (let index = 0; index < (await tiles.count()); index += 1) {
+      await tiles.nth(index).click()
+      const door = opened.getByTestId('door-open')
+      await expect(door).toBeVisible()
+      const key = (await door.getAttribute('data-door')) || ''
+      for (const course of await door.getByTestId('pack-course').evaluateAll((rows) => rows.map((row) => Number(row.getAttribute('data-course'))))) {
+        placed.push({ course, door: key === 'other' ? 'Other' : key })
+      }
+    }
+  }
   expect(placed.length).toBeGreaterThan(3)
   for (const row of placed) {
     const carried = doorsOf.get(row.course)

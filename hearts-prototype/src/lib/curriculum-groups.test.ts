@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { DOORS } from './doors'
-import { countLine, describeGroups, groupCourses, seatLabel, seatName, subsetGroups, type CutPlacement, type SeatInfo } from './curriculum-groups'
+import { countLine, describeGroups, doorName, ghunyaPlace, groupCourses, seatLabel, seatName, subsetGroups, type CutPlacement, type SeatInfo } from './curriculum-groups'
 
 const seats: SeatInfo[] = [
   { id: 10, clause: 15, position: 1, text: 'Vol. 1 the prayer, the short grain.' },
@@ -33,7 +33,8 @@ test('a course sits in the door most of its talks belong to, and the rest are ta
   assert.equal(groups[0].courses[0].talkCount, 4)
   assert.equal(groups[0].seats.length, 1)
   assert.equal(groups[0].seats[0].id, 10)
-  assert.equal(groups[0].seats[0].label, 'Seat 1 · The Prayer')
+  assert.equal(groups[0].seats[0].label, 'Seat 1 · Volume 1')
+  assert.equal(groups[0].seats[0].subject, 'Door, adab, marriage, hisba, creed, sects')
   assert.equal(groups[0].seats[0].note, 'Vol. 1 the prayer, the short grain.')
   assert.equal(groups[0].unseated.length, 0)
 })
@@ -128,4 +129,35 @@ test('a subset keeps the door and drops empty headings', () => {
 
 test('the built-in doors are the ones the groups use', () => {
   assert.equal(DOORS.length, 20)
+})
+
+test('seats that point at the same place in the Ghunya are one heading, named by volume and chapter, never by the sheet note', () => {
+  assert.deepEqual(ghunyaPlace('Vol. 1 sitting, again. Thin, and meant to stay thin'), { key: 'v1', title: 'Volume 1', subject: 'Door, adab, marriage, hisba, creed, sects' })
+  assert.equal(ghunyaPlace('Vol. 1 Ch. 4 miracles of the Prophet, why the name is not ordinary').title, 'Volume 1, Chapter 4')
+  assert.equal(ghunyaPlace('Vol. 5 what is required of the shaykh').subject, 'Seekers, shaykh, fellowship, Path')
+  assert.equal(ghunyaPlace('Knowledge of the Creator, Ch. 4').title, 'Knowledge of the Creator')
+
+  const sitting: SeatInfo[] = [
+    { id: 30, clause: 11, position: 3, text: 'Vol. 1 sitting, again. Thin, and meant to stay thin' },
+    { id: 31, clause: 12, position: 2, text: 'Vol. 1 vocal expression' },
+    { id: 32, clause: 12, position: 3, text: 'Vol. 1 Ch. 4 miracles of the Prophet' },
+    { id: 33, clause: 10, position: 3, text: 'Vol. 5 must not profit from the murid’s wealth' },
+  ]
+  const groups = groupCourses(
+    [{ id: 1, title: 'Adab of sitting' }, { id: 2, title: 'Speaking well' }, { id: 3, title: 'Miracles' }, { id: 4, title: 'The shaykh' }],
+    [{ id: 11, courseId: 1 }, { id: 12, courseId: 2 }, { id: 13, courseId: 3 }, { id: 14, courseId: 4 }],
+    [cut(11, 11, 30), cut(12, 12, 31), cut(13, 12, 32), cut(14, 10, 33)],
+    sitting,
+  )
+  const door = groups.find((group) => group.number === 2)!
+  assert.deepEqual(door.seats.map((seat) => seat.label), ['Seat 3 · Volume 5', 'Seats 2 and 3 · Volume 1', 'Seat 3 · Volume 1, Chapter 4'])
+  const volumeOne = door.seats[1]
+  assert.deepEqual(volumeOne.courses.map((course) => course.title), ['Adab of sitting', 'Speaking well'])
+  assert.equal(volumeOne.note, 'Vol. 1 sitting, again. Thin, and meant to stay thin / Vol. 1 vocal expression')
+  for (const seat of door.seats) assert.doesNotMatch(seat.label, /Vol\.|Thin|vocal/)
+})
+
+test('a door tile reads "Door 2 · The sitting", with the rest of its title below', () => {
+  assert.deepEqual(doorName({ number: 2, title: 'The sitting: how he came and sat with the Messenger' }), { heading: 'Door 2 · The sitting', more: 'How he came and sat with the Messenger' })
+  assert.deepEqual(doorName({ number: 8, title: 'Hajj' }), { heading: 'Door 8 · Hajj', more: '' })
 })

@@ -18,6 +18,8 @@ export type Query = {
   view?: string
   door?: string
   seat?: string
+  /** Library: the pack opened below the packs. */
+  pack?: string
   talk?: string
   question?: string
   family?: string

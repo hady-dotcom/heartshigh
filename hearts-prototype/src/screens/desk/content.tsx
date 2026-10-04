@@ -427,41 +427,52 @@ export async function LibraryScreen(ctx: Ctx) {
   const pickable = courses.filter((course) => adoptedIds.includes(course.id) || course.importable !== false)
   const pickGroups = subsetGroups(grouped, new Set(pickable.map((course) => course.id)))
   const pickHints = Object.fromEntries(pickable.filter((course) => !adoptedIds.includes(course.id)).map((course) => [course.id, '(from the library)']))
+  const openId = Number(ctx.query.pack) || null
+  const openPack = openId ? packs.find((pack) => pack.id === openId) : undefined
+  const packIds = (pack: Row) => new Set(((pack.courses as unknown[]) || []).map((item) => ref(item)).filter((id): id is number => Boolean(id)))
+  const doors = openPack ? (await loadDoors(payload)).map((door) => ({ number: door.number, title: door.title })) : []
   return (
-    <AdminFrame ctx={ctx} active="library" title="Library" intro="Courses from the main library. Adding a pack keeps one living copy: when the library updates, your portal sees it too. Nobody here sees an added course until an access code or a personal grant includes it." testId="admin-library">
+    <AdminFrame ctx={ctx} active="library" title="Library" intro="Courses from the main HEARTS library. Add a pack and it stays up to date." testId="admin-library">
+      <section className="panel" style={{ marginBottom: 18 }}>
+        <header><h2>Library packs</h2></header>
+        <div className="body lib-packs">
+          {packs.map((pack) => {
+            const ids = packIds(pack)
+            const inside = subsetGroups(grouped, ids)
+            const talkTotal = inside.reduce((sum, group) => sum + group.talkCount, 0)
+            const linked = linkedPack(pack.id)
+            const isOpen = openPack?.id === pack.id
+            return (
+              <div className={`lib-card${isOpen ? ' open' : ''}`} key={pack.id} data-testid="library-pack">
+                <h3>{str(pack.title)}</h3>
+                <p className="pack-counts" data-testid="pack-counts">{countLine(talkTotal, ids.size)}</p>
+                <p data-testid="pack-summary">{describeGroups(inside, str(pack.summary))}</p>
+                <Link className="pack-fold-link" data-testid="pack-fold" scroll={false} href={isOpen ? here : `${here}?pack=${pack.id}#pack-open`}>{isOpen ? 'Hide the courses' : 'Show the courses'}</Link>
+                <p className="hint" data-testid="adopt-help">{ADOPT_HELP}</p>
+                {linked ? <span className="badge teal">In this portal</span> : (
+                  <form action="/api/hearts" method="post">
+                    <Hidden fields={{ action: 'adopt', kind: 'pack', pack: pack.id, portalSlug: portal.slug, next: here }} />
+                    <button className="btn small" data-testid="adopt-pack" type="submit">Add to this portal (stays in sync)</button>
+                  </form>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </section>
+      {openPack ? (
+        <section className="panel pack-open" id="pack-open" data-testid="pack-open" data-pack={openPack.id} style={{ marginBottom: 18 }}>
+          <header>
+            <div><h2>{str(openPack.title)}</h2><p>{countLine(subsetGroups(grouped, packIds(openPack)).reduce((sum, group) => sum + group.talkCount, 0), packIds(openPack).size)} · open a door to see its seats</p></div>
+            <Link className="btn small" data-testid="pack-close" scroll={false} href={here}>Close</Link>
+          </header>
+          <div className="body"><PackContents key={openPack.id} groups={subsetGroups(grouped, packIds(openPack))} doors={doors} /></div>
+        </section>
+      ) : null}
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.45fr) minmax(380px, 1fr)', alignItems: 'start' }}>
         <div style={{ display: 'grid', gap: 18 }}>
           <section className="panel">
-            <header className="light"><h2>Library packs</h2></header>
-            <div className="body grid two">
-              {packs.map((pack) => {
-                const ids = new Set(((pack.courses as unknown[]) || []).map((item) => ref(item)).filter((id): id is number => Boolean(id)))
-                const inside = subsetGroups(grouped, ids)
-                const talkTotal = inside.reduce((sum, group) => sum + group.talkCount, 0)
-                const linked = linkedPack(pack.id)
-                return (
-                  <div className="lib-card" key={pack.id} data-testid="library-pack">
-                    <h3>{str(pack.title)}</h3>
-                    <p className="pack-counts" data-testid="pack-counts">{countLine(talkTotal, ids.size)}</p>
-                    <p data-testid="pack-summary">{describeGroups(inside, str(pack.summary))}</p>
-                    <details className="pack-fold" data-testid="pack-fold">
-                      <summary>Show the courses</summary>
-                      <PackContents groups={inside} />
-                    </details>
-                    <p className="hint" data-testid="adopt-help">{ADOPT_HELP}</p>
-                    {linked ? <span className="badge teal">In this portal</span> : (
-                      <form action="/api/hearts" method="post">
-                        <Hidden fields={{ action: 'adopt', kind: 'pack', pack: pack.id, portalSlug: portal.slug, next: here }} />
-                        <button className="btn small" data-testid="adopt-pack" type="submit">Add to this portal (stays in sync)</button>
-                      </form>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </section>
-          <section className="panel">
-            <header className="light"><h2>Library courses</h2></header>
+            <header><h2>Library courses</h2></header>
             <div className="table-wrap">
               <table className="data">
                 <thead><tr><th>Course</th><th>Speaker</th><th>Added</th><th /></tr></thead>

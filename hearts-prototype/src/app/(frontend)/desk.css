@@ -408,3 +408,28 @@ abbr.tip { text-decoration: underline dotted; text-underline-offset: 3px; cursor
 /* max-width: 0 lets the column take only the room left over, so a long address ellipses instead of widening the table. */
 .data td.email-cell { max-width: 0; min-width: 120px; width: 24%; }
 .data td.email-cell span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Library: packs across the main area, and an opened pack as door tiles, then seats. */
+.lib-packs { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.desk .lib-card.open { border-color: var(--teal-deep); box-shadow: 0 0 0 2px var(--teal-deep) inset; }
+.pack-fold-link { font-weight: 650; color: var(--teal-deep); text-decoration: underline; text-underline-offset: 3px; justify-self: start; }
+.pack-open { scroll-margin-top: 16px; }
+.door-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1100px) { .door-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.door-tile { display: grid; gap: 4px; align-content: start; text-align: left; min-height: 104px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--field); color: var(--ink); font: inherit; cursor: pointer; }
+.door-tile b { font-family: var(--serif); font-size: 18px; font-weight: 650; color: var(--teal-deep); line-height: 1.2; }
+.door-tile-more { font-size: 13px; line-height: 1.35; color: var(--muted); }
+.door-tile-count { margin-top: auto; font-size: 13px; font-weight: 650; color: var(--ink-2); }
+.door-tile:hover:not(:disabled) { border-color: var(--teal-deep); }
+.door-tile:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.door-tile.on { background: var(--teal-fill); border-color: var(--teal-fill); }
+.door-tile.on b, .door-tile.on .door-tile-more, .door-tile.on .door-tile-count { color: var(--parchment); }
+.door-tile.empty { cursor: default; background: transparent; border-style: dashed; }
+.door-tile.empty b { color: var(--muted); }
+.door-open { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+.door-open h3 { margin: 0 0 4px; font-family: var(--serif); font-size: 22px; font-weight: 650; color: var(--teal-deep); }
+.door-open .seat-group { margin-top: 0; }
+.seat-head { display: grid; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.seat-subject { font-family: var(--sans, inherit); font-size: 13px; font-weight: 500; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seat-courses { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 2px 18px; margin-top: 8px; }
+.seat-courses .pack-course { border-top: 1px solid var(--line); padding: 6px 2px; }

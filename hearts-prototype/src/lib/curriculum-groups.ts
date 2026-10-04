@@ -49,7 +49,9 @@ export type PlacedCourse = {
 export type SeatGroup = {
   id: number
   label: string
-  /** The full Ghunya note, for the label's tooltip. */
+  /** The volume's contents line, shown muted under the label. */
+  subject?: string
+  /** The sheet notes behind this seat, for the label's tooltip. */
   note?: string
   courses: PlacedCourse[]
   talkCount: number
@@ -120,6 +122,47 @@ export function seatName(text: string) {
 export function seatLabel(seat: Pick<SeatInfo, 'position' | 'text'>) {
   const name = clipWords(seatName(seat.text), 56)
   return name ? `Seat ${seat.position} · ${name}` : `Seat ${seat.position}`
+}
+
+/** The five English volumes of the Ghunya by their printed contents, as the curriculum map lists them. */
+export const GHUNYA_VOLUMES: Record<number, string> = {
+  1: 'Door, adab, marriage, hisba, creed, sects',
+  2: 'Four Qur’an discourses',
+  3: 'Sacred months, days, ikhlas',
+  4: 'Year-fast, five prayers, nawafil, dua',
+  5: 'Seekers, shaykh, fellowship, Path',
+}
+
+export type GhunyaPlace = { key: string; title: string; subject: string }
+
+/**
+ * Where in the book a seat sits, from the volume (and chapter) its note opens with: "Vol. 1 Ch. 4 miracles…" is
+ * Volume 1, Chapter 4. Seats that point at the same place are one seat on the desk. A note that opens with no
+ * volume keeps its own clean name.
+ */
+export function ghunyaPlace(text: string): GhunyaPlace {
+  const opening = text.replace(/\s+/g, ' ').trim().match(/^Vol\.?\s*([1-5])\b\.?(?:\s*Ch\.?\s*(\d+))?/i)
+  if (opening) {
+    const volume = Number(opening[1])
+    const chapter = opening[2] ? Number(opening[2]) : null
+    return { key: chapter ? `v${volume}c${chapter}` : `v${volume}`, title: chapter ? `Volume ${volume}, Chapter ${chapter}` : `Volume ${volume}`, subject: GHUNYA_VOLUMES[volume] || '' }
+  }
+  const name = clipWords(seatName(text), 56)
+  return { key: `n:${name.toLowerCase()}`, title: name, subject: '' }
+}
+
+/** "Seat 3", "Seats 1 and 3", "Seats 1, 2 and 3". */
+function seatWord(positions: number[]) {
+  const list = [...new Set(positions)].sort((a, b) => a - b)
+  if (list.length === 1) return `Seat ${list[0]}`
+  return `Seats ${list.slice(0, -1).join(', ')} and ${list.at(-1)}`
+}
+
+/** "Door 2 · The sitting", with the rest of a long title ("How he came and sat with the Messenger") as its line below. */
+export function doorName(door: Pick<Door, 'number' | 'title'>) {
+  const [name, ...rest] = door.title.split(/:\s+/)
+  const more = rest.join(': ').trim()
+  return { heading: `Door ${door.number} · ${name.trim()}`, more: more ? more.charAt(0).toUpperCase() + more.slice(1) : '' }
 }
 
 function majority<T>(votes: T[], rank: (value: T) => number): T | null {
@@ -241,13 +284,33 @@ function buildGroup(door: Door | null, courses: PlacedCourse[], seatsById: Map<n
       seated.set(course.seatId, list)
     } else unseated.push(course)
   }
-  const seats = [...seated.entries()]
-    .map(([id, list]) => {
-      const seat = seatsById.get(id)!
-      return { id, label: seatLabel(seat), note: seat.text.replace(/\s+/g, ' ').trim(), courses: list, talkCount: talkCount(list), clause: seat.clause, position: seat.position }
+  const merged = new Map<string, { place: GhunyaPlace; ids: number[]; positions: number[]; notes: string[]; courses: PlacedCourse[]; rank: number }>()
+  for (const [id, list] of seated) {
+    const seat = seatsById.get(id)!
+    const place = ghunyaPlace(seat.text)
+    const entry = merged.get(place.key) || { place, ids: [], positions: [], notes: [], courses: [], rank: Infinity }
+    entry.ids.push(id)
+    entry.positions.push(seat.position)
+    const note = seat.text.replace(/\s+/g, ' ').trim()
+    if (!entry.notes.includes(note)) entry.notes.push(note)
+    entry.courses.push(...list)
+    entry.rank = Math.min(entry.rank, seat.clause * 100 + seat.position)
+    merged.set(place.key, entry)
+  }
+  const seats: SeatGroup[] = [...merged.values()]
+    .sort((a, b) => a.rank - b.rank)
+    .map((entry) => {
+      const courses = [...entry.courses].sort(byTitle)
+      const word = seatWord(entry.positions)
+      return {
+        id: Math.min(...entry.ids),
+        label: entry.place.title ? `${word} · ${entry.place.title}` : word,
+        subject: entry.place.subject || undefined,
+        note: entry.notes.join(' / '),
+        courses,
+        talkCount: talkCount(courses),
+      }
     })
-    .sort((a, b) => a.clause - b.clause || a.position - b.position)
-    .map(({ clause: _clause, position: _position, ...seat }) => seat)
   return {
     key: door ? doorCode(door.number) : 'other',
     number: door?.number ?? null,

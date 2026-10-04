@@ -125,52 +125,22 @@ test('the export log shows times in the portal\'s zone with a short label, in th
   }
 })
 
-test('small fixes: favicon, clean seat names with the full text on hover, Teach emails end in an ellipsis, and the install card does not push Home down', async ({ page, request, browser, playwright }) => {
+test('small fixes: favicon, Teach emails end in an ellipsis, and the install card does not push Home down', async ({ page, request, browser }) => {
   const icon = await request.get('/favicon.ico')
   expect(icon.status()).toBe(200)
   expect(icon.headers()['content-type']).toMatch(/icon/)
   for (const size of [16, 32, 48, 96]) expect((await request.get(`/icons/favicon-${size}.png`)).status()).toBe(200)
 
-  const master = await playwright.request.newContext({ baseURL: E2E_BASE })
-  expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
-  const docs = async (path: string) => ((await (await master.get(path)).json()).docs || []) as Record<string, any>[]
-  const [jibril] = await docs(`/api/packs?where[title][equals]=${encodeURIComponent('Jibril sittings')}&depth=0`)
-  const courseIds = (jibril.courses || []).map((course: any) => (typeof course === 'object' ? course.id : course))
-  const lessons = await docs(`/api/lessons?where[course][in]=${courseIds.join(',')}&depth=0&limit=200`)
-  const cuts = await docs(`/api/cuts?where[lesson][in]=${lessons.map((lesson) => lesson.id).join(',')}&where[bestClause][exists]=true&depth=0&limit=200`)
-  const cut = cuts.find((row) => row.bestClause)
-  expect(cut).toBeTruthy()
-  const seats = await docs(`/api/seats?where[clause.number][equals]=${cut!.bestClause}&depth=0&limit=200`)
-  const seat = [...seats].sort((a, b) => String(b.text).length - String(a.text).length)[0]
-  expect(seat).toBeTruthy()
-  expect((await master.patch(`/api/cuts/${cut!.id}`, { data: { seat: seat.id } })).ok()).toBeTruthy()
-
   await page.setViewportSize({ width: 1440, height: 900 })
-  await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${PORTAL}/admin/library`)
-  const pack = page.getByTestId('library-pack').filter({ hasText: 'Jibril sittings' })
-  await pack.getByText('Show the courses').click()
-  await pack.getByTestId('door-group').filter({ has: page.getByTestId('seat-label') }).first().locator('summary').first().click()
-  const labels = pack.getByTestId('seat-label')
-  await expect(labels.first()).toBeVisible()
-  for (const label of await labels.all()) {
-    const text = (await label.innerText()).trim()
-    expect(text).toMatch(/^Seat \d+ · [A-Z]/)
-    expect(text).not.toMatch(/\bVol\b|\bCh\b|\(|\)|\[/)
-    expect(text).not.toMatch(/\s(of|the|and|a|in|to|on|for)$/i)
-    expect(await label.getAttribute('title')).toBeTruthy()
-    const fits = await label.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)
-    expect(fits, text).toBe(true)
-  }
-
-  await expect(labels.first()).toHaveAttribute('title', String(seat.text))
-  expect((await master.patch(`/api/cuts/${cut!.id}`, { data: { seat: cut!.seat ?? null } })).ok()).toBeTruthy()
-  await master.dispose()
-
-  await page.goto(`${PORTAL}/admin/teach`)
+  await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${PORTAL}/admin/teach`)
   const email = page.getByTestId('learner-email').first()
   await expect(email).toBeVisible()
   expect(await email.getAttribute('title')).toBe((await email.innerText()).trim())
   expect(await email.evaluate((el) => getComputedStyle(el).textOverflow)).toBe('ellipsis')
+  for (const cell of await page.getByTestId('learner-email').all()) {
+    expect(await cell.evaluate((el) => getComputedStyle(el).whiteSpace)).toBe('nowrap')
+    expect(await cell.evaluate((el) => el.getClientRects().length)).toBe(1)
+  }
 
   const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
   const app = await phone.newPage()
@@ -183,4 +153,92 @@ test('small fixes: favicon, clean seat names with the full text on hover, Teach 
   const box = await card.boundingBox()
   if (tabs && box) expect(box.y + box.height).toBeLessThanOrEqual(tabs.y + 1)
   await phone.close()
+})
+
+test('an opened pack spans the main area as at most about 20 door tiles, with no seats until a door opens, then one clean heading per Ghunya seat', async ({ page, playwright }) => {
+  const master = await playwright.request.newContext({ baseURL: E2E_BASE })
+  expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
+  const docs = async (path: string) => ((await (await master.get(path)).json()).docs || []) as Record<string, any>[]
+  const courses = await docs('/api/courses?where[origin][equals]=master&depth=0&limit=500')
+  const made = await master.post('/api/packs', { data: { title: 'HEARTS library: all talks', owner: 'master', summary: '', courses: courses.map((course) => course.id) } })
+  expect(made.ok()).toBeTruthy()
+  const packId = (await made.json()).doc.id
+
+  // The seed's cuts carry no seat, so give each cut one its clause really has.
+  const cuts = (await docs('/api/cuts?where[bestClause][exists]=true&depth=0&limit=2000')).filter((cut) => cut.bestClause)
+  const seatsByClause = new Map<number, Record<string, any>[]>()
+  for (const seat of await docs('/api/seats?depth=1&limit=500')) {
+    const clause = Number(seat.clause?.number || 0)
+    seatsByClause.set(clause, [...(seatsByClause.get(clause) || []), seat])
+  }
+  const changed: { id: number; seat: unknown }[] = []
+  for (const cut of cuts) {
+    const options = (seatsByClause.get(Number(cut.bestClause)) || []).filter((seat) => /^Vol\./.test(String(seat.text)))
+    if (!options.length) continue
+    changed.push({ id: cut.id, seat: cut.seat ?? null })
+    expect((await master.patch(`/api/cuts/${cut.id}`, { data: { seat: options[changed.length % options.length].id } })).ok()).toBeTruthy()
+  }
+  expect(changed.length).toBeGreaterThan(2)
+
+  try {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${PORTAL}/admin/library`)
+    await expect(page.getByTestId('admin-library')).toContainText('Courses from the main HEARTS library. Add a pack and it stays up to date.')
+    for (const title of ['Library packs', 'Library courses']) {
+      const header = page.locator('.panel > header').filter({ hasText: title })
+      expect(await header.evaluate((el) => getComputedStyle(el).backgroundColor), title).toBe('rgb(15, 59, 58)')
+    }
+
+    const pack = page.getByTestId('library-pack').filter({ hasText: 'HEARTS library: all talks' })
+    await pack.getByText('Show the courses').click()
+    await expect(page).toHaveURL(new RegExp(`pack=${packId}`))
+    const opened = page.getByTestId('pack-open')
+    await expect(opened).toBeVisible()
+    const main = await page.locator('[data-testid=admin-library] .panel').first().boundingBox()
+    const area = await opened.boundingBox()
+    expect(area!.width).toBeGreaterThan(main!.width - 2)
+    expect(area!.width).toBeGreaterThan(1000)
+
+    const tiles = opened.getByTestId('door-tile')
+    const count = await tiles.count()
+    expect(count).toBeGreaterThanOrEqual(20)
+    expect(count).toBeLessThanOrEqual(21)
+    const tops = await tiles.evaluateAll((all) => all.slice(0, 5).map((tile) => Math.round(tile.getBoundingClientRect().top)))
+    expect(new Set(tops.slice(0, 4)).size, 'four tiles across').toBe(1)
+    expect(tops[4]).toBeGreaterThan(tops[0])
+    for (const text of await tiles.allInnerTexts()) expect(text).toMatch(/^(Door \d+ · |Not on a door yet)/)
+    const empty = opened.locator('[data-testid=door-tile][data-empty=yes]')
+    expect(await empty.count()).toBeGreaterThan(0)
+    await expect(empty.first()).toContainText('Nothing here yet')
+    await expect(empty.first()).toBeDisabled()
+    await expect(opened.getByTestId('seat-label')).toHaveCount(0)
+    await expect(opened.getByTestId('seat-group')).toHaveCount(0)
+    await expect(opened.getByTestId('door-open')).toHaveCount(0)
+
+    const full = opened.locator('[data-testid=door-tile][data-empty=no]')
+    let seated = false
+    for (let index = 0; index < (await full.count()) && !seated; index += 1) {
+      await full.nth(index).click()
+      await expect(opened.getByTestId('door-open')).toHaveCount(1)
+      seated = (await opened.getByTestId('seat-label').filter({ hasText: /^Seats? / }).count()) > 0
+    }
+    expect(seated, 'some door has a Ghunya seat').toBe(true)
+    const labels = await opened.locator('[data-testid=seat-label]').filter({ hasText: /^Seats? / }).all()
+    const texts: string[] = []
+    for (const label of labels) {
+      const text = (await label.innerText()).trim()
+      texts.push(text)
+      expect(text).toMatch(/^Seats? [\d, and]+ · Volume [1-5](, Chapter \d+)?$/)
+      expect(await label.getAttribute('title')).toMatch(/^Vol\./)
+    }
+    expect(new Set(texts).size, 'one heading per seat').toBe(texts.length)
+    const seat = opened.getByTestId('seat-group').first()
+    await seat.locator('summary').click()
+    await expect(seat.getByTestId('pack-course').first()).toBeVisible()
+    await expect(opened.getByTestId('door-open').getByTestId('door-tile')).toHaveCount(0)
+  } finally {
+    for (const row of changed) await master.patch(`/api/cuts/${row.id}`, { data: { seat: row.seat } })
+    await master.delete(`/api/packs/${packId}`)
+    await master.dispose()
+  }
 })
