@@ -23,9 +23,9 @@
 .meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .answer { background: var(--paper); border-radius: 12px; padding: 12px 14px; display: grid; gap: 4px; }
 .answer p { margin: 0; line-height: 1.5; }
-.reply { color: var(--teal-deep); font-weight: 650; }
+.reply { color: var(--gold); font-weight: 650; }
 .private { color: var(--ink-2); font-weight: 700; }
-.ai { background: #fbf6ea; border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 12px; padding: 12px 14px; }
+.ai { background: var(--field); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 12px; padding: 12px 14px; color: var(--ink); }
 .ai h5 { margin: 0 0 6px; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; }
 .ai ul { margin: 0; padding-left: 18px; }
 .ai blockquote { margin: 8px 0 0; font-family: var(--serif); font-size: 16px; }

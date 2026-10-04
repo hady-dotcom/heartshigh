@@ -342,11 +342,11 @@ button.month-back {
 .cohort-row .bar { height: 10px; background: #E7D7B4; border-radius: 999px; overflow: hidden; }
 .cohort-row .bar i { display: block; height: 100%; background: #0F3B3A; }
 .mix-form { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
-.mix-form label { display: grid; gap: 6px; font-weight: 650; color: #0F3B3A; }
-.mix-form input { width: 88px; background: #fff; color: #1A1814; border: 1px solid #CDB88A; border-radius: 8px; padding: 8px; }
+.mix-form label { display: grid; gap: 6px; font-weight: 650; color: #F6EEDC; }
+.mix-form input { width: 88px; background: #102E2C; color: #F6EEDC; border: 1px solid #C4923A; border-radius: 8px; padding: 8px; }
 .sparks { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
-.spark-card { background: #FBF6E8; border: 1px solid #E2D2AE; border-radius: 14px; padding: 12px 12px 8px; }
-.spark-card header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; background: transparent; color: #0F3B3A; padding: 0; }
+.spark-card { background: #163633; border: 1px solid #C4923A; border-radius: 14px; padding: 12px 12px 8px; color: #F6EEDC; }
+.spark-card header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; background: transparent; color: #F6EEDC; padding: 0; }
 .spark-card header b { font-size: 16px; }
 .spark-card .latest { font-variant-numeric: tabular-nums; font-weight: 700; }
 .spark-card .latest.up { color: #14564C; }
