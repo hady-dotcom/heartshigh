@@ -2,7 +2,8 @@ import { FramingPlayer } from '@/components/app/framing-player'
 import { loadFramingFiles } from '@/lib/framing/store'
 import { fallbackTrack, parseTrack } from '@/lib/framing/validate'
 import type { FramingTrack } from '@/lib/framing/types'
-import sample from '../../../../../tests/fixtures/framing-track.json'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 
 function allowed() {
   return process.env.HEARTS_E2E === '1' || process.env.NODE_ENV !== 'production'
@@ -14,7 +15,12 @@ export default async function DevFraming({ searchParams }: { searchParams: Promi
   const files = loadFramingFiles()
   const wanted = query.youtube || query.clip
   const fromFile = wanted ? files.find((row) => row.youtubeId === wanted) : null
-  const track: FramingTrack = parseTrack(query.track ? JSON.parse(query.track) : null) || fromFile || (sample as FramingTrack) || fallbackTrack('dQw4w9WgXcQ', 0, 20)
+  const fixture = parseTrack(JSON.parse(readFileSync(path.join(process.cwd(), 'tests/fixtures/framing-track.json'), 'utf8')))
+  const track: FramingTrack =
+    parseTrack(query.track ? JSON.parse(query.track) : null) ||
+    fromFile ||
+    (query.fixture === 'sample' || !wanted ? fixture : null) ||
+    fallbackTrack('dQw4w9WgXcQ', 0, 20)
   const variant = query.variant || process.env.HEARTS_FRAMING_MODE
   return (
     <main style={{ margin: 0, minHeight: '100dvh', background: '#0F3B3A' }} data-testid="dev-framing">

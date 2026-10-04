@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { buildTrack, chooseMode, segmentsFromShots } from '../../src/lib/framing/choose'
 import { avoidMidSentenceSwitches, holdModes, snapClipWindow, snapIn, snapOut, snapSwitch } from '../../src/lib/framing/snap'
 import { fallbackTrack, validateTrack } from '../../src/lib/framing/validate'
-import { sentencesFromWords, wordsFromCues } from '../../src/lib/framing/words'
+import { sentencesFromWords, wordsFromCues, wrapWordLines } from '../../src/lib/framing/words'
 import type { ShotAnalysis } from '../../src/lib/framing/types'
 import { framingVariant } from '../../src/lib/experiments'
 import sample from '../fixtures/framing-track.json'
@@ -113,6 +113,13 @@ test('buildTrack snaps the window, holds modes, and writes a valid track', () =>
   assert.ok(track.segments.every((row) => row.end - row.start >= 4 - 0.05))
   assert.ok(track.segments.some((row) => row.mode === 'D' || row.mode === 'F'))
   assert.equal(segmentsFromShots([shot({ textScore: 0.02 })]).at(0)?.mode, 'B')
+})
+
+test('spoken lines wrap as word arrays so display spaces cannot collapse', () => {
+  const lines = wrapWordLines('Uh I was speaking at a masid that had about 500 people in the audience.'.split(' '), 20)
+  assert.deepEqual(lines[0], ['Uh', 'I', 'was', 'speaking'])
+  assert.ok(lines.every((line) => line.join(' ').length <= 24))
+  assert.equal(lines.flat().join(' ').includes('Uh I was speaking'), true)
 })
 
 test('the framing-mode experiment stub names both variants', () => {

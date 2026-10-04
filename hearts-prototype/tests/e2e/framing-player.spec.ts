@@ -1,5 +1,13 @@
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { expect, test } from '@playwright/test'
-import sample from '../fixtures/framing-track.json'
+
+const sample = JSON.parse(readFileSync(path.join(process.cwd(), 'tests/fixtures/framing-track.json'), 'utf8')) as {
+  start: number
+  end: number
+  youtubeId: string
+  segments: { start: number; end: number; mode: string }[]
+}
 
 test.describe('AI director player', () => {
   test('at 390x844 the live crop follows the sample track', async ({ page }) => {
@@ -45,8 +53,7 @@ test.describe('AI director player', () => {
       ;(window as unknown as { YT: unknown }).YT = { Player }
     }, sample)
 
-    await page.route(/youtube|ytimg|googlevideo/, (route) => route.abort())
-    await page.goto(`/dev/framing?autoplay=1&sound=0&track=${encodeURIComponent(JSON.stringify(sample))}`)
+    await page.goto('/dev/framing?autoplay=1&sound=0&fixture=sample')
     const player = page.getByTestId('framing-player')
     await expect(player).toBeVisible()
     const box = await player.boundingBox()
@@ -65,6 +72,9 @@ test.describe('AI director player', () => {
     await setTime(24)
     await expect(player).toHaveAttribute('data-framing-mode', 'F')
     await expect(page.getByTestId('spoken-words')).toBeVisible()
-    await expect(page.getByTestId('spoken-words')).toContainText('winning')
+    await expect(page.getByTestId('spoken-words')).toContainText('And they seem to be winning')
+    const spoken = await page.getByTestId('spoken-words').innerText()
+    expect(spoken.replace(/\s+/g, ' ')).toMatch(/And they seem to be winning/)
+    expect(spoken).not.toMatch(/Andtheyseem/)
   })
 })

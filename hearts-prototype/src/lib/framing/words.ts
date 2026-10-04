@@ -77,6 +77,26 @@ function round3(value: number) {
   return Math.round(value * 1000) / 1000
 }
 
+/** Break timed words into display lines without joining them first, so spaces cannot collapse. */
+export function wrapWordLines(words: string[], max = 20) {
+  const lines: string[][] = []
+  let current: string[] = []
+  let len = 0
+  for (const word of words) {
+    const add = word.length + (current.length ? 1 : 0)
+    if (current.length && len + add > max) {
+      lines.push(current)
+      current = [word]
+      len = word.length
+    } else {
+      current.push(word)
+      len += add
+    }
+  }
+  if (current.length) lines.push(current)
+  return lines
+}
+
 export function currentSentence(sentences: FramingSentence[], time: number) {
   if (!sentences.length) return null
   let lo = 0

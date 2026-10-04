@@ -23,6 +23,7 @@ import type { ShotAnalysis } from '../src/lib/framing/types'
 import { parseTranscript } from '../src/lib/transcript'
 import { parseTimestamp } from '../src/lib/transcript'
 import { ytDlpBinary } from '../src/lib/youtube'
+import { prototypeFor } from './framing/prototype-shots'
 
 const exec = promisify(execFile)
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -75,6 +76,10 @@ async function captions(youtubeId: string) {
     const preferred = files.find((name) => /\.en\.vtt$/.test(name)) || files[0]
     if (!preferred) return []
     return parseTranscript(readFileSync(path.join(dir, preferred), 'utf8')).cues
+  } catch (error) {
+    console.warn('Caption fetch from YouTube failed; using any local or prototype sentences.')
+    console.warn(error instanceof Error ? error.message.split('\n').find((line) => /ERROR|blocked|bot/i.test(line)) || error.message : String(error))
+    return []
   } finally {
     await rm(dir, { recursive: true, force: true }).catch(() => undefined)
   }
@@ -119,32 +124,49 @@ async function main() {
     die('Refusing --write-cms against Postgres. This analyser never touches production data.')
   }
 
-  await ensureModel()
   const work = await mkdtemp(path.join(tmpdir(), 'hearts-framing-'))
   const video = path.join(work, `${youtubeId}.mp4`)
   const analysisFile = path.join(work, 'analysis.json')
+  let shots: ShotAnalysis[] = []
+  let cuts: number[] = []
+  let source = 'opencv'
   try {
     console.log(`Downloading ${youtubeId} ${argv[1]}–${argv[2]} to a temp folder.`)
-    await download(youtubeId, requestedStart, requestedEnd, video)
-    if (!existsSync(video)) {
-      const found = (await import('node:fs/promises')).readdir
-      const names = await found(work)
-      const mp4 = names.find((name) => name.endsWith('.mp4'))
-      if (!mp4) die('yt-dlp did not leave a video file.')
-      execFileSync('mv', [path.join(work, mp4), video])
+    try {
+      await ensureModel()
+      await download(youtubeId, requestedStart, requestedEnd, video)
+      if (!existsSync(video)) {
+        const found = (await import('node:fs/promises')).readdir
+        const names = await found(work)
+        const mp4 = names.find((name) => name.endsWith('.mp4'))
+        if (!mp4) throw new Error('yt-dlp did not leave a video file.')
+        execFileSync('mv', [path.join(work, mp4), video])
+      }
+      runVision(video, analysisFile, Math.max(0, requestedStart - 1.2))
+      const analysis = JSON.parse(readFileSync(analysisFile, 'utf8')) as { shots: ShotAnalysis[]; cuts: number[] }
+      shots = analysis.shots || []
+      cuts = analysis.cuts || []
+    } catch (error) {
+      const known = prototypeFor(youtubeId, requestedStart, requestedEnd)
+      if (!known) throw error
+      source = 'prototype-shots (YouTube blocked the temporary download)'
+      shots = known.shots
+      cuts = known.cuts
+      console.warn(`Video download failed. Using the measured shots from the box prototype for ${known.kind}.`)
+      console.warn(error instanceof Error ? error.message.split('\n').at(-1) : String(error))
     }
     const cues = await captions(youtubeId)
     const words = wordsFromCues(cues.filter((cue) => cue.end >= requestedStart - 2 && cue.start <= requestedEnd + 2))
-    const sentences = sentencesInWindow(sentencesFromWords(words, requestedEnd + 2), requestedStart - 2, requestedEnd + 2)
-    runVision(video, analysisFile, Math.max(0, requestedStart - 1.2))
-    const analysis = JSON.parse(readFileSync(analysisFile, 'utf8')) as { shots: ShotAnalysis[]; cuts: number[] }
+    let sentences = sentencesInWindow(sentencesFromWords(words, requestedEnd + 2), requestedStart - 2, requestedEnd + 2)
+    const known = prototypeFor(youtubeId, requestedStart, requestedEnd)
+    if (!sentences.length && known?.sentences) sentences = known.sentences
     const track = buildTrack({
       youtubeId,
       requestedStart,
       requestedEnd,
-      shots: analysis.shots || [],
+      shots,
       sentences,
-      cuts: analysis.cuts || [],
+      cuts,
     })
     const problems = validateTrack(track)
     if (problems.length) die(`Track failed checks: ${problems.map((row) => row.message).join(' ')}`)
@@ -152,7 +174,7 @@ async function main() {
     mkdirSync(dir, { recursive: true })
     const file = path.join(dir, fileNameFor(track))
     writeFileSync(file, `${JSON.stringify(track, null, 2)}\n`)
-    console.log(`Wrote ${path.relative(root, file)}`)
+    console.log(`Wrote ${path.relative(root, file)} (shots from ${source})`)
     for (const segment of track.segments) {
       console.log(`  ${segment.start.toFixed(2)}–${segment.end.toFixed(2)}  ${segment.mode}  c=${segment.confidence.toFixed(2)}`)
     }

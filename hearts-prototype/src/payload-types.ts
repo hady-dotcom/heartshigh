@@ -599,7 +599,7 @@ export interface Lesson {
    */
   sourceTitle?: string | null;
   /**
-   * Live portrait framing track for the whole talk.
+   * Live portrait framing track for the whole talk: [{ start, end, mode A–F, crop, focus, confidence }]. Written by pnpm framing:analyse. Never a rendered file.
    */
   framingTrack?:
     | {
@@ -671,7 +671,7 @@ export interface Cut {
   engine?: string | null;
   seat?: (number | null) | Seat;
   /**
-   * Live portrait framing track for this clip.
+   * Live portrait framing track for this clip. Segments {start, end, mode A–F, crop or focus, confidence}. The player follows it; the film stays on YouTube.
    */
   framingTrack?:
     | {
@@ -2568,6 +2568,7 @@ export interface LessonsSelect<T extends boolean = true> {
   csvSeq?: T;
   starterLane?: T;
   sourceTitle?: T;
+  framingTrack?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2633,6 +2634,7 @@ export interface CutsSelect<T extends boolean = true> {
   kind?: T;
   engine?: T;
   seat?: T;
+  framingTrack?: T;
   updatedAt?: T;
   createdAt?: T;
 }
