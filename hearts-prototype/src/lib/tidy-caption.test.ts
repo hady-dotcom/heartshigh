@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { buildLineTidy, displayLine, shortLine, tidyCaption, tidyKeepsWords, tidyUnchanged } from './tidy-caption'
+import { buildLineTidy, displayLine, feedTidy, shortLine, tidyCaption, tidyKeepsWords, tidyUnchanged } from './tidy-caption'
 
 const EXAMPLE = "return it doesn't return until the day of judgement to testify for or against you allah"
 
@@ -48,6 +48,7 @@ test('auto-caption Islamic terms become taqwa and tawakkul, and fatawa is left a
   assert.match(tidyCaption('grow your tawaku you'), /tawakkul/)
   assert.match(tidyCaption('not everyone is qualified to give fatawa'), /fatawa/)
   assert.equal(displayLine('you know what tawa is', { raw: 'you know what tawa is', text: 'You know what tawa is.' }), 'You know what taqwa is.')
+  assert.equal(feedTidy('you know what tawa is', { raw: 'you know what tawa is', text: 'You know what tawa is.' }, null), 'You know what taqwa is.')
   assert.equal(tidyCaption('You know what taqwa is.'), 'You know what taqwa is.')
   assert.equal(tidyKeepsWords('you know what tawa is', 'You know what taqwa is.'), true)
 })

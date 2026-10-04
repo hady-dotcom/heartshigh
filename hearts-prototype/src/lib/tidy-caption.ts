@@ -321,9 +321,9 @@ export function feedTidy(
   byIndex: { text?: string } | null | undefined,
   hints: TidyHints = {},
 ) {
-  if (stored?.text && stored.raw === raw) return stored.text.trim()
+  if (stored?.text && stored.raw === raw) return sentenceCase(correctIslamicTerms(stored.text.trim()))
   const indexed = byIndex?.text?.trim()
-  if (indexed) return indexed
+  if (indexed) return sentenceCase(correctIslamicTerms(indexed))
   return tidyCaption(raw, hints)
 }
 
