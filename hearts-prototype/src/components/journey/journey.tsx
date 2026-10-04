@@ -9,7 +9,7 @@ import { learnMoreTarget, settleOnLevel, swipeTarget, type Swipe } from '@/lib/f
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readHeart, readPending, sessionFlags, setSessionFlags, viewAsId, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
-import { tidyCaption } from '@/lib/tidy-caption'
+import { spokenCaption } from '@/lib/spoken-caption'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { laneClips } from '@/lib/lanes'
@@ -80,20 +80,6 @@ function clock(total: number) {
   const value = Math.max(0, Math.round(total))
   return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`
 }
-
-function foldCaption(value: string) {
-  return value.replace(/[.?!]+$/g, '').replace(/\s+/g, ' ').trim().toLowerCase()
-}
-
-/** The words said at this moment. A talk title, series name or empty line is not a caption. */
-function spokenCaption(line: { text?: string; tidy?: string } | null | undefined, titles: (string | undefined)[]) {
-  const shown = tidyCaption((line?.tidy || line?.text || '').trim())
-  if (!shown) return ''
-  const spoken = foldCaption(shown)
-  if (titles.some((title) => title && spoken === foldCaption(title))) return ''
-  return shown
-}
-
 
 function useStoredSet(name: string) {
   const [values, setValues] = useState<string[]>([])
@@ -1417,7 +1403,7 @@ export function Journey(props: JourneyProps) {
     <div className="j-speaker">
       <a className="speaker-row" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-link" onClick={(event) => { if (needsAccount('save')) event.preventDefault() }}>
         <Avatar name={item.speaker} portrait={item.portrait} />
-        <span className="who"><b>{item.speaker}</b><small>{laneVisible ? `On ${item.laneLabel}` : item.courseTitle}</small></span>
+        <span className="who"><b>{item.speaker}</b></span>
       </a>
       <span onClickCapture={(event) => { if (needsAccount('save')) { event.preventDefault(); event.stopPropagation() } }}><FollowButton slug={item.speakerSlug} /></span>
     </div>
@@ -1483,7 +1469,7 @@ export function Journey(props: JourneyProps) {
         <div className="j-top-speaker" data-testid="top-speaker">
           <div className="speaker-card">
             <Avatar name={item.speaker} portrait={item.portrait} />
-            <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b><small>{item.courseTitle}</small></a>
+            <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b></a>
             <FollowButton slug={item.speakerSlug} className="follow teal" />
           </div>
         </div>
@@ -1527,7 +1513,7 @@ export function Journey(props: JourneyProps) {
             {wordsInPicture && videoAppetiser ? null : (
               <div className="speaker-card">
                 <Avatar name={item.speaker} portrait={item.portrait} />
-                <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b><small>{item.courseTitle}</small></a>
+                <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b></a>
                 <FollowButton slug={item.speakerSlug} className="follow teal" />
               </div>
             )}
@@ -1720,7 +1706,7 @@ function stillOf(item: FeedItem | undefined, mode: Mode) {
   if (mode === 'hors' && item.card === 'scene' && item.scene) return item.scene.scene
   if (mode === 'hors' && item.style && !item.typography?.src) return SLIDE_BACKDROP[item.style]
   if (mode === 'appetiser' && item.cleanThumb) return item.cleanThumb
-  return item.poster
+  return item.poster && !/i\.ytimg\.com|img\.youtube\.com|^\/clips\//i.test(item.poster) ? item.poster : null
 }
 
 function FeedCardFace({ kicker, title, speaker }: { kicker: string; title: string; speaker: string }) {
@@ -1742,14 +1728,8 @@ function PosterStill({ item, mode, peek = false }: { item: FeedItem; mode: Mode;
       {frame ? (
         // A missing maxresdefault comes back as YouTube's 120px grey stand-in rather than an error.
         <img src={frame} alt="" onError={() => setFrameFailed(true)} onLoad={(event) => { if (event.currentTarget.naturalWidth <= 120) setFrameFailed(true) }} />
-      ) : item.poster ? (
+      ) : item.poster && !/i\.ytimg\.com|img\.youtube\.com|^\/clips\//i.test(item.poster) ? (
         <img src={item.poster} alt="" />
-      ) : null}
-      {mode === 'appetiser' && item.youtubeId && !frame ? (
-        <div className="j-poster-title" data-testid={peek ? undefined : 'poster-title'}>
-          <small>Ready for more?</small>
-          <b>{item.lessonTitle || item.courseTitle}</b>
-        </div>
       ) : null}
     </>
   )

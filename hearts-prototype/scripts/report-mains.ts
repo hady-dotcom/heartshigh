@@ -11,7 +11,11 @@ import { promisify } from 'node:util'
 import { closePayload, clearDevPushMarker } from '../src/lib/prepare-db'
 import { fetchYoutubeMeta, ytDlpBinary } from '../src/lib/youtube'
 import { seriesPartNumber } from '../src/lib/first-course'
-import { clock as seriesClock, groupSeriesEnabled, planSeriesMoves, type LibraryLesson } from '../src/lib/series-group'
+import { clock as seriesClock, demoteShortMainsEnabled, groupSeriesEnabled, planSeriesMoves, shortMainThreshold, type LibraryLesson } from '../src/lib/series-group'
+import { tidyTalkTitle } from '../src/lib/talk-title'
+
+const TEST_COURSE = /ten sittings|teacher sittings/i
+const TEST_VIDEO = /^(dQw4w9WgXcQ|xxTESTFAKEid)$/
 
 const execFileAsync = promisify(execFile)
 
@@ -50,11 +54,15 @@ type Course = { id: number; title?: string; speaker?: string }
 
 try {
   const courses = ((await payload.find({ collection: 'courses', overrideAccess: true, depth: 0, limit: 0, pagination: false })).docs as Course[])
+    .filter((course) => !TEST_COURSE.test(String(course.title || '')))
   const lessons = ((await payload.find({ collection: 'lessons', overrideAccess: true, depth: 1, limit: 0, pagination: false })).docs as Lesson[])
+    .filter((lesson) => !TEST_VIDEO.test(String(lesson.youtubeId || '')) && !TEST_COURSE.test(String(typeof lesson.course === 'object' ? lesson.course?.title : '')))
   const short: string[] = []
   const mismatch: string[] = []
   const wouldChange: string[] = []
+  const shortLimit = shortMainThreshold()
   console.log('Mains report (read-only). Nothing is written.\n')
+  console.log(`Short-main threshold: ${Math.round(shortLimit / 60)} min (HEARTS_DEMOTE_SHORT_MAINS ${demoteShortMainsEnabled() ? 'on' : 'off'}).\n`)
   for (const course of courses.sort((a, b) => a.id - b.id)) {
     const own = lessons.filter((lesson) => (typeof lesson.course === 'object' ? lesson.course?.id : lesson.course) === course.id)
     console.log(`# ${course.id} ${course.title || '(untitled)'} · ${own.length} talks`)
@@ -66,19 +74,20 @@ try {
       const liveDuration = youtubeId ? await youtubeDuration(youtubeId) : null
       const seconds = liveDuration || stored
       const flags: string[] = []
-      if (seconds > 0 && seconds < 600) flags.push(seconds < 180 ? 'UNDER 10 MIN → clip' : 'UNDER 10 MIN → Ready for more?')
-      if (liveTitle && !titlesMatch(String(lesson.title || ''), liveTitle)) flags.push('TITLE MISMATCH')
+      const shown = tidyTalkTitle(String(lesson.title || ''))
+      if (seconds > 0 && seconds < shortLimit) flags.push(seconds < 180 ? `UNDER ${Math.round(shortLimit / 60)} MIN → clip` : `UNDER ${Math.round(shortLimit / 60)} MIN → Ready for more?`)
+      if (liveTitle && !titlesMatch(shown, tidyTalkTitle(liveTitle))) flags.push('TITLE MISMATCH')
       if (!youtubeId) flags.push('NO YOUTUBE ID')
       if (meta === null) flags.push('YOUTUBE MISSING')
-      const line = `  ${lesson.id}  ${lesson.title || '(untitled)'}  id=${youtubeId || '—'}  stored=${stored ? clock(stored) : '—'}  live=${liveDuration ? clock(liveDuration) : liveTitle ? 'title only' : '—'}  yt="${liveTitle || '—'}"${flags.length ? `  !! ${flags.join(', ')}` : ''}`
+      const line = `  ${lesson.id}  ${shown || '(untitled)'}  id=${youtubeId || '—'}  stored=${stored ? clock(stored) : '—'}  live=${liveDuration ? clock(liveDuration) : liveTitle ? 'title only' : '—'}  yt="${tidyTalkTitle(liveTitle) || '—'}"${flags.length ? `  !! ${flags.join(', ')}` : ''}`
       console.log(line)
-      if (flags.some((flag) => flag.startsWith('UNDER 10 MIN'))) short.push(`${course.title}: ${lesson.title} (${clock(seconds)}) — propose as ${seconds < 180 ? 'a clip' : 'Ready for more?'}, not a main`)
-      if (flags.includes('TITLE MISMATCH')) mismatch.push(`${lesson.id}: stored "${lesson.title}" vs YouTube "${liveTitle}"`)
+      if (flags.some((flag) => flag.includes('MIN →'))) short.push(`${course.title}: ${shown} (${clock(seconds)}) — propose as ${seconds < 180 ? 'a clip' : 'Ready for more?'}, not a main`)
+      if (flags.includes('TITLE MISMATCH')) mismatch.push(`${lesson.id}: stored "${shown}" vs YouTube "${tidyTalkTitle(liveTitle)}"`)
       if (liveDuration && stored && Math.abs(liveDuration - stored) > 15) {
         wouldChange.push(`lesson ${lesson.id} durationSeconds ${stored} -> ${liveDuration}`)
       }
-      if (liveTitle && !titlesMatch(String(lesson.title || ''), liveTitle)) {
-        wouldChange.push(`lesson ${lesson.id} title "${lesson.title}" -> "${liveTitle}" (needs Leon)`)
+      if (liveTitle && shown && shown !== tidyTalkTitle(liveTitle)) {
+        wouldChange.push(`lesson ${lesson.id} title stays "${shown}" (YouTube is "${liveTitle}"; do not write the raw title)`)
       }
     }
   }

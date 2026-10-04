@@ -550,6 +550,8 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .weekdays input { display: none; }
 .weekdays span { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid var(--line); font-weight: 700; font-size: 13px; background: #fff; cursor: pointer; }
 .weekdays input:checked + span { background: var(--ink); color: #fff; border-color: var(--ink); }
+.plan-day-list { margin: 8px 0 12px; padding: 0 0 0 18px; color: #F1E4C6; font-size: 14px; font-weight: 650; line-height: 1.45; }
+.plan-day-list li { margin: 0 0 4px; }
 .slot { display: flex; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .slot .date { width: 54px; text-align: center; background: #0F2E2C; color: #F1E4C6; border-radius: 12px; padding: 6px 0; font-weight: 800; font-size: 13px; line-height: 1.2; flex: none; }
 .slot .slot-go { color: #D4A84B; font-size: 22px; font-weight: 400; line-height: 1; padding-right: 4px; }
@@ -596,6 +598,10 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .buffet-row b, .talk-name { display: block; font-size: 15px; overflow-wrap: break-word; word-break: normal; hyphens: none; -webkit-hyphens: none; }
 .buffet-row small { display: block; color: #E8D6AE; font-size: 12.5px; }
 .workbook-page { padding-bottom: calc(120px + var(--safe-bottom)); }
+.file-pick { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
+.file-pick input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+.file-pick-btn { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 14px; border-radius: 999px; background: #0F2E2C; color: #F1E4C6; border: 1px solid #D4A84B; font-weight: 700; font-size: 14px; }
+.file-pick-name { color: #E8D6AE; font-size: 13px; font-weight: 600; }
 .speaker-card { background: #0F2E2C; color: #F1E4C6; }
 .speaker-card small { color: #D4A84B; }
 
@@ -685,6 +691,9 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 :is(html, html[data-theme]) main.app.evening[data-testid="plan"] {
   background: #0e2a2b;
   color: #f6eedc;
+}
+:is(html, html[data-theme]) main.app.evening[data-testid="plan"] .app-scroll {
+  padding-bottom: calc(148px + var(--safe-bottom));
 }
 :is(html, html[data-theme]) main.app.evening[data-testid="course"] .app-scroll,
 :is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .app-scroll,
@@ -794,14 +803,18 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
   background: #D4A84B;
   color: #0F2E2C;
 }
-:is(html, html[data-theme]) .home-plan {
-  background: linear-gradient(180deg, #f3e2c0, #e8d4a6);
-  color: #0f3b3a;
-  border-color: #7a6238;
+html[data-theme] .card.home-plan,
+:is(html, html[data-theme]) .card.home-plan {
+  background: #0F2E2C;
+  color: #F1E4C6;
+  border-color: #D4A84B;
 }
-:is(html, html[data-theme]) .home-plan h2,
-:is(html, html[data-theme]) .home-plan p { color: #0f3b3a; }
-:is(html, html[data-theme]) .home-plan .eyebrow { color: #0f3b3a; }
+html[data-theme] .card.home-plan h2,
+html[data-theme] .card.home-plan p,
+html[data-theme] .card.home-plan .eyebrow,
+:is(html, html[data-theme]) .card.home-plan h2,
+:is(html, html[data-theme]) .card.home-plan p,
+:is(html, html[data-theme]) .card.home-plan .eyebrow { color: #F1E4C6; }
 .player-card.is-loading { background: #0e2a2b; }
 .minutes-day { border: 0; margin: 0; padding: 0; }
 .minutes-day legend { font-weight: 600; font-size: 14px; }

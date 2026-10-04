@@ -53,6 +53,18 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
                 {' · '}
                 {formatLearnerDate(plan.start, 'week')} to {formatLearnerDate(plan.end, 'week')}
               </p>
+              {plan.dayCounts.length > 1 ? (
+                <ol className="plan-day-list" data-testid="plan-day-list">
+                  {[...plan.slots.reduce((map, slot) => {
+                    const own = map.get(slot.date) || []
+                    own.push(slot)
+                    map.set(slot.date, own)
+                    return map
+                  }, new Map<string, typeof plan.slots>()).entries()].map(([date, own]) => (
+                    <li key={date} data-testid="plan-day">{formatLearnerDate(date, 'week')} · {own.length} talk{own.length === 1 ? '' : 's'}</li>
+                  ))}
+                </ol>
+              ) : null}
               {plan.locked ? <p className="muted" data-testid="plan-locked">Your teacher set this plan. You can still watch at your own pace.</p> : null}
               {plan.note ? <p className="muted" data-testid="spread-note">{plan.note}</p> : null}
               {plan.overMinutes ? <p className="muted" data-testid="over-minutes">{plan.overMinutes}</p> : null}

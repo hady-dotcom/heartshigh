@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { groupSeriesEnabled, planSeriesMoves, seriesKey } from './series-group'
+import { demoteShortMainsEnabled, groupSeriesEnabled, planSeriesMoves, seriesKey, shortMainThreshold } from './series-group'
 
 test('Names classes and Prophet sessions share a series key', () => {
   assert.equal(seriesKey('The Names Class 19: Ar-Rabb'), 'The Names')
@@ -62,4 +62,37 @@ test('grouping is off unless HEARTS_GROUP_SERIES=1', () => {
   assert.equal(groupSeriesEnabled({}), false)
   assert.equal(groupSeriesEnabled({ HEARTS_GROUP_SERIES: '0' }), false)
   assert.equal(groupSeriesEnabled({ HEARTS_GROUP_SERIES: '1' }), true)
+})
+
+test('demoting mains under 20 minutes is off unless a flag is on', () => {
+  assert.equal(demoteShortMainsEnabled({}), false)
+  assert.equal(demoteShortMainsEnabled({ HEARTS_DEMOTE_SHORT_MAINS: '0' }), false)
+  assert.equal(demoteShortMainsEnabled({ HEARTS_DEMOTE_SHORT_MAINS: '1' }), true)
+  assert.equal(demoteShortMainsEnabled({ HEARTS_GROUP_SERIES: '1' }), true)
+  assert.equal(shortMainThreshold({}), 600)
+  assert.equal(shortMainThreshold({ HEARTS_DEMOTE_SHORT_MAINS: '1' }), 1200)
+})
+
+test('a 19-minute talk is a short main only when the demote flag is on', () => {
+  const nineteen = {
+    id: 7,
+    title: 'Tawakkul: Supreme Trust in Allah',
+    courseId: 7,
+    courseTitle: 'Tawakkul',
+    durationSeconds: 19 * 60 + 43,
+    speaker: 'Mohammad Elshinawy',
+  }
+  const off = planSeriesMoves([nineteen])
+  assert.ok(!off.shortMains.some((row) => row.lessonTitle === nineteen.title))
+  const prev = process.env.HEARTS_DEMOTE_SHORT_MAINS
+  process.env.HEARTS_DEMOTE_SHORT_MAINS = '1'
+  try {
+    const on = planSeriesMoves([nineteen])
+    const row = on.shortMains.find((item) => item.lessonTitle === nineteen.title)
+    assert.ok(row)
+    assert.equal(row?.proposeAs, 'ready-for-more')
+  } finally {
+    if (prev == null) delete process.env.HEARTS_DEMOTE_SHORT_MAINS
+    else process.env.HEARTS_DEMOTE_SHORT_MAINS = prev
+  }
 })

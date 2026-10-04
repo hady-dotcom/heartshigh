@@ -6,7 +6,9 @@
  */
 
 export const LONG_MAIN_SECONDS = 600
+export const GENUINE_MAIN_SECONDS = 1200
 export const GROUP_SERIES_FLAG = 'HEARTS_GROUP_SERIES'
+export const DEMOTE_SHORT_MAINS_FLAG = 'HEARTS_DEMOTE_SHORT_MAINS'
 
 export type LibraryLesson = {
   id: number
@@ -52,6 +54,15 @@ const NUMBERED = /(?:session|class|episode|ep\.?|part|day)\s*\d+/i
 
 export function groupSeriesEnabled(env: { HEARTS_GROUP_SERIES?: string } = process.env) {
   return env[GROUP_SERIES_FLAG] === '1'
+}
+
+/** Off unless HEARTS_DEMOTE_SHORT_MAINS=1 or HEARTS_GROUP_SERIES=1. Nothing is written when it is off. */
+export function demoteShortMainsEnabled(env: { HEARTS_GROUP_SERIES?: string; HEARTS_DEMOTE_SHORT_MAINS?: string } = process.env) {
+  return env[DEMOTE_SHORT_MAINS_FLAG] === '1' || env[GROUP_SERIES_FLAG] === '1'
+}
+
+export function shortMainThreshold(env: { HEARTS_GROUP_SERIES?: string; HEARTS_DEMOTE_SHORT_MAINS?: string } = process.env) {
+  return demoteShortMainsEnabled(env) ? GENUINE_MAIN_SECONDS : LONG_MAIN_SECONDS
 }
 
 export function clock(total: number) {
@@ -149,11 +160,12 @@ export function planSeriesMoves(lessons: LibraryLesson[]): SeriesPlan {
     after.set(title, list)
   }
 
+  const shortLimit = shortMainThreshold()
   const shortMains: SeriesPlan['shortMains'] = []
   for (const [title, own] of after) {
     if (SHORT_CLIP.test(title)) continue
     for (const lesson of own) {
-      if (lesson.durationSeconds > 0 && lesson.durationSeconds < LONG_MAIN_SECONDS && !SHORT_CLIP.test(`${title} ${lesson.title}`)) {
+      if (lesson.durationSeconds > 0 && lesson.durationSeconds < shortLimit && !SHORT_CLIP.test(`${title} ${lesson.title}`)) {
         shortMains.push({
           courseTitle: title,
           lessonTitle: lesson.title,

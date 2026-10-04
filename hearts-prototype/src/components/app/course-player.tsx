@@ -425,7 +425,7 @@ export function CoursePlayer({
   const open = views.find((point) => point.id === openId) || null
   const total = length || Math.max(60, ...views.map((point) => point.second + 30))
   const filmed = mode === 'youtube' || mode === 'vimeo' || mode === 'file'
-  const ownPoster = Boolean(poster && !/i\.ytimg\.com|img\.youtube\.com/i.test(poster))
+  const ownPoster = Boolean(poster && !/i\.ytimg\.com|img\.youtube\.com|^\/clips\//i.test(poster))
   const scenicPoster = !ownPoster
   const places = new Map(placeDots(views.map((row) => ({ id: row.id, second: row.second })), total, trackWidth).map((row) => [row.id, row]))
 

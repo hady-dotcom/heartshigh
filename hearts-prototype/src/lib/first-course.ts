@@ -51,6 +51,68 @@ export type FirstPick = {
   courseTitle: string
   lessonTitle: string
   reason: string
+  seconds?: number
+  matchText?: string
+}
+
+export type DoorTalk = { title: string; courseTitle?: string; quotes?: string[] }
+export type DoorTopicHit = { text: string; where: 'title' | 'course' | 'quote' }
+
+/**
+ * A door only claims a talk when the title (or a quote, if the title is not already
+ * a Names class about another subject) names that door's topic.
+ */
+const DOOR_NEED: Record<number, RegExp[]> = {
+  1: [/\b(one day|this day|the day you are given)\b/i],
+  2: [/\b(sat with|the sitting|how he came and sat)\b/i],
+  3: [/\b(about islam|tell me about islam|islam named)\b/i],
+  4: [/\b(two testimonies|shahada|l[aā] il[aā]ha)\b/i],
+  5: [/\b(establish(?:ing)? the prayer|the prayer|salah|salat|fajr|qibla)\b/i],
+  6: [/\b(zakat|wealth has people)\b/i],
+  7: [/\b(fasting ramadan|sawm|fast ramadan)\b/i],
+  8: [/\bhajj\b/i],
+  9: [/\b(about iman|the six|islam is not iman)\b/i],
+  10: [/\b(believe in allah|who allah is|ar-?rabb|\brabb\b|al-?n[uū]r|source of (?:all )?light|names of allah)\b/i],
+  11: [/\b(his angels|malaikah|jibril is already)\b/i],
+  12: [/\b(his books|kitab allah|the qur'?an as (?:his )?speech)\b/i],
+  13: [/\b(his messengers|the messengers)\b/i],
+  14: [/\b(last day|day of judgment|akhira|resurrection|the tomb|garden and (?:the )?fire)\b/i],
+  15: [/\b(qadar|decree|good and evil)\b/i],
+  16: [/\b(ihsan|as though you see|he sees you)\b/i],
+  17: [/\b(the hour|when is the hour|cannot be known)\b/i],
+  18: [/\b(slave-?girl|shepherds compete|two signs)\b/i],
+  19: [/\b(it was jibril|that was jibril)\b/i],
+  20: [/\b(teach you your religion|your religion)\b/i],
+}
+
+function snippetAround(hay: string, hit: string) {
+  const at = hay.toLowerCase().indexOf(hit.toLowerCase())
+  if (at < 0) return hit
+  const start = Math.max(0, at - 40)
+  const end = Math.min(hay.length, at + hit.length + 60)
+  return `${start > 0 ? '…' : ''}${hay.slice(start, end).replace(/\s+/g, ' ').trim()}${end < hay.length ? '…' : ''}`
+}
+
+export function matchDoorTalk(doorNumber: number, talk: DoorTalk): DoorTopicHit | null {
+  const need = DOOR_NEED[doorNumber]
+  if (!need?.length) return null
+  const course = (talk.courseTitle || '').trim()
+  const title = (talk.title || '').trim()
+  const tryText = (value: string, where: DoorTopicHit['where']): DoorTopicHit | null => {
+    for (const pattern of need) {
+      const found = value.match(pattern)
+      if (found?.[0]) return { text: snippetAround(value, found[0]), where }
+    }
+    return null
+  }
+  const titleHit = tryText(title, 'title') || (course ? tryText(course, 'course') : null)
+  if (titleHit) return titleHit
+  if (/the names class\s*\d+/i.test(`${course} ${title}`) && doorNumber !== 10) return null
+  for (const quote of talk.quotes || []) {
+    const hit = tryText(String(quote || ''), 'quote')
+    if (hit) return hit
+  }
+  return null
 }
 
 function earliestNumber(course: FirstCourse): number | null {
@@ -58,13 +120,15 @@ function earliestNumber(course: FirstCourse): number | null {
   return numbers.length ? Math.min(...numbers) : null
 }
 
-function pickOf(course: FirstCourse, lesson: FirstLesson, reason: string): FirstPick {
+function pickOf(course: FirstCourse, lesson: FirstLesson, reason: string, extra: { matchText?: string } = {}): FirstPick {
   return {
     courseId: course.courseId,
     lessonId: lesson.id,
     courseTitle: course.courseTitle,
     lessonTitle: lesson.title,
     reason,
+    seconds: secondsOf(lesson),
+    matchText: extra.matchText,
   }
 }
 
@@ -129,7 +193,6 @@ export function pickGentleFirstCourse(recommendedLessonId: number | null, course
     if (isLifeStageTopic(`${hit.courseTitle} ${hitLesson.title}`)) {
       return pickOf(hit, hitLesson, 'This sitting is for one life stage.')
     }
-    return pickOf(hit, hitLesson, 'This sitting is under 10 minutes.')
   }
 
   if (topic && topic.size) {

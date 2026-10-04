@@ -4,7 +4,7 @@ import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
 import { idOf } from '@/lib/ids'
 import { recommendLesson } from '@/lib/placing'
-import { pickGentleFirstCourse } from '@/lib/first-course'
+import { matchDoorTalk, pickGentleFirstCourse } from '@/lib/first-course'
 import { capitalAfterColon, doorNumberOfClause, doorOfClause } from '@/lib/doors'
 import { loadDoors } from './doors'
 import { portalDisplayName } from '@/lib/portal-name'
@@ -126,10 +126,11 @@ export function posterFor(youtubeId: string | null | undefined) {
   return publicFile(`clips/${youtubeId}.jpg`) || `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`
 }
 
-/** A still safe to paint as a thumbnail. YouTube's stand-in for a missing film is a grey ellipsis, so those fall through to the garden crop. */
+/** A still safe to paint as a thumbnail. Unchecked YouTube frames and local copies in /clips/ fall through to the courtyard. */
 export function shownPoster(url: string | null | undefined) {
   if (!url) return null
   if (/i\.ytimg\.com|img\.youtube\.com/i.test(url)) return null
+  if (/^\/clips\//.test(url)) return null
   return url
 }
 
@@ -181,6 +182,11 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
   const startDoor = user.startingClause ? doorNumberOfClause(Number(user.startingClause), doors) : null
   const onTopicIds = startDoor
     ? [...new Set(cutRows.filter((cut) => doorNumberOfClause(cut.bestClause, doors) === startDoor && lessonOrder.includes(cut.lessonId)).map((cut) => cut.lessonId))]
+        .filter((lessonId) => {
+          const lesson = lessons.find((row) => row.id === lessonId)
+          const course = courses.find((row) => row.id === idOf(lesson?.course))
+          return Boolean(lesson && matchDoorTalk(startDoor, { title: String(lesson.title || ''), courseTitle: String(course?.title || '') }))
+        })
     : []
   const catalogue = courses.map((course) => ({
     courseId: course.id,

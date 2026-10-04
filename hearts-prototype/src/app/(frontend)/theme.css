@@ -616,11 +616,11 @@ html[data-theme] .other .heart { color: var(--gold); }
 /* Empty states carry the lattice only. They do not depend on an illustration. */
 html[data-theme] .empty-state p { margin-top: 0; }
 html[data-theme] .speaker-card {
-  background: var(--glass-solid);
-  color: var(--ink);
-  border: var(--hairline);
+  background: #0F2E2C;
+  color: #F1E4C6;
+  border: 1px solid rgba(212, 168, 75, 0.42);
 }
-html[data-theme='evening'] .speaker-card small { color: #f1d58a; }
+html[data-theme='evening'] .speaker-card small { color: #D4A84B; }
 html[data-theme] .follow { border-color: #f6eedc; color: #f6eedc; }
 html[data-theme] .follow[aria-pressed='true'] { background: #f6eedc; color: #142e2c; }
 html[data-theme] .step-bar span { background: rgba(212, 168, 75, 0.28); }

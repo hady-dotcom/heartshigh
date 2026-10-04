@@ -144,6 +144,34 @@ test('every scenic card in the feed keeps its words inside the card, never shift
   expect(checked, 'scenic cards checked').toBeGreaterThan(0)
 })
 
+test('Home Your plan heading reads at AA on the teal card', async ({ page }) => {
+  await page.setViewportSize(PHONE)
+  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', PORTAL)
+  await page.goto(PORTAL)
+  const plan = page.getByTestId('home-plan')
+  if (!(await plan.count())) return
+  const rows = await page.evaluate(() => {
+    const rgb = (value: string) => (value.match(/[\d.]+/g) || []).map(Number)
+    const lum = ([r, g, b]: number[]) => {
+      const c = [r, g, b].map((v) => {
+        const s = v / 255
+        return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+      })
+      return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+    }
+    const card = document.querySelector('[data-testid="home-plan"]') as HTMLElement
+    const bg = rgb(getComputedStyle(card).backgroundColor)
+    return [...card.querySelectorAll<HTMLElement>('.eyebrow, h2, p')].filter((el) => el.textContent?.trim()).map((el) => {
+      const [r, g, b, a = 1] = rgb(getComputedStyle(el).color)
+      const fg = [r, g, b].map((v, i) => v * a + bg[i] * (1 - a))
+      const [hi, lo] = [lum(fg), lum(bg)].sort((x, y) => y - x)
+      return { text: el.textContent!.trim().slice(0, 40), ratio: (hi + 0.05) / (lo + 0.05), color: getComputedStyle(el).color, bg: getComputedStyle(card).backgroundColor }
+    })
+  })
+  expect(rows.length).toBeGreaterThan(0)
+  for (const row of rows) expect(row.ratio, `${row.text} ${row.color} on ${row.bg} ${row.ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5)
+})
+
 test('harvest lines are whole sentences, and Home, Garden and Harvest show the same counts', async ({ page }) => {
   await page.setViewportSize(PHONE)
   await signIn(page, 'elm-learner@hearts.test', 'portal-learner', PORTAL)

@@ -12,6 +12,8 @@ test('a real title is kept, and a slug or video id falls back to the course and 
   assert.equal(displayTalkTitle({ title: 'Tawhid', courseTitle: 'Names', part: 4 }), 'Tawhid')
   assert.equal(displayTalkTitle({ title: '', courseTitle: '', part: 2 }), 'Part 2')
   assert.equal(tidyTalkTitle('Dua 1: O Allah, I am Your Servant | Prophetic Dua | Shaykh Yasir Fahmy'), 'Dua 1: O Allah, I am Your Servant')
+  assert.equal(tidyTalkTitle('Tawakkul: Supreme Trust in Allah - Khutbah by Sh. Mohammad Elshinawy'), 'Tawakkul: Supreme Trust in Allah')
+  assert.equal(tidyTalkTitle("Finding Contentment Within | Jum'uah Khutbah | Imam Khalid Latif"), 'Finding Contentment Within')
   assert.equal(displayTalkTitle({ title: 'Dua 1: O Allah, I am Your Servant | Prophetic Dua | Shaykh Yasir Fahmy', courseTitle: 'Duas', part: 1 }), 'Dua 1: O Allah, I am Your Servant')
   assert.equal(partTitle({ title: 'circle-recording', order: 3, vimeoId: '76979871' }, 'The names'), 'The names · Part 3')
   assert.equal(partTitle({ title: 'Vimeo 76979871', order: 2, vimeoId: '76979871' }, 'Light'), 'Light · Part 2')

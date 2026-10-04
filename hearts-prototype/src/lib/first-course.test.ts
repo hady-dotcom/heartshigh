@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { firstCourseVerdict, isGentleOpening, libraryStartNote, pickGentleFirstCourse, seriesPartNumber } from './first-course'
+import { firstCourseVerdict, isGentleOpening, libraryStartNote, matchDoorTalk, pickGentleFirstCourse, seriesPartNumber } from './first-course'
 
 test('a later session or part is not a gentle opening', () => {
   assert.equal(seriesPartNumber('How to Live Like the Prophet, Session 6'), 6)
@@ -91,8 +91,8 @@ test('a long Session 6 stays when it is the earliest sitting in the library', ()
   assert.equal(pick?.lessonId, 6)
   assert.equal(firstCourseVerdict(pick, courses).ok, true)
   const clip = pickGentleFirstCourse(9, courses)
-  assert.equal(clip?.lessonId, 9)
-  assert.equal(firstCourseVerdict(clip, courses).ok, false)
+  assert.equal(clip, null)
+  assert.equal(firstCourseVerdict(clip, courses).note, 'NO ON-TOPIC LONG TALK')
 })
 
 test('a marriage sitting stays on-topic and is marked life-stage, never swapped for another course', () => {
@@ -141,5 +141,18 @@ test('a short clip is never marked OK', () => {
     },
   ]
   const pick = pickGentleFirstCourse(9, courses)
+  assert.equal(pick, null)
   assert.equal(firstCourseVerdict(pick, courses).ok, false)
+})
+
+test('a door only claims a talk whose title names that door', () => {
+  const rabb = { title: 'The Names Class 19: Ar-Rabb', courseTitle: 'The Names', quotes: ['Establish the prayer and remember the Book.'] }
+  const nur = { title: 'The Names Class 20: Al-Nūr', courseTitle: 'The Names', quotes: ['Light on the day of judgment is a mercy.'] }
+  assert.ok(matchDoorTalk(10, rabb)?.text)
+  assert.ok(matchDoorTalk(10, nur)?.text)
+  assert.equal(matchDoorTalk(5, rabb), null)
+  assert.equal(matchDoorTalk(12, rabb), null)
+  assert.equal(matchDoorTalk(13, rabb), null)
+  assert.equal(matchDoorTalk(14, nur), null)
+  assert.match(matchDoorTalk(5, { title: 'Establish the prayer', quotes: [] })?.text || '', /prayer/i)
 })

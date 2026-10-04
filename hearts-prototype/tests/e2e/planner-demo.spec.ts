@@ -41,8 +41,9 @@ async function hideInstall(page: Page) {
       // Private browsing still hides the sheet for this walk.
     }
     document.cookie = 'hearts.install.dismissed=1; Path=/; SameSite=Lax'
+    document.documentElement.style.background = '#0e2a2b'
     const style = document.createElement('style')
-    style.textContent = '.install-card{display:none!important}'
+    style.textContent = 'html,body{background:#0e2a2b!important}.install-card{display:none!important}'
     document.documentElement.appendChild(style)
   })
 }
@@ -61,6 +62,9 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
   await hideInstall(page)
   await fakeYouTube(page)
   await signInQuiet(page)
+  await page.goto(BASE)
+  await expect(page.getByTestId('rings')).toBeVisible()
+  await hold(page, '00-home', 800)
   await page.goto(`${BASE}/lanes`)
   await expect(page.getByTestId('lanes')).toBeVisible()
   await expect(page.getByTestId('login-email')).toHaveCount(0)
@@ -104,6 +108,17 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
   await expect(page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE }).getByTestId('plan-counts')).toContainText(/3,\s*3,\s*2,\s*2/)
   await expect(page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE }).getByTestId('schedule-slot').first()).toContainText('›')
   await expect(page.getByTestId('schedule-slot').first()).not.toContainText('|')
+  const plan = page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE })
+  await expect(plan.getByTestId('plan-day-list')).toBeVisible()
+  await expect(plan.getByTestId('plan-day')).toHaveCount(4)
+  await plan.getByTestId('plan-day-list').scrollIntoViewIfNeeded()
+  const tab = page.getByTestId('tabbar')
+  const dayBox = await plan.getByTestId('plan-day-list').boundingBox()
+  const tabBox = await tab.boundingBox()
+  expect(dayBox, 'the per-day list is on screen').toBeTruthy()
+  expect(tabBox, 'the tab bar is on screen').toBeTruthy()
+  expect(dayBox!.y + dayBox!.height, 'the per-day list sits above the tab bar').toBeLessThanOrEqual((tabBox!.y || 0) + 2)
+  await expect(tab).toBeVisible()
   await hold(page, '04-days-kept-after-share', 1800)
 
   await page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE }).getByTestId('schedule-slot').first().click()

@@ -207,6 +207,7 @@ test.describe('courses and planning', () => {
     await expect(page.getByTestId('weekday-1')).toBeChecked()
     await expect(page.getByTestId('week-days')).toBeVisible()
     await expect(page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE }).getByTestId('plan-counts')).toContainText('3, 3, 2, 2')
+    await expect(page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE }).getByTestId('plan-day-list')).toBeVisible()
     const dates = await page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE }).getByTestId('schedule-slot').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-date') || ''))
     const counts = dates.reduce((map, date) => map.set(date, (map.get(date) || 0) + 1), new Map<string, number>())
     expect([...counts.values()]).toEqual([3, 3, 2, 2])

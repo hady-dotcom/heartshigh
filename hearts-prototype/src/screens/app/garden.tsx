@@ -10,7 +10,9 @@ import { isNewMoment, readableHarvest } from '@/lib/harvest'
 import { getSession, type SessionUser, visibleCourseIds } from '@/server/context'
 import { workbookFor } from '@/server/workbook'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
-import { partTitle } from '@/lib/talk-title'
+import { isLongTalk, matchDoorTalk } from '@/lib/first-course'
+import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
+import { FilePick } from '@/components/app/file-pick'
 import { posterFor, shownPoster } from '@/server/learner'
 import { loadDoors } from '@/server/doors'
 import { capitalAfterColon, doorByNumber, doorCode, doorFromPath, doorNumberOfClause, doorOfClause, type Door } from '@/lib/doors'
@@ -104,7 +106,7 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
     return sum + (Number(lesson?.durationSeconds || 0) * Number(row.percent || 100)) / 100
   }, 0)
   const book = await workbookFor(payload, user, user)
-  const workbookShown = book.answers.length + book.open.length
+  const workbookShown = book.answers.length
   return { clauses, doors, seats, lit, completions: countedCompletions, lessons, seatVisits, harvest, workbook, answers: countedAnswers, rituals, activeDays, secondsGiven, watched: watchedIds.size, activityLit, harvestNew, workbookShown }
 }
 
@@ -396,6 +398,10 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, token: str
   const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }) : []
   const talkName = (lesson: Row) => partTitle(lesson, str(courses.find((course) => course.id === ref(lesson.course))?.title))
   const lessonOf = (id: number | null) => lessons.find((lesson) => lesson.id === id)
+  const courseTitleOf = (lesson: Row) => str(courses.find((course) => course.id === ref(lesson.course))?.title)
+  const quotesOf = (lesson: Row) => cuts.filter((cut) => ref(cut.lesson) === lesson.id).flatMap((cut) => [str(cut.hook), str(cut.turn), str(cut.land)].filter(Boolean))
+  const longs = lessons.filter((lesson) => isLongTalk({ title: str(lesson.title), durationSeconds: Number(lesson.durationSeconds || 0) }, courseTitleOf(lesson)) && matchDoorTalk(door.number, { title: talkName(lesson), courseTitle: courseTitleOf(lesson), quotes: quotesOf(lesson) }))
+  const clips = lessons.filter((lesson) => !longs.some((row) => row.id === lesson.id))
   const here = `${base}/garden/jibril/${door.number}`
   const teachings = clauses.map((clause) => str(clause.teaching)).filter(Boolean)
   const series = [...new Set(clauses.map((clause) => str(clause.series)).filter(Boolean))]
@@ -441,7 +447,8 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, token: str
         {series.length ? <p style={{ marginTop: 14 }}><span className="lbl">From the series.</span> {series.join(' ')}</p> : null}
       </article>
       <p className="eyebrow">Talks in this door</p>
-      {lessons.length ? lessons.map((lesson) => {
+      {!longs.length ? <p className="muted" data-testid="door-waiting">A longer talk for this door is on its way</p> : null}
+      {longs.length ? longs.map((lesson) => {
         const cut = cuts.find((row) => ref(row.lesson) === lesson.id)
         return (
           <Link key={lesson.id} className="course-row" href={`${base}/course/${ref(lesson.course)}?part=${lesson.id}&t=${Math.floor(Number(cut?.start || 0))}`} data-testid="door-talk">
@@ -450,7 +457,19 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, token: str
             <span className="start teal">Watch</span>
           </Link>
         )
-      }) : <p className="muted">No talk in your courses has been placed in this door yet.</p>}
+      }) : null}
+      {clips.length ? <p className="eyebrow">Clips in this door</p> : null}
+      {clips.map((lesson) => {
+        const cut = cuts.find((row) => ref(row.lesson) === lesson.id)
+        return (
+          <Link key={lesson.id} className="course-row" href={`${base}/course/${ref(lesson.course)}?part=${lesson.id}&t=${Math.floor(Number(cut?.start || 0))}`} data-testid="door-clip">
+            <span className="thumb" style={shownPoster(posterFor(str(lesson.youtubeId) || null)) ? { backgroundImage: `url(${shownPoster(posterFor(str(lesson.youtubeId)))})` } : undefined} />
+            <span className="t"><b>{talkName(lesson)}</b><small>From {clock(Number(cut?.start || 0))} · {str(lesson.speaker)}</small></span>
+            <span className="start teal">Watch</span>
+          </Link>
+        )
+      })}
+      {!lessons.length ? <p className="muted">No talk in your courses has been placed in this door yet.</p> : null}
       {tiers.length ? <p className="eyebrow">Ready for more?</p> : null}
       {tiers.map((tier) => {
         const lesson = lessonOf(ref(tier.lesson))
@@ -566,7 +585,7 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
       <div data-testid="workbook">
         {[...groups.values()].map((group) => (
           <section className="wb-course" key={group.course} data-testid="workbook-course">
-            <h2>{group.course}</h2>
+            <h2>{tidyTalkTitle(group.course)}</h2>
             {[...group.topics.entries()].map(([topic, videos]) => (
               <div className="wb-topic" key={topic} data-testid="workbook-topic">
                 <h3>{topic}</h3>
@@ -627,7 +646,7 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
                   <input type="hidden" name="next" value={here} />
                   {row.kind === 'task' && row.dueDays ? <p data-testid="task-due">Due within {row.dueDays} days of opening this talk.</p> : null}
                   {row.evidence === 'photo' ? null : <textarea name="body" rows={2} required={row.evidence === 'note' || row.family === 'workbook'} placeholder={row.kind === 'task' ? 'What did you do?' : 'Your reflection'} data-testid="workbook-task-note" />}
-                  {row.kind === 'task' ? <input type="file" name="image" accept="image/*" required={row.evidence === 'photo'} /> : null}
+                  {row.kind === 'task' ? <FilePick name="image" accept="image/*" required={row.evidence === 'photo'} testId="workbook-task-file" /> : null}
                   {row.kind === 'task' && taskWantsCompany(row.question) ? listed.cards.filter((card) => !card.past && card.lessonId === row.lessonId).map((card) => (
                     <p key={card.id} data-testid="workbook-gather"><a href={`${base}/gather/${card.id}`}>{card.title}</a> · {card.when}</p>
                   )) : null}

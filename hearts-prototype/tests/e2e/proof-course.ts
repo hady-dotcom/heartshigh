@@ -40,7 +40,7 @@ export async function ensureProofCourse(master: APIRequestContext, portalSlug = 
           portal: portal!.id,
           order: index + 1,
           durationSeconds: 97 * 60,
-          youtubeId: 'dQw4w9WgXcQ',
+          youtubeId: 'xxTESTFAKEid',
           transcriptSource: 'none',
         },
       })
