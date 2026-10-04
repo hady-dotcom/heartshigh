@@ -131,7 +131,7 @@ test('the master creator can switch Gather off, and a learner sees no Gather unt
 
   await page.setViewportSize(DESK)
   await page.goto(`/master/portals/${slug}`)
-  await expect(page.getByTestId('portal-edit')).toBeVisible()
+  await expect(page.locator('[data-testid="portal-edit"]').first()).toBeVisible()
   await expect(page.getByTestId('studio-features')).toBeVisible()
   await expect(page.getByTestId('feature-gather')).not.toBeChecked()
   await page.getByTestId('feature-gather').check()

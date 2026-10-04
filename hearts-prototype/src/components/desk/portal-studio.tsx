@@ -72,7 +72,7 @@ export function PortalStudio({
   )
 
   return (
-    <form className="portal-studio" action="/api/hearts" method="post" data-testid={mode === 'create' ? 'portal-studio' : 'portal-edit'}>
+    <form className="portal-studio" action="/api/hearts" method="post" data-testid="portal-studio">
       <Hidden fields={{ action, next, featuresForm: 'yes', portalSlug: mode === 'edit' ? slug : undefined }} />
       <nav className="studio-steps" aria-label="Portal steps" data-testid="studio-steps">
         {STEPS.map((item, index) => (
