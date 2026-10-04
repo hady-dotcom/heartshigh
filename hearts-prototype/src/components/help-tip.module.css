@@ -5,8 +5,7 @@
   vertical-align: middle;
   flex: none;
 }
-.root > summary {
-  list-style: none;
+.mark {
   width: 22px;
   height: 22px;
   border-radius: 50%;
@@ -18,9 +17,9 @@
   cursor: pointer;
   opacity: 0.85;
   line-height: 1;
-}
-.root > summary::-webkit-details-marker {
-  display: none;
+  background: transparent;
+  color: inherit;
+  padding: 0;
 }
 .pop {
   position: absolute;

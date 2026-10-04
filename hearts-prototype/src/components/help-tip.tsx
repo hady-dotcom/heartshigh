@@ -1,7 +1,9 @@
 'use client'
 
-import { type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import styles from './help-tip.module.css'
+
+const OPEN = 'hearts:help-tip'
 
 export type HelpTipProps = {
   children: ReactNode
@@ -14,24 +16,59 @@ export type HelpTipProps = {
 
 /**
  * Small “?” that opens two to four plain sentences.
- * Import this from `@/components/help-tip` on any desk, including Experiments.
+ * Import from `@/components/help-tip` on any desk, including Experiments.
+ * A button, not details/summary, so it can sit inside other disclosure rows.
  */
 export function HelpTip({ children, topic, label = 'What is this?', place = 'start' }: HelpTipProps) {
+  const id = useId()
+  const rootRef = useRef<HTMLSpanElement>(null)
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    const onOther = (event: Event) => {
+      if ((event as CustomEvent<string>).detail !== id) setOpen(false)
+    }
+    const onDoc = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener(OPEN, onOther)
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener(OPEN, onOther)
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open, id])
+
   return (
-    <details
+    <span
+      ref={rootRef}
       className={styles.root}
       data-testid="desk-help"
       data-help={topic || undefined}
       data-place={place}
-      onToggle={(event) => {
-        if (!event.currentTarget.open) return
-        document.querySelectorAll<HTMLDetailsElement>('details[data-testid="desk-help"][open]').forEach((other) => {
-          if (other !== event.currentTarget) other.open = false
-        })
-      }}
+      data-open={open ? 'yes' : 'no'}
     >
-      <summary aria-label={label} title={label}>?</summary>
-      <div className={styles.pop} role="note">{children}</div>
-    </details>
+      <button
+        type="button"
+        className={styles.mark}
+        aria-label={label}
+        title={label}
+        aria-expanded={open}
+        onClick={() => {
+          const next = !open
+          if (next) window.dispatchEvent(new CustomEvent(OPEN, { detail: id }))
+          setOpen(next)
+        }}
+      >
+        ?
+      </button>
+      {open ? <div className={styles.pop} role="note">{children}</div> : null}
+    </span>
   )
 }
