@@ -34,6 +34,8 @@ test('export times: the portal zone (Europe/London unless set), the viewer\'s la
   assert.equal(zonedTime('2026-10-04T05:12:00.000Z', 'Europe/London', 'en-GB'), '4 Oct 2026, 06:12 BST')
   assert.equal(zonedTime('2026-12-04T05:12:00.000Z', 'Europe/London', 'en-GB'), '4 Dec 2026, 05:12 GMT')
   assert.equal(zonedTime('2026-10-04T05:12:00.000Z', 'Asia/Dubai', 'en-GB'), '4 Oct 2026, 09:12 GST')
+  assert.match(zonedTime('2026-10-04T18:57:00.000Z', 'America/Toronto', 'en-GB'), /^4 Oct 2026, 14:57 (EDT|GMT-4)$/)
+  assert.equal(zoneCity('America/Toronto'), 'Toronto')
   assert.match(zonedTime('2026-10-04T05:12:00.000Z', 'Europe/London', 'en-US'), /^Oct 4, 2026, 06:12 AM GMT\+1$/)
   assert.equal(zonedTime('nonsense', 'Europe/London'), '')
   assert.equal(zoneCity('America/Los_Angeles'), 'Los Angeles')

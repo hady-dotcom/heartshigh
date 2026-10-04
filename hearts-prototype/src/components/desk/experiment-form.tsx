@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, type FormEvent } from 'react'
 import { Hidden } from '@/components/app/shell'
+import styles from './experiment-form.module.css'
 
 type Option = { value: string; label: string }
 
@@ -63,49 +64,51 @@ export function ExperimentForm({ draft }: { draft: ExperimentFormDraft }) {
   return (
     <form className="form panel" action="/api/experiments" method="post" data-testid="experiment-form" onSubmit={onSubmit}>
       <header><h2>{draft.existing ? 'Details' : 'Start from a slot'}</h2></header>
-      <div className="body">
+      <Hidden fields={{ action: draft.action, id: draft.id || '', next: draft.next }} />
+      <div className={`body ${styles.fields}`}>
         {error ? <div className="flash error" role="alert" data-testid="error">{error}</div> : null}
-        <Hidden fields={{ action: draft.action, id: draft.id || '', next: draft.next }} />
-        <label>Key
+        <label className="stack">Key
           <input name="key" defaultValue={draft.key} required autoComplete="off" disabled={draft.existing} data-testid="experiment-key" />
         </label>
-        <label>Name
+        <label className="stack">Name
           <input name="name" defaultValue={draft.name} required data-testid="experiment-name" />
         </label>
-        <label>What you are testing
+        <label className="stack">What you are testing
           <textarea name="description" defaultValue={draft.description} rows={3} />
         </label>
-        <label>Slot
+        <label className="stack">Slot
           <select name="slot" defaultValue={draft.slot} disabled={draft.existing} data-testid="experiment-slot-field">
             {draft.slots.map((slot) => <option key={slot.value} value={slot.value}>{slot.label}</option>)}
           </select>
         </label>
         {draft.existing ? null : (
-          <label>Or type a slot key
-            <input name="slotOverride" defaultValue={draft.slotOverride} placeholder="Only listed slots are allowed" data-testid="experiment-slot-key" />
+          <label className="stack">Or type a slot key
+            <input name="slotOverride" defaultValue={draft.slotOverride} placeholder="lanes-tab-label" data-testid="experiment-slot-key" />
+            <span className={styles.hint} data-testid="slot-key-hint">Only listed slots are allowed. A sheikh’s words cannot be a slot.</span>
           </label>
         )}
-        <label>Portal
+        <label className="stack">Portal
           <select name="portal" defaultValue={draft.portal}>
             <option value="">Every portal</option>
             {draft.portals.map((portal) => <option key={portal.value} value={portal.value}>{portal.label}</option>)}
           </select>
         </label>
-        <label>Split
+        <label className="stack">Split
           <select name="allocation" defaultValue={draft.allocation} data-testid="experiment-allocation">
             <option value="fixed">Fixed split</option>
             <option value="auto">Auto (Thompson sampling, 10% floor)</option>
           </select>
         </label>
-        <label>Primary metric
+        <label className="stack">Primary metric
           <select name="primaryMetric" defaultValue={draft.primaryMetric} data-testid="experiment-metric">
             {draft.metrics.map((metric) => <option key={metric.value} value={metric.value}>{metric.label}</option>)}
           </select>
         </label>
-        <label>Secondary metrics
+        <label className="stack">Secondary metrics
           <input name="secondary" defaultValue={draft.secondary} placeholder="appetiser_complete, return_next_day" />
+          <span className={styles.hint} data-testid="secondary-hint">Comma-separated extras to watch, such as appetiser_complete or return_next_day.</span>
         </label>
-        <label>Versions, one per line as <code>key | label</code>
+        <label className="stack">Versions, one per line as <code>key | label</code>
           <textarea name="variants" defaultValue={draft.variants} rows={6} data-testid="experiment-variants" />
         </label>
         <p className="muted" style={{ margin: 0 }}>{draft.rule}</p>

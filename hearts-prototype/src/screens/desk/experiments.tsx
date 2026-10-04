@@ -3,10 +3,12 @@ import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { ExperimentForm } from '@/components/desk/experiment-form'
 import { ExperimentHelp } from '@/components/desk/help'
+import { LocalWhen, LocalZoneNote } from '@/components/desk/local-when'
 import {
   EXPERIMENT_RULE,
   EXPERIMENT_SLOTS,
   PRIMARY_METRICS,
+  experimentAuditLine,
   metricLabel,
   variantCopy,
 } from '@/lib/experiment-slots'
@@ -47,11 +49,10 @@ function pct(value: number) {
   return `${Math.round(value * 100)}%`
 }
 
-function when(value: unknown) {
+function atIso(value: unknown) {
   if (!value) return ''
   const date = new Date(String(value))
-  if (Number.isNaN(date.getTime())) return ''
-  return date.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString()
 }
 
 async function Frame({
@@ -351,7 +352,12 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
           </div>
         </div>
         <section className="panel">
-          <header><h2>Who changed what</h2></header>
+          <header>
+            <div>
+              <h2>Who changed what</h2>
+              <LocalZoneNote />
+            </div>
+          </header>
           <div className="body">
             {audits.length ? (
               <table className={styles.table} data-testid="experiment-audit">
@@ -359,8 +365,8 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
                 <tbody>
                   {audits.map((row) => (
                     <tr key={row.id}>
-                      <td>{when(row.at)}</td>
-                      <td>{String(row.event || '').replace('experiment.', '')}{row.detail?.variantKey ? ` · ${row.detail.variantKey}` : ''}</td>
+                      <td style={{ whiteSpace: 'nowrap' }}><LocalWhen at={atIso(row.at)} /></td>
+                      <td data-testid="audit-what">{experimentAuditLine(String(row.event || ''), (row.detail || {}) as Record<string, unknown>, experiment)}</td>
                       <td>{row.actorRole || 'desk'}</td>
                     </tr>
                   ))}

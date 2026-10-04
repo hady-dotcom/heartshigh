@@ -286,6 +286,51 @@ export function experimentDraftProblems(input: {
   return [...new Set(problems)]
 }
 
+/** The words learners see when no test is running, used in kill-switch history. */
+export function usualWords(experiment: { slot?: string | null; variants?: { payload?: unknown; label?: string }[] | null }) {
+  const fromSlot = variantCopy(slotOf(experiment.slot)?.fallback, '')
+  if (fromSlot) return fromSlot
+  const first = experiment.variants?.[0]
+  return variantCopy(first?.payload, first?.label || '') || 'the usual words'
+}
+
+/** Plain-English “What” line for Who changed what. */
+export function experimentAuditLine(
+  event: string,
+  detail: Record<string, unknown> | null | undefined,
+  experiment: { slot?: string | null; variants?: { payload?: unknown; label?: string }[] | null },
+) {
+  const variant = typeof detail?.variantKey === 'string' && detail.variantKey.trim() ? detail.variantKey.trim() : ''
+  switch (event) {
+    case 'experiment.start':
+      return 'Test started'
+    case 'experiment.kill':
+      return `Kill switch on: everyone back to ${usualWords(experiment)}`
+    case 'experiment.unkill':
+      return 'Kill switch off'
+    case 'experiment.pause':
+      return 'Test held back'
+    case 'experiment.finish':
+      return 'Test finished'
+    case 'experiment.promote':
+      return 'Made the winner the default'
+    case 'experiment.create':
+      return 'Draft created'
+    case 'experiment.update':
+      return 'Details saved'
+    case 'experiment.approve_variant':
+      return variant ? `Approved ${variant}` : 'Approved a version'
+    case 'experiment.reject_variant':
+      return variant ? `Held back ${variant}` : 'Held a version back'
+    case 'experiment.suggest':
+      return 'Suggested versions with AI'
+    case 'experiment.test_data':
+      return 'Filled with labelled test numbers'
+    default:
+      return String(event || '').replace(/^experiment\./, '')
+  }
+}
+
 export type VariantView = {
   slot: string
   experimentKey: string | null

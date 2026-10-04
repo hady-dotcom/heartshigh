@@ -8,6 +8,7 @@ import {
   FIRST_WEEK_MS,
   MAX_EXPERIMENT_VARIANTS,
   draftsToAdd,
+  experimentAuditLine,
   fallbackPayload,
   formatSlotLabel,
   isTestableSlot,
@@ -15,6 +16,7 @@ import {
   remainingVariantSlots,
   slotKeys,
   slotOf,
+  usualWords,
   variantCopy,
   withinFirstWeek,
 } from '../../src/lib/experiment-slots'
@@ -230,6 +232,20 @@ test('seven versions are allowed and a ninth is refused', () => {
   assert.equal(draftsToAdd(7, 4), 1)
   assert.equal(draftsToAdd(3, 4), 4)
   assert.equal(draftsToAdd(8, 4), 0)
+})
+
+test('kill and start history lines are written in words', () => {
+  const lanes = {
+    slot: 'lanes-tab-label',
+    variants: [
+      { key: 'lanes', label: 'Lanes', payload: { label: 'Lanes' } },
+      { key: 'explore', label: 'Explore', payload: { label: 'Explore' } },
+    ],
+  }
+  assert.equal(usualWords(lanes), 'Lanes')
+  assert.equal(experimentAuditLine('experiment.start', {}, lanes), 'Test started')
+  assert.equal(experimentAuditLine('experiment.kill', { off: true }, lanes), 'Kill switch on: everyone back to Lanes')
+  assert.equal(experimentAuditLine('experiment.kill', {}, { slot: 'feed-cta-label', variants: [] }), 'Kill switch on: everyone back to Learn more')
 })
 
 test('lanes tab draft is a valid experiment on the whitelist', () => {
