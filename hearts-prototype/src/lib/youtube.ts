@@ -13,6 +13,9 @@ export type YoutubeMeta = {
   title: string
   author: string
   thumbnail: string
+  /** oEmbed's player size. A Short answers taller than wide. */
+  width?: number
+  height?: number
 }
 
 export type TranscriptProvider = {
@@ -42,13 +45,14 @@ export async function fetchYoutubeMeta(id: string): Promise<YoutubeMeta | null |
     const response = await fetch(endpoint, { signal: AbortSignal.timeout(12_000) })
     if (response.status === 404 || response.status === 400) return null
     if (!response.ok) return undefined
-    const body = (await response.json()) as { title?: string; author_name?: string; thumbnail_url?: string }
+    const body = (await response.json()) as { title?: string; author_name?: string; thumbnail_url?: string; width?: number; height?: number }
     if (!body.title) return undefined
     return {
       id,
       title: body.title,
       author: body.author_name || 'YouTube',
       thumbnail: body.thumbnail_url || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+      ...(Number(body.width) > 0 && Number(body.height) > 0 ? { width: Number(body.width), height: Number(body.height) } : {}),
     }
   } catch {
     return undefined

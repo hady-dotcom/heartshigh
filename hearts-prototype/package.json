@@ -15,6 +15,7 @@
     "approve:imported": "tsx scripts/approve-imported-questions.ts",
     "bootstrap": "tsx scripts/bootstrap.ts",
     "tidy:lines": "tsx scripts/tidy-lines.ts",
+    "mark:shorts": "tsx scripts/mark-shorts.ts",
     "seed": "tsx src/seed/seed.ts",
     "seed:starters": "tsx src/seed/seed.ts --starters",
     "demo:timed-learners": "tsx src/seed/timed-learners.ts",

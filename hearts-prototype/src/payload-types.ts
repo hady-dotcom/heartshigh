@@ -560,6 +560,10 @@ export interface Lesson {
   speakerProfile?: (number | null) | Speaker;
   youtubeUrl?: string | null;
   youtubeId?: string | null;
+  /**
+   * A YouTube Short or other 9:16 film, usually with its words burned in. The feed hides its own captions and YouTube's thumbnail for it. Set by itself for /shorts/ links and by npm run mark:shorts.
+   */
+  vertical?: boolean | null;
   videoProvider?: ('youtube' | 'vimeo' | 'file') | null;
   vimeoId?: string | null;
   film?: (number | null) | Media;
@@ -2511,6 +2515,7 @@ export interface LessonsSelect<T extends boolean = true> {
   speakerProfile?: T;
   youtubeUrl?: T;
   youtubeId?: T;
+  vertical?: T;
   videoProvider?: T;
   vimeoId?: T;
   film?: T;

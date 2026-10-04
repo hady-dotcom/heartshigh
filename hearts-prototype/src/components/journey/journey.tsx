@@ -1300,6 +1300,17 @@ export function Journey(props: JourneyProps) {
   const laneVisible = Boolean(item) && !firstEver
   void readyTick
 
+  // A Short has its words in the picture: the speaker and Follow sit at the top, out of its lower third.
+  const speakerRow = item ? (
+    <div className="j-speaker">
+      <a className="speaker-row" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-link" onClick={(event) => { if (needsAccount('save')) event.preventDefault() }}>
+        <Avatar name={item.speaker} portrait={item.portrait} />
+        <span className="who"><b>{item.speaker}</b><small>{laneVisible ? `On ${item.laneLabel}` : item.courseTitle}</small></span>
+      </a>
+      <span onClickCapture={(event) => { if (needsAccount('save')) { event.preventDefault(); event.stopPropagation() } }}><FollowButton slug={item.speakerSlug} /></span>
+    </div>
+  ) : null
+
   const chrome = item && phase === 'feed' && !slide && !scenic ? (
     <>
       <div className="j-hairline-row">
@@ -1321,7 +1332,8 @@ export function Journey(props: JourneyProps) {
       {typeClip && muted ? (
         <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button>
       ) : null}
-      {(cardKind && cardKind !== 'scene') || typeClip || mode !== 'hors' ? null : captionButton}
+      {(cardKind && cardKind !== 'scene') || typeClip || mode !== 'hors' || item.vertical ? null : captionButton}
+      {item.vertical && mode === 'hors' ? <div className="j-top-speaker" data-testid="top-speaker">{speakerRow}</div> : null}
       {scenicAppetiser ? (
         <div className="scenic-lines" data-testid="scenic-lines">
           {(scenicLines.length ? scenicLines : [item.lessonTitle || item.courseTitle]).map((line) => (
@@ -1337,13 +1349,7 @@ export function Journey(props: JourneyProps) {
       <div className="clip-foot">
         {mode === 'hors' ? (
           <>
-            <div className="j-speaker">
-              <a className="speaker-row" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-link" onClick={(event) => { if (needsAccount('save')) event.preventDefault() }}>
-                <Avatar name={item.speaker} portrait={item.portrait} />
-                <span className="who"><b>{item.speaker}</b><small>{laneVisible ? `On ${item.laneLabel}` : item.courseTitle}</small></span>
-              </a>
-              <span onClickCapture={(event) => { if (needsAccount('save')) { event.preventDefault(); event.stopPropagation() } }}><FollowButton slug={item.speakerSlug} /></span>
-            </div>
+            {item.vertical ? null : speakerRow}
             <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" onClick={() => void stepUp()}>Learn more</button>
           </>
         ) : (
@@ -1361,7 +1367,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'}>
+    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined}>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />

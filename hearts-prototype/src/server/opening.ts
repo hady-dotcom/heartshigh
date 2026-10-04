@@ -8,13 +8,14 @@ import { now } from '@/lib/clock'
 import { adoptedCourseIds, visibleCourseIds, type PortalDoc, type SessionUser } from './context'
 import { normaliseSpans, type AppetiserSpan } from '@/lib/tiers'
 import { ladderParentRef, talkChain, type PieceRef } from '@/lib/nesting'
-import { readBackgroundsBaseUrl } from '@/lib/backgrounds'
-import { cardForTalk, readCardCatalogue, type StoredCard } from '@/lib/cards'
+import { backgroundSrc, readBackgroundsBaseUrl } from '@/lib/backgrounds'
+import { cardForTalk, readCardCatalogue, sceneSrc, type StoredCard } from '@/lib/cards'
+import { isVerticalLesson } from '@/lib/shorts'
 import { filmsForTalk, mixFeed, readFilmCatalogue, type BeatFilm } from '@/lib/films'
 import { filesForTalk, isTypographyStyle, readTypographyManifest, type TypographyManifest } from '@/lib/typography'
 import { clipWords, displayLine, parseLineTidy } from '@/lib/tidy-caption'
 import { partTitle } from '@/lib/talk-title'
-import { laneOf, portraitFor, posterFor, slugify, type FeedItem, type SlideStyle } from './learner'
+import { laneOf, portraitFor, SLIDE_ART, slugify, type FeedItem, type SlideStyle } from './learner'
 
 type Row = Record<string, unknown> & { id: number }
 
@@ -235,6 +236,15 @@ function cutInfos(data: Loaded, portal: PortalDoc): CutInfo[] {
 
 const STYLES: SlideStyle[] = ['kinetic', 'cinema', 'windows', 'conversation', 'unfold']
 
+/**
+ * The still behind a clip until it plays: the talk's scenic background, else its scene, else a slide. YouTube's
+ * thumbnails carry the channel's title text (and a Short's carry its burned-in words), so they are never used here.
+ */
+function ownPoster(card: StoredCard | null, index: number) {
+  const stored = card?.background ? backgroundSrc(card.background, readBackgroundsBaseUrl()) : null
+  return stored || (card?.scene ? sceneSrc(card.scene) : null) || SLIDE_ART[card?.style && isTypographyStyle(card.style) ? card.style : STYLES[index % STYLES.length]]
+}
+
 function typographyFor(data: Loaded, lesson: Row, tier: Row | undefined) {
   const chosen = String(tier?.typographyStyle || '')
   if (!tier?.typographyInPlace || !isTypographyStyle(chosen)) return null
@@ -332,8 +342,9 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     speaker,
     speakerSlug: slug,
     portrait: portraitFor(slug),
-    poster: posterFor(youtubeId),
+    poster: ownPoster(cardForTalk(data.cards, youtubeId), index),
     youtubeId,
+    vertical: isVerticalLesson(lesson),
     courseId: course.id,
     courseTitle: String(course.title || ''),
     lessonId: lesson.id,

@@ -6,6 +6,7 @@ import { slugProblem } from './lib/text-safety'
 import { authorTextProblems, markupProblems } from './lib/opening-data'
 import { changedTierFields, horsCapOf, saidInTalk, TIER_TIMING_FIELDS, tierProblem, timingProblems } from './lib/tiers'
 import { talkChain } from './lib/nesting'
+import { isShortsUrl } from './lib/shorts'
 import { linkLadderParents } from './server/piece-parents'
 import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
@@ -332,7 +333,15 @@ export const Lessons: CollectionConfig = {
   slug: 'lessons',
   admin: { useAsTitle: 'title' },
   access: masterOnly,
-  hooks: { beforeChange: [plainFields('title', 'sourceTitle', 'speaker')] },
+  hooks: {
+    beforeChange: [
+      plainFields('title', 'sourceTitle', 'speaker'),
+      ({ data }) => {
+        if (data && (isShortsUrl(data.youtubeUrl) || isShortsUrl(data.sourceUrl))) data.vertical = true
+        return data
+      },
+    ],
+  },
   fields: [
     { name: 'title', type: 'text', required: true },
     { name: 'unit', type: 'relationship', relationTo: 'units', required: true },
@@ -344,6 +353,12 @@ export const Lessons: CollectionConfig = {
     { name: 'speakerProfile', type: 'relationship', relationTo: 'speakers' },
     { name: 'youtubeUrl', type: 'text' },
     { name: 'youtubeId', type: 'text' },
+    {
+      name: 'vertical',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: { description: 'A YouTube Short or other 9:16 film, usually with its words burned in. The feed hides its own captions and YouTube\'s thumbnail for it. Set by itself for /shorts/ links and by npm run mark:shorts.' },
+    },
     {
       name: 'videoProvider',
       type: 'select',

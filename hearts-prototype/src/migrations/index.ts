@@ -6,6 +6,7 @@ import * as migration_20261003_180616_jibril_doors from './20261003_180616_jibri
 import * as migration_20261003_200853_integration_final from './20261003_200853_integration_final';
 import * as migration_20261003_194500_line_tidy from './20261003_194500_line_tidy';
 import * as migration_20261003_220000_feedback from './20261003_220000_feedback';
+import * as migration_20261004_060000_shorts from './20261004_060000_shorts';
 
 export const migrations = [
   {
@@ -47,5 +48,10 @@ export const migrations = [
     up: migration_20261003_220000_feedback.up,
     down: migration_20261003_220000_feedback.down,
     name: '20261003_220000_feedback',
+  },
+  {
+    up: migration_20261004_060000_shorts.up,
+    down: migration_20261004_060000_shorts.down,
+    name: '20261004_060000_shorts',
   },
 ];

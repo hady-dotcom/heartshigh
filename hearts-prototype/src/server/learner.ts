@@ -23,6 +23,8 @@ export type FeedItem = {
   portrait: string | null
   poster: string | null
   youtubeId: string | null
+  /** A Short or other 9:16 film with its words in the picture: no caption overlay, buttons above the lower third. */
+  vertical?: boolean
   courseId: number
   courseTitle: string
   lessonId: number

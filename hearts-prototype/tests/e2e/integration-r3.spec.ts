@@ -1,4 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
+import { E2E_BASE } from '../env'
+import { fakeYouTube } from './fake-youtube'
 
 const PORTAL = '/p/east-london'
 
@@ -51,3 +53,36 @@ for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }])
     await expect(page.getByTestId('logout')).toBeInViewport({ ratio: 1 })
   })
 }
+
+test('a YouTube Short in the feed: no caption over its burned-in words, Follow at the top, and our own poster', async ({ page, playwright }) => {
+  const master = await playwright.request.newContext({ baseURL: E2E_BASE })
+  expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
+  await fakeYouTube(page, { blockAutoplay: true })
+  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', `${PORTAL}/feed`)
+  const feed = page.getByTestId('journey')
+  await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  await expect(page.getByTestId('poster-frame')).toBeVisible()
+  const poster = await page.locator('[data-testid="poster-frame"] img').getAttribute('src')
+  expect(poster || '', 'the poster is ours, not a YouTube thumbnail').not.toMatch(/ytimg|youtube|\/clips\//)
+  const lessonId = await feed.getAttribute('data-lesson')
+  const lesson = (await (await master.get(`/api/lessons/${lessonId}?depth=0`)).json()) as { youtubeId: string; youtubeUrl?: string | null }
+  try {
+    expect((await master.patch(`/api/lessons/${lessonId}`, { data: { youtubeUrl: `https://www.youtube.com/shorts/${lesson.youtubeId}` } })).ok()).toBeTruthy()
+    expect(((await (await master.get(`/api/lessons/${lessonId}?depth=0`)).json()) as { vertical?: boolean }).vertical).toBe(true)
+    await page.reload()
+    await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+    await expect(feed).toHaveAttribute('data-lesson', lessonId!)
+    await expect(feed).toHaveAttribute('data-vertical', 'yes')
+    await expect(page.getByTestId('caption')).toHaveCount(0)
+    const top = page.getByTestId('top-speaker')
+    await expect(top.getByRole('button', { name: /follow/i })).toBeVisible()
+    const box = (await top.boundingBox())!
+    expect(box.y + box.height, 'the Follow row sits above the lower third').toBeLessThan(844 * 0.4)
+    await expect(page.locator('.clip-foot [data-testid="speaker-link"]')).toHaveCount(0)
+    await expect(page.locator('.j-poster-who')).toBeHidden()
+    expect(await page.locator('[data-testid="poster-frame"] img').getAttribute('src')).not.toMatch(/ytimg|youtube|\/clips\//)
+  } finally {
+    await master.patch(`/api/lessons/${lessonId}`, { data: { youtubeUrl: lesson.youtubeUrl || null, vertical: false } })
+    await master.dispose()
+  }
+})
