@@ -1031,6 +1031,28 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, text(form, 'next') || '/', undefined, status === 'approved' ? 'Cut approved. Learners can now see it in their feed.' : status === 'rejected' ? 'Cut set aside.' : 'Cut saved.')
   }
 
+  if (action === 'framing-override') {
+    if (user.role !== 'master') return redirectTo(req, '/', 'Only the master desk can override framing.')
+    const cut = await findDoc(payload, 'cuts', Number(text(form, 'cut')))
+    if (!cut) return redirectTo(req, text(form, 'next') || '/', 'That clip could not be found.')
+    const lesson = await findDoc(payload, 'lessons', idOf(cut.lesson) || 0)
+    const youtubeId = String(lesson?.youtubeId || '')
+    if (!youtubeId) return redirectTo(req, text(form, 'next') || '/', 'That clip has no YouTube id.')
+    const { isFramingMode } = await import('@/lib/framing/validate')
+    const { trackForClip } = await import('@/lib/framing/store')
+    const { fallbackTrack, parseTrack, validateTrack } = await import('@/lib/framing/validate')
+    const mode = text(form, 'mode')
+    if (!isFramingMode(mode)) return redirectTo(req, text(form, 'next') || '/', 'Mode must be A, B, C, D, E or F.')
+    const index = Number(text(form, 'index'))
+    const existing = parseTrack(cut.framingTrack) || trackForClip(youtubeId, Number(cut.start), Number(cut.end), lesson?.framingTrack) || fallbackTrack(youtubeId, Number(cut.start), Number(cut.end))
+    if (!existing.segments[index]) return redirectTo(req, text(form, 'next') || '/', 'That segment is not on the track.')
+    const next = { ...existing, segments: existing.segments.map((row, at) => (at === index ? { ...row, mode } : row)) }
+    const problems = validateTrack(next)
+    if (problems.length) return redirectTo(req, text(form, 'next') || '/', problems[0].message)
+    await payload.update({ collection: 'cuts', id: cut.id, overrideAccess: true, data: { framingTrack: next } as never })
+    return redirectTo(req, text(form, 'next') || '/', undefined, `Segment now uses ${mode}.`)
+  }
+
   if (action === 'ladder-status') {
     if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot review clips.')
     const item = await findDoc(payload, 'ladder-items', Number(text(form, 'item')))

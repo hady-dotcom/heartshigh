@@ -598,6 +598,18 @@ export interface Lesson {
    * The title exactly as YouTube and the links list have it.
    */
   sourceTitle?: string | null;
+  /**
+   * Live portrait framing track for the whole talk.
+   */
+  framingTrack?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -658,6 +670,18 @@ export interface Cut {
   kind?: string | null;
   engine?: string | null;
   seat?: (number | null) | Seat;
+  /**
+   * Live portrait framing track for this clip.
+   */
+  framingTrack?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }

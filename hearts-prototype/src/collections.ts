@@ -410,6 +410,11 @@ export const Lessons: CollectionConfig = {
     { name: 'csvSeq', type: 'number', admin: { description: 'Seq in HEARTS-8k-LINKS-for-bots.csv, for audit.' } },
     { name: 'starterLane', type: 'text' },
     { name: 'sourceTitle', type: 'text', admin: { description: 'The title exactly as YouTube and the links list have it.' } },
+    {
+      name: 'framingTrack',
+      type: 'json',
+      admin: { description: 'Live portrait framing track for the whole talk: [{ start, end, mode A–F, crop, focus, confidence }]. Written by pnpm framing:analyse. Never a rendered file.' },
+    },
   ],
 }
 
@@ -508,6 +513,11 @@ export const Cuts: CollectionConfig = {
     { name: 'kind', type: 'text' },
     { name: 'engine', type: 'text' },
     { name: 'seat', type: 'relationship', relationTo: 'seats' },
+    {
+      name: 'framingTrack',
+      type: 'json',
+      admin: { description: 'Live portrait framing track for this clip. Segments {start, end, mode A–F, crop or focus, confidence}. The player follows it; the film stays on YouTube.' },
+    },
   ],
 }
 

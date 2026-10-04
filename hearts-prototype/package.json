@@ -27,7 +27,8 @@
     "test": "npm run test:unit && npm run test:e2e",
     "screenshots": "playwright test tests/e2e/screenshots.spec.ts",
     "typography:export": "tsx scripts/export-typography.ts",
-    "typography:render": "npm --prefix ../remotion run render"
+    "typography:render": "npm --prefix ../remotion run render",
+    "framing:analyse": "tsx scripts/framing-analyse.ts"
   },
   "license": "UNLICENSED",
   "dependencies": {

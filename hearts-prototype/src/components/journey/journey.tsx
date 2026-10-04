@@ -21,6 +21,9 @@ import { HeartIcon, PlayIcon, SaveIcon, ShareIcon } from '../icons'
 import { HelpScreen, Opener, SceneCard } from './scenes'
 import { TeachingCard } from './teaching-card'
 import { KeepPlaceSheet, type SheetReason } from './sheet'
+import { SpokenWords } from '../app/spoken-words'
+import { segmentAt } from '@/lib/framing/choose'
+import type { FramingMode } from '@/lib/framing/types'
 
 type Phase = 'opener' | 'scene' | 'help' | 'handoff' | 'feed'
 type Mode = 'hors' | 'appetiser'
@@ -166,6 +169,7 @@ export function Journey(props: JourneyProps) {
   const [firstEver, setFirstEver] = useState(false)
   const [lineAt, setLineAt] = useState(0)
   const [spokenAt, setSpokenAt] = useState<number | null>(null)
+  const [framingMode, setFramingMode] = useState<FramingMode | null>(null)
   const watch = useRef<{ key: string; start: number; furthest: number; done90: boolean }>({ key: '', start: 0, furthest: 0, done90: false })
   const refilling = useRef(false)
   const clipRef = useRef<HTMLDivElement>(null)
@@ -996,6 +1000,8 @@ export function Journey(props: JourneyProps) {
       const time = player.getCurrentTime()
       const seen = watch.current
       seen.furthest = Math.max(seen.furthest, time - seen.start)
+      const framed = current.framingTrack ? segmentAt(current.framingTrack, time) : null
+      setFramingMode((held) => (framed?.mode === held ? held : framed?.mode || null))
       // The player's own end mark is skipped when someone seeks past it, so the appetiser stops here as well.
       const lines = modeRef.current === 'hors' ? current.hors.lines : current.appetiser.lines
       const showing = captionIndex(lines, time)
@@ -1451,7 +1457,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined}>
+    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing={framingMode || undefined}>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />
@@ -1469,7 +1475,7 @@ export function Journey(props: JourneyProps) {
       ) : null}
 
       <div ref={clipRef} className="j-clip" data-screen={phase === 'feed' || phase === 'handoff' ? 'clip' : undefined}>
-        <div ref={slotRef} className="j-slot" data-testid="player-slot" style={{ visibility: phase === 'feed' || phase === 'handoff' ? 'visible' : 'hidden' }}>
+        <div ref={slotRef} className="j-slot" data-testid="player-slot" data-framing={item?.framingTrack ? framingMode || 'F' : undefined} style={{ visibility: phase === 'feed' || phase === 'handoff' ? 'visible' : 'hidden', ['--fr-poster' as string]: item?.youtubeId ? `url(https://i.ytimg.com/vi/${item.youtubeId}/hqdefault.jpg)` : undefined, ['--fr-tx' as string]: item?.framingTrack && framingMode === 'D' ? `${-((segmentAt(item.framingTrack, spokenAt ?? item.hors.start)?.focus?.x ?? 0.5) * 100 - 50)}%` : undefined }}>
           {[0, 1].map((at) => (
             <div
               key={at}
@@ -1479,6 +1485,9 @@ export function Journey(props: JourneyProps) {
               style={{ visibility: at === visibleHost && playerReady ? 'visible' : 'hidden' }}
             />
           ))}
+          {framingMode === 'F' && item?.framingTrack?.sentences?.length ? (
+            <SpokenWords sentences={item.framingTrack.sentences} time={spokenAt ?? item.hors.start} speaker={item.speaker} />
+          ) : null}
           {typeClip && typeSrc ? (
             <video
               key={item?.id}
