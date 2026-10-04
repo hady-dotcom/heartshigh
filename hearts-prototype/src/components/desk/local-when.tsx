@@ -1,11 +1,7 @@
 'use client'
 
-import { useSyncExternalStore } from 'react'
+import { useEffect, useState } from 'react'
 import { zoneCity, zonedTime } from '@/lib/zone-time'
-
-function subscribe() {
-  return () => {}
-}
 
 function viewerZone() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
@@ -13,15 +9,18 @@ function viewerZone() {
 
 /** UK date, viewer’s local clock, with a short zone label (e.g. 4 Oct 2026, 14:57 EDT). */
 export function LocalWhen({ at }: { at: string }) {
-  const text = useSyncExternalStore(subscribe, () => zonedTime(at, viewerZone(), 'en-GB'), () => '')
-  return <time dateTime={at} data-testid="audit-when" data-at={at}>{text || '\u00a0'}</time>
+  const [text, setText] = useState('')
+  useEffect(() => {
+    if (!at) return
+    setText(zonedTime(at, viewerZone(), 'en-GB'))
+  }, [at])
+  return <time dateTime={at} data-testid="audit-when" data-at={at} data-ready={text ? '1' : '0'}>{text || '\u00a0'}</time>
 }
 
 export function LocalZoneNote() {
-  const label = useSyncExternalStore(
-    subscribe,
-    () => `Times in ${zoneCity(viewerZone())} time`,
-    () => 'Times in your local time',
-  )
-  return <p data-testid="audit-zone">{label}</p>
+  const [label, setLabel] = useState('Times in your local time')
+  useEffect(() => {
+    setLabel(`Times in ${zoneCity(viewerZone())} time`)
+  }, [])
+  return <p data-testid="audit-zone" data-ready={label.startsWith('Times in your local time') ? '0' : '1'}>{label}</p>
 }
