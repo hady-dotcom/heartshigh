@@ -14,6 +14,7 @@ import {
   isSameDay,
   linkLabel,
   londonIso,
+  makeEntryCode,
   matchingGatherings,
   newcomerFollowUp,
   publicNames,
@@ -31,7 +32,7 @@ import {
   type RsvpRow,
   type TaskRef,
 } from '@/lib/gather'
-import { doorByNumber, doorCode, doorLabel } from '@/lib/doors'
+import { capitalAfterColon, doorByNumber, doorCode, doorLabel } from '@/lib/doors'
 import { harvestLine } from '@/lib/harvest'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { now } from '@/lib/clock'
@@ -75,6 +76,7 @@ export type GatherCard = {
   taskId: number | null
   prompts: string[]
   checkinToken: string
+  entryCode: string
   proposedBy: number | null
 }
 
@@ -123,7 +125,7 @@ function cardFrom(row: Doc, rsvps: Doc[], checkins: Doc[], userId: number | null
     waitlist: forRow.filter((item) => item.status === 'waitlist').length,
     checkedIn: checkins.filter((item) => idOf(item.gathering) === row.id).length,
     mine: mine ? text(mine.status) : '',
-    linkLabel: text(row.linkLabel),
+    linkLabel: capitalAfterColon(text(row.linkLabel)),
     door,
     doorLabel: doorRow ? doorLabel(doorRow) : '',
     hostLabel: text(row.hostLabel) || 'Your host',
@@ -137,6 +139,7 @@ function cardFrom(row: Doc, rsvps: Doc[], checkins: Doc[], userId: number | null
     taskId: idOf(row.task),
     prompts: Array.isArray(row.prompts) ? (row.prompts as unknown[]).map((item) => String(item)).filter(Boolean) : [],
     checkinToken: text(row.checkinToken),
+    entryCode: text(row.entryCode).toUpperCase(),
     proposedBy: idOf(row.proposedBy),
   }
 }
@@ -279,13 +282,13 @@ export async function saveGathering(payload: Payload, input: {
     if (input.propose && input.user.role === 'learner' && idOf(existing.proposedBy) !== input.user.id) {
       return { ok: false as const, error: 'You can only change a gathering you proposed.' }
     }
-    await payload.update({ collection: 'gatherings', id: input.id, overrideAccess: true, data: data as never })
+    await payload.update({ collection: 'gatherings', id: input.id, overrideAccess: true, data: { ...data, entryCode: text(existing.entryCode) || makeEntryCode() } as never })
     return { ok: true as const, id: input.id, slug: text(existing.slug) }
   }
   const created = await payload.create({
     collection: 'gatherings',
     overrideAccess: true,
-    data: { ...data, slug: await uniqueSlug(payload, title), checkinToken: randomUUID() } as never,
+    data: { ...data, slug: await uniqueSlug(payload, title), checkinToken: randomUUID(), entryCode: makeEntryCode() } as never,
   })
   return { ok: true as const, id: created.id as number, slug: text((created as Doc).slug) }
 }
@@ -424,9 +427,14 @@ export async function claimGuestRsvp(payload: Payload, token: string, userId: nu
   await payload.update({ collection: 'gather-rsvps', id: row.id, overrideAccess: true, data: { user: userId } as never })
 }
 
-export async function checkIn(payload: Payload, input: { gathering: Doc; user: SessionUser; method: 'qr' | 'host'; token?: string }) {
+export async function checkIn(payload: Payload, input: { gathering: Doc; user: SessionUser; method: 'qr' | 'host' | 'code'; token?: string; code?: string }) {
   if (input.method === 'qr' && input.token !== text(input.gathering.checkinToken)) {
     return { ok: false as const, error: 'That door code does not match this gathering.' }
+  }
+  if (input.method === 'code') {
+    const expected = text(input.gathering.entryCode).toUpperCase()
+    const given = (input.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4)
+    if (!expected || given !== expected) return { ok: false as const, error: 'That door code does not match this gathering.' }
   }
   const portalId = idOf(input.gathering.portal)
   if (!portalId || (input.user.role !== 'master' && portalIdOf(input.user) !== portalId)) {

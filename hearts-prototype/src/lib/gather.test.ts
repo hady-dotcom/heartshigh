@@ -9,6 +9,10 @@ import {
   countsWithGathering,
   crossPost,
   demoPortalGuard,
+  makeEntryCode,
+  normaliseEntryCode,
+  publicShareUrl,
+  whatsAppHref,
   discussionPrompts,
   gatheringMatchesTask,
   googleCalendarUrl,
@@ -28,6 +32,7 @@ import {
   whenLabel,
 } from './gather'
 import { countsTowardProgress } from './progress'
+import { publicBaseURL } from './env'
 
 test('a full room puts the next person on the list, and a decline promotes them', () => {
   const first = applyChoice([], 'a', 'going', 1, 1)
@@ -145,15 +150,25 @@ test('calendar files, Google links and cross-post text are ready to send', () =>
   assert.match(ics, /LOCATION:The hall/)
   const google = googleCalendarUrl({ title: 'Tea and talk', startsAt: '2026-10-08T18:00:00.000Z', place: 'The hall' })
   assert.match(google, /^https:\/\/calendar\.google\.com\//)
-  const post = crossPost({ title: 'Tea and talk', when: 'Thursday', place: 'The hall', audience: 'Everyone', url: 'https://hearts.example/gather/tea', linkLabel: 'Discussing W7: Fasting Ramadan' })
-  assert.match(post, /Discussing W7: Fasting Ramadan/)
-  assert.match(post, /Meetup|Eventbrite|Facebook|Come if you can/)
-  assert.match(post, /https:\/\/hearts\.example\/gather\/tea/)
+  const post = crossPost({ title: 'Tea and talk', when: 'Thursday', place: 'The hall', audience: 'Everyone', url: 'http://127.0.0.1:3010/gather/tea-after-class', linkLabel: 'Discussing W16: Ihsan: worship as though you see Him' })
+  assert.match(post, /Discussing W16: Ihsan: Worship as though you see Him/)
+  assert.match(post, /Come if you can/)
+  assert.doesNotMatch(post, /https?:\/\//)
+  assert.doesNotMatch(post, /127\.0\.0\.1|localhost|tea-after-class/)
+  const sent = decodeURIComponent(whatsAppHref('http://localhost:3010/gather/circle-after-isha', 'Circle after Isha', 'Thursday'))
+  assert.doesNotMatch(sent, /localhost|127\.0\.0\.1|circle-after-isha/)
+  assert.match(decodeURIComponent(whatsAppHref('https://hearts.example/gather/circle-after-isha', 'Circle after Isha', 'Thursday')), /https:\/\/hearts\.example\/gather\/circle-after-isha/)
+  assert.equal(publicShareUrl('http://127.0.0.1:3010/gather/x'), '')
+  assert.equal(publicBaseURL({ NEXT_PUBLIC_SITE_URL: 'https://hearts.example/' }, 'http://localhost:3010'), 'https://hearts.example')
+  assert.equal(publicBaseURL({ NEXT_PUBLIC_SITE_URL: 'http://127.0.0.1:3000' }, 'https://masjid.example'), 'https://masjid.example')
+  assert.equal(publicBaseURL({}, 'http://localhost:3010'), '')
 })
 
 test('London wall time becomes the right instant, and gender defaults follow the title', () => {
   assert.equal(londonIso('2026-01-15T19:00'), '2026-01-15T19:00:00.000Z')
   assert.equal(londonIso('2026-07-15T19:00'), '2026-07-15T18:00:00.000Z')
+  assert.equal(londonIso('15/01/2026 19:00'), '2026-01-15T19:00:00.000Z')
+  assert.equal(londonIso('15/07/2026 19:00'), '2026-07-15T18:00:00.000Z')
   assert.equal(suggestedAudience('walk', 'Sisters’ walk'), 'sisters')
   assert.equal(suggestedAudience('tea', 'Brothers’ tea'), 'brothers')
   assert.equal(suggestedAudience('picnic', 'Sunday picnic'), 'family')
@@ -173,6 +188,9 @@ test('the desk groups by upcoming and past, then by door, and the demo script re
   assert.match(demoPortalGuard('east-london') || '', /hearts-demo/)
   assert.equal(demoPortalGuard('hearts-demo'), null)
   assert.match(linkLabel({ doorCode: 'W7', doorTitle: 'Fasting Ramadan', courseTitle: 'The Names', lessonTitle: 'Class 20' }), /Discussing W7: Fasting Ramadan, after Class 20/)
+  assert.match(linkLabel({ doorCode: 'W16', doorTitle: 'Ihsan: worship as though you see Him' }), /Discussing W16: Ihsan: Worship as though you see Him/)
+  assert.equal(normaliseEntryCode(' nur4 '), 'NUR4')
+  assert.equal(makeEntryCode([0, 1, 2, 3]).length, 4)
 })
 
 test('the door poster is one A4 page and keeps the web address inside the code', () => {
@@ -183,11 +201,14 @@ test('the door poster is one A4 page and keeps the web address inside the code',
     audience: 'Sisters',
     host: 'Amina',
     masjid: 'East London Mosque',
+    entryCode: 'SLM5',
     url: 'https://hearts.example/gather/sisters-walk/in?k=abc',
   }).toString('latin1')
   assert.match(pdf, /%PDF-1\.4/)
   assert.match(pdf, /MediaBox \[0 0 595 842\]/)
   assert.match(pdf, /Sisters' walk/)
   assert.match(pdf, /Scan this to check in/)
+  assert.match(pdf, /SLM5/)
+  assert.match(pdf, /Or type the door code/)
   assert.doesNotMatch(pdf, /sisters-walk/)
 })

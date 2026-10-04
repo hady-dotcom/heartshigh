@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 
-export function CopyLink({ value, testId = 'copy-link' }: { value: string; testId?: string }) {
-  const [label, setLabel] = useState('Copy link')
+export function CopyLink({ value, testId = 'copy-link', label: idle = 'Copy link' }: { value: string; testId?: string; label?: string }) {
+  const [label, setLabel] = useState(idle)
   return (
     <button
       type="button"
@@ -14,7 +14,7 @@ export function CopyLink({ value, testId = 'copy-link' }: { value: string; testI
           await navigator.clipboard.writeText(value)
           setLabel('Copied')
         } catch {
-          setLabel('Select the link and copy it')
+          setLabel('Try again')
         }
       }}
     >

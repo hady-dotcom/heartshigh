@@ -2,6 +2,8 @@
 // Hors d'oeuvres and appetisers still do not finish a course. Showing up to a matching
 // activation task does.
 
+import { capitalAfterColon } from './doors'
+
 export type Audience = 'brothers' | 'sisters' | 'family' | 'youth' | 'all'
 export type GatherKind = 'circle' | 'tea' | 'volunteer' | 'walk' | 'youth' | 'picnic'
 export type RsvpChoice = 'going' | 'maybe' | 'cant'
@@ -246,14 +248,27 @@ export function suggestedAudience(kind: string, title: string): Audience {
   return 'all'
 }
 
-/** Wall-clock time from a datetime-local field, read as London time. */
-export function londonIso(local: string) {
-  const match = local.trim().match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/)
-  if (!match) return ''
-  const asUtc = new Date(`${match[1]}T${match[2]}:00Z`)
+function londonFromParts(date: string, time: string) {
+  const asUtc = new Date(`${date}T${time}:00Z`)
   if (Number.isNaN(asUtc.getTime())) return ''
   const adjusted = new Date(asUtc.getTime() - londonOffsetMinutes(asUtc) * 60_000)
   return new Date(asUtc.getTime() - londonOffsetMinutes(adjusted) * 60_000).toISOString()
+}
+
+/** Wall-clock time as London. Accepts a datetime-local value, or UK dd/mm/yyyy with 24-hour time. */
+export function londonIso(local: string) {
+  const trimmed = local.trim()
+  const uk = trimmed.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})(?:[,\s]+(\d{1,2})[:.](\d{2}))?$/)
+  if (uk) {
+    const day = uk[1].padStart(2, '0')
+    const month = uk[2].padStart(2, '0')
+    const hour = (uk[4] || '00').padStart(2, '0')
+    const minute = uk[5] || '00'
+    return londonFromParts(`${uk[3]}-${month}-${day}`, `${hour}:${minute}`)
+  }
+  const iso = trimmed.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/)
+  if (!iso) return ''
+  return londonFromParts(iso[1], iso[2])
 }
 
 function londonOffsetMinutes(instant: Date) {
@@ -331,27 +346,42 @@ export function googleCalendarUrl(input: { title: string; startsAt: string; ends
   return `https://calendar.google.com/calendar/render?${params.toString()}`
 }
 
+function localHost(hostname: string) {
+  const host = hostname.replace(/^\[|\]$/g, '').split('%')[0].toLowerCase()
+  return host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '::1' || host.endsWith('.localhost')
+}
+
+/** A link people can be shown. Localhost and 127.0.0.1 never go into a message. */
+export function publicShareUrl(url: string) {
+  try {
+    const parsed = new URL(url)
+    if (localHost(parsed.hostname)) return ''
+    return url
+  } catch {
+    return ''
+  }
+}
+
 export function whatsAppHref(url: string, title: string, when: string) {
-  const text = `${title}\n${when}\n${url}`
+  const shareUrl = publicShareUrl(url)
+  const text = [title, when, shareUrl].filter(Boolean).join('\n')
   return `https://wa.me/?text=${encodeURIComponent(text)}`
 }
 
-export function crossPost(input: { title: string; when: string; place: string; mapUrl?: string; audience: string; bring?: string; host?: string; note?: string; url: string; linkLabel?: string }) {
+export function crossPost(input: { title: string; when: string; place: string; mapUrl?: string; audience: string; bring?: string; host?: string; note?: string; url?: string; linkLabel?: string }) {
   const lines = [
     input.title,
-    input.linkLabel || '',
+    input.linkLabel ? capitalAfterColon(input.linkLabel) : '',
     '',
     input.when,
     input.place,
-    input.mapUrl || '',
     '',
     `Who it is for: ${input.audience}`,
     input.host ? `Host: ${input.host}` : '',
     input.bring ? `What to bring: ${input.bring}` : '',
     input.note || '',
     '',
-    'Come if you can. If you are not on HEARTS yet, the link is enough to say you are coming.',
-    input.url,
+    'Come if you can. The link on its own is enough to say you are coming.',
   ]
   return lines.filter((line, index, all) => line !== '' || (all[index - 1] !== '' && line === '')).join('\n').replace(/\n{3,}/g, '\n\n').trim()
 }
@@ -398,8 +428,22 @@ export function demoPortalGuard(slug: string | null | undefined) {
   return null
 }
 
+const ENTRY_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
+/** Four characters someone can read off a poster. No 0, O, 1 or I. */
+export function makeEntryCode(bytes: ArrayLike<number> = crypto.getRandomValues(new Uint8Array(4))) {
+  let out = ''
+  for (let i = 0; i < 4; i++) out += ENTRY_ALPHABET[Number(bytes[i] || 0) % ENTRY_ALPHABET.length]
+  return out
+}
+
+export function normaliseEntryCode(raw: string) {
+  return raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4)
+}
+
 export function linkLabel(input: { doorCode?: string | null; doorTitle?: string | null; courseTitle?: string | null; lessonTitle?: string | null }) {
-  const door = input.doorCode && input.doorTitle ? `${input.doorCode}: ${input.doorTitle}` : input.doorTitle || ''
+  const title = input.doorTitle ? capitalAfterColon(input.doorTitle) : ''
+  const door = input.doorCode && title ? `${input.doorCode}: ${title}` : title
   const after = input.lessonTitle || input.courseTitle || ''
   if (door && after) return `Discussing ${door}, after ${after}`
   if (door) return `Discussing ${door}`

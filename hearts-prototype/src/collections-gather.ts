@@ -66,6 +66,7 @@ export const Gatherings: CollectionConfig = {
     { name: 'linkLabel', type: 'text' },
     { name: 'slug', type: 'text', required: true, unique: true, index: true },
     { name: 'checkinToken', type: 'text', required: true },
+    { name: 'entryCode', type: 'text', admin: { description: 'Four characters read out at the door. Not the web address.' } },
     { name: 'prompts', type: 'json' },
     { name: 'circles', type: 'json', admin: { description: 'Small groups for the night. Names only. No scores.' } },
     { name: 'seedKey', type: 'text', unique: true, index: true },
@@ -115,6 +116,7 @@ export const GatherCheckins: CollectionConfig = {
       defaultValue: 'qr',
       options: [
         { label: 'QR at the door', value: 'qr' },
+        { label: 'Door code', value: 'code' },
         { label: 'Host', value: 'host' },
       ],
     },

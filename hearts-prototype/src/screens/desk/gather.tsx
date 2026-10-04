@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Hidden } from '@/components/app/shell'
 import { Qr } from '@/components/qr'
 import { GATHER_KINDS, KIND_LABEL } from '@/lib/gather'
-import { doorCode } from '@/lib/doors'
+import { doorLabel } from '@/lib/doors'
 import { loadDoors } from '@/server/doors'
 import { attendanceReport, listGatherings, sharePack } from '@/server/gather'
 import { type Ctx, rows, str } from '../common'
@@ -26,6 +26,7 @@ export async function GatherDeskScreen(ctx: Ctx) {
   ])
   const here = `${base}/admin/gather`
   const proposed = cards.filter((card) => card.status === 'proposed')
+  const preview = cards.filter((card) => card.status === 'published' && !card.past).sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0]
   return (
     <AdminFrame ctx={ctx} active="gather" tone="evening" title="Gather" intro="Meetings at this masjid. Upcoming and past, grouped by door, with the counts rather than a long list of names." testId="desk-gather">
       <div className="stats-strip" data-testid="gather-summary">
@@ -35,6 +36,15 @@ export async function GatherDeskScreen(ctx: Ctx) {
         <div className="stat-chip"><b>{proposed.length}</b><span>Waiting on you</span></div>
       </div>
       <p style={{ marginTop: 0 }}><Link className="btn" href={`${base}/admin/gather/attendance`} data-testid="attendance-link">Attendance</Link></p>
+      {preview ? (
+        <section className="panel wa-desk" data-testid="desk-wa-preview" style={{ marginBottom: 18 }}>
+          <header><h2>How this looks in WhatsApp</h2></header>
+          <div className="body">
+            <img src={`/gather/${preview.slug}/card.png`} alt="" />
+            <p className="wa-caption"><b>{preview.title}</b><br />{preview.when}{preview.place ? ` · ${preview.place}` : ''}</p>
+          </div>
+        </section>
+      ) : null}
       {proposed.length ? (
         <section className="panel" data-testid="proposed-list" style={{ marginBottom: 18 }}>
           <header><h2>Suggested by learners</h2></header>
@@ -87,20 +97,20 @@ export async function GatherDeskScreen(ctx: Ctx) {
           <header><h2>Plan a gathering</h2></header>
           <form className="body form" action="/api/gather" method="post" data-testid="desk-gather-form">
             <Hidden fields={{ action: 'save', portal: portal.slug, next: here }} />
-            <label className="stack">Name<input name="title" required data-testid="desk-gather-title" /></label>
+            <label className="stack">Name<input type="text" name="title" required data-testid="desk-gather-title" /></label>
             <label className="stack">Kind
               <select name="kind" defaultValue="circle">{GATHER_KINDS.map((kind) => <option key={kind} value={kind}>{KIND_LABEL[kind]}</option>)}</select>
             </label>
             <label className="stack">Who it’s for
               <select name="audience" defaultValue="all">{AUDIENCES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
             </label>
-            <label className="stack">When, London time<input type="datetime-local" name="startsAt" required data-testid="desk-gather-when" /></label>
-            <label className="stack">Place<input name="place" data-testid="desk-gather-place" /></label>
-            <label className="stack">Map link<input name="mapUrl" placeholder="https://" /></label>
+            <label className="stack">When, London time<input type="text" name="startsAt" required lang="en-GB" placeholder="DD/MM/YYYY HH:mm" autoComplete="off" data-testid="desk-gather-when" /></label>
+            <label className="stack">Place<input type="text" name="place" data-testid="desk-gather-place" /></label>
+            <label className="stack">Map link<input type="url" name="mapUrl" placeholder="https://" /></label>
             <label className="stack">How many places. Leave 0 if anyone can come.<input type="number" name="capacity" min={0} defaultValue={20} /></label>
-            <label className="stack">Host name on the public page<input name="hostLabel" defaultValue={str(user.name).split(' ')[0]} /></label>
+            <label className="stack">Host name on the public page<input type="text" name="hostLabel" defaultValue={str(user.name).split(' ')[0]} /></label>
             <label className="stack">Door
-              <select name="door"><option value="">None</option>{doors.map((door) => <option key={door.number} value={door.number}>{doorCode(door.number)} · {door.title}</option>)}</select>
+              <select name="door"><option value="">None</option>{doors.map((door) => <option key={door.number} value={door.number}>{doorLabel(door)}</option>)}</select>
             </label>
             <label className="stack">Course
               <select name="course"><option value="">None</option>{courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}</select>
@@ -176,6 +186,7 @@ export async function GatherAttendanceScreen(ctx: Ctx) {
           {report.cards.filter((card) => !card.past).slice(0, 1).map((card) => (
             <div key={card.id}>
               <p>{card.title}</p>
+              {card.entryCode ? <p className="door-code-readout" data-testid="desk-entry-code">{card.entryCode}</p> : null}
               <div className="door-qr" style={{ maxWidth: 280 }}><Qr value={`${ctx.origin}/gather/${card.slug}/in?k=${card.checkinToken}`} testId="desk-door-qr" /></div>
             </div>
           ))}

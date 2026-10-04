@@ -10,7 +10,7 @@ export default async function Join({ searchParams }: { searchParams: Promise<{ e
       <div className="door-card">
         <BrandMark size={72} />
         <h1>Come in</h1>
-        <p className="lede">{code ? 'Your link already holds the code. Add your name and you are in.' : 'Type the access code you were given, then your name.'}</p>
+        <p className="lede">{code ? 'Your code’s already in. Just add your name.' : 'Type the access code you were given, then your name.'}</p>
         <Flash error={query.error} />
         <form className="door-form" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'join', gatherGuest: query.gatherGuest, after: query.after }} />
@@ -20,7 +20,7 @@ export default async function Join({ searchParams }: { searchParams: Promise<{ e
           <label>Password<input className="field" data-testid="join-password" name="password" type="password" minLength={8} autoComplete="new-password" required /></label>
           <button className="pill gold block" data-testid="join-submit" type="submit">Join</button>
         </form>
-        <p className="door-hint">The code decides what you see: a learner code opens the courses for learners, and an admin code lets you look after the portal.</p>
+        {code ? null : <p className="door-hint">Use the code your masjid gave you.</p>}
         <div className="door-links"><Link href="/login">I already have an account</Link></div>
       </div>
     </main>

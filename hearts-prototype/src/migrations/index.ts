@@ -5,6 +5,7 @@ import * as migration_20261003_140611_harvest from './20261003_140611_harvest';
 import * as migration_20261003_180616_jibril_doors from './20261003_180616_jibril_doors';
 import * as migration_20261003_200853_integration_final from './20261003_200853_integration_final';
 import * as migration_20261004_031500_gather from './20261004_031500_gather';
+import * as migration_20261004_180000_gather_entry_code from './20261004_180000_gather_entry_code';
 
 export const migrations = [
   {
@@ -41,5 +42,10 @@ export const migrations = [
     up: migration_20261004_031500_gather.up,
     down: migration_20261004_031500_gather.down,
     name: '20261004_031500_gather',
+  },
+  {
+    up: migration_20261004_180000_gather_entry_code.up,
+    down: migration_20261004_180000_gather_entry_code.down,
+    name: '20261004_180000_gather_entry_code',
   },
 ];

@@ -31,7 +31,7 @@ function wrap(value: string, size: number, width: number) {
 }
 
 /** One A4 sheet for the door: title, when, place, and a check-in QR. The web address stays inside the code. */
-export function qrPosterPdf(input: { title: string; when: string; place: string; url: string; audience?: string; host?: string; masjid?: string }) {
+export function qrPosterPdf(input: { title: string; when: string; place: string; url: string; audience?: string; host?: string; masjid?: string; entryCode?: string }) {
   const qr = QRCode.create(input.url, { errorCorrectionLevel: 'M' })
   const modules = qr.modules
   const count = modules.size
@@ -81,8 +81,13 @@ export function qrPosterPdf(input: { title: string; when: string; place: string;
     }
   }
   bits.push('0.059 0.231 0.227 rg')
-  bits.push('BT /F1 16 Tf 64 128 Td (Scan this to check in.) Tj ET')
-  bits.push('BT /F1 12 Tf 64 106 Td (The code is only for this gathering.) Tj ET')
+  bits.push('BT /F1 16 Tf 64 132 Td (Scan this to check in.) Tj ET')
+  if (input.entryCode) {
+    bits.push('BT /F1 12 Tf 64 110 Td (Or type the door code) Tj ET')
+    bits.push(`BT /F1 28 Tf 64 78 Td (${pdfSafe(input.entryCode)}) Tj ET`)
+  } else {
+    bits.push('BT /F1 12 Tf 64 106 Td (The code is only for this gathering.) Tj ET')
+  }
 
   const stream = bits.join('\n')
   const objects = [

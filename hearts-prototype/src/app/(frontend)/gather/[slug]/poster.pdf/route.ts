@@ -1,6 +1,7 @@
 import { qrPosterPdf } from '@/lib/gather-pdf'
 import { AUDIENCE_LABEL, whenLabel, type Audience } from '@/lib/gather'
 import { idOf, portalIdOf } from '@/lib/ids'
+import { shareOrigin } from '@/lib/site-origin'
 import { getSession } from '@/server/context'
 import { gatheringBySlug } from '@/server/gather'
 import { headers } from 'next/headers'
@@ -19,10 +20,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   if (user.role !== 'master' && portalIdOf(user) !== portalId) return new Response('Not your portal.', { status: 403 })
   if (!staff && host !== user.id) return new Response('The host prints the poster.', { status: 403 })
   const headerList = await headers()
-  const hostName = headerList.get('x-forwarded-host') || headerList.get('host') || 'localhost:3000'
-  const proto = headerList.get('x-forwarded-proto') || 'http'
+  const origin = shareOrigin(headerList)
   const token = String(row.checkinToken || '')
-  const url = `${proto}://${hostName}/gather/${slug}/in?k=${token}`
+  const url = `${origin}/gather/${slug}/in?k=${token}`
   const portal = portalId ? await payload.findByID({ collection: 'portals', id: portalId, depth: 0, overrideAccess: true }).catch(() => null) : null
   const audience = AUDIENCE_LABEL[String(row.audience || '') as Audience] || ''
   const title = String(row.title || 'Gather')
@@ -33,6 +33,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
     audience,
     host: String(row.hostLabel || ''),
     masjid: String((portal as { name?: string } | null)?.name || ''),
+    entryCode: String(row.entryCode || ''),
     url,
   })
   const filename = `${title.replace(/[^\w .'-]+/g, '').trim().slice(0, 60) || 'Gather'} door poster.pdf`

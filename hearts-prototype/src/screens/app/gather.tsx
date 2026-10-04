@@ -4,7 +4,7 @@ import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
 import { CopyLink } from '@/components/app/copy-link'
 import { Qr } from '@/components/qr'
 import { GATHER_KINDS, KIND_LABEL, afterTalkLine, publicNames, relatedGatherings, taskWantsCompany, type TaskRef } from '@/lib/gather'
-import { doorCode } from '@/lib/doors'
+import { doorLabel } from '@/lib/doors'
 import { now } from '@/lib/clock'
 import { loadDoors } from '@/server/doors'
 import { bringLink, listGatherings, sharePack, taskMatches, type GatherCard } from '@/server/gather'
@@ -22,7 +22,7 @@ function Card({ card, href }: { card: GatherCard; href: string }) {
   return (
     <article className="gather-card" data-testid="gather-card" data-id={card.id} data-status={card.mine || 'none'}>
       <p className="eyebrow">{card.doorLabel || KIND_LABEL[card.kind as keyof typeof KIND_LABEL] || 'Gather'}</p>
-      <h2 style={{ margin: '0 0 4px', fontSize: 22, lineHeight: 1.2, color: '#0f3b3a' }}>{card.title}</h2>
+      <h2 style={{ margin: '0 0 4px', fontSize: 22, lineHeight: 1.2, color: 'var(--g-heading, #0f3b3a)' }}>{card.title}</h2>
       {card.linkLabel ? <p className="clamp" style={{ margin: '0 0 6px', fontSize: 14 }}>{card.linkLabel}</p> : null}
       <p className="gather-meta" style={{ marginTop: 0 }}>
         <span>{card.when}{card.place ? ` · ${card.place}` : ''}</span>
@@ -116,7 +116,7 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
           <p className="gather-meta">
             <span data-testid="gather-when">{card.when}</span>
             <span>{card.place}</span>
-            {card.mapUrl ? <a href={card.mapUrl} data-testid="gather-map">Map</a> : null}
+            {card.mapUrl ? <a className="pill outline small" href={card.mapUrl} data-testid="open-maps">Open in Maps</a> : null}
             <span>Host: {card.hostLabel}</span>
             {card.bring ? <span>Bring: {card.bring}</span> : null}
             {card.note ? <span>{card.note}</span> : null}
@@ -138,11 +138,11 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
           ) : null}
         </section>
         <section className="gather-card" data-testid="gather-share">
-          <h3 style={{ marginTop: 0, color: '#0f3b3a' }}>Invite someone</h3>
-          <p>Send it on WhatsApp, or copy your own link. It remembers that you brought them. They only see a first name.</p>
+          <h3 style={{ marginTop: 0, color: 'var(--g-heading, #0f3b3a)' }}>Invite someone</h3>
+          <p>Send it on WhatsApp, or copy your invite link. It remembers that you brought them. They only see a first name.</p>
           <div className="gather-actions">
             <a className="pill gold small" href={share.whatsApp} data-testid="share-whatsapp">WhatsApp</a>
-            <CopyLink value={personal} testId="copy-bring-link" />
+            <CopyLink value={personal} testId="copy-bring-link" label="Copy your invite link" />
             <a className="pill outline small" href={share.icsPath} data-testid="share-ics">Add to calendar</a>
             <a className="pill outline small" href={share.google} data-testid="share-google">Google Calendar</a>
           </div>
@@ -157,13 +157,13 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
         </section>
         {card.prompts.length ? (
           <section className="gather-card" data-testid="gather-prompts">
-            <h3 style={{ marginTop: 0, color: '#0f3b3a' }}>If you sit and talk</h3>
+            <h3 style={{ marginTop: 0, color: 'var(--g-heading, #0f3b3a)' }}>If you sit and talk</h3>
             {card.prompts.map((prompt) => <p key={prompt}>{prompt}</p>)}
           </section>
         ) : null}
         {mine ? (
           <section className="gather-card" data-testid="my-circle">
-            <h3 style={{ marginTop: 0, color: '#0f3b3a' }}>{mine.name}</h3>
+            <h3 style={{ marginTop: 0, color: 'var(--g-heading, #0f3b3a)' }}>{mine.name}</h3>
             <p>You’ll sit with {mine.memberIds.filter((member) => member !== String(user.id)).map((member) => nameOf.get(Number(member))?.split(' ')[0] || 'a guest').join(', ') || 'the host'}.</p>
           </section>
         ) : null}
@@ -178,9 +178,21 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
           </section>
         ) : null}
         {checked ? (
-          <section className="gather-card" data-testid="checked-in">
-            <h3 style={{ marginTop: 0, color: '#0f3b3a' }}>You’re checked in</h3>
+          <section className="gather-card welcome-card" data-testid="checked-in">
+            <h3 style={{ marginTop: 0 }} data-testid="welcome-in">You’re in. Welcome.</h3>
             {reflection ? <p data-testid="reflection-saved">{str(reflection.body)}</p> : <Link className="pill gold small" href={`${base}/gather/${id}/reflect`} data-testid="reflect-open">One thing you’ll carry</Link>}
+          </section>
+        ) : card.status === 'published' && !card.past ? (
+          <section className="gather-card" data-testid="door-checkin">
+            <h3 style={{ marginTop: 0, color: 'var(--g-heading, #0f3b3a)' }}>At the door</h3>
+            <p>Scan the QR on the poster, or type the 4-character door code.</p>
+            <form action="/api/gather" method="post">
+              <Hidden fields={{ action: 'checkin', method: 'code', id, next: here }} />
+              <label>Door code
+                <input className="field entry-code" name="code" inputMode="text" autoCapitalize="characters" autoComplete="off" maxLength={4} required data-testid="entry-code" />
+              </label>
+              <button className="pill gold block" type="submit" data-testid="code-checkin">I’m here</button>
+            </form>
           </section>
         ) : null}
         {host ? <Link className="pill outline" href={`${base}/gather/${id}/door`} data-testid="door-link">Door code for tonight</Link> : null}
@@ -214,10 +226,10 @@ export async function GatherProposeScreen(ctx: Ctx) {
           <label>Who it’s for
             <select className="field" name="audience" defaultValue="all">{AUDIENCE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
           </label>
-          <label>When, London time<input className="field" type="datetime-local" name="startsAt" required data-testid="gather-when-input" /></label>
+          <label>When, London time<input className="field" type="text" name="startsAt" required lang="en-GB" placeholder="DD/MM/YYYY HH:mm" autoComplete="off" data-testid="gather-when-input" /></label>
           <label>Place<input className="field" name="place" /></label>
           <label>Door
-            <select className="field" name="door"><option value="">None</option>{doors.map((door) => <option key={door.number} value={door.number}>{doorCode(door.number)} · {door.title}</option>)}</select>
+            <select className="field" name="door"><option value="">None</option>{doors.map((door) => <option key={door.number} value={door.number}>{doorLabel(door)}</option>)}</select>
           </label>
           <label>Course
             <select className="field" name="course"><option value="">None</option>{courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}</select>
@@ -246,7 +258,11 @@ export async function GatherDoorScreen(ctx: Ctx, id: number) {
       <div className="app-scroll gather">
         <Back href={`${base}/gather/${id}`} label={card.title} />
         <h1>At the door</h1>
-        <p>Hold this up, or print the A4 poster and tape it by the door. Someone scans it and checks in. It only works for this gathering.</p>
+        <p>People can scan the QR on the poster, or type this door code.</p>
+        <section className="gather-card" data-testid="door-entry">
+          <p className="eyebrow" style={{ textAlign: 'center' }}>Door code</p>
+          <p className="door-code-readout" data-testid="door-entry-code">{card.entryCode || '----'}</p>
+        </section>
         <div className="door-qr"><Qr value={url} testId="door-qr" /></div>
         <a className="pill gold" href={`/gather/${card.slug}/poster.pdf`} data-testid="poster-link">Print an A4 poster</a>
         {user.role !== 'learner' ? (
@@ -266,7 +282,7 @@ export async function GatherDoorScreen(ctx: Ctx, id: number) {
           <button className="pill outline" type="submit" data-testid="split-circles">Split into circles</button>
         </form>
         <form className="gather-card" action="/api/gather" method="post" encType="multipart/form-data" style={{ marginTop: 16 }} data-testid="photo-form">
-          <h3 style={{ marginTop: 0, color: '#0f3b3a' }}>A photo from the night</h3>
+          <h3 style={{ marginTop: 0, color: 'var(--g-heading, #0f3b3a)' }}>A photo from the night</h3>
           <p>Only people who agreed to be in the picture. It stays inside the portal.</p>
           <Hidden fields={{ action: 'photo', id, next: `${base}/gather/${id}` }} />
           <label>Photo<input className="field" type="file" name="image" accept="image/*" required data-testid="gather-photo" /></label>
@@ -290,7 +306,8 @@ export async function GatherReflectScreen(ctx: Ctx, id: number) {
       <div className="app-scroll gather">
         <Back href={`${base}/gather/${id}`} label={card.title} />
         <h1>One thing you’ll carry</h1>
-        <Flash error={query.error} notice={query.notice} />
+        <Flash error={query.error} notice={query.notice === 'You’re in. Welcome.' ? undefined : query.notice} />
+        {query.notice === 'You’re in. Welcome.' ? <section className="gather-card welcome-card" data-testid="welcome-in"><h2>You’re in. Welcome.</h2></section> : null}
         <p className="lead">A full sentence is enough. It goes into your harvest and your garden. It is not shown on the public page.</p>
         <form className="gather-card" action="/api/gather" method="post">
           <Hidden fields={{ action: 'reflect', id, next: `${base}/gather/${id}` }} />

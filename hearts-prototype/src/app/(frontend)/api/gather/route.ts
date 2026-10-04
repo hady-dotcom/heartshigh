@@ -158,7 +158,7 @@ export async function POST(req: Request) {
   if (action === 'checkin') {
     const row = await gatheringById(payload, Number(text(form, 'id')))
     if (!row) return redirectTo(req, next, 'That gathering could not be found.')
-    const method = text(form, 'method') === 'host' ? 'host' : 'qr'
+    const method = text(form, 'method') === 'host' ? 'host' : text(form, 'method') === 'code' ? 'code' : 'qr'
     if (method === 'host') {
       if (user.role === 'learner') return redirectTo(req, next, 'Only the host can check someone in by hand.')
       const learnerId = Number(text(form, 'learner'))
@@ -169,9 +169,9 @@ export async function POST(req: Request) {
       if (!hosted.ok) return redirectTo(req, next, hosted.error)
       return redirectTo(req, next, undefined, 'Checked in.')
     }
-    const result = await checkIn(payload, { gathering: row, user, method: 'qr', token: text(form, 'token') })
+    const result = await checkIn(payload, { gathering: row, user, method, token: text(form, 'token'), code: text(form, 'code') })
     if (!result.ok) return redirectTo(req, next, result.error)
-    return redirectTo(req, next, undefined, result.already ? 'You were already checked in.' : 'You’re checked in. Welcome.')
+    return redirectTo(req, next, undefined, result.already ? 'You were already checked in.' : 'You’re in. Welcome.')
   }
 
   if (action === 'reflect') {

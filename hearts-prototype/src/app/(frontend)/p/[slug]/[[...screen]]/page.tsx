@@ -7,6 +7,7 @@ import { Hidden } from '@/components/app/shell'
 import { portalIdOf } from '@/lib/ids'
 import { getSession, loadPortal, requirePortal } from '@/server/context'
 import { JourneyScreen } from '@/screens/app/journey'
+import { shareOrigin } from '@/lib/site-origin'
 import { portalName } from '@/server/learner'
 import type { Ctx, Query } from '@/screens/common'
 import { LearnerPathScreen, RecalibrateScreen } from '@/screens/app/compass'
@@ -28,9 +29,7 @@ import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
 import { PortalCircle } from '@/screens/desk/circle'
 
 function originOf(reqHeaders: Headers) {
-  const host = reqHeaders.get('x-forwarded-host') || reqHeaders.get('host') || 'localhost:3000'
-  const proto = reqHeaders.get('x-forwarded-proto') || (host.startsWith('localhost') || host.startsWith('127.') ? 'http' : 'https')
-  return `${proto}://${host}`
+  return shareOrigin(reqHeaders)
 }
 
 const plain = (value: string) => encodeURIComponent(value)

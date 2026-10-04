@@ -43,6 +43,7 @@ test('a talk’s door comes from its clause', () => {
   assert.equal(doorNumberOfClause(null), null)
   assert.equal(doorCode(3), 'W3')
   assert.equal(doorLabel(DOORS[2]), 'W3 · About Islam')
+  assert.equal(doorLabel(DOORS[15]), 'W16 · Ihsan: Worship as though you see Him')
 })
 
 test('a door is read as W3, w3, Door 3 or 3, and nothing out of range', () => {

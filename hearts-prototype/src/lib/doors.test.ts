@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { DOORS, doorCode, doorFromPath, doorLabel, doorOfClause, groupByDoor } from './doors'
+import { DOORS, capitalAfterColon, doorCode, doorFromPath, doorLabel, doorOfClause, groupByDoor } from './doors'
 
 const SPEC: [string, number[]][] = [
   ['W1', [1]],
@@ -43,6 +43,8 @@ test('the working doors are W1 to W20, each with a short teaching, and cover eve
   }
   assert.equal(seen.size, 41)
   assert.equal(doorLabel(doorOfClause(22)!), 'W10 · Believe in Allah')
+  assert.equal(doorLabel(DOORS[15]), 'W16 · Ihsan: Worship as though you see Him')
+  assert.equal(capitalAfterColon('The Hour: when, and what cannot be known'), 'The Hour: When, and what cannot be known')
 })
 
 test('learner paths open a door by number or code, and an old clause number above 20 opens that clause’s door', () => {

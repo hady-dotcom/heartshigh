@@ -17,18 +17,19 @@ type Plan = {
   note: string
   door: number
   capacity: number
+  entryCode: string
   linkCourse?: boolean
 }
 
 const PLAN: Plan[] = [
-  { seedKey: 'gather-demo-isha', title: 'Circle after Isha', kind: 'circle', audience: 'all', days: 2, place: 'The prayer hall', bring: 'Nothing. Just come as you are.', note: 'A short circle once the prayer is done.', door: 16, capacity: 24 },
-  { seedKey: 'gather-demo-tea', title: 'Tea and talk', kind: 'tea', audience: 'all', days: 5, place: 'The sisters’ and brothers’ tea room, sitting separately', bring: 'A cup is poured for you.', note: 'We take one door from the hadith and sit with it.', door: 7, capacity: 16, linkCourse: true },
-  { seedKey: 'gather-demo-food', title: 'Food bank run', kind: 'volunteer', audience: 'all', days: 8, place: 'Meet at the masjid gate, then the food bank', bring: 'Closed shoes and a water bottle.', note: 'An hour of carrying and sorting. No speech, just the work.', door: 6, capacity: 12 },
-  { seedKey: 'gather-demo-walk', title: 'Sisters’ walk', kind: 'walk', audience: 'sisters', days: 10, place: 'The park gate beside the masjid', bring: 'A coat if the evening is cool.', note: 'A walk and a quiet conversation. Sisters only.', door: 5, capacity: 18 },
-  { seedKey: 'gather-demo-youth', title: 'Youth football and a talk', kind: 'youth', audience: 'youth', days: 12, place: 'The astroturf, then the hall', bring: 'Trainers if you have them.', note: 'Kickabout first, then twenty minutes on the week’s door.', door: 13, capacity: 2 },
-  { seedKey: 'gather-demo-picnic', title: 'Family picnic', kind: 'picnic', audience: 'family', days: 18, place: 'The green behind the masjid', bring: 'A blanket and something to share.', note: 'Children are welcome. We finish before Maghrib.', door: 1, capacity: 40 },
-  { seedKey: 'gather-demo-past-circle', title: 'Thursday circle on gratitude', kind: 'circle', audience: 'all', days: -10, place: 'The prayer hall', bring: 'Nothing.', note: 'We sat with gratitude after Isha.', door: 10, capacity: 20 },
-  { seedKey: 'gather-demo-past-brothers', title: 'Brothers’ tea', kind: 'tea', audience: 'brothers', days: -3, place: 'The brothers’ room', bring: 'Nothing.', note: 'Tea, and one question from the talk.', door: 3, capacity: 14 },
+  { seedKey: 'gather-demo-isha', title: 'Circle after Isha', kind: 'circle', audience: 'all', days: 2, place: 'The prayer hall', bring: 'Nothing. Just come as you are.', note: 'A short circle once the prayer is done.', door: 16, capacity: 24, entryCode: 'NUR4' },
+  { seedKey: 'gather-demo-tea', title: 'Tea and talk', kind: 'tea', audience: 'all', days: 5, place: 'The sisters’ and brothers’ tea room, sitting separately', bring: 'A cup is poured for you.', note: 'We take one door from the hadith and sit with it.', door: 7, capacity: 16, entryCode: 'KRM7', linkCourse: true },
+  { seedKey: 'gather-demo-food', title: 'Food bank run', kind: 'volunteer', audience: 'all', days: 8, place: 'Meet at the masjid gate, then the food bank', bring: 'Closed shoes and a water bottle.', note: 'An hour of carrying and sorting. No speech, just the work.', door: 6, capacity: 12, entryCode: 'ZKT6' },
+  { seedKey: 'gather-demo-walk', title: 'Sisters’ walk', kind: 'walk', audience: 'sisters', days: 10, place: 'The park gate beside the masjid', bring: 'A coat if the evening is cool.', note: 'A walk and a quiet conversation. Sisters only.', door: 5, capacity: 18, entryCode: 'SLM5' },
+  { seedKey: 'gather-demo-youth', title: 'Youth football and a talk', kind: 'youth', audience: 'youth', days: 12, place: 'The astroturf, then the hall', bring: 'Trainers if you have them.', note: 'Kickabout first, then twenty minutes on the week’s door.', door: 13, capacity: 2, entryCode: 'FTB2' },
+  { seedKey: 'gather-demo-picnic', title: 'Family picnic', kind: 'picnic', audience: 'family', days: 18, place: 'The green behind the masjid', bring: 'A blanket and something to share.', note: 'Children are welcome. We finish before Maghrib.', door: 1, capacity: 40, entryCode: 'DY14' },
+  { seedKey: 'gather-demo-past-circle', title: 'Thursday circle on gratitude', kind: 'circle', audience: 'all', days: -10, place: 'The prayer hall', bring: 'Nothing.', note: 'We sat with gratitude after Isha.', door: 10, capacity: 20, entryCode: 'SHKR' },
+  { seedKey: 'gather-demo-past-brothers', title: 'Brothers’ tea', kind: 'tea', audience: 'brothers', days: -3, place: 'The brothers’ room', bring: 'Nothing.', note: 'Tea, and one question from the talk.', door: 3, capacity: 14, entryCode: 'AKH3' },
 ]
 
 function at(days: number) {
@@ -77,8 +78,13 @@ export async function seedGatherDemo(payload: Payload) {
   for (const item of PLAN) {
     const door = DOORS.find((row) => row.number === item.door)!
     let row = await one(payload, 'gatherings', { and: [{ seedKey: { equals: item.seedKey } }, { portal: { equals: portalId } }] })
-    if (row) reused += 1
-    else {
+    if (row) {
+      reused += 1
+      const current = await payload.findByID({ collection: 'gatherings', id: row.id, depth: 0, overrideAccess: true })
+      if (!String((current as { entryCode?: string }).entryCode || '')) {
+        await payload.update({ collection: 'gatherings', id: row.id, overrideAccess: true, data: { entryCode: item.entryCode } as never })
+      }
+    } else {
       const made = await payload.create({
         collection: 'gatherings',
         overrideAccess: true,
@@ -103,6 +109,7 @@ export async function seedGatherDemo(payload: Payload) {
           }),
           slug: item.seedKey,
           checkinToken: `demo-${item.seedKey}`,
+          entryCode: item.entryCode,
           prompts: ['What stayed with you from the talk?', 'Where could this show up before next week?'],
           status: 'published',
           seedKey: item.seedKey,

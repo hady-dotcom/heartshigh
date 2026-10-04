@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { loadDoors } from '@/server/doors'
-import { doorOfClause } from '@/lib/doors'
+import { capitalAfterColon, doorOfClause } from '@/lib/doors'
 import { AppFrame, Flash, Hidden } from '@/components/app/shell'
 import { Mascot } from '@/components/brand'
 import { optionLabels } from '@/lib/placing'
@@ -92,7 +92,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
           <article className="clause-card" data-testid="starting-door" data-door={door.number}>
             <div className="clause-num">{door.number}</div>
             <p className="lbl" style={{ margin: '0 0 4px' }}>A door of the hadith of Jibril</p>
-            <h3>{door.title}</h3>
+            <h3>{capitalAfterColon(door.title)}</h3>
             {door.teaching ? <p data-testid="starting-door-teaching">{door.teaching}</p> : null}
           </article>
         ) : null}

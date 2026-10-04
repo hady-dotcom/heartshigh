@@ -1961,6 +1961,10 @@ export interface Gathering {
   linkLabel?: string | null;
   slug: string;
   checkinToken: string;
+  /**
+   * Four characters read out at the door. Not the web address.
+   */
+  entryCode?: string | null;
   prompts?:
     | {
         [k: string]: unknown;
@@ -2017,7 +2021,7 @@ export interface GatherCheckin {
   user?: (number | null) | User;
   rsvp?: (number | null) | GatherRsvp;
   guestLabel?: string | null;
-  method?: ('qr' | 'host') | null;
+  method?: ('qr' | 'code' | 'host') | null;
   newcomer?: boolean | null;
   welcomed?: boolean | null;
   seedKey?: string | null;
@@ -3541,6 +3545,7 @@ export interface GatheringsSelect<T extends boolean = true> {
   linkLabel?: T;
   slug?: T;
   checkinToken?: T;
+  entryCode?: T;
   prompts?: T;
   circles?: T;
   seedKey?: T;
