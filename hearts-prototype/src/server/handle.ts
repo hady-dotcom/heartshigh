@@ -1193,7 +1193,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const lessons = await orderedLessons(payload, courseIds)
     if (!lessons.length) return redirectTo(req, text(form, 'next') || '/', 'There are no lessons to split yet.')
     const courseTitle = targetType === 'course' ? String((await findDoc(payload, 'courses', courseIds[0]))?.title || '') : ''
-    const name = text(form, 'name').slice(0, 80) || courseTitle || defaultPlanName(now())
+    const name = text(form, 'name').slice(0, 80) || defaultPlanName(now())
     let dates: string[]
     const weekdays = form.getAll('weekday').map((value) => Number(value))
     try {

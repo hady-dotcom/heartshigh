@@ -830,47 +830,47 @@ html[data-theme] .desk input[type='password'] {
     linear-gradient(180deg, rgba(10, 40, 40, 0.58), rgba(7, 28, 28, 0.84));
 }
 :is(html, html[data-theme]) .garden-door .door-card {
-  background: linear-gradient(180deg, #123936, #0F2E2C);
-  color: #F1E4C6;
-  border: 1px solid #D4A84B;
+  background: linear-gradient(180deg, var(--gd-parchment), var(--gd-parchment-2));
+  color: var(--gd-ink);
+  border: 1px solid rgba(212, 168, 75, 0.7);
   border-radius: 26px;
   padding: 30px 24px 26px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(212, 168, 75, 0.28);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   backdrop-filter: none;
 }
-:is(html, html[data-theme]) .garden-door .door-card h1 { color: #F1E4C6; }
-:is(html, html[data-theme]) .garden-door .door-card p.lede { color: #E8D6AE; }
+:is(html, html[data-theme]) .garden-door .door-card h1 { color: #123f3a; }
+:is(html, html[data-theme]) .garden-door .door-card p.lede { color: var(--ink-2); }
 :is(html, html[data-theme]) .garden-door .brand-mark {
   background: radial-gradient(circle at 50% 35%, #17504a, var(--gd-teal) 70%);
   color: var(--gd-gold);
   box-shadow: 0 0 0 2px var(--gd-gold), 0 10px 26px rgba(14, 47, 46, 0.35);
 }
-:is(html, html[data-theme]) .garden-door .brand-word { color: #D4A84B; font-weight: 700; }
-:is(html, html[data-theme]) .garden-door .door-form label { color: #E8D6AE; }
+:is(html, html[data-theme]) .garden-door .brand-word { color: var(--gd-gold-deep); font-weight: 700; }
+:is(html, html[data-theme]) .garden-door .door-form label { color: #23443f; }
 :is(html, html[data-theme]) .garden-door .field {
-  background: #0a2422;
-  color: #F1E4C6;
-  border: 1.5px solid #D4A84B;
+  background: #fbf5e6;
+  color: var(--gd-ink);
+  border: 1.5px solid var(--gd-teal-line);
   border-radius: 14px;
 }
-:is(html, html[data-theme]) .garden-door .field::placeholder { color: #9a8f72; }
+:is(html, html[data-theme]) .garden-door .field::placeholder { color: #7d837c; }
 :is(html, html[data-theme]) .garden-door .field:focus {
-  border-color: #D4A84B;
+  border-color: var(--gd-gold-deep);
   box-shadow: 0 0 0 3px rgba(212, 168, 75, 0.35);
 }
 :is(html, html[data-theme]) .garden-door .pill.gold {
-  background: #D4A84B;
+  background: var(--gd-gold);
   color: #1a1408;
   box-shadow: 0 10px 24px rgba(168, 121, 31, 0.35);
 }
 :is(html, html[data-theme]) .garden-door .pill.outline {
   background: transparent;
-  color: #F1E4C6;
-  border: 1.5px solid #D4A84B;
+  color: #14564c;
+  border: 1.5px solid var(--gd-teal-line);
 }
-:is(html, html[data-theme]) .garden-door .door-links { color: #E8D6AE; }
-:is(html, html[data-theme]) .garden-door .door-links a { border-bottom-color: rgba(212, 168, 75, 0.7); color: #F1E4C6; }
-:is(html, html[data-theme]) .garden-door .door-hint { color: #E8D6AE; }
+:is(html, html[data-theme]) .garden-door .door-links { color: #14564c; }
+:is(html, html[data-theme]) .garden-door .door-links a { border-bottom-color: rgba(168, 121, 31, 0.6); }
+:is(html, html[data-theme]) .garden-door .door-hint { color: var(--muted); }
 :is(html, html[data-theme]) .garden-door .flash.notice {
   background: rgba(212, 168, 75, 0.16);
   color: #F1E4C6;

@@ -501,6 +501,15 @@ export function CoursePlayer({
         </div>
       </div>
       <p className="part-chip off-film" data-testid="part-label">{partLabel}</p>
+      {views.length ? (
+        <div className="q-strip" data-testid="question-strip" aria-label="Questions in this film">
+          {views.map((point) => (
+            <span key={point.id} className={point.answered ? 'done' : 'open'} data-testid="strip-dot" data-answered={point.answered ? 'yes' : 'no'} title={point.prompt}>
+              {point.answered ? '✓' : point.number}
+            </span>
+          ))}
+        </div>
+      ) : null}
       {mode === 'practice' ? (
         <p className="muted" style={{ fontSize: 13, margin: '8px 2px 0' }} data-testid="practice-note">
           {youtubeId ? 'The film could not load here, so the timeline runs on its own.' : 'This talk has no film link yet, so the timeline runs on its own.'} Press play and it will stop at each question.

@@ -27,6 +27,11 @@ async function signIn(page: Page, email: string, password: string, next: string)
   await page.waitForURL((url) => !url.pathname.startsWith('/login'))
 }
 
+async function openCoursePlayer(page: Page) {
+  if (await page.getByTestId('start-part').count()) await page.getByTestId('start-part').click()
+  await expect(page.getByTestId('player')).toBeVisible()
+}
+
 async function join(page: Page, code: string, name: string, email: string, password: string) {
   await page.goto(`/join?code=${code}`)
   await page.getByTestId('join-name').fill(name)
@@ -215,6 +220,7 @@ test.describe.serial('HEARTS journeys', () => {
 
   test('learner answers, meets the contingent question, and the test clock opens it', async ({ page }) => {
     await signIn(page, learnerEmail, 'harbour-learner', `/p/${slug}/course/${shared.courseId}`)
+    await openCoursePlayer(page)
     await expect(page.getByTestId('player')).toHaveAttribute('data-mode', 'practice')
     const waiting = await openPoint(page, /two days/)
     await expect(waiting).toHaveAttribute('data-state', 'waiting')
@@ -231,6 +237,7 @@ test.describe.serial('HEARTS journeys', () => {
     await page.getByTestId('popup-close').click()
     await post(page, { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: `/p/${slug}/course/${shared.courseId}` })
     await page.reload()
+    await openCoursePlayer(page)
     await expect(async () => {
       await page.getByTestId('answer-point').click()
       await expect(page.getByTestId('popup-prompt')).toContainText('one manner', { timeout: 1000 })
@@ -274,11 +281,13 @@ test.describe.serial('HEARTS journeys', () => {
     await join(page, learnerCode, 'Second Learner', otherEmail, 'harbour-learner')
     await placing(page, BY_NAMES)
     await page.goto(`/p/${slug}/course/${shared.courseId}`)
+    await openCoursePlayer(page)
     const before = await openPoint(page, /one manner/)
     await expect(before.getByTestId('swarm')).toHaveCount(0)
     await page.getByTestId('popup-close').click()
     await post(page, { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: `/p/${slug}/course/${shared.courseId}` })
     await page.reload()
+    await openCoursePlayer(page)
     const sheet = await openPoint(page, /one manner/)
     await expect(sheet.getByTestId('swarm-item').filter({ hasText: 'soft greeting' })).toBeVisible()
     await page.getByTestId('answer-text').fill('This one stays with me.')
@@ -286,6 +295,7 @@ test.describe.serial('HEARTS journeys', () => {
     await page.getByTestId('answer-submit').click()
     await expect(page.getByTestId('notice')).toContainText('privately')
     await signIn(page, learnerEmail, 'harbour-learner', `/p/${slug}/course/${shared.courseId}`)
+    await openCoursePlayer(page)
     const mine = await openPoint(page, /one manner/)
     await expect(mine.getByTestId('swarm')).not.toContainText('stays with me')
   })

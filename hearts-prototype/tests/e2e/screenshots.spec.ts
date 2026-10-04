@@ -29,7 +29,7 @@ test('a week of use, so the garden has something in it', async ({ page }) => {
     await page.goto(`/p/east-london/course/${course}`)
     const start = page.getByTestId('start-part')
     if (await start.count()) await start.click()
-    await expect(page.locator('form.watched-form input[name=lesson]')).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByTestId('player')).toBeVisible({ timeout: 15_000 })
     const lesson = await page.locator('form.watched-form input[name=lesson]').getAttribute('value')
     await page.request.post('/api/hearts', { form: { action: 'complete', lesson: lesson!, seconds: '99999', ended: 'yes', next: '/' } })
   }
@@ -92,6 +92,8 @@ test('learner app at phone size', async ({ page }) => {
   await page.waitForTimeout(600)
   await page.screenshot({ path: `${dir}/learner-01b-appetiser.png`, caret: 'initial' })
   await page.goto(`${base}/course/1`)
+  if (await page.getByTestId('start-part').count()) await page.getByTestId('start-part').click()
+  await expect(page.getByTestId('player')).toBeVisible()
   await expect(async () => {
     await page.getByTestId('timeline-dot').first().click({ force: true })
     await expect(page.getByTestId('popup')).toBeVisible({ timeout: 1000 })
