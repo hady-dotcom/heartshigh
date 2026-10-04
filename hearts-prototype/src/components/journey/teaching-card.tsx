@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import type { FeedItem } from '@/server/learner'
 import { landedGold, revealedQuote, spreadWords, type SpokenWord } from '@/lib/card-voice'
 
@@ -21,6 +21,28 @@ function Gold({ quote, gold }: { quote: string; gold: string }) {
       {quote.slice(at + gold.length)}
     </>
   )
+}
+
+const FIT_TEXT = '[data-testid="scene-quote"], .dim-line, .window-card .serif, .bubble-text'
+const FIT_BOXES = '.kinetic-body, .scene-stack, .window-card, .bubble-text'
+
+/** Shrink the card's words until nothing spills out of its box or under the footer. */
+function useFitText(root: RefObject<HTMLElement | null>, key: string) {
+  useLayoutEffect(() => {
+    const slide = root.current
+    if (!slide) return
+    const texts = [...slide.querySelectorAll<HTMLElement>(FIT_TEXT)]
+    for (const text of texts) text.style.fontSize = ''
+    const overflowing = () => {
+      const bottom = slide.getBoundingClientRect().bottom - parseFloat(getComputedStyle(slide).paddingBottom || '0')
+      const foot = slide.querySelector<HTMLElement>('.slide-cta')
+      if (foot && foot.getBoundingClientRect().bottom > bottom + 1) return true
+      return [...slide.querySelectorAll<HTMLElement>(FIT_BOXES)].some((box) => box.scrollHeight > box.clientHeight + 1)
+    }
+    for (let step = 0; step < 8 && overflowing(); step++) {
+      for (const text of texts) text.style.fontSize = `${Math.max(13, parseFloat(getComputedStyle(text).fontSize) * 0.88)}px`
+    }
+  }, [root, key])
 }
 
 function readVoice() {
@@ -61,9 +83,12 @@ function Spoken({ beat, elapsed, done, duration }: { beat: Beat; elapsed: number
   const words = lineWords(beat, duration)
   const shown = done ? beat.quote : revealedQuote(words, elapsed)
   const gold = landedGold(shown, beat.gold)
+  const unsaid = done ? '' : words.filter((word) => word.at > elapsed + 1e-3).map((word) => word.text).join(' ')
   return (
     <>
       <Gold quote={shown || '\u00a0'} gold={gold} />
+      {/* The words still to come hold their place, so the line never reflows and is sized once. */}
+      {unsaid ? <span className="unsaid" aria-hidden="true"> {unsaid}</span> : null}
       {done && beat.verse ? (
         <span className="verse">
           <Gold quote={beat.verse} gold={landedGold(beat.verse, beat.gold)} />
@@ -97,6 +122,7 @@ export function TeachingCard({
   const [missing, setMissing] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const quoteRef = useRef<HTMLHeadingElement | null>(null)
+  const slideRef = useRef<HTMLDivElement | null>(null)
   useEffect(() => {
     const src = scene.scene
     if (!src) {
@@ -127,8 +153,15 @@ export function TeachingCard({
     if (reduced) setOpened(true)
   }, [reduced])
 
+  useFitText(slideRef, `${scene.style}:${at}:${opened}`)
+
+  // Only the kinetic list scrolls. scrollIntoView would also scroll the clipped feed itself and shift the screen.
   useEffect(() => {
-    quoteRef.current?.scrollIntoView({ block: 'nearest' })
+    const quote = quoteRef.current
+    const list = quote?.closest<HTMLElement>('.kinetic-body')
+    if (!quote || !list) return
+    const over = quote.offsetTop + quote.offsetHeight - (list.scrollTop + list.clientHeight)
+    if (over > 0) list.scrollTop += over
   }, [at, lineDone])
 
   useEffect(() => {
@@ -251,17 +284,18 @@ export function TeachingCard({
     <button type="button" className="pill gold" onClick={onClip} data-testid="scene-next">Learn more</button>
   ) : null
 
-  const voiceButton = (
-    <button type="button" className="scene-voice" aria-pressed={sound && !blocked} disabled={!heard} onClick={toggleVoice} data-testid="scene-voice">
+  const voiceButton = heard ? (
+    <button type="button" className="scene-voice" aria-pressed={sound && !blocked} onClick={toggleVoice} data-testid="scene-voice">
       {blocked ? 'Tap for voice' : sound ? 'Mute' : 'Voice'}
     </button>
-  )
+  ) : null
 
   const spoken = current ? <Spoken beat={current} elapsed={elapsed} done={lineDone} duration={duration} /> : null
 
   return (
     <div
       className={`slide scene-${scene.style} ${scene.style}${scene.brightness === 'light' && !missing ? ' tone-light' : ''}${missing ? ' tone-missing' : ''}`}
+      ref={slideRef}
       data-testid="scene-card"
       data-style={scene.style}
       data-scene={scene.scene}
@@ -270,6 +304,7 @@ export function TeachingCard({
       data-destination="clip"
       data-beat={current?.beat || ''}
       data-voice={blocked ? 'blocked' : sound ? 'on' : 'off'}
+      data-audio={heard ? 'yes' : 'no'}
       data-cta={reward ? 'shown' : 'hidden'}
       onClick={(event) => {
         if (!blocked) return
@@ -407,7 +442,7 @@ function Conversation({
 }
 
 function Cinema({
-  at, count, lane, speaker, course, voice, next, spoken, quoteRef,
+  beat, at, count, lane, speaker, course, voice, next, spoken, quoteRef,
 }: {
   beat: Beat | undefined
   at: number
@@ -423,7 +458,7 @@ function Cinema({
   return (
     <>
       <div className="slide-label"><span>0{at + 1} · {lane}</span>{voice}</div>
-      <h2 className="serif beat-in" data-testid="scene-quote" ref={quoteRef}>{spoken}</h2>
+      <h2 className={`serif beat-in${(beat?.quote.length || 0) > 90 ? ' long' : ''}`} data-testid="scene-quote" ref={quoteRef}>{spoken}</h2>
       <div className="rule-line" />
       <p className="count-line">{at + 1} of {count}</p>
       <Foot course={`${speaker}${speaker && course ? ' · ' : ''}${course}`} next={next} voice={null} />

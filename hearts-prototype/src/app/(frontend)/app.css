@@ -116,6 +116,8 @@
 
 /* Typography slides (Kinetic, Cinema, Windows, Conversation, Unfold) */
 .slide { position: absolute; inset: 0; padding: calc(64px + var(--safe-top)) 26px calc(96px + var(--safe-bottom)); display: flex; flex-direction: column; }
+.slide { overflow: hidden; overflow: clip; }
+.slide .unsaid { visibility: hidden; }
 .slide-label { font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
 .slide-label .rule { display: block; width: 40px; height: 1px; background: currentColor; margin-top: 10px; opacity: 0.6; }
 .slide .serif { font-family: var(--serif); font-weight: 500; letter-spacing: -0.01em; }

@@ -1,5 +1,6 @@
 import { CATALOGUE, backgroundSrc, pickBackground, type Background } from '@/lib/backgrounds'
 import { pickScene } from '@/lib/scenes'
+import { wholeSentences } from '@/lib/sentences'
 import type { FeedItem, SlideStyle } from '@/server/learner'
 
 type CardBeat = NonNullable<FeedItem['beats']>[number]
@@ -12,11 +13,14 @@ function pickStyle(index: number, visit: number, previous: string, base = 0): Sl
   return STYLE_LIST[at]
 }
 
+/** Longest beat a card shows for a talk without a voiced card: whole sentences that fit, never a fragment. */
+const BEAT_CHARS = 150
+
 function beatsOf(item: FeedItem): CardBeat[] {
   if (item.beats?.length) return item.beats
   return (['hook', 'turn', 'land'] as const)
-    .map((beat) => ({ beat, quote: item[beat] || '', gold: '', audio: null }))
-    .filter((row) => row.quote.trim())
+    .map((beat) => ({ beat, quote: wholeSentences(item[beat] || '', { maxChars: BEAT_CHARS }), gold: '', audio: null }))
+    .filter((row) => row.quote)
 }
 
 /**
