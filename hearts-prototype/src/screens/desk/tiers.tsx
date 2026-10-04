@@ -4,7 +4,7 @@ import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { TierEditor } from '@/components/desk/tier-editor'
 import { idOf } from '@/lib/ids'
-import { gapAfter, gapBefore, horsCapOf, PRE_ROLL, sentencesOf, TAIL, timingProblems } from '@/lib/tiers'
+import { gapAfter, gapBefore, horsCapOf, PRE_ROLL, sentencesOf, straddlingTiers, TAIL, timingProblems } from '@/lib/tiers'
 import { filmsForTalk, readFilmCatalogue } from '@/lib/films'
 import { filesForTalk, readTypographyManifest, TYPOGRAPHY_LABEL, TYPOGRAPHY_STYLES, isTypographyStyle } from '@/lib/typography'
 import { tierSourceText } from '@/server/tier-source'
@@ -93,6 +93,7 @@ export async function MasterTiers(ctx: MasterCtx) {
   ])
   const sorted = [...tiers].sort((a, b) => Number(a.status === 'checked') - Number(b.status === 'checked') || Number(a.id) - Number(b.id))
   const checked = tiers.filter((tier) => tier.status === 'checked').length
+  const straddling = straddlingTiers(tiers)
   return (
     <Frame
       ctx={ctx}
@@ -101,6 +102,25 @@ export async function MasterTiers(ctx: MasterCtx) {
       testId="master-tiers"
     >
       <p className="hint" data-testid="tiers-count">{checked} of {tiers.length} talks checked by a person.</p>
+      {straddling.length ? (
+        <section className="panel" style={{ marginBottom: 18 }} data-testid="tiers-straddling">
+          <header className="light"><h2>Hors d&apos;oeuvre across two cuts</h2><span className="hint">{straddling.length} {straddling.length === 1 ? 'talk' : 'talks'} to re-time</span></header>
+          <div className="body">
+            <p className="hint" style={{ marginTop: 0 }}>These were saved before the hors d&apos;oeuvre had to sit inside one appetiser cut. Learners still see them, and their lines can be tidied. Re-time them when you next check the talk.</p>
+            <ul className="plain">
+              {straddling.map((row) => {
+                const lesson = lessons.find((item) => item.id === row.lesson)
+                return (
+                  <li key={row.id} data-testid="straddling-row">
+                    <Link href={`/master/tiers/${row.id}`}><b>{partTitle(lesson) || `Talk tier ${row.id}`}</b></Link>
+                    <div className="hint">{row.problem}</div>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        </section>
+      ) : null}
       <section className="panel">
         <div className="table-wrap">
           <table className="data">

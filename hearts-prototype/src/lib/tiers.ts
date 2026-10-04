@@ -658,6 +658,49 @@ export function tierProblem(tier: Record<string, unknown>, cap = HORS_CAP) {
   return horsNestingProblem({ horsStart: hs, horsEnd: he, appetiserStart: as, appetiserEnd: ae, appetiserSpans: spans })
 }
 
+export const TIER_TIMING_FIELDS = ['horsStart', 'horsEnd', 'appetiserStart', 'appetiserEnd', 'appetiserSpans'] as const
+
+function sameValue(left: unknown, right: unknown) {
+  const idOf = (value: unknown) => (value && typeof value === 'object' && !Array.isArray(value) && 'id' in value ? (value as { id: unknown }).id : value)
+  const [a, b] = [idOf(left), idOf(right)]
+  const blank = (value: unknown) => value === undefined || value === null || value === ''
+  if (blank(a) && blank(b)) return true
+  if (typeof a === 'number' || typeof b === 'number') return Number(a) === Number(b)
+  return JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
+}
+
+/**
+ * The fields an update really changes. With no original document (a new tier) every field present counts.
+ * Payload may hand the hook the whole document, so an unchanged copy of a field does not count as a change.
+ */
+export function changedTierFields(data: Record<string, unknown> | null | undefined, original: Record<string, unknown> | null | undefined, fields: readonly string[]) {
+  if (!data) return []
+  return fields.filter((field) => field in data && data[field] !== undefined && (!original || !sameValue(data[field], original[field])))
+}
+
+export type StraddlingTier = { id: number | string; lesson: number | string | null; title: string; problem: string }
+
+/** Tiers saved before the nesting rule whose hors d'oeuvre does not sit inside one appetiser cut. */
+export function straddlingTiers(rows: Record<string, unknown>[]): StraddlingTier[] {
+  const out: StraddlingTier[] = []
+  for (const row of rows) {
+    const num = (key: string) => Number(row[key])
+    const spans = Array.isArray(row.appetiserSpans) ? (row.appetiserSpans as AppetiserSpan[]) : []
+    const tier = { horsStart: num('horsStart'), horsEnd: num('horsEnd'), appetiserStart: num('appetiserStart'), appetiserEnd: num('appetiserEnd'), appetiserSpans: spans }
+    if ([tier.horsStart, tier.horsEnd].some((value) => !Number.isFinite(value))) continue
+    const problem = horsNestingProblem(tier)
+    if (!problem) continue
+    const lesson = row.lesson as { id?: number; title?: string } | number | null | undefined
+    out.push({
+      id: row.id as number,
+      lesson: lesson && typeof lesson === 'object' ? (lesson.id ?? null) : (lesson ?? null),
+      title: lesson && typeof lesson === 'object' ? String(lesson.title || '') : '',
+      problem,
+    })
+  }
+  return out
+}
+
 /** Small slack for in and out points rounded to the hundredth on either side. */
 const NEST_SLACK = 0.05
 

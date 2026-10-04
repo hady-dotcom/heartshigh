@@ -4,7 +4,7 @@ import type { Access, Where } from 'payload'
 import { portalIdOf } from './lib/ids'
 import { slugProblem } from './lib/text-safety'
 import { authorTextProblems, markupProblems } from './lib/opening-data'
-import { horsCapOf, saidInTalk, tierProblem, timingProblems } from './lib/tiers'
+import { changedTierFields, horsCapOf, saidInTalk, TIER_TIMING_FIELDS, tierProblem, timingProblems } from './lib/tiers'
 import { talkChain } from './lib/nesting'
 import { linkLadderParents } from './server/piece-parents'
 import { APIError } from 'payload'
@@ -701,26 +701,35 @@ export const TalkTiers: CollectionConfig = {
     beforeChange: [
       async ({ data, originalDoc, req }) => {
         const merged = { ...(originalDoc || {}), ...data } as Record<string, unknown>
-        const flags = (await req.payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null)) as { horsMaxSeconds?: number } | null
-        const problem = tierProblem(merged, horsCapOf(flags?.horsMaxSeconds))
-        if (problem) throw new APIError(problem, 400, null, true)
+        // Only what this save changes is checked, so tidying lines never trips over timings saved before a rule.
+        const original = originalDoc as Record<string, unknown> | undefined
+        const timingChanged = !original || changedTierFields(data, original, [...TIER_TIMING_FIELDS, 'lesson']).length > 0
+        if (timingChanged) {
+          const flags = (await req.payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null)) as { horsMaxSeconds?: number } | null
+          const problem = tierProblem(merged, horsCapOf(flags?.horsMaxSeconds))
+          if (problem) throw new APIError(problem, 400, null, true)
+        }
         const lessonId = typeof merged.lesson === 'object' && merged.lesson ? (merged.lesson as { id: number }).id : Number(merged.lesson)
         if (data && lessonId) data.parents = talkChain(lessonId)
+        const changedLines = new Set(original ? changedTierFields(data, original, ['horsQuote', 'hook', 'turn', 'land']) : ['horsQuote', 'hook', 'turn', 'land'])
+        if (!timingChanged && !changedLines.size) return data
         const lesson = lessonId ? await req.payload.findByID({ collection: 'lessons', id: lessonId, depth: 0, overrideAccess: true }).catch(() => null) : null
         const duration = Number((lesson as { durationSeconds?: number } | null)?.durationSeconds || 0)
         const late = timingProblems(duration || null, [
           { label: "The hors d'oeuvre", start: Number(merged.horsStart), end: Number(merged.horsEnd) },
           { label: 'The appetiser', start: Number(merged.appetiserStart), end: Number(merged.appetiserEnd) },
         ])
-        if (duration && late.length) throw new APIError(late[0], 400, null, true)
+        if (timingChanged && duration && late.length) throw new APIError(late[0], 400, null, true)
         // The hook, turn, land and hors d'oeuvre line are the speaker's words. Markup is refused. The kill list
         // governs our own writing, not a quote or a transcript, so it is not applied here.
-        const lines: [string, string][] = [
-          ["The hors d'oeuvre line", String(merged.horsQuote || '')],
-          ['The hook', String(merged.hook || '')],
-          ['The turn', String(merged.turn || '')],
-          ['The land', String(merged.land || '')],
-        ]
+        const lines = ([
+          ['horsQuote', "The hors d'oeuvre line"],
+          ['hook', 'The hook'],
+          ['turn', 'The turn'],
+          ['land', 'The land'],
+        ] as const)
+          .filter(([field]) => changedLines.has(field))
+          .map(([field, label]): [string, string] => [label, String(merged[field] || '')])
         refuse(markupProblems(lines))
         const { tierSourceText } = await import('./server/tier-source')
         const source = tierSourceText(lesson as { youtubeId?: string; transcript?: string } | null)
