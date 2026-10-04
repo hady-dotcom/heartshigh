@@ -16,7 +16,7 @@ export default async function Door({ searchParams }: { searchParams: Promise<{ e
     if (slug) home = user.role === 'learner' ? `/p/${slug}` : `/p/${slug}/admin`
   }
   return (
-    <main className="door" data-testid="door">
+    <main className="door garden-door" data-testid="door">
       <div className="door-card">
         <BrandLockup size={88} />
         <h1>Someone wanted good for you</h1>

@@ -6,7 +6,7 @@ export default async function Join({ searchParams }: { searchParams: Promise<{ e
   const query = await searchParams
   const code = query.code || ''
   return (
-    <main className="door" data-testid="join">
+    <main className="door garden-door" data-testid="join">
       <div className="door-card">
         <BrandLockup size={72} />
         <h1>Come in</h1>

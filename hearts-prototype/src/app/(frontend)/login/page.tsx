@@ -6,7 +6,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   const query = await searchParams
   const next = query.next && query.next.startsWith('/') && !query.next.startsWith('//') ? query.next : '/'
   return (
-    <main className="door" data-testid="login">
+    <main className="door garden-door" data-testid="login">
       <div className="door-card">
         <BrandLockup size={72} />
         <h1>Welcome back</h1>
