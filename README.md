@@ -30,3 +30,15 @@ Captured at `cursor/hearts-prototype-v1-cf40` head after the addendum. The e2e s
 - `feed-04-scenic-card.png`: the scenic card before its swipe.
 - `feed-07-talk-caption-normal.png`, `feed-08-burned-in-words-speaker-at-top.png`: the same talk before and after its lesson is flagged with burned-in captions; our caption hides and the speaker and Follow move to the top.
 - `feed-09-extended-cut-own-poster.png`: the extended cut on our own still with the talk title, not YouTube's titled thumbnail.
+
+## Addendum 3: door, join and sign-in in the evening garden; HEARTS portal name
+
+The pages are the same at any hour; the dawn shots show they no longer turn pale in the morning.
+
+- `r3-auth-join-phone-evening.png`: `/join?code=…` with the code filled in, 390x844
+- `r3-auth-join-desk-evening.png`: `/join?code=…`, 1440x900
+- `r3-auth-login-phone-evening.png`: `/login`, 390x844
+- `r3-auth-login-desk-evening.png`: `/login`, 1440x900
+- `r3-auth-join-phone-dawn.png`: `/join?code=…` in the morning (dawn theme), 390x844
+- `r3-auth-login-desk-dawn.png`: `/login` in the morning (dawn theme), 1440x900
+- `r3-hearts-portal-name.png`: a portal named "Hearts" shows as HEARTS on the master desk; its slug stays `/p/hearts-demo`
