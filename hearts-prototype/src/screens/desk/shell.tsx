@@ -76,6 +76,7 @@ export async function DeskFrame({
   nav,
   brand,
   subBrand,
+  deskName,
   brandHref,
   extraLinks = [],
   tools,
@@ -91,6 +92,8 @@ export async function DeskFrame({
   nav: { group: string; items: NavItem[] }[]
   brand: string
   subBrand: string
+  /** What the narrow-screen note calls this desk. Defaults to the sub-brand. */
+  deskName?: string
   brandHref: string
   extraLinks?: { label: string; href: string }[]
   tools?: ReactNode
@@ -105,7 +108,7 @@ export async function DeskFrame({
     <div className="desk-narrow" data-testid="desk-narrow" role="note">
       <BrandMark size={44} />
       <h1>Open this on a laptop or desktop</h1>
-      <p>The {subBrand.toLowerCase()} needs a wider screen than this. Your work is saved, so you can carry on from a computer.</p>
+      <p>The {deskName || subBrand.toLowerCase()} needs a wider screen than this. Your work is saved, so you can carry on from a computer.</p>
       <form action="/api/hearts" method="post">
         <Hidden fields={{ action: 'logout' }} />
         <button type="submit" className="btn ghost">Sign out</button>

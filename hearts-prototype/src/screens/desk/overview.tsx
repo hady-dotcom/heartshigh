@@ -21,7 +21,8 @@ export async function AdminFrame({ ctx, active, title, intro, tools, children, t
       active={active}
       nav={portalNav(base, user)}
       brand={portalName(portal)}
-      subBrand={portal.closed ? 'Deactivated' : `${portal.slug} portal`}
+      subBrand={portal.closed ? 'Deactivated' : 'Portal desk'}
+      deskName={`${portalName(portal)} portal desk`}
       brandHref={`${base}/admin`}
       extraLinks={extra}
       tools={tools}
