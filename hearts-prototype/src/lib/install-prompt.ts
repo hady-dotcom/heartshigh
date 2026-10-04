@@ -56,7 +56,7 @@ const COMPUTER_HEADING = 'Keep HEARTS on this computer'
 const LEAD = 'It then opens full screen, with no browser bars.'
 
 const IOS_STEPS: InstallCopy['steps'] = [
-  { glyph: 'share', text: 'Tap the Share button at the bottom of Safari (the square with an arrow).' },
+  { glyph: 'share', text: 'Tap Share at the bottom of Safari.' },
   { glyph: 'add', text: 'Tap Add to Home Screen, then Add.' },
 ]
 
@@ -135,7 +135,7 @@ export function installCopy(kind: InstallKind, prompt: boolean): InstallCopy {
 export function installSlides(kind: InstallKind): InstallSlide[] {
   if (kind === 'ios-safari' || kind === 'ios-other') {
     return [
-      { id: 'ios-share', caption: 'Tap the Share button at the bottom of Safari (the square with an arrow).' },
+      { id: 'ios-share', caption: 'Tap Share at the bottom of Safari.' },
       { id: 'ios-sheet', caption: 'Tap Add to Home Screen.' },
       { id: 'ios-add', caption: 'Tap Add.' },
       { id: 'ios-home', caption: 'HEARTS lands on your home screen.' },

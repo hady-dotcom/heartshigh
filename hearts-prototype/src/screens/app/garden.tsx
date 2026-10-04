@@ -195,7 +195,7 @@ async function areaViews(payload: Payload, user: SessionUser, base: string, g: G
     lessons: lessons.map((lesson) => ({
       id: lesson.id,
       courseId: ref(lesson.course) || 0,
-      title: str(lesson.sourceTitle) || str(lesson.title),
+      title: learnerWords(partTitle(lesson)),
       door: doorFor(lesson.id),
     })),
     completions: g.completions.map((row) => ({ lessonId: ref(row.lesson) || 0 })).filter((row) => row.lessonId),
