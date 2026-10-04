@@ -12,13 +12,12 @@ test.beforeAll(() => {
 })
 
 test('a learner cannot fetch their own scores from any compass API', async () => {
-  const master = await playwrightRequest.newContext({ baseURL: E2E_BASE })
-  expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
-  const me = await (await master.get(`/api/users?where[email][equals]=${encodeURIComponent(LEARNER)}&depth=0`)).json()
-  const id = me.docs[0].id as number
-  await master.dispose()
   const learner = await playwrightRequest.newContext({ baseURL: E2E_BASE })
-  expect((await learner.post('/api/users/login', { data: { email: LEARNER, password: PASSWORD } })).ok()).toBeTruthy()
+  const login = await learner.post('/api/users/login', { data: { email: LEARNER, password: PASSWORD } })
+  const loginBody = await login.json().catch(() => ({})) as { user?: { id?: number } }
+  expect(login.ok(), JSON.stringify(loginBody)).toBeTruthy()
+  const id = loginBody.user?.id
+  expect(id, JSON.stringify(loginBody)).toBeTruthy()
   const own = await (await learner.get(`/api/compass?portal=${PORTAL}`)).json()
   const text = JSON.stringify(own)
   expect(text).not.toMatch(/-\d/)

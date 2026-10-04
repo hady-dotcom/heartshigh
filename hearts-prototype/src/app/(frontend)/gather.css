@@ -5,17 +5,18 @@
 :is(html, html[data-theme]) .app.gather-shell,
 :is(html, html[data-theme]) .gather-stage,
 :is(html, html[data-theme]) .desk.gather-desk {
-  --g-bg: var(--bg-solid, #0e2a2b);
+  --g-bg: #0e2a2b;
   --g-ink: #f6eedc;
-  --g-gold: var(--desk-gold, #d4a84b);
-  --g-gold-ink: var(--desk-gold-ink, #1a1408);
-  --g-card: var(--desk-card, #f7eedb);
-  --g-heading: var(--desk-heading, #0f3b3a);
-  --g-page: var(--desk-page, #efe3c8);
-  --g-sidebar: var(--desk-sidebar, #0e2a2b);
-  --g-on-dark: var(--desk-on-dark, #f6eedc);
-  --g-field: var(--desk-field, #ffffff);
-  --g-line: var(--desk-line, #cbb98a);
+  --g-gold: #d4a84b;
+  --g-gold-ink: #1a1408;
+  --g-card: #f3e2c0;
+  --g-card-end: #e8d4a6;
+  --g-heading: #0f3b3a;
+  --g-page: #e4cfa0;
+  --g-sidebar: #0e2a2b;
+  --g-on-dark: #f6eedc;
+  --g-field: #fbf3e0;
+  --g-line: #7a6238;
   --g-ivy: #3e6b4f;
   --g-muted: #e7d7b0;
 }
@@ -26,22 +27,23 @@ html[data-theme='evening'] .gather-stage,
 html[data-theme='dawn'] .public-gather,
 html[data-theme='dawn'] .app.gather-shell,
 html[data-theme='dawn'] .gather-stage {
-  --g-bg: var(--bg-solid);
-  --g-ink: var(--ink);
-  --g-gold: var(--gold);
-  --g-gold-ink: var(--gold-ink);
-  --g-muted: var(--muted);
-  --g-card: var(--desk-card);
-  --g-heading: var(--desk-heading);
+  --g-bg: #0e2a2b;
+  --g-ink: #f6eedc;
+  --g-gold: #d4a84b;
+  --g-gold-ink: #1a1408;
+  --g-muted: #e7d7b0;
+  --g-card: #f3e2c0;
+  --g-heading: #0f3b3a;
+  --g-page: #e4cfa0;
 }
 
 :is(html, html[data-theme]) .gather-stage { background: var(--g-bg); }
 :is(html, html[data-theme]) .app.gather-shell { background: var(--g-heading); color: var(--g-ink); }
-:is(html, html[data-theme]) .app.gather-shell .app-scroll {
+:is(html, html[data-theme]) .app.gather-shell .app-scroll,
+:is(html, html[data-theme]) .public-gather {
   background:
-    radial-gradient(420px 280px at 80% -10%, rgba(212, 168, 75, 0.28), transparent 60%),
-    radial-gradient(380px 240px at -10% 20%, rgba(62, 107, 79, 0.45), transparent 55%),
-    var(--g-heading);
+    linear-gradient(180deg, rgba(10, 40, 40, 0.55), rgba(7, 28, 28, 0.82)),
+    url('/theme/evening-courtyard.jpg') center / cover no-repeat;
 }
 :is(html, html[data-theme]) .app.gather-shell .app-head h1,
 .gather h1, .gather h2, .gather h3 { font-family: var(--serif); font-weight: 600; color: var(--g-ink); }
@@ -51,8 +53,9 @@ html[data-theme='dawn'] .gather-stage {
 .gather .muted { color: var(--g-muted); }
 
 .gather-card {
-  background: var(--g-card);
+  background: linear-gradient(180deg, var(--g-card), var(--g-card-end));
   color: var(--g-heading);
+  border: 1px solid rgba(212, 168, 75, 0.7);
   border-radius: 22px;
   padding: 18px 16px 16px;
   margin: 0 0 14px;
@@ -100,7 +103,7 @@ html[data-theme] .gather-card .pill.outline, html[data-theme] .public-gather .ga
 .gather .field, .public-gather .field, .gather-card .field,
 html[data-theme] .gather .field, html[data-theme] .public-gather .field, html[data-theme] .gather-card .field,
 html[data-theme] .public-gather input.field, html[data-theme] .gather-card input.field, html[data-theme] .gather-card textarea.field {
-  background: #fbf6e8;
+  background: #fbf3e0;
   color: #0f3b3a;
   border: 1.5px solid #14564c;
   width: 100%;
@@ -110,7 +113,7 @@ html[data-theme] .gather-card .field::placeholder { color: #3a4e48; opacity: 1; 
 /* Beat a later theme rule on .app textarea.field, which otherwise paints a dark field and a dark placeholder. */
 html[data-theme] .app.gather-shell .gather-card textarea.field,
 html[data-theme] .app.gather-shell form.gather-card textarea.field {
-  background: #fbf6e8;
+  background: #fbf3e0;
   color: #0f3b3a;
   border: 1.5px solid #14564c;
   width: 100%;
@@ -220,7 +223,7 @@ html[data-theme] .app.gather-shell form.gather-card textarea.field::placeholder 
 .welcome-card {
   background:
     radial-gradient(140% 90% at 0% 0%, rgba(212, 168, 75, 0.42), transparent 58%),
-    #fbf6e8;
+    linear-gradient(180deg, #f3e2c0, #e8d4a6);
   border: 1px solid #d4a84b;
   overflow-anchor: none;
 }
@@ -326,7 +329,7 @@ html[data-theme] .desk.gather-desk select,
 html[data-theme] .desk.gather-desk textarea {
   width: 100%;
   border: 1.5px solid #14564c;
-  background: #fbf6e8;
+  background: #fbf3e0;
   color: #0f3b3a;
   border-radius: 10px;
   padding: 9px 12px;
@@ -374,3 +377,13 @@ html[data-theme] .desk.gather-desk textarea {
 .gather-door { margin: 18px 0 8px; }
 .gather-door h2 { font-size: 22px; margin: 0 0 8px; }
 .share-box textarea { width: 100%; min-height: 140px; border-radius: 14px; padding: 12px; }
+
+/* Home strip: the same parchment cards, on whichever theme Home is wearing. */
+:is(html, html[data-theme]) [data-testid="home-gather"] .continue-row {
+  background: linear-gradient(180deg, #f3e2c0, #e8d4a6);
+  color: #0f3b3a;
+  border: 1px solid rgba(212, 168, 75, 0.7);
+}
+:is(html, html[data-theme]) [data-testid="home-gather"] .continue-row b,
+:is(html, html[data-theme]) [data-testid="home-gather"] .continue-row small { color: #0f3b3a; }
+:is(html, html[data-theme]) [data-testid="home-gather-all"] { color: #d4a84b; font-weight: 700; }

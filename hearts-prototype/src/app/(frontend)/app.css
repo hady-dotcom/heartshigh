@@ -246,21 +246,22 @@
 .player-veil { position: absolute; inset: 0; z-index: 3; background: rgba(14, 42, 43, 0.72); display: grid; place-items: center; }
 .gold-spin { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(212, 168, 75, 0.35); border-top-color: #f1d58a; animation: gold-spin 0.8s linear infinite; }
 @keyframes gold-spin { to { transform: rotate(360deg); } }
-.player-card .yt { position: absolute; inset: 0 0 46px; }
+.player-card .yt { position: absolute; inset: 0 0 46px; z-index: 1; overflow: hidden; pointer-events: none; }
+.player-card .yt iframe { pointer-events: none; }
 .player-card.yt-on { aspect-ratio: auto; height: calc((min(430px, 100vw) - 36px) * 9 / 16 + 96px); }
-.player-card.yt-on .yt { inset: 50px 0 46px; }
+.player-card.yt-on .yt { inset: 50px 0 72px; }
 /* While a question is open the paused film sits under a soft scrim, so YouTube's pause panel and suggestions fade back. */
-.player-card .yt-scrim { position: absolute; inset: 50px 0 46px; z-index: 2; background: linear-gradient(180deg, rgba(18, 17, 16, 0.5), rgba(18, 17, 16, 0.72)); backdrop-filter: blur(3px); }
+.player-card .yt-scrim { position: absolute; inset: 50px 0 72px; z-index: 2; background: linear-gradient(180deg, rgba(18, 17, 16, 0.5), rgba(18, 17, 16, 0.72)); backdrop-filter: blur(3px); pointer-events: none; }
 .player-card.yt-on .part-chip { top: 9px; right: 70px; background: rgba(255, 255, 255, 0.1); }
 .player-card.yt-on .time-read { top: 9px; }
-.player-card .yt iframe, .player-card .yt > div, .player-card .yt video { width: 100%; height: 100%; border: 0; background: #000; object-fit: contain; }
+.player-card .yt iframe, .player-card .yt > div, .player-card .yt video { width: 100%; height: 100%; max-width: 100%; max-height: 100%; border: 0; background: #000; object-fit: contain; pointer-events: none; }
 .part-chip { position: absolute; top: 12px; left: 12px; right: 60px; z-index: 3; background: rgba(0, 0, 0, 0.72); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .big-play { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 4; width: 44px; height: 44px; border-radius: 50%; background: rgba(14, 42, 43, 0.55); color: #f1d58a; border: 1.5px solid #d4a84b; display: grid; place-items: center; box-shadow: none; }
 .paused-note { position: absolute; left: 0; right: 0; top: 40%; text-align: center; z-index: 3; font-weight: 700; font-size: 15px; }
-.timeline { position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 3; height: 24px; }
+.timeline { position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 6; height: 24px; pointer-events: auto; transform: translateZ(0); }
 .timeline .track { position: absolute; left: 0; right: 0; top: 10px; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.3); }
 .timeline .fill { position: absolute; left: 0; top: 10px; height: 4px; border-radius: 4px; background: #fff; }
-.timeline .dot { position: absolute; top: 2px; width: 20px; height: 20px; margin-left: -10px; border-radius: 50%; border: 3px solid #fff; background: #1c1b19; padding: 0; }
+.timeline .dot { position: absolute; top: 2px; width: 20px; height: 20px; margin-left: -10px; border-radius: 50%; border: 3px solid #fff; background: #1c1b19; padding: 0; z-index: 7; pointer-events: auto; }
 .timeline .dot.done { background: var(--gold); border-color: #f6e2b0; }
 .timeline .dot.locked { background: #4a4740; border-color: #8b877c; }
 .time-read { position: absolute; right: 14px; top: 14px; z-index: 3; font-size: 12px; font-weight: 700; background: rgba(0,0,0,0.6); border-radius: 999px; padding: 5px 10px; }

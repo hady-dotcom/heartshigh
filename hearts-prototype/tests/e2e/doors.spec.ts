@@ -1,7 +1,7 @@
 import ExcelJS from 'exceljs'
 import { expect, request as playwrightRequest, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 import { E2E_BASE } from '../env'
-import { DOORS, doorNumberOfClause } from '../../src/lib/doors'
+import { DOORS, capitalAfterColon, doorNumberOfClause } from '../../src/lib/doors'
 import { buildWorkbook } from '../../src/lib/master-sheet'
 
 // Hadith Jibril as 20 doors: learners see doors only, the desk sees the door first and the clause underneath,
@@ -69,14 +69,14 @@ test('a learner sees the 20 doors with their titles and never a clause number', 
   const lit = await page.locator('[data-testid=door-cell][data-lit=yes]').count()
   await expect(page.getByTestId('lit-count')).toHaveText(`${lit} of 20 doors`)
   await expect(page.locator('[data-testid=door-cell][data-start=yes]')).toHaveAttribute('data-door', '10')
-  for (const door of DOORS) await expect(page.locator(`[data-testid=door-cell][data-door="${door.number}"]`)).toContainText(door.title)
+  for (const door of DOORS) await expect(page.locator(`[data-testid=door-cell][data-door="${door.number}"]`)).toContainText(capitalAfterColon(door.title))
   const map = await page.getByTestId('garden-jibril').innerText()
   expect(map).not.toMatch(/\bclauses?\b/i)
   expect(map).not.toMatch(/\b41\b/)
 
   await page.locator('[data-testid=door-cell][data-door="2"]').click()
   await expect(page).toHaveURL(new RegExp(`${BASE}/garden/jibril/2$`))
-  await expect(page.getByTestId('door-title')).toHaveText(DOORS[1].title)
+  await expect(page.getByTestId('door-title')).toHaveText(capitalAfterColon(DOORS[1].title))
   await expect(page.getByTestId('door-words')).toContainText('We were sitting')
   await expect(page.getByTestId('door-words')).toContainText('O Muhammad')
   await expect(page.getByTestId('seat').first()).toBeVisible()

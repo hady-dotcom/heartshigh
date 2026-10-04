@@ -10,7 +10,7 @@ export default async function Join({ searchParams }: { searchParams: Promise<{ e
       <div className="door-card">
         <BrandLockup size={72} />
         <h1>Come in</h1>
-        <p className="lede">{code ? 'Your code’s already in. Just add your name.' : 'Type the access code you were given, then your name.'}</p>
+        <p className="lede">{code ? 'Your link already holds the code. Add your name and you are in.' : 'Type the access code you were given, then your name.'}</p>
         <Flash error={query.error} />
         <form className="door-form" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'join', gatherGuest: query.gatherGuest, after: query.after }} />

@@ -425,3 +425,124 @@ button.month-back {
 @media (max-width: 800px) {
   .cohort { grid-template-columns: 1fr; }
 }
+
+/* Evening garden. Learner screens sit on the courtyard; cards are rich parchment, not pale cream.
+   These selectors beat html[data-theme] .app / .desk, so dawn does not wash them back to mint. */
+:is(html, html[data-theme]) .app[data-testid="learner-path"],
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] {
+  position: relative;
+  isolation: isolate;
+  background: #0e2a2b;
+  color: #f6eedc;
+}
+:is(html, html[data-theme]) .app-stage:has(.app[data-testid="learner-path"]),
+:is(html, html[data-theme]) .app-stage:has(.app[data-testid="recalibrate"]) {
+  background: #0e2a2b;
+}
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .app-scroll,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .app-scroll {
+  background:
+    linear-gradient(180deg, rgba(10, 40, 40, 0.5), rgba(7, 28, 28, 0.78)),
+    url('/theme/evening-courtyard.jpg') center / cover no-repeat;
+}
+:is(html, html[data-theme]) .app[data-testid="learner-path"] h1,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] h1,
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .lead,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .lead,
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .back,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .back {
+  color: #f6eedc;
+}
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .card,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .card,
+:is(html, html[data-theme]) [data-testid="recalibrate-card"] {
+  background: linear-gradient(180deg, #f3e2c0, #e8d4a6);
+  color: #0f3b3a;
+  border: 1px solid rgba(212, 168, 75, 0.75);
+}
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .card p,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .card p,
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .card b,
+:is(html, html[data-theme]) .app[data-testid="learner-path"] a.next-step,
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .next-step,
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .step-detail,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] legend,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .choice,
+:is(html, html[data-theme]) [data-testid="recalibrate-card"] h2,
+:is(html, html[data-theme]) [data-testid="recalibrate-card"] p {
+  color: #0f3b3a;
+}
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .step-mark {
+  background: #0f3b3a;
+  color: #d4a84b;
+}
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .chip,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .chip {
+  background: #0f3b3a;
+  color: #f6eedc;
+  border-color: #d4a84b;
+}
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] textarea,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .field {
+  background: #fbf3e0;
+  color: #0f3b3a;
+  border: 1.5px solid #14564c;
+}
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .pill.gold,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .pill.gold,
+:is(html, html[data-theme]) .app[data-testid="learner-path"] button.pill,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] button.pill,
+:is(html, html[data-theme]) [data-testid="recalibrate-open"] {
+  background: #d4a84b;
+  color: #1a1408;
+}
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .month-progress .progress,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] button.month-back {
+  color: #f6eedc;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"],
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] {
+  background: #e4cfa0;
+  color: #1a2422;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .side,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .side {
+  background: #0e2a2b;
+  color: #f6eedc;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .main-head h1,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .main-head h1,
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .persona-line,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .persona-line,
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .mix-form label,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .mix-form label {
+  color: #0f3b3a;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel {
+  background: #f3e2c0;
+  border-color: #7a6238;
+  color: #1a2422;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel > header,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel > header {
+  background: #0f3b3a;
+  color: #f6eedc;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel > header h2,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel > header h2,
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel > header .hint,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel > header .hint,
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel > header .spark-legend,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel > header .spark-legend {
+  color: #f6eedc;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .spark-card,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .spark-card {
+  background: #fbf3e0;
+  border-color: #7a6238;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .cohort-row .bar,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .cohort-row .bar {
+  background: #e4cfa0;
+}
