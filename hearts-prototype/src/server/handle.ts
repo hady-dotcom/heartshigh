@@ -36,6 +36,7 @@ import { randomUUID } from 'node:crypto'
 import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourseIds, type Session, type SessionUser } from './context'
 import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCookie, wrote } from './viewas'
 import { isTimeZone } from '@/lib/zone-time'
+import { parseLengthInput } from '@/lib/length'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
@@ -754,6 +755,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       data: { title: text(form, 'unit') || 'Unit 1', course: course.id, order: 1 },
     })
     const lessonTitle = text(form, 'lesson') || title
+    const length = parseLengthInput(text(form, 'duration'))
+    if (!length.ok) return redirectTo(req, next, length.message)
     await payload.create({
       collection: 'lessons',
       overrideAccess: true,
@@ -766,7 +769,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         order: 1,
         speaker: text(form, 'speaker'),
         transcriptSource: 'none',
-        durationSeconds: Number(text(form, 'duration') || 0) || undefined,
+        durationSeconds: length.seconds,
       },
     })
     const packId = Number(text(form, 'pack') || 0)

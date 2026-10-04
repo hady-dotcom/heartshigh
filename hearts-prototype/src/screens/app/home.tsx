@@ -90,7 +90,6 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         <SavedToast />
         <span className="sr-only">{portalName(portal)}</span>
         <Flash error={query.error} notice={query.notice} />
-        <InstallCard sheet />
         <section className="grow-banner" data-testid="grow-banner">
           <p className="eyebrow">Your growth</p>
           <h2 data-testid="days-count">{days ? `${days} day${days === 1 ? '' : 's'} with us so far` : 'Your garden starts today'}</h2>
@@ -130,6 +129,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
           ))}
           {!carryOn.length && !fallback.length ? <p className="muted">Start a course from Lanes and it will wait for you here.</p> : null}
         </div>
+        <InstallCard strip />
         <HomeGather cards={gatherings} base={base} masjid={portalName(portal)} />
         <p className="eyebrow">Today&apos;s clips <span className="muted" style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }} data-testid="day-number">· Day {dayNumber(user)}</span></p>
         <Link className="feed-door" href={`${base}/feed`} data-testid="open-feed">

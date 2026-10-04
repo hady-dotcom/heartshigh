@@ -53,17 +53,20 @@ export async function TeachScreen(ctx: Ctx) {
       <section className="panel" style={{ marginBottom: 18 }}>
         <header className="light">
           <h2>Learners ({learners.length})</h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-            <HelpTip topic="give-course" place="end">{TOOL.giveCourse}</HelpTip>
-            <HelpTip topic="view-as" place="end">{TOOL.viewAs}</HelpTip>
-            <HelpTip topic="on-time" place="end">{TOOL.onTime}</HelpTip>
-            <HelpTip topic="workbook" place="end">{TOOL.workbook}</HelpTip>
-            <HideTestFilter action={here} hide={hideTest} />
-          </div>
+          <HideTestFilter action={here} hide={hideTest} />
         </header>
         <div className="table-wrap">
           <table className="data">
-            <thead><tr><th>Name</th><th>Email</th><th className="num">Day</th><th className="num">Parts watched</th><th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr></th><th className="num">Answers</th><th>Give a course</th><th /></tr></thead>
+            <thead><tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th className="num">Day</th>
+              <th className="num">Parts watched</th>
+              <th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr> <HelpTip topic="on-time" label="What is on time?">{TOOL.onTime}</HelpTip></th>
+              <th className="num">Answers</th>
+              <th>Give a course <HelpTip topic="give-course" label="What is Give a course?">{TOOL.giveCourse}</HelpTip></th>
+              <th>Workbook <HelpTip topic="workbook" label="What is the workbook download?">{TOOL.workbook}</HelpTip></th>
+            </tr></thead>
             <tbody>
               {learners.map((learner) => {
                 const done = completions.filter((row) => ref(row.user) === learner.id)

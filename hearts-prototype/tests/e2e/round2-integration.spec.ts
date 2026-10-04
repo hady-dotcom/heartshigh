@@ -66,12 +66,12 @@ test('no hoopoe or Hudhud on sign-in, Home, the feed, the garden, Me, the desks 
   }
 })
 
-test('desks wear the parchment: dark teal only on the sidebar and card headers, gold buttons', async ({ page }) => {
+test('desks wear the evening garden: deep teal page and panels, gold buttons', async ({ page }) => {
   await page.setViewportSize(DESK)
   await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${PORTAL}/admin/library`)
-  expect(await bg(page, '.desk')).toBe('rgb(239, 227, 200)')
-  expect(await bg(page, '.side')).toBe('rgb(14, 42, 43)')
-  expect(await bg(page, '.panel')).toBe('rgb(247, 238, 219)')
+  expect(await bg(page, '.desk')).toBe('rgb(14, 42, 43)')
+  expect(await bg(page, '.side')).toBe('rgb(11, 34, 35)')
+  expect(await bg(page, '.panel')).toBe('rgb(22, 54, 51)')
   expect(await bg(page, '.panel > header:not(.light)')).toBe('rgb(15, 59, 58)')
   await page.goto(`${PORTAL}/admin/access`)
   expect(await bg(page, '[data-testid="new-code-submit"]')).toBe('rgb(212, 168, 75)')

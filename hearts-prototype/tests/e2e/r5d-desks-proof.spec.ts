@@ -24,7 +24,7 @@ test.describe.configure({ timeout: 240_000 })
 
 test.use({ video: { mode: 'on', size: DESK } })
 
-test('r5d desk proof shots', async ({ page }) => {
+test('r5d desk proof shots', async ({ page, browser }) => {
   mkdirSync(dir, { recursive: true })
   await page.setViewportSize(DESK)
   await signIn(page, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin/teach')
@@ -61,6 +61,8 @@ test('r5d desk proof shots', async ({ page }) => {
   await expect(page.getByTestId('admin-content')).toBeVisible()
   await expect(page.locator('[data-testid="content-door"][data-door^="W"]')).toHaveCount(20)
   await expect(page.getByTestId('course-row').first()).toBeVisible()
+  await expect(page.getByTestId('content-empty-doors')).toBeVisible()
+  await expect(page.getByTestId('content-empty-doors')).not.toHaveAttribute('open')
   await shot(page, 'content-grouped-doors', true)
 
   await page.goto('/p/east-london/admin/library')
@@ -112,6 +114,22 @@ test('r5d desk proof shots', async ({ page }) => {
   await page.goto('/p/east-london')
   await expect(page.getByTestId('home-saved')).toBeVisible()
   await shot(page, 'phone-home-saved')
+
+  const safari = await browser.newContext({
+    viewport: PHONE,
+    isMobile: true,
+    hasTouch: true,
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+  })
+  const phone = await safari.newPage()
+  await signIn(phone, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london')
+  await expect(phone.getByTestId('continue')).toBeVisible()
+  const strip = phone.getByTestId('install-card')
+  await expect(strip).toBeVisible()
+  await expect(strip).toHaveAttribute('data-variant', 'strip')
+  await expect(strip.locator('h2')).toContainText('phone')
+  await shot(phone, 'phone-home-install')
+  await safari.close()
 })
 
 test('teacher opens a few help tips', async ({ page }) => {

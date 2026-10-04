@@ -13,6 +13,7 @@ import {
   installEntry,
   installKind,
   installSlides,
+  installSurface,
   isDisplayStandalone,
   offersInstallButton,
   readInstallFlags,
@@ -43,6 +44,12 @@ function readState(): InstallState {
   }
 }
 
+function readSurface(kind: InstallState['kind']) {
+  const narrow = typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 720px)').matches
+  const coarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches
+  return installSurface(kind, { narrow, coarse })
+}
+
 function useInstallState() {
   const [state, setState] = useState<InstallState | null>(null)
   useEffect(() => {
@@ -59,22 +66,24 @@ function useInstallState() {
 }
 
 /**
- * The first-open card. Pass forced when Me opens it again after a dismissal. On Home it is a sheet over the page,
- * because it can only be known after the page has loaded, and pushing Home down then would shift everything.
+ * First-open guidance. Home uses a slim strip below Continue. Me can open the full card again.
+ * Dismissing the Home strip hides it for 14 days.
  */
-export function InstallCard({ forced = false, onDismiss, sheet = false }: { forced?: boolean; onDismiss?: () => void; sheet?: boolean }) {
+export function InstallCard({ forced = false, onDismiss, sheet = false, strip = false }: { forced?: boolean; onDismiss?: () => void; sheet?: boolean; strip?: boolean }) {
   const [state, setState] = useInstallState()
   const [busy, setBusy] = useState(false)
   if (!state) return null
   const prompt = state.prompt && offersInstallButton(state.kind)
   if (!shouldShowInstall({ standalone: state.standalone, dismissed: state.dismissed, installed: state.installed, forced })) return null
-  const copy = installCopy(state.kind, prompt)
+  const surface = readSurface(state.kind)
+  const copy = installCopy(state.kind, prompt, surface)
+  const variant = strip ? 'strip' : sheet ? 'sheet' : 'card'
 
   const dismiss = () => {
     const until = dismissUntil()
     try {
       localStorage.setItem(INSTALL_DISMISSED_KEY, until)
-      document.cookie = `${INSTALL_DISMISSED_KEY}=${encodeURIComponent(until)}; Max-Age=${30 * 24 * 60 * 60}; Path=/; SameSite=Lax`
+      document.cookie = `${INSTALL_DISMISSED_KEY}=${encodeURIComponent(until)}; Max-Age=${14 * 24 * 60 * 60}; Path=/; SameSite=Lax`
     } catch { /* private mode */ }
     setState({ ...state, dismissed: true })
     onDismiss?.()
@@ -102,11 +111,24 @@ export function InstallCard({ forced = false, onDismiss, sheet = false }: { forc
   }
 
   return (
-    <section className={`card install-card${sheet ? ' sheet' : ''}`} data-testid="install-card" data-kind={state.kind} data-prompt={prompt ? 'yes' : 'no'} role={sheet ? 'dialog' : undefined} aria-label={sheet ? copy.heading : undefined}>
+    <section
+      className={`card install-card${sheet ? ' sheet' : ''}${strip ? ' strip' : ''}`}
+      data-testid="install-card"
+      data-variant={variant}
+      data-kind={state.kind}
+      data-surface={surface}
+      data-prompt={prompt ? 'yes' : 'no'}
+      role={sheet ? 'dialog' : undefined}
+      aria-label={copy.heading}
+    >
       <h2>{copy.heading}</h2>
       <p className="install-lead">{copy.lead}</p>
       {copy.note ? <p className="install-note">{copy.note}</p> : null}
-      {installSlides(state.kind).length ? <InstallSlides kind={state.kind} /> : null}
+      {strip ? (
+        <ol className="install-strip-steps">
+          {copy.steps.map((step) => <li key={step.text}>{step.text}</li>)}
+        </ol>
+      ) : installSlides(state.kind).length ? <InstallSlides kind={state.kind} /> : null}
       {copy.manual ? <p className="install-manual">{copy.manual}</p> : null}
       <div className="install-actions">
         {copy.action ? (
@@ -125,7 +147,7 @@ export function KeepHearts() {
   const [run, setRun] = useState(0)
   if (!state) return null
   const installed = state.installed || state.standalone
-  const entry = installEntry(state.kind, installed)
+  const entry = installEntry(state.kind, installed, readSurface(state.kind))
   const show = () => {
     setRun((n) => n + 1)
     setOpen(true)

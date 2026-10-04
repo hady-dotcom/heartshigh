@@ -44,7 +44,6 @@ export async function ContentScreen(ctx: Ctx) {
     lessonIds.length ? rows(payload, 'cuts', { lesson: { in: lessonIds } }, { limit: 2000 }) : Promise.resolve([]),
   ])
   const localIds = new Set(local.map((course) => course.id))
-  const localLessons = lessons.filter((lesson) => localIds.has(ref(lesson.course) || 0))
   const q = (query.q || '').trim().toLowerCase()
   const origin = query.origin === 'mine' || query.origin === 'library' ? query.origin : 'all'
   const filtered = all.filter((course) => {
@@ -55,6 +54,12 @@ export async function ContentScreen(ctx: Ctx) {
     return true
   })
   const grouped = withEveryDoor(await groupThese(payload, filtered.map((course) => ({ id: course.id, title: str(course.title), summary: str(course.summary) }))))
+  const filled = grouped.filter((group) => group.courses.length)
+  const empty = grouped.filter((group) => !group.courses.length)
+  const listedIds = new Set(filtered.map((course) => course.id))
+  const listedLessons = lessons.filter((lesson) => listedIds.has(ref(lesson.course) || 0))
+  const listedUnits = units.filter((unit) => listedIds.has(ref(unit.course) || 0))
+  const listedPoints = points.filter((point) => listedLessons.some((lesson) => lesson.id === ref(point.lesson)))
   const byId = new Map(filtered.map((course) => [course.id, course]))
   const stat = (n: number, label: string) => <div className="stat-chip"><b>{n}</b><span>{label}</span></div>
   const here = `${base}/admin/content`
@@ -79,10 +84,10 @@ export async function ContentScreen(ctx: Ctx) {
   return (
     <AdminFrame ctx={ctx} active="content" title="Content" intro="Build courses here: a subject, its topics, the films in each topic, and the questions that pause the film." testId="admin-content">
       <div className="stats-strip">
-        {stat(local.length, 'Subjects made here')}
-        {stat(units.filter((unit) => localIds.has(ref(unit.course) || 0)).length, 'Topics')}
-        {stat(localLessons.length, 'Films')}
-        {stat(points.filter((point) => localLessons.some((lesson) => lesson.id === ref(point.lesson))).length, 'Questions')}
+        {stat(filtered.length, 'Subjects')}
+        {stat(listedUnits.length, 'Topics')}
+        {stat(listedLessons.length, 'Films')}
+        {stat(listedPoints.length, 'Questions')}
       </div>
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.7fr) minmax(320px, 1fr)', alignItems: 'start' }}>
         <section className="panel">
@@ -98,28 +103,40 @@ export async function ContentScreen(ctx: Ctx) {
             </label>
             <button className="btn ghost small" type="submit">Apply</button>
           </form>
-          {grouped.length ? grouped.map((group) => (
-            <details key={group.key} className="content-group" open={group.courses.length > 0} data-testid="content-door" data-door={group.key}>
-              <summary>{group.heading} · {countLine(group.talkCount, group.courses.length)}</summary>
-              {group.courses.length ? (
-              <div className="table-wrap">
-                <table className="data">
-                  <thead><tr><th>Subject</th><th>Speaker</th><th>From</th><th className="num">Films</th><th className="num">Questions</th><th className="num">Cuts live</th><th /></tr></thead>
-                  <tbody>
-                    {group.seats.map((seat) => (
-                      <Fragment key={`seat-${seat.id}`}>
-                        <tr><td colSpan={7} className="content-seat">{seat.label}</td></tr>
-                        {seat.courses.map((course) => courseRow(course.id))}
-                      </Fragment>
-                    ))}
-                    {group.unseated.map((course) => courseRow(course.id))}
-                    {!group.seats.length && !group.unseated.length ? group.courses.map((course) => courseRow(course.id)) : null}
-                  </tbody>
-                </table>
-              </div>
-              ) : <p className="hint" style={{ padding: '8px 18px' }}>Nothing on this door yet.</p>}
-            </details>
-          )) : (
+          {grouped.length ? (
+            <>
+              {filled.map((group) => (
+                <details key={group.key} className="content-group" open data-testid="content-door" data-door={group.key}>
+                  <summary>{group.heading} · {countLine(group.talkCount, group.courses.length)}</summary>
+                  <div className="table-wrap">
+                    <table className="data">
+                      <thead><tr><th>Subject</th><th>Speaker</th><th>From</th><th className="num">Films</th><th className="num">Questions</th><th className="num">Cuts live</th><th /></tr></thead>
+                      <tbody>
+                        {group.seats.map((seat) => (
+                          <Fragment key={`seat-${seat.id}`}>
+                            <tr><td colSpan={7} className="content-seat">{seat.label}</td></tr>
+                            {seat.courses.map((course) => courseRow(course.id))}
+                          </Fragment>
+                        ))}
+                        {group.unseated.map((course) => courseRow(course.id))}
+                        {!group.seats.length && !group.unseated.length ? group.courses.map((course) => courseRow(course.id)) : null}
+                      </tbody>
+                    </table>
+                  </div>
+                </details>
+              ))}
+              {empty.length ? (
+                <details className="content-empty-doors" data-testid="content-empty-doors">
+                  <summary>Doors with nothing yet ({empty.length})</summary>
+                  {empty.map((group) => (
+                    <p key={group.key} className="content-empty-door" data-testid="content-door" data-door={group.key}>
+                      {group.heading} · {countLine(group.talkCount, group.courses.length)}
+                    </p>
+                  ))}
+                </details>
+              ) : null}
+            </>
+          ) : (
             <div className="table-wrap">
               <table className="data">
                 <thead><tr><th>Subject</th><th>Speaker</th><th>From</th><th className="num">Films</th><th className="num">Questions</th><th className="num">Cuts live</th><th /></tr></thead>
@@ -139,7 +156,7 @@ export async function ContentScreen(ctx: Ctx) {
             <label className="stack">First topic<input type="text" name="unit" placeholder="Topic 1" /></label>
             <label className="stack">First film<input type="text" name="lesson" placeholder="Same as the subject if left empty" /></label>
             <div className="cols">
-              <label className="stack">Length in seconds<input type="number" data-testid="local-course-duration" name="duration" defaultValue={8} min={0} /></label>
+              <label className="stack">Length<input type="text" data-testid="local-course-duration" name="duration" inputMode="numeric" placeholder="minutes:seconds" /></label>
               <label className="stack">Speaker<input type="text" name="speaker" /></label>
             </div>
             <label className="stack">Add it to a course pack

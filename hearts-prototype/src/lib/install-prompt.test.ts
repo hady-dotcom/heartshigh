@@ -1,12 +1,15 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  INSTALL_DISMISS_MS,
   INSTALL_INSTALLED_KEY,
   installBootScript,
   installCopy,
   installEntry,
   installKind,
   installSlides,
+  installSurface,
+  isInstallDismissed,
   offersInstallButton,
   shouldShowInstall,
 } from './install-prompt'
@@ -40,6 +43,25 @@ test('the card stays hidden once dismissed, installed, or opened full screen', (
   assert.equal(shouldShowInstall({ standalone: true, dismissed: false, installed: false, forced: true }), false)
 })
 
+test('a dismiss lasts 14 days, then the strip can show again', () => {
+  const now = Date.parse('2026-10-04T12:00:00Z')
+  assert.equal(isInstallDismissed(null, now), false)
+  assert.equal(isInstallDismissed('1', now), false)
+  assert.equal(isInstallDismissed(String(now), now), true)
+  assert.equal(isInstallDismissed(String(now - INSTALL_DISMISS_MS + 1000), now), true)
+  assert.equal(isInstallDismissed(String(now - INSTALL_DISMISS_MS - 1000), now), false)
+})
+
+test('a narrow or touch surface says phone even when the browser looks like a desktop', () => {
+  assert.equal(installSurface('desktop'), 'computer')
+  assert.equal(installSurface('desktop', { narrow: true }), 'phone')
+  assert.equal(installSurface('desktop', { coarse: true }), 'phone')
+  assert.equal(installSurface('ios-safari'), 'phone')
+  assert.equal(installCopy('desktop', false, 'phone').heading, 'Keep HEARTS on your phone')
+  assert.match(installCopy('desktop', false, 'phone').steps[0].text, /Share/)
+  assert.match(installCopy('desktop', false, 'phone').steps[1].text, /Install/)
+})
+
 test('copy is the two iPhone steps, an Android install button, or the menu', () => {
   const safari = installCopy('ios-safari', false)
   assert.equal(safari.heading, 'Keep HEARTS on your phone')
@@ -59,7 +81,7 @@ test('copy is the two iPhone steps, an Android install button, or the menu', () 
 
   const menu = installCopy('android-chrome', false)
   assert.match(menu.steps[0].text, /three dots/)
-  assert.match(menu.steps[1].text, /Install app/)
+  assert.match(menu.steps[1].text, /Install/)
 
   const desktop = installCopy('desktop', true)
   assert.equal(desktop.heading, 'Keep HEARTS on this computer')
@@ -82,7 +104,7 @@ test('a phone card is a row of pictured steps, one slide each', () => {
   const android = installSlides('android-chrome')
   assert.deepEqual(android.map((slide) => slide.id), ['android-menu', 'android-install', 'android-home'])
   assert.match(android[0].caption, /three dots/)
-  assert.match(android[1].caption, /Install app/)
+  assert.match(android[1].caption, /Install/)
   assert.match(installSlides('android-other')[0].caption, /menu/)
   assert.equal(installSlides('desktop').length, 0)
 })
