@@ -293,6 +293,7 @@ test('a new learner from the join link reaches the first talk', async ({ browser
   }
   await expect(page.getByTestId('lets-play')).toBeVisible({ timeout: 20_000 })
   await expect(page.getByTestId('opener-heading')).toHaveText('A calm place to start')
+  await page.waitForTimeout(900)
   await page.getByTestId('lets-play').click()
   for (const [scene, option] of PICKS) {
     const card = page.locator(`[data-testid="scene"][data-scene="${scene}"]`)
