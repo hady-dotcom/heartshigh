@@ -32,17 +32,21 @@ export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean
         this.state = state
         this.options.events.onStateChange({ data: state })
       }
+      private origin = 0
+      private originTime = 0
       private run() {
         if (this.tick != null) return
+        this.origin = performance.now()
+        this.originTime = this.time
         this.tick = window.setInterval(() => {
           if (this.state !== 1) return
-          this.time += 0.25
+          this.time = this.originTime + (performance.now() - this.origin) / 1000
           if (this.end != null && this.time >= this.end) {
             this.time = this.end
             this.stopClock()
             this.set(0)
           }
-        }, 250)
+        }, 100)
       }
       private stopClock() {
         if (this.tick != null) window.clearInterval(this.tick)
@@ -60,7 +64,11 @@ export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean
         this.end = typeof video.endSeconds === 'number' ? video.endSeconds : this.end
         this.set(5)
       }
-      seekTo(seconds: number) { this.time = seconds }
+      seekTo(seconds: number) {
+        this.time = seconds
+        this.origin = performance.now()
+        this.originTime = seconds
+      }
       getCurrentTime() { return this.time }
       getDuration() { return 600 }
       getPlayerState() { return this.state }

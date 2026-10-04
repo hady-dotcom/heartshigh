@@ -21,8 +21,18 @@ export function onLevel(item: NavItem | undefined, level: FeedLevel) {
   return Boolean(item) && (level === 'hors' || !isInterstitial(item))
 }
 
-export function cardKey(item: Pick<NavItem, 'cutId' | 'card'>) {
+export function itemKey(item: Pick<NavItem, 'cutId' | 'card'>) {
   return `${item.cutId}:${item.card || 'talk'}`
+}
+
+/** Session key: the same talk clip and its 3-minute version are different cards. */
+export function cardKey(item: Pick<NavItem, 'cutId' | 'card'>, level: FeedLevel = 'hors') {
+  return `${item.cutId}:${item.card || 'talk'}:${level}`
+}
+
+export function appendUnseenItems<T extends Pick<NavItem, 'cutId' | 'card' | 'id'>>(existing: T[], incoming: T[]) {
+  const have = new Set(existing.map(itemKey))
+  return [...existing, ...incoming.filter((row) => !have.has(itemKey(row)))]
 }
 
 function ring(length: number, from: number, step: 1 | -1) {
@@ -45,11 +55,12 @@ export function settleOnLevel(list: NavItem[], to: number, level: FeedLevel, ste
  * topic, speaker and lane move to another talk; next and previous step through the loop, and the
  * appetiser loop passes over the cards that only exist as hors d'oeuvres.
  */
-function unseenCard(list: NavItem[], at: number, seen: ReadonlySet<string> | undefined) {
+function unseenCard(list: NavItem[], at: number, level: FeedLevel, seen: ReadonlySet<string> | undefined) {
   const row = list[at]
   if (!row) return false
   if (!seen || !seen.size) return true
-  return !seen.has(cardKey(row))
+  if (seen.has(cardKey(row, level))) return false
+  return !(level === 'hors' && seen.has(itemKey(row)))
 }
 
 export function swipeTarget(list: NavItem[], index: number, level: FeedLevel, swipe: Swipe, seen?: ReadonlySet<string>): number | null {
@@ -58,10 +69,10 @@ export function swipeTarget(list: NavItem[], index: number, level: FeedLevel, sw
   if (swipe === 'next' || swipe === 'prev') {
     const step = swipe === 'next' ? 1 : -1
     const order = ring(list.length, index, step)
-    return order.find((at) => onLevel(list[at], level) && unseenCard(list, at, seen)) ?? null
+    return order.find((at) => onLevel(list[at], level) && unseenCard(list, at, level, seen)) ?? null
   }
   const talks = ring(list.length, index, 1).filter((at) => list[at].cutId !== item.cutId && !isInterstitial(list[at]))
-  const unused = talks.filter((at) => unseenCard(list, at, seen))
+  const unused = talks.filter((at) => unseenCard(list, at, level, seen))
   if (swipe === 'topic') return unused[0] ?? null
   if (swipe === 'speaker') return unused.find((at) => list[at].speaker === item.speaker) ?? null
   return unused.find((at) => list[at].lane !== item.lane) ?? unused[0] ?? null

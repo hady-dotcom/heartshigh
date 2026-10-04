@@ -90,8 +90,8 @@ export function rememberSeenCut(cutId: number) {
   return next
 }
 
-export function rememberSeenCard(cutId: number, card?: string | null) {
-  const key = `${cutId}:${card || 'talk'}`
+export function rememberSeenCard(cutId: number, card?: string | null, level: 'hors' | 'appetiser' = 'hors') {
+  const key = `${cutId}:${card || 'talk'}:${level}`
   const flags = sessionFlags()
   const cards = flags.seenCards || sessionSeenCards()
   const nextCards = cards.includes(key) ? cards : [...cards, key]
