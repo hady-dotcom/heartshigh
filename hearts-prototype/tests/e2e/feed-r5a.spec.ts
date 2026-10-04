@@ -82,7 +82,7 @@ test('Ready for more? opens the same speaker, and the step-up names a duration o
   await expect(feed).toHaveAttribute('data-speaker', speaker!)
   await expect(feed).toHaveAttribute('data-lesson', lesson!)
   await expect(page.getByTestId('learn-more')).toHaveText(/Watch the whole talk|See the whole course/)
-  await expect(page.getByText('Ready for more?')).toBeVisible()
+  await expect(page.locator('.chip.gold')).toHaveText('Ready for more?')
 })
 
 test('Tap for sound unmutes and plays, and the next clip keeps sound', async ({ page }) => {

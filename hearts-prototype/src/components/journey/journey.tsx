@@ -618,9 +618,11 @@ export function Journey(props: JourneyProps) {
           if (props.play === 'appetiser') firstMode = 'appetiser'
         }
         clips = mixFeed(clips, state.served.length, backgroundsBase)
-        adopt(clips, data.items, data.spinePointer, true)
         const stored = !props.clip && !props.lane ? readFeedPlace() : null
-        const resumeAt = stored ? clips.findIndex((row) => row.cutId === stored.cutId && (stored.mode === 'appetiser' ? !row.card || row.card === 'talk' : (row.card || 'talk') === (stored.card || 'talk'))) : -1
+        const saved = stored?.cutId ? opening.clips[String(stored.cutId)] : undefined
+        if (saved && !clips.some((row) => row.cutId === saved.cutId)) clips = [{ ...saved, laneKey: null }, ...clips]
+        adopt(clips, data.items, data.spinePointer, true)
+        const resumeAt = stored ? clips.findIndex((row) => row.cutId === stored.cutId && (!row.card || row.card === 'talk')) : -1
         const startAt = resumeAt >= 0 ? resumeAt : 0
         const startMode = resumeAt >= 0 && stored?.mode === 'appetiser' ? 'appetiser' : firstMode
         await showItem(startAt, startMode)
