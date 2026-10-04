@@ -405,5 +405,6 @@ abbr.tip { text-decoration: underline dotted; text-underline-offset: 3px; cursor
 .desk .door-tag { color: var(--gold-ink); background: var(--gold); }
 
 /* Teach: a long address ends in an ellipsis on one line; the whole address is in its tooltip. */
-.data td.email-cell { max-width: 220px; }
+/* max-width: 0 lets the column take only the room left over, so a long address ellipses instead of widening the table. */
+.data td.email-cell { max-width: 0; min-width: 120px; width: 24%; }
 .data td.email-cell span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

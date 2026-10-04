@@ -275,7 +275,7 @@ export async function FeedbackScreen(ctx: Ctx) {
 
         {user.role === 'teacher' ? null : (
           <section className="panel" data-testid="export-audit">
-            <header><h2>Export log</h2><span className="hint" data-testid="audit-zone">Times in {zoneCity(timeZone)} time</span></header>
+            <header><div><h2>Export log</h2><p data-testid="audit-zone">Times in {zoneCity(timeZone)} time</p></div></header>
             <div className="table-wrap">
               <table className={`data ${styles.audit}`}>
                 <thead><tr><th>When</th><th>Who</th><th>Kind</th><th className="num">Rows</th><th>Filters</th></tr></thead>
