@@ -29,6 +29,12 @@ async function hold(page: Page, name: string, ms = 1100) {
 test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part', async ({ page }) => {
   test.setTimeout(240_000)
   mkdirSync(PROOF, { recursive: true })
+  await page.addInitScript(() => {
+    const hide = () => document.querySelector('nextjs-portal')?.remove()
+    hide()
+    const watch = new MutationObserver(hide)
+    if (document.documentElement) watch.observe(document.documentElement, { childList: true, subtree: true })
+  })
   await fakeYouTube(page)
   await signInQuiet(page)
   await page.goto(`${BASE}/lanes`)

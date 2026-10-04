@@ -88,6 +88,11 @@ test.describe('planner shots', () => {
       },
     })
     expect(scheduleRes.ok()).toBeTruthy()
+    await page.addInitScript(() => {
+      const hide = () => document.querySelector('nextjs-portal')?.remove()
+      hide()
+      if (document.documentElement) new MutationObserver(hide).observe(document.documentElement, { childList: true, subtree: true })
+    })
     await page.goto('/login')
     await expect(page.getByTestId('login-submit')).toBeVisible()
     await page.screenshot({ path: path.join(SHOTS, 'sign-in-390x844.png'), fullPage: false })

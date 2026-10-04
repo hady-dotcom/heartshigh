@@ -808,7 +808,7 @@ function Sheet({
             {error ? <p className="flash error" data-testid="answer-error" role="alert">{error}</p> : null}
             {!point.answered ? (
               <>
-                <button type="button" className="pill outline block" onClick={onThink} data-testid="think-about-this" style={{ width: '100%', marginTop: 8 }}>
+                <button type="button" className="pill teal block" onClick={onThink} data-testid="think-about-this" style={{ width: '100%', marginTop: 8 }}>
                   Think about this for this session
                 </button>
                 <button type="button" className="link-btn" onClick={later} data-testid="answer-later" style={{ width: '100%' }}>Answer later</button>
