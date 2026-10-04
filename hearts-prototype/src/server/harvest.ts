@@ -1,7 +1,7 @@
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
 import { doorNumberOfClause } from '@/lib/doors'
-import { commentaryFor, firstCitation, kindOfLine, lineAt, type ScholarCitation } from '@/lib/harvest'
+import { commentaryFor, firstCitation, harvestLine, kindOfLine, lineAt, type ScholarCitation } from '@/lib/harvest'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { visibleCourseIds, type SessionUser } from './context'
 import { loadDoors } from './doors'
@@ -66,7 +66,10 @@ export async function captureMoment(payload: Payload, user: SessionUser, portalI
   const place = await placeOfLesson(payload, input.lessonId)
   if (!place?.courseId) return { saved: false as const, reason: 'missing' }
   if (!(await visibleCourseIds(payload, user)).includes(place.courseId)) return { saved: false as const, reason: 'hidden' }
-  const spoken = lineAt(place.transcript, input.seconds)
+  // A one-word caption cue ("fatim") is not a line; the nearest readable cue beside it is kept instead.
+  const at = lineAt(place.transcript, input.seconds)
+  const spoken = [at, ...(at ? [...at.after, ...[...at.before].reverse()].map((row) => lineAt(place.transcript, row.seconds)) : [])]
+    .find((line) => line && harvestLine(line.text, line.context))
   if (!spoken) return { saved: false as const, reason: 'no-line' }
   const mine = await docs(payload, 'harvest-entries', { and: [{ user: { equals: user.id } }, { lesson: { equals: input.lessonId } }] }, 200)
   if (mine.some((row) => Math.abs(Number(row.seconds) - spoken.seconds) < 1.5 || str(row.text) === spoken.text)) return { saved: false as const, reason: 'duplicate' }
@@ -134,15 +137,17 @@ export async function sampleHarvest(payload: Payload, at = now()): Promise<Harve
       const next = lineAt(transcript, from + extra)
       if (words(next?.text) > words(spoken?.text)) spoken = next
     }
-    if (!spoken || words(spoken.text) < 8) continue
+    const readable = spoken ? harvestLine(spoken.text, spoken.context) : null
+    if (!spoken || !readable || words(spoken.text) < 8) continue
     const speaker = str(lesson.speaker) || str(courses.find((row) => row.id === idOf(lesson.course))?.speaker)
     const base = { lessonId: lesson.id, courseId: idOf(lesson.course), lessonTitle: str(lesson.title), speaker, door }
-    candidates.push({ ...base, seconds: spoken.seconds, timestamp: spoken.timestamp, text: spoken.text, kind: kindOfLine(spoken.text), surface: 'hors', commentary: commentaryFor(transcript, spoken.seconds, resources.get(lesson.id) || []) })
+    candidates.push({ ...base, seconds: spoken.seconds, timestamp: spoken.timestamp, text: readable, kind: kindOfLine(spoken.text), surface: 'hors', commentary: commentaryFor(transcript, spoken.seconds, resources.get(lesson.id) || []) })
     if (!cited) {
       const found = firstCitation(transcript)
       const line = found ? lineAt(transcript, found.seconds) : null
-      if (found && line && words(line.text) >= 8 && !candidates.some((row) => row.text === line.text)) {
-        candidates.push({ ...base, seconds: line.seconds, timestamp: line.timestamp, text: line.text, kind: kindOfLine(line.text), surface: 'talk', commentary: found.citation })
+      const lineText = line ? harvestLine(line.text, line.context) : null
+      if (found && line && lineText && words(line.text) >= 8 && !candidates.some((row) => row.text === lineText)) {
+        candidates.push({ ...base, seconds: line.seconds, timestamp: line.timestamp, text: lineText, kind: kindOfLine(line.text), surface: 'talk', commentary: found.citation })
         cited = true
       }
     }

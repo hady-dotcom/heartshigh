@@ -6,6 +6,7 @@ import { Mascot } from '@/components/brand'
 import { GardenPath } from '@/components/app/garden-path'
 import { Flower, LockIcon } from '@/components/icons'
 import { now } from '@/lib/clock'
+import { readableHarvest } from '@/lib/harvest'
 import { getSession, type SessionUser, visibleCourseIds } from '@/server/context'
 import { workbookFor } from '@/server/workbook'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
@@ -48,7 +49,7 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
     rows(payload, 'seats', undefined, { sort: 'position', limit: 400 }),
     rows(payload, 'completions', mine),
     rows(payload, 'seat-visits', mine),
-    rows(payload, 'harvest-entries', mine, { sort: '-createdAt' }),
+    rows(payload, 'harvest-entries', mine, { sort: '-createdAt', limit: 1000 }).then(readableHarvest),
     rows(payload, 'workbook-entries', mine, { sort: '-createdAt' }),
     rows(payload, 'answers', mine),
     rows(payload, 'rituals', mine, { sort: '-createdAt' }),

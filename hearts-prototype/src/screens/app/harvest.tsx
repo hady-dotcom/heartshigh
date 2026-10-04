@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Payload } from 'payload'
 import { Mascot } from '@/components/brand'
-import { COLLECTION_NAMES, commentaryFor, isNewMoment, type ScholarCitation } from '@/lib/harvest'
+import { COLLECTION_NAMES, commentaryFor, isNewMoment, readableHarvest, type ScholarCitation } from '@/lib/harvest'
 import { ayahId as idOfAyah, ayahWindow, surahLabel } from '@/lib/quran-match'
 import { TAFSIR_CREDIT } from '@/lib/tafsir'
 import { getSession } from '@/server/context'
@@ -60,7 +60,7 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
   const session = await getSession()
   const reader = session.actor || user
   const [own, unread, drawn] = await Promise.all([
-    rows(payload, 'harvest-entries', { user: { equals: user.id } }, { sort: '-createdAt', limit: 1000 }),
+    rows(payload, 'harvest-entries', { user: { equals: user.id } }, { sort: '-createdAt', limit: 1000 }).then(readableHarvest),
     unreadCount(payload, user),
     rows(payload, 'drawn-to', { user: { equals: user.id } }, { sort: '-learnMore', limit: 12 }),
   ])

@@ -1,4 +1,5 @@
 import { matchQuran, surahLabel, type QuranIndex, type QuranMatch } from './quran-match'
+import { ASIDE, wholeSentences } from './sentences'
 import { formatTimestamp, isVerbatim, parseTranscript } from './transcript'
 
 export type HarvestHit = {
@@ -46,7 +47,47 @@ export const COLLECTION_NAMES: Record<string, string> = {
 export function collectionsNamed(text: string) {
   return COLLECTIONS.filter(([pattern]) => pattern.test(text)).map(([, slug]) => slug)
 }
-const ASIDE = /\b(description|subscribe|housekeeping|like and share|patreon|sponsors?|notification bell|comment below|thanks for watching|thank you for watching|link in the description|full dua|link below|pinned comment)\b/i
+
+const STOP = /[.?!…]["”’')\]]*$/
+const TERMINATOR = /[.?!…]["”’')\]]*(?=\s|$)/g
+const words = (text: string) => text.split(/\s+/).filter(Boolean)
+
+/** Kept entries as they are shown and counted: each one readable, asides left out. Home, Garden and Harvest all use this. */
+export function readableHarvest<T extends object>(rows: T[]): (T & { text: string })[] {
+  return rows.flatMap((row) => {
+    const { text: raw, context } = row as { text?: unknown; context?: unknown }
+    const text = harvestLine(typeof raw === 'string' ? raw : '', typeof context === 'string' ? context : '')
+    return text ? [{ ...row, text }] : []
+  })
+}
+
+/**
+ * How a kept line reads: the whole sentence it sits in (read from its own context, never rewritten),
+ * starting on a capital and ending on a stop. A caption tail ("Judgment. The Prophet…") is cut away,
+ * and asides about the video ("check the description for the full dua", "I'm paraphrasing") give null.
+ */
+export function harvestLine(text: string, context = ''): string | null {
+  let core = text.replace(/\s+/g, ' ').trim()
+  if (!core || ASIDE.test(core)) return null
+  const around = context.replace(/\s+/g, ' ')
+  const at = around.indexOf(core)
+  const tail = core.match(/^[^.?!…]*[.?!…]["”’')\]]*\s+(?=["“‘(]?[A-Z])/)
+  if (tail && words(tail[0]).length <= 4 && words(core).length - words(tail[0]).length >= 4) {
+    core = core.slice(tail[0].length)
+  } else if (at > 0 && !STOP.test(around.slice(0, at).trim())) {
+    const before = words(around.slice(0, at)).slice(-25).join(' ')
+    const ends = [...before.matchAll(TERMINATOR)]
+    const last = ends[ends.length - 1]
+    if (last) core = `${before.slice(last.index + last[0].length).trim()} ${core}`.trim()
+  }
+  if (at >= 0 && !STOP.test(core)) {
+    const after = words(around.slice(at + text.replace(/\s+/g, ' ').trim().length)).slice(0, 25).join(' ')
+    const first = after.match(/^.*?[.?!…]["”’')\]]*(?=\s|$)/)
+    if (first) core = `${core} ${first[0]}`
+  }
+  const line = wholeSentences(core, { minWords: 4 })
+  return line && !ASIDE.test(line) ? line : null
+}
 
 function sentencesOf(text: string) {
   return text
