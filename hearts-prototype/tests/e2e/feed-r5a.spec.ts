@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
+import { E2E_BASE } from '../env'
 import { fakeYouTube } from './fake-youtube'
-import { settled, stepFeed } from './feed-step'
+import { chromeBoxesClear, settled, stepFeed } from './feed-step'
 
 const PHONE = { width: 390, height: 844 }
 const DESKTOP = { width: 1440, height: 900 }
@@ -28,6 +29,8 @@ test('the feed has no question cards, shows the coach and tab bar, and never lig
   await settled(page)
   await expect(page.getByTestId('swipe-coach')).toBeVisible()
   await expect(page.getByTestId('tabbar')).toBeVisible()
+  await expect(page.getByTestId('tab-week')).toHaveText('My week')
+  await expect(page.getByTestId('tab-gather')).toHaveCount(0)
   await expect(page.getByTestId('tab-home')).not.toHaveAttribute('aria-current', 'page')
   await page.getByTestId('swipe-coach').click()
   await expect(page.getByTestId('swipe-coach')).toHaveCount(0)
@@ -160,6 +163,7 @@ test('talk captions spell taqwa, not tawa, and sit in the bar when words are in 
       const text = await page.getByTestId('caption').innerText()
       expect(text, 'auto-captions must not leave tawa for taqwa').not.toMatch(/\btawa\b/i)
       expect(text).not.toMatch(/\btawakul\b/i)
+      expect(text, 'display tidy drops the raw transcript stumble').not.toMatch(/I was doing your I was/i)
       if ((await feed.getAttribute('data-words-in-picture')) === 'yes') {
         await expect(page.getByTestId('caption')).toHaveAttribute('data-slot', 'bar')
         const cap = (await page.getByTestId('caption').boundingBox())!
@@ -198,6 +202,41 @@ test('a session does not repeat a talk or a scene card until the pool is used up
       await expect(page.getByTestId('toast')).toContainText("You've seen everything here, try another lane.")
       break
     }
+  }
+})
+
+test('the speaker header, lane chip, timer and Tap for sound do not overlap in either layout', async ({ page, playwright }) => {
+  test.setTimeout(90_000)
+  await page.setViewportSize(PHONE)
+  await fakeYouTube(page)
+  await signIn(page)
+  const feed = page.getByTestId('journey')
+  await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  await settled(page)
+  if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').click()
+  const listed = ((await feed.getAttribute('data-cuts')) || '').split(' ').filter(Boolean).length
+  for (let tries = 0; tries < listed && (await feed.getAttribute('data-card')) !== 'talk'; tries++) {
+    if ((await step(page)) === 'end') break
+  }
+  await expect(feed).toHaveAttribute('data-card', 'talk')
+  await chromeBoxesClear(page)
+  const lessonId = await feed.getAttribute('data-lesson')
+  const cut = await feed.getAttribute('data-cut')
+  const master = await playwright.request.newContext({ baseURL: E2E_BASE })
+  expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
+  try {
+    expect((await master.patch(`/api/lessons/${lessonId}`, { data: { burnedCaptions: true } })).ok()).toBeTruthy()
+    await page.goto(`${PORTAL}/feed?clip=${cut}&fresh=${Date.now()}`)
+    await expect(feed).toHaveAttribute('data-words-in-picture', 'yes', { timeout: 20_000 })
+    await settled(page)
+    if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').click()
+    await expect(page.getByTestId('top-speaker')).toBeVisible()
+    await expect(page.getByTestId('lane-chip')).toBeVisible()
+    await expect(page.getByTestId('clip-timer')).toBeVisible()
+    await chromeBoxesClear(page)
+  } finally {
+    await master.patch(`/api/lessons/${lessonId}`, { data: { burnedCaptions: false } })
+    await master.dispose()
   }
 })
 

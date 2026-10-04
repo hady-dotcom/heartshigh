@@ -53,6 +53,23 @@ test('auto-caption Islamic terms become taqwa and tawakkul, and fatawa is left a
   assert.equal(tidyKeepsWords('you know what tawa is', 'You know what taqwa is.'), true)
 })
 
+test('a spoken false start and a repeated word drop for display, and a finished first clause stays', () => {
+  assert.equal(tidyCaption('I was doing your I was nurturing you'), 'I was nurturing you.')
+  assert.equal(tidyCaption(tidyCaption('I was doing your I was nurturing you')), 'I was nurturing you.')
+  assert.equal(
+    displayLine('I was doing your I was nurturing you', { raw: 'I was doing your I was nurturing you', text: 'I was doing your I was nurturing you.' }),
+    'I was nurturing you.',
+  )
+  assert.equal(
+    feedTidy('I was doing your I was nurturing you', { raw: 'I was doing your I was nurturing you', text: 'I was doing your I was nurturing you' }, null),
+    'I was nurturing you.',
+  )
+  assert.equal(tidyCaption('I was I was nurturing you'), 'I was nurturing you.')
+  assert.equal(tidyCaption('the the heart turns'), 'The heart turns.')
+  assert.match(tidyCaption('I was doing your tarbiyah, I was nurturing you'), /tarbiyah/i)
+  assert.match(tidyCaption('I was doing your tarbiyah, I was nurturing you'), /nurturing/i)
+})
+
 test('a stored tidy is kept when it still matches the raw words, and a changed caption is redone', () => {
   const sources = {
     speaker: 'A speaker',

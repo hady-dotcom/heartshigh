@@ -128,7 +128,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; max-height: 22vh;
 }
 .j-chrome .caption[data-expanded='true'] { display: block; -webkit-line-clamp: unset; line-clamp: unset; overflow: auto; max-height: min(36vh, 260px); }
-.j-hairline-row { position: absolute; top: calc(12px + var(--safe-top)); left: 16px; right: 16px; }
+.j-hairline-row { position: absolute; top: calc(12px + var(--safe-top)); left: 16px; right: 16px; z-index: 6; }
 .j-swipe-hint { margin: 8px 0 0; text-align: center; font-size: 12px; font-weight: 650; letter-spacing: 0.01em; color: rgba(255, 255, 255, 0.92); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55); }
 .j-hairline { height: 3px; border-radius: 3px; background: rgba(255, 255, 255, 0.28); overflow: hidden; }
 .j-hairline > i { display: block; height: 100%; width: 0; background: #fff; }
@@ -137,14 +137,14 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-sound { position: static; transform: none; background: rgba(0, 0, 0, 0.6); color: #fff; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; }
 .j-chrome > .j-sound { position: absolute; top: calc(56px + var(--safe-top)); left: 16px; z-index: 5; }
 .j-speaker { display: flex; align-items: center; gap: 10px; }
-/* A Short carries its own words low in the frame: the speaker row moves under the hairline instead. */
-.j-top-speaker { position: absolute; top: calc(58px + var(--safe-top)); left: 16px; right: 16px; pointer-events: auto; }
-.strict .j-top-speaker { top: calc(64px + var(--safe-top) + min(430px, 100vw) * 9 / 16); }
+/* Speaker sits in its own row under the chips and timer, never over them. */
+.j-top-speaker { position: absolute; top: calc(88px + var(--safe-top)); left: 16px; right: 16px; pointer-events: auto; z-index: 5; }
+.strict .j-top-speaker,
+.journey[data-mode='appetiser'] .j-top-speaker { top: calc(88px + var(--safe-top)); }
 .journey:is([data-vertical='yes'], [data-words-in-picture='yes']) .j-slot .j-poster-who, .journey:is([data-vertical='yes'], [data-words-in-picture='yes']) .j-slot .j-poster-mark { display: none; }
-.journey[data-mode='appetiser'] .j-top-speaker { top: calc(52px + var(--safe-top)); }
-/* Burned-in words stay in the picture: the film sits in an uncropped 16:9 band and our caption moves into the bar below. */
+/* Burned-in words stay in the picture: chips, then the speaker, then an uncropped 16:9 band, then our caption. */
 .journey[data-words-in-picture='yes'] .j-slot {
-  top: calc(48px + var(--safe-top));
+  top: calc(142px + var(--safe-top));
   bottom: auto;
   height: calc(min(430px, 100vw) * 9 / 16);
   background: #16120c;
@@ -159,7 +159,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 }
 .journey[data-words-in-picture='yes'] .j-chrome .caption,
 .j-caption-clear {
-  top: calc(64px + var(--safe-top) + min(430px, 100vw) * 9 / 16);
+  top: calc(158px + var(--safe-top) + min(430px, 100vw) * 9 / 16);
   bottom: auto;
   font-size: 26px;
 }
@@ -218,6 +218,8 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .strict .yt-host iframe { top: 0; width: 100%; height: 100%; left: 0; transform: none; }
 .strict .j-chrome .caption { top: calc(64px + var(--safe-top) + min(430px, 100vw) * 9 / 16); font-size: 26px; }
 .strict .j-hairline-row { top: calc(20px + var(--safe-top)); }
+.strict[data-words-in-picture='yes'] .j-slot { top: calc(142px + var(--safe-top)); }
+.strict[data-words-in-picture='yes'] .j-chrome .caption { top: calc(158px + var(--safe-top) + min(430px, 100vw) * 9 / 16); }
 
 /* Sheet, not-for-me and tabs */
 .j-sheet {

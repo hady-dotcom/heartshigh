@@ -1,7 +1,8 @@
 /**
  * Turns a YouTube auto-caption line into a line a learner can read: sentence case, punctuation,
  * and the capitals this app always uses (Allah, the Prophet, Qur'an, hadith collections, names of
- * Allah, the Day of Judgement, the speaker, and "I"). British spelling.
+ * Allah, the Day of Judgement, the speaker, and "I"). British spelling. Display polish also drops
+ * a false start and a repeated word, and keeps the speaker's meaning otherwise.
  *
  * The raw caption is kept beside the tidied line. Timing stays on the raw line's `at`.
  * Running this twice on the same words returns the same line.
@@ -207,8 +208,45 @@ function vocative(text: string) {
 
 function finish(text: string) {
   const trimmed = text.replace(/[\s,;:]+$/g, '')
+  if (!trimmed) return ''
   if (/[.?!]["”']?$/.test(trimmed)) return trimmed
   return `${trimmed}${QUESTION.test(trimmed) ? '?' : '.'}`
+}
+
+const SUBJECT = '(?:I|we|you|he|she|they|it)'
+const AUX = "(?:was|were|am|is|are|do|did|have|had|will|would|'m|'re|'ve)"
+const HANGING = '(?:your|my|his|her|our|their|the|a|an|to|for|of|and|that|this|with|in|on)'
+
+/** Drops a consecutive repeated word: "the the heart" → "the heart". */
+export function dropRepeatedWords(text: string) {
+  return text.replace(/\b(\w+)(?:\s+\1\b)+/gi, '$1')
+}
+
+/**
+ * Drops a spoken false start and keeps the restarted clause.
+ * "I was doing your I was nurturing you" → "I was nurturing you".
+ * A finished first clause ("I was doing your tarbiyah, I was nurturing you") stays.
+ */
+export function dropFalseStarts(text: string) {
+  const restart = new RegExp(
+    `\\b(${SUBJECT}\\s+${AUX}\\s+(?:\\w+\\s+){0,3}${HANGING})\\s+(?=${SUBJECT}\\s+${AUX}\\b)`,
+    'gi',
+  )
+  const echo = /\b((?:\w+\s+){1,3}\w+)\s+\1\b/gi
+  return text.replace(restart, '').replace(echo, '$1').replace(/\s+/g, ' ').trim()
+}
+
+/** Display-only polish: drop stumbles, then restore sentence shape. Safe to run twice. */
+export function polishShown(text: string) {
+  if (!text) return ''
+  let next = dropRepeatedWords(correctIslamicTerms(text))
+  next = dropFalseStarts(next)
+  next = next.replace(/\s+/g, ' ').trim()
+  if (!next) return text.replace(/\s+/g, ' ').trim()
+  next = finish(next)
+  next = sentenceCase(next)
+  next = capitalI(next)
+  return next.replace(/\s+/g, ' ').trim()
 }
 
 /** The deterministic tidy. Used on its own, and whenever a model is absent or wanders off the words. */
@@ -220,6 +258,8 @@ export function tidyCaption(raw: string, hints: TidyHints = {}): string {
   if (!cleaned) return ''
   let text = applyAll(cleaned, BRITISH)
   text = correctIslamicTerms(text)
+  text = dropRepeatedWords(text)
+  text = dropFalseStarts(text)
   text = splitClauses(text)
   text = vocative(text)
   text = finish(text)
@@ -235,7 +275,7 @@ export function tidyCaption(raw: string, hints: TidyHints = {}): string {
     text = text.replace(pattern, shown)
   }
   text = sentenceCase(text)
-  return text.replace(/\s+/g, ' ').trim()
+  return polishShown(text)
 }
 
 /** One strong line: the tidied sentence, cut at a word boundary when it runs past `maxWords`. */
@@ -307,7 +347,7 @@ export function tidyUnchanged(stored: LineTidy | null | undefined, sources: Capt
 
 /** The line to show. A stored tidy wins when it still belongs to this raw caption and keeps the words. */
 export function displayLine(raw: string, stored: { raw?: string; text?: string } | null | undefined, hints: TidyHints = {}) {
-  if (stored && stored.raw === raw && stored.text && tidyKeepsWords(raw, stored.text)) return sentenceCase(correctIslamicTerms(stored.text))
+  if (stored && stored.raw === raw && stored.text && tidyKeepsWords(raw, stored.text)) return polishShown(stored.text)
   return tidyCaption(raw, hints)
 }
 
@@ -321,9 +361,9 @@ export function feedTidy(
   byIndex: { text?: string } | null | undefined,
   hints: TidyHints = {},
 ) {
-  if (stored?.text && stored.raw === raw) return sentenceCase(correctIslamicTerms(stored.text.trim()))
+  if (stored?.text && stored.raw === raw) return polishShown(stored.text.trim())
   const indexed = byIndex?.text?.trim()
-  if (indexed) return sentenceCase(correctIslamicTerms(indexed))
+  if (indexed) return polishShown(indexed)
   return tidyCaption(raw, hints)
 }
 

@@ -10,7 +10,7 @@ import { appendUnseenItems, isInterstitial, learnMoreTarget, settleOnLevel, step
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readCoachDismissed, readFeedPlace, readHeart, readPending, rememberSeenCard, sessionFlags, sessionSeenCards, sessionSeenCuts, setSessionFlags, viewAsId, writeCoachDismissed, writeFeedPlace, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
-import { correctIslamicTerms } from '@/lib/tidy-caption'
+import { tidyCaption } from '@/lib/tidy-caption'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { laneClips } from '@/lib/lanes'
@@ -1503,7 +1503,7 @@ export function Journey(props: JourneyProps) {
   const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
   const horsLine = mode === 'hors' ? piece?.lines?.[lineShown] : null
   const wordsInPicture = Boolean(item?.wordsInPicture || item?.vertical)
-  const captionText = correctIslamicTerms((horsLine ? horsLine.tidy || horsLine.text : mode === 'hors' ? piece?.quote : '') || '')
+  const captionText = tidyCaption((horsLine ? horsLine.tidy || horsLine.text : mode === 'hors' ? piece?.quote : '') || '')
   const videoAppetiser = mode === 'appetiser' && Boolean(item?.youtubeId)
   const scenicAppetiser = mode === 'appetiser' && !item?.youtubeId
   const scenicLines = scenicAppetiser ? [item?.scenic?.hook, item?.scenic?.turn, item?.scenic?.land].filter((line): line is string => Boolean(line)) : []
@@ -1579,7 +1579,7 @@ export function Journey(props: JourneyProps) {
           <div className="clip-row">
             {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
             {!typeClip && muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
-            <span className="chip dark">{clock(item.hors.end - item.hors.start)}</span>
+            <span className="chip dark" data-testid="clip-timer">{clock(item.hors.end - item.hors.start)}</span>
           </div>
           </>
         ) : (

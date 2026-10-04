@@ -160,6 +160,8 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       if (a === 'harvest') return GardenHarvest(ctx)
       if (a === 'workbook') return GardenWorkbook(ctx)
       notFound()
+    case 'week':
+      return PlanScreen({ ...ctx, weekTab: true })
     case 'me':
       if (!a) return MeScreen(ctx)
       if (a === 'plan') return PlanScreen(ctx)

@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { E2E_BASE } from '../env'
 import { fakeYouTube } from './fake-youtube'
-import { settled, stepFeed } from './feed-step'
+import { chromeBoxesClear, settled, stepFeed } from './feed-step'
 
 const PHONE = { width: 390, height: 844 }
 const PORTAL = '/p/east-london'
@@ -66,6 +66,7 @@ test('phone feed proof: no repeats, taqwa, caption bar, advancing mute log', asy
   await expect(page.getByTestId('level-steps')).toBeVisible()
   await expect(page.getByTestId('speaker-link')).toBeVisible()
   expect(await boxesOverlap(page, '[data-testid="level-steps"]', '[data-testid="speaker-link"]'), 'level steps must sit above the speaker, not under the name').toBe(false)
+  await chromeBoxesClear(page)
   await shot('01-levels-above-speaker', 'Level steps sit above the speaker, not under the name.')
 
   if (await page.getByTestId('tap-sound').count()) await page.getByTestId('tap-sound').first().click()
@@ -188,7 +189,9 @@ test('phone feed proof: no repeats, taqwa, caption bar, advancing mute log', asy
     const cap = (await page.getByTestId('caption').boundingBox())!
     const slot = (await page.getByTestId('player-slot').boundingBox())!
     expect(cap.y, 'caption sits in the bar below the 16:9 band').toBeGreaterThanOrEqual(slot.y + slot.height - 12)
-    await shot('06-caption-bar', 'Burned-in film in a 16:9 band; app caption in the bar below.')
+    await expect(page.getByTestId('top-speaker')).toBeVisible()
+    await chromeBoxesClear(page)
+    await shot('06-caption-bar', 'Burned-in film in a 16:9 band; speaker on its own row; chips and timer clear.')
     await master.patch(`/api/lessons/${lessonId}`, { data: { burnedCaptions: false } })
   }
   await master.dispose()

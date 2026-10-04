@@ -25,6 +25,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
   const links: [string, string, string, string][] = [
     ['path', 'Your path', 'Where a little time will help, in plain words', 'me/path'],
     ['plan', 'My study plan', 'Spread a course across the days that suit you', 'me/plan'],
+    ['gather', 'Gather', 'Nights and circles at the masjid', 'gather'],
     ['circle', 'Circle and nights', 'Your board, and the evenings you can come to', 'me/circle'],
     ['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'],
     ['settings', 'Settings', 'Night alerts, watch history and signing out', 'me/settings'],
@@ -90,7 +91,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-export async function PlanScreen({ payload, user, portal, base, query }: Ctx) {
+export async function PlanScreen({ payload, user, portal, base, query, weekTab }: Ctx & { weekTab?: boolean }) {
   const ids = await visibleCourseIds(payload, user)
   const courses = ids.length ? await rows(payload, 'courses', { id: { in: ids } }) : []
   const plans = (await rows(payload, 'schedules', { portal: { equals: portal.id } }, { sort: '-createdAt', limit: 50 })).filter((plan) => ref(plan.owner) === user.id || ((plan.learners as unknown[]) || []).some((item) => ref(item) === user.id))
@@ -146,7 +147,7 @@ export async function PlanScreen({ payload, user, portal, base, query }: Ctx) {
           )
         })}
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      <TabBar base={base} active={weekTab ? 'week' : 'me'} unread={unread} />
     </AppFrame>
   )
 }
