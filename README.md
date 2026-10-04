@@ -26,3 +26,12 @@ D crop uses the track focus so the whole FACE card stays inside the
 - F “dignity”: [frames/demo-f-dignity.png](frames/demo-f-dignity.png)
 
 Raw mp4: https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/ai-director-v1/recordings/demo-switch-390x844.mp4
+
+## Timed words only (Leon)
+
+F and captions show the transcript line for the current clock, or nothing.
+Never a talk title. Gap at 18.45 is empty.
+
+- F winning: [frames/demo-f-winning.png](frames/demo-f-winning.png)
+- F gap (empty): [frames/demo-f-gap-empty.png](frames/demo-f-gap-empty.png)
+- F overcoming: [frames/demo-f-overcoming.png](frames/demo-f-overcoming.png)
