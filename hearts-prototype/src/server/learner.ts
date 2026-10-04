@@ -189,7 +189,7 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
       courseTitle: String(course.title || ''),
       lessons: lessons
         .filter((lesson) => idOf(lesson.course) === course.id)
-        .map((lesson) => ({ id: lesson.id, title: String(lesson.title || ''), order: Number(lesson.order || 0) })),
+        .map((lesson) => ({ id: lesson.id, title: String(lesson.title || ''), order: Number(lesson.order || 0), durationSeconds: Number(lesson.durationSeconds || 0) })),
     })),
   )
   const recommendedCourse = gentle?.courseId || (firstPick ? idOf(lessons.find((lesson) => lesson.id === firstPick)?.course) : null)

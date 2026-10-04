@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { planAcrossDays, splitEvenly, spreadIndices, studyDates } from './schedule'
+import { overMinutesNote, planAcrossDays, splitEvenly, spreadIndices, studyDates } from './schedule'
 
 test('splits a pack evenly across Wednesday and Friday only', () => {
   const dates = studyDates('2026-10-07', '2026-10-16', [3, 5])
@@ -48,6 +48,11 @@ test('V=1 D=8 offers one date, never a spread sitting', () => {
   const planned = planAcrossDays(['only'], dates)
   assert.deepEqual(planned.slots.map((slot) => slot.date), ['d1'])
   assert.match(planned.note || '', /1 talk/)
+})
+
+test('a talk longer than the day is named, not silently crushed', () => {
+  assert.match(overMinutesNote([39], 20) || '', /39 minutes/)
+  assert.equal(overMinutesNote([15], 20), null)
 })
 
 test('rejects an empty weekday set and a range with no matching days', () => {

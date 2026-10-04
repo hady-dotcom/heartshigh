@@ -513,8 +513,10 @@ async function main() {
   }
 
   const opening = await seedOpening(payload, { clauseIds, portalIds, now: new Date(), showUnchecked: !startersOnly })
+  const { applySeriesGroups } = await import('./group-series')
+  const grouped = await applySeriesGroups(payload)
   await seedSpeakers(payload)
-  if (!startersOnly) await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...courseIds, ...opening.starterCourseIds] })
+  if (!startersOnly) await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...new Set([...grouped.courseIds, ...opening.starterCourseIds, ...courseIds])] })
   await seedHarvest(payload, { now: new Date(), demo: !startersOnly })
   if (!startersOnly) {
     const { seedDemoHarvest } = await import('./harvest-seed')

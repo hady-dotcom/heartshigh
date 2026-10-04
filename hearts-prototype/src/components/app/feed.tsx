@@ -91,7 +91,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
 
   const step = useCallback((direction: 1 | -1) => {
     if (items.length < 2) {
-      setToast(mode === 'hors' ? "That is the only hors d'oeuvre here" : 'That is the only ‘Ready for more?’ here.')
+      setToast(mode === 'hors' ? "That is the only short clip here just now." : 'This is the only longer clip here just now.')
       return
     }
     setIndex((current) => (current + direction + items.length) % items.length)

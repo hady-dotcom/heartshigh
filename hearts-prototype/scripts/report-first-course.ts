@@ -1,6 +1,6 @@
 /**
  * Read-only report of the first course each of the 20 doors would offer.
- * Prints the current recommendLesson hit and the gentle part-1 pick.
+ * OK only when the pick is a long talk and is part 1 or the earliest sitting in the library.
  * Never writes.
  *
  *   npm run report:first-course
@@ -8,7 +8,7 @@
 import { closePayload, clearDevPushMarker } from '../src/lib/prepare-db'
 import { DOORS } from '../src/lib/doors'
 import { recommendLesson } from '../src/lib/placing'
-import { isGentleOpening, pickGentleFirstCourse, seriesPartNumber } from '../src/lib/first-course'
+import { firstCourseVerdict, pickGentleFirstCourse } from '../src/lib/first-course'
 import { idOf } from '../src/lib/ids'
 
 await clearDevPushMarker()
@@ -18,7 +18,7 @@ const payload = await getPayload({ config })
 
 try {
   const courses = ((await payload.find({ collection: 'courses', overrideAccess: true, depth: 0, limit: 0, pagination: false })).docs as { id: number; title?: string }[])
-  const lessons = ((await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: 0, pagination: false })).docs as { id: number; title?: string; order?: number; course?: unknown }[])
+  const lessons = ((await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: 0, pagination: false })).docs as { id: number; title?: string; order?: number; course?: unknown; durationSeconds?: number }[])
   const cuts = ((await payload.find({ collection: 'cuts', overrideAccess: true, depth: 0, limit: 0, pagination: false })).docs as { lesson?: unknown; bestClause?: number; status?: string }[])
   const lessonOrder = courses.flatMap((course) => lessons.filter((lesson) => idOf(lesson.course) === course.id).map((lesson) => lesson.id))
   const cutRows = cuts.map((cut) => ({ lessonId: idOf(cut.lesson) || 0, bestClause: cut.bestClause || null, approved: cut.status === 'approved' }))
@@ -27,7 +27,7 @@ try {
     courseTitle: String(course.title || ''),
     lessons: lessons
       .filter((lesson) => idOf(lesson.course) === course.id)
-      .map((lesson) => ({ id: lesson.id, title: String(lesson.title || ''), order: Number(lesson.order || 0) })),
+      .map((lesson) => ({ id: lesson.id, title: String(lesson.title || ''), order: Number(lesson.order || 0), durationSeconds: Number(lesson.durationSeconds || 0) })),
   }))
 
   console.log('First-course report (read-only). Nothing is written.\n')
@@ -39,15 +39,15 @@ try {
     const pick = pickGentleFirstCourse(hitId, catalogue)
     const hitTitle = hit ? String(hit.title || '') : '(none)'
     const pickTitle = pick ? `${pick.courseTitle} · ${pick.lessonTitle}` : '(none)'
-    const part = pick ? seriesPartNumber(pick.lessonTitle) : null
-    const ok = Boolean(pick && (part == null || part === 1) && isGentleOpening(pick.lessonTitle))
-    if (!ok) bad += 1
+    const verdict = firstCourseVerdict(pick, catalogue)
+    if (!verdict.ok) bad += 1
+    const seconds = pick ? catalogue.find((course) => course.courseId === pick.courseId)?.lessons.find((lesson) => lesson.id === pick.lessonId)?.durationSeconds || 0 : 0
     console.log(`Door ${door.number} ${door.title}`)
     console.log(`  clause ${clause}  current hit: ${hitId || '—'} ${hitTitle}`)
-    console.log(`  would offer: ${pickTitle}`)
-    console.log(`  ${pick?.reason || ''}  ${ok ? 'OK' : 'NEEDS A GENTLER PART 1'}`)
+    console.log(`  would offer: ${pickTitle}${seconds ? ` (${Math.round(seconds / 60)} min)` : ''}`)
+    console.log(`  ${pick?.reason || ''}  ${verdict.note}`)
   }
-  console.log(`\n${DOORS.length} doors. ${bad} still open on a later part or a life-stage talk. No rows were changed.`)
+  console.log(`\n${DOORS.length} doors. ${bad} still open on a short clip, a later part, or a life-stage talk. No rows were changed.`)
 } finally {
   await closePayload(payload)
 }

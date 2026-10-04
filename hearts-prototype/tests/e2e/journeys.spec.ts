@@ -321,7 +321,7 @@ test.describe.serial('HEARTS journeys', () => {
     await page.locator('label:has([data-testid=weekday-5])').click()
     await expect(page.getByTestId('weekday-3')).toBeChecked()
     await page.getByTestId('schedule-submit').click()
-    await expect(page.getByTestId('notice')).toContainText('Done. Your 3 talks are on Wednesdays and Fridays until 14 October 2026.')
+    await expect(page.getByTestId('notice')).toContainText('Done. Your 3 talks are on Wed 7 October, Fri 9 October and Wed 14 October.')
     const slots = page.getByTestId('schedule-plan').first().getByTestId('schedule-slot')
     await expect(slots).toHaveCount(3)
     for (const text of await slots.allTextContents()) expect(text).toMatch(/Wed|Fri/)

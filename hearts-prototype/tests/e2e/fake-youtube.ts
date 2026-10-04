@@ -1,14 +1,20 @@
 import type { Page } from '@playwright/test'
 
 /** A stand-in for the IFrame API, so player chrome (Tap for sound and the rest) renders without YouTube. */
-export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean } = {}) {
-  await page.route(/youtube|ytimg|googlevideo/, (route) => route.abort())
-  await page.addInitScript((blockAutoplay) => {
-    const gate = window as unknown as { __allowPlay?: boolean; __playerVars?: unknown[]; __unloaded?: string[] }
+export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean; failFirst?: boolean } = {}) {
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAASwAAADICAYAAABS39xVAAABjklEQVR4nO3BMQEAAADCoPVPbQwfoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPgZcLwAAe0nOggAAAABJRU5ErkJggg==', 'base64')
+  await page.route(/i\.ytimg\.com|img\.youtube\.com/, async (route) => {
+    await route.fulfill({ status: 200, contentType: 'image/png', body: png })
+  })
+  await page.route(/youtube|googlevideo/, (route) => route.abort())
+  await page.addInitScript(({ blockAutoplay, failFirst }) => {
+    const gate = window as unknown as { __allowPlay?: boolean; __playerVars?: unknown[]; __unloaded?: string[]; __failFirst?: boolean; __fails?: number }
     gate.__allowPlay = !blockAutoplay
     gate.__playerVars = []
     gate.__unloaded = []
-    type Options = { playerVars?: { start?: number }; events: { onReady: (e: unknown) => void; onStateChange: (e: { data: number }) => void } }
+    gate.__failFirst = failFirst
+    gate.__fails = 0
+    type Options = { playerVars?: { start?: number }; events: { onReady: (e: unknown) => void; onStateChange: (e: { data: number }) => void; onError?: (e: { data: number }) => void } }
     class Player {
       private state = -1
       private time: number
@@ -22,6 +28,11 @@ export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean
         this.frame = document.createElement('iframe')
         this.frame.dataset.fake = 'youtube'
         el.replaceWith(this.frame)
+        if (gate.__failFirst && !gate.__fails) {
+          gate.__fails = 1
+          window.setTimeout(() => options.events.onError?.({ data: 2 }), 30)
+          return
+        }
         window.setTimeout(() => options.events.onReady({ target: this }), 30)
       }
       private set(state: number) {
@@ -55,5 +66,5 @@ export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean
       destroy() { if (this.tick != null) window.clearInterval(this.tick); this.frame.remove() }
     }
     ;(window as unknown as { YT: unknown }).YT = { Player }
-  }, Boolean(options.blockAutoplay))
+  }, { blockAutoplay: Boolean(options.blockAutoplay), failFirst: Boolean(options.failFirst) })
 }

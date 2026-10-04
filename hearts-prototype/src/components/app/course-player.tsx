@@ -424,7 +424,7 @@ export function CoursePlayer({
   const open = views.find((point) => point.id === openId) || null
   const total = length || Math.max(60, ...views.map((point) => point.second + 30))
   const filmed = mode === 'youtube' || mode === 'vimeo' || mode === 'file'
-  const scenicPoster = !poster || /i\.ytimg\.com|img\.youtube\.com/i.test(poster)
+  const scenicPoster = !poster
   const places = new Map(placeDots(views.map((row) => ({ id: row.id, second: row.second })), total, trackWidth).map((row) => [row.id, row]))
 
   return (
@@ -478,7 +478,7 @@ export function CoursePlayer({
               key={point.id}
               type="button"
               className={`dot${point.answered ? ' done' : point.state !== 'open' ? ' locked' : ''}`}
-              style={{ left: `${place?.left ?? 2}%`, top: place?.lift || 0 }}
+              style={{ left: `${place?.left ?? 2}%` }}
               aria-label={`Question ${point.number} at ${clock(point.second)}`}
               data-testid="timeline-dot"
               data-state={point.state}
@@ -488,7 +488,7 @@ export function CoursePlayer({
                 show(point.id, false)
               }}
             >
-              <i />
+              <i>{point.number}</i>
             </button>
             )
           })}
@@ -547,6 +547,7 @@ export function CoursePlayer({
           <div>
             <h3>What&apos;s done</h3>
             <small data-testid="fruit-count">{garden.done} of {garden.total} fruits</small>
+            <p className="muted fruit-explain" data-testid="fruit-explain">Talks you have watched and questions you have answered in this course.</p>
             <div className="bar"><i style={{ width: `${garden.total ? (garden.done / garden.total) * 100 : 0}%` }} /></div>
             {garden.nextPart ? <Link className="garden-link" href={garden.nextPart.href} data-testid="garden-next">↗ {garden.nextPart.label}</Link> : null}
             {garden.links.map((link) => <Link key={link.href} className="garden-link" href={link.href}>↗ {link.label}</Link>)}

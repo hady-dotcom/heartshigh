@@ -84,11 +84,20 @@ export function fitDatesToTalks(dates: string[], talks: number): { dates: string
   return { dates: planned.slots.map((slot) => slot.date), note: planned.note }
 }
 
-export function planToast(talks: number, weekdays: number[], until: string) {
-  const days = weekdayList(weekdays)
-  const when = formatLearnerDate(until, 'long')
-  if (talks === 1) return `Done. Your 1 talk is on ${days || 'your chosen day'} until ${when}.`
-  return `Done. Your ${talks} talks are on ${days || 'your chosen days'} until ${when}.`
+export function listDates(dates: string[]): string {
+  const named = dates.map((date) => formatLearnerDate(date, 'week')).filter(Boolean)
+  if (!named.length) return ''
+  if (named.length === 1) return named[0]
+  if (named.length === 2) return `${named[0]} and ${named[1]}`
+  return `${named.slice(0, -1).join(', ')} and ${named[named.length - 1]}`
+}
+
+/** Names the actual sitting dates, not a weekday list or a second end date. */
+export function planToast(talks: number, dates: string[]) {
+  const when = listDates(dates)
+  if (talks === 1) return `Done. Your 1 talk is on ${when || 'your chosen day'}.`
+  if (dates.length <= 4) return `Done. Your ${talks} talks are on ${when || 'your chosen days'}.`
+  return `Done. Your ${talks} talks run from ${formatLearnerDate(dates[0], 'week')} to ${formatLearnerDate(dates[dates.length - 1], 'week')}.`
 }
 
 export function parseWeekdays(raw: string | string[] | undefined | null): number[] {

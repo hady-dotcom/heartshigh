@@ -38,8 +38,11 @@ async function aCourse() {
     list.push(lesson)
     byCourse.set(lesson.course, list)
   }
-  const multi = [...byCourse.entries()].find(([, own]) => own.length >= 2)
-  const courseId = multi?.[0] || lessons[0]?.course
+  const courses = ((await json('/api/courses?limit=80&depth=0')).docs || []) as { id: number; title?: string }[]
+  const sitting = courses.find((course) => course.title === 'Long sittings')
+  const names = courses.find((course) => course.title === 'The Names')
+  const multi = [...byCourse.entries()].filter(([, own]) => own.length >= 2).sort((a, b) => b[1].length - a[1].length)[0]
+  const courseId = sitting?.id || names?.id || multi?.[0] || lessons[0]?.course
   const own = byCourse.get(courseId) || []
   const points = ((await json(`/api/engagement-points?where[lesson][equals]=${own[0]?.id || 0}&limit=20&depth=0`)).docs || []) as { id: number; second?: number; prompt?: string }[]
   return { courseId, lessons: own, points }
@@ -163,6 +166,77 @@ test.describe('courses and planning', () => {
     const ics = await page.request.get('/api/hearts/week.ics')
     expect(ics.ok()).toBeTruthy()
     expect(ics.headers()['content-type']).toMatch(/text\/calendar/)
-    expect(await ics.text()).toContain('BEGIN:VCALENDAR')
+    const calendar = await ics.text()
+    expect(calendar).toContain('BEGIN:VCALENDAR')
+    expect(calendar).toContain('BEGIN:VEVENT')
+    expect(calendar).toContain('DTSTART;VALUE=DATE:')
+    expect(calendar).toContain('SUMMARY:')
+    await expect(page.getByTestId('schedule-slot').first()).toContainText('›')
+    await page.getByTestId('schedule-slot').first().click()
+    await expect(page.getByTestId('player')).toBeVisible()
+  })
+
+  test('Long sittings splits 3,3,2,2 and keeps the days row after sharing out', async ({ page }) => {
+    await page.setViewportSize(PHONE)
+    const courses = ((await json('/api/courses?limit=80&depth=0')).docs || []) as { id: number; title?: string }[]
+    const sitting = courses.find((course) => course.title === 'Long sittings')
+    expect(sitting).toBeTruthy()
+    const own = ((await json(`/api/lessons?where[course][equals]=${sitting!.id}&limit=20&depth=0`)).docs || []) as { id: number }[]
+    expect(own.length).toBe(10)
+    await signIn(page, `${BASE}/week?course=${sitting!.id}&view=new&start=2026-10-05&end=2026-10-08&days=0,1,2,3,4,5,6&minutes=20`)
+    await expect(page.getByTestId('schedule-course')).toHaveValue(String(sitting!.id))
+    await expect(page.getByTestId('weekday-1')).toBeChecked()
+    await page.getByTestId('schedule-submit').click()
+    await expect(page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' })).toBeVisible()
+    await expect(page.getByTestId('schedule-course')).toHaveValue(String(sitting!.id))
+    await expect(page.getByTestId('weekday-1')).toBeChecked()
+    await expect(page.getByTestId('week-days')).toBeVisible()
+    const dates = await page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' }).getByTestId('schedule-slot').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-date') || ''))
+    const counts = dates.reduce((map, date) => map.set(date, (map.get(date) || 0) + 1), new Map<string, number>())
+    expect([...counts.values()]).toEqual([3, 3, 2, 2])
+    await expect(page.getByTestId('over-minutes')).toBeVisible()
+    await expect(page.getByTestId('spread-note')).toHaveCount(0)
+  })
+
+  test('a teacher plan locks against another teacher and tells the learner', async ({ page }) => {
+    await page.setViewportSize(DESK)
+    const courses = ((await json('/api/courses?limit=80&depth=0')).docs || []) as { id: number; title?: string }[]
+    const sitting = courses.find((course) => course.title === 'Long sittings')
+    expect(sitting).toBeTruthy()
+    await page.goto(`/login?next=${encodeURIComponent(`${BASE}/admin/plans`)}`)
+    await page.getByTestId('login-email').fill('elm-teacher@hearts.test')
+    await page.getByTestId('login-password').fill('portal-teacher')
+    await page.getByTestId('login-submit').click()
+    await page.waitForURL((url) => !url.pathname.startsWith('/login'))
+    await expect(page.getByTestId('admin-plans')).toBeVisible()
+    await page.getByTestId('schedule-course').selectOption(String(sitting!.id))
+    await page.getByTestId('schedule-start').fill('2026-10-05')
+    await page.getByTestId('schedule-end').fill('2026-10-08')
+    for (const day of [0, 1, 2, 3, 4, 5, 6]) {
+      const box = page.getByTestId(`weekday-${day}`)
+      if (!(await box.isChecked())) await page.locator(`label:has([data-testid=weekday-${day}])`).click()
+    }
+    await page.locator('label:has([data-testid=plan-learner])').filter({ hasText: 'Maryam' }).click()
+    await page.getByTestId('schedule-submit').click()
+    await expect(page.getByTestId('notice')).toContainText('talks are on')
+
+    await page.goto(`/login?next=${encodeURIComponent(`${BASE}/admin/plans`)}`)
+    await page.getByTestId('login-email').fill('elm-admin@hearts.test')
+    await page.getByTestId('login-password').fill('portal-admin')
+    await page.getByTestId('login-submit').click()
+    await page.waitForURL((url) => !url.pathname.startsWith('/login'))
+    await page.getByTestId('schedule-course').selectOption(String(sitting!.id))
+    await page.getByTestId('schedule-start').fill('2026-10-05')
+    await page.getByTestId('schedule-end').fill('2026-10-08')
+    await page.locator('label:has([data-testid=weekday-1])').click()
+    await page.locator('label:has([data-testid=plan-learner])').filter({ hasText: 'Maryam' }).click()
+    await page.getByTestId('schedule-submit').click()
+    await expect(page.getByTestId('error')).toContainText('another teacher')
+
+    await page.setViewportSize(PHONE)
+    await signIn(page, `${BASE}/week`)
+    await expect(page.getByTestId('plan-locked')).toBeVisible()
+    await page.goto(`${BASE}/me`)
+    await expect(page.getByTestId('notification').filter({ hasText: 'A study plan was made for you' })).toBeVisible()
   })
 })

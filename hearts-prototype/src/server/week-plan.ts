@@ -1,7 +1,7 @@
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
 import { minutesLabel, talksLabel, weekStrip, zoneOrToronto, dateKeyInZone, type WeekDay } from '@/lib/week'
-import { spreadNote, studyDates } from '@/lib/schedule'
+import { overMinutesNote, spreadNote, studyDates } from '@/lib/schedule'
 import { isTimeZone, portalTimeZone } from '@/lib/zone-time'
 import { partTitle } from '@/lib/talk-title'
 import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
@@ -27,6 +27,7 @@ export type WeekPlanCard = {
   weekdays: number[]
   locked: boolean
   note: string | null
+  overMinutes: string | null
 }
 
 export type WeekCourse = { id: number; title: string; talks: number; seconds: number; label: string }
@@ -105,16 +106,20 @@ export async function weekView(payload: Payload, user: SessionUser, portal: Port
     } catch {
       // Keep the count from the slots we already have.
     }
+    const firstDate = slots[0]?.date || str(plan.startDate)
+    const lastDate = slots[slots.length - 1]?.date || str(plan.endDate)
+    const perDay = Number(plan.minutesPerDay || 0)
     return {
       id: plan.id,
       name: str(plan.name),
       courseId: courseId || null,
       slots,
-      start: str(plan.startDate),
-      end: str(plan.endDate),
+      start: firstDate,
+      end: lastDate,
       weekdays,
       locked: staff(ref(plan.owner)) && ref(plan.owner) !== user.id,
       note: spreadNote(slots.length, studyDays),
+      overMinutes: overMinutesNote(slots.map((slot) => slot.minutes), perDay),
     }
   })
   const today = cards.flatMap((plan) => plan.slots).find((slot) => slot.today) || null

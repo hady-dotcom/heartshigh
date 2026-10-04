@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { dateKeyInZone, fitDatesToTalks, formatLearnerDate, mondayKey, parseWeekdays, planKeepPath, planToast, talksLabel, weekStrip, weekdayList } from './week'
+import { dateKeyInZone, fitDatesToTalks, formatLearnerDate, listDates, mondayKey, parseWeekdays, planKeepPath, planToast, talksLabel, weekStrip, weekdayList } from './week'
 
 test('the week strip is Monday first and marks today in Toronto', () => {
   const sunday = new Date('2026-10-04T16:00:00Z')
@@ -26,10 +26,15 @@ test('one sitting never keeps leftover empty days, and several talks span the ra
   assert.match(spread.note || '', /spaced across the span/)
 })
 
-test('the plan toast names the talks, the weekdays and a British date', () => {
+test('the plan toast names the actual sitting dates', () => {
   assert.equal(weekdayList([1, 3, 5]), 'Mondays, Wednesdays and Fridays')
   assert.equal(formatLearnerDate('2026-10-12', 'long'), '12 October 2026')
-  assert.equal(planToast(4, [1, 3, 5], '2026-10-12'), 'Done. Your 4 talks are on Mondays, Wednesdays and Fridays until 12 October 2026.')
+  assert.equal(listDates(['2026-10-07', '2026-10-09']), 'Wed 7 October and Fri 9 October')
+  assert.equal(planToast(1, ['2026-10-04']), 'Done. Your 1 talk is on Sun 4 October.')
+  assert.equal(
+    planToast(3, ['2026-10-07', '2026-10-09', '2026-10-14']),
+    'Done. Your 3 talks are on Wed 7 October, Fri 9 October and Wed 14 October.',
+  )
   assert.equal(talksLabel(6, 5 * 3600), '6 talks · about 5 hours')
   assert.equal(talksLabel(1, 900), '1 talk · about 15 min')
 })

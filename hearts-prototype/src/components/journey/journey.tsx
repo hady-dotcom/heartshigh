@@ -1090,7 +1090,7 @@ export function Journey(props: JourneyProps) {
     if (target === null) {
       if (swipe === 'speaker') return setToast(`That is everything from ${current.speaker} for now`)
       if (swipe === 'topic') return setToast('That is everything on this topic for now')
-      return setToast(modeRef.current === 'hors' ? "That is the only hors d'oeuvre here" : 'That is the only ‘Ready for more?’ here.')
+      return setToast(modeRef.current === 'hors' ? "That is the only short clip here just now." : 'This is the only longer clip here just now.')
     }
     const laneLabel = itemsRef.current[target]?.laneLabel?.trim()
     if (swipe === 'lane' && laneLabel) setToast(`Lane · ${laneLabel}`)
@@ -1619,7 +1619,7 @@ export function Journey(props: JourneyProps) {
             <a className="pill gold block" href={course} data-testid="end-full" onClick={(event) => void stepUp(event)}>Watch the full talk</a>
             <button type="button" className="pill block end-feed" data-testid="end-feed" onClick={() => { setAppetiserOver(false); void showItem(index, 'hors') }}>Back to the feed</button>
             {swipeTarget(items, index, 'appetiser', 'next') != null ? (
-              <button type="button" className="pill block end-next" data-testid="end-next" onClick={() => { const next = swipeTarget(items, index, 'appetiser', 'next'); setAppetiserOver(false); if (next != null) void advance(next) }}>Next Ready for more?</button>
+              <button type="button" className="pill block end-next" data-testid="end-next" onClick={() => { const next = swipeTarget(items, index, 'appetiser', 'next'); setAppetiserOver(false); if (next != null) void advance(next) }}>Watch the next longer clip</button>
             ) : null}
           </div>
         ) : null}

@@ -9,36 +9,121 @@ test.use({
   viewport: PHONE,
 })
 
-test('phone walk: buffet, schedule, My week, today, think, next part', async ({ page }) => {
+test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part', async ({ page }) => {
   await fakeYouTube(page)
   await page.goto(`/login?next=${encodeURIComponent(`${BASE}/lanes`)}`)
   await page.getByTestId('login-email').fill('elm-learner@hearts.test')
   await page.getByTestId('login-password').fill('portal-learner')
   await page.getByTestId('login-submit').click()
   await page.waitForURL((url) => !url.pathname.startsWith('/login'))
-  await expect(page.getByTestId('lesson-link').first()).toBeVisible()
-  const href = await page.getByTestId('lesson-link').first().getAttribute('href')
-  expect(href).toBeTruthy()
-  await page.goto(href!)
+  await expect(page.getByTestId('lanes')).toBeVisible()
+  await expect(page.getByTestId('day-number')).toContainText('with us')
+  await expect(page.getByTestId('lane-card').first()).not.toContainText(/oh allah/i)
+
+  const courses = await page.request.get('/api/courses?limit=80&depth=0').then((res) => res.json()) as { docs?: { id: number; title?: string }[] }
+  const sitting = (courses.docs || []).find((course) => course.title === 'Long sittings')
+  expect(sitting).toBeTruthy()
+  const lessons = await page.request.get(`/api/lessons?where[course][equals]=${sitting!.id}&limit=20&depth=0&sort=order`).then((res) => res.json()) as { docs?: { id: number; title?: string }[] }
+  const talks = lessons.docs || []
+  expect(talks.length).toBeGreaterThanOrEqual(2)
+
+  await page.goto(`${BASE}/course/${sitting!.id}`)
   await expect(page.getByTestId('course-overview')).toBeVisible()
-  await expect(page.getByTestId('buffet-talk').first()).toBeVisible()
-  await page.waitForTimeout(1200)
+  await expect(page.getByTestId('buffet-talk')).toHaveCount(10)
+  await expect(page.getByTestId('schedule-all')).toContainText('Schedule all of these')
+  await page.waitForTimeout(1400)
+
   await page.getByTestId('schedule-all').click()
   await expect(page.getByTestId('plan')).toBeVisible()
+  await expect(page.getByTestId('back')).toContainText('Course')
+  await expect(page.getByTestId('week-days')).toBeVisible()
   if (!(await page.getByTestId('weekday-1').isChecked())) await page.locator('label:has([data-testid=weekday-1])').click()
-  await page.waitForTimeout(800)
+  await page.waitForTimeout(700)
   await page.getByTestId('schedule-submit').click()
-  await expect(page.getByTestId('schedule-plan').first()).toBeVisible()
+  await expect(page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' })).toBeVisible()
+  await expect(page.getByTestId('schedule-course')).toHaveValue(String(sitting!.id))
+  await expect(page.getByTestId('weekday-1')).toBeChecked()
+  await expect(page.getByTestId('week-days')).toBeVisible()
   await page.waitForTimeout(1200)
-  if (await page.getByTestId('week-open-today').count()) await page.getByTestId('week-open-today').click()
-  else await page.getByTestId('schedule-slot').first().click()
+
+  await page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' }).getByTestId('schedule-slot').first().click()
   await expect(page.getByTestId('player')).toBeVisible()
-  await page.waitForTimeout(800)
+  await expect(page.getByTestId('up-next')).toBeVisible()
+  await expect(page.getByTestId('up-next')).not.toContainText('last part')
+  await expect(page.getByTestId('fruit-explain')).toBeVisible()
   if (await page.getByTestId('timeline-dot').count()) {
     await page.getByTestId('timeline-dot').first().click()
     await expect(page.getByTestId('popup')).toBeVisible()
     await expect(page.getByTestId('paused-note')).toContainText('Paused')
-    if (await page.getByTestId('think-about-this').count()) await page.getByTestId('think-about-this').click()
+    await expect(page.getByTestId('think-about-this')).toContainText('Think about this for this session')
+    await page.waitForTimeout(900)
+    await page.getByTestId('think-about-this').click()
+    await expect(page.getByTestId('popup')).toHaveCount(0)
   }
-  if (await page.getByTestId('up-next').count()) await page.getByTestId('up-next').click()
+  await page.waitForTimeout(800)
+  await page.getByTestId('up-next').click()
+  await expect(page.getByTestId('player')).toBeVisible()
+  await expect(page.getByTestId('up-next')).not.toContainText('last part')
+  await page.waitForTimeout(900)
+
+  await page.goto(`${BASE}/feed`)
+  await expect(page.getByTestId('journey')).toBeVisible({ timeout: 15_000 })
+  const feed = page.getByTestId('journey')
+  if ((await feed.getAttribute('data-phase')) !== 'feed') {
+    const play = page.getByTestId('lets-play').or(page.getByRole('button', { name: /play|continue/i }))
+    if (await play.count()) await play.first().click()
+  }
+  await expect(page.getByTestId('level-chip').or(page.getByText('Ready for more?'))).toBeVisible({ timeout: 15_000 })
+  const layer = page.getByTestId('gesture-layer')
+  if (await layer.count()) {
+    const box = await layer.boundingBox()
+    if (box) {
+      const cx = box.x + box.width / 2
+      const cy = box.y + box.height / 2
+      await page.mouse.move(cx, cy)
+      await page.mouse.down()
+      await page.mouse.move(cx, cy - 220, { steps: 8 })
+      await page.mouse.up()
+      await page.waitForTimeout(800)
+    }
+  }
+  await expect(page.getByText('Ready for more?').first()).toBeVisible()
+  await page.waitForTimeout(900)
+
+  await page.goto(BASE)
+  await expect(page.getByTestId('rings')).toBeVisible()
+  await expect(page.getByTestId('ring-watched')).toBeVisible()
+  const watched = Number((await page.getByTestId('ring-watched').locator('.r').textContent()) || '0')
+  expect(watched).toBeGreaterThanOrEqual(0)
+  await page.waitForTimeout(800)
+
+  await page.goto(`${BASE}/garden/workbook`)
+  await expect(page.getByTestId('workbook-summary')).toBeVisible()
+  if (await page.getByTestId('open-question').count()) {
+    const labels = await page.getByTestId('open-question').allTextContents()
+    expect(labels.join(' ')).not.toMatch(/Tawakkul/i)
+  }
+  await page.waitForTimeout(800)
+
+  await page.addInitScript(() => {
+    const gate = window as unknown as { __failFirst?: boolean; __fails?: number }
+    gate.__failFirst = true
+    gate.__fails = 0
+  })
+  const tawakkul = await page.request.get('/api/lessons?limit=80&depth=0').then((res) => res.json()) as { docs?: { id: number; title?: string; course?: number }[] }
+  const trust = (tawakkul.docs || []).find((lesson) => /tawakkul/i.test(String(lesson.title || '')))
+  if (trust) {
+    await page.goto(`${BASE}/course/${trust.course}?part=${trust.id}`)
+    await expect(page.getByTestId('player-retry')).toBeVisible({ timeout: 12_000 })
+    await page.getByRole('button', { name: 'Try again' }).click()
+    await expect(page.getByTestId('player')).toBeVisible()
+    await page.waitForTimeout(900)
+  }
+
+  await page.goto(`${BASE}/course/${sitting!.id}?part=${talks[1].id}`)
+  await expect(page.getByTestId('player')).toBeVisible()
+  await expect(page.getByTestId('up-next')).toBeVisible()
+  await expect(page.getByTestId('up-next')).not.toContainText('last part')
+  await expect(page.getByTestId('up-next')).toContainText(/Next|Part 3|part 3/i)
+  await page.waitForTimeout(1400)
 })

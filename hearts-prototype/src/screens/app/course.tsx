@@ -138,12 +138,14 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
         <Back href={`${base}/lanes`} label="Lanes" />
         <Flash error={query.error} notice={query.notice} />
         <div className="app-head"><h1 data-testid="course-title">{title}</h1></div>
-        <p className="lead" data-testid="course-count">{talksLabel(lessons.length, seconds)}.</p>
+        <p className="lead" data-testid="course-count">{talksLabel(lessons.length, seconds)}</p>
         <Link className="pill gold block" href={`${base}/course/${course.id}?part=${continueId}`} data-testid="start-part">
-          {started ? `Continue part ${continueIndex + 1}` : 'Start part 1'}
+          {done.size >= lessons.length && lessons.length
+            ? lessons.length === 1 ? 'Watch again' : 'Watch from part 1'
+            : started ? `Continue part ${continueIndex + 1}` : 'Start part 1'}
         </Link>
-        <Link className="pill outline block" href={`${base}/week?course=${course.id}&view=new`} data-testid="schedule-all" style={{ marginTop: 10 }}>
-          Schedule all of these
+        <Link className="pill outline block" href={`${base}/week?course=${course.id}&view=new&from=course`} data-testid="schedule-all" style={{ marginTop: 10 }}>
+          {lessons.length === 1 ? 'Schedule this talk' : 'Schedule all of these'}
         </Link>
         <p className="eyebrow">Talks in this course</p>
         {lessons.map((lesson, index) => {
@@ -154,7 +156,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
               <span className="thumb" style={shownPoster(posterFor(youtubeId)) ? { backgroundImage: `url(${shownPoster(posterFor(youtubeId))})` } : undefined} />
               <span className="t">
                 <small>Part {index + 1}</small>
-                <b>{partTitle(lesson, title)}</b>
+                <b className="talk-name">{partTitle(lesson, title)}</b>
                 <small>{secondsHere ? clock(secondsHere) : 'Length not known yet'}{done.has(lesson.id) ? ' · watched' : ''}</small>
               </span>
               ›

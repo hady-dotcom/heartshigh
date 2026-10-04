@@ -12,6 +12,7 @@ import { courseCards, dayNumber, portalName, posterFor, shownPoster } from '@/se
 import { ensureMonthNote, recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
 import { lanesWithClips } from '@/lib/lanes'
+import { LANE_BLURBS } from '@/lib/opening-data'
 import { plural } from '@/lib/schedule'
 import { continueOrder, dateKeyInZone, minutesADay, tonightLabel, tonightSlot } from '@/lib/study-plan'
 import { now as clockNow } from '@/lib/clock'
@@ -130,7 +131,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
           {!carryOn.length && !fallback.length ? <p className="muted">Start a course from Lanes and it will wait for you here.</p> : null}
         </div>
         <HomeGather cards={gatherings} base={base} masjid={portalName(portal)} />
-        <p className="eyebrow">Today&apos;s clips <span className="muted" style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }} data-testid="day-number">· Day {dayNumber(user)}</span></p>
+        <p className="eyebrow">Today&apos;s clips <span className="muted" style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }} data-testid="day-number">· Day {dayNumber(user)} with us</span></p>
         <Link className="feed-door" href={`${base}/feed`} data-testid="open-feed">
           <span className="strip">
             {clips.map((clip) => (
@@ -161,7 +162,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
   return (
     <AppFrame testId="lanes">
       <div className="app-scroll">
-        <div className="app-head"><h1>Lanes</h1><span className="muted" style={{ fontSize: 13, fontWeight: 600 }} data-testid="day-number">Day {today}</span></div>
+        <div className="app-head"><h1>Lanes</h1><span className="muted" style={{ fontSize: 13, fontWeight: 600 }} data-testid="day-number">Day {today} with us</span></div>
         <Flash error={query.error} notice={query.notice} />
         <p className="lead">Each lane is one theme. Tap a lane to watch its clips, or start a full course below.</p>
         {lanes.map((lane) => {
@@ -180,7 +181,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
               <div>
                 <small>Lane</small>
                 <h3>{lane.title}</h3>
-                <p>{snippet(first.hook || first.land || first.lessonTitle || '', 64)}</p>
+                <p>{LANE_BLURBS[lane.key] || snippet(first.hookTidy || first.scenic?.hook || first.courseTitle || '', 64)}</p>
                 <p>{first.speaker} · {count} {count === 1 ? 'clip' : 'clips'}</p>
               </div>
             </Link>

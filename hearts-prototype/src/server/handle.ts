@@ -1233,7 +1233,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       const learners = (plan.learners as unknown[]) || []
       return idOf(plan.owner) === learnerId || learners.some((item) => idOf(item) === learnerId)
     }
-    const lastUsed = slots[slots.length - 1]?.date || endDate
+    const usedDates = [...new Set(slots.map((slot) => slot.date).filter(Boolean))]
     for (const learnerId of targets) {
       const matching = existing.docs.filter((plan) => matchesCourse(plan) && covers(plan, learnerId))
       const teacherPlan = matching.find((plan) => ownerIsStaff(idOf(plan.owner)) && idOf(plan.owner) !== learnerId)
@@ -1262,10 +1262,10 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         if (staff || idOf(extra.owner) === user.id) await payload.delete({ collection: 'schedules', id: extra.id, overrideAccess: true })
       }
       if (staff && learnerId !== user.id) {
-        await notify(payload, { user: learnerId, portal, title: 'A study plan was made for you', body: planToast(slots.length, weekdays, lastUsed), href: `/p/${acting.portal.slug}/week` })
+        await notify(payload, { user: learnerId, portal, title: 'A study plan was made for you', body: planToast(slots.length, usedDates), href: `/p/${acting.portal.slug}/week` })
       }
     }
-    const toast = `${planToast(slots.length, weekdays, lastUsed)}${planned.note ? ` ${planned.note}` : ''}`
+    const toast = planToast(slots.length, usedDates)
     return redirectTo(req, planKeepPath(text(form, 'next') || '/', { course: courseIds[0], start: text(form, 'start'), end: text(form, 'end'), weekdays, minutes }), undefined, toast)
   }
 

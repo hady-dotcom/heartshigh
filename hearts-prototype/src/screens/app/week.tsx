@@ -26,15 +26,13 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
   return (
     <AppFrame testId="plan">
       <div className="app-scroll">
-        <Back href={`${base}/me`} label="Me" />
+        <Back
+          href={String(query.from) === 'course' && selected ? `${base}/course/${selected}` : String(query.from) === 'lanes' ? `${base}/lanes` : `${base}/me`}
+          label={String(query.from) === 'course' ? 'Course' : String(query.from) === 'lanes' ? 'Lanes' : 'Me'}
+        />
         <div className="app-head"><h1>My week</h1></div>
         <Flash error={query.error} notice={query.notice} />
         <WeekStrip days={view.days} today={view.today} href={`${base}/week`} emptyHref={`${base}/week?view=new`} />
-        {view.today?.href ? (
-          <Link className="pill gold block" href={view.today.href} data-testid="week-open-today" style={{ margin: '12px 0' }}>
-            {`Today: ${view.today.title}${view.today.minutes ? ` (${view.today.minutes} min)` : ''}`}
-          </Link>
-        ) : null}
         {view.plans.length ? (
           <p style={{ margin: '0 0 12px' }}>
             <a className="pill outline" href="/api/hearts/week.ics" data-testid="plan-ics">Add these days to your calendar</a>
@@ -51,6 +49,7 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
               </p>
               {plan.locked ? <p className="muted" data-testid="plan-locked">Your teacher set this plan. You can still watch at your own pace.</p> : null}
               {plan.note ? <p className="muted" data-testid="spread-note">{plan.note}</p> : null}
+              {plan.overMinutes ? <p className="muted" data-testid="over-minutes">{plan.overMinutes}</p> : null}
               {note ? <p className="muted" data-testid="library-start">{note}</p> : null}
               {plan.slots.map((slot, index) => {
                 const inner = (
@@ -63,6 +62,7 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
                       {slot.title}
                       {slot.today ? <small className="today-badge" data-testid="today-badge">Today</small> : null}
                     </span>
+                    {slot.href ? <span className="slot-go" aria-hidden>›</span> : null}
                   </>
                 )
                 return slot.href ? (

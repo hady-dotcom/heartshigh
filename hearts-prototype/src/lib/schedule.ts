@@ -104,6 +104,17 @@ export function planAcrossDays<T>(items: T[], dates: string[]): { slots: Slot<T>
   return { slots: splitEvenly(items, dates).filter((slot) => slot.items.length), note }
 }
 
+/** A talk longer than the chosen sitting length: warn, do not silently crush it into the day. */
+export function overMinutesNote(talkMinutes: number[], minutesPerDay: number) {
+  const long = talkMinutes.filter((value) => value > minutesPerDay)
+  if (!long.length || minutesPerDay <= 0) return null
+  const longest = Math.max(...long)
+  if (long.length === 1) {
+    return `This talk is about ${longest} minutes and your day is set to ${minutesPerDay} minutes. Sit with it in one go, or split it across two days.`
+  }
+  return `${long.length} talks are longer than the ${minutesPerDay} minutes you set for a day. Sit with each in one go, or split the longest ones.`
+}
+
 export function flattenSlots<T extends { id?: number; title?: string }>(
   slots: Slot<T>[],
 ): { date: string; title: string; lessonId: number | null }[] {
