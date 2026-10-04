@@ -5,6 +5,7 @@ import { headers } from 'next/headers'
 import { CopyLink } from '@/components/app/copy-link'
 import { Flash, Hidden } from '@/components/app/shell'
 import { Qr } from '@/components/qr'
+import { CrossPost } from '@/components/gather/cross-post'
 import { KIND_LABEL } from '@/lib/gather'
 import { shareOrigin } from '@/lib/site-origin'
 import { getSession } from '@/server/context'
@@ -85,10 +86,7 @@ export default async function PublicGather({ params, searchParams }: { params: P
           <a className="pill outline small" href={share.icsPath} data-testid="public-ics">Calendar file</a>
           <a className="pill outline small" href={share.google}>Google Calendar</a>
         </div>
-        <details className="gather-more">
-          <summary>Wording for Meetup, Eventbrite or Facebook</summary>
-          <textarea className="field" readOnly data-testid="public-cross-post" value={share.crossPost} />
-        </details>
+        <CrossPost text={share.crossPost} testId="public-cross-post" />
         <section className="gather-card" data-testid="public-invite-qr">
           <div className="door-qr"><Qr value={share.url || `/gather/${view.card.slug}`} testId="invite-qr" /></div>
           <p style={{ textAlign: 'center', margin: '8px 0 0' }}>Scan to open this invite.</p>

@@ -78,6 +78,14 @@ export function seatsLeft(capacity: number, going: number) {
   return Math.max(0, capacity - going)
 }
 
+/** Prefer the account name when it carries a surname the short guest label does not. */
+export function personName(accountName: string, guestName: string) {
+  const account = accountName.trim()
+  const guest = guestName.trim()
+  if (account && guest) return account.split(/\s+/).length >= guest.split(/\s+/).length ? account : guest
+  return account || guest || 'Guest'
+}
+
 /** First name, or a first name plus a last initial when two people share a first name. Never a full name. */
 export function publicNames(fullNames: string[]): string[] {
   const firsts = fullNames.map((name) => firstName(name))

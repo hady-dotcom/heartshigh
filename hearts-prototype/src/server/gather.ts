@@ -20,6 +20,7 @@ import {
   makeEntryCode,
   matchingGatherings,
   newcomerFollowUp,
+  personName,
   publicNames,
   reflectionSentence,
   suggestedAudience,
@@ -727,7 +728,7 @@ export async function publicView(payload: Payload, slug: string) {
   const nameOf = new Map((users.docs as Doc[]).map((user) => [user.id, text(user.name)]))
   const full = rsvps
     .filter((item) => item.status === 'going')
-    .map((item) => text(item.guestName) || nameOf.get(idOf(item.user) || 0) || 'Guest')
+    .map((item) => personName(nameOf.get(idOf(item.user) || 0) || '', text(item.guestName)))
   const card = cardFrom(row, rsvps, [], null, now())
   const code = portalId ? await learnerAccessCode(payload, portalId) : ''
   return {
@@ -801,7 +802,7 @@ export async function attendanceReport(payload: Payload, portalId: number) {
     }))
   const unwelcomed = checkins.filter((row) => row.newcomer === true && row.welcomed !== true && idOf(row.user))
   const followUp = newcomerFollowUp(unwelcomed.length)
-  const followNames = unwelcomed.map((row) => nameOf.get(idOf(row.user) || 0) || 'A learner')
+  const followNames = publicNames(unwelcomed.map((row) => nameOf.get(idOf(row.user) || 0) || 'A learner'))
   return { cards, series, brought, followUp, followNames, newcomers: checkins.filter((row) => row.newcomer === true).length, regulars: checkins.filter((row) => row.newcomer !== true).length }
 }
 

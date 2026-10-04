@@ -28,7 +28,7 @@ export default async function CheckInPage({ params, searchParams }: { params: Pr
         {welcomed ? (
           <section className="gather-card welcome-card" data-testid="welcome-in">
             <h2>You’re in. Welcome.</h2>
-            <Link className="pill gold" href={reflect}>One thing you’ll carry</Link>
+            <Link className="pill gold" href={reflect} data-testid="reflect-open">Write one thing you’ll carry</Link>
           </section>
         ) : (
           <section className="gather-card door-checkin" data-testid="door-checkin">

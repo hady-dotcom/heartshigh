@@ -59,4 +59,12 @@ test('demo:gather writes only hearts-demo, and a second run does not duplicate',
   assert.ok(rsvps.docs.length >= 8)
   const leaked = await payload.find({ collection: 'gather-rsvps', overrideAccess: true, depth: 0, limit: 5, where: { and: [{ user: { equals: learner.id } }, { portal: { not_equals: demo.id } }] } })
   assert.equal(leaked.docs.length, 0)
+  const checkins = await payload.find({ collection: 'gather-checkins', overrideAccess: true, depth: 0, limit: 400, where: { portal: { equals: demo.id } } })
+  const perNight = new Map<number, number>()
+  for (const row of checkins.docs) {
+    const gathering = Number((row as { gathering?: number }).gathering)
+    perNight.set(gathering, (perNight.get(gathering) || 0) + 1)
+  }
+  const heights = [...perNight.values()]
+  assert.ok(new Set(heights).size >= 6, `attendance nights should differ, got ${heights.join(',')}`)
 })

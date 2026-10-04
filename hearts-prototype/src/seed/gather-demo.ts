@@ -47,7 +47,34 @@ const BRINGERS = [
   { email: 'gather-khadija@hearts.foundation', name: 'Khadija Omar' },
 ]
 
-const GUESTS = ['Idris', 'Sara', 'Hamza', 'Omar', 'Fatima', 'Bilal', 'Zayd', 'Hana', 'Noor', 'Adam', 'Leila', 'Yusuf', 'Maryam', 'Khalid']
+const GUESTS = [
+  'Idris Rahman',
+  'Sara Begum',
+  'Hamza Ali',
+  'Omar Farooq',
+  'Fatima Shah',
+  'Bilal Malik',
+  'Zayd Qureshi',
+  'Hana Karim',
+  'Noor Hassan',
+  'Adam Osman',
+  'Leila Ahmed',
+  'Sami Rahman',
+  'Khalid Saleh',
+  'Rania Farooq',
+]
+
+/** Extra regulars on each past night, so the attendance bars are not one height. */
+const EXTRA_REGULARS = [2, 6, 3, 8, 4, 11, 5, 9]
+
+function guestFor(planIndex: number, bringerName: string) {
+  const taken = new Set(['Amina', 'Yusuf', bringerName.split(/\s+/)[0] || ''])
+  for (let step = 0; step < GUESTS.length; step += 1) {
+    const name = GUESTS[(planIndex + step) % GUESTS.length]
+    if (!taken.has(name.split(/\s+/)[0] || '')) return name
+  }
+  return GUESTS[planIndex % GUESTS.length]
+}
 
 function at(days: number) {
   const date = new Date()
@@ -151,9 +178,10 @@ export async function seedGatherDemo(payload: Payload) {
     }
     const past = item.days < 0
     const bringer = bringers[planIndex % bringers.length]
-    const guestName = GUESTS[planIndex % GUESTS.length]
+    const guestName = guestFor(planIndex, bringer?.name || '')
+    const guestSlug = guestName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
     const guests = [
-      { key: `${item.seedKey}-brought`, name: guestName, contact: `${guestName.toLowerCase()}.${item.seedKey}@example.net`, status: 'going' as const, broughtBy: bringer?.id },
+      { key: `${item.seedKey}-brought`, name: guestName, contact: `${guestSlug}.${item.seedKey}@example.net`, status: 'going' as const, broughtBy: bringer?.id },
     ]
     for (const [index, learner] of learners.entries()) {
       const seedKey = `${item.seedKey}-user-${learner.id}`
@@ -232,6 +260,26 @@ export async function seedGatherDemo(payload: Payload) {
             } as never,
           })
         }
+      }
+    }
+    if (past) {
+      const pastIndex = PLAN.slice(0, planIndex + 1).filter((row) => row.days < 0).length - 1
+      const extra = EXTRA_REGULARS[pastIndex] || 0
+      for (let n = 0; n < extra; n += 1) {
+        const checkKey = `${item.seedKey}-extra-${n}`
+        if (await one(payload, 'gather-checkins', { and: [{ seedKey: { equals: checkKey } }, { portal: { equals: portalId } }] })) continue
+        await payload.create({
+          collection: 'gather-checkins',
+          overrideAccess: true,
+          data: {
+            gathering: row.id,
+            method: 'host',
+            newcomer: false,
+            guestLabel: 'Regular',
+            seedKey: checkKey,
+            portal: portalId,
+          } as never,
+        })
       }
     }
     if (past && bringer) {

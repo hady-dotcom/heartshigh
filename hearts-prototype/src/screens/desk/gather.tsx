@@ -152,6 +152,7 @@ export async function GatherAttendanceScreen(ctx: Ctx) {
               <div className="chart" data-testid="attendance-bars" style={{ gridTemplateColumns: `repeat(${Math.max(report.series.slice(-8).length, 1)}, minmax(0, 1fr))` }}>
                 {report.series.slice(-8).map((point) => (
                   <div className="col" key={`${point.title}-${point.label}`}>
+                    <span className="bar-count" data-testid="bar-count">{point.checkedIn}</span>
                     <div className="slot" title={`${point.title}: ${point.checkedIn}`}>
                       <i className="new" style={{ height: `${Math.round((point.newcomers / max) * 100)}%` }} />
                       <i style={{ height: `${Math.round((point.regulars / max) * 100)}%` }} />

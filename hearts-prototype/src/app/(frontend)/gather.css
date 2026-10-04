@@ -106,7 +106,20 @@ html[data-theme] .public-gather input.field, html[data-theme] .gather-card input
   width: 100%;
 }
 html[data-theme] .public-gather .field::placeholder,
-html[data-theme] .gather-card .field::placeholder { color: #3a4e48; }
+html[data-theme] .gather-card .field::placeholder { color: #3a4e48; opacity: 1; }
+/* Beat a later theme rule on .app textarea.field, which otherwise paints a dark field and a dark placeholder. */
+html[data-theme] .app.gather-shell .gather-card textarea.field,
+html[data-theme] .app.gather-shell form.gather-card textarea.field {
+  background: #fbf6e8;
+  color: #0f3b3a;
+  border: 1.5px solid #14564c;
+  width: 100%;
+}
+html[data-theme] .app.gather-shell .gather-card textarea.field::placeholder,
+html[data-theme] .app.gather-shell form.gather-card textarea.field::placeholder {
+  color: #3a4e48;
+  opacity: 1;
+}
 .gather-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .gather-actions form { margin: 0; }
 .gather-meta { display: grid; gap: 6px; margin: 8px 0 0; font-size: 15px; line-height: 1.45; }
@@ -252,7 +265,9 @@ html[data-theme] .gather-card .field::placeholder { color: #3a4e48; }
 .attendance-legend i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; margin-right: 6px; vertical-align: -2px; }
 .attendance-legend i.gold { background: var(--g-gold); }
 .attendance-legend i.teal { background: #0f3b3a; }
-.desk.evening .chart { height: 180px; }
+.desk.evening .chart { height: 220px; }
+.desk.evening [data-testid="attendance-bars"] .col { grid-template-rows: auto minmax(0, 1fr) auto; }
+.desk.evening .chart .bar-count { text-align: center; font-size: 13px; font-weight: 700; color: #0f3b3a; line-height: 1.2; }
 .desk.evening .chart .col small { color: #0f3b3a; font-size: 12px; line-height: 1.25; white-space: normal; }
 
 .door-qr { display: grid; place-items: center; background: #fff; border-radius: 18px; padding: 16px; margin: 12px 0; }
@@ -310,10 +325,38 @@ html[data-theme] .desk.evening textarea {
 
 .clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .gather-more { margin-top: 12px; }
-.gather-more summary { cursor: pointer; font-weight: 700; }
+.gather-more summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.3;
+  list-style: none;
+  white-space: nowrap;
+}
+.gather-more summary::-webkit-details-marker { display: none; }
+.gather-more summary .chevron {
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  flex: none;
+}
+.gather-more[open] summary .chevron { transform: rotate(45deg); }
 .gather-card .gather-more summary { color: var(--g-heading); }
 .public-gather .gather-more summary { color: var(--g-ink); }
-.gather-more textarea { width: 100%; min-height: 120px; margin-top: 8px; }
+.cross-box { display: grid; gap: 8px; margin-top: 10px; }
+.cross-box textarea {
+  width: 100%;
+  min-height: 96px;
+  max-height: 160px;
+  overflow: auto;
+  resize: none;
+  white-space: pre-wrap;
+}
 .gather-door { margin: 18px 0 8px; }
 .gather-door h2 { font-size: 22px; margin: 0 0 8px; }
 .share-box textarea { width: 100%; min-height: 140px; border-radius: 14px; padding: 12px; }

@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation'
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
 import { CopyLink } from '@/components/app/copy-link'
 import { Qr } from '@/components/qr'
-import { GATHER_KINDS, KIND_LABEL, afterTalkLine, publicNames, relatedGatherings, taskWantsCompany, type TaskRef } from '@/lib/gather'
+import { GATHER_KINDS, KIND_LABEL, afterTalkLine, personName, publicNames, relatedGatherings, taskWantsCompany, type TaskRef } from '@/lib/gather'
+import { CrossPost } from '@/components/gather/cross-post'
 import { doorLabel } from '@/lib/doors'
 import { now } from '@/lib/clock'
 import { loadDoors } from '@/server/doors'
@@ -85,7 +86,7 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
   const userIds = going.map((row) => ref(row.user)).filter((value): value is number => Boolean(value))
   const people = userIds.length ? await rows(payload, 'users', { id: { in: userIds } }) : []
   const nameOf = new Map(people.map((person) => [person.id, str(person.name)]))
-  const full = going.map((row) => str(row.guestName) || nameOf.get(ref(row.user) || 0) || 'Guest')
+  const full = going.map((row) => personName(nameOf.get(ref(row.user) || 0) || '', str(row.guestName)))
   const shown = publicNames(full)
   const checked = checkins.some((row) => ref(row.gathering) === id && ref(row.user) === user.id)
   const share = sharePack(origin, card, '')
@@ -149,10 +150,7 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
             <Qr value={personal} testId="bring-qr" />
             <p style={{ margin: '8px 0 0', textAlign: 'center' }}>They can scan this to open the invite.</p>
           </div>
-          <details className="gather-more">
-            <summary>Wording for Meetup, Eventbrite or Facebook</summary>
-            <textarea className="field" readOnly data-testid="cross-post" value={share.crossPost} />
-          </details>
+          <CrossPost text={share.crossPost} testId="cross-post" />
         </section>
         {card.prompts.length ? (
           <section className="gather-card" data-testid="gather-prompts">
@@ -179,7 +177,7 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
         {checked ? (
           <section className="gather-card welcome-card" data-testid="checked-in">
             <h3 style={{ marginTop: 0 }} data-testid="welcome-in">You’re in. Welcome.</h3>
-            {reflection ? <p data-testid="reflection-saved">{str(reflection.body)}</p> : <Link className="pill gold small" href={`${base}/gather/${id}/reflect`} data-testid="reflect-open">One thing you’ll carry</Link>}
+            {reflection ? <p data-testid="reflection-saved">{str(reflection.body)}</p> : <Link className="pill gold small" href={`${base}/gather/${id}/reflect`} data-testid="reflect-open">Write one thing you’ll carry</Link>}
           </section>
         ) : card.status === 'published' && !card.past ? (
           <section className="gather-card door-checkin" data-testid="door-checkin">

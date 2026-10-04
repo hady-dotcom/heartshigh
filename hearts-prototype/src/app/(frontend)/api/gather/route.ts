@@ -179,7 +179,7 @@ export async function POST(req: Request) {
     if (!row) return redirectTo(req, next, 'That gathering could not be found.')
     const result = await saveReflection(payload, row, user, text(form, 'body'))
     if (!result.ok) return redirectTo(req, next, result.error)
-    return redirectTo(req, next, undefined, 'Kept. It will be in your harvest and your garden.')
+    return redirectTo(req, next, undefined, 'Saved. You’ll find it in your harvest.')
   }
 
   if (action === 'photo') {

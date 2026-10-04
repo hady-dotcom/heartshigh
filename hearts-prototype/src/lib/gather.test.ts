@@ -23,6 +23,7 @@ import {
   linkLabel,
   londonIso,
   newcomerFollowUp,
+  personName,
   publicNames,
   reflectionSentence,
   relatedGatherings,
@@ -70,6 +71,9 @@ test('the earliest waitlist place is the one that moves up', () => {
 test('public pages show a first name, or a first name and initial when two share it', () => {
   assert.deepEqual(publicNames(['Amina Yusuf', 'Idris']), ['Amina', 'Idris'])
   assert.deepEqual(publicNames(['Amina Yusuf', 'Amina Khan']), ['Amina Y.', 'Amina K.'])
+  assert.deepEqual(publicNames(['Layla Noor', 'Layla Saleh']), ['Layla N.', 'Layla S.'])
+  assert.equal(personName('Layla Saleh', 'Layla'), 'Layla Saleh')
+  assert.equal(personName('', 'Idris Rahman'), 'Idris Rahman')
 })
 
 test('a bring-a-friend token points back at the learner who shared it', () => {
