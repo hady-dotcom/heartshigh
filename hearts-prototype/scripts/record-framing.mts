@@ -59,7 +59,8 @@ async function main() {
       await page.evaluate(`window.__frClock.set(${t})`)
       await page.waitForTimeout(450)
       const mode = await page.getAttribute('[data-testid="framing-player"]', 'data-framing-mode')
-      const shown = await page.getAttribute('[data-testid="spoken-words"]', 'data-sentence')
+      const words = page.getByTestId('spoken-words')
+      const shown = (await words.count()) ? await words.getAttribute('data-sentence') : null
       console.log(clip.slug, 't', t, 'mode', mode, shown ? `words=${shown.slice(0, 48)}` : '')
       const file = path.join(dir, `frame-${i}.png`)
       await page.screenshot({ path: file, type: 'png' })
