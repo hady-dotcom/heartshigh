@@ -45,6 +45,14 @@ test('the monthly look is five questions and a life check-in', async ({ page }) 
   await expect(page.getByTestId('month-scene')).toHaveCount(1)
   for (let index = 0; index < 5; index += 1) {
     await expect(page.getByTestId('progress')).toHaveText(`${index + 1} of 5`)
+    if (index === 0) {
+      const label = await page.getByTestId('progress').boundingBox()
+      const bar = await page.locator('.progress-line').boundingBox()
+      expect(label).toBeTruthy()
+      expect(bar).toBeTruthy()
+      expect(label!.x).toBeGreaterThan(bar!.x + bar!.width - 8)
+      expect(label!.height).toBeGreaterThan(10)
+    }
     await page.getByTestId('month-scene').locator('input[type="radio"]').nth(1).check()
   }
   await expect(page.getByTestId('life-check')).toContainText('Someone I love has gone')
@@ -56,6 +64,33 @@ test('the monthly look is five questions and a life check-in', async ({ page }) 
   await expect(page.getByTestId('focus-line')).toContainText('Focusing on')
   const text = await page.getByTestId('learner-path').innerText()
   expect(text.toLowerCase()).not.toMatch(/greedy|persona|score|deficit/)
+  const overlaps = await page.getByTestId('learner-path').evaluate((root) => {
+    const nodes = [...root.querySelectorAll('h1, .lead, .eyebrow, .card, [data-testid="next-step"], [data-testid="soft-area"], [data-testid="focus-line"]')]
+    const boxes = nodes.map((el) => {
+      const rect = el.getBoundingClientRect()
+      return { el, text: (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 48), top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right }
+    }).filter((box) => box.bottom - box.top > 2 && box.right - box.left > 2)
+    const hits: string[] = []
+    for (let i = 0; i < boxes.length; i += 1) {
+      for (let j = i + 1; j < boxes.length; j += 1) {
+        const a = boxes[i]
+        const b = boxes[j]
+        if (a.el.contains(b.el) || b.el.contains(a.el)) continue
+        const crossing = a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1
+        if (crossing) hits.push(`${a.text} ∩ ${b.text}`)
+      }
+    }
+    return hits
+  })
+  expect(overlaps).toEqual([])
+  const steps = page.getByTestId('next-step')
+  const stepCount = await steps.count()
+  for (let index = 0; index < stepCount; index += 1) {
+    const display = await steps.nth(index).evaluate((el) => getComputedStyle(el).display)
+    const decoration = await steps.nth(index).evaluate((el) => getComputedStyle(el).textDecorationLine)
+    expect(display).toBe('flex')
+    expect(decoration).not.toContain('underline')
+  }
 })
 
 test('an imam sees the charts, the cohort, and why a talk was chosen', async ({ page }) => {

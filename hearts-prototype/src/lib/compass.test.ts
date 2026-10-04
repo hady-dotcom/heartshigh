@@ -40,7 +40,7 @@ test('learner copy, monthly wording and the life check pass the kill list', () =
     ...DEFAULT_COPY.places.flatMap((place) => [[place.key, place.label], [`${place.key} forward`, place.forward]] as [string, string][]),
     ...LIFE_OPTIONS.map((option) => [option.key, option.label] as [string, string]),
     ...Object.values(FOCUS_NAMES).map((name) => ['focus', name] as [string, string]),
-    ...Object.values(LEARNER_VOICE).flatMap((voice) => [['voice', voice.line], ['step', voice.step]] as [string, string][]),
+    ...Object.values(LEARNER_VOICE).flatMap((voice) => [['voice', voice.line], ['step', voice.step], ['action', voice.action]] as [string, string][]),
   ]
   for (const [key, wording] of Object.entries(MONTH_WORDING)) {
     const scene = SCENES.find((row) => row.key === key)
@@ -78,6 +78,12 @@ test('the soft summary has warm words and no raw scores', () => {
   assert.equal(summary.areas.length, 2)
   assert.equal(summary.areas.every((area) => area.place == null), true)
   assert.equal(summary.steps.length, 2)
+  assert.equal(summary.steps[0]?.title, 'A short talk on thankfulness')
+  assert.equal(summary.steps[0]?.tone, 'talk')
+  assert.equal(summary.steps[0]?.clip, 'Full talk')
+  assert.equal(summary.steps[1]?.tone, 'action')
+  assert.match(summary.steps[1]?.title || '', /^This week:/)
+  assert.equal(summary.areas.some((area) => area.area === summary.steps[1]?.title), false)
   assert.equal(summary.talks[0]?.title, 'A short talk on thankfulness')
   assert.equal(summary.movement.length, 0)
   const lines = summary.areas.map((area) => area.forward)

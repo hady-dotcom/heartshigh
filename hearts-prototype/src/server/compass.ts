@@ -5,6 +5,7 @@ import { applyMonth, formById, formForRound, LIFE_EVENTS, LIFE_NOTE_MAX, lifeByK
 import { DEFAULT_COPY, FOCUS_NAMES, LIFE_OPTIONS, LIFE_PROMPT, type CompassCopy, type LifeOption, type PlaceCopy } from '@/lib/compass-data'
 import { DEFAULT_MIX, normaliseMix, rankFeed, SCALE_DOOR, type FeedCandidate, type FeedKind, type Mix } from '@/lib/compass-feed'
 import { doorNumberOfClause } from '@/lib/doors'
+import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { freshState, replayTaps, SCALE_KEYS, type ScaleDef, type ScaleKey, type SceneDef } from '@/lib/heart'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { bandFromRow, nearestPersona, toRung, type PersonaBand } from '@/lib/persona'
@@ -178,7 +179,7 @@ async function watchedBy(payload: Payload, userIds: number[]) {
     : []
   const lessonIds = [...new Set(completions.map((row) => idOf(row.lesson)).filter((id): id is number => Boolean(id)))]
   const lessons = lessonIds.length ? ((await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: lessonIds.length, where: { id: { in: lessonIds } } })).docs as unknown as Row[]) : []
-  const titleOf = new Map(lessons.map((row) => [row.id, String(row.title || 'A talk')]))
+  const titleOf = new Map(lessons.map((row) => [row.id, tidyTalkTitle(String(row.title || '')) || 'A talk']))
   const cuts = lessonIds.length ? ((await payload.find({ collection: 'cuts', overrideAccess: true, depth: 0, limit: 1000, where: { lesson: { in: lessonIds } } })).docs as unknown as Row[]) : []
   const cutLesson = new Map(cuts.map((row) => [row.id, idOf(row.lesson)]))
   const tags = (await payload.find({ collection: 'tags', overrideAccess: true, depth: 0, limit: 2000 })).docs as unknown as Row[]
@@ -263,6 +264,7 @@ async function talksFor(payload: Payload, slug: string, portalId: number | null)
   const courses = [...new Set([...courseIds, ...lessonCourseIds])]
   const courseRows = courses.length ? ((await payload.find({ collection: 'courses', overrideAccess: true, depth: 0, limit: courses.length, where: { id: { in: courses } } })).docs as unknown as Row[]) : []
   const coursePortal = new Map(courseRows.map((row) => [row.id, idOf(row.portal)]))
+  const courseTitle = new Map(courseRows.map((row) => [row.id, String(row.title || '')]))
   const here = (local: number | null) => !local || local === portalId
   const visibleLessons = new Map(lessons.filter((row) => here(idOf(row.portal) || coursePortal.get(idOf(row.course) || 0) || null)).map((row) => [row.id, row]))
   const visibleCourses = new Map(courseRows.filter((row) => courseIds.has(row.id) && here(idOf(row.portal))).map((row) => [row.id, row]))
@@ -291,7 +293,7 @@ async function talksFor(payload: Payload, slug: string, portalId: number | null)
     const lesson = visibleLessons.get(lessonId)!
     const strongestLane = laneKeyByScale.get(scale)
     const href = strongestLane ? `/p/${slug}/feed?lane=${strongestLane}` : `/p/${slug}/lanes`
-    const row = ensure(`lesson:${lessonId}`, String(lesson.title || 'A talk'), href, kindOf(typeof lesson.durationSeconds === 'number' ? lesson.durationSeconds : null, 'lessons'))
+    const row = ensure(`lesson:${lessonId}`, partTitle(lesson, courseTitle.get(idOf(lesson.course) || 0)) || 'A talk', href, kindOf(typeof lesson.durationSeconds === 'number' ? lesson.durationSeconds : null, 'lessons'))
     row.scales.set(scale, Math.max(row.scales.get(scale) || 0, weight))
     if (door && !row.door) row.door = door
   }
@@ -388,7 +390,7 @@ export async function learnerPath(payload: Payload, userId: number, slug: string
   const { attempts, ranked, mix, portalId, talks } = shelf
   const latest = attempts.at(-1)
   const previous = attempts.length > 1 ? attempts[attempts.length - 2] : null
-  const ordered = talks.map((talk) => ({ title: talk.title, href: talk.href, scales: talk.scales }))
+  const ordered = talks.map((talk) => ({ title: talk.title, href: talk.href, scales: talk.scales, kind: talk.kind }))
   const summary = summarise({ copy, now: areasOf(latest, index.focus), before: areasOf(previous || undefined, index.focus), talks: ordered })
   summary.talks = ranked.filter((talk) => !rawScoreLeak({ title: talk.title, href: talk.href })).map((talk) => ({ title: talk.title, href: talk.href }))
   if (portalId && ranked.length) await rememberServes(payload, userId, portalId, ranked, mix)
@@ -512,7 +514,7 @@ export async function staffLearner(payload: Payload, actor: SessionUser, learner
       if (lessonId && idOf(item.lesson) === lessonId) return true
       return false
     })
-    return { at: new Date(at).toISOString(), title: String(row.title || 'A talk'), kind: String(row.kind || 'talk'), why: String(row.why || ''), engaged }
+    return { at: new Date(at).toISOString(), title: tidyTalkTitle(String(row.title || '')) || 'A talk', kind: String(row.kind || 'talk'), why: String(row.why || ''), engaged }
   })
   const portal = await payload.findByID({ collection: 'portals', id: portalId, overrideAccess: true, depth: 0 }).catch(() => null)
   const shelf = portal ? await shelfFor(payload, learner.id, String((portal as { slug?: string }).slug || '')) : null

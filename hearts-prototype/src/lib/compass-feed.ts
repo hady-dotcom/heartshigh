@@ -85,13 +85,21 @@ export function quotas(take: number, mix?: Partial<Mix> | null) {
   return { deficit, strength, discovery }
 }
 
-/** "Door 7, Fasting Ramadan". A missing door is left out, never "Door X". */
+/** "Door 15 (Qadar: good and evil)". A colon keeps the short name. A comma becomes a colon so the list does not run together. A missing door is left out, never "Door X". */
 export function doorPhrase(number: number) {
   if (!Number.isInteger(number) || number < 1) return ''
   const door = doorByNumber(number)
   if (!door) return ''
-  const title = door.title.split(':')[0].trim()
-  return title ? `Door ${number}, ${title}` : ''
+  const name = doorName(door.title)
+  return name ? `Door ${number} (${name})` : ''
+}
+
+function doorName(title: string) {
+  const colon = title.indexOf(':')
+  if (colon > 0) return title.slice(0, colon).trim()
+  const comma = title.indexOf(',')
+  if (comma > 0) return `${title.slice(0, comma).trim()}: ${title.slice(comma + 1).trim()}`
+  return title.trim()
 }
 
 /** Jan … Sep. en-GB short months say "Sept", which clashes with May and Jun. */
@@ -191,10 +199,17 @@ export function tidyDesk(why: string) {
     .trim()
 }
 
-/** Turns a stored working code into the door a person can teach. */
+/** Turns a stored working code, or an older "Door 15, Qadar, good and evil", into the door a person can teach. */
 export function plainWhy(why: string) {
   const named = why.replace(/\bW(\d{1,2})\b/g, (_, number: string) => doorPhrase(Number(number)))
-  return tidyDesk(named)
+  const refreshed = named.replace(/\bDoor (\d{1,2}),\s*[^.]*/g, (full, number: string) => {
+    const phrase = doorPhrase(Number(number))
+    if (!phrase) return full
+    const rest = full.replace(new RegExp(`^Door ${number},\\s*`), '')
+    const tail = rest.match(/\btalks\b[\s\S]*$/)
+    return tail ? `${phrase} ${tail[0]}` : phrase
+  })
+  return tidyDesk(refreshed)
 }
 
 /** One row per talk. Clip kinds sit together instead of repeating the title. */

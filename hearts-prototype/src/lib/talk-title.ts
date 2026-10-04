@@ -1,7 +1,16 @@
 /**
  * A title a learner can read. Slugs, file names and video ids are not titles.
  * When neither the source title nor the stored title is a real sentence, the course name and part number stand in.
+ * A YouTube upload often appends "| Prophetic Dua | Shaykh …". That suffix is the channel, not the talk.
  */
+
+/** Drops a "| channel, series" suffix. A title with no pipe is left as it is. */
+export function tidyTalkTitle(raw: string) {
+  const text = raw.replace(/\s+/g, ' ').trim()
+  const pipe = text.indexOf('|')
+  if (pipe <= 0) return text
+  return text.slice(0, pipe).replace(/\s+/g, ' ').trim() || text
+}
 
 export function displayTalkTitle(input: {
   title?: string | null
@@ -16,7 +25,7 @@ export function displayTalkTitle(input: {
   const fallback = course ? `${course} · Part ${part}` : `Part ${part}`
   const ids = new Set([input.youtubeId, input.vimeoId].map((value) => (value || '').trim()).filter(Boolean))
   for (const raw of [input.title, input.sourceTitle]) {
-    const text = (raw || '').replace(/\s+/g, ' ').trim()
+    const text = tidyTalkTitle(raw || '')
     if (!text || isMachineTitle(text, ids)) continue
     return text
   }

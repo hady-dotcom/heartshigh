@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { combineServes, compassDate, kindLabel, monthShort, plainWhy, teachDoors, teachLine } from '@/lib/compass-feed'
+import { tidyTalkTitle } from '@/lib/talk-title'
 import { SCALE_KEYS, type ScaleKey } from '@/lib/heart'
 import { staffLearner, staffPortal } from '@/server/compass'
 import { type Ctx } from '../common'
@@ -113,7 +114,7 @@ export async function PortalCompassScreen(ctx: Ctx) {
                     <td><b>{scale.name}</b></td>
                     <td className="num" data-testid="mean-then">{signed(scale.meanThen)}</td>
                     <td className="num" data-testid="mean-now">{signed(scale.meanNow)}</td>
-                    <td data-testid="helped-by">{scale.helpedBy.length ? scale.helpedBy.map((item) => `${item.title} (${item.lifts})`).join(', ') : '—'}</td>
+                    <td data-testid="helped-by">{scale.helpedBy.length ? scale.helpedBy.map((item) => `${tidyTalkTitle(item.title)} (${item.lifts})`).join(', ') : '—'}</td>
                     <td className="num">{scale.learners}</td>
                   </tr>
                 ))}
@@ -241,7 +242,7 @@ export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
         <div className="body" style={{ display: 'grid', gap: 10 }}>
           {detail.whyNow.map((row) => (
             <article key={row.title + row.why} data-testid="why-talk">
-              <b>{row.title}</b> <span className="chip">{kindLabel(row.kind)}</span>
+              <b>{tidyTalkTitle(row.title)}</b> <span className="chip">{kindLabel(row.kind)}</span>
               <div>{plainWhy(row.why)}</div>
             </article>
           ))}
@@ -251,7 +252,7 @@ export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
       <section className="panel" style={{ marginBottom: 18 }} data-testid="feed-pushed">
         <header><h2>What the feed has put forward</h2></header>
         <div className="body" style={{ display: 'grid', gap: 10 }}>
-          {combineServes(detail.serves).map((row) => (
+          {combineServes(detail.serves.map((row) => ({ ...row, title: tidyTalkTitle(row.title) }))).map((row) => (
             <article key={row.title} data-testid="serve-row">
               <b>{row.title}</b> {row.kinds.map((kind) => <span key={kind} className="chip">{kindLabel(kind)}</span>)} <span className="chip">{row.engaged ? 'Watched' : 'Not yet'}</span>
               <div className="hint">{compassDate(row.at)}. {plainWhy(row.why)}</div>
@@ -266,7 +267,7 @@ export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
           {detail.attribution.map((row) => (
             <article key={`${row.scale}-${row.from}-${row.to}`} data-testid="attribution-row" data-scale={row.scale}>
               <b>{row.name}</b> moved from {signed(row.from)} to {signed(row.to)}.
-              <div className="hint">{row.talks.length ? `Watched in that area: ${row.talks.join(', ')}` : 'No tagged talk in that area between these looks.'}</div>
+              <div className="hint">{row.talks.length ? `Watched in that area: ${row.talks.map((title) => tidyTalkTitle(title)).join(', ')}` : 'No tagged talk in that area between these looks.'}</div>
             </article>
           ))}
           {!detail.attribution.length ? <p>One look so far, so there is no change to set beside a talk.</p> : null}

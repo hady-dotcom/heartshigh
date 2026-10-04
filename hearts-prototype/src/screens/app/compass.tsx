@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { MonthLook } from '@/components/app/month-look'
 import { AppFrame, Back, Flash, TabBar } from '@/components/app/shell'
+import { LeafIcon, PlayIcon } from '@/components/icons'
 import { LIFE_EVENTS } from '@/lib/compass-bank'
 import { learnerPath, monthMoments, recalibrationDueFor } from '@/server/compass'
 import { type Ctx } from '../common'
@@ -22,11 +23,23 @@ export async function LearnerPathScreen({ payload, user, portal, base, query }: 
           </article>
         ))}
         {summary.steps.length ? <p className="eyebrow">Next steps</p> : null}
-        {summary.steps.map((step) => step.href ? (
-          <Link key={step.title} className="card next-step" href={step.href} data-testid="next-step"><b>{step.title}.</b> {step.detail}</Link>
-        ) : (
-          <p key={step.title} className="card" data-testid="next-step"><b>{step.title}.</b> {step.detail}</p>
-        ))}
+        {summary.steps.map((step) => {
+          const body = (
+            <>
+              <span className="step-mark" aria-hidden="true">{step.tone === 'talk' ? <PlayIcon size={14} /> : <LeafIcon size={16} />}</span>
+              <span className="step-copy">
+                <b>{step.title}</b>
+                {step.detail ? <span className="step-detail">{step.detail}</span> : null}
+                {step.clip ? <span className="chip">{step.clip}</span> : null}
+              </span>
+            </>
+          )
+          return step.href ? (
+            <Link key={step.title} className="card next-step" href={step.href} data-testid="next-step" data-tone={step.tone}>{body}</Link>
+          ) : (
+            <div key={step.title} className="card next-step" data-testid="next-step" data-tone={step.tone}>{body}</div>
+          )
+        })}
         {!summary.areas.length ? <p className="card" data-testid="path-empty">When you have sat with the opening, a few next steps will be here.</p> : null}
       </div>
       <TabBar base={base} active="me" unread={0} />

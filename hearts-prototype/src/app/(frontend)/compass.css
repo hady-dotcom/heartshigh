@@ -42,7 +42,45 @@
 }
 .app[data-testid="learner-path"] .eyebrow,
 .app[data-testid="recalibrate"] .eyebrow {
+  display: block;
+  position: static;
   color: #D4A84B;
+  margin: 22px 0 0;
+}
+.app[data-testid="learner-path"] a.next-step,
+.app[data-testid="learner-path"] .next-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  position: static;
+  text-decoration: none;
+  color: #F4EBD4;
+}
+.app[data-testid="learner-path"] .step-mark {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #0E2A2B;
+  color: #D4A84B;
+}
+.app[data-testid="learner-path"] .step-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+.app[data-testid="learner-path"] .step-copy b {
+  font-size: 16px;
+  line-height: 1.35;
+}
+.app[data-testid="learner-path"] .step-detail {
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: #E7DCC8;
 }
 .app[data-testid="learner-path"] .card,
 .app[data-testid="recalibrate"] .card {
@@ -152,11 +190,36 @@
   color: #1A1408;
 }
 .month-look { padding-bottom: 24px; }
-.month-progress { margin: 2px 0 12px; }
-.month-card { animation: month-slide 350ms ease; }
-.month-card.back { animation-name: month-slide-back; }
-.progress { margin: 0 0 8px; color: #F1D58A; font-size: 15px; font-weight: 700; letter-spacing: 0.08em; }
-.progress-line { display: block; height: 5px; border-radius: 99px; background: rgba(212, 168, 75, 0.28); margin: 0; overflow: hidden; }
+.month-progress { display: flex; align-items: center; gap: 10px; margin: 2px 0 12px; }
+.month-stage { position: relative; margin-top: 12px; }
+.app[data-testid="recalibrate"] .month-stage > fieldset.month-card { margin: 0; }
+.month-card { animation: month-enter 350ms ease; }
+.month-card.back { animation-name: month-enter-back; }
+.month-card.leave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  margin: 0;
+  animation: month-exit 350ms ease forwards;
+  pointer-events: none;
+  z-index: 2;
+}
+.month-card.leave.back { animation-name: month-exit-back; }
+.app[data-testid="recalibrate"] .month-progress .progress {
+  height: auto;
+  width: auto;
+  overflow: visible;
+  margin: 0;
+  background: none;
+  color: #F6EEDC;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.progress-line { flex: 1; display: block; height: 5px; border-radius: 99px; background: rgba(212, 168, 75, 0.28); margin: 0; overflow: hidden; }
 .progress-line i { display: block; height: 100%; background: #D4A84B; }
 button.month-back {
   display: inline-flex;
@@ -174,16 +237,20 @@ button.month-back {
   color: #F6E7C1;
 }
 .app[data-testid="recalibrate"] .choice input { margin-top: 3px; accent-color: #D4A84B; }
-@keyframes month-slide { from { opacity: 0; transform: translateX(56px); } to { opacity: 1; transform: none; } }
-@keyframes month-slide-back { from { opacity: 0; transform: translateX(-56px); } to { opacity: 1; transform: none; } }
+@keyframes month-enter { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+@keyframes month-enter-back { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
+@keyframes month-exit { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(-40px); } }
+@keyframes month-exit-back { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(40px); } }
 .route-fade { animation: route-in 320ms ease; }
 @keyframes route-in { from { opacity: 0.35; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .desk-fade { animation: desk-fade 200ms ease; }
 @keyframes desk-fade { from { opacity: 0.45; } to { opacity: 1; } }
 /* Headless Chromium may prefer reduced motion. These moves stay, so a question change is still a slide. */
 @media (prefers-reduced-motion: reduce) {
-  .month-card { animation: month-slide 350ms ease; }
-  .month-card.back { animation-name: month-slide-back; }
+  .month-card { animation: month-enter 350ms ease; }
+  .month-card.back { animation-name: month-enter-back; }
+  .month-card.leave { animation: month-exit 350ms ease forwards; }
+  .month-card.leave.back { animation-name: month-exit-back; }
   .route-fade { animation: route-in 320ms ease; }
   .desk-fade { animation: desk-fade 200ms ease; }
 }

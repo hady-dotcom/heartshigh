@@ -281,7 +281,7 @@ async function main() {
       const serveKey = `${SLUG}:serve:${person.email}:${month}`
       const served = await one(payload, 'compass-serves', { demoKey: { equals: serveKey } })
       const lessonId = lessons.get(scale)
-      if (served && lessonId && /\bW\d+/.test(String(served.why || ''))) {
+      if (served && lessonId && String(served.why || '') !== whyDeficit(scale)) {
         await payload.update({
           collection: 'compass-serves',
           id: served.id,

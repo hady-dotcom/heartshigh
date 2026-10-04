@@ -5,6 +5,8 @@ import { SCALE_KEYS, type ScaleKey } from './heart'
 import { toRung } from './persona'
 import type { CompassCopy, Frame, PlaceCopy } from './compass-data'
 import { DEFAULT_COPY, LEARNER_VOICE } from './compass-data'
+import { kindLabel } from './compass-feed'
+import { tidyTalkTitle } from './talk-title'
 
 export type AreaReading = { scale: ScaleKey; focus: string; rung: number }
 
@@ -12,7 +14,7 @@ export type LearnerCompass = {
   kind: 'path'
   focusLine: string | null
   areas: { area: string; place: string | null; forward: string }[]
-  steps: { title: string; detail: string; href?: string }[]
+  steps: { title: string; detail: string; href?: string; tone: 'talk' | 'action'; clip?: string }[]
   talks: { title: string; href: string }[]
   movement: string[]
 }
@@ -83,7 +85,7 @@ export function summarise(input: {
   copy?: CompassCopy
   now: AreaReading[]
   before?: AreaReading[] | null
-  talks: { title: string; href: string; scales: SteerTag[] }[]
+  talks: { title: string; href: string; scales: SteerTag[]; kind?: string }[]
   frame?: Frame
 }): LearnerCompass {
   const copy = input.copy || DEFAULT_COPY
@@ -106,8 +108,8 @@ export function summarise(input: {
   const first = focusRows[0]
   const voice = first ? LEARNER_VOICE[first.scale] : null
   const matched = first ? talkForScale(first.scale, input.talks) : null
-  if (matched) steps.push({ title: matched.title, detail: 'Sit with this when you have a few minutes.', href: matched.href })
-  if (voice) steps.push({ title: voice.name, detail: voice.step })
+  if (matched) steps.push({ title: tidyTalkTitle(matched.title), detail: 'Sit with this when you have a few minutes.', href: matched.href, tone: 'talk', clip: kindLabel(matched.kind || 'talk') })
+  if (voice) steps.push({ title: voice.action, detail: '', tone: 'action' })
   return {
     kind: 'path',
     focusLine: showFocus ? focusLine(copy.focusLead, areas.map((area) => area.area)) : null,
@@ -119,7 +121,7 @@ export function summarise(input: {
 }
 
 /** A talk whose strongest tag is this scale, or failing that one that carries it at all. */
-function talkForScale(scale: ScaleKey, talks: { title: string; href: string; scales: SteerTag[] }[]) {
+function talkForScale(scale: ScaleKey, talks: { title: string; href: string; scales: SteerTag[]; kind?: string }[]) {
   const scored = talks
     .map((talk) => {
       const main = talk.scales.reduce((max, tag) => Math.max(max, tag.weight || 0), 0)
