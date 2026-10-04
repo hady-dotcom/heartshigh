@@ -117,9 +117,9 @@ test('buildTrack snaps the window, holds modes, and writes a valid track', () =>
 
 test('spoken lines wrap as word arrays so display spaces cannot collapse', () => {
   const lines = wrapWordLines('Uh I was speaking at a masid that had about 500 people in the audience.'.split(' '), 20)
-  assert.deepEqual(lines[0], ['Uh', 'I', 'was', 'speaking'])
-  assert.ok(lines.every((line) => line.join(' ').length <= 24))
-  assert.equal(lines.flat().join(' ').includes('Uh I was speaking'), true)
+  assert.deepEqual(lines[0], ['Uh', 'I', 'was', 'speaking', 'at'])
+  assert.ok(lines.every((line) => line.join(' ').length <= 20))
+  assert.equal(lines.flat().join(' '), 'Uh I was speaking at a masid that had about 500 people in the audience.')
 })
 
 test('the framing-mode experiment stub names both variants', () => {
