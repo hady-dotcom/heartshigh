@@ -33,6 +33,12 @@
   border: 1px solid #2F5C54;
   margin-top: 12px;
 }
+.app[data-testid="learner-path"] .card p,
+.app[data-testid="recalibrate"] .card p,
+.app[data-testid="learner-path"] .card b,
+.app[data-testid="learner-path"] [data-testid="movement"] {
+  color: #F4EBD4;
+}
 .app[data-testid="learner-path"] .focus-card {
   font-size: 18px;
   border-color: #D4A84B;
@@ -76,6 +82,9 @@
   font-weight: 700;
   padding: 0;
 }
+.app[data-testid="recalibrate"] input {
+  accent-color: #D4A84B;
+}
 .app[data-testid="recalibrate"] textarea {
   width: 100%;
   margin-top: 8px;
@@ -91,9 +100,10 @@
   margin-top: 12px;
 }
 .compass-learner { position: relative; }
+.compass-learner .app-head { padding-right: 80px; }
 .compass-learner .ivy {
   position: absolute;
-  top: 8px;
+  top: 14px;
   right: 8px;
   width: 72px;
   height: 110px;
@@ -116,6 +126,7 @@
   background: #0E2A2B;
   color: #F7EEDB;
   border-right-color: #0F3B3A;
+  z-index: 2;
 }
 .desk[data-testid="compass-portal"] .side a.nav,
 .desk[data-testid="compass-learner"] .side a.nav,
@@ -199,7 +210,22 @@
 .spark path { fill: none; stroke: #0F3B3A; stroke-width: 2; }
 .spark circle { fill: #D4A84B; stroke: #0F3B3A; }
 .spark-zero { stroke: #C4B089; stroke-dasharray: 3 3; }
-.timeline { margin: 0; display: grid; gap: 8px; }
+/* The course player already uses .timeline for a film scrub bar. These lists must stay in the card. */
+.desk[data-testid="compass-portal"] .timeline,
+.desk[data-testid="compass-learner"] .timeline {
+  position: static;
+  inset: auto;
+  z-index: auto;
+  height: auto;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.desk[data-testid="compass-portal"] .timeline li,
+.desk[data-testid="compass-learner"] .timeline li {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .timeline time { color: #0F3B3A; font-weight: 700; margin-right: 8px; }
 @media (max-width: 800px) {
   .cohort { grid-template-columns: 1fr; }

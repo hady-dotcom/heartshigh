@@ -73,28 +73,28 @@ test('the soft summary has warm words and no raw scores', () => {
     ],
   })
   assert.equal(rawScoreLeak(summary), null)
-  assert.equal(summary.focusLine, 'Focusing on: thankfulness')
+  assert.equal(summary.focusLine, 'Focusing on: Thankfulness')
   assert.equal(summary.areas.find((area) => area.area === 'patience')?.place, 'Steady')
   assert.equal(summary.areas.find((area) => area.area === 'thankfulness')?.place, 'Growing')
   assert.ok(summary.steps.length >= 2 && summary.steps.length <= 3)
   assert.equal(summary.talks[0]?.title, 'A short talk on thankfulness')
   assert.ok(summary.movement.some((line) => line === "You've grown in patience since last month."))
-  assert.ok(summary.movement.some((line) => line === 'thankfulness is holding steady.'))
+  assert.ok(summary.movement.some((line) => line === 'Thankfulness is holding steady.'))
 })
 
 test('the framing can be the focus line, the place words, or both', () => {
   const now = [{ scale: 'anger' as const, focus: 'patience', rung: -4 }]
   const talks: { title: string; href: string; scales: { scale: 'anger'; weight: number }[] }[] = []
   const both = summarise({ now, talks })
-  assert.equal(both.focusLine, 'Focusing on: patience')
+  assert.equal(both.focusLine, 'Focusing on: Patience')
   assert.equal(both.areas[0]?.place, 'Growing')
   const focusing = summarise({ now, talks, frame: 'focusing' })
-  assert.equal(focusing.focusLine, 'Focusing on: patience')
+  assert.equal(focusing.focusLine, 'Focusing on: Patience')
   assert.equal(focusing.areas[0]?.place, null)
   const places = summarise({ now, talks, frame: 'places', copy: { ...DEFAULT_COPY, focusLead: 'Walking with' } })
   assert.equal(places.focusLine, null)
   assert.equal(places.areas[0]?.place, 'Growing')
-  assert.equal(focusLine('Walking with', ['patience', 'thankfulness']), 'Walking with: patience, thankfulness')
+  assert.equal(focusLine('Walking with', ['patience', 'thankfulness']), 'Walking with: Patience, Thankfulness')
 })
 
 test('steering weights the weakest scale and still keeps a second one', () => {

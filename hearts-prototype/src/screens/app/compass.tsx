@@ -18,7 +18,7 @@ export async function LearnerPathScreen({ payload, user, portal, base, query }: 
         {summary.areas.map((area) => (
           <article key={area.area} className="card" data-testid="soft-area">
             <div className="area-row">
-              <b>{area.area}</b>
+              <b>{area.area.charAt(0).toUpperCase() + area.area.slice(1)}</b>
               {area.place ? <span className="chip" data-testid="soft-place">{area.place}</span> : null}
             </div>
             <p>{area.forward}</p>

@@ -54,8 +54,19 @@ export function placeFor(rung: number, places: PlaceCopy[]) {
   return ordered.find((place) => rung >= place.low && rung <= place.high) || ordered[0]
 }
 
+function capWord(name: string) {
+  const trimmed = name.trim()
+  if (!trimmed) return trimmed
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1)
+}
+
+/** Fills {area}, and starts a sentence with a capital when the name is the first word. */
+function withArea(template: string, area: string) {
+  return template.replaceAll('{area}', area).replace(/(^|[.!?]\s+)([a-z])/g, (_, lead: string, letter: string) => `${lead}${letter.toUpperCase()}`)
+}
+
 export function focusLine(lead: string, names: string[]) {
-  const clean = names.map((name) => name.trim()).filter(Boolean)
+  const clean = names.map(capWord).filter(Boolean)
   if (!clean.length) return null
   return `${lead.replace(/[:\s]+$/, '')}: ${clean.join(', ')}`
 }
@@ -93,13 +104,13 @@ export function summarise(input: {
     return {
       area: row.focus,
       place: showPlaces && place ? place.label : null,
-      forward: (place?.forward || '').replaceAll('{area}', row.focus),
+      forward: withArea(place?.forward || '', row.focus),
     }
   })
   const stepRows = (growing.length ? growing : ranked).slice(0, 3)
   const steps = stepRows.map((row) => {
     const place = placeFor(row.rung, places)
-    return { title: row.focus, detail: (place?.forward || '').replaceAll('{area}', row.focus) }
+    return { title: capWord(row.focus), detail: withArea(place?.forward || '', row.focus) }
   })
   const fillers = [
     { title: 'One short clip', detail: 'Watch one short clip and notice what stays with you.' },
@@ -134,7 +145,7 @@ function movementLines(copy: CompassCopy, now: AreaReading[], before: AreaReadin
     if (!then || !current) continue
     const delta = order.indexOf(current) - order.indexOf(then)
     const template = delta > 0 ? copy.movementUp : delta < 0 ? copy.movementOnward : copy.movementSame
-    lines.push(template.replaceAll('{area}', row.focus))
+    lines.push(withArea(template, row.focus))
   }
   return lines.slice(0, 4)
 }
