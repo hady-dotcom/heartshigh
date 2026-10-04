@@ -384,7 +384,7 @@ async function EditPage({ ctx, master, base, id }: { ctx: Ctx | null; master: { 
       <form className="form panel" action="/api/experiments" method="post" data-testid="experiment-form">
         <header><h2>{current ? 'Details' : 'Start from a slot'}</h2></header>
         <div className="body">
-          <Hidden fields={{ action: current ? 'update' : 'create', id: current ? String(current.id) : '', next: current ? `${base}/${current.id}` : base }} />
+          <Hidden fields={{ action: current ? 'update' : 'create', id: current ? String(current.id) : '', next: current ? `${base}/${current.id}` : `${base}/new` }} />
           <label>Key
             <input name="key" defaultValue={current?.key || ''} required pattern="[a-z][a-z0-9-]{1,58}[a-z0-9]" disabled={Boolean(current)} data-testid="experiment-key" />
           </label>
