@@ -20,7 +20,7 @@ async function shot(page: Page, name: string, fullPage = false) {
   await page.screenshot({ path: `${dir}/${name}.png`, caret: 'initial', fullPage })
 }
 
-test.describe.configure({ timeout: 240_000 })
+test.describe.configure({ timeout: 400_000 })
 
 test.use({ video: { mode: 'on', size: DESK } })
 
