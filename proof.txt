@@ -1,0 +1,5 @@
+viewport 390x844
+video /workspace/hearts-prototype/test-results/feed-r5a-proof-phone-feed--9a041--Tap-for-sound-no-questions
+kinds talk,film,talk,scene,talk,scene,talk,scene
+speaker Shaykh Mikaeel Smith
+hidden playing after swipes: none
