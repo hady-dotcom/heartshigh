@@ -195,6 +195,7 @@ test('until a clip actually plays, our poster and a gold play button cover the p
   await signIn(page, 'elm-learner@hearts.test', 'portal-learner', `${PORTAL}/feed`)
   const feed = page.getByTestId('journey')
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').click()
   await stepTo(page, feed, 'talk')
   await expect(page.getByTestId('poster-frame')).toBeVisible()
   await expect(page.getByTestId('poster-play')).toBeVisible({ timeout: 15_000 })

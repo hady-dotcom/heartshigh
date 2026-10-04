@@ -182,7 +182,7 @@ test('a question-card swipe and a scenic-card swipe never show a bare side or a 
   await page.context().close()
 })
 
-test('words in the picture: YouTube captions are dropped, our caption hides, and the speaker and Follow leave the lower quarter', async ({ browser, playwright }) => {
+test('words in the picture: YouTube captions are dropped, our caption sits in the bar, and the speaker and Follow leave the lower quarter', async ({ browser, playwright }) => {
   test.setTimeout(90_000)
   const master = await playwright.request.newContext({ baseURL: E2E_BASE })
   expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
