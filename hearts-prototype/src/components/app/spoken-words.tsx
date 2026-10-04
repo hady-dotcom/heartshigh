@@ -17,6 +17,7 @@ export function SpokenWords({ sentences, time, speaker }: { sentences: FramingSe
               const key = sentence.key && norm(word) === norm(sentence.key)
               return (
                 <span key={`${at}:${word}`} className={key ? 'fr-key' : undefined}>
+                  {at > 0 ? ' ' : ''}
                   {word}
                 </span>
               )
