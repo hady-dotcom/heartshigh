@@ -8,11 +8,13 @@ export function WeekStrip({
   today,
   href,
   emptyHref,
+  compact = false,
 }: {
   days: WeekDay[]
   today: WeekSlot | null
   href: string
   emptyHref: string
+  compact?: boolean
 }) {
   const line = todayLine(today)
   return (
@@ -26,7 +28,7 @@ export function WeekStrip({
           </span>
         ))}
       </div>
-      {line && today?.href ? (
+      {compact ? null : line && today?.href ? (
         <Link className="week-today" href={today.href} data-testid="week-today">
           {line}
         </Link>
