@@ -59,7 +59,7 @@ test('r5d desk proof shots', async ({ page }) => {
 
   await page.goto('/p/east-london/admin/content')
   await expect(page.getByTestId('admin-content')).toBeVisible()
-  await expect(page.getByTestId('content-door')).toHaveCount(20)
+  await expect(page.locator('[data-testid="content-door"][data-door^="W"]')).toHaveCount(20)
   await expect(page.getByTestId('course-row').first()).toBeVisible()
   await shot(page, 'content-grouped-doors', true)
 

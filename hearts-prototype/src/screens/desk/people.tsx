@@ -54,10 +54,10 @@ export async function TeachScreen(ctx: Ctx) {
         <header className="light">
           <h2>Learners ({learners.length})</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-            <HelpTip topic="give-course">{TOOL.giveCourse}</HelpTip>
-            <HelpTip topic="view-as">{TOOL.viewAs}</HelpTip>
-            <HelpTip topic="on-time">{TOOL.onTime}</HelpTip>
-            <HelpTip topic="workbook">{TOOL.workbook}</HelpTip>
+            <HelpTip topic="give-course" place="end">{TOOL.giveCourse}</HelpTip>
+            <HelpTip topic="view-as" place="end">{TOOL.viewAs}</HelpTip>
+            <HelpTip topic="on-time" place="end">{TOOL.onTime}</HelpTip>
+            <HelpTip topic="workbook" place="end">{TOOL.workbook}</HelpTip>
             <HideTestFilter action={here} hide={hideTest} />
           </div>
         </header>
