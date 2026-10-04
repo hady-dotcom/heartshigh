@@ -1,7 +1,9 @@
+import { Fragment } from 'react'
 import Link from 'next/link'
 import { loadDoors } from '@/server/doors'
 import { doorCode, doorLabel, doorOfClause } from '@/lib/doors'
 import { countLine, describeGroups, subsetGroups } from '@/lib/curriculum-groups'
+import { withEveryDoor } from '@/lib/every-door'
 import { groupThese, listDocs } from '@/server/curriculum'
 import { CourseTree } from '@/components/desk/course-tree'
 import { PackContents } from '@/components/desk/pack-contents'
@@ -52,7 +54,7 @@ export async function ContentScreen(ctx: Ctx) {
     if (q && !`${str(course.title)} ${str(course.speaker)}`.toLowerCase().includes(q)) return false
     return true
   })
-  const grouped = await groupThese(payload, filtered.map((course) => ({ id: course.id, title: str(course.title), summary: str(course.summary) })))
+  const grouped = withEveryDoor(await groupThese(payload, filtered.map((course) => ({ id: course.id, title: str(course.title), summary: str(course.summary) }))))
   const byId = new Map(filtered.map((course) => [course.id, course]))
   const stat = (n: number, label: string) => <div className="stat-chip"><b>{n}</b><span>{label}</span></div>
   const here = `${base}/admin/content`
@@ -97,23 +99,25 @@ export async function ContentScreen(ctx: Ctx) {
             <button className="btn ghost small" type="submit">Apply</button>
           </form>
           {grouped.length ? grouped.map((group) => (
-            <details key={group.key} className="content-group" open data-testid="content-door" data-door={group.key}>
+            <details key={group.key} className="content-group" open={group.courses.length > 0} data-testid="content-door" data-door={group.key}>
               <summary>{group.heading} · {countLine(group.talkCount, group.courses.length)}</summary>
+              {group.courses.length ? (
               <div className="table-wrap">
                 <table className="data">
                   <thead><tr><th>Subject</th><th>Speaker</th><th>From</th><th className="num">Films</th><th className="num">Questions</th><th className="num">Cuts live</th><th /></tr></thead>
                   <tbody>
                     {group.seats.map((seat) => (
-                      <>
-                        <tr key={`seat-${seat.id}`}><td colSpan={7} className="content-seat">{seat.label}</td></tr>
+                      <Fragment key={`seat-${seat.id}`}>
+                        <tr><td colSpan={7} className="content-seat">{seat.label}</td></tr>
                         {seat.courses.map((course) => courseRow(course.id))}
-                      </>
+                      </Fragment>
                     ))}
                     {group.unseated.map((course) => courseRow(course.id))}
                     {!group.seats.length && !group.unseated.length ? group.courses.map((course) => courseRow(course.id)) : null}
                   </tbody>
                 </table>
               </div>
+              ) : <p className="hint" style={{ padding: '8px 18px' }}>Nothing on this door yet.</p>}
             </details>
           )) : (
             <div className="table-wrap">
