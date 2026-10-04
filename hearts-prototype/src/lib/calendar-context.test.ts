@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { actionCta, approvedCopy, calendarContext, contextLabel, nudgeTalks, parseUkDate, ukDate } from './calendar-context'
+import { actionCta, approvedCopy, approximateSunsetHour, calendarContext, contextLabel, nudgeTalks, parseUkDate, ukDate } from './calendar-context'
 import { hijriOf, toGregorian, toHijri } from './hijri'
 import { wallClock } from './zone-time'
 
@@ -204,6 +204,30 @@ test('Sydney and Auckland after local midnight use the local civil date, not UTC
   const auckland = calendarContext({ at: new Date('2027-02-07T11:30:00.000Z'), timeZone: 'Pacific/Auckland' })
   assert.equal(auckland.hour, 0)
   assert.equal(auckland.hijriLabel, '1 Ramadan 1448')
+})
+
+test('Friday line ends at Jumu\'ah, not Friday Maghrib', () => {
+  const london = 'Europe/London'
+  const toronto = 'America/Toronto'
+  const fridayNoon = calendarContext({ at: wallClock('2026-02-06', 12, london), timeZone: london })
+  assert.equal(fridayNoon.friday, true)
+  const fridayAfternoon = calendarContext({ at: wallClock('2026-02-06', 15, london), timeZone: london })
+  assert.equal(fridayAfternoon.friday, false)
+  const torontoNoon = calendarContext({ at: wallClock('2026-02-06', 12, toronto), timeZone: toronto })
+  assert.equal(torontoNoon.friday, true)
+  const torontoAfternoon = calendarContext({ at: wallClock('2026-02-06', 15, toronto), timeZone: toronto })
+  assert.equal(torontoAfternoon.friday, false)
+  const thursdayNight = calendarContext({ at: wallClock('2026-02-05', 22, london), timeZone: london, sunsetHour: 17.5 })
+  assert.equal(thursdayNight.friday, true)
+  const portalJumuah = calendarContext({ at: wallClock('2026-02-06', 12, london), timeZone: london, jumuahHour: 11.5 })
+  assert.equal(portalJumuah.friday, false)
+})
+
+test('July sunset estimate matches known London and Toronto times within 3 minutes', () => {
+  const londonHour = approximateSunsetHour(wallClock('2026-07-02', 12, 'Europe/London'), undefined, undefined, 'Europe/London')
+  const torontoHour = approximateSunsetHour(wallClock('2026-07-02', 12, 'America/Toronto'), undefined, undefined, 'America/Toronto')
+  assert.ok(Math.abs(londonHour - (21 + 21 / 60)) <= 3 / 60, `London July sunset ${londonHour}`)
+  assert.ok(Math.abs(torontoHour - (21 + 3 / 60)) <= 3 / 60, `Toronto July sunset ${torontoHour}`)
 })
 
 test('talk order is nudged by season theme and optional popular ids', () => {

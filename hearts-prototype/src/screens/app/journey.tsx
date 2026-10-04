@@ -53,7 +53,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
     const view = variants[slot]
     if (view.running && view.label && !/^learn more\b/i.test(view.label)) continue
     const label = await resolveContextLabel(payload, slot, view.payload, context)
-    variants[slot] = { ...view, label, payload: { ...view.payload, label } }
+    if (label) variants[slot] = { ...view, label, payload: { ...view.payload, label } }
   }
   const popular = await popularTalkIds(payload)
   const titled = opening.route.cuts.map((cut) => ({

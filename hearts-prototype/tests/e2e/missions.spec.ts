@@ -1,15 +1,13 @@
 import { execFileSync } from 'node:child_process'
-import { mkdirSync } from 'node:fs'
 import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test'
 import { E2E_BASE } from '../env'
+import { artifactDir } from './artifact-dir'
 import { fakeYouTube } from './fake-youtube'
 import { chromeCentresClear, stepFeed } from './feed-step'
 
 const DESK = { width: 1440, height: 900 }
 const PHONE = { width: 390, height: 844 }
-const SHOTS = '/opt/cursor/artifacts/screenshots'
-
-mkdirSync(SHOTS, { recursive: true })
+const SHOTS = artifactDir('screenshots')
 
 async function assertNoIssuesBadge(page: Page) {
   const issues = await page.evaluate(() => {

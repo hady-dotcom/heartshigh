@@ -3,9 +3,10 @@ import ExcelJS from 'exceljs'
 import { mkdirSync } from 'node:fs'
 import path from 'node:path'
 import { E2E_BASE } from '../env'
+import { artifactDir } from './artifact-dir'
 
 const DESK = { width: 1440, height: 900 }
-const ARTIFACTS = '/opt/cursor/artifacts'
+const ARTIFACTS = artifactDir()
 const PORTAL = 'east-london'
 
 let master: APIRequestContext

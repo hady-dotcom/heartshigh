@@ -33,7 +33,8 @@ function boxesOverlap(left: { x: number; y: number; width: number; height: numbe
   return left.x < right.x + right.width && left.x + left.width > right.x && left.y < right.y + right.height && left.y + left.height > right.y
 }
 
-const CHROME_IDS = ['feed-mission', 'swipe-hint', 'lane-chip', 'clip-timer', 'tap-sound', 'top-speaker', 'speaker-link', 'caption', 'learn-more'] as const
+const CHROME_IDS = ['feed-mission', 'swipe-hint', 'lane-chip', 'clip-timer', 'tap-sound', 'top-speaker', 'speaker-link', 'caption', 'learn-more', 'share', 'fave', 'save'] as const
+const REQUIRED_CHROME = ['swipe-hint', 'lane-chip', 'clip-timer', 'tap-sound', 'learn-more', 'share', 'fave', 'save'] as const
 
 /** elementFromPoint at each chrome centre, plus every pair of bounding boxes. */
 export async function chromeCentresClear(page: Page, extraIds: string[] = []) {
@@ -78,7 +79,11 @@ export async function chromeCentresClear(page: Page, extraIds: string[] = []) {
   for (const row of hits) {
     expect(row.owns, `${row.id} centre hit ${row.hit || 'nothing'}`).toBe(true)
   }
-  return found.map((row) => row.id)
+  const foundIds = found.map((row) => row.id)
+  for (const id of REQUIRED_CHROME) {
+    expect(foundIds, `expected chrome ${id}`).toContain(id)
+  }
+  return foundIds
 }
 
 /** Header, lane chip, timer and Tap for sound must not share pixels, in either layout. */

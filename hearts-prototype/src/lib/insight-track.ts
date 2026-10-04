@@ -2,6 +2,37 @@
 
 import { angryFromLatest, type TapPoint } from './insight-taps'
 import { sanitizeProps } from './insight-events'
+import { returnBucketFromDays } from './insight-funnel'
+
+const LAST_VISIT_KEY = 'hearts.lastVisit'
+let sentReturnBucket = false
+
+function localDateKey(at = new Date()) {
+  return `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, '0')}-${String(at.getDate()).padStart(2, '0')}`
+}
+
+function daysBetween(from: string, to: string) {
+  const start = Date.parse(`${from}T00:00:00`)
+  const end = Date.parse(`${to}T00:00:00`)
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return null
+  return Math.round((end - start) / 86_400_000)
+}
+
+/** Last-visit date stays on the device. Only a coarse bucket is sent, once per visit. */
+export function visitReturnBucket() {
+  if (sentReturnBucket || typeof window === 'undefined') return null
+  sentReturnBucket = true
+  try {
+    const today = localDateKey()
+    const last = window.localStorage.getItem(LAST_VISIT_KEY)
+    const days = last && /^\d{4}-\d{2}-\d{2}$/.test(last) ? daysBetween(last, today) : null
+    const bucket = returnBucketFromDays(days)
+    window.localStorage.setItem(LAST_VISIT_KEY, today)
+    return bucket
+  } catch {
+    return null
+  }
+}
 
 let memorySession = ''
 
@@ -54,7 +85,8 @@ function answerSheetOpen() {
 
 function flush() {
   if (!queue.length || typeof window === 'undefined') return
-  const events = queue.splice(0, 40).map((event) => ({
+  const bucket = visitReturnBucket()
+  const events = queue.splice(0, 40).map((event, index) => ({
     ...event,
     sessionId: insightSessionId(),
     route: event.route || window.location.pathname,
@@ -62,6 +94,7 @@ function flush() {
       ...event.props,
       lane: event.props?.lane || readLane(),
       ...(answerSheetOpen() ? { sheet: true } : {}),
+      ...(index === 0 && bucket ? { returnBucket: bucket } : {}),
     }),
   }))
   try {

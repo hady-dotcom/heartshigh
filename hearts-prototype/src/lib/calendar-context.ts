@@ -4,6 +4,7 @@
  */
 import { clipStepUpLabel } from './feed-copy'
 import { hijriMonthName, hijriOf, type HijriDate } from './hijri'
+import { coordinatesForZone, sunsetHourInZone } from './sunset'
 import { DEFAULT_TIME_ZONE, partsInZone } from './zone-time'
 
 export const CONTEXT_KEYS = [
@@ -60,6 +61,9 @@ export type ContextInput = {
   sunsetHour?: number
   timeZone?: string
   latitude?: number
+  longitude?: number
+  /** Local hour when Jumu'ah is taken to begin. The Friday line ends here. Default 13. */
+  jumuahHour?: number
 }
 
 const NAMES: Record<string, string> = {
@@ -91,29 +95,18 @@ function civilKey(year: number, month: number, day: number) {
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
-/** Rough solar sunset hour (local) from latitude. London-ish default. */
-export function approximateSunsetHour(at: Date, latitude = 51.5) {
-  const start = Date.UTC(at.getUTCFullYear(), 0, 0)
-  const day = Math.max(1, Math.floor((Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), at.getUTCDate()) - start) / 86_400_000))
-  const decl = (-23.44 * Math.cos((360 / 365) * (day + 10) * Math.PI / 180) * Math.PI) / 180
-  const lat = (latitude * Math.PI) / 180
-  const cosHa = -Math.tan(lat) * Math.tan(decl)
-  const ha = Math.acos(Math.max(-1, Math.min(1, cosHa)))
-  const hour = 12 + (ha * 180) / Math.PI / 15
-  return Math.min(21.25, Math.max(15.75, hour))
+export function latitudeForZone(zone?: string) {
+  return coordinatesForZone(zone).latitude
 }
 
-export function latitudeForZone(zone?: string) {
-  const key = String(zone || 'Europe/London')
-  if (key.startsWith('Asia/Riyadh') || key.startsWith('Asia/Qatar') || key.startsWith('Asia/Bahrain')) return 24.7
-  if (key.startsWith('Asia/Dubai')) return 25.2
-  if (key.startsWith('Africa/Cairo')) return 30.0
-  if (key.startsWith('Asia/Karachi')) return 24.9
-  if (key.startsWith('America/Toronto')) return 43.7
-  if (key.startsWith('America/New_York')) return 40.7
-  if (key.startsWith('Australia/Sydney')) return -33.9
-  if (key.startsWith('Pacific/Auckland')) return -36.8
-  return 51.5
+export function longitudeForZone(zone?: string) {
+  return coordinatesForZone(zone).longitude
+}
+
+/** NOAA sunset as a local wall-clock hour in the portal's zone. */
+export function approximateSunsetHour(at: Date, latitude?: number, longitude?: number, timeZone = DEFAULT_TIME_ZONE) {
+  const coords = coordinatesForZone(timeZone)
+  return sunsetHourInZone(at, latitude ?? coords.latitude, longitude ?? coords.longitude, timeZone)
 }
 
 const MONTHS: Record<string, string> = {
@@ -182,8 +175,15 @@ export function calendarContext(input: ContextInput): CalendarContext {
   const hour = input.hour ?? local.hour
   const weekday = input.weekday ?? local.weekday
   const civilNoon = civilNoonUtc(local.year, local.month, local.day)
-  const sunsetHour = input.sunsetHour ?? approximateSunsetHour(civilNoon, input.latitude ?? latitudeForZone(zone))
-  const afterSunset = hour + local.minute / 60 >= sunsetHour
+  const coords = coordinatesForZone(zone)
+  const sunsetHour = input.sunsetHour ?? sunsetHourInZone(
+    civilNoon,
+    input.latitude ?? coords.latitude,
+    input.longitude ?? coords.longitude,
+    zone,
+  )
+  const clock = hour + local.minute / 60
+  const afterSunset = clock >= sunsetHour
   const islamicCivil = afterSunset
     ? addCivilDays(local.year, local.month, local.day, 1)
     : { year: local.year, month: local.month, day: local.day }
@@ -191,7 +191,8 @@ export function calendarContext(input: ContextInput): CalendarContext {
   const islamicWeekday = afterSunset ? (weekday + 1) % 7 : weekday
   const hijri = hijriOf(islamicAt, input.offsetDays || 0)
   const thursdayEvening = weekday === 4 && afterSunset
-  const friday = islamicWeekday === 5 || thursdayEvening
+  const jumuahHour = Number.isFinite(Number(input.jumuahHour)) ? Number(input.jumuahHour) : 13
+  const friday = thursdayEvening || (weekday === 5 && !afterSunset && clock < jumuahHour)
   const ramadan = hijri.hm === 9
   const lastTenNights = ramadan && hijri.hd >= 21
   const dhulHijjah = hijri.hm === 12 && hijri.hd <= 10

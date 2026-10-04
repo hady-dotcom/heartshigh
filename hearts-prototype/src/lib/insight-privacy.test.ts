@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { allowInsightBurst, angrySpotWords, insightBurstKey, insightEventRow, insightHoldsPerson, isAnswerScreen, isPrivateLane, replayLines, resetInsightBursts, sanitizeProps, sessionReplayScore } from './insight-events'
+import { allowInsightBurst, allowInsightIngest, angrySpotWords, insightBurstKey, insightEventRow, insightHoldsPerson, insightIpBurstKey, isAnswerScreen, isPrivateLane, replayLines, resetInsightBursts, sanitizeProps, sessionReplayScore } from './insight-events'
 import { insightCollections } from '../collections-insights'
 import { actionCta, parseUkDate, ukDate } from './calendar-context'
 import { formatSlotLabel, slotPlainName } from './experiment-slots'
@@ -36,6 +36,17 @@ test('without a device cookie the burst key is IP and user-agent, so a minted id
   const stillNoCookie = insightBurstKey({ deviceId: '', clientIp: '203.0.113.9', userAgent: 'Mozilla/5.0 Hearts' })
   assert.equal(stillNoCookie, noCookie)
   assert.equal(allowInsightBurst(stillNoCookie, 40, 10_000, 1_000), false)
+})
+
+test('an outer per-IP limit holds when cookies and user-agents change', () => {
+  resetInsightBursts()
+  const ip = '203.0.113.40'
+  let allowed = 0
+  for (let i = 0; i < 200; i++) {
+    if (allowInsightIngest({ deviceId: `spoof-${i}-${'x'.repeat(10)}`, clientIp: ip, userAgent: `UA/${i}` }, 40, 10_000, 1_000)) allowed += 1
+  }
+  assert.equal(allowed, 40)
+  assert.equal(insightIpBurstKey(ip), 'ip-only:203.0.113.40')
 })
 
 test('insight bursts prune stale keys from the map', () => {

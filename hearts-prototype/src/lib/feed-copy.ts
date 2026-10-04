@@ -20,6 +20,16 @@ export function talkStepUpLabel(talks: number, seconds?: number | null) {
   return minutes ? `Watch the whole talk (${minutes} min)` : 'Watch the whole talk'
 }
 
+/** Keep (N min) / (N talks) when a calendar or experiment line replaces only the lead words. */
+export function withTalkDetail(lead: string, talks: number, seconds?: number | null) {
+  const cleaned = String(lead || '').trim()
+  const detail = talkStepUpLabel(talks, seconds)
+  const extra = detail.match(/\((\d+\s+(?:min|talks))\)/)?.[0] || ''
+  if (!cleaned) return detail
+  if (!extra || /\(\d+\s+(?:min|talks)\)/i.test(cleaned)) return cleaned
+  return /›\s*$/.test(cleaned) ? `${cleaned.replace(/\s*›\s*$/, '')} ${extra} ›` : `${cleaned} ${extra}`
+}
+
 export function onlyClipToast(level: 'hors' | 'appetiser') {
   return level === 'hors' ? "That's the only clip here for now." : "That's the only 3-minute version here for now."
 }

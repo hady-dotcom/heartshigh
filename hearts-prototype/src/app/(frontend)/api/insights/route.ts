@@ -1,18 +1,13 @@
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { portalIdOf } from '@/lib/ids'
+import { clientIp, trustedProxyHops } from '@/lib/rate-limit'
 import { getSession } from '@/server/context'
 import { canViewInsights, fillInsightDemo, ingestEvents } from '@/server/insights'
 
 export const dynamic = 'force-dynamic'
 
 const DEVICE = 'hearts_device'
-
-function clientIp(req: Request) {
-  const forwarded = req.headers.get('x-forwarded-for')
-  if (forwarded) return forwarded.split(',')[0]?.trim() || ''
-  return req.headers.get('x-real-ip') || req.headers.get('cf-connecting-ip') || ''
-}
 
 async function existingDeviceCookie() {
   const held = (await cookies()).get(DEVICE)?.value
@@ -44,7 +39,7 @@ export async function POST(req: Request) {
         user,
         deviceId: device,
         portalId: portal,
-        clientIp: clientIp(req),
+        clientIp: clientIp(req, trustedProxyHops()),
         userAgent: req.headers.get('user-agent'),
         events: events as never,
       })
@@ -56,7 +51,7 @@ export async function POST(req: Request) {
     if (action === 'test-data') {
       if (!user || !canViewInsights(user)) return wantsJson ? NextResponse.json({ error: 'Sign in on the desk first.' }, { status: 401 }) : redirectTo(req, next, 'Sign in on the desk first.')
       const n = await fillInsightDemo(payload, user)
-      return wantsJson ? NextResponse.json({ ok: true, n }) : redirectTo(req, next, undefined, `Added ${n} labelled test events on this development database.`)
+      return wantsJson ? NextResponse.json({ ok: true, n }) : redirectTo(req, next, undefined, `Added ${n} labelled sample events on this development database.`)
     }
     return wantsJson ? NextResponse.json({ error: 'Unknown action.' }, { status: 400 }) : redirectTo(req, next, 'Unknown action.')
   } catch (error) {

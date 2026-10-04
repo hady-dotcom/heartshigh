@@ -8,6 +8,8 @@
   background: var(--paper);
   color: var(--ink);
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .app.dark { background: var(--night); color: #fff; }
 .app-scroll { padding: calc(14px + var(--safe-top)) 18px calc(104px + var(--safe-bottom)); }

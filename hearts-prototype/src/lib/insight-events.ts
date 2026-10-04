@@ -57,6 +57,12 @@ export function insightBurstKey(input: { deviceId?: string | null; clientIp?: st
   return `ip:${ip}|ua:${ua}`
 }
 
+/** Outer per-IP key. Spoofed cookies or a changing UA cannot reset this bucket. */
+export function insightIpBurstKey(clientIp?: string | null) {
+  return `ip-only:${String(clientIp || '').trim() || 'anon'}`
+}
+
+
 export const INSIGHT_KINDS = [
   'route',
   'tap',
@@ -260,7 +266,7 @@ function pruneInsightBursts(nowMs: number, windowMs: number) {
   }
 }
 
-/** Simple in-process rate limit. 40 events / 10 s per device cookie or IP. */
+/** Simple in-process rate limit. 40 events / 10 s per key. */
 export function allowInsightBurst(key: string, limit = 40, windowMs = 10_000, nowMs = Date.now()) {
   pruneInsightBursts(nowMs, windowMs)
   const id = String(key || 'anon').slice(0, 80)
@@ -275,4 +281,9 @@ export function allowInsightBurst(key: string, limit = 40, windowMs = 10_000, no
 
 export function resetInsightBursts() {
   buckets.clear()
+}
+
+export function allowInsightIngest(input: { deviceId?: string | null; clientIp?: string | null; userAgent?: string | null }, limit = 40, windowMs = 10_000, nowMs = Date.now()) {
+  if (!allowInsightBurst(insightIpBurstKey(input.clientIp), limit, windowMs, nowMs)) return false
+  return allowInsightBurst(insightBurstKey(input), limit, windowMs, nowMs)
 }

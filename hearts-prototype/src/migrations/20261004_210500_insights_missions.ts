@@ -180,6 +180,57 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
   CREATE INDEX IF NOT EXISTS "mission_joins_mission_idx" ON "mission_joins" USING btree ("mission_id");
   CREATE INDEX IF NOT EXISTS "mission_joins_user_idx" ON "mission_joins" USING btree ("user_id");
   CREATE UNIQUE INDEX IF NOT EXISTS "mission_joins_mission_user_idx" ON "mission_joins" USING btree ("mission_id", "user_id");
+  CREATE UNIQUE INDEX IF NOT EXISTS "mission_user_idx" ON "mission_joins" USING btree ("mission_id", "user_id");
+
+  DO $$ BEGIN ALTER TABLE "calendar_copy" ADD CONSTRAINT "calendar_copy_approved_by_id_fk" FOREIGN KEY ("approved_by_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "mission_joins" ADD CONSTRAINT "mission_joins_portal_id_fk" FOREIGN KEY ("portal_id") REFERENCES "public"."portals"("id") ON DELETE set null ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "support_threads" ADD CONSTRAINT "support_threads_portal_id_fk" FOREIGN KEY ("portal_id") REFERENCES "public"."portals"("id") ON DELETE set null ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_insight_events_fk" FOREIGN KEY ("insight_events_id") REFERENCES "public"."insight_events"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_insight_sessions_fk" FOREIGN KEY ("insight_sessions_id") REFERENCES "public"."insight_sessions"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_calendar_seasons_fk" FOREIGN KEY ("calendar_seasons_id") REFERENCES "public"."calendar_seasons"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_calendar_copy_fk" FOREIGN KEY ("calendar_copy_id") REFERENCES "public"."calendar_copy"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_missions_fk" FOREIGN KEY ("missions_id") REFERENCES "public"."missions"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_mission_joins_fk" FOREIGN KEY ("mission_joins_id") REFERENCES "public"."mission_joins"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_support_threads_fk" FOREIGN KEY ("support_threads_id") REFERENCES "public"."support_threads"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+  DO $$ BEGIN ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_support_messages_fk" FOREIGN KEY ("support_messages_id") REFERENCES "public"."support_messages"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+  CREATE INDEX IF NOT EXISTS "insight_events_created_at_idx" ON "insight_events" USING btree ("created_at");
+  CREATE INDEX IF NOT EXISTS "insight_events_updated_at_idx" ON "insight_events" USING btree ("updated_at");
+  CREATE INDEX IF NOT EXISTS "insight_sessions_created_at_idx" ON "insight_sessions" USING btree ("created_at");
+  CREATE INDEX IF NOT EXISTS "insight_sessions_updated_at_idx" ON "insight_sessions" USING btree ("updated_at");
+  CREATE INDEX IF NOT EXISTS "insight_sessions_portal_idx" ON "insight_sessions" USING btree ("portal_id");
+  CREATE INDEX IF NOT EXISTS "calendar_seasons_created_at_idx" ON "calendar_seasons" USING btree ("created_at");
+  CREATE INDEX IF NOT EXISTS "calendar_seasons_updated_at_idx" ON "calendar_seasons" USING btree ("updated_at");
+  CREATE INDEX IF NOT EXISTS "calendar_copy_created_at_idx" ON "calendar_copy" USING btree ("created_at");
+  CREATE INDEX IF NOT EXISTS "calendar_copy_updated_at_idx" ON "calendar_copy" USING btree ("updated_at");
+  CREATE INDEX IF NOT EXISTS "calendar_copy_approved_by_idx" ON "calendar_copy" USING btree ("approved_by_id");
+  CREATE INDEX IF NOT EXISTS "calendar_copy_created_by_idx" ON "calendar_copy" USING btree ("created_by_id");
+  CREATE INDEX IF NOT EXISTS "missions_created_at_idx" ON "missions" USING btree ("created_at");
+  CREATE INDEX IF NOT EXISTS "missions_updated_at_idx" ON "missions" USING btree ("updated_at");
+  CREATE INDEX IF NOT EXISTS "missions_created_by_idx" ON "missions" USING btree ("created_by_id");
+  CREATE INDEX IF NOT EXISTS "missions_rels_order_idx" ON "missions_rels" USING btree ("order");
+  CREATE INDEX IF NOT EXISTS "missions_rels_parent_idx" ON "missions_rels" USING btree ("parent_id");
+  CREATE INDEX IF NOT EXISTS "missions_rels_path_idx" ON "missions_rels" USING btree ("path");
+  CREATE INDEX IF NOT EXISTS "missions_rels_portals_id_idx" ON "missions_rels" USING btree ("portals_id");
+  CREATE INDEX IF NOT EXISTS "mission_joins_created_at_idx" ON "mission_joins" USING btree ("created_at");
+  CREATE INDEX IF NOT EXISTS "mission_joins_updated_at_idx" ON "mission_joins" USING btree ("updated_at");
+  CREATE INDEX IF NOT EXISTS "mission_joins_portal_idx" ON "mission_joins" USING btree ("portal_id");
+  CREATE INDEX IF NOT EXISTS "support_threads_created_at_idx" ON "support_threads" USING btree ("created_at");
+  CREATE INDEX IF NOT EXISTS "support_threads_updated_at_idx" ON "support_threads" USING btree ("updated_at");
+  CREATE INDEX IF NOT EXISTS "support_threads_portal_idx" ON "support_threads" USING btree ("portal_id");
+  CREATE INDEX IF NOT EXISTS "support_threads_user_idx" ON "support_threads" USING btree ("user_id");
+  CREATE INDEX IF NOT EXISTS "support_messages_created_at_idx" ON "support_messages" USING btree ("created_at");
+  CREATE INDEX IF NOT EXISTS "support_messages_updated_at_idx" ON "support_messages" USING btree ("updated_at");
+  CREATE INDEX IF NOT EXISTS "support_messages_thread_idx" ON "support_messages" USING btree ("thread_id");
+  CREATE INDEX IF NOT EXISTS "support_messages_author_idx" ON "support_messages" USING btree ("author_id");
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_insight_events_id_idx" ON "payload_locked_documents_rels" USING btree ("insight_events_id");
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_insight_sessions_id_idx" ON "payload_locked_documents_rels" USING btree ("insight_sessions_id");
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_calendar_seasons_id_idx" ON "payload_locked_documents_rels" USING btree ("calendar_seasons_id");
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_calendar_copy_id_idx" ON "payload_locked_documents_rels" USING btree ("calendar_copy_id");
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_missions_id_idx" ON "payload_locked_documents_rels" USING btree ("missions_id");
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_mission_joins_id_idx" ON "payload_locked_documents_rels" USING btree ("mission_joins_id");
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_support_threads_id_idx" ON "payload_locked_documents_rels" USING btree ("support_threads_id");
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_support_messages_id_idx" ON "payload_locked_documents_rels" USING btree ("support_messages_id");
   `)
 }
 

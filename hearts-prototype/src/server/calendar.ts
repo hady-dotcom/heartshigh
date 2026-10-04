@@ -1,6 +1,5 @@
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
-import { clipStepUpLabel, talkStepUpLabel } from '@/lib/feed-copy'
 import { actionCta, approvedCopy, calendarContext, DEFAULT_CONTEXT_LINES, latitudeForZone, nudgeTalks, suggestedContextLine, type AdminSeason, type CalendarContext } from '@/lib/calendar-context'
 import { formatSlotLabel } from '@/lib/experiment-slots'
 import { isProduction } from '@/lib/env'
@@ -82,7 +81,7 @@ export async function resolveContextLabel(payload: Payload, slot: string, payloa
   const builtIn = context.active.map((key) => suggestedContextLine(slot, key)).find(Boolean) || ''
   const raw = approved || fromVariant || builtIn
   if (raw && !deadLearnMore(raw)) return actionCta(minutes ? formatSlotLabel(raw, minutes) : raw)
-  return slot === 'full-talk-cta-label' ? talkStepUpLabel(1, minutes ? minutes * 60 : undefined) : clipStepUpLabel()
+  return ''
 }
 
 export async function popularTalkIds(payload: Payload): Promise<number[]> {

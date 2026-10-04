@@ -72,12 +72,12 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
     >
       <div className={styles.page}>
         <p className={styles.quiet}>One in {Math.round(100 / Math.max(1, desk.sampleRate))} sessions is sampled for tap maps and replays. Angry taps and funnels are always kept.</p>
-        {desk.testData ? <p className={styles.testBadge} data-testid="test-numbers">Test numbers</p> : null}
+        {desk.testData ? <p className={styles.testBadge} data-testid="test-numbers">Sample data — labelled test fill, not live visits</p> : null}
         <section className={styles.summary}>
           <div className={styles.tile}><b data-testid="insight-routes">{desk.routes.length}</b><span>Routes with taps</span></div>
           <div className={styles.tile}><b data-testid="insight-angry">{desk.angry.length}</b><span>Angry taps</span></div>
           <div className={styles.tile}><b>{desk.funnel.started}</b><span>Opened the questions</span></div>
-          <div className={styles.tile}><b>{pct(desk.retention.points[0]?.rate || 0)}</b><span>Back the next day</span></div>
+          <div className={styles.tile}><b>{pct(desk.retention.points[0]?.rate || 0)}</b><span>Back the next day{desk.testData ? ' · sample data' : ''}</span></div>
         </section>
         <div className={styles.tabs}>
           {[['heatmap', 'Heatmap'], ['funnel', 'Funnel'], ['angry', 'Angry taps'], ['retention', 'Retention']].map(([key, label]) => (
@@ -182,7 +182,7 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
           <section className="panel" data-testid="insights-retention">
             <header><h2>Came back</h2></header>
             <div className="body">
-              <p className={styles.quiet}>{desk.retention.cohort} people in the cohort.</p>
+              <p className={styles.quiet}>{desk.retention.cohort} returning visits sent a days-since-last-visit bucket. The last-visit date stays on the phone.{desk.testData ? ' These figures are sample data.' : ''}</p>
               <div className={styles.funnel}>
                 {desk.retention.points.map((point) => (
                   <div key={point.day} className={styles.bar} data-testid="retention-day" data-day={point.day}>

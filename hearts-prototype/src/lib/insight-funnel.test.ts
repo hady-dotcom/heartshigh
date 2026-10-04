@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { FUNNEL_STEPS, funnelMaths, retentionByDay } from './insight-funnel'
+import { FUNNEL_STEPS, funnelMaths, retentionByDay, retentionFromBuckets, returnBucketFromDays } from './insight-funnel'
 
 test('funnel counts unique sessions and drop-off from the previous step', () => {
   const events = [
@@ -48,4 +48,16 @@ test('retention by day uses first-seen cohort and later visits', () => {
   assert.equal(result.cohort, 3)
   assert.equal(result.points[0].returned, 1)
   assert.equal(result.points[1].returned, 1)
+})
+
+test('return buckets are coarse and drive next-day retention', () => {
+  assert.equal(returnBucketFromDays(0), '0')
+  assert.equal(returnBucketFromDays(1), '1')
+  assert.equal(returnBucketFromDays(4), '2-7')
+  assert.equal(returnBucketFromDays(8), '8+')
+  assert.equal(returnBucketFromDays(null), null)
+  const result = retentionFromBuckets(['1', '1', '2-7', '8+', '0', '', null])
+  assert.equal(result.cohort, 5)
+  assert.equal(result.points[0].returned, 2)
+  assert.ok(Math.abs(result.points[0].rate - 0.4) < 1e-9)
 })

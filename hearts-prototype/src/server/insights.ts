@@ -1,9 +1,9 @@
 import type { Payload, Where } from 'payload'
 import { now } from '@/lib/clock'
 import { isProduction, isRemoteDatabase } from '@/lib/env'
-import { FUNNEL_STEPS, funnelMaths, retentionByDay, type FunnelResult } from '@/lib/insight-funnel'
+import { FUNNEL_STEPS, funnelMaths, retentionFromBuckets, type FunnelResult } from '@/lib/insight-funnel'
 import { heatmapGrid, type HeatCell } from '@/lib/insight-taps'
-import { allowInsightBurst, angrySpotWords, DEFAULT_SAMPLE_RATE, insightBurstKey, insightEventRow, isAnswerScreen, isInsightKind, isPrivateLane, normaliseRoute, replayLines, sampleSession, sessionReplayScore, shouldKeep } from '@/lib/insight-events'
+import { allowInsightIngest, angrySpotWords, DEFAULT_SAMPLE_RATE, insightEventRow, isAnswerScreen, isInsightKind, isPrivateLane, normaliseRoute, replayLines, sampleSession, sessionReplayScore, shouldKeep } from '@/lib/insight-events'
 
 export { insightEventRow } from '@/lib/insight-events'
 import { idOf, portalIdOf } from '@/lib/ids'
@@ -60,8 +60,7 @@ export async function ingestEvents(
 ) {
   const optedIn = Boolean(input.user && 'trendsOptIn' in input.user && input.user.trendsOptIn)
   const rate = await sampleRateOf(payload)
-  const burstKey = insightBurstKey({ deviceId: input.deviceId, clientIp: input.clientIp, userAgent: input.userAgent })
-  if (!allowInsightBurst(burstKey, 40, 10_000)) return { stored: 0, limited: true }
+  if (!allowInsightIngest({ deviceId: input.deviceId, clientIp: input.clientIp, userAgent: input.userAgent }, 40, 10_000)) return { stored: 0, limited: true }
   let stored = 0
   const stamp = now()
   for (const [index, raw] of input.events.slice(0, 20).entries()) {
@@ -203,6 +202,7 @@ type EventRow = {
   step?: string | null
   interactive?: boolean | null
   at?: string
+  props?: { returnBucket?: string } | null
 }
 
 async function loadEvents(payload: Payload, actor: InsightActor, extra?: Where, limit = 4000) {
@@ -271,14 +271,14 @@ export async function insightsDesk(payload: Payload, actor: InsightActor, query:
     const route = row.route || '/'
     scrollByRoute.set(route, Math.max(scrollByRoute.get(route) || 0, Number(row.depth) || 0))
   }
-  const firstSeen: Record<string, string> = {}
-  const visits: { subject: string; day: string }[] = []
+  const returnBuckets: string[] = []
+  const seenSession = new Set<string>()
   for (const row of events) {
-    const subject = String(row.subject || row.sessionId || '')
-    const day = String(row.at || '').slice(0, 10)
-    if (!subject || !day) continue
-    visits.push({ subject, day })
-    if (!firstSeen[subject] || day < firstSeen[subject]) firstSeen[subject] = day
+    const session = String(row.sessionId || '')
+    const bucket = String(row.props?.returnBucket || '')
+    if (!session || seenSession.has(session) || !bucket) continue
+    seenSession.add(session)
+    returnBuckets.push(bucket)
   }
   const watchRows = events.filter((row) => row.kind === 'clip_watch' && row.watchPct != null)
   const pcts = watchRows.map((row) => Number(row.watchPct)).sort((a, b) => a - b)
@@ -319,7 +319,7 @@ export async function insightsDesk(payload: Payload, actor: InsightActor, query:
     heatmap: { route, cells, max: Math.max(1, ...cells.map((cell) => cell.n)), taps: taps.length },
     funnel,
     angry,
-    retention: retentionByDay(firstSeen, visits),
+    retention: retentionFromBuckets(returnBuckets),
     watch: {
       clips: watchRows.length,
       medianPct: pcts.length ? pcts[Math.floor(pcts.length / 2)] : 0,
@@ -355,7 +355,8 @@ export async function fillInsightDemo(payload: Payload, actor: InsightActor) {
     const sessionId = `test-sess-${s}`
     const subject = `test-data:${s}`
     const day = new Date(stamp.getTime() - (s % 8) * 86_400_000).toISOString()
-    push({ kind: 'route', route: routes[s % 3], sessionId, subject, sampled: true, at: day, props: { test: true } })
+    const bucket = s % 8 === 0 ? '1' : s % 8 === 1 ? '2-7' : s % 8 === 2 ? '8+' : s % 8 === 3 ? '0' : undefined
+    push({ kind: 'route', route: routes[s % 3], sessionId, subject, sampled: true, at: day, props: { test: true, ...(bucket ? { returnBucket: bucket } : {}) } })
     push({ kind: 'funnel', route: '/p/:portal/start', sessionId, subject, step: 'opening_questions', sampled: true, at: day })
     if (s < 18) push({ kind: 'funnel', route: '/p/:portal/feed', sessionId, subject, step: 'first_clip', sampled: true, at: day })
     if (s < 10) push({ kind: 'funnel', route: '/p/:portal/course/1', sessionId, subject, step: 'course_start', sampled: true, at: day })
