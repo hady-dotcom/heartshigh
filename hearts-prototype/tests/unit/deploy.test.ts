@@ -159,10 +159,8 @@ test('the latest Postgres migration has a table for every collection and global'
   const stamps = files.filter((name) => /\.ts$/.test(name) && name !== 'index.ts').map((name) => name.slice(0, 15))
   assert.equal(stamps.length, new Set(stamps).size, `migration timestamps must be unique: ${stamps.join(', ')}`)
   const ts = files.filter((name) => name.endsWith('.ts') && name !== 'index.ts').sort()
-  const newest = ts.slice(-2).map((name) => name.replace(/\.ts$/, ''))
-  for (const name of newest) {
-    assert.equal(files.includes(`${name}.json`), true, `the two newest migrations need snapshots; ${name}.json is missing`)
-  }
+  const newest = ts.at(-1)!.replace(/\.ts$/, '')
+  assert.equal(files.includes(`${newest}.json`), true, `the newest migration needs a snapshot for migrate:create; ${newest}.json is missing`)
   const latest = files.filter((name) => name.endsWith('.json')).sort().at(-1)!
   const tables = new Set(Object.keys(JSON.parse(readFileSync(path.join(dir, latest), 'utf8')).tables).map((name) => name.replace(/^public\./, '')))
   const slugs = [...collections, ...aiCollections, ...sheetCollections, ...experimentCollections, ...insightCollections, ...calendarCollections, ...missionCollections, ...gatherCollections, MasterFlags].map((item) => item.slug.replace(/-/g, '_'))

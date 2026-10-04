@@ -228,7 +228,7 @@ test('a session does not repeat a talk or a scene card until the pool is used up
   }
 })
 
-test('the speaker header, lane chip, timer and Tap for sound do not overlap in either layout', async ({ page, playwright }) => {
+test('every chrome pair is clear at its centre, with and without words in the picture', async ({ page, playwright }) => {
   test.setTimeout(90_000)
   await page.setViewportSize(PHONE)
   await fakeYouTube(page)

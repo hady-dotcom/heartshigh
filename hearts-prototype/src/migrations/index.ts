@@ -15,7 +15,6 @@ import * as migration_20261004_180000_experiments from './20261004_180000_experi
 import * as migration_20261004_181000_gather_entry_code from './20261004_181000_gather_entry_code';
 import * as migration_20261004_210000_insights_missions from './20261004_210000_insights_missions';
 import * as migration_20261004_211000_schedule_minutes from './20261004_211000_schedule_minutes';
-import * as migration_20261004_230000_insight_event_indexes from './20261004_230000_insight_event_indexes';
 import * as migration_20261004_240000_insight_privacy from './20261004_240000_insight_privacy';
 
 export const migrations = [
@@ -103,11 +102,6 @@ export const migrations = [
     up: migration_20261004_211000_schedule_minutes.up,
     down: migration_20261004_211000_schedule_minutes.down,
     name: '20261004_211000_schedule_minutes',
-  },
-  {
-    up: migration_20261004_230000_insight_event_indexes.up,
-    down: migration_20261004_230000_insight_event_indexes.down,
-    name: '20261004_230000_insight_event_indexes',
   },
   {
     up: migration_20261004_240000_insight_privacy.up,

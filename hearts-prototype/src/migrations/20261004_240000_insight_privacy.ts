@@ -10,6 +10,8 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "insight_events" DROP COLUMN IF EXISTS "device_id";
   ALTER TABLE "insight_sessions" DROP COLUMN IF EXISTS "learner_id";
   ALTER TABLE "insight_sessions" DROP COLUMN IF EXISTS "device_id";
+  CREATE INDEX IF NOT EXISTS "insight_events_portal_idx" ON "insight_events" USING btree ("portal_id");
+  CREATE INDEX IF NOT EXISTS "insight_events_step_idx" ON "insight_events" USING btree ("step");
   `)
 }
 
@@ -22,5 +24,7 @@ export async function down({ db }: MigrateDownArgs): Promise<void> {
   DO $$ BEGIN ALTER TABLE "insight_events" ADD CONSTRAINT "insight_events_learner_id_fk" FOREIGN KEY ("learner_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
   DO $$ BEGIN ALTER TABLE "insight_sessions" ADD CONSTRAINT "insight_sessions_learner_id_fk" FOREIGN KEY ("learner_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
   CREATE INDEX IF NOT EXISTS "insight_events_learner_idx" ON "insight_events" USING btree ("learner_id");
+  DROP INDEX IF EXISTS "insight_events_portal_idx";
+  DROP INDEX IF EXISTS "insight_events_step_idx";
   `)
 }

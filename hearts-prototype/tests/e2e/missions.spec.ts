@@ -354,10 +354,49 @@ test('a Friday calendar window reaches the feed gold button', async ({ browser, 
     await expect(page.getByTestId('learn-more')).toBeVisible({ timeout: 20_000 })
     await expect(page.getByTestId('learn-more')).toContainText(/Friday|Jumu/)
     await expect(page.getByTestId('learn-more')).not.toHaveText(/^Learn more/)
+    await expect(page.getByTestId('feed-mission')).toHaveCount(0)
+    await expect(page.getByTestId('tap-sound').first()).toBeVisible()
+    const plainChrome = await chromeCentresClear(page)
+    expect(plainChrome).toContain('tap-sound')
+    expect(plainChrome).toContain('learn-more')
+    expect(plainChrome).not.toContain('feed-mission')
     await page.screenshot({ path: `${SHOTS}/phone-feed-plain.png` })
     await page.close()
     await context.close()
   } finally {
+    await api.post('/api/hearts', { form: { action: 'clock', iso: '', next: '/' } })
+    await api.dispose()
+  }
+})
+
+test('a running experiment label wins over the Friday calendar line on the gold button', async ({ browser, playwright }) => {
+  test.setTimeout(90_000)
+  const api = await playwright.request.newContext({ baseURL: E2E_BASE })
+  expect((await api.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
+  expect((await api.post('/api/hearts', { form: { action: 'clock', iso: '2026-02-06T10:00:00.000Z', next: '/' } })).ok()).toBeTruthy()
+  const json = { accept: 'application/json' }
+  const made = await api.post('/api/experiments', { headers: json, form: { action: 'from-label', slot: 'feed-cta-label', label: 'Watch the experiment version ›', reason: 'Round-5 experiment wins' } })
+  expect(made.ok(), await made.text()).toBeTruthy()
+  const created = await made.json() as { id: number }
+  expect((await api.post('/api/experiments', { headers: json, form: { action: 'approve-variant', id: String(created.id), variant: 'a' } })).ok()).toBeTruthy()
+  expect((await api.post('/api/experiments', { headers: json, form: { action: 'approve-variant', id: String(created.id), variant: 'b' } })).ok()).toBeTruthy()
+  expect((await api.post('/api/experiments', { headers: json, form: { action: 'start', id: String(created.id) } })).ok()).toBeTruthy()
+  try {
+    const context = await browser.newContext({ viewport: PHONE })
+    const page = await context.newPage()
+    await fakeYouTube(page)
+    await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london/feed')
+    await expect(page.getByTestId('feed-screen')).toBeVisible({ timeout: 20_000 })
+    if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').dispatchEvent('click')
+    const cta = page.getByTestId('learn-more')
+    await expect(cta).toBeVisible({ timeout: 20_000 })
+    await expect(cta).toHaveText(/Watch the 3-minute version|Watch the experiment version/)
+    await expect(cta).not.toHaveText(/Friday|Jumu/)
+    await expect(cta).not.toHaveText(/^Learn more/)
+    await page.close()
+    await context.close()
+  } finally {
+    await api.post('/api/experiments', { headers: json, form: { action: 'finish', id: String(created.id) } })
     await api.post('/api/hearts', { form: { action: 'clock', iso: '', next: '/' } })
     await api.dispose()
   }
