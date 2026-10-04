@@ -141,11 +141,13 @@ test('phone feed proof: no repeats, taqwa, caption bar, advancing mute log', asy
   if (!taqwaCut || !/\btaqwa\b|\btawa\b/i.test([taqwa?.hors?.quote, ...(taqwa?.hors?.lines || []).map((line) => `${line.text} ${line.tidy || ''}`)].join(' '))) {
     const talkCut = Number((await feed.getAttribute('data-cut')) || taqwa?.cutId || 0)
     const lessonId = Number((await feed.getAttribute('data-lesson')) || taqwa?.lessonId || 0)
-    const tiers = (await (await master.get(`/api/talk-tiers?where[lesson][equals]=${lessonId}&limit=1`)).json()) as { docs?: { id: number; horsQuote?: string; horsLines?: unknown }[] }
+    const tiers = (await (await master.get(`/api/talk-tiers?where[lesson][equals]=${lessonId}&limit=1`)).json()) as { docs?: { id: number; horsStart?: number; horsQuote?: string; horsLines?: unknown }[] }
     const tier = tiers.docs?.[0]
     if (tier) {
       restoredTier = { id: tier.id, horsQuote: tier.horsQuote || '', horsLines: tier.horsLines || [] }
-      expect((await master.patch(`/api/talk-tiers/${tier.id}`, { data: { horsQuote: 'You know what tawa is.', horsLines: [{ at: 0, text: 'you know what tawa is' }] } })).ok()).toBeTruthy()
+      const at = Number(tier.horsStart) || 0
+      const patched = await master.patch(`/api/talk-tiers/${tier.id}`, { data: { horsLines: [{ at, text: 'you know what tawa is' }] } })
+      expect(patched.ok(), await patched.text()).toBeTruthy()
       taqwaCut = talkCut
     }
   }

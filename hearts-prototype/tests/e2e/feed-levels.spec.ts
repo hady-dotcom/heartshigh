@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { fakeYouTube } from './fake-youtube'
 import { settled, stepFeed } from './feed-step'
 
 // Navigation stays on one level: swipes loop within hors d'oeuvres (films and cards included) or within appetisers,
@@ -38,7 +39,7 @@ async function step(page: Page, feed: ReturnType<Page['getByTestId']>, move: str
 test('swipes keep to the level being watched, and Learn more goes to the watched item’s own parent', async ({ page }) => {
   test.setTimeout(120_000)
   await page.setViewportSize(PHONE)
-  await page.route(/youtube|ytimg|googlevideo/, (route) => route.abort())
+  await fakeYouTube(page)
   await signIn(page, `${PORTAL}/feed`)
   const feed = page.getByTestId('journey')
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
