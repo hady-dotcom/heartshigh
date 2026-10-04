@@ -222,7 +222,7 @@ test.describe('courses and planning', () => {
 
   test('a teacher plan locks against another teacher and tells the learner', async ({ page }) => {
     await page.setViewportSize(DESK)
-    const sitting = await ensureProofCourse(master)
+    const sitting = await ensureProofCourse(master, PORTAL, 'Teacher sittings')
     await page.goto(`/login?next=${encodeURIComponent(`${BASE}/admin/plans`)}`)
     await page.getByTestId('login-email').fill('elm-teacher@hearts.test')
     await page.getByTestId('login-password').fill('portal-teacher')

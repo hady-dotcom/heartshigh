@@ -2,12 +2,12 @@ import { expect, type APIRequestContext } from '@playwright/test'
 
 export const PROOF_COURSE = 'Ten sittings'
 
-export async function ensureProofCourse(master: APIRequestContext, portalSlug = 'east-london') {
+export async function ensureProofCourse(master: APIRequestContext, portalSlug = 'east-london', title = PROOF_COURSE) {
   const portals = (await (await master.get('/api/portals?limit=10&depth=0')).json()) as { docs: { id: number; slug?: string }[] }
   const portal = portals.docs.find((row) => row.slug === portalSlug)
   expect(portal).toBeTruthy()
   const courses = (await (await master.get('/api/courses?limit=80&depth=0')).json()) as { docs: { id: number; title?: string }[] }
-  const existing = courses.docs.find((course) => course.title === PROOF_COURSE)
+  const existing = courses.docs.find((course) => course.title === title)
   const users = (await (await master.get('/api/users?limit=40&depth=0')).json()) as { docs: { id: number; email?: string; extraCourses?: unknown[] }[] }
   const learner = users.docs.find((row) => row.email === 'elm-learner@hearts.test')
   expect(learner).toBeTruthy()
@@ -15,7 +15,7 @@ export async function ensureProofCourse(master: APIRequestContext, portalSlug = 
   if (!courseId) {
     const courseRes = await master.post('/api/courses', {
       data: {
-        title: PROOF_COURSE,
+        title,
         speaker: 'Amina Yusuf',
         origin: 'local',
         portal: portal!.id,
