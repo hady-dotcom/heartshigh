@@ -8,11 +8,11 @@ const BASE = process.env.HEARTS_RECORD_BASE || 'http://127.0.0.1:3000'
 const OUT = process.env.HEARTS_RECORD_OUT || path.join(process.cwd(), '..', 'artifacts', 'ai-director-v1')
 
 const CLIPS = [
-  { slug: 'demo-switch', query: 'fixture=switch&placeholder=1&autoplay=0&sound=0', times: [1, 6, 10, 14, 17, 20, 22.4], label: 'D then B then F' },
-  { slug: 'offcentre', query: 'youtube=9gwe-HMwZv0&placeholder=1&autoplay=0&sound=0', times: [1006, 1012, 1018, 1022, 1026], label: 'D' },
-  { slug: 'twoperson', query: 'youtube=45XUrfJS68Q&placeholder=1&autoplay=0&sound=0', times: [308, 313, 319, 326, 330], label: 'F words' },
-  { slug: 'slidetext', query: 'youtube=9k7QxXtCzaQ&placeholder=1&autoplay=0&sound=0', times: [40, 46, 52, 58], label: 'B' },
-  { slug: 'wide', query: 'youtube=TLCGBj4AlB0&placeholder=1&autoplay=0&sound=0', times: [2752, 2760, 2768, 2774], label: 'D' },
+  { slug: 'demo-switch', start: 0, query: 'fixture=switch&placeholder=1&autoplay=0&sound=0', times: [1, 6, 10, 14, 17, 20, 22.4], label: 'D then B then F' },
+  { slug: 'offcentre', start: 1005, query: 'youtube=9gwe-HMwZv0&placeholder=1&autoplay=0&sound=0', times: [1006, 1012, 1018, 1022, 1026], label: 'D' },
+  { slug: 'twoperson', start: 307.25, query: 'youtube=45XUrfJS68Q&placeholder=1&autoplay=0&sound=0', times: [308, 313, 319, 326, 330], label: 'F words' },
+  { slug: 'slidetext', start: 38, query: 'youtube=9k7QxXtCzaQ&placeholder=1&autoplay=0&sound=0', times: [40, 46, 52, 58], label: 'B' },
+  { slug: 'wide', start: 2751, query: 'youtube=TLCGBj4AlB0&placeholder=1&autoplay=0&sound=0', times: [2752, 2760, 2768, 2774], label: 'D' },
 ]
 
 function ensurePlaceholder() {
@@ -61,11 +61,25 @@ async function main() {
     for (let i = 0; i < clip.times.length; i++) {
       const t = clip.times[i]
       await page.evaluate(`window.__frClock.set(${t})`)
-      await page.waitForTimeout(450)
+      await page.waitForFunction(`(() => {
+        const el = document.querySelector('[data-testid="framing-player"]')
+        const media = document.querySelector('[data-testid="framing-media"]')
+        if (!el) return false
+        const shown = Number(el.getAttribute('data-framing-time'))
+        if (Number.isNaN(shown) || Math.abs(shown - ${t}) > 0.25) return false
+        if (!media || !('currentTime' in media)) return true
+        const want = ((${t} - ${clip.start}) % 24 + 24) % 24
+        return Math.abs(media.currentTime - want) < 0.45
+      })()`)
+      await page.waitForTimeout(220)
       const mode = await page.getAttribute('[data-testid="framing-player"]', 'data-framing-mode')
       const words = page.getByTestId('spoken-words')
       const shown = (await words.count()) ? await words.getAttribute('data-sentence') : null
-      console.log(clip.slug, 't', t, 'mode', mode, shown ? `words=${shown.slice(0, 48)}` : '')
+      const mediaTime = await page.evaluate(`{
+        const media = document.querySelector('[data-testid="framing-media"]')
+        return media && 'currentTime' in media ? Number(media.currentTime.toFixed(2)) : null
+      }`)
+      console.log(clip.slug, 't', t, 'mode', mode, shown ? `words=${shown.slice(0, 48)}` : '', 'media', mediaTime)
       const file = path.join(dir, `frame-${i}.png`)
       await page.screenshot({ path: file, type: 'png' })
       frames.push(file)

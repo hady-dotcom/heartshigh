@@ -62,7 +62,11 @@ export function FramingPlayer({
   useEffect(() => {
     if (placeholder) {
       setReady(true)
-      if (autoplay) void video.current?.play().catch(() => undefined)
+      const node = video.current
+      if (node) {
+        node.pause()
+        if (autoplay) void node.play().catch(() => undefined)
+      }
       return
     }
     if (!host.current) return
@@ -86,6 +90,8 @@ export function FramingPlayer({
       kind: 'hors',
       onReady: (next) => {
         if (gone) return
+        const iframe = host.current?.querySelector('iframe')
+        if (iframe) iframe.setAttribute('data-testid', 'framing-media')
         setReady(true)
         openAtStart(next)
       },
@@ -116,16 +122,25 @@ export function FramingPlayer({
     const tick = () => {
       const player = getPlayer(playerId)
       const testClock = typeof window !== 'undefined' ? (window as unknown as { __frClock?: FramingClock }).__frClock : undefined
+      const driven = clock?.now() ?? testClock?.now()
+      if (placeholder && video.current && typeof driven === 'number' && Number.isFinite(driven)) {
+        const node = video.current
+        const duration = Number.isFinite(node.duration) && node.duration > 0 ? node.duration : 24
+        let offset = driven - resolved.start
+        offset = ((offset % duration) + duration) % duration
+        if (Math.abs(node.currentTime - offset) > 0.08) node.currentTime = offset
+        if (!autoplay && !node.paused) node.pause()
+      }
       const fromVideo = placeholder && video.current && Number.isFinite(video.current.currentTime)
         ? resolved.start + video.current.currentTime
         : undefined
-      const next = clock?.now() ?? testClock?.now() ?? fromVideo ?? player?.getCurrentTime()
+      const next = (typeof driven === 'number' && Number.isFinite(driven) ? driven : undefined) ?? fromVideo ?? player?.getCurrentTime()
       if (typeof next === 'number' && Number.isFinite(next)) setTime((held) => (Math.abs(held - next) < 0.04 ? held : next))
       frame = window.requestAnimationFrame(tick)
     }
     frame = window.requestAnimationFrame(tick)
     return () => window.cancelAnimationFrame(frame)
-  }, [clock, placeholder, playerId, resolved.start])
+  }, [autoplay, clock, placeholder, playerId, resolved.start])
 
   useEffect(() => {
     onMode?.(mode, time)

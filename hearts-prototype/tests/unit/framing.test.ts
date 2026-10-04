@@ -132,6 +132,17 @@ test('letterbox and split film stay inside the 390×844 stage', () => {
   assert.equal(split.film.top, 72)
 })
 
+test('word clocks stay inside each caption cue instead of a clip-wide estimate', () => {
+  const words = wordsFromCues([
+    { start: 10, end: 12, text: 'one two' },
+    { start: 20, end: 22, text: 'three four' },
+  ])
+  assert.equal(words[0].t, 10)
+  assert.ok(words[1].e <= 12.01)
+  assert.equal(words[2].t, 20)
+  assert.ok(words[3].e <= 22.01)
+})
+
 test('spoken words ignore the sentence that ended at the clip in-point', () => {
   const sentences = sentencesFromWords(
     wordsFromCues([

@@ -9,11 +9,14 @@ const switching = JSON.parse(readFileSync(path.join(process.cwd(), 'tests/fixtur
 
 async function setTime(page: Page, time: number) {
   await page.evaluate((value) => (window as unknown as { __frClock: { set(value: number): void } }).__frClock.set(value), time)
-  await page.waitForTimeout(120)
+  await page.waitForFunction((value) => {
+    const el = document.querySelector('[data-testid="framing-player"]')
+    return el && Math.abs(Number(el.getAttribute('data-framing-time')) - value) < 0.2
+  }, time)
 }
 
 async function assertMediaInViewport(page: Page) {
-  const media = page.getByTestId('framing-media')
+  const media = page.locator('[data-testid="framing-media"], [data-testid="framing-host"] iframe, .fr-film iframe').first()
   await expect(media).toBeVisible()
   const box = await media.boundingBox()
   expect(box).toBeTruthy()
@@ -26,6 +29,8 @@ async function assertMediaInViewport(page: Page) {
   expect(film).toBeTruthy()
   expect(film!.x).toBeGreaterThanOrEqual(-1)
   expect(film!.x + film!.width).toBeLessThanOrEqual(391)
+  expect(film!.y).toBeGreaterThanOrEqual(-1)
+  expect(film!.y + film!.height).toBeLessThanOrEqual(845)
 }
 
 test.describe('AI director player', () => {
@@ -59,6 +64,9 @@ test.describe('AI director player', () => {
     const letter = await page.getByTestId('framing-film').boundingBox()
     expect(letter!.width).toBeGreaterThan(380)
     expect(letter!.x).toBeLessThan(2)
+    const videoAtB = await page.getByTestId('framing-media').evaluate((el) => (el as HTMLVideoElement).currentTime)
+    expect(videoAtB).toBeGreaterThan(9)
+    expect(videoAtB).toBeLessThan(11)
 
     await setTime(page, 17)
     await expect(player).toHaveAttribute('data-framing-mode', 'F')
