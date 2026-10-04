@@ -5,6 +5,7 @@
 import ExcelJS from 'exceljs'
 import type { Env } from './env'
 import { isProduction } from './env'
+import { FontUse, fontObjects, notoSans } from './pdf-font'
 
 export type Family = 'popup' | 'reflection' | 'task' | 'circle'
 
@@ -474,9 +475,15 @@ const MUTED = '0.243 0.333 0.318'
 
 export function feedbackPdf(built: BuiltFeedback, summaries: DigestSummary[] = [], digest: PdfDigest = {}) {
   const portal = (digest.portal || 'This portal').replace(/\s+/g, ' ').trim() || 'This portal'
-  const pages: string[][] = [coverPage(built, portal, digest.from, digest.to)]
-  const content = contentPages(built, summaries, portal)
-  return assemblePdf([...pages, ...content].map((ops) => ops.join('\n')))
+  const fonts: PdfFonts = { F1: new FontUse(notoSans('regular')), F2: new FontUse(notoSans('bold')), F3: new FontUse(notoSans('italic')) }
+  writing = fonts
+  try {
+    const pages: string[][] = [coverPage(built, portal, digest.from, digest.to)]
+    const content = contentPages(built, summaries, portal)
+    return assemblePdf([...pages, ...content].map((ops) => ops.join('\n')), fonts)
+  } finally {
+    writing = null
+  }
 }
 
 function coverPage(built: BuiltFeedback, portal: string, from?: string | null, to?: string | null) {
@@ -629,60 +636,48 @@ function wrap(value: string, width: number) {
   return lines
 }
 
-function pdfLiteral(value: string) {
-  const mapped = value
-    .replace(/[‘’]/g, "'")
-    .replace(/[“”]/g, '"')
-    .replace(/[–—]/g, '-')
-    .replace(/…/g, '...')
-  let out = ''
-  for (const ch of mapped) {
-    const code = ch.codePointAt(0) || 32
-    if (ch === '\\' || ch === '(' || ch === ')') out += `\\${ch}`
-    else if (code === 0xb7) out += '\\267'
-    else if (code >= 32 && code <= 126) out += ch
-  }
-  return out || ' '
-}
+type PdfFonts = Record<'F1' | 'F2' | 'F3', FontUse>
+
+/** The faces of the document being written. feedbackPdf is synchronous, so one document is written at a time. */
+let writing: PdfFonts | null = null
 
 function text(ops: string[], x: number, y: number, value: string, font: 'F1' | 'F2' | 'F3', size: number, color: string) {
-  ops.push(`${color} rg`, `BT /${font} ${size} Tf ${x.toFixed(1)} ${y.toFixed(1)} Td (${pdfLiteral(value)}) Tj ET`)
+  if (!writing) throw new Error('No PDF is being written.')
+  ops.push(`${color} rg`, `BT /${font} ${size} Tf ${x.toFixed(1)} ${y.toFixed(1)} Td ${writing[font].encode(value.replace(/\s+/g, ' '))} Tj ET`)
 }
 
-function assemblePdf(pages: string[]) {
-  const objects: string[] = []
+function assemblePdf(pages: string[], fonts: PdfFonts) {
+  const objects: Buffer[] = []
   const pageObjectAt: number[] = []
-  objects.push('<< /Type /Catalog /Pages 2 0 R >>')
-  objects.push('')
-  const fontRegular = objects.length + 1
-  objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>')
-  const fontBold = objects.length + 1
-  objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>')
-  const fontOblique = objects.length + 1
-  objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding >>')
+  objects.push(Buffer.from('<< /Type /Catalog /Pages 2 0 R >>'))
+  objects.push(Buffer.alloc(0))
+  const faces = (['F1', 'F2', 'F3'] as const).map((key, index) => {
+    const built = fontObjects(fonts[key], objects.length + 1, `HRTS${'ABC'[index]}A`)
+    objects.push(...built.objects)
+    return `/${key} ${built.id} 0 R`
+  })
   pages.forEach((content) => {
-    const stream = `<< /Length ${Buffer.byteLength(content)} >>\nstream\n${content}\nendstream`
     const contentId = objects.length + 1
-    objects.push(stream)
+    objects.push(Buffer.from(`<< /Length ${Buffer.byteLength(content)} >>\nstream\n${content}\nendstream`))
     pageObjectAt.push(objects.length + 1)
-    objects.push(
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents ${contentId} 0 R /Resources << /Font << /F1 ${fontRegular} 0 R /F2 ${fontBold} 0 R /F3 ${fontOblique} 0 R >> >> >>`,
-    )
+    objects.push(Buffer.from(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents ${contentId} 0 R /Resources << /Font << ${faces.join(' ')} >> >> >>`))
   })
   const kids = pageObjectAt.map((id) => `${id} 0 R`).join(' ')
-  objects[1] = `<< /Type /Pages /Count ${pages.length} /Kids [${kids}] >>`
-  let body = '%PDF-1.4\n'
-  const offsets = [0]
+  objects[1] = Buffer.from(`<< /Type /Pages /Count ${pages.length} /Kids [${kids}] >>`)
+  const chunks: Buffer[] = [Buffer.from('%PDF-1.4\n%\xe2\xe3\xcf\xd3\n', 'latin1')]
+  let length = chunks[0].length
+  const offsets: number[] = []
   objects.forEach((object, index) => {
-    offsets.push(Buffer.byteLength(body))
-    body += `${index + 1} 0 obj\n${object}\nendobj\n`
+    offsets.push(length)
+    const piece = Buffer.concat([Buffer.from(`${index + 1} 0 obj\n`), object, Buffer.from('\nendobj\n')])
+    chunks.push(piece)
+    length += piece.length
   })
-  const xref = Buffer.byteLength(body)
-  body += `xref\n0 ${objects.length + 1}\n`
-  body += '0000000000 65535 f \n'
-  for (const offset of offsets.slice(1)) body += `${String(offset).padStart(10, '0')} 00000 n \n`
-  body += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`
-  return Buffer.from(body)
+  let tail = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`
+  for (const offset of offsets) tail += `${String(offset).padStart(10, '0')} 00000 n \n`
+  tail += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${length}\n%%EOF`
+  chunks.push(Buffer.from(tail))
+  return Buffer.concat(chunks)
 }
 
 export function themesFromAnswers(text: string): { themes: string[]; quotes: string[] } {

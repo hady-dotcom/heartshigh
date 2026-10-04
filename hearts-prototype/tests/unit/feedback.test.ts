@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import ExcelJS from 'exceljs'
+import { execFileSync } from 'node:child_process'
+import { mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+import { inflateSync } from 'node:zlib'
 import {
   asDraft,
   assessQuestion,
@@ -172,12 +177,75 @@ test('the spreadsheet and the PDF carry the shared answer and leave the private 
   assert.equal(text.includes('maryam@'), false)
   const pdf = feedbackPdf(built, [], { portal: 'East London', from: '2026-09-01', to: '2026-09-30' }).toString('latin1')
   assert.match(pdf, /^%PDF-1\.4/)
-  assert.match(pdf, /I sat with my uncle/)
-  assert.equal(pdf.includes('Kept this'), false)
-  assert.match(pdf, /1 shared, 1 kept private/)
-  assert.match(pdf, /Anonymised/)
-  assert.match(pdf, /East London/)
-  assert.match(pdf, /Teacher reply/)
+  const shown = pdfText(Buffer.from(pdf, 'latin1'))
+  assert.match(shown, /I sat with my uncle/)
+  assert.equal(shown.includes('Kept this'), false)
+  assert.match(shown, /1 shared, 1 kept private/)
+  assert.match(shown, /Anonymised/)
+  assert.match(shown, /East London/)
+  assert.match(shown, /Teacher reply/)
   assert.match(pdf, /0\.059 0\.231 0\.227/)
   assert.match(pdf, /0\.878 0\.667 0\.271/)
+})
+
+/** The text a PDF shows, read back through each font's ToUnicode map, one string per Tj. */
+function pdfText(pdf: Buffer) {
+  const body = pdf.toString('latin1')
+  const objects = new Map<number, string>()
+  for (const match of body.matchAll(/(\d+) 0 obj\n([\s\S]*?)\nendobj/g)) objects.set(Number(match[1]), match[2])
+  const streamOf = (id: number) => {
+    const object = objects.get(id) || ''
+    const data = object.slice(object.indexOf('stream\n') + 7, object.lastIndexOf('\nendstream'))
+    return /FlateDecode/.test(object) ? inflateSync(Buffer.from(data, 'latin1')).toString('latin1') : data
+  }
+  const maps = new Map<string, Map<string, string>>()
+  for (const [, object] of objects) {
+    const page = object.match(/\/Font << ([^>]*) >>/)
+    if (!page) continue
+    for (const [, key, id] of page[1].matchAll(/\/(F\d) (\d+) 0 R/g)) {
+      if (maps.has(key)) continue
+      const unicode = Number((objects.get(Number(id)) || '').match(/\/ToUnicode (\d+) 0 R/)?.[1])
+      const map = new Map<string, string>()
+      for (const [, gid, hex] of streamOf(unicode).matchAll(/<([0-9a-f]{4})> <([0-9a-f]+)>/g)) {
+        map.set(gid, String.fromCharCode(...(hex.match(/.{4}/g) || []).map((unit) => parseInt(unit, 16))))
+      }
+      maps.set(key, map)
+    }
+  }
+  const out: string[] = []
+  for (const [, object] of objects) {
+    if (!/^<< \/Length \d+ >>\nstream\n/.test(object) || /begincmap/.test(object)) continue
+    for (const [, key, hex] of object.matchAll(/\/(F\d) [\d.]+ Tf [^<]*<([0-9a-f]*)> Tj/g)) {
+      out.push((hex.match(/.{4}/g) || []).map((gid) => maps.get(key)?.get(gid) ?? '\uFFFD').join(''))
+    }
+  }
+  return out.join('\n')
+}
+
+test('the PDF embeds Noto Sans, so transliterated Arabic keeps its marks: ū ā ī ḥ ʿ ʾ', () => {
+  const marked = row({
+    id: 'n1', learnerId: 21, text: 'In Sūrat an-Nūr, al-Raḥmān is named; ʿilm and Qurʾān, and the ḥadīth of Abū Hurayra.',
+    talk: 'An-Nūr: the Light', course: 'The Names', learnerName: 'ʿĀʾisha Raḥīm', reply: 'Jazāk Allāhu khayran, ʿĀʾisha.',
+  })
+  const built = buildFeedback([marked], 1, { door: null, seatId: null, courseId: null, talkId: null, questionId: null, family: '', learnerId: null, from: null, to: null, accessCodeId: null }, false)
+  const pdf = feedbackPdf(built, [{ questionKey: built.doors[0].talks[0].questions[0].key, themes: ['Al-Raḥīm and ʿafw came up twice.'], quotes: [] }], { portal: 'Masjid an-Nūr', from: '2026-09-01', to: '2026-09-30' })
+  const raw = pdf.toString('latin1')
+  assert.match(raw, /\/Subtype \/Type0 \/BaseFont \/HRTSAA\+NotoSans-Regular \/Encoding \/Identity-H/)
+  assert.match(raw, /\/FontFile2 \d+ 0 R/)
+  assert.equal(/\/BaseFont \/Helvetica/.test(raw), false)
+  assert.ok(pdf.length < 250_000, `the subset keeps the file small (${pdf.length} bytes)`)
+  const shown = pdfText(pdf).normalize('NFC')
+  for (const expected of ['An-Nūr: the Light', 'Masjid an-Nūr', 'Sūrat an-Nūr', 'al-Raḥmān', 'ʿilm', 'Qurʾān', 'ḥadīth', 'Abū', 'ʿĀʾisha', 'Jazāk Allāhu', 'Al-Raḥīm and ʿafw']) {
+    assert.ok(shown.includes(expected), `the PDF shows "${expected}"`)
+  }
+  assert.equal(shown.includes('\uFFFD'), false, 'every glyph maps back to its text')
+  let poppler = ''
+  try {
+    const file = path.join(mkdtempSync(path.join(tmpdir(), 'hearts-pdf-')), 'feedback.pdf')
+    writeFileSync(file, pdf)
+    poppler = execFileSync('pdftotext', ['-enc', 'UTF-8', file, '-'], { encoding: 'utf8' }).normalize('NFC')
+  } catch {
+    // poppler-utils is not installed here; the ToUnicode read above stands.
+  }
+  if (poppler) for (const expected of ['An-Nūr', 'al-Raḥmān', 'ʿilm', 'Qurʾān', 'ḥadīth', 'ʿĀʾisha']) assert.ok(poppler.includes(expected), `pdftotext reads "${expected}"`)
 })
