@@ -68,6 +68,7 @@ test('the master creator can switch Gather off, and a learner sees no Gather unt
   await page.getByTestId('studio-next').click()
   await expect(page.getByTestId('studio-courses')).toBeVisible()
   await page.getByTestId('studio-next').click()
+  await expect(page.getByTestId('studio-step-features')).toHaveClass(/on/)
   await expect(page.getByTestId('studio-features')).toBeVisible()
   await expect(page.getByTestId('feature-depth-beginner')).toBeVisible()
   await expect(page.getByTestId('feature-depth-intermediate')).toBeVisible()

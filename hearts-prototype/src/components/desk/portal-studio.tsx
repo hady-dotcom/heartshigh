@@ -62,6 +62,9 @@ export function PortalStudio({
   const toggleCourse = (id: number) => {
     setPicked((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]))
   }
+  const go = (next: Step) => {
+    window.setTimeout(() => setStep(next), 0)
+  }
 
   const grouped = useMemo(
     () => DEPTH_ORDER.map((depth) => ({ depth, rows: FEATURES.filter((row) => row.depth === depth) })),
@@ -195,20 +198,32 @@ export function PortalStudio({
       </section>
 
       <div className="studio-actions">
-        {step !== 'details' ? (
-          <button type="button" className="btn ghost" data-testid="studio-back" onClick={() => setStep(step === 'features' ? 'courses' : 'details')}>
-            Back
-          </button>
-        ) : null}
-        {step !== 'features' ? (
-          <button type="button" className="btn ink" data-testid="studio-next" onClick={() => setStep(step === 'details' ? 'courses' : 'features')}>
-            Next
-          </button>
-        ) : (
-          <button className="btn ink" type="submit" data-testid={mode === 'create' ? 'create-portal-submit' : 'save-portal-features'}>
-            {mode === 'create' ? 'Open portal' : 'Save features'}
-          </button>
-        )}
+        <button
+          type="button"
+          className="btn ghost"
+          data-testid="studio-back"
+          hidden={step === 'details'}
+          onClick={() => go(step === 'features' ? 'courses' : 'details')}
+        >
+          Back
+        </button>
+        <button
+          type="button"
+          className="btn ink"
+          data-testid="studio-next"
+          hidden={step === 'features'}
+          onClick={() => go(step === 'details' ? 'courses' : 'features')}
+        >
+          Next
+        </button>
+        <button
+          className="btn ink"
+          type="submit"
+          hidden={step !== 'features'}
+          data-testid={mode === 'create' ? 'create-portal-submit' : 'save-portal-features'}
+        >
+          {mode === 'create' ? 'Open portal' : 'Save features'}
+        </button>
       </div>
     </form>
   )
