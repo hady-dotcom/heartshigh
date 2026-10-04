@@ -111,7 +111,12 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const { payload, user } = await getSession()
   const wantsJson = (req.headers.get('accept') || '').includes('application/json')
-  const form = await req.formData()
+  let form: FormData
+  try {
+    form = await req.formData()
+  } catch {
+    return NextResponse.json({ error: 'That request was incomplete.' }, { status: 400 })
+  }
   const next = text(form, 'next') || '/master/experiments'
   const action = text(form, 'action')
   const device = await deviceId()
