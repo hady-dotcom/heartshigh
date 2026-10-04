@@ -75,10 +75,10 @@ async function main() {
       const mode = await page.getAttribute('[data-testid="framing-player"]', 'data-framing-mode')
       const words = page.getByTestId('spoken-words')
       const shown = (await words.count()) ? await words.getAttribute('data-sentence') : null
-      const mediaTime = await page.evaluate(`{
+      const mediaTime = await page.evaluate(`(() => {
         const media = document.querySelector('[data-testid="framing-media"]')
         return media && 'currentTime' in media ? Number(media.currentTime.toFixed(2)) : null
-      }`)
+      })()`)
       console.log(clip.slug, 't', t, 'mode', mode, shown ? `words=${shown.slice(0, 48)}` : '', 'media', mediaTime)
       const file = path.join(dir, `frame-${i}.png`)
       await page.screenshot({ path: file, type: 'png' })
