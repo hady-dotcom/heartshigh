@@ -57,6 +57,9 @@ type Exit = 'left' | 'right' | 'up' | 'down'
 const EXIT_FROM: Record<Exit, string> = { left: 'translateX(0)', right: 'translateX(0)', up: 'translateY(0)', down: 'translateY(0)' }
 const EXIT_TO: Record<Exit, string> = { left: 'translateX(-100%)', right: 'translateX(100%)', up: 'translateY(-100%)', down: 'translateY(100%)' }
 const ENTER_FROM: Record<Exit, string> = { left: 'translateX(100%)', right: 'translateX(-100%)', up: 'translateY(100%)', down: 'translateY(-100%)' }
+// The card leaves at the finger's pace and the next one glides in evenly; a front-loaded curve reads as a pop.
+const SLIDE_OUT = 'cubic-bezier(0.4, 0, 1, 1)'
+const SLIDE_IN = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
 const SWIPE_EXIT: Record<Swipe, Exit> = { topic: 'left', speaker: 'right', lane: 'down', next: 'up', prev: 'down' }
 const HOLD = 700
 
@@ -894,7 +897,7 @@ export function Journey(props: JourneyProps) {
         // Carry on from wherever the finger left the card, so the move never jumps.
         const from = el.style.transform || EXIT_FROM[exit]
         el.style.transform = ''
-        await finished(animate(el, [{ transform: from }, { transform: EXIT_TO[exit] }], T.snap, EASE.standard, { id: 'snap' }))
+        await finished(animate(el, [{ transform: from }, { transform: EXIT_TO[exit] }], 200, SLIDE_OUT, { id: 'snap' }))
       }
       setFirstEver(false)
       // A swipe moves along the level being watched; only "Learn more" goes up a level.
@@ -903,7 +906,7 @@ export function Journey(props: JourneyProps) {
         // The poster is on screen at once; the incoming card slides in from the side opposite the exit.
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
         el.getAnimations().forEach((animation) => animation.cancel())
-        if (how === 'swipe') animate(el, [{ transform: ENTER_FROM[exit] }, { transform: 'translate(0, 0)' }], T.snap, EASE.enter, { id: 'enter', fill: 'none' })
+        if (how === 'swipe') animate(el, [{ transform: ENTER_FROM[exit] }, { transform: 'translate(0, 0)' }], 380, SLIDE_IN, { id: 'enter', fill: 'none' })
       }
       await shown
       void refill()

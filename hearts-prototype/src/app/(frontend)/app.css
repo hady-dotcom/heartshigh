@@ -186,7 +186,7 @@
 .slide .bg.drift { inset: -6%; animation: scene-drift 22s ease-in-out infinite alternate; }
 @keyframes scene-drift { from { transform: scale(1.04); } to { transform: scale(1.12) translate3d(-1.6%, -1%, 0); } }
 .beat-in { animation: beat-in 0.55s ease both; }
-@keyframes beat-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes beat-in { from { opacity: 0; } to { opacity: 1; } }
 .scene-stack { margin-top: 18px; display: flex; flex-direction: column; gap: 10px; min-height: 0; flex: 1; }
 .scene-stack .window-card { margin-bottom: 0; min-height: 0; flex: 1; display: flex; flex-direction: column; justify-content: center; }
 .slide.kinetic .kinetic-body { flex: 1; min-height: 0; overflow: auto; align-content: start; }

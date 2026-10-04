@@ -97,7 +97,7 @@
 .overlay .yt-host iframe { pointer-events: none; }
 .j-poster { position: absolute; inset: 0; background: #0e2a2b url('/theme/evening-courtyard.jpg') center 40% / cover no-repeat; }
 html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/dawn-courtyard.jpg'); }
-.j-poster-play { position: absolute; left: 50%; top: 42%; z-index: 4; width: 76px; height: 76px; margin: -38px 0 0 -38px; border: 0; border-radius: 50%; display: grid; place-items: center; padding: 0 0 0 4px; background: #d4a84b; color: #1a1408; box-shadow: 0 10px 30px rgba(0,0,0,0.35); cursor: pointer; }
+.j-poster-play { position: absolute; left: 50%; top: 26%; z-index: 4; width: 76px; height: 76px; margin: -38px 0 0 -38px; border: 0; border-radius: 50%; display: grid; place-items: center; padding: 0 0 0 4px; background: #d4a84b; color: #1a1408; box-shadow: 0 10px 30px rgba(0,0,0,0.35); cursor: pointer; }
 .j-poster img { position: absolute; left: 0; top: -17%; width: 100%; height: 134%; max-width: none; object-fit: cover; opacity: 0.8; }
 .j-poster::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.7)); }
 .j-poster.breathe img { animation: breathe 2.4s ease-in-out infinite; }
@@ -193,3 +193,4 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .journey .lane-switch span { padding: 7px 14px; font-size: 13px; animation: toast 1.5s ease forwards; }
 .j-scene .j-choices { margin-top: auto; }
 .j-scene .j-actions { margin-top: 10px; }
+.strict .j-poster-play { top: 50%; }
