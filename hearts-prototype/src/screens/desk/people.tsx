@@ -57,7 +57,7 @@ export async function TeachScreen(ctx: Ctx) {
         </header>
         <div className="table-wrap">
           <table className="data">
-            <thead><tr><th>Name</th><th>Email</th><th className="num">Day</th><th className="num">Parts watched</th><th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr> <HelpTip topic="on-time">{TOOL.onTime}</HelpTip></th><th className="num">Answers</th><th>Give a course</th><th /></tr></thead>
+            <thead><tr><th>Name</th><th>Email</th><th className="num">Day</th><th className="num">Parts watched</th><th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr> <HelpTip topic="on-time">{TOOL.onTime}</HelpTip></th><th className="num">Answers</th><th>Give a course <HelpTip topic="give-course" place="end">{TOOL.giveCourse}</HelpTip></th><th> <HelpTip topic="view-as" place="end">{TOOL.viewAs}</HelpTip></th></tr></thead>
             <tbody>
               {learners.map((learner) => {
                 const done = completions.filter((row) => ref(row.user) === learner.id)

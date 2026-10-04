@@ -2,8 +2,6 @@
 
 import { useState } from 'react'
 import { Hidden } from '@/components/app/shell'
-import { HelpTip } from './help'
-import { TOOL } from '@/lib/desk-help'
 
 export function GiveCourse({
   learnerId,
@@ -46,7 +44,6 @@ export function GiveCourse({
         ))}
       </select>
       <button className="btn small" data-testid="grant-course" type="submit" disabled={!course}>Give</button>
-      <HelpTip topic="give-course">{TOOL.giveCourse}</HelpTip>
     </form>
   )
 }
