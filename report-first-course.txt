@@ -1,0 +1,113 @@
+
+> hearts-prototype@1.0.0 report:first-course
+> tsx scripts/report-first-course.ts
+
+[⣷] Pulling schema from database...
+[✓] Pulling schema from database...
+[21:13:39] WARN: No email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.
+First-course report (read-only). Nothing is written.
+
+Door 1 One day
+  clause 1  current hit: — (none)
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 2 The sitting: how he came and sat with the Messenger
+  clause 2  current hit: 1 How to Live Like the Prophet, Session 6
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 3 About Islam
+  clause 13  current hit: — (none)
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 4 Two testimonies
+  clause 14  current hit: — (none)
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 5 Prayer
+  clause 15  current hit: 2 The Names Class 19: Ar-Rabb
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 6 Zakat
+  clause 16  current hit: — (none)
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 7 Fasting Ramadan
+  clause 17  current hit: — (none)
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 8 Hajj
+  clause 18  current hit: — (none)
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 9 About iman
+  clause 21  current hit: — (none)
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 10 Believe in Allah
+  clause 22  current hit: 2 The Names Class 19: Ar-Rabb
+  would offer: The Names Class 19: Ar-Rabb · The Names Class 19: Ar-Rabb (39 min)
+  matched text: The Names Class 19: Ar-Rabb
+  This is the full talk the door opened on.  OK
+Door 11 His angels
+  clause 23  current hit: — (none)
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 12 His Books
+  clause 24  current hit: 2 The Names Class 19: Ar-Rabb
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 13 His Messengers
+  clause 25  current hit: 2 The Names Class 19: Ar-Rabb
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 14 The Last Day
+  clause 26  current hit: 3 The Names Class 20: Al-Nur
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 15 Qadar, good and evil
+  clause 27  current hit: — (none)
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 16 Ihsan: worship as though you see Him
+  clause 29  current hit: 1 How to Live Like the Prophet, Session 6
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 17 The Hour: when, and what cannot be known
+  clause 32  current hit: — (none)
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 18 The Hour: the two signs
+  clause 34  current hit: — (none)
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 19 It was Jibril
+  clause 36  current hit: — (none)
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+Door 20 He came to teach you your religion
+  clause 41  current hit: — (none)
+  would offer: (none)
+  matched text: none — a longer talk for this door is on its way
+  This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
+
+Empty doors (19): Door 1 One day; Door 2 The sitting: how he came and sat with the Messenger; Door 3 About Islam; Door 4 Two testimonies; Door 5 Prayer; Door 6 Zakat; Door 7 Fasting Ramadan; Door 8 Hajj; Door 9 About iman; Door 11 His angels; Door 12 His Books; Door 13 His Messengers; Door 14 The Last Day; Door 15 Qadar, good and evil; Door 16 Ihsan: worship as though you see Him; Door 17 The Hour: when, and what cannot be known; Door 18 The Hour: the two signs; Door 19 It was Jibril; Door 20 He came to teach you your religion
+
+20 doors. 19 still open on a short clip, a later part, a life-stage talk, an off-topic fallback, or have no on-topic long talk. No rows were changed.

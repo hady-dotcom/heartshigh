@@ -1,0 +1,127 @@
+
+> hearts-prototype@1.0.0 report:mains
+> tsx scripts/report-mains.ts
+
+[⣷] Pulling schema from database...
+[✓] Pulling schema from database...
+[21:13:44] WARN: No email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.
+Mains report (read-only). Nothing is written.
+
+Short-main threshold: 10 min (HEARTS_DEMOTE_SHORT_MAINS off).
+
+# 1 How to Live Like the Prophet, Session 6 · 1 talks
+  1  How to Live Like the Prophet, Session 6  id=TLCGBj4AlB0  stored=2:48:44  live=title only  yt="How to Live Like the Prophet ﷺ"
+# 2 The Names Class 19: Ar-Rabb · 1 talks
+  2  The Names Class 19: Ar-Rabb  id=ECaTWkof57E  stored=38:57  live=title only  yt="Who Is Truly Nurturing You?"  !! TITLE MISMATCH
+# 3 The Names Class 20: Al-Nur · 1 talks
+  3  The Names Class 20: Al-Nur  id=NIR88RRpat4  stored=47:41  live=title only  yt="Why You Feel Empty… And How Ramadan Fixes It"  !! TITLE MISMATCH
+# 4 East London circle notes · 1 talks
+  4  How we sit  id=—  stored=0:08  live=—  yt="—"  !! UNDER 10 MIN → clip, NO YOUTUBE ID
+# 5 Quranic Connection #26: A Cure for Anxiety · 1 talks
+  5  Quranic Connection #26: A Cure for Anxiety  id=FAxIZIqwfd8  stored=1:04  live=title only  yt="Quranic Connection #26: A Cure for Anxiety"  !! UNDER 10 MIN → clip
+# 6 Tawakkul: Supreme Trust in Allah · 1 talks
+  6  Tawakkul: Supreme Trust in Allah  id=RDlKjwPKgPM  stored=19:43  live=title only  yt="Tawakkul: Supreme Trust in Allah"
+# 7 Prophetic Duas · 1 talks
+  7  Dua 1: O Allah, I am Your Servant  id=UGuKJLZnbi8  stored=12:43  live=title only  yt="Dua 1: O Allah, I am Your Servant"
+# 8 The Road Ahead · 1 talks
+  8  On Mosques, Companionship, & Knowledge  id=N_-YiwIb-u0  stored=7:23  live=title only  yt="On Mosques, Companionship, & Knowledge"  !! UNDER 10 MIN → Ready for more?
+# 9 Still Lonely in a Full Masjid? · 1 talks
+  9  Still Lonely in a Full Masjid?  id=45XUrfJS68Q  stored=1:37:01  live=title only  yt="Still Lonely in a Full Masjid?"
+# 10 In Good Company · 1 talks
+  10  How to Give Good Advice - In Good Company ft. Shaykh Umair Haseeb  id=rUIMxBh3aqo  stored=1:13:21  live=title only  yt="How to Give Good Advice - In Good Company ft. Shaykh Umair Haseeb"
+# 11 The BEST Islamic Approach To Wealth · 1 talks
+  11  The BEST Islamic Approach To Wealth  id=v42oVXo20VY  stored=6:34  live=title only  yt="The BEST Islamic Approach To Wealth"  !! UNDER 10 MIN → Ready for more?
+# 12 Contagious Generosity: How To Help Yourself By Helping Others · 1 talks
+  12  Contagious Generosity: How To Help Yourself By Helping Others  id=RZmsvGE785o  stored=46:21  live=title only  yt="Contagious Generosity: How To Help Yourself By Helping Others"
+# 13 The Names · 1 talks
+  13  Why Wealth Won't Give You Peace  id=U_tCg-U0QSY  stored=52:17  live=title only  yt="Why Wealth Won't Give You Peace"
+# 14 When Knowledge Inflates the Ego · 1 talks
+  14  When Knowledge Inflates the Ego  id=ja7eQxc9BR8  stored=2:49  live=title only  yt="When Knowledge Inflates the Ego"  !! UNDER 10 MIN → clip
+# 15 Manners of the Salaf · 1 talks
+  15  [Ep 2] Humility In Practice  id=GLOD742Tzbs  stored=43:14  live=title only  yt="[Ep 2] Humility In Practice"
+# 16 Purification of the Heart w/ Ustadha Fatima Lette · 1 talks
+  16  Purification of the Heart w/ Ustadha Fatima Lette  id=WZySKAmC8go  stored=1:00:00  live=title only  yt="Purification of the Heart w/ Ustadha Fatima Lette"
+# 17 DUA: The Answered Prayer · 1 talks
+  17  What is Dua?  id=JImcAYzp4D4  stored=3:50  live=title only  yt="What is Dua?"  !! UNDER 10 MIN → Ready for more?
+# 18 Moments of Solitude: Closeness to God · 1 talks
+  18  Moments of Solitude: Closeness to God  id=f-3OxXUp9jc  stored=40:24  live=title only  yt="Moments of Solitude: Closeness to God"
+# 19 Using Your Time Wisely - Episode 01 · 1 talks
+  19  Using Your Time Wisely - Episode 01  id=qB3lRpEJwi8  stored=6:52  live=title only  yt="Using Your Time Wisely - Episode 01"  !! UNDER 10 MIN → Ready for more?
+# 20 Self Purification and Discipline methods of Sahaba - Dr.Umar Faruq Abd Allah · 1 talks
+  20  Self Purification and Discipline methods of Sahaba - Dr.Umar Faruq Abd Allah  id=xY7hvYifpxo  stored=34:49  live=title only  yt="Self Purification and Discipline methods of Sahaba - Dr.Umar Faruq Abd Allah"
+# 21 Habits To Win Here and Hereafter · 1 talks
+  21  Ep. 1: Know Your Purpose  id=BnU535dqG6U  stored=3:47  live=title only  yt="Ep. 1: Know Your Purpose"  !! UNDER 10 MIN → Ready for more?
+# 22 What Is The Difference Between Patience And Complaining? · 1 talks
+  22  What Is The Difference Between Patience And Complaining?  id=9k7QxXtCzaQ  stored=1:56  live=title only  yt="What Is The Difference Between Patience And Complaining?"  !! UNDER 10 MIN → clip
+# 23 How to Manage Your Anger - Amjad Tarsin · 1 talks
+  23  How to Manage Your Anger - Amjad Tarsin  id=fBzrLN77gng  stored=4:20  live=title only  yt="How to Manage Your Anger - Amjad Tarsin"  !! UNDER 10 MIN → Ready for more?
+# 24 Anger Management (p. 1) · 1 talks
+  24  Anger Management (p. 1)  id=Rd0e9kXdPvI  stored=28:30  live=title only  yt="Anger Management (p. 1)"
+# 25 Gratitude is the Greatest Blessing · 1 talks
+  25  Gratitude is the Greatest Blessing  id=rb2EkzjgO98  stored=6:37  live=title only  yt="Gratitude is the Greatest Blessing"  !! UNDER 10 MIN → Ready for more?
+# 26 "Ramadan Muslims" - Ep. 10: Grateful · 1 talks
+  26  "Ramadan Muslims" - Ep. 10: Grateful  id=S0-rlAoc__Q  stored=2:44  live=title only  yt=""Ramadan Muslims" - Ep. 10: Grateful"  !! UNDER 10 MIN → clip
+# 27 Finding Contentment Within · 1 talks
+  27  Finding Contentment Within  id=HfIT8TSoHiE  stored=35:40  live=title only  yt="Finding Contentment Within"
+# 28 Which People Receive Allah's Mercy? · 1 talks
+  28  Which People Receive Allah's Mercy?  id=QOpIvu1uJx0  stored=2:05  live=title only  yt="Which People Receive Allah's Mercy?"  !! UNDER 10 MIN → clip
+# 29 The Servant Prophet ﷺ · 1 talks
+  29  The Servant Prophet ﷺ  id=HZgblQ00z1U  stored=9:01  live=title only  yt="The Servant Prophet ﷺ"  !! UNDER 10 MIN → Ready for more?
+# 30 Our Character - Ustadh Amjad Tarsin · 1 talks
+  30  Our Character - Ustadh Amjad Tarsin  id=9kvuzeMaiIs  stored=56:43  live=title only  yt="Our Character - Ustadh Amjad Tarsin"
+# 31 Alhamdulillah! Allah Chose You to Be a Believer · 1 talks
+  31  Alhamdulillah! Allah Chose You to Be a Believer  id=tidGQC4SrgA  stored=27:34  live=title only  yt="Alhamdulillah! Allah Chose You to Be a Believer"
+# 32 The Names: short clips · 1 talks
+  32  The Names Class 20: Al-Nūr  id=MK5q_zMiX1g  stored=1:38  live=title only  yt="The Names Class 20: Al-Nūr"  !! UNDER 10 MIN → clip
+
+## Short mains (under 10 minutes)
+- East London circle notes: How we sit (0:08) — propose as a clip, not a main
+- Quranic Connection #26: A Cure for Anxiety: Quranic Connection #26: A Cure for Anxiety (1:04) — propose as a clip, not a main
+- The Road Ahead: On Mosques, Companionship, & Knowledge (7:23) — propose as Ready for more?, not a main
+- The BEST Islamic Approach To Wealth: The BEST Islamic Approach To Wealth (6:34) — propose as Ready for more?, not a main
+- When Knowledge Inflates the Ego: When Knowledge Inflates the Ego (2:49) — propose as a clip, not a main
+- DUA: The Answered Prayer: What is Dua? (3:50) — propose as Ready for more?, not a main
+- Using Your Time Wisely - Episode 01: Using Your Time Wisely - Episode 01 (6:52) — propose as Ready for more?, not a main
+- Habits To Win Here and Hereafter: Ep. 1: Know Your Purpose (3:47) — propose as Ready for more?, not a main
+- What Is The Difference Between Patience And Complaining?: What Is The Difference Between Patience And Complaining? (1:56) — propose as a clip, not a main
+- How to Manage Your Anger - Amjad Tarsin: How to Manage Your Anger - Amjad Tarsin (4:20) — propose as Ready for more?, not a main
+- Gratitude is the Greatest Blessing: Gratitude is the Greatest Blessing (6:37) — propose as Ready for more?, not a main
+- "Ramadan Muslims" - Ep. 10: Grateful: "Ramadan Muslims" - Ep. 10: Grateful (2:44) — propose as a clip, not a main
+- Which People Receive Allah's Mercy?: Which People Receive Allah's Mercy? (2:05) — propose as a clip, not a main
+- The Servant Prophet ﷺ: The Servant Prophet ﷺ (9:01) — propose as Ready for more?, not a main
+- The Names: short clips: The Names Class 20: Al-Nūr (1:38) — propose as a clip, not a main
+
+## Title mismatches
+- 2: stored "The Names Class 19: Ar-Rabb" vs YouTube "Who Is Truly Nurturing You?"
+- 3: stored "The Names Class 20: Al-Nur" vs YouTube "Why You Feel Empty… And How Ramadan Fixes It"
+
+## Would change (not applied)
+- lesson 1 title stays "How to Live Like the Prophet, Session 6" (YouTube is "How to Live Like the Prophet ﷺ | Sixth Session"; do not write the raw title)
+- lesson 2 title stays "The Names Class 19: Ar-Rabb" (YouTube is "Who Is Truly Nurturing You? | The Names Class 19: Ar-Rabb | Shaykh Mikaeel Smith"; do not write the raw title)
+- lesson 3 title stays "The Names Class 20: Al-Nur" (YouTube is "Why You Feel Empty… And How Ramadan Fixes It | The Names Class 20: An-Nūr | Shaykh Mikaeel Smith"; do not write the raw title)
+
+32 courses, 32 lessons. Later parts flagged: 6.
+
+## Series grouping (would apply only if HEARTS_GROUP_SERIES=1; now off)
+Railway must not group without Leon. Leftover long talks are never bundled.
+- The Names: 2 talks [38:57, 47:41]
+  move lesson 2 "The Names Class 19: Ar-Rabb"  The Names Class 19: Ar-Rabb -> The Names  (38:57)  Numbered sittings of The Names by the same speaker.
+  move lesson 3 "The Names Class 20: Al-Nur"  The Names Class 20: Al-Nur -> The Names  (47:41)  Numbered sittings of The Names by the same speaker.
+
+## Short mains after grouping — propose as clips or Ready for more?, not as mains
+- "Ramadan Muslims" - Ep. 10: Grateful: "Ramadan Muslims" - Ep. 10: Grateful (2:44) → clip
+- DUA: The Answered Prayer: What is Dua? (3:50) → Ready for more?
+- East London circle notes: How we sit (0:08) → clip
+- Gratitude is the Greatest Blessing: Gratitude is the Greatest Blessing (6:37) → Ready for more?
+- Habits To Win Here and Hereafter: Ep. 1: Know Your Purpose (3:47) → Ready for more?
+- How to Manage Your Anger - Amjad Tarsin: How to Manage Your Anger - Amjad Tarsin (4:20) → Ready for more?
+- Quranic Connection #26: A Cure for Anxiety: Quranic Connection #26: A Cure for Anxiety (1:04) → clip
+- The BEST Islamic Approach To Wealth: The BEST Islamic Approach To Wealth (6:34) → Ready for more?
+- The Road Ahead: On Mosques, Companionship, & Knowledge (7:23) → Ready for more?
+- The Servant Prophet ﷺ: The Servant Prophet ﷺ (9:01) → Ready for more?
+- Using Your Time Wisely - Episode 01: Using Your Time Wisely - Episode 01 (6:52) → Ready for more?
+- What Is The Difference Between Patience And Complaining?: What Is The Difference Between Patience And Complaining? (1:56) → clip
+- When Knowledge Inflates the Ego: When Knowledge Inflates the Ego (2:49) → clip
+- Which People Receive Allah's Mercy?: Which People Receive Allah's Mercy? (2:05) → clip
+
+Nothing was written. Grouping is not applied here.
