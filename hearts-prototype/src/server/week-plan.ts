@@ -82,7 +82,7 @@ export async function weekView(payload: Payload, user: SessionUser, portal: Port
   const courses: WeekCourse[] = courseRows.map((course) => {
     const own = lessonRows.filter((lesson) => ref(lesson.course) === course.id)
     const seconds = own.reduce((sum, lesson) => sum + Number(lesson.durationSeconds || 0), 0)
-    return { id: course.id, title: str(course.title), talks: own.length, seconds, label: talksLabel(own.length, seconds) }
+    return { id: course.id, title: tidyTalkTitle(str(course.title)), talks: own.length, seconds, label: talksLabel(own.length, seconds) }
   })
   const cards: WeekPlanCard[] = mine.map((plan) => {
     const courseId = ref(plan.course)
@@ -112,7 +112,7 @@ export async function weekView(payload: Payload, user: SessionUser, portal: Port
     const perDay = Number(plan.minutesPerDay || 0)
     return {
       id: plan.id,
-      name: str(plan.name),
+      name: tidyTalkTitle(str(plan.name)),
       courseId: courseId || null,
       slots,
       start: firstDate,

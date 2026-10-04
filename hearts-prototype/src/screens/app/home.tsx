@@ -7,7 +7,7 @@ import { AppFrame, Flash, TabBar } from '@/components/app/shell'
 import { WeekStrip } from '@/components/app/week-strip'
 import { weekView } from '@/server/week-plan'
 import { PlayIcon } from '@/components/icons'
-import { displayTalkTitle } from '@/lib/talk-title'
+import { displayTalkTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { courseCards, dayNumber, portalName, posterFor, shownPoster } from '@/server/learner'
 import { ensureMonthNote, recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
@@ -64,7 +64,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
           youtubeId: str(lesson.youtubeId),
           vimeoId: str(lesson.vimeoId),
         }),
-        sub: minutesLeft(seconds, percent) || str(course?.title),
+        sub: minutesLeft(seconds, percent) || tidyTalkTitle(str(course?.title)),
         thumb: shownPoster(posterFor(str(lesson.youtubeId) || null)),
       }
     })
@@ -125,7 +125,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
           {fallback.map((course) => (
             <Link key={course.id} className="continue-row" href={`${base}/course/${course.id}`} data-testid="continue-row">
               <span className="thumb" style={shownPoster(course.poster) ? { backgroundImage: `url(${shownPoster(course.poster)})` } : undefined} />
-              <span className="t"><b>{course.title}</b><span className="sr-only">. </span><small>{course.speaker} · {plural(course.parts, 'part')}</small><DoorChips doors={course.doors} max={1} /></span>
+              <span className="t"><b>{tidyTalkTitle(course.title)}</b><span className="sr-only">. </span><small>{course.speaker} · {plural(course.parts, 'part')}</small><DoorChips doors={course.doors} max={1} /></span>
             </Link>
           ))}
           {!carryOn.length && !fallback.length ? <p className="muted">Start a course from Lanes and it will wait for you here.</p> : null}
@@ -195,7 +195,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
             <div key={course.id} className="course-row" data-testid="path-course" data-open={course.open ? 'yes' : 'no'}>
               <span className="thumb" style={shownPoster(course.poster) ? { backgroundImage: `url(${shownPoster(course.poster)})` } : undefined} />
               <span className="t">
-                <b>{course.title}</b>
+                <b>{tidyTalkTitle(course.title)}</b>
                 <small>
                   {course.recommended ? <span className="drip" data-testid="recommended">Chosen for you · </span> : null}
                   {course.open ? `${course.parts} part${course.parts === 1 ? '' : 's'} · ${course.speaker}` : <span className="drip" data-testid="opens-on">Opens on day {course.opensOnDay}</span>}

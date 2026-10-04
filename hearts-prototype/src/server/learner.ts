@@ -10,6 +10,7 @@ import { loadDoors } from './doors'
 import { portalDisplayName } from '@/lib/portal-name'
 import type { PieceRef } from '@/lib/nesting'
 import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
+import { tidyTalkTitle } from '@/lib/talk-title'
 
 export type SlideStyle = 'kinetic' | 'cinema' | 'windows' | 'conversation' | 'unfold'
 
@@ -211,7 +212,7 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
     }
     return {
       id: course.id,
-      title: String(course.title || ''),
+      title: tidyTalkTitle(String(course.title || '')),
       summary: String(course.summary || ''),
       speaker,
       speakerSlug: slugify(speaker),

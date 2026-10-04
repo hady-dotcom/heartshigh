@@ -11,7 +11,7 @@ import { loadDoors } from '@/server/doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { visibleCourseIds } from '@/server/context'
 import { sortParts } from '@/lib/part-order'
-import { partTitle } from '@/lib/talk-title'
+import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { courseCards, portraitFor, posterFor, shownPoster, slugify } from '@/server/learner'
 import { speakerPage } from '@/server/speakers'
 import { learnerClips, pointVisibleWhere } from '@/server/opening'
@@ -82,14 +82,14 @@ export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx,
           <Link className="intro-card" href={`${base}/feed?clip=${intro.cutId}&play=appetiser`} data-testid="watch-intro" data-start={intro.appetiser.start} data-stop={appetiserStop(intro.appetiser)}>
             {shownPoster(intro.poster) ? <span className="poster" style={{ backgroundImage: `url(${shownPoster(intro.poster)})` }} /> : null}
             <span className="play-circle"><PlayIcon size={26} /></span>
-            <span><b>Watch intro</b><small>{clock(appetiserStop(intro.appetiser) - intro.appetiser.start)} · from {intro.courseTitle}</small></span>
+            <span><b>Watch intro</b><small>{clock(appetiserStop(intro.appetiser) - intro.appetiser.start)} · from {tidyTalkTitle(intro.courseTitle)}</small></span>
           </Link>
         ) : null}
         <p className="eyebrow">Courses</p>
         {theirs.map((course, index) => (
           <div className="course-row" key={course.id} data-testid="speaker-course">
             <span className="thumb" style={shownPoster(course.poster) ? { backgroundImage: `url(${shownPoster(course.poster)})` } : undefined} />
-            <span className="t"><b>{course.title}</b><small>{course.parts} part{course.parts === 1 ? '' : 's'}{course.open ? '' : ` · opens on day ${course.opensOnDay}`}</small><DoorChips doors={course.doors} max={1} /></span>
+            <span className="t"><b>{tidyTalkTitle(course.title)}</b><small>{course.parts} part{course.parts === 1 ? '' : 's'}{course.open ? '' : ` · opens on day ${course.opensOnDay}`}</small><DoorChips doors={course.doors} max={1} /></span>
             <Link className={`start ${course.open ? START[index % START.length] : 'soft'}`} href={`${base}/course/${course.id}`}>{course.open ? 'Start' : 'Peek'}</Link>
           </div>
         ))}
@@ -129,7 +129,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
   const continueIndex = lessons.findIndex((lesson) => lesson.id === continueId)
   const started = done.size > 0 || continueIndex > 0
   const seconds = lessons.reduce((sum, lesson) => sum + Number(lesson.durationSeconds || 0), 0)
-  const title = str(course.title)
+  const title = tidyTalkTitle(str(course.title))
   return (
     <AppFrame testId="course-overview">
       <div className="app-scroll">
@@ -342,10 +342,10 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           </section>
         ) : null}
         <CoursePlayer
-          courseTitle={str(course.title)}
+          courseTitle={tidyTalkTitle(str(course.title))}
           backHref={`${base}/lanes`}
           lessonId={lessonId}
-          partLabel={partHeading(partIndex + 1, lesson, str(course.title), ' · ')}
+          partLabel={partHeading(partIndex + 1, lesson, tidyTalkTitle(str(course.title)), ' · ')}
           youtubeId={youtubeId}
           film={film}
           poster={shownPoster(posterFor(youtubeId)) || portraitFor(slugify(str(lesson.speaker || course.speaker)))}
@@ -385,7 +385,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
               return (
                 <div key={row.id}>
                   <Link className="list-link" href={`${base}/course/${courseId}?part=${row.id}`} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
-                    <span className="grow">{partHeading(index + 1, row, str(course.title), '. ')}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small></span>
+                    <span className="grow">{partHeading(index + 1, row, tidyTalkTitle(str(course.title)), '. ')}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small></span>
                     {row.id === lessonId ? <span className="badge" style={{ color: 'var(--purple)', fontWeight: 700, fontSize: 13 }}>Playing</span> : '›'}
                   </Link>
                   {tier ? (

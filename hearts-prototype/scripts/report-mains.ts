@@ -65,7 +65,7 @@ try {
   console.log(`Short-main threshold: ${Math.round(shortLimit / 60)} min (HEARTS_DEMOTE_SHORT_MAINS ${demoteShortMainsEnabled() ? 'on' : 'off'}).\n`)
   for (const course of courses.sort((a, b) => a.id - b.id)) {
     const own = lessons.filter((lesson) => (typeof lesson.course === 'object' ? lesson.course?.id : lesson.course) === course.id)
-    console.log(`# ${course.id} ${course.title || '(untitled)'} · ${own.length} talks`)
+    console.log(`# ${course.id} ${tidyTalkTitle(String(course.title || '')) || '(untitled)'} · ${own.length} talks`)
     for (const lesson of own) {
       const stored = Number(lesson.durationSeconds || 0)
       const youtubeId = lesson.youtubeId || ''
@@ -81,7 +81,7 @@ try {
       if (meta === null) flags.push('YOUTUBE MISSING')
       const line = `  ${lesson.id}  ${shown || '(untitled)'}  id=${youtubeId || '—'}  stored=${stored ? clock(stored) : '—'}  live=${liveDuration ? clock(liveDuration) : liveTitle ? 'title only' : '—'}  yt="${tidyTalkTitle(liveTitle) || '—'}"${flags.length ? `  !! ${flags.join(', ')}` : ''}`
       console.log(line)
-      if (flags.some((flag) => flag.includes('MIN →'))) short.push(`${course.title}: ${shown} (${clock(seconds)}) — propose as ${seconds < 180 ? 'a clip' : 'Ready for more?'}, not a main`)
+      if (flags.some((flag) => flag.includes('MIN →'))) short.push(`${tidyTalkTitle(String(course.title || ''))}: ${shown} (${clock(seconds)}) — propose as ${seconds < 180 ? 'a clip' : 'Ready for more?'}, not a main`)
       if (flags.includes('TITLE MISMATCH')) mismatch.push(`${lesson.id}: stored "${shown}" vs YouTube "${tidyTalkTitle(liveTitle)}"`)
       if (liveDuration && stored && Math.abs(liveDuration - stored) > 15) {
         wouldChange.push(`lesson ${lesson.id} durationSeconds ${stored} -> ${liveDuration}`)
@@ -104,9 +104,9 @@ try {
     const course = courses.find((row) => row.id === courseId)
     return {
       id: lesson.id,
-      title: String(lesson.title || ''),
+      title: tidyTalkTitle(String(lesson.title || '')),
       courseId,
-      courseTitle: String(course?.title || ''),
+      courseTitle: tidyTalkTitle(String(course?.title || '')),
       durationSeconds: Number(lesson.durationSeconds || 0),
       youtubeId: lesson.youtubeId || '',
       order: 0,
@@ -121,7 +121,7 @@ try {
   }
   console.log(grouping.moves.length ? grouping.moves.map((move) => `  move lesson ${move.lessonId} "${move.title}"  ${move.fromTitle} -> ${move.toTitle}  (${seriesClock(move.seconds)})  ${move.reason}`).join('\n') : '  already grouped, or no numbered same-speaker series')
   console.log('\n## Short mains after grouping — propose as clips or Ready for more?, not as mains')
-  console.log(grouping.shortMains.length ? grouping.shortMains.map((row) => `- ${row.courseTitle}: ${row.lessonTitle} (${seriesClock(row.seconds)}) → ${row.proposeAs === 'clip' ? 'clip' : 'Ready for more?'}`).join('\n') : '- none')
+  console.log(grouping.shortMains.length ? grouping.shortMains.map((row) => `- ${tidyTalkTitle(row.courseTitle)}: ${tidyTalkTitle(row.lessonTitle)} (${seriesClock(row.seconds)}) → ${row.proposeAs === 'clip' ? 'clip' : 'Ready for more?'}`).join('\n') : '- none')
   console.log('\nNothing was written. Grouping is not applied here.')
 } finally {
   await closePayload(payload)

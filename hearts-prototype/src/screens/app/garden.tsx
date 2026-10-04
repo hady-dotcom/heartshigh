@@ -301,7 +301,7 @@ export async function GardenGeneral({ payload, user, base }: Ctx) {
     .map((course) => {
       const lessonIds = g.lessons.filter((lesson) => ref(lesson.course) === course.id).map((lesson) => lesson.id)
       const count = [...g.completions, ...g.answers].filter((row) => lessonIds.includes(ref(row.lesson) || 0)).length
-      return { title: str(course.title), count }
+      return { title: tidyTalkTitle(str(course.title)), count }
     })
     .filter((row) => row.count > 0)
     .sort((a, b) => b.count - a.count)
@@ -591,7 +591,7 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
                 <h3>{topic}</h3>
                 {[...videos.entries()].map(([video, rowsHere]) => (
                   <div className="wb-video" key={video} data-testid="workbook-video">
-                    <p className="wb-video-title">{video}</p>
+                    <p className="wb-video-title">{tidyTalkTitle(video)}</p>
                     {rowsHere.map((row) => (
                       <article className="wb-entry" key={row.id} data-testid="workbook-entry" data-consent={row.shared ? 'yes' : 'no'} data-point={row.pointId} data-kind={row.kind || 'question'}>
                         <div className="when">{shortDate(row.answeredAt)}</div>

@@ -41,8 +41,7 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
             <a className="pill outline" href="/api/hearts/week.ics" data-testid="plan-ics">Add these days to your calendar</a>
           </p>
         ) : null}
-        {view.plans[0] ? <PlanCalendar slots={view.plans[0].slots} today={view.todayKey} /> : null}
-        {view.plans.map((plan) => {
+        {view.plans.map((plan, planIndex) => {
           const note = libraryStartNote(plan.slots.map((slot) => slot.title))
           return (
             <section key={plan.id} data-testid="schedule-plan" style={{ marginTop: 18 }}>
@@ -65,6 +64,7 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
                   ))}
                 </ol>
               ) : null}
+              {planIndex === 0 ? <PlanCalendar slots={plan.slots} today={view.todayKey} /> : null}
               {plan.locked ? <p className="muted" data-testid="plan-locked">Your teacher set this plan. You can still watch at your own pace.</p> : null}
               {plan.note ? <p className="muted" data-testid="spread-note">{plan.note}</p> : null}
               {plan.overMinutes ? <p className="muted" data-testid="over-minutes">{plan.overMinutes}</p> : null}
