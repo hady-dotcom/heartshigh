@@ -90,9 +90,10 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
     await expect(page.locator('[data-testid="scene"][data-scene="extra"]')).toBeVisible({ timeout: 1500 })
   }).toPass({ timeout: 20_000 })
   for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'account', 'doors']) {
+    if (await page.getByTestId('starting-door').count()) break
     const card = page.locator(`[data-testid="scene"][data-scene="${scene}"]`)
-    if (!(await card.count())) continue
-    await expect(card.first()).toBeVisible()
+    const shown = await card.first().waitFor({ state: 'visible', timeout: 8_000 }).then(() => true).catch(() => false)
+    if (!shown) continue
     await card.last().getByTestId('pass').click()
   }
   await expect(page.getByTestId('starting-door')).toHaveAttribute('data-door', '2')

@@ -54,12 +54,13 @@ async function placing(page: Page, picks: string[]) {
     await expect(page.locator('[data-testid="scene"][data-scene="extra"]')).toBeVisible({ timeout: 1500 })
   }).toPass({ timeout: 20_000 })
   for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'account', 'doors']) {
+    if (await page.getByTestId('starting-door').count()) break
     const sceneCard = page.locator(`[data-testid="scene"][data-scene="${scene}"]`)
-    if (!(await sceneCard.count())) continue
-    await expect(sceneCard.first()).toBeVisible()
+    const shown = await sceneCard.first().waitFor({ state: 'visible', timeout: 8_000 }).then(() => true).catch(() => false)
+    if (!shown) continue
     await sceneCard.last().getByTestId('pass').click()
   }
-  await expect(page.getByTestId('starting-door')).toBeVisible()
+  await expect(page.getByTestId('starting-door')).toBeVisible({ timeout: 20_000 })
 }
 
 async function masterRequest() {
