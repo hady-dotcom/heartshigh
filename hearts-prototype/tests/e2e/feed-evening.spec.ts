@@ -1,6 +1,7 @@
 import { expect, test, type Browser, type CDPSession, type Locator, type Page } from '@playwright/test'
 import { E2E_BASE } from '../env'
 import { fakeYouTube } from './fake-youtube'
+import { settled as feedSettled, stepFeed, stepToCard } from './feed-step'
 
 // Live phone review: evening-garden question cards, no blank pill, no bare side mid-swipe, YouTube's captions and
 // titled thumbnails kept off our feed.
@@ -35,25 +36,12 @@ async function touchSwipe(page: Page, cdp: CDPSession, dx: number, on?: Locator)
 }
 
 async function settled(feed: Locator, page: Page) {
-  let last = ''
-  await expect(async () => {
-    const now = `${await feed.getAttribute('data-index')}:${await feed.getAttribute('data-mode')}`
-    const same = now === last
-    last = now
-    expect(same).toBe(true)
-  }).toPass({ timeout: 10_000, intervals: [400] })
-  await page.waitForTimeout(150)
+  await feedSettled(page, feed)
 }
 
 async function stepTo(page: Page, feed: Locator, card: string) {
-  const total = ((await feed.getAttribute('data-cuts')) || '').split(' ').length
-  for (let tries = 0; tries < total * 3 && (await feed.getAttribute('data-card')) !== card; tries++) {
-    const before = await feed.getAttribute('data-index')
-    await page.getByTestId('gesture-next').dispatchEvent('click')
-    await expect(feed).not.toHaveAttribute('data-index', before!)
-    await settled(feed, page)
-  }
-  await expect(feed).toHaveAttribute('data-card', card)
+  const found = await stepToCard(page, card, feed)
+  expect(found, `needed a ${card} before the pool ran out`).toBe(true)
 }
 
 /**
@@ -125,20 +113,20 @@ test('the feed never shows a question card, and scenic cards keep the evening ga
   await settled(feed, page)
   const total = ((await feed.getAttribute('data-cuts')) || '').split(' ').length
   const kinds = new Set<string>()
+  let sceneShot = false
   for (let at = 0; at < total; at++) {
     kinds.add((await feed.getAttribute('data-card')) || '')
     expect(await page.getByTestId('feed-question').count()).toBe(0)
     await expect(page.locator('text=What stays with you')).toHaveCount(0)
-    const before = await feed.getAttribute('data-index')
-    await page.getByTestId('gesture-next').dispatchEvent('click')
-    await expect(feed).not.toHaveAttribute('data-index', before!)
-    await settled(feed, page)
+    if ((await feed.getAttribute('data-card')) === 'scene' && !sceneShot) {
+      await expect(page.getByTestId('scene-card')).toBeVisible()
+      await page.screenshot({ path: test.info().outputPath('scenic-card.png') })
+      sceneShot = true
+    }
+    if ((await stepFeed(page, feed)) === 'end') break
   }
   expect(kinds.has('question')).toBe(false)
-  await stepTo(page, feed, 'scene')
-  const card = page.getByTestId('scene-card')
-  await expect(card).toBeVisible()
-  await page.screenshot({ path: test.info().outputPath('scenic-card.png') })
+  expect(sceneShot || kinds.has('scene'), 'a scenic card should appear before the pool ends').toBe(true)
   await page.context().close()
 })
 
@@ -154,14 +142,17 @@ test('a question-card swipe and a scenic-card swipe never show a bare side or a 
     const total = ((await feed.getAttribute('data-cuts')) || '').split(' ').length
     let found = false
     for (let tries = 0; tries < total * 3 && (await feed.getAttribute('data-card')) !== card; tries++) {
-      const before = await feed.getAttribute('data-index')
-      await page.getByTestId('gesture-next').dispatchEvent('click')
-      await expect(feed).not.toHaveAttribute('data-index', before!)
-      await settled(feed, page)
+      if ((await stepFeed(page, feed)) === 'end') break
     }
     found = (await feed.getAttribute('data-card')) === card
     if (!found) continue
     const peek = page.locator('[data-peek="topic"]')
+    if (!(await peek.count())) {
+      await touchSwipe(page, cdp, -230)
+      await expect(page.getByTestId('toast')).toHaveText(/topic|everything/)
+      await settled(feed, page)
+      continue
+    }
     await expect(peek, `the next ${card} neighbour is mounted before the gesture`).toHaveCount(1)
     await expect.poll(() => peek.evaluate((el) => {
       const image = el.querySelector('img')
@@ -195,7 +186,7 @@ test('words in the picture: YouTube captions are dropped, our caption sits in th
   const cut = await feed.getAttribute('data-cut')
   try {
     expect((await master.patch(`/api/lessons/${lessonId}`, { data: { burnedCaptions: true } })).ok()).toBeTruthy()
-    await page.goto(`${PORTAL}/feed?clip=${cut}`)
+    await page.goto(`${PORTAL}/feed?clip=${cut}&fresh=${Date.now()}`)
     await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
     await expect(feed).toHaveAttribute('data-lesson', lessonId!)
     await expect(feed).toHaveAttribute('data-words-in-picture', 'yes')

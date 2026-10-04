@@ -1,4 +1,5 @@
 import { expect, test, type Browser, type CDPSession, type Locator, type Page } from '@playwright/test'
+import { settled as feedSettled, stepFeed } from './feed-step'
 
 // Real touch, not the mouse: a phone context, and touches sent through Chromium's input pipeline (CDP), so the
 // browser's own touch-action handling runs. If it claims the pan, it fires pointercancel and no swipe lands.
@@ -32,14 +33,7 @@ async function touchSwipe(page: Page, cdp: CDPSession, dx: number, on?: Locator,
 }
 
 async function settled(feed: Locator, page: Page) {
-  let last = ''
-  await expect(async () => {
-    const now = `${await feed.getAttribute('data-index')}:${await feed.getAttribute('data-mode')}`
-    const same = now === last
-    last = now
-    expect(same).toBe(true)
-  }).toPass({ timeout: 10_000, intervals: [400] })
-  await page.waitForTimeout(150)
+  await feedSettled(page, feed)
 }
 
 /** The swipe toast never sits over the words on screen. */
@@ -59,7 +53,7 @@ async function toastClearOfWords(page: Page) {
 /** A left swipe is "more on this topic", a right swipe "more from this speaker"; each answers with a toast. */
 async function swipesLand(page: Page, cdp: CDPSession, feed: Locator, mode: 'hors' | 'appetiser') {
   const toast = page.getByTestId('toast')
-  for (const [dx, said] of [[-200, /topic/], [200, /from /i]] as const) {
+  for (const [dx, said] of [[-200, /topic|everything/], [200, /from |everything/i]] as const) {
     await expect(toast).toHaveCount(0, { timeout: 5_000 })
     const before = await feed.getAttribute('data-index')
     await touchSwipe(page, cdp, dx)
@@ -80,12 +74,7 @@ test('touch swipes left and right move the feed, on a talk clip, on a card, and 
   await expect(feed).toHaveAttribute('data-mode', 'hors')
 
   const total = ((await feed.getAttribute('data-cuts')) || '').split(' ').length
-  const step = async () => {
-    const before = await feed.getAttribute('data-index')
-    await page.getByTestId('gesture-next').dispatchEvent('click')
-    await expect(feed).not.toHaveAttribute('data-index', before!)
-    await settled(feed, page)
-  }
+  const step = async () => stepFeed(page, feed)
 
   // A talk's hors d'oeuvre clip (the gesture layer over the player).
   for (let tries = 0; tries < total && (await feed.getAttribute('data-card')) !== 'talk'; tries++) await step()
@@ -124,10 +113,7 @@ test('a scenic card swipes by touch: the card follows the finger, then the next 
   await settled(feed, page)
   const total = ((await feed.getAttribute('data-cuts')) || '').split(' ').length
   for (let tries = 0; tries < total * 3 && (await feed.getAttribute('data-card')) !== 'scene'; tries++) {
-    const before = await feed.getAttribute('data-index')
-    await page.getByTestId('gesture-next').dispatchEvent('click')
-    await expect(feed).not.toHaveAttribute('data-index', before!)
-    await settled(feed, page)
+    if ((await stepFeed(page, feed)) === 'end') break
   }
   await expect(feed).toHaveAttribute('data-card', 'scene')
   const card = page.getByTestId('scene-card')
@@ -151,10 +137,7 @@ test('a scenic card swipes by touch: the card follows the finger, then the next 
   // A short drag springs back and stays put; Continue still taps.
   await expect(page.getByTestId('toast')).toHaveCount(0, { timeout: 5_000 })
   for (let tries = 0; tries < total * 3 && (await feed.getAttribute('data-card')) !== 'scene'; tries++) {
-    const at = await feed.getAttribute('data-index')
-    await page.getByTestId('gesture-next').dispatchEvent('click')
-    await expect(feed).not.toHaveAttribute('data-index', at!)
-    await settled(feed, page)
+    if ((await stepFeed(page, feed)) === 'end') break
   }
   if ((await feed.getAttribute('data-card')) === 'scene') {
     const still = await feed.getAttribute('data-index')

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { fakeYouTube } from './fake-youtube'
+import { settled, stepFeed } from './feed-step'
 
 const PHONE = { width: 390, height: 844 }
 const DESKTOP = { width: 1440, height: 900 }
@@ -13,30 +14,8 @@ async function signIn(page: Page, next = `${PORTAL}/feed`) {
   await page.waitForURL((url) => !url.pathname.startsWith('/login'))
 }
 
-async function settled(page: Page) {
-  const feed = page.getByTestId('journey')
-  let last = ''
-  await expect(async () => {
-    const now = `${await feed.getAttribute('data-index')}:${await feed.getAttribute('data-mode')}`
-    const same = now === last
-    last = now
-    expect(same).toBe(true)
-  }).toPass({ timeout: 10_000, intervals: [400] })
-  await page.waitForTimeout(150)
-}
-
 async function step(page: Page) {
-  const feed = page.getByTestId('journey')
-  const before = await feed.getAttribute('data-index')
-  await page.getByTestId('gesture-next').dispatchEvent('click')
-  await expect.poll(async () => {
-    const moved = (await feed.getAttribute('data-index')) !== before
-    const ended = (await page.getByTestId('toast').count()) > 0 && /seen everything/i.test(await page.getByTestId('toast').innerText())
-    return moved || ended
-  }).toBe(true)
-  if ((await page.getByTestId('toast').count()) && /seen everything/i.test(await page.getByTestId('toast').innerText())) return 'end'
-  await settled(page)
-  return 'ok'
+  return stepFeed(page)
 }
 
 test('the feed has no question cards, shows the coach and tab bar, and never lights Home', async ({ page }) => {

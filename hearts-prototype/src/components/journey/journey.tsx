@@ -6,7 +6,7 @@ import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
 import { mixFeed } from '@/lib/feed-mix'
 import { clipStepUpLabel, onlyClipToast, poolEndToast, READY_FOR_MORE, talkStepUpLabel } from '@/lib/feed-copy'
-import { isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
+import { appendUnseenItems, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readCoachDismissed, readFeedPlace, readHeart, readPending, rememberSeenCard, sessionFlags, sessionSeenCards, sessionSeenCuts, setSessionFlags, viewAsId, writeCoachDismissed, writeFeedPlace, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
@@ -170,6 +170,7 @@ export function Journey(props: JourneyProps) {
   const [coach, setCoach] = useState(false)
   const [needPlay, setNeedPlay] = useState(false)
   const [seenCuts, setSeenCuts] = useState<number[]>([])
+  const [seenCards, setSeenCards] = useState<string[]>([])
   const seenRef = useRef<Set<string>>(new Set())
   const prepareGen = useRef<[number, number]>([0, 0])
   const showGen = useRef(0)
@@ -237,6 +238,7 @@ export function Journey(props: JourneyProps) {
     hydrateSound()
     if (hasSound()) setMuted(false)
     seenRef.current = new Set(sessionSeenCards())
+    setSeenCards(sessionSeenCards())
     setSeenCuts(sessionSeenCuts())
     if (!readCoachDismissed()) setCoach(true)
     const startAt = window.location.pathname.match(/\/start\/(\d+)$/)
@@ -507,8 +509,9 @@ export function Journey(props: JourneyProps) {
       setLineAt(0)
       setAppetiserOver(false)
       if (item) {
-        const seen = rememberSeenCard(item.cutId, item.card || 'talk')
+        const seen = rememberSeenCard(item.cutId, item.card || 'talk', kind)
         seenRef.current = new Set(seen.cards)
+        setSeenCards(seen.cards)
         setSeenCuts(seen.cuts)
       }
       writeFeedPlace(item ? { cutId: item.cutId, mode: kind, card: item.card || 'talk' } : null)
@@ -569,7 +572,7 @@ export function Journey(props: JourneyProps) {
 
   const adopt = useCallback(
     (clips: FeedItem[], slots: FeedSlot[], spinePointer: number, replace: boolean) => {
-      const merged = replace ? clips : [...itemsRef.current, ...clips.filter((clip) => !itemsRef.current.some((row) => row.id === clip.id))]
+      const merged = replace ? clips : appendUnseenItems(itemsRef.current, clips)
       itemsRef.current = merged
       setItems(merged)
       if (heartRef.current) setHeart(markServed(heartRef.current, slots, spinePointer))
@@ -1195,6 +1198,7 @@ export function Journey(props: JourneyProps) {
     dismissCoach()
     const target = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, swipe, seenRef.current)
     if (target === null) {
+      springBack()
       if (swipe === 'speaker') return setToast(`That's everything from ${current.speaker} for now.`)
       if (swipe === 'topic') return setToast("That's everything on this topic for now.")
       return setToast(itemsRef.current.length < 2 ? onlyClipToast(modeRef.current) : poolEndToast())
@@ -1646,7 +1650,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-player-state={host.state} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')}>
+    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-player-state={host.state} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />

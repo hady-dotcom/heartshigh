@@ -335,7 +335,7 @@ function Foot({ course, next, voice, scrim }: { course: string; next: ReactNode;
   return (
     <div className={`slide-cta${scrim ? ' scrim' : ''}`}>
       {next}
-      {course ? <div className="slide-foot">{course}</div> : null}
+      {course ? <div className="slide-foot" data-testid="scene-credit">{course}</div> : null}
       {voice}
     </div>
   )
