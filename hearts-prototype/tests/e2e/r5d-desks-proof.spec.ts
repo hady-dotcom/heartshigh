@@ -247,12 +247,13 @@ test('r5d desk proof shots', async ({ page, browser }) => {
     return {
       bg: rgb(style.backgroundColor === 'rgba(0, 0, 0, 0)' ? cellStyle.backgroundColor : style.backgroundColor),
       color: rgb(cellStyle.color),
-      shadow: style.boxShadow,
+      shadow: cellStyle.boxShadow,
     }
   })
   expect(errorLook.bg).toBe('rgb(16,46,44)')
   expect(errorLook.color).toBe('rgb(246,238,220)')
   expect(errorLook.shadow).toMatch(/196,\s*92,\s*92/)
+  await masterPage.getByTestId('sheet-error-row').first().scrollIntoViewIfNeeded()
   await shot(masterPage, 'sheet-import-error')
   await masterDesk.close()
 
@@ -290,6 +291,7 @@ test('r5d desk proof shots', async ({ page, browser }) => {
   expect(wrap.clientWidth, 'address box is wide enough for the host').toBeGreaterThan(140)
   const linked = page.getByTestId('linked-courses')
   await expect(linked).toBeVisible()
+  await linked.scrollIntoViewIfNeeded()
   const linkedBg = await linked.evaluate((el) => getComputedStyle(el.closest('.count-tile') || el).backgroundColor)
   expect(linkedBg, 'Linked from the library is not a cream bar').not.toBe('rgb(251, 239, 210)')
   await shot(page, 'overview-linked-library')

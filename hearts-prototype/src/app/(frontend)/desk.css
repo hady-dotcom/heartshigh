@@ -433,11 +433,13 @@ abbr.tip { text-decoration: underline dotted; text-underline-offset: 3px; cursor
 .desk [data-testid='sheet-error-row'] {
   background: var(--desk-field, #102E2C);
   color: var(--desk-ink, #F6EEDC);
-  box-shadow: inset 4px 0 0 #c45c5c;
 }
 .desk tr.sheet-error-row td {
   background: var(--desk-field, #102E2C);
   color: var(--desk-ink, #F6EEDC);
+}
+.desk tr.sheet-error-row td:first-child {
+  box-shadow: inset 4px 0 0 #c45c5c;
 }
 .data td.email-cell { max-width: 0; min-width: 120px; width: 24%; }
 .data td.email-cell span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
