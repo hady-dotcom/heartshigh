@@ -25,20 +25,25 @@
 /* The nav scrolls on a short screen; the brand and the footer (learner app, who, Sign out) always stay in view. */
 .side-nav-wrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; position: relative; overflow: hidden; }
 .side-nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; scrollbar-width: thin; }
-.side-nav-wrap.overflow:not(.at-end) .side-nav { padding-bottom: 36px; }
-.side-nav-more {
+.side-nav-wrap.overflow:not(.at-end)::after {
+  content: '';
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
-  z-index: 2;
+  bottom: 34px;
+  height: 18px;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, var(--desk-sidebar, #0B2223));
+}
+.side-nav-more {
+  flex: none;
   margin: 0;
-  padding: 18px 12px 8px;
+  padding: 8px 12px;
   font-size: 12px;
   font-weight: 700;
   color: #e7d7b4;
-  background: linear-gradient(180deg, transparent, var(--desk-sidebar, #0B2223) 42%);
-  pointer-events: none;
+  background: var(--desk-sidebar, #0B2223);
+  border-top: 1px solid rgba(247, 238, 219, 0.12);
 }
 .side-brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 20px; text-decoration: none; color: #f7eedb; }
 .side-brand span { min-width: 0; }

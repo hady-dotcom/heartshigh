@@ -157,17 +157,12 @@ test('r5d desk proof shots', async ({ page, browser }) => {
   expect(wrap.break).not.toBe('break-all')
   expect(wrap.overflow).toBe('ellipsis')
   const cue = page.getByTestId('nav-scroll-cue')
-  if (await cue.isVisible()) {
-    const cueBox = await cue.boundingBox()
-    const items = page.locator('[data-testid="side-nav"] a.nav')
-    for (const item of await items.all()) {
-      const box = await item.boundingBox()
-      if (!box || !cueBox || box.height < 8) continue
-      const visibleHeight = Math.min(box.y + box.height, cueBox.y) - box.y
-      if (box.y < cueBox.y && box.y + box.height > cueBox.y) {
-        expect(visibleHeight, 'More below does not cover a clipped nav label').toBeGreaterThan(box.height * 0.55)
-      }
-    }
+  await expect(cue).toBeVisible()
+  const navBox = await page.getByTestId('side-nav').boundingBox()
+  const cueBox = await cue.boundingBox()
+  expect(navBox && cueBox, 'More below sits under the scrolling nav').toBeTruthy()
+  if (navBox && cueBox) {
+    expect(cueBox.y, 'More below does not overlap the nav').toBeGreaterThanOrEqual(navBox.y + navBox.height - 1)
   }
   await shot(page, 'sidebar-scroll-1366x700')
 
