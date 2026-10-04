@@ -110,7 +110,7 @@
 .caption .from { display: block; font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.75); margin-top: 14px; text-shadow: none; }
 .play-hit { position: absolute; inset: 22% 18% 34% 0; z-index: 3; background: transparent; border: 0; }
 .play-badge { position: absolute; left: 50%; top: 24%; transform: translateX(-50%); z-index: 4; width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.18); border: 1.5px solid rgba(255,255,255,0.6); display: grid; place-items: center; backdrop-filter: blur(4px); pointer-events: none; }
-.rail { position: absolute; right: 12px; bottom: calc(232px + var(--safe-bottom)); z-index: 6; display: grid; gap: 16px; justify-items: center; }
+.rail { position: absolute; right: 12px; bottom: calc(232px + var(--safe-bottom)); z-index: 8; display: grid; gap: 16px; justify-items: center; }
 .rail button { display: grid; justify-items: center; gap: 4px; background: none; border: 0; color: #fff; font-size: 11px; font-weight: 650; min-width: 52px; }
 .rail .bubble { width: 46px; height: 46px; border-radius: 50%; background: rgba(0, 0, 0, 0.42); display: grid; place-items: center; }
 .rail button[aria-pressed='true'] .bubble { background: rgba(217, 79, 104, 0.9); }

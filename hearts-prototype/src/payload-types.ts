@@ -2136,6 +2136,259 @@ export interface SheetImport {
   createdAt: string;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "experiments".
+ */
+export interface Experiment {
+  id: number;
+  key: string;
+  name: string;
+  description?: string | null;
+  status: 'draft' | 'running' | 'paused' | 'finished';
+  slot: string;
+  surface: string;
+  portal?: (number | null) | Portal;
+  allocation: 'fixed' | 'auto';
+  primaryMetric: string;
+  secondaryMetrics?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  guardrailNote?: string | null;
+  variants: {
+    key: string;
+    label: string;
+    payload:
+      | {
+          [k: string]: unknown;
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null;
+    weight: number;
+    approved?: boolean | null;
+    source?: ('staff' | 'ai' | 'mock') | null;
+    id?: string | null;
+  }[];
+  defaultVariant?: string | null;
+  winnerKey?: string | null;
+  promoted?: boolean | null;
+  createdBy?: (number | null) | User;
+  approvedBy?: (number | null) | User;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "experiment-assignments".
+ */
+export interface ExperimentAssignment {
+  id: number;
+  experiment: number | Experiment;
+  experimentKey: string;
+  variantKey: string;
+  subjectKind: 'learner' | 'device';
+  learner?: (number | null) | User;
+  deviceId?: string | null;
+  subject: string;
+  portal?: (number | null) | Portal;
+  sticky?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "experiment-events".
+ */
+export interface ExperimentEvent {
+  id: number;
+  experiment: number | Experiment;
+  experimentKey: string;
+  variantKey: string;
+  kind: 'exposure' | 'conversion';
+  event: string;
+  learner?: (number | null) | User;
+  deviceId?: string | null;
+  subject: string;
+  sessionId?: string | null;
+  portal?: (number | null) | Portal;
+  props?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  at: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "insight-events".
+ */
+export interface InsightEvent {
+  id: number;
+  kind: string;
+  route: string;
+  sessionId: string;
+  subject?: string | null;
+  portal?: (number | null) | Portal;
+  x?: number | null;
+  y?: number | null;
+  vw?: number | null;
+  vh?: number | null;
+  depth?: number | null;
+  clipId?: string | null;
+  watchPct?: number | null;
+  step?: string | null;
+  interactive?: boolean | null;
+  sampled?: boolean | null;
+  props?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  at: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "insight-sessions".
+ */
+export interface InsightSession {
+  id: number;
+  sessionId: string;
+  subject?: string | null;
+  portal?: (number | null) | Portal;
+  sampled?: boolean | null;
+  startedAt: string;
+  endedAt?: string | null;
+  routes?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "calendar-seasons".
+ */
+export interface CalendarSeason {
+  id: number;
+  key: string;
+  name: string;
+  theme?: string | null;
+  start: string;
+  end: string;
+  nudgeTalks?: boolean | null;
+  usePopular?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "calendar-copy".
+ */
+export interface CalendarCopy {
+  id: number;
+  slot: string;
+  context: string;
+  label: string;
+  approved?: boolean | null;
+  source?: ('staff' | 'ai' | 'mock') | null;
+  createdBy?: (number | null) | User;
+  approvedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "missions".
+ */
+export interface Mission {
+  id: number;
+  title: string;
+  ask: string;
+  why?: string | null;
+  minutesAsked: number;
+  startsAt: string;
+  endsAt: string;
+  target: number;
+  portals?: (number | Portal)[] | null;
+  experiment?: (number | null) | Experiment;
+  tryPath?: string | null;
+  status: 'draft' | 'open' | 'closed' | 'shared';
+  result?: string | null;
+  resultAt?: string | null;
+  createdBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mission-joins".
+ */
+export interface MissionJoin {
+  id: number;
+  mission: number | Mission;
+  user: number | User;
+  portal?: (number | null) | Portal;
+  joinedAt: string;
+  finishedAt?: string | null;
+  minutes?: number | null;
+  thanked?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "support-threads".
+ */
+export interface SupportThread {
+  id: number;
+  user: number | User;
+  portal?: (number | null) | Portal;
+  status?: ('open' | 'closed') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "support-messages".
+ */
+export interface SupportMessage {
+  id: number;
+  thread: number | SupportThread;
+  author: number | User;
+  body: string;
+  fromDesk?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * A real meeting at a portal: circle, tea, volunteering, walk, youth night or picnic.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2263,263 +2516,6 @@ export interface GatherPhoto {
   caption?: string | null;
   consent?: boolean | null;
   postedBy?: (number | null) | User;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "experiments".
- */
-export interface Experiment {
-  id: number;
-  key: string;
-  name: string;
-  description?: string | null;
-  status: 'draft' | 'running' | 'paused' | 'finished';
-  slot: string;
-  surface: string;
-  portal?: (number | null) | Portal;
-  allocation: 'fixed' | 'auto';
-  primaryMetric: string;
-  secondaryMetrics?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  guardrailNote?: string | null;
-  variants: {
-    key: string;
-    label: string;
-    payload:
-      | {
-          [k: string]: unknown;
-        }
-      | unknown[]
-      | string
-      | number
-      | boolean
-      | null;
-    weight: number;
-    approved?: boolean | null;
-    source?: ('staff' | 'ai' | 'mock') | null;
-    id?: string | null;
-  }[];
-  defaultVariant?: string | null;
-  winnerKey?: string | null;
-  promoted?: boolean | null;
-  createdBy?: (number | null) | User;
-  approvedBy?: (number | null) | User;
-  startedAt?: string | null;
-  finishedAt?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "experiment-assignments".
- */
-export interface ExperimentAssignment {
-  id: number;
-  experiment: number | Experiment;
-  experimentKey: string;
-  variantKey: string;
-  subjectKind: 'learner' | 'device';
-  learner?: (number | null) | User;
-  deviceId?: string | null;
-  subject: string;
-  portal?: (number | null) | Portal;
-  sticky?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "experiment-events".
- */
-export interface ExperimentEvent {
-  id: number;
-  experiment: number | Experiment;
-  experimentKey: string;
-  variantKey: string;
-  kind: 'exposure' | 'conversion';
-  event: string;
-  learner?: (number | null) | User;
-  deviceId?: string | null;
-  subject: string;
-  sessionId?: string | null;
-  portal?: (number | null) | Portal;
-  props?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  at: string;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "insight-events".
- */
-export interface InsightEvent {
-  id: number;
-  kind: string;
-  route: string;
-  sessionId: string;
-  subject?: string | null;
-  learner?: (number | null) | User;
-  deviceId?: string | null;
-  portal?: (number | null) | Portal;
-  x?: number | null;
-  y?: number | null;
-  vw?: number | null;
-  vh?: number | null;
-  depth?: number | null;
-  clipId?: string | null;
-  watchPct?: number | null;
-  step?: string | null;
-  interactive?: boolean | null;
-  sampled?: boolean | null;
-  props?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  at: string;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "insight-sessions".
- */
-export interface InsightSession {
-  id: number;
-  sessionId: string;
-  subject?: string | null;
-  learner?: (number | null) | User;
-  deviceId?: string | null;
-  portal?: (number | null) | Portal;
-  sampled?: boolean | null;
-  startedAt: string;
-  endedAt?: string | null;
-  routes?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "calendar-seasons".
- */
-export interface CalendarSeason {
-  id: number;
-  key: string;
-  name: string;
-  theme?: string | null;
-  start: string;
-  end: string;
-  nudgeTalks?: boolean | null;
-  usePopular?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "calendar-copy".
- */
-export interface CalendarCopy {
-  id: number;
-  slot: string;
-  context: string;
-  label: string;
-  approved?: boolean | null;
-  source?: ('staff' | 'ai' | 'mock') | null;
-  createdBy?: (number | null) | User;
-  approvedBy?: (number | null) | User;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "missions".
- */
-export interface Mission {
-  id: number;
-  title: string;
-  ask: string;
-  why?: string | null;
-  minutesAsked: number;
-  startsAt: string;
-  endsAt: string;
-  target: number;
-  portals?: (number | Portal)[] | null;
-  experiment?: (number | null) | Experiment;
-  tryPath?: string | null;
-  status: 'draft' | 'open' | 'closed' | 'shared';
-  result?: string | null;
-  resultAt?: string | null;
-  createdBy?: (number | null) | User;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "mission-joins".
- */
-export interface MissionJoin {
-  id: number;
-  mission: number | Mission;
-  user: number | User;
-  portal?: (number | null) | Portal;
-  joinedAt: string;
-  finishedAt?: string | null;
-  minutes?: number | null;
-  thanked?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "support-threads".
- */
-export interface SupportThread {
-  id: number;
-  user: number | User;
-  portal?: (number | null) | Portal;
-  status?: ('open' | 'closed') | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "support-messages".
- */
-export interface SupportMessage {
-  id: number;
-  thread: number | SupportThread;
-  author: number | User;
-  body: string;
-  fromDesk?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -4206,8 +4202,6 @@ export interface InsightEventsSelect<T extends boolean = true> {
   route?: T;
   sessionId?: T;
   subject?: T;
-  learner?: T;
-  deviceId?: T;
   portal?: T;
   x?: T;
   y?: T;
@@ -4231,8 +4225,6 @@ export interface InsightEventsSelect<T extends boolean = true> {
 export interface InsightSessionsSelect<T extends boolean = true> {
   sessionId?: T;
   subject?: T;
-  learner?: T;
-  deviceId?: T;
   portal?: T;
   sampled?: T;
   startedAt?: T;
@@ -4295,6 +4287,44 @@ export interface MissionsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mission-joins_select".
+ */
+export interface MissionJoinsSelect<T extends boolean = true> {
+  mission?: T;
+  user?: T;
+  portal?: T;
+  joinedAt?: T;
+  finishedAt?: T;
+  minutes?: T;
+  thanked?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "support-threads_select".
+ */
+export interface SupportThreadsSelect<T extends boolean = true> {
+  user?: T;
+  portal?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "support-messages_select".
+ */
+export interface SupportMessagesSelect<T extends boolean = true> {
+  thread?: T;
+  author?: T;
+  body?: T;
+  fromDesk?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "gatherings_select".
  */
 export interface GatheringsSelect<T extends boolean = true> {
@@ -4329,32 +4359,6 @@ export interface GatheringsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "mission-joins_select".
- */
-export interface MissionJoinsSelect<T extends boolean = true> {
-  mission?: T;
-  user?: T;
-  portal?: T;
-  joinedAt?: T;
-  finishedAt?: T;
-  minutes?: T;
-  thanked?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "support-threads_select".
- */
-export interface SupportThreadsSelect<T extends boolean = true> {
-  user?: T;
-  portal?: T;
-  status?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "gather-rsvps_select".
  */
 export interface GatherRsvpsSelect<T extends boolean = true> {
@@ -4369,18 +4373,6 @@ export interface GatherRsvpsSelect<T extends boolean = true> {
   bringCode?: T;
   remind?: T;
   seedKey?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "support-messages_select".
- */
-export interface SupportMessagesSelect<T extends boolean = true> {
-  thread?: T;
-  author?: T;
-  body?: T;
-  fromDesk?: T;
   updatedAt?: T;
   createdAt?: T;
 }

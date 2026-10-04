@@ -4,15 +4,18 @@ import Link from 'next/link'
 import { useLayoutEffect, useRef } from 'react'
 import type { NavGroup } from './shell'
 
-/** Grouped desk links. Every group starts open; the current section stays open so pages like Content stay reachable. */
+/** Grouped desk links. Every group starts open so Content stays reachable; the current section stays open after a close. */
 export function DeskNav({ groups, active }: { groups: NavGroup[]; active: string }) {
   const root = useRef<HTMLDivElement>(null)
+  const started = useRef(false)
   useLayoutEffect(() => {
     if (!root.current) return
     const want = new Set(groups.filter((group) => group.items.some((item) => item.key === active)).map((group) => group.group))
     for (const details of root.current.querySelectorAll('details')) {
-      if (want.has(details.getAttribute('data-group') || '')) details.open = true
+      const group = details.getAttribute('data-group') || ''
+      if (!started.current || want.has(group)) details.open = true
     }
+    started.current = true
   }, [active, groups])
 
   return (
@@ -23,7 +26,6 @@ export function DeskNav({ groups, active }: { groups: NavGroup[]; active: string
           className="nav-group"
           data-group={group.group}
           data-testid={`nav-group-${group.group.toLowerCase().replace(/\s+/g, '-')}`}
-          defaultOpen
         >
           <summary className="group">{group.group}</summary>
           {group.description ? <p className="group-desc">{group.description}</p> : null}

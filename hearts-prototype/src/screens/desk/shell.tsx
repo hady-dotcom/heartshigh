@@ -36,13 +36,13 @@ export function portalNav(base: string, user: SessionUser): NavGroup[] {
         { key: 'teach', label: 'Learners', href: `${base}/admin/teach`, icon: <PeopleIcon /> },
         { key: 'access', label: 'Codes', href: `${base}/admin/access`, icon: <KeyIcon /> },
         { key: 'library', label: 'Library', href: `${base}/admin/library`, icon: <LibraryIcon /> },
+        { key: 'content', label: 'Content', href: `${base}/admin/content`, icon: <BookIcon /> },
       ],
     },
     {
       group: 'Intermediate',
       description: 'Course packs, study plans, Gather, live nights, missions, Scenes and Lanes.',
       items: [
-        { key: 'content', label: 'Content', href: `${base}/admin/content`, icon: <BookIcon /> },
         { key: 'plans', label: 'Study plans', href: `${base}/admin/plans`, icon: <CalendarIcon /> },
         { key: 'circle', label: 'Gather', href: `${base}/admin/circle`, icon: <PeopleIcon /> },
         { key: 'nights', label: 'Live', href: `${base}/admin/nights`, icon: <MoonIcon /> },
