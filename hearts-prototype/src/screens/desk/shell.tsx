@@ -123,22 +123,24 @@ export async function DeskFrame({
           <BrandMark size={40} />
           <span><b>{brand}</b><small>{subBrand}</small></span>
         </Link>
-        {nav.map((group) => (
-          <div key={group.group} style={{ display: 'contents' }}>
-            <div className="group">{group.group}</div>
-            {group.items.map((item) => (
-              <Link key={item.key} className={`nav${item.key === active ? ' on' : ''}`} href={item.href} aria-current={item.key === active ? 'page' : undefined} data-testid={`nav-${item.key}`}>
-                {item.icon}
-                {item.label}
-              </Link>
-            ))}
-          </div>
-        ))}
-        {extraLinks.length ? <div className="group">Elsewhere</div> : null}
-        {extraLinks.map((link) => (
-          <Link key={link.href} className="nav" href={link.href}>{link.label}</Link>
-        ))}
+        <nav className="side-nav" aria-label="Desk">
+          {nav.map((group) => (
+            <div key={group.group} style={{ display: 'contents' }}>
+              <div className="group">{group.group}</div>
+              {group.items.map((item) => (
+                <Link key={item.key} className={`nav${item.key === active ? ' on' : ''}`} href={item.href} aria-current={item.key === active ? 'page' : undefined} data-testid={`nav-${item.key}`}>
+                  {item.icon}
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          ))}
+        </nav>
         <div className="side-foot">
+          {extraLinks.length ? <div className="group">Elsewhere</div> : null}
+          {extraLinks.map((link) => (
+            <Link key={link.href} className="nav" href={link.href}>{link.label}</Link>
+          ))}
           <div className="who">
             <span className="initial">{(user.name || user.email).slice(0, 1).toUpperCase()}</span>
             <span><b style={{ display: 'block', fontSize: 13 }}>{user.name || user.email}</b><small className="muted">{roleLabel(user.role)}</small></span>
