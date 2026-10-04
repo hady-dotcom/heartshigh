@@ -175,7 +175,7 @@ export async function recordPersonalWatch(
       user: input.userId,
       lesson: input.lessonId,
       seconds,
-      portal: input.portalId || undefined,
+      portal: portalId || undefined,
     } as never,
   })
 }
