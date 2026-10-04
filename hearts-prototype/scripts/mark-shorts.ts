@@ -20,6 +20,9 @@ const payload = await getPayload({ config })
 let marked = 0
 let already = 0
 let unknown = 0
+let landscape = 0
+// Three silent answers in a row means YouTube is unreachable from here; /shorts/ links still count after that.
+let silentInARow = 0
 try {
   const found = await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: 0, pagination: false, where: { youtubeId: { exists: true } } })
   for (const lesson of found.docs as unknown as { id: number; title?: string; youtubeId?: string; youtubeUrl?: string; sourceUrl?: string; vertical?: boolean }[]) {
@@ -29,19 +32,26 @@ try {
     }
     let vertical = isShortsUrl(lesson.youtubeUrl) || isShortsUrl(lesson.sourceUrl)
     if (!vertical && lesson.youtubeId) {
-      const meta = await fetchYoutubeMeta(lesson.youtubeId)
+      const meta = silentInARow < 3 ? await fetchYoutubeMeta(lesson.youtubeId) : null
       if (!meta?.width) {
+        if (silentInARow < 3) silentInARow += 1
         unknown += 1
         continue
       }
+      silentInARow = 0
       vertical = isPortraitSize(meta.width, meta.height)
     }
-    if (!vertical) continue
+    if (!vertical) {
+      landscape += 1
+      continue
+    }
     marked += 1
     console.log(`${dryRun ? 'Would mark' : 'Marked'} lesson ${lesson.id} as vertical: ${lesson.title || lesson.youtubeId}`)
     if (!dryRun) await payload.update({ collection: 'lessons', id: lesson.id, overrideAccess: true, data: { vertical: true } as never })
   }
-  console.log(`${dryRun ? 'Dry run. ' : ''}${marked} marked vertical, ${already} already vertical, ${unknown} YouTube did not size.`)
+  console.log(`${dryRun ? 'Dry run. ' : ''}${marked} marked vertical, ${already} already vertical, ${landscape} landscape, ${unknown} YouTube did not size.`)
+  if (silentInARow >= 3) console.log('YouTube did not answer three times in a row, so the rest were judged by their links only. Run it again where YouTube is reachable.')
 } finally {
   await closePayload(payload)
 }
+process.exit(0)
