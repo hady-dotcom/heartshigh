@@ -24,6 +24,10 @@ export function onlyClipToast(level: 'hors' | 'appetiser') {
   return level === 'hors' ? "That's the only clip here for now." : "That's the only 3-minute version here for now."
 }
 
+export function poolEndToast() {
+  return "You've seen everything here, try another lane."
+}
+
 export function forbiddenLearnerWords(text: string) {
   return /\bLearn more\b|\bExtended cut\b|\bAppetiser\b|\bAppetizers?\b|\bhors d['’]oeuvre/i.test(text)
 }

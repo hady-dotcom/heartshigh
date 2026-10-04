@@ -72,17 +72,20 @@ test('on hors d’oeuvres, every swipe from every item (talks, films and cards) 
   })
 })
 
-test('the hors d’oeuvre loop steps through films and cards in order, and wraps', () => {
+test('the hors d’oeuvre loop steps through films and cards in order, and stops when they are all seen', () => {
   const list = feed()
-  const seen: number[] = []
+  const visited: number[] = []
+  const seen = new Set<string>()
   let at = 0
-  for (let step = 0; step < list.length; step++) {
-    seen.push(at)
-    at = swipeTarget(list, at, 'hors', 'next')!
+  for (let step = 0; step < list.length + 2; step++) {
+    visited.push(at)
+    seen.add(`${list[at].cutId}:${list[at].card || 'talk'}`)
+    const next = swipeTarget(list, at, 'hors', 'next', seen)
+    if (next == null) break
+    at = next
   }
-  assert.deepEqual(seen, list.map((_, index) => index))
-  assert.equal(at, 0)
-  assert.equal(swipeTarget(list, 0, 'hors', 'prev'), list.length - 1)
+  assert.deepEqual(visited, list.map((_, index) => index))
+  assert.equal(swipeTarget(list, at, 'hors', 'next', seen), null)
 })
 
 test('on appetisers, every swipe lands on another appetiser, never on a film, scene or question card', () => {
@@ -161,17 +164,16 @@ test('every clip steps up to its own speaker and lesson, never a neighbour’s',
   })
 })
 
-test('next skips a seen talk until that lane’s pool is used up, then it may wrap', () => {
+test('next skips a seen card until the pool is used up, then it stops', () => {
   const list = feed()
   const firstTalk = list.findIndex((row) => !isInterstitial(row))
   const lastOfFirst = list.findLastIndex((row) => row.cutId === list[firstTalk].cutId)
-  const secondTalk = list.findIndex((row, at) => at > firstTalk && !isInterstitial(row))
-  const seen = new Set([list[firstTalk].cutId])
+  const seen = new Set([`${list[firstTalk].cutId}:talk`])
   const afterTalk = swipeTarget(list, firstTalk, 'hors', 'next', seen)!
   assert.equal(list[afterTalk].cutId, list[firstTalk].cutId)
+  assert.notEqual(list[afterTalk].card || 'talk', 'talk')
   const nextTalk = swipeTarget(list, lastOfFirst, 'hors', 'next', seen)!
   assert.notEqual(list[nextTalk].cutId, list[firstTalk].cutId)
-  const all = new Set(list.filter((row) => !isInterstitial(row)).map((row) => row.cutId))
-  const wrapped = swipeTarget(list, secondTalk, 'hors', 'next', all)
-  assert.notEqual(wrapped, null)
+  const all = new Set(list.map((row) => `${row.cutId}:${row.card || 'talk'}`))
+  assert.equal(swipeTarget(list, lastOfFirst, 'hors', 'next', all), null)
 })

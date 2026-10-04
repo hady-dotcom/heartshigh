@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { clipStepUpLabel, forbiddenLearnerWords, READY_FOR_MORE, talkStepUpLabel } from '../../src/lib/feed-copy'
+import { clipStepUpLabel, forbiddenLearnerWords, poolEndToast, READY_FOR_MORE, talkStepUpLabel } from '../../src/lib/feed-copy'
 
 test('level buttons use one set of words, with minutes rounded up', () => {
   assert.equal(clipStepUpLabel(), 'Watch the 3-minute version')
@@ -15,4 +15,6 @@ test('level buttons use one set of words, with minutes rounded up', () => {
   assert.equal(forbiddenLearnerWords('Extended cut'), true)
   assert.equal(forbiddenLearnerWords("hors d'oeuvre"), true)
   assert.equal(forbiddenLearnerWords('Appetiser'), true)
+  assert.equal(poolEndToast(), "You've seen everything here, try another lane.")
+  assert.equal(forbiddenLearnerWords(poolEndToast()), false)
 })

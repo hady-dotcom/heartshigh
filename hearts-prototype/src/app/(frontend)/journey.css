@@ -280,16 +280,16 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   cursor: pointer;
 }
 .j-levels {
-  position: absolute;
-  left: 16px;
-  right: 70px;
-  bottom: calc(196px + var(--safe-bottom));
+  position: static;
+  left: auto;
+  right: auto;
+  bottom: auto;
   z-index: 6;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
-  color: rgba(241, 228, 198, 0.78);
+  color: #f1e4c6;
   font-size: 12px;
   font-weight: 650;
   pointer-events: none;

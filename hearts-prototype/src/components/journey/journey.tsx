@@ -5,10 +5,10 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
 import { mixFeed } from '@/lib/feed-mix'
-import { clipStepUpLabel, onlyClipToast, READY_FOR_MORE, talkStepUpLabel } from '@/lib/feed-copy'
+import { clipStepUpLabel, onlyClipToast, poolEndToast, READY_FOR_MORE, talkStepUpLabel } from '@/lib/feed-copy'
 import { isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
-import { deviceKey, haptic, readCoachDismissed, readFeedPlace, readHeart, readPending, rememberSeenCut, sessionFlags, sessionSeenCuts, setSessionFlags, viewAsId, writeCoachDismissed, writeFeedPlace, writeHeart, writePending } from '@/lib/device'
+import { deviceKey, haptic, readCoachDismissed, readFeedPlace, readHeart, readPending, rememberSeenCard, sessionFlags, sessionSeenCards, sessionSeenCuts, setSessionFlags, viewAsId, writeCoachDismissed, writeFeedPlace, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
 import { correctIslamicTerms } from '@/lib/tidy-caption'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
@@ -170,7 +170,7 @@ export function Journey(props: JourneyProps) {
   const [coach, setCoach] = useState(false)
   const [needPlay, setNeedPlay] = useState(false)
   const [seenCuts, setSeenCuts] = useState<number[]>([])
-  const seenRef = useRef<Set<number>>(new Set())
+  const seenRef = useRef<Set<string>>(new Set())
   const prepareGen = useRef<[number, number]>([0, 0])
   const showGen = useRef(0)
   const [lineAt, setLineAt] = useState(0)
@@ -236,9 +236,8 @@ export function Journey(props: JourneyProps) {
     setSessionFlags({ ...sessionFlags() })
     hydrateSound()
     if (hasSound()) setMuted(false)
-    const held = sessionSeenCuts()
-    seenRef.current = new Set(held)
-    setSeenCuts(held)
+    seenRef.current = new Set(sessionSeenCards())
+    setSeenCuts(sessionSeenCuts())
     if (!readCoachDismissed()) setCoach(true)
     const startAt = window.location.pathname.match(/\/start\/(\d+)$/)
     if (startAt) {
@@ -507,10 +506,10 @@ export function Journey(props: JourneyProps) {
       setNeedPlay(false)
       setLineAt(0)
       setAppetiserOver(false)
-      if (item && (!item.card || item.card === 'talk')) {
-        const seen = rememberSeenCut(item.cutId)
-        seenRef.current = new Set(seen)
-        setSeenCuts(seen)
+      if (item) {
+        const seen = rememberSeenCard(item.cutId, item.card || 'talk')
+        seenRef.current = new Set(seen.cards)
+        setSeenCuts(seen.cuts)
       }
       writeFeedPlace(item ? { cutId: item.cutId, mode: kind, card: item.card || 'talk' } : null)
       watch.current = { key: `${item?.cutId}:${kind}:${item?.card || 'talk'}`, start: kind === 'hors' ? item?.hors.start || 0 : item?.appetiser.start || 0, furthest: 0, done90: false, ended: false }
@@ -1048,7 +1047,9 @@ export function Journey(props: JourneyProps) {
           return
         }
       }
-      void advance(indexRef.current + 1, 'auto')
+      const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current)
+      if (next == null) setToast(poolEndToast())
+      else void advance(next, 'auto')
     }
     const onError = (event: Event) => {
       const { code, at } = (event as CustomEvent<{ code: number; at: number }>).detail
@@ -1056,7 +1057,11 @@ export function Journey(props: JourneyProps) {
       const current = itemsRef.current[indexRef.current]
       setErrorNote("This one can't play here")
       if (current && signedIn) void fetch('/api/hearts/unplayable', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cutId: current.cutId, code }) }).catch(() => undefined)
-      window.setTimeout(() => void advance(indexRef.current + 1, 'auto'), 900)
+      window.setTimeout(() => {
+        const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current)
+        if (next == null) setToast(poolEndToast())
+        else void advance(next, 'auto')
+      }, 900)
     }
     window.addEventListener('hearts:ended', onEnded)
     window.addEventListener('hearts:player-error', onError)
@@ -1073,7 +1078,9 @@ export function Journey(props: JourneyProps) {
     if (window.history.state?.hearts?.sheet) window.history.back()
     if (pendingAfterSheet.current === 'next') {
       pendingAfterSheet.current = null
-      void advance(indexRef.current + 1, 'auto')
+      const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current)
+      if (next == null) setToast(poolEndToast())
+      else void advance(next, 'auto')
     } else window.setTimeout(() => tryPlay(), 0)
   }
 
@@ -1190,7 +1197,7 @@ export function Journey(props: JourneyProps) {
     if (target === null) {
       if (swipe === 'speaker') return setToast(`That's everything from ${current.speaker} for now.`)
       if (swipe === 'topic') return setToast("That's everything on this topic for now.")
-      return setToast(onlyClipToast(modeRef.current))
+      return setToast(itemsRef.current.length < 2 ? onlyClipToast(modeRef.current) : poolEndToast())
     }
     const laneLabel = itemsRef.current[target]?.laneLabel?.trim()
     if (swipe === 'lane' && laneLabel) setToast(`Lane · ${laneLabel}`)
@@ -1608,14 +1615,14 @@ export function Journey(props: JourneyProps) {
       {needPlay ? (
         <button type="button" className="j-tap-play" data-testid="tap-to-play" onClick={tapSound}>Tap to play</button>
       ) : null}
-      <div className="j-levels" data-testid="level-steps" aria-label="Where you are">
-        <span className={mode === 'hors' ? 'on' : undefined}>Clip</span>
-        <i aria-hidden>·</i>
-        <span className={mode === 'appetiser' ? 'on' : undefined}>3-minute version</span>
-        <i aria-hidden>·</i>
-        <span>Full talk</span>
-      </div>
       <div className="clip-foot j-credits">
+        <div className="j-levels" data-testid="level-steps" aria-label="Where you are">
+          <span className={mode === 'hors' ? 'on' : undefined}>Clip</span>
+          <i aria-hidden>·</i>
+          <span className={mode === 'appetiser' ? 'on' : undefined}>3-minute version</span>
+          <i aria-hidden>·</i>
+          <span>Full talk</span>
+        </div>
         {mode === 'hors' ? (
           <>
             {wordsInPicture && !cardKind ? null : speakerRow}

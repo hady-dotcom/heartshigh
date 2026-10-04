@@ -11,14 +11,17 @@ export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean
     gate.__unloaded = []
     document.addEventListener('pointerdown', () => { gate.__gestured = true }, true)
     document.addEventListener('click', () => { gate.__gestured = true }, true)
-    type Options = { playerVars?: { start?: number }; events: { onReady: (e: unknown) => void; onStateChange: (e: { data: number }) => void } }
+    type Options = { playerVars?: { start?: number; end?: number }; events: { onReady: (e: unknown) => void; onStateChange: (e: { data: number }) => void } }
     class Player {
       private state = -1
       private time: number
+      private end: number | null = null
       private muted = true
+      private tick: number | null = null
       private frame: HTMLIFrameElement
       constructor(el: HTMLElement, private options: Options) {
         this.time = options.playerVars?.start || 0
+        this.end = typeof options.playerVars?.end === 'number' ? Number(options.playerVars.end) : null
         gate.__playerVars!.push(options.playerVars)
         this.frame = document.createElement('iframe')
         this.frame.dataset.fake = 'youtube'
@@ -29,13 +32,34 @@ export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean
         this.state = state
         this.options.events.onStateChange({ data: state })
       }
-      playVideo() { if (gate.__allowPlay || gate.__gestured) this.set(1) }
-      pauseVideo() { this.set(2) }
-      stopVideo() { this.set(5) }
+      private run() {
+        if (this.tick != null) return
+        this.tick = window.setInterval(() => {
+          if (this.state !== 1) return
+          this.time += 0.25
+          if (this.end != null && this.time >= this.end) {
+            this.time = this.end
+            this.stopClock()
+            this.set(0)
+          }
+        }, 250)
+      }
+      private stopClock() {
+        if (this.tick != null) window.clearInterval(this.tick)
+        this.tick = null
+      }
+      playVideo() { if (gate.__allowPlay || gate.__gestured) { this.set(1); this.run() } }
+      pauseVideo() { this.stopClock(); this.set(2) }
+      stopVideo() { this.stopClock(); this.set(5) }
       mute() { this.muted = true }
       unMute() { this.muted = false }
       isMuted() { return this.muted }
-      cueVideoById(video: { startSeconds?: number }) { this.time = video.startSeconds || 0; this.set(5) }
+      cueVideoById(video: { startSeconds?: number; endSeconds?: number }) {
+        this.stopClock()
+        this.time = video.startSeconds || 0
+        this.end = typeof video.endSeconds === 'number' ? video.endSeconds : this.end
+        this.set(5)
+      }
       seekTo(seconds: number) { this.time = seconds }
       getCurrentTime() { return this.time }
       getDuration() { return 600 }
@@ -43,7 +67,7 @@ export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean
       getIframe() { return this.frame }
       unloadModule(name: string) { gate.__unloaded!.push(name) }
       setOption() {}
-      destroy() { this.frame.remove() }
+      destroy() { this.stopClock(); this.frame.remove() }
     }
     ;(window as unknown as { YT: unknown }).YT = { Player }
   }, Boolean(options.blockAutoplay))

@@ -29,8 +29,14 @@ async function step(page: Page) {
   const feed = page.getByTestId('journey')
   const before = await feed.getAttribute('data-index')
   await page.getByTestId('gesture-next').dispatchEvent('click')
-  await expect(feed).not.toHaveAttribute('data-index', before!)
+  await expect.poll(async () => {
+    const moved = (await feed.getAttribute('data-index')) !== before
+    const ended = (await page.getByTestId('toast').count()) > 0 && /seen everything/i.test(await page.getByTestId('toast').innerText())
+    return moved || ended
+  }).toBe(true)
+  if ((await page.getByTestId('toast').count()) && /seen everything/i.test(await page.getByTestId('toast').innerText())) return 'end'
   await settled(page)
+  return 'ok'
 }
 
 test('the feed has no question cards, shows the coach and tab bar, and never lights Home', async ({ page }) => {
@@ -54,7 +60,7 @@ test('the feed has no question cards, shows the coach and tab bar, and never lig
     expect(await page.locator('[data-card="question"]').count()).toBe(0)
     await expect(page.getByTestId('feed-question')).toHaveCount(0)
     await expect(page.getByText('What stays with you from this')).toHaveCount(0)
-    if (at < total - 1) await step(page)
+    if (at < total - 1 && (await step(page)) === 'end') break
   }
   expect(kinds.includes('question')).toBe(false)
 })
@@ -124,10 +130,12 @@ test('hidden hosts stay paused and muted across clip-end, swipe and a sit on a s
   })
   for (let at = 0; at < 10; at++) {
     expect(await hiddenPlaying(), `hidden audio after step ${at}`).toEqual([])
-    await step(page)
+    if ((await step(page)) === 'end') break
   }
   const total = ((await feed.getAttribute('data-cuts')) || '').split(' ').length
-  for (let tries = 0; tries < total && (await feed.getAttribute('data-card')) !== 'scene'; tries++) await step(page)
+  for (let tries = 0; tries < total && (await feed.getAttribute('data-card')) !== 'scene'; tries++) {
+    if ((await step(page)) === 'end') break
+  }
   if ((await feed.getAttribute('data-card')) === 'scene') {
     const first = await page.evaluate(() => ((window as unknown as { __HEARTS_FEED_SNAP?: () => { hidden: boolean; currentTime: number; state: number }[] }).__HEARTS_FEED_SNAP?.() || []).map((row) => row.currentTime))
     await page.waitForTimeout(1200)
@@ -180,7 +188,37 @@ test('talk captions spell taqwa, not tawa, and sit in the bar when words are in 
         expect(cap.y).toBeGreaterThanOrEqual(slot.y + slot.height - 12)
       }
     }
-    if (at < total - 1) await step(page)
+    if (at < total - 1 && (await step(page)) === 'end') break
+  }
+})
+
+test('a session does not repeat a talk or a scene card until the pool is used up', async ({ page }) => {
+  test.setTimeout(90_000)
+  await page.setViewportSize(PHONE)
+  await fakeYouTube(page)
+  await signIn(page)
+  const feed = page.getByTestId('journey')
+  await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  await settled(page)
+  if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').click()
+  const seenTalks = new Set<string>()
+  const seenScenes = new Set<string>()
+  for (let at = 0; at < 20; at++) {
+    const card = (await feed.getAttribute('data-card')) || 'talk'
+    const cut = await feed.getAttribute('data-cut')
+    const key = `${cut}:${card}`
+    if (card === 'talk') {
+      expect(seenTalks.has(key), `talk ${cut} repeated`).toBe(false)
+      seenTalks.add(key)
+    }
+    if (card === 'scene') {
+      expect(seenScenes.has(key), `scene ${cut} repeated`).toBe(false)
+      seenScenes.add(key)
+    }
+    if ((await step(page)) === 'end') {
+      await expect(page.getByTestId('toast')).toContainText("You've seen everything here, try another lane.")
+      break
+    }
   }
 })
 

@@ -21,6 +21,10 @@ export function onLevel(item: NavItem | undefined, level: FeedLevel) {
   return Boolean(item) && (level === 'hors' || !isInterstitial(item))
 }
 
+export function cardKey(item: Pick<NavItem, 'cutId' | 'card'>) {
+  return `${item.cutId}:${item.card || 'talk'}`
+}
+
 function ring(length: number, from: number, step: 1 | -1) {
   return Array.from({ length: Math.max(0, length - 1) }, (_, offset) => (((from + step * (offset + 1)) % length) + length) % length)
 }
@@ -41,31 +45,26 @@ export function settleOnLevel(list: NavItem[], to: number, level: FeedLevel, ste
  * topic, speaker and lane move to another talk; next and previous step through the loop, and the
  * appetiser loop passes over the cards that only exist as hors d'oeuvres.
  */
-function freshTalk(list: NavItem[], at: number, currentCut: number, seen: ReadonlySet<number> | undefined) {
+function unseenCard(list: NavItem[], at: number, seen: ReadonlySet<string> | undefined) {
   const row = list[at]
   if (!row) return false
-  if (row.cutId === currentCut) return true
   if (!seen || !seen.size) return true
-  return !seen.has(row.cutId)
+  return !seen.has(cardKey(row))
 }
 
-export function swipeTarget(list: NavItem[], index: number, level: FeedLevel, swipe: Swipe, seen?: ReadonlySet<number>): number | null {
+export function swipeTarget(list: NavItem[], index: number, level: FeedLevel, swipe: Swipe, seen?: ReadonlySet<string>): number | null {
   const item = list[index]
   if (!item || list.length < 2) return null
   if (swipe === 'next' || swipe === 'prev') {
     const step = swipe === 'next' ? 1 : -1
     const order = ring(list.length, index, step)
-    const unseen = order.find((at) => onLevel(list[at], level) && freshTalk(list, at, item.cutId, seen))
-    if (unseen !== undefined) return unseen
-    const target = order.find((at) => onLevel(list[at], level))
-    return target === undefined ? null : target
+    return order.find((at) => onLevel(list[at], level) && unseenCard(list, at, seen)) ?? null
   }
   const talks = ring(list.length, index, 1).filter((at) => list[at].cutId !== item.cutId && !isInterstitial(list[at]))
-  const unused = talks.filter((at) => !seen?.has(list[at].cutId))
-  const pool = unused.length ? unused : talks
-  if (swipe === 'topic') return pool[0] ?? null
-  if (swipe === 'speaker') return pool.find((at) => list[at].speaker === item.speaker) ?? talks.find((at) => list[at].speaker === item.speaker) ?? null
-  return pool.find((at) => list[at].lane !== item.lane) ?? talks.find((at) => list[at].lane !== item.lane) ?? pool[0] ?? null
+  const unused = talks.filter((at) => unseenCard(list, at, seen))
+  if (swipe === 'topic') return unused[0] ?? null
+  if (swipe === 'speaker') return unused.find((at) => list[at].speaker === item.speaker) ?? null
+  return unused.find((at) => list[at].lane !== item.lane) ?? unused[0] ?? null
 }
 
 export type LearnMoreStep =
