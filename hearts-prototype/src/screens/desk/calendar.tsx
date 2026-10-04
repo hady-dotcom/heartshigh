@@ -57,8 +57,9 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
   await seedDefaultCopy(payload, user)
   const previewDay = dateValue(query.date)
   const hour = Number(query.hour || 10)
+  const minute = Math.max(0, Math.min(59, Math.round(Number(query.minute || 0))))
   const zone = isTimeZone(query.zone) ? query.zone : ctx ? portalTimeZone(ctx.portal) : DEFAULT_TIME_ZONE
-  const at = wallClock(previewDay, hour, zone)
+  const at = wallClock(previewDay, hour, zone, Number.isFinite(minute) ? minute : 0)
   const [context, offset, seasons, copy, flags] = await Promise.all([
     contextAt(payload, at, hour, undefined, zone),
     hijriOffsetOf(payload),
@@ -98,6 +99,7 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
                   </select>
                 </label>
                 {query.zone ? <input type="hidden" name="zone" value={zone} /> : null}
+                {minute ? <input type="hidden" name="minute" value={String(minute)} /> : null}
                 <button className="btn" type="submit" data-testid="calendar-preview-go">Preview</button>
               </form>
               <p className={styles.quiet}>The Islamic day moves on at Maghrib (about sunset in the UK, or the portal’s zone).</p>

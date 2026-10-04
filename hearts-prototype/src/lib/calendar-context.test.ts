@@ -158,15 +158,19 @@ test('Riyadh evening uses local hour for Maghrib, not UTC', () => {
   assert.equal(inferred.thursdayEvening || inferred.friday || inferred.hour >= 18, true)
 })
 
-test('Toronto 7 Feb 2027 is Sha\'ban before Maghrib and 1 Ramadan after sunset, not the UTC date', () => {
+test('Toronto 7 Feb 2027 is Sha\'ban before Maghrib and 1 Ramadan at 19:30 ET, not the UTC date', () => {
   const zone = 'America/Toronto'
-  const before = calendarContext({ at: wallClock('2027-02-07', 16, zone), timeZone: zone, sunsetHour: 17 + 35 / 60 })
+  const sunset = 17 + 35 / 60
+  const before = calendarContext({ at: wallClock('2027-02-07', 16, zone), timeZone: zone, sunsetHour: sunset })
   assert.equal(before.ramadan, false)
   assert.equal(before.hijri.hm, 8)
   assert.ok(before.hijri.hd === 29 || before.hijri.hd === 30, `expected 29 or 30 Sha'ban, got ${before.hijriLabel}`)
-  assert.match(before.hijriLabel, /Sha'ban 1448$/)
+  assert.match(before.hijriLabel, /^(29|30) Sha'ban 1448$/)
 
-  const after = calendarContext({ at: new Date('2027-02-08T00:30:00.000Z'), timeZone: zone, sunsetHour: 17 + 35 / 60 })
+  // 19:30 ET is 00:30 UTC on 8 Feb. Using that UTC date after Maghrib would show 2 Ramadan.
+  const nineteenThirty = wallClock('2027-02-07', 19, zone, 30)
+  assert.equal(nineteenThirty.toISOString(), '2027-02-08T00:30:00.000Z')
+  const after = calendarContext({ at: nineteenThirty, timeZone: zone, sunsetHour: sunset })
   assert.equal(after.hour, 19)
   assert.equal(after.hijriLabel, '1 Ramadan 1448')
   assert.equal(after.ramadan, true)
@@ -174,11 +178,12 @@ test('Toronto 7 Feb 2027 is Sha\'ban before Maghrib and 1 Ramadan after sunset, 
   assert.equal(after.hijri.hm, 9)
   assert.equal(after.hijri.hy, 1448)
 
-  const inferred = calendarContext({ at: new Date('2027-02-08T00:30:00.000Z'), timeZone: zone })
+  const inferred = calendarContext({ at: nineteenThirty, timeZone: zone })
   assert.equal(inferred.hijriLabel, '1 Ramadan 1448')
   const inferredBefore = calendarContext({ at: wallClock('2027-02-07', 16, zone), timeZone: zone })
   assert.equal(inferredBefore.ramadan, false)
-  assert.ok(inferredBefore.hijri.hd === 29 || inferredBefore.hijri.hd === 30)
+  assert.ok(inferredBefore.hijri.hd === 29 || inferredBefore.hijri.hd === 30, `expected 29 or 30 Sha'ban, got ${inferredBefore.hijriLabel}`)
+  assert.match(inferredBefore.hijriLabel, /^(29|30) Sha'ban 1448$/)
 })
 
 test('London in BST turns the Islamic day at local Maghrib', () => {

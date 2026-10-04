@@ -87,17 +87,18 @@ export function partsInZone(at: Date, timeZone = DEFAULT_TIME_ZONE) {
   }
 }
 
-/** The UTC instant for `day` (YYYY-MM-DD) at `hour`:00 in `timeZone`. */
-export function wallClock(day: string, hour: number, timeZone = DEFAULT_TIME_ZONE) {
+/** The UTC instant for `day` (YYYY-MM-DD) at `hour`:`minute` in `timeZone`. */
+export function wallClock(day: string, hour: number, timeZone = DEFAULT_TIME_ZONE, minute = 0) {
   const [year, month, date] = String(day).split('-').map(Number)
   const h = Math.max(0, Math.min(23, Math.round(Number(hour) || 0)))
+  const min = Math.max(0, Math.min(59, Math.round(Number(minute) || 0)))
   const zone = isTimeZone(timeZone) ? timeZone : DEFAULT_TIME_ZONE
   if (!year || !month || !date) return new Date(NaN)
-  let guess = Date.UTC(year, month - 1, date, h, 0, 0)
+  let guess = Date.UTC(year, month - 1, date, h, min, 0)
   for (let i = 0; i < 4; i++) {
     const local = partsInZone(new Date(guess), zone)
-    const want = Date.UTC(year, month - 1, date, h)
-    const got = Date.UTC(local.year, local.month - 1, local.day, local.hour)
+    const want = Date.UTC(year, month - 1, date, h, min)
+    const got = Date.UTC(local.year, local.month - 1, local.day, local.hour, local.minute)
     const delta = want - got
     if (delta === 0) break
     guess += delta
