@@ -556,7 +556,8 @@ export function Journey(props: JourneyProps) {
         clips = mixFeed(clips, state.served.length, backgroundsBase)
         adopt(clips, data.items, data.spinePointer, true)
         await showItem(0, firstMode)
-        if (!data.clips[0]?.youtubeId || data.clips[0]?.style) window.setTimeout(() => setTabs(true), 1200)
+        if (signedIn) setTabs(true)
+        else window.setTimeout(() => setTabs(true), 1200)
       } catch {
         setOffline(!navigator.onLine)
         setTabs(true)
