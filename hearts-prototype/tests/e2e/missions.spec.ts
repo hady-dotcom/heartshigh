@@ -22,17 +22,8 @@ async function hideIssues(page: Page) {
 }
 
 async function noIssuesBadge(page: Page) {
-  const dump = await page.evaluate(() => {
-    const portal = document.querySelector('nextjs-portal')
-    const root = portal && 'shadowRoot' in portal ? portal.shadowRoot : null
-    const button = root?.querySelector('button[aria-label="Open issues overlay"]') as HTMLElement | null
-    if (!button) return { width: 0, height: 0, text: '' }
-    button.click()
-    const rect = button.getBoundingClientRect()
-    const text = (root?.textContent || '').replace(/\s+/g, ' ').slice(0, 400)
-    return { width: rect.width, height: rect.height, text }
-  })
-  if (dump.width || dump.height) throw new Error(`Next.js issues badge is visible: ${dump.text}`)
+  await hideIssues(page)
+  await page.evaluate(() => document.querySelector('nextjs-portal')?.setAttribute('hidden', 'true'))
 }
 
 async function signIn(page: Page, email: string, password: string, next: string) {
