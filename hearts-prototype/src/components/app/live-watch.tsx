@@ -36,7 +36,6 @@ export function LiveWatchClient({
   staff: boolean
 }) {
   const [state, setState] = useState(initial)
-  const [body, setBody] = useState('')
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
 
@@ -55,15 +54,17 @@ export function LiveWatchClient({
     }
   }, [portal, initial.session.id])
 
-  async function send(event: FormEvent) {
+  async function send(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (sending) return
+    const form = event.currentTarget
+    const typed = String(new FormData(form).get('body') || '')
     setSending(true)
     setError('')
     const res = await fetch('/api/live', {
       method: 'POST',
       headers: { accept: 'application/json', 'content-type': 'application/json' },
-      body: JSON.stringify({ action: 'question', id: state.session.id, body, portal }),
+      body: JSON.stringify({ action: 'question', id: state.session.id, body: typed, portal }),
     }).catch(() => null)
     const data = res ? ((await res.json().catch(() => null)) as { ok?: boolean; error?: string; question?: Question } | null) : null
     setSending(false)
@@ -71,7 +72,7 @@ export function LiveWatchClient({
       setError(data?.error || 'The question could not be sent.')
       return
     }
-    setBody('')
+    form.reset()
     setState((current) => ({ ...current, questions: [data.question!, ...current.questions.filter((row) => row.id !== data.question!.id)] }))
   }
 
@@ -108,7 +109,7 @@ export function LiveWatchClient({
           <form className="live-ask" onSubmit={send} data-testid="live-ask">
             <label className="stack">
               Ask a short question
-              <textarea name="body" rows={2} maxLength={240} value={body} onChange={(event) => setBody(event.target.value)} data-testid="live-question-input" />
+              <textarea name="body" rows={2} maxLength={240} data-testid="live-question-input" />
             </label>
             {error ? <p className="flash error" data-testid="live-question-error">{error}</p> : null}
             <button className="pill gold" type="submit" disabled={sending} data-testid="live-question-send" data-write>Send</button>
