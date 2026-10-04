@@ -199,10 +199,15 @@ test.describe('round 3 API', () => {
     expect(loc(await hide('extra', true))).not.toContain('error=')
     expect(loc(await hide('queue', true))).not.toContain('error=')
     expect(loc(await hide('thumb', true))).toContain('error=')
-    const served = (await json(await (await as()).get(`/api/hearts/opening?portal=${PORTAL}`))).scenes as { key: string }[]
-    expect(served.length).toBe(4)
-    expect(served.map((scene) => scene.key)).toContain('visitor')
-    for (const key of ['extra', 'queue', 'thumb']) await hide(key, false)
+    try {
+      const served = (await json(await (await as()).get(`/api/hearts/opening?portal=${PORTAL}`))).scenes as { key: string }[]
+      // Two published scenes stay hidden. The runtime account scene is still injected.
+      expect(served.length).toBe(5)
+      expect(served.map((scene) => scene.key)).toContain('visitor')
+      expect(served.map((scene) => scene.key)).toContain('account')
+    } finally {
+      for (const key of ['extra', 'queue', 'thumb']) await hide(key, false)
+    }
   })
 
   test('Bug 12: reserved portal addresses are refused by the form and by REST', async () => {
