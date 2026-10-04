@@ -69,7 +69,7 @@ export function preloadApi() {
   else window.setTimeout(go, 200)
 }
 
-/** `hors` and `appetiser` play in the feed with no YouTube chrome; `full` is the course page, which keeps YouTube's controls. */
+/** Feed clips and the course player are both chromeless. Captions, the title bar, the logo and the red button stay off. */
 export type PlayerKind = 'hors' | 'appetiser' | 'full'
 
 export function playerVars(kind: PlayerKind, start: number, end?: number | null) {
@@ -84,10 +84,9 @@ export function playerVars(kind: PlayerKind, start: number, end?: number | null)
     origin: typeof window === 'undefined' ? undefined : window.location.origin,
     autoplay: 0,
   }
-  // A language preference is itself a nudge to load captions, so only the full talk (where YouTube's CC button is) sends one.
+  // A language preference is itself a nudge to load captions. None of the learner players send one.
   if (kind === 'hors') return { ...base, end: end ? Math.ceil(end) : undefined, controls: 0, fs: 0, disablekb: 1 }
-  if (kind === 'appetiser') return { ...base, ...(end ? { end: Math.ceil(end) } : {}), controls: 0, fs: 0, disablekb: 1 }
-  return { ...base, ...(end ? { end: Math.ceil(end) } : {}), controls: 1, fs: 1, disablekb: 0, cc_lang_pref: 'en' }
+  return { ...base, ...(end ? { end: Math.ceil(end) } : {}), controls: 0, fs: 0, disablekb: 1 }
 }
 
 /**
@@ -154,6 +153,7 @@ export async function createPlayer(options: CreateOptions): Promise<YTPlayer> {
         onStateChange: (event: { data: number }) => {
           record.state = event.data
           if (event.data === STATE.PLAYING || event.data === STATE.BUFFERING || event.data === STATE.CUED) dropCaptions(player)
+          if (record.hidden && (event.data === STATE.PLAYING || event.data === STATE.BUFFERING)) hush(player)
           options.onState?.(event.data, player)
         },
         onError: (event: { data: number }) => options.onError?.(event.data),
@@ -162,27 +162,83 @@ export async function createPlayer(options: CreateOptions): Promise<YTPlayer> {
   })
 }
 
+function hush(player: YTPlayer) {
+  try {
+    player.mute()
+  } catch {
+    // The iframe may already have gone.
+  }
+  try {
+    player.pauseVideo()
+  } catch {
+    // Same.
+  }
+}
+
 export function cue(id: string, player: YTPlayer, videoId: string, start: number, end?: number | null) {
   const record = records.find((row) => row.id === id)
   if (record) Object.assign(record, { videoId, start, end: end ?? null })
   player.cueVideoById({ videoId, startSeconds: start, ...(end ? { endSeconds: end } : {}) })
+  if (record?.hidden) hush(player)
 }
 
 export function setHidden(id: string, hidden: boolean) {
   const record = records.find((row) => row.id === id)
   if (record) record.hidden = hidden
+  const player = players.get(id)
+  if (hidden && player) hush(player)
 }
 
 let unmuted = false
+
+/** Pause and mute one player. Hidden hosts must never keep talking. */
+export function silence(id: string) {
+  const player = players.get(id)
+  if (player) hush(player)
+}
+
+/** Pause and mute every player except `keep`, including hosts that are still buffering. */
+export function silenceOthers(keep?: string) {
+  for (const [other, item] of players) if (other !== keep) hush(item)
+}
+
+/** Any host marked hidden that reports PLAYING or BUFFERING is paused and muted at once. */
+export function silenceHidden() {
+  for (const record of records) {
+    if (!record.hidden) continue
+    const player = players.get(record.id)
+    if (!player) continue
+    const state = player.getPlayerState()
+    if (state === STATE.PLAYING || state === STATE.BUFFERING) hush(player)
+  }
+}
+
+export function playerSnapshot() {
+  return records.map((row) => {
+    const player = players.get(row.id)
+    return {
+      id: row.id,
+      videoId: row.videoId,
+      hidden: row.hidden,
+      state: player ? player.getPlayerState() : row.state,
+      muted: player ? player.isMuted() : true,
+      currentTime: player ? player.getCurrentTime() : row.start,
+    }
+  })
+}
 
 /** Scripted playback: pause every other player, start muted until the learner has asked for sound once. */
 export function playOnly(id: string) {
   const player = players.get(id)
   if (!player) return
-  for (const [other, item] of players) if (other !== id) item.pauseVideo()
+  silenceOthers(id)
+  const record = records.find((row) => row.id === id)
+  if (record?.hidden) {
+    hush(player)
+    return
+  }
   if (unmuted) player.unMute()
   else player.mute()
-  const record = records.find((row) => row.id === id)
   if (record) record.playCalls += 1
   player.playVideo()
 }
@@ -191,15 +247,39 @@ export function playOnly(id: string) {
 export function resume(id: string) {
   const player = players.get(id)
   if (!player) return
-  for (const [other, item] of players) if (other !== id) item.pauseVideo()
+  silenceOthers(id)
   const record = records.find((row) => row.id === id)
+  if (record?.hidden) {
+    hush(player)
+    return
+  }
   if (record) record.playCalls += 1
   player.playVideo()
 }
 
 export function soundOn(id: string) {
   unmuted = true
+  if (typeof window !== 'undefined') {
+    try {
+      const key = 'hearts.session.v1'
+      const held = JSON.parse(window.sessionStorage.getItem(key) || '{"sheetCount":0}') as { sheetCount?: number; unmuted?: boolean }
+      window.sessionStorage.setItem(key, JSON.stringify({ ...held, unmuted: true }))
+    } catch {
+      // Private browsing: sound still stays on for this page.
+    }
+  }
   players.get(id)?.unMute()
+}
+
+export function hydrateSound() {
+  if (unmuted || typeof window === 'undefined') return unmuted
+  try {
+    const held = JSON.parse(window.sessionStorage.getItem('hearts.session.v1') || '{}') as { unmuted?: boolean }
+    if (held.unmuted) unmuted = true
+  } catch {
+    // ignore
+  }
+  return unmuted
 }
 
 export const hasSound = () => unmuted

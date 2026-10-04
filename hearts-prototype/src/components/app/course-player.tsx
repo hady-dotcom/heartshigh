@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { newViewingId, POLL_MS, PopupWatcher, type PopupPoint } from '@/lib/popups'
+import { placeDots } from '@/lib/timeline-dots'
 import { createPlayer, destroyPlayer, getPlayer, resume, STATE, UNPLAYABLE } from '@/lib/yt'
 import { HeartIcon, ImageIcon, LockIcon, MicIcon, PauseIcon, PlayIcon } from '../icons'
 import { track } from '@/lib/experiment-track'
@@ -25,6 +26,7 @@ export type PointView = {
   evidence?: 'none' | 'note' | 'photo' | null
   showImam?: boolean
   family?: string | null
+  gatherings?: { href: string; title: string; when: string }[]
 }
 
 export type SwarmItem = { name: string; body: string; image?: string | null; circle?: boolean }
@@ -84,7 +86,7 @@ export function CoursePlayer({
   circleLabel?: string
   serverNow: string
   next: string
-  garden: { done: number; total: number; links: { label: string; href: string }[]; gardenHref: string }
+  garden: { done: number; total: number; links: { label: string; href: string }[]; gardenHref: string; nextPart?: { label: string; href: string } | null }
   /** Master flag popupOverPlayer. Off is the strict layout: the paused player stays fully in view. */
   overPlayer?: boolean
   film?: { provider: 'vimeo' | 'file'; vimeoId?: string | null; src?: string | null } | null
@@ -113,6 +115,9 @@ export function CoursePlayer({
   const [answered, setAnswered] = useState<Record<number, string>>({})
   const [notice, setNotice] = useState('')
   const [now, setNow] = useState(() => new Date(serverNow).getTime())
+  const [lit, setLit] = useState(false)
+  const [trackWidth, setTrackWidth] = useState(340)
+  const timelineRef = useRef<HTMLDivElement>(null)
 
   const views = points.map((point) => (answered[point.id] !== undefined ? { ...point, answered: true, myAnswer: answered[point.id] } : point))
   const viewsRef = useRef(views)
@@ -156,6 +161,7 @@ export function CoursePlayer({
       },
       onState: (state) => {
         setPlaying(state === STATE.PLAYING)
+        if (state === STATE.PLAYING) setLit(true)
         if (state === STATE.ENDED) setEnded(true)
       },
       onError: (code) => UNPLAYABLE.has(code) && !cancelled && setMode('practice'),
@@ -269,6 +275,23 @@ export function CoursePlayer({
     }
   }, [time, length, mode])
 
+  useEffect(() => {
+    const el = timelineRef.current
+    if (!el) return
+    const read = () => setTrackWidth(el.clientWidth || 340)
+    read()
+    const observer = new ResizeObserver(read)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  const resumeNow = () => {
+    if (mode === 'youtube') resume(PLAYER_ID)
+    else if (mode === 'file') void videoRef.current?.play()
+    else if (mode === 'vimeo') filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'play' }), '*')
+    else setPlaying(true)
+  }
+
   const togglePlay = () => {
     if (mode === 'youtube') {
       if (playing) pause()
@@ -301,12 +324,7 @@ export function CoursePlayer({
     const wasTriggered = fromTrigger
     setOpenId(null)
     setFromTrigger(false)
-    if (wasTriggered) {
-      if (mode === 'youtube') window.setTimeout(() => resume(PLAYER_ID), 120)
-      else if (mode === 'file') void videoRef.current?.play()
-      else if (mode === 'vimeo') filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'play' }), '*')
-      else setPlaying(true)
-    }
+    if (wasTriggered) resumeNow()
     if (saved) router.refresh()
   }
 
@@ -315,6 +333,7 @@ export function CoursePlayer({
   const total = length || Math.max(60, ...views.map((point) => point.second + 30))
   const filmed = mode === 'youtube' || mode === 'vimeo' || mode === 'file'
   const scenicPoster = !poster || /i\.ytimg\.com|img\.youtube\.com/i.test(poster)
+  const places = new Map(placeDots(views.map((row) => ({ id: row.id, second: row.second })), total, trackWidth).map((row) => [row.id, row]))
 
   return (
     <div data-testid="player" data-mode={mode} data-popup-layout={overPlayer ? 'over' : 'strict'}>
@@ -322,7 +341,7 @@ export function CoursePlayer({
         <Link className="back" href={backHref} data-testid="back">‹ {courseTitle}</Link>
       </div>
       <div ref={card} className={`player-card${filmed ? ' yt-on' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
-        {!filmed ? <div className={`poster${scenicPoster ? ' scenic' : ''}`} style={scenicPoster ? undefined : { backgroundImage: `url(${poster})` }} /> : null}
+        {!filmed || !lit ? <div className={`poster${scenicPoster ? ' scenic' : ''}${mode === 'loading' ? ' skeleton' : ''}`} style={poster && !scenicPoster ? { backgroundImage: `url(${poster})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : undefined} /> : null}
         {mode === 'loading' ? <div className="player-veil" data-testid="player-veil" aria-hidden><span className="gold-spin" /></div> : null}
         {youtubeId ? <div className="yt" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
         {vimeoId ? (
@@ -344,20 +363,22 @@ export function CoursePlayer({
         <span className="time-read" data-testid="player-time">{clock(time)}</span>
         {open && !filmed ? (
           <p className="paused-note" data-testid="paused-note">❚❚ Paused at question {open.number}</p>
-        ) : !filmed && mode !== 'loading' ? (
+        ) : !open && mode !== 'loading' && (!filmed || !playing) ? (
           <button type="button" className="big-play" aria-label={playing ? 'Pause' : 'Play'} onClick={togglePlay} data-testid="player-play">
             {playing ? <PauseIcon size={22} /> : <PlayIcon size={22} />}
           </button>
         ) : null}
-        <div className="timeline" data-testid="timeline">
+        <div className="timeline" data-testid="timeline" ref={timelineRef}>
           <div className="track" />
           <div className="fill" style={{ width: `${Math.min(100, (time / total) * 100)}%` }} />
-          {views.map((point) => (
+          {views.map((point) => {
+            const place = places.get(point.id)
+            return (
             <button
               key={point.id}
               type="button"
               className={`dot${point.answered ? ' done' : point.state !== 'open' ? ' locked' : ''}`}
-              style={{ left: `${Math.min(98, Math.max(2, (point.second / total) * 100))}%` }}
+              style={{ left: `${place?.left ?? 2}%`, top: place?.lift || 0 }}
               aria-label={`Question ${point.number} at ${clock(point.second)}`}
               data-testid="timeline-dot"
               data-state={point.state}
@@ -366,8 +387,11 @@ export function CoursePlayer({
                 pause()
                 show(point.id, false)
               }}
-            />
-          ))}
+            >
+              <i />
+            </button>
+            )
+          })}
         </div>
       </div>
       {views.length ? (
@@ -397,6 +421,7 @@ export function CoursePlayer({
             <h3>What&apos;s done</h3>
             <small data-testid="fruit-count">{garden.done} of {garden.total} fruits</small>
             <div className="bar"><i style={{ width: `${garden.total ? (garden.done / garden.total) * 100 : 0}%` }} /></div>
+            {garden.nextPart ? <Link className="garden-link" href={garden.nextPart.href} data-testid="garden-next">↗ {garden.nextPart.label}</Link> : null}
             {garden.links.map((link) => <Link key={link.href} className="garden-link" href={link.href}>↗ {link.label}</Link>)}
             <Link className="pill teal small" href={garden.gardenHref} style={{ marginTop: 6 }}>Open garden</Link>
           </div>
@@ -424,6 +449,7 @@ export function CoursePlayer({
           swarmOn={swarmOn}
           circleLabel={circleLabel}
           now={now}
+          onResume={() => { if (fromTrigger) resumeNow() }}
           onClose={close}
         />
       ) : null}
@@ -459,6 +485,7 @@ function Sheet({
   swarmOn,
   circleLabel,
   now,
+  onResume,
   onClose,
 }: {
   point: PointView
@@ -471,6 +498,7 @@ function Sheet({
   swarmOn: boolean
   circleLabel: string
   now: number
+  onResume?: () => void
   onClose: (saved?: Saved) => void
 }) {
   const [keepPrivate, setKeepPrivate] = useState(true)
@@ -493,6 +521,7 @@ function Sheet({
 
   const leave = (saved?: Saved) => {
     setLeaving(true)
+    if (triggered) onResume?.()
     leaveTimer.current = window.setTimeout(() => onClose(saved), 180)
   }
 
@@ -609,6 +638,12 @@ function Sheet({
             {point.kind === 'task' ? (
               <div data-testid="task-form" data-evidence={point.evidence || 'none'}>
                 {point.dueDays ? <p data-testid="task-due">Due within {point.dueDays} days of opening this talk.</p> : null}
+                {point.gatherings?.length ? (
+                  <div data-testid="task-gatherings">
+                    <p>This asks you to do it with others. These gatherings match.</p>
+                    {point.gatherings.map((row) => <p key={row.href}><a href={row.href}>{row.title}</a> · {row.when}</p>)}
+                  </div>
+                ) : null}
                 {point.evidence === 'photo' ? <p>Add a photo of what you did.</p> : (
                   <textarea name="body" rows={3} required={point.evidence === 'note'} placeholder={point.evidence === 'note' ? 'What did you do?' : 'A note is optional'} data-testid="answer-text" defaultValue={point.answered ? point.myAnswer : ''} />
                 )}
@@ -643,7 +678,7 @@ function Sheet({
             {!point.answered ? <button type="button" className="link-btn" onClick={later} data-testid="answer-later" style={{ width: '100%' }}>Answer later</button> : null}
           </form>
         ) : null}
-        {swarmOn ? (
+        {swarmOn || point.answered ? (
         <div className="others" data-testid="swarm">
           <p className="eyebrow">What others said</p>
           {swarm.length ? (

@@ -121,6 +121,8 @@ export interface Config {
     'persona-bands': PersonaBand;
     'compass-settings': CompassSetting;
     'compass-attempts': CompassAttempt;
+    'compass-mixes': CompassMix;
+    'compass-serves': CompassServe;
     'ai-steps': AiStep;
     'ai-step-versions': AiStepVersion;
     'ai-step-outputs': AiStepOutput;
@@ -139,6 +141,11 @@ export interface Config {
     'mission-joins': MissionJoin;
     'support-threads': SupportThread;
     'support-messages': SupportMessage;
+    gatherings: Gathering;
+    'gather-rsvps': GatherRsvp;
+    'gather-checkins': GatherCheckin;
+    'gather-reflections': GatherReflection;
+    'gather-photos': GatherPhoto;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -200,6 +207,8 @@ export interface Config {
     'persona-bands': PersonaBandsSelect<false> | PersonaBandsSelect<true>;
     'compass-settings': CompassSettingsSelect<false> | CompassSettingsSelect<true>;
     'compass-attempts': CompassAttemptsSelect<false> | CompassAttemptsSelect<true>;
+    'compass-mixes': CompassMixesSelect<false> | CompassMixesSelect<true>;
+    'compass-serves': CompassServesSelect<false> | CompassServesSelect<true>;
     'ai-steps': AiStepsSelect<false> | AiStepsSelect<true>;
     'ai-step-versions': AiStepVersionsSelect<false> | AiStepVersionsSelect<true>;
     'ai-step-outputs': AiStepOutputsSelect<false> | AiStepOutputsSelect<true>;
@@ -218,6 +227,11 @@ export interface Config {
     'mission-joins': MissionJoinsSelect<false> | MissionJoinsSelect<true>;
     'support-threads': SupportThreadsSelect<false> | SupportThreadsSelect<true>;
     'support-messages': SupportMessagesSelect<false> | SupportMessagesSelect<true>;
+    gatherings: GatheringsSelect<false> | GatheringsSelect<true>;
+    'gather-rsvps': GatherRsvpsSelect<false> | GatherRsvpsSelect<true>;
+    'gather-checkins': GatherCheckinsSelect<false> | GatherCheckinsSelect<true>;
+    'gather-reflections': GatherReflectionsSelect<false> | GatherReflectionsSelect<true>;
+    'gather-photos': GatherPhotosSelect<false> | GatherPhotosSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -804,6 +818,10 @@ export interface Answer {
   pendingSync?: boolean | null;
   correct?: boolean | null;
   /**
+   * Set when showing up at a gathering completed this activation task. That counts toward the course. A hors d'oeuvre or appetiser watch still does not.
+   */
+  viaGathering?: boolean | null;
+  /**
    * Questions on a hors d'oeuvre or appetiser do not count toward the grow page. Only questions on a full talk do.
    */
   sourceLevel?: ('talk' | 'hors' | 'appetiser') | null;
@@ -1200,6 +1218,10 @@ export interface Schedule {
     | number
     | boolean
     | null;
+  /**
+   * How many minutes a day this plan asks for: 10, 20, 30 or 45.
+   */
+  minutesPerDay?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1723,6 +1745,35 @@ export interface PersonaBand {
    */
   identicalGroup?: string | null;
   note?: string | null;
+  /**
+   * 2 is the balanced reading in PERSONA-BALANCING.md.
+   */
+  version?: number | null;
+  description?: string | null;
+  /**
+   * Working doors, 1 to 20, that this band leans on.
+   */
+  doors?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Talk titles to lean on. Staff only.
+   */
+  talks?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   ranges?:
     | {
         scale:
@@ -1812,6 +1863,21 @@ export interface CompassAttempt {
   bank?: ('opening' | 'month') | null;
   lifeKey?: string | null;
   /**
+   * Every life line ticked this round. History is append-only.
+   */
+  lifeKeys?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  lifeNote?: string | null;
+  formKey?: string | null;
+  demoKey?: string | null;
+  /**
    * Device readings from −1 to +1. Not shown to the learner.
    */
   scales?:
@@ -1823,6 +1889,51 @@ export interface CompassAttempt {
     | number
     | boolean
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * How this portal splits the shelf between quieter scales, steady ones, and a door not sat with lately.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "compass-mixes".
+ */
+export interface CompassMix {
+  id: number;
+  portal: number | Portal;
+  deficit?: number | null;
+  strength?: number | null;
+  discovery?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A talk the compass put forward, and why. Learners do not see the why.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "compass-serves".
+ */
+export interface CompassServe {
+  id: number;
+  user: number | User;
+  portal: number | Portal;
+  lesson?: (number | null) | Lesson;
+  title: string;
+  kind?: ('hors' | 'appetiser' | 'course' | 'talk') | null;
+  why?: string | null;
+  mix?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  at: string;
+  door?: number | null;
+  bucket?: string | null;
+  demoKey?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2021,6 +2132,137 @@ export interface SheetImport {
     | boolean
     | null;
   workbook?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A real meeting at a portal: circle, tea, volunteering, walk, youth night or picnic.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gatherings".
+ */
+export interface Gathering {
+  id: number;
+  portal?: (number | null) | Portal;
+  title: string;
+  kind?: ('circle' | 'tea' | 'volunteer' | 'walk' | 'youth' | 'picnic') | null;
+  audience?: ('brothers' | 'sisters' | 'family' | 'youth' | 'all') | null;
+  startsAt: string;
+  endsAt?: string | null;
+  place?: string | null;
+  mapUrl?: string | null;
+  /**
+   * 0 means no cap.
+   */
+  capacity?: number | null;
+  bring?: string | null;
+  note?: string | null;
+  host?: (number | null) | User;
+  /**
+   * The name shown on the public page. A role or a first name, not a learner’s full name.
+   */
+  hostLabel?: string | null;
+  status?: ('proposed' | 'published' | 'cancelled') | null;
+  proposedBy?: (number | null) | User;
+  lesson?: (number | null) | Lesson;
+  course?: (number | null) | Course;
+  task?: (number | null) | EngagementPoint;
+  door?: number | null;
+  linkLabel?: string | null;
+  slug: string;
+  checkinToken: string;
+  /**
+   * Four characters read out at the door. Not the web address.
+   */
+  entryCode?: string | null;
+  prompts?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Small groups for the night. Names only. No scores.
+   */
+  circles?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  seedKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gather-rsvps".
+ */
+export interface GatherRsvp {
+  id: number;
+  portal?: (number | null) | Portal;
+  gathering: number | Gathering;
+  user?: (number | null) | User;
+  status?: ('going' | 'maybe' | 'cant' | 'waitlist') | null;
+  guestName?: string | null;
+  guestContact?: string | null;
+  guestToken?: string | null;
+  broughtBy?: (number | null) | User;
+  bringCode?: string | null;
+  remind?: boolean | null;
+  seedKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gather-checkins".
+ */
+export interface GatherCheckin {
+  id: number;
+  portal?: (number | null) | Portal;
+  gathering: number | Gathering;
+  user?: (number | null) | User;
+  rsvp?: (number | null) | GatherRsvp;
+  guestLabel?: string | null;
+  method?: ('qr' | 'code' | 'host') | null;
+  newcomer?: boolean | null;
+  welcomed?: boolean | null;
+  seedKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gather-reflections".
+ */
+export interface GatherReflection {
+  id: number;
+  portal?: (number | null) | Portal;
+  gathering: number | Gathering;
+  user: number | User;
+  body: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gather-photos".
+ */
+export interface GatherPhoto {
+  id: number;
+  portal?: (number | null) | Portal;
+  gathering: number | Gathering;
+  image: number | Media;
+  caption?: string | null;
+  consent?: boolean | null;
+  postedBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -2522,6 +2764,14 @@ export interface PayloadLockedDocument {
         value: number | CompassAttempt;
       } | null)
     | ({
+        relationTo: 'compass-mixes';
+        value: number | CompassMix;
+      } | null)
+    | ({
+        relationTo: 'compass-serves';
+        value: number | CompassServe;
+      } | null)
+    | ({
         relationTo: 'ai-steps';
         value: number | AiStep;
       } | null)
@@ -2592,6 +2842,26 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'support-messages';
         value: number | SupportMessage;
+      } | null)
+    | ({
+        relationTo: 'gatherings';
+        value: number | Gathering;
+      } | null)
+    | ({
+        relationTo: 'gather-rsvps';
+        value: number | GatherRsvp;
+      } | null)
+    | ({
+        relationTo: 'gather-checkins';
+        value: number | GatherCheckin;
+      } | null)
+    | ({
+        relationTo: 'gather-reflections';
+        value: number | GatherReflection;
+      } | null)
+    | ({
+        relationTo: 'gather-photos';
+        value: number | GatherPhoto;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -3009,6 +3279,7 @@ export interface AnswersSelect<T extends boolean = true> {
   answeredAt?: T;
   pendingSync?: T;
   correct?: T;
+  viaGathering?: T;
   sourceLevel?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -3214,6 +3485,7 @@ export interface SchedulesSelect<T extends boolean = true> {
   endDate?: T;
   weekdays?: T;
   slots?: T;
+  minutesPerDay?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3625,6 +3897,10 @@ export interface PersonaBandsSelect<T extends boolean = true> {
   placeholder?: T;
   identicalGroup?: T;
   note?: T;
+  version?: T;
+  description?: T;
+  doors?: T;
+  talks?: T;
   ranges?:
     | T
     | {
@@ -3681,7 +3957,42 @@ export interface CompassAttemptsSelect<T extends boolean = true> {
   at?: T;
   bank?: T;
   lifeKey?: T;
+  lifeKeys?: T;
+  lifeNote?: T;
+  formKey?: T;
+  demoKey?: T;
   scales?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "compass-mixes_select".
+ */
+export interface CompassMixesSelect<T extends boolean = true> {
+  portal?: T;
+  deficit?: T;
+  strength?: T;
+  discovery?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "compass-serves_select".
+ */
+export interface CompassServesSelect<T extends boolean = true> {
+  user?: T;
+  portal?: T;
+  lesson?: T;
+  title?: T;
+  kind?: T;
+  why?: T;
+  mix?: T;
+  at?: T;
+  door?: T;
+  bucket?: T;
+  demoKey?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3984,6 +4295,40 @@ export interface MissionsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gatherings_select".
+ */
+export interface GatheringsSelect<T extends boolean = true> {
+  portal?: T;
+  title?: T;
+  kind?: T;
+  audience?: T;
+  startsAt?: T;
+  endsAt?: T;
+  place?: T;
+  mapUrl?: T;
+  capacity?: T;
+  bring?: T;
+  note?: T;
+  host?: T;
+  hostLabel?: T;
+  status?: T;
+  proposedBy?: T;
+  lesson?: T;
+  course?: T;
+  task?: T;
+  door?: T;
+  linkLabel?: T;
+  slug?: T;
+  checkinToken?: T;
+  entryCode?: T;
+  prompts?: T;
+  circles?: T;
+  seedKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "mission-joins_select".
  */
 export interface MissionJoinsSelect<T extends boolean = true> {
@@ -4010,6 +4355,25 @@ export interface SupportThreadsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gather-rsvps_select".
+ */
+export interface GatherRsvpsSelect<T extends boolean = true> {
+  portal?: T;
+  gathering?: T;
+  user?: T;
+  status?: T;
+  guestName?: T;
+  guestContact?: T;
+  guestToken?: T;
+  broughtBy?: T;
+  bringCode?: T;
+  remind?: T;
+  seedKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "support-messages_select".
  */
 export interface SupportMessagesSelect<T extends boolean = true> {
@@ -4017,6 +4381,49 @@ export interface SupportMessagesSelect<T extends boolean = true> {
   author?: T;
   body?: T;
   fromDesk?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gather-checkins_select".
+ */
+export interface GatherCheckinsSelect<T extends boolean = true> {
+  portal?: T;
+  gathering?: T;
+  user?: T;
+  rsvp?: T;
+  guestLabel?: T;
+  method?: T;
+  newcomer?: T;
+  welcomed?: T;
+  seedKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gather-reflections_select".
+ */
+export interface GatherReflectionsSelect<T extends boolean = true> {
+  portal?: T;
+  gathering?: T;
+  user?: T;
+  body?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gather-photos_select".
+ */
+export interface GatherPhotosSelect<T extends boolean = true> {
+  portal?: T;
+  gathering?: T;
+  image?: T;
+  caption?: T;
+  consent?: T;
+  postedBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }

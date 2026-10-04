@@ -799,6 +799,7 @@ export const Answers: CollectionConfig = {
     { name: 'answeredAt', type: 'date' },
     { name: 'pendingSync', type: 'checkbox', defaultValue: false },
     { name: 'correct', type: 'checkbox' },
+    { name: 'viaGathering', type: 'checkbox', defaultValue: false, admin: { description: 'Set when showing up at a gathering completed this activation task. That counts toward the course. A hors d\'oeuvre or appetiser watch still does not.' } },
     {
       name: 'sourceLevel',
       type: 'select',
@@ -1033,6 +1034,7 @@ export const Schedules: CollectionConfig = {
     { name: 'endDate', type: 'text', required: true },
     { name: 'weekdays', type: 'json', required: true },
     { name: 'slots', type: 'json', required: true },
+    { name: 'minutesPerDay', type: 'number', min: 10, max: 45, admin: { description: 'How many minutes a day this plan asks for: 10, 20, 30 or 45.' } },
   ],
 }
 

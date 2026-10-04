@@ -4,7 +4,7 @@ import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
 import { idOf } from '@/lib/ids'
 import { recommendLesson } from '@/lib/placing'
-import { doorOfClause } from '@/lib/doors'
+import { capitalAfterColon, doorOfClause } from '@/lib/doors'
 import { loadDoors } from './doors'
 import { portalDisplayName } from '@/lib/portal-name'
 import type { PieceRef } from '@/lib/nesting'
@@ -26,7 +26,7 @@ export type FeedItem = {
   youtubeId: string | null
   /** A Short or other 9:16 film with its words in the picture: no caption overlay, buttons above the lower third. */
   vertical?: boolean
-  /** Words in the picture (a Short, or captions burned in): our caption hides and the speaker row rises out of the lower quarter. */
+  /** Words in the picture (a Short, or captions burned in): our caption sits in the bar below the uncropped 16:9 film. */
   wordsInPicture?: boolean
   /** YouTube's large frame, only when it carries no words; otherwise the extended cut paints our own still and title. */
   cleanThumb?: string | null
@@ -69,6 +69,8 @@ export type FeedItem = {
   laneKey?: string | null
   laneTags?: { lane: string; weight: number }[]
   lessonTitle?: string
+  /** Whole-talk length in seconds, for the 'Watch the whole talk (N min)' button. */
+  talkSeconds?: number | null
   placeholder?: boolean
   transcriptReady?: boolean
   /** The talk's tier record: a machine draft until a person checks it. */
@@ -194,7 +196,7 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
     for (const cut of cuts) {
       if (!ownIds.has(idOf(cut.lesson) || 0) || (cut.status !== 'approved' && !cut.placeholder)) continue
       const door = doorOfClause(Number(cut.bestClause || 0), doors)
-      if (door) courseDoors.set(door.number, door.title)
+      if (door) courseDoors.set(door.number, capitalAfterColon(door.title))
     }
     return {
       id: course.id,

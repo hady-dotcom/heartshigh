@@ -139,18 +139,20 @@ test.describe('Help shape HEARTS', () => {
     await expect(joinFilm.page.getByTestId('feed-screen')).toBeVisible({ timeout: 20_000 })
     await expect(joinFilm.page.getByTestId('feed-mission')).toBeVisible()
     await expect(joinFilm.page.getByTestId('learn-more')).toBeVisible()
+    await expect(joinFilm.page.getByTestId('learn-more')).toHaveText(/Watch the 3-minute version/)
     const missionBox = await joinFilm.page.getByTestId('feed-mission').boundingBox()
     const clipBox = await joinFilm.page.getByTestId('learn-more').boundingBox()
     expect(missionBox && clipBox).toBeTruthy()
     expect((missionBox?.y || 0) + (missionBox?.height || 0)).toBeLessThan(clipBox?.y || 0)
-    const sound = joinFilm.page.getByTestId('tap-sound')
-    const lane = joinFilm.page.getByTestId('lane-chip')
-    if (await sound.isVisible() && await lane.isVisible()) {
-      const soundBox = await sound.boundingBox()
-      const laneBox = await lane.boundingBox()
-      const overlap = soundBox && laneBox && soundBox.x < laneBox.x + laneBox.width && soundBox.x + soundBox.width > laneBox.x && soundBox.y < laneBox.y + laneBox.height && soundBox.y + soundBox.height > laneBox.y
-      expect(overlap, 'Tap for sound overlaps the lane chip').toBeFalsy()
+    const overlapIds = ['swipe-hint', 'lane-chip', 'clip-timer', 'tap-sound', 'top-speaker', 'speaker-link']
+    for (const id of overlapIds) {
+      const el = joinFilm.page.getByTestId(id)
+      if (!(await el.isVisible())) continue
+      const other = await el.boundingBox()
+      const clash = missionBox && other && missionBox.x < other.x + other.width && missionBox.x + missionBox.width > other.x && missionBox.y < other.y + other.height && missionBox.y + missionBox.height > other.y
+      expect(clash, `feed-mission overlaps ${id}`).toBeFalsy()
     }
+    await expect(joinFilm.page.getByTestId('tab-week')).toHaveText('My week')
     await joinFilm.page.screenshot({ path: `${SHOTS}/phone-feed-mission.png` })
     const journey = joinFilm.page.getByTestId('journey')
     const lesson = await journey.getAttribute('data-lesson')

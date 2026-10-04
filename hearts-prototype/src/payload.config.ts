@@ -11,6 +11,7 @@ import { aiCollections } from './collections-ai'
 import { collections } from './collections'
 import { calendarCollections } from './collections-calendar'
 import { experimentCollections } from './collections-experiments'
+import { gatherCollections } from './collections-gather'
 import { insightCollections } from './collections-insights'
 import { missionCollections } from './collections-missions'
 import { sheetCollections } from './collections-sheet'
@@ -44,7 +45,7 @@ export default buildConfig({
       header: ['/components/viewas-admin-banner#ViewAsAdminBanner'],
     },
   },
-  collections: [...collections, ...aiCollections, ...sheetCollections, ...experimentCollections, ...insightCollections, ...calendarCollections, ...missionCollections].map((collection) => ({
+  collections: [...collections, ...aiCollections, ...sheetCollections, ...experimentCollections, ...insightCollections, ...calendarCollections, ...missionCollections, ...gatherCollections].map((collection) => ({
     ...collection,
     hooks: { ...collection.hooks, beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never] },
   })),
@@ -98,6 +99,11 @@ export default buildConfig({
         rituals: {},
         'placing-answers': {},
         'feedback-notes': {},
+        gatherings: {},
+        'gather-rsvps': {},
+        'gather-checkins': {},
+        'gather-reflections': {},
+        'gather-photos': {},
       },
       userHasAccessToAllTenants: (user) => (user as { role?: string } | null)?.role === 'master',
     }),

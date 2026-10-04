@@ -60,6 +60,10 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
       placeholder: band.placeholder,
       identicalGroup: band.identicalGroup,
       note: band.note,
+      version: band.version || 2,
+      description: band.description || band.note,
+      doors: band.doors || [],
+      talks: band.talks || [],
       ranges: band.ranges.map((row) => ({ scale: row.scale, present: row.present, ...(row.min == null ? {} : { min: row.min }), ...(row.max == null ? {} : { max: row.max }) })),
     })
   }

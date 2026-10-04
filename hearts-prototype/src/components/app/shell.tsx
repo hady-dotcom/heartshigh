@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { InsightTracker } from '@/components/app/insight-tracker'
+import { RouteFade } from '@/components/app/route-fade'
 
 export { TabBar, type Tab } from './tab-bar'
 
@@ -13,12 +14,13 @@ export function Flash({ error, notice }: { error?: string; notice?: string }) {
   )
 }
 
-export function AppFrame({ children, dark = false, evening = false, testId, trendsOptIn }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; trendsOptIn?: boolean }) {
+export function AppFrame({ children, dark = false, evening = false, testId, trendsOptIn, tone }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; trendsOptIn?: boolean; tone?: 'gather' }) {
+  const gather = tone === 'gather'
   return (
-    <div className={`app-stage${evening ? ' evening' : ''}`}>
-      <main className={`app${dark ? ' dark' : ''}${evening ? ' evening' : ''}`} data-testid={testId}>
+    <div className={`app-stage${evening ? ' evening' : ''}${gather ? ' gather-stage' : ''}`}>
+      <main className={`app${dark ? ' dark' : ''}${evening ? ' evening' : ''}${gather ? ' gather-shell' : ''}`} data-testid={testId}>
         <InsightTracker trendsOptIn={trendsOptIn} />
-        {children}
+        <RouteFade>{children}</RouteFade>
       </main>
     </div>
   )

@@ -9,7 +9,7 @@ import { type Ctx, portalPeople, rows, str } from '../common'
 import { DeskFrame, portalNav } from './shell'
 import { PORTAL_TIME_ZONES, portalTimeZone, zoneCity } from '@/lib/zone-time'
 
-export async function AdminFrame({ ctx, active, title, intro, tools, help, children, testId }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; help?: ReactNode; children: ReactNode; testId?: string }) {
+export async function AdminFrame({ ctx, active, title, intro, tools, help, children, testId, tone }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; help?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening' }) {
   const { payload, user, portal, base, query } = ctx
   const extra = [{ label: 'Open the learner app', href: base }]
   if (user.role === 'master') extra.push({ label: 'Back to the master desk', href: '/master' })
@@ -31,6 +31,8 @@ export async function AdminFrame({ ctx, active, title, intro, tools, help, child
       query={query}
       testId={testId}
       evening={active === 'library' || active === 'access' || active === 'teach'}
+      logoUrl={portal.logoUrl}
+      gatherDesk={tone === 'evening'}
     >
       {portal.closed ? <div className="flash error" data-testid="portal-closed">This portal is deactivated. Learners cannot sign in until the master desk opens it again.</div> : null}
       {children}

@@ -32,7 +32,7 @@ try {
     }
     let vertical = isShortsUrl(lesson.youtubeUrl) || isShortsUrl(lesson.sourceUrl)
     if (!vertical && lesson.youtubeId) {
-      const meta = silentInARow < 3 ? await fetchYoutubeMeta(lesson.youtubeId) : null
+      const meta = silentInARow < 3 ? await fetchYoutubeMeta(lesson.youtubeId, 'short') : null
       if (!meta?.width) {
         if (silentInARow < 3) silentInARow += 1
         unknown += 1

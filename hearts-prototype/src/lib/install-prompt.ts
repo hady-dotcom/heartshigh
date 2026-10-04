@@ -1,10 +1,25 @@
 /**
  * First-open guidance for adding HEARTS to the home screen.
- * The card is skippable. Once it is dismissed, or the app is installed, it stays hidden
- * until someone opens it again from Me. An installed app (standalone) never shows the steps.
+ * The card is skippable. Once it is dismissed it stays hidden for 30 days on this device,
+ * then it may appear again. An installed app (standalone) never shows the steps.
+ * Me can still open it with “Show me again”.
  */
 
 export const INSTALL_DISMISSED_KEY = 'hearts.install.dismissed'
+export const INSTALL_HIDE_MS = 30 * 24 * 60 * 60 * 1000
+
+/** Epoch ms until which a dismissal hides the sheet. */
+export function dismissUntil(now = Date.now()) {
+  return String(now + INSTALL_HIDE_MS)
+}
+
+/** True while a stored dismissal is still inside its 30 days. A legacy `'1'` counts as dismissed. */
+export function installHidden(raw: string | null | undefined, now = Date.now()) {
+  if (!raw) return false
+  if (raw === '1') return true
+  const until = Number(raw)
+  return Number.isFinite(until) && until > now
+}
 export const INSTALL_INSTALLED_KEY = 'hearts.install.installed'
 export const INSTALL_SKIP = 'Not now'
 export const INSTALL_AGAIN = 'Show me again'
@@ -157,11 +172,16 @@ export function installEntry(kind: InstallKind, installed: boolean) {
     : { title: PHONE_HEADING, hint: 'Add it to your home screen' }
 }
 
-export function readInstallFlags(storage: { getItem(key: string): string | null } | null) {
-  if (!storage) return { dismissed: false, installed: false }
+export function readInstallFlags(storage: { getItem(key: string): string | null } | null, cookie = '', now = Date.now()) {
+  if (!storage && !cookie) return { dismissed: false, installed: false }
+  const fromCookie = cookie
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${INSTALL_DISMISSED_KEY}=`))
+    ?.slice(INSTALL_DISMISSED_KEY.length + 1)
   return {
-    dismissed: storage.getItem(INSTALL_DISMISSED_KEY) === '1',
-    installed: storage.getItem(INSTALL_INSTALLED_KEY) === '1',
+    dismissed: installHidden(storage?.getItem(INSTALL_DISMISSED_KEY), now) || installHidden(fromCookie ? decodeURIComponent(fromCookie) : null, now),
+    installed: storage?.getItem(INSTALL_INSTALLED_KEY) === '1',
   }
 }
 

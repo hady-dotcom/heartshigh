@@ -291,7 +291,7 @@ export function TeachingCard({
   }
 
   const next = reward ? (
-    <button type="button" className="pill gold" onClick={onClip} data-testid="scene-next">{cta}</button>
+    <button type="button" className="pill gold" onClick={onClip} data-testid="scene-next">Watch the 3-minute version</button>
   ) : null
 
   const voiceButton = heard ? (
@@ -337,7 +337,7 @@ function Foot({ course, next, voice, scrim }: { course: string; next: ReactNode;
   return (
     <div className={`slide-cta${scrim ? ' scrim' : ''}`}>
       {next}
-      {course ? <div className="slide-foot">{course}</div> : null}
+      {course ? <div className="slide-foot" data-testid="scene-credit">{course}</div> : null}
       {voice}
     </div>
   )

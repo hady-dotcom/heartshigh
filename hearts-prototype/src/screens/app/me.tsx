@@ -1,4 +1,5 @@
 import { defaultPlanName, plural } from '@/lib/schedule'
+import { MINUTES_A_DAY } from '@/lib/study-plan'
 import { now as clockNow } from '@/lib/clock'
 import Link from 'next/link'
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
@@ -26,6 +27,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
   const links: [string, string, string, string][] = [
     ['path', 'Your path', 'Where a little time will help, in plain words', 'me/path'],
     ['plan', 'My study plan', 'Spread a course across the days that suit you', 'me/plan'],
+    ['gather', 'Gather', 'Nights and circles at the masjid', 'gather'],
     ['circle', 'Circle and nights', 'Your board, and the evenings you can come to', 'me/circle'],
     ['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'],
     ['shaped', 'Things you helped shape', 'Missions you joined, and what we decided', 'me/shaped'],
@@ -62,7 +64,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
           <PrefToggle name="keepPlace" label="Keep my place" hint="Saves where you are on our side, so another phone picks up from here. Off keeps it on this phone only." checked={Boolean(user.keepPlace)} next={`${base}/me`} />
           <PrefToggle name="shareOpening" label="Share my opening answers with my mentor" hint="Private answers stay with you either way." checked={Boolean(user.shareOpening)} next={`${base}/me`} />
           <PrefToggle name="trendsOptIn" label="Add my taps to my chapter’s trends" hint="Only counts across ten or more people, never your name." checked={Boolean(user.trendsOptIn)} next={`${base}/me`} />
-          <PrefToggle name="shareWithLearners" label="Share answers with other learners" hint="Off: nobody else on a video sees your answers, and you do not see theirs. On: you choose answer by answer." checked={Boolean(user.shareWithLearners)} next={`${base}/me`} />
+          <PrefToggle name="shareWithLearners" label="Share answers with other learners" hint="Off: nobody else on a video sees your answers. You still see what others chose to share, after you answer. On: you choose answer by answer." checked={Boolean(user.shareWithLearners)} next={`${base}/me`} />
           <PrefToggle name="haptics" label="Haptics" hint="A small buzz when you tap an answer." checked={user.haptics !== false} next={`${base}/me`} />
           <OptInLane lane="guarding-gaze" label="Private lanes: Guarding the gaze" hint="Clips on this appear only if you turn this on. It is kept on this phone and never shown to anyone." portal={portal.slug || ''} />
         </section>
@@ -104,7 +106,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-export async function PlanScreen({ payload, user, portal, base, query }: Ctx) {
+export async function PlanScreen({ payload, user, portal, base, query, weekTab }: Ctx & { weekTab?: boolean }) {
   const ids = await visibleCourseIds(payload, user)
   const courses = ids.length ? await rows(payload, 'courses', { id: { in: ids } }) : []
   const plans = (await rows(payload, 'schedules', { portal: { equals: portal.id } }, { sort: '-createdAt', limit: 50 })).filter((plan) => ref(plan.owner) === user.id || ((plan.learners as unknown[]) || []).some((item) => ref(item) === user.id))
@@ -112,7 +114,7 @@ export async function PlanScreen({ payload, user, portal, base, query }: Ctx) {
   const later = new Date(now().getTime() + 27 * 86_400_000).toISOString().slice(0, 10)
   const unread = await unreadCount(payload, user)
   return (
-    <AppFrame testId="plan">
+    <AppFrame testId="plan" evening>
       <div className="app-scroll">
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>My study plan</h1></div>
@@ -122,10 +124,18 @@ export async function PlanScreen({ payload, user, portal, base, query }: Ctx) {
           <Hidden fields={{ action: 'schedule', portalSlug: portal.slug, targetType: 'course', next: `${base}/me/plan` }} />
           <label>Name<input className="field" name="name" defaultValue={defaultPlanName(clockNow())} /></label>
           <label>Course
-            <select className="field" data-testid="schedule-course" name="course">{courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}</select>
+            <select className="field" data-testid="schedule-course" name="course" defaultValue={Number(query.course) || courses[0]?.id}>{courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}</select>
           </label>
           <label>From<input className="field" data-testid="schedule-start" type="date" name="start" defaultValue={today} /></label>
           <label>Until<input className="field" data-testid="schedule-end" type="date" name="end" defaultValue={later} /></label>
+          <fieldset className="minutes-day" data-testid="minutes-a-day">
+            <legend>Minutes a day</legend>
+            <div className="weekdays">
+              {MINUTES_A_DAY.map((minutes) => (
+                <label key={minutes}><input data-testid={`minutes-${minutes}`} type="radio" name="minutes" value={minutes} defaultChecked={minutes === 20} /><span>{minutes}</span></label>
+              ))}
+            </div>
+          </fieldset>
           <div>
             <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink-2)' }}>Days of the week</span>
             <div className="weekdays" style={{ marginTop: 8 }}>
@@ -141,7 +151,7 @@ export async function PlanScreen({ payload, user, portal, base, query }: Ctx) {
           return (
             <section key={plan.id} data-testid="schedule-plan" style={{ marginTop: 18 }}>
               <h2 style={{ fontSize: 19, margin: '0 0 4px' }}>{str(plan.name)}</h2>
-              <p className="muted" style={{ margin: 0, fontSize: 13 }}>{plural(slots.length, 'part')} · {str(plan.startDate)} to {str(plan.endDate)}{ref(plan.owner) !== user.id ? ' · made by your teacher' : ''}</p>
+              <p className="muted" style={{ margin: 0, fontSize: 13 }}>{plural(slots.length, 'part')} · {Number(plan.minutesPerDay) || 20} min a day · {str(plan.startDate)} to {str(plan.endDate)}{ref(plan.owner) !== user.id ? ' · made by your teacher' : ''}</p>
               {slots.map((slot, index) => (
                 <div className="slot" key={index} data-testid="schedule-slot">
                   <span className="date">{slot.date ? new Date(`${slot.date}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', timeZone: 'UTC' }) : ''}<small>{slot.date ? new Date(`${slot.date}T12:00:00Z`).toLocaleDateString('en-GB', { month: 'short', weekday: 'short', timeZone: 'UTC' }) : ''}</small></span>
@@ -152,7 +162,7 @@ export async function PlanScreen({ payload, user, portal, base, query }: Ctx) {
           )
         })}
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      <TabBar base={base} active={weekTab ? 'week' : 'me'} unread={unread} />
     </AppFrame>
   )
 }

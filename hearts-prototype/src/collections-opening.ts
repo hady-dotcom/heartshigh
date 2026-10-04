@@ -517,6 +517,10 @@ export const PersonaBands: CollectionConfig = {
     { name: 'placeholder', type: 'checkbox', defaultValue: true, admin: { description: 'Stand-in numbers. Publishing stays closed while this is ticked.' } },
     { name: 'identicalGroup', type: 'text', admin: { description: 'Bands that arrived with the same ranges share a group name.' } },
     { name: 'note', type: 'textarea' },
+    { name: 'version', type: 'number', defaultValue: 1, admin: { description: '2 is the balanced reading in PERSONA-BALANCING.md.' } },
+    { name: 'description', type: 'textarea' },
+    { name: 'doors', type: 'json', admin: { description: 'Working doors, 1 to 20, that this band leans on.' } },
+    { name: 'talks', type: 'json', admin: { description: 'Talk titles to lean on. Staff only.' } },
     {
       name: 'ranges',
       type: 'array',
@@ -609,8 +613,50 @@ export const CompassAttempts: CollectionConfig = {
     { name: 'at', type: 'date', required: true },
     { name: 'bank', type: 'select', defaultValue: 'opening', options: [{ label: 'Opening', value: 'opening' }, { label: 'Month', value: 'month' }] },
     { name: 'lifeKey', type: 'text' },
+    { name: 'lifeKeys', type: 'json', admin: { description: 'Every life line ticked this round. History is append-only.' } },
+    { name: 'lifeNote', type: 'text' },
+    { name: 'formKey', type: 'text' },
+    { name: 'demoKey', type: 'text', unique: true, index: true },
     { name: 'scales', type: 'json', admin: { description: 'Device readings from −1 to +1. Not shown to the learner.' } },
   ],
 }
 
-export const openingCollections = [HeartScales, Lanes, OpeningScenes, OpeningConfigs, HeartStates, OpeningAnswers, HeartContributions, ViewAsSessions, AuditLog, PersonaBands, CompassSettings, CompassAttempts]
+export const CompassMixes: CollectionConfig = {
+  slug: 'compass-mixes',
+  labels: { singular: 'Compass mix', plural: 'Compass mixes' },
+  admin: { description: 'How this portal splits the shelf between quieter scales, steady ones, and a door not sat with lately.' },
+  access: { read: guiding, create: nobody, update: nobody, delete: nobody },
+  fields: [
+    { name: 'portal', type: 'relationship', relationTo: 'portals', required: true, unique: true, index: true },
+    { name: 'deficit', type: 'number', defaultValue: 60, min: 0, max: 100 },
+    { name: 'strength', type: 'number', defaultValue: 25, min: 0, max: 100 },
+    { name: 'discovery', type: 'number', defaultValue: 15, min: 0, max: 100 },
+  ],
+}
+
+export const CompassServes: CollectionConfig = {
+  slug: 'compass-serves',
+  labels: { singular: 'Compass serve', plural: 'Compass serves' },
+  admin: { description: 'A talk the compass put forward, and why. Learners do not see the why.' },
+  access: { read: guiding, create: nobody, update: nobody, delete: nobody },
+  fields: [
+    { name: 'user', type: 'relationship', relationTo: 'users', required: true, index: true },
+    { name: 'portal', type: 'relationship', relationTo: 'portals', required: true, index: true },
+    { name: 'lesson', type: 'relationship', relationTo: 'lessons' },
+    { name: 'title', type: 'text', required: true },
+    { name: 'kind', type: 'select', defaultValue: 'talk', options: [
+      { label: "Hors d'oeuvre", value: 'hors' },
+      { label: 'Appetiser', value: 'appetiser' },
+      { label: 'Course', value: 'course' },
+      { label: 'Talk', value: 'talk' },
+    ] },
+    { name: 'why', type: 'textarea' },
+    { name: 'mix', type: 'json' },
+    { name: 'at', type: 'date', required: true },
+    { name: 'door', type: 'number' },
+    { name: 'bucket', type: 'text' },
+    { name: 'demoKey', type: 'text', unique: true, index: true },
+  ],
+}
+
+export const openingCollections = [HeartScales, Lanes, OpeningScenes, OpeningConfigs, HeartStates, OpeningAnswers, HeartContributions, ViewAsSessions, AuditLog, PersonaBands, CompassSettings, CompassAttempts, CompassMixes, CompassServes]

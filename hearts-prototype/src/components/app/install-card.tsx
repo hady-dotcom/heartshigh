@@ -7,6 +7,7 @@ import {
   INSTALL_DISMISSED_KEY,
   INSTALL_INSTALLED_KEY,
   INSTALL_SKIP,
+  dismissUntil,
   hasInstallPrompt,
   installCopy,
   installEntry,
@@ -30,7 +31,7 @@ type InstallState = {
 
 function readState(): InstallState {
   let flags = { dismissed: false, installed: false }
-  try { flags = readInstallFlags(window.localStorage) } catch { /* private browsing */ }
+  try { flags = readInstallFlags(window.localStorage, document.cookie) } catch { /* private browsing */ }
   const nav = navigator as Navigator & { standalone?: boolean }
   const media = typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches
   return {
@@ -70,7 +71,11 @@ export function InstallCard({ forced = false, onDismiss, sheet = false }: { forc
   const copy = installCopy(state.kind, prompt)
 
   const dismiss = () => {
-    try { localStorage.setItem(INSTALL_DISMISSED_KEY, '1') } catch { /* private mode */ }
+    const until = dismissUntil()
+    try {
+      localStorage.setItem(INSTALL_DISMISSED_KEY, until)
+      document.cookie = `${INSTALL_DISMISSED_KEY}=${encodeURIComponent(until)}; Max-Age=${30 * 24 * 60 * 60}; Path=/; SameSite=Lax`
+    } catch { /* private mode */ }
     setState({ ...state, dismissed: true })
     onDismiss?.()
   }

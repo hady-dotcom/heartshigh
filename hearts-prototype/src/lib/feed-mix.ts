@@ -22,12 +22,12 @@ function beatsOf(item: FeedItem): CardBeat[] {
 }
 
 /**
- * After each talk, a face film or a scenic card, then a question.
+ * After each talk, a face film or a scenic card. Questions stay inside the full talk.
  * Face films and cards alternate through the session. A return visit swaps which
  * one a talk leads with, and steps the card's style.
  * Without BACKGROUNDS_BASE_URL the six local stills are used, and a shared tag steps on.
  * With the bucket URL, the card's stored catalogue still is used. A neighbour that
- * shares landscape, palette or time steps on. Learn more always opens the appetiser.
+ * shares landscape, palette or time steps on. The step-up always opens this clip's own 3-minute version.
  */
 export function mixFeed(items: FeedItem[], visit = 0, backgroundsBaseUrl: string | null = null): FeedItem[] {
   const out: FeedItem[] = []
@@ -35,9 +35,12 @@ export function mixFeed(items: FeedItem[], visit = 0, backgroundsBaseUrl: string
   let previousScene: { id: string; tags: readonly string[] } | null = null
   let previousBackground: Background | null = null
   const base = (backgroundsBaseUrl || '').trim()
-  items.forEach((item, index) => {
+  const talks = items.filter((item) => !item.card || item.card === 'talk')
+  const seenTalks = new Set<number>()
+  talks.forEach((item, index) => {
+    if (seenTalks.has(item.cutId)) return
+    seenTalks.add(item.cutId)
     out.push(item)
-    if (item.card && item.card !== 'talk') return
     const films = item.films || []
     const showFilm = films.length > 0 && Math.abs(visit + index) % 2 === 0
     const questionFilm = films[Math.abs(visit + index) % films.length]
@@ -68,7 +71,6 @@ export function mixFeed(items: FeedItem[], visit = 0, backgroundsBaseUrl: string
         })
       }
     }
-    out.push({ ...item, id: `question-${item.cutId}`, card: 'question', film: questionFilm, prompt: 'What stays with you from this?' })
   })
   return out
 }

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import type { Payload } from 'payload'
 import { BrandMark } from '@/components/brand'
+import { DeskFade } from '@/components/app/route-fade'
 import { Flash, Hidden } from '@/components/app/shell'
 import { DefaultDeskHelp } from '@/components/desk/help'
 import { BellIcon, BeakerIcon, BookIcon, CalendarIcon, ChartIcon, ClapperIcon, CogIcon, CompassIcon, FilmIcon, FlagIcon, FrameIcon, GlobeIcon, HeartIcon, HomeIcon, KeyIcon, LibraryIcon, MoonIcon, NetworkIcon, PathIcon, PeopleIcon, QuestionIcon, ScaleIcon, SheetIcon, SparkIcon } from '@/components/icons'
@@ -17,6 +18,9 @@ export function portalNav(base: string, user: SessionUser): NavGroup[] {
     { key: 'teach', label: 'Learners', href: `${base}/admin/teach`, icon: <PeopleIcon /> },
     { key: 'feedback', label: 'Feedback', href: `${base}/admin/feedback`, icon: <QuestionIcon /> },
     { key: 'compass', label: 'Compass', href: `${base}/admin/compass`, icon: <HeartIcon /> },
+    { key: 'plans', label: 'Study plans', href: `${base}/admin/plans`, icon: <CalendarIcon /> },
+    { key: 'nights', label: 'Nights', href: `${base}/admin/nights`, icon: <MoonIcon /> },
+    { key: 'gather', label: 'Gather', href: `${base}/admin/gather`, icon: <PeopleIcon /> },
   ]
   if (user.role === 'teacher') {
     return [{ group: 'Beginner', description: 'Everyday work with the people in your portal.', items: [{ key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> }, ...teach] }]
@@ -126,6 +130,8 @@ export async function DeskFrame({
   query,
   testId,
   evening,
+  logoUrl,
+  gatherDesk,
   children,
 }: {
   payload: Payload
@@ -145,6 +151,10 @@ export async function DeskFrame({
   query: { error?: string; notice?: string }
   testId?: string
   evening?: boolean
+  /** A portal logo, when one has been set. Otherwise the HEARTS arch. */
+  logoUrl?: string | null
+  /** Gather's desk look. Kept off the library, access and teach desks. */
+  gatherDesk?: boolean
   children: ReactNode
 }) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 12 })).filter((note) => note.channel !== 'email-stub')
@@ -160,10 +170,10 @@ export async function DeskFrame({
         <button type="submit" className="btn ghost">Sign out</button>
       </form>
     </div>
-    <div className={evening ? 'desk evening' : 'desk'} data-testid={testId}>
+    <div className={`desk${evening ? ' evening' : ''}${gatherDesk ? ' gather-desk' : ''}`} data-testid={testId}>
       <aside className="side">
         <Link className="side-brand" href={brandHref}>
-          <BrandMark size={40} />
+          {logoUrl ? <img className="side-logo" alt="" src={logoUrl} /> : <BrandMark size={40} />}
           <span><b>{brand}</b><small>{subBrand}</small></span>
         </Link>
         <DeskNav groups={nav} active={active} />
@@ -215,7 +225,7 @@ export async function DeskFrame({
           </div>
         </div>
         <Flash error={query.error} notice={query.notice} />
-        {children}
+        <DeskFade>{children}</DeskFade>
       </main>
     </div>
     </>
