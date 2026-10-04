@@ -20,6 +20,8 @@ import { lineAt } from '@/lib/harvest'
 import { answerCounts, courseProgress } from '@/lib/nesting'
 import { type Ctx, type Row, clock, one, ref, rows, str, unreadCount } from '../common'
 import { masterFlags } from './journey'
+import { companyGatherings, relatedCards, TalkGatherNotice } from '@/screens/app/gather'
+import { listGatherings } from '@/server/gather'
 import { mixSwarm } from '@/lib/circle'
 import { circleForPoints, circleSettings } from '@/server/circle'
 
@@ -229,6 +231,14 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
   const spoken = contextOn ? lineAt(str(lesson.transcript), startAt) : null
   const unread = await unreadCount(payload, user)
   const here = `${base}/course/${courseId}?part=${lessonId}`
+  const { cards: gatherCards } = await listGatherings(payload, portal.id, user.id)
+  const related = relatedCards(gatherCards, { lessonId, courseId })
+  const withGather = views.map((view) => ({
+    ...view,
+    gatherings: view.kind === 'task'
+      ? companyGatherings(gatherCards, { id: view.id, lessonId, courseId, door: related[0]?.door || null, prompt: view.prompt }).map((card) => ({ href: `${base}/gather/${card.id}`, title: card.title, when: card.when }))
+      : undefined,
+  }))
 
   return (
     <AppFrame testId="course">
@@ -257,7 +267,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
           poster={posterFor(youtubeId) || portraitFor(slugify(str(lesson.speaker || course.speaker)))}
           duration={Number(lesson.durationSeconds || 0)}
           startAt={startAt}
-          points={views}
+          points={withGather}
           swarm={swarm}
           swarmOn={swarmOn}
           circleLabel={circleLabel}
@@ -266,6 +276,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
           overPlayer={flags.popupOverPlayer}
           garden={{ done, total, gardenHref: `${base}/garden`, links: [{ label: "See what you've sown", href: `${base}/garden/general` }, { label: 'Your workbook', href: `${base}/garden/workbook` }] }}
         />
+        {related[0] ? <TalkGatherNotice startsAt={related[0].startsAt} href={`${base}/gather/${related[0].id}`} title={related[0].title} /> : null}
         {marks.length ? (
           <section className="card" data-testid="in-video-feedback" style={{ marginTop: 14 }}>
             <h3>Feedback from your teacher</h3>

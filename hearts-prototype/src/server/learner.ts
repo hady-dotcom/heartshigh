@@ -4,7 +4,7 @@ import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
 import { idOf } from '@/lib/ids'
 import { recommendLesson } from '@/lib/placing'
-import { doorOfClause } from '@/lib/doors'
+import { capitalAfterColon, doorOfClause } from '@/lib/doors'
 import { loadDoors } from './doors'
 import { portalDisplayName } from '@/lib/portal-name'
 import type { PieceRef } from '@/lib/nesting'
@@ -192,7 +192,7 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
     for (const cut of cuts) {
       if (!ownIds.has(idOf(cut.lesson) || 0) || (cut.status !== 'approved' && !cut.placeholder)) continue
       const door = doorOfClause(Number(cut.bestClause || 0), doors)
-      if (door) courseDoors.set(door.number, door.title)
+      if (door) courseDoors.set(door.number, capitalAfterColon(door.title))
     }
     return {
       id: course.id,

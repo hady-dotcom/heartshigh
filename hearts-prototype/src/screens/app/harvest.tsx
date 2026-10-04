@@ -10,7 +10,7 @@ import { now } from '@/lib/clock'
 import { type Ctx, type Row, ref, rows, str, unreadCount } from '../common'
 import { Frame } from './garden'
 import { loadDoors } from '@/server/doors'
-import { doorByNumber, doorCode, doorNumberOfClause, type Door } from '@/lib/doors'
+import { capitalAfterColon, doorByNumber, doorCode, doorNumberOfClause, type Door } from '@/lib/doors'
 import { partTitle } from '@/lib/talk-title'
 import { resourcesFor, sampleHarvest } from '@/server/harvest'
 
@@ -114,7 +114,7 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
     if (group === 'door') {
       const door = doorByNumber(doorOf(entry), doors)
       key = door ? `door-${door.number}` : 'door-none'
-      title = door ? `Door ${door.number} · ${door.title}` : 'Not yet placed on the hadith'
+      title = door ? `Door ${door.number} · ${capitalAfterColon(door.title)}` : 'Not yet placed on the hadith'
       order = door ? door.number : 999
     } else if (group === 'speaker') {
       const speaker = speakerOf(entry)
@@ -163,7 +163,7 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
             <div className="chip-row quiet" data-testid="harvest-door-filter">
               <Link className={!doorFilter ? 'on' : ''} href={href({ door: null })}>Every door</Link>
               {doorsHere.map((number) => (
-                <Link key={number} className={doorFilter === number ? 'on' : ''} href={href({ door: number })} data-testid="harvest-door" data-door={number} title={doorByNumber(number, doors)?.title}>{doorCode(number)}</Link>
+                <Link key={number} className={doorFilter === number ? 'on' : ''} href={href({ door: number })} data-testid="harvest-door" data-door={number} title={capitalAfterColon(doorByNumber(number, doors)?.title || '')}>{doorCode(number)}</Link>
               ))}
             </div>
           ) : null}
@@ -245,7 +245,7 @@ function HarvestCard({ entry, talkTitle, speaker, door, commentary, context, fre
         {speaker ? ` · ${speaker}` : ''}
         {entry.timestamp ? ` · at ${str(entry.timestamp)}` : ''}
       </small>
-      {door ? <small className="harvest-door" data-testid="harvest-item-door" data-door={door.number}>{doorCode(door.number)} · {door.title}</small> : null}
+      {door ? <small className="harvest-door" data-testid="harvest-item-door" data-door={door.number}>{doorCode(door.number)} · {capitalAfterColon(door.title)}</small> : null}
     </>
   )
   return (

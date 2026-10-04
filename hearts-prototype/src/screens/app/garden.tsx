@@ -13,11 +13,13 @@ import { countsTowardProgress, pieceLevel } from '@/lib/progress'
 import { partTitle } from '@/lib/talk-title'
 import { posterFor, shownPoster } from '@/server/learner'
 import { loadDoors } from '@/server/doors'
-import { doorByNumber, doorCode, doorFromPath, doorNumberOfClause, doorOfClause, type Door } from '@/lib/doors'
+import { capitalAfterColon, doorByNumber, doorCode, doorFromPath, doorNumberOfClause, doorOfClause, type Door } from '@/lib/doors'
 import { areaGrowth, type AreaView } from '@/lib/garden-areas'
 import type { GardenTheme } from '@/lib/garden-art'
 import { GardenScene } from '@/components/app/garden-scene'
 import { answerCounts } from '@/lib/nesting'
+import { taskWantsCompany } from '@/lib/gather'
+import { listGatherings } from '@/server/gather'
 import { type Ctx, type Row, clock, ref, rows, shortDate, str, unreadCount } from '../common'
 
 const SECTIONS: { key: string; title: string; colour: string }[] = [
@@ -68,7 +70,7 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
   const lessons = lessonIds.length ? await rows(payload, 'lessons', { id: { in: lessonIds } }) : []
   const inCourse = (lessonId: number | null) => Boolean(lessonId && ref(lessons.find((row) => row.id === lessonId)?.course))
   const countedCompletions = completions.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'watch' }))
-  const countedAnswers = answers.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'question' }))
+  const countedAnswers = answers.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'question', viaGathering: row.viaGathering === true }))
   const done = new Set(countedCompletions.map((row) => ref(row.lesson)))
   const cutIds = tags.map((tag) => ref((tag.item as { value?: unknown } | undefined)?.value)).filter((id): id is number => Boolean(id))
   const cuts = cutIds.length ? await rows(payload, 'cuts', { id: { in: cutIds } }, { limit: 1000 }) : []
@@ -228,7 +230,7 @@ export async function GardenScreen({ payload, user, base, query }: Ctx) {
           <>
             <p className="eyebrow">Where you began</p>
             <Link className="card" href={`${base}/garden/jibril/${starting.number}`} style={{ display: 'block', textDecoration: 'none' }} data-testid="starting-door" data-door={starting.number}>
-              <h3>Door {starting.number}: {starting.title}</h3>
+              <h3>Door {starting.number}: {capitalAfterColon(starting.title)}</h3>
               <p>Your answers when you joined pointed here. Your first course was chosen from the talks that sit in this door.</p>
             </Link>
           </>
@@ -342,7 +344,7 @@ export async function GardenJibril({ payload, user, base }: Ctx) {
                     <Link key={door.number} className={`door-cell${start ? ' start' : ''}`} href={`${base}/garden/jibril/${door.number}`} data-testid="door-cell" data-door={door.number} data-lit={on ? 'yes' : 'no'} data-start={start ? 'yes' : 'no'}>
                       <span className="mark">{on ? <Flower colour={section.colour} /> : <span className="empty-dot" />}</span>
                       <span className="n">{door.number}</span>
-                      <span className="t">{door.title}</span>
+                      <span className="t">{capitalAfterColon(door.title)}</span>
                     </Link>
                   )
                 })}
@@ -401,7 +403,7 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, token: str
       <article className="clause-card" data-testid="door-card" data-door={door.number}>
         <div className="clause-num">{door.number}</div>
         <p className="lbl" style={{ margin: '0 0 4px' }}>{section?.title || door.section}</p>
-        <h3 data-testid="door-title">{door.title}</h3>
+        <h3 data-testid="door-title">{capitalAfterColon(door.title)}</h3>
         {door.teaching ? <p data-testid="door-teaching">{door.teaching}</p> : null}
         {clauses.length ? <p className="door-words" data-testid="door-words">{clauses.map((clause) => str(clause.fragment)).join(' … ')}</p> : null}
         {teachings.length ? (
@@ -481,9 +483,9 @@ export async function GardenGhunya({ payload, user, base }: Ctx) {
         <p style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, margin: '6px 0 0', fontSize: 14 }}>Each door of the hadith opens onto seats from al-Ghuniyya. One group of dots per door.</p>
         <div className="seat-groups" data-testid="seat-grid">
           {g.doors.map((door) => (
-            <Link key={door.number} className="sg" href={`${base}/garden/jibril/${door.number}`} title={`Door ${door.number}: ${door.title}`} data-testid="seat-group" data-door={door.number}>
+            <Link key={door.number} className="sg" href={`${base}/garden/jibril/${door.number}`} title={`Door ${door.number}: ${capitalAfterColon(door.title)}`} data-testid="seat-group" data-door={door.number}>
               <span className="dots">{seatsOf(g, door).map((seat) => <i key={seat.id} className={read.has(seat.id) ? 'lit' : ''} data-testid="seat-dot" />)}</span>
-              <small>{doorCode(door.number)} · {door.title}</small>
+              <small>{doorCode(door.number)} · {capitalAfterColon(door.title)}</small>
             </Link>
           ))}
         </div>
@@ -496,10 +498,10 @@ export async function GardenGhunya({ payload, user, base }: Ctx) {
   )
 }
 
-export async function GardenWorkbook({ payload, user, base, query }: Ctx) {
+export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx) {
   const session = await getSession()
   const reader = session.actor || user
-  const [book, unread] = await Promise.all([workbookFor(payload, user, reader), unreadCount(payload, user)])
+  const [book, unread, listed] = await Promise.all([workbookFor(payload, user, reader), unreadCount(payload, user), listGatherings(payload, portal.id, user.id)])
   const owner = reader.id === user.id
   const filter = query.filter || 'all'
   const answers = book.answers.filter((row) => (filter === 'shared' ? row.shared : filter === 'private' ? !row.shared : filter === 'replied' ? Boolean(row.reply) : true))
@@ -595,6 +597,9 @@ export async function GardenWorkbook({ payload, user, base, query }: Ctx) {
                   {row.kind === 'task' && row.dueDays ? <p data-testid="task-due">Due within {row.dueDays} days of opening this talk.</p> : null}
                   {row.evidence === 'photo' ? null : <textarea name="body" rows={2} required={row.evidence === 'note' || row.family === 'workbook'} placeholder={row.kind === 'task' ? 'What did you do?' : 'Your reflection'} data-testid="workbook-task-note" />}
                   {row.kind === 'task' ? <input type="file" name="image" accept="image/*" required={row.evidence === 'photo'} /> : null}
+                  {row.kind === 'task' && taskWantsCompany(row.question) ? listed.cards.filter((card) => !card.past && card.lessonId === row.lessonId).map((card) => (
+                    <p key={card.id} data-testid="workbook-gather"><a href={`${base}/gather/${card.id}`}>{card.title}</a> · {card.when}</p>
+                  )) : null}
                   {row.showImam || row.kind === 'task' ? <input type="hidden" name="shareWithTeacher" value="on" /> : null}
                   <button className="mini-btn" type="submit" data-testid="workbook-task-done">{row.kind === 'task' ? 'I have done this' : 'Save in my workbook'}</button>
                 </form>

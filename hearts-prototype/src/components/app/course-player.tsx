@@ -24,6 +24,7 @@ export type PointView = {
   evidence?: 'none' | 'note' | 'photo' | null
   showImam?: boolean
   family?: string | null
+  gatherings?: { href: string; title: string; when: string }[]
 }
 
 export type SwarmItem = { name: string; body: string; image?: string | null; circle?: boolean }
@@ -603,6 +604,12 @@ function Sheet({
             {point.kind === 'task' ? (
               <div data-testid="task-form" data-evidence={point.evidence || 'none'}>
                 {point.dueDays ? <p data-testid="task-due">Due within {point.dueDays} days of opening this talk.</p> : null}
+                {point.gatherings?.length ? (
+                  <div data-testid="task-gatherings">
+                    <p>This asks you to do it with others. These gatherings match.</p>
+                    {point.gatherings.map((row) => <p key={row.href}><a href={row.href}>{row.title}</a> · {row.when}</p>)}
+                  </div>
+                ) : null}
                 {point.evidence === 'photo' ? <p>Add a photo of what you did.</p> : (
                   <textarea name="body" rows={3} required={point.evidence === 'note'} placeholder={point.evidence === 'note' ? 'What did you do?' : 'A note is optional'} data-testid="answer-text" defaultValue={point.answered ? point.myAnswer : ''} />
                 )}

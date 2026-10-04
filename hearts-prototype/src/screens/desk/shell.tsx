@@ -17,6 +17,7 @@ export function portalNav(base: string, user: SessionUser): { group: string; ite
     { key: 'compass', label: 'Compass', href: `${base}/admin/compass`, icon: <HeartIcon /> },
     { key: 'plans', label: 'Study plans', href: `${base}/admin/plans`, icon: <CalendarIcon /> },
     { key: 'nights', label: 'Nights', href: `${base}/admin/nights`, icon: <MoonIcon /> },
+    { key: 'gather', label: 'Gather', href: `${base}/admin/gather`, icon: <PeopleIcon /> },
   ]
   if (user.role === 'teacher') return [{ group: 'Portal', items: [{ key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> }, ...teach] }]
   return [
@@ -86,6 +87,7 @@ export async function DeskFrame({
   testId,
   evening,
   logoUrl,
+  gatherDesk,
   children,
 }: {
   payload: Payload
@@ -106,6 +108,8 @@ export async function DeskFrame({
   evening?: boolean
   /** A portal logo, when one has been set. Otherwise the HEARTS arch. */
   logoUrl?: string | null
+  /** Gather's desk look. Kept off the library, access and teach desks. */
+  gatherDesk?: boolean
   children: ReactNode
 }) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 12 })).filter((note) => note.channel !== 'email-stub')
@@ -121,7 +125,7 @@ export async function DeskFrame({
         <button type="submit" className="btn ghost">Sign out</button>
       </form>
     </div>
-    <div className={evening ? 'desk evening' : 'desk'} data-testid={testId}>
+    <div className={`desk${evening ? ' evening' : ''}${gatherDesk ? ' gather-desk' : ''}`} data-testid={testId}>
       <aside className="side">
         <Link className="side-brand" href={brandHref}>
           {logoUrl ? <img className="side-logo" alt="" src={logoUrl} /> : <BrandMark size={40} />}

@@ -501,8 +501,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       data: { uses: usesBefore + 1 },
     })
     if (!claimed.docs.length) return redirectTo(req, '/join', 'That access code was just used by someone else. Please try again.')
+    let createdId = 0
     try {
-      await payload.create({
+      const created = await payload.create({
         collection: 'users',
         overrideAccess: true,
         data: {
@@ -517,11 +518,19 @@ async function handleForm(req: Request, form: FormData, session: Session) {
           onboarded: codeRole !== 'learner' && codeRole !== 'parent',
         },
       })
+      createdId = created.id
     } catch (error) {
       await payload.update({ collection: 'access-codes', id: access.id, overrideAccess: true, data: { uses: usesBefore } })
       throw error
     }
-    const next = codeRole === 'learner' || codeRole === 'parent' ? `/p/${slug}/welcome` : `/p/${slug}/admin`
+    const guest = text(form, 'gatherGuest')
+    if (guest && createdId) {
+      const { claimGuestRsvp } = await import('./gather')
+      await claimGuestRsvp(payload, guest, createdId)
+    }
+    const after = text(form, 'after')
+    const gatherNext = after.startsWith(`/p/${slug}/`) ? after : ''
+    const next = gatherNext || (codeRole === 'learner' || codeRole === 'parent' ? `/p/${slug}/welcome` : `/p/${slug}/admin`)
     return loginResponse(req, email, password, next)
   }
 

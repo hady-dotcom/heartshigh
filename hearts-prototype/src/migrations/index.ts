@@ -10,6 +10,8 @@ import * as migration_20261004_060000_shorts from './20261004_060000_shorts';
 import * as migration_20261004_061000_portal_time_zone from './20261004_061000_portal_time_zone';
 import * as migration_20261004_080000_lesson_picture_flags from './20261004_080000_lesson_picture_flags';
 import * as migration_20261004_120000_compass_v2 from './20261004_120000_compass_v2';
+import * as migration_20261004_031500_gather from './20261004_031500_gather';
+import * as migration_20261004_180000_gather_entry_code from './20261004_180000_gather_entry_code';
 
 export const migrations = [
   {
@@ -71,5 +73,15 @@ export const migrations = [
     up: migration_20261004_120000_compass_v2.up,
     down: migration_20261004_120000_compass_v2.down,
     name: '20261004_120000_compass_v2',
+  },
+  {
+    up: migration_20261004_031500_gather.up,
+    down: migration_20261004_031500_gather.down,
+    name: '20261004_031500_gather',
+  },
+  {
+    up: migration_20261004_180000_gather_entry_code.up,
+    down: migration_20261004_180000_gather_entry_code.down,
+    name: '20261004_180000_gather_entry_code',
   },
 ];
