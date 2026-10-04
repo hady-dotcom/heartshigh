@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import config from '@payload-config'
 import { REST_GET } from '@payloadcms/next/routes'
+import { tooManyAnswers } from '@/lib/auth-gate'
+import { clientIp, hitAnswer } from '@/lib/rate-limit'
 import { getSession } from '@/server/context'
 import { json, readBody, viewAsRefusal } from '@/server/api'
 import { saveAnswer, type AnswerInput } from '@/server/handle'
@@ -46,6 +48,8 @@ export async function POST(req: Request) {
   const refused = await viewAsRefusal(session, 'answers', true)
   if (refused) return refused
   const { payload, user } = session
+  const limited = hitAnswer(user.id, clientIp(req))
+  if (!limited.allowed) return tooManyAnswers(limited.retryAfterSec, true)
   const body = await readBody(req)
 
   if (body.later) {

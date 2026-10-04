@@ -4,6 +4,9 @@ import type { Payload } from 'payload'
 import { BrandMark } from '@/components/brand'
 import { DeskFade } from '@/components/app/route-fade'
 import { Flash, Hidden } from '@/components/app/shell'
+import { HelpTip } from '@/components/desk/help'
+import { SideNav } from '@/components/desk/side-nav'
+import { pageHelp } from '@/lib/desk-help'
 import { BellIcon, BookIcon, HeartIcon, CalendarIcon, CogIcon, GlobeIcon, HomeIcon, KeyIcon, LibraryIcon, MoonIcon, PeopleIcon, QuestionIcon } from '@/components/icons'
 import type { SessionUser } from '@/server/context'
 import { rows, shortDate, str } from '../common'
@@ -85,7 +88,7 @@ export async function DeskFrame({
   tools,
   query,
   testId,
-  evening,
+  evening = true,
   logoUrl,
   gatherDesk,
   children,
@@ -114,6 +117,7 @@ export async function DeskFrame({
 }) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 12 })).filter((note) => note.channel !== 'email-stub')
   const unread = notes.filter((note) => !note.read).length
+  const help = pageHelp(active, testId)
   return (
     <>
     <div className="desk-narrow" data-testid="desk-narrow" role="note">
@@ -129,9 +133,9 @@ export async function DeskFrame({
       <aside className="side">
         <Link className="side-brand" href={brandHref}>
           {logoUrl ? <img className="side-logo" alt="" src={logoUrl} /> : <BrandMark size={40} />}
-          <span><b>{brand}</b><small>{subBrand}</small></span>
+          <span><b data-testid="side-brand-name">{brand}</b><small>{subBrand}</small></span>
         </Link>
-        <nav className="side-nav" aria-label="Desk">
+        <SideNav>
           {nav.map((group) => (
             <div key={group.group} style={{ display: 'contents' }}>
               <div className="group">{group.group}</div>
@@ -143,7 +147,7 @@ export async function DeskFrame({
               ))}
             </div>
           ))}
-        </nav>
+        </SideNav>
         <div className="side-foot">
           {extraLinks.length ? <div className="group">Elsewhere</div> : null}
           {extraLinks.map((link) => (
@@ -162,7 +166,7 @@ export async function DeskFrame({
       <main className="main">
         <div className="main-head">
           <div>
-            <h1>{title}</h1>
+            <h1>{title}{help ? <HelpTip topic={testId || active}>{help}</HelpTip> : null}</h1>
             {intro ? <p>{intro}</p> : null}
           </div>
           <div className="head-tools">
