@@ -8,7 +8,7 @@ const STOP = /[.?!…]["”'’)]*$/
 export function cleanQuote(raw: string): string {
   let text = String(raw || '').replace(/\s+/g, ' ').trim()
   if (!text) return ''
-  text = text.replace(/[“”]/g, "'").replace(/[‘’]/g, "'")
+  text = text.replace(/[“”"]/g, "'").replace(/[‘’]/g, "'")
   text = text.replace(/\ballah\b/gi, 'Allah')
   text = text.replace(/\bthe prophet\b(?!s\b)/gi, 'the Prophet')
   text = text.replace(/\bthe Prophet(?!\s*ﷺ)/g, 'the Prophet ﷺ')
@@ -19,7 +19,7 @@ export function cleanQuote(raw: string): string {
     const isQuestion = /^(who|what|when|where|why|how|did|do|does|is|are|was|were|can|could|would|should|have|has|will)\b/i.test(text.replace(/^['"]/, ''))
     text = `${text.replace(/[\s,;:]+$/, '')}${isQuestion ? '?' : '.'}`
   }
-  text = text.replace(/([.?!])(["'])\s*$/, '$2$1')
+  text = text.replace(/(['"])([.?!])\s*$/, '$2$1')
   text = text.replace(/(['"])([^'"]+)([.?!])\1/g, "'$2$3'")
   return text
 }
