@@ -662,7 +662,7 @@ html[data-theme='dawn'] .journey[data-mode='appetiser'] .j-mains {
   color: #f6eedc;
 }
 
-/* Desk. Evening garden: deep teal page and cards, dark gold type and buttons. */
+/* Desk. Evening garden: deep teal page and panels, warm dark gold, cream type. */
 html[data-theme] .desk {
   --cream: var(--desk-page);
   --paper: var(--desk-page);
@@ -672,15 +672,15 @@ html[data-theme] .desk {
   --muted: var(--desk-muted);
   --line: var(--desk-line);
   --gold: var(--desk-gold);
-  --gold-deep: var(--desk-heading);
+  --gold-deep: var(--desk-line);
   --gold-glow: var(--desk-gold);
   --gold-ink: var(--desk-gold-ink);
   --teal: var(--desk-teal);
-  --teal-deep: var(--desk-heading);
-  --teal-fill: var(--desk-teal);
-  --mint: var(--desk-card);
+  --teal-deep: var(--desk-header);
+  --teal-fill: var(--desk-header);
+  --mint: var(--desk-field);
   --heading: var(--desk-heading);
-  --focus: var(--desk-heading);
+  --focus: var(--desk-gold);
   --glass: var(--desk-card);
   --glass-solid: var(--desk-card);
   --field: var(--desk-field);
@@ -766,15 +766,15 @@ html[data-theme] .desk .pill.gold {
   background: var(--desk-gold);
   color: var(--desk-gold-ink);
 }
-html[data-theme] .desk .btn.ghost { background: var(--desk-card); color: var(--desk-ink); border-color: var(--desk-line); }
-html[data-theme] .desk .btn.danger { background: var(--desk-card); color: #8F2F2A; border-color: #8F2F2A; }
+html[data-theme] .desk .btn.ghost { background: transparent; color: var(--desk-ink); border-color: var(--desk-gold); }
+html[data-theme] .desk .btn.danger { background: transparent; color: #F0B4B0; border-color: #F0B4B0; }
 html[data-theme] .desk .bell .count { background: var(--desk-gold); color: var(--desk-gold-ink); }
 html[data-theme] .desk .count-tile,
 html[data-theme] .desk .address,
 html[data-theme] .desk table.data th { background: var(--desk-page); color: var(--desk-ink); }
 html[data-theme] .desk table.data td { border-bottom-color: var(--desk-line); color: var(--desk-ink); }
 html[data-theme] .desk .pill.ink,
-html[data-theme] .desk .mini-btn { color: var(--desk-heading); border-color: var(--desk-teal); }
+html[data-theme] .desk .mini-btn { color: var(--desk-ink); border-color: var(--desk-gold); }
 html[data-theme] .desk .input,
 html[data-theme] .desk select,
 html[data-theme] .desk textarea,

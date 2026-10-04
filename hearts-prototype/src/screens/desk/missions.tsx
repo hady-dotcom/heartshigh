@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
-import { MissionHelp } from '@/components/desk/help'
 import { ukDate } from '@/lib/calendar-context'
 import { now } from '@/lib/clock'
 import type { SessionUser } from '@/server/context'
@@ -31,10 +30,10 @@ async function Frame({
   tools?: React.ReactNode
   children: React.ReactNode
 }) {
-  if (ctx) return <AdminFrame ctx={ctx} active="missions" title={title} intro={intro} testId={testId} tools={tools} help={<MissionHelp />}>{children}</AdminFrame>
+  if (ctx) return <AdminFrame ctx={ctx} active="missions" title={title} intro={intro} testId={testId} tools={tools}>{children}</AdminFrame>
   const desk = master!
   return (
-    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="missions" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={tools} help={<MissionHelp />}>
+    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="missions" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={tools}>
       {children}
     </DeskFrame>
   )

@@ -2,12 +2,16 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { Hidden } from '@/components/app/shell'
 import { Qr } from '@/components/qr'
+import { HelpTip } from '@/components/desk/help'
+import { ShareLinks } from '@/components/desk/share-links'
+import { TOOL } from '@/lib/desk-help'
 import { now } from '@/lib/clock'
 import { adoptedCourseIds } from '@/server/context'
 import { portalName } from '@/server/learner'
 import { type Ctx, portalPeople, rows, str } from '../common'
 import { DeskFrame, portalNav } from './shell'
 import { PORTAL_TIME_ZONES, portalTimeZone, zoneCity } from '@/lib/zone-time'
+import { displayPortalAddress } from '@/lib/portal-address'
 
 export async function AdminFrame({ ctx, active, title, intro, tools, help, children, testId, tone }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; help?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening' }) {
   const { payload, user, portal, base, query } = ctx
@@ -30,7 +34,7 @@ export async function AdminFrame({ ctx, active, title, intro, tools, help, child
       help={help}
       query={query}
       testId={testId}
-      evening={active === 'library' || active === 'access' || active === 'teach'}
+      evening
       logoUrl={portal.logoUrl}
       gatherDesk={tone === 'evening'}
     >
@@ -83,6 +87,7 @@ export async function OverviewScreen(ctx: Ctx) {
             <form action="/api/hearts" method="post">
               <Hidden fields={{ action: 'deactivate', portalSlug: portal.slug, closed: portal.closed ? 'no' : 'yes', next: `${base}/admin` }} />
               <button className="btn line-light" data-testid="deactivate" type="submit">{portal.closed ? 'Activate' : 'Deactivate'}</button>
+              <HelpTip topic="deactivate">{TOOL.deactivate}</HelpTip>
             </form>
           ) : null}
         </div>
@@ -93,9 +98,10 @@ export async function OverviewScreen(ctx: Ctx) {
           <div className="body" style={{ display: 'grid', gap: 14 }}>
             <div>
               <div className="hint" style={{ marginBottom: 6 }}>Portal address</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <div className="address" style={{ flex: 1, minWidth: 0, wordBreak: 'normal', overflowWrap: 'anywhere' }} data-testid="portal-address">{address.replace(/^https?:\/\//, '')}</div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <div className="address" style={{ flex: '1 1 12rem', minWidth: '11rem' }} data-testid="portal-address" title={address.replace(/^https?:\/\//, '')}>{displayPortalAddress(address)}</div>
                 <Link className="btn ink" href={base}>Go</Link>
+                <ShareLinks value={address} testId="portal-copy" />
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 16, alignItems: 'center' }}>
@@ -136,12 +142,12 @@ export async function OverviewScreen(ctx: Ctx) {
             <div className="count-tile"><span>Topic</span><b data-testid="own-topics">{units.length}</b></div>
             <div className="count-tile"><span>Video</span><b data-testid="own-videos">{lessons.length}</b></div>
             <div className="count-tile"><span>Resource</span><b data-testid="own-resources">{resources.length}</b></div>
-            <div className="count-tile" style={{ gridColumn: '1 / -1', background: '#fbefd2' }}><span>Linked from the library</span><b data-testid="linked-courses">{adopted.length}</b></div>
+            <div className="count-tile" style={{ gridColumn: '1 / -1' }}><span>Linked from the library</span><b data-testid="linked-courses">{adopted.length}</b></div>
           </div>
           {user.role !== 'teacher' ? <div className="foot"><Link className="btn" href={`${base}/admin/content`}>Content settings</Link></div> : null}
         </section>
         <section className="panel">
-          <header><div><h2>Activity over 14 days</h2><p>Parts watched and questions answered each day</p></div></header>
+          <header><div><h2>Activity over 14 days <HelpTip topic="activity">{TOOL.activity}</HelpTip></h2><p>Parts watched and questions answered each day</p></div></header>
           <div className="body">
             <div className="chart" data-testid="activity">
               {bars.map((bar) => (
@@ -175,9 +181,9 @@ export async function PortalSettingsScreen(ctx: Ctx) {
             <label className="row top"><span>Welcome line</span><textarea name="welcome" defaultValue={str(portal.welcome)} /></label>
             {field('Logo link', 'logoUrl', { placeholder: 'https://' })}
             {field('Linked calendar', 'calendarUrl', { placeholder: 'https://' })}
-            {field('Notification e-mails', 'notificationEmails')}
+            {field('Notification emails', 'notificationEmails')}
             <label className="row"><span>Colour</span><input type="text" name="colour" defaultValue={portal.colour || '#1f1d36'} /></label>
-            <label className="row"><span>Time zone</span>
+            <label className="row"><span>Time zone <HelpTip topic="time-zone">{TOOL.timeZone}</HelpTip></span>
               <select name="timeZone" defaultValue={portalTimeZone(portal)} data-testid="time-zone">
                 {[...new Set([portalTimeZone(portal), ...PORTAL_TIME_ZONES])].map((zone) => <option key={zone} value={zone}>{zoneCity(zone)} ({zone})</option>)}
               </select>
@@ -195,6 +201,7 @@ export async function PortalSettingsScreen(ctx: Ctx) {
               <div className="checks" style={{ flexDirection: 'column' }}>
                 <label className="check"><input type="checkbox" name="showOthersAnswers" defaultChecked={portal.showOthersAnswers !== false} /> Learners can see answers others chose to share</label>
                 <label className="check"><input type="checkbox" name="watchHistoryOptIn" defaultChecked={Boolean(portal.watchHistoryOptIn)} /> Ask learners if they will share detailed watch history</label>
+                <HelpTip topic="watch-history">{TOOL.watchHistory}</HelpTip>
               </div>
             </div>
             <div className="actions"><button className="btn ink" data-testid="save-settings" type="submit">Save settings</button></div>
@@ -204,6 +211,7 @@ export async function PortalSettingsScreen(ctx: Ctx) {
           <header className="light"><h2>Put the portal on your website</h2></header>
           <div className="body" style={{ display: 'grid', gap: 10 }}>
             <p className="hint">Paste this where you would like a button that opens the portal.</p>
+            <p className="hint" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Embed <HelpTip topic="embed">{TOOL.embed}</HelpTip></p>
             <pre className="address" data-testid="embed" style={{ whiteSpace: 'pre-wrap' }}>{`<a href="${ctx.origin}${base}" style="background:${portal.colour || '#1f1d36'};color:#fff;padding:12px 20px;border-radius:999px;text-decoration:none">${portalName(portal)}</a>`}</pre>
             <Link className="btn ghost" href={`${base}/admin/wizard`}>Run the short setup again</Link>
           </div>

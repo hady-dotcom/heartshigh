@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import type { TalkCandidate } from '@/lib/sheet-search'
+import { HelpTip } from '@/components/desk/help'
+import { TOOL } from '@/lib/desk-help'
 
 type Course = { id: number; title: string }
 
@@ -101,7 +103,7 @@ export function CreatorForm({ courses, endpoint, next }: { courses: Course[]; en
   return (
     <div data-testid="sheet-creator">
       <section className="panel">
-        <header><div><h2>What should the sheet be about?</h2><p>Search, tick the talks you want, and the desk builds a draft. Nothing goes live until you apply the preview.</p></div></header>
+        <header><div><h2>What should the sheet be about? <HelpTip topic="creator-search">{TOOL.creatorSearch}</HelpTip></h2><p>Search, tick the talks you want, and the desk builds a draft. Nothing goes live until you apply the preview.</p></div></header>
         <div className="body form">
           <label className="stack">Topic
             <input data-testid="creator-topic" value={topic} onChange={(event) => setTopic(event.target.value)} placeholder="Light, patience, the names" />

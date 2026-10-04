@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
-import { ExperimentHelp } from '@/components/desk/help'
 import {
   EXPERIMENT_RULE,
   EXPERIMENT_SLOTS,
@@ -65,10 +64,10 @@ async function Frame({
   tools?: React.ReactNode
   children: React.ReactNode
 }) {
-  if (ctx) return <AdminFrame ctx={ctx} active="experiments" title={title} intro={intro} testId={testId} tools={tools} help={<ExperimentHelp />}>{children}</AdminFrame>
+  if (ctx) return <AdminFrame ctx={ctx} active="experiments" title={title} intro={intro} testId={testId} tools={tools}>{children}</AdminFrame>
   const desk = master!
   return (
-    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="experiments" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={tools} help={<ExperimentHelp />}>
+    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="experiments" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={tools}>
       {children}
     </DeskFrame>
   )

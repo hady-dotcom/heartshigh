@@ -8,6 +8,8 @@ import { circleScope, circleSettings, pointsInScope } from '@/server/circle'
 import type { SessionUser } from '@/server/context'
 import { partTitle } from '@/lib/talk-title'
 import { type Ctx, type Row, clock, rows, str } from '../common'
+import { HelpTip } from '@/components/desk/help'
+import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
 
@@ -128,11 +130,12 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
             <Bulk lesson={lesson.id} scope="talk" enabled={false} here={back} label="All off for this talk" />
             <Bulk lesson={lesson.id} scope="course" enabled here={back} label="All on for the course" />
             <Bulk lesson={lesson.id} scope="course" enabled={false} here={back} label="All off for the course" />
+            <HelpTip topic="circle-bulk">{TOOL.circleBulk}</HelpTip>
           </div>
         </header>
         <form className="body form circle-generate" action="/api/hearts" method="post" data-testid="circle-generate-all">
           <Hidden fields={{ action: 'circle-generate', lesson: lesson.id, next: back }} />
-          <b>Draft answers for every question on this talk</b>
+          <b>Draft answers for every question on this talk <HelpTip topic="circle-tones">{TOOL.circleTones}</HelpTip></b>
           <GenerateFields />
           <div className="actions"><button className="btn ink" type="submit" data-testid="circle-generate-all-submit">Draft circle answers</button></div>
           <p className="hint">Drafted by the AI when a key is set, otherwise by the built-in drafts. Every answer goes through the same word checks as the editor, and you can edit, switch off or delete any of them.</p>

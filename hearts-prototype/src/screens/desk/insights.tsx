@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
-import { InsightsHelp } from '@/components/desk/help'
 import { routeWords } from '@/lib/insight-events'
 import { pct } from '@/lib/insight-funnel'
 import type { SessionUser } from '@/server/context'
@@ -31,10 +30,10 @@ async function Frame({
   tools?: React.ReactNode
   children: React.ReactNode
 }) {
-  if (ctx) return <AdminFrame ctx={ctx} active="insights" title={title} intro={intro} testId={testId} tools={tools} help={<InsightsHelp />}>{children}</AdminFrame>
+  if (ctx) return <AdminFrame ctx={ctx} active="insights" title={title} intro={intro} testId={testId} tools={tools}>{children}</AdminFrame>
   const desk = master!
   return (
-    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="insights" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={tools} help={<InsightsHelp />}>
+    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="insights" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={tools}>
       {children}
     </DeskFrame>
   )

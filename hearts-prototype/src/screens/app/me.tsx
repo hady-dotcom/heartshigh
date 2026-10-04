@@ -8,6 +8,7 @@ import { OptInLane, PrefToggle, StartAgain } from '@/components/app/me-controls'
 import { EmptyState } from '@/components/app/empty'
 import { KeepHearts } from '@/components/app/install-card'
 import { ThemePinControl } from '@/components/theme/theme-pin'
+import { SavedList, SavedToast } from '@/components/app/saved-list'
 import { Qr } from '@/components/qr'
 import { now } from '@/lib/clock'
 import { visibleCourseIds } from '@/server/context'
@@ -45,6 +46,9 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
           <span><b data-testid="me-name">{user.name || user.email}</b><small className="muted">{portalName(portal)} · day {dayNumber(user)}</small></span>
         </div>
         <ThemePinControl />
+        <SavedToast />
+        <p className="eyebrow" id="saved" style={{ marginTop: 18 }}>Saved</p>
+        <SavedList base={base} />
         <details className="card name-edit" data-testid="name-edit">
           <summary>Change the name we use</summary>
           <form className="form-stack" action="/api/hearts" method="post" style={{ marginTop: 10 }}>
