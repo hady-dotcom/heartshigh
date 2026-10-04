@@ -1636,16 +1636,20 @@ export function Journey(props: JourneyProps) {
           <>
           <p className="j-swipe-hint" data-testid="swipe-hint">↑ swipe up to replay</p>
           <div className="clip-row">
-            {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
+            <div className="clip-row-top">
+              {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
+              <span className="chip dark" data-testid="clip-timer">{clock(item.hors.end - item.hors.start)}</span>
+            </div>
             {!typeClip && muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
-            <span className="chip dark" data-testid="clip-timer">{clock(item.hors.end - item.hors.start)}</span>
           </div>
           </>
         ) : (
           <div className="clip-row">
-            <button type="button" className="chip white" onClick={() => window.history.back()} data-testid="appetiser-back">‹ Back</button>
+            <div className="clip-row-top">
+              <button type="button" className="chip white" onClick={() => window.history.back()} data-testid="appetiser-back">‹ Back</button>
+              <span className="chip gold" data-testid="level-chip">{READY_FOR_MORE}</span>
+            </div>
             {!typeClip && muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
-            <span className="chip gold" data-testid="level-chip">{READY_FOR_MORE}</span>
           </div>
         )}
       </div>

@@ -76,22 +76,18 @@
 .clip-hint { text-align: center; font-size: 12px; font-weight: 600; color: rgba(255, 255, 255, 0.85); margin-top: 10px; }
 .clip-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas:
-    "lane timer"
-    "sound sound";
-  align-items: center;
-  gap: 8px 10px;
+  justify-items: center;
+  gap: 8px;
   margin-top: 10px;
 }
-.clip-row > .chip.white,
-.clip-row > [data-testid="lane-chip"],
-.clip-row > [data-testid="lane-chip-hidden"],
-.clip-row > [data-testid="appetiser-back"] { grid-area: lane; justify-self: start; }
-.clip-row > [data-testid="clip-timer"],
-.clip-row > [data-testid="level-chip"] { grid-area: timer; justify-self: end; }
+.clip-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+}
 .clip-row > .j-sound {
-  grid-area: sound;
   justify-self: center;
   white-space: nowrap;
   position: relative;
