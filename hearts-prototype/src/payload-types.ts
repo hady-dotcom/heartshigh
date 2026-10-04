@@ -789,6 +789,14 @@ export interface Answer {
    * The learner chose to let other learners on this video read it. Separate from sharing with their teacher.
    */
   shareWithLearners?: boolean | null;
+  /**
+   * Hidden from the swarm after a safety screen. Master review can restore it.
+   */
+  swarmHidden?: boolean | null;
+  /**
+   * Why the safety screen hid this answer.
+   */
+  swarmReason?: string | null;
   cut?: (number | null) | Cut;
   atSecond?: number | null;
   viewingId?: string | null;
@@ -2946,6 +2954,8 @@ export interface AnswersSelect<T extends boolean = true> {
   keepPrivate?: T;
   shareWithTeacher?: T;
   shareWithLearners?: T;
+  swarmHidden?: T;
+  swarmReason?: T;
   cut?: T;
   atSecond?: T;
   viewingId?: T;
