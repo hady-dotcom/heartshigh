@@ -31,7 +31,6 @@ export async function ensureProofCourse(master: APIRequestContext, portalSlug = 
     expect(unitRes.ok()).toBeTruthy()
     const unit = (await unitRes.json()) as { id: number; doc?: { id: number } }
     const unitId = unit.doc?.id || unit.id
-    const lessonIds: number[] = []
     for (const index of Array.from({ length: 10 }, (_, at) => at)) {
       const created = await master.post('/api/lessons', {
         data: {
@@ -46,19 +45,6 @@ export async function ensureProofCourse(master: APIRequestContext, portalSlug = 
         },
       })
       expect(created.ok()).toBeTruthy()
-      const body = (await created.json()) as { id: number; doc?: { id: number } }
-      lessonIds.push(body.doc?.id || body.id)
-    }
-    for (const [index, second] of [30, 90, 150, 210].entries()) {
-      await master.post('/api/engagement-points', {
-        data: {
-          lesson: lessonIds[0],
-          second,
-          kind: 'question',
-          prompt: `What stayed with you from sitting 1, question ${index + 1}?`,
-          status: 'approved',
-        },
-      })
     }
   }
   const extras = (learner!.extraCourses || []).map((item) => (typeof item === 'object' && item && 'id' in item ? Number((item as { id: number }).id) : Number(item))).filter(Boolean)
@@ -67,5 +53,24 @@ export async function ensureProofCourse(master: APIRequestContext, portalSlug = 
     expect(grant.ok()).toBeTruthy()
   }
   const lessons = (await (await master.get(`/api/lessons?where[course][equals]=${courseId}&limit=20&depth=0&sort=order`)).json()) as { docs: { id: number; title?: string }[] }
+  const firstLesson = lessons.docs[0]
+  if (firstLesson) {
+    const points = (await (await master.get(`/api/engagement-points?where[lesson][equals]=${firstLesson.id}&limit=10&depth=0`)).json()) as { docs: { id: number }[] }
+    if (!points.docs.length) {
+      for (const [index, second] of [30, 90, 150, 210].entries()) {
+        const point = await master.post('/api/engagement-points', {
+          data: {
+            lesson: firstLesson.id,
+            second,
+            kind: 'question',
+            prompt: `What stayed with you from sitting 1, question ${index + 1}?`,
+            status: 'published',
+            audience: 'everyone',
+          },
+        })
+        expect(point.ok()).toBeTruthy()
+      }
+    }
+  }
   return { courseId, lessons: lessons.docs, portalId: portal!.id }
 }
