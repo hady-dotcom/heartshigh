@@ -69,9 +69,9 @@ for (const size of SIZES) {
     test(`join with the code in the link is the evening garden (${size.name}, ${hour.name})`, async ({ browser }) => {
       const code = seedCode('elm-learner')
       const page = await open(browser, size, hour.at, `/join?code=${code}`)
-      await expect(page.locator('html')).toHaveAttribute('data-theme', hour.name)
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'evening')
       await expect(page.getByRole('heading', { name: 'Come in' })).toBeVisible()
-      await expect(page.getByText('Your link already holds the code. Add your name and you are in.')).toBeVisible()
+      await expect(page.getByText('Your code is already filled in. Add your name, email and a password to join.')).toBeVisible()
       await expect(page.getByTestId('join-code')).toHaveValue(code)
       await expect(page.getByTestId('join-submit')).toHaveText('Join')
       await looksLikeTheGarden(page, 'join')
@@ -85,7 +85,7 @@ for (const size of SIZES) {
 
     test(`sign-in is the evening garden (${size.name}, ${hour.name})`, async ({ browser }) => {
       const page = await open(browser, size, hour.at, '/login')
-      await expect(page.locator('html')).toHaveAttribute('data-theme', hour.name)
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'evening')
       await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible()
       await expect(page.getByTestId('login-submit')).toHaveText('Sign in')
       await looksLikeTheGarden(page, 'login')
