@@ -3,6 +3,7 @@ import { mkdirSync } from 'node:fs'
 import path from 'node:path'
 import { E2E_BASE } from '../env'
 import { fakeYouTube } from './fake-youtube'
+import { noIssueBadge } from './no-issue-badge'
 import { ensureProofCourse, PROOF_COURSE } from './proof-course'
 
 const BASE = '/p/east-london'
@@ -30,11 +31,6 @@ async function signInQuiet(page: Page) {
     data: { email: 'elm-learner@hearts.test', password: 'portal-learner' },
   })
   expect(login.ok()).toBeTruthy()
-}
-
-async function noIssueBadge(page: Page) {
-  await expect(page.locator('nextjs-portal'), 'the Next.js 1 Issue badge must not appear').toHaveCount(0)
-  await expect(page.locator('text=1 Issue')).toHaveCount(0)
 }
 
 async function hideInstall(page: Page) {
@@ -99,7 +95,7 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
   await expect(page.getByTestId('weekday-1')).toBeChecked()
   await expect(page.getByTestId('week-days')).toBeVisible()
   await expect(page.getByTestId('back')).toContainText('Course')
-  await expect(page.getByTestId('plan-counts')).toContainText(/3,\s*3,\s*2,\s*2|10 talks/)
+  await expect(page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE }).getByTestId('plan-counts')).toContainText(/3,\s*3,\s*2,\s*2/)
   await expect(page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE }).getByTestId('schedule-slot').first()).toContainText('›')
   await expect(page.getByTestId('schedule-slot').first()).not.toContainText('|')
   await hold(page, '04-days-kept-after-share', 1800)

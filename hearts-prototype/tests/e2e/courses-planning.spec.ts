@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { E2E_BASE } from '../env'
 import { fakeYouTube } from './fake-youtube'
+import { noIssueBadge } from './no-issue-badge'
 import { ensureProofCourse, PROOF_COURSE } from './proof-course'
 
 const PORTAL = 'east-london'
@@ -200,12 +201,12 @@ test.describe('courses and planning', () => {
     await expect(page.getByTestId('schedule-course')).toHaveValue(String(sitting.courseId))
     await expect(page.getByTestId('weekday-1')).toBeChecked()
     await page.getByTestId('schedule-submit').click()
-    await expect(page.locator('nextjs-portal')).toHaveCount(0)
+    await noIssueBadge(page)
     await expect(page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE })).toBeVisible()
     await expect(page.getByTestId('schedule-course')).toHaveValue(String(sitting.courseId))
     await expect(page.getByTestId('weekday-1')).toBeChecked()
     await expect(page.getByTestId('week-days')).toBeVisible()
-    await expect(page.getByTestId('plan-counts')).toContainText('3, 3, 2, 2')
+    await expect(page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE }).getByTestId('plan-counts')).toContainText('3, 3, 2, 2')
     const dates = await page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE }).getByTestId('schedule-slot').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-date') || ''))
     const counts = dates.reduce((map, date) => map.set(date, (map.get(date) || 0) + 1), new Map<string, number>())
     expect([...counts.values()]).toEqual([3, 3, 2, 2])

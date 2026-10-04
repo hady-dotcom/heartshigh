@@ -2,6 +2,7 @@ import { expect, request as playwrightRequest, test, type APIRequestContext, typ
 import { mkdirSync } from 'node:fs'
 import path from 'node:path'
 import { E2E_BASE } from '../env'
+import { noIssueBadge } from './no-issue-badge'
 
 const PORTAL = 'east-london'
 const BASE = `/p/${PORTAL}`
@@ -97,7 +98,7 @@ test.describe('planner shots', () => {
     const beforeDates = await plan.getByTestId('schedule-slot').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-date')))
     expect(beforeDates).toEqual(bunched)
     await expect(plan.getByTestId('spread-note')).toHaveCount(0)
-    await expect(page.locator('nextjs-portal')).toHaveCount(0)
+    await noIssueBadge(page)
     await page.waitForTimeout(500)
     await page.screenshot({ path: path.join(SHOTS, 'planner-before-390x844.png'), fullPage: false })
     await plan.scrollIntoViewIfNeeded()
@@ -108,7 +109,7 @@ test.describe('planner shots', () => {
     const afterDates = await plan.getByTestId('schedule-slot').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-date')))
     expect(afterDates).toEqual(['2026-10-04', '2026-10-08', '2026-10-12'])
     await expect(page.getByTestId('notice')).toBeVisible()
-    await expect(page.locator('nextjs-portal')).toHaveCount(0)
+    await noIssueBadge(page)
     await page.waitForTimeout(2400)
     await page.screenshot({ path: path.join(SHOTS, 'planner-after-390x844.png'), fullPage: false })
     await plan.scrollIntoViewIfNeeded()
