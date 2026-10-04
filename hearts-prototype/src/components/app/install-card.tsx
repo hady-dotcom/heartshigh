@@ -121,21 +121,31 @@ export function InstallCard({ forced = false, onDismiss, sheet = false, strip = 
       role={sheet ? 'dialog' : undefined}
       aria-label={copy.heading}
     >
-      <h2>{copy.heading}</h2>
-      <p className="install-lead">{copy.lead}</p>
+      {strip ? (
+        <div className="install-strip-row">
+          <h2>{copy.heading}</h2>
+          <button type="button" className="install-skip" data-testid="install-skip" onClick={dismiss}>{INSTALL_SKIP}</button>
+        </div>
+      ) : <h2>{copy.heading}</h2>}
+      {strip ? null : <p className="install-lead">{copy.lead}</p>}
       {copy.note ? <p className="install-note">{copy.note}</p> : null}
       {strip ? (
-        <ol className="install-strip-steps">
-          {copy.steps.map((step) => <li key={step.text}>{step.text}</li>)}
-        </ol>
+        <p className="install-strip-steps">{[...copy.steps.map((step) => step.text), copy.manual].filter(Boolean).join(' ')}</p>
       ) : installSlides(state.kind).length ? <InstallSlides kind={state.kind} /> : null}
-      {copy.manual ? <p className="install-manual">{copy.manual}</p> : null}
+      {strip ? null : copy.manual ? <p className="install-manual">{copy.manual}</p> : null}
+      {strip ? null : (
       <div className="install-actions">
         {copy.action ? (
           <button type="button" className="pill gold block" data-testid="install-action" disabled={busy} onClick={add}>{copy.action}</button>
         ) : null}
         <button type="button" className="install-skip" data-testid="install-skip" onClick={dismiss}>{INSTALL_SKIP}</button>
       </div>
+      )}
+      {strip && copy.action ? (
+        <div className="install-actions">
+          <button type="button" className="pill gold block" data-testid="install-action" disabled={busy} onClick={add}>{copy.action}</button>
+        </div>
+      ) : null}
     </section>
   )
 }

@@ -354,13 +354,13 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 }
 .install-card.strip {
   position: static; transform: none; width: auto; max-height: none; overflow: visible;
-  margin: 10px 0 4px; padding: 12px 14px; box-shadow: none; animation: none;
+  margin: 10px 0 16px; padding: 10px 12px; box-shadow: none; animation: none;
 }
-.install-card.strip h2 { font-size: 17px; margin: 0 0 4px; }
-.install-card.strip .install-lead { font-size: 14px; margin: 0 0 8px; }
-.install-card.strip .install-strip-steps { margin: 0 0 4px; padding-left: 1.15em; display: grid; gap: 4px; font-size: 14px; line-height: 1.4; }
-.install-card.strip .install-actions { display: flex; justify-content: flex-end; gap: 8px; }
-.install-card.strip .install-skip { min-height: 36px; }
+.install-card.strip h2 { font-size: 16px; margin: 0; }
+.install-card.strip .install-strip-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.install-card.strip .install-strip-steps { margin: 6px 0 0; padding: 0; font-size: 13.5px; line-height: 1.4; }
+.install-card.strip .install-skip { min-height: 36px; padding: 4px 8px; }
+.install-card.strip .install-actions { margin-top: 6px; }
 @keyframes install-rise { from { opacity: 0; transform: translate(-50%, 24px); } to { opacity: 1; transform: translate(-50%, 0); } }
 @media (prefers-reduced-motion: reduce) { .install-card.sheet { animation: none; } }
 .install-card h2 { font-family: var(--serif); font-weight: 600; font-size: 26px; line-height: 1.15; margin: 0 0 8px; color: var(--ink); }
