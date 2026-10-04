@@ -1,9 +1,10 @@
 import { tidyTalkTitle } from './talk-title'
 import { cutIdFromSaved } from './saved'
 
-/** Drop a YouTube “ - Khutbah by Shaykh …” tail after the pipe suffix is gone. */
-const UPLOAD_BY = /\s+[-–—]\s+(?:khutbah|khutba|lecture|talk|sermon|friday khutbah)?\s*by\s+.+$/i
-const SPEAKER_DASH = /\s+[-–—]\s+(?:sh\.|shaykh|sheikh|imam|ustadh)\b.+$/i
+/** Drop a YouTube “ - Khutbah by Shaykh …” or “ :: Khutbah by …” tail after the pipe suffix is gone. */
+const UPLOAD_BY = /\s+(?:[-–—]|::)\s+(?:khutbah|khutba|lecture|talk|sermon|friday khutbah)?\s*by\s+.+$/i
+const SPEAKER_DASH = /\s+(?:[-–—]|::)\s+(?:sh\.|shaykh|sheikh|imam|ustadh)\b.+$/i
+const DOUBLE_COLON = /\s*::\s+.+$/
 
 /**
  * Desk and Saved helper. Built on tidyTalkTitle so talk-title.ts can merge with
@@ -11,7 +12,7 @@ const SPEAKER_DASH = /\s+[-–—]\s+(?:sh\.|shaykh|sheikh|imam|ustadh)\b.+$/i
  */
 export function cleanTitle(raw: string) {
   const tidy = tidyTalkTitle(raw)
-  const stripped = tidy.replace(UPLOAD_BY, '').replace(SPEAKER_DASH, '').replace(/\s+/g, ' ').trim()
+  const stripped = tidy.replace(UPLOAD_BY, '').replace(SPEAKER_DASH, '').replace(DOUBLE_COLON, '').replace(/\s+/g, ' ').trim()
   return stripped || tidy
 }
 

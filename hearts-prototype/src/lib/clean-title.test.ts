@@ -5,6 +5,7 @@ import { cleanTitle, uniqueSavedTalks } from './clean-title'
 test('cleanTitle drops a pipe suffix and a YouTube “by” tail', () => {
   assert.equal(cleanTitle('Dua 1: O Allah, I am Your Servant | Prophetic Dua | Shaykh Yasir Fahmy'), 'Dua 1: O Allah, I am Your Servant')
   assert.equal(cleanTitle('Tawakkul: Supreme Trust in Allah - Khutbah by Sh. Mohammed Elshinawy'), 'Tawakkul: Supreme Trust in Allah')
+  assert.equal(cleanTitle('Anger Management (p. 1) :: Khutbah by Sh Mohammad Elshinawy'), 'Anger Management (p. 1)')
   assert.equal(cleanTitle('How to Live Like the Prophet, Session 6'), 'How to Live Like the Prophet, Session 6')
 })
 

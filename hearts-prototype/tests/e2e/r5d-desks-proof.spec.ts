@@ -76,13 +76,17 @@ async function openEveryDeskHelp(page: Page, where: string) {
   const marks = page.locator('[data-testid="desk-help"]')
   const count = await marks.count()
   expect(count, `${where} has at least one ?`).toBeGreaterThan(0)
+  let opened = 0
   for (let index = 0; index < count; index += 1) {
     const mark = marks.nth(index)
+    if (!(await mark.isVisible())) continue
     await mark.scrollIntoViewIfNeeded()
     if ((await mark.getAttribute('data-open')) !== 'yes') await mark.click()
     const pop = page.getByTestId('desk-help-pop')
     await assertPopFits(page, pop, `${where} ? ${index + 1}/${count}`)
+    opened += 1
   }
+  expect(opened, `${where} opened a visible ?`).toBeGreaterThan(0)
 }
 
 test.describe.configure({ timeout: 400_000 })
