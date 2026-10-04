@@ -5,7 +5,7 @@ import { CalendarHelp } from '@/components/desk/help'
 import { actionCta, CONTEXT_KEYS, contextName, parseUkDate, ukDate } from '@/lib/calendar-context'
 import { EXPERIMENT_SLOTS, slotPlainName } from '@/lib/experiment-slots'
 import { now } from '@/lib/clock'
-import { DEFAULT_TIME_ZONE, isTimeZone, portalTimeZone, wallClock } from '@/lib/zone-time'
+import { DEFAULT_TIME_ZONE, isTimeZone, portalTimeZone, wallClock, zoneCity } from '@/lib/zone-time'
 import type { SessionUser } from '@/server/context'
 import { canEditCalendar, canViewCalendar, contextAt, hijriOffsetOf, loadCopy, loadSeasons, resolveContextLabel, seedDefaultCopy } from '@/server/calendar'
 import { flagsOfSafe } from './calendar-flags'
@@ -103,7 +103,7 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
                 <button className="btn" type="submit" data-testid="calendar-preview-go">Preview</button>
               </form>
               <p className={styles.quiet}>The Islamic day moves on at Maghrib (about sunset in the UK, or the portal’s zone).</p>
-              <p className={styles.quiet} data-testid="calendar-context">{context.active.map(contextName).join(' · ') || 'No special day'} · {context.hijriLabel} · {ukDate(previewDay)}</p>
+              <p className={styles.quiet} data-testid="calendar-context">{context.active.map(contextName).join(' · ') || 'No special day'} · {context.hijriLabel} · {ukDate(previewDay)} · {String(hour).padStart(2, '0')}:{String(minute).padStart(2, '0')} {zoneCity(zone)}</p>
               <div
                 className={styles.phone}
                 data-testid="calendar-phone"
