@@ -64,6 +64,9 @@ test('r5d desk proof shots', async ({ page, browser }) => {
   await expect(page.getByTestId('content-empty-doors')).toBeVisible()
   await expect(page.getByTestId('content-empty-doors')).not.toHaveAttribute('open')
   await shot(page, 'content-grouped-doors', true)
+  await page.getByTestId('local-course-duration').scrollIntoViewIfNeeded()
+  await expect(page.getByTestId('local-course-duration')).toHaveValue('')
+  await shot(page, 'content-length-empty')
 
   await page.goto('/p/east-london/admin/library')
   await expect(page.getByTestId('admin-library')).toBeVisible()
@@ -128,6 +131,8 @@ test('r5d desk proof shots', async ({ page, browser }) => {
   await expect(strip).toBeVisible()
   await expect(strip).toHaveAttribute('data-variant', 'strip')
   await expect(strip.locator('h2')).toContainText('phone')
+  await phone.getByTestId('continue').evaluate((el) => el.scrollIntoView({ block: 'start' }))
+  await phone.waitForTimeout(200)
   await shot(phone, 'phone-home-install')
   await safari.close()
 })
