@@ -1,5 +1,7 @@
 viewport 390x844
-video /workspace/hearts-prototype/test-results/feed-r5a-proof-phone-feed--9a041--Tap-for-sound-no-questions
-kinds talk,film,talk,scene,talk,scene,talk,scene
-speaker Shaykh Mikaeel Smith
-hidden playing after swipes: none
+video /workspace/hearts-prototype/test-results/feed-r5a-proof-phone-feed--f427d-tion-bar-advancing-mute-log
+talks 14:talk 27:talk
+scenes 27:scene 14:scene
+time moved 898.1700000000001 -> 899.2701000000006
+muted then false / later false
+pool ended true

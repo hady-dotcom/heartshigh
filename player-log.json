@@ -1,7 +1,7 @@
 [
   {
-    "at": "01-coach",
-    "note": "Arrival: coach and tab bar, first clip muted.",
+    "at": "01-levels-above-speaker",
+    "note": "Level steps sit above the speaker, not under the name.",
     "snap": [
       {
         "id": "h0-1",
@@ -9,16 +9,17 @@
         "hidden": false,
         "state": 1,
         "muted": true,
-        "currentTime": 897.47
+        "currentTime": 898.07
       }
     ],
     "card": "talk",
+    "cut": "14",
     "speaker": "Shaykh Mikaeel Smith",
     "caption": "What's crazy to me is that Allah is telling Moses that I was doing your I was nurturing you when you were an infant in your mother's arms."
   },
   {
-    "at": "02-sound-on",
-    "note": "Tap for sound: ten taps, still unmuted, no freeze.",
+    "at": "02-sound-advancing",
+    "note": "Sound on, player time moving 898.17 -> 899.27.",
     "snap": [
       {
         "id": "h0-1",
@@ -26,15 +27,18 @@
         "hidden": false,
         "state": 1,
         "muted": false,
-        "currentTime": 897.47
+        "currentTime": 899.2701000000006
       }
     ],
     "card": "talk",
+    "cut": "14",
     "speaker": "Shaykh Mikaeel Smith",
     "caption": "What's crazy to me is that Allah is telling Moses that I was doing your I was nurturing you when you were an infant in your mother's arms."
   },
   {
     "at": "swipe-0",
+    "card": "talk",
+    "cut": "14",
     "snap": [
       {
         "id": "h0-1",
@@ -42,13 +46,15 @@
         "hidden": false,
         "state": 1,
         "muted": false,
-        "currentTime": 897.47
+        "currentTime": 899.2701000000006
       }
     ],
     "hiddenPlaying": []
   },
   {
     "at": "swipe-1",
+    "card": "film",
+    "cut": "14",
     "snap": [
       {
         "id": "h0-1",
@@ -56,13 +62,15 @@
         "hidden": false,
         "state": 2,
         "muted": true,
-        "currentTime": 897.47
+        "currentTime": 899.2701000000006
       }
     ],
     "hiddenPlaying": []
   },
   {
     "at": "swipe-2",
+    "card": "talk",
+    "cut": "27",
     "snap": [
       {
         "id": "h0-1",
@@ -70,7 +78,7 @@
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 897.47
+        "currentTime": 899.2701000000006
       },
       {
         "id": "h1-2",
@@ -78,13 +86,15 @@
         "hidden": false,
         "state": 1,
         "muted": false,
-        "currentTime": 252.6
+        "currentTime": 253.20009999999962
       }
     ],
     "hiddenPlaying": []
   },
   {
     "at": "swipe-3",
+    "card": "scene",
+    "cut": "27",
     "snap": [
       {
         "id": "h0-1",
@@ -92,7 +102,7 @@
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 897.47
+        "currentTime": 899.2701000000006
       },
       {
         "id": "h1-2",
@@ -100,13 +110,14 @@
         "hidden": false,
         "state": 2,
         "muted": true,
-        "currentTime": 252.6
+        "currentTime": 253.20009999999962
       }
     ],
     "hiddenPlaying": []
   },
   {
-    "at": "swipe-4",
+    "at": "03-scene-credit",
+    "note": "Scene credit line at 18.74:1.",
     "snap": [
       {
         "id": "h0-1",
@@ -114,29 +125,7 @@
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 897.47
-      },
-      {
-        "id": "h1-2",
-        "videoId": "NIR88RRpat4",
-        "hidden": false,
-        "state": 1,
-        "muted": false,
-        "currentTime": 252.6
-      }
-    ],
-    "hiddenPlaying": []
-  },
-  {
-    "at": "swipe-5",
-    "snap": [
-      {
-        "id": "h0-1",
-        "videoId": "ECaTWkof57E",
-        "hidden": true,
-        "state": 2,
-        "muted": true,
-        "currentTime": 897.47
+        "currentTime": 899.2701000000006
       },
       {
         "id": "h1-2",
@@ -144,83 +133,18 @@
         "hidden": false,
         "state": 2,
         "muted": true,
-        "currentTime": 252.6
-      }
-    ],
-    "hiddenPlaying": []
-  },
-  {
-    "at": "swipe-6",
-    "snap": [
-      {
-        "id": "h0-1",
-        "videoId": "ECaTWkof57E",
-        "hidden": true,
-        "state": 2,
-        "muted": true,
-        "currentTime": 897.47
-      },
-      {
-        "id": "h1-2",
-        "videoId": "NIR88RRpat4",
-        "hidden": false,
-        "state": 1,
-        "muted": false,
-        "currentTime": 252.6
-      }
-    ],
-    "hiddenPlaying": []
-  },
-  {
-    "at": "swipe-7",
-    "snap": [
-      {
-        "id": "h0-1",
-        "videoId": "ECaTWkof57E",
-        "hidden": true,
-        "state": 2,
-        "muted": true,
-        "currentTime": 897.47
-      },
-      {
-        "id": "h1-2",
-        "videoId": "NIR88RRpat4",
-        "hidden": false,
-        "state": 2,
-        "muted": true,
-        "currentTime": 252.6
-      }
-    ],
-    "hiddenPlaying": []
-  },
-  {
-    "at": "03-after-swipes",
-    "note": "Eight steps: no question cards, hidden hosts paused and muted.",
-    "snap": [
-      {
-        "id": "h0-1",
-        "videoId": "ECaTWkof57E",
-        "hidden": true,
-        "state": 2,
-        "muted": true,
-        "currentTime": 897.47
-      },
-      {
-        "id": "h1-2",
-        "videoId": "NIR88RRpat4",
-        "hidden": false,
-        "state": 2,
-        "muted": true,
-        "currentTime": 252.6
+        "currentTime": 253.20009999999962
       }
     ],
     "card": "scene",
+    "cut": "27",
     "speaker": "Shaykh Mikaeel Smith",
     "caption": ""
   },
   {
-    "at": "04-talk",
-    "note": "A talk clip, caption on a dark plate.",
+    "at": "swipe-4",
+    "card": "scene",
+    "cut": "14",
     "snap": [
       {
         "id": "h0-1",
@@ -228,44 +152,105 @@
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 897.47
+        "currentTime": 899.2701000000006
       },
       {
         "id": "h1-2",
         "videoId": "NIR88RRpat4",
         "hidden": false,
-        "state": 1,
-        "muted": false,
-        "currentTime": 252.6
+        "state": 2,
+        "muted": true,
+        "currentTime": 253.20009999999962
       }
     ],
-    "card": "talk",
-    "speaker": "Shaykh Mikaeel Smith",
-    "caption": "What we're saying is that Allah ﷻ is the only source for clarity in your life."
+    "hiddenPlaying": []
   },
   {
-    "at": "05-ready-for-more",
-    "note": "Ready for more? opens this speaker’s 3-minute version.",
+    "at": "03-scene-credit",
+    "note": "Scene credit line at 18.74:1.",
     "snap": [
       {
-        "id": "h1-2",
-        "videoId": "NIR88RRpat4",
+        "id": "h0-1",
+        "videoId": "ECaTWkof57E",
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 252.6
+        "currentTime": 899.2701000000006
       },
       {
-        "id": "h0-3",
+        "id": "h1-2",
         "videoId": "NIR88RRpat4",
+        "hidden": false,
+        "state": 2,
+        "muted": true,
+        "currentTime": 253.20009999999962
+      }
+    ],
+    "card": "scene",
+    "cut": "14",
+    "speaker": "Shaykh Mikaeel Smith",
+    "caption": ""
+  },
+  {
+    "at": "04-pool-end",
+    "note": "You've seen everything here, try another lane.",
+    "snap": [
+      {
+        "id": "h0-1",
+        "videoId": "ECaTWkof57E",
+        "hidden": true,
+        "state": 2,
+        "muted": true,
+        "currentTime": 899.2701000000006
+      },
+      {
+        "id": "h1-2",
+        "videoId": "NIR88RRpat4",
+        "hidden": false,
+        "state": 2,
+        "muted": true,
+        "currentTime": 253.20009999999962
+      }
+    ],
+    "card": "scene",
+    "cut": "14",
+    "speaker": "Shaykh Mikaeel Smith",
+    "caption": ""
+  },
+  {
+    "at": "05-taqwa",
+    "note": "Caption spells taqwa, not tawa.",
+    "snap": [
+      {
+        "id": "h0-1",
+        "videoId": "ECaTWkof57E",
         "hidden": false,
         "state": 1,
         "muted": false,
-        "currentTime": 252.6
+        "currentTime": 898.0702999999999
       }
     ],
     "card": "talk",
+    "cut": "14",
     "speaker": "Shaykh Mikaeel Smith",
-    "caption": ""
+    "caption": "You know what taqwa is."
+  },
+  {
+    "at": "06-caption-bar",
+    "note": "Burned-in film in a 16:9 band; app caption in the bar below.",
+    "snap": [
+      {
+        "id": "h0-1",
+        "videoId": "ECaTWkof57E",
+        "hidden": false,
+        "state": 1,
+        "muted": false,
+        "currentTime": 898.0700999999997
+      }
+    ],
+    "card": "talk",
+    "cut": "14",
+    "speaker": "Shaykh Mikaeel Smith",
+    "caption": "What's crazy to me is that Allah is telling Moses that I was doing your I was nurturing you when you were an infant in your mother's arms."
   }
 ]
