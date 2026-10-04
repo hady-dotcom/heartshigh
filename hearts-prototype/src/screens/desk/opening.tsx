@@ -306,8 +306,10 @@ export async function PortalOpeningScreen(ctx: Ctx) {
                 <label className="stack">Second line<input type="text" name="subline" defaultValue={own?.subline || ''} placeholder={str(scene.subline)} /></label>
               </div>
               {crisis ? <p className="hint" style={{ margin: 0 }}>This scene holds the option that opens the help screen, so it is always shown.</p> : (
-                <label className="check"><input type="checkbox" name="hidden" defaultChecked={hidden.has(scene.id)} data-testid="portal-hide" /> Leave this scene out for {showPortalName(portal.name)}</label>
-                <HelpTip topic="hide-scene">{TOOL.hideScene}</HelpTip>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <label className="check"><input type="checkbox" name="hidden" defaultChecked={hidden.has(scene.id)} data-testid="portal-hide" /> Leave this scene out for {showPortalName(portal.name)}</label>
+                  <HelpTip topic="hide-scene">{TOOL.hideScene}</HelpTip>
+                </span>
               )}
               <div className="actions"><button className="btn ink small" type="submit" data-testid="portal-scene-save">Save</button></div>
             </form>
