@@ -11,4 +11,4 @@ Recorded on a local HEARTS dev server. Nothing here was run against a live deplo
 
 ## Screenshots
 
-See `screenshots/`.
+See `screenshots/`. `experiments-results.png` and `lanes-tab-experiment-draft.png` now show the Versions Copy column as plain words (no raw JSON). `talk-content-refused.png` keeps the typed values on the form. `lanes-kill-history.png` shows a kill line in Who changed what.
