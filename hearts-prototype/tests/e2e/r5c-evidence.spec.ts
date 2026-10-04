@@ -217,7 +217,7 @@ test('contrast at 10:00 and 20:00 Toronto, and the after screenshots', async ({ 
 
   await page.setViewportSize(DESK)
   await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${BASE}/admin/compass`)
-  await expect(page.getByTestId('admin-compass').or(page.locator('h1'))).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Compass' }).first()).toBeVisible()
   await shot(page, path.join(ROOT, 'after', 'compass-live.png'))
   await page.goto(`${BASE}/admin/compass/proposed`)
   await expect(page.getByTestId('compass-proposed')).toBeVisible()
@@ -241,8 +241,14 @@ test('a new learner from the join link reaches the first talk', async ({ browser
   await page.getByTestId('join-password').fill('harbour-learner')
   await page.getByTestId('join-submit').click()
   await page.waitForURL(/\/p\/east-london/)
-  if (await page.getByTestId('welcome-begin').count()) await page.getByTestId('welcome-begin').click()
-  if (await page.getByTestId('welcome-continue').count()) await page.getByTestId('welcome-continue').click()
+  if (await page.getByTestId('welcome-begin').count()) {
+    await page.getByTestId('welcome-begin').click()
+    await page.waitForURL(/step=films|\/start/)
+  }
+  if (page.url().includes('step=films') || await page.getByTestId('welcome-continue').count()) {
+    await page.getByTestId('welcome-continue').click()
+    await page.waitForURL(/\/start/)
+  }
   await expect(page.getByTestId('lets-play').or(page.getByTestId('opener'))).toBeVisible({ timeout: 20_000 })
   if (await page.getByTestId('lets-play').count()) await page.getByTestId('lets-play').click()
   for (const [scene, option] of PICKS) {
