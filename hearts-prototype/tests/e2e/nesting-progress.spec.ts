@@ -37,6 +37,7 @@ test('at phone size, short clips stay off the grow page and a full talk in a cou
   expect(lesson && speaker && slug).toBeTruthy()
 
   const swipe = async (dx: number, dy: number) => {
+    await page.waitForFunction(() => !document.querySelector('.j-clip')?.getAnimations().length)
     const box = (await page.getByTestId('gesture-layer').boundingBox())!
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
     await page.mouse.down()

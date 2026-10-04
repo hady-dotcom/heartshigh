@@ -244,7 +244,7 @@ test.describe.serial('HEARTS journeys', () => {
 
     const countdown = await openPoint(page, /two days/)
     await expect(countdown).toHaveAttribute('data-state', 'countdown')
-    await expect(page.getByTestId('countdown')).toContainText('days')
+    await expect(page.getByTestId('countdown')).toContainText(/days/i)
     const forged = await post(page, { action: 'answer', point: (await countdown.getAttribute('data-point'))!, body: 'Too early', next: `/p/${slug}/course/${shared.courseId}` })
     expect(forged).toContain('has not opened yet')
     await page.getByTestId('popup-close').click()
@@ -423,6 +423,7 @@ test.describe.serial('HEARTS journeys', () => {
     await expect(feed).toHaveAttribute('data-mode', 'hors')
     await expect(feed).toHaveAttribute('data-cuts', /\d+ \d+/)
     const swipe = async (dx: number, dy: number) => {
+      await page.waitForFunction(() => !document.querySelector('.j-clip')?.getAnimations().length)
       const box = (await page.getByTestId('gesture-layer').boundingBox())!
       const cx = box.x + box.width / 2
       const cy = box.y + box.height / 2

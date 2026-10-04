@@ -15,6 +15,7 @@ async function signIn(page: Page, next: string) {
 }
 
 async function swipe(page: Page, dx: number, dy: number) {
+  await page.waitForFunction(() => !document.querySelector('.j-clip')?.getAnimations().length)
   const box = (await page.getByTestId('gesture-layer').first().boundingBox())!
   const cx = box.x + box.width / 2
   const cy = box.y + box.height / 3

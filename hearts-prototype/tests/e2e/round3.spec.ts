@@ -354,26 +354,30 @@ test.describe('round 3 screens', () => {
   test('Bug 19: the question sheet never covers the film, in either layout', async ({ page }) => {
     const nur = await lessonBy(`where[youtubeId][equals]=NIR88RRpat4`)
     await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/course/${nur.course}?part=${nur.id}`)
-    for (const over of [true, false]) {
-      await master.post('/api/globals/master-flags', { data: { popupOverPlayer: over } })
-      await page.goto(`/p/${PORTAL}/course/${nur.course}?part=${nur.id}`)
-      await expect(page.getByTestId('player')).toHaveAttribute('data-popup-layout', over ? 'over' : 'strict')
-      await page.evaluate(() => window.scrollTo(0, 400))
-      await page.getByTestId('answer-point').click()
-      await expect(page.getByTestId('popup')).toBeVisible()
-      await page.waitForTimeout(400)
-      const geo = await page.evaluate(() => {
-        const box = (selector: string) => document.querySelector(selector)?.getBoundingClientRect() || null
-        return { film: box('.player-card .yt'), card: box('[data-testid=player-card]'), popup: box('[data-testid=popup]'), scrim: box('[data-testid=popup-scrim]') }
-      })
-      const guard = over ? geo.film! : geo.card!
-      expect(geo.film!.height).toBeGreaterThan(50)
-      expect(geo.film!.top).toBeGreaterThanOrEqual(-1)
-      expect(geo.popup!.top).toBeGreaterThanOrEqual(guard.bottom - 1)
-      expect(geo.scrim!.top).toBeGreaterThanOrEqual(guard.bottom - 1)
-      await page.getByTestId('popup-close').click()
+    try {
+      for (const over of [true, false]) {
+        await master.post('/api/globals/master-flags', { data: { popupOverPlayer: over } })
+        await page.goto(`/p/${PORTAL}/course/${nur.course}?part=${nur.id}`)
+        await expect(page.getByTestId('player')).toHaveAttribute('data-popup-layout', over ? 'over' : 'strict')
+        await page.evaluate(() => window.scrollTo(0, 400))
+        await page.getByTestId('answer-point').click()
+        await expect(page.getByTestId('popup')).toBeVisible()
+        await page.waitForTimeout(400)
+        await page.waitForFunction(() => document.getAnimations().every((animation) => animation.playState !== 'running' || animation.effect?.getComputedTiming().iterations === Infinity))
+        const geo = await page.evaluate(() => {
+          const box = (selector: string) => document.querySelector(selector)?.getBoundingClientRect() || null
+          return { film: box('.player-card .yt'), card: box('[data-testid=player-card]'), popup: box('[data-testid=popup]'), scrim: box('[data-testid=popup-scrim]') }
+        })
+        const guard = over ? geo.film! : geo.card!
+        expect(geo.film!.height).toBeGreaterThan(50)
+        expect(geo.film!.top).toBeGreaterThanOrEqual(-1)
+        expect(geo.popup!.top).toBeGreaterThanOrEqual(guard.bottom - 1)
+        expect(geo.scrim!.top).toBeGreaterThanOrEqual(guard.bottom - 1)
+        await page.getByTestId('popup-close').click()
+      }
+    } finally {
+      await master.post('/api/globals/master-flags', { data: { popupOverPlayer: true } })
     }
-    await master.post('/api/globals/master-flags', { data: { popupOverPlayer: true } })
   })
 
   test('Bug 22: a brand-new portal can choose courses from the central library', async ({ page }) => {

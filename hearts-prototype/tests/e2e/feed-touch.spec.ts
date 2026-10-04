@@ -18,6 +18,7 @@ async function phone(browser: Browser) {
 }
 
 async function touchSwipe(page: Page, cdp: CDPSession, dx: number, on?: Locator, midway?: () => Promise<void>) {
+  await page.waitForFunction(() => !document.querySelector('.j-clip')?.getAnimations().length)
   const box = (await (on || page.getByTestId('gesture-layer').first()).boundingBox())!
   const x = Math.round(box.x + box.width / 2)
   const y = Math.round(box.y + box.height / 3)
