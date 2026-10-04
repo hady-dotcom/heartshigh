@@ -35,6 +35,12 @@ async function signInQuiet(page: Page) {
 
 async function hideInstall(page: Page) {
   await page.addInitScript(() => {
+    try {
+      localStorage.setItem('hearts.install.dismissed', '1')
+    } catch {
+      // Private browsing still hides the sheet for this walk.
+    }
+    document.cookie = 'hearts.install.dismissed=1; Path=/; SameSite=Lax'
     const style = document.createElement('style')
     style.textContent = '.install-card{display:none!important}'
     document.documentElement.appendChild(style)
