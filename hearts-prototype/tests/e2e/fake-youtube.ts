@@ -12,7 +12,7 @@ export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean
     gate.__allowPlay = !blockAutoplay
     gate.__playerVars = []
     gate.__unloaded = []
-    gate.__failFirst = failFirst
+    gate.__failFirst = failFirst || (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('heartsFailFirst') === '1')
     gate.__fails = 0
     type Options = { playerVars?: { start?: number }; events: { onReady: (e: unknown) => void; onStateChange: (e: { data: number }) => void; onError?: (e: { data: number }) => void } }
     class Player {

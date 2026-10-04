@@ -136,7 +136,7 @@ export async function createPlayer(options: CreateOptions): Promise<YTPlayer> {
   options.host.replaceChildren(mount)
   const record: PlayerRecord = { id: options.id, videoId: options.videoId, start: options.start, end: options.end ?? null, state: STATE.UNSTARTED, hidden: Boolean(options.hidden), playCalls: 0, host: options.host }
   records.push(record)
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const player: YTPlayer = new YT.Player(mount, {
       host: NOCOOKIE,
       videoId: options.videoId,
@@ -157,7 +157,10 @@ export async function createPlayer(options: CreateOptions): Promise<YTPlayer> {
           if (event.data === STATE.PLAYING || event.data === STATE.BUFFERING || event.data === STATE.CUED) dropCaptions(player)
           options.onState?.(event.data, player)
         },
-        onError: (event: { data: number }) => options.onError?.(event.data),
+        onError: (event: { data: number }) => {
+          options.onError?.(event.data)
+          reject(new Error(`The film could not start (${event.data}).`))
+        },
       },
     })
   })

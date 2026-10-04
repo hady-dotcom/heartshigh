@@ -109,20 +109,19 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
   }
   await page.waitForTimeout(800)
 
-  await page.addInitScript(() => {
-    const gate = window as unknown as { __failFirst?: boolean; __fails?: number }
-    gate.__failFirst = true
-    gate.__fails = 0
-  })
   await page.goto(`${BASE}/lanes`)
   const trustCard = page.getByTestId('path-course').filter({ hasText: /Tawakkul/i })
   if (await trustCard.count()) {
     const trustHref = await trustCard.locator('[data-testid=lesson-link], [data-testid=peek]').getAttribute('href')
     await page.goto(trustHref!)
-    if (await page.getByTestId('start-part').count()) await page.getByTestId('start-part').click()
+    const partHref = (await page.getByTestId('start-part').getAttribute('href')) || (await page.getByTestId('buffet-talk').first().getAttribute('href')) || trustHref
+    await page.evaluate(() => sessionStorage.setItem('heartsFailFirst', '1'))
+    await page.goto(partHref!)
     await expect(page.getByTestId('player-retry')).toBeVisible({ timeout: 12_000 })
+    await page.evaluate(() => sessionStorage.removeItem('heartsFailFirst'))
     await page.getByRole('button', { name: 'Try again' }).click()
     await expect(page.getByTestId('player')).toBeVisible()
+    await expect(page.getByTestId('player-retry')).toHaveCount(0)
     await page.waitForTimeout(900)
   }
 
