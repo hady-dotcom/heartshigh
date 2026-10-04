@@ -27,6 +27,9 @@ test('a week of use, so the garden has something in it', async ({ page }) => {
   await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london/lanes')
   for (const course of [1, 2, 3]) {
     await page.goto(`/p/east-london/course/${course}`)
+    const start = page.getByTestId('start-part')
+    if (await start.count()) await start.click()
+    await expect(page.locator('form.watched-form input[name=lesson]')).toBeVisible({ timeout: 15_000 })
     const lesson = await page.locator('form.watched-form input[name=lesson]').getAttribute('value')
     await page.request.post('/api/hearts', { form: { action: 'complete', lesson: lesson!, seconds: '99999', ended: 'yes', next: '/' } })
   }

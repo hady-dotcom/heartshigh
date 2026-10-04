@@ -163,9 +163,12 @@ export function CoursePlayer({
     let cancelled = false
     setFailed(false)
     setMode('loading')
+    const failFirst = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('heartsFailFirst') === '1'
     const fallback = window.setTimeout(() => {
-      if (!cancelled) setFailed(true)
-    }, 8000)
+      if (cancelled) return
+      if (failFirst) setFailed(true)
+      else setMode((value) => (value === 'loading' ? 'practice' : value))
+    }, failFirst ? 8000 : 9000)
     createPlayer({
       id: PLAYER_ID,
       host: holder.current,
@@ -186,13 +189,16 @@ export function CoursePlayer({
         if (state === STATE.PLAYING) setLit(true)
         if (state === STATE.ENDED) setEnded(true)
       },
-      onError: () => {
+      onError: (code) => {
         if (cancelled) return
         window.clearTimeout(fallback)
-        setFailed(true)
+        if (failFirst) setFailed(true)
+        else if (UNPLAYABLE.has(code)) setMode('practice')
       },
     }).catch(() => {
-      if (!cancelled) setFailed(true)
+      if (cancelled) return
+      if (failFirst) setFailed(true)
+      else setMode('practice')
     })
     return () => {
       cancelled = true
