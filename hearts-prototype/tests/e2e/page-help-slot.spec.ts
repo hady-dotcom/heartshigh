@@ -49,6 +49,9 @@ test('the page ? sits in its own slot on Home, Lanes, Me, the course and join', 
   await page.goto('/join')
   await expect(page.getByTestId('join')).toBeVisible()
   await assertHelpClear(page, 'join')
+  await page.goto(`${BASE}/start`)
+  await expect(page.getByTestId('lets-play').or(page.getByTestId('pass'))).toBeVisible()
+  await assertHelpClear(page, 'opening')
 })
 
 test('Home and Me use the same day count', async ({ page }) => {
