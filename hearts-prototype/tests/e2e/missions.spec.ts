@@ -10,19 +10,29 @@ const SHOTS = '/opt/cursor/artifacts/screenshots'
 mkdirSync(SHOTS, { recursive: true })
 
 async function hideIssues(page: Page) {
-  await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' })
+  await page.addInitScript(() => {
+    const style = document.createElement('style')
+    style.textContent = 'nextjs-portal { display: none !important; }'
+    document.documentElement.appendChild(style)
+    const hide = () => document.querySelector('nextjs-portal')?.setAttribute('hidden', 'true')
+    hide()
+    new MutationObserver(hide).observe(document.documentElement, { childList: true, subtree: true })
+  })
+  await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' }).catch(() => undefined)
 }
 
 async function noIssuesBadge(page: Page) {
-  const box = await page.evaluate(() => {
+  const dump = await page.evaluate(() => {
     const portal = document.querySelector('nextjs-portal')
     const root = portal && 'shadowRoot' in portal ? portal.shadowRoot : null
     const button = root?.querySelector('button[aria-label="Open issues overlay"]') as HTMLElement | null
-    if (!button) return { width: 0, height: 0 }
+    if (!button) return { width: 0, height: 0, text: '' }
+    button.click()
     const rect = button.getBoundingClientRect()
-    return { width: rect.width, height: rect.height }
+    const text = (root?.textContent || '').replace(/\s+/g, ' ').slice(0, 400)
+    return { width: rect.width, height: rect.height, text }
   })
-  expect(box).toEqual({ width: 0, height: 0 })
+  if (dump.width || dump.height) throw new Error(`Next.js issues badge is visible: ${dump.text}`)
 }
 
 async function signIn(page: Page, email: string, password: string, next: string) {
@@ -66,9 +76,11 @@ async function filmedAuthed(browser: Browser, dest: string, state: Awaited<Retur
 test.describe('Help shape HEARTS', () => {
   test('admin writes a mission, two learners join, both get the thank-you', async ({ browser }) => {
     const desk = await browser.newPage()
+    const deskErrors: string[] = []
+    desk.on('pageerror', (error) => deskErrors.push(error.message))
+    await hideIssues(desk)
     await desk.setViewportSize(DESK)
     await signIn(desk, 'master@hearts.test', 'hearts-master', '/master/missions')
-    await hideIssues(desk)
     await expect(desk.getByTestId('missions-desk')).toBeVisible()
     await expect(desk.getByTestId('desk-nav')).toContainText('Beginner')
     await expect(desk.getByTestId('desk-nav')).toContainText('Everyday tasks')
@@ -235,6 +247,7 @@ test.describe('Help shape HEARTS', () => {
     await expect(desk.getByTestId('desk-help-dialog')).toBeVisible()
     await noIssuesBadge(desk)
     await desk.screenshot({ path: `${SHOTS}/admin-nav.png`, fullPage: true })
+    expect(deskErrors.join('\n')).not.toContain('Hydration')
     await desk.close()
   })
 })
