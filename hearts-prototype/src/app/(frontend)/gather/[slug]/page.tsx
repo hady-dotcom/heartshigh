@@ -50,7 +50,7 @@ export default async function PublicGather({ params, searchParams }: { params: P
         {view.card.linkLabel ? <p>{view.card.linkLabel}</p> : null}
         <p className="kicker" style={{ marginTop: 18 }}>How this looks in WhatsApp</p>
         <a className="wa-preview" href={share.whatsApp} data-testid="whatsapp-preview">
-          <img src={`/gather/${view.card.slug}/opengraph-image`} alt="" />
+          <img src={`/gather/${view.card.slug}/card.png`} alt="" />
           <div>
             <small>HEARTS</small>
             <strong>{view.card.title}</strong>
