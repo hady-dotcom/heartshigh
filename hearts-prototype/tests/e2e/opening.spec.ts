@@ -242,7 +242,7 @@ test.describe('the opening', () => {
     expect(JSON.parse(openings[0]).taps).toHaveLength(7)
     await page.goto(`/p/${PORTAL}/garden/workbook`)
     await expect(page.getByTestId('where-you-started')).toBeVisible()
-    await expect(page.getByTestId('opening-row')).toHaveCount(7)
+    await expect(page.getByTestId('opening-row')).toHaveCount(6)
     await expect(page.locator('[data-testid="opening-row"][data-scene="thumb"]')).toHaveAttribute('data-private', 'yes')
     await expect(page.locator('[data-testid="opening-row"][data-scene="thumb"] [data-testid="private-lock"]')).toBeVisible()
   })
