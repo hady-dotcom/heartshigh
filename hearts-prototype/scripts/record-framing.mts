@@ -1,6 +1,6 @@
 /** Record the live director at 390×844 against the local placeholder film. Output is mp4. */
 import { chromium } from '@playwright/test'
-import { mkdirSync, writeFileSync, readdirSync, existsSync } from 'node:fs'
+import { mkdirSync, writeFileSync, existsSync } from 'node:fs'
 import path from 'node:path'
 import { execFileSync } from 'node:child_process'
 
@@ -21,8 +21,12 @@ function ensurePlaceholder() {
   execFileSync('bash', [path.join(process.cwd(), 'scripts/framing/make-placeholder.sh')], { stdio: 'inherit' })
 }
 
-function toMp4(webm: string, mp4: string) {
-  execFileSync('ffmpeg', ['-y', '-i', webm, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', mp4], { stdio: 'inherit' })
+function framesToMp4(dir: string, mp4: string) {
+  execFileSync(
+    'ffmpeg',
+    ['-y', '-framerate', '1', '-start_number', '0', '-i', path.join(dir, 'frame-%d.png'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', mp4],
+    { stdio: 'inherit' },
+  )
 }
 
 async function main() {
@@ -67,17 +71,14 @@ async function main() {
       frames.push(file)
     }
     await context.close()
-    const video = readdirSync(dir).find((name) => name.endsWith('.webm'))
-    if (video) {
-      const mp4 = path.join(OUT, `${clip.slug}-390x844.mp4`)
-      toMp4(path.join(dir, video), mp4)
-      console.log('video', mp4)
-    }
+    const mp4 = path.join(OUT, `${clip.slug}-390x844.mp4`)
+    framesToMp4(dir, mp4)
+    console.log('video', mp4)
     const grid = path.join(OUT, `${clip.slug}-frames.png`)
     try {
       execFileSync(
         'ffmpeg',
-        ['-y', '-start_number', '0', '-i', path.join(dir, 'frame-%d.png'), '-frames:v', '1', '-update', '1', '-filter_complex', 'tile=4x2', grid],
+        ['-y', '-start_number', '0', '-i', path.join(dir, 'frame-%d.png'), '-frames:v', '1', '-update', '1', '-filter_complex', `tile=4x2`, grid],
         { stdio: 'inherit' },
       )
     } catch {
