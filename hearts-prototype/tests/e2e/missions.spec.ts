@@ -2,6 +2,8 @@ import { execFileSync } from 'node:child_process'
 import { mkdirSync } from 'node:fs'
 import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test'
 import { E2E_BASE } from '../env'
+import { fakeYouTube } from './fake-youtube'
+import { stepFeed } from './feed-step'
 
 const DESK = { width: 1440, height: 900 }
 const PHONE = { width: 390, height: 844 }
@@ -135,11 +137,25 @@ test.describe('Help shape HEARTS', () => {
     await joinFilm.page.getByTestId('mission-join').click()
     await expect(joinFilm.page.getByTestId('mission-finish')).toBeVisible()
     await joinFilm.page.screenshot({ path: `${SHOTS}/phone-mission-joined.png` })
+    await fakeYouTube(joinFilm.page)
     await joinFilm.page.goto('/p/east-london/feed')
     await expect(joinFilm.page.getByTestId('feed-screen')).toBeVisible({ timeout: 20_000 })
     await expect(joinFilm.page.getByTestId('feed-mission')).toBeVisible()
+    const journey = joinFilm.page.getByTestId('journey')
+    if (await joinFilm.page.getByTestId('swipe-coach').count()) await joinFilm.page.getByTestId('swipe-coach').click()
+    await expect(joinFilm.page.getByTestId('swipe-coach')).toHaveCount(0)
+    for (let tries = 0; tries < 12; tries++) {
+      const talk = (await journey.getAttribute('data-card')) === 'talk'
+      const picture = (await journey.getAttribute('data-words-in-picture')) === 'yes'
+      if (talk && picture && (await joinFilm.page.getByTestId('lane-chip').isVisible().catch(() => false))) break
+      if ((await stepFeed(joinFilm.page)) === 'end') break
+    }
     await expect(joinFilm.page.getByTestId('learn-more')).toBeVisible()
     await expect(joinFilm.page.getByTestId('learn-more')).toHaveText(/Watch the 3-minute version/)
+    await expect(joinFilm.page.getByTestId('swipe-hint')).toBeVisible()
+    await expect(joinFilm.page.getByTestId('lane-chip')).toBeVisible()
+    await expect(joinFilm.page.getByTestId('clip-timer')).toBeVisible()
+    await expect(joinFilm.page.getByTestId('tab-week')).toHaveText('My week')
     const missionBox = await joinFilm.page.getByTestId('feed-mission').boundingBox()
     const clipBox = await joinFilm.page.getByTestId('learn-more').boundingBox()
     expect(missionBox && clipBox).toBeTruthy()
@@ -152,9 +168,7 @@ test.describe('Help shape HEARTS', () => {
       const clash = missionBox && other && missionBox.x < other.x + other.width && missionBox.x + missionBox.width > other.x && missionBox.y < other.y + other.height && missionBox.y + missionBox.height > other.y
       expect(clash, `feed-mission overlaps ${id}`).toBeFalsy()
     }
-    await expect(joinFilm.page.getByTestId('tab-week')).toHaveText('My week')
     await joinFilm.page.screenshot({ path: `${SHOTS}/phone-feed-mission.png` })
-    const journey = joinFilm.page.getByTestId('journey')
     const lesson = await journey.getAttribute('data-lesson')
     const speaker = await journey.getAttribute('data-speaker')
     const slug = await journey.getAttribute('data-speaker-slug')
