@@ -39,30 +39,24 @@ async function main() {
       viewport: { width: 390, height: 844 },
       recordVideo: { dir, size: { width: 390, height: 844 } },
     })
-    await context.addInitScript(() => {
+    await context.addInitScript(`{
       let time = 0
-      ;(window as unknown as { __frClock?: { now(): number; set(value: number): void } }).__frClock = {
-        now: () => time,
-        set: (value) => {
-          time = value
-        },
-      }
-    })
+      window.__frClock = { now: function () { return time }, set: function (value) { time = value } }
+    }`)
     const page = await context.newPage()
     await page.goto(`${BASE}/dev/framing?${clip.query}`, { waitUntil: 'domcontentloaded', timeout: 60_000 })
     await page.waitForSelector('[data-testid="framing-player"]', { timeout: 30_000 })
     await page.waitForSelector('[data-testid="framing-media"]', { timeout: 15_000 }).catch(() => undefined)
-    await page.evaluate(() => {
-      const held = window as unknown as { __frClock?: { now(): number; set(value: number): void } }
-      if (!held.__frClock) {
+    await page.evaluate(`{
+      if (!window.__frClock) {
         let time = 0
-        held.__frClock = { now: () => time, set: (value) => { time = value } }
+        window.__frClock = { now: function () { return time }, set: function (value) { time = value } }
       }
-    })
+    }`)
     const frames: string[] = []
     for (let i = 0; i < clip.times.length; i++) {
       const t = clip.times[i]
-      await page.evaluate((value) => (window as unknown as { __frClock: { set(n: number): void } }).__frClock.set(value), t)
+      await page.evaluate(`window.__frClock.set(${t})`)
       await page.waitForTimeout(450)
       const mode = await page.getAttribute('[data-testid="framing-player"]', 'data-framing-mode')
       const shown = await page.getAttribute('[data-testid="spoken-words"]', 'data-sentence')
