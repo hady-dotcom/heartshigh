@@ -46,8 +46,22 @@ export async function chromeCentresClear(page: Page, extraIds: string[] = []) {
     if (!box || box.width < 2 || box.height < 2) continue
     found.push({ id, box })
   }
+  const nested = await page.evaluate((ids) => {
+    const nodes = ids.map((id) => ({ id, el: document.querySelector(`[data-testid="${id}"]`) }))
+    const skip = new Set<string>()
+    for (const left of nodes) {
+      for (const right of nodes) {
+        if (!left.el || !right.el || left.id === right.id) continue
+        if (left.el.contains(right.el) || right.el.contains(left.el)) skip.add([left.id, right.id].sort().join(':'))
+      }
+    }
+    return [...skip]
+  }, found.map((row) => row.id))
+  const skip = new Set(nested)
   for (let i = 0; i < found.length; i++) {
     for (let j = i + 1; j < found.length; j++) {
+      const key = [found[i].id, found[j].id].sort().join(':')
+      if (skip.has(key)) continue
       expect(boxesOverlap(found[i].box, found[j].box), `${found[i].id} must not overlap ${found[j].id}`).toBe(false)
     }
   }
