@@ -31,7 +31,7 @@ export default async function CheckInPage({ params, searchParams }: { params: Pr
             <Link className="pill gold" href={reflect}>One thing you’ll carry</Link>
           </section>
         ) : (
-          <section className="gather-card" data-testid="door-checkin">
+          <section className="gather-card door-checkin" data-testid="door-checkin">
             <h2>Scan the QR on the poster, or type the 4-character door code.</h2>
             {user ? (
               <>

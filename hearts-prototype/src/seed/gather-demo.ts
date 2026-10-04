@@ -28,9 +28,26 @@ const PLAN: Plan[] = [
   { seedKey: 'gather-demo-walk', title: 'Sisters’ walk', kind: 'walk', audience: 'sisters', days: 10, place: 'The park gate beside the masjid', bring: 'A coat if the evening is cool.', note: 'A walk and a quiet conversation. Sisters only.', door: 5, capacity: 18, entryCode: 'SLM5' },
   { seedKey: 'gather-demo-youth', title: 'Youth football and a talk', kind: 'youth', audience: 'youth', days: 12, place: 'The astroturf, then the hall', bring: 'Trainers if you have them.', note: 'Kickabout first, then twenty minutes on the week’s door.', door: 13, capacity: 2, entryCode: 'FTB2' },
   { seedKey: 'gather-demo-picnic', title: 'Family picnic', kind: 'picnic', audience: 'family', days: 18, place: 'The green behind the masjid', bring: 'A blanket and something to share.', note: 'Children are welcome. We finish before Maghrib.', door: 1, capacity: 40, entryCode: 'DY14' },
-  { seedKey: 'gather-demo-past-circle', title: 'Thursday circle on gratitude', kind: 'circle', audience: 'all', days: -10, place: 'The prayer hall', bring: 'Nothing.', note: 'We sat with gratitude after Isha.', door: 10, capacity: 20, entryCode: 'SHKR' },
-  { seedKey: 'gather-demo-past-brothers', title: 'Brothers’ tea', kind: 'tea', audience: 'brothers', days: -3, place: 'The brothers’ room', bring: 'Nothing.', note: 'Tea, and one question from the talk.', door: 3, capacity: 14, entryCode: 'AKH3' },
+  { seedKey: 'gather-demo-past-circle', title: 'Thursday circle on gratitude', kind: 'circle', audience: 'all', days: -17, place: 'The prayer hall', bring: 'Nothing.', note: 'We sat with gratitude after Isha.', door: 10, capacity: 20, entryCode: 'SHKR' },
+  { seedKey: 'gather-demo-past-brothers', title: 'Brothers’ tea', kind: 'tea', audience: 'brothers', days: -15, place: 'The brothers’ room', bring: 'Nothing.', note: 'Tea, and one question from the talk.', door: 3, capacity: 14, entryCode: 'AKH3' },
+  { seedKey: 'gather-demo-past-walk', title: 'Evening walk', kind: 'walk', audience: 'all', days: -13, place: 'The park gate beside the masjid', bring: 'A coat if the evening is cool.', note: 'A short walk after the prayer.', door: 5, capacity: 16, entryCode: 'WLK5' },
+  { seedKey: 'gather-demo-past-food', title: 'Saturday food bank', kind: 'volunteer', audience: 'all', days: -12, place: 'Meet at the masjid gate', bring: 'Closed shoes.', note: 'An hour of carrying and sorting.', door: 6, capacity: 12, entryCode: 'FD12' },
+  { seedKey: 'gather-demo-past-youth', title: 'Youth night', kind: 'youth', audience: 'youth', days: -9, place: 'The hall', bring: 'Trainers if you have them.', note: 'A kickabout, then one question.', door: 13, capacity: 18, entryCode: 'YTH9' },
+  { seedKey: 'gather-demo-past-picnic', title: 'Family afternoon', kind: 'picnic', audience: 'family', days: -8, place: 'The green behind the masjid', bring: 'A blanket.', note: 'We finished before Maghrib.', door: 1, capacity: 30, entryCode: 'FAM8' },
+  { seedKey: 'gather-demo-past-tea', title: 'Tea after Maghrib', kind: 'tea', audience: 'all', days: -6, place: 'The tea room', bring: 'Nothing.', note: 'One door, and a cup of tea.', door: 9, capacity: 16, entryCode: 'TEA6' },
+  { seedKey: 'gather-demo-past-sisters', title: 'Sisters’ circle', kind: 'circle', audience: 'sisters', days: -3, place: 'The sisters’ room', bring: 'Nothing.', note: 'A quiet circle after Isha.', door: 12, capacity: 14, entryCode: 'SIS3' },
 ]
+
+const BRINGERS = [
+  { email: 'gather-maryam@hearts.foundation', name: 'Maryam Ali' },
+  { email: 'gather-yusuf@hearts.foundation', name: 'Yusuf Khan' },
+  { email: 'gather-amina@hearts.foundation', name: 'Amina Begum' },
+  { email: 'gather-layla@hearts.foundation', name: 'Layla Noor' },
+  { email: 'gather-hassan@hearts.foundation', name: 'Hassan Rahman' },
+  { email: 'gather-khadija@hearts.foundation', name: 'Khadija Omar' },
+]
+
+const GUESTS = ['Idris', 'Sara', 'Hamza', 'Omar', 'Fatima', 'Bilal', 'Zayd', 'Hana', 'Noor', 'Adam', 'Leila', 'Yusuf', 'Maryam', 'Khalid']
 
 function at(days: number) {
   const date = new Date()
@@ -59,6 +76,19 @@ export async function seedGatherDemo(payload: Payload) {
     if (portalIdOf(full as SessionUser) !== portalId) continue
     learners.push({ id: user.id, email })
   }
+  const bringers: { id: number; name: string }[] = []
+  for (const person of BRINGERS) {
+    let row = await one(payload, 'users', { email: { equals: person.email } })
+    if (!row) {
+      const made = await payload.create({
+        collection: 'users',
+        overrideAccess: true,
+        data: { email: person.email, password: 'a-long-demo-password', name: person.name, role: 'learner', tenants: [{ tenant: portalId }] } as never,
+      })
+      row = { id: made.id }
+    }
+    bringers.push({ id: row.id, name: person.name })
+  }
   let courseId: number | null = null
   let lessonId: number | null = null
   let courseTitle = ''
@@ -75,7 +105,7 @@ export async function seedGatherDemo(payload: Payload) {
   }
   let created = 0
   let reused = 0
-  for (const item of PLAN) {
+  for (const [planIndex, item] of PLAN.entries()) {
     const door = DOORS.find((row) => row.number === item.door)!
     let row = await one(payload, 'gatherings', { and: [{ seedKey: { equals: item.seedKey } }, { portal: { equals: portalId } }] })
     if (row) {
@@ -120,15 +150,11 @@ export async function seedGatherDemo(payload: Payload) {
       created += 1
     }
     const past = item.days < 0
-    const guests = past
-      ? [
-          { key: `${item.seedKey}-yusuf`, name: 'Yusuf', contact: 'yusuf.guest@example.net', status: 'going' as const },
-          { key: `${item.seedKey}-maryam`, name: 'Maryam', contact: 'maryam.guest@example.net', status: 'going' as const },
-        ]
-      : [
-          { key: `${item.seedKey}-idris`, name: 'Idris', contact: 'idris.guest@example.net', status: 'going' as const },
-          { key: `${item.seedKey}-sara`, name: 'Sara', contact: 'sara.guest@example.net', status: item.capacity <= 2 ? 'waitlist' as const : 'maybe' as const },
-        ]
+    const bringer = bringers[planIndex % bringers.length]
+    const guestName = GUESTS[planIndex % GUESTS.length]
+    const guests = [
+      { key: `${item.seedKey}-brought`, name: guestName, contact: `${guestName.toLowerCase()}.${item.seedKey}@example.net`, status: 'going' as const, broughtBy: bringer?.id },
+    ]
     for (const [index, learner] of learners.entries()) {
       const seedKey = `${item.seedKey}-user-${learner.id}`
       const existing = await one(payload, 'gather-rsvps', { and: [{ seedKey: { equals: seedKey } }, { portal: { equals: portalId } }] })
@@ -175,7 +201,7 @@ export async function seedGatherDemo(payload: Payload) {
     for (const guest of guests) {
       const existing = await one(payload, 'gather-rsvps', { and: [{ seedKey: { equals: guest.key } }, { portal: { equals: portalId } }] })
       if (existing) continue
-      const broughtBy = guest.key.endsWith('idris') ? learners[0]?.id : undefined
+      const broughtBy = guest.broughtBy
       await payload.create({
         collection: 'gather-rsvps',
         overrideAccess: true,
@@ -199,13 +225,31 @@ export async function seedGatherDemo(payload: Payload) {
             data: {
               gathering: row.id,
               method: 'qr',
-              newcomer: guest.name === 'Maryam',
+              newcomer: true,
               guestLabel: guest.name,
               seedKey: checkKey,
               portal: portalId,
             } as never,
           })
         }
+      }
+    }
+    if (past && bringer) {
+      const checkKey = `${item.seedKey}-bringer-${bringer.id}`
+      if (!(await one(payload, 'gather-checkins', { seedKey: { equals: checkKey } }))) {
+        await payload.create({
+          collection: 'gather-checkins',
+          overrideAccess: true,
+          data: {
+            gathering: row.id,
+            user: bringer.id,
+            method: 'qr',
+            newcomer: false,
+            guestLabel: bringer.name,
+            seedKey: checkKey,
+            portal: portalId,
+          } as never,
+        })
       }
     }
   }

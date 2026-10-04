@@ -77,19 +77,36 @@ html[data-theme='dawn'] .gather-stage {
 .gather-chip.gold { background: var(--g-gold); color: var(--g-gold-ink); }
 .gather-chip.ivy { background: var(--g-ivy); color: var(--g-card); }
 
-.gather .pill.gold, .public-gather .pill.gold, .desk.evening .btn {
+.gather .pill.gold, .public-gather .pill.gold, .desk.evening .btn,
+html[data-theme] .gather .pill.gold, html[data-theme] .public-gather .pill.gold, html[data-theme] .gather-card .pill.gold {
   background: var(--g-gold);
   color: var(--g-gold-ink);
+  border-color: transparent;
   box-shadow: none;
 }
-.gather .pill.outline { color: var(--g-ink); border-color: rgba(247, 238, 219, 0.45); }
-.gather-card .pill.outline, .public-gather .gather-card .pill.outline { color: var(--g-heading); border-color: var(--g-heading); background: transparent; }
-.gather .field, .public-gather .field, .gather-card .field {
-  background: var(--g-field);
-  color: var(--g-heading);
-  border: 1.5px solid var(--g-line);
+/* Outline on the teal page: parchment on deep teal. Outline on a cream card: deep teal on parchment. */
+.gather .pill.outline, .public-gather .pill.outline,
+html[data-theme] .gather .pill.outline, html[data-theme] .public-gather .pill.outline {
+  color: #f6eedc;
+  border: 1.5px solid #f6eedc;
+  background: transparent;
+}
+.gather-card .pill.outline, .public-gather .gather-card .pill.outline,
+html[data-theme] .gather-card .pill.outline, html[data-theme] .public-gather .gather-card .pill.outline {
+  color: #0f3b3a;
+  border: 1.5px solid #0f3b3a;
+  background: transparent;
+}
+.gather .field, .public-gather .field, .gather-card .field,
+html[data-theme] .gather .field, html[data-theme] .public-gather .field, html[data-theme] .gather-card .field,
+html[data-theme] .public-gather input.field, html[data-theme] .gather-card input.field, html[data-theme] .gather-card textarea.field {
+  background: #fbf6e8;
+  color: #0f3b3a;
+  border: 1.5px solid #14564c;
   width: 100%;
 }
+html[data-theme] .public-gather .field::placeholder,
+html[data-theme] .gather-card .field::placeholder { color: #3a4e48; }
 .gather-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .gather-actions form { margin: 0; }
 .gather-meta { display: grid; gap: 6px; margin: 8px 0 0; font-size: 15px; line-height: 1.45; }
@@ -189,13 +206,32 @@ html[data-theme='dawn'] .gather-stage {
 
 .welcome-card h2, .welcome-card h3 { color: var(--g-heading); margin-top: 0; }
 
+.door-checkin {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+.door-checkin > h2, .door-checkin > h3, .door-checkin > p { margin: 0; position: static; }
+.door-checkin form { display: flex; flex-direction: column; gap: 10px; margin: 0; }
+.door-checkin label { display: flex; flex-direction: column; gap: 6px; font-weight: 650; }
 .entry-code {
-  font-size: 28px;
-  letter-spacing: 0.28em;
+  display: block;
+  box-sizing: border-box;
+  width: min(100%, 200px);
+  max-width: 100%;
+  height: 56px;
+  min-height: 56px;
+  margin: 0;
+  padding: 0 12px;
+  position: static;
+  overflow: hidden;
+  font-size: 22px;
+  line-height: 54px;
+  letter-spacing: 0.18em;
   text-align: center;
   text-transform: uppercase;
   font-weight: 700;
-  max-width: 220px;
 }
 .door-code-readout {
   font-family: var(--serif);
@@ -207,8 +243,17 @@ html[data-theme='dawn'] .gather-stage {
   margin: 0;
 }
 
-.wa-desk img { width: 100%; height: auto; display: block; border-radius: 12px; }
-.wa-desk .wa-caption { margin: 12px 0 0; white-space: normal; overflow: visible; color: var(--g-heading); line-height: 1.4; }
+.wa-desk { width: 360px; max-width: 100%; margin-bottom: 18px; }
+.wa-desk-row { display: grid; gap: 8px; }
+.wa-desk-row > p:first-child { margin: 0; }
+.wa-desk img { width: 100%; height: auto; max-height: 190px; object-fit: cover; object-position: center; display: block; border-radius: 12px; }
+.wa-desk .wa-caption { margin: 0; white-space: normal; overflow: visible; color: var(--g-heading); line-height: 1.4; }
+.attendance-legend { display: flex; gap: 18px; margin: 0 0 10px; font-size: 14px; font-weight: 650; color: var(--g-heading); }
+.attendance-legend i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; margin-right: 6px; vertical-align: -2px; }
+.attendance-legend i.gold { background: var(--g-gold); }
+.attendance-legend i.teal { background: #0f3b3a; }
+.desk.evening .chart { height: 180px; }
+.desk.evening .chart .col small { color: #0f3b3a; font-size: 12px; line-height: 1.25; white-space: normal; }
 
 .door-qr { display: grid; place-items: center; background: #fff; border-radius: 18px; padding: 16px; margin: 12px 0; }
 .door-qr .qr svg { width: 220px; height: 220px; }
@@ -243,11 +288,17 @@ html[data-theme='dawn'] .gather-stage {
 .desk.evening .form textarea,
 .desk.evening input:not([type='checkbox']):not([type='radio']):not([type='file']),
 .desk.evening select,
-.desk.evening textarea {
+.desk.evening textarea,
+html[data-theme] .desk.evening .form input:not([type='checkbox']):not([type='radio']):not([type='file']),
+html[data-theme] .desk.evening .form select,
+html[data-theme] .desk.evening .form textarea,
+html[data-theme] .desk.evening input:not([type='checkbox']):not([type='radio']):not([type='file']),
+html[data-theme] .desk.evening select,
+html[data-theme] .desk.evening textarea {
   width: 100%;
-  border: 1.5px solid var(--g-line);
-  background: var(--g-field);
-  color: var(--g-heading);
+  border: 1.5px solid #14564c;
+  background: #fbf6e8;
+  color: #0f3b3a;
   border-radius: 10px;
   padding: 9px 12px;
   min-height: 44px;

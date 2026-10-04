@@ -402,11 +402,11 @@ export function newcomerFollowUp(count: number) {
   return `${count} newcomers came for the first time. Send them a welcome.`
 }
 
-export function groupByDoor<T extends { doorLabel: string; past: boolean; startsAt: string }>(rows: T[]) {
+export function groupByDoor<T extends { doorLabel: string; doorHeading?: string; past: boolean; startsAt: string }>(rows: T[]) {
   const pack = (items: T[]) => {
     const doors = new Map<string, T[]>()
     for (const item of items) {
-      const key = item.doorLabel || 'Open'
+      const key = item.doorHeading || item.doorLabel || 'Open'
       doors.set(key, [...(doors.get(key) || []), item])
     }
     return [...doors.entries()].map(([door, list]) => ({ door, items: list }))
@@ -414,6 +414,31 @@ export function groupByDoor<T extends { doorLabel: string; past: boolean; starts
   const upcoming = pack(rows.filter((row) => !row.past).sort((a, b) => a.startsAt.localeCompare(b.startsAt)))
   const past = pack(rows.filter((row) => row.past).sort((a, b) => b.startsAt.localeCompare(a.startsAt)))
   return { upcoming, past }
+}
+
+/** "Thu 17 Sep", so two Thursdays on the chart are not both labelled "Thu". */
+export function chartLabel(iso: string, zone = 'Europe/London') {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return ''
+  const parts = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: zone }).formatToParts(date)
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value || ''
+  const month = part('month').slice(0, 3)
+  return [part('weekday'), part('day'), month].filter(Boolean).join(' ')
+}
+
+/** "Door 16 · Ihsan". Learners see the door number and the short name, not the W-code. */
+export function doorLearnerHeading(number: number, title: string) {
+  const short = capitalAfterColon(title).split(':')[0]?.trim() || capitalAfterColon(title)
+  return `Door ${number} · ${short}`
+}
+
+/** "On: Worship as though you see Him" when the door title has a clause after the colon. */
+export function doorOnLine(title: string) {
+  const titled = capitalAfterColon(title)
+  const index = titled.indexOf(':')
+  if (index < 0) return ''
+  const rest = titled.slice(index + 1).trim()
+  return rest ? `On: ${rest}` : ''
 }
 
 export type AttendancePoint = { label: string; going: number; checkedIn: number; newcomers: number; regulars: number }
@@ -442,11 +467,10 @@ export function normaliseEntryCode(raw: string) {
 }
 
 export function linkLabel(input: { doorCode?: string | null; doorTitle?: string | null; courseTitle?: string | null; lessonTitle?: string | null }) {
-  const title = input.doorTitle ? capitalAfterColon(input.doorTitle) : ''
-  const door = input.doorCode && title ? `${input.doorCode}: ${title}` : title
+  const on = input.doorTitle ? doorOnLine(input.doorTitle) : ''
   const after = input.lessonTitle || input.courseTitle || ''
-  if (door && after) return `Discussing ${door}, after ${after}`
-  if (door) return `Discussing ${door}`
-  if (after) return `Talking about ${after}`
+  if (on && after) return `${on}, after ${after}`
+  if (on) return on
+  if (after) return `After ${after}`
   return ''
 }

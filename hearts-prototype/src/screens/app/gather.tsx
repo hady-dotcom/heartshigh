@@ -21,9 +21,8 @@ const AUDIENCE_OPTIONS = [
 function Card({ card, href }: { card: GatherCard; href: string }) {
   return (
     <article className="gather-card" data-testid="gather-card" data-id={card.id} data-status={card.mine || 'none'}>
-      <p className="eyebrow">{card.doorLabel || KIND_LABEL[card.kind as keyof typeof KIND_LABEL] || 'Gather'}</p>
       <h2 style={{ margin: '0 0 4px', fontSize: 22, lineHeight: 1.2, color: 'var(--g-heading, #0f3b3a)' }}>{card.title}</h2>
-      {card.linkLabel ? <p className="clamp" style={{ margin: '0 0 6px', fontSize: 14 }}>{card.linkLabel}</p> : null}
+      {card.onLine ? <p className="on-line" data-testid="gather-on">{card.onLine}</p> : null}
       <p className="gather-meta" style={{ marginTop: 0 }}>
         <span>{card.when}{card.place ? ` · ${card.place}` : ''}</span>
         <span>{card.capacity > 0 ? `${card.going} of ${card.capacity} places` : `${card.going} coming`}{card.waitlist ? ` · ${card.waitlist} waiting` : ''}</span>
@@ -105,9 +104,9 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
       <div className="app-scroll gather">
         <Back href={`${base}/gather`} label="Gather" />
         <Flash error={query.error} notice={query.notice} />
-        <p className="eyebrow">{card.doorLabel || 'At your masjid'}</p>
+        <p className="eyebrow" data-testid="detail-door">{card.doorHeading || 'At your masjid'}</p>
         <h1 style={{ fontSize: 36, margin: '4px 0 8px' }}>{card.title}</h1>
-        {card.linkLabel ? <p>{card.linkLabel}</p> : null}
+        {card.onLine ? <p data-testid="gather-on">{card.onLine}</p> : null}
         <div>
           <span className="gather-chip gold">{card.audienceLabel}</span>
           <span className="gather-chip ivy">{KIND_LABEL[card.kind as keyof typeof KIND_LABEL] || 'Circle'}</span>
@@ -183,8 +182,8 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
             {reflection ? <p data-testid="reflection-saved">{str(reflection.body)}</p> : <Link className="pill gold small" href={`${base}/gather/${id}/reflect`} data-testid="reflect-open">One thing you’ll carry</Link>}
           </section>
         ) : card.status === 'published' && !card.past ? (
-          <section className="gather-card" data-testid="door-checkin">
-            <h3 style={{ marginTop: 0, color: 'var(--g-heading, #0f3b3a)' }}>At the door</h3>
+          <section className="gather-card door-checkin" data-testid="door-checkin">
+            <h3>At the door</h3>
             <p>Scan the QR on the poster, or type the 4-character door code.</p>
             <form action="/api/gather" method="post">
               <Hidden fields={{ action: 'checkin', method: 'code', id, next: here }} />

@@ -28,7 +28,7 @@ export async function GatherDeskScreen(ctx: Ctx) {
   const proposed = cards.filter((card) => card.status === 'proposed')
   const preview = cards.filter((card) => card.status === 'published' && !card.past).sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0]
   return (
-    <AdminFrame ctx={ctx} active="gather" tone="evening" title="Gather" intro="Meetings at this masjid. Upcoming and past, grouped by door, with the counts rather than a long list of names." testId="desk-gather">
+    <AdminFrame ctx={ctx} active="gather" tone="evening" title="Gather" intro="Upcoming and past gatherings at this masjid." testId="desk-gather">
       <div className="stats-strip" data-testid="gather-summary">
         <div className="stat-chip"><b>{cards.filter((card) => !card.past && card.status === 'published').length}</b><span>Upcoming</span></div>
         <div className="stat-chip"><b>{cards.reduce((sum, card) => sum + card.going, 0)}</b><span>Places said yes</span></div>
@@ -36,15 +36,6 @@ export async function GatherDeskScreen(ctx: Ctx) {
         <div className="stat-chip"><b>{proposed.length}</b><span>Waiting on you</span></div>
       </div>
       <p style={{ marginTop: 0 }}><Link className="btn" href={`${base}/admin/gather/attendance`} data-testid="attendance-link">Attendance</Link></p>
-      {preview ? (
-        <section className="panel wa-desk" data-testid="desk-wa-preview" style={{ marginBottom: 18 }}>
-          <header><h2>How this looks in WhatsApp</h2></header>
-          <div className="body">
-            <img src={`/gather/${preview.slug}/card.png`} alt="" />
-            <p className="wa-caption"><b>{preview.title}</b><br />{preview.when}{preview.place ? ` · ${preview.place}` : ''}</p>
-          </div>
-        </section>
-      ) : null}
       {proposed.length ? (
         <section className="panel" data-testid="proposed-list" style={{ marginBottom: 18 }}>
           <header><h2>Suggested by learners</h2></header>
@@ -93,6 +84,17 @@ export async function GatherDeskScreen(ctx: Ctx) {
             </section>
           ))}
         </div>
+        <div>
+          {preview ? (
+            <section className="panel wa-desk" data-testid="desk-wa-preview">
+              <header><h2>In WhatsApp</h2></header>
+              <div className="body wa-desk-row">
+                <p>The card people see.</p>
+                <img src={`/gather/${preview.slug}/card.png`} alt="" />
+                <p className="wa-caption"><b>{preview.title}</b><br />{preview.when}{preview.place ? ` · ${preview.place}` : ''}</p>
+              </div>
+            </section>
+          ) : null}
         <section className="panel">
           <header><h2>Plan a gathering</h2></header>
           <form className="body form" action="/api/gather" method="post" data-testid="desk-gather-form">
@@ -123,6 +125,7 @@ export async function GatherDeskScreen(ctx: Ctx) {
             <button className="btn" type="submit" data-testid="desk-gather-save">Save gathering</button>
           </form>
         </section>
+        </div>
       </div>
     </AdminFrame>
   )
@@ -133,7 +136,7 @@ export async function GatherAttendanceScreen(ctx: Ctx) {
   const report = await attendanceReport(payload, portal.id)
   const max = Math.max(1, ...report.series.map((point) => point.checkedIn))
   return (
-    <AdminFrame ctx={ctx} active="gather" tone="evening" title="Attendance" intro="Who showed up, who was new, and who brought them. RSVP alone is not the same as being in the room." testId="desk-attendance">
+    <AdminFrame ctx={ctx} active="gather" tone="evening" title="Attendance" intro="Who showed up, who was new, and who brought them." testId="desk-attendance">
       <div className="stats-strip">
         <div className="stat-chip"><b data-testid="stat-newcomers">{report.newcomers}</b><span>Newcomers</span></div>
         <div className="stat-chip"><b data-testid="stat-regulars">{report.regulars}</b><span>Regulars</span></div>
@@ -141,20 +144,23 @@ export async function GatherAttendanceScreen(ctx: Ctx) {
         <div className="stat-chip"><b>{report.series.length}</b><span>Nights held</span></div>
       </div>
       <section className="panel" data-testid="attendance-chart">
-        <header><h2>Over time</h2><p>Checked in, gold band for newcomers</p></header>
+        <header><h2>Over time</h2></header>
         <div className="body">
           {report.series.length ? (
-            <div className="chart" data-testid="attendance-bars">
-              {report.series.slice(-12).map((point) => (
-                <div className="col" key={`${point.title}-${point.label}`}>
-                  <div className="slot" title={`${point.title}: ${point.checkedIn}`}>
-                    <i className="new" style={{ height: `${Math.round((point.newcomers / max) * 100)}%` }} />
-                    <i style={{ height: `${Math.round((point.regulars / max) * 100)}%` }} />
+            <>
+              <p className="attendance-legend" data-testid="attendance-legend"><span><i className="gold" /> Newcomers</span><span><i className="teal" /> Regulars</span></p>
+              <div className="chart" data-testid="attendance-bars" style={{ gridTemplateColumns: `repeat(${Math.max(report.series.slice(-8).length, 1)}, minmax(0, 1fr))` }}>
+                {report.series.slice(-8).map((point) => (
+                  <div className="col" key={`${point.title}-${point.label}`}>
+                    <div className="slot" title={`${point.title}: ${point.checkedIn}`}>
+                      <i className="new" style={{ height: `${Math.round((point.newcomers / max) * 100)}%` }} />
+                      <i style={{ height: `${Math.round((point.regulars / max) * 100)}%` }} />
+                    </div>
+                    <small>{point.label}</small>
                   </div>
-                  <small>{point.label.slice(0, 3)}</small>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           ) : <p>No one has checked in yet.</p>}
         </div>
       </section>

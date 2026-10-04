@@ -16,6 +16,9 @@ import {
   discussionPrompts,
   gatheringMatchesTask,
   googleCalendarUrl,
+  chartLabel,
+  doorLearnerHeading,
+  doorOnLine,
   groupByDoor,
   linkLabel,
   londonIso,
@@ -150,8 +153,8 @@ test('calendar files, Google links and cross-post text are ready to send', () =>
   assert.match(ics, /LOCATION:The hall/)
   const google = googleCalendarUrl({ title: 'Tea and talk', startsAt: '2026-10-08T18:00:00.000Z', place: 'The hall' })
   assert.match(google, /^https:\/\/calendar\.google\.com\//)
-  const post = crossPost({ title: 'Tea and talk', when: 'Thursday', place: 'The hall', audience: 'Everyone', url: 'http://127.0.0.1:3010/gather/tea-after-class', linkLabel: 'Discussing W16: Ihsan: worship as though you see Him' })
-  assert.match(post, /Discussing W16: Ihsan: Worship as though you see Him/)
+  const post = crossPost({ title: 'Tea and talk', when: 'Thursday', place: 'The hall', audience: 'Everyone', url: 'http://127.0.0.1:3010/gather/tea-after-class', linkLabel: 'On: worship as though you see Him' })
+  assert.match(post, /On: Worship as though you see Him/)
   assert.match(post, /Come if you can/)
   assert.doesNotMatch(post, /https?:\/\//)
   assert.doesNotMatch(post, /127\.0\.0\.1|localhost|tea-after-class/)
@@ -187,8 +190,13 @@ test('the desk groups by upcoming and past, then by door, and the demo script re
   assert.equal(newcomerFollowUp(3), '3 newcomers came for the first time. Send them a welcome.')
   assert.match(demoPortalGuard('east-london') || '', /hearts-demo/)
   assert.equal(demoPortalGuard('hearts-demo'), null)
-  assert.match(linkLabel({ doorCode: 'W7', doorTitle: 'Fasting Ramadan', courseTitle: 'The Names', lessonTitle: 'Class 20' }), /Discussing W7: Fasting Ramadan, after Class 20/)
-  assert.match(linkLabel({ doorCode: 'W16', doorTitle: 'Ihsan: worship as though you see Him' }), /Discussing W16: Ihsan: Worship as though you see Him/)
+  assert.equal(doorLearnerHeading(16, 'Ihsan: worship as though you see Him'), 'Door 16 · Ihsan')
+  assert.equal(doorOnLine('Ihsan: worship as though you see Him'), 'On: Worship as though you see Him')
+  assert.equal(doorOnLine('Fasting Ramadan'), '')
+  assert.equal(linkLabel({ doorCode: 'W7', doorTitle: 'Fasting Ramadan', courseTitle: 'The Names', lessonTitle: 'Class 20' }), 'After Class 20')
+  assert.equal(linkLabel({ doorCode: 'W16', doorTitle: 'Ihsan: worship as though you see Him' }), 'On: Worship as though you see Him')
+  assert.equal(linkLabel({ doorTitle: 'Ihsan: worship as though you see Him', lessonTitle: 'Class 20' }), 'On: Worship as though you see Him, after Class 20')
+  assert.equal(chartLabel('2026-09-17T18:30:00.000Z'), 'Thu 17 Sep')
   assert.equal(normaliseEntryCode(' nur4 '), 'NUR4')
   assert.equal(makeEntryCode([0, 1, 2, 3]).length, 4)
 })

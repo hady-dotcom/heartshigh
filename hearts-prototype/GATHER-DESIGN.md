@@ -48,4 +48,4 @@ Claims below are critic KEEP from the Community Activation set. The id is what t
 
 ## Demo
 
-`npm run demo:gather` writes six upcoming and two past gatherings on the portal whose slug is `hearts-demo`, and only there. It uses `demo-learner@hearts.foundation` and `demo-complete@hearts.foundation` when those accounts already belong to that portal, plus the guests Yusuf, Maryam, Idris, and Sara. It does not create the portal or the accounts. A second run finds the same seed keys and does not add another copy.
+`npm run demo:gather` writes six upcoming and eight past gatherings on the portal whose slug is `hearts-demo`, and only there. It uses `demo-learner@hearts.foundation` and `demo-complete@hearts.foundation` when those accounts already belong to that portal. It also keeps six bringer accounts on that portal, each bringing a different newcomer. It does not create the portal. A second run finds the same seed keys and does not add another copy.

@@ -64,7 +64,8 @@ export default async function PublicGather({ params, searchParams }: { params: P
           )}
         </section>
         <section className="gather-card" data-testid="public-details">
-          {view.card.linkLabel ? <p>{view.card.linkLabel}</p> : null}
+          {view.card.doorHeading ? <p className="eyebrow" data-testid="public-door">{view.card.doorHeading}</p> : null}
+          {view.card.onLine ? <p data-testid="public-on">{view.card.onLine}</p> : null}
           <div>
             <span className="gather-chip gold">{view.card.audienceLabel}</span>
             <span className="gather-chip ivy">{KIND_LABEL[view.card.kind as keyof typeof KIND_LABEL] || 'Circle'}</span>

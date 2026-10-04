@@ -10,6 +10,9 @@ import {
   firstName,
   goingCount,
   googleCalendarUrl,
+  chartLabel,
+  doorLearnerHeading,
+  doorOnLine,
   groupByDoor,
   isSameDay,
   linkLabel,
@@ -65,6 +68,8 @@ export type GatherCard = {
   linkLabel: string
   door: number | null
   doorLabel: string
+  doorHeading: string
+  onLine: string
   hostLabel: string
   bring: string
   note: string
@@ -125,9 +130,11 @@ function cardFrom(row: Doc, rsvps: Doc[], checkins: Doc[], userId: number | null
     waitlist: forRow.filter((item) => item.status === 'waitlist').length,
     checkedIn: checkins.filter((item) => idOf(item.gathering) === row.id).length,
     mine: mine ? text(mine.status) : '',
-    linkLabel: capitalAfterColon(text(row.linkLabel)),
+    linkLabel: capitalAfterColon(text(row.linkLabel)) || (doorRow ? linkLabel({ doorTitle: doorRow.title }) : ''),
     door,
     doorLabel: doorRow ? doorLabel(doorRow) : '',
+    doorHeading: doorRow ? doorLearnerHeading(doorRow.number, doorRow.title) : '',
+    onLine: doorRow ? doorOnLine(doorRow.title) : '',
     hostLabel: text(row.hostLabel) || 'Your host',
     bring: text(row.bring),
     note: text(row.note),
@@ -778,11 +785,12 @@ export async function attendanceReport(payload: Payload, portalId: number) {
     : { docs: [] as Doc[] }
   const nameOf = new Map((users.docs as Doc[]).map((user) => [user.id, text(user.name) || 'Learner']))
   const series = cards
-    .filter((card) => card.past || card.checkedIn)
+    .filter((card) => card.past)
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
     .map((card) => {
       const inside = checkins.filter((row) => idOf(row.gathering) === card.id)
       const newcomers = inside.filter((row) => row.newcomer === true).length
-      return { label: card.when.split(',')[0] || card.title, title: card.title, going: card.going, checkedIn: inside.length, newcomers, regulars: inside.length - newcomers }
+      return { label: chartLabel(card.startsAt) || card.title, title: card.title, going: card.going, checkedIn: inside.length, newcomers, regulars: inside.length - newcomers }
     })
   const brought = rsvps
     .filter((row) => idOf(row.broughtBy))
