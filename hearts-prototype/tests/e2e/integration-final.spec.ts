@@ -16,7 +16,7 @@ const PACK = `Final pack ${sfx}`
 const COURSE = `Imported sitting ${sfx}`
 const PROMPT = `What would you say back to this speaker ${sfx}`
 const ANSWER = `I would thank them for the reminder ${sfx}`
-const BY_PROPHET = ['The Prophet', 'Somewhere calm to sit', 'I go quiet', 'With the Prophet']
+const BY_PROPHET = ['The Prophet', 'A calm place to start', 'I go quiet', 'With the Prophet']
 const VIDEO = process.env.HEARTS_VIDEO
 
 let master: APIRequestContext
