@@ -10,6 +10,7 @@ import { TRENDS_MIN, trendsFrom, type Contribution } from '@/lib/trends'
 import { loadPersonaLens } from '@/server/persona'
 import { loadPortal, type SessionUser } from '@/server/context'
 import { loadOpening } from '@/server/opening'
+import { partTitle } from '@/lib/talk-title'
 import { type Ctx, ref, rows, str } from '../common'
 import { masterFlags } from '../app/journey'
 import { AdminFrame } from './overview'
@@ -21,7 +22,7 @@ type Option = { key?: string; label?: string; replyPill?: string; nudges?: { sca
 
 function Frame({ ctx, active, title, intro, children, testId }: { ctx: MasterCtx; active: string; title: string; intro?: ReactNode; children: ReactNode; testId?: string }) {
   return (
-    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="Hudhud" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
+    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
       {children}
     </DeskFrame>
   )
@@ -129,7 +130,7 @@ export async function MasterLanes(ctx: MasterCtx) {
     if (item?.relationTo === 'lessons') return str(doc.title)
     const lesson = lessons.find((row) => row.id === idOf(doc.lesson))
     const start = Number(doc.start || 0)
-    return `${str(lesson?.title) || str(lesson?.sourceTitle) || 'A talk'} at ${Math.floor(start / 60)}:${String(Math.floor(start % 60)).padStart(2, '0')}`
+    return `${partTitle(lesson)} at ${Math.floor(start / 60)}:${String(Math.floor(start % 60)).padStart(2, '0')}`
   }
   const laneTitle = (value: unknown) => str(lanes.find((lane) => lane.id === idOf(value))?.title)
   return (
@@ -257,7 +258,7 @@ export async function MasterSimulator(ctx: MasterCtx) {
   const [cuts, lessons] = await Promise.all([rows(payload, 'cuts', { id: { in: opening.route.cuts.map((cut) => cut.id) } }, { limit: 2000 }), rows(payload, 'lessons', undefined, { limit: 2000 })])
   const cutTitles = Object.fromEntries(cuts.map((cut) => {
     const lesson = lessons.find((row) => row.id === idOf(cut.lesson))
-    return [cut.id, str(lesson?.title) || str(lesson?.sourceTitle) || `Clip ${cut.id}`]
+    return [cut.id, lesson ? partTitle(lesson) : `Clip ${cut.id}`]
   }))
   const scaleNames = Object.fromEntries(SCALES.map((scale) => [scale.key, scale.leonName]))
   return (

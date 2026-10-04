@@ -118,6 +118,13 @@ export function posterFor(youtubeId: string | null | undefined) {
   return publicFile(`clips/${youtubeId}.jpg`) || `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`
 }
 
+/** A still safe to paint as a thumbnail. YouTube's stand-in for a missing film is a grey ellipsis, so those fall through to the garden crop. */
+export function shownPoster(url: string | null | undefined) {
+  if (!url) return null
+  if (/i\.ytimg\.com|img\.youtube\.com/i.test(url)) return null
+  return url
+}
+
 export const SLIDE_ART: Record<SlideStyle, string> = {
   kinetic: '/slides/bg-kinetic-truck.jpg',
   cinema: '/slides/bg-cinema-road.jpg',

@@ -4,8 +4,8 @@ import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react
 import type { SceneDef, SceneOption } from '@/lib/heart'
 import { EASE, T, animate } from '@/lib/motion'
 import { httpsHref, plainText, telHref } from '@/lib/text-safety'
-import { BUBBLE_TINTS, DOOR_TINTS, Glyph } from './glyphs'
 import { Arch } from '@/components/arch'
+import { BUBBLE_TINTS, DOOR_TINTS, Glyph } from './glyphs'
 
 export function Caption({ text, className = 'j-caption', testId }: { text: string; className?: string; testId?: string }) {
   const parts = text.split(/\*\*(.+?)\*\*/g)
@@ -20,7 +20,7 @@ export function Opener({ caption, subline, onPlay, onJustShow, loginHref, signed
   return (
     <section className="j-screen j-opener" data-screen="opener" data-testid="opener">
       <header className="j-top">
-        <span className="j-mark"><Arch size={34} /></span>
+        <span className="j-mark" aria-hidden><Arch size={34} /></span>
         {signedIn ? null : <a className="j-login" href={loginHref} data-testid="opener-login">Log in</a>}
       </header>
       <span className="j-arch" aria-hidden><Arch size={120} /></span>
@@ -78,7 +78,7 @@ export function SceneCard({ scene, index, selected, reply, picked, onPick, onPas
   return (
     <section className={`j-screen j-scene layout-${scene.layout}`} data-screen={`scene-${index + 1}`} data-testid="scene" data-scene={scene.key}>
       <header className="j-top">
-        <span className="j-mark"><Arch size={34} /></span>
+        <span className="j-mark" aria-hidden><Arch size={34} /></span>
         <button type="button" className="j-pass" onClick={onPass} disabled={locked} data-testid="pass">Pass</button>
       </header>
       <div className="j-body">

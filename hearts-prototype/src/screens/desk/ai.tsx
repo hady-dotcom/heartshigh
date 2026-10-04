@@ -6,6 +6,7 @@ import { diffLines, type Placeholder } from '@/lib/ai-steps'
 import type { SessionUser } from '@/server/context'
 import { loadDesk, pendingForLesson } from '@/server/ai-desk'
 import type { Ctx } from '../common'
+import { partTitle } from '@/lib/talk-title'
 import { rows, str } from '../common'
 import { AdminFrame } from './overview'
 import styles from './ai.module.css'
@@ -51,7 +52,7 @@ async function Frame({
   if (ctx) return <AdminFrame ctx={ctx} active="ai" title={title} intro={intro} testId={testId}>{children}</AdminFrame>
   const desk = master!
   return (
-    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="ai" nav={masterNav()} brand="Hudhud" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId}>
+    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="ai" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId}>
       {children}
     </DeskFrame>
   )
@@ -249,7 +250,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
               <Hidden fields={{ action: 'try', slug, next: here }} />
               <label className="stack">Talk
                 <select name="lesson" data-testid="ai-try-lesson" defaultValue={String(triedLesson || lessons[0]?.id || '')}>
-                  {lessons.map((lesson) => <option key={lesson.id} value={lesson.id}>{str(lesson.title) || str(lesson.sourceTitle)}</option>)}
+                  {lessons.map((lesson) => <option key={lesson.id} value={lesson.id}>{partTitle(lesson)}</option>)}
                 </select>
               </label>
               <label className="stack">Draft prompt
@@ -302,12 +303,12 @@ function RerunForm({ base, slug, lessons, courses, lessonId }: { base: string; s
       </label>
       <label className="stack">Talk
         <select name="lesson" defaultValue={String(lessonId || lessons[0]?.id || '')} data-testid="ai-rerun-lesson">
-          {lessons.map((lesson) => <option key={lesson.id} value={lesson.id}>{str(lesson.title) || str(lesson.sourceTitle)}</option>)}
+          {lessons.map((lesson) => <option key={lesson.id} value={lesson.id}>{partTitle(lesson)}</option>)}
         </select>
       </label>
       <label className="stack">More talks, if the scope is a selection
         <select name="lesson" multiple size={4} data-testid="ai-rerun-selection">
-          {lessons.slice(0, 12).map((lesson) => <option key={lesson.id} value={lesson.id}>{str(lesson.title) || str(lesson.sourceTitle)}</option>)}
+          {lessons.slice(0, 12).map((lesson) => <option key={lesson.id} value={lesson.id}>{partTitle(lesson)}</option>)}
         </select>
       </label>
       <label className="stack">Course
@@ -386,7 +387,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
           {lessons.map((lesson) => (
             <Link key={lesson.id} className={styles.row} href={`${base}/ingest/${lesson.id}`} data-testid="ingest-talk">
               <span>
-                <h2>{str(lesson.title) || str(lesson.sourceTitle) || 'A talk'}</h2>
+                <h2>{partTitle(lesson)}</h2>
                 <p>{str(lesson.speaker)}{lesson.transcript || lesson.youtubeId ? '' : ' · no transcript yet'}</p>
               </span>
               <span className="badge grey">Open</span>
@@ -408,7 +409,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
   const courses = await rows(payload, 'courses', undefined, { limit: 40 })
   const pending = await pendingForLesson(payload, lesson.id)
   return (
-    <Frame ctx={ctx} master={master} title={str(lesson.title) || str(lesson.sourceTitle) || 'A talk'} intro="Each step in the order it runs. A draft waits for a person. A failed step stays on this card with its error, and the rest of the talk is left alone." testId="ai-ingest-talk">
+    <Frame ctx={ctx} master={master} title={partTitle(lesson)} intro="Each step in the order it runs. A draft waits for a person. A failed step stays on this card with its error, and the rest of the talk is left alone." testId="ai-ingest-talk">
       <Banner desk={desk} />
       <p style={{ marginTop: 0 }}><Link href={`${base}/ingest`}>‹ All talks</Link></p>
       {pending.length ? <p className="hint" data-testid="new-draft-available">New draft available. Approved and hand-edited work on this talk was not overwritten.</p> : null}

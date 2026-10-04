@@ -2,13 +2,13 @@
 
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import type { FeedItem } from '@/server/learner'
+import { Arch } from '@/components/arch'
 import { landedGold, revealedQuote, spreadWords, type SpokenWord } from '@/lib/card-voice'
 
 type Scene = NonNullable<FeedItem['scene']>
 type Beat = Scene['beats'][number]
 
 const VOICE_KEY = 'hearts.cardVoice'
-const MARKS = ['/brand/hoopoe-mark.png', '', '']
 
 function Gold({ quote, gold }: { quote: string; gold: string }) {
   if (!gold) return <>{quote}</>
@@ -428,7 +428,7 @@ function Conversation({
         {beats.slice(0, at + 1).map((beat, index) => (
           <div key={beat.beat} className="bubble-row beat-in">
             <span className="bubble-face">
-              {index === 0 ? <img src={MARKS[0]} alt="" /> : index === 1 ? '❦' : '☾'}
+              {index === 0 ? <Arch size={22} /> : index === 1 ? '❦' : '☾'}
             </span>
             <div className={`bubble-text${index === at ? '' : ' earlier'}`} data-testid={index === at ? 'scene-quote' : undefined}>
               {index === at ? spoken : <Gold quote={beat.quote} gold={beat.gold} />}

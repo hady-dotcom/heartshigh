@@ -3,6 +3,7 @@ import { loadDoors } from '@/server/doors'
 import { doorOfClause } from '@/lib/doors'
 import { AppFrame, Flash, Hidden } from '@/components/app/shell'
 import { Arch } from '@/components/arch'
+import { BrandLockup } from '@/components/brand'
 import { optionLabels } from '@/lib/placing'
 import { courseCards, portalName } from '@/server/learner'
 import { type Ctx, embedUrl, rows, str } from '../common'
@@ -19,7 +20,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
       <AppFrame testId="welcome">
         <div className="splash" data-testid="splash">
           <div>
-            <span className="splash-arch" aria-hidden><Arch size={96} /></span>
+            <BrandLockup size={88} />
             <h1>{portal.welcome ? 'Welcome' : 'Someone wanted good for you'}</h1>
             <p>{portal.welcome || `${portalName(portal)} has opened a door for you: short films from real lectures, a few questions to think about, and a circle to sit with.`}</p>
             <Flash error={query.error} notice={query.notice} />
@@ -62,7 +63,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
           <form action="/api/hearts" method="post">
             <Hidden fields={{ action: 'placing', next: user.role === 'learner' ? `${base}/start?after=placing` : `${base}/welcome?step=done` }} />
             {questions.map((question, index) => (
-              <fieldset className="q-card" key={question.id} data-testid="placing-question" style={{ border: '1px solid #e5dccb' }}>
+              <fieldset className="q-card" key={question.id} data-testid="placing-question">
                 <span className="n">{String(index + 1).padStart(2, '0')} of {String(questions.length).padStart(2, '0')}</span>
                 <legend className="sr-only">{str(question.prompt)}</legend>
                 <h2 aria-hidden>{str(question.prompt)}</h2>

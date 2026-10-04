@@ -92,7 +92,23 @@ function Tree({ area }: { area: AreaView }) {
   )
 }
 
-export function GardenScene({ areas, theme = 'evening' }: { areas: AreaView[]; theme?: GardenTheme }) {
+/** The app's Dawn or Evening, set on <html> before first paint and changed by the pin on Me. */
+function useAppTheme(pinned?: GardenTheme): GardenTheme {
+  const [theme, setTheme] = useState<GardenTheme>(pinned || 'evening')
+  useEffect(() => {
+    if (pinned) return setTheme(pinned)
+    const root = document.documentElement
+    const read = () => setTheme(root.dataset.theme === 'dawn' ? 'dawn' : 'evening')
+    read()
+    const watch = new MutationObserver(read)
+    watch.observe(root, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => watch.disconnect()
+  }, [pinned])
+  return theme
+}
+
+export function GardenScene({ areas, theme: pinned }: { areas: AreaView[]; theme?: GardenTheme }) {
+  const theme = useAppTheme(pinned)
   return (
     <section
       className="garden-scene"

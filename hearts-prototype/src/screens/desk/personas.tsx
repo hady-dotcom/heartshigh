@@ -36,7 +36,7 @@ const SOURCES = [
 
 function Frame({ ctx, title, intro, children }: { ctx: MasterCtx; title: string; intro?: ReactNode; children: ReactNode }) {
   return (
-    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active="personas" nav={masterNav()} brand="Hudhud" subBrand="Master desk" brandHref="/master" query={ctx.query} testId="master-personas">
+    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active="personas" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId="master-personas">
       {children}
     </DeskFrame>
   )

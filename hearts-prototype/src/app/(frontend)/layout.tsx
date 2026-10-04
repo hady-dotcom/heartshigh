@@ -4,6 +4,9 @@ import './desk.css'
 import './motion.css'
 import './journey.css'
 import './garden.css'
+import './theme.css'
+import { themeBootScript } from '@/lib/daypart'
+import { installBootScript } from '@/lib/install-prompt'
 import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import { ViewAsBanner } from '@/components/viewas-banner'
@@ -11,16 +14,16 @@ import { ViewAsBanner } from '@/components/viewas-banner'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Hudhud Hearts',
+  title: 'HEARTS',
   description: 'Short clips from real talks, full courses, and a circle that meets in person.',
   manifest: '/manifest.webmanifest',
-  appleWebApp: { capable: true, title: 'Hudhud', statusBarStyle: 'black-translucent' },
+  appleWebApp: { capable: true, title: 'HEARTS', statusBarStyle: 'black-translucent' },
   icons: {
     icon: [
       { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
       { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple: '/icons/apple-touch-icon.png',
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
   },
 }
 
@@ -28,13 +31,15 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#f6f0e4',
+  themeColor: '#0F3B3A',
 }
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en-GB">
+    <html lang="en-GB" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript() }} />
+        <script dangerouslySetInnerHTML={{ __html: installBootScript() }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link

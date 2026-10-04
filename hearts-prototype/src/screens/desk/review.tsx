@@ -8,6 +8,7 @@ import { pendingForLesson } from '@/server/ai-desk'
 import { HORS_MAX, horsCapOf } from '@/lib/tiers'
 import { showUncheckedTalks } from '@/server/opening'
 import type { SessionUser } from '@/server/context'
+import { partTitle } from '@/lib/talk-title'
 import { rows, str } from '../common'
 import { DeskFrame, masterNav } from './shell'
 
@@ -25,7 +26,7 @@ const STATUS_ORDER: Record<string, number> = { draft: 0, rejected: 1, checked: 2
 
 function Frame({ ctx, title, intro, children, testId }: { ctx: MasterCtx; title: string; intro: string; children: React.ReactNode; testId: string }) {
   return (
-    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active="review" nav={masterNav()} brand="Hudhud" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
+    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active="review" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
       <ReviewKeys />
       {children}
     </DeskFrame>
@@ -123,7 +124,7 @@ export async function MasterReview(ctx: MasterCtx) {
       {tier && lesson ? (
         <section className="panel review-card" data-testid="review-card" data-tier={tier.id} data-status={status}>
           <header className="light">
-            <h2>{str(lesson.title) || str(lesson.sourceTitle) || 'A talk'}</h2>
+            <h2>{partTitle(lesson)}</h2>
             <span className={`badge ${status === 'checked' ? 'teal' : status === 'rejected' ? 'rose' : 'grey'}`} data-testid="review-status">{status === 'checked' ? 'Approved' : status === 'rejected' ? 'Rejected' : 'Waiting for review'}</span>
           </header>
           <div className="body review-grid">
@@ -206,7 +207,7 @@ export async function MasterReviewPopups(ctx: MasterCtx) {
       {point && lesson ? (
         <section className="panel review-card" data-testid="review-card" data-point={point.id} data-status={status}>
           <header className="light">
-            <h2>{str(lesson.title) || str(lesson.sourceTitle) || 'A talk'}</h2>
+            <h2>{partTitle(lesson)}</h2>
             <span className={`badge ${status === 'published' ? 'teal' : status === 'rejected' ? 'rose' : 'grey'}`} data-testid="review-status">{status === 'published' ? 'Live' : status === 'rejected' ? 'Rejected' : 'Waiting for review'}</span>
           </header>
           <div className="body review-grid">

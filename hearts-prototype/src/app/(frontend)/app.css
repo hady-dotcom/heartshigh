@@ -64,7 +64,7 @@
 @keyframes replayPulse { from { opacity: 0.4; } to { opacity: 1; } }
 
 .clip { position: absolute; inset: 0; }
-.clip-bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: saturate(0.9); }
+.clip-bg { position: absolute; inset: 0; background: #0e2a2b url('/theme/evening-courtyard.jpg') center/cover no-repeat; filter: saturate(0.9); }
 .clip-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.25) 30%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.82) 100%); }
 .clip-frame { position: absolute; inset: 0; overflow: hidden; }
 .clip-frame iframe { position: absolute; top: 0; left: 50%; height: 100%; width: calc(100dvh * 16 / 9); transform: translateX(-50%); border: 0; pointer-events: none; }
@@ -205,7 +205,7 @@
 }
 
 /* Speaker bio (02b) */
-.bio-cover { height: 150px; margin: 0 -18px; background-size: cover; background-position: center 20%; position: relative; }
+.bio-cover { height: 150px; margin: 0 -18px; background: #0e2a2b url('/theme/evening-courtyard.jpg') center 30% / cover no-repeat; position: relative; }
 .bio-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20, 40, 44, 0.6), rgba(20, 40, 44, 0.85)); }
 .bio-cover .handle { position: absolute; top: 14px; left: 50%; width: 40px; height: 4px; margin-left: -20px; border-radius: 4px; background: rgba(255,255,255,0.7); z-index: 1; }
 .bio-portrait { width: 116px; height: 116px; border-radius: 50%; border: 4px solid var(--gold); margin: -64px auto 0; position: relative; z-index: 2; overflow: hidden; background: #3a3530; display: grid; place-items: center; color: #fff; font-size: 34px; font-weight: 700; box-shadow: 0 10px 26px rgba(0,0,0,0.18); }
@@ -226,12 +226,12 @@
 .intro-card b { display: block; font-size: 18px; }
 .intro-card small { color: rgba(255,255,255,0.8); font-size: 13px; }
 .course-row { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 10px; margin-bottom: 10px; text-decoration: none; color: var(--ink); min-height: 64px; }
-.course-row .thumb { width: 44px; height: 44px; border-radius: 10px; background: #2b2723 center/cover; flex: none; }
+.course-row .thumb { width: 44px; height: 44px; border-radius: 10px; background: #1b3b38 url('/theme/evening-courtyard.jpg') center/cover; flex: none; }
 .course-row .t { flex: 1; min-width: 0; }
 .course-row b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .course-row small { color: var(--muted); font-size: 12.5px; }
 .continue-row { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 10px; margin-bottom: 10px; text-decoration: none; color: var(--ink); min-height: 64px; }
-.continue-row .thumb { width: 52px; height: 52px; border-radius: 10px; background: #2b2723 center/cover; flex: none; }
+.continue-row .thumb { width: 52px; height: 52px; border-radius: 10px; background: #1b3b38 url('/theme/evening-courtyard.jpg') center/cover; flex: none; }
 .continue-row .t { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 .continue-row b { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .continue-row small { color: var(--muted); font-size: 12.5px; }
@@ -241,7 +241,11 @@
 
 /* Mains course player (03) and engagement sheet (03b) */
 .player-card { position: relative; background: #1c1b19; border-radius: 22px; overflow: hidden; aspect-ratio: 16 / 11; color: #fff; }
-.player-card .poster { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0.45; }
+.player-card .poster { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 1; }
+.player-card .poster.scenic { background: #0e2a2b url('/theme/evening-courtyard.jpg') center 40% / cover no-repeat; }
+.player-veil { position: absolute; inset: 0; z-index: 3; background: rgba(14, 42, 43, 0.72); display: grid; place-items: center; }
+.gold-spin { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(212, 168, 75, 0.35); border-top-color: #f1d58a; animation: gold-spin 0.8s linear infinite; }
+@keyframes gold-spin { to { transform: rotate(360deg); } }
 .player-card .yt { position: absolute; inset: 0 0 46px; }
 .player-card.yt-on { aspect-ratio: auto; height: calc((min(430px, 100vw) - 36px) * 9 / 16 + 96px); }
 .player-card.yt-on .yt { inset: 50px 0 46px; }
@@ -251,7 +255,7 @@
 .player-card.yt-on .time-read { top: 9px; }
 .player-card .yt iframe, .player-card .yt > div, .player-card .yt video { width: 100%; height: 100%; border: 0; background: #000; object-fit: contain; }
 .part-chip { position: absolute; top: 12px; left: 12px; right: 60px; z-index: 3; background: rgba(0, 0, 0, 0.72); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.big-play { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 3; width: 68px; height: 68px; border-radius: 50%; background: #f4f1ea; color: var(--ink); border: 0; display: grid; place-items: center; box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
+.big-play { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 4; width: 44px; height: 44px; border-radius: 50%; background: rgba(14, 42, 43, 0.55); color: #f1d58a; border: 1.5px solid #d4a84b; display: grid; place-items: center; box-shadow: none; }
 .paused-note { position: absolute; left: 0; right: 0; top: 40%; text-align: center; z-index: 3; font-weight: 700; font-size: 15px; }
 .timeline { position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 3; height: 24px; }
 .timeline .track { position: absolute; left: 0; right: 0; top: 10px; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.3); }
@@ -268,6 +272,7 @@
 .garden-card .bar { background: rgba(255, 255, 255, 0.16); }
 .garden-card .bar > i { background: #f0c36a; }
 .garden-grid { display: grid; grid-template-columns: 122px 1fr; gap: 14px; align-items: center; }
+.course-tree { width: 108px; height: 108px; border-radius: 18px; display: block; background: #0e2a2b url('/theme/evening-courtyard.jpg') center 52% / cover no-repeat; border: 1px solid rgba(212, 168, 75, 0.55); }
 .garden-grid h3 { margin: 0; font-size: 19px; }
 .garden-grid small { color: var(--muted); }
 .garden-card .garden-grid small { color: rgba(255, 248, 238, 0.86); }
@@ -288,8 +293,8 @@
 @keyframes sheetUp { from { transform: translate(-50%, 40px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 .sheet .handle { width: 44px; height: 5px; border-radius: 5px; background: #e2d8c5; margin: 4px auto 14px; }
 .kind-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
-.kind-tabs span { border-radius: 999px; padding: 7px 13px; font-size: 13px; font-weight: 650; background: var(--lavender); color: var(--purple); }
-.kind-tabs span.on { background: var(--purple); color: #fff; }
+.kind-tabs span { border-radius: 999px; padding: 7px 13px; font-size: 13px; font-weight: 650; background: transparent; color: var(--ink-2); border: 1px solid var(--line); }
+.kind-tabs span.on { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); }
 .sheet h2 { font-size: 21px; line-height: 1.3; margin: 0 0 14px; }
 .compose { display: flex; align-items: center; gap: 10px; border: 1.5px solid var(--line); border-radius: 18px; padding: 8px 8px 8px 16px; background: #faf8f4; }
 .compose textarea { flex: 1; border: 0; background: transparent; resize: none; outline: none; font-size: 16px; min-height: 48px; padding-top: 12px; }
@@ -337,14 +342,30 @@
 .card h3 { margin: 0 0 6px; font-size: 17px; }
 .card p { margin: 0; line-height: 1.5; color: var(--ink-2); font-size: 14.5px; }
 .list-link { display: flex; align-items: center; gap: 12px; padding: 14px 4px; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); min-height: 56px; font-weight: 600; }
+button.list-link { width: 100%; background: none; border-left: 0; border-right: 0; border-top: 0; text-align: left; }
 .list-link span.grow { flex: 1; }
 .list-link small { color: var(--muted); font-weight: 500; display: block; }
+.install-card h2 { font-family: var(--serif); font-weight: 600; font-size: 26px; line-height: 1.15; margin: 0 0 8px; color: var(--ink); }
+.install-card .install-lead,
+.install-card .install-note,
+.install-card .install-manual { margin: 0 0 14px; font-size: 16px; line-height: 1.45; }
+.install-card .install-note { font-weight: 600; }
+.install-steps { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 12px; }
+.install-step { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center; }
+.install-glyph { width: 64px; height: 64px; border-radius: 18px; background: #0F3B3A; color: #D4A84B; display: grid; place-items: center; }
+.install-step p { margin: 0; color: var(--ink); font-weight: 600; font-size: 16px; line-height: 1.35; }
+.install-actions { display: grid; gap: 4px; }
+.install-skip { justify-self: center; min-height: 44px; padding: 8px 16px; background: none; border: 0; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
 
 /* Garden (Grow board) */
 .grow-banner { background: linear-gradient(160deg, #2a2552, #1e1a3c); color: #fff; border-radius: 24px; padding: 20px 18px; position: relative; overflow: hidden; }
 .grow-banner .eyebrow { color: var(--gold); margin: 0 0 8px; }
 .grow-banner h2 { font-size: 28px; line-height: 1.12; margin: 0 0 16px; max-width: 60%; }
-.grow-banner .tree-art { position: absolute; right: 14px; top: 16px; width: 120px; }
+.grow-banner .tree-art { position: absolute; right: 14px; top: 16px; width: 108px; height: 108px; border-radius: 18px; background: #0e2a2b url('/theme/evening-courtyard.jpg') center 52% / cover no-repeat; border: 1px solid rgba(212, 168, 75, 0.55); }
+.feed-door { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 8px; padding: 14px; border-radius: 18px; text-decoration: none; color: inherit; background: var(--glass, rgba(22, 54, 51, 0.82)); border: 1px solid var(--line, rgba(212, 168, 75, 0.42)); }
+.feed-door .strip { display: flex; gap: 8px; }
+.feed-door .mini { flex: 1; min-width: 0; height: 64px; border-radius: 12px; background: #1b3b38 url('/theme/evening-courtyard.jpg') center/cover no-repeat; }
+.feed-door .go { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border-radius: 14px; background: var(--gold, #d4a84b); color: var(--gold-ink, #1a1408); font-weight: 700; font-size: 16px; }
 .rings { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 10px 0 18px; }
 .ring-stat { display: grid; justify-items: center; gap: 6px; font-size: 11.5px; color: rgba(255,255,255,0.85); text-decoration: none; }
 .ring-stat .r { width: 52px; height: 52px; border-radius: 50%; border: 3px solid; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
@@ -448,7 +469,7 @@
 .harvest-card small { color: var(--muted); display: block; line-height: 1.5; }
 .wb-entry { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 16px; margin-bottom: 12px; }
 .wb-entry .when { font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
-.wb-entry .asked { color: var(--gold-deep, #c48f2c); font-weight: 700; font-size: 13px; margin: 10px 0 2px; }
+.wb-entry .asked { color: var(--gold-deep, var(--gold)); font-weight: 700; font-size: 13px; margin: 10px 0 2px; }
 .wb-entry .q { font-size: 14px; color: var(--ink-2); margin: 0 0 10px; }
 .wb-entry blockquote { margin: 0 0 12px; font-size: 18px; font-weight: 700; line-height: 1.35; }
 .wb-entry .from-lesson { display: flex; gap: 10px; align-items: center; background: #f6f1e6; border-radius: 12px; padding: 8px; text-decoration: none; color: var(--ink); font-size: 13px; }
@@ -470,8 +491,8 @@
 .wb-open small { font-size: 12.5px; color: var(--teal-deep); font-weight: 650; }
 .wb-video-title { font-size: 13px; font-weight: 650; color: var(--ink-2); margin: 0 0 8px; }
 .chip-row { display: flex; gap: 8px; margin: 0 0 14px; flex-wrap: wrap; }
-.chip-row a, .chip-row span { border-radius: 999px; padding: 7px 14px; font-weight: 650; font-size: 13px; background: transparent; color: var(--gold-deep, #c48f2c); text-decoration: none; border: 1px solid var(--gold, #dca643); }
-.chip-row .on { background: var(--gold, #dca643); color: var(--gold-ink, #2a2414); }
+.chip-row a, .chip-row span { border-radius: 999px; padding: 7px 14px; font-weight: 650; font-size: 13px; background: transparent; color: var(--ink); border: 1.5px solid var(--gold); text-decoration: none; }
+.chip-row .on { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); }
 .consent-chip { display: inline-flex; border-radius: 999px; padding: 6px 12px; font-size: 12.5px; font-weight: 700; background: var(--mint); color: var(--teal); border: 0; }
 
 /* Onboarding and welcome */
@@ -490,7 +511,7 @@
 .step-bar-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: -10px; margin-bottom: 14px; }
 
 /* Lanes */
-.lane-card { position: relative; display: block; border-radius: 22px; overflow: hidden; min-height: 150px; margin-bottom: 12px; color: #fff; text-decoration: none; background: #1c1b19 center/cover; }
+.lane-card { position: relative; display: block; border-radius: 22px; overflow: hidden; min-height: 150px; margin-bottom: 12px; color: #fff; text-decoration: none; background: #0e2a2b url('/theme/evening-courtyard.jpg') center 40% / cover no-repeat; }
 .lane-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,0,0,0.78), rgba(0,0,0,0.15)); }
 .lane-card > div { position: relative; z-index: 1; padding: 18px; max-width: 78%; }
 .lane-card small { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.85; }
@@ -568,7 +589,8 @@
 .harvest-new { font-size: 11px; font-weight: 750; color: var(--teal); background: #e7f3ef; border-radius: 999px; padding: 3px 9px; letter-spacing: 0.02em; }
 .harvest-replay { display: block; color: inherit; text-decoration: none; border-radius: 14px; margin: 0 -6px; padding: 4px 6px; }
 .harvest-replay:hover, .harvest-replay:focus-visible { background: #f7f3ea; }
-.harvest-when { display: flex !important; align-items: center; gap: 6px; }
+.drawn-meta { font-size: 13px; line-height: 1.45; font-weight: 600; color: var(--ink-2); }
+.harvest-when { display: flex !important; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); }
 .harvest-when .play { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--teal); color: #fff; font-size: 9px; padding-left: 1px; flex: none; }
 .harvest-ayah { margin: 12px 0 0; padding: 12px 14px; background: #f8f5ee; border-radius: 14px; }
 .harvest-card .ar, .harvest-panel .ar { font-family: 'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', 'Geeza Pro', serif; font-size: 22px; line-height: 1.9; margin: 0 0 6px; color: var(--ink); text-align: right; }

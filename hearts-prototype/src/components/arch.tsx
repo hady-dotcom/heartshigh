@@ -1,4 +1,4 @@
-/** A fine-line arch: the mark that stands in for the parked hoopoe. */
+/** A fine-line arch: the HEARTS mark. */
 export function Arch({ size = 48, title }: { size?: number; title?: string }) {
   return (
     <svg className="arch" width={size} height={size} viewBox="0 0 64 64" aria-hidden={title ? undefined : true} role={title ? 'img' : undefined} aria-label={title}>

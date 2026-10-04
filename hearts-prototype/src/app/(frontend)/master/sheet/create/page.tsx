@@ -10,7 +10,7 @@ export default async function MasterCreatorPage({ searchParams }: { searchParams
   const query = await searchParams
   const courses = await rows(payload, 'courses', { origin: { equals: 'master' } }, { sort: 'title', limit: 500 })
   return (
-    <DeskFrame payload={payload} user={user} title="Sheet creator" intro="Name a topic and the desk drafts a master sheet. You still preview and apply it before anything reaches learners." active="create" nav={masterNav()} brand="Hudhud" subBrand="Master desk" brandHref="/master" query={query} testId="master-creator">
+    <DeskFrame payload={payload} user={user} title="Sheet creator" intro="Name a topic and the desk drafts a master sheet. You still preview and apply it before anything reaches learners." active="create" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="master-creator">
       <CreatorForm courses={courses.map((course) => ({ id: course.id, title: str(course.title) }))} endpoint="/api/hearts/sheet/create" next="/master/sheet" />
     </DeskFrame>
   )

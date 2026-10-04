@@ -5,6 +5,8 @@ import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
 import { Avatar } from '@/components/app/feed'
 import { OptInLane, PrefToggle, StartAgain } from '@/components/app/me-controls'
 import { EmptyState } from '@/components/app/empty'
+import { KeepHearts } from '@/components/app/install-card'
+import { ThemePinControl } from '@/components/theme/theme-pin'
 import { Qr } from '@/components/qr'
 import { now } from '@/lib/clock'
 import { visibleCourseIds } from '@/server/context'
@@ -36,6 +38,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
           <Avatar name={user.name || user.email} portrait={null} size={58} />
           <span><b data-testid="me-name">{user.name || user.email}</b><small className="muted">{portalName(portal)} · day {dayNumber(user)}</small></span>
         </div>
+        <ThemePinControl />
         <details className="card name-edit" data-testid="name-edit">
           <summary>Change the name we use</summary>
           <form className="form-stack" action="/api/hearts" method="post" style={{ marginTop: 10 }}>
@@ -44,6 +47,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
             <button className="pill ink small" type="submit" data-testid="name-save">Save name</button>
           </form>
         </details>
+        <KeepHearts />
         {links.map(([key, title, sub, href]) => (
           <Link key={key} className="list-link" href={`${base}/${href}`} data-testid={`me-${key}`}>
             <span className="grow">{title}<small>{sub}</small></span>›

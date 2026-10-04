@@ -194,9 +194,9 @@ The circle label and threshold are not environment variables. They are fields on
 
 On a Cloud Agent, put keys in the Cursor Dashboard under Cloud Agents, then Secrets. Do not commit them.
 
-## The hoopoe
+## The mark
 
-The icon, splash, empty states and logo mark use the artwork in `public/brand/`. After changing it, run `node scripts/brand-icons.mjs` to rebuild the home-screen icons in `public/icons/`.
+HEARTS uses the word HEARTS with a fine gold arch (`src/components/arch.tsx`, wrapped by `BrandMark` and `BrandLockup` in `src/components/brand.tsx`). The home-screen icons are in `public/icons/`.
 
 ## Tests
 

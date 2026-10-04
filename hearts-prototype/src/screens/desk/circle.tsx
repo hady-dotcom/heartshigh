@@ -6,6 +6,7 @@ import { CIRCLE_LENGTHS, CIRCLE_MAX_COUNT, CIRCLE_TONES, LENGTH_LABELS, TONE_LAB
 import { idOf, portalIdOf } from '@/lib/ids'
 import { circleScope, circleSettings, pointsInScope } from '@/server/circle'
 import type { SessionUser } from '@/server/context'
+import { partTitle } from '@/lib/talk-title'
 import { type Ctx, type Row, clock, rows, str } from '../common'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
@@ -86,7 +87,7 @@ async function Index(ctx: CircleCtx) {
             {talks.map(({ lesson, course, questions, on, all }) => (
               <tr key={lesson.id} data-testid="circle-talk" data-lesson={lesson.id}>
                 <td>{str(course?.title)}</td>
-                <td>{str(lesson.title) || str(lesson.sourceTitle)}</td>
+                <td>{partTitle(lesson, str(course?.title))}</td>
                 <td className="num">{questions}</td>
                 <td className="num">{on} of {all}</td>
                 <td><Link className="btn ghost small" href={`${ctx.here}?lesson=${lesson.id}`} data-testid="circle-open">Open</Link></td>
@@ -121,7 +122,7 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
       <p><Link href={here} className="hint">‹ All talks</Link></p>
       <section className="panel" style={{ marginBottom: 18 }}>
         <header className="light">
-          <div><h2>{str(lesson.title) || str(lesson.sourceTitle)}</h2><p>{str(course.title)}{lesson.speaker ? `, ${str(lesson.speaker)}` : ''}</p></div>
+          <div><h2>{partTitle(lesson, str(course.title))}</h2><p>{str(course.title)}{lesson.speaker ? `, ${str(lesson.speaker)}` : ''}</p></div>
           <div className="actions">
             <Bulk lesson={lesson.id} scope="talk" enabled here={back} label="All on for this talk" />
             <Bulk lesson={lesson.id} scope="talk" enabled={false} here={back} label="All off for this talk" />
@@ -235,7 +236,7 @@ async function Body(ctx: CircleCtx): Promise<ReactNode> {
 export async function MasterCircle({ payload, user, query }: { payload: Payload; user: SessionUser; query: Record<string, string | undefined> }) {
   const ctx: CircleCtx = { payload, user, query, here: '/master/circle', portalId: null }
   return (
-    <DeskFrame payload={payload} user={user} title="Circle answers" intro={INTRO} active="circle" nav={masterNav()} brand="Hudhud" subBrand="Master desk" brandHref="/master" query={query} testId="master-circle">
+    <DeskFrame payload={payload} user={user} title="Circle answers" intro={INTRO} active="circle" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="master-circle">
       {await Body(ctx)}
     </DeskFrame>
   )
