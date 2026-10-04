@@ -76,7 +76,7 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
     const play = page.getByTestId('lets-play').or(page.getByRole('button', { name: /play|continue/i }))
     if (await play.count()) await play.first().click()
   }
-  await expect(page.getByTestId('learn-more').or(page.getByTestId('gesture-layer'))).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByTestId('learn-more').first()).toBeVisible({ timeout: 15_000 })
   const layer = page.getByTestId('gesture-layer')
   if (await layer.count()) {
     const box = await layer.boundingBox()
