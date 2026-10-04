@@ -121,6 +121,8 @@ export interface Config {
     'persona-bands': PersonaBand;
     'compass-settings': CompassSetting;
     'compass-attempts': CompassAttempt;
+    'compass-mixes': CompassMix;
+    'compass-serves': CompassServe;
     'ai-steps': AiStep;
     'ai-step-versions': AiStepVersion;
     'ai-step-outputs': AiStepOutput;
@@ -189,6 +191,8 @@ export interface Config {
     'persona-bands': PersonaBandsSelect<false> | PersonaBandsSelect<true>;
     'compass-settings': CompassSettingsSelect<false> | CompassSettingsSelect<true>;
     'compass-attempts': CompassAttemptsSelect<false> | CompassAttemptsSelect<true>;
+    'compass-mixes': CompassMixesSelect<false> | CompassMixesSelect<true>;
+    'compass-serves': CompassServesSelect<false> | CompassServesSelect<true>;
     'ai-steps': AiStepsSelect<false> | AiStepsSelect<true>;
     'ai-step-versions': AiStepVersionsSelect<false> | AiStepVersionsSelect<true>;
     'ai-step-outputs': AiStepOutputsSelect<false> | AiStepOutputsSelect<true>;
@@ -1685,6 +1689,35 @@ export interface PersonaBand {
    */
   identicalGroup?: string | null;
   note?: string | null;
+  /**
+   * 2 is the balanced reading in PERSONA-BALANCING.md.
+   */
+  version?: number | null;
+  description?: string | null;
+  /**
+   * Working doors, 1 to 20, that this band leans on.
+   */
+  doors?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Talk titles to lean on. Staff only.
+   */
+  talks?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   ranges?:
     | {
         scale:
@@ -1774,6 +1807,21 @@ export interface CompassAttempt {
   bank?: ('opening' | 'month') | null;
   lifeKey?: string | null;
   /**
+   * Every life line ticked this round. History is append-only.
+   */
+  lifeKeys?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  lifeNote?: string | null;
+  formKey?: string | null;
+  demoKey?: string | null;
+  /**
    * Device readings from −1 to +1. Not shown to the learner.
    */
   scales?:
@@ -1785,6 +1833,51 @@ export interface CompassAttempt {
     | number
     | boolean
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * How this portal splits the shelf between quieter scales, steady ones, and a door not sat with lately.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "compass-mixes".
+ */
+export interface CompassMix {
+  id: number;
+  portal: number | Portal;
+  deficit?: number | null;
+  strength?: number | null;
+  discovery?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A talk the compass put forward, and why. Learners do not see the why.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "compass-serves".
+ */
+export interface CompassServe {
+  id: number;
+  user: number | User;
+  portal: number | Portal;
+  lesson?: (number | null) | Lesson;
+  title: string;
+  kind?: ('hors' | 'appetiser' | 'course' | 'talk') | null;
+  why?: string | null;
+  mix?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  at: string;
+  door?: number | null;
+  bucket?: string | null;
+  demoKey?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2225,6 +2318,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'compass-attempts';
         value: number | CompassAttempt;
+      } | null)
+    | ({
+        relationTo: 'compass-mixes';
+        value: number | CompassMix;
+      } | null)
+    | ({
+        relationTo: 'compass-serves';
+        value: number | CompassServe;
       } | null)
     | ({
         relationTo: 'ai-steps';
@@ -3282,6 +3383,10 @@ export interface PersonaBandsSelect<T extends boolean = true> {
   placeholder?: T;
   identicalGroup?: T;
   note?: T;
+  version?: T;
+  description?: T;
+  doors?: T;
+  talks?: T;
   ranges?:
     | T
     | {
@@ -3338,7 +3443,42 @@ export interface CompassAttemptsSelect<T extends boolean = true> {
   at?: T;
   bank?: T;
   lifeKey?: T;
+  lifeKeys?: T;
+  lifeNote?: T;
+  formKey?: T;
+  demoKey?: T;
   scales?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "compass-mixes_select".
+ */
+export interface CompassMixesSelect<T extends boolean = true> {
+  portal?: T;
+  deficit?: T;
+  strength?: T;
+  discovery?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "compass-serves_select".
+ */
+export interface CompassServesSelect<T extends boolean = true> {
+  user?: T;
+  portal?: T;
+  lesson?: T;
+  title?: T;
+  kind?: T;
+  why?: T;
+  mix?: T;
+  at?: T;
+  door?: T;
+  bucket?: T;
+  demoKey?: T;
   updatedAt?: T;
   createdAt?: T;
 }

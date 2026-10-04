@@ -1,6 +1,7 @@
 import './globals.css'
 import './app.css'
 import './desk.css'
+import './compass.css'
 import './motion.css'
 import './journey.css'
 import './garden.css'

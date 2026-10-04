@@ -22,7 +22,9 @@ test('persona ranges are published, distinct, and cover anger and greed', () => 
   const devout = PERSONA_BANDS.find((band) => band.key === 'devout')!
   const traditionalist = PERSONA_BANDS.find((band) => band.key === 'traditionalist')!
   assert.notEqual(signature(devout), signature(traditionalist))
-  assert.ok((devout.ranges.find((row) => row.scale === 'faith')?.min || 0) > (traditionalist.ranges.find((row) => row.scale === 'faith')?.min || 0))
+  const devoutFaith = devout.ranges.find((row) => row.scale === 'faith')!
+  const traditionalFaith = traditionalist.ranges.find((row) => row.scale === 'faith')!
+  assert.ok((devoutFaith.max || 0) < (traditionalFaith.min || 0))
   assert.equal(devout.ranges.find((row) => row.scale === 'anger')?.present, true)
   assert.equal(traditionalist.ranges.find((row) => row.scale === 'greed')?.present, true)
 })

@@ -2,6 +2,7 @@
 // Every string here is shown to a learner, so it has to pass the kill list. Scale names such as
 // "gratitude" are on that list, so the focus word for that scale is "thankfulness".
 
+import { LIFE_EVENTS } from './compass-bank'
 import type { ScaleKey } from './heart'
 
 export type PlaceKey = 'growing' | 'steady' | 'flourishing'
@@ -38,13 +39,7 @@ export const LIFE_PROMPT = {
   subline: 'One line is enough. It helps us keep this month close to you.',
 }
 
-export const LIFE_OPTIONS: LifeOption[] = [
-  { key: 'work', label: 'Work is full just now', boost: 'worry' },
-  { key: 'home', label: 'Home is full just now', boost: 'belonging' },
-  { key: 'money', label: 'Money is on my mind', boost: 'greed' },
-  { key: 'people', label: 'I want a gentler pace with people', boost: 'anger' },
-  { key: 'practice', label: 'Prayer has been quiet', boost: 'faith' },
-]
+export const LIFE_OPTIONS: LifeOption[] = LIFE_EVENTS.map((event) => ({ key: event.key, label: event.label, boost: event.scales[0] }))
 
 /** Short words for the "Focusing on" line. Configurable per scale. Never the dust name. */
 export const FOCUS_NAMES: Record<ScaleKey, string> = {

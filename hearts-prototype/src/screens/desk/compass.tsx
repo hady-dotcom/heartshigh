@@ -4,6 +4,7 @@ import { SCALE_KEYS, type ScaleKey } from '@/lib/heart'
 import { staffLearner, staffPortal } from '@/server/compass'
 import { type Ctx, shortDate } from '../common'
 import { AdminFrame } from './overview'
+import { Hidden } from '@/components/app/shell'
 
 function signed(value: number | null) {
   if (value == null) return '—'
@@ -20,14 +21,66 @@ function Mark({ rung }: { rung: number }) {
   )
 }
 
-/** Portal summary: each scale on the signed ladder, and which talks sat beside an upward move. */
+function Spark({ points }: { points: { at: number; rung: number }[] }) {
+  const width = 220
+  const height = 72
+  if (!points.length) return <p className="hint">No looks yet.</p>
+  const minT = points[0].at
+  const maxT = points[points.length - 1].at
+  const x = (at: number) => (points.length === 1 ? width / 2 : 8 + ((at - minT) / (maxT - minT || 1)) * (width - 16))
+  const y = (rung: number) => 8 + ((10 - Math.min(10, Math.max(-10, rung))) / 20) * (height - 16)
+  const d = points.map((point, index) => `${index ? 'L' : 'M'}${x(point.at).toFixed(1)},${y(point.rung).toFixed(1)}`).join(' ')
+  return (
+    <svg className="spark" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Month by month">
+      <line x1="8" x2={width - 8} y1={y(0)} y2={y(0)} className="spark-zero" />
+      <path d={d} />
+      {points.map((point) => <circle key={point.at} cx={x(point.at)} cy={y(point.rung)} r="3.2" />)}
+    </svg>
+  )
+}
+
+/** Portal summary, the anonymised cohort, and the mix the shelf uses. */
 export async function PortalCompassScreen(ctx: Ctx) {
   const summary = await staffPortal(ctx.payload, ctx.user, ctx.portal.id)
   if (!summary) notFound()
+  const peak = Math.max(1, ...summary.personas.map((row) => row.count))
   return (
-    <AdminFrame ctx={ctx} active="compass" title="Compass" intro="The signed scale, from negatives across toward positives. Learners never see these numbers." testId="compass-portal">
+    <AdminFrame ctx={ctx} active="compass" title="Compass" intro="Signed rungs stay on this desk. Learners see a gentle Focusing on line, never a label and never a number." testId="compass-portal">
+      <section className="panel" data-testid="cohort" style={{ marginBottom: 18 }}>
+        <header><h2>The circle, with no names</h2><span className="hint">{summary.learners.length} learners</span></header>
+        <div className="body cohort">
+          <div data-testid="cohort-personas">
+            {summary.personas.map((row) => (
+              <div key={row.key} className="cohort-row" data-testid="cohort-persona">
+                <span>{row.title}</span>
+                <span className="bar"><i style={{ width: `${Math.round((row.count / peak) * 100)}%` }} /></span>
+                <b>{row.count}</b>
+              </div>
+            ))}
+            {!summary.personas.length ? <p>No monthly looks in this portal yet.</p> : null}
+          </div>
+          <div data-testid="cohort-weak">
+            <p className="eyebrow">Teach next</p>
+            {summary.weakest.map((row) => (
+              <p key={row.scale} data-testid="weak-scale"><b>{row.name}</b> sits lowest just now, around {signed(row.mean)}.</p>
+            ))}
+            {!summary.weakest.length ? <p>Once a few people have sat with the compass, the quieter scales will show here.</p> : null}
+          </div>
+        </div>
+      </section>
+      <section className="panel" style={{ marginBottom: 18 }} data-testid="mix-panel">
+        <header><h2>How the shelf is mixed</h2></header>
+        <form className="body mix-form" action="/api/compass" method="post" data-testid="mix-form">
+          <Hidden fields={{ action: 'mix', next: `${ctx.base}/admin/compass`, portal: String(ctx.portal.slug || '') }} />
+          <label>Quieter scales <input name="deficit" type="number" min={0} max={100} defaultValue={summary.mix.deficit} /></label>
+          <label>Steady scales <input name="strength" type="number" min={0} max={100} defaultValue={summary.mix.strength} /></label>
+          <label>A new door <input name="discovery" type="number" min={0} max={100} defaultValue={summary.mix.discovery} /></label>
+          <button className="btn gold" type="submit">Save the mix</button>
+          <p className="hint">Shares are scaled to 100. The usual mix is 60, 25 and 15.</p>
+        </form>
+      </section>
       <section className="panel" style={{ marginBottom: 18 }}>
-        <header className="light"><h2>The chapter</h2><span className="hint">{summary.learners.length} learners</span></header>
+        <header><h2>The chapter</h2></header>
         <div className="table-wrap">
           <table className="data">
             <thead><tr><th>Scale</th><th className="num">Earlier</th><th className="num">Latest</th><th>Talks beside an upward move</th><th className="num">People</th></tr></thead>
@@ -46,7 +99,7 @@ export async function PortalCompassScreen(ctx: Ctx) {
         </div>
       </section>
       <section className="panel">
-        <header className="light"><h2>Each learner</h2></header>
+        <header><h2>Each learner</h2></header>
         <div className="body" style={{ display: 'grid', gap: 8 }}>
           {summary.learners.map((learner) => (
             <Link key={learner.id} href={`${ctx.base}/admin/compass/${learner.id}`} data-testid="compass-learner">{learner.name} · {learner.attempts} {learner.attempts === 1 ? 'look' : 'looks'}</Link>
@@ -58,7 +111,7 @@ export async function PortalCompassScreen(ctx: Ctx) {
   )
 }
 
-/** One learner's signed rungs over time, with the talks watched between looks. */
+/** One learner over the months: persona, scales, life, and why a talk was put forward. */
 export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
   const learner = await ctx.payload.findByID({ collection: 'users', id: learnerId, overrideAccess: true, depth: 0 }).catch(() => null)
   if (!learner || learner.role !== 'learner') notFound()
@@ -66,11 +119,31 @@ export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
   if (!detail) notFound()
   const columns = detail.attempts
   return (
-    <AdminFrame ctx={ctx} active="compass" title={detail.name} intro="Signed rungs from −10 toward +10, and the talks watched in the areas that sat below zero." testId="compass-learner">
+    <AdminFrame ctx={ctx} active="compass" title={detail.name} intro="Signed rungs from −10 toward +10. Opening this page is written to the audit log." testId="compass-learner">
       <p><Link href={`${ctx.base}/admin/compass`}>All learners</Link></p>
       {detail.guide.length ? <p data-testid="compass-guide">Rough guide: {detail.guide.join(', ')}. This name stays on this desk.</p> : null}
+      <section className="panel" style={{ marginBottom: 18 }} data-testid="persona-timeline">
+        <header><h2>Persona over time</h2></header>
+        <ol className="body timeline">
+          {detail.personaTimeline.map((row) => (
+            <li key={row.at}><time>{shortDate(row.at)}</time> <b>{row.title}</b></li>
+          ))}
+          {!detail.personaTimeline.length ? <li>No look yet.</li> : null}
+        </ol>
+      </section>
       <section className="panel" style={{ marginBottom: 18 }}>
-        <header className="light"><h2>Over time</h2></header>
+        <header><h2>Each scale, month by month</h2></header>
+        <div className="body sparks" data-testid="scale-sparks">
+          {detail.series.map((row) => (
+            <article key={row.scale} data-testid="spark" data-scale={row.scale}>
+              <b>{row.name}</b>
+              <Spark points={row.points} />
+            </article>
+          ))}
+        </div>
+      </section>
+      <section className="panel" style={{ marginBottom: 18 }}>
+        <header><h2>Over time</h2></header>
         <div className="table-wrap">
           <table className="data" data-testid="scale-chart">
             <thead>
@@ -102,8 +175,41 @@ export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
           </table>
         </div>
       </section>
+      <section className="panel" style={{ marginBottom: 18 }} data-testid="life-timeline">
+        <header><h2>What was going on</h2></header>
+        <ol className="body timeline">
+          {detail.life.map((row) => (
+            <li key={row.at}><time>{shortDate(row.at)}</time> {row.label}{row.note ? <span className="hint"> — {row.note}</span> : null}</li>
+          ))}
+          {!detail.life.length ? <li>No life check-in yet.</li> : null}
+        </ol>
+      </section>
+      <section className="panel" style={{ marginBottom: 18 }} data-testid="why-now">
+        <header><h2>Why this talk</h2></header>
+        <div className="body" style={{ display: 'grid', gap: 10 }}>
+          {detail.whyNow.map((row) => (
+            <article key={row.title + row.why} data-testid="why-talk">
+              <b>{row.title}</b>
+              <div>{row.why}</div>
+            </article>
+          ))}
+          {!detail.whyNow.length ? <p>No tagged talks to put forward yet.</p> : null}
+        </div>
+      </section>
+      <section className="panel" style={{ marginBottom: 18 }} data-testid="feed-pushed">
+        <header><h2>What the feed has put forward</h2></header>
+        <div className="body" style={{ display: 'grid', gap: 10 }}>
+          {detail.serves.map((row) => (
+            <article key={row.at + row.title} data-testid="serve-row">
+              <b>{row.title}</b> <span className="chip">{row.kind}</span> <span className="chip">{row.engaged ? 'Watched' : 'Not yet'}</span>
+              <div className="hint">{shortDate(row.at)}. {row.why}</div>
+            </article>
+          ))}
+          {!detail.serves.length ? <p>Nothing put forward yet.</p> : null}
+        </div>
+      </section>
       <section className="panel" data-testid="attribution">
-        <header className="light"><h2>What was watched between looks</h2></header>
+        <header><h2>What was watched between looks</h2></header>
         <div className="body" style={{ display: 'grid', gap: 12 }}>
           {detail.attribution.map((row) => (
             <article key={`${row.scale}-${row.from}-${row.to}`} data-testid="attribution-row" data-scale={row.scale}>

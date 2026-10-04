@@ -68,6 +68,11 @@ export function withLife<T extends Partial<Record<ScaleKey, number>>>(reading: T
   return { ...reading, [boost]: pulled }
 }
 
+/** Pulls every life-event scale, without changing the stored reading. */
+export function withLives<T extends Partial<Record<ScaleKey, number>>>(reading: T, boosts: ScaleKey[]): T {
+  return boosts.reduce((current, scale) => withLife(current, scale), reading)
+}
+
 export function summarise(input: {
   copy?: CompassCopy
   now: AreaReading[]
