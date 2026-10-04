@@ -140,8 +140,8 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
               <div className={styles.funnel}>
                 {desk.funnel.steps.map((step) => (
                   <div key={step.key} className={styles.bar} data-testid="funnel-step" data-step={step.key}>
-                    <b>{step.label}</b>
-                    <span className={styles.quiet}>{step.sessions} sessions · {pct(step.fromStart)} of those who began · {pct(step.dropOff)} left here</span>
+                    <p className={styles.barLabel}>{step.label}</p>
+                    <p className={styles.quiet}>{step.sessions} sessions · {pct(step.fromStart)} of those who began · {pct(step.dropOff)} left here</p>
                     <span className={styles.meter} style={{ width: `${Math.max(6, Math.round(step.fromStart * 100))}%` }} />
                   </div>
                 ))}
@@ -181,8 +181,8 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
               <div className={styles.funnel}>
                 {desk.retention.points.map((point) => (
                   <div key={point.day} className={styles.bar} data-testid="retention-day" data-day={point.day}>
-                    <b>Day {point.day}</b>
-                    <span className={styles.quiet}>{point.returned} came back · {pct(point.rate)}</span>
+                    <p className={styles.barLabel}>Day {point.day}</p>
+                    <p className={styles.quiet}>{point.returned} came back · {pct(point.rate)}</p>
                     <span className={styles.meter} style={{ width: `${Math.max(6, Math.round(point.rate * 100))}%` }} />
                   </div>
                 ))}

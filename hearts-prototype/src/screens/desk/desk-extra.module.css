@@ -62,8 +62,8 @@
   border-radius: 12px;
   padding: 10px 12px;
 }
-.bar b { display: block; color: #f1d58a; font-size: 15px; }
-.bar span { display: block; }
+.barLabel { display: block; margin: 0; color: #f1d58a; font-size: 15px; font-weight: 700; }
+.bar p { display: block; margin: 0; }
 .meter {
   display: block;
   height: 10px;
