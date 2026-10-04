@@ -323,6 +323,20 @@ test.describe('Help shape HEARTS', () => {
   })
 })
 
+test('Toronto 7 Feb 2027 is Sha\'ban before sunset and 1 Ramadan at 19:30 ET', async ({ browser }) => {
+  test.setTimeout(60_000)
+  const desk = await browser.newPage()
+  await desk.setViewportSize(DESK)
+  await signIn(desk, 'master@hearts.test', 'hearts-master', '/master/calendar')
+  await desk.goto('/master/calendar?date=2027-02-07&hour=16&zone=America/Toronto')
+  await expect(desk.getByTestId('calendar-phone')).toHaveAttribute('data-hijri', /^(29|30) Sha'ban 1448$/)
+  await desk.screenshot({ path: `${SHOTS}/calendar-toronto-before-sunset.png`, fullPage: true })
+  await desk.goto('/master/calendar?date=2027-02-07&hour=19&minute=30&zone=America/Toronto')
+  await expect(desk.getByTestId('calendar-phone')).toHaveAttribute('data-hijri', '1 Ramadan 1448')
+  await desk.screenshot({ path: `${SHOTS}/calendar-toronto-1930.png`, fullPage: true })
+  await desk.close()
+})
+
 test('a Friday calendar window reaches the feed gold button', async ({ browser, playwright }) => {
   test.setTimeout(90_000)
   const api = await playwright.request.newContext({ baseURL: E2E_BASE })
