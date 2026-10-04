@@ -231,6 +231,7 @@ test('the extended cut opens on our own poster with the talk title, never a titl
   const feed = page.getByTestId('journey')
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
   await settled(feed, page)
+  if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').click()
   await stepTo(page, feed, 'talk')
   const lessonId = await feed.getAttribute('data-lesson')
   const cut = await feed.getAttribute('data-cut')
