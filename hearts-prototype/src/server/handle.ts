@@ -1177,7 +1177,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
     const portal = acting.portal.id
-    const targetType = text(form, 'targetType') === 'pack' ? 'pack' : 'course'
+    const targetType: 'course' | 'pack' = text(form, 'targetType') === 'pack' ? 'pack' : 'course'
     let courseIds: number[] = []
     if (targetType === 'pack') {
       const pack = await findDoc(payload, 'packs', Number(text(form, 'pack')))

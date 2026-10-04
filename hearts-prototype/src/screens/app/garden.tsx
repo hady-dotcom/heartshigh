@@ -91,8 +91,9 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
     const clause = clauses.find((row) => row.id === ref(tag.clause))
     const door = clause ? doorOfClause(Number(clause.number), doors) : null
     if (!door) continue
-    if (done.has(ref(cut.lesson))) lit.add(door.number)
-    if (watchedIds.has(ref(cut.lesson))) activityLit.add(door.number)
+    const lessonId = ref(cut.lesson)
+    if (lessonId && done.has(lessonId)) lit.add(door.number)
+    if (lessonId && watchedIds.has(lessonId)) activityLit.add(door.number)
   }
   const at = now()
   const harvestNew = harvest.filter((row) => isNewMoment(str(row.createdAt) || str(row.gatheredAt), str(row.seenAt) || null, at)).length

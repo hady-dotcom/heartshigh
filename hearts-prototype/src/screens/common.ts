@@ -11,6 +11,10 @@ export type Query = {
   t?: string
   answer?: string
   course?: string
+  start?: string
+  end?: string
+  days?: string
+  minutes?: string
   filter?: string
   kind?: string
   group?: string
