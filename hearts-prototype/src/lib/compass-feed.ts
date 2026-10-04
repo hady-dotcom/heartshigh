@@ -85,11 +85,28 @@ export function quotas(take: number, mix?: Partial<Mix> | null) {
   return { deficit, strength, discovery }
 }
 
-/** "Door 7, Fasting Ramadan". The desk never shows the working code. */
+/** "Door 7, Fasting Ramadan". A missing door is left out, never "Door X". */
 export function doorPhrase(number: number) {
+  if (!Number.isInteger(number) || number < 1) return ''
   const door = doorByNumber(number)
-  if (!door) return `Door ${number}`
-  return `Door ${number}, ${door.title.split(':')[0].trim()}`
+  if (!door) return ''
+  const title = door.title.split(':')[0].trim()
+  return title ? `Door ${number}, ${title}` : ''
+}
+
+/** Jan … Sep. en-GB short months say "Sept", which clashes with May and Jun. */
+export const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+export function monthShort(at: number | string) {
+  const date = new Date(at)
+  if (Number.isNaN(date.getTime())) return ''
+  return MONTH_SHORT[date.getUTCMonth()]
+}
+
+export function compassDate(at: number | string) {
+  const date = new Date(at)
+  if (Number.isNaN(date.getTime())) return ''
+  return `${date.getUTCDate()} ${MONTH_SHORT[date.getUTCMonth()]}`
 }
 
 export function kindLabel(kind: string) {
@@ -111,32 +128,89 @@ const DOOR_HELP: Record<ScaleKey, string> = {
   discipline: 'the prayer',
 }
 
+function withDoor(name: string, scale: ScaleKey, stem: string) {
+  const door = doorPhrase(SCALE_DOOR[scale])
+  return door ? `${stem} ${door} talks ${name}.` : `${stem} talks for this area ${name}.`
+}
+
 export function whyDeficit(scale: ScaleKey) {
-  return `Low on ${SCALE_NAME[scale]}, so ${doorPhrase(SCALE_DOOR[scale])} talks get a boost.`
+  return tidyDesk(withDoor('get a boost', scale, `Low on ${SCALE_NAME[scale]}, so`))
 }
 
 export function whyStrength(scale: ScaleKey) {
-  return `Steady on ${SCALE_NAME[scale]}, so ${doorPhrase(SCALE_DOOR[scale])} talks stay in the mix.`
+  return tidyDesk(withDoor('stay in the mix', scale, `Steady on ${SCALE_NAME[scale]}, so`))
 }
 
 export const WHY_DISCOVERY = 'Something from another part of the sitting, so the feed is not only the quieter scales.'
 
+/** A second door when two quiet scales would otherwise name the same one. */
+const ALT_DOOR: Record<ScaleKey, number> = {
+  desire: 4,
+  greed: 8,
+  anger: 14,
+  ego: 20,
+  worry: 17,
+  belonging: 19,
+  gratitude: 1,
+  faith: 12,
+  compassion: 2,
+  discipline: 7,
+}
+
+/** One door each, the remedy first, then the next unused door. */
+export function teachDoors(scales: ScaleKey[]) {
+  const used = new Set<number>()
+  return scales.map((scale) => {
+    const door = [SCALE_DOOR[scale], ALT_DOOR[scale]].find((number) => !used.has(number)) ?? SCALE_DOOR[scale]
+    used.add(door)
+    return door
+  })
+}
+
 /** Three different sentences, so Teach next does not repeat one template. */
-export function teachLine(scale: ScaleKey, index: number) {
+export function teachLine(scale: ScaleKey, index: number, door = SCALE_DOOR[scale]) {
   const name = SCALE_NAME[scale]
-  const phrase = doorPhrase(SCALE_DOOR[scale])
+  const phrase = doorPhrase(door)
   const help = DOOR_HELP[scale]
+  const where = phrase || 'A talk in this area'
   const lines = [
-    `${name} is the circle's quietest area this month. ${phrase} talks on ${help} would help most.`,
-    `${name} is where the circle is quiet. Open ${phrase}, and teach ${help}.`,
-    `For ${name}, start with ${phrase}. A talk on ${help} gives people something to hold.`,
+    `${name} is the circle's quietest area this month. ${where} talks on ${help} would help most.`,
+    `${name} is where the circle is quiet. Open ${where}, and teach ${help}.`,
+    `For ${name}, start with ${where}. A talk on ${help} gives people something to hold.`,
   ]
-  return lines[index % lines.length]
+  return tidyDesk(lines[index % lines.length])
+}
+
+/** Drops a placeholder door. A real door title is kept. */
+export function tidyDesk(why: string) {
+  return why
+    .replace(/\bDoor X\b,?\s*/gi, '')
+    .replace(/\b(undefined|null|NaN)\b/g, '')
+    .replace(/\s+,/g, ',')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
 }
 
 /** Turns a stored working code into the door a person can teach. */
 export function plainWhy(why: string) {
-  return why.replace(/\bW(\d{1,2})\b/g, (_, number: string) => doorPhrase(Number(number)))
+  const named = why.replace(/\bW(\d{1,2})\b/g, (_, number: string) => doorPhrase(Number(number)))
+  return tidyDesk(named)
+}
+
+/** One row per talk. Clip kinds sit together instead of repeating the title. */
+export function combineServes<T extends { title: string; kind: string; engaged?: boolean }>(rows: T[]) {
+  const grouped = new Map<string, T & { kinds: string[] }>()
+  for (const row of rows) {
+    const key = row.title.trim().toLowerCase()
+    const found = grouped.get(key)
+    if (!found) {
+      grouped.set(key, { ...row, kinds: [row.kind] })
+      continue
+    }
+    if (!found.kinds.includes(row.kind)) found.kinds.push(row.kind)
+    if (row.engaged) found.engaged = true
+  }
+  return [...grouped.values()]
 }
 
 function strongestWeight(item: FeedCandidate) {

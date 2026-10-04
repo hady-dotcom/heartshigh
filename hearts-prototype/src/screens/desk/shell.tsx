@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import type { Payload } from 'payload'
 import { BrandMark } from '@/components/brand'
+import { DeskFade } from '@/components/app/route-fade'
 import { Flash, Hidden } from '@/components/app/shell'
 import { BellIcon, BookIcon, HeartIcon, CalendarIcon, CogIcon, GlobeIcon, HomeIcon, KeyIcon, LibraryIcon, MoonIcon, PeopleIcon, QuestionIcon } from '@/components/icons'
 import type { SessionUser } from '@/server/context'
@@ -84,6 +85,7 @@ export async function DeskFrame({
   query,
   testId,
   evening,
+  logoUrl,
   children,
 }: {
   payload: Payload
@@ -102,6 +104,8 @@ export async function DeskFrame({
   query: { error?: string; notice?: string }
   testId?: string
   evening?: boolean
+  /** A portal logo, when one has been set. Otherwise the HEARTS arch. */
+  logoUrl?: string | null
   children: ReactNode
 }) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 12 })).filter((note) => note.channel !== 'email-stub')
@@ -120,7 +124,7 @@ export async function DeskFrame({
     <div className={evening ? 'desk evening' : 'desk'} data-testid={testId}>
       <aside className="side">
         <Link className="side-brand" href={brandHref}>
-          <BrandMark size={40} />
+          {logoUrl ? <img className="side-logo" alt="" src={logoUrl} /> : <BrandMark size={40} />}
           <span><b>{brand}</b><small>{subBrand}</small></span>
         </Link>
         {nav.map((group) => (
@@ -181,7 +185,7 @@ export async function DeskFrame({
           </div>
         </div>
         <Flash error={query.error} notice={query.notice} />
-        {children}
+        <DeskFade>{children}</DeskFade>
       </main>
     </div>
     </>

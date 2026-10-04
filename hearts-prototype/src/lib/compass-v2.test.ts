@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { authorTextProblems } from './opening-data'
 import { BANK, LIFE_EVENTS, MONTH_FORMS, applyMonth, formById, formForRound } from './compass-bank'
-import { DEFAULT_MIX, SCALE_DOOR, quotas, rankFeed, whyDeficit } from './compass-feed'
+import { DEFAULT_MIX, SCALE_DOOR, combineServes, compassDate, doorPhrase, monthShort, plainWhy, quotas, rankFeed, teachDoors, teachLine, whyDeficit, whyStrength } from './compass-feed'
 import { SCALE_KEYS, type ScaleKey } from './heart'
 import { PERSONA_BANDS } from './persona-data'
 import { matchPersonas, nearestPersona, rangesDisjoint } from './persona'
@@ -101,6 +101,35 @@ test('the shelf is 60, 25 and 15, and the why line names the scale and the door'
   const namesRow = mismatched.find((row) => row.id === 'names')
   assert.notEqual(namesRow?.why, griefWhy)
   assert.notEqual(namesRow?.why, whyDeficit('worry'))
+})
+
+const PLACEHOLDER = /\bDoor X\b|\bundefined\b|\bnull\b|\bNaN\b/
+
+test('desk lines name a real door, and September is Sep', () => {
+  for (const scale of SCALE_KEYS) {
+    assert.doesNotMatch(whyDeficit(scale), PLACEHOLDER)
+    assert.doesNotMatch(whyStrength(scale), PLACEHOLDER)
+    assert.doesNotMatch(teachLine(scale, 0), PLACEHOLDER)
+    assert.doesNotMatch(teachLine(scale, 1), PLACEHOLDER)
+  }
+  assert.equal(doorPhrase(Number.NaN), '')
+  assert.equal(doorPhrase(0), '')
+  const cleaned = plainWhy('Low on Fear, so Door X, qadr and qada come forward.')
+  assert.doesNotMatch(cleaned, PLACEHOLDER)
+  assert.match(cleaned, /qadr and qada/)
+  assert.equal(monthShort('2026-09-03T12:00:00.000Z'), 'Sep')
+  assert.equal(compassDate('2026-06-03T12:00:00.000Z'), '3 Jun')
+  const shared = teachDoors(['ego', 'desire'])
+  assert.equal(shared.length, 2)
+  assert.notEqual(shared[0], shared[1])
+  assert.notEqual(teachDoors(['worry', 'gratitude'])[0], teachDoors(['worry', 'gratitude'])[1])
+  const rows = combineServes([
+    { title: 'Praying the night on', kind: 'appetiser', engaged: false },
+    { title: 'Praying the night on', kind: 'hors', engaged: true },
+  ])
+  assert.equal(rows.length, 1)
+  assert.deepEqual(rows[0].kinds, ['appetiser', 'hors'])
+  assert.equal(rows[0].engaged, true)
 })
 
 test('demo passwords are set only for accounts this run creates, and life notes do not repeat', () => {

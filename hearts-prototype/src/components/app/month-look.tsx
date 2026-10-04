@@ -11,6 +11,7 @@ export function MonthLook({
   scenes,
   life,
   lifeCaption,
+  intro,
   formId,
   portal,
   next,
@@ -18,6 +19,7 @@ export function MonthLook({
   scenes: Scene[]
   life: Life[]
   lifeCaption: string
+  intro?: string
   formId: string
   portal: string
   next: string
@@ -36,12 +38,19 @@ export function MonthLook({
 
   function choose(key: string, option: string) {
     setPicks((current) => ({ ...current, [key]: option }))
-    window.setTimeout(() => go(Math.min(scenes.length, step + 1), 'on'), 220)
+    window.setTimeout(() => go(Math.min(scenes.length, step + 1), 'on'), 360)
   }
 
   return (
     <form action="/api/compass" method="post" className="month-look">
       <Hidden fields={{ next, portal, form: formId, ...picks }} />
+      {!onLife && scene ? (
+        <div className="month-progress">
+          <p className="progress" data-testid="progress">{step + 1} of {scenes.length}</p>
+          <span className="progress-line" aria-hidden="true"><i style={{ width: `${((step + 1) / scenes.length) * 100}%` }} /></span>
+        </div>
+      ) : null}
+      {step === 0 && !onLife && intro ? <p className="lead">{intro}</p> : null}
       {onLife ? (
         <fieldset key="life" className={`card month-card ${dir}`} data-testid="life-check">
           <legend>{lifeCaption}</legend>
@@ -55,12 +64,10 @@ export function MonthLook({
           <label className="note-label" htmlFor="life-note">A line, if you want to add one</label>
           <textarea id="life-note" name="lifeNote" maxLength={280} rows={3} data-testid="life-note" placeholder="Optional." />
           <button className="pill gold block" type="submit" data-testid="month-save">Keep this month</button>
-          <button className="text-back" type="button" data-testid="month-back" onClick={() => go(lastQuestion, 'back')}>Back</button>
+          <button className="back month-back" type="button" data-testid="month-back" onClick={() => go(lastQuestion, 'back')}>‹ Back</button>
         </fieldset>
       ) : scene ? (
         <fieldset key={scene.key} className={`card month-card ${dir}`} data-testid="month-scene" data-scene={scene.key}>
-          <p className="progress" data-testid="progress">{step + 1} of {scenes.length}</p>
-          <span className="progress-line" aria-hidden="true"><i style={{ width: `${((step + 1) / scenes.length) * 100}%` }} /></span>
           <legend>{scene.caption}</legend>
           {scene.subline ? <p className="muted">{scene.subline}</p> : null}
           {scene.options.map((option) => (
@@ -69,7 +76,7 @@ export function MonthLook({
               <span>{option.label}</span>
             </label>
           ))}
-          {step > 0 ? <button className="text-back" type="button" data-testid="month-back" onClick={() => go(step - 1, 'back')}>Back</button> : null}
+          {step > 0 ? <button className="back month-back" type="button" data-testid="month-back" onClick={() => go(step - 1, 'back')}>‹ Back</button> : null}
         </fieldset>
       ) : null}
     </form>

@@ -105,14 +105,9 @@ export function summarise(input: {
   const steps: LearnerCompass['steps'] = []
   const first = focusRows[0]
   const voice = first ? LEARNER_VOICE[first.scale] : null
-  if (voice) steps.push({ title: voice.name, detail: voice.step })
-  const matched = first
-    ? steered.find((talk) => {
-        const main = talk.scales.reduce((max, tag) => Math.max(max, tag.weight || 0), 0)
-        return talk.scales.some((tag) => tag.scale === first.scale && (tag.weight || 0) >= main && main > 0)
-      })
-    : null
+  const matched = first ? talkForScale(first.scale, input.talks) : null
   if (matched) steps.push({ title: matched.title, detail: 'Sit with this when you have a few minutes.', href: matched.href })
+  if (voice) steps.push({ title: voice.name, detail: voice.step })
   return {
     kind: 'path',
     focusLine: showFocus ? focusLine(copy.focusLead, areas.map((area) => area.area)) : null,
@@ -121,6 +116,20 @@ export function summarise(input: {
     talks,
     movement: [],
   }
+}
+
+/** A talk whose strongest tag is this scale, or failing that one that carries it at all. */
+function talkForScale(scale: ScaleKey, talks: { title: string; href: string; scales: SteerTag[] }[]) {
+  const scored = talks
+    .map((talk) => {
+      const main = talk.scales.reduce((max, tag) => Math.max(max, tag.weight || 0), 0)
+      const tag = talk.scales.find((row) => row.scale === scale)
+      const fit = !tag || main <= 0 ? 0 : (tag.weight || 0) >= main ? 2 : (tag.weight || 0) > 0 ? 1 : 0
+      return { talk, fit }
+    })
+    .filter((row) => row.fit > 0)
+    .sort((a, b) => b.fit - a.fit)
+  return scored[0]?.talk
 }
 
 /** The one or two lowest readings. A scale that is already flourishing stays off the line. */

@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { kindLabel, plainWhy, teachLine } from '@/lib/compass-feed'
+import { combineServes, compassDate, kindLabel, monthShort, plainWhy, teachDoors, teachLine } from '@/lib/compass-feed'
 import { SCALE_KEYS, type ScaleKey } from '@/lib/heart'
 import { staffLearner, staffPortal } from '@/server/compass'
-import { type Ctx, shortDate } from '../common'
+import { type Ctx } from '../common'
 import { AdminFrame } from './overview'
 import { Hidden } from '@/components/app/shell'
 
@@ -30,7 +30,7 @@ function personaSummary(rows: { at: string; title: string }[]) {
 }
 
 function monthName(at: number | string) {
-  return new Date(at).toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' })
+  return monthShort(at)
 }
 
 function Spark({ points }: { points: { at: number | string; rung: number }[] }) {
@@ -84,7 +84,7 @@ export async function PortalCompassScreen(ctx: Ctx) {
           <div data-testid="cohort-weak">
             <p className="eyebrow">Teach next</p>
             {summary.weakest.map((row, index) => (
-              <p key={row.scale} data-testid="weak-scale">{teachLine(row.scale, index)} Latest score {signed(row.mean)}.</p>
+              <p key={row.scale} data-testid="weak-scale">{teachLine(row.scale, index, teachDoors(summary.weakest.map((item) => item.scale))[index])} Latest score {signed(row.mean)}.</p>
             ))}
             {!summary.weakest.length ? <p>Once a few people have sat with the compass, the quieter scales will show here.</p> : null}
           </div>
@@ -104,20 +104,39 @@ export async function PortalCompassScreen(ctx: Ctx) {
       <section className="panel" style={{ marginBottom: 18 }}>
         <header><h2>The chapter</h2></header>
         <div className="table-wrap">
-          <table className="data">
-            <thead><tr><th>Scale</th><th className="num">Earlier</th><th className="num">Latest</th><th>Talks beside an upward move</th><th className="num">People</th></tr></thead>
-            <tbody>
-              {summary.scales.map((scale) => (
-                <tr key={scale.scale} data-testid="portal-scale" data-scale={scale.scale}>
-                  <td><b>{scale.name}</b></td>
-                  <td className="num" data-testid="mean-then">{signed(scale.meanThen)}</td>
-                  <td className="num" data-testid="mean-now">{signed(scale.meanNow)}</td>
-                  <td data-testid="helped-by">{scale.helpedBy.length ? scale.helpedBy.map((item) => `${item.title} (${item.lifts})`).join(', ') : '—'}</td>
-                  <td className="num">{scale.learners}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {summary.scales.some((scale) => scale.helpedBy.length) ? (
+            <table className="data">
+              <thead><tr><th>Scale</th><th className="num">Earlier</th><th className="num">Latest</th><th>Talks beside an upward move</th><th className="num">People</th></tr></thead>
+              <tbody>
+                {summary.scales.map((scale) => (
+                  <tr key={scale.scale} data-testid="portal-scale" data-scale={scale.scale}>
+                    <td><b>{scale.name}</b></td>
+                    <td className="num" data-testid="mean-then">{signed(scale.meanThen)}</td>
+                    <td className="num" data-testid="mean-now">{signed(scale.meanNow)}</td>
+                    <td data-testid="helped-by">{scale.helpedBy.length ? scale.helpedBy.map((item) => `${item.title} (${item.lifts})`).join(', ') : '—'}</td>
+                    <td className="num">{scale.learners}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <>
+              <table className="data">
+                <thead><tr><th>Scale</th><th className="num">Earlier</th><th className="num">Latest</th><th className="num">People</th></tr></thead>
+                <tbody>
+                  {summary.scales.map((scale) => (
+                    <tr key={scale.scale} data-testid="portal-scale" data-scale={scale.scale}>
+                      <td><b>{scale.name}</b></td>
+                      <td className="num" data-testid="mean-then">{signed(scale.meanThen)}</td>
+                      <td className="num" data-testid="mean-now">{signed(scale.meanNow)}</td>
+                      <td className="num">{scale.learners}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="hint" data-testid="helped-empty">No tagged talk sat in the month before a rise.</p>
+            </>
+          )}
         </div>
       </section>
       <section className="panel">
@@ -157,9 +176,11 @@ export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
         </div>
       </section>
       <section className="panel" style={{ marginBottom: 18 }}>
-        <header><h2>Each scale, month by month</h2></header>
-        <div className="body sparks" data-testid="scale-sparks">
+        <header>
+          <h2>Each scale, month by month</h2>
           <p className="spark-legend"><span><i className="up" /> Rising</span><span><i className="down" /> Quieter</span></p>
+        </header>
+        <div className="body sparks" data-testid="scale-sparks">
           {detail.series.map((row) => {
             const last = row.points[row.points.length - 1]
             const first = row.points[0]
@@ -180,7 +201,7 @@ export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
             <thead>
               <tr>
                 <th>Scale</th>
-                {columns.map((attempt) => <th key={attempt.at} className="num">{shortDate(attempt.at)}<div className="hint">{attempt.bank === 'month' ? 'Month' : 'Opening'}</div></th>)}
+                {columns.map((attempt) => <th key={attempt.at} className="num">{compassDate(attempt.at)}<div className="hint">{attempt.bank === 'month' ? 'Month' : 'Opening'}</div></th>)}
               </tr>
             </thead>
             <tbody>
@@ -210,7 +231,7 @@ export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
         <header><h2>What was going on</h2></header>
         <ol className="body timeline">
           {detail.life.map((row) => (
-            <li key={row.at}><time>{shortDate(row.at)}</time> {row.label}{row.note ? <span className="hint"> — {row.note}</span> : null}</li>
+            <li key={row.at}><time>{compassDate(row.at)}</time> {row.label}{row.note ? <span className="hint"> — {row.note}</span> : null}</li>
           ))}
           {!detail.life.length ? <li>No life check-in yet.</li> : null}
         </ol>
@@ -230,10 +251,10 @@ export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
       <section className="panel" style={{ marginBottom: 18 }} data-testid="feed-pushed">
         <header><h2>What the feed has put forward</h2></header>
         <div className="body" style={{ display: 'grid', gap: 10 }}>
-          {detail.serves.map((row) => (
-            <article key={row.at + row.title} data-testid="serve-row">
-              <b>{row.title}</b> <span className="chip">{kindLabel(row.kind)}</span> <span className="chip">{row.engaged ? 'Watched' : 'Not yet'}</span>
-              <div className="hint">{shortDate(row.at)}. {plainWhy(row.why)}</div>
+          {combineServes(detail.serves).map((row) => (
+            <article key={row.title} data-testid="serve-row">
+              <b>{row.title}</b> {row.kinds.map((kind) => <span key={kind} className="chip">{kindLabel(kind)}</span>)} <span className="chip">{row.engaged ? 'Watched' : 'Not yet'}</span>
+              <div className="hint">{compassDate(row.at)}. {plainWhy(row.why)}</div>
             </article>
           ))}
           {!detail.serves.length ? <p>Nothing put forward yet.</p> : null}

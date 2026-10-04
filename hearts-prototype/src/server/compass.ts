@@ -380,15 +380,15 @@ async function shelfFor(payload: Payload, userId: number, slug: string) {
   const events = lifeByKeys(latest?.lifeKeys || [])
   const reading = withLives(latest?.scales || {}, [...new Set(events.flatMap((event) => event.scales))])
   const ranked = rankFeed(talks, reading, { take: 4, mix, life: events, recentDoors: doors })
-  return { attempts, ranked, mix, portalId }
+  return { attempts, ranked, mix, portalId, talks }
 }
 
 export async function learnerPath(payload: Payload, userId: number, slug: string): Promise<LearnerCompass> {
   const [copy, index, shelf] = await Promise.all([loadCopy(payload), scaleIndex(payload), shelfFor(payload, userId, slug)])
-  const { attempts, ranked, mix, portalId } = shelf
+  const { attempts, ranked, mix, portalId, talks } = shelf
   const latest = attempts.at(-1)
   const previous = attempts.length > 1 ? attempts[attempts.length - 2] : null
-  const ordered = ranked.map((talk) => ({ title: talk.title, href: talk.href, scales: talk.scales }))
+  const ordered = talks.map((talk) => ({ title: talk.title, href: talk.href, scales: talk.scales }))
   const summary = summarise({ copy, now: areasOf(latest, index.focus), before: areasOf(previous || undefined, index.focus), talks: ordered })
   summary.talks = ranked.filter((talk) => !rawScoreLeak({ title: talk.title, href: talk.href })).map((talk) => ({ title: talk.title, href: talk.href }))
   if (portalId && ranked.length) await rememberServes(payload, userId, portalId, ranked, mix)

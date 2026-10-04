@@ -61,12 +61,16 @@ function tenantsOf(user: Doc) {
   return rows.map((row) => idOf((row as { tenant?: unknown }).tenant)).filter((id): id is number => Boolean(id))
 }
 
-/** The 15th of each of the five months before the latest look, then the latest look itself. */
+/** Days of the five months before the latest look. Not the 15th, so the chart does not look stamped. */
+const LOOK_DAYS = [3, 18, 9, 27, 2]
+
+/** Those five days, then the latest look itself. */
 function lookAges(lastDays: number, nowMs: number) {
   const last = new Date(nowMs - lastDays * DAY)
   const ages: number[] = []
   for (let back = 5; back >= 1; back -= 1) {
-    const at = new Date(Date.UTC(last.getUTCFullYear(), last.getUTCMonth() - back, 15, 12, 0, 0))
+    const day = LOOK_DAYS[5 - back]
+    const at = new Date(Date.UTC(last.getUTCFullYear(), last.getUTCMonth() - back, day, 12, 0, 0))
     const age = Math.round((nowMs - at.getTime()) / DAY)
     if (age > lastDays + 5) ages.push(age)
   }
@@ -74,7 +78,15 @@ function lookAges(lastDays: number, nowMs: number) {
   return ages
 }
 
-function drifted(band: PersonaBand, month: number) {
+/** A scale that can sit below zero and then rise, still inside the persona band. */
+function liftScale(band: PersonaBand): ScaleKey {
+  const room = band.ranges
+    .filter((row) => row.min != null && row.max != null && row.min < 0 && row.max > row.min)
+    .sort((a, b) => (b.max! - b.min!) - (a.max! - a.min!) || SCALE_KEYS.indexOf(a.scale) - SCALE_KEYS.indexOf(b.scale))
+  return room[0]?.scale || SCALE_KEYS[0]
+}
+
+function drifted(band: PersonaBand, month: number, months: number, lift: ScaleKey) {
   const reading = midpointReading(band)
   for (const row of band.ranges) {
     if (row.min == null || row.max == null) continue
@@ -83,7 +95,23 @@ function drifted(band: PersonaBand, month: number) {
     const rung = Math.min(row.max, Math.max(row.min, mid + wobble))
     reading[row.scale] = rung / 10
   }
+  const span = band.ranges.find((row) => row.scale === lift)
+  const low = span?.min != null && span.min < 0 ? span.min : -5
+  const high = span?.max != null && span.max > low ? span.max : low + 4
+  reading[lift] = (month < months - 1 ? low : high) / 10
   return reading
+}
+
+function sameUtcDay(stored: unknown, wanted: string) {
+  const left = new Date(String(stored || ''))
+  const right = new Date(wanted)
+  if (Number.isNaN(left.getTime()) || Number.isNaN(right.getTime())) return false
+  return left.getUTCFullYear() === right.getUTCFullYear() && left.getUTCMonth() === right.getUTCMonth() && left.getUTCDate() === right.getUTCDate()
+}
+
+function scalesDiffer(stored: unknown, wanted: Partial<Record<ScaleKey, number>>) {
+  const current = stored && typeof stored === 'object' ? stored as Record<string, unknown> : {}
+  return SCALE_KEYS.some((key) => wanted[key] != null && Number(current[key]) !== wanted[key])
 }
 
 async function main() {
@@ -210,12 +238,14 @@ async function main() {
     const band = PERSONA_V2.find((row) => row.key === person.persona)
     if (!band) continue
     const ages = lookAges(person.lastDays || 12, nowMs)
+    const lift = liftScale(band)
     for (let month = 0; month < ages.length; month += 1) {
       const demoKey = `${SLUG}:${person.email}:${month}`
       const already = await one(payload, 'compass-attempts', { demoKey: { equals: demoKey } })
       const at = new Date(nowMs - ages[month] * DAY).toISOString()
       const life = lifeForDemo(personIndex, month)
       const monthRound = month === 0 ? null : formForRound(month - 1)
+      const scales = drifted(band, month, ages.length, lift)
       if (!already) {
         await payload.create({
           collection: 'compass-attempts',
@@ -230,16 +260,21 @@ async function main() {
             lifeKeys: life.keys,
             lifeNote: life.note || undefined,
             demoKey,
-            scales: drifted(band, month),
+            scales,
           },
         } as never)
-      } else if (String(already.lifeNote || '') !== life.note || JSON.stringify(already.lifeKeys || []) !== JSON.stringify(life.keys)) {
-        await payload.update({
-          collection: 'compass-attempts',
-          id: already.id,
-          overrideAccess: true,
-          data: { lifeKey: life.keys[0], lifeKeys: life.keys, lifeNote: life.note || undefined },
-        } as never)
+      } else {
+        const data: Record<string, unknown> = {}
+        if (!sameUtcDay(already.at, at)) data.at = at
+        if (scalesDiffer(already.scales, scales)) data.scales = scales
+        if (String(already.lifeNote || '') !== life.note || JSON.stringify(already.lifeKeys || []) !== JSON.stringify(life.keys)) {
+          data.lifeKey = life.keys[0]
+          data.lifeKeys = life.keys
+          data.lifeNote = life.note || undefined
+        }
+        if (Object.keys(data).length) {
+          await payload.update({ collection: 'compass-attempts', id: already.id, overrideAccess: true, data } as never)
+        }
       }
       if (month < 2) continue
       const scale = SCALE_KEYS[month % SCALE_KEYS.length]
@@ -282,6 +317,25 @@ async function main() {
               data: { user: user.id, lesson: lessonId, portal: portalId, percent: 100, sourceLevel: 'appetiser', watchedAt: new Date(nowMs - ages[month] * DAY + 2 * DAY).toISOString() },
             })
           }
+        }
+      }
+    }
+    const liftLesson = lessons.get(lift)
+    if (ages.length >= 2 && liftLesson) {
+      const prevAt = nowMs - ages[ages.length - 2] * DAY
+      const lastAt = nowMs - ages[ages.length - 1] * DAY
+      const watchedAt = new Date(prevAt + Math.round((lastAt - prevAt) * 0.45)).toISOString()
+      const watched = await one(payload, 'completions', { and: [{ user: { equals: user.id } }, { lesson: { equals: liftLesson } }] })
+      if (!watched) {
+        await payload.create({
+          collection: 'completions',
+          overrideAccess: true,
+          data: { user: user.id, lesson: liftLesson, percent: 100, sourceLevel: 'appetiser', watchedAt },
+        })
+      } else {
+        const when = new Date(String(watched.watchedAt || watched.createdAt || '')).getTime()
+        if (!(when >= prevAt && when < lastAt)) {
+          await payload.update({ collection: 'completions', id: watched.id, overrideAccess: true, data: { watchedAt } })
         }
       }
     }

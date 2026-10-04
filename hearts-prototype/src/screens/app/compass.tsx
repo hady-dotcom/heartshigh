@@ -42,11 +42,11 @@ export async function RecalibrateScreen({ payload, user, portal, base, query }: 
       <div className="app-scroll compass-learner">
         <div className="app-head"><Back href={base} label="Home" /><h1>A fresh look</h1></div>
         <Flash error={query.error} notice={query.notice} />
-        <p className="lead">{due ? 'It has been about a month. Five short questions, in different words.' : 'You can take another look whenever you like. The words are a little different this time.'}</p>
         <MonthLook
           scenes={scenes}
           life={LIFE_EVENTS.map((option) => ({ key: option.key, label: option.label }))}
           lifeCaption={copy.lifeCaption}
+          intro={due ? 'It has been about a month. Five short questions, in different words.' : 'You can take another look whenever you like. The words are a little different this time.'}
           formId={formId}
           portal={String(portal.slug || '')}
           next={`${base}/me/path`}

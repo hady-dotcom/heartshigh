@@ -12,3 +12,13 @@ export function RouteFade({ children }: { children: ReactNode }) {
     </div>
   )
 }
+
+/** A short fade on the desk main column. It never drops to a blank frame. */
+export function DeskFade({ children }: { children: ReactNode }) {
+  const path = usePathname()
+  return (
+    <div key={path} className="desk-fade">
+      {children}
+    </div>
+  )
+}
