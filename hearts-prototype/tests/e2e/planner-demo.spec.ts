@@ -26,13 +26,13 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
   const href = await sittingCard.locator('[data-testid=lesson-link], [data-testid=peek]').getAttribute('href')
   expect(href).toBeTruthy()
   const sittingId = Number(/course\/(\d+)/.exec(href || '')?.[1] || 0)
-  const lessons = await page.request.get(`/api/lessons?where[course][equals]=${sittingId}&limit=20&depth=0&sort=order`).then((res) => res.json()) as { docs?: { id: number; title?: string }[] }
-  const talks = lessons.docs || []
-  expect(talks.length).toBeGreaterThanOrEqual(2)
 
   await page.goto(href!)
   await expect(page.getByTestId('course-overview')).toBeVisible()
   await expect(page.getByTestId('buffet-talk')).toHaveCount(10)
+  const talkHrefs = await page.getByTestId('buffet-talk').evaluateAll((nodes) => nodes.map((node) => (node as HTMLAnchorElement).getAttribute('href') || ''))
+  const talkIds = talkHrefs.map((link) => Number(/part=(\d+)/.exec(link)?.[1] || 0)).filter(Boolean)
+  expect(talkIds.length).toBeGreaterThanOrEqual(2)
   await expect(page.getByTestId('schedule-all')).toContainText('Schedule all of these')
   await page.waitForTimeout(1400)
 
@@ -113,17 +113,19 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
     gate.__failFirst = true
     gate.__fails = 0
   })
-  const tawakkul = await page.request.get('/api/lessons?limit=80&depth=0').then((res) => res.json()) as { docs?: { id: number; title?: string; course?: number }[] }
-  const trust = (tawakkul.docs || []).find((lesson) => /tawakkul/i.test(String(lesson.title || '')))
-  if (trust) {
-    await page.goto(`${BASE}/course/${trust.course}?part=${trust.id}`)
+  await page.goto(`${BASE}/lanes`)
+  const trustCard = page.getByTestId('path-course').filter({ hasText: /Tawakkul/i })
+  if (await trustCard.count()) {
+    const trustHref = await trustCard.locator('[data-testid=lesson-link], [data-testid=peek]').getAttribute('href')
+    await page.goto(trustHref!)
+    if (await page.getByTestId('start-part').count()) await page.getByTestId('start-part').click()
     await expect(page.getByTestId('player-retry')).toBeVisible({ timeout: 12_000 })
     await page.getByRole('button', { name: 'Try again' }).click()
     await expect(page.getByTestId('player')).toBeVisible()
     await page.waitForTimeout(900)
   }
 
-  await page.goto(`${BASE}/course/${sittingId}?part=${talks[1].id}`)
+  await page.goto(`${BASE}/course/${sittingId}?part=${talkIds[1]}`)
   await expect(page.getByTestId('player')).toBeVisible()
   await expect(page.getByTestId('up-next')).toBeVisible()
   await expect(page.getByTestId('up-next')).not.toContainText('last part')
