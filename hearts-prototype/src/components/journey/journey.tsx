@@ -1094,6 +1094,11 @@ export function Journey(props: JourneyProps) {
     if (swipe === 'lane' && laneLabel) setToast(`Lane · ${laneLabel}`)
     if (swipe === 'topic') setToast('More on this topic')
     if (swipe === 'speaker') setToast(`More from ${current.speaker}`)
+    try {
+      window.dispatchEvent(new CustomEvent('hearts-insight', { detail: { kind: 'clip_swipe', clipId: String(current.cutId || current.id || ''), watchPct: 0 } }))
+    } catch {
+      // ignore
+    }
     void advance(target, 'swipe', SWIPE_EXIT[swipe], swipe)
   }
   const nextLane = () => swipeTo('lane')

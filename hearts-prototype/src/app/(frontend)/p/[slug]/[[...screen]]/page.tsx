@@ -18,6 +18,10 @@ import { CircleScreen, MeScreen, PlanScreen, SettingsScreen } from '@/screens/ap
 import { WelcomeScreen } from '@/screens/app/welcome'
 import { AiPages } from '@/screens/desk/ai'
 import { ExperimentPages } from '@/screens/desk/experiments'
+import { InsightPages } from '@/screens/desk/insights'
+import { CalendarPages } from '@/screens/desk/calendar'
+import { MissionPages } from '@/screens/desk/missions'
+import { MissionScreen, ShapedScreen, SupportScreen } from '@/screens/app/mission'
 import { OverviewScreen, PortalSettingsScreen, WizardScreen } from '@/screens/desk/overview'
 import { AccessScreen, ContentScreen, CourseEditorScreen, LibraryScreen, guardAdmin } from '@/screens/desk/content'
 import { PortalCompassScreen, StaffLearnerCompass } from '@/screens/desk/compass'
@@ -119,6 +123,15 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       case 'experiments':
         guardAdmin(ctx)
         return ExperimentPages({ ctx, path: screen.slice(2) })
+      case 'insights':
+        guardAdmin(ctx)
+        return InsightPages({ ctx })
+      case 'calendar':
+        guardAdmin(ctx)
+        return CalendarPages({ ctx })
+      case 'missions':
+        guardAdmin(ctx)
+        return MissionPages({ ctx, path: screen.slice(2) })
       case 'sheet':
         guardAdmin(ctx)
         if (b === 'create') return PortalCreatorScreen(ctx)
@@ -159,7 +172,12 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       if (a === 'circle') return CircleScreen(ctx)
       if (a === 'settings') return SettingsScreen(ctx)
       if (a === 'path') return LearnerPathScreen(ctx)
+      if (a === 'shaped') return ShapedScreen(ctx)
+      if (a === 'help') return SupportScreen(ctx)
       notFound()
+    case 'mission':
+      if (!a || !Number(a)) notFound()
+      return MissionScreen(ctx, Number(a))
     case 'recalibrate':
       return RecalibrateScreen(ctx)
     case 'welcome':

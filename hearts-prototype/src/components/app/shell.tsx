@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { InsightTracker } from '@/components/app/insight-tracker'
 
 export { TabBar, type Tab } from './tab-bar'
 
@@ -16,6 +17,7 @@ export function AppFrame({ children, dark = false, evening = false, testId }: { 
   return (
     <div className={`app-stage${evening ? ' evening' : ''}`}>
       <main className={`app${dark ? ' dark' : ''}${evening ? ' evening' : ''}`} data-testid={testId}>
+        <InsightTracker />
         {children}
       </main>
     </div>

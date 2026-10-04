@@ -10,6 +10,7 @@ import * as migration_20261004_060000_shorts from './20261004_060000_shorts';
 import * as migration_20261004_061000_portal_time_zone from './20261004_061000_portal_time_zone';
 import * as migration_20261004_080000_lesson_picture_flags from './20261004_080000_lesson_picture_flags';
 import * as migration_20261004_180000_experiments from './20261004_180000_experiments';
+import * as migration_20261004_210000_insights_missions from './20261004_210000_insights_missions';
 
 export const migrations = [
   {
@@ -71,5 +72,10 @@ export const migrations = [
     up: migration_20261004_180000_experiments.up,
     down: migration_20261004_180000_experiments.down,
     name: '20261004_180000_experiments',
+  },
+  {
+    up: migration_20261004_210000_insights_missions.up,
+    down: migration_20261004_210000_insights_missions.down,
+    name: '20261004_210000_insights_missions',
   },
 ];

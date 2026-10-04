@@ -12,6 +12,7 @@ import { learnerClips } from '@/server/opening'
 import { lanesWithClips } from '@/lib/lanes'
 import { plural } from '@/lib/schedule'
 import { growth, Rings } from './garden'
+import { activeMissionCard } from './mission'
 import { type Ctx, ref, rows, str, unreadCount } from '../common'
 
 function minutesLeft(seconds: number, percent: number) {
@@ -69,6 +70,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         </div>
         <span className="sr-only">{portalName(portal)}</span>
         <Flash error={query.error} notice={query.notice} />
+        {await activeMissionCard(payload, portal.id, base)}
         <InstallCard sheet />
         <section className="grow-banner" data-testid="grow-banner">
           <p className="eyebrow">Your growth</p>

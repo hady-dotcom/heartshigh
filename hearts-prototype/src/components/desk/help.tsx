@@ -42,3 +42,46 @@ export function ExperimentHelp() {
     </DeskHelp>
   )
 }
+
+export function InsightsHelp() {
+  return (
+    <DeskHelp>
+      <p>Insights is our own look at how people move through HEARTS. Taps, scrolls and clip watches stay in our Postgres. We never store typed text or an answer.</p>
+      <p><b>Heatmap</b> shows where people tap on a page, including on things that are not buttons.</p>
+      <p><b>Angry taps</b> are three or more taps in the same spot within a second and a half. Open the route and see if something is stuck.</p>
+      <p><b>Funnel</b> follows opening questions, the first clip, starting a course, and saving a study plan.</p>
+      <p><b>Make this an experiment</b> takes you to the Experiments desk with the slot already chosen.</p>
+    </DeskHelp>
+  )
+}
+
+export function CalendarHelp() {
+  return (
+    <DeskHelp>
+      <p>The calendar knows Friday (and Thursday evening), Ramadan and its last ten nights, the first ten days of Dhul Hijjah, the two Eids, Muharram and Ashura, plus seasons you add, such as exam season.</p>
+      <p>The Hijri date uses a civil calendar. The offset of plus or minus one day is for moon sighting.</p>
+      <p>A suggested line never reaches a learner until you approve it. A sheikh’s words, talk content, Qur’an and hadith stay as they are.</p>
+      <p><b>Preview</b> shows the app as it would look on a date you pick.</p>
+    </DeskHelp>
+  )
+}
+
+export function MissionHelp() {
+  return (
+    <DeskHelp>
+      <p>A mission is a warm ask, never a scolding. Learners already give their time; we thank them for helping shape HEARTS.</p>
+      <p>Write a plain ask, why it matters, how many minutes, the dates, a target, and which portals. You can point them at an experiment or a screen.</p>
+      <p>When you write <b>What we decided</b>, every person who joined gets a thank-you in the app. Email only goes out if mail is configured.</p>
+      <p><b>Ask for help</b> is the in-app thread so nobody needs a support email.</p>
+    </DeskHelp>
+  )
+}
+
+export function DefaultDeskHelp() {
+  return (
+    <DeskHelp>
+      <p>This is a desk page. Use the side list to move between everyday tasks, the middle work, and the in-depth tools.</p>
+      <p>Nothing here changes a sheikh’s words, talk content, Qur’an or hadith.</p>
+    </DeskHelp>
+  )
+}

@@ -11,6 +11,7 @@ import { Qr } from '@/components/qr'
 import { now } from '@/lib/clock'
 import { visibleCourseIds } from '@/server/context'
 import { dayNumber, portalName } from '@/server/learner'
+import { shapedFor } from '@/server/missions'
 import { type Ctx, longDate, ref, rows, shortDate, str, unreadCount } from '../common'
 
 /** Notices written before prompts were clipped on a word were cut mid-word at 60 characters; they read the same way now. */
@@ -20,12 +21,15 @@ function noteBody(body: string) {
 
 export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 30 })).filter((note) => note.channel !== 'email-stub')
+  const shaped = await shapedFor(payload, user.id)
   const unread = notes.filter((note) => !note.read).length
   const links: [string, string, string, string][] = [
     ['path', 'Your path', 'Where a little time will help, in plain words', 'me/path'],
     ['plan', 'My study plan', 'Spread a course across the days that suit you', 'me/plan'],
     ['circle', 'Circle and nights', 'Your board, and the evenings you can come to', 'me/circle'],
     ['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'],
+    ['shaped', 'Things you helped shape', 'Missions you joined, and what we decided', 'me/shaped'],
+    ['help', 'Ask for help', 'Write to the team here. You do not need an email.', 'me/help'],
     ['settings', 'Settings', 'Night alerts, watch history and signing out', 'me/settings'],
   ]
   if (user.role !== 'learner') links.unshift(['desk', 'Portal desk', 'Courses, codes and learners', 'admin'])
@@ -62,6 +66,16 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
           <PrefToggle name="haptics" label="Haptics" hint="A small buzz when you tap an answer." checked={user.haptics !== false} next={`${base}/me`} />
           <OptInLane lane="guarding-gaze" label="Private lanes: Guarding the gaze" hint="Clips on this appear only if you turn this on. It is kept on this phone and never shown to anyone." portal={portal.slug || ''} />
         </section>
+        {shaped.length ? (
+          <section data-testid="shaped-list">
+            <p className="eyebrow">Things you helped shape</p>
+            {shaped.map((item) => (
+              <Link key={item.id} className="list-link" href={`${base}/me/shaped`} data-testid="shaped-item">
+                <span className="grow">{item.title}<small>You helped decide: {item.result}</small></span>›
+              </Link>
+            ))}
+          </section>
+        ) : null}
         <StartAgain base={base} />
         <div className="app-head" style={{ marginTop: 18 }}>
           <h2 style={{ margin: 0, fontSize: 19 }}>Notifications</h2>

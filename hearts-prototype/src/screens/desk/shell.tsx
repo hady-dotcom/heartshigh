@@ -3,67 +3,105 @@ import type { ReactNode } from 'react'
 import type { Payload } from 'payload'
 import { BrandMark } from '@/components/brand'
 import { Flash, Hidden } from '@/components/app/shell'
+import { DefaultDeskHelp } from '@/components/desk/help'
 import { BellIcon, BeakerIcon, BookIcon, HeartIcon, CalendarIcon, CogIcon, GlobeIcon, HomeIcon, KeyIcon, LibraryIcon, MoonIcon, PeopleIcon, QuestionIcon } from '@/components/icons'
 import type { SessionUser } from '@/server/context'
 import { rows, shortDate, str } from '../common'
 
 type NavItem = { key: string; label: string; href: string; icon: ReactNode }
+export type NavGroup = { group: string; description?: string; items: NavItem[] }
 
-export function portalNav(base: string, user: SessionUser): { group: string; items: NavItem[] }[] {
+export function portalNav(base: string, user: SessionUser): NavGroup[] {
   const teach: NavItem[] = [
-    { key: 'teach', label: 'Teach', href: `${base}/admin/teach`, icon: <PeopleIcon /> },
+    { key: 'teach', label: 'Learners', href: `${base}/admin/teach`, icon: <PeopleIcon /> },
     { key: 'feedback', label: 'Feedback', href: `${base}/admin/feedback`, icon: <QuestionIcon /> },
     { key: 'compass', label: 'Compass', href: `${base}/admin/compass`, icon: <HeartIcon /> },
-    { key: 'plans', label: 'Study plans', href: `${base}/admin/plans`, icon: <CalendarIcon /> },
-    { key: 'nights', label: 'Nights', href: `${base}/admin/nights`, icon: <MoonIcon /> },
   ]
-  if (user.role === 'teacher') return [{ group: 'Portal', items: [{ key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> }, ...teach] }]
+  if (user.role === 'teacher') {
+    return [{ group: 'Beginner', description: 'Everyday work with the people in your portal.', items: [{ key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> }, ...teach] }]
+  }
   return [
     {
-      group: 'Portal',
+      group: 'Beginner',
+      description: 'Everyday tasks: learners, codes and the library.',
       items: [
         { key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> },
-        { key: 'content', label: 'Content', href: `${base}/admin/content`, icon: <BookIcon /> },
-        { key: 'sheet', label: 'Master sheet', href: `${base}/admin/sheet`, icon: <BookIcon /> },
-        { key: 'create', label: 'Sheet creator', href: `${base}/admin/sheet/create`, icon: <BookIcon /> },
+        { key: 'teach', label: 'Learners', href: `${base}/admin/teach`, icon: <PeopleIcon /> },
+        { key: 'access', label: 'Codes', href: `${base}/admin/access`, icon: <KeyIcon /> },
         { key: 'library', label: 'Library', href: `${base}/admin/library`, icon: <LibraryIcon /> },
-        { key: 'access', label: 'Access codes', href: `${base}/admin/access`, icon: <KeyIcon /> },
-        { key: 'opening', label: 'Opening', href: `${base}/admin/opening`, icon: <HeartIcon /> },
-        { key: 'circle', label: 'Circle answers', href: `${base}/admin/circle`, icon: <PeopleIcon /> },
-        { key: 'ai', label: 'AI steps', href: `${base}/admin/ai`, icon: <CogIcon /> },
-        { key: 'experiments', label: 'Experiments', href: `${base}/admin/experiments`, icon: <BeakerIcon /> },
       ],
     },
-    { group: 'People', items: teach },
-    { group: 'Setup', items: [{ key: 'settings', label: 'Settings', href: `${base}/admin/settings`, icon: <CogIcon /> }] },
+    {
+      group: 'Intermediate',
+      description: 'Course packs, study plans, Gather, live nights and missions.',
+      items: [
+        { key: 'content', label: 'Content', href: `${base}/admin/content`, icon: <BookIcon /> },
+        { key: 'plans', label: 'Study plans', href: `${base}/admin/plans`, icon: <CalendarIcon /> },
+        { key: 'circle', label: 'Gather', href: `${base}/admin/circle`, icon: <PeopleIcon /> },
+        { key: 'nights', label: 'Live', href: `${base}/admin/nights`, icon: <MoonIcon /> },
+        { key: 'missions', label: 'Missions', href: `${base}/admin/missions`, icon: <HeartIcon /> },
+      ],
+    },
+    {
+      group: 'In-depth',
+      description: 'Experiments, Insights, AI, framing and the sheet.',
+      items: [
+        { key: 'experiments', label: 'Experiments', href: `${base}/admin/experiments`, icon: <BeakerIcon /> },
+        { key: 'insights', label: 'Insights', href: `${base}/admin/insights`, icon: <GlobeIcon /> },
+        { key: 'calendar', label: 'Calendar', href: `${base}/admin/calendar`, icon: <CalendarIcon /> },
+        { key: 'ai', label: 'AI steps', href: `${base}/admin/ai`, icon: <CogIcon /> },
+        { key: 'opening', label: 'Framing director', href: `${base}/admin/opening`, icon: <HeartIcon /> },
+        { key: 'sheet', label: 'Master sheet', href: `${base}/admin/sheet`, icon: <BookIcon /> },
+        { key: 'create', label: 'Sheet creator', href: `${base}/admin/sheet/create`, icon: <BookIcon /> },
+        { key: 'feedback', label: 'Feedback', href: `${base}/admin/feedback`, icon: <QuestionIcon /> },
+        { key: 'compass', label: 'Compass', href: `${base}/admin/compass`, icon: <HeartIcon /> },
+        { key: 'settings', label: 'Settings', href: `${base}/admin/settings`, icon: <CogIcon /> },
+      ],
+    },
   ]
 }
 
-export function masterNav(): { group: string; items: NavItem[] }[] {
+export function masterNav(): NavGroup[] {
   return [
     {
-      group: 'Master desk',
+      group: 'Beginner',
+      description: 'Everyday tasks: portals, learners, codes and the library.',
       items: [
         { key: 'portals', label: 'Portals', href: '/master', icon: <GlobeIcon /> },
+        { key: 'learners', label: 'Learners', href: '/master/learners', icon: <PeopleIcon /> },
+        { key: 'codes', label: 'Codes', href: '/master/codes', icon: <KeyIcon /> },
         { key: 'library', label: 'Library', href: '/master/library', icon: <LibraryIcon /> },
-        { key: 'review', label: 'Review', href: '/master/review', icon: <QuestionIcon /> },
-        { key: 'ai', label: 'AI steps', href: '/master/ai', icon: <CogIcon /> },
-        { key: 'tiers', label: 'Talk tiers', href: '/master/tiers', icon: <BookIcon /> },
-        { key: 'packs', label: 'Course packs', href: '/master/packs', icon: <BookIcon /> },
-        { key: 'sheet', label: 'Master sheet', href: '/master/sheet', icon: <BookIcon /> },
-        { key: 'create', label: 'Sheet creator', href: '/master/sheet/create', icon: <BookIcon /> },
-        { key: 'questions', label: 'Placing questions', href: '/master/questions', icon: <QuestionIcon /> },
-        { key: 'circle', label: 'Circle answers', href: '/master/circle', icon: <PeopleIcon /> },
-        { key: 'experiments', label: 'Experiments', href: '/master/experiments', icon: <BeakerIcon /> },
       ],
     },
     {
-      group: 'Opening',
+      group: 'Intermediate',
+      description: 'Course packs, study plans, Gather, live nights and missions.',
       items: [
+        { key: 'packs', label: 'Course packs', href: '/master/packs', icon: <BookIcon /> },
+        { key: 'plans', label: 'Study plans', href: '/master/plans', icon: <CalendarIcon /> },
+        { key: 'circle', label: 'Gather', href: '/master/circle', icon: <PeopleIcon /> },
+        { key: 'nights', label: 'Live', href: '/master/nights', icon: <MoonIcon /> },
+        { key: 'missions', label: 'Missions', href: '/master/missions', icon: <HeartIcon /> },
         { key: 'opening', label: 'Scenes', href: '/master/opening', icon: <HeartIcon /> },
         { key: 'lanes', label: 'Lanes', href: '/master/lanes', icon: <BookIcon /> },
+      ],
+    },
+    {
+      group: 'In-depth',
+      description: 'Experiments, Insights, AI, framing, the sheet, the simulator and scales.',
+      items: [
+        { key: 'experiments', label: 'Experiments', href: '/master/experiments', icon: <BeakerIcon /> },
+        { key: 'insights', label: 'Insights', href: '/master/insights', icon: <GlobeIcon /> },
+        { key: 'calendar', label: 'Calendar', href: '/master/calendar', icon: <CalendarIcon /> },
+        { key: 'ai', label: 'AI steps', href: '/master/ai', icon: <CogIcon /> },
+        { key: 'framing', label: 'Framing director', href: '/master/framing', icon: <HeartIcon /> },
+        { key: 'sheet', label: 'Master sheet', href: '/master/sheet', icon: <BookIcon /> },
         { key: 'simulator', label: 'Simulator', href: '/master/simulator', icon: <CogIcon /> },
-        { key: 'personas', label: 'Scales and bands', href: '/master/personas', icon: <HeartIcon /> },
+        { key: 'personas', label: 'Scales', href: '/master/personas', icon: <HeartIcon /> },
+        { key: 'review', label: 'Review', href: '/master/review', icon: <QuestionIcon /> },
+        { key: 'tiers', label: 'Talk tiers', href: '/master/tiers', icon: <BookIcon /> },
+        { key: 'create', label: 'Sheet creator', href: '/master/sheet/create', icon: <BookIcon /> },
+        { key: 'questions', label: 'Placing questions', href: '/master/questions', icon: <QuestionIcon /> },
         { key: 'trends', label: 'Network trends', href: '/master/trends', icon: <GlobeIcon /> },
       ],
     },
@@ -83,6 +121,7 @@ export async function DeskFrame({
   brandHref,
   extraLinks = [],
   tools,
+  help,
   query,
   testId,
   evening,
@@ -93,7 +132,7 @@ export async function DeskFrame({
   title: string
   intro?: ReactNode
   active: string
-  nav: { group: string; items: NavItem[] }[]
+  nav: NavGroup[]
   brand: string
   subBrand: string
   /** What the narrow-screen note calls this desk. Defaults to the sub-brand. */
@@ -101,6 +140,7 @@ export async function DeskFrame({
   brandHref: string
   extraLinks?: { label: string; href: string }[]
   tools?: ReactNode
+  help?: ReactNode
   query: { error?: string; notice?: string }
   testId?: string
   evening?: boolean
@@ -125,10 +165,11 @@ export async function DeskFrame({
           <BrandMark size={40} />
           <span><b>{brand}</b><small>{subBrand}</small></span>
         </Link>
-        <nav className="side-nav" aria-label="Desk">
+        <nav className="side-nav" aria-label="Desk" data-testid="desk-nav">
           {nav.map((group) => (
-            <div key={group.group} style={{ display: 'contents' }}>
+            <div key={group.group} className="nav-group" data-testid={`nav-group-${group.group.toLowerCase().replace(/\s+/g, '-')}`}>
               <div className="group">{group.group}</div>
+              {group.description ? <p className="group-desc">{group.description}</p> : null}
               {group.items.map((item) => (
                 <Link key={item.key} className={`nav${item.key === active ? ' on' : ''}`} href={item.href} aria-current={item.key === active ? 'page' : undefined} data-testid={`nav-${item.key}`}>
                   {item.icon}
@@ -160,6 +201,7 @@ export async function DeskFrame({
             {intro ? <p>{intro}</p> : null}
           </div>
           <div className="head-tools">
+            {help === null ? null : help || <DefaultDeskHelp />}
             {tools}
             <details className="bell" data-testid="bell">
               <summary aria-label={`Notifications, ${unread} unread`}>

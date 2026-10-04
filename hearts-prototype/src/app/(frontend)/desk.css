@@ -30,7 +30,9 @@
 .side a.nav:hover { background: rgba(247, 238, 219, 0.12); }
 .side a.nav.on { background: var(--gold); color: var(--gold-ink); }
 .side a.nav svg { flex: none; opacity: 0.9; }
-.side .group { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #e7d7b4; font-weight: 700; padding: 16px 12px 6px; }
+.side .nav-group { display: flex; flex-direction: column; gap: 4px; }
+.side .group { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #e7d7b4; font-weight: 700; padding: 16px 12px 4px; }
+.side .group-desc { margin: 0 12px 8px; font-size: 12px; line-height: 1.4; letter-spacing: 0; text-transform: none; font-weight: 500; color: #d7cbb8; }
 .side-foot { flex: none; margin-top: auto; border-top: 1px solid rgba(247, 238, 219, 0.2); padding-top: 10px; display: grid; gap: 4px; font-size: 13px; }
 .side-foot .group { padding-top: 6px; }
 .side-foot .who { display: flex; gap: 10px; align-items: center; padding: 0 8px; }

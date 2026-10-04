@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers'
 import type { Payload } from 'payload'
+import { InsightTracker } from '@/components/app/insight-tracker'
 import { Journey } from '@/components/journey/journey'
 import { resolveSlots, subjectFrom } from '@/server/experiments'
 import { OPENER } from '@/lib/opening-data'
@@ -10,6 +11,9 @@ import { posterFor, shownPoster } from '@/server/learner'
 import { loadOpening } from '@/server/opening'
 import { loadDoors } from '@/server/doors'
 import { doorNumberOfClause } from '@/lib/doors'
+import { contextAt, popularTalkIds, resolveContextLabel } from '@/server/calendar'
+import { nudgeTalks } from '@/lib/calendar-context'
+import { activeMissionCard } from './mission'
 import { unreadCount } from '../common'
 
 export async function masterFlags(payload: Payload) {
@@ -42,10 +46,25 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
     loadDoors(payload),
     resolveSlots(payload, ['feed-cta-label', 'full-talk-cta-label', 'wide-video-framing'], subjectFrom(user, deviceId, portal.id)),
   ])
+  const context = await contextAt(payload)
+  for (const slot of Object.keys(variants)) {
+    const view = variants[slot]
+    const label = await resolveContextLabel(payload, slot, view.payload, context)
+    variants[slot] = { ...view, label, payload: { ...view.payload, label } }
+  }
+  const popular = await popularTalkIds(payload)
+  const titled = opening.route.cuts.map((cut) => ({
+    ...cut,
+    title: opening.clips[String(cut.id)]?.lessonTitle || opening.clips[String(cut.id)]?.courseTitle || '',
+  }))
+  opening.route.cuts = nudgeTalks(titled, context, popular, true)
+  const mission = user ? await activeMissionCard(payload, portal.id, base) : null
   return (
     <div className="app-stage dusk">
       <main className="app dark journey-frame" data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
-        <Journey
+        <InsightTracker />
+        {mission && initial === 'feed' ? <div className="feed-mission">{mission}</div> : null}
+        <Journey>
           base={base}
           opening={opening}
           opener={OPENER}

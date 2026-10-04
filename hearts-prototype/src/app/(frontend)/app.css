@@ -621,3 +621,26 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .tafsir-text p { margin: 0 0 10px; }
 .tafsir-text.ar { font-family: 'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', 'Geeza Pro', serif; font-size: 18px; line-height: 1.9; text-align: right; }
 .ring-new { font-style: normal; font-size: 10.5px; font-weight: 750; color: var(--gold); }
+
+.mission-card {
+  background: #163633;
+  color: #f6eedc;
+  border: 1.5px solid rgba(212, 168, 75, 0.55);
+  border-radius: 18px;
+  padding: 16px 18px;
+  margin: 0 0 16px;
+  box-shadow: 0 12px 28px rgba(8, 26, 26, 0.28);
+}
+.mission-card h2 { margin: 0 0 8px; font-size: 20px; color: #f6eedc; }
+.mission-card p { margin: 0 0 10px; color: #e7dcc8; }
+.mission-card .eyebrow { color: #f1d58a; margin-top: 0; }
+.feed-mission {
+  position: absolute;
+  top: calc(10px + var(--safe-top));
+  left: 12px;
+  right: 12px;
+  z-index: 8;
+}
+.feed-mission .mission-card { margin: 0; padding: 12px 14px; }
+.feed-mission .mission-card h2 { font-size: 16px; }
+.feed-mission .mission-card p { font-size: 13px; margin-bottom: 8px; }

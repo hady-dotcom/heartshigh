@@ -65,16 +65,10 @@ async function Frame({
   tools?: React.ReactNode
   children: React.ReactNode
 }) {
-  const withHelp = (
-    <>
-      <ExperimentHelp />
-      {tools}
-    </>
-  )
-  if (ctx) return <AdminFrame ctx={ctx} active="experiments" title={title} intro={intro} testId={testId} tools={withHelp}>{children}</AdminFrame>
+  if (ctx) return <AdminFrame ctx={ctx} active="experiments" title={title} intro={intro} testId={testId} tools={tools} help={<ExperimentHelp />}>{children}</AdminFrame>
   const desk = master!
   return (
-    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="experiments" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={withHelp}>
+    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="experiments" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={tools} help={<ExperimentHelp />}>
       {children}
     </DeskFrame>
   )
@@ -94,7 +88,7 @@ export async function ExperimentPages({ ctx, master, path }: { ctx?: Ctx | null;
   }
   await ensureStarterExperiments(payload, user)
   const [head, rest] = path
-  if (head === 'new') return <EditPage ctx={ctx || null} master={master || null} base={base} />
+  if (head === 'new') return <EditPage ctx={ctx || null} master={master || null} base={base} fromInsight={query} />
   if (head && rest === 'edit') return <EditPage ctx={ctx || null} master={master || null} base={base} id={Number(head)} />
   if (head) return <DetailPage ctx={ctx || null} master={master || null} base={base} id={head} suggest={query.suggest === '1'} />
   return <ListPage ctx={ctx || null} master={master || null} base={base} />
@@ -369,7 +363,7 @@ async function DetailPage({ ctx, master, base, id, suggest }: { ctx: Ctx | null;
   )
 }
 
-async function EditPage({ ctx, master, base, id }: { ctx: Ctx | null; master: { payload: Payload; user: SessionUser; query: Query } | null; base: string; id?: number }) {
+async function EditPage({ ctx, master, base, id, fromInsight }: { ctx: Ctx | null; master: { payload: Payload; user: SessionUser; query: Query } | null; base: string; id?: number; fromInsight?: Query }) {
   const payload = ctx?.payload || master!.payload
   const user = ctx?.user || master!.user
   if (!canEditExperiments(user)) {
@@ -379,6 +373,8 @@ async function EditPage({ ctx, master, base, id }: { ctx: Ctx | null; master: { 
   if (id && !current) return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-missing"><p>That experiment was not found.</p></Frame>
   const portals = await rows(payload, 'portals', undefined, { sort: 'name', limit: 40 })
   const variantText = (current?.variants || []).map((row) => `${row.key} | ${row.label}`).join('\n')
+  const insightSlot = fromInsight?.slot && EXPERIMENT_SLOTS.some((slot) => slot.key === fromInsight.slot) ? fromInsight.slot : ''
+  const insightNote = fromInsight?.from === 'insight' ? `From Insights${fromInsight.route ? ` · ${fromInsight.route}` : ''}${fromInsight.reason ? ` · ${fromInsight.reason}` : ''}` : ''
   return (
     <Frame ctx={ctx} master={master} title={current ? `Edit ${current.name}` : 'New experiment'} intro="Stay on a listed slot. Versions are wording or framing only." testId="experiment-edit">
       <form className="form panel" action="/api/experiments" method="post" data-testid="experiment-form">
@@ -389,13 +385,13 @@ async function EditPage({ ctx, master, base, id }: { ctx: Ctx | null; master: { 
             <input name="key" defaultValue={current?.key || ''} required pattern="[a-z][a-z0-9-]{1,58}[a-z0-9]" disabled={Boolean(current)} data-testid="experiment-key" />
           </label>
           <label>Name
-            <input name="name" defaultValue={current?.name || ''} required data-testid="experiment-name" />
+            <input name="name" defaultValue={current?.name || (insightNote ? 'From Insights' : '')} required data-testid="experiment-name" />
           </label>
           <label>What you are testing
-            <textarea name="description" defaultValue={current?.description || ''} rows={3} />
+            <textarea name="description" defaultValue={current?.description || insightNote} rows={3} />
           </label>
           <label>Slot
-            <select name="slot" defaultValue={current?.slot || 'feed-cta-label'} disabled={Boolean(current)} data-testid="experiment-slot-field">
+            <select name="slot" defaultValue={current?.slot || insightSlot || 'feed-cta-label'} disabled={Boolean(current)} data-testid="experiment-slot-field">
               {EXPERIMENT_SLOTS.map((slot) => <option key={slot.key} value={slot.key}>{slot.name} — {slot.wired ? 'live' : 'registered only'}</option>)}
             </select>
           </label>

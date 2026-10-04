@@ -46,6 +46,15 @@ async function recordExperimentQuietly(payload: Payload, user: SessionUser, even
   }
 }
 
+async function recordFunnelQuietly(payload: Payload, user: SessionUser, step: string) {
+  try {
+    const { recordFunnel } = await import('./insights')
+    await recordFunnel(payload, { user, portalId: portalIdOf(user), step })
+  } catch {
+    // Tracking must never break a save.
+  }
+}
+
 function redirectTo(req: Request, path: string, error?: string, notice?: string) {
   const host = req.headers.get('x-forwarded-host') || req.headers.get('host')
   const proto = req.headers.get('x-forwarded-proto') || 'http'
@@ -1215,6 +1224,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       await notify(payload, { user: learnerId, portal, title: 'A study plan was made for you', body: `${name}: ${plural(slots.length, 'sitting')} between ${text(form, 'start')} and ${text(form, 'end')}.`, href: `/p/${acting.portal.slug}/me/plan` })
     }
     void recordExperimentQuietly(payload, user, 'plan_created', { name })
+    void recordFunnelQuietly(payload, user, 'study_plan_saved')
     return redirectTo(req, text(form, 'next') || '/', undefined, `${slots.length === 1 ? 'The 1 sitting is' : `The ${slots.length} sittings are`} spread across ${plural(dates.length, 'study day')}. You can still watch at your own pace.`)
   }
 
