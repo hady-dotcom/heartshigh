@@ -66,7 +66,8 @@ export async function resolveContextLabel(payload: Payload, slot: string, payloa
   const rows = await loadCopy(payload)
   const approved = approvedCopy(rows, slot, context)
   const fromVariant = contextLabel(payloadRow, context, String(payloadRow.label || ''))
-  const raw = approved || fromVariant
+  const builtIn = context.active.map((key) => suggestedContextLine(slot, key)).find(Boolean) || ''
+  const raw = approved || fromVariant || builtIn
   return actionCta(minutes ? formatSlotLabel(raw, minutes) : raw)
 }
 

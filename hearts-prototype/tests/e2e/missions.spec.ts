@@ -13,17 +13,13 @@ async function assertNoIssuesBadge(page: Page) {
   const issues = await page.evaluate(() => {
     const portal = document.querySelector('nextjs-portal')
     const root = portal && 'shadowRoot' in portal ? portal.shadowRoot : null
-    const text = root?.textContent || ''
-    const match = text.match(/(\d+)\s*Issues?/)
-    const button = root?.querySelector('button[aria-label="Open issues overlay"]') as HTMLElement | null
-    const box = button?.getBoundingClientRect()
-    return {
-      label: match ? match[0] : '',
-      width: box?.width || 0,
-      height: box?.height || 0,
-    }
+    const visible = [...(root?.querySelectorAll('button, [data-next-badge-root], [data-nextjs-toast]') || [])]
+      .map((el) => (el as HTMLElement).getBoundingClientRect())
+      .filter((box) => box.width > 1 && box.height > 1)
+    const label = (root?.textContent || '').match(/(\d+)\s+Issues?/)?.[0] || ''
+    return { label, visible: visible.length }
   })
-  expect(issues, `Next.js Issues badge is visible (${issues.label || 'overlay'})`).toEqual({ label: '', width: 0, height: 0 })
+  expect(issues, `Next.js Issues badge is visible (${issues.label || 'overlay'})`).toEqual({ label: '', visible: 0 })
 }
 
 async function signIn(page: Page, email: string, password: string, next: string) {
@@ -272,6 +268,7 @@ test.describe('Help shape HEARTS', () => {
     await assertNoIssuesBadge(desk)
     await desk.screenshot({ path: `${SHOTS}/admin-nav.png`, fullPage: true })
     expect(deskErrors.join('\n')).not.toContain('Hydration')
+    expect(deskErrors.join('\n')).not.toMatch(/did not match|Minified React error/i)
     await desk.close()
   })
 })
