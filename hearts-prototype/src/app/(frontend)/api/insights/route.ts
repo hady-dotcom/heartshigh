@@ -1,6 +1,5 @@
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { cookiesSecure } from '@/lib/env'
 import { portalIdOf } from '@/lib/ids'
 import { getSession } from '@/server/context'
 import { canViewInsights, fillInsightDemo, ingestEvents } from '@/server/insights'
@@ -9,27 +8,16 @@ export const dynamic = 'force-dynamic'
 
 const DEVICE = 'hearts_device'
 
-function newId() {
-  return `d${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`.slice(0, 24)
-}
-
 function clientIp(req: Request) {
   const forwarded = req.headers.get('x-forwarded-for')
   if (forwarded) return forwarded.split(',')[0]?.trim() || ''
   return req.headers.get('x-real-ip') || req.headers.get('cf-connecting-ip') || ''
 }
 
-async function deviceId() {
-  const jar = await cookies()
-  const held = jar.get(DEVICE)?.value
+async function existingDeviceCookie() {
+  const held = (await cookies()).get(DEVICE)?.value
   if (held && /^[a-zA-Z0-9_-]{8,80}$/.test(held)) return held
-  const next = newId()
-  try {
-    jar.set(DEVICE, next, { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 400, secure: cookiesSecure() })
-  } catch {
-    // ignore
-  }
-  return next
+  return ''
 }
 
 function redirectTo(req: Request, path: string, error?: string, notice?: string) {
@@ -45,7 +33,7 @@ function redirectTo(req: Request, path: string, error?: string, notice?: string)
 export async function POST(req: Request) {
   const { payload, user } = await getSession()
   const wantsJson = (req.headers.get('accept') || '').includes('application/json')
-  const device = await deviceId()
+  const device = await existingDeviceCookie()
   const portal = portalIdOf(user)
   try {
     const contentType = req.headers.get('content-type') || ''
@@ -57,6 +45,7 @@ export async function POST(req: Request) {
         deviceId: device,
         portalId: portal,
         clientIp: clientIp(req),
+        userAgent: req.headers.get('user-agent'),
         events: events as never,
       })
       return NextResponse.json({ ok: true, ...result })

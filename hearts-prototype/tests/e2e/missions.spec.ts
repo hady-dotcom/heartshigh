@@ -3,7 +3,7 @@ import { mkdirSync } from 'node:fs'
 import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test'
 import { E2E_BASE } from '../env'
 import { fakeYouTube } from './fake-youtube'
-import { stepFeed } from './feed-step'
+import { chromeCentresClear, stepFeed } from './feed-step'
 
 const DESK = { width: 1440, height: 900 }
 const PHONE = { width: 390, height: 844 }
@@ -159,18 +159,12 @@ test.describe('Help shape HEARTS', () => {
     await expect(joinFilm.page.getByTestId('lane-chip')).toBeVisible()
     await expect(joinFilm.page.getByTestId('clip-timer')).toBeVisible()
     await expect(joinFilm.page.getByTestId('tab-week')).toHaveText('My week')
+    await expect(joinFilm.page.getByTestId('tap-sound').first()).toBeVisible({ timeout: 15_000 })
     const missionBox = await joinFilm.page.getByTestId('feed-mission').boundingBox()
     const clipBox = await joinFilm.page.getByTestId('learn-more').boundingBox()
     expect(missionBox && clipBox).toBeTruthy()
     expect((missionBox?.y || 0) + (missionBox?.height || 0)).toBeLessThan(clipBox?.y || 0)
-    const overlapIds = ['swipe-hint', 'lane-chip', 'clip-timer', 'tap-sound', 'top-speaker', 'speaker-link']
-    for (const id of overlapIds) {
-      const el = joinFilm.page.getByTestId(id)
-      if (!(await el.isVisible())) continue
-      const other = await el.boundingBox()
-      const clash = missionBox && other && missionBox.x < other.x + other.width && missionBox.x + missionBox.width > other.x && missionBox.y < other.y + other.height && missionBox.y + missionBox.height > other.y
-      expect(clash, `feed-mission overlaps ${id}`).toBeFalsy()
-    }
+    await chromeCentresClear(joinFilm.page)
     await joinFilm.page.screenshot({ path: `${SHOTS}/phone-feed-mission.png` })
     const lesson = await journey.getAttribute('data-lesson')
     const speaker = await journey.getAttribute('data-speaker')
@@ -281,6 +275,15 @@ test.describe('Help shape HEARTS', () => {
     await expect(desk.getByTestId('calendar-desk')).not.toContainText('feed-cta-label')
     await assertNoIssuesBadge(desk)
     await desk.screenshot({ path: `${SHOTS}/calendar-friday.png`, fullPage: true })
+    const fridayCta = (await desk.getByTestId('calendar-cta').innerText()).trim()
+    await desk.getByTestId('make-experiment').click()
+    await expect(desk.getByTestId('experiment-detail')).toBeVisible()
+    await expect(desk.getByTestId('variant-table')).toContainText('Watch the 3-minute version')
+    await expect(desk.getByTestId('variant-table')).toContainText(fridayCta)
+    await desk.goto('/master/calendar?date=2027-02-07&hour=16&zone=America/Toronto')
+    await expect(desk.getByTestId('calendar-phone')).toHaveAttribute('data-hijri', /Sha'ban 1448/)
+    await desk.goto('/master/calendar?date=2027-02-07&hour=19&zone=America/Toronto')
+    await expect(desk.getByTestId('calendar-phone')).toHaveAttribute('data-hijri', '1 Ramadan 1448')
     await desk.goto('/master/calendar?date=2026-03-01&hour=19')
     await expect(desk.getByTestId('calendar-phone')).toHaveAttribute('data-ramadan', 'yes')
     await desk.screenshot({ path: `${SHOTS}/calendar-ramadan.png`, fullPage: true })
@@ -318,6 +321,29 @@ test.describe('Help shape HEARTS', () => {
     expect(deskErrors.join('\n')).not.toMatch(/did not match|Minified React error/i)
     await desk.close()
   })
+})
+
+test('a Friday calendar window reaches the feed gold button', async ({ browser, playwright }) => {
+  test.setTimeout(90_000)
+  const api = await playwright.request.newContext({ baseURL: E2E_BASE })
+  expect((await api.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
+  expect((await api.post('/api/hearts', { form: { action: 'clock', iso: '2026-02-06T10:00:00.000Z', next: '/' } })).ok()).toBeTruthy()
+  try {
+    const context = await browser.newContext({ viewport: PHONE })
+    const page = await context.newPage()
+    await fakeYouTube(page)
+    await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london/feed')
+    await expect(page.getByTestId('feed-screen')).toBeVisible({ timeout: 20_000 })
+    if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').dispatchEvent('click')
+    await expect(page.getByTestId('learn-more')).toBeVisible({ timeout: 20_000 })
+    await expect(page.getByTestId('learn-more')).toContainText(/Friday|Jumu/)
+    await expect(page.getByTestId('learn-more')).not.toHaveText(/^Learn more/)
+    await page.close()
+    await context.close()
+  } finally {
+    await api.post('/api/hearts', { form: { action: 'clock', iso: '', next: '/' } })
+    await api.dispose()
+  }
 })
 
 void E2E_BASE

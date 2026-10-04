@@ -31,19 +31,19 @@
   --scene: url('/theme/evening-courtyard.jpg');
   --lattice: url('/theme/lattice.svg');
   /* Shared desk tokens. Same values in src/lib/desk-tokens.ts. Evening garden. */
-  --desk-page: #102E2C;
+  --desk-page: #0E2A2B;
   --desk-card: #163633;
   --desk-ink: #F6EEDC;
-  --desk-heading: #F1D58A;
-  --desk-sidebar: #0E2A2B;
+  --desk-heading: #F6EEDC;
+  --desk-sidebar: #0B2223;
   --desk-header: #0F3B3A;
   --desk-on-dark: #F6EEDC;
-  --desk-gold: #C4923A;
+  --desk-gold: #D4A84B;
   --desk-gold-ink: #1A1408;
   --desk-teal: #1A5552;
-  --desk-muted: #D7CBB8;
-  --desk-line: #8A6D32;
-  --desk-field: #0E2624;
+  --desk-muted: #E4D3A4;
+  --desk-line: #C4923A;
+  --desk-field: #102E2C;
 }
 
 /* —— Evening: night teal, lantern gold, parchment type —— */

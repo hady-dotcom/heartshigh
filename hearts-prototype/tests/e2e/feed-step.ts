@@ -33,6 +33,40 @@ function boxesOverlap(left: { x: number; y: number; width: number; height: numbe
   return left.x < right.x + right.width && left.x + left.width > right.x && left.y < right.y + right.height && left.y + left.height > right.y
 }
 
+const CHROME_IDS = ['feed-mission', 'swipe-hint', 'lane-chip', 'clip-timer', 'tap-sound', 'top-speaker', 'speaker-link', 'caption', 'learn-more'] as const
+
+/** elementFromPoint at each chrome centre, plus every pair of bounding boxes. */
+export async function chromeCentresClear(page: Page, extraIds: string[] = []) {
+  const ids = [...CHROME_IDS, ...extraIds]
+  const found: { id: string; box: { x: number; y: number; width: number; height: number } }[] = []
+  for (const id of ids) {
+    const loc = page.getByTestId(id).first()
+    if (!(await loc.count()) || !(await loc.isVisible())) continue
+    const box = await loc.boundingBox()
+    if (!box || box.width < 2 || box.height < 2) continue
+    found.push({ id, box })
+  }
+  for (let i = 0; i < found.length; i++) {
+    for (let j = i + 1; j < found.length; j++) {
+      expect(boxesOverlap(found[i].box, found[j].box), `${found[i].id} must not overlap ${found[j].id}`).toBe(false)
+    }
+  }
+  const hits = await page.evaluate((items) => items.map((item) => {
+    const el = document.querySelector(`[data-testid="${item.id}"]`)
+    if (!el) return { id: item.id, hit: '', owns: false }
+    const r = el.getBoundingClientRect()
+    const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+    const node = top instanceof Element ? top : null
+    const owns = Boolean(node && (el === node || el.contains(node)))
+    const hit = node?.closest?.('[data-testid]')?.getAttribute('data-testid') || node?.getAttribute('data-testid') || ''
+    return { id: item.id, hit, owns }
+  }), found)
+  for (const row of hits) {
+    expect(row.owns, `${row.id} centre hit ${row.hit || 'nothing'}`).toBe(true)
+  }
+  return found.map((row) => row.id)
+}
+
 /** Header, lane chip, timer and Tap for sound must not share pixels, in either layout. */
 export async function chromeBoxesClear(page: Page) {
   const named = [

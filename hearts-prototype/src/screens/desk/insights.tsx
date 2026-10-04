@@ -5,7 +5,8 @@ import { InsightsHelp } from '@/components/desk/help'
 import { routeWords } from '@/lib/insight-events'
 import { pct } from '@/lib/insight-funnel'
 import type { SessionUser } from '@/server/context'
-import { canViewInsights, experimentHint, insightsDesk } from '@/server/insights'
+import { canViewInsights, insightsDesk } from '@/server/insights'
+import { canEditExperiments } from '@/server/experiments'
 import type { Ctx } from '../common'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
@@ -49,6 +50,13 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
   }
   const desk = await insightsDesk(payload, user, { route: query.route, session: query.session })
   const tab = query.tab || 'heatmap'
+  const canMake = canEditExperiments(user)
+  const makeExperiment = (reason: string, testId: string, slot = 'feed-cta-label') => canMake ? (
+    <form action="/api/experiments" method="post">
+      <Hidden fields={{ action: 'from-label', slot, reason, next: '/master/experiments' }} />
+      <button className="btn" type="submit" data-testid={testId}>Make this an experiment</button>
+    </form>
+  ) : null
   return (
     <Frame
       ctx={ctx || null}
@@ -106,7 +114,7 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
                     />
                   ))}
                 </div>
-                <Link className="btn" href={experimentHint(desk.heatmap.route, `heatmap on ${desk.heatmap.route}`)} data-testid="make-experiment">Make this an experiment</Link>
+                {makeExperiment(`heatmap on ${desk.heatmap.route}`, 'make-experiment')}
                 <div className={styles.scrollBlock} data-testid="insights-scroll">
                   <h3>How far people scrolled</h3>
                   {desk.scroll.length ? desk.scroll.map((row) => (
@@ -145,7 +153,7 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
                 ))}
               </div>
               <p className={styles.quiet} style={{ marginTop: 12 }}>Clip watch-through median {Math.round(desk.watch.medianPct)}%. {desk.watch.swipeAway} swipes away from a clip.</p>
-              <Link className="btn" href={experimentHint('/p/:portal/feed', 'funnel drop-off')} data-testid="make-experiment-funnel">Make this an experiment</Link>
+              {makeExperiment('funnel drop-off', 'make-experiment-funnel')}
             </div>
           </section>
         ) : null}
@@ -162,7 +170,7 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
                         <td>{routeWords(row.route)}</td>
                         <td>{row.place}</td>
                         <td>{row.at ? new Date(row.at).toLocaleString('en-GB', { timeZone: 'Europe/London', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}</td>
-                        <td><Link href={`${base}?tab=heatmap&route=${encodeURIComponent(row.route)}`}>Open route</Link> · <Link href={experimentHint(row.route, 'angry taps')}>Make this an experiment</Link></td>
+                        <td><Link href={`${base}?tab=heatmap&route=${encodeURIComponent(row.route)}`}>Open route</Link> · {makeExperiment('angry taps', `make-experiment-angry-${row.id}`)}</td>
                       </tr>
                     ))}
                   </tbody>

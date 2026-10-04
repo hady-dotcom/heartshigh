@@ -3,7 +3,9 @@ import { now } from '@/lib/clock'
 import { isProduction, isRemoteDatabase } from '@/lib/env'
 import { FUNNEL_STEPS, funnelMaths, retentionByDay, type FunnelResult } from '@/lib/insight-funnel'
 import { heatmapGrid, type HeatCell } from '@/lib/insight-taps'
-import { allowInsightBurst, angrySpotWords, DEFAULT_SAMPLE_RATE, isAnswerScreen, isInsightKind, isPrivateLane, normaliseRoute, replayLines, sampleSession, sanitizeProps, sessionReplayScore, shouldKeep } from '@/lib/insight-events'
+import { allowInsightBurst, angrySpotWords, DEFAULT_SAMPLE_RATE, insightBurstKey, insightEventRow, isAnswerScreen, isInsightKind, isPrivateLane, normaliseRoute, replayLines, sampleSession, sessionReplayScore, shouldKeep } from '@/lib/insight-events'
+
+export { insightEventRow } from '@/lib/insight-events'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { audit } from './viewas'
 import type { SessionUser } from './context'
@@ -52,63 +54,57 @@ export async function ingestEvents(
     deviceId?: string | null
     portalId?: number | null
     clientIp?: string | null
+    userAgent?: string | null
     events: IncomingEvent[]
   },
 ) {
-  const subject = input.user?.role === 'learner' ? `learner:${input.user.id}` : input.deviceId ? `device:${input.deviceId}` : ''
   const optedIn = Boolean(input.user && 'trendsOptIn' in input.user && input.user.trendsOptIn)
   const rate = await sampleRateOf(payload)
-  const burstKey = String(input.deviceId || input.clientIp || 'anon')
+  const burstKey = insightBurstKey({ deviceId: input.deviceId, clientIp: input.clientIp, userAgent: input.userAgent })
   if (!allowInsightBurst(burstKey, 40, 10_000)) return { stored: 0, limited: true }
   let stored = 0
   const stamp = now()
   for (const [index, raw] of input.events.slice(0, 20).entries()) {
     if (!isInsightKind(raw.kind)) continue
     const sessionId = String(raw.sessionId || '').slice(0, 48)
-    if (!sessionId) continue
+    if (!sessionId || /learner/i.test(sessionId)) continue
     const sampled = sampleSession(sessionId, rate)
     if (!shouldKeep(raw.kind, sampled)) continue
     const route = normaliseRoute(raw.route || '/')
     const props = raw.props || {}
     const lane = String((props as { lane?: string }).lane || '')
     if (isPrivateLane(lane)) continue
-    const tapKind = raw.kind === 'tap' || raw.kind === 'angry_tap'
     const hideCoords = isAnswerScreen(route, { sheet: Boolean((props as { sheet?: boolean }).sheet) }) || !optedIn
-    const hidePerson = tapKind || hideCoords
     const at = new Date(stamp.getTime() + index).toISOString()
     try {
+      const data = insightEventRow({
+        kind: raw.kind,
+        route,
+        sessionId,
+        portalId: input.portalId,
+        sampled,
+        props: raw.props,
+        x: raw.x,
+        y: raw.y,
+        vw: raw.vw,
+        vh: raw.vh,
+        depth: raw.depth,
+        clipId: raw.clipId,
+        watchPct: raw.watchPct,
+        step: raw.step,
+        interactive: raw.interactive,
+        at,
+        hideCoords,
+      })
       await payload.create({
         collection: col('insight-events'),
         overrideAccess: true,
-        data: {
-          kind: raw.kind,
-          route,
-          sessionId,
-          subject: hidePerson && raw.kind !== 'funnel' ? sessionId : (subject || sessionId),
-          learner: hidePerson || input.user?.role !== 'learner' ? undefined : input.user.id,
-          deviceId: hideCoords ? undefined : input.deviceId || undefined,
-          portal: input.portalId || undefined,
-          x: hideCoords || !Number.isFinite(Number(raw.x)) ? undefined : Number(raw.x),
-          y: hideCoords || !Number.isFinite(Number(raw.y)) ? undefined : Number(raw.y),
-          vw: hideCoords || !Number.isFinite(Number(raw.vw)) ? undefined : Number(raw.vw),
-          vh: hideCoords || !Number.isFinite(Number(raw.vh)) ? undefined : Number(raw.vh),
-          depth: Number.isFinite(Number(raw.depth)) ? Number(raw.depth) : undefined,
-          clipId: raw.clipId ? String(raw.clipId).slice(0, 40) : undefined,
-          watchPct: Number.isFinite(Number(raw.watchPct)) ? Math.max(0, Math.min(100, Number(raw.watchPct))) : undefined,
-          step: raw.step ? String(raw.step).slice(0, 40) : undefined,
-          interactive: Boolean(raw.interactive),
-          sampled,
-          props: sanitizeProps(raw.props),
-          at,
-        } as never,
+        data: data as never,
       })
       stored += 1
       if (raw.kind === 'route') {
         await touchSession(payload, {
           sessionId,
-          subject: subject || sessionId,
-          learnerId: input.user?.role === 'learner' ? input.user.id : undefined,
-          deviceId: input.deviceId,
           portalId: input.portalId,
           sampled,
           route,
@@ -124,9 +120,6 @@ export async function ingestEvents(
 
 async function touchSession(payload: Payload, input: {
   sessionId: string
-  subject: string
-  learnerId?: number
-  deviceId?: string | null
   portalId?: number | null
   sampled: boolean
   route: string
@@ -155,9 +148,7 @@ async function touchSession(payload: Payload, input: {
     overrideAccess: true,
     data: {
       sessionId: input.sessionId,
-      subject: input.subject,
-      learner: input.learnerId,
-      deviceId: input.deviceId || undefined,
+      subject: input.sessionId,
       portal: input.portalId || undefined,
       sampled: input.sampled,
       startedAt: input.at,
@@ -182,7 +173,7 @@ export async function recordFunnel(payload: Payload, input: {
     portalId: input.portalId,
     events: [{
       kind: 'funnel',
-      sessionId: input.sessionId || `funnel-${input.user?.id || input.deviceId || 'anon'}`,
+      sessionId: input.sessionId || `funnel-${Math.random().toString(36).slice(2, 10)}`,
       step: input.step,
       route: input.route || '/',
     }],

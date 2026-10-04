@@ -74,7 +74,29 @@
 .progress.run > i { animation: grow linear forwards; }
 @keyframes grow { from { width: 0; } to { width: 100%; } }
 .clip-hint { text-align: center; font-size: 12px; font-weight: 600; color: rgba(255, 255, 255, 0.85); margin-top: 10px; }
-.clip-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.clip-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "lane timer"
+    "sound sound";
+  align-items: center;
+  gap: 8px 10px;
+  margin-top: 10px;
+}
+.clip-row > .chip.white,
+.clip-row > [data-testid="lane-chip"],
+.clip-row > [data-testid="lane-chip-hidden"],
+.clip-row > [data-testid="appetiser-back"] { grid-area: lane; justify-self: start; }
+.clip-row > [data-testid="clip-timer"],
+.clip-row > [data-testid="level-chip"] { grid-area: timer; justify-self: end; }
+.clip-row > .j-sound {
+  grid-area: sound;
+  justify-self: center;
+  white-space: nowrap;
+  position: relative;
+  z-index: 6;
+}
 .chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 650; border: 0; text-decoration: none; }
 .chip.white { background: #fff; color: var(--ink); }
 .chip.dark { background: rgba(0, 0, 0, 0.62); color: #fff; }

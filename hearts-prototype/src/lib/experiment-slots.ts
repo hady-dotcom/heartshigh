@@ -5,6 +5,7 @@
  * They must never change a sheikh's words, talk content, Qur'an or hadith text,
  * or the meaning of a question. Anything not listed here is refused.
  */
+import { clipStepUpLabel, talkStepUpLabel } from './feed-copy'
 import { hasMarkup } from './text-safety'
 import { killListHits } from './opening-data'
 
@@ -56,7 +57,7 @@ export const EXPERIMENT_SLOTS: readonly ExperimentSlot[] = [
     kind: 'copy',
     surface: 'feed',
     description: 'The gold button under a short clip (hors d’oeuvre) that invites the learner further.',
-    fallback: { label: 'Learn more' },
+    fallback: { label: clipStepUpLabel() },
     fields: [{ name: 'label', type: 'text', max: 80 }],
     wired: true,
   },
@@ -66,7 +67,7 @@ export const EXPERIMENT_SLOTS: readonly ExperimentSlot[] = [
     kind: 'copy',
     surface: 'feed',
     description: 'The gold button on an appetiser that opens the whole talk. {n} becomes the talk length in minutes.',
-    fallback: { label: 'Learn more' },
+    fallback: { label: talkStepUpLabel(1) },
     fields: [{ name: 'label', type: 'text', max: 80 }],
     wired: true,
   },

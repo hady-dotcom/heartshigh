@@ -124,7 +124,7 @@ test('slot whitelist refuses scripture, questions and unknown keys', () => {
   assert.equal(isTestableSlot('quran-ayah'), false)
   assert.equal(slotOf('wide-video-framing')?.wired, false)
   assert.equal(slotOf('lanes-tab-label')?.wired, true)
-  assert.deepEqual(fallbackPayload('feed-cta-label'), { label: 'Learn more' })
+  assert.deepEqual(fallbackPayload('feed-cta-label'), { label: 'Watch the 3-minute version' })
   assert.deepEqual(fallbackPayload('lanes-tab-label'), { label: 'Lanes' })
   assert.deepEqual(payloadProblems('lanes-tab-label', { label: 'Explore' }), [])
   assert.match(payloadProblems('sheikh-words', { label: 'x' })[0], /not on the testable list/)

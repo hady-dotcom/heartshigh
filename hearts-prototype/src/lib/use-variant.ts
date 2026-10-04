@@ -41,8 +41,12 @@ export function useVariant(slot: string, initial?: Partial<VariantView> | null, 
       .then((body) => {
         if (cancelled || !body || body.error) return
         const next = viewOf(slot, body)
-        setView(next)
-        if (next.running) expose(slot, sessionId())
+        if (next.running && next.variantKey) {
+          setView(next)
+          expose(slot, sessionId())
+          return
+        }
+        setView(viewOf(slot, initial))
       })
       .catch(() => {
         if (!cancelled) setView(fallback)

@@ -50,7 +50,7 @@ export function InsightsHelp() {
       <p><b>Heatmap</b> shows where people tap on a page, including on things that are not buttons.</p>
       <p><b>Angry taps</b> are three or more taps in the same spot within a second and a half. Open the route and see if something is stuck.</p>
       <p><b>Funnel</b> follows opening questions, the first clip, starting a course, and saving a study plan.</p>
-      <p><b>Make this an experiment</b> takes you to the Experiments desk with the slot already chosen.</p>
+      <p><b>Make this an experiment</b> creates a draft on the Experiments desk. Version A is the usual feed button. Version B is the seasonal line.</p>
     </DeskHelp>
   )
 }

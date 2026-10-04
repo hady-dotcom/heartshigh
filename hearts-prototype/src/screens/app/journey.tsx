@@ -51,6 +51,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
   const context = await contextAt(payload, now(), undefined, undefined, portalTimeZone(portal))
   for (const slot of Object.keys(variants)) {
     const view = variants[slot]
+    if (view.running && view.label && !/^learn more\b/i.test(view.label)) continue
     const label = await resolveContextLabel(payload, slot, view.payload, context)
     variants[slot] = { ...view, label, payload: { ...view.payload, label } }
   }

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { E2E_BASE } from '../env'
 import { fakeYouTube } from './fake-youtube'
-import { captionIsSpoken, chromeBoxesClear, settled, stepFeed, type OpeningClip } from './feed-step'
+import { captionIsSpoken, chromeBoxesClear, chromeCentresClear, settled, stepFeed, type OpeningClip } from './feed-step'
 
 const PHONE = { width: 390, height: 844 }
 const DESKTOP = { width: 1440, height: 900 }
@@ -243,6 +243,8 @@ test('the speaker header, lane chip, timer and Tap for sound do not overlap in e
   }
   await expect(feed).toHaveAttribute('data-card', 'talk')
   await chromeBoxesClear(page)
+  await expect(page.getByTestId('tap-sound').first()).toBeVisible({ timeout: 15_000 })
+  await chromeCentresClear(page)
   const lessonId = await feed.getAttribute('data-lesson')
   const cut = await feed.getAttribute('data-cut')
   const master = await playwright.request.newContext({ baseURL: E2E_BASE })
@@ -257,6 +259,7 @@ test('the speaker header, lane chip, timer and Tap for sound do not overlap in e
     await expect(page.getByTestId('lane-chip')).toBeVisible()
     await expect(page.getByTestId('clip-timer')).toBeVisible()
     await chromeBoxesClear(page)
+    await chromeCentresClear(page)
   } finally {
     await master.patch(`/api/lessons/${lessonId}`, { data: { burnedCaptions: false } })
     await master.dispose()

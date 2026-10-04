@@ -2,6 +2,7 @@
  * Islamic calendar context for wording and talk order.
  * A sheikh's words, talk content, Qur'an and hadith are never changed here.
  */
+import { clipStepUpLabel } from './feed-copy'
 import { hijriMonthName, hijriOf, type HijriDate } from './hijri'
 import { DEFAULT_TIME_ZONE, partsInZone } from './zone-time'
 
@@ -77,13 +78,17 @@ export function contextName(key: string) {
   return NAMES[key] || key.replace(/[-_]+/g, ' ')
 }
 
-function dateKey(value: Date) {
-  return value.toISOString().slice(0, 10)
+function civilNoonUtc(year: number, month: number, day: number) {
+  return new Date(Date.UTC(year, month - 1, day, 12, 0, 0))
 }
 
-function nextCivilNoon(at: Date) {
-  const next = new Date(at.getTime() + 86_400_000)
-  return new Date(Date.UTC(next.getUTCFullYear(), next.getUTCMonth(), next.getUTCDate(), 12, 0, 0))
+function addCivilDays(year: number, month: number, day: number, days: number) {
+  const next = new Date(Date.UTC(year, month - 1, day + days, 12, 0, 0))
+  return { year: next.getUTCFullYear(), month: next.getUTCMonth() + 1, day: next.getUTCDate() }
+}
+
+function civilKey(year: number, month: number, day: number) {
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
 /** Rough solar sunset hour (local) from latitude. London-ish default. */
@@ -104,7 +109,10 @@ export function latitudeForZone(zone?: string) {
   if (key.startsWith('Asia/Dubai')) return 25.2
   if (key.startsWith('Africa/Cairo')) return 30.0
   if (key.startsWith('Asia/Karachi')) return 24.9
+  if (key.startsWith('America/Toronto')) return 43.7
   if (key.startsWith('America/New_York')) return 40.7
+  if (key.startsWith('Australia/Sydney')) return -33.9
+  if (key.startsWith('Pacific/Auckland')) return -36.8
   return 51.5
 }
 
@@ -151,7 +159,7 @@ export function ukDate(value: string | Date) {
 const CTA_VERBS = /^(watch|sit|open|read|give|see|try|join|start|learn|stay|come|listen|take)/i
 
 /** CTA lines are actions with a verb. Raw {n} is never shown. */
-export function actionCta(line: string, fallback = 'Learn more ›') {
+export function actionCta(line: string, fallback = clipStepUpLabel()) {
   const cleaned = String(line || '')
     .replace(/\{n\}/gi, '')
     .replace(/\(\s*min\)/gi, '')
@@ -173,9 +181,13 @@ export function calendarContext(input: ContextInput): CalendarContext {
   const local = partsInZone(at, zone)
   const hour = input.hour ?? local.hour
   const weekday = input.weekday ?? local.weekday
-  const sunsetHour = input.sunsetHour ?? approximateSunsetHour(at, input.latitude ?? latitudeForZone(zone))
+  const civilNoon = civilNoonUtc(local.year, local.month, local.day)
+  const sunsetHour = input.sunsetHour ?? approximateSunsetHour(civilNoon, input.latitude ?? latitudeForZone(zone))
   const afterSunset = hour + local.minute / 60 >= sunsetHour
-  const islamicAt = afterSunset ? nextCivilNoon(at) : at
+  const islamicCivil = afterSunset
+    ? addCivilDays(local.year, local.month, local.day, 1)
+    : { year: local.year, month: local.month, day: local.day }
+  const islamicAt = civilNoonUtc(islamicCivil.year, islamicCivil.month, islamicCivil.day)
   const islamicWeekday = afterSunset ? (weekday + 1) % 7 : weekday
   const hijri = hijriOf(islamicAt, input.offsetDays || 0)
   const thursdayEvening = weekday === 4 && afterSunset
@@ -187,7 +199,7 @@ export function calendarContext(input: ContextInput): CalendarContext {
   const eidAdha = hijri.hm === 12 && hijri.hd === 10
   const muharram = hijri.hm === 1
   const ashura = muharram && hijri.hd === 10
-  const day = dateKey(islamicAt)
+  const day = civilKey(islamicCivil.year, islamicCivil.month, islamicCivil.day)
   const seasons = (input.seasons || []).filter((season) => inRange(day, season.start, season.end))
   const flags: Record<BuiltInContext, boolean> = {
     lastTenNights,

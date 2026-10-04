@@ -158,6 +158,49 @@ test('Riyadh evening uses local hour for Maghrib, not UTC', () => {
   assert.equal(inferred.thursdayEvening || inferred.friday || inferred.hour >= 18, true)
 })
 
+test('Toronto 7 Feb 2027 is Sha\'ban before Maghrib and 1 Ramadan after sunset, not the UTC date', () => {
+  const zone = 'America/Toronto'
+  const before = calendarContext({ at: wallClock('2027-02-07', 16, zone), timeZone: zone, sunsetHour: 17 + 35 / 60 })
+  assert.equal(before.ramadan, false)
+  assert.equal(before.hijri.hm, 8)
+  assert.ok(before.hijri.hd === 29 || before.hijri.hd === 30, `expected 29 or 30 Sha'ban, got ${before.hijriLabel}`)
+  assert.match(before.hijriLabel, /Sha'ban 1448$/)
+
+  const after = calendarContext({ at: new Date('2027-02-08T00:30:00.000Z'), timeZone: zone, sunsetHour: 17 + 35 / 60 })
+  assert.equal(after.hour, 19)
+  assert.equal(after.hijriLabel, '1 Ramadan 1448')
+  assert.equal(after.ramadan, true)
+  assert.equal(after.hijri.hd, 1)
+  assert.equal(after.hijri.hm, 9)
+  assert.equal(after.hijri.hy, 1448)
+
+  const inferred = calendarContext({ at: new Date('2027-02-08T00:30:00.000Z'), timeZone: zone })
+  assert.equal(inferred.hijriLabel, '1 Ramadan 1448')
+  const inferredBefore = calendarContext({ at: wallClock('2027-02-07', 16, zone), timeZone: zone })
+  assert.equal(inferredBefore.ramadan, false)
+  assert.ok(inferredBefore.hijri.hd === 29 || inferredBefore.hijri.hd === 30)
+})
+
+test('London in BST turns the Islamic day at local Maghrib', () => {
+  const zone = 'Europe/London'
+  const thursdayEvening = calendarContext({ at: wallClock('2026-07-02', 22, zone), timeZone: zone, sunsetHour: 21 })
+  assert.equal(thursdayEvening.hour, 22)
+  assert.equal(thursdayEvening.thursdayEvening, true)
+  assert.equal(thursdayEvening.friday, true)
+  const thursdayAfternoon = calendarContext({ at: wallClock('2026-07-02', 16, zone), timeZone: zone, sunsetHour: 21 })
+  assert.equal(thursdayAfternoon.hour, 16)
+  assert.equal(thursdayAfternoon.friday, false)
+})
+
+test('Sydney and Auckland after local midnight use the local civil date, not UTC', () => {
+  const sydney = calendarContext({ at: new Date('2027-02-07T13:30:00.000Z'), timeZone: 'Australia/Sydney' })
+  assert.equal(sydney.hour, 0)
+  assert.equal(sydney.hijriLabel, '1 Ramadan 1448')
+  const auckland = calendarContext({ at: new Date('2027-02-07T11:30:00.000Z'), timeZone: 'Pacific/Auckland' })
+  assert.equal(auckland.hour, 0)
+  assert.equal(auckland.hijriLabel, '1 Ramadan 1448')
+})
+
 test('talk order is nudged by season theme and optional popular ids', () => {
   const ramadan = calendarContext({ at: gregorianOf(1447, 9, 5) })
   const talks = [

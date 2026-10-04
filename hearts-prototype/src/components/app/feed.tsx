@@ -313,13 +313,14 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
   )
 }
 
-export function Slide({ item, style, onMore, ctaLabel = 'Learn more' }: { item: FeedItem; style: SlideStyle; onMore: () => void; ctaLabel?: string }) {
+export function Slide({ item, style, onMore, ctaLabel = clipStepUpLabel() }: { item: FeedItem; style: SlideStyle; onMore: () => void; ctaLabel?: string }) {
   const hook = item.hookTidy || item.hook
   const turn = item.turnTidy || item.turn
   const land = item.landTidy || item.land
+  const line = ctaLabel && !/^learn more\b/i.test(ctaLabel) ? ctaLabel : clipStepUpLabel()
   const cta = (cls: string) => (
     <button type="button" className={`pill ${cls}`} onClick={onMore} data-testid="learn-more" data-parent={item.parents?.hors.parentId || ''} data-parent-level="appetiser">
-      {clipStepUpLabel()} <ArrowIcon />
+      {line} <ArrowIcon />
     </button>
   )
   const lane = item.laneLabel

@@ -127,7 +127,7 @@ function useStoredSet(name: string) {
 
 export function Journey(props: JourneyProps) {
   const clipCta = useVariant('feed-cta-label', props.variants?.['feed-cta-label'])
-  useVariant('full-talk-cta-label', props.variants?.['full-talk-cta-label'])
+  const talkCta = useVariant('full-talk-cta-label', props.variants?.['full-talk-cta-label'])
   const { base, opening, flags } = props
   const router = useRouter()
   const overlay = flags.chromeOverPlayer
@@ -1690,11 +1690,11 @@ export function Journey(props: JourneyProps) {
           <>
             {wordsInPicture && !cardKind ? null : speakerRow}
             <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onClick={moreFromSpeaker}>More from {item.speaker} ›</button>
-            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" data-speaker={item.speaker} data-lesson={item.lessonId} onClick={() => void stepUp()}>{clipStepUpLabel()}</button>
+            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" data-speaker={item.speaker} data-lesson={item.lessonId} onClick={() => void stepUp()}>{clipCta.label && !/^learn more\b/i.test(clipCta.label) ? clipCta.label : clipStepUpLabel()}</button>
           </>
         ) : (
           <>
-            <a className="pill gold block" href={course} onClick={(event) => void stepUp(event)} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk" data-speaker={item.speaker} data-lesson={item.lessonId}>{talkStepUpLabel(Object.values(opening.clips).filter((row) => row.courseId === item.courseId).reduce((ids, row) => ids.add(row.lessonId), new Set<number>()).size, item.talkSeconds)}</a>
+            <a className="pill gold block" href={course} onClick={(event) => void stepUp(event)} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk" data-speaker={item.speaker} data-lesson={item.lessonId}>{talkCta.label && !/^learn more\b/i.test(talkCta.label) ? talkCta.label : talkStepUpLabel(Object.values(opening.clips).filter((row) => row.courseId === item.courseId).reduce((ids, row) => ids.add(row.lessonId), new Set<number>()).size, item.talkSeconds)}</a>
             {wordsInPicture && videoAppetiser ? null : (
               <div className="speaker-card">
                 <Avatar name={item.speaker} portrait={item.portrait} />

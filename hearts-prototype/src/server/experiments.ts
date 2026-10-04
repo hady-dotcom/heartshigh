@@ -16,7 +16,9 @@ import {
   withinFirstWeek,
 } from '@/lib/experiment-slots'
 import type { VariantView } from '@/lib/experiment-slots'
+import { clipStepUpLabel, talkStepUpLabel } from '@/lib/feed-copy'
 import { now } from '@/lib/clock'
+import { contextAt, resolveContextLabel } from '@/server/calendar'
 import { isProduction, isRemoteDatabase } from '@/lib/env'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { audit } from './viewas'
@@ -324,6 +326,36 @@ export async function createExperiment(payload: Payload, actor: Actor, input: {
   const doc = asDoc(created as never)
   await writeAudit(payload, actor, 'experiment.create', { id: doc.id, key: doc.key, name: doc.name, slot: doc.slot }, input.portalId)
   return doc
+}
+
+export async function createLabelExperiment(payload: Payload, actor: Actor, input: {
+  slot?: string
+  label?: string
+  reason?: string
+  portalId?: number | null
+}) {
+  const slot = input.slot && isTestableSlot(input.slot) ? input.slot : 'feed-cta-label'
+  const control = slot === 'full-talk-cta-label' ? talkStepUpLabel(1) : clipStepUpLabel()
+  let label = String(input.label || '').trim()
+  if (!label || /^learn more\b/i.test(label)) {
+    const context = await contextAt(payload, now())
+    label = await resolveContextLabel(payload, slot, {}, context)
+  }
+  if (!label || /^learn more\b/i.test(label)) label = control === clipStepUpLabel() ? 'Watch a short clip for this season' : control
+  const key = `label-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`.slice(0, 40)
+  return createExperiment(payload, actor, {
+    key,
+    name: (input.reason || `Test ${label}`).slice(0, 80),
+    description: input.reason || `Variant B is ${label}`,
+    slot,
+    portalId: input.portalId,
+    allocation: 'fixed',
+    primaryMetric: slot === 'lanes-tab-label' ? 'lanes_tab_tap' : 'clip_cta_tap',
+    variants: [
+      { key: 'a', label: 'Usual', payload: { label: control }, weight: 1, approved: false, source: 'staff' },
+      { key: 'b', label: 'Seasonal', payload: { label }, weight: 1, approved: false, source: 'staff' },
+    ],
+  })
 }
 
 export async function updateExperiment(payload: Payload, actor: Actor, id: number, input: Partial<{

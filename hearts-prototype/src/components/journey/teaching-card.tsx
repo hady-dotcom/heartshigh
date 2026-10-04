@@ -4,6 +4,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode,
 import type { FeedItem } from '@/server/learner'
 import { Arch } from '@/components/arch'
 import { landedGold, revealedQuote, spreadWords, type SpokenWord } from '@/lib/card-voice'
+import { clipStepUpLabel } from '@/lib/feed-copy'
 
 type Scene = NonNullable<FeedItem['scene']>
 type Beat = Scene['beats'][number]
@@ -112,7 +113,7 @@ export function TeachingCard({
   course,
   lane,
   onClip,
-  cta = 'Learn more',
+  cta = clipStepUpLabel(),
 }: {
   scene: Scene
   speaker: string
@@ -291,7 +292,7 @@ export function TeachingCard({
   }
 
   const next = reward ? (
-    <button type="button" className="pill gold" onClick={onClip} data-testid="scene-next">Watch the 3-minute version</button>
+    <button type="button" className="pill gold" onClick={onClip} data-testid="scene-next">{cta && !/^learn more\b/i.test(cta) ? cta : clipStepUpLabel()}</button>
   ) : null
 
   const voiceButton = heard ? (

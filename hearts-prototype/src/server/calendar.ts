@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
-import { actionCta, approvedCopy, calendarContext, contextLabel, DEFAULT_CONTEXT_LINES, latitudeForZone, nudgeTalks, suggestedContextLine, type AdminSeason, type CalendarContext } from '@/lib/calendar-context'
+import { clipStepUpLabel, talkStepUpLabel } from '@/lib/feed-copy'
+import { actionCta, approvedCopy, calendarContext, DEFAULT_CONTEXT_LINES, latitudeForZone, nudgeTalks, suggestedContextLine, type AdminSeason, type CalendarContext } from '@/lib/calendar-context'
 import { formatSlotLabel } from '@/lib/experiment-slots'
 import { isProduction } from '@/lib/env'
 import { idOf } from '@/lib/ids'
@@ -62,13 +63,26 @@ export async function contextAt(payload: Payload, at: Date = now(), hour?: numbe
   return calendarContext({ at, offsetDays: offset, seasons, hour, weekday, timeZone: zone, latitude })
 }
 
+function seasonalFromPayload(payloadRow: Record<string, unknown>, context: CalendarContext) {
+  for (const key of context.active) {
+    const value = payloadRow[key]
+    if (typeof value === 'string' && value.trim()) return value.trim()
+  }
+  return ''
+}
+
+function deadLearnMore(line: string) {
+  return /^learn more\b/i.test(line.trim())
+}
+
 export async function resolveContextLabel(payload: Payload, slot: string, payloadRow: Record<string, unknown>, context: CalendarContext, minutes?: number) {
   const rows = await loadCopy(payload)
   const approved = approvedCopy(rows, slot, context)
-  const fromVariant = contextLabel(payloadRow, context, String(payloadRow.label || ''))
+  const fromVariant = seasonalFromPayload(payloadRow, context)
   const builtIn = context.active.map((key) => suggestedContextLine(slot, key)).find(Boolean) || ''
   const raw = approved || fromVariant || builtIn
-  return actionCta(minutes ? formatSlotLabel(raw, minutes) : raw)
+  if (raw && !deadLearnMore(raw)) return actionCta(minutes ? formatSlotLabel(raw, minutes) : raw)
+  return slot === 'full-talk-cta-label' ? talkStepUpLabel(1, minutes ? minutes * 60 : undefined) : clipStepUpLabel()
 }
 
 export async function popularTalkIds(payload: Payload): Promise<number[]> {

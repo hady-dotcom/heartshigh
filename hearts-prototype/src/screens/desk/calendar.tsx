@@ -5,7 +5,7 @@ import { CalendarHelp } from '@/components/desk/help'
 import { actionCta, CONTEXT_KEYS, contextName, parseUkDate, ukDate } from '@/lib/calendar-context'
 import { EXPERIMENT_SLOTS, slotPlainName } from '@/lib/experiment-slots'
 import { now } from '@/lib/clock'
-import { wallClock } from '@/lib/zone-time'
+import { DEFAULT_TIME_ZONE, isTimeZone, portalTimeZone, wallClock } from '@/lib/zone-time'
 import type { SessionUser } from '@/server/context'
 import { canEditCalendar, canViewCalendar, contextAt, hijriOffsetOf, loadCopy, loadSeasons, resolveContextLabel, seedDefaultCopy } from '@/server/calendar'
 import { flagsOfSafe } from './calendar-flags'
@@ -57,7 +57,7 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
   await seedDefaultCopy(payload, user)
   const previewDay = dateValue(query.date)
   const hour = Number(query.hour || 10)
-  const zone = 'Europe/London'
+  const zone = isTimeZone(query.zone) ? query.zone : ctx ? portalTimeZone(ctx.portal) : DEFAULT_TIME_ZONE
   const at = wallClock(previewDay, hour, zone)
   const [context, offset, seasons, copy, flags] = await Promise.all([
     contextAt(payload, at, hour, undefined, zone),
@@ -92,11 +92,12 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
                 <label className="stack">Date
                   <input type="text" name="date" lang="en-GB" autoComplete="off" spellCheck={false} placeholder="4 October 2026" defaultValue={ukDate(previewDay)} data-testid="calendar-date" />
                 </label>
-                <label className="stack">Hour (UK)
+                <label className="stack">Hour
                   <select name="hour" defaultValue={String(hour)} data-testid="calendar-hour">
                     {Array.from({ length: 24 }, (_, index) => <option key={index} value={index}>{index}:00</option>)}
                   </select>
                 </label>
+                {query.zone ? <input type="hidden" name="zone" value={zone} /> : null}
                 <button className="btn" type="submit" data-testid="calendar-preview-go">Preview</button>
               </form>
               <p className={styles.quiet}>The Islamic day moves on at Maghrib (about sunset in the UK, or the portal’s zone).</p>
@@ -110,12 +111,19 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
                 data-dhul-hijjah={context.dhulHijjah ? 'yes' : 'no'}
                 data-eid={eid ? 'yes' : 'no'}
                 data-muharram={context.muharram ? 'yes' : 'no'}
+                data-hijri={context.hijriLabel}
               >
                 <p className={styles.quiet} style={{ color: '#f1d58a', letterSpacing: '0.14em', textTransform: 'uppercase', fontSize: 11 }}>Home</p>
                 <p className={styles.phoneTitle}>{context.greeting || 'Your garden starts today'}</p>
                 <p className={styles.phoneWhen}>{ukDate(previewDay)}</p>
                 <p>{context.lastTenNights ? 'The last ten nights. A few quiet minutes, if you have them.' : context.ramadan ? 'A quieter evening in Ramadan. A short clip is waiting when you are ready.' : eid ? 'Eid mubarak. A short clip, if you would like one.' : context.dhulHijjah ? 'The first ten days. A short clip is waiting.' : context.muharram ? 'A new Hijri year. A short clip to begin.' : context.friday ? 'A Friday reminder, before Jumu\'ah, if you have a moment.' : 'Short clips from real talks, when you have a little time.'}</p>
                 <span className={styles.cta} data-testid="calendar-cta">{cta}</span>
+                {masterUser ? (
+                  <form action="/api/experiments" method="post" style={{ marginTop: 12 }}>
+                    <Hidden fields={{ action: 'from-label', slot: 'feed-cta-label', label: cta, reason: `Calendar ${context.hijriLabel}`, next: '/master/experiments' }} />
+                    <button className="btn" type="submit" data-testid="make-experiment">Make this an experiment</button>
+                  </form>
+                ) : null}
               </div>
             </div>
           </section>

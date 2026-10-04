@@ -17,7 +17,45 @@ export const FORBIDDEN_PROP_KEYS = [
   'prompt',
   'question',
   'message',
+  'learner',
+  'learnerid',
+  'learner_id',
+  'deviceid',
+  'device_id',
+  'device',
 ] as const
+
+export const INSIGHT_PERSON_KEYS = ['learner', 'learnerid', 'learner_id', 'deviceid', 'device_id', 'device'] as const
+
+export function insightHoldsPerson(value: unknown, path = ''): string[] {
+  const hits: string[] = []
+  if (value == null) return hits
+  if (typeof value === 'string') {
+    if (/^learner:\d+/i.test(value) || /^device:/i.test(value)) hits.push(path || value)
+    return hits
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => hits.push(...insightHoldsPerson(item, `${path}[${index}]`)))
+    return hits
+  }
+  if (typeof value === 'object') {
+    for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+      const next = path ? `${path}.${key}` : key
+      if (INSIGHT_PERSON_KEYS.some((banned) => folded(key) === folded(banned))) hits.push(next)
+      hits.push(...insightHoldsPerson(nested, next))
+    }
+  }
+  return hits
+}
+
+/** Cookie if present, otherwise IP + user-agent. Never mint a fresh id to escape the bucket. */
+export function insightBurstKey(input: { deviceId?: string | null; clientIp?: string | null; userAgent?: string | null }) {
+  const cookie = String(input.deviceId || '')
+  if (/^[a-zA-Z0-9_-]{8,80}$/.test(cookie)) return `cookie:${cookie}`
+  const ip = String(input.clientIp || '').trim() || 'anon'
+  const ua = String(input.userAgent || '').replace(/\s+/g, ' ').trim().slice(0, 80)
+  return `ip:${ip}|ua:${ua}`
+}
 
 export const INSIGHT_KINDS = [
   'route',
@@ -41,6 +79,50 @@ function folded(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, '')
 }
 
+export function insightEventRow(input: {
+  kind: string
+  route: string
+  sessionId: string
+  portalId?: number | null
+  sampled: boolean
+  props?: Record<string, unknown>
+  x?: number
+  y?: number
+  vw?: number
+  vh?: number
+  depth?: number
+  clipId?: string
+  watchPct?: number
+  step?: string
+  interactive?: boolean
+  at: string
+  hideCoords?: boolean
+}) {
+  const props = sanitizeProps(input.props)
+  const row = {
+    kind: input.kind,
+    route: input.route,
+    sessionId: input.sessionId,
+    subject: input.sessionId,
+    portal: input.portalId || undefined,
+    x: input.hideCoords || !Number.isFinite(Number(input.x)) ? undefined : Number(input.x),
+    y: input.hideCoords || !Number.isFinite(Number(input.y)) ? undefined : Number(input.y),
+    vw: input.hideCoords || !Number.isFinite(Number(input.vw)) ? undefined : Number(input.vw),
+    vh: input.hideCoords || !Number.isFinite(Number(input.vh)) ? undefined : Number(input.vh),
+    depth: Number.isFinite(Number(input.depth)) ? Number(input.depth) : undefined,
+    clipId: input.clipId ? String(input.clipId).slice(0, 40) : undefined,
+    watchPct: Number.isFinite(Number(input.watchPct)) ? Math.max(0, Math.min(100, Number(input.watchPct))) : undefined,
+    step: input.step ? String(input.step).slice(0, 40) : undefined,
+    interactive: Boolean(input.interactive),
+    sampled: input.sampled,
+    props,
+    at: input.at,
+  }
+  const person = insightHoldsPerson(row)
+  if (person.length) throw new Error(`Insights never store a person. Found ${person.join(', ')}.`)
+  return row
+}
+
 export function sanitizeProps(props: Record<string, unknown> | null | undefined): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(props || {})) {
@@ -49,6 +131,7 @@ export function sanitizeProps(props: Record<string, unknown> | null | undefined)
       // Coordinates and ids only: refuse long free text.
       if (value.length > 80) continue
       if (/@/.test(value)) continue
+      if (/^learner:/i.test(value) || /^device:/i.test(value)) continue
       out[key] = value
     } else if (typeof value === 'number' || typeof value === 'boolean') {
       out[key] = value

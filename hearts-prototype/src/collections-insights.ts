@@ -16,8 +16,6 @@ export const InsightEvents: CollectionConfig = {
     { name: 'route', type: 'text', required: true, index: true },
     { name: 'sessionId', type: 'text', required: true, index: true },
     { name: 'subject', type: 'text', index: true },
-    { name: 'learner', type: 'relationship', relationTo: 'users', index: true },
-    { name: 'deviceId', type: 'text', index: true },
     { name: 'portal', type: 'relationship', relationTo: 'portals', index: true },
     { name: 'x', type: 'number' },
     { name: 'y', type: 'number' },
@@ -42,8 +40,6 @@ export const InsightSessions: CollectionConfig = {
   fields: [
     { name: 'sessionId', type: 'text', required: true, unique: true, index: true },
     { name: 'subject', type: 'text', index: true },
-    { name: 'learner', type: 'relationship', relationTo: 'users', index: true },
-    { name: 'deviceId', type: 'text', index: true },
     { name: 'portal', type: 'relationship', relationTo: 'portals', index: true },
     { name: 'sampled', type: 'checkbox', defaultValue: true },
     { name: 'startedAt', type: 'date', required: true },

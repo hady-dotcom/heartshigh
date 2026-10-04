@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { allowInsightBurst, angrySpotWords, isAnswerScreen, isPrivateLane, replayLines, resetInsightBursts, sessionReplayScore } from './insight-events'
+import { allowInsightBurst, angrySpotWords, insightBurstKey, insightEventRow, insightHoldsPerson, isAnswerScreen, isPrivateLane, replayLines, resetInsightBursts, sanitizeProps, sessionReplayScore } from './insight-events'
+import { insightCollections } from '../collections-insights'
 import { actionCta, parseUkDate, ukDate } from './calendar-context'
 import { formatSlotLabel, slotPlainName } from './experiment-slots'
 
@@ -23,6 +24,18 @@ test('insight bursts are rate-limited', () => {
   for (let i = 0; i < 40; i++) assert.equal(allowInsightBurst('sess-a', 40, 10_000, 1_000), true)
   assert.equal(allowInsightBurst('sess-a', 40, 10_000, 1_000), false)
   assert.equal(allowInsightBurst('sess-a', 40, 10_000, 12_000), true)
+})
+
+test('without a device cookie the burst key is IP and user-agent, so a minted id cannot escape the limit', () => {
+  resetInsightBursts()
+  const noCookie = insightBurstKey({ clientIp: '203.0.113.9', userAgent: 'Mozilla/5.0 Hearts' })
+  assert.match(noCookie, /^ip:203\.0\.113\.9\|ua:/)
+  assert.doesNotMatch(noCookie, /d[a-z0-9]+/)
+  for (let i = 0; i < 40; i++) assert.equal(allowInsightBurst(noCookie, 40, 10_000, 1_000), true)
+  assert.equal(allowInsightBurst(noCookie, 40, 10_000, 1_000), false)
+  const stillNoCookie = insightBurstKey({ deviceId: '', clientIp: '203.0.113.9', userAgent: 'Mozilla/5.0 Hearts' })
+  assert.equal(stillNoCookie, noCookie)
+  assert.equal(allowInsightBurst(stillNoCookie, 40, 10_000, 1_000), false)
 })
 
 test('insight bursts prune stale keys from the map', () => {
@@ -49,6 +62,41 @@ test('CTA lines take a verb and hide raw {n}', () => {
 test('UK dates are day month year', () => {
   assert.equal(ukDate('2026-10-04'), '4 October 2026')
   assert.equal(parseUkDate('4 October 2026'), '2026-10-04')
+})
+
+test('insights collections, props and stored rows never hold a learner or device', () => {
+  for (const collection of insightCollections) {
+    const names = collection.fields.map((field) => field.name)
+    assert.ok(!names.includes('learner'), `${collection.slug} must not have learner`)
+    assert.ok(!names.includes('deviceId'), `${collection.slug} must not have deviceId`)
+    assert.deepEqual(insightHoldsPerson({ fields: names }), [])
+  }
+  const cleaned = sanitizeProps({
+    learnerId: 9,
+    deviceId: 'dabc123456',
+    learner: 'learner:9',
+    answer: 'a typed answer',
+    lane: 'patience',
+    x: 12,
+  })
+  assert.equal(cleaned.lane, 'patience')
+  assert.equal(cleaned.x, 12)
+  assert.equal(cleaned.learnerId, undefined)
+  assert.equal(cleaned.deviceId, undefined)
+  assert.deepEqual(insightHoldsPerson(cleaned), [])
+  const row = insightEventRow({
+    kind: 'tap',
+    route: '/p/:portal/feed',
+    sessionId: 's-anon-1',
+    sampled: true,
+    props: { learner: 'learner:4', deviceId: 'dx' },
+    at: '2026-02-06T10:00:00.000Z',
+    hideCoords: true,
+  })
+  assert.equal(row.subject, 's-anon-1')
+  assert.equal((row as { learner?: unknown }).learner, undefined)
+  assert.equal((row as { deviceId?: unknown }).deviceId, undefined)
+  assert.deepEqual(insightHoldsPerson(row), [])
 })
 
 test('replay collapses tap dumps and prefers a journey', () => {

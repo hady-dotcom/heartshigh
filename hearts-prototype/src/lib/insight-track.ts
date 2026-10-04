@@ -1,8 +1,25 @@
 'use client'
 
 import { angryFromLatest, type TapPoint } from './insight-taps'
-import { sessionId } from './experiment-track'
 import { sanitizeProps } from './insight-events'
+
+let memorySession = ''
+
+/** Random per-visit id. Memory or sessionStorage only — never a cookie, learner, or device id. */
+export function insightSessionId() {
+  if (typeof window === 'undefined') return ''
+  try {
+    const key = 'hearts.insight.session'
+    const held = window.sessionStorage.getItem(key)
+    if (held && !/learner|device/i.test(held)) return held
+    const next = `s${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`
+    window.sessionStorage.setItem(key, next)
+    return next
+  } catch {
+    if (!memorySession) memorySession = `s${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`
+    return memorySession
+  }
+}
 
 export type InsightPayload = {
   kind: string
@@ -39,7 +56,7 @@ function flush() {
   if (!queue.length || typeof window === 'undefined') return
   const events = queue.splice(0, 40).map((event) => ({
     ...event,
-    sessionId: sessionId(),
+    sessionId: insightSessionId(),
     route: event.route || window.location.pathname,
     props: sanitizeProps({
       ...event.props,
@@ -111,4 +128,4 @@ export function noteClip(kind: 'clip_watch' | 'clip_swipe', watchPct: number, cl
   postInsight({ kind, watchPct: Math.round(watchPct), clipId })
 }
 
-export { sessionId }
+export { insightSessionId as sessionId }

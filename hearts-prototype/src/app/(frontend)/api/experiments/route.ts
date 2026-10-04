@@ -9,6 +9,7 @@ import {
   canEditExperiments,
   canViewExperiments,
   createExperiment,
+  createLabelExperiment,
   csvFor,
   experimentsKilled,
   fillTestNumbers,
@@ -141,6 +142,17 @@ export async function POST(req: Request) {
       return ok(result.ok ? 'Exposed.' : 'Skipped.', result)
     }
     if (!user) return wantsJson ? NextResponse.json({ error: 'Sign in first.' }, { status: 401 }) : redirectTo(req, `/login?next=${encodeURIComponent(next)}`, 'Sign in first.')
+    if (action === 'from-label') {
+      if (!canEditExperiments(user)) return fail('Only the master can create an experiment.', 403)
+      const created = await createLabelExperiment(payload, user, {
+        slot: text(form, 'slot'),
+        label: text(form, 'label'),
+        reason: text(form, 'reason'),
+        portalId: Number(text(form, 'portal')) || null,
+      })
+      const dest = `/master/experiments/${created.id}`
+      return wantsJson ? NextResponse.json({ ok: true, id: created.id, key: created.key }) : redirectTo(req, dest, undefined, 'Draft saved. Approve the versions, then start it.')
+    }
     if (action === 'create') {
       if (!canEditExperiments(user)) return fail('Only the master can create an experiment.', 403)
       const slot = text(form, 'slotOverride').trim() || text(form, 'slot')
