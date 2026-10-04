@@ -106,6 +106,8 @@ export interface Config {
     'seat-visits': SeatVisit;
     rituals: Ritual;
     'circle-answers': CircleAnswer;
+    'feedback-summaries': FeedbackSummary;
+    'question-rewrites': QuestionRewrite;
     'scripture-cache': ScriptureCache;
     'heart-scales': HeartScale;
     lanes: Lane;
@@ -172,6 +174,8 @@ export interface Config {
     'seat-visits': SeatVisitsSelect<false> | SeatVisitsSelect<true>;
     rituals: RitualsSelect<false> | RitualsSelect<true>;
     'circle-answers': CircleAnswersSelect<false> | CircleAnswersSelect<true>;
+    'feedback-summaries': FeedbackSummariesSelect<false> | FeedbackSummariesSelect<true>;
+    'question-rewrites': QuestionRewritesSelect<false> | QuestionRewritesSelect<true>;
     'scripture-cache': ScriptureCacheSelect<false> | ScriptureCacheSelect<true>;
     'heart-scales': HeartScalesSelect<false> | HeartScalesSelect<true>;
     lanes: LanesSelect<false> | LanesSelect<true>;
@@ -1328,6 +1332,65 @@ export interface CircleAnswer {
   createdAt: string;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "feedback-summaries".
+ */
+export interface FeedbackSummary {
+  id: number;
+  portal?: (number | null) | Portal;
+  point?: (number | null) | EngagementPoint;
+  questionKey?: string | null;
+  themes:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  quotes:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  status?: ('draft' | 'included') | null;
+  stepSlug?: string | null;
+  versionNumber?: number | null;
+  author?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "question-rewrites".
+ */
+export interface QuestionRewrite {
+  id: number;
+  point: number | EngagementPoint;
+  prompt: string;
+  talk?: string | null;
+  family?: string | null;
+  reasons:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  rewrite: string;
+  status?: 'draft' | null;
+  author?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Tafsir, hadith and summaries fetched from open sources, kept so each is fetched once.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2102,6 +2165,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'circle-answers';
         value: number | CircleAnswer;
+      } | null)
+    | ({
+        relationTo: 'feedback-summaries';
+        value: number | FeedbackSummary;
+      } | null)
+    | ({
+        relationTo: 'question-rewrites';
+        value: number | QuestionRewrite;
       } | null)
     | ({
         relationTo: 'scripture-cache';
@@ -2943,6 +3014,39 @@ export interface CircleAnswersSelect<T extends boolean = true> {
   length?: T;
   origin?: T;
   enabled?: T;
+  author?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "feedback-summaries_select".
+ */
+export interface FeedbackSummariesSelect<T extends boolean = true> {
+  portal?: T;
+  point?: T;
+  questionKey?: T;
+  themes?: T;
+  quotes?: T;
+  status?: T;
+  stepSlug?: T;
+  versionNumber?: T;
+  author?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "question-rewrites_select".
+ */
+export interface QuestionRewritesSelect<T extends boolean = true> {
+  point?: T;
+  prompt?: T;
+  talk?: T;
+  family?: T;
+  reasons?: T;
+  rewrite?: T;
+  status?: T;
   author?: T;
   updatedAt?: T;
   createdAt?: T;

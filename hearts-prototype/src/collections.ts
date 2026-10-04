@@ -1156,6 +1156,57 @@ export const CircleAnswers: CollectionConfig = {
   },
 }
 
+/** A draft reading of one question's shared answers. Included in a digest only after a person says so. */
+export const FeedbackSummaries: CollectionConfig = {
+  slug: 'feedback-summaries',
+  labels: { singular: 'Feedback summary', plural: 'Feedback summaries' },
+  access: masterOnly,
+  fields: [
+    { name: 'portal', type: 'relationship', relationTo: 'portals', index: true },
+    { name: 'point', type: 'relationship', relationTo: 'engagement-points' },
+    { name: 'questionKey', type: 'text', index: true },
+    { name: 'themes', type: 'json', required: true },
+    { name: 'quotes', type: 'json', required: true },
+    {
+      name: 'status',
+      type: 'select',
+      defaultValue: 'draft',
+      options: [
+        { label: 'Draft', value: 'draft' },
+        { label: 'Included in the digest', value: 'included' },
+      ],
+    },
+    { name: 'stepSlug', type: 'text' },
+    { name: 'versionNumber', type: 'number' },
+    { name: 'author', type: 'relationship', relationTo: 'users' },
+  ],
+}
+
+/** A suggested rewrite. Always a draft. The live question is never replaced from here. */
+export const QuestionRewrites: CollectionConfig = {
+  slug: 'question-rewrites',
+  labels: { singular: 'Question rewrite', plural: 'Question rewrites' },
+  access: masterOnly,
+  fields: [
+    { name: 'point', type: 'relationship', relationTo: 'engagement-points', required: true, index: true },
+    { name: 'prompt', type: 'textarea', required: true },
+    { name: 'talk', type: 'text' },
+    { name: 'family', type: 'text' },
+    { name: 'reasons', type: 'json', required: true },
+    { name: 'rewrite', type: 'textarea', required: true },
+    { name: 'status', type: 'select', defaultValue: 'draft', options: [{ label: 'Draft', value: 'draft' }] },
+    { name: 'author', type: 'relationship', relationTo: 'users' },
+  ],
+  hooks: {
+    beforeChange: [
+      ({ data }) => {
+        if (data) data.status = 'draft'
+        return data
+      },
+    ],
+  },
+}
+
 export const collections = [
   Portals,
   Users,
@@ -1196,6 +1247,8 @@ export const collections = [
   SeatVisits,
   Rituals,
   CircleAnswers,
+  FeedbackSummaries,
+  QuestionRewrites,
   ScriptureCache,
   ...openingCollections,
 ]

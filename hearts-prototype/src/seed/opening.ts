@@ -483,7 +483,7 @@ export async function seedPeople(payload: Payload, opts: { portalIds: Map<string
       }
       const nur = await one(payload, 'lessons', { title: { equals: 'The Names Class 20: Al-Nur' } })
       const points = nur ? ((await payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 10, sort: 'second', where: { lesson: { equals: nur.id } } })).docs as unknown as Doc[]) : []
-      const reflection = 'The first week of Ramadan, when the house goes quiet before suhoor.'
+      const reflection = 'First week of Ramadan. The house goes quiet before suhoor and I just sit there.'
       const picked = 'You start to incline towards the Akhira'
       for (const point of points.filter((row) => row.status !== 'draft').slice(0, 2)) {
         const choice = point.kind === 'multiple_choice'
@@ -537,7 +537,7 @@ export async function seedPeople(payload: Payload, opts: { portalIds: Map<string
           await payload.create({
             collection: 'answers',
             overrideAccess: true,
-            data: { point: point.id, user: person.id, lesson: idOf(point.lesson), body: 'A few words kept for myself.', keepPrivate: true, portal: elm, answeredAt: at, createdAt: at, updatedAt: at } as never,
+            data: { point: point.id, user: person.id, lesson: idOf(point.lesson), body: 'Not for anyone else. The bus was packed and I was late for work.', keepPrivate: true, portal: elm, answeredAt: at, createdAt: at, updatedAt: at } as never,
           })
         }
       }

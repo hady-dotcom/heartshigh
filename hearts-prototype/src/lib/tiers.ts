@@ -515,7 +515,7 @@ export function draftTiers(source: string | Cue[], durationHint?: number | null)
   const popupSecond = (index: number) => Math.min(Math.ceil(all[index].end), Math.max(0, duration - 1))
   const addPopup = (index: number) => {
     const quote = capitalise(all[index].text)
-    popups.push({ second: popupSecond(index), quote, prompt: `The speaker says: “${quote}” What does that line ask of you this week?` })
+    popups.push({ second: popupSecond(index), quote, prompt: `The speaker says: “${quote}” What from that stayed with you on the way home?` })
   }
   const popupOk = (index: number) => scores[index] > 0 && all[index].words >= 7 && all[index].words <= 40 && closes(index) && !killListHits(all[index].text).length && !noisy(all[index])
   const ranked = all.map((_, index) => index).sort((x, y) => scores[y] - scores[x] || all[x].start - all[y].start)
