@@ -1,4 +1,4 @@
-/* Live AI director: treatments A–F of a 16:9 YouTube embed in a portrait stage. */
+/* Live AI director: treatments A–F of a 16:9 film in a portrait stage. */
 
 .fr-stage {
   position: relative;
@@ -32,6 +32,7 @@
   transform: scale(1.12);
   z-index: 0;
 }
+/* Visible film window. Never inherit the feed's left:50% / translateX(-50%) centre-crop. */
 .fr-film {
   position: absolute;
   top: var(--fr-film-top, 0);
@@ -40,36 +41,45 @@
   height: var(--fr-film-h, 56%);
   z-index: 1;
   overflow: hidden;
+  transform: none;
   transition: top var(--fr-ms, 360ms) ease, left var(--fr-ms, 360ms) ease, width var(--fr-ms, 360ms) ease, height var(--fr-ms, 360ms) ease;
 }
-.fr-crop, .fr-host, .fr-host iframe {
+.fr-crop,
+.fr-host,
+.fr-media {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   border: 0;
+  transform: none;
 }
-/* Grow the iframe past the 16:9 window so YouTube's own title and control bars sit off the crop. */
 .fr-crop { overflow: hidden; }
+/* Kill the feed crop on any iframe we mount here — same specificity as .yt-host iframe, later in the sheet. */
+.fr-stage .yt-host iframe,
+.fr-stage .fr-host iframe,
 .fr-host iframe {
-  top: -64px;
-  height: calc(100% + 128px);
-  pointer-events: none;
-}
-.fr-F .fr-film {
-  top: 72px;
-  left: 0;
-  width: 100%;
-  /* Pixel height from layout — height:auto + only absolute children collapsed the iframe. */
-  height: var(--fr-film-h, 220px);
-  min-height: 200px;
-}
-.fr-F .fr-crop,
-.fr-F .fr-host {
   position: absolute;
   inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: none;
+  pointer-events: none;
+  border: 0;
 }
-.fr-F .fr-host iframe { top: -36px; height: calc(100% + 72px); }
+.fr-media {
+  object-fit: cover;
+  object-position: var(--fr-focus-x, 50%) var(--fr-focus-y, 45%);
+  background: #000;
+}
+.fr-B .fr-media,
+.fr-C .fr-media,
+.fr-F .fr-media {
+  object-fit: contain;
+  object-position: center;
+}
 .fr-card-meta {
   position: absolute;
   left: 28px;
@@ -92,12 +102,27 @@
   margin: 10px auto 0;
   background: #d4a84b;
 }
+.fr-placeholder-mark {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 6;
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #d4a84b;
+  color: #1a1408;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
 
 .fr-words {
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(72px + min(220px, 100vw * 9 / 16));
+  top: calc(var(--fr-film-top, 72px) + var(--fr-film-h, 220px));
   bottom: 0;
   z-index: 2;
   padding: 22px 22px 28px;
@@ -217,6 +242,8 @@
   transform: none;
 }
 .j-slot[data-framing='D'] .yt-host iframe {
-  transform: translateX(var(--fr-tx, -50%));
+  left: 0;
+  transform: none;
+  width: 100%;
 }
 .journey[data-framing='F'] .j-chrome .caption { display: none; }

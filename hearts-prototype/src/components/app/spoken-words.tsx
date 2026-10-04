@@ -1,14 +1,27 @@
 'use client'
 
-import { currentSentence, wrapWordLines } from '@/lib/framing/words'
+import { currentSentence, sentencesInWindow, wrapWordLines } from '@/lib/framing/words'
 import type { FramingSentence } from '@/lib/framing/types'
 
-export function SpokenWords({ sentences, time, speaker }: { sentences: FramingSentence[]; time: number; speaker?: string }) {
-  const sentence = currentSentence(sentences, time)
+export function SpokenWords({
+  sentences,
+  time,
+  speaker,
+  from,
+  to,
+}: {
+  sentences: FramingSentence[]
+  time: number
+  speaker?: string
+  from?: number
+  to?: number
+}) {
+  const live = from != null && to != null ? sentencesInWindow(sentences, from, to) : sentences
+  const sentence = currentSentence(live, time)
   if (!sentence) return <div className="fr-words" data-testid="spoken-words" data-empty="yes" />
   const lines = wrapWordLines(sentence.words.map((row) => row.w), 20).slice(0, 5)
   return (
-    <div className="fr-words" data-testid="spoken-words" data-sentence={sentence.text}>
+    <div className="fr-words" data-testid="spoken-words" data-sentence={sentence.text} data-sentence-start={sentence.s}>
       {speaker ? <p className="fr-words-speaker">{speaker}</p> : null}
       <div className="fr-words-page" key={`${sentence.s}:${sentence.text}`}>
         {lines.map((line, index) => (
@@ -23,7 +36,7 @@ export function SpokenWords({ sentences, time, speaker }: { sentences: FramingSe
         ))}
       </div>
       <div className="fr-dots" aria-hidden>
-        {sentences.map((row, index) => (
+        {live.map((row, index) => (
           <i key={row.s} className={row === sentence ? 'on' : undefined} data-dot={index} />
         ))}
       </div>

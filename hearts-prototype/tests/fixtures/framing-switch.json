@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "youtubeId": "placeholder",
+  "start": 0,
+  "end": 24,
+  "requestedStart": 0,
+  "requestedEnd": 24,
+  "segments": [
+    { "start": 0, "end": 8, "mode": "D", "confidence": 0.88, "focus": { "x": 0.18, "y": 0.42 } },
+    { "start": 8, "end": 16, "mode": "B", "confidence": 0.9, "focus": { "x": 0.5, "y": 0.45 } },
+    { "start": 16, "end": 24, "mode": "F", "confidence": 0.8, "focus": { "x": 0.5, "y": 0.45 } }
+  ],
+  "sentences": [
+    {
+      "text": "Where do you derive your honour from?",
+      "s": 0,
+      "e": 7.6,
+      "next": 8,
+      "key": "honour",
+      "words": [
+        { "w": "Where", "t": 0, "e": 0.8 },
+        { "w": "do", "t": 0.8, "e": 1.2 },
+        { "w": "you", "t": 1.2, "e": 1.7 },
+        { "w": "derive", "t": 1.7, "e": 3.1 },
+        { "w": "your", "t": 3.1, "e": 3.8 },
+        { "w": "honour", "t": 3.8, "e": 5.4, "key": true },
+        { "w": "from?", "t": 5.4, "e": 7.6 }
+      ]
+    },
+    {
+      "text": "Your dignity, your sense of worth?",
+      "s": 8,
+      "e": 15.5,
+      "next": 16,
+      "key": "worth",
+      "words": [
+        { "w": "Your", "t": 8, "e": 8.6 },
+        { "w": "dignity,", "t": 8.6, "e": 10.2 },
+        { "w": "your", "t": 10.2, "e": 10.8 },
+        { "w": "sense", "t": 10.8, "e": 12.1 },
+        { "w": "of", "t": 12.1, "e": 12.5 },
+        { "w": "worth?", "t": 12.5, "e": 15.5, "key": true }
+      ]
+    },
+    {
+      "text": "And they seem to be winning as well.",
+      "s": 16,
+      "e": 18.4,
+      "next": 18.5,
+      "key": "winning",
+      "words": [
+        { "w": "And", "t": 16, "e": 16.3 },
+        { "w": "they", "t": 16.3, "e": 16.6 },
+        { "w": "seem", "t": 16.6, "e": 17.0 },
+        { "w": "to", "t": 17.0, "e": 17.2 },
+        { "w": "be", "t": 17.2, "e": 17.4 },
+        { "w": "winning", "t": 17.4, "e": 18.0, "key": true },
+        { "w": "as", "t": 18.0, "e": 18.2 },
+        { "w": "well.", "t": 18.2, "e": 18.4 }
+      ]
+    },
+    {
+      "text": "They seem to be overcoming you.",
+      "s": 18.5,
+      "e": 21.1,
+      "next": 21.2,
+      "key": "overcoming",
+      "words": [
+        { "w": "They", "t": 18.5, "e": 18.8 },
+        { "w": "seem", "t": 18.8, "e": 19.1 },
+        { "w": "to", "t": 19.1, "e": 19.3 },
+        { "w": "be", "t": 19.3, "e": 19.5 },
+        { "w": "overcoming", "t": 19.5, "e": 20.6, "key": true },
+        { "w": "you.", "t": 20.6, "e": 21.1 }
+      ]
+    },
+    {
+      "text": "Your dignity still stands.",
+      "s": 21.2,
+      "e": 24,
+      "next": 24,
+      "key": "dignity",
+      "words": [
+        { "w": "Your", "t": 21.2, "e": 21.6 },
+        { "w": "dignity", "t": 21.6, "e": 22.6, "key": true },
+        { "w": "still", "t": 22.6, "e": 23.2 },
+        { "w": "stands.", "t": 23.2, "e": 24 }
+      ]
+    }
+  ]
+}

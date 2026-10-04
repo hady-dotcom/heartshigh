@@ -1486,7 +1486,13 @@ export function Journey(props: JourneyProps) {
             />
           ))}
           {framingMode === 'F' && item?.framingTrack?.sentences?.length ? (
-            <SpokenWords sentences={item.framingTrack.sentences} time={spokenAt ?? item.hors.start} speaker={item.speaker} />
+            <SpokenWords
+              sentences={item.framingTrack.sentences}
+              time={spokenAt ?? item.hors.start}
+              speaker={item.speaker}
+              from={item.hors.start}
+              to={item.hors.end}
+            />
           ) : null}
           {typeClip && typeSrc ? (
             <video

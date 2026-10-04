@@ -168,6 +168,8 @@ async function main() {
       sentences,
       cuts,
     })
+    track.sentences = sentencesInWindow(sentences, track.start, track.end)
+    track.words = track.sentences.flatMap((row) => row.words)
     const problems = validateTrack(track)
     if (problems.length) die(`Track failed checks: ${problems.map((row) => row.message).join(' ')}`)
     const dir = path.join(root, 'content', 'framing')

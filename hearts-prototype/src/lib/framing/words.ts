@@ -58,7 +58,7 @@ export function sentencesFromWords(words: SpokenWord[], clipEnd?: number): Frami
 }
 
 export function sentencesInWindow(sentences: FramingSentence[], start: number, end: number) {
-  return sentences.filter((row) => row.e >= start - 0.15 && row.s <= end + 0.15)
+  return sentences.filter((row) => row.s < end - 0.05 && row.e > start + 0.05)
 }
 
 function pickKey(words: SpokenWord[]) {
@@ -99,15 +99,9 @@ export function wrapWordLines(words: string[], max = 20) {
 
 export function currentSentence(sentences: FramingSentence[], time: number) {
   if (!sentences.length) return null
-  let lo = 0
-  let hi = sentences.length - 1
-  while (lo <= hi) {
-    const mid = (lo + hi) >> 1
-    const row = sentences[mid]
-    if (time < row.s) hi = mid - 1
-    else if (time >= (row.next ?? row.e)) lo = mid + 1
-    else return row
+  for (const row of sentences) {
+    const end = row.next ?? row.e
+    if (time >= row.s && time < end) return row
   }
-  if (time < sentences[0].s) return sentences[0]
-  return sentences[sentences.length - 1]
+  return null
 }

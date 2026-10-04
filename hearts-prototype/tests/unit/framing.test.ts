@@ -3,7 +3,8 @@ import { test } from 'node:test'
 import { buildTrack, chooseMode, segmentsFromShots } from '../../src/lib/framing/choose'
 import { avoidMidSentenceSwitches, holdModes, snapClipWindow, snapIn, snapOut, snapSwitch } from '../../src/lib/framing/snap'
 import { fallbackTrack, validateTrack } from '../../src/lib/framing/validate'
-import { sentencesFromWords, wordsFromCues, wrapWordLines } from '../../src/lib/framing/words'
+import { currentSentence, sentencesFromWords, sentencesInWindow, wordsFromCues, wrapWordLines } from '../../src/lib/framing/words'
+import { filmOnStage, layoutFor } from '../../src/lib/framing/layout'
 import type { ShotAnalysis } from '../../src/lib/framing/types'
 import { framingVariant } from '../../src/lib/experiments'
 import sample from '../fixtures/framing-track.json'
@@ -113,6 +114,36 @@ test('buildTrack snaps the window, holds modes, and writes a valid track', () =>
   assert.ok(track.segments.every((row) => row.end - row.start >= 4 - 0.05))
   assert.ok(track.segments.some((row) => row.mode === 'D' || row.mode === 'F'))
   assert.equal(segmentsFromShots([shot({ textScore: 0.02 })]).at(0)?.mode, 'B')
+})
+
+test('letterbox and split film stay inside the 390×844 stage', () => {
+  for (const mode of ['A', 'B', 'C', 'D', 'E', 'F'] as const) {
+    const layout = layoutFor(mode, 390, 844, undefined, { x: 0.22, y: 0.4 })
+    assert.equal(filmOnStage(layout, 390, 844), true, mode)
+    assert.ok(layout.film.left >= 0, mode)
+    assert.ok(layout.film.left + layout.film.width <= 390.01, mode)
+  }
+  const letter = layoutFor('B', 390, 844)
+  assert.equal(letter.film.left, 0)
+  assert.equal(letter.film.width, 390)
+  const split = layoutFor('F', 390, 844)
+  assert.equal(split.film.left, 0)
+  assert.equal(split.film.width, 390)
+  assert.equal(split.film.top, 72)
+})
+
+test('spoken words ignore the sentence that ended at the clip in-point', () => {
+  const sentences = sentencesFromWords(
+    wordsFromCues([
+      { start: 302, end: 307.25, text: 'And it still is okay to say that you might not know what other people go through.' },
+      { start: 307.25, end: 312.2, text: 'Uh I was speaking at a masid that had about 500 people in the audience.' },
+    ]),
+    332,
+  )
+  const live = sentencesInWindow(sentences, 307.25, 332)
+  assert.ok(live.every((row) => row.e > 307.3))
+  assert.equal(currentSentence(live, 307.0), null)
+  assert.ok(currentSentence(live, 308)?.text.includes('speaking'))
 })
 
 test('spoken lines wrap as word arrays so display spaces cannot collapse', () => {

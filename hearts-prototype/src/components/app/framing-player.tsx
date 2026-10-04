@@ -11,6 +11,8 @@ import { createPlayer, destroyPlayer, getPlayer, playOnly, soundOn, STATE, type 
 
 export type FramingClock = { now(): number }
 
+export const PLACEHOLDER_SRC = '/framing/placeholder.mp4'
+
 type Props = {
   youtubeId: string
   track?: FramingTrack | null
@@ -23,6 +25,8 @@ type Props = {
   clock?: FramingClock
   onMode?: (mode: FramingMode, time: number) => void
   speaker?: string
+  /** Local test-pattern film when YouTube cannot play. Labelled on screen. */
+  placeholder?: boolean
 }
 
 export function effectiveMode(track: FramingTrack | null | undefined, time: number, variant?: string | null): FramingMode {
@@ -42,8 +46,10 @@ export function FramingPlayer({
   clock,
   onMode,
   speaker,
+  placeholder = false,
 }: Props) {
   const host = useRef<HTMLDivElement>(null)
+  const video = useRef<HTMLVideoElement>(null)
   const opened = useRef(false)
   const [ready, setReady] = useState(false)
   const [time, setTime] = useState(track?.start ?? 0)
@@ -54,6 +60,11 @@ export function FramingPlayer({
   const inWindow = time >= resolved.start - 0.75 && time < resolved.end
 
   useEffect(() => {
+    if (placeholder) {
+      setReady(true)
+      if (autoplay) void video.current?.play().catch(() => undefined)
+      return
+    }
     if (!host.current) return
     let gone = false
     opened.current = false
@@ -98,38 +109,23 @@ export function FramingPlayer({
       gone = true
       destroyPlayer(playerId)
     }
-  }, [autoplay, playerId, resolved.end, resolved.start, sound, youtubeId])
-
-  useEffect(() => {
-    if (!ready || !autoplay) return
-    let tries = 0
-    const id = window.setInterval(() => {
-      const player = getPlayer(playerId)
-      if (!player) return
-      const now = player.getCurrentTime()
-      const state = player.getPlayerState()
-      if (state === STATE.CUED || state === STATE.UNSTARTED || state === STATE.ENDED) playOnly(playerId)
-      if (now < resolved.start - 1.5 || now >= resolved.end) {
-        player.seekTo(resolved.start, true)
-        player.playVideo()
-      }
-      if (++tries > 8) window.clearInterval(id)
-    }, 800)
-    return () => window.clearInterval(id)
-  }, [autoplay, playerId, ready, resolved.end, resolved.start])
+  }, [autoplay, placeholder, playerId, resolved.end, resolved.start, sound, youtubeId])
 
   useEffect(() => {
     let frame = 0
     const tick = () => {
       const player = getPlayer(playerId)
       const testClock = typeof window !== 'undefined' ? (window as unknown as { __frClock?: FramingClock }).__frClock : undefined
-      const next = clock?.now() ?? testClock?.now() ?? player?.getCurrentTime()
+      const fromVideo = placeholder && video.current && Number.isFinite(video.current.currentTime)
+        ? resolved.start + video.current.currentTime
+        : undefined
+      const next = clock?.now() ?? testClock?.now() ?? fromVideo ?? player?.getCurrentTime()
       if (typeof next === 'number' && Number.isFinite(next)) setTime((held) => (Math.abs(held - next) < 0.04 ? held : next))
       frame = window.requestAnimationFrame(tick)
     }
     frame = window.requestAnimationFrame(tick)
     return () => window.cancelAnimationFrame(frame)
-  }, [clock, playerId])
+  }, [clock, placeholder, playerId, resolved.start])
 
   useEffect(() => {
     onMode?.(mode, time)
@@ -143,6 +139,7 @@ export function FramingPlayer({
       data-framing-ready={ready ? 'yes' : 'no'}
       data-framing-time={time.toFixed(2)}
       data-framing-window={inWindow ? 'in' : 'out'}
+      data-framing-source={placeholder ? 'placeholder' : 'youtube'}
       style={{ width, height, ...cssVars(layout), ['--fr-ms' as string]: `${TRANSITION_MS}ms` }}
     >
       <div className="fr-bg" aria-hidden />
@@ -151,16 +148,35 @@ export function FramingPlayer({
       ) : null}
       <div className="fr-film" data-testid="framing-film">
         <div className="fr-crop">
-          <div ref={host} className="fr-host yt-host" data-testid="framing-host" />
+          {placeholder ? (
+            <video
+              ref={video}
+              className="fr-media"
+              data-testid="framing-media"
+              src={PLACEHOLDER_SRC}
+              playsInline
+              muted={!sound}
+              loop
+              autoPlay={autoplay}
+              onLoadedData={() => setReady(true)}
+            />
+          ) : (
+            <div ref={host} className="fr-host" data-testid="framing-host">
+              {/* iframe is mounted here; testid is copied onto it after create */}
+            </div>
+          )}
         </div>
       </div>
+      {placeholder ? <p className="fr-placeholder-mark">Placeholder — not YouTube</p> : null}
       {mode === 'E' ? (
         <div className="fr-card-meta">
           <b>{speaker || 'The talk'}</b>
           <i />
         </div>
       ) : null}
-      {mode === 'F' ? <SpokenWords sentences={resolved.sentences || []} time={time} speaker={speaker} /> : null}
+      {mode === 'F' ? (
+        <SpokenWords sentences={resolved.sentences || []} time={time} speaker={speaker} from={resolved.start} to={resolved.end} />
+      ) : null}
     </div>
   )
 }
