@@ -28,7 +28,10 @@ async function signIn(page: Page, email: string, password: string, next: string)
 }
 
 async function openCoursePlayer(page: Page) {
-  if (await page.getByTestId('start-part').count()) await page.getByTestId('start-part').click()
+  if (await page.getByTestId('player').count()) return
+  const first = page.getByTestId('buffet-talk').first()
+  if (await first.count()) await first.click()
+  else if (await page.getByTestId('start-part').count()) await page.getByTestId('start-part').click()
   await expect(page.getByTestId('player')).toBeVisible()
 }
 

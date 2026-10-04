@@ -181,7 +181,8 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
   const course = (await json(await master.get(`/api/courses?where[title][equals]=${encodeURIComponent(COURSE)}&depth=0`))).docs[0].id
 
   await page.goto(`${BASE}/course/${course}`)
-  if (await page.getByTestId('start-part').count()) await page.getByTestId('start-part').click()
+  if (await page.getByTestId('buffet-talk').count()) await page.getByTestId('buffet-talk').first().click()
+  else if (await page.getByTestId('start-part').count()) await page.getByTestId('start-part').click()
   await expect(page.getByTestId('player')).toBeVisible()
   await expect(async () => {
     await page.getByTestId('timeline-dot').first().click()

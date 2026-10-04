@@ -12,6 +12,14 @@ async function signIn(page: Page, email: string, password: string, next: string)
   await page.waitForURL((url) => !url.pathname.startsWith('/login'))
 }
 
+async function openFirstPart(page: Page) {
+  if (await page.getByTestId('player').count()) return
+  const first = page.getByTestId('buffet-talk').first()
+  if (await first.count()) await first.click()
+  else if (await page.getByTestId('start-part').count()) await page.getByTestId('start-part').click()
+  await expect(page.getByTestId('player')).toBeVisible({ timeout: 15_000 })
+}
+
 async function shot(page: Page, name: string, path: string, fullPage = false) {
   mkdirSync(dir, { recursive: true })
   await page.goto(path)
@@ -27,13 +35,12 @@ test('a week of use, so the garden has something in it', async ({ page }) => {
   await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london/lanes')
   for (const course of [1, 2, 3]) {
     await page.goto(`/p/east-london/course/${course}`)
-    const start = page.getByTestId('start-part')
-    if (await start.count()) await start.click()
-    await expect(page.getByTestId('player')).toBeVisible({ timeout: 15_000 })
+    await openFirstPart(page)
     const lesson = await page.locator('form.watched-form input[name=lesson]').getAttribute('value')
     await page.request.post('/api/hearts', { form: { action: 'complete', lesson: lesson!, seconds: '99999', ended: 'yes', next: '/' } })
   }
   await page.goto('/p/east-london/course/1')
+  await openFirstPart(page)
   await expect(async () => {
     await page.getByTestId('timeline-dot').first().click({ force: true })
     await expect(page.getByTestId('answer-form')).toBeVisible({ timeout: 1000 })
@@ -92,8 +99,7 @@ test('learner app at phone size', async ({ page }) => {
   await page.waitForTimeout(600)
   await page.screenshot({ path: `${dir}/learner-01b-appetiser.png`, caret: 'initial' })
   await page.goto(`${base}/course/1`)
-  if (await page.getByTestId('start-part').count()) await page.getByTestId('start-part').click()
-  await expect(page.getByTestId('player')).toBeVisible()
+  await openFirstPart(page)
   await expect(async () => {
     await page.getByTestId('timeline-dot').first().click({ force: true })
     await expect(page.getByTestId('popup')).toBeVisible({ timeout: 1000 })
