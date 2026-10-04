@@ -101,10 +101,17 @@ test('every scenic card in the feed keeps its words inside the card, never shift
       const beats = 3
       for (let beat = 0; beat < beats; beat++) {
         await page.waitForTimeout(250)
+        const peel = page.getByTestId('peel-open')
+        if (await peel.isVisible().catch(() => false)) {
+          await peel.click()
+          await page.waitForTimeout(400)
+        }
         const quote = ((await page.getByTestId('scene-quote').textContent()) || '').replace(/\s+/g, ' ').trim()
         if (quote) {
           expect(quote, quote).toMatch(/^["“‘(]?[A-Z0-9\u0600-\u06FF]/)
           expect(quote.split(' ').length, quote).toBeGreaterThan(1)
+          expect(quote.split(' ').length, quote).toBeLessThanOrEqual(31)
+          expect(quote, quote).not.toMatch(/\b(for|in|of|to|and|the|a|except)[.…]?$/i)
         }
         const box = await page.evaluate(() => {
           const slide = document.querySelector('[data-testid="scene-card"]') as HTMLElement
@@ -159,6 +166,8 @@ test('harvest lines are whole sentences, and Home, Garden and Harvest show the s
     expect(quote, quote).toMatch(/^["“‘(]?[A-Z0-9\u0600-\u06FF]/)
     expect(quote, quote).toMatch(/[.?!…]["”’')\]]*$/)
     expect(quote, quote).not.toMatch(/description|full dua|paraphrasing|subscribe/i)
+    expect(quote, quote).not.toMatch(/\b(for|in|of|to|and|or|but|the|a|an|except|with|from)[.?!…]["”’')\]]*$/i)
+    expect(quote, quote).not.toMatch(/\ballah\b|\bquran\b|\bthe prophet\b/)
   }
 })
 

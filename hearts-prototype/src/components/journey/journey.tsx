@@ -1426,6 +1426,7 @@ export function Journey(props: JourneyProps) {
               ) : null}
             </div>
           ) : null}
+          {phase === 'feed' && !item ? <div className="j-poster" data-testid="poster-frame" data-empty="" /> : null}
           {overlay && phase === 'feed' && !slide && !scenic ? <div className="j-gesture" data-testid="gesture-layer" {...swipe} /> : null}
         </div>
         {slide && item ? (

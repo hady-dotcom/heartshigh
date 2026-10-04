@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { clipWords, isAside, wholeSentences } from '../../src/lib/sentences'
+import { beatLine, clipWords, endsDangling, isAside, properNames, wholeSentences } from '../../src/lib/sentences'
+import { harvestLine } from '../../src/lib/harvest'
 
 test('a beat never ends on the start of the next sentence, and never starts on the end of the last', () => {
   assert.equal(wholeSentences('He will be raised on day of Judgment. The'), 'He will be raised on day of Judgment.')
@@ -63,4 +64,26 @@ test('a scenic card for a talk without a voiced card gets whole-sentence beats, 
     ['hook', 'And they will all stand before Him on the day of Judgment.', null],
     ['turn', 'The Prophet said the strong one holds himself back when he is angry.', null],
   ])
+})
+
+test('a scenic beat is at most two sentences and about 30 words, never ends on a hanging word', () => {
+  assert.equal(beatLine('he went out in the period of the S, when he was seeking refuge amongst those in'), 'He went out in the period of the S, when he was seeking refuge…')
+  const runOn = Array.from({ length: 118 }, (_, at) => ['and', 'then', 'he', 'said', 'that', 'the', 'people', 'of', 'makkah', 'were', 'gathered', 'near'][at % 12]).join(' ')
+  const cut = beatLine(runOn)
+  assert.ok(cut.split(' ').length <= 30, cut)
+  assert.ok(cut.endsWith('…'), cut)
+  assert.equal(endsDangling(cut), false, cut)
+  assert.equal(beatLine('Sabr is a light that does not go out. Gratitude keeps it burning. Prayer is the key to both.'), 'Sabr is a light that does not go out. Gratitude keeps it burning.')
+})
+
+test('harvest lines never end on a preposition, conjunction or article, and name Allah, the Quran and the Prophet properly', () => {
+  assert.equal(harvestLine("oh allah in other words you're asking him to make the quran central a light for"), null)
+  assert.equal(harvestLine('Allah says no Calamity befalls you … except'), null)
+  assert.equal(
+    harvestLine("oh allah in other words you're asking him to make the quran central a light for", "so he said oh allah in other words you're asking him to make the quran central a light for my heart. and then"),
+    "Oh Allah in other words you're asking him to make the Quran central a light for my heart.",
+  )
+  assert.equal(properNames('as the prophet said, allah loves the qur’an'), 'as the Prophet said, Allah loves the Quran')
+  for (const end of ['for', 'in', 'of', 'to', 'and', 'the', 'a', 'except']) assert.equal(endsDangling(`it was ${end}.`), true, end)
+  assert.equal(endsDangling('it was light.'), false)
 })

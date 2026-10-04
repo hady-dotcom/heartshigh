@@ -1,5 +1,5 @@
 import { matchQuran, surahLabel, type QuranIndex, type QuranMatch } from './quran-match'
-import { ASIDE, wholeSentences } from './sentences'
+import { ASIDE, endsDangling, wholeSentences } from './sentences'
 import { formatTimestamp, isVerbatim, parseTranscript } from './transcript'
 
 export type HarvestHit = {
@@ -80,13 +80,27 @@ export function harvestLine(text: string, context = ''): string | null {
     const last = ends[ends.length - 1]
     if (last) core = `${before.slice(last.index + last[0].length).trim()} ${core}`.trim()
   }
+  let rest = at >= 0 ? around.slice(at + text.replace(/\s+/g, ' ').trim().length).trim() : ''
+  const upTo = (stop: RegExp) => words(rest).slice(0, 30).join(' ').match(stop)
   if (at >= 0 && !STOP.test(core)) {
-    const after = words(around.slice(at + text.replace(/\s+/g, ' ').trim().length)).slice(0, 25).join(' ')
-    const first = after.match(/^.*?[.?!…]["”’')\]]*(?=\s|$)/)
-    if (first) core = `${core} ${first[0]}`
+    const first = upTo(/^.*?[.?!…]["”’')\]]*(?=\s|$)/)
+    if (first) {
+      core = `${core} ${first[0]}`
+      rest = rest.slice(first[0].length).trim()
+    }
   }
-  const line = wholeSentences(core, { minWords: 4 })
-  return line && !ASIDE.test(line) ? line : null
+  let line = wholeSentences(core, { minWords: 4 })
+  // A line cut mid-thought ("…a light for.") reads on to the next full stop, at most two more sentences.
+  for (let more = 0; line && endsDangling(line) && more < 2; more++) {
+    const next = upTo(/^.*?[.?!]["”’')\]]*(?=\s|$)/)
+    if (!next) break
+    core = `${core.replace(/[.…]+$/, '')} ${next[0]}`
+    rest = rest.slice(next[0].length).trim()
+    line = wholeSentences(core, { minWords: 4 })
+  }
+  // Still hanging, or too short to be a thought: leave it out rather than add a full stop to a fragment.
+  if (!line || endsDangling(line) || words(line).length < 5 || ASIDE.test(line)) return null
+  return line
 }
 
 function sentencesOf(text: string) {

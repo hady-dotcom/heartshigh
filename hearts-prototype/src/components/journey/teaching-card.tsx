@@ -39,8 +39,16 @@ function useFitText(root: RefObject<HTMLElement | null>, key: string) {
       if (foot && foot.getBoundingClientRect().bottom > bottom + 1) return true
       return [...slide.querySelectorAll<HTMLElement>(FIT_BOXES)].some((box) => box.scrollHeight > box.clientHeight + 1)
     }
+    for (const text of texts) Object.assign(text.style, { display: '', webkitLineClamp: '', webkitBoxOrient: '', overflow: '' })
     for (let step = 0; step < 8 && overflowing(); step++) {
       for (const text of texts) text.style.fontSize = `${Math.max(13, parseFloat(getComputedStyle(text).fontSize) * 0.88)}px`
+    }
+    // Still too long at the smallest size: clamp the longest lines, so the words end inside the card with an ellipsis.
+    const longest = [...texts].sort((a, b) => b.scrollHeight - a.scrollHeight)[0]
+    if (!longest || !overflowing()) return
+    const lineHeight = parseFloat(getComputedStyle(longest).lineHeight) || parseFloat(getComputedStyle(longest).fontSize) * 1.3
+    for (let lines = Math.floor(longest.scrollHeight / lineHeight) - 1; lines >= 2 && overflowing(); lines--) {
+      Object.assign(longest.style, { display: '-webkit-box', webkitBoxOrient: 'vertical', webkitLineClamp: String(lines), overflow: 'hidden' })
     }
   }, [root, key])
 }
