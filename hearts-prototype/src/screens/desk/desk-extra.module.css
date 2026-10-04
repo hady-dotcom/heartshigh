@@ -33,7 +33,7 @@
   width: 280px;
   height: 560px;
   margin: 0 auto;
-  background: #102e2c;
+  background: #102e2c url('/theme/evening-courtyard.jpg') center/cover no-repeat;
   border-radius: 28px;
   overflow: hidden;
   border: 8px solid #1a1408;

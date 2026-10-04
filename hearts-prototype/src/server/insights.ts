@@ -324,17 +324,18 @@ export async function fillInsightDemo(payload: Payload, actor: InsightActor) {
     if (s < 18) push({ kind: 'funnel', route: '/p/:portal/feed', sessionId, subject, step: 'first_clip', sampled: true, at: day })
     if (s < 10) push({ kind: 'funnel', route: '/p/:portal/course/1', sessionId, subject, step: 'course_start', sampled: true, at: day })
     if (s < 6) push({ kind: 'funnel', route: '/p/:portal/me/plan', sessionId, subject, step: 'study_plan_saved', sampled: true, at: day })
-    for (let t = 0; t < 8; t++) {
+    for (let t = 0; t < 16; t++) {
+      const onFeed = t < 12 || s % 2 === 0
       push({
         kind: 'tap',
-        route: routes[s % routes.length],
+        route: onFeed ? '/p/:portal/feed' : routes[s % routes.length],
         sessionId,
         subject,
-        x: 80 + (t * 37) % 240,
-        y: 160 + (t * 53) % 480,
+        x: 40 + ((t * 29 + s * 13) % 310),
+        y: 80 + ((t * 41 + s * 17) % 680),
         vw: 390,
         vh: 844,
-        interactive: t % 3 === 0,
+        interactive: t % 4 === 0,
         sampled: true,
         at: day,
       })

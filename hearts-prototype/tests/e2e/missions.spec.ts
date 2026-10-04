@@ -105,7 +105,15 @@ test.describe('Help shape HEARTS', () => {
       await expect(page.getByTestId('me')).toBeVisible({ timeout: 20_000 })
       await expect(page.getByTestId('notification').first()).toContainText('Thank you')
       await expect(page.getByTestId('shaped-list')).toContainText('You helped decide')
-      if (firstThanks) await page.screenshot({ path: `${SHOTS}/phone-thankyou.png` })
+      if (firstThanks) {
+        await page.getByTestId('shaped-list').scrollIntoViewIfNeeded()
+        await page.getByTestId('notification').first().scrollIntoViewIfNeeded()
+        await page.screenshot({ path: `${SHOTS}/phone-thankyou.png` })
+        await page.goto('/p/east-london/me/shaped')
+        await expect(page.getByTestId('shaped-page')).toBeVisible()
+        await expect(page.getByTestId('shaped-result')).toContainText('You helped decide')
+        await page.screenshot({ path: `${SHOTS}/phone-shaped.png` })
+      }
       if (filmed) await filmed.finish()
       else await page.close()
       firstThanks = false
