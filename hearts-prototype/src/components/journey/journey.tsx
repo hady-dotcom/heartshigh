@@ -167,7 +167,7 @@ export function Journey(props: JourneyProps) {
   const [faves, toggleFave] = useStoredSet('hearts.faves.v1')
   const [saved, toggleSave] = useStoredSet('hearts.saved.v1')
   const [firstEver, setFirstEver] = useState(false)
-  const [lineAt, setLineAt] = useState(0)
+  const [lineAt, setLineAt] = useState<number | null>(null)
   const [spokenAt, setSpokenAt] = useState<number | null>(null)
   const [framingMode, setFramingMode] = useState<FramingMode | null>(null)
   const watch = useRef<{ key: string; start: number; furthest: number; done90: boolean }>({ key: '', start: 0, furthest: 0, done90: false })
@@ -447,7 +447,7 @@ export function Journey(props: JourneyProps) {
       setErrorNote(null)
       setSlow('none')
       setBuffering(false)
-      setLineAt(0)
+      setLineAt(null)
       watch.current = { key: `${item?.cutId}:${kind}`, start: kind === 'hors' ? item?.hors.start || 0 : item?.appetiser.start || 0, furthest: 0, done90: false }
       // The new card is on screen (and sliding in) before any player work starts.
       if (onShown) await onShown()
@@ -568,7 +568,8 @@ export function Journey(props: JourneyProps) {
     const current = items[index]
     if (!current?.lessonId) return
     const piece = mode === 'hors' ? current.hors : current.appetiser
-    const line = piece.lines?.[Math.min(lineAt, Math.max(0, (piece.lines?.length || 1) - 1))]
+    if (lineAt == null) return
+    const line = piece.lines?.[lineAt]
     const at = line?.at
     const seconds = typeof at === 'number' && Number.isFinite(at) ? at : mode === 'hors' ? current.hors.start : current.appetiser.start
     if (!Number.isFinite(seconds)) return
@@ -1322,9 +1323,9 @@ export function Journey(props: JourneyProps) {
   const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (!started || Boolean(errorNote) || offline)))
   const waitingToPlay = phase === 'feed' && playerReady && !started && !errorNote && !offline
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
-  const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
-  const horsLine = mode === 'hors' ? piece?.lines?.[lineShown] : null
-  const captionText = (horsLine ? horsLine.tidy || horsLine.text : mode === 'hors' ? piece?.quote : '') || ''
+  const lineShown = lineAt
+  const horsLine = mode === 'hors' && lineAt != null ? piece?.lines?.[lineAt] : null
+  const captionText = horsLine ? horsLine.tidy || horsLine.text : ''
   const videoAppetiser = mode === 'appetiser' && Boolean(item?.youtubeId)
   const scenicAppetiser = mode === 'appetiser' && !item?.youtubeId
   const scenicLines = scenicAppetiser ? [item?.scenic?.hook, item?.scenic?.turn, item?.scenic?.land].filter((line): line is string => Boolean(line)) : []
@@ -1335,12 +1336,12 @@ export function Journey(props: JourneyProps) {
   const course = (item && learnMore(item, 'appetiser', base)?.href) || base
   const horsParent = item?.parents?.hors
   const appetiserParent = item?.parents?.appetiser
-  const captionButton = item ? (
+  const captionButton = item && captionText ? (
     <button
       type="button"
-      className={`caption${captionText.length > 120 ? ' long' : ''}${captionText ? '' : ' title-only'}`}
+      className={`caption${captionText.length > 120 ? ' long' : ''}`}
       data-testid="caption"
-      data-line={lineShown}
+      data-line={lineShown ?? undefined}
       data-expanded={captionOpen ? 'true' : 'false'}
       aria-expanded={captionOpen}
       key={mode}
@@ -1372,7 +1373,7 @@ export function Journey(props: JourneyProps) {
         setCaptionOpen((open) => !open)
       }}
     >
-      {captionText || item.lessonTitle || item.courseTitle}
+      {captionText}
     </button>
   ) : null
   const laneVisible = Boolean(item) && !firstEver
@@ -1424,7 +1425,7 @@ export function Journey(props: JourneyProps) {
       ) : null}
       {scenicAppetiser ? (
         <div className="scenic-lines" data-testid="scenic-lines">
-          {(scenicLines.length ? scenicLines : [item.lessonTitle || item.courseTitle]).map((line) => (
+          {scenicLines.map((line) => (
             <p key={line}>{line}</p>
           ))}
         </div>
@@ -1490,6 +1491,7 @@ export function Journey(props: JourneyProps) {
               sentences={item.framingTrack.sentences}
               time={spokenAt ?? item.hors.start}
               speaker={item.speaker}
+              title={item.lessonTitle || item.courseTitle}
               from={item.hors.start}
               to={item.hors.end}
             />

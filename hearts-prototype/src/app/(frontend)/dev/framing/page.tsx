@@ -40,6 +40,7 @@ export default async function DevFraming({ searchParams }: { searchParams: Promi
         autoplay={query.autoplay === '1'}
         sound={query.sound === '1'}
         speaker={query.speaker}
+        title={query.title}
         placeholder={placeholder}
       />
     </main>

@@ -1,6 +1,6 @@
 'use client'
 
-import { currentSentence, sentencesInWindow, wrapWordLines } from '@/lib/framing/words'
+import { sentencesInWindow, spokenLine, wrapWordLines } from '@/lib/framing/words'
 import type { FramingSentence } from '@/lib/framing/types'
 
 export function SpokenWords({
@@ -9,15 +9,18 @@ export function SpokenWords({
   speaker,
   from,
   to,
+  title,
 }: {
   sentences: FramingSentence[]
   time: number
   speaker?: string
   from?: number
   to?: number
+  /** Talk title — never shown in place of timed words. */
+  title?: string | null
 }) {
   const live = from != null && to != null ? sentencesInWindow(sentences, from, to) : sentences
-  const sentence = currentSentence(live, time)
+  const sentence = spokenLine(sentences, time, { from, to, title })
   if (!sentence) return <div className="fr-words" data-testid="spoken-words" data-empty="yes" />
   const lines = wrapWordLines(sentence.words.map((row) => row.w), 20).slice(0, 5)
   return (

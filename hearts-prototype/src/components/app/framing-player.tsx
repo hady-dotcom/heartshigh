@@ -26,6 +26,8 @@ type Props = {
   clock?: FramingClock
   onMode?: (mode: FramingMode, time: number) => void
   speaker?: string
+  /** Talk title — passed through so F can refuse it as a stand-in for speech. */
+  title?: string | null
   /** Local test-pattern film when YouTube cannot play. Labelled on screen. */
   placeholder?: boolean
 }
@@ -47,6 +49,7 @@ export function FramingPlayer({
   clock,
   onMode,
   speaker,
+  title,
   placeholder = false,
 }: Props) {
   const host = useRef<HTMLDivElement>(null)
@@ -202,7 +205,14 @@ export function FramingPlayer({
         </div>
       ) : null}
       {mode === 'F' ? (
-        <SpokenWords sentences={resolved.sentences || []} time={time} speaker={speaker} from={resolved.start} to={resolved.end} />
+        <SpokenWords
+          sentences={resolved.sentences || []}
+          time={time}
+          speaker={speaker}
+          title={title}
+          from={resolved.start}
+          to={resolved.end}
+        />
       ) : null}
     </div>
   )

@@ -3,12 +3,13 @@ import { test } from 'node:test'
 import { buildTrack, chooseMode, segmentsFromShots } from '../../src/lib/framing/choose'
 import { avoidMidSentenceSwitches, holdModes, snapClipWindow, snapIn, snapOut, snapSwitch } from '../../src/lib/framing/snap'
 import { fallbackTrack, validateTrack } from '../../src/lib/framing/validate'
-import { currentSentence, sentencesFromWords, sentencesInWindow, wordsFromCues, wrapWordLines } from '../../src/lib/framing/words'
+import { currentSentence, sameSpokenText, sentencesFromWords, sentencesInWindow, spokenLine, wordsFromCues, wrapWordLines } from '../../src/lib/framing/words'
 import { boxOnStage, coverPosition, coverSourceToBox, cssVars, filmOnStage, layoutFor } from '../../src/lib/framing/layout'
 import { PLACEHOLDER_FACE, PLACEHOLDER_FACE_FOCUS } from '../../src/lib/framing/placeholder'
 import type { ShotAnalysis } from '../../src/lib/framing/types'
 import { framingVariant } from '../../src/lib/experiments'
 import sample from '../fixtures/framing-track.json'
+import switching from '../fixtures/framing-switch.json'
 
 const shot = (over: Partial<ShotAnalysis>): ShotAnalysis => ({
   start: 10,
@@ -156,6 +157,21 @@ test('word clocks stay inside each caption cue instead of a clip-wide estimate',
   assert.ok(words[1].e <= 12.01)
   assert.equal(words[2].t, 20)
   assert.ok(words[3].e <= 22.01)
+})
+
+test('F text is the timed transcript now, never a talk title, and nothing in a gap', () => {
+  const title = 'How to Live Like the Prophet'
+  const sentences = switching.sentences
+  assert.equal(spokenLine(sentences, 17)?.text, 'And they seem to be winning as well.')
+  assert.equal(spokenLine(sentences, 18.45), null)
+  assert.equal(spokenLine(sentences, 19.8)?.text, 'They seem to be overcoming you.')
+  assert.equal(spokenLine(sentences, 22)?.text, 'Your dignity still stands.')
+  for (const time of [17, 19.8, 22]) {
+    const line = spokenLine(sentences, time)
+    assert.ok(line)
+    assert.equal(sameSpokenText(line.text, title), false)
+  }
+  assert.equal(spokenLine(sentences, 15.9, { from: 16, to: 24 }), null)
 })
 
 test('spoken words ignore the sentence that ended at the clip in-point', () => {

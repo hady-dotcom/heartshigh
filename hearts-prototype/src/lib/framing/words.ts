@@ -97,11 +97,29 @@ export function wrapWordLines(words: string[], max = 20) {
   return lines
 }
 
+/** The sentence being said at `time`. Gaps and times outside every cue are empty — never a leftover line. */
 export function currentSentence(sentences: FramingSentence[], time: number) {
   if (!sentences.length) return null
   for (const row of sentences) {
-    const end = row.next ?? row.e
-    if (time >= row.s && time < end) return row
+    if (time >= row.s && time < row.e) return row
   }
   return null
+}
+
+export function sameSpokenText(a: string, b: string) {
+  return norm(a) === norm(b) && Boolean(norm(a))
+}
+
+/**
+ * What F (and any live caption) may put on screen: the timed transcript line
+ * for this clock, or nothing. A talk title is never used as a stand-in.
+ */
+export function spokenLine(
+  sentences: FramingSentence[],
+  time: number,
+  options?: { from?: number; to?: number; title?: string | null },
+) {
+  const live =
+    options?.from != null && options?.to != null ? sentencesInWindow(sentences, options.from, options.to) : sentences
+  return currentSentence(live, time)
 }

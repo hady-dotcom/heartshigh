@@ -8,7 +8,7 @@ const BASE = process.env.HEARTS_RECORD_BASE || 'http://127.0.0.1:3000'
 const OUT = process.env.HEARTS_RECORD_OUT || path.join(process.cwd(), '..', 'artifacts', 'ai-director-v1')
 
 const CLIPS = [
-  { slug: 'demo-switch', start: 0, query: 'fixture=switch&placeholder=1&autoplay=0&sound=0', times: [1, 3, 5, 7, 10, 14, 17, 20, 22.4], label: 'D then B then F' },
+  { slug: 'demo-switch', start: 0, query: 'fixture=switch&placeholder=1&autoplay=0&sound=0&title=How%20to%20Live%20Like%20the%20Prophet', times: [1, 3, 5, 7, 10, 14, 17, 18.45, 20, 22.4], label: 'D then B then F' },
   { slug: 'offcentre', start: 1005, query: 'youtube=9gwe-HMwZv0&placeholder=1&autoplay=0&sound=0', times: [1006, 1012, 1018, 1022, 1026], label: 'D' },
   { slug: 'twoperson', start: 307.25, query: 'youtube=45XUrfJS68Q&placeholder=1&autoplay=0&sound=0', times: [308, 313, 319, 326, 330], label: 'F words' },
   { slug: 'slidetext', start: 38, query: 'youtube=9k7QxXtCzaQ&placeholder=1&autoplay=0&sound=0', times: [40, 46, 52, 58], label: 'B' },
@@ -95,7 +95,7 @@ async function main() {
     try {
       execFileSync(
         'ffmpeg',
-        ['-y', '-start_number', '0', '-i', path.join(dir, 'frame-%d.png'), '-frames:v', '1', '-update', '1', '-filter_complex', clip.slug === 'demo-switch' ? 'tile=3x3' : 'tile=4x2', grid],
+        ['-y', '-start_number', '0', '-i', path.join(dir, 'frame-%d.png'), '-frames:v', '1', '-update', '1', '-filter_complex', clip.slug === 'demo-switch' ? 'tile=5x2' : 'tile=4x2', grid],
         { stdio: 'inherit' },
       )
     } catch {

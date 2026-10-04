@@ -2,9 +2,11 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { expect, test, type Page } from '@playwright/test'
 
+const TITLE = 'How to Live Like the Prophet'
 const switching = JSON.parse(readFileSync(path.join(process.cwd(), 'tests/fixtures/framing-switch.json'), 'utf8')) as {
   start: number
   end: number
+  sentences: { text: string; s: number; e: number }[]
 }
 
 async function setTime(page: Page, time: number) {
@@ -46,7 +48,7 @@ test.describe('AI director player', () => {
       }
     }, switching)
 
-    await page.goto('/dev/framing?fixture=switch&placeholder=1&autoplay=0&sound=0')
+    await page.goto(`/dev/framing?fixture=switch&placeholder=1&autoplay=0&sound=0&title=${encodeURIComponent(TITLE)}`)
     const player = page.getByTestId('framing-player')
     await expect(player).toBeVisible()
     await expect(player).toHaveAttribute('data-framing-source', 'placeholder')
@@ -95,14 +97,25 @@ test.describe('AI director player', () => {
     await setTime(page, 17)
     await expect(player).toHaveAttribute('data-framing-mode', 'F')
     await assertMediaInViewport(page)
-    await expect(page.getByTestId('spoken-words')).toHaveAttribute('data-sentence', 'And they seem to be winning as well.')
+    const at17 = switching.sentences.find((row) => row.s <= 17 && 17 < row.e)!.text
+    await expect(page.getByTestId('spoken-words')).toHaveAttribute('data-sentence', at17)
+    expect(at17).not.toBe(TITLE)
+    await expect(page.getByTestId('spoken-words')).not.toHaveAttribute('data-sentence', TITLE)
     await expect(page.getByTestId('spoken-words').locator('.fr-key')).toHaveText('winning')
 
+    await setTime(page, 18.45)
+    await expect(page.getByTestId('spoken-words')).toHaveAttribute('data-empty', 'yes')
+    await expect(page.getByTestId('spoken-words')).not.toHaveAttribute('data-sentence', TITLE)
+
     await setTime(page, 19.8)
-    await expect(page.getByTestId('spoken-words')).toHaveAttribute('data-sentence', 'They seem to be overcoming you.')
+    const at198 = switching.sentences.find((row) => row.s <= 19.8 && 19.8 < row.e)!.text
+    await expect(page.getByTestId('spoken-words')).toHaveAttribute('data-sentence', at198)
+    expect(at198).not.toBe(TITLE)
 
     await setTime(page, 22)
-    await expect(page.getByTestId('spoken-words')).toHaveAttribute('data-sentence', 'Your dignity still stands.')
+    const at22 = switching.sentences.find((row) => row.s <= 22 && 22 < row.e)!.text
+    await expect(page.getByTestId('spoken-words')).toHaveAttribute('data-sentence', at22)
+    expect(at22).not.toBe(TITLE)
     await expect(page.getByTestId('spoken-words')).not.toHaveAttribute('data-sentence', /still is okay/)
 
     const gap = await page.locator('.fr-words-line').first().evaluate((el) => getComputedStyle(el).columnGap)
