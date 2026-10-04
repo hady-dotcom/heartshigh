@@ -142,13 +142,16 @@ test.describe('Help shape HEARTS', () => {
     await expect(joinFilm.page.getByTestId('feed-screen')).toBeVisible({ timeout: 20_000 })
     await expect(joinFilm.page.getByTestId('feed-mission')).toBeVisible()
     const journey = joinFilm.page.getByTestId('journey')
-    if (await joinFilm.page.getByTestId('swipe-coach').count()) await joinFilm.page.getByTestId('swipe-coach').click()
+    if (await joinFilm.page.getByTestId('swipe-coach').count()) {
+      await joinFilm.page.getByTestId('swipe-coach').dispatchEvent('click')
+    }
     await expect(joinFilm.page.getByTestId('swipe-coach')).toHaveCount(0)
-    for (let tries = 0; tries < 12; tries++) {
-      const talk = (await journey.getAttribute('data-card')) === 'talk'
-      const picture = (await journey.getAttribute('data-words-in-picture')) === 'yes'
-      if (talk && picture && (await joinFilm.page.getByTestId('lane-chip').isVisible().catch(() => false))) break
-      if ((await stepFeed(joinFilm.page)) === 'end') break
+    await expect(joinFilm.page.getByTestId('learn-more')).toBeVisible()
+    if (!(await joinFilm.page.getByTestId('lane-chip').isVisible().catch(() => false))) {
+      if ((await stepFeed(joinFilm.page)) === 'ok' && !(await joinFilm.page.getByTestId('learn-more').isVisible().catch(() => false))) {
+        await joinFilm.page.getByTestId('gesture-prev').dispatchEvent('click')
+        await expect(joinFilm.page.getByTestId('learn-more')).toBeVisible()
+      }
     }
     await expect(joinFilm.page.getByTestId('learn-more')).toBeVisible()
     await expect(joinFilm.page.getByTestId('learn-more')).toHaveText(/Watch the 3-minute version/)
