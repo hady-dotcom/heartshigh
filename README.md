@@ -1,6 +1,6 @@
 # Insights, calendar, missions — proof (re-verify)
 
-Phone shots are 390×844. Desk shots are 1440 wide. Videos are normal-speed H.264, filmed after sign-in. No Next Issues badge. Code SHA on `cursor/insights-missions-calendar-eef4` is `beab409`.
+Phone shots are 390×844. Desk shots are 1440 wide. Videos are normal-speed H.264, filmed after sign-in. No Next Issues badge. Code SHA on `cursor/insights-missions-calendar-eef4` is `2d532ae`.
 
 ## Learner (phone)
 
@@ -9,7 +9,7 @@ Phone shots are 390×844. Desk shots are 1440 wide. Videos are normal-speed H.26
 - `screenshots/phone-mission-joined.png` — After join
 - `screenshots/phone-mission-minutes.png` — Minutes rose after sitting with a clip
 - `screenshots/phone-mission-done.png` — I have done this
-- `screenshots/phone-feed-mission.png` — Slim mission chip at the top; gold clip CTA free at the bottom
+- `screenshots/phone-feed-mission.png` — PR #23 feed: mission chip clear of swipe hint, lane chip and timer; Watch the 3-minute version; Home · Lanes · My week · Garden · Me
 - `screenshots/phone-ask-help.png` — Ask for help, sent, no error
 - `screenshots/phone-thankyou.png` — One thank-you; Start the opening questions again
 - `screenshots/phone-shaped.png` — Things you helped shape
