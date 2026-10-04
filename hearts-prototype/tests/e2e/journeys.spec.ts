@@ -301,6 +301,10 @@ test.describe.serial('HEARTS journeys', () => {
 
   test('the schedule splitter shares three parts across Wednesdays and Fridays', async ({ page }) => {
     await signIn(page, learnerEmail, 'harbour-learner', `/p/${slug}/me/plan`)
+    for (const id of ['schedule-course', 'schedule-start', 'schedule-end']) {
+      const size = await page.getByTestId(id).evaluate((el) => parseFloat(getComputedStyle(el).fontSize))
+      expect(size).toBeGreaterThanOrEqual(16)
+    }
     await page.getByTestId('schedule-course').selectOption({ label: 'Night class' })
     await page.getByTestId('schedule-start').fill('2026-10-07')
     await page.getByTestId('schedule-end').fill('2026-10-16')

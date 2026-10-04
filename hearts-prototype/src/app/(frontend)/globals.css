@@ -68,6 +68,21 @@ button { cursor: pointer; }
   outline: none;
 }
 .field:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(220, 166, 67, 0.22); }
+/* iOS Safari zooms the page when a focused field is under 16px. Labels may stay smaller; the controls themselves do not inherit that size. */
+:is(.app, .door, .splash, .journey, .public-gather) :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']) {
+  font-size: 16px;
+}
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit,
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit-fields-wrapper,
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit-text,
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit-month-field,
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit-day-field,
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit-year-field,
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit-hour-field,
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit-minute-field,
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit-ampm-field {
+  font-size: 16px;
+}
 .pill {
   display: inline-flex;
   align-items: center;

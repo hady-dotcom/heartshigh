@@ -890,3 +890,8 @@ html[data-theme] .desk input[type='password'] {
 :is(html, html[data-theme]) .garden-door .door-links { color: #14564c; }
 :is(html, html[data-theme]) .garden-door .door-links a { border-bottom-color: rgba(168, 121, 31, 0.6); }
 :is(html, html[data-theme]) .garden-door .door-hint { color: var(--muted); }
+
+/* Keep the 16px floor after later theme and gather rules, so iOS does not zoom on focus. */
+:is(html, html[data-theme]) :is(.app, .door, .splash, .journey, .public-gather) :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']) {
+  font-size: 16px;
+}
