@@ -45,6 +45,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript() }} />
         <script dangerouslySetInnerHTML={{ __html: installBootScript() }} />
+        {process.env.HEARTS_E2E === '1' ? <style>{'nextjs-portal{display:none!important;visibility:hidden!important}'}</style> : null}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link

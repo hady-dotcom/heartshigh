@@ -98,7 +98,7 @@ export async function POST(req: Request) {
     }
     if (action === 'finish') {
       await finishMission(payload, user, Number(text(form, 'id')))
-      return ok('You did it. Thank you.')
+      return redirectTo(req, next)
     }
     if (action === 'support') {
       await postSupport(payload, user, text(form, 'body'), portalIdOf(user), user.role !== 'learner')
