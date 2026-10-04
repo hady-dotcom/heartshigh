@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { E2E_BASE } from '../env'
 import { fakeYouTube } from './fake-youtube'
-import { chromeBoxesClear, settled, stepFeed } from './feed-step'
+import { captionIsSpoken, chromeBoxesClear, settled, stepFeed, type OpeningClip } from './feed-step'
 
 const PHONE = { width: 390, height: 844 }
 const DESKTOP = { width: 1440, height: 900 }
@@ -145,6 +145,29 @@ test('leaving the feed and coming back lands on the same clip', async ({ page })
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
   await settled(page)
   await expect(feed).toHaveAttribute('data-cut', cut!)
+})
+
+test('the caption is the timed transcript for now and never the talk title', async ({ page }) => {
+  test.setTimeout(90_000)
+  await page.setViewportSize(PHONE)
+  await fakeYouTube(page)
+  await signIn(page)
+  const feed = page.getByTestId('journey')
+  await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  await settled(page)
+  if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').click()
+  const opening = (await (await page.request.get('/api/hearts/opening?portal=east-london')).json()) as { clips: Record<string, OpeningClip> }
+  const listed = ((await feed.getAttribute('data-cuts')) || '').split(' ').filter(Boolean).length
+  const total = Math.min(16, Math.max(6, listed))
+  let talks = 0
+  for (let at = 0; at < total; at++) {
+    if ((await feed.getAttribute('data-card')) === 'talk') {
+      talks += 1
+      await captionIsSpoken(page, opening.clips)
+    }
+    if (at < total - 1 && (await step(page)) === 'end') break
+  }
+  expect(talks, 'the mix must include a talk so the caption rule is checked').toBeGreaterThan(0)
 })
 
 test('talk captions spell taqwa, not tawa, and sit in the bar when words are in the picture', async ({ page }) => {

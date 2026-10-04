@@ -721,10 +721,10 @@ export function tierHorsWarning(tier: { horsStart: number; horsEnd: number }, ca
   return horsVerdict(tier.horsEnd - tier.horsStart, cap).warning
 }
 
-/** Which timed caption is showing at `time`: the last line already said (the first until then). */
+/** Which timed caption is showing at `time`. `-1` when no line has started yet, or there are no lines. */
 export function captionIndex(lines: { at: number }[] | undefined, time: number) {
-  if (!lines?.length) return 0
-  let at = 0
+  if (!lines?.length || !Number.isFinite(time)) return -1
+  let at = -1
   lines.forEach((line, index) => {
     if (time >= line.at - 0.15) at = index
   })
