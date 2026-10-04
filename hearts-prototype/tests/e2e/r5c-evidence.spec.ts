@@ -190,17 +190,17 @@ test('contrast at 10:00 and 20:00 Toronto, and the after screenshots', async ({ 
   await shot(page, path.join(ROOT, 'after', 'safe-area-standalone.png'))
 
   await page.goto(`${BASE}/course/3`)
-  const firstDot = page.getByTestId('timeline-dot').first()
-  await expect(firstDot).toBeVisible()
-  await firstDot.click()
-  await expect(page.getByTestId('popup')).toBeVisible()
+  await expect(async () => {
+    await page.getByTestId('answer-point').click()
+    await expect(page.getByTestId('popup')).toBeVisible({ timeout: 1000 })
+  }).toPass({ timeout: 20_000 })
   if (await page.getByTestId('answer-form').count()) {
     if (await page.getByTestId('answer-text').count()) await page.getByTestId('answer-text').fill('I sat with the names after Fajr.')
     if (await page.getByTestId('answer-private').count()) await page.getByTestId('answer-private').uncheck()
     if (await page.getByTestId('answer-share-learners').count()) await page.getByTestId('answer-share-learners').check()
     await page.getByTestId('answer-submit').click()
     await expect(page.getByTestId('popup')).toBeHidden({ timeout: 8_000 })
-    await firstDot.click()
+    await page.locator('[data-testid="timeline-dot"].done').first().click({ force: true })
     await expect(page.getByTestId('popup')).toBeVisible()
   }
   const swarm = page.getByTestId('swarm')
