@@ -37,6 +37,15 @@ import { isTimeZone } from '@/lib/zone-time'
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
 
+async function recordExperimentQuietly(payload: Payload, user: SessionUser, event: string, props?: Record<string, unknown>) {
+  try {
+    const { recordLearnerEvent } = await import('./experiments')
+    await recordLearnerEvent(payload, { user, event, props, portalId: portalIdOf(user) })
+  } catch {
+    // Tracking must never break a save.
+  }
+}
+
 function redirectTo(req: Request, path: string, error?: string, notice?: string) {
   const host = req.headers.get('x-forwarded-host') || req.headers.get('host')
   const proto = req.headers.get('x-forwarded-proto') || 'http'
@@ -386,6 +395,7 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
       },
     })
     if (shareWithTeacher) await notifyTeachers(payload, user, portal, 'A learner shared an answer', `${user.name || 'A learner'} shared an answer with you.`)
+    void recordExperimentQuietly(payload, user, 'question_answered', { point: pointId, lesson: lessonId || 0 })
     const followers = await payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 20, where: { contingent: { equals: pointId } } })
     for (const follower of followers.docs) {
       await notify(payload, {
@@ -1204,6 +1214,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       if (learnerId === user.id) continue
       await notify(payload, { user: learnerId, portal, title: 'A study plan was made for you', body: `${name}: ${plural(slots.length, 'sitting')} between ${text(form, 'start')} and ${text(form, 'end')}.`, href: `/p/${acting.portal.slug}/me/plan` })
     }
+    void recordExperimentQuietly(payload, user, 'plan_created', { name })
     return redirectTo(req, text(form, 'next') || '/', undefined, `${slots.length === 1 ? 'The 1 sitting is' : `The ${slots.length} sittings are`} spread across ${plural(dates.length, 'study day')}. You can still watch at your own pace.`)
   }
 
@@ -1398,6 +1409,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         await giveHarvest(payload, user.id, lessonId, transcript, portal || undefined, { speaker: place?.speaker || undefined, door: place?.door || undefined, surface: 'talk', gatheredAt: now().toISOString() })
       }
     }
+    void recordExperimentQuietly(payload, user, 'full_talk_complete', { lesson: lessonId, seconds })
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Marked as watched. You will see it in your Garden.')
   }
 

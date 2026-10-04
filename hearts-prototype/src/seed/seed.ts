@@ -523,6 +523,11 @@ async function main() {
     await seedFeedbackDemo(payload, { startersOnly })
   }
 
+  if (!startersOnly) {
+    const { ensureStarterExperiments } = await import('../server/experiments')
+    await ensureStarterExperiments(payload)
+  }
+
   const problems = await timingCheck(payload)
   if (problems.length) {
     console.error(`Timing check failed:\n${problems.join('\n')}`)

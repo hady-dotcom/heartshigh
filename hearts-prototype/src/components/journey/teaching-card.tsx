@@ -112,12 +112,14 @@ export function TeachingCard({
   course,
   lane,
   onClip,
+  cta = 'Learn more',
 }: {
   scene: Scene
   speaker: string
   course: string
   lane: string
   onClip: () => void
+  cta?: string
 }) {
   const reduced = useReducedMotion()
   const [step, setStep] = useState(0)
@@ -289,7 +291,7 @@ export function TeachingCard({
   }
 
   const next = reward ? (
-    <button type="button" className="pill gold" onClick={onClip} data-testid="scene-next">Learn more</button>
+    <button type="button" className="pill gold" onClick={onClip} data-testid="scene-next">{cta}</button>
   ) : null
 
   const voiceButton = heard ? (

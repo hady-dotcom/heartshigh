@@ -17,6 +17,7 @@ import { GardenHarvest } from '@/screens/app/harvest'
 import { CircleScreen, MeScreen, PlanScreen, SettingsScreen } from '@/screens/app/me'
 import { WelcomeScreen } from '@/screens/app/welcome'
 import { AiPages } from '@/screens/desk/ai'
+import { ExperimentPages } from '@/screens/desk/experiments'
 import { OverviewScreen, PortalSettingsScreen, WizardScreen } from '@/screens/desk/overview'
 import { AccessScreen, ContentScreen, CourseEditorScreen, LibraryScreen, guardAdmin } from '@/screens/desk/content'
 import { PortalCompassScreen, StaffLearnerCompass } from '@/screens/desk/compass'
@@ -115,6 +116,9 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       case 'ai':
         guardAdmin(ctx)
         return AiPages({ ctx, path: screen.slice(2) })
+      case 'experiments':
+        guardAdmin(ctx)
+        return ExperimentPages({ ctx, path: screen.slice(2) })
       case 'sheet':
         guardAdmin(ctx)
         if (b === 'create') return PortalCreatorScreen(ctx)

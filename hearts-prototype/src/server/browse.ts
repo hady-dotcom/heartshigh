@@ -72,5 +72,19 @@ export async function recordShortBrowse(payload: Payload, user: SessionUser, inp
     const place = await placeOfLesson(payload, input.lessonId)
     harvest = await giveHarvest(payload, user.id, input.lessonId, transcript, portal, { speaker: place?.speaker || speaker, door: place?.door || undefined, surface: level, gatheredAt: now().toISOString() }, { start: input.start, end: input.end })
   }
+  try {
+    const { recordLearnerEvent } = await import('./experiments')
+    if (event === 'linger' && level === 'hors') {
+      await recordLearnerEvent(payload, { user, event: 'clip_watch_completion', props: { lesson: input.lessonId, start: input.start, end: input.end }, portalId: portal })
+    }
+    if (event === 'linger' && level === 'appetiser') {
+      await recordLearnerEvent(payload, { user, event: 'appetiser_complete', props: { lesson: input.lessonId }, portalId: portal })
+    }
+    if (event === 'learn-more') {
+      await recordLearnerEvent(payload, { user, event: 'clip_cta_tap', props: { lesson: input.lessonId, level }, portalId: portal })
+    }
+  } catch {
+    // ignore
+  }
   return { ok: true, counted: false, harvest, drawnTo: speakerSlug }
 }

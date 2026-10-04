@@ -22,7 +22,12 @@ export function middleware(request: NextRequest) {
   }
   const headers = new Headers(request.headers)
   headers.set('x-hearts-path', `${pathname}${search}`)
-  return NextResponse.next({ request: { headers } })
+  const response = NextResponse.next({ request: { headers } })
+  if (!request.cookies.get('hearts_device')) {
+    const id = `d${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`.slice(0, 24)
+    response.cookies.set('hearts_device', id, { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 400, secure: process.env.NODE_ENV === 'production' })
+  }
+  return response
 }
 
-export const config = { matcher: ['/', '/p/:path*', '/master/:path*', '/admin/create-first-user', '/admin/create-first-user/', '/api/users/first-register', '/api/users/first-register/'] }
+export const config = { matcher: ['/', '/p/:path*', '/master/:path*', '/api/experiments', '/admin/create-first-user', '/admin/create-first-user/', '/api/users/first-register', '/api/users/first-register/'] }

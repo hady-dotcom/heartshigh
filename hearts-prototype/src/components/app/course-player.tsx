@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { newViewingId, POLL_MS, PopupWatcher, type PopupPoint } from '@/lib/popups'
 import { createPlayer, destroyPlayer, getPlayer, resume, STATE, UNPLAYABLE } from '@/lib/yt'
 import { HeartIcon, ImageIcon, LockIcon, MicIcon, PauseIcon, PlayIcon } from '../icons'
+import { track } from '@/lib/experiment-track'
 
 export type PointView = {
   id: number
@@ -126,6 +127,10 @@ export function CoursePlayer({
     viewing.current = newViewingId()
     watcher.current?.startViewing(viewing.current, startAt)
   }, [startAt])
+
+  useEffect(() => {
+    track('full_talk_start', { lesson: lessonId })
+  }, [lessonId])
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow((value) => value + 1000), 1000)
