@@ -437,7 +437,8 @@ export async function postSupport(payload: Payload, user: SessionUser, body: str
   const text = body.trim()
   if (text.length < 2) throw new Error('Write a short note.')
   if (hasMarkup(text)) throw new Error('Keep the words plain.')
-  const thread = await threadFor(payload, user, portalId)
+  const portal = portalId || portalIdOf(user)
+  const thread = await threadFor(payload, user, portal)
   await payload.create({
     collection: col('support-messages'),
     overrideAccess: true,
@@ -451,12 +452,13 @@ export async function postSupport(payload: Payload, user: SessionUser, body: str
         overrideAccess: true,
         data: {
           user: master.id,
+          portal: portal || undefined,
           title: 'A learner asked for help',
           body: `${user.name || 'A learner'} wrote in Ask for help.`,
           href: '/master/missions',
           channel: 'in-app',
         },
-      })
+      }).catch(() => undefined)
     }
   }
   return thread

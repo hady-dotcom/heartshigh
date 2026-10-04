@@ -157,6 +157,7 @@ test.describe('Help shape HEARTS', () => {
     await joinFilm.page.getByTestId('support-body').fill('A small note for the team.')
     await joinFilm.page.getByTestId('support-send').click()
     await expect(joinFilm.page.getByTestId('support-message')).toBeVisible()
+    await expect(joinFilm.page.getByTestId('error')).toHaveCount(0)
     await joinFilm.page.screenshot({ path: `${SHOTS}/phone-ask-help.png` })
     await joinFilm.finish()
 
