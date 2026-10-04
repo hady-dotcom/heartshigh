@@ -4,7 +4,7 @@ import { weekView } from '@/server/week-plan'
 import { planIcs } from '@/lib/plan-ics'
 import { portalIdOf } from '@/lib/ids'
 
-export async function GET() {
+export async function GET(req: Request) {
   const { payload, user } = await getSession()
   if (!user) return new NextResponse('Sign in to download your plan.', { status: 401 })
   const portalId = portalIdOf(user)
@@ -13,8 +13,9 @@ export async function GET() {
   if (!portal) return new NextResponse('No portal.', { status: 404 })
   const slug = String((portal as { slug?: string }).slug || '')
   const view = await weekView(payload, user, portal as never, `/p/${slug}`)
+  const origin = new URL(req.url).origin
   const slots = view.plans.flatMap((plan) => plan.slots.map((slot) => ({ date: slot.date, title: slot.title, href: slot.href })))
-  const body = planIcs({ name: view.plans[0]?.name || 'My week', slots, zone: view.zone })
+  const body = planIcs({ name: view.plans[0]?.name || 'My week', slots, zone: view.zone, origin })
   return new NextResponse(body, {
     status: 200,
     headers: {

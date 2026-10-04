@@ -73,9 +73,20 @@ export function splitEvenly<T>(items: T[], dates: string[]): Slot<T>[] {
   return slots
 }
 
-export function spreadNote(talks: number, studyDays: number) {
+function consecutiveDates(dates: string[]) {
+  const unique = [...new Set(dates.filter(Boolean))].sort()
+  if (unique.length < 2) return unique.length === 1
+  const first = Date.parse(`${unique[0]}T12:00:00Z`)
+  const last = Date.parse(`${unique[unique.length - 1]}T12:00:00Z`)
+  if (!Number.isFinite(first) || !Number.isFinite(last)) return false
+  const span = Math.round((last - first) / 86_400_000) + 1
+  return span <= unique.length
+}
+
+export function spreadNote(talks: number, studyDays: number, slotDates: string[] = []) {
   if (talks === 1 && studyDays > 1) return 'This course has 1 talk, so it fits in one day.'
   if (talks > 1 && talks < studyDays) {
+    if (slotDates.length && consecutiveDates(slotDates)) return null
     return `This course has ${talks} talks and ${studyDays} study days. The talks are spaced across the span. You could pick fewer days, or add more talks.`
   }
   return null

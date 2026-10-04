@@ -1,13 +1,12 @@
 /**
  * Group the library into multi-talk courses: numbered Names classes, Prophet sessions,
- * and other titled series. Short clips stay out of a long series.
- * A 10-talk "Long sittings" course is assembled from the longest remaining mains
- * so a 3,3,2,2 split can be shown. Pure: no writes.
+ * and other titled series. Only numbered sessions of the same series and speaker.
+ * Short clips stay out of a long series. Leftover long talks are never bundled.
+ * Pure: no writes. Applying groups is gated by HEARTS_GROUP_SERIES.
  */
 
 export const LONG_MAIN_SECONDS = 600
-export const LONG_SITTINGS = 'Long sittings'
-export const PROOF_TALK_COUNT = 10
+export const GROUP_SERIES_FLAG = 'HEARTS_GROUP_SERIES'
 
 export type LibraryLesson = {
   id: number
@@ -18,6 +17,7 @@ export type LibraryLesson = {
   youtubeId?: string
   series?: string | null
   order?: number
+  speaker?: string | null
 }
 
 export type SeriesGroup = {
@@ -25,6 +25,7 @@ export type SeriesGroup = {
   title: string
   lessonIds: number[]
   seconds: number[]
+  speaker: string
 }
 
 export type SeriesMove = {
@@ -40,13 +41,18 @@ export type SeriesMove = {
 export type SeriesPlan = {
   groups: SeriesGroup[]
   moves: SeriesMove[]
-  shortMains: { courseTitle: string; lessonTitle: string; seconds: number }[]
+  shortMains: { courseTitle: string; lessonTitle: string; seconds: number; proposeAs: 'clip' | 'ready-for-more' }[]
   emptyCourses: { id: number; title: string }[]
 }
 
 const PROPHET = /how to live like the prophet/i
 const NAMES_CLASS = /the names class\s*\d+/i
 const SHORT_CLIP = /short clip/i
+const NUMBERED = /(?:session|class|episode|ep\.?|part|day)\s*\d+/i
+
+export function groupSeriesEnabled(env: { HEARTS_GROUP_SERIES?: string } = process.env) {
+  return env[GROUP_SERIES_FLAG] === '1'
+}
 
 export function clock(total: number) {
   const value = Math.max(0, Math.floor(total))
@@ -61,13 +67,17 @@ export function isShortClip(title: string, courseTitle = '', seconds = 0) {
   return seconds > 0 && seconds < LONG_MAIN_SECONDS && SHORT_CLIP.test(`${courseTitle} ${title}`)
 }
 
+function speakerKey(speaker?: string | null) {
+  return (speaker || '').replace(/\s+/g, ' ').trim().toLowerCase()
+}
+
 /** Series key from an explicit field or a numbered title. Short clips stay in their own group. */
 export function seriesKey(title: string, explicit?: string | null): string | null {
   const named = (explicit || '').trim()
   if (SHORT_CLIP.test(`${named} ${title}`)) return 'The Names: short clips'
   if (PROPHET.test(title) || PROPHET.test(named)) return 'How to Live Like the Prophet'
   if (NAMES_CLASS.test(title) || (/^the names$/i.test(named) && !SHORT_CLIP.test(named))) return 'The Names'
-  if (named) return named
+  if (named && NUMBERED.test(title)) return named
   const numbered = title.match(/^(.*?)(?:,\s*|\s+)(?:session|class|episode|ep\.?|part|day)\s*\d+/i)
   const stem = numbered?.[1]?.replace(/\s*[|–—:]+$/g, '').trim()
   if (stem && stem.length >= 8) return stem
@@ -79,30 +89,41 @@ export function isLongMain(seconds: number) {
 }
 
 /**
- * Plan course moves from the current library. Series of two or more long talks share a course.
- * Ten leftover long talks become Long sittings (the 3,3,2,2 proof course).
- * Short clips never join a long series. Nothing is written.
+ * Plan course moves from the current library. Series of two or more long talks
+ * that share a series name and a speaker share a course. Short clips never join.
+ * Leftover long talks stay where they are. Nothing is written.
  */
 export function planSeriesMoves(lessons: LibraryLesson[]): SeriesPlan {
   const byKey = new Map<string, LibraryLesson[]>()
   for (const lesson of lessons) {
     const key = seriesKey(lesson.title, lesson.series)
-    if (!key || SHORT_CLIP.test(key)) continue
-    const long = isLongMain(lesson.durationSeconds)
-    if (!long) continue
-    const list = byKey.get(key) || []
+    const speaker = speakerKey(lesson.speaker)
+    if (!key || SHORT_CLIP.test(key) || !speaker) continue
+    if (!NUMBERED.test(lesson.title) && !NUMBERED.test(lesson.series || '')) continue
+    if (!isLongMain(lesson.durationSeconds)) continue
+    const mapKey = `${key}::${speaker}`
+    const list = byKey.get(mapKey) || []
     list.push(lesson)
-    byKey.set(key, list)
+    byKey.set(mapKey, list)
   }
 
   const groups: SeriesGroup[] = []
   const claimed = new Set<number>()
   const moves: SeriesMove[] = []
 
-  for (const [key, own] of [...byKey.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+  for (const [mapKey, own] of [...byKey.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
     if (own.length < 2) continue
+    const speakers = new Set(own.map((row) => speakerKey(row.speaker)).filter(Boolean))
+    if (speakers.size !== 1) continue
+    const key = mapKey.split('::')[0]
     const ordered = [...own].sort((a, b) => (a.order || 0) - (b.order || 0) || a.id - b.id)
-    groups.push({ key, title: key, lessonIds: ordered.map((row) => row.id), seconds: ordered.map((row) => row.durationSeconds) })
+    groups.push({
+      key,
+      title: key,
+      lessonIds: ordered.map((row) => row.id),
+      seconds: ordered.map((row) => row.durationSeconds),
+      speaker: ordered[0]?.speaker?.trim() || '',
+    })
     for (const lesson of ordered) {
       claimed.add(lesson.id)
       if (lesson.courseTitle === key && own.every((row) => row.courseId === lesson.courseId)) continue
@@ -114,34 +135,7 @@ export function planSeriesMoves(lessons: LibraryLesson[]): SeriesPlan {
         fromTitle: lesson.courseTitle,
         toTitle: key,
         seconds: lesson.durationSeconds,
-        reason: `Same series as ${own.length - 1} other long talk${own.length === 2 ? '' : 's'}.`,
-      })
-    }
-  }
-
-  const leftoverLong = lessons
-    .filter((lesson) => !claimed.has(lesson.id) && isLongMain(lesson.durationSeconds) && !SHORT_CLIP.test(`${lesson.courseTitle} ${lesson.title}`))
-    .sort((a, b) => b.durationSeconds - a.durationSeconds || a.id - b.id)
-
-  if (leftoverLong.length >= PROOF_TALK_COUNT) {
-    const picked = leftoverLong.slice(0, PROOF_TALK_COUNT)
-    groups.push({
-      key: LONG_SITTINGS,
-      title: LONG_SITTINGS,
-      lessonIds: picked.map((row) => row.id),
-      seconds: picked.map((row) => row.durationSeconds),
-    })
-    for (const lesson of picked) {
-      claimed.add(lesson.id)
-      if (lesson.courseTitle === LONG_SITTINGS) continue
-      moves.push({
-        lessonId: lesson.id,
-        title: lesson.title,
-        fromCourseId: lesson.courseId,
-        fromTitle: lesson.courseTitle,
-        toTitle: LONG_SITTINGS,
-        seconds: lesson.durationSeconds,
-        reason: 'One of the ten longest full talks, so a 3,3,2,2 split can be shown.',
+        reason: `Numbered sittings of ${key} by the same speaker.`,
       })
     }
   }
@@ -158,9 +152,15 @@ export function planSeriesMoves(lessons: LibraryLesson[]): SeriesPlan {
   const shortMains: SeriesPlan['shortMains'] = []
   for (const [title, own] of after) {
     if (SHORT_CLIP.test(title)) continue
-    const main = [...own].sort((a, b) => b.durationSeconds - a.durationSeconds)[0]
-    if (main && main.durationSeconds > 0 && main.durationSeconds < LONG_MAIN_SECONDS) {
-      shortMains.push({ courseTitle: title, lessonTitle: main.title, seconds: main.durationSeconds })
+    for (const lesson of own) {
+      if (lesson.durationSeconds > 0 && lesson.durationSeconds < LONG_MAIN_SECONDS && !SHORT_CLIP.test(`${title} ${lesson.title}`)) {
+        shortMains.push({
+          courseTitle: title,
+          lessonTitle: lesson.title,
+          seconds: lesson.durationSeconds,
+          proposeAs: lesson.durationSeconds < 180 ? 'clip' : 'ready-for-more',
+        })
+      }
     }
   }
 
@@ -176,7 +176,7 @@ export function planSeriesMoves(lessons: LibraryLesson[]): SeriesPlan {
   return {
     groups,
     moves,
-    shortMains: shortMains.sort((a, b) => a.courseTitle.localeCompare(b.courseTitle)),
+    shortMains: shortMains.sort((a, b) => a.courseTitle.localeCompare(b.courseTitle) || a.lessonTitle.localeCompare(b.lessonTitle)),
     emptyCourses: [...emptied.entries()].map(([id, title]) => ({ id, title })),
   }
 }

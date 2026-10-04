@@ -9,6 +9,7 @@ import { closePayload, clearDevPushMarker } from '../src/lib/prepare-db'
 import { DOORS } from '../src/lib/doors'
 import { recommendLesson } from '../src/lib/placing'
 import { firstCourseVerdict, pickGentleFirstCourse } from '../src/lib/first-course'
+import { doorNumberOfClause } from '../src/lib/doors'
 import { idOf } from '../src/lib/ids'
 
 await clearDevPushMarker()
@@ -35,19 +36,21 @@ try {
   for (const door of DOORS) {
     const clause = Math.min(...door.clauses)
     const hitId = recommendLesson(clause, cutRows, lessonOrder)
+    const onTopicIds = [...new Set(cutRows.filter((cut) => doorNumberOfClause(cut.bestClause) === door.number && lessonOrder.includes(cut.lessonId)).map((cut) => cut.lessonId))]
     const hit = lessons.find((lesson) => lesson.id === hitId)
-    const pick = pickGentleFirstCourse(hitId, catalogue)
+    const pick = pickGentleFirstCourse(hitId, catalogue, onTopicIds)
     const hitTitle = hit ? String(hit.title || '') : '(none)'
     const pickTitle = pick ? `${pick.courseTitle} · ${pick.lessonTitle}` : '(none)'
-    const verdict = firstCourseVerdict(pick, catalogue)
+    const verdict = firstCourseVerdict(pick, catalogue, onTopicIds)
     if (!verdict.ok) bad += 1
     const seconds = pick ? catalogue.find((course) => course.courseId === pick.courseId)?.lessons.find((lesson) => lesson.id === pick.lessonId)?.durationSeconds || 0 : 0
+    const fallback = hitId && pick && !onTopicIds.includes(pick.lessonId) ? 'OFF-TOPIC' : !hitId && !pick ? 'NO ON-TOPIC LONG TALK' : ''
     console.log(`Door ${door.number} ${door.title}`)
     console.log(`  clause ${clause}  current hit: ${hitId || '—'} ${hitTitle}`)
     console.log(`  would offer: ${pickTitle}${seconds ? ` (${Math.round(seconds / 60)} min)` : ''}`)
-    console.log(`  ${pick?.reason || ''}  ${verdict.note}`)
+    console.log(`  ${pick?.reason || (fallback === 'NO ON-TOPIC LONG TALK' ? 'This door has no on-topic long talk in the library.' : '')}  ${verdict.note}${fallback && fallback !== verdict.note ? `  ${fallback}` : ''}`)
   }
-  console.log(`\n${DOORS.length} doors. ${bad} still open on a short clip, a later part, or a life-stage talk. No rows were changed.`)
+  console.log(`\n${DOORS.length} doors. ${bad} still open on a short clip, a later part, a life-stage talk, an off-topic fallback, or have no on-topic long talk. No rows were changed.`)
 } finally {
   await closePayload(payload)
 }

@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { E2E_BASE } from '../env'
 import { fakeYouTube } from './fake-youtube'
+import { ensureProofCourse, PROOF_COURSE } from './proof-course'
 
 const PORTAL = 'east-london'
 const BASE = `/p/${PORTAL}`
@@ -47,7 +48,7 @@ async function aCourse() {
     byCourse.set(lesson.course, list)
   }
   const courses = ((await json('/api/courses?limit=80&depth=0')).docs || []) as { id: number; title?: string }[]
-  const sitting = courses.find((course) => course.title === 'Long sittings')
+  const sitting = courses.find((course) => course.title === PROOF_COURSE)
   const names = courses.find((course) => course.title === 'The Names')
   const multi = [...byCourse.entries()].filter(([, own]) => own.length >= 2).sort((a, b) => b[1].length - a[1].length)[0]
   const courseId = sitting?.id || names?.id || multi?.[0] || lessons[0]?.course
@@ -80,7 +81,7 @@ test.describe('courses and planning', () => {
     await expect(page.getByTestId('schedule-all')).toBeVisible()
     await expect(page.getByTestId('course-question')).toHaveCount(0)
     await expect(page.locator('body')).not.toContainText('questions coming up')
-    await proofShot(page, 'buffet-long-sittings')
+    await proofShot(page, 'buffet-ten-sittings')
     await page.getByTestId('schedule-all').click()
     await expect(page.getByTestId('plan')).toBeVisible()
     await expect(page.getByTestId('schedule-course')).toHaveValue(String(courseId))
@@ -180,6 +181,9 @@ test.describe('courses and planning', () => {
     expect(calendar).toContain('BEGIN:VEVENT')
     expect(calendar).toContain('DTSTART;VALUE=DATE:')
     expect(calendar).toContain('SUMMARY:')
+    expect(calendar).toMatch(/DTSTAMP:\d{8}T\d{6}Z/)
+    expect(calendar).not.toMatch(/SUMMARY:[^:\n]*\|/)
+    expect(calendar).toMatch(/URL:https?:\/\//)
     mkdirSync(PROOF, { recursive: true })
     writeFileSync(path.join(PROOF, 'week.ics'), calendar)
     await expect(page.getByTestId('schedule-slot').first()).toContainText('›')
@@ -189,28 +193,26 @@ test.describe('courses and planning', () => {
     await proofShot(page, 'plan-row-opened-talk')
   })
 
-  test('Long sittings splits 3,3,2,2 and keeps the days row after sharing out', async ({ page }) => {
+  test('Ten sittings splits 3,3,2,2 and keeps the days row after sharing out', async ({ page }) => {
     await page.setViewportSize(PHONE)
-    const courses = ((await json('/api/courses?limit=80&depth=0')).docs || []) as { id: number; title?: string }[]
-    const sitting = courses.find((course) => course.title === 'Long sittings')
-    expect(sitting).toBeTruthy()
-    const own = ((await json(`/api/lessons?where[course][equals]=${sitting!.id}&limit=20&depth=0`)).docs || []) as { id: number }[]
-    expect(own.length).toBe(10)
-    await signIn(page, `${BASE}/week?course=${sitting!.id}&view=new&start=2026-10-05&end=2026-10-08&days=0,1,2,3,4,5,6&minutes=20`)
-    await expect(page.getByTestId('schedule-course')).toHaveValue(String(sitting!.id))
+    const sitting = await ensureProofCourse(master)
+    await signIn(page, `${BASE}/week?course=${sitting.courseId}&view=new&start=2026-10-05&end=2026-10-08&days=0,1,2,3,4,5,6&minutes=20`)
+    await expect(page.getByTestId('schedule-course')).toHaveValue(String(sitting.courseId))
     await expect(page.getByTestId('weekday-1')).toBeChecked()
     await page.getByTestId('schedule-submit').click()
-    await expect(page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' })).toBeVisible()
-    await expect(page.getByTestId('schedule-course')).toHaveValue(String(sitting!.id))
+    await expect(page.locator('nextjs-portal')).toHaveCount(0)
+    await expect(page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE })).toBeVisible()
+    await expect(page.getByTestId('schedule-course')).toHaveValue(String(sitting.courseId))
     await expect(page.getByTestId('weekday-1')).toBeChecked()
     await expect(page.getByTestId('week-days')).toBeVisible()
-    const dates = await page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' }).getByTestId('schedule-slot').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-date') || ''))
+    await expect(page.getByTestId('plan-counts')).toContainText('3, 3, 2, 2')
+    const dates = await page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE }).getByTestId('schedule-slot').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-date') || ''))
     const counts = dates.reduce((map, date) => map.set(date, (map.get(date) || 0) + 1), new Map<string, number>())
     expect([...counts.values()]).toEqual([3, 3, 2, 2])
-    await expect(page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' }).getByTestId('over-minutes')).toBeVisible()
-    await expect(page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' }).getByTestId('spread-note')).toHaveCount(0)
+    await expect(page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE }).getByTestId('over-minutes')).toBeVisible()
+    await expect(page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE }).getByTestId('spread-note')).toHaveCount(0)
     await expect(page.getByTestId('week-days')).toBeVisible()
-    await page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' }).scrollIntoViewIfNeeded()
+    await page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE }).scrollIntoViewIfNeeded()
     await page.getByTestId('week-days').scrollIntoViewIfNeeded()
     await proofShot(page, 'split-3322-days-kept')
     await page.getByTestId('new-plan').scrollIntoViewIfNeeded()
@@ -219,16 +221,14 @@ test.describe('courses and planning', () => {
 
   test('a teacher plan locks against another teacher and tells the learner', async ({ page }) => {
     await page.setViewportSize(DESK)
-    const courses = ((await json('/api/courses?limit=80&depth=0')).docs || []) as { id: number; title?: string }[]
-    const sitting = courses.find((course) => course.title === 'Long sittings')
-    expect(sitting).toBeTruthy()
+    const sitting = await ensureProofCourse(master)
     await page.goto(`/login?next=${encodeURIComponent(`${BASE}/admin/plans`)}`)
     await page.getByTestId('login-email').fill('elm-teacher@hearts.test')
     await page.getByTestId('login-password').fill('portal-teacher')
     await page.getByTestId('login-submit').click()
     await page.waitForURL((url) => !url.pathname.startsWith('/login'))
     await expect(page.getByTestId('admin-plans')).toBeVisible()
-    await page.getByTestId('schedule-course').selectOption(String(sitting!.id))
+    await page.getByTestId('schedule-course').selectOption(String(sitting.courseId))
     await page.getByTestId('schedule-start').fill('2026-10-05')
     await page.getByTestId('schedule-end').fill('2026-10-08')
     for (const day of [0, 1, 2, 3, 4, 5, 6]) {
@@ -244,13 +244,16 @@ test.describe('courses and planning', () => {
     await page.getByTestId('login-password').fill('portal-admin')
     await page.getByTestId('login-submit').click()
     await page.waitForURL((url) => !url.pathname.startsWith('/login'))
-    await page.getByTestId('schedule-course').selectOption(String(sitting!.id))
+    await page.getByTestId('schedule-course').selectOption(String(sitting.courseId))
     await page.getByTestId('schedule-start').fill('2026-10-05')
     await page.getByTestId('schedule-end').fill('2026-10-08')
     await page.locator('label:has([data-testid=weekday-1])').click()
     await page.locator('label:has([data-testid=plan-learner])').filter({ hasText: 'Maryam' }).click()
     await page.getByTestId('schedule-submit').click()
     await expect(page.getByTestId('error')).toContainText('another teacher')
+    await expect(page.getByTestId('schedule-course')).toHaveValue(String(sitting.courseId))
+    await expect(page.getByTestId('schedule-start')).toHaveValue('2026-10-05')
+    await expect(page.getByTestId('schedule-end')).toHaveValue('2026-10-08')
     await proofShot(page, 'teacher-lock-refused')
 
     await page.setViewportSize(PHONE)
@@ -261,6 +264,8 @@ test.describe('courses and planning', () => {
     await page.goto(`${BASE}/me`)
     const note = page.getByTestId('notification').filter({ hasText: 'A study plan was made for you' })
     await expect(note).toBeVisible()
+    await expect(note).not.toContainText(/^Done\./)
+    await expect(note).not.toContainText('Done.')
     await note.scrollIntoViewIfNeeded()
     await proofShot(page, 'teacher-plan-notified')
   })

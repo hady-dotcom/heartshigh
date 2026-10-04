@@ -10,7 +10,8 @@ import { extractWithFallback, llmStatus } from '@/lib/llm'
 import { defaultPlanName, flattenSlots, planAcrossDays, plural, studyDates } from '@/lib/schedule'
 import { sortParts } from '@/lib/part-order'
 import { minutesADay } from '@/lib/study-plan'
-import { planKeepPath, planToast } from '@/lib/week'
+import { partTitle } from '@/lib/talk-title'
+import { planKeepPath, planNotify, planToast } from '@/lib/week'
 import { clockEnabled, setTestNow } from '@/lib/clock'
 import { authCookie } from '@/lib/cookies'
 import { logError } from '@/lib/log'
@@ -1203,7 +1204,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const minutesRaw = text(form, 'minutes')
     const minutes = minutesRaw ? minutesADay(minutesRaw) : 20
     if (!minutes) return redirectTo(req, text(form, 'next') || '/', 'Choose 10, 20, 30 or 45 minutes a day.')
-    const planned = planAcrossDays(lessons.map((lesson) => ({ id: lesson.id, title: lesson.title || 'Sitting' })), dates)
+    const planned = planAcrossDays(lessons.map((lesson) => ({ id: lesson.id, title: partTitle(lesson, courseTitle) })), dates)
     const slots = flattenSlots(planned.slots)
     const learnerIds = [...new Set(form.getAll('learner').map((value) => Number(value)).filter(Boolean))]
     if (learnerIds.length && user.role === 'learner') return redirectTo(req, text(form, 'next') || '/', 'You can plan your own days. A teacher plans for others.')
@@ -1234,12 +1235,20 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       return idOf(plan.owner) === learnerId || learners.some((item) => idOf(item) === learnerId)
     }
     const usedDates = [...new Set(slots.map((slot) => slot.date).filter(Boolean))]
+    const keepForm = (path: string) => planKeepPath(path, {
+      course: courseIds[0],
+      start: text(form, 'start'),
+      end: text(form, 'end'),
+      weekdays,
+      minutes,
+      learners: learnerIds,
+    })
     for (const learnerId of targets) {
       const matching = existing.docs.filter((plan) => matchesCourse(plan) && covers(plan, learnerId))
       const teacherPlan = matching.find((plan) => ownerIsStaff(idOf(plan.owner)) && idOf(plan.owner) !== learnerId)
       const selfPlan = matching.find((plan) => !teacherPlan || plan.id !== teacherPlan.id)
-      if (!staff && teacherPlan) return redirectTo(req, text(form, 'next') || '/', 'Your teacher has set this plan. You can still watch at your own pace.')
-      if (staff && teacherPlan && idOf(teacherPlan.owner) !== user.id) return redirectTo(req, text(form, 'next') || '/', 'This plan has been made by another teacher.')
+      if (!staff && teacherPlan) return redirectTo(req, keepForm(text(form, 'next') || '/'), 'Your teacher has set this plan. You can still watch at your own pace.')
+      if (staff && teacherPlan && idOf(teacherPlan.owner) !== user.id) return redirectTo(req, keepForm(text(form, 'next') || '/'), 'This plan has been made by another teacher.')
       const data = {
         name,
         owner: user.id,
@@ -1262,7 +1271,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         if (staff || idOf(extra.owner) === user.id) await payload.delete({ collection: 'schedules', id: extra.id, overrideAccess: true })
       }
       if (staff && learnerId !== user.id) {
-        await notify(payload, { user: learnerId, portal, title: 'A study plan was made for you', body: planToast(slots.length, usedDates), href: `/p/${acting.portal.slug}/week` })
+        await notify(payload, { user: learnerId, portal, title: 'A study plan was made for you', body: planNotify(slots.length, usedDates), href: `/p/${acting.portal.slug}/week` })
       }
     }
     const toast = planToast(slots.length, usedDates)

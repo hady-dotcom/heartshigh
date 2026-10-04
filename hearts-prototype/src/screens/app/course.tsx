@@ -20,6 +20,7 @@ import { appetiserStop } from '@/lib/tiers'
 import { lineAt } from '@/lib/harvest'
 import { answerCounts, courseProgress } from '@/lib/nesting'
 import { type Ctx, type Row, clock, one, ref, rows, str, unreadCount } from '../common'
+import { nextPartLabel } from '@/lib/study-plan'
 import { talksLabel } from '@/lib/week'
 import { masterFlags } from './journey'
 import { companyGatherings, relatedCards, TalkGatherNotice } from '@/screens/app/gather'
@@ -29,14 +30,11 @@ import { circleForPoints, circleSettings } from '@/server/circle'
 
 const START = ['orange', 'gold', 'teal']
 
-/** The garden card always names a following part when the course has more than one. */
-function nextCoursePart(lessons: Row[], partIndex: number, done: Set<number>, hrefBase: string) {
-  if (lessons.length < 2) return null
-  const rest = [...lessons.slice(partIndex + 1), ...lessons.slice(0, partIndex)]
-  const pick = rest.find((row) => !done.has(row.id)) || rest[0]
+/** The same next part for the player and the garden. */
+function nextCoursePart(lessons: Row[], partIndex: number, hrefBase: string) {
+  const pick = lessons[partIndex + 1]
   if (!pick) return null
-  const index = lessons.findIndex((row) => row.id === pick.id)
-  return { label: `Part ${index + 1} · Next`, href: `${hrefBase}?part=${pick.id}` }
+  return { label: nextPartLabel(partIndex + 2), href: `${hrefBase}?part=${pick.id}` }
 }
 
 function partHeading(index: number, lesson: Row, courseTitle: string, sep: string) {
@@ -297,8 +295,9 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const here = `${base}/course/${courseId}?part=${lessonId}`
   const courseHref = `${base}/course/${courseId}`
   const nextLesson = lessons[partIndex + 1] || null
-  const upNext = nextLesson
-    ? { href: `${base}/course/${courseId}?part=${nextLesson.id}`, label: partHeading(partIndex + 2, nextLesson, str(course.title), ' · '), minutes: Math.max(1, Math.round(Number(nextLesson.durationSeconds || 0) / 60)), last: false }
+  const following = nextCoursePart(lessons, partIndex, `${base}/course/${courseId}`)
+  const upNext = nextLesson && following
+    ? { href: following.href, label: following.label, minutes: Math.max(1, Math.round(Number(nextLesson.durationSeconds || 0) / 60)), last: false }
     : { href: courseHref, label: 'Choose what\'s next', minutes: 0, last: true }
   const thinks = (await rows(payload, 'notifications', { and: [{ user: { equals: user.id } }, { channel: { equals: 'think' } }, { read: { not_equals: true } }] }, { limit: 50 }))
     .map((row) => {
@@ -363,7 +362,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           courseHref={courseHref}
           deferred={deferred}
           initialOpenId={Number(query.answer) || deferred[0]?.pointId || null}
-          garden={{ done, total, gardenHref: `${base}/garden`, nextPart: nextCoursePart(lessons, partIndex, doneLessons, `${base}/course/${courseId}`), links: [{ label: "See what you've sown", href: `${base}/garden/general` }, { label: 'Your workbook', href: `${base}/garden/workbook` }] }}
+          garden={{ done, total, gardenHref: `${base}/garden`, nextPart: following, links: [{ label: "See what you've sown", href: `${base}/garden/general` }, { label: 'Your workbook', href: `${base}/garden/workbook` }] }}
         />
         {related[0] ? <TalkGatherNotice startsAt={related[0].startsAt} href={`${base}/gather/${related[0].id}`} title={related[0].title} /> : null}
         {marks.length ? (

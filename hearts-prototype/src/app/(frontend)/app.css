@@ -256,6 +256,10 @@
 .player-card.yt-on .time-read { top: 9px; }
 .player-card .yt iframe, .player-card .yt > div, .player-card .yt video { width: 100%; height: 100%; max-width: 100%; max-height: 100%; border: 0; background: #0e2a2b; object-fit: contain; pointer-events: none; }
 .part-chip { position: absolute; top: 12px; left: 12px; right: 60px; z-index: 3; background: rgba(0, 0, 0, 0.72); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.part-chip.off-film {
+  position: static; display: block; margin: 10px 2px 0; right: auto; top: auto; z-index: 1;
+  background: #0F2E2C; color: #F1E4C6; border: 1px solid #D4A84B;
+}
 .big-play { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 4; width: 44px; height: 44px; border-radius: 50%; background: rgba(14, 42, 43, 0.55); color: #f1d58a; border: 1.5px solid #d4a84b; display: grid; place-items: center; box-shadow: none; }
 .paused-note { position: absolute; left: 0; right: 0; top: 40%; text-align: center; z-index: 3; font-weight: 700; font-size: 15px; }
 .timeline { position: absolute; left: 16px; right: 16px; bottom: 8px; z-index: 6; height: 48px; pointer-events: auto; transform: translateZ(0); }
@@ -554,16 +558,16 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .slot .today-badge { display: inline-block; margin-left: 8px; background: var(--gold); color: var(--gold-ink); border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
 .date-field, .field[type='date'] { max-width: 100%; width: 100%; box-sizing: border-box; }
 .date-read { display: block; font-weight: 600; font-size: 13px; color: var(--ink-2); }
-.week-strip { background: #E8D6AE; color: #1E2A26; border-radius: 20px; padding: 14px 12px 12px; margin-bottom: 14px; }
+.week-strip { background: #0F2E2C; color: #F1E4C6; border-radius: 20px; padding: 14px 12px 12px; margin-bottom: 14px; }
 .week-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .week-day { display: grid; justify-items: center; gap: 2px; padding: 6px 0 8px; border-radius: 14px; font-size: 12px; position: relative; }
-.week-day small { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #5c5346; }
+.week-day small { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #D4A84B; }
 .week-day b { font-size: 16px; }
 .week-day.today { background: #0F2E2C; color: #F1E4C6; }
 .week-day.today small { color: #D4A84B; }
 .week-day .dot { width: 6px; height: 6px; border-radius: 50%; background: #D4A84B; }
-.week-today { display: block; margin-top: 10px; font-weight: 700; color: #1E2A26; text-decoration: none; min-height: 44px; display: flex; align-items: center; }
-.week-today.empty { color: #0F2E2C; }
+.week-today { display: block; margin-top: 10px; font-weight: 700; color: #F1E4C6; text-decoration: none; min-height: 44px; display: flex; align-items: center; }
+.week-today.empty { color: #E8D6AE; }
 .plan-cal { margin: 4px 0 16px; padding: 12px 10px 14px; border-radius: 20px; }
 .plan-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .plan-cal-label { text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); padding: 4px 0; }
@@ -583,17 +587,17 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .fruit-explain { display: block; margin: 4px 0 0; font-size: 12px; line-height: 1.4; }
 .up-next-row { display: block; margin: 12px 2px 0; font-weight: 700; color: var(--ink); text-decoration: none; min-height: 44px; }
 .up-next-row.last { color: var(--ink-2); font-weight: 600; }
-.up-next-card { margin-top: 14px; background: #E8D6AE; color: #1E2A26; border-radius: 20px; padding: 16px; }
+.up-next-card { margin-top: 14px; background: #0F2E2C; color: #F1E4C6; border-radius: 20px; padding: 16px; }
 .up-next-card h2 { margin: 0 0 8px; font-size: 22px; }
 .up-next-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-.buffet-row { display: flex; align-items: center; gap: 12px; background: #E8D6AE; color: #1E2A26; border-radius: 16px; padding: 10px; margin-bottom: 10px; text-decoration: none; min-height: 64px; }
+.buffet-row { display: flex; align-items: center; gap: 12px; background: #0F2E2C; color: #F1E4C6; border-radius: 16px; padding: 10px; margin-bottom: 10px; text-decoration: none; min-height: 64px; }
 .buffet-row .thumb { width: 72px; height: 44px; border-radius: 10px; background: #0F2E2C center/cover; flex: none; }
 .buffet-row .t { flex: 1; min-width: 0; }
 .buffet-row b, .talk-name { display: block; font-size: 15px; overflow-wrap: break-word; word-break: normal; hyphens: none; -webkit-hyphens: none; }
-.buffet-row small { display: block; color: #5c5346; font-size: 12.5px; }
+.buffet-row small { display: block; color: #E8D6AE; font-size: 12.5px; }
 .workbook-page { padding-bottom: calc(120px + var(--safe-bottom)); }
-.speaker-card { background: #E8D6AE; color: #1E2A26; }
-.speaker-card small { color: #0F2E2C; }
+.speaker-card { background: #0F2E2C; color: #F1E4C6; }
+.speaker-card small { color: #D4A84B; }
 
 /* Clause card number (Jibril card style), Ghunya seat groups, empty states */
 .clause-card .clause-num { font-family: 'Libre Caslon Text', Georgia, serif; font-size: 44px; line-height: 1; color: #2b2622; margin-bottom: 8px; }
@@ -701,9 +705,6 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 :is(html, html[data-theme]) main.app.evening[data-testid="course"] .card,
 :is(html, html[data-theme]) main.app.evening[data-testid="plan"] .card,
 :is(html, html[data-theme]) main.app.evening[data-testid="plan"] .slot,
-:is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-start,
-:is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-entry,
-:is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-open,
 :is(html, html[data-theme]) main.app.evening[data-testid="course"] .list-link,
 :is(html, html[data-theme]) main.app.evening[data-testid="plan"] .form-stack,
 :is(html, html[data-theme]) main.app.evening[data-testid="plan"] .plan-cal {
@@ -711,12 +712,23 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
   color: #0f3b3a;
   border-color: #7a6238;
 }
+:is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-start,
+:is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-entry,
+:is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-open {
+  background: #0F2E2C;
+  color: #F1E4C6;
+  border-color: #D4A84B;
+}
 :is(html, html[data-theme]) main.app.evening[data-testid="course"] .card h2,
 :is(html, html[data-theme]) main.app.evening[data-testid="course"] .card h3,
 :is(html, html[data-theme]) main.app.evening[data-testid="course"] .card p,
 :is(html, html[data-theme]) main.app.evening[data-testid="plan"] .card,
 :is(html, html[data-theme]) main.app.evening[data-testid="plan"] .card label,
 :is(html, html[data-theme]) main.app.evening[data-testid="plan"] .card legend,
+:is(html, html[data-theme]) main.app.evening[data-testid="course"] .list-link,
+:is(html, html[data-theme]) main.app.evening[data-testid="course"] .list-link small {
+  color: #0f3b3a;
+}
 :is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-start,
 :is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-start .eyebrow,
 :is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-start-row,
@@ -725,10 +737,12 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 :is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-entry,
 :is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-entry .q,
 :is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-entry blockquote,
-:is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-course h2,
-:is(html, html[data-theme]) main.app.evening[data-testid="course"] .list-link,
-:is(html, html[data-theme]) main.app.evening[data-testid="course"] .list-link small {
-  color: #0f3b3a;
+:is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-course h2 {
+  color: #F1E4C6;
+}
+:is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-entry .from-lesson {
+  background: #1a403d;
+  color: #F1E4C6;
 }
 :is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-start-row .lock,
 :is(html, html[data-theme]) main.app.evening[data-testid="course"] .eyebrow,
@@ -740,19 +754,45 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 :is(html, html[data-theme]) .sheet[data-testid="popup"] .compose,
 :is(html, html[data-theme]) .sheet[data-testid="popup"] textarea,
 :is(html, html[data-theme]) .sheet[data-testid="popup"] .choice {
-  background: #fbf3e0;
-  color: #0f3b3a;
-  border-color: #7a6238;
+  background: #1a403d;
+  color: #F1E4C6;
+  border-color: #D4A84B;
+}
+:is(html, html[data-theme]) .sheet[data-testid="popup"] textarea::placeholder {
+  color: #E8D6AE;
+  opacity: 1;
 }
 :is(html, html[data-theme]) .sheet[data-testid="popup"] {
-  background: linear-gradient(180deg, #f3e2c0, #e8d4a6);
-  color: #0f3b3a;
+  background: #0F2E2C;
+  color: #F1E4C6;
 }
 :is(html, html[data-theme]) .sheet[data-testid="popup"] h2,
 :is(html, html[data-theme]) .sheet[data-testid="popup"] p,
 :is(html, html[data-theme]) .sheet[data-testid="popup"] label,
-:is(html, html[data-theme]) .sheet[data-testid="popup"] .eyebrow {
-  color: #0f3b3a;
+:is(html, html[data-theme]) .sheet[data-testid="popup"] .eyebrow,
+:is(html, html[data-theme]) .sheet[data-testid="popup"] .kind-tabs span,
+:is(html, html[data-theme]) .sheet[data-testid="popup"] .link-btn,
+:is(html, html[data-theme]) .sheet[data-testid="popup"] .toggle,
+:is(html, html[data-theme]) .sheet[data-testid="popup"] .attach {
+  color: #F1E4C6;
+}
+:is(html, html[data-theme]) .sheet[data-testid="popup"] .kind-tabs span {
+  border-color: #D4A84B;
+  color: #E8D6AE;
+}
+:is(html, html[data-theme]) .sheet[data-testid="popup"] .kind-tabs span.on {
+  background: #D4A84B;
+  color: #0F2E2C;
+  border-color: #D4A84B;
+}
+:is(html, html[data-theme]) .sheet[data-testid="popup"] .handle { background: #D4A84B; }
+:is(html, html[data-theme]) .sheet[data-testid="popup"] .sheet-close {
+  background: #1a403d;
+  color: #F1E4C6;
+}
+:is(html, html[data-theme]) .sheet[data-testid="popup"] .share-btn {
+  background: #D4A84B;
+  color: #0F2E2C;
 }
 :is(html, html[data-theme]) .home-plan {
   background: linear-gradient(180deg, #f3e2c0, #e8d4a6);

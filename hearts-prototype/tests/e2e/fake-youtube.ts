@@ -25,6 +25,7 @@ export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean
       constructor(el: HTMLElement, private options: Options) {
         this.time = options.playerVars?.start || 0
         gate.__playerVars!.push(options.playerVars)
+        ;(window as unknown as { __HEARTS_FAKE_END?: () => void }).__HEARTS_FAKE_END = () => this.end()
         this.frame = document.createElement('iframe')
         this.frame.dataset.fake = 'youtube'
         this.frame.setAttribute('title', 'Talk film')
@@ -65,6 +66,10 @@ export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean
       getIframe() { return this.frame }
       unloadModule(name: string) { gate.__unloaded!.push(name) }
       setOption() {}
+      end() {
+        this.pauseVideo()
+        this.set(0)
+      }
       destroy() { if (this.tick != null) window.clearInterval(this.tick); this.frame.remove() }
     }
     ;(window as unknown as { YT: unknown }).YT = { Player }

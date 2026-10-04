@@ -513,14 +513,16 @@ async function main() {
   }
 
   const opening = await seedOpening(payload, { clauseIds, portalIds, now: new Date(), showUnchecked: !startersOnly })
-  const { applySeriesGroups } = await import('./group-series')
-  const grouped = await applySeriesGroups(payload)
+  const groupedIds: number[] = []
+  if (process.env.HEARTS_GROUP_SERIES === '1') {
+    const { applySeriesGroups } = await import('./group-series')
+    const grouped = await applySeriesGroups(payload)
+    groupedIds.push(...grouped.courseIds)
+  }
   await seedSpeakers(payload)
-  if (!startersOnly) await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...new Set([...grouped.courseIds, ...opening.starterCourseIds, ...courseIds])] })
+  if (!startersOnly) await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...new Set([...groupedIds, ...opening.starterCourseIds, ...courseIds])] })
   await seedHarvest(payload, { now: new Date(), demo: !startersOnly })
   if (!startersOnly) {
-    const { seedDemoHarvest } = await import('./harvest-seed')
-    await seedDemoHarvest(payload)
     const { seedFeedbackDemo } = await import('./feedback-seed')
     await seedFeedbackDemo(payload, { startersOnly })
   }

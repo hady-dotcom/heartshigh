@@ -14,7 +14,7 @@ import { learnerClips } from '@/server/opening'
 import { lanesWithClips } from '@/lib/lanes'
 import { LANE_BLURBS } from '@/lib/opening-data'
 import { plural } from '@/lib/schedule'
-import { continueOrder, dateKeyInZone, minutesADay, tonightLabel, tonightSlot } from '@/lib/study-plan'
+import { continueOrder, dateKeyInZone, tonightLabel, tonightSlot } from '@/lib/study-plan'
 import { now as clockNow } from '@/lib/clock'
 import { growth, Rings } from './garden'
 import { HomeGather, homeGatherings } from './gather'
@@ -73,11 +73,11 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   const plan = plans.find((row) => ref(row.owner) === user.id || ((row.learners as unknown[]) || []).some((item) => ref(item) === user.id))
   const slot = plan ? tonightSlot((plan.slots as { date?: string; lessonId?: number | null; title?: string }[]) || [], dateKeyInZone(clockNow(), portal.timeZone || 'Europe/London'), done) : null
   const planLesson = slot?.lessonId ? (await rows(payload, 'lessons', { id: { equals: slot.lessonId } }, { limit: 1 }))[0] : null
-  const planMinutes = minutesADay(plan?.minutesPerDay) || 20
+  const talkMinutes = Math.max(1, Math.round(Number(planLesson?.durationSeconds || 0) / 60))
   const tonight = planLesson
-    ? { label: tonightLabel(Number(planLesson.order || 1), planMinutes), href: `${base}/course/${ref(planLesson.course)}?part=${planLesson.id}`, title: str(planLesson.title) }
+    ? { label: tonightLabel(Number(planLesson.order || 1), talkMinutes), href: `${base}/course/${ref(planLesson.course)}?part=${planLesson.id}`, title: displayTalkTitle({ title: str(planLesson.title), sourceTitle: str(planLesson.sourceTitle), courseTitle: '', part: Number(planLesson.order || 1), youtubeId: str(planLesson.youtubeId) }) }
     : null
-  const days = g.activeDays.size
+  const days = dayNumber(user)
   const clips = items.slice(0, 3)
   return (
     <AppFrame testId="home">
@@ -91,7 +91,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         <InstallCard sheet />
         <section className="grow-banner" data-testid="grow-banner">
           <p className="eyebrow">Your growth</p>
-          <h2 data-testid="days-count">{days ? `${days} day${days === 1 ? '' : 's'} with us so far` : 'Your garden starts today'}</h2>
+          <h2 data-testid="days-count">{days <= 1 ? 'Your garden starts today' : `${days} days with us so far`}</h2>
           <span className="tree-art" aria-hidden />
           <p className="grow-sub">Five ways to see it</p>
           <Rings g={g} base={base} />

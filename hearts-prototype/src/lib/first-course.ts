@@ -1,7 +1,7 @@
 /**
  * The first course a learner is offered: a long on-topic talk, preferably the earliest
  * sitting of that series in the library. Never walk from a full talk to a short clip.
- * A constructed buffet (Long sittings) is not a series: keep the long on-topic hit.
+ * Walking back stays inside this door's topic. A constructed buffet is not a series.
  */
 
 import { seriesKey } from './series-group'
@@ -68,11 +68,6 @@ function pickOf(course: FirstCourse, lesson: FirstLesson, reason: string): First
   }
 }
 
-function firstLessonOf(course: FirstCourse): FirstLesson | null {
-  if (!course.lessons.length) return null
-  return [...course.lessons].sort((a, b) => (a.order || 0) - (b.order || 0) || a.id - b.id)[0]
-}
-
 function sameSeries(lessonTitle: string, otherTitle: string) {
   const key = seriesKey(lessonTitle)
   const other = seriesKey(otherTitle)
@@ -112,46 +107,49 @@ function lessonOf(course: FirstCourse | null, lessonId: number | null): FirstLes
 
 /**
  * After a door has pointed at a sitting, keep a long on-topic talk.
- * Walk back to an earlier long part of the same course when one exists.
- * Never offer a short clip when a full talk is in the list.
+ * Walk back only to an earlier long part that is still in this door.
+ * Never cross topics, and never offer another course as a fallback.
  */
-export function pickGentleFirstCourse(recommendedLessonId: number | null, courses: FirstCourse[]): FirstPick | null {
+export function pickGentleFirstCourse(recommendedLessonId: number | null, courses: FirstCourse[], onTopicIds?: number[]): FirstPick | null {
+  const topic = onTopicIds ? new Set(onTopicIds) : null
+  const inTopic = (id: number) => !topic || topic.has(id)
   const hit = courseOfLesson(courses, recommendedLessonId)
   const hitLesson = lessonOf(hit, recommendedLessonId)
 
-  if (hit && hitLesson && isLongTalk(hitLesson, hit.courseTitle) && !isLifeStageTopic(`${hit.courseTitle} ${hitLesson.title}`)) {
-    const earlier = earliestLongLesson(hit, seriesSiblings(hit, hitLesson))
-    const hitPart = seriesPartNumber(hitLesson.title)
-    const earlyPart = earlier ? seriesPartNumber(earlier.title) : null
-    if (earlier && earlier.id !== hitLesson.id && hitPart != null && earlyPart != null && earlyPart < hitPart && sameSeries(hitLesson.title, earlier.title)) {
-      return pickOf(hit, earlier, `The door pointed at a later sitting. Offering the earliest full talk of this series instead.`)
+  if (hit && hitLesson && inTopic(hitLesson.id)) {
+    if (isLongTalk(hitLesson, hit.courseTitle) && !isLifeStageTopic(`${hit.courseTitle} ${hitLesson.title}`)) {
+      const earlier = earliestLongLesson(hit, seriesSiblings(hit, hitLesson).filter((row) => inTopic(row.id)))
+      const hitPart = seriesPartNumber(hitLesson.title)
+      const earlyPart = earlier ? seriesPartNumber(earlier.title) : null
+      if (earlier && earlier.id !== hitLesson.id && hitPart != null && earlyPart != null && earlyPart < hitPart && sameSeries(hitLesson.title, earlier.title) && inTopic(earlier.id)) {
+        return pickOf(hit, earlier, `The door pointed at a later sitting. Offering the earliest full talk of this series instead.`)
+      }
+      return pickOf(hit, hitLesson, `This is the full talk the door opened on.`)
     }
-    return pickOf(hit, hitLesson, `This is the full talk the door opened on.`)
+    if (isLifeStageTopic(`${hit.courseTitle} ${hitLesson.title}`)) {
+      return pickOf(hit, hitLesson, 'This sitting is for one life stage.')
+    }
+    return pickOf(hit, hitLesson, 'This sitting is under 10 minutes.')
   }
 
-  const ordered = hit ? [hit, ...courses.filter((course) => course.courseId !== hit.courseId)] : courses
-  for (const course of ordered) {
-    const first = earliestLongLesson(course) || firstLessonOf(course)
-    if (!first) continue
-    if (!isLongTalk(first, course.courseTitle)) continue
-    if (isLifeStageTopic(`${course.courseTitle} ${first.title}`)) continue
-    const part = seriesPartNumber(first.title)
-    const earliest = earliestNumber(course)
-    if (part != null && earliest != null && part > earliest) continue
-    return pickOf(course, first, `Part 1 of ${course.courseTitle}.`)
+  if (topic && topic.size) {
+    for (const course of courses) {
+      const own = course.lessons.filter((lesson) => topic.has(lesson.id))
+      const first = earliestLongLesson({ ...course, lessons: own })
+      if (!first || isLifeStageTopic(`${course.courseTitle} ${first.title}`)) continue
+      return pickOf(course, first, `An on-topic full talk in this door.`)
+    }
   }
 
-  const fallbackCourse = hit || courses.find((course) => earliestLongLesson(course)) || courses[0]
-  const fallback = fallbackCourse ? earliestLongLesson(fallbackCourse) || firstLessonOf(fallbackCourse) : null
-  if (!fallback || !fallbackCourse) return null
-  return pickOf(fallbackCourse, fallback, 'No gentler full talk was in this door, so the matched sitting is used.')
+  return null
 }
 
 export type FirstCourseVerdict = { ok: boolean; note: string }
 
-/** Honest dry-run mark: OK only for a long talk that is part 1 or the earliest sitting in the library. */
-export function firstCourseVerdict(pick: FirstPick | null, courses: FirstCourse[]): FirstCourseVerdict {
-  if (!pick) return { ok: false, note: 'NO TALK' }
+/** Honest dry-run mark: OK only for a long on-topic talk that is part 1 or the earliest sitting. */
+export function firstCourseVerdict(pick: FirstPick | null, courses: FirstCourse[], onTopicIds?: number[]): FirstCourseVerdict {
+  if (!pick) return { ok: false, note: 'NO ON-TOPIC LONG TALK' }
+  if (onTopicIds && !onTopicIds.includes(pick.lessonId)) return { ok: false, note: 'OFF-TOPIC' }
   const course = courses.find((row) => row.courseId === pick.courseId)
   const lesson = course?.lessons.find((row) => row.id === pick.lessonId)
   const title = `${pick.courseTitle} ${pick.lessonTitle}`
@@ -160,7 +158,7 @@ export function firstCourseVerdict(pick: FirstPick | null, courses: FirstCourse[
   if (seconds > 0 && seconds < LONG_OPENING_SECONDS) return { ok: false, note: `UNDER 10 MIN (${Math.max(1, Math.round(seconds / 60))} min)` }
   if (isLifeStageTopic(title)) return { ok: false, note: 'LIFE-STAGE TALK' }
   const part = seriesPartNumber(pick.lessonTitle)
-  const siblings = lesson && course ? seriesSiblings(course, lesson) : course?.lessons || []
+  const siblings = (lesson && course ? seriesSiblings(course, lesson) : course?.lessons || []).filter((row) => !onTopicIds || onTopicIds.includes(row.id))
   const earliest = earliestNumber({ courseId: pick.courseId, courseTitle: pick.courseTitle, lessons: siblings })
   if (part != null && earliest != null && part > earliest) return { ok: false, note: 'LATER PART' }
   if (!lesson) return { ok: false, note: 'MISSING LESSON' }

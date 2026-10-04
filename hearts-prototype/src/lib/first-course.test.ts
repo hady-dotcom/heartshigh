@@ -9,7 +9,7 @@ test('a later session or part is not a gentle opening', () => {
   assert.equal(isGentleOpening('A talk on mahr and marriage'), false)
 })
 
-test('the first course walks back to part 1 of the matched series', () => {
+test('the first course walks back to part 1 of the matched series when that part is on-topic', () => {
   const courses = [
     {
       courseId: 10,
@@ -25,17 +25,36 @@ test('the first course walks back to part 1 of the matched series', () => {
       lessons: [{ id: 9, title: 'Al-Fatihah, part 1', order: 1, durationSeconds: 2400 }],
     },
   ]
-  const pick = pickGentleFirstCourse(6, courses)
+  const pick = pickGentleFirstCourse(6, courses, [1, 6])
   assert.equal(pick?.courseId, 10)
   assert.equal(pick?.lessonId, 1)
   assert.match(pick?.reason || '', /earliest full talk|part 1/i)
 })
 
-test('a long Session 6 stays among leftover Long sittings, and does not walk to another series', () => {
+test('walking back never leaves the door\'s topic', () => {
+  const courses = [
+    {
+      courseId: 10,
+      courseTitle: 'The Names',
+      lessons: [
+        { id: 19, title: 'The Names Class 19: Ar-Rabb', order: 1, durationSeconds: 3600 },
+        { id: 20, title: 'The Names Class 20: Al-Nūr', order: 2, durationSeconds: 3600 },
+      ],
+    },
+  ]
+  const pick = pickGentleFirstCourse(20, courses, [20])
+  assert.equal(pick?.lessonId, 20)
+  assert.equal(firstCourseVerdict(pick, courses, [20]).note, 'OK')
+  const crossed = pickGentleFirstCourse(20, courses, [19])
+  assert.notEqual(crossed?.lessonId, 20)
+  assert.equal(firstCourseVerdict({ courseId: 10, lessonId: 19, courseTitle: 'The Names', lessonTitle: 'The Names Class 19: Ar-Rabb', reason: '' }, courses, [20]).note, 'OFF-TOPIC')
+})
+
+test('a long Session 6 stays when leftover talks share a buffet, and does not walk to another series', () => {
   const courses = [
     {
       courseId: 33,
-      courseTitle: 'Long sittings',
+      courseTitle: 'Ten sittings',
       lessons: [
         { id: 1, title: 'How to Live Like the Prophet, Session 6', order: 1, durationSeconds: 10080 },
         { id: 16, title: 'Purification of the Heart w/ Ustadha Fatima Lette | Session 1', order: 4, durationSeconds: 3600 },
@@ -72,11 +91,11 @@ test('a long Session 6 stays when it is the earliest sitting in the library', ()
   assert.equal(pick?.lessonId, 6)
   assert.equal(firstCourseVerdict(pick, courses).ok, true)
   const clip = pickGentleFirstCourse(9, courses)
-  assert.notEqual(clip?.lessonId, 9)
-  assert.equal(firstCourseVerdict(clip, courses).ok, true)
+  assert.equal(clip?.lessonId, 9)
+  assert.equal(firstCourseVerdict(clip, courses).ok, false)
 })
 
-test('a marriage sitting is skipped when another part 1 is in the list', () => {
+test('a marriage sitting stays on-topic and is marked life-stage, never swapped for another course', () => {
   const courses = [
     {
       courseId: 10,
@@ -89,9 +108,23 @@ test('a marriage sitting is skipped when another part 1 is in the list', () => {
       lessons: [{ id: 9, title: 'Al-Fatihah, part 1', order: 1, durationSeconds: 2400 }],
     },
   ]
-  const pick = pickGentleFirstCourse(6, courses)
-  assert.equal(pick?.courseId, 20)
-  assert.equal(pick?.lessonId, 9)
+  const pick = pickGentleFirstCourse(6, courses, [6])
+  assert.equal(pick?.courseId, 10)
+  assert.equal(pick?.lessonId, 6)
+  assert.equal(firstCourseVerdict(pick, courses, [6]).note, 'LIFE-STAGE TALK')
+})
+
+test('a door with no on-topic long talk says so', () => {
+  const courses = [
+    {
+      courseId: 20,
+      courseTitle: 'The Names: short clips',
+      lessons: [{ id: 9, title: 'The Names Class 20: Al-Nūr', order: 1, durationSeconds: 98 }],
+    },
+  ]
+  const pick = pickGentleFirstCourse(null, courses, [])
+  assert.equal(pick, null)
+  assert.equal(firstCourseVerdict(pick, courses, []).note, 'NO ON-TOPIC LONG TALK')
 })
 
 test('the library-start line names the earliest numbered sitting', () => {

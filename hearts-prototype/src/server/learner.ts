@@ -5,7 +5,7 @@ import { now } from '@/lib/clock'
 import { idOf } from '@/lib/ids'
 import { recommendLesson } from '@/lib/placing'
 import { pickGentleFirstCourse } from '@/lib/first-course'
-import { capitalAfterColon, doorOfClause } from '@/lib/doors'
+import { capitalAfterColon, doorNumberOfClause, doorOfClause } from '@/lib/doors'
 import { loadDoors } from './doors'
 import { portalDisplayName } from '@/lib/portal-name'
 import type { PieceRef } from '@/lib/nesting'
@@ -174,24 +174,22 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
     ? ((await payload.find({ collection: 'cuts', overrideAccess: true, depth: 0, limit: 400, where: { lesson: { in: lessons.map((lesson) => lesson.id) } } })).docs as unknown as Row[])
     : []
   const doors = await loadDoors(payload)
+  const cutRows = cuts.map((cut) => ({ lessonId: idOf(cut.lesson) || 0, bestClause: (cut.bestClause as number) || null, approved: cut.status === 'approved' }))
   const firstPick = user.startingClause
-    ? recommendLesson(
-        Number(user.startingClause),
-        cuts.map((cut) => ({ lessonId: idOf(cut.lesson) || 0, bestClause: (cut.bestClause as number) || null, approved: cut.status === 'approved' })),
-        lessonOrder,
-        doors,
-      )
+    ? recommendLesson(Number(user.startingClause), cutRows, lessonOrder, doors)
     : null
-  const gentle = pickGentleFirstCourse(
-    firstPick,
-    courses.map((course) => ({
-      courseId: course.id,
-      courseTitle: String(course.title || ''),
-      lessons: lessons
-        .filter((lesson) => idOf(lesson.course) === course.id)
-        .map((lesson) => ({ id: lesson.id, title: String(lesson.title || ''), order: Number(lesson.order || 0), durationSeconds: Number(lesson.durationSeconds || 0) })),
-    })),
-  )
+  const startDoor = user.startingClause ? doorNumberOfClause(Number(user.startingClause), doors) : null
+  const onTopicIds = startDoor
+    ? [...new Set(cutRows.filter((cut) => doorNumberOfClause(cut.bestClause, doors) === startDoor && lessonOrder.includes(cut.lessonId)).map((cut) => cut.lessonId))]
+    : []
+  const catalogue = courses.map((course) => ({
+    courseId: course.id,
+    courseTitle: String(course.title || ''),
+    lessons: lessons
+      .filter((lesson) => idOf(lesson.course) === course.id)
+      .map((lesson) => ({ id: lesson.id, title: String(lesson.title || ''), order: Number(lesson.order || 0), durationSeconds: Number(lesson.durationSeconds || 0) })),
+  }))
+  const gentle = pickGentleFirstCourse(firstPick, catalogue, onTopicIds)
   const recommendedCourse = gentle?.courseId || (firstPick ? idOf(lessons.find((lesson) => lesson.id === firstPick)?.course) : null)
   const ordered = [...courses].sort((a, b) => (a.id === recommendedCourse ? -1 : b.id === recommendedCourse ? 1 : a.id - b.id))
   const today = dayNumber(user as SessionUser & { joinedAt?: string })

@@ -1,7 +1,9 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, request as playwrightRequest, test, type APIRequestContext, type Page } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 import path from 'node:path'
+import { E2E_BASE } from '../env'
 import { fakeYouTube } from './fake-youtube'
+import { ensureProofCourse, PROOF_COURSE } from './proof-course'
 
 const BASE = '/p/east-london'
 const PHONE = { width: 390, height: 844 }
@@ -12,6 +14,17 @@ test.use({
   viewport: PHONE,
 })
 
+let master: APIRequestContext
+
+test.beforeAll(async () => {
+  master = await playwrightRequest.newContext({ baseURL: E2E_BASE })
+  expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
+})
+
+test.afterAll(async () => {
+  await master?.dispose()
+})
+
 async function signInQuiet(page: Page) {
   const login = await page.request.post('/api/users/login', {
     data: { email: 'elm-learner@hearts.test', password: 'portal-learner' },
@@ -19,22 +32,31 @@ async function signInQuiet(page: Page) {
   expect(login.ok()).toBeTruthy()
 }
 
-async function hold(page: Page, name: string, ms = 1100) {
+async function noIssueBadge(page: Page) {
+  await expect(page.locator('nextjs-portal'), 'the Next.js 1 Issue badge must not appear').toHaveCount(0)
+  await expect(page.locator('text=1 Issue')).toHaveCount(0)
+}
+
+async function hideInstall(page: Page) {
+  await page.addInitScript(() => {
+    const style = document.createElement('style')
+    style.textContent = '.install-card{display:none!important}'
+    document.documentElement.appendChild(style)
+  })
+}
+
+async function hold(page: Page, name: string, ms = 1400) {
   mkdirSync(PROOF, { recursive: true })
-  await page.evaluate(() => document.querySelector('nextjs-portal')?.remove())
-  await page.screenshot({ path: path.join(PROOF, `${name}.png`), fullPage: false })
   await page.waitForTimeout(ms)
+  await noIssueBadge(page)
+  await page.screenshot({ path: path.join(PROOF, `${name}.png`), fullPage: false })
 }
 
 test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part', async ({ page }) => {
   test.setTimeout(240_000)
   mkdirSync(PROOF, { recursive: true })
-  await page.addInitScript(() => {
-    const hide = () => document.querySelector('nextjs-portal')?.remove()
-    hide()
-    const watch = new MutationObserver(hide)
-    if (document.documentElement) watch.observe(document.documentElement, { childList: true, subtree: true })
-  })
+  const proof = await ensureProofCourse(master)
+  await hideInstall(page)
   await fakeYouTube(page)
   await signInQuiet(page)
   await page.goto(`${BASE}/lanes`)
@@ -44,11 +66,11 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
   await expect(page.getByTestId('lane-card').first()).not.toContainText(/oh allah/i)
   await hold(page, '01-lanes')
 
-  const sittingCard = page.getByTestId('path-course').filter({ hasText: 'Long sittings' })
+  const sittingCard = page.getByTestId('path-course').filter({ hasText: PROOF_COURSE })
   await expect(sittingCard).toBeVisible()
   const href = await sittingCard.locator('[data-testid=lesson-link], [data-testid=peek]').getAttribute('href')
   expect(href).toBeTruthy()
-  const sittingId = Number(/course\/(\d+)/.exec(href || '')?.[1] || 0)
+  const sittingId = proof.courseId
 
   await page.goto(href!)
   await expect(page.getByTestId('course-overview')).toBeVisible()
@@ -63,37 +85,53 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
   await expect(page.getByTestId('plan')).toBeVisible()
   await expect(page.getByTestId('back')).toContainText('Course')
   await expect(page.getByTestId('week-days')).toBeVisible()
-  if (!(await page.getByTestId('weekday-1').isChecked())) await page.locator('label:has([data-testid=weekday-1])').click()
+  await page.getByTestId('schedule-start').fill('2026-10-05')
+  await page.getByTestId('schedule-end').fill('2026-10-08')
+  for (const day of [0, 1, 2, 3, 4, 5, 6]) {
+    const box = page.getByTestId(`weekday-${day}`)
+    if (!(await box.isChecked())) await page.locator(`label:has([data-testid=weekday-${day}])`).click()
+  }
   await hold(page, '03-days-before-share', 800)
   await page.getByTestId('schedule-submit').click()
-  await expect(page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' })).toBeVisible()
+  await expect(page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE })).toBeVisible()
+  await noIssueBadge(page)
   await expect(page.getByTestId('schedule-course')).toHaveValue(String(sittingId))
   await expect(page.getByTestId('weekday-1')).toBeChecked()
   await expect(page.getByTestId('week-days')).toBeVisible()
   await expect(page.getByTestId('back')).toContainText('Course')
-  await expect(page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' }).getByTestId('schedule-slot').first()).toContainText('›')
-  await hold(page, '04-days-kept-after-share')
+  await expect(page.getByTestId('plan-counts')).toContainText(/3,\s*3,\s*2,\s*2|10 talks/)
+  await expect(page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE }).getByTestId('schedule-slot').first()).toContainText('›')
+  await expect(page.getByTestId('schedule-slot').first()).not.toContainText('|')
+  await hold(page, '04-days-kept-after-share', 1800)
 
-  await page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' }).getByTestId('schedule-slot').first().click()
+  await page.getByTestId('schedule-plan').filter({ hasText: PROOF_COURSE }).getByTestId('schedule-slot').first().click()
   await expect(page.getByTestId('player')).toBeVisible()
-  await expect(page.getByTestId('up-next')).toBeVisible()
-  await expect(page.getByTestId('up-next')).not.toContainText('last part')
+  await expect(page.getByTestId('part-label')).toBeVisible()
+  await expect(page.getByTestId('up-next')).toContainText('Part 2 · Next')
+  await expect(page.getByTestId('garden-next')).toContainText('Part 2 · Next')
   await expect(page.getByTestId('fruit-explain')).toBeVisible()
   await expect(page.getByTestId('player-poster').or(page.locator('[data-fake=youtube]'))).toBeVisible()
+  await expect(page.getByTestId('question-strip')).toHaveCount(0)
   await hold(page, '05-player-from-plan-row')
   if (await page.getByTestId('timeline-dot').count()) {
     await page.getByTestId('timeline-dot').first().click()
     await expect(page.getByTestId('popup')).toBeVisible()
     await expect(page.getByTestId('paused-note')).toContainText('Paused')
     await expect(page.getByTestId('think-about-this')).toContainText('Think about this for this session')
-    await hold(page, '06-think-about-this')
+    await expect(page.getByTestId('answer-later')).toBeVisible()
+    await hold(page, '06-think-about-this', 1600)
     await page.getByTestId('think-about-this').click()
     await expect(page.getByTestId('popup')).toHaveCount(0)
   }
+  await page.getByTestId('player-play').click().catch(() => undefined)
+  await page.waitForTimeout(400)
+  await page.evaluate(() => (window as unknown as { __HEARTS_FAKE_END?: () => void }).__HEARTS_FAKE_END?.())
+  await expect(page.getByTestId('up-next-card')).toBeVisible({ timeout: 8_000 })
+  await expect(page.getByTestId('up-next-count')).toContainText('Starting in')
   await hold(page, '07-up-next', 800)
-  await page.getByTestId('up-next').click()
+  await page.getByTestId('watch-now').click()
   await expect(page.getByTestId('player')).toBeVisible()
-  await expect(page.getByTestId('up-next')).not.toContainText('last part')
+  await expect(page.getByTestId('up-next')).toContainText('Part 3 · Next')
   await hold(page, '08-next-part')
 
   await page.goto(`${BASE}/feed`)
@@ -112,30 +150,47 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
       const cy = box.y + box.height / 2
       await page.mouse.move(cx, cy)
       await page.mouse.down()
-      await page.mouse.move(cx, cy - 220, { steps: 8 })
+      await page.mouse.move(cx + 220, cy, { steps: 8 })
       await page.mouse.up()
       await page.waitForTimeout(800)
     }
   }
-  await hold(page, '09-feed-swipe', 700)
+  const caption = page.getByTestId('caption')
+  if (await caption.count()) {
+    const shown = ((await caption.innerText()) || '').replace(/\s+/g, ' ').trim()
+    const lessonTitle = (await feed.getAttribute('data-lesson-title')) || ''
+    const courseTitle = (await feed.getAttribute('data-course-title')) || ''
+    expect(shown).not.toBe(lessonTitle)
+    expect(shown).not.toBe(courseTitle)
+  }
+  await hold(page, '09-feed-swipe', 900)
   if (await page.getByTestId('learn-more').count()) await page.getByTestId('learn-more').first().click()
   await expect(page.getByTestId('level-chip')).toContainText('Ready for more?')
   await hold(page, '10-ready-for-more')
 
   await page.goto(BASE)
   await expect(page.getByTestId('rings')).toBeVisible()
+  await expect(page.getByTestId('install-card')).not.toBeVisible()
   await expect(page.getByTestId('ring-watched')).toBeVisible()
-  const watched = Number((await page.getByTestId('ring-watched').locator('.r').textContent()) || '0')
-  expect(watched).toBeGreaterThanOrEqual(0)
-  await hold(page, '11-home-rings')
+  const dayLabel = (await page.getByTestId('day-number').textContent()) || ''
+  const daysCount = (await page.getByTestId('days-count').textContent()) || ''
+  const dayMatch = /Day (\d+)/.exec(dayLabel)
+  if (dayMatch && Number(dayMatch[1]) > 1) expect(daysCount).toContain(`${dayMatch[1]} days`)
+  if (await page.getByTestId('home-plan-line').count()) {
+    await expect(page.getByTestId('home-plan-line')).toContainText(/Tonight: Part \d+, \d+ min/)
+    await expect(page.getByTestId('home-plan-line')).not.toContainText(', 20 min')
+  }
+  await hold(page, '11-home-rings', 1800)
 
   await page.goto(`${BASE}/garden/workbook`)
   await expect(page.getByTestId('workbook-summary')).toBeVisible()
+  await expect(page.getByTestId('workbook')).toBeVisible()
   if (await page.getByTestId('open-question').count()) {
     const labels = await page.getByTestId('open-question').allTextContents()
     expect(labels.join(' ')).not.toMatch(/Tawakkul/i)
   }
-  await hold(page, '12-workbook')
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+  await hold(page, '12-workbook', 1600)
 
   await page.goto(`${BASE}/lanes`)
   const trustCard = page.getByTestId('path-course').filter({ hasText: /Tawakkul/i })
@@ -146,6 +201,7 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
     await page.evaluate(() => sessionStorage.setItem('heartsFailFirst', '1'))
     await page.goto(partHref!)
     await expect(page.getByTestId('player-retry')).toBeVisible({ timeout: 12_000 })
+    await expect(page.getByTestId('back')).not.toContainText('|')
     await hold(page, '13-tawakkul-retry')
     await page.evaluate(() => sessionStorage.removeItem('heartsFailFirst'))
     await page.getByRole('button', { name: 'Try again' }).click()
@@ -156,8 +212,7 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
 
   await page.goto(`${BASE}/course/${sittingId}?part=${talkIds[1]}`)
   await expect(page.getByTestId('player')).toBeVisible()
-  await expect(page.getByTestId('up-next')).toBeVisible()
-  await expect(page.getByTestId('up-next')).not.toContainText('last part')
-  await expect(page.getByTestId('up-next')).toContainText(/Next|Part 3|part 3/i)
+  await expect(page.getByTestId('up-next')).toContainText('Part 3 · Next')
+  await expect(page.getByTestId('garden-next')).toContainText('Part 3 · Next')
   await hold(page, '15-clear-next-part', 1600)
 })

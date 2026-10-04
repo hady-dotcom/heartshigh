@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { newViewingId, POLL_MS, PopupWatcher, type PopupPoint } from '@/lib/popups'
 import { placeDots } from '@/lib/timeline-dots'
 import { createPlayer, destroyPlayer, getPlayer, resume, STATE, UNPLAYABLE } from '@/lib/yt'
+import { tidyTalkTitle } from '@/lib/talk-title'
 import { HeartIcon, ImageIcon, LockIcon, MicIcon, PauseIcon, PlayIcon } from '../icons'
 
 export type PointView = {
@@ -431,7 +432,7 @@ export function CoursePlayer({
   return (
     <div data-testid="player" data-mode={mode} data-popup-layout={overPlayer ? 'over' : 'strict'}>
       <div className="app-head" style={{ marginBottom: 6 }}>
-        <Link className="back" href={backHref} data-testid="back">‹ {courseTitle}</Link>
+        <Link className="back" href={backHref} data-testid="back">‹ {tidyTalkTitle(courseTitle)}</Link>
       </div>
       <div ref={card} className={`player-card${filmed ? ' yt-on' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
         {!filmed || !lit ? <div className={`poster${scenicPoster ? ' scenic' : ''}${mode === 'loading' ? ' skeleton' : ''}`} style={ownPoster ? { backgroundImage: `url(${poster})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : 'player-poster'} /> : null}
@@ -457,10 +458,8 @@ export function CoursePlayer({
         ) : null}
         {open && filmed && overPlayer ? <div className="yt-scrim" data-testid="paused-scrim" aria-hidden /> : null}
         {open && !playing ? (
-          <span className="part-chip paused" data-testid="paused-note">❚❚ Paused at question {open.number}</span>
-        ) : (
-          <span className="part-chip" data-testid="part-label">{partLabel}</span>
-        )}
+          <span className="paused-note on-film" data-testid="paused-note">❚❚ Paused at question {open.number}</span>
+        ) : null}
         <span className="time-read" data-testid="player-time">{clock(time)}</span>
         {open && !filmed && !playing ? (
           <p className="paused-note" data-testid="paused-note">❚❚ Paused at question {open.number}</p>
@@ -495,15 +494,7 @@ export function CoursePlayer({
           })}
         </div>
       </div>
-      {views.length ? (
-        <div className="q-strip" data-testid="question-strip" aria-label="Questions in this film">
-          {views.map((point) => (
-            <span key={point.id} className={point.answered ? 'done' : 'open'} data-testid="strip-dot" data-answered={point.answered ? 'yes' : 'no'} title={point.prompt}>
-              {point.answered ? '✓' : point.number}
-            </span>
-          ))}
-        </div>
-      ) : null}
+      <p className="part-chip off-film" data-testid="part-label">{partLabel}</p>
       {mode === 'practice' ? (
         <p className="muted" style={{ fontSize: 13, margin: '8px 2px 0' }} data-testid="practice-note">
           {youtubeId ? 'The film could not load here, so the timeline runs on its own.' : 'This talk has no film link yet, so the timeline runs on its own.'} Press play and it will stop at each question.
@@ -512,7 +503,7 @@ export function CoursePlayer({
       {notice ? <p className="flash notice" data-testid="notice" role="status">{notice}</p> : null}
       {upNext && !upNext.last ? (
         <Link className="up-next-row" href={upNext.href} data-testid="up-next">
-          Next: {upNext.label}{upNext.minutes ? ` (${upNext.minutes} min)` : ''}
+          {upNext.label}{upNext.minutes ? ` (${upNext.minutes} min)` : ''}
         </Link>
       ) : (
         <p className="up-next-row last" data-testid="up-next">This is the last part of this course.</p>

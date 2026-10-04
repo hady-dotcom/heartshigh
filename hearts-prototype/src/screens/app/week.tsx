@@ -47,8 +47,11 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
           return (
             <section key={plan.id} data-testid="schedule-plan" style={{ marginTop: 18 }}>
               <h2 style={{ fontSize: 19, margin: '0 0 4px' }}>{plan.name}</h2>
-              <p className="muted" style={{ margin: 0, fontSize: 13 }}>
-                {plan.slots.length} talk{plan.slots.length === 1 ? '' : 's'} · {formatLearnerDate(plan.start, 'week')} to {formatLearnerDate(plan.end, 'week')}
+              <p className="muted" style={{ margin: 0, fontSize: 13 }} data-testid="plan-counts">
+                {plan.slots.length} talk{plan.slots.length === 1 ? '' : 's'}
+                {plan.dayCounts.length > 1 ? ` · ${plan.dayCounts.join(', ')}` : ''}
+                {' · '}
+                {formatLearnerDate(plan.start, 'week')} to {formatLearnerDate(plan.end, 'week')}
               </p>
               {plan.locked ? <p className="muted" data-testid="plan-locked">Your teacher set this plan. You can still watch at your own pace.</p> : null}
               {plan.note ? <p className="muted" data-testid="spread-note">{plan.note}</p> : null}

@@ -11,7 +11,7 @@ import { promisify } from 'node:util'
 import { closePayload, clearDevPushMarker } from '../src/lib/prepare-db'
 import { fetchYoutubeMeta, ytDlpBinary } from '../src/lib/youtube'
 import { seriesPartNumber } from '../src/lib/first-course'
-import { clock as seriesClock, planSeriesMoves, type LibraryLesson } from '../src/lib/series-group'
+import { clock as seriesClock, groupSeriesEnabled, planSeriesMoves, type LibraryLesson } from '../src/lib/series-group'
 
 const execFileAsync = promisify(execFile)
 
@@ -45,8 +45,8 @@ const { getPayload } = await import('payload')
 const { default: config } = await import('../src/payload.config')
 const payload = await getPayload({ config })
 
-type Lesson = { id: number; title?: string; youtubeId?: string; durationSeconds?: number; course?: number | { id: number; title?: string } }
-type Course = { id: number; title?: string }
+type Lesson = { id: number; title?: string; youtubeId?: string; durationSeconds?: number; speaker?: string; course?: number | { id: number; title?: string; speaker?: string } }
+type Course = { id: number; title?: string; speaker?: string }
 
 try {
   const courses = ((await payload.find({ collection: 'courses', overrideAccess: true, depth: 0, limit: 0, pagination: false })).docs as Course[])
@@ -66,13 +66,13 @@ try {
       const liveDuration = youtubeId ? await youtubeDuration(youtubeId) : null
       const seconds = liveDuration || stored
       const flags: string[] = []
-      if (seconds > 0 && seconds < 600) flags.push('UNDER 10 MIN')
+      if (seconds > 0 && seconds < 600) flags.push(seconds < 180 ? 'UNDER 10 MIN → clip' : 'UNDER 10 MIN → Ready for more?')
       if (liveTitle && !titlesMatch(String(lesson.title || ''), liveTitle)) flags.push('TITLE MISMATCH')
       if (!youtubeId) flags.push('NO YOUTUBE ID')
       if (meta === null) flags.push('YOUTUBE MISSING')
       const line = `  ${lesson.id}  ${lesson.title || '(untitled)'}  id=${youtubeId || '—'}  stored=${stored ? clock(stored) : '—'}  live=${liveDuration ? clock(liveDuration) : liveTitle ? 'title only' : '—'}  yt="${liveTitle || '—'}"${flags.length ? `  !! ${flags.join(', ')}` : ''}`
       console.log(line)
-      if (flags.includes('UNDER 10 MIN')) short.push(`${course.title}: ${lesson.title} (${clock(seconds)})`)
+      if (flags.some((flag) => flag.startsWith('UNDER 10 MIN'))) short.push(`${course.title}: ${lesson.title} (${clock(seconds)}) — propose as ${seconds < 180 ? 'a clip' : 'Ready for more?'}, not a main`)
       if (flags.includes('TITLE MISMATCH')) mismatch.push(`${lesson.id}: stored "${lesson.title}" vs YouTube "${liveTitle}"`)
       if (liveDuration && stored && Math.abs(liveDuration - stored) > 15) {
         wouldChange.push(`lesson ${lesson.id} durationSeconds ${stored} -> ${liveDuration}`)
@@ -101,17 +101,19 @@ try {
       durationSeconds: Number(lesson.durationSeconds || 0),
       youtubeId: lesson.youtubeId || '',
       order: 0,
+      speaker: String(lesson.speaker || (typeof lesson.course === 'object' ? lesson.course?.speaker : '') || course?.speaker || ''),
     }
   })
   const grouping = planSeriesMoves(library)
-  console.log('\n## Series grouping (would apply on seed, not here)')
+  console.log(`\n## Series grouping (would apply only if HEARTS_GROUP_SERIES=1; now ${groupSeriesEnabled() ? 'on' : 'off'})`)
+  console.log('Railway must not group without Leon. Leftover long talks are never bundled.')
   for (const group of grouping.groups) {
     console.log(`- ${group.title}: ${group.lessonIds.length} talks [${group.seconds.map((value) => seriesClock(value)).join(', ')}]`)
   }
-  console.log(grouping.moves.length ? grouping.moves.map((move) => `  move lesson ${move.lessonId} "${move.title}"  ${move.fromTitle} -> ${move.toTitle}  (${seriesClock(move.seconds)})  ${move.reason}`).join('\n') : '  already grouped')
-  console.log('\n## Short mains after grouping (under 10 minutes)')
-  console.log(grouping.shortMains.length ? grouping.shortMains.map((row) => `- ${row.courseTitle}: ${row.lessonTitle} (${seriesClock(row.seconds)})`).join('\n') : '- none')
-  console.log('\nNothing was written.')
+  console.log(grouping.moves.length ? grouping.moves.map((move) => `  move lesson ${move.lessonId} "${move.title}"  ${move.fromTitle} -> ${move.toTitle}  (${seriesClock(move.seconds)})  ${move.reason}`).join('\n') : '  already grouped, or no numbered same-speaker series')
+  console.log('\n## Short mains after grouping — propose as clips or Ready for more?, not as mains')
+  console.log(grouping.shortMains.length ? grouping.shortMains.map((row) => `- ${row.courseTitle}: ${row.lessonTitle} (${seriesClock(row.seconds)}) → ${row.proposeAs === 'clip' ? 'clip' : 'Ready for more?'}`).join('\n') : '- none')
+  console.log('\nNothing was written. Grouping is not applied here.')
 } finally {
   await closePayload(payload)
 }

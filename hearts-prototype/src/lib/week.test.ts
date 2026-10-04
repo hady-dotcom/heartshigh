@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { dateKeyInZone, fitDatesToTalks, formatLearnerDate, listDates, mondayKey, parseWeekdays, planKeepPath, planToast, talksLabel, weekStrip, weekdayList } from './week'
+import { dateKeyInZone, dayTalkCounts, fitDatesToTalks, formatLearnerDate, listDates, mondayKey, parseWeekdays, planKeepPath, planNotify, planToast, talksLabel, weekStrip, weekdayList } from './week'
 
 test('the week strip is Monday first and marks today in Toronto', () => {
   const sunday = new Date('2026-10-04T16:00:00Z')
@@ -37,6 +37,9 @@ test('the plan toast names the actual sitting dates', () => {
   )
   assert.equal(talksLabel(6, 5 * 3600), '6 talks · about 5 hours')
   assert.equal(talksLabel(1, 900), '1 talk · about 15 min')
+  assert.equal(planNotify(3, ['2026-10-07', '2026-10-09', '2026-10-14']), 'Your teacher set 3 talks for Wed 7 October, Fri 9 October and Wed 14 October.')
+  assert.ok(!planNotify(3, ['2026-10-07']).startsWith('Done.'))
+  assert.deepEqual(dayTalkCounts([{ date: '2026-10-05' }, { date: '2026-10-05' }, { date: '2026-10-05' }, { date: '2026-10-06' }, { date: '2026-10-06' }, { date: '2026-10-06' }, { date: '2026-10-07' }, { date: '2026-10-07' }, { date: '2026-10-08' }, { date: '2026-10-08' }]), [3, 3, 2, 2])
 })
 
 test('the plan form path keeps the chosen course and days', () => {

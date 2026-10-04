@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 import { idOf } from '../lib/ids'
-import { LONG_SITTINGS, planSeriesMoves, type LibraryLesson } from '../lib/series-group'
+import { groupSeriesEnabled, planSeriesMoves, type LibraryLesson } from '../lib/series-group'
 
 const slugOf = (text: string) => text.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40)
 
@@ -35,8 +35,12 @@ async function ensureUnit(payload: Payload, courseId: number) {
   return (await payload.create({ collection: 'units', overrideAccess: true, data: { title: 'Talks', course: courseId, order: 1 } as never })) as unknown as Doc
 }
 
-/** Apply the series grouping plan. Used by seed only. Never a production write. */
+/** Apply the series grouping plan. Off unless HEARTS_GROUP_SERIES=1. Never a production write. */
 export async function applySeriesGroups(payload: Payload) {
+  if (!groupSeriesEnabled()) {
+    console.log('Series grouping skipped (HEARTS_GROUP_SERIES is off).')
+    return { plan: { groups: [], moves: [], shortMains: [], emptyCourses: [] }, courseIds: [] as number[] }
+  }
   const courses = ((await payload.find({ collection: 'courses', overrideAccess: true, depth: 0, limit: 0, pagination: false })).docs as { id: number; title?: string; speaker?: string }[])
   const lessons = ((await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: 0, pagination: false })).docs as {
     id: number
@@ -58,17 +62,16 @@ export async function applySeriesGroups(payload: Payload) {
       durationSeconds: Number(lesson.durationSeconds || 0),
       youtubeId: lesson.youtubeId || '',
       order: Number(lesson.order || 0),
+      speaker: String(lesson.speaker || course?.speaker || ''),
     }
   })
   const plan = planSeriesMoves(library)
   const courseByTitle = new Map<string, Doc>()
   for (const group of plan.groups) {
-    const speaker = library.find((row) => group.lessonIds.includes(row.id))?.title || 'HEARTS'
     const first = lessons.find((row) => row.id === group.lessonIds[0])
-    const summary = group.title === LONG_SITTINGS
-      ? 'Ten long talks from the library, grouped so a week of study days can share them out.'
-      : `${group.title}: every long sitting of this series that is in the library.`
-    const course = await ensureCourse(payload, group.title, String(first?.speaker || speaker), summary)
+    const speaker = group.speaker || String(first?.speaker || 'HEARTS')
+    const summary = `${group.title}: every long sitting of this series that is in the library.`
+    const course = await ensureCourse(payload, group.title, speaker, summary)
     courseByTitle.set(group.title, course)
     const unit = await ensureUnit(payload, course.id)
     for (const [index, lessonId] of group.lessonIds.entries()) {

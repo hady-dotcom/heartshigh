@@ -46,13 +46,22 @@ export function weekStrip(now: Date, timeZone = LEARNER_ZONE): WeekDay[] {
   })
 }
 
+const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+/** British dates without the host ICU, so the client and the server write the same words. */
 export function formatLearnerDate(iso: string, style: 'long' | 'short' | 'week' = 'short') {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso)
   if (!match) return ''
-  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12))
-  if (style === 'long') return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
-  if (style === 'week') return date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', timeZone: 'UTC' })
-  return date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', timeZone: 'UTC' })
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  if (!month || month > 12 || !day || day > 31) return ''
+  const date = new Date(Date.UTC(year, month - 1, day, 12))
+  if (Number.isNaN(date.getTime()) || date.getUTCDate() !== day) return ''
+  const weekday = WEEKDAY_SHORT[date.getUTCDay()]
+  const monthName = MONTHS_LONG[month - 1]
+  if (style === 'long') return `${day} ${monthName} ${year}`
+  return `${weekday} ${day} ${monthName}`
 }
 
 export function weekdayList(weekdays: number[]): string {
@@ -108,7 +117,7 @@ export function parseWeekdays(raw: string | string[] | undefined | null): number
 /** Keep the course, days and dates on the plan form after it is shared out, so they can be adjusted. */
 export function planKeepPath(
   path: string,
-  draft: { course?: number | null; start: string; end: string; weekdays: number[]; minutes: number; from?: string | null },
+  draft: { course?: number | null; start: string; end: string; weekdays: number[]; minutes: number; from?: string | null; learners?: number[] },
 ) {
   const safe = path.startsWith('/') && !path.startsWith('//') ? path : '/'
   const url = new URL(safe, 'https://hearts.local')
@@ -119,5 +128,30 @@ export function planKeepPath(
   url.searchParams.set('minutes', String(draft.minutes))
   url.searchParams.set('view', 'new')
   if (draft.from) url.searchParams.set('from', draft.from)
+  if (draft.learners?.length) url.searchParams.set('learner', draft.learners.join(','))
   return `${url.pathname}${url.search}`
+}
+
+/** A teacher notice names the dates without starting with Done. */
+export function planNotify(talks: number, dates: string[]) {
+  const when = listDates(dates)
+  if (talks === 1) return `Your teacher set 1 talk for ${when || 'your chosen day'}.`
+  if (dates.length <= 4) return `Your teacher set ${talks} talks for ${when || 'your chosen days'}.`
+  return `Your teacher set ${talks} talks from ${formatLearnerDate(dates[0], 'week')} to ${formatLearnerDate(dates[dates.length - 1], 'week')}.`
+}
+
+/** Talks on each sitting date, in date order: 3, 3, 2, 2. */
+export function dayTalkCounts(slots: { date?: string }[]) {
+  const counts: number[] = []
+  let last = ''
+  for (const slot of slots) {
+    const date = String(slot.date || '')
+    if (!date) continue
+    if (date === last) counts[counts.length - 1] += 1
+    else {
+      counts.push(1)
+      last = date
+    }
+  }
+  return counts
 }

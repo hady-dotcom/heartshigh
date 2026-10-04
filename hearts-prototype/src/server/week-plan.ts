@@ -1,9 +1,9 @@
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
-import { minutesLabel, talksLabel, weekStrip, zoneOrToronto, dateKeyInZone, type WeekDay } from '@/lib/week'
+import { dayTalkCounts, minutesLabel, talksLabel, weekStrip, zoneOrToronto, dateKeyInZone, type WeekDay } from '@/lib/week'
 import { overMinutesNote, spreadNote, studyDates } from '@/lib/schedule'
 import { isTimeZone, portalTimeZone } from '@/lib/zone-time'
-import { partTitle } from '@/lib/talk-title'
+import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
 import { type Row, ref, rows, str } from '@/screens/common'
 
@@ -28,6 +28,7 @@ export type WeekPlanCard = {
   locked: boolean
   note: string | null
   overMinutes: string | null
+  dayCounts: number[]
 }
 
 export type WeekCourse = { id: number; title: string; talks: number; seconds: number; label: string }
@@ -91,7 +92,7 @@ export async function weekView(payload: Payload, user: SessionUser, portal: Port
       const href = slot.lessonId && (courseId || ref(lesson?.course)) ? `${base}/course/${courseId || ref(lesson?.course)}?part=${slot.lessonId}` : null
       return {
         date: String(slot.date || ''),
-        title: slot.title || (lesson ? partTitle(lesson, courseRows.find((course) => course.id === ref(lesson.course))?.title) : 'Sitting'),
+        title: lesson ? partTitle(lesson, courseRows.find((course) => course.id === ref(lesson.course))?.title) : tidyTalkTitle(String(slot.title || 'Sitting')),
         lessonId: slot.lessonId || null,
         courseId: courseId || ref(lesson?.course) || null,
         href,
@@ -118,8 +119,9 @@ export async function weekView(payload: Payload, user: SessionUser, portal: Port
       end: lastDate,
       weekdays,
       locked: staff(ref(plan.owner)) && ref(plan.owner) !== user.id,
-      note: spreadNote(slots.length, studyDays),
+      note: spreadNote(slots.length, studyDays, slots.map((slot) => slot.date)),
       overMinutes: overMinutesNote(slots.map((slot) => slot.minutes), perDay),
+      dayCounts: dayTalkCounts(slots),
     }
   })
   const today = cards.flatMap((plan) => plan.slots).find((slot) => slot.today) || null

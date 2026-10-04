@@ -49,6 +49,7 @@ export type Growth = {
   watched: number
   activityLit: Set<number>
   harvestNew: number
+  workbookShown: number
 }
 
 export async function growth(payload: Payload, user: SessionUser): Promise<Growth> {
@@ -102,7 +103,9 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
     const lesson = lessons.find((item) => item.id === ref(row.lesson))
     return sum + (Number(lesson?.durationSeconds || 0) * Number(row.percent || 100)) / 100
   }, 0)
-  return { clauses, doors, seats, lit, completions: countedCompletions, lessons, seatVisits, harvest, workbook, answers: countedAnswers, rituals, activeDays, secondsGiven, watched: watchedIds.size, activityLit, harvestNew }
+  const book = await workbookFor(payload, user, user)
+  const workbookShown = book.answers.length + book.open.length
+  return { clauses, doors, seats, lit, completions: countedCompletions, lessons, seatVisits, harvest, workbook, answers: countedAnswers, rituals, activeDays, secondsGiven, watched: watchedIds.size, activityLit, harvestNew, workbookShown }
 }
 
 function sectionOf(doors: Door[], key: string) {
@@ -126,7 +129,7 @@ export function Rings({ g, base }: { g: Growth; base: string }) {
     ['Sections', sections, '#f0e2c4', `${base}/garden/jibril`],
     ['Field', g.seatVisits.length, '#b7c7a4', `${base}/garden/ghunya`],
     ['Harvest', g.harvest.length, '#8fbfb4', `${base}/garden/harvest`, g.harvestNew || undefined],
-    ['Workbook', g.workbook.length, '#e2b08a', `${base}/garden/workbook`],
+    ['Workbook', g.workbookShown ?? g.workbook.length, '#e2b08a', `${base}/garden/workbook`],
   ]
   return (
     <div className="rings" data-testid="rings">
