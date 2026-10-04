@@ -5,6 +5,7 @@ import { giveHarvest } from './scripture'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
 import { recordShortBrowse } from './browse'
 import { idOf, portalIdOf } from '@/lib/ids'
+import { clipWords } from '@/lib/sentences'
 import { extractWithFallback, llmStatus } from '@/lib/llm'
 import { defaultPlanName, flattenSlots, plural, splitEvenly, studyDates } from '@/lib/schedule'
 import { clockEnabled, setTestNow } from '@/lib/clock'
@@ -389,7 +390,7 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
         user: user.id,
         portal,
         title: 'A follow-up question is on its way',
-        body: `A follow-up to "${String(point.prompt).slice(0, 60)}" opens after its waiting time. You will see a countdown on the film.`,
+        body: `A follow-up to "${clipWords(String(point.prompt), 60)}" opens after its waiting time. You will see a countdown on the film.`,
         key: `queued-${follower.id}`,
       })
     }

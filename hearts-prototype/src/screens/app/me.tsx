@@ -11,6 +11,11 @@ import { visibleCourseIds } from '@/server/context'
 import { dayNumber, portalName } from '@/server/learner'
 import { type Ctx, longDate, ref, rows, shortDate, str, unreadCount } from '../common'
 
+/** Notices written before prompts were clipped on a word were cut mid-word at 60 characters; they read the same way now. */
+function noteBody(body: string) {
+  return body.replace(/^(A follow-up to ")([^"]{60})(" opens)/, (_, open: string, prompt: string, close: string) => `${open}${prompt.replace(/\s+\S*$/, '').replace(/[\s,;:]+$/, '')}…${close}`)
+}
+
 export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 30 })).filter((note) => note.channel !== 'email-stub')
   const unread = notes.filter((note) => !note.read).length
@@ -66,7 +71,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
         {notes.length ? notes.map((note) => (
           <Link key={note.id} href={str(note.href) && str(note.href) !== '/' ? str(note.href) : `${base}/me`} className={`note${note.read ? '' : ' unread'}`} style={{ display: 'block', textDecoration: 'none', color: 'inherit' }} data-testid="notification" data-read={note.read ? 'yes' : 'no'}>
             <b>{str(note.title)}</b>
-            <p>{str(note.body)}</p>
+            <p>{noteBody(str(note.body))}</p>
             <small className="muted">{shortDate(note.createdAt)}</small>
           </Link>
         )) : (
