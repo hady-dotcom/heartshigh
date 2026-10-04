@@ -226,3 +226,96 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .end-card .end-feed, .end-card .end-next {
   background: transparent; color: #0f3b3a; border: 1.5px solid #0f3b3a; text-align: center; justify-content: center;
 }
+
+/* Captions and the speaker bar sit on a soft dark plate so cream robes cannot wash them out. */
+.j-caption-plate {
+  padding: 8px 12px 10px;
+  border-radius: 12px;
+  background: linear-gradient(to top, rgba(6, 24, 24, 0.82), rgba(6, 24, 24, 0.28) 70%, transparent);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 2px 12px rgba(0, 0, 0, 0.75);
+}
+.j-credits {
+  padding-top: 36px;
+  background: linear-gradient(to top, rgba(6, 24, 24, 0.86), rgba(6, 24, 24, 0.35) 55%, transparent 100%);
+  margin-left: -16px;
+  margin-right: -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-bottom: 4px;
+}
+.j-speaker-plate .who b,
+.j-speaker-plate .who small {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+.j-more-speaker {
+  display: inline-flex;
+  align-self: flex-start;
+  margin: 0 0 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #f1e4c6;
+  font-weight: 650;
+  font-size: 13px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  cursor: pointer;
+}
+.j-levels {
+  position: absolute;
+  left: 16px;
+  right: 70px;
+  bottom: calc(196px + var(--safe-bottom));
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  color: rgba(241, 228, 198, 0.78);
+  font-size: 12px;
+  font-weight: 650;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+}
+.j-levels .on { color: #f1e4c6; }
+.j-levels i { font-style: normal; opacity: 0.55; }
+.j-tap-play {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  z-index: 8;
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  border: 0;
+  border-radius: 50%;
+  background: #d4a84b;
+  color: #1a1408;
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1.15;
+  padding: 8px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+.j-coach {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: calc(72px + var(--safe-top));
+  z-index: 18;
+  pointer-events: auto;
+}
+.j-coach-card {
+  background: rgba(14, 42, 43, 0.94);
+  color: #f6eedc;
+  border: 1px solid rgba(212, 168, 75, 0.45);
+  border-radius: 18px;
+  padding: 14px 16px 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+.j-coach-card h2 { font-family: var(--serif); font-size: 22px; margin: 0 0 8px; }
+.j-coach-card ul { margin: 0 0 8px; padding: 0 0 0 16px; display: grid; gap: 4px; }
+.j-coach-card li { font-size: 14px; line-height: 1.35; }
+.j-coach-card b { display: inline; margin-right: 6px; color: #f1d58a; }
+.j-coach-card p { margin: 0; font-size: 13px; color: rgba(246, 238, 220, 0.78); }
+.journey[data-mode='appetiser'] .j-levels { position: static; margin: 0 0 4px; }

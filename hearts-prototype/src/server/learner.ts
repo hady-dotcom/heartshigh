@@ -67,6 +67,8 @@ export type FeedItem = {
   laneKey?: string | null
   laneTags?: { lane: string; weight: number }[]
   lessonTitle?: string
+  /** Whole-talk length in seconds, for the 'Watch the whole talk (N min)' button. */
+  talkSeconds?: number | null
   placeholder?: boolean
   transcriptReady?: boolean
   /** The talk's tier record: a machine draft until a person checks it. */

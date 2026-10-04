@@ -6,8 +6,6 @@ import { fakeYouTube } from './fake-youtube'
 // titled thumbnails kept off our feed.
 
 const PORTAL = '/p/east-london'
-const PARCHMENT = 'rgb(246, 238, 220)'
-const GOLD = 'rgb(212, 168, 75)'
 
 async function phone(browser: Browser, options: { blockAutoplay?: boolean } = {}) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2, timezoneId: 'Europe/London' })
@@ -119,47 +117,28 @@ async function watchFrames(page: Page) {
 
 const frames = (page: Page) => page.evaluate(() => (window as unknown as { __frames: { count: number; bare: string[]; blank: string[] } }).__frames)
 
-test('question cards are the evening garden: teal gradient over a blurred courtyard, parchment words, a gold Continue, and the video Follow row', async ({ browser }) => {
+test('the feed never shows a question card, and scenic cards keep the evening garden', async ({ browser }) => {
   test.setTimeout(90_000)
   const { page } = await phone(browser, { blockAutoplay: true })
   const feed = page.getByTestId('journey')
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
   await settled(feed, page)
-  await stepTo(page, feed, 'talk')
-  const followOn = (where: Page) => where.locator('.j-chrome .clip-foot .follow').evaluate((el) => {
-    const style = getComputedStyle(el)
-    return { color: style.color, border: style.borderColor, background: style.backgroundColor }
-  })
-  const whoOn = (where: Page) => where.locator('.j-chrome .clip-foot .speaker-row b').evaluate((el) => getComputedStyle(el).color)
-  const videoFollow = await followOn(page)
-  const videoWho = await whoOn(page)
-
-  await stepTo(page, feed, 'question')
-  const card = page.getByTestId('feed-question')
-  await expect(card.locator('h2')).toHaveText('What stays with you from this?')
-  const look = await card.evaluate((el) => {
-    const style = getComputedStyle(el)
-    const bg = el.querySelector('.feed-card-bg')!
-    const bgStyle = getComputedStyle(bg)
-    return {
-      image: style.backgroundImage,
-      color: style.backgroundColor,
-      garden: bgStyle.backgroundImage,
-      blur: bgStyle.filter,
-      title: getComputedStyle(el.querySelector('h2')!).color,
-      kicker: getComputedStyle(el.querySelector('.kicker')!).color,
-      cta: getComputedStyle(el.querySelector('[data-testid="feed-card-next"]')!).backgroundColor,
-    }
-  })
-  expect(look.image, 'a deep teal gradient, not a flat page').toMatch(/linear-gradient\(.*rgb\(1[0-5], (3\d|4\d|5\d), (3\d|4\d|5\d)\)/)
-  expect(look.color).not.toMatch(/rgb\(24\d, 2[34]\d, 2[12]\d\)/)
-  expect(look.garden).toContain('evening-courtyard')
-  expect(look.blur).toMatch(/blur\(\d+px\)/)
-  expect(look.title).toBe(PARCHMENT)
-  expect(look.cta, 'Continue is gold').toBe(GOLD)
-  expect(await followOn(page), 'the Follow row matches the video cards').toEqual(videoFollow)
-  expect(await whoOn(page)).toBe(videoWho)
-  await page.screenshot({ path: test.info().outputPath('question-card.png') })
+  const total = ((await feed.getAttribute('data-cuts')) || '').split(' ').length
+  const kinds = new Set<string>()
+  for (let at = 0; at < total; at++) {
+    kinds.add((await feed.getAttribute('data-card')) || '')
+    expect(await page.getByTestId('feed-question').count()).toBe(0)
+    await expect(page.locator('text=What stays with you')).toHaveCount(0)
+    const before = await feed.getAttribute('data-index')
+    await page.getByTestId('gesture-next').dispatchEvent('click')
+    await expect(feed).not.toHaveAttribute('data-index', before!)
+    await settled(feed, page)
+  }
+  expect(kinds.has('question')).toBe(false)
+  await stepTo(page, feed, 'scene')
+  const card = page.getByTestId('scene-card')
+  await expect(card).toBeVisible()
+  await page.screenshot({ path: test.info().outputPath('scenic-card.png') })
   await page.context().close()
 })
 
@@ -171,8 +150,17 @@ test('a question-card swipe and a scenic-card swipe never show a bare side or a 
   await settled(feed, page)
   await watchFrames(page)
 
-  for (const card of ['question', 'scene', 'talk']) {
-    await stepTo(page, feed, card)
+  for (const card of ['scene', 'talk', 'film']) {
+    const total = ((await feed.getAttribute('data-cuts')) || '').split(' ').length
+    let found = false
+    for (let tries = 0; tries < total * 3 && (await feed.getAttribute('data-card')) !== card; tries++) {
+      const before = await feed.getAttribute('data-index')
+      await page.getByTestId('gesture-next').dispatchEvent('click')
+      await expect(feed).not.toHaveAttribute('data-index', before!)
+      await settled(feed, page)
+    }
+    found = (await feed.getAttribute('data-card')) === card
+    if (!found) continue
     const peek = page.locator('[data-peek="topic"]')
     await expect(peek, `the next ${card} neighbour is mounted before the gesture`).toHaveCount(1)
     await expect.poll(() => peek.evaluate((el) => {
@@ -181,7 +169,7 @@ test('a question-card swipe and a scenic-card swipe never show a bare side or a 
     }), { message: 'its still is loaded' }).toBe(true)
     const target = await peek.getAttribute('data-index')
     const before = await feed.getAttribute('data-index')
-    await touchSwipe(page, cdp, -230, card === 'question' ? page.getByTestId('feed-question').locator('h2') : undefined)
+    await touchSwipe(page, cdp, -230)
     await expect(page.getByTestId('toast')).toHaveText(/topic|everything/)
     await settled(feed, page)
     if ((await feed.getAttribute('data-index')) !== before) expect(await feed.getAttribute('data-index')).toBe(target)

@@ -4,7 +4,7 @@ import { RouteFade } from '@/components/app/route-fade'
 
 export type Tab = 'home' | 'lanes' | 'gather' | 'garden' | 'me'
 
-export function TabBar({ base, active, dark = false, evening = false, unread = 0 }: { base: string; active: Tab; dark?: boolean; evening?: boolean; unread?: number }) {
+export function TabBar({ base, active = null, dark = false, evening = false, unread = 0 }: { base: string; active?: Tab | null; dark?: boolean; evening?: boolean; unread?: number }) {
   const tabs: [Tab, string, string][] = [
     ['home', 'Home', base],
     ['lanes', 'Lanes', `${base}/lanes`],

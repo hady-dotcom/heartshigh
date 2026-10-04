@@ -4,10 +4,13 @@ import type { Page } from '@playwright/test'
 export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean } = {}) {
   await page.route(/youtube|ytimg|googlevideo/, (route) => route.abort())
   await page.addInitScript((blockAutoplay) => {
-    const gate = window as unknown as { __allowPlay?: boolean; __playerVars?: unknown[]; __unloaded?: string[] }
+    const gate = window as unknown as { __allowPlay?: boolean; __gestured?: boolean; __playerVars?: unknown[]; __unloaded?: string[] }
     gate.__allowPlay = !blockAutoplay
+    gate.__gestured = !blockAutoplay
     gate.__playerVars = []
     gate.__unloaded = []
+    document.addEventListener('pointerdown', () => { gate.__gestured = true }, true)
+    document.addEventListener('click', () => { gate.__gestured = true }, true)
     type Options = { playerVars?: { start?: number }; events: { onReady: (e: unknown) => void; onStateChange: (e: { data: number }) => void } }
     class Player {
       private state = -1
@@ -26,7 +29,7 @@ export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean
         this.state = state
         this.options.events.onStateChange({ data: state })
       }
-      playVideo() { if (gate.__allowPlay) this.set(1) }
+      playVideo() { if (gate.__allowPlay || gate.__gestured) this.set(1) }
       pauseVideo() { this.set(2) }
       stopVideo() { this.set(5) }
       mute() { this.muted = true }

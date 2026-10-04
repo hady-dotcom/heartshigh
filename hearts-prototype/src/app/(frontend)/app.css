@@ -83,7 +83,7 @@
 .caption {
   position: absolute; left: 22px; right: 70px; top: 36%; z-index: 4;
   font-family: var(--serif); font-weight: 600; font-size: 31px; line-height: 1.16; color: #fff;
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55); letter-spacing: -0.005em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 2px 12px rgba(0, 0, 0, 0.75); letter-spacing: -0.005em;
 }
 .caption em { font-style: normal; color: #f3d38e; font-size: 1.12em; }
 .caption.long { font-size: 26px; }

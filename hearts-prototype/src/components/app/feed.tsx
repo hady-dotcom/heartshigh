@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FeedItem, SlideStyle } from '@/server/learner'
+import { clipStepUpLabel, onlyClipToast, READY_FOR_MORE, talkStepUpLabel } from '@/lib/feed-copy'
 import { ArrowIcon, HeartIcon, LockIcon, PlayIcon, SaveIcon, ShareIcon } from '../icons'
 import { Arch } from '@/components/arch'
 
@@ -91,7 +92,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
 
   const step = useCallback((direction: 1 | -1) => {
     if (items.length < 2) {
-      setToast(mode === 'hors' ? "That is the only hors d'oeuvre here" : 'That is the only ‘Ready for more?’ here.')
+      setToast(onlyClipToast(mode))
       return
     }
     setIndex((current) => (current + direction + items.length) % items.length)
@@ -231,7 +232,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
                 </>
               ) : (
                 <div className="clip-row" style={{ marginTop: 14 }}>
-                  <span className="chip gold" data-testid="level-chip">Ready for more?</span>
+                  <span className="chip gold" data-testid="level-chip">{READY_FOR_MORE}</span>
                   <span style={{ fontSize: 13, fontWeight: 700 }}>{clock(piece.start)} / {clock(piece.end)}</span>
                 </div>
               )}
@@ -267,12 +268,12 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
                     <FollowButton slug={item.speakerSlug} />
                   </div>
                   <button type="button" className="pill gold block" data-testid="learn-more" data-parent={item.parents?.hors.parentId || ''} data-parent-level="appetiser" onClick={() => { setMode('appetiser'); setMotion('from-bottom'); setTurn((value) => value + 1); setPlaying(false) }}>
-                    Learn more
+                    {clipStepUpLabel()}
                   </button>
                 </>
               ) : (
                 <>
-                  <Link className="pill gold block" href={course} data-testid="learn-more" data-parent={item.parents?.appetiser.parentId || ''} data-parent-level="talk">Learn more</Link>
+                  <Link className="pill gold block" href={course} data-testid="learn-more" data-parent={item.parents?.appetiser.parentId || ''} data-parent-level="talk">{talkStepUpLabel(1, item.talkSeconds)}</Link>
                   <div className="speaker-card">
                     <Avatar name={item.speaker} portrait={item.portrait} />
                     <Link className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link">
@@ -297,11 +298,11 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
         <div className="gesture-help" data-testid="gesture-card" onClick={() => setHelp(false)}>
           <div className="gesture-card">
             <h2>Finding your way</h2>
-            <p className="lead">A swipe stays on this length. Learn more is the only way further, into this clip&apos;s own longer piece.</p>
+            <p className="lead">A swipe stays on this length. The step-up is the only way further, into this clip&apos;s own longer piece.</p>
             <div className="gesture-grid">
-              <div><b>Swipe up or left</b>The next clip at this length</div>
-              <div><b>Swipe down or right</b>The previous clip at this length</div>
-              <div><b>Learn more</b>This clip&apos;s own parent, one step only</div>
+              <div><b>Swipe up or left</b>The next clip at this length.</div>
+              <div><b>Swipe down or right</b>The previous clip at this length.</div>
+              <div><b>Watch the 3-minute version</b>This clip&apos;s own longer piece, one step only.</div>
             </div>
             <button type="button" className="pill ink block">Got it</button>
           </div>
@@ -317,7 +318,7 @@ export function Slide({ item, style, onMore }: { item: FeedItem; style: SlideSty
   const land = item.landTidy || item.land
   const cta = (cls: string) => (
     <button type="button" className={`pill ${cls}`} onClick={onMore} data-testid="learn-more" data-parent={item.parents?.hors.parentId || ''} data-parent-level="appetiser">
-      Learn more <ArrowIcon />
+      {clipStepUpLabel()} <ArrowIcon />
     </button>
   )
   const lane = item.laneLabel

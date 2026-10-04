@@ -36,7 +36,7 @@ function talk(cutId: number, lane: string, speaker: string, withFilm: boolean): 
   }
 }
 
-/** A feed as learners get it: talks with typography films, scenic cards and question cards between them. */
+/** A feed as learners get it: talks with typography films and scenic cards between them. */
 function feed() {
   return mixFeed([
     talk(1, 'trust', 'Speaker A', true),
@@ -47,10 +47,12 @@ function feed() {
   ])
 }
 
-test('the mixed feed really carries films, scenic cards and question cards at the hors d’oeuvre level', () => {
+test('the mixed feed really carries films and scenic cards at the clip level, and never a question card', () => {
   const list = feed()
   const kinds = new Set(list.map((row) => row.card || 'talk'))
-  for (const kind of ['talk', 'film', 'scene', 'question']) assert.ok(kinds.has(kind as never), `missing ${kind}`)
+  for (const kind of ['talk', 'film', 'scene']) assert.ok(kinds.has(kind as never), `missing ${kind}`)
+  assert.equal(kinds.has('question'), false)
+  assert.ok(list.every((row) => row.card !== 'question' && row.prompt !== 'What stays with you from this?'))
   assert.ok(list.filter(isInterstitial).every((row) => list.some((own) => own.cutId === row.cutId && !isInterstitial(own))))
 })
 
@@ -145,4 +147,31 @@ test('Learn more refuses to go anywhere but the next level down', () => {
   const odd = list.map((row) => ({ ...row, parents: { hors: { ...row.parents.hors, parentLevel: 'talk' as const }, appetiser: { ...row.parents.appetiser, parentLevel: 'appetiser' as const } } }))
   for (const level of ['hors', 'appetiser'] as FeedLevel[]) assert.equal(learnMoreTarget(odd, 0, level, BASE), null)
   assert.equal(learnMoreTarget([], 0, 'hors', BASE), null)
+})
+
+test('every clip steps up to its own speaker and lesson, never a neighbour’s', () => {
+  const list = feed()
+  list.forEach((row, index) => {
+    const step = learnMoreTarget(list, index, 'hors', BASE)
+    assert.ok(step && step.level === 'appetiser')
+    const own = list[step.index]
+    assert.equal(own.speaker, row.speaker)
+    assert.equal(own.lessonId, row.lessonId)
+    assert.equal(own.cutId, row.cutId)
+  })
+})
+
+test('next skips a seen talk until that lane’s pool is used up, then it may wrap', () => {
+  const list = feed()
+  const firstTalk = list.findIndex((row) => !isInterstitial(row))
+  const lastOfFirst = list.findLastIndex((row) => row.cutId === list[firstTalk].cutId)
+  const secondTalk = list.findIndex((row, at) => at > firstTalk && !isInterstitial(row))
+  const seen = new Set([list[firstTalk].cutId])
+  const afterTalk = swipeTarget(list, firstTalk, 'hors', 'next', seen)!
+  assert.equal(list[afterTalk].cutId, list[firstTalk].cutId)
+  const nextTalk = swipeTarget(list, lastOfFirst, 'hors', 'next', seen)!
+  assert.notEqual(list[nextTalk].cutId, list[firstTalk].cutId)
+  const all = new Set(list.filter((row) => !isInterstitial(row)).map((row) => row.cutId))
+  const wrapped = swipeTarget(list, secondTalk, 'hors', 'next', all)
+  assert.notEqual(wrapped, null)
 })
