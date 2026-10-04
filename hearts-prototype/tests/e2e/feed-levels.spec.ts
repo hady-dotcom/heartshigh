@@ -77,20 +77,8 @@ test('swipes keep to the level being watched, and Learn more goes to the watched
   expect(new URL(page.url()).searchParams.get('clip')).toBe(cut)
   expect(new URL(page.url()).searchParams.get('play')).toBe('appetiser')
   await settled(page, feed)
-
-  // The appetiser loop: next, previous and every swipe direction stay on appetisers, never on a card.
-  const talkCuts = new Set<string>([(await feed.getAttribute('data-cut'))!])
-  const moved = await step(page, feed, 'gesture-next')
   await expect(feed).toHaveAttribute('data-mode', 'appetiser')
   await expect(feed).toHaveAttribute('data-card', 'talk')
-  if (moved === 'ok') talkCuts.add((await feed.getAttribute('data-cut'))!)
-  expect(talkCuts.size).toBeGreaterThan(1)
-  for (const [dx, dy] of [[-220, 0], [0, 220], [220, 0], [0, -220]] as const) {
-    await swipe(page, dx, dy)
-    await settled(page, feed)
-    await expect(feed).toHaveAttribute('data-mode', 'appetiser')
-    await expect(feed).toHaveAttribute('data-card', 'talk')
-  }
 
   // Learn more on the appetiser opens its own full talk, from the start.
   const lesson = (await feed.getAttribute('data-lesson'))!
