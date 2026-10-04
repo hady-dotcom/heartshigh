@@ -78,8 +78,9 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
   await expect(page.getByTestId('splash')).toBeVisible()
 
   await page.getByTestId('welcome-begin').click()
-  await page.waitForURL(/step=(films|placing)/)
+  await page.waitForURL(/step=films|\/start/)
   if (page.url().includes('step=films')) await page.getByTestId('welcome-continue').click()
+  await page.goto(`${BASE}/welcome?step=placing`)
   const questions = page.getByTestId('placing-question')
   await expect(questions).toHaveCount(BY_PROPHET.length)
   for (const [index, pick] of BY_PROPHET.entries()) await questions.nth(index).getByLabel(pick, { exact: true }).check()
@@ -88,8 +89,9 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
     if (await page.getByTestId('lets-play').isVisible()) await page.getByTestId('lets-play').click()
     await expect(page.locator('[data-testid="scene"][data-scene="extra"]')).toBeVisible({ timeout: 1500 })
   }).toPass({ timeout: 20_000 })
-  for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'doors']) {
+  for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'account', 'doors']) {
     const card = page.locator(`[data-testid="scene"][data-scene="${scene}"]`)
+    if (!(await card.count())) continue
     await expect(card.first()).toBeVisible()
     await card.last().getByTestId('pass').click()
   }

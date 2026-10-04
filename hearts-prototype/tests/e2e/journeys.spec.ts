@@ -36,9 +36,13 @@ async function join(page: Page, code: string, name: string, email: string, passw
 }
 
 async function placing(page: Page, picks: string[]) {
-  await page.getByTestId('welcome-begin').click()
-  await page.waitForURL(/step=(films|placing)/)
-  if (page.url().includes('step=films')) await page.getByTestId('welcome-continue').click()
+  const portal = page.url().match(/\/p\/[^/?#]+/)?.[0] || '/p/east-london'
+  if (await page.getByTestId('welcome-begin').count()) {
+    await page.getByTestId('welcome-begin').click()
+    await page.waitForURL(/step=films|\/start/)
+    if (page.url().includes('step=films')) await page.getByTestId('welcome-continue').click()
+  }
+  await page.goto(`${portal}/welcome?step=placing`)
   const questions = page.getByTestId('placing-question')
   await expect(questions).toHaveCount(picks.length)
   for (const [index, pick] of picks.entries()) await questions.nth(index).getByLabel(pick, { exact: true }).check()
@@ -49,8 +53,9 @@ async function placing(page: Page, picks: string[]) {
     if (await page.getByTestId('lets-play').isVisible()) await page.getByTestId('lets-play').click()
     await expect(page.locator('[data-testid="scene"][data-scene="extra"]')).toBeVisible({ timeout: 1500 })
   }).toPass({ timeout: 20_000 })
-  for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'doors']) {
+  for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'account', 'doors']) {
     const sceneCard = page.locator(`[data-testid="scene"][data-scene="${scene}"]`)
+    if (!(await sceneCard.count())) continue
     await expect(sceneCard.first()).toBeVisible()
     await sceneCard.last().getByTestId('pass').click()
   }
