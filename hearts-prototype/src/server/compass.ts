@@ -442,7 +442,7 @@ const MONTH_INVITE = {
   body: 'Five short questions, in different words, and one line about life just now.',
 }
 
-export async function ensureMonthNote(payload: Payload, userId: number, slug: string) {
+export async function ensureMonthNote(payload: Payload, userId: number, portalId: number, slug: string) {
   if (!(await recalibrationDueFor(payload, userId))) return
   const key = `compass-month-${userId}-${now().toISOString().slice(0, 7)}`
   const existing = await payload.find({ collection: 'notifications', overrideAccess: true, depth: 0, limit: 1, where: { and: [{ user: { equals: userId } }, { key: { equals: key } }] } })
@@ -450,7 +450,7 @@ export async function ensureMonthNote(payload: Payload, userId: number, slug: st
   await payload.create({
     collection: 'notifications',
     overrideAccess: true,
-    data: { user: userId, title: MONTH_INVITE.title, body: MONTH_INVITE.body, href: `/p/${slug}/recalibrate`, channel: 'in-app', key },
+    data: { user: userId, portal: portalId, title: MONTH_INVITE.title, body: MONTH_INVITE.body, href: `/p/${slug}/recalibrate`, channel: 'in-app', key },
   })
 }
 

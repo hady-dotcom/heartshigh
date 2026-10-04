@@ -24,7 +24,7 @@ function minutesLeft(seconds: number, percent: number) {
 export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   if (user.role === 'learner' && !user.onboarded) redirect(user.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
   const [g, unread, { items }, courses, due] = await Promise.all([growth(payload, user), unreadCount(payload, user), learnerClips(payload, portal, user), courseCards(payload, user), user.role === 'learner' ? recalibrationDueFor(payload, user.id) : Promise.resolve(false)])
-  if (due) await ensureMonthNote(payload, user.id, String(portal.slug || ''))
+  if (due) await ensureMonthNote(payload, user.id, portal.id, String(portal.slug || ''))
   const [visits, sessions] = await Promise.all([
     rows(payload, 'lesson-visits', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 40 }),
     rows(payload, 'watch-sessions', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 80 }),

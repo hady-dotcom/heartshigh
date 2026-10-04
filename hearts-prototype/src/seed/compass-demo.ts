@@ -247,7 +247,7 @@ async function main() {
             await payload.create({
               collection: 'completions',
               overrideAccess: true,
-              data: { user: user.id, lesson: lessonId, percent: 100, sourceLevel: 'appetiser', watchedAt: new Date(nowMs - ages[month] * DAY + 2 * DAY).toISOString() },
+              data: { user: user.id, lesson: lessonId, portal: portalId, percent: 100, sourceLevel: 'appetiser', watchedAt: new Date(nowMs - ages[month] * DAY + 2 * DAY).toISOString() },
             })
           }
         }
@@ -258,6 +258,8 @@ async function main() {
 }
 
 main().catch((error) => {
+  const detail = error && typeof error === 'object' && 'data' in error ? (error as { data?: unknown }).data : undefined
   console.error(error instanceof Error ? error.message : error)
+  if (detail) console.error(JSON.stringify(detail, null, 2))
   process.exit(1)
 })
