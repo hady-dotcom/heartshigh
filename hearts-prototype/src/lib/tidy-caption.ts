@@ -75,6 +75,41 @@ const PHRASES: [RegExp, string][] = [
   [/\bmuwatta\b/gi, 'Muwatta'],
 ]
 
+/**
+ * Auto-caption misspellings of Islamic terms. Longer phrases first so "tawa y" is not left as "taqwa y".
+ * Word boundaries keep fatawa and Tawasaw as they are.
+ */
+const ISLAMIC_TERMS: [RegExp, string][] = [
+  [/\btawa\s+y\b/gi, 'taqwa'],
+  [/\btawa\b/gi, 'taqwa'],
+  [/\btakwa\b/gi, 'taqwa'],
+  [/\btaqua\b/gi, 'taqwa'],
+  [/\btawaku(?!l)\b/gi, 'tawakkul'],
+  [/\btawakul\b/gi, 'tawakkul'],
+  [/\btawakkal\b/gi, 'tawakkul'],
+  [/\btawakel\b/gi, 'tawakkul'],
+]
+
+const TERM_ALIASES: Record<string, string> = {
+  tawa: 'taqwa',
+  takwa: 'taqwa',
+  taqua: 'taqwa',
+  tawaku: 'tawakkul',
+  tawakul: 'tawakkul',
+  tawakkal: 'tawakkul',
+  tawakel: 'tawakkul',
+}
+
+/** The learner-facing spelling of a term a YouTube caption often mangles. */
+export function correctIslamicTerms(text: string) {
+  return applyAll(text, ISLAMIC_TERMS)
+}
+
+function canonWord(word: string) {
+  const lower = word.toLowerCase()
+  return TERM_ALIASES[lower] || lower
+}
+
 /** Names of Allah as captions usually spell them, mapped to the form we show. */
 const DIVINE: [RegExp, string][] = [
   [/\bar[\s-]*rabb\b/gi, 'Ar-Rabb'],
@@ -121,15 +156,15 @@ const ECHO = /^(it|he|she|i|we|you|him|her|them|me|us)$/
  * Splitting a run-on ("return it doesn't") may repeat the object pronoun once.
  */
 export function tidyKeepsWords(raw: string, tidy: string) {
-  const source = WORDS(raw)
-  const extra = WORDS(tidy)
+  const source = WORDS(raw).map(canonWord)
+  const extra = WORDS(tidy).map(canonWord)
   if (source.join(' ') === extra.join(' ')) return true
   for (const word of source) {
     const at = extra.indexOf(word)
     if (at === -1) return false
     extra.splice(at, 1)
   }
-  return extra.length > 0 && extra.length <= 2 && extra.every((word) => ECHO.test(word))
+  return extra.length > 0 && extra.length <= 2 && extra.every((word) => ECHO.test(word) || word === 'y')
 }
 
 function applyAll(text: string, pairs: [RegExp, string][]) {
@@ -184,6 +219,7 @@ export function tidyCaption(raw: string, hints: TidyHints = {}): string {
     .trim()
   if (!cleaned) return ''
   let text = applyAll(cleaned, BRITISH)
+  text = correctIslamicTerms(text)
   text = splitClauses(text)
   text = vocative(text)
   text = finish(text)
@@ -191,6 +227,7 @@ export function tidyCaption(raw: string, hints: TidyHints = {}): string {
   text = capitalI(text)
   text = applyAll(text, PHRASES)
   text = applyAll(text, DIVINE)
+  text = correctIslamicTerms(text)
   for (const name of hints.speakers || []) {
     const pattern = speakerPattern(name)
     if (!pattern) continue
@@ -270,7 +307,7 @@ export function tidyUnchanged(stored: LineTidy | null | undefined, sources: Capt
 
 /** The line to show. A stored tidy wins when it still belongs to this raw caption and keeps the words. */
 export function displayLine(raw: string, stored: { raw?: string; text?: string } | null | undefined, hints: TidyHints = {}) {
-  if (stored && stored.raw === raw && stored.text && tidyKeepsWords(raw, stored.text)) return stored.text
+  if (stored && stored.raw === raw && stored.text && tidyKeepsWords(raw, stored.text)) return sentenceCase(correctIslamicTerms(stored.text))
   return tidyCaption(raw, hints)
 }
 

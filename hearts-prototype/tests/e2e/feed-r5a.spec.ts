@@ -159,6 +159,33 @@ test('leaving the feed and coming back lands on the same clip', async ({ page })
   expect(await feed.getAttribute('data-index')).toBe(index)
 })
 
+test('talk captions spell taqwa, not tawa, and sit in the bar when words are in the picture', async ({ page }) => {
+  test.setTimeout(90_000)
+  await page.setViewportSize(PHONE)
+  await fakeYouTube(page)
+  await signIn(page)
+  const feed = page.getByTestId('journey')
+  await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  await settled(page)
+  if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').click()
+  const listed = ((await feed.getAttribute('data-cuts')) || '').split(' ').filter(Boolean).length
+  const total = Math.min(16, Math.max(6, listed))
+  for (let at = 0; at < total; at++) {
+    if ((await feed.getAttribute('data-card')) === 'talk' && (await page.getByTestId('caption').count())) {
+      const text = await page.getByTestId('caption').innerText()
+      expect(text, 'auto-captions must not leave tawa for taqwa').not.toMatch(/\btawa\b/i)
+      expect(text).not.toMatch(/\btawakul\b/i)
+      if ((await feed.getAttribute('data-words-in-picture')) === 'yes') {
+        await expect(page.getByTestId('caption')).toHaveAttribute('data-slot', 'bar')
+        const cap = (await page.getByTestId('caption').boundingBox())!
+        const slot = (await page.getByTestId('player-slot').boundingBox())!
+        expect(cap.y).toBeGreaterThanOrEqual(slot.y + slot.height - 12)
+      }
+    }
+    if (at < total - 1) await step(page)
+  }
+})
+
 test('the feed still fits at 1440×900', async ({ page }) => {
   test.setTimeout(60_000)
   await page.setViewportSize(DESKTOP)

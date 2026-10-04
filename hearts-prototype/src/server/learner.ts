@@ -26,7 +26,7 @@ export type FeedItem = {
   youtubeId: string | null
   /** A Short or other 9:16 film with its words in the picture: no caption overlay, buttons above the lower third. */
   vertical?: boolean
-  /** Words in the picture (a Short, or captions burned in): our caption hides and the speaker row rises out of the lower quarter. */
+  /** Words in the picture (a Short, or captions burned in): our caption sits in the bar below the uncropped 16:9 film. */
   wordsInPicture?: boolean
   /** YouTube's large frame, only when it carries no words; otherwise the extended cut paints our own still and title. */
   cleanThumb?: string | null

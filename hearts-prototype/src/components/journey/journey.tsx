@@ -10,6 +10,7 @@ import { isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarge
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readCoachDismissed, readFeedPlace, readHeart, readPending, rememberSeenCut, sessionFlags, sessionSeenCuts, setSessionFlags, viewAsId, writeCoachDismissed, writeFeedPlace, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
+import { correctIslamicTerms } from '@/lib/tidy-caption'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { laneClips } from '@/lib/lanes'
@@ -1488,7 +1489,8 @@ export function Journey(props: JourneyProps) {
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
   const horsLine = mode === 'hors' ? piece?.lines?.[lineShown] : null
-  const captionText = (horsLine ? horsLine.tidy || horsLine.text : mode === 'hors' ? piece?.quote : '') || ''
+  const wordsInPicture = Boolean(item?.wordsInPicture || item?.vertical)
+  const captionText = correctIslamicTerms((horsLine ? horsLine.tidy || horsLine.text : mode === 'hors' ? piece?.quote : '') || '')
   const videoAppetiser = mode === 'appetiser' && Boolean(item?.youtubeId)
   const scenicAppetiser = mode === 'appetiser' && !item?.youtubeId
   const scenicLines = scenicAppetiser ? [item?.scenic?.hook, item?.scenic?.turn, item?.scenic?.land].filter((line): line is string => Boolean(line)) : []
@@ -1502,8 +1504,9 @@ export function Journey(props: JourneyProps) {
   const captionButton = item ? (
     <button
       type="button"
-      className={`caption j-caption-plate${captionText.length > 120 ? ' long' : ''}${captionText ? '' : ' title-only'}`}
+      className={`caption j-caption-plate${captionText.length > 120 ? ' long' : ''}${captionText ? '' : ' title-only'}${wordsInPicture ? ' j-caption-clear' : ''}`}
       data-testid="caption"
+      data-slot={wordsInPicture ? 'bar' : 'over'}
       data-line={lineShown}
       data-expanded={captionOpen ? 'true' : 'false'}
       aria-expanded={captionOpen}
@@ -1540,10 +1543,9 @@ export function Journey(props: JourneyProps) {
     </button>
   ) : null
   const laneVisible = Boolean(item) && !firstEver
-  const wordsInPicture = Boolean(item?.wordsInPicture || item?.vertical)
   void readyTick
 
-  // A Short (or a film with burned-in words) has text low in the picture: the speaker and Follow sit at the top, out of its lower quarter.
+  // A Short (or a film with burned-in words) has text in the picture: the speaker sits at the top, and our caption sits in the bar below the 16:9 band.
   const speakerRow = item ? (
     <div className="j-speaker j-speaker-plate">
       <a className="speaker-row" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-link" onClick={(event) => { if (needsAccount('save')) event.preventDefault() }}>
@@ -1578,7 +1580,7 @@ export function Journey(props: JourneyProps) {
       {typeClip && muted ? (
         <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button>
       ) : null}
-      {(cardKind && cardKind !== 'scene') || typeClip || mode !== 'hors' || wordsInPicture ? null : captionButton}
+      {(cardKind && cardKind !== 'scene') || typeClip || mode !== 'hors' ? null : captionButton}
       {wordsInPicture && mode === 'hors' && !cardKind ? <div className="j-top-speaker" data-testid="top-speaker">{speakerRow}</div> : null}
       {wordsInPicture && mode === 'appetiser' && videoAppetiser ? (
         <div className="j-top-speaker" data-testid="top-speaker">

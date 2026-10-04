@@ -39,6 +39,19 @@ test('a long line shortens to about 18 words without dropping the capital', () =
   assert.match(short, /\.$/)
 })
 
+test('auto-caption Islamic terms become taqwa and tawakkul, and fatawa is left alone', () => {
+  assert.equal(tidyCaption('you know what tawa is'), 'You know what taqwa is.')
+  assert.match(tidyCaption('what is tawa y'), /taqwa/)
+  assert.doesNotMatch(tidyCaption('what is tawa y'), /\btawa\b/)
+  assert.match(tidyCaption('true tawakul that does not fail you'), /tawakkul/)
+  assert.doesNotMatch(tidyCaption('true tawakul that does not fail you'), /\btawakul\b/)
+  assert.match(tidyCaption('grow your tawaku you'), /tawakkul/)
+  assert.match(tidyCaption('not everyone is qualified to give fatawa'), /fatawa/)
+  assert.equal(displayLine('you know what tawa is', { raw: 'you know what tawa is', text: 'You know what tawa is.' }), 'You know what taqwa is.')
+  assert.equal(tidyCaption('You know what taqwa is.'), 'You know what taqwa is.')
+  assert.equal(tidyKeepsWords('you know what tawa is', 'You know what taqwa is.'), true)
+})
+
 test('a stored tidy is kept when it still matches the raw words, and a changed caption is redone', () => {
   const sources = {
     speaker: 'A speaker',

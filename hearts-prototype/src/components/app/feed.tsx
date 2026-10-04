@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FeedItem, SlideStyle } from '@/server/learner'
 import { clipStepUpLabel, onlyClipToast, READY_FOR_MORE, talkStepUpLabel } from '@/lib/feed-copy'
+import { correctIslamicTerms } from '@/lib/tidy-caption'
 import { ArrowIcon, HeartIcon, LockIcon, PlayIcon, SaveIcon, ShareIcon } from '../icons'
 import { Arch } from '@/components/arch'
 
@@ -243,7 +244,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
             {item.youtubeId && !playing ? <span className="play-badge"><PlayIcon size={28} /></span> : null}
             {mode === 'hors' ? (
               <p className={`caption${(piece.lines?.[0]?.tidy || piece.quote).length > 120 ? ' long' : ''}`} data-testid="caption">
-                <Emphasis text={piece.lines?.[0]?.tidy || piece.quote} />
+                <Emphasis text={correctIslamicTerms(piece.lines?.[0]?.tidy || piece.quote)} />
               </p>
             ) : item.youtubeId ? null : (
               <div className="scenic-lines" data-testid="scenic-lines">

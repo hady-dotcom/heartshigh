@@ -199,7 +199,12 @@ test('words in the picture: YouTube captions are dropped, our caption hides, and
     await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
     await expect(feed).toHaveAttribute('data-lesson', lessonId!)
     await expect(feed).toHaveAttribute('data-words-in-picture', 'yes')
-    await expect(page.getByTestId('caption')).toHaveCount(0)
+    const caption = page.getByTestId('caption')
+    await expect(caption).toBeVisible()
+    await expect(caption).toHaveAttribute('data-slot', 'bar')
+    const cap = (await caption.boundingBox())!
+    const slot = (await page.getByTestId('player-slot').boundingBox())!
+    expect(cap.y, 'the caption sits in the bar below the picture, not over the film').toBeGreaterThanOrEqual(slot.y + slot.height - 12)
     const top = page.getByTestId('top-speaker')
     await expect(top.getByRole('button', { name: /follow/i })).toBeVisible()
     const box = (await top.boundingBox())!
