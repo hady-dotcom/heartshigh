@@ -104,15 +104,16 @@ test('demo learners show varied on-time fractions on Teach', async ({ page }) =>
   await shot(page, 'teach-demo')
 })
 
-test('the workbook empty state has no hoopoe', async ({ page }) => {
+test('the workbook empty state is the arch and a sentence, with no bird art', async ({ page }) => {
   await page.setViewportSize(PHONE)
-  await signIn(page, 'leeds-learner@hearts.test', 'portal-learner', '/p/leeds/garden/workbook')
+  await signIn(page, 'leeds-learner@hearts.test', 'portal-learner', '/p/leeds/garden/workbook?filter=replied')
   const empty = page.getByTestId('workbook-empty')
   await empty.scrollIntoViewIfNeeded()
   await expect(empty).toBeVisible()
   await expect(empty.locator('img')).toHaveCount(0)
-  await expect(empty).toContainText('Your answers to the questions in each film are kept here')
-  await expect(empty.getByRole('link', { name: 'Open a course' })).toBeVisible()
-  await expect(page.locator('img[src*="hoopoe"]')).toHaveCount(0)
+  await expect(empty).toContainText('Nothing here with this filter.')
+  await expect(empty.getByRole('link', { name: 'Show every answer' })).toBeVisible()
+  await expect(empty.locator('svg')).toHaveCount(1)
+  await expect(page.locator('img[src*="/brand/"]')).toHaveCount(0)
   await shot(page, 'workbook-empty')
 })

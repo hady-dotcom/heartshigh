@@ -66,7 +66,7 @@ export function CourseTree({
   })
 
   return (
-    <div className="course-tree" data-testid={testId}>
+    <div className="course-picker" data-testid={testId}>
       <input
         className="tree-search"
         type="search"

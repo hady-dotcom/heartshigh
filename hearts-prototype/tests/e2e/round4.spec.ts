@@ -263,16 +263,16 @@ test.describe('round 4 screens', () => {
     const journey = page.getByTestId('journey')
     await expect(journey).toHaveAttribute('data-mode', 'appetiser', { timeout: 20_000 })
     await expect(journey).toHaveAttribute('data-appetiser-video', 'yes')
-    await expect(page.getByTestId('start-course')).toBeVisible()
+    await expect(page.getByTestId('learn-more')).toBeVisible()
     await expect(page.getByTestId('caption')).toHaveCount(0)
     await expect(page.getByTestId('scenic-lines')).toHaveCount(0)
-    const parts = ['share', 'fave', 'save', 'start-course', 'resume-main', 'mains-shelf', 'speaker-bio-link']
+    const parts = ['share', 'fave', 'save', 'learn-more', 'speaker-bio-link']
     const boxes: Record<string, { x: number; y: number; width: number; height: number }> = {}
     for (const id of parts) {
       const box = (await page.getByTestId(id).count()) ? await page.getByTestId(id).boundingBox() : null
       if (box) boxes[id] = box
     }
-    for (const id of ['share', 'start-course', 'resume-main']) expect(boxes[id], id).toBeTruthy()
+    for (const id of ['share', 'learn-more']) expect(boxes[id], id).toBeTruthy()
     const speakerCard = (await page.locator('.speaker-card').count()) ? await page.locator('.speaker-card').boundingBox() : null
     if (speakerCard) boxes['speaker-card'] = speakerCard
     delete boxes['speaker-bio-link']

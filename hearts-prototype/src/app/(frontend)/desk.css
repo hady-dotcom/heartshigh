@@ -276,7 +276,7 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .pack-course { justify-content: space-between; flex-wrap: wrap; padding: 4px 2px; }
 .door-tags { display: inline-flex; gap: 4px; margin-left: 6px; vertical-align: middle; }
 .door-tag { font-size: 11px; font-weight: 700; letter-spacing: 0.02em; color: var(--gold-ink, #2a2414); background: color-mix(in srgb, var(--gold, #dca643) 32%, white); border-radius: 999px; padding: 1px 7px; }
-.course-tree { display: grid; gap: 8px; }
+.course-picker { display: grid; gap: 8px; }
 .tree-search { width: 100%; border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; }
 .tree-selected { margin: 0; }
 .tree-seat-name { font-size: 12.5px; color: var(--ink-2); font-weight: 650; margin: 4px 0; }

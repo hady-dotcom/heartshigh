@@ -756,9 +756,9 @@ html[data-theme] .desk .stat-chip b {
   color: var(--desk-on-dark);
   opacity: 1;
 }
-html[data-theme] .desk .btn.ink,
 html[data-theme] .desk .badge.ink { background: var(--desk-teal); color: var(--desk-on-dark); }
-html[data-theme] .desk .btn.teal { background: var(--desk-teal); color: var(--desk-on-dark); }
+html[data-theme] .desk .btn.ink,
+html[data-theme] .desk .btn.teal,
 html[data-theme] .desk .btn:not(.ghost):not(.ink):not(.teal):not(.danger):not(.line-light),
 html[data-theme] .desk .pill.gold {
   background: var(--desk-gold);
