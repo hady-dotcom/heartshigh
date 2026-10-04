@@ -1064,6 +1064,19 @@ export function Journey(props: JourneyProps) {
           noteBrowse('linger')
         }
       }
+      const start = modeRef.current === 'hors' ? current.hors.start : current.appetiser.start
+      const end = modeRef.current === 'hors' ? current.hors.end : appetiserEnd(current)
+      const span = Math.max(0.5, end - start)
+      const watchPct = Math.max(0, Math.min(100, Math.round(((time - start) / span) * 100)))
+      const last = (seen as { lastInsightPct?: number }).lastInsightPct || 0
+      if (watchPct >= last + 8 || watchPct >= 90) {
+        ;(seen as { lastInsightPct?: number }).lastInsightPct = watchPct
+        try {
+          window.dispatchEvent(new CustomEvent('hearts-insight', { detail: { kind: 'clip_watch', clipId: String(current.cutId || current.id || ''), watchPct, lane: current.laneKey } }))
+        } catch {
+          // ignore
+        }
+      }
     }, 250)
     return () => window.clearInterval(timer)
   }, [phase, signal, noteBrowse])
@@ -1095,7 +1108,15 @@ export function Journey(props: JourneyProps) {
     if (swipe === 'topic') setToast('More on this topic')
     if (swipe === 'speaker') setToast(`More from ${current.speaker}`)
     try {
-      window.dispatchEvent(new CustomEvent('hearts-insight', { detail: { kind: 'clip_swipe', clipId: String(current.cutId || current.id || ''), watchPct: 0 } }))
+      const host = hosts.current[visibleRef.current]
+      const player = host.playerId ? getPlayer(host.playerId) : null
+      const time = player?.getCurrentTime?.() ?? current.hors.start
+      const start = modeRef.current === 'hors' ? current.hors.start : current.appetiser.start
+      const end = modeRef.current === 'hors' ? current.hors.end : appetiserEnd(current)
+      const span = Math.max(0.5, end - start)
+      const watchPct = Math.max(0, Math.min(100, Math.round(((time - start) / span) * 100)))
+      window.dispatchEvent(new CustomEvent('hearts-insight', { detail: { kind: 'clip_swipe', clipId: String(current.cutId || current.id || ''), watchPct, lane: current.laneKey } }))
+      window.dispatchEvent(new CustomEvent('hearts-insight', { detail: { kind: 'route', route: window.location.pathname, lane: itemsRef.current[target]?.laneKey } }))
     } catch {
       // ignore
     }

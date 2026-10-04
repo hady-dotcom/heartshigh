@@ -51,7 +51,7 @@ const ANDROID_STEPS: InstallCopy['steps'] = [
 ]
 
 /** iPhone and iPad, including iPad desktop mode (Macintosh with a touch screen). */
-export function installKind(ua: string, opts?: { maxTouchPoints?: number }): InstallKind {
+export function installKind(ua: string, opts?: { maxTouchPoints?: number; narrow?: boolean }): InstallKind {
   const touch = opts?.maxTouchPoints ?? 0
   const ios = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && touch > 1)
   if (ios) {
@@ -63,6 +63,7 @@ export function installKind(ua: string, opts?: { maxTouchPoints?: number }): Ins
     const chrome = /Chrome\//.test(ua) && !/EdgA|SamsungBrowser|OPR|UCBrowser|Firefox/.test(ua) && !/\bwv\b/.test(ua)
     return chrome ? 'android-chrome' : 'android-other'
   }
+  if (opts?.narrow) return 'android-other'
   return 'desktop'
 }
 

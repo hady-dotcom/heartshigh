@@ -79,3 +79,66 @@ export function normaliseRoute(path: string) {
   const raw = String(path || '/').split('?')[0]
   return raw.replace(/\/p\/[^/]+/, '/p/:portal') || '/'
 }
+
+/** Opening questions, placing, recalibrate — a tap spot would reveal the answer. */
+export function isAnswerScreen(path: string) {
+  const route = normaliseRoute(path)
+  return /\/(start|welcome|placing|recalibrate|opener)(\/|$)/.test(route) || /question/.test(route)
+}
+
+export function isPrivateLane(value?: string | null) {
+  return String(value || '') === 'guarding-gaze'
+}
+
+export function routeWords(path: string) {
+  const route = normaliseRoute(path)
+  if (route.endsWith('/feed')) return 'the feed'
+  if (route.endsWith('/start') || route.includes('/welcome')) return 'the opening questions'
+  if (route.includes('/course/')) return 'a course'
+  if (route.includes('/me/plan')) return 'the study plan'
+  if (route.endsWith('/me')) return 'Me'
+  if (route.includes('/mission')) return 'a mission'
+  if (/\/p\/:portal\/?$/.test(route)) return 'Home'
+  return 'this screen'
+}
+
+export function tapPlace(x?: number | null, y?: number | null, vw = 390, vh = 844) {
+  if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) return 'somewhere on the screen'
+  const across = vw > 0 ? x / vw : 0.5
+  const down = vh > 0 ? y / vh : 0.5
+  const horiz = across < 0.33 ? 'left' : across > 0.66 ? 'right' : 'middle'
+  const vert = down < 0.28 ? 'top' : down > 0.72 ? 'lower third' : 'middle'
+  if (vert === 'lower third' && down > 0.88) return `the tab bar, ${horiz}`
+  return `the ${vert} ${horiz} of ${routeWords('') === 'this screen' ? 'the screen' : 'the screen'}`
+}
+
+export function angrySpotWords(input: { route?: string; x?: number | null; y?: number | null; vw?: number | null; vh?: number | null }) {
+  const x = input.x
+  const y = input.y
+  const vw = Number(input.vw || 390)
+  const vh = Number(input.vh || 844)
+  const across = vw > 0 && x != null ? x / vw : 0.5
+  const down = vh > 0 && y != null ? y / vh : 0.5
+  const horiz = across < 0.33 ? 'left' : across > 0.66 ? 'right' : 'middle'
+  const vert = down < 0.28 ? 'top' : down > 0.88 ? 'tab bar' : down > 0.72 ? 'lower third' : 'middle'
+  const place = vert === 'tab bar' ? `the tab bar (${horiz})` : `the ${vert} ${horiz}`
+  return `${place} of ${routeWords(input.route || '/')}`
+}
+
+const buckets = new Map<string, { n: number; started: number }>()
+
+/** Simple in-process rate limit. 40 events / 10 s per session or device. */
+export function allowInsightBurst(key: string, limit = 40, windowMs = 10_000, nowMs = Date.now()) {
+  const id = String(key || 'anon').slice(0, 80)
+  const held = buckets.get(id)
+  if (!held || nowMs - held.started > windowMs) {
+    buckets.set(id, { n: 1, started: nowMs })
+    return true
+  }
+  held.n += 1
+  return held.n <= limit
+}
+
+export function resetInsightBursts() {
+  buckets.clear()
+}

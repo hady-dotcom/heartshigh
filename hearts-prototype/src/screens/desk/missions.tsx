@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { MissionHelp } from '@/components/desk/help'
+import { ukDate } from '@/lib/calendar-context'
 import { now } from '@/lib/clock'
 import type { SessionUser } from '@/server/context'
 import { canEditMissions, canViewMissions, deskThreads, joinCount, listMissions, loadMission, missionView } from '@/server/missions'
@@ -164,27 +165,27 @@ async function EditPage({ ctx, master, base, id }: { ctx: Ctx | null; master: { 
         <header><h2>{current ? 'Details' : 'Write the ask'}</h2></header>
         <div className="body">
           <Hidden fields={{ action: current ? 'update' : 'create', id: current ? String(current.id) : '', next: current ? `${base}/${current.id}` : `${base}/new` }} />
-          <label>Title<input name="title" required defaultValue={current?.title || ''} data-testid="mission-title" placeholder="Please use HEARTS for one hour this week" /></label>
-          <label>Plain ask<textarea name="ask" required rows={3} defaultValue={current?.ask || ''} data-testid="mission-ask" placeholder="If you have an hour this week, would you sit with HEARTS and tell us how it felt?" /></label>
-          <label>Why it matters<textarea name="why" rows={3} defaultValue={current?.why || ''} data-testid="mission-why" placeholder="We are choosing the words on a button, and your hour helps us decide." /></label>
-          <label>Minutes asked<input type="number" name="minutesAsked" min={5} max={600} defaultValue={current?.minutesAsked || 60} data-testid="mission-minutes" /></label>
-          <label>Start<input type="date" name="startsAt" defaultValue={(current?.startsAt || today).slice(0, 10)} data-testid="mission-start" /></label>
-          <label>End<input type="date" name="endsAt" defaultValue={(current?.endsAt || later).slice(0, 10)} data-testid="mission-end" /></label>
-          <label>Target learners<input type="number" name="target" min={1} defaultValue={current?.target || 700} data-testid="mission-target-field" /></label>
-          <label>Portals
+          <label className="stack">Title<input name="title" required defaultValue={current?.title || 'Give HEARTS an hour this week'} data-testid="mission-title" placeholder="Give HEARTS an hour this week" /></label>
+          <label className="stack">Plain ask<textarea name="ask" required rows={3} defaultValue={current?.ask || ''} data-testid="mission-ask" placeholder="If you have an hour this week, would you sit with HEARTS and tell us how it felt?" /></label>
+          <label className="stack">Why it matters<textarea name="why" rows={3} defaultValue={current?.why || 'Your hour helps us choose the words on a button.'} data-testid="mission-why" placeholder="Your hour helps us choose the words on a button." /></label>
+          <label className="stack">Minutes asked<input type="number" name="minutesAsked" min={5} max={600} defaultValue={current?.minutesAsked || 60} data-testid="mission-minutes" /></label>
+          <label className="stack">Start <span className={styles.quiet}>({ukDate(current?.startsAt || today)})</span><input type="date" name="startsAt" defaultValue={(current?.startsAt || today).slice(0, 10)} data-testid="mission-start" /></label>
+          <label className="stack">End <span className={styles.quiet}>({ukDate(current?.endsAt || later)})</span><input type="date" name="endsAt" defaultValue={(current?.endsAt || later).slice(0, 10)} data-testid="mission-end" /></label>
+          <label className="stack">Target learners<input type="number" name="target" min={1} defaultValue={current?.target || 700} data-testid="mission-target-field" /></label>
+          <label className="stack">Portals
             <select name="portal" multiple defaultValue={(current?.portals || []).map(String)} data-testid="mission-portals">
               {portals.map((portal) => <option key={portal.id} value={portal.id}>{str(portal.name)}</option>)}
             </select>
           </label>
           <p className={styles.quiet}>Leave portals unselected for every portal.</p>
-          <label>Experiment
+          <label className="stack">Experiment
             <select name="experiment" defaultValue={current?.experiment ? String(current.experiment) : ''} data-testid="mission-experiment">
               <option value="">None</option>
               {experiments.map((row) => <option key={row.id} value={row.id}>{str(row.name)}</option>)}
             </select>
           </label>
-          <label>Screen to try<input name="tryPath" defaultValue={current?.tryPath || ''} placeholder="/feed" data-testid="mission-try" /></label>
-          <button className="btn" type="submit" data-testid="mission-save">{current ? 'Save' : 'Create draft'}</button>
+          <label className="stack">Screen to try<input name="tryPath" defaultValue={current?.tryPath || ''} placeholder="/feed" data-testid="mission-try" /></label>
+          <div><button className="btn" type="submit" data-testid="mission-save">{current ? 'Save' : 'Create draft'}</button></div>
         </div>
       </form>
     </Frame>

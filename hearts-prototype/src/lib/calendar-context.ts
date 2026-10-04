@@ -54,6 +54,10 @@ export type ContextInput = {
   /** Local hour 0–23. Defaults to the UTC hour of `at`. */
   hour?: number
   weekday?: number
+  /** Local hour when Maghrib is taken to fall. After this, the Islamic day moves on. */
+  sunsetHour?: number
+  timeZone?: string
+  latitude?: number
 }
 
 const NAMES: Record<string, string> = {
@@ -76,17 +80,71 @@ function dateKey(value: Date) {
   return value.toISOString().slice(0, 10)
 }
 
+function nextCivilNoon(at: Date) {
+  const next = new Date(at.getTime() + 86_400_000)
+  return new Date(Date.UTC(next.getUTCFullYear(), next.getUTCMonth(), next.getUTCDate(), 12, 0, 0))
+}
+
+/** Rough solar sunset hour (local) from latitude. London-ish default. */
+export function approximateSunsetHour(at: Date, latitude = 51.5) {
+  const start = Date.UTC(at.getUTCFullYear(), 0, 0)
+  const day = Math.max(1, Math.floor((Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), at.getUTCDate()) - start) / 86_400_000))
+  const decl = (-23.44 * Math.cos((360 / 365) * (day + 10) * Math.PI / 180) * Math.PI) / 180
+  const lat = (latitude * Math.PI) / 180
+  const cosHa = -Math.tan(lat) * Math.tan(decl)
+  const ha = Math.acos(Math.max(-1, Math.min(1, cosHa)))
+  const hour = 12 + (ha * 180) / Math.PI / 15
+  return Math.min(21.25, Math.max(15.75, hour))
+}
+
+export function latitudeForZone(zone?: string) {
+  const key = String(zone || 'Europe/London')
+  if (key.startsWith('Asia/Riyadh') || key.startsWith('Asia/Qatar') || key.startsWith('Asia/Bahrain')) return 24.7
+  if (key.startsWith('Asia/Dubai')) return 25.2
+  if (key.startsWith('Africa/Cairo')) return 30.0
+  if (key.startsWith('Asia/Karachi')) return 24.9
+  if (key.startsWith('America/New_York')) return 40.7
+  return 51.5
+}
+
+export function ukDate(value: string | Date) {
+  const raw = typeof value === 'string' ? value : value.toISOString()
+  const iso = raw.length <= 10 ? `${raw}T12:00:00.000Z` : raw
+  const at = new Date(iso)
+  if (Number.isNaN(at.getTime())) return ''
+  return at.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+}
+
+const CTA_VERBS = /^(watch|sit|open|read|give|see|try|join|start|learn|stay|come|listen|take)/i
+
+/** CTA lines are actions with a verb. Raw {n} is never shown. */
+export function actionCta(line: string, fallback = 'Learn more ›') {
+  const cleaned = String(line || '')
+    .replace(/\{n\}/gi, '')
+    .replace(/\(\s*min\)/gi, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+›$/, '')
+    .trim()
+  if (!cleaned) return fallback
+  const withVerb = CTA_VERBS.test(cleaned) ? cleaned : `Watch ${cleaned.charAt(0).toLowerCase()}${cleaned.slice(1)}`
+  return withVerb.endsWith('›') ? withVerb : `${withVerb} ›`
+}
+
 function inRange(day: string, start: string, end: string) {
   return day >= start.slice(0, 10) && day <= end.slice(0, 10)
 }
 
 export function calendarContext(input: ContextInput): CalendarContext {
   const at = input.at
-  const hijri = hijriOf(at, input.offsetDays || 0)
-  const weekday = input.weekday ?? at.getUTCDay()
   const hour = input.hour ?? at.getUTCHours()
-  const thursdayEvening = weekday === 4 && hour >= 18
-  const friday = weekday === 5 || thursdayEvening
+  const weekday = input.weekday ?? at.getUTCDay()
+  const sunsetHour = input.sunsetHour ?? approximateSunsetHour(at, input.latitude ?? latitudeForZone(input.timeZone))
+  const afterSunset = hour + (at.getUTCMinutes() || 0) / 60 >= sunsetHour
+  const islamicAt = afterSunset ? nextCivilNoon(at) : at
+  const islamicWeekday = afterSunset ? (weekday + 1) % 7 : weekday
+  const hijri = hijriOf(islamicAt, input.offsetDays || 0)
+  const thursdayEvening = weekday === 4 && afterSunset
+  const friday = islamicWeekday === 5 || thursdayEvening
   const ramadan = hijri.hm === 9
   const lastTenNights = ramadan && hijri.hd >= 21
   const dhulHijjah = hijri.hm === 12 && hijri.hd <= 10
@@ -94,7 +152,7 @@ export function calendarContext(input: ContextInput): CalendarContext {
   const eidAdha = hijri.hm === 12 && hijri.hd === 10
   const muharram = hijri.hm === 1
   const ashura = muharram && hijri.hd === 10
-  const day = dateKey(at)
+  const day = dateKey(islamicAt)
   const seasons = (input.seasons || []).filter((season) => inRange(day, season.start, season.end))
   const flags: Record<BuiltInContext, boolean> = {
     lastTenNights,
@@ -114,7 +172,7 @@ export function calendarContext(input: ContextInput): CalendarContext {
   const greeting = greetingFor(flags, seasons)
   return {
     at: at.toISOString(),
-    weekday,
+    weekday: islamicWeekday,
     hour,
     hijri,
     hijriLabel: `${hijri.hd} ${hijriMonthName(hijri.hm)} ${hijri.hy}`,
@@ -225,19 +283,19 @@ export function nudgeTalks<T extends { id?: number; title?: string }>(
 
 export const DEFAULT_CONTEXT_LINES: Record<string, Record<string, string>> = {
   'feed-cta-label': {
-    friday: "A Friday reminder before Jumu'ah",
-    ramadan: 'A short clip for a Ramadan evening',
-    lastTenNights: 'A few minutes in the last ten nights',
-    dhulHijjah: 'A few minutes in these ten days',
-    eidFitr: 'A short clip for Eid',
-    eidAdha: 'A short clip for Eid',
-    ashura: 'A short clip for Ashura',
-    muharram: 'A short clip to begin the year',
+    friday: "Watch a Friday reminder before Jumu'ah ›",
+    ramadan: 'Watch a short clip for a Ramadan evening ›',
+    lastTenNights: 'Watch a few minutes in the last ten nights ›',
+    dhulHijjah: 'Watch a few minutes in these ten days ›',
+    eidFitr: 'Watch a short clip for Eid ›',
+    eidAdha: 'Watch a short clip for Eid ›',
+    ashura: 'Watch a short clip for Ashura ›',
+    muharram: 'Watch a short clip to begin the year ›',
   },
   'full-talk-cta-label': {
-    friday: 'Sit with the Friday talk ({n} min)',
-    ramadan: 'Sit with this Ramadan talk ({n} min)',
-    lastTenNights: 'Sit with this for the last ten nights ({n} min)',
+    friday: 'Sit with the Friday talk ›',
+    ramadan: 'Sit with this Ramadan talk ›',
+    lastTenNights: 'Sit with this for the last ten nights ›',
   },
 }
 

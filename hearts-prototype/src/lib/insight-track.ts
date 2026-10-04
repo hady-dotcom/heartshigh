@@ -53,18 +53,18 @@ export function postInsight(event: InsightPayload) {
   }, 400)
 }
 
-export function noteTap(x: number, y: number, interactive: boolean) {
+export function noteTap(x: number, y: number, interactive: boolean, opts?: { coords?: boolean }) {
   const at = Date.now()
   const incoming = { x, y, at }
-  const angry = angryFromLatest(recent, incoming)
-  recent.push(incoming)
-  if (recent.length > 20) recent.splice(0, recent.length - 20)
+  const keepCoords = opts?.coords !== false
+  const angry = keepCoords ? angryFromLatest(recent, incoming) : null
+  if (keepCoords) {
+    recent.push(incoming)
+    if (recent.length > 20) recent.splice(0, recent.length - 20)
+  }
   postInsight({
     kind: 'tap',
-    x: Math.round(x),
-    y: Math.round(y),
-    vw: window.innerWidth,
-    vh: window.innerHeight,
+    ...(keepCoords ? { x: Math.round(x), y: Math.round(y), vw: window.innerWidth, vh: window.innerHeight } : {}),
     interactive,
   })
   if (angry) {

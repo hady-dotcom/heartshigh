@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
-import { approvedCopy, calendarContext, contextLabel, DEFAULT_CONTEXT_LINES, nudgeTalks, suggestedContextLine, type AdminSeason, type CalendarContext } from '@/lib/calendar-context'
+import { actionCta, approvedCopy, calendarContext, contextLabel, DEFAULT_CONTEXT_LINES, latitudeForZone, nudgeTalks, suggestedContextLine, type AdminSeason, type CalendarContext } from '@/lib/calendar-context'
 import { formatSlotLabel } from '@/lib/experiment-slots'
 import { isProduction } from '@/lib/env'
 import { idOf } from '@/lib/ids'
@@ -56,9 +56,10 @@ export async function loadCopy(payload: Payload) {
   }))
 }
 
-export async function contextAt(payload: Payload, at: Date = now(), hour?: number, weekday?: number): Promise<CalendarContext> {
+export async function contextAt(payload: Payload, at: Date = now(), hour?: number, weekday?: number, zone = 'Europe/London'): Promise<CalendarContext> {
   const [offset, seasons] = await Promise.all([hijriOffsetOf(payload), loadSeasons(payload)])
-  return calendarContext({ at, offsetDays: offset, seasons, hour, weekday })
+  const latitude = latitudeForZone(zone)
+  return calendarContext({ at, offsetDays: offset, seasons, hour, weekday, timeZone: zone, latitude })
 }
 
 export async function resolveContextLabel(payload: Payload, slot: string, payloadRow: Record<string, unknown>, context: CalendarContext, minutes?: number) {
@@ -66,7 +67,7 @@ export async function resolveContextLabel(payload: Payload, slot: string, payloa
   const approved = approvedCopy(rows, slot, context)
   const fromVariant = contextLabel(payloadRow, context, String(payloadRow.label || ''))
   const raw = approved || fromVariant
-  return minutes ? formatSlotLabel(raw, minutes) : raw
+  return actionCta(minutes ? formatSlotLabel(raw, minutes) : raw)
 }
 
 export async function popularTalkIds(payload: Payload): Promise<number[]> {

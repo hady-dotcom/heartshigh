@@ -4,7 +4,7 @@ import type { Payload } from 'payload'
 import { BrandMark } from '@/components/brand'
 import { Flash, Hidden } from '@/components/app/shell'
 import { DefaultDeskHelp } from '@/components/desk/help'
-import { BellIcon, BeakerIcon, BookIcon, HeartIcon, CalendarIcon, CogIcon, GlobeIcon, HomeIcon, KeyIcon, LibraryIcon, MoonIcon, PeopleIcon, QuestionIcon } from '@/components/icons'
+import { BellIcon, BeakerIcon, BookIcon, CalendarIcon, ChartIcon, CogIcon, CompassIcon, FilmIcon, FlagIcon, GlobeIcon, HeartIcon, HomeIcon, KeyIcon, LibraryIcon, MoonIcon, NetworkIcon, PathIcon, PeopleIcon, QuestionIcon, ScaleIcon, SheetIcon, SparkIcon } from '@/components/icons'
 import type { SessionUser } from '@/server/context'
 import { rows, shortDate, str } from '../common'
 
@@ -33,13 +33,13 @@ export function portalNav(base: string, user: SessionUser): NavGroup[] {
     },
     {
       group: 'Intermediate',
-      description: 'Course packs, study plans, Gather, live nights and missions.',
+      description: 'Course packs, study plans, Gather, live nights, missions, Scenes and Lanes.',
       items: [
         { key: 'content', label: 'Content', href: `${base}/admin/content`, icon: <BookIcon /> },
         { key: 'plans', label: 'Study plans', href: `${base}/admin/plans`, icon: <CalendarIcon /> },
         { key: 'circle', label: 'Gather', href: `${base}/admin/circle`, icon: <PeopleIcon /> },
         { key: 'nights', label: 'Live', href: `${base}/admin/nights`, icon: <MoonIcon /> },
-        { key: 'missions', label: 'Missions', href: `${base}/admin/missions`, icon: <HeartIcon /> },
+        { key: 'missions', label: 'Missions', href: `${base}/admin/missions`, icon: <FlagIcon /> },
       ],
     },
     {
@@ -47,14 +47,14 @@ export function portalNav(base: string, user: SessionUser): NavGroup[] {
       description: 'Experiments, Insights, AI, framing and the sheet.',
       items: [
         { key: 'experiments', label: 'Experiments', href: `${base}/admin/experiments`, icon: <BeakerIcon /> },
-        { key: 'insights', label: 'Insights', href: `${base}/admin/insights`, icon: <GlobeIcon /> },
+        { key: 'insights', label: 'Insights', href: `${base}/admin/insights`, icon: <ChartIcon /> },
         { key: 'calendar', label: 'Calendar', href: `${base}/admin/calendar`, icon: <CalendarIcon /> },
         { key: 'ai', label: 'AI steps', href: `${base}/admin/ai`, icon: <CogIcon /> },
-        { key: 'opening', label: 'Framing director', href: `${base}/admin/opening`, icon: <HeartIcon /> },
-        { key: 'sheet', label: 'Master sheet', href: `${base}/admin/sheet`, icon: <BookIcon /> },
+        { key: 'opening', label: 'Framing director', href: `${base}/admin/opening`, icon: <SparkIcon /> },
+        { key: 'sheet', label: 'Master sheet', href: `${base}/admin/sheet`, icon: <SheetIcon /> },
         { key: 'create', label: 'Sheet creator', href: `${base}/admin/sheet/create`, icon: <BookIcon /> },
         { key: 'feedback', label: 'Feedback', href: `${base}/admin/feedback`, icon: <QuestionIcon /> },
-        { key: 'compass', label: 'Compass', href: `${base}/admin/compass`, icon: <HeartIcon /> },
+        { key: 'compass', label: 'Compass', href: `${base}/admin/compass`, icon: <CompassIcon /> },
         { key: 'settings', label: 'Settings', href: `${base}/admin/settings`, icon: <CogIcon /> },
       ],
     },
@@ -75,15 +75,15 @@ export function masterNav(): NavGroup[] {
     },
     {
       group: 'Intermediate',
-      description: 'Course packs, study plans, Gather, live nights and missions.',
+      description: 'Course packs, study plans, Gather, live nights, missions, Scenes and Lanes.',
       items: [
         { key: 'packs', label: 'Course packs', href: '/master/packs', icon: <BookIcon /> },
         { key: 'plans', label: 'Study plans', href: '/master/plans', icon: <CalendarIcon /> },
         { key: 'circle', label: 'Gather', href: '/master/circle', icon: <PeopleIcon /> },
         { key: 'nights', label: 'Live', href: '/master/nights', icon: <MoonIcon /> },
-        { key: 'missions', label: 'Missions', href: '/master/missions', icon: <HeartIcon /> },
-        { key: 'opening', label: 'Scenes', href: '/master/opening', icon: <HeartIcon /> },
-        { key: 'lanes', label: 'Lanes', href: '/master/lanes', icon: <BookIcon /> },
+        { key: 'missions', label: 'Missions', href: '/master/missions', icon: <FlagIcon /> },
+        { key: 'opening', label: 'Scenes', href: '/master/opening', icon: <SparkIcon /> },
+        { key: 'lanes', label: 'Lanes', href: '/master/lanes', icon: <PathIcon /> },
       ],
     },
     {
@@ -91,18 +91,18 @@ export function masterNav(): NavGroup[] {
       description: 'Experiments, Insights, AI, framing, the sheet, the simulator and scales.',
       items: [
         { key: 'experiments', label: 'Experiments', href: '/master/experiments', icon: <BeakerIcon /> },
-        { key: 'insights', label: 'Insights', href: '/master/insights', icon: <GlobeIcon /> },
+        { key: 'insights', label: 'Insights', href: '/master/insights', icon: <ChartIcon /> },
         { key: 'calendar', label: 'Calendar', href: '/master/calendar', icon: <CalendarIcon /> },
         { key: 'ai', label: 'AI steps', href: '/master/ai', icon: <CogIcon /> },
-        { key: 'framing', label: 'Framing director', href: '/master/framing', icon: <HeartIcon /> },
-        { key: 'sheet', label: 'Master sheet', href: '/master/sheet', icon: <BookIcon /> },
-        { key: 'simulator', label: 'Simulator', href: '/master/simulator', icon: <CogIcon /> },
-        { key: 'personas', label: 'Scales', href: '/master/personas', icon: <HeartIcon /> },
+        { key: 'framing', label: 'Framing director', href: '/master/framing', icon: <SparkIcon /> },
+        { key: 'sheet', label: 'Master sheet', href: '/master/sheet', icon: <SheetIcon /> },
+        { key: 'simulator', label: 'Simulator', href: '/master/simulator', icon: <FilmIcon /> },
+        { key: 'personas', label: 'Scales', href: '/master/personas', icon: <ScaleIcon /> },
         { key: 'review', label: 'Review', href: '/master/review', icon: <QuestionIcon /> },
-        { key: 'tiers', label: 'Talk tiers', href: '/master/tiers', icon: <BookIcon /> },
+        { key: 'tiers', label: 'Talk tiers', href: '/master/tiers', icon: <FilmIcon /> },
         { key: 'create', label: 'Sheet creator', href: '/master/sheet/create', icon: <BookIcon /> },
         { key: 'questions', label: 'Placing questions', href: '/master/questions', icon: <QuestionIcon /> },
-        { key: 'trends', label: 'Network trends', href: '/master/trends', icon: <GlobeIcon /> },
+        { key: 'trends', label: 'Network trends', href: '/master/trends', icon: <NetworkIcon /> },
       ],
     },
   ]
@@ -166,18 +166,21 @@ export async function DeskFrame({
           <span><b>{brand}</b><small>{subBrand}</small></span>
         </Link>
         <nav className="side-nav" aria-label="Desk" data-testid="desk-nav">
-          {nav.map((group) => (
-            <div key={group.group} className="nav-group" data-testid={`nav-group-${group.group.toLowerCase().replace(/\s+/g, '-')}`}>
-              <div className="group">{group.group}</div>
-              {group.description ? <p className="group-desc">{group.description}</p> : null}
-              {group.items.map((item) => (
-                <Link key={item.key} className={`nav${item.key === active ? ' on' : ''}`} href={item.href} aria-current={item.key === active ? 'page' : undefined} data-testid={`nav-${item.key}`}>
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          ))}
+          {nav.map((group) => {
+            const open = group.items.some((item) => item.key === active)
+            return (
+              <details key={group.group} className="nav-group" open={open} data-testid={`nav-group-${group.group.toLowerCase().replace(/\s+/g, '-')}`}>
+                <summary className="group">{group.group}</summary>
+                {group.description ? <p className="group-desc">{group.description}</p> : null}
+                {group.items.map((item) => (
+                  <Link key={item.key} className={`nav${item.key === active ? ' on' : ''}`} href={item.href} aria-current={item.key === active ? 'page' : undefined} data-testid={`nav-${item.key}`}>
+                    {item.icon}
+                    {item.label}
+                  </Link>
+                ))}
+              </details>
+            )
+          })}
         </nav>
         <div className="side-foot">
           {extraLinks.length ? <div className="group">Elsewhere</div> : null}

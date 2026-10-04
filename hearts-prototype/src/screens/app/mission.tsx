@@ -9,7 +9,7 @@ export async function activeMissionCard(payload: Ctx['payload'], portalId: numbe
   const mission = open[0]
   if (!mission) return null
   const joined = await joinCount(payload, mission.id)
-  return <MissionCard mission={mission} base={base} joined={joined} />
+  return <MissionCard mission={mission} base={base} joined={joined} compact />
 }
 
 export async function MissionScreen({ payload, user, portal, base, query }: Ctx, id: number) {
@@ -39,7 +39,7 @@ export async function MissionScreen({ payload, user, portal, base, query }: Ctx,
         <section className="card" data-testid="mission-progress">
           <p className="eyebrow">Together</p>
           <h2 style={{ margin: '0 0 6px' }}>{view.progress.line}</h2>
-          <p className="muted">{view.toward.line}. Take it at your own pace. This is a thank-you, not a duty.</p>
+          <p className="muted" data-testid="mission-minutes">{view.toward.line}. Take it at your own pace. This is a thank-you, not a duty.</p>
         </section>
         {!view.join ? (
           <form action="/api/missions" method="post">
@@ -54,7 +54,7 @@ export async function MissionScreen({ payload, user, portal, base, query }: Ctx,
             <button className="pill gold block" type="submit" data-testid="mission-finish">I have done this</button>
           </form>
         )}
-        <Link className="pill outline block" href={tryHref} data-testid="mission-try">Try the screen</Link>
+        <Link className="text-link" href={tryHref} data-testid="mission-try">Open the screen this ask is about</Link>
       </div>
       <TabBar base={base} active="home" unread={unread} />
     </AppFrame>

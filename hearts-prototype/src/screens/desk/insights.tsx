@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { InsightsHelp } from '@/components/desk/help'
+import { routeWords } from '@/lib/insight-events'
 import { pct } from '@/lib/insight-funnel'
 import type { SessionUser } from '@/server/context'
 import { canViewInsights, experimentHint, insightsDesk } from '@/server/insights'
@@ -64,6 +65,7 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
     >
       <div className={styles.page}>
         <p className={styles.quiet}>One in {Math.round(100 / Math.max(1, desk.sampleRate))} sessions is sampled for tap maps and replays. Angry taps and funnels are always kept.</p>
+        {desk.testData ? <p className={styles.testBadge} data-testid="test-numbers">Test numbers</p> : null}
         <section className={styles.summary}>
           <div className={styles.tile}><b data-testid="insight-routes">{desk.routes.length}</b><span>Routes with taps</span></div>
           <div className={styles.tile}><b data-testid="insight-angry">{desk.angry.length}</b><span>Angry taps</span></div>
@@ -89,23 +91,28 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
                   </label>
                   <button className="btn ghost small" type="submit">Show</button>
                 </form>
-                <p className={styles.quiet}>Includes taps on things that are not buttons. Darker gold is more taps.</p>
+                <p className={styles.quiet}>Includes taps on things that are not buttons. Gold dots are where people tapped.</p>
                 <div className={styles.heat} data-testid="heatmap-overlay">
                   {desk.heatmap.cells.map((cell) => (
-                    <i
+                    <span
                       key={`${cell.x}-${cell.y}`}
-                      className={styles.cell}
+                      className={styles.dot}
                       style={{
-                        left: `${(cell.x / 16) * 100}%`,
-                        top: `${(cell.y / 28) * 100}%`,
-                        width: `${100 / 16}%`,
-                        height: `${100 / 28}%`,
-                        background: `rgba(212, 168, 75, ${0.18 + (cell.n / desk.heatmap.max) * 0.72})`,
+                        left: `${((cell.x + 0.5) / 16) * 100}%`,
+                        top: `${((cell.y + 0.5) / 28) * 100}%`,
+                        opacity: 0.35 + (cell.n / desk.heatmap.max) * 0.65,
+                        transform: `translate(-50%, -50%) scale(${0.85 + (cell.n / desk.heatmap.max) * 0.7})`,
                       }}
                     />
                   ))}
                 </div>
                 <Link className="btn" href={experimentHint(desk.heatmap.route, `heatmap on ${desk.heatmap.route}`)} data-testid="make-experiment">Make this an experiment</Link>
+                <div className={styles.scrollBlock} data-testid="insights-scroll">
+                  <h3>How far people scrolled</h3>
+                  {desk.scroll.length ? desk.scroll.map((row) => (
+                    <p key={row.route} className={styles.quiet}>{routeWords(row.route)} · {Math.round(row.max)}%</p>
+                  )) : <p className={styles.quiet}>No scroll depth yet.</p>}
+                </div>
               </div>
             </section>
             <section className="panel">
@@ -114,7 +121,11 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
                 {desk.replay ? (
                   <ol data-testid="insight-replay" style={{ paddingLeft: 18, margin: 0 }}>
                     {desk.replay.events.map((event, index) => (
-                      <li key={`${event.at}-${index}`} className={styles.quiet}>{event.kind} · {event.route}{event.x != null ? ` · ${event.x},${event.y}` : ''}</li>
+                      <li key={`${event.at}-${index}`} className={styles.quiet}>
+                        {event.kind.replace(/_/g, ' ')} · {routeWords(event.route)}
+                        {event.watchPct != null ? ` · watched ${Math.round(event.watchPct)}%` : ''}
+                        {event.depth != null ? ` · scrolled ${Math.round(event.depth)}%` : ''}
+                      </li>
                     ))}
                   </ol>
                 ) : <p className={styles.quiet}>No session replay yet.</p>}
@@ -131,7 +142,7 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
                   <div key={step.key} className={styles.bar} data-testid="funnel-step" data-step={step.key}>
                     <b>{step.label}</b>
                     <span className={styles.quiet}>{step.sessions} sessions · {pct(step.fromStart)} of those who began · {pct(step.dropOff)} left here</span>
-                    <i style={{ width: `${Math.max(6, Math.round(step.fromStart * 100))}%` }} />
+                    <span className={styles.meter} style={{ width: `${Math.max(6, Math.round(step.fromStart * 100))}%` }} />
                   </div>
                 ))}
               </div>
@@ -146,12 +157,12 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
             <div className="body">
               {desk.angry.length ? (
                 <table className={styles.table}>
-                  <thead><tr><th>Route</th><th>Spot</th><th>When</th><th /></tr></thead>
+                  <thead><tr><th>Screen</th><th>Where</th><th>When</th><th /></tr></thead>
                   <tbody>
                     {desk.angry.map((row) => (
                       <tr key={row.id} data-testid="angry-row">
-                        <td>{row.route}</td>
-                        <td>{row.x}, {row.y}</td>
+                        <td>{routeWords(row.route)}</td>
+                        <td>{row.place}</td>
                         <td>{row.at ? new Date(row.at).toLocaleString('en-GB') : ''}</td>
                         <td><Link href={`${base}?tab=heatmap&route=${encodeURIComponent(row.route)}`}>Open route</Link> · <Link href={experimentHint(row.route, 'angry taps')}>Make this an experiment</Link></td>
                       </tr>
@@ -172,7 +183,7 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
                   <div key={point.day} className={styles.bar} data-testid="retention-day" data-day={point.day}>
                     <b>Day {point.day}</b>
                     <span className={styles.quiet}>{point.returned} came back · {pct(point.rate)}</span>
-                    <i style={{ width: `${Math.max(6, Math.round(point.rate * 100))}%` }} />
+                    <span className={styles.meter} style={{ width: `${Math.max(6, Math.round(point.rate * 100))}%` }} />
                   </div>
                 ))}
               </div>

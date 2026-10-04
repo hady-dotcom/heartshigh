@@ -2,8 +2,8 @@ import Link from 'next/link'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { CalendarHelp } from '@/components/desk/help'
-import { CONTEXT_KEYS, contextName } from '@/lib/calendar-context'
-import { EXPERIMENT_SLOTS } from '@/lib/experiment-slots'
+import { actionCta, CONTEXT_KEYS, contextName, ukDate } from '@/lib/calendar-context'
+import { EXPERIMENT_SLOTS, slotPlainName } from '@/lib/experiment-slots'
 import { now } from '@/lib/clock'
 import type { SessionUser } from '@/server/context'
 import { canEditCalendar, canViewCalendar, contextAt, hijriOffsetOf, loadCopy, loadSeasons, seedDefaultCopy } from '@/server/calendar'
@@ -67,10 +67,20 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
     flagsOfSafe(payload),
   ])
   const fridayLine = copy.find((row) => row.slot === 'feed-cta-label' && row.context === 'friday' && row.approved)?.label
-    || "A Friday reminder before Jumu'ah"
+    || "Watch a Friday reminder before Jumu'ah ›"
   const ramadanLine = copy.find((row) => row.slot === 'feed-cta-label' && row.context === 'ramadan' && row.approved)?.label
-    || 'A short clip for a Ramadan evening'
-  const cta = context.ramadan ? ramadanLine : context.friday ? fridayLine : 'Learn more'
+    || 'Watch a short clip for a Ramadan evening ›'
+  const eidLine = copy.find((row) => row.slot === 'feed-cta-label' && (row.context === 'eidFitr' || row.context === 'eidAdha') && row.approved)?.label
+    || 'Watch a short clip for Eid ›'
+  const lastTenLine = copy.find((row) => row.slot === 'feed-cta-label' && row.context === 'lastTenNights' && row.approved)?.label
+    || 'Watch a few minutes in the last ten nights ›'
+  const rawCta = context.lastTenNights ? lastTenLine
+    : context.eidFitr || context.eidAdha ? eidLine
+    : context.ramadan ? ramadanLine
+    : context.friday ? fridayLine
+    : 'Learn more ›'
+  const cta = actionCta(rawCta)
+  const eid = context.eidFitr || context.eidAdha
   const masterUser = canEditCalendar(user)
   return (
     <Frame
@@ -92,19 +102,30 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
             <header><h2>See the app on a date</h2></header>
             <div className="body">
               <form action={base} method="get" className="form">
-                <label>Date<input type="date" name="date" defaultValue={previewDay} data-testid="calendar-date" /></label>
-                <label>Hour (UTC)
+                <label>Date <span className={styles.quiet}>({ukDate(previewDay)})</span><input type="date" name="date" defaultValue={previewDay} data-testid="calendar-date" /></label>
+                <label>Hour (UK)
                   <select name="hour" defaultValue={String(hour)} data-testid="calendar-hour">
                     {Array.from({ length: 24 }, (_, index) => <option key={index} value={index}>{index}:00</option>)}
                   </select>
                 </label>
                 <button className="btn" type="submit" data-testid="calendar-preview-go">Preview</button>
               </form>
-              <p className={styles.quiet} data-testid="calendar-context">{context.active.map(contextName).join(' · ') || 'No special day'} · {context.hijriLabel}</p>
-              <div className={styles.phone} data-testid="calendar-phone" data-friday={context.friday ? 'yes' : 'no'} data-ramadan={context.ramadan ? 'yes' : 'no'}>
+              <p className={styles.quiet}>The Islamic day moves on at Maghrib (about sunset in the UK, or the portal’s zone).</p>
+              <p className={styles.quiet} data-testid="calendar-context">{context.active.map(contextName).join(' · ') || 'No special day'} · {context.hijriLabel} · {ukDate(previewDay)}</p>
+              <div
+                className={styles.phone}
+                data-testid="calendar-phone"
+                data-friday={context.friday ? 'yes' : 'no'}
+                data-ramadan={context.ramadan ? 'yes' : 'no'}
+                data-last-ten={context.lastTenNights ? 'yes' : 'no'}
+                data-dhul-hijjah={context.dhulHijjah ? 'yes' : 'no'}
+                data-eid={eid ? 'yes' : 'no'}
+                data-muharram={context.muharram ? 'yes' : 'no'}
+              >
                 <p className={styles.quiet} style={{ color: '#f1d58a', letterSpacing: '0.14em', textTransform: 'uppercase', fontSize: 11 }}>Home</p>
-                <h3>{context.greeting || 'Your garden starts today'}</h3>
-                <p>{context.ramadan ? 'A quieter evening in Ramadan. A short clip is waiting when you are ready.' : context.friday ? 'A Friday reminder, before Jumu\'ah, if you have a moment.' : 'Short clips from real talks, when you have a little time.'}</p>
+                <p className={styles.phoneTitle}>{context.greeting || 'Your garden starts today'}</p>
+                <p className={styles.phoneWhen}>{ukDate(previewDay)}</p>
+                <p>{context.lastTenNights ? 'The last ten nights. A few quiet minutes, if you have them.' : context.ramadan ? 'A quieter evening in Ramadan. A short clip is waiting when you are ready.' : eid ? 'Eid mubarak. A short clip, if you would like one.' : context.dhulHijjah ? 'The first ten days. A short clip is waiting.' : context.muharram ? 'A new Hijri year. A short clip to begin.' : context.friday ? 'A Friday reminder, before Jumu\'ah, if you have a moment.' : 'Short clips from real talks, when you have a little time.'}</p>
                 <span className={styles.cta} data-testid="calendar-cta">{cta}</span>
               </div>
             </div>
@@ -188,13 +209,13 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
               </form>
             ) : null}
             <table className={styles.table} data-testid="copy-table">
-              <thead><tr><th>Slot</th><th>When</th><th>Line</th><th>Approved</th>{masterUser ? <th /> : null}</tr></thead>
+              <thead><tr><th>Where it shows</th><th>When</th><th>Line</th><th>Approved</th>{masterUser ? <th /> : null}</tr></thead>
               <tbody>
                 {copy.map((row) => (
                   <tr key={row.id} data-testid="copy-row" data-approved={row.approved ? 'yes' : 'no'}>
-                    <td>{row.slot}</td>
+                    <td>{slotPlainName(row.slot)}</td>
                     <td>{contextName(row.context)}</td>
-                    <td>{row.label}</td>
+                    <td>{actionCta(row.label)}</td>
                     <td>{row.approved ? 'Yes' : 'Needs approval'}</td>
                     {masterUser ? (
                       <td>

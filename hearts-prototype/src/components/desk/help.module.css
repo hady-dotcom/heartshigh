@@ -2,9 +2,9 @@
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  background: #fff;
-  border: 1px solid var(--line, #7A6238);
-  color: var(--teal-deep, #0F3B3A);
+  background: #163633;
+  border: 1px solid var(--line, #8A6D32);
+  color: #f1d58a;
   font: 750 20px/1 var(--sans, inherit);
   cursor: pointer;
 }
@@ -20,18 +20,19 @@
 }
 .card {
   width: min(520px, 100%);
-  background: var(--card, #F7EEDB);
-  border: 1.5px solid var(--teal-deep, #0F3B3A);
+  background: #163633;
+  border: 1.5px solid #c4923a;
   border-radius: 18px;
   padding: 22px 24px 20px;
-  box-shadow: 0 24px 60px rgba(15, 59, 58, 0.18);
+  box-shadow: 0 24px 60px rgba(8, 26, 26, 0.45);
+  color: #f6eedc;
 }
 .card h2 {
   margin: 0 0 12px;
   font-family: var(--serif, Georgia, serif);
   font-size: 26px;
-  color: var(--teal-deep, #0F3B3A);
+  color: #f1d58a;
 }
 .body { display: grid; gap: 10px; margin-bottom: 16px; }
-.body p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink, #1F2A26); }
-.body b { color: var(--teal-deep, #0F3B3A); }
+.body p { margin: 0; font-size: 15px; line-height: 1.5; color: #f6eedc; }
+.body b { color: #f1d58a; }

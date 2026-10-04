@@ -59,7 +59,7 @@ export function CalendarHelp() {
   return (
     <DeskHelp>
       <p>The calendar knows Friday (and Thursday evening), Ramadan and its last ten nights, the first ten days of Dhul Hijjah, the two Eids, Muharram and Ashura, plus seasons you add, such as exam season.</p>
-      <p>The Hijri date uses a civil calendar. The offset of plus or minus one day is for moon sighting.</p>
+      <p>The Hijri date uses a civil calendar. The Islamic day moves on at Maghrib, not midnight. The offset of plus or minus one day is for moon sighting.</p>
       <p>A suggested line never reaches a learner until you approve it. A sheikh’s words, talk content, Qur’an and hadith stay as they are.</p>
       <p><b>Preview</b> shows the app as it would look on a date you pick.</p>
     </DeskHelp>

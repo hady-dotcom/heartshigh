@@ -634,13 +634,26 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .mission-card h2 { margin: 0 0 8px; font-size: 20px; color: #f6eedc; }
 .mission-card p { margin: 0 0 10px; color: #e7dcc8; }
 .mission-card .eyebrow { color: #f1d58a; margin-top: 0; }
+.mission-card.compact { padding: 10px 12px; margin-bottom: 10px; }
+.mission-card.compact p { margin: 0 0 6px; font-size: 14px; }
+.text-link {
+  display: inline-block;
+  margin-top: 12px;
+  color: #f1d58a;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .feed-mission {
   position: absolute;
-  top: calc(10px + var(--safe-top));
   left: 12px;
   right: 12px;
+  bottom: calc(92px + var(--safe-bottom));
   z-index: 8;
+  pointer-events: none;
 }
-.feed-mission .mission-card { margin: 0; padding: 12px 14px; }
-.feed-mission .mission-card h2 { font-size: 16px; }
-.feed-mission .mission-card p { font-size: 13px; margin-bottom: 8px; }
+.feed-mission .mission-card { margin: 0; padding: 8px 10px; pointer-events: auto; }
+.feed-mission .mission-card .eyebrow { display: none; }
+.feed-mission .mission-card h2 { font-size: 15px; }
+.feed-mission .mission-card p { font-size: 12.5px; margin-bottom: 6px; }
+.feed-mission .pill { min-height: 36px; padding: 6px 12px; font-size: 13px; }

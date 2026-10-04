@@ -154,8 +154,16 @@ export function payloadProblems(slotKey: string, payload: unknown): string[] {
 }
 
 export function formatSlotLabel(template: string, minutes?: number) {
-  const n = Math.max(1, Math.round(Number(minutes) || 0) || 1)
-  return template.replace(/\{n\}/gi, String(n)).replace(/\bN\b/g, String(n))
+  const raw = String(template || '')
+  if (minutes == null || !Number.isFinite(Number(minutes)) || Number(minutes) <= 0) {
+    return raw.replace(/\s*\{n\}\s*/gi, ' ').replace(/\s+/g, ' ').trim()
+  }
+  const n = Math.max(1, Math.round(Number(minutes)))
+  return raw.replace(/\{n\}/gi, String(n)).replace(/\bN\b/g, String(n))
+}
+
+export function slotPlainName(key: string) {
+  return EXPERIMENT_SLOTS.find((slot) => slot.key === key)?.name || key.replace(/[-_]+/g, ' ')
 }
 
 /** Plain words for the Versions table. Never dump the JSON payload. */

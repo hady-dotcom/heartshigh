@@ -3,7 +3,7 @@ import { now } from '@/lib/clock'
 import { isProduction, isRemoteDatabase } from '@/lib/env'
 import { FUNNEL_STEPS, funnelMaths, retentionByDay, type FunnelResult } from '@/lib/insight-funnel'
 import { heatmapGrid, type HeatCell } from '@/lib/insight-taps'
-import { DEFAULT_SAMPLE_RATE, isInsightKind, normaliseRoute, sampleSession, sanitizeProps, shouldKeep } from '@/lib/insight-events'
+import { allowInsightBurst, angrySpotWords, DEFAULT_SAMPLE_RATE, isAnswerScreen, isInsightKind, isPrivateLane, normaliseRoute, sampleSession, sanitizeProps, shouldKeep } from '@/lib/insight-events'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { audit } from './viewas'
 import type { SessionUser } from './context'
@@ -55,16 +55,22 @@ export async function ingestEvents(
   },
 ) {
   const subject = input.user?.role === 'learner' ? `learner:${input.user.id}` : input.deviceId ? `device:${input.deviceId}` : ''
+  const optedIn = Boolean(input.user && 'trendsOptIn' in input.user && input.user.trendsOptIn)
   const rate = await sampleRateOf(payload)
+  const burstKey = String(input.events[0]?.sessionId || input.deviceId || input.user?.id || 'anon')
+  if (!allowInsightBurst(burstKey, 40, 10_000)) return { stored: 0, limited: true }
   let stored = 0
-  for (const raw of input.events.slice(0, 40)) {
+  const stamp = now()
+  for (const [index, raw] of input.events.slice(0, 20).entries()) {
     if (!isInsightKind(raw.kind)) continue
     const sessionId = String(raw.sessionId || '').slice(0, 48)
     if (!sessionId) continue
     const sampled = sampleSession(sessionId, rate)
     if (!shouldKeep(raw.kind, sampled)) continue
     const route = normaliseRoute(raw.route || '/')
-    const at = raw.at && !Number.isNaN(Date.parse(raw.at)) ? raw.at : now().toISOString()
+    if (isPrivateLane(String((raw.props as { lane?: string } | undefined)?.lane || ''))) continue
+    const hideCoords = isAnswerScreen(route) || !optedIn || raw.kind === 'tap' && isAnswerScreen(route)
+    const at = new Date(stamp.getTime() + index).toISOString()
     try {
       await payload.create({
         collection: col('insight-events'),
@@ -73,17 +79,17 @@ export async function ingestEvents(
           kind: raw.kind,
           route,
           sessionId,
-          subject: subject || sessionId,
-          learner: input.user?.role === 'learner' ? input.user.id : undefined,
+          subject: hideCoords && raw.kind !== 'funnel' ? sessionId : (subject || sessionId),
+          learner: hideCoords || input.user?.role !== 'learner' ? undefined : input.user.id,
           deviceId: input.deviceId || undefined,
           portal: input.portalId || undefined,
-          x: Number.isFinite(Number(raw.x)) ? Number(raw.x) : undefined,
-          y: Number.isFinite(Number(raw.y)) ? Number(raw.y) : undefined,
-          vw: Number.isFinite(Number(raw.vw)) ? Number(raw.vw) : undefined,
-          vh: Number.isFinite(Number(raw.vh)) ? Number(raw.vh) : undefined,
+          x: hideCoords || !Number.isFinite(Number(raw.x)) ? undefined : Number(raw.x),
+          y: hideCoords || !Number.isFinite(Number(raw.y)) ? undefined : Number(raw.y),
+          vw: hideCoords || !Number.isFinite(Number(raw.vw)) ? undefined : Number(raw.vw),
+          vh: hideCoords || !Number.isFinite(Number(raw.vh)) ? undefined : Number(raw.vh),
           depth: Number.isFinite(Number(raw.depth)) ? Number(raw.depth) : undefined,
           clipId: raw.clipId ? String(raw.clipId).slice(0, 40) : undefined,
-          watchPct: Number.isFinite(Number(raw.watchPct)) ? Number(raw.watchPct) : undefined,
+          watchPct: Number.isFinite(Number(raw.watchPct)) ? Math.max(0, Math.min(100, Number(raw.watchPct))) : undefined,
           step: raw.step ? String(raw.step).slice(0, 40) : undefined,
           interactive: Boolean(raw.interactive),
           sampled,
@@ -223,11 +229,13 @@ export type InsightsDesk = {
   routes: { route: string; taps: number; angry: number; sessions: number }[]
   heatmap: { route: string; cells: HeatCell[]; max: number; taps: number }
   funnel: FunnelResult
-  angry: { id: number; route: string; x: number; y: number; at: string; sessionId: string }[]
+  angry: { id: number; route: string; x: number; y: number; at: string; sessionId: string; place: string }[]
   retention: { cohort: number; points: { day: number; returned: number; rate: number }[] }
   watch: { clips: number; medianPct: number; swipeAway: number }
-  replay: { sessionId: string; events: { kind: string; route: string; x?: number; y?: number; at?: string }[] } | null
+  scroll: { route: string; max: number }[]
+  replay: { sessionId: string; events: { kind: string; route: string; x?: number; y?: number; at?: string; watchPct?: number; depth?: number }[] } | null
   sampleRate: number
+  testData: boolean
 }
 
 export async function insightsDesk(payload: Payload, actor: InsightActor, query: { route?: string; session?: string } = {}): Promise<InsightsDesk> {
@@ -259,7 +267,14 @@ export async function insightsDesk(payload: Payload, actor: InsightActor, query:
       y: Number(row.y || 0),
       at: String(row.at || ''),
       sessionId: String(row.sessionId || ''),
+      place: angrySpotWords({ route: row.route, x: row.x, y: row.y, vw: row.vw, vh: row.vh }),
     }))
+  const scrollByRoute = new Map<string, number>()
+  for (const row of events) {
+    if (row.kind !== 'scroll' || row.depth == null) continue
+    const route = row.route || '/'
+    scrollByRoute.set(route, Math.max(scrollByRoute.get(route) || 0, Number(row.depth) || 0))
+  }
   const firstSeen: Record<string, string> = {}
   const visits: { subject: string; day: string }[] = []
   for (const row of events) {
@@ -275,10 +290,18 @@ export async function insightsDesk(payload: Payload, actor: InsightActor, query:
   const replayId = query.session || events.find((row) => row.kind === 'route')?.sessionId || ''
   const replayEvents = replayId
     ? events
-      .filter((row) => row.sessionId === replayId && (row.kind === 'route' || row.kind === 'tap' || row.kind === 'angry_tap'))
+      .filter((row) => row.sessionId === replayId && (row.kind === 'route' || row.kind === 'tap' || row.kind === 'angry_tap' || row.kind === 'clip_watch' || row.kind === 'clip_swipe' || row.kind === 'scroll'))
       .sort((a, b) => String(a.at).localeCompare(String(b.at)))
       .slice(0, 80)
-      .map((row) => ({ kind: String(row.kind), route: String(row.route), x: row.x ?? undefined, y: row.y ?? undefined, at: row.at }))
+      .map((row) => ({
+        kind: String(row.kind),
+        route: String(row.route),
+        x: row.x ?? undefined,
+        y: row.y ?? undefined,
+        at: row.at,
+        watchPct: row.watchPct ?? undefined,
+        depth: row.depth ?? undefined,
+      }))
     : []
   return {
     routes,
@@ -293,6 +316,8 @@ export async function insightsDesk(payload: Payload, actor: InsightActor, query:
     },
     replay: replayId ? { sessionId: replayId, events: replayEvents } : null,
     sampleRate: await sampleRateOf(payload),
+    scroll: [...scrollByRoute.entries()].map(([route, max]) => ({ route, max })).sort((a, b) => b.max - a.max),
+    testData: events.some((row) => String(row.subject || '').startsWith('test-data:')),
   }
 }
 
@@ -324,21 +349,35 @@ export async function fillInsightDemo(payload: Payload, actor: InsightActor) {
     if (s < 18) push({ kind: 'funnel', route: '/p/:portal/feed', sessionId, subject, step: 'first_clip', sampled: true, at: day })
     if (s < 10) push({ kind: 'funnel', route: '/p/:portal/course/1', sessionId, subject, step: 'course_start', sampled: true, at: day })
     if (s < 6) push({ kind: 'funnel', route: '/p/:portal/me/plan', sessionId, subject, step: 'study_plan_saved', sampled: true, at: day })
-    for (let t = 0; t < 16; t++) {
-      const onFeed = t < 12 || s % 2 === 0
-      push({
-        kind: 'tap',
-        route: onFeed ? '/p/:portal/feed' : routes[s % routes.length],
-        sessionId,
-        subject,
-        x: 40 + ((t * 29 + s * 13) % 310),
-        y: 80 + ((t * 41 + s * 17) % 680),
-        vw: 390,
-        vh: 844,
-        interactive: t % 4 === 0,
-        sampled: true,
-        at: day,
-      })
+    const spots = [
+      { x: 196, y: 718, n: 8 },
+      { x: 340, y: 390, n: 4 },
+      { x: 196, y: 410, n: 5 },
+      { x: 52, y: 86, n: 2 },
+      { x: 78, y: 800, n: 2 },
+      { x: 196, y: 800, n: 3 },
+    ]
+    for (const spot of spots) {
+      for (let t = 0; t < spot.n; t++) {
+        push({
+          kind: 'tap',
+          route: '/p/:portal/feed',
+          sessionId,
+          subject,
+          x: spot.x + ((s * 7 + t * 11) % 21) - 10,
+          y: spot.y + ((s * 5 + t * 9) % 17) - 8,
+          vw: 390,
+          vh: 844,
+          interactive: spot.y > 680,
+          sampled: true,
+          at: day,
+        })
+      }
+    }
+    push({ kind: 'scroll', route: '/p/:portal/feed', sessionId, subject, depth: 55 + (s * 7) % 40, sampled: true, at: day })
+    if (s % 3 === 0) {
+      push({ kind: 'route', route: '/p/:portal/feed', sessionId, subject, sampled: true, at: day })
+      push({ kind: 'tap', route: '/p/:portal/feed', sessionId, subject, x: 196, y: 718, vw: 390, vh: 844, sampled: true, at: day })
     }
     if (s % 5 === 0) {
       push({ kind: 'angry_tap', route: '/p/:portal/feed', sessionId, subject, x: 196, y: 620, vw: 390, vh: 844, sampled: true, at: day })

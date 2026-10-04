@@ -76,7 +76,6 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
             ))}
           </section>
         ) : null}
-        <StartAgain base={base} />
         <div className="app-head" style={{ marginTop: 18 }}>
           <h2 style={{ margin: 0, fontSize: 19 }}>Notifications</h2>
           {unread ? (
@@ -95,6 +94,8 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
         )) : (
           <EmptyState testId="notes-empty" action={{ href: `${base}/garden`, label: 'Open the garden' }}>Nothing new. Replies from your teacher and new nights will show here.</EmptyState>
         )}
+        <p className="eyebrow" style={{ marginTop: 22 }}>Opening questions</p>
+        <StartAgain base={base} />
       </div>
       <TabBar base={base} active="me" unread={unread} />
     </AppFrame>

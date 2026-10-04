@@ -13,11 +13,11 @@ export function Flash({ error, notice }: { error?: string; notice?: string }) {
   )
 }
 
-export function AppFrame({ children, dark = false, evening = false, testId }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string }) {
+export function AppFrame({ children, dark = false, evening = false, testId, trendsOptIn }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; trendsOptIn?: boolean }) {
   return (
     <div className={`app-stage${evening ? ' evening' : ''}`}>
       <main className={`app${dark ? ' dark' : ''}${evening ? ' evening' : ''}`} data-testid={testId}>
-        <InsightTracker />
+        <InsightTracker trendsOptIn={trendsOptIn} />
         {children}
       </main>
     </div>

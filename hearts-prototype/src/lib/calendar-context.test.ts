@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { approvedCopy, calendarContext, contextLabel, nudgeTalks } from './calendar-context'
+import { actionCta, approvedCopy, calendarContext, contextLabel, nudgeTalks, ukDate } from './calendar-context'
 import { hijriOf, toGregorian, toHijri } from './hijri'
 
 function utc(iso: string) {
@@ -99,6 +99,29 @@ test('context wording picks Friday over the default label', () => {
   )
   assert.equal(approved, "A Friday reminder before Jumu'ah")
   assert.equal(approvedCopy([{ slot: 'feed-cta-label', context: 'friday', label: 'Hold', approved: false }], 'feed-cta-label', friday), null)
+})
+
+test('Islamic day moves on after Maghrib, so Ramadan 20 at night is the last ten nights', () => {
+  const day20 = gregorianOf(1447, 9, 20)
+  const afternoon = calendarContext({ at: day20, hour: 15, sunsetHour: 18 })
+  assert.equal(afternoon.lastTenNights, false)
+  assert.equal(afternoon.hijri.hd, 20)
+  const evening = calendarContext({ at: day20, hour: 19, sunsetHour: 18 })
+  assert.equal(evening.hijri.hd, 21)
+  assert.equal(evening.lastTenNights, true)
+})
+
+test('Thursday after Maghrib is already Friday', () => {
+  const before = calendarContext({ at: utc('2026-02-05T16:00:00'), weekday: 4, hour: 16, sunsetHour: 17.5 })
+  assert.equal(before.friday, false)
+  const after = calendarContext({ at: utc('2026-02-05T18:30:00'), weekday: 4, hour: 18, sunsetHour: 17.5 })
+  assert.equal(after.friday, true)
+  assert.equal(after.thursdayEvening, true)
+})
+
+test('action CTA and UK date helpers', () => {
+  assert.equal(actionCta('Watch a short clip for Eid ›'), 'Watch a short clip for Eid ›')
+  assert.equal(ukDate('2026-10-04'), '4 October 2026')
 })
 
 test('talk order is nudged by season theme and optional popular ids', () => {

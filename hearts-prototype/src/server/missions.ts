@@ -250,18 +250,24 @@ export async function joinMission(payload: Payload, user: SessionUser, missionId
   if (mission.portals.length && portalId && !mission.portals.includes(portalId)) throw new Error('This mission is for another portal.')
   const held = await joinOf(payload, missionId, user.id)
   if (held) return { already: true, join: held }
-  const created = await payload.create({
-    collection: col('mission-joins'),
-    overrideAccess: true,
-    data: {
-      mission: missionId,
-      user: user.id,
-      portal: portalId || undefined,
-      joinedAt: now().toISOString(),
-      minutes: weekMinutesFromSeconds(await weekSeconds(payload, user.id)),
-    } as never,
-  })
-  return { already: false, join: created }
+  try {
+    const created = await payload.create({
+      collection: col('mission-joins'),
+      overrideAccess: true,
+      data: {
+        mission: missionId,
+        user: user.id,
+        portal: portalId || undefined,
+        joinedAt: now().toISOString(),
+        minutes: weekMinutesFromSeconds(await weekSeconds(payload, user.id)),
+      } as never,
+    })
+    return { already: false, join: created }
+  } catch {
+    const again = await joinOf(payload, missionId, user.id)
+    if (again) return { already: true, join: again }
+    throw new Error('That join could not be saved.')
+  }
 }
 
 export async function finishMission(payload: Payload, user: SessionUser, missionId: number) {
@@ -327,19 +333,6 @@ export async function shareResult(payload: Payload, actor: MissionActor, id: num
         body: note.body,
         href,
         key: note.key,
-        channel: 'in-app',
-      },
-    })
-    await payload.create({
-      collection: 'notifications',
-      overrideAccess: true,
-      data: {
-        user: note.user,
-        portal: portal || undefined,
-        title: note.title,
-        body: note.body,
-        href,
-        key: `${note.key}-msg`,
         channel: 'in-app',
       },
     })

@@ -57,6 +57,9 @@ export const MissionJoins: CollectionConfig = {
     { name: 'minutes', type: 'number', defaultValue: 0 },
     { name: 'thanked', type: 'checkbox', defaultValue: false },
   ],
+  indexes: [
+    { fields: ['mission', 'user'], unique: true },
+  ],
 }
 
 export const SupportThreads: CollectionConfig = {

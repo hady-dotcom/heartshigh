@@ -62,7 +62,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
   return (
     <div className="app-stage dusk">
       <main className="app dark journey-frame" data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
-        <InsightTracker />
+        <InsightTracker trendsOptIn={Boolean(user?.trendsOptIn)} />
         {mission && initial === 'feed' ? <div className="feed-mission">{mission}</div> : null}
         <Journey
           base={base}
