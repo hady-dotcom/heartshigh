@@ -25,33 +25,6 @@
   ],
   "sentences": [
     {
-      "text": "their their dowy.",
-      "s": 2749,
-      "e": 2751,
-      "key": "dowy",
-      "words": [
-        {
-          "w": "their",
-          "t": 2749,
-          "e": 2750,
-          "key": false
-        },
-        {
-          "w": "their",
-          "t": 2750,
-          "e": 2750.5,
-          "key": false
-        },
-        {
-          "w": "dowy.",
-          "t": 2750.5,
-          "e": 2751,
-          "key": true
-        }
-      ],
-      "next": 2751
-    },
-    {
       "text": "Today people have taken dowry as like a representation of value.",
       "s": 2751,
       "e": 2756,
@@ -602,84 +575,9 @@
         }
       ],
       "next": 2778
-    },
-    {
-      "text": "You know we cannot we will not accept",
-      "s": 2778,
-      "e": 2778,
-      "key": "cannot",
-      "words": [
-        {
-          "w": "You",
-          "t": 2778,
-          "e": 2778.25,
-          "key": false
-        },
-        {
-          "w": "know",
-          "t": 2778.25,
-          "e": 2778.5,
-          "key": false
-        },
-        {
-          "w": "we",
-          "t": 2778.5,
-          "e": 2778.75,
-          "key": false
-        },
-        {
-          "w": "cannot",
-          "t": 2778.75,
-          "e": 2779,
-          "key": true
-        },
-        {
-          "w": "we",
-          "t": 2779,
-          "e": 2779.25,
-          "key": false
-        },
-        {
-          "w": "will",
-          "t": 2779.25,
-          "e": 2779.5,
-          "key": false
-        },
-        {
-          "w": "not",
-          "t": 2779.5,
-          "e": 2779.75,
-          "key": false
-        },
-        {
-          "w": "accept",
-          "t": 2779.75,
-          "e": 2780,
-          "key": false
-        }
-      ],
-      "next": 2778
     }
   ],
   "words": [
-    {
-      "w": "their",
-      "t": 2749,
-      "e": 2750,
-      "key": false
-    },
-    {
-      "w": "their",
-      "t": 2750,
-      "e": 2750.5,
-      "key": false
-    },
-    {
-      "w": "dowy.",
-      "t": 2750.5,
-      "e": 2751,
-      "key": true
-    },
     {
       "w": "Today",
       "t": 2751,
@@ -1158,54 +1056,6 @@
       "w": "today.",
       "t": 2777.714,
       "e": 2778,
-      "key": false
-    },
-    {
-      "w": "You",
-      "t": 2778,
-      "e": 2778.25,
-      "key": false
-    },
-    {
-      "w": "know",
-      "t": 2778.25,
-      "e": 2778.5,
-      "key": false
-    },
-    {
-      "w": "we",
-      "t": 2778.5,
-      "e": 2778.75,
-      "key": false
-    },
-    {
-      "w": "cannot",
-      "t": 2778.75,
-      "e": 2779,
-      "key": true
-    },
-    {
-      "w": "we",
-      "t": 2779,
-      "e": 2779.25,
-      "key": false
-    },
-    {
-      "w": "will",
-      "t": 2779.25,
-      "e": 2779.5,
-      "key": false
-    },
-    {
-      "w": "not",
-      "t": 2779.5,
-      "e": 2779.75,
-      "key": false
-    },
-    {
-      "w": "accept",
-      "t": 2779.75,
-      "e": 2780,
       "key": false
     }
   ]

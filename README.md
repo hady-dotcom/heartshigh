@@ -1,29 +1,38 @@
-# AI director v1 proof
+# AI director v1 — live-player proof
 
-Live 390×844 recordings of `/dev/framing` for the four prototype windows. The player is the real HEARTS YouTube embed (nocookie, chromeless, sound requested). The film is not re-hosted.
+Portrait treatments A–F of a 16:9 film, applied in the HEARTS player (CSS, not ffmpeg).
+This branch is proof only. It does not merge. It does not touch live data.
 
-## Tracks
+YouTube is blocked on the proof VM (embed + yt-dlp). Every recording uses the
+labelled local placeholder at `/framing/placeholder.mp4`: a 16:9 test pattern
+with a face-like block, burned-in `PLACEHOLDER` copy, and a running clock.
+A fake `__frClock` steps the player so modes and F words change; the video
+element seeks to that clock so the burned-in timecode advances.
 
-Chooser ran on the box-prototype YuNet/textcheck stats because this cloud box is bot-checked by YouTube (`yt-dlp` cannot keep a temp download). In/out still snap to sentence ends.
+## Demo switch (the one to watch)
 
-| Clip | YouTube | Window | Mode | Why |
-| --- | --- | --- | --- | --- |
-| offcentre | 9gwe-HMwZv0 | 1005.20–1028.90 | D | Single face, off centre (x=0.28) |
-| twoperson | 45XUrfJS68Q | 307.25–332.00 | F | Two people / twoFar |
-| slidetext | 9k7QxXtCzaQ | 38.00–65.00 | B | textScore 0.012 |
-| wide | TLCGBj4AlB0 | 2751.00–2778.00 | D | Single face in a wide shot (x=0.22) |
+`placeholder-0-24` / `fixture=switch`: D 0–8, B 8–16, F 16–24, snapped to
+sentence ends. Stepped clock: 1, 6, 10, 14, 17, 20, 22.4.
 
-JSON: `tracks/`.
+- [recordings/demo-switch-390x844.mp4](recordings/demo-switch-390x844.mp4)
+- D crop: [frames/demo-d.png](frames/demo-d.png)
+- B letterbox on screen: [frames/demo-b.png](frames/demo-b.png)
+- F “winning”: [frames/demo-f-winning.png](frames/demo-f-winning.png)
+- F “dignity”: [frames/demo-f-dignity.png](frames/demo-f-dignity.png)
 
-## Recordings
+## Prototype clips (same placeholder film, real tracks)
 
-`recordings/<slug>-390x844.webm` and `recordings/<slug>-frames.png` (3×2 stills).
+| Slug | Track | Mode | Notes |
+| --- | --- | --- | --- |
+| offcentre | 9gwe-HMwZv0 1005–1029 | D | Off-centre face crop |
+| twoperson | 45XUrfJS68Q 307–332 | F | In-window line starts at “Uh I was speaking…” |
+| slidetext | 9k7QxXtCzaQ 38–65 | B | Full-width 16:9 letterbox, teal bars |
+| wide | TLCGBj4AlB0 2751–2778 | D | Wide single face |
 
-## Limits recorded on this box
+Raw mp4s:
 
-- YouTube IFrame playback from this network stayed at t=0 and often showed the unavailable / “learn more” slate, so the stills prove the live crop chrome (D cover, B teal letterbox, F split words) more than the intended 16:45 / 5:08 / 0:38 / 45:51 picture.
-- Mode follow, word wrap and hold/snap are covered by unit + Playwright tests on the feature branch, with a fake clock.
-- iPhone Safari iframe transform is unverified here.
-- `docs/DESIGN-WHY.md` was not in the tree.
-
-Feature PR: https://github.com/hady-dotcom/heartshigh/pull/21
+- https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/ai-director-v1/recordings/demo-switch-390x844.mp4
+- https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/ai-director-v1/recordings/offcentre-390x844.mp4
+- https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/ai-director-v1/recordings/twoperson-390x844.mp4
+- https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/ai-director-v1/recordings/slidetext-390x844.mp4
+- https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/ai-director-v1/recordings/wide-390x844.mp4
