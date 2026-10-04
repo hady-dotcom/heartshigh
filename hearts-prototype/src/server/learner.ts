@@ -4,6 +4,7 @@ import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
 import { idOf } from '@/lib/ids'
 import { recommendLesson } from '@/lib/placing'
+import { pickGentleFirstCourse } from '@/lib/first-course'
 import { capitalAfterColon, doorOfClause } from '@/lib/doors'
 import { loadDoors } from './doors'
 import { portalDisplayName } from '@/lib/portal-name'
@@ -181,7 +182,17 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
         doors,
       )
     : null
-  const recommendedCourse = firstPick ? idOf(lessons.find((lesson) => lesson.id === firstPick)?.course) : null
+  const gentle = pickGentleFirstCourse(
+    firstPick,
+    courses.map((course) => ({
+      courseId: course.id,
+      courseTitle: String(course.title || ''),
+      lessons: lessons
+        .filter((lesson) => idOf(lesson.course) === course.id)
+        .map((lesson) => ({ id: lesson.id, title: String(lesson.title || ''), order: Number(lesson.order || 0) })),
+    })),
+  )
+  const recommendedCourse = gentle?.courseId || (firstPick ? idOf(lessons.find((lesson) => lesson.id === firstPick)?.course) : null)
   const ordered = [...courses].sort((a, b) => (a.id === recommendedCourse ? -1 : b.id === recommendedCourse ? 1 : a.id - b.id))
   const today = dayNumber(user as SessionUser & { joinedAt?: string })
   return ordered.map((course, index) => {

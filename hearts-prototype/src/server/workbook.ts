@@ -89,7 +89,7 @@ export type WorkbookAnswer = {
   reply: string | null
   kind: string
 }
-export type WorkbookOpen = { pointId: number; question: string; video: string; lessonId: number; kind: string; family: string; evidence: string; dueDays: number | null; showImam: boolean }
+export type WorkbookOpen = { pointId: number; question: string; video: string; lessonId: number; courseId: number; second: number; kind: string; family: string; evidence: string; dueDays: number | null; showImam: boolean }
 export type Workbook = { learner: { id: number; name: string }; opening: WorkbookOpeningRow[]; answers: WorkbookAnswer[]; open: WorkbookOpen[] }
 
 const plainCaption = (text: string) => text.replace(/\*\*/g, '')
@@ -114,7 +114,16 @@ export async function workbookFor(payload: Payload, learner: SessionUser, reader
   const answers = (await payload.find({ collection: 'answers', ...asReader, depth: 0, limit: 500, sort: '-createdAt', where: { user: { equals: learner.id } } })).docs as unknown as Row[]
   const pointIds = [...new Set(answers.map((row) => idOf(row.point)).filter((id): id is number => Boolean(id)))]
   const visits = (await payload.find({ collection: 'lesson-visits', overrideAccess: true, depth: 0, limit: 200, where: { user: { equals: learner.id } } })).docs as unknown as Row[]
-  const lessonIds = [...new Set([...answers.map((row) => idOf(row.lesson)), ...visits.map((row) => idOf(row.lesson))].filter((id): id is number => Boolean(id)))]
+  const sessions = (await payload.find({ collection: 'watch-sessions', overrideAccess: true, depth: 0, limit: 200, where: { user: { equals: learner.id } } })).docs as unknown as Row[]
+  const played = new Set(
+    [
+      ...sessions.filter((row) => Number(row.seconds || 0) > 0).map((row) => idOf(row.lesson)),
+      ...answers.map((row) => idOf(row.lesson)),
+    ].filter((id): id is number => Boolean(id)),
+  )
+  const opened = new Set(visits.map((row) => idOf(row.lesson)).filter((id): id is number => Boolean(id)))
+  const allowedTalks = played.size ? played : opened
+  const lessonIds = [...new Set([...answers.map((row) => idOf(row.lesson)), ...allowedTalks]).values()].filter((id): id is number => Boolean(id))
   const showUnchecked = await showUncheckedTalks(payload)
   const [points, lessons, entries] = await Promise.all([
     lessonIds.length ? payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 500, where: { or: [{ id: { in: pointIds.length ? pointIds : [0] } }, { and: [{ lesson: { in: lessonIds } }, pointVisibleWhere(showUnchecked)] }] } }) : Promise.resolve({ docs: [] }),
@@ -156,11 +165,16 @@ export async function workbookFor(payload: Payload, learner: SessionUser, reader
   const answered = new Set(list.map((row) => row.pointId))
   const open = owner
     ? pointRows
-        .filter((point) => !answered.has(point.id) && point.status !== 'rejected' && (showUnchecked || point.status !== 'draft') && visits.some((visit) => idOf(visit.lesson) === idOf(point.lesson)))
+        .filter((point) => !answered.has(point.id) && point.status !== 'rejected' && (showUnchecked || point.status !== 'draft') && allowedTalks.has(idOf(point.lesson) || 0))
         .map((point) => ({
           pointId: point.id,
           question: String(point.prompt),
           lessonId: idOf(point.lesson) || 0,
+          courseId: (() => {
+            const lesson = lessonRows.find((item) => item.id === idOf(point.lesson))
+            return idOf(lesson?.course) || 0
+          })(),
+          second: Number(point.second || 0),
           video: (() => {
             const lesson = lessonRows.find((item) => item.id === idOf(point.lesson))
             const course = (courses.docs as unknown as Row[]).find((item) => item.id === idOf(lesson?.course))

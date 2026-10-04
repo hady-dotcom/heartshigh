@@ -549,6 +549,49 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .slot { display: flex; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .slot .date { width: 54px; text-align: center; background: var(--lavender); color: var(--purple); border-radius: 12px; padding: 6px 0; font-weight: 800; font-size: 13px; line-height: 1.2; flex: none; }
 .slot .date small { display: block; font-weight: 600; font-size: 11px; }
+.slot { text-decoration: none; color: inherit; }
+.slot .today-badge { display: inline-block; margin-left: 8px; background: var(--gold); color: var(--gold-ink); border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+.date-field, .field[type='date'] { max-width: 100%; width: 100%; box-sizing: border-box; }
+.date-read { display: block; font-weight: 600; font-size: 13px; color: var(--ink-2); }
+.week-strip { background: #E8D6AE; color: #1E2A26; border-radius: 20px; padding: 14px 12px 12px; margin-bottom: 14px; }
+.week-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.week-day { display: grid; justify-items: center; gap: 2px; padding: 6px 0 8px; border-radius: 14px; font-size: 12px; position: relative; }
+.week-day small { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #5c5346; }
+.week-day b { font-size: 16px; }
+.week-day.today { background: #0F2E2C; color: #F1E4C6; }
+.week-day.today small { color: #D4A84B; }
+.week-day .dot { width: 6px; height: 6px; border-radius: 50%; background: #D4A84B; }
+.week-today { display: block; margin-top: 10px; font-weight: 700; color: #1E2A26; text-decoration: none; min-height: 44px; display: flex; align-items: center; }
+.week-today.empty { color: #0F2E2C; }
+.plan-cal { margin: 4px 0 16px; padding: 12px 10px 14px; border-radius: 20px; }
+.plan-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.plan-cal-label { text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); padding: 4px 0; }
+.plan-cal-day {
+  min-height: 44px; border-radius: 12px; display: grid; place-items: center;
+  text-decoration: none; color: inherit; position: relative; font-size: 14px;
+}
+.plan-cal-day.empty { visibility: hidden; }
+.plan-cal-day.on { background: var(--lavender); color: var(--purple); font-weight: 700; }
+.plan-cal-day.today { box-shadow: inset 0 0 0 2px var(--gold); }
+.plan-cal-day i { position: absolute; bottom: 6px; width: 5px; height: 5px; border-radius: 50%; background: var(--gold); }
+.player-retry {
+  position: absolute; inset: 0; z-index: 6; display: grid; place-content: center; justify-items: center;
+  gap: 12px; background: rgba(14, 42, 43, 0.86); color: #f6eedc; text-align: center; padding: 24px;
+}
+.player-retry p { margin: 0; font-weight: 650; }
+.up-next-row { display: block; margin: 12px 2px 0; font-weight: 700; color: var(--ink); text-decoration: none; min-height: 44px; }
+.up-next-row.last { color: var(--ink-2); font-weight: 600; }
+.up-next-card { margin-top: 14px; background: #E8D6AE; color: #1E2A26; border-radius: 20px; padding: 16px; }
+.up-next-card h2 { margin: 0 0 8px; font-size: 22px; }
+.up-next-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.buffet-row { display: flex; align-items: center; gap: 12px; background: #E8D6AE; color: #1E2A26; border-radius: 16px; padding: 10px; margin-bottom: 10px; text-decoration: none; min-height: 64px; }
+.buffet-row .thumb { width: 72px; height: 44px; border-radius: 10px; background: #0F2E2C center/cover; flex: none; }
+.buffet-row .t { flex: 1; min-width: 0; }
+.buffet-row b { display: block; font-size: 15px; }
+.buffet-row small { display: block; color: #5c5346; font-size: 12.5px; }
+.workbook-page { padding-bottom: calc(120px + var(--safe-bottom)); }
+.speaker-card { background: #E8D6AE; color: #1E2A26; }
+.speaker-card small { color: #0F2E2C; }
 
 /* Clause card number (Jibril card style), Ghunya seat groups, empty states */
 .clause-card .clause-num { font-family: 'Libre Caslon Text', Georgia, serif; font-size: 44px; line-height: 1; color: #2b2622; margin-bottom: 8px; }
@@ -660,7 +703,8 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 :is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-entry,
 :is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .wb-open,
 :is(html, html[data-theme]) main.app.evening[data-testid="course"] .list-link,
-:is(html, html[data-theme]) main.app.evening[data-testid="plan"] .form-stack {
+:is(html, html[data-theme]) main.app.evening[data-testid="plan"] .form-stack,
+:is(html, html[data-theme]) main.app.evening[data-testid="plan"] .plan-cal {
   background: linear-gradient(180deg, #f3e2c0, #e8d4a6);
   color: #0f3b3a;
   border-color: #7a6238;

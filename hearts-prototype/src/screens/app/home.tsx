@@ -4,6 +4,8 @@ import { InstallCard } from '@/components/app/install-card'
 import { redirect } from 'next/navigation'
 import { Avatar } from '@/components/app/feed'
 import { AppFrame, Flash, TabBar } from '@/components/app/shell'
+import { WeekStrip } from '@/components/app/week-strip'
+import { weekView } from '@/server/week-plan'
 import { PlayIcon } from '@/components/icons'
 import { displayTalkTitle } from '@/lib/talk-title'
 import { courseCards, dayNumber, portalName, posterFor, shownPoster } from '@/server/learner'
@@ -26,7 +28,7 @@ function minutesLeft(seconds: number, percent: number) {
 /** Home: the growth banner, what to carry on with, then the way into today's clips (board 00). */
 export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   if (user.role === 'learner' && !user.onboarded) redirect(user.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
-  const [g, unread, { items }, courses, due, gatherings] = await Promise.all([growth(payload, user), unreadCount(payload, user), learnerClips(payload, portal, user), courseCards(payload, user), user.role === 'learner' ? recalibrationDueFor(payload, user.id) : Promise.resolve(false), homeGatherings({ payload, portal, user, base })])
+  const [g, unread, { items }, courses, due, gatherings, week] = await Promise.all([growth(payload, user), unreadCount(payload, user), learnerClips(payload, portal, user), courseCards(payload, user), user.role === 'learner' ? recalibrationDueFor(payload, user.id) : Promise.resolve(false), homeGatherings({ payload, portal, user, base }), weekView(payload, user, portal, base)])
   if (due) await ensureMonthNote(payload, user.id, portal.id, String(portal.slug || ''))
   const [visits, sessions] = await Promise.all([
     rows(payload, 'lesson-visits', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 40 }),
@@ -109,6 +111,8 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
             <Link className="pill gold" href={tonight.href} data-testid="plan-continue">Continue</Link>
           </section>
         ) : null}
+        <p className="eyebrow">This week</p>
+        <WeekStrip days={week.days} today={week.today} href={`${base}/week`} emptyHref={`${base}/week`} />
         <p className="eyebrow">Continue</p>
         <div data-testid="continue">
           {carryOn.map((row) => (

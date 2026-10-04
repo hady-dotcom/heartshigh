@@ -6,7 +6,7 @@ import { EmptyState } from '@/components/app/empty'
 import { GardenPath } from '@/components/app/garden-path'
 import { Flower, LockIcon } from '@/components/icons'
 import { now } from '@/lib/clock'
-import { readableHarvest } from '@/lib/harvest'
+import { isNewMoment, readableHarvest } from '@/lib/harvest'
 import { getSession, type SessionUser, visibleCourseIds } from '@/server/context'
 import { workbookFor } from '@/server/workbook'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
@@ -46,11 +46,14 @@ export type Growth = {
   rituals: Row[]
   activeDays: Set<string>
   secondsGiven: number
+  watched: number
+  activityLit: Set<number>
+  harvestNew: number
 }
 
 export async function growth(payload: Payload, user: SessionUser): Promise<Growth> {
   const mine = { user: { equals: user.id } }
-  const [clauses, seats, completions, seatVisits, harvest, allWorkbook, allAnswers, rituals, visits, tags, doors] = await Promise.all([
+  const [clauses, seats, completions, seatVisits, harvest, allWorkbook, allAnswers, rituals, visits, tags, doors, sessions] = await Promise.all([
     rows(payload, 'clauses', undefined, { sort: 'number', limit: 50 }),
     rows(payload, 'seats', undefined, { sort: 'position', limit: 400 }),
     rows(payload, 'completions', mine),
@@ -62,6 +65,7 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
     rows(payload, 'lesson-visits', mine),
     rows(payload, 'tags', { state: { equals: 'confirmed' } }, { limit: 1000 }),
     loadDoors(payload),
+    rows(payload, 'watch-sessions', mine, { limit: 200 }),
   ])
   const answers = allAnswers.filter(answerCounts)
   const browsed = new Set(allAnswers.filter((row) => !answerCounts(row)).map((row) => row.id))
@@ -72,22 +76,32 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
   const countedCompletions = completions.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'watch' }))
   const countedAnswers = answers.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'question', viaGathering: row.viaGathering === true }))
   const done = new Set(countedCompletions.map((row) => ref(row.lesson)))
+  const watchedIds = new Set(
+    [...completions, ...sessions.filter((row) => Number(row.seconds || 0) > 0)]
+      .map((row) => ref(row.lesson))
+      .filter((id): id is number => Boolean(id)),
+  )
   const cutIds = tags.map((tag) => ref((tag.item as { value?: unknown } | undefined)?.value)).filter((id): id is number => Boolean(id))
   const cuts = cutIds.length ? await rows(payload, 'cuts', { id: { in: cutIds } }, { limit: 1000 }) : []
   const lit = new Set<number>()
+  const activityLit = new Set<number>()
   for (const tag of tags) {
     const cut = cuts.find((row) => row.id === ref((tag.item as { value?: unknown } | undefined)?.value))
-    if (!cut || !done.has(ref(cut.lesson))) continue
+    if (!cut) continue
     const clause = clauses.find((row) => row.id === ref(tag.clause))
     const door = clause ? doorOfClause(Number(clause.number), doors) : null
-    if (door) lit.add(door.number)
+    if (!door) continue
+    if (done.has(ref(cut.lesson))) lit.add(door.number)
+    if (watchedIds.has(ref(cut.lesson))) activityLit.add(door.number)
   }
+  const at = now()
+  const harvestNew = harvest.filter((row) => isNewMoment(str(row.createdAt) || str(row.gatheredAt), str(row.seenAt) || null, at)).length
   const activeDays = new Set([...countedCompletions, ...countedAnswers, ...visits, ...rituals, ...seatVisits].map((row) => str(row.createdAt).slice(0, 10)).filter(Boolean))
   const secondsGiven = countedCompletions.reduce((sum, row) => {
     const lesson = lessons.find((item) => item.id === ref(row.lesson))
     return sum + (Number(lesson?.durationSeconds || 0) * Number(row.percent || 100)) / 100
   }, 0)
-  return { clauses, doors, seats, lit, completions: countedCompletions, lessons, seatVisits, harvest, workbook, answers: countedAnswers, rituals, activeDays, secondsGiven }
+  return { clauses, doors, seats, lit, completions: countedCompletions, lessons, seatVisits, harvest, workbook, answers: countedAnswers, rituals, activeDays, secondsGiven, watched: watchedIds.size, activityLit, harvestNew }
 }
 
 function sectionOf(doors: Door[], key: string) {
@@ -105,12 +119,12 @@ function seatsOf(g: Growth, door: Door) {
 }
 
 export function Rings({ g, base }: { g: Growth; base: string }) {
-  const sections = SECTIONS.filter((section) => sectionOf(g.doors, section.key).some((door) => g.lit.has(door.number))).length
+  const sections = SECTIONS.filter((section) => sectionOf(g.doors, section.key).some((door) => (g.activityLit || g.lit).has(door.number))).length
   const items: [string, number, string, string, number?][] = [
-    ['Watched', g.completions.length, '#e2c27a', `${base}/garden/general`],
+    ['Watched', g.watched || g.completions.length, '#e2c27a', `${base}/garden/general`],
     ['Sections', sections, '#f0e2c4', `${base}/garden/jibril`],
     ['Field', g.seatVisits.length, '#b7c7a4', `${base}/garden/ghunya`],
-    ['Harvest', g.harvest.length, '#8fbfb4', `${base}/garden/harvest`, g.harvest.filter((row) => !row.seenAt).length],
+    ['Harvest', g.harvest.length, '#8fbfb4', `${base}/garden/harvest`, g.harvestNew || undefined],
     ['Workbook', g.workbook.length, '#e2b08a', `${base}/garden/workbook`],
   ]
   return (
@@ -506,6 +520,7 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
   const filter = query.filter || 'all'
   const answers = book.answers.filter((row) => (filter === 'shared' ? row.shared : filter === 'private' ? !row.shared : filter === 'replied' ? Boolean(row.reply) : true))
   const here = `${base}/garden/workbook${filter !== 'all' ? `?filter=${filter}` : ''}`
+  const talkTitles = new Set(book.answers.map((row) => row.video?.title).filter(Boolean))
   const groups = new Map<string, { course: string; topics: Map<string, Map<string, typeof answers>> }>()
   for (const row of answers) {
     const courseKey = row.course?.title || 'Other talks'
@@ -519,7 +534,14 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
   }
   return (
     <Frame base={base} title="Workbook" testId="garden-workbook" unread={unread} evening>
+      <div className="workbook-page">
       <Flash error={query.error} notice={query.notice} />
+      <p className="lead" data-testid="workbook-summary">
+        {book.answers.length
+          ? `You've answered ${book.answers.length} question${book.answers.length === 1 ? '' : 's'} from ${talkTitles.size || 1} talk${talkTitles.size === 1 ? '' : 's'}.`
+          : 'Your answers will appear here, shared or private. Answer a question in any talk to start.'}
+      </p>
+      <Link className="pill outline small" href={`${base}/garden/harvest`} data-testid="workbook-harvest">Your harvest ›</Link>
       {book.opening.length ? (
         <section className="wb-start" data-testid="where-you-started">
           <p className="eyebrow">Where you started</p>
@@ -579,7 +601,7 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
             testId="workbook-empty"
             action={filter === 'all' ? { href: `${base}/lanes`, label: 'Open a course' } : { href: `${base}/garden/workbook`, label: 'Show every answer' }}
           >
-            {filter === 'all' ? 'Your answers to the questions in each film are kept here, whether you share them or not.' : 'Nothing here with this filter.'}
+            {filter === 'all' ? 'Your answers will appear here, shared or private. Answer a question in any talk to start.' : 'Nothing here with this filter.'}
           </EmptyState>
         ) : null}
       </div>
@@ -590,6 +612,11 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
             <div className="wb-open" key={row.pointId} data-testid="open-question" data-point={row.pointId} data-kind={row.kind || 'question'}>
               <span>{row.question}</span>
               <small>{row.video}</small>
+              {row.courseId && row.lessonId ? (
+                <Link className="from-lesson" href={`${base}/course/${row.courseId}?part=${row.lessonId}&t=${Math.max(0, row.second)}`} data-testid="answer-in-talk">
+                  Answer in the talk ›
+                </Link>
+              ) : null}
               {row.kind === 'task' || row.family === 'workbook' ? (
                 <form action="/api/answers" method="post" encType="multipart/form-data" data-testid="workbook-task" style={{ marginTop: 8 }}>
                   <input type="hidden" name="pointId" value={row.pointId} />
@@ -608,6 +635,7 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
           ))}
         </section>
       ) : null}
+      </div>
     </Frame>
   )
 }

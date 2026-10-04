@@ -313,14 +313,15 @@ test.describe.serial('HEARTS journeys', () => {
 
   test('the schedule splitter shares three parts across Wednesdays and Fridays', async ({ page }) => {
     await signIn(page, learnerEmail, 'harbour-learner', `/p/${slug}/me/plan`)
-    await page.getByTestId('schedule-course').selectOption({ label: 'Night class' })
+    const courseValue = await page.getByTestId('schedule-course').locator('option', { hasText: 'Night class' }).getAttribute('value')
+    await page.getByTestId('schedule-course').selectOption(courseValue!)
     await page.getByTestId('schedule-start').fill('2026-10-07')
     await page.getByTestId('schedule-end').fill('2026-10-16')
     await page.locator('label:has([data-testid=weekday-3])').click()
     await page.locator('label:has([data-testid=weekday-5])').click()
     await expect(page.getByTestId('weekday-3')).toBeChecked()
     await page.getByTestId('schedule-submit').click()
-    await expect(page.getByTestId('notice')).toContainText('The 3 sittings are spread across 4 study days')
+    await expect(page.getByTestId('notice')).toContainText('Done. Your 3 talks are on Wednesdays and Fridays until 14 October 2026.')
     const slots = page.getByTestId('schedule-plan').first().getByTestId('schedule-slot')
     await expect(slots).toHaveCount(3)
     for (const text of await slots.allTextContents()) expect(text).toMatch(/Wed|Fri/)

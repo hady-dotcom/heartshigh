@@ -18,6 +18,8 @@ export type YTPlayer = {
   getCurrentTime(): number
   getDuration(): number
   getPlayerState(): number
+  setPlaybackRate?(rate: number): void
+  getPlaybackRate?(): number
   getIframe(): HTMLIFrameElement
   destroy(): void
   unloadModule?(name: string): void

@@ -1,0 +1,93 @@
+/**
+ * Read-only report of every course lesson: stored title, YouTube id, stored duration,
+ * live YouTube title, and live duration when yt-dlp can answer.
+ * Flags lessons under 10 minutes and titles that do not match YouTube.
+ * Prints what a write would change. Never writes.
+ *
+ *   npm run report:mains
+ */
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
+import { closePayload, clearDevPushMarker } from '../src/lib/prepare-db'
+import { fetchYoutubeMeta, ytDlpBinary } from '../src/lib/youtube'
+import { seriesPartNumber } from '../src/lib/first-course'
+
+const execFileAsync = promisify(execFile)
+
+async function youtubeDuration(id: string): Promise<number | null> {
+  try {
+    const { stdout } = await execFileAsync(ytDlpBinary(), ['--skip-download', '--print', '%(duration)s', `https://www.youtube.com/watch?v=${id}`], { timeout: 20_000 })
+    const seconds = Number(String(stdout).trim())
+    return Number.isFinite(seconds) && seconds > 0 ? seconds : null
+  } catch {
+    return null
+  }
+}
+
+function clock(total: number) {
+  const value = Math.max(0, Math.floor(total))
+  const hours = Math.floor(value / 3600)
+  const minutes = Math.floor((value % 3600) / 60)
+  const seconds = value % 60
+  return hours ? `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}` : `${minutes}:${String(seconds).padStart(2, '0')}`
+}
+
+function titlesMatch(stored: string, live: string) {
+  const a = stored.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+  const b = live.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+  if (!a || !b) return false
+  return a.includes(b.slice(0, 24)) || b.includes(a.slice(0, 24))
+}
+
+await clearDevPushMarker()
+const { getPayload } = await import('payload')
+const { default: config } = await import('../src/payload.config')
+const payload = await getPayload({ config })
+
+type Lesson = { id: number; title?: string; youtubeId?: string; durationSeconds?: number; course?: number | { id: number; title?: string } }
+type Course = { id: number; title?: string }
+
+try {
+  const courses = ((await payload.find({ collection: 'courses', overrideAccess: true, depth: 0, limit: 0, pagination: false })).docs as Course[])
+  const lessons = ((await payload.find({ collection: 'lessons', overrideAccess: true, depth: 1, limit: 0, pagination: false })).docs as Lesson[])
+  const short: string[] = []
+  const mismatch: string[] = []
+  const wouldChange: string[] = []
+  console.log('Mains report (read-only). Nothing is written.\n')
+  for (const course of courses.sort((a, b) => a.id - b.id)) {
+    const own = lessons.filter((lesson) => (typeof lesson.course === 'object' ? lesson.course?.id : lesson.course) === course.id)
+    console.log(`# ${course.id} ${course.title || '(untitled)'} · ${own.length} talks`)
+    for (const lesson of own) {
+      const stored = Number(lesson.durationSeconds || 0)
+      const youtubeId = lesson.youtubeId || ''
+      const meta = youtubeId ? await fetchYoutubeMeta(youtubeId) : undefined
+      const liveTitle = meta?.title || ''
+      const liveDuration = youtubeId ? await youtubeDuration(youtubeId) : null
+      const seconds = liveDuration || stored
+      const flags: string[] = []
+      if (seconds > 0 && seconds < 600) flags.push('UNDER 10 MIN')
+      if (liveTitle && !titlesMatch(String(lesson.title || ''), liveTitle)) flags.push('TITLE MISMATCH')
+      if (!youtubeId) flags.push('NO YOUTUBE ID')
+      if (meta === null) flags.push('YOUTUBE MISSING')
+      const line = `  ${lesson.id}  ${lesson.title || '(untitled)'}  id=${youtubeId || '—'}  stored=${stored ? clock(stored) : '—'}  live=${liveDuration ? clock(liveDuration) : liveTitle ? 'title only' : '—'}  yt="${liveTitle || '—'}"${flags.length ? `  !! ${flags.join(', ')}` : ''}`
+      console.log(line)
+      if (flags.includes('UNDER 10 MIN')) short.push(`${course.title}: ${lesson.title} (${clock(seconds)})`)
+      if (flags.includes('TITLE MISMATCH')) mismatch.push(`${lesson.id}: stored "${lesson.title}" vs YouTube "${liveTitle}"`)
+      if (liveDuration && stored && Math.abs(liveDuration - stored) > 15) {
+        wouldChange.push(`lesson ${lesson.id} durationSeconds ${stored} -> ${liveDuration}`)
+      }
+      if (liveTitle && !titlesMatch(String(lesson.title || ''), liveTitle)) {
+        wouldChange.push(`lesson ${lesson.id} title "${lesson.title}" -> "${liveTitle}" (needs Leon)`)
+      }
+    }
+  }
+  console.log('\n## Short mains (under 10 minutes)')
+  console.log(short.length ? short.map((row) => `- ${row}`).join('\n') : '- none')
+  console.log('\n## Title mismatches')
+  console.log(mismatch.length ? mismatch.map((row) => `- ${row}`).join('\n') : '- none')
+  console.log('\n## Would change (not applied)')
+  console.log(wouldChange.length ? wouldChange.map((row) => `- ${row}`).join('\n') : '- none')
+  console.log(`\n${courses.length} courses, ${lessons.length} lessons. Later parts flagged: ${lessons.filter((lesson) => (seriesPartNumber(String(lesson.title || '')) || 1) > 1).length}.`)
+} finally {
+  await closePayload(payload)
+}

@@ -68,6 +68,10 @@ export function CoursePlayer({
   garden,
   overPlayer = true,
   film = null,
+  upNext = null,
+  courseHref = backHref,
+  deferred = [],
+  initialOpenId = null,
 }: {
   courseTitle: string
   backHref: string
@@ -89,6 +93,10 @@ export function CoursePlayer({
   /** Master flag popupOverPlayer. Off is the strict layout: the paused player stays fully in view. */
   overPlayer?: boolean
   film?: { provider: 'vimeo' | 'file'; vimeoId?: string | null; src?: string | null } | null
+  upNext?: { href: string; label: string; minutes: number; last: boolean } | null
+  courseHref: string
+  deferred?: { pointId: number; prompt: string }[]
+  initialOpenId?: number | null
 }) {
   const router = useRouter()
   const card = useRef<HTMLDivElement>(null)
@@ -117,8 +125,20 @@ export function CoursePlayer({
   const [lit, setLit] = useState(false)
   const [trackWidth, setTrackWidth] = useState(340)
   const timelineRef = useRef<HTMLDivElement>(null)
+  const [failed, setFailed] = useState(false)
+  const [boot, setBoot] = useState(0)
+  const [endCard, setEndCard] = useState(false)
+  const [count, setCount] = useState(5)
+  const [held, setHeld] = useState<number[]>(deferred.map((row) => row.pointId))
+  const heldRef = useRef(held)
+  heldRef.current = held
+  const deferredPrompts = useRef(Object.fromEntries(deferred.map((row) => [row.pointId, row.prompt])))
 
-  const views = points.map((point) => (answered[point.id] !== undefined ? { ...point, answered: true, myAnswer: answered[point.id] } : point))
+  const views = points.map((point) => {
+    const mine = answered[point.id] !== undefined ? { ...point, answered: true, myAnswer: answered[point.id] } : point
+    const rewrite = deferredPrompts.current[point.id]
+    return rewrite ? { ...mine, prompt: rewrite } : mine
+  })
   const viewsRef = useRef(views)
   viewsRef.current = views
 
@@ -140,7 +160,11 @@ export function CoursePlayer({
   useEffect(() => {
     if (!youtubeId || !holder.current) return
     let cancelled = false
-    const fallback = window.setTimeout(() => !cancelled && setMode((value) => (value === 'loading' ? 'practice' : value)), 9000)
+    setFailed(false)
+    setMode('loading')
+    const fallback = window.setTimeout(() => {
+      if (!cancelled) setFailed(true)
+    }, 8000)
     createPlayer({
       id: PLAYER_ID,
       host: holder.current,
@@ -150,23 +174,31 @@ export function CoursePlayer({
       onReady: (player) => {
         if (cancelled) return
         window.clearTimeout(fallback)
+        setFailed(false)
         setMode('youtube')
         const total = player.getDuration() || 0
         if (total > 0) setLength(total)
+        resume(PLAYER_ID)
       },
       onState: (state) => {
         setPlaying(state === STATE.PLAYING)
         if (state === STATE.PLAYING) setLit(true)
         if (state === STATE.ENDED) setEnded(true)
       },
-      onError: (code) => UNPLAYABLE.has(code) && !cancelled && setMode('practice'),
-    }).catch(() => !cancelled && setMode('practice'))
+      onError: () => {
+        if (cancelled) return
+        window.clearTimeout(fallback)
+        setFailed(true)
+      },
+    }).catch(() => {
+      if (!cancelled) setFailed(true)
+    })
     return () => {
       cancelled = true
       window.clearTimeout(fallback)
       destroyPlayer(PLAYER_ID)
     }
-  }, [youtubeId, startAt])
+  }, [youtubeId, startAt, boot])
 
   useEffect(() => {
     if (!vimeoId) return
@@ -234,11 +266,66 @@ export function CoursePlayer({
   }, [openId])
 
   const pause = () => {
-    getPlayer(PLAYER_ID)?.pauseVideo()
+    const player = getPlayer(PLAYER_ID)
+    player?.pauseVideo()
+    player?.mute?.()
     videoRef.current?.pause()
     filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'pause' }), '*')
     setPlaying(false)
   }
+
+  // Keep the film truly paused while a question is open: YouTube can resume itself after a seek or buffer.
+  useEffect(() => {
+    if (openId === null) return
+    pause()
+    const timer = window.setInterval(() => {
+      const player = getPlayer(PLAYER_ID)
+      const state = player?.getPlayerState()
+      if (state === STATE.PLAYING || state === STATE.BUFFERING) {
+        player?.pauseVideo()
+        player?.mute?.()
+      }
+      if (videoRef.current && !videoRef.current.paused) videoRef.current.pause()
+      filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'pause' }), '*')
+      const at = player?.getCurrentTime()
+      if (typeof at === 'number') setTime(at)
+      setPlaying(false)
+    }, 250)
+    return () => window.clearInterval(timer)
+  }, [openId])
+
+  useEffect(() => {
+    if (initialOpenId && viewsRef.current.some((point) => point.id === initialOpenId)) show(initialOpenId, false)
+  }, [initialOpenId, show])
+
+  const revealEnd = useCallback(() => {
+    const waiting = heldRef.current.find((id) => viewsRef.current.some((point) => point.id === id && !point.answered))
+    if (waiting) {
+      pause()
+      show(waiting, false)
+      setHeld((value) => value.filter((id) => id !== waiting))
+      void fetch('/api/answers', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ thinkRead: true, pointId: waiting, lessonId }) }).catch(() => undefined)
+      return
+    }
+    setEndCard(true)
+    setCount(5)
+  }, [lessonId, show])
+
+  useEffect(() => {
+    if (!ended || openId !== null || endCard) return
+    const timer = window.setTimeout(revealEnd, 400)
+    return () => window.clearTimeout(timer)
+  }, [ended, openId, endCard, revealEnd])
+
+  useEffect(() => {
+    if (!endCard || upNext?.last) return
+    if (count <= 0) {
+      if (upNext?.href) router.push(upNext.href)
+      return
+    }
+    const timer = window.setTimeout(() => setCount((value) => value - 1), 1000)
+    return () => window.clearTimeout(timer)
+  }, [endCard, count, upNext, router])
 
   useEffect(() => {
     if (!playing || openId !== null) return
@@ -320,7 +407,17 @@ export function CoursePlayer({
     setOpenId(null)
     setFromTrigger(false)
     if (wasTriggered) resumeNow()
-    if (saved) router.refresh()
+    if (saved) {
+      const left = viewsRef.current.filter((point) => point.id !== saved.pointId && !point.answered)
+      if (!left.length) window.setTimeout(revealEnd, 400)
+      router.refresh()
+    }
+  }
+
+  const thinkAbout = (pointId: number) => {
+    setHeld((value) => (value.includes(pointId) ? value : [...value, pointId]))
+    void fetch('/api/answers', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ think: true, pointId, lessonId }) }).catch(() => undefined)
+    close()
   }
 
   const nextPoint = views.find((point) => point.state === 'open' && !point.answered) || views.find((point) => !point.answered) || null
@@ -337,7 +434,15 @@ export function CoursePlayer({
       </div>
       <div ref={card} className={`player-card${filmed ? ' yt-on' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
         {!filmed || !lit ? <div className={`poster${scenicPoster ? ' scenic' : ''}${mode === 'loading' ? ' skeleton' : ''}`} style={poster && !scenicPoster ? { backgroundImage: `url(${poster})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : undefined} /> : null}
-        {mode === 'loading' ? <div className="player-veil" data-testid="player-veil" aria-hidden><span className="gold-spin" /></div> : null}
+        {mode === 'loading' && !failed ? <div className="player-veil" data-testid="player-veil" aria-hidden><span className="gold-spin" /></div> : null}
+        {failed ? (
+          <div className="player-retry" data-testid="player-retry">
+            <p>This film did not start.</p>
+            <button type="button" className="pill gold" onClick={() => { setFailed(false); setMode('loading'); setBoot((value) => value + 1) }}>
+              Try again
+            </button>
+          </div>
+        ) : null}
         {youtubeId ? <div className="yt" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
         {vimeoId ? (
           <div className="yt" ref={filmBox} style={{ visibility: mode === 'vimeo' ? 'visible' : 'hidden' }}>
@@ -350,13 +455,13 @@ export function CoursePlayer({
           </div>
         ) : null}
         {open && filmed && overPlayer ? <div className="yt-scrim" data-testid="paused-scrim" aria-hidden /> : null}
-        {open && filmed ? (
+        {open && !playing ? (
           <span className="part-chip paused" data-testid="paused-note">❚❚ Paused at question {open.number}</span>
         ) : (
           <span className="part-chip" data-testid="part-label">{partLabel}</span>
         )}
         <span className="time-read" data-testid="player-time">{clock(time)}</span>
-        {open && !filmed ? (
+        {open && !filmed && !playing ? (
           <p className="paused-note" data-testid="paused-note">❚❚ Paused at question {open.number}</p>
         ) : !open && mode !== 'loading' && (!filmed || !playing) ? (
           <button type="button" className="big-play" aria-label={playing ? 'Pause' : 'Play'} onClick={togglePlay} data-testid="player-play">
@@ -404,6 +509,33 @@ export function CoursePlayer({
         </p>
       ) : null}
       {notice ? <p className="flash notice" data-testid="notice" role="status">{notice}</p> : null}
+      {upNext && !upNext.last ? (
+        <Link className="up-next-row" href={upNext.href} data-testid="up-next">
+          Next: {upNext.label}{upNext.minutes ? ` (${upNext.minutes} min)` : ''}
+        </Link>
+      ) : (
+        <p className="up-next-row last" data-testid="up-next">This is the last part of this course.</p>
+      )}
+      {endCard ? (
+        <section className="up-next-card" data-testid="up-next-card">
+          {upNext?.last ? (
+            <>
+              <h2>You&apos;ve finished this course.</h2>
+              <Link className="pill gold block" href={courseHref} data-testid="choose-next">Choose what&apos;s next</Link>
+            </>
+          ) : (
+            <>
+              <p className="eyebrow">Up next</p>
+              <h2>{upNext?.label || 'The next part'}</h2>
+              <p className="muted" data-testid="up-next-count">Starting in {count}s.</p>
+              <div className="up-next-actions">
+                <Link className="pill gold" href={upNext?.href || courseHref} data-testid="watch-now">Watch now</Link>
+                <Link className="pill outline" href={courseHref} data-testid="back-to-course">Back to the course</Link>
+              </div>
+            </>
+          )}
+        </section>
+      ) : null}
       <button type="button" className="answer-btn" disabled={!nextPoint} onClick={() => nextPoint && show(nextPoint.id, false)} data-testid="answer-point">
         {nextPoint ? `Answer question ${nextPoint.number} →` : views.length ? 'All questions answered' : 'No questions on this part yet'}
       </button>
@@ -446,6 +578,7 @@ export function CoursePlayer({
           now={now}
           onResume={() => { if (fromTrigger) resumeNow() }}
           onClose={close}
+          onThink={() => thinkAbout(open.id)}
         />
       ) : null}
     </div>
@@ -482,6 +615,7 @@ function Sheet({
   now,
   onResume,
   onClose,
+  onThink,
 }: {
   point: PointView
   lessonId: number
@@ -495,6 +629,7 @@ function Sheet({
   now: number
   onResume?: () => void
   onClose: (saved?: Saved) => void
+  onThink: () => void
 }) {
   const [keepPrivate, setKeepPrivate] = useState(true)
   const [error, setError] = useState('')
@@ -669,7 +804,14 @@ function Sheet({
               {sending ? 'Saving…' : point.kind === 'task' ? 'I have done this' : `${keepPrivate ? 'Save' : 'Share'} my ${SUBMIT[point.kind]}`}
             </button>
             {error ? <p className="flash error" data-testid="answer-error" role="alert">{error}</p> : null}
-            {!point.answered ? <button type="button" className="link-btn" onClick={later} data-testid="answer-later" style={{ width: '100%' }}>Answer later</button> : null}
+            {!point.answered ? (
+              <>
+                <button type="button" className="pill outline block" onClick={onThink} data-testid="think-about-this" style={{ width: '100%', marginTop: 8 }}>
+                  Think about this for this session
+                </button>
+                <button type="button" className="link-btn" onClick={later} data-testid="answer-later" style={{ width: '100%' }}>Answer later</button>
+              </>
+            ) : null}
           </form>
         ) : null}
         {swarmOn || point.answered ? (

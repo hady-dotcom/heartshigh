@@ -55,9 +55,8 @@ export function studyDates(start: string, end: string, weekdays: number[]): stri
 }
 
 /**
- * Spread items evenly, in order, across study days.
- * Earlier days take the remainder so the plan finishes as soon as the days allow,
- * even if the end date is later.
+ * Balanced, order-preserving split when there are at least as many talks as study days.
+ * base = floor(V/D); the first V mod D days get one extra. Never the old front-loaded chunk.
  */
 export function splitEvenly<T>(items: T[], dates: string[]): Slot<T>[] {
   if (!dates.length) throw new Error('There are no study days to split across.')
@@ -72,6 +71,37 @@ export function splitEvenly<T>(items: T[], dates: string[]): Slot<T>[] {
     index += count
   })
   return slots
+}
+
+export function spreadNote(talks: number, studyDays: number) {
+  if (talks === 1 && studyDays > 1) return 'This course has 1 talk, so it fits in one day.'
+  if (talks > 1 && talks < studyDays) {
+    return `This course has ${talks} talks and ${studyDays} study days. The talks are spaced across the span. You could pick fewer days, or add more talks.`
+  }
+  return null
+}
+
+/** Indices for V talks across D days: 3 over 12 lands on days 1, 5 and 9 (0, 4, 8). */
+export function spreadIndices(talks: number, days: number) {
+  if (talks <= 0 || days <= 0) return []
+  if (talks === 1) return [0]
+  if (talks >= days) return Array.from({ length: days }, (_, index) => index)
+  return Array.from({ length: talks }, (_, index) => Math.floor((index * days) / talks))
+}
+
+/**
+ * Place talks on the chosen study days: one date for a single sitting, an even spread when
+ * there are fewer talks than days, and a balanced split when there are more talks than days.
+ */
+export function planAcrossDays<T>(items: T[], dates: string[]): { slots: Slot<T>[]; note: string | null } {
+  if (!dates.length) throw new Error('There are no study days to split across.')
+  if (!items.length) return { slots: [], note: null }
+  const note = spreadNote(items.length, dates.length)
+  if (items.length < dates.length) {
+    const at = spreadIndices(items.length, dates.length)
+    return { slots: items.map((item, index) => ({ date: dates[at[index]] || dates[0], items: [item] })), note }
+  }
+  return { slots: splitEvenly(items, dates).filter((slot) => slot.items.length), note }
 }
 
 export function flattenSlots<T extends { id?: number; title?: string }>(

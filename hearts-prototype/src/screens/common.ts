@@ -101,7 +101,7 @@ export function embedUrl(value: string) {
 
 export async function unreadCount(payload: Payload, user: SessionUser) {
   const notes = await rows(payload, 'notifications', { user: { equals: user.id } }, { limit: 200 })
-  return notes.filter((note) => note.read !== true && note.channel !== 'email-stub').length
+  return notes.filter((note) => note.read !== true && note.channel !== 'email-stub' && note.channel !== 'think').length
 }
 
 export async function portalPeople(payload: Payload, portalId: number) {

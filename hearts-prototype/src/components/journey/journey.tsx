@@ -66,7 +66,7 @@ const PEEK_SWIPES = ['topic', 'speaker', 'lane', 'next'] as const satisfies read
 const peekRest = (swipe: Swipe) => ENTER_FROM[SWIPE_EXIT[swipe]]
 // Leaving and arriving share one curve and one duration, so the two cards move as a single strip.
 const SLIDE_PAIR = 'cubic-bezier(0.32, 0.2, 0.3, 1)'
-const PAIR_MS = 260
+const PAIR_MS = 170
 const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
 const decoded = new Map<string, HTMLImageElement>()
 const HOLD = 700
@@ -138,6 +138,13 @@ export function Journey(props: JourneyProps) {
   const [mode, setMode] = useState<Mode>('hors')
   const modeRef = useRef<Mode>('hors')
   const [captionOpen, setCaptionOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const markSwipe = (on: boolean) => {
+    const node = rootRef.current
+    if (!node) return
+    if (on) node.setAttribute('data-swiping', 'yes')
+    else node.removeAttribute('data-swiping')
+  }
   const [appetiserOver, setAppetiserOver] = useState(false)
   const spanJoin = useRef<number | null>(null)
   const hosts = useRef<[Host, Host]>([
@@ -167,6 +174,8 @@ export function Journey(props: JourneyProps) {
   const [firstEver, setFirstEver] = useState(false)
   const [lineAt, setLineAt] = useState(0)
   const [spokenAt, setSpokenAt] = useState<number | null>(null)
+  const [clipPlaying, setClipPlaying] = useState(false)
+  const [speed, setSpeed] = useState(1)
   const watch = useRef<{ key: string; start: number; furthest: number; done90: boolean }>({ key: '', start: 0, furthest: 0, done90: false })
   const refilling = useRef(false)
   const clipRef = useRef<HTMLDivElement>(null)
@@ -917,7 +926,8 @@ export function Journey(props: JourneyProps) {
         // Carry on from wherever the finger left the card, so the move never jumps.
         const from = el.style.transform || EXIT_FROM[exit]
         el.style.transform = ''
-        const out = animate(el, [{ transform: from }, { transform: EXIT_TO[exit] }], incoming ? PAIR_MS : 200, incoming ? SLIDE_PAIR : SLIDE_OUT, { id: 'snap' })
+        markSwipe(true)
+        const out = animate(el, [{ transform: from }, { transform: EXIT_TO[exit] }], incoming ? PAIR_MS : 160, incoming ? SLIDE_PAIR : SLIDE_OUT, { id: 'snap' })
         if (incoming) {
           const peekFrom = incoming.style.transform || ENTER_FROM[exit]
           incoming.style.transform = ENTER_FROM[exit]
@@ -939,8 +949,9 @@ export function Journey(props: JourneyProps) {
         }
         // The poster is on screen at once; the incoming card slides in from the side opposite the exit.
         el.getAnimations().forEach((animation) => animation.cancel())
-        if (how === 'swipe') animate(el, [{ transform: ENTER_FROM[exit] }, { transform: 'translate(0, 0)' }], 380, SLIDE_IN, { id: 'enter', fill: 'none' })
+        if (how === 'swipe') animate(el, [{ transform: ENTER_FROM[exit] }, { transform: 'translate(0, 0)' }], 220, SLIDE_IN, { id: 'enter', fill: 'none' })
       })
+      markSwipe(false)
       void refill()
     },
     [leaveSignal, refill, showItem],
@@ -996,6 +1007,7 @@ export function Journey(props: JourneyProps) {
       const current = itemsRef.current[indexRef.current]
       if (!player || !current) return
       const time = player.getCurrentTime()
+      setClipPlaying(host.state === STATE.PLAYING)
       const seen = watch.current
       seen.furthest = Math.max(seen.furthest, time - seen.start)
       // The player's own end mark is skipped when someone seeks past it, so the appetiser stops here as well.
@@ -1216,7 +1228,10 @@ export function Journey(props: JourneyProps) {
     if (!start) return
     const dx = event.clientX - start.x
     const dy = event.clientY - start.y
-    if (Math.max(Math.abs(dx), Math.abs(dy)) > 8) start.moved = true
+    if (Math.max(Math.abs(dx), Math.abs(dy)) > 8) {
+      start.moved = true
+      markSwipe(true)
+    }
     if (clipRef.current && Math.abs(dx) > Math.abs(dy) && start.moved) {
       clipRef.current.style.transform = `translateX(${dx}px)`
       const topic = peekEls.current.topic
@@ -1244,6 +1259,7 @@ export function Journey(props: JourneyProps) {
       }
     }
     if (far < 40 || (far < width * 0.25 && !quick)) {
+      markSwipe(false)
       springBack()
       if (!start.moved && overlay && !slide && cardKind !== 'question' && cardKind !== 'text') {
         const host = hosts.current[visibleRef.current]
@@ -1263,6 +1279,7 @@ export function Journey(props: JourneyProps) {
     const start = gesture.current
     gesture.current = null
     if (start?.timer) window.clearTimeout(start.timer)
+    markSwipe(false)
     springBack()
   }
   const springBack = () => {
@@ -1322,7 +1339,8 @@ export function Journey(props: JourneyProps) {
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
   const horsLine = mode === 'hors' ? piece?.lines?.[lineShown] : null
-  const captionText = (horsLine ? horsLine.tidy || horsLine.text : mode === 'hors' ? piece?.quote : '') || ''
+  const appetiserLine = mode === 'appetiser' ? piece?.lines?.[lineShown] : null
+  const captionText = (horsLine ? horsLine.tidy || horsLine.text : appetiserLine ? appetiserLine.tidy || appetiserLine.text : mode === 'hors' ? piece?.quote : '') || ''
   const videoAppetiser = mode === 'appetiser' && Boolean(item?.youtubeId)
   const scenicAppetiser = mode === 'appetiser' && !item?.youtubeId
   const scenicLines = scenicAppetiser ? [item?.scenic?.hook, item?.scenic?.turn, item?.scenic?.land].filter((line): line is string => Boolean(line)) : []
@@ -1388,17 +1406,47 @@ export function Journey(props: JourneyProps) {
     </div>
   ) : null
 
+  const clipStart = item ? (mode === 'hors' ? item.hors.start : item.appetiser.start) : 0
+  const clipEnd = item ? (mode === 'hors' ? item.hors.end : appetiserEnd(item)) : 0
+  const clipLength = Math.max(0, clipEnd - clipStart)
+  const clipElapsed = spokenAt != null ? Math.max(0, Math.min(clipLength, spokenAt - clipStart)) : 0
+  const clipLeft = Math.max(0, clipLength - clipElapsed)
+  const clipPct = clipLength ? Math.min(100, (clipElapsed / clipLength) * 100) : 0
+  const visiblePlayer = () => {
+    const id = hosts.current[visibleRef.current].playerId
+    return id ? getPlayer(id) : null
+  }
+  const seekBy = (delta: number) => {
+    const player = visiblePlayer()
+    if (!player) return
+    const at = player.getCurrentTime()
+    const next = Math.min(clipEnd, Math.max(clipStart, at + delta))
+    player.seekTo(next, true)
+    setSpokenAt(next)
+  }
+  const cycleSpeed = () => {
+    const next = speed === 1 ? 1.25 : speed === 1.25 ? 1.5 : speed === 1.5 ? 2 : 1
+    setSpeed(next)
+    visiblePlayer()?.setPlaybackRate?.(next)
+  }
+  const scrubTo = (ratio: number) => {
+    const player = visiblePlayer()
+    if (!player) return
+    const next = clipStart + clipLength * ratio
+    player.seekTo(next, true)
+    setSpokenAt(next)
+  }
   const chrome = item && phase === 'feed' && !slide && !scenic ? (
     <>
       <div className="j-hairline-row">
-        <div className={`j-hairline${buffering ? ' shimmer' : ''}`} data-testid="hairline"><i /></div>
+        <div className={`j-hairline${buffering ? ' shimmer' : ''}`} data-testid="hairline"><i style={{ width: `${clipPlaying ? clipPct : 0}%` }} /></div>
         {mode === 'hors' ? (
           <>
           <p className="j-swipe-hint" data-testid="swipe-hint">↑ swipe up to replay</p>
           <div className="clip-row">
             {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
             {!typeClip && muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
-            <span className="chip dark">{clock(item.hors.end - item.hors.start)}</span>
+            {clipPlaying ? <span className="chip dark" data-testid="clip-timer">{clock(clipLeft)}</span> : null}
           </div>
           </>
         ) : (
@@ -1412,7 +1460,7 @@ export function Journey(props: JourneyProps) {
       {typeClip && muted ? (
         <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button>
       ) : null}
-      {(cardKind && cardKind !== 'scene') || typeClip || mode !== 'hors' || wordsInPicture ? null : captionButton}
+      {(cardKind && cardKind !== 'scene') || typeClip || wordsInPicture ? null : captionButton}
       {wordsInPicture && mode === 'hors' && !cardKind ? <div className="j-top-speaker" data-testid="top-speaker">{speakerRow}</div> : null}
       {wordsInPicture && mode === 'appetiser' && videoAppetiser ? (
         <div className="j-top-speaker" data-testid="top-speaker">
@@ -1443,6 +1491,21 @@ export function Journey(props: JourneyProps) {
           </>
         ) : (
           <>
+            <div className="ready-controls" data-testid="ready-controls">
+              <button type="button" className="chip white" data-testid="skip-back" onClick={() => seekBy(-10)}>Back 10 s</button>
+              <button type="button" className="chip white" data-testid="skip-forward" onClick={() => seekBy(10)}>Forward 10 s</button>
+              <button type="button" className="chip gold" data-testid="speed" onClick={cycleSpeed}>{speed}×</button>
+              <span className="chip dark" data-testid="appetiser-timer">{clock(clipElapsed)} / {clock(clipLength)}</span>
+              <input
+                type="range"
+                min={0}
+                max={1000}
+                value={Math.round(clipPct * 10)}
+                data-testid="appetiser-scrub"
+                aria-label="Place in this talk"
+                onChange={(event) => scrubTo(Number(event.target.value) / 1000)}
+              />
+            </div>
             <a className="pill gold block" href={course} onClick={(event) => void stepUp(event)} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk">Learn more</a>
             {wordsInPicture && videoAppetiser ? null : (
               <div className="speaker-card">
@@ -1458,7 +1521,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined}>
+    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined}>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />
@@ -1716,7 +1779,7 @@ function TabEntry({ base, unread, onGuard }: { base: string; unread: number; onG
   }, [])
   return (
     <div ref={ref} className="j-tabs" onClickCapture={onGuard}>
-      <TabBar base={`${base}`} active="home" dark unread={unread} />
+      <TabBar base={`${base}`} active={null} dark unread={unread} />
     </div>
   )
 }

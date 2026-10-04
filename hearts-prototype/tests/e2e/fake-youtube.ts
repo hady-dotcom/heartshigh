@@ -13,6 +13,8 @@ export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean
       private state = -1
       private time: number
       private muted = true
+      private rate = 1
+      private tick: number | null = null
       private frame: HTMLIFrameElement
       constructor(el: HTMLElement, private options: Options) {
         this.time = options.playerVars?.start || 0
@@ -26,9 +28,17 @@ export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean
         this.state = state
         this.options.events.onStateChange({ data: state })
       }
-      playVideo() { if (gate.__allowPlay) this.set(1) }
-      pauseVideo() { this.set(2) }
-      stopVideo() { this.set(5) }
+      playVideo() {
+        if (!gate.__allowPlay) return
+        this.set(1)
+        if (this.tick == null) this.tick = window.setInterval(() => { this.time += 0.25 * this.rate }, 250)
+      }
+      pauseVideo() {
+        if (this.tick != null) window.clearInterval(this.tick)
+        this.tick = null
+        this.set(2)
+      }
+      stopVideo() { this.pauseVideo(); this.set(5) }
       mute() { this.muted = true }
       unMute() { this.muted = false }
       isMuted() { return this.muted }
@@ -37,10 +47,12 @@ export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean
       getCurrentTime() { return this.time }
       getDuration() { return 600 }
       getPlayerState() { return this.state }
+      setPlaybackRate(rate: number) { this.rate = rate }
+      getPlaybackRate() { return this.rate }
       getIframe() { return this.frame }
       unloadModule(name: string) { gate.__unloaded!.push(name) }
       setOption() {}
-      destroy() { this.frame.remove() }
+      destroy() { if (this.tick != null) window.clearInterval(this.tick); this.frame.remove() }
     }
     ;(window as unknown as { YT: unknown }).YT = { Player }
   }, Boolean(options.blockAutoplay))
