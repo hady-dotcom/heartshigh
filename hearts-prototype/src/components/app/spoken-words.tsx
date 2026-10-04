@@ -16,10 +16,7 @@ export function SpokenWords({ sentences, time, speaker }: { sentences: FramingSe
             {line.map((word, at) => {
               const key = sentence.key && norm(word) === norm(sentence.key)
               return (
-                <span key={`${at}:${word}`} className={key ? 'fr-key' : undefined}>
-                  {at > 0 ? '\u00a0' : ''}
-                  {word}
-                </span>
+                <span key={`${at}:${word}`} className={key ? 'fr-key' : undefined}>{word}</span>
               )
             })}
           </p>
