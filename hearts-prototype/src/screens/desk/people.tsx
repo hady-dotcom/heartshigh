@@ -62,10 +62,10 @@ export async function TeachScreen(ctx: Ctx) {
               <th>Email</th>
               <th className="num">Day</th>
               <th className="num">Parts watched</th>
-              <th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr> <HelpTip topic="on-time" label="What is on time?">{TOOL.onTime}</HelpTip></th>
+              <th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr></th>
               <th className="num">Answers</th>
               <th>Give a course <HelpTip topic="give-course" label="What is Give a course?">{TOOL.giveCourse}</HelpTip></th>
-              <th>Workbook <HelpTip topic="workbook" label="What is the workbook download?">{TOOL.workbook}</HelpTip></th>
+              <th />
             </tr></thead>
             <tbody>
               {learners.map((learner) => {
