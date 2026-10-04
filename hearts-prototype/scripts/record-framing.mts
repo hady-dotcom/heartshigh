@@ -18,12 +18,7 @@ async function main() {
   mkdirSync(OUT, { recursive: true })
   const browser = await chromium.launch({
     headless: true,
-    args: [
-      '--autoplay-policy=no-user-gesture-required',
-      '--use-fake-ui-for-media-stream',
-      '--autoplay-policy=user-gesture-required=0',
-      '--disable-features=UserAgentClientHint',
-    ],
+    args: ['--autoplay-policy=no-user-gesture-required', '--use-fake-ui-for-media-stream'],
   })
   for (const clip of CLIPS) {
     const dir = path.join(OUT, clip.slug)

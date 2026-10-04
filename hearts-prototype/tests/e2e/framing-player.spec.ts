@@ -73,7 +73,7 @@ test.describe('AI director player', () => {
     await expect(player).toHaveAttribute('data-framing-mode', 'F')
     await expect(page.getByTestId('spoken-words')).toBeVisible()
     await expect(page.getByTestId('spoken-words')).toHaveAttribute('data-sentence', 'And they seem to be winning as well.')
-    const spoken = await page.getByTestId('spoken-words').innerText()
+    const spoken = (await page.getByTestId('spoken-words').innerText()).replace(/\s+/g, ' ')
     expect(spoken).toMatch(/And they seem to be/)
     expect(spoken).toMatch(/winning as well/)
     expect(spoken).not.toMatch(/Andthey/)
