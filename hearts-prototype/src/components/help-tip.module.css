@@ -22,11 +22,10 @@
   padding: 0;
 }
 .pop {
-  position: absolute;
-  left: 0;
-  top: calc(100% + 8px);
-  z-index: 40;
-  width: min(22rem, 72vw);
+  position: fixed;
+  z-index: 80;
+  width: min(22rem, calc(100vw - 24px));
+  max-width: min(22rem, calc(100vw - 24px));
   padding: 12px 14px;
   background: #fffaf0;
   color: #14221f;
@@ -37,15 +36,7 @@
   text-align: left;
   text-transform: none;
   letter-spacing: normal;
+  white-space: normal;
+  overflow-wrap: break-word;
   isolation: isolate;
-}
-.root[data-place='end'] .pop {
-  left: auto;
-  right: 0;
-}
-.root[data-place='up'] .pop {
-  top: auto;
-  bottom: calc(100% + 8px);
-  left: auto;
-  right: 0;
 }

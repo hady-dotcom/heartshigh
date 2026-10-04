@@ -7,6 +7,7 @@ import { HideTestFilter } from '@/components/desk/hide-test'
 import { HelpTip } from '@/components/desk/help'
 import { TOOL } from '@/lib/desk-help'
 import { hideTestFromQuery, visiblePeople } from '@/lib/test-accounts'
+import { cleanTitle } from '@/lib/clean-title'
 import Link from 'next/link'
 import { Hidden } from '@/components/app/shell'
 import { EvidencePlayer } from '@/components/desk/tools'
@@ -196,7 +197,7 @@ export async function PlansScreen(ctx: Ctx) {
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'schedule', portalSlug: portal.slug, targetType: 'course', next: here }} />
             <label className="stack">Name<input type="text" name="name" defaultValue={defaultPlanName(clockNow())} /></label>
-            <label className="stack">Course<select data-testid="schedule-course" name="course">{courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}</select></label>
+            <label className="stack">Course<select data-testid="schedule-course" name="course">{courses.map((course) => <option key={course.id} value={course.id}>{cleanTitle(str(course.title))}</option>)}</select></label>
             <div className="cols">
               <label className="stack">From<input data-testid="schedule-start" type="date" name="start" defaultValue={today} /></label>
               <label className="stack">Until<input data-testid="schedule-end" type="date" name="end" defaultValue={later} /></label>

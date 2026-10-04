@@ -11,6 +11,7 @@ import { portalName } from '@/server/learner'
 import { type Ctx, portalPeople, rows, str } from '../common'
 import { DeskFrame, portalNav } from './shell'
 import { PORTAL_TIME_ZONES, portalTimeZone, zoneCity } from '@/lib/zone-time'
+import { displayPortalAddress } from '@/lib/portal-address'
 
 export async function AdminFrame({ ctx, active, title, intro, tools, children, testId, tone }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening' }) {
   const { payload, user, portal, base, query } = ctx
@@ -97,7 +98,7 @@ export async function OverviewScreen(ctx: Ctx) {
             <div>
               <div className="hint" style={{ marginBottom: 6 }}>Portal address</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <div className="address" style={{ flex: 1, minWidth: 0 }} data-testid="portal-address" title={address.replace(/^https?:\/\//, '')}>{address.replace(/^https?:\/\//, '')}</div>
+                <div className="address" style={{ flex: '1 1 12rem', minWidth: '11rem' }} data-testid="portal-address" title={address.replace(/^https?:\/\//, '')}>{displayPortalAddress(address)}</div>
                 <Link className="btn ink" href={base}>Go</Link>
                 <ShareLinks value={address} testId="portal-copy" />
               </div>
@@ -140,7 +141,7 @@ export async function OverviewScreen(ctx: Ctx) {
             <div className="count-tile"><span>Topic</span><b data-testid="own-topics">{units.length}</b></div>
             <div className="count-tile"><span>Video</span><b data-testid="own-videos">{lessons.length}</b></div>
             <div className="count-tile"><span>Resource</span><b data-testid="own-resources">{resources.length}</b></div>
-            <div className="count-tile" style={{ gridColumn: '1 / -1', background: '#fbefd2' }}><span>Linked from the library</span><b data-testid="linked-courses">{adopted.length}</b></div>
+            <div className="count-tile" style={{ gridColumn: '1 / -1' }}><span>Linked from the library</span><b data-testid="linked-courses">{adopted.length}</b></div>
           </div>
           {user.role !== 'teacher' ? <div className="foot"><Link className="btn" href={`${base}/admin/content`}>Content settings</Link></div> : null}
         </section>

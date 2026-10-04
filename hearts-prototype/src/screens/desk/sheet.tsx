@@ -191,7 +191,7 @@ function SheetBody({
                   <thead><tr><th>Tab</th><th className="num">Row</th><th>Column</th><th>What to fix</th></tr></thead>
                   <tbody>
                     {summary.errors.map((issue, index) => (
-                      <tr key={`${issue.tab}-${issue.row}-${issue.column}-${index}`} data-testid="sheet-error-row" style={{ background: '#fff5f5' }}>
+                      <tr key={`${issue.tab}-${issue.row}-${issue.column}-${index}`} className="sheet-error-row" data-testid="sheet-error-row">
                         <td>{issue.tab}</td>
                         <td className="num">{issue.row}</td>
                         <td><code>{issue.column}</code></td>

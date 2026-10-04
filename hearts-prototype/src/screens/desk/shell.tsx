@@ -133,7 +133,7 @@ export async function DeskFrame({
       <aside className="side">
         <Link className="side-brand" href={brandHref}>
           {logoUrl ? <img className="side-logo" alt="" src={logoUrl} /> : <BrandMark size={40} />}
-          <span><b>{brand}</b><small>{subBrand}</small></span>
+          <span><b data-testid="side-brand-name">{brand}</b><small>{subBrand}</small></span>
         </Link>
         <SideNav>
           {nav.map((group) => (

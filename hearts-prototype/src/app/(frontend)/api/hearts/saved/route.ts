@@ -1,6 +1,7 @@
 import { getSession } from '@/server/context'
 import { json } from '@/server/api'
-import { cleanTitle, partTitle } from '@/lib/talk-title'
+import { partTitle } from '@/lib/talk-title'
+import { cleanTitle } from '@/lib/clean-title'
 import { cutIdFromSaved } from '@/lib/saved'
 
 export const dynamic = 'force-dynamic'
@@ -20,11 +21,15 @@ export async function GET(req: Request) {
     overrideAccess: true,
   })
   const titles: Record<string, string> = {}
+  const talks: Record<string, { talk: string; title: string }> = {}
   for (const cut of found.docs) {
-    const lesson = typeof cut.lesson === 'object' && cut.lesson ? cut.lesson as { title?: string; sourceTitle?: string; order?: number; youtubeId?: string; vimeoId?: string; course?: { title?: string } | number } : null
+    const lesson = typeof cut.lesson === 'object' && cut.lesson ? cut.lesson as { id?: number; title?: string; sourceTitle?: string; order?: number; youtubeId?: string; vimeoId?: string; course?: { title?: string } | number } : null
     const courseTitle = lesson && typeof lesson.course === 'object' ? lesson.course.title : ''
     const title = cleanTitle(partTitle(lesson, courseTitle) || String(cut.hook || cut.turn || ''))
-    if (title) titles[`cut-${cut.id}`] = title
+    const key = `cut-${cut.id}`
+    if (title) titles[key] = title
+    const talk = lesson?.id ? `lesson-${lesson.id}` : key
+    talks[key] = { talk, title: title || key }
   }
-  return json({ titles })
+  return json({ titles, talks })
 }

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { cleanTitle, displayTalkTitle, partTitle, tidyTalkTitle } from './talk-title'
+import { displayTalkTitle, partTitle, tidyTalkTitle } from './talk-title'
 
 test('a real title is kept, and a slug or video id falls back to the course and part', () => {
   assert.equal(displayTalkTitle({ title: 'The heart of the matter', courseTitle: 'Names', part: 2 }), 'The heart of the matter')
@@ -12,7 +12,6 @@ test('a real title is kept, and a slug or video id falls back to the course and 
   assert.equal(displayTalkTitle({ title: 'Tawhid', courseTitle: 'Names', part: 4 }), 'Tawhid')
   assert.equal(displayTalkTitle({ title: '', courseTitle: '', part: 2 }), 'Part 2')
   assert.equal(tidyTalkTitle('Dua 1: O Allah, I am Your Servant | Prophetic Dua | Shaykh Yasir Fahmy'), 'Dua 1: O Allah, I am Your Servant')
-  assert.equal(cleanTitle('Dua 1: O Allah, I am Your Servant | Prophetic Dua | Shaykh Yasir Fahmy'), 'Dua 1: O Allah, I am Your Servant')
   assert.equal(displayTalkTitle({ title: 'Dua 1: O Allah, I am Your Servant | Prophetic Dua | Shaykh Yasir Fahmy', courseTitle: 'Duas', part: 1 }), 'Dua 1: O Allah, I am Your Servant')
   assert.equal(partTitle({ title: 'circle-recording', order: 3, vimeoId: '76979871' }, 'The names'), 'The names · Part 3')
   assert.equal(partTitle({ title: 'Vimeo 76979871', order: 2, vimeoId: '76979871' }, 'Light'), 'Light · Part 2')
