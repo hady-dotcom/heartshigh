@@ -174,7 +174,7 @@ export function calendarContext(input: ContextInput): CalendarContext {
   const hour = input.hour ?? local.hour
   const weekday = input.weekday ?? local.weekday
   const sunsetHour = input.sunsetHour ?? approximateSunsetHour(at, input.latitude ?? latitudeForZone(zone))
-  const afterSunset = hour + (local.minute || at.getUTCMinutes() || 0) / 60 >= sunsetHour
+  const afterSunset = hour + local.minute / 60 >= sunsetHour
   const islamicAt = afterSunset ? nextCivilNoon(at) : at
   const islamicWeekday = afterSunset ? (weekday + 1) % 7 : weekday
   const hijri = hijriOf(islamicAt, input.offsetDays || 0)

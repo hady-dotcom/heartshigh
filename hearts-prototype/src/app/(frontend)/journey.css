@@ -131,7 +131,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 @keyframes shimmer { to { background-position: -200% 0; } }
 .j-sound {
   position: absolute;
-  top: calc(68px + var(--safe-top));
+  top: calc(28px + var(--safe-top));
   left: 16px;
   z-index: 6;
   transform: none;

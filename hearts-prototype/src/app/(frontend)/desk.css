@@ -30,7 +30,9 @@
 .side a.nav:hover { background: rgba(247, 238, 219, 0.12); }
 .side a.nav.on { background: var(--gold); color: var(--gold-ink); }
 .side a.nav svg { flex: none; opacity: 0.9; }
-.side .nav-group { display: flex; flex-direction: column; gap: 2px; }
+.side .nav-group { display: block; }
+.side details.nav-group[open] { display: flex; flex-direction: column; gap: 2px; }
+.side details.nav-group:not([open]) > :not(summary) { display: none; }
 .side details.nav-group > summary.group { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .side details.nav-group > summary.group::-webkit-details-marker { display: none; }
 .side details.nav-group > summary.group::after {

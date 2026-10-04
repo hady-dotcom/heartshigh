@@ -153,6 +153,9 @@ test('Riyadh evening uses local hour for Maghrib, not UTC', () => {
   assert.equal(utcHour.hour, 15)
   assert.ok(evening.hour >= 18)
   assert.ok(utcHour.hour < 18)
+  const inferred = calendarContext({ at, timeZone: 'Asia/Riyadh', sunsetHour: 17.5 })
+  assert.equal(inferred.hour, 18)
+  assert.equal(inferred.thursdayEvening || inferred.friday || inferred.hour >= 18, true)
 })
 
 test('talk order is nudged by season theme and optional popular ids', () => {

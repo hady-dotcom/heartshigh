@@ -18,9 +18,10 @@ async function assertNoIssuesBadge(page: Page) {
       return box.width > 1 && box.height > 1
     })
     const label = painted.map((el) => (el.getAttribute('aria-label') || el.textContent || '').trim()).join(' ').match(/\b(\d+)\s+Issues?\b/)?.[0] || ''
-    return { label, visible: painted.length }
+    const detail = painted.map((el) => (el.getAttribute('aria-label') || el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 200)).filter(Boolean)
+    return { label, visible: painted.length, detail }
   })
-  expect(issues, `Next.js Issues badge is visible (${issues.label || 'overlay'})`).toEqual({ label: '', visible: 0 })
+  expect(issues, `Next.js Issues badge is visible (${issues.label || issues.detail.join(' | ') || 'overlay'})`).toMatchObject({ label: '', visible: 0 })
 }
 
 async function signIn(page: Page, email: string, password: string, next: string) {
@@ -69,10 +70,10 @@ test.describe('Help shape HEARTS', () => {
     await desk.setViewportSize(DESK)
     await signIn(desk, 'master@hearts.test', 'hearts-master', '/master/missions')
     await expect(desk.getByTestId('missions-desk')).toBeVisible()
-    await expect(desk.getByTestId('desk-nav')).toContainText('Beginner')
-    await expect(desk.getByTestId('desk-nav')).toContainText('Everyday tasks')
-    await desk.getByTestId('nav-group-intermediate').locator('summary').click()
+    await expect(desk.getByTestId('nav-group-beginner').locator('summary')).toContainText('Beginner')
+    await expect(desk.getByTestId('nav-group-intermediate')).toHaveJSProperty('open', true)
     await expect(desk.getByTestId('desk-nav')).toContainText('Scenes and Lanes')
+    await expect(desk.getByTestId('nav-group-beginner')).toHaveJSProperty('open', false)
     await desk.getByTestId('nav-group-in-depth').locator('summary').click()
     await expect(desk.getByTestId('nav-insights')).toBeVisible()
     await desk.getByTestId('desk-help').click()
@@ -128,6 +129,14 @@ test.describe('Help shape HEARTS', () => {
     const clipBox = await joinFilm.page.getByTestId('learn-more').boundingBox()
     expect(missionBox && clipBox).toBeTruthy()
     expect((missionBox?.y || 0) + (missionBox?.height || 0)).toBeLessThan(clipBox?.y || 0)
+    const sound = joinFilm.page.getByTestId('tap-sound')
+    const lane = joinFilm.page.getByTestId('lane-chip')
+    if (await sound.isVisible() && await lane.isVisible()) {
+      const soundBox = await sound.boundingBox()
+      const laneBox = await lane.boundingBox()
+      const overlap = soundBox && laneBox && soundBox.x < laneBox.x + laneBox.width && soundBox.x + soundBox.width > laneBox.x && soundBox.y < laneBox.y + laneBox.height && soundBox.y + soundBox.height > laneBox.y
+      expect(overlap, 'Tap for sound overlaps the lane chip').toBeFalsy()
+    }
     await joinFilm.page.screenshot({ path: `${SHOTS}/phone-feed-mission.png` })
     const journey = joinFilm.page.getByTestId('journey')
     const lesson = await journey.getAttribute('data-lesson')
@@ -261,9 +270,13 @@ test.describe('Help shape HEARTS', () => {
     await desk.screenshot({ path: `${SHOTS}/calendar-muharram.png`, fullPage: true })
 
     await desk.goto('/master')
+    await expect(desk.getByTestId('nav-group-beginner').locator('summary')).toContainText('Beginner')
     await expect(desk.getByTestId('desk-nav')).toContainText('In-depth')
-    await desk.getByTestId('nav-group-intermediate').locator('summary').click()
+    await desk.getByTestId('nav-group-beginner').locator('summary').click()
     await desk.getByTestId('nav-group-in-depth').locator('summary').click()
+    await expect(desk.getByTestId('nav-insights')).toBeVisible()
+    await expect(desk.getByTestId('nav-group-beginner')).toHaveJSProperty('open', false)
+    await expect(desk.getByTestId('nav-group-intermediate')).toHaveJSProperty('open', false)
     await desk.getByTestId('desk-help').click()
     await expect(desk.getByTestId('desk-help-dialog')).toBeVisible()
     await assertNoIssuesBadge(desk)

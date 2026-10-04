@@ -667,5 +667,5 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .feed-mission .mission-card p { margin: 0; font-size: 13px; flex: 1; min-width: 0; }
 .feed-mission .pill { min-height: 32px; padding: 5px 10px; font-size: 12.5px; flex: none; }
 .journey-frame:has(.feed-mission) .j-hairline-row { top: calc(58px + var(--safe-top)); }
-.journey-frame:has(.feed-mission) .j-top-speaker { top: calc(104px + var(--safe-top)); }
-.journey-frame:has(.feed-mission) .j-sound { top: calc(108px + var(--safe-top)); }
+.journey-frame:has(.feed-mission) .j-top-speaker { top: calc(88px + var(--safe-top)); }
+.journey-frame:has(.feed-mission) .j-sound { top: calc(74px + var(--safe-top)); }

@@ -32,7 +32,7 @@ function readLane() {
 
 function answerSheetOpen() {
   if (typeof document === 'undefined') return false
-  return Boolean(document.querySelector('[data-testid="popup"]'))
+  return Boolean(document.querySelector('[data-testid="popup"][data-sheet="answer"]'))
 }
 
 function flush() {

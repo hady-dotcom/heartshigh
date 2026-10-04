@@ -25,6 +25,14 @@ test('insight bursts are rate-limited', () => {
   assert.equal(allowInsightBurst('sess-a', 40, 10_000, 12_000), true)
 })
 
+test('insight bursts prune stale keys from the map', () => {
+  resetInsightBursts()
+  assert.equal(allowInsightBurst('old', 1, 10_000, 1_000), true)
+  assert.equal(allowInsightBurst('old', 1, 10_000, 1_000), false)
+  assert.equal(allowInsightBurst('fresh', 1, 10_000, 12_000), true)
+  assert.equal(allowInsightBurst('old', 1, 10_000, 12_000), true)
+})
+
 test('angry spots are in words, not raw coordinates', () => {
   const place = angrySpotWords({ route: '/p/east-london/feed', x: 196, y: 620, vw: 390, vh: 844 })
   assert.equal(place, 'the lower middle of the feed')

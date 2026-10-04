@@ -1432,17 +1432,6 @@ export function Journey(props: JourneyProps) {
     <>
       <div className="j-hairline-row">
         <div className={`j-hairline${buffering ? ' shimmer' : ''}`} data-testid="hairline"><i /></div>
-        {mode === 'hors' ? (
-          <div className="clip-row">
-            {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
-            <span className="chip dark">{clock(item.hors.end - item.hors.start)}</span>
-          </div>
-        ) : (
-          <div className="clip-row">
-            <button type="button" className="chip white" onClick={() => window.history.back()} data-testid="appetiser-back">‹ Back</button>
-            <span className="chip gold">Extended cut</span>
-          </div>
-        )}
       </div>
       {muted && !hasSound() && (typeClip || playerReady) ? (
         <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button>
@@ -1473,11 +1462,19 @@ export function Journey(props: JourneyProps) {
       <div className="clip-foot">
         {mode === 'hors' ? (
           <>
+            <div className="clip-row">
+              {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
+              <span className="chip dark">{clock(item.hors.end - item.hors.start)}</span>
+            </div>
             {wordsInPicture && !cardKind ? null : speakerRow}
             <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" onClick={() => void stepUp()}>{clipCta.label}</button>
           </>
         ) : (
           <>
+            <div className="clip-row">
+              <button type="button" className="chip white" onClick={() => window.history.back()} data-testid="appetiser-back">‹ Back</button>
+              <span className="chip gold">Extended cut</span>
+            </div>
             <a className="pill gold block" href={course} onClick={(event) => void stepUp(event)} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk">{formatSlotLabel(talkCta.label, Math.max(1, Math.round((item.durationSeconds || 0) / 60) || 3))}</a>
             {wordsInPicture && videoAppetiser ? null : (
               <div className="speaker-card">

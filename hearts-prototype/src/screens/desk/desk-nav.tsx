@@ -1,22 +1,28 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import type { NavGroup } from './shell'
 
 export function DeskNav({ groups, active }: { groups: NavGroup[]; active: string }) {
-  const [opened, setOpened] = useState(() => groups.filter((group) => group.items.some((item) => item.key === active)).map((group) => group.group))
+  const root = useRef<HTMLElement>(null)
+  const booted = useRef(false)
+  useLayoutEffect(() => {
+    if (booted.current || !root.current) return
+    booted.current = true
+    const want = new Set(groups.filter((group) => group.items.some((item) => item.key === active)).map((group) => group.group))
+    for (const details of root.current.querySelectorAll('details')) {
+      details.open = want.has(details.getAttribute('data-group') || '')
+    }
+  }, [active, groups])
+
   return (
-    <nav className="side-nav" aria-label="Desk" data-testid="desk-nav">
+    <nav ref={root} className="side-nav" aria-label="Desk" data-testid="desk-nav">
       {groups.map((group) => (
         <details
           key={group.group}
           className="nav-group"
-          open={opened.includes(group.group)}
-          onToggle={(event) => {
-            const isOpen = event.currentTarget.open
-            setOpened((current) => (isOpen ? [...new Set([...current, group.group])] : current.filter((name) => name !== group.group)))
-          }}
+          data-group={group.group}
           data-testid={`nav-group-${group.group.toLowerCase().replace(/\s+/g, '-')}`}
         >
           <summary className="group">{group.group}</summary>

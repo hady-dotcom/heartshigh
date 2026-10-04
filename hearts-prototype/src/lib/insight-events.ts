@@ -151,9 +151,9 @@ export function tapPlace(x?: number | null, y?: number | null, vw = 390, vh = 84
   const across = vw > 0 ? x / vw : 0.5
   const down = vh > 0 ? y / vh : 0.5
   const horiz = across < 0.33 ? 'left' : across > 0.66 ? 'right' : 'middle'
-  const vert = down < 0.28 ? 'top' : down > 0.72 ? 'lower' : 'middle'
-  if (vert === 'lower third' && down > 0.88) return `the tab bar, ${horiz}`
-  return `the ${vert} ${horiz} of ${routeWords('') === 'this screen' ? 'the screen' : 'the screen'}`
+  const vert = down < 0.28 ? 'top' : down > 0.88 ? 'tab bar' : down > 0.72 ? 'lower' : 'middle'
+  if (vert === 'tab bar') return `the tab bar, ${horiz}`
+  return `the ${vert} ${horiz} of the screen`
 }
 
 export function angrySpotWords(input: { route?: string; x?: number | null; y?: number | null; vw?: number | null; vh?: number | null }) {
