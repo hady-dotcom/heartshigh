@@ -157,7 +157,14 @@
 .beat-rail span.on { color: var(--gold-ink); }
 .typography-player { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #14120e; z-index: 2; }
 .feed-card { position: absolute; inset: 0; z-index: 4; background: #f6f0e4; color: #1c1914; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: calc(72px + var(--safe-top)) 36px 120px; }
-.feed-card .kicker { letter-spacing: 0.18em; text-transform: uppercase; font-size: 13px; font-weight: 700; color: #c48f2c; }
+.feed-card .kicker { letter-spacing: 0.18em; text-transform: uppercase; font-size: 13px; font-weight: 700; color: #7a5410; }
+/* Question and text cards are cream: the chrome over them switches to ink so every label stays at AA. */
+.journey:is([data-card='question'], [data-card='text']) .j-chrome .rail button,
+.journey:is([data-card='question'], [data-card='text']) .j-chrome .speaker-row { color: #1c1914; text-shadow: none; }
+.journey:is([data-card='question'], [data-card='text']) .j-chrome .speaker-row small { color: #4a4134; }
+.journey:is([data-card='question'], [data-card='text']) .j-chrome .rail .bubble { background: rgba(28, 25, 20, 0.82); }
+.journey:is([data-card='question'], [data-card='text']) .j-chrome .follow { color: #1c1914; border-color: #1c1914; }
+.journey:is([data-card='question'], [data-card='text']) .j-chrome .follow[aria-pressed='true'] { background: #1c1914; color: #f6f0e4; }
 .feed-card h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; font-size: 34px; line-height: 1.15; margin: 16px 0; }
 .feed-card p { margin: 0 0 28px; font-size: 16px; }
 .journey[data-mode='appetiser'] .j-chrome .rail { position: static; flex: none; display: flex; justify-content: flex-end; gap: 6px; }
