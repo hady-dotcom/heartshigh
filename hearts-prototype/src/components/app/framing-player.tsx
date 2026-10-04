@@ -58,9 +58,13 @@ export function FramingPlayer({
     let gone = false
     opened.current = false
     const openAtStart = (player: YTPlayer) => {
-      player.seekTo(resolved.start, true)
+      if (player.loadVideoById) {
+        player.loadVideoById({ videoId: youtubeId, startSeconds: resolved.start, endSeconds: resolved.end })
+      } else {
+        player.seekTo(resolved.start, true)
+        if (autoplay) playOnly(playerId)
+      }
       if (sound) soundOn(playerId)
-      if (autoplay) playOnly(playerId)
     }
     void createPlayer({
       id: playerId,

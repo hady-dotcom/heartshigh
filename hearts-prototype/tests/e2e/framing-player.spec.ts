@@ -41,6 +41,7 @@ test.describe('AI director player', () => {
         unMute() { this.muted = false }
         isMuted() { return this.muted }
         cueVideoById() { this.state = 5 }
+        loadVideoById() { this.state = 1 }
         seekTo(seconds: number) { (window as unknown as { __frClock: { set(value: number): void } }).__frClock.set(seconds) }
         getCurrentTime() { return (window as unknown as { __frClock: { now(): number } }).__frClock.now() }
         getDuration() { return 600 }
@@ -77,5 +78,6 @@ test.describe('AI director player', () => {
     expect(spoken).toMatch(/And they seem to be/)
     expect(spoken).toMatch(/winning as well/)
     expect(spoken).not.toMatch(/Andthey/)
+    await page.screenshot({ path: 'test-results/spoken-words-f.png', type: 'png' })
   })
 })
