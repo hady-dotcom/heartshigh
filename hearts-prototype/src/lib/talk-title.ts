@@ -4,6 +4,11 @@
  * A YouTube upload often appends "| Prophetic Dua | Shaykh …". That suffix is the channel, not the talk.
  */
 
+/** The title a learner should see: drop channel suffixes and machine names. */
+export function cleanTitle(raw: string) {
+  return tidyTalkTitle(raw)
+}
+
 /** Drops a "| channel, series" suffix. A title with no pipe is left as it is. */
 export function tidyTalkTitle(raw: string) {
   const text = raw.replace(/\s+/g, ' ').trim()

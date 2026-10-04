@@ -64,7 +64,7 @@ export async function TeachScreen(ctx: Ctx) {
               <th className="num">Parts watched</th>
               <th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr></th>
               <th className="num">Answers</th>
-              <th>Give a course <HelpTip topic="give-course" label="What is Give a course?">{TOOL.giveCourse}</HelpTip></th>
+              <th>Give a course <HelpTip topic="give-course" label="What is Give a course?" place="end">{TOOL.giveCourse}</HelpTip></th>
               <th />
             </tr></thead>
             <tbody>
@@ -259,7 +259,7 @@ export async function NightsScreen(ctx: Ctx) {
                 <header><div><h2>{str(event.title)}</h2><p>{longDate(str(event.startsAt))}{event.place ? ` · ${str(event.place)}` : ''}</p></div><span className="badge gold">{going.length} coming · {inside.length} here</span></header>
                 <div className="table-wrap">
                   <table className="data">
-                    <thead><tr><th>Name</th><th>Ticket</th><th>Kind</th><th>Arrived</th></tr></thead>
+                    <thead><tr><th>Name</th><th>Ticket</th><th>Kind <HelpTip topic="ticket" label="What is a ticket kind?">{TOOL.earnedTicket}</HelpTip></th><th>Arrived</th></tr></thead>
                     <tbody>
                       {going.map((row) => {
                         const arrived = inside.find((item) => ref(item.user) === ref(row.user))
@@ -267,7 +267,7 @@ export async function NightsScreen(ctx: Ctx) {
                           <tr key={row.id} data-testid="rsvp-row">
                             <td>{name(row.user)}</td>
                             <td style={{ fontFamily: 'ui-monospace, monospace' }}>{str(row.ticket)}</td>
-                            <td>{row.ticketKind === 'earned' ? <span className="badge teal">Earned</span> : <span className="badge grey">Held</span>} <HelpTip topic="ticket">{TOOL.earnedTicket}</HelpTip></td>
+                            <td>{row.ticketKind === 'earned' ? <span className="badge teal">Earned</span> : <span className="badge grey">Held</span>}</td>
                             <td>{arrived ? <span className="badge ink">{arrived.override ? 'Welcomed in' : 'Checked in'}</span> : <span className="hint">Not yet</span>}</td>
                           </tr>
                         )

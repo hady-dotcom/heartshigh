@@ -24,7 +24,7 @@ test('Content lists all twenty doors, keeping courses on the doors they already 
   assert.deepEqual(filled.map((row) => row.number), DOORS.map((door) => door.number))
   assert.equal(filled[4].courses[0].title, 'A talk')
   assert.equal(filled[0].courses.length, 0)
-  assert.equal(filled[0].heading, 'W1 · One day')
+  assert.equal(filled[0].heading, 'Door 1 · One day')
 })
 
 test('unmapped courses stay after the twenty doors', () => {

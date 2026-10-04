@@ -10,7 +10,10 @@ test('desk tokens are the evening-garden teal, gold and cream values', () => {
   assert.equal(deskTokens.heading, '#F6EEDC')
   assert.notEqual(deskTokens.page.toLowerCase(), '#efe3c8')
   const css = readFileSync(new URL('../app/(frontend)/theme.css', import.meta.url), 'utf8')
+  const desk = readFileSync(new URL('../app/(frontend)/desk.css', import.meta.url), 'utf8')
   for (const value of Object.values(deskTokens)) assert.match(css, new RegExp(value))
+  assert.match(desk, /--paper:\s*var\(--desk-page/)
+  assert.match(desk, /--card:\s*var\(--desk-card/)
 })
 
 test('desk type on teal panels meets 4.5:1', () => {

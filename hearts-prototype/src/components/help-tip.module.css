@@ -35,9 +35,17 @@
   box-shadow: 0 12px 32px rgba(20, 34, 31, 0.18);
   font: 500 13.5px/1.45 var(--sans, 'Source Sans 3', sans-serif);
   text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
   isolation: isolate;
 }
 .root[data-place='end'] .pop {
+  left: auto;
+  right: 0;
+}
+.root[data-place='up'] .pop {
+  top: auto;
+  bottom: calc(100% + 8px);
   left: auto;
   right: 0;
 }

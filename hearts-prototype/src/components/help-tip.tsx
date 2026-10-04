@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import styles from './help-tip.module.css'
 
 const OPEN = 'hearts:help-tip'
@@ -10,7 +10,7 @@ export type HelpTipProps = {
   /** Stable name for tests and for one-open-at-a-time grouping. */
   topic?: string
   label?: string
-  /** Open the card to the right when the “?” sits at the end of a row. */
+  /** Open the card to the left when the “?” sits at the end of a row. */
   place?: 'start' | 'end'
 }
 
@@ -23,6 +23,23 @@ export function HelpTip({ children, topic, label = 'What is this?', place = 'sta
   const id = useId()
   const rootRef = useRef<HTMLSpanElement>(null)
   const [open, setOpen] = useState(false)
+  const [fit, setFit] = useState<'start' | 'end' | 'up'>(place)
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setFit(place)
+      return
+    }
+    const pop = rootRef.current?.querySelector('[role="note"]')
+    if (!(pop instanceof HTMLElement)) return
+    const box = pop.getBoundingClientRect()
+    const pad = 12
+    let next: 'start' | 'end' | 'up' = place
+    if (box.right > window.innerWidth - pad) next = 'end'
+    if (box.left < pad) next = 'start'
+    if (box.bottom > window.innerHeight - pad) next = 'up'
+    setFit(next)
+  }, [open, place])
 
   useEffect(() => {
     if (!open) return
@@ -51,7 +68,7 @@ export function HelpTip({ children, topic, label = 'What is this?', place = 'sta
       className={styles.root}
       data-testid="desk-help"
       data-help={topic || undefined}
-      data-place={place}
+      data-place={fit}
       data-open={open ? 'yes' : 'no'}
     >
       <button

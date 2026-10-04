@@ -2,20 +2,37 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { SAVED_KEY, parseIdList, savedHref } from '@/lib/saved'
+import { SAVED_KEY, cutIdFromSaved, parseIdList, savedHref } from '@/lib/saved'
+import { cleanTitle } from '@/lib/talk-title'
 
 export function SavedList({ base }: { base: string }) {
   const [ids, setIds] = useState<string[] | null>(null)
+  const [titles, setTitles] = useState<Record<string, string>>({})
   useEffect(() => {
     setIds(parseIdList(typeof localStorage === 'undefined' ? '' : localStorage.getItem(SAVED_KEY)))
   }, [])
+  useEffect(() => {
+    if (!ids?.length) return
+    const query = ids.map((id) => cutIdFromSaved(id)).filter((id): id is number => Boolean(id)).join(',')
+    if (!query) return
+    fetch(`/api/hearts/saved?ids=${encodeURIComponent(query)}`, { credentials: 'same-origin' })
+      .then((res) => res.json())
+      .then((body: { titles?: Record<string, string> }) => {
+        const next: Record<string, string> = {}
+        for (const [key, value] of Object.entries(body.titles || {})) {
+          if (value) next[key] = cleanTitle(value)
+        }
+        setTitles(next)
+      })
+      .catch(() => undefined)
+  }, [ids])
   if (ids == null) return <p className="muted" data-testid="saved-list">Loading saved clips…</p>
   if (!ids.length) return <p className="muted" data-testid="saved-empty">Nothing saved on this phone yet. Tap Save on a clip and it will wait here.</p>
   return (
     <div className="saved-list" data-testid="saved-list">
       {ids.map((id, index) => (
         <Link key={id} className="list-link saved-item" href={savedHref(base, id)} data-testid="saved-item">
-          <span className="grow">Saved clip {index + 1}<small>Opens in today’s clips</small></span>›
+          <span className="grow">{titles[id] || titles[`cut-${cutIdFromSaved(id)}`] || `Saved clip ${index + 1}`}<small>Opens in today’s clips</small></span>›
         </Link>
       ))}
     </div>

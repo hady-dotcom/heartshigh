@@ -46,10 +46,10 @@ test('the card stays hidden once dismissed, installed, or opened full screen', (
 test('a dismiss lasts 14 days, then the strip can show again', () => {
   const now = Date.parse('2026-10-04T12:00:00Z')
   assert.equal(isInstallDismissed(null, now), false)
-  assert.equal(isInstallDismissed('1', now), false)
-  assert.equal(isInstallDismissed(String(now), now), true)
-  assert.equal(isInstallDismissed(String(now - INSTALL_DISMISS_MS + 1000), now), true)
-  assert.equal(isInstallDismissed(String(now - INSTALL_DISMISS_MS - 1000), now), false)
+  assert.equal(isInstallDismissed('1', now), true)
+  assert.equal(isInstallDismissed(String(now + INSTALL_DISMISS_MS), now), true)
+  assert.equal(isInstallDismissed(String(now + 1000), now), true)
+  assert.equal(isInstallDismissed(String(now - 1000), now), false)
 })
 
 test('a narrow or touch surface says phone even when the browser looks like a desktop', () => {

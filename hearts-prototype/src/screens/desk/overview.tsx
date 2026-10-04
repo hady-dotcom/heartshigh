@@ -97,7 +97,7 @@ export async function OverviewScreen(ctx: Ctx) {
             <div>
               <div className="hint" style={{ marginBottom: 6 }}>Portal address</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <div className="address" style={{ flex: 1, minWidth: 0, wordBreak: 'normal', overflowWrap: 'anywhere' }} data-testid="portal-address">{address.replace(/^https?:\/\//, '')}</div>
+                <div className="address" style={{ flex: 1, minWidth: 0 }} data-testid="portal-address" title={address.replace(/^https?:\/\//, '')}>{address.replace(/^https?:\/\//, '')}</div>
                 <Link className="btn ink" href={base}>Go</Link>
                 <ShareLinks value={address} testId="portal-copy" />
               </div>

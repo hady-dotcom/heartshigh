@@ -76,7 +76,7 @@ test('desks wear the evening garden: deep teal page and panels, gold buttons', a
   await page.goto(`${PORTAL}/admin/access`)
   expect(await bg(page, '[data-testid="new-code-submit"]')).toBe('rgb(212, 168, 75)')
 
-  for (const screen of ['/admin/access', '/admin/library', '/admin/teach', '/admin/feedback']) {
+  for (const screen of ['/admin/access', '/admin/library', '/admin/teach', '/admin/feedback', '/admin/gather', '/admin/gather/attendance']) {
     await page.goto(`${PORTAL}${screen}`)
     for (const open of await page.locator('details:not([open]) > summary').all()) await open.click({ timeout: 2000 }).catch(() => undefined)
     const ratios = await page.evaluate(() => {

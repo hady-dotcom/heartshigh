@@ -1,5 +1,5 @@
-import { doorCode, doorLabel, type Door, DOORS } from './doors'
-import type { DoorGroup } from './curriculum-groups'
+import { doorCode, type Door, DOORS } from './doors'
+import { doorName, type DoorGroup } from './curriculum-groups'
 
 /** An empty heading so Content can list all twenty doors, even when a portal has nothing on one. */
 export function emptyDoorGroup(door: Door): DoorGroup {
@@ -8,7 +8,7 @@ export function emptyDoorGroup(door: Door): DoorGroup {
     number: door.number,
     code: doorCode(door.number),
     title: door.title,
-    heading: doorLabel(door),
+    heading: doorName(door).heading,
     courses: [],
     seats: [],
     unseated: [],
