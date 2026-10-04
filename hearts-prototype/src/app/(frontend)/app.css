@@ -44,6 +44,18 @@
 .lanes-head { align-items: flex-start; }
 .page-sub { margin: 4px 0 0; font-size: 14px; line-height: 1.4; color: var(--ink-2); font-weight: 500; }
 .page-help { position: absolute; top: calc(10px + var(--safe-top)); right: 12px; z-index: 40; }
+/* On the opening the Skip / Log in control sits top-right; keep ? beside the arch. */
+.journey-frame > .page-help {
+  top: calc(14px + var(--safe-top, env(safe-area-inset-top, 0px)));
+  left: 56px;
+  right: auto;
+  z-index: 12;
+}
+.journey-frame > .page-help .page-help-btn {
+  background: rgba(18, 48, 47, 0.72);
+  color: #f6eedc;
+  border-color: rgba(246, 238, 220, 0.45);
+}
 .page-help-btn {
   width: 36px; height: 36px; border-radius: 50%;
   border: 1.5px solid var(--line); background: var(--glass-solid, var(--card));

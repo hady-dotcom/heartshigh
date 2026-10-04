@@ -239,10 +239,10 @@ test.describe('the opening', () => {
     await page.getByTestId('keep-submit').click()
     await expect(page.getByTestId('toast')).toContainText('Your place is kept')
     expect(openings).toHaveLength(1)
-    expect(JSON.parse(openings[0]).taps).toHaveLength(6)
+    expect(JSON.parse(openings[0]).taps).toHaveLength(7)
     await page.goto(`/p/${PORTAL}/garden/workbook`)
     await expect(page.getByTestId('where-you-started')).toBeVisible()
-    await expect(page.getByTestId('opening-row')).toHaveCount(6)
+    await expect(page.getByTestId('opening-row')).toHaveCount(7)
     await expect(page.locator('[data-testid="opening-row"][data-scene="thumb"]')).toHaveAttribute('data-private', 'yes')
     await expect(page.locator('[data-testid="opening-row"][data-scene="thumb"] [data-testid="private-lock"]')).toBeVisible()
   })
@@ -282,7 +282,7 @@ test.describe('the opening', () => {
     await signIn(teacher, 'elm-teacher@hearts.test', 'portal-teacher', '/')
     const id = await userId('elm-learner@hearts.test')
     const shared = async () => ((await (await teacher.request.get(`/api/workbook/${id}`)).json()).opening || []).length
-    await signIn(learner, 'elm-learner@hearts.test', 'portal-learner', `/p/${PORTAL}/me`)
+    await signIn(learner, 'elm-learner@hearts.test', 'portal-learner', `/p/${PORTAL}/me/settings`)
     const toggle = learner.getByTestId('pref-shareOpening-input')
     await expect(toggle).toBeChecked()
     expect(await shared()).toBeGreaterThan(0)
@@ -292,7 +292,7 @@ test.describe('the opening', () => {
       await expect(toggle).not.toBeChecked()
       expect(await shared()).toBe(0)
     } finally {
-      await learner.goto(`/p/${PORTAL}/me`)
+      await learner.goto(`/p/${PORTAL}/me/settings`)
       if (!(await learner.getByTestId('pref-shareOpening-input').isChecked())) {
         await learner.getByTestId('pref-shareOpening-input').check()
         await expect(learner.getByTestId('notice')).toContainText('Saved')
@@ -317,7 +317,7 @@ test.describe('the opening', () => {
 
   test('23. Guarding the gaze is opt-in and kept on the device only', async ({ page }) => {
     const seen = watchRequests(page)
-    await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/me`)
+    await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/me/settings`)
     const toggle = page.locator('[data-testid="optin-guarding-gaze"] input')
     await expect(toggle).not.toBeChecked()
     await toggle.check()
@@ -336,7 +336,7 @@ test.describe('the opening', () => {
     await page.getByTestId('keep-password').fill('again-pass')
     await page.getByTestId('keep-submit').click()
     await expect(page.getByTestId('toast')).toContainText('Your place is kept')
-    await page.goto(`/p/${PORTAL}/me`)
+    await page.goto(`/p/${PORTAL}/me/settings`)
     await page.getByTestId('start-again').click()
     await page.getByTestId('start-again-yes').click()
     await expect(page.getByTestId('opener')).toBeVisible()
