@@ -81,7 +81,8 @@ async function openEveryDeskHelp(page: Page, where: string) {
     const mark = marks.nth(index)
     if (!(await mark.isVisible())) continue
     await mark.scrollIntoViewIfNeeded()
-    if ((await mark.getAttribute('data-open')) !== 'yes') await mark.click()
+    await page.keyboard.press('Escape')
+    await mark.locator('button').click()
     const pop = page.getByTestId('desk-help-pop')
     await assertPopFits(page, pop, `${where} ? ${index + 1}/${count}`)
     opened += 1

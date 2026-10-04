@@ -95,7 +95,9 @@ export function HelpTip({ children, topic, label = 'What is this?', place = 'sta
         aria-label={label}
         title={label}
         aria-expanded={open}
-        onClick={() => {
+        onClick={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
           const next = !open
           if (next) window.dispatchEvent(new CustomEvent(OPEN, { detail: id }))
           setOpen(next)
