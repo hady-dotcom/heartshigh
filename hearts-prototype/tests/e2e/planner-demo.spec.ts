@@ -122,6 +122,11 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
   const play = page.getByTestId('player-play')
   if (await play.count()) await play.click({ timeout: 3_000 }).catch(() => undefined)
   await page.evaluate(() => (window as unknown as { __HEARTS_FAKE_END?: () => void }).__HEARTS_FAKE_END?.())
+  await page.waitForTimeout(700)
+  if (await page.getByTestId('popup').isVisible()) {
+    await page.getByTestId('answer-later').click()
+    await expect(page.getByTestId('popup')).toHaveCount(0)
+  }
   await expect(page.getByTestId('up-next-card')).toBeVisible({ timeout: 8_000 })
   await expect(page.getByTestId('up-next-count')).toContainText('Starting in')
   await hold(page, '07-up-next', 800)
