@@ -108,6 +108,12 @@ export async function applySeriesGroups(payload: Payload) {
   }
 
   const groupedIds = [...courseByTitle.values()].map((course) => course.id)
+  const people = ((await payload.find({ collection: 'users', overrideAccess: true, depth: 0, limit: 200 })).docs as { id: number; courseList?: unknown }[])
+  for (const person of people) {
+    const list = Array.isArray(person.courseList) ? person.courseList.map(Number).filter(Boolean) : null
+    if (!list || !groupedIds.some((id) => !list.includes(id))) continue
+    await payload.update({ collection: 'users', id: person.id, overrideAccess: true, data: { courseList: [...new Set([...list, ...groupedIds])] } as never })
+  }
   console.log(`Grouped series: ${plan.groups.map((group) => `${group.title} (${group.lessonIds.length})`).join(', ') || 'none'}. ${plan.moves.length} talks moved.`)
   return { plan, courseIds: groupedIds }
 }

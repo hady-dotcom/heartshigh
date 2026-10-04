@@ -20,14 +20,16 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
   await expect(page.getByTestId('day-number')).toContainText('with us')
   await expect(page.getByTestId('lane-card').first()).not.toContainText(/oh allah/i)
 
-  const courses = await page.request.get('/api/courses?limit=80&depth=0').then((res) => res.json()) as { docs?: { id: number; title?: string }[] }
-  const sitting = (courses.docs || []).find((course) => course.title === 'Long sittings')
-  expect(sitting).toBeTruthy()
-  const lessons = await page.request.get(`/api/lessons?where[course][equals]=${sitting!.id}&limit=20&depth=0&sort=order`).then((res) => res.json()) as { docs?: { id: number; title?: string }[] }
+  const sittingCard = page.getByTestId('path-course').filter({ hasText: 'Long sittings' })
+  await expect(sittingCard).toBeVisible()
+  const href = await sittingCard.getByTestId('lesson-link').getAttribute('href')
+  expect(href).toBeTruthy()
+  const sittingId = Number(/course\/(\d+)/.exec(href || '')?.[1] || 0)
+  const lessons = await page.request.get(`/api/lessons?where[course][equals]=${sittingId}&limit=20&depth=0&sort=order`).then((res) => res.json()) as { docs?: { id: number; title?: string }[] }
   const talks = lessons.docs || []
   expect(talks.length).toBeGreaterThanOrEqual(2)
 
-  await page.goto(`${BASE}/course/${sitting!.id}`)
+  await page.goto(href!)
   await expect(page.getByTestId('course-overview')).toBeVisible()
   await expect(page.getByTestId('buffet-talk')).toHaveCount(10)
   await expect(page.getByTestId('schedule-all')).toContainText('Schedule all of these')
@@ -41,7 +43,7 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
   await page.waitForTimeout(700)
   await page.getByTestId('schedule-submit').click()
   await expect(page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' })).toBeVisible()
-  await expect(page.getByTestId('schedule-course')).toHaveValue(String(sitting!.id))
+  await expect(page.getByTestId('schedule-course')).toHaveValue(String(sittingId))
   await expect(page.getByTestId('weekday-1')).toBeChecked()
   await expect(page.getByTestId('week-days')).toBeVisible()
   await page.waitForTimeout(1200)
@@ -120,7 +122,7 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
     await page.waitForTimeout(900)
   }
 
-  await page.goto(`${BASE}/course/${sitting!.id}?part=${talks[1].id}`)
+  await page.goto(`${BASE}/course/${sittingId}?part=${talks[1].id}`)
   await expect(page.getByTestId('player')).toBeVisible()
   await expect(page.getByTestId('up-next')).toBeVisible()
   await expect(page.getByTestId('up-next')).not.toContainText('last part')
