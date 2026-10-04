@@ -249,8 +249,8 @@ test('a new learner from the join link reaches the first talk', async ({ browser
     await page.getByTestId('welcome-continue').click()
     await page.waitForURL(/\/start/)
   }
-  await expect(page.getByTestId('lets-play').or(page.getByTestId('opener'))).toBeVisible({ timeout: 20_000 })
-  if (await page.getByTestId('lets-play').count()) await page.getByTestId('lets-play').click()
+  await expect(page.getByTestId('lets-play')).toBeVisible({ timeout: 20_000 })
+  await page.getByTestId('lets-play').click()
   for (const [scene, option] of PICKS) {
     const card = page.locator(`[data-testid="scene"][data-scene="${scene}"]`)
     await expect(card.first()).toBeVisible({ timeout: 15_000 })

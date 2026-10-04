@@ -582,10 +582,15 @@ html[data-theme='dawn'] .chip-row span { color: var(--gold-deep); border-color: 
 html[data-theme] .chip-row .on,
 html[data-theme] .chip-row a.on,
 html[data-theme] .chip-row span.on,
+html[data-theme] .chip-row a.on .count,
 html[data-theme] .chip-row span.on .count {
   background: var(--gold);
   color: var(--gold-ink);
   border-color: var(--gold);
+}
+html[data-theme] .harvest-new {
+  background: var(--gold);
+  color: var(--gold-ink);
 }
 html[data-theme] .chip-row.soft a,
 html[data-theme] .chip-row.soft span {

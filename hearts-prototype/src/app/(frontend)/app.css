@@ -641,7 +641,7 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .name-edit summary { font-weight: 700; cursor: pointer; }
 
 /* Harvest */
-.chip-row a .count { background: none; color: inherit; padding: 0; border-radius: 0; font-size: inherit; opacity: 0.7; font-weight: 600; margin-left: 2px; }
+.chip-row a .count { background: none; color: inherit; padding: 0; border-radius: 0; font-size: inherit; opacity: 1; font-weight: 600; margin-left: 2px; }
 .chip-row.soft a { background: #eef5f3; color: var(--teal); }
 .chip-row.soft .on { background: var(--teal); color: #fff; }
 .harvest-group { margin: 6px 0 18px; }
@@ -649,7 +649,7 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .harvest-card.fresh { border-color: #cfe6df; box-shadow: 0 0 0 3px rgba(31, 122, 104, 0.07); }
 .harvest-card header { gap: 8px; }
 .harvest-card header small { margin-left: auto; text-align: right; }
-.harvest-new { font-size: 11px; font-weight: 750; color: var(--teal); background: #e7f3ef; border-radius: 999px; padding: 3px 9px; letter-spacing: 0.02em; }
+.harvest-new { font-size: 11px; font-weight: 750; color: #1a1408; background: var(--gold); border-radius: 999px; padding: 3px 9px; letter-spacing: 0.02em; }
 .harvest-replay { display: block; color: inherit; text-decoration: none; border-radius: 14px; margin: 0 -6px; padding: 4px 6px; }
 .harvest-replay:hover, .harvest-replay:focus-visible { background: #f7f3ea; }
 .drawn-meta { font-size: 13px; line-height: 1.45; font-weight: 600; color: var(--ink-2); }
