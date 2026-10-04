@@ -42,7 +42,11 @@ test('harvest lines: whole sentences from their own context, asides dropped, cap
   const { harvestLine } = await import('../../src/lib/harvest')
   assert.equal(harvestLine('check the description for the full dua that I mentioned'), null)
   assert.equal(harvestLine("I'm paraphrasing here but the meaning is the same"), null)
-  assert.equal(harvestLine('Judgment. The Prophet said the strong one is the one who controls himself'), 'The Prophet said the strong one is the one who controls himself.')
+  assert.equal(harvestLine('Judgment. The Prophet said the strong one is the one who controls himself'), null)
+  assert.equal(
+    harvestLine('Judgment. The Prophet said the strong one is the one who controls himself', 'on the day of Judgment. The Prophet said the strong one is the one who controls himself when he is angry. And'),
+    'The Prophet said the strong one is the one who controls himself when he is angry.',
+  )
   const context = 'We sat with him for years. and he would say the heart is a vessel for light and it fills when you remember Allah. Then he would smile.'
   assert.equal(harvestLine('the heart is a vessel for light and it fills', context), 'And he would say the heart is a vessel for light and it fills when you remember Allah.')
   assert.equal(harvestLine('Allah is with the patient.', ''), 'Allah is with the patient.')

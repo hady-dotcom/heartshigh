@@ -16,6 +16,33 @@ export function endsSentence(text: string) {
   return END.test(text.trim())
 }
 
+/** At most `max` characters, ending on a whole word: a word cut by the limit is left out. */
+export function wordSlice(text: string, max: number) {
+  if (text.length <= max) return text
+  const cut = text.slice(0, max)
+  const next = text.charAt(max)
+  if (/\s/.test(next)) return cut.trimEnd()
+  const space = cut.search(/\s\S*$/)
+  return space > 0 ? cut.slice(0, space).trimEnd() : ''
+}
+
+const TITLES = /^(dr|mr|mrs|ms|sh|shaykh|vs|e\.g|i\.e)$/i
+
+/**
+ * The finished sentences of a run of words: pieces after the last real stop (".", "?" or "!") are dropped, and so is
+ * a piece that trails off ("…" or "..."), since the speaker or the captions left it unfinished. Nothing is added.
+ */
+export function finishedSentences(text: string) {
+  const flat = text.replace(/\s+/g, ' ').trim()
+  let end = 0
+  for (const stop of flat.matchAll(/(\S*?)([.?!…]+)(["”’')\]]*)(?=\s|$)/g)) {
+    const [, word, marks] = stop
+    if (!/^(\.|[?!]+)$/.test(marks) || TITLES.test(word)) continue
+    end = (stop.index || 0) + stop[0].length
+  }
+  return flat.slice(0, end)
+}
+
 /** Cut at a word boundary and mark the cut. Never ends mid-word. */
 export function clipWords(text: string, max: number) {
   const flat = text.replace(/\s+/g, ' ').trim()

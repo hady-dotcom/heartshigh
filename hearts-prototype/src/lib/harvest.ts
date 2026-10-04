@@ -1,5 +1,5 @@
 import { matchQuran, surahLabel, type QuranIndex, type QuranMatch } from './quran-match'
-import { ASIDE, endsDangling, wholeSentences } from './sentences'
+import { ASIDE, endsDangling, finishedSentences, wholeSentences, wordSlice } from './sentences'
 import { formatTimestamp, isVerbatim, parseTranscript } from './transcript'
 
 export type HarvestHit = {
@@ -79,6 +79,7 @@ export function harvestLine(text: string, context = ''): string | null {
     const ends = [...before.matchAll(TERMINATOR)]
     const last = ends[ends.length - 1]
     if (last) core = `${before.slice(last.index + last[0].length).trim()} ${core}`.trim()
+    else if (before === words(around.slice(0, at)).join(' ') && /^["“‘(]?[A-Z]/.test(before)) core = `${before} ${core}`
   }
   let rest = at >= 0 ? around.slice(at + text.replace(/\s+/g, ' ').trim().length).trim() : ''
   const upTo = (stop: RegExp) => words(rest).slice(0, 30).join(' ').match(stop)
@@ -89,14 +90,16 @@ export function harvestLine(text: string, context = ''): string | null {
       rest = rest.slice(first[0].length).trim()
     }
   }
-  let line = wholeSentences(core, { minWords: 4 })
+  // Only sentences the speaker finished: words after the last real stop are dropped, never closed with an added one.
+  const finished = (value: string) => wholeSentences(finishedSentences(value.replace(/\s+([.?!,;:])(?=\s|$)/g, '$1')), { minWords: 4 })
+  let line = finished(core)
   // A line cut mid-thought ("…a light for.") reads on to the next full stop, at most two more sentences.
-  for (let more = 0; line && endsDangling(line) && more < 2; more++) {
+  for (let more = 0; (!line || endsDangling(line)) && at >= 0 && more < 2; more++) {
     const next = upTo(/^.*?[.?!]["”’')\]]*(?=\s|$)/)
     if (!next) break
-    core = `${core.replace(/[.…]+$/, '')} ${next[0]}`
+    core = `${core} ${next[0]}`
     rest = rest.slice(next[0].length).trim()
-    line = wholeSentences(core, { minWords: 4 })
+    line = finished(core)
   }
   // Still hanging, or too short to be a thought: leave it out rather than add a full stop to a fragment.
   if (!line || endsDangling(line) || words(line).length < 5 || ASIDE.test(line)) return null
@@ -187,7 +190,7 @@ export function harvestTranscript(raw: string, quran?: QuranIndex): HarvestHit[]
         reference: match && quran ? surahLabel(quran, match.surah, match.ayah) : kind === 'quran' ? (surah ? `Surah ${surah[0].replace(/^surah\s+/i, '')}` : '') : collections.map((slug) => COLLECTION_NAMES[slug]).join(' and '),
         timestamp: formatTimestamp(cue.start),
         seconds: Math.round(cue.start),
-        context: [cues[cueIndex - 1]?.text, cue.text, cues[cueIndex + 1]?.text, cues[cueIndex + 2]?.text].filter(Boolean).join(' ').slice(0, 600),
+        context: wordSlice([cues[cueIndex - 1]?.text, cue.text, cues[cueIndex + 1]?.text, cues[cueIndex + 2]?.text].filter(Boolean).join(' '), 600),
         ...(match ? { surah: match.surah, ayah: match.ayah, matchedBy: match.how } : {}),
         ...(collections.length ? { collections } : {}),
       })
@@ -211,7 +214,7 @@ export function harvestTranscript(raw: string, quran?: QuranIndex): HarvestHit[]
         reference: surahLabel(quran, match.surah, match.ayah),
         timestamp: formatTimestamp(cue.start),
         seconds: Math.round(cue.start),
-        context: `${cues[cueIndex - 1]?.text || ''} ${pair}`.trim().slice(0, 400),
+        context: wordSlice(`${cues[cueIndex - 1]?.text || ''} ${pair}`.trim(), 400),
         surah: match.surah,
         ayah: match.ayah,
         matchedBy: match.how,

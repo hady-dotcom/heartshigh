@@ -3,6 +3,7 @@ import { now } from '@/lib/clock'
 import { doorNumberOfClause } from '@/lib/doors'
 import { commentaryFor, firstCitation, harvestLine, kindOfLine, lineAt, type ScholarCitation } from '@/lib/harvest'
 import { idOf, portalIdOf } from '@/lib/ids'
+import { wordSlice } from '@/lib/sentences'
 import { visibleCourseIds, type SessionUser } from './context'
 import { loadDoors } from './doors'
 
@@ -84,7 +85,7 @@ export async function captureMoment(payload: Payload, user: SessionUser, portalI
       text: spoken.text,
       reference: '',
       timestamp: spoken.timestamp,
-      context: spoken.context.slice(0, 1200),
+      context: wordSlice(spoken.context, 1200),
       seconds: spoken.seconds,
       speaker: place.speaker,
       door: place.door || undefined,
