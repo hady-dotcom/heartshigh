@@ -421,7 +421,7 @@ export function Journey(props: JourneyProps) {
 
   /** Shows item `at` in the slot: the hidden host takes over if it already holds it, otherwise the other host loads it. */
   const showItem = useCallback(
-    async (at: number, kind: Mode = 'hors') => {
+    async (at: number, kind: Mode = 'hors', onShown?: () => Promise<void>) => {
       const item = itemsRef.current[at]
       indexRef.current = at
       modeRef.current = kind
@@ -432,6 +432,8 @@ export function Journey(props: JourneyProps) {
       setBuffering(false)
       setLineAt(0)
       watch.current = { key: `${item?.cutId}:${kind}`, start: kind === 'hors' ? item?.hors.start || 0 : item?.appetiser.start || 0, furthest: 0, done90: false }
+      // The new card is on screen (and sliding in) before any player work starts.
+      if (onShown) await onShown()
       const spec = specFor(item, kind)
       if (!spec) {
         stopVisible()
@@ -901,14 +903,13 @@ export function Journey(props: JourneyProps) {
       }
       setFirstEver(false)
       // A swipe moves along the level being watched; only "Learn more" goes up a level.
-      const shown = showItem(target, modeRef.current)
-      if (el) {
+      await showItem(target, modeRef.current, async () => {
+        if (!el) return
         // The poster is on screen at once; the incoming card slides in from the side opposite the exit.
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
         el.getAnimations().forEach((animation) => animation.cancel())
         if (how === 'swipe') animate(el, [{ transform: ENTER_FROM[exit] }, { transform: 'translate(0, 0)' }], 380, SLIDE_IN, { id: 'enter', fill: 'none' })
-      }
-      await shown
+      })
       void refill()
     },
     [leaveSignal, refill, showItem],
