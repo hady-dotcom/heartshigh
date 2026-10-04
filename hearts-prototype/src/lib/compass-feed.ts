@@ -128,8 +128,8 @@ export function teachLine(scale: ScaleKey, index: number) {
   const help = DOOR_HELP[scale]
   const lines = [
     `${name} is the circle's quietest area this month. ${phrase} talks on ${help} would help most.`,
-    `People are sitting with ${name.toLowerCase()}. A teaching from ${phrase}, on ${help}, would meet them.`,
-    `${phrase} is the one to open for ${name.toLowerCase()}. A talk on ${help} gives the circle something to hold.`,
+    `${name} is where the circle is quiet. Open ${phrase}, and teach ${help}.`,
+    `For ${name}, start with ${phrase}. A talk on ${help} gives people something to hold.`,
   ]
   return lines[index % lines.length]
 }
@@ -139,8 +139,26 @@ export function plainWhy(why: string) {
   return why.replace(/\bW(\d{1,2})\b/g, (_, number: string) => doorPhrase(Number(number)))
 }
 
-function primaryScale(item: FeedCandidate, scoreOf: (scale: ScaleKey) => number) {
-  return item.scales.slice().sort((a, b) => scoreOf(b.scale) * (b.weight || 0) - scoreOf(a.scale) * (a.weight || 0))[0]?.scale
+function strongestWeight(item: FeedCandidate) {
+  return item.scales.reduce((max, tag) => Math.max(max, tag.weight || 0), 0)
+}
+
+function mainScale(item: FeedCandidate) {
+  const main = strongestWeight(item)
+  return item.scales.find((tag) => (tag.weight || 0) === main)?.scale || null
+}
+
+/**
+ * The scale a sentence may name. A lighter side tag must not speak for the talk:
+ * Names Class is about faith even when a worry tag is also on it.
+ */
+function scaleWeCanName(item: FeedCandidate, scoreOf: (scale: ScaleKey) => number) {
+  const main = strongestWeight(item)
+  if (main <= 0) return null
+  const named = item.scales
+    .filter((tag) => scoreOf(tag.scale) > 0 && (tag.weight || 0) >= main)
+    .sort((a, b) => scoreOf(b.scale) * (b.weight || 0) - scoreOf(a.scale) * (a.weight || 0))
+  return named[0]?.scale || null
 }
 
 function itemScore(item: FeedCandidate, scoreOf: (scale: ScaleKey) => number) {
@@ -166,14 +184,17 @@ export function rankFeed<T extends FeedCandidate>(
   const picked: (T & { bucket: RankedTalk['bucket']; why: string })[] = []
 
   const byDeficit = items
-    .map((item, index) => ({ item, index, score: itemScore(item, deficitOf), scale: primaryScale(item, deficitOf) }))
+    .map((item, index) => ({ item, index, score: itemScore(item, deficitOf), scale: scaleWeCanName(item, deficitOf) }))
     .sort((a, b) => b.score - a.score || a.index - b.index)
 
   let deficitLeft = share.deficit
   if (life.length && deficitLeft > 0) {
     const lifeScales = new Set(life.flatMap((event) => event.scales))
-    const row = byDeficit.find((entry) => !used.has(entry.item) && entry.scale && lifeScales.has(entry.scale))
-    if (row && row.scale) {
+    const row = items
+      .map((item, index) => ({ item, index, scale: mainScale(item) }))
+      .filter((entry) => entry.scale && lifeScales.has(entry.scale))
+      .sort((a, b) => deficitOf(b.scale as ScaleKey) - deficitOf(a.scale as ScaleKey) || a.index - b.index)[0]
+    if (row?.scale) {
       const event = life.find((entry) => entry.scales.includes(row.scale as ScaleKey)) || life[0]
       picked.push({ ...row.item, bucket: 'deficit', why: event.why })
       used.add(row.item)
@@ -199,7 +220,7 @@ export function rankFeed<T extends FeedCandidate>(
   }
 
   const byStrength = items
-    .map((item, index) => ({ item, index, score: itemScore(item, strengthOf), scale: primaryScale(item, strengthOf) }))
+    .map((item, index) => ({ item, index, score: itemScore(item, strengthOf), scale: scaleWeCanName(item, strengthOf) }))
     .sort((a, b) => b.score - a.score || a.index - b.index)
   let strengthLeft = share.strength
   for (const row of byStrength) {

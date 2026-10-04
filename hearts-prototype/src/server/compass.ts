@@ -388,7 +388,7 @@ export async function learnerPath(payload: Payload, userId: number, slug: string
   const { attempts, ranked, mix, portalId } = shelf
   const latest = attempts.at(-1)
   const previous = attempts.length > 1 ? attempts[attempts.length - 2] : null
-  const ordered = ranked.map((talk) => ({ title: talk.title, href: talk.href, scales: [] as SteerTag[] }))
+  const ordered = ranked.map((talk) => ({ title: talk.title, href: talk.href, scales: talk.scales }))
   const summary = summarise({ copy, now: areasOf(latest, index.focus), before: areasOf(previous || undefined, index.focus), talks: ordered })
   summary.talks = ranked.filter((talk) => !rawScoreLeak({ title: talk.title, href: talk.href })).map((talk) => ({ title: talk.title, href: talk.href }))
   if (portalId && ranked.length) await rememberServes(payload, userId, portalId, ranked, mix)

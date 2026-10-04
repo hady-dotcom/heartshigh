@@ -100,6 +100,14 @@
   display: block;
   margin-top: 12px;
 }
+/* The life check-in is its own screen, and the whole of it sits above the tab bar. */
+[data-testid="life-check"].card { padding: 12px 12px 8px; }
+[data-testid="life-check"] .choice { padding: 6px 10px; min-height: 0; margin-bottom: 6px; border-radius: 12px; }
+[data-testid="life-check"] .muted { margin: 2px 0 8px; }
+[data-testid="life-check"] textarea { min-height: 44px; margin-top: 4px; }
+[data-testid="life-check"] .note-label { margin-top: 6px; }
+[data-testid="life-check"] .pill { margin-top: 8px; }
+[data-testid="life-check"] .text-back { margin-top: 4px; }
 .compass-learner { position: relative; }
 .app[data-testid="learner-path"] .tabbar,
 .app[data-testid="recalibrate"] .tabbar {
@@ -248,8 +256,20 @@
 .spark-legend .down { background: #8C4A55; }
 .persona-line { margin: 0 0 10px; font-size: 18px; color: #0F3B3A; }
 .persona-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.persona-chips .chip { background: #E7D7B4; color: #1A1814; }
-.persona-chips .chip.on { background: #0F3B3A; color: #F7EEDB; }
+.desk[data-testid="compass-learner"] .persona-chips .chip,
+.desk[data-testid="compass-portal"] .persona-chips .chip {
+  background: #E7D7B4;
+  color: #1A1814;
+  margin: 0;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.desk[data-testid="compass-learner"] .persona-chips .chip.on,
+.desk[data-testid="compass-portal"] .persona-chips .chip.on {
+  background: #0F3B3A;
+  color: #F7EEDB;
+}
 .desk[data-testid="compass-portal"] table.data th.num,
 .desk[data-testid="compass-learner"] table.data th.num,
 .desk[data-testid="compass-portal"] table.data td.num,

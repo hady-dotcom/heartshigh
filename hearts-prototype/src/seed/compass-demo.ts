@@ -61,6 +61,19 @@ function tenantsOf(user: Doc) {
   return rows.map((row) => idOf((row as { tenant?: unknown }).tenant)).filter((id): id is number => Boolean(id))
 }
 
+/** The 15th of each of the five months before the latest look, then the latest look itself. */
+function lookAges(lastDays: number, nowMs: number) {
+  const last = new Date(nowMs - lastDays * DAY)
+  const ages: number[] = []
+  for (let back = 5; back >= 1; back -= 1) {
+    const at = new Date(Date.UTC(last.getUTCFullYear(), last.getUTCMonth() - back, 15, 12, 0, 0))
+    const age = Math.round((nowMs - at.getTime()) / DAY)
+    if (age > lastDays + 5) ages.push(age)
+  }
+  ages.push(lastDays)
+  return ages
+}
+
 function drifted(band: PersonaBand, month: number) {
   const reading = midpointReading(band)
   for (const row of band.ranges) {
@@ -196,7 +209,7 @@ async function main() {
     if (!user || person.role !== 'learner' || !person.persona) continue
     const band = PERSONA_V2.find((row) => row.key === person.persona)
     if (!band) continue
-    const ages = [150, 120, 90, 60, person.lastDays || 12]
+    const ages = lookAges(person.lastDays || 12, nowMs)
     for (let month = 0; month < ages.length; month += 1) {
       const demoKey = `${SLUG}:${person.email}:${month}`
       const already = await one(payload, 'compass-attempts', { demoKey: { equals: demoKey } })

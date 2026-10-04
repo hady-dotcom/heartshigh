@@ -95,9 +95,12 @@ test('the shelf is 60, 25 and 15, and the why line names the scale and the door'
   const grief = rankFeed(items, { gratitude: 0.4, anger: 0.4 }, { take: 4, life: [LIFE_EVENTS.find((event) => event.key === 'grief')!] })
   assert.equal(grief[0]?.id, 'a1')
   assert.match(grief[0]?.why || '', /patience and qadr/)
-  const names = { id: 'names', title: 'The Names Class 19', href: '/n', kind: 'talk' as const, door: SCALE_DOOR.worry, scales: [{ scale: 'faith' as const, weight: 1 }] }
-  const mismatched = rankFeed([names, items[2]], { faith: -0.2, anger: 0.4 }, { take: 2, life: [LIFE_EVENTS.find((event) => event.key === 'grief')!] })
-  assert.notEqual(mismatched.find((row) => row.id === 'names')?.why, LIFE_EVENTS.find((event) => event.key === 'grief')?.why)
+  const names = { id: 'names', title: 'The Names Class 19', href: '/n', kind: 'talk' as const, door: SCALE_DOOR.faith, scales: [{ scale: 'faith' as const, weight: 1 }, { scale: 'worry' as const, weight: 0.6 }] }
+  const griefWhy = LIFE_EVENTS.find((event) => event.key === 'grief')?.why
+  const mismatched = rankFeed([names, items[2]], { faith: 0.5, worry: -0.8, anger: 0.2 }, { take: 3, life: [LIFE_EVENTS.find((event) => event.key === 'grief')!] })
+  const namesRow = mismatched.find((row) => row.id === 'names')
+  assert.notEqual(namesRow?.why, griefWhy)
+  assert.notEqual(namesRow?.why, whyDeficit('worry'))
 })
 
 test('demo passwords are set only for accounts this run creates, and life notes do not repeat', () => {

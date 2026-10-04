@@ -100,12 +100,19 @@ export function summarise(input: {
     }
   })
   const reading = Object.fromEntries(input.now.map((row) => [row.scale, row.rung / 10])) as Partial<Record<ScaleKey, number>>
-  const talks = steer(input.talks, reading, 1).map((talk) => ({ title: talk.title, href: talk.href }))
+  const steered = steer(input.talks, reading, 3)
+  const talks = steered.map((talk) => ({ title: talk.title, href: talk.href }))
   const steps: LearnerCompass['steps'] = []
   const first = focusRows[0]
   const voice = first ? LEARNER_VOICE[first.scale] : null
   if (voice) steps.push({ title: voice.name, detail: voice.step })
-  if (talks[0]) steps.push({ title: talks[0].title, detail: 'Sit with this when you have a few minutes.', href: talks[0].href })
+  const matched = first
+    ? steered.find((talk) => {
+        const main = talk.scales.reduce((max, tag) => Math.max(max, tag.weight || 0), 0)
+        return talk.scales.some((tag) => tag.scale === first.scale && (tag.weight || 0) >= main && main > 0)
+      })
+    : null
+  if (matched) steps.push({ title: matched.title, detail: 'Sit with this when you have a few minutes.', href: matched.href })
   return {
     kind: 'path',
     focusLine: showFocus ? focusLine(copy.focusLead, areas.map((area) => area.area)) : null,
