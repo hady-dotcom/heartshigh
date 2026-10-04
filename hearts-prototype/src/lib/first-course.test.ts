@@ -31,6 +31,29 @@ test('the first course walks back to part 1 of the matched series', () => {
   assert.match(pick?.reason || '', /earliest full talk|part 1/i)
 })
 
+test('a long Session 6 stays among leftover Long sittings, and does not walk to another series', () => {
+  const courses = [
+    {
+      courseId: 33,
+      courseTitle: 'Long sittings',
+      lessons: [
+        { id: 1, title: 'How to Live Like the Prophet, Session 6', order: 1, durationSeconds: 10080 },
+        { id: 16, title: 'Purification of the Heart w/ Ustadha Fatima Lette | Session 1', order: 4, durationSeconds: 3600 },
+      ],
+    },
+    {
+      courseId: 20,
+      courseTitle: 'The Names: short clips',
+      lessons: [{ id: 9, title: 'The Names Class 20: Al-Nūr', order: 1, durationSeconds: 98 }],
+    },
+  ]
+  const pick = pickGentleFirstCourse(1, courses)
+  assert.equal(pick?.lessonId, 1)
+  assert.match(pick?.lessonTitle || '', /Session 6/)
+  assert.equal(firstCourseVerdict(pick, courses).ok, true)
+  assert.equal(firstCourseVerdict(pick, courses).note, 'OK')
+})
+
 test('a long Session 6 stays when it is the earliest sitting in the library', () => {
   const courses = [
     {
