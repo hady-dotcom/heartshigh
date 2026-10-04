@@ -2,7 +2,7 @@
 // and every picked talk carries a sentence a portal admin or an imam can read.
 
 import type { LifeEvent } from './compass-bank'
-import { doorCode } from './doors'
+import { doorByNumber } from './doors'
 import type { ScaleKey } from './heart'
 
 export type Mix = { deficit: number; strength: number; discovery: number }
@@ -85,15 +85,59 @@ export function quotas(take: number, mix?: Partial<Mix> | null) {
   return { deficit, strength, discovery }
 }
 
+/** "Door 7, Fasting Ramadan". The desk never shows the working code. */
+export function doorPhrase(number: number) {
+  const door = doorByNumber(number)
+  if (!door) return `Door ${number}`
+  return `Door ${number}, ${door.title.split(':')[0].trim()}`
+}
+
+export function kindLabel(kind: string) {
+  if (kind === 'hors') return 'Short clip'
+  if (kind === 'appetiser') return '3-minute clip'
+  return 'Full talk'
+}
+
+const DOOR_HELP: Record<ScaleKey, string> = {
+  desire: 'the gaze',
+  greed: 'what we keep and what we give',
+  anger: 'patience',
+  ego: 'letting the credit pass',
+  worry: 'trust and qadr',
+  belonging: 'sitting with people',
+  gratitude: 'the gift of the day',
+  faith: 'drawing close',
+  compassion: 'a kind hand',
+  discipline: 'the prayer',
+}
+
 export function whyDeficit(scale: ScaleKey) {
-  return `Low on ${SCALE_NAME[scale]}, so the ${doorCode(SCALE_DOOR[scale])} talks get a boost.`
+  return `Low on ${SCALE_NAME[scale]}, so ${doorPhrase(SCALE_DOOR[scale])} talks get a boost.`
 }
 
 export function whyStrength(scale: ScaleKey) {
-  return `Steady on ${SCALE_NAME[scale]}, so the ${doorCode(SCALE_DOOR[scale])} talks stay in the mix.`
+  return `Steady on ${SCALE_NAME[scale]}, so ${doorPhrase(SCALE_DOOR[scale])} talks stay in the mix.`
 }
 
-export const WHY_DISCOVERY = 'A door not sat with lately, so the feed is not only the quieter scales.'
+export const WHY_DISCOVERY = 'Something from another part of the sitting, so the feed is not only the quieter scales.'
+
+/** Three different sentences, so Teach next does not repeat one template. */
+export function teachLine(scale: ScaleKey, index: number) {
+  const name = SCALE_NAME[scale]
+  const phrase = doorPhrase(SCALE_DOOR[scale])
+  const help = DOOR_HELP[scale]
+  const lines = [
+    `${name} is the circle's quietest area this month. ${phrase} talks on ${help} would help most.`,
+    `People are sitting with ${name.toLowerCase()}. A teaching from ${phrase}, on ${help}, would meet them.`,
+    `${phrase} is the one to open for ${name.toLowerCase()}. A talk on ${help} gives the circle something to hold.`,
+  ]
+  return lines[index % lines.length]
+}
+
+/** Turns a stored working code into the door a person can teach. */
+export function plainWhy(why: string) {
+  return why.replace(/\bW(\d{1,2})\b/g, (_, number: string) => doorPhrase(Number(number)))
+}
 
 function primaryScale(item: FeedCandidate, scoreOf: (scale: ScaleKey) => number) {
   return item.scales.slice().sort((a, b) => scoreOf(b.scale) * (b.weight || 0) - scoreOf(a.scale) * (a.weight || 0))[0]?.scale
@@ -117,7 +161,6 @@ export function rankFeed<T extends FeedCandidate>(
   const deficitOf = (scale: ScaleKey) => Math.max(0, -(reading[scale] ?? 0))
   const strengthOf = (scale: ScaleKey) => Math.max(0, reading[scale] ?? 0)
   const life = options?.life || []
-  const lifeDoors = new Set(life.flatMap((event) => event.doors))
   const recent = new Set(options?.recentDoors || [])
   const used = new Set<T>()
   const picked: (T & { bucket: RankedTalk['bucket']; why: string })[] = []
@@ -129,10 +172,9 @@ export function rankFeed<T extends FeedCandidate>(
   let deficitLeft = share.deficit
   if (life.length && deficitLeft > 0) {
     const lifeScales = new Set(life.flatMap((event) => event.scales))
-    const lifeRows = byDeficit.filter((entry) => !used.has(entry.item) && entry.item.door != null && lifeDoors.has(entry.item.door))
-    const row = lifeRows.find((entry) => entry.scale && lifeScales.has(entry.scale)) || lifeRows[0]
-    if (row) {
-      const event = life.find((entry) => row.scale && entry.scales.includes(row.scale)) || life.find((entry) => row.item.door != null && entry.doors.includes(row.item.door)) || life[0]
+    const row = byDeficit.find((entry) => !used.has(entry.item) && entry.scale && lifeScales.has(entry.scale))
+    if (row && row.scale) {
+      const event = life.find((entry) => entry.scales.includes(row.scale as ScaleKey)) || life[0]
       picked.push({ ...row.item, bucket: 'deficit', why: event.why })
       used.add(row.item)
       deficitLeft -= 1

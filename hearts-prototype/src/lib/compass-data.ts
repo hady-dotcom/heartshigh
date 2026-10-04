@@ -41,18 +41,75 @@ export const LIFE_PROMPT = {
 
 export const LIFE_OPTIONS: LifeOption[] = LIFE_EVENTS.map((event) => ({ key: event.key, label: event.label, boost: event.scales[0] }))
 
+/**
+ * Plain names a person understands, plus a line and a small action for each.
+ * Each line is written out. Nothing here is a template filled with a name.
+ */
+export const LEARNER_VOICE: Record<ScaleKey, { name: string; line: string; step: string }> = {
+  desire: {
+    name: 'Guarding the gaze',
+    line: 'When a picture holds your eye, one breath is enough to look away.',
+    step: 'Set the screen face down once this evening.',
+  },
+  greed: {
+    name: 'A light hold on money',
+    line: 'A little set aside for someone else keeps the hand open.',
+    step: 'Put a small amount aside before you spend on yourself.',
+  },
+  anger: {
+    name: 'Holding your temper',
+    line: 'The heat can pass before the words do. Give it that moment.',
+    step: 'When the heat rises, wait for three breaths before you answer.',
+  },
+  ego: {
+    name: 'Letting the credit pass',
+    line: 'The good work can stand without your name written on it.',
+    step: 'The next time you are praised, pass a share of it on.',
+  },
+  worry: {
+    name: 'Patience with worry',
+    line: 'You do not have to settle the ending tonight. Leave a piece of it.',
+    step: 'Write the worry down, then close the page.',
+  },
+  belonging: {
+    name: 'A seat among people',
+    line: 'One message, or one sitting, is enough to be with people again.',
+    step: 'Send one message to someone who knows you.',
+  },
+  gratitude: {
+    name: 'Noticing small gifts',
+    line: 'Name one small gift before the day closes. That is plenty.',
+    step: 'Before sleep, name one thing the day gave you.',
+  },
+  faith: {
+    name: 'Drawing a little closer',
+    line: 'A short word, said slowly, is a way back when the day has been loud.',
+    step: 'Say one short prayer before the next thing you do.',
+  },
+  compassion: {
+    name: 'A kind word for others',
+    line: 'Someone near you is carrying a hard week. A kind word reaches them.',
+    step: 'Offer one kind word to someone near you today.',
+  },
+  discipline: {
+    name: 'Showing up for the prayer',
+    line: 'The prayer time can find you in the middle of a task. Meet it, even briefly.',
+    step: 'When the time comes, pause the task and pray.',
+  },
+}
+
 /** Short words for the "Focusing on" line. Configurable per scale. Never the dust name. */
 export const FOCUS_NAMES: Record<ScaleKey, string> = {
-  desire: 'looking',
-  greed: 'giving',
-  anger: 'patience',
-  ego: 'quiet',
-  worry: 'trust',
-  belonging: 'company',
-  gratitude: 'thankfulness',
-  faith: 'closeness',
-  compassion: 'mercy',
-  discipline: 'habits',
+  desire: LEARNER_VOICE.desire.name,
+  greed: LEARNER_VOICE.greed.name,
+  anger: LEARNER_VOICE.anger.name,
+  ego: LEARNER_VOICE.ego.name,
+  worry: LEARNER_VOICE.worry.name,
+  belonging: LEARNER_VOICE.belonging.name,
+  gratitude: LEARNER_VOICE.gratitude.name,
+  faith: LEARNER_VOICE.faith.name,
+  compassion: LEARNER_VOICE.compassion.name,
+  discipline: LEARNER_VOICE.discipline.name,
 }
 
 export type MonthWording = { caption: string; subline: string; labels: Record<string, string> }

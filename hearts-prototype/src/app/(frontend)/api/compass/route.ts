@@ -91,5 +91,5 @@ export async function POST(req: Request) {
   if (problem) return fail(problem)
   const summary = await learnerPath(session.payload, session.user.id, String(portal.slug || ''))
   if (wantsJson) return json(summary)
-  return redirectTo(req, String(body.next || `/p/${portal.slug}/me/path`), undefined, 'Saved. Here is where to spend a little time.')
+  return redirectTo(req, String(body.next || `/p/${portal.slug}/me/path`), undefined, 'Kept for this month.')
 }

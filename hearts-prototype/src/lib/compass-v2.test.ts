@@ -7,7 +7,7 @@ import { SCALE_KEYS, type ScaleKey } from './heart'
 import { PERSONA_BANDS } from './persona-data'
 import { matchPersonas, nearestPersona, rangesDisjoint } from './persona'
 import { midpointReading, PERSONA_VERSION } from './persona-v2'
-import { doorCode } from './doors'
+import { lifeForDemo, passwordForNewAccount } from './compass-demo-plan'
 
 test('persona v2 ranges do not overlap, and a midpoint matches only its own band', () => {
   assert.equal(PERSONA_BANDS.length, 10)
@@ -87,11 +87,25 @@ test('the shelf is 60, 25 and 15, and the why line names the scale and the door'
   assert.equal(ranked.filter((row) => row.bucket === 'strength').length, 1)
   assert.equal(ranked.filter((row) => row.bucket === 'discovery').length, 1)
   assert.equal(ranked.find((row) => row.id === 'g1')?.why, whyDeficit('gratitude'))
-  assert.equal(ranked.find((row) => row.id === 'g1')?.why, `Low on Gratitude, so the ${doorCode(SCALE_DOOR.gratitude)} talks get a boost.`)
+  assert.match(ranked.find((row) => row.id === 'g1')?.why || '', /Door 15, Qadar/)
+  assert.doesNotMatch(ranked.find((row) => row.id === 'g1')?.why || '', /\bW\d+/)
   assert.equal(ranked.find((row) => row.bucket === 'strength')?.id, 'f1')
   assert.match(ranked.find((row) => row.id === 'f1')?.why || '', /Steady on Faith/)
   assert.equal(ranked.find((row) => row.bucket === 'discovery')?.id, 'd1')
   const grief = rankFeed(items, { gratitude: 0.4, anger: 0.4 }, { take: 4, life: [LIFE_EVENTS.find((event) => event.key === 'grief')!] })
   assert.equal(grief[0]?.id, 'a1')
   assert.match(grief[0]?.why || '', /patience and qadr/)
+  const names = { id: 'names', title: 'The Names Class 19', href: '/n', kind: 'talk' as const, door: SCALE_DOOR.worry, scales: [{ scale: 'faith' as const, weight: 1 }] }
+  const mismatched = rankFeed([names, items[2]], { faith: -0.2, anger: 0.4 }, { take: 2, life: [LIFE_EVENTS.find((event) => event.key === 'grief')!] })
+  assert.notEqual(mismatched.find((row) => row.id === 'names')?.why, LIFE_EVENTS.find((event) => event.key === 'grief')?.why)
+})
+
+test('demo passwords are set only for accounts this run creates, and life notes do not repeat', () => {
+  assert.equal(passwordForNewAccount(true), 'compass-demo')
+  assert.equal(passwordForNewAccount(false), null)
+  const notes = new Set<string>()
+  for (let month = 1; month <= 4; month += 1) notes.add(lifeForDemo(0, month).note)
+  assert.equal(notes.size, 4)
+  const sameMonth = [0, 1, 2, 3].map((person) => lifeForDemo(person, 2).note)
+  assert.equal(new Set(sameMonth).size, sameMonth.length)
 })

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { kindLabel, plainWhy, teachLine } from '@/lib/compass-feed'
 import { SCALE_KEYS, type ScaleKey } from '@/lib/heart'
 import { staffLearner, staffPortal } from '@/server/compass'
 import { type Ctx, shortDate } from '../common'
@@ -21,20 +22,41 @@ function Mark({ rung }: { rung: number }) {
   )
 }
 
-function Spark({ points }: { points: { at: number; rung: number }[] }) {
-  const width = 220
-  const height = 72
+function personaSummary(rows: { at: string; title: string }[]) {
+  const changes = rows.filter((row, index) => index === 0 || row.title !== rows[index - 1].title)
+  if (!changes.length) return ''
+  if (changes.length === 1) return `${changes[0].title} since ${monthName(changes[0].at)}`
+  return changes.map((row, index) => (index === 0 ? `${row.title} since ${monthName(row.at)}` : `${row.title} from ${monthName(row.at)}`)).join(', then ')
+}
+
+function monthName(at: number | string) {
+  return new Date(at).toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' })
+}
+
+function Spark({ points }: { points: { at: number | string; rung: number }[] }) {
+  const width = 360
+  const height = 128
   if (!points.length) return <p className="hint">No looks yet.</p>
-  const minT = points[0].at
-  const maxT = points[points.length - 1].at
-  const x = (at: number) => (points.length === 1 ? width / 2 : 8 + ((at - minT) / (maxT - minT || 1)) * (width - 16))
-  const y = (rung: number) => 8 + ((10 - Math.min(10, Math.max(-10, rung))) / 20) * (height - 16)
-  const d = points.map((point, index) => `${index ? 'L' : 'M'}${x(point.at).toFixed(1)},${y(point.rung).toFixed(1)}`).join(' ')
+  const times = points.map((point) => new Date(point.at).getTime())
+  const minT = times[0]
+  const maxT = times[times.length - 1]
+  const x = (at: number) => (points.length === 1 ? width / 2 : 28 + ((at - minT) / (maxT - minT || 1)) * (width - 56))
+  const y = (rung: number) => 16 + ((10 - Math.min(10, Math.max(-10, rung))) / 20) * (height - 40)
+  const d = times.map((at, index) => `${index ? 'L' : 'M'}${x(at).toFixed(1)},${y(points[index].rung).toFixed(1)}`).join(' ')
+  const delta = points[points.length - 1].rung - points[0].rung
+  const tone = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat'
+  const latest = points[points.length - 1].rung
   return (
     <svg className="spark" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Month by month">
-      <line x1="8" x2={width - 8} y1={y(0)} y2={y(0)} className="spark-zero" />
-      <path d={d} />
-      {points.map((point) => <circle key={point.at} cx={x(point.at)} cy={y(point.rung)} r="3.2" />)}
+      <line x1="28" x2={width - 20} y1={y(0)} y2={y(0)} className="spark-zero" />
+      <path d={d} className={tone} />
+      {points.map((point, index) => (
+        <g key={times[index]}>
+          <circle cx={x(times[index])} cy={y(point.rung)} r="3.4" />
+          <text x={x(times[index])} y={height - 6} textAnchor="middle">{monthName(point.at)}</text>
+        </g>
+      ))}
+      <text x={x(times[times.length - 1])} y={y(latest) - 8} textAnchor="middle">{latest > 0 ? `+${latest}` : String(latest)}</text>
     </svg>
   )
 }
@@ -45,7 +67,7 @@ export async function PortalCompassScreen(ctx: Ctx) {
   if (!summary) notFound()
   const peak = Math.max(1, ...summary.personas.map((row) => row.count))
   return (
-    <AdminFrame ctx={ctx} active="compass" title="Compass" intro="Signed rungs stay on this desk. Learners see a gentle Focusing on line, never a label and never a number." testId="compass-portal">
+    <AdminFrame ctx={ctx} active="compass" title="Compass" intro="Scores run from -10 to +10. Learners see a gentle Focusing on line, never a label and never a number." testId="compass-portal">
       <section className="panel" data-testid="cohort" style={{ marginBottom: 18 }}>
         <header><h2>The circle, with no names</h2><span className="hint">{summary.learners.length} learners</span></header>
         <div className="body cohort">
@@ -61,8 +83,8 @@ export async function PortalCompassScreen(ctx: Ctx) {
           </div>
           <div data-testid="cohort-weak">
             <p className="eyebrow">Teach next</p>
-            {summary.weakest.map((row) => (
-              <p key={row.scale} data-testid="weak-scale"><b>{row.name}</b> sits lowest just now, around {signed(row.mean)}.</p>
+            {summary.weakest.map((row, index) => (
+              <p key={row.scale} data-testid="weak-scale">{teachLine(row.scale, index)} Latest score {signed(row.mean)}.</p>
             ))}
             {!summary.weakest.length ? <p>Once a few people have sat with the compass, the quieter scales will show here.</p> : null}
           </div>
@@ -119,27 +141,36 @@ export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
   if (!detail) notFound()
   const columns = detail.attempts
   return (
-    <AdminFrame ctx={ctx} active="compass" title={detail.name} intro="Signed rungs from −10 toward +10. Opening this page is written to the audit log." testId="compass-learner">
+    <AdminFrame ctx={ctx} active="compass" title={detail.name} intro="Scores run from -10 to +10. Opening this page is written to the audit log." testId="compass-learner">
       <p><Link href={`${ctx.base}/admin/compass`}>All learners</Link></p>
       {detail.guide.length ? <p data-testid="compass-guide">Rough guide: {detail.guide.join(', ')}. This name stays on this desk.</p> : null}
       <section className="panel" style={{ marginBottom: 18 }} data-testid="persona-timeline">
         <header><h2>Persona over time</h2></header>
-        <ol className="body timeline">
-          {detail.personaTimeline.map((row) => (
-            <li key={row.at}><time>{shortDate(row.at)}</time> <b>{row.title}</b></li>
-          ))}
-          {!detail.personaTimeline.length ? <li>No look yet.</li> : null}
-        </ol>
+        <div className="body">
+          {detail.personaTimeline.length ? <p className="persona-line">{personaSummary(detail.personaTimeline)}</p> : <p>No look yet.</p>}
+          <div className="persona-chips">
+            {detail.personaTimeline.map((row, index) => {
+              const changed = index === 0 || row.title !== detail.personaTimeline[index - 1].title
+              return <span key={row.at} className={`chip${changed ? ' on' : ''}`} data-testid="persona-chip">{monthName(row.at)}{changed && index > 0 ? ` ${row.title}` : ''}</span>
+            })}
+          </div>
+        </div>
       </section>
       <section className="panel" style={{ marginBottom: 18 }}>
         <header><h2>Each scale, month by month</h2></header>
         <div className="body sparks" data-testid="scale-sparks">
-          {detail.series.map((row) => (
-            <article key={row.scale} data-testid="spark" data-scale={row.scale}>
-              <b>{row.name}</b>
-              <Spark points={row.points} />
-            </article>
-          ))}
+          <p className="spark-legend"><span><i className="up" /> Rising</span><span><i className="down" /> Quieter</span></p>
+          {detail.series.map((row) => {
+            const last = row.points[row.points.length - 1]
+            const first = row.points[0]
+            const tone = last && first && last.rung < first.rung ? 'down' : 'up'
+            return (
+              <article key={row.scale} className="spark-card" data-testid="spark" data-scale={row.scale}>
+                <header><b>{row.name}</b>{last ? <span className={`latest ${tone}`}>{signed(last.rung)}</span> : null}</header>
+                <Spark points={row.points} />
+              </article>
+            )
+          })}
         </div>
       </section>
       <section className="panel" style={{ marginBottom: 18 }}>
@@ -189,8 +220,8 @@ export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
         <div className="body" style={{ display: 'grid', gap: 10 }}>
           {detail.whyNow.map((row) => (
             <article key={row.title + row.why} data-testid="why-talk">
-              <b>{row.title}</b>
-              <div>{row.why}</div>
+              <b>{row.title}</b> <span className="chip">{kindLabel(row.kind)}</span>
+              <div>{plainWhy(row.why)}</div>
             </article>
           ))}
           {!detail.whyNow.length ? <p>No tagged talks to put forward yet.</p> : null}
@@ -201,8 +232,8 @@ export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
         <div className="body" style={{ display: 'grid', gap: 10 }}>
           {detail.serves.map((row) => (
             <article key={row.at + row.title} data-testid="serve-row">
-              <b>{row.title}</b> <span className="chip">{row.kind}</span> <span className="chip">{row.engaged ? 'Watched' : 'Not yet'}</span>
-              <div className="hint">{shortDate(row.at)}. {row.why}</div>
+              <b>{row.title}</b> <span className="chip">{kindLabel(row.kind)}</span> <span className="chip">{row.engaged ? 'Watched' : 'Not yet'}</span>
+              <div className="hint">{shortDate(row.at)}. {plainWhy(row.why)}</div>
             </article>
           ))}
           {!detail.serves.length ? <p>Nothing put forward yet.</p> : null}

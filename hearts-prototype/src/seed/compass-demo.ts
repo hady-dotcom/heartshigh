@@ -3,7 +3,8 @@
 
 import { getPayload, type Payload } from 'payload'
 import config from '../payload.config'
-import { LIFE_EVENTS, formForRound } from '../lib/compass-bank'
+import { formForRound } from '../lib/compass-bank'
+import { lifeForDemo, passwordForNewAccount } from '../lib/compass-demo-plan'
 import { DEFAULT_MIX, SCALE_DOOR, whyDeficit } from '../lib/compass-feed'
 import { DOORS } from '../lib/doors'
 import { SCALE_KEYS, type ScaleKey } from '../lib/heart'
@@ -12,7 +13,6 @@ import { midpointReading, PERSONA_V2 } from '../lib/persona-v2'
 import type { PersonaBand } from '../lib/persona'
 
 const SLUG = 'hearts-demo'
-const PASSWORD = 'compass-demo'
 const DAY = 24 * 60 * 60 * 1000
 
 const TITLES: Record<ScaleKey, string> = {
@@ -164,7 +164,8 @@ async function main() {
   }
 
   const nowMs = Date.now()
-  for (const person of PEOPLE) {
+  let createdAccounts = 0
+  for (const [personIndex, person] of PEOPLE.entries()) {
     const existing = await one(payload, 'users', { email: { equals: person.email } })
     let user = existing
     if (existing) {
@@ -173,13 +174,16 @@ async function main() {
         console.log(`Skipping ${person.email}: they already belong to another portal.`)
         continue
       }
+      // An account that already exists keeps its password. demo-learner and demo-complete are live.
     } else {
+      const password = passwordForNewAccount(true)
+      createdAccounts += 1
       user = (await payload.create({
         collection: 'users',
         overrideAccess: true,
         data: {
           email: person.email,
-          password: PASSWORD,
+          password,
           name: person.name,
           role: person.role,
           audience: person.role === 'learner' ? 'learner' : undefined,
@@ -197,9 +201,9 @@ async function main() {
       const demoKey = `${SLUG}:${person.email}:${month}`
       const already = await one(payload, 'compass-attempts', { demoKey: { equals: demoKey } })
       const at = new Date(nowMs - ages[month] * DAY).toISOString()
+      const life = lifeForDemo(personIndex, month)
+      const monthRound = month === 0 ? null : formForRound(month - 1)
       if (!already) {
-        const event = LIFE_EVENTS[month % LIFE_EVENTS.length]
-        const monthRound = month === 0 ? null : formForRound(month - 1)
         await payload.create({
           collection: 'compass-attempts',
           overrideAccess: true,
@@ -209,12 +213,19 @@ async function main() {
             at,
             bank: month === 0 ? 'opening' : 'month',
             formKey: monthRound?.id,
-            lifeKey: month === 0 ? undefined : event.key,
-            lifeKeys: month === 0 ? [] : [event.key],
-            lifeNote: month === 2 ? 'The house has been quiet.' : undefined,
+            lifeKey: life.keys[0],
+            lifeKeys: life.keys,
+            lifeNote: life.note || undefined,
             demoKey,
             scales: drifted(band, month),
           },
+        } as never)
+      } else if (String(already.lifeNote || '') !== life.note || JSON.stringify(already.lifeKeys || []) !== JSON.stringify(life.keys)) {
+        await payload.update({
+          collection: 'compass-attempts',
+          id: already.id,
+          overrideAccess: true,
+          data: { lifeKey: life.keys[0], lifeKeys: life.keys, lifeNote: life.note || undefined },
         } as never)
       }
       if (month < 2) continue
@@ -222,6 +233,14 @@ async function main() {
       const serveKey = `${SLUG}:serve:${person.email}:${month}`
       const served = await one(payload, 'compass-serves', { demoKey: { equals: serveKey } })
       const lessonId = lessons.get(scale)
+      if (served && lessonId && /\bW\d+/.test(String(served.why || ''))) {
+        await payload.update({
+          collection: 'compass-serves',
+          id: served.id,
+          overrideAccess: true,
+          data: { why: whyDeficit(scale), kind: scale === 'gratitude' || scale === 'worry' ? 'hors' : 'appetiser' },
+        } as never)
+      }
       if (!served && lessonId) {
         const serveAt = new Date(nowMs - ages[month] * DAY + DAY).toISOString()
         await payload.create({
@@ -254,7 +273,7 @@ async function main() {
       }
     }
   }
-  console.log(`Compass demo is in place on ${SLUG}. Password for the demo accounts: ${PASSWORD}`)
+  console.log(`Compass demo is in place on ${SLUG}. ${createdAccounts ? `New accounts use ${passwordForNewAccount(true)}.` : 'No new accounts.'} Existing accounts keep their password.`)
 }
 
 main().catch((error) => {

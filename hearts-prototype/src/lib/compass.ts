@@ -4,7 +4,7 @@
 import { SCALE_KEYS, type ScaleKey } from './heart'
 import { toRung } from './persona'
 import type { CompassCopy, Frame, PlaceCopy } from './compass-data'
-import { DEFAULT_COPY } from './compass-data'
+import { DEFAULT_COPY, LEARNER_VOICE } from './compass-data'
 
 export type AreaReading = { scale: ScaleKey; focus: string; rung: number }
 
@@ -12,7 +12,7 @@ export type LearnerCompass = {
   kind: 'path'
   focusLine: string | null
   areas: { area: string; place: string | null; forward: string }[]
-  steps: { title: string; detail: string }[]
+  steps: { title: string; detail: string; href?: string }[]
   talks: { title: string; href: string }[]
   movement: string[]
 }
@@ -60,11 +60,6 @@ function capWord(name: string) {
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1)
 }
 
-/** Fills {area}, and starts a sentence with a capital when the name is the first word. */
-function withArea(template: string, area: string) {
-  return template.replaceAll('{area}', area).replace(/(^|[.!?]\s+)([a-z])/g, (_, lead: string, letter: string) => `${lead}${letter.toUpperCase()}`)
-}
-
 export function focusLine(lead: string, names: string[]) {
   const clean = names.map(capWord).filter(Boolean)
   if (!clean.length) return null
@@ -93,61 +88,41 @@ export function summarise(input: {
 }): LearnerCompass {
   const copy = input.copy || DEFAULT_COPY
   const frame = input.frame || copy.frame
-  const places = copy.places.length ? copy.places : DEFAULT_COPY.places
   const ranked = [...input.now].sort((a, b) => a.rung - b.rung || a.focus.localeCompare(b.focus))
-  const growing = ranked.filter((row) => placeFor(row.rung, places)?.key === 'growing')
-  const focusNames = (growing.length ? growing : ranked.slice(0, 2)).slice(0, 3).map((row) => row.focus)
-  const showPlaces = frame !== 'focusing'
+  const focusRows = quieter(ranked)
   const showFocus = frame !== 'places'
-  const areas = ranked.map((row) => {
-    const place = placeFor(row.rung, places)
+  const areas = focusRows.map((row) => {
+    const voice = LEARNER_VOICE[row.scale]
     return {
-      area: row.focus,
-      place: showPlaces && place ? place.label : null,
-      forward: withArea(place?.forward || '', row.focus),
+      area: voice?.name || capWord(row.focus),
+      place: null,
+      forward: voice?.line || '',
     }
   })
-  const stepRows = (growing.length ? growing : ranked).slice(0, 3)
-  const steps = stepRows.map((row) => {
-    const place = placeFor(row.rung, places)
-    return { title: capWord(row.focus), detail: withArea(place?.forward || '', row.focus) }
-  })
-  const fillers = [
-    { title: 'One short clip', detail: 'Watch one short clip and notice what stays with you.' },
-    { title: 'A second sitting', detail: 'Come back to one more clip when you have a quiet moment.' },
-  ]
-  for (const filler of fillers) {
-    if (steps.length >= 2) break
-    steps.push(filler)
-  }
   const reading = Object.fromEntries(input.now.map((row) => [row.scale, row.rung / 10])) as Partial<Record<ScaleKey, number>>
-  const talks = steer(input.talks, reading, 3).map((talk) => ({ title: talk.title, href: talk.href }))
+  const talks = steer(input.talks, reading, 1).map((talk) => ({ title: talk.title, href: talk.href }))
+  const steps: LearnerCompass['steps'] = []
+  const first = focusRows[0]
+  const voice = first ? LEARNER_VOICE[first.scale] : null
+  if (voice) steps.push({ title: voice.name, detail: voice.step })
+  if (talks[0]) steps.push({ title: talks[0].title, detail: 'Sit with this when you have a few minutes.', href: talks[0].href })
   return {
     kind: 'path',
-    focusLine: showFocus ? focusLine(copy.focusLead, focusNames) : null,
+    focusLine: showFocus ? focusLine(copy.focusLead, areas.map((area) => area.area)) : null,
     areas,
-    steps: steps.slice(0, 3),
+    steps: steps.slice(0, 2),
     talks,
-    movement: movementLines(copy, input.now, input.before || null, places),
+    movement: [],
   }
 }
 
-function movementLines(copy: CompassCopy, now: AreaReading[], before: AreaReading[] | null, places: PlaceCopy[]) {
-  if (!before?.length) return []
-  const order = ['growing', 'steady', 'flourishing']
-  const prev = new Map(before.map((row) => [row.scale, row]))
-  const lines: string[] = []
-  for (const row of now) {
-    const old = prev.get(row.scale)
-    if (!old) continue
-    const then = placeFor(old.rung, places)?.key
-    const current = placeFor(row.rung, places)?.key
-    if (!then || !current) continue
-    const delta = order.indexOf(current) - order.indexOf(then)
-    const template = delta > 0 ? copy.movementUp : delta < 0 ? copy.movementOnward : copy.movementSame
-    lines.push(withArea(template, row.focus))
-  }
-  return lines.slice(0, 4)
+/** The one or two lowest readings. A scale that is already flourishing stays off the line. */
+function quieter(ranked: AreaReading[]) {
+  if (!ranked.length) return []
+  const picked = [ranked[0]]
+  const second = ranked[1]
+  if (second && second.rung <= 2) picked.push(second)
+  return picked
 }
 
 /**

@@ -46,9 +46,10 @@
 .app[data-testid="learner-path"] .area-row,
 .app[data-testid="recalibrate"] .choice {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
-  align-items: center;
+  align-items: flex-start;
+  text-align: left;
 }
 .app[data-testid="learner-path"] .chip,
 .app[data-testid="recalibrate"] .chip {
@@ -100,21 +101,42 @@
   margin-top: 12px;
 }
 .compass-learner { position: relative; }
-.compass-learner .app-head { padding-right: 80px; }
-.compass-learner .ivy {
-  position: absolute;
-  top: 14px;
-  right: 8px;
-  width: 72px;
-  height: 110px;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 20% 20%, #2F6B4F 0 7px, transparent 8px),
-    radial-gradient(circle at 70% 35%, #3E7A58 0 8px, transparent 9px),
-    radial-gradient(circle at 30% 55%, #245C45 0 7px, transparent 8px),
-    radial-gradient(circle at 75% 75%, #2F6B4F 0 6px, transparent 7px);
-  opacity: 0.9;
+.app[data-testid="learner-path"] .tabbar,
+.app[data-testid="recalibrate"] .tabbar {
+  background: #0E2A2B;
+  border-top-color: rgba(212, 168, 75, 0.45);
 }
+.app[data-testid="learner-path"] .tab,
+.app[data-testid="recalibrate"] .tab {
+  color: #E7DCC8;
+}
+.app[data-testid="learner-path"] .tab.on,
+.app[data-testid="recalibrate"] .tab.on {
+  color: #D4A84B;
+}
+.app[data-testid="learner-path"] .flash.notice,
+.app[data-testid="recalibrate"] .flash.notice,
+[data-testid="recalibrate-card"] {
+  background: #1A3F38;
+  color: #F6EEDC;
+  border: 1px solid rgba(212, 168, 75, 0.55);
+}
+[data-testid="recalibrate-open"] {
+  background: #D4A84B;
+  color: #1A1408;
+}
+.month-look { padding-bottom: 24px; }
+.month-card { animation: month-slide 280ms ease; }
+.month-card.back { animation-name: month-slide-back; }
+.progress { margin: 0 0 8px; color: #D4A84B; font-weight: 700; letter-spacing: 0.04em; }
+.progress-line { display: block; height: 4px; border-radius: 99px; background: #0E2A2B; margin: 0 0 14px; overflow: hidden; }
+.progress-line i { display: block; height: 100%; background: #D4A84B; }
+.text-back { display: inline-flex; margin-top: 14px; background: none; border: 0; color: #F6E7C1; font-weight: 700; padding: 8px 0; }
+.app[data-testid="recalibrate"] .choice input { margin-top: 3px; accent-color: #D4A84B; }
+@keyframes month-slide { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes month-slide-back { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+.route-fade { animation: route-in 320ms ease; }
+@keyframes route-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
 .desk[data-testid="compass-portal"],
 .desk[data-testid="compass-learner"] {
@@ -205,11 +227,35 @@
 .mix-form { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
 .mix-form label { display: grid; gap: 6px; font-weight: 650; color: #0F3B3A; }
 .mix-form input { width: 88px; background: #fff; color: #1A1814; border: 1px solid #CDB88A; border-radius: 8px; padding: 8px; }
-.sparks { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
-.spark { width: 100%; height: 72px; }
-.spark path { fill: none; stroke: #0F3B3A; stroke-width: 2; }
+.sparks { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.spark-card { background: #FBF6E8; border: 1px solid #E2D2AE; border-radius: 14px; padding: 12px 12px 8px; }
+.spark-card header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; background: transparent; color: #0F3B3A; padding: 0; }
+.spark-card header b { font-size: 16px; }
+.spark-card .latest { font-variant-numeric: tabular-nums; font-weight: 700; }
+.spark-card .latest.up { color: #14564C; }
+.spark-card .latest.down { color: #8C4A55; }
+.spark { width: 100%; height: 120px; }
+.spark path { fill: none; stroke-width: 2.4; }
+.spark path.up { stroke: #14564C; }
+.spark path.down { stroke: #8C4A55; }
+.spark path.flat { stroke: #0F3B3A; }
 .spark circle { fill: #D4A84B; stroke: #0F3B3A; }
+.spark text { fill: #3A4E48; font-size: 11px; font-family: inherit; }
 .spark-zero { stroke: #C4B089; stroke-dasharray: 3 3; }
+.spark-legend { display: flex; gap: 16px; margin: 0 0 12px; color: #3A4E48; font-size: 13px; }
+.spark-legend i { display: inline-block; width: 18px; height: 3px; margin-right: 6px; vertical-align: middle; }
+.spark-legend .up { background: #14564C; }
+.spark-legend .down { background: #8C4A55; }
+.persona-line { margin: 0 0 10px; font-size: 18px; color: #0F3B3A; }
+.persona-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.persona-chips .chip { background: #E7D7B4; color: #1A1814; }
+.persona-chips .chip.on { background: #0F3B3A; color: #F7EEDB; }
+.desk[data-testid="compass-portal"] table.data th.num,
+.desk[data-testid="compass-learner"] table.data th.num,
+.desk[data-testid="compass-portal"] table.data td.num,
+.desk[data-testid="compass-learner"] table.data td.num { text-align: right; }
+[data-testid="serve-row"] { display: block; padding-bottom: 8px; }
+[data-testid="serve-row"] .hint { display: block; margin-top: 8px; }
 /* The course player already uses .timeline for a film scrub bar. These lists must stay in the card. */
 .desk[data-testid="compass-portal"] .timeline,
 .desk[data-testid="compass-learner"] .timeline {
