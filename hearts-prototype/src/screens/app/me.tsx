@@ -15,6 +15,7 @@ import { visibleCourseIds } from '@/server/context'
 import { dayNumber, portalName } from '@/server/learner'
 import { featureOn } from '@/lib/features'
 import { type Ctx, longDate, ref, rows, shortDate, str, unreadCount } from '../common'
+import { DeleteAccount } from '@/components/app/delete-account'
 
 /** Notices written before prompts were clipped on a word were cut mid-word at 60 characters; they read the same way now. */
 function noteBody(body: string) {
@@ -252,6 +253,7 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
           <Hidden fields={{ action: 'logout' }} />
           <button className="pill outline block" type="submit" data-testid="logout">Sign out</button>
         </form>
+        <DeleteAccount name={user.name || user.email} next={`${base}/me/settings`} />
       </div>
       <TabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>

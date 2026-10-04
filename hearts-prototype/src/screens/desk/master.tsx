@@ -13,6 +13,8 @@ import type { SessionUser } from '@/server/context'
 import { one, ref, rows, str } from '../common'
 import { CourseEditorBody } from './content'
 import { DeskFrame, masterNav } from './shell'
+import { ErasePanel } from '@/components/desk/erase-panel'
+import { TOOL } from '@/lib/desk-help'
 
 export type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string; part?: string } }
 
@@ -65,6 +67,18 @@ export async function MasterPortals(ctx: MasterCtx) {
                       <Hidden fields={{ action: 'deactivate', portalSlug: str(portal.slug), closed: portal.closed ? 'no' : 'yes', next: '/master' }} />
                       <button className={`btn ${portal.closed ? 'teal' : 'danger'} small`} data-testid="deactivate-portal" type="submit">{portal.closed ? 'Activate' : 'Deactivate'}</button>
                     </form>
+                    <ErasePanel
+                      action="delete-portal"
+                      next="/master"
+                      portalSlug={str(portal.slug)}
+                      portalId={portal.id}
+                      confirmValue={str(portal.name)}
+                      kind="portal"
+                      help={TOOL.deletePortal}
+                      helpTopic="delete-portal"
+                      label="Delete"
+                      testId={`delete-portal-${str(portal.slug)}`}
+                    />
                   </td>
                 </tr>
               ))}

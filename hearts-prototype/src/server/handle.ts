@@ -39,6 +39,7 @@ import { isTimeZone } from '@/lib/zone-time'
 import { parseLengthInput } from '@/lib/length'
 import { FEATURE_UNAVAILABLE, featuresFromForm } from '@/lib/features'
 import { adoptLibraryCourses, loadPortalById, refuseFeature } from './features'
+import { wipePortal, wipeUser } from './erase'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
@@ -109,6 +110,9 @@ async function loginResponse(req: Request, email: string, password: string, next
   try {
     const result = await payload.login({ collection: 'users', data: { email, password } })
     if (!result.token || !result.user) return redirectTo(req, '/login', 'That email or password did not match.')
+    if ((result.user as { removed?: boolean | null }).removed) {
+      return redirectTo(req, '/login', 'That account is no longer here.')
+    }
     const response = redirectTo(req, await landingPath(payload, result.user as SessionUser, next))
     response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, result.token, 7200))
     return response
@@ -1658,6 +1662,48 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const closed = text(form, 'closed') !== 'no'
     await payload.update({ collection: 'portals', id: acting.portal.id, overrideAccess: true, data: { closed } })
     return redirectTo(req, text(form, 'next') || '/master', undefined, closed ? 'Portal deactivated.' : 'Portal is active again.')
+  }
+
+  if (action === 'delete-portal') {
+    if (user.role !== 'master') return redirectTo(req, text(form, 'next') || '/master', 'Only the master desk can delete a portal.')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, text(form, 'next') || '/master', acting.error)
+    const result = await wipePortal(payload, { actor: user, portalId: acting.portal.id, confirmName: text(form, 'confirmName') })
+    if (!result.ok) return redirectTo(req, text(form, 'next') || '/master', result.error)
+    return redirectTo(req, '/master', undefined, 'The portal and everything in it has been wiped.')
+  }
+
+  if (action === 'delete-person') {
+    if (user.role === 'learner' || user.role === 'teacher') return redirectTo(req, text(form, 'next') || '/', 'Your role cannot delete people.')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
+    const personId = Number(text(form, 'person'))
+    if (!Number.isInteger(personId) || personId <= 0) return redirectTo(req, text(form, 'next') || '/', 'Name the person.')
+    const mode = text(form, 'mode') === 'portal' ? 'portal' : 'account'
+    const result = await wipeUser(payload, {
+      actor: user,
+      userId: personId,
+      portalId: acting.portal.id,
+      mode,
+      confirmName: text(form, 'confirmName'),
+    })
+    if (!result.ok) return redirectTo(req, text(form, 'next') || '/', result.error)
+    return redirectTo(req, text(form, 'next') || '/', undefined, mode === 'portal' ? 'They have been taken off this portal.' : 'That person and their data have been wiped.')
+  }
+
+  if (action === 'delete-account') {
+    const result = await wipeUser(payload, {
+      actor: user,
+      userId: user.id,
+      portalId: portalIdOf(user),
+      mode: 'account',
+      confirmName: text(form, 'confirmName'),
+      self: true,
+    })
+    if (!result.ok) return redirectTo(req, text(form, 'next') || '/', result.error)
+    const response = redirectTo(req, '/login', undefined, 'Your account and its data have been wiped.')
+    response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, '', 0))
+    return response
   }
 
   if (action === 'remove-adoption') {

@@ -152,6 +152,8 @@ export const Users: CollectionConfig = {
     ],
     beforeLogin: [
       ({ req }) => {
+        const signingIn = (req as { user?: { removed?: boolean } }).user
+        if (signingIn?.removed) throw new APIError('That account is no longer here.', 401, undefined, true)
         if (req.payloadAPI !== 'REST' || limitsRelaxed()) return
         const headers = req.headers
         const read = (name: string) => (headers && typeof headers.get === 'function' ? headers.get(name) : '') || ''

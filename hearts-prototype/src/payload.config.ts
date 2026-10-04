@@ -14,6 +14,7 @@ import { sheetCollections } from './collections-sheet'
 import { MasterFlags } from './collections-opening'
 import { databaseKind, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
 import { migrations } from './migrations'
+import { TENANT_COLLECTIONS } from './lib/tenant-collections'
 import { viewAsGlobalGuard, viewAsGuard } from './server/viewas'
 
 const filename = fileURLToPath(import.meta.url)
@@ -75,32 +76,7 @@ export default buildConfig({
       tenantsSlug: 'portals',
       tenantField: { name: 'portal' },
       tenantSelectorLabel: 'Portal',
-      collections: {
-        messages: {},
-        events: {},
-        rsvps: {},
-        checkins: {},
-        'workbook-entries': {},
-        answers: {},
-        'access-codes': {},
-        schedules: {},
-        notifications: {},
-        completions: {},
-        'watch-sessions': {},
-        adoptions: {},
-        'harvest-entries': {},
-        'drawn-to': {},
-        'lesson-visits': {},
-        'seat-visits': {},
-        rituals: {},
-        'placing-answers': {},
-        'feedback-notes': {},
-        gatherings: {},
-        'gather-rsvps': {},
-        'gather-checkins': {},
-        'gather-reflections': {},
-        'gather-photos': {},
-      },
+      collections: { ...TENANT_COLLECTIONS },
       userHasAccessToAllTenants: (user) => (user as { role?: string } | null)?.role === 'master',
     }),
     // The prefix column is part of the schema even when the bucket is off, so SQLite and Postgres stay aligned.

@@ -138,6 +138,16 @@ export const TOOL: Record<string, string> = {
     'Link adds this library course to the portal. Learners see it once a code or grant includes it. The original stays as the master desk set it.',
   deactivate:
     'Deactivate stops learners signing in. Their work is still here. Activate opens the portal again. Only the master desk can do this.',
+  deletePortal:
+    'Delete wipes this portal from the database: people, answers, files and codes. Shared library talks stay for other portals. Type the portal name after you have read the counts.',
+  deletePerson:
+    'Delete wipes this person’s answers, files and progress. If they belong only to this portal, the account goes too. You can download a copy first. Type their name to confirm.',
+  deleteAccount:
+    'This wipes your answers, progress and files, then signs you out. It cannot be undone. Download a copy first if you want to keep anything.',
+  downloadCopy:
+    'Download writes a workbook of the rows that will be wiped. Keep it if you may need the names or answers later. The wipe still needs you to type the name.',
+  removeFromPortal:
+    'Take them off this portal if the account also lives elsewhere. Wipe the whole account only when every portal should lose their data. The counts show what will go.',
   activity:
     'Each bar is one day: parts watched and questions answered. It is a pulse, not a league table. Empty days are normal.',
   portalDetails:
