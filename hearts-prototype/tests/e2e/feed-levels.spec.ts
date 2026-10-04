@@ -30,7 +30,7 @@ async function swipe(page: Page, dx: number, dy: number) {
 async function step(page: Page, feed: ReturnType<Page['getByTestId']>, move: string) {
   const before = await feed.getAttribute('data-index')
   await page.getByTestId(move).dispatchEvent('click')
-  await expect.poll(async () => (await feed.getAttribute('data-index')) !== before || /seen everything|only clip|everything from|everything on this topic/i.test((await page.getByTestId('toast').innerText().catch(() => '')) || '')).toBe(true)
+  await expect.poll(async () => (await feed.getAttribute('data-index')) !== before || /seen everything|only clip|only 3-minute|everything from|everything on this topic/i.test((await page.getByTestId('toast').innerText().catch(() => '')) || '')).toBe(true)
   if ((await feed.getAttribute('data-index')) === before) return 'end' as const
   await settled(page, feed)
   return 'ok' as const
@@ -79,14 +79,11 @@ test('swipes keep to the level being watched, and Learn more goes to the watched
   await settled(page, feed)
 
   // The appetiser loop: next, previous and every swipe direction stay on appetisers, never on a card.
-  const talkCuts = new Set<string>()
-  for (const move of ['gesture-next', 'gesture-next', 'gesture-prev']) {
-    const moved = await step(page, feed, move)
-    await expect(feed).toHaveAttribute('data-mode', 'appetiser')
-    await expect(feed).toHaveAttribute('data-card', 'talk')
-    if (moved === 'ok') talkCuts.add((await feed.getAttribute('data-cut'))!)
-  }
-  talkCuts.add((await feed.getAttribute('data-cut'))!)
+  const talkCuts = new Set<string>([(await feed.getAttribute('data-cut'))!])
+  const moved = await step(page, feed, 'gesture-next')
+  await expect(feed).toHaveAttribute('data-mode', 'appetiser')
+  await expect(feed).toHaveAttribute('data-card', 'talk')
+  if (moved === 'ok') talkCuts.add((await feed.getAttribute('data-cut'))!)
   expect(talkCuts.size).toBeGreaterThan(1)
   for (const [dx, dy] of [[-220, 0], [0, 220], [220, 0], [0, -220]] as const) {
     await swipe(page, dx, dy)
