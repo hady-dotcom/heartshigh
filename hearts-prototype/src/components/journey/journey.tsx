@@ -61,7 +61,17 @@ const ENTER_FROM: Record<Exit, string> = { left: 'translateX(100%)', right: 'tra
 const SLIDE_OUT = 'cubic-bezier(0.4, 0, 1, 1)'
 const SLIDE_IN = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
 const SWIPE_EXIT: Record<Swipe, Exit> = { topic: 'left', speaker: 'right', lane: 'down', next: 'up', prev: 'down' }
+/** The neighbours kept mounted beside the card, each on the side it comes in from. */
+const PEEK_SWIPES = ['topic', 'speaker', 'lane', 'next'] as const satisfies readonly Swipe[]
+const peekRest = (swipe: Swipe) => ENTER_FROM[SWIPE_EXIT[swipe]]
+// Leaving and arriving share one curve and one duration, so the two cards move as a single strip.
+const SLIDE_PAIR = 'cubic-bezier(0.32, 0.2, 0.3, 1)'
+const PAIR_MS = 260
+const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+const decoded = new Map<string, HTMLImageElement>()
 const HOLD = 700
+/** A player in any other state shows YouTube's own titled thumbnail or end screen, so our poster covers it. */
+const LIVE = new Set<number>([STATE.PLAYING, STATE.PAUSED, STATE.BUFFERING])
 
 const appetiserEnd = (item: FeedItem) => appetiserStop(item.appetiser)
 
@@ -159,6 +169,7 @@ export function Journey(props: JourneyProps) {
   const watch = useRef<{ key: string; start: number; furthest: number; done90: boolean }>({ key: '', start: 0, furthest: 0, done90: false })
   const refilling = useRef(false)
   const clipRef = useRef<HTMLDivElement>(null)
+  const peekEls = useRef<Partial<Record<Swipe, HTMLDivElement | null>>>({})
   const slotRef = useRef<HTMLDivElement>(null)
   const gesture = useRef<{ x: number; y: number; t: number; moved: boolean; timer: number | null } | null>(null)
   const captionDrag = useRef(false)
@@ -320,7 +331,9 @@ export function Journey(props: JourneyProps) {
 
   const onPlayerState = useCallback((at: 0 | 1, state: number) => {
     const host = hosts.current[at]
+    const wasLive = LIVE.has(host.state)
     host.state = state
+    if (at === visibleRef.current && wasLive !== LIVE.has(state)) setReadyTick((value) => value + 1)
     if (at !== visibleRef.current) {
       if (state === STATE.PLAYING && host.playerId) getPlayer(host.playerId)?.pauseVideo()
       return
@@ -887,7 +900,7 @@ export function Journey(props: JourneyProps) {
   }, [])
 
   const advance = useCallback(
-    async (to: number, how: 'swipe' | 'auto' = 'swipe', exit: Exit = 'up') => {
+    async (to: number, how: 'swipe' | 'auto' = 'swipe', exit: Exit = 'up', via?: Swipe) => {
       const list = itemsRef.current
       if (!list.length) return
       // Whatever moves the feed, it stays on the level being watched.
@@ -895,18 +908,34 @@ export function Journey(props: JourneyProps) {
       if (target === null) return
       if (how === 'swipe') leaveSignal()
       const el = clipRef.current
+      const peek = how === 'swipe' && via ? peekEls.current[via] : null
+      // The neighbour already mounted beside the card is the incoming side, so it is never bare.
+      const incoming = peek && Number(peek.dataset.index) === target && !reducedMotion() ? peek : null
       if (how === 'swipe' && el) {
         // Carry on from wherever the finger left the card, so the move never jumps.
         const from = el.style.transform || EXIT_FROM[exit]
         el.style.transform = ''
-        await finished(animate(el, [{ transform: from }, { transform: EXIT_TO[exit] }], 200, SLIDE_OUT, { id: 'snap' }))
+        const out = animate(el, [{ transform: from }, { transform: EXIT_TO[exit] }], incoming ? PAIR_MS : 200, incoming ? SLIDE_PAIR : SLIDE_OUT, { id: 'snap' })
+        if (incoming) {
+          const peekFrom = incoming.style.transform || ENTER_FROM[exit]
+          incoming.style.transform = ENTER_FROM[exit]
+          animate(incoming, [{ transform: peekFrom }, { transform: 'translate(0, 0)' }], PAIR_MS, SLIDE_PAIR, { id: 'peek-in' })
+        }
+        await finished(out)
       }
       setFirstEver(false)
       // A swipe moves along the level being watched; only "Learn more" goes up a level.
       await showItem(target, modeRef.current, async () => {
         if (!el) return
+        await nextFrame()
+        if (incoming) {
+          // The card returns to the middle only once it holds the new item; the neighbour then goes back to its side.
+          await nextFrame()
+          el.getAnimations().forEach((animation) => animation.cancel())
+          incoming.getAnimations().forEach((animation) => animation.cancel())
+          return
+        }
         // The poster is on screen at once; the incoming card slides in from the side opposite the exit.
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
         el.getAnimations().forEach((animation) => animation.cancel())
         if (how === 'swipe') animate(el, [{ transform: ENTER_FROM[exit] }, { transform: 'translate(0, 0)' }], 380, SLIDE_IN, { id: 'enter', fill: 'none' })
       })
@@ -1046,10 +1075,11 @@ export function Journey(props: JourneyProps) {
       if (swipe === 'topic') return setToast('That is everything on this topic for now')
       return setToast(modeRef.current === 'hors' ? "That is the only hors d'oeuvre here" : 'That is the only appetiser here')
     }
-    if (swipe === 'lane') setToast(`Lane · ${itemsRef.current[target]?.laneLabel || ''}`)
+    const laneLabel = itemsRef.current[target]?.laneLabel?.trim()
+    if (swipe === 'lane' && laneLabel) setToast(`Lane · ${laneLabel}`)
     if (swipe === 'topic') setToast('More on this topic')
     if (swipe === 'speaker') setToast(`More from ${current.speaker}`)
-    void advance(target, 'swipe', SWIPE_EXIT[swipe])
+    void advance(target, 'swipe', SWIPE_EXIT[swipe], swipe)
   }
   const nextLane = () => swipeTo('lane')
   const moreLikeThis = () => swipeTo('topic')
@@ -1137,6 +1167,29 @@ export function Journey(props: JourneyProps) {
     return () => window.clearTimeout(timer)
   }, [toast])
 
+  const peeks = useMemo(() => {
+    if (phase !== 'feed' || items.length < 2) return []
+    const out: { swipe: Swipe; at: number }[] = []
+    for (const swipe of PEEK_SWIPES) {
+      const raw = swipeTarget(items, index, mode, swipe)
+      if (raw === null) continue
+      const at = settleOnLevel(items, raw, mode, raw < index ? -1 : 1)
+      if (at !== null && at !== index) out.push({ swipe, at })
+    }
+    return out
+  }, [phase, items, index, mode])
+
+  useEffect(() => {
+    for (const { at } of peeks) {
+      const src = stillOf(items[at], mode)
+      if (!src || decoded.has(src)) continue
+      const image = new Image()
+      image.src = src
+      decoded.set(src, image)
+      void image.decode?.().catch(() => decoded.delete(src))
+    }
+  }, [peeks, items, mode])
+
   useEffect(() => {
     for (const row of items.slice(index + 1, index + 6)) {
       const src = row.scene?.scene
@@ -1160,7 +1213,13 @@ export function Journey(props: JourneyProps) {
     const dx = event.clientX - start.x
     const dy = event.clientY - start.y
     if (Math.max(Math.abs(dx), Math.abs(dy)) > 8) start.moved = true
-    if (clipRef.current && Math.abs(dx) > Math.abs(dy) && start.moved) clipRef.current.style.transform = `translateX(${dx}px)`
+    if (clipRef.current && Math.abs(dx) > Math.abs(dy) && start.moved) {
+      clipRef.current.style.transform = `translateX(${dx}px)`
+      const topic = peekEls.current.topic
+      const speaker = peekEls.current.speaker
+      if (topic) topic.style.transform = `translateX(calc(100% + ${dx}px))`
+      if (speaker) speaker.style.transform = `translateX(calc(-100% + ${dx}px))`
+    }
   }
   const onUp = (event: ReactPointerEvent) => {
     const start = gesture.current
@@ -1173,7 +1232,13 @@ export function Journey(props: JourneyProps) {
     const width = clipRef.current?.clientWidth || 390
     const far = Math.max(Math.abs(dx), Math.abs(dy))
     const quick = far / elapsed >= 0.5
-    if (Math.abs(dy) > Math.abs(dx) && clipRef.current) clipRef.current.style.transform = ''
+    if (Math.abs(dy) > Math.abs(dx) && clipRef.current) {
+      clipRef.current.style.transform = ''
+      for (const side of ['topic', 'speaker'] as const) {
+        const peek = peekEls.current[side]
+        if (peek) peek.style.transform = peekRest(side)
+      }
+    }
     if (far < 40 || (far < width * 0.25 && !quick)) {
       springBack()
       if (!start.moved && overlay && !slide && cardKind !== 'question' && cardKind !== 'text') {
@@ -1198,6 +1263,13 @@ export function Journey(props: JourneyProps) {
   }
   const springBack = () => {
     const el = clipRef.current
+    for (const side of ['topic', 'speaker'] as const) {
+      const peek = peekEls.current[side]
+      if (!peek || !peek.style.transform.includes('calc')) continue
+      const from = peek.style.transform
+      peek.style.transform = peekRest(side)
+      animate(peek, [{ transform: from }, { transform: peekRest(side) }], T.sheet, EASE.calm, { id: 'peek-back', fill: 'none' })
+    }
     if (!el || !el.style.transform) return
     const from = el.style.transform
     el.style.transform = ''
@@ -1240,9 +1312,9 @@ export function Journey(props: JourneyProps) {
   const typeClip = Boolean(phase === 'feed' && mode === 'hors' && typeSrc && cardKind !== 'text' && cardKind !== 'question' && cardKind !== 'scene')
   const scenic = Boolean(phase === 'feed' && cardKind === 'scene' && mode === 'hors' && item?.scene)
   const feedCard = phase === 'feed' && (cardKind === 'question' || cardKind === 'text')
-  const started = playerReady && host.played
+  const started = playerReady && host.played && LIVE.has(host.state)
   const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (!started || Boolean(errorNote) || offline)))
-  const waitingToPlay = phase === 'feed' && playerReady && !host.played && !errorNote && !offline
+  const waitingToPlay = phase === 'feed' && playerReady && !started && !errorNote && !offline
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
   const horsLine = mode === 'hors' ? piece?.lines?.[lineShown] : null
@@ -1298,9 +1370,10 @@ export function Journey(props: JourneyProps) {
     </button>
   ) : null
   const laneVisible = Boolean(item) && !firstEver
+  const wordsInPicture = Boolean(item?.wordsInPicture || item?.vertical)
   void readyTick
 
-  // A Short has its words in the picture: the speaker and Follow sit at the top, out of its lower third.
+  // A Short (or a film with burned-in words) has text low in the picture: the speaker and Follow sit at the top, out of its lower quarter.
   const speakerRow = item ? (
     <div className="j-speaker">
       <a className="speaker-row" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-link" onClick={(event) => { if (needsAccount('save')) event.preventDefault() }}>
@@ -1332,8 +1405,17 @@ export function Journey(props: JourneyProps) {
       {typeClip && muted ? (
         <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button>
       ) : null}
-      {(cardKind && cardKind !== 'scene') || typeClip || mode !== 'hors' || item.vertical ? null : captionButton}
-      {item.vertical && mode === 'hors' ? <div className="j-top-speaker" data-testid="top-speaker">{speakerRow}</div> : null}
+      {(cardKind && cardKind !== 'scene') || typeClip || mode !== 'hors' || wordsInPicture ? null : captionButton}
+      {wordsInPicture && mode === 'hors' && !cardKind ? <div className="j-top-speaker" data-testid="top-speaker">{speakerRow}</div> : null}
+      {wordsInPicture && mode === 'appetiser' && videoAppetiser ? (
+        <div className="j-top-speaker" data-testid="top-speaker">
+          <div className="speaker-card">
+            <Avatar name={item.speaker} portrait={item.portrait} />
+            <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b><small>{item.courseTitle}</small></a>
+            <FollowButton slug={item.speakerSlug} className="follow teal" />
+          </div>
+        </div>
+      ) : null}
       {scenicAppetiser ? (
         <div className="scenic-lines" data-testid="scenic-lines">
           {(scenicLines.length ? scenicLines : [item.lessonTitle || item.courseTitle]).map((line) => (
@@ -1349,17 +1431,19 @@ export function Journey(props: JourneyProps) {
       <div className="clip-foot">
         {mode === 'hors' ? (
           <>
-            {item.vertical ? null : speakerRow}
+            {wordsInPicture && !cardKind ? null : speakerRow}
             <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" onClick={() => void stepUp()}>Learn more</button>
           </>
         ) : (
           <>
             <a className="pill gold block" href={course} onClick={(event) => void stepUp(event)} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk">Learn more</a>
-            <div className="speaker-card">
-              <Avatar name={item.speaker} portrait={item.portrait} />
-              <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b><small>{item.courseTitle}</small></a>
-              <FollowButton slug={item.speakerSlug} className="follow teal" />
-            </div>
+            {wordsInPicture && videoAppetiser ? null : (
+              <div className="speaker-card">
+                <Avatar name={item.speaker} portrait={item.portrait} />
+                <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b><small>{item.courseTitle}</small></a>
+                <FollowButton slug={item.speakerSlug} className="follow teal" />
+              </div>
+            )}
           </>
         )}
       </div>
@@ -1367,12 +1451,22 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined}>
+    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined}>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />
         ))}
       </div>
+
+      {phase === 'feed' ? (
+        <div className="j-peeks" aria-hidden data-testid="peeks">
+          {peeks.map(({ swipe, at }) => (
+            <div key={swipe} ref={(el) => { peekEls.current[swipe] = el }} className="j-peek" data-testid="peek" data-peek={swipe} data-index={at} style={{ transform: peekRest(swipe) }}>
+              {items[at] ? <PeekFace item={items[at]} mode={mode} /> : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       <div ref={clipRef} className="j-clip" data-screen={phase === 'feed' || phase === 'handoff' ? 'clip' : undefined}>
         <div ref={slotRef} className="j-slot" data-testid="player-slot" style={{ visibility: phase === 'feed' || phase === 'handoff' ? 'visible' : 'hidden' }}>
@@ -1402,22 +1496,18 @@ export function Journey(props: JourneyProps) {
           ) : null}
           {phase === 'feed' && cardKind === 'question' && item ? (
             <div className="feed-card" data-testid="feed-question" {...swipe}>
-              <div className="kicker">Question</div>
-              <h2>{item.prompt}</h2>
-              <p>{item.speaker}</p>
+              <FeedCardFace kicker="Question" title={item.prompt || ''} speaker={item.speaker} />
               <button type="button" className="pill gold" onClick={() => void advance(index + 1)} data-testid="feed-card-next">Continue</button>
             </div>
           ) : phase === 'feed' && cardKind === 'text' && item?.film ? (
             <div className="feed-card" data-testid="feed-text" {...swipe}>
-              <div className="kicker">{item.film.beat === 'hook' ? 'Hook' : item.film.beat === 'turn' ? 'Turn' : 'Land'}</div>
-              <h2>{item.film.quote}</h2>
-              <p>{item.speaker}</p>
+              <FeedCardFace kicker={item.film.beat === 'hook' ? 'Hook' : item.film.beat === 'turn' ? 'Turn' : 'Land'} title={item.film.quote || ''} speaker={item.speaker} />
               <button type="button" className="pill gold" onClick={() => void advance(index + 1)} data-testid="feed-card-next">Continue</button>
             </div>
           ) : null}
           {showPoster && item && !slide ? (
-            <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}${scenicAppetiser ? ' scenic' : ''}`} data-testid="poster-frame">
-              {item.poster ? <img src={item.poster} alt="" /> : null}
+            <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}${scenicAppetiser ? ' scenic' : ''}`} data-testid="poster-frame" data-poster={mode === 'appetiser' && item.cleanThumb ? 'frame' : 'own'}>
+              <PosterStill item={item} mode={mode} />
               <span className="j-poster-mark" aria-hidden><Arch size={28} /></span>
               {waitingToPlay && slow !== 'retry' ? (
                 <button type="button" className="j-poster-play" aria-label="Play with sound" data-testid="poster-play" onClick={() => { tapSound(); tryPlay() }}>
@@ -1494,7 +1584,7 @@ export function Journey(props: JourneyProps) {
         </div>
       ) : null}
 
-      {toast ? <div className="lane-switch" data-testid="toast"><span key={toast}>{toast}</span></div> : null}
+      {toast?.trim() ? <div className="lane-switch" data-testid="toast"><span key={toast}>{toast.trim()}</span></div> : null}
 
       <div className="sr-only">
         {phase === 'feed' ? (
@@ -1523,6 +1613,76 @@ export function Journey(props: JourneyProps) {
           }}
         />
       ) : null}
+    </div>
+  )
+}
+
+/** The still a card opens on: its scene, or our own poster (YouTube's large frame only when it carries no words). */
+function stillOf(item: FeedItem | undefined, mode: Mode) {
+  if (!item) return null
+  if (mode === 'hors' && item.card === 'scene' && item.scene) return item.scene.scene
+  if (mode === 'appetiser' && item.cleanThumb) return item.cleanThumb
+  return item.poster
+}
+
+function FeedCardFace({ kicker, title, speaker }: { kicker: string; title: string; speaker: string }) {
+  return (
+    <>
+      <span className="feed-card-bg" aria-hidden />
+      <div className="kicker">{kicker}</div>
+      <h2>{title}</h2>
+      <p>{speaker}</p>
+    </>
+  )
+}
+
+function PosterStill({ item, mode, peek = false }: { item: FeedItem; mode: Mode; peek?: boolean }) {
+  const [frameFailed, setFrameFailed] = useState(false)
+  const frame = mode === 'appetiser' && item.cleanThumb && !frameFailed ? item.cleanThumb : null
+  return (
+    <>
+      {frame ? (
+        // A missing maxresdefault comes back as YouTube's 120px grey stand-in rather than an error.
+        <img src={frame} alt="" onError={() => setFrameFailed(true)} onLoad={(event) => { if (event.currentTarget.naturalWidth <= 120) setFrameFailed(true) }} />
+      ) : item.poster ? (
+        <img src={item.poster} alt="" />
+      ) : null}
+      {mode === 'appetiser' && item.youtubeId && !frame ? (
+        <div className="j-poster-title" data-testid={peek ? undefined : 'poster-title'}>
+          <small>Extended cut</small>
+          <b>{item.lessonTitle || item.courseTitle}</b>
+        </div>
+      ) : null}
+    </>
+  )
+}
+
+/** A neighbour as it first appears, drawn from stills already decoded: nothing here waits on a player. */
+function PeekFace({ item, mode }: { item: FeedItem; mode: Mode }) {
+  if (mode === 'hors' && (item.card === 'question' || (item.card === 'text' && item.film))) {
+    const kicker = item.card === 'question' ? 'Question' : item.film?.beat === 'hook' ? 'Hook' : item.film?.beat === 'turn' ? 'Turn' : 'Land'
+    return (
+      <div className="feed-card">
+        <FeedCardFace kicker={kicker} title={(item.card === 'question' ? item.prompt : item.film?.quote) || ''} speaker={item.speaker} />
+        <span className="pill gold">Continue</span>
+      </div>
+    )
+  }
+  if (mode === 'hors' && item.card === 'scene' && item.scene) {
+    return (
+      <div className={`slide scene-${item.scene.style} ${item.scene.style}`}>
+        <div className="bg" style={{ backgroundImage: `url(${item.scene.scene})` }} />
+      </div>
+    )
+  }
+  if (mode === 'hors' && item.style && !item.typography?.src) {
+    return <div className="j-slide"><Slide item={item} style={item.style} onMore={() => undefined} /></div>
+  }
+  return (
+    <div className="j-poster">
+      <PosterStill item={item} mode={mode} peek />
+      <span className="j-poster-mark" aria-hidden><Arch size={28} /></span>
+      <span className="j-poster-who">{item.speaker}</span>
     </div>
   )
 }

@@ -368,6 +368,18 @@ export const Lessons: CollectionConfig = {
       admin: { description: 'A YouTube Short or other 9:16 film, usually with its words burned in. The feed hides its own captions and YouTube\'s thumbnail for it. Set by itself for /shorts/ links and by npm run mark:shorts.' },
     },
     {
+      name: 'burnedCaptions',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: { description: 'Words are burned into the picture (not YouTube captions). The feed hides its own caption and lifts the speaker and Follow out of the lower quarter, as for a Short.' },
+    },
+    {
+      name: 'thumbnailClean',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: { description: 'YouTube\'s own large thumbnail has no words on it. Only then may the extended cut use it as its poster; otherwise the poster is a scenic still with the talk title in our type.' },
+    },
+    {
       name: 'videoProvider',
       type: 'select',
       options: [

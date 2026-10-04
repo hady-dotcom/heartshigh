@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { isPortraitSize, isShortsUrl, isVerticalLesson } from '../../src/lib/shorts'
+import { cleanThumbnail, hasWordsInPicture, isPortraitSize, isShortsUrl, isTitledThumbnail, isVerticalLesson } from '../../src/lib/shorts'
+import { playerVars } from '../../src/lib/yt'
 
 test('Shorts: a /shorts/ link or a 9:16 size is vertical, a watch link or a 16:9 size is not', () => {
   assert.ok(isShortsUrl('https://www.youtube.com/shorts/abcdefghijk'))
@@ -36,4 +37,33 @@ test('export times: the portal zone (Europe/London unless set), the viewer\'s la
   assert.match(zonedTime('2026-10-04T05:12:00.000Z', 'Europe/London', 'en-US'), /^Oct 4, 2026, 06:12 AM GMT\+1$/)
   assert.equal(zonedTime('nonsense', 'Europe/London'), '')
   assert.equal(zoneCity('America/Los_Angeles'), 'Los Angeles')
+})
+
+test('words in the picture: a Short or a lesson flagged with burned-in captions, nothing else', () => {
+  assert.ok(hasWordsInPicture({ vertical: true }))
+  assert.ok(hasWordsInPicture({ burnedCaptions: true }))
+  assert.ok(hasWordsInPicture({ youtubeUrl: 'https://www.youtube.com/shorts/abcdefghijk' }))
+  assert.ok(!hasWordsInPicture({ burnedCaptions: false, youtubeUrl: 'https://youtu.be/abcdefghijk' }))
+  assert.ok(!hasWordsInPicture(null))
+})
+
+test('posters: YouTube\'s titled thumbnails and their /clips/ copies are never ours; the large frame only when marked clean', () => {
+  assert.ok(isTitledThumbnail('https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg'))
+  assert.ok(isTitledThumbnail('https://img.youtube.com/vi/abcdefghijk/maxresdefault.jpg'))
+  assert.ok(isTitledThumbnail('/clips/HfIT8TSoHiE.jpg'))
+  assert.ok(!isTitledThumbnail('/slides/bg-cinema-road.jpg'))
+  assert.ok(!isTitledThumbnail(null))
+  assert.equal(cleanThumbnail({ youtubeId: 'abcdefghijk', thumbnailClean: true }), 'https://i.ytimg.com/vi/abcdefghijk/maxresdefault.jpg')
+  assert.equal(cleanThumbnail({ youtubeId: 'abcdefghijk' }), null)
+  assert.equal(cleanThumbnail({ youtubeId: 'not an id', thumbnailClean: true }), null)
+})
+
+test('feed players keep YouTube captions and annotations off and send no caption language; the full talk still may', () => {
+  for (const kind of ['hors', 'appetiser'] as const) {
+    const vars = playerVars(kind, 3, 20) as Record<string, unknown>
+    assert.equal(vars.cc_load_policy, 0, kind)
+    assert.equal(vars.iv_load_policy, 3, kind)
+    assert.equal('cc_lang_pref' in vars, false, kind)
+  }
+  assert.equal((playerVars('full', 0) as Record<string, unknown>).cc_lang_pref, 'en')
 })

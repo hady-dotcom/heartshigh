@@ -568,6 +568,14 @@ export interface Lesson {
    * A YouTube Short or other 9:16 film, usually with its words burned in. The feed hides its own captions and YouTube's thumbnail for it. Set by itself for /shorts/ links and by npm run mark:shorts.
    */
   vertical?: boolean | null;
+  /**
+   * Words are burned into the picture (not YouTube captions). The feed hides its own caption and lifts the speaker and Follow out of the lower quarter, as for a Short.
+   */
+  burnedCaptions?: boolean | null;
+  /**
+   * YouTube's own large thumbnail has no words on it. Only then may the extended cut use it as its poster; otherwise the poster is a scenic still with the talk title in our type.
+   */
+  thumbnailClean?: boolean | null;
   videoProvider?: ('youtube' | 'vimeo' | 'file') | null;
   vimeoId?: string | null;
   film?: (number | null) | Media;
@@ -2521,6 +2529,8 @@ export interface LessonsSelect<T extends boolean = true> {
   youtubeUrl?: T;
   youtubeId?: T;
   vertical?: T;
+  burnedCaptions?: T;
+  thumbnailClean?: T;
   videoProvider?: T;
   vimeoId?: T;
   film?: T;

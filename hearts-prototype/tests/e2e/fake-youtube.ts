@@ -4,9 +4,10 @@ import type { Page } from '@playwright/test'
 export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean } = {}) {
   await page.route(/youtube|ytimg|googlevideo/, (route) => route.abort())
   await page.addInitScript((blockAutoplay) => {
-    const gate = window as unknown as { __allowPlay?: boolean; __playerVars?: unknown[] }
+    const gate = window as unknown as { __allowPlay?: boolean; __playerVars?: unknown[]; __unloaded?: string[] }
     gate.__allowPlay = !blockAutoplay
     gate.__playerVars = []
+    gate.__unloaded = []
     type Options = { playerVars?: { start?: number }; events: { onReady: (e: unknown) => void; onStateChange: (e: { data: number }) => void } }
     class Player {
       private state = -1
@@ -37,6 +38,8 @@ export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean
       getDuration() { return 600 }
       getPlayerState() { return this.state }
       getIframe() { return this.frame }
+      unloadModule(name: string) { gate.__unloaded!.push(name) }
+      setOption() {}
       destroy() { this.frame.remove() }
     }
     ;(window as unknown as { YT: unknown }).YT = { Player }

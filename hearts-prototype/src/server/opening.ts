@@ -10,7 +10,7 @@ import { normaliseSpans, type AppetiserSpan } from '@/lib/tiers'
 import { ladderParentRef, talkChain, type PieceRef } from '@/lib/nesting'
 import { backgroundSrc, readBackgroundsBaseUrl } from '@/lib/backgrounds'
 import { cardForTalk, readCardCatalogue, sceneSrc, type StoredCard } from '@/lib/cards'
-import { isVerticalLesson } from '@/lib/shorts'
+import { cleanThumbnail, hasWordsInPicture, isTitledThumbnail, isVerticalLesson } from '@/lib/shorts'
 import { filmsForTalk, mixFeed, readFilmCatalogue, type BeatFilm } from '@/lib/films'
 import { filesForTalk, isTypographyStyle, readTypographyManifest, type TypographyManifest } from '@/lib/typography'
 import { clipWords, displayLine, parseLineTidy } from '@/lib/tidy-caption'
@@ -240,6 +240,10 @@ const STYLES: SlideStyle[] = ['kinetic', 'cinema', 'windows', 'conversation', 'u
  * The still behind a clip until it plays: the talk's scenic background, else its scene, else a slide. YouTube's
  * thumbnails carry the channel's title text (and a Short's carry its burned-in words), so they are never used here.
  */
+function cleanPoster(src: string | null, index: number) {
+  return src && !isTitledThumbnail(src) ? src : SLIDE_ART[STYLES[index % STYLES.length]]
+}
+
 function ownPoster(card: StoredCard | null, index: number) {
   const stored = card?.background ? backgroundSrc(card.background, readBackgroundsBaseUrl()) : null
   return stored || (card?.scene ? sceneSrc(card.scene) : null) || SLIDE_ART[card?.style && isTypographyStyle(card.style) ? card.style : STYLES[index % STYLES.length]]
@@ -342,9 +346,11 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     speaker,
     speakerSlug: slug,
     portrait: portraitFor(slug),
-    poster: ownPoster(cardForTalk(data.cards, youtubeId), index),
+    poster: cleanPoster(ownPoster(cardForTalk(data.cards, youtubeId), index), index),
     youtubeId,
     vertical: isVerticalLesson(lesson),
+    wordsInPicture: hasWordsInPicture(lesson),
+    cleanThumb: cleanThumbnail(lesson),
     courseId: course.id,
     courseTitle: String(course.title || ''),
     lessonId: lesson.id,

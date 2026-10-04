@@ -21,6 +21,7 @@ export type YTPlayer = {
   getIframe(): HTMLIFrameElement
   destroy(): void
   unloadModule?(name: string): void
+  setOption?(module: string, option: string, value: unknown): void
 }
 
 type YTNamespace = { Player: new (el: HTMLElement, options: Record<string, unknown>) => YTPlayer }
@@ -79,14 +80,33 @@ export function playerVars(kind: PlayerKind, start: number, end?: number | null)
     iv_load_policy: 3,
     modestbranding: 1,
     cc_load_policy: 0,
-    cc_lang_pref: 'en',
     enablejsapi: 1,
     origin: typeof window === 'undefined' ? undefined : window.location.origin,
     autoplay: 0,
   }
+  // A language preference is itself a nudge to load captions, so only the full talk (where YouTube's CC button is) sends one.
   if (kind === 'hors') return { ...base, end: end ? Math.ceil(end) : undefined, controls: 0, fs: 0, disablekb: 1 }
   if (kind === 'appetiser') return { ...base, ...(end ? { end: Math.ceil(end) } : {}), controls: 0, fs: 0, disablekb: 1 }
-  return { ...base, ...(end ? { end: Math.ceil(end) } : {}), controls: 1, fs: 1, disablekb: 0 }
+  return { ...base, ...(end ? { end: Math.ceil(end) } : {}), controls: 1, fs: 1, disablekb: 0, cc_lang_pref: 'en' }
+}
+
+/**
+ * cc_load_policy is only a hint; the learner's own YouTube setting can still load captions over our buttons.
+ * We draw our own lines, so the feed's players drop YouTube's caption module whenever it could have come back.
+ */
+export function dropCaptions(player: YTPlayer) {
+  for (const name of ['captions', 'cc']) {
+    try {
+      player.unloadModule?.(name)
+    } catch {
+      // Older players have no such module.
+    }
+  }
+  try {
+    player.setOption?.('captions', 'track', {})
+  } catch {
+    // The module is already gone.
+  }
 }
 
 export type PlayerRecord = { id: string; videoId: string; start: number; end: number | null; state: number; hidden: boolean; playCalls: number; host: HTMLElement }
@@ -125,6 +145,7 @@ export async function createPlayer(options: CreateOptions): Promise<YTPlayer> {
       events: {
         onReady: () => {
           players.set(options.id, player)
+          dropCaptions(player)
           // playerVars only take whole seconds; clips open and close between sentences, so cue the exact times.
           if (options.start % 1 || (options.end && options.end % 1)) player.cueVideoById({ videoId: options.videoId, startSeconds: options.start, ...(options.end ? { endSeconds: options.end } : {}) })
           resolve(player)
@@ -132,8 +153,7 @@ export async function createPlayer(options: CreateOptions): Promise<YTPlayer> {
         },
         onStateChange: (event: { data: number }) => {
           record.state = event.data
-          // cc_load_policy is only a hint; the learner's own YouTube setting can still load captions. We draw our own lines.
-          if (event.data === STATE.PLAYING) for (const name of ['captions', 'cc']) player.unloadModule?.(name)
+          if (event.data === STATE.PLAYING || event.data === STATE.BUFFERING || event.data === STATE.CUED) dropCaptions(player)
           options.onState?.(event.data, player)
         },
         onError: (event: { data: number }) => options.onError?.(event.data),

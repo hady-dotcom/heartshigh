@@ -115,6 +115,7 @@ test('a question card swipes by touch: the card follows the finger, then the nex
     const original = Element.prototype.animate
     Element.prototype.animate = function (frames, options) {
       if (this instanceof HTMLElement && this.classList.contains('j-clip') && Array.isArray(frames)) seen.push(frames.map((frame) => String((frame as Keyframe).transform || '')).join(' > '))
+      if (this instanceof HTMLElement && this.classList.contains('j-peek') && Array.isArray(frames)) seen.push(`peek ${this.dataset.peek}: ${frames.map((frame) => String((frame as Keyframe).transform || '')).join(' > ')}`)
       return original.call(this, frames, options)
     }
   })
@@ -144,7 +145,7 @@ test('a question card swipes by touch: the card follows the finger, then the nex
     expect(await feed.getAttribute('data-index')).not.toBe(before)
     const moves = await page.evaluate(() => (window as unknown as { __moves: string[] }).__moves)
     expect(moves.some((move) => /translateX\(-?\d+(\.\d+)?px\) > translateX\(-100%\)/.test(move)), moves.join(' | ')).toBe(true)
-    expect(moves, 'the next item comes in from the right').toContain('translateX(100%) > translate(0, 0)')
+    expect(moves.some((move) => /^peek topic: translateX\((calc\(100% [+-] -?\d+(\.\d+)?px\)|100%)\) > translate\(0, 0\)$/.test(move)), `the next item comes in from the right: ${moves.join(' | ')}`).toBe(true)
   }
 
   // A short drag springs back and stays put; Continue still taps.
