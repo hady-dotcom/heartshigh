@@ -1,0 +1,22 @@
+$ pdffonts feedback-diacritics.pdf
+name                                 type              encoding         emb sub uni object ID
+------------------------------------ ----------------- ---------------- --- --- --- ---------
+HRTSAA+NotoSans-Regular              CID TrueType      Identity-H       yes yes yes      3  0
+HRTSBA+NotoSans-Bold                 CID TrueType      Identity-H       yes yes yes      8  0
+HRTSCA+NotoSans-Italic               CID TrueType      Identity-H       yes yes yes     13  0
+
+$ pdftotext feedback-diacritics.pdf - | grep -E "[ūāīḥʿʾ]"
+Masjid an-Nūr
+Masjid an-Nūr
+The Names - An-Nūr: the Light
+- Al-Raḥīm and ʿafw came up twice.
+"In Sūrat an-Nūr, al-Raḥmān is named; ʿilm and Qurʾān, and the ḥadīth of
+Abū Hurayra."
+Jazāk Allāhu khayran, ʿĀʾisha.
+
+$ pdffonts feedback.pdf   (seeded East London export)
+name                                 type              encoding         emb sub uni object ID
+------------------------------------ ----------------- ---------------- --- --- --- ---------
+HRTSAA+NotoSans-Regular              CID TrueType      Identity-H       yes yes yes      3  0
+HRTSBA+NotoSans-Bold                 CID TrueType      Identity-H       yes yes yes      8  0
+HRTSCA+NotoSans-Italic               CID TrueType      Identity-H       yes yes yes     13  0
