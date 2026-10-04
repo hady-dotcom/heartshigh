@@ -186,6 +186,10 @@ test.describe('Help shape HEARTS', () => {
     await joinFilm.page.screenshot({ path: `${SHOTS}/phone-mission-minutes.png` })
     await joinFilm.page.getByTestId('mission-finish').click()
     await expect(joinFilm.page.getByTestId('mission-done')).toBeVisible()
+    await expect(joinFilm.page.getByTestId('tab-home')).toBeVisible()
+    const tabBar = (await joinFilm.page.getByTestId('tab-home').boundingBox())!
+    expect(tabBar.height).toBeGreaterThan(20)
+    await joinFilm.page.waitForTimeout(400)
     await joinFilm.page.screenshot({ path: `${SHOTS}/phone-mission-done.png` })
     await joinFilm.page.goto('/p/east-london/me/help')
     await expect(joinFilm.page.getByTestId('support-page')).toBeVisible()

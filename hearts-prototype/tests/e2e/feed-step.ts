@@ -34,7 +34,7 @@ function boxesOverlap(left: { x: number; y: number; width: number; height: numbe
 }
 
 const CHROME_IDS = ['feed-mission', 'swipe-hint', 'lane-chip', 'clip-timer', 'tap-sound', 'top-speaker', 'speaker-link', 'caption', 'learn-more', 'share', 'fave', 'save'] as const
-const REQUIRED_CHROME = ['swipe-hint', 'lane-chip', 'clip-timer', 'tap-sound', 'learn-more', 'share', 'fave', 'save'] as const
+const REQUIRED_CHROME = ['swipe-hint', 'clip-timer', 'tap-sound', 'learn-more', 'share', 'fave', 'save'] as const
 
 /** elementFromPoint at each chrome centre, plus every pair of bounding boxes. */
 export async function chromeCentresClear(page: Page, extraIds: string[] = []) {

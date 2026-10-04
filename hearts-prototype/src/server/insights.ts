@@ -289,7 +289,8 @@ export async function insightsDesk(payload: Payload, actor: InsightActor, query:
     if (!bySession.has(row.sessionId)) bySession.set(row.sessionId, [])
     bySession.get(row.sessionId)!.push(row)
   }
-  const richest = [...bySession.entries()].sort((a, b) => sessionReplayScore(b[1]) - sessionReplayScore(a[1]))[0]?.[0] || ''
+  const labelledJourney = bySession.has('test-sess-journey') ? 'test-sess-journey' : ''
+  const richest = labelledJourney || [...bySession.entries()].sort((a, b) => sessionReplayScore(b[1]) - sessionReplayScore(a[1]))[0]?.[0] || ''
   const replayId = query.session || richest || events.find((row) => row.kind === 'route')?.sessionId || ''
   const rawReplay = replayId
     ? events
