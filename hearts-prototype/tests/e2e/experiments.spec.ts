@@ -94,7 +94,12 @@ test.describe('Experiments', () => {
       await expect(button).toBeVisible({ timeout: 20_000 })
       await expect(button).toHaveText(labels[person.variant])
       seen.push(await button.innerText())
+      const tracked = page.waitForResponse((response) => {
+        const url = response.url()
+        return response.request().method() === 'POST' && (url.includes('/api/experiments') || url.includes('/api/hearts'))
+      }, { timeout: 15_000 })
       await button.click()
+      await tracked
       await page.close()
     }
     expect(new Set(seen).size).toBe(2)

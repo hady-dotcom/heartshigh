@@ -883,7 +883,7 @@ export function Journey(props: JourneyProps) {
     form.set('start', String(Math.floor(piece.start)))
     form.set('end', String(Math.ceil(piece.end)))
     form.set('parent', parent)
-    void fetch('/api/hearts', { method: 'POST', headers: { accept: 'application/json' }, body: form }).catch(() => undefined)
+    void fetch('/api/hearts', { method: 'POST', headers: { accept: 'application/json' }, body: form, keepalive: true }).catch(() => undefined)
     const seconds = Math.max(0, Math.round(piece.end - piece.start))
     if (event === 'linger' && level === 'hors') {
       track('clip_watch_seconds', { seconds, lesson: current.lessonId })

@@ -128,6 +128,9 @@ export interface Config {
     'ai-desk': AiDesk;
     'sheet-keys': SheetKey;
     'sheet-imports': SheetImport;
+    experiments: Experiment;
+    'experiment-assignments': ExperimentAssignment;
+    'experiment-events': ExperimentEvent;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -196,6 +199,9 @@ export interface Config {
     'ai-desk': AiDeskSelect<false> | AiDeskSelect<true>;
     'sheet-keys': SheetKeysSelect<false> | SheetKeysSelect<true>;
     'sheet-imports': SheetImportsSelect<false> | SheetImportsSelect<true>;
+    experiments: ExperimentsSelect<false> | ExperimentsSelect<true>;
+    'experiment-assignments': ExperimentAssignmentsSelect<false> | ExperimentAssignmentsSelect<true>;
+    'experiment-events': ExperimentEventsSelect<false> | ExperimentEventsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -2004,6 +2010,105 @@ export interface SheetImport {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "experiments".
+ */
+export interface Experiment {
+  id: number;
+  key: string;
+  name: string;
+  description?: string | null;
+  status: 'draft' | 'running' | 'paused' | 'finished';
+  slot: string;
+  surface: string;
+  portal?: (number | null) | Portal;
+  allocation: 'fixed' | 'auto';
+  primaryMetric: string;
+  secondaryMetrics?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  guardrailNote?: string | null;
+  variants: {
+    key: string;
+    label: string;
+    payload:
+      | {
+          [k: string]: unknown;
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null;
+    weight: number;
+    approved?: boolean | null;
+    source?: ('staff' | 'ai' | 'mock') | null;
+    id?: string | null;
+  }[];
+  defaultVariant?: string | null;
+  winnerKey?: string | null;
+  promoted?: boolean | null;
+  createdBy?: (number | null) | User;
+  approvedBy?: (number | null) | User;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "experiment-assignments".
+ */
+export interface ExperimentAssignment {
+  id: number;
+  experiment: number | Experiment;
+  experimentKey: string;
+  variantKey: string;
+  subjectKind: 'learner' | 'device';
+  learner?: (number | null) | User;
+  deviceId?: string | null;
+  subject: string;
+  portal?: (number | null) | Portal;
+  sticky?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "experiment-events".
+ */
+export interface ExperimentEvent {
+  id: number;
+  experiment: number | Experiment;
+  experimentKey: string;
+  variantKey: string;
+  kind: 'exposure' | 'conversion';
+  event: string;
+  learner?: (number | null) | User;
+  deviceId?: string | null;
+  subject: string;
+  sessionId?: string | null;
+  portal?: (number | null) | Portal;
+  props?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  at: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -2269,6 +2374,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'sheet-imports';
         value: number | SheetImport;
+      } | null)
+    | ({
+        relationTo: 'experiments';
+        value: number | Experiment;
+      } | null)
+    | ({
+        relationTo: 'experiment-assignments';
+        value: number | ExperimentAssignment;
+      } | null)
+    | ({
+        relationTo: 'experiment-events';
+        value: number | ExperimentEvent;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -3491,6 +3608,80 @@ export interface SheetImportsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "experiments_select".
+ */
+export interface ExperimentsSelect<T extends boolean = true> {
+  key?: T;
+  name?: T;
+  description?: T;
+  status?: T;
+  slot?: T;
+  surface?: T;
+  portal?: T;
+  allocation?: T;
+  primaryMetric?: T;
+  secondaryMetrics?: T;
+  guardrailNote?: T;
+  variants?:
+    | T
+    | {
+        key?: T;
+        label?: T;
+        payload?: T;
+        weight?: T;
+        approved?: T;
+        source?: T;
+        id?: T;
+      };
+  defaultVariant?: T;
+  winnerKey?: T;
+  promoted?: T;
+  createdBy?: T;
+  approvedBy?: T;
+  startedAt?: T;
+  finishedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "experiment-assignments_select".
+ */
+export interface ExperimentAssignmentsSelect<T extends boolean = true> {
+  experiment?: T;
+  experimentKey?: T;
+  variantKey?: T;
+  subjectKind?: T;
+  learner?: T;
+  deviceId?: T;
+  subject?: T;
+  portal?: T;
+  sticky?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "experiment-events_select".
+ */
+export interface ExperimentEventsSelect<T extends boolean = true> {
+  experiment?: T;
+  experimentKey?: T;
+  variantKey?: T;
+  kind?: T;
+  event?: T;
+  learner?: T;
+  deviceId?: T;
+  subject?: T;
+  sessionId?: T;
+  portal?: T;
+  props?: T;
+  at?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -3559,6 +3750,22 @@ export interface MasterFlag {
    * Longest hors d'oeuvre the desk will save, in seconds. 15 to 30 is the usual length; longer is only a warning. Longer than this is refused.
    */
   horsMaxSeconds?: number | null;
+  /**
+   * Kill switch. On, every running experiment pauses and learners see the usual defaults.
+   */
+  experimentsOff?: boolean | null;
+  /**
+   * Winning payloads promoted from Experiments, keyed by slot.
+   */
+  experimentDefaults?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -3573,6 +3780,8 @@ export interface MasterFlagsSelect<T extends boolean = true> {
   circleLabel?: T;
   circleThreshold?: T;
   horsMaxSeconds?: T;
+  experimentsOff?: T;
+  experimentDefaults?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

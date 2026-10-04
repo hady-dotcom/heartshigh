@@ -22,7 +22,7 @@ function bodyOf(event: string, props?: TrackProps) {
 export function track(event: TrackedEvent | string, props?: TrackProps) {
   if (typeof window === 'undefined') return
   try {
-    void fetch('/api/experiments', { method: 'POST', headers: { accept: 'application/json' }, body: bodyOf(event, props) }).catch(() => undefined)
+    void fetch('/api/experiments', { method: 'POST', headers: { accept: 'application/json' }, body: bodyOf(event, props), keepalive: true }).catch(() => undefined)
   } catch {
     // Private browsing or a blocked request: the tap still works.
   }
