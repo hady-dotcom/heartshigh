@@ -124,3 +124,63 @@ test('the export log shows times in the portal\'s zone with a short label, in th
     await context.close()
   }
 })
+
+test('small fixes: favicon, clean seat names with the full text on hover, Teach emails end in an ellipsis, and the install card does not push Home down', async ({ page, request, browser, playwright }) => {
+  const icon = await request.get('/favicon.ico')
+  expect(icon.status()).toBe(200)
+  expect(icon.headers()['content-type']).toMatch(/icon/)
+  for (const size of [16, 32, 48, 96]) expect((await request.get(`/icons/favicon-${size}.png`)).status()).toBe(200)
+
+  const master = await playwright.request.newContext({ baseURL: E2E_BASE })
+  expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
+  const docs = async (path: string) => ((await (await master.get(path)).json()).docs || []) as Record<string, any>[]
+  const [jibril] = await docs(`/api/packs?where[title][equals]=${encodeURIComponent('Jibril sittings')}&depth=0`)
+  const courseIds = (jibril.courses || []).map((course: any) => (typeof course === 'object' ? course.id : course))
+  const lessons = await docs(`/api/lessons?where[course][in]=${courseIds.join(',')}&depth=0&limit=200`)
+  const cuts = await docs(`/api/cuts?where[lesson][in]=${lessons.map((lesson) => lesson.id).join(',')}&where[bestClause][exists]=true&depth=0&limit=200`)
+  const cut = cuts.find((row) => row.bestClause)
+  expect(cut).toBeTruthy()
+  const seats = await docs(`/api/seats?where[clause.number][equals]=${cut!.bestClause}&depth=0&limit=200`)
+  const seat = [...seats].sort((a, b) => String(b.text).length - String(a.text).length)[0]
+  expect(seat).toBeTruthy()
+  expect((await master.patch(`/api/cuts/${cut!.id}`, { data: { seat: seat.id } })).ok()).toBeTruthy()
+
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${PORTAL}/admin/library`)
+  const pack = page.getByTestId('library-pack').filter({ hasText: 'Jibril sittings' })
+  await pack.getByText('Show the courses').click()
+  await pack.getByTestId('door-group').filter({ has: page.getByTestId('seat-label') }).first().locator('summary').first().click()
+  const labels = pack.getByTestId('seat-label')
+  await expect(labels.first()).toBeVisible()
+  for (const label of await labels.all()) {
+    const text = (await label.innerText()).trim()
+    expect(text).toMatch(/^Seat \d+ · [A-Z]/)
+    expect(text).not.toMatch(/\bVol\b|\bCh\b|\(|\)|\[/)
+    expect(text).not.toMatch(/\s(of|the|and|a|in|to|on|for)$/i)
+    expect(await label.getAttribute('title')).toBeTruthy()
+    const fits = await label.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)
+    expect(fits, text).toBe(true)
+  }
+
+  await expect(labels.first()).toHaveAttribute('title', String(seat.text))
+  expect((await master.patch(`/api/cuts/${cut!.id}`, { data: { seat: cut!.seat ?? null } })).ok()).toBeTruthy()
+  await master.dispose()
+
+  await page.goto(`${PORTAL}/admin/teach`)
+  const email = page.getByTestId('learner-email').first()
+  await expect(email).toBeVisible()
+  expect(await email.getAttribute('title')).toBe((await email.innerText()).trim())
+  expect(await email.evaluate((el) => getComputedStyle(el).textOverflow)).toBe('ellipsis')
+
+  const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
+  const app = await phone.newPage()
+  await signIn(app, 'elm-learner@hearts.test', 'portal-learner', PORTAL)
+  const card = app.getByTestId('install-card')
+  await expect(card).toBeVisible()
+  expect(await card.evaluate((el) => getComputedStyle(el).position)).toBe('fixed')
+  await card.evaluate((el) => Promise.all(el.getAnimations().map((animation) => animation.finished)))
+  const tabs = await app.locator('[data-testid="tabbar"]').first().boundingBox()
+  const box = await card.boundingBox()
+  if (tabs && box) expect(box.y + box.height).toBeLessThanOrEqual(tabs.y + 1)
+  await phone.close()
+})

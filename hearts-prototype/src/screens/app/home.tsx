@@ -69,7 +69,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         </div>
         <span className="sr-only">{portalName(portal)}</span>
         <Flash error={query.error} notice={query.notice} />
-        <InstallCard />
+        <InstallCard sheet />
         <section className="grow-banner" data-testid="grow-banner">
           <p className="eyebrow">Your growth</p>
           <h2 data-testid="days-count">{days ? `${days} day${days === 1 ? '' : 's'} with us so far` : 'Your garden starts today'}</h2>

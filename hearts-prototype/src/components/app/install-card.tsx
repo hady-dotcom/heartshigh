@@ -57,8 +57,11 @@ function useInstallState() {
   return [state, setState] as const
 }
 
-/** The first-open card. Pass forced when Me opens it again after a dismissal. */
-export function InstallCard({ forced = false, onDismiss }: { forced?: boolean; onDismiss?: () => void }) {
+/**
+ * The first-open card. Pass forced when Me opens it again after a dismissal. On Home it is a sheet over the page,
+ * because it can only be known after the page has loaded, and pushing Home down then would shift everything.
+ */
+export function InstallCard({ forced = false, onDismiss, sheet = false }: { forced?: boolean; onDismiss?: () => void; sheet?: boolean }) {
   const [state, setState] = useInstallState()
   const [busy, setBusy] = useState(false)
   if (!state) return null
@@ -94,7 +97,7 @@ export function InstallCard({ forced = false, onDismiss }: { forced?: boolean; o
   }
 
   return (
-    <section className="card install-card" data-testid="install-card" data-kind={state.kind} data-prompt={prompt ? 'yes' : 'no'}>
+    <section className={`card install-card${sheet ? ' sheet' : ''}`} data-testid="install-card" data-kind={state.kind} data-prompt={prompt ? 'yes' : 'no'} role={sheet ? 'dialog' : undefined} aria-label={sheet ? copy.heading : undefined}>
       <h2>{copy.heading}</h2>
       <p className="install-lead">{copy.lead}</p>
       {copy.note ? <p className="install-note">{copy.note}</p> : null}

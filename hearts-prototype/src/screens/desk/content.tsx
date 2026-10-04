@@ -429,7 +429,7 @@ export async function LibraryScreen(ctx: Ctx) {
   const pickHints = Object.fromEntries(pickable.filter((course) => !adoptedIds.includes(course.id)).map((course) => [course.id, '(from the library)']))
   return (
     <AdminFrame ctx={ctx} active="library" title="Library" intro="Courses from the main library. Adding a pack keeps one living copy: when the library updates, your portal sees it too. Nobody here sees an added course until an access code or a personal grant includes it." testId="admin-library">
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.6fr) minmax(300px, 1fr)', alignItems: 'start' }}>
+      <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.45fr) minmax(380px, 1fr)', alignItems: 'start' }}>
         <div style={{ display: 'grid', gap: 18 }}>
           <section className="panel">
             <header className="light"><h2>Library packs</h2></header>

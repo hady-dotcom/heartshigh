@@ -57,7 +57,7 @@ export async function TeachScreen(ctx: Ctx) {
                 return (
                   <tr key={learner.id} data-testid="learner-row">
                     <td><b>{str(learner.name)}</b>{learner.audience && learner.audience !== 'learner' ? <div className="hint">{str(learner.audience)}</div> : null}</td>
-                    <td>{str(learner.email)}</td>
+                    <td className="email-cell"><span title={str(learner.email)} data-testid="learner-email">{str(learner.email)}</span></td>
                     <td className="num">{dayNumber(learner as never)}</td>
                     <td className="num" data-testid="learner-progress">{done.length}</td>
                     <td className="num" data-testid="on-time" title={progress.planned ? ON_TIME_HINT : 'No study plan yet'}>{onTime}</td>

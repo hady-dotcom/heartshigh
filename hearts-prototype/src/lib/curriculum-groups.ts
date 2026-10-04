@@ -3,6 +3,7 @@
 // Pure, so the desk and the tests share one rule.
 
 import { doorByNumber, doorCode, doorLabel, doorNumberOfClause, type Door, DOORS } from './doors'
+import { clipWords, endsDangling } from './sentences'
 
 export type CutPlacement = {
   lessonId: number
@@ -48,6 +49,8 @@ export type PlacedCourse = {
 export type SeatGroup = {
   id: number
   label: string
+  /** The full Ghunya note, for the label's tooltip. */
+  note?: string
   courses: PlacedCourse[]
   talkCount: number
 }
@@ -70,11 +73,53 @@ export function countLine(talks: number, courses: number) {
   return `${word(talks, 'talk')} · ${word(courses, 'course')}`
 }
 
-/** The Ghunya line under a door, trimmed so a card stays a heading. */
+const SMALL_WORDS = new Set('a an and as at but by for from in into of on or the to with nor'.split(' '))
+const ARTICLE = /^(al|an|ar|as|at|ad|az|ash|ath|adh)-/i
+
+function capital(word: string) {
+  return word.replace(/^([“"‘'(]?)(\p{Ll})/u, (_, open: string, letter: string) => `${open}${letter.toUpperCase()}`)
+}
+
+function titleCase(text: string) {
+  return text
+    .split(' ')
+    .map((word, index, all) => {
+      if (index > 0 && !/:$/.test(all[index - 1]) && SMALL_WORDS.has(word.toLowerCase())) return word
+      if (ARTICLE.test(word)) {
+        const [prefix, ...rest] = word.split('-')
+        return [index === 0 ? capital(prefix) : prefix.toLowerCase(), ...rest.map(capital)].join('-')
+      }
+      return word.split('-').map((part, at) => (at === 0 || part.length > 3 ? capital(part) : part)).join('-')
+    })
+    .join(' ')
+}
+
+/**
+ * The seat's name from its Ghunya note: the volume, chapter and page references, any aside in brackets, and the
+ * gloss after it ("…, a circle already in ordinary days") are left out, and the rest is title-cased.
+ * "Vol. 3 Friday 295–325, a known hour in a known week" is "Friday".
+ */
+export function seatName(text: string) {
+  let name = text.replace(/\s+/g, ' ').trim()
+  name = name.replace(/\([^)]*\)/g, ' ')
+  name = name.split(/\.\s+(?=[A-Z])/)[0]
+  name = name.replace(/\bVols\.\s*(\d+)\s*[–-]\s*(\d+)/g, 'Vols§$1§$2')
+  name = name.split(/\s\d+\s*[–-]\s*\d*\s*,/)[0]
+  name = name.replace(/\s(?:in|of)\s+Vol\.?\s*\d+\b/gi, ' ')
+  name = name.replace(/\bVol\.?\s*\d+[a-z]?(?:’s|'s)?\b[:.]?/gi, ' ').replace(/\bCh(?:apter|\.)?\s*\d+(?:\s*[–-]\s*\d+)?\b[:.]?/gi, ' ')
+  name = name.split(/;|,\s+(?=(?:a|an|the|its|his|her|their|which|where|when|how|later)\b)/i)[0]
+  name = name.replace(/\b(?:pp?\.\s*)?\d+\s*[–-]\s*\d*(?=\s|$|[,:;.])|\b\d+(?:\+\d+)+\b/g, ' ')
+  name = name.replace(/Vols§(\d+)§(\d+)/g, 'Vols. $1–$2')
+  name = name.replace(/\s+([,:;.])/g, '$1').replace(/\s+/g, ' ').replace(/^[\s,:;.–—+-]+|[\s,:;.–—+-]+$/g, '').trim()
+  while (endsDangling(name) && name.includes(' ')) name = name.replace(/\s*\S+$/, '').replace(/[\s,:;–—-]+$/, '')
+  if (/^(?:vols?|ch|pp?|unit)\.?$/i.test(name)) return ''
+  return name ? titleCase(name) : ''
+}
+
+/** "Seat 2 · Days of the Week and White Days": the clean name, cut on a word boundary so a card stays a heading. */
 export function seatLabel(seat: Pick<SeatInfo, 'position' | 'text'>) {
-  const text = seat.text.replace(/\s+/g, ' ').trim()
-  const short = text.length > 72 ? `${text.slice(0, 69).trim()}…` : text
-  return short ? `Seat ${seat.position} · ${short}` : `Seat ${seat.position}`
+  const name = clipWords(seatName(seat.text), 56)
+  return name ? `Seat ${seat.position} · ${name}` : `Seat ${seat.position}`
 }
 
 function majority<T>(votes: T[], rank: (value: T) => number): T | null {
@@ -199,7 +244,7 @@ function buildGroup(door: Door | null, courses: PlacedCourse[], seatsById: Map<n
   const seats = [...seated.entries()]
     .map(([id, list]) => {
       const seat = seatsById.get(id)!
-      return { id, label: seatLabel(seat), courses: list, talkCount: talkCount(list), clause: seat.clause, position: seat.position }
+      return { id, label: seatLabel(seat), note: seat.text.replace(/\s+/g, ' ').trim(), courses: list, talkCount: talkCount(list), clause: seat.clause, position: seat.position }
     })
     .sort((a, b) => a.clause - b.clause || a.position - b.position)
     .map(({ clause: _clause, position: _position, ...seat }) => seat)

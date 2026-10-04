@@ -28,7 +28,7 @@ export function PackContents({ groups }: { groups: DoorGroup[] }) {
             {group.seats.map((seat) => (
               <details key={seat.id} className="seat-group" data-testid="seat-group">
                 <summary>
-                  <span>{seat.label}</span>
+                  <span className="seat-label" title={seat.note || seat.label} data-testid="seat-label">{seat.label}</span>
                   <span className="hint">{countLine(seat.talkCount, seat.courses.length)}</span>
                 </summary>
                 {seat.courses.map((course) => <CourseLine key={course.id} course={course} />)}

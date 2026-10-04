@@ -132,7 +132,7 @@ export function CourseTree({
               ))}
               {seats.map((seat) => (
                 <div key={seat.id} className="tree-seat" data-testid="tree-seat">
-                  <div className="tree-seat-name">{seat.label}</div>
+                  <div className="tree-seat-name" title={seat.note || seat.label} data-testid="seat-label">{seat.label}</div>
                   {seat.courses.map((course) => (
                     <CourseRow key={course.id} course={course} name={name} hint={hints?.[course.id]} testId={courseTestId} checked={Boolean(picked[course.id])} onChange={(on) => setCourse(course.id, on)} />
                   ))}
