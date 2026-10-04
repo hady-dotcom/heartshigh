@@ -52,6 +52,12 @@ export type JourneyProps = {
 }
 
 const TAB_DELAY = 200
+/** Which way the outgoing card leaves. A swipe to the left sends it left, and the next card comes in from the right. */
+type Exit = 'left' | 'right' | 'up' | 'down'
+const EXIT_FROM: Record<Exit, string> = { left: 'translateX(0)', right: 'translateX(0)', up: 'translateY(0)', down: 'translateY(0)' }
+const EXIT_TO: Record<Exit, string> = { left: 'translateX(-100%)', right: 'translateX(100%)', up: 'translateY(-100%)', down: 'translateY(100%)' }
+const ENTER_FROM: Record<Exit, string> = { left: 'translateX(100%)', right: 'translateX(-100%)', up: 'translateY(100%)', down: 'translateY(-100%)' }
+const SWIPE_EXIT: Record<Swipe, Exit> = { topic: 'left', speaker: 'right', lane: 'down', next: 'up', prev: 'down' }
 const HOLD = 700
 
 const appetiserEnd = (item: FeedItem) => appetiserStop(item.appetiser)
@@ -870,20 +876,30 @@ export function Journey(props: JourneyProps) {
   }, [])
 
   const advance = useCallback(
-    async (to: number, how: 'swipe' | 'auto' = 'swipe') => {
+    async (to: number, how: 'swipe' | 'auto' = 'swipe', exit: Exit = 'up') => {
       const list = itemsRef.current
       if (!list.length) return
       // Whatever moves the feed, it stays on the level being watched.
       const target = settleOnLevel(list, to, modeRef.current, to < indexRef.current ? -1 : 1)
       if (target === null) return
       if (how === 'swipe') leaveSignal()
-      if (how === 'swipe' && clipRef.current) {
-        await finished(animate(clipRef.current, [{ transform: 'translateY(0)' }, { transform: 'translateY(-100%)' }], T.snap, EASE.standard, { id: 'snap' }))
+      const el = clipRef.current
+      if (how === 'swipe' && el) {
+        // Carry on from wherever the finger left the card, so the move never jumps.
+        const from = el.style.transform || EXIT_FROM[exit]
+        el.style.transform = ''
+        await finished(animate(el, [{ transform: from }, { transform: EXIT_TO[exit] }], T.snap, EASE.standard, { id: 'snap' }))
       }
       setFirstEver(false)
       // A swipe moves along the level being watched; only "Learn more" goes up a level.
-      await showItem(target, modeRef.current)
-      if (clipRef.current) clipRef.current.getAnimations().forEach((animation) => animation.cancel())
+      const shown = showItem(target, modeRef.current)
+      if (el) {
+        // The poster is on screen at once; the incoming card slides in from the side opposite the exit.
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+        el.getAnimations().forEach((animation) => animation.cancel())
+        if (how === 'swipe') animate(el, [{ transform: ENTER_FROM[exit] }, { transform: 'translate(0, 0)' }], T.snap, EASE.enter, { id: 'enter', fill: 'none' })
+      }
+      await shown
       void refill()
     },
     [leaveSignal, refill, showItem],
@@ -1023,7 +1039,7 @@ export function Journey(props: JourneyProps) {
     if (swipe === 'lane') setToast(`Lane · ${itemsRef.current[target]?.laneLabel || ''}`)
     if (swipe === 'topic') setToast('More on this topic')
     if (swipe === 'speaker') setToast(`More from ${current.speaker}`)
-    void advance(target)
+    void advance(target, 'swipe', SWIPE_EXIT[swipe])
   }
   const nextLane = () => swipeTo('lane')
   const moreLikeThis = () => swipeTo('topic')
@@ -1122,7 +1138,7 @@ export function Journey(props: JourneyProps) {
 
   // Gestures on the clip. In overlay mode the gesture layer covers the player; in strict mode only the chrome.
   const onDown = (event: ReactPointerEvent) => {
-    if (!(event.target as HTMLElement).closest('button, a')) (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId)
+    if (!(event.target as HTMLElement).closest('button, a, input, textarea, select, label')) (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId)
     const timer = window.setTimeout(() => {
       if (gesture.current && !gesture.current.moved) setNotForMe(true)
     }, 650)
@@ -1141,15 +1157,16 @@ export function Journey(props: JourneyProps) {
     gesture.current = null
     if (!start) return
     if (start.timer) window.clearTimeout(start.timer)
-    if (clipRef.current) clipRef.current.style.transform = ''
     const dx = event.clientX - start.x
     const dy = event.clientY - start.y
     const elapsed = Math.max(1, performance.now() - start.t)
     const width = clipRef.current?.clientWidth || 390
     const far = Math.max(Math.abs(dx), Math.abs(dy))
     const quick = far / elapsed >= 0.5
+    if (Math.abs(dy) > Math.abs(dx) && clipRef.current) clipRef.current.style.transform = ''
     if (far < 40 || (far < width * 0.25 && !quick)) {
-      if (!start.moved && overlay && !slide) {
+      springBack()
+      if (!start.moved && overlay && !slide && cardKind !== 'question' && cardKind !== 'text') {
         const host = hosts.current[visibleRef.current]
         const player = host.playerId ? getPlayer(host.playerId) : null
         if (player && host.state === STATE.PLAYING) player.pauseVideo()
@@ -1167,7 +1184,14 @@ export function Journey(props: JourneyProps) {
     const start = gesture.current
     gesture.current = null
     if (start?.timer) window.clearTimeout(start.timer)
-    if (clipRef.current) clipRef.current.style.transform = ''
+    springBack()
+  }
+  const springBack = () => {
+    const el = clipRef.current
+    if (!el || !el.style.transform) return
+    const from = el.style.transform
+    el.style.transform = ''
+    animate(el, [{ transform: from }, { transform: 'translateX(0)' }], T.sheet, EASE.calm, { id: 'spring-back', fill: 'none' })
   }
   const swipe = { onPointerDown: onDown, onPointerMove: onMove, onPointerUp: onUp, onPointerCancel: onCancel }
 
@@ -1205,6 +1229,7 @@ export function Journey(props: JourneyProps) {
   const typeSrc = cardKind === 'film' ? item?.film?.src : item?.typography?.src
   const typeClip = Boolean(phase === 'feed' && mode === 'hors' && typeSrc && cardKind !== 'text' && cardKind !== 'question' && cardKind !== 'scene')
   const scenic = Boolean(phase === 'feed' && cardKind === 'scene' && mode === 'hors' && item?.scene)
+  const feedCard = phase === 'feed' && (cardKind === 'question' || cardKind === 'text')
   const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (!playerReady || Boolean(errorNote) || offline)))
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
@@ -1358,14 +1383,14 @@ export function Journey(props: JourneyProps) {
             />
           ) : null}
           {phase === 'feed' && cardKind === 'question' && item ? (
-            <div className="feed-card" data-testid="feed-question">
+            <div className="feed-card" data-testid="feed-question" {...swipe}>
               <div className="kicker">Question</div>
               <h2>{item.prompt}</h2>
               <p>{item.speaker}</p>
               <button type="button" className="pill gold" onClick={() => void advance(index + 1)} data-testid="feed-card-next">Continue</button>
             </div>
           ) : phase === 'feed' && cardKind === 'text' && item?.film ? (
-            <div className="feed-card" data-testid="feed-text">
+            <div className="feed-card" data-testid="feed-text" {...swipe}>
               <div className="kicker">{item.film.beat === 'hook' ? 'Hook' : item.film.beat === 'turn' ? 'Turn' : 'Land'}</div>
               <h2>{item.film.quote}</h2>
               <p>{item.speaker}</p>
@@ -1400,7 +1425,7 @@ export function Journey(props: JourneyProps) {
             <TeachingCard key={item.id} scene={item.scene} speaker={item.speaker} course={item.courseTitle} lane={item.laneLabel} onClip={() => void stepUp()} />
           </div>
         ) : null}
-        <div className="j-chrome" data-swipe={overlay ? undefined : ''} {...(overlay ? {} : swipe)}>
+        <div className="j-chrome" data-swipe={overlay && !feedCard ? undefined : ''} {...(overlay && !feedCard ? {} : swipe)}>
           {chrome}
         </div>
       </div>

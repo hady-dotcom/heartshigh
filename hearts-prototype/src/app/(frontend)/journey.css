@@ -108,7 +108,7 @@
 .j-gesture { position: absolute; inset: 0; z-index: 3; }
 .j-slide { position: absolute; inset: 0; z-index: 2; }
 /* Swipes are ours: any browser pan here fires pointercancel and the swipe never lands. */
-.j-gesture, .j-slide, .j-slide *, .j-chrome .caption, .j-chrome[data-swipe] .rail, .j-chrome[data-swipe] .clip-foot { touch-action: none; }
+.j-gesture, .j-slide, .j-slide *, .feed-card, .feed-card *, .j-chrome .caption, .j-chrome[data-swipe] .rail, .j-chrome[data-swipe] .clip-foot { touch-action: none; }
 .j-chrome .caption[data-expanded='true'] { touch-action: pan-y; }
 
 /* Chrome over (or around) the clip. Controls and the caption take taps; the rest falls through to the film. */

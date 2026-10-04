@@ -17,14 +17,15 @@ async function phone(browser: Browser) {
   return { page, cdp: await context.newCDPSession(page) }
 }
 
-async function touchSwipe(page: Page, cdp: CDPSession, dx: number) {
-  const box = (await page.getByTestId('gesture-layer').first().boundingBox())!
+async function touchSwipe(page: Page, cdp: CDPSession, dx: number, on?: Locator, midway?: () => Promise<void>) {
+  const box = (await (on || page.getByTestId('gesture-layer').first()).boundingBox())!
   const x = Math.round(box.x + box.width / 2)
   const y = Math.round(box.y + box.height / 3)
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y, id: 1 }] })
   for (let step = 1; step <= 10; step++) {
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x + (dx * step) / 10, y, id: 1 }] })
     await page.waitForTimeout(12)
+    if (step === 6 && midway) await midway()
   }
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
 }
@@ -86,5 +87,66 @@ test('touch swipes left and right move the feed, on a talk clip, on a card, and 
   await expect(feed).toHaveAttribute('data-mode', 'appetiser')
   await settled(feed, page)
   await swipesLand(page, cdp, feed, 'appetiser')
+  await page.context().close()
+})
+
+test('a question card swipes by touch: the card follows the finger, then the next item comes in from the right', async ({ browser }) => {
+  test.setTimeout(120_000)
+  const { page, cdp } = await phone(browser)
+  await page.evaluate(() => {
+    const seen: string[] = []
+    ;(window as unknown as { __moves: string[] }).__moves = seen
+    const original = Element.prototype.animate
+    Element.prototype.animate = function (frames, options) {
+      if (this instanceof HTMLElement && this.classList.contains('j-clip') && Array.isArray(frames)) seen.push(frames.map((frame) => String((frame as Keyframe).transform || '')).join(' > '))
+      return original.call(this, frames, options)
+    }
+  })
+  const feed = page.getByTestId('journey')
+  await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  await settled(feed, page)
+  const total = ((await feed.getAttribute('data-cuts')) || '').split(' ').length
+  for (let tries = 0; tries < total * 3 && (await feed.getAttribute('data-card')) !== 'question'; tries++) {
+    const before = await feed.getAttribute('data-index')
+    await page.getByTestId('gesture-next').dispatchEvent('click')
+    await expect(feed).not.toHaveAttribute('data-index', before!)
+    await settled(feed, page)
+  }
+  await expect(feed).toHaveAttribute('data-card', 'question')
+  const card = page.getByTestId('feed-question')
+  expect(await card.evaluate((el) => getComputedStyle(el).touchAction)).toBe('none')
+
+  const before = await feed.getAttribute('data-index')
+  let dragged = 0
+  await touchSwipe(page, cdp, -220, card.locator('h2'), async () => {
+    dragged = await page.locator('.j-clip').evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m41)
+  })
+  expect(dragged, 'the card moves left under the finger').toBeLessThan(-60)
+  await expect(page.getByTestId('toast')).toHaveText(/topic|everything/)
+  await settled(feed, page)
+  if (!/everything/.test((await page.getByTestId('toast').textContent().catch(() => '')) || '')) {
+    expect(await feed.getAttribute('data-index')).not.toBe(before)
+    const moves = await page.evaluate(() => (window as unknown as { __moves: string[] }).__moves)
+    expect(moves.some((move) => /translateX\(-?\d+(\.\d+)?px\) > translateX\(-100%\)/.test(move)), moves.join(' | ')).toBe(true)
+    expect(moves, 'the next item comes in from the right').toContain('translateX(100%) > translate(0, 0)')
+  }
+
+  // A short drag springs back and stays put; Continue still taps.
+  await expect(page.getByTestId('toast')).toHaveCount(0, { timeout: 5_000 })
+  for (let tries = 0; tries < total * 3 && (await feed.getAttribute('data-card')) !== 'question'; tries++) {
+    const at = await feed.getAttribute('data-index')
+    await page.getByTestId('gesture-next').dispatchEvent('click')
+    await expect(feed).not.toHaveAttribute('data-index', at!)
+    await settled(feed, page)
+  }
+  if ((await feed.getAttribute('data-card')) === 'question') {
+    const still = await feed.getAttribute('data-index')
+    await touchSwipe(page, cdp, -30, page.getByTestId('feed-question').locator('h2'))
+    await page.waitForTimeout(600)
+    await expect(feed).toHaveAttribute('data-index', still!)
+    expect(await page.locator('.j-clip').evaluate((el) => getComputedStyle(el).transform)).toMatch(/none|matrix\(1, 0, 0, 1, 0, 0\)/)
+    await page.getByTestId('feed-card-next').tap()
+    await expect(feed).not.toHaveAttribute('data-index', still!)
+  }
   await page.context().close()
 })
