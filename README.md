@@ -21,3 +21,12 @@ Captured at `cursor/hearts-prototype-v1-cf40` head after the addendum. The e2e s
 | Door opened: merged seat heading "Seat 1 · Volume 1" with the volume's contents line; then the seat opened with its course rows | `library-door-open-seats.png`, `library-seat-open.png` |
 | Teach emails on one line with an ellipsis | `teach-emails.png` |
 | Export log: "CSV, anonymised", "PDF, anonymised", "Excel, anonymised" | `export-log.png` |
+
+## Addendum 2: feed, from the live phone recording (390x844, evening)
+
+- `feed-question-and-scenic-swipe-390x844.mp4`: a question-card swipe, then a scenic-card swipe. The next card is beside the current one throughout; the toast is a dark-teal pill with its words. A frame sampler over the recording counted 1,057 frames with no bare edge and no empty or unreadable toast.
+- `feed-01-question-card.png`: the question card in the evening-garden look.
+- `feed-02-question-swipe-midway.png`, `feed-05-scenic-swipe-midway.png`: mid-gesture, the incoming card already sits beside the current one.
+- `feed-04-scenic-card.png`: the scenic card before its swipe.
+- `feed-07-talk-caption-normal.png`, `feed-08-burned-in-words-speaker-at-top.png`: the same talk before and after its lesson is flagged with burned-in captions; our caption hides and the speaker and Follow move to the top.
+- `feed-09-extended-cut-own-poster.png`: the extended cut on our own still with the talk title, not YouTube's titled thumbnail.
