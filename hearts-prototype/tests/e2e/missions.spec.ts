@@ -350,10 +350,9 @@ test('a Friday calendar window reaches the feed gold button', async ({ browser, 
     await fakeYouTube(page)
     await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london/feed')
     await expect(page.getByTestId('feed-screen')).toBeVisible({ timeout: 20_000 })
-    if (await page.getByTestId('swipe-coach').count()) {
-      await page.getByTestId('swipe-coach').click()
-      await expect(page.getByTestId('swipe-coach')).toHaveCount(0)
-    }
+    await expect(page.getByTestId('swipe-coach')).toBeVisible({ timeout: 10_000 })
+    await page.getByTestId('swipe-coach').click()
+    await expect(page.getByTestId('swipe-coach')).toHaveCount(0)
     await expect(page.getByTestId('learn-more')).toBeVisible({ timeout: 20_000 })
     await expect(page.getByTestId('learn-more')).toContainText(/Friday|Jumu/)
     await expect(page.getByTestId('learn-more')).not.toHaveText(/^Learn more/)
@@ -390,10 +389,9 @@ test('a running experiment label wins over the Friday calendar line on the gold 
     await fakeYouTube(page)
     await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london/feed')
     await expect(page.getByTestId('feed-screen')).toBeVisible({ timeout: 20_000 })
-    if (await page.getByTestId('swipe-coach').count()) {
-      await page.getByTestId('swipe-coach').click()
-      await expect(page.getByTestId('swipe-coach')).toHaveCount(0)
-    }
+    await expect(page.getByTestId('swipe-coach')).toBeVisible({ timeout: 10_000 })
+    await page.getByTestId('swipe-coach').click()
+    await expect(page.getByTestId('swipe-coach')).toHaveCount(0)
     const cta = page.getByTestId('learn-more')
     await expect(cta).toBeVisible({ timeout: 20_000 })
     await expect(cta).toHaveText(/Watch the 3-minute version|Watch the experiment version/)
