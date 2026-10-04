@@ -135,6 +135,10 @@ export interface Config {
     'gather-checkins': GatherCheckin;
     'gather-reflections': GatherReflection;
     'gather-photos': GatherPhoto;
+    'live-sessions': LiveSession;
+    'live-questions': LiveQuestion;
+    'live-reminders': LiveReminder;
+    'live-presence': LivePresence;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -210,6 +214,10 @@ export interface Config {
     'gather-checkins': GatherCheckinsSelect<false> | GatherCheckinsSelect<true>;
     'gather-reflections': GatherReflectionsSelect<false> | GatherReflectionsSelect<true>;
     'gather-photos': GatherPhotosSelect<false> | GatherPhotosSelect<true>;
+    'live-sessions': LiveSessionsSelect<false> | LiveSessionsSelect<true>;
+    'live-questions': LiveQuestionsSelect<false> | LiveQuestionsSelect<true>;
+    'live-reminders': LiveRemindersSelect<false> | LiveRemindersSelect<true>;
+    'live-presence': LivePresenceSelect<false> | LivePresenceSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -2241,6 +2249,80 @@ export interface GatherPhoto {
   createdAt: string;
 }
 /**
+ * A teacher going live for the learners of one portal.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "live-sessions".
+ */
+export interface LiveSession {
+  id: number;
+  portal?: (number | null) | Portal;
+  title: string;
+  door?: number | null;
+  host: number | User;
+  hostName?: string | null;
+  source: 'youtube' | 'vimeo' | 'mux';
+  sourceUrl?: string | null;
+  youtubeId?: string | null;
+  vimeoId?: string | null;
+  muxStreamId?: string | null;
+  muxStreamKey?: string | null;
+  muxRtmpUrl?: string | null;
+  muxPlaybackId?: string | null;
+  vodUrl?: string | null;
+  status: 'scheduled' | 'live' | 'ended';
+  scheduledAt?: string | null;
+  startedAt?: string | null;
+  endedAt?: string | null;
+  viewerCount?: number | null;
+  replayLesson?: (number | null) | Lesson;
+  seedKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "live-questions".
+ */
+export interface LiveQuestion {
+  id: number;
+  portal?: (number | null) | Portal;
+  session: number | LiveSession;
+  author: number | User;
+  authorName?: string | null;
+  body: string;
+  hidden?: boolean | null;
+  answered?: boolean | null;
+  pinned?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "live-reminders".
+ */
+export interface LiveReminder {
+  id: number;
+  portal?: (number | null) | Portal;
+  session: number | LiveSession;
+  user: number | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "live-presence".
+ */
+export interface LivePresence {
+  id: number;
+  portal?: (number | null) | Portal;
+  session: number | LiveSession;
+  user: number | User;
+  lastSeenAt: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -2535,6 +2617,22 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'gather-photos';
         value: number | GatherPhoto;
+      } | null)
+    | ({
+        relationTo: 'live-sessions';
+        value: number | LiveSession;
+      } | null)
+    | ({
+        relationTo: 'live-questions';
+        value: number | LiveQuestion;
+      } | null)
+    | ({
+        relationTo: 'live-reminders';
+        value: number | LiveReminder;
+      } | null)
+    | ({
+        relationTo: 'live-presence';
+        value: number | LivePresence;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -3888,6 +3986,74 @@ export interface GatherPhotosSelect<T extends boolean = true> {
   caption?: T;
   consent?: T;
   postedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "live-sessions_select".
+ */
+export interface LiveSessionsSelect<T extends boolean = true> {
+  portal?: T;
+  title?: T;
+  door?: T;
+  host?: T;
+  hostName?: T;
+  source?: T;
+  sourceUrl?: T;
+  youtubeId?: T;
+  vimeoId?: T;
+  muxStreamId?: T;
+  muxStreamKey?: T;
+  muxRtmpUrl?: T;
+  muxPlaybackId?: T;
+  vodUrl?: T;
+  status?: T;
+  scheduledAt?: T;
+  startedAt?: T;
+  endedAt?: T;
+  viewerCount?: T;
+  replayLesson?: T;
+  seedKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "live-questions_select".
+ */
+export interface LiveQuestionsSelect<T extends boolean = true> {
+  portal?: T;
+  session?: T;
+  author?: T;
+  authorName?: T;
+  body?: T;
+  hidden?: T;
+  answered?: T;
+  pinned?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "live-reminders_select".
+ */
+export interface LiveRemindersSelect<T extends boolean = true> {
+  portal?: T;
+  session?: T;
+  user?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "live-presence_select".
+ */
+export interface LivePresenceSelect<T extends boolean = true> {
+  portal?: T;
+  session?: T;
+  user?: T;
+  lastSeenAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

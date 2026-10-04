@@ -45,12 +45,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: #f7eedb;
+  background: #e8d5a8;
   color: #0f3b3a;
   border-radius: 18px;
   padding: 14px 14px 12px;
   margin: 0 0 10px;
-  border: 1px solid rgba(212, 168, 75, 0.35);
+  border: 1px solid rgba(212, 168, 75, 0.55);
 }
 .live-coming-card b, .live-coming-card small { display: block; color: #0f3b3a; }
 .live-coming-card small { margin-top: 4px; font-weight: 600; color: #3d5348; }
@@ -112,7 +112,7 @@
   margin: 0 0 10px;
 }
 .live-ask {
-  background: #f7eedb;
+  background: #e8d5a8;
   color: #0f3b3a;
   border-radius: 18px;
   padding: 14px;
@@ -129,11 +129,11 @@
 }
 .live-q-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
 .live-q {
-  background: #f7eedb;
+  background: #e8d5a8;
   color: #0f3b3a;
   border-radius: 16px;
   padding: 12px 14px;
-  border: 1px solid rgba(15, 59, 58, 0.12);
+  border: 1px solid rgba(15, 59, 58, 0.18);
 }
 .live-q p { margin: 0 0 6px; }
 .live-q.pinned { border-color: #d4a84b; box-shadow: 0 0 0 1px #d4a84b; }
