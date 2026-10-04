@@ -38,9 +38,9 @@ test('phone feed proof: no repeats, taqwa, caption bar, advancing mute log', asy
   test.setTimeout(180_000)
   mkdirSync(path.join(OUT, 'frames'), { recursive: true })
   const log: unknown[] = []
-  const shot = async (name: string, note: string) => {
+  const shot = async (name: string, note: string, live = false) => {
     const file = path.join(OUT, 'frames', `${name}.png`)
-    await page.screenshot({ path: file, animations: 'disabled' })
+    await page.screenshot({ path: file, animations: live ? 'allow' : 'disabled' })
     log.push({
       at: name,
       note,
@@ -119,7 +119,7 @@ test('phone feed proof: no repeats, taqwa, caption bar, advancing mute log', asy
     if ((await stepFeed(page)) === 'end') {
       ended = true
       await expect(page.getByTestId('toast')).toContainText("You've seen everything here, try another lane.")
-      await shot('04-pool-end', "You've seen everything here, try another lane.")
+      await shot('04-pool-end', "You've seen everything here, try another lane.", true)
       break
     }
   }

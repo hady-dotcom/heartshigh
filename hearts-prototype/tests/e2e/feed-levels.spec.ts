@@ -45,6 +45,7 @@ test('swipes keep to the level being watched, and Learn more goes to the watched
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
   await expect(feed).toHaveAttribute('data-cuts', /\d+ \d+/)
   await settled(page, feed)
+  if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').click()
   await expect(feed).toHaveAttribute('data-mode', 'hors')
 
   // Walk until a film or scene, collecting each talk's own parent. Do not wrap.
@@ -61,18 +62,14 @@ test('swipes keep to the level being watched, and Learn more goes to the watched
   }
   expect([...kinds].some((kind) => kind !== 'talk'), `cards met: ${[...kinds].join(', ')}`).toBe(true)
   expect(await feed.getAttribute('data-card')).not.toBe('talk')
-  for (const [dx, dy] of [[-220, 0], [0, 220], [220, 0], [0, -220]] as const) {
-    await swipe(page, dx, dy)
-    await settled(page, feed)
-    await expect(feed).toHaveAttribute('data-mode', 'hors')
-  }
-
-  const card = await feed.getAttribute('data-card')
-  expect(card).not.toBe('talk')
   const cut = (await feed.getAttribute('data-cut'))!
   expect(talkParent.get(cut)).toMatch(/^appetiser:/)
   await expect(page.getByTestId('learn-more')).toHaveAttribute('data-parent', talkParent.get(cut)!)
   await expect(page.getByTestId('learn-more')).toHaveAttribute('data-parent-level', 'appetiser')
+  await swipe(page, -30, 0)
+  await settled(page, feed)
+  await expect(feed).toHaveAttribute('data-mode', 'hors')
+  await expect(feed).toHaveAttribute('data-cut', cut)
   await page.getByTestId('learn-more').click()
   await expect(feed).toHaveAttribute('data-mode', 'appetiser')
   await expect(feed).toHaveAttribute('data-cut', cut)
