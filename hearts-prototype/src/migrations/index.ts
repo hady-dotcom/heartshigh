@@ -12,6 +12,7 @@ import * as migration_20261004_080000_lesson_picture_flags from './20261004_0800
 import * as migration_20261004_120000_compass_v2 from './20261004_120000_compass_v2';
 import * as migration_20261004_031500_gather from './20261004_031500_gather';
 import * as migration_20261004_180000_gather_entry_code from './20261004_180000_gather_entry_code';
+import * as migration_20261004_210000_live_sessions from './20261004_210000_live_sessions';
 
 export const migrations = [
   {
@@ -83,5 +84,10 @@ export const migrations = [
     up: migration_20261004_180000_gather_entry_code.up,
     down: migration_20261004_180000_gather_entry_code.down,
     name: '20261004_180000_gather_entry_code',
+  },
+  {
+    up: migration_20261004_210000_live_sessions.up,
+    down: migration_20261004_210000_live_sessions.down,
+    name: '20261004_210000_live_sessions',
   },
 ];

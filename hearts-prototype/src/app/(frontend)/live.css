@@ -1,0 +1,149 @@
+/* Live sessions. Learner: deep teal courtyard, parchment cards, gold accents. Desk reuses gather-desk. */
+
+@keyframes live-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.55; }
+}
+
+.live-now {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  text-decoration: none;
+  background: #163633;
+  border: 1px solid rgba(212, 168, 75, 0.55);
+  color: #f6eedc;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+}
+.live-now strong {
+  display: block;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #d4a84b;
+}
+.live-now-copy span { color: #f6eedc; font-weight: 650; }
+.live-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d4a84b;
+  box-shadow: 0 0 0 4px rgba(212, 168, 75, 0.22);
+  animation: live-pulse 1.2s ease-in-out infinite;
+  flex: none;
+}
+
+.live-coming { margin: 0 0 16px; }
+.live-coming-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #f7eedb;
+  color: #0f3b3a;
+  border-radius: 18px;
+  padding: 14px 14px 12px;
+  margin: 0 0 10px;
+  border: 1px solid rgba(212, 168, 75, 0.35);
+}
+.live-coming-card b, .live-coming-card small { display: block; color: #0f3b3a; }
+.live-coming-card small { margin-top: 4px; font-weight: 600; color: #3d5348; }
+
+.feed-live {
+  position: relative;
+  z-index: 20;
+  width: min(430px, 100%);
+  margin: 0 auto;
+  padding: calc(10px + var(--safe-top)) 14px 0;
+}
+.feed-live .live-now { margin-bottom: 8px; }
+
+.live-shell { padding-bottom: calc(120px + var(--safe-bottom)); }
+.live-watch { color: #f6eedc; }
+.live-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #081616;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(212, 168, 75, 0.35);
+}
+.live-player, .live-player.empty {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.live-player.empty {
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  text-align: center;
+  color: #f6eedc;
+  background: #102e2c;
+}
+.live-meta { margin: 14px 0 18px; }
+.live-kicker {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 700;
+  color: #d4a84b;
+  margin: 0 0 6px;
+}
+.live-meta h1 {
+  font-family: var(--serif);
+  font-size: 30px;
+  line-height: 1.1;
+  margin: 0 0 6px;
+  color: #f6eedc;
+}
+.live-questions h2 {
+  font-family: var(--serif);
+  color: #f6eedc;
+  margin: 0 0 10px;
+}
+.live-ask {
+  background: #f7eedb;
+  color: #0f3b3a;
+  border-radius: 18px;
+  padding: 14px;
+  margin: 0 0 14px;
+}
+.live-ask label, .live-ask textarea { color: #0f3b3a; }
+.live-ask textarea {
+  width: 100%;
+  border: 1.5px solid #14564c;
+  background: #fffdf6;
+  border-radius: 10px;
+  padding: 8px 10px;
+  min-height: 64px;
+}
+.live-q-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.live-q {
+  background: #f7eedb;
+  color: #0f3b3a;
+  border-radius: 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(15, 59, 58, 0.12);
+}
+.live-q p { margin: 0 0 6px; }
+.live-q.pinned { border-color: #d4a84b; box-shadow: 0 0 0 1px #d4a84b; }
+.live-q.answered { opacity: 0.82; }
+.live-q.hidden { opacity: 0.55; }
+.live-q-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.live-mux { display: grid; gap: 8px; margin: 0 0 12px; }
+
+html[data-theme='evening'] .live-now,
+html[data-theme] .live-now {
+  background: #163633;
+  color: #f6eedc;
+}

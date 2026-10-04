@@ -13,6 +13,7 @@ import { lanesWithClips } from '@/lib/lanes'
 import { plural } from '@/lib/schedule'
 import { growth, Rings } from './garden'
 import { HomeGather, homeGatherings } from './gather'
+import { HomeLive, liveHomeBits } from './live'
 import { type Ctx, ref, rows, str, unreadCount } from '../common'
 
 function minutesLeft(seconds: number, percent: number) {
@@ -24,7 +25,7 @@ function minutesLeft(seconds: number, percent: number) {
 /** Home: the growth banner, what to carry on with, then the way into today's clips (board 00). */
 export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   if (user.role === 'learner' && !user.onboarded) redirect(user.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
-  const [g, unread, { items }, courses, due, gatherings] = await Promise.all([growth(payload, user), unreadCount(payload, user), learnerClips(payload, portal, user), courseCards(payload, user), user.role === 'learner' ? recalibrationDueFor(payload, user.id) : Promise.resolve(false), homeGatherings({ payload, portal, user, base })])
+  const [g, unread, { items }, courses, due, gatherings, liveBits] = await Promise.all([growth(payload, user), unreadCount(payload, user), learnerClips(payload, portal, user), courseCards(payload, user), user.role === 'learner' ? recalibrationDueFor(payload, user.id) : Promise.resolve(false), homeGatherings({ payload, portal, user, base }), liveHomeBits({ payload, portal, user })])
   if (due) await ensureMonthNote(payload, user.id, portal.id, String(portal.slug || ''))
   const [visits, sessions] = await Promise.all([
     rows(payload, 'lesson-visits', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 40 }),
@@ -65,6 +66,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   return (
     <AppFrame testId="home">
       <div className="app-scroll">
+        <HomeLive live={liveBits.live} upcoming={liveBits.upcoming} base={base} portal={String(portal.slug)} />
         <div className="app-head">
           <h1>Home</h1>
           <Link href={`${base}/me`} aria-label="Me" data-testid="home-avatar"><Avatar name={user.name || 'You'} portrait={null} size={40} /></Link>

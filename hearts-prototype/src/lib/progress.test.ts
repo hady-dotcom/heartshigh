@@ -23,6 +23,7 @@ test('only a full talk inside a course, and the questions on that talk, count', 
   assert.equal(countsTowardProgress({ level: 'talk', inCourse: true, event: 'question' }), true)
   assert.equal(countsTowardProgress({ level: 'talk', inCourse: false, event: 'watch' }), false)
   assert.equal(countsTowardProgress({ level: 'talk', inCourse: false, event: 'question' }), false)
+  assert.equal(countsTowardProgress({ level: 'talk', inCourse: false, event: 'watch', viaLive: true }), false)
   assert.deepEqual(shortFormEffect('talk'), { harvest: false, drawnTo: false, completion: false, grow: false })
 })
 

@@ -17,6 +17,7 @@
     "tidy:lines": "tsx scripts/tidy-lines.ts",
     "mark:shorts": "tsx scripts/mark-shorts.ts",
     "demo:gather": "tsx scripts/demo-gather.ts",
+    "demo:live": "tsx scripts/demo-live.ts",
     "seed": "tsx src/seed/seed.ts",
     "seed:starters": "tsx src/seed/seed.ts --starters",
     "demo:timed-learners": "tsx src/seed/timed-learners.ts",

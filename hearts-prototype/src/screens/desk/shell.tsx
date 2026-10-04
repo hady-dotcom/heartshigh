@@ -4,7 +4,7 @@ import type { Payload } from 'payload'
 import { BrandMark } from '@/components/brand'
 import { DeskFade } from '@/components/app/route-fade'
 import { Flash, Hidden } from '@/components/app/shell'
-import { BellIcon, BookIcon, HeartIcon, CalendarIcon, CogIcon, GlobeIcon, HomeIcon, KeyIcon, LibraryIcon, MoonIcon, PeopleIcon, QuestionIcon } from '@/components/icons'
+import { BellIcon, BookIcon, HeartIcon, CalendarIcon, CogIcon, GlobeIcon, HomeIcon, KeyIcon, LibraryIcon, MicIcon, MoonIcon, PeopleIcon, QuestionIcon } from '@/components/icons'
 import type { SessionUser } from '@/server/context'
 import { rows, shortDate, str } from '../common'
 
@@ -18,6 +18,7 @@ export function portalNav(base: string, user: SessionUser): { group: string; ite
     { key: 'plans', label: 'Study plans', href: `${base}/admin/plans`, icon: <CalendarIcon /> },
     { key: 'nights', label: 'Nights', href: `${base}/admin/nights`, icon: <MoonIcon /> },
     { key: 'gather', label: 'Gather', href: `${base}/admin/gather`, icon: <PeopleIcon /> },
+    { key: 'live', label: 'Go live', href: `${base}/admin/live`, icon: <MicIcon /> },
   ]
   if (user.role === 'teacher') return [{ group: 'Portal', items: [{ key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> }, ...teach] }]
   return [
@@ -55,6 +56,7 @@ export function masterNav(): { group: string; items: NavItem[] }[] {
         { key: 'create', label: 'Sheet creator', href: '/master/sheet/create', icon: <BookIcon /> },
         { key: 'questions', label: 'Placing questions', href: '/master/questions', icon: <QuestionIcon /> },
         { key: 'circle', label: 'Circle answers', href: '/master/circle', icon: <PeopleIcon /> },
+        { key: 'live', label: 'Live', href: '/master/live', icon: <MicIcon /> },
       ],
     },
     {

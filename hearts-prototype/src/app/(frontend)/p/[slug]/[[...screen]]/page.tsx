@@ -26,6 +26,8 @@ import { PortalCreatorScreen } from '@/screens/desk/creator-screen'
 import { PortalSheetScreen } from '@/screens/desk/sheet'
 import { FeedbackScreen } from '@/screens/desk/feedback'
 import { GatherAttendanceScreen, GatherDeskScreen } from '@/screens/desk/gather'
+import { LiveDeskScreen } from '@/screens/desk/live'
+import { LiveWatchScreen } from '@/screens/app/live'
 import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
 import { PortalCircle } from '@/screens/desk/circle'
 
@@ -104,6 +106,8 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       case 'gather':
         if (b === 'attendance') return GatherAttendanceScreen(ctx)
         return GatherDeskScreen(ctx)
+      case 'live':
+        return LiveDeskScreen(ctx)
       case 'settings':
         guardAdmin(ctx)
         return PortalSettingsScreen(ctx)
@@ -139,6 +143,9 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       return HomeScreen(ctx)
     case 'lanes':
       return LanesScreen(ctx)
+    case 'live':
+      if (!a || !Number(a)) notFound()
+      return LiveWatchScreen(ctx, Number(a))
     case 'gather':
       if (!a) return GatherListScreen(ctx)
       if (a === 'propose') return GatherProposeScreen(ctx)
