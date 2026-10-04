@@ -165,14 +165,16 @@ test('phone feed proof: no repeats, taqwa, caption bar, advancing mute log', asy
     if (restoredTier) await master.patch(`/api/talk-tiers/${restoredTier.id}`, { data: { horsQuote: restoredTier.horsQuote, horsLines: restoredTier.horsLines } })
   }
 
-  let talk = Object.values(opening.clips).find((clip) => clip.cutId === Number(await feed.getAttribute('data-cut')))
   if ((await feed.getAttribute('data-card')) !== 'talk') {
-    await page.goto(`${PORTAL}/feed?clip=${Object.values(opening.clips)[0]?.cutId || ''}&fresh=${Date.now()}`)
-    await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
-    await settled(page)
+    const firstCut = Object.values(opening.clips)[0]?.cutId
+    if (firstCut) {
+      await page.goto(`${PORTAL}/feed?clip=${firstCut}&fresh=${Date.now()}`)
+      await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+      await settled(page)
+    }
   }
   const lessonId = (await feed.getAttribute('data-lesson')) || ''
-  const cut = (await feed.getAttribute('data-cut')) || String(talk?.cutId || '')
+  const cut = (await feed.getAttribute('data-cut')) || ''
   if (lessonId && cut) {
     expect((await master.patch(`/api/lessons/${lessonId}`, { data: { burnedCaptions: true } })).ok()).toBeTruthy()
     await page.goto(`${PORTAL}/feed?clip=${cut}&fresh=${Date.now()}`)
