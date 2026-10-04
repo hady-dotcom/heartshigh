@@ -102,6 +102,49 @@ export function routeWords(path: string) {
   return 'this screen'
 }
 
+export type ReplayEvent = { kind: string; route: string; watchPct?: number; depth?: number }
+
+/** Collapse a tap dump into a short journey in words. */
+export function replayLines(events: ReplayEvent[]) {
+  const lines: { text: string; kind: string; route: string; n: number }[] = []
+  for (const event of events) {
+    const screen = routeWords(event.route)
+    const last = lines[lines.length - 1]
+    if (event.kind === 'tap' && last?.kind === 'tap' && last.route === event.route) {
+      last.n += 1
+      last.text = `tapped ${screen} · ${last.n} times`
+      continue
+    }
+    const extra = event.watchPct != null
+      ? ` · watched ${Math.round(event.watchPct)}%`
+      : event.depth != null
+        ? ` · scrolled ${Math.round(event.depth)}%`
+        : ''
+    lines.push({
+      text: `${event.kind.replace(/_/g, ' ')} · ${screen}${extra}`,
+      kind: event.kind,
+      route: event.route,
+      n: 1,
+    })
+  }
+  return lines.slice(0, 16)
+}
+
+export function sessionReplayScore(events: { kind?: string; route?: string }[]) {
+  const routes = new Set<string>()
+  const kinds = new Set<string>()
+  let score = 0
+  for (const event of events) {
+    if (event.route) routes.add(event.route)
+    if (event.kind) kinds.add(event.kind)
+    if (event.kind === 'route') score += 6
+    else if (event.kind === 'clip_watch' || event.kind === 'clip_swipe') score += 4
+    else if (event.kind === 'scroll' || event.kind === 'funnel') score += 2
+    else score += 0.15
+  }
+  return score + routes.size * 12 + kinds.size * 4
+}
+
 export function tapPlace(x?: number | null, y?: number | null, vw = 390, vh = 844) {
   if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) return 'somewhere on the screen'
   const across = vw > 0 ? x / vw : 0.5

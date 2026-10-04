@@ -1398,14 +1398,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         data: { user: user.id, lesson: lessonId, portal: portal || undefined, percent, onTime, sourceLevel: 'talk' },
       })
     }
-    const fullUser = await payload.findByID({ collection: 'users', id: user.id, overrideAccess: true, depth: 0 })
-    if ((fullUser as { shareWatch?: boolean }).shareWatch) {
-      await payload.create({
-        collection: 'watch-sessions',
-        overrideAccess: true,
-        data: { user: user.id, lesson: lessonId, seconds: Number(text(form, 'seconds') || 0), portal },
-      })
-    }
+    const watched = duration > 0 ? Math.min(seconds, duration) : Math.min(seconds, 3600)
+    const { recordPersonalWatch } = await import('./missions')
+    await recordPersonalWatch(payload, { userId: user.id, lessonId, seconds: watched, portalId: portal })
     const transcript = (lesson as { transcript?: string }).transcript || ''
     if (transcript) {
       const already = await payload.find({

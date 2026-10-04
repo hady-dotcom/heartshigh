@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { actionCta, approvedCopy, calendarContext, contextLabel, nudgeTalks, ukDate } from './calendar-context'
+import { actionCta, approvedCopy, calendarContext, contextLabel, nudgeTalks, parseUkDate, ukDate } from './calendar-context'
 import { hijriOf, toGregorian, toHijri } from './hijri'
 
 function utc(iso: string) {
@@ -122,6 +122,9 @@ test('Thursday after Maghrib is already Friday', () => {
 test('action CTA and UK date helpers', () => {
   assert.equal(actionCta('Watch a short clip for Eid ›'), 'Watch a short clip for Eid ›')
   assert.equal(ukDate('2026-10-04'), '4 October 2026')
+  assert.equal(parseUkDate('4 October 2026'), '2026-10-04')
+  assert.equal(parseUkDate('04/10/2026'), '2026-10-04')
+  assert.equal(parseUkDate('2026-10-04'), '2026-10-04')
 })
 
 test('talk order is nudged by season theme and optional popular ids', () => {

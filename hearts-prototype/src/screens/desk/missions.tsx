@@ -169,8 +169,8 @@ async function EditPage({ ctx, master, base, id }: { ctx: Ctx | null; master: { 
           <label className="stack">Plain ask<textarea name="ask" required rows={3} defaultValue={current?.ask || ''} data-testid="mission-ask" placeholder="If you have an hour this week, would you sit with HEARTS and tell us how it felt?" /></label>
           <label className="stack">Why it matters<textarea name="why" rows={3} defaultValue={current?.why || 'Your hour helps us choose the words on a button.'} data-testid="mission-why" placeholder="Your hour helps us choose the words on a button." /></label>
           <label className="stack">Minutes asked<input type="number" name="minutesAsked" min={5} max={600} defaultValue={current?.minutesAsked || 60} data-testid="mission-minutes" /></label>
-          <label className="stack">Start <span className={styles.quiet}>({ukDate(current?.startsAt || today)})</span><input type="date" name="startsAt" defaultValue={(current?.startsAt || today).slice(0, 10)} data-testid="mission-start" /></label>
-          <label className="stack">End <span className={styles.quiet}>({ukDate(current?.endsAt || later)})</span><input type="date" name="endsAt" defaultValue={(current?.endsAt || later).slice(0, 10)} data-testid="mission-end" /></label>
+          <label className="stack">Start<input type="text" name="startsAt" lang="en-GB" autoComplete="off" spellCheck={false} placeholder="4 October 2026" defaultValue={ukDate(current?.startsAt || today)} data-testid="mission-start" /></label>
+          <label className="stack">End<input type="text" name="endsAt" lang="en-GB" autoComplete="off" spellCheck={false} placeholder="11 October 2026" defaultValue={ukDate(current?.endsAt || later)} data-testid="mission-end" /></label>
           <label className="stack">Target learners<input type="number" name="target" min={1} defaultValue={current?.target || 700} data-testid="mission-target-field" /></label>
           <label className="stack">Portals
             <select name="portal" multiple defaultValue={(current?.portals || []).map(String)} data-testid="mission-portals">

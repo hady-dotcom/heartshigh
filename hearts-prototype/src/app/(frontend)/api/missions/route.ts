@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { parseUkDate } from '@/lib/calendar-context'
 import { portalIdOf } from '@/lib/ids'
 import { getSession } from '@/server/context'
 import {
@@ -55,8 +56,8 @@ export async function POST(req: Request) {
         ask: text(form, 'ask'),
         why: text(form, 'why'),
         minutesAsked: Number(text(form, 'minutesAsked') || 60),
-        startsAt: text(form, 'startsAt'),
-        endsAt: text(form, 'endsAt'),
+        startsAt: parseUkDate(text(form, 'startsAt')),
+        endsAt: parseUkDate(text(form, 'endsAt')),
         target: Number(text(form, 'target') || 500),
         portalIds: ids(form, 'portal'),
         experimentId: Number(text(form, 'experiment')) || null,
@@ -71,8 +72,8 @@ export async function POST(req: Request) {
         ask: text(form, 'ask'),
         why: text(form, 'why'),
         minutesAsked: Number(text(form, 'minutesAsked') || 60),
-        startsAt: text(form, 'startsAt'),
-        endsAt: text(form, 'endsAt'),
+        startsAt: parseUkDate(text(form, 'startsAt')),
+        endsAt: parseUkDate(text(form, 'endsAt')),
         target: Number(text(form, 'target') || 500),
         portalIds: ids(form, 'portal'),
         experimentId: Number(text(form, 'experiment')) || null,

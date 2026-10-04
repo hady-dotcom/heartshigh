@@ -122,9 +122,7 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
                   <ol data-testid="insight-replay" style={{ paddingLeft: 18, margin: 0 }}>
                     {desk.replay.events.map((event, index) => (
                       <li key={`${event.at}-${index}`} className={styles.quiet}>
-                        {event.kind.replace(/_/g, ' ')} · {routeWords(event.route)}
-                        {event.watchPct != null ? ` · watched ${Math.round(event.watchPct)}%` : ''}
-                        {event.depth != null ? ` · scrolled ${Math.round(event.depth)}%` : ''}
+                        {event.line || `${event.kind.replace(/_/g, ' ')} · ${routeWords(event.route)}`}
                       </li>
                     ))}
                   </ol>

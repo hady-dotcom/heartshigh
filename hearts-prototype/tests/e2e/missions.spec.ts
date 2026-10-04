@@ -86,7 +86,8 @@ test.describe('Help shape HEARTS', () => {
     await desk.getByTestId('mission-new').click()
     await expect(desk.getByTestId('mission-form')).toBeVisible()
     await expect(desk.getByTestId('mission-title')).toHaveValue('Give HEARTS an hour this week')
-    await expect(desk.getByTestId('mission-form')).toContainText(/January|February|March|April|May|June|July|August|September|October|November|December/)
+    await expect(desk.getByTestId('mission-start')).toHaveValue(/October 2026|4 October/)
+    await expect(desk.getByTestId('mission-form')).not.toContainText('10/04/2026')
     await desk.getByTestId('mission-ask').fill('If you have an hour this week, would you sit with HEARTS and tell us how the feed felt?')
     await desk.getByTestId('mission-why').fill('Your hour helps us choose the words on a button.')
     await desk.getByTestId('mission-target-field').fill('700')
@@ -122,13 +123,35 @@ test.describe('Help shape HEARTS', () => {
     await joinFilm.page.getByTestId('mission-join').click()
     await expect(joinFilm.page.getByTestId('mission-finish')).toBeVisible()
     await joinFilm.page.screenshot({ path: `${SHOTS}/phone-mission-joined.png` })
-    await joinFilm.page.getByTestId('mission-finish').click()
-    await expect(joinFilm.page.getByTestId('mission-done')).toBeVisible()
-    await joinFilm.page.screenshot({ path: `${SHOTS}/phone-mission-done.png` })
     await joinFilm.page.goto('/p/east-london/feed')
     await expect(joinFilm.page.getByTestId('feed-screen')).toBeVisible({ timeout: 20_000 })
     await expect(joinFilm.page.getByTestId('mission-card')).toBeVisible()
     await joinFilm.page.screenshot({ path: `${SHOTS}/phone-feed-mission.png` })
+    const journey = joinFilm.page.getByTestId('journey')
+    const lesson = await journey.getAttribute('data-lesson')
+    const speaker = await journey.getAttribute('data-speaker')
+    const slug = await journey.getAttribute('data-speaker-slug')
+    expect(lesson).toBeTruthy()
+    await joinFilm.page.request.post('/api/hearts', {
+      headers: { accept: 'application/json' },
+      form: {
+        action: 'browse',
+        level: 'appetiser',
+        event: 'linger',
+        lesson: lesson!,
+        speaker: speaker || 'Shaykh',
+        speakerSlug: slug || 'speaker',
+        start: '0',
+        end: '780',
+        parent: `talk:${lesson}`,
+      },
+    })
+    await joinFilm.page.goto(`/p/east-london/mission/${missionId}`)
+    await expect(joinFilm.page.getByTestId('mission-minutes')).toContainText(/\b1[0-9] of 60 minutes/)
+    await joinFilm.page.screenshot({ path: `${SHOTS}/phone-mission-minutes.png` })
+    await joinFilm.page.getByTestId('mission-finish').click()
+    await expect(joinFilm.page.getByTestId('mission-done')).toBeVisible()
+    await joinFilm.page.screenshot({ path: `${SHOTS}/phone-mission-done.png` })
     await joinFilm.page.goto('/p/east-london/me/help')
     await expect(joinFilm.page.getByTestId('support-page')).toBeVisible()
     await joinFilm.page.getByTestId('support-body').fill('A small note for the team.')
@@ -187,8 +210,12 @@ test.describe('Help shape HEARTS', () => {
     await expect(desk.getByTestId('insights-desk')).toBeVisible()
     await expect(desk.getByTestId('test-numbers')).toBeVisible()
     await expect(desk.getByTestId('insights-scroll')).toContainText('feed')
-    const replayCount = await desk.getByTestId('insight-replay').locator('li').count()
+    const replay = desk.getByTestId('insight-replay')
+    const replayCount = await replay.locator('li').count()
     expect(replayCount).toBeGreaterThan(1)
+    await expect(replay).toContainText('Home')
+    await expect(replay).toContainText('opening questions')
+    await expect(replay).toContainText('watched 72%')
     await noIssuesBadge(desk)
     await desk.screenshot({ path: `${SHOTS}/insights-heatmap.png`, fullPage: true })
     await desk.getByTestId('insights-tab-funnel').click()

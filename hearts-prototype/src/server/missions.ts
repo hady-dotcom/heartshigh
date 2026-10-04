@@ -78,6 +78,7 @@ export function missionProblems(input: { title?: string; ask?: string; why?: str
   if (!Number.isFinite(minutes) || minutes < 5 || minutes > 600) problems.push('Ask for between 5 and 600 minutes.')
   const target = Number(input.target)
   if (!Number.isFinite(target) || target < 1) problems.push('Give a target number of learners.')
+  if (!input.startsAt || !input.endsAt) problems.push('Write the start and end as 4 October 2026.')
   if (input.startsAt && input.endsAt && input.endsAt < input.startsAt) problems.push('The end cannot be before the start.')
   return problems
 }
@@ -153,6 +154,24 @@ export async function weekSeconds(payload: Payload, userId: number) {
     where: { and: [{ user: { equals: userId } }, { updatedAt: { greater_than_equal: since } }] },
   })
   return (sessions.docs as { seconds?: number }[]).reduce((sum, row) => sum + Number(row.seconds || 0), 0)
+}
+
+/** Personal sitting time for mission minutes. Teachers only see this when shareWatch is on. */
+export async function recordPersonalWatch(
+  payload: Payload,
+  input: { userId: number; lessonId: number; seconds: number; portalId?: number | null },
+) {
+  const seconds = Math.max(0, Math.round(Number(input.seconds) || 0))
+  if (!input.userId || !input.lessonId || seconds <= 0) return null
+  return payload.create({
+    collection: 'watch-sessions',
+    overrideAccess: true,
+    data: {
+      user: input.userId,
+      lesson: input.lessonId,
+      seconds,
+    } as never,
+  })
 }
 
 export async function createMission(payload: Payload, actor: MissionActor, input: {

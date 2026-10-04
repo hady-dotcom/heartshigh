@@ -107,10 +107,42 @@ export function latitudeForZone(zone?: string) {
   return 51.5
 }
 
+const MONTHS: Record<string, string> = {
+  january: '01', february: '02', march: '03', april: '04', may: '05', june: '06',
+  july: '07', august: '08', september: '09', october: '10', november: '11', december: '12',
+}
+
+function isoDay(year: string, month: string, day: string) {
+  const y = Number(year)
+  const m = Number(month)
+  const d = Number(day)
+  if (!Number.isInteger(y) || m < 1 || m > 12 || d < 1 || d > 31) return ''
+  const at = new Date(Date.UTC(y, m - 1, d))
+  if (at.getUTCFullYear() !== y || at.getUTCMonth() !== m - 1 || at.getUTCDate() !== d) return ''
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+}
+
+/** Accepts 4 October 2026, 04/10/2026, or 2026-10-04. Always returns YYYY-MM-DD. */
+export function parseUkDate(value: string | Date | undefined) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString().slice(0, 10)
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (iso) return isoDay(iso[1], iso[2], iso[3])
+  const named = raw.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/)
+  if (named) {
+    const month = MONTHS[named[2].toLowerCase()]
+    return month ? isoDay(named[3], month, named[1]) : ''
+  }
+  const british = raw.match(/^(\d{1,2})[/.](\d{1,2})[/.](\d{4})$/)
+  if (british) return isoDay(british[3], british[2], british[1])
+  return ''
+}
+
 export function ukDate(value: string | Date) {
-  const raw = typeof value === 'string' ? value : value.toISOString()
-  const iso = raw.length <= 10 ? `${raw}T12:00:00.000Z` : raw
-  const at = new Date(iso)
+  const parsed = parseUkDate(value)
+  const iso = parsed || (typeof value === 'string' && value.length > 10 ? value : '')
+  const at = parsed ? new Date(`${parsed}T12:00:00.000Z`) : new Date(iso || value)
   if (Number.isNaN(at.getTime())) return ''
   return at.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
 }

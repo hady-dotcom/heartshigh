@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { allowInsightBurst, angrySpotWords, isAnswerScreen, isPrivateLane, resetInsightBursts } from './insight-events'
-import { actionCta, ukDate } from './calendar-context'
+import { allowInsightBurst, angrySpotWords, isAnswerScreen, isPrivateLane, replayLines, resetInsightBursts, sessionReplayScore } from './insight-events'
+import { actionCta, parseUkDate, ukDate } from './calendar-context'
 import { formatSlotLabel, slotPlainName } from './experiment-slots'
 
 test('opening question routes are answer screens', () => {
@@ -38,4 +38,26 @@ test('CTA lines take a verb and hide raw {n}', () => {
 
 test('UK dates are day month year', () => {
   assert.equal(ukDate('2026-10-04'), '4 October 2026')
+  assert.equal(parseUkDate('4 October 2026'), '2026-10-04')
+})
+
+test('replay collapses tap dumps and prefers a journey', () => {
+  const lines = replayLines([
+    { kind: 'route', route: '/p/east-london' },
+    { kind: 'route', route: '/p/east-london/feed' },
+    { kind: 'clip_watch', route: '/p/east-london/feed', watchPct: 72 },
+    { kind: 'tap', route: '/p/east-london/feed' },
+    { kind: 'tap', route: '/p/east-london/feed' },
+    { kind: 'tap', route: '/p/east-london/feed' },
+  ])
+  assert.equal(lines[0].text, 'route · Home')
+  assert.match(lines.at(-1)?.text || '', /tapped the feed · 3 times/)
+  const dump = sessionReplayScore(Array.from({ length: 30 }, () => ({ kind: 'tap', route: '/p/:portal/feed' })))
+  const journey = sessionReplayScore([
+    { kind: 'route', route: '/p/:portal' },
+    { kind: 'route', route: '/p/:portal/feed' },
+    { kind: 'clip_watch', route: '/p/:portal/feed' },
+    { kind: 'route', route: '/p/:portal/course/1' },
+  ])
+  assert.ok(journey > dump)
 })

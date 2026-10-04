@@ -19,14 +19,24 @@ function readLane() {
   return document.documentElement.getAttribute('data-lane') || ''
 }
 
+function notePath(path: string) {
+  noteRoute(path)
+  if (path.endsWith('/start') || path.includes('/welcome')) noteFunnel('opening_questions', path)
+  if (path.includes('/feed')) noteFunnel('first_clip', path)
+  if (/\/course\//.test(path)) noteFunnel('course_start', path)
+}
+
 export function InsightTracker({ trendsOptIn }: { trendsOptIn?: boolean } = {}) {
   useEffect(() => {
     if (trendsOptIn) document.documentElement.setAttribute('data-trends', 'on')
-    noteRoute(window.location.pathname)
-    const path = window.location.pathname
-    if (path.endsWith('/start') || path.includes('/welcome')) noteFunnel('opening_questions', path)
-    if (path.includes('/feed')) noteFunnel('first_clip', path)
-    if (/\/course\//.test(path)) noteFunnel('course_start', path)
+    let last = window.location.pathname
+    notePath(last)
+    const seeMove = () => {
+      const path = window.location.pathname
+      if (path === last) return
+      last = path
+      notePath(path)
+    }
 
     const onPointer = (event: PointerEvent) => {
       const route = window.location.pathname
@@ -59,13 +69,22 @@ export function InsightTracker({ trendsOptIn }: { trendsOptIn?: boolean } = {}) 
         noteClip(detail.kind, Number(detail.watchPct || 0), detail.clipId)
       }
     }
+    const onClick = (event: MouseEvent) => {
+      const link = event.target instanceof Element ? event.target.closest('a[href]') : null
+      if (!link) return
+      window.setTimeout(seeMove, 80)
+    }
     window.addEventListener('pointerdown', onPointer, { passive: true })
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('hearts-insight', onInsight)
+    window.addEventListener('popstate', seeMove)
+    document.addEventListener('click', onClick, true)
     return () => {
       window.removeEventListener('pointerdown', onPointer)
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('hearts-insight', onInsight)
+      window.removeEventListener('popstate', seeMove)
+      document.removeEventListener('click', onClick, true)
     }
   }, [trendsOptIn])
   return null

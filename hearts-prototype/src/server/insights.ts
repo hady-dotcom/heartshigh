@@ -3,7 +3,7 @@ import { now } from '@/lib/clock'
 import { isProduction, isRemoteDatabase } from '@/lib/env'
 import { FUNNEL_STEPS, funnelMaths, retentionByDay, type FunnelResult } from '@/lib/insight-funnel'
 import { heatmapGrid, type HeatCell } from '@/lib/insight-taps'
-import { allowInsightBurst, angrySpotWords, DEFAULT_SAMPLE_RATE, isAnswerScreen, isInsightKind, isPrivateLane, normaliseRoute, sampleSession, sanitizeProps, shouldKeep } from '@/lib/insight-events'
+import { allowInsightBurst, angrySpotWords, DEFAULT_SAMPLE_RATE, isAnswerScreen, isInsightKind, isPrivateLane, normaliseRoute, replayLines, sampleSession, sanitizeProps, sessionReplayScore, shouldKeep } from '@/lib/insight-events'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { audit } from './viewas'
 import type { SessionUser } from './context'
@@ -233,7 +233,7 @@ export type InsightsDesk = {
   retention: { cohort: number; points: { day: number; returned: number; rate: number }[] }
   watch: { clips: number; medianPct: number; swipeAway: number }
   scroll: { route: string; max: number }[]
-  replay: { sessionId: string; events: { kind: string; route: string; x?: number; y?: number; at?: string; watchPct?: number; depth?: number }[] } | null
+  replay: { sessionId: string; events: { kind: string; route: string; x?: number; y?: number; at?: string; watchPct?: number; depth?: number; line: string }[] } | null
   sampleRate: number
   testData: boolean
 }
@@ -287,28 +287,37 @@ export async function insightsDesk(payload: Payload, actor: InsightActor, query:
   const watchRows = events.filter((row) => row.kind === 'clip_watch' && row.watchPct != null)
   const pcts = watchRows.map((row) => Number(row.watchPct)).sort((a, b) => a - b)
   const swipeAway = events.filter((row) => row.kind === 'clip_swipe').length
-  const sessionWeight = new Map<string, number>()
+  const bySession = new Map<string, EventRow[]>()
   for (const row of events) {
     if (!row.sessionId) continue
-    sessionWeight.set(row.sessionId, (sessionWeight.get(row.sessionId) || 0) + (row.kind === 'route' ? 2 : 1))
+    if (!bySession.has(row.sessionId)) bySession.set(row.sessionId, [])
+    bySession.get(row.sessionId)!.push(row)
   }
-  const richest = [...sessionWeight.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+  const richest = [...bySession.entries()].sort((a, b) => sessionReplayScore(b[1]) - sessionReplayScore(a[1]))[0]?.[0] || ''
   const replayId = query.session || richest || events.find((row) => row.kind === 'route')?.sessionId || ''
-  const replayEvents = replayId
+  const rawReplay = replayId
     ? events
       .filter((row) => row.sessionId === replayId && (row.kind === 'route' || row.kind === 'tap' || row.kind === 'angry_tap' || row.kind === 'clip_watch' || row.kind === 'clip_swipe' || row.kind === 'scroll'))
       .sort((a, b) => String(a.at).localeCompare(String(b.at)))
-      .slice(0, 80)
-      .map((row) => ({
-        kind: String(row.kind),
-        route: String(row.route),
-        x: row.x ?? undefined,
-        y: row.y ?? undefined,
-        at: row.at,
-        watchPct: row.watchPct ?? undefined,
-        depth: row.depth ?? undefined,
-      }))
     : []
+  const replayEvents = replayLines(rawReplay.map((row) => ({
+    kind: String(row.kind),
+    route: String(row.route),
+    watchPct: row.watchPct ?? undefined,
+    depth: row.depth ?? undefined,
+  }))).map((line, index) => {
+    const row = rawReplay[Math.min(index, rawReplay.length - 1)]
+    return {
+      kind: line.kind,
+      route: line.route,
+      x: row?.x ?? undefined,
+      y: row?.y ?? undefined,
+      at: row?.at,
+      watchPct: rawReplay.find((item) => item.kind === line.kind && item.watchPct != null)?.watchPct ?? undefined,
+      depth: rawReplay.find((item) => item.kind === line.kind && item.depth != null)?.depth ?? undefined,
+      line: line.text,
+    }
+  })
   return {
     routes,
     heatmap: { route, cells, max: Math.max(1, ...cells.map((cell) => cell.n)), taps: taps.length },
@@ -356,12 +365,13 @@ export async function fillInsightDemo(payload: Payload, actor: InsightActor) {
     if (s < 10) push({ kind: 'funnel', route: '/p/:portal/course/1', sessionId, subject, step: 'course_start', sampled: true, at: day })
     if (s < 6) push({ kind: 'funnel', route: '/p/:portal/me/plan', sessionId, subject, step: 'study_plan_saved', sampled: true, at: day })
     const spots = [
-      { x: 196, y: 718, n: 8 },
-      { x: 340, y: 390, n: 4 },
-      { x: 196, y: 410, n: 5 },
-      { x: 52, y: 86, n: 2 },
-      { x: 78, y: 800, n: 2 },
-      { x: 196, y: 800, n: 3 },
+      { x: 196, y: 718, n: 3 },
+      { x: 348, y: 392, n: 2 },
+      { x: 196, y: 428, n: 2 },
+      { x: 188, y: 268, n: 2 },
+      { x: 56, y: 88, n: 1 },
+      { x: 78, y: 804, n: 1 },
+      { x: 196, y: 804, n: 2 },
     ]
     for (const spot of spots) {
       for (let t = 0; t < spot.n; t++) {
@@ -399,6 +409,34 @@ export async function fillInsightDemo(payload: Payload, actor: InsightActor) {
       push({ kind: 'route', route: '/p/:portal', sessionId: `${sessionId}-d1`, subject, sampled: true, at: later })
     }
   }
+  const journeyId = 'test-sess-journey'
+  const journeySubject = 'test-data:journey'
+  const journeyAt = (step: number) => new Date(stamp.getTime() - 2 * 86_400_000 + step * 45_000).toISOString()
+  const journey: { kind: string; route: string; step?: string; watchPct?: number; depth?: number; x?: number; y?: number }[] = [
+    { kind: 'route', route: '/p/:portal' },
+    { kind: 'tap', route: '/p/:portal', x: 196, y: 520 },
+    { kind: 'route', route: '/p/:portal/start' },
+    { kind: 'funnel', route: '/p/:portal/start', step: 'opening_questions' },
+    { kind: 'route', route: '/p/:portal/feed' },
+    { kind: 'funnel', route: '/p/:portal/feed', step: 'first_clip' },
+    { kind: 'clip_watch', route: '/p/:portal/feed', watchPct: 72 },
+    { kind: 'scroll', route: '/p/:portal/feed', depth: 64 },
+    { kind: 'tap', route: '/p/:portal/feed', x: 196, y: 718 },
+    { kind: 'route', route: '/p/:portal/course/1' },
+    { kind: 'funnel', route: '/p/:portal/course/1', step: 'course_start' },
+    { kind: 'route', route: '/p/:portal/me/plan' },
+    { kind: 'funnel', route: '/p/:portal/me/plan', step: 'study_plan_saved' },
+  ]
+  journey.forEach((event, index) => {
+    push({
+      ...event,
+      sessionId: journeyId,
+      subject: journeySubject,
+      sampled: true,
+      at: journeyAt(index),
+      ...(event.x != null ? { x: event.x, y: event.y, vw: 390, vh: 844 } : {}),
+    })
+  })
   for (let i = 0; i < jobs.length; i += 25) await Promise.all(jobs.slice(i, i + 25))
   await audit(payload, 'insights.test_data', { actor: actor.id, actorRole: actor.role, detail: { rows: n } })
   return n
