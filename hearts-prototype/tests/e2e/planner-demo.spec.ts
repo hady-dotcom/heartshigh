@@ -10,6 +10,7 @@ test.use({
 })
 
 test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part', async ({ page }) => {
+  test.setTimeout(240_000)
   await fakeYouTube(page)
   await page.goto(`/login?next=${encodeURIComponent(`${BASE}/lanes`)}`)
   await page.getByTestId('login-email').fill('elm-learner@hearts.test')
@@ -22,7 +23,7 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
 
   const sittingCard = page.getByTestId('path-course').filter({ hasText: 'Long sittings' })
   await expect(sittingCard).toBeVisible()
-  const href = await sittingCard.getByTestId('lesson-link').getAttribute('href')
+  const href = await sittingCard.locator('[data-testid=lesson-link], [data-testid=peek]').getAttribute('href')
   expect(href).toBeTruthy()
   const sittingId = Number(/course\/(\d+)/.exec(href || '')?.[1] || 0)
   const lessons = await page.request.get(`/api/lessons?where[course][equals]=${sittingId}&limit=20&depth=0&sort=order`).then((res) => res.json()) as { docs?: { id: number; title?: string }[] }

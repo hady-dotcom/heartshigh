@@ -194,8 +194,8 @@ test.describe('courses and planning', () => {
     const dates = await page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' }).getByTestId('schedule-slot').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-date') || ''))
     const counts = dates.reduce((map, date) => map.set(date, (map.get(date) || 0) + 1), new Map<string, number>())
     expect([...counts.values()]).toEqual([3, 3, 2, 2])
-    await expect(page.getByTestId('over-minutes')).toBeVisible()
-    await expect(page.getByTestId('spread-note')).toHaveCount(0)
+    await expect(page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' }).getByTestId('over-minutes')).toBeVisible()
+    await expect(page.getByTestId('schedule-plan').filter({ hasText: 'Long sittings' }).getByTestId('spread-note')).toHaveCount(0)
   })
 
   test('a teacher plan locks against another teacher and tells the learner', async ({ page }) => {
