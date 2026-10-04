@@ -9,13 +9,13 @@
         "hidden": false,
         "state": 1,
         "muted": true,
-        "currentTime": 898.07
+        "currentTime": 898.1701000000006
       }
     ],
     "card": "talk",
     "cut": "14",
     "speaker": "Shaykh Mikaeel Smith",
-    "caption": "What's crazy to me is that Allah is telling Moses that I was doing your I was nurturing you when you were an infant in your mother's arms."
+    "caption": "What's crazy to me is that Allah is telling Moses that I was nurturing you when you were an infant in your mother's arms."
   },
   {
     "at": "02-sound-advancing",
@@ -27,13 +27,13 @@
         "hidden": false,
         "state": 1,
         "muted": false,
-        "currentTime": 899.2701000000006
+        "currentTime": 899.3701000000005
       }
     ],
     "card": "talk",
     "cut": "14",
     "speaker": "Shaykh Mikaeel Smith",
-    "caption": "What's crazy to me is that Allah is telling Moses that I was doing your I was nurturing you when you were an infant in your mother's arms."
+    "caption": "What's crazy to me is that Allah is telling Moses that I was nurturing you when you were an infant in your mother's arms."
   },
   {
     "at": "swipe-0",
@@ -46,7 +46,7 @@
         "hidden": false,
         "state": 1,
         "muted": false,
-        "currentTime": 899.2701000000006
+        "currentTime": 899.3701000000005
       }
     ],
     "hiddenPlaying": []
@@ -62,7 +62,7 @@
         "hidden": false,
         "state": 2,
         "muted": true,
-        "currentTime": 899.2701000000006
+        "currentTime": 899.3701000000005
       }
     ],
     "hiddenPlaying": []
@@ -78,7 +78,7 @@
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 899.2701000000006
+        "currentTime": 899.3701000000005
       },
       {
         "id": "h1-2",
@@ -86,7 +86,7 @@
         "hidden": false,
         "state": 1,
         "muted": false,
-        "currentTime": 253.20009999999962
+        "currentTime": 253.2002000000002
       }
     ],
     "hiddenPlaying": []
@@ -102,7 +102,7 @@
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 899.2701000000006
+        "currentTime": 899.3701000000005
       },
       {
         "id": "h1-2",
@@ -110,7 +110,7 @@
         "hidden": false,
         "state": 2,
         "muted": true,
-        "currentTime": 253.20009999999962
+        "currentTime": 253.2002000000002
       }
     ],
     "hiddenPlaying": []
@@ -125,7 +125,7 @@
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 899.2701000000006
+        "currentTime": 899.3701000000005
       },
       {
         "id": "h1-2",
@@ -133,7 +133,7 @@
         "hidden": false,
         "state": 2,
         "muted": true,
-        "currentTime": 253.20009999999962
+        "currentTime": 253.2002000000002
       }
     ],
     "card": "scene",
@@ -152,7 +152,7 @@
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 899.2701000000006
+        "currentTime": 899.3701000000005
       },
       {
         "id": "h1-2",
@@ -160,7 +160,7 @@
         "hidden": false,
         "state": 2,
         "muted": true,
-        "currentTime": 253.20009999999962
+        "currentTime": 253.2002000000002
       }
     ],
     "hiddenPlaying": []
@@ -175,7 +175,7 @@
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 899.2701000000006
+        "currentTime": 899.3701000000005
       },
       {
         "id": "h1-2",
@@ -183,7 +183,7 @@
         "hidden": false,
         "state": 2,
         "muted": true,
-        "currentTime": 253.20009999999962
+        "currentTime": 253.2002000000002
       }
     ],
     "card": "scene",
@@ -201,7 +201,7 @@
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 899.2701000000006
+        "currentTime": 899.3701000000005
       },
       {
         "id": "h1-2",
@@ -209,7 +209,7 @@
         "hidden": false,
         "state": 2,
         "muted": true,
-        "currentTime": 253.20009999999962
+        "currentTime": 253.2002000000002
       }
     ],
     "card": "scene",
@@ -227,7 +227,7 @@
         "hidden": false,
         "state": 1,
         "muted": false,
-        "currentTime": 898.0702999999999
+        "currentTime": 897.9705
       }
     ],
     "card": "talk",
@@ -237,7 +237,7 @@
   },
   {
     "at": "06-caption-bar",
-    "note": "Burned-in film in a 16:9 band; app caption in the bar below.",
+    "note": "Burned-in film in a 16:9 band; speaker on its own row; chips and timer clear.",
     "snap": [
       {
         "id": "h0-1",
@@ -245,12 +245,12 @@
         "hidden": false,
         "state": 1,
         "muted": false,
-        "currentTime": 898.0700999999997
+        "currentTime": 898.172
       }
     ],
     "card": "talk",
     "cut": "14",
     "speaker": "Shaykh Mikaeel Smith",
-    "caption": "What's crazy to me is that Allah is telling Moses that I was doing your I was nurturing you when you were an infant in your mother's arms."
+    "caption": "What's crazy to me is that Allah is telling Moses that I was nurturing you when you were an infant in your mother's arms."
   }
 ]
