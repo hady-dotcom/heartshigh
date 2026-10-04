@@ -1,5 +1,6 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, request as playwrightRequest, type Page } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
+import { E2E_BASE } from '../env'
 
 const dir = process.env.PROOF_DIR || '/tmp/r5d-desks-proof'
 const DESK = { width: 1440, height: 900 }
@@ -50,6 +51,28 @@ test('r5d desk proof shots', async ({ page, browser }) => {
   await page.goto('/p/east-london/admin/gather/attendance')
   await expect(page.getByTestId('desk-attendance')).toBeVisible()
   await expect(page.locator('.desk.gather-desk')).toHaveCSS('background-color', 'rgb(14, 42, 43)')
+  const empty = page.locator('[data-testid="attendance-chart"] p, [data-testid="brought"] p, [data-testid="follow-up"] p').first()
+  await expect(empty).toBeVisible()
+  const emptyLook = await empty.evaluate((el) => {
+    const rgb = (value: string) => (value.match(/[\d.]+/g) || []).map(Number)
+    const lum = ([r, g, b]: number[]) => {
+      const c = [r, g, b].map((v) => {
+        const s = v / 255
+        return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+      })
+      return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+    }
+    let at: HTMLElement | null = el
+    let bg = [255, 255, 255]
+    while (at) {
+      const [r, g, b, a = 1] = rgb(getComputedStyle(at).backgroundColor)
+      if (a > 0.5) { bg = [r, g, b]; break }
+      at = at.parentElement
+    }
+    const [hi, lo] = [lum(rgb(getComputedStyle(el).color)), lum(bg)].sort((x, y) => y - x)
+    return { ratio: (hi + 0.05) / (lo + 0.05), color: getComputedStyle(el).color, bg }
+  })
+  expect(emptyLook.ratio, `gather empty ${emptyLook.color} on ${emptyLook.bg}`).toBeGreaterThanOrEqual(4.5)
   await page.locator('[data-testid="desk-help"][data-help="desk-attendance"]').click()
   await expect(page.locator('[data-testid="desk-help"][data-help="desk-attendance"] [role="note"]')).toBeVisible()
   await shot(page, 'help-gather-attendance')
@@ -70,6 +93,7 @@ test('r5d desk proof shots', async ({ page, browser }) => {
   await expect(page.getByTestId('course-row').first()).toBeVisible()
   await expect(page.getByTestId('content-empty-doors')).toBeVisible()
   await expect(page.getByTestId('content-empty-doors')).not.toHaveAttribute('open')
+  await expect(page.getByTestId('content-empty-doors')).toContainText('Doors with nothing yet (17)')
   await expect(page.locator('[data-testid="content-door"] summary').first()).toContainText('Door ')
   await expect(page.locator('[data-testid="content-door"] summary').first()).not.toContainText('W2 ·')
   await shot(page, 'content-grouped-doors', true)
@@ -87,29 +111,64 @@ test('r5d desk proof shots', async ({ page, browser }) => {
   await expect(page.getByTestId('seat-group').first()).toBeVisible()
   await shot(page, 'content-ghunya-seats')
 
+  const master = await playwrightRequest.newContext({ baseURL: E2E_BASE })
+  expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
+  const elm = ((await (await master.get('/api/portals?where[slug][equals]=east-london&limit=1')).json()) as { docs?: { id: number }[] }).docs?.[0]
+  const existing = ((await (await master.get('/api/users?where[email][equals]=qa-desk@hearts.foundation&limit=1')).json()) as { docs?: { id: number }[] }).docs?.[0]
+  if (!existing && elm?.id) {
+    const created = await master.post('/api/users', {
+      data: {
+        email: 'qa-desk@hearts.foundation',
+        password: 'portal-learner',
+        name: 'QA Desk Learner',
+        role: 'learner',
+        tenants: [{ tenant: elm.id }],
+      },
+    })
+    expect(created.ok() || created.status() === 400).toBeTruthy()
+  }
+  await master.dispose()
+
   await page.goto('/p/east-london/admin/teach')
   await expect(page.getByTestId('hide-test-accounts')).toBeVisible()
   await expect(page.getByTestId('hide-test-toggle')).toBeChecked()
+  await expect(page.getByRole('cell', { name: 'QA Desk Learner' })).toHaveCount(0)
+  const hiddenCount = Number((await page.getByTestId('learner-count').innerText()).match(/\((\d+)\)/)?.[1] || 0)
   await shot(page, 'teach-hide-test-on')
   await page.getByTestId('hide-test-toggle').click()
   await page.waitForURL((url) => url.searchParams.get('hideTest') === '0')
   await expect(page.getByTestId('hide-test-toggle')).not.toBeChecked()
+  await expect(page.getByRole('cell', { name: 'QA Desk Learner' })).toBeVisible()
+  const shownCount = Number((await page.getByTestId('learner-count').innerText()).match(/\((\d+)\)/)?.[1] || 0)
+  expect(shownCount, 'hide-test off shows more learners than hide-test on').toBeGreaterThan(hiddenCount)
   await shot(page, 'teach-hide-test-off')
 
   await page.setViewportSize(LAPTOP)
   await page.goto('/p/east-london/admin')
   await expect(page.getByTestId('side-nav')).toBeVisible()
-  await page.locator('[data-testid="side-nav"]').evaluate((el) => {
-    el.scrollTop = 80
-  })
   const address = page.getByTestId('portal-address')
   await expect(address).toBeVisible()
   const wrap = await address.evaluate((el) => ({
     lines: el.getClientRects().length,
     break: getComputedStyle(el).wordBreak,
+    overflow: getComputedStyle(el).textOverflow,
   }))
   expect(wrap.lines, 'the portal address stays on one line').toBe(1)
   expect(wrap.break).not.toBe('break-all')
+  expect(wrap.overflow).toBe('ellipsis')
+  const cue = page.getByTestId('nav-scroll-cue')
+  if (await cue.isVisible()) {
+    const cueBox = await cue.boundingBox()
+    const items = page.locator('[data-testid="side-nav"] a.nav')
+    for (const item of await items.all()) {
+      const box = await item.boundingBox()
+      if (!box || !cueBox || box.height < 8) continue
+      const visibleHeight = Math.min(box.y + box.height, cueBox.y) - box.y
+      if (box.y < cueBox.y && box.y + box.height > cueBox.y) {
+        expect(visibleHeight, 'More below does not cover a clipped nav label').toBeGreaterThan(box.height * 0.55)
+      }
+    }
+  }
   await shot(page, 'sidebar-scroll-1366x700')
 
   await page.setViewportSize(PHONE)

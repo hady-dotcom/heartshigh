@@ -61,7 +61,7 @@ export async function GatherDeskScreen(ctx: Ctx) {
         <div>
           {(['upcoming', 'past'] as const).map((bucket) => (
             <section key={bucket} style={{ marginBottom: 18 }} data-testid={`desk-${bucket}`}>
-              <h2 style={{ fontFamily: 'var(--serif)', color: '#0f3b3a', fontSize: 32, margin: '0 0 8px' }}>{bucket === 'upcoming' ? 'Upcoming' : 'Past'}</h2>
+              <h2 className="gather-desk-heading">{bucket === 'upcoming' ? 'Upcoming' : 'Past'}</h2>
               {grouped[bucket].map((group) => (
                 <section className="panel" key={`${bucket}-${group.door}`} data-testid="desk-door" style={{ marginBottom: 12 }}>
                   <header><div><h2>{group.door}</h2><p>{group.items.length} {group.items.length === 1 ? 'gathering' : 'gatherings'}</p></div></header>

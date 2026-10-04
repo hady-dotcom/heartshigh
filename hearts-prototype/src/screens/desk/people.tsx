@@ -52,7 +52,7 @@ export async function TeachScreen(ctx: Ctx) {
     <AdminFrame ctx={ctx} active="teach" title="Teach" intro="See how each learner is getting on, reply to what they have shared, and leave notes on their recordings." testId="admin-teach">
       <section className="panel" style={{ marginBottom: 18 }}>
         <header className="light">
-          <h2>Learners ({learners.length})</h2>
+          <h2 data-testid="learner-count">Learners ({learners.length})</h2>
           <HideTestFilter action={here} hide={hideTest} />
         </header>
         <div className="table-wrap">

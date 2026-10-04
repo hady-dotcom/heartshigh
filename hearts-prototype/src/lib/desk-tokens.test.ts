@@ -21,6 +21,7 @@ test('desk type on teal panels meets 4.5:1', () => {
   assert.ok(contrastRatio(deskTokens.ink, deskTokens.card) >= 4.5)
   assert.ok(contrastRatio(deskTokens.heading, deskTokens.page) >= 4.5)
   assert.ok(contrastRatio(deskTokens.muted, deskTokens.card) >= 4.5)
+  assert.ok(contrastRatio(deskTokens.muted, deskTokens.page) >= 4.5)
   assert.ok(contrastRatio(deskTokens.onDark, deskTokens.header) >= 4.5)
   assert.ok(contrastRatio(deskTokens.goldInk, deskTokens.gold) >= 4.5)
 })

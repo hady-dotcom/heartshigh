@@ -472,6 +472,17 @@ async function main() {
     courseList: learnerList,
   })
   await ensureUser(payload, {
+    email: 'qa-desk@hearts.foundation',
+    password: 'portal-learner',
+    name: 'QA Desk Learner',
+    role: 'learner',
+    audience: 'learner' as const,
+    tenants: [{ tenant: elm }],
+    onboarded: true,
+    seenWelcome: true,
+    courseList: learnerList,
+  })
+  await ensureUser(payload, {
     email: 'leeds-learner@hearts.test',
     password: 'portal-learner',
     name: 'Yusuf Khan',

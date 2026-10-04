@@ -10,6 +10,7 @@ describe('isTestAccount', () => {
     assert.equal(isTestAccount('words-audit@hearts.foundation', 'Words Audit'), true)
     assert.equal(isTestAccount('someone@masjid.org', 'Test Learner'), true)
     assert.equal(isTestAccount('play@hearts.foundation', 'UX Audit Play 2143cb'), true)
+    assert.equal(isTestAccount('qa-desk@hearts.foundation', 'QA Desk Learner'), true)
   })
 
   it('keeps the two demo learners and ordinary accounts, including e2e logins', () => {
