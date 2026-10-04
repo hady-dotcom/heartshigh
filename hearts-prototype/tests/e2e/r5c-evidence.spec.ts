@@ -61,6 +61,33 @@ async function shot(page: Page, file: string) {
   await page.screenshot({ path: file, caret: 'initial' })
 }
 
+async function captureSwarm(page: Page) {
+  await page.goto(`${BASE}/course/3`)
+  await expect(page.getByTestId('timeline-dot').first()).toBeVisible()
+  await page.getByTestId('timeline-dot').first().click({ force: true })
+  await expect(page.getByTestId('popup')).toBeVisible()
+  const pointId = Number(await page.getByTestId('popup').getAttribute('data-point'))
+  expect(pointId).toBeGreaterThan(0)
+  const saved = await page.request.post('/api/answers', {
+    headers: { accept: 'application/json' },
+    data: { pointId, body: 'I sat with the names after Fajr.', keepPrivate: false, shareWithLearners: true },
+  })
+  expect(saved.ok(), await saved.text()).toBeTruthy()
+  await page.goto(`${BASE}/course/3`)
+  await page.getByTestId('timeline-dot').first().click({ force: true })
+  await expect(page.getByTestId('popup')).toBeVisible()
+  const swarm = page.getByTestId('swarm')
+  await expect(swarm).toBeVisible()
+  await expect(page.getByTestId('swarm-like-mine')).toBeVisible()
+  await swarm.scrollIntoViewIfNeeded()
+  await page.getByTestId('swarm-like-mine').click()
+  await expect(swarm).toHaveAttribute('data-mode', 'like')
+  await swarm.screenshot({ path: path.join(ROOT, 'after', 'swarm-like-mine.png') })
+  await page.getByTestId('swarm-surprise').click()
+  await expect(swarm).toHaveAttribute('data-mode', 'surprise')
+  await swarm.screenshot({ path: path.join(ROOT, 'after', 'swarm-surprise.png') })
+}
+
 async function audit(page: Page, route: string): Promise<ContrastRow[]> {
   return page.evaluate((route) => {
     const rgb = (value: string) => (value.match(/[\d.]+/g) || []).map(Number)
@@ -189,34 +216,7 @@ test('contrast at 10:00 and 20:00 Toronto, and the after screenshots', async ({ 
   await page.addStyleTag({ content: '.app::before{height:47px!important;margin-bottom:-47px!important;background:#081c1b!important}.app-head,.main-head{padding-top:47px!important}.app-scroll{padding-top:calc(14px + 47px)!important}' })
   await shot(page, path.join(ROOT, 'after', 'safe-area-standalone.png'))
 
-  await page.goto(`${BASE}/course/3`)
-  await expect(async () => {
-    await page.getByTestId('answer-point').click()
-    await expect(page.getByTestId('popup')).toBeVisible({ timeout: 1000 })
-  }).toPass({ timeout: 20_000 })
-  if (await page.getByTestId('answer-form').count()) {
-    if (await page.getByTestId('answer-text').count()) await page.getByTestId('answer-text').fill('I sat with the names after Fajr.')
-    if (await page.getByTestId('answer-private').count()) await page.getByTestId('answer-private').uncheck()
-    if (await page.getByTestId('answer-share-learners').count()) await page.getByTestId('answer-share-learners').check()
-    await page.getByTestId('answer-submit').click()
-    await expect(page.getByTestId('popup')).toBeHidden({ timeout: 8_000 })
-    await page.locator('[data-testid="timeline-dot"].done').first().click({ force: true })
-    await expect(page.getByTestId('popup')).toBeVisible()
-  }
-  const swarm = page.getByTestId('swarm')
-  await expect(swarm).toBeVisible()
-  await swarm.scrollIntoViewIfNeeded()
-  if (await page.getByTestId('swarm-like-mine').count()) {
-    await page.getByTestId('swarm-like-mine').click()
-    await expect(swarm).toHaveAttribute('data-mode', 'like')
-    await swarm.screenshot({ path: path.join(ROOT, 'after', 'swarm-like-mine.png') })
-    await page.getByTestId('swarm-surprise').click()
-    await expect(swarm).toHaveAttribute('data-mode', 'surprise')
-    await swarm.screenshot({ path: path.join(ROOT, 'after', 'swarm-surprise.png') })
-  } else {
-    await swarm.screenshot({ path: path.join(ROOT, 'after', 'swarm-like-mine.png') })
-    await swarm.screenshot({ path: path.join(ROOT, 'after', 'swarm-surprise.png') })
-  }
+  await captureSwarm(page)
 
   await page.setViewportSize(DESK)
   await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${BASE}/admin/compass`)
@@ -231,6 +231,13 @@ test('contrast at 10:00 and 20:00 Toronto, and the after screenshots', async ({ 
     ? `# Contrast fails\n\n${fails.map((row) => `- ${row.route}: “${row.text}” ${row.ratio}:1 (need ${row.need}) ${row.color} on ${row.bg}`).join('\n')}\n`
     : '# Contrast\n\nEvery learner route at 10:00 and 20:00 America/Toronto met 4.5:1 for body text and 3:1 for large headings.\n')
   expect(fails, fails.map((row) => `${row.route} ${row.text} ${row.ratio}`).join('\n')).toEqual([])
+})
+
+test('swarm Answers like mine and Surprise me', async ({ page }) => {
+  mkdirSync(ROOT, { recursive: true })
+  await page.setViewportSize(PHONE)
+  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', BASE)
+  await captureSwarm(page)
 })
 
 test('a new learner from the join link reaches the first talk', async ({ browser }) => {
