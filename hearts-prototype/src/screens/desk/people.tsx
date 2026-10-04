@@ -52,12 +52,18 @@ export async function TeachScreen(ctx: Ctx) {
     <AdminFrame ctx={ctx} active="teach" title="Teach" intro="See how each learner is getting on, reply to what they have shared, and leave notes on their recordings." testId="admin-teach">
       <section className="panel" style={{ marginBottom: 18 }}>
         <header className="light">
-          <h2>Learners ({learners.length}) <HelpTip topic="learners">{TOOL.giveCourse}</HelpTip></h2>
-          <HideTestFilter action={here} hide={hideTest} />
+          <h2>Learners ({learners.length})</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            <HelpTip topic="give-course">{TOOL.giveCourse}</HelpTip>
+            <HelpTip topic="view-as">{TOOL.viewAs}</HelpTip>
+            <HelpTip topic="on-time">{TOOL.onTime}</HelpTip>
+            <HelpTip topic="workbook">{TOOL.workbook}</HelpTip>
+            <HideTestFilter action={here} hide={hideTest} />
+          </div>
         </header>
         <div className="table-wrap">
           <table className="data">
-            <thead><tr><th>Name</th><th>Email</th><th className="num">Day</th><th className="num">Parts watched</th><th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr> <HelpTip topic="on-time">{TOOL.onTime}</HelpTip></th><th className="num">Answers</th><th>Give a course <HelpTip topic="give-course" place="end">{TOOL.giveCourse}</HelpTip></th><th> <HelpTip topic="view-as" place="end">{TOOL.viewAs}</HelpTip></th></tr></thead>
+            <thead><tr><th>Name</th><th>Email</th><th className="num">Day</th><th className="num">Parts watched</th><th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr></th><th className="num">Answers</th><th>Give a course</th><th /></tr></thead>
             <tbody>
               {learners.map((learner) => {
                 const done = completions.filter((row) => ref(row.user) === learner.id)

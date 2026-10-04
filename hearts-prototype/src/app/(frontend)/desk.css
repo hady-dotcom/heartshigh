@@ -446,7 +446,7 @@ abbr.tip { text-decoration: underline dotted; text-underline-offset: 3px; cursor
 .panel > header h2 { display: inline-flex; align-items: center; gap: 8px; }
 .hide-test { margin: 0; }
 .give-course { display: flex; gap: 8px; align-items: center; }
-.give-course select { min-width: 0; width: 170px; }
+.give-course select { min-width: 0; width: 156px; }
 .row-menu { position: relative; }
 .row-menu-drop { position: absolute; right: 0; top: calc(100% + 4px); z-index: 12; display: grid; gap: 6px; min-width: 10rem; padding: 8px; background: #fffaf0; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 24px rgba(20, 34, 31, 0.12); }
 .share-links { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }

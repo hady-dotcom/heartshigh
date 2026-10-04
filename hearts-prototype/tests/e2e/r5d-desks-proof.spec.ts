@@ -51,11 +51,22 @@ test('r5d desk proof shots', async ({ page }) => {
   await expect(page.getByTestId('course-row').first()).toBeVisible()
   await shot(page, 'content-grouped-doors', true)
 
+  await page.goto('/p/east-london/admin/library')
+  await expect(page.getByTestId('admin-library')).toBeVisible()
+  const packHref = await page.getByTestId('pack-fold').first().getAttribute('href')
+  if (packHref) await page.goto(packHref)
+  await expect(page.getByTestId('pack-open')).toBeVisible()
+  await page.locator('[data-testid="door-tile"][data-empty="no"]').first().click()
+  await expect(page.getByTestId('door-open')).toBeVisible()
+  await expect(page.getByTestId('seat-group').first()).toBeVisible()
+  await shot(page, 'content-ghunya-seats')
+
   await page.goto('/p/east-london/admin/teach')
   await expect(page.getByTestId('hide-test-accounts')).toBeVisible()
   await shot(page, 'teach-hide-test-on')
   await page.goto('/p/east-london/admin/teach?hideTest=0')
   await expect(page.getByTestId('hide-test-toggle')).toBeVisible()
+  await expect(page.getByTestId('hide-test-toggle')).not.toBeChecked()
   await shot(page, 'teach-hide-test-off')
 
   await page.setViewportSize(LAPTOP)
