@@ -28,6 +28,7 @@ export async function AdminFrame({ ctx, active, title, intro, tools, children, t
       tools={tools}
       query={query}
       testId={testId}
+      evening={active === 'library' || active === 'access' || active === 'teach'}
     >
       {portal.closed ? <div className="flash error" data-testid="portal-closed">This portal is deactivated. Learners cannot sign in until the master desk opens it again.</div> : null}
       {children}

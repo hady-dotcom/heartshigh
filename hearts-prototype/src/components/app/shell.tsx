@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 
 export type Tab = 'home' | 'lanes' | 'garden' | 'me'
 
-export function TabBar({ base, active, dark = false, unread = 0 }: { base: string; active: Tab; dark?: boolean; unread?: number }) {
+export function TabBar({ base, active, dark = false, evening = false, unread = 0 }: { base: string; active: Tab; dark?: boolean; evening?: boolean; unread?: number }) {
   const tabs: [Tab, string, string][] = [
     ['home', 'Home', base],
     ['lanes', 'Lanes', `${base}/lanes`],
@@ -11,7 +11,7 @@ export function TabBar({ base, active, dark = false, unread = 0 }: { base: strin
     ['me', 'Me', `${base}/me`],
   ]
   return (
-    <nav className={`tabbar${dark ? ' dark' : ''}`} aria-label="Main" data-testid="tabbar">
+    <nav className={`tabbar${dark ? ' dark' : ''}${evening ? ' evening' : ''}`} aria-label="Main" data-testid="tabbar">
       {tabs.map(([key, label, href]) => (
         <Link key={key} href={href} className={`tab${active === key ? ' on' : ''}`} aria-current={active === key ? 'page' : undefined} data-testid={`tab-${key}`}>
           <TabIcon tab={key} on={active === key} />
@@ -66,10 +66,10 @@ export function Flash({ error, notice }: { error?: string; notice?: string }) {
   )
 }
 
-export function AppFrame({ children, dark = false, testId }: { children: ReactNode; dark?: boolean; testId?: string }) {
+export function AppFrame({ children, dark = false, evening = false, testId }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string }) {
   return (
-    <div className="app-stage">
-      <main className={`app${dark ? ' dark' : ''}`} data-testid={testId}>
+    <div className={`app-stage${evening ? ' evening' : ''}`}>
+      <main className={`app${dark ? ' dark' : ''}${evening ? ' evening' : ''}`} data-testid={testId}>
         {children}
       </main>
     </div>

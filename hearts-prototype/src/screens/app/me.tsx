@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
 import { Avatar } from '@/components/app/feed'
 import { OptInLane, PrefToggle, StartAgain } from '@/components/app/me-controls'
-import { Mascot } from '@/components/brand'
+import { EmptyState } from '@/components/app/empty'
 import { Qr } from '@/components/qr'
 import { now } from '@/lib/clock'
 import { visibleCourseIds } from '@/server/context'
@@ -75,7 +75,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
             <small className="muted">{shortDate(note.createdAt)}</small>
           </Link>
         )) : (
-          <div className="empty-state" data-testid="notes-empty"><Mascot width={96} /><p>Nothing new. Replies from your teacher and new nights will show here.</p></div>
+          <EmptyState testId="notes-empty" action={{ href: `${base}/garden`, label: 'Open the garden' }}>Nothing new. Replies from your teacher and new nights will show here.</EmptyState>
         )}
       </div>
       <TabBar base={base} active="me" unread={unread} />

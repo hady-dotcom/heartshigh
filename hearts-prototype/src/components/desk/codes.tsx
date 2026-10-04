@@ -30,7 +30,7 @@ export function CodeStatus({ code, next, portalSlug }: { code: CodeRow; next: st
 export function CodeLimits() {
   return (
     <>
-      <label className="stack">Label (for the desk only)<input type="text" name="label" maxLength={80} placeholder="Spring term learners" /></label>
+      <label className="stack">Label (only you see this)<input type="text" name="label" maxLength={80} placeholder="Spring term learners" /></label>
       <div className="cols">
         <label className="stack">Uses<input type="number" data-testid="code-max-uses" name="maxUses" min={1} max={10000} placeholder="No limit" /></label>
         <label className="stack">Works for (days)<input type="number" data-testid="code-expiry-days" name="expiresInDays" min={1} max={366} placeholder="No expiry" /></label>

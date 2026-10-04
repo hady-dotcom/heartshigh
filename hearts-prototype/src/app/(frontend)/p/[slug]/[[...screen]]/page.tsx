@@ -2,7 +2,7 @@ import { PortalOpeningScreen } from '@/screens/desk/opening'
 import { cookies, headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { AppFrame } from '@/components/app/shell'
-import { Mascot } from '@/components/brand'
+import { Arch } from '@/components/arch'
 import { Hidden } from '@/components/app/shell'
 import { portalIdOf } from '@/lib/ids'
 import { getSession, loadPortal, requirePortal } from '@/server/context'
@@ -65,7 +65,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       <AppFrame testId="closed">
         <div className="splash">
           <div>
-            <Mascot width={120} />
+            <span className="splash-arch" aria-hidden><Arch size={72} /></span>
             <h1>{portalName(portal)} is closed for now</h1>
             <p data-testid="portal-closed">This portal has been paused. Your answers and your garden are kept safe, and will be here when it opens again.</p>
             <form action="/api/hearts" method="post" style={{ marginTop: 18 }}>

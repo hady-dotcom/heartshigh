@@ -850,14 +850,6 @@ export interface TalkTier {
     | boolean
     | null;
   /**
-   * The typography style that can stand in for the hors d'oeuvre clip.
-   */
-  typographyStyle?: ('kinetic' | 'windows' | 'conversation' | 'cinema' | 'unfold') | null;
-  /**
-   * Typography in place of the clip. Learners see the rendered video instead of the hors d'oeuvre.
-   */
-  typographyInPlace?: boolean | null;
-  /**
    * Tidied learner-facing lines. Raw captions stay on horsQuote, hook, turn, land and horsLines. Shape: { version, source, quote, hook, turn, land, horsLines: [{ at, raw, text }] }.
    */
   lineTidy?:
@@ -869,6 +861,14 @@ export interface TalkTier {
     | number
     | boolean
     | null;
+  /**
+   * The typography style that can stand in for the hors d'oeuvre clip.
+   */
+  typographyStyle?: ('kinetic' | 'windows' | 'conversation' | 'cinema' | 'unfold') | null;
+  /**
+   * Typography in place of the clip. Learners see the rendered video instead of the hors d'oeuvre.
+   */
+  typographyInPlace?: boolean | null;
   /**
    * Offer "Resume from where the appetiser ended" next to the main, which always opens at 0:00.
    */
@@ -2672,9 +2672,9 @@ export interface TalkTiersSelect<T extends boolean = true> {
   landAt?: T;
   appetiserSpans?: T;
   horsLines?: T;
+  lineTidy?: T;
   typographyStyle?: T;
   typographyInPlace?: T;
-  lineTidy?: T;
   offerResume?: T;
   status?: T;
   checkedAt?: T;
