@@ -9,9 +9,37 @@
   color: var(--ink);
   overflow-x: hidden;
 }
+/* Home-screen (standalone) draws under the status bar. A sticky strip plus header padding keep titles readable. */
+.app::before {
+  content: '';
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 34;
+  height: env(safe-area-inset-top, 0px);
+  margin-bottom: calc(-1 * env(safe-area-inset-top, 0px));
+  background: inherit;
+  pointer-events: none;
+}
 .app.dark { background: var(--night); color: #fff; }
-.app-scroll { padding: calc(14px + var(--safe-top)) 18px calc(104px + var(--safe-bottom)); }
-.app-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; margin-bottom: 10px; }
+.app-scroll { padding: calc(14px + env(safe-area-inset-top, 0px)) 18px calc(104px + env(safe-area-inset-bottom, 0px)); }
+.app-head,
+.main-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  margin-bottom: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 21;
+  padding-top: env(safe-area-inset-top, 0px);
+  background-color: var(--paper);
+}
+.app.dark .app-head,
+.app.evening .app-head,
+.app.gather-shell .app-head { background-color: var(--night, #0e2a2b); }
 .app-head h1 { font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
 .lanes-head { align-items: flex-start; }
 .page-sub { margin: 4px 0 0; font-size: 14px; line-height: 1.4; color: var(--ink-2); font-weight: 500; }
@@ -21,7 +49,7 @@
   border: 1.5px solid var(--line); background: var(--glass-solid, var(--card));
   color: var(--ink); font-weight: 700; font-size: 16px; cursor: pointer;
 }
-.page-help-sheet { position: fixed; inset: 0; z-index: 80; background: rgba(8, 20, 20, 0.55); display: grid; place-items: end center; padding: 18px; }
+.page-help-sheet { position: fixed; inset: 0; z-index: 80; background: rgba(8, 20, 20, 0.55); display: grid; place-items: end center; padding: calc(18px + env(safe-area-inset-top, 0px)) 18px calc(18px + env(safe-area-inset-bottom, 0px)); }
 .page-help-card { width: min(390px, 100%); background: var(--card); color: var(--ink); border-radius: 22px; padding: 22px 20px 18px; box-shadow: var(--shadow-soft); }
 .page-help-card h2 { margin: 0 0 10px; font-size: 20px; }
 .page-help-card p { margin: 0 0 10px; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
@@ -519,7 +547,7 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .consent-chip { display: inline-flex; border-radius: 999px; padding: 6px 12px; font-size: 12.5px; font-weight: 700; background: var(--mint); color: var(--teal); border: 0; }
 
 /* Onboarding and welcome */
-.splash { min-height: 100dvh; display: grid; place-items: center; text-align: center; padding: 30px 24px calc(30px + var(--safe-bottom)); background: radial-gradient(600px 400px at 50% 20%, #fff8ea, transparent 70%), var(--paper); }
+.splash { min-height: 100dvh; display: grid; place-items: center; text-align: center; padding: calc(30px + env(safe-area-inset-top, 0px)) 24px calc(30px + var(--safe-bottom)); background: radial-gradient(600px 400px at 50% 20%, #fff8ea, transparent 70%), var(--paper); }
 .splash h1 { font-family: var(--serif); font-size: 42px; line-height: 1.05; margin: 18px 0 10px; font-weight: 600; }
 .splash p { color: var(--ink-2); font-size: 16px; line-height: 1.55; }
 .q-card { background: #fbf8f2; border: 1px solid #e5dccb; border-radius: 22px; padding: 18px; margin-bottom: 16px; }

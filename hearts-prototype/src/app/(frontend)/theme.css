@@ -154,10 +154,12 @@ html[data-theme] .app.dark {
 
 html[data-theme] .app-head,
 html[data-theme] .main-head {
+  background-color: var(--paper);
   background-image: var(--lattice);
   background-size: 140px;
   background-repeat: repeat;
   border-radius: 12px;
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* Door, join, sign-in */
