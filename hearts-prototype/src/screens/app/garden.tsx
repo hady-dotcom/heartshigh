@@ -14,6 +14,8 @@ import { posterFor } from '@/server/learner'
 import { loadDoors } from '@/server/doors'
 import { doorByNumber, doorCode, doorFromPath, doorOfClause, type Door } from '@/lib/doors'
 import { answerCounts } from '@/lib/nesting'
+import { taskWantsCompany } from '@/lib/gather'
+import { listGatherings } from '@/server/gather'
 import { type Ctx, type Row, clock, ref, rows, shortDate, str, unreadCount } from '../common'
 
 const SECTIONS: { key: string; title: string; colour: string }[] = [
@@ -64,7 +66,7 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
   const lessons = lessonIds.length ? await rows(payload, 'lessons', { id: { in: lessonIds } }) : []
   const inCourse = (lessonId: number | null) => Boolean(lessonId && ref(lessons.find((row) => row.id === lessonId)?.course))
   const countedCompletions = completions.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'watch' }))
-  const countedAnswers = answers.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'question' }))
+  const countedAnswers = answers.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'question', viaGathering: row.viaGathering === true }))
   const done = new Set(countedCompletions.map((row) => ref(row.lesson)))
   const cutIds = tags.map((tag) => ref((tag.item as { value?: unknown } | undefined)?.value)).filter((id): id is number => Boolean(id))
   const cuts = cutIds.length ? await rows(payload, 'cuts', { id: { in: cutIds } }, { limit: 1000 }) : []
@@ -433,10 +435,10 @@ export async function GardenGhunya({ payload, user, base }: Ctx) {
   )
 }
 
-export async function GardenWorkbook({ payload, user, base, query }: Ctx) {
+export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx) {
   const session = await getSession()
   const reader = session.actor || user
-  const [book, unread] = await Promise.all([workbookFor(payload, user, reader), unreadCount(payload, user)])
+  const [book, unread, listed] = await Promise.all([workbookFor(payload, user, reader), unreadCount(payload, user), listGatherings(payload, portal.id, user.id)])
   const owner = reader.id === user.id
   const filter = query.filter || 'all'
   const answers = book.answers.filter((row) => (filter === 'shared' ? row.shared : filter === 'private' ? !row.shared : filter === 'replied' ? Boolean(row.reply) : true))
@@ -530,6 +532,9 @@ export async function GardenWorkbook({ payload, user, base, query }: Ctx) {
                   {row.kind === 'task' && row.dueDays ? <p data-testid="task-due">Due within {row.dueDays} days of opening this talk.</p> : null}
                   {row.evidence === 'photo' ? null : <textarea name="body" rows={2} required={row.evidence === 'note' || row.family === 'workbook'} placeholder={row.kind === 'task' ? 'What did you do?' : 'Your reflection'} data-testid="workbook-task-note" />}
                   {row.kind === 'task' ? <input type="file" name="image" accept="image/*" required={row.evidence === 'photo'} /> : null}
+                  {row.kind === 'task' && taskWantsCompany(row.question) ? listed.cards.filter((card) => !card.past && card.lessonId === row.lessonId).map((card) => (
+                    <p key={card.id} data-testid="workbook-gather"><a href={`${base}/gather/${card.id}`}>{card.title}</a> · {card.when}</p>
+                  )) : null}
                   {row.showImam || row.kind === 'task' ? <input type="hidden" name="shareWithTeacher" value="on" /> : null}
                   <button className="mini-btn" type="submit" data-testid="workbook-task-done">{row.kind === 'task' ? 'I have done this' : 'Save in my workbook'}</button>
                 </form>

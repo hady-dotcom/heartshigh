@@ -29,14 +29,14 @@
   width: min(430px, 100%);
   z-index: 50;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   padding: 8px 6px calc(10px + var(--safe-bottom));
   background: rgba(253, 250, 243, 0.97);
   border-top: 1px solid var(--line);
   backdrop-filter: blur(12px);
 }
 .tabbar.dark { background: rgba(18, 17, 16, 0.94); border-top-color: rgba(255, 255, 255, 0.08); }
-.tab { display: grid; justify-items: center; gap: 4px; min-height: 56px; padding-top: 6px; text-decoration: none; font-size: 12px; font-weight: 600; color: #8f8b99; }
+.tab { display: grid; justify-items: center; gap: 4px; min-height: 56px; padding-top: 6px; text-decoration: none; font-size: 11px; font-weight: 600; color: #8f8b99; }
 .tab .tab-icon { display: block; }
 .tab.on { color: var(--ink); }
 .tabbar.dark .tab { color: rgba(255, 255, 255, 0.55); }

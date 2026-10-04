@@ -1,0 +1,143 @@
+/* Gather: evening garden. Deep teal, lantern gold, stone and ivy.
+   Desk pages that opt in use parchment cards and a dark teal sidebar. */
+
+.gather-stage { background: #0c2424; }
+.app.gather-shell { background: #0f3b3a; color: #f7eedb; }
+.app.gather-shell .app-scroll {
+  background:
+    radial-gradient(420px 280px at 80% -10%, rgba(212, 168, 75, 0.28), transparent 60%),
+    radial-gradient(380px 240px at -10% 20%, rgba(62, 107, 79, 0.45), transparent 55%),
+    #0f3b3a;
+}
+.app.gather-shell .app-head h1,
+.gather h1, .gather h2, .gather h3 { font-family: var(--serif); font-weight: 600; color: #f7eedb; }
+.gather .back, .app.gather-shell .back { color: #e7d7b0; }
+.gather .eyebrow { color: #d4a84b; }
+.gather .lead, .gather p { color: #f4ead4; }
+.gather .muted { color: #e7d7b0; }
+
+.gather-card {
+  background: #f7eedb;
+  color: #0f3b3a;
+  border-radius: 22px;
+  padding: 18px 16px 16px;
+  margin: 0 0 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+}
+.gather-card h2, .gather-card h3, .gather-card p, .gather-card .muted { color: #0f3b3a; }
+.gather-card .muted { color: #3d5348; }
+.gather-card .eyebrow { color: #0f3b3a; }
+
+.gather-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #0f3b3a;
+  color: #f7eedb;
+  margin: 0 6px 8px 0;
+}
+.gather-chip.gold { background: #d4a84b; color: #1a1408; }
+.gather-chip.ivy { background: #3e6b4f; color: #f7eedb; }
+
+.gather .pill.gold, .public-gather .pill.gold, .desk.evening .btn {
+  background: #d4a84b;
+  color: #1a1408;
+  box-shadow: none;
+}
+.gather .pill.outline { color: #f7eedb; border-color: rgba(247, 238, 219, 0.45); }
+.gather-card .pill.outline { color: #0f3b3a; border-color: #0f3b3a; }
+.gather .field, .public-gather .field, .gather-card .field {
+  background: #fff;
+  color: #0f3b3a;
+  border-color: #d9cba8;
+}
+.gather-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.gather-actions form { margin: 0; }
+.gather-meta { display: grid; gap: 6px; margin: 8px 0 0; font-size: 15px; line-height: 1.45; }
+.gather-meta a { color: #0f3b3a; }
+
+.tabbar.evening {
+  background: rgba(14, 42, 43, 0.96);
+  border-top-color: rgba(212, 168, 75, 0.35);
+}
+.tabbar.evening .tab { color: rgba(247, 238, 219, 0.72); }
+.tabbar.evening .tab.on { color: #d4a84b; }
+
+.gather .flash.error, .public-gather .flash.error {
+  background: #f7eedb;
+  color: #0f3b3a;
+  border: 1px solid #d4a84b;
+}
+.gather .flash.notice, .public-gather .flash.notice {
+  background: #3e6b4f;
+  color: #f7eedb;
+  border: 1px solid #2d5240;
+}
+
+.public-gather {
+  min-height: 100dvh;
+  background:
+    radial-gradient(520px 320px at 90% 0%, rgba(212, 168, 75, 0.3), transparent 60%),
+    radial-gradient(480px 300px at 0% 30%, rgba(62, 107, 79, 0.5), transparent 55%),
+    #0f3b3a;
+  color: #f7eedb;
+  padding: 28px 18px 48px;
+}
+.public-gather .wrap { width: min(440px, 100%); margin: 0 auto; }
+.public-gather h1 { font-family: var(--serif); font-weight: 600; font-size: 40px; line-height: 1.05; margin: 8px 0; color: #f7eedb; }
+.public-gather .kicker { letter-spacing: 0.16em; text-transform: uppercase; font-size: 12px; font-weight: 700; color: #d4a84b; margin: 0; }
+
+.wa-preview {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 0;
+  background: #efe3c8;
+  color: #0f3b3a;
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 14px 0 18px;
+  text-decoration: none;
+}
+.wa-preview img { width: 92px; height: 100%; object-fit: cover; background: #0f3b3a; min-height: 92px; }
+.wa-preview div { padding: 10px 12px; }
+.wa-preview strong { display: block; font-size: 14px; }
+.wa-preview span { display: block; font-size: 12px; color: #3d5348; margin-top: 4px; }
+.wa-preview small { color: #3e6b4f; font-weight: 700; }
+
+.door-qr { display: grid; place-items: center; background: #fff; border-radius: 18px; padding: 16px; margin: 12px 0; }
+.door-qr .qr svg { width: 220px; height: 220px; }
+
+.desk.evening { background: #efe3c8; color: #0f3b3a; }
+.desk.evening .side { background: #0e2a2b; border-right: 0; }
+.desk.evening .side-brand b, .desk.evening .side-brand small, .desk.evening .side a.nav, .desk.evening .side-foot, .desk.evening .side-foot button { color: #f7eedb; }
+.desk.evening .side .group { color: #d4a84b; }
+.desk.evening .side a.nav:hover { background: rgba(247, 238, 219, 0.08); }
+.desk.evening .side a.nav.on { background: #d4a84b; color: #1a1408; }
+.desk.evening .side-foot { border-top-color: rgba(247, 238, 219, 0.15); }
+.desk.evening .side-foot button:hover { background: rgba(247, 238, 219, 0.08); }
+.desk.evening .side-foot .who .initial { background: #d4a84b; color: #1a1408; }
+.desk.evening .main-head h1 { color: #0f3b3a; font-family: var(--serif); font-size: 40px; font-weight: 600; letter-spacing: -0.02em; }
+.desk.evening .main-head p { color: #1d3f3a; }
+.desk.evening .panel { background: #f7eedb; border-color: #e4d3b0; }
+.desk.evening .panel > header { background: #0f3b3a; color: #f7eedb; }
+.desk.evening .panel > header.light { background: #f7eedb; color: #0f3b3a; border-bottom-color: #e4d3b0; }
+.desk.evening .badge.gold { background: #d4a84b; color: #1a1408; }
+.desk.evening .badge.teal { background: #0f3b3a; color: #f7eedb; }
+.desk.evening .badge.grey { background: #efe3c8; color: #0f3b3a; }
+.desk.evening .btn.ghost { background: #f7eedb; color: #0f3b3a; border-color: #0f3b3a; }
+.desk.evening .btn.ink { background: #0f3b3a; color: #f7eedb; }
+.desk.evening .bell summary { background: #f7eedb; border-color: #e4d3b0; color: #0f3b3a; }
+.desk.evening .bell .count { background: #d4a84b; color: #1a1408; }
+.desk.evening .data th { color: #0f3b3a; }
+.desk.evening input, .desk.evening select, .desk.evening textarea { background: #fff; color: #0f3b3a; border-color: #d9cba8; }
+.desk.evening .chart .slot { background: #efe3c8; }
+.desk.evening .chart .slot i { background: #0f3b3a; }
+.desk.evening .chart .slot i.new { background: #d4a84b; }
+
+.gather-door { margin: 18px 0 8px; }
+.gather-door h2 { font-size: 22px; margin: 0 0 8px; }
+.share-box textarea { width: 100%; min-height: 140px; border-radius: 14px; padding: 12px; }

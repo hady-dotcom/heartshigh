@@ -10,6 +10,7 @@ import { learnerClips } from '@/server/opening'
 import { lanesWithClips } from '@/lib/lanes'
 import { plural } from '@/lib/schedule'
 import { growth, Rings } from './garden'
+import { HomeGather, homeGatherings } from './gather'
 import { type Ctx, ref, rows, str, unreadCount } from '../common'
 
 function minutesLeft(seconds: number, percent: number) {
@@ -21,7 +22,7 @@ function minutesLeft(seconds: number, percent: number) {
 /** Home: the growth banner, what to carry on with, then the way into today's clips (board 00). */
 export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   if (user.role === 'learner' && !user.onboarded) redirect(user.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
-  const [g, unread, { items }, courses, due] = await Promise.all([growth(payload, user), unreadCount(payload, user), learnerClips(payload, portal, user), courseCards(payload, user), user.role === 'learner' ? recalibrationDueFor(payload, user.id) : Promise.resolve(false)])
+  const [g, unread, { items }, courses, due, gatherings] = await Promise.all([growth(payload, user), unreadCount(payload, user), learnerClips(payload, portal, user), courseCards(payload, user), user.role === 'learner' ? recalibrationDueFor(payload, user.id) : Promise.resolve(false), homeGatherings({ payload, portal, user, base })])
   const [visits, sessions] = await Promise.all([
     rows(payload, 'lesson-visits', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 40 }),
     rows(payload, 'watch-sessions', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 80 }),
@@ -90,6 +91,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
           ))}
           {!carryOn.length && !fallback.length ? <p className="muted">Start a course from Lanes and it will wait for you here.</p> : null}
         </div>
+        <HomeGather cards={gatherings} base={base} masjid={portalName(portal)} />
         <p className="eyebrow">Today&apos;s clips <span className="muted" style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }} data-testid="day-number">· Day {dayNumber(user)}</span></p>
         <Link className="feed-door" href={`${base}/feed`} data-testid="open-feed">
           <span className="strip">

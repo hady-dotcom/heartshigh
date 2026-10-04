@@ -15,6 +15,7 @@ export function portalNav(base: string, user: SessionUser): { group: string; ite
     { key: 'compass', label: 'Compass', href: `${base}/admin/compass`, icon: <HeartIcon /> },
     { key: 'plans', label: 'Study plans', href: `${base}/admin/plans`, icon: <CalendarIcon /> },
     { key: 'nights', label: 'Nights', href: `${base}/admin/nights`, icon: <MoonIcon /> },
+    { key: 'gather', label: 'Gather', href: `${base}/admin/gather`, icon: <PeopleIcon /> },
   ]
   if (user.role === 'teacher') return [{ group: 'Portal', items: [{ key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> }, ...teach] }]
   return [
@@ -82,6 +83,7 @@ export async function DeskFrame({
   tools,
   query,
   testId,
+  tone,
   children,
 }: {
   payload: Payload
@@ -99,6 +101,7 @@ export async function DeskFrame({
   tools?: ReactNode
   query: { error?: string; notice?: string }
   testId?: string
+  tone?: 'evening'
   children: ReactNode
 }) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 12 })).filter((note) => note.channel !== 'email-stub')
@@ -114,7 +117,7 @@ export async function DeskFrame({
         <button type="submit" className="btn ghost">Sign out</button>
       </form>
     </div>
-    <div className="desk" data-testid={testId}>
+    <div className={`desk${tone === 'evening' ? ' evening' : ''}`} data-testid={testId}>
       <aside className="side">
         <Link className="side-brand" href={brandHref}>
           <BrandMark size={40} />

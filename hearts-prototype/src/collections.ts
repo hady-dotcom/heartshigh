@@ -754,6 +754,7 @@ export const Answers: CollectionConfig = {
     { name: 'answeredAt', type: 'date' },
     { name: 'pendingSync', type: 'checkbox', defaultValue: false },
     { name: 'correct', type: 'checkbox' },
+    { name: 'viaGathering', type: 'checkbox', defaultValue: false, admin: { description: 'Set when showing up at a gathering completed this activation task. That counts toward the course. A hors d\'oeuvre or appetiser watch still does not.' } },
     {
       name: 'sourceLevel',
       type: 'select',

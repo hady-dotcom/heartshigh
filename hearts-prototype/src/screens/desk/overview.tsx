@@ -8,7 +8,7 @@ import { portalName } from '@/server/learner'
 import { type Ctx, portalPeople, rows, str } from '../common'
 import { DeskFrame, portalNav } from './shell'
 
-export async function AdminFrame({ ctx, active, title, intro, tools, children, testId }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; children: ReactNode; testId?: string }) {
+export async function AdminFrame({ ctx, active, title, intro, tools, children, testId, tone }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening' }) {
   const { payload, user, portal, base, query } = ctx
   const extra = [{ label: 'Open the learner app', href: base }]
   if (user.role === 'master') extra.push({ label: 'Back to the master desk', href: '/master' })
@@ -28,6 +28,7 @@ export async function AdminFrame({ ctx, active, title, intro, tools, children, t
       tools={tools}
       query={query}
       testId={testId}
+      tone={tone}
     >
       {portal.closed ? <div className="flash error" data-testid="portal-closed">This portal is deactivated. Learners cannot sign in until the master desk opens it again.</div> : null}
       {children}

@@ -126,6 +126,11 @@ export interface Config {
     'ai-desk': AiDesk;
     'sheet-keys': SheetKey;
     'sheet-imports': SheetImport;
+    gatherings: Gathering;
+    'gather-rsvps': GatherRsvp;
+    'gather-checkins': GatherCheckin;
+    'gather-reflections': GatherReflection;
+    'gather-photos': GatherPhoto;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -192,6 +197,11 @@ export interface Config {
     'ai-desk': AiDeskSelect<false> | AiDeskSelect<true>;
     'sheet-keys': SheetKeysSelect<false> | SheetKeysSelect<true>;
     'sheet-imports': SheetImportsSelect<false> | SheetImportsSelect<true>;
+    gatherings: GatheringsSelect<false> | GatheringsSelect<true>;
+    'gather-rsvps': GatherRsvpsSelect<false> | GatherRsvpsSelect<true>;
+    'gather-checkins': GatherCheckinsSelect<false> | GatherCheckinsSelect<true>;
+    'gather-reflections': GatherReflectionsSelect<false> | GatherReflectionsSelect<true>;
+    'gather-photos': GatherPhotosSelect<false> | GatherPhotosSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -761,6 +771,10 @@ export interface Answer {
   answeredAt?: string | null;
   pendingSync?: boolean | null;
   correct?: boolean | null;
+  /**
+   * Set when showing up at a gathering completed this activation task. That counts toward the course. A hors d'oeuvre or appetiser watch still does not.
+   */
+  viaGathering?: boolean | null;
   /**
    * Questions on a hors d'oeuvre or appetiser do not count toward the grow page. Only questions on a full talk do.
    */
@@ -1912,6 +1926,133 @@ export interface SheetImport {
   createdAt: string;
 }
 /**
+ * A real meeting at a portal: circle, tea, volunteering, walk, youth night or picnic.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gatherings".
+ */
+export interface Gathering {
+  id: number;
+  portal?: (number | null) | Portal;
+  title: string;
+  kind?: ('circle' | 'tea' | 'volunteer' | 'walk' | 'youth' | 'picnic') | null;
+  audience?: ('brothers' | 'sisters' | 'family' | 'youth' | 'all') | null;
+  startsAt: string;
+  endsAt?: string | null;
+  place?: string | null;
+  mapUrl?: string | null;
+  /**
+   * 0 means no cap.
+   */
+  capacity?: number | null;
+  bring?: string | null;
+  note?: string | null;
+  host?: (number | null) | User;
+  /**
+   * The name shown on the public page. A role or a first name, not a learner’s full name.
+   */
+  hostLabel?: string | null;
+  status?: ('proposed' | 'published' | 'cancelled') | null;
+  proposedBy?: (number | null) | User;
+  lesson?: (number | null) | Lesson;
+  course?: (number | null) | Course;
+  task?: (number | null) | EngagementPoint;
+  door?: number | null;
+  linkLabel?: string | null;
+  slug: string;
+  checkinToken: string;
+  prompts?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Small groups for the night. Names only. No scores.
+   */
+  circles?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  seedKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gather-rsvps".
+ */
+export interface GatherRsvp {
+  id: number;
+  portal?: (number | null) | Portal;
+  gathering: number | Gathering;
+  user?: (number | null) | User;
+  status?: ('going' | 'maybe' | 'cant' | 'waitlist') | null;
+  guestName?: string | null;
+  guestContact?: string | null;
+  guestToken?: string | null;
+  broughtBy?: (number | null) | User;
+  bringCode?: string | null;
+  remind?: boolean | null;
+  seedKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gather-checkins".
+ */
+export interface GatherCheckin {
+  id: number;
+  portal?: (number | null) | Portal;
+  gathering: number | Gathering;
+  user?: (number | null) | User;
+  rsvp?: (number | null) | GatherRsvp;
+  guestLabel?: string | null;
+  method?: ('qr' | 'host') | null;
+  newcomer?: boolean | null;
+  welcomed?: boolean | null;
+  seedKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gather-reflections".
+ */
+export interface GatherReflection {
+  id: number;
+  portal?: (number | null) | Portal;
+  gathering: number | Gathering;
+  user: number | User;
+  body: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gather-photos".
+ */
+export interface GatherPhoto {
+  id: number;
+  portal?: (number | null) | Portal;
+  gathering: number | Gathering;
+  image: number | Media;
+  caption?: string | null;
+  consent?: boolean | null;
+  postedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -2170,6 +2311,26 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'sheet-imports';
         value: number | SheetImport;
+      } | null)
+    | ({
+        relationTo: 'gatherings';
+        value: number | Gathering;
+      } | null)
+    | ({
+        relationTo: 'gather-rsvps';
+        value: number | GatherRsvp;
+      } | null)
+    | ({
+        relationTo: 'gather-checkins';
+        value: number | GatherCheckin;
+      } | null)
+    | ({
+        relationTo: 'gather-reflections';
+        value: number | GatherReflection;
+      } | null)
+    | ({
+        relationTo: 'gather-photos';
+        value: number | GatherPhoto;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2583,6 +2744,7 @@ export interface AnswersSelect<T extends boolean = true> {
   answeredAt?: T;
   pendingSync?: T;
   correct?: T;
+  viaGathering?: T;
   sourceLevel?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -3349,6 +3511,101 @@ export interface SheetImportsSelect<T extends boolean = true> {
   summary?: T;
   snapshot?: T;
   workbook?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gatherings_select".
+ */
+export interface GatheringsSelect<T extends boolean = true> {
+  portal?: T;
+  title?: T;
+  kind?: T;
+  audience?: T;
+  startsAt?: T;
+  endsAt?: T;
+  place?: T;
+  mapUrl?: T;
+  capacity?: T;
+  bring?: T;
+  note?: T;
+  host?: T;
+  hostLabel?: T;
+  status?: T;
+  proposedBy?: T;
+  lesson?: T;
+  course?: T;
+  task?: T;
+  door?: T;
+  linkLabel?: T;
+  slug?: T;
+  checkinToken?: T;
+  prompts?: T;
+  circles?: T;
+  seedKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gather-rsvps_select".
+ */
+export interface GatherRsvpsSelect<T extends boolean = true> {
+  portal?: T;
+  gathering?: T;
+  user?: T;
+  status?: T;
+  guestName?: T;
+  guestContact?: T;
+  guestToken?: T;
+  broughtBy?: T;
+  bringCode?: T;
+  remind?: T;
+  seedKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gather-checkins_select".
+ */
+export interface GatherCheckinsSelect<T extends boolean = true> {
+  portal?: T;
+  gathering?: T;
+  user?: T;
+  rsvp?: T;
+  guestLabel?: T;
+  method?: T;
+  newcomer?: T;
+  welcomed?: T;
+  seedKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gather-reflections_select".
+ */
+export interface GatherReflectionsSelect<T extends boolean = true> {
+  portal?: T;
+  gathering?: T;
+  user?: T;
+  body?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gather-photos_select".
+ */
+export interface GatherPhotosSelect<T extends boolean = true> {
+  portal?: T;
+  gathering?: T;
+  image?: T;
+  caption?: T;
+  consent?: T;
+  postedBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
