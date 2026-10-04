@@ -1,0 +1,55 @@
+# Runs the production image on this computer, with Postgres and an S3 stand-in.
+# The public site is Railway, described in DEPLOY.md. MinIO's Docker Hub image is no longer public,
+# so this file uses Adobe's S3 mock, which speaks the same API.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: hearts
+      POSTGRES_PASSWORD: hearts
+      POSTGRES_DB: hearts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hearts -d hearts"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  s3:
+    image: adobe/s3mock:latest
+    environment:
+      # Current S3Mock (4.5+) ignores the old initialBuckets name.
+      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: hearts-media
+    ports:
+      - "9000:9090"
+
+  app:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      s3:
+        condition: service_started
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://hearts:hearts@postgres:5432/hearts
+      PAYLOAD_SECRET: local-proof-secret-not-a-real-deployment-key
+      SERVER_URL: http://127.0.0.1:3000
+      S3_BUCKET: hearts-media
+      S3_ACCESS_KEY_ID: hearts
+      S3_SECRET_ACCESS_KEY: hearts-secret-key
+      S3_ENDPOINT: http://s3:9090
+      S3_REGION: us-east-1
+      S3_FORCE_PATH_STYLE: "1"
+      HEARTS_TRUSTED_PROXY_HOPS: "1"
+      BOOTSTRAP_ADMIN_EMAIL: owner@example.com
+      BOOTSTRAP_ADMIN_PASSWORD: local-proof-passphrase
+      BOOTSTRAP_ADMIN_NAME: Owner
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 40s

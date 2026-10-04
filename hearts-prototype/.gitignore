@@ -1,0 +1,17 @@
+node_modules
+.env
+.env.*
+!.env.example
+.next
+data
+media
+playwright-report
+test-results
+*.log
+.DS_Store
+tsconfig.tsbuildinfo
+artifacts/
+.next-e2e
+bin/
+content/audio/*
+!content/audio/.gitkeep
