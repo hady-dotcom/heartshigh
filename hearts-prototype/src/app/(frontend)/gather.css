@@ -330,14 +330,14 @@ html[data-theme] .app.gather-shell form.gather-card textarea.field::placeholder 
 :is(html, html[data-theme]) .desk.gather-desk .main-head p { color: var(--g-muted); }
 :is(html, html[data-theme]) .desk.gather-desk .panel { background: var(--g-card); border-color: var(--g-line); }
 :is(html, html[data-theme]) .desk.gather-desk .panel > header { background: var(--g-heading); color: var(--g-on-dark); }
-:is(html, html[data-theme]) .desk.gather-desk .panel > header.light { background: var(--g-card); color: var(--g-heading); border-bottom-color: var(--g-line); }
+:is(html, html[data-theme]) .desk.gather-desk .panel > header.light { background: var(--g-card); color: var(--g-ink); border-bottom-color: var(--g-line); }
 :is(html, html[data-theme]) .desk.gather-desk .panel > header h2, :is(html, html[data-theme]) .desk.gather-desk .panel > header p { color: inherit; }
 :is(html, html[data-theme]) .desk.gather-desk .badge.gold { background: var(--g-gold); color: var(--g-gold-ink); }
 :is(html, html[data-theme]) .desk.gather-desk .badge.teal { background: var(--g-heading); color: var(--g-on-dark); }
-:is(html, html[data-theme]) .desk.gather-desk .badge.grey { background: var(--g-page); color: var(--g-heading); }
-:is(html, html[data-theme]) .desk.gather-desk .btn.ghost { background: var(--g-card); color: var(--g-heading); border-color: var(--g-heading); }
+:is(html, html[data-theme]) .desk.gather-desk .badge.grey { background: var(--g-field); color: var(--g-ink); }
+:is(html, html[data-theme]) .desk.gather-desk .btn.ghost { background: transparent; color: var(--g-ink); border-color: var(--g-gold); }
 :is(html, html[data-theme]) .desk.gather-desk .btn.ink { background: var(--g-heading); color: var(--g-on-dark); }
-:is(html, html[data-theme]) .desk.gather-desk .bell summary { background: var(--g-card); border-color: var(--g-line); color: var(--g-heading); }
+:is(html, html[data-theme]) .desk.gather-desk .bell summary { background: var(--g-card); border-color: var(--g-line); color: var(--g-ink); }
 :is(html, html[data-theme]) .desk.gather-desk .bell .count { background: var(--g-gold); color: var(--g-gold-ink); }
 :is(html, html[data-theme]) .desk.gather-desk .data th { color: var(--g-muted); }
 :is(html, html[data-theme]) .desk.gather-desk .stat-chip { background: var(--g-heading); color: var(--g-on-dark); }
