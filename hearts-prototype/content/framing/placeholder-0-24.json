@@ -6,7 +6,7 @@
   "requestedStart": 0,
   "requestedEnd": 24,
   "segments": [
-    { "start": 0, "end": 8, "mode": "D", "confidence": 0.88, "focus": { "x": 0.18, "y": 0.42 } },
+    { "start": 0, "end": 8, "mode": "D", "confidence": 0.88, "focus": { "x": 0.156, "y": 0.472 }, "crop": { "x": 0.055, "y": 0.222, "w": 0.203, "h": 0.5 } },
     { "start": 8, "end": 16, "mode": "B", "confidence": 0.9, "focus": { "x": 0.5, "y": 0.45 } },
     { "start": 16, "end": 24, "mode": "F", "confidence": 0.8, "focus": { "x": 0.5, "y": 0.45 } }
   ],

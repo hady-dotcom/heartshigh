@@ -4,7 +4,8 @@ import { buildTrack, chooseMode, segmentsFromShots } from '../../src/lib/framing
 import { avoidMidSentenceSwitches, holdModes, snapClipWindow, snapIn, snapOut, snapSwitch } from '../../src/lib/framing/snap'
 import { fallbackTrack, validateTrack } from '../../src/lib/framing/validate'
 import { currentSentence, sentencesFromWords, sentencesInWindow, wordsFromCues, wrapWordLines } from '../../src/lib/framing/words'
-import { filmOnStage, layoutFor } from '../../src/lib/framing/layout'
+import { boxOnStage, coverPosition, coverSourceToBox, cssVars, filmOnStage, layoutFor } from '../../src/lib/framing/layout'
+import { PLACEHOLDER_FACE, PLACEHOLDER_FACE_FOCUS } from '../../src/lib/framing/placeholder'
 import type { ShotAnalysis } from '../../src/lib/framing/types'
 import { framingVariant } from '../../src/lib/experiments'
 import sample from '../fixtures/framing-track.json'
@@ -129,7 +130,21 @@ test('letterbox and split film stay inside the 390×844 stage', () => {
   const split = layoutFor('F', 390, 844)
   assert.equal(split.film.left, 0)
   assert.equal(split.film.width, 390)
-  assert.equal(split.film.top, 72)
+  assert.equal(split.film.top, letter.film.top)
+})
+
+test('D cover crop keeps the placeholder FACE box on the 390×844 stage', () => {
+  const layout = layoutFor('D', 390, 844, PLACEHOLDER_FACE, PLACEHOLDER_FACE_FOCUS)
+  const vars = cssVars(layout)
+  const rawFocus = `${Math.round(PLACEHOLDER_FACE_FOCUS.x * 1000) / 10}%`
+  assert.notEqual(vars['--fr-focus-x'], rawFocus)
+  const face = coverSourceToBox(PLACEHOLDER_FACE, 390, 844, { x: layout.objectX, y: layout.objectY })
+  assert.equal(boxOnStage(face, 390, 844), true)
+  assert.ok(face.x > 4, 'face should not sit on the left edge')
+  const misplaced = coverSourceToBox(PLACEHOLDER_FACE, 390, 844, coverPosition({ x: 0.18, y: 0.42 }, 390, 844))
+  assert.equal(boxOnStage(misplaced, 390, 844), true)
+  const oldPin = coverSourceToBox(PLACEHOLDER_FACE, 390, 844, { x: 0.18, y: 0.42 })
+  assert.equal(boxOnStage(oldPin, 390, 844), false)
 })
 
 test('word clocks stay inside each caption cue instead of a clip-wide estimate', () => {

@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { framingVariant, type FramingVariant } from '@/lib/experiments'
-import { cssVars, layoutFor } from '@/lib/framing/layout'
+import { coverSourceToBox, cssVars, layoutFor } from '@/lib/framing/layout'
+import { PLACEHOLDER_FACE } from '@/lib/framing/placeholder'
 import { segmentAt } from '@/lib/framing/choose'
 import { fallbackTrack } from '@/lib/framing/validate'
 import { TRANSITION_MS, type FramingMode, type FramingTrack } from '@/lib/framing/types'
@@ -58,6 +59,10 @@ export function FramingPlayer({
   const segment = segmentAt(resolved, time)
   const layout = layoutFor(mode, width, height, segment?.crop, segment?.focus)
   const inWindow = time >= resolved.start - 0.75 && time < resolved.end
+  const faceHit =
+    placeholder && mode === 'D'
+      ? coverSourceToBox(PLACEHOLDER_FACE, layout.film.width, layout.film.height, { x: layout.objectX, y: layout.objectY })
+      : null
 
   useEffect(() => {
     if (placeholder) {
@@ -181,6 +186,13 @@ export function FramingPlayer({
             </div>
           )}
         </div>
+        {faceHit ? (
+          <div
+            data-testid="placeholder-face"
+            className="fr-face-hit"
+            style={{ left: faceHit.x, top: faceHit.y, width: faceHit.w, height: faceHit.h }}
+          />
+        ) : null}
       </div>
       {placeholder ? <p className="fr-placeholder-mark">Placeholder — not YouTube</p> : null}
       {mode === 'E' ? (

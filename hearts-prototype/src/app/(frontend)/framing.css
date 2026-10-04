@@ -73,6 +73,13 @@
   object-fit: cover;
   object-position: var(--fr-focus-x, 50%) var(--fr-focus-y, 45%);
   background: #000;
+  transition: object-position var(--fr-ms, 360ms) ease;
+}
+.fr-face-hit {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
 }
 .fr-B .fr-media,
 .fr-C .fr-media,
