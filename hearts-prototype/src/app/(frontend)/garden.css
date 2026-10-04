@@ -31,12 +31,19 @@
   margin: 0;
   font-family: var(--serif);
   font-weight: 600;
-  font-size: 26px;
+  font-size: 28px;
   line-height: 1.2;
   letter-spacing: 0;
   text-transform: none;
   color: #fff8ee;
   text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+}
+.garden-hook {
+  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #f6eedc;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 .gold-mark {
   display: inline-block;
@@ -120,7 +127,7 @@
   padding: 0 2px;
   font-family: Cinzel, 'Times New Roman', serif;
   font-weight: 600;
-  font-size: 9.5pt;
+  font-size: 11pt;
   line-height: 1;
   letter-spacing: 0.02em;
   color: #f6e7c3;

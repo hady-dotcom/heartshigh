@@ -1,4 +1,6 @@
 import type { Payload } from 'payload'
+import { JourneyErrorBoundary } from '@/components/app/error-boundary'
+import { PageHelp } from '@/components/app/page-help'
 import { Journey } from '@/components/journey/journey'
 import { OPENER } from '@/lib/opening-data'
 import { idOf } from '@/lib/ids'
@@ -29,13 +31,15 @@ async function mainsShelf(payload: Payload) {
   return shelf
 }
 
-/** The one continuous learner surface: opener, six scenes, the door, and the feed (spec 7 and 7A). */
+/** The one continuous learner surface: opener, scenes, the door, and the feed (spec 7 and 7A). */
 export async function JourneyScreen({ payload, portal, user, base, initial, viewAs, query = {} }: { payload: Payload; portal: PortalDoc; user: SessionUser | null; base: string; initial: 'opener' | 'help' | 'feed'; viewAs: boolean; query?: Record<string, string | undefined> }) {
   const [opening, flags, mains, unread, doors] = await Promise.all([loadOpening(payload, portal, user), masterFlags(payload), mainsShelf(payload), user ? unreadCount(payload, user) : Promise.resolve(0), loadDoors(payload)])
   return (
     <div className="app-stage dusk">
       <main className="app dark journey-frame" data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
-        <Journey
+        <PageHelp page={initial === 'feed' ? 'feed' : 'start'} />
+        <JourneyErrorBoundary homeHref={base}>
+        <Journey>
           base={base}
           opening={opening}
           opener={OPENER}
@@ -54,6 +58,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
           play={query.play === 'appetiser' ? 'appetiser' : null}
           afterPlacing={query.after === 'placing'}
         />
+        </JourneyErrorBoundary>
       </main>
     </div>
   )

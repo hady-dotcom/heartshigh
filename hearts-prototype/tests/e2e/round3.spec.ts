@@ -38,7 +38,7 @@ async function signIn(page: Page, email: string, password: string, next: string)
   await page.waitForURL((url) => !url.pathname.startsWith('/login'))
 }
 const tile = (scene: string, option: string) => `[data-testid="scene"][data-scene="${scene}"] [data-testid="tile"][data-option="${option}"]`
-const PICKS: [string, string][] = [['extra', 'pause'], ['queue', 'let-go'], ['thumb', 'lives'], ['visitor', 'spin'], ['news', 'nobody'], ['doors', 'calmer']]
+const PICKS: [string, string][] = [['extra', 'pause'], ['queue', 'let-go'], ['thumb', 'lives'], ['visitor', 'spin'], ['news', 'nobody'], ['account', 'lord'], ['doors', 'calmer']]
 
 test.beforeAll(async () => {
   master = await as('master@hearts.test', 'hearts-master')
@@ -410,19 +410,14 @@ test.describe('round 3 screens', () => {
     expect(await row.locator('.t').textContent()).toMatch(/\. \S/)
   })
 
-  test('Bug 27: What others said stays hidden until the learner opts in', async ({ page }) => {
+  test('Bug 27: What others said is always on, with initials and no rating', async ({ page }) => {
     const nur = await lessonBy(`where[youtubeId][equals]=NIR88RRpat4`)
-    const learner = await as('elm-learner2@hearts.test', 'portal-learner')
-    await form(learner, { action: 'me-pref', name: 'shareWithLearners', value: 'off', next: '/' })
     await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/course/${nur.course}?part=${nur.id}`)
     await page.getByTestId('answer-point').click()
     await expect(page.getByTestId('popup')).toBeVisible()
-    await expect(page.getByTestId('swarm')).toHaveCount(0)
-    await form(learner, { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: '/' })
-    await page.reload()
-    await page.getByTestId('answer-point').click()
     await expect(page.getByTestId('swarm')).toHaveCount(1)
-    await form(learner, { action: 'me-pref', name: 'shareWithLearners', value: 'off', next: '/' })
+    await expect(page.getByTestId('swarm')).not.toContainText('most popular')
+    await expect(page.getByTestId('swarm')).not.toContainText('most read')
   })
 
   test('Bug 28: no hydration warnings on the desks', async ({ page }) => {

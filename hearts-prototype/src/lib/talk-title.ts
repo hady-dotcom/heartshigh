@@ -6,10 +6,12 @@
 
 /** Drops a "| channel, series" suffix. A title with no pipe is left as it is. */
 export function tidyTalkTitle(raw: string) {
-  const text = raw.replace(/\s+/g, ' ').trim()
+  let text = raw.replace(/\s+/g, ' ').trim()
   const pipe = text.indexOf('|')
-  if (pipe <= 0) return text
-  return text.slice(0, pipe).replace(/\s+/g, ' ').trim() || text
+  if (pipe > 0) text = text.slice(0, pipe).replace(/\s+/g, ' ').trim() || text
+  text = text.replace(/\s+[–—-]\s+(Shaykh|Sheikh|Imam|Ustadh|Dr)\b.*$/i, '')
+  text = text.replace(/\s+\((?:Shaykh|Sheikh|Imam|Ustadh|Dr)[^)]*\)\s*$/i, '')
+  return text
 }
 
 export function displayTalkTitle(input: {

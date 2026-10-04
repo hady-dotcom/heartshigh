@@ -3,10 +3,10 @@ import { now as clockNow } from '@/lib/clock'
 import Link from 'next/link'
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
 import { Avatar } from '@/components/app/feed'
-import { OptInLane, PrefToggle, StartAgain } from '@/components/app/me-controls'
+import { OptInLane, PrefToggle, SoundOnToggle, StartAgain } from '@/components/app/me-controls'
+import { SavedList } from '@/components/app/saved-list'
 import { EmptyState } from '@/components/app/empty'
 import { KeepHearts } from '@/components/app/install-card'
-import { ThemePinControl } from '@/components/theme/theme-pin'
 import { Qr } from '@/components/qr'
 import { now } from '@/lib/clock'
 import { visibleCourseIds } from '@/server/context'
@@ -22,11 +22,11 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 30 })).filter((note) => note.channel !== 'email-stub')
   const unread = notes.filter((note) => !note.read).length
   const links: [string, string, string, string][] = [
-    ['path', 'Your path', 'Where a little time will help, in plain words', 'me/path'],
-    ['plan', 'My study plan', 'Spread a course across the days that suit you', 'me/plan'],
-    ['circle', 'Circle and nights', 'Your board, and the evenings you can come to', 'me/circle'],
+    ['plan', 'My week', 'The talks you meant to sit with this week', 'me/plan'],
+    ['saved', 'Saved', 'Clips you kept from the feed', 'me/saved'],
     ['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'],
-    ['settings', 'Settings', 'Night alerts, watch history and signing out', 'me/settings'],
+    ['path', 'Where to grow next', 'Plain words, only when a real talk or answer backs them', 'me/path'],
+    ['settings', 'Settings', 'Sound, privacy, nights and the account', 'me/settings'],
   ]
   if (user.role !== 'learner') links.unshift(['desk', 'Portal desk', 'Courses, codes and learners', 'admin'])
   return (
@@ -38,7 +38,6 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
           <Avatar name={user.name || user.email} portrait={null} size={58} />
           <span><b data-testid="me-name">{user.name || user.email}</b><small className="muted">{portalName(portal)} · day {dayNumber(user)}</small></span>
         </div>
-        <ThemePinControl />
         <details className="card name-edit" data-testid="name-edit">
           <summary>Change the name we use</summary>
           <form className="form-stack" action="/api/hearts" method="post" style={{ marginTop: 10 }}>
@@ -53,16 +52,10 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
             <span className="grow">{title}<small>{sub}</small></span>›
           </Link>
         ))}
-        <p className="eyebrow" style={{ marginTop: 18 }}>Your opening and this phone</p>
-        <section className="card prefs" data-testid="me-prefs">
-          <PrefToggle name="keepPlace" label="Keep my place" hint="Saves where you are on our side, so another phone picks up from here. Off keeps it on this phone only." checked={Boolean(user.keepPlace)} next={`${base}/me`} />
-          <PrefToggle name="shareOpening" label="Share my opening answers with my mentor" hint="Private answers stay with you either way." checked={Boolean(user.shareOpening)} next={`${base}/me`} />
-          <PrefToggle name="trendsOptIn" label="Add my taps to my chapter’s trends" hint="Only counts across ten or more people, never your name." checked={Boolean(user.trendsOptIn)} next={`${base}/me`} />
-          <PrefToggle name="shareWithLearners" label="Share answers with other learners" hint="Off: nobody else on a video sees your answers, and you do not see theirs. On: you choose answer by answer." checked={Boolean(user.shareWithLearners)} next={`${base}/me`} />
-          <PrefToggle name="haptics" label="Haptics" hint="A small buzz when you tap an answer." checked={user.haptics !== false} next={`${base}/me`} />
-          <OptInLane lane="guarding-gaze" label="Private lanes: Guarding the gaze" hint="Clips on this appear only if you turn this on. It is kept on this phone and never shown to anyone." portal={portal.slug || ''} />
-        </section>
-        <StartAgain base={base} />
+        <p className="eyebrow" style={{ marginTop: 18 }}>Circle and nights</p>
+        <Link className="list-link" href={`${base}/me/circle`} data-testid="me-circle">
+          <span className="grow">Circle and nights<small>Your board, and the evenings you can come to</small></span>›
+        </Link>
         <div className="app-head" style={{ marginTop: 18 }}>
           <h2 style={{ margin: 0, fontSize: 19 }}>Notifications</h2>
           {unread ? (
@@ -217,25 +210,50 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>Settings</h1></div>
         <Flash error={query.error} notice={query.notice} />
-        <form className="card form-stack" action="/api/hearts" method="post">
-          <Hidden fields={{ action: 'night-alerts', next: here }} />
-          <label className="toggle" style={{ marginTop: 0 }}><input type="checkbox" name="nightAlerts" defaultChecked={Boolean(user.nightAlerts)} data-testid="night-alerts" /> Tell me when a new night opens</label>
-          <button className="pill outline small" type="submit" data-testid="night-alerts-save">Save</button>
-        </form>
-        <form className="card form-stack" action="/api/hearts" method="post">
-          <Hidden fields={{ action: 'watch-opt-in', next: here }} />
-          <label className="toggle" style={{ marginTop: 0 }}><input data-testid="share-watch" type="checkbox" name="shareWatch" defaultChecked={Boolean(user.shareWatch)} /> Share my detailed watch history with my teachers</label>
-          <p className="muted" style={{ fontSize: 13 }}>{portal.watchHistoryOptIn ? 'Your portal has asked for this. It is off unless you turn it on.' : 'Off unless you turn it on. Your teachers only see which parts you finished.'}</p>
-          <button className="pill outline small" type="submit" data-testid="share-watch-save">Save</button>
-        </form>
-        <section className="card">
-          <h3>On this device</h3>
-          <p>The speakers you follow, and the clips you like or save, are kept on this phone only.</p>
+        <p className="eyebrow">Sound and display</p>
+        <section className="card prefs" data-testid="settings-sound">
+          <PrefToggle name="haptics" label="Haptics" hint="A small buzz when you tap an answer." checked={user.haptics !== false} next={here} />
+          <SoundOnToggle />
         </section>
+        <p className="eyebrow">Privacy</p>
+        <section className="card prefs" data-testid="me-prefs">
+          <PrefToggle name="keepPlace" label="Start where I left off" hint="Open the feed on the last clip you watched, including on another phone." checked={Boolean(user.keepPlace)} next={here} />
+          <PrefToggle name="shareOpening" label="Share my opening answers with my mentor" hint="Private answers stay with you either way." checked={Boolean(user.shareOpening)} next={here} />
+          <PrefToggle name="trendsOptIn" label="Help my circle see what is popular" hint="Only counts across ten or more people, never your name." checked={Boolean(user.trendsOptIn)} next={here} />
+          <PrefToggle name="shareWatch" label="Share my detailed watch history with my teachers" hint={portal.watchHistoryOptIn ? 'Your portal has asked for this. It is off unless you turn it on.' : 'Off unless you turn it on. Your teachers only see which parts you finished.'} checked={Boolean(user.shareWatch)} next={here} />
+          <OptInLane lane="guarding-gaze" label="Private lanes: Guarding the gaze" hint="Clips on this appear only if you turn this on. It is kept on this phone and never shown to anyone." portal={portal.slug || ''} />
+          <p className="muted" style={{ fontSize: 13, margin: '8px 0 0' }}>Answers in a talk show to other learners as initials only. There is no rating. Your teacher still sees what you offer them.</p>
+        </section>
+        <p className="eyebrow">Notifications</p>
+        <section className="card prefs">
+          <PrefToggle name="nightAlerts" label="Tell me when a new night opens" checked={Boolean(user.nightAlerts)} next={here} />
+        </section>
+        <p className="eyebrow">Account</p>
+        <section className="card">
+          <h3>Privacy and this phone</h3>
+          <p>The speakers you follow, and the clips you save, are kept on this phone only.</p>
+        </section>
+        <KeepHearts />
+        <StartAgain base={base} />
         <form action="/api/hearts" method="post" style={{ marginTop: 14 }}>
           <Hidden fields={{ action: 'logout' }} />
           <button className="pill outline block" type="submit" data-testid="logout">Sign out</button>
         </form>
+      </div>
+      <TabBar base={base} active="me" unread={unread} />
+    </AppFrame>
+  )
+}
+
+export async function SavedScreen({ payload, user, base }: Ctx) {
+  const unread = await unreadCount(payload, user)
+  return (
+    <AppFrame testId="saved">
+      <div className="app-scroll">
+        <Back href={`${base}/me`} label="Me" />
+        <div className="app-head"><h1>Saved</h1></div>
+        <p className="lead">Clips you kept from the feed. They stay on this phone.</p>
+        <SavedList base={base} />
       </div>
       <TabBar base={base} active="me" unread={unread} />
     </AppFrame>

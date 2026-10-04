@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { PageHelp } from '@/components/app/page-help'
 import { RouteFade } from '@/components/app/route-fade'
 
 export type Tab = 'home' | 'lanes' | 'gather' | 'garden' | 'me'
@@ -76,11 +77,12 @@ export function Flash({ error, notice }: { error?: string; notice?: string }) {
   )
 }
 
-export function AppFrame({ children, dark = false, evening = false, testId, tone }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; tone?: 'gather' }) {
+export function AppFrame({ children, dark = false, evening = false, testId, tone, help }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; tone?: 'gather'; help?: string }) {
   const gather = tone === 'gather'
   return (
     <div className={`app-stage${evening ? ' evening' : ''}${gather ? ' gather-stage' : ''}`}>
       <main className={`app${dark ? ' dark' : ''}${evening ? ' evening' : ''}${gather ? ' gather-shell' : ''}`} data-testid={testId}>
+        <PageHelp page={help || testId} />
         <RouteFade>{children}</RouteFade>
       </main>
     </div>

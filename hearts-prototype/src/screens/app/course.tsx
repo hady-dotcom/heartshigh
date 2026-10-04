@@ -24,6 +24,7 @@ import { companyGatherings, relatedCards, TalkGatherNotice } from '@/screens/app
 import { listGatherings } from '@/server/gather'
 import { mixSwarm } from '@/lib/circle'
 import { circleForPoints, circleSettings } from '@/server/circle'
+import { initialsOf } from '@/lib/swarm-sort'
 
 const START = ['orange', 'gold', 'teal']
 
@@ -182,9 +183,8 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
 
   const swarm: Record<number, SwarmItem[]> = {}
   let circleLabel = ''
-  // The swarm is opt-in: a learner sees other learners' answers only after choosing to share with learners
-  // themselves, and only answers whose authors chose the same and ticked "Let other learners read it".
-  const swarmOn = user.role === 'learner' && Boolean(user.shareWithLearners) && portal.showOthersAnswers !== false
+  // The swarm is always on for learners. Answers stay anonymous (initials), and a private or hidden row never appears.
+  const swarmOn = user.role === 'learner' && portal.showOthersAnswers !== false
   if (swarmOn && points.length) {
     const shared = await rows(
       payload,
@@ -193,13 +193,13 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
       { depth: 1, sort: '-createdAt', limit: 200 },
     )
     for (const answer of shared) {
-      if (answer.keepPrivate === true || answer.shareWithLearners !== true || ref(answer.user) === user.id) continue
+      if (answer.keepPrivate === true || answer.shareWithLearners !== true || answer.swarmHidden === true || ref(answer.user) === user.id) continue
       const pointId = ref(answer.point)
       if (!pointId) continue
-      const author = answer.user as { name?: string; shareWithLearners?: boolean } | null
-      if (!author?.shareWithLearners) continue
+      const author = answer.user as { name?: string } | null
       const image = answer.image as { url?: string } | null
-      ;(swarm[pointId] ||= []).push({ name: author?.name || 'Someone in your circle', body: str(answer.body) || str(answer.choice) || 'Shared a photo', image: image?.url || null })
+      const name = author?.name || 'Someone in your circle'
+      ;(swarm[pointId] ||= []).push({ name, body: str(answer.body) || str(answer.choice) || 'Shared a photo', image: image?.url || null, initials: initialsOf(name) })
     }
     // HEARTS circle answers fill the swarm while it is quiet and step back as real shared answers arrive.
     const [circle, settings] = await Promise.all([circleForPoints(payload, points.map((point) => point.id), portal.id), circleSettings(payload)])

@@ -135,12 +135,18 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
   return (
     <AppFrame testId="lanes">
       <div className="app-scroll">
-        <div className="app-head"><h1>Lanes</h1><span className="muted" style={{ fontSize: 13, fontWeight: 600 }} data-testid="day-number">Day {today}</span></div>
+        <div className="app-head lanes-head">
+          <div>
+            <h1>Lanes</h1>
+            <p className="page-sub" data-testid="lanes-sub">Paths to walk, one theme at a time.</p>
+          </div>
+          <span className="muted" style={{ fontSize: 13, fontWeight: 600 }} data-testid="day-number">Day {today}</span>
+        </div>
         <Flash error={query.error} notice={query.notice} />
-        <p className="lead">Each lane is one theme. Tap a lane to watch its clips, or start a full course below.</p>
         {lanes.map((lane) => {
           const first = lane.clips[0]
           const count = lane.clips.length
+          const poster = shownPoster(first?.poster) || shownPoster(first?.portrait)
           return (
             <Link
               key={lane.key}
@@ -148,14 +154,14 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
               href={`${base}/feed?lane=${lane.key}`}
               data-testid="lane-card"
               data-lane={lane.key}
-              data-first-cut={first.cutId}
-              style={shownPoster(first.poster) || shownPoster(first.portrait) ? { backgroundImage: `url(${shownPoster(first.poster) || shownPoster(first.portrait)})` } : undefined}
+              data-first-cut={first?.cutId}
+              style={poster ? { backgroundImage: `url(${poster})` } : undefined}
             >
               <div>
                 <small>Lane</small>
                 <h3>{lane.title}</h3>
-                <p>{snippet(first.hook || first.land || first.lessonTitle || '', 64)}</p>
-                <p>{first.speaker} · {count} {count === 1 ? 'clip' : 'clips'}</p>
+                <p>{snippet(first?.hook || first?.land || first?.lessonTitle || '', 64)}</p>
+                <p>{first?.speaker}{first?.speaker ? ' · ' : ''}{count} {count === 1 ? 'clip' : 'clips'}</p>
               </div>
             </Link>
           )
@@ -170,7 +176,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
               <span className="t">
                 <b>{course.title}</b>
                 <small>
-                  {course.recommended ? <span className="drip" data-testid="recommended">Chosen for you · </span> : null}
+                  {course.recommended ? <span className="drip" data-testid="recommended">This week · </span> : null}
                   {course.open ? `${course.parts} part${course.parts === 1 ? '' : 's'} · ${course.speaker}` : <span className="drip" data-testid="opens-on">Opens on day {course.opensOnDay}</span>}
                 </small>
                 <DoorChips doors={course.doors} />
@@ -178,7 +184,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
               {course.open ? (
                 <Link className={`start ${START[index % START.length]}`} href={href} data-testid="lesson-link">Start</Link>
               ) : (
-                <Link className="start soft" href={href} data-testid="peek">Peek now</Link>
+                <Link className="start soft" href={href} data-testid="peek">Preview</Link>
               )}
             </div>
           )

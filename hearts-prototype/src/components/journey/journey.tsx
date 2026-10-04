@@ -18,6 +18,7 @@ import { Arch } from '@/components/arch'
 import { TabBar } from '../app/shell'
 import { ART as SLIDE_BACKDROP, Avatar, FollowButton, Slide } from '../app/feed'
 import { HeartIcon, PlayIcon, SaveIcon, ShareIcon } from '../icons'
+import { beginWith } from '@/lib/begin-with'
 import { HelpScreen, Opener, SceneCard } from './scenes'
 import { TeachingCard } from './teaching-card'
 import { KeepPlaceSheet, type SheetReason } from './sheet'
@@ -687,7 +688,8 @@ export function Journey(props: JourneyProps) {
         setItems([starter])
       }
       setFirstEver(true)
-      setLine(justShow ? props.opener.justShow : props.opener.handOff)
+      const topic = beginWith(state, opening.scenes)
+      setLine(justShow ? props.opener.justShow : `We'll begin with ${topic.title}.`)
       setPhase('handoff')
       performance.mark('door-tap')
       const doorAnimation = doorEl && !justShow ? animate(doorEl, [{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }], T.calm, EASE.calm, { id: 'door' }) : null

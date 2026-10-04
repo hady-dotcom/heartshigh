@@ -1,6 +1,5 @@
 /*
- * HEARTS look: one token set, two themes.
- * Evening is the deep teal and lantern gold. Dawn is the same garden in rose-gold mist.
+ * HEARTS look: one token set. Evening garden at every hour.
  * Components read the tokens. Screens do not restyle themselves.
  * Garden rings stay a gradient with white figures (the path layout is untouched).
  * The appetiser's next-talk card stays an opaque colour.
@@ -86,44 +85,44 @@ html[data-theme='evening'] {
   color-scheme: dark;
 }
 
-/* —— Dawn: pale misty teal, rose-gold light, deep teal ink —— */
+/* Dawn is retired. A leftover data-theme="dawn" still uses the evening tokens. */
 html[data-theme='dawn'] {
-  --cream: #dceee9;
-  --paper: #e7f3f0;
-  --card: #f4faf8;
-  --ink: #102e2c;
-  --ink-2: #1e4540;
-  --muted: #3d5c57;
-  --line: #b7d4cc;
-  --gold: #c47a45;
-  --gold-deep: #7a3f28;
-  --gold-glow: #e8b089;
-  --gold-ink: #1a120c;
-  --teal: #1a6b5e;
-  --teal-deep: #0f4f46;
-  --teal-fill: #1f6f62;
-  --mint: #d5ebe4;
-  --purple: #6a4a86;
-  --lavender: #f4e8ee;
-  --orange: #a85a32;
-  --rose: #8f3d4a;
-  --rose-bg: #f3e4e2;
-  --indigo: #1b3b38;
-  --night: #12302f;
-  --red-clause: #8f2f2a;
-  --bg-solid: #d7ebe6;
-  --scrim: rgba(220, 236, 232, 0.84);
-  --scrim-deep: rgba(236, 210, 198, 0.78);
-  --glass: rgba(244, 250, 248, 0.78);
-  --glass-solid: #f4faf8;
-  --field: #f7fbfa;
-  --ring-from: #6a4038;
-  --ring-to: #1a4a44;
-  --scene: url('/theme/dawn-courtyard.jpg');
-  --focus: #102e2c;
+  --cream: #0e2a2b;
+  --paper: #102e2c;
+  --card: #163633;
+  --ink: #f6eedc;
+  --ink-2: #e7dcc8;
+  --muted: #d7cbb8;
+  --line: rgba(212, 168, 75, 0.42);
+  --gold: #d4a84b;
+  --gold-deep: #c4923a;
+  --gold-glow: #f1d58a;
+  --gold-ink: #1a1408;
+  --teal: #c9d6b0;
+  --teal-deep: #e7f3ec;
+  --teal-fill: #245e54;
+  --mint: #1a3f38;
+  --purple: #e4d4f4;
+  --lavender: #2a2436;
+  --orange: #e8a15a;
+  --rose: #e7a0b4;
+  --rose-bg: #3a242c;
+  --indigo: #12302f;
+  --night: #0e2a2b;
+  --red-clause: #f0b4b0;
+  --bg-solid: #0e2a2b;
+  --scrim: rgba(14, 42, 43, 0.86);
+  --scrim-deep: rgba(14, 42, 43, 0.93);
+  --glass: rgba(18, 48, 47, 0.8);
+  --glass-solid: #163633;
+  --field: rgba(8, 26, 26, 0.72);
+  --ring-from: #1b4a46;
+  --ring-to: #0e2a2b;
+  --scene: url('/theme/evening-courtyard.jpg');
+  --focus: #f1d58a;
   color: var(--ink);
   background: var(--bg-solid);
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 /* Scenic wash. The star lattice stays off the page itself: 7% in the file, and only on headers and empty states. */
@@ -292,6 +291,24 @@ html[data-theme] :focus-visible {
   outline-offset: 2px;
 }
 
+html[data-theme] .page-help-btn {
+  background: var(--glass-solid);
+  color: var(--ink);
+  border-color: var(--line);
+}
+html[data-theme] .page-help-card {
+  background: var(--card);
+  color: var(--ink);
+}
+html[data-theme] .swarm-tools .chip {
+  background: var(--glass-solid);
+  color: var(--ink);
+  border-color: var(--line);
+}
+html[data-theme] .swarm-tools .chip.on {
+  background: var(--gold);
+  color: var(--gold-ink);
+}
 html[data-theme] .chip {
   border: 1px solid transparent;
 }

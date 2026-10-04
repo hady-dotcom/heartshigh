@@ -5,6 +5,7 @@ import type { SceneDef, SceneOption } from '@/lib/heart'
 import { EASE, T, animate } from '@/lib/motion'
 import { httpsHref, plainText, telHref } from '@/lib/text-safety'
 import { Arch } from '@/components/arch'
+import { COMPASS_DISCLOSURE, compassPrivacyOn } from '@/lib/compass-privacy'
 import { BUBBLE_TINTS, DOOR_TINTS, Glyph } from './glyphs'
 
 export function Caption({ text, className = 'j-caption', testId }: { text: string; className?: string; testId?: string }) {
@@ -23,8 +24,9 @@ export function Opener({ caption, subline, onPlay, onJustShow, loginHref, signed
         <span className="j-mark" aria-hidden><Arch size={34} /></span>
         {signedIn ? null : <a className="j-login" href={loginHref} data-testid="opener-login">Log in</a>}
       </header>
-      <span className="j-arch" aria-hidden><Arch size={120} /></span>
+      <span className="j-arch" aria-hidden style={{ opacity: 0.15 }}><Arch size={120} /></span>
       <div className="j-body">
+        <p className="j-progress" data-testid="progress">1 of 8</p>
         <Caption text={caption} testId="opener-caption" />
         <p className="j-sub">{subline}</p>
       </div>
@@ -39,6 +41,7 @@ export function Opener({ caption, subline, onPlay, onJustShow, loginHref, signed
 type SceneProps = {
   scene: SceneDef
   index: number
+  total?: number
   selected: string | null
   reply: string | null
   picked: string | null
@@ -48,7 +51,7 @@ type SceneProps = {
   onBrowse?: () => void
 }
 
-export function SceneCard({ scene, index, selected, reply, picked, onPick, onPass, onJustShow }: SceneProps) {
+export function SceneCard({ scene, index, total = 8, selected, reply, picked, onPick, onPass, onJustShow }: SceneProps) {
   const pillRef = useRef<HTMLParagraphElement>(null)
   const tilesRef = useRef<HTMLDivElement>(null)
   const swipe = useRef<{ x: number; y: number } | null>(null)
@@ -79,11 +82,13 @@ export function SceneCard({ scene, index, selected, reply, picked, onPick, onPas
     <section className={`j-screen j-scene layout-${scene.layout}`} data-screen={`scene-${index + 1}`} data-testid="scene" data-scene={scene.key}>
       <header className="j-top">
         <span className="j-mark" aria-hidden><Arch size={34} /></span>
-        <button type="button" className="j-pass" onClick={onPass} disabled={locked} data-testid="pass">Pass</button>
+        <button type="button" className="j-pass" onClick={onPass} disabled={locked} data-testid="pass">Skip</button>
       </header>
       <div className="j-body">
+        <p className="j-progress" data-testid="progress">{index + 2} of {total}</p>
         <Caption text={scene.caption} testId="scene-caption" />
         <p className="j-sub">{scene.subline}</p>
+        {index === 0 && compassPrivacyOn() ? <p className="j-sub" data-testid="compass-disclosure">{COMPASS_DISCLOSURE}</p> : null}
       </div>
       <div className="j-choices" onPointerDown={down} onPointerUp={up}>
         <p ref={pillRef} className="j-reply" aria-live="polite" data-testid="reply-pill" style={{ visibility: reply ? 'visible' : 'hidden' }}>{reply || ' '}</p>
@@ -143,6 +148,7 @@ export function SceneCard({ scene, index, selected, reply, picked, onPick, onPas
                 aria-pressed={selected === option.key}
               >
                 <span className="j-arch"><span className="leaf" /></span>
+                <span className="j-door-scrim" aria-hidden />
                 <span className="j-door-label">{option.label}</span>
               </button>
             ))}

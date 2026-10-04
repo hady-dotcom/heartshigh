@@ -75,7 +75,7 @@ const PLACING = [
   {
     prompt: 'What would you most like to get from a sitting like this?',
     why: 'Some people come for prayer, some for character, some to know Allah better. We start where you are.',
-    options: ['Prayer that holds steady | 15', 'Being kinder to people | 31', 'Knowing the names of Allah | 22', 'Somewhere calm to sit | 2'],
+    options: ['Prayer that holds steady | 15', 'Being kinder to people | 31', 'Knowing the names of Allah | 22', 'A calm place to start | 2'],
   },
   {
     prompt: 'When a hard week comes, what do you usually do?',
@@ -84,7 +84,7 @@ const PLACING = [
   },
   {
     prompt: 'Where would you like your first proper talk to begin?',
-    why: 'This answer counts twice, because it tells us directly where you would like to start.',
+    why: 'This helps us pick the first talk from the door you would like to walk through.',
     options: ['With the Prophet | 3', 'With prayer | 15', 'With Allah as Lord | 22', 'With how I treat people | 31'],
   },
 ]

@@ -6,7 +6,8 @@ import { E2E_BASE } from '../env'
 
 const PORTAL = 'east-london'
 const START = `/p/${PORTAL}/start`
-const PICKS: [string, string][] = [['extra', 'pause'], ['queue', 'let-go'], ['thumb', 'lives'], ['visitor', 'spin'], ['news', 'nobody'], ['doors', 'calmer']]
+const PICKS: [string, string][] = [['extra', 'pause'], ['queue', 'let-go'], ['thumb', 'lives'], ['visitor', 'spin'], ['news', 'nobody'], ['account', 'lord'], ['doors', 'calmer']]
+const SIM_PICKS: [string, string][] = PICKS.filter(([scene]) => scene !== 'account')
 const suffix = Date.now().toString().slice(-7)
 
 let master: APIRequestContext
@@ -151,9 +152,9 @@ test.describe('the opening', () => {
   test('9. six taps hand off with the line, then the feed, at /feed', async ({ page }) => {
     await page.goto(START)
     await page.getByTestId('lets-play').click()
-    for (const [scene, option] of PICKS.slice(0, 5)) await tapScene(page, scene, option)
+    for (const [scene, option] of PICKS.slice(0, 6)) await tapScene(page, scene, option)
     await tapScene(page, 'doors', 'calmer')
-    await expect(page.getByTestId('handoff-line')).toContainText('Pull up a chair')
+    await expect(page.getByTestId('handoff-line')).toContainText('We\'ll begin with')
     await expect(page.getByTestId('journey')).toHaveAttribute('data-phase', 'feed', { timeout: 15_000 })
     await expect(page).toHaveURL(new RegExp(`/p/${PORTAL}/feed$`))
   })
@@ -462,7 +463,7 @@ test.describe('the desks for the opening', () => {
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master/simulator')
     await expect(page.getByTestId('simulator')).toBeVisible()
     await expect(page.getByTestId('sim-lane').filter({ hasText: 'L1' })).toHaveCount(0)
-    for (const [scene, option] of PICKS) await page.getByTestId(`sim-${scene}`).selectOption(option)
+    for (const [scene, option] of SIM_PICKS) await page.getByTestId(`sim-${scene}`).selectOption(option)
     await expect(page.getByTestId('sim-lane').filter({ hasText: 'L1' })).toHaveCount(1)
     await expect(page.getByTestId('sim-feed-item').first()).toBeVisible()
     await expect(page.locator('[data-testid="sim-scale"][data-scale="desire"]')).toHaveAttribute('data-value', '0.00')
