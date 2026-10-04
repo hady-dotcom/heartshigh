@@ -330,7 +330,7 @@ async function main() {
         await payload.create({
           collection: 'completions',
           overrideAccess: true,
-          data: { user: user.id, lesson: liftLesson, percent: 100, sourceLevel: 'appetiser', watchedAt },
+          data: { user: user.id, lesson: liftLesson, portal: portalId, percent: 100, sourceLevel: 'appetiser', watchedAt },
         })
       } else {
         const when = new Date(String(watched.watchedAt || watched.createdAt || '')).getTime()
