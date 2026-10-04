@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 
-export function CopyLink({ value, testId = 'copy-link', label: idle = 'Copy link' }: { value: string; testId?: string; label?: string }) {
+export function CopyLink({ value, testId = 'copy-link', label: idle = 'Copy link', className = 'btn ghost small' }: { value: string; testId?: string; label?: string; className?: string }) {
   const [label, setLabel] = useState(idle)
   return (
     <button
       type="button"
-      className="pill outline small"
+      className={className}
       data-testid={testId}
       onClick={async () => {
         try {

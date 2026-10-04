@@ -25,6 +25,7 @@ import { companyGatherings, relatedCards, TalkGatherNotice } from '@/screens/app
 import { listGatherings } from '@/server/gather'
 import { mixSwarm } from '@/lib/circle'
 import { circleForPoints, circleSettings } from '@/server/circle'
+import { featureOn } from '@/lib/features'
 
 const START = ['orange', 'gold', 'teal']
 
@@ -104,7 +105,7 @@ export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx,
           </form>
         </section>
       </div>
-      <TabBar base={base} active="home" unread={unread} />
+      <TabBar base={base} active="home" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -211,13 +212,15 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
       const image = answer.image as { url?: string } | null
       ;(swarm[pointId] ||= []).push({ name: author?.name || 'Someone in your circle', body: str(answer.body) || str(answer.choice) || 'Shared a photo', image: image?.url || null })
     }
-    // HEARTS circle answers fill the swarm while it is quiet and step back as real shared answers arrive.
-    const [circle, settings] = await Promise.all([circleForPoints(payload, points.map((point) => point.id), portal.id), circleSettings(payload)])
-    circleLabel = settings.label
-    for (const point of points) {
-      const extra = (circle.get(point.id) || []).map((row): SwarmItem => ({ name: row.name, body: row.body, circle: true }))
-      const mixed = mixSwarm(swarm[point.id] || [], extra, `${user.id}:${point.id}`, settings.threshold)
-      if (mixed.length) swarm[point.id] = mixed
+    if (featureOn(portal, 'circle')) {
+      // HEARTS circle answers fill the swarm while it is quiet and step back as real shared answers arrive.
+      const [circle, settings] = await Promise.all([circleForPoints(payload, points.map((point) => point.id), portal.id), circleSettings(payload)])
+      circleLabel = settings.label
+      for (const point of points) {
+        const extra = (circle.get(point.id) || []).map((row): SwarmItem => ({ name: row.name, body: row.body, circle: true }))
+        const mixed = mixSwarm(swarm[point.id] || [], extra, `${user.id}:${point.id}`, settings.threshold)
+        if (mixed.length) swarm[point.id] = mixed
+      }
     }
   }
 
@@ -241,11 +244,12 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
   const spoken = contextOn ? lineAt(str(lesson.transcript), startAt) : null
   const unread = await unreadCount(payload, user)
   const here = `${base}/course/${courseId}?part=${lessonId}`
-  const { cards: gatherCards } = await listGatherings(payload, portal.id, user.id)
-  const related = relatedCards(gatherCards, { lessonId, courseId })
+  const gatherOn = featureOn(portal, 'gather')
+  const { cards: gatherCards } = gatherOn ? await listGatherings(payload, portal.id, user.id) : { cards: [] as Awaited<ReturnType<typeof listGatherings>>['cards'] }
+  const related = gatherOn ? relatedCards(gatherCards, { lessonId, courseId }) : []
   const withGather = views.map((view) => ({
     ...view,
-    gatherings: view.kind === 'task'
+    gatherings: gatherOn && view.kind === 'task'
       ? companyGatherings(gatherCards, { id: view.id, lessonId, courseId, door: related[0]?.door || null, prompt: view.prompt }).map((card) => ({ href: `${base}/gather/${card.id}`, title: card.title, when: card.when }))
       : undefined,
   }))
@@ -284,10 +288,13 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
           serverNow={at.toISOString()}
           next={here}
           overPlayer={flags.popupOverPlayer}
-          garden={{ done, total, gardenHref: `${base}/garden`, nextPart: nextCoursePart(lessons, partIndex, doneLessons, `${base}/course/${courseId}`), links: [{ label: "See what you've sown", href: `${base}/garden/general` }, { label: 'Your workbook', href: `${base}/garden/workbook` }] }}
+          garden={{ done, total, gardenHref: featureOn(portal, 'garden') ? `${base}/garden` : base, nextPart: nextCoursePart(lessons, partIndex, doneLessons, `${base}/course/${courseId}`), links: [
+            ...(featureOn(portal, 'garden') ? [{ label: "See what you've sown", href: `${base}/garden/general` }] : []),
+            ...(featureOn(portal, 'workbook') ? [{ label: 'Your workbook', href: `${base}/garden/workbook` }] : []),
+          ] }}
         />
         {related[0] ? <TalkGatherNotice startsAt={related[0].startsAt} href={`${base}/gather/${related[0].id}`} title={related[0].title} /> : null}
-        {marks.length ? (
+        {marks.length && featureOn(portal, 'feedback') ? (
           <section className="card" data-testid="in-video-feedback" style={{ marginTop: 14 }}>
             <h3>Feedback from your teacher</h3>
             {marks.map((mark) => (
@@ -295,7 +302,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
             ))}
           </section>
         ) : null}
-        {lessons.length >= 2 ? <p style={{ margin: '16px 0 0' }}><Link className="pill outline" href={`${base}/me/plan?course=${courseId}`} data-testid="plan-rest">Plan the rest of this course</Link></p> : null}
+        {lessons.length >= 2 && featureOn(portal, 'planner') ? <p style={{ margin: '16px 0 0' }}><Link className="pill outline" href={`${base}/me/plan?course=${courseId}`} data-testid="plan-rest">Plan the rest of this course</Link></p> : null}
         <p className="eyebrow">Parts of this course</p>
         {courseDoors(lessons, partCuts, doors).map((group) => (
           <section key={group.door?.number || 'open'} className="door-course" data-testid="course-door" data-door={group.door?.number || ''}>
@@ -337,7 +344,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
           </details>
         ) : null}
       </div>
-      <TabBar base={base} active="lanes" unread={unread} />
+      <TabBar base={base} active="lanes" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
