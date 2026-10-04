@@ -1,4 +1,5 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext, type Page } from '@playwright/test'
+import { mkdirSync } from 'node:fs'
 import { E2E_BASE } from '../env'
 
 const sfx = Date.now().toString().slice(-6)
@@ -11,8 +12,20 @@ const teacherCode = `F${sfx}T`
 const learnerCode = `F${sfx}L`
 const DESK = { width: 1366, height: 768 }
 const PHONE = { width: 390, height: 844 }
+const PROOF = process.env.PROOF_DIR || '/tmp/portal-features-proof'
 
 let master: APIRequestContext
+
+async function hideDevBadge(page: Page) {
+  await page.addStyleTag({ content: 'nextjs-portal, [data-nextjs-toast], [data-next-badge-root] { display: none !important; }' }).catch(() => undefined)
+}
+
+async function proofShot(page: Page, name: string) {
+  mkdirSync(PROOF, { recursive: true })
+  await hideDevBadge(page)
+  await page.waitForTimeout(300)
+  await page.screenshot({ path: `${PROOF}/${name}.png`, caret: 'initial' })
+}
 
 async function as(email?: string, password?: string) {
   const ctx = await playwrightRequest.newContext({ baseURL: E2E_BASE })
@@ -62,6 +75,7 @@ test('the master creator can switch Gather off, and a learner sees no Gather unt
   await expect(page.getByTestId('feature-gather')).toBeChecked()
   await page.getByTestId('feature-gather').uncheck()
   await expect(page.getByTestId('feature-gather')).not.toBeChecked()
+  await proofShot(page, 'creator-features-gather-off')
   await page.getByTestId('create-portal-submit').click()
   await expect(page.getByTestId('notice')).toBeVisible()
   await expect(page.getByTestId('portal-card').filter({ hasText: `/p/${slug}` })).toBeVisible()
@@ -103,6 +117,7 @@ test('the master creator can switch Gather off, and a learner sees no Gather unt
   await expect(phone.getByTestId('tabbar')).not.toContainText('Gather')
   await expect(phone.locator('[data-testid="home-gather"]')).toHaveCount(0)
   await expect(phone.getByTestId('home')).not.toContainText('Gather')
+  await proofShot(phone, 'phone-home-gather-off')
 
   await phone.goto(`/p/${slug}/gather`)
   await expect(phone.getByTestId('feature-unavailable')).toBeVisible()
@@ -124,6 +139,7 @@ test('the master creator can switch Gather off, and a learner sees no Gather unt
   await expect(phone.getByTestId('home')).toBeVisible()
   await expect(phone.getByTestId('tab-gather')).toBeVisible()
   await expect(phone.getByTestId('tab-week')).toHaveCount(0)
+  await proofShot(phone, 'phone-home-gather-on')
   await phone.goto(`/p/${slug}/gather`)
   await expect(phone.getByTestId('feature-unavailable')).toHaveCount(0)
   await expect(phone.getByTestId('tab-gather')).toBeVisible()
@@ -151,5 +167,30 @@ test('the master creator can switch Gather off, and a learner sees no Gather unt
   await expect(phone.getByTestId('see-sown')).toBeVisible()
   await phone.goto(`/p/${slug}/garden`)
   await expect(phone.getByTestId('garden')).toBeVisible()
+
+  const film = await browser.newContext({
+    viewport: PHONE,
+    recordVideo: { dir: PROOF, size: PHONE },
+    baseURL: E2E_BASE,
+  })
+  const clip = await film.newPage()
+  await signIn(clip, learnerEmail, learnerPass, `/p/${slug}`)
+  await expect(clip.getByTestId('tab-gather')).toBeVisible()
+  await hideDevBadge(clip)
+  await page.goto(`/master/portals/${slug}`)
+  await expect(page.getByTestId('feature-gather')).toBeChecked()
+  await page.getByTestId('feature-gather').uncheck()
+  await page.getByTestId('save-portal-features').click()
+  await expect(page.getByTestId('notice')).toBeVisible()
+  await clip.goto(`/p/${slug}`)
+  await expect(clip.getByTestId('home')).toBeVisible()
+  await expect(clip.getByTestId('tab-gather')).toHaveCount(0)
+  await expect(clip.getByTestId('tab-week')).toBeVisible()
+  await hideDevBadge(clip)
+  await clip.waitForTimeout(600)
+  await clip.close()
+  const video = clip.video()
+  if (video) await video.saveAs(`${PROOF}/switch-gather-off.mp4`)
+  await film.close()
   await phone.close()
 })
