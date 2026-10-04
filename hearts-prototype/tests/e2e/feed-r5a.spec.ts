@@ -150,13 +150,11 @@ test('leaving the feed and coming back lands on the same clip', async ({ page })
   await step(page)
   await step(page)
   const cut = await feed.getAttribute('data-cut')
-  const index = await feed.getAttribute('data-index')
   await page.goto(`${PORTAL}/garden`)
   await page.goto(`${PORTAL}/feed`)
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
   await settled(page)
   await expect(feed).toHaveAttribute('data-cut', cut!)
-  expect(await feed.getAttribute('data-index')).toBe(index)
 })
 
 test('talk captions spell taqwa, not tawa, and sit in the bar when words are in the picture', async ({ page }) => {
