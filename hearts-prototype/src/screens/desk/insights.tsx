@@ -83,7 +83,7 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
               <header><h2>Tap map</h2></header>
               <div className="body">
                 <form action={base} method="get">
-                  <input type="hidden" name="tab" value="heatmap" />
+                  <Hidden fields={{ tab: 'heatmap' }} />
                   <label>Route
                     <select name="route" defaultValue={desk.heatmap.route} data-testid="insights-route">
                       {desk.routes.map((row) => <option key={row.route} value={row.route}>{row.route} · {row.taps} taps</option>)}
