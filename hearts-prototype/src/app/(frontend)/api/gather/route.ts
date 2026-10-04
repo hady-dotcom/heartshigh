@@ -34,6 +34,15 @@ function redirectTo(req: Request, path: string, error?: string, notice?: string)
   return NextResponse.redirect(url, 303)
 }
 
+function wantsJson(req: Request) {
+  return (req.headers.get('accept') || '').includes('application/json')
+}
+
+function checkinReply(req: Request, next: string, error?: string, notice?: string) {
+  if (!wantsJson(req)) return redirectTo(req, next, error, notice)
+  return NextResponse.json({ ok: !error, error: error || null, notice: notice || null }, { status: error ? 400 : 200 })
+}
+
 const NOTICE: Record<string, string> = {
   going: 'You’re down as coming.',
   maybe: 'You’re down as maybe. The place stays open for someone else.',
@@ -157,21 +166,21 @@ export async function POST(req: Request) {
 
   if (action === 'checkin') {
     const row = await gatheringById(payload, Number(text(form, 'id')))
-    if (!row) return redirectTo(req, next, 'That gathering could not be found.')
+    if (!row) return checkinReply(req, next, 'That gathering could not be found.')
     const method = text(form, 'method') === 'host' ? 'host' : text(form, 'method') === 'code' ? 'code' : 'qr'
     if (method === 'host') {
-      if (user.role === 'learner') return redirectTo(req, next, 'Only the host can check someone in by hand.')
+      if (user.role === 'learner') return checkinReply(req, next, 'Only the host can check someone in by hand.')
       const learnerId = Number(text(form, 'learner'))
-      if (!learnerId) return redirectTo(req, next, 'Choose who has arrived.')
+      if (!learnerId) return checkinReply(req, next, 'Choose who has arrived.')
       const learner = await payload.findByID({ collection: 'users', id: learnerId, depth: 0, overrideAccess: true }).catch(() => null)
-      if (!learner) return redirectTo(req, next, 'That person could not be found.')
+      if (!learner) return checkinReply(req, next, 'That person could not be found.')
       const hosted = await checkIn(payload, { gathering: row, user: learner as typeof user, method: 'host' })
-      if (!hosted.ok) return redirectTo(req, next, hosted.error)
-      return redirectTo(req, next, undefined, 'Checked in.')
+      if (!hosted.ok) return checkinReply(req, next, hosted.error)
+      return checkinReply(req, next, undefined, 'Checked in.')
     }
     const result = await checkIn(payload, { gathering: row, user, method, token: text(form, 'token'), code: text(form, 'code') })
-    if (!result.ok) return redirectTo(req, next, result.error)
-    return redirectTo(req, next, undefined, result.already ? 'You were already checked in.' : 'You’re in. Welcome.')
+    if (!result.ok) return checkinReply(req, next, result.error)
+    return checkinReply(req, next, undefined, result.already ? 'You were already checked in.' : 'You’re in. Welcome.')
   }
 
   if (action === 'reflect') {

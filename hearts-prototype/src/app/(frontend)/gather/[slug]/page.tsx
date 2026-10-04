@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
@@ -6,6 +5,7 @@ import { CopyLink } from '@/components/app/copy-link'
 import { Flash, Hidden } from '@/components/app/shell'
 import { Qr } from '@/components/qr'
 import { CrossPost } from '@/components/gather/cross-post'
+import { FadeLink } from '@/components/gather/fade-link'
 import { KIND_LABEL } from '@/lib/gather'
 import { shareOrigin } from '@/lib/site-origin'
 import { getSession } from '@/server/context'
@@ -48,7 +48,7 @@ export default async function PublicGather({ params, searchParams }: { params: P
           {query.rsvp === '1' ? (
             <div data-testid="guest-saved">
               <p>You’re on the list. If you’d like the talks as well, the code for {view.portalName} is already filled in.</p>
-              <Link className="pill gold" href={join} data-testid="join-from-gather">Join {view.portalName}</Link>
+              <FadeLink className="pill gold" href={join} testId="join-from-gather" readyText="Come in">Join {view.portalName}</FadeLink>
             </div>
           ) : (
             <form action="/api/gather" method="post">

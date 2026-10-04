@@ -217,7 +217,21 @@ html[data-theme] .app.gather-shell form.gather-card textarea.field::placeholder 
 .public-gather.invite .gather-actions { margin-top: 8px; }
 .public-gather.invite .pill.small { min-height: 40px; }
 
-.welcome-card h2, .welcome-card h3 { color: var(--g-heading); margin-top: 0; }
+.welcome-card {
+  background:
+    radial-gradient(140% 90% at 0% 0%, rgba(212, 168, 75, 0.42), transparent 58%),
+    #fbf6e8;
+  border: 1px solid #d4a84b;
+  overflow-anchor: none;
+}
+.welcome-card h2, .welcome-card h3 {
+  color: var(--g-heading);
+  margin-top: 0;
+  font-size: 28px;
+  line-height: 1.15;
+}
+.welcome-card .pill { margin-top: 12px; }
+.door-error { margin: 0; color: #6b2a1a; font-weight: 650; }
 
 .door-checkin {
   display: flex;

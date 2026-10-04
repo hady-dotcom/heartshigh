@@ -5,6 +5,7 @@ import { CopyLink } from '@/components/app/copy-link'
 import { Qr } from '@/components/qr'
 import { GATHER_KINDS, KIND_LABEL, afterTalkLine, personName, publicNames, relatedGatherings, taskWantsCompany, type TaskRef } from '@/lib/gather'
 import { CrossPost } from '@/components/gather/cross-post'
+import { DoorArrival } from '@/components/gather/door-arrival'
 import { doorLabel } from '@/lib/doors'
 import { now } from '@/lib/clock'
 import { loadDoors } from '@/server/doors'
@@ -104,7 +105,7 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
     <AppFrame testId="gather-detail" tone="gather">
       <div className="app-scroll gather">
         <Back href={`${base}/gather`} label="Gather" />
-        <Flash error={query.error} notice={query.notice} />
+        <Flash error={query.error} notice={query.notice === 'You’re in. Welcome.' || query.notice === 'You were already checked in.' ? undefined : query.notice} />
         <p className="eyebrow" data-testid="detail-door">{card.doorHeading || 'At your masjid'}</p>
         <h1 style={{ fontSize: 36, margin: '4px 0 8px' }}>{card.title}</h1>
         {card.onLine ? <p data-testid="gather-on">{card.onLine}</p> : null}
@@ -175,22 +176,12 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
           </section>
         ) : null}
         {checked ? (
-          <section className="gather-card welcome-card" data-testid="checked-in">
+          <section className="gather-card welcome-card" id="at-the-door" data-testid="checked-in">
             <h3 style={{ marginTop: 0 }} data-testid="welcome-in">You’re in. Welcome.</h3>
             {reflection ? <p data-testid="reflection-saved">{str(reflection.body)}</p> : <Link className="pill gold small" href={`${base}/gather/${id}/reflect`} data-testid="reflect-open">Write one thing you’ll carry</Link>}
           </section>
         ) : card.status === 'published' && !card.past ? (
-          <section className="gather-card door-checkin" data-testid="door-checkin">
-            <h3>At the door</h3>
-            <p>Scan the QR on the poster, or type the 4-character door code.</p>
-            <form action="/api/gather" method="post">
-              <Hidden fields={{ action: 'checkin', method: 'code', id, next: here }} />
-              <label>Door code
-                <input className="field entry-code" name="code" inputMode="text" autoCapitalize="characters" autoComplete="off" maxLength={4} required data-testid="entry-code" />
-              </label>
-              <button className="pill gold block" type="submit" data-testid="code-checkin">I’m here</button>
-            </form>
-          </section>
+          <DoorArrival id={id} next={`${here}#at-the-door`} reflectHref={`${base}/gather/${id}/reflect`} />
         ) : null}
         {host ? <Link className="pill outline" href={`${base}/gather/${id}/door`} data-testid="door-link">Door code for tonight</Link> : null}
         <p className="muted" style={{ marginTop: 16 }}>A reminder is set when you say you’re coming. It stays on this page and in your bell.</p>
