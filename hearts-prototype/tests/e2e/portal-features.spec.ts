@@ -92,12 +92,14 @@ test('the master creator can switch Gather off, and a learner sees no Gather unt
   expect(teacherId).toBeTruthy()
   expect((await form(master, { action: 'create-code', portalSlug: slug, code: learnerCode, role: 'learner', pack: packId!, linkedTeacherCode: teacherId!, next: '/master' })).status()).toBe(303)
 
-  await page.goto(`/join?code=${learnerCode}`)
-  await page.getByTestId('join-name').fill('Features Learner')
-  await page.getByTestId('join-email').fill(learnerEmail)
-  await page.getByTestId('join-password').fill(learnerPass)
-  await page.getByTestId('join-submit').click()
-  await page.waitForURL((url) => !url.pathname.startsWith('/join'))
+  const joinPage = await browser.newPage()
+  await joinPage.goto(`/join?code=${learnerCode}`)
+  await joinPage.getByTestId('join-name').fill('Features Learner')
+  await joinPage.getByTestId('join-email').fill(learnerEmail)
+  await joinPage.getByTestId('join-password').fill(learnerPass)
+  await joinPage.getByTestId('join-submit').click()
+  await joinPage.waitForURL((url) => !url.pathname.startsWith('/join'))
+  await joinPage.close()
 
   const found = await json(await master.get(`/api/users?where[email][equals]=${encodeURIComponent(learnerEmail)}&depth=0`))
   const learnerId = found.docs?.[0]?.id
