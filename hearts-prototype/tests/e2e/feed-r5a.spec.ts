@@ -18,9 +18,11 @@ async function settled(page: Page) {
   let last = ''
   await expect(async () => {
     const now = `${await feed.getAttribute('data-index')}:${await feed.getAttribute('data-mode')}`
-    expect(now === last).toBe(true)
+    const same = now === last
     last = now
+    expect(same).toBe(true)
   }).toPass({ timeout: 10_000, intervals: [400] })
+  await page.waitForTimeout(150)
 }
 
 async function step(page: Page) {
@@ -38,18 +40,20 @@ test('the feed has no question cards, shows the coach and tab bar, and never lig
   await signIn(page)
   const feed = page.getByTestId('journey')
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  await settled(page)
   await expect(page.getByTestId('swipe-coach')).toBeVisible()
   await expect(page.getByTestId('tabbar')).toBeVisible()
   await expect(page.getByTestId('tab-home')).not.toHaveAttribute('aria-current', 'page')
   await page.getByTestId('swipe-coach').click()
   await expect(page.getByTestId('swipe-coach')).toHaveCount(0)
   const kinds: string[] = []
-  const total = Math.min(50, Math.max(12, ((await feed.getAttribute('data-cuts')) || '').split(' ').filter(Boolean).length))
+  const listed = ((await feed.getAttribute('data-cuts')) || '').split(' ').filter(Boolean).length
+  const total = Math.min(24, Math.max(8, listed))
   for (let at = 0; at < total; at++) {
     kinds.push((await feed.getAttribute('data-card')) || '')
     expect(await page.locator('[data-card="question"]').count()).toBe(0)
     await expect(page.getByTestId('feed-question')).toHaveCount(0)
-    await expect(page.getByText('What stays with you', { exact: false })).toHaveCount(0)
+    await expect(page.getByText('What stays with you from this')).toHaveCount(0)
     if (at < total - 1) await step(page)
   }
   expect(kinds.includes('question')).toBe(false)

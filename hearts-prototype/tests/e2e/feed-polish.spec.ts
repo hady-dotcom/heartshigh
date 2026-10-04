@@ -201,6 +201,7 @@ test('until a clip actually plays, our poster and a gold play button cover the p
   const vars = (await page.evaluate(() => (window as unknown as { __playerVars: Record<string, unknown>[] }).__playerVars)).at(-1)!
   expect(vars).toMatchObject({ controls: 0, playsinline: 1, rel: 0, iv_load_policy: 3, cc_load_policy: 0, modestbranding: 1 })
   await page.evaluate(() => { (window as unknown as { __allowPlay: boolean }).__allowPlay = true })
+  if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').click()
   await page.getByTestId('poster-play').click()
   await expect(page.getByTestId('poster-frame')).toHaveCount(0)
   await expect(page.getByTestId('poster-play')).toHaveCount(0)

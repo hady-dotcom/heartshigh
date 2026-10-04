@@ -301,16 +301,17 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   position: absolute;
   left: 16px;
   right: 16px;
-  top: calc(72px + var(--safe-top));
+  top: calc(10px + var(--safe-top));
   z-index: 18;
-  pointer-events: auto;
+  pointer-events: none;
 }
 .j-coach-card {
+  pointer-events: auto;
   background: rgba(14, 42, 43, 0.94);
   color: #f6eedc;
   border: 1px solid rgba(212, 168, 75, 0.45);
   border-radius: 18px;
-  padding: 14px 16px 12px;
+  padding: 10px 14px 10px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
 }
 .j-coach-card h2 { font-family: var(--serif); font-size: 22px; margin: 0 0 8px; }

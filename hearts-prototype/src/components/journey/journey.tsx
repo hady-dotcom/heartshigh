@@ -174,7 +174,7 @@ export function Journey(props: JourneyProps) {
   const showGen = useRef(0)
   const [lineAt, setLineAt] = useState(0)
   const [spokenAt, setSpokenAt] = useState<number | null>(null)
-  const watch = useRef<{ key: string; start: number; furthest: number; done90: boolean }>({ key: '', start: 0, furthest: 0, done90: false })
+  const watch = useRef<{ key: string; start: number; furthest: number; done90: boolean; ended: boolean }>({ key: '', start: 0, furthest: 0, done90: false, ended: false })
   const refilling = useRef(false)
   const clipRef = useRef<HTMLDivElement>(null)
   const peekEls = useRef<Partial<Record<Swipe, HTMLDivElement | null>>>({})
@@ -512,7 +512,7 @@ export function Journey(props: JourneyProps) {
         setSeenCuts(seen)
       }
       writeFeedPlace(item ? { cutId: item.cutId, mode: kind, card: item.card || 'talk' } : null)
-      watch.current = { key: `${item?.cutId}:${kind}`, start: kind === 'hors' ? item?.hors.start || 0 : item?.appetiser.start || 0, furthest: 0, done90: false }
+      watch.current = { key: `${item?.cutId}:${kind}:${item?.card || 'talk'}`, start: kind === 'hors' ? item?.hors.start || 0 : item?.appetiser.start || 0, furthest: 0, done90: false, ended: false }
       // The new card is on screen (and sliding in) before any player work starts.
       if (onShown) await onShown()
       const spec = specFor(item, kind)
@@ -785,7 +785,7 @@ export function Journey(props: JourneyProps) {
       const spec = specFor(starter, 'hors')
       indexRef.current = 0
       setIndex(0)
-      watch.current = { key: `${starter?.cutId}:hors`, start: starter?.hors.start || 0, furthest: 0, done90: false }
+      watch.current = { key: `${starter?.cutId}:hors`, start: starter?.hors.start || 0, furthest: 0, done90: false, ended: false }
       if (spec) {
         const holder: 0 | 1 = hosts.current[0].playerId ? 0 : hosts.current[1].playerId ? 1 : 0
         setVisibleHost(holder)
@@ -1087,10 +1087,11 @@ export function Journey(props: JourneyProps) {
         if (other && (otherState === STATE.PLAYING || otherState === STATE.BUFFERING || !other.isMuted())) silence(hidden.playerId)
       }
       const host = hosts.current[visibleRef.current]
-      if (host.state !== STATE.PLAYING || !host.playerId) return
-      const player = getPlayer(host.playerId)
+      const player = host.playerId ? getPlayer(host.playerId) : null
+      const realState = player ? player.getPlayerState() : host.state
+      if (realState !== STATE.PLAYING || !player) return
       const current = itemsRef.current[indexRef.current]
-      if (!player || !current) return
+      if (!current) return
       const time = player.getCurrentTime()
       const seen = watch.current
       seen.furthest = Math.max(seen.furthest, time - seen.start)
@@ -1133,7 +1134,7 @@ export function Journey(props: JourneyProps) {
         return
       }
       // The player's own end mark is a whole second; the clip stops at its real out point, between sentences.
-      if (modeRef.current === 'hors' && current.hors.end > current.hors.start && time >= current.hors.end) {
+      if (modeRef.current === 'hors' && (!current.card || current.card === 'talk') && current.hors.end > current.hors.start && time >= current.hors.end) {
         player.mute()
         player.pauseVideo()
         if (!seen.done90) {
@@ -1141,7 +1142,10 @@ export function Journey(props: JourneyProps) {
           signal('watched90')
           noteBrowse('linger')
         }
-        window.dispatchEvent(new CustomEvent('hearts:ended'))
+        if (!seen.ended) {
+          seen.ended = true
+          window.dispatchEvent(new CustomEvent('hearts:ended'))
+        }
         return
       }
       if (modeRef.current === 'hors' && !seen.done90) {
