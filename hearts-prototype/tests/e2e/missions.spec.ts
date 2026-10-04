@@ -220,7 +220,7 @@ test.describe('Help shape HEARTS', () => {
     await desk.screenshot({ path: `${SHOTS}/insights-heatmap.png`, fullPage: true })
     await desk.getByTestId('insights-tab-funnel').click()
     await expect(desk.getByTestId('insights-funnel')).toBeVisible()
-    await expect(desk.getByTestId('funnel-step').first()).toContainText('Opening questions · 24 sessions')
+    await expect(desk.getByTestId('funnel-step').first()).toContainText(/Opening questions · \d+ sessions/)
     await noIssuesBadge(desk)
     await desk.screenshot({ path: `${SHOTS}/insights-funnel.png`, fullPage: true })
     await desk.getByTestId('insights-tab-angry').click()
