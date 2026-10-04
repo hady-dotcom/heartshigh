@@ -1,7 +1,7 @@
 [
   {
     "at": "01-levels-above-speaker",
-    "note": "Level steps sit above the speaker, not under the name.",
+    "note": "Level steps sit above the speaker. Caption is the timed line, not the talk title.",
     "snap": [
       {
         "id": "h0-1",
@@ -9,7 +9,7 @@
         "hidden": false,
         "state": 1,
         "muted": true,
-        "currentTime": 898.1701000000006
+        "currentTime": 899.1703999999995
       }
     ],
     "card": "talk",
@@ -19,7 +19,7 @@
   },
   {
     "at": "02-sound-advancing",
-    "note": "Sound on, player time moving 898.17 -> 899.27.",
+    "note": "Sound on, player time moving 899.17 -> 900.27.",
     "snap": [
       {
         "id": "h0-1",
@@ -27,7 +27,7 @@
         "hidden": false,
         "state": 1,
         "muted": false,
-        "currentTime": 899.3701000000005
+        "currentTime": 900.3702999999998
       }
     ],
     "card": "talk",
@@ -46,7 +46,7 @@
         "hidden": false,
         "state": 1,
         "muted": false,
-        "currentTime": 899.3701000000005
+        "currentTime": 900.3702999999998
       }
     ],
     "hiddenPlaying": []
@@ -62,7 +62,7 @@
         "hidden": false,
         "state": 2,
         "muted": true,
-        "currentTime": 899.3701000000005
+        "currentTime": 900.3702999999998
       }
     ],
     "hiddenPlaying": []
@@ -78,7 +78,7 @@
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 899.3701000000005
+        "currentTime": 900.3702999999998
       },
       {
         "id": "h1-2",
@@ -86,7 +86,7 @@
         "hidden": false,
         "state": 1,
         "muted": false,
-        "currentTime": 253.2002000000002
+        "currentTime": 253.20010000000056
       }
     ],
     "hiddenPlaying": []
@@ -102,7 +102,7 @@
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 899.3701000000005
+        "currentTime": 900.3702999999998
       },
       {
         "id": "h1-2",
@@ -110,7 +110,7 @@
         "hidden": false,
         "state": 2,
         "muted": true,
-        "currentTime": 253.2002000000002
+        "currentTime": 253.20010000000056
       }
     ],
     "hiddenPlaying": []
@@ -125,7 +125,7 @@
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 899.3701000000005
+        "currentTime": 900.3702999999998
       },
       {
         "id": "h1-2",
@@ -133,7 +133,7 @@
         "hidden": false,
         "state": 2,
         "muted": true,
-        "currentTime": 253.2002000000002
+        "currentTime": 253.20010000000056
       }
     ],
     "card": "scene",
@@ -152,7 +152,7 @@
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 899.3701000000005
+        "currentTime": 900.3702999999998
       },
       {
         "id": "h1-2",
@@ -160,7 +160,7 @@
         "hidden": false,
         "state": 2,
         "muted": true,
-        "currentTime": 253.2002000000002
+        "currentTime": 253.20010000000056
       }
     ],
     "hiddenPlaying": []
@@ -175,7 +175,7 @@
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 899.3701000000005
+        "currentTime": 900.3702999999998
       },
       {
         "id": "h1-2",
@@ -183,7 +183,7 @@
         "hidden": false,
         "state": 2,
         "muted": true,
-        "currentTime": 253.2002000000002
+        "currentTime": 253.20010000000056
       }
     ],
     "card": "scene",
@@ -201,7 +201,7 @@
         "hidden": true,
         "state": 2,
         "muted": true,
-        "currentTime": 899.3701000000005
+        "currentTime": 900.3702999999998
       },
       {
         "id": "h1-2",
@@ -209,7 +209,7 @@
         "hidden": false,
         "state": 2,
         "muted": true,
-        "currentTime": 253.2002000000002
+        "currentTime": 253.20010000000056
       }
     ],
     "card": "scene",
@@ -227,7 +227,7 @@
         "hidden": false,
         "state": 1,
         "muted": false,
-        "currentTime": 897.9705
+        "currentTime": 897.97
       }
     ],
     "card": "talk",
@@ -237,7 +237,7 @@
   },
   {
     "at": "06-caption-bar",
-    "note": "Burned-in film in a 16:9 band; speaker on its own row; chips and timer clear.",
+    "note": "Burned-in film in a 16:9 band; caption is the timed spoken line, not a title.",
     "snap": [
       {
         "id": "h0-1",
@@ -245,7 +245,7 @@
         "hidden": false,
         "state": 1,
         "muted": false,
-        "currentTime": 898.172
+        "currentTime": 898.0700999999997
       }
     ],
     "card": "talk",
