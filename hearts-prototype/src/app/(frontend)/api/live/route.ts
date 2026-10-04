@@ -19,6 +19,7 @@ import {
   setReminder,
   startSession,
   moderateQuestion,
+  deleteSession,
 } from '@/server/live'
 import { blocked, READ_ONLY } from '@/server/viewas'
 
@@ -159,6 +160,12 @@ export async function POST(req: Request) {
     const result = await setReminder(payload, portal, user, Number(text(body.id)))
     if (!result.ok) return reply(req, next, result.error)
     return reply(req, next, undefined, 'We’ll remind you when it starts.')
+  }
+
+  if (action === 'forget') {
+    const result = await deleteSession(payload, portal, user, Number(text(body.id)))
+    if (!result.ok) return reply(req, next, result.error)
+    return reply(req, next, undefined, 'That session was removed.')
   }
 
   if (action === 'heartbeat') {

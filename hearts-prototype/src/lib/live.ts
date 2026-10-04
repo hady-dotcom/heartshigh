@@ -5,6 +5,7 @@ import { isProduction, isRemoteDatabase, type Env } from './env'
 import { youtubeIdFromUrl } from './extractor'
 
 export const DEMO_PORTAL_SLUG = 'hearts-demo'
+export const LIVE_DEMO_TITLES = ['Circle after Isha', 'Jumuʿah reminders', 'Friday night tafsir: Surah al-Kahf'] as const
 export const LIVE_POLL_MS = 12_000
 export const PRESENCE_WINDOW_MS = 45_000
 export const QUESTION_MAX = 240
@@ -271,14 +272,19 @@ export function parseLiveWhen(raw: string, now = new Date()): Date | null {
 export function liveWhenLabel(iso: string | Date | null | undefined, timeZone = 'Europe/London') {
   const date = iso instanceof Date ? iso : new Date(String(iso || ''))
   if (Number.isNaN(date.getTime())) return ''
-  return new Intl.DateTimeFormat('en-GB', {
+  const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone,
     weekday: 'short',
     day: 'numeric',
     month: 'short',
-    hour: '2-digit',
+    hour: 'numeric',
     minute: '2-digit',
-  }).format(date)
+    hour12: true,
+  }).formatToParts(date)
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value || ''
+  const month = part('month').slice(0, 3)
+  const period = part('dayPeriod').replace(/\./g, '').replace(/\s+/g, '').toLowerCase()
+  return `${part('weekday')} ${part('day')} ${month}, ${part('hour')}:${part('minute')} ${period}`
 }
 
 export function hostFirstName(full: string) {

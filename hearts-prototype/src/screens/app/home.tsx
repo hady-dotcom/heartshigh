@@ -66,11 +66,11 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   return (
     <AppFrame testId="home">
       <div className="app-scroll">
-        <HomeLive live={liveBits.live} upcoming={liveBits.upcoming} base={base} portal={String(portal.slug)} />
         <div className="app-head">
           <h1>Home</h1>
           <Link href={`${base}/me`} aria-label="Me" data-testid="home-avatar"><Avatar name={user.name || 'You'} portrait={null} size={40} /></Link>
         </div>
+        <HomeLive live={liveBits.live} upcoming={liveBits.upcoming} base={base} portal={String(portal.slug)} />
         <span className="sr-only">{portalName(portal)}</span>
         <Flash error={query.error} notice={query.notice} />
         <InstallCard sheet />

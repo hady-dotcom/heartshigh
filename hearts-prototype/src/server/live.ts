@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
-import { doorByNumber, doorLabel } from '@/lib/doors'
+import { doorByNumber, doorSpokenLabel } from '@/lib/doors'
+import { portraitFor, slugify } from '@/server/learner'
 import { idOf, portalIdOf } from '@/lib/ids'
 import {
   LIVE_POLL_MS,
@@ -62,6 +63,7 @@ export type LiveCard = {
   muxRtmpUrl: string
   muxPlaybackId: string
   embedUrl: string
+  posterUrl: string
   vodUrl: string
   status: 'scheduled' | 'live' | 'ended'
   scheduledAt: string
@@ -135,7 +137,7 @@ function cardFrom(row: Doc, portal: PortalDoc, reminded: boolean, viewers: numbe
     portalSlug: text(portal.slug),
     title: text(row.title),
     door,
-    doorLabel: doorRow ? doorLabel(doorRow) : '',
+    doorLabel: doorRow ? doorSpokenLabel(doorRow) : '',
     hostId: idOf(row.host) || 0,
     hostName,
     hostFirst: hostFirstName(hostName),
@@ -148,6 +150,7 @@ function cardFrom(row: Doc, portal: PortalDoc, reminded: boolean, viewers: numbe
     muxRtmpUrl: text(row.muxRtmpUrl),
     muxPlaybackId: text(row.muxPlaybackId),
     embedUrl: embedFor(row),
+    posterUrl: portraitFor(slugify(hostName)) || '/theme/evening-courtyard.jpg',
     vodUrl: text(row.vodUrl),
     status: row.status === 'live' || row.status === 'ended' ? row.status : 'scheduled',
     scheduledAt: text(row.scheduledAt),
@@ -554,6 +557,27 @@ export async function heartbeat(payload: Payload, portal: PortalDoc, user: Sessi
   if (existing) await payload.update({ collection: col('live-presence'), id: existing.id, overrideAccess: true, data: { lastSeenAt: at } as never })
   else await payload.create({ collection: col('live-presence'), overrideAccess: true, data: { portal: portal.id, session: sessionId, user: user.id, lastSeenAt: at } as never })
   return viewersFor(payload, sessionId)
+}
+
+export async function deleteSession(
+  payload: Payload,
+  portal: PortalDoc,
+  user: SessionUser,
+  id: number,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!canGoLive(user.role, portalIdOf(user), portal.id)) return { ok: false, error: 'Only a teacher or the portal admin can remove a live session.' }
+  const row = await sessionById(payload, id)
+  if (!row || idOf(row.portal) !== portal.id) return { ok: false, error: 'That session could not be found.' }
+  const related = ['live-questions', 'live-reminders', 'live-presence'] as const
+  for (const collection of related) {
+    const rows = await many(payload, collection, { session: { equals: id } }, { limit: 500 })
+    for (const item of rows) {
+      await payload.delete({ collection: col(collection), id: item.id, overrideAccess: true })
+    }
+  }
+  await payload.delete({ collection: col('live-sessions'), id, overrideAccess: true })
+  await audit(payload, 'live.forget', { actor: user.id, actorRole: user.role, portal: portal.id, detail: { session: id, title: text(row.title) } })
+  return { ok: true }
 }
 
 export function muxStatus() {

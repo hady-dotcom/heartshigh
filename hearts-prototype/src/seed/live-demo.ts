@@ -1,5 +1,5 @@
 import type { Payload } from 'payload'
-import { DEMO_PORTAL_SLUG, liveDemoGuard, replayTitle } from '@/lib/live'
+import { DEMO_PORTAL_SLUG, LIVE_DEMO_TITLES, liveDemoGuard, replayTitle } from '@/lib/live'
 import { portalIdOf } from '@/lib/ids'
 import type { SessionUser } from '@/server/context'
 
@@ -20,7 +20,13 @@ function later(days: number, hours = 19, minutes = 0) {
   return date
 }
 
-/** Seeds one scheduled session, and optionally one live session, on hearts-demo only. Never touches passwords. */
+const DEMO_ROWS: { seedKey: string; title: (typeof LIVE_DEMO_TITLES)[number]; door: number; days: number; live?: boolean }[] = [
+  { seedKey: 'live-demo-isha', title: LIVE_DEMO_TITLES[0], door: 16, days: 0, live: true },
+  { seedKey: 'live-demo-jumuah', title: LIVE_DEMO_TITLES[1], door: 7, days: 2 },
+  { seedKey: 'live-demo-kahf', title: LIVE_DEMO_TITLES[2], door: 12, days: 5 },
+]
+
+/** Seeds the three named sessions on hearts-demo only. Never touches passwords. */
 export async function seedLiveDemo(payload: Payload, options: { live?: boolean } = {}): Promise<SeedResult> {
   const portal = await one(payload, 'portals', { slug: { equals: DEMO_PORTAL_SLUG } })
   const guard = liveDemoGuard(portal ? DEMO_PORTAL_SLUG : null)
@@ -55,56 +61,34 @@ export async function seedLiveDemo(payload: Payload, options: { live?: boolean }
 
   let created = 0
   let reused = 0
-  const scheduledKey = 'live-demo-scheduled'
-  const existingScheduled = await one(payload, 'live-sessions', { seedKey: { equals: scheduledKey } })
-  if (existingScheduled) reused += 1
-  else {
+  const wantLive = Boolean(options.live)
+  for (const row of DEMO_ROWS) {
+    const existing = await one(payload, 'live-sessions', { seedKey: { equals: row.seedKey } })
+    if (existing) {
+      reused += 1
+      continue
+    }
+    const goLive = Boolean(row.live && wantLive)
+    const when = goLive ? new Date() : later(row.days || 2)
     await payload.create({
       collection: 'live-sessions' as 'users',
       overrideAccess: true,
       data: {
         portal: portal.id,
-        title: 'Jumuʿah reminders',
-        door: 16,
+        title: row.title,
+        door: row.door,
         host: host.id,
         hostName: host.name,
         source: 'youtube',
         sourceUrl: DEMO_YOUTUBE,
         youtubeId: 'jNQXAC9IVRw',
-        status: 'scheduled',
-        scheduledAt: later(2).toISOString(),
-        seedKey: scheduledKey,
+        status: goLive ? 'live' : 'scheduled',
+        scheduledAt: when.toISOString(),
+        startedAt: goLive ? when.toISOString() : undefined,
+        seedKey: row.seedKey,
       } as never,
     })
     created += 1
-  }
-
-  const wantLive = Boolean(options.live)
-  if (wantLive) {
-    const liveKey = 'live-demo-live'
-    const existingLive = await one(payload, 'live-sessions', { seedKey: { equals: liveKey } })
-    if (existingLive) reused += 1
-    else {
-      await payload.create({
-        collection: 'live-sessions' as 'users',
-        overrideAccess: true,
-        data: {
-          portal: portal.id,
-          title: 'Circle after Isha',
-          door: 7,
-          host: host.id,
-          hostName: host.name,
-          source: 'youtube',
-          sourceUrl: DEMO_YOUTUBE,
-          youtubeId: 'jNQXAC9IVRw',
-          status: 'live',
-          scheduledAt: new Date().toISOString(),
-          startedAt: new Date().toISOString(),
-          seedKey: liveKey,
-        } as never,
-      })
-      created += 1
-    }
   }
 
   return { ok: true, created, reused, live: wantLive }

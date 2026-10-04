@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Hidden } from '@/components/app/shell'
-import { doorLabel } from '@/lib/doors'
+import { LiveWhenPicker } from '@/components/desk/live-when'
+import { doorSpokenLabel } from '@/lib/doors'
 import { muxConfigured, SOURCE_LABEL } from '@/lib/live'
 import { loadDoors } from '@/server/doors'
 import { listQuestions, listSessions, muxStatus } from '@/server/live'
@@ -128,7 +129,7 @@ export async function LiveDeskScreen(ctx: Ctx) {
             <label className="stack">Door
               <select name="door" data-testid="desk-live-door">
                 <option value="">None</option>
-                {doors.map((door) => <option key={door.number} value={door.number}>{doorLabel(door)}</option>)}
+                {doors.map((door) => <option key={door.number} value={door.number}>{doorSpokenLabel(door)}</option>)}
               </select>
             </label>
             <label className="stack">Source
@@ -142,7 +143,9 @@ export async function LiveDeskScreen(ctx: Ctx) {
               <input type="url" name="sourceUrl" data-testid="desk-live-url" placeholder="https://www.youtube.com/live/…" />
             </label>
             <p className="hint" data-testid="desk-mux-status">{mux.message}</p>
-            <label className="stack">Schedule for later<input type="datetime-local" name="when" data-testid="desk-live-when" /></label>
+            <div className="stack">Schedule for later
+              <LiveWhenPicker />
+            </div>
             <div className="actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button className="btn" type="submit" name="action" value="start-now" data-testid="desk-start-now" data-write>Start now</button>
               <button className="btn ghost" type="submit" name="action" value="save" data-testid="desk-schedule" data-write>Schedule</button>

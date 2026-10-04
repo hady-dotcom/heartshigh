@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { doorSpokenLabel, DOORS } from '../../src/lib/doors'
 import {
   canGoLive,
   canSeeLive,
   createMuxLiveStream,
   liveCountsTowardProgress,
   liveDemoGuard,
+  LIVE_DEMO_TITLES,
+  liveWhenLabel,
   muxConfigured,
   muxNotConfiguredMessage,
   parseLiveSource,
@@ -88,4 +91,15 @@ test('schedule times can be now, ISO, or a British date', () => {
   assert.ok(parseLiveWhen('04/10/2026 19:30'))
   assert.ok(parseLiveWhen('2026-10-04T19:30'))
   assert.equal(parseLiveWhen('not a time'), null)
+})
+
+test('live dates are UK style with a 12-hour clock', () => {
+  assert.equal(liveWhenLabel(new Date('2026-10-06T15:42:00.000Z')), 'Tue 6 Oct, 4:42 pm')
+})
+
+test('live door labels speak the door number, never the W-code', () => {
+  assert.equal(doorSpokenLabel(DOORS[15]), 'Door 16 · Ihsan: Worship as though you see Him')
+  assert.equal(LIVE_DEMO_TITLES[0], 'Circle after Isha')
+  assert.equal(LIVE_DEMO_TITLES[1], 'Jumuʿah reminders')
+  assert.equal(LIVE_DEMO_TITLES[2], 'Friday night tafsir: Surah al-Kahf')
 })

@@ -45,6 +45,11 @@ export function doorLabel(door: Pick<Door, 'number' | 'title'>) {
   return `${doorCode(door.number)} · ${capitalAfterColon(door.title)}`
 }
 
+/** "Door 16 · Ihsan: Worship as though you see Him". Live desks never show the W-code. */
+export function doorSpokenLabel(door: Pick<Door, 'number' | 'title'>) {
+  return `Door ${door.number} · ${capitalAfterColon(door.title)}`
+}
+
 export function doorOfClause(clause: number | null | undefined, doors: Door[] = DOORS): Door | null {
   if (!clause) return null
   return doors.find((door) => door.clauses.includes(clause)) || null
