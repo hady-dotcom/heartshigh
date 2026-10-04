@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { RouteFade } from '@/components/app/route-fade'
 
 export type Tab = 'home' | 'lanes' | 'garden' | 'me'
 
@@ -70,7 +71,7 @@ export function AppFrame({ children, dark = false, evening = false, testId }: { 
   return (
     <div className={`app-stage${evening ? ' evening' : ''}`}>
       <main className={`app${dark ? ' dark' : ''}${evening ? ' evening' : ''}`} data-testid={testId}>
-        {children}
+        <RouteFade>{children}</RouteFade>
       </main>
     </div>
   )

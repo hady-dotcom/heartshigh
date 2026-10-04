@@ -7,7 +7,7 @@ import { AppFrame, Flash, TabBar } from '@/components/app/shell'
 import { PlayIcon } from '@/components/icons'
 import { displayTalkTitle } from '@/lib/talk-title'
 import { courseCards, dayNumber, portalName, posterFor, shownPoster } from '@/server/learner'
-import { recalibrationDueFor } from '@/server/compass'
+import { ensureMonthNote, recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
 import { lanesWithClips } from '@/lib/lanes'
 import { plural } from '@/lib/schedule'
@@ -24,6 +24,7 @@ function minutesLeft(seconds: number, percent: number) {
 export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   if (user.role === 'learner' && !user.onboarded) redirect(user.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
   const [g, unread, { items }, courses, due] = await Promise.all([growth(payload, user), unreadCount(payload, user), learnerClips(payload, portal, user), courseCards(payload, user), user.role === 'learner' ? recalibrationDueFor(payload, user.id) : Promise.resolve(false)])
+  if (due) await ensureMonthNote(payload, user.id, portal.id, String(portal.slug || ''))
   const [visits, sessions] = await Promise.all([
     rows(payload, 'lesson-visits', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 40 }),
     rows(payload, 'watch-sessions', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 80 }),
@@ -81,7 +82,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         {due ? (
           <section className="card" data-testid="recalibrate-card" style={{ marginBottom: 16 }}>
             <h2 style={{ marginTop: 0 }}>A fresh look, when you have a moment</h2>
-            <p>A few new moments, in slightly different words, so this month stays close to your life.</p>
+            <p>Five short questions, in different words, and one line about life just now.</p>
             <Link className="pill ink" href={`${base}/recalibrate`} data-testid="recalibrate-open">Take a few moments</Link>
           </section>
         ) : null}

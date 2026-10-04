@@ -6,6 +6,7 @@ export const ShareIcon = ({ size = 22 }: P) => (<svg {...base(size)}><path d="M1
 export const HeartIcon = ({ size = 22, filled = true }: P & { filled?: boolean }) => (<svg {...base(size)} fill={filled ? 'currentColor' : 'none'}><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>)
 export const SaveIcon = ({ size = 22 }: P) => (<svg {...base(size)}><path d="M6 3h12v18l-6-4-6 4z" /></svg>)
 export const PlayIcon = ({ size = 22 }: P) => (<svg width={size} height={size} viewBox="0 0 24 24" aria-hidden><path d="M8 5v14l11-7z" fill="currentColor" /></svg>)
+export const LeafIcon = ({ size = 22 }: P) => (<svg {...base(size)}><path d="M5 19c8-1 12-8 14-16-8 1-14 6-14 14" /><path d="M8 15c2-3 5-6 9-8" /></svg>)
 export const PauseIcon = ({ size = 22 }: P) => (<svg width={size} height={size} viewBox="0 0 24 24" aria-hidden><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor" /></svg>)
 export const MicIcon = ({ size = 20 }: P) => (<svg {...base(size)}><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" /><path d="M5 11a7 7 0 0 0 14 0" /><path d="M12 18v3" /></svg>)
 export const ImageIcon = ({ size = 20 }: P) => (<svg {...base(size)}><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-9 9" /></svg>)
