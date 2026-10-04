@@ -338,6 +338,7 @@ test('a Friday calendar window reaches the feed gold button', async ({ browser, 
     await expect(page.getByTestId('learn-more')).toBeVisible({ timeout: 20_000 })
     await expect(page.getByTestId('learn-more')).toContainText(/Friday|Jumu/)
     await expect(page.getByTestId('learn-more')).not.toHaveText(/^Learn more/)
+    await page.screenshot({ path: `${SHOTS}/phone-feed-plain.png` })
     await page.close()
     await context.close()
   } finally {
