@@ -76,7 +76,7 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
     const play = page.getByTestId('lets-play').or(page.getByRole('button', { name: /play|continue/i }))
     if (await play.count()) await play.first().click()
   }
-  await expect(page.getByTestId('level-chip').or(page.getByText('Ready for more?'))).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByTestId('learn-more').or(page.getByTestId('gesture-layer'))).toBeVisible({ timeout: 15_000 })
   const layer = page.getByTestId('gesture-layer')
   if (await layer.count()) {
     const box = await layer.boundingBox()
@@ -90,7 +90,8 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
       await page.waitForTimeout(800)
     }
   }
-  await expect(page.getByText('Ready for more?').first()).toBeVisible()
+  if (await page.getByTestId('learn-more').count()) await page.getByTestId('learn-more').first().click()
+  await expect(page.getByTestId('level-chip')).toContainText('Ready for more?')
   await page.waitForTimeout(900)
 
   await page.goto(BASE)
