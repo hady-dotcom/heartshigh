@@ -163,6 +163,11 @@ export async function recordPersonalWatch(
 ) {
   const seconds = Math.max(0, Math.round(Number(input.seconds) || 0))
   if (!input.userId || !input.lessonId || seconds <= 0) return null
+  let portalId = input.portalId || null
+  if (!portalId) {
+    const user = await payload.findByID({ collection: 'users', id: input.userId, depth: 0, overrideAccess: true }).catch(() => null)
+    portalId = portalIdOf(user as { tenants?: { tenant?: unknown }[] } | null)
+  }
   return payload.create({
     collection: 'watch-sessions',
     overrideAccess: true,
@@ -170,6 +175,7 @@ export async function recordPersonalWatch(
       user: input.userId,
       lesson: input.lessonId,
       seconds,
+      portal: input.portalId || undefined,
     } as never,
   })
 }
