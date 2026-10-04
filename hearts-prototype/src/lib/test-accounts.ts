@@ -12,6 +12,8 @@ export function isTestAccount(email?: string | null, name?: string | null) {
   if (KEEP_EMAILS.has(address)) return false
   const local = address.split('@')[0] || ''
   const domain = address.split('@')[1] || ''
+  // e2e and demo-portal logins live on these domains and must stay on Teach.
+  if (domain === 'hearts.test' || domain === 'hearts-demo.test') return false
   if (HIDE_LOCAL.test(local)) return true
   if (domain === 'hearts.foundation' && /(audit|ux-|qa-)/i.test(address)) return true
   if (/^test\b/i.test(label)) return true
