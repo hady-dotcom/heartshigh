@@ -903,6 +903,8 @@ html[data-theme] .desk input[type='password'] {
 :is(html, html[data-theme]) .garden-door .door-hint { color: #5f6a65; }
 :is(html, html[data-theme]) .garden-door[data-testid="join"] .door-card {
   width: min(360px, calc(100% - 36px));
+  flex: 0 0 auto;
+  align-self: center;
   margin: 12px auto 28px;
   background: #163633;
   color: #f6eedc;
@@ -925,25 +927,22 @@ html[data-theme] .desk input[type='password'] {
 :is(html, html[data-theme]) .garden-door[data-testid="join"] .door-hint { color: #e4d3a4; }
 
 /* Proposed Compass mock: evening-garden desk (deep teal, warm gold, cream type). Live Compass stays parchment. */
-:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] {
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"],
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"].gather-desk {
   --desk-page: #0e2a2b;
   --desk-card: #163633;
   --desk-ink: #f6eedc;
   --desk-heading: #f6eedc;
-  --desk-sidebar: #0b2223;
-  --desk-header: #0f3b3a;
-  --desk-on-dark: #f6eedc;
-  --desk-gold: #d4a84b;
-  --desk-gold-ink: #1a1408;
-  --desk-teal: #1a5552;
   --desk-muted: #e4d3a4;
   --desk-line: #c4923a;
+  --desk-gold: #d4a84b;
+  --desk-gold-ink: #1a1408;
   --desk-field: #102e2c;
   --cream: #0e2a2b;
   --paper: #0e2a2b;
   --card: #163633;
   --ink: #f6eedc;
-  --ink-2: #f6eedc;
+  --ink-2: #e4d3a4;
   --muted: #e4d3a4;
   --line: #c4923a;
   --gold: #d4a84b;
@@ -953,20 +952,31 @@ html[data-theme] .desk input[type='password'] {
   --g-page: #0e2a2b;
   --g-card: #163633;
   --g-heading: #f6eedc;
-  --g-on-dark: #f6eedc;
+  --parchment: #f6eedc;
   color: #f6eedc;
-  background-color: #0e2a2b;
+  background: #0e2a2b;
   color-scheme: dark;
 }
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .main,
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .main-head,
 :is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .main-head h1,
 :is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .main-head p,
-:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .panel,
 :is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .hint {
+  background: #0e2a2b;
   color: #f6eedc;
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .panel {
   background: #163633;
+  color: #f6eedc;
   border-color: #c4923a;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .panel > header {
+  background: #0f3b3a;
+  color: #f6eedc;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .panel .body,
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .panel p {
+  color: #f6eedc;
 }
 
 /* Keep the 16px floor after later theme and gather rules, so iOS does not zoom on focus. */
