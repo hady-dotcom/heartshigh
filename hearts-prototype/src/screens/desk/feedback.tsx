@@ -10,6 +10,7 @@ import {
   canNameExport,
   countPhrase,
   displayDay,
+  exportKindLabel,
   filterQuery,
   parseFilters,
   sharingDecision,
@@ -288,7 +289,7 @@ export async function FeedbackScreen(ctx: Ctx) {
                       <tr key={row.id} data-testid="audit-row">
                         <td data-testid="audit-when" data-at={str(row.at)} style={{ whiteSpace: 'nowrap' }}>{zonedTime(str(row.at), timeZone, locale)}</td>
                         <td>{name}</td>
-                        <td>{detail.named ? 'Named' : 'Anonymised'} {detail.format || ''}</td>
+                        <td data-testid="audit-kind">{exportKindLabel(detail.format, detail.named)}</td>
                         <td className="num">{detail.rows ?? ''}</td>
                         <td className="hint">{filterPhrase(detail.filters)}</td>
                       </tr>

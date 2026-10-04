@@ -151,7 +151,9 @@ test.describe('Feedback for teachers', () => {
 
     await page.reload()
     await expect(page.getByTestId('audit-row').first()).toBeVisible()
-    await expect(page.getByTestId('export-audit')).toContainText('Anonymised')
+    const kinds = await page.getByTestId('audit-kind').allInnerTexts()
+    for (const kind of ['CSV, anonymised', 'Excel, anonymised', 'PDF, anonymised']) expect(kinds).toContain(kind)
+    for (const kind of kinds) expect(kind).toMatch(/^(CSV|PDF|Excel), (anonymised|named)$/)
 
     await page.getByTestId('anonymise').uncheck()
     await page.getByTestId('apply-filters').click()

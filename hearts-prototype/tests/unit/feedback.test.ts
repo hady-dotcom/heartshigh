@@ -12,6 +12,7 @@ import {
   assignPseudonyms,
   buildFeedback,
   canNameExport,
+  exportKindLabel,
   countPhrase,
   feedbackCsv,
   feedbackDemoSeedAllowed,
@@ -214,4 +215,12 @@ test('the PDF embeds Noto Sans, so transliterated Arabic keeps its marks: ū ā 
     // poppler-utils is not installed here; the ToUnicode read above stands.
   }
   if (poppler) for (const expected of ['An-Nūr', 'al-Raḥmān', 'ʿilm', 'Qurʾān', 'ḥadīth', 'ʿĀʾisha']) assert.ok(poppler.includes(expected), `pdftotext reads "${expected}"`)
+})
+
+test('the export log names a download by its format first: "CSV, anonymised"', () => {
+  assert.equal(exportKindLabel('csv', false), 'CSV, anonymised')
+  assert.equal(exportKindLabel('pdf', false), 'PDF, anonymised')
+  assert.equal(exportKindLabel('xlsx', false), 'Excel, anonymised')
+  assert.equal(exportKindLabel('xlsx', true), 'Excel, named')
+  assert.equal(exportKindLabel(undefined, false), 'Anonymised')
 })

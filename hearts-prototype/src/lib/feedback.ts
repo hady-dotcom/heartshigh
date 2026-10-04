@@ -192,6 +192,15 @@ export function canReadFeedback(role: string | null | undefined) {
   return role === 'teacher' || role === 'portal-admin' || role === 'master'
 }
 
+const FORMAT_NAMES: Record<string, string> = { csv: 'CSV', pdf: 'PDF', xlsx: 'Excel' }
+
+/** "CSV, anonymised", "Excel, named": how the export log names a download. */
+export function exportKindLabel(format: string | null | undefined, named: boolean | null | undefined) {
+  const kind = named ? 'named' : 'anonymised'
+  const name = FORMAT_NAMES[String(format || '').toLowerCase()] || String(format || '').toUpperCase()
+  return name ? `${name}, ${kind}` : kind.charAt(0).toUpperCase() + kind.slice(1)
+}
+
 /** Named exports need a teacher or admin on this portal. Learners never qualify. */
 export function canNameExport(role: string | null | undefined) {
   return role === 'teacher' || role === 'portal-admin' || role === 'master'
