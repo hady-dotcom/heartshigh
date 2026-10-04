@@ -104,6 +104,15 @@ test('desks wear the parchment: dark teal only on the sidebar and card headers, 
     expect(ratios.length, screen).toBeGreaterThan(5)
     for (const row of ratios) expect(row.ratio, `${screen} ${row.text} ${row.ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5)
   }
+
+  await page.goto(`${PORTAL}/admin/teach`)
+  const spill = await page.evaluate(() => {
+    const wrap = document.querySelector<HTMLElement>('[data-testid="admin-teach"] .table-wrap')!
+    const edge = wrap.getBoundingClientRect().right
+    return { scroll: wrap.scrollWidth - wrap.clientWidth, past: Math.max(...[...wrap.querySelectorAll('td')].map((cell) => cell.getBoundingClientRect().right - edge)) }
+  })
+  expect(spill.scroll, 'the learners table fits its card at 1440').toBeLessThanOrEqual(1)
+  expect(spill.past).toBeLessThanOrEqual(1)
 })
 
 test('the library puts each course on the door its clips carry', async ({ page }) => {

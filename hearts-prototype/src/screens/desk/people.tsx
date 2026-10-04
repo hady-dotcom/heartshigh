@@ -65,13 +65,15 @@ export async function TeachScreen(ctx: Ctx) {
                     <td>
                       <form action="/api/hearts" method="post" style={{ display: 'flex', gap: 8 }}>
                         <Hidden fields={{ action: 'grant', learner: learner.id, next: here }} />
-                        <select name="course" style={{ minWidth: 200 }}>{courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}</select>
+                        <select name="course" style={{ minWidth: 0, width: 170 }}>{courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}</select>
                         <button className="btn small" data-testid="grant-course" type="submit">Give</button>
                       </form>
                     </td>
-                    <td style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'start' }}>
-                      <a className="btn ghost small" href={`/api/workbook/${learner.id}?format=csv`} data-testid="workbook-csv">Workbook</a>
-                      {user.role !== 'teacher' ? <ViewAsButton targetId={learner.id} name={str(learner.name) || 'this learner'} landing={`${base}`} /> : null}
+                    <td>
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'start' }}>
+                        <a className="btn ghost small" href={`/api/workbook/${learner.id}?format=csv`} data-testid="workbook-csv">Workbook</a>
+                        {user.role !== 'teacher' ? <ViewAsButton targetId={learner.id} name={str(learner.name) || 'this learner'} landing={`${base}`} /> : null}
+                      </div>
                     </td>
                   </tr>
                 )
