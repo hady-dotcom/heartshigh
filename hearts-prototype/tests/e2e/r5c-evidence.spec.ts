@@ -184,35 +184,38 @@ test('contrast at 10:00 and 20:00 Toronto, and the after screenshots', async ({ 
   await expect(page.getByTestId('page-help-sheet')).toBeVisible()
   await shot(page, path.join(ROOT, 'after', 'page-help.png'))
 
-  await page.addStyleTag({ content: '.app::before{height:47px!important;margin-bottom:-47px!important;background:#081c1b!important}.app-head,.main-head{padding-top:47px!important}.app-scroll{padding-top:calc(14px + 47px)!important}' })
   await page.goto(BASE)
   await expect(page.getByTestId('home')).toBeVisible()
+  await page.addStyleTag({ content: '.app::before{height:47px!important;margin-bottom:-47px!important;background:#081c1b!important}.app-head,.main-head{padding-top:47px!important}.app-scroll{padding-top:calc(14px + 47px)!important}' })
   await shot(page, path.join(ROOT, 'after', 'safe-area-standalone.png'))
 
   await page.goto(`${BASE}/course/3`)
-  await expect(async () => {
-    await page.getByTestId('answer-point').click()
-    await expect(page.getByTestId('popup')).toBeVisible({ timeout: 1000 })
-  }).toPass({ timeout: 20_000 })
+  const firstDot = page.getByTestId('timeline-dot').first()
+  await expect(firstDot).toBeVisible()
+  await firstDot.click()
+  await expect(page.getByTestId('popup')).toBeVisible()
   if (await page.getByTestId('answer-form').count()) {
     if (await page.getByTestId('answer-text').count()) await page.getByTestId('answer-text').fill('I sat with the names after Fajr.')
     if (await page.getByTestId('answer-private').count()) await page.getByTestId('answer-private').uncheck()
     if (await page.getByTestId('answer-share-learners').count()) await page.getByTestId('answer-share-learners').check()
     await page.getByTestId('answer-submit').click()
-    await page.waitForTimeout(800)
+    await expect(page.getByTestId('popup')).toBeHidden({ timeout: 8_000 })
+    await firstDot.click()
+    await expect(page.getByTestId('popup')).toBeVisible()
   }
-  await expect(page.getByTestId('swarm')).toBeVisible()
-  await page.getByTestId('swarm').scrollIntoViewIfNeeded()
+  const swarm = page.getByTestId('swarm')
+  await expect(swarm).toBeVisible()
+  await swarm.scrollIntoViewIfNeeded()
   if (await page.getByTestId('swarm-like-mine').count()) {
     await page.getByTestId('swarm-like-mine').click()
-    await expect(page.getByTestId('swarm')).toHaveAttribute('data-mode', 'like')
-    await shot(page, path.join(ROOT, 'after', 'swarm-like-mine.png'))
+    await expect(swarm).toHaveAttribute('data-mode', 'like')
+    await swarm.screenshot({ path: path.join(ROOT, 'after', 'swarm-like-mine.png') })
     await page.getByTestId('swarm-surprise').click()
-    await expect(page.getByTestId('swarm')).toHaveAttribute('data-mode', 'surprise')
-    await shot(page, path.join(ROOT, 'after', 'swarm-surprise.png'))
+    await expect(swarm).toHaveAttribute('data-mode', 'surprise')
+    await swarm.screenshot({ path: path.join(ROOT, 'after', 'swarm-surprise.png') })
   } else {
-    await shot(page, path.join(ROOT, 'after', 'swarm-like-mine.png'))
-    await shot(page, path.join(ROOT, 'after', 'swarm-surprise.png'))
+    await swarm.screenshot({ path: path.join(ROOT, 'after', 'swarm-like-mine.png') })
+    await swarm.screenshot({ path: path.join(ROOT, 'after', 'swarm-surprise.png') })
   }
 
   await page.setViewportSize(DESK)
