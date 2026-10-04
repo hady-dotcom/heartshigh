@@ -2,9 +2,9 @@
    Fallbacks keep the same look before that theme file is present. */
 
 .public-gather,
-.app.gather-shell,
-.gather-stage,
-.desk.gather-desk {
+:is(html, html[data-theme]) .app.gather-shell,
+:is(html, html[data-theme]) .gather-stage,
+:is(html, html[data-theme]) .desk.gather-desk {
   --g-bg: var(--bg-solid, #0e2a2b);
   --g-ink: #f6eedc;
   --g-gold: var(--desk-gold, #d4a84b);
@@ -35,17 +35,17 @@ html[data-theme='dawn'] .gather-stage {
   --g-heading: var(--desk-heading);
 }
 
-.gather-stage { background: var(--g-bg); }
-.app.gather-shell { background: var(--g-heading); color: var(--g-ink); }
-.app.gather-shell .app-scroll {
+:is(html, html[data-theme]) .gather-stage { background: var(--g-bg); }
+:is(html, html[data-theme]) .app.gather-shell { background: var(--g-heading); color: var(--g-ink); }
+:is(html, html[data-theme]) .app.gather-shell .app-scroll {
   background:
     radial-gradient(420px 280px at 80% -10%, rgba(212, 168, 75, 0.28), transparent 60%),
     radial-gradient(380px 240px at -10% 20%, rgba(62, 107, 79, 0.45), transparent 55%),
     var(--g-heading);
 }
-.app.gather-shell .app-head h1,
+:is(html, html[data-theme]) .app.gather-shell .app-head h1,
 .gather h1, .gather h2, .gather h3 { font-family: var(--serif); font-weight: 600; color: var(--g-ink); }
-.gather .back, .app.gather-shell .back { color: var(--g-muted); }
+.gather .back, :is(html, html[data-theme]) .app.gather-shell .back { color: var(--g-muted); }
 .gather .eyebrow { color: var(--g-gold); }
 .gather .lead, .gather p { color: var(--g-ink); }
 .gather .muted { color: var(--g-muted); }
@@ -77,7 +77,7 @@ html[data-theme='dawn'] .gather-stage {
 .gather-chip.gold { background: var(--g-gold); color: var(--g-gold-ink); }
 .gather-chip.ivy { background: var(--g-ivy); color: var(--g-card); }
 
-.gather .pill.gold, .public-gather .pill.gold, .desk.gather-desk .btn,
+.gather .pill.gold, .public-gather .pill.gold, :is(html, html[data-theme]) .desk.gather-desk .btn,
 html[data-theme] .gather .pill.gold, html[data-theme] .public-gather .pill.gold, html[data-theme] .gather-card .pill.gold {
   background: var(--g-gold);
   color: var(--g-gold-ink);
@@ -173,12 +173,12 @@ html[data-theme] .app.gather-shell form.gather-card textarea.field::placeholder 
 .gold-toggle input:checked + i::after { transform: translateX(20px); }
 .gold-toggle input:focus-visible + i { outline: 2px solid var(--g-heading); outline-offset: 2px; }
 
-.app.gather-shell .tabbar {
+:is(html, html[data-theme]) .app.gather-shell .tabbar {
   background: rgba(14, 42, 43, 0.96);
   border-top-color: rgba(212, 168, 75, 0.35);
 }
-.app.gather-shell .tabbar .tab { color: rgba(247, 238, 219, 0.72); }
-.app.gather-shell .tabbar .tab.on { color: var(--g-gold); }
+:is(html, html[data-theme]) .app.gather-shell .tabbar .tab { color: rgba(247, 238, 219, 0.72); }
+:is(html, html[data-theme]) .app.gather-shell .tabbar .tab.on { color: var(--g-gold); }
 
 .gather .flash.error, .public-gather .flash.error {
   background: var(--g-card);
@@ -279,45 +279,45 @@ html[data-theme] .app.gather-shell form.gather-card textarea.field::placeholder 
 .attendance-legend i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; margin-right: 6px; vertical-align: -2px; }
 .attendance-legend i.gold { background: var(--g-gold); }
 .attendance-legend i.teal { background: #0f3b3a; }
-.desk.gather-desk .chart { height: 220px; }
-.desk.gather-desk [data-testid="attendance-bars"] .col { grid-template-rows: auto minmax(0, 1fr) auto; }
-.desk.gather-desk .chart .bar-count { text-align: center; font-size: 13px; font-weight: 700; color: #0f3b3a; line-height: 1.2; }
-.desk.gather-desk .chart .col small { color: #0f3b3a; font-size: 12px; line-height: 1.25; white-space: normal; }
+:is(html, html[data-theme]) .desk.gather-desk .chart { height: 220px; }
+:is(html, html[data-theme]) .desk.gather-desk [data-testid="attendance-bars"] .col { grid-template-rows: auto minmax(0, 1fr) auto; }
+:is(html, html[data-theme]) .desk.gather-desk .chart .bar-count { text-align: center; font-size: 13px; font-weight: 700; color: #0f3b3a; line-height: 1.2; }
+:is(html, html[data-theme]) .desk.gather-desk .chart .col small { color: #0f3b3a; font-size: 12px; line-height: 1.25; white-space: normal; }
 
 .door-qr { display: grid; place-items: center; background: #fff; border-radius: 18px; padding: 16px; margin: 12px 0; }
 .door-qr .qr svg { width: 220px; height: 220px; }
 
-.desk.gather-desk { background: var(--g-page); color: var(--g-heading); }
-.desk.gather-desk .side { background: var(--g-sidebar); border-right: 0; }
-.desk.gather-desk .side-brand b, .desk.gather-desk .side-brand small, .desk.gather-desk .side a.nav, .desk.gather-desk .side-foot, .desk.gather-desk .side-foot button { color: var(--g-on-dark); }
-.desk.gather-desk .side .group { color: var(--g-gold); }
-.desk.gather-desk .side a.nav:hover { background: rgba(247, 238, 219, 0.08); }
-.desk.gather-desk .side a.nav.on { background: var(--g-gold); color: var(--g-gold-ink); }
-.desk.gather-desk .side-foot { border-top-color: rgba(247, 238, 219, 0.15); }
-.desk.gather-desk .side-foot button:hover { background: rgba(247, 238, 219, 0.08); }
-.desk.gather-desk .side-foot .who .initial { background: var(--g-gold); color: var(--g-gold-ink); }
-.desk.gather-desk .main-head h1 { color: var(--g-heading); font-family: var(--serif); font-size: 40px; font-weight: 600; letter-spacing: -0.02em; }
-.desk.gather-desk .main-head p { color: var(--g-heading); }
-.desk.gather-desk .panel { background: var(--g-card); border-color: var(--g-line); }
-.desk.gather-desk .panel > header { background: var(--g-heading); color: var(--g-on-dark); }
-.desk.gather-desk .panel > header.light { background: var(--g-card); color: var(--g-heading); border-bottom-color: var(--g-line); }
-.desk.gather-desk .panel > header h2, .desk.gather-desk .panel > header p { color: inherit; }
-.desk.gather-desk .badge.gold { background: var(--g-gold); color: var(--g-gold-ink); }
-.desk.gather-desk .badge.teal { background: var(--g-heading); color: var(--g-on-dark); }
-.desk.gather-desk .badge.grey { background: var(--g-page); color: var(--g-heading); }
-.desk.gather-desk .btn.ghost { background: var(--g-card); color: var(--g-heading); border-color: var(--g-heading); }
-.desk.gather-desk .btn.ink { background: var(--g-heading); color: var(--g-on-dark); }
-.desk.gather-desk .bell summary { background: var(--g-card); border-color: var(--g-line); color: var(--g-heading); }
-.desk.gather-desk .bell .count { background: var(--g-gold); color: var(--g-gold-ink); }
-.desk.gather-desk .data th { color: var(--g-heading); }
-.desk.gather-desk .stat-chip { background: var(--g-heading); color: var(--g-on-dark); }
-.desk.gather-desk .stat-chip b, .desk.gather-desk .stat-chip span { color: var(--g-on-dark); }
-.desk.gather-desk .form input:not([type='checkbox']):not([type='radio']):not([type='file']),
-.desk.gather-desk .form select,
-.desk.gather-desk .form textarea,
-.desk.gather-desk input:not([type='checkbox']):not([type='radio']):not([type='file']),
-.desk.gather-desk select,
-.desk.gather-desk textarea,
+:is(html, html[data-theme]) .desk.gather-desk { background: var(--g-page); color: var(--g-heading); }
+:is(html, html[data-theme]) .desk.gather-desk .side { background: var(--g-sidebar); border-right: 0; }
+:is(html, html[data-theme]) .desk.gather-desk .side-brand b, :is(html, html[data-theme]) .desk.gather-desk .side-brand small, :is(html, html[data-theme]) .desk.gather-desk .side a.nav, :is(html, html[data-theme]) .desk.gather-desk .side-foot, :is(html, html[data-theme]) .desk.gather-desk .side-foot button { color: var(--g-on-dark); }
+:is(html, html[data-theme]) .desk.gather-desk .side .group { color: var(--g-gold); }
+:is(html, html[data-theme]) .desk.gather-desk .side a.nav:hover { background: rgba(247, 238, 219, 0.08); }
+:is(html, html[data-theme]) .desk.gather-desk .side a.nav.on { background: var(--g-gold); color: var(--g-gold-ink); }
+:is(html, html[data-theme]) .desk.gather-desk .side-foot { border-top-color: rgba(247, 238, 219, 0.15); }
+:is(html, html[data-theme]) .desk.gather-desk .side-foot button:hover { background: rgba(247, 238, 219, 0.08); }
+:is(html, html[data-theme]) .desk.gather-desk .side-foot .who .initial { background: var(--g-gold); color: var(--g-gold-ink); }
+:is(html, html[data-theme]) .desk.gather-desk .main-head h1 { color: var(--g-heading); font-family: var(--serif); font-size: 40px; font-weight: 600; letter-spacing: -0.02em; }
+:is(html, html[data-theme]) .desk.gather-desk .main-head p { color: var(--g-heading); }
+:is(html, html[data-theme]) .desk.gather-desk .panel { background: var(--g-card); border-color: var(--g-line); }
+:is(html, html[data-theme]) .desk.gather-desk .panel > header { background: var(--g-heading); color: var(--g-on-dark); }
+:is(html, html[data-theme]) .desk.gather-desk .panel > header.light { background: var(--g-card); color: var(--g-heading); border-bottom-color: var(--g-line); }
+:is(html, html[data-theme]) .desk.gather-desk .panel > header h2, :is(html, html[data-theme]) .desk.gather-desk .panel > header p { color: inherit; }
+:is(html, html[data-theme]) .desk.gather-desk .badge.gold { background: var(--g-gold); color: var(--g-gold-ink); }
+:is(html, html[data-theme]) .desk.gather-desk .badge.teal { background: var(--g-heading); color: var(--g-on-dark); }
+:is(html, html[data-theme]) .desk.gather-desk .badge.grey { background: var(--g-page); color: var(--g-heading); }
+:is(html, html[data-theme]) .desk.gather-desk .btn.ghost { background: var(--g-card); color: var(--g-heading); border-color: var(--g-heading); }
+:is(html, html[data-theme]) .desk.gather-desk .btn.ink { background: var(--g-heading); color: var(--g-on-dark); }
+:is(html, html[data-theme]) .desk.gather-desk .bell summary { background: var(--g-card); border-color: var(--g-line); color: var(--g-heading); }
+:is(html, html[data-theme]) .desk.gather-desk .bell .count { background: var(--g-gold); color: var(--g-gold-ink); }
+:is(html, html[data-theme]) .desk.gather-desk .data th { color: var(--g-heading); }
+:is(html, html[data-theme]) .desk.gather-desk .stat-chip { background: var(--g-heading); color: var(--g-on-dark); }
+:is(html, html[data-theme]) .desk.gather-desk .stat-chip b, :is(html, html[data-theme]) .desk.gather-desk .stat-chip span { color: var(--g-on-dark); }
+:is(html, html[data-theme]) .desk.gather-desk .form input:not([type='checkbox']):not([type='radio']):not([type='file']),
+:is(html, html[data-theme]) .desk.gather-desk .form select,
+:is(html, html[data-theme]) .desk.gather-desk .form textarea,
+:is(html, html[data-theme]) .desk.gather-desk input:not([type='checkbox']):not([type='radio']):not([type='file']),
+:is(html, html[data-theme]) .desk.gather-desk select,
+:is(html, html[data-theme]) .desk.gather-desk textarea,
 html[data-theme] .desk.gather-desk .form input:not([type='checkbox']):not([type='radio']):not([type='file']),
 html[data-theme] .desk.gather-desk .form select,
 html[data-theme] .desk.gather-desk .form textarea,
@@ -333,9 +333,9 @@ html[data-theme] .desk.gather-desk textarea {
   min-height: 44px;
   box-sizing: border-box;
 }
-.desk.gather-desk .chart .slot { background: var(--g-page); }
-.desk.gather-desk .chart .slot i { background: var(--g-heading); }
-.desk.gather-desk .chart .slot i.new { background: var(--g-gold); }
+:is(html, html[data-theme]) .desk.gather-desk .chart .slot { background: var(--g-page); }
+:is(html, html[data-theme]) .desk.gather-desk .chart .slot i { background: var(--g-heading); }
+:is(html, html[data-theme]) .desk.gather-desk .chart .slot i.new { background: var(--g-gold); }
 
 .clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .gather-more { margin-top: 12px; }
