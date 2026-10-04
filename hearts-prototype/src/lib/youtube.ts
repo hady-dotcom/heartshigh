@@ -38,9 +38,15 @@ export function looksLikeYoutube(input: string) {
   }
 }
 
+/** A Short is a different film from the landscape watch page, so oEmbed has to ask for `/shorts/<id>`. */
+export function youtubeOembedUrl(id: string, shape: 'watch' | 'short' = 'watch') {
+  const page = shape === 'short' ? `https://www.youtube.com/shorts/${id}` : `https://www.youtube.com/watch?v=${id}`
+  return `https://www.youtube.com/oembed?url=${encodeURIComponent(page)}&format=json`
+}
+
 /** null means YouTube said the film does not exist. undefined means we could not ask. */
-export async function fetchYoutubeMeta(id: string): Promise<YoutubeMeta | null | undefined> {
-  const endpoint = `https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}&format=json`
+export async function fetchYoutubeMeta(id: string, shape: 'watch' | 'short' = 'watch'): Promise<YoutubeMeta | null | undefined> {
+  const endpoint = youtubeOembedUrl(id, shape)
   try {
     const response = await fetch(endpoint, { signal: AbortSignal.timeout(12_000) })
     if (response.status === 404 || response.status === 400) return null

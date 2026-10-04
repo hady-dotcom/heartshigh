@@ -11,6 +11,8 @@ import { ensureMonthNote, recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
 import { lanesWithClips } from '@/lib/lanes'
 import { plural } from '@/lib/schedule'
+import { continueOrder, dateKeyInZone, minutesADay, tonightLabel, tonightSlot } from '@/lib/study-plan'
+import { now as clockNow } from '@/lib/clock'
 import { growth, Rings } from './garden'
 import { HomeGather, homeGatherings } from './gather'
 import { type Ctx, ref, rows, str, unreadCount } from '../common'
@@ -30,8 +32,12 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
     rows(payload, 'lesson-visits', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 40 }),
     rows(payload, 'watch-sessions', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 80 }),
   ])
-  const done = new Set(g.completions.filter((row) => Number(row.percent ?? 100) >= 90).map((row) => ref(row.lesson)))
-  const openIds = [...new Set(visits.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id) && !done.has(id)))].slice(0, 3)
+  const done = new Set(g.completions.filter((row) => Number(row.percent ?? 100) >= 90).map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))
+  const openIds = continueOrder(
+    sessions.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)),
+    visits.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)),
+    done,
+  )
   const openLessons = openIds.length ? await rows(payload, 'lessons', { id: { in: openIds } }) : []
   const courseIds = [...new Set(openLessons.map((row) => ref(row.course)).filter((id): id is number => Boolean(id)))]
   const openCourses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }) : []
@@ -60,6 +66,14 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
       }
     })
   const fallback = carryOn.length ? [] : courses.filter((course) => course.open).slice(0, 2)
+  const plans = await rows(payload, 'schedules', { portal: { equals: portal.id } }, { sort: '-createdAt', limit: 20 })
+  const plan = plans.find((row) => ref(row.owner) === user.id || ((row.learners as unknown[]) || []).some((item) => ref(item) === user.id))
+  const slot = plan ? tonightSlot((plan.slots as { date?: string; lessonId?: number | null; title?: string }[]) || [], dateKeyInZone(clockNow(), portal.timeZone || 'Europe/London'), done) : null
+  const planLesson = slot?.lessonId ? (await rows(payload, 'lessons', { id: { equals: slot.lessonId } }, { limit: 1 }))[0] : null
+  const planMinutes = minutesADay(plan?.minutesPerDay) || 20
+  const tonight = planLesson
+    ? { label: tonightLabel(Number(planLesson.order || 1), planMinutes), href: `${base}/course/${ref(planLesson.course)}?part=${planLesson.id}`, title: str(planLesson.title) }
+    : null
   const days = g.activeDays.size
   const clips = items.slice(0, 3)
   return (
@@ -85,6 +99,14 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
             <h2 style={{ marginTop: 0 }}>A fresh look, when you have a moment</h2>
             <p>Five short questions, in different words, and one line about life just now.</p>
             <Link className="pill ink" href={`${base}/recalibrate`} data-testid="recalibrate-open">Take a few moments</Link>
+          </section>
+        ) : null}
+        {tonight ? (
+          <section className="card home-plan" data-testid="home-plan">
+            <p className="eyebrow">Your plan</p>
+            <h2 data-testid="home-plan-line">{tonight.label}</h2>
+            <p>{tonight.title}</p>
+            <Link className="pill gold" href={tonight.href} data-testid="plan-continue">Continue</Link>
           </section>
         ) : null}
         <p className="eyebrow">Continue</p>

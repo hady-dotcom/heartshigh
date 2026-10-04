@@ -274,6 +274,22 @@ export function displayLine(raw: string, stored: { raw?: string; text?: string }
   return tidyCaption(raw, hints)
 }
 
+/**
+ * The feed caption. `tidy:lines` stores the learner-facing line on `lineTidy`.
+ * Use that text when it is there, including when the raw caption has drifted and an index match is all we have.
+ */
+export function feedTidy(
+  raw: string,
+  stored: { raw?: string; text?: string } | null | undefined,
+  byIndex: { text?: string } | null | undefined,
+  hints: TidyHints = {},
+) {
+  if (stored?.text && stored.raw === raw) return stored.text.trim()
+  const indexed = byIndex?.text?.trim()
+  if (indexed) return indexed
+  return tidyCaption(raw, hints)
+}
+
 export function parseLineTidy(value: unknown): LineTidy | null {
   if (!value || typeof value !== 'object') return null
   const row = value as Partial<LineTidy>

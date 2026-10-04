@@ -121,11 +121,15 @@ async function main() {
     portal = (await payload.create({
       collection: 'portals',
       overrideAccess: true,
-      data: { name: 'Hearts demo', slug: SLUG, kind: 'mosque', welcome: 'A quiet room for a short talk, when you have a moment.' },
+      data: { name: 'Hearts demo', slug: SLUG, kind: 'mosque', welcome: 'A quiet room for a short talk, when you have a moment.', timeZone: 'America/Toronto' },
     })) as unknown as Doc
     console.log(`Created portal ${SLUG}.`)
+  } else if (portal.timeZone !== 'America/Toronto') {
+    await payload.update({ collection: 'portals', id: portal.id, overrideAccess: true, data: { timeZone: 'America/Toronto' } })
+    portal.timeZone = 'America/Toronto'
+    console.log(`Portal ${SLUG} is already there. Time zone set to America/Toronto.`)
   } else {
-    console.log(`Portal ${SLUG} is already there. Leaving its settings alone.`)
+    console.log(`Portal ${SLUG} is already there. Time zone is America/Toronto.`)
   }
   const portalId = portal.id
 

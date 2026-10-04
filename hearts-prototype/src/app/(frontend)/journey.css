@@ -94,7 +94,11 @@
 .yt-host.off { left: -200vw; right: auto; width: 100%; }
 /* The film is cropped to fill the phone; the extra 64px above and below keep YouTube's title and control bars off screen. */
 .yt-host iframe { position: absolute; top: -64px; left: 50%; height: calc(100% + 128px); width: max(100%, calc((100dvh + 128px) * 16 / 9)); transform: translateX(-50%); border: 0; }
-.overlay .yt-host iframe { pointer-events: none; }
+.yt-host iframe, .overlay .yt-host iframe, .strict .yt-host iframe { pointer-events: none; }
+.journey[data-playing='yes'] .j-poster-play,
+.journey[data-playing='yes'] video::-webkit-media-controls,
+.journey[data-playing='yes'] video::-webkit-media-controls-overlay-play-button,
+.journey[data-playing='yes'] video::-webkit-media-controls-start-playback-button { display: none !important; opacity: 0; }
 .j-poster { position: absolute; inset: 0; background: #0e2a2b url('/theme/evening-courtyard.jpg') center 40% / cover no-repeat; }
 html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/dawn-courtyard.jpg'); }
 .j-poster-play { position: absolute; left: 50%; top: 26%; z-index: 4; width: 76px; height: 76px; margin: -38px 0 0 -38px; border: 0; border-radius: 50%; display: grid; place-items: center; padding: 0 0 0 4px; background: #d4a84b; color: #1a1408; box-shadow: 0 10px 30px rgba(0,0,0,0.35); cursor: pointer; }
@@ -125,11 +129,13 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 }
 .j-chrome .caption[data-expanded='true'] { display: block; -webkit-line-clamp: unset; line-clamp: unset; overflow: auto; max-height: min(36vh, 260px); }
 .j-hairline-row { position: absolute; top: calc(12px + var(--safe-top)); left: 16px; right: 16px; }
+.j-swipe-hint { margin: 8px 0 0; text-align: center; font-size: 12px; font-weight: 650; letter-spacing: 0.01em; color: rgba(255, 255, 255, 0.92); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55); }
 .j-hairline { height: 3px; border-radius: 3px; background: rgba(255, 255, 255, 0.28); overflow: hidden; }
 .j-hairline > i { display: block; height: 100%; width: 0; background: #fff; }
 .j-hairline.shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.55), rgba(255,255,255,0.2)); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 .j-sound { position: static; transform: none; background: rgba(0, 0, 0, 0.6); color: #fff; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; }
+.j-chrome > .j-sound { position: absolute; top: calc(56px + var(--safe-top)); left: 16px; z-index: 5; }
 .j-speaker { display: flex; align-items: center; gap: 10px; }
 /* A Short carries its own words low in the frame: the speaker row moves under the hairline instead. */
 .j-top-speaker { position: absolute; top: calc(58px + var(--safe-top)); left: 16px; right: 16px; pointer-events: auto; }
@@ -210,3 +216,13 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-scene .j-choices { margin-top: auto; }
 .j-scene .j-actions { margin-top: 10px; }
 .strict .j-poster-play { top: 50%; }
+.end-card {
+  position: absolute; left: 16px; right: 16px; bottom: calc(96px + var(--safe-bottom)); z-index: 8;
+  display: grid; gap: 10px; padding: 18px 16px;
+  background: linear-gradient(180deg, #f3e2c0, #e8d4a6); color: #0f3b3a;
+  border: 1px solid #d4a84b; border-radius: 22px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+}
+.end-card .eyebrow { margin: 0; color: #0f3b3a; letter-spacing: 0.04em; }
+.end-card .end-feed, .end-card .end-next {
+  background: transparent; color: #0f3b3a; border: 1.5px solid #0f3b3a; text-align: center; justify-content: center;
+}

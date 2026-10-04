@@ -138,6 +138,7 @@ export function Journey(props: JourneyProps) {
   const [mode, setMode] = useState<Mode>('hors')
   const modeRef = useRef<Mode>('hors')
   const [captionOpen, setCaptionOpen] = useState(false)
+  const [appetiserOver, setAppetiserOver] = useState(false)
   const spanJoin = useRef<number | null>(null)
   const hosts = useRef<[Host, Host]>([
     { spec: null, playerId: null, ready: false, state: -1, played: false },
@@ -444,6 +445,7 @@ export function Journey(props: JourneyProps) {
       setSlow('none')
       setBuffering(false)
       setLineAt(0)
+      setAppetiserOver(false)
       watch.current = { key: `${item?.cutId}:${kind}`, start: kind === 'hors' ? item?.hors.start || 0 : item?.appetiser.start || 0, furthest: 0, done90: false }
       // The new card is on screen (and sliding in) before any player work starts.
       if (onShown) await onShown()
@@ -1015,6 +1017,7 @@ export function Journey(props: JourneyProps) {
         if (join.action === 'stop') {
           player.pauseVideo()
           player.seekTo(spans[spans.length - 1].end, true)
+          setAppetiserOver(true)
           if (!seen.done90) {
             seen.done90 = true
             noteBrowse('linger')
@@ -1024,6 +1027,7 @@ export function Journey(props: JourneyProps) {
       } else if (modeRef.current === 'appetiser' && time >= appetiserEnd(current) - 0.25) {
         player.pauseVideo()
         player.seekTo(appetiserEnd(current), true)
+        setAppetiserOver(true)
         if (!seen.done90) {
           seen.done90 = true
           noteBrowse('linger')
@@ -1073,7 +1077,7 @@ export function Journey(props: JourneyProps) {
     if (target === null) {
       if (swipe === 'speaker') return setToast(`That is everything from ${current.speaker} for now`)
       if (swipe === 'topic') return setToast('That is everything on this topic for now')
-      return setToast(modeRef.current === 'hors' ? "That is the only hors d'oeuvre here" : 'That is the only appetiser here')
+      return setToast(modeRef.current === 'hors' ? "That is the only hors d'oeuvre here" : 'That is the only ‘Ready for more?’ here.')
     }
     const laneLabel = itemsRef.current[target]?.laneLabel?.trim()
     if (swipe === 'lane' && laneLabel) setToast(`Lane · ${laneLabel}`)
@@ -1389,16 +1393,19 @@ export function Journey(props: JourneyProps) {
       <div className="j-hairline-row">
         <div className={`j-hairline${buffering ? ' shimmer' : ''}`} data-testid="hairline"><i /></div>
         {mode === 'hors' ? (
+          <>
+          <p className="j-swipe-hint" data-testid="swipe-hint">↑ swipe up to replay</p>
           <div className="clip-row">
             {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
             {!typeClip && muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
             <span className="chip dark">{clock(item.hors.end - item.hors.start)}</span>
           </div>
+          </>
         ) : (
           <div className="clip-row">
             <button type="button" className="chip white" onClick={() => window.history.back()} data-testid="appetiser-back">‹ Back</button>
             {!typeClip && muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
-            <span className="chip gold">Extended cut</span>
+            <span className="chip gold" data-testid="level-chip">Ready for more?</span>
           </div>
         )}
       </div>
@@ -1451,7 +1458,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined}>
+    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined}>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />
@@ -1542,6 +1549,16 @@ export function Journey(props: JourneyProps) {
         <div className="j-chrome" data-swipe={overlay && !feedCard ? undefined : ''} {...(overlay && !feedCard ? {} : swipe)}>
           {chrome}
         </div>
+        {appetiserOver && mode === 'appetiser' && item && phase === 'feed' ? (
+          <div className="end-card" data-testid="appetiser-end">
+            <p className="eyebrow">This one is finished.</p>
+            <a className="pill gold block" href={course} data-testid="end-full" onClick={(event) => void stepUp(event)}>Watch the full talk</a>
+            <button type="button" className="pill block end-feed" data-testid="end-feed" onClick={() => { setAppetiserOver(false); void showItem(index, 'hors') }}>Back to the feed</button>
+            {swipeTarget(items, index, 'appetiser', 'next') != null ? (
+              <button type="button" className="pill block end-next" data-testid="end-next" onClick={() => { const next = swipeTarget(items, index, 'appetiser', 'next'); setAppetiserOver(false); if (next != null) void advance(next) }}>Next Ready for more?</button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {phase === 'handoff' && line ? <p className="j-line" data-testid="handoff-line">{line}</p> : null}
@@ -1650,7 +1667,7 @@ function PosterStill({ item, mode, peek = false }: { item: FeedItem; mode: Mode;
       ) : null}
       {mode === 'appetiser' && item.youtubeId && !frame ? (
         <div className="j-poster-title" data-testid={peek ? undefined : 'poster-title'}>
-          <small>Extended cut</small>
+          <small>Ready for more?</small>
           <b>{item.lessonTitle || item.courseTitle}</b>
         </div>
       ) : null}
