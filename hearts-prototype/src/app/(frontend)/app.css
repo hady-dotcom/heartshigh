@@ -797,10 +797,9 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .feed-mission .pill { min-height: 32px; padding: 5px 10px; font-size: 12.5px; flex: none; }
 /* When a mission chip is on the feed, push PR #23 chrome down so nothing sits under it. */
 .journey-frame:has(.feed-mission) .j-hairline-row { top: calc(66px + var(--safe-top)); }
-.journey-frame:has(.feed-mission) .j-chrome > .j-sound { top: calc(110px + var(--safe-top)); }
 .journey-frame:has(.feed-mission) .j-top-speaker,
 .journey-frame:has(.feed-mission) .strict .j-top-speaker,
-.journey-frame:has(.feed-mission) .journey[data-mode='appetiser'] .j-top-speaker { top: calc(142px + var(--safe-top)); }
-.journey-frame:has(.feed-mission) .journey[data-words-in-picture='yes'] .j-slot { top: calc(196px + var(--safe-top)); }
+.journey-frame:has(.feed-mission) .journey[data-mode='appetiser'] .j-top-speaker { top: calc(190px + var(--safe-top)); }
+.journey-frame:has(.feed-mission) .journey[data-words-in-picture='yes'] .j-slot { top: calc(244px + var(--safe-top)); }
 .journey-frame:has(.feed-mission) .journey[data-words-in-picture='yes'] .j-chrome .caption,
-.journey-frame:has(.feed-mission) .j-caption-clear { top: calc(212px + var(--safe-top) + min(430px, 100vw) * 9 / 16); }
+.journey-frame:has(.feed-mission) .j-caption-clear { top: calc(260px + var(--safe-top) + min(430px, 100vw) * 9 / 16); }

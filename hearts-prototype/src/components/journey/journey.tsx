@@ -1640,7 +1640,7 @@ export function Journey(props: JourneyProps) {
               {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
               <span className="chip dark" data-testid="clip-timer">{clock(item.hors.end - item.hors.start)}</span>
             </div>
-            {!typeClip && muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
+            {muted && (typeClip || (!hasSound() && playerReady)) ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
           </div>
           </>
         ) : (
@@ -1649,13 +1649,10 @@ export function Journey(props: JourneyProps) {
               <button type="button" className="chip white" onClick={() => window.history.back()} data-testid="appetiser-back">‹ Back</button>
               <span className="chip gold" data-testid="level-chip">{READY_FOR_MORE}</span>
             </div>
-            {!typeClip && muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
+            {muted && (typeClip || (!hasSound() && playerReady)) ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
           </div>
         )}
       </div>
-      {typeClip && muted ? (
-        <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button>
-      ) : null}
       {(cardKind && cardKind !== 'scene') || typeClip || mode !== 'hors' ? null : captionButton}
       {wordsInPicture && mode === 'hors' && !cardKind ? <div className="j-top-speaker" data-testid="top-speaker">{speakerRow}</div> : null}
       {wordsInPicture && mode === 'appetiser' && videoAppetiser ? (
