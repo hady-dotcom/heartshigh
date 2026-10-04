@@ -9,7 +9,7 @@ import { Arch } from '@/components/arch'
 type Mode = 'hors' | 'appetiser'
 type Motion = 'from-bottom' | 'from-left' | 'from-right' | 'from-top' | 'replay'
 
-const ART: Record<SlideStyle, string> = {
+export const ART: Record<SlideStyle, string> = {
   kinetic: '/slides/bg-kinetic-truck.jpg',
   cinema: '/slides/bg-cinema-road.jpg',
   windows: '/slides/bg-windows-mist.jpg',

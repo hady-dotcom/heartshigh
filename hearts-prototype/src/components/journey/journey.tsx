@@ -16,7 +16,7 @@ import { isoWeek } from '@/lib/trends'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, lowData, playOnly, preloadApi, setHidden, soundOn, type PlayerKind } from '@/lib/yt'
 import { Arch } from '@/components/arch'
 import { TabBar } from '../app/shell'
-import { Avatar, FollowButton, Slide } from '../app/feed'
+import { ART as SLIDE_BACKDROP, Avatar, FollowButton, Slide } from '../app/feed'
 import { HeartIcon, PlayIcon, SaveIcon, ShareIcon } from '../icons'
 import { HelpScreen, Opener, SceneCard } from './scenes'
 import { TeachingCard } from './teaching-card'
@@ -1621,6 +1621,7 @@ export function Journey(props: JourneyProps) {
 function stillOf(item: FeedItem | undefined, mode: Mode) {
   if (!item) return null
   if (mode === 'hors' && item.card === 'scene' && item.scene) return item.scene.scene
+  if (mode === 'hors' && item.style && !item.typography?.src) return SLIDE_BACKDROP[item.style]
   if (mode === 'appetiser' && item.cleanThumb) return item.cleanThumb
   return item.poster
 }
@@ -1676,7 +1677,11 @@ function PeekFace({ item, mode }: { item: FeedItem; mode: Mode }) {
     )
   }
   if (mode === 'hors' && item.style && !item.typography?.src) {
-    return <div className="j-slide"><Slide item={item} style={item.style} onMore={() => undefined} /></div>
+    return (
+      <div className={`slide ${item.style}`}>
+        <div className="bg" style={{ backgroundImage: `url(${SLIDE_BACKDROP[item.style]})` }} />
+      </div>
+    )
   }
   return (
     <div className="j-poster">

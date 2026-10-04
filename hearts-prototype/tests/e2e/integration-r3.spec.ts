@@ -79,7 +79,7 @@ test('a YouTube Short in the feed: no caption over its burned-in words, Follow a
     const box = (await top.boundingBox())!
     expect(box.y + box.height, 'the Follow row sits above the lower third').toBeLessThan(844 * 0.4)
     await expect(page.locator('.clip-foot [data-testid="speaker-link"]')).toHaveCount(0)
-    await expect(page.locator('.j-poster-who')).toBeHidden()
+    await expect(page.getByTestId('poster-frame').locator('.j-poster-who')).toBeHidden()
     expect(await page.locator('[data-testid="poster-frame"] img').getAttribute('src')).not.toMatch(/ytimg|youtube|\/clips\//)
   } finally {
     await master.patch(`/api/lessons/${lessonId}`, { data: { youtubeUrl: lesson.youtubeUrl || null, vertical: false } })
