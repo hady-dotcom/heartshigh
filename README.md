@@ -11,4 +11,4 @@ Recorded on a local HEARTS dev server. Nothing here was run against a live deplo
 
 ## Screenshots
 
-See `screenshots/`. `experiments-results.png` and `lanes-tab-experiment-draft.png` now show the Versions Copy column as plain words (no raw JSON). `talk-content-refused.png` keeps the typed values on the form. `lanes-kill-history.png` shows a kill line in Who changed what.
+See `screenshots/`. `experiments-new-form.png` shows each New experiment label stacked above its full-width field, with hints under the slot key and secondary metrics. `lanes-kill-history.png` shows Who changed what in Toronto time (UK date plus a zone label) with the lines “Test started” and “Kill switch on: everyone back to Lanes”. `talk-content-refused.png` is the same stacked form after a refused talk-content slot, values kept. `experiments-results.png` and `lanes-tab-experiment-draft.png` show the Versions Copy column as plain words (no raw JSON).
