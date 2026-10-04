@@ -184,3 +184,16 @@ test('LOW: the main player keeps YouTube’s own overlays to a minimum when it p
   assert.equal(vars.modestbranding, 1)
   assert.match(readFileSync(path.join(root, 'src/components/app/course-player.tsx'), 'utf8'), /paused-scrim/)
 })
+
+test('feed players show none of YouTube’s chrome: no controls, inline, no related videos, cards or captions', () => {
+  for (const kind of ['hors', 'appetiser'] as const) {
+    const vars = playerVars(kind, 12.5, 40) as Record<string, unknown>
+    assert.equal(vars.controls, 0, kind)
+    assert.equal(vars.playsinline, 1, kind)
+    assert.equal(vars.rel, 0, kind)
+    assert.equal(vars.iv_load_policy, 3, kind)
+    assert.equal(vars.cc_load_policy, 0, kind)
+    assert.equal(vars.modestbranding, 1, kind)
+    assert.equal(vars.fs, 0, kind)
+  }
+})

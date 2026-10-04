@@ -20,6 +20,7 @@ export type YTPlayer = {
   getPlayerState(): number
   getIframe(): HTMLIFrameElement
   destroy(): void
+  unloadModule?(name: string): void
 }
 
 type YTNamespace = { Player: new (el: HTMLElement, options: Record<string, unknown>) => YTPlayer }
@@ -67,7 +68,8 @@ export function preloadApi() {
   else window.setTimeout(go, 200)
 }
 
-export type PlayerKind = 'hors' | 'full'
+/** `hors` and `appetiser` play in the feed with no YouTube chrome; `full` is the course page, which keeps YouTube's controls. */
+export type PlayerKind = 'hors' | 'appetiser' | 'full'
 
 export function playerVars(kind: PlayerKind, start: number, end?: number | null) {
   const base = {
@@ -83,6 +85,7 @@ export function playerVars(kind: PlayerKind, start: number, end?: number | null)
     autoplay: 0,
   }
   if (kind === 'hors') return { ...base, end: end ? Math.ceil(end) : undefined, controls: 0, fs: 0, disablekb: 1 }
+  if (kind === 'appetiser') return { ...base, ...(end ? { end: Math.ceil(end) } : {}), controls: 0, fs: 0, disablekb: 1 }
   return { ...base, ...(end ? { end: Math.ceil(end) } : {}), controls: 1, fs: 1, disablekb: 0 }
 }
 
@@ -129,6 +132,8 @@ export async function createPlayer(options: CreateOptions): Promise<YTPlayer> {
         },
         onStateChange: (event: { data: number }) => {
           record.state = event.data
+          // cc_load_policy is only a hint; the learner's own YouTube setting can still load captions. We draw our own lines.
+          if (event.data === STATE.PLAYING) for (const name of ['captions', 'cc']) player.unloadModule?.(name)
           options.onState?.(event.data, player)
         },
         onError: (event: { data: number }) => options.onError?.(event.data),

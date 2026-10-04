@@ -41,6 +41,20 @@ async function settled(feed: Locator, page: Page) {
   await page.waitForTimeout(150)
 }
 
+/** The swipe toast never sits over the words on screen. */
+async function toastClearOfWords(page: Page) {
+  const hits = await page.evaluate(() => {
+    const pill = document.querySelector('[data-testid="toast"] span')?.getBoundingClientRect()
+    if (!pill) return []
+    return [...document.querySelectorAll<HTMLElement>('.j-chrome .caption, [data-testid="scene-quote"], .slide h2, .slide p, .feed-card h2, .feed-card p, .scenic-lines p')]
+      .filter((el) => el.offsetParent && el.textContent?.trim())
+      .map((el) => ({ text: el.textContent!.trim().slice(0, 30), box: el.getBoundingClientRect() }))
+      .filter(({ box }) => box.left < pill.right && box.right > pill.left && box.top < pill.bottom && box.bottom > pill.top)
+      .map(({ text }) => text)
+  })
+  expect(hits, 'words under the toast').toEqual([])
+}
+
 /** A left swipe is "more on this topic", a right swipe "more from this speaker"; each answers with a toast. */
 async function swipesLand(page: Page, cdp: CDPSession, feed: Locator, mode: 'hors' | 'appetiser') {
   const toast = page.getByTestId('toast')
@@ -49,6 +63,7 @@ async function swipesLand(page: Page, cdp: CDPSession, feed: Locator, mode: 'hor
     const before = await feed.getAttribute('data-index')
     await touchSwipe(page, cdp, dx)
     await expect(toast).toHaveText(said)
+    await toastClearOfWords(page)
     await settled(feed, page)
     await expect(feed).toHaveAttribute('data-mode', mode)
     if (!/everything|only/.test((await toast.textContent().catch(() => '')) || '')) expect(await feed.getAttribute('data-index')).not.toBe(before)

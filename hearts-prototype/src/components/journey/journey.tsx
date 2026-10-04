@@ -17,7 +17,7 @@ import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVis
 import { Arch } from '@/components/arch'
 import { TabBar } from '../app/shell'
 import { Avatar, FollowButton, Slide } from '../app/feed'
-import { HeartIcon, SaveIcon, ShareIcon } from '../icons'
+import { HeartIcon, PlayIcon, SaveIcon, ShareIcon } from '../icons'
 import { HelpScreen, Opener, SceneCard } from './scenes'
 import { TeachingCard } from './teaching-card'
 import { KeepPlaceSheet, type SheetReason } from './sheet'
@@ -25,7 +25,7 @@ import { KeepPlaceSheet, type SheetReason } from './sheet'
 type Phase = 'opener' | 'scene' | 'help' | 'handoff' | 'feed'
 type Mode = 'hors' | 'appetiser'
 type Spec = { key: string; videoId: string; start: number; end: number | null; kind: PlayerKind }
-type Host = { spec: Spec | null; playerId: string | null; ready: boolean; state: number }
+type Host = { spec: Spec | null; playerId: string | null; ready: boolean; state: number; played: boolean }
 type Mains = { courseId: number; lessonId: number; title: string; poster: string | null }
 
 export type JourneyProps = {
@@ -127,8 +127,8 @@ export function Journey(props: JourneyProps) {
   const [captionOpen, setCaptionOpen] = useState(false)
   const spanJoin = useRef<number | null>(null)
   const hosts = useRef<[Host, Host]>([
-    { spec: null, playerId: null, ready: false, state: -1 },
-    { spec: null, playerId: null, ready: false, state: -1 },
+    { spec: null, playerId: null, ready: false, state: -1, played: false },
+    { spec: null, playerId: null, ready: false, state: -1, played: false },
   ])
   const hostEls = useRef<(HTMLDivElement | null)[]>([null, null])
   const [visibleHost, setVisibleHostState] = useState<0 | 1>(0)
@@ -302,7 +302,7 @@ export function Journey(props: JourneyProps) {
     if (kind === 'appetiser') {
       const spans = item.appetiser.spans
       const multi = Boolean(spans && spans.length > 1)
-      return { key: `${item.cutId}:appetiser`, videoId: item.youtubeId, start: spans?.length ? spans[0].start : item.appetiser.start, end: multi ? null : appetiserEnd(item), kind: 'full' }
+      return { key: `${item.cutId}:appetiser`, videoId: item.youtubeId, start: spans?.length ? spans[0].start : item.appetiser.start, end: multi ? null : appetiserEnd(item), kind: 'appetiser' }
     }
     return { key: `${item.cutId}:hors`, videoId: item.youtubeId, start: item.hors.start, end: item.hors.end, kind: 'hors' }
   }, [])
@@ -323,6 +323,10 @@ export function Journey(props: JourneyProps) {
       return
     }
     if (state === STATE.PLAYING) {
+      if (!host.played) {
+        host.played = true
+        setReadyTick((value) => value + 1)
+      }
       setBuffering(false)
       setSlow('none')
       setErrorNote(null)
@@ -351,6 +355,7 @@ export function Journey(props: JourneyProps) {
       const existing = host.playerId ? getPlayer(host.playerId) : null
       if (existing && host.spec?.kind === spec.kind) {
         host.spec = spec
+        host.played = false
         cue(host.playerId!, existing, spec.videoId, spec.start, spec.end)
         host.ready = true
         setReadyTick((value) => value + 1)
@@ -362,6 +367,7 @@ export function Journey(props: JourneyProps) {
       host.spec = spec
       host.playerId = id
       host.ready = false
+      host.played = false
       host.state = -1
       setReadyTick((value) => value + 1)
       try {
@@ -1230,7 +1236,9 @@ export function Journey(props: JourneyProps) {
   const typeClip = Boolean(phase === 'feed' && mode === 'hors' && typeSrc && cardKind !== 'text' && cardKind !== 'question' && cardKind !== 'scene')
   const scenic = Boolean(phase === 'feed' && cardKind === 'scene' && mode === 'hors' && item?.scene)
   const feedCard = phase === 'feed' && (cardKind === 'question' || cardKind === 'text')
-  const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (!playerReady || Boolean(errorNote) || offline)))
+  const started = playerReady && host.played
+  const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (!started || Boolean(errorNote) || offline)))
+  const waitingToPlay = phase === 'feed' && playerReady && !host.played && !errorNote && !offline
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
   const horsLine = mode === 'hors' ? piece?.lines?.[lineShown] : null
@@ -1364,7 +1372,7 @@ export function Journey(props: JourneyProps) {
               ref={(el) => { hostEls.current[at] = el }}
               className={`yt-host ${at === visibleHost && revealed && !slide && !scenic ? 'on' : 'off'}`}
               data-testid={at === visibleHost && revealed ? 'player-visible' : 'player-hidden'}
-              style={{ visibility: at === visibleHost && playerReady && !showPoster ? 'visible' : 'hidden' }}
+              style={{ visibility: at === visibleHost && playerReady ? 'visible' : 'hidden' }}
             />
           ))}
           {typeClip && typeSrc ? (
@@ -1401,6 +1409,11 @@ export function Journey(props: JourneyProps) {
             <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}${scenicAppetiser ? ' scenic' : ''}`} data-testid="poster-frame">
               {item.poster ? <img src={item.poster} alt="" /> : null}
               <span className="j-poster-mark" aria-hidden><Arch size={28} /></span>
+              {waitingToPlay && slow !== 'retry' ? (
+                <button type="button" className="j-poster-play" aria-label="Play with sound" data-testid="poster-play" onClick={() => { tapSound(); tryPlay() }}>
+                  <PlayIcon size={30} />
+                </button>
+              ) : null}
               <span className="j-poster-who">{item.speaker}</span>
               {offline ? <p className="j-poster-note" data-testid="offline-note">{phase === 'handoff' || index === 0 ? "You're offline. Your first clip will play as soon as you're back." : "You're offline. We'll carry on from here when you're back."}</p> : null}
               {errorNote ? <p className="j-poster-note" data-testid="cannot-play">{errorNote}</p> : null}

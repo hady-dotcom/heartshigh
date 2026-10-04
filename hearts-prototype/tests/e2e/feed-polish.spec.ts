@@ -178,3 +178,21 @@ test('the portal desk names the portal, never its slug, in the sidebar and on a 
   await expect(narrow).toContainText(`The ${name} portal desk needs a wider screen`)
   await expect(narrow).not.toContainText('east-london')
 })
+
+test('until a clip actually plays, our poster and a gold play button cover the player, never YouTube’s own', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.setViewportSize(PHONE)
+  await fakeYouTube(page, { blockAutoplay: true })
+  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', `${PORTAL}/feed`)
+  const feed = page.getByTestId('journey')
+  await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  await stepTo(page, feed, 'talk')
+  await expect(page.getByTestId('poster-frame')).toBeVisible()
+  await expect(page.getByTestId('poster-play')).toBeVisible({ timeout: 15_000 })
+  const vars = (await page.evaluate(() => (window as unknown as { __playerVars: Record<string, unknown>[] }).__playerVars)).at(-1)!
+  expect(vars).toMatchObject({ controls: 0, playsinline: 1, rel: 0, iv_load_policy: 3, cc_load_policy: 0, modestbranding: 1 })
+  await page.evaluate(() => { (window as unknown as { __allowPlay: boolean }).__allowPlay = true })
+  await page.getByTestId('poster-play').click()
+  await expect(page.getByTestId('poster-frame')).toHaveCount(0)
+  await expect(page.getByTestId('poster-play')).toHaveCount(0)
+})

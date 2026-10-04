@@ -1,9 +1,12 @@
 import type { Page } from '@playwright/test'
 
 /** A stand-in for the IFrame API, so player chrome (Tap for sound and the rest) renders without YouTube. */
-export async function fakeYouTube(page: Page) {
+export async function fakeYouTube(page: Page, options: { blockAutoplay?: boolean } = {}) {
   await page.route(/youtube|ytimg|googlevideo/, (route) => route.abort())
-  await page.addInitScript(() => {
+  await page.addInitScript((blockAutoplay) => {
+    const gate = window as unknown as { __allowPlay?: boolean; __playerVars?: unknown[] }
+    gate.__allowPlay = !blockAutoplay
+    gate.__playerVars = []
     type Options = { playerVars?: { start?: number }; events: { onReady: (e: unknown) => void; onStateChange: (e: { data: number }) => void } }
     class Player {
       private state = -1
@@ -12,6 +15,7 @@ export async function fakeYouTube(page: Page) {
       private frame: HTMLIFrameElement
       constructor(el: HTMLElement, private options: Options) {
         this.time = options.playerVars?.start || 0
+        gate.__playerVars!.push(options.playerVars)
         this.frame = document.createElement('iframe')
         this.frame.dataset.fake = 'youtube'
         el.replaceWith(this.frame)
@@ -21,7 +25,7 @@ export async function fakeYouTube(page: Page) {
         this.state = state
         this.options.events.onStateChange({ data: state })
       }
-      playVideo() { this.set(1) }
+      playVideo() { if (gate.__allowPlay) this.set(1) }
       pauseVideo() { this.set(2) }
       stopVideo() { this.set(5) }
       mute() { this.muted = true }
@@ -36,5 +40,5 @@ export async function fakeYouTube(page: Page) {
       destroy() { this.frame.remove() }
     }
     ;(window as unknown as { YT: unknown }).YT = { Player }
-  })
+  }, Boolean(options.blockAutoplay))
 }
