@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { seedCode } from '../env'
 
@@ -210,29 +210,33 @@ test('contrast at 10:00 and 20:00 Toronto, and the after screenshots', async ({ 
   expect(fails, fails.map((row) => `${row.route} ${row.text} ${row.ratio}`).join('\n')).toEqual([])
 })
 
-test.describe('join to first talk', () => {
-  test.use({ video: { mode: 'on', size: PHONE } })
-  test('a new learner from the join link reaches the first talk', async ({ page }) => {
-    await page.setViewportSize(PHONE)
-    await page.route(/youtube\.com|ytimg|googlevideo|doubleclick/, (route) => route.abort())
-    const stamp = Date.now().toString().slice(-8)
-    await page.goto(`/join?code=${seedCode('elm-learner')}`)
-    await page.getByTestId('join-name').fill(`Nora ${stamp}`)
-    await page.getByTestId('join-email').fill(`nora-${stamp}@hearts.test`)
-    await page.getByTestId('join-password').fill('harbour-learner')
-    await page.getByTestId('join-submit').click()
-    await page.waitForURL(/\/p\/east-london/)
-    if (await page.getByTestId('welcome-begin').count()) await page.getByTestId('welcome-begin').click()
-    if (await page.getByTestId('welcome-continue').count()) await page.getByTestId('welcome-continue').click()
-    await expect(page.getByTestId('lets-play').or(page.getByTestId('opener'))).toBeVisible({ timeout: 20_000 })
-    if (await page.getByTestId('lets-play').count()) await page.getByTestId('lets-play').click()
-    for (const [scene, option] of PICKS) {
-      const card = page.locator(`[data-testid="scene"][data-scene="${scene}"]`)
-      await expect(card.first()).toBeVisible({ timeout: 15_000 })
-      await card.last().locator(`[data-testid="tile"][data-option="${option}"]`).click()
-    }
-    await expect(page.getByTestId('journey')).toHaveAttribute('data-phase', 'feed', { timeout: 25_000 })
-    if (await page.getByTestId('learn-more').count()) await page.getByTestId('learn-more').click()
-    await page.waitForTimeout(1400)
-  })
+test('a new learner from the join link reaches the first talk', async ({ browser }) => {
+  const context = await browser.newContext({ viewport: PHONE, recordVideo: { dir: ROOT, size: PHONE } })
+  const page = await context.newPage()
+  await page.route(/youtube\.com|ytimg|googlevideo|doubleclick/, (route) => route.abort())
+  const stamp = Date.now().toString().slice(-8)
+  await page.goto(`/join?code=${seedCode('elm-learner')}`)
+  await page.getByTestId('join-name').fill(`Nora ${stamp}`)
+  await page.getByTestId('join-email').fill(`nora-${stamp}@hearts.test`)
+  await page.getByTestId('join-password').fill('harbour-learner')
+  await page.getByTestId('join-submit').click()
+  await page.waitForURL(/\/p\/east-london/)
+  if (await page.getByTestId('welcome-begin').count()) await page.getByTestId('welcome-begin').click()
+  if (await page.getByTestId('welcome-continue').count()) await page.getByTestId('welcome-continue').click()
+  await expect(page.getByTestId('lets-play').or(page.getByTestId('opener'))).toBeVisible({ timeout: 20_000 })
+  if (await page.getByTestId('lets-play').count()) await page.getByTestId('lets-play').click()
+  for (const [scene, option] of PICKS) {
+    const card = page.locator(`[data-testid="scene"][data-scene="${scene}"]`)
+    await expect(card.first()).toBeVisible({ timeout: 15_000 })
+    await card.last().locator(`[data-testid="tile"][data-option="${option}"]`).click()
+  }
+  await expect(page.getByTestId('journey')).toHaveAttribute('data-phase', 'feed', { timeout: 25_000 })
+  if (await page.getByTestId('learn-more').count()) await page.getByTestId('learn-more').click()
+  await page.waitForTimeout(1400)
+  const video = page.video()
+  await context.close()
+  if (video) {
+    const from = await video.path()
+    copyFileSync(from, path.join(ROOT, 'join-to-first-talk.webm'))
+  }
 })
