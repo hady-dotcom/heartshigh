@@ -158,6 +158,15 @@ export function formatSlotLabel(template: string, minutes?: number) {
   return template.replace(/\{n\}/gi, String(n)).replace(/\bN\b/g, String(n))
 }
 
+/** Plain words for the Versions table. Never dump the JSON payload. */
+export function variantCopy(payload: unknown, fallback = ''): string {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return fallback
+  const row = payload as Record<string, unknown>
+  if (typeof row.label === 'string' && row.label.trim()) return row.label.trim()
+  if (typeof row.framing === 'string' && row.framing.trim()) return row.framing.trim()
+  return fallback
+}
+
 export const PRIMARY_METRICS = [
   { key: 'clip_cta_tap', label: 'Tapped the clip button' },
   { key: 'clip_watch_completion', label: 'Finished the short clip' },

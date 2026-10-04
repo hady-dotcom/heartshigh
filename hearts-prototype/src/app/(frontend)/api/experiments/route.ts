@@ -143,16 +143,17 @@ export async function POST(req: Request) {
     if (!user) return wantsJson ? NextResponse.json({ error: 'Sign in first.' }, { status: 401 }) : redirectTo(req, `/login?next=${encodeURIComponent(next)}`, 'Sign in first.')
     if (action === 'create') {
       if (!canEditExperiments(user)) return fail('Only the master can create an experiment.', 403)
+      const slot = text(form, 'slotOverride').trim() || text(form, 'slot')
       const created = await createExperiment(payload, user, {
         key: text(form, 'key').trim(),
         name: text(form, 'name'),
         description: text(form, 'description'),
-        slot: text(form, 'slot'),
+        slot,
         portalId: Number(text(form, 'portal')) || null,
         allocation: text(form, 'allocation') === 'auto' ? 'auto' : 'fixed',
         primaryMetric: text(form, 'primaryMetric'),
         secondaryMetrics: text(form, 'secondary').split(/[, ]+/).map((item) => item.trim()).filter(Boolean),
-        variants: parseVariants(text(form, 'variants'), text(form, 'slot')),
+        variants: parseVariants(text(form, 'variants'), slot),
       })
       const dest = next.includes('/experiments') ? `${next.replace(/\/new$/, '')}/${created.id}` : `/master/experiments/${created.id}`
       return wantsJson ? NextResponse.json({ ok: true, id: created.id, key: created.key }) : redirectTo(req, dest, undefined, 'Draft saved. Approve the versions, then start it.')

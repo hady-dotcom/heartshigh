@@ -12,6 +12,7 @@ import {
   payloadProblems,
   slotKeys,
   slotOf,
+  variantCopy,
   withinFirstWeek,
 } from '../../src/lib/experiment-slots'
 import { experimentDraftProblems as experimentProblems } from '../../src/lib/experiment-slots'
@@ -182,6 +183,13 @@ test('lanes course starts only count in the first week after assignment', () => 
   assert.equal(withinFirstWeek(assigned, new Date(assigned.getTime() + FIRST_WEEK_MS + 1)), false)
   assert.equal(withinFirstWeek(assigned, new Date('2026-09-30T23:59:59.000Z')), false)
   assert.equal(withinFirstWeek(null, assigned), false)
+})
+
+test('versions table copy is the plain words, not JSON', () => {
+  assert.equal(variantCopy({ label: 'Explore' }, 'Lanes'), 'Explore')
+  assert.equal(variantCopy({ framing: 'face-crop' }, 'split'), 'face-crop')
+  assert.equal(variantCopy({ label: '{"label":"Explore"}' }, 'Lanes'), '{"label":"Explore"}')
+  assert.equal(variantCopy(null, 'Lanes'), 'Lanes')
 })
 
 test('lanes tab draft is a valid experiment on the whitelist', () => {

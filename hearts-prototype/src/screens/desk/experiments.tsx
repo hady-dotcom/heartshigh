@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
+import { ExperimentHelp } from '@/components/desk/help'
 import {
   EXPERIMENT_RULE,
   EXPERIMENT_SLOTS,
   PRIMARY_METRICS,
   metricLabel,
+  variantCopy,
 } from '@/lib/experiment-slots'
 import type { SessionUser } from '@/server/context'
 import {
@@ -63,10 +65,16 @@ async function Frame({
   tools?: React.ReactNode
   children: React.ReactNode
 }) {
-  if (ctx) return <AdminFrame ctx={ctx} active="experiments" title={title} intro={intro} testId={testId} tools={tools}>{children}</AdminFrame>
+  const withHelp = (
+    <>
+      <ExperimentHelp />
+      {tools}
+    </>
+  )
+  if (ctx) return <AdminFrame ctx={ctx} active="experiments" title={title} intro={intro} testId={testId} tools={withHelp}>{children}</AdminFrame>
   const desk = master!
   return (
-    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="experiments" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={tools}>
+    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="experiments" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={withHelp}>
       {children}
     </DeskFrame>
   )
@@ -290,7 +298,7 @@ async function DetailPage({ ctx, master, base, id, suggest }: { ctx: Ctx | null;
                   {variants.map((row) => (
                     <tr key={row.key} data-testid="variant-row" data-variant={row.key}>
                       <td><b>{row.letter}</b><div className={styles.quiet}>{row.key}</div></td>
-                      <td>{row.label}<div className={styles.quiet}>{JSON.stringify(row.payload)}</div></td>
+                      <td data-testid="variant-copy">{variantCopy(row.payload, row.label)}</td>
                       <td>{row.approved ? 'Yes' : 'Needs approval'}</td>
                       <td data-testid="variant-exposures">{row.exposures}</td>
                       <td data-testid="variant-conversions">{row.conversions}</td>
@@ -391,6 +399,11 @@ async function EditPage({ ctx, master, base, id }: { ctx: Ctx | null; master: { 
               {EXPERIMENT_SLOTS.map((slot) => <option key={slot.key} value={slot.key}>{slot.name} — {slot.wired ? 'live' : 'registered only'}</option>)}
             </select>
           </label>
+          {current ? null : (
+            <label>Or type a slot key
+              <input name="slotOverride" placeholder="Only listed slots are allowed" data-testid="experiment-slot-key" />
+            </label>
+          )}
           <label>Portal
             <select name="portal" defaultValue={current ? String(idOfPortal(current) || '') : ''}>
               <option value="">Every portal</option>
