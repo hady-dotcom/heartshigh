@@ -29,6 +29,18 @@ test('r5d desk proof shots', async ({ page }) => {
   await page.setViewportSize(DESK)
   await signIn(page, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin/teach')
   await expect(page.getByTestId('admin-teach')).toBeVisible()
+  const elm = ((await (await page.request.get('/api/portals?where[slug][equals]=east-london&limit=1')).json()) as { docs?: { id: number }[] }).docs?.[0]
+  if (elm?.id) {
+    await page.request.post('/api/users', {
+      data: {
+        email: 'ux-audit-desk@hearts.foundation',
+        password: 'audit-pass-12',
+        name: 'UX Audit Desk',
+        role: 'learner',
+        tenants: [{ tenant: elm.id }],
+      },
+    }).catch(() => null)
+  }
 
   await page.locator('[data-testid="desk-help"][data-help="admin-teach"]').click()
   await expect(page.locator('[data-testid="desk-help"][data-help="admin-teach"] .desk-help-pop, [data-testid="desk-help"][data-help="admin-teach"] [role="note"]')).toBeVisible()
