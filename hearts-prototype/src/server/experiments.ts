@@ -12,7 +12,9 @@ import {
   isTrackedEvent,
   metricLabel,
   payloadProblems,
+  remainingVariantSlots,
   slotOf,
+  variantCopy,
   withinFirstWeek,
 } from '@/lib/experiment-slots'
 import type { VariantView } from '@/lib/experiment-slots'
@@ -416,15 +418,17 @@ export async function addSuggestedVariants(payload: Payload, actor: Actor, id: n
     })
   }
   if (!extra.length) throw new Error('No new versions passed the checks.')
-  if (current.variants.length + extra.length > 8) throw new Error('Keep it to eight versions or fewer. Remove one before adding more.')
+  const room = remainingVariantSlots(current.variants)
+  if (room <= 0) throw new Error('Keep it to eight versions or fewer. Remove one before adding more.')
+  const taking = extra.slice(0, room)
   const updated = await payload.update({
     collection: col('experiments'),
     id,
     overrideAccess: true,
-    data: { variants: [...current.variants, ...extra] } as never,
+    data: { variants: [...current.variants, ...taking] } as never,
   })
-  await writeAudit(payload, actor, 'experiment.suggest', { id, key: current.key, added: extra.map((row) => row.key) }, current.portal)
-  return { experiment: asDoc(updated as never), added: extra }
+  await writeAudit(payload, actor, 'experiment.suggest', { id, key: current.key, added: taking.map((row) => row.key) }, current.portal)
+  return { experiment: asDoc(updated as never), added: taking }
 }
 
 export async function startExperiment(payload: Payload, actor: Actor, id: number) {
@@ -505,10 +509,14 @@ export async function setKillSwitch(payload: Payload, actor: Actor, off: boolean
   if (off) {
     const running = await payload.find({ collection: col('experiments'), overrideAccess: true, depth: 0, limit: 100, where: { status: { equals: 'running' } } })
     for (const row of running.docs) {
-      await payload.update({ collection: col('experiments'), id: row.id, overrideAccess: true, data: { status: 'paused' } as never })
+      const doc = asDoc(row as never)
+      await payload.update({ collection: col('experiments'), id: doc.id, overrideAccess: true, data: { status: 'paused' } as never })
+      await writeAudit(payload, actor, 'experiment.kill', { id: doc.id, key: doc.key, off: true }, doc.portal)
     }
+    if (!running.docs.length) await writeAudit(payload, actor, 'experiment.kill', { off: true })
+  } else {
+    await writeAudit(payload, actor, 'experiment.unkill', { off: false })
   }
-  await writeAudit(payload, actor, off ? 'experiment.kill' : 'experiment.unkill', { off })
 }
 
 type CountRow = { experiment: number; variantKey: string; kind: string; event: string; n: number }
@@ -727,7 +735,7 @@ export async function assignVariant(payload: Payload, slot: string, subject: Sub
       experimentKey: experiment.key,
       variantKey: variant.key,
       payload: variant.payload,
-      label: String(variant.payload.label || variant.label),
+      label: variantCopy(variant.payload, variant.label),
       framing: typeof variant.payload.framing === 'string' ? String(variant.payload.framing) : undefined,
       running: true,
     }
@@ -869,7 +877,7 @@ export async function suggestFor(payload: Payload, actor: Actor, id: number, cur
   if (!experiment) throw new Error('That experiment was not found.')
   const slot = slotOf(experiment.slot)
   if (!slot || slot.kind !== 'copy') throw new Error('AI suggestions are for wording slots. Layout slots are written by hand.')
-  const sample = current || String(experiment.variants[0]?.payload.label || experiment.variants[0]?.label || slot.fallback.label || '')
+  const sample = current || variantCopy(experiment.variants[0]?.payload, experiment.variants[0]?.label || String(slot.fallback.label || ''))
   const suggested = await suggestWording(experiment.slot, sample)
   return { ...suggested, experiment }
 }
@@ -938,7 +946,10 @@ export async function experimentAudit(payload: Payload, experimentKey: string, p
     },
   })
   return (found.docs as { id: number; event?: string; actorRole?: string; at?: string; detail?: { key?: string; name?: string; variantKey?: string } }[])
-    .filter((row) => !experimentKey || row.detail?.key === experimentKey || !row.detail?.key)
+    .filter((row) => {
+      const key = row.detail && typeof row.detail === 'object' ? row.detail.key : undefined
+      return !experimentKey || key === experimentKey
+    })
 }
 
 export function csvFor(results: ExperimentResults) {

@@ -31,13 +31,21 @@ export const dynamic = 'force-dynamic'
 
 const DEVICE = 'hearts_device'
 
-function redirectTo(req: Request, path: string, error?: string, notice?: string) {
+const DRAFT_FIELDS = ['key', 'name', 'description', 'slot', 'slotOverride', 'portal', 'allocation', 'primaryMetric', 'secondary', 'variants'] as const
+
+function redirectTo(req: Request, path: string, error?: string, notice?: string, form?: FormData) {
   const host = req.headers.get('x-forwarded-host') || req.headers.get('host')
   const proto = req.headers.get('x-forwarded-proto') || 'http'
   const safe = path.startsWith('/') && !path.startsWith('//') && !path.startsWith('/\\') ? path : '/'
   const url = new URL(safe, host ? `${proto}://${host}` : req.url)
   if (error) url.searchParams.set('error', error.slice(0, 400))
   if (notice) url.searchParams.set('notice', notice.slice(0, 400))
+  if (error && form) {
+    for (const name of DRAFT_FIELDS) {
+      const value = String(form.get(name) || '')
+      if (value) url.searchParams.set(name, value.slice(0, 800))
+    }
+  }
   return NextResponse.redirect(url, 303)
 }
 
@@ -122,7 +130,7 @@ export async function POST(req: Request) {
   const device = await deviceId()
   const portal = portalIdOf(user)
 
-  const fail = (message: string, status = 400) => (wantsJson ? NextResponse.json({ error: message }, { status }) : redirectTo(req, next, message))
+  const fail = (message: string, status = 400) => (wantsJson ? NextResponse.json({ error: message }, { status }) : redirectTo(req, next, message, undefined, action === 'create' || action === 'update' ? form : undefined))
   const ok = (notice: string, extra?: unknown) => (wantsJson ? NextResponse.json({ ok: true, notice, ...(extra && typeof extra === 'object' ? extra : {}) }) : redirectTo(req, next, undefined, notice))
 
   try {

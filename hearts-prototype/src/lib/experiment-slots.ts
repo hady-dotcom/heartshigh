@@ -160,11 +160,27 @@ export function formatSlotLabel(template: string, minutes?: number) {
 
 /** Plain words for the Versions table. Never dump the JSON payload. */
 export function variantCopy(payload: unknown, fallback = ''): string {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return fallback
-  const row = payload as Record<string, unknown>
+  if (typeof payload === 'string' && payload.trim() && !payload.trim().startsWith('{')) return payload.trim()
+  const row = payload && typeof payload === 'object' && !Array.isArray(payload) ? (payload as Record<string, unknown>) : null
+  if (!row) return fallback
   if (typeof row.label === 'string' && row.label.trim()) return row.label.trim()
   if (typeof row.framing === 'string' && row.framing.trim()) return row.framing.trim()
   return fallback
+}
+
+/** Hard cap for versions on one experiment. Eight is allowed; nine is not. */
+export const MAX_EXPERIMENT_VARIANTS = 8
+
+export function countedVariants<T extends { key?: string | null }>(variants: T[] | null | undefined): T[] {
+  return (variants || []).filter((row) => String(row?.key || '').trim())
+}
+
+export function remainingVariantSlots(variants: { key?: string | null }[] | null | undefined) {
+  return Math.max(0, MAX_EXPERIMENT_VARIANTS - countedVariants(variants).length)
+}
+
+export function draftsToAdd(existing: number, incoming: number) {
+  return Math.max(0, Math.min(incoming, MAX_EXPERIMENT_VARIANTS - Math.max(0, existing)))
 }
 
 export const PRIMARY_METRICS = [
@@ -248,9 +264,9 @@ export function experimentDraftProblems(input: {
     if (metric && !isTrackedEvent(metric) && !isPrimaryMetric(metric)) problems.push(`“${metric}” is not a tracked event.`)
   }
   if (input.allocation && input.allocation !== 'fixed' && input.allocation !== 'auto') problems.push('The split is either fixed or auto.')
-  const variants = input.variants || []
+  const variants = countedVariants(input.variants)
   if (variants.length < 2) problems.push('An experiment needs at least two versions.')
-  if (variants.length > 8) problems.push('Keep it to eight versions or fewer.')
+  if (variants.length > MAX_EXPERIMENT_VARIANTS) problems.push('Keep it to eight versions or fewer.')
   const keys = new Set<string>()
   let weight = 0
   for (const variant of variants) {

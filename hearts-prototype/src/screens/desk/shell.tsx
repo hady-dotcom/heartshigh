@@ -101,7 +101,7 @@ export async function DeskFrame({
   brandHref: string
   extraLinks?: { label: string; href: string }[]
   tools?: ReactNode
-  query: { error?: string; notice?: string }
+  query: { error?: string | string[]; notice?: string | string[] }
   testId?: string
   evening?: boolean
   children: ReactNode

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
+import { ExperimentForm } from '@/components/desk/experiment-form'
 import { ExperimentHelp } from '@/components/desk/help'
 import {
   EXPERIMENT_RULE,
@@ -28,7 +29,12 @@ import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
 import styles from './experiments.module.css'
 
-type Query = Record<string, string | undefined>
+type Query = Record<string, string | string[] | undefined>
+
+function queryText(query: Query, key: string) {
+  const value = query[key]
+  return typeof value === 'string' ? value : Array.isArray(value) ? value[0] || '' : ''
+}
 
 const STATUS_BADGE: Record<string, [string, string]> = {
   draft: ['Draft', 'grey'],
@@ -96,7 +102,7 @@ export async function ExperimentPages({ ctx, master, path }: { ctx?: Ctx | null;
   const [head, rest] = path
   if (head === 'new') return <EditPage ctx={ctx || null} master={master || null} base={base} />
   if (head && rest === 'edit') return <EditPage ctx={ctx || null} master={master || null} base={base} id={Number(head)} />
-  if (head) return <DetailPage ctx={ctx || null} master={master || null} base={base} id={head} suggest={query.suggest === '1'} />
+  if (head) return <DetailPage ctx={ctx || null} master={master || null} base={base} id={head} suggest={queryText(query, 'suggest') === '1'} error={queryText(query, 'error')} />
   return <ListPage ctx={ctx || null} master={master || null} base={base} />
 }
 
@@ -207,7 +213,7 @@ function idOfPortal(item: ExperimentDoc) {
   return typeof value === 'number' ? value : null
 }
 
-async function DetailPage({ ctx, master, base, id, suggest }: { ctx: Ctx | null; master: { payload: Payload; user: SessionUser; query: Query } | null; base: string; id: string; suggest: boolean }) {
+async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx | null; master: { payload: Payload; user: SessionUser; query: Query } | null; base: string; id: string; suggest: boolean; error?: string }) {
   const payload = ctx?.payload || master!.payload
   const user = ctx?.user || master!.user
   let results: ExperimentResults
@@ -327,11 +333,11 @@ async function DetailPage({ ctx, master, base, id, suggest }: { ctx: Ctx | null;
                   <form action="/api/experiments" method="post">
                     <Hidden fields={{ action: 'suggest', id: String(experiment.id), next: `${base}/${experiment.id}?suggest=1` }} />
                     <label>Current line
-                      <input name="current" defaultValue={String(experiment.variants[0]?.payload.label || experiment.variants[0]?.label || '')} />
+                      <input name="current" defaultValue={variantCopy(experiment.variants[0]?.payload, experiment.variants[0]?.label)} />
                     </label>
                     <button className="btn" type="submit" data-testid="experiment-suggest">Suggest versions with AI</button>
                   </form>
-                  {suggest ? <p className={styles.quiet} data-testid="ai-suggest-done">Drafts were added below. Approve the ones you want before you start.</p> : null}
+                  {suggest && !error ? <p className={styles.quiet} data-testid="ai-suggest-done">Drafts were added below. Approve the ones you want before you start.</p> : null}
                 </div>
               </section>
             ) : null}
@@ -378,62 +384,33 @@ async function EditPage({ ctx, master, base, id }: { ctx: Ctx | null; master: { 
   const current = id ? await loadExperiment(payload, id) : null
   if (id && !current) return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-missing"><p>That experiment was not found.</p></Frame>
   const portals = await rows(payload, 'portals', undefined, { sort: 'name', limit: 40 })
-  const variantText = (current?.variants || []).map((row) => `${row.key} | ${row.label}`).join('\n')
+  const query = queryOf(ctx, master)
+  const variantText = queryText(query, 'variants') || (current?.variants || []).map((row) => `${row.key} | ${row.label}`).join('\n')
   return (
     <Frame ctx={ctx} master={master} title={current ? `Edit ${current.name}` : 'New experiment'} intro="Stay on a listed slot. Versions are wording or framing only." testId="experiment-edit">
-      <form className="form panel" action="/api/experiments" method="post" data-testid="experiment-form">
-        <header><h2>{current ? 'Details' : 'Start from a slot'}</h2></header>
-        <div className="body">
-          <Hidden fields={{ action: current ? 'update' : 'create', id: current ? String(current.id) : '', next: current ? `${base}/${current.id}` : `${base}/new` }} />
-          <label>Key
-            <input name="key" defaultValue={current?.key || ''} required pattern="[a-z][a-z0-9-]{1,58}[a-z0-9]" disabled={Boolean(current)} data-testid="experiment-key" />
-          </label>
-          <label>Name
-            <input name="name" defaultValue={current?.name || ''} required data-testid="experiment-name" />
-          </label>
-          <label>What you are testing
-            <textarea name="description" defaultValue={current?.description || ''} rows={3} />
-          </label>
-          <label>Slot
-            <select name="slot" defaultValue={current?.slot || 'feed-cta-label'} disabled={Boolean(current)} data-testid="experiment-slot-field">
-              {EXPERIMENT_SLOTS.map((slot) => <option key={slot.key} value={slot.key}>{slot.name} — {slot.wired ? 'live' : 'registered only'}</option>)}
-            </select>
-          </label>
-          {current ? null : (
-            <label>Or type a slot key
-              <input name="slotOverride" placeholder="Only listed slots are allowed" data-testid="experiment-slot-key" />
-            </label>
-          )}
-          <label>Portal
-            <select name="portal" defaultValue={current ? String(idOfPortal(current) || '') : ''}>
-              <option value="">Every portal</option>
-              {portals.map((portal) => <option key={portal.id} value={portal.id}>{str(portal.name)}</option>)}
-            </select>
-          </label>
-          <label>Split
-            <select name="allocation" defaultValue={current?.allocation || 'fixed'} data-testid="experiment-allocation">
-              <option value="fixed">Fixed split</option>
-              <option value="auto">Auto (Thompson sampling, 10% floor)</option>
-            </select>
-          </label>
-          <label>Primary metric
-            <select name="primaryMetric" defaultValue={current?.primaryMetric || 'clip_cta_tap'} data-testid="experiment-metric">
-              {PRIMARY_METRICS.map((metric) => <option key={metric.key} value={metric.key}>{metric.label}</option>)}
-            </select>
-          </label>
-          <label>Secondary metrics
-            <input name="secondary" defaultValue={(current?.secondaryMetrics || []).join(', ')} placeholder="appetiser_complete, return_next_day" />
-          </label>
-          <label>Versions, one per line as <code>key | label</code>
-            <textarea name="variants" defaultValue={variantText || 'ready | Ready for more?\nthree-min | Watch the 3-minute version'} rows={6} data-testid="experiment-variants" />
-          </label>
-          <p className={styles.quiet}>{EXPERIMENT_RULE}</p>
-          <div className="actions" style={{ justifyContent: 'flex-start' }}>
-            <button className="btn" type="submit" data-testid="experiment-save">{current ? 'Save' : 'Create draft'}</button>
-            <Link className="btn ghost" href={current ? `${base}/${current.id}` : base}>Cancel</Link>
-          </div>
-        </div>
-      </form>
+      <ExperimentForm
+        draft={{
+          action: current ? 'update' : 'create',
+          id: current ? String(current.id) : '',
+          next: current ? `${base}/${current.id}` : `${base}/new`,
+          key: queryText(query, 'key') || current?.key || '',
+          name: queryText(query, 'name') || current?.name || '',
+          description: queryText(query, 'description') || current?.description || '',
+          slot: queryText(query, 'slot') || current?.slot || 'feed-cta-label',
+          slotOverride: queryText(query, 'slotOverride'),
+          portal: queryText(query, 'portal') || (current ? String(idOfPortal(current) || '') : ''),
+          allocation: queryText(query, 'allocation') || current?.allocation || 'fixed',
+          primaryMetric: queryText(query, 'primaryMetric') || current?.primaryMetric || 'clip_cta_tap',
+          secondary: queryText(query, 'secondary') || (current?.secondaryMetrics || []).join(', '),
+          variants: variantText || 'ready | Ready for more?\nthree-min | Watch the 3-minute version',
+          existing: Boolean(current),
+          cancelHref: current ? `${base}/${current.id}` : base,
+          rule: EXPERIMENT_RULE,
+          slots: EXPERIMENT_SLOTS.map((slot) => ({ value: slot.key, label: `${slot.name} — ${slot.wired ? 'live' : 'registered only'}` })),
+          portals: portals.map((portal) => ({ value: String(portal.id), label: str(portal.name) })),
+          metrics: PRIMARY_METRICS.map((metric) => ({ value: metric.key, label: metric.label })),
+        }}
+      />
     </Frame>
   )
 }

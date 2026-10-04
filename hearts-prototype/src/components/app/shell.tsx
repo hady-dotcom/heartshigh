@@ -3,11 +3,19 @@ import type { ReactNode } from 'react'
 
 export { TabBar, type Tab } from './tab-bar'
 
-export function Flash({ error, notice }: { error?: string; notice?: string }) {
+function flashText(value: unknown) {
+  if (typeof value === 'string') return value
+  if (Array.isArray(value)) return value.filter((item) => typeof item === 'string').join(' ')
+  return ''
+}
+
+export function Flash({ error, notice }: { error?: string | string[]; notice?: string | string[] }) {
+  const problem = flashText(error)
+  const ok = flashText(notice)
   return (
     <>
-      {error ? <div className="flash error" role="alert" data-testid="error">{error}</div> : null}
-      {notice ? <div className="flash notice" role="status" data-testid="notice">{notice}</div> : null}
+      {problem ? <div className="flash error" role="alert" data-testid="error">{problem}</div> : null}
+      {ok ? <div className="flash notice" role="status" data-testid="notice">{ok}</div> : null}
     </>
   )
 }

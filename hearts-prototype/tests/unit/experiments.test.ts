@@ -6,10 +6,13 @@ import { mockWording } from '../../src/lib/experiment-copy'
 import {
   EXPERIMENT_SLOTS,
   FIRST_WEEK_MS,
+  MAX_EXPERIMENT_VARIANTS,
+  draftsToAdd,
   fallbackPayload,
   formatSlotLabel,
   isTestableSlot,
   payloadProblems,
+  remainingVariantSlots,
   slotKeys,
   slotOf,
   variantCopy,
@@ -190,6 +193,43 @@ test('versions table copy is the plain words, not JSON', () => {
   assert.equal(variantCopy({ framing: 'face-crop' }, 'split'), 'face-crop')
   assert.equal(variantCopy({ label: '{"label":"Explore"}' }, 'Lanes'), '{"label":"Explore"}')
   assert.equal(variantCopy(null, 'Lanes'), 'Lanes')
+})
+
+test('seven versions are allowed and a ninth is refused', () => {
+  const seven = Array.from({ length: 7 }, (_, index) => ({
+    key: `v${index + 1}`,
+    label: `Line ${index + 1}`,
+    payload: { label: `Line ${index + 1}` },
+    weight: 1,
+  }))
+  assert.deepEqual(experimentProblems({
+    key: 'feed-cta-label',
+    name: 'Seven versions',
+    slot: 'feed-cta-label',
+    primaryMetric: 'clip_cta_tap',
+    variants: seven,
+  }), [])
+  const eight = [...seven, { key: 'v8', label: 'Line 8', payload: { label: 'Line 8' }, weight: 1 }]
+  assert.deepEqual(experimentProblems({
+    key: 'feed-cta-label',
+    name: 'Eight versions',
+    slot: 'feed-cta-label',
+    primaryMetric: 'clip_cta_tap',
+    variants: eight,
+  }), [])
+  const nine = [...eight, { key: 'v9', label: 'Line 9', payload: { label: 'Line 9' }, weight: 1 }]
+  assert.ok(experimentProblems({
+    key: 'feed-cta-label',
+    name: 'Nine versions',
+    slot: 'feed-cta-label',
+    primaryMetric: 'clip_cta_tap',
+    variants: nine,
+  }).some((row) => /eight versions/.test(row)))
+  assert.equal(MAX_EXPERIMENT_VARIANTS, 8)
+  assert.equal(remainingVariantSlots(seven), 1)
+  assert.equal(draftsToAdd(7, 4), 1)
+  assert.equal(draftsToAdd(3, 4), 4)
+  assert.equal(draftsToAdd(8, 4), 0)
 })
 
 test('lanes tab draft is a valid experiment on the whitelist', () => {
