@@ -2,13 +2,13 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { RouteFade } from '@/components/app/route-fade'
 
-export type Tab = 'home' | 'lanes' | 'gather' | 'garden' | 'me'
+export type Tab = 'home' | 'lanes' | 'week' | 'garden' | 'me' | 'gather'
 
-export function TabBar({ base, active, dark = false, evening = false, unread = 0 }: { base: string; active: Tab; dark?: boolean; evening?: boolean; unread?: number }) {
+export function TabBar({ base, active = null, dark = false, evening = false, unread = 0 }: { base: string; active?: Tab | null; dark?: boolean; evening?: boolean; unread?: number }) {
   const tabs: [Tab, string, string][] = [
     ['home', 'Home', base],
     ['lanes', 'Lanes', `${base}/lanes`],
-    ['gather', 'Gather', `${base}/gather`],
+    ['week', 'My week', `${base}/week`],
     ['garden', 'Garden', `${base}/garden`],
     ['me', 'Me', `${base}/me`],
   ]
@@ -43,12 +43,14 @@ function TabIcon({ tab, on }: { tab: Tab; on: boolean }) {
         <path d="m16.2 5.2 3.6-1 3 15.2-3.6 1z" />
       </svg>
     )
-  if (tab === 'gather')
+  if (tab === 'week')
     return (
       <svg {...common} className="tab-icon">
-        <path d="M12 21c-4-3-7-6.2-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 3.8-3 7-7 10z" fill={on ? 'currentColor' : 'none'} fillOpacity={on ? 0.15 : 0} />
-        <path d="M12 11v4" />
-        <path d="M9 8.5c.4-2 1.4-3.5 3-4.5 1.6 1 2.6 2.5 3 4.5" />
+        <rect x="3.5" y="5" width="17" height="16" rx="2" />
+        <path d="M3.5 10h17" />
+        <path d="M8 3v4" />
+        <path d="M16 3v4" />
+        <path d="M8 14h.01M12 14h.01M16 14h.01" />
       </svg>
     )
   if (tab === 'garden')
