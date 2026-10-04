@@ -70,6 +70,8 @@ export async function GatherDeskScreen(ctx: Ctx) {
                         <div style={{ marginTop: 8 }}>
                           <Link href={`${base}/gather/${card.id}/door`}>Door code</Link>
                           {' · '}
+                          <a href={`/gather/${card.slug}/poster.pdf`}>A4 poster</a>
+                          {' · '}
                           <a href={sharePack(origin, card).url}>Public page</a>
                         </div>
                       </article>
@@ -77,7 +79,7 @@ export async function GatherDeskScreen(ctx: Ctx) {
                   </div>
                 </section>
               ))}
-              {!grouped[bucket].length ? <p className="hint">None {bucket}.</p> : null}
+              {!grouped[bucket].length ? <p className="hint">{bucket === 'upcoming' ? 'Nothing coming up.' : 'Nothing in the past yet.'}</p> : null}
             </section>
           ))}
         </div>
@@ -95,7 +97,7 @@ export async function GatherDeskScreen(ctx: Ctx) {
             <label className="stack">When, London time<input type="datetime-local" name="startsAt" required data-testid="desk-gather-when" /></label>
             <label className="stack">Place<input name="place" data-testid="desk-gather-place" /></label>
             <label className="stack">Map link<input name="mapUrl" placeholder="https://" /></label>
-            <label className="stack">Places (0 means no cap)<input type="number" name="capacity" min={0} defaultValue={20} /></label>
+            <label className="stack">How many places. Leave 0 if anyone can come.<input type="number" name="capacity" min={0} defaultValue={20} /></label>
             <label className="stack">Host name on the public page<input name="hostLabel" defaultValue={str(user.name).split(' ')[0]} /></label>
             <label className="stack">Door
               <select name="door"><option value="">None</option>{doors.map((door) => <option key={door.number} value={door.number}>{doorCode(door.number)} · {door.title}</option>)}</select>
@@ -126,7 +128,7 @@ export async function GatherAttendanceScreen(ctx: Ctx) {
         <div className="stat-chip"><b data-testid="stat-newcomers">{report.newcomers}</b><span>Newcomers</span></div>
         <div className="stat-chip"><b data-testid="stat-regulars">{report.regulars}</b><span>Regulars</span></div>
         <div className="stat-chip"><b>{report.brought.length}</b><span>Brought by someone</span></div>
-        <div className="stat-chip"><b>{report.series.length}</b><span>Nights with a door</span></div>
+        <div className="stat-chip"><b>{report.series.length}</b><span>Nights held</span></div>
       </div>
       <section className="panel" data-testid="attendance-chart">
         <header><h2>Over time</h2><p>Checked in, gold band for newcomers</p></header>

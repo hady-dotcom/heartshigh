@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import { CopyLink } from '@/components/app/copy-link'
-import { Qr } from '@/components/qr'
 import { Flash, Hidden } from '@/components/app/shell'
 import { KIND_LABEL } from '@/lib/gather'
 import { getSession } from '@/server/context'
@@ -48,38 +47,18 @@ export default async function PublicGather({ params, searchParams }: { params: P
         <p className="kicker">Gather · {view.portalName}</p>
         <h1>{view.card.title}</h1>
         {view.card.linkLabel ? <p>{view.card.linkLabel}</p> : null}
-        <p className="kicker" style={{ marginTop: 18 }}>How this looks in WhatsApp</p>
-        <a className="wa-preview" href={share.whatsApp} data-testid="whatsapp-preview">
-          <img src={`/gather/${view.card.slug}/card.png`} alt="" />
-          <div>
-            <small>HEARTS</small>
-            <strong>{view.card.title}</strong>
-            <span>{share.description}</span>
-          </div>
-        </a>
+        <p data-testid="public-when">{view.card.when}{view.card.place ? ` · ${view.card.place}` : ''}</p>
+        <div>
+          <span className="gather-chip gold">{view.card.audienceLabel}</span>
+          <span className="gather-chip ivy">{KIND_LABEL[view.card.kind as keyof typeof KIND_LABEL] || 'Circle'}</span>
+        </div>
         <Flash error={query.error} notice={query.notice} />
-        <section className="gather-card">
-          <div>
-            <span className="gather-chip gold">{view.card.audienceLabel}</span>
-            <span className="gather-chip ivy">{KIND_LABEL[view.card.kind as keyof typeof KIND_LABEL] || 'Circle'}</span>
-          </div>
-          <p className="gather-meta">
-            <span data-testid="public-when">{view.card.when}</span>
-            <span>{view.card.place}</span>
-            {view.card.mapUrl ? <a href={view.card.mapUrl}>Map</a> : null}
-            <span>Host: {view.card.hostLabel}</span>
-            {view.card.bring ? <span>Bring: {view.card.bring}</span> : null}
-            {view.card.note ? <span>{view.card.note}</span> : null}
-            <span data-testid="public-count">{view.card.capacity > 0 ? `${view.card.going} of ${view.card.capacity} places` : `${view.card.going} coming`}</span>
-          </p>
-          {view.names.length ? <p data-testid="public-names">Coming: {view.names.join(', ')}{view.more ? ` and ${view.more} more` : ''}</p> : null}
-        </section>
         <section className="gather-card" data-testid="public-rsvp">
           <h2 style={{ marginTop: 0, color: '#0f3b3a', fontFamily: 'var(--serif)' }}>Say you’re coming</h2>
           <p>No account needed. A first name and a phone or email is enough.</p>
           {query.rsvp === '1' ? (
             <div data-testid="guest-saved">
-              <p>You’re on the list. If you’d like the talks as well, the door code for {view.portalName} is already filled in.</p>
+              <p>You’re on the list. If you’d like the talks as well, the code for {view.portalName} is already filled in.</p>
               <Link className="pill gold" href={join} data-testid="join-from-gather">Join {view.portalName}</Link>
             </div>
           ) : (
@@ -96,21 +75,26 @@ export default async function PublicGather({ params, searchParams }: { params: P
             </form>
           )}
         </section>
+        <section className="gather-card">
+          <p className="gather-meta">
+            {view.card.mapUrl ? <a href={view.card.mapUrl}>Map</a> : null}
+            <span>Host: {view.card.hostLabel}</span>
+            {view.card.bring ? <span>Bring: {view.card.bring}</span> : null}
+            {view.card.note ? <span>{view.card.note}</span> : null}
+            <span data-testid="public-count">{view.card.capacity > 0 ? `${view.card.going} of ${view.card.capacity} places` : `${view.card.going} coming`}</span>
+          </p>
+          {view.names.length ? <p data-testid="public-names">Coming: {view.names.join(', ')}{view.more ? ` and ${view.more} more` : ''}</p> : null}
+        </section>
         <div className="gather-actions">
           <a className="pill gold small" href={share.whatsApp} data-testid="public-whatsapp">WhatsApp</a>
           <CopyLink value={share.url} />
           <a className="pill outline small" href={share.icsPath} data-testid="public-ics">Calendar file</a>
           <a className="pill outline small" href={share.google}>Google Calendar</a>
         </div>
-        <section className="door-qr" data-testid="invite-qr" style={{ maxWidth: 240 }}>
-          <Qr value={share.url} testId="invite-qr-code" />
-          <p style={{ margin: '8px 0 0', color: '#0f3b3a', textAlign: 'center' }}>Show this to someone nearby</p>
-        </section>
-        <form className="share-box" style={{ marginTop: 16 }}>
-          <label style={{ color: '#f7eedb' }}>Copy for Meetup, Eventbrite or Facebook
-            <textarea className="field" readOnly data-testid="public-cross-post" value={share.crossPost} />
-          </label>
-        </form>
+        <details className="gather-more">
+          <summary>Wording for Meetup, Eventbrite or Facebook</summary>
+          <textarea className="field" readOnly data-testid="public-cross-post" value={share.crossPost} />
+        </details>
       </div>
     </main>
   )

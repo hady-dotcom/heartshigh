@@ -22,8 +22,12 @@ function Card({ card, href }: { card: GatherCard; href: string }) {
   return (
     <article className="gather-card" data-testid="gather-card" data-id={card.id} data-status={card.mine || 'none'}>
       <p className="eyebrow">{card.doorLabel || KIND_LABEL[card.kind as keyof typeof KIND_LABEL] || 'Gather'}</p>
-      <h2 style={{ margin: '0 0 6px', fontSize: 28, color: '#0f3b3a' }}>{card.title}</h2>
-      {card.linkLabel ? <p style={{ margin: '0 0 8px' }}>{card.linkLabel}</p> : null}
+      <h2 style={{ margin: '0 0 4px', fontSize: 22, lineHeight: 1.2, color: '#0f3b3a' }}>{card.title}</h2>
+      {card.linkLabel ? <p className="clamp" style={{ margin: '0 0 6px', fontSize: 14 }}>{card.linkLabel}</p> : null}
+      <p className="gather-meta" style={{ marginTop: 0 }}>
+        <span>{card.when}{card.place ? ` · ${card.place}` : ''}</span>
+        <span>{card.capacity > 0 ? `${card.going} of ${card.capacity} places` : `${card.going} coming`}{card.waitlist ? ` · ${card.waitlist} waiting` : ''}</span>
+      </p>
       <div>
         <span className="gather-chip gold">{card.audienceLabel}</span>
         <span className="gather-chip ivy">{KIND_LABEL[card.kind as keyof typeof KIND_LABEL] || 'Circle'}</span>
@@ -32,12 +36,7 @@ function Card({ card, href }: { card: GatherCard; href: string }) {
         {card.mine === 'waitlist' ? <span className="gather-chip" data-testid="rsvp-state">On the list</span> : null}
         {card.mine === 'cant' ? <span className="gather-chip" data-testid="rsvp-state">Can’t this time</span> : null}
       </div>
-      <p className="gather-meta">
-        <span>{card.when}</span>
-        <span>{card.place || 'Place to be confirmed'}</span>
-        <span>{card.capacity > 0 ? `${card.going} of ${card.capacity} places` : `${card.going} coming`}{card.waitlist ? ` · ${card.waitlist} waiting` : ''}</span>
-      </p>
-      <Link className="pill gold small" href={href} data-testid="gather-open" style={{ marginTop: 12 }}>See it</Link>
+      <Link className="pill gold small" href={href} data-testid="gather-open" style={{ marginTop: 4 }}>Open</Link>
     </article>
   )
 }
@@ -140,20 +139,21 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
         </section>
         <section className="gather-card" data-testid="gather-share">
           <h3 style={{ marginTop: 0, color: '#0f3b3a' }}>Invite someone</h3>
-          <p>Your link remembers that you brought them. On the public page they only see a first name.</p>
-          <p data-testid="bring-link"><a href={personal}>{personal}</a></p>
+          <p>Send it on WhatsApp, or copy your own link. It remembers that you brought them. They only see a first name.</p>
           <div className="gather-actions">
             <a className="pill gold small" href={share.whatsApp} data-testid="share-whatsapp">WhatsApp</a>
             <CopyLink value={personal} testId="copy-bring-link" />
             <a className="pill outline small" href={share.icsPath} data-testid="share-ics">Add to calendar</a>
             <a className="pill outline small" href={share.google} data-testid="share-google">Google Calendar</a>
           </div>
-          <div className="door-qr" style={{ maxWidth: 200 }}><Qr value={personal} testId="bring-qr" /></div>
-          <form className="share-box" style={{ marginTop: 12 }}>
-            <label>Copy for Meetup, Eventbrite or Facebook
-              <textarea className="field" readOnly data-testid="cross-post" value={share.crossPost} />
-            </label>
-          </form>
+          <div className="door-qr" style={{ maxWidth: 200 }}>
+            <Qr value={personal} testId="bring-qr" />
+            <p style={{ margin: '8px 0 0', textAlign: 'center' }}>They can scan this to open the invite.</p>
+          </div>
+          <details className="gather-more">
+            <summary>Wording for Meetup, Eventbrite or Facebook</summary>
+            <textarea className="field" readOnly data-testid="cross-post" value={share.crossPost} />
+          </details>
         </section>
         {card.prompts.length ? (
           <section className="gather-card" data-testid="gather-prompts">
@@ -246,10 +246,9 @@ export async function GatherDoorScreen(ctx: Ctx, id: number) {
       <div className="app-scroll gather">
         <Back href={`${base}/gather/${id}`} label={card.title} />
         <h1>At the door</h1>
-        <p>Show this on your phone, or print the poster. A learner scans it and checks in. The code is only for this gathering.</p>
+        <p>Hold this up, or print the A4 poster and tape it by the door. Someone scans it and checks in. It only works for this gathering.</p>
         <div className="door-qr"><Qr value={url} testId="door-qr" /></div>
-        <p data-testid="door-url">{url}</p>
-        <a className="pill gold" href={`/gather/${card.slug}/poster.pdf`} data-testid="poster-link">Print a poster</a>
+        <a className="pill gold" href={`/gather/${card.slug}/poster.pdf`} data-testid="poster-link">Print an A4 poster</a>
         {user.role !== 'learner' ? (
           <form className="gather-card" action="/api/gather" method="post" style={{ marginTop: 16 }}>
             <Hidden fields={{ action: 'checkin', method: 'host', id, next: `${base}/gather/${id}/door` }} />

@@ -1,5 +1,5 @@
 import { qrPosterPdf } from '@/lib/gather-pdf'
-import { whenLabel } from '@/lib/gather'
+import { AUDIENCE_LABEL, whenLabel, type Audience } from '@/lib/gather'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { getSession } from '@/server/context'
 import { gatheringBySlug } from '@/server/gather'
@@ -23,16 +23,23 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   const proto = headerList.get('x-forwarded-proto') || 'http'
   const token = String(row.checkinToken || '')
   const url = `${proto}://${hostName}/gather/${slug}/in?k=${token}`
+  const portal = portalId ? await payload.findByID({ collection: 'portals', id: portalId, depth: 0, overrideAccess: true }).catch(() => null) : null
+  const audience = AUDIENCE_LABEL[String(row.audience || '') as Audience] || ''
+  const title = String(row.title || 'Gather')
   const pdf = qrPosterPdf({
-    title: String(row.title || 'Gather'),
+    title,
     when: whenLabel(String(row.startsAt || '')),
     place: String(row.place || ''),
+    audience,
+    host: String(row.hostLabel || ''),
+    masjid: String((portal as { name?: string } | null)?.name || ''),
     url,
   })
+  const filename = `${title.replace(/[^\w .'-]+/g, '').trim().slice(0, 60) || 'Gather'} door poster.pdf`
   return new Response(new Uint8Array(pdf), {
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="${slug}-door.pdf"`,
+      'Content-Disposition': `inline; filename="${filename}"`,
     },
   })
 }

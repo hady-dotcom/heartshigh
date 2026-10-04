@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { harvestLine } from './harvest'
+import { qrPosterPdf } from './gather-pdf'
 import {
   applyChoice,
   attendanceCompletesTask,
@@ -172,4 +173,21 @@ test('the desk groups by upcoming and past, then by door, and the demo script re
   assert.match(demoPortalGuard('east-london') || '', /hearts-demo/)
   assert.equal(demoPortalGuard('hearts-demo'), null)
   assert.match(linkLabel({ doorCode: 'W7', doorTitle: 'Fasting Ramadan', courseTitle: 'The Names', lessonTitle: 'Class 20' }), /Discussing W7: Fasting Ramadan, after Class 20/)
+})
+
+test('the door poster is one A4 page and keeps the web address inside the code', () => {
+  const pdf = qrPosterPdf({
+    title: "Sisters' walk",
+    when: 'Thursday 15 October at 6:30 pm',
+    place: 'The park gate beside the masjid',
+    audience: 'Sisters',
+    host: 'Amina',
+    masjid: 'East London Mosque',
+    url: 'https://hearts.example/gather/sisters-walk/in?k=abc',
+  }).toString('latin1')
+  assert.match(pdf, /%PDF-1\.4/)
+  assert.match(pdf, /MediaBox \[0 0 595 842\]/)
+  assert.match(pdf, /Sisters' walk/)
+  assert.match(pdf, /Scan this to check in/)
+  assert.doesNotMatch(pdf, /sisters-walk/)
 })
