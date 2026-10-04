@@ -78,6 +78,7 @@ test.describe('the opening', () => {
   test('1. a first visit to the portal lands on the opener, with its caption and both ways in', async ({ page }) => {
     await page.goto(`/p/${PORTAL}`)
     await expect(page.getByTestId('opener')).toBeVisible()
+    await expect(page.getByTestId('opener-heading')).toHaveText('A calm place to start')
     await expect(page.getByTestId('opener-caption')).toContainText('Every heart has a bit of shine')
     await expect(page.getByTestId('lets-play')).toBeVisible()
     await expect(page.getByTestId('just-show')).toBeVisible()

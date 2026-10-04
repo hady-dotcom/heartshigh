@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FeedItem, SlideStyle } from '@/server/learner'
 import { clipStepUpLabel, onlyClipToast, READY_FOR_MORE, talkStepUpLabel } from '@/lib/feed-copy'
-import { correctIslamicTerms } from '@/lib/tidy-caption'
+import { spokenCaption } from '@/lib/tidy-caption'
 import { ArrowIcon, HeartIcon, LockIcon, PlayIcon, SaveIcon, ShareIcon } from '../icons'
 import { Arch } from '@/components/arch'
 
@@ -184,6 +184,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
   const showSlide = mode === 'hors' && item.style
   const motionClass = motion === 'from-bottom' ? '' : motion
   const course = `${base}/course/${item.courseId}?part=${item.lessonId}&t=0`
+  const captionText = spokenCaption(piece.lines?.[0], [item.lessonTitle, item.courseTitle])
 
   return (
     <div
@@ -242,9 +243,9 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
               <button type="button" className="play-hit" aria-label={playing ? 'Pause the clip' : 'Play the clip'} data-testid="play-clip" onClick={() => setPlaying((value) => !value)} />
             ) : null}
             {item.youtubeId && !playing ? <span className="play-badge"><PlayIcon size={28} /></span> : null}
-            {mode === 'hors' ? (
-              <p className={`caption${(piece.lines?.[0]?.tidy || piece.quote).length > 120 ? ' long' : ''}`} data-testid="caption">
-                <Emphasis text={correctIslamicTerms(piece.lines?.[0]?.tidy || piece.quote)} />
+            {mode === 'hors' && captionText ? (
+              <p className={`caption${captionText.length > 120 ? ' long' : ''}`} data-testid="caption">
+                <Emphasis text={captionText} />
               </p>
             ) : item.youtubeId ? null : (
               <div className="scenic-lines" data-testid="scenic-lines">

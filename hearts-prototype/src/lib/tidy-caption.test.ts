@@ -1,8 +1,21 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { buildLineTidy, displayLine, feedTidy, shortLine, tidyCaption, tidyKeepsWords, tidyUnchanged } from './tidy-caption'
+import { buildLineTidy, displayLine, feedTidy, learnerWords, shortLine, spokenCaption, tidyCaption, tidyKeepsWords, tidyUnchanged } from './tidy-caption'
 
 const EXAMPLE = "return it doesn't return until the day of judgement to testify for or against you allah"
+
+test('a caption is the timed spoken line, never a title or an untimed quote', () => {
+  assert.equal(spokenCaption({ text: 'return to allah', tidy: 'Return to Allah.' }, ['Quranic Connection #26', 'A series']), 'Return to Allah.')
+  assert.equal(spokenCaption({ text: 'Quranic Connection #26' }, ['Quranic Connection #26', 'A series']), '')
+  assert.equal(spokenCaption({ text: '  ' }, ['A title']), '')
+  assert.equal(spokenCaption(null, ['A title']), '')
+  assert.equal(spokenCaption({ text: 'the heart turns' }, ['The heart turns.', 'Nur']), '')
+})
+
+test('learner blurbs capitalise Allah and Qur\'an without inventing a title', () => {
+  assert.equal(learnerWords('Oh allah … the quran is near'), "Oh Allah … the Qur'an is near")
+  assert.equal(learnerWords('the quran and allah'), "The Qur'an and Allah")
+})
 
 test('a raw auto-caption becomes a sentence, with Allah and the Day of Judgement', () => {
   const tidy = tidyCaption(EXAMPLE)

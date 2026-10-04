@@ -367,6 +367,32 @@ export function feedTidy(
   return tidyCaption(raw, hints)
 }
 
+export function foldCaption(value: string) {
+  return value.replace(/[.?!]+$/g, '').replace(/\s+/g, ' ').trim().toLowerCase()
+}
+
+/** The words said at this moment. A talk title, series name or empty line is not a caption. */
+export function spokenCaption(line: { text?: string; tidy?: string } | null | undefined, titles: (string | undefined)[]) {
+  const shown = tidyCaption((line?.tidy || line?.text || '').trim())
+  if (!shown) return ''
+  const spoken = foldCaption(shown)
+  if (titles.some((title) => title && spoken === foldCaption(title))) return ''
+  return shown
+}
+
+/** Learner-facing blurbs and titles: Allah, Qur'an, and a capital start. Does not invent a full stop. */
+export function learnerWords(text: string) {
+  const raw = String(text || '').replace(/\s+/g, ' ').trim()
+  if (!raw) return ''
+  let next = applyAll(raw, BRITISH)
+  next = correctIslamicTerms(next)
+  next = applyAll(next, PHRASES)
+  next = applyAll(next, DIVINE)
+  next = next.replace(/\ballah\b/gi, 'Allah')
+  next = next.replace(/^(["']?)(\p{Ll})/u, (_, open: string, letter: string) => `${open}${letter.toUpperCase()}`)
+  return next
+}
+
 export function parseLineTidy(value: unknown): LineTidy | null {
   if (!value || typeof value !== 'object') return null
   const row = value as Partial<LineTidy>

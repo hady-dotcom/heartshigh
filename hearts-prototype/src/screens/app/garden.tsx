@@ -9,8 +9,9 @@ import { now } from '@/lib/clock'
 import { readableHarvest } from '@/lib/harvest'
 import { getSession, type SessionUser, visibleCourseIds } from '@/server/context'
 import { workbookFor } from '@/server/workbook'
+import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
+import { learnerWords } from '@/lib/tidy-caption'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
-import { partTitle } from '@/lib/talk-title'
 import { posterFor, shownPoster } from '@/server/learner'
 import { loadDoors } from '@/server/doors'
 import { capitalAfterColon, doorByNumber, doorCode, doorFromPath, doorNumberOfClause, doorOfClause, type Door } from '@/lib/doors'
@@ -508,12 +509,13 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
   const here = `${base}/garden/workbook${filter !== 'all' ? `?filter=${filter}` : ''}`
   const groups = new Map<string, { course: string; topics: Map<string, Map<string, typeof answers>> }>()
   for (const row of answers) {
-    const courseKey = row.course?.title || 'Other talks'
+    const courseKey = learnerWords(tidyTalkTitle(row.course?.title || '')) || 'Other talks'
     if (!groups.has(courseKey)) groups.set(courseKey, { course: courseKey, topics: new Map() })
     const topics = groups.get(courseKey)!.topics
-    if (!topics.has(row.topic)) topics.set(row.topic, new Map())
-    const videos = topics.get(row.topic)!
-    const video = row.video?.title || 'The talk'
+    const topic = learnerWords(tidyTalkTitle(row.topic || '')) || 'The talk'
+    if (!topics.has(topic)) topics.set(topic, new Map())
+    const videos = topics.get(topic)!
+    const video = learnerWords(tidyTalkTitle(row.video?.title || '')) || 'The talk'
     if (!videos.has(video)) videos.set(video, [])
     videos.get(video)!.push(row)
   }

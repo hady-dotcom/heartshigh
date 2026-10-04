@@ -32,6 +32,7 @@
 .j-pass[disabled] { opacity: 0.4; }
 .j-arch { display: flex; justify-content: center; margin: 18px auto 0; color: var(--gold, #e0b15a); }
 .j-body { padding: 0 26px; }
+.j-heading { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1.2; margin: 8px 0 0; color: #f1d58a; }
 .j-caption { font-family: var(--serif); font-weight: 600; font-size: 34px; line-height: 1.12; margin: 14px 0 8px; letter-spacing: -0.005em; }
 .j-caption em { font-style: normal; color: #f3d38e; }
 .j-caption.small { font-size: 29px; }
@@ -83,7 +84,18 @@
 .j-contacts small { color: rgba(255, 255, 255, 0.7); }
 
 /* Hand-off line */
-.j-line { position: absolute; left: 26px; right: 26px; top: 42%; z-index: 12; margin: 0; text-align: center; font-family: var(--serif); font-weight: 600; font-size: 30px; line-height: 1.2; text-shadow: 0 2px 24px rgba(0, 0, 0, 0.4); pointer-events: none; }
+.j-line { position: absolute; left: 26px; right: 26px; top: 28%; z-index: 12; margin: 0; text-align: center; font-family: var(--serif); font-weight: 600; font-size: 30px; line-height: 1.2; text-shadow: 0 2px 24px rgba(0, 0, 0, 0.4); pointer-events: none; }
+.j-read-instead, .j-poster [data-testid="read-instead"] {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  z-index: 6;
+  white-space: nowrap;
+}
+.phase-handoff .j-read-instead,
+.phase-handoff [data-testid="read-instead"],
+.phase-handoff .j-poster-title { display: none; }
 
 /* The clip: one visible player and at most one hidden, cued beside it. */
 .j-clip { position: absolute; inset: 0; z-index: 2; }

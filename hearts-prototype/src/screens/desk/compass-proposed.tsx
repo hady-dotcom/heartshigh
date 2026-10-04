@@ -12,6 +12,7 @@ export function ProposedCompassScreen(ctx: Ctx) {
       title="Compass (proposed)"
       intro="A mock for Leon. The live Compass desk is unchanged. Totals only, from ten or more people, and no named scores."
       testId="compass-proposed"
+      tone="evening"
     >
       <p className="hint" data-testid="privacy-flag">{live ? 'The privacy flag is on.' : 'The privacy flag is off. This page is only a mock.'}</p>
       <section className="panel" data-testid="proposed-disclosure" style={{ marginBottom: 18 }}>

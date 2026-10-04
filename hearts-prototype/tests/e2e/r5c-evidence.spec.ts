@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { execFileSync } from 'node:child_process'
 import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { seedCode } from '../env'
@@ -38,7 +39,7 @@ const LEARNER_ROUTES: [string, string][] = [
   ['start', `${BASE}/start`],
 ]
 
-type ContrastRow = { route: string; text: string; ratio: number; need: number; size: number; weight: number; color: string; bg: string }
+type ContrastRow = { route: string; href?: string; testid?: string; tag?: string; text: string; ratio: number; need: number; pass: boolean; size: number; weight: number; color: string; bg: string }
 
 async function signIn(page: Page, email: string, password: string, next: string) {
   await page.goto(`/login?next=${encodeURIComponent(next)}`)
@@ -88,8 +89,8 @@ async function captureSwarm(page: Page) {
   await swarm.screenshot({ path: path.join(ROOT, 'after', 'swarm-surprise.png') })
 }
 
-async function audit(page: Page, route: string): Promise<ContrastRow[]> {
-  return page.evaluate((route) => {
+async function audit(page: Page, route: string, href: string): Promise<ContrastRow[]> {
+  return page.evaluate(({ route, href }) => {
     const rgb = (value: string) => (value.match(/[\d.]+/g) || []).map(Number)
     const lum = (c: number[]) => {
       const [r, g, b] = c.slice(0, 3).map((v) => {
@@ -138,7 +139,7 @@ async function audit(page: Page, route: string): Promise<ContrastRow[]> {
       if (box.width < 2 || box.height < 2) return true
       return false
     }
-    const rows: ContrastRow[] = []
+    const rows: Array<{ route: string; href: string; testid: string; tag: string; text: string; ratio: number; need: number; pass: boolean; size: number; weight: number; color: string; bg: string }> = []
     const seen = new Set<string>()
     for (const el of document.querySelectorAll<HTMLElement>('h1, h2, h3, h4, p, a, button, label, span, small, li, td, th, legend, summary, b, em, strong, figcaption')) {
       if (skip(el)) continue
@@ -154,15 +155,26 @@ async function audit(page: Page, route: string): Promise<ContrastRow[]> {
       const ratio = (hi + 0.05) / (lo + 0.05)
       const large = size >= 24 || (size >= 18.66 && weight >= 700)
       const need = large ? 3 : 4.5
-      const key = `${text.slice(0, 40)}|${style.color}|${bg.join(',')}`
+      const key = `${el.tagName}|${text.slice(0, 40)}|${style.color}|${bg.join(',')}`
       if (seen.has(key)) continue
       seen.add(key)
-      if (ratio + 0.01 < need) {
-        rows.push({ route, text: text.slice(0, 80), ratio: Number(ratio.toFixed(2)), need, size, weight, color: style.color, bg: bg.join(',') })
-      }
+      rows.push({
+        route,
+        href,
+        testid: el.getAttribute('data-testid') || el.closest('[data-testid]')?.getAttribute('data-testid') || '',
+        tag: el.tagName.toLowerCase(),
+        text: text.slice(0, 80),
+        ratio: Number(ratio.toFixed(2)),
+        need,
+        pass: ratio + 0.01 >= need,
+        size,
+        weight,
+        color: style.color,
+        bg: bg.join(','),
+      })
     }
     return rows
-  }, route)
+  }, { route, href })
 }
 
 test.describe.configure({ timeout: 360_000 })
@@ -176,17 +188,29 @@ test('contrast at 10:00 and 20:00 Toronto, and the after screenshots', async ({ 
     await signIn(page, 'elm-learner@hearts.test', 'portal-learner', BASE)
     await expect(page.getByTestId('home')).toBeVisible()
     const hour: ContrastRow[] = []
+    const byRoute: Record<string, ContrastRow[]> = {}
     for (const [name, href] of LEARNER_ROUTES) {
       await page.goto(href)
       await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {})
       await page.waitForTimeout(350)
-      hour.push(...await audit(page, `${label}:${name}`))
-      if (['welcome', 'home', 'lanes', 'workbook', 'me'].includes(name)) {
+      const rows = await audit(page, name, href)
+      byRoute[name] = rows
+      hour.push(...rows)
+      if (['welcome', 'home', 'lanes', 'workbook', 'me', 'join'].includes(name)) {
         await shot(page, path.join(ROOT, 'after', label, `${name}.png`))
       }
     }
-    writeFileSync(path.join(ROOT, `contrast-${label}.json`), JSON.stringify({ when: iso, fails: hour }, null, 2))
-    fails.push(...hour)
+    const hourFails = hour.filter((row) => !row.pass)
+    writeFileSync(path.join(ROOT, `contrast-${label}.json`), JSON.stringify({
+      when: iso,
+      zone: 'America/Toronto',
+      routes: Object.fromEntries(Object.entries(byRoute).map(([name, rows]) => [name, {
+        href: LEARNER_ROUTES.find(([key]) => key === name)?.[1],
+        elements: rows.map((row) => ({ testid: row.testid, tag: row.tag, text: row.text, ratio: row.ratio, need: row.need, pass: row.pass, size: row.size, weight: row.weight, color: row.color, bg: row.bg })),
+      }])),
+      fails: hourFails,
+    }, null, 2))
+    fails.push(...hourFails)
     await page.goto(`${BASE}/welcome?step=start`)
     await shot(page, path.join(ROOT, 'after', `welcome-${label}.png`))
     await page.goto(BASE)
@@ -199,6 +223,8 @@ test('contrast at 10:00 and 20:00 Toronto, and the after screenshots', async ({ 
     await page.goto(`${BASE}/me`)
     await expect(page.getByText('Light', { exact: true })).toHaveCount(0)
     await shot(page, path.join(ROOT, 'after', `me-${label}.png`))
+    await page.goto('/join')
+    await shot(page, path.join(ROOT, 'after', `join-${label}.png`))
     await page.goto(`${BASE}/me/settings`)
     await expect(page.getByText('Light', { exact: true })).toHaveCount(0)
     await expect(page.getByTestId('theme-pin')).toHaveCount(0)
@@ -243,9 +269,16 @@ test('swarm Answers like mine and Surprise me', async ({ page }) => {
 test('a new learner from the join link reaches the first talk', async ({ browser }) => {
   const context = await browser.newContext({ viewport: PHONE, recordVideo: { dir: ROOT, size: PHONE } })
   const page = await context.newPage()
+  await page.addInitScript(() => {
+    const hide = () => document.querySelectorAll('nextjs-portal, [data-nextjs-toast], [data-next-mark]').forEach((node) => node.remove())
+    hide()
+    new MutationObserver(hide).observe(document.documentElement, { childList: true, subtree: true })
+  })
+  await page.addStyleTag({ content: 'nextjs-portal,[data-nextjs-toast],[data-next-mark]{display:none!important}' }).catch(() => {})
   await page.route(/youtube\.com|ytimg|googlevideo|doubleclick/, (route) => route.abort())
   const stamp = Date.now().toString().slice(-8)
   await page.goto(`/join?code=${seedCode('elm-learner')}`)
+  await expect(page.getByTestId('join-pitch')).toContainText('invited you')
   await page.getByTestId('join-name').fill(`Nora ${stamp}`)
   await page.getByTestId('join-email').fill(`nora-${stamp}@hearts.test`)
   await page.getByTestId('join-password').fill('harbour-learner')
@@ -260,6 +293,7 @@ test('a new learner from the join link reaches the first talk', async ({ browser
     await page.waitForURL(/\/start/)
   }
   await expect(page.getByTestId('lets-play')).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByTestId('opener-heading')).toHaveText('A calm place to start')
   await page.getByTestId('lets-play').click()
   for (const [scene, option] of PICKS) {
     const card = page.locator(`[data-testid="scene"][data-scene="${scene}"]`)
@@ -267,6 +301,7 @@ test('a new learner from the join link reaches the first talk', async ({ browser
     await card.last().locator(`[data-testid="tile"][data-option="${option}"]`).click()
   }
   await expect(page.getByTestId('journey')).toHaveAttribute('data-phase', 'feed', { timeout: 25_000 })
+  await expect(page.getByTestId('poster-title')).toHaveCount(0)
   if (await page.getByTestId('learn-more').count()) await page.getByTestId('learn-more').click()
   await page.waitForTimeout(1400)
   const video = page.video()
@@ -274,5 +309,10 @@ test('a new learner from the join link reaches the first talk', async ({ browser
   if (video) {
     const from = await video.path()
     copyFileSync(from, path.join(ROOT, 'join-to-first-talk.webm'))
+    try {
+      execFileSync('ffmpeg', ['-y', '-i', from, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-an', path.join(ROOT, 'join-to-first-talk.mp4')], { stdio: 'pipe' })
+    } catch {
+      copyFileSync(from, path.join(ROOT, 'join-to-first-talk.mp4'))
+    }
   }
 })

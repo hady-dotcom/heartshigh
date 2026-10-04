@@ -825,13 +825,16 @@ html[data-theme] .desk input[type='password'] {
   --gd-teal-line: #1f6b60;
   --gd-gold: #d4a84b;
   --gd-gold-deep: #a8791f;
-  --gd-parchment: #f5ecd6;
-  --gd-parchment-2: #ebdcbb;
-  --gd-ink: #1b2a27;
+  --gd-ink: #f6eedc;
   --ink: var(--gd-ink);
-  --ink-2: #3c4b47;
-  --muted: #5f6a65;
-  --line: rgba(31, 107, 96, 0.35);
+  --ink-2: #e4d3a4;
+  --muted: #e4d3a4;
+  --line: rgba(212, 168, 75, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100dvh;
   position: relative;
   isolation: isolate;
   background: var(--gd-teal);
@@ -857,8 +860,8 @@ html[data-theme] .desk input[type='password'] {
     linear-gradient(180deg, rgba(10, 40, 40, 0.58), rgba(7, 28, 28, 0.84));
 }
 :is(html, html[data-theme]) .garden-door .door-card {
-  background: linear-gradient(180deg, var(--gd-parchment), var(--gd-parchment-2));
-  color: var(--gd-ink);
+  background: linear-gradient(180deg, #f5ecd6, #ebdcbb);
+  color: #1b2a27;
   border: 1px solid rgba(212, 168, 75, 0.7);
   border-radius: 26px;
   padding: 30px 24px 26px;
@@ -866,7 +869,7 @@ html[data-theme] .desk input[type='password'] {
   backdrop-filter: none;
 }
 :is(html, html[data-theme]) .garden-door .door-card h1 { color: #123f3a; }
-:is(html, html[data-theme]) .garden-door .door-card p.lede { color: var(--ink-2); }
+:is(html, html[data-theme]) .garden-door .door-card p.lede { color: #3c4b47; }
 :is(html, html[data-theme]) .garden-door .brand-mark {
   background: radial-gradient(circle at 50% 35%, #17504a, var(--gd-teal) 70%);
   color: var(--gd-gold);
@@ -876,7 +879,7 @@ html[data-theme] .desk input[type='password'] {
 :is(html, html[data-theme]) .garden-door .door-form label { color: #23443f; }
 :is(html, html[data-theme]) .garden-door .field {
   background: #fbf5e6;
-  color: var(--gd-ink);
+  color: #1b2a27;
   border: 1.5px solid var(--gd-teal-line);
   border-radius: 14px;
 }
@@ -897,7 +900,74 @@ html[data-theme] .desk input[type='password'] {
 }
 :is(html, html[data-theme]) .garden-door .door-links { color: #14564c; }
 :is(html, html[data-theme]) .garden-door .door-links a { border-bottom-color: rgba(168, 121, 31, 0.6); }
-:is(html, html[data-theme]) .garden-door .door-hint { color: var(--muted); }
+:is(html, html[data-theme]) .garden-door .door-hint { color: #5f6a65; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-card {
+  width: min(360px, calc(100% - 36px));
+  margin: 12px auto 28px;
+  background: #163633;
+  color: #f6eedc;
+  border: 1px solid rgba(212, 168, 75, 0.55);
+  border-radius: 20px;
+  padding: 22px 20px 18px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.38);
+}
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-card h1 { color: #f6eedc; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-card p.lede { color: #e4d3a4; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .brand-word { color: #f6eedc; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-form label { color: #e4d3a4; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .field {
+  background: #102e2c;
+  color: #f6eedc;
+  border-color: #c4923a;
+}
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .field::placeholder { color: #c8b88a; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-links { color: #f6eedc; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-hint { color: #e4d3a4; }
+
+/* Proposed Compass mock: evening-garden desk (deep teal, warm gold, cream type). Live Compass stays parchment. */
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] {
+  --desk-page: #0e2a2b;
+  --desk-card: #163633;
+  --desk-ink: #f6eedc;
+  --desk-heading: #f6eedc;
+  --desk-sidebar: #0b2223;
+  --desk-header: #0f3b3a;
+  --desk-on-dark: #f6eedc;
+  --desk-gold: #d4a84b;
+  --desk-gold-ink: #1a1408;
+  --desk-teal: #1a5552;
+  --desk-muted: #e4d3a4;
+  --desk-line: #c4923a;
+  --desk-field: #102e2c;
+  --cream: #0e2a2b;
+  --paper: #0e2a2b;
+  --card: #163633;
+  --ink: #f6eedc;
+  --ink-2: #f6eedc;
+  --muted: #e4d3a4;
+  --line: #c4923a;
+  --gold: #d4a84b;
+  --gold-ink: #1a1408;
+  --heading: #f6eedc;
+  --field: #102e2c;
+  --g-page: #0e2a2b;
+  --g-card: #163633;
+  --g-heading: #f6eedc;
+  --g-on-dark: #f6eedc;
+  color: #f6eedc;
+  background-color: #0e2a2b;
+  color-scheme: dark;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .main-head h1,
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .main-head p,
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .panel,
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .hint {
+  color: #f6eedc;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .panel {
+  background: #163633;
+  border-color: #c4923a;
+}
 
 /* Keep the 16px floor after later theme and gather rules, so iOS does not zoom on focus. */
 :is(html, html[data-theme]) :is(.app, .door, .splash, .journey, .public-gather) :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']) {

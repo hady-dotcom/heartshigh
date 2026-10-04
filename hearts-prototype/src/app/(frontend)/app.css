@@ -2,6 +2,8 @@
 .app-stage { min-height: 100dvh; background: #e9e1d2; }
 .app {
   position: relative;
+  display: flex;
+  flex-direction: column;
   width: min(430px, 100%);
   min-height: 100dvh;
   margin: 0 auto;
@@ -22,7 +24,7 @@
   pointer-events: none;
 }
 .app.dark { background: var(--night); color: #fff; }
-.app-scroll { padding: calc(14px + env(safe-area-inset-top, 0px)) 18px calc(104px + env(safe-area-inset-bottom, 0px)); }
+.app-scroll { padding: 10px 18px calc(104px + env(safe-area-inset-bottom, 0px)); }
 .app-head,
 .main-head {
   display: flex;
@@ -34,7 +36,7 @@
   position: sticky;
   top: 0;
   z-index: 21;
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: 0;
   background-color: var(--paper);
 }
 .app.dark .app-head,
@@ -43,12 +45,33 @@
 .app-head h1 { font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
 .lanes-head { align-items: flex-start; }
 .page-sub { margin: 4px 0 0; font-size: 14px; line-height: 1.4; color: var(--ink-2); font-weight: 500; }
-.page-help { position: absolute; top: calc(10px + var(--safe-top)); right: 12px; z-index: 40; }
+.page-help {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) 14px 4px;
+  z-index: 22;
+}
+.app > .page-help,
+.garden-door > .page-help {
+  position: relative;
+  top: auto;
+  right: auto;
+  left: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
 /* On the opening the Skip / Log in control sits top-right; keep ? beside the arch. */
 .journey-frame > .page-help {
+  position: absolute;
   top: calc(14px + var(--safe-top, env(safe-area-inset-top, 0px)));
   left: 56px;
   right: auto;
+  padding: 0;
+  min-height: 0;
   z-index: 12;
 }
 .journey-frame > .page-help .page-help-btn {
@@ -66,8 +89,25 @@
 .page-help-card h2 { margin: 0 0 10px; font-size: 20px; }
 .page-help-card p { margin: 0 0 10px; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
 .swarm-tools { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
-.swarm-tools .chip { background: var(--glass-solid, var(--card)); color: var(--ink); border: 1px solid var(--line); cursor: pointer; }
-.swarm-tools .chip.on { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); }
+.swarm-tools .chip {
+  background: #f6eedc;
+  color: #12302f;
+  border: 1px solid #c4923a;
+  cursor: pointer;
+}
+.app.evening .swarm-tools .chip,
+.app.dark .swarm-tools .chip {
+  background: #163633;
+  color: #f6eedc;
+  border-color: #c4923a;
+}
+.swarm-tools .chip.on,
+.app.evening .swarm-tools .chip.on,
+.app.dark .swarm-tools .chip.on {
+  background: #d4a84b;
+  color: #1a1408;
+  border-color: #d4a84b;
+}
 .back { display: inline-flex; align-items: center; gap: 4px; font-weight: 650; font-size: 16px; color: var(--ink-2); text-decoration: none; min-height: 44px; }
 .eyebrow { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; color: var(--muted); margin: 22px 0 10px; }
 .lead { color: var(--ink-2); font-size: 15px; line-height: 1.55; margin: 0 0 14px; }

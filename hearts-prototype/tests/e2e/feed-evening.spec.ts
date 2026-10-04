@@ -234,7 +234,7 @@ test('the extended cut opens on our own poster with the talk title, never a titl
   if (await poster.count()) {
     await expect(poster).toHaveAttribute('data-poster', /own|frame/)
     expect(await poster.locator('img').first().getAttribute('src')).not.toMatch(/ytimg|youtube|\/clips\//)
-    if (await poster.getByTestId('poster-title').count()) await expect(poster.getByTestId('poster-title')).toContainText('Ready for more?')
+    await expect(poster.getByTestId('poster-title')).toHaveCount(0)
   }
   if (await page.getByTestId('poster-play').count()) await expect(page.getByTestId('poster-play')).toBeVisible()
   await page.screenshot({ path: test.info().outputPath('extended-cut-poster.png') })
@@ -245,7 +245,7 @@ test('the extended cut opens on our own poster with the talk title, never a titl
     await page.goto(`${PORTAL}/feed?clip=${cut}&play=appetiser`)
     await expect(feed).toHaveAttribute('data-mode', 'appetiser', { timeout: 20_000 })
     await expect(page.getByTestId('poster-frame')).toHaveAttribute('data-poster', 'frame')
-    await expect(page.getByTestId('poster-frame').getByTestId('poster-title')).toBeVisible()
+    await expect(page.getByTestId('poster-frame').getByTestId('poster-title')).toHaveCount(0)
     expect(await page.getByTestId('poster-frame').locator('img').first().getAttribute('src')).not.toMatch(/ytimg|\/clips\//)
   } finally {
     await master.patch(`/api/lessons/${lessonId}`, { data: { thumbnailClean: false } })

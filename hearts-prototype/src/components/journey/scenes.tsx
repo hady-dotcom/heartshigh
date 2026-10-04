@@ -6,14 +6,15 @@ import { EASE, T, animate } from '@/lib/motion'
 import { httpsHref, plainText, telHref } from '@/lib/text-safety'
 import { Arch } from '@/components/arch'
 import { COMPASS_DISCLOSURE, compassPrivacyOn } from '@/lib/compass-privacy'
+import { OPENING_HEADING } from '@/lib/opening-data'
 import { BUBBLE_TINTS, DOOR_TINTS, Glyph } from './glyphs'
 
-export function Caption({ text, className = 'j-caption', testId }: { text: string; className?: string; testId?: string }) {
+export function Caption({ text, className = 'j-caption', testId, as: Tag = 'h1' }: { text: string; className?: string; testId?: string; as?: 'h1' | 'h2' | 'p' }) {
   const parts = text.split(/\*\*(.+?)\*\*/g)
   return (
-    <h1 className={className} data-testid={testId}>
+    <Tag className={className} data-testid={testId}>
       {parts.map((part, index) => (index % 2 ? <em key={index}>{part}</em> : <span key={index}>{part}</span>))}
-    </h1>
+    </Tag>
   )
 }
 
@@ -27,7 +28,8 @@ export function Opener({ caption, subline, onPlay, onJustShow, loginHref, signed
       <span className="j-arch" aria-hidden style={{ opacity: 0.15 }}><Arch size={120} /></span>
       <div className="j-body">
         <p className="j-progress" data-testid="progress">1 of 8</p>
-        <Caption text={caption} testId="opener-caption" />
+        <h1 className="j-heading" data-testid="opener-heading">{OPENING_HEADING}</h1>
+        <Caption text={caption} testId="opener-caption" as="p" />
         <p className="j-sub">{subline}</p>
       </div>
       <div className="j-actions">

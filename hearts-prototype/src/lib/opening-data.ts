@@ -44,6 +44,9 @@ export const DEFAULT_LANE = 'default'
 
 const n = (scale: ScaleKey, delta: -1 | 0 | 1) => ({ scale, delta })
 
+/** The opening's own heading. Not a placing option and not a seed answer. */
+export const OPENING_HEADING = 'A calm place to start'
+
 export const SCENES: SceneDef[] = [
   {
     key: 'extra',

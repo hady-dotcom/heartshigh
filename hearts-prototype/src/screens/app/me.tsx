@@ -37,7 +37,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
         <Flash error={query.error} notice={query.notice} />
         <div className="profile">
           <Avatar name={user.name || user.email} portrait={null} size={58} />
-          <span><b data-testid="me-name">{user.name || user.email}</b><small className="muted">{portalName(portal)} · day {dayNumber(user)}</small></span>
+          <span><b data-testid="me-name">{user.name || user.email}</b><small className="muted">{portalName(portal)} · day <span data-testid="day-number">{dayNumber(user)}</span></small></span>
         </div>
         <details className="card name-edit" data-testid="name-edit">
           <summary>Change the name we use</summary>
