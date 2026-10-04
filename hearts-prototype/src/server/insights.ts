@@ -287,7 +287,13 @@ export async function insightsDesk(payload: Payload, actor: InsightActor, query:
   const watchRows = events.filter((row) => row.kind === 'clip_watch' && row.watchPct != null)
   const pcts = watchRows.map((row) => Number(row.watchPct)).sort((a, b) => a - b)
   const swipeAway = events.filter((row) => row.kind === 'clip_swipe').length
-  const replayId = query.session || events.find((row) => row.kind === 'route')?.sessionId || ''
+  const sessionWeight = new Map<string, number>()
+  for (const row of events) {
+    if (!row.sessionId) continue
+    sessionWeight.set(row.sessionId, (sessionWeight.get(row.sessionId) || 0) + (row.kind === 'route' ? 2 : 1))
+  }
+  const richest = [...sessionWeight.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+  const replayId = query.session || richest || events.find((row) => row.kind === 'route')?.sessionId || ''
   const replayEvents = replayId
     ? events
       .filter((row) => row.sessionId === replayId && (row.kind === 'route' || row.kind === 'tap' || row.kind === 'angry_tap' || row.kind === 'clip_watch' || row.kind === 'clip_swipe' || row.kind === 'scroll'))
