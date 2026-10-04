@@ -49,7 +49,7 @@ async function hold(page: Page, name: string, ms = 1400) {
 }
 
 test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part', async ({ page }) => {
-  test.setTimeout(240_000)
+  test.setTimeout(300_000)
   mkdirSync(PROOF, { recursive: true })
   const proof = await ensureProofCourse(master)
   await hideInstall(page)

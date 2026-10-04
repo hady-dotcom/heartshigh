@@ -5,6 +5,10 @@ import { expect, type Page } from '@playwright/test'
  * `[data-next-badge][data-error=true]` node inside its shadow root.
  */
 export async function noIssueBadge(page: Page) {
-  const badge = page.locator('[data-next-badge][data-error="true"]')
-  await expect(badge, 'the Next.js 1 Issue badge must not appear').toHaveCount(0)
+  const issue = await page.evaluate(() => {
+    const badge = document.querySelector('nextjs-portal')?.shadowRoot?.querySelector('[data-next-badge]')
+    if (badge?.getAttribute('data-error') !== 'true') return ''
+    return '1 Issue'
+  })
+  expect(issue, 'the Next.js 1 Issue badge must not appear').toBe('')
 }
