@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { Flash } from '@/components/app/shell'
 import { BrandLockup } from '@/components/brand'
 import { portalIdOf } from '@/lib/ids'
@@ -15,6 +16,8 @@ export default async function Door({ searchParams }: { searchParams: Promise<{ e
     const slug = (portal as { slug?: string } | null)?.slug
     if (slug) home = user.role === 'learner' ? `/p/${slug}` : `/p/${slug}/admin`
   }
+  // A signed-in visit to the door goes home. An error or notice stays here so the flash can be read.
+  if (user && home !== '/login' && !query.error && !query.notice) redirect(home)
   return (
     <main className="door garden-door" data-testid="door">
       <div className="door-card">

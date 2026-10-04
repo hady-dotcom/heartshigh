@@ -1204,6 +1204,10 @@ export interface Schedule {
     | number
     | boolean
     | null;
+  /**
+   * How many minutes a day this plan asks for: 10, 20, 30 or 45.
+   */
+  minutesPerDay?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -3168,6 +3172,7 @@ export interface SchedulesSelect<T extends boolean = true> {
   endDate?: T;
   weekdays?: T;
   slots?: T;
+  minutesPerDay?: T;
   updatedAt?: T;
   createdAt?: T;
 }

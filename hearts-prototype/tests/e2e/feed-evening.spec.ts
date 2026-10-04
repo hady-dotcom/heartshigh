@@ -247,7 +247,7 @@ test('the extended cut opens on our own poster with the talk title, never a titl
   const poster = page.getByTestId('poster-frame')
   await expect(poster).toHaveAttribute('data-poster', 'own')
   expect(await poster.locator('img').first().getAttribute('src')).not.toMatch(/ytimg|youtube|\/clips\//)
-  await expect(poster.getByTestId('poster-title')).toContainText('Extended cut')
+  await expect(poster.getByTestId('poster-title')).toContainText('Ready for more?')
   expect(((await poster.getByTestId('poster-title').locator('b').textContent()) || '').trim().length).toBeGreaterThan(3)
   await expect(page.getByTestId('poster-play')).toBeVisible()
   await page.screenshot({ path: test.info().outputPath('extended-cut-poster.png') })

@@ -433,14 +433,14 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, token: str
           </Link>
         )
       }) : <p className="muted">No talk in your courses has been placed in this door yet.</p>}
-      {tiers.length ? <p className="eyebrow">Appetisers</p> : null}
+      {tiers.length ? <p className="eyebrow">Ready for more?</p> : null}
       {tiers.map((tier) => {
         const lesson = lessonOf(ref(tier.lesson))
         if (!lesson) return null
         const start = Number(tier.appetiserStart || 0)
         return (
           <Link key={tier.id} className="course-row" href={`${base}/course/${ref(lesson.course)}?part=${lesson.id}&t=${Math.floor(start)}`} data-testid="door-appetiser">
-            <span className="t"><b>Appetiser</b><small>{talkName(lesson)} · from {clock(start)}</small></span>
+            <span className="t"><b>Ready for more?</b><small>{talkName(lesson)} · from {clock(start)}</small></span>
             <span className="start teal">Watch</span>
           </Link>
         )

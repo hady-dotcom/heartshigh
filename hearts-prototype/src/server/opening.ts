@@ -13,7 +13,7 @@ import { cardForTalk, readCardCatalogue, sceneSrc, type StoredCard } from '@/lib
 import { cleanThumbnail, hasWordsInPicture, isTitledThumbnail, isVerticalLesson } from '@/lib/shorts'
 import { filmsForTalk, mixFeed, readFilmCatalogue, type BeatFilm } from '@/lib/films'
 import { filesForTalk, isTypographyStyle, readTypographyManifest, type TypographyManifest } from '@/lib/typography'
-import { clipWords, displayLine, parseLineTidy } from '@/lib/tidy-caption'
+import { clipWords, displayLine, feedTidy, parseLineTidy } from '@/lib/tidy-caption'
 import { partTitle } from '@/lib/talk-title'
 import { laneOf, portraitFor, SLIDE_ART, slugify, type FeedItem, type SlideStyle } from './learner'
 
@@ -306,15 +306,23 @@ function tidyOf(speaker: string, stored: unknown, raw: { hook: string; turn: str
   const hookTidy = line(raw.hook, tidy?.hook)
   const turnTidy = line(raw.turn, tidy?.turn)
   const landTidy = line(raw.land, tidy?.land)
+  const storedLines = tidy?.horsLines || []
+  const indexed = storedLines.length === raw.horsLines.length
   return {
     hookTidy,
     turnTidy,
     landTidy,
+    quoteTidy: tidy?.quote?.text?.trim() || '',
     scenic: { hook: clipWords(hookTidy), turn: clipWords(turnTidy), land: clipWords(landTidy) },
-    horsLines: raw.horsLines.map((row) => ({
+    horsLines: raw.horsLines.map((row, index) => ({
       at: row.at,
       text: row.text,
-      tidy: line(row.text, tidy?.horsLines.find((item) => item.raw === row.text && (item.at === undefined || Number(item.at) === row.at))),
+      tidy: feedTidy(
+        row.text,
+        storedLines.find((item) => item.raw === row.text && (item.at === undefined || Number(item.at) === row.at)),
+        indexed ? storedLines[index] : null,
+        hints,
+      ),
     })),
   }
 }
@@ -389,7 +397,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
       turnTidy: tidy.turnTidy,
       landTidy: tidy.landTidy,
       scenic: tidy.scenic,
-      hors: { start: Number(tier.horsStart), end: Number(tier.horsEnd), quote: horsQuote, lines: tidy.horsLines },
+      hors: { start: Number(tier.horsStart), end: Number(tier.horsEnd), quote: tidy.quoteTidy || horsQuote, lines: tidy.horsLines },
       appetiser: {
         ...appetiser,
         lines: [

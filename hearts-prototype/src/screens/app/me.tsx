@@ -1,4 +1,5 @@
 import { defaultPlanName, plural } from '@/lib/schedule'
+import { MINUTES_A_DAY } from '@/lib/study-plan'
 import { now as clockNow } from '@/lib/clock'
 import Link from 'next/link'
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
@@ -90,7 +91,7 @@ export async function PlanScreen({ payload, user, portal, base, query }: Ctx) {
   const later = new Date(now().getTime() + 27 * 86_400_000).toISOString().slice(0, 10)
   const unread = await unreadCount(payload, user)
   return (
-    <AppFrame testId="plan">
+    <AppFrame testId="plan" evening>
       <div className="app-scroll">
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>My study plan</h1></div>
@@ -100,10 +101,18 @@ export async function PlanScreen({ payload, user, portal, base, query }: Ctx) {
           <Hidden fields={{ action: 'schedule', portalSlug: portal.slug, targetType: 'course', next: `${base}/me/plan` }} />
           <label>Name<input className="field" name="name" defaultValue={defaultPlanName(clockNow())} /></label>
           <label>Course
-            <select className="field" data-testid="schedule-course" name="course">{courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}</select>
+            <select className="field" data-testid="schedule-course" name="course" defaultValue={Number(query.course) || courses[0]?.id}>{courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}</select>
           </label>
           <label>From<input className="field" data-testid="schedule-start" type="date" name="start" defaultValue={today} /></label>
           <label>Until<input className="field" data-testid="schedule-end" type="date" name="end" defaultValue={later} /></label>
+          <fieldset className="minutes-day" data-testid="minutes-a-day">
+            <legend>Minutes a day</legend>
+            <div className="weekdays">
+              {MINUTES_A_DAY.map((minutes) => (
+                <label key={minutes}><input data-testid={`minutes-${minutes}`} type="radio" name="minutes" value={minutes} defaultChecked={minutes === 20} /><span>{minutes}</span></label>
+              ))}
+            </div>
+          </fieldset>
           <div>
             <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink-2)' }}>Days of the week</span>
             <div className="weekdays" style={{ marginTop: 8 }}>
@@ -119,7 +128,7 @@ export async function PlanScreen({ payload, user, portal, base, query }: Ctx) {
           return (
             <section key={plan.id} data-testid="schedule-plan" style={{ marginTop: 18 }}>
               <h2 style={{ fontSize: 19, margin: '0 0 4px' }}>{str(plan.name)}</h2>
-              <p className="muted" style={{ margin: 0, fontSize: 13 }}>{plural(slots.length, 'part')} · {str(plan.startDate)} to {str(plan.endDate)}{ref(plan.owner) !== user.id ? ' · made by your teacher' : ''}</p>
+              <p className="muted" style={{ margin: 0, fontSize: 13 }}>{plural(slots.length, 'part')} · {Number(plan.minutesPerDay) || 20} min a day · {str(plan.startDate)} to {str(plan.endDate)}{ref(plan.owner) !== user.id ? ' · made by your teacher' : ''}</p>
               {slots.map((slot, index) => (
                 <div className="slot" key={index} data-testid="schedule-slot">
                   <span className="date">{slot.date ? new Date(`${slot.date}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', timeZone: 'UTC' }) : ''}<small>{slot.date ? new Date(`${slot.date}T12:00:00Z`).toLocaleDateString('en-GB', { month: 'short', weekday: 'short', timeZone: 'UTC' }) : ''}</small></span>

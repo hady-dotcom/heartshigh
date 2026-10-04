@@ -10,6 +10,7 @@ import { doorLabel, doorOfClause, groupByDoor, type Door } from '@/lib/doors'
 import { loadDoors } from '@/server/doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { visibleCourseIds } from '@/server/context'
+import { sortParts } from '@/lib/part-order'
 import { partTitle } from '@/lib/talk-title'
 import { courseCards, portraitFor, posterFor, shownPoster, slugify } from '@/server/learner'
 import { speakerPage } from '@/server/speakers'
@@ -27,6 +28,16 @@ import { circleForPoints, circleSettings } from '@/server/circle'
 import { initialsOf } from '@/lib/swarm-sort'
 
 const START = ['orange', 'gold', 'teal']
+
+/** The garden card always names a following part when the course has more than one. */
+function nextCoursePart(lessons: Row[], partIndex: number, done: Set<number>, hrefBase: string) {
+  if (lessons.length < 2) return null
+  const rest = [...lessons.slice(partIndex + 1), ...lessons.slice(0, partIndex)]
+  const pick = rest.find((row) => !done.has(row.id)) || rest[0]
+  if (!pick) return null
+  const index = lessons.findIndex((row) => row.id === pick.id)
+  return { label: `Part ${index + 1} · Next`, href: `${hrefBase}?part=${pick.id}` }
+}
 
 function partHeading(index: number, lesson: Row, courseTitle: string, sep: string) {
   const name = partTitle(lesson, courseTitle)
@@ -128,7 +139,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
     masterFlags(payload),
   ])
   const unitRank = new Map(units.map((unit, index) => [unit.id, index]))
-  const lessons = [...lessonRows].sort((a, b) => (unitRank.get(ref(a.unit) || 0) ?? 99) - (unitRank.get(ref(b.unit) || 0) ?? 99) || Number(a.order || 0) - Number(b.order || 0) || a.id - b.id)
+  const lessons = sortParts(lessonRows, (row) => unitRank.get(ref(row.unit) || 0) ?? 99)
   if (!lessons.length) redirect(`${base}/lanes?error=${encodeURIComponent('That course has no parts yet.')}`)
   const partIndex = Math.max(0, lessons.findIndex((lesson) => lesson.id === Number(query.part)))
   const lesson = lessons[partIndex]
@@ -241,7 +252,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
   }))
 
   return (
-    <AppFrame testId="course">
+    <AppFrame testId="course" evening>
       <div className="app-scroll">
         <Flash error={query.error} notice={query.notice} />
         {contextOn ? (
@@ -274,7 +285,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
           serverNow={at.toISOString()}
           next={here}
           overPlayer={flags.popupOverPlayer}
-          garden={{ done, total, gardenHref: `${base}/garden`, links: [{ label: "See what you've sown", href: `${base}/garden/general` }, { label: 'Your workbook', href: `${base}/garden/workbook` }] }}
+          garden={{ done, total, gardenHref: `${base}/garden`, nextPart: nextCoursePart(lessons, partIndex, doneLessons, `${base}/course/${courseId}`), links: [{ label: "See what you've sown", href: `${base}/garden/general` }, { label: 'Your workbook', href: `${base}/garden/workbook` }] }}
         />
         {related[0] ? <TalkGatherNotice startsAt={related[0].startsAt} href={`${base}/gather/${related[0].id}`} title={related[0].title} /> : null}
         {marks.length ? (
@@ -285,6 +296,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
             ))}
           </section>
         ) : null}
+        {lessons.length >= 2 ? <p style={{ margin: '16px 0 0' }}><Link className="pill outline" href={`${base}/me/plan?course=${courseId}`} data-testid="plan-rest">Plan the rest of this course</Link></p> : null}
         <p className="eyebrow">Parts of this course</p>
         {courseDoors(lessons, partCuts, doors).map((group) => (
           <section key={group.door?.number || 'open'} className="door-course" data-testid="course-door" data-door={group.door?.number || ''}>
@@ -302,7 +314,7 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
                   </Link>
                   {tier ? (
                     <Link className="list-link sub" href={`${base}/course/${courseId}?part=${row.id}&t=${Math.floor(Number(tier.appetiserStart || 0))}`} data-testid="course-appetiser">
-                      <span className="grow">Appetiser<small>From {clock(Number(tier.appetiserStart || 0))}</small></span>›
+                      <span className="grow">Ready for more?<small>From {clock(Number(tier.appetiserStart || 0))}</small></span>›
                     </Link>
                   ) : null}
                   {questions.map((point) => (
