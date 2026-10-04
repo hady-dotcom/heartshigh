@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { anonymiseFromQuery, canNameExport, canReadFeedback, parseFilters } from '@/lib/feedback'
 import { json, portalOf, viewAsRefusal } from '@/server/api'
 import { getSession } from '@/server/context'
+import { portalDisplayName } from '@/lib/portal-name'
 import { checkQuestions, draftQuestionSummary, exportFilename, feedbackFor, includeSummary, includedSummaries, recordExport, renderExport } from '@/server/feedback'
 
 export const dynamic = 'force-dynamic'
@@ -36,7 +37,7 @@ export async function GET(req: Request) {
   const filters = parseFilters(query)
   const built = await feedbackFor(session.payload, portal.id, filters, anonymised)
   const summaries = format === 'pdf' ? await includedSummaries(session.payload, portal.id, built) : []
-  const rendered = await renderExport(built, format, summaries, { portal: portal.organisationName || portal.name, from: filters.from, to: filters.to })
+  const rendered = await renderExport(built, format, summaries, { portal: portalDisplayName(portal), from: filters.from, to: filters.to })
   if (!rendered) return json({ error: 'Choose CSV, Excel or PDF.' }, 400)
   await recordExport(session.payload, session.user, portal.id, format, filters, built)
   const filename = exportFilename(anonymised, rendered.ext)

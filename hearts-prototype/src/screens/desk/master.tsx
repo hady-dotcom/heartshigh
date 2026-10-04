@@ -8,6 +8,7 @@ import { Hidden } from '@/components/app/shell'
 import { CodeLimits, CodeStatus } from '@/components/desk/codes'
 import { ViewAsButton } from '@/components/desk/view-as-button'
 import { parseOption } from '@/lib/placing'
+import { portalDisplayName, showPortalName } from '@/lib/portal-name'
 import type { SessionUser } from '@/server/context'
 import { one, ref, rows, str } from '../common'
 import { CourseEditorBody } from './content'
@@ -47,7 +48,7 @@ export async function MasterPortals(ctx: MasterCtx) {
             <tbody>
               {portals.map((portal) => (
                 <tr key={portal.id} data-testid="portal-card">
-                  <td><b>{str(portal.organisationName) || str(portal.name)}</b></td>
+                  <td><b>{portalDisplayName(portal)}</b></td>
                   <td style={{ fontFamily: 'ui-monospace, monospace' }}>/p/{str(portal.slug)}</td>
                   <td>{kindLabel(portal.kind)}</td>
                   <td>{portal.closed ? <span className="badge rose">Deactivated</span> : <span className="badge teal">Active</span>}</td>
@@ -107,7 +108,7 @@ export async function MasterPortals(ctx: MasterCtx) {
           <header><div><h2>Access code for a portal</h2><p>The first admin code is how a portal admin gets in</p></div></header>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-code', next: '/master' }} />
-            <label className="stack">Portal<select name="portalSlug" data-testid="code-portal">{portals.map((portal) => <option key={portal.id} value={str(portal.slug)}>{str(portal.name)}</option>)}</select></label>
+            <label className="stack">Portal<select name="portalSlug" data-testid="code-portal">{portals.map((portal) => <option key={portal.id} value={str(portal.slug)}>{showPortalName(portal.name)}</option>)}</select></label>
             <label className="stack">Code<input type="text" data-testid="code-value" name="code" placeholder="Leave empty for a random code" /></label>
             <label className="stack">For
               <select data-testid="code-role" name="role" defaultValue="admin"><option value="admin">Admin</option><option value="teacher">Teacher</option><option value="learner">Learner</option><option value="parent">Parent</option></select>
@@ -130,7 +131,7 @@ export async function MasterPortals(ctx: MasterCtx) {
           <header><div><h2>Course pack for a portal</h2></div></header>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-pack', next: '/master' }} />
-            <label className="stack">Portal<select name="portalSlug" data-testid="pack-portal">{portals.map((portal) => <option key={portal.id} value={str(portal.slug)}>{str(portal.name)}</option>)}</select></label>
+            <label className="stack">Portal<select name="portalSlug" data-testid="pack-portal">{portals.map((portal) => <option key={portal.id} value={str(portal.slug)}>{showPortalName(portal.name)}</option>)}</select></label>
             <label className="stack">Pack name<input type="text" data-testid="portal-pack-title" name="title" placeholder="Harbour sittings" required /></label>
             <div className="actions"><button className="btn ghost" type="submit" data-testid="portal-pack-save">Save pack</button></div>
           </form>
@@ -223,7 +224,7 @@ export async function MasterPacks(ctx: MasterCtx) {
                   return (
                     <tr key={pack.id} data-testid="pack-row">
                       <td><b>{str(pack.title)}</b></td>
-                      <td>{pack.owner === 'master' ? <span className="badge gold">Library</span> : <span className="badge grey">{str(portal?.name)}</span>}</td>
+                      <td>{pack.owner === 'master' ? <span className="badge gold">Library</span> : <span className="badge grey">{showPortalName(portal?.name)}</span>}</td>
                       <td>
                         {pack.owner === 'master' ? (
                           <form action="/api/hearts" method="post" style={{ display: 'grid', gap: 8 }}>
@@ -300,7 +301,7 @@ export async function MasterQuestions(ctx: MasterCtx) {
             <label className="stack">Answers, one on each line<textarea data-testid="placing-options" name="options" required /></label>
             <label className="stack">Order<input type="number" name="order" defaultValue={questions.length + 1} /></label>
             <label className="stack">Shown in
-              <select name="portalSlug"><option value="">Every portal</option>{portals.map((portal) => <option key={portal.id} value={str(portal.slug)}>{str(portal.name)}</option>)}</select>
+              <select name="portalSlug"><option value="">Every portal</option>{portals.map((portal) => <option key={portal.id} value={str(portal.slug)}>{showPortalName(portal.name)}</option>)}</select>
             </label>
             <div className="actions"><button className="btn ink" type="submit" data-testid="placing-save">Save question</button></div>
           </form>

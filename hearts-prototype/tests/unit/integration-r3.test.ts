@@ -67,3 +67,18 @@ test('feed players keep YouTube captions and annotations off and send no caption
   }
   assert.equal((playerVars('full', 0) as Record<string, unknown>).cc_lang_pref, 'en')
 })
+
+test('portal names: the brand word shows as HEARTS; other names, stored values and slugs stay as typed', async () => {
+  const { portalDisplayName, showPortalName } = await import('../../src/lib/portal-name')
+  assert.equal(showPortalName('Hearts'), 'HEARTS')
+  assert.equal(showPortalName('hearts demo'), 'HEARTS demo')
+  assert.equal(showPortalName('East London Mosque'), 'East London Mosque')
+  assert.equal(showPortalName('Heartsease Hall'), 'Heartsease Hall')
+  assert.equal(showPortalName(undefined), '')
+  assert.equal(portalDisplayName({ name: 'Hearts', organisationName: '' }), 'HEARTS')
+  assert.equal(portalDisplayName({ name: 'Leeds Chapter', organisationName: 'Hearts' }), 'HEARTS')
+  assert.equal(portalDisplayName({ name: 'Hearts', organisationName: 'East London Mosque' }), 'East London Mosque')
+  const portal = { slug: 'hearts', name: 'Hearts' }
+  portalDisplayName(portal)
+  assert.deepEqual(portal, { slug: 'hearts', name: 'Hearts' })
+})

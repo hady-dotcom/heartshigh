@@ -6,6 +6,7 @@ import { idOf } from '@/lib/ids'
 import { recommendLesson } from '@/lib/placing'
 import { doorOfClause } from '@/lib/doors'
 import { loadDoors } from './doors'
+import { portalDisplayName } from '@/lib/portal-name'
 import type { PieceRef } from '@/lib/nesting'
 import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
 
@@ -211,5 +212,5 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
 }
 
 export function portalName(portal: PortalDoc) {
-  return portal.organisationName || portal.name
+  return portalDisplayName(portal)
 }

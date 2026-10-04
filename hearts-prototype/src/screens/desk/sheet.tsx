@@ -1,5 +1,6 @@
 import type { Payload } from 'payload'
 import { idOf } from '@/lib/ids'
+import { portalDisplayName, showPortalName } from '@/lib/portal-name'
 import { circleAnswerCount } from '@/server/circle'
 import type { SessionUser } from '@/server/context'
 import type { Ctx, Row } from '../common'
@@ -96,7 +97,7 @@ function SheetBody({
             {desk === 'master' && portals.length ? (
               <label className="stack">Portal, when the scope is a portal
                 <select name="portal" data-testid="sheet-portal" defaultValue={portals[0]?.slug}>
-                  {portals.map((portal) => <option key={portal.slug} value={portal.slug}>{portal.name}</option>)}
+                  {portals.map((portal) => <option key={portal.slug} value={portal.slug}>{showPortalName(portal.name)}</option>)}
                 </select>
               </label>
             ) : null}
@@ -134,7 +135,7 @@ function SheetBody({
                   <label className="stack">Portal
                     <select name="portal" defaultValue={portals[0]?.slug || ''}>
                       <option value="">Library, not a portal</option>
-                      {portals.map((portal) => <option key={portal.slug} value={portal.slug}>{portal.name}</option>)}
+                      {portals.map((portal) => <option key={portal.slug} value={portal.slug}>{showPortalName(portal.name)}</option>)}
                     </select>
                   </label>
                 ) : null}
@@ -291,7 +292,7 @@ export async function MasterSheetScreen({ payload, user, query }: { payload: Pay
         next="/master/sheet"
         desk="master"
         courses={courses.map((course) => ({ id: course.id, title: str(course.title) }))}
-        portals={portals.map((portal) => ({ slug: str(portal.slug), name: str(portal.organisationName) || str(portal.name) }))}
+        portals={portals.map((portal) => ({ slug: str(portal.slug), name: portalDisplayName(portal) }))}
         preview={preview ? { id: preview.id, summary: (preview.summary || {}) as Summary } : null}
         last={last ? { id: last.id, fileName: str(last.fileName) } : null}
         libraryCounts={libraryCounts}

@@ -11,6 +11,7 @@ import { loadPersonaLens } from '@/server/persona'
 import { loadPortal, type SessionUser } from '@/server/context'
 import { loadOpening } from '@/server/opening'
 import { partTitle } from '@/lib/talk-title'
+import { portalDisplayName, showPortalName } from '@/lib/portal-name'
 import { type Ctx, ref, rows, str } from '../common'
 import { masterFlags } from '../app/journey'
 import { AdminFrame } from './overview'
@@ -240,7 +241,7 @@ export async function MasterTrends(ctx: MasterCtx) {
       </section>
       {portals.map((portal) => (
         <section className="panel" key={portal.id} style={{ marginBottom: 18 }}>
-          <header className="light"><h2>{str(portal.organisationName) || str(portal.name)}</h2></header>
+          <header className="light"><h2>{portalDisplayName(portal)}</h2></header>
           <TrendsTable trends={trendsFrom(all, portal.id)} laneTitles={laneTitles} />
         </section>
       ))}
@@ -303,7 +304,7 @@ export async function PortalOpeningScreen(ctx: Ctx) {
                 <label className="stack">Second line<input type="text" name="subline" defaultValue={own?.subline || ''} placeholder={str(scene.subline)} /></label>
               </div>
               {crisis ? <p className="hint" style={{ margin: 0 }}>This scene holds the option that opens the help screen, so it is always shown.</p> : (
-                <label className="check"><input type="checkbox" name="hidden" defaultChecked={hidden.has(scene.id)} data-testid="portal-hide" /> Leave this scene out for {str(portal.name)}</label>
+                <label className="check"><input type="checkbox" name="hidden" defaultChecked={hidden.has(scene.id)} data-testid="portal-hide" /> Leave this scene out for {showPortalName(portal.name)}</label>
               )}
               <div className="actions"><button className="btn ink small" type="submit" data-testid="portal-scene-save">Save</button></div>
             </form>
@@ -334,7 +335,7 @@ export async function PortalOpeningScreen(ctx: Ctx) {
           </div>
         </section>
         <section className="panel" data-testid="portal-trends">
-          <header className="light"><h2>Trends in {str(portal.name)}</h2></header>
+          <header className="light"><h2>Trends in {showPortalName(portal.name)}</h2></header>
           <TrendsTable trends={trendsFrom(all, portal.id)} laneTitles={laneTitles} />
         </section>
       </div>
