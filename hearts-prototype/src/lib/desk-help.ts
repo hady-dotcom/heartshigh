@@ -36,7 +36,11 @@ export const PAGE: Record<string, string> = {
   wizard:
     'Three short steps get the portal ready: a welcome line, an optional first course, then you are done. You can run this again from Settings. Nothing here deletes what you already made.',
   portals:
-    'Each portal is one mosque or community, with its own admin, codes and people. You open portals here; each portal admin runs their own. View as lets you see a portal desk as that admin does.',
+    'Each portal is one mosque or community, with its own admin, codes and people. You open portals here; each portal admin runs their own. View as lets you see a portal desk as that admin does. Open with courses and features when you want to switch parts on in stages.',
+  portalCreate:
+    'Three short steps open a portal: the name and address, the library courses it may use, then which features learners and the desk will see. Saving takes effect at once. You can change features later from the portal’s edit page.',
+  portalEdit:
+    'Features decide what this portal shows: Gather, Compass, the Garden, and the rest. Saving takes effect at once for learners and for the desk. Courses ticked here are linked from the library.',
   review:
     'Review is where machine drafts wait for a person. Approve what reads true; send back what does not. Approved work is what learners see.',
   tiers:
@@ -136,6 +140,12 @@ export const TOOL: Record<string, string> = {
     'Deactivate stops learners signing in. Their work is still here. Activate opens the portal again. Only the master desk can do this.',
   activity:
     'Each bar is one day: parts watched and questions answered. It is a pulse, not a league table. Empty days are normal.',
+  portalDetails:
+    'The name is what people see. The short address becomes /p/that-word. Kind is only a label for you. The welcome line greets whoever arrives.',
+  portalCourses:
+    'These are library courses this portal may link. Tick the ones they will use. You can add more later from the portal library. Nothing is copied; the original stays as the master desk set it.',
+  portalFeatures:
+    'Each switch is one part of HEARTS. Start small keeps videos, questions and the Garden. Add the community brings circle answers and the planner, and Everything turns every switch on. Saving takes effect at once.',
 }
 
 const TEST_IDS: Record<string, string> = {
@@ -164,6 +174,8 @@ const TEST_IDS: Record<string, string> = {
   'ai-registry': 'ai',
   'ai-step-page': 'ai',
   master: 'portals',
+  'portal-create': 'portalCreate',
+  'portal-edit': 'portalEdit',
   'master-library': 'library',
   'master-course': 'course',
   'master-packs': 'packs',

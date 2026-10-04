@@ -112,6 +112,14 @@ export const Portals: CollectionConfig = {
     { name: 'learnerLabel', type: 'text', defaultValue: 'Learner' },
     { name: 'teacherLabel', type: 'text', defaultValue: 'Teacher' },
     { name: 'wizardDone', type: 'checkbox', defaultValue: false },
+    {
+      name: 'features',
+      type: 'json',
+      admin: {
+        description:
+          'Per-portal feature switches. Empty means every feature that exists today stays on, so live portals do not change.',
+      },
+    },
   ],
 }
 

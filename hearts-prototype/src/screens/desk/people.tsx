@@ -16,6 +16,7 @@ import { visibleCourseIds } from '@/server/context'
 import { dayNumber } from '@/server/learner'
 import { type Ctx, clock, longDate, portalPeople, ref, rows, shortDate, str } from '../common'
 import { AdminFrame } from './overview'
+import { featureOn } from '@/lib/features'
 
 export async function TeachScreen(ctx: Ctx) {
   const { payload, user, portal, base, query } = ctx
@@ -86,11 +87,11 @@ export async function TeachScreen(ctx: Ctx) {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'start' }}>
-                        {answers.filter((row) => ref(row.user) === learner.id).length ? (
+                        {featureOn(portal, 'workbook') ? (answers.filter((row) => ref(row.user) === learner.id).length ? (
                           <a className="btn ghost small" href={`/api/workbook/${learner.id}?format=csv`} data-testid="workbook-csv">Workbook</a>
                         ) : (
                           <span className="btn ghost small" aria-disabled="true" data-testid="workbook-csv" title="Nothing to download yet">Workbook</span>
-                        )}
+                        )) : null}
                         {user.role !== 'teacher' ? <ViewAsButton targetId={learner.id} name={str(learner.name) || 'this learner'} landing={`${base}`} /> : null}
                       </div>
                     </td>
@@ -104,6 +105,7 @@ export async function TeachScreen(ctx: Ctx) {
       </section>
 
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.25fr)', alignItems: 'start' }}>
+        {featureOn(portal, 'workbook') ? (
         <section className="panel" data-testid="workbook-inbox">
           <header><div><h2>Workbook entries shared with you ({shared.length})</h2><p>{kept} kept private by their writers and not shown here</p></div></header>
           <div className="body" style={{ display: 'grid', gap: 14 }}>
@@ -116,19 +118,23 @@ export async function TeachScreen(ctx: Ctx) {
                   {prompt ? <p className="hint" style={{ margin: 0 }}>Question: {prompt}</p> : null}
                   {(answer?.point as { kind?: string } | undefined)?.kind === 'task' ? <p className="badge" data-testid="activation-task">Activation task</p> : null}
                   <p style={{ fontSize: 15, color: 'var(--ink)' }}>{str(entry.body) || 'A photo or recording'}</p>
-                  {entry.teacherReply ? <p className="count-tile" style={{ display: 'block', background: 'var(--mint)' }} data-testid="teacher-reply">Your reply: {str(entry.teacherReply)}</p> : null}
+                  {entry.teacherReply && featureOn(portal, 'feedback') ? <p className="count-tile" style={{ display: 'block', background: 'var(--mint)' }} data-testid="teacher-reply">Your reply: {str(entry.teacherReply)}</p> : null}
+                  {featureOn(portal, 'feedback') ? (
                   <form className="form" action="/api/hearts" method="post">
                     <Hidden fields={{ action: 'reply', entry: entry.id, href: `${base}/garden/workbook`, next: here }} />
                     <textarea data-testid="reply-text" name="reply" placeholder="Write a reply. They will see it in their workbook." required />
                     <div className="actions"><button className="btn ink small" data-testid="reply-submit" type="submit">{entry.teacherReply ? 'Send another reply' : 'Send reply'}</button></div>
                   </form>
+                  ) : null}
                 </article>
               )
             })}
             {!shared.length ? <p className="empty">Nothing shared yet. Learners choose, answer by answer, whether you can read it.</p> : null}
           </div>
         </section>
+        ) : null}
 
+        {featureOn(portal, 'feedback') ? (
         <section className="panel" data-testid="evidence">
           <header><div><h2>Recordings to give feedback on ({evidence.length})</h2><p>Pause at a moment and add a note; the learner sees it on their timeline</p></div></header>
           <div className="body">
@@ -155,6 +161,7 @@ export async function TeachScreen(ctx: Ctx) {
             ) : <p className="empty">No recordings yet. When a learner answers with a video or a voice note, it appears here.</p>}
           </div>
         </section>
+        ) : null}
       </div>
 
       <section className="panel" style={{ marginTop: 18 }}>

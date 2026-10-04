@@ -32,6 +32,8 @@ const PAGES = [
   'course',
   'compassLearner',
   'attendance',
+  'portalCreate',
+  'portalEdit',
 ]
 
 describe('desk help', () => {

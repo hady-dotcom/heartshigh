@@ -56,6 +56,8 @@ export type PortalDoc = {
   teacherLabel?: string | null
   wizardDone?: boolean | null
   timeZone?: string | null
+  /** Null or missing: every switch uses its registry default (shipped features on). */
+  features?: Record<string, boolean> | null
 }
 
 /**

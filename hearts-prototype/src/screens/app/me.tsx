@@ -13,6 +13,7 @@ import { Qr } from '@/components/qr'
 import { now } from '@/lib/clock'
 import { visibleCourseIds } from '@/server/context'
 import { dayNumber, portalName } from '@/server/learner'
+import { featureOn } from '@/lib/features'
 import { type Ctx, longDate, ref, rows, shortDate, str, unreadCount } from '../common'
 
 /** Notices written before prompts were clipped on a word were cut mid-word at 60 characters; they read the same way now. */
@@ -24,10 +25,10 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 30 })).filter((note) => note.channel !== 'email-stub')
   const unread = notes.filter((note) => !note.read).length
   const links: [string, string, string, string][] = [
-    ['path', 'Your path', 'Where a little time will help, in plain words', 'me/path'],
-    ['plan', 'My study plan', 'Spread a course across the days that suit you', 'me/plan'],
-    ['circle', 'Circle and nights', 'Your board, and the evenings you can come to', 'me/circle'],
-    ['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'],
+    ...(featureOn(portal, 'compass') ? [['path', 'Your path', 'Where a little time will help, in plain words', 'me/path'] as [string, string, string, string]] : []),
+    ...(featureOn(portal, 'planner') ? [['plan', 'My study plan', 'Spread a course across the days that suit you', 'me/plan'] as [string, string, string, string]] : []),
+    ['circle', featureOn(portal, 'gather') ? 'Circle and nights' : 'Circle', featureOn(portal, 'gather') ? 'Your board, and the evenings you can come to' : 'Your board', 'me/circle'],
+    ...(featureOn(portal, 'workbook') ? [['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'] as [string, string, string, string]] : []),
     ['settings', 'Settings', 'Night alerts, watch history and signing out', 'me/settings'],
   ]
   if (user.role !== 'learner') links.unshift(['desk', 'Portal desk', 'Courses, codes and learners', 'admin'])
@@ -84,10 +85,10 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
             <small className="muted">{shortDate(note.createdAt)}</small>
           </Link>
         )) : (
-          <EmptyState testId="notes-empty" action={{ href: `${base}/garden`, label: 'Open the garden' }}>Nothing new. Replies from your teacher and new nights will show here.</EmptyState>
+          <EmptyState testId="notes-empty" action={featureOn(portal, 'garden') ? { href: `${base}/garden`, label: 'Open the garden' } : { href: base, label: 'Back home' }}>Nothing new. Replies from your teacher and new nights will show here.</EmptyState>
         )}
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      <TabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -150,7 +151,7 @@ export async function PlanScreen({ payload, user, portal, base, query }: Ctx) {
           )
         })}
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      <TabBar base={base} active={featureOn(portal, 'gather') || !featureOn(portal, 'planner') ? 'me' : 'week'} portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -170,7 +171,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>Circle</h1></div>
         <Flash error={query.error} notice={query.notice} />
-        <p className="eyebrow" style={{ marginTop: 6 }}>Nights</p>
+        {featureOn(portal, 'gather') ? <><p className="eyebrow" style={{ marginTop: 6 }}>Nights</p>
         {events.length ? events.map((event) => {
           const mine = rsvps.find((row) => ref(row.event) === event.id && ref(row.user) === user.id)
           const coming = rsvps.filter((row) => ref(row.event) === event.id).length
@@ -202,7 +203,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
               )}
             </article>
           )
-        }) : <p className="muted">No nights are planned yet.</p>}
+        }) : <p className="muted">No nights are planned yet.</p>}</> : null}
         <p className="eyebrow">Board</p>
         <form className="card form-stack" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'board', next: here }} />
@@ -216,7 +217,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
           </div>
         ))}
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      <TabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -230,11 +231,13 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>Settings</h1></div>
         <Flash error={query.error} notice={query.notice} />
+        {featureOn(portal, 'gather') ? (
         <form className="card form-stack" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'night-alerts', next: here }} />
           <label className="toggle" style={{ marginTop: 0 }}><input type="checkbox" name="nightAlerts" defaultChecked={Boolean(user.nightAlerts)} data-testid="night-alerts" /> Tell me when a new night opens</label>
           <button className="pill outline small" type="submit" data-testid="night-alerts-save">Save</button>
         </form>
+        ) : null}
         <form className="card form-stack" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'watch-opt-in', next: here }} />
           <label className="toggle" style={{ marginTop: 0 }}><input data-testid="share-watch" type="checkbox" name="shareWatch" defaultChecked={Boolean(user.shareWatch)} /> Share my detailed watch history with my teachers</label>
@@ -250,7 +253,7 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
           <button className="pill outline block" type="submit" data-testid="logout">Sign out</button>
         </form>
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      <TabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>
   )
 }

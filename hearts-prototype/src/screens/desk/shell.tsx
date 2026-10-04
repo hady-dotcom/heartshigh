@@ -9,24 +9,26 @@ import { SideNav } from '@/components/desk/side-nav'
 import { pageHelp } from '@/lib/desk-help'
 import { BellIcon, BookIcon, HeartIcon, CalendarIcon, CogIcon, GlobeIcon, HomeIcon, KeyIcon, LibraryIcon, MoonIcon, PeopleIcon, QuestionIcon } from '@/components/icons'
 import type { SessionUser } from '@/server/context'
+import { deskNavAllowed, type FeatureSource } from '@/lib/features'
 import { rows, shortDate, str } from '../common'
 
 type NavItem = { key: string; label: string; href: string; icon: ReactNode }
 
-export function portalNav(base: string, user: SessionUser): { group: string; items: NavItem[] }[] {
-  const teach: NavItem[] = [
+export function portalNav(base: string, user: SessionUser, portal?: FeatureSource): { group: string; items: NavItem[] }[] {
+  const keep = (items: NavItem[]) => items.filter((item) => deskNavAllowed(portal, item.key))
+  const teach: NavItem[] = keep([
     { key: 'teach', label: 'Teach', href: `${base}/admin/teach`, icon: <PeopleIcon /> },
     { key: 'feedback', label: 'Feedback', href: `${base}/admin/feedback`, icon: <QuestionIcon /> },
     { key: 'compass', label: 'Compass', href: `${base}/admin/compass`, icon: <HeartIcon /> },
     { key: 'plans', label: 'Study plans', href: `${base}/admin/plans`, icon: <CalendarIcon /> },
     { key: 'nights', label: 'Nights', href: `${base}/admin/nights`, icon: <MoonIcon /> },
     { key: 'gather', label: 'Gather', href: `${base}/admin/gather`, icon: <PeopleIcon /> },
-  ]
+  ])
   if (user.role === 'teacher') return [{ group: 'Portal', items: [{ key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> }, ...teach] }]
   return [
     {
       group: 'Portal',
-      items: [
+      items: keep([
         { key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> },
         { key: 'content', label: 'Content', href: `${base}/admin/content`, icon: <BookIcon /> },
         { key: 'sheet', label: 'Master sheet', href: `${base}/admin/sheet`, icon: <BookIcon /> },
@@ -36,7 +38,7 @@ export function portalNav(base: string, user: SessionUser): { group: string; ite
         { key: 'opening', label: 'Opening', href: `${base}/admin/opening`, icon: <HeartIcon /> },
         { key: 'circle', label: 'Circle answers', href: `${base}/admin/circle`, icon: <PeopleIcon /> },
         { key: 'ai', label: 'AI steps', href: `${base}/admin/ai`, icon: <CogIcon /> },
-      ],
+      ]),
     },
     { group: 'People', items: teach },
     { group: 'Setup', items: [{ key: 'settings', label: 'Settings', href: `${base}/admin/settings`, icon: <CogIcon /> }] },

@@ -8,8 +8,9 @@ import { CrossPost } from '@/components/gather/cross-post'
 import { FadeLink } from '@/components/gather/fade-link'
 import { KIND_LABEL } from '@/lib/gather'
 import { shareOrigin } from '@/lib/site-origin'
-import { getSession } from '@/server/context'
+import { getSession, loadPortal } from '@/server/context'
 import { publicView, sharePack } from '@/server/gather'
+import { featureOn } from '@/lib/features'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,6 +34,8 @@ export default async function PublicGather({ params, searchParams }: { params: P
   const { payload } = await getSession()
   const view = await publicView(payload, slug)
   if (!view) notFound()
+  const portal = view.portalSlug ? await loadPortal(payload, view.portalSlug) : null
+  if (!featureOn(portal, 'gather')) notFound()
   const share = sharePack(shareOrigin(headerList), view.card, query.with || '')
   const join = view.code
     ? `/join?code=${encodeURIComponent(view.code)}${query.guest ? `&gatherGuest=${encodeURIComponent(query.guest)}` : ''}${query.name ? `&name=${encodeURIComponent(query.name)}` : ''}&after=${encodeURIComponent(`/p/${view.portalSlug}/gather`)}`

@@ -37,6 +37,8 @@ import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourse
 import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCookie, wrote } from './viewas'
 import { isTimeZone } from '@/lib/zone-time'
 import { parseLengthInput } from '@/lib/length'
+import { FEATURE_UNAVAILABLE, featuresFromForm } from '@/lib/features'
+import { adoptLibraryCourses, loadPortalById, refuseFeature } from './features'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
@@ -141,6 +143,22 @@ async function actingPortal(payload: Awaited<ReturnType<typeof getSession>>['pay
   const found = await loadPortal(payload, slug)
   if (!found) return { error: 'That portal could not be found.' as const }
   return { portal: { id: found.id, slug: found.slug } }
+}
+
+async function featureBlock(
+  payload: Awaited<ReturnType<typeof getSession>>['payload'],
+  user: SessionUser,
+  form: FormData,
+  key: 'gather' | 'planner' | 'compass' | 'circle' | 'feedback' | 'workbook',
+) {
+  let id = portalIdOf(user)
+  if (user.role === 'master' && text(form, 'portalSlug')) {
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return acting.error
+    id = acting.portal.id
+  }
+  if (!id) return null
+  return refuseFeature(await loadPortalById(payload, id), key)
 }
 
 async function courseOfLesson(payload: Awaited<ReturnType<typeof getSession>>['payload'], lessonId: number) {
@@ -615,7 +633,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (slugIssue) return redirectTo(req, '/master', slugIssue)
     const clash = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: slug } } })
     if (clash.docs.length) return redirectTo(req, '/master', 'That address is already in use.')
-    await payload.create({
+    const features = form.get('featuresForm') === 'yes' ? featuresFromForm(form) : undefined
+    const created = await payload.create({
       collection: 'portals',
       overrideAccess: true,
       data: {
@@ -626,9 +645,27 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         colour: text(form, 'colour') || '#1f4d3a',
         watchHistoryOptIn: false,
         wizardDone: true,
+        ...(features ? { features } : {}),
       },
     })
-    return redirectTo(req, '/master', undefined, `${name} is open.`)
+    const courseIds = form.getAll('course').map((value) => Number(value)).filter(Boolean)
+    if (courseIds.length) await adoptLibraryCourses(payload, created.id, courseIds)
+    return redirectTo(req, text(form, 'next') || '/master', undefined, `${name} is open.`)
+  }
+
+  if (action === 'portal-features') {
+    if (user.role !== 'master') return redirectTo(req, '/', 'Only the master desk can change portal features.')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, text(form, 'next') || '/master', acting.error)
+    const data: Record<string, unknown> = {}
+    if (form.has('name') && text(form, 'name')) data.name = text(form, 'name')
+    if (form.has('welcome')) data.welcome = text(form, 'welcome')
+    if (form.has('kind') && ['mosque', 'church', 'synagogue', 'other'].includes(text(form, 'kind'))) data.kind = text(form, 'kind')
+    if (form.get('featuresForm') === 'yes') data.features = featuresFromForm(form)
+    await payload.update({ collection: 'portals', id: acting.portal.id, overrideAccess: true, data })
+    const courseIds = form.getAll('course').map((value) => Number(value)).filter(Boolean)
+    if (form.has('course') || form.get('featuresForm') === 'yes') await adoptLibraryCourses(payload, acting.portal.id, courseIds, true)
+    return redirectTo(req, text(form, 'next') || `/master/portals/${acting.portal.slug}`, undefined, 'Features saved. They are live now.')
   }
 
   if (action === 'create-pack') {
@@ -1215,6 +1252,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   if (action === 'schedule') {
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
+    if (refuseFeature(await loadPortalById(payload, acting.portal.id), 'planner')) {
+      return redirectTo(req, text(form, 'next') || '/', FEATURE_UNAVAILABLE)
+    }
     const portal = acting.portal.id
     const name = text(form, 'name').slice(0, 80) || defaultPlanName(now())
     const targetType = text(form, 'targetType') === 'pack' ? 'pack' : 'course'
@@ -1279,6 +1319,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const eventId = Number(text(form, 'event'))
     const event = await findDoc(payload, 'events', eventId)
     if (!event || (user.role !== 'master' && idOf(event.portal) !== portal)) return redirectTo(req, '/', 'That night is not in your portal.')
+    if (refuseFeature(await loadPortalById(payload, idOf(event.portal) || portal || 0), 'gather')) {
+      return redirectTo(req, text(form, 'next') || '/', FEATURE_UNAVAILABLE)
+    }
     const eventPortal = idOf(event.portal)
     if (action === 'rsvp') {
       const existing = await payload.find({
@@ -1343,6 +1386,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       return redirectTo(req, '/', 'That workbook is not in your portal.')
     }
     if (!entry.consent) return redirectTo(req, text(form, 'next') || '/', 'The learner has kept this entry to themselves, so it cannot be replied to.')
+    if (refuseFeature(await loadPortalById(payload, idOf(entry.portal) || portalIdOf(user) || 0), 'feedback')) {
+      return redirectTo(req, text(form, 'next') || '/', FEATURE_UNAVAILABLE)
+    }
     await payload.update({
       collection: 'workbook-entries',
       id: entryId,
@@ -1711,6 +1757,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (user.role !== 'master' && idOf(answer.portal) !== portalIdOf(user)) {
       return redirectTo(req, '/', 'That answer is not in your portal.')
     }
+    if (refuseFeature(await loadPortalById(payload, idOf(answer.portal) || portalIdOf(user) || 0), 'feedback')) {
+      return redirectTo(req, text(form, 'next') || '/', FEATURE_UNAVAILABLE)
+    }
     const body = text(form, 'body')
     if (!body) return redirectTo(req, text(form, 'next') || '/', 'Write the feedback first.')
     const audio = form.get('audio')
@@ -2066,7 +2115,11 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, text(form, 'next') || '/')
   }
 
-  if (action.startsWith('circle-')) return handleCircle(action, form, payload, user, (path, error, notice) => redirectTo(req, path, error, notice))
+  if (action.startsWith('circle-')) {
+    const blocked = await featureBlock(payload, user, form, 'circle')
+    if (blocked) return redirectTo(req, text(form, 'next') || '/', blocked)
+    return handleCircle(action, form, payload, user, (path, error, notice) => redirectTo(req, path, error, notice))
+  }
 
   return redirectTo(req, '/', 'That action is not known.')
 }
