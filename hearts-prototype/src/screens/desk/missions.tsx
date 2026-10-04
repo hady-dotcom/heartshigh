@@ -114,7 +114,7 @@ async function DetailPage({ ctx, master, base, id }: { ctx: Ctx | null; master: 
         <section className={styles.summary}>
           <div className={styles.tile}><b data-testid="mission-joined">{joined}</b><span>Have joined</span></div>
           <div className={styles.tile}><b data-testid="mission-target">{mission.target}</b><span>Target</span></div>
-          <div className={styles.tile}><b>{view.progress.pct}%</b><span>{view.progress.line}</span></div>
+          <div className={styles.tile}><b>{view.progress.displayPct}</b><span>{view.progress.line}</span></div>
           <div className={styles.tile}><b>{mission.minutesAsked}</b><span>Minutes asked</span></div>
         </section>
         <p className={styles.quiet}>{mission.why || 'A thank-you, not a duty.'}</p>
@@ -134,7 +134,7 @@ async function DetailPage({ ctx, master, base, id }: { ctx: Ctx | null; master: 
             <header><h2>What we decided</h2></header>
             <form className="body form" action="/api/missions" method="post">
               <Hidden fields={{ action: 'result', id: String(mission.id), next: `${base}/${mission.id}` }} />
-              <label>A short line for everyone who joined
+              <label className="stack result-line">A short line for everyone who joined
                 <textarea name="result" rows={3} defaultValue={mission.result || ''} data-testid="mission-result" placeholder="the button now says 'Stay with this'" />
               </label>
               <p className={styles.quiet}>Each person gets a thank-you in the app. Email only goes if mail is set up.</p>
@@ -165,26 +165,32 @@ async function EditPage({ ctx, master, base, id }: { ctx: Ctx | null; master: { 
         <header><h2>{current ? 'Details' : 'Write the ask'}</h2></header>
         <div className="body">
           <Hidden fields={{ action: current ? 'update' : 'create', id: current ? String(current.id) : '', next: current ? `${base}/${current.id}` : `${base}/new` }} />
-          <label className="stack">Title<input name="title" required defaultValue={current?.title || 'Give HEARTS an hour this week'} data-testid="mission-title" placeholder="Give HEARTS an hour this week" /></label>
+          <label className="stack">Title<input type="text" name="title" required defaultValue={current?.title || 'Give HEARTS an hour this week'} data-testid="mission-title" placeholder="Give HEARTS an hour this week" /></label>
           <label className="stack">Plain ask<textarea name="ask" required rows={3} defaultValue={current?.ask || ''} data-testid="mission-ask" placeholder="If you have an hour this week, would you sit with HEARTS and tell us how it felt?" /></label>
           <label className="stack">Why it matters<textarea name="why" rows={3} defaultValue={current?.why || 'Your hour helps us choose the words on a button.'} data-testid="mission-why" placeholder="Your hour helps us choose the words on a button." /></label>
           <label className="stack">Minutes asked<input type="number" name="minutesAsked" min={5} max={600} defaultValue={current?.minutesAsked || 60} data-testid="mission-minutes" /></label>
           <label className="stack">Start<input type="text" name="startsAt" lang="en-GB" autoComplete="off" spellCheck={false} placeholder="4 October 2026" defaultValue={ukDate(current?.startsAt || today)} data-testid="mission-start" /></label>
           <label className="stack">End<input type="text" name="endsAt" lang="en-GB" autoComplete="off" spellCheck={false} placeholder="11 October 2026" defaultValue={ukDate(current?.endsAt || later)} data-testid="mission-end" /></label>
           <label className="stack">Target learners<input type="number" name="target" min={1} defaultValue={current?.target || 700} data-testid="mission-target-field" /></label>
-          <label className="stack">Portals
-            <select name="portal" multiple defaultValue={(current?.portals || []).map(String)} data-testid="mission-portals">
-              {portals.map((portal) => <option key={portal.id} value={portal.id}>{str(portal.name)}</option>)}
-            </select>
-          </label>
-          <p className={styles.quiet}>Leave portals unselected for every portal.</p>
+          <fieldset className="stack" data-testid="mission-portals">
+            <legend>Portals</legend>
+            <div className="checks">
+              {portals.map((portal) => (
+                <label key={portal.id} className="check portal-pick">
+                  <input type="checkbox" name="portal" value={portal.id} defaultChecked={(current?.portals || []).includes(Number(portal.id))} />
+                  {str(portal.name)}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <p className={styles.quiet}>No portal picked means every portal.</p>
           <label className="stack">Experiment
             <select name="experiment" defaultValue={current?.experiment ? String(current.experiment) : ''} data-testid="mission-experiment">
               <option value="">None</option>
               {experiments.map((row) => <option key={row.id} value={row.id}>{str(row.name)}</option>)}
             </select>
           </label>
-          <label className="stack">Screen to try<input name="tryPath" defaultValue={current?.tryPath || ''} placeholder="/feed" data-testid="mission-try" /></label>
+          <label className="stack">Screen to try<input type="text" name="tryPath" defaultValue={current?.tryPath || ''} placeholder="/feed" data-testid="mission-try" /></label>
           <div><button className="btn" type="submit" data-testid="mission-save">{current ? 'Save' : 'Create draft'}</button></div>
         </div>
       </form>

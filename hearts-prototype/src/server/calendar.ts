@@ -111,6 +111,7 @@ export async function saveSeason(payload: Payload, actor: CalendarActor, input: 
   const name = input.name.trim()
   if (name.length < 3) throw new Error('Give the season a name.')
   if (hasMarkup(name) || hasMarkup(input.theme || '')) throw new Error('Keep the words plain.')
+  if (!input.start || !input.end) throw new Error('Write the dates as 4 October 2026.')
   const data = { key, name, theme: (input.theme || '').trim(), start: input.start, end: input.end }
   if (input.id) {
     await payload.update({ collection: col('calendar-seasons'), id: input.id, overrideAccess: true, data: data as never })

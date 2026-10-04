@@ -23,13 +23,29 @@ const queue: InsightPayload[] = []
 let timer: ReturnType<typeof setTimeout> | null = null
 const recent: TapPoint[] = []
 
+function readLane() {
+  if (typeof document === 'undefined') return ''
+  return document.documentElement.getAttribute('data-lane')
+    || document.querySelector('[data-testid="journey"]')?.getAttribute('data-lane')
+    || ''
+}
+
+function answerSheetOpen() {
+  if (typeof document === 'undefined') return false
+  return Boolean(document.querySelector('[data-testid="popup"]'))
+}
+
 function flush() {
   if (!queue.length || typeof window === 'undefined') return
   const events = queue.splice(0, 40).map((event) => ({
     ...event,
     sessionId: sessionId(),
     route: event.route || window.location.pathname,
-    props: sanitizeProps(event.props),
+    props: sanitizeProps({
+      ...event.props,
+      lane: event.props?.lane || readLane(),
+      ...(answerSheetOpen() ? { sheet: true } : {}),
+    }),
   }))
   try {
     void fetch('/api/insights', {

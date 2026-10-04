@@ -2,11 +2,12 @@ import Link from 'next/link'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { CalendarHelp } from '@/components/desk/help'
-import { actionCta, CONTEXT_KEYS, contextName, ukDate } from '@/lib/calendar-context'
+import { actionCta, CONTEXT_KEYS, contextName, parseUkDate, ukDate } from '@/lib/calendar-context'
 import { EXPERIMENT_SLOTS, slotPlainName } from '@/lib/experiment-slots'
 import { now } from '@/lib/clock'
+import { wallClock } from '@/lib/zone-time'
 import type { SessionUser } from '@/server/context'
-import { canEditCalendar, canViewCalendar, contextAt, hijriOffsetOf, loadCopy, loadSeasons, seedDefaultCopy } from '@/server/calendar'
+import { canEditCalendar, canViewCalendar, contextAt, hijriOffsetOf, loadCopy, loadSeasons, resolveContextLabel, seedDefaultCopy } from '@/server/calendar'
 import { flagsOfSafe } from './calendar-flags'
 import type { Ctx } from '../common'
 import { AdminFrame } from './overview'
@@ -42,8 +43,7 @@ async function Frame({
 }
 
 function dateValue(value?: string) {
-  if (value && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10)
-  return now().toISOString().slice(0, 10)
+  return parseUkDate(value) || now().toISOString().slice(0, 10)
 }
 
 export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?: { payload: Payload; user: SessionUser; query: Query } | null }) {
@@ -57,29 +57,16 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
   await seedDefaultCopy(payload, user)
   const previewDay = dateValue(query.date)
   const hour = Number(query.hour || 10)
-  const at = new Date(`${previewDay}T${String(Math.max(0, Math.min(23, hour))).padStart(2, '0')}:00:00.000Z`)
-  const weekday = at.getUTCDay()
+  const zone = 'Europe/London'
+  const at = wallClock(previewDay, hour, zone)
   const [context, offset, seasons, copy, flags] = await Promise.all([
-    contextAt(payload, at, hour, weekday),
+    contextAt(payload, at, hour, undefined, zone),
     hijriOffsetOf(payload),
     loadSeasons(payload),
     loadCopy(payload),
     flagsOfSafe(payload),
   ])
-  const fridayLine = copy.find((row) => row.slot === 'feed-cta-label' && row.context === 'friday' && row.approved)?.label
-    || "Watch a Friday reminder before Jumu'ah ›"
-  const ramadanLine = copy.find((row) => row.slot === 'feed-cta-label' && row.context === 'ramadan' && row.approved)?.label
-    || 'Watch a short clip for a Ramadan evening ›'
-  const eidLine = copy.find((row) => row.slot === 'feed-cta-label' && (row.context === 'eidFitr' || row.context === 'eidAdha') && row.approved)?.label
-    || 'Watch a short clip for Eid ›'
-  const lastTenLine = copy.find((row) => row.slot === 'feed-cta-label' && row.context === 'lastTenNights' && row.approved)?.label
-    || 'Watch a few minutes in the last ten nights ›'
-  const rawCta = context.lastTenNights ? lastTenLine
-    : context.eidFitr || context.eidAdha ? eidLine
-    : context.ramadan ? ramadanLine
-    : context.friday ? fridayLine
-    : 'Learn more ›'
-  const cta = actionCta(rawCta)
+  const cta = await resolveContextLabel(payload, 'feed-cta-label', {}, context)
   const eid = context.eidFitr || context.eidAdha
   const masterUser = canEditCalendar(user)
   return (
@@ -102,8 +89,10 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
             <header><h2>See the app on a date</h2></header>
             <div className="body">
               <form action={base} method="get" className="form">
-                <label>Date <span className={styles.quiet}>({ukDate(previewDay)})</span><input type="date" name="date" defaultValue={previewDay} data-testid="calendar-date" /></label>
-                <label>Hour (UK)
+                <label className="stack">Date
+                  <input type="text" name="date" lang="en-GB" autoComplete="off" spellCheck={false} placeholder="4 October 2026" defaultValue={ukDate(previewDay)} data-testid="calendar-date" />
+                </label>
+                <label className="stack">Hour (UK)
                   <select name="hour" defaultValue={String(hour)} data-testid="calendar-hour">
                     {Array.from({ length: 24 }, (_, index) => <option key={index} value={index}>{index}:00</option>)}
                   </select>
@@ -164,17 +153,17 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
             <header><h2>A season you set</h2></header>
             <form className="body form" action="/api/calendar" method="post" data-testid="season-form">
               <Hidden fields={{ action: 'season', next: base }} />
-              <label>Key<input name="key" placeholder="exams" required /></label>
-              <label>Name<input name="name" placeholder="Exam season" required /></label>
-              <label>Theme words<input name="theme" placeholder="focus revision" /></label>
-              <label>From<input type="date" name="start" required /></label>
-              <label>Until<input type="date" name="end" required /></label>
+              <label className="stack">Key<input type="text" name="key" placeholder="exams" required /></label>
+              <label className="stack">Name<input type="text" name="name" placeholder="Exam season" required /></label>
+              <label className="stack">Theme words<input type="text" name="theme" placeholder="focus revision" /></label>
+              <label className="stack">From<input type="text" name="start" lang="en-GB" autoComplete="off" spellCheck={false} placeholder="4 October 2026" required /></label>
+              <label className="stack">Until<input type="text" name="end" lang="en-GB" autoComplete="off" spellCheck={false} placeholder="11 October 2026" required /></label>
               <button className="btn" type="submit">Save season</button>
             </form>
             {seasons.length ? (
               <div className="body">
                 {seasons.map((season) => (
-                  <p key={season.key} className={styles.quiet}>{season.name} · {season.start} to {season.end}</p>
+                  <p key={season.key} className={styles.quiet}>{season.name} · {ukDate(season.start)} to {ukDate(season.end)}</p>
                 ))}
               </div>
             ) : null}
@@ -187,18 +176,20 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
             {masterUser ? (
               <form className="form" action="/api/calendar" method="post" data-testid="copy-form">
                 <Hidden fields={{ action: 'copy', next: base }} />
-                <label>Slot
+                <label className="stack">Slot
                   <select name="slot" defaultValue="feed-cta-label">
                     {EXPERIMENT_SLOTS.filter((slot) => slot.kind === 'copy').map((slot) => <option key={slot.key} value={slot.key}>{slot.name}</option>)}
                   </select>
                 </label>
-                <label>When
+                <label className="stack">When
                   <select name="context" defaultValue="friday">
                     {CONTEXT_KEYS.map((key) => <option key={key} value={key}>{contextName(key)}</option>)}
                     {seasons.map((season) => <option key={season.key} value={season.key}>{season.name}</option>)}
                   </select>
                 </label>
-                <label>Line<input name="label" required placeholder="A Friday reminder before Jumu'ah" data-testid="copy-label" /></label>
+                <label className="stack">Line
+                  <textarea name="label" rows={4} required placeholder="Watch a Friday reminder before Jumu'ah" data-testid="copy-label" />
+                </label>
                 <button className="btn" type="submit">Save draft</button>
               </form>
             ) : null}

@@ -4,7 +4,9 @@ import { InsightTracker } from '@/components/app/insight-tracker'
 import { Journey } from '@/components/journey/journey'
 import { resolveSlots, subjectFrom } from '@/server/experiments'
 import { OPENER } from '@/lib/opening-data'
+import { now } from '@/lib/clock'
 import { idOf } from '@/lib/ids'
+import { portalTimeZone } from '@/lib/zone-time'
 import type { PortalDoc, SessionUser } from '@/server/context'
 import { partTitle } from '@/lib/talk-title'
 import { posterFor, shownPoster } from '@/server/learner'
@@ -46,7 +48,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
     loadDoors(payload),
     resolveSlots(payload, ['feed-cta-label', 'full-talk-cta-label', 'wide-video-framing'], subjectFrom(user, deviceId, portal.id)),
   ])
-  const context = await contextAt(payload)
+  const context = await contextAt(payload, now(), undefined, undefined, portalTimeZone(portal))
   for (const slot of Object.keys(variants)) {
     const view = variants[slot]
     const label = await resolveContextLabel(payload, slot, view.payload, context)
@@ -63,7 +65,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
     <div className="app-stage dusk">
       <main className="app dark journey-frame" data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
         <InsightTracker trendsOptIn={Boolean(user?.trendsOptIn)} />
-        {mission && initial === 'feed' ? <div className="feed-mission">{mission}</div> : null}
+        {mission && initial === 'feed' ? <div className="feed-mission" data-testid="feed-mission">{mission}</div> : null}
         <Journey
           base={base}
           opening={opening}

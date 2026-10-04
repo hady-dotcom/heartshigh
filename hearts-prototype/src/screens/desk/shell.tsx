@@ -4,7 +4,7 @@ import type { Payload } from 'payload'
 import { BrandMark } from '@/components/brand'
 import { Flash, Hidden } from '@/components/app/shell'
 import { DefaultDeskHelp } from '@/components/desk/help'
-import { BellIcon, BeakerIcon, BookIcon, CalendarIcon, ChartIcon, CogIcon, CompassIcon, FilmIcon, FlagIcon, GlobeIcon, HeartIcon, HomeIcon, KeyIcon, LibraryIcon, MoonIcon, NetworkIcon, PathIcon, PeopleIcon, QuestionIcon, ScaleIcon, SheetIcon, SparkIcon } from '@/components/icons'
+import { BellIcon, BeakerIcon, BookIcon, CalendarIcon, ChartIcon, ClapperIcon, CogIcon, CompassIcon, FilmIcon, FlagIcon, FrameIcon, GlobeIcon, HeartIcon, HomeIcon, KeyIcon, LibraryIcon, MoonIcon, NetworkIcon, PathIcon, PeopleIcon, QuestionIcon, ScaleIcon, SheetIcon, SparkIcon } from '@/components/icons'
 import type { SessionUser } from '@/server/context'
 import { rows, shortDate, str } from '../common'
 
@@ -50,7 +50,7 @@ export function portalNav(base: string, user: SessionUser): NavGroup[] {
         { key: 'insights', label: 'Insights', href: `${base}/admin/insights`, icon: <ChartIcon /> },
         { key: 'calendar', label: 'Calendar', href: `${base}/admin/calendar`, icon: <CalendarIcon /> },
         { key: 'ai', label: 'AI steps', href: `${base}/admin/ai`, icon: <CogIcon /> },
-        { key: 'opening', label: 'Framing director', href: `${base}/admin/opening`, icon: <SparkIcon /> },
+        { key: 'opening', label: 'Framing director', href: `${base}/admin/opening`, icon: <FrameIcon /> },
         { key: 'sheet', label: 'Master sheet', href: `${base}/admin/sheet`, icon: <SheetIcon /> },
         { key: 'create', label: 'Sheet creator', href: `${base}/admin/sheet/create`, icon: <BookIcon /> },
         { key: 'feedback', label: 'Feedback', href: `${base}/admin/feedback`, icon: <QuestionIcon /> },
@@ -94,12 +94,12 @@ export function masterNav(): NavGroup[] {
         { key: 'insights', label: 'Insights', href: '/master/insights', icon: <ChartIcon /> },
         { key: 'calendar', label: 'Calendar', href: '/master/calendar', icon: <CalendarIcon /> },
         { key: 'ai', label: 'AI steps', href: '/master/ai', icon: <CogIcon /> },
-        { key: 'framing', label: 'Framing director', href: '/master/framing', icon: <SparkIcon /> },
+        { key: 'framing', label: 'Framing director', href: '/master/framing', icon: <FrameIcon /> },
         { key: 'sheet', label: 'Master sheet', href: '/master/sheet', icon: <SheetIcon /> },
         { key: 'simulator', label: 'Simulator', href: '/master/simulator', icon: <FilmIcon /> },
         { key: 'personas', label: 'Scales', href: '/master/personas', icon: <ScaleIcon /> },
         { key: 'review', label: 'Review', href: '/master/review', icon: <QuestionIcon /> },
-        { key: 'tiers', label: 'Talk tiers', href: '/master/tiers', icon: <FilmIcon /> },
+        { key: 'tiers', label: 'Talk tiers', href: '/master/tiers', icon: <ClapperIcon /> },
         { key: 'create', label: 'Sheet creator', href: '/master/sheet/create', icon: <BookIcon /> },
         { key: 'questions', label: 'Placing questions', href: '/master/questions', icon: <QuestionIcon /> },
         { key: 'trends', label: 'Network trends', href: '/master/trends', icon: <NetworkIcon /> },

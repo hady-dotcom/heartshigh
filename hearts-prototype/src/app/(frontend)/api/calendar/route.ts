@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { parseUkDate } from '@/lib/calendar-context'
 import { getSession } from '@/server/context'
 import { canEditCalendar, saveCopy, saveSeason, setCopyApproval, setHijriOffset, setPopularFlag, suggestSeasonal } from '@/server/calendar'
 
@@ -48,8 +49,8 @@ export async function POST(req: Request) {
         key: text(form, 'key'),
         name: text(form, 'name'),
         theme: text(form, 'theme'),
-        start: text(form, 'start'),
-        end: text(form, 'end'),
+        start: parseUkDate(text(form, 'start')),
+        end: parseUkDate(text(form, 'end')),
       })
       return ok('Season saved.')
     }

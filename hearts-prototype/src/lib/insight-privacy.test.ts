@@ -9,6 +9,8 @@ test('opening question routes are answer screens', () => {
   assert.equal(isAnswerScreen('/p/east-london/welcome'), true)
   assert.equal(isAnswerScreen('/p/east-london/placing'), true)
   assert.equal(isAnswerScreen('/p/east-london/feed'), false)
+  assert.equal(isAnswerScreen('/p/east-london/course/1'), false)
+  assert.equal(isAnswerScreen('/p/east-london/course/1', { sheet: true }), true)
 })
 
 test('guarding the gaze is a private lane', () => {
@@ -25,7 +27,7 @@ test('insight bursts are rate-limited', () => {
 
 test('angry spots are in words, not raw coordinates', () => {
   const place = angrySpotWords({ route: '/p/east-london/feed', x: 196, y: 620, vw: 390, vh: 844 })
-  assert.match(place, /feed|middle|lower/i)
+  assert.equal(place, 'the lower middle of the feed')
   assert.doesNotMatch(place, /196/)
 })
 

@@ -1435,18 +1435,16 @@ export function Journey(props: JourneyProps) {
         {mode === 'hors' ? (
           <div className="clip-row">
             {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
-            {!typeClip && muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
             <span className="chip dark">{clock(item.hors.end - item.hors.start)}</span>
           </div>
         ) : (
           <div className="clip-row">
             <button type="button" className="chip white" onClick={() => window.history.back()} data-testid="appetiser-back">‹ Back</button>
-            {!typeClip && muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
             <span className="chip gold">Extended cut</span>
           </div>
         )}
       </div>
-      {typeClip && muted ? (
+      {muted && !hasSound() && (typeClip || playerReady) ? (
         <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button>
       ) : null}
       {(cardKind && cardKind !== 'scene') || typeClip || mode !== 'hors' || wordsInPicture ? null : captionButton}

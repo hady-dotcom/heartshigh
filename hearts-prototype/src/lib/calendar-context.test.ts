@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { actionCta, approvedCopy, calendarContext, contextLabel, nudgeTalks, parseUkDate, ukDate } from './calendar-context'
 import { hijriOf, toGregorian, toHijri } from './hijri'
+import { wallClock } from './zone-time'
 
 function utc(iso: string) {
   return new Date(`${iso}Z`)
@@ -16,6 +17,15 @@ test('Kuwaiti conversion round-trips a 2026 civil date', () => {
   const hijri = toHijri(2026, 3, 1)
   const back = toGregorian(hijri.hy, hijri.hm, hijri.hd)
   assert.deepEqual(back, { gy: 2026, gm: 3, gd: 1 })
+})
+
+test('1 Ramadan 1448 is 8 February 2027', () => {
+  assert.deepEqual(toGregorian(1448, 9, 1), { gy: 2027, gm: 2, gd: 8 })
+  const first = calendarContext({ at: gregorianOf(1448, 9, 1) })
+  assert.equal(first.ramadan, true)
+  assert.equal(first.hijri.hd, 1)
+  assert.equal(first.hijri.hm, 9)
+  assert.equal(first.hijri.hy, 1448)
 })
 
 test('1 Ramadan 1447 is Ramadan, and day 21 opens the last ten nights', () => {
@@ -125,6 +135,24 @@ test('action CTA and UK date helpers', () => {
   assert.equal(parseUkDate('4 October 2026'), '2026-10-04')
   assert.equal(parseUkDate('04/10/2026'), '2026-10-04')
   assert.equal(parseUkDate('2026-10-04'), '2026-10-04')
+})
+
+test('Hour (UK) in BST is the London wall clock, not UTC', () => {
+  const at = wallClock('2026-07-01', 10, 'Europe/London')
+  assert.equal(at.getUTCHours(), 9)
+  const ctx = calendarContext({ at, hour: 10, timeZone: 'Europe/London' })
+  assert.equal(ctx.hour, 10)
+})
+
+test('Riyadh evening uses local hour for Maghrib, not UTC', () => {
+  const at = wallClock('2026-02-08', 18, 'Asia/Riyadh')
+  assert.equal(at.getUTCHours(), 15)
+  const evening = calendarContext({ at, timeZone: 'Asia/Riyadh', sunsetHour: 18 })
+  assert.equal(evening.hour, 18)
+  const utcHour = calendarContext({ at, hour: 15, sunsetHour: 18 })
+  assert.equal(utcHour.hour, 15)
+  assert.ok(evening.hour >= 18)
+  assert.ok(utcHour.hour < 18)
 })
 
 test('talk order is nudged by season theme and optional popular ids', () => {

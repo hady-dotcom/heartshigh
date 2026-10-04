@@ -161,7 +161,7 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
                       <tr key={row.id} data-testid="angry-row">
                         <td>{routeWords(row.route)}</td>
                         <td>{row.place}</td>
-                        <td>{row.at ? new Date(row.at).toLocaleString('en-GB') : ''}</td>
+                        <td>{row.at ? new Date(row.at).toLocaleString('en-GB', { timeZone: 'Europe/London', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}</td>
                         <td><Link href={`${base}?tab=heatmap&route=${encodeURIComponent(row.route)}`}>Open route</Link> · <Link href={experimentHint(row.route, 'angry taps')}>Make this an experiment</Link></td>
                       </tr>
                     ))}

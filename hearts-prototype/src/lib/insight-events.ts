@@ -80,9 +80,10 @@ export function normaliseRoute(path: string) {
   return raw.replace(/\/p\/[^/]+/, '/p/:portal') || '/'
 }
 
-/** Opening questions, placing, recalibrate — a tap spot would reveal the answer. */
-export function isAnswerScreen(path: string) {
+/** Opening questions, placing, recalibrate, or the course player's question sheet. */
+export function isAnswerScreen(path: string, extras?: { sheet?: boolean } | null) {
   const route = normaliseRoute(path)
+  if (extras?.sheet && /\/course\//.test(route)) return true
   return /\/(start|welcome|placing|recalibrate|opener)(\/|$)/.test(route) || /question/.test(route)
 }
 
@@ -150,7 +151,7 @@ export function tapPlace(x?: number | null, y?: number | null, vw = 390, vh = 84
   const across = vw > 0 ? x / vw : 0.5
   const down = vh > 0 ? y / vh : 0.5
   const horiz = across < 0.33 ? 'left' : across > 0.66 ? 'right' : 'middle'
-  const vert = down < 0.28 ? 'top' : down > 0.72 ? 'lower third' : 'middle'
+  const vert = down < 0.28 ? 'top' : down > 0.72 ? 'lower' : 'middle'
   if (vert === 'lower third' && down > 0.88) return `the tab bar, ${horiz}`
   return `the ${vert} ${horiz} of ${routeWords('') === 'this screen' ? 'the screen' : 'the screen'}`
 }
@@ -163,15 +164,22 @@ export function angrySpotWords(input: { route?: string; x?: number | null; y?: n
   const across = vw > 0 && x != null ? x / vw : 0.5
   const down = vh > 0 && y != null ? y / vh : 0.5
   const horiz = across < 0.33 ? 'left' : across > 0.66 ? 'right' : 'middle'
-  const vert = down < 0.28 ? 'top' : down > 0.88 ? 'tab bar' : down > 0.72 ? 'lower third' : 'middle'
+  const vert = down < 0.28 ? 'top' : down > 0.88 ? 'tab bar' : down > 0.72 ? 'lower' : 'middle'
   const place = vert === 'tab bar' ? `the tab bar (${horiz})` : `the ${vert} ${horiz}`
   return `${place} of ${routeWords(input.route || '/')}`
 }
 
 const buckets = new Map<string, { n: number; started: number }>()
 
-/** Simple in-process rate limit. 40 events / 10 s per session or device. */
+function pruneInsightBursts(nowMs: number, windowMs: number) {
+  for (const [id, held] of buckets) {
+    if (nowMs - held.started > windowMs) buckets.delete(id)
+  }
+}
+
+/** Simple in-process rate limit. 40 events / 10 s per device cookie or IP. */
 export function allowInsightBurst(key: string, limit = 40, windowMs = 10_000, nowMs = Date.now()) {
+  pruneInsightBursts(nowMs, windowMs)
   const id = String(key || 'anon').slice(0, 80)
   const held = buckets.get(id)
   if (!held || nowMs - held.started > windowMs) {

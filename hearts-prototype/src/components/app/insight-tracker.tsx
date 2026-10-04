@@ -16,7 +16,14 @@ function readTrendsOptIn() {
 
 function readLane() {
   if (typeof document === 'undefined') return ''
-  return document.documentElement.getAttribute('data-lane') || ''
+  return document.documentElement.getAttribute('data-lane')
+    || document.querySelector('[data-testid="journey"]')?.getAttribute('data-lane')
+    || ''
+}
+
+function answerSheetOpen() {
+  if (typeof document === 'undefined') return false
+  return Boolean(document.querySelector('[data-testid="popup"]'))
 }
 
 function notePath(path: string) {
@@ -40,7 +47,7 @@ export function InsightTracker({ trendsOptIn }: { trendsOptIn?: boolean } = {}) 
 
     const onPointer = (event: PointerEvent) => {
       const route = window.location.pathname
-      if (isAnswerScreen(route)) {
+      if (isAnswerScreen(route, { sheet: answerSheetOpen() })) {
         noteTap(0, 0, interactive(event.target), { coords: false })
         return
       }
@@ -52,7 +59,7 @@ export function InsightTracker({ trendsOptIn }: { trendsOptIn?: boolean } = {}) 
       noteTap(event.clientX, event.clientY, interactive(event.target), { coords: true })
     }
     const onScroll = () => {
-      if (isAnswerScreen(window.location.pathname) || isPrivateLane(readLane())) return
+      if (isAnswerScreen(window.location.pathname, { sheet: answerSheetOpen() }) || isPrivateLane(readLane())) return
       if (!readTrendsOptIn() && !trendsOptIn) return
       const root = document.scrollingElement || document.documentElement
       const max = Math.max(1, root.scrollHeight - window.innerHeight)

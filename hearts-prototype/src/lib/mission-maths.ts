@@ -5,6 +5,7 @@ export type MissionProgress = {
   target: number
   remaining: number
   pct: number
+  displayPct: string
   reached: boolean
   line: string
 }
@@ -18,7 +19,8 @@ export function missionProgress(joined: number, target: number): MissionProgress
   const line = safeTarget
     ? `${safeJoined} of ${safeTarget} have joined`
     : `${safeJoined} ${safeJoined === 1 ? 'has' : 'have'} joined`
-  return { joined: safeJoined, target: safeTarget, remaining, pct, reached, line }
+  const displayPct = safeTarget && safeJoined > 0 && pct === 0 ? '<1%' : `${pct}%`
+  return { joined: safeJoined, target: safeTarget, remaining, pct, displayPct, reached, line }
 }
 
 export function weekMinutesFromSeconds(seconds: number) {

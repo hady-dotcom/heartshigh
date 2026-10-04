@@ -13,6 +13,12 @@ function newId() {
   return `d${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`.slice(0, 24)
 }
 
+function clientIp(req: Request) {
+  const forwarded = req.headers.get('x-forwarded-for')
+  if (forwarded) return forwarded.split(',')[0]?.trim() || ''
+  return req.headers.get('x-real-ip') || req.headers.get('cf-connecting-ip') || ''
+}
+
 async function deviceId() {
   const jar = await cookies()
   const held = jar.get(DEVICE)?.value
@@ -50,6 +56,7 @@ export async function POST(req: Request) {
         user,
         deviceId: device,
         portalId: portal,
+        clientIp: clientIp(req),
         events: events as never,
       })
       return NextResponse.json({ ok: true, ...result })

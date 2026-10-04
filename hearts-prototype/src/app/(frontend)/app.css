@@ -648,12 +648,24 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
   position: absolute;
   left: 12px;
   right: 12px;
-  bottom: calc(92px + var(--safe-bottom));
+  top: calc(10px + var(--safe-top));
+  bottom: auto;
   z-index: 8;
   pointer-events: none;
 }
-.feed-mission .mission-card { margin: 0; padding: 8px 10px; pointer-events: auto; }
+.feed-mission .mission-card {
+  margin: 0;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  pointer-events: auto;
+}
 .feed-mission .mission-card .eyebrow { display: none; }
-.feed-mission .mission-card h2 { font-size: 15px; }
-.feed-mission .mission-card p { font-size: 12.5px; margin-bottom: 6px; }
-.feed-mission .pill { min-height: 36px; padding: 6px 12px; font-size: 13px; }
+.feed-mission .mission-card h2 { font-size: 14px; margin: 0; }
+.feed-mission .mission-card p { margin: 0; font-size: 13px; flex: 1; min-width: 0; }
+.feed-mission .pill { min-height: 32px; padding: 5px 10px; font-size: 12.5px; flex: none; }
+.journey-frame:has(.feed-mission) .j-hairline-row { top: calc(58px + var(--safe-top)); }
+.journey-frame:has(.feed-mission) .j-top-speaker { top: calc(104px + var(--safe-top)); }
+.journey-frame:has(.feed-mission) .j-sound { top: calc(108px + var(--safe-top)); }

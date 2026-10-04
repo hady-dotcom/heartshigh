@@ -129,7 +129,20 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-hairline > i { display: block; height: 100%; width: 0; background: #fff; }
 .j-hairline.shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.55), rgba(255,255,255,0.2)); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
-.j-sound { position: static; transform: none; background: rgba(0, 0, 0, 0.6); color: #fff; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; }
+.j-sound {
+  position: absolute;
+  top: calc(68px + var(--safe-top));
+  left: 16px;
+  z-index: 6;
+  transform: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 700;
+  font-size: 13px;
+}
 .j-speaker { display: flex; align-items: center; gap: 10px; }
 /* A Short carries its own words low in the frame: the speaker row moves under the hairline instead. */
 .j-top-speaker { position: absolute; top: calc(58px + var(--safe-top)); left: 16px; right: 16px; pointer-events: auto; }

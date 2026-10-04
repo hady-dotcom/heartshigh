@@ -57,3 +57,50 @@ export function zonedTime(iso: string | Date | null | undefined, timeZone: strin
 export function zoneCity(timeZone: string) {
   return timeZone === 'UTC' ? 'UTC' : timeZone.split('/').pop()!.replace(/_/g, ' ')
 }
+
+const WEEKDAYS: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
+
+/** Wall-clock parts of an instant in a zone: hour 0–23, weekday 0=Sunday. */
+export function partsInZone(at: Date, timeZone = DEFAULT_TIME_ZONE) {
+  const zone = isTimeZone(timeZone) ? timeZone : DEFAULT_TIME_ZONE
+  const fmt = new Intl.DateTimeFormat('en-GB', {
+    timeZone: zone,
+    weekday: 'short',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  })
+  const bag: Record<string, string> = {}
+  for (const part of fmt.formatToParts(at)) {
+    if (part.type !== 'literal') bag[part.type] = part.value
+  }
+  return {
+    year: Number(bag.year),
+    month: Number(bag.month),
+    day: Number(bag.day),
+    hour: Number(bag.hour),
+    minute: Number(bag.minute),
+    weekday: WEEKDAYS[bag.weekday] ?? 0,
+  }
+}
+
+/** The UTC instant for `day` (YYYY-MM-DD) at `hour`:00 in `timeZone`. */
+export function wallClock(day: string, hour: number, timeZone = DEFAULT_TIME_ZONE) {
+  const [year, month, date] = String(day).split('-').map(Number)
+  const h = Math.max(0, Math.min(23, Math.round(Number(hour) || 0)))
+  const zone = isTimeZone(timeZone) ? timeZone : DEFAULT_TIME_ZONE
+  if (!year || !month || !date) return new Date(NaN)
+  let guess = Date.UTC(year, month - 1, date, h, 0, 0)
+  for (let i = 0; i < 4; i++) {
+    const local = partsInZone(new Date(guess), zone)
+    const want = Date.UTC(year, month - 1, date, h)
+    const got = Date.UTC(local.year, local.month - 1, local.day, local.hour)
+    const delta = want - got
+    if (delta === 0) break
+    guess += delta
+  }
+  return new Date(guess)
+}

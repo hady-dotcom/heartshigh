@@ -9,21 +9,21 @@ const SHOTS = '/opt/cursor/artifacts/screenshots'
 
 mkdirSync(SHOTS, { recursive: true })
 
-async function hideIssues(page: Page) {
-  await page.addInitScript(() => {
-    const style = document.createElement('style')
-    style.textContent = 'nextjs-portal { display: none !important; }'
-    document.documentElement.appendChild(style)
-    const hide = () => document.querySelector('nextjs-portal')?.setAttribute('hidden', 'true')
-    hide()
-    new MutationObserver(hide).observe(document.documentElement, { childList: true, subtree: true })
+async function assertNoIssuesBadge(page: Page) {
+  const issues = await page.evaluate(() => {
+    const portal = document.querySelector('nextjs-portal')
+    const root = portal && 'shadowRoot' in portal ? portal.shadowRoot : null
+    const text = root?.textContent || ''
+    const match = text.match(/(\d+)\s*Issues?/)
+    const button = root?.querySelector('button[aria-label="Open issues overlay"]') as HTMLElement | null
+    const box = button?.getBoundingClientRect()
+    return {
+      label: match ? match[0] : '',
+      width: box?.width || 0,
+      height: box?.height || 0,
+    }
   })
-  await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' }).catch(() => undefined)
-}
-
-async function noIssuesBadge(page: Page) {
-  await hideIssues(page)
-  await page.evaluate(() => document.querySelector('nextjs-portal')?.setAttribute('hidden', 'true'))
+  expect(issues, `Next.js Issues badge is visible (${issues.label || 'overlay'})`).toEqual({ label: '', width: 0, height: 0 })
 }
 
 async function signIn(page: Page, email: string, password: string, next: string) {
@@ -69,7 +69,6 @@ test.describe('Help shape HEARTS', () => {
     const desk = await browser.newPage()
     const deskErrors: string[] = []
     desk.on('pageerror', (error) => deskErrors.push(error.message))
-    await hideIssues(desk)
     await desk.setViewportSize(DESK)
     await signIn(desk, 'master@hearts.test', 'hearts-master', '/master/missions')
     await expect(desk.getByTestId('missions-desk')).toBeVisible()
@@ -85,6 +84,7 @@ test.describe('Help shape HEARTS', () => {
     await desk.getByTestId('desk-help-close').click()
     await desk.getByTestId('mission-new').click()
     await expect(desk.getByTestId('mission-form')).toBeVisible()
+    await expect(desk.getByTestId('mission-form')).toContainText('No portal picked means every portal')
     await expect(desk.getByTestId('mission-title')).toHaveValue('Give HEARTS an hour this week')
     await expect(desk.getByTestId('mission-start')).toHaveValue(/October 2026|4 October/)
     await expect(desk.getByTestId('mission-form')).not.toContainText('10/04/2026')
@@ -125,7 +125,12 @@ test.describe('Help shape HEARTS', () => {
     await joinFilm.page.screenshot({ path: `${SHOTS}/phone-mission-joined.png` })
     await joinFilm.page.goto('/p/east-london/feed')
     await expect(joinFilm.page.getByTestId('feed-screen')).toBeVisible({ timeout: 20_000 })
-    await expect(joinFilm.page.getByTestId('mission-card')).toBeVisible()
+    await expect(joinFilm.page.getByTestId('feed-mission')).toBeVisible()
+    await expect(joinFilm.page.getByTestId('learn-more')).toBeVisible()
+    const missionBox = await joinFilm.page.getByTestId('feed-mission').boundingBox()
+    const clipBox = await joinFilm.page.getByTestId('learn-more').boundingBox()
+    expect(missionBox && clipBox).toBeTruthy()
+    expect((missionBox?.y || 0) + (missionBox?.height || 0)).toBeLessThan(clipBox?.y || 0)
     await joinFilm.page.screenshot({ path: `${SHOTS}/phone-feed-mission.png` })
     const journey = joinFilm.page.getByTestId('journey')
     const lesson = await journey.getAttribute('data-lesson')
@@ -172,10 +177,8 @@ test.describe('Help shape HEARTS', () => {
     await second.close()
 
     await desk.goto('/master/missions')
-    await hideIssues(desk)
     await expect(desk.getByTestId('support-inbox')).toBeVisible()
     await desk.goto(`/master/missions/${missionId}`)
-    await hideIssues(desk)
     await expect(desk.getByTestId('mission-joined')).toHaveText('2')
     await desk.getByTestId('mission-result').fill("the button now says 'Stay with this'")
     await desk.getByTestId('mission-share-result').click()
@@ -206,7 +209,6 @@ test.describe('Help shape HEARTS', () => {
     await thanksTwo.close()
 
     await desk.goto('/master/insights')
-    await hideIssues(desk)
     await desk.getByTestId('insights-test-data').click()
     await expect(desk.getByTestId('insights-desk')).toBeVisible()
     await expect(desk.getByTestId('test-numbers')).toBeVisible()
@@ -217,28 +219,28 @@ test.describe('Help shape HEARTS', () => {
     await expect(replay).toContainText('Home')
     await expect(replay).toContainText('opening questions')
     await expect(replay).toContainText('watched 72%')
-    await noIssuesBadge(desk)
+    await assertNoIssuesBadge(desk)
     await desk.screenshot({ path: `${SHOTS}/insights-heatmap.png`, fullPage: true })
     await desk.getByTestId('insights-tab-funnel').click()
     await expect(desk.getByTestId('insights-funnel')).toBeVisible()
     await expect(desk.getByTestId('funnel-step').first()).toContainText(/Opening questions · \d+ sessions/)
-    await noIssuesBadge(desk)
+    await assertNoIssuesBadge(desk)
     await desk.screenshot({ path: `${SHOTS}/insights-funnel.png`, fullPage: true })
     await desk.getByTestId('insights-tab-angry').click()
     await expect(desk.getByTestId('insights-angry')).toBeVisible()
     await expect(desk.getByTestId('angry-row').first()).toContainText('feed')
+    await expect(desk.getByTestId('angry-row').first()).toContainText('lower middle')
     await expect(desk.getByTestId('angry-row').first()).not.toContainText('196')
-    await noIssuesBadge(desk)
+    await assertNoIssuesBadge(desk)
     await desk.screenshot({ path: `${SHOTS}/insights-angry.png`, fullPage: true })
 
     await desk.goto('/master/calendar?date=2026-02-06&hour=10')
-    await hideIssues(desk)
     await expect(desk.getByTestId('calendar-desk')).toBeVisible()
     await expect(desk.getByTestId('calendar-phone')).toHaveAttribute('data-friday', 'yes')
     await expect(desk.getByTestId('calendar-cta')).toContainText('Watch')
     await expect(desk.getByTestId('calendar-desk')).toContainText('6 February 2026')
     await expect(desk.getByTestId('calendar-desk')).not.toContainText('feed-cta-label')
-    await noIssuesBadge(desk)
+    await assertNoIssuesBadge(desk)
     await desk.screenshot({ path: `${SHOTS}/calendar-friday.png`, fullPage: true })
     await desk.goto('/master/calendar?date=2026-03-01&hour=19')
     await expect(desk.getByTestId('calendar-phone')).toHaveAttribute('data-ramadan', 'yes')
@@ -248,6 +250,8 @@ test.describe('Help shape HEARTS', () => {
     await desk.screenshot({ path: `${SHOTS}/calendar-last-ten.png`, fullPage: true })
     await desk.goto('/master/calendar?date=2026-05-18&hour=10')
     await expect(desk.getByTestId('calendar-phone')).toHaveAttribute('data-dhul-hijjah', 'yes')
+    await expect(desk.getByTestId('calendar-cta')).toContainText(/Watch|Sit/)
+    await expect(desk.getByTestId('calendar-cta')).not.toHaveText('Learn more ›')
     await desk.screenshot({ path: `${SHOTS}/calendar-dhul-hijjah.png`, fullPage: true })
     await desk.goto('/master/calendar?date=2026-03-20&hour=10')
     await expect(desk.getByTestId('calendar-phone')).toHaveAttribute('data-eid', 'yes')
@@ -255,16 +259,17 @@ test.describe('Help shape HEARTS', () => {
     await desk.screenshot({ path: `${SHOTS}/calendar-eid.png`, fullPage: true })
     await desk.goto('/master/calendar?date=2026-06-16&hour=10')
     await expect(desk.getByTestId('calendar-phone')).toHaveAttribute('data-muharram', 'yes')
+    await expect(desk.getByTestId('calendar-cta')).toContainText(/Watch|Sit/)
+    await expect(desk.getByTestId('calendar-cta')).not.toHaveText('Learn more ›')
     await desk.screenshot({ path: `${SHOTS}/calendar-muharram.png`, fullPage: true })
 
     await desk.goto('/master')
-    await hideIssues(desk)
     await expect(desk.getByTestId('desk-nav')).toContainText('In-depth')
     await desk.getByTestId('nav-group-intermediate').locator('summary').click()
     await desk.getByTestId('nav-group-in-depth').locator('summary').click()
     await desk.getByTestId('desk-help').click()
     await expect(desk.getByTestId('desk-help-dialog')).toBeVisible()
-    await noIssuesBadge(desk)
+    await assertNoIssuesBadge(desk)
     await desk.screenshot({ path: `${SHOTS}/admin-nav.png`, fullPage: true })
     expect(deskErrors.join('\n')).not.toContain('Hydration')
     await desk.close()

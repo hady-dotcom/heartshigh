@@ -12,6 +12,9 @@ test('mission progress counts joined against the target', () => {
   assert.equal(row.pct, 59)
   assert.equal(missionProgress(700, 700).reached, true)
   assert.equal(missionProgress(3, 0).line, '3 have joined')
+  assert.equal(missionProgress(2, 700).pct, 0)
+  assert.equal(missionProgress(2, 700).displayPct, '<1%')
+  assert.equal(missionProgress(2, 700).line, '2 of 700 have joined')
 })
 
 test('week minutes come from real seconds of use', () => {

@@ -51,13 +51,14 @@ export async function ingestEvents(
     user?: SessionUser | null
     deviceId?: string | null
     portalId?: number | null
+    clientIp?: string | null
     events: IncomingEvent[]
   },
 ) {
   const subject = input.user?.role === 'learner' ? `learner:${input.user.id}` : input.deviceId ? `device:${input.deviceId}` : ''
   const optedIn = Boolean(input.user && 'trendsOptIn' in input.user && input.user.trendsOptIn)
   const rate = await sampleRateOf(payload)
-  const burstKey = String(input.events[0]?.sessionId || input.deviceId || input.user?.id || 'anon')
+  const burstKey = String(input.deviceId || input.clientIp || 'anon')
   if (!allowInsightBurst(burstKey, 40, 10_000)) return { stored: 0, limited: true }
   let stored = 0
   const stamp = now()
@@ -68,8 +69,12 @@ export async function ingestEvents(
     const sampled = sampleSession(sessionId, rate)
     if (!shouldKeep(raw.kind, sampled)) continue
     const route = normaliseRoute(raw.route || '/')
-    if (isPrivateLane(String((raw.props as { lane?: string } | undefined)?.lane || ''))) continue
-    const hideCoords = isAnswerScreen(route) || !optedIn || raw.kind === 'tap' && isAnswerScreen(route)
+    const props = raw.props || {}
+    const lane = String((props as { lane?: string }).lane || '')
+    if (isPrivateLane(lane)) continue
+    const tapKind = raw.kind === 'tap' || raw.kind === 'angry_tap'
+    const hideCoords = isAnswerScreen(route, { sheet: Boolean((props as { sheet?: boolean }).sheet) }) || !optedIn
+    const hidePerson = tapKind || hideCoords
     const at = new Date(stamp.getTime() + index).toISOString()
     try {
       await payload.create({
@@ -79,9 +84,9 @@ export async function ingestEvents(
           kind: raw.kind,
           route,
           sessionId,
-          subject: hideCoords && raw.kind !== 'funnel' ? sessionId : (subject || sessionId),
-          learner: hideCoords || input.user?.role !== 'learner' ? undefined : input.user.id,
-          deviceId: input.deviceId || undefined,
+          subject: hidePerson && raw.kind !== 'funnel' ? sessionId : (subject || sessionId),
+          learner: hidePerson || input.user?.role !== 'learner' ? undefined : input.user.id,
+          deviceId: hideCoords ? undefined : input.deviceId || undefined,
           portal: input.portalId || undefined,
           x: hideCoords || !Number.isFinite(Number(raw.x)) ? undefined : Number(raw.x),
           y: hideCoords || !Number.isFinite(Number(raw.y)) ? undefined : Number(raw.y),

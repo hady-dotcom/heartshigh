@@ -22,19 +22,30 @@
 .side { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow-y: auto; background: var(--teal-deep); color: #f7eedb; border-right: 0; padding: 22px 16px 14px; display: flex; flex-direction: column; gap: 4px; }
 .side-brand { flex: none; }
 /* The nav scrolls on a short screen; the brand and the footer (learner app, who, Sign out) always stay in view. */
-.side-nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; scrollbar-width: thin; }
+.side-nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; scrollbar-width: thin; }
 .side-brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 20px; text-decoration: none; color: #f7eedb; }
 .side-brand b { display: block; font-size: 15px; line-height: 1.2; }
 .side-brand small { color: #e7d7b4; font-size: 12px; }
-.side a.nav { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; text-decoration: none; color: #f7eedb; font-weight: 600; font-size: 14.5px; }
+.side a.nav { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 10px; text-decoration: none; color: #f7eedb; font-weight: 600; font-size: 13.5px; }
 .side a.nav:hover { background: rgba(247, 238, 219, 0.12); }
 .side a.nav.on { background: var(--gold); color: var(--gold-ink); }
 .side a.nav svg { flex: none; opacity: 0.9; }
-.side .nav-group { display: flex; flex-direction: column; gap: 4px; }
-.side details.nav-group > summary.group { list-style: none; cursor: pointer; }
+.side .nav-group { display: flex; flex-direction: column; gap: 2px; }
+.side details.nav-group > summary.group { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .side details.nav-group > summary.group::-webkit-details-marker { display: none; }
-.side .group { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #e7d7b4; font-weight: 700; padding: 16px 12px 4px; }
-.side .group-desc { margin: 0 12px 8px; font-size: 12px; line-height: 1.4; letter-spacing: 0; text-transform: none; font-weight: 500; color: #d7cbb8; }
+.side details.nav-group > summary.group::after {
+  content: '';
+  width: 0.4em;
+  height: 0.4em;
+  border-right: 1.6px solid currentColor;
+  border-bottom: 1.6px solid currentColor;
+  transform: rotate(-45deg);
+  opacity: 0.85;
+  flex: none;
+}
+.side details.nav-group[open] > summary.group::after { transform: rotate(45deg); }
+.side .group { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #e7d7b4; font-weight: 700; padding: 8px 12px 2px; }
+.side .group-desc { margin: 0 12px 4px; font-size: 11px; line-height: 1.35; letter-spacing: 0; text-transform: none; font-weight: 500; color: #d7cbb8; }
 .side-foot { flex: none; margin-top: auto; border-top: 1px solid rgba(247, 238, 219, 0.2); padding-top: 10px; display: grid; gap: 4px; font-size: 13px; }
 .side-foot .group { padding-top: 6px; }
 .side-foot .who { display: flex; gap: 10px; align-items: center; padding: 0 8px; }
@@ -117,6 +128,20 @@
 .check { display: inline-flex; gap: 8px; align-items: center; font-size: 14px; color: var(--ink-2); font-weight: 500; }
 .check input { accent-color: var(--ink); width: 16px; height: 16px; }
 .checks { display: flex; flex-wrap: wrap; gap: 10px 18px; }
+.desk .check.portal-pick {
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: var(--field, #fff);
+}
+.desk .check.portal-pick:has(input:checked) {
+  background: var(--gold);
+  color: var(--gold-ink);
+  border-color: var(--gold);
+}
+.desk .result-line { font-size: 15px; color: var(--ink); font-weight: 650; }
+.desk fieldset.stack { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; }
+.desk fieldset.stack legend { font-size: 13.5px; color: var(--ink-2); font-weight: 600; padding: 0; }
 .actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 .hint { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
 .inline-form { display: inline; }

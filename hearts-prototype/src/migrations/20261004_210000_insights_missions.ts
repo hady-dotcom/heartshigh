@@ -171,6 +171,9 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
   CREATE INDEX IF NOT EXISTS "insight_events_session_id_idx" ON "insight_events" USING btree ("session_id");
   CREATE INDEX IF NOT EXISTS "insight_events_at_idx" ON "insight_events" USING btree ("at");
   CREATE INDEX IF NOT EXISTS "insight_events_subject_idx" ON "insight_events" USING btree ("subject");
+  CREATE INDEX IF NOT EXISTS "insight_events_learner_idx" ON "insight_events" USING btree ("learner_id");
+  CREATE INDEX IF NOT EXISTS "insight_events_portal_idx" ON "insight_events" USING btree ("portal_id");
+  CREATE INDEX IF NOT EXISTS "insight_events_step_idx" ON "insight_events" USING btree ("step");
   CREATE UNIQUE INDEX IF NOT EXISTS "calendar_seasons_key_idx" ON "calendar_seasons" USING btree ("key");
   CREATE INDEX IF NOT EXISTS "calendar_copy_slot_idx" ON "calendar_copy" USING btree ("slot");
   CREATE INDEX IF NOT EXISTS "missions_status_idx" ON "missions" USING btree ("status");

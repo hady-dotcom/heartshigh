@@ -3,6 +3,7 @@
  * A sheikh's words, talk content, Qur'an and hadith are never changed here.
  */
 import { hijriMonthName, hijriOf, type HijriDate } from './hijri'
+import { DEFAULT_TIME_ZONE, partsInZone } from './zone-time'
 
 export const CONTEXT_KEYS = [
   'lastTenNights',
@@ -51,7 +52,7 @@ export type ContextInput = {
   at: Date
   offsetDays?: number
   seasons?: AdminSeason[]
-  /** Local hour 0–23. Defaults to the UTC hour of `at`. */
+  /** Local hour 0–23. Defaults to the hour of `at` in `timeZone`. */
   hour?: number
   weekday?: number
   /** Local hour when Maghrib is taken to fall. After this, the Islamic day moves on. */
@@ -168,10 +169,12 @@ function inRange(day: string, start: string, end: string) {
 
 export function calendarContext(input: ContextInput): CalendarContext {
   const at = input.at
-  const hour = input.hour ?? at.getUTCHours()
-  const weekday = input.weekday ?? at.getUTCDay()
-  const sunsetHour = input.sunsetHour ?? approximateSunsetHour(at, input.latitude ?? latitudeForZone(input.timeZone))
-  const afterSunset = hour + (at.getUTCMinutes() || 0) / 60 >= sunsetHour
+  const zone = input.timeZone || DEFAULT_TIME_ZONE
+  const local = partsInZone(at, zone)
+  const hour = input.hour ?? local.hour
+  const weekday = input.weekday ?? local.weekday
+  const sunsetHour = input.sunsetHour ?? approximateSunsetHour(at, input.latitude ?? latitudeForZone(zone))
+  const afterSunset = hour + (local.minute || at.getUTCMinutes() || 0) / 60 >= sunsetHour
   const islamicAt = afterSunset ? nextCivilNoon(at) : at
   const islamicWeekday = afterSunset ? (weekday + 1) % 7 : weekday
   const hijri = hijriOf(islamicAt, input.offsetDays || 0)
