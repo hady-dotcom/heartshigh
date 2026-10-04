@@ -323,7 +323,7 @@ export async function GardenJibril({ payload, user, base }: Ctx) {
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
   const startDoor = doorOfClause(Number(user.startingClause || 0), g.doors)?.number
   return (
-    <Frame base={base} title="Against Hadith Jibril" testId="garden-jibril" unread={unread}>
+    <Frame base={base} title="The hadith of Jibril" testId="garden-jibril" unread={unread}>
       <section className="summary-card gold">
         <h2 data-testid="lit-count">{g.lit.size} of {g.doors.length} doors</h2>
         <p>A door flowers when you finish a talk that a teacher has placed in it. Tap any door to read it.</p>
@@ -474,10 +474,10 @@ export async function GardenGhunya({ payload, user, base }: Ctx) {
     .map((visit) => g.seats.find((seat) => seat.id === ref(visit.seat)))
     .filter((seat): seat is Row => Boolean(seat))
   return (
-    <Frame base={base} title="Against al-Ghuniyya" testId="garden-ghunya" unread={unread} dark>
+    <Frame base={base} title="Seats from al-Ghuniyya" testId="garden-ghunya" unread={unread} dark>
       <div className="forest">
         <Back href={`${base}/garden`} label="Garden" />
-        <p className="eyebrow" style={{ color: 'var(--gold)', marginTop: 10 }}>Against al-Ghuniyya</p>
+        <p className="eyebrow" style={{ color: 'var(--gold)', marginTop: 10 }}>Seats from al-Ghuniyya</p>
         <h1 style={{ margin: 0, fontSize: 26 }}>The seats you have read</h1>
         <p className="big" data-testid="seat-count">{read.size} <span style={{ fontSize: 18, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>of {g.seats.length}</span></p>
         <p style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, margin: '6px 0 0', fontSize: 14 }}>Each door of the hadith opens onto seats from al-Ghuniyya. One group of dots per door.</p>
