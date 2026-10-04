@@ -21,7 +21,21 @@ async function assertNoIssuesBadge(page: Page) {
     const detail = painted.map((el) => (el.getAttribute('aria-label') || el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 200)).filter(Boolean)
     return { label, visible: painted.length, detail }
   })
-  expect(issues, `Next.js Issues badge is visible (${issues.label || issues.detail.join(' | ') || 'overlay'})`).toMatchObject({ label: '', visible: 0 })
+  if (issues.visible || issues.label) {
+    const overlay = page.getByRole('button', { name: /open issues overlay/i })
+    if (await overlay.count()) await overlay.click()
+    await page.waitForTimeout(400)
+    const dumped = await page.evaluate(() => {
+      const root = document.querySelector('nextjs-portal')?.shadowRoot
+      const nodes = [...(root?.querySelectorAll('h1, h2, h3, p, pre, code, li, [data-nextjs-toast], [role="dialog"]') || [])]
+        .map((el) => (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 400))
+        .filter((text) => text && !text.includes('sourceMappingURL'))
+      return nodes.slice(0, 30)
+    })
+    await page.screenshot({ path: '/tmp/issues-overlay.png', fullPage: true })
+    expect(issues, `Next.js Issues badge: ${dumped.join(' | ') || issues.detail.join(' | ')}`).toMatchObject({ label: '', visible: 0 })
+  }
+  expect(issues).toMatchObject({ label: '', visible: 0 })
 }
 
 async function signIn(page: Page, email: string, password: string, next: string) {
