@@ -64,7 +64,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
       <main className="app dark journey-frame" data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
         <InsightTracker />
         {mission && initial === 'feed' ? <div className="feed-mission">{mission}</div> : null}
-        <Journey>
+        <Journey
           base={base}
           opening={opening}
           opener={OPENER}
