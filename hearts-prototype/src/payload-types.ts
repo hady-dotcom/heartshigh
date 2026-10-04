@@ -257,6 +257,10 @@ export interface Portal {
   logoUrl?: string | null;
   showOthersAnswers?: boolean | null;
   notificationEmails?: string | null;
+  /**
+   * The time zone staff times are shown in, such as Europe/London.
+   */
+  timeZone?: string | null;
   theme?: ('light' | 'dark') | null;
   calendarUrl?: string | null;
   learnerWelcomeUrl?: string | null;
@@ -2317,6 +2321,7 @@ export interface PortalsSelect<T extends boolean = true> {
   logoUrl?: T;
   showOthersAnswers?: T;
   notificationEmails?: T;
+  timeZone?: T;
   theme?: T;
   calendarUrl?: T;
   learnerWelcomeUrl?: T;

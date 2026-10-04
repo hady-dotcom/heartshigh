@@ -7,6 +7,7 @@ import * as migration_20261003_200853_integration_final from './20261003_200853_
 import * as migration_20261003_194500_line_tidy from './20261003_194500_line_tidy';
 import * as migration_20261003_220000_feedback from './20261003_220000_feedback';
 import * as migration_20261004_060000_shorts from './20261004_060000_shorts';
+import * as migration_20261004_061000_portal_time_zone from './20261004_061000_portal_time_zone';
 
 export const migrations = [
   {
@@ -53,5 +54,10 @@ export const migrations = [
     up: migration_20261004_060000_shorts.up,
     down: migration_20261004_060000_shorts.down,
     name: '20261004_060000_shorts',
+  },
+  {
+    up: migration_20261004_061000_portal_time_zone.up,
+    down: migration_20261004_061000_portal_time_zone.down,
+    name: '20261004_061000_portal_time_zone',
   },
 ];

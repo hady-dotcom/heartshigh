@@ -86,3 +86,41 @@ test('a YouTube Short in the feed: no caption over its burned-in words, Follow a
     await master.dispose()
   }
 })
+
+test('the export log shows times in the portal\'s zone with a short label, in the viewer\'s language', async ({ browser }) => {
+  const { zonedTime } = await import('../../src/lib/zone-time')
+  for (const locale of ['en-GB', 'de-DE']) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale, timezoneId: 'America/Los_Angeles' })
+    const page = await context.newPage()
+    await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${PORTAL}/admin/feedback`)
+    expect((await page.request.get('/api/feedback?portal=east-london&format=csv')).ok()).toBeTruthy()
+    await page.reload()
+    await expect(page.getByTestId('audit-zone')).toHaveText('Times in London time')
+    const when = page.getByTestId('audit-when').first()
+    const at = (await when.getAttribute('data-at'))!
+    await expect(when).toHaveText(zonedTime(at, 'Europe/London', locale))
+    if (locale === 'en-GB') await expect(when).toHaveText(/\d{1,2} \w{3} \d{4}, \d{2}:\d{2} (BST|GMT)$/)
+    else await expect(when).toHaveText(/^\d{1,2}\. \w+\.? \d{4}, \d{2}:\d{2} /)
+    await context.close()
+  }
+
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'en-GB' })
+  const page = await context.newPage()
+  await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${PORTAL}/admin/settings`)
+  await page.getByTestId('time-zone').selectOption('Asia/Dubai')
+  await page.getByTestId('save-settings').click()
+  await expect(page.getByTestId('time-zone')).toHaveValue('Asia/Dubai')
+  try {
+    await page.goto(`${PORTAL}/admin/feedback`)
+    await expect(page.getByTestId('audit-zone')).toHaveText('Times in Dubai time')
+    const when = page.getByTestId('audit-when').first()
+    await expect(when).toHaveText(zonedTime((await when.getAttribute('data-at'))!, 'Asia/Dubai', 'en-GB'))
+    await expect(when).toHaveText(/GST$/)
+  } finally {
+    await page.goto(`${PORTAL}/admin/settings`)
+    await page.getByTestId('time-zone').selectOption('Europe/London')
+    await page.getByTestId('save-settings').click()
+    await expect(page.getByTestId('time-zone')).toHaveValue('Europe/London')
+    await context.close()
+  }
+})

@@ -32,6 +32,7 @@ import { handleCircle } from './circle'
 import { randomUUID } from 'node:crypto'
 import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourseIds, type Session, type SessionUser } from './context'
 import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCookie, wrote } from './viewas'
+import { isTimeZone } from '@/lib/zone-time'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
@@ -1442,6 +1443,10 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       if (typeof value === 'string' && value && !/^https:\/\//i.test(value)) return redirectTo(req, text(form, 'next') || '/', 'Links need to start with https://')
     }
     if (form.has('theme')) data.theme = text(form, 'theme') === 'dark' ? 'dark' : 'light'
+    if (form.has('timeZone')) {
+      if (!isTimeZone(text(form, 'timeZone'))) return redirectTo(req, text(form, 'next') || '/', 'Choose a time zone such as Europe/London.')
+      data.timeZone = text(form, 'timeZone')
+    }
     if (form.get('settingsForm') === 'yes') {
       data.showOthersAnswers = form.get('showOthersAnswers') === 'on'
       data.watchHistoryOptIn = form.get('watchHistoryOptIn') === 'on'

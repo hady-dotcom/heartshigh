@@ -7,6 +7,7 @@ import { adoptedCourseIds } from '@/server/context'
 import { portalName } from '@/server/learner'
 import { type Ctx, portalPeople, rows, str } from '../common'
 import { DeskFrame, portalNav } from './shell'
+import { PORTAL_TIME_ZONES, portalTimeZone, zoneCity } from '@/lib/zone-time'
 
 export async function AdminFrame({ ctx, active, title, intro, tools, children, testId }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; children: ReactNode; testId?: string }) {
   const { payload, user, portal, base, query } = ctx
@@ -173,6 +174,11 @@ export async function PortalSettingsScreen(ctx: Ctx) {
             {field('Linked calendar', 'calendarUrl', { placeholder: 'https://' })}
             {field('Notification e-mails', 'notificationEmails')}
             <label className="row"><span>Colour</span><input type="text" name="colour" defaultValue={portal.colour || '#1f1d36'} /></label>
+            <label className="row"><span>Time zone</span>
+              <select name="timeZone" defaultValue={portalTimeZone(portal)} data-testid="time-zone">
+                {[...new Set([portalTimeZone(portal), ...PORTAL_TIME_ZONES])].map((zone) => <option key={zone} value={zone}>{zoneCity(zone)} ({zone})</option>)}
+              </select>
+            </label>
             <label className="row"><span>Theme</span>
               <select name="theme" defaultValue={portal.theme || 'light'}><option value="light">Light</option><option value="dark">Dark</option></select>
             </label>

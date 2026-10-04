@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { headers } from 'next/headers'
 import { Hidden } from '@/components/app/shell'
 import {
   EMPTY_FILTERS,
@@ -20,6 +21,7 @@ import { rows, str, type Ctx } from '../common'
 import { AdminFrame } from './overview'
 import { exportAudit, includedSummaries, loadRawFeedback, summariesFor, weakQuestions } from '@/server/feedback'
 import styles from './feedback.module.css'
+import { localeFromAcceptLanguage, portalTimeZone, zonedTime, zoneCity } from '@/lib/zone-time'
 
 const FAMILIES: Family[] = ['popup', 'reflection', 'task', 'circle']
 
@@ -39,6 +41,8 @@ export async function FeedbackScreen(ctx: Ctx) {
     user.role === 'teacher' ? Promise.resolve([]) : exportAudit(payload, portal.id),
   ])
   const built = buildFeedback(raw, portal.id, filters, anonymised)
+  const timeZone = portalTimeZone(portal)
+  const locale = localeFromAcceptLanguage((await headers()).get('accept-language'))
   const included = new Map((await includedSummaries(payload, portal.id, built)).map((row) => [row.questionKey, row]))
   const drafts = summaryRows.filter((row) => row.status !== 'included')
   const draftByKey = new Map(drafts.map((row) => [str(row.questionKey), row]))
@@ -271,7 +275,7 @@ export async function FeedbackScreen(ctx: Ctx) {
 
         {user.role === 'teacher' ? null : (
           <section className="panel" data-testid="export-audit">
-            <header><h2>Export log</h2></header>
+            <header><h2>Export log</h2><span className="hint" data-testid="audit-zone">Times in {zoneCity(timeZone)} time</span></header>
             <div className="table-wrap">
               <table className={`data ${styles.audit}`}>
                 <thead><tr><th>When</th><th>Who</th><th>Kind</th><th className="num">Rows</th><th>Filters</th></tr></thead>
@@ -282,7 +286,7 @@ export async function FeedbackScreen(ctx: Ctx) {
                     const name = who && typeof who === 'object' ? who.name || who.email : 'Staff'
                     return (
                       <tr key={row.id} data-testid="audit-row">
-                        <td>{str(row.at).replace('T', ' ').slice(0, 16)}</td>
+                        <td data-testid="audit-when" data-at={str(row.at)} style={{ whiteSpace: 'nowrap' }}>{zonedTime(str(row.at), timeZone, locale)}</td>
                         <td>{name}</td>
                         <td>{detail.named ? 'Named' : 'Anonymised'} {detail.format || ''}</td>
                         <td className="num">{detail.rows ?? ''}</td>

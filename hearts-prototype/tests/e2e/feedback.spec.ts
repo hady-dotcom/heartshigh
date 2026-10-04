@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { expect, request as playwrightRequest, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 import { E2E_BASE } from '../env'
+import { pdfText } from '../pdf-text'
 
 const DESK = { width: 1440, height: 900 }
 const SHOTS = '/opt/cursor/artifacts/screenshots'
@@ -142,11 +143,11 @@ test.describe('Feedback for teachers', () => {
     writeFileSync(`${ARTIFACTS}/feedback-digest-voice.pdf`, pdfBytes)
     writeFileSync(`${REVIEW}/feedback-digest-voice.pdf`, pdfBytes)
     expect(pdfBytes.subarray(0, 5).toString()).toBe('%PDF-')
-    const pdfText = pdfBytes.toString('latin1')
-    expect(pdfText).toContain('sat with my uncle')
-    expect(pdfText).toContain('Thursday?')
-    expect(pdfText).not.toContain(PRIVATE)
-    expect(pdfText).not.toContain('Kept this')
+    const pdfShown = pdfText(pdfBytes)
+    expect(pdfShown).toContain('sat with my uncle')
+    expect(pdfShown).toContain('Thursday?')
+    expect(pdfShown).not.toContain(PRIVATE)
+    expect(pdfShown).not.toContain('Kept this')
 
     await page.reload()
     await expect(page.getByTestId('audit-row').first()).toBeVisible()

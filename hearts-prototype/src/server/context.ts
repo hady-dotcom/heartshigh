@@ -55,6 +55,7 @@ export type PortalDoc = {
   learnerLabel?: string | null
   teacherLabel?: string | null
   wizardDone?: boolean | null
+  timeZone?: string | null
 }
 
 /**

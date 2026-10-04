@@ -7,6 +7,7 @@ import { authorTextProblems, markupProblems } from './lib/opening-data'
 import { changedTierFields, horsCapOf, saidInTalk, TIER_TIMING_FIELDS, tierProblem, timingProblems } from './lib/tiers'
 import { talkChain } from './lib/nesting'
 import { isShortsUrl } from './lib/shorts'
+import { DEFAULT_TIME_ZONE, isTimeZone } from './lib/zone-time'
 import { linkLadderParents } from './server/piece-parents'
 import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
@@ -94,6 +95,13 @@ export const Portals: CollectionConfig = {
     { name: 'logoUrl', type: 'text' },
     { name: 'showOthersAnswers', type: 'checkbox', defaultValue: true },
     { name: 'notificationEmails', type: 'text' },
+    {
+      name: 'timeZone',
+      type: 'text',
+      defaultValue: DEFAULT_TIME_ZONE,
+      admin: { description: 'The time zone staff times are shown in, such as Europe/London.' },
+      validate: (value: unknown) => (value == null || value === '' || isTimeZone(value) ? true : 'Choose a time zone such as Europe/London.'),
+    },
     { name: 'theme', type: 'select', defaultValue: 'light', options: [{ label: 'Light', value: 'light' }, { label: 'Dark', value: 'dark' }] },
     { name: 'calendarUrl', type: 'text' },
     { name: 'learnerWelcomeUrl', type: 'text' },
