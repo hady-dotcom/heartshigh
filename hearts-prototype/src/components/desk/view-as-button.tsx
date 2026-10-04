@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { HelpTip } from './help'
+import { TOOL } from '@/lib/desk-help'
 
 /** Starts a view-as session (spec 6A). A reason is required and kept in the audit log. */
 export function ViewAsButton({ targetId, name, landing }: { targetId: number; name: string; landing: string }) {
@@ -26,7 +28,12 @@ export function ViewAsButton({ targetId, name, landing }: { targetId: number; na
     window.location.assign(landing)
   }
   if (!open) {
-    return <button type="button" className="btn ghost small" onClick={() => setOpen(true)} data-testid="view-as">View as</button>
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+        <button type="button" className="btn ghost small" onClick={() => setOpen(true)} data-testid="view-as">View as</button>
+        <HelpTip topic="view-as">{TOOL.viewAs}</HelpTip>
+      </span>
+    )
   }
   return (
     <div className="view-as-ask" data-testid="view-as-ask">

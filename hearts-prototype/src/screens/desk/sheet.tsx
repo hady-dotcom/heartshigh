@@ -5,6 +5,8 @@ import { circleAnswerCount } from '@/server/circle'
 import type { SessionUser } from '@/server/context'
 import type { Ctx, Row } from '../common'
 import { rows, str } from '../common'
+import { HelpTip } from '@/components/desk/help'
+import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
 
@@ -87,7 +89,7 @@ function SheetBody({
           <form className="body form" action={action} method="post" encType="multipart/form-data" data-testid="sheet-upload">
             {hidden}
             <input type="hidden" name="intent" value="preview" />
-            <label className="stack">Scope
+            <label className="stack">Scope <HelpTip topic="sheet-scope">{TOOL.sheetScope}</HelpTip>
               <select name="scope" data-testid="sheet-scope" defaultValue={desk === 'portal' ? 'portal' : 'library'}>
                 {desk === 'master' ? <option value="library">Whole library</option> : null}
                 <option value="portal">{desk === 'portal' ? 'This portal’s own courses' : 'One portal’s own courses'}</option>
@@ -145,7 +147,14 @@ function SheetBody({
                     {courses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
                   </select>
                 </label>
-                <button className="btn" type="submit" data-testid="sheet-export-submit">Download .xlsx</button>
+                {desk === 'portal' && !libraryCounts.talks ? (
+                  <>
+                    <p className="hint" data-testid="export-empty">This portal has no courses of its own yet, so an export would be empty.</p>
+                    <button className="btn" type="submit" data-testid="sheet-export-submit" disabled>Download .xlsx</button>
+                  </>
+                ) : (
+                  <button className="btn" type="submit" data-testid="sheet-export-submit">Download .xlsx</button>
+                )}
               </form>
             </div>
           </section>
@@ -166,7 +175,7 @@ function SheetBody({
       {summary && counts ? (
         <section className="panel" style={{ marginTop: 18 }} data-testid="sheet-preview">
           <header>
-            <div><h2>Preview of {summary.fileName || 'the sheet'}</h2><p>Check this, then apply. Rows with a problem are skipped and nothing is saved until the sheet is clean.</p></div>
+            <div><h2>Preview of {summary.fileName || 'the sheet'} <HelpTip topic="sheet-preview">{TOOL.sheetPreview}</HelpTip></h2><p>Check this, then apply. Rows with a problem are skipped and nothing is saved until the sheet is clean.</p></div>
           </header>
           <div className="body">
             <div className="stats-strip" data-testid="sheet-counts">

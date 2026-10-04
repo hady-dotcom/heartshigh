@@ -11,9 +11,12 @@ import { Hidden } from '@/components/app/shell'
 import { CodeLimits, CodeStatus } from '@/components/desk/codes'
 import { PointPicker } from '@/components/desk/tools'
 import { Qr } from '@/components/qr'
+import { ShareLinks } from '@/components/desk/share-links'
 import { adoptedCourseIds, type PortalDoc, type SessionUser } from '@/server/context'
 import { partTitle } from '@/lib/talk-title'
 import { type Ctx, type Row, clock, one, portalPeople, ref, rows, str } from '../common'
+import { HelpTip } from '@/components/desk/help'
+import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
 
 export function guardAdmin(ctx: Ctx) {
@@ -22,7 +25,7 @@ export function guardAdmin(ctx: Ctx) {
 
 export async function ContentScreen(ctx: Ctx) {
   guardAdmin(ctx)
-  const { payload, portal, base } = ctx
+  const { payload, portal, base, query } = ctx
   const local = await rows(payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }] }, { sort: 'title' })
   const adoptedIds = await adoptedCourseIds(payload, portal.id)
   const linked = adoptedIds.length ? await rows(payload, 'courses', { id: { in: adoptedIds } }, { sort: 'title' }) : []
@@ -40,7 +43,37 @@ export async function ContentScreen(ctx: Ctx) {
   ])
   const localIds = new Set(local.map((course) => course.id))
   const localLessons = lessons.filter((lesson) => localIds.has(ref(lesson.course) || 0))
+  const q = (query.q || '').trim().toLowerCase()
+  const origin = query.origin === 'mine' || query.origin === 'library' ? query.origin : 'all'
+  const filtered = all.filter((course) => {
+    const isLocal = localIds.has(course.id)
+    if (origin === 'mine' && !isLocal) return false
+    if (origin === 'library' && isLocal) return false
+    if (q && !`${str(course.title)} ${str(course.speaker)}`.toLowerCase().includes(q)) return false
+    return true
+  })
+  const grouped = await groupThese(payload, filtered.map((course) => ({ id: course.id, title: str(course.title), summary: str(course.summary) })))
+  const byId = new Map(filtered.map((course) => [course.id, course]))
   const stat = (n: number, label: string) => <div className="stat-chip"><b>{n}</b><span>{label}</span></div>
+  const here = `${base}/admin/content`
+  const courseRow = (courseId: number) => {
+    const course = byId.get(courseId)
+    if (!course) return null
+    const own = lessons.filter((lesson) => ref(lesson.course) === course.id)
+    const ownIds = new Set(own.map((lesson) => lesson.id))
+    const isLocal = localIds.has(course.id)
+    return (
+      <tr key={course.id} data-testid="course-row" data-origin={isLocal ? 'local' : 'imported'}>
+        <td><Link href={`${base}/admin/content/${course.id}`} style={{ fontWeight: 700 }}>{str(course.title)}</Link></td>
+        <td>{str(course.speaker) || <span className="hint">Not set</span>}</td>
+        <td>{isLocal ? <span className="badge teal">Made here</span> : <span className="badge gold">Library, read only</span>}</td>
+        <td className="num">{own.length}</td>
+        <td className="num">{points.filter((point) => ownIds.has(ref(point.lesson) || 0)).length}</td>
+        <td className="num">{cuts.filter((cut) => ownIds.has(ref(cut.lesson) || 0) && cut.status === 'approved').length}</td>
+        <td><Link className="btn ghost small" href={`${base}/admin/content/${course.id}`}>{isLocal ? 'Edit' : 'View'}</Link></td>
+      </tr>
+    )
+  }
   return (
     <AdminFrame ctx={ctx} active="content" title="Content" intro="Build courses here: a subject, its topics, the films in each topic, and the questions that pause the film." testId="admin-content">
       <div className="stats-strip">
@@ -51,34 +84,51 @@ export async function ContentScreen(ctx: Ctx) {
       </div>
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.7fr) minmax(320px, 1fr)', alignItems: 'start' }}>
         <section className="panel">
-          <header className="light"><h2>Courses in this portal</h2><Link className="btn ghost small" href={`${base}/admin/library`}>Add from the library</Link></header>
-          <div className="table-wrap">
-            <table className="data">
-              <thead><tr><th>Subject</th><th>Speaker</th><th>From</th><th className="num">Films</th><th className="num">Questions</th><th className="num">Cuts live</th><th /></tr></thead>
-              <tbody>
-                {all.map((course) => {
-                  const own = lessons.filter((lesson) => ref(lesson.course) === course.id)
-                  const ownIds = new Set(own.map((lesson) => lesson.id))
-                  const isLocal = localIds.has(course.id)
-                  return (
-                    <tr key={course.id} data-testid="course-row" data-origin={isLocal ? 'local' : 'imported'}>
-                      <td><Link href={`${base}/admin/content/${course.id}`} style={{ fontWeight: 700 }}>{str(course.title)}</Link></td>
-                      <td>{str(course.speaker) || <span className="hint">Not set</span>}</td>
-                      <td>{isLocal ? <span className="badge teal">Made here</span> : <span className="badge gold">Library, read only</span>}</td>
-                      <td className="num">{own.length}</td>
-                      <td className="num">{points.filter((point) => ownIds.has(ref(point.lesson) || 0)).length}</td>
-                      <td className="num">{cuts.filter((cut) => ownIds.has(ref(cut.lesson) || 0) && cut.status === 'approved').length}</td>
-                      <td><Link className="btn ghost small" href={`${base}/admin/content/${course.id}`}>{isLocal ? 'Edit' : 'View'}</Link></td>
-                    </tr>
-                  )
-                })}
-                {!all.length ? <tr><td colSpan={7} className="empty">No courses yet. Start one on the right, or link one from the library.</td></tr> : null}
-              </tbody>
-            </table>
-          </div>
+          <header className="light"><h2>Courses in this portal <HelpTip topic="content-search">{TOOL.contentSearch}</HelpTip></h2><Link className="btn ghost small" href={`${base}/admin/library`}>Add from the library</Link></header>
+          <form className="content-tools" action={here} method="get" data-testid="content-filter">
+            <label className="stack">Search<input className="field" name="q" defaultValue={query.q || ''} placeholder="Subject or speaker" /></label>
+            <label className="stack">Show
+              <select name="origin" defaultValue={origin} data-testid="content-origin">
+                <option value="all">Mine and library</option>
+                <option value="mine">Mine</option>
+                <option value="library">Library</option>
+              </select>
+            </label>
+            <button className="btn ghost small" type="submit">Apply</button>
+          </form>
+          {grouped.length ? grouped.map((group) => (
+            <details key={group.key} className="content-group" open data-testid="content-door" data-door={group.key}>
+              <summary>{group.heading} · {countLine(group.talkCount, group.courses.length)}</summary>
+              <div className="table-wrap">
+                <table className="data">
+                  <thead><tr><th>Subject</th><th>Speaker</th><th>From</th><th className="num">Films</th><th className="num">Questions</th><th className="num">Cuts live</th><th /></tr></thead>
+                  <tbody>
+                    {group.seats.map((seat) => (
+                      <>
+                        <tr key={`seat-${seat.id}`}><td colSpan={7} className="content-seat">{seat.label}</td></tr>
+                        {seat.courses.map((course) => courseRow(course.id))}
+                      </>
+                    ))}
+                    {group.unseated.map((course) => courseRow(course.id))}
+                    {!group.seats.length && !group.unseated.length ? group.courses.map((course) => courseRow(course.id)) : null}
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          )) : (
+            <div className="table-wrap">
+              <table className="data">
+                <thead><tr><th>Subject</th><th>Speaker</th><th>From</th><th className="num">Films</th><th className="num">Questions</th><th className="num">Cuts live</th><th /></tr></thead>
+                <tbody>
+                  {filtered.map((course) => courseRow(course.id))}
+                  {!filtered.length ? <tr><td colSpan={7} className="empty">{all.length ? 'Nothing matches this search.' : 'No courses yet. Start one on the right, or link one from the library.'}</td></tr> : null}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
         <section className="panel">
-          <header><div><h2>New subject</h2><p>Subject, then topic, then film. Questions are added in the editor.</p></div></header>
+          <header><div><h2>New subject <HelpTip topic="local-course">{TOOL.localCourse}</HelpTip></h2><p>Subject, then topic, then film. Questions are added in the editor.</p></div></header>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-course', origin: 'local', portalSlug: portal.slug, next: `${base}/admin/content` }} />
             <label className="stack">Subject name<input type="text" data-testid="local-course-title" name="title" required /></label>
@@ -196,7 +246,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                   <div style={{ display: 'grid', gap: 14, alignContent: 'start' }}>
                     <form className="form" action="/api/hearts" method="post">
                       <Hidden fields={{ action: 'ingest', lesson: lesson.id, next: here }} />
-                      <label className="stack">YouTube or share link<input type="url" data-testid="youtube-url" name="url" placeholder="https://www.youtube.com/watch?v=" required /></label>
+                      <label className="stack">YouTube or share link <HelpTip topic="ingest">{TOOL.ingest}</HelpTip><input type="url" data-testid="youtube-url" name="url" placeholder="https://www.youtube.com/watch?v=" required /></label>
                       <div className="actions"><button className="btn ink small" data-testid="ingest-submit" type="submit">Fetch film and transcript</button></div>
                     </form>
                     <form className="form" action="/api/hearts" method="post" encType="multipart/form-data">
@@ -453,6 +503,7 @@ export async function LibraryScreen(ctx: Ctx) {
                   <form action="/api/hearts" method="post">
                     <Hidden fields={{ action: 'adopt', kind: 'pack', pack: pack.id, portalSlug: portal.slug, next: here }} />
                     <button className="btn small" data-testid="adopt-pack" type="submit">Add to this portal (stays in sync)</button>
+                    <HelpTip topic="adopt">{TOOL.adopt}</HelpTip>
                   </form>
                 )}
               </div>
@@ -581,7 +632,10 @@ export async function AccessScreen(ctx: Ctx) {
                     <td>{str(teachers.find((row) => row.id === ref(code.linkedTeacherCode))?.code) || <span className="hint">None</span>}</td>
                     <td className="num"><CodeJoins people={people.filter((person) => ref(person.accessCode) === code.id)} /></td>
                     <td><CodeStatus code={code} next={here} portalSlug={portal.slug} /></td>
-                    <td><div className="address" style={{ fontSize: 12 }} data-testid="share-url">{share}</div></td>
+                    <td>
+                      <div className="address" style={{ fontSize: 12 }} data-testid="share-url">{share}</div>
+                      <ShareLinks value={share} testId="code-copy" />
+                    </td>
                     <td><div style={{ width: 84 }} className="qr-small"><Qr value={share} testId="code-qr" /></div></td>
                     <td>
                       <details>
@@ -634,10 +688,11 @@ export async function AccessScreen(ctx: Ctx) {
             <CodeLimits />
             {requiredGroups.length ? (
               <div data-testid="required-courses">
-                <div className="hint" style={{ marginBottom: 6 }}>Courses everyone on this code is asked to finish (optional)</div>
+                <div className="hint" style={{ marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>Courses everyone on this code is asked to finish (optional) <HelpTip topic="required">{TOOL.requiredCourses}</HelpTip></div>
                 <CourseTree groups={requiredGroups} name="requiredCourse" testId="required-tree" courseTestId="required-course" />
               </div>
             ) : null}
+            <p className="hint" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Limits and a teacher code <HelpTip topic="code-limits">{TOOL.codeLimits}</HelpTip><HelpTip topic="teacher-code">{TOOL.teacherCode}</HelpTip></p>
             <div className="actions"><button className="btn ink" data-testid="new-code-submit" type="submit">Create access code</button></div>
           </form>
         </section>

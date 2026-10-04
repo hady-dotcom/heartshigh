@@ -34,6 +34,10 @@ export type Query = {
   context?: string
   /** Garden painting: `dawn` or `evening`. Another theme pass can set this. */
   theme?: string
+  hideTest?: string
+  showTest?: string
+  origin?: string
+  q?: string
 }
 
 export type Ctx = {

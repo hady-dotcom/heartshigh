@@ -13,7 +13,8 @@ import { minutesADay } from '@/lib/study-plan'
 import { clockEnabled, setTestNow } from '@/lib/clock'
 import { authCookie } from '@/lib/cookies'
 import { logError } from '@/lib/log'
-import { clientIp, hit, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
+import { gateAuth, tooManyAnswers } from '@/lib/auth-gate'
+import { clientIp, hit, hitAnswer, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
 import { slugProblem } from '@/lib/text-safety'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
 import { ingestYoutubeUrl } from '@/lib/youtube'
@@ -464,7 +465,36 @@ async function handleForm(req: Request, form: FormData, session: Session) {
 
   if (action === 'login') {
     const next = text(form, 'next') || '/'
-    return loginResponse(req, text(form, 'email').toLowerCase(), text(form, 'password'), next)
+    const email = text(form, 'email').toLowerCase()
+    const blocked = await gateAuth(req, form, 'login', email, '/login')
+    if (blocked) return blocked
+    return loginResponse(req, email, text(form, 'password'), next)
+  }
+
+  if (action === 'forgot-password') {
+    const email = text(form, 'email').toLowerCase()
+    const blocked = await gateAuth(req, form, 'forgot', email, '/forgot')
+    if (blocked) return blocked
+    try {
+      if (email) await payload.forgotPassword({ collection: 'users', data: { email } })
+    } catch {
+      // Same notice either way, so a guesser cannot tell whether the email is on the books.
+    }
+    return redirectTo(req, '/forgot', undefined, 'If that email has an account, we have sent a reset link.')
+  }
+
+  if (action === 'reset-password') {
+    const token = text(form, 'token')
+    const password = text(form, 'password')
+    const blocked = await gateAuth(req, form, 'reset', '', `/reset${token ? `?token=${encodeURIComponent(token)}` : ''}`)
+    if (blocked) return blocked
+    if (!token || password.length < 8) return redirectTo(req, '/reset', 'Use the link from your email, and at least 8 characters for the password.')
+    try {
+      await payload.resetPassword({ collection: 'users', data: { token, password }, overrideAccess: true })
+    } catch {
+      return redirectTo(req, '/reset', 'That reset link is not valid any more. Ask for a new one.')
+    }
+    return redirectTo(req, '/login', undefined, 'Your password is updated. Sign in with the new one.')
   }
 
   if (action === 'logout') {
@@ -480,6 +510,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const password = text(form, 'password')
     if (!name || !email || !password) return redirectTo(req, `/join?code=${encodeURIComponent(codeValue)}`, 'Name, email and a password are all needed.')
     if (password.length < 8) return redirectTo(req, `/join?code=${encodeURIComponent(codeValue)}`, 'Use at least 8 characters for the password.')
+    const joinBack = `/join?code=${encodeURIComponent(codeValue)}`
+    const blocked = await gateAuth(req, form, 'join', email, joinBack)
+    if (blocked) return blocked
     const keys = joinFailKeys(clientIp(req), codeValue)
     if (!peek(keys.pair, JOIN_FAILS_PER_CODE, JOIN_WINDOW_MS).allowed || (keys.address && !peek(keys.address, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS).allowed)) return tooManyJoins()
     const found = await payload.find({
@@ -1123,6 +1156,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   }
 
   if (action === 'answer') {
+    const limited = hitAnswer(user.id, clientIp(req))
+    if (!limited.allowed) return tooManyAnswers(limited.retryAfterSec, false)
     const result = await saveAnswer(payload, user, {
       pointId: Number(text(form, 'point')),
       body: text(form, 'body'),

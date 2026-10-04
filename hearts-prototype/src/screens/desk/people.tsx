@@ -2,6 +2,11 @@ import { defaultPlanName } from '@/lib/schedule'
 import { now as clockNow } from '@/lib/clock'
 import { dateKey, formatOnTime, onTimeProgress, ON_TIME_HINT, type PlanSlot } from '@/lib/on-time'
 import { ViewAsButton } from '@/components/desk/view-as-button'
+import { GiveCourse } from '@/components/desk/give-course'
+import { HideTestFilter } from '@/components/desk/hide-test'
+import { HelpTip } from '@/components/desk/help'
+import { TOOL } from '@/lib/desk-help'
+import { hideTestFromQuery, visiblePeople } from '@/lib/test-accounts'
 import Link from 'next/link'
 import { Hidden } from '@/components/app/shell'
 import { EvidencePlayer } from '@/components/desk/tools'
@@ -14,7 +19,8 @@ import { AdminFrame } from './overview'
 export async function TeachScreen(ctx: Ctx) {
   const { payload, user, portal, base, query } = ctx
   const people = await portalPeople(payload, portal.id)
-  const learners = people.filter((person) => person.role === 'learner')
+  const hideTest = hideTestFromQuery(query)
+  const learners = visiblePeople(people.filter((person) => person.role === 'learner'), hideTest)
   const [entries, answers, completions, notes, watches, courseIds, plans] = await Promise.all([
     rows(payload, 'workbook-entries', { portal: { equals: portal.id } }, { depth: 1, sort: '-createdAt' }),
     rows(payload, 'answers', { portal: { equals: portal.id } }, { depth: 1, sort: '-createdAt', limit: 500 }),
@@ -45,10 +51,13 @@ export async function TeachScreen(ctx: Ctx) {
   return (
     <AdminFrame ctx={ctx} active="teach" title="Teach" intro="See how each learner is getting on, reply to what they have shared, and leave notes on their recordings." testId="admin-teach">
       <section className="panel" style={{ marginBottom: 18 }}>
-        <header className="light"><h2>Learners ({learners.length})</h2></header>
+        <header className="light">
+          <h2>Learners ({learners.length}) <HelpTip topic="learners">{TOOL.giveCourse}</HelpTip></h2>
+          <HideTestFilter action={here} hide={hideTest} />
+        </header>
         <div className="table-wrap">
           <table className="data">
-            <thead><tr><th>Name</th><th>E-mail</th><th className="num">Day</th><th className="num">Parts watched</th><th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr></th><th className="num">Answers</th><th>Give a course</th><th /></tr></thead>
+            <thead><tr><th>Name</th><th>Email</th><th className="num">Day</th><th className="num">Parts watched</th><th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr> <HelpTip topic="on-time">{TOOL.onTime}</HelpTip></th><th className="num">Answers</th><th>Give a course</th><th /></tr></thead>
             <tbody>
               {learners.map((learner) => {
                 const done = completions.filter((row) => ref(row.user) === learner.id)
@@ -63,15 +72,15 @@ export async function TeachScreen(ctx: Ctx) {
                     <td className="num" data-testid="on-time" title={progress.planned ? ON_TIME_HINT : 'No study plan yet'}>{onTime}</td>
                     <td className="num" data-testid="learner-answers">{answers.filter((row) => ref(row.user) === learner.id).length}</td>
                     <td>
-                      <form action="/api/hearts" method="post" style={{ display: 'flex', gap: 8 }}>
-                        <Hidden fields={{ action: 'grant', learner: learner.id, next: here }} />
-                        <select name="course" style={{ minWidth: 0, width: 170 }}>{courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}</select>
-                        <button className="btn small" data-testid="grant-course" type="submit">Give</button>
-                      </form>
+                      <GiveCourse learnerId={learner.id} learnerName={str(learner.name) || 'this learner'} courses={courses.map((course) => ({ id: course.id, title: str(course.title) }))} next={here} />
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'start' }}>
-                        <a className="btn ghost small" href={`/api/workbook/${learner.id}?format=csv`} data-testid="workbook-csv">Workbook</a>
+                        {answers.filter((row) => ref(row.user) === learner.id).length ? (
+                          <a className="btn ghost small" href={`/api/workbook/${learner.id}?format=csv`} data-testid="workbook-csv">Workbook</a>
+                        ) : (
+                          <span className="btn ghost small" aria-disabled="true" data-testid="workbook-csv" title="Nothing to download yet">Workbook</span>
+                        )}
                         {user.role !== 'teacher' ? <ViewAsButton targetId={learner.id} name={str(learner.name) || 'this learner'} landing={`${base}`} /> : null}
                       </div>
                     </td>
@@ -184,8 +193,9 @@ export async function PlansScreen(ctx: Ctx) {
               <label className="stack">Until<input data-testid="schedule-end" type="date" name="end" defaultValue={later} /></label>
             </div>
             <div className="checks">{DAYS.map((label, index) => <label className="check" key={label}><input data-testid={`weekday-${index}`} type="checkbox" name="weekday" value={index} /> {label}</label>)}</div>
+            <p className="hint" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>Days the plan should use <HelpTip topic="weekdays">{TOOL.weekdays}</HelpTip></p>
             <div className="hint">For</div>
-            <div className="checks" style={{ flexDirection: 'column' }}>{learners.map((learner) => <label className="check" key={learner.id}><input type="checkbox" name="learner" value={learner.id} data-testid="plan-learner" /> {str(learner.name)}</label>)}</div>
+            <div className="checks" style={{ flexDirection: 'column' }}>{visiblePeople(learners, hideTestFromQuery(ctx.query)).map((learner) => <label className="check" key={learner.id}><input type="checkbox" name="learner" value={learner.id} data-testid="plan-learner" /> {str(learner.name)}</label>)}</div>
             <div className="actions"><button className="btn ink" data-testid="schedule-submit" type="submit">Share out the parts</button></div>
           </form>
         </section>
@@ -248,7 +258,7 @@ export async function NightsScreen(ctx: Ctx) {
                           <tr key={row.id} data-testid="rsvp-row">
                             <td>{name(row.user)}</td>
                             <td style={{ fontFamily: 'ui-monospace, monospace' }}>{str(row.ticket)}</td>
-                            <td>{row.ticketKind === 'earned' ? <span className="badge teal">Earned</span> : <span className="badge grey">Held</span>}</td>
+                            <td>{row.ticketKind === 'earned' ? <span className="badge teal">Earned</span> : <span className="badge grey">Held</span>} <HelpTip topic="ticket">{TOOL.earnedTicket}</HelpTip></td>
                             <td>{arrived ? <span className="badge ink">{arrived.override ? 'Welcomed in' : 'Checked in'}</span> : <span className="hint">Not yet</span>}</td>
                           </tr>
                         )
@@ -264,9 +274,10 @@ export async function NightsScreen(ctx: Ctx) {
                   <Hidden fields={{ action: 'checkin', event: event.id, next: here }} />
                   <select name="learner" data-testid="checkin-learner" style={{ maxWidth: 260 }} required>
                     <option value="">Who has arrived?</option>
-                    {people.map((person) => <option key={person.id} value={person.id}>{str(person.name)}</option>)}
+                    {visiblePeople(people, hideTestFromQuery(ctx.query)).map((person) => <option key={person.id} value={person.id}>{str(person.name)}</option>)}
                   </select>
                   <label className="check"><input type="checkbox" name="override" data-testid="checkin-override" /> Let them in anyway</label>
+                  <HelpTip topic="checkin">{TOOL.checkinOverride}</HelpTip>
                   <button className="btn ink small" type="submit" data-testid="staff-checkin">Check in</button>
                 </form>
               </section>
