@@ -75,6 +75,18 @@ export const PAGE: Record<string, string> = {
     'Everyone who has an account, across portals. Pause keeps their learning but stops sign-in. Restore opens it again. Change a role only when their email is confirmed.',
   masterSettings:
     'Email and two-step sign-in sit here. A test email goes to your own inbox. Resetting two-step for someone needs a reason, and is written in the activity log.',
+  activity:
+    'The activity log is a calm list of staff changes: codes, people, classes and settings. Portal admins see only their own community. Downloads are written here too.',
+  classes:
+    'A class is a group inside this portal, such as Saturday Year 5 or a sisters’ circle. Add people, then give a course or a plan to the whole class. A code can drop new joiners into a class.',
+  peopleImport:
+    'Paste a class list or upload a spreadsheet. Preview first — rows with a rose first cell will not be added. Accounts are created with a temporary password you can print for the teacher.',
+  people:
+    'Everyone in one portal, grouped by role. Tick a group of people, then give a course, add them to a class, or download the list. Answers never leave this page.',
+  system:
+    'System is a health check: database, files, email, the last backup and the last restore drill. It does not show anyone’s reflections. Use it when something feels off.',
+  trash:
+    'Recently removed is a short pause after a course, talk, code or pack is taken off. You can restore it for 30 days. After that a nightly job empties it for good. People and their answers are never kept here.',
 }
 
 export const TOOL: Record<string, string> = {
@@ -170,6 +182,28 @@ export const TOOL: Record<string, string> = {
     'This shows whether HEARTS can send mail. A test goes to your own inbox. If transport is off, we say so and never pretend a letter went out.',
   twoStep:
     'A code from an app on your phone, as well as your password. Master and portal admins need this, because they can see children’s answers. Backup codes each work once.',
+  activityFilters:
+    'Person, action and date narrow the list. Times follow the portal’s city. An empty view means nothing matches, not that the log was wiped.',
+  activityExport:
+    'Download writes the sentences you can see now. The download itself is logged. If the list is empty the button stays still, so you do not take a blank file.',
+  classes:
+    'Give the class a name people will recognise. The colour is only a mark on the desk. Deleting a class does not delete the people.',
+  classJoin:
+    'Pick a code and new joiners on that link land in this class. Leave it empty if people should be added by hand. The code itself does not change.',
+  peopleImport:
+    'Name, email and an access code are required. Role is learner unless you say teacher or admin. A class name must already exist here, or leave that cell blank.',
+  peopleExport:
+    'The file has names, emails, roles, codes, joined dates and progress. It never includes answers. If nobody is on the list, the button stays still.',
+  bulkPeople:
+    'Tick the people, choose one action, and confirm. You will see how many will change. Pause needs a short reason. One line goes on the activity log.',
+  systemHealth:
+    'Fine means that part answered. Off means it is not wired yet, such as email. Down means it failed. The note never includes a secret or a request body.',
+  retention:
+    'Each row is how long we keep that kind of data. The nightly job removes what is due. Closed portals are not wiped; the master is asked after 90 days.',
+  trashRestore:
+    'Restore puts this back where it was. Learners will see it again if it was published. The activity log keeps a line.',
+  trashEmpty:
+    'Empty now removes these items for good. Type yes first. Personal wipes never wait here — they skip this list and erase at once.',
 }
 
 export const TEST_IDS: Record<string, string> = {
@@ -218,9 +252,15 @@ export const TEST_IDS: Record<string, string> = {
   'master-personas': 'personas',
   'master-trends': 'trends',
   'master-settings': 'masterSettings',
-  'master-people': 'learners',
   'compass-learner': 'compassLearner',
   'gather-attendance': 'attendance',
+  'admin-activity': 'activity',
+  'master-activity': 'activity',
+  'admin-classes': 'classes',
+  'admin-people-import': 'peopleImport',
+  'master-system': 'system',
+  'admin-trash': 'trash',
+  'master-trash': 'trash',
 }
 
 /** Page copy for a desk frame, from the nav key or the screen test id. */

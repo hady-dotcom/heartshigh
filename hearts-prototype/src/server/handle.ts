@@ -45,6 +45,7 @@ import { sendQueuedNotification } from './notify-email'
 import { notifyKey } from '@/lib/notify-prefs'
 import { requestOriginAllowed } from '@/lib/env'
 import { handleConsentActions } from './consent-actions'
+import { handleAdminActions } from './admin-actions'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
@@ -506,6 +507,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   const { payload, user } = session
   const consentReply = await handleConsentActions(req, form, session)
   if (consentReply) return consentReply
+  const fromAdmin = await handleAdminActions(action, form, session, req, (path, error, notice) => redirectTo(req, path, error, notice))
+  if (fromAdmin) return fromAdmin
 
   if (action === 'login') {
     const next = text(form, 'next') || '/'
@@ -1577,7 +1580,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     }
     if (form.has('theme')) data.theme = text(form, 'theme') === 'dark' ? 'dark' : 'light'
     if (form.has('timeZone')) {
-      if (!isTimeZone(text(form, 'timeZone'))) return redirectTo(req, text(form, 'next') || '/', 'Choose a time zone such as Europe/London.')
+      if (!isTimeZone(text(form, 'timeZone'))) return redirectTo(req, text(form, 'next') || '/', 'Choose a time zone such as America/Toronto.')
       data.timeZone = text(form, 'timeZone')
     }
     if (form.get('settingsForm') === 'yes') {

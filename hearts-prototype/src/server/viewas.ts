@@ -3,6 +3,9 @@ import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
 import { cookiesSecure } from '@/lib/env'
 import { idOf, portalIdOf } from '@/lib/ids'
+import { audit } from './audit'
+
+export { audit }
 
 export const VIEWAS_COOKIE = 'hearts_viewas'
 export const IDLE_MS = 15 * 60_000
@@ -56,10 +59,6 @@ export function viewAsCookie(token: string | null, req?: Request) {
 export function hashIp(ip: string | null | undefined) {
   if (!ip) return undefined
   return createHash('sha256').update(`${process.env.PAYLOAD_SECRET || 'hearts'}:${ip}`).digest('hex').slice(0, 16)
-}
-
-export async function audit(payload: Payload, event: string, fields: Record<string, unknown>) {
-  await payload.create({ collection: 'audit-log', overrideAccess: true, data: { event, at: now().toISOString(), ...fields } as never })
 }
 
 /** The table in spec 6A. Returns null when allowed, or the reason it is not. */

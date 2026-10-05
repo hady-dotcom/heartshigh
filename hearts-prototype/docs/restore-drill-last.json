@@ -1,0 +1,43 @@
+{
+  "ok": true,
+  "at": "2026-10-05T014229Z",
+  "source": "hearts_demo",
+  "destination": "hearts_restore",
+  "database": {
+    "before": {
+      "users": 21,
+      "answers": 31,
+      "audit_log": 0,
+      "courses": 32,
+      "portals": 2,
+      "access_codes": 6,
+      "completions": 74,
+      "lessons": 32,
+      "media": 0
+    },
+    "after": {
+      "users": 21,
+      "answers": 31,
+      "audit_log": 0,
+      "courses": 32,
+      "portals": 2,
+      "access_codes": 6,
+      "completions": 74,
+      "lessons": 32,
+      "media": 0
+    },
+    "matched": true
+  },
+  "files": {
+    "before": 3,
+    "after": 3,
+    "matched": true
+  },
+  "encrypted": {
+    "refusedWithoutKey": true
+  },
+  "notes": [
+    "Real Postgres custom dump, age encryption, and an S3-compatible bucket on this VM.",
+    "The private age key is not in the repository."
+  ]
+}

@@ -141,6 +141,9 @@ export interface Config {
     'portal-contacts': PortalContact;
     'child-code-flags': ChildCodeFlag;
     'help-requests': HelpRequest;
+    classes: Class;
+    'class-join-rules': ClassJoinRule;
+    'ops-events': OpsEvent;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -222,6 +225,9 @@ export interface Config {
     'portal-contacts': PortalContactsSelect<false> | PortalContactsSelect<true>;
     'child-code-flags': ChildCodeFlagsSelect<false> | ChildCodeFlagsSelect<true>;
     'help-requests': HelpRequestsSelect<false> | HelpRequestsSelect<true>;
+    classes: ClassesSelect<false> | ClassesSelect<true>;
+    'class-join-rules': ClassJoinRulesSelect<false> | ClassJoinRulesSelect<true>;
+    'ops-events': OpsEventsSelect<false> | OpsEventsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -284,7 +290,7 @@ export interface Portal {
   showOthersAnswers?: boolean | null;
   notificationEmails?: string | null;
   /**
-   * The time zone staff times are shown in, such as Europe/London.
+   * The time zone staff times are shown in, such as America/Toronto.
    */
   timeZone?: string | null;
   theme?: ('light' | 'dark') | null;
@@ -442,6 +448,7 @@ export interface AccessCode {
   disabled?: boolean | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -456,6 +463,7 @@ export interface Pack {
   courses?: (number | Course)[] | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -476,6 +484,7 @@ export interface Course {
   visibility?: ('draft' | 'published') | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -626,6 +635,7 @@ export interface Unit {
   order?: number | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -679,6 +689,7 @@ export interface Lesson {
   sourceTitle?: string | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -832,6 +843,7 @@ export interface EngagementPoint {
   showImam?: boolean | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1433,6 +1445,7 @@ export interface CircleAnswer {
   author?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2435,6 +2448,55 @@ export interface HelpRequest {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "classes".
+ */
+export interface Class {
+  id: number;
+  portal?: (number | null) | Portal;
+  name: string;
+  colour?: ('#0E2A2B' | '#163633' | '#1A5552' | '#8A6A1F' | '#1A1408') | null;
+  teachers?: (number | User)[] | null;
+  learners?: (number | User)[] | null;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "class-join-rules".
+ */
+export interface ClassJoinRule {
+  id: number;
+  portal?: (number | null) | Portal;
+  accessCode: number | AccessCode;
+  class: number | Class;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ops-events".
+ */
+export interface OpsEvent {
+  id: number;
+  kind: 'backup' | 'restore' | 'retention' | 'closed-portal';
+  ok?: boolean | null;
+  at: string;
+  detail?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  portal?: (number | null) | Portal;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -2752,6 +2814,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'help-requests';
         value: number | HelpRequest;
+      } | null)
+    | ({
+        relationTo: 'classes';
+        value: number | Class;
+      } | null)
+    | ({
+        relationTo: 'class-join-rules';
+        value: number | ClassJoinRule;
+      } | null)
+    | ({
+        relationTo: 'ops-events';
+        value: number | OpsEvent;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -3010,6 +3084,7 @@ export interface CoursesSelect<T extends boolean = true> {
   visibility?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3021,6 +3096,7 @@ export interface UnitsSelect<T extends boolean = true> {
   order?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3055,6 +3131,7 @@ export interface LessonsSelect<T extends boolean = true> {
   sourceTitle?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3083,6 +3160,7 @@ export interface PacksSelect<T extends boolean = true> {
   courses?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3171,6 +3249,7 @@ export interface EngagementPointsSelect<T extends boolean = true> {
   showImam?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3253,6 +3332,7 @@ export interface AccessCodesSelect<T extends boolean = true> {
   disabled?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3548,6 +3628,7 @@ export interface CircleAnswersSelect<T extends boolean = true> {
   author?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -4229,6 +4310,44 @@ export interface HelpRequestsSelect<T extends boolean = true> {
   note?: T;
   status?: T;
   happenedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "classes_select".
+ */
+export interface ClassesSelect<T extends boolean = true> {
+  portal?: T;
+  name?: T;
+  colour?: T;
+  teachers?: T;
+  learners?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "class-join-rules_select".
+ */
+export interface ClassJoinRulesSelect<T extends boolean = true> {
+  portal?: T;
+  accessCode?: T;
+  class?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ops-events_select".
+ */
+export interface OpsEventsSelect<T extends boolean = true> {
+  kind?: T;
+  ok?: T;
+  at?: T;
+  detail?: T;
+  portal?: T;
   updatedAt?: T;
   createdAt?: T;
 }

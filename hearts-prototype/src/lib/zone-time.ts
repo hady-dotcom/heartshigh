@@ -1,6 +1,9 @@
-/** Times shown to a portal's staff: in the portal's own time zone, written the way the viewer's language writes them. */
+/** Times shown to a portal's staff: in the portal's own time zone, written the British way. */
 
-export const DEFAULT_TIME_ZONE = 'Europe/London'
+import { dateKeyInZone as dayInZone } from './study-plan'
+
+export const DEFAULT_TIME_ZONE = 'America/Toronto'
+export { dateKeyInZone } from './study-plan'
 
 /** The zones offered in portal settings. Any valid IANA zone saved another way is still honoured. */
 export const PORTAL_TIME_ZONES = [
@@ -8,6 +11,15 @@ export const PORTAL_TIME_ZONES = [
   'Asia/Dubai', 'Asia/Riyadh', 'Asia/Karachi', 'Asia/Kolkata', 'Asia/Dhaka', 'Asia/Kuala_Lumpur', 'Asia/Jakarta', 'Asia/Singapore',
   'Australia/Sydney', 'Pacific/Auckland', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'America/Toronto', 'UTC',
 ] as const
+
+const ZONE_LETTERS: Record<string, string> = {
+  'America/Toronto': 'ET',
+  'America/New_York': 'ET',
+  'America/Chicago': 'CT',
+  'America/Denver': 'MT',
+  'America/Los_Angeles': 'PT',
+  UTC: 'UTC',
+}
 
 export function isTimeZone(value: unknown): value is string {
   if (typeof value !== 'string' || !value.trim()) return false
@@ -45,12 +57,100 @@ export function localeFromAcceptLanguage(header: string | null | undefined) {
   return 'en-GB'
 }
 
+function asDate(iso: string | Date | null | undefined) {
+  const date = iso instanceof Date ? iso : new Date(String(iso || ''))
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function zoneOf(timeZone: string) {
+  return isTimeZone(timeZone) ? timeZone : DEFAULT_TIME_ZONE
+}
+
 /** "4 Oct 2026, 06:12 BST": date, time and a short zone label, in the portal's zone and the viewer's language. */
 export function zonedTime(iso: string | Date | null | undefined, timeZone: string, locale = 'en-GB') {
-  const date = iso instanceof Date ? iso : new Date(String(iso || ''))
-  if (Number.isNaN(date.getTime())) return ''
-  const zone = isTimeZone(timeZone) ? timeZone : DEFAULT_TIME_ZONE
-  return new Intl.DateTimeFormat(locale, { timeZone: zone, day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }).format(date)
+  const date = asDate(iso)
+  if (!date) return ''
+  const zone = zoneOf(timeZone)
+  const formatted = new Intl.DateTimeFormat(locale, { timeZone: zone, day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }).format(date)
+  const letter = ZONE_LETTERS[zone]
+  if (!letter) return formatted
+  return formatted.replace(/\s(?:GMT[+\-−]\d+(?::\d+)?|UTC|EDT|EST|ET|CDT|CST|MDT|MST|PDT|PST)$/u, ` ${letter}`)
+}
+
+export function zoneLetter(timeZone: string) {
+  const zone = zoneOf(timeZone)
+  if (ZONE_LETTERS[zone]) return ZONE_LETTERS[zone]
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: zone, timeZoneName: 'short', hour: '2-digit' }).formatToParts(new Date())
+  return parts.find((part) => part.type === 'timeZoneName')?.value || zoneCity(zone)
+}
+
+/** "5 October 2026, 8:36 PM ET" — British date, 12-hour clock, short zone. */
+export function staffWhen(iso: string | Date | null | undefined, timeZone: string) {
+  const date = asDate(iso)
+  if (!date) return ''
+  const zone = zoneOf(timeZone)
+  const day = new Intl.DateTimeFormat('en-GB', { timeZone: zone, day: 'numeric', month: 'long', year: 'numeric' }).format(date)
+  const clock = new Intl.DateTimeFormat('en-US', { timeZone: zone, hour: 'numeric', minute: '2-digit', hour12: true }).format(date)
+  return `${day}, ${clock} ${zoneLetter(zone)}`
+}
+
+function offsetAt(date: Date, timeZone: string) {
+  const name = new Intl.DateTimeFormat('en-US', { timeZone: zoneOf(timeZone), timeZoneName: 'longOffset', hour: '2-digit' })
+    .formatToParts(date)
+    .find((part) => part.type === 'timeZoneName')?.value || 'GMT+00:00'
+  const match = name.match(/GMT([+-])(\d{1,2})(?::?(\d{2}))?/)
+  if (!match) return '+00:00'
+  return `${match[1]}${match[2].padStart(2, '0')}:${(match[3] || '00').padStart(2, '0')}`
+}
+
+/** ISO 8601 in the portal zone, with the offset — for CSV downloads. */
+export function zonedIso(iso: string | Date | null | undefined, timeZone: string) {
+  const date = asDate(iso)
+  if (!date) return ''
+  const zone = zoneOf(timeZone)
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-GB', {
+      timeZone: zone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(date).map((part) => [part.type, part.value]),
+  )
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}${offsetAt(date, zone)}`
+}
+
+/** Start and end of a YYYY-MM-DD calendar day in a zone, as UTC ISO strings. */
+export function zonedDayRange(day: string, timeZone: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null
+  const zone = zoneOf(timeZone)
+  const startGuess = new Date(`${day}T00:00:00.000Z`)
+  const start = new Date(startGuess.getTime() - parseOffsetMs(offsetAt(startGuess, zone)))
+  if (dayInZone(start, zone) !== day) {
+    const shift = dayInZone(start, zone) < day ? 86_400_000 : -86_400_000
+    start.setTime(start.getTime() + shift)
+  }
+  const end = new Date(start.getTime() + 86_400_000 - 1)
+  return { from: start.toISOString(), to: end.toISOString() }
+}
+
+function parseOffsetMs(offset: string) {
+  const match = offset.match(/([+-])(\d{2}):(\d{2})/)
+  if (!match) return 0
+  const minutes = Number(match[2]) * 60 + Number(match[3])
+  return (match[1] === '-' ? -1 : 1) * minutes * 60_000
+}
+
+export function ymdFromParts(year?: string, month?: string, day?: string) {
+  const y = Number(year)
+  const m = Number(month)
+  const d = Number(day)
+  if (!y || !m || !d) return ''
+  if (m < 1 || m > 12 || d < 1 || d > 31) return ''
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
 }
 
 /** "18 October 2026, 21:30", or "5 October 2026 at 00:16" when join is "at". */

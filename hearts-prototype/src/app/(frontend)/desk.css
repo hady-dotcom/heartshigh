@@ -139,6 +139,9 @@
 .hint { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
 .inline-form { display: inline; }
 
+.british-date { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.british-date input[type='number'] { width: 5.5rem; }
+.british-date select { min-width: 9rem; }
 .table-wrap { overflow-x: auto; }
 table.data { width: 100%; border-collapse: collapse; font-size: 14px; }
 table.data th { text-align: left; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 10px 12px; border-bottom: 1px solid var(--line); background: transparent; vertical-align: bottom; }

@@ -8,13 +8,18 @@ import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
 import { s3Storage } from '@payloadcms/storage-s3'
 import { buildConfig } from 'payload'
 import { aiCollections } from './collections-ai'
+import { adminCollections } from './collections-admin'
 import { collections } from './collections'
 import { consentCollections } from './collections-consent'
 import { gatherCollections } from './collections-gather'
 import { sheetCollections } from './collections-sheet'
 import { MasterFlags } from './collections-opening'
+import { AUDITED_COLLECTIONS } from './lib/audit-events'
 import { databaseKind, payloadCsrf, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
 import { migrations } from './migrations'
+import { TRASH_SLUGS } from './lib/trash'
+import { assignJoinerToClass } from './server/classes'
+import { enqueueAudit, staffAuditAfterChange, staffAuditAfterDelete } from './server/audit'
 import { viewAsGlobalGuard, viewAsGuard } from './server/viewas'
 import { emailAdapter } from './lib/email-adapter'
 
@@ -43,10 +48,32 @@ export default buildConfig({
       header: ['/components/viewas-admin-banner#ViewAsAdminBanner'],
     },
   },
-  collections: [...collections, ...aiCollections, ...sheetCollections, ...gatherCollections, ...consentCollections].map((collection) => ({
-    ...collection,
-    hooks: { ...collection.hooks, beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never] },
-  })),
+  collections: [...collections, ...aiCollections, ...sheetCollections, ...gatherCollections, ...consentCollections, ...adminCollections].map((collection) => {
+    const afterChange = [...(collection.hooks?.afterChange || [])]
+    const afterDelete = [...(collection.hooks?.afterDelete || [])]
+    if (AUDITED_COLLECTIONS.includes(collection.slug as (typeof AUDITED_COLLECTIONS)[number])) {
+      afterChange.push(staffAuditAfterChange as never)
+      afterDelete.push(staffAuditAfterDelete as never)
+    }
+    if (collection.slug === 'users') {
+      afterChange.push((async ({ doc, operation, req }: { doc: { id: number; accessCode?: unknown; role?: string | null }; operation: string; req: { payload?: typeof import('payload') } }) => {
+        if (operation !== 'create' || !req.payload) return
+        const payload = req.payload
+        enqueueAudit(() => assignJoinerToClass(payload as never, doc))
+      }) as never)
+    }
+    return {
+      ...collection,
+      // C15: trash on content collections only. Do not edit collections.ts (A owns Users, C owns Media).
+      trash: collection.trash || TRASH_SLUGS.includes(collection.slug),
+      hooks: {
+        ...collection.hooks,
+        beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never],
+        afterChange,
+        afterDelete,
+      },
+    }
+  }),
   globals: [MasterFlags].map((global) => ({ ...global, hooks: { ...global.hooks, beforeChange: [viewAsGlobalGuard as never, ...(global.hooks?.beforeChange || [])] } })),
   editor: lexicalEditor(),
   secret: payloadSecret(),
@@ -108,6 +135,8 @@ export default buildConfig({
         consents: {},
         'age-profiles': {},
         'help-requests': {},
+        classes: {},
+        'class-join-rules': {},
       },
       userHasAccessToAllTenants: (user) => (user as { role?: string } | null)?.role === 'master',
     }),

@@ -2,6 +2,7 @@ import { defaultPlanName } from '@/lib/schedule'
 import { now as clockNow } from '@/lib/clock'
 import { dateKey, formatOnTime, onTimeProgress, ON_TIME_HINT, type PlanSlot } from '@/lib/on-time'
 import { ViewAsButton } from '@/components/desk/view-as-button'
+import { BulkPeopleBar, PersonTick } from '@/components/desk/bulk-people'
 import { GiveCourse } from '@/components/desk/give-course'
 import { HideTestFilter } from '@/components/desk/hide-test'
 import { HelpTip } from '@/components/desk/help'
@@ -12,6 +13,7 @@ import Link from 'next/link'
 import { Hidden } from '@/components/app/shell'
 import { EvidencePlayer } from '@/components/desk/tools'
 import { now } from '@/lib/clock'
+import { classesInPortal } from '@/server/classes'
 import { visibleCourseIds } from '@/server/context'
 import { dayNumber } from '@/server/learner'
 import { type Ctx, clock, longDate, portalPeople, ref, rows, shortDate, str } from '../common'
@@ -25,7 +27,7 @@ export async function TeachScreen(ctx: Ctx) {
   const people = await portalPeople(payload, portal.id)
   const hideTest = hideTestFromQuery(query)
   const learners = visiblePeople(people.filter((person) => person.role === 'learner'), hideTest)
-  const [entries, answers, completions, notes, watches, courseIds, plans] = await Promise.all([
+  const [entries, answers, completions, notes, watches, courseIds, plans, codes, classes] = await Promise.all([
     rows(payload, 'workbook-entries', { portal: { equals: portal.id } }, { depth: 1, sort: '-createdAt' }),
     rows(payload, 'answers', { portal: { equals: portal.id } }, { depth: 1, sort: '-createdAt', limit: 500 }),
     rows(payload, 'completions', { portal: { equals: portal.id } }, { limit: 2000 }),
@@ -33,6 +35,8 @@ export async function TeachScreen(ctx: Ctx) {
     rows(payload, 'watch-sessions', { portal: { equals: portal.id } }, { depth: 1, sort: '-createdAt', limit: 50 }),
     visibleCourseIds(payload, user),
     rows(payload, 'schedules', { portal: { equals: portal.id } }, { limit: 200 }),
+    rows(payload, 'access-codes', { portal: { equals: portal.id } }, { sort: 'code' }),
+    classesInPortal(payload, portal.id),
   ])
   const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }, { sort: 'title' }) : []
   const shared = entries.filter((entry) => entry.consent)
@@ -54,10 +58,26 @@ export async function TeachScreen(ctx: Ctx) {
   }
   return (
     <AdminFrame ctx={ctx} active="teach" title="Teach" intro="See how each learner is getting on, reply to what they have shared, and leave notes on their recordings." testId="admin-teach">
+      {user.role !== 'teacher' ? (
+        <BulkPeopleBar
+          portalSlug={portal.slug}
+          next={here}
+          courses={courses.map((course) => ({ id: course.id, title: str(course.title) }))}
+          codes={codes.map((code) => ({ id: code.id, code: str(code.code) }))}
+          classes={classes.map((row) => ({ id: row.id, name: str(row.name) }))}
+        />
+      ) : null}
       <section className="panel" style={{ marginBottom: 18 }}>
         <header className="light">
           <h2 data-testid="learner-count">Learners ({learners.length})</h2>
-          <HideTestFilter action={here} hide={hideTest} />
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <HideTestFilter action={here} hide={hideTest} />
+            {learners.length ? (
+              <a className="btn ghost small" href={`/api/hearts/people.csv?portal=${encodeURIComponent(portal.slug)}`} data-testid="people-export">Download people <HelpTip topic="people-export">{TOOL.peopleExport}</HelpTip></a>
+            ) : (
+              <span className="btn ghost small" aria-disabled="true" data-testid="people-export" title="Nobody to download">Download people</span>
+            )}
+          </div>
         </header>
         <div className="table-wrap">
           <table className="data">
@@ -79,16 +99,21 @@ export async function TeachScreen(ctx: Ctx) {
                 return (
                   <tr key={learner.id} data-testid="learner-row">
                     <td>
-                      <b>{str(learner.name)}</b>
-                      {learner.audience && learner.audience !== 'learner' ? <div className="hint">{str(learner.audience)}</div> : null}
-                      <PersonActions
-                        person={learner as never}
-                        next={here}
-                        canPause={user.role === 'master' || user.role === 'portal-admin'}
-                        canTemp
-                        canRole={user.role === 'master' || user.role === 'portal-admin'}
-                        pausedWhen={learner.suspendedAt ? britishPortalTime(str(learner.suspendedAt), portalTimeZone(portal)) : undefined}
-                      />
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', minWidth: 0 }}>
+                        {user.role !== 'teacher' ? <PersonTick id={learner.id} /> : null}
+                        <div style={{ minWidth: 0 }}>
+                          <b>{str(learner.name)}</b>
+                          {learner.audience && learner.audience !== 'learner' ? <div className="hint">{str(learner.audience)}</div> : null}
+                          <PersonActions
+                            person={learner as never}
+                            next={here}
+                            canPause={user.role === 'master' || user.role === 'portal-admin'}
+                            canTemp
+                            canRole={user.role === 'master' || user.role === 'portal-admin'}
+                            pausedWhen={learner.suspendedAt ? britishPortalTime(str(learner.suspendedAt), portalTimeZone(portal)) : undefined}
+                          />
+                        </div>
+                      </div>
                     </td>
                     <td className="email-cell"><span title={str(learner.email)} data-testid="learner-email">{str(learner.email)}</span></td>
                     <td className="num">{dayNumber(learner as never)}</td>

@@ -40,6 +40,12 @@ const PAGES = [
   'children',
   'legal',
   'helpRequests',
+  'activity',
+  'classes',
+  'peopleImport',
+  'people',
+  'system',
+  'trash',
 ]
 
 describe('desk help', () => {

@@ -100,14 +100,14 @@ function files(dir: string): string[] {
   })
 }
 
-test('Circle: only the swarm, the circle desk, the master sheet and the seed read circle answers, so analytics never see them', () => {
+test('Circle: only the swarm, the circle desk, the master sheet, Recently removed and the seed read circle answers, so analytics never see them', () => {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../src')
   const readers = files(root)
     .filter((file) => !file.endsWith('payload-types.ts'))
     .filter((file) => /['"]circle-answers['"]/.test(readFileSync(file, 'utf8')))
     .map((file) => path.relative(root, file))
     .sort()
-  assert.deepEqual(readers, ['collections.ts', 'screens/desk/circle.tsx', 'seed/seed.ts', 'server/circle.ts', 'server/master-sheet.ts', 'server/my-data.ts'])
+  assert.deepEqual(readers, ['collections.ts', 'lib/trash.ts', 'screens/desk/circle.tsx', 'seed/seed.ts', 'server/circle.ts', 'server/master-sheet.ts', 'server/my-data.ts'])
   for (const file of files(root)) {
     const text = readFileSync(file, 'utf8')
     if (/circleForPoints/.test(text)) assert.ok(['server/circle.ts', 'screens/app/course.tsx'].includes(path.relative(root, file)), `${file} reads circle answers`)
