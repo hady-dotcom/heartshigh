@@ -68,7 +68,7 @@ test('A17: a portal admin cannot pause someone in another portal, and a paused s
   await page.getByTestId('login-email').fill(email)
   await page.getByTestId('login-password').fill(password)
   await page.getByTestId('login-submit').click()
-  await expect(page.getByTestId('error')).toContainText('paused')
+  await expect(page.getByTestId('error')).toContainText(/paused|masjid or school/)
 
   const restore = await postAction(master, { action: 'restore-person', userId: String(learnerId), next: '/master/learners' })
   expect(restore.status()).toBeLessThan(400)

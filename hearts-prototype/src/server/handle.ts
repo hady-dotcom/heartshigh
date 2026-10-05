@@ -40,6 +40,7 @@ import { parseLengthInput } from '@/lib/length'
 import { FEATURE_UNAVAILABLE, featuresFromForm } from '@/lib/features'
 import { adoptLibraryCourses, loadPortalById, refuseFeature } from './features'
 import { afterPasswordChanged, afterPasswordLogin, handleAccountAction, issueConfirmEmail, prepareForgot } from './account-actions'
+import { SUSPEND_MESSAGE } from '@/lib/account-rules'
 import { sendQueuedNotification } from './notify-email'
 import { notifyKey } from '@/lib/notify-prefs'
 
@@ -113,7 +114,9 @@ async function loginResponse(req: Request, email: string, password: string, next
     const result = await payload.login({ collection: 'users', data: { email, password } })
     const land = await landingPath(payload, (result.user || {}) as SessionUser, next)
     return afterPasswordLogin(req, payload, result as never, land)
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : ''
+    if (/paused|masjid or school/i.test(message)) return redirectTo(req, '/login', SUSPEND_MESSAGE)
     return redirectTo(req, '/login', 'That email or password did not match.')
   }
 }
