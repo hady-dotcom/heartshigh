@@ -13,10 +13,12 @@ export async function GET(req: Request) {
   const refused = await viewAsRefusal(session, 'people.export')
   if (refused) return refused
   const url = new URL(req.url)
+  const requested = url.searchParams.get('portal')
   const portal = await portalOf(session, req)
+  if (session.actor.role !== 'master' && requested && !portal) return json({ error: 'That portal is not yours.' }, 403)
   const portalId = portal?.id || (session.actor.role === 'master' ? null : portalIdOf(session.actor))
   if (session.actor.role !== 'master' && !portalId) return json({ error: 'That portal is not yours.' }, 403)
-  if (session.actor.role !== 'master' && url.searchParams.get('portal') && portal && portalIdOf(session.actor) !== portal.id) {
+  if (session.actor.role !== 'master' && requested && portal && portalIdOf(session.actor) !== portal.id) {
     return json({ error: 'That portal is not yours.' }, 403)
   }
   const built = await buildPeopleExport(session.payload, session.actor.role === 'master' ? portal?.id || portalId : portalId)

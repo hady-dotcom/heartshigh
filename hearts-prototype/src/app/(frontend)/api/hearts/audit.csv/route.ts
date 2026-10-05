@@ -20,10 +20,12 @@ export async function GET(req: Request) {
   const refused = await viewAsRefusal(session, 'audit.export')
   if (refused) return refused
   const url = new URL(req.url)
+  const requested = url.searchParams.get('portal')
   const portal = await portalOf(session, req)
+  if (session.actor.role !== 'master' && requested && !portal) return json({ error: 'That portal is not yours.' }, 403)
   const portalId = session.actor.role === 'master' ? portal?.id || null : portalIdOf(session.actor)
   if (session.actor.role !== 'master' && !portalId) return json({ error: 'That portal is not yours.' }, 403)
-  if (session.actor.role !== 'master' && url.searchParams.get('portal') && portal && portal.id !== portalId) {
+  if (session.actor.role !== 'master' && requested && portal && portal.id !== portalId) {
     return json({ error: 'That portal is not yours.' }, 403)
   }
   const where: Record<string, unknown>[] = []

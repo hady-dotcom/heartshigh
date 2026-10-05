@@ -123,17 +123,18 @@ test.describe('Lane D admin desk', () => {
     await signIn(page, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin/trash')
     await expect(page.getByTestId('admin-trash')).toBeVisible()
     await expect(page.getByTestId('nav-trash')).toBeVisible()
-    await page.evaluate(async (id: number) => {
-      const body = new URLSearchParams({
+    const moved = await page.request.post('/api/hearts', {
+      form: {
         action: 'trash-remove',
         collection: 'courses',
-        id: String(id),
+        id: String(course.id),
         portalSlug: 'east-london',
         next: '/p/east-london/admin/trash',
-      })
-      await fetch('/api/hearts', { method: 'POST', body, redirect: 'manual' })
-    }, course.id)
-    await page.reload()
+      },
+      maxRedirects: 0,
+    })
+    expect([302, 303]).toContain(moved.status())
+    await page.goto('/p/east-london/admin/trash')
     const row = page.getByTestId('trash-row').filter({ hasText: title })
     await expect(row).toBeVisible()
     const hidden = await master.get(`/api/courses/${course.id}?depth=0`)
