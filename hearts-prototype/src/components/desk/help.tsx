@@ -16,11 +16,11 @@ export function DeskHelp({
   const heading = useId()
   return (
     <>
-      <button type="button" className={styles.btn} aria-label={title} aria-expanded={open} data-testid="desk-help" onClick={() => setOpen(true)}>
+      <button type="button" className={styles.btn} aria-label={title} aria-expanded={open} data-testid="desk-page-help" onClick={() => setOpen(true)}>
         ?
       </button>
       {open ? (
-        <div className={styles.back} data-testid="desk-help-dialog" onClick={() => setOpen(false)}>
+        <div className={styles.back} data-testid="desk-page-help-dialog" onClick={() => setOpen(false)}>
           <div className={styles.card} role="dialog" aria-modal="true" aria-labelledby={heading} onClick={(event) => event.stopPropagation()}>
             <h2 id={heading}>{title}</h2>
             <div className={styles.body}>{children}</div>

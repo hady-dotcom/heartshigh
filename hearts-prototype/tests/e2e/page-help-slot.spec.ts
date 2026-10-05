@@ -44,7 +44,7 @@ test('the page ? sits in its own slot on Home, Lanes, Me, the course and join', 
   await expect(page.getByTestId('me')).toBeVisible()
   await assertHelpClear(page, 'Me')
   await page.goto(`${BASE}/course/1`)
-  await expect(page.getByTestId('course')).toBeVisible()
+  await expect(page.getByTestId('course-overview').or(page.getByTestId('course-title'))).toBeVisible()
   await assertHelpClear(page, 'course')
   await page.goto('/join')
   await expect(page.getByTestId('join')).toBeVisible()

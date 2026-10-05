@@ -69,7 +69,8 @@ async function watchFrames(page: Page) {
     const tick = () => {
       const root = document.querySelector<HTMLElement>('.journey')
       if (root?.dataset.phase === 'feed') {
-        const box = root.getBoundingClientRect()
+        const clip = document.querySelector<HTMLElement>('.j-clip, [data-testid="player-slot"]')
+        const box = (clip || root).getBoundingClientRect()
         const layers: { rect: DOMRect; ready: boolean; name: string }[] = []
         const clip = document.querySelector('.j-clip')
         if (clip) layers.push({ rect: clip.getBoundingClientRect(), ready: true, name: 'card' })
@@ -229,7 +230,7 @@ test('the extended cut opens on our own poster with the talk title, never a titl
   await page.getByTestId('learn-more').tap()
   await expect(feed).toHaveAttribute('data-mode', 'appetiser')
   await expect(feed).toHaveAttribute('data-video', 'yes')
-  await expect(page.locator('.chip.gold')).toHaveText('Ready for more?')
+  await expect(page.getByTestId('level-chip')).toHaveText('Ready for more?')
   const poster = page.getByTestId('poster-frame')
   if (await poster.count()) {
     await expect(poster).toHaveAttribute('data-poster', /own|frame/)

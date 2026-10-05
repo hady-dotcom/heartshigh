@@ -6,7 +6,6 @@ import { OptInLane, PrefToggle, SoundOnToggle, StartAgain } from '@/components/a
 import { SavedList, SavedToast } from '@/components/app/saved-list'
 import { EmptyState } from '@/components/app/empty'
 import { KeepHearts } from '@/components/app/install-card'
-import { ThemePinControl } from '@/components/theme/theme-pin'
 import { Qr } from '@/components/qr'
 import { dayNumber, portalName } from '@/server/learner'
 import { shapedFor } from '@/server/missions'
@@ -41,7 +40,6 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
           <Avatar name={user.name || user.email} portrait={null} size={58} />
           <span><b data-testid="me-name">{user.name || user.email}</b><small className="muted">{portalName(portal)} · day <span data-testid="day-number">{dayNumber(user)}</span></small></span>
         </div>
-        <ThemePinControl />
         <SavedToast />
         <p className="eyebrow" id="saved" style={{ marginTop: 18 }}>Saved</p>
         <SavedList base={base} />

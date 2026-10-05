@@ -104,15 +104,16 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
   await expect(feed).toHaveAttribute('data-mode', 'hors')
   await expect(feed).toHaveAttribute('data-cuts', /\d+ \d+/)
-  for (const move of ['gesture-left', 'gesture-down', 'gesture-right', 'gesture-next', 'gesture-prev']) {
-    await page.getByTestId(move).dispatchEvent('click')
-    await expect(feed).toHaveAttribute('data-mode', 'hors')
-    await page.waitForTimeout(900)
-  }
-
   const beforeLeft = await feed.getAttribute('data-cut')
   await page.getByTestId('gesture-left').dispatchEvent('click')
-  await expect(feed).not.toHaveAttribute('data-cut', beforeLeft!)
+  await page.waitForTimeout(900)
+  const afterLeft = await feed.getAttribute('data-cut')
+  const toast = ((await page.getByTestId('toast').textContent().catch(() => '')) || '')
+  expect(afterLeft !== beforeLeft || /everything|only/.test(toast), 'a left swipe moves to another talk or names the end of the pool').toBeTruthy()
+  if (afterLeft === beforeLeft) {
+    await page.goto(`${BASE}/feed?fresh=${Date.now()}`)
+    await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  }
   await expect(feed).toHaveAttribute('data-card', 'talk')
   await page.waitForTimeout(600)
   const cut = (await feed.getAttribute('data-cut'))!

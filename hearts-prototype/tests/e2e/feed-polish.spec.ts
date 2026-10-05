@@ -65,6 +65,9 @@ test('one Tap for sound on the first clip and on the 3-minute version; scenic ch
   expect(rows.length).toBeGreaterThan(0)
   for (const row of rows) expect(row.ratio, `${row.text} ${row.ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(3)
 
+  await page.goto(`${PORTAL}/feed?fresh=${Date.now()}`)
+  await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  await settled(feed, page)
   await stepTo(page, feed, 'talk')
   await page.getByTestId('learn-more').click()
   await expect(feed).toHaveAttribute('data-mode', 'appetiser')

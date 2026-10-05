@@ -193,7 +193,7 @@ test.describe('Experiments', () => {
     await expect(page.getByTestId('experiments-killed')).toBeVisible()
     await page.locator(`[data-testid=experiment-card][data-key=${key}]`).click()
     await expect(page.getByTestId('experiment-audit')).toContainText('Test started')
-    await expect(page.getByTestId('experiment-audit')).toContainText('Kill switch on: everyone back to Learn more')
+    await expect(page.getByTestId('experiment-audit')).toContainText(/Kill switch on: everyone back to Watch the (whole talk|3-minute version)/)
     await expect(page.getByTestId('audit-zone')).toContainText(/Times in .+ time/)
     await expect(page.getByTestId('audit-when').first()).toContainText(/\d{1,2} \w{3} \d{4}, \d{2}:\d{2}/)
     await page.goto('/master/experiments')

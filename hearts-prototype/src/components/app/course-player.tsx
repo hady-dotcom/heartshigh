@@ -888,7 +888,7 @@ function Sheet({
             ) : null}
           </form>
         ) : null}
-        {swarmOn || point.answered ? (
+        {swarmOn ? (
           <>
             <SwarmList
               items={swarm.map((item) => ({ ...item, initials: item.initials || initialsOf(item.name) }))}
