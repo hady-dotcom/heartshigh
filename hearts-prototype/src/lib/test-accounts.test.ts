@@ -17,6 +17,7 @@ describe('isTestAccount', () => {
     assert.equal(isTestAccount('demo-learner@hearts.foundation', 'Amina Yusuf'), false)
     assert.equal(isTestAccount('demo-complete@hearts.foundation', 'Yusuf Rahman'), false)
     assert.equal(isTestAccount('walkthrough@hearts.foundation', 'Amina Yusuf'), false)
+    assert.equal(isTestAccount('afternoon.walk.demo+1005@example.com', 'Afternoon Walk'), false)
     assert.equal(isTestAccount('elm-learner@hearts.test', 'Maryam'), false)
     assert.equal(isTestAccount('demo-admin@hearts-demo.test', 'Nabil Hassan (demo)'), false)
     assert.equal(isTestAccount('layla@hearts-demo.test', 'Layla Rahman (demo)'), false)

@@ -46,7 +46,7 @@ Access codes are random on every seed, in the form `ELM-7KQX-M4TD`. The seed pri
 
 ### Afternoon walkthrough (hearts-demo)
 
-`npm run demo:walkthrough` fills the `hearts-demo` portal only: named learner `walkthrough@hearts.foundation`, watch progress on the key demo talks, workbook answers, Garden growth, small acts, My week, and HEARTS circle sample answers. It is additive and safe on Railway production. How to run it, the join path, and what looks full afterwards are in [docs/DEMO-WALKTHROUGH.md](docs/DEMO-WALKTHROUGH.md).
+`npm run demo:walkthrough` fills the `hearts-demo` portal only. On production it adds to the existing **Afternoon Walk** account (`afternoon.walk.demo+1005@example.com`) without wiping it, and it also keeps a named seed login `walkthrough@hearts.foundation`. Watch progress, workbook answers, Garden rings, small acts, My week and HEARTS circle samples. Additive and safe on Railway. How to run it, both logins, and what looks full afterwards are in [docs/DEMO-WALKTHROUGH.md](docs/DEMO-WALKTHROUGH.md).
 
 ## What is seeded
 

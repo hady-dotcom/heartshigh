@@ -3,7 +3,7 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
-import { WALKTHROUGH_LEARNER_EMAIL, WALKTHROUGH_PLAN_NAME } from '../../src/lib/walkthrough-demo'
+import { AFTERNOON_WALK_EMAIL, WALKTHROUGH_LEARNER_EMAIL, WALKTHROUGH_PLAN_NAME } from '../../src/lib/walkthrough-demo'
 
 const dir = mkdtempSync(path.join(tmpdir(), 'hearts-walkthrough-'))
 process.env.DATABASE_URL = `file:${path.join(dir, 'hearts.db')}`
@@ -79,6 +79,53 @@ test('demo:walkthrough writes only hearts-demo, never touches passwords, and a s
       status: 'published',
     },
   })
+  const demoPortal = await payload.create({
+    collection: 'portals',
+    overrideAccess: true,
+    data: {
+      name: 'HEARTS demo',
+      slug: 'hearts-demo',
+      kind: 'mosque',
+      wizardDone: true,
+      timeZone: 'America/Toronto',
+    } as never,
+  })
+  const afternoon = await payload.create({
+    collection: 'users',
+    overrideAccess: true,
+    data: {
+      email: AFTERNOON_WALK_EMAIL,
+      password: 'keep-afternoon-walk-password',
+      name: 'Afternoon Walk',
+      role: 'learner',
+      audience: 'learner',
+      tenants: [{ tenant: demoPortal.id }],
+      onboarded: true,
+      seenWelcome: true,
+    } as never,
+  })
+  await payload.create({
+    collection: 'completions',
+    overrideAccess: true,
+    data: { user: afternoon.id, lesson: lesson.id, portal: demoPortal.id, percent: 40, sourceLevel: 'talk' },
+  })
+  await payload.create({
+    collection: 'schedules',
+    overrideAccess: true,
+    data: {
+      name: 'Afternoon sittings',
+      owner: afternoon.id,
+      learners: [afternoon.id],
+      targetType: 'course',
+      course: course.id,
+      portal: demoPortal.id,
+      startDate: '2026-10-05',
+      endDate: '2026-10-11',
+      weekdays: [1, 3],
+      slots: [{ date: '2026-10-05', lessonId: lesson.id, title: 'Ar-Rabb' }],
+    } as never,
+  })
+
   await payload.create({
     collection: 'opening-scenes',
     overrideAccess: true,
@@ -108,6 +155,7 @@ test('demo:walkthrough writes only hearts-demo, never touches passwords, and a s
   assert.ok(first.joinCode)
   assert.match(first.joinPath, /\/join\?code=/)
   assert.ok(first.courses.some((row) => row.key === 'ar-rabb' && row.percent === 100))
+  assert.ok(first.alsoFilled.includes(AFTERNOON_WALK_EMAIL))
 
   const portal = (await payload.find({
     collection: 'portals',
@@ -155,7 +203,7 @@ test('demo:walkthrough writes only hearts-demo, never touches passwords, and a s
     limit: 20,
     where: { and: [{ portal: { equals: portal.id } }, { user: { equals: learner.id } }] },
   })
-  assert.equal(rituals.docs.length, 6)
+  assert.equal(rituals.docs.length, 8)
   const plans = await payload.find({
     collection: 'schedules',
     overrideAccess: true,
@@ -226,6 +274,33 @@ test('demo:walkthrough writes only hearts-demo, never touches passwords, and a s
     where: { and: [{ portal: { equals: portal.id } }, { name: { equals: WALKTHROUGH_PLAN_NAME } }] },
   })
   assert.equal(plansAgain.docs.length, 1)
+
+  const afternoonPlans = await payload.find({
+    collection: 'schedules',
+    overrideAccess: true,
+    depth: 0,
+    limit: 10,
+    where: { and: [{ portal: { equals: portal.id } }, { owner: { equals: afternoon.id } }] },
+  })
+  assert.equal(afternoonPlans.docs.length, 1)
+  assert.equal((afternoonPlans.docs[0] as { name?: string }).name, 'Afternoon sittings')
+  const afternoonDone = await payload.find({
+    collection: 'completions',
+    overrideAccess: true,
+    depth: 0,
+    limit: 10,
+    where: { and: [{ user: { equals: afternoon.id } }, { lesson: { equals: lesson.id } }] },
+  })
+  assert.equal(afternoonDone.docs.length, 1)
+  assert.equal(Number((afternoonDone.docs[0] as { percent?: number }).percent), 100)
+  const afternoonRituals = await payload.find({
+    collection: 'rituals',
+    overrideAccess: true,
+    depth: 0,
+    limit: 20,
+    where: { user: { equals: afternoon.id } },
+  })
+  assert.ok(afternoonRituals.docs.length >= 8)
 
   const leakedCompletions = await payload.find({
     collection: 'completions',

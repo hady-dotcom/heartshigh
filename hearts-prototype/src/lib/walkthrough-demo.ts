@@ -15,6 +15,11 @@ export const WALKTHROUGH_PLAN_NAME = 'Walkthrough week'
 export const WALKTHROUGH_LEARNER_EMAIL = 'walkthrough@hearts.foundation'
 export const WALKTHROUGH_LEARNER_NAME = 'Amina Yusuf'
 export const EXISTING_DEMO_LEARNER_EMAIL = 'demo-learner@hearts.foundation'
+/** Live production walkthrough account. Never wipe; fill only. Password stays as Leon set it. */
+export const AFTERNOON_WALK_EMAIL = 'afternoon.walk.demo+1005@example.com'
+export const AFTERNOON_WALK_NAME = 'Afternoon Walk'
+
+export const EXISTING_FILL_EMAILS = [AFTERNOON_WALK_EMAIL, EXISTING_DEMO_LEARNER_EMAIL] as const
 
 /** Printed only when this run creates the walkthrough account. */
 export const DEFAULT_WALKTHROUGH_PASSWORD = 'walkthrough-afternoon'
@@ -93,6 +98,8 @@ export const WALKTHROUGH_RITUALS: RitualDraft[] = [
   { note: 'Left the last biscuit. My brother did not notice.' },
   { note: 'Put the phone in the kitchen before I sat down with the talk.' },
   { note: 'Made tea for the man on the till who looked done in.' },
+  { note: 'Sat in the car for a minute before I went in, like Dad used to.' },
+  { note: 'Put a glass of water out for the next person after taraweeh.' },
 ]
 
 export type LearnerAnswerDraft = {

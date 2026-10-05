@@ -10,8 +10,10 @@ import { idOf, portalIdOf } from '../lib/ids'
 import { ensurePackAdopted } from '../server/pack-adopt'
 import { giveHarvest } from '../server/scripture'
 import {
+  AFTERNOON_WALK_EMAIL,
+  AFTERNOON_WALK_NAME,
   COURSE_NEEDLES,
-  EXISTING_DEMO_LEARNER_EMAIL,
+  EXISTING_FILL_EMAILS,
   WALKTHROUGH_CODE_LABEL,
   WALKTHROUGH_CODE_PREFIX,
   WALKTHROUGH_LEARNER_EMAIL,
@@ -363,8 +365,8 @@ async function fillOpening(payload: Payload, user: Doc, portalId: number, create
 function watchPlan(lessons: MatchedLesson[]) {
   const keyComplete = lessons.filter((lesson) => isKeyDemoCourse(lesson.key))
   const starters = lessons.filter((lesson) => lesson.key === 'starter')
-  const complete = [...keyComplete, ...starters.slice(0, 6)]
-  const partial = starters.slice(6, 8)
+  const complete = [...keyComplete, ...starters.slice(0, 10)]
+  const partial = starters.slice(10, 13)
   const seen = new Set<number>()
   const rows: { lesson: MatchedLesson; percent: number; daysAgo: number }[] = []
   complete.forEach((lesson, index) => {
@@ -578,6 +580,19 @@ async function fillWeek(
   if (!weekLessons.length) return
   const slots = walkthroughWeekSlots(new Date(), weekLessons)
   if (!slots.length) return
+  const mine = (await payload.find({
+    collection: 'schedules',
+    overrideAccess: true,
+    depth: 0,
+    limit: 20,
+    where: { and: [{ portal: { equals: portalId } }, { or: [{ owner: { equals: user.id } }, { learners: { contains: user.id } }] }] },
+  })).docs as unknown as Doc[]
+  const existing = mine.find((plan) => String(plan.name) === WALKTHROUGH_PLAN_NAME)
+  const otherOwn = mine.filter((plan) => String(plan.name) !== WALKTHROUGH_PLAN_NAME)
+  if (!existing && otherOwn.length) {
+    bump(reused, 'schedules')
+    return
+  }
   const data = {
     name: WALKTHROUGH_PLAN_NAME,
     owner: user.id,
@@ -591,7 +606,6 @@ async function fillWeek(
     minutesPerDay: 20,
     slots,
   }
-  const existing = await one(payload, 'schedules', { and: [{ portal: { equals: portalId } }, { name: { equals: WALKTHROUGH_PLAN_NAME } }, { owner: { equals: user.id } }] })
   if (existing) {
     await payload.update({ collection: 'schedules', id: existing.id, overrideAccess: true, data: data as never })
     bump(reused, 'schedules')
@@ -599,6 +613,41 @@ async function fillWeek(
   }
   await payload.create({ collection: 'schedules', overrideAccess: true, data: data as never })
   bump(created, 'schedules')
+}
+
+async function fillSeats(payload: Payload, user: Doc, portalId: number, created: Record<string, number>, reused: Record<string, number>) {
+  const seats = (await payload.find({
+    collection: 'seats',
+    overrideAccess: true,
+    depth: 0,
+    limit: 40,
+    sort: 'position',
+  })).docs as unknown as Doc[]
+  if (!seats.length) return
+  const have = (await payload.find({
+    collection: 'seat-visits',
+    overrideAccess: true,
+    depth: 0,
+    limit: 80,
+    where: { user: { equals: user.id } },
+  })).docs as unknown as Doc[]
+  const seen = new Set(have.map((row) => idOf(row.seat)).filter((id): id is number => Boolean(id)))
+  const want = 12
+  if (seen.size >= want) {
+    bump(reused, 'seats', seen.size)
+    return
+  }
+  for (const seat of seats) {
+    if (seen.size >= want) break
+    if (seen.has(seat.id)) continue
+    await payload.create({
+      collection: 'seat-visits',
+      overrideAccess: true,
+      data: { user: user.id, seat: seat.id, portal: portalId, returned: true } as never,
+    })
+    seen.add(seat.id)
+    bump(created, 'seats')
+  }
 }
 
 async function fillCircle(payload: Payload, portalId: number, lessons: MatchedLesson[], created: Record<string, number>, reused: Record<string, number>) {
@@ -665,6 +714,7 @@ async function fillLearner(
   const plan = await fillProgress(payload, user, portalId, lessons, created, reused, notes)
   await fillAnswers(payload, user, portalId, plan.map((row) => row.lesson), created, reused)
   await fillRituals(payload, user, portalId, created, reused)
+  await fillSeats(payload, user, portalId, created, reused)
   await fillWeek(payload, user, portalId, lessons, created, reused)
   return plan
 }
@@ -692,17 +742,18 @@ export async function seedWalkthroughDemo(payload: Payload): Promise<Walkthrough
   if (!walkthrough) return { ok: false, reason: `${WALKTHROUGH_LEARNER_EMAIL} could not be used on ${WALKTHROUGH_PORTAL_SLUG}. Nothing else was written for that account.` }
   const alsoFilled: string[] = []
   const plan = await fillLearner(payload, walkthrough.user, portalId, lessons, created, reused, notes)
-  const existingDemo = await ensureLearner(
-    payload,
-    { email: EXISTING_DEMO_LEARNER_EMAIL, name: WALKTHROUGH_LEARNER_NAME, create: false },
-    portalId,
-    code.id,
-    courseIds,
-    notes,
-  )
-  if (existingDemo) {
-    await fillLearner(payload, existingDemo.user, portalId, lessons, created, reused, notes)
-    alsoFilled.push(EXISTING_DEMO_LEARNER_EMAIL)
+  for (const email of EXISTING_FILL_EMAILS) {
+    const existing = await ensureLearner(
+      payload,
+      { email, name: email === AFTERNOON_WALK_EMAIL ? AFTERNOON_WALK_NAME : WALKTHROUGH_LEARNER_NAME, create: false },
+      portalId,
+      code.id,
+      courseIds,
+      notes,
+    )
+    if (!existing) continue
+    await fillLearner(payload, existing.user, portalId, lessons, created, reused, notes)
+    alsoFilled.push(email)
   }
   await fillCircle(payload, portalId, lessons, created, reused)
   if (!lessons.some((lesson) => lesson.key === 'sheltered')) {

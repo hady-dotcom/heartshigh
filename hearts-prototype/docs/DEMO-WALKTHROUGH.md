@@ -10,7 +10,17 @@ Production: [https://heartshigh-production.up.railway.app](https://heartshigh-pr
 
 Portal: `/p/hearts-demo`
 
-**Named learner (this is the full garden):**
+**Use the account that is already on production first:**
+
+| | |
+|---|---|
+| Name | Afternoon Walk |
+| Email | `afternoon.walk.demo+1005@example.com` |
+| Password | the one Leon already has (this seed never changes it) |
+
+That account already has some workbook, watched talks and a My week plan. The seed **adds** more talks, workbook depth, harvest, Field seats, small acts and circle samples. It does not wipe what is there, and it leaves the existing My week plan alone.
+
+**Named seed account (created if missing):**
 
 | | |
 |---|---|
@@ -30,7 +40,7 @@ The seed prints the current learner code. On production it has looked like `HEAR
 https://heartshigh-production.up.railway.app/join?code=<printed-code>
 ```
 
-If `demo-learner@hearts.foundation` already belongs to hearts-demo, the seed fills that account too and leaves its password alone.
+If `afternoon.walk.demo+1005@example.com` or `demo-learner@hearts.foundation` already belong to hearts-demo, the seed fills those accounts too and leaves their passwords alone.
 
 ## How to run it on Railway production
 
@@ -59,7 +69,7 @@ Do **not** run `npm run seed` or `npm run reseed` on production. Those are refus
 
 ## What lands on hearts-demo
 
-For `walkthrough@hearts.foundation` (and `demo-learner@hearts.foundation` if that account is already on the portal):
+For Afternoon Walk (if already on the portal), `walkthrough@hearts.foundation`, and `demo-learner@hearts.foundation` (if already on the portal):
 
 - Opening answers already filled, so the path and Garden are not blank. Private opening rows stay private.
 - Substantial watch progress, or completion, on the key demo talks when they exist in the library:
@@ -68,7 +78,7 @@ For `walkthrough@hearts.foundation` (and `demo-learner@hearts.foundation` if tha
   - Names Class / Al-Nur
   - Divinely Sheltered, if that title is in the library
   - Other starter talks on the feed (anxiety, mosques, wealth, gratitude, time, dua, and similar)
-- Garden watched counts, harvest lines from finished talks that have a transcript, and small acts kept with ordinary wording.
+- Garden rings filled further: more talks watched, Jibril sections from those talks, Field seats visited, harvest lines from finished talks that have a transcript, and small acts kept with ordinary wording.
 - Workbook entries in a human voice. A few stay private. Shared ones can appear in the swarm as initials.
 - HEARTS circle sample answers on those questions, scoped to hearts-demo, labelled **From the HEARTS circle**, first names only (the swarm shows initials).
 - A **My week** plan named “Walkthrough week” with a few sittings on this week, including today.

@@ -25,7 +25,10 @@ if (result.createdLearner && result.password) {
 } else {
   console.log(`Password for ${WALKTHROUGH_LEARNER_EMAIL} was left as it is. If this run created it earlier, it was ${DEFAULT_WALKTHROUGH_PASSWORD} unless HEARTS_DEMO_WALKTHROUGH_PASSWORD was set.`)
 }
-if (result.alsoFilled.length) console.log(`Also filled: ${result.alsoFilled.join(', ')}`)
+if (result.alsoFilled.length) {
+  console.log('Also filled, passwords left as they are:')
+  for (const email of result.alsoFilled) console.log(`  ${email}`)
+}
 if (result.courses.length) {
   console.log('Talks marked on the walkthrough account:')
   for (const course of result.courses) console.log(`  ${course.percent}% · ${course.title}`)
