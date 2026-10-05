@@ -49,6 +49,8 @@ test.describe('Lane D admin desk', () => {
     if (await when.count()) {
       await expect(when).toHaveText(/\d{1,2} October 2026, \d{1,2}:\d{2} (AM|PM) ET/)
     }
+    await page.locator('nextjs-portal').evaluate((el) => el.remove()).catch(() => null)
+    await page.screenshot({ path: '/cursor/stores/self/artifacts/d02_activity_toronto.png', fullPage: false })
     const rows = master ? await lastAudit(master, 'people.export') : []
     expect(rows.length).toBeGreaterThan(0)
     expect(rows[0].portal).toBeTruthy()
@@ -163,7 +165,8 @@ test.describe('Lane D admin desk', () => {
     await expect(codeRow).toBeVisible()
     await expect(courseRow.getByTestId('trash-days-left')).toContainText('30')
     await expect(codeRow.getByTestId('trash-days-left')).toContainText('30')
-    await page.screenshot({ path: '/cursor/stores/self/artifacts/c15_recently_removed_filled.png', fullPage: false })
+    await page.locator('nextjs-portal').evaluate((el) => el.remove()).catch(() => null)
+    await page.screenshot({ path: '/cursor/stores/self/artifacts/c15_recently_removed_days_left.png', fullPage: false })
     expect((await master.get(`/api/courses/${courseId}?depth=0`)).ok()).toBeFalsy()
     await courseRow.getByTestId('trash-restore').click()
     await expect(page.getByTestId('trash-row').filter({ hasText: title })).toHaveCount(0)
@@ -191,6 +194,8 @@ test.describe('Lane D admin desk', () => {
     await expect(page.getByTestId('retention-row').first()).toBeVisible()
     await expect(page.getByTestId('system-checked')).toHaveText(/\d{1,2} \w+ 2026, \d{1,2}:\d{2} (AM|PM) ET/)
     await expect(page.getByTestId('system-checked')).not.toContainText('UTC')
+    await page.locator('nextjs-portal').evaluate((el) => el.remove()).catch(() => null)
+    await page.screenshot({ path: '/cursor/stores/self/artifacts/d06_system_health_et.png', fullPage: false })
   })
 })
 
