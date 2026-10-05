@@ -15,7 +15,8 @@ function pickStyle(index: number, visit: number, previous: string, base = 0): Sl
 }
 
 function paintExtractBeat(quote: string, fromExtract: boolean) {
-  const line = beatLine(quote || '') || quote
+  const line = beatLine(quote || '')
+  if (!line) return ''
   return fromExtract ? kineticExtractLine(line) : line
 }
 
