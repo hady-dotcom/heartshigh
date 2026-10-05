@@ -1,0 +1,10 @@
+{
+  "command": "npm run test:unit",
+  "tests": 326,
+  "fail": 0,
+  "pass": 326,
+  "s05MediaAccess": {
+    "tests": 6,
+    "fail": 0
+  }
+}
