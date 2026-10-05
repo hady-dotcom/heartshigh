@@ -1,9 +1,12 @@
-# Railway: set the service root directory to hearts-prototype so this file and the Dockerfile are found.
+# Service root directory must be hearts-prototype, so this file and the Dockerfile sit at the build root.
+# Do not set builder = "DOCKERFILE". Railpack prepare ignores that value and fails the deploy
+# ("ignored DOCKERFILE builder in railway.toml"). A file named Dockerfile is still detected
+# when the builder is Dockerfile. If the platform builds with Railpack, railpack.json matches the image.
 [build]
-builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
+startCommand = "node --import tsx scripts/start-production.ts"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
