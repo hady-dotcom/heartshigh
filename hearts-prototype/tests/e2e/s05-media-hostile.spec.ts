@@ -35,11 +35,12 @@ test('S05: learner B cannot list or fetch learner A private answer media', async
   })
   expect(saved.ok(), await saved.text()).toBeTruthy()
   const result = await json(saved)
-  const answer = await json(await alice.get(`/api/answers/${result.answerId}?depth=1`))
-  const media = typeof answer.image === 'object' && answer.image ? answer.image : null
-  expect(media?.id, 'alice media').toBeTruthy()
-  const mediaId = media.id as number
-  const filename = String(media.filename || '')
+  expect(result.answerId, 'alice answer').toBeTruthy()
+  const answer = await json(await alice.get(`/api/answers/${result.answerId}?depth=0`))
+  const mediaId = typeof answer.image === 'object' && answer.image ? Number(answer.image.id) : Number(answer.image)
+  expect(mediaId, 'alice media').toBeTruthy()
+  const owned = await json(await alice.get(`/api/media/${mediaId}?depth=0`))
+  const filename = String(owned.filename || '')
 
   const listed = await json(await bob.get('/api/media?limit=100&depth=0'))
   const listedDocs = (listed.docs || []) as { id: number }[]
