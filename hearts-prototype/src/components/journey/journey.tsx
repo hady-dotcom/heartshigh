@@ -1557,7 +1557,7 @@ export function Journey(props: JourneyProps) {
   const started = playerReady && host.played && LIVE.has(host.state)
   const playingOut = playerReady && host.played && host.state === STATE.PLAYING
   const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (!playingOut || Boolean(errorNote) || offline)))
-  const waitingToPlay = phase === 'feed' && playerReady && !started && !errorNote && !offline
+  const waitingToPlay = phase === 'feed' && playerReady && !playingOut && !errorNote && !offline
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const lineShown = mode === 'hors' && lineAt >= 0 ? lineAt : -1
   const horsLine = lineShown >= 0 ? piece?.lines?.[lineShown] : null

@@ -102,7 +102,7 @@ test.describe('Experiments', () => {
       }
       const button = page.getByTestId('learn-more').first()
       await expect(button).toBeVisible({ timeout: 20_000 })
-      await expect(button).toHaveText(labels[person.variant])
+      await expect(button).toHaveText(new RegExp(`^${labels[person.variant]}(?: \\(\\d+ (?:min|talks)\\))?$`))
       seen.push(await button.innerText())
       const tracked = page.waitForResponse((response) => {
         const url = response.url()
