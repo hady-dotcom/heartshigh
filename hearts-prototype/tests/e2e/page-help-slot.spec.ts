@@ -81,3 +81,27 @@ test('Home and Me use the same day count', async ({ page }) => {
   const meDay = (await page.getByTestId('day-number').innerText()).replace(/\D/g, '')
   expect(meDay).toBe(homeDay)
 })
+
+test('? copy matches the page and never shows another page\'s help', async ({ page }) => {
+  await page.setViewportSize(PHONE)
+  await signIn(page)
+  const pages: [string, string, string][] = [
+    [BASE, 'home', 'How to use Home'],
+    [`${BASE}/lanes`, 'lanes', 'How to use Lanes'],
+    [`${BASE}/week`, 'plan', 'How to use My week'],
+    [`${BASE}/garden`, 'garden', 'How to use the Garden'],
+    [`${BASE}/me`, 'me', 'How to use Me'],
+    [`${BASE}/course/1`, 'course-overview', 'How to use this course'],
+    [`${BASE}/feed`, 'feed', 'How to use clips'],
+    [`${BASE}/start`, 'start', 'How to use the opening'],
+    [`${BASE}/help`, 'help', 'How to use Help'],
+    ['/login', 'login', 'How to sign in'],
+  ]
+  for (const [href, key, title] of pages) {
+    await page.goto(href)
+    await expect(page.getByTestId('page-help'), key).toHaveAttribute('data-page', key)
+    await page.getByTestId('page-help-open').click()
+    await expect(page.getByTestId('page-help-title'), key).toHaveText(title)
+    await page.getByTestId('page-help-close').click()
+  }
+})

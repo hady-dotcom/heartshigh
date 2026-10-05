@@ -112,7 +112,7 @@ const PAGES: Record<string, HelpCopy> = {
     title: 'How to use Me',
     body: [
       'This is your name, your week, your saved clips, your workbook and your settings.',
-      'The first rows take you to those places. Settings holds sound, privacy and the account.',
+      'Keep HEARTS on this phone opens the install card again. Settings holds sound, privacy and the account.',
     ],
   },
   settings: {
@@ -164,11 +164,151 @@ const PAGES: Record<string, HelpCopy> = {
       'Start a course from the list, or watch a short clip first.',
     ],
   },
+  help: {
+    title: 'How to use Help',
+    body: [
+      'These are people you can call or visit if you need support now.',
+      'The numbers and links are for this portal. Back to HEARTS returns you to the opening.',
+    ],
+  },
+  login: {
+    title: 'How to sign in',
+    body: [
+      'Use the email and password you joined with.',
+      'Teachers come into the app. The desk needs a laptop.',
+    ],
+  },
+  door: {
+    title: 'How to come in',
+    body: [
+      'If you have an access code, join from here. If you already have an account, sign in.',
+      'Teachers use the same door. They come into the app; the desk needs a laptop.',
+    ],
+  },
+  placing: {
+    title: 'How to begin',
+    body: [
+      'A few short questions help us choose a gentle first talk. There is no right answer.',
+      'Skip this and play the scenes instead if you would rather.',
+    ],
+  },
+  'placing-result': {
+    title: 'How to use this page',
+    body: [
+      'This is a good first talk, chosen from what you just said.',
+      'Start the course, or go to your feed if you would rather watch a short clip first.',
+    ],
+  },
+  saved: {
+    title: 'How to use Saved',
+    body: [
+      'Clips you kept from the feed sit here.',
+      'Open one to watch it again. Nothing here is a test.',
+    ],
+  },
+  'support-page': {
+    title: 'How to ask for help',
+    body: [
+      'Write to the portal team here. You do not need an email.',
+      'They will read it. This is not the crisis contacts on the opening.',
+    ],
+  },
+  'shaped-page': {
+    title: 'How to use this page',
+    body: [
+      'Missions you joined, and what the group decided, sit here.',
+      'You cannot change a decision from this list.',
+    ],
+  },
+  'mission-page': {
+    title: 'How to use this ask',
+    body: [
+      'This is a thank-you, not a duty. Join if you can help, then mark it when you have done it.',
+      'Open the screen the ask is about if you want to try it now.',
+    ],
+  },
+  'live-screen': {
+    title: 'How to sit with a live talk',
+    body: [
+      'When it is live you can watch and send a question.',
+      'After it ends, a replay sits here if the teacher kept one.',
+    ],
+  },
+  gather: {
+    title: 'How to use Gather',
+    body: [
+      'These are meetings at your masjid or school. Say if you are coming.',
+      'You can bring someone who is not on HEARTS yet, or suggest a gathering.',
+    ],
+  },
+  'gather-detail': {
+    title: 'How to use this gathering',
+    body: [
+      'Say if you are coming, maybe, or cannot this time.',
+      'Share the link so someone who is not on HEARTS can still say they are coming.',
+    ],
+  },
+  'gather-propose': {
+    title: 'How to suggest a gathering',
+    body: [
+      'Propose a time and a kind of meeting. The portal team will look.',
+      'This does not book the room on its own.',
+    ],
+  },
+  'gather-door': {
+    title: 'How to arrive',
+    body: [
+      'This is the door list for tonight. Tick yourself in when you are here.',
+      'Your teacher can also tick you in.',
+    ],
+  },
+  'gather-reflect': {
+    title: 'How to reflect',
+    body: [
+      'A short note after the gathering. Only you and the portal team see it unless you share.',
+    ],
+  },
+  recalibrate: {
+    title: 'How to take a fresh look',
+    body: [
+      'Five short questions, in different words from last time. There is no right answer.',
+      'Your path on Me updates from what you sit with, not from a score.',
+    ],
+  },
+  closed: {
+    title: 'How to use this page',
+    body: [
+      'This portal is paused. Your answers and your garden are kept.',
+      'Sign out if you need to leave this phone.',
+    ],
+  },
+  'feature-unavailable': {
+    title: 'How to use this page',
+    body: [
+      'This part is not on in your portal yet.',
+      'Go back home, or ask your teacher if you were expecting it.',
+    ],
+  },
+}
+
+/** Screen test ids that share another page's copy. Never point at a different kind of page. */
+const ALIASES: Record<string, string> = {
+  'welcome-films': 'welcome',
+  'garden-door': 'garden-jibril',
+  'mission-missing': 'mission-page',
+  forgot: 'login',
+  reset: 'login',
+}
+
+export function helpPageKey(page: string | undefined | null) {
+  if (!page) return 'default'
+  const key = ALIASES[page] || page
+  return PAGES[key] ? key : 'default'
 }
 
 export function helpFor(page: string | undefined | null): HelpCopy {
-  if (!page) return DEFAULT
-  return PAGES[page] || DEFAULT
+  const key = helpPageKey(page)
+  return key === 'default' ? DEFAULT : PAGES[key]
 }
 
 /** Learner-facing '?' copy for report and announce. Two to four short sentences. */

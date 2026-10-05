@@ -15,7 +15,7 @@ function HelpSheet({ title, body, titleId, onClose }: { title: string; body: str
   return (
     <div className="page-help-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} data-testid="page-help-sheet" onClick={onClose}>
       <div className="page-help-card" onClick={(event) => event.stopPropagation()}>
-        <h2 id={titleId}>{title}</h2>
+        <h2 id={titleId} data-testid="page-help-title">{title}</h2>
         {body.map((line) => (
           <p key={line}>{line}</p>
         ))}
