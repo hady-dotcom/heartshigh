@@ -28,7 +28,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
     ...(featureOn(portal, 'compass') ? [['path', 'Where to grow next', 'Plain words, only when a real talk or answer backs them', 'me/path'] as [string, string, string, string]] : []),
     ...(featureOn(portal, 'missions') ? [['shaped', 'Things you helped shape', 'Missions you joined, and what we decided', 'me/shaped'] as [string, string, string, string]] : []),
     ['help', 'Ask for help', 'Write to the team here. You do not need an email.', 'me/help'],
-    ['settings', 'Settings', 'Night alerts, watch history and signing out', 'me/settings'],
+    ['settings', 'Settings', 'Night alerts, watch history and logging out', 'me/settings'],
   ]
   if (user.role !== 'learner') links.unshift(['desk', 'Portal desk', 'Courses, codes and learners', 'admin'])
   return (
@@ -57,6 +57,10 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
             <span className="grow">{title}<small>{sub}</small></span>›
           </Link>
         ))}
+        <form action="/api/hearts" method="post" style={{ marginTop: 16 }}>
+          <Hidden fields={{ action: 'logout' }} />
+          <button className="pill outline block" type="submit" data-testid="logout">Log out</button>
+        </form>
         <p className="eyebrow" style={{ marginTop: 18 }}>Circle and nights</p>
         <Link className="list-link" href={`${base}/me/circle`} data-testid="me-circle">
           <span className="grow">Circle and nights<small>Your board, and the evenings you can come to</small></span>›
@@ -212,7 +216,7 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
         <StartAgain base={base} />
         <form action="/api/hearts" method="post" style={{ marginTop: 14 }}>
           <Hidden fields={{ action: 'logout' }} />
-          <button className="pill outline block" type="submit" data-testid="logout">Sign out</button>
+          <button className="pill outline block" type="submit" data-testid="logout">Log out</button>
         </form>
       </div>
       <TabBar base={base} active="me" portal={portal} unread={unread} />

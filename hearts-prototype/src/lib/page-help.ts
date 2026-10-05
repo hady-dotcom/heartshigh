@@ -279,7 +279,7 @@ const PAGES: Record<string, HelpCopy> = {
     title: 'How to use this page',
     body: [
       'This portal is paused. Your answers and your garden are kept.',
-      'Sign out if you need to leave this phone.',
+      'Log out if you need to leave this phone.',
     ],
   },
   'feature-unavailable': {
