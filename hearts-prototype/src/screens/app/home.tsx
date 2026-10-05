@@ -24,6 +24,8 @@ import { HomeGather, homeGatherings } from './gather'
 import { HomeLive, liveHomeBits } from './live'
 import { activeMissionCard } from './mission'
 import { featureOn } from '@/lib/features'
+import { openAnnouncements } from '@/server/safety'
+import { AnnounceCard } from '@/components/app/announce-card'
 import { type Ctx, ref, rows, str, unreadCount } from '../common'
 
 function minutesLeft(seconds: number, percent: number) {
@@ -108,6 +110,9 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         <SavedToast />
         <span className="sr-only">{portalName(portal)}</span>
         <Flash error={query.error} notice={query.notice} />
+        {(await openAnnouncements(payload, user, portal.id)).map((note) => (
+          <AnnounceCard key={note.id} id={note.id} body={str(note.body)} next={base} />
+        ))}
         {featureOn(portal, 'missions') ? await activeMissionCard(payload, portal.id, base) : null}
         {featureOn(portal, 'garden') ? (
         <section className="grow-banner" data-testid="grow-banner">

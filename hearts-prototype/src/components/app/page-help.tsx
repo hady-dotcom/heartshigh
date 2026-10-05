@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useId, useState } from 'react'
-import { helpFor } from '@/lib/page-help'
+import { helpFor, learnerHelp } from '@/lib/page-help'
 
 export function PageHelp({ page }: { page?: string }) {
   const [open, setOpen] = useState(false)
@@ -34,5 +34,59 @@ export function PageHelp({ page }: { page?: string }) {
         </div>
       ) : null}
     </div>
+  )
+}
+
+/** Small '?' on report and announce. Evening garden colours — no cream. */
+export function TopicHelp({ topic, label = 'What is this?' }: { topic: string; label?: string }) {
+  const text = learnerHelp(topic)
+  const [open, setOpen] = useState(false)
+  if (!text) return null
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', position: 'relative' }}>
+      <button
+        type="button"
+        className="help-mark"
+        data-help={topic}
+        data-testid={`page-help-${topic}`}
+        aria-expanded={open}
+        aria-label={label}
+        onClick={() => setOpen((value) => !value)}
+        style={{
+          width: 22,
+          height: 22,
+          borderRadius: 999,
+          border: '1px solid #D4A84B',
+          background: '#0E2A2B',
+          color: '#D4A84B',
+          fontWeight: 700,
+          cursor: 'pointer',
+        }}
+      >
+        ?
+      </button>
+      {open ? (
+        <span
+          role="dialog"
+          data-testid={`page-help-pop-${topic}`}
+          style={{
+            position: 'absolute',
+            zIndex: 20,
+            maxWidth: 280,
+            marginTop: 28,
+            padding: '12px 14px',
+            background: '#0E2A2B',
+            color: '#F4F0E6',
+            border: '1px solid #D4A84B',
+            borderRadius: 12,
+            boxShadow: '0 8px 24px rgba(14,42,43,0.45)',
+            fontSize: 14,
+            lineHeight: 1.45,
+          }}
+        >
+          {text}
+        </span>
+      ) : null}
+    </span>
   )
 }

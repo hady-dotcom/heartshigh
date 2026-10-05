@@ -11,6 +11,7 @@ import { DEFAULT_TIME_ZONE, isTimeZone } from './lib/zone-time'
 import { linkLadderParents } from './server/piece-parents'
 import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
+import { mediaReadAccess } from './collections-safety'
 import { circleProblems } from './lib/circle'
 import { cookiesSecure } from './lib/env'
 import { clientIp, hitAuth, limitsRelaxed } from './lib/rate-limit'
@@ -224,11 +225,7 @@ export const Media: CollectionConfig = {
     mimeTypes: ['image/*', 'audio/*', 'video/*', 'application/pdf', 'text/*'],
   },
   access: {
-    read: ({ req }) => {
-      if (req.user?.role === 'master') return true
-      const portal = portalIdOf(req.user as { tenants?: { tenant?: unknown }[] } | null)
-      return portal ? { portal: { equals: portal } } : false
-    },
+    read: mediaReadAccess,
     create: master,
     update: master,
     delete: master,
@@ -236,6 +233,18 @@ export const Media: CollectionConfig = {
   fields: [
     { name: 'alt', type: 'text' },
     { name: 'portal', type: 'relationship', relationTo: 'portals' },
+    { name: 'owner', type: 'relationship', relationTo: 'users' },
+    {
+      name: 'purpose',
+      type: 'select',
+      options: [
+        { label: 'Answer', value: 'answer' },
+        { label: 'Gather photo', value: 'gather-photo' },
+        { label: 'Portal asset', value: 'portal-asset' },
+        { label: 'Film', value: 'film' },
+        { label: 'Feedback', value: 'feedback' },
+      ],
+    },
   ],
 }
 

@@ -12,6 +12,7 @@ import { initialsOf } from '@/lib/swarm-sort'
 import { tidyTalkTitle } from '@/lib/talk-title'
 import { HeartIcon, ImageIcon, LockIcon, MicIcon, PauseIcon, PlayIcon } from '../icons'
 import { track } from '@/lib/experiment-track'
+import { ReportButton } from '@/components/app/report-sheet'
 
 export type PointView = {
   id: number
@@ -33,7 +34,7 @@ export type PointView = {
   gatherings?: { href: string; title: string; when: string }[]
 }
 
-export type SwarmItem = { name: string; body: string; image?: string | null; circle?: boolean; initials?: string }
+export type SwarmItem = { name: string; body: string; image?: string | null; circle?: boolean; initials?: string; id?: number; kind?: 'answer' | 'circle-answer' }
 
 function clock(total: number) {
   const value = Math.max(0, Math.floor(total))
@@ -884,12 +885,21 @@ function Sheet({
             ) : null}
           </form>
         ) : null}
-        {swarmOn ? (
-          <SwarmList
-            items={swarm.map((item) => ({ ...item, initials: item.initials || initialsOf(item.name) }))}
-            mine={point.myAnswer}
-            circleLabel={circleLabel}
-          />
+        {swarmOn || point.answered ? (
+          <>
+            <SwarmList
+              items={swarm.map((item) => ({ ...item, initials: item.initials || initialsOf(item.name) }))}
+              mine={point.myAnswer}
+              circleLabel={circleLabel}
+            />
+            {swarm.some((item) => item.id && item.kind) ? (
+              <div style={{ marginTop: 8 }}>
+                {swarm.filter((item) => item.id && item.kind).map((item) => (
+                  <ReportButton key={`${item.kind}-${item.id}`} targetType={item.kind!} targetId={item.id!} next={next} />
+                ))}
+              </div>
+            ) : null}
+          </>
         ) : null}
       </section>
     </>

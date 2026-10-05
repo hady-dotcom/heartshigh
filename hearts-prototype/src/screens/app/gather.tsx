@@ -11,6 +11,8 @@ import { now } from '@/lib/clock'
 import { loadDoors } from '@/server/doors'
 import { bringLink, listGatherings, sharePack, taskMatches, type GatherCard } from '@/server/gather'
 import { type Ctx, portalPeople, ref, rows, str, unreadCount } from '../common'
+import { ReportButton } from '@/components/app/report-sheet'
+import { hiddenIds } from '@/server/safety'
 
 const AUDIENCE_OPTIONS = [
   ['all', 'Everyone'],
@@ -94,7 +96,9 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
   const personal = bringLink(origin, card.slug, user.id)
   const circles = Array.isArray(doc.circles) ? (doc.circles as { name: string; memberIds: string[] }[]) : []
   const mine = circles.find((circle) => circle.memberIds.includes(String(user.id)))
-  const photos = await rows(payload, 'gather-photos', { and: [{ gathering: { equals: id } }, { consent: { equals: true } }] })
+  const allPhotos = await rows(payload, 'gather-photos', { and: [{ gathering: { equals: id } }, { consent: { equals: true } }] })
+  const hiddenPhotos = await hiddenIds(payload, 'gather-photo', allPhotos.map((row) => row.id))
+  const photos = allPhotos.filter((row) => !hiddenPhotos.has(row.id))
   const mediaIds = photos.map((row) => ref(row.image)).filter((value): value is number => Boolean(value))
   const media = mediaIds.length ? await rows(payload, 'media', { id: { in: mediaIds } }) : []
   const reflection = (await rows(payload, 'gather-reflections', { and: [{ gathering: { equals: id } }, { user: { equals: user.id } }] }))[0]
@@ -170,8 +174,13 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
             <p className="eyebrow">From the night</p>
             {photos.map((photo) => {
               const file = media.find((item) => item.id === ref(photo.image))
-              const src = str(file?.url)
-              return src ? <img key={photo.id} src={src} alt={str(photo.caption) || 'From the gathering'} style={{ width: '100%', borderRadius: 18, marginBottom: 8 }} /> : null
+              const src = file?.id ? `/api/hearts/file/${file.id}` : str(file?.url)
+              return src ? (
+                <div key={photo.id}>
+                  <img src={src} alt={str(photo.caption) || 'From the gathering'} style={{ width: '100%', borderRadius: 18, marginBottom: 8 }} />
+                  <ReportButton targetType="gather-photo" targetId={photo.id} next={`${base}/gather/${id}`} />
+                </div>
+              ) : null
             })}
           </section>
         ) : null}

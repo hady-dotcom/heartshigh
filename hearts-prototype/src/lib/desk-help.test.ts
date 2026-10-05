@@ -38,6 +38,8 @@ const PAGES = [
   'missions',
   'portalCreate',
   'portalEdit',
+  'safety',
+  'announcements',
 
 ]
 

@@ -636,18 +636,19 @@ export async function savePhoto(payload: Payload, gathering: Doc, user: SessionU
   if (user.role === 'learner' && idOf(gathering.host) !== user.id) return { ok: false as const, error: 'The host keeps the photos.' }
   if (!consent) return { ok: false as const, error: 'Tick the consent box before a photo is kept.' }
   if (!(file instanceof File) || file.size <= 0) return { ok: false as const, error: 'Choose a photo.' }
-  const ext = (file.name.match(/\.[a-z0-9]{1,5}$/i)?.[0] || '.jpg').toLowerCase()
-  const media = await payload.create({
-    collection: 'media',
-    overrideAccess: true,
-    data: { alt: caption.slice(0, 120) || 'Gathering photo', portal: portalId } as never,
-    file: { data: Buffer.from(await file.arrayBuffer()), mimetype: file.type || 'image/jpeg', name: `${randomUUID()}${ext}`, size: file.size },
-  })
-  await payload.create({
+  const { saveOwnedMedia } = await import('./media')
+  const { afterLearnerWords } = await import('./safety')
+  const { hitShared, GATHER_POST_PER_HOUR, HOUR_MS, gatherPostKey } = await import('@/lib/rate-store')
+  const { SLOW_DOWN } = await import('@/lib/safety')
+  const limited = await hitShared(payload, gatherPostKey(user.id), GATHER_POST_PER_HOUR, HOUR_MS)
+  if (!limited.allowed) return { ok: false as const, error: SLOW_DOWN }
+  const mediaId = await saveOwnedMedia(payload, file, { portal: portalId, owner: user.id, purpose: 'gather-photo', alt: caption.slice(0, 120) || 'Gathering photo', fallbackType: 'image/jpeg' })
+  const photo = await payload.create({
     collection: 'gather-photos',
     overrideAccess: true,
-    data: { gathering: gathering.id, image: media.id, caption: caption.slice(0, 160), consent: true, postedBy: user.id, portal: portalId } as never,
+    data: { gathering: gathering.id, image: mediaId, caption: caption.slice(0, 160), consent: true, postedBy: user.id, portal: portalId } as never,
   })
+  await afterLearnerWords(payload, user, portalId, caption, { type: 'gather-photo', id: photo.id as number })
   return { ok: true as const }
 }
 

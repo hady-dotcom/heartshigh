@@ -34,6 +34,11 @@ import { finishedBySchedule } from '@/lib/on-time'
 import { showUncheckedTalks, tierVisible } from './opening'
 import { tierSourceText } from './tier-source'
 import { handleCircle } from './circle'
+import { handleSafetyAction } from './safety-actions'
+import { saveOwnedMedia } from './media'
+import { afterLearnerWords, circleMutedUntil } from './safety'
+import { hitShared, UPLOAD_PER_HOUR, HOUR_MS, uploadKey } from '@/lib/rate-store'
+import { SLOW_DOWN } from '@/lib/safety'
 import { randomUUID } from 'node:crypto'
 import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourseIds, type Session, type SessionUser } from './context'
 import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCookie, wrote } from './viewas'
@@ -242,15 +247,8 @@ async function notify(payload: Payload, data: { user: number; portal?: number | 
   })
 }
 
-async function saveUpload(payload: Payload, file: File, portal: number | null, fallbackType: string) {
-  const ext = (file.name.match(/\.[a-z0-9]{1,5}$/i)?.[0] || '').toLowerCase()
-  const media = await payload.create({
-    collection: 'media',
-    overrideAccess: true,
-    data: { alt: file.name.slice(0, 120), portal: portal || undefined },
-    file: { data: Buffer.from(await file.arrayBuffer()), mimetype: file.type || fallbackType, name: `${randomUUID()}${ext}`, size: file.size },
-  })
-  return media.id as number
+async function saveUpload(payload: Payload, file: File, portal: number | null, fallbackType: string, owner?: number | null, purpose: 'answer' | 'feedback' = 'answer') {
+  return saveOwnedMedia(payload, file, { portal, owner, purpose, fallbackType, alt: file.name })
 }
 
 async function clauseCards(payload: Awaited<ReturnType<typeof getSession>>['payload']): Promise<ClauseCard[]> {
@@ -367,20 +365,26 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
     let imageId: number | undefined
     if (image instanceof File && image.size > 0) {
       if (!image.type.startsWith('image/')) return fail(400, 'That file needs to be an image.')
-      imageId = await saveUpload(payload, image, portal, 'image/jpeg')
+      imageId = await saveUpload(payload, image, portal, 'image/jpeg', user.id, 'answer')
     }
     const audio = audioFile
     let audioId: number | undefined
     if (audio instanceof File && audio.size > 0) {
-      audioId = await saveUpload(payload, audio, portal, 'audio/webm')
+      audioId = await saveUpload(payload, audio, portal, 'audio/webm', user.id, 'answer')
     }
     let videoId: number | undefined
     if (video instanceof File && video.size > 0) {
-      videoId = await saveUpload(payload, video, portal, 'video/mp4')
+      videoId = await saveUpload(payload, video, portal, 'video/mp4', user.id, 'answer')
+    }
+    if (imageId || audioId || videoId) {
+      const limited = await hitShared(payload, uploadKey(user.id), UPLOAD_PER_HOUR, HOUR_MS)
+      if (!limited.allowed) return fail(429, SLOW_DOWN)
     }
     const keepPrivate = Boolean(input.keepPrivate)
     const shareWithTeacher = Boolean(input.shareWithTeacher) || Boolean(point.showImam)
-    const shareWithLearners = !keepPrivate && Boolean(input.shareWithLearners)
+    // Other learners read an answer only when its author opted in to sharing with learners and chose it here.
+    let shareWithLearners = !keepPrivate && Boolean(input.shareWithLearners) && Boolean(user.shareWithLearners)
+    if (shareWithLearners && (await circleMutedUntil(payload, user.id))) shareWithLearners = false
     const screened = await screenAnswerSafe([body, choice].filter(Boolean).join(' '))
     const correct = point.kind === 'multiple_choice' && point.correctOption ? choice === point.correctOption : null
     const extra = {
@@ -406,6 +410,8 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
       if (entry.docs[0]) {
         await payload.update({ collection: 'workbook-entries', id: entry.docs[0].id, overrideAccess: true, data: { body: body || choice, consent: shareWithTeacher, ...(imageId ? { image: imageId } : {}) } })
       }
+      const crisis = Boolean(point.crisisOption && (body === point.crisisOption || choice === point.crisisOption))
+      await afterLearnerWords(payload, user, portal, body || choice, { type: 'answer', id: earlier.docs[0].id }, crisis)
       return { ok: true as const, answerId: earlier.docs[0].id, updated: true, keepPrivate, sharedWithLearners: shareWithLearners, correct }
     }
     const answer = await payload.create({
@@ -442,6 +448,8 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
         portal,
       },
     })
+    const crisis = Boolean(point.crisisOption && (body === point.crisisOption || choice === point.crisisOption))
+    await afterLearnerWords(payload, user, portal, body || choice, { type: 'answer', id: answer.id }, crisis)
     if (shareWithTeacher) await notifyTeachers(payload, user, portal, 'A learner shared an answer', `${user.name || 'A learner'} shared an answer with you.`)
     void recordExperimentQuietly(payload, user, 'question_answered', { point: pointId, lesson: lessonId || 0 })
     const followers = await payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 20, where: { contingent: { equals: pointId } } })
@@ -625,6 +633,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   }
 
   if (!user) return redirectTo(req, '/login', 'Please sign in first.')
+
+  const safety = await handleSafetyAction(action, form, payload, user, req, (path, error, notice) => redirectTo(req, path, error, notice))
+  if (safety) return safety
 
   if (action === 'clock') {
     if (!clockEnabled()) return redirectTo(req, text(form, 'next') || '/', 'The test clock is off.')
@@ -1850,7 +1861,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     let audioId: number | undefined
     if (audio instanceof File && audio.size > 0) {
       if (tooBig(audio)) return redirectTo(req, text(form, 'next') || '/', 'That file is over 200 MB.')
-      audioId = await saveUpload(payload, audio, idOf(answer.portal), 'audio/webm')
+      audioId = await saveUpload(payload, audio, idOf(answer.portal), 'audio/webm', user.id, 'feedback')
     }
     await payload.create({
       collection: 'feedback-notes',

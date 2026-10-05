@@ -71,6 +71,10 @@ export const PAGE: Record<string, string> = {
     'The calendar knows Friday, Ramadan, Dhul Hijjah, the two Eids and seasons you add. The Islamic day moves on at Maghrib. A suggested line never reaches a learner until you approve it.',
   missions:
     'A mission is a warm ask, never a scolding. Write a plain ask, why it matters, how many minutes, the dates, a target, and which portals. Ask for help is the in-app thread so nobody needs a support email.',
+  safety:
+    'Care and safety is where the portal team looks at concerns people raise, and at words the screen held back. Hide or keep an item, and send a short note. A gold box at the top is for the named person when someone may need support.',
+  announcements:
+    'Write a short note for everyone, for teachers, or for one access code. It appears on Home until they dismiss it. Learners cannot reply here — they write to their teacher.',
 }
 
 export const TOOL: Record<string, string> = {
@@ -154,6 +158,8 @@ export const TOOL: Record<string, string> = {
     'These are library courses this portal may link. Tick the ones they will use. You can add more later from the portal library. Nothing is copied; the original stays as the master desk set it.',
   portalFeatures:
     'Each switch is one part of HEARTS. Start small keeps videos, questions and the Garden. Add the community brings circle answers and the planner, and Everything turns every switch on. Saving takes effect at once.',
+  safeguarding:
+    'This box is for the named safeguarding lead. Other staff only see that a person is needed. The email says to look today and does not add extra personal detail.',
 }
 
 const TEST_IDS: Record<string, string> = {
@@ -202,6 +208,10 @@ const TEST_IDS: Record<string, string> = {
   'insights-desk': 'insights',
   'calendar-desk': 'calendar',
   'missions-desk': 'missions',
+  'admin-safety': 'safety',
+  'master-safety': 'safety',
+  'admin-announcements': 'announcements',
+  'master-announcements': 'announcements',
 }
 
 /** Page copy for a desk frame, from the nav key or the screen test id. */

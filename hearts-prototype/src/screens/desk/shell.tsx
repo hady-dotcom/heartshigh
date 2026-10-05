@@ -26,6 +26,8 @@ export function portalNav(base: string, user: SessionUser, portal?: FeatureSourc
     { key: 'nights', label: 'Nights', href: `${base}/admin/nights`, icon: <MoonIcon /> },
     { key: 'gather', label: 'Gather', href: `${base}/admin/gather`, icon: <PeopleIcon /> },
     { key: 'live', label: 'Go live', href: `${base}/admin/live`, icon: <MicIcon /> },
+    { key: 'safety', label: 'Care and safety', href: `${base}/admin/safety`, icon: <HeartIcon /> },
+    { key: 'announcements', label: 'Announcements', href: `${base}/admin/announcements`, icon: <BellIcon /> },
   ])
   if (user.role === 'teacher') {
     return [{ group: 'Beginner', description: 'Everyday work with the people in your portal.', items: [{ key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> }, ...teach] }]
@@ -52,6 +54,8 @@ export function portalNav(base: string, user: SessionUser, portal?: FeatureSourc
         { key: 'nights', label: 'Nights', href: `${base}/admin/nights`, icon: <MoonIcon /> },
         { key: 'live', label: 'Go live', href: `${base}/admin/live`, icon: <MicIcon /> },
         { key: 'missions', label: 'Missions', href: `${base}/admin/missions`, icon: <FlagIcon /> },
+        { key: 'safety', label: 'Care and safety', href: `${base}/admin/safety`, icon: <HeartIcon /> },
+        { key: 'announcements', label: 'Announcements', href: `${base}/admin/announcements`, icon: <BellIcon /> },
       ]),
     },
     {
@@ -95,6 +99,8 @@ export function masterNav(): NavGroup[] {
         { key: 'circle', label: 'Gather', href: '/master/circle', icon: <PeopleIcon /> },
         { key: 'nights', label: 'Live', href: '/master/nights', icon: <MoonIcon /> },
         { key: 'missions', label: 'Missions', href: '/master/missions', icon: <FlagIcon /> },
+        { key: 'safety', label: 'Care and safety', href: '/master/safety', icon: <HeartIcon /> },
+        { key: 'announcements', label: 'Announcements', href: '/master/announcements', icon: <BellIcon /> },
         { key: 'opening', label: 'Scenes', href: '/master/opening', icon: <SparkIcon /> },
         { key: 'lanes', label: 'Lanes', href: '/master/lanes', icon: <PathIcon /> },
       ],
