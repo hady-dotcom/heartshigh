@@ -1,0 +1,10 @@
+Isolated Postgres reruns of the 28 failures that were new on this branch vs PF.
+
+24 passed twice (RAM timeouts in the first full run, not regressions).
+The ET assertion (integration-r3 export log) passed twice after 8872df4.
+
+Still failing both isolated tries:
+1. integration-final.spec.ts — 240s test timeout + afterAll timeout
+2. portal-features.spec.ts — 180s timeout at users PATCH (Request context disposed)
+3. security.spec.ts — master POST /api/users teacher returned not-ok ("the master desk can still add people")
+4. sheet-packs.spec.ts — beforeAll 180s timeout creating a pack

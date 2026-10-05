@@ -11,34 +11,49 @@ Never pushed to live `cursor/hearts-prototype-v1-cf40`.
 | ID | Status | Proof |
 |---|---|---|
 | D01 Must | Done | `server/audit.ts`. Other lanes call `audit()`. |
-| D02 Should | Done | Activity in portal TZ (America/Toronto). British dates + day/month/year fields. Still: `stills/d02_activity_toronto.png`. |
-| D03 Must | Done | Real Postgres + s3rver + age drill. Encrypted dump refused without the key. Log: `restore-drill-postgres.log`. |
-| D04 Should | Done | Retention table + nightly job. System page lists every rule. |
+| D02 Should | Done | Activity in America/Toronto. British dates. Day/month/year fields. Still: `stills/d02_activity_toronto.png`. |
+| D03 Must | Done | Real Postgres + s3rver + age. Encrypted dump refused without the key. `restore-drill-postgres.log`. |
+| D04 Should | Done | Retention table + nightly job. |
 | D05 Should | Done | Bulk bar on Teach. Tick in the name cell. |
-| A12 Should | Done | Playwright A12 passed (sqlite + postgres Lane D). |
+| A12 Should | Done | Playwright A12 passed. |
 | A13 Should | Done | Playwright A13 + hostile CSV 403. |
 | K03 Should | Done | Playwright K03 passed. |
-| C15 Should | Done | Course + access code in Recently removed, 30 days left, restore course (completion lives), clock + retention empties the code. Still: `stills/c15_recently_removed_days_left.png`. |
+| C15 Should | Done | Course + access code, 30 days left, restore course (completion lives), clock + retention empties the code. Still: `stills/c15_recently_removed_days_left.png`. |
 | D06 Should | Done | System checked time in ET, not UTC. Still: `stills/d06_system_health_et.png`. |
 
 ## Test numbers
 
-**Unit (HEAD `e451fe4`):** 398 pass / 0 fail.
+**Unit (`e451fe4`):** 398 pass / 0 fail.
 
-**Lane D Playwright** (`tests/e2e/basics-admin.spec.ts`): **7 pass / 0 fail** on sqlite (shots) and on Postgres (inside the full branch suite).
+**Lane D Playwright** (`basics-admin.spec.ts`): **7 / 7** on sqlite and on Postgres.
 
-**Full Playwright on Postgres, this branch `866211f` (222 tests, 2.0h):**
-- 70 passed, 30 unexpected, 122 skipped (skipped after hook/login timeouts as the Next server exhausted RAM).
-- The one assertion failure (not a timeout): `integration-r3` export log showed `GMT-4` instead of `ET`. Fixed in `8872df4` (`zonedTime` now uses the ET letter).
-- The other 29 were timeouts (`waitForURL` / `page.goto` / `beforeAll` login) after the Next process grew past ~4 GB.
+**Full Playwright on Postgres**
 
-**Full Playwright on Postgres, PF `1ae7f2b`:** running (restarted after compass-demo hung without `process.exit(0)`; that patch is local to the worktree only). Results will be appended.
+| Suite | Passed | Failed | Skipped | Duration |
+|---|---|---|---|---|
+| This branch `866211f` | 70 | 30 | 122 | 2.0h |
+| PF `1ae7f2b` | 211 | 3 | 1 | 36.9m |
 
-## Restore drill counts (real Postgres)
+The first branch run ran out of RAM (leftover :3000 Next + 4 GB e2e server). Most of the 30 were login/`waitForURL` timeouts after that.
 
-From `restore-drill-last.json` — `hearts_demo` → age → `hearts_restore`, files via s3rver:
+**New on this branch vs PF (28 titles).** Isolated reruns, twice each, on Postgres:
 
-| table / files | Before | After |
+- **24 passed twice**, including the only assertion failure (`GMT-4` vs `ET`, fixed in `8872df4`).
+- **4 still failed both tries:**
+  1. `integration-final` — 240s timeout
+  2. `portal-features` Gather off — 180s timeout on `users` PATCH
+  3. `security` — master REST create of a teacher returned not-ok
+  4. `sheet-packs` pack column — `beforeAll` 180s timeout
+
+Shared with PF (not new): `r5d` desk proof shots; screenshots garden week. PF-only: sheet-packs push-to-existing-learners.
+
+Logs: `e2e-branch-postgres.log`, `e2e-pf-postgres.log`, `reruns.log`, `rerun-summary.txt`.
+
+## Restore drill (real Postgres)
+
+`hearts_demo` → age → `hearts_restore`, files via s3rver:
+
+| | Before | After |
 |---|---|---|
 | users | 21 | 21 |
 | answers | 31 | 31 |
@@ -53,11 +68,9 @@ From `restore-drill-last.json` — `hearts_demo` → age → `hearts_restore`, f
 | encrypted.refusedWithoutKey | true | |
 | ok | **true** | |
 
-Log: `restore-drill-postgres.log`. The private age key is not in the repository.
-
 ## Hostile activity
 
-On Postgres Lane D: portal admin 403 on `/api/audit-log/:leedsId` and `/api/hearts/audit.csv?portal=leeds`. Master CSV includes East London and Leeds, ISO times with offset. Learner 403 on people/audit CSV.
+Portal admin 403 on `/api/audit-log/:leedsId` and `/api/hearts/audit.csv?portal=leeds`. Master CSV includes East London and Leeds, ISO times with offset. Learner 403 on people/audit CSV. Passed on Postgres.
 
 ## Raw proof URLs
 
@@ -66,37 +79,25 @@ On Postgres Lane D: portal admin 403 on `/api/audit-log/:leedsId` and `/api/hear
 - https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/basics-admin/restore-drill-postgres.log
 - https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/basics-admin/unit-counts.txt
 - https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/basics-admin/e2e-branch-postgres.log
-- https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/basics-admin/e2e-branch-failures.txt
+- https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/basics-admin/e2e-pf-postgres.log
+- https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/basics-admin/reruns.log
+- https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/basics-admin/rerun-summary.txt
 - https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/basics-admin/stills/d02_activity_toronto.png
 - https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/basics-admin/stills/d06_system_health_et.png
 - https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/basics-admin/stills/c15_recently_removed_days_left.png
-- https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/basics-admin/stills/d02_activity_log.png
-- https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/basics-admin/stills/c15_recently_removed.png
-- https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/basics-admin/stills/d06_system_health.png
 
 ## Railway steps (Leon — not done here)
 
-1. Create a **second** versioned backup bucket (`hearts-backups`).
-2. On Leon’s machine: `age-keygen -o hearts-backup.key`. Only `AGE_RECIPIENT` (the `age1…` public key) goes on Railway.
-3. Add a **cron service** (not the public web app) that runs `bash scripts/backup.sh` daily.
-4. Variables on that cron only: `DATABASE_URL`, live bucket keys, `BACKUP_BUCKET`, `AGE_RECIPIENT`, `BACKUP_KIND=daily`.
-5. Optional weekly/monthly crons. Lifecycle: daily 14 days, weekly 8 weeks, monthly 12 months.
-6. `aws s3 sync` the live media bucket to the backup bucket (versioning on).
-7. Point uptime at `/api/health`.
+1. Second versioned bucket `hearts-backups`.
+2. `age-keygen` on Leon’s machine. Only `AGE_RECIPIENT` goes on Railway.
+3. Cron service runs `bash scripts/backup.sh` daily.
+4. Cron vars: `DATABASE_URL`, live bucket keys, `BACKUP_BUCKET`, `AGE_RECIPIENT`, `BACKUP_KIND=daily`.
+5. Optional weekly/monthly. Lifecycle: daily 14d, weekly 8w, monthly 12m.
+6. `aws s3 sync` live media to the backup bucket.
+7. Uptime at `/api/health`.
 
-Full text: `docs/BACKUPS.md` on the PR branch. No secrets in the repo. No Railway changes from this builder.
+Full text: `docs/BACKUPS.md`. No secrets. No Railway changes from this builder.
 
 ## Integrator notes
 
-See `docs/LANE-D-INTEGRATOR.md` on the PR.
-
-Erase registry (`src/server/erase/`) was **not** on PF. Register:
-
-| Collection | User wipe | Portal wipe |
-|---|---|---|
-| `classes` | Remove person from learners/teachers | Delete the class |
-| `class-join-rules` | Nothing | Delete portal rules |
-| `ops-events` | Nothing | Drop portal; keep backup rows |
-| `audit-log` | `pseudonymiseAuditForUser` | Keep rows |
-
-Wipes must `hardDelete` / `payload.delete({ trash: true })`. Trash is a 30-day grace on content only.
+See `docs/LANE-D-INTEGRATOR.md`. Erase registry was not on PF. Register `classes`, `class-join-rules`, `ops-events`, `audit-log`. Wipes must hard-delete (`payload.delete({ trash: true })`).
