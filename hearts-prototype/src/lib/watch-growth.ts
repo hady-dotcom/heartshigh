@@ -36,6 +36,12 @@ export function countedTalkCompletions<T extends LessonRef>(input: {
   })
 }
 
+/** The day a sitting or answer counts on Garden, preferring the moment it happened. */
+export function activityDay(row: { watchedAt?: unknown; answeredAt?: unknown; createdAt?: unknown }) {
+  const raw = row.watchedAt || row.answeredAt || row.createdAt
+  return typeof raw === 'string' ? raw.slice(0, 10) : ''
+}
+
 /** Lesson ids to load so a completion or sitting can be placed in its course. */
 export function growthLessonIds(input: { completions: LessonRef[]; visits: LessonRef[]; answers: LessonRef[]; sessions: LessonRef[] }) {
   const ids = new Set<number>()

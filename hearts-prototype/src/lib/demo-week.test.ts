@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { AFTERNOON_PLAN, demoWeekGardenGuard, demoWeekMonday, demoWeekSlots, pickLessonsByArea } from './demo-week'
+import { AFTERNOON_PLAN, demoGardenAt, demoWeekGardenGuard, demoWeekMonday, demoWeekSlots, pickLessonsByArea } from './demo-week'
 
 test('the afternoon walk picks talks from more than one garden tree', () => {
   const picked = pickLessonsByArea([
@@ -42,4 +42,8 @@ test('demo My week spreads talks across the seven days and keeps each course id'
   assert.equal(AFTERNOON_PLAN, 'Afternoon walk week')
   assert.match(demoWeekGardenGuard({ NODE_ENV: 'production' }) || '', /production/)
   assert.equal(demoWeekGardenGuard({ NODE_ENV: 'test', DATABASE_URL: 'file:./data/hearts.db' }), null)
+  const first = demoGardenAt(new Date('2026-10-05T16:00:00Z'), 0)
+  const last = demoGardenAt(new Date('2026-10-05T16:00:00Z'), 6)
+  assert.equal(first.slice(0, 10), '2026-10-05')
+  assert.equal(last.slice(0, 10), '2026-09-29')
 })

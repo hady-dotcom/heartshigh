@@ -12,7 +12,7 @@ import { workbookFor } from '@/server/workbook'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { learnerWords } from '@/lib/tidy-caption'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
-import { countedTalkCompletions, growthLessonIds, watchedLessonIds } from '@/lib/watch-growth'
+import { activityDay, countedTalkCompletions, growthLessonIds, watchedLessonIds } from '@/lib/watch-growth'
 import { isLongTalk, matchDoorTalk } from '@/lib/first-course'
 import { FilePick } from '@/components/app/file-pick'
 import { posterFor, shownPoster } from '@/server/learner'
@@ -107,7 +107,7 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
   }
   const at = now()
   const harvestNew = harvest.filter((row) => isNewMoment(str(row.createdAt) || str(row.gatheredAt), str(row.seenAt) || null, at)).length
-  const activeDays = new Set([...countedCompletions, ...countedAnswers, ...visits, ...rituals, ...seatVisits].map((row) => str(row.createdAt).slice(0, 10)).filter(Boolean))
+  const activeDays = new Set([...countedCompletions, ...countedAnswers, ...visits, ...rituals, ...seatVisits].map(activityDay).filter(Boolean))
   const secondsGiven = countedCompletions.reduce((sum, row) => {
     const lesson = lessons.find((item) => item.id === ref(row.lesson))
     return sum + (Number(lesson?.durationSeconds || 0) * Number(row.percent || 100)) / 100

@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
-import { AFTERNOON_PLAN, DEMO_WALK_EMAIL, DEMO_WALK_PORTAL, demoWeekGardenGuard, demoWeekMonday, demoWeekSlots, pickLessonsByArea } from '@/lib/demo-week'
+import { AFTERNOON_PLAN, DEMO_WALK_EMAIL, DEMO_WALK_PORTAL, demoGardenAt, demoWeekGardenGuard, demoWeekMonday, demoWeekSlots, pickLessonsByArea } from '@/lib/demo-week'
 import { doorNumberOfClause } from '@/lib/doors'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { partTitle } from '@/lib/talk-title'
@@ -108,9 +108,11 @@ export async function seedDemoWeekGarden(
   const picked = pickLessonsByArea(mapped, 2)
   if (!picked.length) return { ok: false, reason: 'No talks were ready to place on the garden trees.' }
 
+  const monday = demoWeekMonday(now(), LEARNER_ZONE)
   let completions = 0
   let answers = 0
-  for (const lesson of picked) {
+  for (const [index, lesson] of picked.entries()) {
+    const at = demoGardenAt(now(), index)
     const have = await payload.find({
       collection: 'completions',
       overrideAccess: true,
@@ -129,10 +131,19 @@ export async function seedDemoWeekGarden(
           percent: 100,
           onTime: true,
           sourceLevel: 'talk',
-          watchedAt: now().toISOString(),
+          watchedAt: at,
+          createdAt: at,
+          updatedAt: at,
         } as never,
       })
       completions += 1
+    } else {
+      await payload.update({
+        collection: 'completions',
+        id: (have.docs[0] as Doc).id,
+        overrideAccess: true,
+        data: { watchedAt: at, createdAt: at, updatedAt: at } as never,
+      })
     }
     const sitting = await payload.find({
       collection: 'watch-sessions',
@@ -145,7 +156,7 @@ export async function seedDemoWeekGarden(
       await payload.create({
         collection: 'watch-sessions',
         overrideAccess: true,
-        data: { user: learner.id, lesson: lesson.id, seconds: 540, portal: portal.id } as never,
+        data: { user: learner.id, lesson: lesson.id, seconds: 540, portal: portal.id, createdAt: at, updatedAt: at } as never,
       })
     }
     const points = (await payload.find({
@@ -165,26 +176,34 @@ export async function seedDemoWeekGarden(
       limit: 1,
       where: { and: [{ user: { equals: learner.id } }, { point: { equals: point.id } }] },
     })
-    if (answered.docs.length) continue
-    await payload.create({
-      collection: 'answers',
-      overrideAccess: true,
-      data: {
-        user: learner.id,
-        lesson: lesson.id,
-        point: point.id,
-        portal: portal.id,
-        body: 'I will carry this sitting into an ordinary day.',
-        answeredAt: now().toISOString(),
-        atSecond: Number(point.second || 0),
-        shareWithTeacher: false,
-        keepPrivate: true,
-      } as never,
-    })
-    answers += 1
+    if (!answered.docs.length) {
+      await payload.create({
+        collection: 'answers',
+        overrideAccess: true,
+        data: {
+          user: learner.id,
+          lesson: lesson.id,
+          point: point.id,
+          portal: portal.id,
+          body: 'I will carry this sitting into an ordinary day.',
+          answeredAt: at,
+          atSecond: Number(point.second || 0),
+          shareWithTeacher: false,
+          keepPrivate: true,
+          createdAt: at,
+          updatedAt: at,
+        } as never,
+      })
+      answers += 1
+    } else {
+      await payload.update({
+        collection: 'answers',
+        id: (answered.docs[0] as Doc).id,
+        overrideAccess: true,
+        data: { answeredAt: at, createdAt: at, updatedAt: at } as never,
+      })
+    }
   }
-
-  const monday = demoWeekMonday(now(), LEARNER_ZONE)
   const weekTalks = picked.length >= 7 ? picked : mapped.filter((lesson) => lesson.courseId).slice(0, 7)
   const slots = demoWeekSlots({
     monday,

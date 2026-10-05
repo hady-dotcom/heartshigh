@@ -56,6 +56,12 @@ export function demoWeekToday(now = new Date(), timeZone = LEARNER_ZONE) {
   return dateKeyInZone(now, timeZone)
 }
 
+/** Past days, newest first, so Garden Days you came shows flowers this week. */
+export function demoGardenAt(now: Date, index: number) {
+  const at = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - (index % 7), 18, 0, 0))
+  return at.toISOString()
+}
+
 export function demoWeekGardenGuard(env: Env = process.env) {
   if (isProduction(env) || isRemoteDatabase(env)) {
     return 'Refusing to write the afternoon walk on a production or remote database. Nothing was changed.'
