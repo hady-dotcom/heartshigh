@@ -1,0 +1,34 @@
+{
+  "pf": {
+    "stats": {
+      "startTime": "2026-10-05T07:28:46.693Z",
+      "duration": 2410940.531,
+      "expected": 211,
+      "skipped": 0,
+      "unexpected": 4,
+      "flaky": 0
+    },
+    "failed": [
+      "r5d-desks-proof.spec.ts:97:1 r5d desk proof shots",
+      "screenshots.spec.ts:25:1 a week of use, so the garden has something in it",
+      "sheet-creator.spec.ts:60:1 the creator drafts a sheet, then a learner completes a task the imam can see",
+      "view-as.spec.ts:108:3 43. Exit returns to where the view started and ends the session"
+    ]
+  },
+  "tip": {
+    "stats": {
+      "startTime": "2026-10-05T08:31:28.809Z",
+      "duration": 2276031.3,
+      "expected": 219,
+      "skipped": 0,
+      "unexpected": 3,
+      "flaky": 0
+    },
+    "failed": [
+      "r5d-desks-proof.spec.ts:97:1 r5d desk proof shots",
+      "screenshots.spec.ts:25:1 a week of use, so the garden has something in it",
+      "sheet-creator.spec.ts:60:1 the creator drafts a sheet, then a learner completes a task the imam can see"
+    ]
+  },
+  "newOnTip": []
+}

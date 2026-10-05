@@ -1,0 +1,13 @@
+PF failed (4):
+  1. r5d-desks-proof.spec.ts:97:1 r5d desk proof shots
+  2. screenshots.spec.ts:25:1 a week of use, so the garden has something in it
+  3. sheet-creator.spec.ts:60:1 the creator drafts a sheet, then a learner completes a task the imam can see
+  4. view-as.spec.ts:108:3 43. Exit returns to where the view started and ends the session
+
+Tip failed (3):
+  1. r5d-desks-proof.spec.ts:97:1 r5d desk proof shots
+  2. screenshots.spec.ts:25:1 a week of use, so the garden has something in it
+  3. sheet-creator.spec.ts:60:1 the creator drafts a sheet, then a learner completes a task the imam can see
+
+NEW on tip vs PF (0) — target none:
+  none

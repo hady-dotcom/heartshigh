@@ -1,10 +1,29 @@
-# Lane D proof — `artifacts/basics-admin` (Round 2)
+# Lane D proof — `artifacts/basics-admin` (Round 3)
 
-Branch under test: `cursor/basics-admin-ops-dbc7` @ `e451fe4`  
+Branch under test: `cursor/basics-admin-ops-dbc7` @ `bb779824162311f44af56370655f41d680d225a3`  
 Draft PR: https://github.com/hady-dotcom/heartshigh/pull/33  
 Base: `cursor/compass-gather-demo-ed5a`  
 Compared with: `cursor/portal-features-0777` @ `1ae7f2b`  
 Never pushed to live `cursor/hearts-prototype-v1-cf40`.
+
+## Round 3
+
+Nested `audit_log` inserts from `afterChange` raced the uncommitted `users`/`packs` row on Postgres (FK 500 or pool hang). Audit and class-join writes are now enqueued after commit; audit errors never fail the staff write; noisy onboarding PATCH fields are skipped.
+
+**Isolated (the four, twice each, Postgres):** 8/8 exit 0.
+
+**Clean full Playwright on Postgres** (leftover servers killed; PF then tip):
+
+| Suite | Passed | Failed | Skipped | Duration |
+|---|---|---|---|---|
+| PF `1ae7f2b` | 211 | 4 | 0 | 40.2m |
+| Tip `bb77982` | 219 | 3 | 0 | 37.9m |
+
+**NEW on tip vs PF:** none (target: none).
+
+Shared failures (not new): `r5d-desks-proof.spec.ts:97:1`, `screenshots.spec.ts:25:1`, `sheet-creator.spec.ts:60:1`. PF also failed `view-as.spec.ts:108:3`; tip passed it.
+
+Unit: **399 / 0**. Detail: `round3/REPORT.md`.
 
 ## Per brief
 

@@ -1,0 +1,14 @@
+Isolated Postgres reruns of the four Round 2 double-failures, after bb77982.
+Server: 127.0.0.1:3100 HEARTS_E2E_REUSE=1 DATABASE=hearts_e2e
+Each run reseeds via Playwright global-setup.
+
+security-1               exit 0  07:21:06-07:21:36Z
+sheet-packs-1 pack column exit 0  07:21:36-07:22:04Z
+portal-features-1 Gather  exit 0  07:22:04-07:23:01Z
+integration-final-1       exit 0  07:23:01-07:24:00Z
+security-2               exit 0  07:24:00-07:24:28Z
+sheet-packs-2 pack column exit 0  07:24:28-07:24:55Z
+portal-features-2 Gather  exit 0  07:24:55-07:25:44Z
+integration-final-2       exit 0  07:25:44-07:26:42Z
+
+8/8 passed. No remaining hang on teacher create, users PATCH, pack create, or the learner journey.
