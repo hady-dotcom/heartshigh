@@ -195,13 +195,13 @@ export const FEATURES: readonly FeatureRecord[] = [
   },
   {
     key: 'missions',
-    name: 'Help shape HEARTS missions',
-    what: 'A quiet way to say which missions HEARTS should take on next.',
+    name: 'Help shape Hady Core missions',
+    what: 'A quiet way to say which missions Hady Core should take on next.',
     defaultOn: true,
     depth: 'in-depth',
     shipped: true,
     dependsOn: [],
-    help: 'Missions let people help shape what HEARTS works on next. Turning it off hides the learner card and the desk tools.',
+    help: 'Missions let people help shape what Hady Core works on next. Turning it off hides the learner card and the desk tools.',
     plugIn: [
       'PR #27 — Learner missions surfaces (Home / Me card and /p/:slug/missions)',
       'PR #27 — Master desk /master/missions',

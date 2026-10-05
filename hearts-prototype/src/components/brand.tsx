@@ -9,12 +9,12 @@ export function BrandMark({ size = 40 }: { size?: number }) {
   )
 }
 
-/** HEARTS with the gold arch. Join, sign-in and the door use this. */
+/** Hady Core with the gold arch. Join, sign-in and the door use this. */
 export function BrandLockup({ size = 72 }: { size?: number }) {
   return (
     <div className="brand-lockup">
       <BrandMark size={size} />
-      <p className="brand-word">HEARTS</p>
+      <p className="brand-word">Hady Core</p>
     </div>
   )
 }

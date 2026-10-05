@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process'
 import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { seedCode } from '../env'
+import { skipWelcomeFilms } from './welcome-walk'
 
 test.skip(process.env.HEARTS_R5C_EVIDENCE !== '1', 'Heavy evidence capture. Set HEARTS_R5C_EVIDENCE=1 to run.')
 
@@ -287,14 +288,8 @@ test('a new learner from the join link reaches the first talk', async ({ browser
   await page.getByTestId('join-password').fill('harbour-learner')
   await page.getByTestId('join-submit').click()
   await page.waitForURL(/\/p\/east-london/)
-  if (await page.getByTestId('welcome-begin').count()) {
-    await page.getByTestId('welcome-begin').click()
-    await page.waitForURL(/step=films|\/start/)
-  }
-  if (page.url().includes('step=films') || await page.getByTestId('welcome-continue').count()) {
-    await page.getByTestId('welcome-continue').click()
-    await page.waitForURL(/\/start/)
-  }
+  await skipWelcomeFilms(page)
+  if (!page.url().includes('/start')) await page.goto(`${BASE}/start`)
   await expect(page.getByTestId('lets-play')).toBeVisible({ timeout: 20_000 })
   await expect(page.getByTestId('opener-heading')).toHaveText('A calm place to start')
   await page.waitForTimeout(900)

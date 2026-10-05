@@ -17,7 +17,7 @@ type CircleCtx = { payload: Payload; user: SessionUser; query: Record<string, st
 
 const KIND: Record<string, string> = { reflection: 'Reflection', question: 'Question', multiple_choice: 'Multiple choice', task: 'Task' }
 const INTRO =
-  'Answers from the HEARTS circle sit in a question’s “What others said” beside real learners’ shared answers, so nobody meets an empty list. They carry a light label, show less often as real answers arrive, and are never counted in analytics, trends, profiles or progress.'
+  'Answers from the Hady Core circle sit in a question’s “What others said” beside real learners’ shared answers, so nobody meets an empty list. They carry a light label, show less often as real answers arrive, and are never counted in analytics, trends, profiles or progress.'
 
 async function talksInScope(ctx: CircleCtx) {
   const { payload, user } = ctx
@@ -239,7 +239,7 @@ async function Body(ctx: CircleCtx): Promise<ReactNode> {
 export async function MasterCircle({ payload, user, query }: { payload: Payload; user: SessionUser; query: Record<string, string | undefined> }) {
   const ctx: CircleCtx = { payload, user, query, here: '/master/circle', portalId: null }
   return (
-    <DeskFrame payload={payload} user={user} title="Circle answers" intro={INTRO} active="circle" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="master-circle">
+    <DeskFrame payload={payload} user={user} title="Circle answers" intro={INTRO} active="circle" nav={masterNav()} brand="Hady Core" subBrand="Master desk" brandHref="/master" query={query} testId="master-circle">
       {await Body(ctx)}
     </DeskFrame>
   )

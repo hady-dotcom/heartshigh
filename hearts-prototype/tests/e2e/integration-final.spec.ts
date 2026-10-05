@@ -3,6 +3,7 @@ import path from 'node:path'
 import { expect, request as playwrightRequest, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 import { E2E_BASE, seedCode } from '../env'
 import { buildWorkbook } from '../../src/lib/master-sheet'
+import { skipWelcomeFilms } from './welcome-walk'
 
 // The whole learner path after the final integration, at phone size, end to end.
 
@@ -77,9 +78,7 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
   await page.getByTestId('join-submit').click()
   await expect(page.getByTestId('splash')).toBeVisible()
 
-  await page.getByTestId('welcome-begin').click()
-  await page.waitForURL(/step=films|\/start/)
-  if (page.url().includes('step=films')) await page.getByTestId('welcome-continue').click()
+  await skipWelcomeFilms(page)
   await page.goto(`${BASE}/welcome?step=placing`)
   const questions = page.getByTestId('placing-question')
   await expect(questions).toHaveCount(BY_PROPHET.length)

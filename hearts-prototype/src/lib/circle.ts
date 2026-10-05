@@ -1,7 +1,7 @@
 import { ANSWER_VOICE } from './human-voice'
 import { authorTextProblems } from './opening-data'
 
-// HEARTS circle answers: written answers that sit in a question's swarm beside real learners' shared answers, so
+// Hady Core circle answers: written answers that sit in a question's swarm beside real learners' shared answers, so
 // nobody meets an empty "What others said". They live in their own collection and are never counted as answers.
 
 export const CIRCLE_TONES = ['warm', 'honest', 'practical', 'searching', 'quiet'] as const
@@ -9,7 +9,7 @@ export const CIRCLE_LENGTHS = ['short', 'medium', 'long'] as const
 export type CircleTone = (typeof CIRCLE_TONES)[number]
 export type CircleLength = (typeof CIRCLE_LENGTHS)[number]
 
-export const CIRCLE_LABEL_DEFAULT = 'From the HEARTS circle'
+export const CIRCLE_LABEL_DEFAULT = 'From the Hady Core circle'
 export const CIRCLE_THRESHOLD_DEFAULT = 8
 export const CIRCLE_MAX_COUNT = 12
 /** At most this many circle answers sit in one swarm, however many are switched on. */
@@ -129,7 +129,7 @@ export function parseCircleReply(reply: string, spread: { tone: CircleTone; leng
 
 export function circleRequest(point: CirclePoint, spread: { tone: CircleTone; length: CircleLength }[]) {
   const system = [
-    'You write short answers that ordinary British Muslim learners might share under a question after watching an Islamic talk. The label on these is From the HEARTS circle.',
+    'You write short answers that ordinary British Muslim learners might share under a question after watching an Islamic talk. The label on these is From the Hady Core circle.',
     ANSWER_VOICE,
     'No preaching, no clichés, no emojis, no HTML.',
     'Never use these words: should, must, need to, fix, improve, struggle, test, quiz, score, result, level, type, fear, anxiety, anger, pride, gratitude, sometimes, often, rarely.',

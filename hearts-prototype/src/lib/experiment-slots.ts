@@ -143,7 +143,7 @@ export function payloadProblems(slotKey: string, payload: unknown): string[] {
       if (text.length > field.max) problems.push(`Keep ${field.name} under ${field.max} characters.`)
       if (hasMarkup(text)) problems.push(`${field.name} must be plain text: no HTML or script.`)
       const hits = killListHits(text)
-      if (hits.length) problems.push(`The words ${hits.join(', ')} are not used in HEARTS.`)
+      if (hits.length) problems.push(`The words ${hits.join(', ')} are not used in Hady Core.`)
     }
     if (field.type === 'enum') {
       if (typeof value !== 'string' || !field.values.includes(value)) {
@@ -201,7 +201,7 @@ export const PRIMARY_METRICS = [
   { key: 'question_answered', label: 'Answered a question' },
   { key: 'return_next_day', label: 'Came back the next day' },
   { key: 'plan_created', label: 'Made a study plan' },
-  { key: 'install_card_accept', label: 'Added HEARTS to the home screen' },
+  { key: 'install_card_accept', label: 'Added Hady Core to the home screen' },
   { key: 'lanes_tab_tap', label: 'Tapped the lanes tab' },
   { key: 'lanes_course_start', label: 'Started a course from lanes in the first week' },
 ] as const
@@ -266,7 +266,7 @@ export function experimentDraftProblems(input: {
   if (name.length > 80) problems.push('Keep the name under 80 characters.')
   if (hasMarkup(name)) problems.push('The name is plain text.')
   const hits = killListHits(name)
-  if (hits.length) problems.push(`The words ${hits.join(', ')} are not used in HEARTS.`)
+  if (hits.length) problems.push(`The words ${hits.join(', ')} are not used in Hady Core.`)
   if (!isTestableSlot(input.slot || '')) problems.push('Pick a slot from the testable list. Experiments may only change listed UI wording, labels, layout and framing.')
   if (!isPrimaryMetric(String(input.primaryMetric || ''))) problems.push('Pick a primary metric from the known events.')
   for (const metric of input.secondaryMetrics || []) {

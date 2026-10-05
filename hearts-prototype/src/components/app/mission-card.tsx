@@ -7,7 +7,7 @@ export function MissionCard({ mission, base, joined, compact = false }: { missio
   if (compact) {
     return (
       <section className="mission-card compact" data-testid="mission-card">
-        <p className="eyebrow">Help shape HEARTS</p>
+        <p className="eyebrow">Help shape Hady Core</p>
         <p><b>{mission.title}</b> · {progress.line}</p>
         <Link className="pill gold small" href={`${base}/mission/${mission.id}`} data-testid="mission-open">See this ask</Link>
       </section>
@@ -15,7 +15,7 @@ export function MissionCard({ mission, base, joined, compact = false }: { missio
   }
   return (
     <section className="mission-card" data-testid="mission-card">
-      <p className="eyebrow">Help shape HEARTS</p>
+      <p className="eyebrow">Help shape Hady Core</p>
       <h2>{mission.title}</h2>
       <p>{mission.ask}</p>
       <p className="muted">{progress.line}</p>

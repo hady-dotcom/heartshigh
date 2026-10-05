@@ -73,7 +73,7 @@ export function missionProblems(input: { title?: string; ask?: string; why?: str
   if (ask.length < 8) problems.push('Write the ask in a plain sentence.')
   if (hasMarkup(ask) || hasMarkup(String(input.why || ''))) problems.push('Keep the words plain.')
   const hits = killListHits(`${title} ${ask} ${input.why || ''}`)
-  if (hits.length) problems.push(`The words ${hits.join(', ')} are not used in HEARTS.`)
+  if (hits.length) problems.push(`The words ${hits.join(', ')} are not used in Hady Core.`)
   const minutes = Number(input.minutesAsked)
   if (!Number.isFinite(minutes) || minutes < 5 || minutes > 600) problems.push('Ask for between 5 and 600 minutes.')
   const target = Number(input.target)

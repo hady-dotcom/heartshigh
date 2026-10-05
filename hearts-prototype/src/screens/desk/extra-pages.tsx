@@ -10,7 +10,7 @@ type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string;
 
 function Frame({ ctx, active, title, intro, testId, children }: { ctx: MasterCtx; active: string; title: string; intro: string; testId: string; children: React.ReactNode }) {
   return (
-    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
+    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="Hady Core" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
       {children}
     </DeskFrame>
   )

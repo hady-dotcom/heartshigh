@@ -56,7 +56,7 @@ export function thankYouFanOut(
   input: { missionId: number; result: string; href: string },
 ): ThankYouNote[] {
   const result = String(input.result || '').trim()
-  const body = result ? `You helped decide: ${result}` : 'You helped shape HEARTS. Thank you.'
+  const body = result ? `You helped decide: ${result}` : 'You helped shape Hady Core. Thank you.'
   const href = input.href || '/'
   const seen = new Set<number>()
   const notes: ThankYouNote[] = []
@@ -67,7 +67,7 @@ export function thankYouFanOut(
     notes.push({
       user: id,
       portal: person.portalId || undefined,
-      title: 'Thank you for helping shape HEARTS',
+      title: 'Thank you for helping shape Hady Core',
       body,
       href,
       key: `mission-thanks-${input.missionId}-${id}`,
@@ -79,7 +79,7 @@ export function thankYouFanOut(
 
 export function shapedLine(result: string) {
   const text = String(result || '').trim()
-  return text ? `You helped decide: ${text}` : 'You helped shape HEARTS. Thank you.'
+  return text ? `You helped decide: ${text}` : 'You helped shape Hady Core. Thank you.'
 }
 
 export const MISSION_TONE =

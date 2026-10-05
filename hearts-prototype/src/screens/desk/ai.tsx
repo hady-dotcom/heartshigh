@@ -54,7 +54,7 @@ async function Frame({
   if (ctx) return <AdminFrame ctx={ctx} active="ai" title={title} intro={intro} testId={testId}>{children}</AdminFrame>
   const desk = master!
   return (
-    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="ai" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId}>
+    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="ai" nav={masterNav()} brand="Hady Core" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId}>
       {children}
     </DeskFrame>
   )
@@ -104,11 +104,11 @@ async function Registry({ ctx, master, base, desk }: { ctx: Ctx | null; master: 
   const payload = ctx?.payload || master!.payload
   const steps = await rows(payload, 'ai-steps', undefined, { limit: 30, sort: 'pipelineOrder' })
   return (
-    <Frame ctx={ctx} master={master} title="AI steps" intro="Each step is one job the model does after a talk is ingested. Edit the prompt, try it on a single talk, then mark a version live. Re-runs land as drafts on Review and leave approved work where it is." testId="ai-registry">
+    <Frame ctx={ctx} master={master} title="AI steps" intro="Each step is one job the model does after a talk is brought in. Edit the prompt, try it on a single talk, then mark a version live. Re-runs land as drafts on Review and leave approved work where it is." testId="ai-registry">
       <Banner desk={desk} />
       <Grant base={base} desk={desk} master={(ctx?.user || master?.user)?.role === 'master'} />
       <div className="actions" style={{ marginBottom: 14 }}>
-        <Link className="btn ghost small" href={`${base}/ingest`} data-testid="ai-ingest-link">Ingest view</Link>
+        <Link className="btn ghost small" href={`${base}/ingest`} data-testid="ai-ingest-link">Bring in</Link>
       </div>
       <div className={styles.list}>
         {steps.map((step) => (
@@ -385,7 +385,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
   const lessons = await rows(payload, 'lessons', undefined, { limit: 200, sort: 'title' })
   if (!lessonId) {
     return (
-      <Frame ctx={ctx} master={master} title="Ingest" intro="One row per talk. Open it to see each step, then run it or send the draft to Review." testId="ai-ingest">
+      <Frame ctx={ctx} master={master} title="Bring in" intro="One row per talk. Open it to see each step, then run it or send the draft to Review." testId="ai-ingest">
         <Banner desk={desk} />
         <p style={{ marginTop: 0 }}><Link href={base}>‹ AI steps</Link></p>
         <div className={styles.list}>
@@ -403,7 +403,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
     )
   }
   const lesson = lessons.find((row) => row.id === lessonId) || (await rows(payload, 'lessons', { id: { equals: lessonId } }, { limit: 1 }))[0]
-  if (!lesson) return <Frame ctx={ctx} master={master} title="Ingest" intro="" testId="ai-ingest-missing"><p>That talk was not found.</p></Frame>
+  if (!lesson) return <Frame ctx={ctx} master={master} title="Bring in" intro="" testId="ai-ingest-missing"><p>That talk was not found.</p></Frame>
   const [outputs, tierRows, points, jobs] = await Promise.all([
     rows(payload, 'ai-step-outputs', { lesson: { equals: lesson.id } }, { limit: 200, sort: '-createdAt' }),
     rows(payload, 'talk-tiers', { lesson: { equals: lesson.id } }, { limit: 1 }),

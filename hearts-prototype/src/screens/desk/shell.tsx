@@ -165,7 +165,7 @@ export async function DeskFrame({
   query: { error?: string | string[]; notice?: string | string[] }
   testId?: string
   evening?: boolean
-  /** A portal logo, when one has been set. Otherwise the HEARTS arch. */
+  /** A portal logo, when one has been set. Otherwise the Hady Core arch. */
   logoUrl?: string | null
   /** Gather's desk look. Kept off the library, access and teach desks. */
   gatherDesk?: boolean

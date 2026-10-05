@@ -321,6 +321,10 @@ export interface Portal {
   timeZone?: string | null;
   theme?: ('light' | 'dark') | null;
   calendarUrl?: string | null;
+  learnerWelcome?: (number | null) | Media;
+  learnerIntro?: (number | null) | Media;
+  teacherWelcome?: (number | null) | Media;
+  teacherIntro?: (number | null) | Media;
   learnerWelcomeUrl?: string | null;
   learnerIntroUrl?: string | null;
   teacherWelcomeUrl?: string | null;
@@ -342,6 +346,30 @@ export interface Portal {
     | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  alt?: string | null;
+  portal?: (number | null) | Portal;
+  owner?: (number | null) | User;
+  purpose?: ('answer' | 'gather-photo' | 'portal-asset' | 'film' | 'feedback') | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -516,30 +544,6 @@ export interface Speaker {
   status?: ('draft' | 'published') | null;
   updatedAt: string;
   createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
- */
-export interface Media {
-  id: number;
-  alt?: string | null;
-  portal?: (number | null) | Portal;
-  owner?: (number | null) | User;
-  purpose?: ('answer' | 'gather-photo' | 'portal-asset' | 'film' | 'feedback') | null;
-  prefix?: string | null;
-  _objectKey?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3214,6 +3218,10 @@ export interface PortalsSelect<T extends boolean = true> {
   timeZone?: T;
   theme?: T;
   calendarUrl?: T;
+  learnerWelcome?: T;
+  learnerIntro?: T;
+  teacherWelcome?: T;
+  teacherIntro?: T;
   learnerWelcomeUrl?: T;
   learnerIntroUrl?: T;
   teacherWelcomeUrl?: T;
@@ -4944,7 +4952,7 @@ export interface MasterFlag {
    */
   showUnchecked?: boolean | null;
   /**
-   * The light label under each HEARTS circle answer in the swarm.
+   * The light label under each Hady Core circle answer in the swarm.
    */
   circleLabel?: string | null;
   /**

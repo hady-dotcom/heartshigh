@@ -5,7 +5,7 @@ export type HelpCopy = { title: string; body: string[] }
 const DEFAULT: HelpCopy = {
   title: 'How to use this page',
   body: [
-    'This page is part of HEARTS: short talks, a circle that meets in person, and a garden that grows as you watch.',
+    'This page is part of Hady Core: short talks, a circle that meets in person, and a garden that grows as you watch.',
     'Use the bar at the bottom to move around.',
     'Nothing here is a test.',
   ],
@@ -39,7 +39,7 @@ const PAGES: Record<string, HelpCopy> = {
   welcome: {
     title: 'How to use Welcome',
     body: [
-      'Someone in your circle opened HEARTS for you: short talks, a few minutes a day.',
+      'Someone in your circle opened Hady Core for you: short talks, a few minutes a day.',
       'Begin when you are ready. You can sign in later if you already have an account.',
     ],
   },

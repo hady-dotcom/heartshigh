@@ -57,7 +57,7 @@ export async function GatherListScreen(ctx: Ctx) {
       <div className="app-scroll gather">
         <div className="app-head"><h1>Gather</h1></div>
         <Flash error={query.error} notice={query.notice} />
-        <p className="lead">Meetings at {portal.name}. Your masjid comes first. Say if you’re coming, and bring someone who isn’t on HEARTS yet.</p>
+        <p className="lead">Meetings at {portal.name}. Your masjid comes first. Say if you’re coming, and bring someone who isn’t on Hady Core yet.</p>
         {!cards.length ? <p data-testid="gather-empty">Nothing is planned yet. You can suggest one.</p> : null}
         {upcoming.map((group) => (
           <section key={group.door} className="gather-door" data-testid="gather-group">

@@ -1,4 +1,4 @@
-# Putting HEARTS on the internet
+# Putting Hady Core on the internet
 
 This is for the person who will create the hosting account and sign in. You do not need to change the program. You will copy a few values into a website, run two commands, and then sign in.
 

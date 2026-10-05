@@ -29,7 +29,7 @@ export async function MasterFramingList(ctx: MasterCtx) {
     return { cut, lesson, youtubeId, track }
   })
   return (
-    <DeskFrame payload={ctx.payload} user={ctx.user} title="Framing" intro="The AI director’s portrait track for each clip. Play it through, then override a segment when the pick is wrong." active="framing" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId="master-framing">
+    <DeskFrame payload={ctx.payload} user={ctx.user} title="Framing" intro="The AI director’s portrait track for each clip. Play it through, then override a segment when the pick is wrong." active="framing" nav={masterNav()} brand="Hady Core" subBrand="Master desk" brandHref="/master" query={ctx.query} testId="master-framing">
       <section className="panel">
         <header className="light"><h2>Clips</h2><span className="hint">{rowsWithTracks.filter((row) => row.track).length} with a stored track</span></header>
         <div className="table-wrap">
@@ -62,7 +62,7 @@ export async function MasterFramingClip(ctx: MasterCtx, cutId: number) {
   const track: FramingTrack = trackForClip(youtubeId, Number(cut.start), Number(cut.end), stored) || fallbackTrack(youtubeId, Number(cut.start), Number(cut.end))
   const next = `/master/framing/${cut.id}`
   return (
-    <DeskFrame payload={ctx.payload} user={ctx.user} title={partTitle(lesson) || 'Clip framing'} intro="Coloured segments are the director’s pick. Override a mode, then play the live YouTube crop. The film is never re-hosted." active="framing" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId="framing-clip">
+    <DeskFrame payload={ctx.payload} user={ctx.user} title={partTitle(lesson) || 'Clip framing'} intro="Coloured segments are the director’s pick. Override a mode, then play the live YouTube crop. The film is never re-hosted." active="framing" nav={masterNav()} brand="Hady Core" subBrand="Master desk" brandHref="/master" query={ctx.query} testId="framing-clip">
       <p className="hint"><Link href="/master/framing">All clips</Link> · YouTube {youtubeId} · {clock(track.start)} to {clock(track.end)}</p>
       <section className="panel" data-testid="framing-panel">
         <header><div><h2>Framing track</h2><p>{track.segments.length} segments</p></div></header>

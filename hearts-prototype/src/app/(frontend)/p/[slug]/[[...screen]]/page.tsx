@@ -40,6 +40,7 @@ import { PortalCircle } from '@/screens/desk/circle'
 import { PortalAnnounceScreen, PortalSafetyScreen } from '@/screens/desk/safety'
 import { FeatureUnavailable } from '@/components/app/feature-unavailable'
 import { featureOn, type FeatureKey } from '@/lib/features'
+import { welcomeWalkHref } from '@/lib/welcome-films'
 
 function originOf(reqHeaders: Headers) {
   return shareOrigin(reqHeaders)
@@ -70,6 +71,8 @@ export default async function PortalScreen({ params, searchParams }: { params: P
     const shut = portal.closed && (!visitor || visitor.role === 'learner')
     if (!shut && area === undefined) {
       if (!visitor) redirect((await cookies()).get('hearts_opened')?.value === '1' ? `${base}/feed` : `${base}/start`)
+      const firstFilms = welcomeWalkHref(base, visitor, portal)
+      if (firstFilms) redirect(firstFilms)
       if (visitor.role === 'learner' && !visitor.onboarded) redirect(visitor.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
     } else if (!shut) {
       return JourneyScreen({ payload: session.payload, portal, user: visitor, base, initial: area === 'feed' ? 'feed' : area === 'help' ? 'help' : 'opener', viewAs: Boolean(session.viewAs), query: query as Record<string, string | undefined> })

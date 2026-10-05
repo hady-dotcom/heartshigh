@@ -1,23 +1,33 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { loadDoors } from '@/server/doors'
 import { capitalAfterColon, doorOfClause } from '@/lib/doors'
 import { AppFrame, Flash, Hidden } from '@/components/app/shell'
 import { Arch } from '@/components/arch'
 import { BrandLockup } from '@/components/brand'
+import { WelcomePlayer } from '@/components/app/welcome-player'
 import { optionLabels } from '@/lib/placing'
+import { PRODUCT } from '@/lib/product'
+import { afterWelcomePath, filmsFor, nextWelcomeStep, shouldSeeWelcomeWalk, welcomeStepFromQuery } from '@/lib/welcome-films'
 import { courseCards, portalName } from '@/server/learner'
 import { type Ctx, embedUrl, rows, str } from '../common'
 
 export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx) {
-  const staff = user.role !== 'learner'
-  const welcome = staff ? portal.teacherWelcomeUrl : portal.learnerWelcomeUrl
-  const intro = staff ? portal.teacherIntroUrl : portal.learnerIntroUrl
-  const step = query.step || (user.onboarded ? 'done' : 'start')
+  const films = filmsFor(portal, user.role)
+  const asked = welcomeStepFromQuery(query.step)
+  const step = query.step || (shouldSeeWelcomeWalk(user, portal) ? 'welcome' : user.onboarded ? 'done' : 'start')
+
+  if (!query.step && shouldSeeWelcomeWalk(user, portal)) {
+    redirect(`${base}/welcome?step=welcome`)
+  }
+  if (!query.step && user.onboarded && !shouldSeeWelcomeWalk(user, portal)) {
+    redirect(afterWelcomePath(base, user))
+  }
 
   if (step === 'start') {
-    const next = !user.seenWelcome && (welcome || intro) ? `${base}/welcome?step=films` : `${base}/start`
+    const next = shouldSeeWelcomeWalk(user, portal) ? `${base}/welcome?step=welcome` : `${base}/start`
     return (
-      <AppFrame testId="welcome">
+      <AppFrame evening testId="welcome" help="welcome">
         <div className="splash" data-testid="splash">
           <div>
             <BrandLockup size={88} />
@@ -33,20 +43,46 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
     )
   }
 
-  if (step === 'films') {
+  if (asked !== 'other') {
+    const kind = asked
+    const film = films[kind]
+    const onward = nextWelcomeStep(kind)
+    const next = onward === 'done' ? afterWelcomePath(base, user) : `${base}/welcome?step=${onward}`
+    const markDone = onward === 'done'
     return (
-      <AppFrame testId="welcome-films">
-        <div className="app-scroll">
-          <Journey at={0} />
-          <div className="app-head"><h1>Before you begin</h1></div>
-          <div data-testid="welcome-film">
-            {welcome ? <iframe className="film-frame" title="Welcome" src={embedUrl(welcome)} allow="encrypted-media" /> : null}
-            {intro ? <iframe className="film-frame" style={{ marginTop: 12 }} title="Introduction" src={embedUrl(intro)} allow="encrypted-media" /> : null}
+      <AppFrame evening testId={kind === 'welcome' ? 'welcome-films' : 'welcome-intro'} help="welcome">
+        <div className="welcome-walk app-scroll">
+          <Journey at={kind === 'welcome' ? 0 : 1} />
+          <div className="app-head">
+            <h1>{kind === 'welcome' ? 'A welcome' : 'How to begin'}</h1>
+            <p className="lead">{kind === 'welcome' ? `A short film from ${portalName(portal)}.` : `How ${PRODUCT} works here.`}</p>
           </div>
-          <form action="/api/hearts" method="post" style={{ marginTop: 18 }}>
-            <Hidden fields={{ action: 'seen-welcome', next: staff && user.onboarded ? `${base}/admin` : `${base}/start` }} />
-            <button className="pill gold block" data-testid="welcome-continue" type="submit">Continue</button>
-          </form>
+          <div data-testid={kind === 'welcome' ? 'welcome-film' : 'intro-film'}>
+            {film.kind === 'media' ? <WelcomePlayer src={film.src} /> : null}
+            {film.kind === 'url' ? <WelcomePlayer embed={embedUrl(film.src)} /> : null}
+            {film.kind === 'empty' ? (
+              <div className="welcome-empty" data-testid="welcome-empty">
+                <p>No film in this slot yet. Skip when you are ready.</p>
+              </div>
+            ) : null}
+          </div>
+          {markDone ? (
+            <>
+              <form action="/api/hearts" method="post" style={{ marginTop: 18 }}>
+                <Hidden fields={{ action: 'seen-welcome', next }} />
+                <button className="pill gold block" data-testid="welcome-continue" type="submit">Continue</button>
+              </form>
+              <form action="/api/hearts" method="post" style={{ marginTop: 10 }}>
+                <Hidden fields={{ action: 'seen-welcome', next }} />
+                <button className="pill outline block" data-testid="welcome-skip" type="submit">Skip</button>
+              </form>
+            </>
+          ) : (
+            <div style={{ marginTop: 18, display: 'grid', gap: 10 }}>
+              <Link className="pill gold block" href={next} data-testid="welcome-continue">Continue</Link>
+              <Link className="pill outline block" href={next} data-testid="welcome-skip">Skip</Link>
+            </div>
+          )}
         </div>
       </AppFrame>
     )
@@ -55,7 +91,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
   if (step === 'placing') {
     const questions = await rows(payload, 'placing-questions', { or: [{ portal: { exists: false } }, { portal: { equals: portal.id } }] }, { sort: 'order', limit: 20 })
     return (
-      <AppFrame testId="placing">
+      <AppFrame evening testId="placing">
         <div className="app-scroll">
           <Journey at={1} />
           <div className="app-head"><h1>Where to begin</h1></div>
@@ -85,7 +121,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
   const door = doorOfClause(Number(user.startingClause || 0), await loadDoors(payload))
   const first = (await courseCards(payload, user))[0]
   return (
-    <AppFrame testId="placing-result">
+    <AppFrame evening testId="placing-result">
       <div className="app-scroll">
         <Journey at={2} />
         <Flash error={query.error} notice={query.notice} />
@@ -117,7 +153,7 @@ function Journey({ at }: { at: number }) {
   return (
     <>
       <div className="step-bar" aria-hidden>{[0, 1, 2].map((index) => <span key={index} className={index <= at ? 'on' : ''} />)}</div>
-      <div className="step-bar-labels"><span>Welcome</span><span>A few questions</span><span>Your first talk</span></div>
+      <div className="step-bar-labels"><span>Welcome</span><span>How to begin</span><span>Your first talk</span></div>
     </>
   )
 }

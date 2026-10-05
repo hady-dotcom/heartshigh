@@ -95,7 +95,7 @@ export async function SupportScreen({ payload, user, portal, base, query }: Ctx)
         <p className="lead">Write to the team here. You do not need an email.</p>
         {messages.map((message) => (
           <section key={message.id} className="card" data-testid="support-message" data-desk={message.fromDesk ? 'yes' : 'no'}>
-            <b>{message.fromDesk ? 'HEARTS' : 'You'}</b>
+            <b>{message.fromDesk ? 'Hady Core' : 'You'}</b>
             <p>{str(message.body)}</p>
             <small className="muted">{shortDate(message.createdAt)}</small>
           </section>

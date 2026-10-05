@@ -48,6 +48,10 @@ export type PortalDoc = {
   notificationEmails?: string | null
   theme?: string | null
   calendarUrl?: string | null
+  learnerWelcome?: unknown
+  learnerIntro?: unknown
+  teacherWelcome?: unknown
+  teacherIntro?: unknown
   learnerWelcomeUrl?: string | null
   learnerIntroUrl?: string | null
   teacherWelcomeUrl?: string | null

@@ -28,7 +28,7 @@ test('no hoopoe or Hudhud on sign-in, Home, the feed, the garden, Me, the desks 
   test.setTimeout(180_000)
   await page.setViewportSize(PHONE)
   await page.goto('/login')
-  await expect(page.locator('.brand-word')).toHaveText('HEARTS')
+    await expect(page.locator('.brand-word')).toHaveText('Hady Core')
   await clean(page, 'login')
   await page.goto('/join')
   await clean(page, 'join')

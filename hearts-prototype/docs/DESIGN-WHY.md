@@ -1,4 +1,4 @@
-# HEARTS: why each screen exists (from Leon's deck, 2026-10-04)
+# Hady Core: why each screen exists (from Leon's deck, 2026-10-04)
 
 Every agent must read this before changing a learner screen. Keep each screen's reason. This is a basis, not a rulebook: a better idea from testing can replace a specific in the deck. Where a newer decision from Leon conflicts, the newer one wins, and that is noted below.
 

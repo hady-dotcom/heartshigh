@@ -43,6 +43,7 @@ import { randomUUID } from 'node:crypto'
 import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourseIds, type Session, type SessionUser } from './context'
 import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCookie, wrote } from './viewas'
 import { isTimeZone } from '@/lib/zone-time'
+import { isWelcomeSlot, welcomeSlotLabel, welcomeWalkHref } from '@/lib/welcome-films'
 import { parseLengthInput } from '@/lib/length'
 import { screenAnswerSafe } from '@/lib/answer-moderation'
 import { FEATURE_UNAVAILABLE, featuresFromForm } from '@/lib/features'
@@ -120,13 +121,15 @@ function safeNext(next: string) {
 /** Sign-in from the front door used to land back on the door. `/` means the person's own home. */
 async function landingPath(payload: Awaited<ReturnType<typeof getSession>>['payload'], user: SessionUser, next: string) {
   const wanted = safeNext(next)
-  if (wanted !== '/') return wanted
-  if (user.role === 'master') return '/master'
+  if (user.role === 'master' && (wanted === '/' || wanted.startsWith('/master'))) return wanted === '/' ? '/master' : wanted
   const portalId = portalIdOf(user)
-  if (!portalId) return '/'
+  if (!portalId) return wanted === '/' ? '/' : wanted
   const doc = await payload.findByID({ collection: 'portals', id: portalId, overrideAccess: true, depth: 0 }).catch(() => null)
   const slug = (doc as { slug?: string } | null)?.slug
-  if (!slug) return '/'
+  if (!slug) return wanted === '/' ? '/' : wanted
+  const walk = welcomeWalkHref(`/p/${slug}`, user, doc as { slug?: string })
+  if (walk && !wanted.includes('/welcome')) return walk
+  if (wanted !== '/') return wanted
   return user.role === 'learner' ? `/p/${slug}` : `/p/${slug}/admin`
 }
 
@@ -628,7 +631,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     }
     const after = text(form, 'after')
     const gatherNext = after.startsWith(`/p/${slug}/`) ? after : ''
-    const next = gatherNext || (codeRole === 'learner' || codeRole === 'parent' ? `/p/${slug}/welcome` : `/p/${slug}/admin`)
+    const next = gatherNext || `/p/${slug}/welcome`
     return loginResponse(req, email, password, next)
   }
 
@@ -941,7 +944,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   }
 
   if (action === 'ingest') {
-    if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot ingest a film.')
+    if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot bring in a film.')
     const lessonId = Number(text(form, 'lesson'))
     const next = text(form, 'next') || '/'
     if (!(await findDoc(payload, 'lessons', lessonId))) return redirectTo(req, next, 'That lesson could not be found.')
@@ -1634,6 +1637,52 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       data: { user: user.id, note: text(form, 'note').slice(0, 280) || 'I held back a harsh word.', portal: portalIdOf(user) || undefined },
     })
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Thank you. That is noted in your Garden.')
+  }
+
+  if (action === 'welcome-film') {
+    if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'Only a portal admin can change this.')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
+    const slot = text(form, 'slot')
+    if (!isWelcomeSlot(slot)) return redirectTo(req, text(form, 'next') || '/', 'That film slot is not known.')
+    const here = text(form, 'next') || `/p/${acting.portal.slug}/admin/settings`
+    if (text(form, 'clear') === 'yes') {
+      await payload.update({
+        collection: 'portals',
+        id: acting.portal.id,
+        overrideAccess: true,
+        data: { [slot]: null, [`${slot}Url`]: '' } as never,
+      })
+      return redirectTo(req, here, undefined, `${welcomeSlotLabel(slot)} cleared.`)
+    }
+    const file = form.get('file')
+    if (!(file instanceof File) || !file.size) return redirectTo(req, here, 'Choose a film to add.')
+    if (tooBig(file)) return redirectTo(req, here, 'That file is over 200 MB. Compress it, or add a shorter film.')
+    const mime = file.type || 'video/mp4'
+    if (!mime.startsWith('video/') && !/\.(mp4|webm|mov|m4v)$/i.test(file.name)) {
+      return redirectTo(req, here, 'That file needs to be a video.')
+    }
+    const limited = await hitShared(payload, uploadKey(user.id), UPLOAD_PER_HOUR, HOUR_MS)
+    if (limited) return redirectTo(req, here, 'Please wait a little before adding another file.')
+    try {
+      const mediaId = await saveOwnedMedia(payload, file, {
+        portal: acting.portal.id,
+        owner: user.id,
+        purpose: 'portal-asset',
+        alt: welcomeSlotLabel(slot),
+        fallbackType: 'video/mp4',
+      })
+      await payload.update({
+        collection: 'portals',
+        id: acting.portal.id,
+        overrideAccess: true,
+        data: { [slot]: mediaId, [`${slot}Url`]: '' } as never,
+      })
+      return redirectTo(req, here, undefined, `${welcomeSlotLabel(slot)} saved.`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'That film could not be stored.'
+      return redirectTo(req, here, message.includes('invalid') ? 'That video file could not be stored. Use an mp4, webm or mov.' : message)
+    }
   }
 
   if (action === 'settings') {

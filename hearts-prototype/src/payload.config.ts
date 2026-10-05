@@ -41,7 +41,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
     meta: {
-      titleSuffix: '· HEARTS',
+      titleSuffix: '· Hady Core',
     },
     components: {
       header: ['/components/viewas-admin-banner#ViewAsAdminBanner'],

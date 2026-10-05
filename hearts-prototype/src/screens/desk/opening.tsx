@@ -25,7 +25,7 @@ type Option = { key?: string; label?: string; replyPill?: string; nudges?: { sca
 
 function Frame({ ctx, active, title, intro, children, testId }: { ctx: MasterCtx; active: string; title: string; intro?: ReactNode; children: ReactNode; testId?: string }) {
   return (
-    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
+    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="Hady Core" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
       {children}
     </DeskFrame>
   )

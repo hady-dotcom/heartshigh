@@ -95,7 +95,7 @@ export async function popularTalkIds(payload: Payload): Promise<number[]> {
     const id = idOf(row.lesson)
     if (id) counts.set(id, (counts.get(id) || 0) + 3)
   }
-  // drawn-to is by speaker; we still surface most-finished talks as "popular inside HEARTS".
+  // drawn-to is by speaker; we still surface most-finished talks as "popular inside Hady Core".
   void drawn
   return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 20).map(([id]) => id)
 }
@@ -141,7 +141,7 @@ function copyProblems(label: string) {
   if (text.length > 80) return ['Keep the line under 80 characters.']
   if (hasMarkup(text)) return ['The line is plain text.']
   const hits = killListHits(text)
-  if (hits.length) return [`The words ${hits.join(', ')} are not used in HEARTS.`]
+  if (hits.length) return [`The words ${hits.join(', ')} are not used in Hady Core.`]
   return []
 }
 

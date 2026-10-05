@@ -71,15 +71,15 @@ test('feed players and the course player keep YouTube captions and annotations o
   }
 })
 
-test('portal names: the brand word shows as HEARTS; other names, stored values and slugs stay as typed', async () => {
+test('portal names: the brand word shows as Hady Core; other names, stored values and slugs stay as typed', async () => {
   const { portalDisplayName, showPortalName } = await import('../../src/lib/portal-name')
-  assert.equal(showPortalName('Hearts'), 'HEARTS')
-  assert.equal(showPortalName('hearts demo'), 'HEARTS demo')
+  assert.equal(showPortalName('Hearts'), 'Hady Core')
+  assert.equal(showPortalName('hearts demo'), 'Hady Core demo')
   assert.equal(showPortalName('East London Mosque'), 'East London Mosque')
   assert.equal(showPortalName('Heartsease Hall'), 'Heartsease Hall')
   assert.equal(showPortalName(undefined), '')
-  assert.equal(portalDisplayName({ name: 'Hearts', organisationName: '' }), 'HEARTS')
-  assert.equal(portalDisplayName({ name: 'Leeds Chapter', organisationName: 'Hearts' }), 'HEARTS')
+  assert.equal(portalDisplayName({ name: 'Hearts', organisationName: '' }), 'Hady Core')
+  assert.equal(portalDisplayName({ name: 'Leeds Chapter', organisationName: 'Hearts' }), 'Hady Core')
   assert.equal(portalDisplayName({ name: 'Hearts', organisationName: 'East London Mosque' }), 'East London Mosque')
   const portal = { slug: 'hearts', name: 'Hearts' }
   portalDisplayName(portal)

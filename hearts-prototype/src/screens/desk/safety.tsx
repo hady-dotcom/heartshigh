@@ -148,7 +148,7 @@ export async function PortalSafetyScreen(ctx: Ctx) {
 
 export async function MasterSafetyScreen({ payload, user, query }: { payload: Payload; user: SessionUser; query: { error?: string; notice?: string } }) {
   return (
-    <DeskFrame payload={payload} user={user} title="Care and safety" intro="Concerns and alerts across every portal." active="safety" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="master-safety">
+    <DeskFrame payload={payload} user={user} title="Care and safety" intro="Concerns and alerts across every portal." active="safety" nav={masterNav()} brand="Hady Core" subBrand="Master desk" brandHref="/master" query={query} testId="master-safety">
       {await CareSafetyBody({ payload, user, portalId: null, here: '/master/safety' })}
     </DeskFrame>
   )
@@ -170,7 +170,7 @@ export async function MasterAnnounceScreen({ payload, user, query }: { payload: 
   const portals = await payload.find({ collection: 'portals', overrideAccess: true, depth: 0, limit: 40, sort: 'name' })
   const list = await payload.find({ collection: 'announcements', overrideAccess: true, depth: 0, limit: 40, sort: '-createdAt' })
   return (
-    <DeskFrame payload={payload} user={user} title="Announcements" intro="A short note to a portal. Learners see it on Home." active="announcements" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="master-announcements">
+    <DeskFrame payload={payload} user={user} title="Announcements" intro="A short note to a portal. Learners see it on Home." active="announcements" nav={masterNav()} brand="Hady Core" subBrand="Master desk" brandHref="/master" query={query} testId="master-announcements">
       <AnnounceForm portal={Number(portals.docs[0]?.id || 0)} here="/master/announcements" portals={portals.docs as { id: number; name?: string }[]} codes={[]} />
       <AnnounceList rows={list.docs as { id: number; body?: string; audience?: string; createdAt?: string }[]} />
     </DeskFrame>

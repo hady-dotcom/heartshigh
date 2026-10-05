@@ -1,5 +1,5 @@
 /**
- * First-open guidance for adding HEARTS to the home screen.
+ * First-open guidance for adding Hady Core to the home screen.
  * The Home strip is skippable. Once dismissed it stays hidden for 14 days,
  * unless someone opens it again from Me. An installed app (standalone) never shows the steps.
  */
@@ -57,8 +57,8 @@ declare global {
   }
 }
 
-const PHONE_HEADING = 'Keep HEARTS on your phone'
-const COMPUTER_HEADING = 'Keep HEARTS on this computer'
+const PHONE_HEADING = 'Keep Hady Core on your phone'
+const COMPUTER_HEADING = 'Keep Hady Core on this computer'
 const LEAD = 'It then opens full screen, with no browser bars.'
 
 const IOS_STEPS: InstallCopy['steps'] = [
@@ -128,13 +128,13 @@ export function installCopy(kind: InstallKind, prompt: boolean, surface: 'phone'
       heading,
       lead: LEAD,
       steps: [],
-      action: prompt ? 'Install HEARTS' : undefined,
-      manual: prompt ? undefined : 'Look for the install icon in the address bar, or open the browser menu and choose Install HEARTS.',
+      action: prompt ? 'Install Hady Core' : undefined,
+      manual: prompt ? undefined : 'Look for the install icon in the address bar, or open the browser menu and choose Install Hady Core.',
     }
   }
   const phone = kind === 'android-chrome' || kind === 'android-other'
   if (phone && prompt) {
-    return { heading, lead: LEAD, steps: [], action: 'Add HEARTS' }
+    return { heading, lead: LEAD, steps: [], action: 'Add Hady Core' }
   }
   if (phone) {
     const steps = kind === 'android-other'
@@ -160,21 +160,21 @@ export function installSlides(kind: InstallKind): InstallSlide[] {
       { id: 'ios-share', caption: 'Tap Share at the bottom of Safari.' },
       { id: 'ios-sheet', caption: 'Tap Add to Home Screen.' },
       { id: 'ios-add', caption: 'Tap Add.' },
-      { id: 'ios-home', caption: 'HEARTS lands on your home screen.' },
+      { id: 'ios-home', caption: 'Hady Core lands on your home screen.' },
     ]
   }
   if (kind === 'android-chrome') {
     return [
       { id: 'android-menu', caption: 'Tap the menu, the three dots at the top.' },
       { id: 'android-install', caption: 'Tap Install.' },
-      { id: 'android-home', caption: 'HEARTS lands on your home screen.' },
+      { id: 'android-home', caption: 'Hady Core lands on your home screen.' },
     ]
   }
   if (kind === 'android-other') {
     return [
       { id: 'android-menu', caption: 'Tap the menu in your browser.' },
       { id: 'android-install', caption: 'Tap Install.' },
-      { id: 'android-home', caption: 'HEARTS lands on your home screen.' },
+      { id: 'android-home', caption: 'Hady Core lands on your home screen.' },
     ]
   }
   return []
@@ -184,7 +184,7 @@ export function installEntry(kind: InstallKind, installed: boolean, surface: 'ph
   const computer = surface === 'computer'
   if (installed) {
     return {
-      title: computer ? 'HEARTS is on this computer' : 'HEARTS is on this phone',
+      title: computer ? 'Hady Core is on this computer' : 'Hady Core is on this phone',
       hint: 'It opens full screen, with no browser bars.',
     }
   }

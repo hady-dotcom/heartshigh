@@ -72,7 +72,7 @@ function HomeGrid({ round }: { round?: boolean }) {
       <span className="demo-blob mist" />
       <span className="demo-landing">
         <span className="demo-badge"><ArchMark /></span>
-        <small>HEARTS</small>
+        <small>Hady Core</small>
       </span>
       <span className="demo-dock"><i /><i /><i /><i /></span>
     </div>
@@ -104,7 +104,7 @@ function PhoneDemo({ scene, playing }: { scene: InstallSlideId; playing: boolean
             </div>
             <div className="demo-preview">
               <span className="demo-badge big"><ArchMark /></span>
-              <strong>HEARTS</strong>
+              <strong>Hady Core</strong>
               <small>hearts</small>
             </div>
             <span className="demo-homebar" />

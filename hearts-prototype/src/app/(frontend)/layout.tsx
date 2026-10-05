@@ -18,10 +18,10 @@ import { ViewAsBanner } from '@/components/viewas-banner'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'HEARTS',
+  title: 'Hady Core',
   description: 'Short clips from real talks, full courses, and a circle that meets in person.',
   manifest: '/manifest.webmanifest',
-  appleWebApp: { capable: true, title: 'HEARTS', statusBarStyle: 'black-translucent' },
+  appleWebApp: { capable: true, title: 'Hady Core', statusBarStyle: 'black-translucent' },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: '16x16 32x32 48x48' },

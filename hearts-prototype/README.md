@@ -1,6 +1,6 @@
-# HEARTS prototype
+# Hady Core
 
-A portal CMS for the desk and a phone app for learners. The master desk opens portals. Each portal has its own admin, access codes, teachers and learners. Courses linked from the master library stay linked: when the library changes, the portal sees the change, and the portal cannot edit the original.
+Hady Core is the platform: a portal CMS for the desk and a phone app for learners. The repository is still heartshigh. The master desk opens portals. Each portal has its own admin, access codes, teachers and learners. Courses linked from the master library stay linked: when the library changes, the portal sees the change, and the portal cannot edit the original.
 
 Every agent must read [docs/DESIGN-WHY.md](docs/DESIGN-WHY.md) before changing a learner screen. It is the basis for why each screen exists. Keep each screen's reason. A better idea from testing can replace a detail in the deck.
 
@@ -201,7 +201,7 @@ The circle label and threshold are not environment variables. They are fields on
 
 On a Cloud Agent, put keys in the Cursor Dashboard under Cloud Agents, then Secrets. Do not commit them.
 
-## Cloudflare in front of HEARTS
+## Cloudflare in front of Hady Core
 
 Do this in the Cloudflare dashboard. Do **not** change Railway, DNS at the registrar, or Turnstile from this repository. The app only reads the keys you paste into the host’s variables.
 
@@ -226,7 +226,7 @@ Password reset uses `/forgot` and `/reset`. Email is still a stand-in (Payload l
 
 ## The mark
 
-HEARTS uses the word HEARTS with a fine gold arch (`src/components/arch.tsx`, wrapped by `BrandMark` and `BrandLockup` in `src/components/brand.tsx`). The home-screen icons are in `public/icons/`.
+Hady Core uses the word Hady Core with a fine gold arch (`src/components/arch.tsx`, wrapped by `BrandMark` and `BrandLockup` in `src/components/brand.tsx`). The home-screen icons are in `public/icons/`.
 
 ## Tests
 

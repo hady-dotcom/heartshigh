@@ -35,7 +35,7 @@ async function Frame({
   if (ctx) return <AdminFrame ctx={ctx} active="calendar" title={title} intro={intro} testId={testId} tools={tools}>{children}</AdminFrame>
   const desk = master!
   return (
-    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="calendar" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={tools}>
+    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="calendar" nav={masterNav()} brand="Hady Core" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={tools}>
       {children}
     </DeskFrame>
   )
@@ -159,7 +159,7 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
             ) : null}
             {masterUser ? (
               <section className="panel">
-                <header><h2>Popular inside HEARTS</h2></header>
+                <header><h2>Popular inside Hady Core</h2></header>
                 <form className="body" action="/api/calendar" method="post">
                   <Hidden fields={{ action: 'popular', value: flags.popular ? 'off' : 'on', next: base }} />
                   <p className={styles.quiet}>Most finished talks this week can nudge the order, after the season theme. Talk content itself never changes.</p>

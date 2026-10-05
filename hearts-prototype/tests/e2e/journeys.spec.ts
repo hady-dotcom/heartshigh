@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test, type Page } from '@playwright/test'
 import { E2E_BASE, seedCode } from '../env'
 import path from 'node:path'
+import { skipWelcomeFilms } from './welcome-walk'
 
 const suffix = Date.now().toString().slice(-7)
 const slug = `harbour-${suffix}`
@@ -45,11 +46,7 @@ async function join(page: Page, code: string, name: string, email: string, passw
 
 async function placing(page: Page, picks: string[]) {
   const portal = page.url().match(/\/p\/[^/?#]+/)?.[0] || '/p/east-london'
-  if (await page.getByTestId('welcome-begin').count()) {
-    await page.getByTestId('welcome-begin').click()
-    await page.waitForURL(/step=films|\/start/)
-    if (page.url().includes('step=films')) await page.getByTestId('welcome-continue').click()
-  }
+  await skipWelcomeFilms(page)
   await page.goto(`${portal}/welcome?step=placing`)
   const questions = page.getByTestId('placing-question')
   await expect(questions).toHaveCount(picks.length)

@@ -33,7 +33,7 @@ async function Frame({
   if (ctx) return <AdminFrame ctx={ctx} active="insights" title={title} intro={intro} testId={testId} tools={tools}>{children}</AdminFrame>
   const desk = master!
   return (
-    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="insights" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={tools}>
+    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="insights" nav={masterNav()} brand="Hady Core" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={tools}>
       {children}
     </DeskFrame>
   )

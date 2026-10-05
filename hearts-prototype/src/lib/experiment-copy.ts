@@ -87,7 +87,7 @@ export async function suggestWording(slotKey: string, current: string, count = 4
   try {
     const reply = await client.complete({
       system: [
-        'You write short button labels for HEARTS, a gentle Islamic learning app.',
+        'You write short button labels for Hady Core, a gentle Islamic learning app.',
         'Return JSON only: {"variants":[{"label":"..."}]}',
         slot.key === 'lanes-tab-label'
           ? 'Each label is one or two short words, like a bottom-bar tab name. Plain text, no emoji, no HTML.'

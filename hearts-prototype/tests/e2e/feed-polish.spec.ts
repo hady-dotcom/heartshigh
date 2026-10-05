@@ -223,7 +223,7 @@ test('the portal desk names the portal, never its slug, in the sidebar and on a 
   const side = page.locator('.side-brand')
   await expect(side).toBeVisible()
   await expect(side).not.toContainText('east-london')
-  await expect(side.locator('small')).toHaveText('Portal desk')
+  await expect(side.locator('small')).toHaveText('Hady Core')
   const name = ((await side.locator('b').textContent()) || '').trim()
   expect(name.length).toBeGreaterThan(2)
   await page.setViewportSize(PHONE)

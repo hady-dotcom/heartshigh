@@ -418,8 +418,8 @@ export const MasterFlags: GlobalConfig = {
     {
       name: 'circleLabel',
       type: 'text',
-      defaultValue: 'From the HEARTS circle',
-      admin: { description: 'The light label under each HEARTS circle answer in the swarm.' },
+      defaultValue: 'From the Hady Core circle',
+      admin: { description: 'The light label under each Hady Core circle answer in the swarm.' },
     },
     {
       name: 'circleThreshold',

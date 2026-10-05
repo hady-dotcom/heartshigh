@@ -162,7 +162,7 @@ export async function MasterLiveScreen({ payload, user, query }: { payload: Payl
   const portals = await rows(payload, 'portals', undefined, { sort: 'name', limit: 80 })
   const sessions = await rows(payload, 'live-sessions', undefined, { sort: '-createdAt', limit: 80 })
   return (
-    <DeskFrame payload={payload} user={user} title="Live" intro="Every portal’s live sessions. Open a portal desk to start or end one." active="live" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="master-live">
+    <DeskFrame payload={payload} user={user} title="Live" intro="Every portal’s live sessions. Open a portal desk to start or end one." active="live" nav={masterNav()} brand="Hady Core" subBrand="Master desk" brandHref="/master" query={query} testId="master-live">
       <section className="panel">
         <header><h2>All portals</h2></header>
         <div className="body">

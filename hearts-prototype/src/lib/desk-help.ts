@@ -18,7 +18,7 @@ export const PAGE: Record<string, string> = {
   content:
     'Build subjects here: a topic, then a film, then the questions that pause the film. Courses from the library are read only; you can still add your own questions on top. Search and Mine or Library help when the list is long.',
   sheet:
-    'The master sheet is a workbook you can download, edit and upload again. Preview first — nothing is saved until you apply. An empty export is refused, so you do not download a blank file by mistake.',
+    'The master sheet is a workbook you can download, edit and upload again. Preview first — nothing is saved until you load it. An empty export is refused, so you do not download a blank file by mistake.',
   create:
     'The sheet creator searches for talks on a topic and builds a draft workbook. Nothing goes live until you apply the preview on the sheet page. A portal draft stays in this portal; the shared library is unchanged.',
   library:
@@ -30,7 +30,7 @@ export const PAGE: Record<string, string> = {
   circle:
     'Circle answers are light, written examples that sit beside real shared answers so a question is never empty. They are never counted in progress, trends or exports. You can write them, draft a handful, or switch a talk’s set on or off.',
   ai:
-    'Each step is one job the model does after a talk is ingested. Edit the prompt, try it on a single talk, then mark a version live. Re-runs land as drafts on Review and leave approved work where it is.',
+    'Each step is one job the model does after a talk is brought in. Edit the prompt, try it on a single talk, then mark a version live. Re-runs land as drafts on Review and leave approved work where it is.',
   settings:
     'These details are what people see: the name, welcome line, logo, time zone and the short films at the door. Sharing choices decide whether learners can see answers others chose to share. Save before you leave.',
   wizard:
@@ -66,7 +66,7 @@ export const PAGE: Record<string, string> = {
   experiments:
     'A test shows some learners one wording or layout and others another, then counts what they do. Learners are never told they are in a test. A sheikh’s words stay as they are. The kill switch stops every running test at once.',
   insights:
-    'Insights is our own look at how people move through HEARTS. Taps, scrolls and clip watches stay in our Postgres. We never store typed text or an answer.',
+    'Insights is our own look at how people move through Hady Core. Taps, scrolls and clip watches stay in our Postgres. We never store typed text or an answer.',
   calendar:
     'The calendar knows Friday, Ramadan, Dhul Hijjah, the two Eids and seasons you add. The Islamic day moves on at Maghrib. A suggested line never reaches a learner until you approve it.',
   missions:
@@ -127,13 +127,23 @@ export const TOOL: Record<string, string> = {
   contentSearch:
     'Search looks at subject titles. Mine is what you made here; Library is what you linked. The list is grouped by the twenty doors of Hadith Jibril, then by Ghunya seat.',
   ingest:
-    'Paste a YouTube or share link to fetch the film and, when we can, the transcript. You can also upload a transcript file. Nothing is shown to learners until you approve cuts and questions.',
+    'Paste a YouTube or share link to bring in the film and, when we can, the transcript. You can also add a transcript file. Nothing is shown to learners until you approve cuts and questions.',
+  welcomeFilm:
+    'A short film people see the first time they arrive. Learners get a welcome, then how to use the app; teachers get their own pair. Skip is always on the phone, and an empty slot is a quiet placeholder.',
+  'welcome-learner':
+    'A personal hello from the teacher or school: why this circle is here. It plays first for a new learner. They can skip it. Returning people who already skipped never see it again.',
+  'intro-learner':
+    'How to use the app: the feed, the garden, a few minutes a day. It plays after the welcome. Skip is always there. Leave it empty if you only have a hello.',
+  'welcome-teacher':
+    'A hello for teachers the first time they open the desk. Same idea as the learner welcome: why this portal, from the school. Skip is always there.',
+  'intro-teacher':
+    'How teachers use the desk: codes, the board, replies. It plays after their welcome. Leave it empty if the hello is enough.',
   sheetScope:
     'Scope says what the workbook covers: the whole library, this portal’s own courses, or one course. Portal exports skip library courses, so they can be empty. The blank template is always safe to download.',
   sheetPreview:
-    'Preview shows every add, change and problem before anything is saved. Apply only when the sheet is clean. Undo takes back the last import, not older ones.',
+    'Preview shows every add, change and problem before anything is saved. Load only when the sheet is clean. Undo takes back the last import, not older ones.',
   creatorSearch:
-    'Search looks on YouTube for talks on this topic. Tick the ones you want, or paste links and upload a file. Build draft writes a workbook; apply it on the sheet page when you are happy.',
+    'Search looks on YouTube for talks on this topic. Tick the ones you want, or paste links and add a file. Build draft writes a workbook; load it on the sheet page when you are happy.',
   hideScene:
     'Leave this scene out hides it for your community only. The scene that opens the help screen cannot be hidden. The choices still mean what the master desk set.',
   helpContacts:
@@ -157,7 +167,7 @@ export const TOOL: Record<string, string> = {
   portalCourses:
     'These are library courses this portal may link. Tick the ones they will use. You can add more later from the portal library. Nothing is copied; the original stays as the master desk set it.',
   portalFeatures:
-    'Each switch is one part of HEARTS. Start small keeps videos, questions and the Garden. Add the community brings circle answers and the planner, and Everything turns every switch on. Saving takes effect at once.',
+    'Each switch is one part of Hady Core. Start small keeps videos, questions and the Garden. Add the community brings circle answers and the planner, and Everything turns every switch on. Saving takes effect at once.',
   safeguarding:
     'This box is for the named safeguarding lead. Other staff only see that a person is needed. The email says to look today and does not add extra personal detail.',
 }

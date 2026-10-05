@@ -262,7 +262,7 @@ function SheetBody({
                   <p className="hint">Off, only people who join with the pack’s codes from now on get the courses. On, learners who already hold the pack get them straight away. Either way the choice is logged, and undo takes them back out.</p>
                 </div>
               ) : null}
-              {counts.errors || counts.skipped ? <p data-testid="sheet-blocked">Fix the rows above and upload the sheet again. Apply stays off while any row has a problem.</p> : <button className="btn teal" type="submit" data-testid="sheet-apply">Apply this import</button>}
+              {counts.errors || counts.skipped ? <p data-testid="sheet-blocked">Fix the rows above and upload the sheet again. Apply stays off while any row has a problem.</p> : <button className="btn teal" type="submit" data-testid="sheet-apply">Load this sheet</button>}
             </form>
           </div>
         </section>
@@ -295,7 +295,7 @@ export async function MasterSheetScreen({ payload, user, query }: { payload: Pay
     rows(payload, 'packs', undefined, { sort: 'title', limit: 500 }),
   ])
   return (
-    <DeskFrame payload={payload} user={user} title="Master sheet" intro="Upload one workbook to add talks and place pop-up questions, or download what is already here. A dry run shows every add, change and problem before anything is saved." active="sheet" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="master-sheet">
+    <DeskFrame payload={payload} user={user} title="Master sheet" intro="Load one workbook to add talks and place pop-up questions, or download what is already here. A dry run shows every add, change and problem before anything is saved." active="sheet" nav={masterNav()} brand="Hady Core" subBrand="Master desk" brandHref="/master" query={query} testId="master-sheet">
       <SheetBody
         action="/api/hearts/sheet"
         next="/master/sheet"

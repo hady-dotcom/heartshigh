@@ -6,7 +6,7 @@ import { E2E_BASE } from '../env'
 const PORTAL = 'east-london'
 const sfx = Date.now().toString().slice(-6)
 const DESK = { width: 1440, height: 900 }
-const LABEL = 'From the HEARTS circle'
+const LABEL = 'From the Hady Core circle'
 
 type Row = Record<string, any> & { id: number }
 
@@ -114,10 +114,10 @@ test.describe('HEARTS circle answers', () => {
     expect(box, 'circle answers are not boxed off').toBe(plain)
 
     expect(loc(await form(master, { action: 'circle-settings', label: 'Quiz corner', threshold: '8', next: '/master/circle' }))).toContain('error=')
-    await settings(`Shared in the HEARTS circle ${sfx}`, 8)
+    await settings(`Shared in the Hady Core circle ${sfx}`, 8)
     await page.reload()
     await openFirstQuestion(page)
-    await expect(page.getByTestId('circle-label').first()).toHaveText(`Shared in the HEARTS circle ${sfx}`)
+    await expect(page.getByTestId('circle-label').first()).toHaveText(`Shared in the Hady Core circle ${sfx}`)
     await settings(LABEL, 8)
 
     await expect(page.getByTestId('swarm')).toHaveCount(1)

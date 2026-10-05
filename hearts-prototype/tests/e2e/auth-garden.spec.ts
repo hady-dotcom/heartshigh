@@ -54,7 +54,7 @@ async function looksLikeTheGarden(page: Page, main: string) {
   expect(look.shade).toContain('rgba(10, 40, 40')
   expect(look.mark).toBe(GOLD)
   expect(look.markDisc).toContain('radial-gradient')
-  expect(look.word).toBe('HEARTS')
+  expect(look.word).toBe('Hady Core')
   expect(look.button).toBe(GOLD)
   expect(luminance(look.buttonInk)).toBeLessThan(0.15)
   if (main === 'join') {
@@ -117,7 +117,7 @@ test('the front door is the evening garden too, and signing in from the garden p
   await page.context().close()
 })
 
-test('a portal named Hearts shows as HEARTS on the master desk; its slug stays as typed', async ({ page }) => {
+test('a portal named Hearts shows as Hady Core on the master desk; its slug stays as typed', async ({ page }) => {
   const sfx = Date.now().toString(36).slice(-5)
   const slug = `hearts-${sfx}`
   await page.setViewportSize({ width: 1440, height: 900 })
@@ -131,7 +131,7 @@ test('a portal named Hearts shows as HEARTS on the master desk; its slug stays a
   await page.getByTestId('create-portal-submit').click()
   await expect(page.getByTestId('notice')).toBeVisible()
   const card = page.getByTestId('portal-card').filter({ hasText: `/p/${slug}` })
-  await expect(card).toContainText(`HEARTS ${sfx}`)
+  await expect(card).toContainText(`Hady Core ${sfx}`)
   await expect(card).not.toContainText(`Hearts ${sfx}`)
-  await expect(page.getByTestId('code-portal').locator(`option[value="${slug}"]`)).toHaveText(`HEARTS ${sfx}`)
+  await expect(page.getByTestId('code-portal').locator(`option[value="${slug}"]`)).toHaveText(`Hady Core ${sfx}`)
 })

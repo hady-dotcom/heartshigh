@@ -35,12 +35,12 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const query = await searchParams
   const line = await inviteFor(query.code || '')
   return {
-    title: `${line} to HEARTS`,
+    title: `${line} to Hady Core`,
     description: 'Short talks from real lectures, a few minutes a day, and a circle that meets in person.',
     openGraph: {
-      title: `${line} to HEARTS`,
+      title: `${line} to Hady Core`,
       description: 'Short talks from real lectures, a few minutes a day, and a circle that meets in person.',
-      images: [{ url: '/theme/evening-courtyard.jpg', width: 1200, height: 630, alt: 'The HEARTS garden courtyard' }],
+      images: [{ url: '/theme/evening-courtyard.jpg', width: 1200, height: 630, alt: 'The Hady Core garden courtyard' }],
     },
   }
 }

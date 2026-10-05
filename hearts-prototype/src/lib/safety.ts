@@ -87,10 +87,10 @@ export function canSeeAlertContent(user: { id: number; role?: string | null }, l
   return false
 }
 
-export function tealMailHtml(title: string, body: string, href?: string, button = 'Open HEARTS') {
+export function tealMailHtml(title: string, body: string, href?: string, button = 'Open Hady Core') {
   const link = href
     ? `<p style="margin:24px 0"><a href="${href}" style="background:#D4A84B;color:#1A1408;padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:700">${button}</a></p>`
-    : `<p style="margin:24px 0;color:#D4A84B">Open Care and safety in HEARTS.</p>`
+    : `<p style="margin:24px 0;color:#D4A84B">Open Care and safety in Hady Core.</p>`
   return `<!doctype html><html lang="en-GB"><body style="margin:0;font-family:Georgia,serif;background:#F6EEDC;color:#1A1408">
 <div style="background:#0E2A2B;color:#F6EEDC;padding:18px 24px"><strong>${title}</strong></div>
 <div style="padding:24px;max-width:32rem">${body}${link}<p style="color:#5a4a2a;font-size:13px">You received this because you are named as a contact for this portal.</p></div>

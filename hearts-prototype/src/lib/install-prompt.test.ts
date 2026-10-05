@@ -57,14 +57,14 @@ test('a narrow or touch surface says phone even when the browser looks like a de
   assert.equal(installSurface('desktop', { narrow: true }), 'phone')
   assert.equal(installSurface('desktop', { coarse: true }), 'phone')
   assert.equal(installSurface('ios-safari'), 'phone')
-  assert.equal(installCopy('desktop', false, 'phone').heading, 'Keep HEARTS on your phone')
+  assert.equal(installCopy('desktop', false, 'phone').heading, 'Keep Hady Core on your phone')
   assert.match(installCopy('desktop', false, 'phone').steps[0].text, /Share/)
   assert.match(installCopy('desktop', false, 'phone').steps[1].text, /Install/)
 })
 
 test('copy is the two iPhone steps, an Android install button, or the menu', () => {
   const safari = installCopy('ios-safari', false)
-  assert.equal(safari.heading, 'Keep HEARTS on your phone')
+  assert.equal(safari.heading, 'Keep Hady Core on your phone')
   assert.equal(safari.lead, 'It then opens full screen, with no browser bars.')
   assert.equal(safari.note, undefined)
   assert.deepEqual(safari.steps.map((step) => step.glyph), ['share', 'add'])
@@ -76,7 +76,7 @@ test('copy is the two iPhone steps, an Android install button, or the menu', () 
   assert.equal(other.steps.length, 2)
 
   const prompted = installCopy('android-chrome', true)
-  assert.equal(prompted.action, 'Add HEARTS')
+  assert.equal(prompted.action, 'Add Hady Core')
   assert.equal(prompted.steps.length, 0)
 
   const menu = installCopy('android-chrome', false)
@@ -84,13 +84,13 @@ test('copy is the two iPhone steps, an Android install button, or the menu', () 
   assert.match(menu.steps[1].text, /Install/)
 
   const desktop = installCopy('desktop', true)
-  assert.equal(desktop.heading, 'Keep HEARTS on this computer')
-  assert.equal(desktop.action, 'Install HEARTS')
+  assert.equal(desktop.heading, 'Keep Hady Core on this computer')
+  assert.equal(desktop.action, 'Install Hady Core')
   assert.match(installCopy('desktop', false).manual || '', /address bar/)
 
-  assert.equal(installEntry('ios-safari', false).title, 'Keep HEARTS on your phone')
-  assert.equal(installEntry('ios-safari', true).title, 'HEARTS is on this phone')
-  assert.equal(installEntry('desktop', true).title, 'HEARTS is on this computer')
+  assert.equal(installEntry('ios-safari', false).title, 'Keep Hady Core on your phone')
+  assert.equal(installEntry('ios-safari', true).title, 'Hady Core is on this phone')
+  assert.equal(installEntry('desktop', true).title, 'Hady Core is on this computer')
 })
 
 test('a phone card is a row of pictured steps, one slide each', () => {

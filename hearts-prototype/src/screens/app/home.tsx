@@ -24,6 +24,7 @@ import { HomeGather, homeGatherings } from './gather'
 import { HomeLive, liveHomeBits } from './live'
 import { activeMissionCard } from './mission'
 import { featureOn } from '@/lib/features'
+import { welcomeWalkHref } from '@/lib/welcome-films'
 import { openAnnouncements } from '@/server/safety'
 import { AnnounceCard } from '@/components/app/announce-card'
 import { type Ctx, ref, rows, str, unreadCount } from '../common'
@@ -36,6 +37,8 @@ function minutesLeft(seconds: number, percent: number) {
 
 /** Home: the growth banner, what to carry on with, then the way into today's clips (board 00). */
 export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
+  const films = welcomeWalkHref(base, user, portal)
+  if (films) redirect(films)
   if (user.role === 'learner' && !user.onboarded) redirect(user.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
   const [g, unread, { items }, courses, due, gatherings, liveBits, week] = await Promise.all([
     growth(payload, user),

@@ -8,10 +8,11 @@ import { TOOL } from '@/lib/desk-help'
 import { now } from '@/lib/clock'
 import { adoptedCourseIds } from '@/server/context'
 import { portalName } from '@/server/learner'
-import { type Ctx, portalPeople, rows, str } from '../common'
+import { type Ctx, embedUrl, portalPeople, rows, str } from '../common'
 import { DeskFrame, portalNav } from './shell'
 import { PORTAL_TIME_ZONES, portalTimeZone, zoneCity } from '@/lib/zone-time'
 import { displayPortalAddress } from '@/lib/portal-address'
+import { filmSource, welcomeSlotLabel, type WelcomeSlot } from '@/lib/welcome-films'
 
 export async function AdminFrame({ ctx, active, title, intro, tools, help, children, testId, tone }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; help?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening' }) {
   const { payload, user, portal, base, query } = ctx
@@ -26,7 +27,7 @@ export async function AdminFrame({ ctx, active, title, intro, tools, help, child
       active={active}
       nav={portalNav(base, user, portal)}
       brand={portalName(portal)}
-      subBrand={portal.closed ? 'Deactivated' : 'Portal desk'}
+      subBrand={portal.closed ? 'Deactivated' : 'Hady Core'}
       deskName={`${portalName(portal)} portal desk`}
       brandHref={`${base}/admin`}
       extraLinks={extra}
@@ -193,10 +194,6 @@ export async function PortalSettingsScreen(ctx: Ctx) {
             </label>
             {field('What learners are called', 'learnerLabel')}
             {field('What teachers are called', 'teacherLabel')}
-            {field('Learner welcome film', 'learnerWelcomeUrl', { 'data-testid': 'learner-welcome', placeholder: 'https://www.youtube.com/watch?v=' })}
-            {field('Learner introduction film', 'learnerIntroUrl', { 'data-testid': 'learner-intro' })}
-            {field('Teacher welcome film', 'teacherWelcomeUrl', { 'data-testid': 'teacher-welcome' })}
-            {field('Teacher introduction film', 'teacherIntroUrl', { 'data-testid': 'teacher-intro' })}
             <div className="row top"><span>Sharing</span>
               <div className="checks" style={{ flexDirection: 'column' }}>
                 <label className="check"><input type="checkbox" name="showOthersAnswers" defaultChecked={portal.showOthersAnswers !== false} /> Learners can see answers others chose to share</label>
@@ -206,6 +203,14 @@ export async function PortalSettingsScreen(ctx: Ctx) {
             </div>
             <div className="actions"><button className="btn ink" data-testid="save-settings" type="submit">Save settings</button></div>
           </form>
+          <div className="body" data-testid="welcome-film-slots" style={{ display: 'grid', gap: 18 }}>
+            <h3 style={{ margin: 0, fontFamily: 'var(--serif)', fontSize: 22 }}>Welcome and introduction films</h3>
+            <p className="hint" style={{ margin: 0 }}>On Hady Core, learners see their pair the first time they arrive. Teachers see theirs. Add a file, or keep a YouTube link. Clear takes the slot away. Skip is always on the phone.</p>
+            <FilmSlot ctx={ctx} slot="learnerWelcome" help="welcome-learner" />
+            <FilmSlot ctx={ctx} slot="learnerIntro" help="intro-learner" />
+            <FilmSlot ctx={ctx} slot="teacherWelcome" help="welcome-teacher" />
+            <FilmSlot ctx={ctx} slot="teacherIntro" help="intro-teacher" />
+          </div>
         </section>
         <section className="panel">
           <header className="light"><h2>Put the portal on your website</h2></header>
@@ -252,5 +257,58 @@ export async function WizardScreen(ctx: Ctx) {
         </div>
       </section>
     </AdminFrame>
+  )
+}
+
+const SLOT_TEST: Record<WelcomeSlot, string> = {
+  learnerWelcome: 'learner-welcome',
+  learnerIntro: 'learner-intro',
+  teacherWelcome: 'teacher-welcome',
+  teacherIntro: 'teacher-intro',
+}
+
+function FilmSlot({ ctx, slot, help }: { ctx: Ctx; slot: WelcomeSlot; help: string }) {
+  const { portal, base } = ctx
+  const film = filmSource(portal, slot)
+  const test = SLOT_TEST[slot]
+  const urlKey = `${slot}Url` as 'learnerWelcomeUrl' | 'learnerIntroUrl' | 'teacherWelcomeUrl' | 'teacherIntroUrl'
+  return (
+    <div className="film-slot" data-testid={`${test}-slot`}>
+      <div className="lbl" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        {welcomeSlotLabel(slot)}
+        <HelpTip topic={help}>{TOOL[help] || TOOL.welcomeFilm}</HelpTip>
+      </div>
+      {film.kind === 'media' ? (
+        <video className="film-preview" style={{ padding: 0, marginBottom: 10 }} controls src={film.src} data-testid={`${test}-preview`} />
+      ) : film.kind === 'url' ? (
+        <iframe className="film-preview" style={{ padding: 0, marginBottom: 10 }} title="" src={embedUrl(film.src)} data-testid={`${test}-preview`} />
+      ) : (
+        <p className="hint" data-testid={`${test}-empty`}>No film yet. Add a file, or save a YouTube link below.</p>
+      )}
+      <form className="form" action="/api/hearts" method="post" encType="multipart/form-data">
+        <Hidden fields={{ action: 'welcome-film', slot, portalSlug: portal.slug, next: `${base}/admin/settings` }} />
+        <label className="stack">
+          Add a film
+          <input type="file" name="file" accept="video/*" data-testid={`${test}-file`} required />
+        </label>
+        <div className="actions">
+          <button className="btn ink small" type="submit" data-testid={`${test}-add`}>{film.kind === 'empty' ? 'Add film' : 'Replace film'}</button>
+        </div>
+      </form>
+      {film.kind !== 'empty' ? (
+        <form action="/api/hearts" method="post" style={{ marginTop: 8 }}>
+          <Hidden fields={{ action: 'welcome-film', slot, clear: 'yes', portalSlug: portal.slug, next: `${base}/admin/settings` }} />
+          <button className="btn ghost small" type="submit" data-testid={`${test}-clear`}>Clear</button>
+        </form>
+      ) : null}
+      <form className="form" action="/api/hearts" method="post" style={{ marginTop: 10 }}>
+        <Hidden fields={{ action: 'settings', portalSlug: portal.slug, next: `${base}/admin/settings` }} />
+        <label className="stack">
+          Or a YouTube link
+          <input type="text" name={urlKey} defaultValue={str(portal[urlKey])} data-testid={test} placeholder="https://www.youtube.com/watch?v=" />
+        </label>
+        <div className="actions"><button className="btn ghost small" type="submit">Save link</button></div>
+      </form>
+    </div>
   )
 }

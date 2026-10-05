@@ -555,7 +555,7 @@ async function main() {
   if (startersOnly) {
     console.log('Loaded the starter talks and the library. No demo accounts were created.')
   } else {
-    console.log('Seeded HEARTS. Master: master@hearts.test / hearts-master')
+    console.log('Seeded Hady Core. Master: master@hearts.test / hearts-master')
     console.log(`Access codes (also on the master desk, and in ${codesFile()}):`)
     for (const [label, value] of Object.entries(codeValues)) console.log(`  ${label.padEnd(14)} ${value}`)
   }

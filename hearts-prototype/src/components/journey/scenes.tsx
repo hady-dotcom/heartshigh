@@ -184,7 +184,7 @@ export function HelpScreen({ contacts, onBack }: { contacts: HelpContact[]; onBa
         ))}
       </ul>
       <div className="j-actions">
-        <button type="button" className="pill outline-light block" onClick={onBack} data-testid="back-to-hearts">Back to HEARTS</button>
+        <button type="button" className="pill outline-light block" onClick={onBack} data-testid="back-to-hearts">Back to Hady Core</button>
       </div>
     </section>
   )

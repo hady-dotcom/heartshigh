@@ -14,6 +14,6 @@ export default async function Image({ params }: { params: Promise<{ slug: string
     title: view?.card.title || 'Gather',
     when: view?.card.when || '',
     place: view?.card.place || view?.portalName || '',
-    portal: view?.portalName || 'HEARTS',
+    portal: view?.portalName || 'Hady Core',
   })
 }

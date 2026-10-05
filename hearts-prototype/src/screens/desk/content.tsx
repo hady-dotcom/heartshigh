@@ -271,12 +271,12 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                     <form className="form" action="/api/hearts" method="post">
                       <Hidden fields={{ action: 'ingest', lesson: lesson.id, next: here }} />
                       <label className="stack">YouTube or share link <HelpTip topic="ingest">{TOOL.ingest}</HelpTip><input type="url" data-testid="youtube-url" name="url" placeholder="https://www.youtube.com/watch?v=" required /></label>
-                      <div className="actions"><button className="btn ink small" data-testid="ingest-submit" type="submit">Fetch film and transcript</button></div>
+                      <div className="actions"><button className="btn ink small" data-testid="ingest-submit" type="submit">Bring in film and transcript</button></div>
                     </form>
                     <form className="form" action="/api/hearts" method="post" encType="multipart/form-data">
                       <Hidden fields={{ action: 'upload-transcript', lesson: lesson.id, next: here }} />
-                      <label className="stack">Or upload a transcript (.vtt, .srt or .txt)<input data-testid="transcript-file" type="file" name="file" accept=".vtt,.srt,.txt,.md,text/plain" required /></label>
-                      <div className="actions"><button className="btn ghost small" data-testid="transcript-submit" type="submit">Upload transcript</button></div>
+                      <label className="stack">Or add a transcript (.vtt, .srt or .txt)<input data-testid="transcript-file" type="file" name="file" accept=".vtt,.srt,.txt,.md,text/plain" required /></label>
+                      <div className="actions"><button className="btn ghost small" data-testid="transcript-submit" type="submit">Add transcript</button></div>
                     </form>
                     <form action="/api/hearts" method="post">
                       <Hidden fields={{ action: 'extract', lesson: lesson.id, next: here }} />
@@ -521,7 +521,7 @@ export async function LibraryScreen(ctx: Ctx) {
   const packIds = (pack: Row) => new Set(((pack.courses as unknown[]) || []).map((item) => ref(item)).filter((id): id is number => Boolean(id)))
   const doors = openPack ? (await loadDoors(payload)).map((door) => ({ number: door.number, title: door.title })) : []
   return (
-    <AdminFrame ctx={ctx} active="library" title="Library" intro="Courses from the main HEARTS library. Add a pack and it stays up to date." testId="admin-library">
+    <AdminFrame ctx={ctx} active="library" title="Library" intro="Courses from the main Hady Core library. Add a pack and it stays up to date." testId="admin-library">
       <section className="panel" style={{ marginBottom: 18 }}>
         <header><h2>Library packs</h2></header>
         <div className="body lib-packs">

@@ -1023,3 +1023,35 @@ html[data-theme] .card.home-plan .eyebrow,
 .journey-frame:has(.feed-mission) .journey[data-words-in-picture='yes'] .j-slot { top: calc(244px + var(--safe-top)); }
 .journey-frame:has(.feed-mission) .journey[data-words-in-picture='yes'] .j-chrome .caption,
 .journey-frame:has(.feed-mission) .j-caption-clear { top: calc(260px + var(--safe-top) + min(430px, 100vw) * 9 / 16); }
+
+/* First-login welcome and intro: evening garden, never cream. */
+.welcome-walk { background: #0E2A2B; color: #F6EEDC; min-height: 100dvh; }
+.welcome-walk .app-head h1,
+.welcome-walk .lead { color: #F6EEDC; }
+.welcome-walk .lead { opacity: 0.86; }
+.welcome-empty {
+  background: #163633;
+  border: 1px solid #D4A84B;
+  border-radius: 18px;
+  padding: 28px 18px;
+  text-align: center;
+  color: #E4D3A4;
+}
+.welcome-player { position: relative; }
+.welcome-player .film-frame { background: #0B2223; border: 1px solid rgba(212, 168, 75, 0.45); }
+.welcome-spoken {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 18px;
+  margin: 0;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.35;
+  color: #F6EEDC;
+  text-shadow: 0 1px 4px #0E2A2B;
+  pointer-events: none;
+}
+.welcome-walk .step-bar span { background: #163633; }
+.welcome-walk .step-bar span.on { background: #D4A84B; }
+.desk .film-slot { padding-top: 8px; border-top: 1px solid rgba(212, 168, 75, 0.28); }

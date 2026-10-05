@@ -26,7 +26,7 @@ const STATUS_ORDER: Record<string, number> = { draft: 0, rejected: 1, checked: 2
 
 function Frame({ ctx, title, intro, children, testId }: { ctx: MasterCtx; title: string; intro: string; children: React.ReactNode; testId: string }) {
   return (
-    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active="review" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
+    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active="review" nav={masterNav()} brand="Hady Core" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
       <ReviewKeys />
       {children}
     </DeskFrame>
@@ -141,7 +141,7 @@ export async function MasterReview(ctx: MasterCtx) {
               <p className="hint">{str(lesson.speaker)}{lesson.durationSeconds ? `, talk length ${clock(Number(lesson.durationSeconds))}` : ''}</p>
             </div>
             <div>
-              {pending.length ? <p className="hint" data-testid="new-draft-available">New draft available. The approved cut is unchanged. <Link href={`/master/ai/ingest/${lesson.id}`}>Read it on the ingest view</Link>.</p> : null}
+              {pending.length ? <p className="hint" data-testid="new-draft-available">New draft available. The approved cut is unchanged. <Link href={`/master/ai/ingest/${lesson.id}`}>Read it on the Bring in view</Link>.</p> : null}
               <dl className="review-lines" data-testid="review-lines">
                 <dt>Hors d&apos;oeuvre line</dt><dd data-testid="review-hors">{str(tier.horsQuote)}</dd>
                 <dt>Hook <span className="hint">{clock(Number(tier.hookAt ?? tier.appetiserStart))}</span></dt><dd data-testid="review-hook">{str(tier.hook)}</dd>
@@ -217,7 +217,7 @@ export async function MasterReviewPopups(ctx: MasterCtx) {
               <p className="hint">{str(lesson.speaker)}. The main pauses at {clock(second)}.</p>
             </div>
             <div>
-              {pending.length ? <p className="hint" data-testid="new-draft-available">New draft available. This pop-up was left as it is. <Link href={`/master/ai/ingest/${lesson.id}`}>Read the draft on the ingest view</Link>.</p> : null}
+              {pending.length ? <p className="hint" data-testid="new-draft-available">New draft available. This pop-up was left as it is. <Link href={`/master/ai/ingest/${lesson.id}`}>Read the draft on the Bring in view</Link>.</p> : null}
               <dl className="review-lines">
                 <dt>Question <span className="hint">{clock(second)}, {str(point.kind) || 'reflection'}</span></dt>
                 <dd data-testid="review-prompt">{str(point.prompt)}</dd>

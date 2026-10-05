@@ -130,7 +130,7 @@ test.describe('the opening', () => {
     expect(state.taps[0].option).toBe('treat')
   })
 
-  test('7. the crisis option opens the help screen with contacts, and Back to HEARTS returns to the opener', async ({ page }) => {
+  test('7. the crisis option opens the help screen with contacts, and Back to Hady Core returns to the opener', async ({ page }) => {
     await page.goto(START)
     await page.getByTestId('lets-play').click()
     await tapScene(page, 'extra', 'pause')

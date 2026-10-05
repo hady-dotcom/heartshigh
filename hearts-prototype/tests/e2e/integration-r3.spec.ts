@@ -203,7 +203,7 @@ test('an opened pack spans the main area as at most about 20 door tiles, with no
   try {
     await page.setViewportSize({ width: 1440, height: 900 })
     await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${PORTAL}/admin/library`)
-    await expect(page.getByTestId('admin-library')).toContainText('Courses from the main HEARTS library. Add a pack and it stays up to date.')
+    await expect(page.getByTestId('admin-library')).toContainText('Courses from the main Hady Core library. Add a pack and it stays up to date.')
     for (const title of ['Library packs', 'Library courses']) {
       const header = page.locator('.panel > header').filter({ hasText: title })
       expect(await header.evaluate((el) => getComputedStyle(el).backgroundColor), title).toBe('rgb(15, 59, 58)')

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "HEARTS prototype: Payload CMS portals and a phone-friendly learner app.",
+  "description": "Hady Core: Payload CMS portals and a phone-friendly learner app.",
   "scripts": {
     "setup": "node scripts/setup.mjs",
     "go": "node scripts/setup.mjs --start",
