@@ -39,8 +39,8 @@ test.describe('planner shots', () => {
     const portals = await json<{ docs: { id: number; slug?: string }[] }>('/api/portals?limit=10&depth=0')
     const portal = portals.docs.find((row) => row.slug === PORTAL)
     expect(portal).toBeTruthy()
-    const users = await json<{ docs: { id: number; email?: string; extraCourses?: unknown[] }[] }>('/api/users?limit=40&depth=0')
-    const learner = users.docs.find((row) => row.email === 'elm-learner@hearts.test')
+    const users = await json<{ docs: { id: number; email?: string; extraCourses?: unknown[] }[] }>(`/api/users?where[email][equals]=${encodeURIComponent('elm-learner@hearts.test')}&limit=1&depth=0`)
+    const learner = users.docs[0]
     expect(learner).toBeTruthy()
     const courseRes = await master.post('/api/courses', {
       data: {
