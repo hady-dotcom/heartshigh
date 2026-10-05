@@ -454,21 +454,21 @@ export function CoursePlayer({
       <TranscriptPanel paragraphs={paragraphs} seconds={time} title={partLabel} onJump={jumpTo} />
       {open ? (
         <FocusTrap onClose={() => close()}>
-        <Sheet>
-          key={open.id}
-          point={open}
-          lessonId={lessonId}
-          atSecond={time}
-          viewingId={viewing.current}
-          triggered={fromTrigger}
-          top={sheetTop}
-          swarm={swarm[open.id] || []}
-          swarmOn={swarmOn}
-          circleLabel={circleLabel}
-          now={now}
-          onResume={() => { if (fromTrigger) resumeNow() }}
-          onClose={close}
-        />
+          <Sheet
+            key={open.id}
+            point={open}
+            lessonId={lessonId}
+            atSecond={time}
+            viewingId={viewing.current}
+            triggered={fromTrigger}
+            top={sheetTop}
+            swarm={swarm[open.id] || []}
+            swarmOn={swarmOn}
+            circleLabel={circleLabel}
+            now={now}
+            onResume={() => { if (fromTrigger) resumeNow() }}
+            onClose={close}
+          />
         </FocusTrap>
       ) : null}
     </div>
