@@ -25,11 +25,14 @@ function beatsOf(item: FeedItem): CardBeat[] {
   const fromExtract = item.extractId != null || Boolean(item.extracts?.some((row) => extractVisible(row)))
   if (item.beats?.length) {
     return item.beats
-      .map((row) => ({
-        ...row,
-        quote: paintExtractBeat(row.quote || '', fromExtract),
-        words: fromExtract && row.words?.length ? kineticExtractWords(row.words) : row.words,
-      }))
+      .map((row) => {
+        const quote = beatLine(row.quote || '') || row.quote
+        return {
+          ...row,
+          quote: fromExtract ? kineticExtractLine(quote) : quote,
+          words: fromExtract && row.words?.length ? kineticExtractWords(row.words) : row.words,
+        }
+      })
       .filter((row) => row.quote)
   }
   return (['hook', 'turn', 'land'] as const)
