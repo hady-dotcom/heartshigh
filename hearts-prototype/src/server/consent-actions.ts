@@ -396,12 +396,13 @@ async function handleHelpRequest(req: Request, form: FormData, session: Session)
   const kind = text(form, 'kind')
   if (kind !== 'broken' && kind !== 'learning' && kind !== 'worrying') return redirectTo(req, text(form, 'next') || '/', 'Choose one of the three doors.')
   const portalId = portalIdOf(user)
+  if (!portalId) return redirectTo(req, text(form, 'next') || '/', 'That note needs a portal.')
   await payload.create({
     collection: 'help-requests',
     overrideAccess: true,
     data: {
       user: user.id,
-      portal: portalId || undefined,
+      portal: portalId,
       kind,
       page: text(form, 'page').slice(0, 200),
       device: (req.headers.get('user-agent') || '').slice(0, 180),

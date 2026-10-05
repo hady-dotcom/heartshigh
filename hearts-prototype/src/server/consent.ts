@@ -194,12 +194,13 @@ export async function recordConsent(
     },
   })
   if (existing.docs.length) return existing.docs[0]
+  if (!input.portalId) return null
   const created = await payload.create({
     collection: 'consents',
     overrideAccess: true,
     data: {
       user: input.userId,
-      portal: input.portalId || undefined,
+      portal: input.portalId,
       kind: input.kind,
       version: input.version,
       acceptedAt: now().toISOString(),
@@ -248,6 +249,7 @@ export async function ensureLegalPages(payload: Payload) {
 }
 
 export async function grantCurrentConsents(payload: Payload, userId: number, portalId?: number | null) {
+  if (!portalId) return
   const pages = await currentLegalPages(payload)
   for (const page of pages) {
     if (!LEARNER_CONSENT_KINDS.includes(page.kind as (typeof LEARNER_CONSENT_KINDS)[number])) continue

@@ -7,7 +7,9 @@ export async function seedLegal(payload: Payload) {
   await ensureLegalPages(payload)
   const people = await payload.find({ collection: 'users', overrideAccess: true, depth: 0, limit: 500 })
   for (const person of people.docs as { id: number; role?: string; tenants?: { tenant?: unknown }[] }[]) {
+    if (person.role !== 'learner') continue
     const portalId = portalIdOf(person as never)
+    if (!portalId) continue
     await grantCurrentConsents(payload, person.id, portalId)
   }
   const portals = await payload.find({ collection: 'portals', overrideAccess: true, depth: 0, limit: 50 })
