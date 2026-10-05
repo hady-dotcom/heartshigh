@@ -1,5 +1,6 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 import { E2E_BASE, seedCode } from '../env'
+import { openReachedQuestion } from './question-moment'
 
 // Round 3: one test per bug from the hostile pass, named by its number. Each one failed before its fix.
 
@@ -365,8 +366,7 @@ test.describe('round 3 screens', () => {
         await page.goto(`/p/${PORTAL}/course/${nur.course}?part=${nur.id}`)
         await expect(page.getByTestId('player')).toHaveAttribute('data-popup-layout', over ? 'over' : 'strict')
         await page.evaluate(() => window.scrollTo(0, 400))
-        await page.getByTestId('answer-point').click()
-        await expect(page.getByTestId('popup')).toBeVisible()
+        await openReachedQuestion(page)
         await page.waitForTimeout(400)
         await page.waitForFunction(() => document.getAnimations().every((animation) => animation.playState !== 'running' || animation.effect?.getComputedTiming().iterations === Infinity))
         const geo = await page.evaluate(() => {
@@ -420,8 +420,7 @@ test.describe('round 3 screens', () => {
     await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/course/${nur.course}?part=${nur.id}`)
     await page.request.post('/api/hearts', { form: { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: `/p/${PORTAL}` }, maxRedirects: 0 })
     await page.reload()
-    await page.getByTestId('answer-point').click()
-    await expect(page.getByTestId('popup')).toBeVisible()
+    await openReachedQuestion(page)
     await expect(page.getByTestId('swarm')).toHaveCount(1)
     await expect(page.getByTestId('swarm')).not.toContainText('most popular')
     await expect(page.getByTestId('swarm')).not.toContainText('most read')

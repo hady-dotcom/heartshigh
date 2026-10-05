@@ -314,7 +314,9 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
       data: { title: 'Starter map', summary: 'The first talk, the next talk and a longer course for each lane of the opening.', owner: 'master', courses: starterCourseIds } as never,
     })) as unknown as Doc
   }
-  for (const portalId of [elm, leeds].filter((id): id is number => Boolean(id))) {
+  const existingPortals = await payload.find({ collection: 'portals', overrideAccess: true, depth: 0, limit: 200 })
+  const adoptTargets = new Set<number>([...portalIds.values(), ...existingPortals.docs.map((doc) => doc.id)])
+  for (const portalId of adoptTargets) {
     const already = await one(payload, 'adoptions', { and: [{ portal: { equals: portalId } }, { pack: { equals: starterPack.id } }] })
     if (!already) await payload.create({ collection: 'adoptions', overrideAccess: true, data: { kind: 'pack', portal: portalId, pack: starterPack.id } as never })
   }

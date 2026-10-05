@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process'
 import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { seedCode } from '../env'
+import { openReachedQuestion } from './question-moment'
 
 test.skip(process.env.HEARTS_R5C_EVIDENCE !== '1', 'Heavy evidence capture. Set HEARTS_R5C_EVIDENCE=1 to run.')
 
@@ -67,8 +68,7 @@ async function shot(page: Page, file: string) {
 async function captureSwarm(page: Page) {
   await page.goto(`${BASE}/course/3`)
   await expect(page.getByTestId('timeline-dot').first()).toBeVisible()
-  await page.getByTestId('timeline-dot').first().click({ force: true })
-  await expect(page.getByTestId('popup')).toBeVisible()
+  await openReachedQuestion(page)
   const pointId = Number(await page.getByTestId('popup').getAttribute('data-point'))
   expect(pointId).toBeGreaterThan(0)
   const saved = await page.request.post('/api/answers', {
@@ -77,8 +77,7 @@ async function captureSwarm(page: Page) {
   })
   expect(saved.ok(), await saved.text()).toBeTruthy()
   await page.goto(`${BASE}/course/3`)
-  await page.getByTestId('timeline-dot').first().click({ force: true })
-  await expect(page.getByTestId('popup')).toBeVisible()
+  await openReachedQuestion(page)
   const swarm = page.getByTestId('swarm')
   await expect(swarm).toBeVisible()
   await expect(page.getByTestId('swarm-like-mine')).toBeVisible()

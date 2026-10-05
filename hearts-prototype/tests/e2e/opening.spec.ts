@@ -1,5 +1,6 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext, type Page, type Request } from '@playwright/test'
 import { E2E_BASE } from '../env'
+import { openReachedQuestion } from './question-moment'
 
 // The opening, "Shine and dust" (psychometric-opening-build-spec section 8, browser tests).
 // Every test starts in a fresh browser context, so the device holds nothing until the test taps.
@@ -396,7 +397,7 @@ test.describe('pop-up questions in a lesson', () => {
     await expect(page.getByTestId('player')).toHaveAttribute('data-mode', 'practice', { timeout: 15_000 })
     const open = page.locator('[data-testid="strip-dot"][data-answered="no"]')
     const before = await open.count()
-    await page.getByTestId('answer-point').click()
+    await openReachedQuestion(page)
     const later = page.waitForResponse((response) => response.url().endsWith('/api/answers') && response.request().method() === 'POST')
     await page.getByTestId('answer-later').click()
     expect((await later).status()).toBe(200)
@@ -426,7 +427,7 @@ test.describe('pop-up questions in a lesson', () => {
     await page.setViewportSize({ width: 390, height: 844 })
     await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', await nurPath())
     await expect(page.getByTestId('player')).toHaveAttribute('data-popup-layout', 'strict')
-    await page.getByTestId('answer-point').click()
+    await openReachedQuestion(page)
     const card = await page.getByTestId('player-card').boundingBox()
     const sheet = await page.getByTestId('popup').boundingBox()
     expect(sheet!.y).toBeGreaterThanOrEqual(card!.y + card!.height - 1)

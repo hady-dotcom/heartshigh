@@ -62,7 +62,7 @@ test('Ready for more? opens the same speaker, and the step-up names a duration o
   const speaker = await feed.getAttribute('data-speaker')
   const lesson = await feed.getAttribute('data-lesson')
   const more = page.getByTestId('learn-more')
-  await expect(more).toHaveText(/Watch the 3-minute version|See the whole course|Watch the whole talk/)
+  await expect(more).toHaveText(/Ready for more\?|See the whole course|Watch the whole talk/)
   await expect(more).toHaveAttribute('data-speaker', speaker!)
   await expect(page.getByTestId('level-steps')).toContainText('Clip')
   await more.click()

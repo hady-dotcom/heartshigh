@@ -4,6 +4,8 @@ import { json } from './api'
 import { idOf } from '@/lib/ids'
 import type { PortalDoc } from './context'
 
+export { adoptPacksOnAccessCodes, ensurePackAdopted } from './pack-adopt'
+
 export function refuseFeature(portal: FeatureSource, key: FeatureKey) {
   return featureOn(portal, key) ? null : FEATURE_UNAVAILABLE
 }

@@ -5,6 +5,7 @@ import { E2E_BASE } from '../env'
 import { fakeYouTube } from './fake-youtube'
 import { noIssueBadge } from './no-issue-badge'
 import { ensureProofCourse, PROOF_COURSE } from './proof-course'
+import { openReachedQuestion } from './question-moment'
 
 const PORTAL = 'east-london'
 const BASE = `/p/${PORTAL}`
@@ -162,8 +163,13 @@ test.describe('courses and planning', () => {
       await expect(rows.nth(index)).not.toContainText(/What stayed with you|The speaker says|He said:/)
     }
     await expect(page.getByTestId('player-time')).toContainText('0:00')
+    await expect(page.getByTestId('answer-point')).toHaveText('Keep watching')
+    await expect(page.getByTestId('answer-point')).toBeDisabled()
+    await expect(page.getByTestId('timeline-dot').first()).toHaveAttribute('data-moment', 'waiting')
     await proofShot(page, 'round8-at-zero')
-    await page.getByTestId('timeline-dot').first().click()
+    await page.getByTestId('timeline-dot').first().click({ force: true })
+    await expect(page.getByTestId('popup')).toHaveCount(0)
+    await openReachedQuestion(page)
     await waitForSheet(page)
     await expect(page.getByTestId('player-time')).toContainText('0:30')
     await expect(page.getByTestId('answer-point')).toContainText('Answer question 1')
@@ -189,7 +195,7 @@ test.describe('courses and planning', () => {
     const proof = await ensureProofCourse(master)
     await signIn(page, `${BASE}/course/${proof.courseId}?part=${proof.lessons[0].id}`, 'elm-learner2@hearts.test')
     await expect(page.getByTestId('player')).toBeVisible()
-    if (!(await page.getByTestId('popup').count())) await page.getByTestId('timeline-dot').first().click()
+    if (!(await page.getByTestId('popup').count())) await openReachedQuestion(page)
     await waitForSheet(page)
     await expect(page.getByTestId('player-time')).toContainText('0:30')
     const paint = await page.getByTestId('popup').evaluate((sheet) => getComputedStyle(sheet).backgroundColor)
@@ -221,7 +227,7 @@ test.describe('courses and planning', () => {
     await expect(page.getByTestId('timeline-dot').first()).toBeVisible()
     await expect(page.getByTestId('up-next')).toBeVisible()
     if (points[0]) {
-      if (!(await page.getByTestId('popup').count())) await page.getByTestId('timeline-dot').first().click()
+      if (!(await page.getByTestId('popup').count())) await openReachedQuestion(page)
       await expect(page.getByTestId('popup')).toBeVisible()
       await expect(page.getByTestId('paused-note').first()).toContainText('Paused')
       await expect(page.getByTestId('think-about-this')).toBeVisible()

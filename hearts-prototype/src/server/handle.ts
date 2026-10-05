@@ -47,6 +47,7 @@ import { parseLengthInput } from '@/lib/length'
 import { screenAnswerSafe } from '@/lib/answer-moderation'
 import { FEATURE_UNAVAILABLE, featuresFromForm } from '@/lib/features'
 import { adoptLibraryCourses, loadPortalById, refuseFeature } from './features'
+import { ensurePackAdopted } from './pack-adopt'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
@@ -589,6 +590,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (existing.docs.length) return redirectTo(req, `/login?next=/p/${(portalDoc as { slug?: string }).slug || ''}`, 'That email already has an account. Sign in instead.')
     const slug = (portalDoc as { slug?: string }).slug || ''
     const packIds = (access.packs || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
+    for (const packId of packIds) await ensurePackAdopted(payload, portal, packId)
     const courseList = await coursesInPacks(payload, packIds)
     const codeRole = access.role || 'learner'
     const usesBefore = access.uses || 0
@@ -744,6 +746,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (days !== null && (!Number.isInteger(days) || days < 1 || days > 366)) return redirectTo(req, text(form, 'next') || '/master', 'Expiry must be 1 to 366 days, or empty for none.')
     const expiresAt = days ? new Date(now().getTime() + days * 86_400_000).toISOString() : null
     if (!(await packUsable(payload, user, acting.portal.id, packId))) return redirectTo(req, text(form, 'next') || '/master', 'That course pack is not available in this portal.')
+    await ensurePackAdopted(payload, acting.portal.id, packId)
     const linkedId = Number(text(form, 'linkedTeacherCode') || 0)
     if (linkedId) {
       const teacherCode = await findDoc(payload, 'access-codes', linkedId)
@@ -1799,6 +1802,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const packId = Number(text(form, 'pack') || 0)
     if (packId && !(await packUsable(payload, user, acting.portal.id, packId))) return redirectTo(req, text(form, 'next') || '/', 'That course pack is not available in this portal.')
     const packIds = packId ? [packId] : ((code as { packs?: unknown[] }).packs || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
+    for (const id of packIds) await ensurePackAdopted(payload, acting.portal.id, id)
     if (packId) {
       await payload.update({ collection: 'access-codes', id: codeId, overrideAccess: true, data: { packs: packIds } })
     }

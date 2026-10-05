@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { clipStepUpLabel, forbiddenLearnerWords, pieceSeconds, poolEndToast, READY_FOR_MORE, talkStepUpLabel, withTalkDetail } from '../../src/lib/feed-copy'
 
 test('level buttons use one set of words, with minutes rounded up', () => {
-  assert.equal(clipStepUpLabel(), 'Watch the 3-minute version')
+  assert.equal(clipStepUpLabel(), 'Ready for more?')
   assert.equal(READY_FOR_MORE, 'Ready for more?')
   assert.equal(talkStepUpLabel(1, 58 * 60), 'Watch the whole talk (58 min)')
   assert.equal(talkStepUpLabel(1, 58 * 60 + 1), 'Watch the whole talk (59 min)')

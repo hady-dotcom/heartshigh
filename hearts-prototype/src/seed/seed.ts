@@ -526,6 +526,8 @@ async function main() {
   }
 
   const opening = await seedOpening(payload, { clauseIds, portalIds, now: new Date(), showUnchecked: !startersOnly })
+  const { adoptPacksOnAccessCodes } = await import('../server/pack-adopt')
+  await adoptPacksOnAccessCodes(payload)
   const groupedIds: number[] = []
   if (process.env.HEARTS_GROUP_SERIES === '1') {
     const { applySeriesGroups } = await import('./group-series')

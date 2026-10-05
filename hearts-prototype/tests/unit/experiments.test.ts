@@ -129,7 +129,7 @@ test('slot whitelist refuses scripture, questions and unknown keys', () => {
   assert.equal(isTestableSlot('quran-ayah'), false)
   assert.equal(slotOf('wide-video-framing')?.wired, false)
   assert.equal(slotOf('lanes-tab-label')?.wired, true)
-  assert.deepEqual(fallbackPayload('feed-cta-label'), { label: 'Watch the 3-minute version' })
+  assert.deepEqual(fallbackPayload('feed-cta-label'), { label: 'Ready for more?' })
   assert.deepEqual(fallbackPayload('lanes-tab-label'), { label: 'Lanes' })
   assert.deepEqual(payloadProblems('lanes-tab-label', { label: 'Explore' }), [])
   assert.match(payloadProblems('sheikh-words', { label: 'x' })[0], /not on the testable list/)
@@ -245,7 +245,7 @@ test('kill and start history lines are written in words', () => {
   assert.equal(usualWords(lanes), 'Lanes')
   assert.equal(experimentAuditLine('experiment.start', {}, lanes), 'Test started')
   assert.equal(experimentAuditLine('experiment.kill', { off: true }, lanes), 'Kill switch on: everyone back to Lanes')
-  assert.equal(experimentAuditLine('experiment.kill', {}, { slot: 'feed-cta-label', variants: [] }), 'Kill switch on: everyone back to Watch the 3-minute version')
+  assert.equal(experimentAuditLine('experiment.kill', {}, { slot: 'feed-cta-label', variants: [] }), 'Kill switch on: everyone back to Ready for more?')
 })
 
 test('lanes tab draft is a valid experiment on the whitelist', () => {

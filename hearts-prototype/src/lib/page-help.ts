@@ -25,7 +25,7 @@ const PAGES: Record<string, HelpCopy> = {
     body: [
       'Swipe up for the next clip. Swipe down to change lane.',
       'Swipe sideways for more from this speaker.',
-      'Tap the picture to pause or play. Sound stays on once you ask for it.',
+      'Tap Ready for more? under a clip, or on a scenic card, to sit with the longer cut.',
     ],
   },
   start: {
@@ -131,8 +131,15 @@ const PAGES: Record<string, HelpCopy> = {
   course: {
     title: 'How to use a talk',
     body: [
-      'The film sits at the top. Questions pause the talk when they arrive.',
+      'The film sits at the top. Questions stay hidden until their moment, then the talk pauses.',
       'What others said is a quiet list of initials, not names. There is no rating.',
+    ],
+  },
+  'course-overview': {
+    title: 'How to use this course',
+    body: [
+      'This is the whole course: every talk, the count and the time.',
+      'Questions only appear once you open a talk and reach their moment. Nothing here previews them.',
     ],
   },
   circle: {
@@ -162,6 +169,8 @@ export const LEARNER_HELP: Record<string, string> = {
     'This is a quiet way to tell the portal team something does not sit right. They will look, and the other person is not told your name. If someone may be at risk, a named person is asked to look today.',
   announce:
     'A short note from your masjid or school. It stays at the top of Home until you dismiss it. You cannot reply here — write to your teacher if you have a question.',
+  'hide-until-moment':
+    'Questions stay hidden until their moment in the talk. The dots light when that time arrives. The list of talks never shows the questions.',
 }
 
 export function learnerHelp(topic: string) {

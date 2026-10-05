@@ -3,6 +3,7 @@ import path from 'node:path'
 import { expect, request as playwrightRequest, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 import { E2E_BASE, seedCode } from '../env'
 import { buildWorkbook } from '../../src/lib/master-sheet'
+import { openReachedQuestion } from './question-moment'
 
 // The whole learner path after the final integration, at phone size, end to end.
 
@@ -192,10 +193,8 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
   if (await page.getByTestId('buffet-talk').count()) await page.getByTestId('buffet-talk').first().click()
   else if (await page.getByTestId('start-part').count()) await page.getByTestId('start-part').click()
   await expect(page.getByTestId('player')).toBeVisible()
-  await expect(async () => {
-    await page.getByTestId('timeline-dot').first().click()
-    await expect(page.getByTestId('popup-prompt')).toContainText(PROMPT, { timeout: 1500 })
-  }).toPass({ timeout: 20_000 })
+  await openReachedQuestion(page)
+  await expect(page.getByTestId('popup-prompt')).toContainText(PROMPT)
   await page.getByTestId('answer-text').fill(ANSWER)
   await page.getByTestId('answer-submit').click()
   await expect(page.getByTestId('player').getByTestId('notice')).toContainText('workbook')
