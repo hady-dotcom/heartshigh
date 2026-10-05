@@ -15,6 +15,7 @@ import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { laneClips } from '@/lib/lanes'
 import { isoWeek } from '@/lib/trends'
+import { hostShouldShow, planFilmAdvance, playbackAction, shouldNudgePlay, verticalSwipe } from '@/lib/film-advance'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, hydrateSound, lowData, playOnly, playerSnapshot, preloadApi, setHidden, silence, silenceHidden, silenceOthers, soundOn, type PlayerKind } from '@/lib/yt'
 import { PageHelp } from '@/components/app/page-help'
 import { Arch } from '@/components/arch'
@@ -201,6 +202,10 @@ export function Journey(props: JourneyProps) {
   const seenRef = useRef<Set<string>>(new Set())
   const prepareGen = useRef<[number, number]>([0, 0])
   const showGen = useRef(0)
+  // The clip key we mean to be playing. Cleared on a user pause and while a swipe is leaving.
+  const wantPlayRef = useRef<string | null>(null)
+  const userPausedRef = useRef(false)
+  const nudgeRef = useRef(0)
   const [lineAt, setLineAt] = useState(-1)
   const [spokenAt, setSpokenAt] = useState<number | null>(null)
   const [clipPlaying, setClipPlaying] = useState(false)
@@ -229,6 +234,7 @@ export function Journey(props: JourneyProps) {
   }
 
   const hushLeaving = () => {
+    wantPlayRef.current = null
     const hidden: 0 | 1 = visibleRef.current === 0 ? 1 : 0
     hushHost(hidden)
     hushHost(visibleRef.current)
@@ -393,6 +399,9 @@ export function Journey(props: JourneyProps) {
     const el = slotRef.current
     if (!host.ready || !host.playerId || !revealedRef.current || sheetRef.current) return
     if (el && !halfVisible(el)) return
+    if (userPausedRef.current) return
+    if (!wantPlayRef.current || wantPlayRef.current !== host.spec?.key) return
+    setHidden(host.playerId, false)
     playOnly(host.playerId)
   }, [])
 
@@ -430,6 +439,21 @@ export function Journey(props: JourneyProps) {
       }, 600)
     }
     if (state === STATE.ENDED) window.dispatchEvent(new CustomEvent('hearts:ended'))
+    if (state === STATE.PLAYING && at === visibleRef.current) nudgeRef.current = 0
+    if (
+      at === visibleRef.current &&
+      shouldNudgePlay(state, wantPlayRef.current === host.spec?.key && Boolean(host.playerId), userPausedRef.current, nudgeRef.current)
+    ) {
+      nudgeRef.current += 1
+      const key = host.spec?.key
+      const wait = 90 * nudgeRef.current
+      window.setTimeout(() => {
+        const again = hosts.current[at]
+        if (userPausedRef.current || visibleRef.current !== at || wantPlayRef.current !== key || again.spec?.key !== key || !again.playerId) return
+        setHidden(again.playerId, false)
+        playOnly(again.playerId)
+      }, wait)
+    }
   }, [])
 
   const prepare = useCallback(
@@ -438,23 +462,46 @@ export function Journey(props: JourneyProps) {
       const el = hostEls.current[at]
       if (!el) return
       const gen = (prepareGen.current[at] += 1)
-      if (host.spec?.key === spec.key && host.playerId) return
+      const visible = () => at === visibleRef.current
+      const arm = () => {
+        if (!visible()) return
+        wantPlayRef.current = spec.key
+        userPausedRef.current = false
+        nudgeRef.current = 0
+      }
+      const playVisible = (id: string) => {
+        if (!visible()) return
+        setHidden(id, false)
+        arm()
+        playOnly(id)
+      }
       const existing = host.playerId ? getPlayer(host.playerId) : null
-      const sameFilm = host.spec?.videoId === spec.videoId
-      if (existing && (host.spec?.kind === spec.kind || sameFilm)) {
+      const action = playbackAction({ key: host.spec?.key ?? null, hasPlayer: Boolean(host.playerId && existing) }, spec.key)
+      // Same iframe: loadVideoById starts the new film. cueVideoById then playVideo in one turn
+      // finishes as CUED, and YouTube draws its own play button at 0:00.
+      if (action === 'play' && host.playerId && existing) {
+        host.ready = true
+        if (visible()) {
+          const live = host.state === STATE.PLAYING || host.state === STATE.BUFFERING
+          if (!live) host.played = false
+          playVisible(host.playerId)
+        }
+        setReadyTick((value) => value + 1)
+        return
+      }
+      if (action === 'load' && host.playerId && existing?.loadVideoById) {
         host.spec = spec
         host.played = false
         host.ready = true
-        if (at !== visibleRef.current) {
-          cue(host.playerId!, existing, spec.videoId, spec.start, spec.end)
-          silence(host.playerId!)
-        } else if (sameFilm && existing.loadVideoById) {
+        host.state = STATE.UNSTARTED
+        if (!visible()) {
+          cue(host.playerId, existing, spec.videoId, spec.start, spec.end)
+          silence(host.playerId)
+        } else {
           if (hasSound()) existing.unMute()
           else existing.mute()
           existing.loadVideoById({ videoId: spec.videoId, startSeconds: spec.start, ...(spec.end ? { endSeconds: spec.end } : {}) })
-        } else {
-          cue(host.playerId!, existing, spec.videoId, spec.start, spec.end)
-          playOnly(host.playerId!)
+          playVisible(host.playerId)
         }
         setReadyTick((value) => value + 1)
         return
@@ -491,14 +538,17 @@ export function Journey(props: JourneyProps) {
               }
               return
             }
-            if (at !== visibleRef.current || !revealedRef.current) {
+            if (!visible() || !revealedRef.current) {
               player.mute()
               cue(id, player, spec.videoId, spec.start, spec.end)
             }
             host.ready = true
             setReadyTick((value) => value + 1)
-            if (at === visibleRef.current) tryPlay()
-            else silence(id)
+            if (visible()) {
+              setHidden(id, false)
+              arm()
+              tryPlay()
+            } else silence(id)
           },
           onState: (state) => host.playerId === id && onPlayerState(at, state),
           onError: (code) => host.playerId === id && window.dispatchEvent(new CustomEvent('hearts:player-error', { detail: { code, at } })),
@@ -538,7 +588,7 @@ export function Journey(props: JourneyProps) {
     [prepare, specFor],
   )
 
-  /** Shows item `at` in the slot: the hidden host takes over if it already holds it, otherwise the other host loads it. */
+  /** Shows item `at` in the slot, on the iframe that already earned muted autoplay. */
   const showItem = useCallback(
     async (at: number, kind: Mode = 'hors', onShown?: () => Promise<void>) => {
       const item = itemsRef.current[at]
@@ -570,11 +620,12 @@ export function Journey(props: JourneyProps) {
         return
       }
       const current = visibleRef.current
-      const other: 0 | 1 = current === 0 ? 1 : 0
-      let target: 0 | 1 = other
-      if (hosts.current[current].spec?.videoId === spec.videoId || hosts.current[current].spec?.key === spec.key) target = current
-      else if (hosts.current[other].spec?.key === spec.key || hosts.current[other].spec?.videoId === spec.videoId) target = other
-      else if (!hosts.current[current].playerId) target = current
+      const hold = (at: 0 | 1) => {
+        const row = hosts.current[at]
+        return { key: row.spec?.key ?? null, hasPlayer: Boolean(row.playerId && getPlayer(row.playerId)) }
+      }
+      // Keep the warmed iframe. Revealing the preloaded hidden one leaves the film cued at 0:00.
+      const target = planFilmAdvance(current, spec.key, [hold(0), hold(1)]).target
       if (target !== current) {
         hushHost(current)
         stopVisible()
@@ -1257,6 +1308,9 @@ export function Journey(props: JourneyProps) {
   const replay = () => {
     signal('replay')
     const host = hosts.current[visibleRef.current]
+    userPausedRef.current = false
+    if (host.spec) wantPlayRef.current = host.spec.key
+    nudgeRef.current = 0
     if (host.playerId && host.spec && host === hosts.current[visibleRef.current]) {
       const player = getPlayer(host.playerId)
       player?.mute()
@@ -1314,6 +1368,8 @@ export function Journey(props: JourneyProps) {
   const stepLoop = (direction: 1 | -1) => swipeTo(direction === 1 ? 'next' : 'prev')
   const stepLoopRef = useRef(stepLoop)
   stepLoopRef.current = stepLoop
+  const nextLaneRef = useRef(nextLane)
+  nextLaneRef.current = nextLane
 
   // Wheel and arrow keys step the hors d'oeuvre order. A real click, wheel or key must not depend on the
   // YouTube iframe having focus: that frame swallows them, and the feed then looks stuck on one clip.
@@ -1339,11 +1395,40 @@ export function Journey(props: JourneyProps) {
       wheelLock = now + 420
       stepLoopRef.current(event.deltaY > 0 ? 1 : -1)
     }
+    // If the YouTube iframe still receives the pointer, finish the swipe here. The gesture layer
+    // handles its own events, so this only runs when the target is that iframe.
+    let drag: { x: number; y: number; pointerId: number } | null = null
+    const iframeInSlot = (event: Event) => {
+      const node = event.target as HTMLElement | null
+      return node?.tagName === 'IFRAME' && Boolean(node.closest?.('.j-slot'))
+    }
+    const onPointerDown = (event: PointerEvent) => {
+      if (sheetRef.current || !iframeInSlot(event)) return
+      drag = { x: event.clientX, y: event.clientY, pointerId: event.pointerId }
+    }
+    const onPointerUp = (event: PointerEvent) => {
+      if (!drag || event.pointerId !== drag.pointerId) return
+      const dx = event.clientX - drag.x
+      const dy = event.clientY - drag.y
+      drag = null
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 48 || Math.abs(dy) <= Math.abs(dx)) return
+      if (verticalSwipe(dy) === 'next') stepLoopRef.current(1)
+      else nextLaneRef.current()
+    }
+    const onPointerCancel = () => {
+      drag = null
+    }
     window.addEventListener('keydown', onKey)
     window.addEventListener('wheel', onWheel, { passive: false })
+    window.addEventListener('pointerdown', onPointerDown, true)
+    window.addEventListener('pointerup', onPointerUp, true)
+    window.addEventListener('pointercancel', onPointerCancel, true)
     return () => {
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('wheel', onWheel)
+      window.removeEventListener('pointerdown', onPointerDown, true)
+      window.removeEventListener('pointerup', onPointerUp, true)
+      window.removeEventListener('pointercancel', onPointerCancel, true)
     }
   }, [phase])
 
@@ -1455,10 +1540,15 @@ export function Journey(props: JourneyProps) {
       return
     }
     if (player && real === STATE.PLAYING) {
+      userPausedRef.current = true
+      wantPlayRef.current = null
       player.pauseVideo()
       return
     }
     if (player) {
+      userPausedRef.current = false
+      if (host.spec) wantPlayRef.current = host.spec.key
+      nudgeRef.current = 0
       player.unMute()
       player.playVideo()
       return
@@ -1588,13 +1678,8 @@ export function Journey(props: JourneyProps) {
       return
     }
     if (vertical) {
-      if (dy < 0) {
-        markSwipe(false)
-        if (clipRef.current) clipRef.current.style.transform = ''
-        const peek = peekEls.current.next
-        if (peek) peek.style.transform = peekRest('next')
-        replay()
-      } else nextLane()
+      if (verticalSwipe(dy) === 'next') stepLoop(1)
+      else nextLane()
     } else if (dx < 0) moreLikeThis()
     else moreFromSpeaker()
   }
@@ -1769,7 +1854,7 @@ export function Journey(props: JourneyProps) {
         <div className={`j-hairline${buffering ? ' shimmer' : ''}`} data-testid="hairline"><i style={{ width: `${clipPlaying ? clipPct : 0}%` }} /></div>
         {mode === 'hors' ? (
           <>
-          <p className="j-swipe-hint" data-testid="swipe-hint">↑ swipe up to replay</p>
+          <p className="j-swipe-hint" data-testid="swipe-hint">↑ swipe up for the next clip</p>
           <div className="clip-row">
             <div className="clip-row-top">
               {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
@@ -1889,7 +1974,7 @@ export function Journey(props: JourneyProps) {
         <div ref={slotRef} className="j-slot" data-testid="player-slot" data-framing={item?.framingTrack ? framingMode || 'F' : undefined} style={{ visibility: phase === 'feed' || phase === 'handoff' ? 'visible' : 'hidden', ['--fr-poster' as string]: item?.youtubeId ? `url(https://i.ytimg.com/vi/${item.youtubeId}/hqdefault.jpg)` : undefined, ['--fr-tx' as string]: item?.framingTrack && framingMode === 'D' ? `${-((segmentAt(item.framingTrack, spokenAt ?? item.hors.start)?.focus?.x ?? 0.5) * 100 - 50)}%` : undefined }}>
           {[0, 1].map((at) => {
             const row = hosts.current[at as 0 | 1]
-            const filmOn = at === visibleHost && revealed && !slide && !scenic && playerReady && row.spec?.key === currentSpec?.key && row.spec?.videoId === currentSpec?.videoId
+            const filmOn = hostShouldShow(at === visibleHost, revealed, Boolean(slide || scenic || !currentSpec))
             return (
               <div
                 key={at}
@@ -1943,7 +2028,7 @@ export function Journey(props: JourneyProps) {
               <PosterStill item={item} mode={mode} />
               <span className="j-poster-mark" aria-hidden><Arch size={28} /></span>
               {waitingToPlay && slow !== 'retry' ? (
-                <button type="button" className="j-poster-play" aria-label="Play" data-testid="poster-play" onClick={() => { tapSound(); tryPlay() }}>
+                <button type="button" className="j-poster-play" aria-label="Play" data-testid="poster-play" onClick={() => { tapSound(); userPausedRef.current = false; const playing = hosts.current[visibleRef.current]; if (playing.spec) wantPlayRef.current = playing.spec.key; tryPlay() }}>
                   <PlayIcon size={30} />
                 </button>
               ) : null}
@@ -2030,15 +2115,20 @@ export function Journey(props: JourneyProps) {
 
       {toast?.trim() ? <div className="lane-switch" data-testid="toast"><span key={toast}>{toast.trim()}</span></div> : null}
 
+      {phase === 'feed' ? (
+        <div className="j-step-nav" data-testid="step-nav">
+          <button type="button" className="j-step prev" data-testid="gesture-prev" aria-label="Previous clip" onClick={() => stepLoop(-1)}>Prev</button>
+          <button type="button" className="j-step next" data-testid="gesture-next" aria-label="Next clip" onClick={() => stepLoop(1)}>Next</button>
+        </div>
+      ) : null}
+
       <div className="sr-only">
         {phase === 'feed' ? (
           <>
             <button type="button" data-testid="gesture-up" onClick={replay}>Replay this clip</button>
             <button type="button" data-testid="gesture-down" onClick={nextLane}>Switch lane</button>
-            <button type="button" data-testid="gesture-left" onClick={moreLikeThis}>Next clip</button>
+            <button type="button" data-testid="gesture-left" onClick={moreLikeThis}>More on this topic</button>
             <button type="button" data-testid="gesture-right" onClick={moreFromSpeaker}>More from this speaker</button>
-            <button type="button" data-testid="gesture-next" onClick={() => stepLoop(1)}>Next clip on this level</button>
-            <button type="button" data-testid="gesture-prev" onClick={() => stepLoop(-1)}>Previous clip on this level</button>
           </>
         ) : null}
       </div>
@@ -2048,7 +2138,7 @@ export function Journey(props: JourneyProps) {
           <div className="j-coach-card">
             <h2>How to move around</h2>
             <ul>
-              <li><b>Swipe up</b> Play this clip again.</li>
+              <li><b>Swipe up</b> The next clip.</li>
               <li><b>Swipe down</b> Switch lane.</li>
               <li><b>Swipe left</b> More on this topic.</li>
               <li><b>Swipe right</b> More from this speaker.</li>

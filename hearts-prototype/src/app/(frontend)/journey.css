@@ -7,8 +7,27 @@
 }
 .journey.phase-feed { touch-action: none; overscroll-behavior: none; }
 .journey a, .journey img { -webkit-user-drag: none; }
-/* Above the film, so a real click on Next clip reaches the button. The global clip rect would give it no hit target. */
-.journey > .sr-only { z-index: 8; clip: auto; overflow: hidden; }
+/* Next and Prev are real hit targets inside a 390×844 phone. Numbers match STEP_CONTROL in film-advance.ts. */
+.j-step-nav { position: absolute; inset: 0; z-index: 19; pointer-events: none; }
+.j-step {
+  position: absolute;
+  top: 248px;
+  z-index: 19;
+  width: 72px;
+  min-height: 48px;
+  padding: 0 8px;
+  border: 1px solid rgba(241, 213, 138, 0.9);
+  border-radius: 999px;
+  background: rgba(14, 42, 43, 0.92);
+  color: #f6eedc;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.2;
+  pointer-events: auto;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+.j-step.prev { left: 12px; }
+.j-step.next { right: 12px; }
 
 /* Sky: eight layers from dusk to first light, lit one by one as the scenes go by. */
 .j-sky, .j-sky-layer { position: absolute; inset: 0; pointer-events: none; }
@@ -120,7 +139,7 @@
 .journey[data-playing='yes'] video::-webkit-media-controls-start-playback-button { display: none !important; opacity: 0; }
 .j-poster { position: absolute; inset: 0; background: #0e2a2b url('/theme/evening-courtyard.jpg') center 40% / cover no-repeat; }
 html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/dawn-courtyard.jpg'); }
-.j-poster-play { position: absolute; left: 50%; top: 26%; z-index: 4; width: 76px; height: 76px; margin: -38px 0 0 -38px; border: 0; border-radius: 50%; display: grid; place-items: center; padding: 0 0 0 4px; background: #d4a84b; color: #1a1408; box-shadow: 0 10px 30px rgba(0,0,0,0.35); cursor: pointer; }
+.j-poster-play { position: absolute; left: 50%; top: 26%; z-index: 7; width: 76px; height: 76px; margin: -38px 0 0 -38px; border: 0; border-radius: 50%; display: grid; place-items: center; padding: 0 0 0 4px; background: #d4a84b; color: #1a1408; box-shadow: 0 10px 30px rgba(0,0,0,0.35); cursor: pointer; }
 .j-poster img { position: absolute; left: 0; top: -17%; width: 100%; height: 134%; max-width: none; object-fit: cover; opacity: 0.8; }
 .j-poster::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.7)); }
 .j-poster.breathe img { animation: breathe 2.4s ease-in-out infinite; }
@@ -134,7 +153,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-poster-title b { display: block; font-family: var(--serif); font-weight: 600; font-size: 28px; line-height: 1.15; }
 .j-poster .pill { position: absolute; left: 50%; top: 40%; transform: translateX(-50%); z-index: 1; }
 /* Capture layer over the film. A faint fill makes phones hit-test this div instead of the YouTube iframe. */
-.j-gesture { position: absolute; inset: 0; z-index: 3; background: rgba(0, 0, 0, 0.001); touch-action: none; }
+.j-gesture { position: absolute; inset: 0; z-index: 5; background: rgba(0, 0, 0, 0.001); touch-action: none; pointer-events: auto; }
 .j-slide { position: absolute; inset: 0; z-index: 3; }
 /* Swipes are ours: any browser pan here fires pointercancel and the swipe never lands. */
 .j-gesture, .j-slide, .j-slide *, .feed-card, .feed-card *, .j-chrome .caption, .j-chrome[data-swipe] .rail, .j-chrome[data-swipe] .clip-foot { touch-action: none; }

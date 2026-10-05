@@ -457,8 +457,10 @@ test.describe.serial('HEARTS journeys', () => {
       await page.mouse.move(cx + dx, cy + dy, { steps: 8 })
       await page.mouse.up()
     }
+    const beforeUp = await feed.getAttribute('data-index')
     await swipe(0, -220)
-    await expect(page.getByTestId('toast')).toContainText('again')
+    await expect(feed).not.toHaveAttribute('data-index', beforeUp!)
+    await expect(feed).toHaveAttribute('data-mode', 'hors')
     const lane = await feed.getAttribute('data-lane')
     await swipe(0, 220)
     await expect(feed).not.toHaveAttribute('data-lane', lane!)
