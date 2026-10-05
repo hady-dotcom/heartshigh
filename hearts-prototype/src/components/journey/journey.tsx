@@ -1878,14 +1878,6 @@ export function Journey(props: JourneyProps) {
     const id = hosts.current[visibleRef.current].playerId
     return id ? getPlayer(id) : null
   }
-  const seekBy = (delta: number) => {
-    const player = visiblePlayer()
-    if (!player) return
-    const at = player.getCurrentTime()
-    const next = Math.min(clipEnd, Math.max(clipStart, at + delta))
-    player.seekTo(next, true)
-    setSpokenAt(next)
-  }
   const cycleSpeed = () => {
     const next = speed === 1 ? 1.25 : speed === 1.25 ? 1.5 : speed === 1.5 ? 2 : 1
     setSpeed(next)
@@ -1968,8 +1960,6 @@ export function Journey(props: JourneyProps) {
         ) : (
           <>
             <div className="ready-controls" data-testid="ready-controls">
-              <button type="button" className="chip white" data-testid="skip-back" onClick={() => seekBy(-10)}>Back 10 s</button>
-              <button type="button" className="chip white" data-testid="skip-forward" onClick={() => seekBy(10)}>Forward 10 s</button>
               <button type="button" className="chip gold" data-testid="speed" onClick={cycleSpeed}>{speed}×</button>
               <span className="chip dark" data-testid="appetiser-timer">{clock(clipElapsed)} / {clock(clipLength)}</span>
               <input
