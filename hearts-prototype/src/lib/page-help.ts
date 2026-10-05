@@ -146,7 +146,7 @@ const PAGES: Record<string, HelpCopy> = {
   'course-overview': {
     title: 'How to use this course',
     body: [
-      'This is the whole course: every talk, the count and the time.',
+      'This is the whole course: every talk, the count and the time. Schedule all of these puts them on My week.',
       'Questions only appear once you open a talk and reach their moment. Nothing here previews them.',
     ],
   },

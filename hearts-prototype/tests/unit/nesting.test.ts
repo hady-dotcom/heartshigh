@@ -79,6 +79,9 @@ test('Progress: watching an appetiser or a hors d\'oeuvre of an hour talk never 
   assert.deepEqual(completionVerdict({ duration: hour, watched: hour * 2, ended: true }), { counts: true, percent: 100 })
   assert.equal(completionVerdict({ duration: 0, watched: 30, ended: false }).counts, false)
   assert.deepEqual(completionVerdict({ duration: 0, watched: 30, ended: true }), { counts: true, percent: 100 })
+  // A finished sitting still counts when the lesson row is longer than the film that actually played.
+  assert.deepEqual(completionVerdict({ duration: hour, watched: 0.8 * 1800, ended: true, media: 1800 }), { counts: true, percent: 80 })
+  assert.equal(completionVerdict({ duration: hour, watched: 600, ended: true, media: 1800 }).counts, false)
 })
 
 test('Progress: answers given while browsing a clip are kept but never count towards a course', () => {

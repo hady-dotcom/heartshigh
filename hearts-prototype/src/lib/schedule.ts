@@ -102,6 +102,62 @@ export function spreadIndices(talks: number, days: number) {
   return Array.from({ length: talks }, (_, index) => Math.floor((index * days) / talks))
 }
 
+function jsDayOf(iso: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
+  if (!match) return null
+  return new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))).getUTCDay()
+}
+
+/** First date for each weekday, in the order those weekdays first appear. */
+export function firstWeekdayDates(dates: string[]) {
+  const seen = new Set<number>()
+  const out: string[] = []
+  for (const date of dates) {
+    const day = jsDayOf(date)
+    if (day == null) return []
+    if (seen.has(day)) continue
+    seen.add(day)
+    out.push(date)
+  }
+  return out
+}
+
+/**
+ * When the learner picks two weekdays (Tue and Thu) and there are only two talks, both
+ * weekdays get a sitting in the first week. Even spread across a long range used to land
+ * on two Tuesdays a fortnight apart.
+ */
+export function placeTalkIndices(dates: string[], talks: number) {
+  if (talks <= 0 || !dates.length) return []
+  if (talks === 1) return [0]
+  if (talks >= dates.length) return dates.map((_, index) => index)
+  const cover = firstWeekdayDates(dates)
+  if (cover.length > 1 && cover.length <= talks) {
+    const picked: string[] = []
+    const used = new Set<string>()
+    for (const date of cover) {
+      if (picked.length >= talks) break
+      picked.push(date)
+      used.add(date)
+    }
+    if (picked.length < talks) {
+      const leftover = dates.filter((date) => !used.has(date))
+      for (const index of spreadIndices(talks - picked.length, leftover.length)) {
+        const date = leftover[index]
+        if (date && !used.has(date)) {
+          picked.push(date)
+          used.add(date)
+        }
+      }
+    }
+    return picked
+      .sort()
+      .map((date) => dates.indexOf(date))
+      .filter((index) => index >= 0)
+  }
+  return spreadIndices(talks, dates.length)
+}
+
 /**
  * Place talks on the chosen study days: one date for a single sitting, an even spread when
  * there are fewer talks than days, and a balanced split when there are more talks than days.
@@ -111,7 +167,7 @@ export function planAcrossDays<T>(items: T[], dates: string[]): { slots: Slot<T>
   if (!items.length) return { slots: [], note: null }
   const note = spreadNote(items.length, dates.length, dates)
   if (items.length < dates.length) {
-    const at = consecutiveDates(dates) ? spreadIndices(items.length, dates.length) : items.map((_, index) => index)
+    const at = placeTalkIndices(dates, items.length)
     return { slots: items.map((item, index) => ({ date: dates[at[index]] || dates[0], items: [item] })), note }
   }
   return { slots: splitEvenly(items, dates).filter((slot) => slot.items.length), note }
@@ -128,16 +184,17 @@ export function overMinutesNote(talkMinutes: number[], minutesPerDay: number) {
   return `${long.length} talks are longer than the ${minutesPerDay} minutes you set for a day. Sit with each in one go, or split the longest ones.`
 }
 
-export function flattenSlots<T extends { id?: number; title?: string }>(
+export function flattenSlots<T extends { id?: number; title?: string; courseId?: number | null }>(
   slots: Slot<T>[],
-): { date: string; title: string; lessonId: number | null }[] {
-  const rows: { date: string; title: string; lessonId: number | null }[] = []
+): { date: string; title: string; lessonId: number | null; courseId: number | null }[] {
+  const rows: { date: string; title: string; lessonId: number | null; courseId: number | null }[] = []
   for (const slot of slots) {
     for (const item of slot.items) {
       rows.push({
         date: slot.date,
         title: item.title || 'Sitting',
         lessonId: typeof item.id === 'number' ? item.id : null,
+        courseId: typeof item.courseId === 'number' ? item.courseId : null,
       })
     }
   }

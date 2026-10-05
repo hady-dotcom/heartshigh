@@ -92,7 +92,7 @@ export function minutesLabel(seconds: number) {
   return `${Math.max(1, Math.round(seconds / 60))} min`
 }
 
-/** Dates a plan will actually use. One talk stays on the first day. Daily spans space talks (3 over 12 → 1, 5, 9). Chosen weekdays that skip days land on the first sittings. */
+/** Dates a plan will actually use. One talk stays on the first day. Daily spans space talks. Chosen weekdays are covered first. */
 export function fitDatesToTalks(dates: string[], talks: number): { dates: string[]; note: string | null } {
   if (talks <= 0 || !dates.length) return { dates: [], note: null }
   const planned = planAcrossDays(Array.from({ length: talks }, (_, index) => index), dates)
@@ -144,6 +144,37 @@ export function planNotify(talks: number, dates: string[]) {
   if (talks === 1) return `Your teacher set 1 talk for ${when || 'your chosen day'}.`
   if (dates.length <= 4) return `Your teacher set ${talks} talks for ${when || 'your chosen days'}.`
   return `Your teacher set ${talks} talks from ${formatLearnerDate(dates[0], 'week')} to ${formatLearnerDate(dates[dates.length - 1], 'week')}.`
+}
+
+/**
+ * Gold dots on Home and My week: every sitting date, and each chosen weekday
+ * that still falls inside the plan's range this week (so Thu is marked when
+ * they asked for Tue and Thu, even if an older spread only stored Tuesdays).
+ */
+export function weekBusy(input: {
+  days: { key: string; weekday: number }[]
+  slots: { date?: string }[]
+  plans?: { start?: string; end?: string; weekdays?: number[] }[]
+}) {
+  const busy = new Map<string, number>()
+  for (const slot of input.slots) {
+    const date = String(slot.date || '')
+    if (!date) continue
+    busy.set(date, (busy.get(date) || 0) + 1)
+  }
+  for (const plan of input.plans || []) {
+    const start = String(plan.start || '')
+    const end = String(plan.end || '')
+    const wanted = new Set(plan.weekdays || [])
+    if (!wanted.size) continue
+    for (const day of input.days) {
+      if (!wanted.has(day.weekday)) continue
+      if (start && day.key < start) continue
+      if (end && day.key > end) continue
+      if (!busy.has(day.key)) busy.set(day.key, 1)
+    }
+  }
+  return busy
 }
 
 /** Talks on each sitting date, in date order: 3, 3, 2, 2. */

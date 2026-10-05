@@ -12,6 +12,7 @@ import { workbookFor } from '@/server/workbook'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { learnerWords } from '@/lib/tidy-caption'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
+import { activityDay, countedTalkCompletions, doorsLitByCuts, gardenPathNodes, growthLessonIds, watchedLessonIds } from '@/lib/watch-growth'
 import { isLongTalk, matchDoorTalk } from '@/lib/first-course'
 import { FilePick } from '@/components/app/file-pick'
 import { posterFor, shownPoster } from '@/server/learner'
@@ -53,6 +54,7 @@ export type Growth = {
   activeDays: Set<string>
   secondsGiven: number
   watched: number
+  watchedIds: Set<number>
   activityLit: Set<number>
   harvestNew: number
   workbookShown: number
@@ -60,7 +62,7 @@ export type Growth = {
 
 export async function growth(payload: Payload, user: SessionUser): Promise<Growth> {
   const mine = { user: { equals: user.id } }
-  const [clauses, seats, completions, seatVisits, harvest, allWorkbook, allAnswers, rituals, visits, tags, doors] = await Promise.all([
+  const [clauses, seats, completions, seatVisits, harvest, allWorkbook, allAnswers, rituals, visits, tags, doors, sessions] = await Promise.all([
     rows(payload, 'clauses', undefined, { sort: 'number', limit: 50 }),
     rows(payload, 'seats', undefined, { sort: 'position', limit: 400 }),
     rows(payload, 'completions', mine),
@@ -72,46 +74,62 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
     rows(payload, 'lesson-visits', mine),
     rows(payload, 'tags', { state: { equals: 'confirmed' } }, { limit: 1000 }),
     loadDoors(payload),
+    rows(payload, 'watch-sessions', mine, { limit: 500 }),
   ])
   const answers = allAnswers.filter(answerCounts)
   const browsed = new Set(allAnswers.filter((row) => !answerCounts(row)).map((row) => row.id))
   const workbook = allWorkbook.filter((row) => !browsed.has(ref(row.answer) || 0))
-  const lessonIds = [...new Set([...completions, ...visits, ...answers].map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))]
-  const lessons = lessonIds.length ? await rows(payload, 'lessons', { id: { in: lessonIds } }) : []
-  const inCourse = (lessonId: number | null) => Boolean(lessonId && ref(lessons.find((row) => row.id === lessonId)?.course))
-  const countedCompletions = completions.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'watch' }))
+  const lessonIds = growthLessonIds({ completions, visits, answers, sessions })
+  const lessons = lessonIds.length ? await rows(payload, 'lessons', { id: { in: lessonIds } }, { limit: 800 }) : []
+  const courseByLesson = new Map(lessons.map((row) => [row.id, ref(row.course)]))
+  const inCourse = (lessonId: number | null) => Boolean(lessonId && courseByLesson.get(lessonId))
+  const countedCompletions = countedTalkCompletions({ completions, courseByLesson })
   const countedAnswers = answers.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'question', viaGathering: row.viaGathering === true }))
-  const done = new Set(countedCompletions.map((row) => ref(row.lesson)))
-  const watchedIds = new Set(
+  const done = new Set(countedCompletions.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))
+  const finishedIds = new Set(
     countedCompletions
       .filter((row) => Number(row.percent ?? 100) >= 90)
       .map((row) => ref(row.lesson))
       .filter((id): id is number => Boolean(id)),
   )
+  const watchedIds = watchedLessonIds({ completions, sessions })
+  const answeredIds = new Set(countedAnswers.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))
   const cutIds = tags.map((tag) => ref((tag.item as { value?: unknown } | undefined)?.value)).filter((id): id is number => Boolean(id))
-  const cuts = cutIds.length ? await rows(payload, 'cuts', { id: { in: cutIds } }, { limit: 1000 }) : []
-  const lit = new Set<number>()
-  const activityLit = new Set<number>()
+  const sittingIds = [...new Set([...watchedIds, ...answeredIds, ...done])]
+  const [taggedCuts, sittingCuts] = await Promise.all([
+    cutIds.length ? rows(payload, 'cuts', { id: { in: cutIds } }, { limit: 1000 }) : Promise.resolve([] as Row[]),
+    sittingIds.length ? rows(payload, 'cuts', { lesson: { in: sittingIds } }, { limit: 2000 }) : Promise.resolve([] as Row[]),
+  ])
+  const doorNumber = (clause: number) => doorNumberOfClause(clause, doors)
+  const fromCuts = doorsLitByCuts({
+    cuts: sittingCuts,
+    watched: watchedIds,
+    done,
+    answered: answeredIds,
+    doorOf: doorNumber,
+  })
+  const lit = new Set(fromCuts.lit)
+  const activityLit = new Set(fromCuts.activityLit)
   for (const tag of tags) {
-    const cut = cuts.find((row) => row.id === ref((tag.item as { value?: unknown } | undefined)?.value))
+    const cut = taggedCuts.find((row) => row.id === ref((tag.item as { value?: unknown } | undefined)?.value))
     if (!cut) continue
     const clause = clauses.find((row) => row.id === ref(tag.clause))
     const door = clause ? doorOfClause(Number(clause.number), doors) : null
     if (!door) continue
     const lessonId = ref(cut.lesson)
     if (lessonId && done.has(lessonId)) lit.add(door.number)
-    if (lessonId && watchedIds.has(lessonId)) activityLit.add(door.number)
+    if (lessonId && (watchedIds.has(lessonId) || answeredIds.has(lessonId))) activityLit.add(door.number)
   }
   const at = now()
   const harvestNew = harvest.filter((row) => isNewMoment(str(row.createdAt) || str(row.gatheredAt), str(row.seenAt) || null, at)).length
-  const activeDays = new Set([...countedCompletions, ...countedAnswers, ...visits, ...rituals, ...seatVisits].map((row) => str(row.createdAt).slice(0, 10)).filter(Boolean))
+  const activeDays = new Set([...countedCompletions, ...countedAnswers, ...visits, ...rituals, ...seatVisits].map(activityDay).filter(Boolean))
   const secondsGiven = countedCompletions.reduce((sum, row) => {
     const lesson = lessons.find((item) => item.id === ref(row.lesson))
     return sum + (Number(lesson?.durationSeconds || 0) * Number(row.percent || 100)) / 100
   }, 0)
   const book = await workbookFor(payload, user, user)
   const workbookShown = book.answers.length
-  return { clauses, doors, seats, lit, completions: countedCompletions, lessons, seatVisits, harvest, workbook, answers: countedAnswers, rituals, activeDays, secondsGiven, watched: watchedIds.size, activityLit, harvestNew, workbookShown }
+  return { clauses, doors, seats, lit, completions: countedCompletions, lessons, seatVisits, harvest, workbook, answers: countedAnswers, rituals, activeDays, secondsGiven, watched: finishedIds.size, watchedIds, activityLit, harvestNew, workbookShown }
 }
 
 function sectionOf(doors: Door[], key: string) {
@@ -154,6 +172,16 @@ export function Rings({ g, base, portal }: { g: Growth; base: string; portal?: i
 export async function coursePath(payload: Payload, user: SessionUser, base: string, g: Growth, courseId?: number | null) {
   let id = courseId || null
   if (!id) {
+    const counts = new Map<number, number>()
+    for (const lesson of g.lessons) {
+      if (!g.watchedIds?.has(lesson.id)) continue
+      const course = ref(lesson.course)
+      if (course) counts.set(course, (counts.get(course) || 0) + 1)
+    }
+    const top = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]
+    id = top?.[0] || null
+  }
+  if (!id) {
     const visits = await rows(payload, 'lesson-visits', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 1 })
     const lesson = visits[0] ? g.lessons.find((row) => row.id === ref(visits[0].lesson)) : null
     id = lesson ? ref(lesson.course) : null
@@ -164,16 +192,20 @@ export async function coursePath(payload: Payload, user: SessionUser, base: stri
   const lessons = await rows(payload, 'lessons', { course: { equals: id } }, { sort: 'order', limit: 60 })
   if (!course || !lessons.length) return null
   const done = new Set(g.completions.filter((row) => Number(row.percent ?? 100) >= 90).map((row) => ref(row.lesson)))
-  const active = lessons.find((lesson) => !done.has(lesson.id))
-  return {
-    title: str(course.title),
-    nodes: lessons.map((lesson) => ({
-      id: lesson.id,
-      title: partTitle(lesson, str(course.title)),
-      href: `${base}/course/${id}?part=${lesson.id}`,
-      state: (done.has(lesson.id) ? 'done' : lesson.id === active?.id ? 'active' : 'next') as 'done' | 'active' | 'next',
-    })),
-  }
+  const watchedSet = g.watchedIds || new Set<number>()
+  const asTalk = (lesson: Row, courseId: number, courseTitle: string) => ({
+    id: lesson.id,
+    title: partTitle(lesson, courseTitle),
+    href: `${base}/course/${courseId}?part=${lesson.id}`,
+    done: done.has(lesson.id) || watchedSet.has(lesson.id),
+  })
+  const watched = g.lessons
+    .filter((lesson) => watchedSet.has(lesson.id))
+    .map((lesson) => asTalk(lesson, ref(lesson.course) || id || 0, str(course.title)))
+  const courseTalks = lessons.map((lesson) => asTalk(lesson, id, str(course.title)))
+  const nodes = gardenPathNodes(watched, courseTalks)
+  if (!nodes.length) return null
+  return { title: str(course.title), nodes }
 }
 
 /** Trees for the garden screen. Lessons are placed by a cut's best clause, then by a confirmed tag. */

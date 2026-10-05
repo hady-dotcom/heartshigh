@@ -736,6 +736,7 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .week-day.today small { color: #D4A84B; }
 .week-day.scheduled { background: #163d3a; }
 .week-day .dot { width: 6px; height: 6px; border-radius: 50%; background: #D4A84B; }
+.week-day.busy .dot { box-shadow: 0 0 0 2px rgba(212, 168, 75, 0.25); }
 .week-today { display: block; margin-top: 10px; font-weight: 700; color: #F1E4C6; text-decoration: none; min-height: 44px; display: flex; align-items: center; }
 .week-today.empty { color: #E8D6AE; }
 .plan-cal { margin: 4px 0 16px; padding: 12px 10px 14px; border-radius: 20px; }

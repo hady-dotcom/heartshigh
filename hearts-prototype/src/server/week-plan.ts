@@ -1,10 +1,11 @@
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
-import { dayTalkCounts, minutesLabel, talksLabel, scheduledInWeek, weekStrip, zoneOrToronto, dateKeyInZone, type WeekDay } from '@/lib/week'
+import { dayTalkCounts, minutesLabel, talksLabel, scheduledInWeek, weekBusy, weekStrip, zoneOrToronto, dateKeyInZone, type WeekDay } from '@/lib/week'
 import { overMinutesNote, spreadNote, studyDates } from '@/lib/schedule'
 import { isTimeZone, portalTimeZone } from '@/lib/zone-time'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
+import { slotCourseId, slotHref } from '@/lib/slot-course'
 import { type Row, ref, rows, str } from '@/screens/common'
 
 export type WeekSlot = {
@@ -87,15 +88,16 @@ export async function weekView(payload: Payload, user: SessionUser, portal: Port
   })
   const cards: WeekPlanCard[] = mine.map((plan) => {
     const courseId = ref(plan.course)
-    const slots = ((plan.slots as { date?: string; title?: string; lessonId?: number }[]) || []).map((slot) => {
+    const slots = ((plan.slots as { date?: string; title?: string; lessonId?: number; courseId?: number }[]) || []).map((slot) => {
       const lesson = slot.lessonId ? lessonsById.get(slot.lessonId) : null
       const minutes = lesson ? Math.max(0, Math.round(Number(lesson.durationSeconds || 0) / 60)) : 0
-      const href = slot.lessonId && (courseId || ref(lesson?.course)) ? `${base}/course/${courseId || ref(lesson?.course)}?part=${slot.lessonId}` : null
+      const ownCourse = slotCourseId({ lessonCourse: lesson?.course, slotCourseId: slot.courseId, planCourseId: courseId })
+      const href = slotHref(base, slot.lessonId, ownCourse)
       return {
         date: String(slot.date || ''),
         title: lesson ? partTitle(lesson, courseRows.find((course) => course.id === ref(lesson.course))?.title) : tidyTalkTitle(String(slot.title || 'Sitting')),
         lessonId: slot.lessonId || null,
-        courseId: courseId || ref(lesson?.course) || null,
+        courseId: ownCourse,
         href,
         minutes,
         today: slot.date === todayKey,
@@ -127,7 +129,19 @@ export async function weekView(payload: Payload, user: SessionUser, portal: Port
     }
   })
   const today = cards.flatMap((plan) => plan.slots).find((slot) => slot.today) || null
-  const scheduledKeys = scheduledInWeek(days, cards.flatMap((plan) => plan.slots.map((slot) => slot.date)))
+  const busy = weekBusy({
+    days,
+    slots: cards.flatMap((plan) => plan.slots),
+    plans: mine.map((plan) => ({
+      start: str(plan.startDate) || str(plan.endDate),
+      end: str(plan.endDate) || str(plan.startDate),
+      weekdays: Array.isArray(plan.weekdays) ? (plan.weekdays as number[]) : [],
+    })),
+  })
+  const scheduledKeys = [...new Set([
+    ...scheduledInWeek(days, cards.flatMap((plan) => plan.slots.map((slot) => slot.date))),
+    ...days.filter((day) => busy.has(day.key)).map((day) => day.key),
+  ])]
   return { days, today, scheduledKeys, plans: cards, courses, zone, todayKey }
 }
 

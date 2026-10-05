@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { dateKeyInZone, dayTalkCounts, fitDatesToTalks, formatLearnerDate, listDates, mondayKey, parseWeekdays, planKeepPath, planNotify, planToast, scheduledInWeek, talksLabel, weekStrip, weekdayList } from './week'
+import { dateKeyInZone, dayTalkCounts, fitDatesToTalks, formatLearnerDate, listDates, mondayKey, parseWeekdays, planKeepPath, planNotify, planToast, scheduledInWeek, talksLabel, weekBusy, weekStrip, weekdayList } from './week'
 
 test('the week strip is Monday first and marks today in Toronto', () => {
   const sunday = new Date('2026-10-04T16:00:00Z')
@@ -12,6 +12,18 @@ test('the week strip is Monday first and marks today in Toronto', () => {
   assert.equal(mondayKey(sunday, 'America/Toronto'), '2026-09-28')
   assert.equal(dateKeyInZone(sunday, 'America/Toronto'), '2026-10-04')
   assert.deepEqual(scheduledInWeek(days, ['2026-09-29', '2026-10-01', '2026-10-08']), ['2026-09-29', '2026-10-01'])
+})
+
+test('the week strip marks chosen weekdays in range, not only stored sitting dates', () => {
+  const days = weekStrip(new Date('2026-10-05T16:00:00Z'), 'Europe/London')
+  const busy = weekBusy({
+    days,
+    slots: [{ date: '2026-10-06' }, { date: '2026-10-20' }],
+    plans: [{ start: '2026-10-05', end: '2026-11-01', weekdays: [2, 4] }],
+  })
+  assert.equal(busy.get('2026-10-06'), 1)
+  assert.equal(busy.get('2026-10-08'), 1)
+  assert.equal(busy.get('2026-10-07'), undefined)
 })
 
 test('one sitting never keeps leftover empty days, and several talks span the range', () => {
