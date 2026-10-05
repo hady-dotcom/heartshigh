@@ -1,8 +1,6 @@
-import { defaultPlanName, plural } from '@/lib/schedule'
-import { MINUTES_A_DAY } from '@/lib/study-plan'
-import { now as clockNow } from '@/lib/clock'
 import Link from 'next/link'
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
+import { WeekScreen } from '@/screens/app/week'
 import { Avatar } from '@/components/app/feed'
 import { OptInLane, PrefToggle, StartAgain } from '@/components/app/me-controls'
 import { EmptyState } from '@/components/app/empty'
@@ -10,8 +8,6 @@ import { KeepHearts } from '@/components/app/install-card'
 import { ThemePinControl } from '@/components/theme/theme-pin'
 import { SavedList, SavedToast } from '@/components/app/saved-list'
 import { Qr } from '@/components/qr'
-import { now } from '@/lib/clock'
-import { visibleCourseIds } from '@/server/context'
 import { dayNumber, portalName } from '@/server/learner'
 import { featureOn } from '@/lib/features'
 import { type Ctx, longDate, ref, rows, shortDate, str, unreadCount } from '../common'
@@ -27,11 +23,11 @@ function noteBody(body: string) {
 }
 
 export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
-  const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 30 })).filter((note) => note.channel !== 'email-stub')
+  const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 30 })).filter((note) => note.channel !== 'email-stub' && note.channel !== 'think')
   const unread = notes.filter((note) => !note.read).length
   const links: [string, string, string, string][] = [
     ...(featureOn(portal, 'compass') ? [['path', 'Your path', 'Where a little time will help, in plain words', 'me/path'] as [string, string, string, string]] : []),
-    ...(featureOn(portal, 'planner') ? [['plan', 'My study plan', 'Spread a course across the days that suit you', 'me/plan'] as [string, string, string, string]] : []),
+    ...(featureOn(portal, 'planner') ? [['plan', 'My week', 'Spread a course across the days that suit you', 'week'] as [string, string, string, string]] : []),
     ['circle', featureOn(portal, 'gather') ? 'Circle and nights' : 'Circle', featureOn(portal, 'gather') ? 'Your board, and the evenings you can come to' : 'Your board', 'me/circle'],
     ...(featureOn(portal, 'workbook') ? [['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'] as [string, string, string, string]] : []),
     ['settings', 'Settings', 'Night alerts, watch history and signing out', 'me/settings'],
@@ -99,67 +95,8 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
   )
 }
 
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-export async function PlanScreen({ payload, user, portal, base, query }: Ctx) {
-  const ids = await visibleCourseIds(payload, user)
-  const courses = ids.length ? await rows(payload, 'courses', { id: { in: ids } }) : []
-  const plans = (await rows(payload, 'schedules', { portal: { equals: portal.id } }, { sort: '-createdAt', limit: 50 })).filter((plan) => ref(plan.owner) === user.id || ((plan.learners as unknown[]) || []).some((item) => ref(item) === user.id))
-  const today = now().toISOString().slice(0, 10)
-  const later = new Date(now().getTime() + 27 * 86_400_000).toISOString().slice(0, 10)
-  const unread = await unreadCount(payload, user)
-  return (
-    <AppFrame testId="plan" evening>
-      <div className="app-scroll">
-        <Back href={`${base}/me`} label="Me" />
-        <div className="app-head"><h1>My study plan</h1></div>
-        <Flash error={query.error} notice={query.notice} />
-        <p className="lead">Pick a course, the dates and the days of the week. The parts are shared out evenly, in order, so no day is left empty at the end. It is a guide only; you can always watch at your own pace.</p>
-        <form className="card form-stack" action="/api/hearts" method="post">
-          <Hidden fields={{ action: 'schedule', portalSlug: portal.slug, targetType: 'course', next: `${base}/me/plan` }} />
-          <label>Name<input className="field" name="name" defaultValue={defaultPlanName(clockNow())} /></label>
-          <label>Course
-            <select className="field" data-testid="schedule-course" name="course" defaultValue={Number(query.course) || courses[0]?.id}>{courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}</select>
-          </label>
-          <label>From<input className="field" data-testid="schedule-start" type="date" name="start" defaultValue={today} /></label>
-          <label>Until<input className="field" data-testid="schedule-end" type="date" name="end" defaultValue={later} /></label>
-          <fieldset className="minutes-day" data-testid="minutes-a-day">
-            <legend>Minutes a day</legend>
-            <div className="weekdays">
-              {MINUTES_A_DAY.map((minutes) => (
-                <label key={minutes}><input data-testid={`minutes-${minutes}`} type="radio" name="minutes" value={minutes} defaultChecked={minutes === 20} /><span>{minutes}</span></label>
-              ))}
-            </div>
-          </fieldset>
-          <div>
-            <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink-2)' }}>Days of the week</span>
-            <div className="weekdays" style={{ marginTop: 8 }}>
-              {DAYS.map((label, index) => (
-                <label key={label}><input data-testid={`weekday-${index}`} type="checkbox" name="weekday" value={index} /><span>{label.slice(0, 2)}</span></label>
-              ))}
-            </div>
-          </div>
-          <button className="pill purple block" data-testid="schedule-submit" type="submit">Share out the parts</button>
-        </form>
-        {plans.map((plan) => {
-          const slots = (plan.slots as { date?: string; title?: string; lessonId?: number }[]) || []
-          return (
-            <section key={plan.id} data-testid="schedule-plan" style={{ marginTop: 18 }}>
-              <h2 style={{ fontSize: 19, margin: '0 0 4px' }}>{str(plan.name)}</h2>
-              <p className="muted" style={{ margin: 0, fontSize: 13 }}>{plural(slots.length, 'part')} · {Number(plan.minutesPerDay) || 20} min a day · {str(plan.startDate)} to {str(plan.endDate)}{ref(plan.owner) !== user.id ? ' · made by your teacher' : ''}</p>
-              {slots.map((slot, index) => (
-                <div className="slot" key={index} data-testid="schedule-slot">
-                  <span className="date">{slot.date ? new Date(`${slot.date}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', timeZone: 'UTC' }) : ''}<small>{slot.date ? new Date(`${slot.date}T12:00:00Z`).toLocaleDateString('en-GB', { month: 'short', weekday: 'short', timeZone: 'UTC' }) : ''}</small></span>
-                  <span>{str(slot.title)}</span>
-                </div>
-              ))}
-            </section>
-          )
-        })}
-      </div>
-      <TabBar base={base} active={featureOn(portal, 'gather') || !featureOn(portal, 'planner') ? 'me' : 'week'} portal={portal} unread={unread} />
-    </AppFrame>
-  )
+export async function PlanScreen(ctx: Ctx) {
+  return WeekScreen(ctx)
 }
 
 export async function CircleScreen({ payload, user, portal, base, query }: Ctx) {

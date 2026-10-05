@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { test } from 'node:test'
 import { securityHeaders } from '../../security-headers.mjs'
@@ -145,7 +145,6 @@ test('the Dockerfile bakes no secret or database address into the image', () => 
 })
 
 test('the latest Postgres migration has a table for every collection and global', async () => {
-  const { readdirSync } = await import('node:fs')
   const { collections } = await import('../../src/collections')
   const { aiCollections } = await import('../../src/collections-ai')
   const { MasterFlags } = await import('../../src/collections-opening')
@@ -153,12 +152,16 @@ test('the latest Postgres migration has a table for every collection and global'
   const { gatherCollections } = await import('../../src/collections-gather')
   const { consentCollections } = await import('../../src/collections-consent')
   const dir = path.join(root, 'src/migrations')
-  const sql = readdirSync(dir)
-    .filter((name) => name.endsWith('.ts') && name !== 'index.ts')
-    .map((name) => readFileSync(path.join(dir, name), 'utf8'))
-    .join('\n')
-  const tables = new Set([...sql.matchAll(/CREATE TABLE(?: IF NOT EXISTS)? "([^"]+)"/gi)].map((row) => row[1]))
-  const slugs = [...collections, ...aiCollections, ...sheetCollections, ...gatherCollections, ...consentCollections, MasterFlags].map((item) =>
+  const latest = readdirSync(dir).filter((name) => name.endsWith('.json')).sort().at(-1)
+  const tables = new Set<string>(
+    latest ? Object.keys(JSON.parse(readFileSync(path.join(dir, latest), 'utf8')).tables).map((name) => name.replace(/^public\./, '')) : [],
+  )
+  for (const name of readdirSync(dir).filter((file) => file.endsWith('.ts') && file !== 'index.ts')) {
+    const src = readFileSync(path.join(dir, name), 'utf8')
+    for (const match of src.matchAll(/CREATE TABLE(?: IF NOT EXISTS)? "([^"]+)"/gi)) tables.add(match[1])
+  }
+  const { adminCollections } = await import('../../src/collections-admin')
+  const slugs = [...collections, ...aiCollections, ...sheetCollections, ...gatherCollections, ...consentCollections, ...adminCollections, MasterFlags].map((item) =>
     item.slug.replace(/-/g, '_'),
   )
   const missing = slugs.filter((slug) => !tables.has(slug))

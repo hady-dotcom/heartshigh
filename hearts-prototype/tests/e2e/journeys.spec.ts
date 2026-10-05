@@ -27,6 +27,14 @@ async function signIn(page: Page, email: string, password: string, next: string)
   await page.waitForURL((url) => !url.pathname.startsWith('/login'))
 }
 
+async function openCoursePlayer(page: Page) {
+  if (await page.getByTestId('player').count()) return
+  const first = page.getByTestId('buffet-talk').first()
+  if (await first.count()) await first.click()
+  else if (await page.getByTestId('start-part').count()) await page.getByTestId('start-part').click()
+  await expect(page.getByTestId('player')).toBeVisible()
+}
+
 async function join(page: Page, code: string, name: string, email: string, password: string) {
   const { joinWithConsent } = await import('./legal-helpers')
   await joinWithConsent(page, code, name, email, password)
@@ -212,6 +220,7 @@ test.describe.serial('HEARTS journeys', () => {
 
   test('learner answers, meets the contingent question, and the test clock opens it', async ({ page }) => {
     await signIn(page, learnerEmail, 'harbour-learner', `/p/${slug}/course/${shared.courseId}`)
+    await openCoursePlayer(page)
     await expect(page.getByTestId('player')).toHaveAttribute('data-mode', 'practice')
     const waiting = await openPoint(page, /two days/)
     await expect(waiting).toHaveAttribute('data-state', 'waiting')
@@ -228,6 +237,7 @@ test.describe.serial('HEARTS journeys', () => {
     await page.getByTestId('popup-close').click()
     await post(page, { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: `/p/${slug}/course/${shared.courseId}` })
     await page.reload()
+    await openCoursePlayer(page)
     await expect(async () => {
       await page.getByTestId('answer-point').click()
       await expect(page.getByTestId('popup-prompt')).toContainText('one manner', { timeout: 1000 })
@@ -271,11 +281,13 @@ test.describe.serial('HEARTS journeys', () => {
     await join(page, learnerCode, 'Second Learner', otherEmail, 'harbour-learner')
     await placing(page, BY_NAMES)
     await page.goto(`/p/${slug}/course/${shared.courseId}`)
+    await openCoursePlayer(page)
     const before = await openPoint(page, /one manner/)
     await expect(before.getByTestId('swarm')).toHaveCount(0)
     await page.getByTestId('popup-close').click()
     await post(page, { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: `/p/${slug}/course/${shared.courseId}` })
     await page.reload()
+    await openCoursePlayer(page)
     const sheet = await openPoint(page, /one manner/)
     await expect(sheet.getByTestId('swarm-item').filter({ hasText: 'soft greeting' })).toBeVisible()
     await page.getByTestId('answer-text').fill('This one stays with me.')
@@ -283,6 +295,7 @@ test.describe.serial('HEARTS journeys', () => {
     await page.getByTestId('answer-submit').click()
     await expect(page.getByTestId('notice')).toContainText('privately')
     await signIn(page, learnerEmail, 'harbour-learner', `/p/${slug}/course/${shared.courseId}`)
+    await openCoursePlayer(page)
     const mine = await openPoint(page, /one manner/)
     await expect(mine.getByTestId('swarm')).not.toContainText('stays with me')
   })
@@ -310,14 +323,15 @@ test.describe.serial('HEARTS journeys', () => {
 
   test('the schedule splitter shares three parts across Wednesdays and Fridays', async ({ page }) => {
     await signIn(page, learnerEmail, 'harbour-learner', `/p/${slug}/me/plan`)
-    await page.getByTestId('schedule-course').selectOption({ label: 'Night class' })
+    const courseValue = await page.getByTestId('schedule-course').locator('option', { hasText: 'Night class' }).getAttribute('value')
+    await page.getByTestId('schedule-course').selectOption(courseValue!)
     await page.getByTestId('schedule-start').fill('2026-10-07')
     await page.getByTestId('schedule-end').fill('2026-10-16')
     await page.locator('label:has([data-testid=weekday-3])').click()
     await page.locator('label:has([data-testid=weekday-5])').click()
     await expect(page.getByTestId('weekday-3')).toBeChecked()
     await page.getByTestId('schedule-submit').click()
-    await expect(page.getByTestId('notice')).toContainText('The 3 sittings are spread across 4 study days')
+    await expect(page.getByTestId('notice')).toContainText('Done. Your 3 talks are on Wed 7 October, Fri 9 October and Wed 14 October.')
     const slots = page.getByTestId('schedule-plan').first().getByTestId('schedule-slot')
     await expect(slots).toHaveCount(3)
     for (const text of await slots.allTextContents()) expect(text).toMatch(/Wed|Fri/)

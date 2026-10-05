@@ -18,3 +18,5 @@ proto-test/verify/
 bin/
 content/audio/*
 !content/audio/.gitkeep
+content/sheets/*.xlsx
+!content/sheets/.gitkeep

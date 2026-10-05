@@ -17,6 +17,7 @@ import { CourseScreen, SpeakerScreen } from '@/screens/app/course'
 import { GardenDoor, GardenGeneral, GardenGhunya, GardenJibril, GardenScreen, GardenWorkbook } from '@/screens/app/garden'
 import { GardenHarvest } from '@/screens/app/harvest'
 import { CircleScreen, MeScreen, PlanScreen, SettingsScreen } from '@/screens/app/me'
+import { WeekScreen } from '@/screens/app/week'
 import { WelcomeScreen } from '@/screens/app/welcome'
 import { AiPages } from '@/screens/desk/ai'
 import { OverviewScreen, PortalSettingsScreen, WizardScreen } from '@/screens/desk/overview'
@@ -223,6 +224,8 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       if (a === 'ghunya') return GardenGhunya(ctx)
       if (a === 'harvest') return GardenHarvest(ctx)
       notFound()
+    case 'week':
+      return WeekScreen(ctx)
     case 'me':
       if (!a) return MeScreen(ctx)
       if (a === 'plan' || a === 'week') return gated(ctx, 'planner') || PlanScreen(ctx)
@@ -257,7 +260,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
     case 'night':
       redirect(`${base}/me/circle`)
     case 'schedule':
-      redirect(`${base}/me/plan`)
+      redirect(`${base}/week`)
     case 'watch': {
       const lesson = a ? await payload.findByID({ collection: 'lessons', id: Number(a), overrideAccess: true, depth: 0 }).catch(() => null) : null
       const courseId = lesson ? (typeof lesson.course === 'object' && lesson.course ? lesson.course.id : lesson.course) : null

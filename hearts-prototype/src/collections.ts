@@ -5,6 +5,7 @@ import { portalIdOf } from './lib/ids'
 import { slugProblem } from './lib/text-safety'
 import { authorTextProblems, markupProblems } from './lib/opening-data'
 import { changedTierFields, horsCapOf, saidInTalk, TIER_TIMING_FIELDS, tierProblem, timingProblems } from './lib/tiers'
+import { attachHorsToAppetisers, parseExtractStatus, timeInTalkProblem, type TalkExtract } from './lib/extracts'
 import { talkChain } from './lib/nesting'
 import { isShortsUrl } from './lib/shorts'
 import { britishPortalTime, DEFAULT_TIME_ZONE, isTimeZone, portalTimeZone } from './lib/zone-time'
@@ -862,6 +863,143 @@ export const TalkTiers: CollectionConfig = {
   },
 }
 
+/**
+ * Many extracts on one talk. An appetiser is a hook, turn and land.
+ * Most hold 0 or 1 hors (usually the turn into the land). Empty is common.
+ * AI picks arrive as suggested; only approved extracts reach learners.
+ * The parallel erase-registry branch is not on this base: wipeLesson, CHILD_ORDER
+ * and RESTORE_ORDER in src/server/master-sheet.ts delete these with the talk.
+ */
+export const TalkExtracts: CollectionConfig = {
+  slug: 'talk-extracts',
+  labels: { singular: 'Talk extract', plural: 'Talk extracts' },
+  admin: { useAsTitle: 'quote' },
+  access: masterOnly,
+  fields: [
+    { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true, index: true },
+    {
+      name: 'kind',
+      type: 'select',
+      required: true,
+      options: [
+        { label: "Hors d'oeuvre", value: 'hors' },
+        { label: 'Appetiser', value: 'appetiser' },
+      ],
+    },
+    { name: 'start', type: 'number', required: true, min: 0 },
+    { name: 'end', type: 'number', required: true, min: 0 },
+    { name: 'quote', type: 'textarea' },
+    { name: 'words', type: 'json', admin: { description: 'Timed spoken words: [{ at, text }]. The only text over a speaker.' } },
+    { name: 'score', type: 'number' },
+    {
+      name: 'status',
+      type: 'select',
+      defaultValue: 'suggested',
+      options: [
+        { label: 'Draft', value: 'draft' },
+        { label: 'Suggested', value: 'suggested' },
+        { label: 'Approved', value: 'approved' },
+        { label: 'Rejected', value: 'rejected' },
+      ],
+    },
+    { name: 'door', type: 'number', admin: { description: 'Jibril door hang, 1 to 20.' } },
+    { name: 'seat', type: 'relationship', relationTo: 'seats' },
+    { name: 'order', type: 'number', defaultValue: 1 },
+    {
+      name: 'parent',
+      type: 'relationship',
+      relationTo: 'talk-extracts',
+      admin: { description: "The appetiser this hors d'oeuvre sits inside. Empty until overlap finds one." },
+    },
+    {
+      name: 'arc',
+      type: 'select',
+      options: [
+        { label: 'Hook', value: 'hook' },
+        { label: 'Turn', value: 'turn' },
+        { label: 'Land', value: 'land' },
+      ],
+      admin: { description: 'Which part of the parent appetiser this hors comes from.' },
+    },
+    { name: 'hook', type: 'textarea' },
+    { name: 'turn', type: 'textarea' },
+    { name: 'land', type: 'textarea' },
+    { name: 'source', type: 'text' },
+  ],
+  hooks: {
+    beforeChange: [
+      plainFields('quote', 'hook', 'turn', 'land'),
+      async ({ data, originalDoc, req }) => {
+        const merged = { ...(originalDoc || {}), ...data } as Record<string, unknown>
+        const start = Number(merged.start)
+        const end = Number(merged.end)
+        if (Number.isFinite(start) && Number.isFinite(end) && !(end > start)) {
+          throw new APIError('The extract has to end after it starts.', 400, null, true)
+        }
+        const lessonId = typeof merged.lesson === 'object' && merged.lesson ? (merged.lesson as { id: number }).id : Number(merged.lesson)
+        const lesson = lessonId ? await req.payload.findByID({ collection: 'lessons', id: lessonId, depth: 0, overrideAccess: true }).catch(() => null) : null
+        const duration = Number((lesson as { durationSeconds?: number } | null)?.durationSeconds || 0)
+        const late = timeInTalkProblem({ start, end }, duration || null)
+        if (late) throw new APIError(late, 400, null, true)
+        const quote = String(merged.quote || '')
+        const status = String(merged.status || 'suggested')
+        // Suggested and draft picks are often noisy AI text. Only an approved extract
+        // has to match the transcript word for word, because only those reach learners.
+        if (status === 'approved' && quote.trim() && lesson) {
+          const { tierSourceText } = await import('./server/tier-source')
+          const source = tierSourceText(lesson as { youtubeId?: string; transcript?: string })
+          if (source && !saidInTalk(quote, source)) {
+            throw new APIError("The extract has to be the speaker's words, word for word from the transcript.", 400, null, true)
+          }
+        }
+        return data
+      },
+    ],
+    afterChange: [
+      async ({ doc, req }) => {
+        if (req.context?.skipExtractRelink) return doc
+        if (doc.kind !== 'appetiser') return doc
+        const lessonId = typeof doc.lesson === 'object' && doc.lesson ? (doc.lesson as { id: number }).id : Number(doc.lesson)
+        if (!lessonId) return doc
+        const found = await req.payload.find({
+          collection: 'talk-extracts',
+          overrideAccess: true,
+          depth: 0,
+          limit: 500,
+          pagination: false,
+          where: { lesson: { equals: lessonId } },
+        })
+        const rows = found.docs.map((row) => ({
+          id: row.id,
+          lesson: lessonId,
+          kind: row.kind as TalkExtract['kind'],
+          start: Number(row.start),
+          end: Number(row.end),
+          quote: String(row.quote || ''),
+          status: parseExtractStatus(row.status),
+          order: Number(row.order || 1),
+          parent: typeof row.parent === 'object' && row.parent ? (row.parent as { id: number }).id : row.parent ? Number(row.parent) : null,
+          arc: (row.arc || null) as TalkExtract['arc'],
+        }))
+        const linked = attachHorsToAppetisers(rows)
+        for (const row of linked) {
+          if (row.kind !== 'hors' || row.id == null) continue
+          const current = rows.find((item) => item.id === row.id)
+          if (!current) continue
+          if (current.parent === row.parent && current.arc === row.arc) continue
+          await req.payload.update({
+            collection: 'talk-extracts',
+            id: row.id,
+            overrideAccess: true,
+            data: { parent: row.parent || null, arc: row.arc || null } as never,
+          })
+        }
+        return doc
+      },
+    ],
+  },
+}
+
 export const Answers: CollectionConfig = {
   slug: 'answers',
   access: { read: ownerOrStaff(true, 'keepPrivate'), create: master, update: master, delete: master },
@@ -1359,6 +1497,7 @@ export const collections = [
   Notifications,
   AccessCodes,
   TalkTiers,
+  TalkExtracts,
   Adoptions,
   PlacingQuestions,
   PlacingAnswers,

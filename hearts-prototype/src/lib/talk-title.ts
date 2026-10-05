@@ -4,12 +4,14 @@
  * A YouTube upload often appends "| Prophetic Dua | Shaykh …". That suffix is the channel, not the talk.
  */
 
-/** Drops a "| channel, series" suffix. A title with no pipe is left as it is. */
+/** Drops a "| channel, series" suffix and a trailing "Khutbah by …" credit. */
 export function tidyTalkTitle(raw: string) {
-  const text = raw.replace(/\s+/g, ' ').trim()
+  let text = raw.replace(/\s+/g, ' ').trim()
   const pipe = text.indexOf('|')
-  if (pipe <= 0) return text
-  return text.slice(0, pipe).replace(/\s+/g, ' ').trim() || text
+  if (pipe > 0) text = text.slice(0, pipe).replace(/\s+/g, ' ').trim() || text
+  text = text.replace(/\s+[-–—:]+(?:\s+|:)(?:Jum(?:'?uah|mah)\s+)?Khutbah\b.*$/i, '').trim()
+  text = text.replace(/\s+::\s+Khutbah\b.*$/i, '').trim()
+  return text
 }
 
 export function displayTalkTitle(input: {

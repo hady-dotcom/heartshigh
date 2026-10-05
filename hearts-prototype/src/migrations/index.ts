@@ -14,6 +14,7 @@ import * as migration_20261004_031500_gather from './20261004_031500_gather';
 import * as migration_20261004_180000_gather_entry_code from './20261004_180000_gather_entry_code';
 import * as migration_20261004_210000_schedule_minutes from './20261004_210000_schedule_minutes';
 import * as migration_20261004_230000_portal_features from './20261004_230000_portal_features';
+import * as migration_20261004_233000_talk_extracts from './20261004_233000_talk_extracts';
 import * as migration_20261005_010000_admin_ops from './20261005_010000_admin_ops';
 import * as migration_20261005_020000_accounts from './20261005_020000_accounts';
 import * as migration_20261005_021000_trash from './20261005_021000_trash';
@@ -99,6 +100,11 @@ export const migrations = [
     up: migration_20261004_230000_portal_features.up,
     down: migration_20261004_230000_portal_features.down,
     name: '20261004_230000_portal_features',
+  },
+  {
+    up: migration_20261004_233000_talk_extracts.up,
+    down: migration_20261004_233000_talk_extracts.down,
+    name: '20261004_233000_talk_extracts',
   },
   {
     up: migration_20261005_010000_admin_ops.up,

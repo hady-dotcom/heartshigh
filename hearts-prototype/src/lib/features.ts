@@ -333,20 +333,16 @@ export function featuresFromForm(form: FormData, field = 'feature'): FeatureMap 
 }
 
 /**
- * Bottom bar. Always Home · (middle) · Garden · Me, driven by the registry.
- * Gather takes the middle slot when it is on, so live does not change.
- * When Gather is off, My week fills that slot if the planner is on.
+ * Bottom bar is always Home · Lanes · My week · Garden · Me.
+ * Gather lives on its own screens and must not replace My week.
  */
-export function learnerBar(portal: FeatureSource): BarItem[] {
-  const items = [...ALWAYS_BAR]
-  const gather = featureByKey('gather')?.bar
-  const planner = featureByKey('planner')?.bar
-  if (gather && featureOn(portal, 'gather')) items.push(gather)
-  else if (planner && featureOn(portal, 'planner')) items.push(planner)
-  const garden = featureByKey('garden')?.bar
-  if (garden && featureOn(portal, 'garden')) items.push(garden)
-  items.push(ME_BAR)
-  return items
+export function learnerBar(_portal?: FeatureSource): BarItem[] {
+  return [
+    ...ALWAYS_BAR,
+    { key: 'week', label: 'My week', path: '/week' },
+    { key: 'garden', label: 'Garden', path: '/garden' },
+    ME_BAR,
+  ]
 }
 
 export function deskNavAllowed(portal: FeatureSource, navKey: string): boolean {

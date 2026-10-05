@@ -556,3 +556,66 @@ table.data th [data-testid='desk-help'] { margin-left: 4px; vertical-align: midd
 .saved-toast { margin: 0 0 12px; padding: 10px 14px; background: var(--card, #f7eedb); border: 1px solid var(--line, #d7c6a4); border-radius: 12px; font-size: 14px; }
 .saved-list { display: grid; gap: 8px; }
 .saved-item { display: flex; justify-content: space-between; gap: 10px; }
+/* Evening garden desk: the library talk review uses the garden night colours. */
+.desk.evening {
+  --teal-deep: #0E2A2B;
+  --gold: #D4A84B;
+  --gold-ink: #1A1408;
+}
+.desk.evening .side { background: var(--desk-sidebar); }
+.extract-desk > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.extract-help { position: relative; }
+.extract-help summary {
+  list-style: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--desk-gold);
+  color: var(--desk-gold-ink);
+  font-weight: 800;
+  cursor: pointer;
+}
+.extract-help summary::-webkit-details-marker { display: none; }
+.extract-help div {
+  position: absolute;
+  right: 0;
+  top: 40px;
+  z-index: 2;
+  width: min(360px, 70vw);
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--desk-sidebar);
+  color: var(--desk-on-dark);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--desk-sidebar) 35%, transparent);
+}
+.extract-help p { margin: 0 0 8px; font-size: 13.5px; line-height: 1.45; }
+.extract-help p:last-child { margin-bottom: 0; }
+.extract-density { margin-bottom: 16px; }
+.extract-bars { display: grid; gap: 6px; margin-top: 8px; }
+.extract-bars div { height: 8px; border-radius: 99px; background: color-mix(in srgb, var(--desk-sidebar) 12%, transparent); overflow: hidden; }
+.extract-bars i { display: block; height: 100%; background: var(--desk-gold); }
+.extract-group { display: grid; gap: 8px; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--desk-line); }
+.extract-row { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--desk-card); border: 1px solid var(--desk-line); }
+.extract-row.nested { margin-left: 28px; border-left: 3px solid var(--desk-gold); }
+.extract-row.flagged { box-shadow: 0 0 0 2px var(--desk-gold) inset; }
+.extract-row.current { box-shadow: 0 0 0 2px var(--desk-sidebar) inset; }
+.extract-time { display: grid; gap: 4px; align-content: start; }
+.extract-time b { font-family: ui-monospace, monospace; }
+.extract-kind { margin: 0 0 4px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--desk-sidebar); font-weight: 700; }
+.extract-flag { margin: 8px 0 0; font-weight: 650; color: var(--desk-sidebar); }
+.extract-empty-note { margin: 8px 0 0; font-size: 13px; color: var(--desk-muted); font-weight: 500; }
+.extract-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.extract-orphans { margin-top: 8px; }
+.extract-orphans h3 { margin: 0 0 10px; font-size: 16px; }
+.extract-more { margin-top: 8px; }
+.extract-more summary { cursor: pointer; font-weight: 650; color: var(--desk-sidebar); }
+.extract-review { padding: 14px 16px; margin-bottom: 16px; border-radius: 14px; background: var(--desk-sidebar); color: var(--desk-on-dark); }
+.extract-review p { margin: 0 0 8px; }
+.extract-review .hint, .extract-review .review-keys { color: var(--desk-on-dark); opacity: 0.82; }
+.extract-review .extract-kind { color: var(--desk-gold); }
+.extract-review .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.extract-review-clip { margin-top: 8px; }
+.extract-review .tier-player { margin: 10px 0; background: color-mix(in srgb, var(--desk-sidebar) 80%, #000); border-radius: 10px; overflow: hidden; min-height: 180px; }
+.extract-review iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; }

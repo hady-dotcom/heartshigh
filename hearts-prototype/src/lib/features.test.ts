@@ -102,15 +102,15 @@ test('presets: start small, add the community, everything', () => {
   assert.equal(matchingPreset({ ...small, gather: true }), null)
 })
 
-test('the bottom bar stays a complete five when Gather is off, and matches live when it is on', () => {
+test('the bottom bar is always Home · Lanes · My week · Garden · Me', () => {
   const on = learnerBar(null)
-  assert.deepEqual(on.map((item) => item.key), ['home', 'lanes', 'gather', 'garden', 'me'])
-  assert.deepEqual(on.map((item) => item.label), ['Home', 'Lanes', 'Gather', 'Garden', 'Me'])
+  assert.deepEqual(on.map((item) => item.key), ['home', 'lanes', 'week', 'garden', 'me'])
+  assert.deepEqual(on.map((item) => item.label), ['Home', 'Lanes', 'My week', 'Garden', 'Me'])
   const off = learnerBar({ features: { ...defaultFeatures(), gather: false } })
   assert.deepEqual(off.map((item) => item.key), ['home', 'lanes', 'week', 'garden', 'me'])
   assert.deepEqual(off.map((item) => item.label), ['Home', 'Lanes', 'My week', 'Garden', 'Me'])
   const bare = learnerBar({ features: { ...defaultFeatures(), gather: false, planner: false, garden: false } })
-  assert.deepEqual(bare.map((item) => item.key), ['home', 'lanes', 'me'])
+  assert.deepEqual(bare.map((item) => item.key), ['home', 'lanes', 'week', 'garden', 'me'])
 })
 
 test('desk nav hides a feature’s tools when that switch is off', () => {

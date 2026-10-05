@@ -20,6 +20,8 @@ import { partTitle } from '@/lib/talk-title'
 import { type Ctx, type Row, clock, one, portalPeople, ref, rows, str } from '../common'
 import { HelpTip } from '@/components/desk/help'
 import { TOOL } from '@/lib/desk-help'
+import { ExtractTimeline } from '@/components/desk/extract-timeline'
+import { extractsForLesson } from '@/server/extracts'
 import { AdminFrame } from './overview'
 
 export function guardAdmin(ctx: Ctx) {
@@ -182,7 +184,7 @@ export async function canOpenCourse(payload: Payload, user: SessionUser, portal:
   return { ok: localHere || linked, locked: !localHere }
 }
 
-export async function CourseEditorBody({ payload, user, portal, editorHref, courseId, part }: { payload: Payload; user: SessionUser; portal: PortalDoc | null; editorHref: string; courseId: number; part?: string }) {
+export async function CourseEditorBody({ payload, user, portal, editorHref, courseId, part, extract }: { payload: Payload; user: SessionUser; portal: PortalDoc | null; editorHref: string; courseId: number; part?: string; extract?: string }) {
   const course = await one(payload, 'courses', courseId)
   if (!course) notFound()
   const access = await canOpenCourse(payload, user, portal, course)
@@ -194,7 +196,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
   ])
   const lesson = lessons.find((row) => row.id === Number(part)) || lessons[0]
   const here = `${editorHref}${lesson ? `?part=${lesson.id}` : ''}`
-  const [cuts, ladder, points, clauses, seats, people, doors] = await Promise.all([
+  const [cuts, ladder, points, clauses, seats, people, doors, extracts] = await Promise.all([
     lesson ? rows(payload, 'cuts', { lesson: { equals: lesson.id } }, { sort: 'start' }) : Promise.resolve([]),
     lesson ? rows(payload, 'ladder-items', { lesson: { equals: lesson.id } }, { sort: 'start' }) : Promise.resolve([]),
     lesson ? rows(payload, 'engagement-points', { lesson: { equals: lesson.id } }, { sort: 'second', depth: 1 }) : Promise.resolve([]),
@@ -202,6 +204,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
     rows(payload, 'seats', undefined, { sort: 'position', limit: 400 }),
     portal ? portalPeople(payload, portal.id) : Promise.resolve([]),
     loadDoors(payload),
+    lesson ? extractsForLesson(payload, lesson.id) : Promise.resolve([]),
   ])
   const visiblePoints = points.filter((point) => {
     const author = point.author as { role?: string; tenants?: { tenant?: unknown }[] } | null
@@ -345,6 +348,17 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
             </section>
           ) : null}
 
+          {lesson ? (
+            <ExtractTimeline
+              extracts={extracts}
+              duration={Number(lesson.durationSeconds || length)}
+              youtubeId={youtubeId}
+              next={here}
+              locked={locked}
+              currentExtract={Number(extract) || null}
+            />
+          ) : null}
+
           {lesson && ladder.length ? (
             <section className="panel" data-testid="ladder-panel">
               <header className="light"><h2>Short clips for the feed ({ladder.length})</h2><span className="hint">Short opening clips of 15 to 20 seconds, each inside its longer extended clip</span></header>
@@ -470,7 +484,7 @@ export async function CourseEditorScreen(ctx: Ctx, courseId: number) {
   const { payload, user, portal, base, query } = ctx
   const course = await one(payload, 'courses', courseId)
   if (!course) notFound()
-  const body = await CourseEditorBody({ payload, user, portal, editorHref: `${base}/admin/content/${courseId}`, courseId, part: query.part })
+  const body = await CourseEditorBody({ payload, user, portal, editorHref: `${base}/admin/content/${courseId}`, courseId, part: query.part, extract: query.extract })
   if (!body) redirect(`${base}/admin/content?error=${encodeURIComponent('That course is not in this portal.')}`)
   return (
     <AdminFrame ctx={ctx} active="content" title={str(course.title)} intro={<Link href={`${base}/admin/content`}>‹ All courses</Link>} testId="admin-course">

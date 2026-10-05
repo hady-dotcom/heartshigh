@@ -6,14 +6,17 @@ import { redirect } from 'next/navigation'
 import { Avatar } from '@/components/app/feed'
 import { SavedCount, SavedToast } from '@/components/app/saved-list'
 import { AppFrame, Flash, TabBar } from '@/components/app/shell'
+import { WeekStrip } from '@/components/app/week-strip'
+import { weekView } from '@/server/week-plan'
 import { PlayIcon } from '@/components/icons'
-import { displayTalkTitle } from '@/lib/talk-title'
+import { displayTalkTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { courseCards, dayNumber, portalName, posterFor, shownPoster } from '@/server/learner'
 import { ensureMonthNote, recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
 import { lanesWithClips } from '@/lib/lanes'
+import { LANE_BLURBS } from '@/lib/opening-data'
 import { plural } from '@/lib/schedule'
-import { continueOrder, dateKeyInZone, minutesADay, tonightLabel, tonightSlot } from '@/lib/study-plan'
+import { continueOrder, dateKeyInZone, tonightLabel, tonightSlot } from '@/lib/study-plan'
 import { now as clockNow } from '@/lib/clock'
 import { growth, Rings } from './garden'
 import { HomeGather, homeGatherings } from './gather'
@@ -30,7 +33,15 @@ function minutesLeft(seconds: number, percent: number) {
 /** Home: the growth banner, what to carry on with, then the way into today's clips (board 00). */
 export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   if (user.role === 'learner' && !user.onboarded) redirect(user.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
-  const [g, unread, { items }, courses, due, gatherings] = await Promise.all([growth(payload, user), unreadCount(payload, user), learnerClips(payload, portal, user), courseCards(payload, user), user.role === 'learner' && featureOn(portal, 'compass') ? recalibrationDueFor(payload, user.id) : Promise.resolve(false), featureOn(portal, 'gather') ? homeGatherings({ payload, portal, user, base }) : Promise.resolve([])])
+  const [g, unread, { items }, courses, due, gatherings, week] = await Promise.all([
+    growth(payload, user),
+    unreadCount(payload, user),
+    learnerClips(payload, portal, user),
+    courseCards(payload, user),
+    user.role === 'learner' && featureOn(portal, 'compass') ? recalibrationDueFor(payload, user.id) : Promise.resolve(false),
+    featureOn(portal, 'gather') ? homeGatherings({ payload, portal, user, base }) : Promise.resolve([]),
+    weekView(payload, user, portal, base),
+  ])
   if (due) await ensureMonthNote(payload, user.id, portal.id, String(portal.slug || ''))
   const [visits, sessions] = await Promise.all([
     rows(payload, 'lesson-visits', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 40 }),
@@ -65,7 +76,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
           youtubeId: str(lesson.youtubeId),
           vimeoId: str(lesson.vimeoId),
         }),
-        sub: minutesLeft(seconds, percent) || str(course?.title),
+        sub: minutesLeft(seconds, percent) || tidyTalkTitle(str(course?.title)),
         thumb: shownPoster(posterFor(str(lesson.youtubeId) || null)),
       }
     })
@@ -74,11 +85,11 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   const plan = plans.find((row) => ref(row.owner) === user.id || ((row.learners as unknown[]) || []).some((item) => ref(item) === user.id))
   const slot = plan ? tonightSlot((plan.slots as { date?: string; lessonId?: number | null; title?: string }[]) || [], dateKeyInZone(clockNow(), portal.timeZone || 'America/Toronto'), done) : null
   const planLesson = slot?.lessonId ? (await rows(payload, 'lessons', { id: { equals: slot.lessonId } }, { limit: 1 }))[0] : null
-  const planMinutes = minutesADay(plan?.minutesPerDay) || 20
+  const talkMinutes = Math.max(1, Math.round(Number(planLesson?.durationSeconds || 0) / 60))
   const tonight = planLesson
-    ? { label: tonightLabel(Number(planLesson.order || 1), planMinutes), href: `${base}/course/${ref(planLesson.course)}?part=${planLesson.id}`, title: str(planLesson.title) }
+    ? { label: tonightLabel(Number(planLesson.order || 1), talkMinutes), href: `${base}/course/${ref(planLesson.course)}?part=${planLesson.id}`, title: displayTalkTitle({ title: str(planLesson.title), sourceTitle: str(planLesson.sourceTitle), courseTitle: '', part: Number(planLesson.order || 1), youtubeId: str(planLesson.youtubeId) }) }
     : null
-  const days = g.activeDays.size
+  const days = dayNumber(user)
   const clips = items.slice(0, 3)
   return (
     <AppFrame testId="home">
@@ -98,7 +109,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         {featureOn(portal, 'garden') ? (
         <section className="grow-banner" data-testid="grow-banner">
           <p className="eyebrow">Your growth</p>
-          <h2 data-testid="days-count">{days ? `${days} day${days === 1 ? '' : 's'} with us so far` : 'Your garden starts today'}</h2>
+          <h2 data-testid="days-count">{days <= 1 ? 'Your garden starts today' : `${days} days with us so far`}</h2>
           <span className="tree-art" aria-hidden />
           <p className="grow-sub">Five ways to see it</p>
           <Rings g={g} base={base} portal={portal} />
@@ -120,6 +131,8 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
             <Link className="pill gold" href={tonight.href} data-testid="plan-continue">Continue</Link>
           </section>
         ) : null}
+        <p className="eyebrow">This week</p>
+        <WeekStrip days={week.days} today={week.today} href={`${base}/week`} emptyHref={`${base}/week`} />
         <p className="eyebrow">Continue</p>
         <div data-testid="continue">
           {carryOn.map((row) => (
@@ -131,7 +144,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
           {fallback.map((course) => (
             <Link key={course.id} className="continue-row" href={`${base}/course/${course.id}`} data-testid="continue-row">
               <span className="thumb" style={shownPoster(course.poster) ? { backgroundImage: `url(${shownPoster(course.poster)})` } : undefined} />
-              <span className="t"><b>{course.title}</b><span className="sr-only">. </span><small>{course.speaker} · {plural(course.parts, 'part')}</small><DoorChips doors={course.doors} max={1} /></span>
+              <span className="t"><b>{tidyTalkTitle(course.title)}</b><span className="sr-only">. </span><small>{course.speaker} · {plural(course.parts, 'part')}</small><DoorChips doors={course.doors} max={1} /></span>
             </Link>
           ))}
           {!carryOn.length && !fallback.length ? <p className="muted">Start a course from Lanes and it will wait for you here.</p> : null}
@@ -169,7 +182,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
   return (
     <AppFrame testId="lanes">
       <div className="app-scroll">
-        <div className="app-head"><h1>Lanes</h1><span className="muted" style={{ fontSize: 13, fontWeight: 600 }} data-testid="day-number">Day {today}</span></div>
+        <div className="app-head"><h1>Lanes</h1><span className="muted" style={{ fontSize: 13, fontWeight: 600 }} data-testid="day-number">Day {today} with us</span></div>
         <Flash error={query.error} notice={query.notice} />
         <SearchBox action={`${base}/search`} defaultValue={typeof query.q === 'string' ? query.q : ''} />
         <p className="lead">Each lane is one theme. Tap a lane to watch its clips, or start a full course below.</p>
@@ -189,7 +202,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
               <div>
                 <small>Lane</small>
                 <h3>{lane.title}</h3>
-                <p>{snippet(first.hook || first.land || first.lessonTitle || '', 64)}</p>
+                <p>{LANE_BLURBS[lane.key] || snippet(first.hookTidy || first.scenic?.hook || first.courseTitle || '', 64)}</p>
                 <p>{first.speaker} · {count} {count === 1 ? 'clip' : 'clips'}</p>
               </div>
             </Link>
@@ -203,7 +216,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
             <div key={course.id} className="course-row" data-testid="path-course" data-open={course.open ? 'yes' : 'no'}>
               <span className="thumb" style={shownPoster(course.poster) ? { backgroundImage: `url(${shownPoster(course.poster)})` } : undefined} />
               <span className="t">
-                <b>{course.title}</b>
+                <b>{tidyTalkTitle(course.title)}</b>
                 <small>
                   {course.recommended ? <span className="drip" data-testid="recommended">Chosen for you · </span> : null}
                   {course.open ? `${course.parts} part${course.parts === 1 ? '' : 's'} · ${course.speaker}` : <span className="drip" data-testid="opens-on">Opens on day {course.opensOnDay}</span>}

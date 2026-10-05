@@ -96,12 +96,12 @@ test('Extraction: the Al-Nur hook is word for word from the transcript', () => {
 
 test('A2: the appetiser caption shows the hook, then the turn, then the land, each at its moment', () => {
   const lines = [{ at: 10, text: 'hook' }, { at: 40, text: 'turn' }, { at: 90, text: 'land' }]
-  assert.equal(captionIndex(lines, 0), 0)
+  assert.equal(captionIndex(lines, 0), -1)
   assert.equal(captionIndex(lines, 12), 0)
   assert.equal(captionIndex(lines, 39.9), 1)
   assert.equal(captionIndex(lines, 60), 1)
   assert.equal(captionIndex(lines, 95), 2)
-  assert.equal(captionIndex(undefined, 95), 0)
+  assert.equal(captionIndex(undefined, 95), -1)
 })
 
 test('K1: the kill list catches spaced letters, stretched spellings, words built on a listed root and rating a person', () => {

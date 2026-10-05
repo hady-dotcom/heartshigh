@@ -91,5 +91,5 @@ test('the first course follows the starting door, not only the exact clause', ()
   ]
   assert.equal(recommendLesson(3, cuts, [1, 2, 3]), 2, 'clause 3 and clause 7 share door 2')
   assert.equal(recommendLesson(22, cuts, [1, 2, 3]), 3)
-  assert.equal(recommendLesson(30, cuts, [1, 2, 3]), 1, 'nothing in door 16 falls back to the first lesson')
+  assert.equal(recommendLesson(30, cuts, [1, 2, 3]), null, 'nothing in door 16 stays empty rather than falling back')
 })
