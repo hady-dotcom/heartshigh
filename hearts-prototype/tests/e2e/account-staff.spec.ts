@@ -16,6 +16,7 @@ import {
 test.describe.configure({ mode: 'serial' })
 
 test('A03: the master desk sends a real test email through the catcher', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
   await signIn(page, 'master@hearts.test', 'hearts-master', '/master/settings')
   await page.waitForURL(/\/master\/settings/)
   await expect(page.getByTestId('email-panel')).toBeVisible()
@@ -90,6 +91,7 @@ test('A15: a confirmed learner can be made a teacher; an unconfirmed one cannot'
 })
 
 test('A11: the access desk emails a join link', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
   await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${BASE}/admin/access`)
   await page.waitForURL(/\/admin\/access/)
   const box = page.getByTestId('email-join').first()

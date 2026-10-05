@@ -13,6 +13,7 @@ import {
 test.describe.configure({ mode: 'serial' })
 
 test('A09: two-step enrol, TOTP sign-in, backup codes once, password alone cannot pass', async ({ page, request }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
   const email = uniqueEmail('a09-admin')
   const password = 'two-step-99'
   const master = await asUser('master@hearts.test', 'hearts-master')
@@ -90,6 +91,7 @@ test('A09: two-step enrol, TOTP sign-in, backup codes once, password alone canno
 })
 
 test('A09: a password alone cannot reach /master after a master enrols', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
   const email = uniqueEmail('a09-master')
   const password = 'master-step-1'
   const master = await asUser('master@hearts.test', 'hearts-master')

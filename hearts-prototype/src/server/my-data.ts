@@ -35,7 +35,6 @@ export const PERSONAL: Record<string, { field: string; many?: boolean }> = {
   'gather-photos': { field: 'postedBy' },
   'heart-states': { field: 'user' },
   'opening-answers': { field: 'user' },
-  'heart-contributions': { field: 'user' },
   'compass-attempts': { field: 'user' },
   'compass-serves': { field: 'user' },
 }
@@ -79,6 +78,7 @@ export const NOT_PERSONAL = new Set([
   'lanes',
   'opening-scenes',
   'opening-configs',
+  'heart-contributions',
   'master-flags',
   'persona-bands',
   'compass-settings',
@@ -120,6 +120,7 @@ export function missingPersonalCoverage() {
 
 async function rowsFor(payload: Payload, collection: string, field: string, userId: number) {
   if (!(collection in (payload.collections || {}))) return []
+  try {
   const found = await payload.find({
     collection: collection as 'users',
     overrideAccess: true,
@@ -139,6 +140,9 @@ async function rowsFor(payload: Payload, collection: string, field: string, user
     delete row.dataExportToken
     return row
   })
+  } catch {
+    return []
+  }
 }
 
 export async function gatherMyData(payload: Payload, userId: number) {

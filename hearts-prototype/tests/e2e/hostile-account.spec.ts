@@ -7,6 +7,7 @@ import {
   findUserId,
   joinLearner,
   postAction,
+  sessionUserId,
   uniqueEmail,
   waitForMail,
 } from './account-helpers'
@@ -21,7 +22,7 @@ test('A17: a portal admin cannot pause someone in another portal, and a paused s
   await expect(page.getByTestId('me-name').or(page.getByTestId('settings'))).toBeVisible()
 
   const master = await asUser('master@hearts.test', 'hearts-master')
-  const learnerId = await findUserId(master, email)
+  const learnerId = await sessionUserId(page)
   const leeds = await findPortalId(master, 'leeds')
   const otherEmail = uniqueEmail('a17-leeds-admin')
   const other = await master.post('/api/users', {

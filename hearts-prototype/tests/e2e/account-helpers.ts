@@ -15,7 +15,9 @@ export function uniqueEmail(label: string) {
 export async function asUser(email: string, password: string) {
   const ctx = await playwrightRequest.newContext({ baseURL: E2E_BASE, extraHTTPHeaders: { accept: 'application/json' } })
   const login = await ctx.post('/api/users/login', { data: { email, password } })
-  expect(login.ok(), `login ${email} (${login.status()})`).toBeTruthy()
+  const body = await login.json().catch(() => ({}))
+  expect(login.ok(), `login ${email} (${login.status()} ${JSON.stringify(body)})`).toBeTruthy()
+  expect(body.user?.id || body.token, `login body ${email}`).toBeTruthy()
   return ctx
 }
 
@@ -37,7 +39,7 @@ export async function joinLearner(page: Page, name: string, email: string, passw
 
 export async function caughtMail() {
   const res = await fetch(`${E2E_BASE}/api/hearts/mail`)
-  expect(res.ok(), `mail catcher ${res.status()}`).toBeTruthy()
+  expect(res.ok, `mail catcher ${res.status}`).toBeTruthy()
   const body = (await res.json()) as { emails: { id: string; to: string; subject: string; text: string; html: string }[] }
   return body.emails || []
 }
@@ -75,17 +77,31 @@ export async function confirmFromInbox(page: Page, email: string) {
   await expect(page.getByTestId('notice')).toContainText('confirmed')
 }
 
+function whereEquals(field: string, value: string) {
+  return `where=${encodeURIComponent(JSON.stringify({ [field]: { equals: value } }))}`
+}
+
 export async function findUserId(master: APIRequestContext, email: string) {
-  const body = await (await master.get(`/api/users?where[email][equals]=${encodeURIComponent(email)}&depth=0&limit=1`)).json()
+  const res = await master.get(`/api/users?${whereEquals('email', email)}&depth=0&limit=1`)
+  const body = await res.json()
   const id = body.docs?.[0]?.id
-  expect(id, `user ${email}`).toBeTruthy()
+  expect(id, `user ${email} (${res.status()} ${JSON.stringify(body).slice(0, 240)})`).toBeTruthy()
   return Number(id)
 }
 
 export async function findPortalId(master: APIRequestContext, slug: string) {
-  const body = await (await master.get(`/api/portals?where[slug][equals]=${slug}&depth=0&limit=1`)).json()
-  const id = body.docs?.[0]?.id
-  expect(id, `portal ${slug}`).toBeTruthy()
+  const res = await master.get(`/api/portals?${whereEquals('slug', slug)}&depth=0&limit=20`)
+  const body = await res.json()
+  const id = (body.docs || []).find((row: { slug?: string }) => row.slug === slug)?.id || body.docs?.[0]?.id
+  expect(id, `portal ${slug} (${res.status()} ${JSON.stringify(body).slice(0, 240)})`).toBeTruthy()
+  return Number(id)
+}
+
+export async function sessionUserId(page: Page) {
+  const res = await page.request.get('/api/users/me')
+  const body = await res.json()
+  const id = body.user?.id || body.id
+  expect(id, `session user ${res.status()}`).toBeTruthy()
   return Number(id)
 }
 
