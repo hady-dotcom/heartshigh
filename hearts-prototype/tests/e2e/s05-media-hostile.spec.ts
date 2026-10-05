@@ -1,4 +1,4 @@
-import { expect, request as playwrightRequest, test, type APIResponse } from '@playwright/test'
+import { expect, request as playwrightRequest, test, type APIRequestContext, type APIResponse } from '@playwright/test'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { E2E_BASE } from '../env'
@@ -16,6 +16,19 @@ async function as(email: string, password: string) {
 
 const json = async (response: APIResponse) => (await response.json().catch(() => ({}))) as Record<string, any>
 
+async function get(ctx: APIRequestContext, path: string, tries = 4) {
+  let last: unknown
+  for (let attempt = 0; attempt < tries; attempt++) {
+    try {
+      return await ctx.get(path)
+    } catch (error) {
+      last = error
+      await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)))
+    }
+  }
+  throw last
+}
+
 function denied(status: number) {
   return status === 403 || status === 404
 }
@@ -27,10 +40,11 @@ test('S05: learner B cannot list or fetch learner A private answer media', async
   const teacher = await as('elm-teacher@hearts.test', 'portal-teacher')
   const guest = await playwrightRequest.newContext({ baseURL: E2E_BASE })
 
-  const nur = (await json(await master.get('/api/lessons?where[youtubeId][equals]=NIR88RRpat4&depth=0'))).docs[0]
+  const nur = (await json(await get(master, '/api/lessons?where[youtubeId][equals]=NIR88RRpat4&depth=0'))).docs[0]
   const point = (
     await json(
-      await master.get(
+      await get(
+        master,
         `/api/engagement-points?where[lesson][equals]=${nur.id}&where[kind][equals]=reflection&where[status][equals]=published&depth=0&limit=10`,
       ),
     )
@@ -47,31 +61,31 @@ test('S05: learner B cannot list or fetch learner A private answer media', async
   expect(saved.ok(), await saved.text()).toBeTruthy()
   const result = await json(saved)
   expect(result.answerId, 'alice answer').toBeTruthy()
-  const answer = await json(await alice.get(`/api/answers/${result.answerId}?depth=0`))
+  const answer = await json(await get(alice, `/api/answers/${result.answerId}?depth=0`))
   const mediaId = typeof answer.image === 'object' && answer.image ? Number(answer.image.id) : Number(answer.image)
   expect(mediaId, 'alice media').toBeTruthy()
-  const owned = await json(await alice.get(`/api/media/${mediaId}?depth=0`))
+  const owned = await json(await get(alice, `/api/media/${mediaId}?depth=0`))
   const filename = String(owned.filename || '')
 
-  const listed = await json(await bob.get('/api/media?limit=100&depth=0'))
+  const listed = await json(await get(bob, '/api/media?limit=100&depth=0'))
   const listedDocs = (listed.docs || []) as { id: number }[]
   expect(listedDocs.some((row) => row.id === mediaId)).toBeFalsy()
 
-  const byId = await bob.get(`/api/media/${mediaId}?depth=0`)
+  const byId = await get(bob, `/api/media/${mediaId}?depth=0`)
   expect(denied(byId.status()), `bob by id ${byId.status()}`).toBeTruthy()
 
-  const byFile = filename ? await bob.get(`/api/media/file/${encodeURIComponent(filename)}`) : null
+  const byFile = filename ? await get(bob, `/api/media/file/${encodeURIComponent(filename)}`) : null
   if (byFile) expect(denied(byFile.status()), `bob by file ${byFile.status()}`).toBeTruthy()
 
-  const signed = await bob.get(`/api/hearts/file/${mediaId}`)
+  const signed = await get(bob, `/api/hearts/file/${mediaId}`)
   expect(signed.status()).toBe(403)
 
-  const teacherPrivate = await teacher.get(`/api/hearts/file/${mediaId}`)
+  const teacherPrivate = await get(teacher, `/api/hearts/file/${mediaId}`)
   expect(denied(teacherPrivate.status()), 'teacher cannot open an unshared answer file').toBeTruthy()
 
-  const ownerById = await alice.get(`/api/media/${mediaId}?depth=0`)
+  const ownerById = await get(alice, `/api/media/${mediaId}?depth=0`)
   expect(ownerById.ok(), 'owner can read their media row').toBeTruthy()
-  const ownerFetch = await alice.get(`/api/hearts/file/${mediaId}`)
+  const ownerFetch = await get(alice, `/api/hearts/file/${mediaId}`)
   expect(ownerFetch.ok(), 'owner can open their file').toBeTruthy()
 
   const sharedSaved = await alice.post('/api/answers', {
@@ -84,17 +98,17 @@ test('S05: learner B cannot list or fetch learner A private answer media', async
   })
   expect(sharedSaved.ok(), await sharedSaved.text()).toBeTruthy()
   const sharedResult = await json(sharedSaved)
-  const sharedAnswer = await json(await alice.get(`/api/answers/${sharedResult.answerId}?depth=0`))
+  const sharedAnswer = await json(await get(alice, `/api/answers/${sharedResult.answerId}?depth=0`))
   const sharedMediaId =
     typeof sharedAnswer.image === 'object' && sharedAnswer.image ? Number(sharedAnswer.image.id) : Number(sharedAnswer.image)
-  const teacherShared = await teacher.get(`/api/hearts/file/${sharedMediaId}`)
+  const teacherShared = await get(teacher, `/api/hearts/file/${sharedMediaId}`)
   expect(teacherShared.ok(), 'teacher can open a shared answer file').toBeTruthy()
-  const bobShared = await bob.get(`/api/hearts/file/${sharedMediaId}`)
+  const bobShared = await get(bob, `/api/hearts/file/${sharedMediaId}`)
   expect(denied(bobShared.status()), 'learner B still cannot open a teacher-shared file').toBeTruthy()
 
-  const publicStill = await guest.get('/theme/lattice.svg')
+  const publicStill = await get(guest, '/theme/lattice.svg')
   expect(publicStill.ok(), 'public library / theme art still loads signed out').toBeTruthy()
-  const guestMedia = await guest.get('/api/media?limit=5&depth=0')
+  const guestMedia = await get(guest, '/api/media?limit=5&depth=0')
   expect(guestMedia.ok(), 'signed-out people cannot list media').toBeFalsy()
 
   await page.goto(`/login?next=${encodeURIComponent('/p/east-london/garden/workbook')}`)
