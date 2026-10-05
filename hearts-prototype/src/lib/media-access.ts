@@ -32,6 +32,12 @@ export function isPublicPurpose(purpose: string | null | undefined) {
   return purpose === 'portal-asset' || purpose === 'film'
 }
 
+/** The app's own authorised file URL. Payload's `/api/media/file/…` stays gated by Media.read. */
+export function heartsFileUrl(media: unknown) {
+  const id = idOf(media)
+  return id ? `/api/hearts/file/${id}` : null
+}
+
 /** Same sharing rules as Answers.ownerOrStaff(true, 'keepPrivate'). */
 export function canReadLinkedAnswer(user: MediaReader, answer: LinkedAnswer) {
   if (!user || !answer) return false

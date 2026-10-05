@@ -2,8 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import type { Access, Where } from 'payload'
 import { portalIdOf } from './lib/ids'
-import { canReadMedia, MEDIA_PURPOSES, mediaListWhere } from './lib/media-access'
-import { findLinkedAnswer } from './server/media'
+import { MEDIA_PURPOSES } from './lib/media-access'
 import { slugProblem } from './lib/text-safety'
 import { authorTextProblems, markupProblems } from './lib/opening-data'
 import { changedTierFields, horsCapOf, saidInTalk, TIER_TIMING_FIELDS, tierProblem, timingProblems } from './lib/tiers'
@@ -228,18 +227,6 @@ export const Users: CollectionConfig = {
  * thumbnails, speaker stills and scenic art that live under /clips, /speakers,
  * /slides and /theme are not Media rows and stay readable signed out.
  */
-const mediaReadAccess: Access = async ({ req, id }) => {
-  const user = req.user as { id: number; role?: string; tenants?: { tenant?: unknown }[] } | null
-  if (!user) return false
-  if (!id) return mediaListWhere(user)
-  const payload = req.payload
-  if (!payload?.findByID) return false
-  const media = await payload.findByID({ collection: 'media', id, overrideAccess: true, depth: 0 }).catch(() => null)
-  if (!media) return false
-  const answer = await findLinkedAnswer(payload, Number(media.id))
-  return canReadMedia(user, media, answer, false)
-}
-
 export const Media: CollectionConfig = {
   slug: 'media',
   upload: {
