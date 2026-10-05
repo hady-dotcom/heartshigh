@@ -9,15 +9,16 @@ export function clipsFromRoute(
   clips: Record<string, FeedItem>,
   laneTitles: Record<string, string> = {},
 ): FeedItem[] {
-  const mapped = slots
-    .map((slot) => {
-      const clip = clips[String(slot.cutId)]
-      if (!clip) return null
-      return slot.laneKey
+  const mapped: FeedItem[] = []
+  for (const slot of slots) {
+    const clip = clips[String(slot.cutId)]
+    if (!clip) continue
+    mapped.push(
+      slot.laneKey
         ? { ...clip, laneKey: slot.laneKey, lane: slot.laneKey, laneLabel: laneTitles[slot.laneKey] || clip.laneLabel }
-        : { ...clip, laneKey: null }
-    })
-    .filter((clip): clip is FeedItem => Boolean(clip))
+        : { ...clip, laneKey: null },
+    )
+  }
   if (mapped.length) return mapped
   return Object.values(clips)
 }
