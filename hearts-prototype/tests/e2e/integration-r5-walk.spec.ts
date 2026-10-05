@@ -100,6 +100,7 @@ test('integration-r5 phone walk: bar, captions, course, desk, hostile file', asy
   }
 
   await page.context().clearCookies()
+  await page.setViewportSize({ width: 1440, height: 900 })
   await signIn(page, 'elm-admin@hearts.test', `${PORTAL}/admin`)
   await page.goto(`${PORTAL}/admin`)
   const desk = page.getByTestId('desk-nav')
