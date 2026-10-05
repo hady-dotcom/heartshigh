@@ -114,25 +114,30 @@
 
 .plaque-name {
   position: absolute;
-  left: 50%;
-  top: 91.4%;
+  /* Centre of the dark plaque face on the 512×640 planter. The face is about 39% of the canvas wide and one line tall. */
+  left: 51.2%;
+  top: 91.25%;
   transform: translate(-50%, -50%);
   z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 36%;
   min-width: 44px;
   min-height: 44px;
   margin: 0;
-  padding: 0 2px;
-  font-family: Cinzel, 'Times New Roman', serif;
-  font-weight: 600;
-  font-size: 11pt;
+  padding: 0;
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: clamp(7.5px, 2.3vw, 9px);
   line-height: 1;
   letter-spacing: 0.02em;
   color: #f6e7c3;
+  text-align: center;
   text-decoration: none;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+  text-shadow: none;
   white-space: nowrap;
   pointer-events: auto;
 }
