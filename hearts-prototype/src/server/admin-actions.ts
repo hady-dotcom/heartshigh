@@ -317,12 +317,12 @@ export async function handleAdminActions(
       detail: { count: created.length, ids: created },
     })
     const store = (globalThis as typeof globalThis & { __heartsImportPasswords?: Record<string, unknown> }).__heartsImportPasswords || {}
-    const token = `import-${Date.now()}`
-    store[token] = { passwords, at: now().toISOString() }
+    const sheetToken = `import-${Date.now()}`
+    store[sheetToken] = { passwords, at: now().toISOString() }
     ;(globalThis as typeof globalThis & { __heartsImportPasswords?: Record<string, unknown> }).__heartsImportPasswords = store
     const url = new URL(next, 'http://local')
     url.searchParams.set('imported', String(created.length))
-    url.searchParams.set('sheet', token)
+    url.searchParams.set('sheet', sheetToken)
     return redirectTo(`${url.pathname}?${url.searchParams.toString()}`, undefined, `${created.length === 1 ? '1 person is' : `${created.length} people are`} in the portal.`)
   }
 
