@@ -1,0 +1,19 @@
+Postgres 16 on this VM. Empty public schema, then payload.db.migrate() from src/migrations (including 20261004_233000_talk_extracts), then npm seed, then the app importer (planBuffer + applyPlan). HEARTS_DB_PUSH was not set.
+
+Old single-extract fields: 31 talk-tiers on the seeded database. Wipe of talk-extracts then migrateTiersToExtracts created 62 extracts. Every hors pointed at its appetiser. Nothing lost.
+
+Sheet: content/sheets/hearts-density-30-extracts.xlsx
+Sheet build: 30 talks (20 nested study + 10 confirm-set new talks), 1150 AI-passed extracts as suggested (757 hors, 393 appetisers, 354 with parent_start), 99 questions as drafts.
+
+Plan: 0 errors. Verbatim-on-suggested and same-type overlap are warnings, so every passing extract is kept.
+
+Talks (lessons): 56 (30 density-sheet talks with 10 or more extracts; 24 new talk rows from the confirm set and unmatched study talks; 6 study talks matched existing seed talks)
+Extracts: 1212 {"appetiser":424,"hors":788} (1150 from the master sheet, plus the copied talk-tier pair on seeded talks)
+Extract status: {"appetiser:suggested":424,"hors:suggested":788}
+Parent links set: 313
+Questions: 184 (179 draft)
+
+Density for 3 talks against 1 hors per 6 min and 1 appetiser per 15 min (approved vs suggested vs target):
+  The Prayer of the Righteous, Lesson 1: 112 min · hors 0 approved / 64 suggested of 19 · appetisers 0 approved / 22 suggested of 7
+  How to Give Good Advice: 73 min · hors 0 approved / 46 suggested of 12 · appetisers 0 approved / 14 suggested of 5
+  Stop Blaming Yourself for What Was Written. The Names, Class 31: Al-Qabid: 61 min · hors 0 approved / 43 suggested of 10 · appetisers 0 approved / 17 suggested of 4

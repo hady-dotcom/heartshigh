@@ -1,0 +1,8 @@
+Proof for many extracts per talk.
+admin-timeline-nested-hors.png  nested hors under an approved appetiser
+admin-review-queue.png         suggested review queue (A R P J K)
+admin-timeline-nested.png      density bar and suggested timeline
+learner-feed-several.png       learner feed hors from How to Give Good Advice
+approve-next-learner-proof.mp4 approve and next, then hors to appetiser to talk
+import-log.txt                 Postgres migrate + importer counts
+hearts-density-30-extracts.xlsx 30 talks, 1150 suggested extracts
