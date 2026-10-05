@@ -44,11 +44,12 @@ test('features that exist on live today default ON, so existing portals do not c
   assert.ok(shipped.every((row) => row.defaultOn), 'a shipped feature defaulted off')
 })
 
-test('unmerged work is in the registry so later PRs add one featureOn check', () => {
+test('merged live, missions, insights and experiments are shipped and still named by their PRs', () => {
   for (const key of ['live', 'missions', 'insights', 'experiments'] as const) {
     const feature = FEATURES.find((row) => row.key === key)
     assert.ok(feature, key)
-    assert.equal(feature!.shipped, false)
+    assert.equal(feature!.shipped, true)
+    assert.equal(feature!.defaultOn, true)
     assert.ok(feature!.plugIn.some((line) => /PR #\d+/.test(line)), key)
   }
 })

@@ -3,9 +3,8 @@
  *
  * Missing or null `portal.features` means “use each feature’s default”.
  * Features that already exist on live default ON, so existing portals do not
- * change when this lands. Unmerged work (Live, missions, insights, experiments)
- * is listed here with exact plug-in points; those branches add one
- * `featureOn(portal, key)` check each.
+ * change when this lands. Live, missions, insights and experiments shipped in
+ * the first r5 merge and stay in this registry with their plug-in points.
  */
 
 export const FEATURE_KEYS = [

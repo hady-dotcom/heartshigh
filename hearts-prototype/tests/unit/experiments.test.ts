@@ -245,7 +245,7 @@ test('kill and start history lines are written in words', () => {
   assert.equal(usualWords(lanes), 'Lanes')
   assert.equal(experimentAuditLine('experiment.start', {}, lanes), 'Test started')
   assert.equal(experimentAuditLine('experiment.kill', { off: true }, lanes), 'Kill switch on: everyone back to Lanes')
-  assert.equal(experimentAuditLine('experiment.kill', {}, { slot: 'feed-cta-label', variants: [] }), 'Kill switch on: everyone back to Learn more')
+  assert.equal(experimentAuditLine('experiment.kill', {}, { slot: 'feed-cta-label', variants: [] }), 'Kill switch on: everyone back to Watch the 3-minute version')
 })
 
 test('lanes tab draft is a valid experiment on the whitelist', () => {
