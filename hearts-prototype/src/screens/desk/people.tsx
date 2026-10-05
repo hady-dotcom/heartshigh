@@ -40,6 +40,9 @@ export async function TeachScreen(ctx: Ctx) {
   const picked = evidence.find((answer) => answer.id === Number(query.answer)) || evidence[0]
   const here = `${base}/admin/teach`
   const today = dateKey(now())
+  const consentByLearner = new Map(
+    await Promise.all(learners.map(async (learner) => [learner.id, await learnerConsentHint(payload, learner.id, portal.id)] as const)),
+  )
   const slotsFor = (learnerId: number): PlanSlot[] => {
     const slots: PlanSlot[] = []
     for (const plan of plans) {
@@ -72,11 +75,11 @@ export async function TeachScreen(ctx: Ctx) {
               <th />
             </tr></thead>
             <tbody>
-              {await Promise.all(learners.map(async (learner) => {
+              {learners.map((learner) => {
                 const done = completions.filter((row) => ref(row.user) === learner.id)
                 const progress = onTimeProgress(slotsFor(learner.id), done.map((row) => ({ lessonId: ref(row.lesson) || 0, watchedOn: dateKey(row.watchedAt || row.createdAt) })), today)
                 const onTime = formatOnTime(progress)
-                const consent = await learnerConsentHint(payload, learner.id, portal.id)
+                const consent = consentByLearner.get(learner.id)
                 return (
                   <tr key={learner.id} data-testid="learner-row">
                     <td><b>{str(learner.name)}</b>{learner.audience && learner.audience !== 'learner' ? <div className="hint">{str(learner.audience)}</div> : null}</td>
@@ -101,7 +104,7 @@ export async function TeachScreen(ctx: Ctx) {
                     </td>
                   </tr>
                 )
-              }))}
+              })}
               {!learners.length ? <tr><td colSpan={9} className="empty">Nobody has joined with a learner code yet.</td></tr> : null}
             </tbody>
           </table>

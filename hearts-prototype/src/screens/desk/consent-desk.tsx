@@ -57,6 +57,12 @@ export async function ChildrenScreen(ctx: Ctx) {
   const codes = await rows(payload, 'access-codes', { portal: { equals: portal.id } }, { sort: 'code' })
   const flags = await rows(payload, 'child-code-flags', {}, { limit: 200 })
   const flagged = new Set(flags.filter((row) => row.forChildren).map((row) => Number(typeof row.accessCode === 'object' && row.accessCode && 'id' in (row.accessCode as object) ? (row.accessCode as { id: number }).id : row.accessCode)))
+  const childRows = await Promise.all(
+    people.map(async (learner) => {
+      const { age } = await loadAgeProfile(payload, learner.id)
+      return { learner, age, label: guardianStatusLabel(age) }
+    }),
+  )
   return (
     <AdminFrame ctx={ctx} active="children" title="Children" intro="Age bands, guardian consent, and codes meant for children." testId="admin-children">
       <section className="panel">
@@ -77,10 +83,7 @@ export async function ChildrenScreen(ctx: Ctx) {
           <table className="data">
             <thead><tr><th>Name</th><th>Guardian consent</th><th /></tr></thead>
             <tbody>
-              {await Promise.all(people.map(async (learner) => {
-                const { age } = await loadAgeProfile(payload, learner.id)
-                const label = guardianStatusLabel(age)
-                return (
+              {childRows.map(({ learner, age, label }) => (
                   <tr key={learner.id} data-testid="child-row">
                     <td><b>{str(learner.name)}</b><div className="hint">{age?.ageBand || 'Age not asked yet'}</div></td>
                     <td data-testid="guardian-status">{label}</td>
@@ -94,8 +97,7 @@ export async function ChildrenScreen(ctx: Ctx) {
                       ) : null}
                     </td>
                   </tr>
-                )
-              })}
+              ))}
               {!people.length ? <tr><td colSpan={3} className="empty">Nobody has joined yet.</td></tr> : null}
             </tbody>
           </table>
