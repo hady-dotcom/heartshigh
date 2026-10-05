@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { hostShouldShow, planFilmAdvance, playbackAction, shouldNudgePlay, stepControlBox, stepControlInside, verticalSwipe } from '../../src/lib/film-advance'
+import { PLAY_NUDGE_FOR_MS, hostShouldShow, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, verticalSwipe } from '../../src/lib/film-advance'
 
 const visible = { key: '14:hors', hasPlayer: true }
 const preloaded = { key: '22:hors', hasPlayer: true }
@@ -27,13 +27,20 @@ test('with no warmed iframe, a preload that already holds the clip is played and
   assert.deepEqual(planFilmAdvance(0, '14:hors', [empty, preloaded]), { target: 1, action: 'load' })
 })
 
-test('a cued or paused visible host is nudged until it plays', () => {
+test('a cued film is asked to play for several seconds, not one quick burst', () => {
   for (const state of [-1, 2, 5]) assert.equal(shouldNudgePlay(state, true, false, 0), true)
+  assert.equal(shouldNudgePlay(5, true, false, PLAY_NUDGE_FOR_MS - 1), true)
   assert.equal(shouldNudgePlay(1, true, false, 0), false)
+  assert.equal(shouldNudgePlay(3, true, false, 0), false)
   assert.equal(shouldNudgePlay(0, true, false, 0), false)
   assert.equal(shouldNudgePlay(5, false, false, 0), false)
   assert.equal(shouldNudgePlay(5, true, true, 0), false)
-  assert.equal(shouldNudgePlay(5, true, false, 5), false)
+  assert.equal(shouldNudgePlay(5, true, false, PLAY_NUDGE_FOR_MS), false)
+})
+
+test('an older prepare must not load over the clip just stepped to', () => {
+  assert.equal(prepareIsCurrent(4, 4), true)
+  assert.equal(prepareIsCurrent(3, 4), false)
 })
 
 test('the chosen host stays visible through a clip change, and a parked host stays hidden', () => {
@@ -48,29 +55,18 @@ test('swipe up is the next hors d’oeuvre and swipe down stays on the lane', ()
   assert.equal(verticalSwipe(80), 'lane')
 })
 
-test('Next and Prev sit inside a 390×844 phone and are not the clipped control', () => {
-  for (const which of ['next', 'prev'] as const) {
-    assert.equal(stepControlInside(which), true)
-    const box = stepControlBox(which)
-    assert.ok(box.left >= 0, which)
-    assert.ok(box.right <= 390, which)
-    assert.ok(box.top >= 0 && box.bottom <= 844, which)
-  }
-  assert.equal(stepControlBox('next').left, 306)
-  assert.equal(stepControlBox('prev').left, 12)
-
+test('the film has no Prev/Next chrome, and the ladder stays a small text row', () => {
   const css = readFileSync(new URL('../../src/app/(frontend)/journey.css', import.meta.url), 'utf8')
-  assert.match(css, /\.j-step\.prev \{ left: 12px; \}/)
-  assert.match(css, /\.j-step\.next \{ right: 12px; \}/)
-  assert.match(css, /\.j-step \{[\s\S]*top: 248px;/)
-  assert.match(css, /\.j-step \{[\s\S]*width: 72px;/)
-  assert.match(css, /\.j-step \{[\s\S]*min-height: 48px;/)
-
+  assert.equal(css.includes('.j-step'), false)
+  assert.match(css, /\.j-level-choices button \{[\s\S]*font-size: 12px;/)
+  assert.equal(css.includes('min(46vw, 188px)'), false)
   const source = readFileSync(new URL('../../src/components/journey/journey.tsx', import.meta.url), 'utf8')
-  const hidden = source.slice(source.indexOf('className="sr-only"'), source.indexOf('className="sr-only"') + 900)
-  assert.equal(hidden.includes('gesture-next'), false)
-  assert.equal(hidden.includes('gesture-prev'), false)
-  assert.match(source, /data-testid="gesture-next"/)
-  assert.match(source, /data-testid="gesture-prev"/)
-  assert.match(source, /className="j-step next"/)
+  assert.equal(source.includes('className="j-step'), false)
+  assert.equal(source.includes('Back 10 s'), false)
+  assert.equal(source.includes('Forward 10 s'), false)
+  assert.equal(source.includes('skip-back'), false)
+  assert.equal(source.includes('skip-forward'), false)
+  const hidden = source.slice(source.indexOf('className="sr-only"'), source.indexOf('className="sr-only"') + 1200)
+  assert.match(hidden, /data-testid="gesture-next"/)
+  assert.match(hidden, /aria-hidden="true"/)
 })

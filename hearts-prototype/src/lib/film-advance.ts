@@ -27,11 +27,20 @@ export function playbackAction(hold: HostHold, specKey: string): FilmAdvance['ac
   return 'load'
 }
 
-/** UNSTARTED, PAUSED, CUED. ENDED is not stuck — the feed moves on. */
+/** UNSTARTED, PAUSED, CUED. ENDED is not stuck — the feed moves on. BUFFERING is left alone. */
 const STUCK = new Set([-1, 2, 5])
 
-export function shouldNudgePlay(state: number, armed: boolean, userPaused: boolean, tries: number, limit = 5) {
-  return armed && !userPaused && tries < limit && STUCK.has(state)
+/** Keep asking for several seconds. Five quick tries (~1s) gave up while YouTube was still settling on CUED. */
+export const PLAY_NUDGE_FOR_MS = 8000
+export const PLAY_NUDGE_EVERY_MS = 400
+
+export function shouldNudgePlay(state: number, armed: boolean, userPaused: boolean, elapsedMs: number, limitMs = PLAY_NUDGE_FOR_MS) {
+  return armed && !userPaused && elapsedMs < limitMs && STUCK.has(state)
+}
+
+/** A prepare from an older Next must not load over the clip the learner just stepped to. */
+export function prepareIsCurrent(stamp: number, current: number) {
+  return stamp === current
 }
 
 /**
@@ -47,18 +56,4 @@ export function hostShouldShow(isChosen: boolean, revealed: boolean, blocked: bo
 /** Swipe up steps the hors d'oeuvre order. Swipe down still changes lane. */
 export function verticalSwipe(dy: number): 'next' | 'lane' {
   return dy < 0 ? 'next' : 'lane'
-}
-
-/** Next / Prev hit boxes inside a phone. Kept in step with .j-step in journey.css. */
-export const STEP_CONTROL = { top: 248, width: 72, height: 48, inset: 12 } as const
-
-export function stepControlBox(which: 'next' | 'prev', viewport = { width: 390, height: 844 }) {
-  const { top, width, height, inset } = STEP_CONTROL
-  const left = which === 'prev' ? inset : viewport.width - inset - width
-  return { left, top, width, height, right: left + width, bottom: top + height }
-}
-
-export function stepControlInside(which: 'next' | 'prev', viewport = { width: 390, height: 844 }) {
-  const box = stepControlBox(which, viewport)
-  return box.left >= 0 && box.top >= 0 && box.right <= viewport.width && box.bottom <= viewport.height && box.width >= 44 && box.height >= 44
 }

@@ -7,27 +7,6 @@
 }
 .journey.phase-feed { touch-action: none; overscroll-behavior: none; }
 .journey a, .journey img { -webkit-user-drag: none; }
-/* Next and Prev are real hit targets inside a 390×844 phone. Numbers match STEP_CONTROL in film-advance.ts. */
-.j-step-nav { position: absolute; inset: 0; z-index: 19; pointer-events: none; }
-.j-step {
-  position: absolute;
-  top: 248px;
-  z-index: 19;
-  width: 72px;
-  min-height: 48px;
-  padding: 0 8px;
-  border: 1px solid rgba(241, 213, 138, 0.9);
-  border-radius: 999px;
-  background: rgba(14, 42, 43, 0.92);
-  color: #f6eedc;
-  font-weight: 700;
-  font-size: 15px;
-  line-height: 1.2;
-  pointer-events: auto;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
-}
-.j-step.prev { left: 12px; }
-.j-step.next { right: 12px; }
 
 /* Sky: eight layers from dusk to first light, lit one by one as the scenes go by. */
 .j-sky, .j-sky-layer { position: absolute; inset: 0; pointer-events: none; }
@@ -351,35 +330,36 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-level-choices {
   position: absolute;
   left: 16px;
-  /* Lower-left quarter of the full-bleed player, above the speaker row so the buttons stay readable. */
-  bottom: calc(272px + var(--safe-bottom));
+  bottom: calc(248px + var(--safe-bottom));
   z-index: 8;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
-  width: min(46vw, 188px);
+  align-items: flex-start;
+  gap: 2px;
+  width: max-content;
+  max-width: 42%;
   pointer-events: auto;
 }
 .j-level-choices button {
   appearance: none;
-  border: 1px solid rgba(241, 213, 138, 0.85);
-  background: rgba(14, 42, 43, 0.92);
-  color: #f6eedc;
-  border-radius: 999px;
-  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: rgba(246, 238, 220, 0.78);
+  border-radius: 0;
+  padding: 2px 0;
   font-weight: 700;
-  font-size: 15px;
-  line-height: 1.2;
-  text-align: center;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+  line-height: 1.3;
+  text-align: left;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  box-shadow: none;
 }
 .j-level-choices button.on {
-  background: #d4a84b;
-  color: #1a1408;
-  border-color: #d4a84b;
+  background: transparent;
+  color: #fff;
+  border: 0;
 }
-.journey.phase-feed.overlay:not([data-words-in-picture='yes']) .j-chrome .caption { left: calc(16px + min(46vw, 188px) + 12px); }
+.journey.phase-feed.overlay:not([data-words-in-picture='yes']) .j-chrome .caption { left: 22px; }
 .journey[data-mode='appetiser']:not(.strict):not([data-words-in-picture='yes']) .j-level-choices {
   position: relative;
   left: auto;
@@ -389,11 +369,11 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   align-self: flex-start;
 }
 .strict .j-level-choices {
-  top: calc(48px + var(--safe-top) + min(430px, 100vw) * 9 / 16 - 140px);
+  top: calc(48px + var(--safe-top) + min(430px, 100vw) * 9 / 16 - 44px);
   bottom: auto;
 }
 .journey[data-words-in-picture='yes'] .j-level-choices {
-  top: calc(190px + var(--safe-top) + min(430px, 100vw) * 9 / 16 - 140px);
+  top: calc(190px + var(--safe-top) + min(430px, 100vw) * 9 / 16 - 44px);
   bottom: auto;
 }
 .j-credits .j-speaker { margin-top: 0; }
