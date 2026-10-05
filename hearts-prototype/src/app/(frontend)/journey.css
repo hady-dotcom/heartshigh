@@ -7,6 +7,8 @@
 }
 .journey.phase-feed { touch-action: none; overscroll-behavior: none; }
 .journey a, .journey img { -webkit-user-drag: none; }
+/* Above the film, so a real click on Next clip reaches the button. The global clip rect would give it no hit target. */
+.journey > .sr-only { z-index: 8; clip: auto; overflow: hidden; }
 
 /* Sky: eight layers from dusk to first light, lit one by one as the scenes go by. */
 .j-sky, .j-sky-layer { position: absolute; inset: 0; pointer-events: none; }
@@ -103,13 +105,15 @@
 .j-clip { position: absolute; inset: 0; z-index: 2; }
 .phase-feed .j-clip, .phase-handoff .j-clip { background: #000; }
 .phase-handoff .j-clip { background: transparent; }
-.j-slot { position: absolute; inset: 0; overflow: hidden; }
-.yt-host { position: absolute; inset: 0; }
-.yt-host.off { left: -200vw; right: auto; width: 100%; }
+.j-slot { position: absolute; inset: 0; overflow: hidden; isolation: isolate; }
+.yt-host { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+/* A parked host used to slide to -200vw. The cropped film is wider than the phone, so that shift left the picture sticking back over the next hors d'oeuvre. */
+.yt-host.off { visibility: hidden !important; pointer-events: none !important; }
+.yt-host.off iframe { top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; transform: none !important; }
 /* The film is cropped to fill the phone; the extra 88px above and below keep YouTube's title and control bars off screen. */
-.yt-host iframe { position: absolute; top: -88px; left: 50%; height: calc(100% + 176px); width: max(100%, calc((100dvh + 176px) * 16 / 9)); transform: translateX(-50%); border: 0; }
+.yt-host iframe { position: absolute; top: -88px; left: 50%; height: calc(100% + 176px); width: max(100%, calc((100dvh + 176px) * 16 / 9)); transform: translateX(-50%); border: 0; z-index: 0; }
 .yt-title-mask { position: absolute; left: 0; right: 0; top: 0; height: 56px; z-index: 2; pointer-events: none; background: linear-gradient(#000 0 70%, transparent); }
-.yt-host iframe, .overlay .yt-host iframe, .strict .yt-host iframe { pointer-events: none; }
+.yt-host iframe, .overlay .yt-host iframe, .strict .yt-host iframe { pointer-events: none !important; }
 .journey[data-playing='yes'] .j-poster-play,
 .journey[data-playing='yes'] video::-webkit-media-controls,
 .journey[data-playing='yes'] video::-webkit-media-controls-overlay-play-button,
@@ -129,8 +133,9 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-poster-title small { display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.16em; color: #f1d58a; margin-bottom: 8px; }
 .j-poster-title b { display: block; font-family: var(--serif); font-weight: 600; font-size: 28px; line-height: 1.15; }
 .j-poster .pill { position: absolute; left: 50%; top: 40%; transform: translateX(-50%); z-index: 1; }
-.j-gesture { position: absolute; inset: 0; z-index: 3; }
-.j-slide { position: absolute; inset: 0; z-index: 2; }
+/* Capture layer over the film. A faint fill makes phones hit-test this div instead of the YouTube iframe. */
+.j-gesture { position: absolute; inset: 0; z-index: 3; background: rgba(0, 0, 0, 0.001); touch-action: none; }
+.j-slide { position: absolute; inset: 0; z-index: 3; }
 /* Swipes are ours: any browser pan here fires pointercancel and the swipe never lands. */
 .j-gesture, .j-slide, .j-slide *, .feed-card, .feed-card *, .j-chrome .caption, .j-chrome[data-swipe] .rail, .j-chrome[data-swipe] .clip-foot { touch-action: none; }
 .j-chrome .caption[data-expanded='true'] { touch-action: pan-y; }

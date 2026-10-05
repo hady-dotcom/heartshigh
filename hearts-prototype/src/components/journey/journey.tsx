@@ -5,7 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
 import { clipsFromRoute, sessionPlaylist } from '@/lib/feed-mix'
-import { clipStepUpLabel, onlyClipToast, pieceSeconds, poolEndToast, READY_FOR_MORE, talkStepUpLabel, withTalkDetail } from '@/lib/feed-copy'
+import { clipStepUpLabel, LEVEL_WORDS, onlyClipToast, pieceSeconds, poolEndToast, READY_FOR_MORE, talkStepUpLabel, withTalkDetail } from '@/lib/feed-copy'
 import { appendUnseenItems, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readCoachDismissed, readFeedPlace, readHeart, readPending, rememberSeenCard, sessionFlags, sessionSeenCards, sessionSeenCuts, setSessionFlags, viewAsId, writeCoachDismissed, writeFeedPlace, writeHeart, writePending } from '@/lib/device'
@@ -1312,6 +1312,40 @@ export function Journey(props: JourneyProps) {
   const moreLikeThis = () => swipeTo('topic')
   const moreFromSpeaker = () => swipeTo('speaker')
   const stepLoop = (direction: 1 | -1) => swipeTo(direction === 1 ? 'next' : 'prev')
+  const stepLoopRef = useRef(stepLoop)
+  stepLoopRef.current = stepLoop
+
+  // Wheel and arrow keys step the hors d'oeuvre order. A real click, wheel or key must not depend on the
+  // YouTube iframe having focus: that frame swallows them, and the feed then looks stuck on one clip.
+  useEffect(() => {
+    if (phase !== 'feed') return
+    let wheelLock = 0
+    const typing = (event: Event) => Boolean((event.target as HTMLElement | null)?.closest?.('input, textarea, select, [contenteditable="true"]'))
+    const onKey = (event: KeyboardEvent) => {
+      if (event.repeat || event.metaKey || event.ctrlKey || event.altKey || sheetRef.current || typing(event)) return
+      const next = event.key === 'ArrowDown' || event.key === 'PageDown'
+      const prev = event.key === 'ArrowUp' || event.key === 'PageUp'
+      if (!next && !prev) return
+      event.preventDefault()
+      stepLoopRef.current(next ? 1 : -1)
+    }
+    const onWheel = (event: WheelEvent) => {
+      if (sheetRef.current || typing(event)) return
+      if ((event.target as HTMLElement | null)?.closest?.('.j-sheet, .caption[data-expanded="true"]')) return
+      if (Math.abs(event.deltaY) < 24 || Math.abs(event.deltaY) < Math.abs(event.deltaX)) return
+      event.preventDefault()
+      const now = performance.now()
+      if (now < wheelLock) return
+      wheelLock = now + 420
+      stepLoopRef.current(event.deltaY > 0 ? 1 : -1)
+    }
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('wheel', onWheel, { passive: false })
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('wheel', onWheel)
+    }
+  }, [phase])
 
   const stepUp = async (event?: React.MouseEvent<HTMLAnchorElement>) => {
     const current = itemsRef.current[indexRef.current]
@@ -1781,9 +1815,9 @@ export function Journey(props: JourneyProps) {
         aria-label="Choose how much to watch"
         onPointerDown={(event) => event.stopPropagation()}
       >
-        <button type="button" className={mode === 'hors' ? 'on' : undefined} data-testid="level-clip" aria-pressed={mode === 'hors'} onClick={() => { if (mode !== 'hors') void showItem(index, 'hors') }}>Clip</button>
-        <button type="button" className={mode === 'appetiser' ? 'on' : undefined} data-testid="level-minutes" aria-pressed={mode === 'appetiser'} onClick={() => { if (mode !== 'appetiser') void stepUp() }}>3 minutes</button>
-        <button type="button" data-testid="level-lecture" onClick={watchFull}>Full lecture</button>
+        <button type="button" className={mode === 'hors' ? 'on' : undefined} data-testid="level-clip" aria-pressed={mode === 'hors'} onClick={() => { if (mode !== 'hors') void showItem(index, 'hors') }}>{LEVEL_WORDS[0]}</button>
+        <button type="button" className={mode === 'appetiser' ? 'on' : undefined} data-testid="level-minutes" aria-pressed={mode === 'appetiser'} onClick={() => { if (mode !== 'appetiser') void stepUp() }}>{LEVEL_WORDS[1]}</button>
+        <button type="button" data-testid="level-lecture" onClick={watchFull}>{LEVEL_WORDS[2]}</button>
       </div>
       <div className="clip-foot j-credits">
         {mode === 'hors' ? (
@@ -1853,15 +1887,19 @@ export function Journey(props: JourneyProps) {
 
       <div ref={clipRef} className="j-clip" data-screen={phase === 'feed' || phase === 'handoff' ? 'clip' : undefined}>
         <div ref={slotRef} className="j-slot" data-testid="player-slot" data-framing={item?.framingTrack ? framingMode || 'F' : undefined} style={{ visibility: phase === 'feed' || phase === 'handoff' ? 'visible' : 'hidden', ['--fr-poster' as string]: item?.youtubeId ? `url(https://i.ytimg.com/vi/${item.youtubeId}/hqdefault.jpg)` : undefined, ['--fr-tx' as string]: item?.framingTrack && framingMode === 'D' ? `${-((segmentAt(item.framingTrack, spokenAt ?? item.hors.start)?.focus?.x ?? 0.5) * 100 - 50)}%` : undefined }}>
-          {[0, 1].map((at) => (
-            <div
-              key={at}
-              ref={(el) => { hostEls.current[at] = el }}
-              className={`yt-host ${at === visibleHost && revealed && !slide && !scenic ? 'on' : 'off'}`}
-              data-testid={at === visibleHost && revealed ? 'player-visible' : 'player-hidden'}
-              style={{ visibility: at === visibleHost && playerReady ? 'visible' : 'hidden' }}
-            />
-          ))}
+          {[0, 1].map((at) => {
+            const row = hosts.current[at as 0 | 1]
+            const filmOn = at === visibleHost && revealed && !slide && !scenic && playerReady && row.spec?.key === currentSpec?.key && row.spec?.videoId === currentSpec?.videoId
+            return (
+              <div
+                key={at}
+                ref={(el) => { hostEls.current[at] = el }}
+                className={`yt-host ${filmOn ? 'on' : 'off'}`}
+                data-testid={filmOn ? 'player-visible' : 'player-hidden'}
+                style={{ visibility: filmOn ? 'visible' : 'hidden' }}
+              />
+            )
+          })}
           {!overlay && !wordsInPicture ? <div className="yt-title-mask" data-testid="yt-title-mask" aria-hidden /> : null}
           {framingMode === 'F' && item?.framingTrack?.sentences?.length ? (
             <SpokenWords
@@ -1922,7 +1960,7 @@ export function Journey(props: JourneyProps) {
             </div>
           ) : null}
           {phase === 'feed' && !item ? <div className="j-poster" data-testid="poster-frame" data-poster="own" data-empty="" /> : null}
-          {overlay && phase === 'feed' && !slide && !scenic ? <div className="j-gesture" data-testid="gesture-layer" {...swipe} /> : null}
+          {phase === 'feed' && !slide && !scenic && !feedCard ? <div className="j-gesture" data-testid="gesture-layer" data-capture="yes" {...swipe} /> : null}
         </div>
         {slide && item ? (
           <div className="j-slide" data-testid="gesture-layer" {...swipe}>
