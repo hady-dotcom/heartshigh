@@ -17,6 +17,26 @@ function proofShot(page: Page, name: string) {
   return page.screenshot({ path: path.join(PROOF, `${name}.png`), fullPage: false })
 }
 
+function paintAlpha(color: string) {
+  const match = /rgba?\(([^)]+)\)/.exec(color)
+  if (!match) return color === 'transparent' ? 0 : 1
+  const parts = match[1].split(',').map((part) => part.trim())
+  return parts.length < 4 ? 1 : Number(parts[3])
+}
+
+async function waitForSheet(page: Page) {
+  await expect(page.getByTestId('popup')).toBeVisible()
+  await expect(page.getByTestId('popup-close')).toBeVisible()
+  await expect(page.locator('[data-testid=popup] .handle')).toBeVisible()
+  await page.waitForFunction(() => {
+    const sheet = document.querySelector('[data-testid="popup"]')
+    if (!sheet) return false
+    const style = getComputedStyle(sheet)
+    if (Number(style.opacity) < 0.99) return false
+    return [...document.getAnimations()].every((animation) => animation.playState !== 'running' || animation.effect?.getComputedTiming().iterations === Infinity)
+  })
+}
+
 let master: APIRequestContext
 
 test.beforeAll(async () => {
@@ -28,9 +48,9 @@ test.afterAll(async () => {
   await master?.dispose()
 })
 
-async function signIn(page: Page, next: string) {
+async function signIn(page: Page, next: string, email = 'elm-learner@hearts.test') {
   await page.goto(`/login?next=${encodeURIComponent(next)}`)
-  await page.getByTestId('login-email').fill('elm-learner@hearts.test')
+  await page.getByTestId('login-email').fill(email)
   await page.getByTestId('login-password').fill('portal-learner')
   await page.getByTestId('login-submit').click()
   await page.waitForURL((url) => !url.pathname.startsWith('/login'))
@@ -41,13 +61,14 @@ async function json(path: string) {
 }
 
 async function aCourse() {
-  const lessons = ((await json('/api/lessons?limit=80&depth=0')).docs || []) as { id: number; course: number; title?: string; durationSeconds?: number }[]
+  const lessons = ((await json('/api/lessons?limit=80&depth=0&sort=order')).docs || []) as { id: number; course: number; title?: string; durationSeconds?: number; order?: number }[]
   const byCourse = new Map<number, typeof lessons>()
   for (const lesson of lessons) {
     const list = byCourse.get(lesson.course) || []
     list.push(lesson)
     byCourse.set(lesson.course, list)
   }
+  for (const list of byCourse.values()) list.sort((a, b) => (a.order || a.id) - (b.order || b.id))
   const courses = ((await json('/api/courses?limit=80&depth=0')).docs || []) as { id: number; title?: string }[]
   const sitting = courses.find((course) => course.title === PROOF_COURSE)
   const names = courses.find((course) => course.title === 'The Names')
@@ -94,18 +115,115 @@ test.describe('courses and planning', () => {
     expect(overflow).toBeTruthy()
   })
 
+  test('every overview row on a real imported course has a visible still', async ({ page }) => {
+    await page.setViewportSize(PHONE)
+    const lessons = ((await json('/api/lessons?limit=80&depth=0')).docs || []) as { id: number; course: number; youtubeId?: string }[]
+    const courses = ((await json('/api/courses?limit=80&depth=0')).docs || []) as { id: number; title?: string }[]
+    const real = lessons.filter((row) => row.youtubeId && /^[\w-]{11}$/.test(row.youtubeId) && row.youtubeId !== 'dQw4w9WgXcQ')
+    const byCourse = new Map<number, typeof real>()
+    for (const row of real) {
+      const list = byCourse.get(row.course) || []
+      list.push(row)
+      byCourse.set(row.course, list)
+    }
+    const courseId = [...byCourse.entries()].sort((a, b) => b[1].length - a[1].length)[0]?.[0]
+    expect(courseId, 'a seeded imported course with real YouTube ids').toBeTruthy()
+    expect(courses.find((course) => course.id === courseId)?.title).not.toBe(PROOF_COURSE)
+    await signIn(page, `${BASE}/course/${courseId}`)
+    await expect(page.getByTestId('course-overview')).toBeVisible()
+    const talks = page.getByTestId('buffet-talk')
+    const count = await talks.count()
+    expect(count).toBeGreaterThan(0)
+    await expect(page.getByTestId('talk-thumb')).toHaveCount(count)
+    for (let index = 0; index < count; index++) {
+      const img = talks.nth(index).getByTestId('talk-thumb').locator('img')
+      await expect(img).toBeVisible()
+      const src = (await img.getAttribute('src')) || ''
+      expect(src, 'row still is a real frame, a speaker, or courtyard art').toMatch(/ytimg|\/clips\/|\/speakers\/|evening-courtyard/)
+      const box = await talks.nth(index).getByTestId('talk-thumb').boundingBox()
+      expect(box?.width, 'thumb is painted, not an empty teal box').toBeGreaterThan(20)
+      expect(box?.height).toBeGreaterThan(20)
+    }
+    await proofShot(page, 'round7-overview-thumbs')
+  })
+
+  test('the player hides question text until its moment', async ({ page }) => {
+    await page.setViewportSize(PHONE)
+    await fakeYouTube(page)
+    const proof = await ensureProofCourse(master)
+    await signIn(page, `${BASE}/course/${proof.courseId}?part=${proof.lessons[0].id}`, 'elm-learner2@hearts.test')
+    await expect(page.getByTestId('player')).toBeVisible()
+    const rows = page.getByTestId('strip-dot')
+    const count = await rows.count()
+    expect(count).toBeGreaterThan(1)
+    for (let index = 0; index < count; index++) {
+      await expect(rows.nth(index)).toHaveAttribute('data-revealed', 'no')
+      await expect(rows.nth(index)).toHaveText(new RegExp(`Question ${index + 1} comes at \\d+:\\d+`))
+      await expect(rows.nth(index)).not.toContainText(/What stayed with you|The speaker says|He said:/)
+    }
+    await expect(page.getByTestId('player-time')).toContainText('0:00')
+    await proofShot(page, 'round8-at-zero')
+    await page.getByTestId('timeline-dot').first().click()
+    await waitForSheet(page)
+    await expect(page.getByTestId('player-time')).toContainText('0:30')
+    await expect(page.getByTestId('answer-point')).toContainText('Answer question 1')
+    await expect(rows.first()).toHaveAttribute('data-revealed', 'yes')
+    await expect(rows.first()).toContainText('What stayed with you from sitting 1, question 1')
+    await expect(rows.nth(1)).toHaveAttribute('data-revealed', 'no')
+    await expect(rows.nth(1)).toHaveText(/Question 2 comes at/)
+    await proofShot(page, 'round8-after-dot-1')
+    await page.getByTestId('think-about-this').click()
+    await expect(page.getByTestId('popup')).toHaveCount(0)
+    await expect(rows.first()).toHaveAttribute('data-revealed', 'yes')
+    await expect(rows.first()).toContainText('What stayed with you from sitting 1, question 1')
+    await proofShot(page, 'round8-row-revealed')
+    await page.reload()
+    await expect(page.getByTestId('strip-dot').first()).toHaveAttribute('data-revealed', 'yes')
+    await expect(page.getByTestId('strip-dot').first()).toContainText('question 1')
+    await expect(page.getByTestId('strip-dot').nth(1)).toHaveAttribute('data-revealed', 'no')
+  })
+
+  test('the answer sheet sits opaque over the page after it settles', async ({ page }) => {
+    await page.setViewportSize(PHONE)
+    await fakeYouTube(page)
+    const proof = await ensureProofCourse(master)
+    await signIn(page, `${BASE}/course/${proof.courseId}?part=${proof.lessons[0].id}`, 'elm-learner2@hearts.test')
+    await expect(page.getByTestId('player')).toBeVisible()
+    if (!(await page.getByTestId('popup').count())) await page.getByTestId('timeline-dot').first().click()
+    await waitForSheet(page)
+    await expect(page.getByTestId('player-time')).toContainText('0:30')
+    const paint = await page.getByTestId('popup').evaluate((sheet) => getComputedStyle(sheet).backgroundColor)
+    expect(paintAlpha(paint), `sheet background ${paint} must be opaque`).toBeGreaterThanOrEqual(0.99)
+    const save = page.getByTestId('answer-submit')
+    await expect(save).toBeVisible()
+    const box = await save.boundingBox()
+    expect(box, 'Save sits on screen').toBeTruthy()
+    const hit = await page.evaluate(({ x, y }) => {
+      const node = document.elementFromPoint(x, y)
+      return node instanceof Element ? (node.closest('[data-testid="answer-submit"]')?.getAttribute('data-testid') || node.getAttribute('data-testid')) : null
+    }, { x: box!.x + box!.width / 2, y: box!.y + box!.height / 2 })
+    expect(hit).toBe('answer-submit')
+    await page.getByTestId('popup-close').click()
+    await expect(page.getByTestId('popup')).toHaveCount(0)
+    await expect(page.getByTestId('strip-dot').first()).toHaveAttribute('data-revealed', 'yes')
+  })
+
   test('B6, B11 and B15: the player pauses, thinks, and always has a next part', async ({ page }) => {
     await page.setViewportSize(PHONE)
     await fakeYouTube(page)
-    const { courseId, lessons, points } = await aCourse()
-    const first = lessons[0]
-    await signIn(page, `${BASE}/course/${courseId}?part=${first.id}`)
+    const proof = await ensureProofCourse(master)
+    const first = proof.lessons[0]
+    const points = ((await json(`/api/engagement-points?where[lesson][equals]=${first.id}&limit=20&depth=0`)).docs || []) as { id: number; second?: number; prompt?: string }[]
+    const courseId = proof.courseId
+    await signIn(page, `${BASE}/course/${courseId}?part=${first.id}`, 'elm-learner2@hearts.test')
     await expect(page.getByTestId('player')).toBeVisible()
+    await expect(page.getByTestId('part-label')).toContainText(/Sitting 1|Part 1/)
+    await expect(page.getByTestId('timeline-dot').first()).toBeVisible()
     await expect(page.getByTestId('up-next')).toBeVisible()
     if (points[0]) {
-      await page.getByTestId('timeline-dot').first().click()
+      if (!(await page.getByTestId('popup').count())) await page.getByTestId('timeline-dot').first().click()
       await expect(page.getByTestId('popup')).toBeVisible()
-      await expect(page.getByTestId('paused-note')).toContainText('Paused')
+      await expect(page.getByTestId('paused-note').first()).toContainText('Paused')
       await expect(page.getByTestId('think-about-this')).toBeVisible()
       const before = await page.getByTestId('player-time').textContent()
       await page.waitForTimeout(1200)
@@ -114,6 +232,27 @@ test.describe('courses and planning', () => {
       await page.getByTestId('think-about-this').click()
       await expect(page.getByTestId('popup')).toHaveCount(0)
     }
+    await page.setViewportSize(PHONE)
+    await page.goto(`${BASE}/course/${courseId}?part=${first.id}`)
+    await expect(page.getByTestId('player')).toBeVisible()
+    await expect(page.getByTestId('up-next')).toBeVisible()
+    if (await page.getByTestId('popup').count()) {
+      const later = page.getByTestId('answer-later')
+      if (await later.count()) await later.click()
+      else await page.keyboard.press('Escape')
+    }
+    await expect(page.getByTestId('popup')).toHaveCount(0)
+    await expect(page.getByTestId('timeline-dot').first()).toBeVisible()
+    await proofShot(page, 'round7-player-bar')
+    const gardenCard = page.getByTestId('course-garden')
+    await gardenCard.scrollIntoViewIfNeeded()
+    const garden = await gardenCard.evaluate((card) => {
+      const style = getComputedStyle(card)
+      return { bg: style.backgroundColor, color: style.color, border: style.borderColor }
+    })
+    expect(garden.bg.replace(/\s/g, '')).toMatch(/rgb\(14,\s*42,\s*43\)/)
+    expect(garden.bg).not.toMatch(/42,\s*36,\s*72|36,\s*54,\s*40/)
+    await proofShot(page, 'round7-garden-card')
     await page.setViewportSize(DESK)
     await page.goto(`${BASE}/course/${courseId}?part=${first.id}`)
     await expect(page.getByTestId('up-next')).toBeVisible()

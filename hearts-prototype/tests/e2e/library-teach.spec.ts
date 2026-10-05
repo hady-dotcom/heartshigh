@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process'
 import { mkdirSync } from 'node:fs'
 import { expect, request as playwrightRequest, test, type Page } from '@playwright/test'
-import { E2E_BASE, e2eDatabase } from '../env'
+import { E2E_BASE, E2E_DATABASE } from '../env'
 
 const DESK = { width: 1440, height: 900 }
 const PHONE = { width: 390, height: 844 }
@@ -81,7 +81,7 @@ test('library packs are summaries, and the course picker is the door tree', asyn
 })
 
 test('demo learners show varied on-time fractions on Teach', async ({ page }) => {
-  execSync('npm run demo:timed-learners', { stdio: 'inherit', env: { ...process.env, DATABASE_URL: e2eDatabase } })
+  execSync('npm run demo:timed-learners', { stdio: 'inherit', env: { ...process.env, DATABASE_URL: E2E_DATABASE } })
   await page.setViewportSize(DESK)
   await signIn(page, 'demo-admin@hearts-demo.test', 'demo-timed', '/p/hearts-demo/admin/teach')
   await expect(page.getByTestId('on-time-header')).toHaveAttribute('title', /study plan/)

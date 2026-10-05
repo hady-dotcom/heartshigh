@@ -2,15 +2,18 @@ import { expect, type APIRequestContext } from '@playwright/test'
 
 export const PROOF_COURSE = 'Ten sittings'
 
+function allowTestFixture() {
+  const db = process.env.DATABASE_URL || ''
+  return process.env.HEARTS_E2E === '1' || process.env.HEARTS_TEST_CLOCK === '1' || /hearts-test|hearts_[^\s]*e2e|_e2e/.test(db)
+}
+
 export async function ensureProofCourse(master: APIRequestContext, portalSlug = 'east-london', title = PROOF_COURSE) {
+  if (!allowTestFixture()) throw new Error('Ten sittings is a test fixture and is never planted in a demo portal.')
   const portals = (await (await master.get('/api/portals?limit=10&depth=0')).json()) as { docs: { id: number; slug?: string }[] }
   const portal = portals.docs.find((row) => row.slug === portalSlug)
   expect(portal).toBeTruthy()
   const courses = (await (await master.get('/api/courses?limit=80&depth=0')).json()) as { docs: { id: number; title?: string }[] }
   const existing = courses.docs.find((course) => course.title === title)
-  const users = (await (await master.get(`/api/users?where[email][equals]=${encodeURIComponent('elm-learner@hearts.test')}&limit=1&depth=0`)).json()) as { docs: { id: number; email?: string; extraCourses?: unknown[] }[] }
-  const learner = users.docs[0]
-  expect(learner).toBeTruthy()
   let courseId = existing?.id || 0
   if (!courseId) {
     const courseRes = await master.post('/api/courses', {
@@ -47,9 +50,13 @@ export async function ensureProofCourse(master: APIRequestContext, portalSlug = 
       expect(created.ok()).toBeTruthy()
     }
   }
-  const extras = (learner!.extraCourses || []).map((item) => (typeof item === 'object' && item && 'id' in item ? Number((item as { id: number }).id) : Number(item))).filter(Boolean)
-  if (!extras.includes(courseId)) {
-    const grant = await master.patch(`/api/users/${learner!.id}`, { data: { extraCourses: [...new Set([...extras, courseId])] } })
+  for (const email of ['elm-learner@hearts.test', 'elm-learner2@hearts.test']) {
+    const users = (await (await master.get(`/api/users?where[email][equals]=${encodeURIComponent(email)}&limit=1&depth=0`)).json()) as { docs: { id: number; extraCourses?: unknown[] }[] }
+    const learner = users.docs[0]
+    if (!learner) continue
+    const extras = (learner.extraCourses || []).map((item) => (typeof item === 'object' && item && 'id' in item ? Number((item as { id: number }).id) : Number(item))).filter(Boolean)
+    if (extras.includes(courseId)) continue
+    const grant = await master.patch(`/api/users/${learner.id}`, { data: { extraCourses: [...new Set([...extras, courseId])] } })
     expect(grant.ok()).toBeTruthy()
   }
   const lessons = (await (await master.get(`/api/lessons?where[course][equals]=${courseId}&limit=20&depth=0&sort=order`)).json()) as { docs: { id: number; title?: string }[] }

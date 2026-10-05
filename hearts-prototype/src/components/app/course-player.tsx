@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { newViewingId, POLL_MS, PopupWatcher, type PopupPoint } from '@/lib/popups'
+import { comingQuestionLabel, questionRowRevealed, revealedStorageKey } from '@/lib/question-list'
 import { placeDots } from '@/lib/timeline-dots'
 import { createPlayer, destroyPlayer, getPlayer, resume, STATE, UNPLAYABLE } from '@/lib/yt'
 import { tidyTalkTitle } from '@/lib/talk-title'
@@ -134,6 +135,34 @@ export function CoursePlayer({
   const heldRef = useRef(held)
   heldRef.current = held
   const deferredPrompts = useRef(Object.fromEntries(deferred.map((row) => [row.pointId, row.prompt])))
+  const [revealed, setRevealed] = useState<number[]>(() => {
+    const start = new Set<number>([
+      ...points.filter((point) => point.answered).map((point) => point.id),
+      ...deferred.map((row) => row.pointId),
+    ])
+    if (typeof sessionStorage !== 'undefined') {
+      try {
+        const stored = JSON.parse(sessionStorage.getItem(revealedStorageKey(lessonId)) || '[]') as number[]
+        for (const id of stored) if (Number.isFinite(id)) start.add(id)
+      } catch {
+        // Private mode or a bad value: start from answers only.
+      }
+    }
+    return [...start]
+  })
+
+  const reveal = useCallback((id: number) => {
+    setRevealed((value) => {
+      if (value.includes(id)) return value
+      const next = [...value, id]
+      try {
+        sessionStorage.setItem(revealedStorageKey(lessonId), JSON.stringify(next))
+      } catch {
+        // Private mode.
+      }
+      return next
+    })
+  }, [lessonId])
 
   const views = points.map((point) => {
     const mine = answered[point.id] !== undefined ? { ...point, answered: true, myAnswer: answered[point.id] } : point
@@ -168,7 +197,7 @@ export function CoursePlayer({
       if (cancelled) return
       if (failFirst) setFailed(true)
       else setMode((value) => (value === 'loading' ? 'practice' : value))
-    }, failFirst ? 8000 : 9000)
+    }, failFirst ? 8000 : 30_000)
     createPlayer({
       id: PLAYER_ID,
       host: holder.current,
@@ -243,11 +272,22 @@ export function CoursePlayer({
 
   const show = useCallback(
     (id: number, triggered: boolean) => {
+      reveal(id)
+      const point = viewsRef.current.find((row) => row.id === id)
+      if (point) {
+        const at = point.second
+        lastTime.current = at
+        setTime(at)
+        getPlayer(PLAYER_ID)?.seekTo(at, true)
+        if (videoRef.current) videoRef.current.currentTime = at
+        vimeoTime.current = at
+        filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'setCurrentTime', value: at }), '*')
+      }
       placeSheet()
       setFromTrigger(triggered)
       setOpenId(id)
     },
-    [placeSheet],
+    [placeSheet, reveal],
   )
 
   // The player changes shape once YouTube is ready, so a sheet opened before that moves with it.
@@ -365,6 +405,12 @@ export function CoursePlayer({
   }, [time, length, mode])
 
   useEffect(() => {
+    for (const point of points) {
+      if (point.answered || answered[point.id] !== undefined || time + 0.01 >= point.second) reveal(point.id)
+    }
+  }, [answered, points, reveal, time])
+
+  useEffect(() => {
     const el = timelineRef.current
     if (!el) return
     const read = () => setTrackWidth(el.clientWidth || 340)
@@ -462,7 +508,7 @@ export function CoursePlayer({
             <video ref={videoRef} src={fileSrc} controls playsInline data-testid="file-player" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => { setPlaying(false); setEnded(true) }} />
           </div>
         ) : null}
-        {open && filmed && overPlayer ? <div className="yt-scrim" data-testid="paused-scrim" aria-hidden /> : null}
+        {open && overPlayer && (filmed || youtubeId) ? <div className="yt-scrim" data-testid="paused-scrim" aria-hidden /> : null}
         {open && !playing ? (
           <span className="paused-note on-film" data-testid="paused-note">❚❚ Paused at question {open.number}</span>
         ) : null}
@@ -502,13 +548,22 @@ export function CoursePlayer({
       </div>
       <p className="part-chip off-film" data-testid="part-label">{partLabel}</p>
       {views.length ? (
-        <div className="q-strip" data-testid="question-strip" aria-label="Questions in this film">
-          {views.map((point) => (
-            <span key={point.id} className={point.answered ? 'done' : 'open'} data-testid="strip-dot" data-answered={point.answered ? 'yes' : 'no'} title={point.prompt}>
-              {point.answered ? '✓' : point.number}
-            </span>
-          ))}
-        </div>
+        <ul className="q-list" data-testid="question-strip" aria-label="Questions in this film">
+          {views.map((point) => {
+            const seen = questionRowRevealed({ id: point.id, second: point.second, time, revealedIds: revealed, answered: point.answered })
+            return (
+            <li
+              key={point.id}
+              className={point.answered ? 'done' : seen ? 'open' : 'coming'}
+              data-testid="strip-dot"
+              data-answered={point.answered ? 'yes' : 'no'}
+              data-revealed={seen ? 'yes' : 'no'}
+            >
+              {seen ? point.prompt : comingQuestionLabel(point.number, point.second)}
+            </li>
+            )
+          })}
+        </ul>
       ) : null}
       {mode === 'practice' ? (
         <p className="muted" style={{ fontSize: 13, margin: '8px 2px 0' }} data-testid="practice-note">

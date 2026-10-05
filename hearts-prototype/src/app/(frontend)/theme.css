@@ -417,7 +417,7 @@ html[data-theme] .j-sheet {
 }
 html[data-theme='evening'] .sheet,
 html[data-theme='evening'] .j-sheet {
-  background: rgba(14, 36, 35, 0.96);
+  background: #0F2E2C;
 }
 html[data-theme] .sheet .handle,
 html[data-theme] .j-sheet .handle { background: var(--gold); opacity: 0.7; }
@@ -452,8 +452,9 @@ html[data-theme] .weekdays input:checked + span {
   color: var(--gold-ink);
   border-color: var(--gold);
 }
-html[data-theme] .q-strip .done { background: var(--teal-fill); color: #f6eedc; }
-html[data-theme] .q-strip .open { background: rgba(232, 161, 90, 0.2); color: var(--orange); }
+html[data-theme] .q-list li.done { color: #D4A84B; border-color: #D4A84B; }
+html[data-theme] .q-list li.open { color: #e6efe8; }
+html[data-theme] .q-list li.coming { color: #8aa0a0; }
 html[data-theme] .flash.error { background: var(--rose-bg); color: var(--red-clause); border-color: transparent; }
 html[data-theme] .flash.notice { background: var(--mint); color: var(--teal-deep); border-color: transparent; }
 html[data-theme='evening'] .flash.error { color: #ffd0d4; }
