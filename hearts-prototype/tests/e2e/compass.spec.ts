@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process'
 import { expect, request as playwrightRequest, test } from '@playwright/test'
-import { E2E_BASE, E2E_DATABASE } from '../env'
+import { E2E_BASE, e2eDatabase } from '../env'
 
 const PORTAL = 'hearts-demo'
 const LEARNER = 'demo-learner@hearts.foundation'
@@ -8,7 +8,7 @@ const IMAM = 'demo-imam@hearts.foundation'
 const PASSWORD = 'compass-demo'
 
 test.beforeAll(() => {
-  execSync('npx tsx src/seed/compass-demo.ts', { stdio: 'inherit', env: { ...process.env, DATABASE_URL: E2E_DATABASE } })
+  execSync('npx tsx src/seed/compass-demo.ts', { stdio: 'inherit', env: { ...process.env, DATABASE_URL: e2eDatabase } })
 })
 
 test('a learner cannot fetch their own scores from any compass API', async () => {
