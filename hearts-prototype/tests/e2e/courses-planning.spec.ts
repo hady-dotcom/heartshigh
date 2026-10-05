@@ -28,9 +28,9 @@ test.afterAll(async () => {
   await master?.dispose()
 })
 
-async function signIn(page: Page, next: string) {
+async function signIn(page: Page, next: string, email = 'elm-learner@hearts.test') {
   await page.goto(`/login?next=${encodeURIComponent(next)}`)
-  await page.getByTestId('login-email').fill('elm-learner@hearts.test')
+  await page.getByTestId('login-email').fill(email)
   await page.getByTestId('login-password').fill('portal-learner')
   await page.getByTestId('login-submit').click()
   await page.waitForURL((url) => !url.pathname.startsWith('/login'))
@@ -41,13 +41,14 @@ async function json(path: string) {
 }
 
 async function aCourse() {
-  const lessons = ((await json('/api/lessons?limit=80&depth=0')).docs || []) as { id: number; course: number; title?: string; durationSeconds?: number }[]
+  const lessons = ((await json('/api/lessons?limit=80&depth=0&sort=order')).docs || []) as { id: number; course: number; title?: string; durationSeconds?: number; order?: number }[]
   const byCourse = new Map<number, typeof lessons>()
   for (const lesson of lessons) {
     const list = byCourse.get(lesson.course) || []
     list.push(lesson)
     byCourse.set(lesson.course, list)
   }
+  for (const list of byCourse.values()) list.sort((a, b) => (a.order || a.id) - (b.order || b.id))
   const courses = ((await json('/api/courses?limit=80&depth=0')).docs || []) as { id: number; title?: string }[]
   const sitting = courses.find((course) => course.title === PROOF_COURSE)
   const names = courses.find((course) => course.title === 'The Names')
@@ -130,7 +131,7 @@ test.describe('courses and planning', () => {
     await page.setViewportSize(PHONE)
     await fakeYouTube(page)
     const proof = await ensureProofCourse(master)
-    await signIn(page, `${BASE}/course/${proof.courseId}?part=${proof.lessons[0].id}`)
+    await signIn(page, `${BASE}/course/${proof.courseId}?part=${proof.lessons[0].id}`, 'elm-learner2@hearts.test')
     await expect(page.getByTestId('player')).toBeVisible()
     const rows = page.getByTestId('strip-dot')
     const count = await rows.count()
@@ -162,13 +163,17 @@ test.describe('courses and planning', () => {
   test('B6, B11 and B15: the player pauses, thinks, and always has a next part', async ({ page }) => {
     await page.setViewportSize(PHONE)
     await fakeYouTube(page)
-    const { courseId, lessons, points } = await aCourse()
-    const first = lessons[0]
-    await signIn(page, `${BASE}/course/${courseId}?part=${first.id}`)
+    const proof = await ensureProofCourse(master)
+    const first = proof.lessons[0]
+    const points = ((await json(`/api/engagement-points?where[lesson][equals]=${first.id}&limit=20&depth=0`)).docs || []) as { id: number; second?: number; prompt?: string }[]
+    const courseId = proof.courseId
+    await signIn(page, `${BASE}/course/${courseId}?part=${first.id}`, 'elm-learner2@hearts.test')
     await expect(page.getByTestId('player')).toBeVisible()
+    await expect(page.getByTestId('part-label')).toContainText(/Sitting 1|Part 1/)
+    await expect(page.getByTestId('timeline-dot').first()).toBeVisible()
     await expect(page.getByTestId('up-next')).toBeVisible()
     if (points[0]) {
-      await page.getByTestId('timeline-dot').first().click()
+      if (!(await page.getByTestId('popup').count())) await page.getByTestId('timeline-dot').first().click()
       await expect(page.getByTestId('popup')).toBeVisible()
       await expect(page.getByTestId('paused-note')).toContainText('Paused')
       await expect(page.getByTestId('think-about-this')).toBeVisible()
