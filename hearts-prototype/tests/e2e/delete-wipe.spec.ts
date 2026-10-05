@@ -56,9 +56,22 @@ async function adminApi() {
   return ctx
 }
 
+async function postOk(api: APIRequestContext, url: string, data: Record<string, unknown>, label: string) {
+  const response = await api.post(url, { data })
+  expect(response.ok(), `${label}: ${await response.text()}`).toBeTruthy()
+}
+
 async function seedWork(api: APIRequestContext, userId: number, portalId: number) {
   const lesson = (await (await api.get('/api/lessons?limit=1&depth=0&where[master][equals]=true')).json()).docs[0] as { id: number }
-  const point = (await (await api.get(`/api/engagement-points?where[lesson][equals]=${lesson.id}&limit=1&depth=0`)).json()).docs[0] as { id: number }
+  expect(lesson?.id, 'need a library talk to hang work on').toBeTruthy()
+  let point = (await (await api.get(`/api/engagement-points?where[lesson][equals]=${lesson.id}&limit=1&depth=0`)).json()).docs[0] as { id: number } | undefined
+  if (!point?.id) {
+    const made = await api.post('/api/engagement-points', {
+      data: { lesson: lesson.id, second: 12, prompt: 'What stayed with you?', kind: 'reflection', status: 'published' },
+    })
+    expect(made.ok(), await made.text()).toBeTruthy()
+    point = (await made.json()).doc
+  }
   const mediaRes = await api.post('/api/media', {
     multipart: {
       file: { name: `wipe-${userId}.png`, mimeType: 'image/png', buffer: PNG },
@@ -66,22 +79,15 @@ async function seedWork(api: APIRequestContext, userId: number, portalId: number
       portal: String(portalId),
     },
   })
-  const mediaId = ((await mediaRes.json().catch(() => ({}))) as { doc?: { id?: number } }).doc?.id
-  expect((await api.post('/api/answers', {
-    data: { point: point.id, user: userId, portal: portalId, lesson: lesson.id, body: 'A seeded answer', image: mediaId },
-  })).ok()).toBeTruthy()
-  expect((await api.post('/api/workbook-entries', {
-    data: { user: userId, portal: portalId, lesson: lesson.id, body: 'A workbook note' },
-  })).ok()).toBeTruthy()
-  expect((await api.post('/api/rituals', {
-    data: { user: userId, portal: portalId, note: 'A garden note' },
-  })).ok()).toBeTruthy()
-  expect((await api.post('/api/completions', {
-    data: { user: userId, portal: portalId, lesson: lesson.id, percent: 100 },
-  })).ok()).toBeTruthy()
-  expect((await api.post('/api/watch-sessions', {
-    data: { user: userId, portal: portalId, lesson: lesson.id, seconds: 40 },
-  })).ok()).toBeTruthy()
+  const mediaBody = (await mediaRes.json().catch(() => ({}))) as { doc?: { id?: number }; id?: number }
+  const mediaId = mediaBody.doc?.id || mediaBody.id
+  expect(mediaRes.ok(), `media: ${JSON.stringify(mediaBody)}`).toBeTruthy()
+  expect(mediaId, 'media id').toBeTruthy()
+  await postOk(api, '/api/answers', { point: point!.id, user: userId, portal: portalId, lesson: lesson.id, body: 'A seeded answer', image: mediaId }, 'answers')
+  await postOk(api, '/api/workbook-entries', { user: userId, portal: portalId, lesson: lesson.id, body: 'A workbook note' }, 'workbook')
+  await postOk(api, '/api/rituals', { user: userId, portal: portalId, note: 'A garden note' }, 'garden')
+  await postOk(api, '/api/completions', { user: userId, portal: portalId, lesson: lesson.id, percent: 100 }, 'completions')
+  await postOk(api, '/api/watch-sessions', { user: userId, portal: portalId, lesson: lesson.id, seconds: 40 }, 'watches')
 }
 
 test.describe('desk delete flows', () => {
