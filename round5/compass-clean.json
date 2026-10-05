@@ -1,0 +1,285 @@
+{
+  "config": {
+    "argv": [
+      "/exec-daemon/node",
+      "/workspace/hearts-prototype/node_modules/.bin/playwright",
+      "test",
+      "tests/e2e/compass.spec.ts",
+      "--reporter=json"
+    ],
+    "configFile": "/workspace/hearts-prototype/playwright.config.ts",
+    "rootDir": "/workspace/hearts-prototype/tests/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/workspace/hearts-prototype/tests/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/workspace/hearts-prototype/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/workspace/hearts-prototype/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 180000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npx next dev --hostname 127.0.0.1 --port 3125",
+      "url": "http://127.0.0.1:3125/api/hearts",
+      "reuseExistingServer": false,
+      "timeout": 240000,
+      "env": {
+        "TMUX": "/tmp/tmux-1000/default,8801,8",
+        "DATABASE_URL": "postgres://hearts:hearts@127.0.0.1:5432/hearts_e2e",
+        "USER": "ubuntu",
+        "npm_config_user_agent": "npm/10.9.2 node/v22.14.0 linux x64 workspaces/false",
+        "CURSOR_RIPGREP_PATH": "/exec-daemon/rg",
+        "npm_node_execpath": "/exec-daemon/node",
+        "SHLVL": "3",
+        "LD_LIBRARY_PATH": "/exec-daemon/tmux-root/lib",
+        "npm_config_noproxy": "",
+        "HOME": "/home/ubuntu",
+        "GH_TELEMETRY": "false",
+        "OLDPWD": "/workspace/hearts-prototype",
+        "TERM_PROGRAM_VERSION": "3.5a",
+        "CURSOR_WORKLOAD_CGROUP": "/sys/fs/cgroup/system.slice/pod-jb5hevcb3vcn5k2ntu2toh27ra-f11b6693/cursor-agent/workload",
+        "NVM_BIN": "/home/ubuntu/.nvm/versions/node/v22.22.2/bin",
+        "npm_package_json": "/workspace/hearts-prototype/package.json",
+        "NVM_INC": "/home/ubuntu/.nvm/versions/node/v22.22.2/include/node",
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "HEARTS_E2E_PORT": "3125",
+        "npm_config_userconfig": "/home/ubuntu/.npmrc",
+        "npm_config_local_prefix": "/workspace/hearts-prototype",
+        "NO_COLOR": "1",
+        "PAYLOAD_SECRET": "hearts-prototype-dev-secret",
+        "VNC_DPI": "96",
+        "COLOR": "0",
+        "NVM_DIR": "/home/ubuntu/.nvm",
+        "HEARTS_E2E_DATABASE": "postgres://hearts:hearts@127.0.0.1:5432/hearts_e2e",
+        "FORCE_COLOR": "0",
+        "CURSOR_REQUEST_ID": "ea897404-50e3-4b9b-a228-a95a936e1da2",
+        "_": "/exec-daemon/npx",
+        "npm_config_prefix": "/",
+        "npm_config_npm_version": "10.9.2",
+        "TERMINFO_DIRS": "/exec-daemon/tmux-root/share/terminfo",
+        "HEARTS_E2E": "1",
+        "TERM": "tmux-256color",
+        "npm_config_cache": "/home/ubuntu/.npm",
+        "RUSTUP_HOME": "/usr/local/rustup",
+        "npm_config_node_gyp": "/exec-daemon/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js",
+        "PATH": "/workspace/hearts-prototype/node_modules/.bin:/workspace/hearts-prototype/node_modules/.bin:/workspace/node_modules/.bin:/node_modules/.bin:/exec-daemon/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin:/usr/local/cargo/bin:/usr/local/cargo/bin:/exec-daemon:/exec-daemon/tools:/usr/local/cargo/bin:/home/ubuntu/.nvm/versions/node/v22.22.2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "NODE": "/exec-daemon/node",
+        "npm_package_name": "hearts-prototype",
+        "AGENT_TRANSCRIPTS": "/home/ubuntu/.cursor/projects/workspace/agent-transcripts",
+        "CURSOR_AGENT": "1",
+        "DISPLAY": ":1",
+        "LANG": "en_US.UTF-8",
+        "TERM_PROGRAM": "tmux",
+        "npm_lifecycle_script": "playwright",
+        "SHELL": "/bin/bash",
+        "npm_package_version": "1.0.0",
+        "npm_lifecycle_event": "npx",
+        "GIT_DISCOVERY_ACROSS_FILESYSTEM": "0",
+        "GIT_LFS_SKIP_SMUDGE": "1",
+        "CURSOR_AGENT_SOCKET": "/run/cursor/api.sock",
+        "RUST_VERSION": "1.83.0",
+        "npm_config_globalconfig": "/etc/npmrc",
+        "npm_config_init_module": "/home/ubuntu/.npm-init.js",
+        "PWD": "/workspace/hearts-prototype",
+        "VNC_RESOLUTION": "1920x1200x24",
+        "LC_ALL": "en_US.UTF-8",
+        "npm_execpath": "/exec-daemon/lib/node_modules/npm/bin/npm-cli.js",
+        "CARGO_HOME": "/usr/local/cargo",
+        "NVM_CD_FLAGS": "",
+        "npm_config_global_prefix": "/",
+        "CURSOR_CONVERSATION_ID": "bc-edb5db0b-167a-5ce3-be5e-ed938b76923b",
+        "EXEC_DAEMON_STARTUP_TRACEPARENT": "00-01a10810fa687f069ca2efb07dddfa8b-9780fe9a7444cb8d-01",
+        "npm_command": "exec",
+        "__CURSOR_SANDBOX_ENV_RESTORE": "builtin unset CURSOR_CONVERSATION_ID CURSOR_REQUEST_ID CURSOR_AGENT_STORE_FILES_DIR CURSOR_AGENT_STORE_SHARED_PATHS 2>/dev/null || true; builtin export CURSOR_CONVERSATION_ID='bc-edb5db0b-167a-5ce3-be5e-ed938b76923b'; builtin export CURSOR_REQUEST_ID='ea897404-50e3-4b9b-a228-a95a936e1da2'",
+        "_ZO_DOCTOR": "0",
+        "TMUX_PANE": "%8",
+        "INIT_CWD": "/workspace/hearts-prototype",
+        "EDITOR": "vi",
+        "HEARTS_TEST_CLOCK": "1",
+        "HEARTS_DIST_DIR": ".next-e2e",
+        "HEARTS_TRUSTED_PROXY_HOPS": "1",
+        "HEARTS_SEARCH_FIXTURE": "tests/fixtures/youtube-search.json",
+        "HEARTS_TRANSCRIPT_FIXTURE": "tests/fixtures/transcripts.json"
+      }
+    }
+  },
+  "suites": [
+    {
+      "title": "compass.spec.ts",
+      "file": "compass.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "a learner cannot fetch their own scores from any compass API",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5167,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "buffer": "WzAxOjI2OjU1XSAbWzMzbVdBUk4bWzM5bTogG1szNm1ObyBlbWFpbCBhZGFwdGVyIHByb3ZpZGVkLiBFbWFpbCB3aWxsIGJlIHdyaXR0ZW4gdG8gY29uc29sZS4gTW9yZSBpbmZvIGF0IGh0dHBzOi8vcGF5bG9hZGNtcy5jb20vZG9jcy9lbWFpbC9vdmVydmlldy4bWzM5bQo="
+                    },
+                    {
+                      "buffer": "Q3JlYXRlZCBwb3J0YWwgaGVhcnRzLWRlbW8uCg=="
+                    },
+                    {
+                      "buffer": "Q29tcGFzcyBkZW1vIGlzIGluIHBsYWNlIG9uIGhlYXJ0cy1kZW1vLiBOZXcgYWNjb3VudHMgdXNlIGNvbXBhc3MtZGVtby4gRXhpc3RpbmcgYWNjb3VudHMga2VlcCB0aGVpciBwYXNzd29yZC4K"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "buffer": "KG5vZGU6NzI3ODUpIFdhcm5pbmc6IFRoZSAnTk9fQ09MT1InIGVudiBpcyBpZ25vcmVkIGR1ZSB0byB0aGUgJ0ZPUkNFX0NPTE9SJyBlbnYgYmVpbmcgc2V0LgooVXNlIGBub2RlIC0tdHJhY2Utd2FybmluZ3MgLi4uYCB0byBzaG93IHdoZXJlIHRoZSB3YXJuaW5nIHdhcyBjcmVhdGVkKQo="
+                    },
+                    {
+                      "buffer": "KG5vZGU6NzI3OTkpIFdhcm5pbmc6IFRoZSAnTk9fQ09MT1InIGVudiBpcyBpZ25vcmVkIGR1ZSB0byB0aGUgJ0ZPUkNFX0NPTE9SJyBlbnYgYmVpbmcgc2V0LgooVXNlIGBub2RlIC0tdHJhY2Utd2FybmluZ3MgLi4uYCB0byBzaG93IHdoZXJlIHRoZSB3YXJuaW5nIHdhcyBjcmVhdGVkKQo="
+                    },
+                    {
+                      "buffer": "KG5vZGU6NzI4MTApIFdhcm5pbmc6IFRoZSAnTk9fQ09MT1InIGVudiBpcyBpZ25vcmVkIGR1ZSB0byB0aGUgJ0ZPUkNFX0NPTE9SJyBlbnYgYmVpbmcgc2V0LgooVXNlIGBub2RlIC0tdHJhY2Utd2FybmluZ3MgLi4uYCB0byBzaG93IHdoZXJlIHRoZSB3YXJuaW5nIHdhcyBjcmVhdGVkKQo="
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-10-05T01:26:52.962Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "75125bc86b08a932d4b2-e04d64a1096a6be6e9c8",
+          "file": "compass.spec.ts",
+          "line": 14,
+          "column": 1
+        },
+        {
+          "title": "the monthly look is five questions and a life check-in",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12338,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-05T01:27:04.765Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "75125bc86b08a932d4b2-cb0c6cb796130d7f8c8c",
+          "file": "compass.spec.ts",
+          "line": 37,
+          "column": 1
+        },
+        {
+          "title": "an imam sees the charts, the cohort, and why a talk was chosen",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2679,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-05T01:27:17.799Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "75125bc86b08a932d4b2-cd9b29ed40b1583b6cc4",
+          "file": "compass.spec.ts",
+          "line": 95,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-05T01:26:15.061Z",
+    "duration": 65589.364,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

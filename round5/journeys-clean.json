@@ -1,0 +1,869 @@
+{
+  "config": {
+    "argv": [
+      "/exec-daemon/node",
+      "/workspace/hearts-prototype/node_modules/.bin/playwright",
+      "test",
+      "tests/e2e/journeys.spec.ts",
+      "--reporter=json"
+    ],
+    "configFile": "/workspace/hearts-prototype/playwright.config.ts",
+    "rootDir": "/workspace/hearts-prototype/tests/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/workspace/hearts-prototype/tests/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/workspace/hearts-prototype/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/workspace/hearts-prototype/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 180000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npx next dev --hostname 127.0.0.1 --port 3125",
+      "url": "http://127.0.0.1:3125/api/hearts",
+      "reuseExistingServer": false,
+      "timeout": 240000,
+      "env": {
+        "TMUX": "/tmp/tmux-1000/default,8801,8",
+        "DATABASE_URL": "postgres://hearts:hearts@127.0.0.1:5432/hearts_e2e",
+        "USER": "ubuntu",
+        "npm_config_user_agent": "npm/10.9.2 node/v22.14.0 linux x64 workspaces/false",
+        "CURSOR_RIPGREP_PATH": "/exec-daemon/rg",
+        "npm_node_execpath": "/exec-daemon/node",
+        "SHLVL": "3",
+        "LD_LIBRARY_PATH": "/exec-daemon/tmux-root/lib",
+        "npm_config_noproxy": "",
+        "HOME": "/home/ubuntu",
+        "GH_TELEMETRY": "false",
+        "OLDPWD": "/workspace/hearts-prototype",
+        "TERM_PROGRAM_VERSION": "3.5a",
+        "CURSOR_WORKLOAD_CGROUP": "/sys/fs/cgroup/system.slice/pod-jb5hevcb3vcn5k2ntu2toh27ra-f11b6693/cursor-agent/workload",
+        "NVM_BIN": "/home/ubuntu/.nvm/versions/node/v22.22.2/bin",
+        "npm_package_json": "/workspace/hearts-prototype/package.json",
+        "NVM_INC": "/home/ubuntu/.nvm/versions/node/v22.22.2/include/node",
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "HEARTS_E2E_PORT": "3125",
+        "npm_config_userconfig": "/home/ubuntu/.npmrc",
+        "npm_config_local_prefix": "/workspace/hearts-prototype",
+        "NO_COLOR": "1",
+        "PAYLOAD_SECRET": "hearts-prototype-dev-secret",
+        "VNC_DPI": "96",
+        "COLOR": "0",
+        "NVM_DIR": "/home/ubuntu/.nvm",
+        "HEARTS_E2E_DATABASE": "postgres://hearts:hearts@127.0.0.1:5432/hearts_e2e",
+        "FORCE_COLOR": "0",
+        "CURSOR_REQUEST_ID": "ea897404-50e3-4b9b-a228-a95a936e1da2",
+        "_": "/exec-daemon/npx",
+        "npm_config_prefix": "/",
+        "npm_config_npm_version": "10.9.2",
+        "TERMINFO_DIRS": "/exec-daemon/tmux-root/share/terminfo",
+        "HEARTS_E2E": "1",
+        "TERM": "tmux-256color",
+        "npm_config_cache": "/home/ubuntu/.npm",
+        "RUSTUP_HOME": "/usr/local/rustup",
+        "npm_config_node_gyp": "/exec-daemon/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js",
+        "PATH": "/workspace/hearts-prototype/node_modules/.bin:/workspace/hearts-prototype/node_modules/.bin:/workspace/node_modules/.bin:/node_modules/.bin:/exec-daemon/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin:/usr/local/cargo/bin:/usr/local/cargo/bin:/exec-daemon:/exec-daemon/tools:/usr/local/cargo/bin:/home/ubuntu/.nvm/versions/node/v22.22.2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "NODE": "/exec-daemon/node",
+        "npm_package_name": "hearts-prototype",
+        "AGENT_TRANSCRIPTS": "/home/ubuntu/.cursor/projects/workspace/agent-transcripts",
+        "CURSOR_AGENT": "1",
+        "DISPLAY": ":1",
+        "LANG": "en_US.UTF-8",
+        "TERM_PROGRAM": "tmux",
+        "npm_lifecycle_script": "playwright",
+        "SHELL": "/bin/bash",
+        "npm_package_version": "1.0.0",
+        "npm_lifecycle_event": "npx",
+        "GIT_DISCOVERY_ACROSS_FILESYSTEM": "0",
+        "GIT_LFS_SKIP_SMUDGE": "1",
+        "CURSOR_AGENT_SOCKET": "/run/cursor/api.sock",
+        "RUST_VERSION": "1.83.0",
+        "npm_config_globalconfig": "/etc/npmrc",
+        "npm_config_init_module": "/home/ubuntu/.npm-init.js",
+        "PWD": "/workspace/hearts-prototype",
+        "VNC_RESOLUTION": "1920x1200x24",
+        "LC_ALL": "en_US.UTF-8",
+        "npm_execpath": "/exec-daemon/lib/node_modules/npm/bin/npm-cli.js",
+        "CARGO_HOME": "/usr/local/cargo",
+        "NVM_CD_FLAGS": "",
+        "npm_config_global_prefix": "/",
+        "CURSOR_CONVERSATION_ID": "bc-edb5db0b-167a-5ce3-be5e-ed938b76923b",
+        "EXEC_DAEMON_STARTUP_TRACEPARENT": "00-01a10810fa687f069ca2efb07dddfa8b-9780fe9a7444cb8d-01",
+        "npm_command": "exec",
+        "__CURSOR_SANDBOX_ENV_RESTORE": "builtin unset CURSOR_CONVERSATION_ID CURSOR_REQUEST_ID CURSOR_AGENT_STORE_FILES_DIR CURSOR_AGENT_STORE_SHARED_PATHS 2>/dev/null || true; builtin export CURSOR_CONVERSATION_ID='bc-edb5db0b-167a-5ce3-be5e-ed938b76923b'; builtin export CURSOR_REQUEST_ID='ea897404-50e3-4b9b-a228-a95a936e1da2'",
+        "_ZO_DOCTOR": "0",
+        "TMUX_PANE": "%8",
+        "INIT_CWD": "/workspace/hearts-prototype",
+        "EDITOR": "vi",
+        "HEARTS_TEST_CLOCK": "1",
+        "HEARTS_DIST_DIR": ".next-e2e",
+        "HEARTS_TRUSTED_PROXY_HOPS": "1",
+        "HEARTS_SEARCH_FIXTURE": "tests/fixtures/youtube-search.json",
+        "HEARTS_TRANSCRIPT_FIXTURE": "tests/fixtures/transcripts.json"
+      }
+    }
+  },
+  "suites": [
+    {
+      "title": "journeys.spec.ts",
+      "file": "journeys.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "HEARTS journeys",
+          "file": "journeys.spec.ts",
+          "line": 92,
+          "column": 15,
+          "specs": [
+            {
+              "title": "an empty sign-in is refused",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                        "line": 92,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2866,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T01:28:34.616Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                            "line": 92,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aa09586c1d16412a1f00-47584b5314327372b0ab",
+              "file": "journeys.spec.ts",
+              "line": 94,
+              "column": 3
+            },
+            {
+              "title": "master opens a portal, a pack and its codes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                        "line": 92,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4131,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T01:28:37.585Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                            "line": 92,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aa09586c1d16412a1f00-ae6c735adb81245bd48c",
+              "file": "journeys.spec.ts",
+              "line": 102,
+              "column": 3
+            },
+            {
+              "title": "admin builds a course, extracts and approves a cut with its clause and seat, and places questions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                        "line": 92,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 12967,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T01:28:41.722Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                            "line": 92,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aa09586c1d16412a1f00-726ee686cdc865054208",
+              "file": "journeys.spec.ts",
+              "line": 126,
+              "column": 3
+            },
+            {
+              "title": "the approved cut reaches the learner feed; placing answers choose the first course",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                        "line": 92,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 33831,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T01:28:54.695Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                            "line": 92,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aa09586c1d16412a1f00-5c3a4021b2f5dba9b807",
+              "file": "journeys.spec.ts",
+              "line": 200,
+              "column": 3
+            },
+            {
+              "title": "learner answers, meets the contingent question, and the test clock opens it",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                        "line": 92,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 14398,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T01:29:28.535Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                            "line": 92,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aa09586c1d16412a1f00-bd6537e7f0dba999f4c6",
+              "file": "journeys.spec.ts",
+              "line": 224,
+              "column": 3
+            },
+            {
+              "title": "a second learner sees the shared answer, and a private answer stays private",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                        "line": 92,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 13626,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T01:29:42.946Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                            "line": 92,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aa09586c1d16412a1f00-e4bef644249e318aa999",
+              "file": "journeys.spec.ts",
+              "line": 274,
+              "column": 3
+            },
+            {
+              "title": "teacher replies to a shared workbook entry and the learner is told",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                        "line": 92,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4070,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T01:29:56.590Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                            "line": 92,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aa09586c1d16412a1f00-9f2559685e9c98f81ad2",
+              "file": "journeys.spec.ts",
+              "line": 289,
+              "column": 3
+            },
+            {
+              "title": "the schedule splitter shares three parts across Wednesdays and Fridays",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                        "line": 92,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2426,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T01:30:00.668Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                            "line": 92,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aa09586c1d16412a1f00-805f61c9ac0d7dd65ab9",
+              "file": "journeys.spec.ts",
+              "line": 310,
+              "column": 3
+            },
+            {
+              "title": "RSVP gives an earned or held ticket, self check-in for earned, staff check-in for held",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                        "line": 92,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5950,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T01:30:03.103Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                            "line": 92,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aa09586c1d16412a1f00-8526f2fa217c4ca40768",
+              "file": "journeys.spec.ts",
+              "line": 332,
+              "column": 3
+            },
+            {
+              "title": "rooms stay apart, including forged ids and the raw API",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                        "line": 92,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 9187,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T01:30:09.061Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                            "line": 92,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aa09586c1d16412a1f00-9ed8bb221a9d042f00db",
+              "file": "journeys.spec.ts",
+              "line": 358,
+              "column": 3
+            },
+            {
+              "title": "a learner on an admin address is sent back, and a closed portal shows the closed page",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                        "line": 92,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 16878,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T01:30:18.257Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                            "line": 92,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "aa09586c1d16412a1f00-e70493f13d6746511c71",
+              "file": "journeys.spec.ts",
+              "line": 394,
+              "column": 3
+            },
+            {
+              "title": "feed swipes stay on one level, and learn more steps to that clip’s own parent",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                        "line": 92,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 22304,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).not.\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByTestId('journey')\nExpected: not \u001b[32m\"27\"\u001b[39m\nReceived: \u001b[31m\"\u001b[7m27\u001b[27m\"\u001b[39m\nTimeout:  20000ms\n\nCall log:\n\u001b[2m  - Expect \"not toHaveAttribute\" getByTestId('journey') with timeout 20000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey')\u001b[22m\n\u001b[2m    43 × locator resolved to <div data-cut=\"27\" data-index=\"2\" data-lesson=\"3\" data-mode=\"hors\" data-card=\"talk\" data-phase=\"feed\" data-playing=\"no\" data-seen=\"14 27\" data-chrome=\"over\" data-lane=\"talking\" data-testid=\"journey\" data-player-state=\"-1\" data-cuts=\"14 14 27 27\" data-player-muted=\"yes\" data-speaker-slug=\"mikaeel-smith\" class=\"journey overlay phase-feed\" data-speaker=\"Shaykh Mikaeel Smith\" data-seen-cards=\"14:talk:hors 27:talk:hors\" data-lesson-title=\"The Names Class 20: Al-Nur\" data-course-title=\"The Names Class 20…>…</div>\u001b[22m\n\u001b[2m       - unexpected value \"27\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).not.\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByTestId('journey')\nExpected: not \u001b[32m\"27\"\u001b[39m\nReceived: \u001b[31m\"\u001b[7m27\u001b[27m\"\u001b[39m\nTimeout:  20000ms\n\nCall log:\n\u001b[2m  - Expect \"not toHaveAttribute\" getByTestId('journey') with timeout 20000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey')\u001b[22m\n\u001b[2m    43 × locator resolved to <div data-cut=\"27\" data-index=\"2\" data-lesson=\"3\" data-mode=\"hors\" data-card=\"talk\" data-phase=\"feed\" data-playing=\"no\" data-seen=\"14 27\" data-chrome=\"over\" data-lane=\"talking\" data-testid=\"journey\" data-player-state=\"-1\" data-cuts=\"14 14 27 27\" data-player-muted=\"yes\" data-speaker-slug=\"mikaeel-smith\" class=\"journey overlay phase-feed\" data-speaker=\"Shaykh Mikaeel Smith\" data-seen-cards=\"14:talk:hors 27:talk:hors\" data-lesson-title=\"The Names Class 20: Al-Nur\" data-course-title=\"The Names Class 20…>…</div>\u001b[22m\n\u001b[2m       - unexpected value \"27\"\u001b[22m\n\n    at /workspace/hearts-prototype/tests/e2e/journeys.spec.ts:444:28",
+                        "location": {
+                          "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                          "column": 28,
+                          "line": 444
+                        },
+                        "snippet": "  442 |     await swipe(-220, 0)\n  443 |     await expect(page.getByTestId('toast')).toContainText(/More on|everything on/)\n> 444 |     await expect(feed).not.toHaveAttribute('data-cut', beforeLeft!)\n      |                            ^\n  445 |     await expect(feed).toHaveAttribute('data-mode', 'hors')\n  446 |     const first = await feed.getAttribute('data-cut')\n  447 |     const horsMore = page.getByTestId('learn-more')"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                            "column": 28,
+                            "line": 444
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).not.\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByTestId('journey')\nExpected: not \u001b[32m\"27\"\u001b[39m\nReceived: \u001b[31m\"\u001b[7m27\u001b[27m\"\u001b[39m\nTimeout:  20000ms\n\nCall log:\n\u001b[2m  - Expect \"not toHaveAttribute\" getByTestId('journey') with timeout 20000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('journey')\u001b[22m\n\u001b[2m    43 × locator resolved to <div data-cut=\"27\" data-index=\"2\" data-lesson=\"3\" data-mode=\"hors\" data-card=\"talk\" data-phase=\"feed\" data-playing=\"no\" data-seen=\"14 27\" data-chrome=\"over\" data-lane=\"talking\" data-testid=\"journey\" data-player-state=\"-1\" data-cuts=\"14 14 27 27\" data-player-muted=\"yes\" data-speaker-slug=\"mikaeel-smith\" class=\"journey overlay phase-feed\" data-speaker=\"Shaykh Mikaeel Smith\" data-seen-cards=\"14:talk:hors 27:talk:hors\" data-lesson-title=\"The Names Class 20: Al-Nur\" data-course-title=\"The Names Class 20…>…</div>\u001b[22m\n\u001b[2m       - unexpected value \"27\"\u001b[22m\n\n\n  442 |     await swipe(-220, 0)\n  443 |     await expect(page.getByTestId('toast')).toContainText(/More on|everything on/)\n> 444 |     await expect(feed).not.toHaveAttribute('data-cut', beforeLeft!)\n      |                            ^\n  445 |     await expect(feed).toHaveAttribute('data-mode', 'hors')\n  446 |     const first = await feed.getAttribute('data-cut')\n  447 |     const horsMore = page.getByTestId('learn-more')\n    at /workspace/hearts-prototype/tests/e2e/journeys.spec.ts:444:28"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T01:30:35.146Z",
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                            "line": 92,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/workspace/hearts-prototype/test-results/journeys-HEARTS-journeys-f-04c16-s-to-that-clip’s-own-parent/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                        "column": 28,
+                        "line": 444
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "aa09586c1d16412a1f00-b113186d88188cb24c55",
+              "file": "journeys.spec.ts",
+              "line": 417,
+              "column": 3
+            },
+            {
+              "title": "the main screens load without console errors",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/workspace/hearts-prototype/tests/e2e/journeys.spec.ts",
+                        "line": 92,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T01:30:57.500Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "aa09586c1d16412a1f00-db421559e720bd72e433",
+              "file": "journeys.spec.ts",
+              "line": 470,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-05T01:28:05.211Z",
+    "duration": 172447.014,
+    "expected": 11,
+    "skipped": 1,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

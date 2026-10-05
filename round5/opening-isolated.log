@@ -1,0 +1,104 @@
+Wiped the Postgres database (dropped the public schema).
+[02:15:27] [33mWARN[39m: [36mNo email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.[39m
+[02:15:27] [32mINFO[39m: [36mReading migration files from /workspace/hearts-prototype/src/migrations[39m
+[02:15:27] [32mINFO[39m: [36mMigrating: 20261003_103330_initial[39m
+[02:15:28] [32mINFO[39m: [36mMigrated:  20261003_103330_initial (895ms)[39m
+[02:15:28] [32mINFO[39m: [36mMigrating: 20261003_124500_integration_part1[39m
+[02:15:28] [32mINFO[39m: [36mMigrated:  20261003_124500_integration_part1 (194ms)[39m
+[02:15:28] [32mINFO[39m: [36mMigrating: 20261003_131651_integration_part2[39m
+[02:15:28] [32mINFO[39m: [36mMigrated:  20261003_131651_integration_part2 (51ms)[39m
+[02:15:28] [32mINFO[39m: [36mMigrating: 20261003_140611_harvest[39m
+[02:15:28] [32mINFO[39m: [36mMigrated:  20261003_140611_harvest (9ms)[39m
+[02:15:28] [32mINFO[39m: [36mMigrating: 20261003_180616_jibril_doors[39m
+[02:15:28] [32mINFO[39m: [36mMigrated:  20261003_180616_jibril_doors (16ms)[39m
+[02:15:28] [32mINFO[39m: [36mMigrating: 20261003_194500_line_tidy[39m
+[02:15:28] [32mINFO[39m: [36mMigrated:  20261003_194500_line_tidy (1ms)[39m
+[02:15:28] [32mINFO[39m: [36mMigrating: 20261003_200853_integration_final[39m
+[02:15:28] [32mINFO[39m: [36mMigrated:  20261003_200853_integration_final (48ms)[39m
+[02:15:28] [32mINFO[39m: [36mMigrating: 20261003_220000_feedback[39m
+[02:15:28] [32mINFO[39m: [36mMigrated:  20261003_220000_feedback (40ms)[39m
+[02:15:28] [32mINFO[39m: [36mMigrating: 20261004_031500_gather[39m
+[02:15:28] [32mINFO[39m: [36mMigrated:  20261004_031500_gather (73ms)[39m
+[02:15:28] [32mINFO[39m: [36mMigrating: 20261004_060000_shorts[39m
+[02:15:28] [32mINFO[39m: [36mMigrated:  20261004_060000_shorts (2ms)[39m
+[02:15:28] [32mINFO[39m: [36mMigrating: 20261004_061000_portal_time_zone[39m
+[02:15:28] [32mINFO[39m: [36mMigrated:  20261004_061000_portal_time_zone (1ms)[39m
+[02:15:28] [32mINFO[39m: [36mMigrating: 20261004_080000_lesson_picture_flags[39m
+[02:15:28] [32mINFO[39m: [36mMigrated:  20261004_080000_lesson_picture_flags (3ms)[39m
+[02:15:28] [32mINFO[39m: [36mMigrating: 20261004_120000_compass_v2[39m
+[02:15:28] [32mINFO[39m: [36mMigrated:  20261004_120000_compass_v2 (37ms)[39m
+[02:15:28] [32mINFO[39m: [36mMigrating: 20261004_180000_gather_entry_code[39m
+[02:15:28] [32mINFO[39m: [36mMigrated:  20261004_180000_gather_entry_code (1ms)[39m
+[02:15:28] [32mINFO[39m: [36mMigrating: 20261004_210000_schedule_minutes[39m
+[02:15:28] [32mINFO[39m: [36mMigrated:  20261004_210000_schedule_minutes (1ms)[39m
+[02:15:28] [32mINFO[39m: [36mMigrating: 20261005_010000_swarm_hidden[39m
+[02:15:28] [32mINFO[39m: [36mMigrated:  20261005_010000_swarm_hidden (1ms)[39m
+Harvest: 172 verses and hadith across 31 talks. No quotation found in 5: Gratitude is the Greatest Blessing | Gems from Ibn Ata Illah Ep. 1 | Shaykh Mikaeel Ahmed Smith; How to Manage Your Anger - Amjad Tarsin; Moments of Solitude: Closeness to God | Jummah Khutbah | Imam Khalid Latif | 3.11.2022; On Mosques, Companionship, & Knowledge; Quranic Connection #26: A Cure for Anxiety | Shaykh Suleiman Hani.
+Harvest sample: 4 lines kept for Maryam.
+Feedback demo: sample answers are on the East London and Leeds desks.
+Seeded HEARTS. Master: master@hearts.test / hearts-master
+Access codes (also on the master desk, and in data/seed-codes-test.json):
+  elm-teacher    ELM-PC46-D9WK
+  elm-admin      ELM-ECQJ-XRW6
+  elm-learner    ELM-7EDE-VKUV
+  elm-parent     ELM-XCA6-UPCA
+  leeds-teacher  LEEDS-E3R7-9YEJ
+  leeds-learner  LEEDS-W46J-MBAN
+
+Running 43 tests using 1 worker
+
+(node:85690) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:85690) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/43] tests/e2e/opening.spec.ts:78:3 › the opening › 1. a first visit to the portal lands on the opener, with its caption and both ways in
+[2/43] tests/e2e/opening.spec.ts:88:3 › the opening › 2. nothing from YouTube loads before the learner chooses a way in (P12)
+[3/43] tests/e2e/opening.spec.ts:95:3 › the opening › 3. Let us play opens scene one, and the address follows the scene
+[4/43] tests/e2e/opening.spec.ts:102:3 › the opening › 4. a tap shows its reply line, then the next scene rises
+[5/43] tests/e2e/opening.spec.ts:111:3 › the opening › 5. Pass moves on without a tap and is kept as a pass
+[6/43] tests/e2e/opening.spec.ts:120:3 › the opening › 6. going back replaces the earlier tap instead of adding one
+[7/43] tests/e2e/opening.spec.ts:133:3 › the opening › 7. the crisis option opens the help screen with contacts, and Back to HEARTS returns to the opener
+[8/43] tests/e2e/opening.spec.ts:147:3 › the opening › 8. the help screen has its own address and works on a cold load
+[9/43] tests/e2e/opening.spec.ts:153:3 › the opening › 9. six taps hand off with the line, then the feed, at /feed
+[10/43] tests/e2e/opening.spec.ts:163:3 › the opening › 10. Back from the feed does not reopen the scenes
+[11/43] tests/e2e/opening.spec.ts:171:3 › the opening › 11. the taps stay on the device: no request carries them before sign-up (P1)
+[12/43] tests/e2e/opening.spec.ts:184:3 › the opening › 12. before sign-up the feed is chosen on the device, so no request carries lane scores (P2)
+[13/43] tests/e2e/opening.spec.ts:198:3 › the opening › 13. Just show me something goes straight to a clip with its own line
+[14/43] tests/e2e/opening.spec.ts:205:3 › the opening › 14. after the opening, the portal address opens the feed on the next visit
+[15/43] tests/e2e/opening.spec.ts:212:3 › the opening › 15. the sky lightens scene by scene and is full at the feed
+[16/43] tests/e2e/opening.spec.ts:221:3 › the opening › 16. a heart on a clip asks to keep the place, and Not now carries on
+[17/43] tests/e2e/opening.spec.ts:230:3 › the opening › 17. signing up from the sheet sends the opening once, and the workbook shows where you started
+[18/43] tests/e2e/opening.spec.ts:251:3 › the opening › 18. a private opening answer is never shown to the teacher (P9)
+[19/43] tests/e2e/opening.spec.ts:264:3 › the opening › 19. the owner sees all six rows, private ones with a lock
+[20/43] tests/e2e/opening.spec.ts:270:3 › the opening › 20. the mentor CSV holds shared rows only
+[21/43] tests/e2e/opening.spec.ts:280:3 › the opening › 21. turning off Share my opening answers hides them from the teacher
+[22/43] tests/e2e/opening.spec.ts:307:3 › the opening › 22. the Me tab lets the learner change their name
+[23/43] tests/e2e/opening.spec.ts:319:3 › the opening › 23. Guarding the gaze is opt-in and kept on the device only
+[24/43] tests/e2e/opening.spec.ts:330:3 › the opening › 24. Start again clears the opening here and on the server, and opens the opener
+[25/43] tests/e2e/opening.spec.ts:349:3 › the opening › 25. reduced motion keeps every step, with fades in place of movement
+[26/43] tests/e2e/opening.spec.ts:363:3 › pop-up questions in a lesson › 26. the question strip shows one mark per question
+[27/43] tests/e2e/opening.spec.ts:371:3 › pop-up questions in a lesson › 27. playback stops at a question, the answer saves, and playback carries on
+[28/43] tests/e2e/opening.spec.ts:393:3 › pop-up questions in a lesson › 28. Answer later closes the card and keeps the question open
+[29/43] tests/e2e/opening.spec.ts:407:3 › pop-up questions in a lesson › 29a. a clip the player refuses is reported, and a report alone never hides it
+[30/43] tests/e2e/opening.spec.ts:419:3 › pop-up questions in a lesson › 29. the strict layout keeps the paused player in view above the card
+[31/43] tests/e2e/opening.spec.ts:444:3 › the desks for the opening › 30. the master sees the six scenes, their options and the publish checks
+[32/43] tests/e2e/opening.spec.ts:451:3 › the desks for the opening › 31. publishing a caption with a kill-list word is refused
+[33/43] tests/e2e/opening.spec.ts:463:3 › the desks for the opening › 32. the simulator runs the phone’s routing on picked taps
+[34/43] tests/e2e/opening.spec.ts:475:3 › the desks for the opening › 33. the lanes screen lists every lane and the tag queue
+[35/43] tests/e2e/opening.spec.ts:481:3 › the desks for the opening › 34. trends stay hidden until ten people have taken part
+[36/43] tests/e2e/opening.spec.ts:487:3 › the desks for the opening › 35. a portal admin rewords a scene for their community and the opener shows it
+[WebServer] (node:85595) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[37/43] tests/e2e/opening.spec.ts:503:3 › the desks for the opening › 36. the scene with the help option cannot be left out
+[38/43] tests/e2e/opening.spec.ts:510:3 › the desks for the opening › 37. a portal admin adds a help contact and the help screen lists it
+[39/43] tests/e2e/opening.spec.ts:525:3 › the desks for the opening › 38. persona bands are distinct, including anger and greed
+[40/43] tests/e2e/opening.spec.ts:542:3 › the desks for the opening › 39. the master edits a scale and a nudge, and a portal admin cannot see the bands
+[41/43] tests/e2e/opening.spec.ts:586:3 › the desks for the opening › 40. a learner sees a gentle path and the API carries no raw scores
+[42/43] tests/e2e/opening.spec.ts:615:3 › the desks for the opening › 41. an imam sees the signed scale over time and the talks watched between looks
+[43/43] tests/e2e/opening.spec.ts:659:3 › the desks for the opening › 42. a month later the home card opens different words and a life check
+  43 passed (4.4m)

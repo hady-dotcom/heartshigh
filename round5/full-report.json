@@ -1,0 +1,142 @@
+{
+  "stats": {
+    "startTime": "2026-10-05T01:35:27.082Z",
+    "duration": 1990253.045,
+    "expected": 213,
+    "skipped": 5,
+    "unexpected": 11,
+    "flaky": 0
+  },
+  "failed": [
+    {
+      "file": "feed-evening.spec.ts",
+      "line": 133,
+      "title": "a question-card swipe and a scenic-card swipe never show a bare side or a blank pill",
+      "status": "unexpected",
+      "rstatus": "failed",
+      "err": "Error: no frame leaves an edge of the phone bare"
+    },
+    {
+      "file": "feed-evening.spec.ts",
+      "line": 217,
+      "title": "the extended cut opens on our own poster with the talk title, never a titled YouTube thumbnail",
+      "status": "unexpected",
+      "rstatus": "timedOut",
+      "err": "\u001b[31mTest timeout of 90000ms exceeded.\u001b[39m"
+    },
+    {
+      "file": "feed-polish.spec.ts",
+      "line": 50,
+      "title": "one Tap for sound on the first clip and on the 3-minute version; scenic chrome stays readable",
+      "status": "unexpected",
+      "rstatus": "failed",
+      "err": "Error: needed a talk before the pool ran out"
+    },
+    {
+      "file": "feed-touch.spec.ts",
+      "line": 68,
+      "title": "touch swipes left and right move the feed, on a talk clip, on a card, and in the appetiser loop",
+      "status": "unexpected",
+      "rstatus": "failed",
+      "err": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m"
+    },
+    {
+      "file": "harvest-lines.spec.ts",
+      "line": 65,
+      "title": "a fresh learner sees the sample, then a short clip keeps a real line and parts watched stays at 0",
+      "status": "unexpected",
+      "rstatus": "failed",
+      "err": "TimeoutError: page.waitForResponse: Timeout 60000ms exceeded while waiting for event \"response\""
+    },
+    {
+      "file": "integration-final.spec.ts",
+      "line": 67,
+      "title": "a learner joins by code, takes the persona quiz, stays on level, steps up by Learn more, answers an imported pop-up and finds it all again",
+      "status": "unexpected",
+      "rstatus": "failed",
+      "err": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).not.\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed"
+    },
+    {
+      "file": "integration-r3.spec.ts",
+      "line": 57,
+      "title": "a YouTube Short in the feed: no caption over its burned-in words, Follow at the top, and our own poster",
+      "status": "unexpected",
+      "rstatus": "failed",
+      "err": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed"
+    },
+    {
+      "file": "journeys.spec.ts",
+      "line": 417,
+      "title": "feed swipes stay on one level, and learn more steps to that clip\u2019s own parent",
+      "status": "unexpected",
+      "rstatus": "failed",
+      "err": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).not.\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed"
+    },
+    {
+      "file": "nesting-progress.spec.ts",
+      "line": 22,
+      "title": "at phone size, short clips stay off the grow page and a full talk in a course moves it",
+      "status": "unexpected",
+      "rstatus": "failed",
+      "err": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).not.\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed"
+    },
+    {
+      "file": "opening.spec.ts",
+      "line": 451,
+      "title": "31. publishing a caption with a kill-list word is refused",
+      "status": "unexpected",
+      "rstatus": "timedOut",
+      "err": "\u001b[31mTest timeout of 180000ms exceeded.\u001b[39m"
+    },
+    {
+      "file": "screenshots.spec.ts",
+      "line": 25,
+      "title": "a week of use, so the garden has something in it",
+      "status": "unexpected",
+      "rstatus": "timedOut",
+      "err": "\u001b[31mTest timeout of 300000ms exceeded.\u001b[39m"
+    }
+  ],
+  "skipped": [
+    {
+      "file": "integration-final.spec.ts",
+      "line": 206,
+      "title": "a portal admin walks the short setup and lands back on the overview",
+      "status": "skipped",
+      "rstatus": "skipped",
+      "err": ""
+    },
+    {
+      "file": "journeys.spec.ts",
+      "line": 470,
+      "title": "the main screens load without console errors",
+      "status": "skipped",
+      "rstatus": "skipped",
+      "err": ""
+    },
+    {
+      "file": "r5c-evidence.spec.ts",
+      "line": 184,
+      "title": "contrast at 10:00 and 20:00 Toronto, and the after screenshots",
+      "status": "skipped",
+      "rstatus": "skipped",
+      "err": ""
+    },
+    {
+      "file": "r5c-evidence.spec.ts",
+      "line": 263,
+      "title": "swarm Answers like mine and Surprise me",
+      "status": "skipped",
+      "rstatus": "skipped",
+      "err": ""
+    },
+    {
+      "file": "r5c-evidence.spec.ts",
+      "line": 270,
+      "title": "a new learner from the join link reaches the first talk",
+      "status": "skipped",
+      "rstatus": "skipped",
+      "err": ""
+    }
+  ]
+}
