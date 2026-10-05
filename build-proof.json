@@ -1,0 +1,30 @@
+{
+  "title": "S05 type-fix / live deploy unblock",
+  "codeBranch": "cursor/s05-type-fix-live-unblock-b07e",
+  "codeCommit": "231abf0677f3344b2cbc7c317ffdd227a8a61231",
+  "baseBranch": "cursor/hearts-prototype-v1-cf40",
+  "baseCommit": "a366ecb",
+  "pr": "https://github.com/hady-dotcom/heartshigh/pull/42",
+  "liveStillOn": "8ad0b33",
+  "reproducedError": {
+    "file": "hearts-prototype/src/collections.ts",
+    "line": 201,
+    "code": "TS2322",
+    "summary": "mediaReadAccess is not assignable to Access: inferred Where union carries id?: undefined, which violates Where's index signature",
+    "tscExit": 2,
+    "log": "tsc-before.txt"
+  },
+  "afterFix": {
+    "tsc": { "command": "npx tsc --noEmit --pretty false", "exit": 0, "log": "tsc-after.txt" },
+    "nextBuild": {
+      "command": "HEARTS_BUILD=1 NODE_OPTIONS=--max-old-space-size=3072 npm run build",
+      "matchesDockerfile": true,
+      "exit": 0,
+      "compiled": true,
+      "typecheck": "Linting and checking validity of types passed",
+      "log": "next-build.txt"
+    },
+    "s05Unit": { "command": "npx tsx --test src/lib/media-access.test.ts", "tests": 6, "fail": 0, "log": "unit-media-access.txt" },
+    "fullUnit": { "command": "npm run test:unit", "tests": 326, "fail": 0, "log": "unit-full.txt" }
+  }
+}

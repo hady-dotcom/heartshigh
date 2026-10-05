@@ -1,0 +1,78 @@
+# command: HEARTS_BUILD=1 NODE_OPTIONS=--max-old-space-size=3072 npm run build
+# cwd: hearts-prototype
+# commit: 231abf0677f3344b2cbc7c317ffdd227a8a61231
+# same command as hearts-prototype/Dockerfile (Railway production image)
+# exit: 0
+
+> hearts-prototype@1.0.0 build
+> next build
+
+   ▲ Next.js 15.4.11
+   - Experiments (use with caution):
+     · serverActions
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 30.0s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/3) ...
+ ✓ Generating static pages (3/3)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ƒ /                                      182 B         104 kB
+├ ○ /_not-found                            999 B         102 kB
+├ ƒ /admin/[[...segments]]                 413 B         581 kB
+├ ƒ /api/[...slug]                         193 B         101 kB
+├ ƒ /api/ai-steps                          193 B         101 kB
+├ ƒ /api/answers                           193 B         101 kB
+├ ƒ /api/compass                           193 B         101 kB
+├ ƒ /api/feedback                          193 B         101 kB
+├ ƒ /api/health                            193 B         101 kB
+├ ƒ /api/hearts                            193 B         101 kB
+├ ƒ /api/hearts/contribute                 193 B         101 kB
+├ ƒ /api/hearts/feed                       193 B         101 kB
+├ ƒ /api/hearts/file/[id]                  193 B         101 kB
+├ ƒ /api/hearts/film/[lessonId]            193 B         101 kB
+├ ƒ /api/hearts/harvest                    193 B         101 kB
+├ ƒ /api/hearts/opening                    193 B         101 kB
+├ ƒ /api/hearts/persona                    193 B         101 kB
+├ ƒ /api/hearts/sheet                      193 B         101 kB
+├ ƒ /api/hearts/sheet/create               193 B         101 kB
+├ ƒ /api/hearts/start-again                193 B         101 kB
+├ ƒ /api/hearts/state                      193 B         101 kB
+├ ƒ /api/hearts/unplayable                 193 B         101 kB
+├ ƒ /api/view-as/[action]                  193 B         101 kB
+├ ƒ /api/workbook                          193 B         101 kB
+├ ƒ /api/workbook/[learnerId]              193 B         101 kB
+├ ƒ /api/workbook/opening                  193 B         101 kB
+├ ƒ /backgrounds/[...path]                 193 B         101 kB
+├ ƒ /join                                  182 B         104 kB
+├ ƒ /login                                 182 B         104 kB
+├ ƒ /master                              2.41 kB         111 kB
+├ ƒ /master/ai/[[...path]]                 529 B         105 kB
+├ ƒ /master/circle                         182 B         104 kB
+├ ƒ /master/lanes                          205 B         147 kB
+├ ƒ /master/library/[[...id]]            2.41 kB         111 kB
+├ ƒ /master/opening                        205 B         147 kB
+├ ƒ /master/packs                        2.41 kB         111 kB
+├ ƒ /master/personas                       182 B         104 kB
+├ ƒ /master/questions                    2.41 kB         111 kB
+├ ƒ /master/review/[[...kind]]           1.11 kB         105 kB
+├ ƒ /master/sheet                          182 B         104 kB
+├ ƒ /master/sheet/create                   179 B         107 kB
+├ ƒ /master/simulator                      205 B         147 kB
+├ ƒ /master/tiers/[[...id]]              2.92 kB         109 kB
+├ ƒ /master/trends                         205 B         147 kB
+└ ƒ /p/[slug]/[[...screen]]              14.6 kB         168 kB
++ First Load JS shared by all             101 kB
+  ├ chunks/4bd1b696-cc729d47eba2cee4.js  54.1 kB
+  ├ chunks/5964-e79a4e4de2181827.js        44 kB
+  └ other shared chunks (total)          2.74 kB
+
+
+ƒ Middleware                             35.8 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

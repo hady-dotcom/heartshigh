@@ -1,0 +1,6 @@
+src/collections.ts(201,7): error TS2322: Type '({ req, id }: AccessArgs<any>) => false | { purpose: { in: string[]; }; id?: undefined; and?: undefined; } | { id: { equals: number; }; purpose?: undefined; and?: undefined; } | { and: ({ portal: { equals: number; }; purpose?: undefined; } | { ...; })[]; purpose?: undefined; id?: undefined; } | Promise<...>' is not assignable to type 'Access'.
+  Type 'false | { purpose: { in: string[]; }; id?: undefined; and?: undefined; } | { id: { equals: number; }; purpose?: undefined; and?: undefined; } | { and: ({ portal: { equals: number; }; purpose?: undefined; } | { purpose: { ...; }; portal?: undefined; })[]; purpose?: undefined; id?: undefined; } | Promise<...>' is not assignable to type 'AccessResult | Promise<AccessResult>'.
+    Type '{ purpose: { in: string[]; }; id?: undefined; and?: undefined; }' is not assignable to type 'AccessResult | Promise<AccessResult>'.
+      Type '{ purpose: { in: string[]; }; id?: undefined; and?: undefined; }' is not assignable to type 'Where'.
+        Property 'id' is incompatible with index signature.
+          Type 'undefined' is not assignable to type 'Where[] | WhereField'.

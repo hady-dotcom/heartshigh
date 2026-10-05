@@ -1,0 +1,5 @@
+# command: npx tsc --noEmit --pretty false
+# cwd: hearts-prototype
+# commit: 231abf0677f3344b2cbc7c317ffdd227a8a61231
+# exit: 0
+# no TypeScript diagnostics

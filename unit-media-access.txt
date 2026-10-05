@@ -1,0 +1,47 @@
+TAP version 13
+# Subtest: S05 media access
+    # Subtest: a learner reads only their own answer media
+    ok 1 - a learner reads only their own answer media
+      ---
+      duration_ms: 0.596086
+      ...
+    # Subtest: staff follow the answer rules; a teacher cannot open an unshared answer file
+    ok 2 - staff follow the answer rules; a teacher cannot open an unshared answer file
+      ---
+      duration_ms: 0.097991
+      ...
+    # Subtest: the master cannot open media on a private answer
+    ok 3 - the master cannot open media on a private answer
+      ---
+      duration_ms: 0.070706
+      ...
+    # Subtest: portal assets and films stay readable to members; listing never includes answer files
+    ok 4 - portal assets and films stay readable to members; listing never includes answer files
+      ---
+      duration_ms: 0.563957
+      ...
+    # Subtest: unowned answer media is private, not a portal asset
+    ok 5 - unowned answer media is private, not a portal asset
+      ---
+      duration_ms: 0.132253
+      ...
+    # Subtest: signed-out people read nothing, and the app file route is by id
+    ok 6 - signed-out people read nothing, and the app file route is by id
+      ---
+      duration_ms: 0.090066
+      ...
+    1..6
+ok 1 - S05 media access
+  ---
+  duration_ms: 2.279158
+  type: 'suite'
+  ...
+1..1
+# tests 6
+# suites 1
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 184.302831

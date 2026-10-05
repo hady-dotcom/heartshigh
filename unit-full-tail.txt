@@ -1,0 +1,20 @@
+  ...
+# Subtest: every appetiser beat opens and closes on the pause around a whole sentence
+ok 320 - every appetiser beat opens and closes on the pause around a whole sentence
+  ---
+  duration_ms: 1333.637899
+  ...
+# Subtest: a long appetiser beat shows one card of words, then the next
+ok 321 - a long appetiser beat shows one card of words, then the next
+  ---
+  duration_ms: 0.381056
+  ...
+1..321
+# tests 326
+# suites 1
+# pass 326
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 22308.300309
