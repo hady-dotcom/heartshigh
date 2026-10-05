@@ -2,7 +2,13 @@ import { expect, type APIRequestContext } from '@playwright/test'
 
 export const PROOF_COURSE = 'Ten sittings'
 
+function allowTestFixture() {
+  const db = process.env.DATABASE_URL || ''
+  return process.env.HEARTS_E2E === '1' || process.env.HEARTS_TEST_CLOCK === '1' || /hearts-test|hearts_[^\s]*e2e|_e2e/.test(db)
+}
+
 export async function ensureProofCourse(master: APIRequestContext, portalSlug = 'east-london', title = PROOF_COURSE) {
+  if (!allowTestFixture()) throw new Error('Ten sittings is a test fixture and is never planted in a demo portal.')
   const portals = (await (await master.get('/api/portals?limit=10&depth=0')).json()) as { docs: { id: number; slug?: string }[] }
   const portal = portals.docs.find((row) => row.slug === portalSlug)
   expect(portal).toBeTruthy()

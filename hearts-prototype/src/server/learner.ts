@@ -123,16 +123,23 @@ export function portraitFor(slug: string) {
 }
 
 export function posterFor(youtubeId: string | null | undefined) {
-  if (!youtubeId) return null
+  if (!youtubeId || !/^[\w-]{11}$/.test(youtubeId)) return null
   return publicFile(`clips/${youtubeId}.jpg`) || `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`
 }
 
-/** A still safe to paint as a thumbnail. Unchecked YouTube frames and local copies in /clips/ fall through to the courtyard. */
+/** A still we can paint as a thumbnail, including YouTube frames and the copies under /clips/. */
 export function shownPoster(url: string | null | undefined) {
   if (!url) return null
-  if (/i\.ytimg\.com|img\.youtube\.com/i.test(url)) return null
-  if (/^\/clips\//.test(url)) return null
   return url
+}
+
+/** Overview still: the real frame, else a speaker portrait or the courtyard, never an empty teal box. */
+export function talkStill(youtubeId: string | null | undefined, speaker?: string | null) {
+  const poster = shownPoster(posterFor(youtubeId))
+  if (poster) return { src: poster, fallback: false as const }
+  const face = speaker ? portraitFor(slugify(speaker)) : null
+  if (face) return { src: face, fallback: true as const }
+  return { src: '/theme/evening-courtyard.jpg', fallback: true as const }
 }
 
 export const SLIDE_ART: Record<SlideStyle, string> = {

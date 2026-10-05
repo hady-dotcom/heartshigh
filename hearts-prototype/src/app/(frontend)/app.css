@@ -251,7 +251,8 @@
 .player-card.yt-on { aspect-ratio: auto; height: calc((min(430px, 100vw) - 36px) * 9 / 16 + 96px); }
 .player-card.yt-on .yt { inset: 50px 0 72px; }
 /* While a question is open the paused film sits under a soft scrim, so YouTube's pause panel and suggestions fade back. */
-.player-card .yt-scrim { position: absolute; inset: 50px 0 72px; z-index: 2; background: linear-gradient(180deg, rgba(18, 17, 16, 0.5), rgba(18, 17, 16, 0.72)); backdrop-filter: blur(3px); pointer-events: none; }
+.player-card .yt-scrim { position: absolute; inset: 0 0 46px; z-index: 2; background: linear-gradient(180deg, rgba(18, 17, 16, 0.5), rgba(18, 17, 16, 0.72)); backdrop-filter: blur(3px); pointer-events: none; min-height: 80px; }
+.player-card.yt-on .yt-scrim { inset: 50px 0 72px; }
 .player-card.yt-on .part-chip { top: 9px; right: 70px; background: rgba(255, 255, 255, 0.1); }
 .player-card.yt-on .time-read { top: 9px; }
 .player-card .yt iframe, .player-card .yt > div, .player-card .yt video { width: 100%; height: 100%; max-width: 100%; max-height: 100%; border: 0; background: #0e2a2b; object-fit: contain; pointer-events: none; }
@@ -272,16 +273,17 @@
 .time-read { position: absolute; right: 14px; top: 14px; z-index: 3; font-size: 12px; font-weight: 700; background: rgba(0,0,0,0.6); border-radius: 999px; padding: 5px 10px; }
 .answer-btn { margin-top: 14px; width: 100%; min-height: 54px; border-radius: 16px; background: var(--purple); color: #fff; border: 0; font-weight: 700; font-size: 17px; }
 .answer-btn[disabled] { background: #cbbfdc; }
-.garden-card { margin-top: 16px; background: linear-gradient(165deg, #2a2448 0%, #1c2830 58%, #243628 100%); border: 0; color: #fff8ee; border-radius: 22px; padding: 18px; }
-.garden-card .eyebrow { color: #f3d38e; margin: 0 0 12px; }
-.garden-card h3, .garden-card small, .garden-card .garden-link { color: #fff8ee; }
-.garden-card .bar { background: rgba(255, 255, 255, 0.16); }
-.garden-card .bar > i { background: #f0c36a; }
+.garden-card { margin-top: 16px; background: #0E2A2B; border: 1px solid #D4A84B; color: #e6efe8; border-radius: 22px; padding: 18px; }
+.garden-card .eyebrow { color: #D4A84B; margin: 0 0 12px; }
+.garden-card h3, .garden-card small, .garden-card .garden-link { color: #e6efe8; }
+.garden-card h3 { color: #D4A84B; }
+.garden-card .bar { background: rgba(212, 168, 75, 0.22); }
+.garden-card .bar > i { background: #D4A84B; }
 .garden-grid { display: grid; grid-template-columns: 122px 1fr; gap: 14px; align-items: center; }
 .course-tree { width: 108px; height: 108px; border-radius: 18px; display: block; background: #0e2a2b url('/theme/evening-courtyard.jpg') center 52% / cover no-repeat; border: 1px solid rgba(212, 168, 75, 0.55); }
 .garden-grid h3 { margin: 0; font-size: 19px; }
 .garden-grid small { color: var(--muted); }
-.garden-card .garden-grid small { color: rgba(255, 248, 238, 0.86); }
+.garden-card .garden-grid small { color: #e6efe8; }
 .bar { height: 8px; border-radius: 8px; background: #d4e7df; overflow: hidden; margin: 10px 0; }
 .bar > i { display: block; height: 100%; background: var(--teal); border-radius: 8px; }
 .garden-link { display: block; color: var(--teal); font-weight: 700; text-decoration: none; margin: 6px 0; font-size: 15px; }
@@ -336,10 +338,9 @@
 .part-chip.paused { background: rgba(255, 255, 255, 0.16); }
 .sheet.leaving { opacity: 0; transform: translate(-50%, 24px); transition: opacity 0.18s ease, transform 0.18s ease; }
 .time-left { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: var(--orange); }
-.q-strip { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 2px 0; }
-.q-strip span { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; }
-.q-strip .done { background: var(--teal); color: #fff; }
-.q-strip .open { background: #0F2E2C; color: #F1E4C6; }
+.q-list { list-style: none; margin: 10px 2px 0; padding: 0; display: grid; gap: 6px; }
+.q-list li { margin: 0; padding: 8px 12px; border-radius: 12px; font-size: 13px; line-height: 1.35; background: #0F2E2C; color: #e6efe8; border: 1px solid rgba(212, 168, 75, 0.35); }
+.q-list li.done { border-color: #D4A84B; color: #D4A84B; }
 @media (prefers-reduced-motion: reduce) { .sheet, .sheet.leaving { animation: none; transform: translateX(-50%); } }
 .sheet-close { position: absolute; right: 14px; top: 12px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: #f2ede3; font-size: 20px; }
 
@@ -587,13 +588,16 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 }
 .player-retry p { margin: 0; font-weight: 650; }
 .fruit-explain { display: block; margin: 4px 0 0; font-size: 12px; line-height: 1.4; }
+.garden-card .fruit-explain, .garden-card .muted { color: #e6efe8; }
 .up-next-row { display: block; margin: 12px 2px 0; font-weight: 700; color: var(--ink); text-decoration: none; min-height: 44px; }
 .up-next-row.last { color: var(--ink-2); font-weight: 600; }
 .up-next-card { margin-top: 14px; background: #0F2E2C; color: #F1E4C6; border-radius: 20px; padding: 16px; }
 .up-next-card h2 { margin: 0 0 8px; font-size: 22px; }
 .up-next-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .buffet-row { display: flex; align-items: center; gap: 12px; background: #0F2E2C; color: #F1E4C6; border-radius: 16px; padding: 10px; margin-bottom: 10px; text-decoration: none; min-height: 64px; }
-.buffet-row .thumb { width: 72px; height: 44px; border-radius: 10px; background: #0F2E2C center/cover; flex: none; }
+.buffet-row .thumb { width: 72px; height: 44px; border-radius: 10px; background: #0E2A2B; border: 1px solid rgba(212, 168, 75, 0.45); flex: none; overflow: hidden; position: relative; }
+.buffet-row .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.buffet-row .thumb .thumb-title { position: absolute; inset: 0; display: grid; place-items: center; padding: 3px; font-size: 9px; line-height: 1.15; font-weight: 700; color: #D4A84B; text-align: center; }
 .buffet-row .t { flex: 1; min-width: 0; }
 .buffet-row b, .talk-name { display: block; font-size: 15px; overflow-wrap: break-word; word-break: normal; hyphens: none; -webkit-hyphens: none; }
 .buffet-row small { display: block; color: #E8D6AE; font-size: 12.5px; }

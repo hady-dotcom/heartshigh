@@ -94,6 +94,38 @@ test.describe('courses and planning', () => {
     expect(overflow).toBeTruthy()
   })
 
+  test('every overview row on a real imported course has a visible still', async ({ page }) => {
+    await page.setViewportSize(PHONE)
+    const lessons = ((await json('/api/lessons?limit=80&depth=0')).docs || []) as { id: number; course: number; youtubeId?: string }[]
+    const courses = ((await json('/api/courses?limit=80&depth=0')).docs || []) as { id: number; title?: string }[]
+    const real = lessons.filter((row) => row.youtubeId && /^[\w-]{11}$/.test(row.youtubeId) && row.youtubeId !== 'dQw4w9WgXcQ')
+    const byCourse = new Map<number, typeof real>()
+    for (const row of real) {
+      const list = byCourse.get(row.course) || []
+      list.push(row)
+      byCourse.set(row.course, list)
+    }
+    const courseId = [...byCourse.entries()].sort((a, b) => b[1].length - a[1].length)[0]?.[0]
+    expect(courseId, 'a seeded imported course with real YouTube ids').toBeTruthy()
+    expect(courses.find((course) => course.id === courseId)?.title).not.toBe(PROOF_COURSE)
+    await signIn(page, `${BASE}/course/${courseId}`)
+    await expect(page.getByTestId('course-overview')).toBeVisible()
+    const talks = page.getByTestId('buffet-talk')
+    const count = await talks.count()
+    expect(count).toBeGreaterThan(0)
+    await expect(page.getByTestId('talk-thumb')).toHaveCount(count)
+    for (let index = 0; index < count; index++) {
+      const img = talks.nth(index).getByTestId('talk-thumb').locator('img')
+      await expect(img).toBeVisible()
+      const src = (await img.getAttribute('src')) || ''
+      expect(src, 'row still is a real frame, a speaker, or courtyard art').toMatch(/ytimg|\/clips\/|\/speakers\/|evening-courtyard/)
+      const box = await talks.nth(index).getByTestId('talk-thumb').boundingBox()
+      expect(box?.width, 'thumb is painted, not an empty teal box').toBeGreaterThan(20)
+      expect(box?.height).toBeGreaterThan(20)
+    }
+    await proofShot(page, 'round7-overview-thumbs')
+  })
+
   test('B6, B11 and B15: the player pauses, thinks, and always has a next part', async ({ page }) => {
     await page.setViewportSize(PHONE)
     await fakeYouTube(page)
@@ -118,6 +150,14 @@ test.describe('courses and planning', () => {
     await page.goto(`${BASE}/course/${courseId}?part=${first.id}`)
     await expect(page.getByTestId('up-next')).toBeVisible()
     await expect(page.getByTestId('player')).toBeVisible()
+    const garden = await page.getByTestId('course-garden').evaluate((card) => {
+      const style = getComputedStyle(card)
+      return { bg: style.backgroundColor, color: style.color, border: style.borderColor }
+    })
+    expect(garden.bg.replace(/\s/g, '')).toMatch(/rgb\(14,\s*42,\s*43\)/)
+    expect(garden.bg).not.toMatch(/42,\s*36,\s*72|36,\s*54,\s*40/)
+    await proofShot(page, 'round7-garden-card')
+    await proofShot(page, 'round7-player-bar')
   })
 
   test('B25: the workbook summarises and links back to the talk', async ({ page }) => {

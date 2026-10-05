@@ -12,7 +12,7 @@ import { delayToMs, unlockState } from '@/lib/unlock'
 import { visibleCourseIds } from '@/server/context'
 import { sortParts } from '@/lib/part-order'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
-import { courseCards, portraitFor, posterFor, shownPoster, slugify } from '@/server/learner'
+import { courseCards, portraitFor, posterFor, shownPoster, slugify, talkStill } from '@/server/learner'
 import { speakerPage } from '@/server/speakers'
 import { learnerClips, pointVisibleWhere } from '@/server/opening'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
@@ -149,12 +149,17 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
         {lessons.map((lesson, index) => {
           const secondsHere = Number(lesson.durationSeconds || 0)
           const youtubeId = str(lesson.youtubeId) || null
+          const name = partTitle(lesson, title)
+          const still = talkStill(youtubeId, str(lesson.speaker || course.speaker))
           return (
             <Link key={lesson.id} className="buffet-row" href={`${base}/course/${course.id}?part=${lesson.id}`} data-testid="buffet-talk">
-              <span className="thumb" style={shownPoster(posterFor(youtubeId)) ? { backgroundImage: `url(${shownPoster(posterFor(youtubeId))})` } : undefined} />
+              <span className={`thumb${still.fallback ? ' is-fallback' : ''}`} data-testid="talk-thumb">
+                <img src={still.src} alt="" />
+                {still.fallback ? <span className="thumb-title">{name}</span> : null}
+              </span>
               <span className="t">
                 <small>Part {index + 1}</small>
-                <b className="talk-name">{partTitle(lesson, title)}</b>
+                <b className="talk-name">{name}</b>
                 <small>{secondsHere ? clock(secondsHere) : 'Length not known yet'}{done.has(lesson.id) ? ' · watched' : ''}</small>
               </span>
               ›

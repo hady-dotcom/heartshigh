@@ -168,7 +168,7 @@ export function CoursePlayer({
       if (cancelled) return
       if (failFirst) setFailed(true)
       else setMode((value) => (value === 'loading' ? 'practice' : value))
-    }, failFirst ? 8000 : 9000)
+    }, failFirst ? 8000 : 30_000)
     createPlayer({
       id: PLAYER_ID,
       host: holder.current,
@@ -462,7 +462,7 @@ export function CoursePlayer({
             <video ref={videoRef} src={fileSrc} controls playsInline data-testid="file-player" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => { setPlaying(false); setEnded(true) }} />
           </div>
         ) : null}
-        {open && filmed && overPlayer ? <div className="yt-scrim" data-testid="paused-scrim" aria-hidden /> : null}
+        {open && overPlayer && (filmed || youtubeId) ? <div className="yt-scrim" data-testid="paused-scrim" aria-hidden /> : null}
         {open && !playing ? (
           <span className="paused-note on-film" data-testid="paused-note">❚❚ Paused at question {open.number}</span>
         ) : null}
@@ -502,13 +502,13 @@ export function CoursePlayer({
       </div>
       <p className="part-chip off-film" data-testid="part-label">{partLabel}</p>
       {views.length ? (
-        <div className="q-strip" data-testid="question-strip" aria-label="Questions in this film">
+        <ul className="q-list" data-testid="question-strip" aria-label="Questions in this film">
           {views.map((point) => (
-            <span key={point.id} className={point.answered ? 'done' : 'open'} data-testid="strip-dot" data-answered={point.answered ? 'yes' : 'no'} title={point.prompt}>
-              {point.answered ? '✓' : point.number}
-            </span>
+            <li key={point.id} className={point.answered ? 'done' : 'open'} data-testid="strip-dot" data-answered={point.answered ? 'yes' : 'no'}>
+              {point.prompt}
+            </li>
           ))}
-        </div>
+        </ul>
       ) : null}
       {mode === 'practice' ? (
         <p className="muted" style={{ fontSize: 13, margin: '8px 2px 0' }} data-testid="practice-note">
