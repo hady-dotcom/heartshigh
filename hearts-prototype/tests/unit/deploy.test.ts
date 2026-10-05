@@ -9,8 +9,10 @@ import {
   bootstrapIdentity,
   cookiesSecure,
   databaseKind,
+  demoAccountsBlockBoot,
   DEMO_PASSWORDS,
   DEV_SECRET,
+  isPreviewEnvironment,
   payloadSecret,
   productionProblems,
   readS3,
@@ -112,10 +114,22 @@ test('security headers are set, and they do not trust a frame from another site'
   assert.match(readFileSync(path.join(root, 'next.config.mjs'), 'utf8'), /securityHeaders/)
 })
 
+test('preview may boot with leftover @hearts.test accounts; production still refuses', () => {
+  assert.equal(isPreviewEnvironment({ RAILWAY_ENVIRONMENT: 'preview' }), true)
+  assert.equal(isPreviewEnvironment({ HEARTS_ENV: 'preview' }), true)
+  assert.equal(isPreviewEnvironment({ RAILWAY_ENVIRONMENT: 'production' }), false)
+  assert.equal(isPreviewEnvironment({ NODE_ENV: 'production' }), false)
+  assert.equal(demoAccountsBlockBoot({ RAILWAY_ENVIRONMENT: 'preview' }), false)
+  assert.equal(demoAccountsBlockBoot({ HEARTS_ENV: 'preview' }), false)
+  assert.equal(demoAccountsBlockBoot({ NODE_ENV: 'production', RAILWAY_ENVIRONMENT: 'production' }), true)
+  assert.equal(demoAccountsBlockBoot({ NODE_ENV: 'production' }), true)
+})
+
 test('production startup does not seed, and dev startup refuses to seed when NODE_ENV is production', () => {
   const start = readFileSync(path.join(root, 'scripts/start-production.ts'), 'utf8')
   assert.doesNotMatch(start, /seed\.ts/)
   assert.match(start, /@hearts\.test/)
+  assert.match(start, /demoAccountsBlockBoot/)
   const run = (script: string) => {
     try {
       execFileSync(process.execPath, [script], { cwd: root, env: { ...process.env, NODE_ENV: 'production' }, encoding: 'utf8' })

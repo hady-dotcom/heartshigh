@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { assertProductionEnv, DEMO_EMAIL_SUFFIX, isProduction } from '../src/lib/env'
+import { assertProductionEnv, DEMO_EMAIL_SUFFIX, demoAccountsBlockBoot, isProduction } from '../src/lib/env'
 import { logError } from '../src/lib/log'
 import { closePayload, clearDevPushMarker } from '../src/lib/prepare-db'
 import { platformClientIpHeader, trustedProxyHops } from '../src/lib/rate-limit'
@@ -37,11 +37,14 @@ try {
     limit: 1,
     where: { email: { like: DEMO_EMAIL_SUFFIX } },
   })
-  if (demo.totalDocs) {
+  if (demo.totalDocs && demoAccountsBlockBoot()) {
     console.error(
       'HEARTS cannot start: this database still has demo accounts (addresses ending in @hearts.test, such as master@hearts.test). Those accounts use passwords that are written in the README. Remove them before hosting this for real people. Nothing was started.',
     )
     process.exit(1)
+  }
+  if (demo.totalDocs) {
+    console.warn('Preview boot: @hearts.test accounts are still in this database. Production would refuse to start.')
   }
 } finally {
   await closePayload(payload)
