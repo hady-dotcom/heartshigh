@@ -19,6 +19,7 @@
     "circle:fill": "tsx scripts/circle-fill.ts",
     "detect:burned": "tsx scripts/detect-burned.ts",
     "demo:gather": "tsx scripts/demo-gather.ts",
+    "demo:live": "tsx scripts/demo-live.ts",
     "seed": "tsx src/seed/seed.ts",
     "seed:starters": "tsx src/seed/seed.ts --starters",
     "demo:timed-learners": "tsx src/seed/timed-learners.ts",

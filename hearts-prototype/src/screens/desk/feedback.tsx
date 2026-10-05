@@ -24,7 +24,7 @@ import { exportAudit, includedSummaries, loadRawFeedback, summariesFor, weakQues
 import styles from './feedback.module.css'
 import { localeFromAcceptLanguage, portalTimeZone, zonedTime, zoneCity } from '@/lib/zone-time'
 
-const FAMILIES: Family[] = ['popup', 'reflection', 'task', 'circle']
+const FAMILIES: Family[] = ['popup', 'reflection', 'task', 'circle', 'live']
 
 export async function FeedbackScreen(ctx: Ctx) {
   const { payload, user, portal, base, query } = ctx

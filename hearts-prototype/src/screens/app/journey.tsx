@@ -9,6 +9,8 @@ import { loadOpening } from '@/server/opening'
 import { loadDoors } from '@/server/doors'
 import { doorNumberOfClause } from '@/lib/doors'
 import { unreadCount } from '../common'
+import { FeedLiveBanner } from '@/components/app/live-banner'
+import { homeLive } from '@/server/live'
 
 export async function masterFlags(payload: Payload) {
   const flags = (await payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null)) as { popupOverPlayer?: boolean; chromeOverPlayer?: boolean; showUnchecked?: boolean } | null
@@ -31,9 +33,10 @@ async function mainsShelf(payload: Payload) {
 
 /** The one continuous learner surface: opener, six scenes, the door, and the feed (spec 7 and 7A). */
 export async function JourneyScreen({ payload, portal, user, base, initial, viewAs, query = {} }: { payload: Payload; portal: PortalDoc; user: SessionUser | null; base: string; initial: 'opener' | 'help' | 'feed'; viewAs: boolean; query?: Record<string, string | undefined> }) {
-  const [opening, flags, mains, unread, doors] = await Promise.all([loadOpening(payload, portal, user), masterFlags(payload), mainsShelf(payload), user ? unreadCount(payload, user) : Promise.resolve(0), loadDoors(payload)])
+  const [opening, flags, mains, unread, doors, live] = await Promise.all([loadOpening(payload, portal, user), masterFlags(payload), mainsShelf(payload), user ? unreadCount(payload, user) : Promise.resolve(0), loadDoors(payload), user ? homeLive(payload, portal, user) : Promise.resolve({ live: null, upcoming: [], pollMs: 12_000 })])
   return (
     <div className="app-stage dusk">
+      {initial === 'feed' && user ? <FeedLiveBanner portal={String(portal.slug)} base={base} session={live.live} /> : null}
       <main className="app dark journey-frame" data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
         <Journey
           base={base}

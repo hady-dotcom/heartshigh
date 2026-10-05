@@ -10,6 +10,7 @@ import { buildConfig } from 'payload'
 import { aiCollections } from './collections-ai'
 import { collections } from './collections'
 import { gatherCollections } from './collections-gather'
+import { liveCollections } from './collections-live'
 import { sheetCollections } from './collections-sheet'
 import { MasterFlags } from './collections-opening'
 import { databaseKind, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
@@ -41,7 +42,7 @@ export default buildConfig({
       header: ['/components/viewas-admin-banner#ViewAsAdminBanner'],
     },
   },
-  collections: [...collections, ...aiCollections, ...sheetCollections, ...gatherCollections].map((collection) => ({
+  collections: [...collections, ...aiCollections, ...sheetCollections, ...gatherCollections, ...liveCollections].map((collection) => ({
     ...collection,
     hooks: { ...collection.hooks, beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never] },
   })),
@@ -100,7 +101,11 @@ export default buildConfig({
         'gather-checkins': {},
         'gather-reflections': {},
         'gather-photos': {},
-      },
+        'live-sessions': {},
+        'live-questions': {},
+        'live-reminders': {},
+        'live-presence': {},
+      } as never,
       userHasAccessToAllTenants: (user) => (user as { role?: string } | null)?.role === 'master',
     }),
     // The prefix column is part of the schema even when the bucket is off, so SQLite and Postgres stay aligned.
