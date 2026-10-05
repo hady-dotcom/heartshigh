@@ -70,7 +70,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   const fallback = carryOn.length ? [] : courses.filter((course) => course.open).slice(0, 2)
   const plans = await rows(payload, 'schedules', { portal: { equals: portal.id } }, { sort: '-createdAt', limit: 20 })
   const plan = plans.find((row) => ref(row.owner) === user.id || ((row.learners as unknown[]) || []).some((item) => ref(item) === user.id))
-  const slot = plan ? tonightSlot((plan.slots as { date?: string; lessonId?: number | null; title?: string }[]) || [], dateKeyInZone(clockNow(), portal.timeZone || 'Europe/London'), done) : null
+  const slot = plan ? tonightSlot((plan.slots as { date?: string; lessonId?: number | null; title?: string }[]) || [], dateKeyInZone(clockNow(), portal.timeZone || 'America/Toronto'), done) : null
   const planLesson = slot?.lessonId ? (await rows(payload, 'lessons', { id: { equals: slot.lessonId } }, { limit: 1 }))[0] : null
   const planMinutes = minutesADay(plan?.minutesPerDay) || 20
   const tonight = planLesson

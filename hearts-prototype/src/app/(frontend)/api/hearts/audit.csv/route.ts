@@ -3,6 +3,7 @@ import { json, portalOf, viewAsRefusal } from '@/server/api'
 import { audit } from '@/server/audit'
 import { auditSentence } from '@/lib/audit-events'
 import { portalIdOf } from '@/lib/ids'
+import { DEFAULT_TIME_ZONE, portalTimeZone, ymdFromParts, zonedDayRange, zonedIso } from '@/lib/zone-time'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,6 +29,9 @@ export async function GET(req: Request) {
   if (session.actor.role !== 'master' && requested && portal && portal.id !== portalId) {
     return json({ error: 'That portal is not yours.' }, 403)
   }
+  const timeZone = portal ? portalTimeZone(portal) : DEFAULT_TIME_ZONE
+  const fromDay = ymdFromParts(url.searchParams.get('fromYear') || '', url.searchParams.get('fromMonth') || '', url.searchParams.get('fromDay') || '') || url.searchParams.get('from') || ''
+  const toDay = ymdFromParts(url.searchParams.get('toYear') || '', url.searchParams.get('toMonth') || '', url.searchParams.get('toDay') || '') || url.searchParams.get('to') || ''
   const where: Record<string, unknown>[] = []
   if (portalId) where.push({ portal: { equals: portalId } })
   if (url.searchParams.get('person')) {
@@ -35,8 +39,10 @@ export async function GET(req: Request) {
     where.push({ or: [{ actor: { equals: id } }, { target: { equals: id } }] })
   }
   if (url.searchParams.get('action')) where.push({ event: { equals: url.searchParams.get('action') } })
-  if (url.searchParams.get('from')) where.push({ at: { greater_than_equal: `${url.searchParams.get('from')}T00:00:00.000Z` } })
-  if (url.searchParams.get('to')) where.push({ at: { less_than_equal: `${url.searchParams.get('to')}T23:59:59.999Z` } })
+  const from = fromDay ? zonedDayRange(fromDay, timeZone) : null
+  const to = toDay ? zonedDayRange(toDay, timeZone) : null
+  if (from) where.push({ at: { greater_than_equal: from.from } })
+  if (to) where.push({ at: { less_than_equal: to.to } })
   const found = await session.payload.find({
     collection: 'audit-log',
     overrideAccess: true,
@@ -66,7 +72,7 @@ export async function GET(req: Request) {
       reason: row.reason,
       detail: row.detail,
     })
-    lines.push([row.at || '', row.event || '', sentence, row.reason || ''].map((value) => csvCell(String(value))).join(','))
+    lines.push([zonedIso(row.at, timeZone), row.event || '', sentence, row.reason || ''].map((value) => csvCell(String(value))).join(','))
   }
   await audit(session.payload, 'audit.export', {
     actor: session.actor,

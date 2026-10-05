@@ -1,8 +1,9 @@
+import { BritishDateFields } from '@/components/desk/british-date'
 import { HelpTip } from '@/components/desk/help'
 import { auditSentence } from '@/lib/audit-events'
 import { TOOL } from '@/lib/desk-help'
 import { idOf } from '@/lib/ids'
-import { portalTimeZone, zonedTime } from '@/lib/zone-time'
+import { dateKeyInZone, DEFAULT_TIME_ZONE, portalTimeZone, staffWhen, ymdFromParts, zonedDayRange } from '@/lib/zone-time'
 import type { Ctx } from '../common'
 import { ref, rows, str } from '../common'
 import { AdminFrame } from './overview'
@@ -28,14 +29,14 @@ function personName(value: AuditRow['actor'] | AuditRow['target']) {
 function groupByDay(list: AuditRow[], timeZone: string) {
   const groups = new Map<string, AuditRow[]>()
   for (const row of list) {
-    const key = (row.at || '').slice(0, 10) || 'unknown'
+    const key = row.at ? dateKeyInZone(new Date(row.at), timeZone) : 'unknown'
     const bucket = groups.get(key) || []
     bucket.push(row)
     groups.set(key, bucket)
   }
   return [...groups.entries()].map(([day, items]) => ({
     day,
-    label: zonedTime(`${day}T12:00:00.000Z`, timeZone, 'en-GB').replace(/,.*/, '') || day,
+    label: staffWhen(`${day}T12:00:00.000Z`, timeZone).replace(/,.*/, '') || day,
     items,
   }))
 }
@@ -71,7 +72,7 @@ function ActivityBody({
         <header>
           <div>
             <h2>Find a change <HelpTip topic="activity-filters">{TOOL.activityFilters}</HelpTip></h2>
-            <p>Filter by person, action or date. Times are in {timeZone.replace(/_/g, ' ')}.</p>
+            <p data-testid="activity-zone">Times are in {timeZone.replace(/_/g, ' ')}. Dates are written the British way.</p>
           </div>
         </header>
         <form className="body form" method="get" action={here} data-testid="activity-filter-form">
@@ -92,8 +93,12 @@ function ActivityBody({
             </label>
           </div>
           <div className="cols">
-            <label className="stack">From<input type="date" name="from" defaultValue={query.from || ''} data-testid="activity-from" /></label>
-            <label className="stack">To<input type="date" name="to" defaultValue={query.to || ''} data-testid="activity-to" /></label>
+            <label className="stack" lang="en-GB">From
+              <BritishDateFields name="from" value={query.from} testId="activity-from" />
+            </label>
+            <label className="stack" lang="en-GB">To
+              <BritishDateFields name="to" value={query.to} testId="activity-to" />
+            </label>
           </div>
           <div className="actions">
             <button className="btn ink small" type="submit">Show</button>
@@ -122,7 +127,7 @@ function ActivityBody({
                   <tbody>
                     {group.items.map((row) => (
                       <tr key={row.id} data-testid="activity-row" data-event={row.event}>
-                        <td data-testid="activity-when" data-at={str(row.at)} style={{ whiteSpace: 'nowrap' }}>{zonedTime(str(row.at), timeZone, 'en-GB')}</td>
+                        <td data-testid="activity-when" data-at={str(row.at)} style={{ whiteSpace: 'nowrap' }}>{staffWhen(str(row.at), timeZone)}</td>
                         <td data-testid="activity-sentence">
                           {auditSentence({
                             event: String(row.event || ''),
@@ -148,7 +153,13 @@ function ActivityBody({
   )
 }
 
-async function loadActivity(payload: Ctx['payload'], portalId: number | null, query: { person?: string; action?: string; from?: string; to?: string }) {
+function activityFilters(query: Record<string, string | undefined>) {
+  const from = ymdFromParts(query.fromYear, query.fromMonth, query.fromDay) || query.from || ''
+  const to = ymdFromParts(query.toYear, query.toMonth, query.toDay) || query.to || ''
+  return { person: query.learner || query.person || '', action: query.action || '', from, to }
+}
+
+async function loadActivity(payload: Ctx['payload'], portalId: number | null, query: { person?: string; action?: string; from?: string; to?: string }, timeZone: string) {
   const where: Record<string, unknown>[] = []
   if (portalId) where.push({ portal: { equals: portalId } })
   if (query.person) {
@@ -156,17 +167,20 @@ async function loadActivity(payload: Ctx['payload'], portalId: number | null, qu
     where.push({ or: [{ actor: { equals: id } }, { target: { equals: id } }] })
   }
   if (query.action) where.push({ event: { equals: query.action } })
-  if (query.from) where.push({ at: { greater_than_equal: `${query.from}T00:00:00.000Z` } })
-  if (query.to) where.push({ at: { less_than_equal: `${query.to}T23:59:59.999Z` } })
+  const from = query.from ? zonedDayRange(query.from, timeZone) : null
+  const to = query.to ? zonedDayRange(query.to, timeZone) : null
+  if (from) where.push({ at: { greater_than_equal: from.from } })
+  if (to) where.push({ at: { less_than_equal: to.to } })
   const found = await rows(payload, 'audit-log', where.length ? { and: where } : undefined, { depth: 1, sort: '-at', limit: 200 })
   return found as unknown as AuditRow[]
 }
 
 export async function PortalActivityScreen(ctx: Ctx) {
   const { payload, portal, base, query } = ctx
-  const filters = { person: str(query.learner || (query as { person?: string }).person), action: str((query as { action?: string }).action), from: str(query.from), to: str(query.to) }
+  const timeZone = portalTimeZone(portal)
+  const filters = activityFilters(query as Record<string, string | undefined>)
   const [list, people] = await Promise.all([
-    loadActivity(payload, portal.id, filters),
+    loadActivity(payload, portal.id, filters, timeZone),
     rows(payload, 'users', { 'tenants.tenant': { equals: portal.id } }, { limit: 300, sort: 'name' }),
   ])
   const events = [...new Set(list.map((row) => String(row.event || '')).filter(Boolean))].sort()
@@ -174,7 +188,7 @@ export async function PortalActivityScreen(ctx: Ctx) {
     <AdminFrame ctx={ctx} active="activity" title="Activity log" intro="Who changed a person, a code, a class or a setting in this portal." testId="admin-activity">
       <ActivityBody
         rows={list}
-        timeZone={portalTimeZone(portal)}
+        timeZone={timeZone}
         here={`${base}/admin/activity`}
         portalSlug={portal.slug}
         people={people.map((person) => ({ id: person.id, name: str(person.name), email: str(person.email) }))}
@@ -186,14 +200,17 @@ export async function PortalActivityScreen(ctx: Ctx) {
 }
 
 export async function MasterActivityScreen(ctx: MasterCtx) {
-  const query = ctx.query as { person?: string; action?: string; from?: string; to?: string; portal?: string }
+  const raw = ctx.query as Record<string, string | undefined>
+  const filters = activityFilters(raw)
   let portalId: number | null = null
-  if (query.portal) {
-    const found = await rows(ctx.payload, 'portals', { slug: { equals: query.portal } }, { limit: 1 })
+  let timeZone = DEFAULT_TIME_ZONE
+  if (raw.portal) {
+    const found = await rows(ctx.payload, 'portals', { slug: { equals: raw.portal } }, { limit: 1 })
     portalId = found[0]?.id || null
+    if (found[0]) timeZone = portalTimeZone(found[0])
   }
   const [list, people, portals] = await Promise.all([
-    loadActivity(ctx.payload, portalId, query),
+    loadActivity(ctx.payload, portalId, filters, timeZone),
     rows(ctx.payload, 'users', undefined, { limit: 400, sort: 'name' }),
     rows(ctx.payload, 'portals', undefined, { sort: 'name' }),
   ])
@@ -202,7 +219,7 @@ export async function MasterActivityScreen(ctx: MasterCtx) {
     <MasterFrame ctx={ctx} active="activity" title="Activity log" intro="Every staff change across the portals. Portal admins only see their own community." testId="master-activity">
       <form method="get" action="/master/activity" className="form" style={{ marginBottom: 16 }}>
         <label className="stack">Portal
-          <select name="portal" defaultValue={query.portal || ''} data-testid="activity-portal">
+          <select name="portal" defaultValue={raw.portal || ''} data-testid="activity-portal">
             <option value="">All portals</option>
             {portals.map((portal) => <option key={portal.id} value={str(portal.slug)}>{str(portal.name)}</option>)}
           </select>
@@ -211,11 +228,11 @@ export async function MasterActivityScreen(ctx: MasterCtx) {
       </form>
       <ActivityBody
         rows={list}
-        timeZone="Europe/London"
+        timeZone={timeZone}
         here="/master/activity"
         people={people.filter((person) => person.role !== 'master').map((person) => ({ id: person.id, name: str(person.name), email: str(person.email) }))}
         events={events}
-        query={query}
+        query={filters}
       />
     </MasterFrame>
   )

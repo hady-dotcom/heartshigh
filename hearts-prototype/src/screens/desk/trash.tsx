@@ -2,7 +2,7 @@ import { Hidden } from '@/components/app/shell'
 import { HelpTip } from '@/components/desk/help'
 import { TOOL } from '@/lib/desk-help'
 import { TRASH_KEEP_DAYS } from '@/lib/trash'
-import { portalTimeZone, zonedTime } from '@/lib/zone-time'
+import { DEFAULT_TIME_ZONE, portalTimeZone, staffWhen } from '@/lib/zone-time'
 import { listTrash, trashGroups } from '@/server/trash'
 import type { Ctx } from '../common'
 import { rows, str } from '../common'
@@ -58,8 +58,8 @@ function TrashBody({
                 {group.items.map((item) => (
                   <tr key={`${item.collection}-${item.id}`} data-testid="trash-row" data-collection={item.collection} data-id={item.id}>
                     <td>{item.title}</td>
-                    <td>{item.deletedAt ? zonedTime(item.deletedAt, timeZone, 'en-GB') : '—'}</td>
-                    <td>{item.daysLeft === 0 ? 'Due' : item.daysLeft}</td>
+                    <td>{item.deletedAt ? staffWhen(item.deletedAt, timeZone) : '—'}</td>
+                    <td data-testid="trash-days-left">{item.daysLeft === 0 ? 'Due' : `${item.daysLeft} day${item.daysLeft === 1 ? '' : 's'}`}</td>
                     <td>
                       <form action="/api/hearts" method="post">
                         <Hidden fields={{ action: 'trash-restore', collection: item.collection, id: item.id, portalSlug: portalSlug || '', next: here }} />
@@ -130,7 +130,7 @@ export async function MasterTrashScreen(ctx: MasterCtx) {
         </label>
         <button className="btn ghost small" type="submit">Show this portal</button>
       </form>
-      <TrashBody items={items} here={query.portal ? `/master/trash?portal=${encodeURIComponent(query.portal)}` : '/master/trash'} portalSlug={portalSlug} timeZone="Europe/London" master />
+      <TrashBody items={items} here={query.portal ? `/master/trash?portal=${encodeURIComponent(query.portal)}` : '/master/trash'} portalSlug={portalSlug} timeZone={query.portal ? portalTimeZone(portals.find((row) => str(row.slug) === query.portal)) : DEFAULT_TIME_ZONE} master />
     </MasterFrame>
   )
 }

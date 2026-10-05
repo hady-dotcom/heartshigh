@@ -2,6 +2,7 @@ import { Hidden } from '@/components/app/shell'
 import { HelpTip } from '@/components/desk/help'
 import { TOOL } from '@/lib/desk-help'
 import { retentionTable } from '@/lib/retention'
+import { DEFAULT_TIME_ZONE, staffWhen } from '@/lib/zone-time'
 import { closedPortalReminders, systemSnapshot } from '@/server/ops'
 import { MasterFrame, type MasterCtx } from './master'
 
@@ -21,7 +22,7 @@ export async function SystemScreen(ctx: MasterCtx) {
         <header>
           <div>
             <h2>Health <HelpTip topic="system-health">{TOOL.systemHealth}</HelpTip></h2>
-            <p>App version {snapshot.version}. Checked {snapshot.checkedAt.replace('T', ' ').slice(0, 16)} UTC.</p>
+            <p data-testid="system-checked">App version {snapshot.version}. Checked {staffWhen(snapshot.checkedAt, DEFAULT_TIME_ZONE)}.</p>
           </div>
         </header>
         <div className="table-wrap">

@@ -7,6 +7,7 @@ import { planRetention, retentionTable } from './retention'
 import { buildRestoreReport, countsMatch, lifecyclePrefix, shouldKeepBackup } from './backup'
 import { emailTransportStatus, snapshotOk } from './ops-health'
 import { classColour } from './class-palette'
+import { DEFAULT_TIME_ZONE, staffWhen, ymdFromParts, zonedDayRange, zonedIso } from './zone-time'
 
 describe('A12 people sheet', () => {
   it('previews rows and marks problems, then only the clean ones are ready', () => {
@@ -83,6 +84,19 @@ describe('D03 backup helpers', () => {
     assert.equal(shouldKeepBackup('daily', 15), false)
     assert.equal(shouldKeepBackup('weekly', 56), true)
     assert.equal(shouldKeepBackup('monthly', 400), false)
+  })
+})
+
+describe('staff times', () => {
+  it('writes a British date, 12-hour clock and ET for Toronto', () => {
+    assert.equal(DEFAULT_TIME_ZONE, 'America/Toronto')
+    assert.equal(staffWhen('2026-10-05T00:36:00.000Z', 'America/Toronto'), '4 October 2026, 8:36 PM ET')
+    assert.match(zonedIso('2026-10-05T00:36:00.000Z', 'America/Toronto'), /2026-10-04T20:36:00-04:00/)
+    assert.equal(ymdFromParts('2026', '10', '5'), '2026-10-05')
+    const range = zonedDayRange('2026-10-04', 'America/Toronto')
+    assert.ok(range)
+    assert.equal(range.from, '2026-10-04T04:00:00.000Z')
+    assert.equal(range.to, '2026-10-05T03:59:59.999Z')
   })
 })
 

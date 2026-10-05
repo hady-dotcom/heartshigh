@@ -1560,7 +1560,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     }
     if (form.has('theme')) data.theme = text(form, 'theme') === 'dark' ? 'dark' : 'light'
     if (form.has('timeZone')) {
-      if (!isTimeZone(text(form, 'timeZone'))) return redirectTo(req, text(form, 'next') || '/', 'Choose a time zone such as Europe/London.')
+      if (!isTimeZone(text(form, 'timeZone'))) return redirectTo(req, text(form, 'next') || '/', 'Choose a time zone such as America/Toronto.')
       data.timeZone = text(form, 'timeZone')
     }
     if (form.get('settingsForm') === 'yes') {

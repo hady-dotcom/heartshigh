@@ -217,6 +217,7 @@ async function main() {
       teacherLabel: 'Teacher',
       wizardDone: true,
       colour: '#1f4d3a',
+      timeZone: 'America/Toronto',
     },
     {
       name: 'Leeds Chapter',
@@ -226,6 +227,7 @@ async function main() {
       organisationName: 'Leeds Chapter',
       wizardDone: true,
       colour: '#6b3a2f',
+      timeZone: 'America/Toronto',
     },
   ]
   const portalIds = new Map<string, number>()

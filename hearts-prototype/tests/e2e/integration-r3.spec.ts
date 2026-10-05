@@ -95,11 +95,11 @@ test('the export log shows times in the portal\'s zone with a short label, in th
     await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${PORTAL}/admin/feedback`)
     expect((await page.request.get('/api/feedback?portal=east-london&format=csv')).ok()).toBeTruthy()
     await page.reload()
-    await expect(page.getByTestId('audit-zone')).toHaveText('Times in London time')
+    await expect(page.getByTestId('audit-zone')).toHaveText('Times in Toronto time')
     const when = page.getByTestId('audit-when').first()
     const at = (await when.getAttribute('data-at'))!
-    await expect(when).toHaveText(zonedTime(at, 'Europe/London', locale))
-    if (locale === 'en-GB') await expect(when).toHaveText(/\d{1,2} \w{3} \d{4}, \d{2}:\d{2} (BST|GMT)$/)
+    await expect(when).toHaveText(zonedTime(at, 'America/Toronto', locale))
+    if (locale === 'en-GB') await expect(when).toHaveText(/\d{1,2} \w{3} \d{4}, \d{2}:\d{2} (EDT|EST|ET)$/)
     else await expect(when).toHaveText(/^\d{1,2}\. \w+\.? \d{4}, \d{2}:\d{2} /)
     await context.close()
   }
@@ -118,9 +118,9 @@ test('the export log shows times in the portal\'s zone with a short label, in th
     await expect(when).toHaveText(/GST$/)
   } finally {
     await page.goto(`${PORTAL}/admin/settings`)
-    await page.getByTestId('time-zone').selectOption('Europe/London')
+    await page.getByTestId('time-zone').selectOption('America/Toronto')
     await page.getByTestId('save-settings').click()
-    await expect(page.getByTestId('time-zone')).toHaveValue('Europe/London')
+    await expect(page.getByTestId('time-zone')).toHaveValue('America/Toronto')
     await context.close()
   }
 })

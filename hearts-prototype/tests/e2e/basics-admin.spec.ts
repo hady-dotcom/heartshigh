@@ -42,6 +42,13 @@ test.describe('Lane D admin desk', () => {
     }
     await page.goto('/p/east-london/admin/activity')
     await expect(page.getByTestId('activity-log')).toBeVisible()
+    await expect(page.getByTestId('activity-zone')).toContainText('America/Toronto')
+    await expect(page.getByTestId('activity-from-day')).toBeVisible()
+    await expect(page.getByTestId('activity-from-month')).toBeVisible()
+    const when = page.getByTestId('activity-when').first()
+    if (await when.count()) {
+      await expect(when).toHaveText(/\d{1,2} October 2026, \d{1,2}:\d{2} (AM|PM) ET/)
+    }
     const rows = master ? await lastAudit(master, 'people.export') : []
     expect(rows.length).toBeGreaterThan(0)
     expect(rows[0].portal).toBeTruthy()
@@ -112,42 +119,67 @@ test.describe('Lane D admin desk', () => {
     await master.dispose()
   })
 
-  test('C15 recently removed restore and portal scope', async ({ page }) => {
+  test('C15 recently removed restore, days left, progress and clean-up', async ({ page }) => {
     const master = await as('master@hearts.test', 'hearts-master')
     const elm = (await (await master.get('/api/portals?where[slug][equals]=east-london&depth=0')).json()).docs[0]
-    const title = `Trash drill ${Date.now().toString().slice(-6)}`
+    const learner = (await (await master.get('/api/users?where[email][equals]=elm-learner@hearts.test&depth=0')).json()).docs[0]
+    const stamp = Date.now().toString().slice(-6)
+    const title = `Trash drill ${stamp}`
     const created = await master.post('/api/courses', { data: { title, origin: 'local', portal: elm.id, visibility: 'draft' } })
     expect(created.ok(), await created.text()).toBeTruthy()
-    const course = ((await created.json()) as { doc?: { id: number; title?: string }; id?: number })
-    const courseId = course.doc?.id || course.id
+    const courseId = ((await created.json()) as { doc?: { id: number }; id?: number }).doc?.id
     expect(courseId).toBeTruthy()
+    const unitRes = await master.post('/api/units', { data: { title: `Topic ${stamp}`, course: courseId } })
+    expect(unitRes.ok(), await unitRes.text()).toBeTruthy()
+    const unitId = ((await unitRes.json()) as { doc?: { id: number }; id?: number }).doc?.id
+    const lessonRes = await master.post('/api/lessons', { data: { title: `Talk ${stamp}`, course: courseId, unit: unitId, portal: elm.id } })
+    expect(lessonRes.ok(), await lessonRes.text()).toBeTruthy()
+    const lessonId = ((await lessonRes.json()) as { doc?: { id: number }; id?: number }).doc?.id
+    expect(lessonId).toBeTruthy()
+    const done = await master.post('/api/completions', { data: { user: learner.id, lesson: lessonId, percent: 100, sourceLevel: 'talk' } })
+    expect(done.ok(), await done.text()).toBeTruthy()
+    const completionId = ((await done.json()) as { doc?: { id: number }; id?: number }).doc?.id
+    const codeRes = await master.post('/api/access-codes', { data: { code: `TRASH-${stamp}`, label: `Trash code ${stamp}`, role: 'learner', portal: elm.id } })
+    expect(codeRes.ok(), await codeRes.text()).toBeTruthy()
+    const codeId = ((await codeRes.json()) as { doc?: { id: number }; id?: number }).doc?.id
+    expect(codeId).toBeTruthy()
 
     await signIn(page, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin/trash')
-    await expect(page.getByTestId('admin-trash')).toBeVisible()
-    await expect(page.getByTestId('nav-trash')).toBeVisible()
-    const moved = await page.request.post('/api/hearts', {
-      form: {
-        action: 'trash-remove',
-        collection: 'courses',
-        id: String(courseId),
-        portalSlug: 'east-london',
-        next: '/p/east-london/admin/trash',
-      },
-      maxRedirects: 0,
-    })
-    expect([302, 303]).toContain(moved.status())
-    expect(moved.headers()['location'] || '').not.toContain('error=')
+    for (const item of [
+      { collection: 'courses', id: courseId },
+      { collection: 'access-codes', id: codeId },
+    ]) {
+      const moved = await page.request.post('/api/hearts', {
+        form: { action: 'trash-remove', collection: item.collection, id: String(item.id), portalSlug: 'east-london', next: '/p/east-london/admin/trash' },
+        maxRedirects: 0,
+      })
+      expect([302, 303]).toContain(moved.status())
+      expect(moved.headers()['location'] || '').not.toContain('error=')
+    }
     await page.goto('/p/east-london/admin/trash')
-    const row = page.getByTestId('trash-row').filter({ hasText: title })
-    await expect(row).toBeVisible()
-    const hidden = await master.get(`/api/courses/${courseId}?depth=0`)
-    expect(hidden.ok()).toBeFalsy()
-    await row.getByTestId('trash-restore').click()
+    const courseRow = page.getByTestId('trash-row').filter({ hasText: title })
+    const codeRow = page.getByTestId('trash-row').filter({ hasText: `Trash code ${stamp}` })
+    await expect(courseRow).toBeVisible()
+    await expect(codeRow).toBeVisible()
+    await expect(courseRow.getByTestId('trash-days-left')).toContainText('30')
+    await expect(codeRow.getByTestId('trash-days-left')).toContainText('30')
+    await page.screenshot({ path: '/cursor/stores/self/artifacts/c15_recently_removed_filled.png', fullPage: false })
+    expect((await master.get(`/api/courses/${courseId}?depth=0`)).ok()).toBeFalsy()
+    await courseRow.getByTestId('trash-restore').click()
     await expect(page.getByTestId('trash-row').filter({ hasText: title })).toHaveCount(0)
-    const live = await master.get(`/api/courses/${courseId}?depth=0`)
-    expect(live.ok()).toBeTruthy()
-    const liveBody = await live.json() as { title?: string; doc?: { title?: string } }
-    expect(liveBody.title || liveBody.doc?.title).toBe(title)
+    expect((await master.get(`/api/courses/${courseId}?depth=0`)).ok()).toBeTruthy()
+    const stillDone = await master.get(`/api/completions/${completionId}?depth=0`)
+    expect(stillDone.ok()).toBeTruthy()
+    await expect(page.getByTestId('trash-row').filter({ hasText: `Trash code ${stamp}` })).toBeVisible()
+
+    const later = new Date(Date.now() + 31 * 86_400_000).toISOString()
+    expect((await master.post('/api/hearts', { form: { action: 'clock', iso: later, next: '/' }, maxRedirects: 0 })).status()).toBe(303)
+    await master.post('/api/hearts', { form: { action: 'retention-run', next: '/master/system' }, maxRedirects: 0 })
+    await page.goto('/p/east-london/admin/trash')
+    await expect(page.getByTestId('trash-row').filter({ hasText: `Trash code ${stamp}` })).toHaveCount(0)
+    expect((await master.get(`/api/access-codes/${codeId}?depth=0&trash=true`)).ok()).toBeFalsy()
+    expect((await master.get(`/api/courses/${courseId}?depth=0`)).ok()).toBeTruthy()
+    await master.post('/api/hearts', { form: { action: 'clock', iso: '', next: '/' }, maxRedirects: 0 })
     await master.dispose()
   })
 
@@ -157,6 +189,8 @@ test.describe('Lane D admin desk', () => {
     await expect(page.getByTestId('health-database')).toBeVisible()
     await expect(page.getByTestId('health-email')).toContainText(/Off|Fine|on/i)
     await expect(page.getByTestId('retention-row').first()).toBeVisible()
+    await expect(page.getByTestId('system-checked')).toHaveText(/\d{1,2} \w+ 2026, \d{1,2}:\d{2} (AM|PM) ET/)
+    await expect(page.getByTestId('system-checked')).not.toContainText('UTC')
   })
 })
 
@@ -183,6 +217,26 @@ test.describe('Lane D hostile API', () => {
 
     const stealAudit = await elm.get('/api/hearts/audit.csv?portal=leeds')
     expect(stealAudit.ok()).toBeFalsy()
+
+    await leeds.post('/api/hearts/people.csv?portal=leeds').catch(() => null)
+    const leedsAuditList = ((await (await master.get('/api/audit-log?limit=80&depth=0')).json()).docs || []) as { id: number; portal?: number }[]
+    const leedsRow = leedsAuditList.find((row) => row.portal === leedsPortal.id)
+    expect(leedsRow, 'the master list includes a Leeds row').toBeTruthy()
+    const stealById = await elm.get(`/api/audit-log/${leedsRow!.id}?depth=0`)
+    expect(stealById.ok()).toBeFalsy()
+
+    const masterCsv = await master.get('/api/hearts/audit.csv')
+    expect(masterCsv.ok()).toBeTruthy()
+    const masterText = await masterCsv.text()
+    expect(masterText).toMatch(/T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}/)
+    expect(masterText.toLowerCase()).toMatch(/east london|leeds/)
+
+    const elmCsv = await elm.get('/api/hearts/audit.csv?portal=east-london')
+    expect(elmCsv.ok()).toBeTruthy()
+    const elmText = await elmCsv.text()
+    expect(elmText).toMatch(/T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}/)
+    expect(elmText).not.toMatch(/leeds-learner@hearts.test/)
+    expect(elmText.toLowerCase()).not.toMatch(/leeds chapter/)
 
     const foreign = await master.post('/api/courses', { data: { title: `Leeds trash ${Date.now().toString().slice(-4)}`, origin: 'local', portal: leedsPortal.id, visibility: 'draft' } })
     expect(foreign.ok(), await foreign.text()).toBeTruthy()
