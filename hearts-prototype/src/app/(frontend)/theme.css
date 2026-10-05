@@ -438,7 +438,7 @@ html[data-theme] .j-sheet {
 }
 html[data-theme='evening'] .sheet,
 html[data-theme='evening'] .j-sheet {
-  background: rgba(14, 36, 35, 0.96);
+  background: #0F2E2C;
 }
 html[data-theme] .sheet .handle,
 html[data-theme] .j-sheet .handle { background: var(--gold); opacity: 0.7; }
@@ -473,8 +473,9 @@ html[data-theme] .weekdays input:checked + span {
   color: var(--gold-ink);
   border-color: var(--gold);
 }
-html[data-theme] .q-strip .done { background: var(--teal-fill); color: #f6eedc; }
-html[data-theme] .q-strip .open { background: rgba(232, 161, 90, 0.2); color: var(--orange); }
+html[data-theme] .q-list li.done { color: #D4A84B; border-color: #D4A84B; }
+html[data-theme] .q-list li.open { color: #e6efe8; }
+html[data-theme] .q-list li.coming { color: #8aa0a0; }
 html[data-theme] .flash.error { background: var(--rose-bg); color: var(--red-clause); border-color: transparent; }
 html[data-theme] .flash.notice { background: var(--mint); color: var(--teal-deep); border-color: transparent; }
 html[data-theme='evening'] .flash.error { color: #ffd0d4; }
@@ -643,11 +644,11 @@ html[data-theme] .other .heart { color: var(--gold); }
 /* Empty states carry the lattice only. They do not depend on an illustration. */
 html[data-theme] .empty-state p { margin-top: 0; }
 html[data-theme] .speaker-card {
-  background: var(--glass-solid);
-  color: var(--ink);
-  border: var(--hairline);
+  background: #0F2E2C;
+  color: #F1E4C6;
+  border: 1px solid rgba(212, 168, 75, 0.42);
 }
-html[data-theme='evening'] .speaker-card small { color: #f1d58a; }
+html[data-theme='evening'] .speaker-card small { color: #D4A84B; }
 html[data-theme] .follow { border-color: #f6eedc; color: #f6eedc; }
 html[data-theme] .follow[aria-pressed='true'] { background: #f6eedc; color: #142e2c; }
 html[data-theme] .step-bar span { background: rgba(212, 168, 75, 0.28); }
@@ -901,6 +902,16 @@ html[data-theme] .desk input[type='password'] {
 :is(html, html[data-theme]) .garden-door .door-links { color: #14564c; }
 :is(html, html[data-theme]) .garden-door .door-links a { border-bottom-color: rgba(168, 121, 31, 0.6); }
 :is(html, html[data-theme]) .garden-door .door-hint { color: #5f6a65; }
+:is(html, html[data-theme]) .garden-door .flash.notice {
+  background: rgba(212, 168, 75, 0.16);
+  color: #F1E4C6;
+  border: 1px solid rgba(212, 168, 75, 0.45);
+}
+:is(html, html[data-theme]) .garden-door .flash.error {
+  background: rgba(138, 35, 53, 0.28);
+  color: #F1E4C6;
+  border: 1px solid rgba(241, 228, 198, 0.3);
+}
 :is(html, html[data-theme]) .garden-door[data-testid="join"] .door-card {
   width: min(360px, calc(100% - 36px));
   flex: 0 0 auto;

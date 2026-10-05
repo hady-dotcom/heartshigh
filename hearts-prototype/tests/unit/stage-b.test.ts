@@ -32,7 +32,8 @@ test('timeline dots that sit about 10px apart keep separate tap targets', () => 
   )
   const gap = Math.abs(placed[1].left - placed[0].left) / 100 * width
   assert.ok(gap >= 44, `gap was ${gap}`)
-  assert.ok(placed.some((dot) => dot.lift !== 0))
+  assert.ok(placed.every((dot) => dot.lift === 0))
+  assert.ok(placed.every((dot) => dot.left >= 0 && dot.left <= 100))
 })
 
 test('Home Continue follows the last watch, then a visit that was never watched', () => {

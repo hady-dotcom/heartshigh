@@ -164,11 +164,12 @@
 }
 
 .garden-card {
-  background: linear-gradient(165deg, #2a2448 0%, #1c2830 58%, #243628 100%);
-  color: #fff8ee;
-  border: 0;
+  background: #0E2A2B;
+  color: #e6efe8;
+  border: 1px solid #D4A84B;
 }
-.garden-card .eyebrow { color: #f3d38e; }
-.garden-card h3, .garden-card small, .garden-card .garden-link { color: #fff8ee; }
-.garden-card .bar { background: rgba(255, 255, 255, 0.16); }
-.garden-card .bar > i { background: #f0c36a; }
+.garden-card .eyebrow { color: #D4A84B; }
+.garden-card h3, .garden-card small, .garden-card .garden-link { color: #e6efe8; }
+.garden-card h3 { color: #D4A84B; }
+.garden-card .bar { background: rgba(212, 168, 75, 0.22); }
+.garden-card .bar > i { background: #D4A84B; }

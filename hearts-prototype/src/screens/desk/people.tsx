@@ -1,5 +1,6 @@
 import { defaultPlanName } from '@/lib/schedule'
 import { now as clockNow } from '@/lib/clock'
+import { parseWeekdays } from '@/lib/week'
 import { dateKey, formatOnTime, onTimeProgress, ON_TIME_HINT, type PlanSlot } from '@/lib/on-time'
 import { ViewAsButton } from '@/components/desk/view-as-button'
 import { GiveCourse } from '@/components/desk/give-course'
@@ -178,7 +179,7 @@ export async function TeachScreen(ctx: Ctx) {
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export async function PlansScreen(ctx: Ctx) {
-  const { payload, user, portal, base } = ctx
+  const { payload, user, portal, base, query } = ctx
   const [people, plans, courseIds] = await Promise.all([
     portalPeople(payload, portal.id),
     rows(payload, 'schedules', { portal: { equals: portal.id } }, { sort: '-createdAt', limit: 100 }),
@@ -188,6 +189,11 @@ export async function PlansScreen(ctx: Ctx) {
   const learners = people.filter((person) => person.role === 'learner')
   const today = now().toISOString().slice(0, 10)
   const later = new Date(now().getTime() + 27 * 86_400_000).toISOString().slice(0, 10)
+  const start = String(query.start || today)
+  const end = String(query.end || later)
+  const weekdays = parseWeekdays(query.days)
+  const selected = Number(query.course) || courses[0]?.id || 0
+  const keptLearners = new Set(String(query.learner || '').split(',').map(Number).filter(Boolean))
   const here = `${base}/admin/plans`
   return (
     <AdminFrame ctx={ctx} active="plans" title="Study plans" intro="Share a course out across chosen days for one learner or a whole group. The parts stay in order and are spread evenly, so no day is left empty at the end. Learners can still watch at their own pace." testId="admin-plans">
@@ -197,15 +203,15 @@ export async function PlansScreen(ctx: Ctx) {
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'schedule', portalSlug: portal.slug, targetType: 'course', next: here }} />
             <label className="stack">Name<input type="text" name="name" defaultValue={defaultPlanName(clockNow())} /></label>
-            <label className="stack">Course<select data-testid="schedule-course" name="course">{courses.map((course) => <option key={course.id} value={course.id}>{cleanTitle(str(course.title))}</option>)}</select></label>
+            <label className="stack">Course<select data-testid="schedule-course" name="course" defaultValue={selected || undefined}>{courses.map((course) => <option key={course.id} value={course.id}>{cleanTitle(str(course.title))}</option>)}</select></label>
             <div className="cols">
-              <label className="stack">From<input data-testid="schedule-start" type="date" name="start" defaultValue={today} /></label>
-              <label className="stack">Until<input data-testid="schedule-end" type="date" name="end" defaultValue={later} /></label>
+              <label className="stack">From<input data-testid="schedule-start" type="date" name="start" defaultValue={start} /></label>
+              <label className="stack">Until<input data-testid="schedule-end" type="date" name="end" defaultValue={end} /></label>
             </div>
-            <div className="checks">{DAYS.map((label, index) => <label className="check" key={label}><input data-testid={`weekday-${index}`} type="checkbox" name="weekday" value={index} /> {label}</label>)}</div>
+            <div className="checks">{DAYS.map((label, index) => <label className="check" key={label}><input data-testid={`weekday-${index}`} type="checkbox" name="weekday" value={index} defaultChecked={weekdays.includes(index)} /> {label}</label>)}</div>
             <p className="hint" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>Days the plan should use <HelpTip topic="weekdays">{TOOL.weekdays}</HelpTip></p>
             <div className="hint">For</div>
-            <div className="checks" style={{ flexDirection: 'column' }}>{visiblePeople(learners, hideTestFromQuery(ctx.query)).map((learner) => <label className="check" key={learner.id}><input type="checkbox" name="learner" value={learner.id} data-testid="plan-learner" /> {str(learner.name)}</label>)}</div>
+            <div className="checks" style={{ flexDirection: 'column' }}>{visiblePeople(learners, hideTestFromQuery(ctx.query)).map((learner) => <label className="check" key={learner.id}><input type="checkbox" name="learner" value={learner.id} data-testid="plan-learner" defaultChecked={keptLearners.has(learner.id)} /> {str(learner.name)}</label>)}</div>
             <div className="actions"><button className="btn ink" data-testid="schedule-submit" type="submit">Share out the parts</button></div>
           </form>
         </section>

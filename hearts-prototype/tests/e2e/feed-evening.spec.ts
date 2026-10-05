@@ -237,6 +237,7 @@ test('the extended cut opens on our own poster with the talk title, never a titl
     await expect(poster.getByTestId('poster-title')).toHaveCount(0)
   }
   if (await page.getByTestId('poster-play').count()) await expect(page.getByTestId('poster-play')).toBeVisible()
+  if (await page.getByTestId('level-chip').count()) await expect(page.getByTestId('level-chip')).toContainText('Ready for more?')
   await page.screenshot({ path: test.info().outputPath('extended-cut-poster.png') })
 
   try {

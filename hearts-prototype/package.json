@@ -18,6 +18,8 @@
     "mark:shorts": "tsx scripts/mark-shorts.ts",
     "circle:fill": "tsx scripts/circle-fill.ts",
     "detect:burned": "tsx scripts/detect-burned.ts",
+    "report:mains": "tsx scripts/report-mains.ts",
+    "report:first-course": "tsx scripts/report-first-course.ts",
     "demo:gather": "tsx scripts/demo-gather.ts",
     "demo:live": "tsx scripts/demo-live.ts",
     "seed": "tsx src/seed/seed.ts",

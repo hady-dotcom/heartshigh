@@ -39,6 +39,19 @@ export const LANES: (LaneDef & { seriesNote: string })[] = [
   { key: 'guarding-gaze', title: 'Guarding the gaze', scale: 'desire', fit: 'weak', order: 10, clauses: c([[31, 1], [29, 2], [17, 2]]), excludeClauses: [], optInOnly: true, seriesNote: 'Vol 3 ikhlas 326–350; Vol 2 tawba 105–208; Vol 1 fasting 21–23. Opt-in only. Unit 34 (marriage seat) is not a back door.' },
 ]
 
+/** Clean lane blurbs for the Lanes screen. Never a raw transcript line. */
+export const LANE_BLURBS: Record<string, string> = {
+  trust: 'Resting the heart with Allah when the week feels heavy.',
+  company: 'Finding people who lift you, and being that person for others.',
+  lightness: 'Holding wealth lightly, and giving without fear.',
+  quiet: 'Softening pride so the heart can hear again.',
+  talking: 'Speaking to Allah in the ordinary hours, not only in crisis.',
+  habits: 'Small steady acts that hold a life together.',
+  patience: 'Staying kind when anger wants the last word.',
+  gifts: 'Noticing what is already in your hands.',
+  mercy: 'Meeting people at their wounds, as you hope to be met.',
+}
+
 /** The pseudo-lane behind 'Just show me something'. Never scored, never shown. */
 export const DEFAULT_LANE = 'default'
 

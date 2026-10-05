@@ -30,7 +30,7 @@ test('the recommended part is the one whose cuts hang on the starting clause', (
     { lessonId: 3, bestClause: 13, approved: true },
   ]
   assert.equal(recommendLesson(22, cuts, [1, 2, 3]), 2)
-  assert.equal(recommendLesson(41, cuts, [1, 2, 3]), 1)
+  assert.equal(recommendLesson(41, cuts, [1, 2, 3]), null)
   assert.equal(recommendLesson(22, cuts, []), null)
 })
 

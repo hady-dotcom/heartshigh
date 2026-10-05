@@ -55,9 +55,8 @@ export function studyDates(start: string, end: string, weekdays: number[]): stri
 }
 
 /**
- * Spread items evenly, in order, across study days.
- * Earlier days take the remainder so the plan finishes as soon as the days allow,
- * even if the end date is later.
+ * Balanced, order-preserving split when there are at least as many talks as study days.
+ * base = floor(V/D); the first V mod D days get one extra. Never the old front-loaded chunk.
  */
 export function splitEvenly<T>(items: T[], dates: string[]): Slot<T>[] {
   if (!dates.length) throw new Error('There are no study days to split across.')
@@ -72,6 +71,59 @@ export function splitEvenly<T>(items: T[], dates: string[]): Slot<T>[] {
     index += count
   })
   return slots
+}
+
+function consecutiveDates(dates: string[]) {
+  const unique = [...new Set(dates.filter(Boolean))].sort()
+  if (unique.length < 2) return unique.length === 1
+  const first = Date.parse(`${unique[0]}T12:00:00Z`)
+  const last = Date.parse(`${unique[unique.length - 1]}T12:00:00Z`)
+  if (!Number.isFinite(first) || !Number.isFinite(last)) return false
+  const span = Math.round((last - first) / 86_400_000) + 1
+  return span <= unique.length
+}
+
+export function spreadNote(talks: number, studyDays: number, slotDates: string[] = []) {
+  if (talks === 1 && studyDays > 1) return 'This course has 1 talk, so it fits in one day.'
+  if (talks > 1 && talks < studyDays) {
+    if (slotDates.length && consecutiveDates(slotDates)) return null
+    return `This course has ${talks} talks and ${studyDays} study days. The talks are spaced across the span. You could pick fewer days, or add more talks.`
+  }
+  return null
+}
+
+/** Indices for V talks across D days: 3 over 12 lands on days 1, 5 and 9 (0, 4, 8). */
+export function spreadIndices(talks: number, days: number) {
+  if (talks <= 0 || days <= 0) return []
+  if (talks === 1) return [0]
+  if (talks >= days) return Array.from({ length: days }, (_, index) => index)
+  return Array.from({ length: talks }, (_, index) => Math.floor((index * days) / talks))
+}
+
+/**
+ * Place talks on the chosen study days: one date for a single sitting, an even spread when
+ * there are fewer talks than days, and a balanced split when there are more talks than days.
+ */
+export function planAcrossDays<T>(items: T[], dates: string[]): { slots: Slot<T>[]; note: string | null } {
+  if (!dates.length) throw new Error('There are no study days to split across.')
+  if (!items.length) return { slots: [], note: null }
+  const note = spreadNote(items.length, dates.length)
+  if (items.length < dates.length) {
+    const at = spreadIndices(items.length, dates.length)
+    return { slots: items.map((item, index) => ({ date: dates[at[index]] || dates[0], items: [item] })), note }
+  }
+  return { slots: splitEvenly(items, dates).filter((slot) => slot.items.length), note }
+}
+
+/** A talk longer than the chosen sitting length: warn, do not silently crush it into the day. */
+export function overMinutesNote(talkMinutes: number[], minutesPerDay: number) {
+  const long = talkMinutes.filter((value) => value > minutesPerDay)
+  if (!long.length || minutesPerDay <= 0) return null
+  const longest = Math.max(...long)
+  if (long.length === 1) {
+    return `This talk is about ${longest} minutes and your day is set to ${minutesPerDay} minutes. Sit with it in one go, or split it across two days.`
+  }
+  return `${long.length} talks are longer than the ${minutesPerDay} minutes you set for a day. Sit with each in one go, or split the longest ones.`
 }
 
 export function flattenSlots<T extends { id?: number; title?: string }>(
