@@ -13,7 +13,7 @@
     "orientationAngle": 0,
     "orientationType": "landscape-primary"
   },
-  "timestamp": "2026-10-05T00:50:32.859Z",
+  "timestamp": "2026-10-05T02:08:09.493Z",
   "url": "http://127.0.0.1:3100/p/east-london/me",
   "toolOptions": {
     "runOnly": {
@@ -1669,76 +1669,6 @@
           "html": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" class=\"tab-icon\">",
           "target": [
             "svg[stroke-width=\"2.2\"]"
-          ]
-        },
-        {
-          "any": [],
-          "all": [
-            {
-              "id": "focusable-modal-open",
-              "data": null,
-              "relatedNodes": [],
-              "impact": "serious",
-              "message": "No focusable elements while a modal is open"
-            },
-            {
-              "id": "focusable-disabled",
-              "data": null,
-              "relatedNodes": [],
-              "impact": "serious",
-              "message": "No focusable elements contained within element"
-            },
-            {
-              "id": "focusable-not-tabbable",
-              "data": null,
-              "relatedNodes": [],
-              "impact": "serious",
-              "message": "No focusable elements contained within element"
-            }
-          ],
-          "none": [],
-          "impact": null,
-          "html": "<div aria-hidden=\"true\" data-issues-count-exit=\"true\">-1</div>",
-          "target": [
-            [
-              "nextjs-portal",
-              "div[data-issues-count-exit=\"true\"]"
-            ]
-          ]
-        },
-        {
-          "any": [],
-          "all": [
-            {
-              "id": "focusable-modal-open",
-              "data": null,
-              "relatedNodes": [],
-              "impact": "serious",
-              "message": "No focusable elements while a modal is open"
-            },
-            {
-              "id": "focusable-disabled",
-              "data": null,
-              "relatedNodes": [],
-              "impact": "serious",
-              "message": "No focusable elements contained within element"
-            },
-            {
-              "id": "focusable-not-tabbable",
-              "data": null,
-              "relatedNodes": [],
-              "impact": "serious",
-              "message": "No focusable elements contained within element"
-            }
-          ],
-          "none": [],
-          "impact": null,
-          "html": "<div aria-hidden=\"true\" data-dot=\"true\"></div>",
-          "target": [
-            [
-              "nextjs-portal",
-              "div[data-dot=\"true\"]"
-            ]
           ]
         }
       ]
@@ -4192,12 +4122,12 @@
               "id": "target-size",
               "data": {
                 "minSize": 24,
-                "width": 166.1,
+                "width": 171,
                 "height": 34.2
               },
               "relatedNodes": [],
               "impact": "serious",
-              "message": "Control has sufficient size (166.1px by 34.2px, should be at least 24px by 24px)"
+              "message": "Control has sufficient size (171px by 34.2px, should be at least 24px by 24px)"
             },
             {
               "id": "target-offset",
@@ -4256,12 +4186,12 @@
               "id": "target-size",
               "data": {
                 "minSize": 24,
-                "width": 121.3,
+                "width": 124,
                 "height": 40
               },
               "relatedNodes": [],
               "impact": "serious",
-              "message": "Control has sufficient size (121.3px by 40px, should be at least 24px by 24px)"
+              "message": "Control has sufficient size (124px by 40px, should be at least 24px by 24px)"
             },
             {
               "id": "target-offset",
@@ -4288,12 +4218,12 @@
               "id": "target-size",
               "data": {
                 "minSize": 24,
-                "width": 66.1,
+                "width": 66,
                 "height": 40
               },
               "relatedNodes": [],
               "impact": "serious",
-              "message": "Control has sufficient size (66.1px by 40px, should be at least 24px by 24px)"
+              "message": "Control has sufficient size (66px by 40px, should be at least 24px by 24px)"
             },
             {
               "id": "target-offset",
@@ -4320,12 +4250,12 @@
               "id": "target-size",
               "data": {
                 "minSize": 24,
-                "width": 81.1,
+                "width": 82,
                 "height": 40
               },
               "relatedNodes": [],
               "impact": "serious",
-              "message": "Control has sufficient size (81.1px by 40px, should be at least 24px by 24px)"
+              "message": "Control has sufficient size (82px by 40px, should be at least 24px by 24px)"
             },
             {
               "id": "target-offset",
@@ -4405,12 +4335,12 @@
               "id": "target-size",
               "data": {
                 "minSize": 24,
-                "width": 118.3,
+                "width": 119,
                 "height": 44
               },
               "relatedNodes": [],
               "impact": "serious",
-              "message": "Control has sufficient size (118.3px by 44px, should be at least 24px by 24px)"
+              "message": "Control has sufficient size (119px by 44px, should be at least 24px by 24px)"
             },
             {
               "id": "target-offset",
@@ -4853,12 +4783,12 @@
               "id": "target-size",
               "data": {
                 "minSize": 24,
-                "width": 174,
+                "width": 176,
                 "height": 52
               },
               "relatedNodes": [],
               "impact": "serious",
-              "message": "Control has sufficient size (174px by 52px, should be at least 24px by 24px)"
+              "message": "Control has sufficient size (176px by 52px, should be at least 24px by 24px)"
             },
             {
               "id": "target-offset",

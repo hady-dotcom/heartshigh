@@ -13,7 +13,7 @@
     "orientationAngle": 0,
     "orientationType": "landscape-primary"
   },
-  "timestamp": "2026-10-05T00:50:25.686Z",
+  "timestamp": "2026-10-05T02:08:01.375Z",
   "url": "http://127.0.0.1:3100/",
   "toolOptions": {
     "runOnly": {
@@ -1097,76 +1097,6 @@
           "target": [
             "span"
           ]
-        },
-        {
-          "any": [],
-          "all": [
-            {
-              "id": "focusable-modal-open",
-              "data": null,
-              "relatedNodes": [],
-              "impact": "serious",
-              "message": "No focusable elements while a modal is open"
-            },
-            {
-              "id": "focusable-disabled",
-              "data": null,
-              "relatedNodes": [],
-              "impact": "serious",
-              "message": "No focusable elements contained within element"
-            },
-            {
-              "id": "focusable-not-tabbable",
-              "data": null,
-              "relatedNodes": [],
-              "impact": "serious",
-              "message": "No focusable elements contained within element"
-            }
-          ],
-          "none": [],
-          "impact": null,
-          "html": "<div aria-hidden=\"true\" data-issues-count-exit=\"true\">-1</div>",
-          "target": [
-            [
-              "nextjs-portal",
-              "div[data-issues-count-exit=\"true\"]"
-            ]
-          ]
-        },
-        {
-          "any": [],
-          "all": [
-            {
-              "id": "focusable-modal-open",
-              "data": null,
-              "relatedNodes": [],
-              "impact": "serious",
-              "message": "No focusable elements while a modal is open"
-            },
-            {
-              "id": "focusable-disabled",
-              "data": null,
-              "relatedNodes": [],
-              "impact": "serious",
-              "message": "No focusable elements contained within element"
-            },
-            {
-              "id": "focusable-not-tabbable",
-              "data": null,
-              "relatedNodes": [],
-              "impact": "serious",
-              "message": "No focusable elements contained within element"
-            }
-          ],
-          "none": [],
-          "impact": null,
-          "html": "<div aria-hidden=\"true\" data-dot=\"true\"></div>",
-          "target": [
-            [
-              "nextjs-portal",
-              "div[data-dot=\"true\"]"
-            ]
-          ]
         }
       ]
     },
@@ -1885,12 +1815,12 @@
               "id": "target-size",
               "data": {
                 "minSize": 24,
-                "width": 166.1,
+                "width": 171,
                 "height": 34.2
               },
               "relatedNodes": [],
               "impact": "serious",
-              "message": "Control has sufficient size (166.1px by 34.2px, should be at least 24px by 24px)"
+              "message": "Control has sufficient size (171px by 34.2px, should be at least 24px by 24px)"
             },
             {
               "id": "target-offset",
