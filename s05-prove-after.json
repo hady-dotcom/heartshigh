@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-05T02:00:07.736Z",
+  "mediaId": 1,
+  "sharedMediaId": 2,
+  "bobListIncludesAlice": false,
+  "bobFetchByIdStatus": 403,
+  "bobFetchByFileStatus": 403,
+  "bobSignedStatus": 403,
+  "teacherPrivateStatus": 403,
+  "teacherSharedOk": true,
+  "ownerFetchOk": true,
+  "ownerByIdOk": true,
+  "publicStillSignedOut": true,
+  "guestMediaStatus": 403,
+  "closed": true
+}

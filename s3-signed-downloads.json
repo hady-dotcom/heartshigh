@@ -1,0 +1,24 @@
+{
+  "plugin": "@payloadcms/storage-s3",
+  "config": {
+    "acl": "private",
+    "signedDownloads": { "expiresIn": 300 },
+    "collections.media.signedDownloads": { "expiresIn": 300 }
+  },
+  "credentials": {
+    "acceptedNames": [
+      "S3_BUCKET / AWS_S3_BUCKET_NAME / BUCKET",
+      "S3_ACCESS_KEY_ID / AWS_ACCESS_KEY_ID / ACCESS_KEY_ID",
+      "S3_SECRET_ACCESS_KEY / AWS_SECRET_ACCESS_KEY / SECRET_ACCESS_KEY",
+      "S3_REGION / AWS_DEFAULT_REGION / AWS_REGION / REGION",
+      "S3_ENDPOINT / AWS_ENDPOINT_URL / ENDPOINT",
+      "S3_FORCE_PATH_STYLE"
+    ],
+    "newEnvVarRequired": false
+  },
+  "railway": {
+    "bucketAlreadyPrivate": true,
+    "note": "DEPLOY.md already says the Railway bucket is private and visitors do not get a public link. acl private matches that. signedDownloads uses the same keys; no extra env var."
+  },
+  "backgroundsAreSeparate": "BACKGROUNDS_BASE_URL is only for catalogue stills at /backgrounds/jpg/… (1 hour signed GET). Not required for Media."
+}

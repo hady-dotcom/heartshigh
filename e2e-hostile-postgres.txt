@@ -1,0 +1,49 @@
+Wiped the Postgres database (dropped the public schema).
+[01:59:29] [33mWARN[39m: [36mNo email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.[39m
+[01:59:29] [32mINFO[39m: [36mReading migration files from /workspace/hearts-prototype/src/migrations[39m
+[01:59:29] [32mINFO[39m: [36mMigrating: 20261003_103330_initial[39m
+[01:59:30] [32mINFO[39m: [36mMigrated:  20261003_103330_initial (875ms)[39m
+[01:59:30] [32mINFO[39m: [36mMigrating: 20261003_124500_integration_part1[39m
+[01:59:31] [32mINFO[39m: [36mMigrated:  20261003_124500_integration_part1 (204ms)[39m
+[01:59:31] [32mINFO[39m: [36mMigrating: 20261003_131651_integration_part2[39m
+[01:59:31] [32mINFO[39m: [36mMigrated:  20261003_131651_integration_part2 (59ms)[39m
+[01:59:31] [32mINFO[39m: [36mMigrating: 20261003_140611_harvest[39m
+[01:59:31] [32mINFO[39m: [36mMigrated:  20261003_140611_harvest (14ms)[39m
+[01:59:31] [32mINFO[39m: [36mMigrating: 20261003_180616_jibril_doors[39m
+[01:59:31] [32mINFO[39m: [36mMigrated:  20261003_180616_jibril_doors (20ms)[39m
+[01:59:31] [32mINFO[39m: [36mMigrating: 20261003_194500_line_tidy[39m
+[01:59:31] [32mINFO[39m: [36mMigrated:  20261003_194500_line_tidy (1ms)[39m
+[01:59:31] [32mINFO[39m: [36mMigrating: 20261003_200853_integration_final[39m
+[01:59:31] [32mINFO[39m: [36mMigrated:  20261003_200853_integration_final (47ms)[39m
+[01:59:31] [32mINFO[39m: [36mMigrating: 20261003_220000_feedback[39m
+[01:59:31] [32mINFO[39m: [36mMigrated:  20261003_220000_feedback (47ms)[39m
+[01:59:31] [32mINFO[39m: [36mMigrating: 20261004_060000_shorts[39m
+[01:59:31] [32mINFO[39m: [36mMigrated:  20261004_060000_shorts (2ms)[39m
+[01:59:31] [32mINFO[39m: [36mMigrating: 20261004_061000_portal_time_zone[39m
+[01:59:31] [32mINFO[39m: [36mMigrated:  20261004_061000_portal_time_zone (1ms)[39m
+[01:59:31] [32mINFO[39m: [36mMigrating: 20261004_080000_lesson_picture_flags[39m
+[01:59:31] [32mINFO[39m: [36mMigrated:  20261004_080000_lesson_picture_flags (1ms)[39m
+[01:59:31] [32mINFO[39m: [36mMigrating: 20261005_013000_media_privacy[39m
+[01:59:31] [32mINFO[39m: [36mMigrated:  20261005_013000_media_privacy (3ms)[39m
+Harvest: 172 verses and hadith across 31 talks. No quotation found in 5: Gratitude is the Greatest Blessing | Gems from Ibn Ata Illah Ep. 1 | Shaykh Mikaeel Ahmed Smith; How to Manage Your Anger - Amjad Tarsin; Moments of Solitude: Closeness to God | Jummah Khutbah | Imam Khalid Latif | 3.11.2022; On Mosques, Companionship, & Knowledge; Quranic Connection #26: A Cure for Anxiety | Shaykh Suleiman Hani.
+Harvest sample: 4 lines kept for Maryam.
+Feedback demo: sample answers are on the East London and Leeds desks.
+Seeded HEARTS. Master: master@hearts.test / hearts-master
+Access codes (also on the master desk, and in data/seed-codes-test.json):
+  elm-teacher    ELM-4PU4-K8MP
+  elm-admin      ELM-PXFV-9BRQ
+  elm-learner    ELM-46CW-RRVF
+  elm-parent     ELM-M8NM-QAPJ
+  leeds-teacher  LEEDS-EFTW-KJJN
+  leeds-learner  LEEDS-3ERB-GKUN
+
+Running 1 test using 1 worker
+
+(node:21719) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21719) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/e2e/s05-media-hostile.spec.ts:36:1 › S05: learner B cannot list or fetch learner A private answer media (16.2s)
+
+  1 passed (45.9s)
+EXIT:0

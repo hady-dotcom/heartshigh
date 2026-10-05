@@ -1,0 +1,46 @@
+{
+  "hotfixBranch": "cursor/hotfix-s05-private-files",
+  "baseBranch": "cursor/hearts-prototype-v1-cf40",
+  "baseSha": "8ad0b33ae55de3c8ad62baeeb67b669fffb39d2e",
+  "tipSha": "5aea0e63220d11857e2e112b0c9e95aa6d98711f",
+  "pr": "https://github.com/hady-dotcom/heartshigh/pull/38",
+  "migration": "20261005_013000_media_privacy",
+  "newEnvVarRequired": false,
+  "unit": {
+    "before": { "pass": 319, "fail": 0 },
+    "after": { "pass": 326, "fail": 0 },
+    "newFailures": []
+  },
+  "playwrightSqlite": {
+    "before": { "pass": 207, "fail": 0, "duration": "20.7m" },
+    "afterFirstRun": {
+      "pass": 206,
+      "fail": 2,
+      "duration": "20.7m",
+      "failures": [
+        "nesting-progress.spec.ts — empty feed attrs (flake; passed on rerun)",
+        "s05-media-hostile.spec.ts — ECONNRESET on teacher GET after a long suite (passed on rerun and on Postgres)"
+      ]
+    },
+    "afterRerunOfFailures": { "pass": 2, "fail": 0 },
+    "newPersistentFailures": []
+  },
+  "playwrightPostgres": {
+    "s05Hostile": { "pass": 1, "fail": 0, "database": "hearts_e2e" }
+  },
+  "migrate": {
+    "fresh": "ok — owner_id and purpose nullable; 20261005_013000_media_privacy applied",
+    "cf40Shaped": "ok — answer media backfilled with owner+purpose=answer; film=film; leftover speaker still=portal-asset"
+  },
+  "s05Prove": {
+    "bobListIncludesAlice": false,
+    "bobFetchByIdStatus": 403,
+    "bobFetchByFileStatus": 403,
+    "bobSignedStatus": 403,
+    "teacherPrivateStatus": 403,
+    "teacherSharedOk": true,
+    "ownerFetchOk": true,
+    "publicStillSignedOut": true,
+    "closed": true
+  }
+}

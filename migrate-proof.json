@@ -1,0 +1,27 @@
+{
+  "fresh": {
+    "database": "hearts_fresh",
+    "exit": 0,
+    "migrationsInclude": "20261005_013000_media_privacy",
+    "mediaColumns": ["owner_id", "purpose"],
+    "ownerNullable": true,
+    "purposeNullable": true
+  },
+  "cf40Shaped": {
+    "database": "hearts_cf40",
+    "seededOn": "8ad0b33 (cf40, no owner/purpose columns)",
+    "legacyRowsBefore": [
+      { "filename": "legacy-answer.png", "linked": "answers.image_id user 8" },
+      { "filename": "legacy-unowned.png", "linked": "answers.image_id user 4 keepPrivate" },
+      { "filename": "legacy-film.mp4", "linked": "lessons.film_id" },
+      { "filename": "legacy-speaker.jpg", "linked": "none" }
+    ],
+    "afterHotfixMigrate": [
+      { "filename": "legacy-answer.png", "purpose": "answer", "owner_id": 8 },
+      { "filename": "legacy-unowned.png", "purpose": "answer", "owner_id": 4 },
+      { "filename": "legacy-film.mp4", "purpose": "film", "owner_id": null },
+      { "filename": "legacy-speaker.jpg", "purpose": "portal-asset", "owner_id": null }
+    ],
+    "exit": 0
+  }
+}
