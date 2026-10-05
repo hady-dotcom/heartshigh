@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { SCALE_KEYS } from './heart'
 import { SCENES } from './opening-data'
 import { authorTextProblems } from './opening-data'
-import { DEFAULT_COPY, FOCUS_NAMES, LIFE_OPTIONS, LIFE_PROMPT, MONTH_WORDING } from './compass-data'
+import { DEFAULT_COPY, FOCUS_NAMES, LEARNER_VOICE, LIFE_OPTIONS, LIFE_PROMPT, MONTH_WORDING } from './compass-data'
 import { attribute, focusLine, portalSummary, rawScoreLeak, recalibrationDue, steer, summarise, withLife, MONTH_MS } from './compass'
 import { PERSONA_BANDS } from './persona-data'
 import { publishProblems, signature } from './persona'
@@ -22,7 +22,9 @@ test('persona ranges are published, distinct, and cover anger and greed', () => 
   const devout = PERSONA_BANDS.find((band) => band.key === 'devout')!
   const traditionalist = PERSONA_BANDS.find((band) => band.key === 'traditionalist')!
   assert.notEqual(signature(devout), signature(traditionalist))
-  assert.ok((devout.ranges.find((row) => row.scale === 'faith')?.min || 0) > (traditionalist.ranges.find((row) => row.scale === 'faith')?.min || 0))
+  const devoutFaith = devout.ranges.find((row) => row.scale === 'faith')!
+  const traditionalFaith = traditionalist.ranges.find((row) => row.scale === 'faith')!
+  assert.ok((devoutFaith.max || 0) < (traditionalFaith.min || 0))
   assert.equal(devout.ranges.find((row) => row.scale === 'anger')?.present, true)
   assert.equal(traditionalist.ranges.find((row) => row.scale === 'greed')?.present, true)
 })
@@ -38,6 +40,7 @@ test('learner copy, monthly wording and the life check pass the kill list', () =
     ...DEFAULT_COPY.places.flatMap((place) => [[place.key, place.label], [`${place.key} forward`, place.forward]] as [string, string][]),
     ...LIFE_OPTIONS.map((option) => [option.key, option.label] as [string, string]),
     ...Object.values(FOCUS_NAMES).map((name) => ['focus', name] as [string, string]),
+    ...Object.values(LEARNER_VOICE).flatMap((voice) => [['voice', voice.line], ['step', voice.step], ['action', voice.action]] as [string, string][]),
   ]
   for (const [key, wording] of Object.entries(MONTH_WORDING)) {
     const scene = SCENES.find((row) => row.key === key)
@@ -71,28 +74,35 @@ test('the soft summary has warm words and no raw scores', () => {
     ],
   })
   assert.equal(rawScoreLeak(summary), null)
-  assert.equal(summary.focusLine, 'Focusing on: thankfulness')
-  assert.equal(summary.areas.find((area) => area.area === 'patience')?.place, 'Steady')
-  assert.equal(summary.areas.find((area) => area.area === 'thankfulness')?.place, 'Growing')
-  assert.ok(summary.steps.length >= 2 && summary.steps.length <= 3)
+  assert.equal(summary.focusLine, 'Focusing on: Noticing small gifts, Holding your temper')
+  assert.equal(summary.areas.length, 2)
+  assert.equal(summary.areas.every((area) => area.place == null), true)
+  assert.equal(summary.steps.length, 2)
+  assert.equal(summary.steps[0]?.title, 'A short talk on thankfulness')
+  assert.equal(summary.steps[0]?.tone, 'talk')
+  assert.equal(summary.steps[0]?.clip, 'Full talk')
+  assert.equal(summary.steps[1]?.tone, 'action')
+  assert.match(summary.steps[1]?.title || '', /^This week:/)
+  assert.equal(summary.areas.some((area) => area.area === summary.steps[1]?.title), false)
   assert.equal(summary.talks[0]?.title, 'A short talk on thankfulness')
-  assert.ok(summary.movement.some((line) => line === "You've grown in patience since last month."))
-  assert.ok(summary.movement.some((line) => line === 'thankfulness is holding steady.'))
+  assert.equal(summary.movement.length, 0)
+  const lines = summary.areas.map((area) => area.forward)
+  assert.equal(new Set(lines).size, lines.length)
 })
 
 test('the framing can be the focus line, the place words, or both', () => {
   const now = [{ scale: 'anger' as const, focus: 'patience', rung: -4 }]
   const talks: { title: string; href: string; scales: { scale: 'anger'; weight: number }[] }[] = []
   const both = summarise({ now, talks })
-  assert.equal(both.focusLine, 'Focusing on: patience')
-  assert.equal(both.areas[0]?.place, 'Growing')
+  assert.equal(both.focusLine, 'Focusing on: Holding your temper')
+  assert.equal(both.areas[0]?.place, null)
   const focusing = summarise({ now, talks, frame: 'focusing' })
-  assert.equal(focusing.focusLine, 'Focusing on: patience')
+  assert.equal(focusing.focusLine, 'Focusing on: Holding your temper')
   assert.equal(focusing.areas[0]?.place, null)
   const places = summarise({ now, talks, frame: 'places', copy: { ...DEFAULT_COPY, focusLead: 'Walking with' } })
   assert.equal(places.focusLine, null)
-  assert.equal(places.areas[0]?.place, 'Growing')
-  assert.equal(focusLine('Walking with', ['patience', 'thankfulness']), 'Walking with: patience, thankfulness')
+  assert.equal(places.areas[0]?.place, null)
+  assert.equal(focusLine('Walking with', ['patience', 'thankfulness']), 'Walking with: Patience, Thankfulness')
 })
 
 test('steering weights the weakest scale and still keeps a second one', () => {

@@ -25,6 +25,11 @@ export type PersonaBand = {
   identicalGroup: string
   note: string
   ranges: RangeRow[]
+  /** 2 once the band is the balanced reading in PERSONA-BALANCING.md. */
+  version?: number
+  description?: string
+  doors?: number[]
+  talks?: string[]
 }
 
 /** A phone reading: the heart state's `s` values, each in −1..+1. Not rungs. */
@@ -109,6 +114,46 @@ export function matchPersonas(reading: Reading, bands: PersonaBand[]) {
   return hits
 }
 
+/** True when some scale's ranges cannot both contain the same rung. */
+export function rangesDisjoint(a: PersonaBand, b: PersonaBand) {
+  return a.ranges.some((row) => {
+    const other = b.ranges.find((item) => item.scale === row.scale)
+    if (!row.present || !other?.present || row.min == null || row.max == null || other.min == null || other.max == null) return false
+    return row.max < other.min || other.max < row.min
+  })
+}
+
+/**
+ * The published band that contains the reading, or the nearest one when the reading sits outside every box.
+ * Used on the desk charts. Never shown to the learner.
+ */
+export function nearestPersona(reading: Reading, bands: PersonaBand[]) {
+  const hits = matchPersonas(reading, bands)
+  if (hits[0]) return hits[0]
+  const published = bands.filter((band) => band.status === 'published' && publishProblems(band, bands.filter((other) => other.key !== band.key)).length === 0)
+  let best: { key: string; dist: number } | null = null
+  for (const band of published) {
+    let dist = 0
+    let seen = 0
+    for (const row of band.ranges) {
+      if (!row.present || row.min == null || row.max == null) continue
+      const raw = reading[row.scale]
+      if (raw == null || !Number.isFinite(raw)) {
+        dist += 20
+        continue
+      }
+      const rung = toRung(raw)
+      if (rung == null) continue
+      seen += 1
+      if (rung < row.min) dist += row.min - rung
+      else if (rung > row.max) dist += rung - row.max
+    }
+    if (!seen) continue
+    if (!best || dist < best.dist) best = { key: band.key, dist }
+  }
+  return best?.key || null
+}
+
 export type PersonaCell = { group: string; persona: string; count: number; people: number; shown: boolean; share: number | null }
 
 /** Counts per persona per group. Cells under PERSONA_MIN are marked hidden; the count stays for the desk to withhold. */
@@ -132,7 +177,7 @@ export function tallyPersonas(rows: { group: string; reading: Reading }[], bands
   return cells.sort((a, b) => a.group.localeCompare(b.group) || b.count - a.count || a.persona.localeCompare(b.persona))
 }
 
-const SOURCES: PersonaSource[] = ['doc-a', 'doc-b', 'doc-c', 'ux-draft', 'unassigned']
+const SOURCES: PersonaSource[] = ['doc-a', 'doc-b', 'doc-c', 'ux-draft', 'unassigned', 'balanced']
 
 /** A stored row, from the CMS or the seed, turned into the shape the functions use. Missing scales are filled in as absent. */
 export function bandFromRow(row: {
@@ -144,8 +189,14 @@ export function bandFromRow(row: {
   identicalGroup?: string | null
   note?: string | null
   ranges?: { scale?: string | null; present?: boolean | null; min?: number | null; max?: number | null }[] | null
+  version?: number | null
+  description?: string | null
+  doors?: number[] | null
+  talks?: string[] | null
 }): PersonaBand {
   const byScale = new Map((row.ranges || []).map((item) => [item.scale, item]))
+  const doors = (row.doors || []).map((door) => Number(door)).filter((door) => Number.isInteger(door))
+  const talks = (row.talks || []).map((talk) => String(talk)).filter(Boolean)
   return {
     key: row.key || '',
     title: row.title || '',
@@ -154,6 +205,10 @@ export function bandFromRow(row: {
     placeholder: row.placeholder !== false,
     identicalGroup: row.identicalGroup || '',
     note: row.note || '',
+    version: typeof row.version === 'number' ? row.version : undefined,
+    description: row.description || row.note || '',
+    doors,
+    talks,
     ranges: SCALE_KEYS.map((scale) => {
       const found = byScale.get(scale)
       return {

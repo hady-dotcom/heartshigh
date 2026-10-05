@@ -7,9 +7,11 @@ import { Hidden } from '@/components/app/shell'
 import { portalIdOf } from '@/lib/ids'
 import { getSession, loadPortal, requirePortal } from '@/server/context'
 import { JourneyScreen } from '@/screens/app/journey'
+import { shareOrigin } from '@/lib/site-origin'
 import { portalName } from '@/server/learner'
 import type { Ctx, Query } from '@/screens/common'
 import { LearnerPathScreen, RecalibrateScreen } from '@/screens/app/compass'
+import { GatherDetailScreen, GatherDoorScreen, GatherListScreen, GatherProposeScreen, GatherReflectScreen } from '@/screens/app/gather'
 import { HomeScreen, LanesScreen } from '@/screens/app/home'
 import { CourseScreen, SpeakerScreen } from '@/screens/app/course'
 import { GardenDoor, GardenGeneral, GardenGhunya, GardenJibril, GardenScreen, GardenWorkbook } from '@/screens/app/garden'
@@ -23,13 +25,12 @@ import { PortalCompassScreen, StaffLearnerCompass } from '@/screens/desk/compass
 import { PortalCreatorScreen } from '@/screens/desk/creator-screen'
 import { PortalSheetScreen } from '@/screens/desk/sheet'
 import { FeedbackScreen } from '@/screens/desk/feedback'
+import { GatherAttendanceScreen, GatherDeskScreen } from '@/screens/desk/gather'
 import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
 import { PortalCircle } from '@/screens/desk/circle'
 
 function originOf(reqHeaders: Headers) {
-  const host = reqHeaders.get('x-forwarded-host') || reqHeaders.get('host') || 'localhost:3000'
-  const proto = reqHeaders.get('x-forwarded-proto') || (host.startsWith('localhost') || host.startsWith('127.') ? 'http' : 'https')
-  return `${proto}://${host}`
+  return shareOrigin(reqHeaders)
 }
 
 const plain = (value: string) => encodeURIComponent(value)
@@ -100,6 +101,9 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         return PlansScreen(ctx)
       case 'nights':
         return NightsScreen(ctx)
+      case 'gather':
+        if (b === 'attendance') return GatherAttendanceScreen(ctx)
+        return GatherDeskScreen(ctx)
       case 'settings':
         guardAdmin(ctx)
         return PortalSettingsScreen(ctx)
@@ -135,6 +139,13 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       return HomeScreen(ctx)
     case 'lanes':
       return LanesScreen(ctx)
+    case 'gather':
+      if (!a) return GatherListScreen(ctx)
+      if (a === 'propose') return GatherProposeScreen(ctx)
+      if (!Number(a)) notFound()
+      if (b === 'door') return GatherDoorScreen(ctx, Number(a))
+      if (b === 'reflect') return GatherReflectScreen(ctx, Number(a))
+      return GatherDetailScreen(ctx, Number(a))
     case 'speaker':
       if (!a) notFound()
       return SpeakerScreen(ctx, a)

@@ -7,11 +7,14 @@ import { AppFrame, Flash, TabBar } from '@/components/app/shell'
 import { PlayIcon } from '@/components/icons'
 import { displayTalkTitle } from '@/lib/talk-title'
 import { courseCards, dayNumber, portalName, posterFor, shownPoster } from '@/server/learner'
-import { recalibrationDueFor } from '@/server/compass'
+import { ensureMonthNote, recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
 import { lanesWithClips } from '@/lib/lanes'
 import { plural } from '@/lib/schedule'
+import { continueOrder, dateKeyInZone, minutesADay, tonightLabel, tonightSlot } from '@/lib/study-plan'
+import { now as clockNow } from '@/lib/clock'
 import { growth, Rings } from './garden'
+import { HomeGather, homeGatherings } from './gather'
 import { type Ctx, ref, rows, str, unreadCount } from '../common'
 
 function minutesLeft(seconds: number, percent: number) {
@@ -23,13 +26,18 @@ function minutesLeft(seconds: number, percent: number) {
 /** Home: the growth banner, what to carry on with, then the way into today's clips (board 00). */
 export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   if (user.role === 'learner' && !user.onboarded) redirect(user.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
-  const [g, unread, { items }, courses, due] = await Promise.all([growth(payload, user), unreadCount(payload, user), learnerClips(payload, portal, user), courseCards(payload, user), user.role === 'learner' ? recalibrationDueFor(payload, user.id) : Promise.resolve(false)])
+  const [g, unread, { items }, courses, due, gatherings] = await Promise.all([growth(payload, user), unreadCount(payload, user), learnerClips(payload, portal, user), courseCards(payload, user), user.role === 'learner' ? recalibrationDueFor(payload, user.id) : Promise.resolve(false), homeGatherings({ payload, portal, user, base })])
+  if (due) await ensureMonthNote(payload, user.id, portal.id, String(portal.slug || ''))
   const [visits, sessions] = await Promise.all([
     rows(payload, 'lesson-visits', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 40 }),
     rows(payload, 'watch-sessions', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 80 }),
   ])
-  const done = new Set(g.completions.filter((row) => Number(row.percent ?? 100) >= 90).map((row) => ref(row.lesson)))
-  const openIds = [...new Set(visits.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id) && !done.has(id)))].slice(0, 3)
+  const done = new Set(g.completions.filter((row) => Number(row.percent ?? 100) >= 90).map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))
+  const openIds = continueOrder(
+    sessions.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)),
+    visits.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)),
+    done,
+  )
   const openLessons = openIds.length ? await rows(payload, 'lessons', { id: { in: openIds } }) : []
   const courseIds = [...new Set(openLessons.map((row) => ref(row.course)).filter((id): id is number => Boolean(id)))]
   const openCourses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }) : []
@@ -58,6 +66,14 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
       }
     })
   const fallback = carryOn.length ? [] : courses.filter((course) => course.open).slice(0, 2)
+  const plans = await rows(payload, 'schedules', { portal: { equals: portal.id } }, { sort: '-createdAt', limit: 20 })
+  const plan = plans.find((row) => ref(row.owner) === user.id || ((row.learners as unknown[]) || []).some((item) => ref(item) === user.id))
+  const slot = plan ? tonightSlot((plan.slots as { date?: string; lessonId?: number | null; title?: string }[]) || [], dateKeyInZone(clockNow(), portal.timeZone || 'Europe/London'), done) : null
+  const planLesson = slot?.lessonId ? (await rows(payload, 'lessons', { id: { equals: slot.lessonId } }, { limit: 1 }))[0] : null
+  const planMinutes = minutesADay(plan?.minutesPerDay) || 20
+  const tonight = planLesson
+    ? { label: tonightLabel(Number(planLesson.order || 1), planMinutes), href: `${base}/course/${ref(planLesson.course)}?part=${planLesson.id}`, title: str(planLesson.title) }
+    : null
   const days = g.activeDays.size
   const clips = items.slice(0, 3)
   return (
@@ -81,8 +97,16 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         {due ? (
           <section className="card" data-testid="recalibrate-card" style={{ marginBottom: 16 }}>
             <h2 style={{ marginTop: 0 }}>A fresh look, when you have a moment</h2>
-            <p>A few new moments, in slightly different words, so this month stays close to your life.</p>
+            <p>Five short questions, in different words, and one line about life just now.</p>
             <Link className="pill ink" href={`${base}/recalibrate`} data-testid="recalibrate-open">Take a few moments</Link>
+          </section>
+        ) : null}
+        {tonight ? (
+          <section className="card home-plan" data-testid="home-plan">
+            <p className="eyebrow">Your plan</p>
+            <h2 data-testid="home-plan-line">{tonight.label}</h2>
+            <p>{tonight.title}</p>
+            <Link className="pill gold" href={tonight.href} data-testid="plan-continue">Continue</Link>
           </section>
         ) : null}
         <p className="eyebrow">Continue</p>
@@ -101,6 +125,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
           ))}
           {!carryOn.length && !fallback.length ? <p className="muted">Start a course from Lanes and it will wait for you here.</p> : null}
         </div>
+        <HomeGather cards={gatherings} base={base} masjid={portalName(portal)} />
         <p className="eyebrow">Today&apos;s clips <span className="muted" style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }} data-testid="day-number">· Day {dayNumber(user)}</span></p>
         <Link className="feed-door" href={`${base}/feed`} data-testid="open-feed">
           <span className="strip">

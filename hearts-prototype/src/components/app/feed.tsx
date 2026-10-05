@@ -91,7 +91,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
 
   const step = useCallback((direction: 1 | -1) => {
     if (items.length < 2) {
-      setToast(mode === 'hors' ? "That is the only hors d'oeuvre here" : 'That is the only appetiser here')
+      setToast(mode === 'hors' ? "That is the only hors d'oeuvre here" : 'That is the only ‘Ready for more?’ here.')
       return
     }
     setIndex((current) => (current + direction + items.length) % items.length)
@@ -231,7 +231,7 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
                 </>
               ) : (
                 <div className="clip-row" style={{ marginTop: 14 }}>
-                  <span className="chip gold">Extended cut</span>
+                  <span className="chip gold" data-testid="level-chip">Ready for more?</span>
                   <span style={{ fontSize: 13, fontWeight: 700 }}>{clock(piece.start)} / {clock(piece.end)}</span>
                 </div>
               )}

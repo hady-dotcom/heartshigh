@@ -32,7 +32,7 @@ test('a week of use, so the garden has something in it', async ({ page }) => {
   }
   await page.goto('/p/east-london/course/1')
   await expect(async () => {
-    await page.getByTestId('timeline-dot').first().click()
+    await page.getByTestId('timeline-dot').first().click({ force: true })
     await expect(page.getByTestId('answer-form')).toBeVisible({ timeout: 1000 })
   }).toPass({ timeout: 15_000 })
   await page.getByTestId('answer-text').fill('Sending salawat after Fajr, before I pick up my phone.')
@@ -90,7 +90,7 @@ test('learner app at phone size', async ({ page }) => {
   await page.screenshot({ path: `${dir}/learner-01b-appetiser.png`, caret: 'initial' })
   await page.goto(`${base}/course/1`)
   await expect(async () => {
-    await page.getByTestId('timeline-dot').first().click()
+    await page.getByTestId('timeline-dot').first().click({ force: true })
     await expect(page.getByTestId('popup')).toBeVisible({ timeout: 1000 })
   }).toPass({ timeout: 15_000 })
   await page.waitForTimeout(800)

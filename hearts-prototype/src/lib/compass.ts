@@ -4,7 +4,9 @@
 import { SCALE_KEYS, type ScaleKey } from './heart'
 import { toRung } from './persona'
 import type { CompassCopy, Frame, PlaceCopy } from './compass-data'
-import { DEFAULT_COPY } from './compass-data'
+import { DEFAULT_COPY, LEARNER_VOICE } from './compass-data'
+import { kindLabel } from './compass-feed'
+import { tidyTalkTitle } from './talk-title'
 
 export type AreaReading = { scale: ScaleKey; focus: string; rung: number }
 
@@ -12,7 +14,7 @@ export type LearnerCompass = {
   kind: 'path'
   focusLine: string | null
   areas: { area: string; place: string | null; forward: string }[]
-  steps: { title: string; detail: string }[]
+  steps: { title: string; detail: string; href?: string; tone: 'talk' | 'action'; clip?: string }[]
   talks: { title: string; href: string }[]
   movement: string[]
 }
@@ -54,8 +56,14 @@ export function placeFor(rung: number, places: PlaceCopy[]) {
   return ordered.find((place) => rung >= place.low && rung <= place.high) || ordered[0]
 }
 
+function capWord(name: string) {
+  const trimmed = name.trim()
+  if (!trimmed) return trimmed
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1)
+}
+
 export function focusLine(lead: string, names: string[]) {
-  const clean = names.map((name) => name.trim()).filter(Boolean)
+  const clean = names.map(capWord).filter(Boolean)
   if (!clean.length) return null
   return `${lead.replace(/[:\s]+$/, '')}: ${clean.join(', ')}`
 }
@@ -68,70 +76,71 @@ export function withLife<T extends Partial<Record<ScaleKey, number>>>(reading: T
   return { ...reading, [boost]: pulled }
 }
 
+/** Pulls every life-event scale, without changing the stored reading. */
+export function withLives<T extends Partial<Record<ScaleKey, number>>>(reading: T, boosts: ScaleKey[]): T {
+  return boosts.reduce((current, scale) => withLife(current, scale), reading)
+}
+
 export function summarise(input: {
   copy?: CompassCopy
   now: AreaReading[]
   before?: AreaReading[] | null
-  talks: { title: string; href: string; scales: SteerTag[] }[]
+  talks: { title: string; href: string; scales: SteerTag[]; kind?: string }[]
   frame?: Frame
 }): LearnerCompass {
   const copy = input.copy || DEFAULT_COPY
   const frame = input.frame || copy.frame
-  const places = copy.places.length ? copy.places : DEFAULT_COPY.places
   const ranked = [...input.now].sort((a, b) => a.rung - b.rung || a.focus.localeCompare(b.focus))
-  const growing = ranked.filter((row) => placeFor(row.rung, places)?.key === 'growing')
-  const focusNames = (growing.length ? growing : ranked.slice(0, 2)).slice(0, 3).map((row) => row.focus)
-  const showPlaces = frame !== 'focusing'
+  const focusRows = quieter(ranked)
   const showFocus = frame !== 'places'
-  const areas = ranked.map((row) => {
-    const place = placeFor(row.rung, places)
+  const areas = focusRows.map((row) => {
+    const voice = LEARNER_VOICE[row.scale]
     return {
-      area: row.focus,
-      place: showPlaces && place ? place.label : null,
-      forward: (place?.forward || '').replaceAll('{area}', row.focus),
+      area: voice?.name || capWord(row.focus),
+      place: null,
+      forward: voice?.line || '',
     }
   })
-  const stepRows = (growing.length ? growing : ranked).slice(0, 3)
-  const steps = stepRows.map((row) => {
-    const place = placeFor(row.rung, places)
-    return { title: row.focus, detail: (place?.forward || '').replaceAll('{area}', row.focus) }
-  })
-  const fillers = [
-    { title: 'One short clip', detail: 'Watch one short clip and notice what stays with you.' },
-    { title: 'A second sitting', detail: 'Come back to one more clip when you have a quiet moment.' },
-  ]
-  for (const filler of fillers) {
-    if (steps.length >= 2) break
-    steps.push(filler)
-  }
   const reading = Object.fromEntries(input.now.map((row) => [row.scale, row.rung / 10])) as Partial<Record<ScaleKey, number>>
-  const talks = steer(input.talks, reading, 3).map((talk) => ({ title: talk.title, href: talk.href }))
+  const steered = steer(input.talks, reading, 3)
+  const talks = steered.map((talk) => ({ title: talk.title, href: talk.href }))
+  const steps: LearnerCompass['steps'] = []
+  const first = focusRows[0]
+  const voice = first ? LEARNER_VOICE[first.scale] : null
+  const matched = first ? talkForScale(first.scale, input.talks) : null
+  if (matched) steps.push({ title: tidyTalkTitle(matched.title), detail: 'Sit with this when you have a few minutes.', href: matched.href, tone: 'talk', clip: kindLabel(matched.kind || 'talk') })
+  if (voice) steps.push({ title: voice.action, detail: '', tone: 'action' })
   return {
     kind: 'path',
-    focusLine: showFocus ? focusLine(copy.focusLead, focusNames) : null,
+    focusLine: showFocus ? focusLine(copy.focusLead, areas.map((area) => area.area)) : null,
     areas,
-    steps: steps.slice(0, 3),
+    steps: steps.slice(0, 2),
     talks,
-    movement: movementLines(copy, input.now, input.before || null, places),
+    movement: [],
   }
 }
 
-function movementLines(copy: CompassCopy, now: AreaReading[], before: AreaReading[] | null, places: PlaceCopy[]) {
-  if (!before?.length) return []
-  const order = ['growing', 'steady', 'flourishing']
-  const prev = new Map(before.map((row) => [row.scale, row]))
-  const lines: string[] = []
-  for (const row of now) {
-    const old = prev.get(row.scale)
-    if (!old) continue
-    const then = placeFor(old.rung, places)?.key
-    const current = placeFor(row.rung, places)?.key
-    if (!then || !current) continue
-    const delta = order.indexOf(current) - order.indexOf(then)
-    const template = delta > 0 ? copy.movementUp : delta < 0 ? copy.movementOnward : copy.movementSame
-    lines.push(template.replaceAll('{area}', row.focus))
-  }
-  return lines.slice(0, 4)
+/** A talk whose strongest tag is this scale, or failing that one that carries it at all. */
+function talkForScale(scale: ScaleKey, talks: { title: string; href: string; scales: SteerTag[]; kind?: string }[]) {
+  const scored = talks
+    .map((talk) => {
+      const main = talk.scales.reduce((max, tag) => Math.max(max, tag.weight || 0), 0)
+      const tag = talk.scales.find((row) => row.scale === scale)
+      const fit = !tag || main <= 0 ? 0 : (tag.weight || 0) >= main ? 2 : (tag.weight || 0) > 0 ? 1 : 0
+      return { talk, fit }
+    })
+    .filter((row) => row.fit > 0)
+    .sort((a, b) => b.fit - a.fit)
+  return scored[0]?.talk
+}
+
+/** The one or two lowest readings. A scale that is already flourishing stays off the line. */
+function quieter(ranked: AreaReading[]) {
+  if (!ranked.length) return []
+  const picked = [ranked[0]]
+  const second = ranked[1]
+  if (second && second.rung <= 2) picked.push(second)
+  return picked
 }
 
 /**

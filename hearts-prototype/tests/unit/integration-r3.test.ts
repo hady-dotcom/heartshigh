@@ -58,14 +58,14 @@ test('posters: YouTube\'s titled thumbnails and their /clips/ copies are never o
   assert.equal(cleanThumbnail({ youtubeId: 'not an id', thumbnailClean: true }), null)
 })
 
-test('feed players keep YouTube captions and annotations off and send no caption language; the full talk still may', () => {
-  for (const kind of ['hors', 'appetiser'] as const) {
+test('feed players and the course player keep YouTube captions and annotations off and send no caption language', () => {
+  for (const kind of ['hors', 'appetiser', 'full'] as const) {
     const vars = playerVars(kind, 3, 20) as Record<string, unknown>
     assert.equal(vars.cc_load_policy, 0, kind)
     assert.equal(vars.iv_load_policy, 3, kind)
+    assert.equal(vars.controls, 0, kind)
     assert.equal('cc_lang_pref' in vars, false, kind)
   }
-  assert.equal((playerVars('full', 0) as Record<string, unknown>).cc_lang_pref, 'en')
 })
 
 test('portal names: the brand word shows as HEARTS; other names, stored values and slugs stay as typed', async () => {

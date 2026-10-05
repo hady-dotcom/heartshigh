@@ -8,6 +8,8 @@ import { idOf, portalIdOf } from '@/lib/ids'
 import { clipWords } from '@/lib/sentences'
 import { extractWithFallback, llmStatus } from '@/lib/llm'
 import { defaultPlanName, flattenSlots, plural, splitEvenly, studyDates } from '@/lib/schedule'
+import { sortParts } from '@/lib/part-order'
+import { minutesADay } from '@/lib/study-plan'
 import { clockEnabled, setTestNow } from '@/lib/clock'
 import { authCookie } from '@/lib/cookies'
 import { logError } from '@/lib/log'
@@ -79,12 +81,31 @@ function text(form: FormData, key: string) {
   return String(form.get(key) || '').trim()
 }
 
+function safeNext(next: string) {
+  const value = (next || '/').trim() || '/'
+  if (!value.startsWith('/') || value.startsWith('//')) return '/'
+  return value
+}
+
+/** Sign-in from the front door used to land back on the door. `/` means the person's own home. */
+async function landingPath(payload: Awaited<ReturnType<typeof getSession>>['payload'], user: SessionUser, next: string) {
+  const wanted = safeNext(next)
+  if (wanted !== '/') return wanted
+  if (user.role === 'master') return '/master'
+  const portalId = portalIdOf(user)
+  if (!portalId) return '/'
+  const doc = await payload.findByID({ collection: 'portals', id: portalId, overrideAccess: true, depth: 0 }).catch(() => null)
+  const slug = (doc as { slug?: string } | null)?.slug
+  if (!slug) return '/'
+  return user.role === 'learner' ? `/p/${slug}` : `/p/${slug}/admin`
+}
+
 async function loginResponse(req: Request, email: string, password: string, next: string) {
   const { payload } = await getSession()
   try {
     const result = await payload.login({ collection: 'users', data: { email, password } })
-    if (!result.token) return redirectTo(req, '/login', 'That email or password did not match.')
-    const response = redirectTo(req, next)
+    if (!result.token || !result.user) return redirectTo(req, '/login', 'That email or password did not match.')
+    const response = redirectTo(req, await landingPath(payload, result.user as SessionUser, next))
     response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, result.token, 7200))
     return response
   } catch {
@@ -225,12 +246,7 @@ async function orderedLessons(payload: Awaited<ReturnType<typeof getSession>>['p
     sort: 'order',
   })
   const unitOrder = new Map(units.docs.map((doc, index) => [doc.id, index]))
-  return [...lessons.docs].sort((a, b) => {
-    const left = unitOrder.get(idOf((a as { unit?: unknown }).unit) || 0) ?? 0
-    const right = unitOrder.get(idOf((b as { unit?: unknown }).unit) || 0) ?? 0
-    if (left !== right) return left - right
-    return ((a as { order?: number }).order || 0) - ((b as { order?: number }).order || 0)
-  }) as { id: number; title?: string; course?: unknown }[]
+  return sortParts(lessons.docs as { id: number; title?: string; course?: unknown; order?: number | null; unit?: unknown }[], (row) => unitOrder.get(idOf(row.unit) || 0) ?? 0)
 }
 
 export type AnswerInput = {
@@ -501,8 +517,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       data: { uses: usesBefore + 1 },
     })
     if (!claimed.docs.length) return redirectTo(req, '/join', 'That access code was just used by someone else. Please try again.')
+    let createdId = 0
     try {
-      await payload.create({
+      const created = await payload.create({
         collection: 'users',
         overrideAccess: true,
         data: {
@@ -517,11 +534,19 @@ async function handleForm(req: Request, form: FormData, session: Session) {
           onboarded: codeRole !== 'learner' && codeRole !== 'parent',
         },
       })
+      createdId = created.id
     } catch (error) {
       await payload.update({ collection: 'access-codes', id: access.id, overrideAccess: true, data: { uses: usesBefore } })
       throw error
     }
-    const next = codeRole === 'learner' || codeRole === 'parent' ? `/p/${slug}/welcome` : `/p/${slug}/admin`
+    const guest = text(form, 'gatherGuest')
+    if (guest && createdId) {
+      const { claimGuestRsvp } = await import('./gather')
+      await claimGuestRsvp(payload, guest, createdId)
+    }
+    const after = text(form, 'after')
+    const gatherNext = after.startsWith(`/p/${slug}/`) ? after : ''
+    const next = gatherNext || (codeRole === 'learner' || codeRole === 'parent' ? `/p/${slug}/welcome` : `/p/${slug}/admin`)
     return loginResponse(req, email, password, next)
   }
 
@@ -1174,6 +1199,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     } catch (error) {
       return redirectTo(req, text(form, 'next') || '/', error instanceof Error ? error.message : 'Those dates did not work.')
     }
+    const minutesRaw = text(form, 'minutes')
+    const minutes = minutesRaw ? minutesADay(minutesRaw) : 20
+    if (!minutes) return redirectTo(req, text(form, 'next') || '/', 'Choose 10, 20, 30 or 45 minutes a day.')
     const slots = flattenSlots(splitEvenly(lessons.map((lesson) => ({ id: lesson.id, title: lesson.title || 'Sitting' })), dates))
     const learnerIds = [...new Set(form.getAll('learner').map((value) => Number(value)).filter(Boolean))]
     if (learnerIds.length && user.role === 'learner') return redirectTo(req, text(form, 'next') || '/', 'You can plan your own days. A teacher plans for others.')
@@ -1197,6 +1225,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         endDate: text(form, 'end'),
         weekdays: form.getAll('weekday').map((value) => Number(value)),
         slots,
+        minutesPerDay: minutes,
         portal,
       },
     })

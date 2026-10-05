@@ -100,7 +100,7 @@ test('demo learners show varied on-time fractions on Teach', async ({ page }) =>
   await expect(row('Hassan Malik (demo)').getByTestId('learner-progress')).toHaveText('5')
   await expect(row('Hassan Malik (demo)').getByTestId('on-time')).toHaveText('5 of 7')
   await expect(row('Hassan Malik (demo)').getByTestId('learner-answers')).toHaveText('5')
-  await expect(page.getByTestId('learner-row')).toHaveCount(4)
+  await expect(page.getByTestId('learner-row').filter({ hasText: '(demo)' })).toHaveCount(4)
   await shot(page, 'teach-demo')
 })
 

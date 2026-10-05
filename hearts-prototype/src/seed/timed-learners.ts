@@ -59,8 +59,12 @@ async function main() {
       organisationName: 'HEARTS demo',
       wizardDone: true,
       colour: '#123f3a',
+      timeZone: 'America/Toronto',
     },
   })
+  if ((portal as { timeZone?: string }).timeZone !== 'America/Toronto') {
+    await payload.update({ collection: 'portals', id: portal.id, overrideAccess: true, data: { timeZone: 'America/Toronto' } })
+  }
   if (portal.slug !== SLUG) refuse('The demo portal slug did not match. Nothing else was written.')
 
   const course = await ensureCourse(payload, portal.id)
