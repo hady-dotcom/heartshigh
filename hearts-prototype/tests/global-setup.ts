@@ -22,6 +22,7 @@ export default async function setup() {
       ...process.env,
       DATABASE_URL: database,
       DATABASE_ADAPTER: /^postgres/i.test(database) ? 'postgres' : 'sqlite',
+      HEARTS_E2E: '1',
     },
   })
   if (!(await serverClock())) {
