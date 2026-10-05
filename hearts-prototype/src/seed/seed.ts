@@ -523,12 +523,16 @@ async function main() {
     await seedFeedbackDemo(payload, { startersOnly })
   }
   if (!startersOnly && process.env.HEARTS_E2E !== '1') {
-    const { seedDemoWeekGarden } = await import('./demo-week-garden')
-    const filled = await seedDemoWeekGarden(payload)
-    if (filled.ok) {
-      console.log(`Afternoon walk: ${filled.slots} talks on My week and ${filled.talks} garden talks for ${filled.email}.`)
-    } else {
-      console.log(`Afternoon walk skipped: ${filled.reason}`)
+    try {
+      const { seedDemoWeekGarden } = await import('./demo-week-garden')
+      const filled = await seedDemoWeekGarden(payload)
+      if (filled.ok) {
+        console.log(`Afternoon walk: ${filled.slots} talks on My week and ${filled.talks} garden talks for ${filled.email}.`)
+      } else {
+        console.log(`Afternoon walk skipped: ${filled.reason}`)
+      }
+    } catch (error) {
+      console.log(`Afternoon walk skipped: ${error instanceof Error ? error.message : error}`)
     }
   }
 

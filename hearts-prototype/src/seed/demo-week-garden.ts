@@ -50,13 +50,15 @@ export async function seedDemoWeekGarden(
     return { ok: false, reason: `${email} is not in ${portalSlug}. Nothing was changed.` }
   }
 
-  const teacher = (await payload.find({
+  const namedTeacher = await one(payload, 'users', { email: { equals: 'elm-teacher@hearts.test' } })
+  const staff = namedTeacher || ((await payload.find({
     collection: 'users',
     overrideAccess: true,
     depth: 0,
-    limit: 5,
-    where: { and: [{ tenants: { tenant: { equals: portal.id } } }, { or: [{ role: { equals: 'teacher' } }, { role: { equals: 'portal-admin' } }] }] } as never,
-  })).docs[0] as Doc | undefined
+    limit: 20,
+    where: { or: [{ role: { equals: 'teacher' } }, { role: { equals: 'portal-admin' } }] } as never,
+  })).docs as Doc[]).find((person) => portalIdOf(person as { tenants?: { tenant?: unknown }[] }) === portal.id)
+  const teacher = staff
 
   const courseIds = await visibleCourseIds(payload, learner as SessionUser)
   if (!courseIds.length) return { ok: false, reason: `${email} has no courses open yet.` }
