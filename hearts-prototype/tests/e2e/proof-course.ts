@@ -8,8 +8,8 @@ export async function ensureProofCourse(master: APIRequestContext, portalSlug = 
   expect(portal).toBeTruthy()
   const courses = (await (await master.get('/api/courses?limit=80&depth=0')).json()) as { docs: { id: number; title?: string }[] }
   const existing = courses.docs.find((course) => course.title === title)
-  const users = (await (await master.get('/api/users?limit=40&depth=0')).json()) as { docs: { id: number; email?: string; extraCourses?: unknown[] }[] }
-  const learner = users.docs.find((row) => row.email === 'elm-learner@hearts.test')
+  const users = (await (await master.get(`/api/users?where[email][equals]=${encodeURIComponent('elm-learner@hearts.test')}&limit=1&depth=0`)).json()) as { docs: { id: number; email?: string; extraCourses?: unknown[] }[] }
+  const learner = users.docs[0]
   expect(learner).toBeTruthy()
   let courseId = existing?.id || 0
   if (!courseId) {
