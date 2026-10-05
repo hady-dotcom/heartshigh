@@ -8,7 +8,9 @@ test('a cross-origin cookie POST to a state-changing route is refused while CSRF
   expect(origins, CSRF_E2E_IN_PRODUCTION).toEqual(['https://hearts.example'])
 
   await signIn(page, 'elm-learner@hearts.test', 'portal-learner', SETTINGS)
-  await page.waitForURL((url) => url.pathname.startsWith(`${BASE}/me`))
+  await expect(page.getByTestId('settings')).toBeVisible()
+  await page.goto(`${BASE}/me`)
+  await expect(page.getByTestId('me-name')).toBeVisible()
   const state = await page.context().storageState()
   const before = await page.getByTestId('me-name').innerText()
 
