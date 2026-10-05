@@ -1,7 +1,7 @@
 import { idOf } from './ids'
 import { countsTowardProgress, pieceLevel } from './progress'
 
-type LessonRef = { lesson?: unknown; sourceLevel?: unknown; seconds?: unknown }
+type LessonRef = { lesson?: unknown; sourceLevel?: unknown; seconds?: unknown; [key: string]: unknown }
 
 /** Distinct talks that have a completion or a sitting with real played seconds. */
 export function watchedLessonIds(input: { completions: LessonRef[]; sessions: LessonRef[] }) {

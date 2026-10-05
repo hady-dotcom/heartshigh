@@ -98,6 +98,7 @@ export async function weekView(payload: Payload, user: SessionUser, portal: Port
         title: lesson ? partTitle(lesson, courseRows.find((course) => course.id === ref(lesson.course))?.title) : tidyTalkTitle(String(slot.title || 'Sitting')),
         lessonId: slot.lessonId || null,
         courseId: ownCourse,
+        href,
         minutes,
         today: slot.date === todayKey,
       }
