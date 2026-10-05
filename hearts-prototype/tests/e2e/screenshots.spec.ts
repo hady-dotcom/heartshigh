@@ -193,7 +193,7 @@ test('circle answers: the desk and the swarm', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await signIn(page, 'master@hearts.test', 'hearts-master', '/master/circle')
   await shot(page, 'master-circle', '/master/circle')
-  const lesson = await page.getByTestId('circle-talk').filter({ hasText: 'Al-Nur' }).first().getAttribute('data-lesson')
+  const lesson = await page.getByTestId('circle-talk').filter({ hasText: /Al-Nur|An-N[uū]r|Why You Feel Empty/i }).first().getAttribute('data-lesson')
   await shot(page, 'master-circle-talk', `/master/circle?lesson=${lesson}`)
   await page.getByTestId('circle-edit-open').first().click()
   await page.waitForTimeout(300)

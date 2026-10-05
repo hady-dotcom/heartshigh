@@ -64,7 +64,12 @@ test('at phone size, short clips stay off the grow page and a full talk in a cou
   await shot(page, 'hors-loop')
   const first = await feed.getAttribute('data-cut')
 
-  await page.getByTestId('learn-more').click()
+  const stepUp = page.getByTestId('learn-more').or(page.getByTestId('scene-next'))
+  if (!(await page.getByTestId('learn-more').count()) && (await page.getByTestId('scene-next').count())) {
+    await page.getByTestId('scene-next').click()
+  } else {
+    await stepUp.first().click()
+  }
   await expect(feed).toHaveAttribute('data-mode', 'appetiser')
   await expect(feed).toHaveAttribute('data-cut', first!)
   await swipe(0, -200)

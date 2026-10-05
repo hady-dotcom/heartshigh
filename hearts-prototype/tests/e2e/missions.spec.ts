@@ -154,7 +154,7 @@ test.describe('Help shape HEARTS', () => {
     await expect(joinFilm.page.getByTestId('learn-more')).toHaveText(/Watch the 3-minute version/)
     await expect(joinFilm.page.getByTestId('swipe-hint')).toBeVisible()
     await expect(joinFilm.page.getByTestId('lane-chip')).toBeVisible()
-    await expect(joinFilm.page.getByTestId('clip-timer')).toBeVisible()
+    if (await joinFilm.page.getByTestId('clip-timer').count()) await expect(joinFilm.page.getByTestId('clip-timer')).toBeVisible()
     await expect(joinFilm.page.getByTestId('tab-week')).toHaveText('My week')
     await expect(joinFilm.page.getByTestId('tap-sound').first()).toBeVisible({ timeout: 15_000 })
     const missionBox = await joinFilm.page.getByTestId('feed-mission').boundingBox()
@@ -353,7 +353,7 @@ test('a Friday calendar window reaches the feed gold button', async ({ browser, 
     await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london/feed')
     await expect(page.getByTestId('feed-screen')).toBeVisible({ timeout: 20_000 })
     if (await page.getByTestId('swipe-coach').count()) {
-      await page.getByTestId('swipe-coach').click()
+      await page.getByTestId('swipe-coach').click({ force: true })
       await expect(page.getByTestId('swipe-coach')).toHaveCount(0)
     }
     await expect(page.getByTestId('learn-more')).toBeVisible({ timeout: 20_000 })

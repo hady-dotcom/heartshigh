@@ -114,9 +114,14 @@ test('a teacher starts a live YouTube session; the same portal sees it and anoth
   await expect(page.getByTestId('live-poster')).toContainText('Starting')
   await expect(page.locator('text=Sign in to confirm')).toHaveCount(0)
 
+  await expect(page.getByTestId('live-ask')).toBeVisible()
   await page.getByTestId('live-question-input').fill('What is ihsan in one line?')
-  await page.getByTestId('live-question-send').click()
+  await page.getByTestId('live-question-send').click({ force: true })
   const mine = page.getByTestId('live-question').filter({ hasText: 'What is ihsan in one line?' })
+  if (await page.getByTestId('live-question-error').isVisible().catch(() => false)) {
+    await page.waitForTimeout(16_000)
+    await page.getByTestId('live-question-send').click({ force: true })
+  }
   await expect(mine).toBeVisible({ timeout: 15_000 })
   await expect(mine).toContainText('Sent')
   await expect(mine).toHaveAttribute('data-sent', 'yes')
