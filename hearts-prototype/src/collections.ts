@@ -150,7 +150,7 @@ export const Users: CollectionConfig = {
       generateEmailHTML: ({ token, user } = {}) => {
         const name = user && typeof user === 'object' && 'name' in user ? String((user as { name?: string }).name || '') : ''
         const base = (serverURL() || process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '')
-        const href = `${base}/reset?token=${token || ''}`
+        const href = `${base || ''}/reset?token=${token || ''}`
         return renderMail('reset', { name, buttonUrl: href }).html
       },
     },

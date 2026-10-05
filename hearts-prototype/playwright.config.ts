@@ -35,7 +35,6 @@ export default defineConfig({
       HEARTS_SEARCH_FIXTURE: 'tests/fixtures/youtube-search.json',
       HEARTS_TRANSCRIPT_FIXTURE: 'tests/fixtures/transcripts.json',
       HEARTS_MAIL_CATCHER: '1',
-      SERVER_URL: E2E_BASE,
     } as Record<string, string>,
   },
 })

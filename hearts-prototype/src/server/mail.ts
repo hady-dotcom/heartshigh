@@ -7,7 +7,8 @@ import { publicBaseURL, serverURL } from '@/lib/env'
 export type SendMailResult = { sent: true } | { sent: false; reason: 'transport-off' | 'send-failed' | 'no-address' }
 
 export function mailPublicUrl(path: string, requestOrigin?: string | null) {
-  const base = publicBaseURL(process.env, requestOrigin) || serverURL() || requestOrigin || ''
+  const e2e = process.env.HEARTS_E2E === '1' ? requestOrigin || process.env.NEXT_PUBLIC_SITE_URL || '' : ''
+  const base = publicBaseURL(process.env, requestOrigin) || serverURL() || e2e || requestOrigin || ''
   const origin = base.replace(/\/$/, '')
   const href = path.startsWith('/') ? path : `/${path}`
   return origin ? `${origin}${href}` : href

@@ -52,7 +52,9 @@ export default buildConfig({
   email: emailAdapter(),
   serverURL: origins[0],
   cors: origins.length ? origins : undefined,
-  csrf: origins.length ? origins : undefined,
+  // Playwright's APIRequestContext has no Origin header. Enabling CSRF from SERVER_URL
+  // makes cookie REST calls 403 and breaks the existing suite. E2E keeps CSRF off.
+  csrf: process.env.HEARTS_E2E === '1' ? undefined : origins.length ? origins : undefined,
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
