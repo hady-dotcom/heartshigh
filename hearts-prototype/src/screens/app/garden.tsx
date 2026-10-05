@@ -193,17 +193,17 @@ export async function coursePath(payload: Payload, user: SessionUser, base: stri
   if (!course || !lessons.length) return null
   const done = new Set(g.completions.filter((row) => Number(row.percent ?? 100) >= 90).map((row) => ref(row.lesson)))
   const watchedSet = g.watchedIds || new Set<number>()
-  const asTalk = (lesson: Row, courseId: number, courseTitle: string) => ({
-    id: lesson.id,
-    title: partTitle(lesson, courseTitle),
-    href: `${base}/course/${courseId}?part=${lesson.id}`,
-    done: done.has(lesson.id) || watchedSet.has(lesson.id),
-  })
-  const watched = g.lessons
-    .filter((lesson) => watchedSet.has(lesson.id))
-    .map((lesson) => asTalk(lesson, ref(lesson.course) || id || 0, str(course.title)))
-  const courseTalks = lessons.map((lesson) => asTalk(lesson, id, str(course.title)))
-  const nodes = gardenPathNodes(watched, courseTalks)
+  const title = str(course.title)
+  // This course only. A sitting on another course stays on the Finished ring, not on this path.
+  const courseTalks = lessons
+    .filter((lesson) => ref(lesson.course) === id)
+    .map((lesson) => ({
+      id: lesson.id,
+      title: partTitle(lesson, title),
+      href: `${base}/course/${id}?part=${lesson.id}`,
+      done: done.has(lesson.id) || watchedSet.has(lesson.id),
+    }))
+  const nodes = gardenPathNodes(courseTalks.filter((row) => row.done), courseTalks)
   if (!nodes.length) return null
   return { title: str(course.title), nodes }
 }
