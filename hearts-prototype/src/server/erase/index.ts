@@ -2,6 +2,7 @@ export { registerWipe, wipeEntries, wipeEntry, registeredSlugs } from './registr
 export { collectionsNeedingWipe, ALL_COLLECTION_CONFIGS } from './relations'
 export { missingWipeRegistrations, wipePortal, wipeUser } from './service'
 export { portalSummary, personSummary } from './summary'
+export { formatCount, wipeIntro } from './copy'
 export { exportPortalCopy, exportPersonCopy } from './export'
 export { findOrphans, fixOrphans, formatOrphanReport } from './orphans'
 export { refusePortalDelete, refusePersonDelete, refuseSelfDelete, confirmMatches, tenantsOf } from './permissions'

@@ -5,11 +5,8 @@ import { createPortal } from 'react-dom'
 import { Hidden } from '@/components/app/shell'
 import { HelpTip } from '@/components/desk/help'
 import { deskTokens } from '@/lib/desk-tokens'
-import type { CountRow, EraseSummary, PersonMode } from '@/server/erase/types'
-
-function countLine(counts: CountRow[]) {
-  return counts.filter((row) => row.n > 0).map((row) => `${row.n} ${row.label.toLowerCase()}`)
-}
+import { formatCount, wipeIntro } from '@/server/erase/copy'
+import type { EraseSummary, PersonMode } from '@/server/erase/types'
 
 const FOCUSABLE = 'a[href], button:not([disabled]), textarea, input:not([disabled]), select, [tabindex]:not([tabindex="-1"])'
 
@@ -153,11 +150,11 @@ export function ErasePanel({
           <>
             <div className="erase-dialog-body">
               <p style={{ margin: '0 0 10px' }} data-testid={`${testId}-summary`}>
-                This wipes {countLine(summary.counts).join(', ') || 'the saved rows'} from the database. It cannot be undone.
+                {wipeIntro(kind, personName || confirmValue)}
               </p>
               <ul data-testid={`${testId}-counts`} style={{ margin: '0 0 12px', paddingLeft: 18 }}>
-                {summary.counts.map((row) => (
-                  <li key={row.key}>{row.n} {row.label.toLowerCase()}</li>
+                {summary.counts.filter((row) => row.n > 0).map((row) => (
+                  <li key={row.key}>{formatCount(row.n, row.label)}</li>
                 ))}
               </ul>
               {kind === 'user' && manyHomes ? (
@@ -193,7 +190,7 @@ export function ErasePanel({
                   confirmName: typed,
                 }}
               />
-              <label className="stack">
+              <label className="stack erase-confirm">
                 {summary.confirmLabel}
                 <input
                   type="text"
@@ -201,6 +198,7 @@ export function ErasePanel({
                   onChange={(event) => setTyped(event.target.value)}
                   data-testid={`${testId}-confirm`}
                   autoComplete="off"
+                  placeholder={confirmValue}
                 />
               </label>
               <div className="actions" style={{ marginTop: 10 }}>

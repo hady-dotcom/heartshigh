@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Hidden } from '@/components/app/shell'
 import { HelpTip } from '@/components/desk/help'
 import { TOOL } from '@/lib/desk-help'
+import { formatCount } from '@/server/erase/copy'
 import type { CountRow, EraseSummary } from '@/server/erase/types'
 
 export function DeleteAccount({ name, next }: { name: string; next: string }) {
@@ -45,7 +46,7 @@ export function DeleteAccount({ name, next }: { name: string; next: string }) {
             <>
               <ul data-testid="delete-account-counts">
                 {lines.map((row) => (
-                  <li key={row.key}>{row.n} {row.label.toLowerCase()}</li>
+                  <li key={row.key}>{formatCount(row.n, row.label)}</li>
                 ))}
               </ul>
               <p>

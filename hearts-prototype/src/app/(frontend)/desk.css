@@ -154,7 +154,7 @@ body:has(.desk) {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgba(8, 20, 20, 0.58);
+  background: rgba(14, 42, 43, 0.6);
 }
 .erase-dialog {
   width: min(440px, 100%);
@@ -178,6 +178,45 @@ body:has(.desk) {
 .erase-dialog-foot {
   flex: none;
   padding-top: 12px;
+}
+.erase-dialog-foot label.erase-confirm {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.erase-dialog input[type='text'] {
+  width: 100%;
+  min-height: 42px;
+  border: 1.5px solid var(--line, #C4923A);
+  background: var(--field, #102E2C);
+  color: var(--ink, #F6EEDC);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+}
+.erase-dialog input[type='text']::placeholder {
+  color: var(--muted, #E4D3A4);
+  opacity: 0.72;
+}
+.erase-dialog input[type='text']:focus {
+  border-color: var(--gold, #D4A84B);
+  box-shadow: 0 0 0 3px rgba(212, 168, 75, 0.25);
+}
+.erase-dialog .btn.danger {
+  background: #9B1B2E;
+  color: #FFFFFF;
+  border-color: #9B1B2E;
+}
+.erase-dialog .btn.danger[disabled] {
+  background: #2C2222;
+  color: #A89890;
+  border-color: #5A4545;
+  opacity: 1;
+  cursor: not-allowed;
 }
 .erase-trigger { display: inline-flex; }
 table.data { width: 100%; border-collapse: collapse; font-size: 14px; }
