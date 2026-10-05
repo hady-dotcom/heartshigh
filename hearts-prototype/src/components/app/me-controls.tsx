@@ -80,7 +80,7 @@ export function StartAgain({ base }: { base: string }) {
   if (!asking) {
     return (
       <button type="button" className="pill outline block" onClick={() => setAsking(true)} data-testid="start-again">
-        Redo my opening
+        Start the opening questions again
       </button>
     )
   }

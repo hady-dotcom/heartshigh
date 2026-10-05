@@ -12,10 +12,12 @@ import * as migration_20261004_080000_lesson_picture_flags from './20261004_0800
 import * as migration_20261004_120000_compass_v2 from './20261004_120000_compass_v2';
 import * as migration_20261004_031500_gather from './20261004_031500_gather';
 import * as migration_20261004_180000_gather_entry_code from './20261004_180000_gather_entry_code';
-import * as migration_20261004_180000_experiments from './20261004_180000_experiments';
 import * as migration_20261004_180000_framing_track from './20261004_180000_framing_track';
+import * as migration_20261004_180500_experiments from './20261004_180500_experiments';
 import * as migration_20261004_210000_schedule_minutes from './20261004_210000_schedule_minutes';
 import * as migration_20261004_210000_live_sessions from './20261004_210000_live_sessions';
+import * as migration_20261004_210500_insights_missions from './20261004_210500_insights_missions';
+import * as migration_20261004_235900_insight_privacy from './20261004_235900_insight_privacy';
 import * as migration_20261005_010000_swarm_hidden from './20261005_010000_swarm_hidden';
 
 export const migrations = [
@@ -47,7 +49,7 @@ export const migrations = [
   {
     up: migration_20261003_200853_integration_final.up,
     down: migration_20261003_200853_integration_final.down,
-    name: '20261003_200853_integration_final'
+    name: '20261003_200853_integration_final',
   },
   {
     up: migration_20261003_194500_line_tidy.up,
@@ -90,14 +92,14 @@ export const migrations = [
     name: '20261004_180000_gather_entry_code',
   },
   {
-    up: migration_20261004_180000_experiments.up,
-    down: migration_20261004_180000_experiments.down,
-    name: '20261004_180000_experiments',
-  },
-  {
     up: migration_20261004_180000_framing_track.up,
     down: migration_20261004_180000_framing_track.down,
     name: '20261004_180000_framing_track',
+  },
+  {
+    up: migration_20261004_180500_experiments.up,
+    down: migration_20261004_180500_experiments.down,
+    name: '20261004_180500_experiments',
   },
   {
     up: migration_20261004_210000_schedule_minutes.up,
@@ -108,6 +110,16 @@ export const migrations = [
     up: migration_20261004_210000_live_sessions.up,
     down: migration_20261004_210000_live_sessions.down,
     name: '20261004_210000_live_sessions',
+  },
+  {
+    up: migration_20261004_210500_insights_missions.up,
+    down: migration_20261004_210500_insights_missions.down,
+    name: '20261004_210500_insights_missions',
+  },
+  {
+    up: migration_20261004_235900_insight_privacy.up,
+    down: migration_20261004_235900_insight_privacy.down,
+    name: '20261004_235900_insight_privacy',
   },
   {
     up: migration_20261005_010000_swarm_hidden.up,

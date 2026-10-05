@@ -724,6 +724,8 @@ html[data-theme] .desk h3 {
   font-family: var(--serif);
   font-weight: 600;
 }
+html[data-theme] .desk .phoneTitle,
+html[data-theme] .desk .phone h3 { color: #f1d58a; }
 html[data-theme] .desk h1 { font-size: 40px; line-height: 1.1; }
 html[data-theme] .desk h2 { font-size: 26px; line-height: 1.2; }
 html[data-theme] .desk .side {

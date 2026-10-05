@@ -22,6 +22,7 @@ import { now as clockNow } from '@/lib/clock'
 import { growth, Rings } from './garden'
 import { HomeGather, homeGatherings } from './gather'
 import { HomeLive, liveHomeBits } from './live'
+import { activeMissionCard } from './mission'
 import { type Ctx, ref, rows, str, unreadCount } from '../common'
 
 function minutesLeft(seconds: number, percent: number) {
@@ -97,6 +98,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         <SavedToast />
         <span className="sr-only">{portalName(portal)}</span>
         <Flash error={query.error} notice={query.notice} />
+        {await activeMissionCard(payload, portal.id, base)}
         <section className="grow-banner" data-testid="grow-banner">
           <p className="eyebrow">Your growth</p>
           <h2 data-testid="days-count">{daysWithUsLabel(days)}</h2>

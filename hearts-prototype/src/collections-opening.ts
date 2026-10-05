@@ -448,6 +448,28 @@ export const MasterFlags: GlobalConfig = {
       type: 'json',
       admin: { description: 'Winning payloads promoted from Experiments, keyed by slot.' },
     },
+    {
+      name: 'hijriOffset',
+      type: 'number',
+      defaultValue: 0,
+      min: -1,
+      max: 1,
+      admin: { description: 'Moon-sighting offset: minus one, none, or plus one day on the civil Hijri date.' },
+    },
+    {
+      name: 'insightSampleRate',
+      type: 'number',
+      defaultValue: 25,
+      min: 1,
+      max: 100,
+      admin: { description: 'Percent of sessions that store tap maps and replays. Angry taps and funnels are always kept.' },
+    },
+    {
+      name: 'popularTalksOn',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: { description: 'When on, most finished talks this week can nudge feed order, after the season theme.' },
+    },
   ],
 }
 

@@ -800,6 +800,7 @@ function Sheet({
         role="dialog"
         aria-label={point.prompt}
         data-testid="popup"
+        data-sheet="answer"
         data-state={point.state}
         data-point={point.id}
         data-triggered={triggered ? 'yes' : 'no'}

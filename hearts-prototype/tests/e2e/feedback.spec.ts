@@ -2,11 +2,12 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { expect, request as playwrightRequest, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 import { E2E_BASE } from '../env'
 import { pdfText } from '../pdf-text'
+import { artifactDir } from './artifact-dir'
 
 const DESK = { width: 1440, height: 900 }
-const SHOTS = '/opt/cursor/artifacts/screenshots'
-const REVIEW = '/opt/cursor/artifacts/feedback-review'
-const ARTIFACTS = '/opt/cursor/artifacts'
+const SHOTS = artifactDir('screenshots')
+const REVIEW = artifactDir('feedback-review')
+const ARTIFACTS = artifactDir()
 const SHARED = 'Phone went in the other room after isha. Then I sat with my uncle. He was half asleep.'
 const PRIVATE = "Just for me. I'm not putting this where anyone else can read it."
 const HAMZA = "On the bus home I clocked I hadn't said salaam to the man next to me. Did it the next morning. Felt a bit late."

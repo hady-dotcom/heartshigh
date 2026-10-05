@@ -59,6 +59,14 @@ export const PAGE: Record<string, string> = {
     'This is one learner’s Compass over the months. You see the scales and why a talk was put forward. They still only see a gentle line, never these numbers.',
   attendance:
     'This is the register for gatherings. Who said they would come, who arrived, and a download when you need a list. It does not change who is invited.',
+  experiments:
+    'A test shows some learners one wording or layout and others another, then counts what they do. Learners are never told they are in a test. A sheikh’s words stay as they are. The kill switch stops every running test at once.',
+  insights:
+    'Insights is our own look at how people move through HEARTS. Taps, scrolls and clip watches stay in our Postgres. We never store typed text or an answer.',
+  calendar:
+    'The calendar knows Friday, Ramadan, Dhul Hijjah, the two Eids and seasons you add. The Islamic day moves on at Maghrib. A suggested line never reaches a learner until you approve it.',
+  missions:
+    'A mission is a warm ask, never a scolding. Write a plain ask, why it matters, how many minutes, the dates, a target, and which portals. Ask for help is the in-app thread so nobody needs a support email.',
 }
 
 export const TOOL: Record<string, string> = {
@@ -178,6 +186,10 @@ const TEST_IDS: Record<string, string> = {
   'master-trends': 'trends',
   'compass-learner': 'compassLearner',
   'gather-attendance': 'attendance',
+  'experiments-desk': 'experiments',
+  'insights-desk': 'insights',
+  'calendar-desk': 'calendar',
+  'missions-desk': 'missions',
 }
 
 /** Page copy for a desk frame, from the nav key or the screen test id. */

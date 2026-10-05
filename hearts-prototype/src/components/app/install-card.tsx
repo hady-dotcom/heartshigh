@@ -36,7 +36,7 @@ function readState(): InstallState {
   const nav = navigator as Navigator & { standalone?: boolean }
   const media = typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches
   return {
-    kind: installKind(navigator.userAgent, { maxTouchPoints: navigator.maxTouchPoints || 0 }),
+    kind: installKind(navigator.userAgent, { maxTouchPoints: navigator.maxTouchPoints || 0, narrow: window.innerWidth <= 520 }),
     standalone: isDisplayStandalone(media, nav.standalone),
     dismissed: flags.dismissed,
     installed: flags.installed,

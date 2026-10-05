@@ -13,7 +13,7 @@ import { DeskFrame, portalNav } from './shell'
 import { PORTAL_TIME_ZONES, portalTimeZone, zoneCity } from '@/lib/zone-time'
 import { displayPortalAddress } from '@/lib/portal-address'
 
-export async function AdminFrame({ ctx, active, title, intro, tools, children, testId, tone }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening' }) {
+export async function AdminFrame({ ctx, active, title, intro, tools, help, children, testId, tone }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; help?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening' }) {
   const { payload, user, portal, base, query } = ctx
   const extra = [{ label: 'Open the learner app', href: base }]
   if (user.role === 'master') extra.push({ label: 'Back to the master desk', href: '/master' })
@@ -31,6 +31,7 @@ export async function AdminFrame({ ctx, active, title, intro, tools, children, t
       brandHref={`${base}/admin`}
       extraLinks={extra}
       tools={tools}
+      help={help}
       query={query}
       testId={testId}
       evening

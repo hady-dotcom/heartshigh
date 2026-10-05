@@ -9,6 +9,7 @@ import { KeepHearts } from '@/components/app/install-card'
 import { ThemePinControl } from '@/components/theme/theme-pin'
 import { Qr } from '@/components/qr'
 import { dayNumber, portalName } from '@/server/learner'
+import { shapedFor } from '@/server/missions'
 import { type Ctx, longDate, ref, rows, shortDate, str, unreadCount } from '../common'
 
 /** Notices written before prompts were clipped on a word were cut mid-word at 60 characters; they read the same way now. */
@@ -18,13 +19,16 @@ function noteBody(body: string) {
 
 export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 30 })).filter((note) => note.channel !== 'email-stub' && note.channel !== 'think')
+  const shaped = await shapedFor(payload, user.id)
   const unread = notes.filter((note) => !note.read).length
   const links: [string, string, string, string][] = [
     ['plan', 'My week', 'Spread a course across the days that suit you', 'week'],
     ['saved', 'Saved', 'Clips you kept from the feed', 'me/saved'],
     ['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'],
     ['path', 'Where to grow next', 'Plain words, only when a real talk or answer backs them', 'me/path'],
-    ['settings', 'Settings', 'Sound, privacy, nights and the account', 'me/settings'],
+    ['shaped', 'Things you helped shape', 'Missions you joined, and what we decided', 'me/shaped'],
+    ['help', 'Ask for help', 'Write to the team here. You do not need an email.', 'me/help'],
+    ['settings', 'Settings', 'Night alerts, watch history and signing out', 'me/settings'],
   ]
   if (user.role !== 'learner') links.unshift(['desk', 'Portal desk', 'Courses, codes and learners', 'admin'])
   return (
@@ -58,6 +62,25 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
         <Link className="list-link" href={`${base}/me/circle`} data-testid="me-circle">
           <span className="grow">Circle and nights<small>Your board, and the evenings you can come to</small></span>›
         </Link>
+        <p className="eyebrow" style={{ marginTop: 18 }}>Your opening and this phone</p>
+        <section className="card prefs" data-testid="me-prefs">
+          <PrefToggle name="keepPlace" label="Keep my place" hint="Saves where you are on our side, so another phone picks up from here. Off keeps it on this phone only." checked={Boolean(user.keepPlace)} next={`${base}/me`} />
+          <PrefToggle name="shareOpening" label="Share my opening answers with my mentor" hint="Private answers stay with you either way." checked={Boolean(user.shareOpening)} next={`${base}/me`} />
+          <PrefToggle name="trendsOptIn" label="Add my taps to my chapter’s trends" hint="Only counts across ten or more people, never your name." checked={Boolean(user.trendsOptIn)} next={`${base}/me`} />
+          <PrefToggle name="shareWithLearners" label="Share answers with other learners" hint="Off: nobody else on a video sees your answers. You still see what others chose to share, after you answer. On: you choose answer by answer." checked={Boolean(user.shareWithLearners)} next={`${base}/me`} />
+          <PrefToggle name="haptics" label="Haptics" hint="A small buzz when you tap an answer." checked={user.haptics !== false} next={`${base}/me`} />
+          <OptInLane lane="guarding-gaze" label="Private lanes: Guarding the gaze" hint="Clips on this appear only if you turn this on. It is kept on this phone and never shown to anyone." portal={portal.slug || ''} />
+        </section>
+        {shaped.length ? (
+          <section data-testid="shaped-list">
+            <p className="eyebrow">Things you helped shape</p>
+            {shaped.map((item) => (
+              <Link key={item.id} className="list-link" href={`${base}/me/shaped`} data-testid="shaped-item">
+                <span className="grow">{item.title}<small>You helped decide: {item.result}</small></span>›
+              </Link>
+            ))}
+          </section>
+        ) : null}
         <div className="app-head" style={{ marginTop: 18 }}>
           <h2 style={{ margin: 0, fontSize: 19 }}>Notifications</h2>
           {unread ? (
@@ -76,6 +99,8 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
         )) : (
           <EmptyState testId="notes-empty" action={{ href: `${base}/garden`, label: 'Open the garden' }}>Nothing new. Replies from your teacher and new nights will show here.</EmptyState>
         )}
+        <p className="eyebrow" style={{ marginTop: 22 }}>Opening questions</p>
+        <StartAgain base={base} />
       </div>
       <TabBar base={base} active="me" unread={unread} />
     </AppFrame>

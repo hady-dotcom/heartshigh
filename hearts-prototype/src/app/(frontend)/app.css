@@ -10,6 +10,8 @@
   background: var(--paper);
   color: var(--ink);
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 /* Home-screen (standalone) draws under the status bar. A sticky strip plus header padding keep titles readable. */
 .app::before {
@@ -176,7 +178,25 @@
 .progress.run > i { animation: grow linear forwards; }
 @keyframes grow { from { width: 0; } to { width: 100%; } }
 .clip-hint { text-align: center; font-size: 12px; font-weight: 600; color: rgba(255, 255, 255, 0.85); margin-top: 10px; }
-.clip-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.clip-row {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.clip-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+}
+.clip-row > .j-sound {
+  justify-self: center;
+  white-space: nowrap;
+  position: relative;
+  z-index: 6;
+}
 .chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 650; border: 0; text-decoration: none; }
 .chip.white { background: #fff; color: var(--ink); }
 .chip.dark { background: rgba(0, 0, 0, 0.62); color: #fff; }
@@ -192,7 +212,7 @@
 .caption .from { display: block; font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.75); margin-top: 14px; text-shadow: none; }
 .play-hit { position: absolute; inset: 22% 18% 34% 0; z-index: 3; background: transparent; border: 0; }
 .play-badge { position: absolute; left: 50%; top: 24%; transform: translateX(-50%); z-index: 4; width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.18); border: 1.5px solid rgba(255,255,255,0.6); display: grid; place-items: center; backdrop-filter: blur(4px); pointer-events: none; }
-.rail { position: absolute; right: 12px; bottom: calc(232px + var(--safe-bottom)); z-index: 6; display: grid; gap: 16px; justify-items: center; }
+.rail { position: absolute; right: 12px; bottom: calc(232px + var(--safe-bottom)); z-index: 8; display: grid; gap: 16px; justify-items: center; }
 .rail button { display: grid; justify-items: center; gap: 4px; background: none; border: 0; color: #fff; font-size: 11px; font-weight: 650; min-width: 52px; }
 .rail .bubble { width: 46px; height: 46px; border-radius: 50%; background: rgba(0, 0, 0, 0.42); display: grid; place-items: center; }
 .rail button[aria-pressed='true'] .bubble { background: rgba(217, 79, 104, 0.9); }
@@ -950,3 +970,56 @@ html[data-theme] .card.home-plan .eyebrow,
 .player-card.is-loading { background: #0e2a2b; }
 .minutes-day { border: 0; margin: 0; padding: 0; }
 .minutes-day legend { font-weight: 600; font-size: 14px; }
+
+.mission-card {
+  background: #163633;
+  color: #f6eedc;
+  border: 1.5px solid rgba(212, 168, 75, 0.55);
+  border-radius: 18px;
+  padding: 16px 18px;
+  margin: 0 0 16px;
+  box-shadow: 0 12px 28px rgba(8, 26, 26, 0.28);
+}
+.mission-card h2 { margin: 0 0 8px; font-size: 20px; color: #f6eedc; }
+.mission-card p { margin: 0 0 10px; color: #e7dcc8; }
+.mission-card .eyebrow { color: #f1d58a; margin-top: 0; }
+.mission-card.compact { padding: 10px 12px; margin-bottom: 10px; }
+.mission-card.compact p { margin: 0 0 6px; font-size: 14px; }
+.text-link {
+  display: inline-block;
+  margin-top: 12px;
+  color: #f1d58a;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.feed-mission {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: calc(10px + var(--safe-top));
+  bottom: auto;
+  z-index: 8;
+  pointer-events: none;
+}
+.feed-mission .mission-card {
+  margin: 0;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  pointer-events: auto;
+}
+.feed-mission .mission-card .eyebrow { display: none; }
+.feed-mission .mission-card h2 { font-size: 14px; margin: 0; }
+.feed-mission .mission-card p { margin: 0; font-size: 13px; flex: 1; min-width: 0; }
+.feed-mission .pill { min-height: 32px; padding: 5px 10px; font-size: 12.5px; flex: none; }
+/* When a mission chip is on the feed, push PR #23 chrome down so nothing sits under it. */
+.journey-frame:has(.feed-mission) .j-hairline-row { top: calc(66px + var(--safe-top)); }
+.journey-frame:has(.feed-mission) .j-top-speaker,
+.journey-frame:has(.feed-mission) .strict .j-top-speaker,
+.journey-frame:has(.feed-mission) .journey[data-mode='appetiser'] .j-top-speaker { top: calc(190px + var(--safe-top)); }
+.journey-frame:has(.feed-mission) .journey[data-words-in-picture='yes'] .j-slot { top: calc(244px + var(--safe-top)); }
+.journey-frame:has(.feed-mission) .journey[data-words-in-picture='yes'] .j-chrome .caption,
+.journey-frame:has(.feed-mission) .j-caption-clear { top: calc(260px + var(--safe-top) + min(430px, 100vw) * 9 / 16); }

@@ -1,10 +1,11 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext, type Page } from '@playwright/test'
 import { assignByHash, subjectKey } from '../../src/lib/experiment-assign'
 import { E2E_BASE } from '../env'
+import { artifactDir } from './artifact-dir'
 
 const DESK = { width: 1440, height: 900 }
 const PHONE = { width: 390, height: 844 }
-const SHOTS = '/opt/cursor/artifacts/screenshots'
+const SHOTS = artifactDir('screenshots')
 
 let master: APIRequestContext
 
@@ -51,10 +52,10 @@ test.describe('Experiments', () => {
     await expect(desk.getByTestId('experiments-desk')).toBeVisible()
     await expect(desk.getByTestId('experiment-rule')).toContainText('never change a sheikh')
     await desk.getByTestId('desk-help').click()
-    await expect(desk.getByTestId('desk-help-dialog')).toBeVisible()
-    await expect(desk.getByTestId('desk-help-dialog')).toContainText('A sheikh')
-    await expect(desk.getByTestId('desk-help-dialog')).toContainText('Kill switch')
-    await desk.getByTestId('desk-help-close').click()
+    await expect(desk.getByTestId('desk-help-pop')).toBeVisible()
+    await expect(desk.getByTestId('desk-help-pop')).toContainText('A sheikh')
+    await expect(desk.getByTestId('desk-help-pop')).toContainText('kill switch')
+    await desk.getByTestId('desk-help').click()
     await expect(desk.getByTestId('count-draft')).toHaveText(/[1-9]/)
     await expect(desk.getByTestId('slot-registry')).toContainText('feed-cta-label')
     await expect(desk.getByTestId('slot-registry')).toContainText('wide-video-framing')
@@ -71,9 +72,13 @@ test.describe('Experiments', () => {
     await desk.goto('/master/experiments')
     await expect(desk.getByTestId('experiments-desk')).toBeVisible()
 
-    const people = await json(await master.get('/api/users?limit=20&depth=0'))
-    const maryam = (people.docs as { id: number; email: string }[]).find((row) => row.email === 'elm-learner@hearts.test')
-    const hamza = (people.docs as { id: number; email: string }[]).find((row) => row.email === 'elm-learner2@hearts.test')
+    const seeded = async (email: string) => {
+      const q = new URLSearchParams({ 'where[email][equals]': email, limit: '1', depth: '0' })
+      const data = await json(await master.get(`/api/users?${q}`))
+      return (data.docs as { id: number; email: string }[])[0]
+    }
+    const maryam = await seeded('elm-learner@hearts.test')
+    const hamza = await seeded('elm-learner2@hearts.test')
     expect(maryam && hamza, 'seeded learners').toBeTruthy()
     const split = keyThatSplits(maryam!.id, hamza!.id)
 
@@ -113,7 +118,7 @@ test.describe('Experiments', () => {
       }
       const button = page.getByTestId('learn-more').first()
       await expect(button).toBeVisible({ timeout: 20_000 })
-      await expect(button).toHaveText(labels[person.variant])
+      await expect(button).toHaveText(new RegExp(`^${labels[person.variant]}(?: \\(\\d+ (?:min|talks)\\))?$`))
       seen.push(await button.innerText())
       const tracked = page.waitForResponse((response) => {
         const url = response.url()

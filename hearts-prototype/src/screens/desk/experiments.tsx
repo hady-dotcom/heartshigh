@@ -101,7 +101,7 @@ export async function ExperimentPages({ ctx, master, path }: { ctx?: Ctx | null;
   }
   await ensureStarterExperiments(payload, user)
   const [head, rest] = path
-  if (head === 'new') return <EditPage ctx={ctx || null} master={master || null} base={base} />
+  if (head === 'new') return <EditPage ctx={ctx || null} master={master || null} base={base} fromInsight={query} />
   if (head && rest === 'edit') return <EditPage ctx={ctx || null} master={master || null} base={base} id={Number(head)} />
   if (head) return <DetailPage ctx={ctx || null} master={master || null} base={base} id={head} suggest={queryText(query, 'suggest') === '1'} error={queryText(query, 'error')} />
   return <ListPage ctx={ctx || null} master={master || null} base={base} />
@@ -219,7 +219,11 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
   const user = ctx?.user || master!.user
   let results: ExperimentResults
   try {
-    results = await resultsFor(payload, user, Number(id) || id)
+    const experimentId = Number(id)
+    if (!Number.isFinite(experimentId) || experimentId <= 0) {
+      return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-missing"><p>That experiment was not found.</p></Frame>
+    }
+    results = await resultsFor(payload, user, experimentId)
   } catch (error) {
     return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-missing"><p>{error instanceof Error ? error.message : 'That experiment was not found.'}</p></Frame>
   }
@@ -381,7 +385,7 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
   )
 }
 
-async function EditPage({ ctx, master, base, id }: { ctx: Ctx | null; master: { payload: Payload; user: SessionUser; query: Query } | null; base: string; id?: number }) {
+async function EditPage({ ctx, master, base, id, fromInsight }: { ctx: Ctx | null; master: { payload: Payload; user: SessionUser; query: Query } | null; base: string; id?: number; fromInsight?: Query }) {
   const payload = ctx?.payload || master!.payload
   const user = ctx?.user || master!.user
   if (!canEditExperiments(user)) {
@@ -391,6 +395,8 @@ async function EditPage({ ctx, master, base, id }: { ctx: Ctx | null; master: { 
   if (id && !current) return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-missing"><p>That experiment was not found.</p></Frame>
   const portals = await rows(payload, 'portals', undefined, { sort: 'name', limit: 40 })
   const query = queryOf(ctx, master)
+  const insightSlot = fromInsight?.slot && EXPERIMENT_SLOTS.some((slot) => slot.key === fromInsight.slot) ? fromInsight.slot : ''
+  const insightNote = fromInsight?.from === 'insight' ? `From Insights${fromInsight.route ? ` · ${fromInsight.route}` : ''}${fromInsight.reason ? ` · ${fromInsight.reason}` : ''}` : ''
   const variantText = queryText(query, 'variants') || (current?.variants || []).map((row) => `${row.key} | ${row.label}`).join('\n')
   return (
     <Frame ctx={ctx} master={master} title={current ? `Edit ${current.name}` : 'New experiment'} intro="Stay on a listed slot. Versions are wording or framing only." testId="experiment-edit">
@@ -400,9 +406,9 @@ async function EditPage({ ctx, master, base, id }: { ctx: Ctx | null; master: { 
           id: current ? String(current.id) : '',
           next: current ? `${base}/${current.id}` : `${base}/new`,
           key: queryText(query, 'key') || current?.key || '',
-          name: queryText(query, 'name') || current?.name || '',
-          description: queryText(query, 'description') || current?.description || '',
-          slot: queryText(query, 'slot') || current?.slot || 'feed-cta-label',
+          name: queryText(query, 'name') || current?.name || (insightNote ? 'From Insights' : ''),
+          description: queryText(query, 'description') || current?.description || insightNote,
+          slot: queryText(query, 'slot') || current?.slot || insightSlot || 'feed-cta-label',
           slotOverride: queryText(query, 'slotOverride'),
           portal: queryText(query, 'portal') || (current ? String(idOfPortal(current) || '') : ''),
           allocation: queryText(query, 'allocation') || current?.allocation || 'fixed',

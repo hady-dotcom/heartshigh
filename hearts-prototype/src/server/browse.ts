@@ -72,6 +72,11 @@ export async function recordShortBrowse(payload: Payload, user: SessionUser, inp
     const place = await placeOfLesson(payload, input.lessonId)
     harvest = await giveHarvest(payload, user.id, input.lessonId, transcript, portal, { speaker: place?.speaker || speaker, door: place?.door || undefined, surface: level, gatheredAt: now().toISOString() }, { start: input.start, end: input.end })
   }
+  const clipSeconds = Math.max(0, Math.round(Number(input.end) - Number(input.start)))
+  if (event === 'linger' && clipSeconds > 0) {
+    const { recordPersonalWatch } = await import('./missions')
+    await recordPersonalWatch(payload, { userId: user.id, lessonId: input.lessonId, seconds: clipSeconds, portalId: portal })
+  }
   try {
     const { recordLearnerEvent } = await import('./experiments')
     if (event === 'linger' && level === 'hors') {

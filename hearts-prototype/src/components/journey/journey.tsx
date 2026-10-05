@@ -5,7 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
 import { mixFeed } from '@/lib/feed-mix'
-import { clipStepUpLabel, onlyClipToast, poolEndToast, READY_FOR_MORE, talkStepUpLabel } from '@/lib/feed-copy'
+import { clipStepUpLabel, onlyClipToast, pieceSeconds, poolEndToast, READY_FOR_MORE, talkStepUpLabel, withTalkDetail } from '@/lib/feed-copy'
 import { appendUnseenItems, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readCoachDismissed, readFeedPlace, readHeart, readPending, rememberSeenCard, sessionFlags, sessionSeenCards, sessionSeenCuts, setSessionFlags, viewAsId, writeCoachDismissed, writeFeedPlace, writeHeart, writePending } from '@/lib/device'
@@ -25,7 +25,6 @@ import { HelpScreen, Opener, SceneCard } from './scenes'
 import { TeachingCard } from './teaching-card'
 import { KeepPlaceSheet, type SheetReason } from './sheet'
 import { track } from '@/lib/experiment-track'
-import { formatSlotLabel } from '@/lib/experiment-slots'
 import { useVariant, type VariantMap } from '@/lib/use-variant'
 import { SpokenWords } from '../app/spoken-words'
 import { segmentAt } from '@/lib/framing/choose'
@@ -167,6 +166,7 @@ export function Journey(props: JourneyProps) {
     else node.removeAttribute('data-swiping')
   }
   const [appetiserOver, setAppetiserOver] = useState(false)
+  const [appetiserHeld, setAppetiserHeld] = useState(true)
   const spanJoin = useRef<number | null>(null)
   const hosts = useRef<[Host, Host]>([
     { spec: null, playerId: null, ready: false, state: -1, played: false },
@@ -1222,6 +1222,19 @@ export function Journey(props: JourneyProps) {
           noteBrowse('linger')
         }
       }
+      const start = modeRef.current === 'hors' ? current.hors.start : current.appetiser.start
+      const end = modeRef.current === 'hors' ? current.hors.end : appetiserEnd(current)
+      const span = Math.max(0.5, end - start)
+      const watchPct = Math.max(0, Math.min(100, Math.round(((time - start) / span) * 100)))
+      const last = (seen as { lastInsightPct?: number }).lastInsightPct || 0
+      if (watchPct >= last + 8 || watchPct >= 90) {
+        ;(seen as { lastInsightPct?: number }).lastInsightPct = watchPct
+        try {
+          window.dispatchEvent(new CustomEvent('hearts-insight', { detail: { kind: 'clip_watch', clipId: String(current.cutId || current.id || ''), watchPct, lane: current.laneKey } }))
+        } catch {
+          // ignore
+        }
+      }
     }, 250)
     return () => window.clearInterval(timer)
   }, [phase, signal, noteBrowse])
@@ -1260,6 +1273,19 @@ export function Journey(props: JourneyProps) {
     if (swipe === 'lane' && laneLabel) setToast(`Lane · ${laneLabel}`)
     if (swipe === 'topic') setToast('More on this topic.')
     if (swipe === 'speaker') setToast(`More from ${current.speaker}.`)
+    try {
+      const host = hosts.current[visibleRef.current]
+      const player = host.playerId ? getPlayer(host.playerId) : null
+      const time = player?.getCurrentTime?.() ?? current.hors.start
+      const start = modeRef.current === 'hors' ? current.hors.start : current.appetiser.start
+      const end = modeRef.current === 'hors' ? current.hors.end : appetiserEnd(current)
+      const span = Math.max(0.5, end - start)
+      const watchPct = Math.max(0, Math.min(100, Math.round(((time - start) / span) * 100)))
+      window.dispatchEvent(new CustomEvent('hearts-insight', { detail: { kind: 'clip_swipe', clipId: String(current.cutId || current.id || ''), watchPct, lane: current.laneKey } }))
+      window.dispatchEvent(new CustomEvent('hearts-insight', { detail: { kind: 'route', route: window.location.pathname, lane: itemsRef.current[target]?.laneKey } }))
+    } catch {
+      // ignore
+    }
     void advance(target, 'swipe', SWIPE_EXIT[swipe], swipe)
   }
   const nextLane = () => swipeTo('lane')
@@ -1332,6 +1358,7 @@ export function Journey(props: JourneyProps) {
   }
 
   const tapSound = () => {
+    setAppetiserHeld(false)
     const host = hosts.current[visibleRef.current]
     setSessionFlags({ ...sessionFlags(), unmuted: true })
     if (host.playerId) {
@@ -1556,8 +1583,10 @@ export function Journey(props: JourneyProps) {
   const scenic = Boolean(phase === 'feed' && cardKind === 'scene' && mode === 'hors' && item?.scene)
   const feedCard = phase === 'feed' && (cardKind === 'question' || cardKind === 'text')
   const started = playerReady && host.played && LIVE.has(host.state)
-  const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (!started || Boolean(errorNote) || offline)))
-  const waitingToPlay = phase === 'feed' && playerReady && !started && !errorNote && !offline
+  const playingOut = playerReady && host.played && host.state === STATE.PLAYING
+  const keepAppetiserPoster = mode === 'appetiser' && appetiserHeld
+  const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (keepAppetiserPoster || !playingOut || Boolean(errorNote) || offline)))
+  const waitingToPlay = phase === 'feed' && playerReady && (keepAppetiserPoster || !playingOut) && !errorNote && !offline
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const lineShown = mode === 'hors' && lineAt >= 0 ? lineAt : -1
   const horsLine = lineShown >= 0 ? piece?.lines?.[lineShown] : null
@@ -1568,6 +1597,7 @@ export function Journey(props: JourneyProps) {
   const scenicLines = scenicAppetiser ? [item?.scenic?.hook, item?.scenic?.turn, item?.scenic?.land].filter((line): line is string => Boolean(line)) : []
   useEffect(() => {
     setCaptionOpen(false)
+    setAppetiserHeld(true)
   }, [item?.id, mode])
   const slide = phase === 'feed' && mode === 'hors' && item?.style && !typeClip ? item.style : null
   const course = (item && learnMore(item, 'appetiser', base)?.href) || base
@@ -1668,22 +1698,23 @@ export function Journey(props: JourneyProps) {
           <>
           <p className="j-swipe-hint" data-testid="swipe-hint">↑ swipe up to replay</p>
           <div className="clip-row">
-            {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
+            <div className="clip-row-top">
+              {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
+              {clipPlaying ? <span className="chip dark" data-testid="clip-timer">{clock(clipLeft)}</span> : null}
+            </div>
             {!typeClip && muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
-            {clipPlaying ? <span className="chip dark" data-testid="clip-timer">{clock(clipLeft)}</span> : null}
           </div>
           </>
         ) : (
           <div className="clip-row">
-            <button type="button" className="chip white" onClick={() => window.history.back()} data-testid="appetiser-back">‹ Back</button>
-            {!typeClip && muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
-            <span className="chip gold" data-testid="level-chip">{READY_FOR_MORE}</span>
+            <div className="clip-row-top">
+              <button type="button" className="chip white" onClick={() => window.history.back()} data-testid="appetiser-back">‹ Back</button>
+              <span className="chip gold" data-testid="level-chip">{READY_FOR_MORE}</span>
+            </div>
+            {muted && (typeClip || (!hasSound() && playerReady)) ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
           </div>
         )}
       </div>
-      {typeClip && muted ? (
-        <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button>
-      ) : null}
       {(cardKind && cardKind !== 'scene') || typeClip || mode !== 'hors' ? null : captionButton}
       {wordsInPicture && mode === 'hors' && !cardKind ? <div className="j-top-speaker" data-testid="top-speaker">{speakerRow}</div> : null}
       {wordsInPicture && mode === 'appetiser' && videoAppetiser ? (
@@ -1722,7 +1753,11 @@ export function Journey(props: JourneyProps) {
           <>
             {wordsInPicture && !cardKind ? null : speakerRow}
             <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onClick={moreFromSpeaker}>More from {item.speaker} ›</button>
-            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" data-speaker={item.speaker} data-lesson={item.lessonId} onClick={() => void stepUp()}>{clipCta.label || clipStepUpLabel()}</button>
+            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" data-speaker={item.speaker} data-lesson={item.lessonId} onClick={() => void stepUp()}>{(() => {
+              const lead = clipCta.label && !/^learn more\b/i.test(clipCta.label) ? clipCta.label : clipStepUpLabel()
+              const seconds = item.talkSeconds || pieceSeconds(item.appetiser)
+              return withTalkDetail(lead, 1, seconds)
+            })()}</button>
           </>
         ) : (
           <>
@@ -1741,7 +1776,12 @@ export function Journey(props: JourneyProps) {
                 onChange={(event) => scrubTo(Number(event.target.value) / 1000)}
               />
             </div>
-            <a className="pill gold block" href={course} onClick={(event) => void stepUp(event)} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk" data-speaker={item.speaker} data-lesson={item.lessonId}>{formatSlotLabel(talkCta.label, Math.max(1, Math.round((item.talkSeconds || item.durationSeconds || 0) / 60) || 3)) || talkStepUpLabel(Object.values(opening.clips).filter((row) => row.courseId === item.courseId).reduce((ids, row) => ids.add(row.lessonId), new Set<number>()).size, item.talkSeconds)}</a>
+            <a className="pill gold block" href={course} onClick={(event) => void stepUp(event)} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk" data-speaker={item.speaker} data-lesson={item.lessonId}>{(() => {
+              const talks = Object.values(opening.clips).filter((row) => row.courseId === item.courseId).reduce((ids, row) => ids.add(row.lessonId), new Set<number>()).size
+              const computed = talkStepUpLabel(talks, item.talkSeconds)
+              const custom = talkCta.label && !/^learn more\b/i.test(talkCta.label) && talkCta.label !== talkStepUpLabel(1) && (talkCta.running || talkCta.label !== computed)
+              return custom ? withTalkDetail(talkCta.label, talks, item.talkSeconds) : computed
+            })()}</a>
             {wordsInPicture && videoAppetiser ? null : (
               <div className="speaker-card">
                 <Avatar name={item.speaker} portrait={item.portrait} />
@@ -1756,7 +1796,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing={framingMode || undefined} data-player-state={host.state} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
+    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING && !keepAppetiserPoster ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing={framingMode || undefined} data-player-state={host.state} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />
@@ -1841,7 +1881,7 @@ export function Journey(props: JourneyProps) {
               ) : null}
             </div>
           ) : null}
-          {phase === 'feed' && !item ? <div className="j-poster" data-testid="poster-frame" data-empty="" /> : null}
+          {phase === 'feed' && !item ? <div className="j-poster" data-testid="poster-frame" data-poster="own" data-empty="" /> : null}
           {overlay && phase === 'feed' && !slide && !scenic ? <div className="j-gesture" data-testid="gesture-layer" {...swipe} /> : null}
         </div>
         {slide && item ? (

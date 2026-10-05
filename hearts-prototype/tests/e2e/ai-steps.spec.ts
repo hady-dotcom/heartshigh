@@ -3,9 +3,10 @@ import { mkdirSync } from 'node:fs'
 import { mockOutput, stepBySlug, type TalkContext } from '../../src/lib/ai-steps'
 import { tierSourceText } from '../../src/server/tier-source'
 import { E2E_BASE } from '../env'
+import { artifactDir } from './artifact-dir'
 
 const DESK = { width: 1440, height: 900 }
-const SHOTS = '/opt/cursor/artifacts/screenshots'
+const SHOTS = artifactDir('screenshots')
 
 let master: APIRequestContext
 

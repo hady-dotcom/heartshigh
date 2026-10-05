@@ -53,7 +53,24 @@
 .side a.nav:hover { background: rgba(247, 238, 219, 0.12); }
 .side a.nav.on { background: var(--gold); color: var(--gold-ink); }
 .side a.nav svg { flex: none; opacity: 0.9; }
-.side .group { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #e7d7b4; font-weight: 700; padding: 16px 12px 6px; }
+.side .nav-group { display: block; }
+.side details.nav-group[open] { display: flex; flex-direction: column; gap: 2px; }
+.side details.nav-group:not([open]) > :not(summary) { display: none; }
+.side details.nav-group > summary.group { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.side details.nav-group > summary.group::-webkit-details-marker { display: none; }
+.side details.nav-group > summary.group::after {
+  content: '';
+  width: 0.4em;
+  height: 0.4em;
+  border-right: 1.6px solid currentColor;
+  border-bottom: 1.6px solid currentColor;
+  transform: rotate(-45deg);
+  opacity: 0.85;
+  flex: none;
+}
+.side details.nav-group[open] > summary.group::after { transform: rotate(45deg); }
+.side .group { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #e7d7b4; font-weight: 700; padding: 8px 12px 2px; }
+.side .group-desc { margin: 0 12px 4px; font-size: 11px; line-height: 1.35; letter-spacing: 0; text-transform: none; font-weight: 500; color: #d7cbb8; }
 .side-foot { flex: none; margin-top: auto; border-top: 1px solid rgba(247, 238, 219, 0.2); padding-top: 10px; display: grid; gap: 4px; font-size: 13px; }
 .side-foot .group { padding-top: 6px; }
 .side-foot .who { display: flex; gap: 10px; align-items: center; padding: 0 8px; }
@@ -119,6 +136,10 @@
 .stat-chip span { opacity: 0.8; font-size: 14px; }
 
 .form { display: grid; gap: 14px; }
+.form .body { display: grid; gap: 14px; }
+.form label.stack input,
+.form label.stack textarea,
+.form label.stack select { width: 100%; max-width: 100%; }
 .form .row { display: grid; grid-template-columns: 170px 1fr; gap: 14px; align-items: center; }
 .form .row.top { align-items: start; }
 .form .row > span { font-size: 14px; color: var(--ink-2); font-weight: 600; }
@@ -132,6 +153,20 @@
 .check { display: inline-flex; gap: 8px; align-items: center; font-size: 14px; color: var(--ink-2); font-weight: 500; }
 .check input { accent-color: var(--ink); width: 16px; height: 16px; }
 .checks { display: flex; flex-wrap: wrap; gap: 10px 18px; }
+.desk .check.portal-pick {
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: var(--field, #fff);
+}
+.desk .check.portal-pick:has(input:checked) {
+  background: var(--gold);
+  color: var(--gold-ink);
+  border-color: var(--gold);
+}
+.desk .result-line { font-size: 15px; color: var(--ink); font-weight: 650; }
+.desk fieldset.stack { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; }
+.desk fieldset.stack legend { font-size: 13.5px; color: var(--ink-2); font-weight: 600; padding: 0; }
 .actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 .hint { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
 .inline-form { display: inline; }
@@ -319,24 +354,24 @@ abbr.tip { text-decoration: underline dotted; text-underline-offset: 3px; cursor
  * --paper #0E2A2B, --card #163633, --ink #F6EEDC.
  */
 .desk {
-  --paper: #0E2A2B;
-  --card: #163633;
-  --glass: #163633;
-  --glass-solid: #163633;
-  --field: #102E2C;
-  --ink: #F6EEDC;
-  --ink-2: #E7DCC8;
-  --muted: #E4D3A4;
-  --line: #C4923A;
-  --gold: #D4A84B;
-  --gold-deep: #C4923A;
-  --gold-ink: #1A1408;
-  --teal: #1A5552;
-  --teal-deep: #0F3B3A;
-  --teal-fill: #0F3B3A;
-  --mint: #1A3F38;
-  --night: #0B2223;
-  --parchment: #F6EEDC;
+  --paper: var(--desk-page, #0E2A2B);
+  --card: var(--desk-card, #163633);
+  --glass: var(--desk-card, #163633);
+  --glass-solid: var(--desk-card, #163633);
+  --field: var(--desk-field, #102E2C);
+  --ink: var(--desk-ink, #F6EEDC);
+  --ink-2: var(--desk-ink, #F6EEDC);
+  --muted: var(--desk-muted, #E4D3A4);
+  --line: var(--desk-line, #C4923A);
+  --gold: var(--desk-gold, #D4A84B);
+  --gold-deep: var(--desk-line, #C4923A);
+  --gold-ink: var(--desk-gold-ink, #1A1408);
+  --teal: var(--desk-teal, #1A5552);
+  --teal-deep: var(--desk-header, #0F3B3A);
+  --teal-fill: var(--desk-header, #0F3B3A);
+  --mint: var(--desk-field, #102E2C);
+  --night: var(--desk-sidebar, #0B2223);
+  --parchment: var(--desk-ink, #F6EEDC);
   background: var(--paper);
   color: var(--ink);
   color-scheme: dark;

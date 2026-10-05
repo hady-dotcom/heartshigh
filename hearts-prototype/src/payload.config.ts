@@ -9,9 +9,12 @@ import { s3Storage } from '@payloadcms/storage-s3'
 import { buildConfig } from 'payload'
 import { aiCollections } from './collections-ai'
 import { collections } from './collections'
+import { calendarCollections } from './collections-calendar'
 import { experimentCollections } from './collections-experiments'
 import { gatherCollections } from './collections-gather'
+import { insightCollections } from './collections-insights'
 import { liveCollections } from './collections-live'
+import { missionCollections } from './collections-missions'
 import { sheetCollections } from './collections-sheet'
 import { MasterFlags } from './collections-opening'
 import { databaseKind, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
@@ -43,7 +46,7 @@ export default buildConfig({
       header: ['/components/viewas-admin-banner#ViewAsAdminBanner'],
     },
   },
-  collections: [...collections, ...aiCollections, ...sheetCollections, ...experimentCollections, ...gatherCollections, ...liveCollections].map((collection) => ({
+  collections: [...collections, ...aiCollections, ...sheetCollections, ...experimentCollections, ...insightCollections, ...calendarCollections, ...missionCollections, ...gatherCollections, ...liveCollections].map((collection) => ({
     ...collection,
     hooks: { ...collection.hooks, beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never] },
   })),

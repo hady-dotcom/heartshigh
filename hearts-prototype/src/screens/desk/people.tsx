@@ -164,10 +164,10 @@ export async function TeachScreen(ctx: Ctx) {
           <table className="data">
             <thead><tr><th>Learner</th><th>Film</th><th className="num">Watched up to</th><th>When</th></tr></thead>
             <tbody>
-              {watches.map((row) => (
+              {watches.filter((row) => Boolean((row.user as { shareWatch?: boolean } | null)?.shareWatch)).map((row) => (
                 <tr key={row.id} data-testid="watch-session"><td>{(row.user as { name?: string } | null)?.name}</td><td>{(row.lesson as { title?: string } | null)?.title}</td><td className="num">{clock(Number(row.seconds || 0))}</td><td>{shortDate(row.createdAt)}</td></tr>
               ))}
-              {!watches.length ? <tr><td colSpan={4} className="empty">Nothing here unless a learner chooses to share it.</td></tr> : null}
+              {!watches.some((row) => Boolean((row.user as { shareWatch?: boolean } | null)?.shareWatch)) ? <tr><td colSpan={4} className="empty">Nothing here unless a learner chooses to share it.</td></tr> : null}
             </tbody>
           </table>
         </div>

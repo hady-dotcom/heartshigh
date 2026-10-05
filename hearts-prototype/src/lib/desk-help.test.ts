@@ -32,6 +32,10 @@ const PAGES = [
   'course',
   'compassLearner',
   'attendance',
+  'experiments',
+  'insights',
+  'calendar',
+  'missions',
 ]
 
 describe('desk help', () => {

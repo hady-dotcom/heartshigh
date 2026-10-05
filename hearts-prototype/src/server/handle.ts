@@ -53,6 +53,15 @@ async function recordExperimentQuietly(payload: Payload, user: SessionUser, even
   }
 }
 
+async function recordFunnelQuietly(payload: Payload, user: SessionUser, step: string) {
+  try {
+    const { recordFunnel } = await import('./insights')
+    await recordFunnel(payload, { user, portalId: portalIdOf(user), step })
+  } catch {
+    // Tracking must never break a save.
+  }
+}
+
 function redirectTo(req: Request, path: string, error?: string, notice?: string) {
   const host = req.headers.get('x-forwarded-host') || req.headers.get('host')
   const proto = req.headers.get('x-forwarded-proto') || 'http'
@@ -1348,6 +1357,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       }
     }
     void recordExperimentQuietly(payload, user, 'plan_created', { name })
+    void recordFunnelQuietly(payload, user, 'study_plan_saved')
     const toast = planToast(slots.length, usedDates)
     return redirectTo(req, planKeepPath(text(form, 'next') || '/', { course: courseIds[0], start: text(form, 'start'), end: text(form, 'end'), weekdays, minutes }), undefined, toast)
   }
@@ -1522,14 +1532,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         data: { user: user.id, lesson: lessonId, portal: portal || undefined, percent, onTime, sourceLevel: 'talk' },
       })
     }
-    const fullUser = await payload.findByID({ collection: 'users', id: user.id, overrideAccess: true, depth: 0 })
-    if ((fullUser as { shareWatch?: boolean }).shareWatch) {
-      await payload.create({
-        collection: 'watch-sessions',
-        overrideAccess: true,
-        data: { user: user.id, lesson: lessonId, seconds: Number(text(form, 'seconds') || 0), portal },
-      })
-    }
+    const watched = duration > 0 ? Math.min(seconds, duration) : Math.min(seconds, 3600)
+    const { recordPersonalWatch } = await import('./missions')
+    await recordPersonalWatch(payload, { userId: user.id, lessonId, seconds: watched, portalId: portal })
     const transcript = (lesson as { transcript?: string }).transcript || ''
     if (transcript) {
       const already = await payload.find({

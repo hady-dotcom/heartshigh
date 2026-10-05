@@ -1,17 +1,23 @@
 import { cookies } from 'next/headers'
 import type { Payload } from 'payload'
+import { InsightTracker } from '@/components/app/insight-tracker'
 import { JourneyErrorBoundary } from '@/components/app/error-boundary'
 import { PageHelp } from '@/components/app/page-help'
 import { Journey } from '@/components/journey/journey'
 import { resolveSlots, subjectFrom } from '@/server/experiments'
 import { OPENER } from '@/lib/opening-data'
+import { now } from '@/lib/clock'
 import { idOf } from '@/lib/ids'
+import { portalTimeZone } from '@/lib/zone-time'
 import type { PortalDoc, SessionUser } from '@/server/context'
 import { partTitle } from '@/lib/talk-title'
 import { posterFor, shownPoster } from '@/server/learner'
 import { loadOpening } from '@/server/opening'
 import { loadDoors } from '@/server/doors'
 import { doorNumberOfClause } from '@/lib/doors'
+import { contextAt, popularTalkIds, resolveContextLabel } from '@/server/calendar'
+import { nudgeTalks } from '@/lib/calendar-context'
+import { activeMissionCard } from './mission'
 import { unreadCount } from '../common'
 import { FeedLiveBanner } from '@/components/app/live-banner'
 import { homeLive } from '@/server/live'
@@ -47,11 +53,27 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
     user ? homeLive(payload, portal, user) : Promise.resolve({ live: null, upcoming: [], pollMs: 12_000 }),
     resolveSlots(payload, ['feed-cta-label', 'full-talk-cta-label', 'wide-video-framing'], subjectFrom(user, deviceId, portal.id)),
   ])
+  const context = await contextAt(payload, now(), undefined, undefined, portalTimeZone(portal))
+  for (const slot of Object.keys(variants)) {
+    const view = variants[slot]
+    if (view.running && view.label && !/^learn more\b/i.test(view.label)) continue
+    const label = await resolveContextLabel(payload, slot, view.payload, context)
+    if (label) variants[slot] = { ...view, label, payload: { ...view.payload, label } }
+  }
+  const popular = await popularTalkIds(payload)
+  const titled = opening.route.cuts.map((cut) => ({
+    ...cut,
+    title: opening.clips[String(cut.id)]?.lessonTitle || opening.clips[String(cut.id)]?.courseTitle || '',
+  }))
+  opening.route.cuts = nudgeTalks(titled, context, popular, true)
+  const mission = user ? await activeMissionCard(payload, portal.id, base) : null
   return (
     <div className="app-stage dusk">
       {initial === 'feed' && user ? <FeedLiveBanner portal={String(portal.slug)} base={base} session={live.live} /> : null}
       <main className="app dark journey-frame" data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
         <PageHelp page={initial === 'feed' ? 'feed' : 'start'} />
+        <InsightTracker trendsOptIn={Boolean(user?.trendsOptIn)} />
+        {mission && initial === 'feed' ? <div className="feed-mission" data-testid="feed-mission">{mission}</div> : null}
         <JourneyErrorBoundary homeHref={base}>
           <Journey
             base={base}

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { InsightTracker } from '@/components/app/insight-tracker'
 import { PageHelp } from '@/components/app/page-help'
 import { RouteFade } from '@/components/app/route-fade'
 
@@ -22,12 +23,13 @@ export function Flash({ error, notice }: { error?: string | string[]; notice?: s
   )
 }
 
-export function AppFrame({ children, dark = false, evening = false, testId, tone, help }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; tone?: 'gather'; help?: string }) {
+export function AppFrame({ children, dark = false, evening = false, testId, tone, help, trendsOptIn }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; tone?: 'gather'; help?: string; trendsOptIn?: boolean }) {
   const gather = tone === 'gather'
   return (
     <div className={`app-stage${evening ? ' evening' : ''}${gather ? ' gather-stage' : ''}`}>
       <main className={`app${dark ? ' dark' : ''}${evening ? ' evening' : ''}${gather ? ' gather-shell' : ''}`} data-testid={testId}>
         <PageHelp page={help || testId} />
+        <InsightTracker trendsOptIn={trendsOptIn} />
         <RouteFade>{children}</RouteFade>
       </main>
     </div>
@@ -43,9 +45,8 @@ export function Back({ href, label }: { href: string; label: string }) {
 }
 
 export function Hidden({ fields }: { fields: Record<string, string | number | undefined | null> }) {
-  return (
-    <>
-      {Object.entries(fields).map(([name, value]) => (value === undefined || value === null ? null : <input key={name} type="hidden" name={name} value={String(value)} suppressHydrationWarning />))}
-    </>
-  )
+  return Object.entries(fields).map(([name, value]) => {
+    if (value === undefined || value === null) return null
+    return <input key={name} type="hidden" name={name} defaultValue={String(value)} suppressHydrationWarning />
+  })
 }
