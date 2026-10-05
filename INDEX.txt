@@ -8,3 +8,6 @@ import-log.txt                 Postgres migrate + importer counts
 hearts-density-30-extracts.xlsx 30 talks, 1150 suggested extracts
 round3/                        clean dual Postgres suite, data-extract fix, kinetic tidy, desk tokens
 round3/REPORT.md               tip SHA, base and branch numbers, new vs flake fails, raw URLs
+round4/                        hide-until-moment merge, plan-row player still, tip-only Playwright
+round4/REPORT.md               tip SHA, fair base c0fe322, numbers, raw URLs
+round4/player-from-plan-row.png player just after opening from a plan row; no prompt or strip count

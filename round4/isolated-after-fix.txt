@@ -1,0 +1,11 @@
+After merge c0fe322 (30b92cf), Postgres port 3100:
+  tests/e2e/planner-demo.spec.ts:58
+  tests/e2e/talk-extracts.spec.ts:22
+  2 passed (1.5m)
+
+After alias-map fix (506b1c4), Postgres port 3102:
+  tests/e2e/courses-planning.spec.ts:211  B6, B11 and B15
+  tests/e2e/round4.spec.ts:65             N4 one carrier cut
+  tests/e2e/talk-extracts.spec.ts:22
+  tests/e2e/planner-demo.spec.ts:58
+  4 passed (1.8m)

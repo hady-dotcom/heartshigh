@@ -1,0 +1,16 @@
+Tip SHA recorded: 30b92cf01982bf5549912506dfeae5dbac74ec5f
+Fair base: c0fe3224e7c36ce7229f695fc2bec1a8714c55cc (#26)
+Postgres HEARTS_E2E_DATABASE=postgresql://ubuntu:hearts@127.0.0.1:5432/hearts_e2e
+Port 3100, HEARTS_DIST_DIR=.next-e2e-round4
+Start 2026-10-05T07:31:06Z
+End 2026-10-05T07:58:50Z
+
+220 passed
+6 failed
+  tests/e2e/courses-planning.spec.ts:211
+  tests/e2e/feed-polish.spec.ts:148
+  tests/e2e/planner-demo.spec.ts:58
+  tests/e2e/round4.spec.ts:65
+  tests/e2e/screenshots.spec.ts:33
+  tests/e2e/typography.spec.ts:27
+27.7m
