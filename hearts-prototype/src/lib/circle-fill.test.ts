@@ -73,5 +73,11 @@ test('the joining bank keeps the four default questions and a richer extra set',
 
 test('circle people names are initials-ready and not on the kill list', () => {
   assert.ok(CIRCLE_PEOPLE.length >= 8)
-  for (const name of CIRCLE_PEOPLE) assert.equal(initialsOf(name).length, 2)
+  const seen = new Set<string>()
+  for (const name of CIRCLE_PEOPLE) {
+    const initials = initialsOf(name)
+    assert.equal(initials.length, 2, name)
+    assert.equal(seen.has(initials), false, `${name} reuses ${initials}`)
+    seen.add(initials)
+  }
 })

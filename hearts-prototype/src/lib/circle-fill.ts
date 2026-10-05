@@ -16,7 +16,7 @@ export const CIRCLE_PEOPLE = [
   'Ibrahim Karim',
   'Zainab Uddin',
   'Layla Qureshi',
-  'Hamza Ali',
+  'Hamza Riaz',
 ] as const
 
 type Written = { name: string; body: string; tone: CircleTone; length: CircleLength }
