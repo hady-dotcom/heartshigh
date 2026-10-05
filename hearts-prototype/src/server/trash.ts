@@ -147,6 +147,7 @@ export async function moveToTrash(payload: Payload, collection: string, id: numb
     collection: collection as never,
     id,
     overrideAccess: true,
+    trash: true,
     data: { deletedAt: now().toISOString() } as never,
   })) as Doc
 }

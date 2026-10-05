@@ -118,7 +118,9 @@ test.describe('Lane D admin desk', () => {
     const title = `Trash drill ${Date.now().toString().slice(-6)}`
     const created = await master.post('/api/courses', { data: { title, origin: 'local', portal: elm.id, visibility: 'draft' } })
     expect(created.ok(), await created.text()).toBeTruthy()
-    const course = await created.json() as { id: number; title?: string }
+    const course = ((await created.json()) as { doc?: { id: number; title?: string }; id?: number })
+    const courseId = course.doc?.id || course.id
+    expect(courseId).toBeTruthy()
 
     await signIn(page, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin/trash')
     await expect(page.getByTestId('admin-trash')).toBeVisible()
@@ -127,23 +129,25 @@ test.describe('Lane D admin desk', () => {
       form: {
         action: 'trash-remove',
         collection: 'courses',
-        id: String(course.id),
+        id: String(courseId),
         portalSlug: 'east-london',
         next: '/p/east-london/admin/trash',
       },
       maxRedirects: 0,
     })
     expect([302, 303]).toContain(moved.status())
+    expect(moved.headers()['location'] || '').not.toContain('error=')
     await page.goto('/p/east-london/admin/trash')
     const row = page.getByTestId('trash-row').filter({ hasText: title })
     await expect(row).toBeVisible()
-    const hidden = await master.get(`/api/courses/${course.id}?depth=0`)
+    const hidden = await master.get(`/api/courses/${courseId}?depth=0`)
     expect(hidden.ok()).toBeFalsy()
     await row.getByTestId('trash-restore').click()
     await expect(page.getByTestId('trash-row').filter({ hasText: title })).toHaveCount(0)
-    const live = await master.get(`/api/courses/${course.id}?depth=0`)
+    const live = await master.get(`/api/courses/${courseId}?depth=0`)
     expect(live.ok()).toBeTruthy()
-    expect((await live.json()).title).toBe(title)
+    const liveBody = await live.json() as { title?: string; doc?: { title?: string } }
+    expect(liveBody.title || liveBody.doc?.title).toBe(title)
     await master.dispose()
   })
 
@@ -181,23 +185,24 @@ test.describe('Lane D hostile API', () => {
     expect(stealAudit.ok()).toBeFalsy()
 
     const foreign = await master.post('/api/courses', { data: { title: `Leeds trash ${Date.now().toString().slice(-4)}`, origin: 'local', portal: leedsPortal.id, visibility: 'draft' } })
-    if (foreign.ok()) {
-      const course = await foreign.json() as { id: number }
-      const stealTrash = await elm.post('/api/hearts', {
-        form: {
-          action: 'trash-remove',
-          collection: 'courses',
-          id: String(course.id),
-          portalSlug: 'east-london',
-          next: '/p/east-london/admin/trash',
-        },
-        maxRedirects: 0,
-      })
-      const status = stealTrash.status()
-      expect(status === 303 || status === 302 || !stealTrash.ok()).toBeTruthy()
-      const stillLive = await master.get(`/api/courses/${course.id}?depth=0`)
-      expect(stillLive.ok()).toBeTruthy()
-    }
+    expect(foreign.ok(), await foreign.text()).toBeTruthy()
+    const foreignBody = (await foreign.json()) as { doc?: { id: number }; id?: number }
+    const foreignId = foreignBody.doc?.id || foreignBody.id
+    expect(foreignId).toBeTruthy()
+    const stealTrash = await elm.post('/api/hearts', {
+      form: {
+        action: 'trash-remove',
+        collection: 'courses',
+        id: String(foreignId),
+        portalSlug: 'east-london',
+        next: '/p/east-london/admin/trash',
+      },
+      maxRedirects: 0,
+    })
+    expect([302, 303]).toContain(stealTrash.status())
+    expect(stealTrash.headers()['location'] || '').toMatch(/error=/)
+    const stillLive = await master.get(`/api/courses/${foreignId}?depth=0`)
+    expect(stillLive.ok()).toBeTruthy()
 
     const learner = await as('elm-learner@hearts.test', 'portal-learner')
     expect((await learner.get('/api/hearts/people.csv?portal=east-london')).ok()).toBeFalsy()
