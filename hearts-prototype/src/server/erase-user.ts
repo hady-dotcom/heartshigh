@@ -16,7 +16,8 @@ export type EraseUserResult = { ok: true; deleted?: Record<string, number> } | {
  */
 export async function eraseUser(payload: Payload, args: EraseUserArgs): Promise<EraseUserResult> {
   try {
-    const mod = (await import('./erase')) as {
+    const spec = './erase'
+    const mod = (await import(/* webpackIgnore: true */ spec)) as {
       wipeUser?: (
         payload: Payload,
         args: EraseUserArgs & { mode: 'account'; self: boolean },
