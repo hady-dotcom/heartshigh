@@ -11,8 +11,10 @@ import { DEFAULT_TIME_ZONE, isTimeZone } from './lib/zone-time'
 import { linkLadderParents } from './server/piece-parents'
 import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
+import { mediaReadAccess } from './collections-safety'
 import { circleProblems } from './lib/circle'
 import { cookiesSecure } from './lib/env'
+import { clientIp, hitAuth, limitsRelaxed } from './lib/rate-limit'
 import { DOOR_SECTIONS } from './lib/doors'
 
 // The app's own screens and actions use the local API with explicit portal checks.
@@ -111,6 +113,14 @@ export const Portals: CollectionConfig = {
     { name: 'learnerLabel', type: 'text', defaultValue: 'Learner' },
     { name: 'teacherLabel', type: 'text', defaultValue: 'Teacher' },
     { name: 'wizardDone', type: 'checkbox', defaultValue: false },
+    {
+      name: 'features',
+      type: 'json',
+      admin: {
+        description:
+          'Per-portal feature switches. Empty means every feature that exists today stays on, so live portals do not change.',
+      },
+    },
   ],
 }
 
@@ -139,6 +149,25 @@ export const Users: CollectionConfig = {
       ({ args, operation, req }) => {
         refuseOutsideAccountCreation({ operation, req })
         return args
+      },
+    ],
+    beforeLogin: [
+      ({ req }) => {
+        if (req.payloadAPI !== 'REST' || limitsRelaxed()) return
+        const headers = req.headers
+        const read = (name: string) => (headers && typeof headers.get === 'function' ? headers.get(name) : '') || ''
+        const fake = new Request('http://local', {
+          headers: {
+            'cf-connecting-ip': read('cf-connecting-ip'),
+            'x-forwarded-for': read('x-forwarded-for'),
+            'fly-client-ip': read('fly-client-ip'),
+          },
+        })
+        const email = typeof (req as { data?: { email?: unknown } }).data?.email === 'string' ? (req as { data: { email: string } }).data.email : ''
+        const limited = hitAuth('login', clientIp(fake), email)
+        if (!limited.allowed) {
+          throw new APIError('Too many sign-in tries from here. Wait a few minutes, then try again.', 429, undefined, true)
+        }
       },
     ],
     beforeValidate: [
@@ -196,11 +225,7 @@ export const Media: CollectionConfig = {
     mimeTypes: ['image/*', 'audio/*', 'video/*', 'application/pdf', 'text/*'],
   },
   access: {
-    read: ({ req }) => {
-      if (req.user?.role === 'master') return true
-      const portal = portalIdOf(req.user as { tenants?: { tenant?: unknown }[] } | null)
-      return portal ? { portal: { equals: portal } } : false
-    },
+    read: mediaReadAccess,
     create: master,
     update: master,
     delete: master,
@@ -208,6 +233,18 @@ export const Media: CollectionConfig = {
   fields: [
     { name: 'alt', type: 'text' },
     { name: 'portal', type: 'relationship', relationTo: 'portals' },
+    { name: 'owner', type: 'relationship', relationTo: 'users' },
+    {
+      name: 'purpose',
+      type: 'select',
+      options: [
+        { label: 'Answer', value: 'answer' },
+        { label: 'Gather photo', value: 'gather-photo' },
+        { label: 'Portal asset', value: 'portal-asset' },
+        { label: 'Film', value: 'film' },
+        { label: 'Feedback', value: 'feedback' },
+      ],
+    },
   ],
 }
 

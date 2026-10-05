@@ -219,7 +219,7 @@ export async function setWrite(payload: Payload, viewAs: ViewAs, on: boolean, re
 }
 
 /** Things a viewer may never do as the learner, whether or not changes are allowed (spec 6A). */
-export const NEVER_ACTIONS = new Set(['join', 'answer', 'reply', 'start-again', 'keep-place', 'share-opening', 'delete-account', 'change-email', 'change-password', 'opening-answers', 'heart-state', 'popup-answer', 'workbook-consent'])
+export const NEVER_ACTIONS = new Set(['join', 'answer', 'reply', 'start-again', 'keep-place', 'share-opening', 'delete-account', 'change-email', 'change-password', 'opening-answers', 'heart-state', 'popup-answer', 'workbook-consent', 'report', 'safety-report', 'safety-hide', 'safety-keep', 'safety-message', 'safety-mute', 'safety-outcome', 'announce', 'announce-create', 'announce-dismiss'])
 export const NEVER_COLLECTIONS = new Set(['heart-states', 'opening-answers', 'answers', 'workbook-entries'])
 
 export async function blocked(payload: Payload, viewAs: ViewAs, what: Record<string, unknown>) {

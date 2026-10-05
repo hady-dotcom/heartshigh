@@ -19,8 +19,10 @@ import type { GardenTheme } from '@/lib/garden-art'
 import { GardenScene } from '@/components/app/garden-scene'
 import { answerCounts } from '@/lib/nesting'
 import { taskWantsCompany } from '@/lib/gather'
+import { featureOn } from '@/lib/features'
 import { listGatherings } from '@/server/gather'
 import { type Ctx, type Row, clock, ref, rows, shortDate, str, unreadCount } from '../common'
+import { ReportButton } from '@/components/app/report-sheet'
 
 const SECTIONS: { key: string; title: string; colour: string }[] = [
   { key: 'Sitting', title: 'The sitting', colour: '#e98fb0' },
@@ -104,14 +106,14 @@ function seatsOf(g: Growth, door: Door) {
   return clausesOf(g, door).flatMap((clause) => g.seats.filter((seat) => ref(seat.clause) === clause.id).sort((a, b) => Number(a.position) - Number(b.position)))
 }
 
-export function Rings({ g, base }: { g: Growth; base: string }) {
+export function Rings({ g, base, portal }: { g: Growth; base: string; portal?: import('@/lib/features').FeatureSource }) {
   const sections = SECTIONS.filter((section) => sectionOf(g.doors, section.key).some((door) => g.lit.has(door.number))).length
   const items: [string, number, string, string, number?][] = [
     ['Watched', g.completions.length, '#e2c27a', `${base}/garden/general`],
     ['Sections', sections, '#f0e2c4', `${base}/garden/jibril`],
     ['Field', g.seatVisits.length, '#b7c7a4', `${base}/garden/ghunya`],
     ['Harvest', g.harvest.length, '#8fbfb4', `${base}/garden/harvest`, g.harvest.filter((row) => !row.seenAt).length],
-    ['Workbook', g.workbook.length, '#e2b08a', `${base}/garden/workbook`],
+    ...((!portal || featureOn(portal, 'workbook')) ? [['Workbook', g.workbook.length, '#e2b08a', `${base}/garden/workbook`] as [string, number, string, string]] : []),
   ]
   return (
     <div className="rings" data-testid="rings">
@@ -207,7 +209,7 @@ async function areaViews(payload: Payload, user: SessionUser, base: string, g: G
   })
 }
 
-export async function GardenScreen({ payload, user, base, query }: Ctx) {
+export async function GardenScreen({ payload, user, portal, base, query }: Ctx) {
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
   const [areas, path] = await Promise.all([areaViews(payload, user, base, g), coursePath(payload, user, base, g)])
   const starting = doorOfClause(Number(user.startingClause || 0), g.doors)
@@ -219,7 +221,7 @@ export async function GardenScreen({ payload, user, base, query }: Ctx) {
         <Flash error={query.error} notice={query.notice} />
         <section className="garden-rings card" data-testid="garden-rings">
           <p className="eyebrow" style={{ margin: '0 0 8px' }}>Five ways to see it</p>
-          <Rings g={g} base={base} />
+          <Rings g={g} base={base} portal={portal} />
         </section>
         {path ? <GardenPath title={path.title} nodes={path.nodes} /> : (
           <EmptyState testId="garden-empty" action={{ href: `${base}/lanes`, label: 'Browse courses' }}>
@@ -247,12 +249,12 @@ export async function GardenScreen({ payload, user, base, query }: Ctx) {
         </section>
         </div>
       </div>
-      <TabBar base={base} active="garden" unread={unread} />
+      <TabBar base={base} active="garden" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
 
-export function Frame({ base, title, testId, children, unread, dark, evening }: { base: string; title: string; testId: string; children: React.ReactNode; unread: number; dark?: boolean; evening?: boolean }) {
+export function Frame({ base, title, testId, children, unread, dark, evening, portal }: { base: string; title: string; testId: string; children: React.ReactNode; unread: number; dark?: boolean; evening?: boolean; portal?: import('@/lib/features').FeatureSource }) {
   return (
     <AppFrame testId={testId} dark={dark} evening={evening}>
       <div className="app-scroll">
@@ -264,12 +266,12 @@ export function Frame({ base, title, testId, children, unread, dark, evening }: 
           </>
         )}
       </div>
-      <TabBar base={base} active="garden" unread={unread} dark={dark} evening={evening} />
+      <TabBar base={base} active="garden" portal={portal} unread={unread} dark={dark} evening={evening} />
     </AppFrame>
   )
 }
 
-export async function GardenGeneral({ payload, user, base }: Ctx) {
+export async function GardenGeneral({ payload, user, portal, base }: Ctx) {
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
   const hours = Math.floor(g.secondsGiven / 3600)
   const minutes = Math.round((g.secondsGiven % 3600) / 60)
@@ -288,7 +290,7 @@ export async function GardenGeneral({ payload, user, base }: Ctx) {
     .slice(0, 4)
   const top = Math.max(1, ...returns.map((row) => row.count))
   return (
-    <Frame base={base} title="General" testId="garden-general" unread={unread}>
+    <Frame base={base} title="General" testId="garden-general" unread={unread} portal={portal}>
       <section className="time-card">
         <p className="eyebrow">Time given</p>
         <div className="big" data-testid="time-given">{hours ? `${hours}h ` : ''}{minutes}m</div>
@@ -319,11 +321,11 @@ export async function GardenGeneral({ payload, user, base }: Ctx) {
   )
 }
 
-export async function GardenJibril({ payload, user, base }: Ctx) {
+export async function GardenJibril({ payload, user, portal, base }: Ctx) {
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
   const startDoor = doorOfClause(Number(user.startingClause || 0), g.doors)?.number
   return (
-    <Frame base={base} title="Against Hadith Jibril" testId="garden-jibril" unread={unread}>
+    <Frame base={base} title="Against Hadith Jibril" testId="garden-jibril" unread={unread} portal={portal}>
       <section className="summary-card gold">
         <h2 data-testid="lit-count">{g.lit.size} of {g.doors.length} doors</h2>
         <p>A door flowers when you finish a talk that a teacher has placed in it. Tap any door to read it.</p>
@@ -358,7 +360,7 @@ export async function GardenJibril({ payload, user, base }: Ctx) {
   )
 }
 
-export async function GardenDoor({ payload, user, base, query }: Ctx, token: string) {
+export async function GardenDoor({ payload, user, portal, base, query }: Ctx, token: string) {
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
   const door = doorFromPath(token, g.doors)
   if (!door) notFound()
@@ -398,7 +400,7 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, token: str
     </div>
   )
   return (
-    <Frame base={base} title={`Door ${door.number}`} testId="garden-door" unread={unread}>
+    <Frame base={base} title={`Door ${door.number}`} testId="garden-door" unread={unread} portal={portal}>
       <Flash error={query.error} notice={query.notice} />
       <article className="clause-card" data-testid="door-card" data-door={door.number}>
         <div className="clause-num">{door.number}</div>
@@ -464,7 +466,7 @@ export async function GardenDoor({ payload, user, base, query }: Ctx, token: str
   )
 }
 
-export async function GardenGhunya({ payload, user, base }: Ctx) {
+export async function GardenGhunya({ payload, user, portal, base }: Ctx) {
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
   const read = new Set(g.seatVisits.map((visit) => ref(visit.seat)))
   const recent = g.seatVisits
@@ -474,7 +476,7 @@ export async function GardenGhunya({ payload, user, base }: Ctx) {
     .map((visit) => g.seats.find((seat) => seat.id === ref(visit.seat)))
     .filter((seat): seat is Row => Boolean(seat))
   return (
-    <Frame base={base} title="Against al-Ghuniyya" testId="garden-ghunya" unread={unread} dark>
+    <Frame base={base} title="Against al-Ghuniyya" testId="garden-ghunya" unread={unread} dark portal={portal}>
       <div className="forest">
         <Back href={`${base}/garden`} label="Garden" />
         <p className="eyebrow" style={{ color: 'var(--gold)', marginTop: 10 }}>Against al-Ghuniyya</p>
@@ -518,7 +520,7 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
     videos.get(video)!.push(row)
   }
   return (
-    <Frame base={base} title="Workbook" testId="garden-workbook" unread={unread} evening>
+    <Frame base={base} title="Workbook" testId="garden-workbook" unread={unread} evening portal={portal}>
       <Flash error={query.error} notice={query.notice} />
       {book.opening.length ? (
         <section className="wb-start" data-testid="where-you-started">
@@ -565,7 +567,12 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
                             <button className="mini-btn" type="submit" data-testid="consent-toggle">{row.shared ? 'Make private' : 'Share with my teacher'}</button>
                           </form>
                         ) : null}
-                        {row.reply ? <div className="reply" data-testid="teacher-reply"><b>Your teacher replied</b>{row.reply}</div> : null}
+                        {row.reply && featureOn(portal, 'feedback') ? (
+                          <div className="reply" data-testid="teacher-reply">
+                            <b>Your teacher replied</b>{row.reply}
+                            {row.entryId ? <ReportButton targetType="teacher-reply" targetId={row.entryId} next={here} /> : null}
+                          </div>
+                        ) : null}
                       </article>
                     ))}
                   </div>
@@ -597,7 +604,7 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
                   {row.kind === 'task' && row.dueDays ? <p data-testid="task-due">Due within {row.dueDays} days of opening this talk.</p> : null}
                   {row.evidence === 'photo' ? null : <textarea name="body" rows={2} required={row.evidence === 'note' || row.family === 'workbook'} placeholder={row.kind === 'task' ? 'What did you do?' : 'Your reflection'} data-testid="workbook-task-note" />}
                   {row.kind === 'task' ? <input type="file" name="image" accept="image/*" required={row.evidence === 'photo'} /> : null}
-                  {row.kind === 'task' && taskWantsCompany(row.question) ? listed.cards.filter((card) => !card.past && card.lessonId === row.lessonId).map((card) => (
+                  {row.kind === 'task' && featureOn(portal, 'gather') && taskWantsCompany(row.question) ? listed.cards.filter((card) => !card.past && card.lessonId === row.lessonId).map((card) => (
                     <p key={card.id} data-testid="workbook-gather"><a href={`${base}/gather/${card.id}`}>{card.title}</a> · {card.when}</p>
                   )) : null}
                   {row.showImam || row.kind === 'task' ? <input type="hidden" name="shareWithTeacher" value="on" /> : null}

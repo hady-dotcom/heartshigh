@@ -4,26 +4,33 @@ import type { Payload } from 'payload'
 import { BrandMark } from '@/components/brand'
 import { DeskFade } from '@/components/app/route-fade'
 import { Flash, Hidden } from '@/components/app/shell'
+import { HelpTip } from '@/components/desk/help'
+import { SideNav } from '@/components/desk/side-nav'
+import { pageHelp } from '@/lib/desk-help'
 import { BellIcon, BookIcon, HeartIcon, CalendarIcon, CogIcon, GlobeIcon, HomeIcon, KeyIcon, LibraryIcon, MoonIcon, PeopleIcon, QuestionIcon } from '@/components/icons'
 import type { SessionUser } from '@/server/context'
+import { deskNavAllowed, type FeatureSource } from '@/lib/features'
 import { rows, shortDate, str } from '../common'
 
 type NavItem = { key: string; label: string; href: string; icon: ReactNode }
 
-export function portalNav(base: string, user: SessionUser): { group: string; items: NavItem[] }[] {
-  const teach: NavItem[] = [
+export function portalNav(base: string, user: SessionUser, portal?: FeatureSource): { group: string; items: NavItem[] }[] {
+  const keep = (items: NavItem[]) => items.filter((item) => deskNavAllowed(portal, item.key))
+  const teach: NavItem[] = keep([
     { key: 'teach', label: 'Teach', href: `${base}/admin/teach`, icon: <PeopleIcon /> },
     { key: 'feedback', label: 'Feedback', href: `${base}/admin/feedback`, icon: <QuestionIcon /> },
     { key: 'compass', label: 'Compass', href: `${base}/admin/compass`, icon: <HeartIcon /> },
     { key: 'plans', label: 'Study plans', href: `${base}/admin/plans`, icon: <CalendarIcon /> },
     { key: 'nights', label: 'Nights', href: `${base}/admin/nights`, icon: <MoonIcon /> },
     { key: 'gather', label: 'Gather', href: `${base}/admin/gather`, icon: <PeopleIcon /> },
-  ]
+    { key: 'safety', label: 'Care and safety', href: `${base}/admin/safety`, icon: <HeartIcon /> },
+    { key: 'announcements', label: 'Announcements', href: `${base}/admin/announcements`, icon: <BellIcon /> },
+  ])
   if (user.role === 'teacher') return [{ group: 'Portal', items: [{ key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> }, ...teach] }]
   return [
     {
       group: 'Portal',
-      items: [
+      items: keep([
         { key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> },
         { key: 'content', label: 'Content', href: `${base}/admin/content`, icon: <BookIcon /> },
         { key: 'sheet', label: 'Master sheet', href: `${base}/admin/sheet`, icon: <BookIcon /> },
@@ -33,7 +40,7 @@ export function portalNav(base: string, user: SessionUser): { group: string; ite
         { key: 'opening', label: 'Opening', href: `${base}/admin/opening`, icon: <HeartIcon /> },
         { key: 'circle', label: 'Circle answers', href: `${base}/admin/circle`, icon: <PeopleIcon /> },
         { key: 'ai', label: 'AI steps', href: `${base}/admin/ai`, icon: <CogIcon /> },
-      ],
+      ]),
     },
     { group: 'People', items: teach },
     { group: 'Setup', items: [{ key: 'settings', label: 'Settings', href: `${base}/admin/settings`, icon: <CogIcon /> }] },
@@ -55,6 +62,8 @@ export function masterNav(): { group: string; items: NavItem[] }[] {
         { key: 'create', label: 'Sheet creator', href: '/master/sheet/create', icon: <BookIcon /> },
         { key: 'questions', label: 'Placing questions', href: '/master/questions', icon: <QuestionIcon /> },
         { key: 'circle', label: 'Circle answers', href: '/master/circle', icon: <PeopleIcon /> },
+        { key: 'safety', label: 'Care and safety', href: '/master/safety', icon: <HeartIcon /> },
+        { key: 'announcements', label: 'Announcements', href: '/master/announcements', icon: <BellIcon /> },
       ],
     },
     {
@@ -85,7 +94,7 @@ export async function DeskFrame({
   tools,
   query,
   testId,
-  evening,
+  evening = true,
   logoUrl,
   gatherDesk,
   children,
@@ -114,6 +123,7 @@ export async function DeskFrame({
 }) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 12 })).filter((note) => note.channel !== 'email-stub')
   const unread = notes.filter((note) => !note.read).length
+  const help = pageHelp(active, testId)
   return (
     <>
     <div className="desk-narrow" data-testid="desk-narrow" role="note">
@@ -129,9 +139,9 @@ export async function DeskFrame({
       <aside className="side">
         <Link className="side-brand" href={brandHref}>
           {logoUrl ? <img className="side-logo" alt="" src={logoUrl} /> : <BrandMark size={40} />}
-          <span><b>{brand}</b><small>{subBrand}</small></span>
+          <span><b data-testid="side-brand-name">{brand}</b><small>{subBrand}</small></span>
         </Link>
-        <nav className="side-nav" aria-label="Desk">
+        <SideNav>
           {nav.map((group) => (
             <div key={group.group} style={{ display: 'contents' }}>
               <div className="group">{group.group}</div>
@@ -143,7 +153,7 @@ export async function DeskFrame({
               ))}
             </div>
           ))}
-        </nav>
+        </SideNav>
         <div className="side-foot">
           {extraLinks.length ? <div className="group">Elsewhere</div> : null}
           {extraLinks.map((link) => (
@@ -162,7 +172,7 @@ export async function DeskFrame({
       <main className="main">
         <div className="main-head">
           <div>
-            <h1>{title}</h1>
+            <h1>{title}{help ? <HelpTip topic={testId || active}>{help}</HelpTip> : null}</h1>
             {intro ? <p>{intro}</p> : null}
           </div>
           <div className="head-tools">

@@ -10,6 +10,7 @@ import { buildConfig } from 'payload'
 import { aiCollections } from './collections-ai'
 import { collections } from './collections'
 import { gatherCollections } from './collections-gather'
+import { safetyCollections } from './collections-safety'
 import { sheetCollections } from './collections-sheet'
 import { MasterFlags } from './collections-opening'
 import { databaseKind, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
@@ -41,10 +42,12 @@ export default buildConfig({
       header: ['/components/viewas-admin-banner#ViewAsAdminBanner'],
     },
   },
-  collections: [...collections, ...aiCollections, ...sheetCollections, ...gatherCollections].map((collection) => ({
-    ...collection,
-    hooks: { ...collection.hooks, beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never] },
-  })),
+  collections: [...collections, ...aiCollections, ...sheetCollections, ...gatherCollections, ...safetyCollections].map((collection) => {
+    return {
+      ...collection,
+      hooks: { ...collection.hooks, beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never] },
+    }
+  }),
   globals: [MasterFlags].map((global) => ({ ...global, hooks: { ...global.hooks, beforeChange: [viewAsGlobalGuard as never, ...(global.hooks?.beforeChange || [])] } })),
   editor: lexicalEditor(),
   secret: payloadSecret(),
@@ -100,6 +103,13 @@ export default buildConfig({
         'gather-checkins': {},
         'gather-reflections': {},
         'gather-photos': {},
+        reports: {},
+        'moderation-hides': {},
+        'safeguarding-alerts': {},
+        announcements: {},
+        'announcement-dismissals': {},
+        'rate-hits': {},
+        'circle-mutes': {},
       },
       userHasAccessToAllTenants: (user) => (user as { role?: string } | null)?.role === 'master',
     }),
@@ -108,7 +118,9 @@ export default buildConfig({
     s3Storage({
       enabled: Boolean(s3),
       alwaysInsertFields: true,
-      collections: { media: true },
+      acl: 'private',
+      signedDownloads: { expiresIn: 300 },
+      collections: { media: { signedDownloads: { expiresIn: 300 } } },
       bucket: s3?.bucket || 'hearts-local',
       config: s3
         ? {
