@@ -1,4 +1,5 @@
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, request as playwrightRequest, test, type Locator, type Page } from '@playwright/test'
+import { E2E_BASE } from '../env'
 import { fakeYouTube } from './fake-youtube'
 
 // Follow-ups from the live check: one Tap for sound, readable chrome on cream cards, scenic cards for talks
@@ -146,10 +147,38 @@ test('every scenic card in the feed keeps its words inside the card, never shift
 
 test('Home Your plan heading reads at AA on the teal card', async ({ page }) => {
   await page.setViewportSize(PHONE)
+  const master = await playwrightRequest.newContext({ baseURL: E2E_BASE })
+  expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
+  const portals = (await (await master.get('/api/portals?limit=10&depth=0')).json()) as { docs: { id: number; slug?: string }[] }
+  const portal = portals.docs.find((row) => row.slug === 'east-london')
+  const users = (await (await master.get('/api/users?where[email][equals]=elm-learner@hearts.test&limit=1&depth=0')).json()) as { docs: { id: number }[] }
+  const lessons = (await (await master.get('/api/lessons?limit=40&depth=0&sort=id')).json()) as { docs: { id: number; course?: number | { id: number } }[] }
+  const done = (await (await master.get(`/api/completions?where[user][equals]=${users.docs[0]?.id || 0}&limit=100&depth=0`)).json()) as { docs: { lesson?: number | { id: number } }[] }
+  const watched = new Set(done.docs.map((row) => (typeof row.lesson === 'object' ? row.lesson?.id : row.lesson)))
+  const lesson = lessons.docs.find((row) => row.id && !watched.has(row.id))
+  expect(portal && users.docs[0] && lesson, 'Maryam needs an open sitting for the plan card').toBeTruthy()
+  const courseId = typeof lesson!.course === 'object' ? lesson!.course.id : lesson!.course
+  const made = await master.post('/api/schedules', {
+    data: {
+      name: 'Tonight contrast',
+      owner: users.docs[0].id,
+      learners: [users.docs[0].id],
+      targetType: 'course',
+      course: courseId,
+      startDate: '2026-10-05',
+      endDate: '2026-10-05',
+      weekdays: [1],
+      minutesPerDay: 30,
+      portal: portal!.id,
+      slots: [{ date: '2026-10-05', title: 'Tonight sitting', lessonId: lesson!.id }],
+    },
+  })
+  expect(made.ok(), 'the tonight sitting has to be saved').toBeTruthy()
+  await master.dispose()
   await signIn(page, 'elm-learner@hearts.test', 'portal-learner', PORTAL)
   await page.goto(PORTAL)
   const plan = page.getByTestId('home-plan')
-  await expect(plan).toBeVisible()
+  await expect(plan, 'Home Your plan card must be on the teal card').toBeVisible()
   const rows = await page.evaluate(() => {
     const rgb = (value: string) => (value.match(/[\d.]+/g) || []).map(Number)
     const lum = ([r, g, b]: number[]) => {
