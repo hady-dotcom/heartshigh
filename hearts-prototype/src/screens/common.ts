@@ -8,6 +8,7 @@ export type Query = {
   step?: string
   lane?: string
   part?: string
+  extract?: string
   t?: string
   answer?: string
   course?: string

@@ -23,6 +23,7 @@ import {
   type CircleRow,
   type CourseRow,
   type CutRow,
+  type ExtractRow,
   type KeyRow,
   type LessonRow,
   type PackRow,
@@ -133,7 +134,7 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
     appetiserSpans: spansOf(tier.appetiserSpans),
     hook: String(tier.hook || ''), turn: String(tier.turn || ''), land: String(tier.land || ''), note: String(tier.note || ''), status: String(tier.status || 'draft'),
   }))
-  const extractRows = extracts.map((row) => ({
+  const extractRows: ExtractRow[] = extracts.map((row) => ({
     id: row.id,
     lesson: num(row.lesson) || 0,
     kind: row.kind === 'appetiser' ? 'appetiser' as const : 'hors' as const,

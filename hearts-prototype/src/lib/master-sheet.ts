@@ -621,7 +621,7 @@ export function extractSheetValues(extract: ExtractRow, catalogue: SheetCatalogu
     order: numOrNull(extract.order),
     door: extract.door,
     seat: extract.seat,
-    arc: extract.arc,
+    arc: extract.arc ?? null,
     parent_start: parent ? numOrNull(parent.start) : null,
     words: null,
     hook_text: extract.hook || null,

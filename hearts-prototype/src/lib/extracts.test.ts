@@ -241,8 +241,9 @@ test('a talk with one hors stays one feed item; several hors expand', () => {
   const one = {
     id: 'cut-1',
     lessonId: 1,
+    extractId: null as number | null,
     extracts: [appetiser, extract({ id: 11, kind: 'hors', start: 10, end: 30, parent: 10, quote: 'A line.' })],
-    hors: { start: 10, end: 30, quote: 'A line.' },
+    hors: { start: 10, end: 30, quote: 'A line.', lines: undefined as { at: number; text: string }[] | undefined },
     appetiser: { start: 0, end: 180, quote: 'Land' },
     hook: 'Hook',
     turn: 'Turn',
@@ -274,12 +275,13 @@ test('suggested hors stay off the learner feed until they are approved', () => {
   const item = {
     id: 'cut-1',
     lessonId: 1,
+    extractId: null as number | null,
     extracts: [
       appetiser,
       extract({ id: 11, kind: 'hors', start: 10, end: 30, parent: 10, status: 'suggested', quote: 'A line.' }),
       extract({ id: 12, kind: 'hors', start: 150, end: 170, parent: 10, status: 'approved', quote: 'Land line.' }),
     ],
-    hors: { start: 10, end: 30, quote: 'A line.' },
+    hors: { start: 10, end: 30, quote: 'A line.', lines: undefined as { at: number; text: string }[] | undefined },
     appetiser: { start: 0, end: 180, quote: 'Land' },
     hook: 'Hook',
     turn: 'Turn',
