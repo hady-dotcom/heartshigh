@@ -43,6 +43,21 @@ export type Query = {
   showTest?: string
   origin?: string
   q?: string
+  account?: string
+  need?: string
+  guardian?: string
+  after?: string
+  page?: string
+  person?: string
+  action?: string
+  portal?: string
+  fromYear?: string
+  fromMonth?: string
+  fromDay?: string
+  toYear?: string
+  toMonth?: string
+  toDay?: string
+  [key: string]: string | undefined
 }
 
 export type Ctx = {

@@ -126,7 +126,7 @@ test('r5d desk proof shots', async ({ page, browser }) => {
       })
       return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
     }
-    let at: HTMLElement | null = el
+    let at: Element | null = el
     let bg = [255, 255, 255]
     while (at) {
       const [r, g, b, a = 1] = rgb(getComputedStyle(at).backgroundColor)

@@ -134,7 +134,7 @@ export async function handleAdminActions(
       return redirectTo(next, undefined, removed ? `${removed === 1 ? '1 item was' : `${removed} items were`} emptied.` : 'Recently removed was already empty.')
     }
     const acting = await actingPortal(payload, user, form).catch(() => null)
-    const portalId = acting && 'portal' in acting ? acting.portal.id : user.role === 'master' ? null : portalIdOf(user)
+    const portalId = acting && 'portal' in acting && acting.portal ? acting.portal.id : user.role === 'master' ? null : portalIdOf(user)
     if (user.role !== 'master' && !portalId) return redirectTo(next, 'Your account is not in a portal.')
 
     if (action === 'trash-empty') {

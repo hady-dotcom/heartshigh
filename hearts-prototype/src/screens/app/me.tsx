@@ -17,6 +17,7 @@ import { DeleteAccount } from '@/components/app/delete-account'
 import { deleteDueAt, isEmailConfirmed } from '@/lib/account-rules'
 import { britishPortalTime, portalTimeZone } from '@/lib/zone-time'
 import { KIND_LABEL, NOTIFY_KINDS, parsePrefs } from '@/lib/notify-prefs'
+import { now } from '@/lib/clock'
 
 /** Notices written before prompts were clipped on a word were cut mid-word at 60 characters; they read the same way now. */
 function noteBody(body: string) {

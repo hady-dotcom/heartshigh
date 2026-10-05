@@ -43,7 +43,7 @@ async function courseIdsForPortal(payload: Payload, portalId: number) {
     trash: true,
     where: { portal: { equals: portalId } },
   })
-  return (found.docs as Doc[]).map((row) => row.id)
+  return (found.docs as unknown as Doc[]).map((row) => row.id)
 }
 
 async function lessonIdsForPortal(payload: Payload, portalId: number) {
@@ -60,7 +60,7 @@ async function lessonIdsForPortal(payload: Payload, portalId: number) {
     trash: true,
     where,
   })
-  return (found.docs as Doc[]).map((row) => row.id)
+  return (found.docs as unknown as Doc[]).map((row) => row.id)
 }
 
 async function whereForPortal(payload: Payload, slug: string, portalId: number): Promise<Where | null> {

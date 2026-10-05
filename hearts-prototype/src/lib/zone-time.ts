@@ -31,8 +31,9 @@ export function isTimeZone(value: unknown): value is string {
   }
 }
 
-export function portalTimeZone(portal: { timeZone?: unknown } | null | undefined) {
-  return isTimeZone(portal?.timeZone) ? String(portal!.timeZone).trim() : DEFAULT_TIME_ZONE
+export function portalTimeZone(portal?: { timeZone?: unknown } | Record<string, unknown> | null) {
+  const zone = portal && typeof portal === 'object' && 'timeZone' in portal ? portal.timeZone : undefined
+  return isTimeZone(zone) ? String(zone).trim() : DEFAULT_TIME_ZONE
 }
 
 /** The first language the browser asked for that Intl knows, else British English. */

@@ -69,7 +69,7 @@ export async function createClass(
       note: input.note || undefined,
       portal: input.portal,
     } as never,
-  })
+  }) as Promise<{ id: number }>
 }
 
 export async function joinRuleForCode(payload: Payload, codeId: number) {

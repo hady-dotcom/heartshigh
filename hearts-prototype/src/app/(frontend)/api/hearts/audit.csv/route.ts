@@ -49,7 +49,7 @@ export async function GET(req: Request) {
     depth: 1,
     limit: 200,
     sort: '-at',
-    where: where.length ? { and: where } : undefined,
+    where: where.length ? { and: where } as never : undefined,
   })
   if (!found.docs.length) return json({ error: 'Nobody matches this list, so the download stays still.' }, 400)
   const lines = [['when', 'event', 'sentence', 'reason'].join(',')]

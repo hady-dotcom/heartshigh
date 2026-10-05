@@ -17,7 +17,7 @@ export async function peopleInScope(payload: Payload, portalId?: number | null) 
     sort: 'name',
     where,
   })
-  return found.docs as (SessionUser & Doc)[]
+  return found.docs as unknown as (SessionUser & Doc)[]
 }
 
 export async function buildPeopleExport(
@@ -29,13 +29,13 @@ export async function buildPeopleExport(
   const codeIds = [...new Set(people.map((person) => idOf(person.accessCode)).filter((id): id is number => Boolean(id)))]
   if (codeIds.length) {
     const found = await payload.find({ collection: 'access-codes', overrideAccess: true, depth: 0, limit: 200, where: { id: { in: codeIds } } })
-    for (const row of found.docs as Doc[]) codes.set(row.id, String(row.code || ''))
+    for (const row of found.docs as unknown as Doc[]) codes.set(row.id, String(row.code || ''))
   }
   const completions = portalId
-    ? ((await payload.find({ collection: 'completions', overrideAccess: true, depth: 0, limit: 2000, where: { portal: { equals: portalId } } })).docs as Doc[])
+    ? ((await payload.find({ collection: 'completions', overrideAccess: true, depth: 0, limit: 2000, where: { portal: { equals: portalId } } })).docs as unknown as Doc[])
     : []
   const watches = portalId
-    ? ((await payload.find({ collection: 'watch-sessions', overrideAccess: true, depth: 0, limit: 2000, where: { portal: { equals: portalId } } })).docs as Doc[])
+    ? ((await payload.find({ collection: 'watch-sessions', overrideAccess: true, depth: 0, limit: 2000, where: { portal: { equals: portalId } } })).docs as unknown as Doc[])
     : []
   const classes = portalId ? await classesInPortal(payload, portalId) : []
   const classOf = new Map<number, string>()

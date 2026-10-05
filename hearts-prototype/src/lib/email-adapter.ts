@@ -18,11 +18,19 @@ export function mailTransportOn(env: Record<string, string | undefined> = proces
   return mailTransportMode(env) !== 'off'
 }
 
+function addressOf(item: unknown) {
+  if (typeof item === 'string') return item
+  if (item && typeof item === 'object' && 'address' in item && typeof (item as { address?: unknown }).address === 'string') {
+    return (item as { address: string }).address
+  }
+  return ''
+}
+
 function addresses(value: SendEmailOptions['to']) {
   if (!value) return ''
   if (typeof value === 'string') return value
-  if (Array.isArray(value)) return value.map((item) => (typeof item === 'string' ? item : item.address)).join(', ')
-  return value.address
+  if (Array.isArray(value)) return value.map(addressOf).join(', ')
+  return addressOf(value)
 }
 
 function record(message: SendEmailOptions, from: string) {

@@ -197,7 +197,8 @@ export const Users: CollectionConfig = {
             'fly-client-ip': read('fly-client-ip'),
           },
         })
-        const email = typeof (req as { data?: { email?: unknown } }).data?.email === 'string' ? (req as { data: { email: string } }).data.email : person?.email || ''
+        const rawEmail = (req as { data?: { email?: unknown } }).data?.email
+        const email = typeof rawEmail === 'string' ? rawEmail : person?.email || ''
         const limited = hitAuth('login', clientIp(fake), email)
         if (!limited.allowed) {
           throw new APIError('Too many sign-in tries from here. Wait a few minutes, then try again.', 429, undefined, true)

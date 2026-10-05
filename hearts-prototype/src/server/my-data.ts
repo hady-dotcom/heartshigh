@@ -129,7 +129,7 @@ async function rowsFor(payload: Payload, collection: string, field: string, user
     where: { [field]: { equals: userId } } as never,
   })
   return found.docs.map((doc) => {
-    const row = { ...(doc as Record<string, unknown>) }
+    const row = { ...(doc as unknown as Record<string, unknown>) }
     delete row.hash
     delete row.salt
     delete row.resetPasswordToken
@@ -146,7 +146,7 @@ async function rowsFor(payload: Payload, collection: string, field: string, user
 }
 
 export async function gatherMyData(payload: Payload, userId: number) {
-  const user = (await payload.findByID({ collection: 'users', id: userId, overrideAccess: true, depth: 1 })) as Record<string, unknown>
+  const user = (await payload.findByID({ collection: 'users', id: userId, overrideAccess: true, depth: 1 })) as unknown as Record<string, unknown>
   const profile = {
     name: user.name,
     email: user.email,

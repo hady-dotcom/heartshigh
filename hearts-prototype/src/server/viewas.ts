@@ -88,12 +88,12 @@ export async function endSession(payload: Payload, session: Row, endReason: EndR
   await payload.update({ collection: 'view-as-sessions', id: session.id, overrideAccess: true, data: { endedAt: now().toISOString(), endReason, writeEnabled: false } as never })
   await audit(payload, 'view_as.stop', {
     actor: idOf(session.actor),
-    actorRole: session.actorRole,
+    actorRole: session.actorRole as string | null | undefined,
     target: idOf(session.target),
-    targetRole: session.targetRole,
+    targetRole: session.targetRole as string | null | undefined,
     portal: idOf(session.portal) || undefined,
     sessionId: String(session.id),
-    reason: session.reason,
+    reason: session.reason as string | null | undefined,
     detail: { endReason },
   })
 }
@@ -156,7 +156,7 @@ export async function loadViewAs(payload: Payload, actor: Person | null, token: 
   const patch: Record<string, unknown> = {}
   if (session.writeEnabled && writeUntil && writeUntil <= at) {
     patch.writeEnabled = false
-    await audit(payload, 'view_as.write_off', { actor: actor.id, actorRole: actor.role, target: target!.id, targetRole: target!.role, portal: idOf(session.portal) || undefined, sessionId: String(session.id), reason: session.reason, detail: { why: 'time-up' } })
+    await audit(payload, 'view_as.write_off', { actor: actor.id, actorRole: actor.role, target: target!.id, targetRole: target!.role, portal: idOf(session.portal) || undefined, sessionId: String(session.id), reason: session.reason as string | null | undefined, detail: { why: 'time-up' } })
   }
   if (touch) patch.lastSeenAt = new Date(at).toISOString()
   const fresh = Object.keys(patch).length

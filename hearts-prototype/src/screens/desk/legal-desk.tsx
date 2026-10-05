@@ -61,7 +61,7 @@ export async function MasterHelpRequests(ctx: MasterCtx) {
             <tbody>
               {notes.map((row) => (
                 <tr key={row.id} data-testid="help-row">
-                  <td>{longDate(row.happenedAt || row.createdAt)}</td>
+                  <td>{longDate(typeof row.happenedAt === 'string' ? row.happenedAt : row.createdAt)}</td>
                   <td>{str(row.kind)}</td>
                   <td>{str((row.user as { name?: string; email?: string } | null)?.name || (row.user as { email?: string } | null)?.email)}</td>
                   <td>{str(row.page)}</td>

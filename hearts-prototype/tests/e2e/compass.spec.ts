@@ -16,7 +16,7 @@ test.beforeAll(() => {
     timeout: 180_000,
     env: { ...process.env, DATABASE_URL: database },
   })
-}, { timeout: 180_000 })
+})
 
 test('a learner cannot fetch their own scores from any compass API', async () => {
   const learner = await playwrightRequest.newContext({ baseURL: E2E_BASE })

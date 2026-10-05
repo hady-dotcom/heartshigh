@@ -237,10 +237,10 @@ async function main() {
     const found = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: portal.slug } } })
     const doc = found.docs[0]
       ? portal.timeZone && (found.docs[0] as { timeZone?: string }).timeZone !== portal.timeZone
-        ? await payload.update({ collection: 'portals', id: found.docs[0].id, overrideAccess: true, data: { timeZone: portal.timeZone } })
+        ? await payload.update({ collection: 'portals', id: found.docs[0].id, overrideAccess: true, data: { timeZone: portal.timeZone as string } })
         : found.docs[0]
       : await payload.create({ collection: 'portals', overrideAccess: true, data: portal })
-    portalIds.set(portal.slug, doc.id)
+    portalIds.set(portal.slug, (doc as { id: number }).id)
   }
 
   const courseIds: number[] = []

@@ -206,7 +206,7 @@ export async function recordConsent(
       kind: input.kind,
       version: input.version,
       acceptedAt: now().toISOString(),
-      ipHash: input.req ? hashIp(clientIp(input.req)) : '',
+      ipHash: input.req ? hashIp(clientIp(input.req) || '') : '',
       byGuardian: Boolean(input.byGuardian),
       guardianEmail: input.guardianEmail || undefined,
       staffActor: input.staffActor || undefined,

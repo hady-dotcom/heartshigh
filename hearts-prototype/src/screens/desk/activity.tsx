@@ -171,7 +171,7 @@ async function loadActivity(payload: Ctx['payload'], portalId: number | null, qu
   const to = query.to ? zonedDayRange(query.to, timeZone) : null
   if (from) where.push({ at: { greater_than_equal: from.from } })
   if (to) where.push({ at: { less_than_equal: to.to } })
-  const found = await rows(payload, 'audit-log', where.length ? { and: where } : undefined, { depth: 1, sort: '-at', limit: 200 })
+  const found = await rows(payload, 'audit-log', where.length ? { and: where } as never : undefined, { depth: 1, sort: '-at', limit: 200 })
   return found as unknown as AuditRow[]
 }
 

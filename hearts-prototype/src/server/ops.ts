@@ -53,8 +53,8 @@ export async function systemSnapshot(payload: Payload): Promise<OpsSnapshot> {
     storageStatus(Boolean(readS3())),
     emailTransportStatus(),
     jobsStatus(null),
-    backupStatus(backup),
-    restoreStatus(restore),
+    backupStatus(backup ? { at: backup.at, ok: backup.ok, detail: backup.detail ? JSON.stringify(backup.detail) : null } : null),
+    restoreStatus(restore ? { at: restore.at, ok: restore.ok, detail: restore.detail ? JSON.stringify(restore.detail) : null } : null),
   ]
   return {
     ok: snapshotOk(checks),

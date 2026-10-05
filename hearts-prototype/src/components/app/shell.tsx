@@ -67,14 +67,6 @@ function TabIcon({ tab, on }: { tab: Tab; on: boolean }) {
         <path d="M8 14h.01M12 14h.01M16 14h.01" />
       </svg>
     )
-  if (tab === 'week')
-    return (
-      <svg {...common} className="tab-icon">
-        <rect x="4" y="5" width="16" height="15" rx="2" fill={on ? 'currentColor' : 'none'} fillOpacity={on ? 0.12 : 0} />
-        <path d="M8 3.5v3M16 3.5v3M4 10h16" />
-        <path d="M8 14h2M12 14h2M8 17h2" />
-      </svg>
-    )
   if (tab === 'garden')
     return (
       <svg {...common} className="tab-icon">
