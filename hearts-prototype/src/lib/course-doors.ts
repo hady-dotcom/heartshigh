@@ -35,6 +35,30 @@ export function lessonDoor(input: { lessonTitle: string; courseTitle: string; cu
   return doorOfClause(primaryBestClause(input.cuts), input.doors)
 }
 
-export function showCourseDoorHeading(lessonCount: number, groupCount: number) {
-  return lessonCount > 1 || groupCount > 1
+export function showCourseDoorHeading(input: {
+  lessonCount: number
+  groupCount: number
+  doorMatchesTitle?: boolean
+}) {
+  if (input.groupCount !== 1) return input.groupCount > 1
+  if (input.lessonCount <= 1) return false
+  if (input.doorMatchesTitle === false) return false
+  return true
+}
+
+/** Hide a lone W-code when the course name does not sit in that door (mistagged early cuts). */
+export function courseDoorHeadingVisible(
+  groups: { door: Door | null; items: Array<{ title?: unknown } & Record<string, unknown>> }[],
+  courseTitle: string,
+) {
+  const only = groups.length === 1 ? groups[0] : null
+  const doorMatchesTitle = Boolean(
+    only?.door &&
+      only.items.some((item) => matchDoorTalk(only.door!.number, { title: String(item.title || ''), courseTitle })),
+  )
+  return showCourseDoorHeading({
+    lessonCount: groups.reduce((sum, group) => sum + group.items.length, 0),
+    groupCount: groups.length,
+    doorMatchesTitle,
+  })
 }

@@ -8,7 +8,7 @@ import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
 import { PlayIcon } from '@/components/icons'
 import { clockEnabled, now } from '@/lib/clock'
 import { doorLabel, groupByDoor, type Door } from '@/lib/doors'
-import { lessonDoor, showCourseDoorHeading } from '@/lib/course-doors'
+import { courseDoorHeadingVisible, lessonDoor } from '@/lib/course-doors'
 import { loadDoors } from '@/server/doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { visibleCourseIds } from '@/server/context'
@@ -407,7 +407,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
         <p className="eyebrow">Parts of this course</p>
         {(() => {
           const groups = courseDoors(lessons, partCuts, doors, str(course.title))
-          const heading = showCourseDoorHeading(lessons.length, groups.length)
+          const heading = courseDoorHeadingVisible(groups, str(course.title))
           return groups.map((group) => (
           <section key={group.door?.number || 'open'} className="door-course" data-testid="course-door" data-door={group.door?.number || ''}>
             {heading && group.door ? <h2>{doorLabel(group.door)}</h2> : null}
