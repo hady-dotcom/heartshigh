@@ -36,6 +36,10 @@ const PAGES = [
   'portalEdit',
   'learners',
   'masterSettings',
+  'contacts',
+  'children',
+  'legal',
+  'helpRequests',
 ]
 
 describe('desk help', () => {

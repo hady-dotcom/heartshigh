@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Payload } from 'payload'
 import { EmptyState } from '@/components/app/empty'
-import { COLLECTION_NAMES, commentaryFor, isNewMoment, readableHarvest, type ScholarCitation } from '@/lib/harvest'
+import { COLLECTION_NAMES, commentaryFor, isNewMoment, readableHarvest, replayHref, type ScholarCitation } from '@/lib/harvest'
 import { ayahId as idOfAyah, ayahWindow, surahLabel } from '@/lib/quran-match'
 import { TAFSIR_CREDIT } from '@/lib/tafsir'
 import { getSession } from '@/server/context'
@@ -13,13 +13,6 @@ import { loadDoors } from '@/server/doors'
 import { capitalAfterColon, doorByNumber, doorCode, doorNumberOfClause, type Door } from '@/lib/doors'
 import { partTitle } from '@/lib/talk-title'
 import { resourcesFor, sampleHarvest } from '@/server/harvest'
-
-export const REPLAY_LEAD_SECONDS = 5
-
-export function replayHref(base: string, courseId: number | null, lessonId: number | null, seconds: number) {
-  if (!courseId || !lessonId) return null
-  return `${base}/course/${courseId}?part=${lessonId}&t=${Math.max(0, Math.floor(seconds) - REPLAY_LEAD_SECONDS)}`
-}
 
 function secondsOf(entry: Row) {
   if (typeof entry.seconds === 'number') return entry.seconds

@@ -6,6 +6,7 @@ import { clientIp, hitAnswer } from '@/lib/rate-limit'
 import { getSession } from '@/server/context'
 import { json, readBody, viewAsRefusal } from '@/server/api'
 import { saveAnswer, type AnswerInput } from '@/server/handle'
+import { applyChildAnswerRules, refuseUnconsented } from '@/server/consent-actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,6 +49,8 @@ export async function POST(req: Request) {
   const refused = await viewAsRefusal(session, 'answers', true)
   if (refused) return refused
   const { payload, user } = session
+  const needsConsent = await refuseUnconsented(req, session, 'answer')
+  if (needsConsent) return needsConsent
   const limited = hitAnswer(user.id, clientIp(req))
   if (!limited.allowed) return tooManyAnswers(limited.retryAfterSec, true)
   const body = await readBody(req)
@@ -68,7 +71,12 @@ export async function POST(req: Request) {
     return json({ ok: true, saved: results.filter((row) => row.ok).length, results })
   }
 
-  const result = await saveAnswer(payload, user, inputOf(body, false))
+  const incoming = inputOf(body, false)
+  const child = await applyChildAnswerRules(payload, user, incoming)
+  if (child.error && (incoming.shareWithLearners || incoming.shareWithTeacher) && !child.defaults.answersSavedForTeachers) {
+    return json({ error: child.error }, 403)
+  }
+  const result = await saveAnswer(payload, user, { ...incoming, ...child.input })
   const accept = req.headers.get('accept') || ''
   const page = accept.includes('text/html') && !accept.includes('application/json')
   const next = typeof body.next === 'string' && body.next.startsWith('/') && !body.next.startsWith('//') ? body.next : ''

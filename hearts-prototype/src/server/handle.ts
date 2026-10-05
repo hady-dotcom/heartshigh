@@ -44,6 +44,7 @@ import { pausedSinceMessage, SUSPEND_MESSAGE } from '@/lib/account-rules'
 import { sendQueuedNotification } from './notify-email'
 import { notifyKey } from '@/lib/notify-prefs'
 import { requestOriginAllowed } from '@/lib/env'
+import { handleConsentActions } from './consent-actions'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
@@ -503,6 +504,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   if (account) return account
   const action = text(form, 'action')
   const { payload, user } = session
+  const consentReply = await handleConsentActions(req, form, session)
+  if (consentReply) return consentReply
 
   if (action === 'login') {
     const next = text(form, 'next') || '/'

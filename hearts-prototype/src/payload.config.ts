@@ -9,6 +9,7 @@ import { s3Storage } from '@payloadcms/storage-s3'
 import { buildConfig } from 'payload'
 import { aiCollections } from './collections-ai'
 import { collections } from './collections'
+import { consentCollections } from './collections-consent'
 import { gatherCollections } from './collections-gather'
 import { sheetCollections } from './collections-sheet'
 import { MasterFlags } from './collections-opening'
@@ -42,7 +43,7 @@ export default buildConfig({
       header: ['/components/viewas-admin-banner#ViewAsAdminBanner'],
     },
   },
-  collections: [...collections, ...aiCollections, ...sheetCollections, ...gatherCollections].map((collection) => ({
+  collections: [...collections, ...aiCollections, ...sheetCollections, ...gatherCollections, ...consentCollections].map((collection) => ({
     ...collection,
     hooks: { ...collection.hooks, beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never] },
   })),
@@ -104,6 +105,9 @@ export default buildConfig({
         'gather-checkins': {},
         'gather-reflections': {},
         'gather-photos': {},
+        consents: {},
+        'age-profiles': {},
+        'help-requests': {},
       },
       userHasAccessToAllTenants: (user) => (user as { role?: string } | null)?.role === 'master',
     }),

@@ -41,7 +41,7 @@ export function portalNav(base: string, user: SessionUser, portal?: FeatureSourc
       ]),
     },
     { group: 'People', items: teach },
-    { group: 'Setup', items: [{ key: 'settings', label: 'Settings', href: `${base}/admin/settings`, icon: <CogIcon /> }] },
+    { group: 'Setup', items: [{ key: 'settings', label: 'Settings', href: `${base}/admin/settings`, icon: <CogIcon /> }, { key: 'contacts', label: 'Contacts', href: `${base}/admin/contacts`, icon: <PeopleIcon /> }, { key: 'children', label: 'Children', href: `${base}/admin/children`, icon: <PeopleIcon /> }] },
   ]
 }
 
@@ -72,6 +72,8 @@ export function masterNav(): { group: string; items: NavItem[] }[] {
         { key: 'simulator', label: 'Simulator', href: '/master/simulator', icon: <CogIcon /> },
         { key: 'personas', label: 'Scales and bands', href: '/master/personas', icon: <HeartIcon /> },
         { key: 'trends', label: 'Network trends', href: '/master/trends', icon: <GlobeIcon /> },
+        { key: 'legal', label: 'Legal pages', href: '/master/legal', icon: <BookIcon /> },
+        { key: 'help-requests', label: 'Help requests', href: '/master/help-requests', icon: <QuestionIcon /> },
       ],
     },
   ]
@@ -167,7 +169,7 @@ export async function DeskFrame({
           </form>
         </div>
       </aside>
-      <main className="main">
+      <main className="main" id="main-content" tabIndex={-1}>
         <div className="main-head">
           <div>
             <h1>{title}{help ? <HelpTip topic={testId || active}>{help}</HelpTip> : null}</h1>

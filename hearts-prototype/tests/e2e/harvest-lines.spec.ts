@@ -1,5 +1,6 @@
 import { expect, request as playwrightRequest, test, type Page } from '@playwright/test'
 import { E2E_BASE, seedCode } from '../env'
+import { completeConsent } from './legal-helpers'
 
 // Spoken lines in the harvest: copied from the transcript at the moment a short clip plays, grouped and filtered
 // by the 20 working doors and by speaker, and never counted towards progress.
@@ -69,6 +70,7 @@ test('a fresh learner sees the sample, then a short clip keeps a real line and p
   await joiner.dispose()
 
   await signIn(page, FRESH.email, FRESH.password, `${PORTAL}/garden/general`)
+  await completeConsent(page)
   await page.goto(`${PORTAL}/garden/general`)
   await expect(page.getByTestId('stat-sittings')).toHaveText('0')
   await page.goto(`${PORTAL}/garden/harvest`)

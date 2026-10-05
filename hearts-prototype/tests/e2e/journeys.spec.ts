@@ -28,11 +28,8 @@ async function signIn(page: Page, email: string, password: string, next: string)
 }
 
 async function join(page: Page, code: string, name: string, email: string, password: string) {
-  await page.goto(`/join?code=${code}`)
-  await page.getByTestId('join-name').fill(name)
-  await page.getByTestId('join-email').fill(email)
-  await page.getByTestId('join-password').fill(password)
-  await page.getByTestId('join-submit').click()
+  const { joinWithConsent } = await import('./legal-helpers')
+  await joinWithConsent(page, code, name, email, password)
 }
 
 async function placing(page: Page, picks: string[]) {

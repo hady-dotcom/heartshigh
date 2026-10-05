@@ -102,7 +102,7 @@ async function ensureUser(payload: Awaited<ReturnType<typeof getPayload>>, data:
 /** The e2e database keeps its codes in its own file, so the codes `npm run go` printed stay true. */
 function codesFile() {
   const url = process.env.DATABASE_URL || ''
-  if (/hearts-test\.db/.test(url) || process.env.HEARTS_E2E_DATABASE) return 'data/seed-codes-test.json'
+  if (/hearts-test\.db/.test(url) || /hearts_e2e/.test(url) || process.env.HEARTS_E2E_DATABASE || process.env.HEARTS_E2E === '1') return 'data/seed-codes-test.json'
   return 'data/seed-codes.json'
 }
 
@@ -533,6 +533,8 @@ async function main() {
   await seedSpeakers(payload)
   if (!startersOnly) await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...courseIds, ...opening.starterCourseIds] })
   await seedHarvest(payload, { now: new Date(), demo: !startersOnly })
+  const { seedLegal } = await import('./legal')
+  await seedLegal(payload)
   if (!startersOnly) {
     const { seedDemoHarvest } = await import('./harvest-seed')
     await seedDemoHarvest(payload)

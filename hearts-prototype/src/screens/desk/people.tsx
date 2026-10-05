@@ -111,7 +111,7 @@ export async function TeachScreen(ctx: Ctx) {
                   </tr>
                 )
               })}
-              {!learners.length ? <tr><td colSpan={8} className="empty">Nobody has joined with a learner code yet.</td></tr> : null}
+              {!learners.length ? <tr><td colSpan={9} className="empty">Nobody has joined with a learner code yet.</td></tr> : null}
             </tbody>
           </table>
         </div>

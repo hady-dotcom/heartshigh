@@ -23,13 +23,15 @@ const LEARNER: Record<string, string> = {
     'Your portal asks people to confirm their email before they go further. Check your inbox, or send the link again. You can still sign out.',
 }
 
-export function PageHelp({ topic, label }: { topic: keyof typeof LEARNER | string; label?: string }) {
-  const text = LEARNER[topic]
+export function PageHelp({ topic, label, children }: { topic: keyof typeof LEARNER | string; label?: string; children?: string }) {
+  const text = children || LEARNER[topic]
   if (!text) return null
   return (
-    <HelpTip topic={topic} label={label || 'What is this?'}>
-      {text}
-    </HelpTip>
+    <span className="page-help" data-help={topic} data-testid="page-help">
+      <HelpTip topic={topic} label={label || (children ? 'What is this page?' : 'What is this?')}>
+        {text}
+      </HelpTip>
+    </span>
   )
 }
 

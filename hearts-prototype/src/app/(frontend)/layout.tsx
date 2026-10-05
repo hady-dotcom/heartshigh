@@ -1,3 +1,4 @@
+import './fonts-local.css'
 import './globals.css'
 import './app.css'
 import './desk.css'
@@ -12,6 +13,7 @@ import { installBootScript } from '@/lib/install-prompt'
 import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import { ViewAsBanner } from '@/components/viewas-banner'
+import { SkipLink } from '@/components/app/skip-link'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,16 +47,13 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="en-GB" suppressHydrationWarning>
       <head>
+        <link rel="preload" href="/fonts/cormorant-garamond-600.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <script dangerouslySetInnerHTML={{ __html: themeBootScript() }} />
         <script dangerouslySetInnerHTML={{ __html: installBootScript() }} />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700;800&family=Libre+Caslon+Text:wght@400;700&family=Noto+Naskh+Arabic:wght@500;600&display=swap"
-          rel="stylesheet"
-        />
       </head>
       <body>
+        <SkipLink />
         <ViewAsBanner />
         {children}
       </body>

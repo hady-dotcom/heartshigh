@@ -12,7 +12,7 @@
 .app.dark { background: var(--night); color: #fff; }
 .app-scroll { padding: calc(14px + var(--safe-top)) 18px calc(104px + var(--safe-bottom)); }
 .app-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; margin-bottom: 10px; }
-.app-head h1 { font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+.app-head h1 { font-family: var(--serif); font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
 .back { display: inline-flex; align-items: center; gap: 4px; font-weight: 650; font-size: 16px; color: var(--ink-2); text-decoration: none; min-height: 44px; }
 .eyebrow { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; color: var(--muted); margin: 22px 0 10px; }
 .lead { color: var(--ink-2); font-size: 15px; line-height: 1.55; margin: 0 0 14px; }
@@ -637,18 +637,27 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
    Dawn must not wash them back to mint or pale cream. */
 :is(html, html[data-theme]) .app-stage.evening:has([data-testid="course"]),
 :is(html, html[data-theme]) .app-stage.evening:has([data-testid="garden-workbook"]),
-:is(html, html[data-theme]) .app-stage.evening:has([data-testid="plan"]) {
+:is(html, html[data-theme]) .app-stage.evening:has([data-testid="plan"]),
+:is(html, html[data-theme]) .app-stage.evening:has([data-testid="consent"]),
+:is(html, html[data-theme]) .app-stage.evening:has([data-testid="search"]),
+:is(html, html[data-theme]) .app-stage.evening:has([data-testid="help-request"]) {
   background: #0e2a2b;
 }
 :is(html, html[data-theme]) main.app.evening[data-testid="course"],
 :is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"],
-:is(html, html[data-theme]) main.app.evening[data-testid="plan"] {
+:is(html, html[data-theme]) main.app.evening[data-testid="plan"],
+:is(html, html[data-theme]) main.app.evening[data-testid="consent"],
+:is(html, html[data-theme]) main.app.evening[data-testid="search"],
+:is(html, html[data-theme]) main.app.evening[data-testid="help-request"] {
   background: #0e2a2b;
   color: #f6eedc;
 }
 :is(html, html[data-theme]) main.app.evening[data-testid="course"] .app-scroll,
 :is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .app-scroll,
-:is(html, html[data-theme]) main.app.evening[data-testid="plan"] .app-scroll {
+:is(html, html[data-theme]) main.app.evening[data-testid="plan"] .app-scroll,
+:is(html, html[data-theme]) main.app.evening[data-testid="consent"] .app-scroll,
+:is(html, html[data-theme]) main.app.evening[data-testid="search"] .app-scroll,
+:is(html, html[data-theme]) main.app.evening[data-testid="help-request"] .app-scroll {
   background:
     linear-gradient(180deg, rgba(10, 40, 40, 0.55), rgba(7, 28, 28, 0.82)),
     url('/theme/evening-courtyard.jpg') center / cover no-repeat;
@@ -657,10 +666,47 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 :is(html, html[data-theme]) main.app.evening[data-testid="course"] .app-head h1,
 :is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .app-head h1,
 :is(html, html[data-theme]) main.app.evening[data-testid="plan"] .app-head h1,
+:is(html, html[data-theme]) main.app.evening[data-testid="consent"] .app-head h1,
+:is(html, html[data-theme]) main.app.evening[data-testid="search"] .app-head h1,
+:is(html, html[data-theme]) main.app.evening[data-testid="help-request"] .app-head h1,
 :is(html, html[data-theme]) main.app.evening[data-testid="course"] .back,
 :is(html, html[data-theme]) main.app.evening[data-testid="garden-workbook"] .back,
-:is(html, html[data-theme]) main.app.evening[data-testid="plan"] .back {
+:is(html, html[data-theme]) main.app.evening[data-testid="plan"] .back,
+:is(html, html[data-theme]) main.app.evening[data-testid="consent"] .back,
+:is(html, html[data-theme]) main.app.evening[data-testid="search"] .back,
+:is(html, html[data-theme]) main.app.evening[data-testid="help-request"] .back {
   color: #f6eedc;
+  font-family: var(--serif);
+}
+:is(html, html[data-theme]) main.app.evening[data-testid="consent"] .card,
+:is(html, html[data-theme]) main.app.evening[data-testid="consent"] .consent-card {
+  background: #163633;
+  color: #f6eedc;
+  border: 1px solid rgba(212, 168, 75, 0.42);
+  backdrop-filter: none;
+  box-shadow: none;
+}
+:is(html, html[data-theme]) main.app.evening[data-testid="consent"] .card,
+:is(html, html[data-theme]) main.app.evening[data-testid="consent"] .card p,
+:is(html, html[data-theme]) main.app.evening[data-testid="consent"] .card b,
+:is(html, html[data-theme]) main.app.evening[data-testid="consent"] .lede,
+:is(html, html[data-theme]) main.app.evening[data-testid="consent"] .muted,
+:is(html, html[data-theme]) main.app.evening[data-testid="consent"] .consent-line,
+:is(html, html[data-theme]) main.app.evening[data-testid="consent"] .age-band,
+:is(html, html[data-theme]) main.app.evening[data-testid="consent"] legend {
+  color: #f6eedc;
+}
+:is(html, html[data-theme]) main.app.evening[data-testid="consent"] .card a,
+:is(html, html[data-theme]) main.app.evening[data-testid="consent"] a {
+  color: #d4a84b;
+}
+:is(html, html[data-theme]) main.app.evening[data-testid="search"] .list-link,
+:is(html, html[data-theme]) main.app.evening[data-testid="search"] .list-link small,
+:is(html, html[data-theme]) main.app.evening[data-testid="search"] .muted {
+  color: #f6eedc;
+}
+:is(html, html[data-theme]) main.app.evening[data-testid="search"] .search-hit-time {
+  color: #d4a84b;
 }
 :is(html, html[data-theme]) main.app.evening[data-testid="course"] .card,
 :is(html, html[data-theme]) main.app.evening[data-testid="plan"] .card,

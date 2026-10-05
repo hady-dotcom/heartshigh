@@ -1,5 +1,6 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 import { E2E_BASE, seedCode } from '../env'
+import { acceptConsentViaApi } from './legal-helpers'
 import { horsNestingProblem } from '../../src/lib/tiers'
 
 // The product rule. A full talk holds its appetiser and the appetiser holds its hors d'oeuvre, each linking up to
@@ -60,6 +61,7 @@ test.beforeAll(async () => {
   expect(loc(await form(joiner, { action: 'join', code: seedCode('elm-learner'), ...LEARNER }))).not.toContain('error=')
   await joiner.dispose()
   learner = await as(LEARNER.email, LEARNER.password)
+  expect((await acceptConsentViaApi(learner)).status()).toBe(303)
 })
 
 test.afterAll(async () => {

@@ -35,6 +35,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
     ['circle', featureOn(portal, 'gather') ? 'Circle and nights' : 'Circle', featureOn(portal, 'gather') ? 'Your board, and the evenings you can come to' : 'Your board', 'me/circle'],
     ...(featureOn(portal, 'workbook') ? [['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'] as [string, string, string, string]] : []),
     ['settings', 'Settings', 'Night alerts, watch history and signing out', 'me/settings'],
+    ['help', 'Get help', 'Something broken, a learning question, or something worrying', 'me/help'],
   ]
   if (user.role !== 'learner') links.unshift(['desk', 'Portal desk', 'Courses, codes and learners', 'admin'])
   return (
@@ -317,6 +318,12 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
         <section className="card">
           <h3>On this device</h3>
           <p>The speakers you follow, and the clips you like or save, are kept on this phone only.</p>
+        </section>
+        <section className="card" data-testid="settings-legal">
+          <h3>How we look after each other</h3>
+          <p>What we keep, the short rules, and how we speak here.</p>
+          <p><Link href={`${base}/privacy`}>Privacy</Link> · <Link href={`${base}/terms`}>Terms</Link> · <Link href={`${base}/guidelines`}>How we speak</Link></p>
+          <p><Link href={`${base}/me/help`} data-testid="settings-help">Get help</Link></p>
         </section>
         <form action="/api/hearts" method="post" style={{ marginTop: 14 }}>
           <Hidden fields={{ action: 'logout' }} />

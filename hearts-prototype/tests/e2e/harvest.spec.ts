@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { expect, request as playwrightRequest, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 import { E2E_BASE, seedCode } from '../env'
+import { acceptConsentViaApi } from './legal-helpers'
 
 // Harvest: a learner finishes a talk and gets its verses and hadith, word for word, with the real text.
 
@@ -51,6 +52,7 @@ test.beforeAll(async () => {
   expect(loc(await joiner.post('/api/hearts', { form: { action: 'join', code: seedCode('elm-learner'), ...LEARNER }, maxRedirects: 0 }))).not.toContain('error=')
   await joiner.dispose()
   const learner = await as(LEARNER.email, LEARNER.password)
+  expect((await acceptConsentViaApi(learner)).status()).toBe(303)
   expect(loc(await learner.post('/api/hearts', { form: { action: 'complete', lesson: String(lesson.id), seconds: '90', ended: 'yes', next: '/' }, maxRedirects: 0 }))).not.toContain('error=')
   await learner.dispose()
 })

@@ -33,6 +33,14 @@ export const PAGE: Record<string, string> = {
     'Each step is one job the model does after a talk is ingested. Edit the prompt, try it on a single talk, then mark a version live. Re-runs land as drafts on Review and leave approved work where it is.',
   settings:
     'These details are what people see: the name, welcome line, logo, time zone and the short films at the door. Sharing choices decide whether learners can see answers others chose to share. Save before you leave.',
+  contacts:
+    'Who people can turn to: a privacy contact and a safeguarding lead, with a name and a way to write. Fill these in before learners arrive. Lane C uses the safeguarding lead.',
+  children:
+    'This panel is for under-13s and the codes meant for them. Tick paper consent when the school already has it. A waiting child can watch; their answers stay with them.',
+  legal:
+    'The privacy notice, terms and guidelines live here as drafts until an adviser signs them off. A new published version asks learners to agree again.',
+  helpRequests:
+    'Notes from Get help land here for the master desk. Something broken stays with HEARTS. A learning question is for the teacher. Something worrying is for the people who look after safety.',
   wizard:
     'Three short steps get the portal ready: a welcome line, an optional first course, then you are done. You can run this again from Settings. Nothing here deletes what you already made.',
   portals:
@@ -164,7 +172,7 @@ export const TOOL: Record<string, string> = {
     'A code from an app on your phone, as well as your password. Master and portal admins need this, because they can see children’s answers. Backup codes each work once.',
 }
 
-const TEST_IDS: Record<string, string> = {
+export const TEST_IDS: Record<string, string> = {
   'admin-overview': 'overview',
   'admin-teach': 'teach',
   'feedback-desk': 'feedback',
@@ -186,6 +194,11 @@ const TEST_IDS: Record<string, string> = {
   'admin-access': 'access',
   'admin-opening': 'opening',
   'admin-settings': 'settings',
+  'admin-contacts': 'contacts',
+  'admin-children': 'children',
+  'master-legal': 'legal',
+  'master-help-requests': 'helpRequests',
+  'help-requests': 'helpRequests',
   wizard: 'wizard',
   'ai-registry': 'ai',
   'ai-step-page': 'ai',
@@ -213,7 +226,7 @@ const TEST_IDS: Record<string, string> = {
 /** Page copy for a desk frame, from the nav key or the screen test id. */
 export function pageHelp(active?: string, testId?: string) {
   if (testId && PAGE[TEST_IDS[testId] || testId]) return PAGE[TEST_IDS[testId] || testId]
-  if (active && PAGE[active]) return PAGE[active]
+  if (active && PAGE[TEST_IDS[active] || active]) return PAGE[TEST_IDS[active] || active]
   return ''
 }
 

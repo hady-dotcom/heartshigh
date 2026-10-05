@@ -1,5 +1,6 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext, type Page, type Request } from '@playwright/test'
 import { E2E_BASE } from '../env'
+import { completeConsent } from './legal-helpers'
 
 // The opening, "Shine and dust" (psychometric-opening-build-spec section 8, browser tests).
 // Every test starts in a fresh browser context, so the device holds nothing until the test taps.
@@ -239,6 +240,7 @@ test.describe('the opening', () => {
     await expect(page.getByTestId('toast')).toContainText('Your place is kept')
     expect(openings).toHaveLength(1)
     expect(JSON.parse(openings[0]).taps).toHaveLength(6)
+    await completeConsent(page)
     await page.goto(`/p/${PORTAL}/garden/workbook`)
     await expect(page.getByTestId('where-you-started')).toBeVisible()
     await expect(page.getByTestId('opening-row')).toHaveCount(6)
@@ -335,6 +337,7 @@ test.describe('the opening', () => {
     await page.getByTestId('keep-password').fill('again-pass')
     await page.getByTestId('keep-submit').click()
     await expect(page.getByTestId('toast')).toContainText('Your place is kept')
+    await completeConsent(page)
     await page.goto(`/p/${PORTAL}/me`)
     await page.getByTestId('start-again').click()
     await page.getByTestId('start-again-yes').click()

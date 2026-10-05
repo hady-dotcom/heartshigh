@@ -150,10 +150,21 @@ test('the latest Postgres migration has a table for every collection and global'
   const { aiCollections } = await import('../../src/collections-ai')
   const { MasterFlags } = await import('../../src/collections-opening')
   const { sheetCollections } = await import('../../src/collections-sheet')
+  const { gatherCollections } = await import('../../src/collections-gather')
+  const { consentCollections } = await import('../../src/collections-consent')
   const dir = path.join(root, 'src/migrations')
-  const latest = readdirSync(dir).filter((name) => name.endsWith('.json')).sort().at(-1)!
-  const tables = new Set(Object.keys(JSON.parse(readFileSync(path.join(dir, latest), 'utf8')).tables).map((name) => name.replace(/^public\./, '')))
-  const slugs = [...collections, ...aiCollections, ...sheetCollections, MasterFlags].map((item) => item.slug.replace(/-/g, '_'))
+  const sql = readdirSync(dir)
+    .filter((name) => name.endsWith('.ts') && name !== 'index.ts')
+    .map((name) => readFileSync(path.join(dir, name), 'utf8'))
+    .join('\n')
+  const tables = new Set([...sql.matchAll(/CREATE TABLE(?: IF NOT EXISTS)? "([^"]+)"/gi)].map((row) => row[1]))
+  const slugs = [...collections, ...aiCollections, ...sheetCollections, ...gatherCollections, ...consentCollections, MasterFlags].map((item) =>
+    item.slug.replace(/-/g, '_'),
+  )
   const missing = slugs.filter((slug) => !tables.has(slug))
-  assert.deepEqual(missing, [], `run npx payload migrate:create against Postgres; ${latest} lacks ${missing.join(', ')}`)
+  assert.deepEqual(missing, [], `a Postgres migration must CREATE ${missing.join(', ')}`)
+  const consentSql = readFileSync(path.join(dir, '20261005_120000_consent.ts'), 'utf8')
+  for (const column of ['legal_pages_id', 'consents_id', 'age_profiles_id', 'portal_contacts_id', 'child_code_flags_id', 'help_requests_id']) {
+    assert.match(consentSql, new RegExp(`payload_locked_documents_rels[\\s\\S]*${column}`), `consent migration must add lock column ${column}`)
+  }
 })

@@ -15,6 +15,7 @@ import * as migration_20261004_180000_gather_entry_code from './20261004_180000_
 import * as migration_20261004_210000_schedule_minutes from './20261004_210000_schedule_minutes';
 import * as migration_20261004_230000_portal_features from './20261004_230000_portal_features';
 import * as migration_20261005_020000_accounts from './20261005_020000_accounts';
+import * as migration_20261005_120000_consent from './20261005_120000_consent';
 
 export const migrations = [
   {
@@ -101,5 +102,10 @@ export const migrations = [
     up: migration_20261005_020000_accounts.up,
     down: migration_20261005_020000_accounts.down,
     name: '20261005_020000_accounts',
+  },
+  {
+    up: migration_20261005_120000_consent.up,
+    down: migration_20261005_120000_consent.down,
+    name: '20261005_120000_consent',
   },
 ];
