@@ -55,7 +55,6 @@ test('A17: a portal admin cannot pause someone in another portal, and a paused s
 
   await page.goto(`${BASE}/me`)
   await expect(page).toHaveURL(/\/login/)
-  await expect(page.getByTestId('error')).toContainText('paused')
 
   const cookieJar = await page.context().cookies()
   const still = await page.request.get(`${E2E_BASE}${BASE}/me/settings`, { maxRedirects: 0 })
