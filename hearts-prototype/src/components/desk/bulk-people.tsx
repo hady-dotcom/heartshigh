@@ -74,5 +74,5 @@ export function BulkPeopleBar({
 }
 
 export function PersonTick({ id }: { id: number }) {
-  return <input type="checkbox" name="person" value={id} form="bulk-people-form" data-testid="person-tick" data-person={id} />
+  return <input type="checkbox" name="person" value={id} form="bulk-people-form" data-testid="person-tick" data-person={id} style={{ flexShrink: 0, marginTop: 3 }} />
 }

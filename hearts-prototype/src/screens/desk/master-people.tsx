@@ -70,17 +70,21 @@ export async function MasterPeopleScreen(ctx: MasterCtx) {
             </summary>
             <div className="table-wrap">
               <table className="data">
-                <thead><tr><th /><th>Name</th><th>Email</th><th>Code</th></tr></thead>
+                <thead><tr><th>Name</th><th>Email</th><th>Code</th></tr></thead>
                 <tbody>
                   {byRole[role].map((person) => (
                     <tr key={person.id} data-testid="people-row">
-                      <td><PersonTick id={person.id} /></td>
-                      <td><b>{str(person.name)}</b></td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', minWidth: 0 }}>
+                          <PersonTick id={person.id} />
+                          <b style={{ minWidth: 0 }}>{str(person.name)}</b>
+                        </div>
+                      </td>
                       <td>{str(person.email)}</td>
                       <td>{str(codes.find((code) => code.id === idOf(person.accessCode))?.code)}</td>
                     </tr>
                   ))}
-                  {!byRole[role].length ? <tr><td colSpan={4} className="empty">None in this group.</td></tr> : null}
+                  {!byRole[role].length ? <tr><td colSpan={3} className="empty">None in this group.</td></tr> : null}
                 </tbody>
               </table>
             </div>

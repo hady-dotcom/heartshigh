@@ -80,7 +80,6 @@ export async function TeachScreen(ctx: Ctx) {
         <div className="table-wrap">
           <table className="data">
             <thead><tr>
-              {user.role !== 'teacher' ? <th /> : null}
               <th>Name</th>
               <th>Email</th>
               <th className="num">Day</th>
@@ -97,8 +96,14 @@ export async function TeachScreen(ctx: Ctx) {
                 const onTime = formatOnTime(progress)
                 return (
                   <tr key={learner.id} data-testid="learner-row">
-                    {user.role !== 'teacher' ? <td><PersonTick id={learner.id} /></td> : null}
-                    <td><b>{str(learner.name)}</b>{learner.audience && learner.audience !== 'learner' ? <div className="hint">{str(learner.audience)}</div> : null}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', minWidth: 0 }}>
+                        {user.role !== 'teacher' ? <PersonTick id={learner.id} /> : null}
+                        <div style={{ minWidth: 0 }}>
+                          <b>{str(learner.name)}</b>{learner.audience && learner.audience !== 'learner' ? <div className="hint">{str(learner.audience)}</div> : null}
+                        </div>
+                      </div>
+                    </td>
                     <td className="email-cell"><span title={str(learner.email)} data-testid="learner-email">{str(learner.email)}</span></td>
                     <td className="num">{dayNumber(learner as never)}</td>
                     <td className="num" data-testid="learner-progress">{done.length}</td>
@@ -120,7 +125,7 @@ export async function TeachScreen(ctx: Ctx) {
                   </tr>
                 )
               })}
-              {!learners.length ? <tr><td colSpan={user.role !== 'teacher' ? 9 : 8} className="empty">Nobody has joined with a learner code yet.</td></tr> : null}
+              {!learners.length ? <tr><td colSpan={8} className="empty">Nobody has joined with a learner code yet.</td></tr> : null}
             </tbody>
           </table>
         </div>
