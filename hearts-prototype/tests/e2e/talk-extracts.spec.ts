@@ -85,7 +85,8 @@ test('admin timeline nests hors under their appetiser, and Learn more opens that
     mkdirSync(PROOF, { recursive: true })
     await page.screenshot({ path: `${PROOF}/admin-timeline.png`, fullPage: true })
 
-    const cut = ((await json(master, `/api/cuts?where[lesson][equals]=${lesson.id}&limit=10&depth=0`)).docs || [])[0] as { id: number } | undefined
+    const cuts = ((await json(master, `/api/cuts?where[lesson][equals]=${lesson.id}&limit=20&depth=0`)).docs || []) as { id: number; placeholder?: boolean; start?: number; status?: string }[]
+    const cut = cuts.find((row) => row.placeholder) || [...cuts].filter((row) => row.status === 'approved').sort((a, b) => Number(a.start) - Number(b.start) || a.id - b.id)[0]
     await page.setViewportSize(PHONE)
     await page.route(/youtube|ytimg|googlevideo/, (route) => route.abort())
     await signIn(page, 'elm-learner@hearts.test', 'portal-learner', cut ? `${PORTAL}/feed?clip=${cut.id}` : `${PORTAL}/feed`)

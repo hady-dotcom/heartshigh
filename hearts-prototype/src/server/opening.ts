@@ -40,6 +40,8 @@ export type OpeningData = {
   starters: Record<string, FeedItem>
   /** Display data for every routable clip, so the device can build its own feed and keep its taps to itself. */
   clips: Record<string, FeedItem>
+  /** Old cut ids that now stand for the talk's one carrier clip. */
+  alias: Record<string, number>
   laneTitles: Record<string, string>
   trendsPrompt: boolean
   /** Bucket origin for the photographic stills. Empty in local dev, which keeps the six bundled stills. */
@@ -231,7 +233,7 @@ function cutInfos(data: Loaded, portal: PortalDoc): CutInfo[] {
         approved: cut.status === 'approved',
         placeholder: Boolean(cut.placeholder),
         withheld: cut.status === 'rejected',
-        hasHors: data.tiers.some((tier) => idOf(tier.lesson) === idOf(cut.lesson)) || data.extracts.some((row) => row.kind === 'hors' && row.lesson === idOf(cut.lesson) && extractVisible(row, data.showUnchecked)) || data.ladder.some((item) => item.kind === 'hors' && idOf(item.lesson) === idOf(cut.lesson) && Number(item.start) >= Number(cut.start) - 1 && Number(item.end) <= Number(cut.end) + 1),
+        hasHors: data.tiers.some((tier) => idOf(tier.lesson) === idOf(cut.lesson)) || data.extracts.some((row) => row.kind === 'hors' && Number(row.lesson) === Number(idOf(cut.lesson)) && extractVisible(row, data.showUnchecked)) || data.ladder.some((item) => item.kind === 'hors' && idOf(item.lesson) === idOf(cut.lesson) && Number(item.start) >= Number(cut.start) - 1 && Number(item.end) <= Number(cut.end) + 1),
         portalOwn: Boolean(course && course.origin === 'local' && idOf(course.portal) === portal.id),
         starter: starters.get(cut.id),
       }
@@ -532,6 +534,11 @@ export async function loadOpening(payload: Payload, portal: PortalDoc, user: Ses
     const item = row ? itemFor(data, row, info.starter?.lane || null, laneTitles, index) : null
     if (item) clips[String(info.id)] = presentClips([item], data.showUnchecked)[0] || item
   }
+  const alias: Record<string, number> = {}
+  for (const [from, to] of data.alias) {
+    alias[String(from)] = to
+    if (clips[String(to)] && !clips[String(from)]) clips[String(from)] = clips[String(to)]
+  }
   return {
     portal: portal.slug,
     scenesVersion: Math.max(1, ...scenes.map((scene) => (scene as SceneDef & { version: number }).version)),
@@ -542,6 +549,7 @@ export async function loadOpening(payload: Payload, portal: PortalDoc, user: Ses
     route: { lanes, cuts, d0CutId, allowSuggested: process.env.HEARTS_ALLOW_SUGGESTED_LANES === '1', showUnchecked: data.showUnchecked },
     starters,
     clips,
+    alias,
     laneTitles,
     trendsPrompt: own?.trendsContributionPrompt !== false && master?.trendsContributionPrompt !== false,
     backgroundsBaseUrl: readBackgroundsBaseUrl(),

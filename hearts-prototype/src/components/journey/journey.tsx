@@ -4,7 +4,22 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
-import { presentClips } from '@/lib/extracts'
+import { extractVisible, presentClips } from '@/lib/extracts'
+
+function clipFromOpening(opening: OpeningData, id: number | string | null | undefined) {
+  if (id == null || id === '') return undefined
+  const direct = opening.clips[String(id)]
+  if (direct) return direct
+  const aliased = opening.alias?.[String(id)]
+  return aliased != null ? opening.clips[String(aliased)] : undefined
+}
+
+function extractIdOf(item: FeedItem | null | undefined) {
+  if (!item) return ''
+  if (item.extractId != null) return String(item.extractId)
+  const hors = (item.extracts || []).find((row) => row.kind === 'hors' && extractVisible(row))
+  return hors?.id != null ? String(hors.id) : ''
+}
 import { mixFeed } from '@/lib/feed-mix'
 import { learnMoreTarget, settleOnLevel, swipeTarget, type Swipe } from '@/lib/feed-nav'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
@@ -496,14 +511,14 @@ export function Journey(props: JourneyProps) {
       if (!route.items.length) route = buildFeed({ ...planFrom(state, local, { justShow }), served: [], spinePointer: 0 }, local)
       const clips = route.items
         .map((slot): FeedItem | null => {
-          const clip = opening.clips[String(slot.cutId)]
+          const clip = clipFromOpening(opening, slot.cutId)
           if (!clip) return null
           return slot.laneKey ? { ...clip, laneKey: slot.laneKey, lane: slot.laneKey, laneLabel: opening.laneTitles[slot.laneKey] || clip.laneLabel } : { ...clip, laneKey: null }
         })
         .filter((clip): clip is FeedItem => Boolean(clip))
       return { items: route.items, clips, spinePointer: route.spinePointer }
     },
-    [ctx, opening.clips, opening.laneTitles],
+    [ctx, opening.alias, opening.clips, opening.laneTitles],
   )
 
   const adopt = useCallback(
@@ -550,7 +565,7 @@ export function Journey(props: JourneyProps) {
           const own = laneClips(opening.clips, opening.route.cuts, props.lane, opening.laneTitles[props.lane] || props.lane)
           if (own.length) clips = [...own, ...clips.filter((clip) => !own.some((row) => row.cutId === clip.cutId))]
         }
-        const asked = props.clip ? opening.clips[String(props.clip)] : undefined
+        const asked = clipFromOpening(opening, props.clip)
         if (asked) {
           clips = [{ ...asked, laneKey: null }, ...clips.filter((clip) => clip.cutId !== asked.cutId)]
           if (props.play === 'appetiser') firstMode = 'appetiser'
@@ -1525,7 +1540,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-extract={item?.extractId ?? ''} data-parent-extract={item?.parentExtractId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined}>
+    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-extract={extractIdOf(item)} data-parent-extract={item?.parentExtractId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined}>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />
