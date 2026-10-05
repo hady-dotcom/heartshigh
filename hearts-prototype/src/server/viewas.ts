@@ -3,6 +3,9 @@ import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
 import { cookiesSecure } from '@/lib/env'
 import { idOf, portalIdOf } from '@/lib/ids'
+import { audit } from './audit'
+
+export { audit }
 
 export const VIEWAS_COOKIE = 'hearts_viewas'
 export const IDLE_MS = 15 * 60_000
@@ -11,7 +14,7 @@ export const WRITE_MS = 10 * 60_000
 export const MIN_REASON = 10
 export const READ_ONLY = 'VIEW_AS_READ_ONLY'
 
-type Person = { id: number; role?: string | null; name?: string | null; email?: string | null; tenants?: { tenant?: unknown }[]; removed?: boolean | null }
+type Person = { id: number; role?: string | null; name?: string | null; email?: string | null; tenants?: { tenant?: unknown }[]; removed?: boolean | null; suspendedAt?: string | null }
 type Row = Record<string, unknown> & { id: number }
 
 export type EndReason = 'exit' | 'idle-timeout' | 'max-timeout' | 'replaced' | 'actor-signed-out' | 'role-changed' | 'target-removed' | 'portal-closed'
@@ -58,10 +61,6 @@ export function hashIp(ip: string | null | undefined) {
   return createHash('sha256').update(`${process.env.PAYLOAD_SECRET || 'hearts'}:${ip}`).digest('hex').slice(0, 16)
 }
 
-export async function audit(payload: Payload, event: string, fields: Record<string, unknown>) {
-  await payload.create({ collection: 'audit-log', overrideAccess: true, data: { event, at: now().toISOString(), ...fields } as never })
-}
-
 /** The table in spec 6A. Returns null when allowed, or the reason it is not. */
 export function refusal(actor: Person, target: Person | null) {
   if (!target) return 'There is nobody with that id.'
@@ -89,12 +88,12 @@ export async function endSession(payload: Payload, session: Row, endReason: EndR
   await payload.update({ collection: 'view-as-sessions', id: session.id, overrideAccess: true, data: { endedAt: now().toISOString(), endReason, writeEnabled: false } as never })
   await audit(payload, 'view_as.stop', {
     actor: idOf(session.actor),
-    actorRole: session.actorRole,
+    actorRole: session.actorRole as string | null | undefined,
     target: idOf(session.target),
-    targetRole: session.targetRole,
+    targetRole: session.targetRole as string | null | undefined,
     portal: idOf(session.portal) || undefined,
     sessionId: String(session.id),
-    reason: session.reason,
+    reason: session.reason as string | null | undefined,
     detail: { endReason },
   })
 }
@@ -142,7 +141,7 @@ export async function loadViewAs(payload: Payload, actor: Person | null, token: 
   else if (at > lastSeenAt + IDLE_MS) reason = 'idle-timeout'
   const target = (await payload.findByID({ collection: 'users', id: idOf(session.target) || 0, overrideAccess: true, depth: 0 }).catch(() => null)) as Person | null
   if (!reason) {
-    if (!target || target.removed) reason = 'target-removed'
+    if (!target || target.removed || target.suspendedAt) reason = 'target-removed'
     else if (actor.role !== session.actorRole || target.role !== session.targetRole) reason = 'role-changed'
   }
   if (!reason && idOf(session.portal)) {
@@ -157,7 +156,7 @@ export async function loadViewAs(payload: Payload, actor: Person | null, token: 
   const patch: Record<string, unknown> = {}
   if (session.writeEnabled && writeUntil && writeUntil <= at) {
     patch.writeEnabled = false
-    await audit(payload, 'view_as.write_off', { actor: actor.id, actorRole: actor.role, target: target!.id, targetRole: target!.role, portal: idOf(session.portal) || undefined, sessionId: String(session.id), reason: session.reason, detail: { why: 'time-up' } })
+    await audit(payload, 'view_as.write_off', { actor: actor.id, actorRole: actor.role, target: target!.id, targetRole: target!.role, portal: idOf(session.portal) || undefined, sessionId: String(session.id), reason: session.reason as string | null | undefined, detail: { why: 'time-up' } })
   }
   if (touch) patch.lastSeenAt = new Date(at).toISOString()
   const fresh = Object.keys(patch).length
@@ -219,7 +218,7 @@ export async function setWrite(payload: Payload, viewAs: ViewAs, on: boolean, re
 }
 
 /** Things a viewer may never do as the learner, whether or not changes are allowed (spec 6A). */
-export const NEVER_ACTIONS = new Set(['join', 'answer', 'reply', 'start-again', 'keep-place', 'share-opening', 'delete-account', 'change-email', 'change-password', 'opening-answers', 'heart-state', 'popup-answer', 'workbook-consent'])
+export const NEVER_ACTIONS = new Set(['join', 'answer', 'reply', 'start-again', 'keep-place', 'share-opening', 'delete-account', 'delete-portal', 'delete-person', 'change-email', 'change-password', 'opening-answers', 'heart-state', 'popup-answer', 'workbook-consent', 'request-delete', 'setup-totp', 'confirm-totp', 'verify-totp', 'resend-confirm', 'download-data', 'save-notify-prefs'])
 export const NEVER_COLLECTIONS = new Set(['heart-states', 'opening-answers', 'answers', 'workbook-entries'])
 
 export async function blocked(payload: Payload, viewAs: ViewAs, what: Record<string, unknown>) {

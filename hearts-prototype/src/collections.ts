@@ -5,14 +5,20 @@ import { portalIdOf } from './lib/ids'
 import { slugProblem } from './lib/text-safety'
 import { authorTextProblems, markupProblems } from './lib/opening-data'
 import { changedTierFields, horsCapOf, saidInTalk, TIER_TIMING_FIELDS, tierProblem, timingProblems } from './lib/tiers'
+import { attachHorsToAppetisers, parseExtractStatus, timeInTalkProblem, type TalkExtract } from './lib/extracts'
 import { talkChain } from './lib/nesting'
 import { isShortsUrl } from './lib/shorts'
-import { DEFAULT_TIME_ZONE, isTimeZone } from './lib/zone-time'
+import { britishPortalTime, DEFAULT_TIME_ZONE, isTimeZone, portalTimeZone } from './lib/zone-time'
 import { linkLadderParents } from './server/piece-parents'
 import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
 import { circleProblems } from './lib/circle'
-import { cookiesSecure } from './lib/env'
+import { cookiesSecure, serverURL } from './lib/env'
+import { renderMail } from './lib/email-templates'
+import { now } from './lib/clock'
+import { RESET_MS } from './lib/account-rules'
+import { portalDisplayName } from './lib/portal-name'
+import { clientIp, hitAuth, limitsRelaxed } from './lib/rate-limit'
 import { DOOR_SECTIONS } from './lib/doors'
 
 // The app's own screens and actions use the local API with explicit portal checks.
@@ -99,8 +105,8 @@ export const Portals: CollectionConfig = {
       name: 'timeZone',
       type: 'text',
       defaultValue: DEFAULT_TIME_ZONE,
-      admin: { description: 'The time zone staff times are shown in, such as Europe/London.' },
-      validate: (value: unknown) => (value == null || value === '' || isTimeZone(value) ? true : 'Choose a time zone such as Europe/London.'),
+      admin: { description: 'The time zone staff times are shown in, such as America/Toronto.' },
+      validate: (value: unknown) => (value == null || value === '' || isTimeZone(value) ? true : 'Choose a time zone such as America/Toronto.'),
     },
     { name: 'theme', type: 'select', defaultValue: 'light', options: [{ label: 'Light', value: 'light' }, { label: 'Dark', value: 'dark' }] },
     { name: 'calendarUrl', type: 'text' },
@@ -111,6 +117,15 @@ export const Portals: CollectionConfig = {
     { name: 'learnerLabel', type: 'text', defaultValue: 'Learner' },
     { name: 'teacherLabel', type: 'text', defaultValue: 'Teacher' },
     { name: 'wizardDone', type: 'checkbox', defaultValue: false },
+    { name: 'requireEmailConfirm', type: 'checkbox', defaultValue: false, label: 'Ask people to confirm their email before they join as staff or reset a password' },
+    {
+      name: 'features',
+      type: 'json',
+      admin: {
+        description:
+          'Per-portal feature switches. Empty means every feature that exists today stays on, so live portals do not change.',
+      },
+    },
   ],
 }
 
@@ -133,12 +148,61 @@ export const Users: CollectionConfig = {
       secure: cookiesSecure(),
       sameSite: 'Lax',
     },
+    forgotPassword: {
+      expiration: 60 * 60 * 1000,
+      generateEmailSubject: () => 'Reset your HEARTS password',
+      generateEmailHTML: ({ token, user } = {}) => {
+        const person = user && typeof user === 'object' ? (user as { name?: string; tenants?: { tenant?: { name?: string; organisationName?: string; timeZone?: string } | number }[] }) : null
+        const name = person?.name || ''
+        const tenant = person?.tenants?.[0]?.tenant
+        const portal = tenant && typeof tenant === 'object' ? tenant : null
+        const portalName = portalDisplayName(portal) || undefined
+        const expires = britishPortalTime(new Date(now().getTime() + RESET_MS), portalTimeZone(portal))
+        const base = (serverURL() || process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '')
+        const href = `${base || ''}/reset?token=${token || ''}`
+        return renderMail('reset', {
+          name,
+          portalName,
+          buttonUrl: href,
+          extra: expires ? `The link expires at ${expires}.` : undefined,
+        }).html
+      },
+    },
   },
   hooks: {
     beforeOperation: [
       ({ args, operation, req }) => {
         refuseOutsideAccountCreation({ operation, req })
         return args
+      },
+    ],
+    beforeLogin: [
+      async ({ req, user }) => {
+        const person = user as { suspendedAt?: string | null; removed?: boolean | null; role?: string; totpEnabledAt?: string | null; email?: string } | undefined
+        const signingIn = (req as { user?: { removed?: boolean } }).user
+        if (signingIn?.removed || person?.removed) throw new APIError('That account is no longer here.', 401, undefined, true)
+        if (person?.suspendedAt) {
+          throw new APIError('This account is paused. Please speak to your masjid or school.', 403, undefined, true)
+        }
+        if (req.payloadAPI === 'REST' && person && (person.role === 'master' || person.role === 'portal-admin') && person.totpEnabledAt) {
+          throw new APIError('Sign in at /login so you can enter your two-step code.', 403, undefined, true)
+        }
+        if (req.payloadAPI !== 'REST' || limitsRelaxed()) return
+        const headers = req.headers
+        const read = (name: string) => (headers && typeof headers.get === 'function' ? headers.get(name) : '') || ''
+        const fake = new Request('http://local', {
+          headers: {
+            'cf-connecting-ip': read('cf-connecting-ip'),
+            'x-forwarded-for': read('x-forwarded-for'),
+            'fly-client-ip': read('fly-client-ip'),
+          },
+        })
+        const rawEmail = (req as { data?: { email?: unknown } }).data?.email
+        const email = typeof rawEmail === 'string' ? rawEmail : person?.email || ''
+        const limited = hitAuth('login', clientIp(fake), email)
+        if (!limited.allowed) {
+          throw new APIError('Too many sign-in tries from here. Wait a few minutes, then try again.', 429, undefined, true)
+        }
       },
     ],
     beforeValidate: [
@@ -184,6 +248,30 @@ export const Users: CollectionConfig = {
     { name: 'shareWithLearners', type: 'checkbox', defaultValue: false, label: 'Share answers with other learners, and see the answers they share' },
     { name: 'haptics', type: 'checkbox', defaultValue: true },
     { name: 'removed', type: 'checkbox', defaultValue: false },
+    { name: 'emailConfirmedAt', type: 'date' },
+    { name: 'emailConfirmToken', type: 'text', access: { read: () => false }, admin: { hidden: true } },
+    { name: 'emailConfirmExpiresAt', type: 'date', admin: { hidden: true } },
+    { name: 'lastConfirmSentAt', type: 'date', admin: { hidden: true } },
+    { name: 'pendingEmail', type: 'email', admin: { hidden: true } },
+    { name: 'pendingEmailToken', type: 'text', access: { read: () => false }, admin: { hidden: true } },
+    { name: 'pendingEmailExpiresAt', type: 'date', admin: { hidden: true } },
+    { name: 'totpSecret', type: 'text', access: { read: () => false, update: () => false }, admin: { hidden: true } },
+    { name: 'totpEnabledAt', type: 'date' },
+    { name: 'totpPendingSecret', type: 'text', access: { read: () => false }, admin: { hidden: true } },
+    { name: 'backupCodes', type: 'json', access: { read: () => false }, admin: { hidden: true } },
+    { name: 'suspendedAt', type: 'date' },
+    { name: 'suspendedBy', type: 'relationship', relationTo: 'users' },
+    { name: 'suspendReason', type: 'text' },
+    { name: 'deletionRequestedAt', type: 'date' },
+    { name: 'mustChangePassword', type: 'checkbox', defaultValue: false },
+    { name: 'notificationPrefs', type: 'json' },
+    { name: 'lastDataExportAt', type: 'date' },
+    { name: 'dataExportToken', type: 'text', access: { read: () => false }, admin: { hidden: true } },
+    { name: 'dataExportExpiresAt', type: 'date', admin: { hidden: true } },
+    { name: 'dataExportFile', type: 'text', admin: { hidden: true } },
+    { name: 'tokenVersion', type: 'number', defaultValue: 0, saveToJWT: true },
+    { name: 'passwordChangedAt', type: 'date' },
+    { name: 'circleMutedUntil', type: 'date' },
     { name: 'updatedBy', type: 'relationship', relationTo: 'users' },
     { name: 'onBehalfOf', type: 'relationship', relationTo: 'users' },
   ],
@@ -778,6 +866,143 @@ export const TalkTiers: CollectionConfig = {
   },
 }
 
+/**
+ * Many extracts on one talk. An appetiser is a hook, turn and land.
+ * Most hold 0 or 1 hors (usually the turn into the land). Empty is common.
+ * AI picks arrive as suggested; only approved extracts reach learners.
+ * The parallel erase-registry branch is not on this base: wipeLesson, CHILD_ORDER
+ * and RESTORE_ORDER in src/server/master-sheet.ts delete these with the talk.
+ */
+export const TalkExtracts: CollectionConfig = {
+  slug: 'talk-extracts',
+  labels: { singular: 'Talk extract', plural: 'Talk extracts' },
+  admin: { useAsTitle: 'quote' },
+  access: masterOnly,
+  fields: [
+    { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true, index: true },
+    {
+      name: 'kind',
+      type: 'select',
+      required: true,
+      options: [
+        { label: "Hors d'oeuvre", value: 'hors' },
+        { label: 'Appetiser', value: 'appetiser' },
+      ],
+    },
+    { name: 'start', type: 'number', required: true, min: 0 },
+    { name: 'end', type: 'number', required: true, min: 0 },
+    { name: 'quote', type: 'textarea' },
+    { name: 'words', type: 'json', admin: { description: 'Timed spoken words: [{ at, text }]. The only text over a speaker.' } },
+    { name: 'score', type: 'number' },
+    {
+      name: 'status',
+      type: 'select',
+      defaultValue: 'suggested',
+      options: [
+        { label: 'Draft', value: 'draft' },
+        { label: 'Suggested', value: 'suggested' },
+        { label: 'Approved', value: 'approved' },
+        { label: 'Rejected', value: 'rejected' },
+      ],
+    },
+    { name: 'door', type: 'number', admin: { description: 'Jibril door hang, 1 to 20.' } },
+    { name: 'seat', type: 'relationship', relationTo: 'seats' },
+    { name: 'order', type: 'number', defaultValue: 1 },
+    {
+      name: 'parent',
+      type: 'relationship',
+      relationTo: 'talk-extracts',
+      admin: { description: "The appetiser this hors d'oeuvre sits inside. Empty until overlap finds one." },
+    },
+    {
+      name: 'arc',
+      type: 'select',
+      options: [
+        { label: 'Hook', value: 'hook' },
+        { label: 'Turn', value: 'turn' },
+        { label: 'Land', value: 'land' },
+      ],
+      admin: { description: 'Which part of the parent appetiser this hors comes from.' },
+    },
+    { name: 'hook', type: 'textarea' },
+    { name: 'turn', type: 'textarea' },
+    { name: 'land', type: 'textarea' },
+    { name: 'source', type: 'text' },
+  ],
+  hooks: {
+    beforeChange: [
+      plainFields('quote', 'hook', 'turn', 'land'),
+      async ({ data, originalDoc, req }) => {
+        const merged = { ...(originalDoc || {}), ...data } as Record<string, unknown>
+        const start = Number(merged.start)
+        const end = Number(merged.end)
+        if (Number.isFinite(start) && Number.isFinite(end) && !(end > start)) {
+          throw new APIError('The extract has to end after it starts.', 400, null, true)
+        }
+        const lessonId = typeof merged.lesson === 'object' && merged.lesson ? (merged.lesson as { id: number }).id : Number(merged.lesson)
+        const lesson = lessonId ? await req.payload.findByID({ collection: 'lessons', id: lessonId, depth: 0, overrideAccess: true }).catch(() => null) : null
+        const duration = Number((lesson as { durationSeconds?: number } | null)?.durationSeconds || 0)
+        const late = timeInTalkProblem({ start, end }, duration || null)
+        if (late) throw new APIError(late, 400, null, true)
+        const quote = String(merged.quote || '')
+        const status = String(merged.status || 'suggested')
+        // Suggested and draft picks are often noisy AI text. Only an approved extract
+        // has to match the transcript word for word, because only those reach learners.
+        if (status === 'approved' && quote.trim() && lesson) {
+          const { tierSourceText } = await import('./server/tier-source')
+          const source = tierSourceText(lesson as { youtubeId?: string; transcript?: string })
+          if (source && !saidInTalk(quote, source)) {
+            throw new APIError("The extract has to be the speaker's words, word for word from the transcript.", 400, null, true)
+          }
+        }
+        return data
+      },
+    ],
+    afterChange: [
+      async ({ doc, req }) => {
+        if (req.context?.skipExtractRelink) return doc
+        if (doc.kind !== 'appetiser') return doc
+        const lessonId = typeof doc.lesson === 'object' && doc.lesson ? (doc.lesson as { id: number }).id : Number(doc.lesson)
+        if (!lessonId) return doc
+        const found = await req.payload.find({
+          collection: 'talk-extracts',
+          overrideAccess: true,
+          depth: 0,
+          limit: 500,
+          pagination: false,
+          where: { lesson: { equals: lessonId } },
+        })
+        const rows = found.docs.map((row) => ({
+          id: row.id,
+          lesson: lessonId,
+          kind: row.kind as TalkExtract['kind'],
+          start: Number(row.start),
+          end: Number(row.end),
+          quote: String(row.quote || ''),
+          status: parseExtractStatus(row.status),
+          order: Number(row.order || 1),
+          parent: typeof row.parent === 'object' && row.parent ? (row.parent as { id: number }).id : row.parent ? Number(row.parent) : null,
+          arc: (row.arc || null) as TalkExtract['arc'],
+        }))
+        const linked = attachHorsToAppetisers(rows)
+        for (const row of linked) {
+          if (row.kind !== 'hors' || row.id == null) continue
+          const current = rows.find((item) => item.id === row.id)
+          if (!current) continue
+          if (current.parent === row.parent && current.arc === row.arc) continue
+          await req.payload.update({
+            collection: 'talk-extracts',
+            id: row.id,
+            overrideAccess: true,
+            data: { parent: row.parent || null, arc: row.arc || null } as never,
+          })
+        }
+        return doc
+      },
+    ],
+  },
+}
+
 export const Answers: CollectionConfig = {
   slug: 'answers',
   access: { read: ownerOrStaff(true, 'keepPrivate'), create: master, update: master, delete: master },
@@ -1275,6 +1500,7 @@ export const collections = [
   Notifications,
   AccessCodes,
   TalkTiers,
+  TalkExtracts,
   Adoptions,
   PlacingQuestions,
   PlacingAnswers,

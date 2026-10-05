@@ -8,9 +8,14 @@ export type Query = {
   step?: string
   lane?: string
   part?: string
+  extract?: string
   t?: string
   answer?: string
   course?: string
+  start?: string
+  end?: string
+  days?: string
+  minutes?: string
   filter?: string
   kind?: string
   group?: string
@@ -34,6 +39,25 @@ export type Query = {
   context?: string
   /** Garden painting: `dawn` or `evening`. Another theme pass can set this. */
   theme?: string
+  hideTest?: string
+  showTest?: string
+  origin?: string
+  q?: string
+  account?: string
+  need?: string
+  guardian?: string
+  after?: string
+  page?: string
+  person?: string
+  action?: string
+  portal?: string
+  fromYear?: string
+  fromMonth?: string
+  fromDay?: string
+  toYear?: string
+  toMonth?: string
+  toDay?: string
+  [key: string]: string | undefined
 }
 
 export type Ctx = {
@@ -101,7 +125,7 @@ export function embedUrl(value: string) {
 
 export async function unreadCount(payload: Payload, user: SessionUser) {
   const notes = await rows(payload, 'notifications', { user: { equals: user.id } }, { limit: 200 })
-  return notes.filter((note) => note.read !== true && note.channel !== 'email-stub').length
+  return notes.filter((note) => note.read !== true && note.channel !== 'email-stub' && note.channel !== 'think').length
 }
 
 export async function portalPeople(payload: Payload, portalId: number) {

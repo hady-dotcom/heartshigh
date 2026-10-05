@@ -128,10 +128,27 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; max-height: 22vh;
 }
 .j-chrome .caption[data-expanded='true'] { display: block; -webkit-line-clamp: unset; line-clamp: unset; overflow: auto; max-height: min(36vh, 260px); }
+/* Mid-swipe: hide chrome words so captions never sit over the incoming card. */
+.journey[data-swiping] .j-chrome .caption,
+.journey[data-swiping] .j-chrome .j-speaker,
+.journey[data-swiping] .j-top-speaker,
+.journey[data-swiping] .j-poster-who,
+.journey[data-swiping] .j-poster-title {
+  opacity: 0;
+  pointer-events: none;
+}
+.j-peek .caption,
+.j-peek .j-speaker,
+.j-peek .j-top-speaker,
+.j-peek .j-poster-who,
+.j-peek .j-poster-title,
+.j-peek .feed-card h2,
+.j-peek .feed-card p { visibility: hidden; }
+.j-peeks, .j-peek, .j-slot, .j-slide { overflow: hidden; }
 .j-hairline-row { position: absolute; top: calc(12px + var(--safe-top)); left: 16px; right: 16px; }
 .j-swipe-hint { margin: 8px 0 0; text-align: center; font-size: 12px; font-weight: 650; letter-spacing: 0.01em; color: rgba(255, 255, 255, 0.92); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55); }
 .j-hairline { height: 3px; border-radius: 3px; background: rgba(255, 255, 255, 0.28); overflow: hidden; }
-.j-hairline > i { display: block; height: 100%; width: 0; background: #fff; }
+.j-hairline > i { display: block; height: 100%; width: 0; background: #fff; transition: width 0.25s linear; }
 .j-hairline.shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.55), rgba(255,255,255,0.2)); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 .j-sound { position: static; transform: none; background: rgba(0, 0, 0, 0.6); color: #fff; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; }
@@ -180,7 +197,10 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .journey[data-mode='appetiser'] .j-resume { padding: 2px 0 4px; }
 .journey[data-mode='appetiser'] .j-mains { background: #24203f; backdrop-filter: none; padding: 6px; }
 .journey[data-mode='appetiser'] .j-mains .thumb { width: 60px; height: 38px; }
-.journey[data-mode='appetiser'] .speaker-card { padding: 8px 12px; }
+.journey[data-mode='appetiser'] .speaker-card { padding: 8px 12px; background: #0F2E2C; color: #F1E4C6; border: 1px solid rgba(212, 168, 75, 0.42); }
+.journey[data-mode='appetiser'] .speaker-card small { color: #D4A84B; }
+.ready-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; pointer-events: auto; }
+.ready-controls input[type='range'] { width: 100%; accent-color: #D4A84B; }
 .strict.journey[data-mode='appetiser'] .j-chrome { padding-top: calc(60px + var(--safe-top) + min(430px, 100vw) * 9 / 16); background: none; }
 
 /* An appetiser with no film: a still, and three short lines. Never the transcript. */
@@ -210,7 +230,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-sheet-small { text-align: center; font-size: 14px; margin: 4px 0 0 !important; }
 .j-notfor { position: absolute; inset: 0; z-index: 25; background: rgba(0, 0, 0, 0.6); display: grid; place-content: center; justify-items: center; gap: 10px; }
 .j-tabs { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; }
-.journey .lane-switch { z-index: 26; top: calc(52px + var(--safe-top)); }
+.journey .lane-switch { z-index: 26; top: auto; bottom: calc(128px + var(--safe-bottom)); }
 .journey .lane-switch span { padding: 7px 14px; font-size: 13px; animation: toast 1.5s ease forwards; background: rgba(12, 38, 38, 0.94); color: #f6eedc; border: 1px solid rgba(212, 168, 75, 0.55); }
 .lane-switch span:empty { display: none; }
 .j-scene .j-choices { margin-top: auto; }

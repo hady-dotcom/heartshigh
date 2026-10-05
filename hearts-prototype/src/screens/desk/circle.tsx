@@ -8,6 +8,8 @@ import { circleScope, circleSettings, pointsInScope } from '@/server/circle'
 import type { SessionUser } from '@/server/context'
 import { partTitle } from '@/lib/talk-title'
 import { type Ctx, type Row, clock, rows, str } from '../common'
+import { HelpTip } from '@/components/desk/help'
+import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
 
@@ -113,7 +115,10 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
   const [circle, real] = await Promise.all([
     ids.length ? rows(payload, 'circle-answers', { point: { in: ids } }, { limit: 2000, sort: 'createdAt' }) : Promise.resolve([]),
     ids.length
-      ? rows(payload, 'answers', { and: [{ point: { in: ids } }, { shareWithLearners: { equals: true } }, { keepPrivate: { not_equals: true } }, ...(scope.portal ? [{ portal: { equals: scope.portal } }] : [])] }, { limit: 5000, depth: 1 }).then((list) => list.filter((row) => (row.user as { shareWithLearners?: boolean } | null)?.shareWithLearners))
+      ? rows(payload, 'answers', { and: [{ point: { in: ids } }, { shareWithLearners: { equals: true } }, { keepPrivate: { not_equals: true } }, ...(scope.portal ? [{ portal: { equals: scope.portal } }] : [])] }, { limit: 5000, depth: 1 }).then((list) => list.filter((row) => {
+          const author = row.user as { shareWithLearners?: boolean; suspendedAt?: string | null; removed?: boolean | null } | null
+          return Boolean(author?.shareWithLearners) && !author?.suspendedAt && !author?.removed
+        }))
       : Promise.resolve([]),
   ])
   const mine = circle.filter((row) => user.role === 'master' || !idOf(row.portal) || idOf(row.portal) === scope.portal)
@@ -128,11 +133,12 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
             <Bulk lesson={lesson.id} scope="talk" enabled={false} here={back} label="All off for this talk" />
             <Bulk lesson={lesson.id} scope="course" enabled here={back} label="All on for the course" />
             <Bulk lesson={lesson.id} scope="course" enabled={false} here={back} label="All off for the course" />
+            <HelpTip topic="circle-bulk">{TOOL.circleBulk}</HelpTip>
           </div>
         </header>
         <form className="body form circle-generate" action="/api/hearts" method="post" data-testid="circle-generate-all">
           <Hidden fields={{ action: 'circle-generate', lesson: lesson.id, next: back }} />
-          <b>Draft answers for every question on this talk</b>
+          <b>Draft answers for every question on this talk <HelpTip topic="circle-tones">{TOOL.circleTones}</HelpTip></b>
           <GenerateFields />
           <div className="actions"><button className="btn ink" type="submit" data-testid="circle-generate-all-submit">Draft circle answers</button></div>
           <p className="hint">Drafted by the AI when a key is set, otherwise by the built-in drafts. Every answer goes through the same word checks as the editor, and you can edit, switch off or delete any of them.</p>

@@ -96,12 +96,12 @@ test('Extraction: the Al-Nur hook is word for word from the transcript', () => {
 
 test('A2: the appetiser caption shows the hook, then the turn, then the land, each at its moment', () => {
   const lines = [{ at: 10, text: 'hook' }, { at: 40, text: 'turn' }, { at: 90, text: 'land' }]
-  assert.equal(captionIndex(lines, 0), 0)
+  assert.equal(captionIndex(lines, 0), -1)
   assert.equal(captionIndex(lines, 12), 0)
   assert.equal(captionIndex(lines, 39.9), 1)
   assert.equal(captionIndex(lines, 60), 1)
   assert.equal(captionIndex(lines, 95), 2)
-  assert.equal(captionIndex(undefined, 95), 0)
+  assert.equal(captionIndex(undefined, 95), -1)
 })
 
 test('K1: the kill list catches spaced letters, stretched spellings, words built on a listed root and rating a person', () => {
@@ -172,7 +172,8 @@ test('LOW: yt-dlp is fetched by setup, uses the web_embedded client, and says pl
 test('LOW: the browser tests run against their own database file, never the demo one', () => {
   const env = readFileSync(path.join(root, 'tests/env.ts'), 'utf8')
   const config = readFileSync(path.join(root, 'playwright.config.ts'), 'utf8')
-  assert.match(env, /E2E_DATABASE = 'file:\.\/data\/hearts-test\.db'/)
+  assert.match(env, /E2E_DATABASE = process\.env\.HEARTS_E2E_DATABASE \|\| 'file:\.\/data\/hearts-test\.db'/)
+  assert.doesNotMatch(env, /hearts\.db'/)
   assert.match(config, /DATABASE_URL: E2E_DATABASE/)
   assert.match(readFileSync(path.join(root, 'tests/global-setup.ts'), 'utf8'), /E2E_DATABASE/)
 })

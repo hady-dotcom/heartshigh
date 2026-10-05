@@ -21,11 +21,11 @@ test('Shorts: a /shorts/ link or a 9:16 size is vertical, a watch link or a 16:9
   assert.ok(!isVerticalLesson(null))
 })
 
-test('export times: the portal zone (Europe/London unless set), the viewer\'s language, and a short zone label', async () => {
+test('export times: the portal zone (America/Toronto unless set), the viewer\'s language, and a short zone label', async () => {
   const { DEFAULT_TIME_ZONE, isTimeZone, localeFromAcceptLanguage, portalTimeZone, zonedTime, zoneCity } = await import('../../src/lib/zone-time')
-  assert.equal(DEFAULT_TIME_ZONE, 'Europe/London')
-  assert.equal(portalTimeZone(null), 'Europe/London')
-  assert.equal(portalTimeZone({ timeZone: 'Not/AZone' }), 'Europe/London')
+  assert.equal(DEFAULT_TIME_ZONE, 'America/Toronto')
+  assert.equal(portalTimeZone(null), 'America/Toronto')
+  assert.equal(portalTimeZone({ timeZone: 'Not/AZone' }), 'America/Toronto')
   assert.equal(portalTimeZone({ timeZone: 'Asia/Dubai' }), 'Asia/Dubai')
   assert.ok(isTimeZone('America/Los_Angeles') && !isTimeZone('Mars/Olympus'))
   assert.equal(localeFromAcceptLanguage('de-DE,de;q=0.9,en;q=0.8'), 'de-DE')
@@ -34,9 +34,13 @@ test('export times: the portal zone (Europe/London unless set), the viewer\'s la
   assert.equal(zonedTime('2026-10-04T05:12:00.000Z', 'Europe/London', 'en-GB'), '4 Oct 2026, 06:12 BST')
   assert.equal(zonedTime('2026-12-04T05:12:00.000Z', 'Europe/London', 'en-GB'), '4 Dec 2026, 05:12 GMT')
   assert.equal(zonedTime('2026-10-04T05:12:00.000Z', 'Asia/Dubai', 'en-GB'), '4 Oct 2026, 09:12 GST')
+  assert.equal(zonedTime('2026-10-05T00:36:00.000Z', 'America/Toronto', 'en-GB'), '4 Oct 2026, 20:36 ET')
   assert.match(zonedTime('2026-10-04T05:12:00.000Z', 'Europe/London', 'en-US'), /^Oct 4, 2026, 06:12 AM GMT\+1$/)
   assert.equal(zonedTime('nonsense', 'Europe/London'), '')
   assert.equal(zoneCity('America/Los_Angeles'), 'Los Angeles')
+  const { britishPortalTime } = await import('../../src/lib/zone-time')
+  assert.equal(britishPortalTime('2026-10-19T01:30:00.000Z', 'America/Toronto'), '18 October 2026, 21:30')
+  assert.equal(britishPortalTime('2026-10-05T04:16:00.000Z', 'America/Toronto', 'at'), '5 October 2026 at 00:16')
 })
 
 test('words in the picture: a Short or a lesson flagged with burned-in captions, nothing else', () => {
@@ -51,6 +55,7 @@ test('posters: YouTube\'s titled thumbnails and their /clips/ copies are never o
   assert.ok(isTitledThumbnail('https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg'))
   assert.ok(isTitledThumbnail('https://img.youtube.com/vi/abcdefghijk/maxresdefault.jpg'))
   assert.ok(isTitledThumbnail('/clips/HfIT8TSoHiE.jpg'))
+  assert.ok(isTitledThumbnail('https://i.ytimg.com/vi/HfIT8TSoHiE/hqdefault.jpg'))
   assert.ok(!isTitledThumbnail('/slides/bg-cinema-road.jpg'))
   assert.ok(!isTitledThumbnail(null))
   assert.equal(cleanThumbnail({ youtubeId: 'abcdefghijk', thumbnailClean: true }), 'https://i.ytimg.com/vi/abcdefghijk/maxresdefault.jpg')

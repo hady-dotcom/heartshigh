@@ -70,11 +70,8 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
   const page = await context.newPage()
   await page.route(/youtube|ytimg|googlevideo/, (route) => route.abort())
 
-  await page.goto(`/join?code=${seedCode('elm-learner')}`)
-  await page.getByTestId('join-name').fill(LEARNER.name)
-  await page.getByTestId('join-email').fill(LEARNER.email)
-  await page.getByTestId('join-password').fill(LEARNER.password)
-  await page.getByTestId('join-submit').click()
+  const { joinWithConsent } = await import('./legal-helpers')
+  await joinWithConsent(page, seedCode('elm-learner'), LEARNER.name, LEARNER.email, LEARNER.password)
   await expect(page.getByTestId('splash')).toBeVisible()
 
   await page.getByTestId('welcome-begin').click()
@@ -181,6 +178,9 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
   const course = (await json(await master.get(`/api/courses?where[title][equals]=${encodeURIComponent(COURSE)}&depth=0`))).docs[0].id
 
   await page.goto(`${BASE}/course/${course}`)
+  if (await page.getByTestId('buffet-talk').count()) await page.getByTestId('buffet-talk').first().click()
+  else if (await page.getByTestId('start-part').count()) await page.getByTestId('start-part').click()
+  await expect(page.getByTestId('player')).toBeVisible()
   await expect(async () => {
     await page.getByTestId('timeline-dot').first().click()
     await expect(page.getByTestId('popup-prompt')).toContainText(PROMPT, { timeout: 1500 })
@@ -208,7 +208,7 @@ test('a portal admin walks the short setup and lands back on the overview', asyn
   await page.getByRole('button', { name: 'Next' }).click()
   await page.waitForURL(/step=2/)
   await expect(page.getByTestId('wizard-course')).toBeVisible()
-  await page.getByRole('link', { name: 'Skip' }).click()
+  await page.getByTestId('wizard').getByRole('link', { name: 'Skip', exact: true }).click()
   await page.waitForURL(/step=3/)
   await page.getByTestId('wizard-finish').click()
   await page.waitForURL((url) => url.pathname === `${BASE}/admin`)

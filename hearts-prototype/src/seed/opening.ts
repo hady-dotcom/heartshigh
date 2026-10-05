@@ -369,6 +369,8 @@ async function seedTier(payload: Payload, lesson: Doc, youtubeId: string, length
   }
   if (existing) await payload.update({ collection: 'talk-tiers', id: existing.id, overrideAccess: true, data: data as never })
   else await payload.create({ collection: 'talk-tiers', overrideAccess: true, data: data as never })
+  const { syncExtractsFromTier } = await import('../server/extracts')
+  await syncExtractsFromTier(payload, lesson.id, { ...data, lesson: lesson.id })
   const drafts = await payload.count({ collection: 'engagement-points', overrideAccess: true, where: { and: [{ lesson: { equals: lesson.id } }, { status: { equals: 'draft' } }] } })
   if (!drafts.totalDocs) {
     for (const popup of draft.popups) {
@@ -448,7 +450,7 @@ export async function seedPeople(payload: Payload, opts: { portalIds: Map<string
   const ensure = async (data: Record<string, unknown>) => {
     const found = await one(payload, 'users', { email: { equals: data.email } })
     if (found) return found
-    return (await payload.create({ collection: 'users', overrideAccess: true, data: data as never })) as unknown as Doc
+    return (await payload.create({ collection: 'users', overrideAccess: true, data: { emailConfirmedAt: new Date().toISOString(), ...data } as never })) as unknown as Doc
   }
   await ensure({ email: 'leeds-admin@hearts.test', password: 'portal-admin', name: 'Bushra Iqbal', role: 'portal-admin', tenants: [{ tenant: leeds }], onboarded: true, seenWelcome: true, courseList: opts.courseList })
   await ensure({ email: 'master2@hearts.test', password: 'hearts-master', name: 'Idris Rahman', role: 'master', onboarded: true, seenWelcome: true })

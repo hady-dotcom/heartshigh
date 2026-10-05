@@ -1,0 +1,42 @@
+/* Self-contained so any desk can import HelpTip, including Experiments when that PR lands. */
+.root {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+  flex: none;
+}
+.mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  opacity: 0.85;
+  line-height: 1;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+.pop {
+  position: fixed;
+  z-index: 80;
+  width: min(22rem, calc(100vw - 24px));
+  max-width: min(22rem, calc(100vw - 24px));
+  padding: 12px 14px;
+  background: #fffaf0;
+  color: #14221f;
+  border: 1px solid #d7c6a4;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(20, 34, 31, 0.18);
+  font: 500 13.5px/1.45 var(--sans, 'Source Sans 3', sans-serif);
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: normal;
+  overflow-wrap: break-word;
+  isolation: isolate;
+}

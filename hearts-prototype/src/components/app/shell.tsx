@@ -1,26 +1,40 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { RouteFade } from '@/components/app/route-fade'
+import { PageHelp } from '@/components/app/page-help'
+import { learnerBar, type BarKey, type FeatureSource } from '@/lib/features'
+import { learnerHelp } from '@/lib/learner-help'
 
-export type Tab = 'home' | 'lanes' | 'gather' | 'garden' | 'me'
+export type Tab = BarKey
 
-export function TabBar({ base, active, dark = false, evening = false, unread = 0 }: { base: string; active: Tab; dark?: boolean; evening?: boolean; unread?: number }) {
-  const tabs: [Tab, string, string][] = [
-    ['home', 'Home', base],
-    ['lanes', 'Lanes', `${base}/lanes`],
-    ['gather', 'Gather', `${base}/gather`],
-    ['garden', 'Garden', `${base}/garden`],
-    ['me', 'Me', `${base}/me`],
-  ]
+export function TabBar({
+  base,
+  active,
+  portal,
+  dark = false,
+  evening = false,
+  unread = 0,
+}: {
+  base: string
+  active?: Tab | null
+  portal?: FeatureSource
+  dark?: boolean
+  evening?: boolean
+  unread?: number
+}) {
+  const tabs = learnerBar(portal)
   return (
     <nav className={`tabbar${dark ? ' dark' : ''}${evening ? ' evening' : ''}`} aria-label="Main" data-testid="tabbar">
-      {tabs.map(([key, label, href]) => (
-        <Link key={key} href={href} className={`tab${active === key ? ' on' : ''}`} aria-current={active === key ? 'page' : undefined} data-testid={`tab-${key}`}>
-          <TabIcon tab={key} on={active === key} />
-          {key === 'me' && unread > 0 ? <span className="badge" data-testid="unread-badge">{unread}</span> : null}
-          {label}
-        </Link>
-      ))}
+      {tabs.map((item) => {
+        const href = `${base}${item.path}`
+        return (
+          <Link key={item.key} href={href} className={`tab${active === item.key ? ' on' : ''}`} aria-current={active === item.key ? 'page' : undefined} data-testid={`tab-${item.key}`}>
+            <TabIcon tab={item.key} on={active === item.key} />
+            {item.key === 'me' && unread > 0 ? <span className="badge" data-testid="unread-badge">{unread}</span> : null}
+            {item.label}
+          </Link>
+        )
+      })}
     </nav>
   )
 }
@@ -43,12 +57,14 @@ function TabIcon({ tab, on }: { tab: Tab; on: boolean }) {
         <path d="m16.2 5.2 3.6-1 3 15.2-3.6 1z" />
       </svg>
     )
-  if (tab === 'gather')
+  if (tab === 'week')
     return (
       <svg {...common} className="tab-icon">
-        <path d="M12 21c-4-3-7-6.2-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 3.8-3 7-7 10z" fill={on ? 'currentColor' : 'none'} fillOpacity={on ? 0.15 : 0} />
-        <path d="M12 11v4" />
-        <path d="M9 8.5c.4-2 1.4-3.5 3-4.5 1.6 1 2.6 2.5 3 4.5" />
+        <rect x="3.5" y="5" width="17" height="16" rx="2" />
+        <path d="M3.5 10h17" />
+        <path d="M8 3v4" />
+        <path d="M16 3v4" />
+        <path d="M8 14h.01M12 14h.01M16 14h.01" />
       </svg>
     )
   if (tab === 'garden')
@@ -68,9 +84,10 @@ function TabIcon({ tab, on }: { tab: Tab; on: boolean }) {
 }
 
 export function Flash({ error, notice }: { error?: string; notice?: string }) {
+  const paused = Boolean(error && /this account is paused/i.test(error))
   return (
     <>
-      {error ? <div className="flash error" role="alert" data-testid="error">{error}</div> : null}
+      {error ? <div className="flash error" role="alert" data-testid="error" {...(paused ? { 'data-paused-when': error } : {})}>{error}</div> : null}
       {notice ? <div className="flash notice" role="status" data-testid="notice">{notice}</div> : null}
     </>
   )
@@ -78,9 +95,11 @@ export function Flash({ error, notice }: { error?: string; notice?: string }) {
 
 export function AppFrame({ children, dark = false, evening = false, testId, tone }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; tone?: 'gather' }) {
   const gather = tone === 'gather'
+  const help = learnerHelp(testId)
   return (
     <div className={`app-stage${evening ? ' evening' : ''}${gather ? ' gather-stage' : ''}`}>
-      <main className={`app${dark ? ' dark' : ''}${evening ? ' evening' : ''}${gather ? ' gather-shell' : ''}`} data-testid={testId}>
+      <main id="main-content" className={`app${dark ? ' dark' : ''}${evening ? ' evening' : ''}${gather ? ' gather-shell' : ''}`} data-testid={testId} tabIndex={-1}>
+        {help ? <PageHelp topic={testId || 'page'}>{help}</PageHelp> : null}
         <RouteFade>{children}</RouteFade>
       </main>
     </div>

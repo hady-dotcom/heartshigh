@@ -5,6 +5,7 @@
  * A model key is never accepted as an argument and never returned. Callers that speak to
  * a real model read ANTHROPIC_API_KEY or OPENAI_API_KEY from the environment themselves.
  */
+import { draftPopupPrompt } from './draft-prompt'
 import { dualExtract } from './extractor'
 import { assessQuestion, themesFromAnswers } from './feedback'
 import { ANSWER_VOICE, REWRITE_VOICE, TEACHER_REPLY_VOICE } from './human-voice'
@@ -904,7 +905,7 @@ function popupPoints(draft: TierDraft, shift: number, kind: 'question' | 'reflec
   return ordered.map((row) => ({
     second: row.second,
     kind,
-    prompt: row.prompt || `The speaker says: “${row.quote}” What from that stayed with you on the way home?`,
+    prompt: row.prompt || draftPopupPrompt(row.quote, ordered.indexOf(row)),
     options: [] as string[],
   }))
 }

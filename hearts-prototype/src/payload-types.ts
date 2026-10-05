@@ -88,6 +88,7 @@ export interface Config {
     notifications: Notification;
     'access-codes': AccessCode;
     'talk-tiers': TalkTier;
+    'talk-extracts': TalkExtract;
     adoptions: Adoption;
     'placing-questions': PlacingQuestion;
     'placing-answers': PlacingAnswer;
@@ -135,6 +136,15 @@ export interface Config {
     'gather-checkins': GatherCheckin;
     'gather-reflections': GatherReflection;
     'gather-photos': GatherPhoto;
+    'legal-pages': LegalPage;
+    consents: Consent;
+    'age-profiles': AgeProfile;
+    'portal-contacts': PortalContact;
+    'child-code-flags': ChildCodeFlag;
+    'help-requests': HelpRequest;
+    classes: Class;
+    'class-join-rules': ClassJoinRule;
+    'ops-events': OpsEvent;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -163,6 +173,7 @@ export interface Config {
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
     'access-codes': AccessCodesSelect<false> | AccessCodesSelect<true>;
     'talk-tiers': TalkTiersSelect<false> | TalkTiersSelect<true>;
+    'talk-extracts': TalkExtractsSelect<false> | TalkExtractsSelect<true>;
     adoptions: AdoptionsSelect<false> | AdoptionsSelect<true>;
     'placing-questions': PlacingQuestionsSelect<false> | PlacingQuestionsSelect<true>;
     'placing-answers': PlacingAnswersSelect<false> | PlacingAnswersSelect<true>;
@@ -210,6 +221,15 @@ export interface Config {
     'gather-checkins': GatherCheckinsSelect<false> | GatherCheckinsSelect<true>;
     'gather-reflections': GatherReflectionsSelect<false> | GatherReflectionsSelect<true>;
     'gather-photos': GatherPhotosSelect<false> | GatherPhotosSelect<true>;
+    'legal-pages': LegalPagesSelect<false> | LegalPagesSelect<true>;
+    consents: ConsentsSelect<false> | ConsentsSelect<true>;
+    'age-profiles': AgeProfilesSelect<false> | AgeProfilesSelect<true>;
+    'portal-contacts': PortalContactsSelect<false> | PortalContactsSelect<true>;
+    'child-code-flags': ChildCodeFlagsSelect<false> | ChildCodeFlagsSelect<true>;
+    'help-requests': HelpRequestsSelect<false> | HelpRequestsSelect<true>;
+    classes: ClassesSelect<false> | ClassesSelect<true>;
+    'class-join-rules': ClassJoinRulesSelect<false> | ClassJoinRulesSelect<true>;
+    'ops-events': OpsEventsSelect<false> | OpsEventsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -272,7 +292,7 @@ export interface Portal {
   showOthersAnswers?: boolean | null;
   notificationEmails?: string | null;
   /**
-   * The time zone staff times are shown in, such as Europe/London.
+   * The time zone staff times are shown in, such as America/Toronto.
    */
   timeZone?: string | null;
   theme?: ('light' | 'dark') | null;
@@ -284,6 +304,19 @@ export interface Portal {
   learnerLabel?: string | null;
   teacherLabel?: string | null;
   wizardDone?: boolean | null;
+  requireEmailConfirm?: boolean | null;
+  /**
+   * Per-portal feature switches. Empty means every feature that exists today stays on, so live portals do not change.
+   */
+  features?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -320,6 +353,46 @@ export interface User {
   shareWithLearners?: boolean | null;
   haptics?: boolean | null;
   removed?: boolean | null;
+  emailConfirmedAt?: string | null;
+  emailConfirmToken?: string | null;
+  emailConfirmExpiresAt?: string | null;
+  lastConfirmSentAt?: string | null;
+  pendingEmail?: string | null;
+  pendingEmailToken?: string | null;
+  pendingEmailExpiresAt?: string | null;
+  totpSecret?: string | null;
+  totpEnabledAt?: string | null;
+  totpPendingSecret?: string | null;
+  backupCodes?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  suspendedAt?: string | null;
+  suspendedBy?: (number | null) | User;
+  suspendReason?: string | null;
+  deletionRequestedAt?: string | null;
+  mustChangePassword?: boolean | null;
+  notificationPrefs?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  lastDataExportAt?: string | null;
+  dataExportToken?: string | null;
+  dataExportExpiresAt?: string | null;
+  dataExportFile?: string | null;
+  tokenVersion?: number | null;
+  passwordChangedAt?: string | null;
+  circleMutedUntil?: string | null;
   updatedBy?: (number | null) | User;
   onBehalfOf?: (number | null) | User;
   tenants?:
@@ -377,6 +450,7 @@ export interface AccessCode {
   disabled?: boolean | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -391,6 +465,7 @@ export interface Pack {
   courses?: (number | Course)[] | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -411,6 +486,7 @@ export interface Course {
   visibility?: ('draft' | 'published') | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -561,6 +637,7 @@ export interface Unit {
   order?: number | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -614,6 +691,7 @@ export interface Lesson {
   sourceTitle?: string | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -767,6 +845,7 @@ export interface EngagementPoint {
   showImam?: boolean | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -931,6 +1010,52 @@ export interface TalkTier {
     | number
     | boolean
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "talk-extracts".
+ */
+export interface TalkExtract {
+  id: number;
+  lesson: number | Lesson;
+  kind: 'hors' | 'appetiser';
+  start: number;
+  end: number;
+  quote?: string | null;
+  /**
+   * Timed spoken words: [{ at, text }]. The only text over a speaker.
+   */
+  words?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  score?: number | null;
+  status?: ('draft' | 'suggested' | 'approved' | 'rejected') | null;
+  /**
+   * Jibril door hang, 1 to 20.
+   */
+  door?: number | null;
+  seat?: (number | null) | Seat;
+  order?: number | null;
+  /**
+   * The appetiser this hors d'oeuvre sits inside. Empty until overlap finds one.
+   */
+  parent?: (number | null) | TalkExtract;
+  /**
+   * Which part of the parent appetiser this hors comes from.
+   */
+  arc?: ('hook' | 'turn' | 'land') | null;
+  hook?: string | null;
+  turn?: string | null;
+  land?: string | null;
+  source?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1368,6 +1493,7 @@ export interface CircleAnswer {
   author?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2245,6 +2371,179 @@ export interface GatherPhoto {
   createdAt: string;
 }
 /**
+ * Draft wording for adviser review. Publishing a new version asks people to agree again.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "legal-pages".
+ */
+export interface LegalPage {
+  id: number;
+  kind: 'privacy' | 'terms' | 'guidelines' | 'portal-agreement';
+  version: string;
+  title: string;
+  /**
+   * One line learners see first. No legal words.
+   */
+  summary: string;
+  body: string;
+  published?: boolean | null;
+  /**
+   * Keep this ticked until Leon’s adviser has signed off the wording.
+   */
+  draftForAdviserReview?: boolean | null;
+  /**
+   * The date shown on the page, such as 4 October 2026.
+   */
+  updatedLabel?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A record that someone agreed to a named version, with the time.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "consents".
+ */
+export interface Consent {
+  id: number;
+  portal?: (number | null) | Portal;
+  user: number | User;
+  kind: 'privacy' | 'terms' | 'guidelines' | 'guardian' | 'email-news' | 'portal-agreement';
+  version: string;
+  acceptedAt: string;
+  ipHash?: string | null;
+  byGuardian?: boolean | null;
+  guardianEmail?: string | null;
+  staffActor?: (number | null) | User;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * An age band only — never a date of birth. Used for children’s defaults and guardian consent.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "age-profiles".
+ */
+export interface AgeProfile {
+  id: number;
+  portal?: (number | null) | Portal;
+  user: number | User;
+  ageBand: 'under-13' | '13-17' | '18+';
+  guardianEmail?: string | null;
+  guardianTokenHash?: string | null;
+  guardianTokenExpiresAt?: string | null;
+  waitingForGuardian?: boolean | null;
+  guardianAcceptedAt?: string | null;
+  schoolOfflineAt?: string | null;
+  schoolOfflineBy?: (number | null) | User;
+  schoolOfflineNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Named privacy and safeguarding people for one portal. Lane C reads the safeguarding lead.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "portal-contacts".
+ */
+export interface PortalContact {
+  id: number;
+  portal: number | Portal;
+  privacyName?: string | null;
+  privacyEmail?: string | null;
+  safeguardingName?: string | null;
+  safeguardingEmail?: string | null;
+  safeguardingPhone?: string | null;
+  schoolOfflineConsent?: boolean | null;
+  agreementAcceptedAt?: string | null;
+  agreementName?: string | null;
+  agreementVersion?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Marks an access code as for children, so the age step is pre-filled.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "child-code-flags".
+ */
+export interface ChildCodeFlag {
+  id: number;
+  accessCode: number | AccessCode;
+  forChildren?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Something is not working, a learning question, or something worrying.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "help-requests".
+ */
+export interface HelpRequest {
+  id: number;
+  portal?: (number | null) | Portal;
+  user: number | User;
+  kind: 'broken' | 'learning' | 'worrying';
+  page?: string | null;
+  device?: string | null;
+  note?: string | null;
+  status?: ('open' | 'sent' | 'closed') | null;
+  happenedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "classes".
+ */
+export interface Class {
+  id: number;
+  portal?: (number | null) | Portal;
+  name: string;
+  colour?: ('#0E2A2B' | '#163633' | '#1A5552' | '#8A6A1F' | '#1A1408') | null;
+  teachers?: (number | User)[] | null;
+  learners?: (number | User)[] | null;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "class-join-rules".
+ */
+export interface ClassJoinRule {
+  id: number;
+  portal?: (number | null) | Portal;
+  accessCode: number | AccessCode;
+  class: number | Class;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ops-events".
+ */
+export interface OpsEvent {
+  id: number;
+  kind: 'backup' | 'restore' | 'retention' | 'closed-portal';
+  ok?: boolean | null;
+  at: string;
+  detail?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  portal?: (number | null) | Portal;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -2351,6 +2650,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'talk-tiers';
         value: number | TalkTier;
+      } | null)
+    | ({
+        relationTo: 'talk-extracts';
+        value: number | TalkExtract;
       } | null)
     | ({
         relationTo: 'adoptions';
@@ -2539,6 +2842,42 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'gather-photos';
         value: number | GatherPhoto;
+      } | null)
+    | ({
+        relationTo: 'legal-pages';
+        value: number | LegalPage;
+      } | null)
+    | ({
+        relationTo: 'consents';
+        value: number | Consent;
+      } | null)
+    | ({
+        relationTo: 'age-profiles';
+        value: number | AgeProfile;
+      } | null)
+    | ({
+        relationTo: 'portal-contacts';
+        value: number | PortalContact;
+      } | null)
+    | ({
+        relationTo: 'child-code-flags';
+        value: number | ChildCodeFlag;
+      } | null)
+    | ({
+        relationTo: 'help-requests';
+        value: number | HelpRequest;
+      } | null)
+    | ({
+        relationTo: 'classes';
+        value: number | Class;
+      } | null)
+    | ({
+        relationTo: 'class-join-rules';
+        value: number | ClassJoinRule;
+      } | null)
+    | ({
+        relationTo: 'ops-events';
+        value: number | OpsEvent;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2609,6 +2948,8 @@ export interface PortalsSelect<T extends boolean = true> {
   learnerLabel?: T;
   teacherLabel?: T;
   wizardDone?: T;
+  requireEmailConfirm?: T;
+  features?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2636,6 +2977,30 @@ export interface UsersSelect<T extends boolean = true> {
   shareWithLearners?: T;
   haptics?: T;
   removed?: T;
+  emailConfirmedAt?: T;
+  emailConfirmToken?: T;
+  emailConfirmExpiresAt?: T;
+  lastConfirmSentAt?: T;
+  pendingEmail?: T;
+  pendingEmailToken?: T;
+  pendingEmailExpiresAt?: T;
+  totpSecret?: T;
+  totpEnabledAt?: T;
+  totpPendingSecret?: T;
+  backupCodes?: T;
+  suspendedAt?: T;
+  suspendedBy?: T;
+  suspendReason?: T;
+  deletionRequestedAt?: T;
+  mustChangePassword?: T;
+  notificationPrefs?: T;
+  lastDataExportAt?: T;
+  dataExportToken?: T;
+  dataExportExpiresAt?: T;
+  dataExportFile?: T;
+  tokenVersion?: T;
+  passwordChangedAt?: T;
+  circleMutedUntil?: T;
   updatedBy?: T;
   onBehalfOf?: T;
   tenants?:
@@ -2771,6 +3136,7 @@ export interface CoursesSelect<T extends boolean = true> {
   visibility?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2782,6 +3148,7 @@ export interface UnitsSelect<T extends boolean = true> {
   order?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2816,6 +3183,7 @@ export interface LessonsSelect<T extends boolean = true> {
   sourceTitle?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2844,6 +3212,7 @@ export interface PacksSelect<T extends boolean = true> {
   courses?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2932,6 +3301,7 @@ export interface EngagementPointsSelect<T extends boolean = true> {
   showImam?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3014,6 +3384,7 @@ export interface AccessCodesSelect<T extends boolean = true> {
   disabled?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3044,6 +3415,31 @@ export interface TalkTiersSelect<T extends boolean = true> {
   note?: T;
   checkedBy?: T;
   parents?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "talk-extracts_select".
+ */
+export interface TalkExtractsSelect<T extends boolean = true> {
+  lesson?: T;
+  kind?: T;
+  start?: T;
+  end?: T;
+  quote?: T;
+  words?: T;
+  score?: T;
+  status?: T;
+  door?: T;
+  seat?: T;
+  order?: T;
+  parent?: T;
+  arc?: T;
+  hook?: T;
+  turn?: T;
+  land?: T;
+  source?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3309,6 +3705,7 @@ export interface CircleAnswersSelect<T extends boolean = true> {
   author?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3893,6 +4290,141 @@ export interface GatherPhotosSelect<T extends boolean = true> {
   caption?: T;
   consent?: T;
   postedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "legal-pages_select".
+ */
+export interface LegalPagesSelect<T extends boolean = true> {
+  kind?: T;
+  version?: T;
+  title?: T;
+  summary?: T;
+  body?: T;
+  published?: T;
+  draftForAdviserReview?: T;
+  updatedLabel?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "consents_select".
+ */
+export interface ConsentsSelect<T extends boolean = true> {
+  portal?: T;
+  user?: T;
+  kind?: T;
+  version?: T;
+  acceptedAt?: T;
+  ipHash?: T;
+  byGuardian?: T;
+  guardianEmail?: T;
+  staffActor?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "age-profiles_select".
+ */
+export interface AgeProfilesSelect<T extends boolean = true> {
+  portal?: T;
+  user?: T;
+  ageBand?: T;
+  guardianEmail?: T;
+  guardianTokenHash?: T;
+  guardianTokenExpiresAt?: T;
+  waitingForGuardian?: T;
+  guardianAcceptedAt?: T;
+  schoolOfflineAt?: T;
+  schoolOfflineBy?: T;
+  schoolOfflineNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "portal-contacts_select".
+ */
+export interface PortalContactsSelect<T extends boolean = true> {
+  portal?: T;
+  privacyName?: T;
+  privacyEmail?: T;
+  safeguardingName?: T;
+  safeguardingEmail?: T;
+  safeguardingPhone?: T;
+  schoolOfflineConsent?: T;
+  agreementAcceptedAt?: T;
+  agreementName?: T;
+  agreementVersion?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "child-code-flags_select".
+ */
+export interface ChildCodeFlagsSelect<T extends boolean = true> {
+  accessCode?: T;
+  forChildren?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "help-requests_select".
+ */
+export interface HelpRequestsSelect<T extends boolean = true> {
+  portal?: T;
+  user?: T;
+  kind?: T;
+  page?: T;
+  device?: T;
+  note?: T;
+  status?: T;
+  happenedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "classes_select".
+ */
+export interface ClassesSelect<T extends boolean = true> {
+  portal?: T;
+  name?: T;
+  colour?: T;
+  teachers?: T;
+  learners?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "class-join-rules_select".
+ */
+export interface ClassJoinRulesSelect<T extends boolean = true> {
+  portal?: T;
+  accessCode?: T;
+  class?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ops-events_select".
+ */
+export interface OpsEventsSelect<T extends boolean = true> {
+  kind?: T;
+  ok?: T;
+  at?: T;
+  detail?: T;
+  portal?: T;
   updatedAt?: T;
   createdAt?: T;
 }

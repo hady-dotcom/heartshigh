@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { test } from 'node:test'
 import { securityHeaders } from '../../security-headers.mjs'
@@ -107,6 +107,7 @@ test('security headers are set, and they do not trust a frame from another site'
   assert.equal(headers['X-Frame-Options'], 'DENY')
   assert.match(headers['Content-Security-Policy'], /frame-ancestors 'none'/)
   assert.match(headers['Content-Security-Policy'], /youtube-nocookie/)
+  assert.match(headers['Content-Security-Policy'], /challenges\.cloudflare\.com/)
   assert.match(headers['Strict-Transport-Security'], /max-age=/)
   assert.match(readFileSync(path.join(root, 'next.config.mjs'), 'utf8'), /securityHeaders/)
 })
@@ -144,15 +145,29 @@ test('the Dockerfile bakes no secret or database address into the image', () => 
 })
 
 test('the latest Postgres migration has a table for every collection and global', async () => {
-  const { readdirSync } = await import('node:fs')
   const { collections } = await import('../../src/collections')
   const { aiCollections } = await import('../../src/collections-ai')
   const { MasterFlags } = await import('../../src/collections-opening')
   const { sheetCollections } = await import('../../src/collections-sheet')
+  const { gatherCollections } = await import('../../src/collections-gather')
+  const { consentCollections } = await import('../../src/collections-consent')
   const dir = path.join(root, 'src/migrations')
-  const latest = readdirSync(dir).filter((name) => name.endsWith('.json')).sort().at(-1)!
-  const tables = new Set(Object.keys(JSON.parse(readFileSync(path.join(dir, latest), 'utf8')).tables).map((name) => name.replace(/^public\./, '')))
-  const slugs = [...collections, ...aiCollections, ...sheetCollections, MasterFlags].map((item) => item.slug.replace(/-/g, '_'))
+  const latest = readdirSync(dir).filter((name) => name.endsWith('.json')).sort().at(-1)
+  const tables = new Set<string>(
+    latest ? Object.keys(JSON.parse(readFileSync(path.join(dir, latest), 'utf8')).tables).map((name) => name.replace(/^public\./, '')) : [],
+  )
+  for (const name of readdirSync(dir).filter((file) => file.endsWith('.ts') && file !== 'index.ts')) {
+    const src = readFileSync(path.join(dir, name), 'utf8')
+    for (const match of src.matchAll(/CREATE TABLE(?: IF NOT EXISTS)? "([^"]+)"/gi)) tables.add(match[1])
+  }
+  const { adminCollections } = await import('../../src/collections-admin')
+  const slugs = [...collections, ...aiCollections, ...sheetCollections, ...gatherCollections, ...consentCollections, ...adminCollections, MasterFlags].map((item) =>
+    item.slug.replace(/-/g, '_'),
+  )
   const missing = slugs.filter((slug) => !tables.has(slug))
-  assert.deepEqual(missing, [], `run npx payload migrate:create against Postgres; ${latest} lacks ${missing.join(', ')}`)
+  assert.deepEqual(missing, [], `a Postgres migration must CREATE ${missing.join(', ')}`)
+  const consentSql = readFileSync(path.join(dir, '20261005_120000_consent.ts'), 'utf8')
+  for (const column of ['legal_pages_id', 'consents_id', 'age_profiles_id', 'portal_contacts_id', 'child_code_flags_id', 'help_requests_id']) {
+    assert.match(consentSql, new RegExp(`payload_locked_documents_rels[\\s\\S]*${column}`), `consent migration must add lock column ${column}`)
+  }
 })

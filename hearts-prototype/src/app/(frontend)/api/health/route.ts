@@ -11,7 +11,14 @@ export async function GET() {
   try {
     const payload = await getPayload({ config })
     await payload.find({ collection: 'users', depth: 0, limit: 1, overrideAccess: true })
-    return Response.json({ ok: true, database: databaseKind(), storage: readS3() ? 's3' : 'local' })
+    const email = process.env.SMTP_URL || process.env.RESEND_API_KEY ? 'on' : 'off'
+    return Response.json({
+      ok: true,
+      database: databaseKind(),
+      storage: readS3() ? 's3' : 'local',
+      email,
+      version: process.env.HEARTS_VERSION || process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 8) || 'dev',
+    })
   } catch (error) {
     logError('health', error)
     return Response.json({ ok: false }, { status: 503 })

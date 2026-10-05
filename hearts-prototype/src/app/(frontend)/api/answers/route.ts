@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server'
 import config from '@payload-config'
 import { REST_GET } from '@payloadcms/next/routes'
+import { tooManyAnswers } from '@/lib/auth-gate'
+import { clientIp, hitAnswer } from '@/lib/rate-limit'
 import { getSession } from '@/server/context'
 import { json, readBody, viewAsRefusal } from '@/server/api'
 import { saveAnswer, type AnswerInput } from '@/server/handle'
+import { applyChildAnswerRules, refuseUnconsented } from '@/server/consent-actions'
+import { portalIdOf } from '@/lib/ids'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,6 +50,10 @@ export async function POST(req: Request) {
   const refused = await viewAsRefusal(session, 'answers', true)
   if (refused) return refused
   const { payload, user } = session
+  const needsConsent = await refuseUnconsented(req, session, 'answer')
+  if (needsConsent) return needsConsent
+  const limited = hitAnswer(user.id, clientIp(req))
+  if (!limited.allowed) return tooManyAnswers(limited.retryAfterSec, true)
   const body = await readBody(req)
 
   if (body.later) {
@@ -56,6 +64,42 @@ export async function POST(req: Request) {
     return json({ ok: true, open: true })
   }
 
+  if (body.think || body.thinkRead) {
+    const pointId = Number(body.pointId)
+    const lessonId = Number(body.lessonId)
+    if (!pointId) return json({ error: 'Name the question.' }, 400)
+    const key = `think:${user.id}:${pointId}`
+    const existing = await payload.find({ collection: 'notifications', overrideAccess: true, depth: 0, limit: 1, where: { and: [{ user: { equals: user.id } }, { key: { equals: key } }] } })
+    if (body.thinkRead) {
+      if (existing.docs[0] && !existing.docs[0].read) {
+        await payload.update({ collection: 'notifications', id: existing.docs[0].id, overrideAccess: true, data: { read: true } })
+      }
+      return json({ ok: true, read: true })
+    }
+    const point = await payload.findByID({ collection: 'engagement-points', id: pointId, overrideAccess: true, depth: 0 }).catch(() => null)
+    const rewrite = (await payload.find({ collection: 'question-rewrites', overrideAccess: true, depth: 0, limit: 1, where: { point: { equals: pointId } } })).docs[0] as { rewrite?: string } | undefined
+    const prompt = String(rewrite?.rewrite || point?.prompt || '')
+    if (existing.docs[0]) {
+      await payload.update({ collection: 'notifications', id: existing.docs[0].id, overrideAccess: true, data: { read: false, body: JSON.stringify({ kind: 'think', pointId, lessonId, prompt }), title: 'Think about this' } })
+    } else {
+      await payload.create({
+        collection: 'notifications',
+        overrideAccess: true,
+        data: {
+          user: user.id,
+          portal: portalIdOf(user) || undefined,
+          title: 'Think about this',
+          body: JSON.stringify({ kind: 'think', pointId, lessonId, prompt }),
+          href: '/',
+          channel: 'think',
+          key,
+          read: false,
+        },
+      })
+    }
+    return json({ ok: true, held: true })
+  }
+
   if (Array.isArray(body.pending)) {
     const results = []
     for (const row of body.pending.slice(0, 50)) {
@@ -64,7 +108,12 @@ export async function POST(req: Request) {
     return json({ ok: true, saved: results.filter((row) => row.ok).length, results })
   }
 
-  const result = await saveAnswer(payload, user, inputOf(body, false))
+  const incoming = inputOf(body, false)
+  const child = await applyChildAnswerRules(payload, user, incoming)
+  if (child.error && (incoming.shareWithLearners || incoming.shareWithTeacher) && !child.defaults.answersSavedForTeachers) {
+    return json({ error: child.error }, 403)
+  }
+  const result = await saveAnswer(payload, user, { ...incoming, ...child.input })
   const accept = req.headers.get('accept') || ''
   const page = accept.includes('text/html') && !accept.includes('application/json')
   const next = typeof body.next === 'string' && body.next.startsWith('/') && !body.next.startsWith('//') ? body.next : ''

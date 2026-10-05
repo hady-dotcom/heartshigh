@@ -6,6 +6,8 @@ import { doorLabel } from '@/lib/doors'
 import { loadDoors } from '@/server/doors'
 import { attendanceReport, listGatherings, sharePack } from '@/server/gather'
 import { type Ctx, rows, str } from '../common'
+import { HelpTip } from '@/components/desk/help'
+import { PAGE } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
 
 const AUDIENCES = [
@@ -35,7 +37,10 @@ export async function GatherDeskScreen(ctx: Ctx) {
         <div className="stat-chip"><b>{cards.reduce((sum, card) => sum + card.checkedIn, 0)}</b><span>Checked in</span></div>
         <div className="stat-chip"><b>{proposed.length}</b><span>Waiting on you</span></div>
       </div>
-      <p style={{ marginTop: 0 }}><Link className="btn" href={`${base}/admin/gather/attendance`} data-testid="attendance-link">Attendance</Link></p>
+      <p style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Link className="btn" href={`${base}/admin/gather/attendance`} data-testid="attendance-link">Attendance</Link>
+        <HelpTip topic="attendance">{PAGE.attendance}</HelpTip>
+      </p>
       {proposed.length ? (
         <section className="panel" data-testid="proposed-list" style={{ marginBottom: 18 }}>
           <header><h2>Suggested by learners</h2></header>
@@ -56,7 +61,7 @@ export async function GatherDeskScreen(ctx: Ctx) {
         <div>
           {(['upcoming', 'past'] as const).map((bucket) => (
             <section key={bucket} style={{ marginBottom: 18 }} data-testid={`desk-${bucket}`}>
-              <h2 style={{ fontFamily: 'var(--serif)', color: '#0f3b3a', fontSize: 32, margin: '0 0 8px' }}>{bucket === 'upcoming' ? 'Upcoming' : 'Past'}</h2>
+              <h2 className="gather-desk-heading">{bucket === 'upcoming' ? 'Upcoming' : 'Past'}</h2>
               {grouped[bucket].map((group) => (
                 <section className="panel" key={`${bucket}-${group.door}`} data-testid="desk-door" style={{ marginBottom: 12 }}>
                   <header><div><h2>{group.door}</h2><p>{group.items.length} {group.items.length === 1 ? 'gathering' : 'gatherings'}</p></div></header>

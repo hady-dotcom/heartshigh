@@ -13,8 +13,10 @@ import type { SessionUser } from '@/server/context'
 import { one, ref, rows, str } from '../common'
 import { CourseEditorBody } from './content'
 import { DeskFrame, masterNav } from './shell'
+import { ErasePanel } from '@/components/desk/erase-panel'
+import { TOOL } from '@/lib/desk-help'
 
-type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string; part?: string } }
+export type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string; part?: string; hideTest?: string; extract?: string } }
 
 function kindLabel(value: unknown) {
   const text = str(value).replace(/[_-]+/g, ' ').trim()
@@ -22,9 +24,9 @@ function kindLabel(value: unknown) {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
-function MasterFrame({ ctx, active, title, intro, children, testId }: { ctx: MasterCtx; active: string; title: string; intro?: ReactNode; children: ReactNode; testId?: string }) {
+export function MasterFrame({ ctx, active, title, intro, children, testId, evening }: { ctx: MasterCtx; active: string; title: string; intro?: ReactNode; children: ReactNode; testId?: string; evening?: boolean }) {
   return (
-    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
+    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId} evening={evening}>
       {children}
     </DeskFrame>
   )
@@ -54,7 +56,9 @@ export async function MasterPortals(ctx: MasterCtx) {
                   <td>{portal.closed ? <span className="badge rose">Deactivated</span> : <span className="badge teal">Active</span>}</td>
                   <td className="num">{people.filter((person) => inPortal(person, portal.id)).length}</td>
                   <td className="num">{codes.filter((code) => ref(code.portal) === portal.id).length}</td>
-                  <td style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                  <td className="row-actions">
+                    <div className="row-actions-inner">
+                    <Link className="btn ghost small" href={`/master/portals/${str(portal.slug)}`} data-testid="edit-portal">Features</Link>
                     <Link className="btn ghost small" href={`/p/${str(portal.slug)}/admin`}>Open admin</Link>
                     {(() => {
                       const admin = people.find((person) => person.role === 'portal-admin' && inPortal(person, portal.id))
@@ -64,6 +68,19 @@ export async function MasterPortals(ctx: MasterCtx) {
                       <Hidden fields={{ action: 'deactivate', portalSlug: str(portal.slug), closed: portal.closed ? 'no' : 'yes', next: '/master' }} />
                       <button className={`btn ${portal.closed ? 'teal' : 'danger'} small`} data-testid="deactivate-portal" type="submit">{portal.closed ? 'Activate' : 'Deactivate'}</button>
                     </form>
+                    <ErasePanel
+                      action="delete-portal"
+                      next="/master"
+                      portalSlug={str(portal.slug)}
+                      portalId={portal.id}
+                      confirmValue={str(portal.name)}
+                      kind="portal"
+                      help={TOOL.deletePortal}
+                      helpTopic="delete-portal"
+                      label="Delete"
+                      testId={`delete-portal-${str(portal.slug)}`}
+                    />
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -92,7 +109,7 @@ export async function MasterPortals(ctx: MasterCtx) {
       </section>
       <div className="grid three" style={{ alignItems: 'start' }}>
         <section className="panel">
-          <header><div><h2>Open a portal</h2></div></header>
+          <header><div><h2>Open a portal</h2><p><Link href="/master/create" data-testid="open-portal-studio">Choose courses and features</Link> when you want to switch parts on in stages.</p></div></header>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-portal' }} />
             <label className="stack">Name<input type="text" data-testid="create-portal-name" name="name" placeholder="Harbour Mosque" required /></label>
@@ -198,9 +215,9 @@ export async function MasterLibrary(ctx: MasterCtx) {
 export async function MasterCourse(ctx: MasterCtx, courseId: number) {
   const course = await one(ctx.payload, 'courses', courseId)
   if (!course) notFound()
-  const body = await CourseEditorBody({ payload: ctx.payload, user: ctx.user, portal: null, editorHref: `/master/library/${courseId}`, courseId, part: ctx.query.part })
+  const body = await CourseEditorBody({ payload: ctx.payload, user: ctx.user, portal: null, editorHref: `/master/library/${courseId}`, courseId, part: ctx.query.part, extract: ctx.query.extract })
   return (
-    <MasterFrame ctx={ctx} active="library" title={str(course.title)} intro={<Link href="/master/library">‹ Library</Link>} testId="master-course">
+    <MasterFrame ctx={ctx} active="library" title={str(course.title)} intro={<Link href="/master/library">‹ Library</Link>} testId="master-course" evening>
       {body}
     </MasterFrame>
   )

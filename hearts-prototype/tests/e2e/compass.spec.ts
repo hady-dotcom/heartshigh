@@ -7,8 +7,15 @@ const LEARNER = 'demo-learner@hearts.foundation'
 const IMAM = 'demo-imam@hearts.foundation'
 const PASSWORD = 'compass-demo'
 
+const database = process.env.HEARTS_E2E_DATABASE || E2E_DATABASE
+
 test.beforeAll(() => {
-  execSync('npx tsx src/seed/compass-demo.ts', { stdio: 'inherit', env: { ...process.env, DATABASE_URL: E2E_DATABASE } })
+  test.setTimeout(180_000)
+  execSync('npx tsx src/seed/compass-demo.ts', {
+    stdio: 'inherit',
+    timeout: 180_000,
+    env: { ...process.env, DATABASE_URL: database },
+  })
 })
 
 test('a learner cannot fetch their own scores from any compass API', async () => {

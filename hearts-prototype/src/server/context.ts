@@ -5,6 +5,7 @@ import { getPayload, type Payload } from 'payload'
 import config from '@payload-config'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { cookieValue, loadViewAs, type EndReason, type ViewAs } from './viewas'
+import { isSuspended } from '@/lib/account-rules'
 
 export type SessionUser = {
   id: number
@@ -30,6 +31,17 @@ export type SessionUser = {
   shareWithLearners?: boolean | null
   haptics?: boolean | null
   removed?: boolean | null
+  emailConfirmedAt?: string | null
+  totpEnabledAt?: string | null
+  suspendedAt?: string | null
+  suspendReason?: string | null
+  deletionRequestedAt?: string | null
+  mustChangePassword?: boolean | null
+  notificationPrefs?: unknown
+  tokenVersion?: number | null
+  lastDataExportAt?: string | null
+  pendingEmail?: string | null
+  circleMutedUntil?: string | null
 }
 
 export type PortalDoc = {
@@ -56,6 +68,9 @@ export type PortalDoc = {
   teacherLabel?: string | null
   wizardDone?: boolean | null
   timeZone?: string | null
+  requireEmailConfirm?: boolean | null
+  /** Null or missing: every switch uses its registry default (shipped features on). */
+  features?: Record<string, boolean> | null
 }
 
 /**
@@ -77,6 +92,7 @@ export type Session = {
   actor: SessionUser | null
   viewAs: ViewAs | null
   viewAsEnded: EndReason | null
+  dropSession?: 'paused' | 'expired' | null
 }
 
 async function readSession(touch: boolean): Promise<Session> {
@@ -89,7 +105,15 @@ async function readSession(touch: boolean): Promise<Session> {
     id: result.user.id,
     overrideAccess: true,
     depth: 0,
-  })) as unknown as SessionUser
+  }).catch(() => null)) as unknown as SessionUser | null
+  if (!full || full.removed) return { payload, user: null, actor: null, viewAs: null, viewAsEnded: null }
+  if (isSuspended(full)) {
+    return { payload, user: null, actor: null, viewAs: null, viewAsEnded: null, dropSession: 'paused' }
+  }
+  const jwtVersion = (result.user as { tokenVersion?: number }).tokenVersion
+  if (Number(full.tokenVersion || 0) !== Number(jwtVersion || 0)) {
+    return { payload, user: null, actor: null, viewAs: null, viewAsEnded: null, dropSession: 'expired' }
+  }
   const token = cookieValue(reqHeaders.get('cookie'))
   const { viewAs, ended } = await loadViewAs(payload, full, token, touch)
   let viewAsEnded = ended
@@ -258,6 +282,8 @@ export async function adoptedCourseIds(payload: Payload, portalId: number) {
 
 export async function requireUser() {
   const session = await getSession()
+  if (session.dropSession === 'paused') redirect('/api/hearts/session-end?reason=paused')
+  if (session.dropSession === 'expired') redirect('/api/hearts/session-end?reason=expired')
   if (!session.user) redirect(`/login?next=${encodeURIComponent((await headers()).get('x-hearts-path') || '/')}`)
   return session as Session & { user: SessionUser; actor: SessionUser }
 }
