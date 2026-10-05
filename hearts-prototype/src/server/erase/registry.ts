@@ -196,7 +196,6 @@ registerWipe({
   countLabel: 'Study plans',
 })
 
-portalOnly('events', 'nights', 'Nights')
 tenantOwned('rsvps', 'user', 'rsvps', 'Night tickets')
 
 registerWipe({
@@ -212,22 +211,10 @@ registerWipe({
   countLabel: 'Night check-ins',
 })
 
+portalOnly('events', 'nights', 'Nights')
 tenantOwned('messages', 'author', 'board', 'Board notes')
 portalOnly('access-codes', 'codes', 'Access codes')
 portalOnly('adoptions', 'adoptions', 'Library links')
-
-registerWipe({
-  collection: 'gatherings',
-  table: 'gatherings',
-  relations: { portals: ['portal'], users: ['host', 'proposedBy'] },
-  portal: { kind: 'hard-delete', field: 'portal' },
-  user: [
-    { kind: 'unlink', field: 'host' },
-    { kind: 'unlink', field: 'proposedBy' },
-  ],
-  countKey: 'gatherings',
-  countLabel: 'Gatherings',
-})
 
 registerWipe({
   collection: 'gather-rsvps',
@@ -254,6 +241,19 @@ registerWipe({
   mediaColumns: ['image_id'],
   countKey: 'gatherPhotos',
   countLabel: 'Gather photos',
+})
+
+registerWipe({
+  collection: 'gatherings',
+  table: 'gatherings',
+  relations: { portals: ['portal'], users: ['host', 'proposedBy'] },
+  portal: { kind: 'hard-delete', field: 'portal' },
+  user: [
+    { kind: 'unlink', field: 'host' },
+    { kind: 'unlink', field: 'proposedBy' },
+  ],
+  countKey: 'gatherings',
+  countLabel: 'Gatherings',
 })
 
 registerWipe({

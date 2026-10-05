@@ -71,8 +71,12 @@ async function wipeLocalTalkTree(exec: SqlExec, portalId: number, deleted: Recor
     const result = await exec(`DELETE FROM ${quoteIdent(row.table)} WHERE ${quoteIdent(row.column)} IN (${lessons})`)
     deleted[row.table] = (deleted[row.table] || 0) + result.rowCount
   }
+  const localLessons = await exec(`DELETE FROM lessons WHERE course_id IN (SELECT id FROM courses WHERE origin = 'local' AND portal_id = ${portalId})`)
+  deleted.lessons = (deleted.lessons || 0) + localLessons.rowCount
   const units = await exec(`DELETE FROM units WHERE course_id IN (SELECT id FROM courses WHERE origin = 'local' AND portal_id = ${portalId})`)
   deleted.units = (deleted.units || 0) + units.rowCount
+  const localCourses = await exec(`DELETE FROM courses WHERE origin = 'local' AND portal_id = ${portalId}`)
+  deleted.courses = (deleted.courses || 0) + localCourses.rowCount
 }
 
 async function deleteMediaRows(exec: SqlExec, files: MediaTarget[], deleted: Record<string, number>) {
@@ -129,8 +133,14 @@ export async function wipePortal(
     const counts: Record<string, number> = {}
     files.push(...(await gatherMedia(exec, 'portal', portal.id)))
     files.push(...(await unreferencedPortalMedia(exec, portal.id)))
-    await runSide(exec, 'portal', portal.id, counts)
+    await runSide(exec, 'portal', portal.id, counts, new Set(['courses', 'lessons']))
     await wipeLocalTalkTree(exec, portal.id, counts)
+    for (const slug of ['courses', 'lessons', 'packs'] as const) {
+      const entry = wipeEntries().find((row) => row.collection === slug)
+      if (!entry) continue
+      await clearJoins(exec, entry, 'portal', portal.id, counts)
+      for (const rule of rulesFor(entry, 'portal')) await applyRule(exec, entry, rule, portal.id, counts)
+    }
     for (const person of people) {
       if (person.role === 'master') continue
       const homes = tenantsOf(person)

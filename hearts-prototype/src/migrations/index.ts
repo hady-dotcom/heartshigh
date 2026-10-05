@@ -15,6 +15,7 @@ import * as migration_20261004_180000_gather_entry_code from './20261004_180000_
 import * as migration_20261004_210000_schedule_minutes from './20261004_210000_schedule_minutes';
 import * as migration_20261004_230000_portal_features from './20261004_230000_portal_features';
 import * as migration_20261005_010000_erase_cascades from './20261005_010000_erase_cascades';
+import * as migration_20261005_020000_erase_parent_cascades from './20261005_020000_erase_parent_cascades';
 
 export const migrations = [
   {
@@ -101,5 +102,10 @@ export const migrations = [
     up: migration_20261005_010000_erase_cascades.up,
     down: migration_20261005_010000_erase_cascades.down,
     name: '20261005_010000_erase_cascades',
+  },
+  {
+    up: migration_20261005_020000_erase_parent_cascades.up,
+    down: migration_20261005_020000_erase_parent_cascades.down,
+    name: '20261005_020000_erase_parent_cascades',
   },
 ];

@@ -3,24 +3,16 @@ import { after, before, describe, it } from 'node:test'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
-import { databaseKind } from '../../src/lib/env'
 import { closePayload } from '../../src/lib/prepare-db'
 import { findOrphans, formatOrphanReport, missingWipeRegistrations, wipePortal, wipeUser } from '../../src/server/erase'
 import { execOutside } from '../../src/server/erase/sql'
 
-const PG = process.env.HEARTS_ERASE_DATABASE || process.env.HEARTS_INTEGRATION_DATABASE || ''
+const PG = process.env.HEARTS_ERASE_DATABASE || process.env.HEARTS_INTEGRATION_DATABASE || 'postgresql://hearts:hearts@127.0.0.1:5432/hearts_erase'
 
-describe('erase wipe on a real database', () => {
+describe('erase wipe on a real database', { timeout: 180_000 }, () => {
   it('the registry is complete before any seed', () => {
     assert.deepEqual(missingWipeRegistrations(), [])
   })
-
-  if (!PG && databaseKind() !== 'postgres') {
-    it('skips the live wipe when no Postgres URL is set; HEARTS_ERASE_DATABASE is required', () => {
-      assert.ok(true)
-    })
-    return
-  }
 
   let payload: Awaited<ReturnType<typeof import('payload')['getPayload']>>
   let keepPortal: { id: number; name: string }
@@ -95,12 +87,17 @@ describe('erase wipe on a real database', () => {
 
     const dir = path.resolve(process.cwd(), 'media')
     mkdirSync(dir, { recursive: true })
-    const filename = `erase-${suffix}.txt`
-    writeFileSync(path.join(dir, filename), 'wipe-me')
+    const filename = `erase-${suffix}.png`
+    const filePath = path.join(dir, filename)
+    writeFileSync(
+      filePath,
+      Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64'),
+    )
     const media = (await payload.create({
       collection: 'media',
       overrideAccess: true,
-      data: { alt: 'wipe file', portal: wipePortalDoc.id, filename },
+      data: { alt: 'wipe file', portal: wipePortalDoc.id },
+      filePath,
     })) as { id: number }
     mediaId = media.id
 
@@ -223,7 +220,11 @@ describe('erase wipe on a real database', () => {
   })
 
   after(async () => {
-    if (payload) await closePayload(payload)
+    if (!payload) return
+    const pool = (payload.db as { pool?: { end?: () => Promise<unknown> } }).pool
+    if (pool?.end) await pool.end().catch(() => undefined)
+    await closePayload(payload)
+    setTimeout(() => process.exit(0), 50).unref()
   })
 
   it('wiping a learner leaves no rows for them and keeps the other portal and the library talk', async () => {

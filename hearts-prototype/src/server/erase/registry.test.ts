@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { collectionsNeedingWipe } from './relations'
-import { missingWipeRegistrations, registeredSlugs, wipeEntries, wipeEntry } from './registry'
+import { registeredSlugs, wipeEntries, wipeEntry } from './registry'
+import { missingWipeRegistrations } from './service'
 import { confirmMatches, refusePortalDelete } from './permissions'
 import { TENANT_COLLECTIONS } from '../../lib/tenant-collections'
 
