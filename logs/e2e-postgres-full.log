@@ -1,0 +1,1128 @@
+Wiped the Postgres database (dropped the public schema).
+[11:17:59] [32mINFO[39m: [36mReading migration files from /workspace/hearts-prototype/src/migrations[39m
+[11:17:59] [32mINFO[39m: [36mMigrating: 20261003_103330_initial[39m
+[11:18:00] [32mINFO[39m: [36mMigrated:  20261003_103330_initial (931ms)[39m
+[11:18:00] [32mINFO[39m: [36mMigrating: 20261003_124500_integration_part1[39m
+[11:18:00] [32mINFO[39m: [36mMigrated:  20261003_124500_integration_part1 (184ms)[39m
+[11:18:00] [32mINFO[39m: [36mMigrating: 20261003_131651_integration_part2[39m
+[11:18:00] [32mINFO[39m: [36mMigrated:  20261003_131651_integration_part2 (43ms)[39m
+[11:18:00] [32mINFO[39m: [36mMigrating: 20261003_140611_harvest[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261003_140611_harvest (24ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261003_180616_jibril_doors[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261003_180616_jibril_doors (18ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261003_194500_line_tidy[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261003_194500_line_tidy (0ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261003_200853_integration_final[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261003_200853_integration_final (38ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261003_220000_feedback[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261003_220000_feedback (46ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261004_031500_gather[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261004_031500_gather (84ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261004_060000_shorts[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261004_060000_shorts (1ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261004_061000_portal_time_zone[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261004_061000_portal_time_zone (1ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261004_080000_lesson_picture_flags[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261004_080000_lesson_picture_flags (1ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261004_120000_compass_v2[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261004_120000_compass_v2 (31ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261004_180000_gather_entry_code[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261004_180000_gather_entry_code (4ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261004_210000_schedule_minutes[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261004_210000_schedule_minutes (0ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261004_230000_portal_features[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261004_230000_portal_features (1ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261004_233000_talk_extracts[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261004_233000_talk_extracts (22ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261005_010000_admin_ops[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261005_010000_admin_ops (30ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261005_020000_accounts[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261005_020000_accounts (2ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261005_021000_trash[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261005_021000_trash (12ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261005_120000_consent[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261005_120000_consent (47ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261005_130000_erase_cascades[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261005_130000_erase_cascades (57ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261005_131000_erase_parent_cascades[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261005_131000_erase_parent_cascades (4ms)[39m
+[11:18:01] [32mINFO[39m: [36mMigrating: 20261005_132000_erase_s3_retries[39m
+[11:18:01] [32mINFO[39m: [36mMigrated:  20261005_132000_erase_s3_retries (0ms)[39m
+Harvest: 172 verses and hadith across 31 talks. No quotation found in 5: Gratitude is the Greatest Blessing | Gems from Ibn Ata Illah Ep. 1 | Shaykh Mikaeel Ahmed Smith; How to Manage Your Anger - Amjad Tarsin; Moments of Solitude: Closeness to God | Jummah Khutbah | Imam Khalid Latif | 3.11.2022; On Mosques, Companionship, & Knowledge; Quranic Connection #26: A Cure for Anxiety | Shaykh Suleiman Hani.
+Harvest sample: 4 lines kept for Maryam.
+Feedback demo: sample answers are on the East London and Leeds desks.
+Seeded HEARTS. Master: master@hearts.test / hearts-master
+Access codes (also on the master desk, and in data/seed-codes-test.json):
+  elm-teacher    ELM-GYDC-CGUF
+  elm-admin      ELM-P9CE-UR6V
+  elm-learner    ELM-4JDY-T3X8
+  elm-parent     ELM-TG8J-PWUD
+  leeds-teacher  LEEDS-NBNB-HKCP
+  leeds-learner  LEEDS-NPHY-J7NA
+
+Running 277 tests using 1 worker
+
+(node:31866) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:31866) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/277] tests/e2e/account-2fa.spec.ts:15:1 › A09: two-step enrol, TOTP sign-in, backup codes once, password alone cannot pass
+[2/277] tests/e2e/account-2fa.spec.ts:93:1 › A09: a password alone cannot reach /master after a master enrols
+[3/277] tests/e2e/account-data.spec.ts:4:1 › A20: Download my data emails a zip link that contains data.json and my-hearts.html
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: users.delete,1,master,23,master,2026-10-05T11:19:04.154Z,{"collection":"users","id":23},2026-10-05T11:19:04.155Z,2026-10-05T11:19:04.155Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_target_id_users_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 279,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (target_id)=(23) is not present in table "users".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_target_id_users_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+[4/277] tests/e2e/account-delete.spec.ts:4:1 › A19: delete request emails, signing in cancels, and the job runs after the clock is moved
+[WebServer] (node:31572) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default, $7, $8, default, $9, $10, $11) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: erase.user,25,learner,25,learner,1,Account wiped,2026-11-01T12:00:00.000Z,{"deleted":{"engagement_points_rels":0,"engagement-points:unlink":0,"talk-tiers:unlink":0,"answers":0,"workbook-entries":0,"notifications":0,"completions":0,"harvest-entries":0,"drawn-to":0,"watch-sessions":0,"lesson-visits":0,"seat-visits":0,"rituals":0,"placing-answers":0,"feedback-notes":0,"schedules_rels":0,"schedules":0,"rsvps":0,"checkins":0,"checkins:unlink":0,"messages":0,"gather-rsvps":0,"gather-rsvps:unlink":0,"gather-checkins":0,"gather-reflections":0,"gather-photos":0,"gatherings:unlink":0,"circle-answers":0,"heart-states":0,"opening_answers_rels":0,"opening-answers":0,"view-as-sessions":0,"audit-log":4,"compass-attempts":0,"compass-serves":0,"feedback-summaries":0,"sheet-imports:unlink":0,"question-rewrites:unlink":0,"ai-step-versions:unlink":0,"ai-step-jobs:unlink":0,"consents":2,"consents:unlink":0,"age-profiles":1,"age-profiles:unlink":0,"help-requests":0,"classes_rels":0,"users":1},"files":{"removed":0,"failed":0}},2026-10-05T11:19:18.541Z,2026-10-05T11:19:18.541Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]     at async wipeUser (src/server/erase/service.ts:243:2)
+[WebServer]     at async eraseUser (src/server/erase-user.ts:18:19)
+[WebServer]     at async runDeletionWipes (src/server/account-jobs.ts:22:18)
+[WebServer]     at async runAccountJobs (src/server/account-jobs.ts:106:20)
+[WebServer]     at async POST (src/app/(frontend)/api/hearts/jobs/route.ts:13:27)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default, $7, $8, default, $9, $10, $11) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_actor_id_users_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]       at async wipeUser (src/server/erase/service.ts:243:2)
+[WebServer]       at async eraseUser (src/server/erase-user.ts:18:19)
+[WebServer]       at async runDeletionWipes (src/server/account-jobs.ts:22:18)
+[WebServer]       at async runAccountJobs (src/server/account-jobs.ts:106:20)
+[WebServer]       at async POST (src/app/(frontend)/api/hearts/jobs/route.ts:13:27)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 276,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (actor_id)=(25) is not present in table "users".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_actor_id_users_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, default, $3, default, default, default, default, $4, default, $5, $6, $7) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: account.deleted,25,25,2026-11-01T12:00:00.000Z,{"via":"cooling-off"},2026-10-05T11:19:18.698Z,2026-10-05T11:19:18.698Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]     at async runDeletionWipes (src/server/account-jobs.ts:29:6)
+[WebServer]     at async runAccountJobs (src/server/account-jobs.ts:106:20)
+[WebServer]     at async POST (src/app/(frontend)/api/hearts/jobs/route.ts:13:27)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, default, $3, default, default, default, default, $4, default, $5, $6, $7) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_actor_id_users_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]       at async runDeletionWipes (src/server/account-jobs.ts:29:6)
+[WebServer]       at async runAccountJobs (src/server/account-jobs.ts:106:20)
+[WebServer]       at async POST (src/app/(frontend)/api/hearts/jobs/route.ts:13:27)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 276,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (actor_id)=(25) is not present in table "users".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_actor_id_users_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+[5/277] tests/e2e/account-notify.spec.ts:4:1 › N05: notification preferences save, including quiet night and email consent
+[6/277] tests/e2e/account-password.spec.ts:4:1 › A05: Settings change password refuses a wrong current password, then emails the change
+[7/277] tests/e2e/account-proof.spec.ts:33:1 › proof stills: reset, confirm mail, 2FA and suspend
+[8/277] tests/e2e/account-reset.spec.ts:17:1 › A02: a confirmed learner resets from the emailed link, then the token expires
+[9/277] tests/e2e/account-reset.spec.ts:53:1 › A02: a wrong token and an unconfirmed inbox keep the same calm notice
+[10/277] tests/e2e/account-staff.spec.ts:18:1 › A03: the master desk sends a real test email through the catcher
+[11/277] tests/e2e/account-staff.spec.ts:31:1 › A06: change email writes to both inboxes and switches only after confirm
+[12/277] tests/e2e/account-staff.spec.ts:51:1 › A22: a temporary password forces a change at the next sign-in
+[13/277] tests/e2e/account-staff.spec.ts:76:1 › A15: a confirmed learner can be made a teacher; an unconfirmed one cannot
+[14/277] tests/e2e/account-staff.spec.ts:99:1 › A11: the access desk emails a join link
+[15/277] tests/e2e/account-verify.spec.ts:4:1 › A04: join sends a confirm email, the strip shows, then it goes after the link
+[16/277] tests/e2e/ai-steps.spec.ts:73:3 › AI steps › registry, versions, diff, try-it and mock mode
+[17/277] tests/e2e/ai-steps.spec.ts:120:3 › AI steps › a re-run does not overwrite an approved tier, and the review screen says a new draft is available
+[18/277] tests/e2e/ai-steps.spec.ts:149:3 › AI steps › a background re-run reports progress and keeps a per-talk error
+[19/277] tests/e2e/ai-steps.spec.ts:186:3 › AI steps › portal admins can read the steps and cannot edit them until the master grants it
+[20/277] tests/e2e/auth-garden.spec.ts:69:5 › join with the code in the link is the evening garden (phone, dawn)
+[21/277] tests/e2e/auth-garden.spec.ts:86:5 › sign-in is the evening garden (phone, dawn)
+[22/277] tests/e2e/auth-garden.spec.ts:69:5 › join with the code in the link is the evening garden (phone, evening)
+[23/277] tests/e2e/auth-garden.spec.ts:86:5 › sign-in is the evening garden (phone, evening)
+[24/277] tests/e2e/auth-garden.spec.ts:69:5 › join with the code in the link is the evening garden (desk, dawn)
+[25/277] tests/e2e/auth-garden.spec.ts:86:5 › sign-in is the evening garden (desk, dawn)
+[26/277] tests/e2e/auth-garden.spec.ts:69:5 › join with the code in the link is the evening garden (desk, evening)
+[27/277] tests/e2e/auth-garden.spec.ts:86:5 › sign-in is the evening garden (desk, evening)
+[28/277] tests/e2e/auth-garden.spec.ts:98:1 › the front door is the evening garden too, and signing in from the garden page still works
+[29/277] tests/e2e/auth-garden.spec.ts:110:1 › a portal named Hearts shows as HEARTS on the master desk; its slug stays as typed
+[30/277] tests/e2e/basics-admin.spec.ts:27:3 › Lane D admin desk › D02 activity log shows a plain sentence and filters to this portal
+[31/277] tests/e2e/basics-admin.spec.ts:60:3 › Lane D admin desk › A12 bulk add from a list previews problems then creates accounts
+[32/277] tests/e2e/basics-admin.spec.ts:93:3 › Lane D admin desk › A13 people CSV is portal-scoped and audited
+[33/277] tests/e2e/basics-admin.spec.ts:111:3 › Lane D admin desk › K03 classes: create, add a person, see the group
+[34/277] tests/e2e/basics-admin.spec.ts:124:3 › Lane D admin desk › C15 recently removed restore, days left, progress and clean-up
+[35/277] tests/e2e/basics-admin.spec.ts:189:3 › Lane D admin desk › D06 system page is on the master desk
+[36/277] tests/e2e/basics-admin.spec.ts:203:3 › Lane D hostile API › a portal admin sees only their portal audit and people
+[37/277] tests/e2e/circle-sheet.spec.ts:69:1 › the export carries a CircleAnswers tab, and circle answers on an activation task never count as answers or done tasks
+[WebServer] (node:31572) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+
+[38/277] tests/e2e/circle-sheet.spec.ts:130:1 › deleting a question through the sheet takes its circle answers with it, and undo brings both back together
+[39/277] tests/e2e/circle-sheet.spec.ts:167:1 › a portal admin adds circle answers to their own portal’s questions only, and they belong to that portal
+[40/277] tests/e2e/circle.spec.ts:62:3 › HEARTS circle answers › generation: the master desk drafts answers with the chosen count, tones and lengths, with the built-in drafts when there is no AI key
+[41/277] tests/e2e/circle.spec.ts:101:3 › HEARTS circle answers › label: a learner who shares sees circle answers in the swarm with the light label, and the CMS wording reaches them
+[42/277] tests/e2e/circle.spec.ts:131:3 › HEARTS circle answers › fade-out: circle answers step back once real answers reach the threshold, and stay on the desk
+[43/277] tests/e2e/circle.spec.ts:174:3 › HEARTS circle answers › exclusion: circle answers never reach analytics, trends, the profile, the workbook or progress views
+[44/277] tests/e2e/circle.spec.ts:209:3 › HEARTS circle answers › portal scope: a portal admin looks after circle answers on their own courses only, and their answers stay in their portal
+[45/277] tests/e2e/circle.spec.ts:275:3 › HEARTS circle answers › word checks and switches: kill-list text is refused, and bulk off clears the swarm while the desk keeps the answers
+[46/277] tests/e2e/compass.spec.ts:21:1 › a learner cannot fetch their own scores from any compass API
+tests/e2e/compass.spec.ts:21:1 › a learner cannot fetch their own scores from any compass API
+(node:33817) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:33831) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:33842) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Created portal hearts-demo.
+
+
+Compass demo is in place on hearts-demo. New accounts use compass-demo. Existing accounts keep their password.
+
+
+[47/277] tests/e2e/compass.spec.ts:44:1 › the monthly look is five questions and a life check-in
+[48/277] tests/e2e/compass.spec.ts:102:1 › an imam sees the charts, the cohort, and why a talk was chosen
+[49/277] tests/e2e/courses-planning.spec.ts:83:3 › courses and planning › B9: My week is one tap from the feed, and the bar keeps Lanes
+[50/277] tests/e2e/courses-planning.spec.ts:97:3 › courses and planning › B14 and B10: a main opens as a buffet, and scheduling lands on My week
+[51/277] tests/e2e/courses-planning.spec.ts:118:3 › courses and planning › every overview row on a real imported course has a visible still
+[52/277] tests/e2e/courses-planning.spec.ts:150:3 › courses and planning › the player hides question text until its moment
+[53/277] tests/e2e/courses-planning.spec.ts:186:3 › courses and planning › the answer sheet sits opaque over the page after it settles
+[54/277] tests/e2e/courses-planning.spec.ts:211:3 › courses and planning › B6, B11 and B15: the player pauses, thinks, and always has a next part
+[55/277] tests/e2e/courses-planning.spec.ts:262:3 › courses and planning › B25: the workbook summarises and links back to the talk
+[56/277] tests/e2e/courses-planning.spec.ts:274:3 › courses and planning › Home shows This week at both sizes
+[57/277] tests/e2e/courses-planning.spec.ts:283:3 › courses and planning › a short course is spaced across the study-day span, not bunched in week one
+[58/277] tests/e2e/courses-planning.spec.ts:336:3 › courses and planning › Ten sittings splits 3,3,2,2 and keeps the days row after sharing out
+[59/277] tests/e2e/courses-planning.spec.ts:362:3 › courses and planning › a teacher plan locks against another teacher and tells the learner
+[60/277] tests/e2e/csrf-guard.spec.ts:6:1 › a cross-origin cookie POST to a state-changing route is refused while CSRF is on
+[61/277] tests/e2e/doors.spec.ts:50:1 › the 20 doors are seeded with their sections, titles and clauses
+[62/277] tests/e2e/doors.spec.ts:60:1 › a learner sees the 20 doors with their titles and never a clause number
+[63/277] tests/e2e/doors.spec.ts:99:1 › every learner screen that shows the spine speaks in doors
+[64/277] tests/e2e/doors.spec.ts:120:1 › the feed walks the spine door by door and the lanes push talks by door
+[65/277] tests/e2e/doors.spec.ts:151:1 › the desk shows the door first and keeps the clause beside it
+[66/277] tests/e2e/doors.spec.ts:167:1 › the sheet exports the door beside the clause, takes a door in place of a clause, and undo puts it back
+[67/277] tests/e2e/feed-evening.spec.ts:122:1 › question cards are the evening garden: teal gradient over a blurred courtyard, parchment words, a gold Continue, and the video Follow row
+[68/277] tests/e2e/feed-evening.spec.ts:166:1 › a question-card swipe and a scenic-card swipe never show a bare side or a blank pill
+[69/277] tests/e2e/feed-evening.spec.ts:197:1 › words in the picture: YouTube captions are dropped, our caption hides, and the speaker and Follow leave the lower quarter
+[70/277] tests/e2e/feed-evening.spec.ts:233:1 › the extended cut opens on our own poster with the talk title, never a titled YouTube thumbnail
+[71/277] tests/e2e/feed-levels.spec.ts:47:1 › swipes keep to the level being watched, and Learn more goes to the watched item’s own parent
+[72/277] tests/e2e/feed-polish.spec.ts:63:1 › one Tap for sound on the first clip and on the appetiser; the question card’s chrome reads at AA
+[73/277] tests/e2e/feed-polish.spec.ts:87:1 › every scenic card in the feed keeps its words inside the card, never shifts the screen, and offers Mute only with audio
+[74/277] tests/e2e/feed-polish.spec.ts:148:1 › Home Your plan heading reads at AA on the teal card
+  1) tests/e2e/feed-polish.spec.ts:148:1 › Home Your plan heading reads at AA on the teal card ─────
+
+    Error: Your plan rgb(241, 228, 198) on rgba(244, 250, 248, 0.78) 1.19:1
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 4.5
+    Received:    1.1935611275700637
+
+      199 |   })
+      200 |   expect(rows.length).toBeGreaterThan(0)
+    > 201 |   for (const row of rows) expect(row.ratio, `${row.text} ${row.color} on ${row.bg} ${row.ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5)
+          |                                                                                                                ^
+      202 | })
+      203 |
+      204 | test('harvest lines are whole sentences, and Home, Garden and Harvest show the same counts', async ({ page }) => {
+        at /workspace/hearts-prototype/tests/e2e/feed-polish.spec.ts:201:112
+
+    Error Context: ../../tmp/pw-full/feed-polish-Home-Your-plan-4e33f-eads-at-AA-on-the-teal-card/error-context.md
+
+
+(node:34881) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:34881) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[75/277] tests/e2e/feed-polish.spec.ts:204:1 › harvest lines are whole sentences, and Home, Garden and Harvest show the same counts
+[76/277] tests/e2e/feed-polish.spec.ts:231:1 › the portal desk names the portal, never its slug, in the sidebar and on a narrow screen
+[77/277] tests/e2e/feed-polish.spec.ts:248:1 › until a clip actually plays, our poster and a gold play button cover the player, never YouTube’s own
+[78/277] tests/e2e/feed-touch.spec.ts:74:1 › touch swipes left and right move the feed, on a talk clip, on a card, and in the appetiser loop
+[79/277] tests/e2e/feed-touch.spec.ts:109:1 › a question card swipes by touch: the card follows the finger, then the next item comes in from the right
+[80/277] tests/e2e/feedback.spec.ts:79:3 › Feedback for teachers › anonymised export, private answers left out, and a draft question check
+[81/277] tests/e2e/feedback.spec.ts:191:3 › Feedback for teachers › a teacher can open feedback, a learner cannot, and Leeds cannot read East London
+[82/277] tests/e2e/gather.spec.ts:43:1 › RSVP, waitlist promotion, public page, calendar, QR check-in and activation
+[83/277] tests/e2e/harvest-lines.spec.ts:23:1 › the seeded lines group and filter by the 20 doors and by speaker, cite only real words, and open their context
+[84/277] tests/e2e/harvest-lines.spec.ts:66:1 › a fresh learner sees the sample, then a short clip keeps a real line and parts watched stays at 0
+[85/277] tests/e2e/harvest.spec.ts:71:3 › harvest › finishing a talk fills Harvest with what was said, verses placed only when the match is sure
+[86/277] tests/e2e/harvest.spec.ts:86:3 › harvest › the Garden counts the new harvest; the cards are verbatim, Arabic above the translation, and the new marker clears once seen
+[87/277] tests/e2e/harvest.spec.ts:127:3 › harvest › filters and grouping
+[88/277] tests/e2e/harvest.spec.ts:151:3 › harvest › Maryam’s seeded harvest groups under the doors of the hadith of Jibril
+[89/277] tests/e2e/harvest.spec.ts:159:3 › harvest › a card replays its talk from a few seconds before the quote
+[90/277] tests/e2e/harvest.spec.ts:170:3 › harvest › See it in context shows the ayah among its neighbours, and the named hadith in full
+[91/277] tests/e2e/harvest.spec.ts:193:3 › harvest › What do the scholars say offers a labelled summary or the tafsir itself, each source titled
+[92/277] tests/e2e/harvest.spec.ts:216:3 › harvest › the harvest is the learner’s own: another portal cannot view it and the records are master-only
+[93/277] tests/e2e/hostile-account.spec.ts:17:1 › A17: a portal admin cannot pause someone in another portal, and a paused session dies
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: users.delete,1,master,58,portal-admin,2026-10-05T11:27:04.105Z,{"collection":"users","id":58},2026-10-05T11:27:04.106Z,2026-10-05T11:27:04.106Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_target_id_users_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 279,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (target_id)=(58) is not present in table "users".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_target_id_users_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+[94/277] tests/e2e/hostile-account.spec.ts:80:1 › A15 hostile: a portal admin cannot promote to portal admin or touch another portal
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: users.delete,1,master,59,learner,2026-10-05T11:27:04.741Z,{"collection":"users","id":59},2026-10-05T11:27:04.742Z,2026-10-05T11:27:04.742Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_target_id_users_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 279,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (target_id)=(59) is not present in table "users".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_target_id_users_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+[95/277] tests/e2e/integration-final.spec.ts:67:1 › a learner joins by code, takes the persona quiz, stays on level, steps up by Learn more, answers an imported pop-up and finds it all again
+[96/277] tests/e2e/integration-final.spec.ts:203:1 › a portal admin walks the short setup and lands back on the overview
+[97/277] tests/e2e/integration-r3.spec.ts:15:1 › Me loads with no console errors and keeps the evening palette when the phone is not on UTC
+[98/277] tests/e2e/integration-r3.spec.ts:38:3 › the desk sidebar keeps the learner app link, the name and Sign out in view at 1440x900
+[99/277] tests/e2e/integration-r3.spec.ts:38:3 › the desk sidebar keeps the learner app link, the name and Sign out in view at 1280x720
+[100/277] tests/e2e/integration-r3.spec.ts:57:1 › a YouTube Short in the feed: no caption over its burned-in words, Follow at the top, and our own poster
+[101/277] tests/e2e/integration-r3.spec.ts:90:1 › the export log shows times in the portal's zone with a short label, in the viewer's language
+[102/277] tests/e2e/integration-r3.spec.ts:128:1 › small fixes: favicon, Teach emails end in an ellipsis, and the install card does not push Home down
+[103/277] tests/e2e/integration-r3.spec.ts:172:1 › an opened pack spans the main area as at most about 20 door tiles, with no seats until a door opens, then one clean heading per Ghunya seat
+[104/277] tests/e2e/journeys.spec.ts:93:3 › HEARTS journeys › an empty sign-in is refused
+[105/277] tests/e2e/journeys.spec.ts:101:3 › HEARTS journeys › master opens a portal, a pack and its codes
+[106/277] tests/e2e/journeys.spec.ts:125:3 › HEARTS journeys › admin builds a course, extracts and approves a cut with its clause and seat, and places questions
+[107/277] tests/e2e/journeys.spec.ts:197:3 › HEARTS journeys › the approved cut reaches the learner feed; placing answers choose the first course
+[108/277] tests/e2e/journeys.spec.ts:221:3 › HEARTS journeys › learner answers, meets the contingent question, and the test clock opens it
+[109/277] tests/e2e/journeys.spec.ts:280:3 › HEARTS journeys › a second learner sees the shared answer, and a private answer stays private
+[110/277] tests/e2e/journeys.spec.ts:303:3 › HEARTS journeys › teacher replies to a shared workbook entry and the learner is told
+[111/277] tests/e2e/journeys.spec.ts:324:3 › HEARTS journeys › the schedule splitter shares three parts across Wednesdays and Fridays
+[112/277] tests/e2e/journeys.spec.ts:343:3 › HEARTS journeys › RSVP gives an earned or held ticket, self check-in for earned, staff check-in for held
+[113/277] tests/e2e/journeys.spec.ts:369:3 › HEARTS journeys › rooms stay apart, including forged ids and the raw API
+[114/277] tests/e2e/journeys.spec.ts:405:3 › HEARTS journeys › a learner on an admin address is sent back, and a closed portal shows the closed page
+[115/277] tests/e2e/journeys.spec.ts:428:3 › HEARTS journeys › feed swipes stay on one level, and learn more steps to that clip’s own parent
+[116/277] tests/e2e/journeys.spec.ts:481:3 › HEARTS journeys › the main screens load without console errors
+[117/277] tests/e2e/legal-a11y.spec.ts:17:1 › X01 axe-core on main learner and desk pages
+[118/277] tests/e2e/legal-a11y.spec.ts:39:1 › H01 help mark is on learner and desk frames
+[119/277] tests/e2e/legal-child.spec.ts:7:1 › L04 under-13 waits for a grown-up and shows the guardian link in e2e
+[120/277] tests/e2e/legal-child.spec.ts:23:1 › L04 school-offline path: staff can tick a child
+[121/277] tests/e2e/legal-consent.spec.ts:7:1 › L03 join records consent and opens the welcome
+[122/277] tests/e2e/legal-consent.spec.ts:13:1 › L01 L02 legal pages are linked from the door and show a draft mark
+[123/277] tests/e2e/legal-consent.spec.ts:26:1 › H02 get help files a broken note
+[124/277] tests/e2e/legal-consent.spec.ts:35:1 › seeded learners already agreed and can open home
+[125/277] tests/e2e/legal-cookies.spec.ts:3:1 › L05 privacy page lists cookies and storage and does not load Google Fonts
+[126/277] tests/e2e/legal-fonts.spec.ts:14:1 › L05 display font is loaded on opening, Home and a desk page
+[127/277] tests/e2e/legal-hostile.spec.ts:4:1 › L03 hostile: learner actions are refused until consent exists
+[128/277] tests/e2e/legal-hostile.spec.ts:40:1 › P11 hostile: a learner cannot write portal contacts
+[129/277] tests/e2e/legal-policy-version.spec.ts:5:1 › L03 a new published version asks the learner to agree again
+[130/277] tests/e2e/legal-transcript-search.spec.ts:4:1 › C06 C07 C10 captions, transcript and search
+[131/277] tests/e2e/library-teach.spec.ts:25:1 › library packs are summaries, and the course picker is the door tree
+[132/277] tests/e2e/library-teach.spec.ts:83:1 › demo learners show varied on-time fractions on Teach
+tests/e2e/library-teach.spec.ts:83:1 › demo learners show varied on-time fractions on Teach
+
+> hearts-prototype@1.0.0 demo:timed-learners
+> tsx src/seed/timed-learners.ts
+
+
+
+(node:37309) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:37320) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Demo portal /p/hearts-demo is ready. Sign in as demo-admin@hearts-demo.test / demo-timed
+  Layla Rahman (demo): 7 parts watched, 4 answers
+  Yusuf Karim (demo): 3 parts watched, 1 answers
+  Amina Shah (demo): 9 parts watched, 6 answers
+  Hassan Malik (demo): 5 parts watched, 5 answers
+
+
+[133/277] tests/e2e/library-teach.spec.ts:107:1 › the workbook empty state is the arch and a sentence, with no bird art
+[134/277] tests/e2e/master-sheet.spec.ts:59:1 › template downloads as xlsx and the seeded library round-trips with no changes
+[135/277] tests/e2e/master-sheet.spec.ts:85:1 › a dry run names every bad cell and does not save the rows
+[136/277] tests/e2e/master-sheet.spec.ts:121:1 › applying an ai draft keeps it off the learner page until a person approves it, and undo puts the import back
+[137/277] tests/e2e/master-sheet.spec.ts:178:1 › a portal admin can only import into courses made in their own portal
+[138/277] tests/e2e/master-sheet.spec.ts:212:1 › five hundred rows are previewed through the import route
+[139/277] tests/e2e/master-sheet.spec.ts:235:1 › the desk shows the error preview, the applied import and the export
+[140/277] tests/e2e/nesting-progress.spec.ts:22:1 › at phone size, short clips stay off the grow page and a full talk in a course moves it
+[141/277] tests/e2e/nesting.spec.ts:72:1 › every seeded hors d'oeuvre sits inside its appetiser, and every appetiser inside its full talk
+[142/277] tests/e2e/nesting.spec.ts:96:1 › a tier whose hors d'oeuvre leaves the appetiser is refused
+[143/277] tests/e2e/nesting.spec.ts:109:1 › browsing answers and short watching never move the course, the Garden or time given
+[144/277] tests/e2e/nesting.spec.ts:137:1 › the course page sends only the seconds played there, so opening near the end counts nothing
+[145/277] tests/e2e/nesting.spec.ts:150:1 › answering in the course and watching the full talk there do count
+[146/277] tests/e2e/nesting.spec.ts:171:1 › swipes stay on the level being watched, and "Learn more" goes to the parent of that same item
+[147/277] tests/e2e/opening.spec.ts:78:3 › the opening › 1. a first visit to the portal lands on the opener, with its caption and both ways in
+[148/277] tests/e2e/opening.spec.ts:87:3 › the opening › 2. nothing from YouTube loads before the learner chooses a way in (P12)
+[149/277] tests/e2e/opening.spec.ts:94:3 › the opening › 3. Let us play opens scene one, and the address follows the scene
+[150/277] tests/e2e/opening.spec.ts:101:3 › the opening › 4. a tap shows its reply line, then the next scene rises
+[151/277] tests/e2e/opening.spec.ts:110:3 › the opening › 5. Pass moves on without a tap and is kept as a pass
+[152/277] tests/e2e/opening.spec.ts:119:3 › the opening › 6. going back replaces the earlier tap instead of adding one
+[153/277] tests/e2e/opening.spec.ts:132:3 › the opening › 7. the crisis option opens the help screen with contacts, and Back to HEARTS returns to the opener
+[154/277] tests/e2e/opening.spec.ts:146:3 › the opening › 8. the help screen has its own address and works on a cold load
+[155/277] tests/e2e/opening.spec.ts:152:3 › the opening › 9. six taps hand off with the line, then the feed, at /feed
+[156/277] tests/e2e/opening.spec.ts:162:3 › the opening › 10. Back from the feed does not reopen the scenes
+[157/277] tests/e2e/opening.spec.ts:170:3 › the opening › 11. the taps stay on the device: no request carries them before sign-up (P1)
+[158/277] tests/e2e/opening.spec.ts:183:3 › the opening › 12. before sign-up the feed is chosen on the device, so no request carries lane scores (P2)
+[159/277] tests/e2e/opening.spec.ts:197:3 › the opening › 13. Just show me something goes straight to a clip with its own line
+[160/277] tests/e2e/opening.spec.ts:204:3 › the opening › 14. after the opening, the portal address opens the feed on the next visit
+[161/277] tests/e2e/opening.spec.ts:211:3 › the opening › 15. the sky lightens scene by scene and is full at the feed
+[162/277] tests/e2e/opening.spec.ts:220:3 › the opening › 16. a heart on a clip asks to keep the place, and Not now carries on
+[163/277] tests/e2e/opening.spec.ts:229:3 › the opening › 17. signing up from the sheet sends the opening once, and the workbook shows where you started
+[164/277] tests/e2e/opening.spec.ts:251:3 › the opening › 18. a private opening answer is never shown to the teacher (P9)
+[165/277] tests/e2e/opening.spec.ts:264:3 › the opening › 19. the owner sees all six rows, private ones with a lock
+[166/277] tests/e2e/opening.spec.ts:270:3 › the opening › 20. the mentor CSV holds shared rows only
+[167/277] tests/e2e/opening.spec.ts:280:3 › the opening › 21. turning off Share my opening answers hides them from the teacher
+[168/277] tests/e2e/opening.spec.ts:307:3 › the opening › 22. the Me tab lets the learner change their name
+[169/277] tests/e2e/opening.spec.ts:319:3 › the opening › 23. Guarding the gaze is opt-in and kept on the device only
+[170/277] tests/e2e/opening.spec.ts:330:3 › the opening › 24. Start again clears the opening here and on the server, and opens the opener
+[171/277] tests/e2e/opening.spec.ts:350:3 › the opening › 25. reduced motion keeps every step, with fades in place of movement
+[172/277] tests/e2e/opening.spec.ts:364:3 › pop-up questions in a lesson › 26. the question strip shows one mark per question
+[173/277] tests/e2e/opening.spec.ts:372:3 › pop-up questions in a lesson › 27. playback stops at a question, the answer saves, and playback carries on
+[174/277] tests/e2e/opening.spec.ts:394:3 › pop-up questions in a lesson › 28. Answer later closes the card and keeps the question open
+[175/277] tests/e2e/opening.spec.ts:408:3 › pop-up questions in a lesson › 29a. a clip the player refuses is reported, and a report alone never hides it
+[176/277] tests/e2e/opening.spec.ts:420:3 › pop-up questions in a lesson › 29. the strict layout keeps the paused player in view above the card
+[177/277] tests/e2e/opening.spec.ts:445:3 › the desks for the opening › 30. the master sees the six scenes, their options and the publish checks
+[178/277] tests/e2e/opening.spec.ts:452:3 › the desks for the opening › 31. publishing a caption with a kill-list word is refused
+[179/277] tests/e2e/opening.spec.ts:464:3 › the desks for the opening › 32. the simulator runs the phone’s routing on picked taps
+[180/277] tests/e2e/opening.spec.ts:476:3 › the desks for the opening › 33. the lanes screen lists every lane and the tag queue
+[181/277] tests/e2e/opening.spec.ts:482:3 › the desks for the opening › 34. trends stay hidden until ten people have taken part
+[182/277] tests/e2e/opening.spec.ts:488:3 › the desks for the opening › 35. a portal admin rewords a scene for their community and the opener shows it
+[183/277] tests/e2e/opening.spec.ts:504:3 › the desks for the opening › 36. the scene with the help option cannot be left out
+[184/277] tests/e2e/opening.spec.ts:511:3 › the desks for the opening › 37. a portal admin adds a help contact and the help screen lists it
+[WebServer]  ⚠ Server is approaching the used memory threshold, restarting...
+
+  2) tests/e2e/opening.spec.ts:511:3 › the desks for the opening › 37. a portal admin adds a help contact and the help screen lists it 
+
+    Test timeout of 180000ms exceeded.
+
+    Error: page.goto: Test ended.
+    Call log:
+      - navigating to "http://127.0.0.1:3100/p/east-london/help", waiting until "load"
+
+
+      516 |     await expect(page.getByTestId('notice')).toContainText('Help contacts saved')
+      517 |     const visitor = await browser.newPage({ viewport: { width: 390, height: 844 } })
+    > 518 |     await visitor.goto(`/p/${PORTAL}/help`)
+          |                   ^
+      519 |     await expect(visitor.getByTestId('help-contacts')).toContainText('East London Mosque helpline')
+      520 |     await visitor.close()
+      521 |     const row = page.getByTestId('help-contact').filter({ hasText: 'East London Mosque helpline' })
+        at /workspace/hearts-prototype/tests/e2e/opening.spec.ts:518:19
+
+    Error Context: ../../tmp/pw-full/opening-the-desks-for-the--b1787-nd-the-help-screen-lists-it/error-context.md
+
+    Error Context: ../../tmp/pw-full/opening-the-desks-for-the--b1787-nd-the-help-screen-lists-it/error-context.md
+
+
+(node:38911) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:38911) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[185/277] tests/e2e/opening.spec.ts:526:3 › the desks for the opening › 38. persona bands are distinct, including anger and greed
+[186/277] tests/e2e/opening.spec.ts:543:3 › the desks for the opening › 39. the master edits a scale and a nudge, and a portal admin cannot see the bands
+[187/277] tests/e2e/opening.spec.ts:587:3 › the desks for the opening › 40. a learner sees a gentle path and the API carries no raw scores
+[188/277] tests/e2e/opening.spec.ts:616:3 › the desks for the opening › 41. an imam sees the signed scale over time and the talks watched between looks
+[189/277] tests/e2e/opening.spec.ts:660:3 › the desks for the opening › 42. a month later the home card opens different words and a life check
+[190/277] tests/e2e/planner-shots.spec.ts:37:3 › planner shots › before and after at 390x844: bunched first week, then spaced across the span
+[191/277] tests/e2e/portal-features.spec.ts:61:1 › the master creator can switch Gather off, and a learner sees no Gather until it is turned back on
+[WebServer] (node:38876) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[192/277] tests/e2e/round2-integration.spec.ts:27:1 › no hoopoe or Hudhud on sign-in, Home, the feed, the garden, Me, the desks or the laptop page
+[193/277] tests/e2e/round2-integration.spec.ts:69:1 › desks wear the evening garden: deep teal page and panels, gold buttons
+[194/277] tests/e2e/round2-integration.spec.ts:118:1 › the library puts each course on the door its clips carry
+[195/277] tests/e2e/round3.spec.ts:52:3 › round 3 API › Bug 1: one account adds at most one trend row a week, whatever nonce it sends
+[196/277] tests/e2e/round3.spec.ts:75:3 › round 3 API › Bug 2: codes have expiry, max uses and a switch; a one-use code refuses a second person; guessing is throttled; seed codes are random
+[197/277] tests/e2e/round3.spec.ts:108:3 › round 3 API › Bug 3: a portal admin cannot get round the opening rules over REST, and cannot move the setup to another portal
+[198/277] tests/e2e/round3.spec.ts:125:3 › round 3 API › Bug 4: a heart-state row is always the signed-in person, and only with Keep my place on
+[199/277] tests/e2e/round3.spec.ts:140:3 › round 3 API › Bug 6: a private answer is read by its owner only, not the teacher, the admin or the master
+[200/277] tests/e2e/round3.spec.ts:155:3 › round 3 API › Bug 7: nothing is written while viewing as someone, globals and new portals included
+[201/277] tests/e2e/round3.spec.ts:168:3 › round 3 API › Bug 8: joining is refused and audited while viewing as someone, even with changes allowed
+[202/277] tests/e2e/round3.spec.ts:183:3 › round 3 API › Bug 9: only the master moves the test clock, and signed-out reads of it are refused
+[203/277] tests/e2e/round3.spec.ts:193:3 › round 3 API › Bug 11: a portal hides at most two scenes and never the one with the help option
+[204/277] tests/e2e/round3.spec.ts:208:3 › round 3 API › Bug 12: reserved portal addresses are refused by the form and by REST
+[205/277] tests/e2e/round3.spec.ts:216:3 › round 3 API › Bug 13: help contacts take tel and https only, and the help screen shows plain text
+[206/277] tests/e2e/round3.spec.ts:228:3 › round 3 API › Bug 15: Al-Nur plays the full class and the seed holds every timing inside its talk
+[207/277] tests/e2e/round3.spec.ts:237:3 › round 3 API › Bug 21: plans are capped at a year, take a season name, and say 1 sitting
+[208/277] tests/e2e/round3.spec.ts:248:3 › round 3 API › Bug 24: master flags are not readable signed out; unplayable reports need sign-in and are rate-limited
+[209/277] tests/e2e/round3.spec.ts:260:3 › round 3 API › Bug 25: leaving view-as goes back to a path on this site, never localhost
+[210/277] tests/e2e/round3.spec.ts:272:3 › round 3 API › Bug 26: a view-as reason, and a reason to allow changes, need at least 10 characters
+[211/277] tests/e2e/round3.spec.ts:285:3 › round 3 screens › Bug 5: nothing tap-derived leaves the device before sign-up, and the feed API refuses strangers
+[212/277] tests/e2e/round3.spec.ts:300:3 › round 3 screens › Bug 14: the 14-day chart bars have width
+[213/277] tests/e2e/round3.spec.ts:310:3 › round 3 screens › Bug 16: a reload in the middle of the opening keeps the taps and the scene
+[214/277] tests/e2e/round3.spec.ts:324:3 › round 3 screens › Bug 17: a double tap moves one scene and adds one history entry
+[215/277] tests/e2e/round3.spec.ts:343:3 › round 3 screens › Bug 18: a narrow screen gets a laptop note instead of the desk
+[216/277] tests/e2e/round3.spec.ts:354:3 › round 3 screens › Bug 19: the question sheet never covers the film, in either layout
+[217/277] tests/e2e/round3.spec.ts:383:3 › round 3 screens › Bug 22: a brand-new portal can choose courses from the central library
+[218/277] tests/e2e/round3.spec.ts:404:3 › round 3 screens › Bug 23: Home Continue rows put the title and the speaker line on separate lines
+[219/277] tests/e2e/round3.spec.ts:414:3 › round 3 screens › Bug 27: What others said stays hidden until the learner opts in
+[WebServer] (node:38876) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+
+[220/277] tests/e2e/round3.spec.ts:429:3 › round 3 screens › Bug 28: no hydration warnings on the desks
+[221/277] tests/e2e/round3.spec.ts:451:3 › round 3 screens › Section T: the appetiser offers the main from 0:00 and a resume link at its out point; drafts stay off the learner side
+[222/277] tests/e2e/round3.spec.ts:497:3 › round 3 screens › Section T: the master checks a talk in the tier editor and publishes a pop-up
+[223/277] tests/e2e/round4.spec.ts:66:3 › round 4 API › N4: the tier record is what learners get for lessons 1 to 3, one clip per talk, and an edit reaches them at once
+[224/277] tests/e2e/round4.spec.ts:88:3 › round 4 API › LOW: lesson 1 plays its video, not slides
+[225/277] tests/e2e/round4.spec.ts:95:3 › round 4 API › K1: pop-up questions and tier lines refuse spaced letters, stretched spellings, quizlet, rating and markup
+[226/277] tests/e2e/round4.spec.ts:107:3 › round 4 API › N2: a portal admin sets any use limit on an admin code, including none; it grants admin in their own portal only, can be switched off, and shows who joined
+[227/277] tests/e2e/round4.spec.ts:150:3 › round 4 API › N1: 210 failures from rotating addresses never block a valid code; one address is limited by its own failures, whatever it writes on the left
+[228/277] tests/e2e/round4.spec.ts:173:3 › round 4 API › N3: a contribution counts only from an account that has finished a video and is at least a day old
+[229/277] tests/e2e/round4.spec.ts:197:3 › round 4 API › D1: show unchecked talks is a master flag; off, learners get approved talks only; review approves and rejects
+[230/277] tests/e2e/round4.spec.ts:219:3 › round 4 screens › L1: each lane card opens that lane’s own feed, starting on its first clip
+[231/277] tests/e2e/round4.spec.ts:241:3 › round 4 screens › LOW: a speaker’s Watch intro plays the tier’s appetiser and stops at its out point
+[232/277] tests/e2e/round4.spec.ts:259:3 › round 4 screens › A1 and A2: at 390 by 844 the appetiser plays its clip with nothing overlapping, and no transcript over the picture
+[233/277] tests/e2e/round4.spec.ts:297:3 › round 4 screens › G1: the Garden rings are readable and Your path is styled with one number per lesson
+[234/277] tests/e2e/round4.spec.ts:319:3 › round 4 screens › LOW: each Still open row in the workbook keeps the question and the talk on separate lines
+  3) tests/e2e/round4.spec.ts:319:3 › round 4 screens › LOW: each Still open row in the workbook keeps the question and the talk on separate lines 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByTestId('open-question').first()
+    Expected: visible
+    Timeout: 20000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByTestId('open-question').first() with timeout 20000ms
+      - waiting for getByTestId('open-question').first()
+
+
+      330 |     await page.goto(`/p/${PORTAL}/garden/workbook`)
+      331 |     const row = page.getByTestId('open-question').first()
+    > 332 |     await expect(row).toBeVisible()
+          |                       ^
+      333 |     const [question, talk] = await Promise.all([row.locator('span').boundingBox(), row.locator('small').boundingBox()])
+      334 |     expect(talk!.y).toBeGreaterThanOrEqual(question!.y + question!.height - 1)
+      335 |   })
+        at /workspace/hearts-prototype/tests/e2e/round4.spec.ts:332:23
+
+    Error Context: ../../tmp/pw-full/round4-round-4-screens-LOW-dbb33--the-talk-on-separate-lines/error-context.md
+
+    Error Context: ../../tmp/pw-full/round4-round-4-screens-LOW-dbb33--the-talk-on-separate-lines/error-context.md
+
+
+(node:40724) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:40724) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[235/277] tests/e2e/round4.spec.ts:337:3 › round 4 screens › E1: at 1440 the tier editor labels, number boxes, sliders, headings and note do not overlap
+[236/277] tests/e2e/round4.spec.ts:360:3 › round 4 screens › D1: the review screen plays both tiers, shows hook, turn and land, and takes keyboard shortcuts
+[237/277] tests/e2e/round4.spec.ts:392:3 › round 4 screens › LOW: a question paused over the film fades YouTube’s pause panel under a soft scrim
+[238/277] tests/e2e/screenshots.spec.ts:33:1 › a week of use, so the garden has something in it
+  4) tests/e2e/screenshots.spec.ts:33:1 › a week of use, so the garden has something in it ─────────
+
+    Test timeout of 300000ms exceeded.
+
+    Error: locator.check: Test timeout of 300000ms exceeded.
+    Call log:
+      - waiting for getByTestId('answer-share')
+
+
+      48 |   await page.getByTestId('answer-text').fill('Sending salawat after Fajr, before I pick up my phone.')
+      49 |   await page.getByTestId('answer-private').uncheck()
+    > 50 |   await page.getByTestId('answer-share').check()
+         |                                          ^
+      51 |   await page.getByTestId('answer-submit').click()
+      52 |   await expect(page.getByTestId('notice')).toBeVisible()
+      53 |   await page.goto('/p/east-london/garden/jibril/10')
+        at /workspace/hearts-prototype/tests/e2e/screenshots.spec.ts:50:42
+
+    Error Context: ../../tmp/pw-full/screenshots-a-week-of-use-so-the-garden-has-something-in-it/error-context.md
+
+
+(node:41014) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:41014) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[239/277] tests/e2e/screenshots.spec.ts:66:1 › learner app at phone size
+[240/277] tests/e2e/screenshots.spec.ts:111:1 › portal desk at desktop size
+[241/277] tests/e2e/screenshots.spec.ts:147:1 › the opening at phone size
+[242/277] tests/e2e/screenshots.spec.ts:169:1 › view as, from the portal desk
+[243/277] tests/e2e/screenshots.spec.ts:185:1 › door, sign-in and join
+[244/277] tests/e2e/screenshots.spec.ts:192:1 › circle answers: the desk and the swarm
+[245/277] tests/e2e/security.spec.ts:9:1 › the create-first-user screen and first-register are closed, and nobody outside can make an admin
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: users.delete,1,master,88,teacher,2026-10-05T12:02:33.291Z,{"collection":"users","id":88},2026-10-05T12:02:33.292Z,2026-10-05T12:02:33.292Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_target_id_users_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 279,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (target_id)=(88) is not present in table "users".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_target_id_users_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+[246/277] tests/e2e/sheet-creator.spec.ts:60:1 › the creator drafts a sheet, then a learner completes a task the imam can see
+[247/277] tests/e2e/sheet-creator.spec.ts:168:1 › a portal admin searches for their own course and cannot draft the master library
+[248/277] tests/e2e/sheet-packs.spec.ts:65:1 › the pack column puts a new course in the pack; without the tick box existing learners are left as they are, and that is logged
+[249/277] tests/e2e/sheet-packs.spec.ts:84:1 › the preview offers the pack choice with the push tick box off by default
+[250/277] tests/e2e/sheet-packs.spec.ts:99:1 › choosing a pack for new courses and ticking push gives them to learners who already hold the pack; undo takes both back out
+[251/277] tests/e2e/sheet-packs.spec.ts:126:1 › a portal admin cannot name a master pack or another portal’s pack
+[252/277] tests/e2e/talk-extracts.spec.ts:22:1 › admin timeline nests hors under their appetiser, and Learn more opens that parent first
+[253/277] tests/e2e/typography.spec.ts:27:1 › Typography panel lists the five styles and can stand in for the hors d’oeuvre
+[254/277] tests/e2e/view-as.spec.ts:51:3 › view as › 38. a portal admin views as a learner with a reason, read-only by default
+[255/277] tests/e2e/view-as.spec.ts:58:3 › view as › 39. a view without a reason is refused
+[256/277] tests/e2e/view-as.spec.ts:68:3 › view as › 40. while read-only, answers and settings are refused and logged
+[257/277] tests/e2e/view-as.spec.ts:78:3 › view as › 41. the learner’s private opening answers are not shown in view-as
+[258/277] tests/e2e/view-as.spec.ts:87:3 › view as › 42. the viewer’s own device state is left alone, and the view’s keys are wiped on exit
+[259/277] tests/e2e/view-as.spec.ts:108:3 › view as › 43. Exit returns to where the view started and ends the session
+[260/277] tests/e2e/view-as.spec.ts:118:3 › view as › 44. a teacher has no View as, and the server refuses one
+[261/277] tests/e2e/view-as.spec.ts:126:3 › view as › 45. a portal admin cannot view as a learner in another portal
+[262/277] tests/e2e/view-as.spec.ts:133:3 › view as › 46. the master views as a portal admin, but never as another master
+[263/277] tests/e2e/view-as.spec.ts:147:3 › view as › 47. start and stop are written to the audit log with the reason
+[264/277] tests/e2e/view-as.spec.ts:156:3 › view as › 48. allowing changes needs a reason, and then a change goes through and is logged
+[265/277] tests/e2e/view-as.spec.ts:174:3 › view as › 49. some things stay closed even with changes allowed: the opening and Start again
+(node:42608) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:42608) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[266/277] tests/e2e/delete-wipe.spec.ts:124:3 › desk delete flows › master desk deletes a portal after a summary and typed name
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, default, default, $4, default, default, $5, default, $6, $7, $8) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: portals.create,1,master,8,2026-10-05T12:04:51.781Z,{"fields":["name","slug","kind","welcome","colour","watchHistoryOptIn","organisationName","description","closed","logoUrl","showOthersAnswers","notificationEmails","timeZone","theme","calendarUrl","learnerWelcomeUrl","learnerIntroUrl","teacherWelcomeUrl","teacherIntroUrl","learnerLabel","teacherLabel","wizardDone","requireEmailConfirm","features"],"collection":"portals","id":8},2026-10-05T12:04:51.782Z,2026-10-05T12:04:51.782Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, default, default, $4, default, default, $5, default, $6, $7, $8) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_portal_id_portals_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 284,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (portal_id)=(8) is not present in table "portals".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_portal_id_portals_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: users.create,1,master,90,learner,2026-10-05T12:04:51.945Z,{"fields":["name","role","accessCode","extraPacks","startingClause","courseList","extraCourses","audience","shareWatch","joinedAt","nightAlerts","shareOpening","keepPlace","trendsOptIn","shareWithLearners","haptics","removed","emailConfirmedAt","emailConfirmExpiresAt","lastConfirmSentAt","pendingEmail","pendingEmailExpiresAt","totpEnabledAt","suspendedAt","suspendedBy","suspendReason","deletionRequestedAt","mustChangePassword","notificationPrefs","lastDataExportAt","dataExportExpiresAt","dataExportFile","tokenVersion","passwordChangedAt","circleMutedUntil","tenants","email"],"collection":"users","id":90},2026-10-05T12:04:51.947Z,2026-10-05T12:04:51.947Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_target_id_users_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 279,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (target_id)=(90) is not present in table "users".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_target_id_users_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+[267/277] tests/e2e/delete-wipe.spec.ts:184:3 › desk delete flows › portal admin deletes a learner and that session cannot sign in
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default, $7, $8, default, $9, $10, $11) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: erase.user,2,portal-admin,91,learner,1,Account wiped,2026-10-05T12:05:03.533Z,{"deleted":{"engagement_points_rels":0,"engagement-points:unlink":0,"talk-tiers:unlink":0,"answers":1,"workbook-entries":1,"notifications":0,"completions":1,"harvest-entries":0,"drawn-to":0,"watch-sessions":1,"lesson-visits":0,"seat-visits":0,"rituals":1,"placing-answers":0,"feedback-notes":0,"schedules_rels":0,"schedules":0,"rsvps":0,"checkins":0,"checkins:unlink":0,"messages":0,"gather-rsvps":0,"gather-rsvps:unlink":0,"gather-checkins":0,"gather-reflections":0,"gather-photos":0,"gatherings:unlink":0,"circle-answers":0,"heart-states":0,"opening_answers_rels":0,"opening-answers":0,"view-as-sessions":0,"audit-log":4,"compass-attempts":0,"compass-serves":0,"feedback-summaries":0,"sheet-imports:unlink":0,"question-rewrites:unlink":0,"ai-step-versions:unlink":0,"ai-step-jobs:unlink":0,"consents":2,"consents:unlink":0,"age-profiles":1,"age-profiles:unlink":0,"help-requests":0,"classes_rels":0,"media":1,"users":1},"files":{"removed":1,"failed":0}},2026-10-05T12:05:03.535Z,2026-10-05T12:05:03.535Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]     at async wipeUser (src/server/erase/service.ts:243:2)
+[WebServer]     at async handleForm (src/server/handle.ts:1801:19)
+[WebServer]     at async handlePost (src/server/handle.ts:493:21)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default, $7, $8, default, $9, $10, $11) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_target_id_users_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]       at async wipeUser (src/server/erase/service.ts:243:2)
+[WebServer]       at async handleForm (src/server/handle.ts:1801:19)
+[WebServer]       at async handlePost (src/server/handle.ts:493:21)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 279,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (target_id)=(91) is not present in table "users".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_target_id_users_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+[268/277] tests/e2e/delete-wipe.spec.ts:240:1 › seeded east london and maryam show real wipe counts in a centred dialog
+[269/277] tests/e2e/delete-wipe.spec.ts:285:1 › a learner can delete their own account from Me
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: users.create,1,master,92,learner,2026-10-05T12:05:13.342Z,{"fields":["name","role","accessCode","extraPacks","startingClause","courseList","extraCourses","audience","shareWatch","joinedAt","nightAlerts","shareOpening","keepPlace","trendsOptIn","shareWithLearners","haptics","removed","emailConfirmedAt","emailConfirmExpiresAt","lastConfirmSentAt","pendingEmail","pendingEmailExpiresAt","totpEnabledAt","suspendedAt","suspendedBy","suspendReason","deletionRequestedAt","mustChangePassword","notificationPrefs","lastDataExportAt","dataExportExpiresAt","dataExportFile","tokenVersion","passwordChangedAt","circleMutedUntil","tenants","email"],"collection":"users","id":92},2026-10-05T12:05:13.343Z,2026-10-05T12:05:13.343Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_target_id_users_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 279,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (target_id)=(92) is not present in table "users".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_target_id_users_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default, $7, $8, default, $9, $10, $11) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: erase.user,92,learner,92,learner,1,Account wiped,2026-10-05T12:05:15.796Z,{"deleted":{"engagement_points_rels":0,"engagement-points:unlink":0,"talk-tiers:unlink":0,"answers":1,"workbook-entries":1,"notifications":0,"completions":1,"harvest-entries":0,"drawn-to":0,"watch-sessions":1,"lesson-visits":0,"seat-visits":0,"rituals":1,"placing-answers":0,"feedback-notes":0,"schedules_rels":0,"schedules":0,"rsvps":0,"checkins":0,"checkins:unlink":0,"messages":0,"gather-rsvps":0,"gather-rsvps:unlink":0,"gather-checkins":0,"gather-reflections":0,"gather-photos":0,"gatherings:unlink":0,"circle-answers":0,"heart-states":0,"opening_answers_rels":0,"opening-answers":0,"view-as-sessions":0,"audit-log":3,"compass-attempts":0,"compass-serves":0,"feedback-summaries":0,"sheet-imports:unlink":0,"question-rewrites:unlink":0,"ai-step-versions:unlink":0,"ai-step-jobs:unlink":0,"consents":2,"consents:unlink":0,"age-profiles":1,"age-profiles:unlink":0,"help-requests":0,"classes_rels":0,"media":1,"users":1},"files":{"removed":1,"failed":0}},2026-10-05T12:05:15.797Z,2026-10-05T12:05:15.797Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]     at async wipeUser (src/server/erase/service.ts:243:2)
+[WebServer]     at async handleForm (src/server/handle.ts:1813:19)
+[WebServer]     at async handlePost (src/server/handle.ts:493:21)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default, $7, $8, default, $9, $10, $11) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_actor_id_users_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]       at async wipeUser (src/server/erase/service.ts:243:2)
+[WebServer]       at async handleForm (src/server/handle.ts:1813:19)
+[WebServer]       at async handlePost (src/server/handle.ts:493:21)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 276,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (actor_id)=(92) is not present in table "users".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_actor_id_users_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+[270/277] tests/e2e/delete-wipe.spec.ts:321:1 › a portal admin cannot delete another portal’s user or a portal
+[271/277] tests/e2e/delete-wipe.spec.ts:368:1 › a learner cannot wipe another learner
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: users.create,1,master,94,learner,2026-10-05T12:05:17.645Z,{"fields":["name","role","accessCode","extraPacks","startingClause","courseList","extraCourses","audience","shareWatch","joinedAt","nightAlerts","shareOpening","keepPlace","trendsOptIn","shareWithLearners","haptics","removed","emailConfirmedAt","emailConfirmExpiresAt","lastConfirmSentAt","pendingEmail","pendingEmailExpiresAt","totpEnabledAt","suspendedAt","suspendedBy","suspendReason","deletionRequestedAt","mustChangePassword","notificationPrefs","lastDataExportAt","dataExportExpiresAt","dataExportFile","tokenVersion","passwordChangedAt","circleMutedUntil","tenants","email"],"collection":"users","id":94},2026-10-05T12:05:17.646Z,2026-10-05T12:05:17.646Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_target_id_users_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 279,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (target_id)=(94) is not present in table "users".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_target_id_users_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+(node:42865) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:42865) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[272/277] tests/e2e/legal-stills.spec.ts:16:1 › proof stills: door, privacy, join, consent, search, children
+(node:43195) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:43195) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[273/277] tests/e2e/legal-walk.spec.ts:18:1 › phone walk: join, consent, search, tap the timestamp
+(node:43294) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:43294) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[274/277] tests/e2e/planner-demo.spec.ts:58:1 › phone walk: buffet, plan, think, swipe, home, workbook, retry, next part
+(node:43495) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:43495) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[275/277] tests/e2e/r5d-desks-proof.spec.ts:97:1 › r5d desk proof shots
+  5) tests/e2e/r5d-desks-proof.spec.ts:97:1 › r5d desk proof shots ─────────────────────────────────
+
+    Test timeout of 400000ms exceeded.
+
+    Error: locator.click: Test timeout of 400000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="door-tile"][data-empty="no"]').first()
+
+
+      171 |   if (packHref) await page.goto(packHref)
+      172 |   await expect(page.getByTestId('pack-open')).toBeVisible()
+    > 173 |   await page.locator('[data-testid="door-tile"][data-empty="no"]').first().click()
+          |                                                                            ^
+      174 |   await expect(page.getByTestId('door-open')).toBeVisible()
+      175 |   await expect(page.getByTestId('seat-group').first()).toBeVisible()
+      176 |   await shot(page, 'content-ghunya-seats')
+        at /workspace/hearts-prototype/tests/e2e/r5d-desks-proof.spec.ts:173:76
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../tmp/pw-full/r5d-desks-proof-r5d-desk-proof-shots/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../tmp/pw-full/r5d-desks-proof-r5d-desk-proof-shots/error-context.md
+
+
+(node:43710) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:43710) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[276/277] tests/e2e/r5d-desks-proof.spec.ts:359:1 › admin and teacher open help tips
+[277/277] tests/e2e/r5d-desks-proof.spec.ts:409:1 › every desk help card fits at 1366x700 and 1280x800
+  5 failed
+    tests/e2e/feed-polish.spec.ts:148:1 › Home Your plan heading reads at AA on the teal card ──────
+    tests/e2e/opening.spec.ts:511:3 › the desks for the opening › 37. a portal admin adds a help contact and the help screen lists it 
+    tests/e2e/r5d-desks-proof.spec.ts:97:1 › r5d desk proof shots ──────────────────────────────────
+    tests/e2e/round4.spec.ts:319:3 › round 4 screens › LOW: each Still open row in the workbook keeps the question and the talk on separate lines 
+    tests/e2e/screenshots.spec.ts:33:1 › a week of use, so the garden has something in it ──────────
+  272 passed (50.3m)
+EXIT:0

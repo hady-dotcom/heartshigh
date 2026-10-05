@@ -1,0 +1,378 @@
+Wiped the Postgres database (dropped the public schema).
+[11:13:17] [32mINFO[39m: [36mReading migration files from /workspace/hearts-prototype/src/migrations[39m
+[11:13:17] [32mINFO[39m: [36mMigrating: 20261003_103330_initial[39m
+[11:13:19] [32mINFO[39m: [36mMigrated:  20261003_103330_initial (1886ms)[39m
+[11:13:19] [32mINFO[39m: [36mMigrating: 20261003_124500_integration_part1[39m
+[11:13:19] [32mINFO[39m: [36mMigrated:  20261003_124500_integration_part1 (324ms)[39m
+[11:13:19] [32mINFO[39m: [36mMigrating: 20261003_131651_integration_part2[39m
+[11:13:19] [32mINFO[39m: [36mMigrated:  20261003_131651_integration_part2 (69ms)[39m
+[11:13:19] [32mINFO[39m: [36mMigrating: 20261003_140611_harvest[39m
+[11:13:19] [32mINFO[39m: [36mMigrated:  20261003_140611_harvest (21ms)[39m
+[11:13:19] [32mINFO[39m: [36mMigrating: 20261003_180616_jibril_doors[39m
+[11:13:19] [32mINFO[39m: [36mMigrated:  20261003_180616_jibril_doors (49ms)[39m
+[11:13:19] [32mINFO[39m: [36mMigrating: 20261003_194500_line_tidy[39m
+[11:13:19] [32mINFO[39m: [36mMigrated:  20261003_194500_line_tidy (1ms)[39m
+[11:13:19] [32mINFO[39m: [36mMigrating: 20261003_200853_integration_final[39m
+[11:13:19] [32mINFO[39m: [36mMigrated:  20261003_200853_integration_final (74ms)[39m
+[11:13:19] [32mINFO[39m: [36mMigrating: 20261003_220000_feedback[39m
+[11:13:19] [32mINFO[39m: [36mMigrated:  20261003_220000_feedback (79ms)[39m
+[11:13:19] [32mINFO[39m: [36mMigrating: 20261004_031500_gather[39m
+[11:13:20] [32mINFO[39m: [36mMigrated:  20261004_031500_gather (110ms)[39m
+[11:13:20] [32mINFO[39m: [36mMigrating: 20261004_060000_shorts[39m
+[11:13:20] [32mINFO[39m: [36mMigrated:  20261004_060000_shorts (2ms)[39m
+[11:13:20] [32mINFO[39m: [36mMigrating: 20261004_061000_portal_time_zone[39m
+[11:13:20] [32mINFO[39m: [36mMigrated:  20261004_061000_portal_time_zone (2ms)[39m
+[11:13:20] [32mINFO[39m: [36mMigrating: 20261004_080000_lesson_picture_flags[39m
+[11:13:20] [32mINFO[39m: [36mMigrated:  20261004_080000_lesson_picture_flags (7ms)[39m
+[11:13:20] [32mINFO[39m: [36mMigrating: 20261004_120000_compass_v2[39m
+[11:13:20] [32mINFO[39m: [36mMigrated:  20261004_120000_compass_v2 (54ms)[39m
+[11:13:20] [32mINFO[39m: [36mMigrating: 20261004_180000_gather_entry_code[39m
+[11:13:20] [32mINFO[39m: [36mMigrated:  20261004_180000_gather_entry_code (1ms)[39m
+[11:13:20] [32mINFO[39m: [36mMigrating: 20261004_210000_schedule_minutes[39m
+[11:13:20] [32mINFO[39m: [36mMigrated:  20261004_210000_schedule_minutes (10ms)[39m
+[11:13:20] [32mINFO[39m: [36mMigrating: 20261004_230000_portal_features[39m
+[11:13:20] [32mINFO[39m: [36mMigrated:  20261004_230000_portal_features (4ms)[39m
+[11:13:20] [32mINFO[39m: [36mMigrating: 20261004_233000_talk_extracts[39m
+[11:13:20] [32mINFO[39m: [36mMigrated:  20261004_233000_talk_extracts (37ms)[39m
+[11:13:20] [32mINFO[39m: [36mMigrating: 20261005_010000_admin_ops[39m
+[11:13:20] [32mINFO[39m: [36mMigrated:  20261005_010000_admin_ops (58ms)[39m
+[11:13:20] [32mINFO[39m: [36mMigrating: 20261005_020000_accounts[39m
+[11:13:20] [32mINFO[39m: [36mMigrated:  20261005_020000_accounts (2ms)[39m
+[11:13:20] [32mINFO[39m: [36mMigrating: 20261005_021000_trash[39m
+[11:13:20] [32mINFO[39m: [36mMigrated:  20261005_021000_trash (31ms)[39m
+[11:13:20] [32mINFO[39m: [36mMigrating: 20261005_120000_consent[39m
+[11:13:20] [32mINFO[39m: [36mMigrated:  20261005_120000_consent (118ms)[39m
+[11:13:20] [32mINFO[39m: [36mMigrating: 20261005_130000_erase_cascades[39m
+[11:13:20] [32mINFO[39m: [36mMigrated:  20261005_130000_erase_cascades (127ms)[39m
+[11:13:20] [32mINFO[39m: [36mMigrating: 20261005_131000_erase_parent_cascades[39m
+[11:13:20] [32mINFO[39m: [36mMigrated:  20261005_131000_erase_parent_cascades (13ms)[39m
+[11:13:20] [32mINFO[39m: [36mMigrating: 20261005_132000_erase_s3_retries[39m
+[11:13:20] [32mINFO[39m: [36mMigrated:  20261005_132000_erase_s3_retries (1ms)[39m
+Harvest: 172 verses and hadith across 31 talks. No quotation found in 5: Gratitude is the Greatest Blessing | Gems from Ibn Ata Illah Ep. 1 | Shaykh Mikaeel Ahmed Smith; How to Manage Your Anger - Amjad Tarsin; Moments of Solitude: Closeness to God | Jummah Khutbah | Imam Khalid Latif | 3.11.2022; On Mosques, Companionship, & Knowledge; Quranic Connection #26: A Cure for Anxiety | Shaykh Suleiman Hani.
+Harvest sample: 4 lines kept for Maryam.
+Feedback demo: sample answers are on the East London and Leeds desks.
+Seeded HEARTS. Master: master@hearts.test / hearts-master
+Access codes (also on the master desk, and in data/seed-codes-test.json):
+  elm-teacher    ELM-QPJW-8BXR
+  elm-admin      ELM-DWGU-VXAP
+  elm-learner    ELM-JNY7-ATXT
+  elm-parent     ELM-9KB9-KRQX
+  leeds-teacher  LEEDS-VGY9-RAAW
+  leeds-learner  LEEDS-94BM-C93Y
+
+Running 24 tests using 1 worker
+
+(node:29729) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:29729) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/24] tests/e2e/account-proof.spec.ts:33:1 › proof stills: reset, confirm mail, 2FA and suspend
+[WebServer] (node:28234) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[2/24] tests/e2e/account-reset.spec.ts:17:1 › A02: a confirmed learner resets from the emailed link, then the token expires
+[3/24] tests/e2e/account-reset.spec.ts:53:1 › A02: a wrong token and an unconfirmed inbox keep the same calm notice
+[4/24] tests/e2e/basics-admin.spec.ts:27:3 › Lane D admin desk › D02 activity log shows a plain sentence and filters to this portal
+[5/24] tests/e2e/basics-admin.spec.ts:60:3 › Lane D admin desk › A12 bulk add from a list previews problems then creates accounts
+[6/24] tests/e2e/basics-admin.spec.ts:93:3 › Lane D admin desk › A13 people CSV is portal-scoped and audited
+[7/24] tests/e2e/basics-admin.spec.ts:111:3 › Lane D admin desk › K03 classes: create, add a person, see the group
+[8/24] tests/e2e/basics-admin.spec.ts:124:3 › Lane D admin desk › C15 recently removed restore, days left, progress and clean-up
+[9/24] tests/e2e/basics-admin.spec.ts:189:3 › Lane D admin desk › D06 system page is on the master desk
+[10/24] tests/e2e/basics-admin.spec.ts:203:3 › Lane D hostile API › a portal admin sees only their portal audit and people
+[11/24] tests/e2e/legal-consent.spec.ts:7:1 › L03 join records consent and opens the welcome
+[12/24] tests/e2e/legal-consent.spec.ts:13:1 › L01 L02 legal pages are linked from the door and show a draft mark
+[13/24] tests/e2e/legal-consent.spec.ts:26:1 › H02 get help files a broken note
+[14/24] tests/e2e/legal-consent.spec.ts:35:1 › seeded learners already agreed and can open home
+[15/24] tests/e2e/legal-transcript-search.spec.ts:4:1 › C06 C07 C10 captions, transcript and search
+  1) tests/e2e/legal-transcript-search.spec.ts:4:1 › C06 C07 C10 captions, transcript and search ───
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByTestId('course').or(getByTestId('player')).first()
+    Expected: visible
+    Timeout: 20000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByTestId('course').or(getByTestId('player')).first() with timeout 20000ms
+      - waiting for getByTestId('course').or(getByTestId('player')).first()
+
+
+      27 |       await page.getByTestId('start-part').click()
+      28 |     }
+    > 29 |     await expect(page.getByTestId('course').or(page.getByTestId('player')).first()).toBeVisible()
+         |                                                                                     ^
+      30 |     if (await page.getByTestId('transcript-toggle').count()) {
+      31 |       await page.getByTestId('transcript-toggle').click()
+      32 |       await expect(page.getByTestId('transcript-body')).toBeVisible()
+        at /workspace/hearts-prototype/tests/e2e/legal-transcript-search.spec.ts:29:85
+
+    Error Context: ../../tmp/pw-walks/legal-transcript-search-C0-19e65-tions-transcript-and-search/error-context.md
+
+
+(node:30363) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:30363) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[16/24] tests/e2e/talk-extracts.spec.ts:22:1 › admin timeline nests hors under their appetiser, and Learn more opens that parent first
+(node:30518) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:30518) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[17/24] tests/e2e/delete-wipe.spec.ts:124:3 › desk delete flows › master desk deletes a portal after a summary and typed name
+[18/24] tests/e2e/delete-wipe.spec.ts:184:3 › desk delete flows › portal admin deletes a learner and that session cannot sign in
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default, $7, $8, default, $9, $10, $11) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: erase.user,2,portal-admin,30,learner,1,Account wiped,2026-10-05T11:16:01.042Z,{"deleted":{"engagement_points_rels":0,"engagement-points:unlink":0,"talk-tiers:unlink":0,"answers":1,"workbook-entries":1,"notifications":0,"completions":1,"harvest-entries":0,"drawn-to":0,"watch-sessions":1,"lesson-visits":0,"seat-visits":0,"rituals":1,"placing-answers":0,"feedback-notes":0,"schedules_rels":0,"schedules":0,"rsvps":0,"checkins":0,"checkins:unlink":0,"messages":0,"gather-rsvps":0,"gather-rsvps:unlink":0,"gather-checkins":0,"gather-reflections":0,"gather-photos":0,"gatherings:unlink":0,"circle-answers":0,"heart-states":0,"opening_answers_rels":0,"opening-answers":0,"view-as-sessions":0,"audit-log":4,"compass-attempts":0,"compass-serves":0,"feedback-summaries":0,"sheet-imports:unlink":0,"question-rewrites:unlink":0,"ai-step-versions:unlink":0,"ai-step-jobs:unlink":0,"consents":2,"consents:unlink":0,"age-profiles":1,"age-profiles:unlink":0,"help-requests":0,"classes_rels":0,"media":1,"users":1},"files":{"removed":1,"failed":0}},2026-10-05T11:16:01.043Z,2026-10-05T11:16:01.043Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]     at async wipeUser (src/server/erase/service.ts:243:2)
+[WebServer]     at async handleForm (src/server/handle.ts:1801:19)
+[WebServer]     at async handlePost (src/server/handle.ts:493:21)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default, $7, $8, default, $9, $10, $11) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_target_id_users_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]       at async wipeUser (src/server/erase/service.ts:243:2)
+[WebServer]       at async handleForm (src/server/handle.ts:1801:19)
+[WebServer]       at async handlePost (src/server/handle.ts:493:21)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 279,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (target_id)=(30) is not present in table "users".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_target_id_users_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+[19/24] tests/e2e/delete-wipe.spec.ts:240:1 › seeded east london and maryam show real wipe counts in a centred dialog
+[20/24] tests/e2e/delete-wipe.spec.ts:285:1 › a learner can delete their own account from Me
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: users.create,1,master,31,learner,2026-10-05T11:16:08.791Z,{"fields":["name","role","accessCode","extraPacks","startingClause","courseList","extraCourses","audience","shareWatch","joinedAt","nightAlerts","shareOpening","keepPlace","trendsOptIn","shareWithLearners","haptics","removed","emailConfirmedAt","emailConfirmExpiresAt","lastConfirmSentAt","pendingEmail","pendingEmailExpiresAt","totpEnabledAt","suspendedAt","suspendedBy","suspendReason","deletionRequestedAt","mustChangePassword","notificationPrefs","lastDataExportAt","dataExportExpiresAt","dataExportFile","tokenVersion","passwordChangedAt","circleMutedUntil","tenants","email"],"collection":"users","id":31},2026-10-05T11:16:08.793Z,2026-10-05T11:16:08.793Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_target_id_users_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 279,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (target_id)=(31) is not present in table "users".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_target_id_users_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default, $7, $8, default, $9, $10, $11) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: erase.user,31,learner,31,learner,1,Account wiped,2026-10-05T11:16:11.954Z,{"deleted":{"engagement_points_rels":0,"engagement-points:unlink":0,"talk-tiers:unlink":0,"answers":1,"workbook-entries":1,"notifications":0,"completions":1,"harvest-entries":0,"drawn-to":0,"watch-sessions":1,"lesson-visits":0,"seat-visits":0,"rituals":1,"placing-answers":0,"feedback-notes":0,"schedules_rels":0,"schedules":0,"rsvps":0,"checkins":0,"checkins:unlink":0,"messages":0,"gather-rsvps":0,"gather-rsvps:unlink":0,"gather-checkins":0,"gather-reflections":0,"gather-photos":0,"gatherings:unlink":0,"circle-answers":0,"heart-states":0,"opening_answers_rels":0,"opening-answers":0,"view-as-sessions":0,"audit-log":3,"compass-attempts":0,"compass-serves":0,"feedback-summaries":0,"sheet-imports:unlink":0,"question-rewrites:unlink":0,"ai-step-versions:unlink":0,"ai-step-jobs:unlink":0,"consents":2,"consents:unlink":0,"age-profiles":1,"age-profiles:unlink":0,"help-requests":0,"classes_rels":0,"media":1,"users":1},"files":{"removed":1,"failed":0}},2026-10-05T11:16:11.956Z,2026-10-05T11:16:11.956Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]     at async wipeUser (src/server/erase/service.ts:243:2)
+[WebServer]     at async handleForm (src/server/handle.ts:1813:19)
+[WebServer]     at async handlePost (src/server/handle.ts:493:21)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default, $7, $8, default, $9, $10, $11) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_actor_id_users_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]       at async wipeUser (src/server/erase/service.ts:243:2)
+[WebServer]       at async handleForm (src/server/handle.ts:1813:19)
+[WebServer]       at async handlePost (src/server/handle.ts:493:21)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 276,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (actor_id)=(31) is not present in table "users".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_actor_id_users_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+[21/24] tests/e2e/delete-wipe.spec.ts:321:1 › a portal admin cannot delete another portal’s user or a portal
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: users.create,1,master,32,learner,2026-10-05T11:16:13.338Z,{"fields":["name","role","accessCode","extraPacks","startingClause","courseList","extraCourses","audience","shareWatch","joinedAt","nightAlerts","shareOpening","keepPlace","trendsOptIn","shareWithLearners","haptics","removed","emailConfirmedAt","emailConfirmExpiresAt","lastConfirmSentAt","pendingEmail","pendingEmailExpiresAt","totpEnabledAt","suspendedAt","suspendedBy","suspendReason","deletionRequestedAt","mustChangePassword","notificationPrefs","lastDataExportAt","dataExportExpiresAt","dataExportFile","tokenVersion","passwordChangedAt","circleMutedUntil","tenants","email"],"collection":"users","id":32},2026-10-05T11:16:13.339Z,2026-10-05T11:16:13.339Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_target_id_users_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 279,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (target_id)=(32) is not present in table "users".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_target_id_users_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+[22/24] tests/e2e/delete-wipe.spec.ts:368:1 › a learner cannot wipe another learner
+[WebServer] audit write failed Error: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+[WebServer] params: users.create,1,master,34,learner,2026-10-05T11:16:13.893Z,{"fields":["name","role","accessCode","extraPacks","startingClause","courseList","extraCourses","audience","shareWatch","joinedAt","nightAlerts","shareOpening","keepPlace","trendsOptIn","shareWithLearners","haptics","removed","emailConfirmedAt","emailConfirmExpiresAt","lastConfirmSentAt","pendingEmail","pendingEmailExpiresAt","totpEnabledAt","suspendedAt","suspendedBy","suspendReason","deletionRequestedAt","mustChangePassword","notificationPrefs","lastDataExportAt","dataExportExpiresAt","dataExportFile","tokenVersion","passwordChangedAt","circleMutedUntil","tenants","email"],"collection":"users","id":34},2026-10-05T11:16:13.893Z,2026-10-05T11:16:13.893Z
+[WebServer]     at async audit (src/server/audit.ts:83:4)
+[WebServer]   81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]   82 |   try {
+[WebServer] > 83 |     await payload.create({
+[WebServer]      |    ^
+[WebServer]   84 |       collection: 'audit-log',
+[WebServer]   85 |       overrideAccess: true,
+[WebServer]   86 |       data: { {
+[WebServer]   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, default, default, default, $6, default, $7, $8, $9) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+[WebServer]   params: [Array],
+[WebServer]   [cause]: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_target_id_users_id_fk"
+[WebServer]       at async audit (src/server/audit.ts:83:4)
+[WebServer]     81 |   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
+[WebServer]     82 |   try {
+[WebServer]   > 83 |     await payload.create({
+[WebServer]        |    ^
+[WebServer]     84 |       collection: 'audit-log',
+[WebServer]     85 |       overrideAccess: true,
+[WebServer]     86 |       data: { {
+[WebServer]     length: 279,
+[WebServer]     severity: 'ERROR',
+[WebServer]     code: '23503',
+[WebServer]     detail: 'Key (target_id)=(34) is not present in table "users".',
+[WebServer]     hint: undefined,
+[WebServer]     position: undefined,
+[WebServer]     internalPosition: undefined,
+[WebServer]     internalQuery: undefined,
+[WebServer]     where: undefined,
+[WebServer]     schema: 'public',
+[WebServer]     table: 'audit_log',
+[WebServer]     column: undefined,
+[WebServer]     dataType: undefined,
+[WebServer]     constraint: 'audit_log_target_id_users_id_fk',
+[WebServer]     file: 'ri_triggers.c',
+[WebServer]     line: '2608',
+[WebServer]     routine: 'ri_ReportViolation'
+[WebServer]   }
+[WebServer] }
+
+(node:30772) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:30772) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[23/24] tests/e2e/legal-stills.spec.ts:16:1 › proof stills: door, privacy, join, consent, search, children
+(node:31133) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:31133) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[24/24] tests/e2e/legal-walk.spec.ts:18:1 › phone walk: join, consent, search, tap the timestamp
+  1 failed
+    tests/e2e/legal-transcript-search.spec.ts:4:1 › C06 C07 C10 captions, transcript and search ────
+  23 passed (3.3m)
+EXIT:0

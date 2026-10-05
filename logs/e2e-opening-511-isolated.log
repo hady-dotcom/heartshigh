@@ -1,0 +1,75 @@
+Wiped the Postgres database (dropped the public schema).
+[12:21:13] [32mINFO[39m: [36mReading migration files from /workspace/hearts-prototype/src/migrations[39m
+[12:21:13] [32mINFO[39m: [36mMigrating: 20261003_103330_initial[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261003_103330_initial (759ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261003_124500_integration_part1[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261003_124500_integration_part1 (155ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261003_131651_integration_part2[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261003_131651_integration_part2 (62ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261003_140611_harvest[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261003_140611_harvest (16ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261003_180616_jibril_doors[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261003_180616_jibril_doors (17ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261003_194500_line_tidy[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261003_194500_line_tidy (1ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261003_200853_integration_final[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261003_200853_integration_final (45ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261003_220000_feedback[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261003_220000_feedback (29ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261004_031500_gather[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261004_031500_gather (78ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261004_060000_shorts[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261004_060000_shorts (2ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261004_061000_portal_time_zone[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261004_061000_portal_time_zone (1ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261004_080000_lesson_picture_flags[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261004_080000_lesson_picture_flags (1ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261004_120000_compass_v2[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261004_120000_compass_v2 (46ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261004_180000_gather_entry_code[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261004_180000_gather_entry_code (1ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261004_210000_schedule_minutes[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261004_210000_schedule_minutes (1ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261004_230000_portal_features[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261004_230000_portal_features (1ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261004_233000_talk_extracts[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261004_233000_talk_extracts (17ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261005_010000_admin_ops[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261005_010000_admin_ops (38ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261005_020000_accounts[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261005_020000_accounts (3ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261005_021000_trash[39m
+[12:21:14] [32mINFO[39m: [36mMigrated:  20261005_021000_trash (20ms)[39m
+[12:21:14] [32mINFO[39m: [36mMigrating: 20261005_120000_consent[39m
+[12:21:15] [32mINFO[39m: [36mMigrated:  20261005_120000_consent (45ms)[39m
+[12:21:15] [32mINFO[39m: [36mMigrating: 20261005_130000_erase_cascades[39m
+[12:21:15] [32mINFO[39m: [36mMigrated:  20261005_130000_erase_cascades (60ms)[39m
+[12:21:15] [32mINFO[39m: [36mMigrating: 20261005_131000_erase_parent_cascades[39m
+[12:21:15] [32mINFO[39m: [36mMigrated:  20261005_131000_erase_parent_cascades (9ms)[39m
+[12:21:15] [32mINFO[39m: [36mMigrating: 20261005_132000_erase_s3_retries[39m
+[12:21:15] [32mINFO[39m: [36mMigrated:  20261005_132000_erase_s3_retries (1ms)[39m
+Harvest: 172 verses and hadith across 31 talks. No quotation found in 5: Gratitude is the Greatest Blessing | Gems from Ibn Ata Illah Ep. 1 | Shaykh Mikaeel Ahmed Smith; How to Manage Your Anger - Amjad Tarsin; Moments of Solitude: Closeness to God | Jummah Khutbah | Imam Khalid Latif | 3.11.2022; On Mosques, Companionship, & Knowledge; Quranic Connection #26: A Cure for Anxiety | Shaykh Suleiman Hani.
+Harvest sample: 4 lines kept for Maryam.
+Feedback demo: sample answers are on the East London and Leeds desks.
+Seeded HEARTS. Master: master@hearts.test / hearts-master
+Access codes (also on the master desk, and in data/seed-codes-test.json):
+  elm-teacher    ELM-YGQ4-AKNJ
+  elm-admin      ELM-MPQP-J8T9
+  elm-learner    ELM-NURV-QEGX
+  elm-parent     ELM-DEKJ-WCQU
+  leeds-teacher  LEEDS-HA4C-ETYA
+  leeds-learner  LEEDS-JR39-HX7T
+
+Running 1 test using 1 worker
+
+(node:44706) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:44706) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/1] tests/e2e/opening.spec.ts:511:3 › the desks for the opening › 37. a portal admin adds a help contact and the help screen lists it
+  1 passed (49.3s)
+EXIT:0

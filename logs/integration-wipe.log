@@ -1,0 +1,157 @@
+
+> hearts-prototype@1.0.0 test:integration
+> tsx --test --test-concurrency=1 --test-force-exit tests/integration/*.test.ts
+
+TAP version 13
+# [11:18:13] [32mINFO[39m: [36mReading migration files from /workspace/hearts-prototype/src/migrations[39m
+# Subtest: erase wipe on a real database
+    # Subtest: the registry is complete before any seed
+    ok 1 - the registry is complete before any seed
+      ---
+      duration_ms: 6.295622
+      ...
+# audit write failed DrizzleQueryError: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default, $7, $8, default, $9, $10, $11) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+# params: erase.user,1,master,8,learner,8,Account wiped,2026-10-05T11:18:14.365Z,{"deleted":{"engagement_points_rels":0,"engagement-points:unlink":0,"talk-tiers:unlink":0,"answers":1,"workbook-entries":1,"notifications":1,"completions":1,"harvest-entries":1,"drawn-to":1,"watch-sessions":1,"lesson-visits":1,"seat-visits":0,"rituals":1,"placing-answers":0,"feedback-notes":0,"schedules_rels":0,"schedules":0,"rsvps":0,"checkins":0,"checkins:unlink":0,"messages":0,"gather-rsvps":1,"gather-rsvps:unlink":0,"gather-checkins":0,"gather-reflections":0,"gather-photos":0,"gatherings:unlink":0,"circle-answers":1,"heart-states":0,"opening_answers_rels":0,"opening-answers":1,"view-as-sessions":0,"audit-log":0,"compass-attempts":1,"compass-serves":0,"feedback-summaries":0,"sheet-imports:unlink":0,"question-rewrites:unlink":0,"ai-step-versions:unlink":0,"ai-step-jobs:unlink":0,"consents":0,"consents:unlink":0,"age-profiles":0,"age-profiles:unlink":0,"help-requests":0,"classes_rels":0,"media":1,"users":1},"files":{"removed":1,"failed":0}},2026-10-05T11:18:14.366Z,2026-10-05T11:18:14.366Z
+#     at NodePgPreparedQuery.queryWithCache (/workspace/hearts-prototype/node_modules/src/pg-core/session.ts:73:11)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+#     at async <anonymous> (/workspace/hearts-prototype/node_modules/src/node-postgres/session.ts:154:19)
+#     ... 8 lines matching cause stack trace ...
+#     at async Suite.processPendingSubtests (node:internal/test_runner/test:677:7) {
+#   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default, $7, $8, default, $9, $10, $11) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+#   params: [
+#     'erase.user',
+#     1,
+#     'master',
+#     8,
+#     'learner',
+#     8,
+#     'Account wiped',
+#     '2026-10-05T11:18:14.365Z',
+#     '{"deleted":{"engagement_points_rels":0,"engagement-points:unlink":0,"talk-tiers:unlink":0,"answers":1,"workbook-entries":1,"notifications":1,"completions":1,"harvest-entries":1,"drawn-to":1,"watch-sessions":1,"lesson-visits":1,"seat-visits":0,"rituals":1,"placing-answers":0,"feedback-notes":0,"schedules_rels":0,"schedules":0,"rsvps":0,"checkins":0,"checkins:unlink":0,"messages":0,"gather-rsvps":1,"gather-rsvps:unlink":0,"gather-checkins":0,"gather-reflections":0,"gather-photos":0,"gatherings:unlink":0,"circle-answers":1,"heart-states":0,"opening_answers_rels":0,"opening-answers":1,"view-as-sessions":0,"audit-log":0,"compass-attempts":1,"compass-serves":0,"feedback-summaries":0,"sheet-imports:unlink":0,"question-rewrites:unlink":0,"ai-step-versions:unlink":0,"ai-step-jobs:unlink":0,"consents":0,"consents:unlink":0,"age-profiles":0,"age-profiles:unlink":0,"help-requests":0,"classes_rels":0,"media":1,"users":1},"files":{"removed":1,"failed":0}}',
+#     '2026-10-05T11:18:14.366Z',
+#     '2026-10-05T11:18:14.366Z'
+#   ],
+#   cause: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_target_id_users_id_fk"
+#       at /workspace/hearts-prototype/node_modules/@payloadcms/db-postgres/node_modules/pg/lib/client.js:631:17
+#       at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+#       at async <anonymous> (/workspace/hearts-prototype/node_modules/src/node-postgres/session.ts:161:13)
+#       at async NodePgPreparedQuery.queryWithCache (/workspace/hearts-prototype/node_modules/src/pg-core/session.ts:71:12)
+#       at async <anonymous> (/workspace/hearts-prototype/node_modules/src/node-postgres/session.ts:154:19)
+#       at async Object.insert (/workspace/hearts-prototype/node_modules/@payloadcms/drizzle/src/postgres/insert.ts:20:14)
+#       at async upsertRow (/workspace/hearts-prototype/node_modules/@payloadcms/drizzle/src/upsertRow/index.ts:266:24)
+#       at async Object.create (/workspace/hearts-prototype/node_modules/@payloadcms/drizzle/src/create.ts:21:18)
+#       at async createOperation (/workspace/hearts-prototype/node_modules/payload/src/collections/operations/create.ts:432:13)
+#       at async audit (/workspace/hearts-prototype/src/server/audit.ts:83:5)
+#       at async wipeUser (/workspace/hearts-prototype/src/server/erase/service.ts:243:3)
+#       at async TestContext.<anonymous> (/workspace/hearts-prototype/tests/integration/erase-wipe.test.ts:239:20)
+#       at async Test.run (node:internal/test_runner/test:980:9)
+#       at async Suite.processPendingSubtests (node:internal/test_runner/test:677:7) {
+#     length: 278,
+#     severity: 'ERROR',
+#     code: '23503',
+#     detail: 'Key (target_id)=(8) is not present in table "users".',
+#     hint: undefined,
+#     position: undefined,
+#     internalPosition: undefined,
+#     internalQuery: undefined,
+#     where: undefined,
+#     schema: 'public',
+#     table: 'audit_log',
+#     column: undefined,
+#     dataType: undefined,
+#     constraint: 'audit_log_target_id_users_id_fk',
+#     file: 'ri_triggers.c',
+#     line: '2608',
+#     routine: 'ri_ReportViolation'
+#   }
+# }
+    # Subtest: wiping a learner leaves no rows for them and keeps the other portal and the library talk
+    ok 2 - wiping a learner leaves no rows for them and keeps the other portal and the library talk
+      ---
+      duration_ms: 78.849126
+      ...
+    # Subtest: wiping the portal leaves zero rows for it, keeps the library talk, and leaves the other portal clean
+    ok 3 - wiping the portal leaves zero rows for it, keeps the library talk, and leaves the other portal clean
+      ---
+      duration_ms: 186.652994
+      ...
+# audit write failed DrizzleQueryError: Failed query: insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default, $7, $8, default, $9, $10, $11) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"
+# params: erase.user,1,master,10,learner,9,Account wiped,2026-10-05T11:18:14.831Z,{"deleted":{"engagement_points_rels":0,"engagement-points:unlink":0,"talk-tiers:unlink":0,"answers":1,"workbook-entries":0,"notifications":0,"completions":0,"harvest-entries":0,"drawn-to":0,"watch-sessions":0,"lesson-visits":0,"seat-visits":0,"rituals":0,"placing-answers":0,"feedback-notes":0,"schedules_rels":0,"schedules":0,"rsvps":0,"checkins":0,"checkins:unlink":0,"messages":0,"gather-rsvps":0,"gather-rsvps:unlink":0,"gather-checkins":0,"gather-reflections":0,"gather-photos":0,"gatherings:unlink":0,"circle-answers":0,"heart-states":0,"opening_answers_rels":0,"opening-answers":0,"view-as-sessions":0,"audit-log":0,"compass-attempts":0,"compass-serves":0,"feedback-summaries":0,"sheet-imports:unlink":0,"question-rewrites:unlink":0,"ai-step-versions:unlink":0,"ai-step-jobs:unlink":0,"consents":0,"consents:unlink":0,"age-profiles":0,"age-profiles:unlink":0,"help-requests":0,"classes_rels":0,"media":1,"users":1},"files":{"removed":0,"failed":1}},2026-10-05T11:18:14.836Z,2026-10-05T11:18:14.836Z
+#     at NodePgPreparedQuery.queryWithCache (/workspace/hearts-prototype/node_modules/src/pg-core/session.ts:73:11)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+#     at async <anonymous> (/workspace/hearts-prototype/node_modules/src/node-postgres/session.ts:154:19)
+#     ... 8 lines matching cause stack trace ...
+#     at async Suite.processPendingSubtests (node:internal/test_runner/test:677:7) {
+#   query: 'insert into "audit_log" ("id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default, $7, $8, default, $9, $10, $11) returning "id", "event", "actor_id", "actor_role", "target_id", "target_role", "portal_id", "session_id", "reason", "at", "ip_hash", "detail", "updated_at", "created_at"',
+#   params: [
+#     'erase.user',
+#     1,
+#     'master',
+#     10,
+#     'learner',
+#     9,
+#     'Account wiped',
+#     '2026-10-05T11:18:14.831Z',
+#     '{"deleted":{"engagement_points_rels":0,"engagement-points:unlink":0,"talk-tiers:unlink":0,"answers":1,"workbook-entries":0,"notifications":0,"completions":0,"harvest-entries":0,"drawn-to":0,"watch-sessions":0,"lesson-visits":0,"seat-visits":0,"rituals":0,"placing-answers":0,"feedback-notes":0,"schedules_rels":0,"schedules":0,"rsvps":0,"checkins":0,"checkins:unlink":0,"messages":0,"gather-rsvps":0,"gather-rsvps:unlink":0,"gather-checkins":0,"gather-reflections":0,"gather-photos":0,"gatherings:unlink":0,"circle-answers":0,"heart-states":0,"opening_answers_rels":0,"opening-answers":0,"view-as-sessions":0,"audit-log":0,"compass-attempts":0,"compass-serves":0,"feedback-summaries":0,"sheet-imports:unlink":0,"question-rewrites:unlink":0,"ai-step-versions:unlink":0,"ai-step-jobs:unlink":0,"consents":0,"consents:unlink":0,"age-profiles":0,"age-profiles:unlink":0,"help-requests":0,"classes_rels":0,"media":1,"users":1},"files":{"removed":0,"failed":1}}',
+#     '2026-10-05T11:18:14.836Z',
+#     '2026-10-05T11:18:14.836Z'
+#   ],
+#   cause: error: insert or update on table "audit_log" violates foreign key constraint "audit_log_target_id_users_id_fk"
+#       at /workspace/hearts-prototype/node_modules/@payloadcms/db-postgres/node_modules/pg/lib/client.js:631:17
+#       at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+#       at async <anonymous> (/workspace/hearts-prototype/node_modules/src/node-postgres/session.ts:161:13)
+#       at async NodePgPreparedQuery.queryWithCache (/workspace/hearts-prototype/node_modules/src/pg-core/session.ts:71:12)
+#       at async <anonymous> (/workspace/hearts-prototype/node_modules/src/node-postgres/session.ts:154:19)
+#       at async Object.insert (/workspace/hearts-prototype/node_modules/@payloadcms/drizzle/src/postgres/insert.ts:20:14)
+#       at async upsertRow (/workspace/hearts-prototype/node_modules/@payloadcms/drizzle/src/upsertRow/index.ts:266:24)
+#       at async Object.create (/workspace/hearts-prototype/node_modules/@payloadcms/drizzle/src/create.ts:21:18)
+#       at async createOperation (/workspace/hearts-prototype/node_modules/payload/src/collections/operations/create.ts:432:13)
+#       at async audit (/workspace/hearts-prototype/src/server/audit.ts:83:5)
+#       at async wipeUser (/workspace/hearts-prototype/src/server/erase/service.ts:243:3)
+#       at async TestContext.<anonymous> (/workspace/hearts-prototype/tests/integration/erase-wipe.test.ts:339:20)
+#       at async Test.run (node:internal/test_runner/test:980:9)
+#       at async Suite.processPendingSubtests (node:internal/test_runner/test:677:7) {
+#     length: 279,
+#     severity: 'ERROR',
+#     code: '23503',
+#     detail: 'Key (target_id)=(10) is not present in table "users".',
+#     hint: undefined,
+#     position: undefined,
+#     internalPosition: undefined,
+#     internalQuery: undefined,
+#     where: undefined,
+#     schema: 'public',
+#     table: 'audit_log',
+#     column: undefined,
+#     dataType: undefined,
+#     constraint: 'audit_log_target_id_users_id_fk',
+#     file: 'ri_triggers.c',
+#     line: '2608',
+#     routine: 'ri_ReportViolation'
+#   }
+# }
+    # Subtest: a forced storage failure lands in erase_s3_retries and is retried
+    ok 4 - a forced storage failure lands in erase_s3_retries and is retried
+      ---
+      duration_ms: 262.456371
+      ...
+    # Subtest: db:orphans stays quiet when later-PR tables and the retry table are missing
+    ok 5 - db:orphans stays quiet when later-PR tables and the retry table are missing
+      ---
+      duration_ms: 143.250614
+      ...
+    1..5
+ok 1 - erase wipe on a real database
+  ---
+  duration_ms: 2543.886321
+  type: 'suite'
+  ...
+1..1
+# tests 5
+# suites 1
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3442.068117
