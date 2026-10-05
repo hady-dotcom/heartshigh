@@ -92,7 +92,7 @@ const PLACING = [
 async function ensureUser(payload: Awaited<ReturnType<typeof getPayload>>, data: Partial<User> & { email: string; password: string }) {
   const found = await payload.find({ collection: 'users', overrideAccess: true, limit: 1, where: { email: { equals: data.email } } })
   if (found.docs[0]) return found.docs[0]
-  return payload.create({ collection: 'users', overrideAccess: true, data: data as User & { password: string } })
+  return payload.create({ collection: 'users', overrideAccess: true, data: { emailConfirmedAt: new Date().toISOString(), ...data } as User & { password: string } })
 }
 
 /**
@@ -101,7 +101,9 @@ async function ensureUser(payload: Awaited<ReturnType<typeof getPayload>>, data:
  */
 /** The e2e database keeps its codes in its own file, so the codes `npm run go` printed stay true. */
 function codesFile() {
-  return /hearts-test\.db/.test(process.env.DATABASE_URL || '') ? 'data/seed-codes-test.json' : 'data/seed-codes.json'
+  const url = process.env.DATABASE_URL || ''
+  if (/hearts-test\.db/.test(url) || process.env.HEARTS_E2E_DATABASE) return 'data/seed-codes-test.json'
+  return 'data/seed-codes.json'
 }
 
 async function wipe() {
@@ -231,7 +233,11 @@ async function main() {
   const portalIds = new Map<string, number>()
   for (const portal of startersOnly ? [] : portals) {
     const found = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: portal.slug } } })
-    const doc = found.docs[0] || (await payload.create({ collection: 'portals', overrideAccess: true, data: portal }))
+    const doc = found.docs[0]
+      ? portal.timeZone && (found.docs[0] as { timeZone?: string }).timeZone !== portal.timeZone
+        ? await payload.update({ collection: 'portals', id: found.docs[0].id, overrideAccess: true, data: { timeZone: portal.timeZone } })
+        : found.docs[0]
+      : await payload.create({ collection: 'portals', overrideAccess: true, data: portal })
     portalIds.set(portal.slug, doc.id)
   }
 
@@ -469,6 +475,17 @@ async function main() {
     seenWelcome: true,
     startingClause: 22,
     joinedAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
+    courseList: learnerList,
+  })
+  await ensureUser(payload, {
+    email: 'qa-desk@hearts.foundation',
+    password: 'portal-learner',
+    name: 'QA Desk Learner',
+    role: 'learner',
+    audience: 'learner' as const,
+    tenants: [{ tenant: elm }],
+    onboarded: true,
+    seenWelcome: true,
     courseList: learnerList,
   })
   await ensureUser(payload, {

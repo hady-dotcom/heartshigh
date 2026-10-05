@@ -11,7 +11,7 @@ export const WRITE_MS = 10 * 60_000
 export const MIN_REASON = 10
 export const READ_ONLY = 'VIEW_AS_READ_ONLY'
 
-type Person = { id: number; role?: string | null; name?: string | null; email?: string | null; tenants?: { tenant?: unknown }[]; removed?: boolean | null }
+type Person = { id: number; role?: string | null; name?: string | null; email?: string | null; tenants?: { tenant?: unknown }[]; removed?: boolean | null; suspendedAt?: string | null }
 type Row = Record<string, unknown> & { id: number }
 
 export type EndReason = 'exit' | 'idle-timeout' | 'max-timeout' | 'replaced' | 'actor-signed-out' | 'role-changed' | 'target-removed' | 'portal-closed'
@@ -142,7 +142,7 @@ export async function loadViewAs(payload: Payload, actor: Person | null, token: 
   else if (at > lastSeenAt + IDLE_MS) reason = 'idle-timeout'
   const target = (await payload.findByID({ collection: 'users', id: idOf(session.target) || 0, overrideAccess: true, depth: 0 }).catch(() => null)) as Person | null
   if (!reason) {
-    if (!target || target.removed) reason = 'target-removed'
+    if (!target || target.removed || target.suspendedAt) reason = 'target-removed'
     else if (actor.role !== session.actorRole || target.role !== session.targetRole) reason = 'role-changed'
   }
   if (!reason && idOf(session.portal)) {
@@ -219,7 +219,7 @@ export async function setWrite(payload: Payload, viewAs: ViewAs, on: boolean, re
 }
 
 /** Things a viewer may never do as the learner, whether or not changes are allowed (spec 6A). */
-export const NEVER_ACTIONS = new Set(['join', 'answer', 'reply', 'start-again', 'keep-place', 'share-opening', 'delete-account', 'change-email', 'change-password', 'opening-answers', 'heart-state', 'popup-answer', 'workbook-consent'])
+export const NEVER_ACTIONS = new Set(['join', 'answer', 'reply', 'start-again', 'keep-place', 'share-opening', 'delete-account', 'change-email', 'change-password', 'opening-answers', 'heart-state', 'popup-answer', 'workbook-consent', 'request-delete', 'setup-totp', 'confirm-totp', 'verify-totp', 'resend-confirm', 'download-data', 'save-notify-prefs'])
 export const NEVER_COLLECTIONS = new Set(['heart-states', 'opening-answers', 'answers', 'workbook-entries'])
 
 export async function blocked(payload: Payload, viewAs: ViewAs, what: Record<string, unknown>) {

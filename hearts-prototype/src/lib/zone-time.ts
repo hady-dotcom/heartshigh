@@ -53,6 +53,31 @@ export function zonedTime(iso: string | Date | null | undefined, timeZone: strin
   return new Intl.DateTimeFormat(locale, { timeZone: zone, day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }).format(date)
 }
 
+/** "18 October 2026, 21:30", or "5 October 2026 at 00:16" when join is "at". */
+export function britishPortalTime(iso: string | Date | null | undefined, timeZone: string, join: 'comma' | 'at' = 'comma') {
+  const date = iso instanceof Date ? iso : new Date(String(iso || ''))
+  if (Number.isNaN(date.getTime())) return ''
+  const zone = isTimeZone(timeZone) ? timeZone : DEFAULT_TIME_ZONE
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: zone,
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date)
+  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || ''
+  const day = value('day')
+  const month = value('month')
+  const year = value('year')
+  const hour = value('hour')
+  const minute = value('minute')
+  if (!day || !month || !year || !hour || !minute) return ''
+  const glue = join === 'at' ? ' at ' : ', '
+  return `${day} ${month} ${year}${glue}${hour}:${minute}`
+}
+
 /** "London" from Europe/London, for the setting's label. */
 export function zoneCity(timeZone: string) {
   return timeZone === 'UTC' ? 'UTC' : timeZone.split('/').pop()!.replace(/_/g, ' ')

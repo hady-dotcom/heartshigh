@@ -2,7 +2,7 @@
 // belong to, with any other doors as tags, and under a Ghunya seat when the talks carry one.
 // Pure, so the desk and the tests share one rule.
 
-import { doorByNumber, doorCode, doorLabel, doorNumberOfClause, type Door, DOORS } from './doors'
+import { doorByNumber, doorCode, doorNumberOfClause, type Door, DOORS } from './doors'
 import { clipWords, endsDangling } from './sentences'
 
 export type CutPlacement = {
@@ -316,7 +316,7 @@ function buildGroup(door: Door | null, courses: PlacedCourse[], seatsById: Map<n
     number: door?.number ?? null,
     code: door ? doorCode(door.number) : 'Other',
     title: door?.title || 'Other',
-    heading: door ? doorLabel(door) : 'Other',
+    heading: door ? doorName(door).heading : 'Other',
     courses: sorted,
     seats,
     unseated,

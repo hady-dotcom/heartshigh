@@ -448,7 +448,7 @@ export async function seedPeople(payload: Payload, opts: { portalIds: Map<string
   const ensure = async (data: Record<string, unknown>) => {
     const found = await one(payload, 'users', { email: { equals: data.email } })
     if (found) return found
-    return (await payload.create({ collection: 'users', overrideAccess: true, data: data as never })) as unknown as Doc
+    return (await payload.create({ collection: 'users', overrideAccess: true, data: { emailConfirmedAt: new Date().toISOString(), ...data } as never })) as unknown as Doc
   }
   await ensure({ email: 'leeds-admin@hearts.test', password: 'portal-admin', name: 'Bushra Iqbal', role: 'portal-admin', tenants: [{ tenant: leeds }], onboarded: true, seenWelcome: true, courseList: opts.courseList })
   await ensure({ email: 'master2@hearts.test', password: 'hearts-master', name: 'Idris Rahman', role: 'master', onboarded: true, seenWelcome: true })

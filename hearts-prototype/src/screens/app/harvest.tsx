@@ -57,7 +57,7 @@ async function doorsOfLessons(payload: Payload, lessonIds: number[], doors: Door
 
 type View = 'context' | 'scholars' | 'summary' | 'tafsir'
 
-export async function GardenHarvest({ payload, user, base, query }: Ctx) {
+export async function GardenHarvest({ payload, user, portal, base, query }: Ctx) {
   const session = await getSession()
   const reader = session.actor || user
   const [own, unread, drawn] = await Promise.all([
@@ -131,7 +131,7 @@ export async function GardenHarvest({ payload, user, base, query }: Ctx) {
   const panel = opened && view ? await openPanel(payload, opened, view, href) : null
 
   return (
-    <Frame base={base} title="Harvest" testId="garden-harvest" unread={unread}>
+    <Frame base={base} title="Harvest" testId="garden-harvest" unread={unread} portal={portal}>
       <p className="lead">Verses, hadith and lines from the talks you watch, in the speaker’s own words. Tap a card to hear that moment again.</p>
       {drawn.length ? (
         <section className="card" data-testid="drawn-to" style={{ marginBottom: 16 }}>

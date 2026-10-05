@@ -9,6 +9,8 @@ test('Bug 20: e2e starts its own server with the test clock on, on a port `npm r
   assert.ok(server, 'a webServer is configured')
   assert.equal(server.reuseExistingServer, false, 'never reuses whatever is already listening')
   assert.equal(server.env?.HEARTS_TEST_CLOCK, '1')
+  assert.equal(server.env?.HEARTS_MAIL_CATCHER, '1')
+  assert.equal(server.env?.SERVER_URL, undefined, 'SERVER_URL would turn on Payload CSRF and break cookie REST from Playwright')
   assert.doesNotMatch(String(config.use?.baseURL), /:3000\b/, 'the suite does not share :3000 with npm run go')
   assert.match(String(server.command), new RegExp(String(new URL(String(config.use?.baseURL)).port)))
 })

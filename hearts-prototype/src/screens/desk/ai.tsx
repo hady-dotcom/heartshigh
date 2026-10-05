@@ -8,6 +8,8 @@ import { loadDesk, pendingForLesson } from '@/server/ai-desk'
 import type { Ctx } from '../common'
 import { partTitle } from '@/lib/talk-title'
 import { rows, str } from '../common'
+import { HelpTip } from '@/components/desk/help'
+import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
 import styles from './ai.module.css'
 import { DeskFrame, masterNav } from './shell'
@@ -92,6 +94,7 @@ function Grant({ base, desk, master }: { base: string; desk: Awaited<ReturnType<
     <form action="/api/ai-steps" method="post" className="actions" style={{ marginBottom: 16 }}>
       <Hidden fields={{ action: 'grant', value: desk.portalMayEdit ? 'off' : 'on', next: base }} />
       <button className="btn ghost small" type="submit" data-testid="ai-grant">{desk.portalMayEdit ? 'Stop portal admins editing' : 'Let portal admins edit'}</button>
+      <HelpTip topic="ai-grant">{TOOL.aiGrant}</HelpTip>
       <span className="hint">{desk.portalMayEdit ? 'Portal admins can edit the steps.' : 'Portal admins can read the steps, not change them.'}</span>
     </form>
   )
@@ -121,12 +124,14 @@ async function Registry({ ctx, master, base, desk }: { ctx: Ctx | null; master: 
           </Link>
         ))}
       </div>
-      <details style={{ marginTop: 18 }}>
-        <summary className={styles.quiet}>Environment variables for a real model</summary>
-        <ul className={styles.quiet} data-testid="ai-env">
-          {desk.env.map((item) => <li key={item.name}><code>{item.name}</code> — {item.purpose}</li>)}
-        </ul>
-      </details>
+      {(ctx?.user || master?.user)?.role === 'master' ? (
+        <details style={{ marginTop: 18 }}>
+          <summary className={styles.quiet}>Environment variables for a real model</summary>
+          <ul className={styles.quiet} data-testid="ai-env">
+            {desk.env.map((item) => <li key={item.name}><code>{item.name}</code> — {item.purpose}</li>)}
+          </ul>
+        </details>
+      ) : null}
     </Frame>
   )
 }
@@ -154,7 +159,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
       <p style={{ marginTop: 0 }}><Link href={base}>‹ All steps</Link></p>
       <div className={styles.layout}>
         <section className="panel">
-          <header className="light"><h2>Prompt</h2><span className="badge grey">Live version {str(step.liveVersion) || '1'}</span></header>
+          <header className="light"><h2>Prompt <HelpTip topic="ai-prompt">{TOOL.aiPrompt}</HelpTip></h2><span className="badge grey">Live version {str(step.liveVersion) || '1'}</span></header>
           <div className="body">
             {canEdit ? (
               <form action="/api/ai-steps" method="post" className="form" data-testid="ai-prompt-form">

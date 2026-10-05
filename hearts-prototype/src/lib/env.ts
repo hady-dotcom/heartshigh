@@ -117,6 +117,34 @@ export function serverOrigins(env: Env = process.env) {
   return [...new Set(urls)]
 }
 
+export const CSRF_E2E_IN_PRODUCTION =
+  'HEARTS: HEARTS_E2E=1 is ignored because NODE_ENV=production. CSRF stays on.'
+
+/**
+ * Payload CSRF allowlist. HEARTS_E2E may turn CSRF off in development and tests so
+ * Playwright's cookie REST calls (no Origin) still work. Production never honours that switch.
+ */
+export function payloadCsrf(origins: string[], env: Env = process.env, warn: (message: string) => void = console.warn) {
+  const e2e = env.HEARTS_E2E === '1'
+  if (isProduction(env) && e2e) warn(CSRF_E2E_IN_PRODUCTION)
+  if (e2e && !isProduction(env)) return undefined
+  return origins.length ? origins : undefined
+}
+
+/** Same-host Origin, or an origin on the production CSRF list. Missing Origin is left to Payload. */
+export function requestOriginAllowed(headers: Headers, env: Env = process.env) {
+  const origin = (headers.get('origin') || '').trim()
+  if (!origin) return true
+  const host = (headers.get('x-forwarded-host') || headers.get('host') || '').split(',')[0].trim()
+  try {
+    if (host && new URL(origin).host === host) return true
+  } catch {
+    return false
+  }
+  const allowed = payloadCsrf(serverOrigins(env), env)
+  return Boolean(allowed?.includes(origin.replace(/\/$/, '')))
+}
+
 export function serverURL(env: Env = process.env) {
   return serverOrigins(env)[0]
 }
