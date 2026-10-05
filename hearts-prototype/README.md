@@ -44,6 +44,10 @@ Other ways in:
 
 Access codes are random on every seed, in the form `ELM-7KQX-M4TD`. The seed prints them, writes them to `data/seed-codes.json` (by label: `elm-teacher`, `elm-admin`, `elm-learner`, `elm-parent`, `leeds-teacher`, `leeds-learner`), and lists them on the master desk under Access codes. A join link looks like `/join?code=ELM-7KQX-M4TD`. Codes are not case sensitive and spaces are ignored. Each code on a portal's Access page shows its link, a QR code, its uses and whether it still works. The seeded admin code was made for one use and is already used.
 
+### Afternoon walkthrough (hearts-demo)
+
+`npm run demo:walkthrough` fills the `hearts-demo` portal only: named learner `walkthrough@hearts.foundation`, watch progress on the key demo talks, workbook answers, Garden growth, small acts, My week, and HEARTS circle sample answers. It is additive and safe on Railway production. How to run it, the join path, and what looks full afterwards are in [docs/DEMO-WALKTHROUGH.md](docs/DEMO-WALKTHROUGH.md).
+
 ## What is seeded
 
 - The 41 clauses of Hadith Jibril, with three Ghunya seats under each clause, and the shelf list from `content/ghunya-shelf.txt`. Clauses 22, 23, 24, 25 and 27 have no teaching line in the source, so none is shown for them.

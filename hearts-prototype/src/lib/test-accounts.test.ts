@@ -16,6 +16,7 @@ describe('isTestAccount', () => {
   it('keeps the two demo learners and ordinary accounts, including e2e logins', () => {
     assert.equal(isTestAccount('demo-learner@hearts.foundation', 'Amina Yusuf'), false)
     assert.equal(isTestAccount('demo-complete@hearts.foundation', 'Yusuf Rahman'), false)
+    assert.equal(isTestAccount('walkthrough@hearts.foundation', 'Amina Yusuf'), false)
     assert.equal(isTestAccount('elm-learner@hearts.test', 'Maryam'), false)
     assert.equal(isTestAccount('demo-admin@hearts-demo.test', 'Nabil Hassan (demo)'), false)
     assert.equal(isTestAccount('layla@hearts-demo.test', 'Layla Rahman (demo)'), false)
@@ -38,8 +39,9 @@ describe('visiblePeople', () => {
       { email: 'imam@masjid.org', name: 'Imam Karim' },
       { email: 'qa-bot@hearts.foundation', name: 'QA Bot' },
       { email: 'demo-learner@hearts.foundation', name: 'Amina Yusuf' },
+      { email: 'walkthrough@hearts.foundation', name: 'Amina Yusuf' },
     ]
-    assert.equal(visiblePeople(people, true).length, 2)
-    assert.equal(visiblePeople(people, false).length, 3)
+    assert.equal(visiblePeople(people, true).length, 3)
+    assert.equal(visiblePeople(people, false).length, 4)
   })
 })

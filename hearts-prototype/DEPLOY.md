@@ -140,6 +140,14 @@ npm run seed:starters
 
 Leave it running. It can take several minutes. It is finished when it says the starter talks are loaded and that no demo accounts were created.
 
+To make the **hearts-demo** portal look lived-in for a phone walkthrough, run this in the same shell after the talks are loaded:
+
+```bash
+npm run demo:walkthrough
+```
+
+It only writes `hearts-demo`. It does not wipe anything. Run it again if you like; a second run does not add copies. The named learner, the join path, and what the Garden should show are in `docs/DEMO-WALKTHROUGH.md`.
+
 What this does:
 
 - Loads the clauses, the library, and the starter talks.

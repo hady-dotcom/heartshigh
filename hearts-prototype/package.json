@@ -22,6 +22,7 @@
     "report:first-course": "tsx scripts/report-first-course.ts",
     "demo:gather": "tsx scripts/demo-gather.ts",
     "demo:live": "tsx scripts/demo-live.ts",
+    "demo:walkthrough": "tsx scripts/demo-walkthrough.ts",
     "seed": "tsx src/seed/seed.ts",
     "seed:starters": "tsx src/seed/seed.ts --starters",
     "demo:timed-learners": "tsx src/seed/timed-learners.ts",

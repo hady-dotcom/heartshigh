@@ -1,6 +1,6 @@
 /** Test and audit accounts that clutter Teach, Compass, Plans and Access. Never delete them; hide them. */
 
-const KEEP_EMAILS = new Set(['demo-learner@hearts.foundation', 'demo-complete@hearts.foundation'])
+const KEEP_EMAILS = new Set(['demo-learner@hearts.foundation', 'demo-complete@hearts.foundation', 'walkthrough@hearts.foundation'])
 
 /** Local-part prefixes used by audit and QA bots. */
 const HIDE_LOCAL = /^(ux-audit-|qa-|demo-|words-audit|compass-\d+)/i
