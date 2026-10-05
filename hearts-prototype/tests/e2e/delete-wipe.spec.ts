@@ -34,7 +34,10 @@ async function assertCentredDialog(page: Page, testId: string) {
     expect(mid).toBeGreaterThan(viewport.width * 0.3)
     expect(mid).toBeLessThan(viewport.width * 0.7)
     expect(box.y).toBeGreaterThan(20)
+    expect(box.y + box.height).toBeLessThanOrEqual(viewport.height - 8)
   }
+  await expect(panel.getByRole('heading')).toBeVisible()
+  await expect(page.getByTestId(`${testId}-confirm`)).toBeVisible()
 }
 
 async function signIn(page: Page, email: string, password: string, next: string) {

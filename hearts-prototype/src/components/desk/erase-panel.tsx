@@ -63,7 +63,7 @@ export function ErasePanel({
     const prior = openerRef.current
     const nodes = () => [...(root?.querySelectorAll<HTMLElement>(FOCUSABLE) || [])]
     const confirm = root?.querySelector<HTMLElement>(`[data-testid="${testId}-confirm"]`)
-    ;(confirm || nodes()[0])?.focus()
+    ;(confirm || nodes()[0])?.focus({ preventScroll: true })
 
     function onKey(event: KeyboardEvent) {
       if (event.key === 'Escape') {
@@ -145,40 +145,44 @@ export function ErasePanel({
           border: `1px solid ${deskTokens.line}`,
         }}
       >
-        <h3 id={titleId} style={{ margin: '0 0 8px', color: deskTokens.heading, fontSize: 18 }}>{title}</h3>
-        {error ? <p className="flash error" data-testid={`${testId}-error`}>{error}</p> : null}
+        <div className="erase-dialog-head">
+          <h3 id={titleId} style={{ margin: '0 0 8px', color: deskTokens.heading, fontSize: 18 }}>{title}</h3>
+          {error ? <p className="flash error" data-testid={`${testId}-error`}>{error}</p> : null}
+        </div>
         {summary ? (
           <>
-            <p style={{ margin: '0 0 10px' }} data-testid={`${testId}-summary`}>
-              This wipes {countLine(summary.counts).join(', ') || 'the saved rows'} from the database. It cannot be undone.
-            </p>
-            <ul data-testid={`${testId}-counts`} style={{ margin: '0 0 12px', paddingLeft: 18 }}>
-              {summary.counts.map((row) => (
-                <li key={row.key}>{row.n} {row.label.toLowerCase()}</li>
-              ))}
-            </ul>
-            {kind === 'user' && manyHomes ? (
-              <fieldset style={{ border: 0, padding: 0, margin: '0 0 12px' }} data-testid={`${testId}-homes`}>
-                <legend style={{ fontWeight: 600, marginBottom: 6 }}>This account is also in another portal</legend>
-                <label style={{ display: 'block', marginBottom: 6 }}>
-                  <input type="radio" name={`${testId}-mode`} checked={mode === 'portal'} onChange={() => setMode('portal')} />
-                  {' '}Take them off this portal only
-                </label>
-                <label style={{ display: 'block' }}>
-                  <input type="radio" name={`${testId}-mode`} checked={mode === 'account'} onChange={() => setMode('account')} />
-                  {' '}Wipe the whole account
-                </label>
-              </fieldset>
-            ) : kind === 'user' ? (
-              <p className="hint" data-testid={`${testId}-one-home`}>This account belongs only to this portal, so deleting them removes the account.</p>
-            ) : null}
-            <p style={{ margin: '0 0 10px' }}>
-              <a className="btn ghost small" href={exportHref} data-testid={`${testId}-export`}>Download a copy first</a>
-              <HelpTip topic="download-copy" label="What is Download a copy first?" place="end">
-                Download writes a workbook of the rows that will be wiped. Keep it if you may need the names or answers later. The wipe still needs you to type the name.
-              </HelpTip>
-            </p>
-            <form action="/api/hearts" method="post">
+            <div className="erase-dialog-body">
+              <p style={{ margin: '0 0 10px' }} data-testid={`${testId}-summary`}>
+                This wipes {countLine(summary.counts).join(', ') || 'the saved rows'} from the database. It cannot be undone.
+              </p>
+              <ul data-testid={`${testId}-counts`} style={{ margin: '0 0 12px', paddingLeft: 18 }}>
+                {summary.counts.map((row) => (
+                  <li key={row.key}>{row.n} {row.label.toLowerCase()}</li>
+                ))}
+              </ul>
+              {kind === 'user' && manyHomes ? (
+                <fieldset style={{ border: 0, padding: 0, margin: '0 0 12px' }} data-testid={`${testId}-homes`}>
+                  <legend style={{ fontWeight: 600, marginBottom: 6 }}>This account is also in another portal</legend>
+                  <label style={{ display: 'block', marginBottom: 6 }}>
+                    <input type="radio" name={`${testId}-mode`} checked={mode === 'portal'} onChange={() => setMode('portal')} />
+                    {' '}Take them off this portal only
+                  </label>
+                  <label style={{ display: 'block' }}>
+                    <input type="radio" name={`${testId}-mode`} checked={mode === 'account'} onChange={() => setMode('account')} />
+                    {' '}Wipe the whole account
+                  </label>
+                </fieldset>
+              ) : kind === 'user' ? (
+                <p className="hint" data-testid={`${testId}-one-home`}>This account belongs only to this portal, so deleting them removes the account.</p>
+              ) : null}
+              <p style={{ margin: '0 0 10px' }}>
+                <a className="btn ghost small" href={exportHref} data-testid={`${testId}-export`}>Download a copy first</a>
+                <HelpTip topic="download-copy" label="What is Download a copy first?" place="end">
+                  Download writes a workbook of the rows that will be wiped. Keep it if you may need the names or answers later. The wipe still needs you to type the name.
+                </HelpTip>
+              </p>
+            </div>
+            <form className="erase-dialog-foot" action="/api/hearts" method="post">
               <Hidden
                 fields={{
                   action,

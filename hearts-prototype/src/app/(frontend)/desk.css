@@ -158,11 +158,26 @@ body:has(.desk) {
 }
 .erase-dialog {
   width: min(440px, 100%);
-  max-height: min(80vh, 640px);
-  overflow: auto;
+  max-height: min(calc(100vh - 48px), 640px);
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   padding: 20px;
   border-radius: 14px;
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.4);
+}
+.erase-dialog-head {
+  flex: none;
+}
+.erase-dialog-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+.erase-dialog-foot {
+  flex: none;
+  padding-top: 12px;
 }
 .erase-trigger { display: inline-flex; }
 table.data { width: 100%; border-collapse: collapse; font-size: 14px; }
