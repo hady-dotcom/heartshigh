@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { newViewingId, POLL_MS, PopupWatcher, type PopupPoint } from '@/lib/popups'
-import { comingQuestionLabel, questionRowRevealed, revealedStorageKey } from '@/lib/question-list'
+import { comingAnswerLabel, comingQuestionLabel, questionMomentReached, questionRowRevealed, revealedStorageKey } from '@/lib/question-list'
+import { TopicHelp } from '@/components/app/page-help'
 import { placeDots } from '@/lib/timeline-dots'
 import { createPlayer, destroyPlayer, getPlayer, resume, STATE, UNPLAYABLE } from '@/lib/yt'
 import { SwarmList } from '@/components/app/swarm-list'
@@ -118,6 +119,8 @@ export function CoursePlayer({
   const [time, setTime] = useState(startAt)
   const [watched, setWatched] = useState(0)
   const lastTime = useRef(startAt)
+  const timeRef = useRef(startAt)
+  timeRef.current = time
   const [length, setLength] = useState(duration)
   const [playing, setPlaying] = useState(false)
   const [ended, setEnded] = useState(false)
@@ -279,17 +282,17 @@ export function CoursePlayer({
 
   const show = useCallback(
     (id: number, triggered: boolean) => {
-      reveal(id)
       const point = viewsRef.current.find((row) => row.id === id)
-      if (point) {
-        const at = point.second
-        lastTime.current = at
-        setTime(at)
-        getPlayer(PLAYER_ID)?.seekTo(at, true)
-        if (videoRef.current) videoRef.current.currentTime = at
-        vimeoTime.current = at
-        filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'setCurrentTime', value: at }), '*')
-      }
+      if (!point) return
+      if (!triggered && !questionMomentReached({ second: point.second, time: timeRef.current, answered: point.answered })) return
+      reveal(id)
+      const at = point.second
+      lastTime.current = at
+      setTime(at)
+      getPlayer(PLAYER_ID)?.seekTo(at, true)
+      if (videoRef.current) videoRef.current.currentTime = at
+      vimeoTime.current = at
+      filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'setCurrentTime', value: at }), '*')
       placeSheet()
       setFromTrigger(triggered)
       setOpenId(id)
@@ -349,7 +352,7 @@ export function CoursePlayer({
   }, [openId])
 
   useEffect(() => {
-    if (initialOpenId && viewsRef.current.some((point) => point.id === initialOpenId)) show(initialOpenId, false)
+    if (initialOpenId && viewsRef.current.some((point) => point.id === initialOpenId)) show(initialOpenId, true)
   }, [initialOpenId, show])
 
   const revealEnd = useCallback(() => {
@@ -480,7 +483,8 @@ export function CoursePlayer({
     close()
   }
 
-  const nextPoint = views.find((point) => point.state === 'open' && !point.answered) || views.find((point) => !point.answered) || null
+  const nextPoint = views.find((point) => point.state === 'open' && !point.answered && questionMomentReached({ second: point.second, time, answered: point.answered })) || null
+  const waitingOnFilm = views.some((point) => !point.answered)
   const open = views.find((point) => point.id === openId) || null
   const total = length || Math.max(60, ...views.map((point) => point.second + 30))
   const filmed = mode === 'youtube' || mode === 'vimeo' || mode === 'file'
@@ -532,22 +536,27 @@ export function CoursePlayer({
           <div className="fill" style={{ width: `${Math.min(100, (time / total) * 100)}%` }} />
           {views.map((point) => {
             const place = places.get(point.id)
+            const reached = questionMomentReached({ second: point.second, time, answered: point.answered })
+            const locked = !point.answered && (!reached || point.state !== 'open')
             return (
             <button
               key={point.id}
               type="button"
-              className={`dot${point.answered ? ' done' : point.state !== 'open' ? ' locked' : ''}`}
+              className={`dot${point.answered ? ' done' : locked ? ' locked' : ''}`}
               style={{ left: `${place?.left ?? 2}%` }}
-              aria-label={`Question ${point.number} at ${clock(point.second)}`}
+              aria-label={reached ? `Question ${point.number} at ${clock(point.second)}` : `Question ${point.number} comes at ${clock(point.second)}`}
               data-testid="timeline-dot"
               data-state={point.state}
               data-second={point.second}
+              data-moment={reached ? 'reached' : 'waiting'}
+              disabled={locked}
               onClick={() => {
+                if (locked) return
                 pause()
                 show(point.id, false)
               }}
             >
-              <i>{point.number}</i>
+              <i>{reached ? point.number : ''}</i>
             </button>
             )
           })}
@@ -605,9 +614,12 @@ export function CoursePlayer({
           )}
         </section>
       ) : null}
-      <button type="button" className="answer-btn" disabled={!nextPoint} onClick={() => nextPoint && show(nextPoint.id, false)} data-testid="answer-point">
-        {nextPoint ? `Answer question ${nextPoint.number} →` : views.length ? 'All questions answered' : 'No questions on this part yet'}
-      </button>
+      <div className="answer-row" data-testid="answer-row">
+        <button type="button" className="answer-btn" disabled={!nextPoint} onClick={() => nextPoint && show(nextPoint.id, false)} data-testid="answer-point">
+          {nextPoint ? `Answer question ${nextPoint.number} →` : waitingOnFilm ? comingAnswerLabel() : views.length ? 'All questions answered' : 'No questions on this part yet'}
+        </button>
+        {waitingOnFilm && !nextPoint ? <TopicHelp topic="hide-until-moment" label="When do questions appear?" /> : null}
+      </div>
       <section className="garden-card" data-testid="course-garden">
         <p className="eyebrow">Course garden</p>
         <div className="garden-grid">

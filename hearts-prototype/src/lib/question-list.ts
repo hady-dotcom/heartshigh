@@ -18,6 +18,16 @@ export function questionRowRevealed(input: { id: number; second: number; time: n
   return new Set(input.revealedIds).has(input.id)
 }
 
+/** A learner may open or answer only after the film has reached that second. */
+export function questionMomentReached(input: { second: number; time: number; answered?: boolean }) {
+  if (input.answered) return true
+  return input.time + 0.01 >= input.second
+}
+
+export function comingAnswerLabel() {
+  return 'Keep watching'
+}
+
 export function revealedStorageKey(lessonId: number) {
   return `hearts-revealed-${lessonId}`
 }

@@ -4,7 +4,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode,
 import type { FeedItem } from '@/server/learner'
 import { Arch } from '@/components/arch'
 import { landedGold, revealedQuote, spreadWords, type SpokenWord } from '@/lib/card-voice'
-import { clipStepUpLabel } from '@/lib/feed-copy'
+import { clipStepUpLabel, READY_FOR_MORE } from '@/lib/feed-copy'
 
 type Scene = NonNullable<FeedItem['scene']>
 type Beat = Scene['beats'][number]
@@ -154,7 +154,6 @@ export function TeachingCard({
   const heard = beats.some((beat) => beat.audio)
   const sound = pref === 'on'
   const holdLand = scene.style === 'unfold' && current?.beat === 'land' && !opened
-  const reward = Boolean(lineDone && current?.beat === 'land' && !holdLand)
 
   useEffect(() => {
     setPref(readVoice() ? 'on' : 'off')
@@ -291,8 +290,10 @@ export function TeachingCard({
     if (blocked || pref !== 'on') unlock()
   }
 
-  const next = reward ? (
-    <button type="button" className="pill gold" onClick={onClip} data-testid="scene-next">{cta && !/^learn more\b/i.test(cta) ? cta : clipStepUpLabel()}</button>
+  // Keep the step-up on screen from the first beat. On a phone the land beat
+  // often never finishes (autoplay blocked), and that used to hide the appetiser path.
+  const next = !holdLand ? (
+    <button type="button" className="pill gold" onClick={onClip} data-testid="scene-next">{cta && !/^learn more\b/i.test(cta) ? cta : READY_FOR_MORE}</button>
   ) : null
 
   const voiceButton = heard ? (
@@ -316,7 +317,7 @@ export function TeachingCard({
       data-beat={current?.beat || ''}
       data-voice={blocked ? 'blocked' : sound ? 'on' : 'off'}
       data-audio={heard ? 'yes' : 'no'}
-      data-cta={reward ? 'shown' : 'hidden'}
+      data-cta={next ? 'shown' : 'hidden'}
       onClick={(event) => {
         if (!blocked) return
         if ((event.target as HTMLElement).closest('button, a')) return

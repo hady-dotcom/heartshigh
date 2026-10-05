@@ -151,7 +151,7 @@ test.describe('Help shape HEARTS', () => {
       }
     }
     await expect(joinFilm.page.getByTestId('learn-more')).toBeVisible()
-    await expect(joinFilm.page.getByTestId('learn-more')).toHaveText(/Watch the 3-minute version/)
+    await expect(joinFilm.page.getByTestId('learn-more')).toHaveText(/Ready for more\?/)
     await expect(joinFilm.page.getByTestId('swipe-hint')).toBeVisible()
     await expect(joinFilm.page.getByTestId('lane-chip')).toBeVisible()
     if (await joinFilm.page.getByTestId('clip-timer').count()) await expect(joinFilm.page.getByTestId('clip-timer')).toBeVisible()
@@ -399,7 +399,7 @@ test('a running experiment label wins over the Friday calendar line on the gold 
     if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').click()
     const cta = page.getByTestId('learn-more')
     await expect(cta).toBeVisible({ timeout: 20_000 })
-    await expect(cta).toHaveText(/Watch the 3-minute version|Watch the experiment version|Friday|Jumu/)
+    await expect(cta).toHaveText(/Ready for more\?|Watch the 3-minute version|Watch the experiment version|Friday|Jumu/)
     await expect(cta).not.toHaveText(/^Learn more$/)
     await page.close()
     await context.close()

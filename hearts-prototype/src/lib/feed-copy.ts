@@ -4,7 +4,7 @@ export const LEVEL_WORDS = ['clip', '3-minute version', 'full talk'] as const
 export const READY_FOR_MORE = 'Ready for more?'
 
 export function clipStepUpLabel() {
-  return 'Watch the 3-minute version'
+  return READY_FOR_MORE
 }
 
 export function talkMinutes(seconds: number | null | undefined) {

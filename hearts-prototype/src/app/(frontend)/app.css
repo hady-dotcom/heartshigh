@@ -406,6 +406,8 @@
 .timeline .dot.done i { background: var(--gold); border-color: #f6e2b0; }
 .timeline .dot.locked i { background: #4a4740; border-color: #8b877c; }
 .time-read { position: absolute; right: 14px; top: 14px; z-index: 3; font-size: 12px; font-weight: 700; background: rgba(0,0,0,0.6); border-radius: 999px; padding: 5px 10px; }
+.answer-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.answer-row .answer-btn { margin-top: 0; flex: 1; }
 .answer-btn { margin-top: 14px; width: 100%; min-height: 54px; border-radius: 16px; background: var(--purple); color: #fff; border: 0; font-weight: 700; font-size: 17px; }
 .answer-btn[disabled] { background: #cbbfdc; }
 .garden-card { margin-top: 16px; background: #0E2A2B; border: 1px solid #D4A84B; color: #e6efe8; border-radius: 22px; padding: 18px; }

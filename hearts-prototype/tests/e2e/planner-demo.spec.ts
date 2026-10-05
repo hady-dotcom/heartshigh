@@ -5,6 +5,7 @@ import { E2E_BASE } from '../env'
 import { fakeYouTube } from './fake-youtube'
 import { noIssueBadge } from './no-issue-badge'
 import { ensureProofCourse, PROOF_COURSE } from './proof-course'
+import { openReachedQuestion } from './question-moment'
 
 const BASE = '/p/east-london'
 const PHONE = { width: 390, height: 844 }
@@ -131,7 +132,7 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
   await expect(page.getByTestId('player-poster').or(page.locator('[data-fake=youtube]'))).toBeVisible()
   const player = page.getByTestId('player')
   await expect(player.getByTestId('timeline-dot').first()).toBeVisible()
-  await expect(player.getByTestId('timeline-dot').first()).toContainText('1')
+  await expect(player.getByTestId('timeline-dot').first()).toHaveAttribute('data-moment', 'waiting')
   await expect(player.getByTestId('question-strip')).toBeVisible()
   await expect(player.getByTestId('strip-dot').first()).toBeVisible()
   await expect(player.getByTestId('strip-dot').first()).not.toHaveText(/^[1-4]$/)
@@ -142,8 +143,7 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
   await expect(page.getByTestId('course-overview')).toHaveCount(0)
   await hold(page, '05-player-from-plan-row')
   if (await page.getByTestId('timeline-dot').count()) {
-    await page.getByTestId('timeline-dot').first().click()
-    await expect(page.getByTestId('popup')).toBeVisible()
+    await openReachedQuestion(page)
     await page.waitForFunction(() => [...document.getAnimations()].every((animation) => animation.playState !== 'running' || animation.effect?.getComputedTiming().iterations === Infinity))
     await expect(page.getByTestId('player-time')).toContainText('0:30')
     await expect(page.getByTestId('paused-note').first()).toContainText('Paused')

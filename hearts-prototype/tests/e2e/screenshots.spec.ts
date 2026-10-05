@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 import { seedCode } from '../env'
+import { openReachedQuestion } from './question-moment'
 
 const dir = process.env.SCREENSHOT_DIR || 'artifacts/screenshots'
 
@@ -41,10 +42,8 @@ test('a week of use, so the garden has something in it', async ({ page }) => {
   }
   await page.goto('/p/east-london/course/1')
   await openFirstPart(page)
-  await expect(async () => {
-    await page.getByTestId('timeline-dot').first().click({ force: true })
-    await expect(page.getByTestId('answer-form')).toBeVisible({ timeout: 1000 })
-  }).toPass({ timeout: 15_000 })
+  await openReachedQuestion(page)
+  await expect(page.getByTestId('answer-form')).toBeVisible()
   await page.getByTestId('answer-text').fill('Sending salawat after Fajr, before I pick up my phone.')
   if (await page.getByTestId('answer-private').count()) await page.getByTestId('answer-private').uncheck()
   if (await page.getByTestId('answer-share').count()) await page.getByTestId('answer-share').check()
@@ -100,10 +99,7 @@ test('learner app at phone size', async ({ page }) => {
   await page.screenshot({ path: `${dir}/learner-01b-appetiser.png`, caret: 'initial' })
   await page.goto(`${base}/course/1`)
   await openFirstPart(page)
-  await expect(async () => {
-    await page.getByTestId('timeline-dot').first().click({ force: true })
-    await expect(page.getByTestId('popup')).toBeVisible({ timeout: 1000 })
-  }).toPass({ timeout: 15_000 })
+  await openReachedQuestion(page)
   await page.waitForTimeout(800)
   await page.screenshot({ path: `${dir}/learner-03b-answer-sheet.png`, caret: 'initial' })
 })
@@ -205,7 +201,7 @@ test('circle answers: the desk and the swarm', async ({ page }) => {
   await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', '/p/east-london')
   await page.request.post('/api/hearts', { form: { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: '/' } })
   await page.goto(`/p/east-london/course/3?part=${lesson}`)
-  await page.getByTestId('answer-point').click()
+  await openReachedQuestion(page)
   await expect(page.getByTestId('swarm')).toBeVisible()
   await page.getByTestId('swarm').scrollIntoViewIfNeeded()
   await page.waitForTimeout(600)

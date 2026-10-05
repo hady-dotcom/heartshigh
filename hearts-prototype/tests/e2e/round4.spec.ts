@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 import { E2E_BASE, seedCode } from '../env'
 import { fakeYouTube } from './fake-youtube'
+import { openReachedQuestion } from './question-moment'
 
 // Round 4: one test per item from the retest, named by its label. Each one failed before its fix.
 
@@ -387,8 +388,7 @@ test.describe('round 4 screens', () => {
     const player = page.getByTestId('player')
     await expect(player).toHaveAttribute('data-popup-layout', 'over')
     await expect(player).toHaveAttribute('data-mode', 'youtube', { timeout: 20_000 })
-    await page.getByTestId('answer-point').click()
-    await expect(page.getByTestId('popup')).toBeVisible()
+    await openReachedQuestion(page)
     await expect(page.getByTestId('paused-scrim')).toBeVisible()
     const [scrim, film] = await Promise.all([page.getByTestId('paused-scrim').boundingBox(), page.locator('.player-card .yt').boundingBox()])
     expect(Math.abs(scrim!.y - film!.y)).toBeLessThanOrEqual(1)

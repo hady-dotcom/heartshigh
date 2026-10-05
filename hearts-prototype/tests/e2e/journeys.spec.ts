@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test, type Page } from '@playwright/test'
 import { E2E_BASE, seedCode } from '../env'
 import path from 'node:path'
+import { openReachedQuestion, reachQuestionMoment } from './question-moment'
 
 const suffix = Date.now().toString().slice(-7)
 const slug = `harbour-${suffix}`
@@ -87,8 +88,9 @@ async function openPoint(page: Page, prompt: RegExp) {
   const dots = page.getByTestId('timeline-dot')
   const count = await dots.count()
   for (let index = 0; index < count; index += 1) {
+    await reachQuestionMoment(page, index)
     await expect(async () => {
-      await dots.nth(index).click()
+      await page.getByTestId('timeline-dot').nth(index).click()
       await expect(page.getByTestId('popup-prompt')).toBeVisible({ timeout: 1000 })
     }).toPass({ timeout: 15_000 })
     if (prompt.test((await page.getByTestId('popup-prompt').textContent()) || '')) return page.getByTestId('popup')
@@ -239,20 +241,16 @@ test.describe.serial('HEARTS journeys', () => {
     await expect(page.getByTestId('answer-form')).toHaveCount(0)
     await page.getByTestId('popup-close').click()
 
-    await expect(async () => {
-      await page.getByTestId('answer-point').click()
-      await expect(page.getByTestId('popup-prompt')).toContainText('one manner', { timeout: 1000 })
-    }).toPass({ timeout: 15_000 })
+    await openReachedQuestion(page)
+    await expect(page.getByTestId('popup-prompt')).toContainText('one manner')
     await expect(page.getByTestId('swarm')).toHaveCount(0)
     await expect(page.getByTestId('answer-share-learners')).toHaveCount(0)
     await page.getByTestId('popup-close').click()
     await post(page, { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: `/p/${slug}/course/${shared.courseId}` })
     await page.reload()
     await openCoursePlayer(page)
-    await expect(async () => {
-      await page.getByTestId('answer-point').click()
-      await expect(page.getByTestId('popup-prompt')).toContainText('one manner', { timeout: 1000 })
-    }).toPass({ timeout: 15_000 })
+    await openReachedQuestion(page)
+    await expect(page.getByTestId('popup-prompt')).toContainText('one manner')
     await expect(page.getByTestId('answer-share-learners')).toHaveCount(1)
     await page.getByTestId('answer-text').fill('I want to keep a soft greeting.')
     await page.getByTestId('answer-private').uncheck()

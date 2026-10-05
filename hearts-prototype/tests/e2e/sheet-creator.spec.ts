@@ -4,6 +4,7 @@ import { mkdirSync } from 'node:fs'
 import path from 'node:path'
 import { E2E_BASE } from '../env'
 import { artifactDir } from './artifact-dir'
+import { openReachedQuestion } from './question-moment'
 
 const DESK = { width: 1440, height: 900 }
 const ARTIFACTS = artifactDir()
@@ -137,7 +138,7 @@ test('the creator drafts a sheet, then a learner completes a task the imam can s
     await page.goto(`/p/${PORTAL}/course/${course!.id}?part=${file.id}`)
     await expect(page.getByTestId('file-player')).toHaveAttribute('src', new RegExp(`/api/hearts/film/${file.id}`))
     await page.goto(`/p/${PORTAL}/course/${course!.id}?part=${talk.id}`)
-    await page.getByTestId('answer-point').click()
+    await openReachedQuestion(page)
     await expect(page.getByTestId('task-form')).toBeVisible()
     await expect(page.getByTestId('task-due')).toContainText('7')
     await expect(page.getByTestId('task-imam')).toBeVisible()

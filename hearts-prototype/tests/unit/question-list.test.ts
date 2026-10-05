@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { test } from 'node:test'
-import { comingQuestionLabel, filmClock, questionRowRevealed } from '../../src/lib/question-list'
+import { comingAnswerLabel, comingQuestionLabel, filmClock, questionMomentReached, questionRowRevealed } from '../../src/lib/question-list'
 
 test('a hidden row names the question and the time on its dot, never the prompt', () => {
   assert.equal(filmClock(760), '12:40')
@@ -15,6 +15,14 @@ test('a row stays hidden until the film reaches it, then stays revealed', () => 
   assert.equal(questionRowRevealed({ id: 2, second: 90, time: 90, revealedIds: [] }), true)
   assert.equal(questionRowRevealed({ id: 2, second: 90, time: 0, revealedIds: [2] }), true)
   assert.equal(questionRowRevealed({ id: 2, second: 90, time: 0, revealedIds: [], answered: true }), true)
+})
+
+test('a question stays unanswerable until its timestamp, even if a row was revealed earlier', () => {
+  assert.equal(questionMomentReached({ second: 30, time: 0 }), false)
+  assert.equal(questionMomentReached({ second: 30, time: 29.9 }), false)
+  assert.equal(questionMomentReached({ second: 30, time: 30 }), true)
+  assert.equal(questionMomentReached({ second: 30, time: 0, answered: true }), true)
+  assert.equal(comingAnswerLabel(), 'Keep watching')
 })
 
 test('the evening answer sheet is a solid card, not glass', () => {
