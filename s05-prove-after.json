@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-05T00:31:54.672Z",
+  "mediaId": 1,
+  "bobListIncludesAlice": false,
+  "bobFetchByIdStatus": 403,
+  "bobSignedStatus": 403,
+  "teacherFetchStatus": 403,
+  "ownerFetchOk": true,
+  "closed": true
+}
