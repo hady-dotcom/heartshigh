@@ -6,7 +6,8 @@ import { E2E_BASE } from '../env'
 
 const PORTAL = 'east-london'
 const START = `/p/${PORTAL}/start`
-const PICKS: [string, string][] = [['extra', 'pause'], ['queue', 'let-go'], ['thumb', 'lives'], ['visitor', 'spin'], ['news', 'nobody'], ['doors', 'calmer']]
+const PICKS: [string, string][] = [['extra', 'pause'], ['queue', 'let-go'], ['thumb', 'lives'], ['visitor', 'spin'], ['news', 'nobody'], ['account', 'lord'], ['doors', 'calmer']]
+const SIM_PICKS: [string, string][] = PICKS.filter(([scene]) => scene !== 'account')
 const suffix = Date.now().toString().slice(-7)
 
 let master: APIRequestContext
@@ -77,6 +78,7 @@ test.describe('the opening', () => {
   test('1. a first visit to the portal lands on the opener, with its caption and both ways in', async ({ page }) => {
     await page.goto(`/p/${PORTAL}`)
     await expect(page.getByTestId('opener')).toBeVisible()
+    await expect(page.getByTestId('opener-heading')).toHaveText('A calm place to start')
     await expect(page.getByTestId('opener-caption')).toContainText('Every heart has a bit of shine')
     await expect(page.getByTestId('lets-play')).toBeVisible()
     await expect(page.getByTestId('just-show')).toBeVisible()
@@ -151,9 +153,9 @@ test.describe('the opening', () => {
   test('9. six taps hand off with the line, then the feed, at /feed', async ({ page }) => {
     await page.goto(START)
     await page.getByTestId('lets-play').click()
-    for (const [scene, option] of PICKS.slice(0, 5)) await tapScene(page, scene, option)
+    for (const [scene, option] of PICKS.slice(0, 6)) await tapScene(page, scene, option)
     await tapScene(page, 'doors', 'calmer')
-    await expect(page.getByTestId('handoff-line')).toContainText('Pull up a chair')
+    await expect(page.getByTestId('handoff-line')).toContainText('We\'ll begin with')
     await expect(page.getByTestId('journey')).toHaveAttribute('data-phase', 'feed', { timeout: 15_000 })
     await expect(page).toHaveURL(new RegExp(`/p/${PORTAL}/feed$`))
   })
@@ -238,7 +240,7 @@ test.describe('the opening', () => {
     await page.getByTestId('keep-submit').click()
     await expect(page.getByTestId('toast')).toContainText('Your place is kept')
     expect(openings).toHaveLength(1)
-    expect(JSON.parse(openings[0]).taps).toHaveLength(6)
+    expect(JSON.parse(openings[0]).taps).toHaveLength(7)
     await page.goto(`/p/${PORTAL}/garden/workbook`)
     await expect(page.getByTestId('where-you-started')).toBeVisible()
     await expect(page.getByTestId('opening-row')).toHaveCount(6)
@@ -281,7 +283,7 @@ test.describe('the opening', () => {
     await signIn(teacher, 'elm-teacher@hearts.test', 'portal-teacher', '/')
     const id = await userId('elm-learner@hearts.test')
     const shared = async () => ((await (await teacher.request.get(`/api/workbook/${id}`)).json()).opening || []).length
-    await signIn(learner, 'elm-learner@hearts.test', 'portal-learner', `/p/${PORTAL}/me`)
+    await signIn(learner, 'elm-learner@hearts.test', 'portal-learner', `/p/${PORTAL}/me/settings`)
     const toggle = learner.getByTestId('pref-shareOpening-input')
     await expect(toggle).toBeChecked()
     expect(await shared()).toBeGreaterThan(0)
@@ -291,7 +293,7 @@ test.describe('the opening', () => {
       await expect(toggle).not.toBeChecked()
       expect(await shared()).toBe(0)
     } finally {
-      await learner.goto(`/p/${PORTAL}/me`)
+      await learner.goto(`/p/${PORTAL}/me/settings`)
       if (!(await learner.getByTestId('pref-shareOpening-input').isChecked())) {
         await learner.getByTestId('pref-shareOpening-input').check()
         await expect(learner.getByTestId('notice')).toContainText('Saved')
@@ -316,7 +318,7 @@ test.describe('the opening', () => {
 
   test('23. Guarding the gaze is opt-in and kept on the device only', async ({ page }) => {
     const seen = watchRequests(page)
-    await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/me`)
+    await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/me/settings`)
     const toggle = page.locator('[data-testid="optin-guarding-gaze"] input')
     await expect(toggle).not.toBeChecked()
     await toggle.check()
@@ -335,7 +337,7 @@ test.describe('the opening', () => {
     await page.getByTestId('keep-password').fill('again-pass')
     await page.getByTestId('keep-submit').click()
     await expect(page.getByTestId('toast')).toContainText('Your place is kept')
-    await page.goto(`/p/${PORTAL}/me`)
+    await page.goto(`/p/${PORTAL}/me/settings`)
     await page.getByTestId('start-again').click()
     await page.getByTestId('start-again-yes').click()
     await expect(page.getByTestId('opener')).toBeVisible()
@@ -462,7 +464,7 @@ test.describe('the desks for the opening', () => {
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master/simulator')
     await expect(page.getByTestId('simulator')).toBeVisible()
     await expect(page.getByTestId('sim-lane').filter({ hasText: 'L1' })).toHaveCount(0)
-    for (const [scene, option] of PICKS) await page.getByTestId(`sim-${scene}`).selectOption(option)
+    for (const [scene, option] of SIM_PICKS) await page.getByTestId(`sim-${scene}`).selectOption(option)
     await expect(page.getByTestId('sim-lane').filter({ hasText: 'L1' })).toHaveCount(1)
     await expect(page.getByTestId('sim-feed-item').first()).toBeVisible()
     await expect(page.locator('[data-testid="sim-scale"][data-scale="desire"]')).toHaveAttribute('data-value', '0.00')

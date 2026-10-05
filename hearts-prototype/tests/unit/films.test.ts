@@ -51,24 +51,24 @@ test('a talk with no sheet row still plays the rendered face films, and the prop
   assert.equal(filmsForTalk({ films: [] }, 'TLCGBj4AlB0').length, 0)
 })
 
-test('a session alternates a face film and a scenic card, then a question, and a return visit swaps them', () => {
+test('a session alternates a face film and a scenic card, and a return visit swaps them', () => {
   const talk = item(1, filmsForTalk(catalogue, 'ECaTWkof57E'), { cardStyle: 'kinetic', cardScene: 'road' })
   const second = item(2, filmsForTalk(catalogue, 'NIR88RRpat4'), { cardStyle: 'windows', cardScene: 'mist' })
   const first = mixFeed([talk, second], 0)
-  assert.deepEqual(first.map((row) => row.card || 'talk'), ['talk', 'film', 'question', 'talk', 'scene', 'question'])
+  assert.deepEqual(first.map((row) => row.card || 'talk'), ['talk', 'film', 'talk', 'scene'])
   assert.equal(first[1].film?.src, '/typography/ECaTWkof57E/hook.mp4')
-  assert.equal(first[2].prompt, 'What stays with you from this?')
-  assert.equal(first[4].scene?.destination, 'clip')
-  assert.equal(first[4].scene?.beats.length, 3)
-  assert.notEqual(first[1].film?.style, first[4].scene?.style)
+  assert.equal(first.some((row) => row.card === 'question' || row.prompt === 'What stays with you from this?'), false)
+  assert.equal(first[3].scene?.destination, 'clip')
+  assert.equal(first[3].scene?.beats.length, 3)
+  assert.notEqual(first[1].film?.style, first[3].scene?.style)
   const ids = new Set(first.map((row) => row.id))
   assert.equal(ids.size, first.length)
 
   const again = mixFeed([talk, second], 1)
-  assert.deepEqual(again.map((row) => row.card || 'talk'), ['talk', 'scene', 'question', 'talk', 'film', 'question'])
+  assert.deepEqual(again.map((row) => row.card || 'talk'), ['talk', 'scene', 'talk', 'film'])
   assert.equal(again[1].scene?.destination, 'clip')
   assert.notEqual(again[1].card, first[1].card)
-  assert.notEqual(again[1].scene?.style, first[4].scene?.style)
+  assert.notEqual(again[1].scene?.style, first[3].scene?.style)
 })
 
 test('a card keeps its own background, neighbours skip a shared tag, and learn more stays on the clip', () => {

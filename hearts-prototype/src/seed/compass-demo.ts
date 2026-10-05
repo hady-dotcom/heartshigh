@@ -345,6 +345,7 @@ async function main() {
     }
   }
   console.log(`Compass demo is in place on ${SLUG}. ${createdAccounts ? `New accounts use ${passwordForNewAccount(true)}.` : 'No new accounts.'} Existing accounts keep their password.`)
+  process.exit(0)
 }
 
 main().catch((error) => {

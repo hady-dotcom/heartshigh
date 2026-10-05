@@ -212,17 +212,18 @@ test("10. best(L) gives the lane's first starter on a fresh state, then other la
 
 test('every complete tap path stays away from guarding the gaze, and going back replaces a tap', () => {
   const ctx = context([{ id: 5000, clause: 31, lanes: [{ lane: 'guarding-gaze', weight: 1, confirmed: true }], approved: true, hasHors: true, portalOwn: false }])
-  const choices = SCENES.map((scene) => scene.options.filter((option) => !option.crisis).map((option) => option.key))
+  const walkScenes = SCENES.filter((scene) => scene.key !== 'account')
+  const choices = walkScenes.map((scene) => scene.options.filter((option) => !option.crisis).map((option) => option.key))
   assert.equal(choices.reduce((total, list) => total * list.length, 1), 7680)
   let paths = 0
   const walk = (depth: number, taps: [string, string][]) => {
-    if (depth === SCENES.length) {
+    if (depth === walkScenes.length) {
       paths += 1
       const route = routeFeed(play(taps), ctx)
       assert.ok(route.items.every((item) => item.laneKey !== 'guarding-gaze'))
       return
     }
-    for (const option of choices[depth]) walk(depth + 1, [...taps, [SCENES[depth].key, option]])
+    for (const option of choices[depth]) walk(depth + 1, [...taps, [walkScenes[depth].key, option]])
   }
   walk(0, [])
   assert.equal(paths, 7680)

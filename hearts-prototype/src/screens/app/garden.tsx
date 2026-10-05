@@ -9,8 +9,9 @@ import { now } from '@/lib/clock'
 import { readableHarvest } from '@/lib/harvest'
 import { getSession, type SessionUser, visibleCourseIds } from '@/server/context'
 import { workbookFor } from '@/server/workbook'
+import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
+import { learnerWords } from '@/lib/tidy-caption'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
-import { partTitle } from '@/lib/talk-title'
 import { posterFor, shownPoster } from '@/server/learner'
 import { loadDoors } from '@/server/doors'
 import { capitalAfterColon, doorByNumber, doorCode, doorFromPath, doorNumberOfClause, doorOfClause, type Door } from '@/lib/doors'
@@ -194,7 +195,7 @@ async function areaViews(payload: Payload, user: SessionUser, base: string, g: G
     lessons: lessons.map((lesson) => ({
       id: lesson.id,
       courseId: ref(lesson.course) || 0,
-      title: str(lesson.sourceTitle) || str(lesson.title),
+      title: learnerWords(partTitle(lesson)),
       door: doorFor(lesson.id),
     })),
     completions: g.completions.map((row) => ({ lessonId: ref(row.lesson) || 0 })).filter((row) => row.lessonId),
@@ -323,7 +324,7 @@ export async function GardenJibril({ payload, user, base }: Ctx) {
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
   const startDoor = doorOfClause(Number(user.startingClause || 0), g.doors)?.number
   return (
-    <Frame base={base} title="Against Hadith Jibril" testId="garden-jibril" unread={unread}>
+    <Frame base={base} title="The hadith of Jibril" testId="garden-jibril" unread={unread}>
       <section className="summary-card gold">
         <h2 data-testid="lit-count">{g.lit.size} of {g.doors.length} doors</h2>
         <p>A door flowers when you finish a talk that a teacher has placed in it. Tap any door to read it.</p>
@@ -474,10 +475,10 @@ export async function GardenGhunya({ payload, user, base }: Ctx) {
     .map((visit) => g.seats.find((seat) => seat.id === ref(visit.seat)))
     .filter((seat): seat is Row => Boolean(seat))
   return (
-    <Frame base={base} title="Against al-Ghuniyya" testId="garden-ghunya" unread={unread} dark>
+    <Frame base={base} title="Seats from al-Ghuniyya" testId="garden-ghunya" unread={unread} dark>
       <div className="forest">
         <Back href={`${base}/garden`} label="Garden" />
-        <p className="eyebrow" style={{ color: 'var(--gold)', marginTop: 10 }}>Against al-Ghuniyya</p>
+        <p className="eyebrow" style={{ color: 'var(--gold)', marginTop: 10 }}>Seats from al-Ghuniyya</p>
         <h1 style={{ margin: 0, fontSize: 26 }}>The seats you have read</h1>
         <p className="big" data-testid="seat-count">{read.size} <span style={{ fontSize: 18, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>of {g.seats.length}</span></p>
         <p style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, margin: '6px 0 0', fontSize: 14 }}>Each door of the hadith opens onto seats from al-Ghuniyya. One group of dots per door.</p>
@@ -508,12 +509,13 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
   const here = `${base}/garden/workbook${filter !== 'all' ? `?filter=${filter}` : ''}`
   const groups = new Map<string, { course: string; topics: Map<string, Map<string, typeof answers>> }>()
   for (const row of answers) {
-    const courseKey = row.course?.title || 'Other talks'
+    const courseKey = learnerWords(tidyTalkTitle(row.course?.title || '')) || 'Other talks'
     if (!groups.has(courseKey)) groups.set(courseKey, { course: courseKey, topics: new Map() })
     const topics = groups.get(courseKey)!.topics
-    if (!topics.has(row.topic)) topics.set(row.topic, new Map())
-    const videos = topics.get(row.topic)!
-    const video = row.video?.title || 'The talk'
+    const topic = learnerWords(tidyTalkTitle(row.topic || '')) || 'The talk'
+    if (!topics.has(topic)) topics.set(topic, new Map())
+    const videos = topics.get(topic)!
+    const video = learnerWords(tidyTalkTitle(row.video?.title || '')) || 'The talk'
     if (!videos.has(video)) videos.set(video, [])
     videos.get(video)!.push(row)
   }

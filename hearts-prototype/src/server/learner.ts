@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
+import { daysWithUs } from '@/lib/days-with-us'
 import { idOf } from '@/lib/ids'
 import { recommendLesson } from '@/lib/placing'
 import { capitalAfterColon, doorOfClause } from '@/lib/doors'
@@ -26,7 +27,7 @@ export type FeedItem = {
   youtubeId: string | null
   /** A Short or other 9:16 film with its words in the picture: no caption overlay, buttons above the lower third. */
   vertical?: boolean
-  /** Words in the picture (a Short, or captions burned in): our caption hides and the speaker row rises out of the lower quarter. */
+  /** Words in the picture (a Short, or captions burned in): our caption sits in the bar below the uncropped 16:9 film. */
   wordsInPicture?: boolean
   /** YouTube's large frame, only when it carries no words; otherwise the extended cut paints our own still and title. */
   cleanThumb?: string | null
@@ -67,6 +68,8 @@ export type FeedItem = {
   laneKey?: string | null
   laneTags?: { lane: string; weight: number }[]
   lessonTitle?: string
+  /** Whole-talk length in seconds, for the 'Watch the whole talk (N min)' button. */
+  talkSeconds?: number | null
   placeholder?: boolean
   transcriptReady?: boolean
   /** The talk's tier record: a machine draft until a person checks it. */
@@ -151,8 +154,7 @@ export function initials(name: string) {
 }
 
 export function dayNumber(user: SessionUser & { joinedAt?: string | null; createdAt?: string }) {
-  const start = new Date(user.joinedAt || user.createdAt || now().toISOString())
-  return Math.max(1, Math.floor((now().getTime() - start.getTime()) / 86_400_000) + 1)
+  return daysWithUs(user.joinedAt || user.createdAt, now().getTime())
 }
 
 type Row = Record<string, unknown> & { id: number }

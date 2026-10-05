@@ -35,6 +35,7 @@ import { randomUUID } from 'node:crypto'
 import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourseIds, type Session, type SessionUser } from './context'
 import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCookie, wrote } from './viewas'
 import { isTimeZone } from '@/lib/zone-time'
+import { screenAnswerSafe } from '@/lib/answer-moderation'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
@@ -341,8 +342,8 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
     }
     const keepPrivate = Boolean(input.keepPrivate)
     const shareWithTeacher = Boolean(input.shareWithTeacher) || Boolean(point.showImam)
-    // Other learners read an answer only when its author opted in to sharing with learners and chose it here.
-    const shareWithLearners = !keepPrivate && Boolean(input.shareWithLearners) && Boolean(user.shareWithLearners)
+    const shareWithLearners = !keepPrivate && Boolean(input.shareWithLearners)
+    const screened = await screenAnswerSafe([body, choice].filter(Boolean).join(' '))
     const correct = point.kind === 'multiple_choice' && point.correctOption ? choice === point.correctOption : null
     const extra = {
       answeredAt: input.answeredAt || now().toISOString(),
@@ -352,6 +353,8 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
       sourceLevel: (input.cutId ? input.level || 'appetiser' : 'talk') as 'hors' | 'appetiser' | 'talk',
       pendingSync: Boolean(input.pendingSync),
       correct: correct ?? undefined,
+      swarmHidden: !screened.show,
+      swarmReason: screened.show ? undefined : screened.reason,
     }
     const earlier = await payload.find({ collection: 'answers', overrideAccess: true, depth: 0, limit: 1, where: { and: [{ point: { equals: pointId } }, { user: { equals: user.id } }] } })
     if (earlier.docs.length) {
@@ -1774,7 +1777,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   if (action === 'me-pref') {
     const name = text(form, 'name')
     const value = text(form, 'value') === 'on'
-    if (!['keepPlace', 'shareOpening', 'trendsOptIn', 'haptics', 'shareWithLearners'].includes(name)) return redirectTo(req, text(form, 'next') || '/', 'That setting is not known.')
+    if (!['keepPlace', 'shareOpening', 'trendsOptIn', 'haptics', 'shareWithLearners', 'nightAlerts', 'shareWatch'].includes(name)) return redirectTo(req, text(form, 'next') || '/', 'That setting is not known.')
     await payload.update({ collection: 'users', id: user.id, overrideAccess: true, data: { [name]: value } as never })
     if (name === 'shareOpening') {
       const rows = await payload.find({ collection: 'opening-answers', overrideAccess: true, depth: 0, limit: 50, where: { user: { equals: user.id } } })
@@ -1895,6 +1898,21 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       return redirectTo(req, back, publicMessage(error, 'That review was not saved.'))
     }
     return redirectTo(req, back, undefined, status === 'published' ? 'Approved and published. Learners meet it in the main.' : status === 'rejected' ? 'Rejected. Learners never see it.' : 'Back to draft.')
+  }
+
+  if (action === 'swarm-review') {
+    const back = text(form, 'next') || '/master/review/swarm'
+    if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk reviews swarm answers.')
+    const answer = await findDoc(payload, 'answers', Number(text(form, 'answer')))
+    if (!answer) return redirectTo(req, back, 'That answer was not found.')
+    const decision = text(form, 'decision')
+    const hidden = decision !== 'approve'
+    try {
+      await payload.update({ collection: 'answers', id: answer.id, overrideAccess: true, data: { swarmHidden: hidden, swarmReason: hidden ? String(answer.swarmReason || 'Kept hidden by review.') : null } as never })
+    } catch (error) {
+      return redirectTo(req, back, publicMessage(error, 'That review was not saved.'))
+    }
+    return redirectTo(req, back, undefined, hidden ? 'Kept hidden from the swarm.' : 'Shown in the swarm as initials.')
   }
 
   if (action === 'popup-approve-all') {

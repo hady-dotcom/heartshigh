@@ -6,6 +6,8 @@ import { Avatar } from '@/components/app/feed'
 import { AppFrame, Flash, TabBar } from '@/components/app/shell'
 import { PlayIcon } from '@/components/icons'
 import { displayTalkTitle } from '@/lib/talk-title'
+import { daysWithUsLabel } from '@/lib/days-with-us'
+import { learnerWords } from '@/lib/tidy-caption'
 import { courseCards, dayNumber, portalName, posterFor, shownPoster } from '@/server/learner'
 import { ensureMonthNote, recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
@@ -53,14 +55,14 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
       return {
         id: lesson.id,
         href: `${base}/course/${ref(lesson.course)}?part=${lesson.id}`,
-        title: displayTalkTitle({
+        title: learnerWords(displayTalkTitle({
           title: str(lesson.title),
           sourceTitle: str(lesson.sourceTitle),
           courseTitle: str(course?.title),
           part,
           youtubeId: str(lesson.youtubeId),
           vimeoId: str(lesson.vimeoId),
-        }),
+        })),
         sub: minutesLeft(seconds, percent) || str(course?.title),
         thumb: shownPoster(posterFor(str(lesson.youtubeId) || null)),
       }
@@ -72,9 +74,9 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   const planLesson = slot?.lessonId ? (await rows(payload, 'lessons', { id: { equals: slot.lessonId } }, { limit: 1 }))[0] : null
   const planMinutes = minutesADay(plan?.minutesPerDay) || 20
   const tonight = planLesson
-    ? { label: tonightLabel(Number(planLesson.order || 1), planMinutes), href: `${base}/course/${ref(planLesson.course)}?part=${planLesson.id}`, title: str(planLesson.title) }
+    ? { label: tonightLabel(Number(planLesson.order || 1), planMinutes), href: `${base}/course/${ref(planLesson.course)}?part=${planLesson.id}`, title: learnerWords(displayTalkTitle({ title: str(planLesson.title), sourceTitle: str(planLesson.sourceTitle), part: Number(planLesson.order || 1), youtubeId: str(planLesson.youtubeId), vimeoId: str(planLesson.vimeoId) })) }
     : null
-  const days = g.activeDays.size
+  const days = dayNumber(user)
   const clips = items.slice(0, 3)
   return (
     <AppFrame testId="home">
@@ -88,7 +90,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         <InstallCard sheet />
         <section className="grow-banner" data-testid="grow-banner">
           <p className="eyebrow">Your growth</p>
-          <h2 data-testid="days-count">{days ? `${days} day${days === 1 ? '' : 's'} with us so far` : 'Your garden starts today'}</h2>
+          <h2 data-testid="days-count">{daysWithUsLabel(days)}</h2>
           <span className="tree-art" aria-hidden />
           <p className="grow-sub">Five ways to see it</p>
           <Rings g={g} base={base} />
@@ -144,8 +146,9 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
 const START = ['orange', 'gold', 'teal']
 
 function snippet(text: string, max: number) {
-  if (text.length <= max) return text
-  const cut = text.slice(0, max)
+  const polished = learnerWords(text)
+  if (polished.length <= max) return polished
+  const cut = polished.slice(0, max)
   const space = cut.lastIndexOf(' ')
   return `${(space > max * 0.6 ? cut.slice(0, space) : cut).replace(/[\s,;:.]+$/, '')}…`
 }
@@ -157,12 +160,18 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
   return (
     <AppFrame testId="lanes">
       <div className="app-scroll">
-        <div className="app-head"><h1>Lanes</h1><span className="muted" style={{ fontSize: 13, fontWeight: 600 }} data-testid="day-number">Day {today}</span></div>
+        <div className="app-head lanes-head">
+          <div>
+            <h1>Lanes</h1>
+            <p className="page-sub" data-testid="lanes-sub">Paths to walk, one theme at a time.</p>
+          </div>
+          <span className="muted" style={{ fontSize: 13, fontWeight: 600 }} data-testid="day-number">Day {today}</span>
+        </div>
         <Flash error={query.error} notice={query.notice} />
-        <p className="lead">Each lane is one theme. Tap a lane to watch its clips, or start a full course below.</p>
         {lanes.map((lane) => {
           const first = lane.clips[0]
           const count = lane.clips.length
+          const poster = shownPoster(first?.poster) || shownPoster(first?.portrait)
           return (
             <Link
               key={lane.key}
@@ -170,14 +179,14 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
               href={`${base}/feed?lane=${lane.key}`}
               data-testid="lane-card"
               data-lane={lane.key}
-              data-first-cut={first.cutId}
-              style={shownPoster(first.poster) || shownPoster(first.portrait) ? { backgroundImage: `url(${shownPoster(first.poster) || shownPoster(first.portrait)})` } : undefined}
+              data-first-cut={first?.cutId}
+              style={poster ? { backgroundImage: `url(${poster})` } : undefined}
             >
               <div>
                 <small>Lane</small>
-                <h3>{lane.title}</h3>
-                <p>{snippet(first.hook || first.land || first.lessonTitle || '', 64)}</p>
-                <p>{first.speaker} · {count} {count === 1 ? 'clip' : 'clips'}</p>
+                <h3>{learnerWords(lane.title)}</h3>
+                <p>{snippet(first?.hook || first?.land || first?.lessonTitle || '', 64)}</p>
+                <p>{first?.speaker}{first?.speaker ? ' · ' : ''}{count} {count === 1 ? 'clip' : 'clips'}</p>
               </div>
             </Link>
           )
@@ -190,9 +199,9 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
             <div key={course.id} className="course-row" data-testid="path-course" data-open={course.open ? 'yes' : 'no'}>
               <span className="thumb" style={shownPoster(course.poster) ? { backgroundImage: `url(${shownPoster(course.poster)})` } : undefined} />
               <span className="t">
-                <b>{course.title}</b>
+                <b>{learnerWords(course.title)}</b>
                 <small>
-                  {course.recommended ? <span className="drip" data-testid="recommended">Chosen for you · </span> : null}
+                  {course.recommended ? <span className="drip" data-testid="recommended">This week · </span> : null}
                   {course.open ? `${course.parts} part${course.parts === 1 ? '' : 's'} · ${course.speaker}` : <span className="drip" data-testid="opens-on">Opens on day {course.opensOnDay}</span>}
                 </small>
                 <DoorChips doors={course.doors} />
@@ -200,7 +209,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
               {course.open ? (
                 <Link className={`start ${START[index % START.length]}`} href={href} data-testid="lesson-link">Start</Link>
               ) : (
-                <Link className="start soft" href={href} data-testid="peek">Peek now</Link>
+                <Link className="start soft" href={href} data-testid="peek">Preview</Link>
               )}
             </div>
           )

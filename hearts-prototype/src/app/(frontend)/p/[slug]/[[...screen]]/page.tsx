@@ -16,12 +16,13 @@ import { HomeScreen, LanesScreen } from '@/screens/app/home'
 import { CourseScreen, SpeakerScreen } from '@/screens/app/course'
 import { GardenDoor, GardenGeneral, GardenGhunya, GardenJibril, GardenScreen, GardenWorkbook } from '@/screens/app/garden'
 import { GardenHarvest } from '@/screens/app/harvest'
-import { CircleScreen, MeScreen, PlanScreen, SettingsScreen } from '@/screens/app/me'
+import { CircleScreen, MeScreen, PlanScreen, SavedScreen, SettingsScreen } from '@/screens/app/me'
 import { WelcomeScreen } from '@/screens/app/welcome'
 import { AiPages } from '@/screens/desk/ai'
 import { OverviewScreen, PortalSettingsScreen, WizardScreen } from '@/screens/desk/overview'
 import { AccessScreen, ContentScreen, CourseEditorScreen, LibraryScreen, guardAdmin } from '@/screens/desk/content'
 import { PortalCompassScreen, StaffLearnerCompass } from '@/screens/desk/compass'
+import { ProposedCompassScreen } from '@/screens/desk/compass-proposed'
 import { PortalCreatorScreen } from '@/screens/desk/creator-screen'
 import { PortalSheetScreen } from '@/screens/desk/sheet'
 import { FeedbackScreen } from '@/screens/desk/feedback'
@@ -96,6 +97,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       case 'feedback':
         return FeedbackScreen(ctx)
       case 'compass':
+        if (b === 'proposed') return ProposedCompassScreen(ctx)
         return b ? StaffLearnerCompass(ctx, Number(b)) : PortalCompassScreen(ctx)
       case 'plans':
         return PlansScreen(ctx)
@@ -160,11 +162,14 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       if (a === 'harvest') return GardenHarvest(ctx)
       if (a === 'workbook') return GardenWorkbook(ctx)
       notFound()
+    case 'week':
+      return PlanScreen({ ...ctx, weekTab: true })
     case 'me':
       if (!a) return MeScreen(ctx)
       if (a === 'plan') return PlanScreen(ctx)
       if (a === 'circle') return CircleScreen(ctx)
       if (a === 'settings') return SettingsScreen(ctx)
+      if (a === 'saved') return SavedScreen(ctx)
       if (a === 'path') return LearnerPathScreen(ctx)
       notFound()
     case 'recalibrate':

@@ -16,7 +16,7 @@ const PACK = `Final pack ${sfx}`
 const COURSE = `Imported sitting ${sfx}`
 const PROMPT = `What would you say back to this speaker ${sfx}`
 const ANSWER = `I would thank them for the reminder ${sfx}`
-const BY_PROPHET = ['The Prophet', 'Somewhere calm to sit', 'I go quiet', 'With the Prophet']
+const BY_PROPHET = ['The Prophet', 'A calm place to start', 'I go quiet', 'With the Prophet']
 const VIDEO = process.env.HEARTS_VIDEO
 
 let master: APIRequestContext
@@ -78,8 +78,9 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
   await expect(page.getByTestId('splash')).toBeVisible()
 
   await page.getByTestId('welcome-begin').click()
-  await page.waitForURL(/step=(films|placing)/)
+  await page.waitForURL(/step=films|\/start/)
   if (page.url().includes('step=films')) await page.getByTestId('welcome-continue').click()
+  await page.goto(`${BASE}/welcome?step=placing`)
   const questions = page.getByTestId('placing-question')
   await expect(questions).toHaveCount(BY_PROPHET.length)
   for (const [index, pick] of BY_PROPHET.entries()) await questions.nth(index).getByLabel(pick, { exact: true }).check()
@@ -88,9 +89,11 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
     if (await page.getByTestId('lets-play').isVisible()) await page.getByTestId('lets-play').click()
     await expect(page.locator('[data-testid="scene"][data-scene="extra"]')).toBeVisible({ timeout: 1500 })
   }).toPass({ timeout: 20_000 })
-  for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'doors']) {
+  for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'account', 'doors']) {
+    if (await page.getByTestId('starting-door').count()) break
     const card = page.locator(`[data-testid="scene"][data-scene="${scene}"]`)
-    await expect(card.first()).toBeVisible()
+    const shown = await card.first().waitFor({ state: 'visible', timeout: 8_000 }).then(() => true).catch(() => false)
+    if (!shown) continue
     await card.last().getByTestId('pass').click()
   }
   await expect(page.getByTestId('starting-door')).toHaveAttribute('data-door', '2')

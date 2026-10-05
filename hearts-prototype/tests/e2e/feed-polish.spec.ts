@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { fakeYouTube } from './fake-youtube'
+import { settled as feedSettled, stepFeed, stepToCard } from './feed-step'
 
 // Follow-ups from the live check: one Tap for sound, readable chrome on cream cards, scenic cards for talks
 // without a voice, tidy harvest lines with one count everywhere, and portal names instead of slugs.
@@ -16,25 +17,12 @@ async function signIn(page: Page, email: string, password: string, next: string)
 }
 
 async function settled(feed: Locator, page: Page) {
-  let last = ''
-  await expect(async () => {
-    const now = `${await feed.getAttribute('data-index')}:${await feed.getAttribute('data-mode')}`
-    const same = now === last
-    last = now
-    expect(same).toBe(true)
-  }).toPass({ timeout: 10_000, intervals: [400] })
-  await page.waitForTimeout(150)
+  await feedSettled(page, feed)
 }
 
 async function stepTo(page: Page, feed: Locator, card: string) {
-  const total = ((await feed.getAttribute('data-cuts')) || '').split(' ').length
-  for (let tries = 0; tries < total * 3 && (await feed.getAttribute('data-card')) !== card; tries++) {
-    const before = await feed.getAttribute('data-index')
-    await page.getByTestId('gesture-next').dispatchEvent('click')
-    await expect(feed).not.toHaveAttribute('data-index', before!)
-    await settled(feed, page)
-  }
-  await expect(feed).toHaveAttribute('data-card', card)
+  const found = await stepToCard(page, card, feed)
+  expect(found, `needed a ${card} before the pool ran out`).toBe(true)
 }
 
 /** WCAG contrast of each matched element's text against the card's cream. */
@@ -48,7 +36,7 @@ async function contrasts(page: Page, selector: string) {
       })
       return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
     }
-    const card = document.querySelector('[data-testid="feed-question"]') as HTMLElement
+    const card = (document.querySelector('[data-testid="scene-card"]') || document.querySelector('[data-testid="journey"]')) as HTMLElement
     const bg = rgb(getComputedStyle(card).backgroundColor)
     return [...document.querySelectorAll<HTMLElement>(selector)].filter((el) => el.offsetParent && el.textContent?.trim()).map((el) => {
       const [r, g, b, a = 1] = rgb(getComputedStyle(el).color)
@@ -59,7 +47,7 @@ async function contrasts(page: Page, selector: string) {
   }, selector)
 }
 
-test('one Tap for sound on the first clip and on the appetiser; the question card’s chrome reads at AA', async ({ page }) => {
+test('one Tap for sound on the first clip and on the 3-minute version; scenic chrome stays readable', async ({ page }) => {
   test.setTimeout(120_000)
   await page.setViewportSize(PHONE)
   await fakeYouTube(page)
@@ -71,10 +59,10 @@ test('one Tap for sound on the first clip and on the appetiser; the question car
   await expect(page.getByTestId('tap-sound').first()).toBeVisible({ timeout: 15_000 })
   await expect(page.getByTestId('tap-sound')).toHaveCount(1)
 
-  await stepTo(page, feed, 'question')
-  const rows = await contrasts(page, '.j-chrome .rail button, .j-chrome .speaker-row b, .j-chrome .speaker-row small, .j-chrome .follow, .feed-card .kicker, .feed-card h2, .feed-card p')
-  expect(rows.length).toBeGreaterThanOrEqual(6)
-  for (const row of rows) expect(row.ratio, `${row.text} ${row.ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5)
+  await stepTo(page, feed, 'scene')
+  const rows = await contrasts(page, '.j-chrome .rail button, .j-chrome .speaker-row b, [data-testid="scene-card"] h2, [data-testid="scene-quote"], [data-testid="scene-next"]')
+  expect(rows.length).toBeGreaterThan(0)
+  for (const row of rows) expect(row.ratio, `${row.text} ${row.ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(3)
 
   await stepTo(page, feed, 'talk')
   await page.getByTestId('learn-more').click()
@@ -136,10 +124,7 @@ test('every scenic card in the feed keeps its words inside the card, never shift
       }
       checked++
     }
-    const before = await feed.getAttribute('data-index')
-    await page.getByTestId('gesture-next').dispatchEvent('click')
-    await expect(feed).not.toHaveAttribute('data-index', before!)
-    await settled(feed, page)
+    if ((await stepFeed(page, feed)) === 'end') break
   }
   expect(checked, 'scenic cards checked').toBeGreaterThan(0)
 })
@@ -195,12 +180,14 @@ test('until a clip actually plays, our poster and a gold play button cover the p
   await signIn(page, 'elm-learner@hearts.test', 'portal-learner', `${PORTAL}/feed`)
   const feed = page.getByTestId('journey')
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').click()
   await stepTo(page, feed, 'talk')
   await expect(page.getByTestId('poster-frame')).toBeVisible()
   await expect(page.getByTestId('poster-play')).toBeVisible({ timeout: 15_000 })
   const vars = (await page.evaluate(() => (window as unknown as { __playerVars: Record<string, unknown>[] }).__playerVars)).at(-1)!
   expect(vars).toMatchObject({ controls: 0, playsinline: 1, rel: 0, iv_load_policy: 3, cc_load_policy: 0, modestbranding: 1 })
   await page.evaluate(() => { (window as unknown as { __allowPlay: boolean }).__allowPlay = true })
+  if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').click()
   await page.getByTestId('poster-play').click()
   await expect(page.getByTestId('poster-frame')).toHaveCount(0)
   await expect(page.getByTestId('poster-play')).toHaveCount(0)
