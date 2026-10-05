@@ -249,6 +249,29 @@ export function playOnly(id: string) {
   player.playVideo()
 }
 
+export type PauseSound = { hadSound: boolean; mutedBefore: boolean; mutedAfter: boolean }
+
+/**
+ * Pause without muting. If the learner already has sound, the player is left unmuted
+ * even when pause itself flips the mute flag.
+ */
+export function pauseKeepingSound(
+  player: { pauseVideo(): void; isMuted(): boolean; unMute(): void } | null,
+  hadSound: boolean,
+): PauseSound {
+  if (!player) {
+    const mutedAfter = !hadSound
+    console.info('[hearts] pause', { hadSound, mutedBefore: true, mutedAfter })
+    return { hadSound, mutedBefore: true, mutedAfter }
+  }
+  const mutedBefore = player.isMuted()
+  player.pauseVideo()
+  if (hadSound) player.unMute()
+  const mutedAfter = player.isMuted()
+  console.info('[hearts] pause', { hadSound, mutedBefore, mutedAfter })
+  return { hadSound, mutedBefore, mutedAfter }
+}
+
 /** Learner-started playback (the full lesson): pause every other player and keep the sound as it is. */
 export function resume(id: string) {
   const player = players.get(id)

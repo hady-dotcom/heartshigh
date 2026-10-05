@@ -417,6 +417,7 @@
 .film-tap { position: absolute; inset: 0; z-index: 2; cursor: pointer; }
 .player-card.yt-on .film-tap { inset: 50px 0 72px; }
 .big-play { position: absolute; left: 12px; top: 9px; z-index: 5; min-width: 44px; min-height: 44px; padding: 0 12px 0 10px; border-radius: 999px; background: rgba(14, 42, 43, 0.82); color: #f1d58a; border: 1.5px solid #d4a84b; display: inline-flex; align-items: center; gap: 6px; box-shadow: none; font-weight: 700; font-size: 14px; }
+.lecture-speed { position: absolute; right: 14px; top: 46px; z-index: 6; border: 0; border-radius: 999px; padding: 6px 12px; background: #d4a84b; color: #1a1408; font-weight: 800; font-size: 13px; cursor: pointer; }
 .paused-note { position: absolute; left: 0; right: 0; top: 40%; text-align: center; z-index: 3; font-weight: 700; font-size: 15px; }
 .timeline { position: absolute; left: 16px; right: 16px; bottom: 8px; z-index: 6; height: 48px; pointer-events: auto; transform: translateZ(0); }
 .timeline .track { position: absolute; left: 0; right: 0; top: 22px; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.3); }
@@ -601,6 +602,35 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .section-row header small { color: var(--muted); font-weight: 600; }
 .section-row .flowers a { display: inline-grid; text-decoration: none; }
 .door-course { margin: 4px 0 16px; }
+.part-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0;
+  padding: 14px 16px;
+  min-height: 72px;
+  border-radius: 18px;
+  text-decoration: none;
+  background: #143836;
+  color: #f6eedc;
+  border: 1px solid rgba(212, 168, 75, 0.55);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+.part-row .grow { flex: 1; min-width: 0; font-weight: 650; line-height: 1.3; }
+.part-row small { display: block; margin-top: 4px; color: #e4d3a4; font-weight: 600; font-size: 13px; }
+.part-row[aria-current='page'] { background: linear-gradient(180deg, #1c4f4a, #102e2c); border-color: #d4a84b; }
+.part-status {
+  flex: none;
+  border-radius: 999px;
+  padding: 6px 11px;
+  background: #d4a84b;
+  color: #1a1408;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.part-chevron { flex: none; color: #d4a84b; font-size: 22px; font-weight: 650; line-height: 1; }
 .door-course h2 { font-family: var(--serif); font-size: 22px; font-weight: 600; margin: 8px 0 4px; }
 .door-course > p { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0 0 8px; }
 .empty-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #ddd2bd; display: inline-block; }

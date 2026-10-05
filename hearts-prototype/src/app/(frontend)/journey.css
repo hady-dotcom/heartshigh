@@ -141,6 +141,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 /* Chrome over (or around) the clip. Controls and the caption take taps; the rest falls through to the film. */
 .j-chrome { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
 .j-chrome .rail, .j-chrome .clip-foot, .j-chrome .chip, .j-chrome .j-sound, .j-chrome .j-swipe-hint, .j-chrome button, .j-chrome a { pointer-events: auto; }
+.j-chrome .pill, .j-chrome .chip { touch-action: manipulation; }
 .j-chrome .caption {
   pointer-events: auto; cursor: pointer; background: none; border: 0; padding: 0; text-align: left;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; max-height: 22vh;
@@ -330,15 +331,16 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-level-choices {
   position: absolute;
   left: 16px;
-  bottom: calc(248px + var(--safe-bottom));
+  bottom: calc(22% + var(--safe-bottom));
   z-index: 8;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: 0;
   width: max-content;
-  max-width: 42%;
+  max-width: 48%;
   pointer-events: auto;
+  touch-action: manipulation;
 }
 .j-level-choices button {
   appearance: none;
@@ -346,13 +348,16 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   background: transparent;
   color: rgba(246, 238, 220, 0.78);
   border-radius: 0;
-  padding: 2px 0;
+  padding: 0 28px 0 0;
+  min-height: 44px;
+  min-width: 44px;
   font-weight: 700;
   font-size: 12px;
   line-height: 1.3;
   text-align: left;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
   box-shadow: none;
+  touch-action: manipulation;
 }
 .j-level-choices button.on {
   background: transparent;
@@ -360,14 +365,6 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   border: 0;
 }
 .journey.phase-feed.overlay:not([data-words-in-picture='yes']) .j-chrome .caption { left: 22px; }
-.journey[data-mode='appetiser']:not(.strict):not([data-words-in-picture='yes']) .j-level-choices {
-  position: relative;
-  left: auto;
-  right: auto;
-  top: auto;
-  bottom: auto;
-  align-self: flex-start;
-}
 .strict .j-level-choices {
   top: calc(48px + var(--safe-top) + min(430px, 100vw) * 9 / 16 - 44px);
   bottom: auto;

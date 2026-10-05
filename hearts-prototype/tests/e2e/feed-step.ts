@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test'
 import { tidyCaption } from '../../src/lib/tidy-caption'
+import { feedFilmCaption } from '../../src/lib/spoken-caption'
 import { captionIndex } from '../../src/lib/tiers'
 
 export async function settled(page: Page, feed = page.getByTestId('journey')) {
@@ -128,7 +129,13 @@ export type OpeningClip = {
   cutId: number
   lessonTitle?: string
   courseTitle?: string
-  hors?: { quote?: string; lines?: { at: number; text: string; tidy?: string }[] }
+  hook?: string
+  hookTidy?: string
+  turn?: string
+  turnTidy?: string
+  land?: string
+  landTidy?: string
+  hors?: { quote?: string; end?: number; lines?: { at: number; end?: number; text: string; tidy?: string; role?: string }[] }
 }
 
 const fold = (value: string) => value.replace(/[.?!]+$/g, '').replace(/\s+/g, ' ').trim().toLowerCase()
@@ -147,8 +154,16 @@ export async function captionIsSpoken(page: Page, clips: Record<string, OpeningC
   const lines = clip?.hors?.lines || []
   const index = time == null ? -1 : captionIndex(lines, time)
   const caption = page.getByTestId('caption')
-  if (index < 0) {
-    expect(await caption.count(), 'no timed words for this moment, so no caption').toBe(0)
+  const line = index >= 0 ? lines[index] : null
+  const expected = feedFilmCaption(
+    line,
+    lines,
+    [lessonTitle, courseTitle],
+    [clip?.hook, clip?.hookTidy, clip?.turn, clip?.turnTidy, clip?.land, clip?.landTidy, clip?.hors?.quote],
+    clip?.hors?.end,
+  )
+  if (!expected) {
+    expect(await caption.count(), 'no short timed words for this moment, so no caption').toBe(0)
     return
   }
   await expect(caption, 'timed words must appear as the caption').toBeVisible()
@@ -158,6 +173,5 @@ export async function captionIsSpoken(page: Page, clips: Record<string, OpeningC
   expect(fold(shown), 'caption must not be the series title').not.toBe(fold(courseTitle))
   if (lessonTitle) expect(shown, 'caption must not be the lesson title').not.toBe(lessonTitle)
   if (courseTitle) expect(shown, 'caption must not be the series title').not.toBe(courseTitle)
-  const expected = tidyCaption(lines[index].tidy || lines[index].text)
-  expect(fold(shown), 'caption must be the timed transcript line for now').toBe(fold(expected))
+  expect(fold(shown), 'caption must be the timed transcript line for now').toBe(fold(tidyCaption(expected)))
 }
