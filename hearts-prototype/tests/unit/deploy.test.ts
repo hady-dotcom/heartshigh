@@ -163,4 +163,8 @@ test('the latest Postgres migration has a table for every collection and global'
   )
   const missing = slugs.filter((slug) => !tables.has(slug))
   assert.deepEqual(missing, [], `a Postgres migration must CREATE ${missing.join(', ')}`)
+  const consentSql = readFileSync(path.join(dir, '20261005_120000_consent.ts'), 'utf8')
+  for (const column of ['legal_pages_id', 'consents_id', 'age_profiles_id', 'portal_contacts_id', 'child_code_flags_id', 'help_requests_id']) {
+    assert.match(consentSql, new RegExp(`payload_locked_documents_rels[\\s\\S]*${column}`), `consent migration must add lock column ${column}`)
+  }
 })

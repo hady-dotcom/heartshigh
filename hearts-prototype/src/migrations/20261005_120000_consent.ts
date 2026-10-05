@@ -102,11 +102,48 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
   CREATE INDEX IF NOT EXISTS "consents_user_idx" ON "consents" USING btree ("user_id");
   CREATE INDEX IF NOT EXISTS "consents_portal_idx" ON "consents" USING btree ("portal_id");
   CREATE INDEX IF NOT EXISTS "help_requests_user_idx" ON "help_requests" USING btree ("user_id");
+
+  ALTER TABLE "payload_locked_documents_rels" ADD COLUMN IF NOT EXISTS "legal_pages_id" integer;
+  ALTER TABLE "payload_locked_documents_rels" ADD COLUMN IF NOT EXISTS "consents_id" integer;
+  ALTER TABLE "payload_locked_documents_rels" ADD COLUMN IF NOT EXISTS "age_profiles_id" integer;
+  ALTER TABLE "payload_locked_documents_rels" ADD COLUMN IF NOT EXISTS "portal_contacts_id" integer;
+  ALTER TABLE "payload_locked_documents_rels" ADD COLUMN IF NOT EXISTS "child_code_flags_id" integer;
+  ALTER TABLE "payload_locked_documents_rels" ADD COLUMN IF NOT EXISTS "help_requests_id" integer;
+  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_legal_pages_fk" FOREIGN KEY ("legal_pages_id") REFERENCES "public"."legal_pages"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_consents_fk" FOREIGN KEY ("consents_id") REFERENCES "public"."consents"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_age_profiles_fk" FOREIGN KEY ("age_profiles_id") REFERENCES "public"."age_profiles"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_portal_contacts_fk" FOREIGN KEY ("portal_contacts_id") REFERENCES "public"."portal_contacts"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_child_code_flags_fk" FOREIGN KEY ("child_code_flags_id") REFERENCES "public"."child_code_flags"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_help_requests_fk" FOREIGN KEY ("help_requests_id") REFERENCES "public"."help_requests"("id") ON DELETE cascade ON UPDATE no action;
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_legal_pages_id_idx" ON "payload_locked_documents_rels" USING btree ("legal_pages_id");
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_consents_id_idx" ON "payload_locked_documents_rels" USING btree ("consents_id");
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_age_profiles_id_idx" ON "payload_locked_documents_rels" USING btree ("age_profiles_id");
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_portal_contacts_id_idx" ON "payload_locked_documents_rels" USING btree ("portal_contacts_id");
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_child_code_flags_id_idx" ON "payload_locked_documents_rels" USING btree ("child_code_flags_id");
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_help_requests_id_idx" ON "payload_locked_documents_rels" USING btree ("help_requests_id");
   `)
 }
 
 export async function down({ db }: MigrateDownArgs): Promise<void> {
   await db.execute(sql`
+    ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_legal_pages_fk";
+    ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_consents_fk";
+    ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_age_profiles_fk";
+    ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_portal_contacts_fk";
+    ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_child_code_flags_fk";
+    ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_help_requests_fk";
+    DROP INDEX IF EXISTS "payload_locked_documents_rels_legal_pages_id_idx";
+    DROP INDEX IF EXISTS "payload_locked_documents_rels_consents_id_idx";
+    DROP INDEX IF EXISTS "payload_locked_documents_rels_age_profiles_id_idx";
+    DROP INDEX IF EXISTS "payload_locked_documents_rels_portal_contacts_id_idx";
+    DROP INDEX IF EXISTS "payload_locked_documents_rels_child_code_flags_id_idx";
+    DROP INDEX IF EXISTS "payload_locked_documents_rels_help_requests_id_idx";
+    ALTER TABLE "payload_locked_documents_rels" DROP COLUMN IF EXISTS "legal_pages_id";
+    ALTER TABLE "payload_locked_documents_rels" DROP COLUMN IF EXISTS "consents_id";
+    ALTER TABLE "payload_locked_documents_rels" DROP COLUMN IF EXISTS "age_profiles_id";
+    ALTER TABLE "payload_locked_documents_rels" DROP COLUMN IF EXISTS "portal_contacts_id";
+    ALTER TABLE "payload_locked_documents_rels" DROP COLUMN IF EXISTS "child_code_flags_id";
+    ALTER TABLE "payload_locked_documents_rels" DROP COLUMN IF EXISTS "help_requests_id";
     DROP TABLE IF EXISTS "help_requests";
     DROP TABLE IF EXISTS "child_code_flags";
     DROP TABLE IF EXISTS "portal_contacts";

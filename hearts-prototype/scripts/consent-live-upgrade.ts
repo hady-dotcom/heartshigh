@@ -107,6 +107,12 @@ async function main() {
 
     const home = await payload.find({ collection: 'users', overrideAccess: true, limit: 1, where: { id: { equals: learnerId } } })
     assert.equal(home.docs.length, 1, 'existing learner is still readable after migrate')
+    await payload.update({
+      collection: 'users',
+      id: learnerId,
+      overrideAccess: true,
+      data: { seenWelcome: true },
+    })
 
     await grantCurrentConsents(payload, learnerId, portalId)
     assert.equal(await learnerNeedsConsent(payload, learnerUser), false, 'after agreeing they are not asked again')
