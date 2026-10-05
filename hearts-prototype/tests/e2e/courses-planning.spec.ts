@@ -175,7 +175,7 @@ test.describe('courses and planning', () => {
     if (points[0]) {
       if (!(await page.getByTestId('popup').count())) await page.getByTestId('timeline-dot').first().click()
       await expect(page.getByTestId('popup')).toBeVisible()
-      await expect(page.getByTestId('paused-note')).toContainText('Paused')
+      await expect(page.getByTestId('paused-note').first()).toContainText('Paused')
       await expect(page.getByTestId('think-about-this')).toBeVisible()
       const before = await page.getByTestId('player-time').textContent()
       await page.waitForTimeout(1200)
