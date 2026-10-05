@@ -58,6 +58,7 @@ export type JourneyProps = {
   /** After placing, the quiz returns to the first-talk screen instead of the feed. */
   afterPlacing?: boolean
   variants?: VariantMap
+  features?: import('@/lib/features').FeatureMap
 }
 
 const TAB_DELAY = 200
@@ -1983,6 +1984,7 @@ export function Journey(props: JourneyProps) {
         <TabEntry
           base={base}
           unread={props.unread}
+          features={props.features}
           onGuard={(event) => {
             if (signedIn) return
             const target = (event.target as HTMLElement).closest('a')
@@ -2066,14 +2068,24 @@ function PeekFace({ item, mode }: { item: FeedItem; mode: Mode }) {
   )
 }
 
-function TabEntry({ base, unread, onGuard }: { base: string; unread: number; onGuard: (event: React.MouseEvent) => void }) {
+function TabEntry({
+  base,
+  unread,
+  features,
+  onGuard,
+}: {
+  base: string
+  unread: number
+  features?: import('@/lib/features').FeatureMap
+  onGuard: (event: React.MouseEvent) => void
+}) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     animate(ref.current, [{ transform: 'translateY(100%)' }, { transform: 'translateY(0)' }], 300, EASE.enter, { id: 'tabbar-in' })
   }, [])
   return (
     <div ref={ref} className="j-tabs" onClickCapture={onGuard}>
-      <TabBar base={`${base}`} active={null} dark unread={unread} />
+      <TabBar base={`${base}`} active={null} portal={{ features }} dark unread={unread} />
     </div>
   )
 }

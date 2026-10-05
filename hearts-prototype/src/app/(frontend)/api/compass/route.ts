@@ -4,6 +4,7 @@ import { getSession } from '@/server/context'
 import { LIFE_EVENTS, LIFE_NOTE_MAX } from '@/lib/compass-bank'
 import { canGuide, learnerPath, saveMix, saveMonth, staffLearner, staffPortal } from '@/server/compass'
 import type { SessionUser } from '@/server/context'
+import { featureGoneJson } from '@/server/features'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +25,8 @@ export async function GET(req: Request) {
   if (!session.user) return json({ error: 'Please sign in first.' }, 401)
   const portal = await portalOf(session, req)
   if (!portal) return json({ error: 'That portal could not be found.' }, 404)
+  const gone = featureGoneJson(portal, 'compass')
+  if (gone) return gone
   const asked = new URL(req.url).searchParams.get('learner')
   if (session.user.role === 'learner') {
     if (asked && Number(asked) !== session.user.id) return json({ error: 'That path is not yours.' }, 403)
@@ -48,6 +51,8 @@ export async function POST(req: Request) {
   if (!session.user) return json({ error: 'Please sign in first.' }, 401)
   const portal = await portalOf(session, req)
   if (!portal) return json({ error: 'That portal could not be found.' }, 404)
+  const gone = featureGoneJson(portal, 'compass')
+  if (gone) return gone
   const body = await readBody(req)
   const wantsJson = (req.headers.get('content-type') || '').includes('application/json')
   const fail = (message: string, status = 400) => (wantsJson ? json({ error: message }, status) : redirectTo(req, String(body.next || `/p/${portal.slug}/recalibrate`), message))

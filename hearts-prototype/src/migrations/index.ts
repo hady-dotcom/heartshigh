@@ -17,6 +17,7 @@ import * as migration_20261004_180500_experiments from './20261004_180500_experi
 import * as migration_20261004_210000_schedule_minutes from './20261004_210000_schedule_minutes';
 import * as migration_20261004_210000_live_sessions from './20261004_210000_live_sessions';
 import * as migration_20261004_210500_insights_missions from './20261004_210500_insights_missions';
+import * as migration_20261004_230000_portal_features from './20261004_230000_portal_features';
 import * as migration_20261004_235900_insight_privacy from './20261004_235900_insight_privacy';
 import * as migration_20261005_010000_swarm_hidden from './20261005_010000_swarm_hidden';
 
@@ -115,6 +116,11 @@ export const migrations = [
     up: migration_20261004_210500_insights_missions.up,
     down: migration_20261004_210500_insights_missions.down,
     name: '20261004_210500_insights_missions',
+  },
+  {
+    up: migration_20261004_230000_portal_features.up,
+    down: migration_20261004_230000_portal_features.down,
+    name: '20261004_230000_portal_features',
   },
   {
     up: migration_20261004_235900_insight_privacy.up,

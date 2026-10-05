@@ -528,6 +528,60 @@ abbr.tip { text-decoration: underline dotted; text-underline-offset: 3px; cursor
 table.data th { white-space: nowrap; }
 table.data th [data-testid='desk-help'] { margin-left: 4px; vertical-align: middle; }
 .content-seat { padding: 8px 18px 4px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.portal-studio { display: grid; gap: 18px; max-width: 880px; }
+.studio-steps { display: flex; flex-wrap: wrap; gap: 8px; }
+.studio-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  background: var(--field);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+.studio-step.on { background: var(--gold); color: var(--gold-ink); border-color: transparent; }
+.studio-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(246, 238, 220, 0.12);
+  font-size: 12px;
+}
+.studio-step.on .studio-num { background: var(--gold-ink); color: var(--gold); }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.feature-board { display: grid; gap: 22px; }
+.feature-depth h3 {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 650;
+  color: var(--gold);
+}
+.feature-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.feature-row.on { border-color: var(--gold); }
+.feature-switch { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; align-items: start; cursor: pointer; }
+.feature-switch input { margin-top: 4px; accent-color: var(--gold); width: 18px; height: 18px; }
+.feature-switch b { display: block; font-size: 16px; color: var(--ink); }
+.feature-switch small { display: block; margin-top: 4px; color: var(--muted); font-size: 13.5px; line-height: 1.4; }
+.studio-courses { display: grid; gap: 8px; }
+.studio-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.portal-studio [hidden] { display: none !important; }
 .saved-toast { margin: 0 0 12px; padding: 10px 14px; background: var(--card, #f7eedb); border: 1px solid var(--line, #d7c6a4); border-radius: 12px; font-size: 14px; }
 .saved-list { display: grid; gap: 8px; }
 .saved-item { display: flex; justify-content: space-between; gap: 10px; }

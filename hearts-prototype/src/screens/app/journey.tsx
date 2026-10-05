@@ -21,6 +21,7 @@ import { activeMissionCard } from './mission'
 import { unreadCount } from '../common'
 import { FeedLiveBanner } from '@/components/app/live-banner'
 import { homeLive } from '@/server/live'
+import { featureOn, featuresOf } from '@/lib/features'
 
 export async function masterFlags(payload: Payload) {
   const flags = (await payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null)) as { popupOverPlayer?: boolean; chromeOverPlayer?: boolean; showUnchecked?: boolean } | null
@@ -69,11 +70,11 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
   const mission = user ? await activeMissionCard(payload, portal.id, base) : null
   return (
     <div className="app-stage dusk">
-      {initial === 'feed' && user ? <FeedLiveBanner portal={String(portal.slug)} base={base} session={live.live} /> : null}
+      {initial === 'feed' && user && featureOn(portal, 'live') ? <FeedLiveBanner portal={String(portal.slug)} base={base} session={live.live} /> : null}
       <main className="app dark journey-frame" data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
         <PageHelp page={initial === 'feed' ? 'feed' : 'start'} />
         <InsightTracker trendsOptIn={Boolean(user?.trendsOptIn)} />
-        {mission && initial === 'feed' ? <div className="feed-mission" data-testid="feed-mission">{mission}</div> : null}
+        {mission && initial === 'feed' && featureOn(portal, 'missions') ? <div className="feed-mission" data-testid="feed-mission">{mission}</div> : null}
         <JourneyErrorBoundary homeHref={base}>
           <Journey
             base={base}
@@ -94,6 +95,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
             play={query.play === 'appetiser' ? 'appetiser' : null}
             afterPlacing={query.after === 'placing'}
             variants={variants}
+            features={featuresOf(portal)}
           />
         </JourneyErrorBoundary>
       </main>

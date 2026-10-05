@@ -314,6 +314,18 @@ export interface Portal {
   learnerLabel?: string | null;
   teacherLabel?: string | null;
   wizardDone?: boolean | null;
+  /**
+   * Per-portal feature switches. Empty means every feature that exists today stays on, so live portals do not change.
+   */
+  features?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -3062,6 +3074,7 @@ export interface PortalsSelect<T extends boolean = true> {
   learnerLabel?: T;
   teacherLabel?: T;
   wizardDone?: T;
+  features?: T;
   updatedAt?: T;
   createdAt?: T;
 }

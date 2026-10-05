@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Flash, Hidden } from '@/components/app/shell'
-import { getSession } from '@/server/context'
+import { getSession, loadPortal } from '@/server/context'
 import { gatheringBySlug, publicView } from '@/server/gather'
+import { featureOn } from '@/lib/features'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,6 +15,8 @@ export default async function CheckInPage({ params, searchParams }: { params: Pr
   if (!row || String(row.status || '') !== 'published') notFound()
   const view = await publicView(payload, slug)
   if (!view) notFound()
+  const portal = view.portalSlug ? await loadPortal(payload, view.portalSlug) : null
+  if (!featureOn(portal, 'gather')) notFound()
   const tokenOk = Boolean(query.k) && String(row.checkinToken || '') === query.k
   const next = `/gather/${slug}/in${query.k ? `?k=${encodeURIComponent(query.k)}` : ''}`
   const reflect = `/p/${view.portalSlug}/gather/${view.card.id}/reflect`

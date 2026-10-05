@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { track } from '@/lib/experiment-track'
+import type { FeatureSource } from '@/lib/features'
 import { useVariant } from '@/lib/use-variant'
 
 export type Tab = 'home' | 'lanes' | 'week' | 'garden' | 'me' | 'gather'
 
-export function TabBar({ base, active = null, dark = false, evening = false, unread = 0 }: { base: string; active?: Tab | null; dark?: boolean; evening?: boolean; unread?: number }) {
+export function TabBar({ base, active = null, portal: _portal, dark = false, evening = false, unread = 0 }: { base: string; active?: Tab | null; portal?: FeatureSource; dark?: boolean; evening?: boolean; unread?: number }) {
   const lanes = useVariant('lanes-tab-label')
   const tabs: [Tab, string, string][] = [
     ['home', 'Home', base],

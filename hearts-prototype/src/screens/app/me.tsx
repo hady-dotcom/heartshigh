@@ -10,6 +10,7 @@ import { ThemePinControl } from '@/components/theme/theme-pin'
 import { Qr } from '@/components/qr'
 import { dayNumber, portalName } from '@/server/learner'
 import { shapedFor } from '@/server/missions'
+import { featureOn } from '@/lib/features'
 import { type Ctx, longDate, ref, rows, shortDate, str, unreadCount } from '../common'
 
 /** Notices written before prompts were clipped on a word were cut mid-word at 60 characters; they read the same way now. */
@@ -22,11 +23,11 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
   const shaped = await shapedFor(payload, user.id)
   const unread = notes.filter((note) => !note.read).length
   const links: [string, string, string, string][] = [
-    ['plan', 'My week', 'Spread a course across the days that suit you', 'week'],
+    ...(featureOn(portal, 'planner') ? [['plan', 'My week', 'Spread a course across the days that suit you', 'week'] as [string, string, string, string]] : []),
     ['saved', 'Saved', 'Clips you kept from the feed', 'me/saved'],
-    ['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'],
-    ['path', 'Where to grow next', 'Plain words, only when a real talk or answer backs them', 'me/path'],
-    ['shaped', 'Things you helped shape', 'Missions you joined, and what we decided', 'me/shaped'],
+    ...(featureOn(portal, 'workbook') ? [['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'] as [string, string, string, string]] : []),
+    ...(featureOn(portal, 'compass') ? [['path', 'Where to grow next', 'Plain words, only when a real talk or answer backs them', 'me/path'] as [string, string, string, string]] : []),
+    ...(featureOn(portal, 'missions') ? [['shaped', 'Things you helped shape', 'Missions you joined, and what we decided', 'me/shaped'] as [string, string, string, string]] : []),
     ['help', 'Ask for help', 'Write to the team here. You do not need an email.', 'me/help'],
     ['settings', 'Settings', 'Night alerts, watch history and signing out', 'me/settings'],
   ]
@@ -97,12 +98,12 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
             <small className="muted">{shortDate(note.createdAt)}</small>
           </Link>
         )) : (
-          <EmptyState testId="notes-empty" action={{ href: `${base}/garden`, label: 'Open the garden' }}>Nothing new. Replies from your teacher and new nights will show here.</EmptyState>
+          <EmptyState testId="notes-empty" action={featureOn(portal, 'garden') ? { href: `${base}/garden`, label: 'Open the garden' } : { href: base, label: 'Back home' }}>Nothing new. Replies from your teacher and new nights will show here.</EmptyState>
         )}
         <p className="eyebrow" style={{ marginTop: 22 }}>Opening questions</p>
         <StartAgain base={base} />
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      <TabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -126,7 +127,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>Circle</h1></div>
         <Flash error={query.error} notice={query.notice} />
-        <p className="eyebrow" style={{ marginTop: 6 }}>Nights</p>
+        {featureOn(portal, 'gather') ? <><p className="eyebrow" style={{ marginTop: 6 }}>Nights</p>
         {events.length ? events.map((event) => {
           const mine = rsvps.find((row) => ref(row.event) === event.id && ref(row.user) === user.id)
           const coming = rsvps.filter((row) => ref(row.event) === event.id).length
@@ -158,7 +159,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
               )}
             </article>
           )
-        }) : <p className="muted">No nights are planned yet.</p>}
+        }) : <p className="muted">No nights are planned yet.</p>}</> : null}
         <p className="eyebrow">Board</p>
         <form className="card form-stack" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'board', next: here }} />
@@ -172,7 +173,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
           </div>
         ))}
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      <TabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -216,7 +217,7 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
           <button className="pill outline block" type="submit" data-testid="logout">Sign out</button>
         </form>
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      <TabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
