@@ -1,18 +1,30 @@
 {
   "ok": true,
-  "at": "2026-10-05T00:03:14.869Z",
-  "source": "/workspace/hearts-prototype/.backups/fixture-run/2026-10-05T000314867Z",
-  "destination": "/workspace/hearts-prototype/.backups/scratch",
+  "at": "2026-10-05T014229Z",
+  "source": "hearts_demo",
+  "destination": "hearts_restore",
   "database": {
     "before": {
-      "answers": 2,
-      "audit_log": 2,
-      "users": 2
+      "users": 21,
+      "answers": 31,
+      "audit_log": 0,
+      "courses": 32,
+      "portals": 2,
+      "access_codes": 6,
+      "completions": 74,
+      "lessons": 32,
+      "media": 0
     },
     "after": {
-      "answers": 2,
-      "audit_log": 2,
-      "users": 2
+      "users": 21,
+      "answers": 31,
+      "audit_log": 0,
+      "courses": 32,
+      "portals": 2,
+      "access_codes": 6,
+      "completions": 74,
+      "lessons": 32,
+      "media": 0
     },
     "matched": true
   },
@@ -21,7 +33,11 @@
     "after": 3,
     "matched": true
   },
+  "encrypted": {
+    "refusedWithoutKey": true
+  },
   "notes": [
-    "Local SQLite drill. Production uses pg_dump --format=custom and a second bucket. See docs/BACKUPS.md."
+    "Real Postgres custom dump, age encryption, and an S3-compatible bucket on this VM.",
+    "The private age key is not in the repository."
   ]
 }

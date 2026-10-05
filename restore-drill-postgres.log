@@ -1,0 +1,208 @@
+HEARTS real restore drill 2026-10-05T013805Z
+upload failed: .backups/postgres-drill/voice-1.webm to s3://hearts-media/voice-1.webm Could not connect to the endpoint URL: "http://127.0.0.1:9000/hearts-media/voice-1.webm"
+HEARTS real restore drill 2026-10-05T013923Z
+make_bucket: hearts-media
+make_bucket: hearts-backups
+make_bucket: hearts-restore-media
+Completed 10 Bytes/10 Bytes (433 Bytes/s) with 1 file(s) remainingupload: .backups/postgres-drill/voice-1.webm to s3://hearts-media/voice-1.webm
+Completed 11 Bytes/11 Bytes (605 Bytes/s) with 1 file(s) remainingupload: .backups/postgres-drill/photo-1.jpg to s3://hearts-media/photo-1.jpg
+Completed 9 Bytes/9 Bytes (462 Bytes/s) with 1 file(s) remainingupload: .backups/postgres-drill/sheet.pdf to s3://hearts-media/sheet.pdf
+Seeding hearts_demo
+Wiped the Postgres database (dropped the public schema).
+[01:39:30] [33mWARN[39m: [36mNo email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.[39m
+[01:39:30] [32mINFO[39m: [36mReading migration files from /workspace/hearts-prototype/src/migrations[39m
+[01:39:30] [32mINFO[39m: [36mMigrating: 20261003_103330_initial[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261003_103330_initial (801ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261003_124500_integration_part1[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261003_124500_integration_part1 (104ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261003_131651_integration_part2[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261003_131651_integration_part2 (26ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261003_140611_harvest[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261003_140611_harvest (10ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261003_180616_jibril_doors[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261003_180616_jibril_doors (12ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261003_194500_line_tidy[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261003_194500_line_tidy (2ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261003_200853_integration_final[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261003_200853_integration_final (26ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261003_220000_feedback[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261003_220000_feedback (23ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261004_031500_gather[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261004_031500_gather (76ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261004_060000_shorts[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261004_060000_shorts (2ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261004_061000_portal_time_zone[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261004_061000_portal_time_zone (1ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261004_080000_lesson_picture_flags[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261004_080000_lesson_picture_flags (2ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261004_120000_compass_v2[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261004_120000_compass_v2 (30ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261004_180000_gather_entry_code[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261004_180000_gather_entry_code (2ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261004_210000_schedule_minutes[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261004_210000_schedule_minutes (0ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261004_230000_portal_features[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261004_230000_portal_features (0ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261005_010000_admin_ops[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261005_010000_admin_ops (21ms)[39m
+[01:39:31] [32mINFO[39m: [36mMigrating: 20261005_020000_trash[39m
+[01:39:31] [32mINFO[39m: [36mMigrated:  20261005_020000_trash (16ms)[39m
+Harvest: 172 verses and hadith across 31 talks. No quotation found in 5: Gratitude is the Greatest Blessing | Gems from Ibn Ata Illah Ep. 1 | Shaykh Mikaeel Ahmed Smith; How to Manage Your Anger - Amjad Tarsin; Moments of Solitude: Closeness to God | Jummah Khutbah | Imam Khalid Latif | 3.11.2022; On Mosques, Companionship, & Knowledge; Quranic Connection #26: A Cure for Anxiety | Shaykh Suleiman Hani.
+Harvest sample: 4 lines kept for Maryam.
+Feedback demo: sample answers are on the East London and Leeds desks.
+Seeded HEARTS. Master: master@hearts.test / hearts-master
+Access codes (also on the master desk, and in data/seed-codes.json):
+  elm-teacher    ELM-FH3M-KBBM
+  elm-admin      ELM-8D9M-MN4G
+  elm-learner    ELM-QFM8-XV7B
+  elm-parent     ELM-BUYJ-GXPG
+  leeds-teacher  LEEDS-RB78-P4WG
+  leeds-learner  LEEDS-XYCR-D89C
+Row counts before backup:
+  users 21
+  answers 31
+  audit_log 0
+  courses 32
+  portals 2
+  access_codes 6
+  completions 74
+  lessons 32
+  media 0
+  files 3
+Public key: age1j7jqy608vdx8mz5d4l7w3yvkh5an4mvqfgd4wf68krvdns5wrgts7e7gpu
+HEARTS real restore drill 2026-10-05T014229Z
+Completed 10 Bytes/10 Bytes (579 Bytes/s) with 1 file(s) remainingupload: .backups/postgres-drill/voice-1.webm to s3://hearts-media/voice-1.webm
+Completed 11 Bytes/11 Bytes (702 Bytes/s) with 1 file(s) remainingupload: .backups/postgres-drill/photo-1.jpg to s3://hearts-media/photo-1.jpg
+Completed 9 Bytes/9 Bytes (647 Bytes/s) with 1 file(s) remainingupload: .backups/postgres-drill/sheet.pdf to s3://hearts-media/sheet.pdf
+Seeding hearts_demo
+Wiped the Postgres database (dropped the public schema).
+[01:42:34] [33mWARN[39m: [36mNo email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.[39m
+[01:42:34] [32mINFO[39m: [36mReading migration files from /workspace/hearts-prototype/src/migrations[39m
+[01:42:34] [32mINFO[39m: [36mMigrating: 20261003_103330_initial[39m
+[01:42:35] [32mINFO[39m: [36mMigrated:  20261003_103330_initial (1004ms)[39m
+[01:42:35] [32mINFO[39m: [36mMigrating: 20261003_124500_integration_part1[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261003_124500_integration_part1 (254ms)[39m
+[01:42:36] [32mINFO[39m: [36mMigrating: 20261003_131651_integration_part2[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261003_131651_integration_part2 (53ms)[39m
+[01:42:36] [32mINFO[39m: [36mMigrating: 20261003_140611_harvest[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261003_140611_harvest (11ms)[39m
+[01:42:36] [32mINFO[39m: [36mMigrating: 20261003_180616_jibril_doors[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261003_180616_jibril_doors (10ms)[39m
+[01:42:36] [32mINFO[39m: [36mMigrating: 20261003_194500_line_tidy[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261003_194500_line_tidy (3ms)[39m
+[01:42:36] [32mINFO[39m: [36mMigrating: 20261003_200853_integration_final[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261003_200853_integration_final (30ms)[39m
+[01:42:36] [32mINFO[39m: [36mMigrating: 20261003_220000_feedback[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261003_220000_feedback (21ms)[39m
+[01:42:36] [32mINFO[39m: [36mMigrating: 20261004_031500_gather[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261004_031500_gather (63ms)[39m
+[01:42:36] [32mINFO[39m: [36mMigrating: 20261004_060000_shorts[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261004_060000_shorts (2ms)[39m
+[01:42:36] [32mINFO[39m: [36mMigrating: 20261004_061000_portal_time_zone[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261004_061000_portal_time_zone (1ms)[39m
+[01:42:36] [32mINFO[39m: [36mMigrating: 20261004_080000_lesson_picture_flags[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261004_080000_lesson_picture_flags (1ms)[39m
+[01:42:36] [32mINFO[39m: [36mMigrating: 20261004_120000_compass_v2[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261004_120000_compass_v2 (27ms)[39m
+[01:42:36] [32mINFO[39m: [36mMigrating: 20261004_180000_gather_entry_code[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261004_180000_gather_entry_code (1ms)[39m
+[01:42:36] [32mINFO[39m: [36mMigrating: 20261004_210000_schedule_minutes[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261004_210000_schedule_minutes (0ms)[39m
+[01:42:36] [32mINFO[39m: [36mMigrating: 20261004_230000_portal_features[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261004_230000_portal_features (1ms)[39m
+[01:42:36] [32mINFO[39m: [36mMigrating: 20261005_010000_admin_ops[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261005_010000_admin_ops (36ms)[39m
+[01:42:36] [32mINFO[39m: [36mMigrating: 20261005_020000_trash[39m
+[01:42:36] [32mINFO[39m: [36mMigrated:  20261005_020000_trash (22ms)[39m
+Harvest: 172 verses and hadith across 31 talks. No quotation found in 5: Gratitude is the Greatest Blessing | Gems from Ibn Ata Illah Ep. 1 | Shaykh Mikaeel Ahmed Smith; How to Manage Your Anger - Amjad Tarsin; Moments of Solitude: Closeness to God | Jummah Khutbah | Imam Khalid Latif | 3.11.2022; On Mosques, Companionship, & Knowledge; Quranic Connection #26: A Cure for Anxiety | Shaykh Suleiman Hani.
+Harvest sample: 4 lines kept for Maryam.
+Feedback demo: sample answers are on the East London and Leeds desks.
+Seeded HEARTS. Master: master@hearts.test / hearts-master
+Access codes (also on the master desk, and in data/seed-codes.json):
+  elm-teacher    ELM-V797-9Y73
+  elm-admin      ELM-9GQN-AGH3
+  elm-learner    ELM-TAWR-YGY9
+  elm-parent     ELM-WQT9-86FF
+  leeds-teacher  LEEDS-8KXH-PA8N
+  leeds-learner  LEEDS-WJVP-G9HC
+Row counts before backup:
+  users 21
+  answers 31
+  audit_log 0
+  courses 32
+  portals 2
+  access_codes 6
+  completions 74
+  lessons 32
+  media 0
+  files 3
+age public key generated (private key stays in /workspace/hearts-prototype/.backups/postgres-drill/keys, not the repo)
+HEARTS backup 2026-10-05T014258Z (daily) -> /workspace/hearts-prototype/.backups/postgres-drill/plain
+database: postgres custom dump
+files: copied local media
+files: synced from the live bucket to the backup folder
+encrypted: /workspace/hearts-prototype/.backups/postgres-drill/plain.age (the key is Leon's, not in this repo)
+uploaded: s3://hearts-backups/hearts/daily/2026-10-05T014258Z
+done
+encrypted dump: /workspace/hearts-prototype/.backups/postgres-drill/plain.age
+encrypted dump refused without the key:
+age: error: no identity matched any of the recipients
+age: report unexpected or unhelpful errors at https://filippo.io/age/report
+dump: /workspace/hearts-prototype/.backups/postgres-drill/plain/hearts.dump
+DROP SCHEMA
+CREATE SCHEMA
+Row counts after restore:
+  users 21 -> 21
+  answers 31 -> 31
+  audit_log 0 -> 0
+  courses 32 -> 32
+  portals 2 -> 2
+  access_codes 6 -> 6
+  completions 74 -> 74
+  lessons 32 -> 32
+  media 0 -> 0
+  files 3 -> 3
+{
+  "ok": true,
+  "at": "2026-10-05T014229Z",
+  "source": "hearts_demo",
+  "destination": "hearts_restore",
+  "database": {
+    "before": {
+      "users": 21,
+      "answers": 31,
+      "audit_log": 0,
+      "courses": 32,
+      "portals": 2,
+      "access_codes": 6,
+      "completions": 74,
+      "lessons": 32,
+      "media": 0
+    },
+    "after": {
+      "users": 21,
+      "answers": 31,
+      "audit_log": 0,
+      "courses": 32,
+      "portals": 2,
+      "access_codes": 6,
+      "completions": 74,
+      "lessons": 32,
+      "media": 0
+    },
+    "matched": true
+  },
+  "files": {
+    "before": 3,
+    "after": 3,
+    "matched": true
+  },
+  "encrypted": {
+    "refusedWithoutKey": true
+  },
+  "notes": [
+    "Real Postgres custom dump, age encryption, and an S3-compatible bucket on this VM.",
+    "The private age key is not in the repository."
+  ]
+}
+report: /workspace/hearts-prototype/docs/restore-drill-last.json
