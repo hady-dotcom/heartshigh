@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Flash, Hidden } from '@/components/app/shell'
+import { PageHelp } from '@/components/app/page-help'
 import { TurnstileField } from '@/components/app/turnstile-field'
 import { BrandLockup } from '@/components/brand'
 
@@ -8,6 +9,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   const next = query.next && query.next.startsWith('/') && !query.next.startsWith('//') ? query.next : '/'
   return (
     <main className="door garden-door" data-testid="login">
+      <PageHelp page="login" />
       <div className="door-card">
         <BrandLockup size={72} />
         <h1>Welcome back</h1>

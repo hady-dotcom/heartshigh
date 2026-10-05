@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Flash } from '@/components/app/shell'
+import { PageHelp } from '@/components/app/page-help'
 import { BrandLockup } from '@/components/brand'
 import { portalIdOf } from '@/lib/ids'
 import { portalHomePath } from '@/lib/landing'
@@ -21,6 +22,7 @@ export default async function Door({ searchParams }: { searchParams: Promise<{ e
   if (user && home !== '/login' && !query.error && !query.notice) redirect(home)
   return (
     <main className="door garden-door" data-testid="door">
+      <PageHelp page="door" />
       <div className="door-card">
         <BrandLockup size={88} />
         <h1>Someone wanted good for you</h1>
