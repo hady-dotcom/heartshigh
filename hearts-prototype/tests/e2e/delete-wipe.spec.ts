@@ -90,7 +90,11 @@ async function seedWork(
     point = (await made.json()).doc
   }
   await master.post('/api/adoptions', { data: { kind: 'course', course: courseId, portal: opts.portalId } })
-  const granted = await master.patch(`/api/users/${opts.userId}`, { data: { courseList: [courseId] } })
+  const current = (await (await master.get(`/api/users/${opts.userId}?depth=0`)).json()) as { courseList?: unknown }
+  const existing = (Array.isArray(current.courseList) ? current.courseList : [])
+    .map((item) => (typeof item === 'object' && item && 'id' in item ? Number((item as { id: number }).id) : Number(item)))
+    .filter((id) => Number.isFinite(id) && id > 0)
+  const granted = await master.patch(`/api/users/${opts.userId}`, { data: { courseList: [...new Set([...existing, courseId])] } })
   expect(granted.ok(), await granted.text()).toBeTruthy()
 
   const learner = await playwrightRequest.newContext({ baseURL: E2E_BASE })
