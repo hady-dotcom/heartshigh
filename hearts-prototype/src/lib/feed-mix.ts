@@ -3,6 +3,25 @@ import { pickScene } from '@/lib/scenes'
 import { beatLine } from '@/lib/sentences'
 import type { FeedItem, SlideStyle } from '@/server/learner'
 
+/** Map routed slots to display clips. If the spine/D0 route is empty, use every clip this learner already has. */
+export function clipsFromRoute(
+  slots: { cutId: number; laneKey?: string | null }[],
+  clips: Record<string, FeedItem>,
+  laneTitles: Record<string, string> = {},
+): FeedItem[] {
+  const mapped = slots
+    .map((slot) => {
+      const clip = clips[String(slot.cutId)]
+      if (!clip) return null
+      return slot.laneKey
+        ? { ...clip, laneKey: slot.laneKey, lane: slot.laneKey, laneLabel: laneTitles[slot.laneKey] || clip.laneLabel }
+        : { ...clip, laneKey: null }
+    })
+    .filter((clip): clip is FeedItem => Boolean(clip))
+  if (mapped.length) return mapped
+  return Object.values(clips)
+}
+
 type CardBeat = NonNullable<FeedItem['beats']>[number]
 
 const STYLE_LIST = ['kinetic', 'windows', 'conversation', 'cinema', 'unfold'] as const
