@@ -20,12 +20,12 @@ test('X01 axe-core on main learner and desk pages', async ({ page, browser }) =>
   const door = await scan(page, 'after-door')
   expect(door.serious, door.serious.map((row) => row.id).join(', ')).toEqual([])
 
-  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/elm')
-  await expect(page.getByTestId('home').or(page.getByTestId('welcome'))).toBeVisible()
+  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london')
+  await expect(page.getByTestId('home').or(page.getByTestId('welcome')).first()).toBeVisible()
   const home = await scan(page, 'after-home')
   expect(home.serious, home.serious.map((row) => row.id).join(', ')).toEqual([])
 
-  await page.goto('/p/elm/me')
+  await page.goto('/p/east-london/me')
   const me = await scan(page, 'after-me')
   expect(me.serious, me.serious.map((row) => row.id).join(', ')).toEqual([])
 
@@ -39,7 +39,7 @@ test('X01 axe-core on main learner and desk pages', async ({ page, browser }) =>
 })
 
 test('H01 help mark is on learner and desk frames', async ({ page }) => {
-  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/elm')
+  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london')
   await expect(page.locator('[data-help]').first()).toBeVisible()
   await page.setViewportSize({ width: 1440, height: 900 })
   await signIn(page, 'leeds-admin@hearts.test', 'portal-admin', '/p/leeds/admin/contacts')

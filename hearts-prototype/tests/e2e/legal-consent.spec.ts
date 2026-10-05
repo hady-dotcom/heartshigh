@@ -7,8 +7,7 @@ const suffix = Date.now().toString().slice(-6)
 test('L03 join records consent and opens the welcome', async ({ page }) => {
   const email = `legal-join-${suffix}@hearts.test`
   await joinWithConsent(page, seedCode('elm-learner'), 'Legal Joiner', email, 'legal-join-1')
-  await expect(page.getByTestId('consent').or(page.getByTestId('splash')).or(page.getByTestId('welcome'))).toBeVisible()
-  await expect(page.getByTestId('legal-links').or(page.getByTestId('splash')).or(page.getByTestId('welcome'))).toBeVisible()
+  await expect(page.getByTestId('welcome').or(page.getByTestId('splash')).first()).toBeVisible()
 })
 
 test('L01 L02 legal pages are linked from the door and show a draft mark', async ({ page }) => {
@@ -26,7 +25,7 @@ test('L01 L02 legal pages are linked from the door and show a draft mark', async
 
 test('H02 get help files a broken note', async ({ page }) => {
   const { signIn } = await import('./legal-helpers')
-  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/elm/me/help')
+  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london/me/help')
   await expect(page.getByTestId('help-request')).toBeVisible()
   await page.getByTestId('help-broken-note').fill('The film did not start.')
   await page.getByTestId('help-broken-send').click()
@@ -34,6 +33,6 @@ test('H02 get help files a broken note', async ({ page }) => {
 })
 
 test('seeded learners already agreed and can open home', async ({ page }) => {
-  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/elm')
-  await expect(page.getByTestId('home').or(page.getByTestId('welcome'))).toBeVisible()
+  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london')
+  await expect(page.getByTestId('home').or(page.getByTestId('welcome')).first()).toBeVisible()
 })

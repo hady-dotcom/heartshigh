@@ -18,7 +18,7 @@ test('L03 a new published version asks the learner to agree again', async ({ pag
   const bumped = await ctx.patch(`/api/consents/${privacy!.id}`, { data: { version: `old-${suffix}` } })
   expect(bumped.ok()).toBeTruthy()
 
-  await page.goto('/p/elm')
+  await page.goto('/p/east-london')
   await expect(page.getByTestId('consent')).toBeVisible()
   await expect(page.getByTestId('consent-summaries')).toBeVisible()
   await completeConsent(page, '18+')

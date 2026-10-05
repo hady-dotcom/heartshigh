@@ -2,11 +2,11 @@ import { expect, test } from '@playwright/test'
 import { signIn } from './legal-helpers'
 
 test('C06 C07 C10 captions, transcript and search', async ({ page }) => {
-  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/elm')
-  await page.goto('/p/elm/search?q=jibril')
+  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london')
+  await page.goto('/p/east-london/search?q=jibril')
   await expect(page.getByTestId('search')).toBeVisible()
-  await expect(page.getByTestId('search-hit').or(page.getByTestId('search-empty'))).toBeVisible()
-  await page.goto('/p/elm/lanes')
+  await expect(page.getByTestId('search-hit').or(page.getByTestId('search-empty')).first()).toBeVisible()
+  await page.goto('/p/east-london/lanes')
   await expect(page.getByTestId('learner-search')).toBeVisible()
   const course = page.getByTestId('path-course').first()
   if (await course.count()) {

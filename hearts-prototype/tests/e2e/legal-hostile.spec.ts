@@ -22,7 +22,7 @@ test('L03 hostile: learner actions are refused until consent exists', async () =
   expect((await learner.post('/api/users/login', { data: { email, password } })).ok()).toBeTruthy()
   const blocked = await learner.post('/api/hearts', {
     headers: { accept: 'application/json' },
-    form: { action: 'profile', name: 'Nope', next: '/p/elm' },
+    form: { action: 'profile', name: 'Nope', next: '/p/east-london' },
     maxRedirects: 0,
   })
   expect(blocked.status()).toBe(403)
@@ -49,7 +49,7 @@ test('P11 hostile: a learner cannot write portal contacts', async () => {
       safeguardingName: 'Stolen',
       safeguardingEmail: 'x@y.z',
       safeguardingPhone: '0',
-      next: '/p/elm',
+      next: '/p/east-london',
     },
     maxRedirects: 0,
   })

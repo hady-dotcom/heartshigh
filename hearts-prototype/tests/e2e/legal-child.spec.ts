@@ -7,7 +7,7 @@ const suffix = Date.now().toString().slice(-6)
 test('L04 under-13 waits for a grown-up and shows the guardian link in e2e', async ({ page }) => {
   const email = `child-${suffix}@hearts.test`
   await joinWithConsent(page, seedCode('elm-learner'), 'Young Learner', email, 'child-pass-1', 'under-13')
-  await expect(page.getByTestId('guardian-form').or(page.getByTestId('consent'))).toBeVisible()
+  await expect(page.getByTestId('guardian-form')).toBeVisible()
   await page.getByTestId('guardian-email').fill(`parent-${suffix}@hearts.test`)
   await page.getByTestId('guardian-send').click()
   await expect(page.getByTestId('guardian-link')).toBeVisible()
@@ -26,5 +26,5 @@ test('L04 school-offline path: staff can tick a child', async ({ page }) => {
   await expect(page.getByTestId('admin-children')).toBeVisible()
   await page.getByTestId('school-offline').check()
   await page.getByTestId('save-children').click()
-  await expect(page.getByTestId('notice').or(page.getByTestId('admin-children'))).toBeVisible()
+  await expect(page.getByTestId('notice')).toContainText(/saved|Children/i)
 })
