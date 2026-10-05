@@ -1,5 +1,8 @@
+import { mkdirSync } from 'node:fs'
 import { expect, request as playwrightRequest, test, type APIRequestContext, type Page } from '@playwright/test'
 import { E2E_BASE } from '../env'
+
+const PROOF = 'artifacts/talk-extracts'
 
 const PORTAL = '/p/east-london'
 const PHONE = { width: 390, height: 844 }
@@ -72,6 +75,8 @@ test('admin timeline nests hors under their appetiser, and Learn more opens that
     await expect(page.getByTestId('extract-help')).toContainText('none or one')
     await expect(page.getByTestId('extract-help')).toContainText('suggested')
     await expect(page.getByTestId('extract-help')).toContainText('6 minutes')
+    mkdirSync(PROOF, { recursive: true })
+    await page.screenshot({ path: `${PROOF}/admin-timeline.png`, fullPage: true })
 
     const cut = ((await json(master, `/api/cuts?where[lesson][equals]=${lesson.id}&limit=10&depth=0`)).docs || [])[0] as { id: number } | undefined
     await page.setViewportSize(PHONE)
@@ -90,6 +95,8 @@ test('admin timeline nests hors under their appetiser, and Learn more opens that
     await expect(feed).toHaveAttribute('data-mode', 'appetiser')
     await expect(page.getByTestId('learn-more').first()).toHaveAttribute('data-parent-level', 'talk')
     await expect(page.getByTestId('learn-more').first()).toHaveAttribute('data-parent', /talk:/)
+    mkdirSync(PROOF, { recursive: true })
+    await page.screenshot({ path: `${PROOF}/learner-feed.png`, fullPage: true })
   } finally {
     for (const id of extra) await master.delete(`/api/talk-extracts/${id}`).catch(() => undefined)
     await master.dispose()
