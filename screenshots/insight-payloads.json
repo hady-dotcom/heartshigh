@@ -1,0 +1,14 @@
+[
+  {
+    "url": "http://127.0.0.1:3300/api/insights",
+    "post": "{\"events\":[{\"kind\":\"route\",\"route\":\"/p/east-london\",\"sessionId\":\"s3opibiqudopmuul96b5\",\"props\":{\"lane\":\"\",\"returnBucket\":\"2-7\"}}]}"
+  },
+  {
+    "url": "http://127.0.0.1:3300/api/insights",
+    "post": "{\"events\":[{\"kind\":\"route\",\"route\":\"/p/east-london/feed\",\"sessionId\":\"s3opibiqudopmuul96b5\",\"props\":{\"lane\":\"default\",\"returnBucket\":\"2-7\"}},{\"kind\":\"funnel\",\"step\":\"first_clip\",\"route\":\"/p/east-london/feed\",\"sessionId\":\"s3opibiqudopmuul96b5\",\"props\":{\"lane\":\"default\"}}]}"
+  },
+  {
+    "url": "http://127.0.0.1:3300/api/insights",
+    "post": "{\"events\":[{\"kind\":\"tap\",\"interactive\":false,\"sessionId\":\"s3opibiqudopmuul96b5\",\"route\":\"/p/east-london/feed\",\"props\":{\"lane\":\"default\"}}]}"
+  }
+]

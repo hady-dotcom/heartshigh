@@ -1,0 +1,1 @@
+linear-gradient(rgb(245, 236, 214), rgb(235, 220, 187))
