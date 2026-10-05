@@ -36,6 +36,14 @@ describe('erase registry', () => {
     assert.ok(portalCourses.some((rule) => rule?.kind === 'hard-delete' && rule.extra?.includes("origin = 'local'")))
   })
 
+  it('unlinks class members through classes_rels, not teachers_id on classes', () => {
+    const entry = wipeEntry('classes')
+    assert.ok(entry)
+    const user = Array.isArray(entry.user) ? entry.user : [entry.user]
+    assert.ok(user.every((rule) => !rule || rule.kind === 'none'))
+    assert.deepEqual(entry.joinClears?.user, [{ table: 'classes_rels', column: 'users_id' }])
+  })
+
   it('lists a plug-in comment for the unmerged PRs', () => {
     assert.ok(wipeEntries().length > 20)
     const needed = collectionsNeedingWipe()

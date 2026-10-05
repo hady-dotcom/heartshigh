@@ -378,10 +378,8 @@ registerWipe({
   table: 'classes',
   relations: { portals: ['portal'], users: ['teachers', 'learners'] },
   portal: { kind: 'hard-delete', field: 'portal' },
-  user: [
-    { kind: 'unlink', field: 'teachers' },
-    { kind: 'unlink', field: 'learners' },
-  ],
+  user: { kind: 'none' },
+  joinClears: { user: [{ table: 'classes_rels', column: 'users_id' }] },
   countKey: 'classes',
   countLabel: 'Classes',
 })
