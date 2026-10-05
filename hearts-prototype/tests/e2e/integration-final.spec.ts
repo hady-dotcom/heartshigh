@@ -157,14 +157,18 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
     }
   }
 
-  await page.goto(`${BASE}/feed`)
+  await page.goto(`${BASE}/feed?fresh=${Date.now()}`)
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  if ((await feed.getAttribute('data-mode')) === 'appetiser' && await page.getByTestId('appetiser-back').count()) {
+    await page.getByTestId('appetiser-back').click()
+  }
+  const speakerHit = page.getByTestId('speaker-link').or(page.getByTestId('speaker-bio-link'))
   await expect(async () => {
-    if ((await feed.getAttribute('data-card')) !== 'talk') await page.getByTestId('gesture-left').dispatchEvent('click')
-    await expect(page.getByTestId('speaker-link')).toBeVisible({ timeout: 1500 })
+    if ((await feed.getAttribute('data-card')) !== 'talk' && !(await speakerHit.count())) await page.getByTestId('gesture-left').dispatchEvent('click')
+    await expect(speakerHit.first()).toBeVisible({ timeout: 1500 })
   }).toPass({ timeout: 20_000 })
   const shownSpeaker = (await feed.getAttribute('data-speaker'))!
-  await page.getByTestId('speaker-link').click()
+  await speakerHit.first().click()
   await page.waitForURL(/\/speaker\//)
   await expect(page.getByTestId('speaker-name')).toContainText(shownSpeaker.split(' ').slice(-1)[0])
   await expect(page.getByTestId('speaker-course').first()).toBeVisible()

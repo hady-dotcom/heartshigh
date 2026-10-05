@@ -261,8 +261,9 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
 
   const swarm: Record<number, SwarmItem[]> = {}
   let circleLabel = ''
-  // The swarm is always on for learners. Answers stay anonymous (initials), and a private or hidden row never appears.
-  const swarmOn = user.role === 'learner' && portal.showOthersAnswers !== false
+  // The swarm is opt-in (#32): a learner sees other learners' answers only after choosing to share,
+  // and only answers whose authors chose the same. A private or hidden row never appears.
+  const swarmOn = user.role === 'learner' && Boolean(user.shareWithLearners) && portal.showOthersAnswers !== false
   if (swarmOn && points.length) {
     const shared = await rows(
       payload,

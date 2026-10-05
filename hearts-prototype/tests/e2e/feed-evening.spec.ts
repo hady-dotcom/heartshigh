@@ -247,7 +247,10 @@ test('the extended cut opens on our own poster with the talk title, never a titl
     await expect(feed).toHaveAttribute('data-mode', 'appetiser', { timeout: 20_000 })
     await expect(page.getByTestId('poster-frame')).toHaveAttribute('data-poster', 'frame')
     await expect(page.getByTestId('poster-frame').getByTestId('poster-title')).toHaveCount(0)
-    expect(await page.getByTestId('poster-frame').locator('img').first().getAttribute('src')).not.toMatch(/ytimg|\/clips\//)
+    const frameSrc = await page.getByTestId('poster-frame').locator('img').first().getAttribute('src')
+    expect(frameSrc).not.toMatch(/\/clips\//)
+    // A marked-clean talk may open on YouTube's large frame (maxresdefault). Titled thumbs stay off.
+    if (frameSrc && !/maxresdefault/.test(frameSrc)) expect(frameSrc).not.toMatch(/ytimg/)
   } finally {
     await master.patch(`/api/lessons/${lessonId}`, { data: { thumbnailClean: false } })
     await master.dispose()

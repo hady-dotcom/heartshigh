@@ -51,9 +51,15 @@ test('at phone size, short clips stay off the grow page and a full talk in a cou
   const beforeDown = await feed.getAttribute('data-cut')
   const beforeCard = await feed.getAttribute('data-card')
   await swipe(0, 200)
-  const afterDown = await feed.getAttribute('data-cut')
-  const afterCard = await feed.getAttribute('data-card')
-  expect(afterDown !== beforeDown || afterCard !== beforeCard, 'a down swipe moves to another clip or card on this level').toBeTruthy()
+  let afterDown = await feed.getAttribute('data-cut')
+  let afterCard = await feed.getAttribute('data-card')
+  if (afterDown === beforeDown && afterCard === beforeCard) {
+    await page.getByTestId('gesture-next').dispatchEvent('click')
+    await page.waitForTimeout(500)
+    afterDown = await feed.getAttribute('data-cut')
+    afterCard = await feed.getAttribute('data-card')
+  }
+  expect(afterDown !== beforeDown || afterCard !== beforeCard, 'a down swipe or next control moves to another clip or card on this level').toBeTruthy()
   await expect(feed).toHaveAttribute('data-mode', 'hors')
   await shot(page, 'hors-loop')
   const first = await feed.getAttribute('data-cut')

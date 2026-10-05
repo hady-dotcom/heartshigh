@@ -87,9 +87,10 @@ test('touch swipes left and right move the feed, on a talk clip, on a card, and 
     await swipesLand(page, cdp, feed, 'hors')
   }
 
-  // The appetiser loop.
-  for (let tries = 0; tries < total && !(await page.getByTestId('learn-more').isVisible()); tries++) await step()
-  await page.getByTestId('learn-more').tap()
+  // The appetiser loop — a scenic card steps up from scene-next, a talk clip from learn-more.
+  const stepUp = page.getByTestId('learn-more').or(page.getByTestId('scene-next'))
+  for (let tries = 0; tries < total && !(await stepUp.first().isVisible().catch(() => false)); tries++) await step()
+  await stepUp.first().tap()
   await expect(feed).toHaveAttribute('data-mode', 'appetiser')
   await settled(feed, page)
   await swipesLand(page, cdp, feed, 'appetiser')

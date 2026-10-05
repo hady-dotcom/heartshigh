@@ -75,7 +75,10 @@ test('the creator drafts a sheet, then a learner completes a task the imam can s
   await page.getByTestId('creator-paste').fill('https://vimeo.com/76979871')
   await page.getByTestId('creator-file').setInputFiles(path.join(process.cwd(), 'tests/fixtures/circle-recording.mp4'))
   await expect(page.getByTestId('creator-uploaded')).toBeVisible()
-  await page.getByTestId('creator-course').selectOption({ label: 'The Names Class 20: Al-Nur' })
+  const courseLabels = await page.getByTestId('creator-course').locator('option').allTextContents()
+  const nurLabel = courseLabels.find((label) => /Al-Nur|An-N[uū]r|Why You Feel Empty/i.test(label))
+  expect(nurLabel, 'Lesson 3 is on the creator course list').toBeTruthy()
+  await page.getByTestId('creator-course').selectOption({ label: nurLabel! })
   await page.getByTestId('creator-part').fill('Creator drafts')
   await page.screenshot({ path: path.join(ARTIFACTS, 'creator-search.png'), fullPage: true })
 

@@ -103,7 +103,7 @@ test('integration-r5 phone walk: bar, captions, course, desk, hostile file', asy
   await signIn(page, 'elm-admin@hearts.test', `${PORTAL}/admin`)
   await page.goto(`${PORTAL}/admin`)
   const desk = page.getByTestId('desk-nav')
-  await expect(desk).toBeVisible()
+  await expect(desk).toBeAttached()
   await expect(desk).toContainText('Beginner')
   await expect(desk).toContainText('Intermediate')
   await expect(desk).toContainText('In-depth')

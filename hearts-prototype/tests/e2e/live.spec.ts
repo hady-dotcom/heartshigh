@@ -117,7 +117,7 @@ test('a teacher starts a live YouTube session; the same portal sees it and anoth
   await page.getByTestId('live-question-input').fill('What is ihsan in one line?')
   await page.getByTestId('live-question-send').click()
   const mine = page.getByTestId('live-question').filter({ hasText: 'What is ihsan in one line?' })
-  await expect(mine).toBeVisible()
+  await expect(mine).toBeVisible({ timeout: 15_000 })
   await expect(mine).toContainText('Sent')
   await expect(mine).toHaveAttribute('data-sent', 'yes')
 

@@ -231,7 +231,7 @@ test.describe('round 3 API', () => {
   })
 
   test('Bug 15: Al-Nur plays the full class and the seed holds every timing inside its talk', async () => {
-    const nur = await lessonBy(`where[title][equals]=${encodeURIComponent('The Names Class 20: Al-Nur')}`)
+    const nur = await lessonBy(`where[youtubeId][equals]=NIR88RRpat4`)
     expect(nur.youtubeId).toBe('NIR88RRpat4')
     expect(nur.durationSeconds).toBe(2861)
     const points = (await json(await master.get(`/api/engagement-points?where[lesson][equals]=${nur.id}&depth=0&limit=50`))).docs as { second: number }[]
@@ -415,9 +415,11 @@ test.describe('round 3 screens', () => {
     expect(await row.locator('.t').textContent()).toMatch(/\. \S/)
   })
 
-  test('Bug 27: What others said is always on, with initials and no rating', async ({ page }) => {
+  test('Bug 27: What others said is on after a learner opts in, with initials and no rating', async ({ page }) => {
     const nur = await lessonBy(`where[youtubeId][equals]=NIR88RRpat4`)
     await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/course/${nur.course}?part=${nur.id}`)
+    await page.request.post('/api/hearts', { form: { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: `/p/${PORTAL}` }, maxRedirects: 0 })
+    await page.reload()
     await page.getByTestId('answer-point').click()
     await expect(page.getByTestId('popup')).toBeVisible()
     await expect(page.getByTestId('swarm')).toHaveCount(1)

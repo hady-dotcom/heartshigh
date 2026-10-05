@@ -38,7 +38,7 @@ export const FILMS: Film[] = [
     ],
   },
   {
-    title: 'The Names Class 20: Al-Nur',
+    title: 'Why You Feel Empty… And How Ramadan Fixes It | The Names Class 20: An-Nūr | Shaykh Mikaeel Smith',
     speaker: 'Shaykh Mikaeel Smith',
     file: 'mikaeel-al-nur.md',
     youtubeUrl: 'https://www.youtube.com/watch?v=NIR88RRpat4',

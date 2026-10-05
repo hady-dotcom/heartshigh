@@ -156,6 +156,14 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
       }
     }
     if (!lesson) lesson = await one(payload, 'lessons', { youtubeId: { equals: row.youtubeId } })
+    if (lesson && row.youtubeId === 'NIR88RRpat4' && row.title) {
+      lesson = (await payload.update({
+        collection: 'lessons',
+        id: lesson.id,
+        overrideAccess: true,
+        data: { title: row.title, sourceTitle: row.title, youtubeId: row.youtubeId } as never,
+      })) as unknown as Doc
+    }
     const captions = starterTranscript(row.youtubeId)
     const captionFields = captions
       ? { transcript: captions, transcriptSource: 'youtube', transcriptNote: `English captions from YouTube, repeats removed (content/transcripts/starters/${row.youtubeId}.vtt).` }
@@ -485,7 +493,7 @@ export async function seedPeople(payload: Payload, opts: { portalIds: Map<string
           } as never,
         })
       }
-      const nur = await one(payload, 'lessons', { title: { equals: 'The Names Class 20: Al-Nur' } })
+      const nur = await one(payload, 'lessons', { youtubeId: { equals: 'NIR88RRpat4' } })
       const points = nur ? ((await payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 10, sort: 'second', where: { lesson: { equals: nur.id } } })).docs as unknown as Doc[]) : []
       const reflection = 'First week of Ramadan. The house goes quiet before suhoor and I just sit there.'
       const picked = 'You start to incline towards the Akhira'

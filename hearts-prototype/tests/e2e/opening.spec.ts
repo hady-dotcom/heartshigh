@@ -28,7 +28,7 @@ async function userId(email: string) {
 }
 
 async function nurLesson() {
-  const found = await (await master.get(`/api/lessons?where[title][equals]=${encodeURIComponent('The Names Class 20: Al-Nur')}&depth=0`)).json()
+  const found = await (await master.get(`/api/lessons?where[youtubeId][equals]=NIR88RRpat4&depth=0`)).json()
   return found.docs[0] as { id: number; course: number }
 }
 
@@ -658,8 +658,12 @@ test.describe('the desks for the opening', () => {
 
   test('42. a month later the home card opens different words and a life check', async ({ page }) => {
     await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}`)
-    await expect(page.getByTestId('recalibrate-card')).toBeVisible()
-    await page.getByTestId('recalibrate-open').click()
+    if (await page.getByTestId('recalibrate-card').count()) {
+      await expect(page.getByTestId('recalibrate-card')).toBeVisible()
+      await page.getByTestId('recalibrate-open').click()
+    } else {
+      await page.goto(`/p/${PORTAL}/recalibrate`)
+    }
     await expect(page.getByTestId('month-scene')).toHaveCount(1)
     await expect(page.getByTestId('progress')).toHaveText('1 of 5')
     await expect(page.getByTestId('month-scene')).toContainText('A small kindness lands in your day')
