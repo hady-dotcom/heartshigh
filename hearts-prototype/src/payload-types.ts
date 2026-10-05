@@ -278,7 +278,7 @@ export interface Portal {
   showOthersAnswers?: boolean | null;
   notificationEmails?: string | null;
   /**
-   * The time zone staff times are shown in, such as Europe/London.
+   * The time zone staff times are shown in, such as America/Toronto.
    */
   timeZone?: string | null;
   theme?: ('light' | 'dark') | null;
