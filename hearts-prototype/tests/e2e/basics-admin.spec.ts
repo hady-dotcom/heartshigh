@@ -136,7 +136,7 @@ test.describe('Lane D admin desk', () => {
     expect(lessonRes.ok(), await lessonRes.text()).toBeTruthy()
     const lessonId = ((await lessonRes.json()) as { doc?: { id: number }; id?: number }).doc?.id
     expect(lessonId).toBeTruthy()
-    const done = await master.post('/api/completions', { data: { user: learner.id, lesson: lessonId, percent: 100, sourceLevel: 'talk' } })
+    const done = await master.post('/api/completions', { data: { user: learner.id, lesson: lessonId, portal: elm.id, percent: 100, sourceLevel: 'talk' } })
     expect(done.ok(), await done.text()).toBeTruthy()
     const completionId = ((await done.json()) as { doc?: { id: number }; id?: number }).doc?.id
     const codeRes = await master.post('/api/access-codes', { data: { code: `TRASH-${stamp}`, label: `Trash code ${stamp}`, role: 'learner', portal: elm.id } })
@@ -218,8 +218,9 @@ test.describe('Lane D hostile API', () => {
     const stealAudit = await elm.get('/api/hearts/audit.csv?portal=leeds')
     expect(stealAudit.ok()).toBeFalsy()
 
-    await leeds.post('/api/hearts/people.csv?portal=leeds').catch(() => null)
-    const leedsAuditList = ((await (await master.get('/api/audit-log?limit=80&depth=0')).json()).docs || []) as { id: number; portal?: number }[]
+    const marked = await master.patch(`/api/portals/${leedsPortal.id}`, { data: { organisationName: 'Leeds Chapter' } })
+    expect(marked.ok(), await marked.text()).toBeTruthy()
+    const leedsAuditList = ((await (await master.get('/api/audit-log?limit=200&depth=0')).json()).docs || []) as { id: number; portal?: number; event?: string }[]
     const leedsRow = leedsAuditList.find((row) => row.portal === leedsPortal.id)
     expect(leedsRow, 'the master list includes a Leeds row').toBeTruthy()
     const stealById = await elm.get(`/api/audit-log/${leedsRow!.id}?depth=0`)

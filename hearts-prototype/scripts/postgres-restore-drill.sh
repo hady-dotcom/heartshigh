@@ -35,7 +35,7 @@ RESTORE_URL="postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT:-5432}/${REST
 S3_PORT="${S3_PORT:-9000}"
 S3_DIR="$WORK/s3-root"
 mkdir -p "$S3_DIR"
-npx --yes s3rver --port "$S3_PORT" --directory "$S3_DIR" --silent >/tmp/s3rver.log 2>&1 &
+npx --yes s3rver -a 127.0.0.1 --port "$S3_PORT" --directory "$S3_DIR" --no-vhost-buckets --silent >/tmp/s3rver.log 2>&1 &
 S3_PID=$!
 trap 'kill $S3_PID 2>/dev/null || true' EXIT
 for i in $(seq 1 30); do
@@ -76,8 +76,12 @@ for table in "${TABLES[@]}"; do
 done
 echo "  files $FILES_BEFORE"
 
-age-keygen -o "$WORK/keys/hearts-backup.key" >/tmp/age-pub.txt
-RECIPIENT="$(grep -E '^age1' /tmp/age-pub.txt | tail -1)"
+rm -f "$WORK/keys/hearts-backup.key"
+RECIPIENT="$(age-keygen -o "$WORK/keys/hearts-backup.key" 2>&1 | sed -n 's/^Public key: //p')"
+if [[ ! "$RECIPIENT" =~ ^age1 ]]; then
+  echo "Could not read the age public key."
+  exit 1
+fi
 echo "age public key generated (private key stays in $WORK/keys, not the repo)"
 
 export DATABASE_URL="$SOURCE_URL"
