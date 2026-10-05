@@ -1,0 +1,58 @@
+03e042a55093fc30ad25e610b2f20e5e63fc342a
+hearts-prototype/src/app/(frontend)/journey.css
+hearts-prototype/src/app/(frontend)/p/[slug]/[[...screen]]/page.tsx
+hearts-prototype/src/app/(frontend)/theme.css
+hearts-prototype/src/components/app/course-player.tsx
+hearts-prototype/src/components/app/feed.tsx
+hearts-prototype/src/components/app/shell.tsx
+hearts-prototype/src/components/journey/journey.tsx
+hearts-prototype/src/lib/talk-title.test.ts
+hearts-prototype/src/lib/talk-title.ts
+hearts-prototype/src/screens/app/garden.tsx
+hearts-prototype/src/screens/app/home.tsx
+hearts-prototype/src/screens/app/me.tsx
+hearts-prototype/tests/e2e/fake-youtube.ts
+hearts-prototype/tests/e2e/feed-evening.spec.ts
+hearts-prototype/tests/e2e/journeys.spec.ts
+
+Auto-merging hearts-prototype/src/app/(frontend)/app.css
+Auto-merging hearts-prototype/src/app/(frontend)/journey.css
+CONFLICT (content): Merge conflict in hearts-prototype/src/app/(frontend)/journey.css
+Auto-merging hearts-prototype/src/app/(frontend)/p/[slug]/[[...screen]]/page.tsx
+CONFLICT (content): Merge conflict in hearts-prototype/src/app/(frontend)/p/[slug]/[[...screen]]/page.tsx
+Auto-merging hearts-prototype/src/app/(frontend)/theme.css
+CONFLICT (content): Merge conflict in hearts-prototype/src/app/(frontend)/theme.css
+Auto-merging hearts-prototype/src/components/app/course-player.tsx
+CONFLICT (content): Merge conflict in hearts-prototype/src/components/app/course-player.tsx
+Auto-merging hearts-prototype/src/components/app/feed.tsx
+CONFLICT (content): Merge conflict in hearts-prototype/src/components/app/feed.tsx
+Auto-merging hearts-prototype/src/components/app/shell.tsx
+CONFLICT (content): Merge conflict in hearts-prototype/src/components/app/shell.tsx
+Auto-merging hearts-prototype/src/components/journey/journey.tsx
+CONFLICT (content): Merge conflict in hearts-prototype/src/components/journey/journey.tsx
+Auto-merging hearts-prototype/src/lib/opening-data.ts
+Auto-merging hearts-prototype/src/lib/talk-title.test.ts
+CONFLICT (content): Merge conflict in hearts-prototype/src/lib/talk-title.test.ts
+Auto-merging hearts-prototype/src/lib/talk-title.ts
+CONFLICT (content): Merge conflict in hearts-prototype/src/lib/talk-title.ts
+Auto-merging hearts-prototype/src/lib/yt.ts
+Auto-merging hearts-prototype/src/screens/app/course.tsx
+Auto-merging hearts-prototype/src/screens/app/garden.tsx
+CONFLICT (content): Merge conflict in hearts-prototype/src/screens/app/garden.tsx
+Auto-merging hearts-prototype/src/screens/app/home.tsx
+CONFLICT (content): Merge conflict in hearts-prototype/src/screens/app/home.tsx
+Auto-merging hearts-prototype/src/screens/app/me.tsx
+CONFLICT (content): Merge conflict in hearts-prototype/src/screens/app/me.tsx
+Auto-merging hearts-prototype/src/seed/seed.ts
+Auto-merging hearts-prototype/src/server/handle.ts
+Auto-merging hearts-prototype/src/server/learner.ts
+Auto-merging hearts-prototype/tests/e2e/fake-youtube.ts
+CONFLICT (content): Merge conflict in hearts-prototype/tests/e2e/fake-youtube.ts
+Auto-merging hearts-prototype/tests/e2e/feed-evening.spec.ts
+CONFLICT (content): Merge conflict in hearts-prototype/tests/e2e/feed-evening.spec.ts
+Auto-merging hearts-prototype/tests/e2e/feed-polish.spec.ts
+Auto-merging hearts-prototype/tests/e2e/integration-final.spec.ts
+Auto-merging hearts-prototype/tests/e2e/journeys.spec.ts
+CONFLICT (content): Merge conflict in hearts-prototype/tests/e2e/journeys.spec.ts
+Auto-merging hearts-prototype/tests/e2e/round3.spec.ts
+Auto-merging hearts-prototype/tests/e2e/screenshots.spec.ts

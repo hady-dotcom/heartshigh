@@ -1,0 +1,57 @@
+Wiped the Postgres database (dropped the public schema).
+[03:06:55] [33mWARN[39m: [36mNo email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.[39m
+[03:06:55] [32mINFO[39m: [36mReading migration files from /tmp/verify-pr26/branch/hearts-prototype/src/migrations[39m
+[03:06:55] [32mINFO[39m: [36mMigrating: 20261003_103330_initial[39m
+[03:06:56] [32mINFO[39m: [36mMigrated:  20261003_103330_initial (1082ms)[39m
+[03:06:56] [32mINFO[39m: [36mMigrating: 20261003_124500_integration_part1[39m
+[03:06:56] [32mINFO[39m: [36mMigrated:  20261003_124500_integration_part1 (198ms)[39m
+[03:06:56] [32mINFO[39m: [36mMigrating: 20261003_131651_integration_part2[39m
+[03:06:56] [32mINFO[39m: [36mMigrated:  20261003_131651_integration_part2 (36ms)[39m
+[03:06:56] [32mINFO[39m: [36mMigrating: 20261003_140611_harvest[39m
+[03:06:56] [32mINFO[39m: [36mMigrated:  20261003_140611_harvest (24ms)[39m
+[03:06:56] [32mINFO[39m: [36mMigrating: 20261003_180616_jibril_doors[39m
+[03:06:56] [32mINFO[39m: [36mMigrated:  20261003_180616_jibril_doors (19ms)[39m
+[03:06:56] [32mINFO[39m: [36mMigrating: 20261003_194500_line_tidy[39m
+[03:06:56] [32mINFO[39m: [36mMigrated:  20261003_194500_line_tidy (1ms)[39m
+[03:06:56] [32mINFO[39m: [36mMigrating: 20261003_200853_integration_final[39m
+[03:06:57] [32mINFO[39m: [36mMigrated:  20261003_200853_integration_final (56ms)[39m
+[03:06:57] [32mINFO[39m: [36mMigrating: 20261003_220000_feedback[39m
+[03:06:57] [32mINFO[39m: [36mMigrated:  20261003_220000_feedback (56ms)[39m
+[03:06:57] [32mINFO[39m: [36mMigrating: 20261004_031500_gather[39m
+[03:06:57] [32mINFO[39m: [36mMigrated:  20261004_031500_gather (72ms)[39m
+[03:06:57] [32mINFO[39m: [36mMigrating: 20261004_060000_shorts[39m
+[03:06:57] [32mINFO[39m: [36mMigrated:  20261004_060000_shorts (1ms)[39m
+[03:06:57] [32mINFO[39m: [36mMigrating: 20261004_061000_portal_time_zone[39m
+[03:06:57] [32mINFO[39m: [36mMigrated:  20261004_061000_portal_time_zone (1ms)[39m
+[03:06:57] [32mINFO[39m: [36mMigrating: 20261004_080000_lesson_picture_flags[39m
+[03:06:57] [32mINFO[39m: [36mMigrated:  20261004_080000_lesson_picture_flags (1ms)[39m
+[03:06:57] [32mINFO[39m: [36mMigrating: 20261004_120000_compass_v2[39m
+[03:06:57] [32mINFO[39m: [36mMigrated:  20261004_120000_compass_v2 (31ms)[39m
+[03:06:57] [32mINFO[39m: [36mMigrating: 20261004_180000_gather_entry_code[39m
+[03:06:57] [32mINFO[39m: [36mMigrated:  20261004_180000_gather_entry_code (1ms)[39m
+[03:06:57] [32mINFO[39m: [36mMigrating: 20261004_210000_schedule_minutes[39m
+[03:06:57] [32mINFO[39m: [36mMigrated:  20261004_210000_schedule_minutes (1ms)[39m
+Harvest: 172 verses and hadith across 31 talks. No quotation found in 5: Gratitude is the Greatest Blessing | Gems from Ibn Ata Illah Ep. 1 | Shaykh Mikaeel Ahmed Smith; How to Manage Your Anger - Amjad Tarsin; Moments of Solitude: Closeness to God | Jummah Khutbah | Imam Khalid Latif | 3.11.2022; On Mosques, Companionship, & Knowledge; Quranic Connection #26: A Cure for Anxiety | Shaykh Suleiman Hani.
+Harvest sample: 4 lines kept for Maryam.
+Feedback demo: sample answers are on the East London and Leeds desks.
+Seeded HEARTS. Master: master@hearts.test / hearts-master
+Access codes (also on the master desk, and in data/seed-codes-test.json):
+  elm-teacher    ELM-NW3D-XWG7
+  elm-admin      ELM-4KFP-8XFJ
+  elm-learner    ELM-B9GN-TFHC
+  elm-parent     ELM-FMHD-MJFD
+  leeds-teacher  LEEDS-WWWV-7UCR
+  leeds-learner  LEEDS-GPN7-WBUE
+
+Running 1 test using 1 worker
+
+(node:31125) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:31125) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/1] tests/e2e/sheet-creator.spec.ts:60:1 › the creator drafts a sheet, then a learner completes a task the imam can see
+  1 passed (1.1m)

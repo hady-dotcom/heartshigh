@@ -1,0 +1,30 @@
+09933f5d6afafb66a4e1f6d8b816a8119c5f2e29
+hearts-prototype/src/components/app/shell.tsx
+hearts-prototype/src/components/journey/journey.tsx
+hearts-prototype/src/screens/app/course.tsx
+hearts-prototype/src/screens/app/garden.tsx
+hearts-prototype/src/screens/app/home.tsx
+hearts-prototype/src/screens/app/me.tsx
+hearts-prototype/src/screens/desk/people.tsx
+
+Auto-merging hearts-prototype/src/app/(frontend)/api/answers/route.ts
+Auto-merging hearts-prototype/src/app/(frontend)/app.css
+Auto-merging hearts-prototype/src/app/(frontend)/p/[slug]/[[...screen]]/page.tsx
+Auto-merging hearts-prototype/src/app/(frontend)/theme.css
+Auto-merging hearts-prototype/src/components/app/shell.tsx
+CONFLICT (content): Merge conflict in hearts-prototype/src/components/app/shell.tsx
+Auto-merging hearts-prototype/src/components/journey/journey.tsx
+CONFLICT (content): Merge conflict in hearts-prototype/src/components/journey/journey.tsx
+Auto-merging hearts-prototype/src/screens/app/course.tsx
+CONFLICT (content): Merge conflict in hearts-prototype/src/screens/app/course.tsx
+Auto-merging hearts-prototype/src/screens/app/garden.tsx
+CONFLICT (content): Merge conflict in hearts-prototype/src/screens/app/garden.tsx
+Auto-merging hearts-prototype/src/screens/app/home.tsx
+CONFLICT (content): Merge conflict in hearts-prototype/src/screens/app/home.tsx
+Auto-merging hearts-prototype/src/screens/app/me.tsx
+CONFLICT (content): Merge conflict in hearts-prototype/src/screens/app/me.tsx
+Auto-merging hearts-prototype/src/screens/common.ts
+Auto-merging hearts-prototype/src/screens/desk/people.tsx
+CONFLICT (content): Merge conflict in hearts-prototype/src/screens/desk/people.tsx
+Auto-merging hearts-prototype/src/seed/seed.ts
+Auto-merging hearts-prototype/src/server/handle.ts

@@ -1,0 +1,75 @@
+HEARTS Learner App Verification - Phone Viewport (390x844)
+=========================================================
+
+STEP 3: Tab bar labels
+- ✓ Bottom bar reads: Home · Lanes · My week · Garden · Me
+- ✓ No "Explore" or "Gather" in the middle positions
+- Screenshot: 01_lanes_tabbar.png
+
+STEP 5: Ten sittings course overview (buffet)
+- ✓ Shows all 10 talks (Part 1-10, Sitting 1-10, each 1:37:00)
+- ✓ Shows count and total time: "10 talks · about 16 hours"
+- ✓ Shows "Schedule all of these" button
+- ✓ Does NOT show question strip/preview on buffet (no Answer question button)
+- Talk tiles: Do not show prominent thumbnail images, just text list entries with timestamps
+- Screenshot: 02_ten_sittings_overview.png
+
+STEP 6: Real YouTube course (course 31) thumbnail comparison
+- Course title: "Alhamdulillah! Allah Chose You to Be a Believer"
+- Talk tiles: Also do not show prominent thumbnail images in the list
+- Background has faded courtyard image but list entries are text-based
+- Both Ten sittings and real course have similar presentation (no thumbnail boxes in talk lists)
+- Screenshot: 03_real_course_thumbs.png
+
+STEP 7: Schedule form and plan creation
+- Form showed: Name, Course, From (10/05/2026), Until (10/08/2026), Minutes/day (20 selected), Days (Mon-Thu selected)
+- Successfully submitted plan covering Mon Oct 5 - Thu Oct 8, 2026
+- Plan created: 1. Mon 5 Oct · 3 talks, 2. Tue 6 Oct · 3 talks, 3. Wed 7 Oct · 2 talks, 4. Thu 8 Oct · 2 talks
+- Screenshots: 04_schedule_form.png, 05_my_week_after_schedule.png
+
+STEP 8: My week accessibility from Home
+- ✓ My week is one tap from Home via the tab bar
+- Home page shows "Your plan" section with "Tonight: Part 1, 97 min"
+- From Home, tapping "My week" in tab bar navigates directly (one tap)
+- Screenshots: 06_home_after_plan.png, 07_my_week_from_home.png
+
+STEP 9: Plan starting point and row layout
+- ✓ Plan starts at Part 1 / Sitting 1 (not a later leftover day)
+- First sitting shows "TODAY" badge
+- Plan rows fit the 390x844 screen - all 4 day entries visible above tab bar
+- Individual sitting cards: Sitting 1-3 (Mon), Sitting 4-6 (Tue), Sitting 7 (Wed), etc.
+- No horizontal overflow observed
+- Screenshot: 08_plan_rows.png
+
+STEP 10: Player - questions, buttons, navigation
+- ✓ Questions appear inside/under the video as a question strip (timeline with numbered dots: 1, 2, 3, 4)
+- ✓ Gold "Answer question 1 →" button present
+- ✓ "Part 2 · Next (97 min)" section visible
+- ✓ Opening question shows "Think about this for this session" button (dark green)
+- Question text: "What stayed with you from sitting 1, question 1?"
+- Question numbers appear TWICE: once on video timeline dots AND once as a row of numbers (1, 2, 3, 4) below "Part 1 · Sitting 1" title
+- Course garden card color: Teal/turquoise (not purple)
+- Garden card shows "What's done: 0 of 14 fruits"
+- Screenshots: 09_player.png, 10_think_about_this.png
+
+STEP 11: My week accessible from player
+- ✓ My week is one tap from player via the tab bar
+- Successfully navigated back to My week from player
+
+SUMMARY OF KEY FINDINGS:
+========================
+1. Tab bar correctly shows: Home · Lanes · My week · Garden · Me ✓
+2. Course buffet shows all talks with count/time, Schedule CTA, NO question strip ✓
+3. Thumbnails: Both Ten sittings and real courses show text-based lists without prominent thumbnail boxes
+4. Schedule form works, plan created successfully for Oct 5-8 ✓
+5. My week accessible in one tap from both Home and Player ✓
+6. Plan starts at Part 1 / Sitting 1 ✓
+7. Plan rows fit 390x844 viewport without overflow ✓
+8. Player shows question strip inside video area ✓
+9. "Answer question 1" button present (gold) ✓
+10. "Part 2 · Next" section visible ✓
+11. "Think about this for this session" button visible when question opened ✓
+12. Question numbers DO appear twice (timeline dots AND text row) - potential duplication
+13. Garden card color is teal/turquoise ✓
+
+All core functionality verified successfully on phone viewport!

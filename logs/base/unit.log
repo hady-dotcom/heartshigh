@@ -1,0 +1,1770 @@
+
+> hearts-prototype@1.0.0 test:unit
+> tsx --test src/lib/*.test.ts tests/unit/*.test.ts
+
+TAP version 13
+# Subtest: every seeded step names its placeholders, and the prompt uses them
+ok 1 - every seeded step names its placeholders, and the prompt uses them
+  ---
+  duration_ms: 4.790675
+  ...
+# Subtest: a prompt edit adds a version, and rollback marks an older one live
+ok 2 - a prompt edit adds a version, and rollback marks an older one live
+  ---
+  duration_ms: 0.43409
+  ...
+# Subtest: a diff shows the added and removed lines
+ok 3 - a diff shows the added and removed lines
+  ---
+  duration_ms: 0.60031
+  ...
+# Subtest: approved and hand-edited tiers are protected, machine drafts are not
+ok 4 - approved and hand-edited tiers are protected, machine drafts are not
+  ---
+  duration_ms: 0.156995
+  ...
+# Subtest: the mock is deterministic, matches each schema, and a different prompt can pick a different cut
+ok 5 - the mock is deterministic, matches each schema, and a different prompt can pick a different cut
+  ---
+  duration_ms: 203.598031
+  ...
+# Subtest: a job reports progress after each talk and keeps the error
+ok 6 - a job reports progress after each talk and keeps the error
+  ---
+  duration_ms: 0.340541
+  ...
+# Subtest: portal admins can read, and can edit only after the master grants it
+ok 7 - portal admins can read, and can edit only after the master grants it
+  ---
+  duration_ms: 0.153335
+  ...
+# Subtest: with no key the desk says it is in mock mode, and a key is never part of that answer
+ok 8 - with no key the desk says it is in mock mode, and a key is never part of that answer
+  ---
+  duration_ms: 0.138335
+  ...
+# Subtest: persona v2 ranges do not overlap, and a midpoint matches only its own band
+ok 9 - persona v2 ranges do not overlap, and a midpoint matches only its own band
+  ---
+  duration_ms: 11.677199
+  ...
+# Subtest: each scale has two wordings, and a month sits five of them
+ok 10 - each scale has two wordings, and a month sits five of them
+  ---
+  duration_ms: 64.025542
+  ...
+# Subtest: a monthly sitting keeps unasked scales and never overwrites the previous object
+ok 11 - a monthly sitting keeps unasked scales and never overwrites the previous object
+  ---
+  duration_ms: 0.204831
+  ...
+# Subtest: the shelf is 60, 25 and 15, and the why line names the scale and the door
+ok 12 - the shelf is 60, 25 and 15, and the why line names the scale and the door
+  ---
+  duration_ms: 1.362624
+  ...
+# Subtest: desk lines name a real door, and September is Sep
+ok 13 - desk lines name a real door, and September is Sep
+  ---
+  duration_ms: 1.316485
+  ...
+# Subtest: demo passwords are set only for accounts this run creates, and life notes do not repeat
+ok 14 - demo passwords are set only for accounts this run creates, and life notes do not repeat
+  ---
+  duration_ms: 0.166249
+  ...
+# Subtest: persona ranges are published, distinct, and cover anger and greed
+ok 15 - persona ranges are published, distinct, and cover anger and greed
+  ---
+  duration_ms: 1.166331
+  ...
+# Subtest: learner copy, monthly wording and the life check pass the kill list
+ok 16 - learner copy, monthly wording and the life check pass the kill list
+  ---
+  duration_ms: 94.605537
+  ...
+# Subtest: the soft summary has warm words and no raw scores
+ok 17 - the soft summary has warm words and no raw scores
+  ---
+  duration_ms: 1.090521
+  ...
+# Subtest: the framing can be the focus line, the place words, or both
+ok 18 - the framing can be the focus line, the place words, or both
+  ---
+  duration_ms: 0.177332
+  ...
+# Subtest: steering weights the weakest scale and still keeps a second one
+ok 19 - steering weights the weakest scale and still keeps a second one
+  ---
+  duration_ms: 0.217235
+  ...
+# Subtest: a life event pulls steering toward that scale without changing the stored reading
+ok 20 - a life event pulls steering toward that scale without changing the stored reading
+  ---
+  duration_ms: 0.229843
+  ...
+# Subtest: recalibration is due thirty days after the latest attempt
+ok 21 - recalibration is due thirty days after the latest attempt
+  ---
+  duration_ms: 2.163694
+  ...
+# Subtest: attribution pairs talks watched in a low scale with the change at the next attempt
+ok 22 - attribution pairs talks watched in a low scale with the change at the next attempt
+  ---
+  duration_ms: 5.170442
+  ...
+# Subtest: a course sits in the door most of its talks belong to, and the rest are tags
+ok 23 - a course sits in the door most of its talks belong to, and the rest are tags
+  ---
+  duration_ms: 2.108876
+  ...
+# Subtest: a tie between doors goes to the earlier door
+ok 24 - a tie between doors goes to the earlier door
+  ---
+  duration_ms: 0.207012
+  ...
+# Subtest: talks with no clause, and courses with none, gather under Other
+ok 25 - talks with no clause, and courses with none, gather under Other
+  ---
+  duration_ms: 0.27049
+  ...
+# Subtest: a talk with cuts on several doors votes by its own majority
+ok 26 - a talk with cuts on several doors votes by its own majority
+  ---
+  duration_ms: 0.184049
+  ...
+# Subtest: counts, seat labels and a written summary stay short
+ok 27 - counts, seat labels and a written summary stay short
+  ---
+  duration_ms: 2.494414
+  ...
+# Subtest: a subset keeps the door and drops empty headings
+ok 28 - a subset keeps the door and drops empty headings
+  ---
+  duration_ms: 0.456502
+  ...
+# Subtest: the built-in doors are the ones the groups use
+ok 29 - the built-in doors are the ones the groups use
+  ---
+  duration_ms: 0.078707
+  ...
+# Subtest: seats that point at the same place in the Ghunya are one heading, named by volume and chapter, never by the sheet note
+ok 30 - seats that point at the same place in the Ghunya are one heading, named by volume and chapter, never by the sheet note
+  ---
+  duration_ms: 6.926337
+  ...
+# Subtest: a door tile reads "Door 2 · The sitting", with the rest of its title below
+ok 31 - a door tile reads "Door 2 · The sitting", with the rest of its title below
+  ---
+  duration_ms: 0.307541
+  ...
+# Subtest: dawn runs from the Fajr stand-in until late afternoon
+ok 32 - dawn runs from the Fajr stand-in until late afternoon
+  ---
+  duration_ms: 0.676325
+  ...
+# Subtest: a pin wins over the clock, and auto follows it
+ok 33 - a pin wins over the clock, and auto follows it
+  ---
+  duration_ms: 0.111722
+  ...
+# Subtest: prayer marks can move the window, and a broken pair falls back
+ok 34 - prayer marks can move the window, and a broken pair falls back
+  ---
+  duration_ms: 0.10165
+  ...
+# Subtest: stored pins accept plain words and JSON
+ok 35 - stored pins accept plain words and JSON
+  ---
+  duration_ms: 0.19186
+  ...
+# Subtest: the boot script uses the same key and the same fallback minutes
+ok 36 - the boot script uses the same key and the same fallback minutes
+  ---
+  duration_ms: 5.181241
+  ...
+# Subtest: desk tokens are the shared parchment, ink and teal values
+ok 37 - desk tokens are the shared parchment, ink and teal values
+  ---
+  duration_ms: 1.986278
+  ...
+# Subtest: the working doors are W1 to W20, each with a short teaching, and cover every clause once
+ok 38 - the working doors are W1 to W20, each with a short teaching, and cover every clause once
+  ---
+  duration_ms: 1.645929
+  ...
+# Subtest: learner paths open a door by number or code, and an old clause number above 20 opens that clause’s door
+ok 39 - learner paths open a door by number or code, and an old clause number above 20 opens that clause’s door
+  ---
+  duration_ms: 0.383824
+  ...
+# Subtest: course parts group by door, with anything untagged after the doors
+ok 40 - course parts group by door, with anything untagged after the doors
+  ---
+  duration_ms: 0.307725
+  ...
+# Subtest: parses marked timestamps and webvtt
+ok 41 - parses marked timestamps and webvtt
+  ---
+  duration_ms: 3.129638
+  ...
+# Subtest: fahmy session 6 yields hook, turn and land cuts
+ok 42 - fahmy session 6 yields hook, turn and land cuts
+  ---
+  duration_ms: 104.615852
+  ...
+# Subtest: a transcript with no timestamps still cuts, and says confidence is low
+ok 43 - a transcript with no timestamps still cuts, and says confidence is low
+  ---
+  duration_ms: 0.853372
+  ...
+# Subtest: empty transcript does not invent a cut
+ok 44 - empty transcript does not invent a cut
+  ---
+  duration_ms: 0.115533
+  ...
+# Subtest: the 20 working doors each belong to one tree
+ok 45 - the 20 working doors each belong to one tree
+  ---
+  duration_ms: 1.077758
+  ...
+# Subtest: growth moves off a sapling with the first real thing done, and fills the tree when the area is done
+ok 46 - growth moves off a sapling with the first real thing done, and fills the tree when the area is done
+  ---
+  duration_ms: 0.107036
+  ...
+# Subtest: only finished full talks and their course questions fill a tree
+ok 47 - only finished full talks and their course questions fill a tree
+  ---
+  duration_ms: 0.707567
+  ...
+# Subtest: a full room puts the next person on the list, and a decline promotes them
+ok 48 - a full room puts the next person on the list, and a decline promotes them
+  ---
+  duration_ms: 0.745055
+  ...
+# Subtest: maybe and can’t do not take a seat or promote anyone
+ok 49 - maybe and can’t do not take a seat or promote anyone
+  ---
+  duration_ms: 0.148714
+  ...
+# Subtest: the earliest waitlist place is the one that moves up
+ok 50 - the earliest waitlist place is the one that moves up
+  ---
+  duration_ms: 0.117686
+  ...
+# Subtest: public pages show a first name, or a first name and initial when two share it
+ok 51 - public pages show a first name, or a first name and initial when two share it
+  ---
+  duration_ms: 4.551639
+  ...
+# Subtest: a bring-a-friend token points back at the learner who shared it
+ok 52 - a bring-a-friend token points back at the learner who shared it
+  ---
+  duration_ms: 0.215007
+  ...
+# Subtest: company tasks match a gathering on the same talk, course or door
+ok 53 - company tasks match a gathering on the same talk, course or door
+  ---
+  duration_ms: 0.410617
+  ...
+# Subtest: after a talk, the masjid line names the day
+ok 54 - after a talk, the masjid line names the day
+  ---
+  duration_ms: 58.051933
+  ...
+# Subtest: showing up completes a matching activation task, and that counts even on a short clip
+ok 55 - showing up completes a matching activation task, and that counts even on a short clip
+  ---
+  duration_ms: 0.151521
+  ...
+# Subtest: circles mix newcomers with regulars and do not return scores
+ok 56 - circles mix newcomers with regulars and do not return scores
+  ---
+  duration_ms: 0.531235
+  ...
+# Subtest: discussion prompts come from the talk, and a reflection sentence can sit in the harvest
+ok 57 - discussion prompts come from the talk, and a reflection sentence can sit in the harvest
+  ---
+  duration_ms: 2.116177
+  ...
+# Subtest: calendar files, Google links and cross-post text are ready to send
+ok 58 - calendar files, Google links and cross-post text are ready to send
+  ---
+  duration_ms: 13.142391
+  ...
+# Subtest: London wall time becomes the right instant, and gender defaults follow the title
+ok 59 - London wall time becomes the right instant, and gender defaults follow the title
+  ---
+  duration_ms: 1.361293
+  ...
+# Subtest: the desk groups by upcoming and past, then by door, and the demo script refuses every other portal
+ok 60 - the desk groups by upcoming and past, then by door, and the demo script refuses every other portal
+  ---
+  duration_ms: 1.208895
+  ...
+# Subtest: the door poster is one A4 page and keeps the web address inside the code
+ok 61 - the door poster is one A4 page and keeps the web address inside the code
+  ---
+  duration_ms: 23.943454
+  ...
+# Subtest: a moment is the transcript line at that time, word for word
+ok 62 - a moment is the transcript line at that time, word for word
+  ---
+  duration_ms: 30.43404
+  ...
+# Subtest: scholars are only words the transcript already gives them
+ok 63 - scholars are only words the transcript already gives them
+  ---
+  duration_ms: 17.801496
+  ...
+# Subtest: a stored commentary is shown unchanged, and a placeholder is not a source
+ok 64 - a stored commentary is shown unchanged, and a placeholder is not a source
+  ---
+  duration_ms: 0.455735
+  ...
+# Subtest: new marks lines gathered after the last visit, and the first look only marks the recent ones
+ok 65 - new marks lines gathered after the last visit, and the first look only marks the recent ones
+  ---
+  duration_ms: 0.133108
+  ...
+# Subtest: a spoken line is classed without inventing a verse
+ok 66 - a spoken line is classed without inventing a verse
+  ---
+  duration_ms: 1.676448
+  ...
+# Subtest: 1. the worked example in 3.5 gives trust 0.86, the others 0.2525, and a feed of four trust clips then three from the spine
+ok 67 - 1. the worked example in 3.5 gives trust 0.86, the others 0.2525, and a feed of four trust clips then three from the spine
+  ---
+  duration_ms: 6.137894
+  ...
+# Subtest: 2. the day-2 example in section 4 gives trust 0.92, company 0.545, and a refill that alternates them
+ok 68 - 2. the day-2 example in section 4 gives trust 0.92, company 0.545, and a refill that alternates them
+  ---
+  duration_ms: 1.10908
+  ...
+# Subtest: 3. the desire guard: an opening option that nudges desire changes nothing
+ok 69 - 3. the desire guard: an opening option that nudges desire changes nothing
+  ---
+  duration_ms: 0.149438
+  ...
+# Subtest: 4. guarding the gaze appears only when the learner has opted in and its scale has signal
+ok 70 - 4. guarding the gaze appears only when the learner has opted in and its scale has signal
+  ---
+  duration_ms: 3.478495
+  ...
+# Subtest: 5. the second signal is dropped when it scores under half of the first
+ok 71 - 5. the second signal is dropped when it scores under half of the first
+  ---
+  duration_ms: 0.126944
+  ...
+# Subtest: 6. all passes give the default clip then six from the spine; starting from the beginning leads with the best lane clip or the default
+ok 72 - 6. all passes give the default clip then six from the spine; starting from the beginning leads with the best lane clip or the default
+  ---
+  duration_ms: 3.492177
+  ...
+# Subtest: 7. the trust lane leaves out the doors of clauses 26, 31 and 32 to 35 in the first seven days
+ok 73 - 7. the trust lane leaves out the doors of clauses 26, 31 and 32 to 35 in the first seven days
+  ---
+  duration_ms: 0.504615
+  ...
+# Subtest: 8. the simulator fixtures stay frozen
+ok 74 - 8. the simulator fixtures stay frozen
+  ---
+  duration_ms: 5.527188
+  ...
+# Subtest: 9. the starter map holds together
+ok 75 - 9. the starter map holds together
+  ---
+  duration_ms: 1.569338
+  ...
+# Subtest: 10. best(L) gives the lane's first starter on a fresh state, then other lane cuts once it has been served
+ok 76 - 10. best(L) gives the lane's first starter on a fresh state, then other lane cuts once it has been served
+  ---
+  duration_ms: 0.445703
+  ...
+# Subtest: every complete tap path stays away from guarding the gaze, and going back replaces a tap
+ok 77 - every complete tap path stays away from guarding the gaze, and going back replaces a tap
+  ---
+  duration_ms: 538.588979
+  ...
+# Subtest: a placeholder clip joins the spine only while unchecked talks are shown, and a withheld clip never does
+ok 78 - a placeholder clip joins the spine only while unchecked talks are shown, and a withheld clip never does
+  ---
+  duration_ms: 0.407043
+  ...
+# Subtest: buildFeed takes lane scores alone, as the server does
+ok 79 - buildFeed takes lane scores alone, as the server does
+  ---
+  duration_ms: 0.228993
+  ...
+# Subtest: a lane ranks every talk in a door by its best clause there, so a Sitting talk ranks with the clauses the lane names
+ok 80 - a lane ranks every talk in a door by its best clause there, so a Sitting talk ranks with the clauses the lane names
+  ---
+  duration_ms: 0.118291
+  ...
+# Subtest: first-week exclusions cover the whole door: clause 29 shares door 16 with excluded clause 31
+ok 81 - first-week exclusions cover the whole door: clause 29 shares door 16 with excluded clause 31
+  ---
+  duration_ms: 0.09625
+  ...
+# Subtest: explicit door fields from the server win over the built-in map
+ok 82 - explicit door fields from the server win over the built-in map
+  ---
+  duration_ms: 1.299219
+  ...
+# Subtest: the spine starts at the door before the starting door, and an older clause pointer moves to doors
+ok 83 - the spine starts at the door before the starting door, and an older clause pointer moves to doors
+  ---
+  duration_ms: 0.171908
+  ...
+# Subtest: placing options carry their clause and hide it from the learner
+ok 84 - placing options carry their clause and hide it from the learner
+  ---
+  duration_ms: 9.321948
+  ...
+# Subtest: starting clause follows the votes, the last question weighs double, ties go to the earlier answer
+ok 85 - starting clause follows the votes, the last question weighs double, ties go to the earlier answer
+  ---
+  duration_ms: 0.353946
+  ...
+# Subtest: the recommended part is the one whose cuts hang on the starting clause
+ok 86 - the recommended part is the one whose cuts hang on the starting clause
+  ---
+  duration_ms: 0.166705
+  ...
+# Subtest: the Jibril map gives 41 clauses with three seats each, word for word
+ok 87 - the Jibril map gives 41 clauses with three seats each, word for word
+  ---
+  duration_ms: 5.275875
+  ...
+# Subtest: a seat is only suggested when words overlap, never invented
+ok 88 - a seat is only suggested when words overlap, never invented
+  ---
+  duration_ms: 0.286235
+  ...
+# Subtest: harvest copies verses and hadith word for word with the real timestamp
+ok 89 - harvest copies verses and hadith word for word with the real timestamp
+  ---
+  duration_ms: 114.849504
+  ...
+# Subtest: harvest rejects description, subscribe and housekeeping lines
+ok 90 - harvest rejects description, subscribe and housekeeping lines
+  ---
+  duration_ms: 0.454586
+  ...
+# Subtest: harvest leaves the Quranic Connection description line out, even when a caption splits it
+ok 91 - harvest leaves the Quranic Connection description line out, even when a caption splits it
+  ---
+  duration_ms: 1.393544
+  ...
+# Subtest: delayed and contingent questions unlock at the right moment
+ok 92 - delayed and contingent questions unlock at the right moment
+  ---
+  duration_ms: 0.372993
+  ...
+# Subtest: the YouTube transcript chain tries each provider in order and stops at the first that answers
+ok 93 - the YouTube transcript chain tries each provider in order and stops at the first that answers
+  ---
+  duration_ms: 0.433016
+  ...
+# Subtest: ingesting a YouTube link explains each failure plainly
+ok 94 - ingesting a YouTube link explains each failure plainly
+  ---
+  duration_ms: 0.646095
+  ...
+# Subtest: bulk approve only touches untouched questions from the master sheet
+ok 95 - bulk approve only touches untouched questions from the master sheet
+  ---
+  duration_ms: 0.747111
+  ...
+# Subtest: install kind distinguishes Safari, other iOS browsers, Android Chrome and desktop
+ok 96 - install kind distinguishes Safari, other iOS browsers, Android Chrome and desktop
+  ---
+  duration_ms: 0.845073
+  ...
+# Subtest: the card stays hidden once dismissed, installed, or opened full screen
+ok 97 - the card stays hidden once dismissed, installed, or opened full screen
+  ---
+  duration_ms: 0.101158
+  ...
+# Subtest: copy is the two iPhone steps, an Android install button, or the menu
+ok 98 - copy is the two iPhone steps, an Android install button, or the menu
+  ---
+  duration_ms: 0.553854
+  ...
+# Subtest: a phone card is a row of pictured steps, one slide each
+ok 99 - a phone card is a row of pictured steps, one slide each
+  ---
+  duration_ms: 0.24285
+  ...
+# Subtest: the boot script holds the install prompt and remembers when the app is installed
+ok 100 - the boot script holds the install prompt and remembers when the app is installed
+  ---
+  duration_ms: 0.190833
+  ...
+# Subtest: a hors d'oeuvre parents its appetiser, and that appetiser parents the full talk
+ok 101 - a hors d'oeuvre parents its appetiser, and that appetiser parents the full talk
+  ---
+  duration_ms: 0.561121
+  ...
+# Subtest: a hors d'oeuvre ladder row points at the appetiser that contains it, never the talk
+ok 102 - a hors d'oeuvre ladder row points at the appetiser that contains it, never the talk
+  ---
+  duration_ms: 0.181801
+  ...
+# Subtest: finishing on or before the earliest scheduled day counts, and a later plan does not excuse a miss
+ok 103 - finishing on or before the earliest scheduled day counts, and a later plan does not excuse a miss
+  ---
+  duration_ms: 0.677592
+  ...
+# Subtest: the fraction is parts finished on time out of parts due by today
+ok 104 - the fraction is parts finished on time out of parts due by today
+  ---
+  duration_ms: 0.557013
+  ...
+# Subtest: the same day is read from an ISO time or a date-only string
+ok 105 - the same day is read from an ISO time or a date-only string
+  ---
+  duration_ms: 0.079396
+  ...
+# Subtest: the four demo histories come out as different, realistic columns
+ok 106 - the four demo histories come out as different, realistic columns
+  ---
+  duration_ms: 0.911126
+  ...
+# Subtest: balanced persona bands are distinct and ready to publish
+ok 107 - balanced persona bands are distinct and ready to publish
+  ---
+  duration_ms: 12.656021
+  ...
+# Subtest: the step-2 stand-in matches a published band only when every included scale was read
+ok 108 - the step-2 stand-in matches a published band only when every included scale was read
+  ---
+  duration_ms: 0.495293
+  ...
+# Subtest: persona cells stay hidden under 20 people and round a share to 5 percent
+ok 109 - persona cells stay hidden under 20 people and round a share to 5 percent
+  ---
+  duration_ms: 11.783391
+  ...
+# Subtest: the balancing notes record how the ranges were split
+ok 110 - the balancing notes record how the ranges were split
+  ---
+  duration_ms: 0.134808
+  ...
+# Subtest: a timestamp question fires once as playback crosses it, with 0.3 s of lead
+ok 111 - a timestamp question fires once as playback crosses it, with 0.3 s of lead
+  ---
+  duration_ms: 0.93753
+  ...
+# Subtest: a forward seek across two questions shows both, in order
+ok 112 - a forward seek across two questions shows both, in order
+  ---
+  duration_ms: 0.129576
+  ...
+# Subtest: seeking back in the same viewing does not fire again; a new viewing does
+ok 113 - seeking back in the same viewing does not fire again; a new viewing does
+  ---
+  duration_ms: 0.163856
+  ...
+# Subtest: the trigger ignores a backward tick
+ok 114 - the trigger ignores a backward tick
+  ---
+  duration_ms: 0.073635
+  ...
+# Subtest: trends hold back any week with fewer than 10 people
+ok 115 - trends hold back any week with fewer than 10 people
+  ---
+  duration_ms: 5.731145
+  ...
+# Subtest: hors d'oeuvres and appetisers never count toward course completion or the grow page
+ok 116 - hors d'oeuvres and appetisers never count toward course completion or the grow page
+  ---
+  duration_ms: 0.635209
+  ...
+# Subtest: only a full talk inside a course, and the questions on that talk, count
+ok 117 - only a full talk inside a course, and the questions on that talk, count
+  ---
+  duration_ms: 0.526527
+  ...
+# Subtest: grow rows drop short clips and talks that are not in a course
+ok 118 - grow rows drop short clips and talks that are not in a course
+  ---
+  duration_ms: 0.214429
+  ...
+# Subtest: browsing records who the learner lingers on and learns more from
+ok 119 - browsing records who the learner lingers on and learns more from
+  ---
+  duration_ms: 0.232661
+  ...
+# Subtest: a short clip harvests only the quotes inside its own window
+ok 120 - a short clip harvests only the quotes inside its own window
+  ---
+  duration_ms: 0.259271
+  ...
+# Subtest: fahmy-session6.md: every cut quotes the transcript word for word, at a time the transcript really has
+ok 121 - fahmy-session6.md: every cut quotes the transcript word for word, at a time the transcript really has
+  ---
+  duration_ms: 181.464792
+  ...
+# Subtest: mikaeel-ar-rabb.md: every cut quotes the transcript word for word, at a time the transcript really has
+ok 122 - mikaeel-ar-rabb.md: every cut quotes the transcript word for word, at a time the transcript really has
+  ---
+  duration_ms: 63.771539
+  ...
+# Subtest: mikaeel-al-nur.md: every cut quotes the transcript word for word, at a time the transcript really has
+ok 123 - mikaeel-al-nur.md: every cut quotes the transcript word for word, at a time the transcript really has
+  ---
+  duration_ms: 116.317989
+  ...
+# Subtest: estimated timestamps are marked as low confidence
+ok 124 - estimated timestamps are marked as low confidence
+  ---
+  duration_ms: 18.455069
+  ...
+# Subtest: a reworded line is not accepted as verbatim
+ok 125 - a reworded line is not accepted as verbatim
+  ---
+  duration_ms: 7.029167
+  ...
+# Subtest: splits a pack evenly across Wednesday and Friday only
+ok 126 - splits a pack evenly across Wednesday and Friday only
+  ---
+  duration_ms: 3.981166
+  ...
+# Subtest: rejects an empty weekday set and a range with no matching days
+ok 127 - rejects an empty weekday set and a range with no matching days
+  ---
+  duration_ms: 0.297128
+  ...
+# Subtest: known aliases resolve to one speaker even when the catalogue is empty
+ok 128 - known aliases resolve to one speaker even when the catalogue is empty
+  ---
+  duration_ms: 3.378088
+  ...
+# Subtest: a catalogue alias wins, and a title that already shares the page is not a new person
+ok 129 - a catalogue alias wins, and a title that already shares the page is not a new person
+  ---
+  duration_ms: 0.145153
+  ...
+# Subtest: a real title is kept, and a slug or video id falls back to the course and part
+ok 130 - a real title is kept, and a slug or video id falls back to the course and part
+  ---
+  duration_ms: 1.070218
+  ...
+# Subtest: a raw auto-caption becomes a sentence, with Allah and the Day of Judgement
+ok 131 - a raw auto-caption becomes a sentence, with Allah and the Day of Judgement
+  ---
+  duration_ms: 6.382087
+  ...
+# Subtest: Qur'an, the Prophet, names of Allah, the speaker and I take capitals
+ok 132 - Qur'an, the Prophet, names of Allah, the speaker and I take capitals
+  ---
+  duration_ms: 3.409029
+  ...
+# Subtest: Al-Nur and a question keep their shape, and American spelling becomes British
+ok 133 - Al-Nur and a question keep their shape, and American spelling becomes British
+  ---
+  duration_ms: 0.280354
+  ...
+# Subtest: a long line shortens to about 18 words without dropping the capital
+ok 134 - a long line shortens to about 18 words without dropping the capital
+  ---
+  duration_ms: 0.388322
+  ...
+# Subtest: a stored tidy is kept when it still matches the raw words, and a changed caption is redone
+ok 135 - a stored tidy is kept when it still matches the raw words, and a changed caption is redone
+  ---
+  duration_ms: 1.881802
+  ...
+# Subtest: every catalogue row is written jpg/<basename> and resolves to backgrounds/jpg/<basename>
+ok 136 - every catalogue row is written jpg/<basename> and resolves to backgrounds/jpg/<basename>
+  ---
+  duration_ms: 7.238099
+  ...
+# Subtest: the route redirects every catalogue still to a short-lived signed GET for backgrounds/jpg/<basename>
+ok 137 - the route redirects every catalogue still to a short-lived signed GET for backgrounds/jpg/<basename>
+  ---
+  duration_ms: 433.186346
+  ...
+# Subtest: unknown names and anything shaped like a path escape are a 404
+ok 138 - unknown names and anything shaped like a path escape are a 404
+  ---
+  duration_ms: 1.578809
+  ...
+# Subtest: without bucket settings the route is a 404, and without BACKGROUNDS_BASE_URL no bucket link is built
+ok 139 - without bucket settings the route is a 404, and without BACKGROUNDS_BASE_URL no bucket link is built
+  ---
+  duration_ms: 0.184601
+  ...
+# Subtest: the shipped catalogue matches the csv, and a walk never repeats a look
+ok 140 - the shipped catalogue matches the csv, and a walk never repeats a look
+  ---
+  duration_ms: 9.492311
+  ...
+# Subtest: a neighbour skips a shared landscape, palette or time, and the same pick stays put
+ok 141 - a neighbour skips a shared landscape, palette or time, and the same pick stays put
+  ---
+  duration_ms: 0.184934
+  ...
+# Subtest: with a base URL the stored still is served, a similar neighbour steps on, and a return visit keeps its own
+ok 142 - with a base URL the stored still is served, a similar neighbour steps on, and a return visit keeps its own
+  ---
+  duration_ms: 0.983402
+  ...
+# Subtest: cards are one per talk, with the verbatim quote and the last gold landing
+ok 143 - cards are one per talk, with the verbatim quote and the last gold landing
+  ---
+  duration_ms: 1042.427943
+  ...
+# Subtest: a return visit steps the background, and a shared tag is not a neighbour
+ok 144 - a return visit steps the background, and a shared tag is not a neighbour
+  ---
+  duration_ms: 0.166555
+  ...
+# Subtest: words stay hidden until they are spoken, and gold lands with them
+ok 145 - words stay hidden until they are spoken, and gold lands with them
+  ---
+  duration_ms: 0.199843
+  ...
+# Subtest: a beat with no audio file stays silent, and a later write keeps the other talks
+ok 146 - a beat with no audio file stays silent, and a later write keeps the other talks
+  ---
+  duration_ms: 16.140579
+  ...
+# Subtest: Circle: the built-in drafts meet the count, follow the tone and length spread, and pass every word check
+ok 147 - Circle: the built-in drafts meet the count, follow the tone and length spread, and pass every word check
+  ---
+  duration_ms: 690.211145
+  ...
+# Subtest: Circle: an AI reply only keeps answers that pass the kill list and plain-text checks
+ok 148 - Circle: an AI reply only keeps answers that pass the kill list and plain-text checks
+  ---
+  duration_ms: 2.514616
+  ...
+# Subtest: Circle: answers fade as real answers arrive and step back at the threshold
+ok 149 - Circle: answers fade as real answers arrive and step back at the threshold
+  ---
+  duration_ms: 0.892687
+  ...
+# Subtest: Circle: only the swarm, the circle desk, the master sheet and the seed read circle answers, so analytics never see them
+ok 150 - Circle: only the swarm, the circle desk, the master sheet and the seed read circle answers, so analytics never see them
+  ---
+  duration_ms: 39.951558
+  ...
+# Subtest: Circle: the CircleAnswers sheet tab reads rows through the same checks and exports round-trip
+ok 151 - Circle: the CircleAnswers sheet tab reads rows through the same checks and exports round-trip
+  ---
+  duration_ms: 9.89618
+  ...
+# Subtest: Bug 20: e2e starts its own server with the test clock on, on a port `npm run go` does not use
+ok 152 - Bug 20: e2e starts its own server with the test clock on, on a port `npm run go` does not use
+  ---
+  duration_ms: 569.636396
+  ...
+# Subtest: Bug 9: the test clock is master-only and never on in a production build
+ok 153 - Bug 9: the test clock is master-only and never on in a production build
+  ---
+  duration_ms: 7.666558
+  ...
+# Refusing to seed automatically because NODE_ENV is production. The live database is left as it is.
+# Refusing to seed demo data because NODE_ENV is production. Use npm run bootstrap and npm run seed:starters.
+# Subtest: SQLite stays the default, and a postgres address selects Postgres
+ok 154 - SQLite stays the default, and a postgres address selects Postgres
+  ---
+  duration_ms: 1.007248
+  ...
+# Subtest: production refuses to start until the secret, Postgres, bucket, address and proxy are set
+ok 155 - production refuses to start until the secret, Postgres, bucket, address and proxy are set
+  ---
+  duration_ms: 0.98624
+  ...
+# Subtest: Railway bucket variable names are accepted, and local disk is used when they are absent
+ok 156 - Railway bucket variable names are accepted, and local disk is used when they are absent
+  ---
+  duration_ms: 0.11815
+  ...
+# Subtest: production cookies are always Secure, and local cookies are not
+ok 157 - production cookies are always Secure, and local cookies are not
+  ---
+  duration_ms: 0.174184
+  ...
+# Subtest: demo passwords cannot be the first admin, and production cannot be wiped or seeded with them
+ok 158 - demo passwords cannot be the first admin, and production cannot be wiped or seeded with them
+  ---
+  duration_ms: 0.277709
+  ...
+# Subtest: a platform header is used instead of a spoofed X-Forwarded-For
+ok 159 - a platform header is used instead of a spoofed X-Forwarded-For
+  ---
+  duration_ms: 23.124109
+  ...
+# Subtest: security headers are set, and they do not trust a frame from another site
+ok 160 - security headers are set, and they do not trust a frame from another site
+  ---
+  duration_ms: 5.421585
+  ...
+# Subtest: production startup does not seed, and dev startup refuses to seed when NODE_ENV is production
+ok 161 - production startup does not seed, and dev startup refuses to seed when NODE_ENV is production
+  ---
+  duration_ms: 124.229117
+  ...
+# Subtest: the Dockerfile bakes no secret or database address into the image
+ok 162 - the Dockerfile bakes no secret or database address into the image
+  ---
+  duration_ms: 2.982891
+  ...
+# Subtest: the latest Postgres migration has a table for every collection and global
+ok 163 - the latest Postgres migration has a table for every collection and global
+  ---
+  duration_ms: 1850.241416
+  ...
+# Subtest: the 20 doors cover all 41 clauses exactly once, in order, as Leon mapped them
+ok 164 - the 20 doors cover all 41 clauses exactly once, in order, as Leon mapped them
+  ---
+  duration_ms: 1.140795
+  ...
+# Subtest: the mapping matches the working-doors file line for line
+ok 165 - the mapping matches the working-doors file line for line
+  ---
+  duration_ms: 3.892583
+  ...
+# Subtest: a talk’s door comes from its clause
+ok 166 - a talk’s door comes from its clause
+  ---
+  duration_ms: 0.443306
+  ...
+# Subtest: a door is read as W3, w3, Door 3 or 3, and nothing out of range
+ok 167 - a door is read as W3, w3, Door 3 or 3, and nothing out of range
+  ---
+  duration_ms: 0.202614
+  ...
+# Subtest: a door alone keeps a clause already in it, or takes its first clause
+ok 168 - a door alone keeps a clause already in it, or takes its first clause
+  ---
+  duration_ms: 0.117065
+  ...
+# Subtest: stored doors are used when they cover every clause; otherwise the built-in map
+ok 169 - stored doors are used when they cover every clause; otherwise the built-in map
+  ---
+  duration_ms: 0.28895
+  ...
+# Subtest: placing votes in doors: two answers in the Sitting outvote one elsewhere, and the clause stored is the first voted
+ok 170 - placing votes in doors: two answers in the Sitting outvote one elsewhere, and the clause stored is the first voted
+  ---
+  duration_ms: 0.451346
+  ...
+# Subtest: a placing answer may name a door, and is saved as that door’s clause
+ok 171 - a placing answer may name a door, and is saved as that door’s clause
+  ---
+  duration_ms: 0.298592
+  ...
+# Subtest: the first course follows the starting door, not only the exact clause
+ok 172 - the first course follows the starting door, not only the exact clause
+  ---
+  duration_ms: 0.282942
+  ...
+# Subtest: the mixed feed really carries films, scenic cards and question cards at the hors d’oeuvre level
+ok 173 - the mixed feed really carries films, scenic cards and question cards at the hors d’oeuvre level
+  ---
+  duration_ms: 3.018549
+  ...
+# Subtest: on hors d’oeuvres, every swipe from every item (talks, films and cards) lands on an hors d’oeuvre-level item
+ok 174 - on hors d’oeuvres, every swipe from every item (talks, films and cards) lands on an hors d’oeuvre-level item
+  ---
+  duration_ms: 9.236688
+  ...
+# Subtest: the hors d’oeuvre loop steps through films and cards in order, and wraps
+ok 175 - the hors d’oeuvre loop steps through films and cards in order, and wraps
+  ---
+  duration_ms: 0.830621
+  ...
+# Subtest: on appetisers, every swipe lands on another appetiser, never on a film, scene or question card
+ok 176 - on appetisers, every swipe lands on another appetiser, never on a film, scene or question card
+  ---
+  duration_ms: 1.518141
+  ...
+# Subtest: anything that moves the appetiser feed by index settles on an appetiser in the direction of travel
+ok 177 - anything that moves the appetiser feed by index settles on an appetiser in the direction of travel
+  ---
+  duration_ms: 0.389505
+  ...
+# Subtest: Learn more from an hors d’oeuvre, its film or its card opens that same piece’s own appetiser
+ok 178 - Learn more from an hors d’oeuvre, its film or its card opens that same piece’s own appetiser
+  ---
+  duration_ms: 0.361853
+  ...
+# Subtest: Learn more from an appetiser opens its own full talk from the start, and nothing else
+ok 179 - Learn more from an appetiser opens its own full talk from the start, and nothing else
+  ---
+  duration_ms: 0.24242
+  ...
+# Subtest: Learn more refuses to go anywhere but the next level down
+ok 180 - Learn more refuses to go anywhere but the next level down
+  ---
+  duration_ms: 0.206211
+  ...
+# Subtest: private answers are counted and never exported, and another portal stays out
+ok 181 - private answers are counted and never exported, and another portal stays out
+  ---
+  duration_ms: 31.320246
+  ...
+# Subtest: pseudonyms are stable for the same people, whatever the row order
+ok 182 - pseudonyms are stable for the same people, whatever the row order
+  ---
+  duration_ms: 5.210155
+  ...
+# Subtest: a named export keeps the name, still drops the email, and a learner cannot ask for names
+ok 183 - a named export keeps the name, still drops the email, and a learner cannot ask for names
+  ---
+  duration_ms: 0.347128
+  ...
+# Subtest: portal scoping drops every row that is not this portal, including a shared one
+ok 184 - portal scoping drops every row that is not this portal, including a shared one
+  ---
+  duration_ms: 0.708541
+  ...
+# Subtest: sharing follows the learner’s choice, including an imam task they did not mark private
+ok 185 - sharing follows the learner’s choice, including an imam task they did not mark private
+  ---
+  duration_ms: 0.173158
+  ...
+# Subtest: answers group under door, then talk, then question, and a cohort filter holds
+ok 186 - answers group under door, then talk, then question, and a cohort filter holds
+  ---
+  duration_ms: 1.5703
+  ...
+# Subtest: a yes or no question is weak, and a personal one is left alone
+ok 187 - a yes or no question is weak, and a personal one is left alone
+  ---
+  duration_ms: 1.238536
+  ...
+# Subtest: the demo seed stays off in production and on a starters load
+ok 188 - the demo seed stays off in production and on a starters load
+  ---
+  duration_ms: 0.235471
+  ...
+# Subtest: the spreadsheet and the PDF carry the shared answer and leave the private one out
+ok 189 - the spreadsheet and the PDF carry the shared answer and leave the private one out
+  ---
+  duration_ms: 119.097224
+  ...
+# Subtest: the PDF embeds Noto Sans, so transliterated Arabic keeps its marks: ū ā ī ḥ ʿ ʾ
+ok 190 - the PDF embeds Noto Sans, so transliterated Arabic keeps its marks: ū ā ī ḥ ʿ ʾ
+  ---
+  duration_ms: 23.366278
+  ...
+# Subtest: the export log names a download by its format first: "CSV, anonymised"
+ok 191 - the export log names a download by its format first: "CSV, anonymised"
+  ---
+  duration_ms: 0.15618
+  ...
+# Subtest: films attach to a talk in hook, turn, land order
+ok 192 - films attach to a talk in hook, turn, land order
+  ---
+  duration_ms: 2.376464
+  ...
+# Subtest: a talk with no sheet row still plays the rendered face films, and the prophet films stay out
+ok 193 - a talk with no sheet row still plays the rendered face films, and the prophet films stay out
+  ---
+  duration_ms: 3.65521
+  ...
+# Subtest: a session alternates a face film and a scenic card, then a question, and a return visit swaps them
+ok 194 - a session alternates a face film and a scenic card, then a question, and a return visit swaps them
+  ---
+  duration_ms: 1.552078
+  ...
+# Subtest: a card keeps its own background, neighbours skip a shared tag, and learn more stays on the clip
+ok 195 - a card keeps its own background, neighbours skip a shared tag, and learn more stays on the clip
+  ---
+  duration_ms: 0.566222
+  ...
+# Subtest: Security: only the server itself or a signed-in master can create an account
+ok 196 - Security: only the server itself or a signed-in master can create an account
+  ---
+  duration_ms: 2.751243
+  ...
+# Subtest: Security: the create-first-user screen and the first-register endpoint are closed
+ok 197 - Security: the create-first-user screen and the first-register endpoint are closed
+  ---
+  duration_ms: 10.513235
+  ...
+# [⣷] Pulling schema from database...
+# [2K[1G[✓] Pulling schema from database...
+# [01:21:09] [33mWARN[39m: [36mNo email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.[39m
+# Subtest: demo:gather writes only hearts-demo, and a second run does not duplicate
+ok 198 - demo:gather writes only hearts-demo, and a second run does not duplicate
+  ---
+  duration_ms: 18553.423616
+  ...
+# Subtest: wordSlice never cuts a word, finishedSentences never adds a stop
+ok 199 - wordSlice never cuts a word, finishedSentences never adds a stop
+  ---
+  duration_ms: 1.075725
+  ...
+# Subtest: the reported lines: no "…we discu", no "…I'm going to give"
+ok 200 - the reported lines: no "…we discu", no "…I'm going to give"
+  ---
+  duration_ms: 1.989923
+  ...
+# Subtest: over the real transcripts, every harvest line is whole sentences ending on a whole word
+ok 201 - over the real transcripts, every harvest line is whole sentences ending on a whole word
+  ---
+  duration_ms: 4491.866197
+  ...
+# Subtest: Harvest: tests read the bundled scripture only, never the network
+ok 202 - Harvest: tests read the bundled scripture only, never the network
+  ---
+  duration_ms: 1.361253
+  ...
+# Subtest: Harvest matching: Arabic the speaker recites is matched to its ayah
+ok 203 - Harvest matching: Arabic the speaker recites is matched to its ayah
+  ---
+  duration_ms: 16.018105
+  ...
+# Subtest: Harvest matching: transliterated recitation is matched to its ayah
+ok 204 - Harvest matching: transliterated recitation is matched to its ayah
+  ---
+  duration_ms: 0.50581
+  ...
+# Subtest: Harvest matching: an English rendering close to a real translation is matched
+ok 205 - Harvest matching: an English rendering close to a real translation is matched
+  ---
+  duration_ms: 11.717891
+  ...
+# Subtest: Harvest matching: no confident match gives no reference, never a guess
+ok 206 - Harvest matching: no confident match gives no reference, never a guess
+  ---
+  duration_ms: 5.329113
+  ...
+# Subtest: Harvest matching: the talk on al-Nur is quoted word for word and each verse is placed
+ok 207 - Harvest matching: the talk on al-Nur is quoted word for word and each verse is placed
+  ---
+  duration_ms: 451.817837
+  ...
+# Subtest: Harvest matching: the test talk gives its verses, its named hadith, and an unplaced quote
+ok 208 - Harvest matching: the test talk gives its verses, its named hadith, and an unplaced quote
+  ---
+  duration_ms: 13.685525
+  ...
+# Subtest: Harvest matching: collections are read from what the speaker says, garbled captions included
+ok 209 - Harvest matching: collections are read from what the speaker says, garbled captions included
+  ---
+  duration_ms: 1.230845
+  ...
+# Subtest: Hadith matching: a named collection and narrator find the one hadith; the wrong narrator finds none
+ok 210 - Hadith matching: a named collection and narrator find the one hadith; the wrong narrator finds none
+  ---
+  duration_ms: 9.139457
+  ...
+# Subtest: Hadith matching: when a collection repeats a hadith word for word, the first place it appears is cited
+ok 211 - Hadith matching: when a collection repeats a hadith word for word, the first place it appears is cited
+  ---
+  duration_ms: 0.946567
+  ...
+# Subtest: Harvest: a hadith is placed only when its collection is named and it matched
+ok 212 - Harvest: a hadith is placed only when its collection is named and it matched
+  ---
+  duration_ms: 23.214292
+  ...
+# Subtest: Context: the ayah comes with three either side and never crosses into the next surah
+ok 213 - Context: the ayah comes with three either side and never crosses into the next surah
+  ---
+  duration_ms: 0.386059
+  ...
+# Subtest: Tafsir: the bundle has every named source for every ayah the starter talks quote
+ok 214 - Tafsir: the bundle has every named source for every ayah the starter talks quote
+  ---
+  duration_ms: 4457.573434
+  ...
+# Subtest: Summary labels: the label names the tafsir the summary was written from
+ok 215 - Summary labels: the label names the tafsir the summary was written from
+  ---
+  duration_ms: 0.291622
+  ...
+# Subtest: Summary: the model is given only the real tafsir, one text per work, and told to add nothing
+ok 216 - Summary: the model is given only the real tafsir, one text per work, and told to add nothing
+  ---
+  duration_ms: 1.063155
+  ...
+# Subtest: Summary: with AI it is labelled with its sources and cached; without AI it says so and shows al-Jalalayn itself
+ok 217 - Summary: with AI it is labelled with its sources and cached; without AI it says so and shows al-Jalalayn itself
+  ---
+  duration_ms: 1.075935
+  ...
+# Subtest: Replay: a card replays its talk from a few seconds before the quote
+ok 218 - Replay: a card replays its talk from a few seconds before the quote
+  ---
+  duration_ms: 0.163579
+  ...
+# Subtest: Seed: the starter talks with transcripts give harvest items
+ok 219 - Seed: the starter talks with transcripts give harvest items
+  ---
+  duration_ms: 2480.233236
+  ...
+# Subtest: banned phrases stay out of the seeds and the prompts
+ok 220 - banned phrases stay out of the seeds and the prompts
+  ---
+  duration_ms: 13.359266
+  ...
+# Subtest: demo answers, circle drafts, rewrites and theme notes avoid the banned phrases and a tidy list of three
+ok 221 - demo answers, circle drafts, rewrites and theme notes avoid the banned phrases and a tidy list of three
+  ---
+  duration_ms: 1.70542
+  ...
+# Subtest: Shorts: a /shorts/ link or a 9:16 size is vertical, a watch link or a 16:9 size is not
+ok 222 - Shorts: a /shorts/ link or a 9:16 size is vertical, a watch link or a 16:9 size is not
+  ---
+  duration_ms: 0.878963
+  ...
+# Subtest: export times: the portal zone (Europe/London unless set), the viewer's language, and a short zone label
+ok 223 - export times: the portal zone (Europe/London unless set), the viewer's language, and a short zone label
+  ---
+  duration_ms: 30.61145
+  ...
+# Subtest: words in the picture: a Short or a lesson flagged with burned-in captions, nothing else
+ok 224 - words in the picture: a Short or a lesson flagged with burned-in captions, nothing else
+  ---
+  duration_ms: 0.199166
+  ...
+# Subtest: posters: YouTube's titled thumbnails and their /clips/ copies are never ours; the large frame only when marked clean
+ok 225 - posters: YouTube's titled thumbnails and their /clips/ copies are never ours; the large frame only when marked clean
+  ---
+  duration_ms: 0.230627
+  ...
+# Subtest: feed players and the course player keep YouTube captions and annotations off and send no caption language
+ok 226 - feed players and the course player keep YouTube captions and annotations off and send no caption language
+  ---
+  duration_ms: 0.196136
+  ...
+# Subtest: portal names: the brand word shows as HEARTS; other names, stored values and slugs stay as typed
+ok 227 - portal names: the brand word shows as HEARTS; other names, stored values and slugs stay as typed
+  ---
+  duration_ms: 8.773257
+  ...
+# Subtest: times accept seconds, m:ss, h:mm:ss and an Excel time
+ok 228 - times accept seconds, m:ss, h:mm:ss and an Excel time
+  ---
+  duration_ms: 3.717025
+  ...
+# Subtest: round-trip: export then import with no edits makes no changes
+ok 229 - round-trip: export then import with no edits makes no changes
+  ---
+  duration_ms: 192.090802
+  ...
+# Subtest: a multiple-choice row with no question_id is matched before its choices are compared, so re-applying it changes nothing
+ok 230 - a multiple-choice row with no question_id is matched before its choices are compared, so re-applying it changes nothing
+  ---
+  duration_ms: 3.36155
+  ...
+# Subtest: pack column: a new course joins the named pack, by name or number, once however many rows name it
+ok 231 - pack column: a new course joins the named pack, by name or number, once however many rows name it
+  ---
+  duration_ms: 1.174449
+  ...
+# Subtest: pack column: an existing course already in the pack changes nothing; one not in it joins
+ok 232 - pack column: an existing course already in the pack changes nothing; one not in it joins
+  ---
+  duration_ms: 0.633958
+  ...
+# Subtest: pack column: an unknown pack, a pack name used twice, and another portal’s pack are refused on that cell
+ok 233 - pack column: an unknown pack, a pack name used twice, and another portal’s pack are refused on that cell
+  ---
+  duration_ms: 0.941962
+  ...
+# Subtest: preview choice: every course the import creates joins the chosen pack, and only a pack this desk may use
+ok 234 - preview choice: every course the import creates joins the chosen pack, and only a pack this desk may use
+  ---
+  duration_ms: 0.874862
+  ...
+# Subtest: the pack column is optional, exported blank, and a blank cell leaves packs alone
+ok 235 - the pack column is optional, exported blank, and a blank cell leaves packs alone
+  ---
+  duration_ms: 86.795832
+  ...
+# Subtest: the blank template has five tabs, a note and the header row
+ok 236 - the blank template has five tabs, a note and the header row
+  ---
+  duration_ms: 53.762973
+  ...
+# Subtest: a clause number on a sheet resolves to the working door
+ok 237 - a clause number on a sheet resolves to the working door
+  ---
+  duration_ms: 0.892674
+  ...
+# Subtest: dry-run counts creates, updates and skips
+ok 238 - dry-run counts creates, updates and skips
+  ---
+  duration_ms: 1.452043
+  ...
+# Subtest: every error type names the tab, row and column
+ok 239 - every error type names the tab, row and column
+  ---
+  duration_ms: 2.853113
+  ...
+# Subtest: a blank cell leaves the field alone and delete is explicit
+ok 240 - a blank cell leaves the field alone and delete is explicit
+  ---
+  duration_ms: 0.282469
+  ...
+# Subtest: approving an ai draft publishes it, and a new ai draft stays a draft
+ok 241 - approving an ai draft publishes it, and a new ai draft stays a draft
+  ---
+  duration_ms: 1.539279
+  ...
+# Subtest: course parts take the order they first appear, and a failed row does not keep a number
+ok 242 - course parts take the order they first appear, and a failed row does not keep a number
+  ---
+  duration_ms: 0.55247
+  ...
+# Subtest: a reimport writes the real part order when every part was stored as 1
+ok 243 - a reimport writes the real part order when every part was stored as 1
+  ---
+  duration_ms: 0.241749
+  ...
+# Subtest: the sheet status wins, and approving new questions publishes only a blank status
+ok 244 - the sheet status wins, and approving new questions publishes only a blank status
+  ---
+  duration_ms: 2.593587
+  ...
+# Subtest: portal scope refuses another portal and the master library
+ok 245 - portal scope refuses another portal and the master library
+  ---
+  duration_ms: 0.579779
+  ...
+# Subtest: a Google Sheets export with a note row and a time serial still reads
+ok 246 - a Google Sheets export with a note row and a time serial still reads
+  ---
+  duration_ms: 11.950041
+  ...
+# Subtest: 500 rows are planned quickly
+ok 247 - 500 rows are planned quickly
+  ---
+  duration_ms: 337.075812
+  ...
+# Subtest: CircleAnswers: name and length keep their own meaning on that tab
+ok 248 - CircleAnswers: name and length keep their own meaning on that tab
+  ---
+  duration_ms: 61.830511
+  ...
+# Subtest: CircleAnswers: adds, updates, switches off and removes, and only ever touches circle answers
+ok 249 - CircleAnswers: adds, updates, switches off and removes, and only ever touches circle answers
+  ---
+  duration_ms: 10.848166
+  ...
+# Subtest: CircleAnswers: every bad row names the column, and nothing is saved from it
+ok 250 - CircleAnswers: every bad row names the column, and nothing is saved from it
+  ---
+  duration_ms: 32.80618
+  ...
+# Subtest: CircleAnswers: a portal import adds its own answers on its own courses only
+ok 251 - CircleAnswers: a portal import adds its own answers on its own courses only
+  ---
+  duration_ms: 2.058533
+  ...
+# Subtest: undo points restored rows at the new ids Postgres gives their parents
+ok 252 - undo points restored rows at the new ids Postgres gives their parents
+  ---
+  duration_ms: 0.15922
+  ...
+# Subtest: the example workbook in content/ reads cleanly, circle answers included
+ok 253 - the example workbook in content/ reads cleanly, circle answers included
+  ---
+  duration_ms: 117.07445
+  ...
+# Subtest: the export writes the door beside the clause, and a door alone or a door in the clause column places the talk
+ok 254 - the export writes the door beside the clause, and a door alone or a door in the clause column places the talk
+  ---
+  duration_ms: 1.02162
+  ...
+# Subtest: a door alone keeps the clause a seat names inside that door
+ok 255 - a door alone keeps the clause a seat names inside that door
+  ---
+  duration_ms: 0.191037
+  ...
+# Subtest: a sheet with no door column imports exactly as before
+ok 256 - a sheet with no door column imports exactly as before
+  ---
+  duration_ms: 18.668744
+  ...
+# Subtest: Nesting: every starter talk's hors d'oeuvre sits inside its appetiser, and the appetiser inside the talk
+ok 257 - Nesting: every starter talk's hors d'oeuvre sits inside its appetiser, and the appetiser inside the talk
+  ---
+  duration_ms: 1.135091
+  ...
+# Subtest: Nesting: a hors d'oeuvre outside the appetiser, or across two of its cuts, is refused
+ok 258 - Nesting: a hors d'oeuvre outside the appetiser, or across two of its cuts, is refused
+  ---
+  duration_ms: 0.268361
+  ...
+# Subtest: Nesting: the extractor's short clip always plays inside its extended clip
+ok 259 - Nesting: the extractor's short clip always plays inside its extended clip
+  ---
+  duration_ms: 48.698675
+  ...
+# Subtest: Nesting: the hors d'oeuvre runs 15 to 30 seconds, the cap defaults to 45 and never drops below 30
+ok 260 - Nesting: the hors d'oeuvre runs 15 to 30 seconds, the cap defaults to 45 and never drops below 30
+  ---
+  duration_ms: 0.147282
+  ...
+# Subtest: Nesting: slides, typography films and cards are hors level, and each level links up to its own parent
+ok 261 - Nesting: slides, typography films and cards are hors level, and each level links up to its own parent
+  ---
+  duration_ms: 0.557888
+  ...
+# Subtest: Progress: watching an appetiser or a hors d'oeuvre of an hour talk never completes it; most of the talk played does
+ok 262 - Progress: watching an appetiser or a hors d'oeuvre of an hour talk never completes it; most of the talk played does
+  ---
+  duration_ms: 0.184461
+  ...
+# Subtest: Progress: answers given while browsing a clip are kept but never count towards a course
+ok 263 - Progress: answers given while browsing a clip are kept but never count towards a course
+  ---
+  duration_ms: 0.248117
+  ...
+# Subtest: Progress: browsing signals only move the soft "drawn to" lane interest, nothing that counts
+ok 264 - Progress: browsing signals only move the soft "drawn to" lane interest, nothing that counts
+  ---
+  duration_ms: 0.352281
+  ...
+# Subtest: no file name, asset, component or line of copy names the hoopoe or Hudhud
+ok 265 - no file name, asset, component or line of copy names the hoopoe or Hudhud
+  ---
+  duration_ms: 64.794761
+  ...
+# Subtest: Bug 2: codes refuse when switched off, expired or used up, with one message for unknown and switched off
+ok 266 - Bug 2: codes refuse when switched off, expired or used up, with one message for unknown and switched off
+  ---
+  duration_ms: 0.696887
+  ...
+# Subtest: Bug 2: seed and generated codes are long and random, not words
+ok 267 - Bug 2: seed and generated codes are long and random, not words
+  ---
+  duration_ms: 9.941308
+  ...
+# Subtest: Bug 13: help contacts render only tel: and https: targets, and plain text
+ok 268 - Bug 13: help contacts render only tel: and https: targets, and plain text
+  ---
+  duration_ms: 0.636143
+  ...
+# Subtest: Bug 21: plans are capped at a year, named for the season, and counted in the right number
+ok 269 - Bug 21: plans are capped at a year, named for the season, and counted in the right number
+  ---
+  duration_ms: 0.846291
+  ...
+# Subtest: Bug 15: Al-Nur points to the full class and every seeded pop-up sits inside its talk
+ok 270 - Bug 15: Al-Nur points to the full class and every seeded pop-up sits inside its talk
+  ---
+  duration_ms: 8.223592
+  ...
+# Subtest: Bug 29: npm run reseed wipes and reseeds, and the README says so
+ok 271 - Bug 29: npm run reseed wipes and reseeds, and the README says so
+  ---
+  duration_ms: 0.407506
+  ...
+# Subtest: Bug 30: 31 starters, each length taken from its shipped captions
+ok 272 - Bug 30: 31 starters, each length taken from its shipped captions
+  ---
+  duration_ms: 0.2655
+  ...
+# Subtest: Section T: rolling auto captions become each word once, in order, without tags or markers
+ok 273 - Section T: rolling auto captions become each word once, in order, without tags or markers
+  ---
+  duration_ms: 1.099693
+  ...
+# Subtest: Section T: tier rules hold the hors to 15-30 seconds and the appetiser to about 3 minutes
+ok 274 - Section T: tier rules hold the hors to 15-30 seconds and the appetiser to about 3 minutes
+  ---
+  duration_ms: 0.416261
+  ...
+# Subtest: Section T: the appetiser player stops at its out point and never runs on past about 3 minutes
+ok 275 - Section T: the appetiser player stops at its out point and never runs on past about 3 minutes
+  ---
+  duration_ms: 0.279863
+  ...
+# Subtest: Section T: every shipped transcript drafts verbatim tiers and pop-ups inside its talk
+ok 276 - Section T: every shipped transcript drafts verbatim tiers and pop-ups inside its talk
+  ---
+  duration_ms: 10154.260443
+  ...
+# Subtest: Section T: estimated transcript marks are moved onto the caption times
+ok 277 - Section T: estimated transcript marks are moved onto the caption times
+  ---
+  duration_ms: 1.235397
+  ...
+# Subtest: Extraction: every one of the 31 talks has a draft
+ok 278 - Extraction: every one of the 31 talks has a draft
+  ---
+  duration_ms: 0.735298
+  ...
+# Subtest: Extraction: the seed path drafts two or three pop-ups for every talk, at least 8 seconds apart and clear of the kill list
+ok 279 - Extraction: the seed path drafts two or three pop-ups for every talk, at least 8 seconds apart and clear of the kill list
+  ---
+  duration_ms: 23.935881
+  ...
+# Subtest: Extraction: every tier boundary falls on a sentence boundary, inside the silence around it
+ok 280 - Extraction: every tier boundary falls on a sentence boundary, inside the silence around it
+  ---
+  duration_ms: 3.941391
+  ...
+# Subtest: Extraction: the hors runs 15 to 20 seconds and the appetiser up to about 3 minutes, inside the talk
+ok 281 - Extraction: the hors runs 15 to 20 seconds and the appetiser up to about 3 minutes, inside the talk
+  ---
+  duration_ms: 0.284912
+  ...
+# Subtest: Extraction: hook, turn, land and the hors line are the speaker’s words, in order, and they come in that order
+ok 282 - Extraction: hook, turn, land and the hors line are the speaker’s words, in order, and they come in that order
+  ---
+  duration_ms: 299.716321
+  ...
+# Subtest: Extraction: the turn is a real turn, not the next few seconds of the hook (N_-YiwIb-u0 and every other talk)
+ok 283 - Extraction: the turn is a real turn, not the next few seconds of the hook (N_-YiwIb-u0 and every other talk)
+  ---
+  duration_ms: 0.304941
+  ...
+# Subtest: Extraction: the hors is chosen by hook score, not the land line
+ok 284 - Extraction: the hors is chosen by hook score, not the land line
+  ---
+  duration_ms: 0.451542
+  ...
+# Subtest: Extraction: intro music, sponsor and outro lines are left out (FAxIZIqwfd8 stops before its free ebooks outro)
+ok 285 - Extraction: intro music, sponsor and outro lines are left out (FAxIZIqwfd8 stops before its free ebooks outro)
+  ---
+  duration_ms: 0.838551
+  ...
+# Subtest: Extraction: the Al-Nur hook is word for word from the transcript
+ok 286 - Extraction: the Al-Nur hook is word for word from the transcript
+  ---
+  duration_ms: 4.611446
+  ...
+# Subtest: A2: the appetiser caption shows the hook, then the turn, then the land, each at its moment
+ok 287 - A2: the appetiser caption shows the hook, then the turn, then the land, each at its moment
+  ---
+  duration_ms: 0.319515
+  ...
+# Subtest: K1: the kill list catches spaced letters, stretched spellings, words built on a listed root and rating a person
+ok 288 - K1: the kill list catches spaced letters, stretched spellings, words built on a listed root and rating a person
+  ---
+  duration_ms: 1.19104
+  ...
+# Subtest: K1: author text learners read gets one check: plain text and the kill list
+ok 289 - K1: author text learners read gets one check: plain text and the kill list
+  ---
+  duration_ms: 2.309246
+  ...
+# Subtest: N1: X-Forwarded-For is trusted only behind a configured proxy, read from the right
+ok 290 - N1: X-Forwarded-For is trusted only behind a configured proxy, read from the right
+  ---
+  duration_ms: 26.843537
+  ...
+# Subtest: N1: failed joins are keyed by address and code, and by address only when it can be trusted
+ok 291 - N1: failed joins are keyed by address and code, and by address only when it can be trusted
+  ---
+  duration_ms: 3.122419
+  ...
+# Subtest: N3: trends count only accounts that have finished a video and are at least 24 hours old
+ok 292 - N3: trends count only accounts that have finished a video and are at least 24 hours old
+  ---
+  duration_ms: 0.544205
+  ...
+# Subtest: L1: each lane opens its own clips: its starters in order, then clips confirmed for it
+ok 293 - L1: each lane opens its own clips: its starters in order, then clips confirmed for it
+  ---
+  duration_ms: 0.399748
+  ...
+# Subtest: LOW: yt-dlp is fetched by setup, uses the web_embedded client, and says plainly when YouTube blocks it
+ok 294 - LOW: yt-dlp is fetched by setup, uses the web_embedded client, and says plainly when YouTube blocks it
+  ---
+  duration_ms: 0.272973
+  ...
+# Subtest: LOW: the browser tests run against their own database file, never the demo one
+ok 295 - LOW: the browser tests run against their own database file, never the demo one
+  ---
+  duration_ms: 0.095707
+  ...
+# Subtest: LOW: the main player keeps YouTube’s own overlays to a minimum when it pauses at a question
+ok 296 - LOW: the main player keeps YouTube’s own overlays to a minimum when it pauses at a question
+  ---
+  duration_ms: 0.230495
+  ...
+# Subtest: feed players show none of YouTube’s chrome: no controls, inline, no related videos, cards or captions
+ok 297 - feed players show none of YouTube’s chrome: no controls, inline, no related videos, cards or captions
+  ---
+  duration_ms: 0.106403
+  ...
+# Subtest: Bug 10: kill-list catches plurals, -ing forms, spelt-out words and look-alike letters
+ok 298 - Bug 10: kill-list catches plurals, -ing forms, spelt-out words and look-alike letters
+  ---
+  duration_ms: 16.246023
+  ...
+# Subtest: Bug 10: the seeded scenes and opener stay clean after folding
+ok 299 - Bug 10: the seeded scenes and opener stay clean after folding
+  ---
+  duration_ms: 34.733369
+  ...
+# Subtest: Bug 10: markup in learner-facing words is refused
+ok 300 - Bug 10: markup in learner-facing words is refused
+  ---
+  duration_ms: 3.571055
+  ...
+# Subtest: Bug 13: help contacts accept tel-safe numbers and https links only, with plain labels
+ok 301 - Bug 13: help contacts accept tel-safe numbers and https links only, with plain labels
+  ---
+  duration_ms: 0.432598
+  ...
+# Subtest: Bug 12: reserved and malformed portal addresses are refused with a clear message
+ok 302 - Bug 12: reserved and malformed portal addresses are refused with a clear message
+  ---
+  duration_ms: 0.406462
+  ...
+# Subtest: a beat never ends on the start of the next sentence, and never starts on the end of the last
+ok 303 - a beat never ends on the start of the next sentence, and never starts on the end of the last
+  ---
+  duration_ms: 1.735424
+  ...
+# Subtest: a line starts with a capital and ends on a stop
+ok 304 - a line starts with a capital and ends on a stop
+  ---
+  duration_ms: 0.502811
+  ...
+# Subtest: maxChars keeps whole sentences that fit, and always at least one
+ok 305 - maxChars keeps whole sentences that fit, and always at least one
+  ---
+  duration_ms: 1.61478
+  ...
+# Subtest: asides about the video are recognised
+ok 306 - asides about the video are recognised
+  ---
+  duration_ms: 0.77982
+  ...
+# Subtest: clipWords cuts on a word and marks the cut
+ok 307 - clipWords cuts on a word and marks the cut
+  ---
+  duration_ms: 0.240643
+  ...
+# Subtest: harvest lines: whole sentences from their own context, asides dropped, caption tails cut
+ok 308 - harvest lines: whole sentences from their own context, asides dropped, caption tails cut
+  ---
+  duration_ms: 6.035017
+  ...
+# Subtest: a scenic card for a talk without a voiced card gets whole-sentence beats, and a fragment beat is dropped
+ok 309 - a scenic card for a talk without a voiced card gets whole-sentence beats, and a fragment beat is dropped
+  ---
+  duration_ms: 9.213921
+  ...
+# Subtest: a scenic beat is at most two sentences and about 30 words, never ends on a hanging word
+ok 310 - a scenic beat is at most two sentences and about 30 words, never ends on a hanging word
+  ---
+  duration_ms: 0.52971
+  ...
+# Subtest: harvest lines never end on a preposition, conjunction or article, and name Allah, the Quran and the Prophet properly
+ok 311 - harvest lines never end on a preposition, conjunction or article, and name Allah, the Quran and the Prophet properly
+  ---
+  duration_ms: 0.715363
+  ...
+# Subtest: the registered service worker is a no-op file, so /sw.js is not a 404
+ok 312 - the registered service worker is a no-op file, so /sw.js is not a 404
+  ---
+  duration_ms: 4.717045
+  ...
+# Subtest: search keeps films inside the length window and can use a mocked YouTube response
+ok 313 - search keeps films inside the length window and can use a mocked YouTube response
+  ---
+  duration_ms: 60.628014
+  ...
+# Subtest: pasted lines accept YouTube and Vimeo, and a file source is planned as provider file
+ok 314 - pasted lines accept YouTube and Vimeo, and a file source is planned as provider file
+  ---
+  duration_ms: 185.158214
+  ...
+# Subtest: resource drafts include a summary, timestamped quotes, a reading to verify and a discussion guide
+ok 315 - resource drafts include a summary, timestamped quotes, a reading to verify and a discussion guide
+  ---
+  duration_ms: 74.783181
+  ...
+# Subtest: a drafted sheet stays a draft until it is applied, including the activation task
+ok 316 - a drafted sheet stays a draft until it is applied, including the activation task
+  ---
+  duration_ms: 136.798318
+  ...
+# Subtest: the kill list does not cut speaker quotes, hook text or transcripts
+ok 317 - the kill list does not cut speaker quotes, hook text or transcripts
+  ---
+  duration_ms: 15.068046
+  ...
+# Subtest: a question without an id is matched, and the same file does not add it twice
+ok 318 - a question without an id is matched, and the same file does not add it twice
+  ---
+  duration_ms: 15.06857
+  ...
+# Subtest: hook, turn and land can be three spans whose lengths add up to at most 195 seconds
+ok 319 - hook, turn and land can be three spans whose lengths add up to at most 195 seconds
+  ---
+  duration_ms: 2.021618
+  ...
+# Subtest: a hors d'oeuvre of 15 to 30 seconds is the usual length, and up to the desk cap is a warning
+ok 320 - a hors d'oeuvre of 15 to 30 seconds is the usual length, and up to the desk cap is a warning
+  ---
+  duration_ms: 9.33211
+  ...
+# Subtest: notes may contain an equals sign
+ok 321 - notes may contain an equals sign
+  ---
+  duration_ms: 0.37801
+  ...
+# Subtest: a transcript can be an uploaded file instead of a cell
+ok 322 - a transcript can be an uploaded file instead of a cell
+  ---
+  duration_ms: 0.372256
+  ...
+# Subtest: the template note and columns come from the current sheet
+ok 323 - the template note and columns come from the current sheet
+  ---
+  duration_ms: 245.206818
+  ...
+# Subtest: AI multiple choice does not leave the right answer in slot 2
+ok 324 - AI multiple choice does not leave the right answer in slot 2
+  ---
+  duration_ms: 1.243734
+  ...
+# [⣷] Pulling schema from database...
+# [2K[1G[✓] Pulling schema from database...
+# [01:21:30] [33mWARN[39m: [36mNo email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.[39m
+# Subtest: dry run, real import with the alias cases, export round trip, and the push to learners who hold the pack
+ok 325 - dry run, real import with the alias cases, export round trip, and the push to learners who hold the pack
+  ---
+  duration_ms: 14322.636617
+  ...
+# Subtest: the seeded speakers round-trip through the Speakers tab
+ok 326 - the seeded speakers round-trip through the Speakers tab
+  ---
+  duration_ms: 241.009836
+  ...
+# Subtest: variant speaker names on a talk map to one speaker and a second import is unchanged
+ok 327 - variant speaker names on a talk map to one speaker and a second import is unchanged
+  ---
+  duration_ms: 3.970541
+  ...
+# Subtest: an unknown speaker is left as written, and a known alias is rewritten with no record yet
+ok 328 - an unknown speaker is left as written, and a known alias is rewritten with no record yet
+  ---
+  duration_ms: 0.60299
+  ...
+# Subtest: a re-import of unchanged questions writes nothing, including equivalent place, evidence and show_imam
+ok 329 - a re-import of unchanged questions writes nothing, including equivalent place, evidence and show_imam
+  ---
+  duration_ms: 0.373148
+  ...
+# Subtest: a prompt-only edit patches the prompt and leaves the choices
+ok 330 - a prompt-only edit patches the prompt and leaves the choices
+  ---
+  duration_ms: 3.761086
+  ...
+# Subtest: changing source from ai to human replaces a marker note and a second plan is clean
+ok 331 - changing source from ai to human replaces a marker note and a second plan is clean
+  ---
+  duration_ms: 0.52631
+  ...
+# Subtest: a custom note is kept when the source cell still says human
+ok 332 - a custom note is kept when the source cell still says human
+  ---
+  duration_ms: 0.197188
+  ...
+# Subtest: export then import of talks, questions and speakers still makes no changes
+ok 333 - export then import of talks, questions and speakers still makes no changes
+  ---
+  duration_ms: 50.806212
+  ...
+# Subtest: course parts follow the order field, not the unit they sit in
+ok 334 - course parts follow the order field, not the unit they sit in
+  ---
+  duration_ms: 2.211364
+  ...
+# Subtest: timeline dots that sit about 10px apart keep separate tap targets
+ok 335 - timeline dots that sit about 10px apart keep separate tap targets
+  ---
+  duration_ms: 0.24099
+  ...
+# Subtest: Home Continue follows the last watch, then a visit that was never watched
+ok 336 - Home Continue follows the last watch, then a visit that was never watched
+  ---
+  duration_ms: 0.109756
+  ...
+# Subtest: a study plan names tonight from the next open part
+ok 337 - a study plan names tonight from the next open part
+  ---
+  duration_ms: 0.185547
+  ...
+# Subtest: starter questions have four to six answers in a real voice
+ok 338 - starter questions have four to six answers in a real voice
+  ---
+  duration_ms: 46.521593
+  ...
+# Subtest: the feed shows the stored tidy line, including when the raw caption no longer matches
+ok 339 - the feed shows the stored tidy line, including when the raw caption no longer matches
+  ---
+  duration_ms: 1.725342
+  ...
+# Subtest: Shorts are sized from the shorts link, and burned captions include lesson 31
+ok 340 - Shorts are sized from the shorts link, and burned captions include lesson 31
+  ---
+  duration_ms: 0.454463
+  ...
+# Subtest: a dismissed install sheet stays hidden for 30 days, then can return
+ok 341 - a dismissed install sheet stays hidden for 30 days, then can return
+  ---
+  duration_ms: 0.140677
+  ...
+# Subtest: the course player is chromeless, the same as the feed
+ok 342 - the course player is chromeless, the same as the feed
+  ---
+  duration_ms: 8.370343
+  ...
+# Subtest: a scenic card with no audio offers no Mute button; with audio it does
+ok 343 - a scenic card with no audio offers no Mute button; with audio it does
+  ---
+  duration_ms: 30.557495
+  ...
+# Subtest: changed fields: an unchanged copy of a field is not a change, a new value is, a new tier counts everything sent
+ok 344 - changed fields: an unchanged copy of a field is not a change, a new value is, a new tier counts everything sent
+  ---
+  duration_ms: 9.371553
+  ...
+# Subtest: straddle report lists only tiers whose hors d'oeuvre crosses two cuts
+ok 345 - straddle report lists only tiers whose hors d'oeuvre crosses two cuts
+  ---
+  duration_ms: 0.342235
+  ...
+# [⣷] Pulling schema from database...
+# [2K[1G[✓] Pulling schema from database...
+# [01:21:34] [33mWARN[39m: [36mNo email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.[39m
+# Subtest: a tier saved before the nesting rule takes a lines-only update, a timing change is still checked
+ok 346 - a tier saved before the nesting rule takes a lines-only update, a timing change is still checked
+  ---
+  duration_ms: 11413.158986
+  ...
+# Subtest: typography: the three seeded talks put only the speaker’s words on screen, and never early
+ok 347 - typography: the three seeded talks put only the speaker’s words on screen, and never early
+  ---
+  duration_ms: 3209.465346
+  ...
+# Subtest: every appetiser beat opens and closes on the pause around a whole sentence
+ok 348 - every appetiser beat opens and closes on the pause around a whole sentence
+  ---
+  duration_ms: 2116.748916
+  ...
+# Subtest: a long appetiser beat shows one card of words, then the next
+ok 349 - a long appetiser beat shows one card of words, then the next
+  ---
+  duration_ms: 1.331704
+  ...
+1..349
+# tests 349
+# suites 0
+# pass 349
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 48065.394123

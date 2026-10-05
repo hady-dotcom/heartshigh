@@ -1,0 +1,37 @@
+
+> hearts-prototype@1.0.0 migrate
+> tsx scripts/migrate.ts
+
+[01:20:35] [33mWARN[39m: [36mNo email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.[39m
+[01:20:35] [32mINFO[39m: [36mReading migration files from /tmp/verify-pr26/branch/hearts-prototype/src/migrations[39m
+[01:20:35] [32mINFO[39m: [36mMigrating: 20261003_103330_initial[39m
+[01:20:37] [32mINFO[39m: [36mMigrated:  20261003_103330_initial (1899ms)[39m
+[01:20:37] [32mINFO[39m: [36mMigrating: 20261003_124500_integration_part1[39m
+[01:20:37] [32mINFO[39m: [36mMigrated:  20261003_124500_integration_part1 (441ms)[39m
+[01:20:37] [32mINFO[39m: [36mMigrating: 20261003_131651_integration_part2[39m
+[01:20:37] [32mINFO[39m: [36mMigrated:  20261003_131651_integration_part2 (86ms)[39m
+[01:20:37] [32mINFO[39m: [36mMigrating: 20261003_140611_harvest[39m
+[01:20:37] [32mINFO[39m: [36mMigrated:  20261003_140611_harvest (25ms)[39m
+[01:20:37] [32mINFO[39m: [36mMigrating: 20261003_180616_jibril_doors[39m
+[01:20:37] [32mINFO[39m: [36mMigrated:  20261003_180616_jibril_doors (30ms)[39m
+[01:20:37] [32mINFO[39m: [36mMigrating: 20261003_194500_line_tidy[39m
+[01:20:37] [32mINFO[39m: [36mMigrated:  20261003_194500_line_tidy (1ms)[39m
+[01:20:37] [32mINFO[39m: [36mMigrating: 20261003_200853_integration_final[39m
+[01:20:38] [32mINFO[39m: [36mMigrated:  20261003_200853_integration_final (81ms)[39m
+[01:20:38] [32mINFO[39m: [36mMigrating: 20261003_220000_feedback[39m
+[01:20:38] [32mINFO[39m: [36mMigrated:  20261003_220000_feedback (71ms)[39m
+[01:20:38] [32mINFO[39m: [36mMigrating: 20261004_031500_gather[39m
+[01:20:38] [32mINFO[39m: [36mMigrated:  20261004_031500_gather (158ms)[39m
+[01:20:38] [32mINFO[39m: [36mMigrating: 20261004_060000_shorts[39m
+[01:20:38] [32mINFO[39m: [36mMigrated:  20261004_060000_shorts (7ms)[39m
+[01:20:38] [32mINFO[39m: [36mMigrating: 20261004_061000_portal_time_zone[39m
+[01:20:38] [32mINFO[39m: [36mMigrated:  20261004_061000_portal_time_zone (1ms)[39m
+[01:20:38] [32mINFO[39m: [36mMigrating: 20261004_080000_lesson_picture_flags[39m
+[01:20:38] [32mINFO[39m: [36mMigrated:  20261004_080000_lesson_picture_flags (1ms)[39m
+[01:20:38] [32mINFO[39m: [36mMigrating: 20261004_120000_compass_v2[39m
+[01:20:38] [32mINFO[39m: [36mMigrated:  20261004_120000_compass_v2 (65ms)[39m
+[01:20:38] [32mINFO[39m: [36mMigrating: 20261004_180000_gather_entry_code[39m
+[01:20:38] [32mINFO[39m: [36mMigrated:  20261004_180000_gather_entry_code (3ms)[39m
+[01:20:38] [32mINFO[39m: [36mMigrating: 20261004_210000_schedule_minutes[39m
+[01:20:38] [32mINFO[39m: [36mMigrated:  20261004_210000_schedule_minutes (1ms)[39m
+Database migrations are up to date.

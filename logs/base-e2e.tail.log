@@ -1,0 +1,80 @@
+        at /tmp/verify-pr26/base/hearts-prototype/tests/e2e/screenshots.spec.ts:40:42
+
+    Error Context: test-results/screenshots-a-week-of-use-so-the-garden-has-something-in-it/error-context.md
+
+
+(node:16170) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:16170) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[186/211] tests/e2e/screenshots.spec.ts:56:1 › learner app at phone size
+[187/211] tests/e2e/screenshots.spec.ts:100:1 › portal desk at desktop size
+[188/211] tests/e2e/screenshots.spec.ts:136:1 › the opening at phone size
+[189/211] tests/e2e/screenshots.spec.ts:158:1 › view as, from the portal desk
+[190/211] tests/e2e/screenshots.spec.ts:174:1 › door, sign-in and join
+[191/211] tests/e2e/screenshots.spec.ts:181:1 › circle answers: the desk and the swarm
+[192/211] tests/e2e/security.spec.ts:9:1 › the create-first-user screen and first-register are closed, and nobody outside can make an admin
+[193/211] tests/e2e/sheet-creator.spec.ts:60:1 › the creator drafts a sheet, then a learner completes a task the imam can see
+[194/211] tests/e2e/sheet-creator.spec.ts:168:1 › a portal admin searches for their own course and cannot draft the master library
+[195/211] tests/e2e/sheet-packs.spec.ts:65:1 › the pack column puts a new course in the pack; without the tick box existing learners are left as they are, and that is logged
+[196/211] tests/e2e/sheet-packs.spec.ts:84:1 › the preview offers the pack choice with the push tick box off by default
+[197/211] tests/e2e/sheet-packs.spec.ts:99:1 › choosing a pack for new courses and ticking push gives them to learners who already hold the pack; undo takes both back out
+[198/211] tests/e2e/sheet-packs.spec.ts:126:1 › a portal admin cannot name a master pack or another portal’s pack
+[199/211] tests/e2e/typography.spec.ts:27:1 › Typography panel lists the five styles and can stand in for the hors d’oeuvre
+[WebServer]  ⚠ Server is approaching the used memory threshold, restarting...
+
+  3) tests/e2e/typography.spec.ts:27:1 › Typography panel lists the five styles and can stand in for the hors d’oeuvre 
+
+    Test timeout of 180000ms exceeded.
+
+    Error: page.waitForURL: Test timeout of 180000ms exceeded.
+    =========================== logs ===========================
+      "networkidle" event fired
+    ============================================================
+
+      13 |   await page.getByTestId('login-password').fill(password)
+      14 |   await page.getByTestId('login-submit').click()
+    > 15 |   await page.waitForURL((url) => !url.pathname.startsWith('/login'))
+         |              ^
+      16 | }
+      17 |
+      18 | test.beforeAll(async () => {
+        at signIn (/tmp/verify-pr26/base/hearts-prototype/tests/e2e/typography.spec.ts:15:14)
+        at /tmp/verify-pr26/base/hearts-prototype/tests/e2e/typography.spec.ts:60:3
+
+    Error Context: test-results/typography-Typography-pane-b3e81-nd-in-for-the-hors-d’oeuvre/error-context.md
+
+    Error Context: test-results/typography-Typography-pane-b3e81-nd-in-for-the-hors-d’oeuvre/error-context.md
+
+
+(node:17093) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:17093) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[200/211] tests/e2e/view-as.spec.ts:51:3 › view as › 38. a portal admin views as a learner with a reason, read-only by default
+[201/211] tests/e2e/view-as.spec.ts:58:3 › view as › 39. a view without a reason is refused
+[202/211] tests/e2e/view-as.spec.ts:68:3 › view as › 40. while read-only, answers and settings are refused and logged
+[203/211] tests/e2e/view-as.spec.ts:78:3 › view as › 41. the learner’s private opening answers are not shown in view-as
+[204/211] tests/e2e/view-as.spec.ts:87:3 › view as › 42. the viewer’s own device state is left alone, and the view’s keys are wiped on exit
+[205/211] tests/e2e/view-as.spec.ts:108:3 › view as › 43. Exit returns to where the view started and ends the session
+[206/211] tests/e2e/view-as.spec.ts:118:3 › view as › 44. a teacher has no View as, and the server refuses one
+[207/211] tests/e2e/view-as.spec.ts:126:3 › view as › 45. a portal admin cannot view as a learner in another portal
+[208/211] tests/e2e/view-as.spec.ts:133:3 › view as › 46. the master views as a portal admin, but never as another master
+[209/211] tests/e2e/view-as.spec.ts:147:3 › view as › 47. start and stop are written to the audit log with the reason
+[210/211] tests/e2e/view-as.spec.ts:156:3 › view as › 48. allowing changes needs a reason, and then a change goes through and is logged
+[211/211] tests/e2e/view-as.spec.ts:174:3 › view as › 49. some things stay closed even with changes allowed: the opening and Start again
+  3 failed
+    tests/e2e/compass.spec.ts:14:1 › a learner cannot fetch their own scores from any compass API ──
+    tests/e2e/screenshots.spec.ts:25:1 › a week of use, so the garden has something in it ──────────
+    tests/e2e/typography.spec.ts:27:1 › Typography panel lists the five styles and can stand in for the hors d’oeuvre 
+  2 did not run
+  206 passed (53.4m)
+e2e exit=1

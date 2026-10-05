@@ -1,0 +1,6 @@
+=== branch HEAD 3ca8534 DATABASE_URL=postgres://hearts:hearts@127.0.0.1:5432/hearts_branch ===
+CMD: npx tsc --noEmit
+tsc exit=0
+CMD: npm run test:unit
+unit exit=0
+unit parse pass=379 fail=0 skipped=0 total=379

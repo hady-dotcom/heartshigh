@@ -1,0 +1,251 @@
+{
+  "config": {
+    "argv": [
+      "/exec-daemon/node",
+      "/tmp/verify-pr26/branch/hearts-prototype/node_modules/.bin/playwright",
+      "test",
+      "--config=playwright.verify.config.ts",
+      "-g",
+      "paused over the film fades"
+    ],
+    "configFile": "/tmp/verify-pr26/branch/hearts-prototype/playwright.verify.config.ts",
+    "rootDir": "/tmp/verify-pr26/branch/hearts-prototype/tests/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/tmp/verify-pr26/branch/hearts-prototype/tests/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/tmp/verify-pr26/branch/hearts-prototype/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/tmp/verify-pr26/branch/hearts-prototype/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 180000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/tmp/verify-pr26/results/rerun-paused-scrim-1.json"
+        }
+      ],
+      [
+        "line",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npx next dev --hostname 127.0.0.1 --port 3200",
+      "url": "http://127.0.0.1:3200/api/hearts",
+      "reuseExistingServer": false,
+      "timeout": 240000,
+      "env": {
+        "TMUX": "/tmp/tmux-1000/default,8424,4",
+        "DATABASE_URL": "postgres://hearts:hearts@127.0.0.1:5432/hearts_branch_e2e",
+        "USER": "ubuntu",
+        "npm_config_user_agent": "npm/10.9.2 node/v22.14.0 linux x64 workspaces/false",
+        "CURSOR_RIPGREP_PATH": "/exec-daemon/rg",
+        "npm_node_execpath": "/exec-daemon/node",
+        "SHLVL": "3",
+        "LD_LIBRARY_PATH": "/exec-daemon/tmux-root/lib",
+        "npm_config_noproxy": "",
+        "HOME": "/home/ubuntu",
+        "GH_TELEMETRY": "false",
+        "OLDPWD": "/tmp/verify-pr26",
+        "TERM_PROGRAM_VERSION": "3.5a",
+        "CURSOR_WORKLOAD_CGROUP": "/sys/fs/cgroup/system.slice/pod-7uhr57fuq5d43pam5sjipixqo4-4bb3c13c/cursor-agent/workload",
+        "NVM_BIN": "/home/ubuntu/.nvm/versions/node/v22.22.2/bin",
+        "npm_package_json": "/tmp/verify-pr26/branch/hearts-prototype/package.json",
+        "NVM_INC": "/home/ubuntu/.nvm/versions/node/v22.22.2/include/node",
+        "HEARTS_E2E_PORT": "3200",
+        "npm_config_userconfig": "/home/ubuntu/.npmrc",
+        "npm_config_local_prefix": "/tmp/verify-pr26/branch/hearts-prototype",
+        "NO_COLOR": "1",
+        "PAYLOAD_SECRET": "hearts-prototype-dev-secret",
+        "VNC_DPI": "96",
+        "COLOR": "0",
+        "NVM_DIR": "/home/ubuntu/.nvm",
+        "HEARTS_SCRIPTURE_OFFLINE": "1",
+        "FORCE_COLOR": "0",
+        "CURSOR_REQUEST_ID": "10d9179a-e88d-4a95-91ae-942a3fb78a06",
+        "_": "/exec-daemon/npx",
+        "npm_config_prefix": "/",
+        "npm_config_npm_version": "10.9.2",
+        "TERMINFO_DIRS": "/exec-daemon/tmux-root/share/terminfo",
+        "HEARTS_E2E": "1",
+        "TERM": "tmux-256color",
+        "npm_config_cache": "/home/ubuntu/.npm",
+        "RUSTUP_HOME": "/usr/local/rustup",
+        "npm_config_node_gyp": "/exec-daemon/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js",
+        "PATH": "/tmp/verify-pr26/branch/hearts-prototype/node_modules/.bin:/tmp/verify-pr26/branch/hearts-prototype/node_modules/.bin:/tmp/verify-pr26/branch/node_modules/.bin:/tmp/verify-pr26/node_modules/.bin:/tmp/node_modules/.bin:/node_modules/.bin:/exec-daemon/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin:/usr/local/cargo/bin:/usr/local/cargo/bin:/exec-daemon:/exec-daemon/tools:/usr/local/cargo/bin:/home/ubuntu/.nvm/versions/node/v22.22.2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "NODE": "/exec-daemon/node",
+        "npm_package_name": "hearts-prototype",
+        "AGENT_TRANSCRIPTS": "/home/ubuntu/.cursor/projects/workspace/agent-transcripts",
+        "CURSOR_AGENT": "1",
+        "PW_JSON": "/tmp/verify-pr26/results/rerun-paused-scrim-1.json",
+        "DISPLAY": ":1",
+        "LANG": "en_US.UTF-8",
+        "HEARTS_TEST_CLOCK": "1",
+        "TERM_PROGRAM": "tmux",
+        "npm_lifecycle_script": "playwright",
+        "SHELL": "/bin/bash",
+        "npm_package_version": "1.0.0",
+        "npm_lifecycle_event": "npx",
+        "GIT_DISCOVERY_ACROSS_FILESYSTEM": "0",
+        "GIT_LFS_SKIP_SMUDGE": "1",
+        "CURSOR_AGENT_SOCKET": "/run/cursor/api.sock",
+        "RUST_VERSION": "1.83.0",
+        "npm_config_globalconfig": "/etc/npmrc",
+        "npm_config_init_module": "/home/ubuntu/.npm-init.js",
+        "PWD": "/tmp/verify-pr26/branch/hearts-prototype",
+        "VNC_RESOLUTION": "1920x1200x24",
+        "HEARTS_DEMOTE_SHORT_MAINS": "0",
+        "LC_ALL": "en_US.UTF-8",
+        "npm_execpath": "/exec-daemon/lib/node_modules/npm/bin/npm-cli.js",
+        "CARGO_HOME": "/usr/local/cargo",
+        "NVM_CD_FLAGS": "",
+        "npm_config_global_prefix": "/",
+        "CURSOR_CONVERSATION_ID": "bc-3fce71df-2fcf-580c-b938-9b51a4204bbf",
+        "EXEC_DAEMON_STARTUP_TRACEPARENT": "00-01a109a1dccb755393c2ec80e1199e86-12ac36b3462e2362-01",
+        "npm_command": "exec",
+        "__CURSOR_SANDBOX_ENV_RESTORE": "builtin unset CURSOR_CONVERSATION_ID CURSOR_REQUEST_ID CURSOR_AGENT_STORE_FILES_DIR CURSOR_AGENT_STORE_SHARED_PATHS 2>/dev/null || true; builtin export CURSOR_CONVERSATION_ID='bc-3fce71df-2fcf-580c-b938-9b51a4204bbf'; builtin export CURSOR_REQUEST_ID='10d9179a-e88d-4a95-91ae-942a3fb78a06'",
+        "_ZO_DOCTOR": "0",
+        "TMUX_PANE": "%4",
+        "DATABASE_ADAPTER": "postgres",
+        "INIT_CWD": "/tmp/verify-pr26/branch/hearts-prototype",
+        "EDITOR": "vi",
+        "HEARTS_DIST_DIR": ".next-e2e",
+        "HEARTS_TRUSTED_PROXY_HOPS": "1",
+        "HEARTS_SEARCH_FIXTURE": "tests/fixtures/youtube-search.json",
+        "HEARTS_TRANSCRIPT_FIXTURE": "tests/fixtures/transcripts.json"
+      }
+    }
+  },
+  "suites": [
+    {
+      "title": "round4.spec.ts",
+      "file": "round4.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "round 4 screens",
+          "file": "round4.spec.ts",
+          "line": 215,
+          "column": 6,
+          "specs": [
+            {
+              "title": "LOW: a question paused over the film fades YouTube’s pause panel under a soft scrim",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 29837,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('paused-scrim')\nExpected: visible\nTimeout: 20000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByTestId('paused-scrim') with timeout 20000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('paused-scrim')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('paused-scrim')\nExpected: visible\nTimeout: 20000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByTestId('paused-scrim') with timeout 20000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('paused-scrim')\u001b[22m\n\n    at /tmp/verify-pr26/branch/hearts-prototype/tests/e2e/round4.spec.ts:391:52",
+                        "location": {
+                          "file": "/tmp/verify-pr26/branch/hearts-prototype/tests/e2e/round4.spec.ts",
+                          "column": 52,
+                          "line": 391
+                        },
+                        "snippet": "  389 |     await page.getByTestId('answer-point').click()\n  390 |     await expect(page.getByTestId('popup')).toBeVisible()\n> 391 |     await expect(page.getByTestId('paused-scrim')).toBeVisible()\n      |                                                    ^\n  392 |     const [scrim, film] = await Promise.all([page.getByTestId('paused-scrim').boundingBox(), page.locator('.player-card .yt').boundingBox()])\n  393 |     expect(Math.abs(scrim!.y - film!.y)).toBeLessThanOrEqual(1)\n  394 |     expect(Math.abs(scrim!.height - film!.height)).toBeLessThanOrEqual(1)"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/tmp/verify-pr26/branch/hearts-prototype/tests/e2e/round4.spec.ts",
+                            "column": 52,
+                            "line": 391
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('paused-scrim')\nExpected: visible\nTimeout: 20000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByTestId('paused-scrim') with timeout 20000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('paused-scrim')\u001b[22m\n\n\n  389 |     await page.getByTestId('answer-point').click()\n  390 |     await expect(page.getByTestId('popup')).toBeVisible()\n> 391 |     await expect(page.getByTestId('paused-scrim')).toBeVisible()\n      |                                                    ^\n  392 |     const [scrim, film] = await Promise.all([page.getByTestId('paused-scrim').boundingBox(), page.locator('.player-card .yt').boundingBox()])\n  393 |     expect(Math.abs(scrim!.y - film!.y)).toBeLessThanOrEqual(1)\n  394 |     expect(Math.abs(scrim!.height - film!.height)).toBeLessThanOrEqual(1)\n    at /tmp/verify-pr26/branch/hearts-prototype/tests/e2e/round4.spec.ts:391:52"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-05T03:09:26.389Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/tmp/verify-pr26/branch/hearts-prototype/test-results/round4-round-4-screens-LOW-d2f20-se-panel-under-a-soft-scrim/error-context.md"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/tmp/verify-pr26/branch/hearts-prototype/test-results/round4-round-4-screens-LOW-d2f20-se-panel-under-a-soft-scrim/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/tmp/verify-pr26/branch/hearts-prototype/tests/e2e/round4.spec.ts",
+                        "column": 52,
+                        "line": 391
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2c101e26881467b79347-c8aba86179214477cb5d",
+              "file": "round4.spec.ts",
+              "line": 380,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-05T03:08:54.626Z",
+    "duration": 65059.32199999999,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

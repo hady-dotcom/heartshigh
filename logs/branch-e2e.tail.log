@@ -1,0 +1,80 @@
+[202/222] tests/e2e/security.spec.ts:9:1 › the create-first-user screen and first-register are closed, and nobody outside can make an admin
+[203/222] tests/e2e/sheet-creator.spec.ts:60:1 › the creator drafts a sheet, then a learner completes a task the imam can see
+[WebServer]  ⚠ Server is approaching the used memory threshold, restarting...
+
+  2) tests/e2e/sheet-creator.spec.ts:60:1 › the creator drafts a sheet, then a learner completes a task the imam can see 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByTestId('creator-candidate')
+    Expected: 3
+    Received: 0
+    Timeout:  20000ms
+
+    Call log:
+      - Expect "toHaveCount" getByTestId('creator-candidate') with timeout 20000ms
+      - waiting for getByTestId('creator-candidate')
+        44 × locator resolved to 0 elements
+           - unexpected value "0"
+
+
+      70 |   await page.getByTestId('creator-speaker').fill('Mikaeel Smith')
+      71 |   await page.getByTestId('creator-search').click()
+    > 72 |   await expect(page.getByTestId('creator-candidate')).toHaveCount(3)
+         |                                                       ^
+      73 |   await page.locator('[data-testid="creator-candidate"][data-id="ccccccccccc"] [data-testid="creator-include"]').check()
+      74 |   await page.getByTestId('creator-paste').fill('https://vimeo.com/76979871')
+      75 |   await page.getByTestId('creator-file').setInputFiles(path.join(process.cwd(), 'tests/fixtures/circle-recording.mp4'))
+        at /tmp/verify-pr26/branch/hearts-prototype/tests/e2e/sheet-creator.spec.ts:72:55
+
+    Error Context: test-results/sheet-creator-the-creator--f8732-tes-a-task-the-imam-can-see/error-context.md
+
+    Error Context: test-results/sheet-creator-the-creator--f8732-tes-a-task-the-imam-can-see/error-context.md
+
+
+(node:29379) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:29379) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[204/222] tests/e2e/sheet-creator.spec.ts:168:1 › a portal admin searches for their own course and cannot draft the master library
+[205/222] tests/e2e/sheet-packs.spec.ts:65:1 › the pack column puts a new course in the pack; without the tick box existing learners are left as they are, and that is logged
+[206/222] tests/e2e/sheet-packs.spec.ts:84:1 › the preview offers the pack choice with the push tick box off by default
+[207/222] tests/e2e/sheet-packs.spec.ts:99:1 › choosing a pack for new courses and ticking push gives them to learners who already hold the pack; undo takes both back out
+[208/222] tests/e2e/sheet-packs.spec.ts:126:1 › a portal admin cannot name a master pack or another portal’s pack
+[209/222] tests/e2e/typography.spec.ts:27:1 › Typography panel lists the five styles and can stand in for the hors d’oeuvre
+[210/222] tests/e2e/view-as.spec.ts:51:3 › view as › 38. a portal admin views as a learner with a reason, read-only by default
+[211/222] tests/e2e/view-as.spec.ts:58:3 › view as › 39. a view without a reason is refused
+[212/222] tests/e2e/view-as.spec.ts:68:3 › view as › 40. while read-only, answers and settings are refused and logged
+[213/222] tests/e2e/view-as.spec.ts:78:3 › view as › 41. the learner’s private opening answers are not shown in view-as
+[214/222] tests/e2e/view-as.spec.ts:87:3 › view as › 42. the viewer’s own device state is left alone, and the view’s keys are wiped on exit
+[215/222] tests/e2e/view-as.spec.ts:108:3 › view as › 43. Exit returns to where the view started and ends the session
+[216/222] tests/e2e/view-as.spec.ts:118:3 › view as › 44. a teacher has no View as, and the server refuses one
+[217/222] tests/e2e/view-as.spec.ts:126:3 › view as › 45. a portal admin cannot view as a learner in another portal
+[218/222] tests/e2e/view-as.spec.ts:133:3 › view as › 46. the master views as a portal admin, but never as another master
+[WebServer] (node:29359) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[219/222] tests/e2e/view-as.spec.ts:147:3 › view as › 47. start and stop are written to the audit log with the reason
+[220/222] tests/e2e/view-as.spec.ts:156:3 › view as › 48. allowing changes needs a reason, and then a change goes through and is logged
+[221/222] tests/e2e/view-as.spec.ts:174:3 › view as › 49. some things stay closed even with changes allowed: the opening and Start again
+(node:30332) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:30332) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[222/222] tests/e2e/planner-demo.spec.ts:58:1 › phone walk: buffet, plan, think, swipe, home, workbook, retry, next part
+  Slow test file: tests/e2e/opening.spec.ts (5.1m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  2 failed
+    tests/e2e/screenshots.spec.ts:33:1 › a week of use, so the garden has something in it ──────────
+    tests/e2e/sheet-creator.spec.ts:60:1 › the creator drafts a sheet, then a learner completes a task the imam can see 
+  1 skipped
+  219 passed (35.8m)
+e2e exit=1
