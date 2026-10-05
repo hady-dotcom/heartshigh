@@ -24,6 +24,9 @@ import { KeepPlaceSheet, type SheetReason } from './sheet'
 import { track } from '@/lib/experiment-track'
 import { formatSlotLabel } from '@/lib/experiment-slots'
 import { useVariant, type VariantMap } from '@/lib/use-variant'
+import { SpokenWords } from '../app/spoken-words'
+import { segmentAt } from '@/lib/framing/choose'
+import type { FramingMode } from '@/lib/framing/types'
 
 type Phase = 'opener' | 'scene' | 'help' | 'handoff' | 'feed'
 type Mode = 'hors' | 'appetiser'
@@ -171,8 +174,9 @@ export function Journey(props: JourneyProps) {
   const [faves, toggleFave] = useStoredSet('hearts.faves.v1')
   const [saved, toggleSave] = useStoredSet('hearts.saved.v1')
   const [firstEver, setFirstEver] = useState(false)
-  const [lineAt, setLineAt] = useState(0)
+  const [lineAt, setLineAt] = useState<number | null>(null)
   const [spokenAt, setSpokenAt] = useState<number | null>(null)
+  const [framingMode, setFramingMode] = useState<FramingMode | null>(null)
   const watch = useRef<{ key: string; start: number; furthest: number; done90: boolean }>({ key: '', start: 0, furthest: 0, done90: false })
   const refilling = useRef(false)
   const clipRef = useRef<HTMLDivElement>(null)
@@ -450,7 +454,7 @@ export function Journey(props: JourneyProps) {
       setErrorNote(null)
       setSlow('none')
       setBuffering(false)
-      setLineAt(0)
+      setLineAt(null)
       setAppetiserOver(false)
       watch.current = { key: `${item?.cutId}:${kind}`, start: kind === 'hors' ? item?.hors.start || 0 : item?.appetiser.start || 0, furthest: 0, done90: false }
       // The new card is on screen (and sliding in) before any player work starts.
@@ -572,7 +576,8 @@ export function Journey(props: JourneyProps) {
     const current = items[index]
     if (!current?.lessonId) return
     const piece = mode === 'hors' ? current.hors : current.appetiser
-    const line = piece.lines?.[Math.min(lineAt, Math.max(0, (piece.lines?.length || 1) - 1))]
+    if (lineAt == null) return
+    const line = piece.lines?.[lineAt]
     const at = line?.at
     const seconds = typeof at === 'number' && Number.isFinite(at) ? at : mode === 'hors' ? current.hors.start : current.appetiser.start
     if (!Number.isFinite(seconds)) return
@@ -1013,6 +1018,8 @@ export function Journey(props: JourneyProps) {
       const time = player.getCurrentTime()
       const seen = watch.current
       seen.furthest = Math.max(seen.furthest, time - seen.start)
+      const framed = current.framingTrack ? segmentAt(current.framingTrack, time) : null
+      setFramingMode((held) => (framed?.mode === held ? held : framed?.mode || null))
       // The player's own end mark is skipped when someone seeks past it, so the appetiser stops here as well.
       const lines = modeRef.current === 'hors' ? current.hors.lines : current.appetiser.lines
       const showing = captionIndex(lines, time)
@@ -1338,9 +1345,9 @@ export function Journey(props: JourneyProps) {
   const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (!started || Boolean(errorNote) || offline)))
   const waitingToPlay = phase === 'feed' && playerReady && !started && !errorNote && !offline
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
-  const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
-  const horsLine = mode === 'hors' ? piece?.lines?.[lineShown] : null
-  const captionText = (horsLine ? horsLine.tidy || horsLine.text : mode === 'hors' ? piece?.quote : '') || ''
+  const lineShown = lineAt
+  const horsLine = mode === 'hors' && lineAt != null ? piece?.lines?.[lineAt] : null
+  const captionText = horsLine ? horsLine.tidy || horsLine.text : ''
   const videoAppetiser = mode === 'appetiser' && Boolean(item?.youtubeId)
   const scenicAppetiser = mode === 'appetiser' && !item?.youtubeId
   const scenicLines = scenicAppetiser ? [item?.scenic?.hook, item?.scenic?.turn, item?.scenic?.land].filter((line): line is string => Boolean(line)) : []
@@ -1351,12 +1358,12 @@ export function Journey(props: JourneyProps) {
   const course = (item && learnMore(item, 'appetiser', base)?.href) || base
   const horsParent = item?.parents?.hors
   const appetiserParent = item?.parents?.appetiser
-  const captionButton = item ? (
+  const captionButton = item && captionText ? (
     <button
       type="button"
-      className={`caption${captionText.length > 120 ? ' long' : ''}${captionText ? '' : ' title-only'}`}
+      className={`caption${captionText.length > 120 ? ' long' : ''}`}
       data-testid="caption"
-      data-line={lineShown}
+      data-line={lineShown ?? undefined}
       data-expanded={captionOpen ? 'true' : 'false'}
       aria-expanded={captionOpen}
       key={mode}
@@ -1388,7 +1395,7 @@ export function Journey(props: JourneyProps) {
         setCaptionOpen((open) => !open)
       }}
     >
-      {captionText || item.lessonTitle || item.courseTitle}
+      {captionText}
     </button>
   ) : null
   const laneVisible = Boolean(item) && !firstEver
@@ -1443,7 +1450,7 @@ export function Journey(props: JourneyProps) {
       ) : null}
       {scenicAppetiser ? (
         <div className="scenic-lines" data-testid="scenic-lines">
-          {(scenicLines.length ? scenicLines : [item.lessonTitle || item.courseTitle]).map((line) => (
+          {scenicLines.map((line) => (
             <p key={line}>{line}</p>
           ))}
         </div>
@@ -1476,7 +1483,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined}>
+    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing={framingMode || undefined}>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />
@@ -1494,7 +1501,7 @@ export function Journey(props: JourneyProps) {
       ) : null}
 
       <div ref={clipRef} className="j-clip" data-screen={phase === 'feed' || phase === 'handoff' ? 'clip' : undefined}>
-        <div ref={slotRef} className="j-slot" data-testid="player-slot" style={{ visibility: phase === 'feed' || phase === 'handoff' ? 'visible' : 'hidden' }}>
+        <div ref={slotRef} className="j-slot" data-testid="player-slot" data-framing={item?.framingTrack ? framingMode || 'F' : undefined} style={{ visibility: phase === 'feed' || phase === 'handoff' ? 'visible' : 'hidden', ['--fr-poster' as string]: item?.youtubeId ? `url(https://i.ytimg.com/vi/${item.youtubeId}/hqdefault.jpg)` : undefined, ['--fr-tx' as string]: item?.framingTrack && framingMode === 'D' ? `${-((segmentAt(item.framingTrack, spokenAt ?? item.hors.start)?.focus?.x ?? 0.5) * 100 - 50)}%` : undefined }}>
           {[0, 1].map((at) => (
             <div
               key={at}
@@ -1504,6 +1511,16 @@ export function Journey(props: JourneyProps) {
               style={{ visibility: at === visibleHost && playerReady ? 'visible' : 'hidden' }}
             />
           ))}
+          {framingMode === 'F' && item?.framingTrack?.sentences?.length ? (
+            <SpokenWords
+              sentences={item.framingTrack.sentences}
+              time={spokenAt ?? item.hors.start}
+              speaker={item.speaker}
+              title={item.lessonTitle || item.courseTitle}
+              from={item.hors.start}
+              to={item.hors.end}
+            />
+          ) : null}
           {typeClip && typeSrc ? (
             <video
               key={item?.id}

@@ -14,6 +14,9 @@ import { Qr } from '@/components/qr'
 import { adoptedCourseIds, type PortalDoc, type SessionUser } from '@/server/context'
 import { partTitle } from '@/lib/talk-title'
 import { type Ctx, type Row, clock, one, portalPeople, ref, rows, str } from '../common'
+import { FramingPreview } from '@/components/desk/framing-preview'
+import { trackForClip } from '@/lib/framing/store'
+import { fallbackTrack } from '@/lib/framing/validate'
 import { AdminFrame } from './overview'
 
 export function guardAdmin(ctx: Ctx) {
@@ -214,6 +217,21 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
               </div>
             </section>
           ) : <section className="panel"><div className="body empty">This subject has no films yet.</div></section>}
+
+          {lesson && youtubeId ? (() => {
+            const clip = cuts[0]
+            const windowStart = Number(clip?.start || 0)
+            const windowEnd = Number(clip?.end || lesson.durationSeconds || windowStart + 25)
+            const track = trackForClip(youtubeId, windowStart, windowEnd, clip?.framingTrack || lesson.framingTrack) || fallbackTrack(youtubeId, windowStart, windowEnd)
+            return (
+              <section className="panel" data-testid="framing-panel">
+                <header className="light"><h2>Portrait framing</h2><span className="hint">Live crop on YouTube. No re-render.</span></header>
+                <div className="body">
+                  <FramingPreview track={track} youtubeId={youtubeId} speaker={str(lesson.speaker)} cutId={clip?.id} next={here} />
+                </div>
+              </section>
+            )
+          })() : null}
 
           {lesson ? (
             <section className="panel" data-testid="cuts-panel">

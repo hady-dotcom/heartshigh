@@ -15,6 +15,7 @@ import { filmsForTalk, mixFeed, readFilmCatalogue, type BeatFilm } from '@/lib/f
 import { filesForTalk, isTypographyStyle, readTypographyManifest, type TypographyManifest } from '@/lib/typography'
 import { clipWords, displayLine, feedTidy, parseLineTidy } from '@/lib/tidy-caption'
 import { partTitle } from '@/lib/talk-title'
+import { trackForClip } from '@/lib/framing/store'
 import { laneOf, portraitFor, SLIDE_ART, slugify, type FeedItem, type SlideStyle } from './learner'
 
 type Row = Record<string, unknown> & { id: number }
@@ -414,6 +415,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
       tierStatus: tier.status === 'checked' ? 'checked' : 'draft',
       offerResume: tier.offerResume !== false,
       parents: parentsFor(lesson.id, data.ladder.filter((item) => idOf(item.lesson) === lesson.id)),
+      framingTrack: trackForClip(youtubeId, Number(tier.horsStart), Number(tier.horsEnd), cut.framingTrack || lesson.framingTrack),
     }
   }
   const start = Number(cut.start)
@@ -447,6 +449,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     tierStatus: null,
     offerResume: true,
     parents: parentsFor(lesson.id, data.ladder.filter((item) => idOf(item.lesson) === lesson.id)),
+    framingTrack: trackForClip(youtubeId, horsStart, horsEnd, cut.framingTrack || lesson.framingTrack),
   }
 }
 

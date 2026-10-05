@@ -722,11 +722,14 @@ export function tierHorsWarning(tier: { horsStart: number; horsEnd: number }, ca
 }
 
 /** Which timed caption is showing at `time`: the last line already said (the first until then). */
-export function captionIndex(lines: { at: number }[] | undefined, time: number) {
-  if (!lines?.length) return 0
-  let at = 0
+/** Index of the timed caption for `time`, or null when nothing is being said. Never invents a line. */
+export function captionIndex(lines: { at: number; end?: number }[] | undefined, time: number): number | null {
+  if (!lines?.length) return null
+  let at: number | null = null
   lines.forEach((line, index) => {
-    if (time >= line.at - 0.15) at = index
+    const start = line.at - 0.15
+    const end = line.end ?? lines[index + 1]?.at ?? Number.POSITIVE_INFINITY
+    if (time >= start && time < end) at = index
   })
   return at
 }

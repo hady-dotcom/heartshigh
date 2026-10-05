@@ -52,6 +52,7 @@ export function masterNav(): { group: string; items: NavItem[] }[] {
         { key: 'review', label: 'Review', href: '/master/review', icon: <QuestionIcon /> },
         { key: 'ai', label: 'AI steps', href: '/master/ai', icon: <CogIcon /> },
         { key: 'tiers', label: 'Talk tiers', href: '/master/tiers', icon: <BookIcon /> },
+        { key: 'framing', label: 'Framing', href: '/master/framing', icon: <BookIcon /> },
         { key: 'packs', label: 'Course packs', href: '/master/packs', icon: <BookIcon /> },
         { key: 'sheet', label: 'Master sheet', href: '/master/sheet', icon: <BookIcon /> },
         { key: 'create', label: 'Sheet creator', href: '/master/sheet/create', icon: <BookIcon /> },

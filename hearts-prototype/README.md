@@ -27,6 +27,7 @@ Other ways in:
 | `npm run seed` | Seed an empty database (the first run of `npm run go` does this) |
 | `HEARTS_TEST_CLOCK=1 npm run dev` | Start with the test clock. Only the master desk can move it, and it is never on in a production build |
 | `npx tsx scripts/import-transcripts.ts <folder>` | Clean a folder of YouTube `.vtt` captions into `content/transcripts/starters/` (one spoken line per cue, repeats removed) and rebuild its `index.json` of lengths |
+| `pnpm framing:analyse <youtubeId> <start> <end>` | On a box with yt-dlp, ffmpeg and OpenCV: download a window, pick treatments A–F per shot, snap in/out to sentence ends, write `content/framing/<id>-<start>-<end>.json`, delete the film. Never writes production data. |
 
 ### Accounts
 

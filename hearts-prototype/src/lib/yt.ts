@@ -14,6 +14,7 @@ export type YTPlayer = {
   unMute(): void
   isMuted(): boolean
   cueVideoById(options: { videoId: string; startSeconds?: number; endSeconds?: number }): void
+  loadVideoById?(options: { videoId: string; startSeconds?: number; endSeconds?: number }): void
   seekTo(seconds: number, allowSeekAhead: boolean): void
   getCurrentTime(): number
   getDuration(): number

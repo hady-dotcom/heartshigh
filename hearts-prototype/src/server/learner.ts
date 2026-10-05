@@ -9,6 +9,7 @@ import { loadDoors } from './doors'
 import { portalDisplayName } from '@/lib/portal-name'
 import type { PieceRef } from '@/lib/nesting'
 import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
+import type { FramingTrack } from '@/lib/framing/types'
 
 export type SlideStyle = 'kinetic' | 'cinema' | 'windows' | 'conversation' | 'unfold'
 
@@ -77,6 +78,8 @@ export type FeedItem = {
   offerResume?: boolean
   /** Hors d'oeuvre -> its appetiser -> its full talk. Learn more uses the current piece's parent only. */
   parents: { hors: PieceRef; appetiser: PieceRef }
+  /** Live portrait treatments A–F. Missing means the player uses F. */
+  framingTrack?: FramingTrack | null
 }
 
 export type CourseCard = {

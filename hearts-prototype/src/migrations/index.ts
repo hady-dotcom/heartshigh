@@ -13,6 +13,7 @@ import * as migration_20261004_120000_compass_v2 from './20261004_120000_compass
 import * as migration_20261004_031500_gather from './20261004_031500_gather';
 import * as migration_20261004_180000_gather_entry_code from './20261004_180000_gather_entry_code';
 import * as migration_20261004_180000_experiments from './20261004_180000_experiments';
+import * as migration_20261004_180000_framing_track from './20261004_180000_framing_track';
 import * as migration_20261004_210000_schedule_minutes from './20261004_210000_schedule_minutes';
 import * as migration_20261004_210000_live_sessions from './20261004_210000_live_sessions';
 
@@ -91,6 +92,11 @@ export const migrations = [
     up: migration_20261004_180000_experiments.up,
     down: migration_20261004_180000_experiments.down,
     name: '20261004_180000_experiments',
+  },
+  {
+    up: migration_20261004_180000_framing_track.up,
+    down: migration_20261004_180000_framing_track.down,
+    name: '20261004_180000_framing_track',
   },
   {
     up: migration_20261004_210000_schedule_minutes.up,

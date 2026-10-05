@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "youtubeId": "dQw4w9WgXcQ",
+  "start": 10,
+  "end": 34,
+  "requestedStart": 10,
+  "requestedEnd": 34,
+  "segments": [
+    {
+      "start": 10,
+      "end": 16,
+      "mode": "D",
+      "confidence": 0.82,
+      "focus": { "x": 0.28, "y": 0.4 },
+      "crop": { "x": 0.12, "y": 0, "w": 0.316, "h": 1 }
+    },
+    {
+      "start": 16,
+      "end": 22,
+      "mode": "B",
+      "confidence": 0.7,
+      "focus": { "x": 0.5, "y": 0.45 }
+    },
+    {
+      "start": 22,
+      "end": 34,
+      "mode": "F",
+      "confidence": 0.4,
+      "focus": { "x": 0.5, "y": 0.45 }
+    }
+  ],
+  "sentences": [
+    {
+      "text": "Where do you derive your honour from?",
+      "s": 10,
+      "e": 15.8,
+      "next": 16,
+      "key": "honour",
+      "words": [
+        { "w": "Where", "t": 10 },
+        { "w": "do", "t": 10.3 },
+        { "w": "you", "t": 10.5 },
+        { "w": "derive", "t": 10.8 },
+        { "w": "your", "t": 11.2 },
+        { "w": "honour", "t": 11.5, "key": true },
+        { "w": "from?", "t": 12.2 }
+      ]
+    },
+    {
+      "text": "Your dignity, your sense of worth?",
+      "s": 16,
+      "e": 21.5,
+      "next": 22,
+      "key": "worth",
+      "words": [
+        { "w": "Your", "t": 16 },
+        { "w": "dignity,", "t": 16.4 },
+        { "w": "your", "t": 17.1 },
+        { "w": "sense", "t": 17.4 },
+        { "w": "of", "t": 17.8 },
+        { "w": "worth?", "t": 18.1, "key": true }
+      ]
+    },
+    {
+      "text": "And they seem to be winning as well.",
+      "s": 22,
+      "e": 33,
+      "next": 34,
+      "key": "winning",
+      "words": [
+        { "w": "And", "t": 22 },
+        { "w": "they", "t": 22.3 },
+        { "w": "seem", "t": 22.6 },
+        { "w": "to", "t": 22.9 },
+        { "w": "be", "t": 23.1 },
+        { "w": "winning", "t": 23.4, "key": true },
+        { "w": "as", "t": 24 },
+        { "w": "well.", "t": 24.3 }
+      ]
+    }
+  ]
+}
