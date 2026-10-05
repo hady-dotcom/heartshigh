@@ -39,6 +39,7 @@ import { isTimeZone } from '@/lib/zone-time'
 import { parseLengthInput } from '@/lib/length'
 import { FEATURE_UNAVAILABLE, featuresFromForm } from '@/lib/features'
 import { adoptLibraryCourses, loadPortalById, refuseFeature } from './features'
+import { handleConsentActions } from './consent-actions'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
@@ -481,6 +482,8 @@ export async function handlePost(req: Request) {
 async function handleForm(req: Request, form: FormData, session: Session) {
   const action = text(form, 'action')
   const { payload, user } = session
+  const consentReply = await handleConsentActions(req, form, session)
+  if (consentReply) return consentReply
 
   if (action === 'login') {
     const next = text(form, 'next') || '/'

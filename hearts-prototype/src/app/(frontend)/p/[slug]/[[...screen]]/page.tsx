@@ -30,6 +30,12 @@ import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
 import { PortalCircle } from '@/screens/desk/circle'
 import { FeatureUnavailable } from '@/components/app/feature-unavailable'
 import { featureOn, type FeatureKey } from '@/lib/features'
+import { learnerNeedsConsent } from '@/server/consent'
+import { LegalScreen } from '@/screens/app/legal'
+import { ConsentScreen } from '@/screens/app/consent'
+import { SearchScreen } from '@/screens/app/search'
+import { HelpCentreScreen } from '@/screens/app/help-centre'
+import { ChildrenScreen, PortalContactsScreen } from '@/screens/desk/consent-desk'
 
 function originOf(reqHeaders: Headers) {
   return shareOrigin(reqHeaders)
@@ -68,6 +74,12 @@ export default async function PortalScreen({ params, searchParams }: { params: P
 
   const { payload, user, portal } = await requirePortal(slug)
   const ctx: Ctx = { payload, user, portal, slug, base, origin: originOf(await headers()), query }
+
+  const legalOpen = new Set(['consent', 'privacy', 'terms', 'guidelines', 'running'])
+  if (user.role === 'learner' && !legalOpen.has(area || '') && (await learnerNeedsConsent(payload, user))) {
+    const after = encodeURIComponent(`${base}${area ? `/${screen.join('/')}` : ''}`)
+    redirect(`${base}/consent?after=${after}`)
+  }
 
   if (portal.closed && user.role === 'learner') {
     return (
@@ -117,6 +129,11 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       case 'settings':
         guardAdmin(ctx)
         return PortalSettingsScreen(ctx)
+      case 'contacts':
+        guardAdmin(ctx)
+        return PortalContactsScreen(ctx)
+      case 'children':
+        return ChildrenScreen(ctx)
       case 'wizard':
         guardAdmin(ctx)
         return WizardScreen(ctx)
@@ -182,12 +199,25 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       if (a === 'plan' || a === 'week') return gated(ctx, 'planner') || PlanScreen(ctx)
       if (a === 'circle') return CircleScreen(ctx)
       if (a === 'settings') return SettingsScreen(ctx)
+      if (a === 'help') return HelpCentreScreen(ctx)
       if (a === 'path') return gated(ctx, 'compass') || LearnerPathScreen(ctx)
       notFound()
     case 'recalibrate':
       return gated(ctx, 'compass') || RecalibrateScreen(ctx)
     case 'welcome':
       return WelcomeScreen(ctx)
+    case 'consent':
+      return ConsentScreen(ctx)
+    case 'privacy':
+      return LegalScreen({ ...ctx, slug }, 'privacy')
+    case 'terms':
+      return LegalScreen({ ...ctx, slug }, 'terms')
+    case 'guidelines':
+      return LegalScreen({ ...ctx, slug }, 'guidelines')
+    case 'running':
+      return LegalScreen({ ...ctx, slug }, 'portal-agreement')
+    case 'search':
+      return SearchScreen(ctx)
     case 'about':
       redirect(`${base}/welcome`)
     case 'path':

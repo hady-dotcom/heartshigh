@@ -395,6 +395,13 @@ export function firstCitation(raw: string): { seconds: number; citation: Scholar
 
 const FIRST_LOOK_MS = 36 * 60 * 60 * 1000
 
+export const REPLAY_LEAD_SECONDS = 5
+
+export function replayHref(base: string, courseId: number | null, lessonId: number | null, seconds: number) {
+  if (!courseId || !lessonId) return null
+  return `${base}/course/${courseId}?part=${lessonId}&t=${Math.max(0, Math.floor(seconds) - REPLAY_LEAD_SECONDS)}`
+}
+
 /** New when the line was gathered after the learner last opened Harvest. The first look marks only the last day and a half. */
 export function isNewMoment(gatheredAt: string | null | undefined, seenAt: string | null | undefined, at: Date) {
   if (!gatheredAt) return false

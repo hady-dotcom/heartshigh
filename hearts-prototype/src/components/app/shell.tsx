@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { RouteFade } from '@/components/app/route-fade'
+import { PageHelp } from '@/components/app/page-help'
 import { learnerBar, type BarKey, type FeatureSource } from '@/lib/features'
+import { learnerHelp } from '@/lib/learner-help'
 
 export type Tab = BarKey
 
@@ -98,9 +100,11 @@ export function Flash({ error, notice }: { error?: string; notice?: string }) {
 
 export function AppFrame({ children, dark = false, evening = false, testId, tone }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; tone?: 'gather' }) {
   const gather = tone === 'gather'
+  const help = learnerHelp(testId)
   return (
     <div className={`app-stage${evening ? ' evening' : ''}${gather ? ' gather-stage' : ''}`}>
-      <main className={`app${dark ? ' dark' : ''}${evening ? ' evening' : ''}${gather ? ' gather-shell' : ''}`} data-testid={testId}>
+      <main id="main-content" className={`app${dark ? ' dark' : ''}${evening ? ' evening' : ''}${gather ? ' gather-shell' : ''}`} data-testid={testId} tabIndex={-1}>
+        {help ? <PageHelp topic={testId || 'page'}>{help}</PageHelp> : null}
         <RouteFade>{children}</RouteFade>
       </main>
     </div>

@@ -7,6 +7,10 @@ import { newViewingId, POLL_MS, PopupWatcher, type PopupPoint } from '@/lib/popu
 import { placeDots } from '@/lib/timeline-dots'
 import { createPlayer, destroyPlayer, getPlayer, resume, STATE, UNPLAYABLE } from '@/lib/yt'
 import { HeartIcon, ImageIcon, LockIcon, MicIcon, PauseIcon, PlayIcon } from '../icons'
+import { TalkCaptions } from '@/components/app/talk-captions'
+import { TranscriptPanel } from '@/components/app/transcript-panel'
+import { FocusTrap } from '@/components/app/focus-trap'
+import { captionCues, transcriptParagraphs } from '@/lib/spoken-caption'
 
 export type PointView = {
   id: number
@@ -68,6 +72,8 @@ export function CoursePlayer({
   garden,
   overPlayer = true,
   film = null,
+  transcript = '',
+  speaker = '',
 }: {
   courseTitle: string
   backHref: string
@@ -89,6 +95,8 @@ export function CoursePlayer({
   /** Master flag popupOverPlayer. Off is the strict layout: the paused player stays fully in view. */
   overPlayer?: boolean
   film?: { provider: 'vimeo' | 'file'; vimeoId?: string | null; src?: string | null } | null
+  transcript?: string
+  speaker?: string
 }) {
   const router = useRouter()
   const card = useRef<HTMLDivElement>(null)
@@ -305,6 +313,17 @@ export function CoursePlayer({
     setPlaying((value) => !value)
   }
 
+  const jumpTo = (seconds: number) => {
+    const at = Math.max(0, seconds)
+    setTime(at)
+    if (mode === 'youtube') getPlayer(PLAYER_ID)?.seekTo(at, true)
+    else if (mode === 'file' && videoRef.current) videoRef.current.currentTime = at
+    else if (mode === 'vimeo') filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'setCurrentTime', value: at }), '*')
+  }
+
+  const cues = captionCues(transcript, speaker)
+  const paragraphs = transcriptParagraphs(transcript, speaker)
+
   /** Close the card; when the player paused for it, playback resumes within 300 ms (spec 7A.11). */
   const close = (saved?: { pointId: number; text: string; message: string }) => {
     if (saved) {
@@ -355,6 +374,7 @@ export function CoursePlayer({
         ) : (
           <span className="part-chip" data-testid="part-label">{partLabel}</span>
         )}
+        {cues.length ? <TalkCaptions cues={cues} seconds={time} /> : null}
         <span className="time-read" data-testid="player-time">{clock(time)}</span>
         {open && !filmed ? (
           <p className="paused-note" data-testid="paused-note">❚❚ Paused at question {open.number}</p>
@@ -374,7 +394,7 @@ export function CoursePlayer({
               type="button"
               className={`dot${point.answered ? ' done' : point.state !== 'open' ? ' locked' : ''}`}
               style={{ left: `${place?.left ?? 2}%`, top: place?.lift || 0 }}
-              aria-label={`Question ${point.number} at ${clock(point.second)}`}
+              aria-label={`Question ${point.number} of ${views.length}${point.answered ? ', answered' : point.state !== 'open' ? ', locked' : ', not answered yet'}`}
               data-testid="timeline-dot"
               data-state={point.state}
               data-second={point.second}
@@ -431,8 +451,10 @@ export function CoursePlayer({
         <input type="hidden" name="next" value={next} />
         <button className="link-btn" type="submit" data-testid="mark-watched">I have watched this part</button>
       </form>
+      <TranscriptPanel paragraphs={paragraphs} seconds={time} title={partLabel} onJump={jumpTo} />
       {open ? (
-        <Sheet
+        <FocusTrap onClose={() => close()}>
+        <Sheet>
           key={open.id}
           point={open}
           lessonId={lessonId}
@@ -447,6 +469,7 @@ export function CoursePlayer({
           onResume={() => { if (fromTrigger) resumeNow() }}
           onClose={close}
         />
+        </FocusTrap>
       ) : null}
     </div>
   )

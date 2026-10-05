@@ -2,12 +2,13 @@ import Link from 'next/link'
 import { Flash, Hidden } from '@/components/app/shell'
 import { TurnstileField } from '@/components/app/turnstile-field'
 import { BrandLockup } from '@/components/brand'
+import { LegalLinks } from '@/components/app/legal-links'
 
 export default async function Login({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string; next?: string }> }) {
   const query = await searchParams
   const next = query.next && query.next.startsWith('/') && !query.next.startsWith('//') ? query.next : '/'
   return (
-    <main className="door garden-door" data-testid="login">
+    <main id="main-content" className="door garden-door" data-testid="login">
       <div className="door-card">
         <BrandLockup size={72} />
         <h1>Welcome back</h1>
@@ -21,6 +22,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
           <button className="pill gold block" data-testid="login-submit" type="submit">Sign in</button>
         </form>
         <div className="door-links"><Link href="/forgot">Forgot password</Link><Link href="/join">I have an access code</Link><Link href="/">Back</Link></div>
+        <LegalLinks />
       </div>
     </main>
   )

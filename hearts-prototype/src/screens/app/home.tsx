@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { DoorChips } from '@/components/app/doors'
 import { InstallCard } from '@/components/app/install-card'
+import { SearchBox } from '@/components/app/search-box'
 import { redirect } from 'next/navigation'
 import { Avatar } from '@/components/app/feed'
 import { SavedCount, SavedToast } from '@/components/app/saved-list'
@@ -91,6 +92,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         <SavedToast />
         <span className="sr-only">{portalName(portal)}</span>
         <Flash error={query.error} notice={query.notice} />
+        <SearchBox action={`${base}/search`} />
         {featureOn(portal, 'garden') ? (
         <section className="grow-banner" data-testid="grow-banner">
           <p className="eyebrow">Your growth</p>
@@ -167,6 +169,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
       <div className="app-scroll">
         <div className="app-head"><h1>Lanes</h1><span className="muted" style={{ fontSize: 13, fontWeight: 600 }} data-testid="day-number">Day {today}</span></div>
         <Flash error={query.error} notice={query.notice} />
+        <SearchBox action={`${base}/search`} defaultValue={typeof query.q === 'string' ? query.q : ''} />
         <p className="lead">Each lane is one theme. Tap a lane to watch its clips, or start a full course below.</p>
         {lanes.map((lane) => {
           const first = lane.clips[0]

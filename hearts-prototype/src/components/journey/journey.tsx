@@ -21,6 +21,7 @@ import { HeartIcon, PlayIcon, SaveIcon, ShareIcon } from '../icons'
 import { HelpScreen, Opener, SceneCard } from './scenes'
 import { TeachingCard } from './teaching-card'
 import { KeepPlaceSheet, type SheetReason } from './sheet'
+import { FeedKeys } from './feed-keys'
 
 type Phase = 'opener' | 'scene' | 'help' | 'handoff' | 'feed'
 type Mode = 'hors' | 'appetiser'
@@ -1604,6 +1605,7 @@ export function Journey(props: JourneyProps) {
 
       {toast?.trim() ? <div className="lane-switch" data-testid="toast"><span key={toast}>{toast.trim()}</span></div> : null}
 
+      {phase === 'feed' ? <FeedKeys /> : null}
       <div className="sr-only">
         {phase === 'feed' ? (
           <>
@@ -1613,6 +1615,12 @@ export function Journey(props: JourneyProps) {
             <button type="button" data-testid="gesture-right" onClick={moreFromSpeaker}>More from this speaker</button>
             <button type="button" data-testid="gesture-next" onClick={() => stepLoop(1)}>Next clip on this level</button>
             <button type="button" data-testid="gesture-prev" onClick={() => stepLoop(-1)}>Previous clip on this level</button>
+            <button type="button" data-testid="gesture-pause" onClick={() => {
+              const player = host.playerId ? getPlayer(host.playerId) : null
+              if (!player) return
+              if (host.state === STATE.PLAYING) player.pauseVideo()
+              else player.playVideo?.()
+            }}>Pause or play this clip</button>
           </>
         ) : null}
       </div>

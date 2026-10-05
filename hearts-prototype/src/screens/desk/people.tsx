@@ -17,6 +17,7 @@ import { dayNumber } from '@/server/learner'
 import { type Ctx, clock, longDate, portalPeople, ref, rows, shortDate, str } from '../common'
 import { AdminFrame } from './overview'
 import { featureOn } from '@/lib/features'
+import { learnerConsentHint } from './consent-desk'
 
 export async function TeachScreen(ctx: Ctx) {
   const { payload, user, portal, base, query } = ctx
@@ -61,6 +62,7 @@ export async function TeachScreen(ctx: Ctx) {
           <table className="data">
             <thead><tr>
               <th>Name</th>
+              <th>Consent</th>
               <th>Email</th>
               <th className="num">Day</th>
               <th className="num">Parts watched</th>
@@ -70,13 +72,15 @@ export async function TeachScreen(ctx: Ctx) {
               <th />
             </tr></thead>
             <tbody>
-              {learners.map((learner) => {
+              {await Promise.all(learners.map(async (learner) => {
                 const done = completions.filter((row) => ref(row.user) === learner.id)
                 const progress = onTimeProgress(slotsFor(learner.id), done.map((row) => ({ lessonId: ref(row.lesson) || 0, watchedOn: dateKey(row.watchedAt || row.createdAt) })), today)
                 const onTime = formatOnTime(progress)
+                const consent = await learnerConsentHint(payload, learner.id, portal.id)
                 return (
                   <tr key={learner.id} data-testid="learner-row">
                     <td><b>{str(learner.name)}</b>{learner.audience && learner.audience !== 'learner' ? <div className="hint">{str(learner.audience)}</div> : null}</td>
+                    <td data-testid="learner-consent"><div>{consent.agreed}</div><div className="hint">Guardian consent: {consent.guardian}</div></td>
                     <td className="email-cell"><span title={str(learner.email)} data-testid="learner-email">{str(learner.email)}</span></td>
                     <td className="num">{dayNumber(learner as never)}</td>
                     <td className="num" data-testid="learner-progress">{done.length}</td>
@@ -97,8 +101,8 @@ export async function TeachScreen(ctx: Ctx) {
                     </td>
                   </tr>
                 )
-              })}
-              {!learners.length ? <tr><td colSpan={8} className="empty">Nobody has joined with a learner code yet.</td></tr> : null}
+              }))}
+              {!learners.length ? <tr><td colSpan={9} className="empty">Nobody has joined with a learner code yet.</td></tr> : null}
             </tbody>
           </table>
         </div>

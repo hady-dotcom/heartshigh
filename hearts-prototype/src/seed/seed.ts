@@ -527,6 +527,8 @@ async function main() {
   await seedSpeakers(payload)
   if (!startersOnly) await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...courseIds, ...opening.starterCourseIds] })
   await seedHarvest(payload, { now: new Date(), demo: !startersOnly })
+  const { seedLegal } = await import('./legal')
+  await seedLegal(payload)
   if (!startersOnly) {
     const { seedDemoHarvest } = await import('./harvest-seed')
     await seedDemoHarvest(payload)

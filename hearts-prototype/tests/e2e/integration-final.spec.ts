@@ -70,11 +70,8 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
   const page = await context.newPage()
   await page.route(/youtube|ytimg|googlevideo/, (route) => route.abort())
 
-  await page.goto(`/join?code=${seedCode('elm-learner')}`)
-  await page.getByTestId('join-name').fill(LEARNER.name)
-  await page.getByTestId('join-email').fill(LEARNER.email)
-  await page.getByTestId('join-password').fill(LEARNER.password)
-  await page.getByTestId('join-submit').click()
+  const { joinWithConsent } = await import('./legal-helpers')
+  await joinWithConsent(page, seedCode('elm-learner'), LEARNER.name, LEARNER.email, LEARNER.password)
   await expect(page.getByTestId('splash')).toBeVisible()
 
   await page.getByTestId('welcome-begin').click()

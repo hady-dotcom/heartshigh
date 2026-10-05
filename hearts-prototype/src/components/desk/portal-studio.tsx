@@ -97,6 +97,13 @@ export function PortalStudio({
           </div>
         </header>
         <div className="body form">
+          <p className="hint" data-testid="studio-agreement-note">Before learners arrive: name a privacy contact and a safeguarding lead on Contacts, and tick the community agreement. <a href="/running">Read Running HEARTS in your community</a>.</p>
+          {mode === 'create' ? (
+            <label className="check">
+              <input type="checkbox" name="portalAgreementSeen" data-testid="studio-agreement" />
+              I have read how HEARTS runs in a community, and we will look after the people who join.
+            </label>
+          ) : null}
           <label className="stack">Name
             <input type="text" name="name" defaultValue={name} data-testid="create-portal-name" placeholder="Harbour Mosque" required={mode === 'create'} />
           </label>

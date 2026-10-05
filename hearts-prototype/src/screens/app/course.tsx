@@ -288,6 +288,8 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
           serverNow={at.toISOString()}
           next={here}
           overPlayer={flags.popupOverPlayer}
+          transcript={str(lesson.transcript)}
+          speaker={str(lesson.speaker || course.speaker)}
           garden={{ done, total, gardenHref: featureOn(portal, 'garden') ? `${base}/garden` : base, nextPart: nextCoursePart(lessons, partIndex, doneLessons, `${base}/course/${courseId}`), links: [
             ...(featureOn(portal, 'garden') ? [{ label: "See what you've sown", href: `${base}/garden/general` }] : []),
             ...(featureOn(portal, 'workbook') ? [{ label: 'Your workbook', href: `${base}/garden/workbook` }] : []),

@@ -2,12 +2,13 @@ import Link from 'next/link'
 import { Flash, Hidden } from '@/components/app/shell'
 import { TurnstileField } from '@/components/app/turnstile-field'
 import { BrandLockup } from '@/components/brand'
+import { ConsentLine, LegalLinks } from '@/components/app/legal-links'
 
 export default async function Join({ searchParams }: { searchParams: Promise<{ error?: string; code?: string; name?: string; gatherGuest?: string; after?: string }> }) {
   const query = await searchParams
   const code = query.code || ''
   return (
-    <main className="door garden-door" data-testid="join">
+    <main id="main-content" className="door garden-door" data-testid="join">
       <div className="door-card">
         <BrandLockup size={72} />
         <h1>Come in</h1>
@@ -20,10 +21,12 @@ export default async function Join({ searchParams }: { searchParams: Promise<{ e
           <label>Email<input className="field" data-testid="join-email" name="email" type="email" autoComplete="email" required /></label>
           <label>Password<input className="field" data-testid="join-password" name="password" type="password" minLength={8} autoComplete="new-password" required /></label>
           <TurnstileField />
+          <ConsentLine />
           <button className="pill gold block" data-testid="join-submit" type="submit">Join</button>
         </form>
         {code ? null : <p className="door-hint">Use the code your masjid gave you.</p>}
         <div className="door-links"><Link href="/login">I already have an account</Link></div>
+        <LegalLinks />
       </div>
     </main>
   )

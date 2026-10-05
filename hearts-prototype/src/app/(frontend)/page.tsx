@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Flash } from '@/components/app/shell'
 import { BrandLockup } from '@/components/brand'
+import { LegalLinks } from '@/components/app/legal-links'
 import { portalIdOf } from '@/lib/ids'
 import { getSession } from '@/server/context'
 
@@ -19,7 +20,7 @@ export default async function Door({ searchParams }: { searchParams: Promise<{ e
   // A signed-in visit to the door goes home. An error or notice stays here so the flash can be read.
   if (user && home !== '/login' && !query.error && !query.notice) redirect(home)
   return (
-    <main className="door garden-door" data-testid="door">
+    <main id="main-content" className="door garden-door" data-testid="door">
       <div className="door-card">
         <BrandLockup size={88} />
         <h1>Someone wanted good for you</h1>
@@ -30,6 +31,7 @@ export default async function Door({ searchParams }: { searchParams: Promise<{ e
           {user ? null : <Link className="pill outline block" href="/login" data-testid="door-login">Sign in</Link>}
         </div>
         {user ? null : <p className="door-hint">Teachers and portal admins sign in here too.</p>}
+        <LegalLinks />
       </div>
     </main>
   )

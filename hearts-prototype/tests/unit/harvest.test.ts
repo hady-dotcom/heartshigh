@@ -11,7 +11,7 @@ import { collectionsNamed, harvestTranscript } from '../../src/lib/harvest'
 import type { LlmClient, LlmRequest } from '../../src/lib/llm'
 import { ayahWindow, matchQuran, surahLabel } from '../../src/lib/quran-match'
 import { summaryLabel, summaryRequest, TAFSIR_SOURCES } from '../../src/lib/tafsir'
-import { replayHref, REPLAY_LEAD_SECONDS } from '../../src/screens/app/harvest'
+import { replayHref, REPLAY_LEAD_SECONDS } from '../../src/lib/harvest'
 import { quranIndex, scriptureFallback, scriptureOffline, tafsirFor, tafsirSummary, talkHarvest } from '../../src/server/scripture'
 
 const root = process.cwd()
