@@ -364,3 +364,51 @@ test('a portal admin cannot delete another portal’s user or a portal', async (
 
   await Promise.all([master.dispose(), admin.dispose()])
 })
+
+test('a learner cannot wipe another learner', async () => {
+  const master = await masterApi()
+  const portal = (await (await master.get('/api/portals?where[slug][equals]=east-london&depth=0')).json()).docs[0]
+  const emailA = `wipe-a-${sfx}@example.com`
+  const emailB = `wipe-b-${sfx}@example.com`
+  const madeA = await master.post('/api/users', {
+    data: { email: emailA, password: 'a-long-password-here', name: `Wipe A ${sfx}`, role: 'learner', tenants: [{ tenant: portal.id }] },
+  })
+  const madeB = await master.post('/api/users', {
+    data: { email: emailB, password: 'a-long-password-here', name: `Wipe B ${sfx}`, role: 'learner', tenants: [{ tenant: portal.id }] },
+  })
+  expect(madeA.ok() && madeB.ok(), `${await madeA.text()} ${await madeB.text()}`).toBeTruthy()
+  const personA = (await madeA.json()).doc as { id: number; name: string }
+  const personB = (await madeB.json()).doc as { id: number }
+
+  const learnerB = await playwrightRequest.newContext({ baseURL: E2E_BASE })
+  expect((await learnerB.post('/api/users/login', { data: { email: emailB, password: 'a-long-password-here' } })).ok()).toBeTruthy()
+
+  const personWipe = await learnerB.post('/api/hearts', {
+    form: {
+      action: 'delete-person',
+      portalSlug: 'east-london',
+      person: String(personA.id),
+      mode: 'account',
+      confirmName: personA.name,
+      next: '/p/east-london',
+    },
+    maxRedirects: 0,
+  })
+  expect(personWipe.status()).toBe(303)
+
+  const asOther = await learnerB.post('/api/hearts', {
+    form: { action: 'delete-account', confirmName: personA.name, next: '/p/east-london' },
+    maxRedirects: 0,
+  })
+  expect(asOther.status()).toBe(303)
+
+  const peek = await learnerB.get(`/api/erase?scope=user&id=${personA.id}&portal=${portal.id}`)
+  expect(peek.ok()).toBeFalsy()
+
+  const liveA = await (await master.get(`/api/users/${personA.id}`)).json()
+  const liveB = await (await master.get(`/api/users/${personB.id}`)).json()
+  expect(liveA.id || liveA.doc?.id, 'learner A must still be here').toBeTruthy()
+  expect(liveB.id || liveB.doc?.id, 'learner B must still be here').toBeTruthy()
+
+  await Promise.all([master.dispose(), learnerB.dispose()])
+})
