@@ -6,6 +6,8 @@ import { getPayload } from 'payload'
 import config from '../payload.config'
 import { randomCode } from '../lib/access-codes'
 import { answersForPoint } from '../lib/circle-fill'
+import { fillMissingCircleAnswers } from './circle-seed'
+import { attachExtraPlacing, ensureDefaultPlacing } from './placing-seed'
 import { dualExtract } from '../lib/extractor'
 import { DOORS, doorLabel, doorOfClause } from '../lib/doors'
 import { parseJibrilMap } from '../lib/seats'
@@ -66,28 +68,6 @@ const CLAUSES: [number, string, string, string][] = [
   [41, 'He came to teach you your religion', 'Trunk', 'The whole sitting was the lesson.'],
 ]
 
-const PLACING = [
-  {
-    prompt: 'When you think about who you answer to, who comes to mind first?',
-    why: 'This helps us choose whether your first sitting is about Allah, the Prophet, or the people around you.',
-    options: ['My Lord | 22', 'The Prophet | 3', 'The people I look after | 4', 'I am not sure yet | 2'],
-  },
-  {
-    prompt: 'What would you most like to get from a sitting like this?',
-    why: 'Some people come for prayer, some for character, some to know Allah better. We start where you are.',
-    options: ['Prayer that holds steady | 15', 'Being kinder to people | 31', 'Knowing the names of Allah | 22', 'A calm place to start | 2'],
-  },
-  {
-    prompt: 'When a hard week comes, what do you usually do?',
-    why: 'Knowing this helps us pick a talk that meets you on an ordinary day.',
-    options: ['I go quiet | 30', 'I get short with people | 31', 'I look for a verse | 24', 'I keep busy | 13'],
-  },
-  {
-    prompt: 'Where would you like your first proper talk to begin?',
-    why: 'This helps us pick the first talk from the door you would like to walk through.',
-    options: ['With the Prophet | 3', 'With prayer | 15', 'With Allah as Lord | 22', 'With how I treat people | 31'],
-  },
-]
 
 async function ensureUser(payload: Awaited<ReturnType<typeof getPayload>>, data: Partial<User> & { email: string; password: string }) {
   const found = await payload.find({ collection: 'users', overrideAccess: true, limit: 1, where: { email: { equals: data.email } } })
@@ -186,12 +166,7 @@ async function main() {
     }
   }
 
-  const questions = await payload.count({ collection: 'placing-questions', overrideAccess: true })
-  if (!questions.totalDocs) {
-    for (const [index, question] of PLACING.entries()) {
-      await payload.create({ collection: 'placing-questions', overrideAccess: true, data: { ...question, order: index + 1, portal: undefined } })
-    }
-  }
+  await ensureDefaultPlacing(payload)
 
   if (!startersOnly) {
     await ensureUser(payload, {
@@ -526,6 +501,10 @@ async function main() {
   }
 
   const opening = await seedOpening(payload, { clauseIds, portalIds, now: new Date(), showUnchecked: !startersOnly })
+  const circleFill = await fillMissingCircleAnswers(payload)
+  if (circleFill.added) console.log(`Filled ${circleFill.added} HEARTS circle answers on questions that were short.`)
+  const demoPortal = (await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: 'hearts-demo' } } })).docs[0]
+  if (demoPortal) await attachExtraPlacing(payload, demoPortal.id)
   const { adoptPacksOnAccessCodes } = await import('../server/pack-adopt')
   await adoptPacksOnAccessCodes(payload)
   const groupedIds: number[] = []

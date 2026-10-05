@@ -67,6 +67,7 @@ export function portalNav(base: string, user: SessionUser, portal?: FeatureSourc
         { key: 'calendar', label: 'Calendar', href: `${base}/admin/calendar`, icon: <CalendarIcon /> },
         { key: 'ai', label: 'AI steps', href: `${base}/admin/ai`, icon: <CogIcon /> },
         { key: 'opening', label: 'Framing director', href: `${base}/admin/opening`, icon: <FrameIcon /> },
+        { key: 'questions', label: 'Joining questions', href: `${base}/admin/questions`, icon: <QuestionIcon /> },
         { key: 'sheet', label: 'Master sheet', href: `${base}/admin/sheet`, icon: <SheetIcon /> },
         { key: 'create', label: 'Sheet creator', href: `${base}/admin/sheet/create`, icon: <BookIcon /> },
         { key: 'feedback', label: 'Feedback', href: `${base}/admin/feedback`, icon: <QuestionIcon /> },

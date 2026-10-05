@@ -48,7 +48,7 @@ export const PAGE: Record<string, string> = {
   packs:
     'A pack is the set of courses an access code opens. Library packs can be linked by any portal; a portal pack belongs to one community.',
   questions:
-    'Placing questions are asked once when someone joins. Each answer points to a door of Hadith Jibril. The door with most answers chooses the first course.',
+    'Joining questions are asked once when someone joins. Each answer points to a door of Hadith Jibril. The door with most answers chooses the first course. The default bank is already on every portal; you can attach more or add your own.',
   lanes:
     'Lanes are the themes the opening uses to pick clips. The titles here are what learners see on Lanes. Change a title with care; it shows on every phone in that portal.',
   simulator:
@@ -183,6 +183,7 @@ const TEST_IDS: Record<string, string> = {
   'admin-library': 'library',
   'admin-access': 'access',
   'admin-opening': 'opening',
+  'admin-questions': 'questions',
   'admin-settings': 'settings',
   wizard: 'wizard',
   'ai-registry': 'ai',

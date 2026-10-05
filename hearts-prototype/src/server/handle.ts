@@ -22,6 +22,7 @@ import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, ra
 import { ingestYoutubeUrl } from '@/lib/youtube'
 import { now } from '@/lib/clock'
 import { normaliseOption, startingClause } from '@/lib/placing'
+import { attachExtraPlacing } from '@/seed/placing-seed'
 import { doorOfClause } from '@/lib/doors'
 import { loadDoors } from './doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
@@ -1696,6 +1697,15 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       },
     })
     return redirectTo(req, text(form, 'next') || '/master', undefined, 'Question saved.')
+  }
+
+  if (action === 'placing-bank-attach') {
+    if (user.role !== 'master' && user.role !== 'portal-admin') return redirectTo(req, '/', 'You cannot edit the questions.')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
+    const keys = form.getAll('bankKey').map((value) => String(value || '').trim()).filter(Boolean)
+    const added = await attachExtraPlacing(payload, acting.portal.id, keys.length ? keys : undefined)
+    return redirectTo(req, text(form, 'next') || '/', undefined, added ? `${added} joining question${added === 1 ? '' : 's'} added for this portal.` : 'Those questions are already on this portal.')
   }
 
   if (action === 'create-event') {

@@ -289,7 +289,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
       const [circle, settings] = await Promise.all([circleForPoints(payload, points.map((point) => point.id), portal.id), circleSettings(payload)])
       circleLabel = settings.label
       for (const point of points) {
-        const extra = (circle.get(point.id) || []).map((row): SwarmItem => ({ name: row.name, body: row.body, circle: true, id: row.id, kind: 'circle-answer' }))
+        const extra = (circle.get(point.id) || []).map((row): SwarmItem => ({ name: row.name, body: row.body, circle: true, id: row.id, kind: 'circle-answer', initials: initialsOf(row.name) }))
         const hiddenCircle = await hiddenIds(payload, 'circle-answer', extra.map((row) => row.id!).filter(Boolean))
         const visibleExtra = extra.filter((row) => !row.id || !hiddenCircle.has(row.id))
         const mixed = mixSwarm(swarm[point.id] || [], visibleExtra, `${user.id}:${point.id}`, settings.threshold)

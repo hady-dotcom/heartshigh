@@ -1,19 +1,19 @@
 /**
  * Adds HEARTS circle answers where a question has fewer than four.
  * Additive: it never deletes or rewrites an answer that is already there.
- * Refuses a production or remote database. `--dry-run` prints the plan and writes nothing.
+ * Refuses a production or remote database unless HEARTS_DEMO=1. `--dry-run` prints the plan and writes nothing.
  *
  *   npm run circle:fill -- --dry-run
  *   npm run circle:fill
  */
 import { closePayload, clearDevPushMarker } from '../src/lib/prepare-db'
-import { isProduction, isRemoteDatabase } from '../src/lib/env'
-import { answersForPoint, circleFillProblems, FILL_MIN } from '../src/lib/circle-fill'
+import { circleDemoGuard, draftsForGap, lessonIdOf, type CircleFillPoint } from '../src/lib/circle-apply'
 
 const dryRun = process.argv.includes('--dry-run')
+const guard = circleDemoGuard()
 
-if (!dryRun && (isProduction() || isRemoteDatabase())) {
-  console.error('Refusing to write circle answers on a production or remote database. Nothing was changed.')
+if (!dryRun && guard) {
+  console.error(guard)
   process.exit(1)
 }
 
@@ -33,34 +33,27 @@ try {
     pagination: false,
     where: { family: { not_equals: 'workbook' } },
   })
-  for (const point of points.docs as unknown as { id: number; prompt?: string; kind?: string; options?: string[]; lesson?: unknown }[]) {
+  for (const point of points.docs as unknown as CircleFillPoint[]) {
     const existing = await payload.count({
       collection: 'circle-answers' as never,
       overrideAccess: true,
       where: { point: { equals: point.id } } as never,
     })
-    if (existing.totalDocs >= FILL_MIN) {
+    const writing = draftsForGap(point, existing.totalDocs)
+    if (!writing.length) {
       skipped += 1
       continue
     }
-    const lessonId = typeof point.lesson === 'number' ? point.lesson : (point.lesson as { id?: number } | null)?.id
-    const drafts = answersForPoint({ prompt: String(point.prompt || ''), kind: String(point.kind || 'reflection'), options: point.options })
-    const problems = circleFillProblems(drafts)
-    if (problems.length) {
-      console.error(`Skipped question ${point.id}: ${problems.join(' ')}`)
-      continue
-    }
-    const room = existing.totalDocs === 0 ? drafts.length : FILL_MIN - existing.totalDocs
-    const writing = drafts.slice(0, room)
     console.log(`${dryRun ? 'Would add' : 'Adding'} ${writing.length} on question ${point.id} (${existing.totalDocs} already): ${String(point.prompt || '').slice(0, 72)}`)
     if (!dryRun) {
+      const lesson = lessonIdOf(point)
       for (const draft of writing) {
         await payload.create({
           collection: 'circle-answers',
           overrideAccess: true,
           data: {
             point: point.id,
-            lesson: lessonId || undefined,
+            lesson: lesson || undefined,
             name: draft.name,
             body: draft.body,
             tone: draft.tone,
@@ -73,7 +66,7 @@ try {
       }
     } else added += writing.length
   }
-  console.log(`${dryRun ? 'Dry run. ' : ''}${added} circle answers ${dryRun ? 'would be added' : 'added'}. ${skipped} questions already have at least ${FILL_MIN}.`)
+  console.log(`${dryRun ? 'Dry run. ' : ''}${added} circle answers ${dryRun ? 'would be added' : 'added'}. ${skipped} questions already have enough, or were skipped.`)
 } finally {
   await closePayload(payload)
 }
