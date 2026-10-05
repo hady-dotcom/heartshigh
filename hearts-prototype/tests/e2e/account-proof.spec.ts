@@ -40,7 +40,7 @@ test('proof stills: reset, confirm mail, 2FA and suspend', async ({ page }) => {
   await page.getByTestId('forgot-email').fill(email)
   await page.getByTestId('forgot-submit').click()
   await expect(page.getByTestId('notice')).toBeVisible()
-  const forgotLinks = page.locator('.door-links a')
+  const forgotLinks = page.locator('.door-links:not([data-testid="legal-links"]) a')
   await expect(forgotLinks.first()).toBeVisible()
   for (const link of await forgotLinks.all()) {
     const box = (await link.boundingBox())!
@@ -123,7 +123,7 @@ test('proof stills: reset, confirm mail, 2FA and suspend', async ({ page }) => {
   await expect(flash).toBeVisible()
   await expect(flash).toHaveText(/This account is paused since .+ at \d{2}:\d{2}\. Please speak to your masjid or school\./)
   await expect(page.locator('.door-card').getByText(/This account is paused/)).toHaveCount(1)
-  const links = page.locator('.door-links a')
+  const links = page.locator('.door-links:not([data-testid="legal-links"]) a')
   await expect(links).toHaveCount(3)
   for (const link of await links.all()) {
     const box = (await link.boundingBox())!

@@ -46,6 +46,11 @@ async function signIn(page: Page, email: string, password: string, next: string)
   await page.getByTestId('login-password').fill(password)
   await page.getByTestId('login-submit').click()
   await page.waitForURL((url) => !url.pathname.startsWith('/login'))
+  if (page.url().includes('/consent')) {
+    const { completeConsent } = await import('./legal-helpers')
+    await completeConsent(page)
+    if (!page.url().includes(next.split('?')[0]!)) await page.goto(next)
+  }
 }
 
 async function masterApi() {
@@ -90,6 +95,10 @@ async function seedWork(
 
   const learner = await playwrightRequest.newContext({ baseURL: E2E_BASE })
   expect((await learner.post('/api/users/login', { data: { email: opts.email, password: opts.password } })).ok()).toBeTruthy()
+  expect((await learner.post('/api/hearts', {
+    form: { action: 'accept-consent', agree: 'on', ageBand: '18+', after: '/', next: '/' },
+    maxRedirects: 0,
+  })).status(), 'grant consent so the seeded answer is kept').toBeLessThan(400)
   const answered = await learner.post('/api/answers', {
     multipart: {
       pointId: String(point!.id),

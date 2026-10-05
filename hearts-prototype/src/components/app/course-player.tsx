@@ -568,7 +568,7 @@ export function CoursePlayer({
           })}
         </div>
       </div>
-      <p className="part-chip off-film" data-testid="part-label">{partLabel}</p>
+      <p className="part-chip off-film">{partLabel}</p>
       {views.length ? (
         <ul className="q-list" data-testid="question-strip" aria-label="Questions in this film">
           {views.map((point) => {
