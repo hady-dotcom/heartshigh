@@ -139,7 +139,7 @@ const PAGES: Record<string, HelpCopy> = {
   course: {
     title: 'How to use a talk',
     body: [
-      'The film sits at the top. Tap a question dot on the timeline to jump there; the talk pauses so you can write.',
+      'The film sits at the top. Play and pause stay on the film. Tap a question dot on the timeline to jump there; the talk pauses so you can write.',
       'What others said is a quiet list of initials, not names. There is no rating.',
     ],
   },

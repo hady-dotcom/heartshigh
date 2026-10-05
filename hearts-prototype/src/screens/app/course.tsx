@@ -299,10 +299,9 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
     }
   }
 
-  const [completions, partCuts, partTiers, doors] = await Promise.all([
+  const [completions, partCuts, doors] = await Promise.all([
     rows(payload, 'completions', { and: [{ user: { equals: user.id } }, { lesson: { in: lessonIds } }] }),
     lessonIds.length ? rows(payload, 'cuts', { and: [{ lesson: { in: lessonIds } }, { status: { not_equals: 'rejected' } }] }, { limit: 300 }) : Promise.resolve([] as Row[]),
-    lessonIds.length ? rows(payload, 'talk-tiers', { and: [{ lesson: { in: lessonIds } }, { status: { not_equals: 'rejected' } }] }) : Promise.resolve([] as Row[]),
     loadDoors(payload),
   ])
   const { doneLessons, done, total } = courseProgress({ lessonIds, completions: completions.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: true, event: 'watch' })), pointIds: allPoints.map((point) => point.id), answers: mine })
@@ -417,19 +416,11 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
             {heading && group.door?.teaching ? <p>{group.door.teaching}</p> : null}
             {group.items.map((row) => {
               const index = lessons.findIndex((lesson) => lesson.id === row.id)
-              const tier = partTiers.find((item) => ref(item.lesson) === row.id && Number(item.appetiserEnd) > Number(item.appetiserStart))
               return (
-                <div key={row.id}>
-                  <Link className="list-link" href={`${base}/course/${courseId}?part=${row.id}`} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
-                    <span className="grow">{partHeading(index + 1, row, tidyTalkTitle(str(course.title)), lessons.length)}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small></span>
-                    {row.id === lessonId ? <span className="badge" style={{ color: 'var(--purple)', fontWeight: 700, fontSize: 13 }}>Playing</span> : '›'}
-                  </Link>
-                  {tier ? (
-                    <Link className="list-link sub" href={`${base}/course/${courseId}?part=${row.id}&t=${Math.floor(Number(tier.appetiserStart || 0))}`} data-testid="course-appetiser">
-                      <span className="grow">Ready for more?<small>From {clock(Number(tier.appetiserStart || 0))}</small></span>›
-                    </Link>
-                  ) : null}
-                </div>
+                <Link key={row.id} className="list-link" href={`${base}/course/${courseId}?part=${row.id}`} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
+                  <span className="grow">{partHeading(index + 1, row, tidyTalkTitle(str(course.title)), lessons.length)}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small></span>
+                  {row.id === lessonId ? <span className="badge" style={{ color: 'var(--purple)', fontWeight: 700, fontSize: 13 }}>Playing</span> : '›'}
+                </Link>
               )
             })}
           </section>

@@ -7,6 +7,7 @@ import { newViewingId, POLL_MS, PopupWatcher, type PopupPoint } from '@/lib/popu
 import { comingAnswerLabel, comingQuestionLabel, questionMomentReached, questionRowRevealed, revealedStorageKey } from '@/lib/question-list'
 import { TopicHelp } from '@/components/app/page-help'
 import { placeDots } from '@/lib/timeline-dots'
+import { coursePlayVisible } from '@/lib/course-controls'
 import { createPlayer, destroyPlayer, getPlayer, resume, STATE, UNPLAYABLE } from '@/lib/yt'
 import { SwarmList } from '@/components/app/swarm-list'
 import { initialsOf } from '@/lib/swarm-sort'
@@ -447,8 +448,11 @@ export function CoursePlayer({
 
   const togglePlay = () => {
     if (mode === 'youtube') {
-      if (playing) pause()
-      else resume(PLAYER_ID)
+      // A question pause mutes, so YouTube cannot talk over the sheet. A learner pause only stops the film.
+      if (playing) {
+        getPlayer(PLAYER_ID)?.pauseVideo()
+        setPlaying(false)
+      } else resume(PLAYER_ID)
       return
     }
     if (mode === 'file') {
@@ -534,10 +538,15 @@ export function CoursePlayer({
         <span className="time-read" data-testid="player-time">{clock(time)}</span>
         {open && !filmed && !playing ? (
           <p className="paused-note" data-testid="paused-note">❚❚ Paused at question {open.number}</p>
-        ) : !open && mode !== 'loading' && (!filmed || !playing) ? (
-          <button type="button" className="big-play" aria-label={playing ? 'Pause' : 'Play'} onClick={togglePlay} data-testid="player-play">
-            {playing ? <PauseIcon size={22} /> : <PlayIcon size={22} />}
-          </button>
+        ) : null}
+        {coursePlayVisible({ loading: mode === 'loading', questionOpen: open !== null }) ? (
+          <>
+            <div className="film-tap" aria-hidden onClick={togglePlay} />
+            <button type="button" className="big-play" aria-label={playing ? 'Pause' : 'Play'} onClick={togglePlay} data-testid="player-play">
+              {playing ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
+              <span>{playing ? 'Pause' : 'Play'}</span>
+            </button>
+          </>
         ) : null}
         <div className="timeline" data-testid="timeline" ref={timelineRef}>
           <div className="track" />
