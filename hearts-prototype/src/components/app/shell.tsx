@@ -88,9 +88,10 @@ function TabIcon({ tab, on }: { tab: Tab; on: boolean }) {
 }
 
 export function Flash({ error, notice }: { error?: string; notice?: string }) {
+  const paused = Boolean(error && /this account is paused/i.test(error))
   return (
     <>
-      {error ? <div className="flash error" role="alert" data-testid="error">{error}</div> : null}
+      {error ? <div className="flash error" role="alert" data-testid="error" {...(paused ? { 'data-paused-when': error } : {})}>{error}</div> : null}
       {notice ? <div className="flash notice" role="status" data-testid="notice">{notice}</div> : null}
     </>
   )

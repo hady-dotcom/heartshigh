@@ -40,7 +40,7 @@ import { parseLengthInput } from '@/lib/length'
 import { FEATURE_UNAVAILABLE, featuresFromForm } from '@/lib/features'
 import { adoptLibraryCourses, loadPortalById, refuseFeature } from './features'
 import { afterPasswordChanged, afterPasswordLogin, handleAccountAction, issueConfirmEmail, prepareForgot } from './account-actions'
-import { SUSPEND_MESSAGE } from '@/lib/account-rules'
+import { pausedSinceMessage, SUSPEND_MESSAGE } from '@/lib/account-rules'
 import { sendQueuedNotification } from './notify-email'
 import { notifyKey } from '@/lib/notify-prefs'
 import { requestOriginAllowed } from '@/lib/env'
@@ -122,8 +122,8 @@ async function loginResponse(req: Request, email: string, password: string, next
       const person = found.docs[0] as { suspendedAt?: string | null; tenants?: { tenant?: { timeZone?: string } | number }[] } | undefined
       const tenant = person?.tenants?.[0]?.tenant
       const zone = portalTimeZone(tenant && typeof tenant === 'object' ? tenant : null)
-      const when = britishPortalTime(person?.suspendedAt, zone)
-      return redirectTo(req, '/login', when ? `${SUSPEND_MESSAGE} This was at ${when}.` : SUSPEND_MESSAGE)
+      const when = britishPortalTime(person?.suspendedAt, zone, 'at')
+      return redirectTo(req, '/login', pausedSinceMessage(when))
     }
     return redirectTo(req, '/login', 'That email or password did not match.')
   }

@@ -10,6 +10,7 @@ import {
   exportAllowed,
   isQuietHour,
   isSuspended,
+  pausedSinceMessage,
   tokenFresh,
   twoFactorNeeded,
 } from './account-rules'
@@ -77,6 +78,14 @@ describe('account rules', () => {
     assert.equal(exportAllowed('2026-10-03T11:00:00Z', now), true)
     assert.equal(deleteIsDue('2026-09-20T12:00:00Z', now), true)
     assert.equal(deleteIsDue('2026-10-01T12:00:00Z', now), false)
+  })
+
+  it('writes the paused flash as since this time, then speak to the masjid', () => {
+    assert.equal(pausedSinceMessage(''), 'This account is paused. Please speak to your masjid or school.')
+    assert.equal(
+      pausedSinceMessage('5 October 2026 at 00:16'),
+      'This account is paused since 5 October 2026 at 00:16. Please speak to your masjid or school.',
+    )
   })
 
   it('treats 22:00 to 07:00 in the portal zone as quiet', () => {

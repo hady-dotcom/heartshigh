@@ -155,6 +155,13 @@ export function tokenFresh(expiresAt: string | null | undefined, now: Date) {
 }
 
 export const SUSPEND_MESSAGE = 'This account is paused. Please speak to your masjid or school.'
+
+/** Timed pause line for the sign-in flash and the paused email. */
+export function pausedSinceMessage(when?: string | null) {
+  const time = (when || '').trim()
+  if (!time) return SUSPEND_MESSAGE
+  return `This account is paused since ${time}. Please speak to your masjid or school.`
+}
 export const RESET_STALE = 'That reset link is not valid any more.'
 export const CONFIRM_STALE = 'That confirmation link is not valid any more. Ask for a new one.'
 export const ASK_TEACHER = 'Ask your teacher to set a password for you.'

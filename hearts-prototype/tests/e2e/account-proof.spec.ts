@@ -40,6 +40,12 @@ test('proof stills: reset, confirm mail, 2FA and suspend', async ({ page }) => {
   await page.getByTestId('forgot-email').fill(email)
   await page.getByTestId('forgot-submit').click()
   await expect(page.getByTestId('notice')).toBeVisible()
+  const forgotLinks = page.locator('.door-links a')
+  await expect(forgotLinks.first()).toBeVisible()
+  for (const link of await forgotLinks.all()) {
+    const box = (await link.boundingBox())!
+    expect(box.height, await link.innerText()).toBeGreaterThanOrEqual(44)
+  }
   await shot(page, '01-forgot-notice')
   const resetMail = await waitForMail(email, 'Reset your HEARTS password')
   writeFileSync(path.join(OUT, 'email-reset.html'), resetMail.html)
@@ -113,7 +119,17 @@ test('proof stills: reset, confirm mail, 2FA and suspend', async ({ page }) => {
   await page.getByTestId('login-email').fill(learnerEmail)
   await page.getByTestId('login-password').fill('proof-pause-1')
   await page.getByTestId('login-submit').click()
-  await expect(page.getByTestId('error')).toContainText(/paused|masjid/)
+  const flash = page.getByTestId('error')
+  await expect(flash).toBeVisible()
+  await expect(flash).toHaveText(/This account is paused since .+ at \d{2}:\d{2}\. Please speak to your masjid or school\./)
+  await expect(page.locator('.door-card').getByText(/This account is paused/)).toHaveCount(1)
+  const links = page.locator('.door-links a')
+  await expect(links).toHaveCount(3)
+  for (const link of await links.all()) {
+    const box = (await link.boundingBox())!
+    expect(box.height, await link.innerText()).toBeGreaterThanOrEqual(44)
+    expect(await link.evaluate((node) => getComputedStyle(node).whiteSpace)).toBe('nowrap')
+  }
   await shot(page, '12-paused-sign-in')
   await master.dispose()
 

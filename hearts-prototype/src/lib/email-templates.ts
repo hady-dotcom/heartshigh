@@ -1,3 +1,4 @@
+import { pausedSinceMessage } from './account-rules'
 import { contrastRatio, deskTokens } from './desk-tokens'
 
 export type MailKind =
@@ -30,6 +31,7 @@ export type MailVars = {
   buttonLabel?: string
   extra?: string
   why?: string
+  since?: string
 }
 
 export type RenderedMail = { subject: string; text: string; html: string }
@@ -75,7 +77,7 @@ const BODY: Record<MailKind, (portal: string) => string> = {
   confirm: () => 'Please confirm this email belongs to you. You can keep using HEARTS in the meantime.',
   'email-changed-new': () => 'A request was made to use this address for a HEARTS account. Confirm it to finish the change.',
   'email-changed-old': () => 'A request was made to change the email on this HEARTS account. If that was not you, sign in and speak to your teacher.',
-  suspended: () => 'This account has been paused. Your learning is kept. Please speak to your masjid or school.',
+  suspended: () => 'This account is paused. Your learning is kept. Please speak to your masjid or school.',
   restored: () => 'This account is open again. You can sign in as before.',
   'delete-requested': () => 'We will delete this account in 14 days. Signing in before then cancels the request.',
   'delete-cancelled': () => 'You signed in, so we have cancelled the request to delete this account.',
@@ -156,7 +158,9 @@ export function mailIgnoreLine(kind: MailKind) {
 export function renderMail(kind: MailKind, vars: MailVars = {}): RenderedMail {
   const portal = mailPortalLabel(vars.portalName)
   const name = greetingName(vars.name)
-  const body = vars.extra ? `${BODY[kind](portal)} ${vars.extra}`.trim() : BODY[kind](portal)
+  const body = kind === 'suspended' && vars.since
+    ? [pausedSinceMessage(vars.since), 'Your learning is kept.', vars.extra].filter(Boolean).join(' ')
+    : vars.extra ? `${BODY[kind](portal)} ${vars.extra}`.trim() : BODY[kind](portal)
   const why = vars.why || DEFAULT_WHY[kind]
   const ignore = mailIgnoreLine(kind)
   const signOff = mailSignOff(portal)

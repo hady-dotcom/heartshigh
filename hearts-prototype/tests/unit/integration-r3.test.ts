@@ -39,6 +39,7 @@ test('export times: the portal zone (Europe/London unless set), the viewer\'s la
   assert.equal(zoneCity('America/Los_Angeles'), 'Los Angeles')
   const { britishPortalTime } = await import('../../src/lib/zone-time')
   assert.equal(britishPortalTime('2026-10-19T01:30:00.000Z', 'America/Toronto'), '18 October 2026, 21:30')
+  assert.equal(britishPortalTime('2026-10-05T04:16:00.000Z', 'America/Toronto', 'at'), '5 October 2026 at 00:16')
 })
 
 test('words in the picture: a Short or a lesson flagged with burned-in captions, nothing else', () => {

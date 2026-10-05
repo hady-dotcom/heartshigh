@@ -397,9 +397,17 @@ async function suspendPerson(req: Request, form: FormData, payload: Payload, act
       : { suspendedAt: null, suspendedBy: null, suspendReason: null },
   } as never)
   const mail = await portalMail(payload, target)
-  const pausedAt = pause ? britishPortalTime(now(), mail.timeZone) : ''
-  const extra = pause ? [pausedAt ? `This was at ${pausedAt}.` : '', reason].filter(Boolean).join(' ') : undefined
-  await sendMail(payload, { to: target.email, kind: pause ? 'suspended' : 'restored', vars: { name: target.name || undefined, portalName: mail.portalName, extra } })
+  const pausedAt = pause ? britishPortalTime(now(), mail.timeZone, 'at') : ''
+  await sendMail(payload, {
+    to: target.email,
+    kind: pause ? 'suspended' : 'restored',
+    vars: {
+      name: target.name || undefined,
+      portalName: mail.portalName,
+      since: pause ? pausedAt || undefined : undefined,
+      extra: pause ? reason || undefined : undefined,
+    },
+  })
   await audit(payload, pause ? 'account.suspended' : 'account.restored', { actor: actor.id, actorRole: actor.role, target: target.id, portal: portalIdOf(target), reason })
   return redirectTo(req, next, undefined, pause ? 'That account is paused.' : 'That account is open again.')
 }

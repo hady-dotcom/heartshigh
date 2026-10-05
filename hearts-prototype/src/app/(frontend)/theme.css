@@ -869,5 +869,8 @@ html[data-theme] .desk input[type='password'] {
   border: 1.5px solid var(--gd-teal-line);
 }
 :is(html, html[data-theme]) .garden-door .door-links { color: #14564c; }
-:is(html, html[data-theme]) .garden-door .door-links a { border-bottom-color: rgba(168, 121, 31, 0.6); }
+:is(html, html[data-theme]) .garden-door .door-links a {
+  border-bottom: 0;
+  text-decoration-color: rgba(168, 121, 31, 0.7);
+}
 :is(html, html[data-theme]) .garden-door .door-hint { color: var(--muted); }
