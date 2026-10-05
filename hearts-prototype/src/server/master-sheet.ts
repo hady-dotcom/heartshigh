@@ -336,15 +336,18 @@ async function wipeLesson(payload: Payload, snapshot: SheetSnapshot, lessonId: n
 export async function applyPlan(payload: Payload, plan: SheetPlan, actorId: number | null): Promise<SheetSnapshot> {
   const snapshot = emptySnapshot()
   const temps = new Map<string, number>()
+  const relink = new Set<number>()
   for (const op of plan.ops) {
     try {
-      await applyOp(payload, op, temps, snapshot, actorId)
+      await applyOp(payload, op, temps, snapshot, actorId, relink)
     } catch (error) {
-      const wrapped = new Error(publicMessage(error))
+      const detail = error instanceof Error ? error.message : String(error)
+      const wrapped = new Error(`${publicMessage(error)} (${op.op}${detail && detail !== publicMessage(error) ? `: ${detail}` : ''})`)
       ;(wrapped as { snapshot?: SheetSnapshot }).snapshot = snapshot
       throw wrapped
     }
   }
+  for (const lessonId of relink) await relinkExtractParents(payload, lessonId)
   return snapshot
 }
 
@@ -353,7 +356,7 @@ function relationId(value: unknown, temps: Map<string, number>) {
   return value
 }
 
-async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>, snapshot: SheetSnapshot, actorId: number | null) {
+async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>, snapshot: SheetSnapshot, actorId: number | null, relink: Set<number>) {
   if (op.op === 'speaker.create') {
     const doc = (await payload.create({ collection: 'speakers', overrideAccess: true, data: op.data as never })) as unknown as Doc
     temps.set(op.temp, doc.id)
@@ -458,18 +461,18 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
         sameExtractWindow(row, { kind: data.kind === 'appetiser' ? 'appetiser' : 'hors', start: Number(data.start), end: Number(data.end) }),
       )
       if (already) {
-        await relinkExtractParents(payload, lessonId)
+        relink.add(lessonId)
         return
       }
-      const doc = (await payload.create({ collection: 'talk-extracts', overrideAccess: true, data: { ...data, lesson: lessonId } as never })) as unknown as Doc
+      const doc = (await payload.create({ collection: 'talk-extracts', overrideAccess: true, context: { skipExtractRelink: true }, data: { ...data, lesson: lessonId } as never })) as unknown as Doc
       rememberCreated(snapshot, 'talk-extracts', doc.id)
-      if (data.kind === 'appetiser' || data.kind === 'hors') await relinkExtractParents(payload, lessonId)
+      if (data.kind === 'appetiser' || data.kind === 'hors') relink.add(lessonId)
     } else {
       await remember(payload, snapshot, 'talk-extracts', op.id, data)
-      await payload.update({ collection: 'talk-extracts', id: op.id, overrideAccess: true, data: data as never })
+      await payload.update({ collection: 'talk-extracts', id: op.id, overrideAccess: true, context: { skipExtractRelink: true }, data: data as never })
       const after = await payload.findByID({ collection: 'talk-extracts', id: op.id, depth: 0, overrideAccess: true })
       const lesson = idOf((after as { lesson?: unknown }).lesson)
-      if (lesson) await relinkExtractParents(payload, lesson)
+      if (lesson) relink.add(lesson)
     }
     return
   }

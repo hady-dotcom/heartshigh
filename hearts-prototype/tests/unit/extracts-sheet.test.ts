@@ -63,7 +63,7 @@ test('the Extracts tab adds one hors or appetiser per row, and a pass arrives as
   assert.equal(made?.data?.status, 'suggested')
 })
 
-test('the Extracts tab refuses overlap or a time past the talk', () => {
+test('the Extracts tab warns on overlap and still keeps both, and refuses a time past the talk', () => {
   const catalogue = fixture()
   const overlap = planSheet({
     talks: [],
@@ -75,7 +75,9 @@ test('the Extracts tab refuses overlap or a time past the talk', () => {
     ],
     errors: [],
   }, catalogue)
-  assert.ok(overlap.errors.some((issue) => issue.tab === EXTRACT_TAB && /hors/.test(issue.message)))
+  assert.deepEqual(overlap.errors, [])
+  assert.ok(overlap.warnings.some((issue) => issue.tab === EXTRACT_TAB && /hors/.test(issue.message)))
+  assert.equal(overlap.ops.filter((op) => op.op === 'extract.create').length, 2)
   const late = planSheet({
     talks: [],
     questions: [],

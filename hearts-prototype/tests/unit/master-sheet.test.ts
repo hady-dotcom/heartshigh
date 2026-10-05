@@ -593,7 +593,7 @@ test('a door alone keeps the clause a seat names inside that door', () => {
   assert.deepEqual(plan.ops, [{ op: 'cut.update', id: 2, patch: { bestClause: 9, clauseFragment: 'W2 · The sitting: How he came and sat with the Messenger', seat: 6 } }])
 })
 
-test('the Extracts tab adds one hors or appetiser per row, and refuses overlap or a time past the talk', () => {
+test('the Extracts tab adds one hors or appetiser per row, warns on overlap, and refuses a time past the talk', () => {
   const catalogue = fixture()
   const created = planSheet({
     talks: [],
@@ -627,7 +627,9 @@ test('the Extracts tab adds one hors or appetiser per row, and refuses overlap o
     ],
     errors: [],
   }, catalogue)
-  assert.ok(overlap.errors.some((issue) => issue.tab === EXTRACT_TAB && /hors/.test(issue.message)))
+  assert.deepEqual(overlap.errors, [])
+  assert.ok(overlap.warnings.some((issue) => issue.tab === EXTRACT_TAB && /hors/.test(issue.message)))
+  assert.equal(overlap.ops.filter((op) => op.op === 'extract.create').length, 2)
   const late = planSheet({
     talks: [],
     questions: [],

@@ -858,7 +858,10 @@ export const TalkExtracts: CollectionConfig = {
         const late = timeInTalkProblem({ start, end }, duration || null)
         if (late) throw new APIError(late, 400, null, true)
         const quote = String(merged.quote || '')
-        if (quote.trim() && lesson) {
+        const status = String(merged.status || 'suggested')
+        // Suggested and draft picks are often noisy AI text. Only an approved extract
+        // has to match the transcript word for word, because only those reach learners.
+        if (status === 'approved' && quote.trim() && lesson) {
           const { tierSourceText } = await import('./server/tier-source')
           const source = tierSourceText(lesson as { youtubeId?: string; transcript?: string })
           if (source && !saidInTalk(quote, source)) {
@@ -870,6 +873,7 @@ export const TalkExtracts: CollectionConfig = {
     ],
     afterChange: [
       async ({ doc, req }) => {
+        if (req.context?.skipExtractRelink) return doc
         if (doc.kind !== 'appetiser') return doc
         const lessonId = typeof doc.lesson === 'object' && doc.lesson ? (doc.lesson as { id: number }).id : Number(doc.lesson)
         if (!lessonId) return doc

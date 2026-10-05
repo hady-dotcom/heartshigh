@@ -1994,9 +1994,13 @@ function planExtracts(working: Working, rows: InputRow[]) {
       if (late) fail(end > (duration || Infinity) ? 'end' : 'start', late)
     }
     const quote = textOf(row, 'text')
+    const status = extractStatusFromSheet(statusRaw) || 'suggested'
     if (quote && transcript) {
       const verbatim = verbatimProblem(quote, transcript)
-      if (verbatim) fail('text', verbatim)
+      if (verbatim) {
+        if (status === 'approved') fail('text', verbatim)
+        else working.warnings.push({ tab: EXTRACT_TAB, row: row.row, column: 'text', message: verbatim })
+      }
     }
     const scoreRaw = textOf(row, 'score')
     const score = scoreRaw && Number.isFinite(Number(scoreRaw)) ? Number(scoreRaw) : null
@@ -2005,7 +2009,6 @@ function planExtracts(working: Working, rows: InputRow[]) {
     const doorRaw = textOf(row, 'door')
     const door = doorRaw ? Number(doorRaw.replace(/^w/i, '')) : null
     if (doorRaw && (!Number.isFinite(door) || (door as number) < 1 || (door as number) > 20)) fail('door', 'door is 1 to 20, or W1 to W20.')
-    const status = extractStatusFromSheet(statusRaw) || 'suggested'
     const arcRaw = textOf(row, 'arc').toLowerCase()
     const arc = arcRaw === 'hook' || arcRaw === 'turn' || arcRaw === 'land' ? arcRaw : null
     const words = present(row, 'words') ? parseWordsCell(textOf(row, 'words')) : null
@@ -2045,7 +2048,7 @@ function planExtracts(working: Working, rows: InputRow[]) {
       draft,
     ]
     const overlap = sameTypeOverlapProblem(siblings)
-    if (overlap) fail('start', overlap)
+    if (overlap) working.warnings.push({ tab: EXTRACT_TAB, row: row.row, column: 'start', message: overlap })
     if (problems.length) {
       working.errors.push(...problems)
       working.skipped += 1

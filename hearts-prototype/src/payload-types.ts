@@ -947,6 +947,9 @@ export interface TalkExtract {
   start: number;
   end: number;
   quote?: string | null;
+  /**
+   * Timed spoken words: [{ at, text }]. The only text over a speaker.
+   */
   words?:
     | {
         [k: string]: unknown;
@@ -958,10 +961,19 @@ export interface TalkExtract {
     | null;
   score?: number | null;
   status?: ('draft' | 'suggested' | 'approved' | 'rejected') | null;
+  /**
+   * Jibril door hang, 1 to 20.
+   */
   door?: number | null;
   seat?: (number | null) | Seat;
   order?: number | null;
+  /**
+   * The appetiser this hors d'oeuvre sits inside. Empty until overlap finds one.
+   */
   parent?: (number | null) | TalkExtract;
+  /**
+   * Which part of the parent appetiser this hors comes from.
+   */
   arc?: ('hook' | 'turn' | 'land') | null;
   hook?: string | null;
   turn?: string | null;
