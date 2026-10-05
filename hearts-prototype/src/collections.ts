@@ -198,18 +198,16 @@ export const Users: CollectionConfig = {
  * thumbnails, speaker stills and scenic art that live under /clips, /speakers,
  * /slides and /theme are not Media rows and stay readable signed out.
  */
-const mediaReadAccess: Access = ({ req, id }) => {
+const mediaReadAccess: Access = async ({ req, id }) => {
   const user = req.user as { id: number; role?: string; tenants?: { tenant?: unknown }[] } | null
   if (!user) return false
   if (!id) return mediaListWhere(user)
-  return (async () => {
-    const payload = req.payload
-    if (!payload?.findByID) return false
-    const media = await payload.findByID({ collection: 'media', id, overrideAccess: true, depth: 0 }).catch(() => null)
-    if (!media) return false
-    const answer = await findLinkedAnswer(payload, Number(media.id))
-    return canReadMedia(user, media, answer, false)
-  })()
+  const payload = req.payload
+  if (!payload?.findByID) return false
+  const media = await payload.findByID({ collection: 'media', id, overrideAccess: true, depth: 0 }).catch(() => null)
+  if (!media) return false
+  const answer = await findLinkedAnswer(payload, Number(media.id))
+  return canReadMedia(user, media, answer, false)
 }
 
 export const Media: CollectionConfig = {
