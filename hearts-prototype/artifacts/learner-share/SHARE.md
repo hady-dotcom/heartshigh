@@ -9,8 +9,7 @@ Door, login and join are the same evening garden: teal `#0E2A2B`, gold `#D4A84B`
 | `01-door` | Front door, Hady Core lockup |
 | `02-login` | Sign in |
 | `03-join` | Join with a code |
-| `04-welcome-splash` | First arrival |
-| `05-welcome-film` | Welcome + Skip |
+| `05-welcome-film` | Welcome + Skip (join lands here; splash is skipped) |
 | `06-intro-film` | How to begin + Skip |
 | `07-opening` | After Skip, into the app |
 | `08-home` | Maryam’s Home |
