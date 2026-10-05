@@ -1,3 +1,7 @@
+# Insights, calendar, missions — proof
+
+Round 7 (Postgres, poster, Friday minutes, compass exit): see `round7/`.
+
 # Insights, calendar, missions — proof (round 6)
 
 Phone shots are 390×844. Desk shots are 1440 wide. Videos are normal-speed H.264, filmed after sign-in. No Next Issues badge. Code SHA on `cursor/insights-missions-calendar-eef4` is `085687d`.

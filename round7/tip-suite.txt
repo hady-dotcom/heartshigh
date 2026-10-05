@@ -1,0 +1,25 @@
+TIP SHA 26584360d1590e5e89c4024f5cdf04eec3d9ca2d
+UNIT 435 pass / 0 fail (unpatched tree)
+TSC 32 errors (same as fair base; 8 branch-only errors gone)
+PLAYWRIGHT 219 passed / 11 failed / 2 did not run (40.8m) Postgres workers=1
+
+(node:119687) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[231/232] tests/e2e/r5d-desks-proof.spec.ts:359:1 › admin and teacher open help tips
+[232/232] tests/e2e/r5d-desks-proof.spec.ts:409:1 › every desk help card fits at 1366x700 and 1280x800
+  11 failed
+    tests/e2e/feed-evening.spec.ts:133:1 › a question-card swipe and a scenic-card swipe never show a bare side or a blank pill 
+    tests/e2e/feed-polish.spec.ts:50:1 › one Tap for sound on the first clip and on the 3-minute version; scenic chrome stays readable 
+    tests/e2e/feed-touch.spec.ts:68:1 › touch swipes left and right move the feed, on a talk clip, on a card, and in the appetiser loop 
+    tests/e2e/harvest-lines.spec.ts:65:1 › a fresh learner sees the sample, then a short clip keeps a real line and parts watched stays at 0 
+    tests/e2e/integration-final.spec.ts:67:1 › a learner joins by code, takes the persona quiz, stays on level, steps up by Learn more, answers an imported pop-up and finds it all again 
+    tests/e2e/integration-r3.spec.ts:57:1 › a YouTube Short in the feed: no caption over its burned-in words, Follow at the top, and our own poster 
+    tests/e2e/journeys.spec.ts:417:3 › HEARTS journeys › feed swipes stay on one level, and learn more steps to that clip’s own parent 
+    tests/e2e/nesting-progress.spec.ts:22:1 › at phone size, short clips stay off the grow page and a full talk in a course moves it 
+    tests/e2e/r5d-desks-proof.spec.ts:97:1 › r5d desk proof shots ──────────────────────────────────
+    tests/e2e/round4.spec.ts:171:3 › round 4 API › N3: a contribution counts only from an account that has finished a video and is at least a day old 
+    tests/e2e/screenshots.spec.ts:25:1 › a week of use, so the garden has something in it ──────────
+  2 did not run
+  219 passed (40.8m)

@@ -1,0 +1,41 @@
+src/collections.ts(157,98): error TS2352: Conversion of type 'PayloadRequest' to type '{ data: { email: string; }; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Types of property 'data' are incompatible.
+    Type 'JsonObject | undefined' is not comparable to type '{ email: string; }'.
+      Property 'email' is missing in type 'JsonObject' but required in type '{ email: string; }'.
+src/lib/feed-nav.ts(33,59): error TS2344: Type '"id" | "cutId" | "card"' does not satisfy the constraint '"lane" | "speaker" | "parents" | "courseId" | "lessonId" | "cutId" | "card"'.
+  Type '"id"' is not assignable to type '"lane" | "speaker" | "parents" | "courseId" | "lessonId" | "cutId" | "card"'.
+src/screens/desk/people.tsx(24,34): error TS2345: Argument of type 'Row[]' is not assignable to parameter of type '{ email?: string | null | undefined; name?: string | null | undefined; }[]'.
+  Type 'Row' has no properties in common with type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(73,84): error TS2339: Property 'id' does not exist on type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(74,66): error TS2339: Property 'id' does not exist on type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(77,36): error TS2339: Property 'id' does not exist on type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(78,60): error TS2339: Property 'audience' does not exist on type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(78,80): error TS2339: Property 'audience' does not exist on type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(78,140): error TS2339: Property 'audience' does not exist on type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(83,122): error TS2339: Property 'id' does not exist on type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(85,54): error TS2339: Property 'id' does not exist on type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(89,76): error TS2339: Property 'id' does not exist on type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(90,89): error TS2339: Property 'id' does not exist on type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(94,84): error TS2339: Property 'id' does not exist on type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(208,88): error TS2345: Argument of type 'Row[]' is not assignable to parameter of type '{ email?: string | null | undefined; name?: string | null | undefined; }[]'.
+  Type 'Row' has no properties in common with type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(208,183): error TS2339: Property 'id' does not exist on type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(208,240): error TS2339: Property 'id' does not exist on type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(287,36): error TS2345: Argument of type 'Row[]' is not assignable to parameter of type '{ email?: string | null | undefined; name?: string | null | undefined; }[]'.
+  Type 'Row' has no properties in common with type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(287,110): error TS2339: Property 'id' does not exist on type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+src/screens/desk/people.tsx(287,128): error TS2339: Property 'id' does not exist on type '{ email?: string | null | undefined; name?: string | null | undefined; }'.
+tests/e2e/feed-r5a-proof.spec.ts(34,15): error TS2339: Property 'left' does not exist on type '{ x: number; y: number; width: number; height: number; }'.
+tests/e2e/feed-r5a-proof.spec.ts(34,28): error TS2339: Property 'right' does not exist on type '{ x: number; y: number; width: number; height: number; }'.
+tests/e2e/feed-r5a-proof.spec.ts(34,42): error TS2339: Property 'right' does not exist on type '{ x: number; y: number; width: number; height: number; }'.
+tests/e2e/feed-r5a-proof.spec.ts(34,56): error TS2339: Property 'left' does not exist on type '{ x: number; y: number; width: number; height: number; }'.
+tests/e2e/feed-r5a-proof.spec.ts(34,69): error TS2339: Property 'top' does not exist on type '{ x: number; y: number; width: number; height: number; }'.
+tests/e2e/feed-r5a-proof.spec.ts(34,81): error TS2339: Property 'bottom' does not exist on type '{ x: number; y: number; width: number; height: number; }'.
+tests/e2e/feed-r5a-proof.spec.ts(34,96): error TS2339: Property 'bottom' does not exist on type '{ x: number; y: number; width: number; height: number; }'.
+tests/e2e/feed-r5a-proof.spec.ts(34,111): error TS2339: Property 'top' does not exist on type '{ x: number; y: number; width: number; height: number; }'.
+tests/e2e/feed-r5a-proof.spec.ts(196,33): error TS2345: Argument of type 'Record<string, { cutId: number; youtubeId?: string | undefined; lessonId?: number | undefined; hors?: { quote?: string | undefined; lines?: { text: string; tidy?: string | undefined; }[] | undefined; } | undefined; }>' is not assignable to parameter of type 'Record<string, OpeningClip> | OpeningClip[]'.
+  Type 'Record<string, { cutId: number; youtubeId?: string | undefined; lessonId?: number | undefined; hors?: { quote?: string | undefined; lines?: { text: string; tidy?: string | undefined; }[] | undefined; } | undefined; }>' is missing the following properties from type 'OpeningClip[]': length, pop, push, concat, and 29 more.
+tests/e2e/r5d-desks-proof.spec.ts(129,9): error TS2322: Type 'HTMLElement | SVGElement' is not assignable to type 'HTMLElement | null'.
+  Type 'SVGElement' is missing the following properties from type 'HTMLElement': accessKey, accessKeyLabel, autocapitalize, dir, and 25 more.
+tests/unit/feed-nav.test.ts(170,28): error TS2550: Property 'findLastIndex' does not exist on type 'FeedItem[]'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2023' or later.
+tests/unit/feed-nav.test.ts(170,43): error TS7006: Parameter 'row' implicitly has an 'any' type.

@@ -1,0 +1,31 @@
+FAIR BASE merge 20e191c + efe888b = 250c272ac7c420b525a27ec7f3746ae2431bbe60
+UNIT 379 pass / 1 fail (verifier-induced E2E_DATABASE string after env.ts patch)
+TSC 32 errors
+PLAYWRIGHT 182 passed / 18 failed / 25 did not run (39.4m) Postgres workers=1
+compass completed after worktree-only process.exit(0) on compass-demo (product hang exists on base)
+
+
+
+[224/225] tests/e2e/r5d-desks-proof.spec.ts:359:1 › admin and teacher open help tips
+[225/225] tests/e2e/r5d-desks-proof.spec.ts:409:1 › every desk help card fits at 1366x700 and 1280x800
+  18 failed
+    tests/e2e/feed-evening.spec.ts:133:1 › a question-card swipe and a scenic-card swipe never show a bare side or a blank pill 
+    tests/e2e/feed-evening.spec.ts:217:1 › the extended cut opens on our own poster with the talk title, never a titled YouTube thumbnail 
+    tests/e2e/feed-polish.spec.ts:50:1 › one Tap for sound on the first clip and on the 3-minute version; scenic chrome stays readable 
+    tests/e2e/feed-touch.spec.ts:68:1 › touch swipes left and right move the feed, on a talk clip, on a card, and in the appetiser loop 
+    tests/e2e/harvest-lines.spec.ts:65:1 › a fresh learner sees the sample, then a short clip keeps a real line and parts watched stays at 0 
+    tests/e2e/harvest.spec.ts:69:3 › harvest › finishing a talk fills Harvest with what was said, verses placed only when the match is sure 
+    tests/e2e/integration-final.spec.ts:67:1 › a learner joins by code, takes the persona quiz, stays on level, steps up by Learn more, answers an imported pop-up and finds it all again 
+    tests/e2e/integration-r3.spec.ts:57:1 › a YouTube Short in the feed: no caption over its burned-in words, Follow at the top, and our own poster 
+    tests/e2e/journeys.spec.ts:192:3 › HEARTS journeys › the approved cut reaches the learner feed; placing answers choose the first course 
+    tests/e2e/nesting-progress.spec.ts:22:1 › at phone size, short clips stay off the grow page and a full talk in a course moves it 
+    tests/e2e/nesting.spec.ts:70:1 › every seeded hors d'oeuvre sits inside its appetiser, and every appetiser inside its full talk 
+    tests/e2e/r5d-desks-proof.spec.ts:97:1 › r5d desk proof shots ──────────────────────────────────
+    tests/e2e/round3.spec.ts:75:3 › round 3 API › Bug 2: codes have expiry, max uses and a switch; a one-use code refuses a second person; guessing is throttled; seed codes are random 
+    tests/e2e/round4.spec.ts:148:3 › round 4 API › N1: 210 failures from rotating addresses never block a valid code; one address is limited by its own failures, whatever it writes on the left 
+    tests/e2e/round4.spec.ts:171:3 › round 4 API › N3: a contribution counts only from an account that has finished a video and is at least a day old 
+    tests/e2e/round4.spec.ts:316:3 › round 4 screens › LOW: each Still open row in the workbook keeps the question and the talk on separate lines 
+    tests/e2e/screenshots.spec.ts:25:1 › a week of use, so the garden has something in it ──────────
+    tests/e2e/sheet-packs.spec.ts:65:1 › the pack column puts a new course in the pack; without the tick box existing learners are left as they are, and that is logged 
+  25 did not run
+  182 passed (39.4m)
