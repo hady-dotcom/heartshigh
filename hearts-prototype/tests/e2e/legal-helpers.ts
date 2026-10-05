@@ -30,6 +30,8 @@ export async function joinWithConsent(
   await page.getByTestId('join-consent').check()
   await page.getByTestId('join-submit').click()
   await page.waitForURL((url) => !url.pathname.startsWith('/join') && !url.pathname.startsWith('/login'))
+  const path = new URL(page.url()).pathname
+  if (path.includes('/admin') || path.includes('/teach') || path.includes('/master')) return
   await completeConsent(page, age)
 }
 

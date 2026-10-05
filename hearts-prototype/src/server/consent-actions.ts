@@ -139,8 +139,18 @@ async function handleAcceptConsent(req: Request, form: FormData, session: Sessio
   if (ageBand === 'under-13' && school?.schoolOfflineConsent) {
     return redirectTo(req, `/p/${slug}/consent?need=school`, undefined, 'Your school will tick that a grown-up has agreed.')
   }
-  const after = safeNext(text(form, 'after') || (slug ? `/p/${slug}` : '/'))
+  const after = afterConsentPath(user, slug, text(form, 'after'))
   return redirectTo(req, after, undefined, 'Thank you. You can begin.')
+}
+
+function afterConsentPath(user: SessionUser, slug: string | null, after: string) {
+  const asked = safeNext(after)
+  if (asked !== '/' && !asked.endsWith('/consent')) return asked
+  if (!slug) return '/'
+  if (user.role === 'portal-admin') return `/p/${slug}/admin`
+  if (user.role === 'teacher') return `/p/${slug}/teach`
+  if (user.role === 'master') return '/master'
+  return `/p/${slug}`
 }
 
 async function handleRequestGuardian(req: Request, form: FormData, session: Session) {
