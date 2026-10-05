@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { mixFeed } from '../../src/lib/feed-mix'
+import { mixFeed, sessionPlaylist } from '../../src/lib/feed-mix'
 import { appendUnseenItems, cardKey, catalogueRemainder, isInterstitial, learnMoreTarget, settleOnLevel, swipeTarget, type FeedLevel, type Swipe } from '../../src/lib/feed-nav'
 import type { FeedItem } from '../../src/server/learner'
 
@@ -209,6 +209,39 @@ test('a two-clip batch is not the end of the library: speaker, topic and lane st
   const topic = swipeTarget(list, first, 'hors', 'topic', seen)
   assert.notEqual(topic, null)
   assert.notEqual(list[topic!].cutId, list[first].cutId)
+  assert.equal(catalogueRemainder(list, catalogue).length, 0)
+})
+
+test('a two-clip route grows into the whole catalogue: dozens of real talks, and swipes do not die', () => {
+  const catalogue = Array.from({ length: 48 }, (_, index) => {
+    const cutId = index + 1
+    const lane = cutId % 3 === 0 ? 'trust' : cutId % 3 === 1 ? 'quiet' : 'company'
+    const speaker = cutId % 5 === 0 || cutId === 1 ? 'McCarl Smith' : `Speaker ${cutId % 7}`
+    return talk(cutId, lane, speaker, false)
+  })
+  const routed = catalogue.slice(0, 2)
+  const list = sessionPlaylist(routed, catalogue)
+  const talks = list.filter((row) => !isInterstitial(row))
+  assert.equal(talks.length, 48, 'the session keeps every catalogue talk')
+  assert.deepEqual(talks.slice(0, 2).map((row) => row.cutId), [1, 2], 'the routed handful still leads')
+  assert.equal(new Set(talks.map((row) => row.cutId)).size, 48)
+  const seen = new Set<string>()
+  let at = list.findIndex((row) => row.cutId === 1 && !isInterstitial(row))
+  for (let step = 0; step < 40; step++) {
+    seen.add(cardKey(list[at], 'hors'))
+    const target = swipeTarget(list, at, 'hors', 'next', seen)
+    assert.notEqual(target, null, `next died after ${step} cards`)
+    at = target!
+  }
+  const seenTwo = new Set([cardKey(catalogue[0], 'hors'), cardKey(catalogue[1], 'hors')])
+  const fromFirst = list.findIndex((row) => row.cutId === 1 && !isInterstitial(row))
+  for (const swipe of ['speaker', 'topic', 'lane'] as const) {
+    const target = swipeTarget(list, fromFirst, 'hors', swipe, seenTwo)
+    assert.notEqual(target, null, `${swipe} died after two clips`)
+    assert.notEqual(list[target!].cutId, 1)
+  }
+  const speaker = swipeTarget(list, fromFirst, 'hors', 'speaker', seenTwo)
+  assert.equal(list[speaker!].speaker, 'McCarl Smith')
   assert.equal(catalogueRemainder(list, catalogue).length, 0)
 })
 

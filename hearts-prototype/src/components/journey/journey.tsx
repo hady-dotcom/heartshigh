@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
-import { clipsFromRoute, mixFeed } from '@/lib/feed-mix'
+import { clipsFromRoute, sessionPlaylist } from '@/lib/feed-mix'
 import { clipStepUpLabel, onlyClipToast, pieceSeconds, poolEndToast, READY_FOR_MORE, talkStepUpLabel, withTalkDetail } from '@/lib/feed-copy'
-import { appendUnseenItems, catalogueRemainder, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
+import { appendUnseenItems, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readCoachDismissed, readFeedPlace, readHeart, readPending, rememberSeenCard, sessionFlags, sessionSeenCards, sessionSeenCuts, setSessionFlags, viewAsId, writeCoachDismissed, writeFeedPlace, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
@@ -99,13 +99,6 @@ const appetiserEnd = (item: FeedItem) => appetiserStop(item.appetiser)
 function clock(total: number) {
   const value = Math.max(0, Math.round(total))
   return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`
-}
-
-/** The routed batch is only the opening handful. Keep every real talk this learner can already see. */
-function widenWithCatalogue(list: FeedItem[], catalogue: Record<string, FeedItem>, visit: number, backgrounds: string | null) {
-  const more = catalogueRemainder(list, Object.values(catalogue))
-  if (!more.length) return list
-  return appendUnseenItems(list, mixFeed(more, visit, backgrounds))
 }
 
 function useStoredSet(name: string) {
@@ -633,7 +626,7 @@ export function Journey(props: JourneyProps) {
     try {
       const data = await fetchFeed(heartRef.current)
       const visit = heartRef.current?.served.length || 0
-      const mixed = widenWithCatalogue(mixFeed(data.clips, visit, backgroundsBase), opening.clips, visit, backgroundsBase)
+      const mixed = sessionPlaylist(data.clips, opening.clips, visit, backgroundsBase)
       adopt(mixed, data.items, data.spinePointer, false)
     } catch {
       // Offline: carry on with what is here.
@@ -667,7 +660,7 @@ export function Journey(props: JourneyProps) {
           clips = [{ ...asked, laneKey: null }, ...clips.filter((clip) => clip.cutId !== asked.cutId)]
           if (props.play === 'appetiser') firstMode = 'appetiser'
         }
-        clips = widenWithCatalogue(mixFeed(clips, state.served.length, backgroundsBase), opening.clips, state.served.length, backgroundsBase)
+        clips = sessionPlaylist(clips, opening.clips, state.served.length, backgroundsBase)
         const stored = !props.clip && !props.lane ? readFeedPlace() : null
         const saved = stored?.cutId ? opening.clips[String(stored.cutId)] : undefined
         if (saved && !clips.some((row) => row.cutId === saved.cutId)) clips = [{ ...saved, laneKey: null }, ...clips]
@@ -874,7 +867,7 @@ export function Journey(props: JourneyProps) {
       const data = await feed
       if (data) {
         const seeded = data.clips.length ? data.clips : itemsRef.current
-        const mixed = widenWithCatalogue(mixFeed(seeded, state.served.length, backgroundsBase), opening.clips, state.served.length, backgroundsBase)
+        const mixed = sessionPlaylist(seeded, opening.clips, state.served.length, backgroundsBase)
         adopt(mixed.length ? mixed : itemsRef.current, data.items, data.spinePointer, true)
         if (!starter && mixed[0]) await showItem(0)
         else preloadNext(0)
@@ -1281,7 +1274,7 @@ export function Journey(props: JourneyProps) {
     let list = itemsRef.current
     let target = swipeTarget(list, indexRef.current, modeRef.current, swipe, seenRef.current)
     if (target === null) {
-      const wider = widenWithCatalogue(list, opening.clips, heartRef.current?.served.length || 0, backgroundsBase)
+      const wider = sessionPlaylist(list, opening.clips, heartRef.current?.served.length || 0, backgroundsBase)
       if (wider.length > list.length) {
         itemsRef.current = wider
         setItems(wider)
@@ -1299,7 +1292,7 @@ export function Journey(props: JourneyProps) {
     const laneLabel = list[target]?.laneLabel?.trim()
     if (swipe === 'lane' && laneLabel) setToast(`Lane · ${laneLabel}`)
     if (swipe === 'topic' && list[target]?.lane === current.lane) setToast('More on this topic.')
-    if (swipe === 'speaker') setToast(`More from ${current.speaker}.`)
+    if (swipe === 'speaker' && list[target]?.speaker === current.speaker) setToast(`More from ${current.speaker}.`)
     try {
       const host = hosts.current[visibleRef.current]
       const player = host.playerId ? getPlayer(host.playerId) : null

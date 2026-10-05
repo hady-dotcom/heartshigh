@@ -90,7 +90,8 @@ export function swipeTarget(list: NavItem[], index: number, level: FeedLevel, sw
   const talks = ring(list.length, index, 1).filter((at) => list[at].cutId !== item.cutId && !isInterstitial(list[at]))
   const unused = talks.filter((at) => unseenCard(list, at, level, seen))
   if (swipe === 'topic') return unused.find((at) => list[at].lane === item.lane) ?? unused[0] ?? null
-  if (swipe === 'speaker') return unused.find((at) => list[at].speaker === item.speaker) ?? null
+  // Same speaker first. If that person has no further talk, keep going through the rest of the real catalogue.
+  if (swipe === 'speaker') return unused.find((at) => list[at].speaker === item.speaker) ?? unused[0] ?? null
   return unused.find((at) => list[at].lane !== item.lane) ?? unused[0] ?? null
 }
 
