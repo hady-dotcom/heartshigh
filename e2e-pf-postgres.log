@@ -1,0 +1,462 @@
+START 2026-10-05T04:26:28Z
+Wiped the Postgres database (dropped the public schema).
+[04:26:39] [33mWARN[39m: [36mNo email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.[39m
+[04:26:39] [32mINFO[39m: [36mReading migration files from /tmp/pf-base/hearts-prototype/src/migrations[39m
+[04:26:39] [32mINFO[39m: [36mMigrating: 20261003_103330_initial[39m
+[04:26:40] [32mINFO[39m: [36mMigrated:  20261003_103330_initial (1561ms)[39m
+[04:26:40] [32mINFO[39m: [36mMigrating: 20261003_124500_integration_part1[39m
+[04:26:40] [32mINFO[39m: [36mMigrated:  20261003_124500_integration_part1 (243ms)[39m
+[04:26:40] [32mINFO[39m: [36mMigrating: 20261003_131651_integration_part2[39m
+[04:26:41] [32mINFO[39m: [36mMigrated:  20261003_131651_integration_part2 (82ms)[39m
+[04:26:41] [32mINFO[39m: [36mMigrating: 20261003_140611_harvest[39m
+[04:26:41] [32mINFO[39m: [36mMigrated:  20261003_140611_harvest (51ms)[39m
+[04:26:41] [32mINFO[39m: [36mMigrating: 20261003_180616_jibril_doors[39m
+[04:26:41] [32mINFO[39m: [36mMigrated:  20261003_180616_jibril_doors (27ms)[39m
+[04:26:41] [32mINFO[39m: [36mMigrating: 20261003_194500_line_tidy[39m
+[04:26:41] [32mINFO[39m: [36mMigrated:  20261003_194500_line_tidy (1ms)[39m
+[04:26:41] [32mINFO[39m: [36mMigrating: 20261003_200853_integration_final[39m
+[04:26:41] [32mINFO[39m: [36mMigrated:  20261003_200853_integration_final (82ms)[39m
+[04:26:41] [32mINFO[39m: [36mMigrating: 20261003_220000_feedback[39m
+[04:26:41] [32mINFO[39m: [36mMigrated:  20261003_220000_feedback (68ms)[39m
+[04:26:41] [32mINFO[39m: [36mMigrating: 20261004_031500_gather[39m
+[04:26:41] [32mINFO[39m: [36mMigrated:  20261004_031500_gather (155ms)[39m
+[04:26:41] [32mINFO[39m: [36mMigrating: 20261004_060000_shorts[39m
+[04:26:41] [32mINFO[39m: [36mMigrated:  20261004_060000_shorts (5ms)[39m
+[04:26:41] [32mINFO[39m: [36mMigrating: 20261004_061000_portal_time_zone[39m
+[04:26:41] [32mINFO[39m: [36mMigrated:  20261004_061000_portal_time_zone (10ms)[39m
+[04:26:41] [32mINFO[39m: [36mMigrating: 20261004_080000_lesson_picture_flags[39m
+[04:26:41] [32mINFO[39m: [36mMigrated:  20261004_080000_lesson_picture_flags (4ms)[39m
+[04:26:41] [32mINFO[39m: [36mMigrating: 20261004_120000_compass_v2[39m
+[04:26:41] [32mINFO[39m: [36mMigrated:  20261004_120000_compass_v2 (71ms)[39m
+[04:26:41] [32mINFO[39m: [36mMigrating: 20261004_180000_gather_entry_code[39m
+[04:26:41] [32mINFO[39m: [36mMigrated:  20261004_180000_gather_entry_code (1ms)[39m
+[04:26:41] [32mINFO[39m: [36mMigrating: 20261004_210000_schedule_minutes[39m
+[04:26:41] [32mINFO[39m: [36mMigrated:  20261004_210000_schedule_minutes (1ms)[39m
+[04:26:41] [32mINFO[39m: [36mMigrating: 20261004_230000_portal_features[39m
+[04:26:41] [32mINFO[39m: [36mMigrated:  20261004_230000_portal_features (4ms)[39m
+Harvest: 172 verses and hadith across 31 talks. No quotation found in 5: Gratitude is the Greatest Blessing | Gems from Ibn Ata Illah Ep. 1 | Shaykh Mikaeel Ahmed Smith; How to Manage Your Anger - Amjad Tarsin; Moments of Solitude: Closeness to God | Jummah Khutbah | Imam Khalid Latif | 3.11.2022; On Mosques, Companionship, & Knowledge; Quranic Connection #26: A Cure for Anxiety | Shaykh Suleiman Hani.
+Harvest sample: 4 lines kept for Maryam.
+Feedback demo: sample answers are on the East London and Leeds desks.
+Seeded HEARTS. Master: master@hearts.test / hearts-master
+Access codes (also on the master desk, and in data/seed-codes-test.json):
+  elm-teacher    ELM-F3D3-34AD
+  elm-admin      ELM-GV48-HBXJ
+  elm-learner    ELM-H3UK-TVXY
+  elm-parent     ELM-9GHP-UE8M
+  leeds-teacher  LEEDS-J48Y-YMFG
+  leeds-learner  LEEDS-UFK3-AFXJ
+
+Running 215 tests using 1 worker
+
+(node:48707) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:48707) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/215] tests/e2e/ai-steps.spec.ts:73:3 › AI steps › registry, versions, diff, try-it and mock mode
+[2/215] tests/e2e/ai-steps.spec.ts:120:3 › AI steps › a re-run does not overwrite an approved tier, and the review screen says a new draft is available
+[3/215] tests/e2e/ai-steps.spec.ts:149:3 › AI steps › a background re-run reports progress and keeps a per-talk error
+[4/215] tests/e2e/ai-steps.spec.ts:186:3 › AI steps › portal admins can read the steps and cannot edit them until the master grants it
+[5/215] tests/e2e/auth-garden.spec.ts:69:5 › join with the code in the link is the evening garden (phone, dawn)
+[6/215] tests/e2e/auth-garden.spec.ts:86:5 › sign-in is the evening garden (phone, dawn)
+[7/215] tests/e2e/auth-garden.spec.ts:69:5 › join with the code in the link is the evening garden (phone, evening)
+[8/215] tests/e2e/auth-garden.spec.ts:86:5 › sign-in is the evening garden (phone, evening)
+[9/215] tests/e2e/auth-garden.spec.ts:69:5 › join with the code in the link is the evening garden (desk, dawn)
+[10/215] tests/e2e/auth-garden.spec.ts:86:5 › sign-in is the evening garden (desk, dawn)
+[11/215] tests/e2e/auth-garden.spec.ts:69:5 › join with the code in the link is the evening garden (desk, evening)
+[12/215] tests/e2e/auth-garden.spec.ts:86:5 › sign-in is the evening garden (desk, evening)
+[13/215] tests/e2e/auth-garden.spec.ts:98:1 › the front door is the evening garden too, and signing in from the garden page still works
+[14/215] tests/e2e/auth-garden.spec.ts:110:1 › a portal named Hearts shows as HEARTS on the master desk; its slug stays as typed
+[15/215] tests/e2e/circle-sheet.spec.ts:69:1 › the export carries a CircleAnswers tab, and circle answers on an activation task never count as answers or done tasks
+[WebServer] (node:47521) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+
+[16/215] tests/e2e/circle-sheet.spec.ts:130:1 › deleting a question through the sheet takes its circle answers with it, and undo brings both back together
+[17/215] tests/e2e/circle-sheet.spec.ts:167:1 › a portal admin adds circle answers to their own portal’s questions only, and they belong to that portal
+[18/215] tests/e2e/circle.spec.ts:62:3 › HEARTS circle answers › generation: the master desk drafts answers with the chosen count, tones and lengths, with the built-in drafts when there is no AI key
+[19/215] tests/e2e/circle.spec.ts:101:3 › HEARTS circle answers › label: a learner who shares sees circle answers in the swarm with the light label, and the CMS wording reaches them
+[20/215] tests/e2e/circle.spec.ts:131:3 › HEARTS circle answers › fade-out: circle answers step back once real answers reach the threshold, and stay on the desk
+[21/215] tests/e2e/circle.spec.ts:174:3 › HEARTS circle answers › exclusion: circle answers never reach analytics, trends, the profile, the workbook or progress views
+[WebServer] (node:47521) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+
+[22/215] tests/e2e/circle.spec.ts:209:3 › HEARTS circle answers › portal scope: a portal admin looks after circle answers on their own courses only, and their answers stay in their portal
+[23/215] tests/e2e/circle.spec.ts:275:3 › HEARTS circle answers › word checks and switches: kill-list text is refused, and bulk off clears the swarm while the desk keeps the answers
+[24/215] tests/e2e/compass.spec.ts:14:1 › a learner cannot fetch their own scores from any compass API
+tests/e2e/compass.spec.ts:14:1 › a learner cannot fetch their own scores from any compass API
+(node:49624) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:49638) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:49649) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[04:28:47] WARN: No email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.
+
+
+Created portal hearts-demo.
+
+
+Compass demo is in place on hearts-demo. New accounts use compass-demo. Existing accounts keep their password.
+
+
+[25/215] tests/e2e/compass.spec.ts:37:1 › the monthly look is five questions and a life check-in
+[26/215] tests/e2e/compass.spec.ts:95:1 › an imam sees the charts, the cohort, and why a talk was chosen
+[27/215] tests/e2e/doors.spec.ts:50:1 › the 20 doors are seeded with their sections, titles and clauses
+[28/215] tests/e2e/doors.spec.ts:60:1 › a learner sees the 20 doors with their titles and never a clause number
+[29/215] tests/e2e/doors.spec.ts:99:1 › every learner screen that shows the spine speaks in doors
+[30/215] tests/e2e/doors.spec.ts:120:1 › the feed walks the spine door by door and the lanes push talks by door
+[31/215] tests/e2e/doors.spec.ts:151:1 › the desk shows the door first and keeps the clause beside it
+[32/215] tests/e2e/doors.spec.ts:167:1 › the sheet exports the door beside the clause, takes a door in place of a clause, and undo puts it back
+[33/215] tests/e2e/feed-evening.spec.ts:122:1 › question cards are the evening garden: teal gradient over a blurred courtyard, parchment words, a gold Continue, and the video Follow row
+[34/215] tests/e2e/feed-evening.spec.ts:166:1 › a question-card swipe and a scenic-card swipe never show a bare side or a blank pill
+[35/215] tests/e2e/feed-evening.spec.ts:197:1 › words in the picture: YouTube captions are dropped, our caption hides, and the speaker and Follow leave the lower quarter
+[36/215] tests/e2e/feed-evening.spec.ts:233:1 › the extended cut opens on our own poster with the talk title, never a titled YouTube thumbnail
+[37/215] tests/e2e/feed-levels.spec.ts:47:1 › swipes keep to the level being watched, and Learn more goes to the watched item’s own parent
+[38/215] tests/e2e/feed-polish.spec.ts:62:1 › one Tap for sound on the first clip and on the appetiser; the question card’s chrome reads at AA
+[39/215] tests/e2e/feed-polish.spec.ts:86:1 › every scenic card in the feed keeps its words inside the card, never shifts the screen, and offers Mute only with audio
+[40/215] tests/e2e/feed-polish.spec.ts:147:1 › harvest lines are whole sentences, and Home, Garden and Harvest show the same counts
+[41/215] tests/e2e/feed-polish.spec.ts:174:1 › the portal desk names the portal, never its slug, in the sidebar and on a narrow screen
+[42/215] tests/e2e/feed-polish.spec.ts:191:1 › until a clip actually plays, our poster and a gold play button cover the player, never YouTube’s own
+[43/215] tests/e2e/feed-touch.spec.ts:74:1 › touch swipes left and right move the feed, on a talk clip, on a card, and in the appetiser loop
+[44/215] tests/e2e/feed-touch.spec.ts:109:1 › a question card swipes by touch: the card follows the finger, then the next item comes in from the right
+[45/215] tests/e2e/feedback.spec.ts:79:3 › Feedback for teachers › anonymised export, private answers left out, and a draft question check
+[46/215] tests/e2e/feedback.spec.ts:191:3 › Feedback for teachers › a teacher can open feedback, a learner cannot, and Leeds cannot read East London
+[47/215] tests/e2e/gather.spec.ts:43:1 › RSVP, waitlist promotion, public page, calendar, QR check-in and activation
+[48/215] tests/e2e/harvest-lines.spec.ts:22:1 › the seeded lines group and filter by the 20 doors and by speaker, cite only real words, and open their context
+[49/215] tests/e2e/harvest-lines.spec.ts:65:1 › a fresh learner sees the sample, then a short clip keeps a real line and parts watched stays at 0
+[50/215] tests/e2e/harvest.spec.ts:69:3 › harvest › finishing a talk fills Harvest with what was said, verses placed only when the match is sure
+[51/215] tests/e2e/harvest.spec.ts:84:3 › harvest › the Garden counts the new harvest; the cards are verbatim, Arabic above the translation, and the new marker clears once seen
+[52/215] tests/e2e/harvest.spec.ts:125:3 › harvest › filters and grouping
+[53/215] tests/e2e/harvest.spec.ts:149:3 › harvest › a seeded learner’s harvest groups under the doors of the hadith of Jibril
+[54/215] tests/e2e/harvest.spec.ts:157:3 › harvest › a card replays its talk from a few seconds before the quote
+[55/215] tests/e2e/harvest.spec.ts:168:3 › harvest › See it in context shows the ayah among its neighbours, and the named hadith in full
+[56/215] tests/e2e/harvest.spec.ts:191:3 › harvest › What do the scholars say offers a labelled summary or the tafsir itself, each source titled
+[57/215] tests/e2e/harvest.spec.ts:214:3 › harvest › the harvest is the learner’s own: another portal cannot view it and the records are master-only
+[58/215] tests/e2e/integration-final.spec.ts:67:1 › a learner joins by code, takes the persona quiz, stays on level, steps up by Learn more, answers an imported pop-up and finds it all again
+[59/215] tests/e2e/integration-final.spec.ts:203:1 › a portal admin walks the short setup and lands back on the overview
+[60/215] tests/e2e/integration-r3.spec.ts:15:1 › Me loads with no console errors and keeps the evening palette when the phone is not on UTC
+[61/215] tests/e2e/integration-r3.spec.ts:38:3 › the desk sidebar keeps the learner app link, the name and Sign out in view at 1440x900
+[62/215] tests/e2e/integration-r3.spec.ts:38:3 › the desk sidebar keeps the learner app link, the name and Sign out in view at 1280x720
+[63/215] tests/e2e/integration-r3.spec.ts:57:1 › a YouTube Short in the feed: no caption over its burned-in words, Follow at the top, and our own poster
+[64/215] tests/e2e/integration-r3.spec.ts:90:1 › the export log shows times in the portal's zone with a short label, in the viewer's language
+[65/215] tests/e2e/integration-r3.spec.ts:128:1 › small fixes: favicon, Teach emails end in an ellipsis, and the install card does not push Home down
+[66/215] tests/e2e/integration-r3.spec.ts:172:1 › an opened pack spans the main area as at most about 20 door tiles, with no seats until a door opens, then one clean heading per Ghunya seat
+[67/215] tests/e2e/journeys.spec.ts:88:3 › HEARTS journeys › an empty sign-in is refused
+[68/215] tests/e2e/journeys.spec.ts:96:3 › HEARTS journeys › master opens a portal, a pack and its codes
+[69/215] tests/e2e/journeys.spec.ts:120:3 › HEARTS journeys › admin builds a course, extracts and approves a cut with its clause and seat, and places questions
+[70/215] tests/e2e/journeys.spec.ts:192:3 › HEARTS journeys › the approved cut reaches the learner feed; placing answers choose the first course
+[71/215] tests/e2e/journeys.spec.ts:216:3 › HEARTS journeys › learner answers, meets the contingent question, and the test clock opens it
+[72/215] tests/e2e/journeys.spec.ts:273:3 › HEARTS journeys › a second learner sees the shared answer, and a private answer stays private
+[73/215] tests/e2e/journeys.spec.ts:293:3 › HEARTS journeys › teacher replies to a shared workbook entry and the learner is told
+[74/215] tests/e2e/journeys.spec.ts:314:3 › HEARTS journeys › the schedule splitter shares three parts across Wednesdays and Fridays
+[75/215] tests/e2e/journeys.spec.ts:332:3 › HEARTS journeys › RSVP gives an earned or held ticket, self check-in for earned, staff check-in for held
+[76/215] tests/e2e/journeys.spec.ts:358:3 › HEARTS journeys › rooms stay apart, including forged ids and the raw API
+[77/215] tests/e2e/journeys.spec.ts:394:3 › HEARTS journeys › a learner on an admin address is sent back, and a closed portal shows the closed page
+[78/215] tests/e2e/journeys.spec.ts:417:3 › HEARTS journeys › feed swipes stay on one level, and learn more steps to that clip’s own parent
+[79/215] tests/e2e/journeys.spec.ts:470:3 › HEARTS journeys › the main screens load without console errors
+[80/215] tests/e2e/library-teach.spec.ts:25:1 › library packs are summaries, and the course picker is the door tree
+[81/215] tests/e2e/library-teach.spec.ts:83:1 › demo learners show varied on-time fractions on Teach
+tests/e2e/library-teach.spec.ts:83:1 › demo learners show varied on-time fractions on Teach
+
+> hearts-prototype@1.0.0 demo:timed-learners
+> tsx src/seed/timed-learners.ts
+
+
+
+(node:52192) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:52203) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[04:36:01] WARN: No email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.
+
+
+Demo portal /p/hearts-demo is ready. Sign in as demo-admin@hearts-demo.test / demo-timed
+
+
+  Layla Rahman (demo): 7 parts watched, 4 answers
+  Yusuf Karim (demo): 3 parts watched, 1 answers
+  Amina Shah (demo): 9 parts watched, 6 answers
+  Hassan Malik (demo): 5 parts watched, 5 answers
+
+
+[82/215] tests/e2e/library-teach.spec.ts:107:1 › the workbook empty state is the arch and a sentence, with no bird art
+[83/215] tests/e2e/master-sheet.spec.ts:59:1 › template downloads as xlsx and the seeded library round-trips with no changes
+[84/215] tests/e2e/master-sheet.spec.ts:85:1 › a dry run names every bad cell and does not save the rows
+[85/215] tests/e2e/master-sheet.spec.ts:121:1 › applying an ai draft keeps it off the learner page until a person approves it, and undo puts the import back
+[86/215] tests/e2e/master-sheet.spec.ts:178:1 › a portal admin can only import into courses made in their own portal
+[87/215] tests/e2e/master-sheet.spec.ts:212:1 › five hundred rows are previewed through the import route
+[88/215] tests/e2e/master-sheet.spec.ts:235:1 › the desk shows the error preview, the applied import and the export
+[89/215] tests/e2e/nesting-progress.spec.ts:22:1 › at phone size, short clips stay off the grow page and a full talk in a course moves it
+[90/215] tests/e2e/nesting.spec.ts:70:1 › every seeded hors d'oeuvre sits inside its appetiser, and every appetiser inside its full talk
+[91/215] tests/e2e/nesting.spec.ts:94:1 › a tier whose hors d'oeuvre leaves the appetiser is refused
+[92/215] tests/e2e/nesting.spec.ts:107:1 › browsing answers and short watching never move the course, the Garden or time given
+[93/215] tests/e2e/nesting.spec.ts:135:1 › the course page sends only the seconds played there, so opening near the end counts nothing
+[94/215] tests/e2e/nesting.spec.ts:148:1 › answering in the course and watching the full talk there do count
+[95/215] tests/e2e/nesting.spec.ts:169:1 › swipes stay on the level being watched, and "Learn more" goes to the parent of that same item
+[96/215] tests/e2e/opening.spec.ts:77:3 › the opening › 1. a first visit to the portal lands on the opener, with its caption and both ways in
+[97/215] tests/e2e/opening.spec.ts:86:3 › the opening › 2. nothing from YouTube loads before the learner chooses a way in (P12)
+[98/215] tests/e2e/opening.spec.ts:93:3 › the opening › 3. Let us play opens scene one, and the address follows the scene
+[99/215] tests/e2e/opening.spec.ts:100:3 › the opening › 4. a tap shows its reply line, then the next scene rises
+[100/215] tests/e2e/opening.spec.ts:109:3 › the opening › 5. Pass moves on without a tap and is kept as a pass
+[101/215] tests/e2e/opening.spec.ts:118:3 › the opening › 6. going back replaces the earlier tap instead of adding one
+[102/215] tests/e2e/opening.spec.ts:131:3 › the opening › 7. the crisis option opens the help screen with contacts, and Back to HEARTS returns to the opener
+[103/215] tests/e2e/opening.spec.ts:145:3 › the opening › 8. the help screen has its own address and works on a cold load
+[104/215] tests/e2e/opening.spec.ts:151:3 › the opening › 9. six taps hand off with the line, then the feed, at /feed
+[105/215] tests/e2e/opening.spec.ts:161:3 › the opening › 10. Back from the feed does not reopen the scenes
+[106/215] tests/e2e/opening.spec.ts:169:3 › the opening › 11. the taps stay on the device: no request carries them before sign-up (P1)
+[107/215] tests/e2e/opening.spec.ts:182:3 › the opening › 12. before sign-up the feed is chosen on the device, so no request carries lane scores (P2)
+[108/215] tests/e2e/opening.spec.ts:196:3 › the opening › 13. Just show me something goes straight to a clip with its own line
+[109/215] tests/e2e/opening.spec.ts:203:3 › the opening › 14. after the opening, the portal address opens the feed on the next visit
+[110/215] tests/e2e/opening.spec.ts:210:3 › the opening › 15. the sky lightens scene by scene and is full at the feed
+[111/215] tests/e2e/opening.spec.ts:219:3 › the opening › 16. a heart on a clip asks to keep the place, and Not now carries on
+[112/215] tests/e2e/opening.spec.ts:228:3 › the opening › 17. signing up from the sheet sends the opening once, and the workbook shows where you started
+[113/215] tests/e2e/opening.spec.ts:249:3 › the opening › 18. a private opening answer is never shown to the teacher (P9)
+[114/215] tests/e2e/opening.spec.ts:262:3 › the opening › 19. the owner sees all six rows, private ones with a lock
+[115/215] tests/e2e/opening.spec.ts:268:3 › the opening › 20. the mentor CSV holds shared rows only
+[116/215] tests/e2e/opening.spec.ts:278:3 › the opening › 21. turning off Share my opening answers hides them from the teacher
+[117/215] tests/e2e/opening.spec.ts:305:3 › the opening › 22. the Me tab lets the learner change their name
+[118/215] tests/e2e/opening.spec.ts:317:3 › the opening › 23. Guarding the gaze is opt-in and kept on the device only
+[119/215] tests/e2e/opening.spec.ts:328:3 › the opening › 24. Start again clears the opening here and on the server, and opens the opener
+[120/215] tests/e2e/opening.spec.ts:347:3 › the opening › 25. reduced motion keeps every step, with fades in place of movement
+[121/215] tests/e2e/opening.spec.ts:361:3 › pop-up questions in a lesson › 26. the question strip shows one mark per question
+[122/215] tests/e2e/opening.spec.ts:369:3 › pop-up questions in a lesson › 27. playback stops at a question, the answer saves, and playback carries on
+[123/215] tests/e2e/opening.spec.ts:391:3 › pop-up questions in a lesson › 28. Answer later closes the card and keeps the question open
+[124/215] tests/e2e/opening.spec.ts:405:3 › pop-up questions in a lesson › 29a. a clip the player refuses is reported, and a report alone never hides it
+[125/215] tests/e2e/opening.spec.ts:417:3 › pop-up questions in a lesson › 29. the strict layout keeps the paused player in view above the card
+[126/215] tests/e2e/opening.spec.ts:442:3 › the desks for the opening › 30. the master sees the six scenes, their options and the publish checks
+[127/215] tests/e2e/opening.spec.ts:449:3 › the desks for the opening › 31. publishing a caption with a kill-list word is refused
+[128/215] tests/e2e/opening.spec.ts:461:3 › the desks for the opening › 32. the simulator runs the phone’s routing on picked taps
+[129/215] tests/e2e/opening.spec.ts:473:3 › the desks for the opening › 33. the lanes screen lists every lane and the tag queue
+[130/215] tests/e2e/opening.spec.ts:479:3 › the desks for the opening › 34. trends stay hidden until ten people have taken part
+[131/215] tests/e2e/opening.spec.ts:485:3 › the desks for the opening › 35. a portal admin rewords a scene for their community and the opener shows it
+[132/215] tests/e2e/opening.spec.ts:501:3 › the desks for the opening › 36. the scene with the help option cannot be left out
+[133/215] tests/e2e/opening.spec.ts:508:3 › the desks for the opening › 37. a portal admin adds a help contact and the help screen lists it
+[134/215] tests/e2e/opening.spec.ts:523:3 › the desks for the opening › 38. persona bands are distinct, including anger and greed
+[135/215] tests/e2e/opening.spec.ts:540:3 › the desks for the opening › 39. the master edits a scale and a nudge, and a portal admin cannot see the bands
+[136/215] tests/e2e/opening.spec.ts:584:3 › the desks for the opening › 40. a learner sees a gentle path and the API carries no raw scores
+[137/215] tests/e2e/opening.spec.ts:613:3 › the desks for the opening › 41. an imam sees the signed scale over time and the talks watched between looks
+[138/215] tests/e2e/opening.spec.ts:657:3 › the desks for the opening › 42. a month later the home card opens different words and a life check
+[139/215] tests/e2e/portal-features.spec.ts:61:1 › the master creator can switch Gather off, and a learner sees no Gather until it is turned back on
+[140/215] tests/e2e/round2-integration.spec.ts:27:1 › no hoopoe or Hudhud on sign-in, Home, the feed, the garden, Me, the desks or the laptop page
+[141/215] tests/e2e/round2-integration.spec.ts:69:1 › desks wear the evening garden: deep teal page and panels, gold buttons
+[142/215] tests/e2e/round2-integration.spec.ts:118:1 › the library puts each course on the door its clips carry
+[143/215] tests/e2e/round3.spec.ts:52:3 › round 3 API › Bug 1: one account adds at most one trend row a week, whatever nonce it sends
+[144/215] tests/e2e/round3.spec.ts:75:3 › round 3 API › Bug 2: codes have expiry, max uses and a switch; a one-use code refuses a second person; guessing is throttled; seed codes are random
+[145/215] tests/e2e/round3.spec.ts:108:3 › round 3 API › Bug 3: a portal admin cannot get round the opening rules over REST, and cannot move the setup to another portal
+[146/215] tests/e2e/round3.spec.ts:125:3 › round 3 API › Bug 4: a heart-state row is always the signed-in person, and only with Keep my place on
+[147/215] tests/e2e/round3.spec.ts:140:3 › round 3 API › Bug 6: a private answer is read by its owner only, not the teacher, the admin or the master
+[148/215] tests/e2e/round3.spec.ts:155:3 › round 3 API › Bug 7: nothing is written while viewing as someone, globals and new portals included
+[149/215] tests/e2e/round3.spec.ts:168:3 › round 3 API › Bug 8: joining is refused and audited while viewing as someone, even with changes allowed
+[150/215] tests/e2e/round3.spec.ts:183:3 › round 3 API › Bug 9: only the master moves the test clock, and signed-out reads of it are refused
+[151/215] tests/e2e/round3.spec.ts:193:3 › round 3 API › Bug 11: a portal hides at most two scenes and never the one with the help option
+[152/215] tests/e2e/round3.spec.ts:208:3 › round 3 API › Bug 12: reserved portal addresses are refused by the form and by REST
+[153/215] tests/e2e/round3.spec.ts:216:3 › round 3 API › Bug 13: help contacts take tel and https only, and the help screen shows plain text
+[154/215] tests/e2e/round3.spec.ts:228:3 › round 3 API › Bug 15: Al-Nur plays the full class and the seed holds every timing inside its talk
+[155/215] tests/e2e/round3.spec.ts:237:3 › round 3 API › Bug 21: plans are capped at a year, take a season name, and say 1 sitting
+[156/215] tests/e2e/round3.spec.ts:248:3 › round 3 API › Bug 24: master flags are not readable signed out; unplayable reports need sign-in and are rate-limited
+[157/215] tests/e2e/round3.spec.ts:260:3 › round 3 API › Bug 25: leaving view-as goes back to a path on this site, never localhost
+[158/215] tests/e2e/round3.spec.ts:272:3 › round 3 API › Bug 26: a view-as reason, and a reason to allow changes, need at least 10 characters
+[159/215] tests/e2e/round3.spec.ts:285:3 › round 3 screens › Bug 5: nothing tap-derived leaves the device before sign-up, and the feed API refuses strangers
+[160/215] tests/e2e/round3.spec.ts:300:3 › round 3 screens › Bug 14: the 14-day chart bars have width
+[161/215] tests/e2e/round3.spec.ts:310:3 › round 3 screens › Bug 16: a reload in the middle of the opening keeps the taps and the scene
+[162/215] tests/e2e/round3.spec.ts:324:3 › round 3 screens › Bug 17: a double tap moves one scene and adds one history entry
+[163/215] tests/e2e/round3.spec.ts:343:3 › round 3 screens › Bug 18: a narrow screen gets a laptop note instead of the desk
+[164/215] tests/e2e/round3.spec.ts:354:3 › round 3 screens › Bug 19: the question sheet never covers the film, in either layout
+[165/215] tests/e2e/round3.spec.ts:383:3 › round 3 screens › Bug 22: a brand-new portal can choose courses from the central library
+[166/215] tests/e2e/round3.spec.ts:403:3 › round 3 screens › Bug 23: Home Continue rows put the title and the speaker line on separate lines
+[167/215] tests/e2e/round3.spec.ts:413:3 › round 3 screens › Bug 27: What others said stays hidden until the learner opts in
+[168/215] tests/e2e/round3.spec.ts:428:3 › round 3 screens › Bug 28: no hydration warnings on the desks
+[169/215] tests/e2e/round3.spec.ts:450:3 › round 3 screens › Section T: the appetiser offers the main from 0:00 and a resume link at its out point; drafts stay off the learner side
+[170/215] tests/e2e/round3.spec.ts:496:3 › round 3 screens › Section T: the master checks a talk in the tier editor and publishes a pop-up
+[171/215] tests/e2e/round4.spec.ts:64:3 › round 4 API › N4: the tier record is what learners get for lessons 1 to 3, one clip per talk, and an edit reaches them at once
+[172/215] tests/e2e/round4.spec.ts:86:3 › round 4 API › LOW: lesson 1 plays its video, not slides
+[173/215] tests/e2e/round4.spec.ts:93:3 › round 4 API › K1: pop-up questions and tier lines refuse spaced letters, stretched spellings, quizlet, rating and markup
+[174/215] tests/e2e/round4.spec.ts:105:3 › round 4 API › N2: a portal admin sets any use limit on an admin code, including none; it grants admin in their own portal only, can be switched off, and shows who joined
+[175/215] tests/e2e/round4.spec.ts:148:3 › round 4 API › N1: 210 failures from rotating addresses never block a valid code; one address is limited by its own failures, whatever it writes on the left
+[176/215] tests/e2e/round4.spec.ts:171:3 › round 4 API › N3: a contribution counts only from an account that has finished a video and is at least a day old
+[177/215] tests/e2e/round4.spec.ts:194:3 › round 4 API › D1: show unchecked talks is a master flag; off, learners get approved talks only; review approves and rejects
+[178/215] tests/e2e/round4.spec.ts:216:3 › round 4 screens › L1: each lane card opens that lane’s own feed, starting on its first clip
+[179/215] tests/e2e/round4.spec.ts:238:3 › round 4 screens › LOW: a speaker’s Watch intro plays the tier’s appetiser and stops at its out point
+[180/215] tests/e2e/round4.spec.ts:256:3 › round 4 screens › A1 and A2: at 390 by 844 the appetiser plays its clip with nothing overlapping, and no transcript over the picture
+[181/215] tests/e2e/round4.spec.ts:294:3 › round 4 screens › G1: the Garden rings are readable and Your path is styled with one number per lesson
+[182/215] tests/e2e/round4.spec.ts:316:3 › round 4 screens › LOW: each Still open row in the workbook keeps the question and the talk on separate lines
+[183/215] tests/e2e/round4.spec.ts:333:3 › round 4 screens › E1: at 1440 the tier editor labels, number boxes, sliders, headings and note do not overlap
+[184/215] tests/e2e/round4.spec.ts:356:3 › round 4 screens › D1: the review screen plays both tiers, shows hook, turn and land, and takes keyboard shortcuts
+[185/215] tests/e2e/round4.spec.ts:388:3 › round 4 screens › LOW: a question paused over the film fades YouTube’s pause panel under a soft scrim
+[186/215] tests/e2e/screenshots.spec.ts:25:1 › a week of use, so the garden has something in it
+  1) tests/e2e/screenshots.spec.ts:25:1 › a week of use, so the garden has something in it ─────────
+
+    Test timeout of 300000ms exceeded.
+
+    Error: locator.check: Test timeout of 300000ms exceeded.
+    Call log:
+      - waiting for getByTestId('answer-share')
+
+
+      38 |   await page.getByTestId('answer-text').fill('Sending salawat after Fajr, before I pick up my phone.')
+      39 |   await page.getByTestId('answer-private').uncheck()
+    > 40 |   await page.getByTestId('answer-share').check()
+         |                                          ^
+      41 |   await page.getByTestId('answer-submit').click()
+      42 |   await expect(page.getByTestId('notice')).toBeVisible()
+      43 |   await page.goto('/p/east-london/garden/jibril/10')
+        at /tmp/pf-base/hearts-prototype/tests/e2e/screenshots.spec.ts:40:42
+
+    Error Context: test-results/screenshots-a-week-of-use-so-the-garden-has-something-in-it/error-context.md
+
+
+(node:55560) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:55560) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[187/215] tests/e2e/screenshots.spec.ts:56:1 › learner app at phone size
+[188/215] tests/e2e/screenshots.spec.ts:100:1 › portal desk at desktop size
+[189/215] tests/e2e/screenshots.spec.ts:136:1 › the opening at phone size
+[190/215] tests/e2e/screenshots.spec.ts:158:1 › view as, from the portal desk
+[191/215] tests/e2e/screenshots.spec.ts:174:1 › door, sign-in and join
+[192/215] tests/e2e/screenshots.spec.ts:181:1 › circle answers: the desk and the swarm
+[193/215] tests/e2e/security.spec.ts:9:1 › the create-first-user screen and first-register are closed, and nobody outside can make an admin
+[194/215] tests/e2e/sheet-creator.spec.ts:60:1 › the creator drafts a sheet, then a learner completes a task the imam can see
+[195/215] tests/e2e/sheet-creator.spec.ts:168:1 › a portal admin searches for their own course and cannot draft the master library
+[196/215] tests/e2e/sheet-packs.spec.ts:65:1 › the pack column puts a new course in the pack; without the tick box existing learners are left as they are, and that is logged
+[197/215] tests/e2e/sheet-packs.spec.ts:84:1 › the preview offers the pack choice with the push tick box off by default
+[198/215] tests/e2e/sheet-packs.spec.ts:99:1 › choosing a pack for new courses and ticking push gives them to learners who already hold the pack; undo takes both back out
+[WebServer]  ⚠ Server is approaching the used memory threshold, restarting...
+
+  2) tests/e2e/sheet-packs.spec.ts:99:1 › choosing a pack for new courses and ticking push gives them to learners who already hold the pack; undo takes both back out 
+
+    Error: apiRequestContext.post: read ECONNRESET
+    Call log:
+      - → POST http://127.0.0.1:3101/api/hearts/sheet
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.8010.12 Safari/537.36
+        - accept: application/json
+        - accept-encoding: gzip,deflate,br
+        - content-type: multipart/form-data; boundary=----WebKitFormBoundaryyOZtKlelyv4zhYBP
+        - content-length: 14065
+        - cookie: payload-token=eyJhbGciOiJIUzI1NiIsImF1dGhWZXJzaW9uIjoxLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiTWFzdGVyIGRlc2siLCJyb2xlIjoibWFzdGVyIiwiYWNjZXNzQ29kZSI6bnVsbCwidGVuYW50cyI6W10sImlkIjoxLCJjb2xsZWN0aW9uIjoidXNlcnMiLCJlbWFpbCI6Im1hc3RlckBoZWFydHMudGVzdCIsInNpZCI6IjE3MjYzZWFmLTUzZDEtNGRkMS1iODg2LTJkYjI4MzA2MTUwZiIsImlhdCI6MTc5MTE3NjYwMSwiZXhwIjoxNzkxMTgzODAxfQ.rSYnkK68ebGLg3vJCJWzrUm9ouWauiC7l-ZBQf-eiqs
+
+
+      25 |
+      26 | async function postSheet(ctx: APIRequestContext, buffer: Buffer, fields: Record<string, string>) {
+    > 27 |   const response = await ctx.post('/api/hearts/sheet', {
+         |                              ^
+      28 |     multipart: { ...fields, response: 'json', file: { name: 'packs.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer } },
+      29 |   })
+      30 |   return { response, body: await json(response) }
+        at postSheet (/tmp/pf-base/hearts-prototype/tests/e2e/sheet-packs.spec.ts:27:30)
+        at /tmp/pf-base/hearts-prototype/tests/e2e/sheet-packs.spec.ts:103:25
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3101
+    Call log:
+      - → GET http://127.0.0.1:3101/api/courses?where[title][equals]=Pack%20course%20one%20601421&depth=0
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.8010.12 Safari/537.36
+        - accept: application/json
+        - accept-encoding: gzip,deflate,br
+        - cookie: payload-token=eyJhbGciOiJIUzI1NiIsImF1dGhWZXJzaW9uIjoxLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiTWFzdGVyIGRlc2siLCJyb2xlIjoibWFzdGVyIiwiYWNjZXNzQ29kZSI6bnVsbCwidGVuYW50cyI6W10sImlkIjoxLCJjb2xsZWN0aW9uIjoidXNlcnMiLCJlbWFpbCI6Im1hc3RlckBoZWFydHMudGVzdCIsInNpZCI6IjE3MjYzZWFmLTUzZDEtNGRkMS1iODg2LTJkYjI4MzA2MTUwZiIsImlhdCI6MTc5MTE3NjYwMSwiZXhwIjoxNzkxMTgzODAxfQ.rSYnkK68ebGLg3vJCJWzrUm9ouWauiC7l-ZBQf-eiqs
+
+
+      33 | const talk = (key: string, course: string, youtubeId: string, extra: Record<string, string> = {}) => ({ talk_key: key, youtube_id: youtubeId, title: `A sitting for ${course}`, course, speaker: 'Pack Test', ...extra })
+      34 | const packCourses = async () => ((await json(await master.get(`/api/packs/${packId}?depth=0`))).courses as (number | { id: number })[]).map((row) => (typeof row === 'number' ? row : row.id))
+    > 35 | const courseId = async (title: string) => ((await json(await master.get(`/api/courses?where[title][equals]=${encodeURIComponent(title)}&depth=0`))).docs[0]?.id as number | undefined)
+         |                                                                     ^
+      36 | const courseList = async () => ((await json(await master.get(`/api/users/${learnerId}?depth=0`))).courseList as number[]).map(Number)
+      37 | const lastAudit = async (event: string) => (await json(await master.get(`/api/audit-log?where[event][equals]=${event}&sort=-createdAt&limit=1&depth=0`))).docs[0] as { detail?: Record<string, any> } | undefined
+      38 |
+        at courseId (/tmp/pf-base/hearts-prototype/tests/e2e/sheet-packs.spec.ts:35:69)
+        at /tmp/pf-base/hearts-prototype/tests/e2e/sheet-packs.spec.ts:54:22
+
+    Error Context: test-results/sheet-packs-choosing-a-pac-91ef2-ck-undo-takes-both-back-out/error-context.md
+
+    Error Context: test-results/sheet-packs-choosing-a-pac-91ef2-ck-undo-takes-both-back-out/error-context.md
+
+
+[199/215] tests/e2e/sheet-packs.spec.ts:126:1 › a portal admin cannot name a master pack or another portal’s pack
+(node:56389) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:56389) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[200/215] tests/e2e/typography.spec.ts:27:1 › Typography panel lists the five styles and can stand in for the hors d’oeuvre
+[201/215] tests/e2e/view-as.spec.ts:51:3 › view as › 38. a portal admin views as a learner with a reason, read-only by default
+[202/215] tests/e2e/view-as.spec.ts:58:3 › view as › 39. a view without a reason is refused
+[203/215] tests/e2e/view-as.spec.ts:68:3 › view as › 40. while read-only, answers and settings are refused and logged
+[204/215] tests/e2e/view-as.spec.ts:78:3 › view as › 41. the learner’s private opening answers are not shown in view-as
+[205/215] tests/e2e/view-as.spec.ts:87:3 › view as › 42. the viewer’s own device state is left alone, and the view’s keys are wiped on exit
+[206/215] tests/e2e/view-as.spec.ts:108:3 › view as › 43. Exit returns to where the view started and ends the session
+[207/215] tests/e2e/view-as.spec.ts:118:3 › view as › 44. a teacher has no View as, and the server refuses one
+[208/215] tests/e2e/view-as.spec.ts:126:3 › view as › 45. a portal admin cannot view as a learner in another portal
+[209/215] tests/e2e/view-as.spec.ts:133:3 › view as › 46. the master views as a portal admin, but never as another master
+[210/215] tests/e2e/view-as.spec.ts:147:3 › view as › 47. start and stop are written to the audit log with the reason
+[211/215] tests/e2e/view-as.spec.ts:156:3 › view as › 48. allowing changes needs a reason, and then a change goes through and is logged
+[212/215] tests/e2e/view-as.spec.ts:174:3 › view as › 49. some things stay closed even with changes allowed: the opening and Start again
+(node:57241) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:57241) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[213/215] tests/e2e/r5d-desks-proof.spec.ts:97:1 › r5d desk proof shots
+  3) tests/e2e/r5d-desks-proof.spec.ts:97:1 › r5d desk proof shots ─────────────────────────────────
+
+    Test timeout of 400000ms exceeded.
+
+    Error: locator.click: Test timeout of 400000ms exceeded.
+    Call log:
+      - waiting for locator('[data-testid="door-tile"][data-empty="no"]').first()
+
+
+      171 |   if (packHref) await page.goto(packHref)
+      172 |   await expect(page.getByTestId('pack-open')).toBeVisible()
+    > 173 |   await page.locator('[data-testid="door-tile"][data-empty="no"]').first().click()
+          |                                                                            ^
+      174 |   await expect(page.getByTestId('door-open')).toBeVisible()
+      175 |   await expect(page.getByTestId('seat-group').first()).toBeVisible()
+      176 |   await shot(page, 'content-ghunya-seats')
+        at /tmp/pf-base/hearts-prototype/tests/e2e/r5d-desks-proof.spec.ts:173:76
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/r5d-desks-proof-r5d-desk-proof-shots/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/r5d-desks-proof-r5d-desk-proof-shots/error-context.md
+
+
+(node:57554) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:57554) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[214/215] tests/e2e/r5d-desks-proof.spec.ts:359:1 › admin and teacher open help tips
+[215/215] tests/e2e/r5d-desks-proof.spec.ts:409:1 › every desk help card fits at 1366x700 and 1280x800
+  3 failed
+    tests/e2e/r5d-desks-proof.spec.ts:97:1 › r5d desk proof shots ──────────────────────────────────
+    tests/e2e/screenshots.spec.ts:25:1 › a week of use, so the garden has something in it ──────────
+    tests/e2e/sheet-packs.spec.ts:99:1 › choosing a pack for new courses and ticking push gives them to learners who already hold the pack; undo takes both back out 
+  1 did not run
+  211 passed (36.9m)
+EXIT:0
+END 2026-10-05T05:19:03Z

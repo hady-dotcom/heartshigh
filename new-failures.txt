@@ -1,0 +1,7 @@
+New on cursor/basics-admin-ops-dbc7 vs cursor/portal-features-0777 (Postgres Playwright).
+Shared (not new): r5d desk proof shots; screenshots garden week.
+PF-only: sheet-packs push-to-existing-learners (failed on PF, not on this branch).
+
+NEW on this branch (28):
+1. integration-r3 export log times (ASSERT GMT-4 vs ET) — fixed in 8872df4
+2-28. timeouts after the Next server ran out of RAM during the first full run
