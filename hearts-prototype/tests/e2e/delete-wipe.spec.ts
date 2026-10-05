@@ -11,6 +11,7 @@ test.use({ video: { mode: 'on', size: { width: 1440, height: 900 } } })
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
 
 async function shot(page: Page, name: string) {
+  await page.evaluate(() => window.scrollTo(0, 0))
   await page.screenshot({ path: path.join(shots, `${name}.png`), fullPage: false })
 }
 
@@ -213,6 +214,7 @@ test.describe('desk delete flows', () => {
 })
 
 test('seeded east london and maryam show real wipe counts in a centred dialog', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
   const master = await masterApi()
   const portal = (await (await master.get('/api/portals?where[slug][equals]=east-london&depth=0')).json()).docs[0]
   const maryam = (await (await master.get('/api/users?where[email][equals]=elm-learner@hearts.test&depth=0')).json()).docs[0]
