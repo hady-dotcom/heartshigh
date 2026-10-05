@@ -77,6 +77,16 @@ export function isKeyDemoCourse(key: CourseKey | null) {
   return key === 'ar-rabb' || key === 'prophet' || key === 'nur' || key === 'sheltered'
 }
 
+/** Multi-part courses already on Afternoon Walk, such as Prophetic Duas 4/7. Finish every part. */
+export function isFullSeriesTitle(title: string) {
+  const folded = foldTitle(title)
+  return folded.includes('prophetic dua') || folded.includes('divinely shelter')
+}
+
+export function finishEveryLesson(key: CourseKey | null, courseTitle: string, lessonTitle: string) {
+  return isKeyDemoCourse(key) || isFullSeriesTitle(`${courseTitle} ${lessonTitle}`)
+}
+
 /** Opening taps for Amina. Private rows stay private. */
 export const WALKTHROUGH_OPENING: { sceneKey: string; optionKey: string }[] = [
   { sceneKey: 'extra', optionKey: 'pause' },

@@ -50,7 +50,7 @@ In the production app service, open **Shell** (or `railway ssh` from `hearts-pro
 npm run demo:walkthrough
 ```
 
-That is the one command. It is safe to run twice. A second run adds nothing that is already there, and refreshes **My week** onto this week so the strip is not stale.
+That is the one command. It is safe to run twice. A second run adds nothing that is already there. Afternoon Walk’s existing **My week** plan is left alone.
 
 Optional, only if you are creating the walkthrough account for the first time and do not want the default password:
 
@@ -81,7 +81,7 @@ For Afternoon Walk (if already on the portal), `walkthrough@hearts.foundation`, 
 - Garden rings filled further: more talks watched, Jibril sections from those talks, Field seats visited, harvest lines from finished talks that have a transcript, and small acts kept with ordinary wording.
 - Workbook entries in a human voice. A few stay private. Shared ones can appear in the swarm as initials.
 - HEARTS circle sample answers on those questions, scoped to hearts-demo, labelled **From the HEARTS circle**, first names only (the swarm shows initials).
-- A **My week** plan named “Walkthrough week” with a few sittings on this week, including today.
+- A **My week** plan named “Walkthrough week” only when that learner has no plan yet. Afternoon Walk’s existing plan is left alone.
 
 The seed will say if Divinely Sheltered is missing. Everything else still fills.
 

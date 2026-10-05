@@ -104,6 +104,46 @@ test('demo:walkthrough writes only hearts-demo, never touches passwords, and a s
       seenWelcome: true,
     } as never,
   })
+  const duas = await payload.create({
+    collection: 'courses',
+    overrideAccess: true,
+    data: {
+      title: 'Prophetic Duas',
+      speaker: 'Shaykh Yasir Fahmy',
+      origin: 'master',
+      importable: true,
+      isPublic: true,
+      visibility: 'published',
+    } as never,
+  })
+  const duasUnit = await payload.create({
+    collection: 'units',
+    overrideAccess: true,
+    data: { title: 'The sittings', course: duas.id, order: 1 },
+  })
+  const duaLessons = []
+  for (let part = 1; part <= 7; part += 1) {
+    duaLessons.push(await payload.create({
+      collection: 'lessons',
+      overrideAccess: true,
+      data: {
+        title: `Dua ${part}: O Allah, I am Your Servant | Prophetic Dua`,
+        unit: duasUnit.id,
+        course: duas.id,
+        speaker: 'Shaykh Yasir Fahmy',
+        order: part,
+        durationSeconds: 760,
+        transcriptSource: 'none',
+      } as never,
+    }))
+  }
+  for (const part of duaLessons.slice(0, 4)) {
+    await payload.create({
+      collection: 'completions',
+      overrideAccess: true,
+      data: { user: afternoon.id, lesson: part.id, portal: demoPortal.id, percent: 100, sourceLevel: 'talk' },
+    })
+  }
   await payload.create({
     collection: 'completions',
     overrideAccess: true,
@@ -301,6 +341,14 @@ test('demo:walkthrough writes only hearts-demo, never touches passwords, and a s
     where: { user: { equals: afternoon.id } },
   })
   assert.ok(afternoonRituals.docs.length >= 8)
+  const duaDone = await payload.find({
+    collection: 'completions',
+    overrideAccess: true,
+    depth: 0,
+    limit: 20,
+    where: { and: [{ user: { equals: afternoon.id } }, { lesson: { in: duaLessons.map((row) => row.id) } }] },
+  })
+  assert.equal(duaDone.docs.length, 7)
 
   const leakedCompletions = await payload.find({
     collection: 'completions',

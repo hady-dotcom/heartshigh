@@ -3,6 +3,7 @@ import test from 'node:test'
 import {
   DEFAULT_WALKTHROUGH_PASSWORD,
   WALKTHROUGH_PORTAL_SLUG,
+  finishEveryLesson,
   matchCourseKey,
   passwordForNewWalkthrough,
   walkthroughDemoGuard,
@@ -34,6 +35,8 @@ test('key demo talks match on title, token or YouTube id', () => {
   assert.equal(matchCourseKey({ title: 'Quranic Connection #26: A Cure for Anxiety' }), 'starter')
   assert.equal(matchCourseKey({ title: 'Dua 1: O Allah, I am Your Servant | Prophetic Dua' }), 'starter')
   assert.equal(matchCourseKey({ title: 'A talk from another chapter' }), null)
+  assert.equal(finishEveryLesson('starter', 'Prophetic Duas', 'Dua 5'), true)
+  assert.equal(finishEveryLesson('starter', 'A Cure for Anxiety', 'A Cure for Anxiety'), false)
 })
 
 test('My week gets a few sittings on this week, including today', () => {

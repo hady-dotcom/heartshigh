@@ -26,7 +26,7 @@ import {
   WALKTHROUGH_STARTING_CLAUSE,
   WALKTHROUGH_TIME_ZONE,
   circleDraftsForPoint,
-  isKeyDemoCourse,
+  finishEveryLesson,
   learnerAnswerForPoint,
   matchCourseKey,
   passwordForNewWalkthrough,
@@ -107,8 +107,22 @@ async function loadMatchedLessons(payload: Payload): Promise<MatchedLesson[]> {
       })).docs as unknown as Doc[])
     : []
   const byId = new Map(courses.map((course) => [course.id, course]))
-  const matched: MatchedLesson[] = []
-  const seenCourses = new Set<number>()
+  const matched = new Map<number, MatchedLesson>()
+  const take = (lesson: Doc, course: Doc | undefined, key: CourseKey) => {
+    const courseId = idOf(lesson.course)
+    if (!courseId || matched.has(lesson.id)) return
+    matched.set(lesson.id, {
+      id: lesson.id,
+      title: String(lesson.title || course?.title || 'Talk'),
+      courseId,
+      courseTitle: String(course?.title || lesson.title || 'Talk'),
+      key,
+      durationSeconds: Number(lesson.durationSeconds || 0),
+      youtubeId: String(lesson.youtubeId || ''),
+      importToken: String(course?.importToken || ''),
+      transcript: typeof lesson.transcript === 'string' ? lesson.transcript : '',
+    })
+  }
   for (const lesson of lessons) {
     const course = byId.get(idOf(lesson.course) || 0)
     const key = matchCourseKey({
@@ -121,24 +135,20 @@ async function loadMatchedLessons(payload: Payload): Promise<MatchedLesson[]> {
       youtubeId: String(lesson.youtubeId || ''),
     })
     if (!key) continue
+    take(lesson, course, key)
+  }
+  const seriesCourses = new Set(
+    [...matched.values()].filter((row) => finishEveryLesson(row.key, row.courseTitle, row.title)).map((row) => row.courseId),
+  )
+  for (const lesson of lessons) {
     const courseId = idOf(lesson.course)
-    if (!courseId) continue
-    if (key === 'starter' && seenCourses.has(courseId) && !isKeyDemoCourse(key)) continue
-    seenCourses.add(courseId)
-    matched.push({
-      id: lesson.id,
-      title: String(lesson.title || course?.title || 'Talk'),
-      courseId,
-      courseTitle: String(course?.title || lesson.title || 'Talk'),
-      key,
-      durationSeconds: Number(lesson.durationSeconds || 0),
-      youtubeId: String(lesson.youtubeId || ''),
-      importToken: String(course?.importToken || ''),
-      transcript: typeof lesson.transcript === 'string' ? lesson.transcript : '',
-    })
+    if (!courseId || !seriesCourses.has(courseId) || matched.has(lesson.id)) continue
+    const course = byId.get(courseId)
+    const sibling = [...matched.values()].find((row) => row.courseId === courseId)
+    take(lesson, course, sibling?.key || 'starter')
   }
   const rank = (key: CourseKey) => COURSE_NEEDLES.findIndex((row) => row.key === key)
-  return matched.sort((a, b) => rank(a.key) - rank(b.key) || a.id - b.id)
+  return [...matched.values()].sort((a, b) => rank(a.key) - rank(b.key) || a.id - b.id)
 }
 
 async function ensurePortal(payload: Payload, notes: string[]) {
@@ -363,9 +373,9 @@ async function fillOpening(payload: Payload, user: Doc, portalId: number, create
 }
 
 function watchPlan(lessons: MatchedLesson[]) {
-  const keyComplete = lessons.filter((lesson) => isKeyDemoCourse(lesson.key))
-  const starters = lessons.filter((lesson) => lesson.key === 'starter')
-  const complete = [...keyComplete, ...starters.slice(0, 10)]
+  const series = lessons.filter((lesson) => finishEveryLesson(lesson.key, lesson.courseTitle, lesson.title))
+  const starters = lessons.filter((lesson) => !series.some((row) => row.id === lesson.id))
+  const complete = [...series, ...starters.slice(0, 10)]
   const partial = starters.slice(10, 13)
   const seen = new Set<number>()
   const rows: { lesson: MatchedLesson; percent: number; daysAgo: number }[] = []
