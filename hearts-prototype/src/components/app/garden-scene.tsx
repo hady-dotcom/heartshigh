@@ -121,6 +121,7 @@ export function GardenScene({ areas, theme: pinned }: { areas: AreaView[]; theme
       <img className="garden-scene-bg" src={sceneBackground(theme)} alt="" />
       <header className="garden-top">
         <h1><span className="gold-mark" aria-hidden="true" />Small steps. A fuller you.</h1>
+        <p className="garden-hook">A quiet picture of time you have given.</p>
       </header>
       <img className="garden-prop lantern" src="/garden/props/lantern.webp" alt="" />
       <div className="garden-trees">

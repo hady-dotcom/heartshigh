@@ -24,6 +24,7 @@ export default async function Door({ searchParams }: { searchParams: Promise<{ e
         <BrandLockup size={88} />
         <h1>Someone wanted good for you</h1>
         <p className="lede">Short films from real lectures, a few questions to sit with, and a circle of people to meet in person.</p>
+        <p className="lede" data-testid="powered-by-donations">This has been powered by donations.</p>
         <Flash error={query.error} notice={query.notice} />
         <div style={{ display: 'grid', gap: 10 }}>
           <Link className="pill gold block" href={user ? home : '/join'} data-testid="door-primary">{user ? 'Continue' : 'I have an access code'}</Link>

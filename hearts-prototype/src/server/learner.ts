@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
+import { daysWithUs } from '@/lib/days-with-us'
 import { idOf } from '@/lib/ids'
 import { recommendLesson } from '@/lib/placing'
 import { capitalAfterColon, doorOfClause } from '@/lib/doors'
@@ -158,8 +159,7 @@ export function initials(name: string) {
 }
 
 export function dayNumber(user: SessionUser & { joinedAt?: string | null; createdAt?: string }) {
-  const start = new Date(user.joinedAt || user.createdAt || now().toISOString())
-  return Math.max(1, Math.floor((now().getTime() - start.getTime()) / 86_400_000) + 1)
+  return daysWithUs(user.joinedAt || user.createdAt, now().getTime())
 }
 
 type Row = Record<string, unknown> & { id: number }

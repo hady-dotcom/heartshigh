@@ -10,7 +10,7 @@ import { appendUnseenItems, isInterstitial, learnMoreTarget, settleOnLevel, step
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readCoachDismissed, readFeedPlace, readHeart, readPending, rememberSeenCard, sessionFlags, sessionSeenCards, sessionSeenCuts, setSessionFlags, viewAsId, writeCoachDismissed, writeFeedPlace, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
-import { tidyCaption } from '@/lib/tidy-caption'
+import { spokenCaption } from '@/lib/tidy-caption'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { laneClips } from '@/lib/lanes'
@@ -20,6 +20,7 @@ import { Arch } from '@/components/arch'
 import { TabBar } from '../app/shell'
 import { ART as SLIDE_BACKDROP, Avatar, FollowButton, Slide } from '../app/feed'
 import { HeartIcon, PlayIcon, SaveIcon, ShareIcon } from '../icons'
+import { beginWith } from '@/lib/begin-with'
 import { HelpScreen, Opener, SceneCard } from './scenes'
 import { TeachingCard } from './teaching-card'
 import { KeepPlaceSheet, type SheetReason } from './sheet'
@@ -88,20 +89,6 @@ function clock(total: number) {
   const value = Math.max(0, Math.round(total))
   return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`
 }
-
-function foldCaption(value: string) {
-  return value.replace(/[.?!]+$/g, '').replace(/\s+/g, ' ').trim().toLowerCase()
-}
-
-/** The words said at this moment. A talk title, series name or empty line is not a caption. */
-function spokenCaption(line: { text?: string; tidy?: string } | null | undefined, titles: (string | undefined)[]) {
-  const shown = tidyCaption((line?.tidy || line?.text || '').trim())
-  if (!shown) return ''
-  const spoken = foldCaption(shown)
-  if (titles.some((title) => title && spoken === foldCaption(title))) return ''
-  return shown
-}
-
 
 function useStoredSet(name: string) {
   const [values, setValues] = useState<string[]>([])
@@ -795,7 +782,8 @@ export function Journey(props: JourneyProps) {
         setItems([starter])
       }
       setFirstEver(true)
-      setLine(justShow ? props.opener.justShow : props.opener.handOff)
+      const topic = beginWith(state, opening.scenes)
+      setLine(justShow ? props.opener.justShow : `We'll begin with ${topic.title}.`)
       setPhase('handoff')
       performance.mark('door-tap')
       const doorAnimation = doorEl && !justShow ? animate(doorEl, [{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }], T.calm, EASE.calm, { id: 'door' }) : null
@@ -1603,7 +1591,7 @@ export function Journey(props: JourneyProps) {
     <div className="j-speaker j-speaker-plate">
       <a className="speaker-row" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-link" onClick={(event) => { if (needsAccount('save')) event.preventDefault() }}>
         <Avatar name={item.speaker} portrait={item.portrait} />
-        <span className="who"><b>{item.speaker}</b><small>{laneVisible ? `On ${item.laneLabel}` : item.courseTitle}</small></span>
+        <span className="who"><b>{item.speaker}</b>{laneVisible && item.laneLabel ? <small>On {item.laneLabel}</small> : null}</span>
       </a>
       <span onClickCapture={(event) => { if (needsAccount('save')) { event.preventDefault(); event.stopPropagation() } }}><FollowButton slug={item.speakerSlug} /></span>
     </div>
@@ -1639,7 +1627,7 @@ export function Journey(props: JourneyProps) {
         <div className="j-top-speaker" data-testid="top-speaker">
           <div className="speaker-card">
             <Avatar name={item.speaker} portrait={item.portrait} />
-            <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b><small>{item.courseTitle}</small></a>
+            <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b>{item.laneLabel ? <small>On {item.laneLabel}</small> : null}</a>
             <FollowButton slug={item.speakerSlug} className="follow teal" />
           </div>
         </div>
@@ -1679,7 +1667,7 @@ export function Journey(props: JourneyProps) {
             {wordsInPicture && videoAppetiser ? null : (
               <div className="speaker-card">
                 <Avatar name={item.speaker} portrait={item.portrait} />
-                <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b><small>{item.courseTitle}</small></a>
+                <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b>{item.laneLabel ? <small>On {item.laneLabel}</small> : null}</a>
                 <FollowButton slug={item.speakerSlug} className="follow teal" />
               </div>
             )}
@@ -1766,9 +1754,9 @@ export function Journey(props: JourneyProps) {
               <span className="j-poster-who">{item.speaker}</span>
               {offline ? <p className="j-poster-note" data-testid="offline-note">{phase === 'handoff' || index === 0 ? "You're offline. Your first clip will play as soon as you're back." : "You're offline. We'll carry on from here when you're back."}</p> : null}
               {errorNote ? <p className="j-poster-note" data-testid="cannot-play">{errorNote}</p> : null}
-              {slow === 'retry' && !offline ? (
+              {slow === 'retry' && !offline && phase !== 'handoff' ? (
                 item.transcriptReady ? (
-                  <a className="pill white small" href={course} data-testid="read-instead">Read it instead ›</a>
+                  <a className="pill white small j-read-instead" href={course} data-testid="read-instead">Read it instead ›</a>
                 ) : (
                   <button type="button" className="pill white small" onClick={retry} data-testid="try-again">Try again</button>
                 )
@@ -1911,7 +1899,7 @@ function FeedCardFace({ kicker, title, speaker }: { kicker: string; title: strin
   )
 }
 
-function PosterStill({ item, mode, peek = false }: { item: FeedItem; mode: Mode; peek?: boolean }) {
+function PosterStill({ item, mode }: { item: FeedItem; mode: Mode; peek?: boolean }) {
   const [frameFailed, setFrameFailed] = useState(false)
   const frame = mode === 'appetiser' && item.cleanThumb && !frameFailed ? item.cleanThumb : null
   return (
@@ -1921,12 +1909,6 @@ function PosterStill({ item, mode, peek = false }: { item: FeedItem; mode: Mode;
         <img src={frame} alt="" onError={() => setFrameFailed(true)} onLoad={(event) => { if (event.currentTarget.naturalWidth <= 120) setFrameFailed(true) }} />
       ) : item.poster ? (
         <img src={item.poster} alt="" />
-      ) : null}
-      {mode === 'appetiser' && item.youtubeId && !frame ? (
-        <div className="j-poster-title" data-testid={peek ? undefined : 'poster-title'}>
-          <small>{READY_FOR_MORE}</small>
-          <b>{item.lessonTitle || item.courseTitle}</b>
-        </div>
       ) : null}
     </>
   )

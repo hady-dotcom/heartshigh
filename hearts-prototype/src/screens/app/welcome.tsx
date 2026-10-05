@@ -15,7 +15,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
   const step = query.step || (user.onboarded ? 'done' : 'start')
 
   if (step === 'start') {
-    const next = !user.seenWelcome && (welcome || intro) ? `${base}/welcome?step=films` : `${base}/welcome?step=placing`
+    const next = !user.seenWelcome && (welcome || intro) ? `${base}/welcome?step=films` : `${base}/start`
     return (
       <AppFrame testId="welcome">
         <div className="splash" data-testid="splash">
@@ -23,6 +23,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
             <BrandLockup size={88} />
             <h1>{portal.welcome ? 'Welcome' : 'Someone wanted good for you'}</h1>
             <p>{portal.welcome || `${portalName(portal)} has opened a door for you: short films from real lectures, a few questions to think about, and a circle to sit with.`}</p>
+            <p className="muted" data-testid="powered-by-donations">This has been powered by donations.</p>
             <Flash error={query.error} notice={query.notice} />
             <Link className="pill gold block" href={next} style={{ marginTop: 18 }} data-testid="welcome-begin">Begin</Link>
             <p className="muted" style={{ fontSize: 13, marginTop: 14 }}>{portalName(portal)}</p>
@@ -43,7 +44,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
             {intro ? <iframe className="film-frame" style={{ marginTop: 12 }} title="Introduction" src={embedUrl(intro)} allow="encrypted-media" /> : null}
           </div>
           <form action="/api/hearts" method="post" style={{ marginTop: 18 }}>
-            <Hidden fields={{ action: 'seen-welcome', next: staff && user.onboarded ? `${base}/admin` : `${base}/welcome?step=placing` }} />
+            <Hidden fields={{ action: 'seen-welcome', next: staff && user.onboarded ? `${base}/admin` : `${base}/start` }} />
             <button className="pill gold block" data-testid="welcome-continue" type="submit">Continue</button>
           </form>
         </div>
@@ -59,12 +60,13 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
           <Journey at={1} />
           <div className="app-head"><h1>Where to begin</h1></div>
           <Flash error={query.error} notice={query.notice} />
-          <p className="lead">A few short questions so your first talk is a gentle place to start. There are no wrong answers.</p>
+          <p className="lead">A few short questions so your first talk is a gentle place to start. There are no wrong answers. Skip this and play the scenes instead if you would rather.</p>
+          <p><Link href={`${base}/start`}>Play the scenes instead</Link></p>
           <form action="/api/hearts" method="post">
             <Hidden fields={{ action: 'placing', next: user.role === 'learner' ? `${base}/start?after=placing` : `${base}/welcome?step=done` }} />
             {questions.map((question, index) => (
               <fieldset className="q-card" key={question.id} data-testid="placing-question">
-                <span className="n">{String(index + 1).padStart(2, '0')} of {String(questions.length).padStart(2, '0')}</span>
+                <span className="n">Question {index + 1} of {questions.length}</span>
                 <legend className="sr-only">{str(question.prompt)}</legend>
                 <h2 aria-hidden>{str(question.prompt)}</h2>
                 {question.why ? <p className="why">{str(question.why)}</p> : null}

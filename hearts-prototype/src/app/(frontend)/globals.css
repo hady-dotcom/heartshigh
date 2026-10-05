@@ -24,6 +24,8 @@
   --sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
   color: var(--ink);
   background: var(--cream);
   font-family: var(--sans);
@@ -48,7 +50,7 @@ button { cursor: pointer; }
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: 32px 20px calc(32px + var(--safe-bottom));
+  padding: calc(32px + env(safe-area-inset-top, 0px)) 20px calc(32px + var(--safe-bottom));
   background: radial-gradient(900px 500px at 50% -10%, #fffaf0 0%, transparent 60%), var(--cream);
 }
 .door-card { width: min(420px, 100%); text-align: center; }
@@ -66,6 +68,21 @@ button { cursor: pointer; }
   outline: none;
 }
 .field:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(220, 166, 67, 0.22); }
+/* iOS Safari zooms the page when a focused field is under 16px. Labels may stay smaller; the controls themselves do not inherit that size. */
+:is(.app, .door, .splash, .journey, .public-gather) :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']) {
+  font-size: 16px;
+}
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit,
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit-fields-wrapper,
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit-text,
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit-month-field,
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit-day-field,
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit-year-field,
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit-hour-field,
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit-minute-field,
+:is(.app, .door, .splash, .journey, .public-gather) :is(input[type='date'], input[type='time'], input[type='datetime-local'])::-webkit-datetime-edit-ampm-field {
+  font-size: 16px;
+}
 .pill {
   display: inline-flex;
   align-items: center;
@@ -101,7 +118,7 @@ button { cursor: pointer; }
 
 /* View as (spec 6A): ink on gold, sticky, pushes the layout down. */
 body:has(.viewas-bar) { --viewas-h: 46px; }
-.viewas-bar { position: sticky; top: 0; z-index: 400; min-height: 46px; background: #e3b23c; color: #1f1d36; font: 600 14px/1.35 var(--sans, system-ui), sans-serif; box-shadow: 0 1px 0 rgba(31, 29, 54, 0.25); }
+.viewas-bar { position: sticky; top: 0; z-index: 400; min-height: 46px; padding-top: env(safe-area-inset-top, 0px); background: #e3b23c; color: #1f1d36; font: 600 14px/1.35 var(--sans, system-ui), sans-serif; box-shadow: 0 1px 0 rgba(31, 29, 54, 0.25); }
 .viewas-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 12px 16px; max-width: 1440px; margin: 0 auto; }
 .viewas-exit, .viewas-link { background: none; border: 0; padding: 0; font: inherit; color: #1f1d36; text-decoration: underline; cursor: pointer; }
 .viewas-link { margin-left: 10px; }

@@ -36,7 +36,9 @@ async function looksLikeTheGarden(page: Page, main: string) {
       blur: css(el, '::before').filter,
       shade: css(el, '::after').backgroundImage,
       card: css(card).backgroundImage,
+      cardBg: css(card).backgroundColor,
       cardInk: css(card).color,
+      cardWidth: card.getBoundingClientRect().width,
       mark: css(mark).color,
       markDisc: css(mark).backgroundImage,
       word: el.querySelector('.brand-word')?.textContent,
@@ -50,14 +52,21 @@ async function looksLikeTheGarden(page: Page, main: string) {
   expect(look.art).toContain('/theme/evening-courtyard.jpg')
   expect(look.blur).toContain('blur')
   expect(look.shade).toContain('rgba(10, 40, 40')
-  expect(look.card).toContain(PARCHMENT_TOP)
-  expect(luminance(look.cardInk), 'dark ink on the parchment card').toBeLessThan(0.25)
   expect(look.mark).toBe(GOLD)
   expect(look.markDisc).toContain('radial-gradient')
   expect(look.word).toBe('HEARTS')
-  expect(luminance(look.wordColour)).toBeLessThan(0.6)
   expect(look.button).toBe(GOLD)
   expect(luminance(look.buttonInk)).toBeLessThan(0.15)
+  if (main === 'join') {
+    expect(look.cardWidth, 'the join card stays compact').toBeLessThanOrEqual(380)
+    expect(luminance(look.cardBg), 'join card is evening teal, not parchment').toBeLessThan(0.3)
+    expect(luminance(look.cardInk), 'cream type on the join card').toBeGreaterThan(0.7)
+    expect(luminance(look.wordColour)).toBeGreaterThan(0.7)
+    return
+  }
+  expect(look.card).toContain(PARCHMENT_TOP)
+  expect(luminance(look.cardInk), 'dark ink on the parchment card').toBeLessThan(0.25)
+  expect(luminance(look.wordColour)).toBeLessThan(0.6)
   for (const field of look.fields) {
     expect(field.bg).toBe(FIELD)
     expect(field.border).toBe(TEAL_LINE)
@@ -68,15 +77,16 @@ for (const size of SIZES) {
   for (const hour of HOURS) {
     test(`join with the code in the link is the evening garden (${size.name}, ${hour.name})`, async ({ browser }) => {
       const code = seedCode('elm-learner')
-      const page = await open(browser, size, hour.at, `/join?code=${code}`)
-      await expect(page.locator('html')).toHaveAttribute('data-theme', hour.name)
+      const page = await open(browser, size, hour.at, `/join?code=${code}&from=Aisha`)
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'evening')
       await expect(page.getByRole('heading', { name: 'Come in' })).toBeVisible()
-      await expect(page.getByText('Your link already holds the code. Add your name and you are in.')).toBeVisible()
+      await expect(page.getByText('Your code is already filled in. Add your name, email and a password to join.')).toBeVisible()
       await expect(page.getByTestId('join-code')).toHaveValue(code)
       await expect(page.getByTestId('join-submit')).toHaveText('Join')
+      await expect(page.getByTestId('join-pitch')).toContainText('Idris from East London Mosque invited you')
       await looksLikeTheGarden(page, 'join')
       const card = (await page.locator('.door-card').boundingBox())!
-      expect(card.width).toBeLessThanOrEqual(420)
+      expect(card.width).toBeLessThanOrEqual(380)
       expect(card.x).toBeGreaterThanOrEqual(0)
       expect(card.x + card.width).toBeLessThanOrEqual(size.width)
       if (process.env.AUTH_SHOTS) await page.screenshot({ path: `${process.env.AUTH_SHOTS}/auth-join-${size.name}-${hour.name}.png`, fullPage: true })
@@ -85,7 +95,7 @@ for (const size of SIZES) {
 
     test(`sign-in is the evening garden (${size.name}, ${hour.name})`, async ({ browser }) => {
       const page = await open(browser, size, hour.at, '/login')
-      await expect(page.locator('html')).toHaveAttribute('data-theme', hour.name)
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'evening')
       await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible()
       await expect(page.getByTestId('login-submit')).toHaveText('Sign in')
       await looksLikeTheGarden(page, 'login')

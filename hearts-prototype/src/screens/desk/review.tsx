@@ -33,11 +33,12 @@ function Frame({ ctx, title, intro, children, testId }: { ctx: MasterCtx; title:
   )
 }
 
-function Tabs({ active, tiers, popups }: { active: 'tiers' | 'popups'; tiers: number; popups: number }) {
+function Tabs({ active, tiers, popups, swarm = 0 }: { active: 'tiers' | 'popups' | 'swarm'; tiers: number; popups: number; swarm?: number }) {
   return (
     <div className="actions review-tabs" data-testid="review-tabs">
       <Link className={`btn small ${active === 'tiers' ? 'ink' : 'ghost'}`} href="/master/review" data-testid="review-tab-tiers">Talk tiers ({tiers} to review)</Link>
       <Link className={`btn small ${active === 'popups' ? 'ink' : 'ghost'}`} href="/master/review/popups" data-testid="review-tab-popups">Pop-ups ({popups} to review)</Link>
+      <Link className={`btn small ${active === 'swarm' ? 'ink' : 'ghost'}`} href="/master/review/swarm" data-testid="review-tab-swarm">Swarm ({swarm} to review)</Link>
     </div>
   )
 }
@@ -93,7 +94,7 @@ export async function MasterReview(ctx: MasterCtx) {
       intro="One talk at a time: watch the hors d'oeuvre and the appetiser, read the hook, turn and land, then approve, adjust or reject. Approved talks reach learners whatever the setting below; rejected talks never do."
       testId="master-review"
     >
-      <Tabs active="tiers" tiers={waiting} popups={drafts.totalDocs} />
+      <Tabs active="tiers" tiers={waiting} popups={drafts.totalDocs} swarm={(await payload.count({ collection: 'answers', overrideAccess: true, where: { swarmHidden: { equals: true } } })).totalDocs} />
       <section className="panel review-flag" data-testid="review-flag">
         <div className="body review-flag-body">
           <div>
@@ -195,7 +196,7 @@ export async function MasterReviewPopups(ctx: MasterCtx) {
       intro="Each pop-up pauses the main at its moment and asks the learner one thing. Watch the lead-in, read the question, then approve and publish, adjust or reject. Only published pop-ups reach learners, unless show-unchecked is on."
       testId="master-review-popups"
     >
-      <Tabs active="popups" tiers={tiersWaiting} popups={waiting} />
+      <Tabs active="popups" tiers={tiersWaiting} popups={waiting} swarm={(await payload.count({ collection: 'answers', overrideAccess: true, where: { swarmHidden: { equals: true } } })).totalDocs} />
       <p className="hint" data-testid="review-counts">{live} of {own.length} pop-ups are live. {bare} of {tiers.length} talks have none live yet.</p>
       {imported > 0 ? (
         <form action="/api/hearts" method="post" style={{ margin: '0 0 14px' }}>
@@ -237,6 +238,42 @@ export async function MasterReviewPopups(ctx: MasterCtx) {
       ) : (
         <p className="empty">No pop-ups to review.</p>
       )}
+    </Frame>
+  )
+}
+
+export async function MasterReviewSwarm(ctx: MasterCtx) {
+  const { payload } = ctx
+  const hidden = await rows(payload, 'answers', { swarmHidden: { equals: true } }, { limit: 200, depth: 1, sort: '-updatedAt' })
+  const [tiersWaiting, popupsWaiting] = await Promise.all([
+    payload.count({ collection: 'talk-tiers', overrideAccess: true, where: { or: [{ status: { equals: 'draft' } }, { status: { exists: false } }] } }),
+    payload.count({ collection: 'engagement-points', overrideAccess: true, where: { status: { equals: 'draft' } } }),
+  ])
+  return (
+    <Frame
+      ctx={ctx}
+      title="Review swarm answers"
+      intro="Answers the safety screen hid from learners. Approve to show them as initials, or keep them hidden. Teacher-facing feedback is not touched."
+      testId="master-review-swarm"
+    >
+      <Tabs active="swarm" tiers={tiersWaiting.totalDocs} popups={popupsWaiting.totalDocs} swarm={hidden.length} />
+      <p className="hint" data-testid="review-counts">{hidden.length} hidden answer{hidden.length === 1 ? '' : 's'} waiting.</p>
+      {hidden.length ? hidden.map((answer) => (
+        <section key={answer.id} className="panel review-card" data-testid="swarm-review-card">
+          <header className="light">
+            <h2>{(answer.user as { name?: string } | null)?.name || 'A learner'}</h2>
+            <span className="badge rose">Hidden</span>
+          </header>
+          <div className="body">
+            <p data-testid="swarm-review-body">{str(answer.body) || str(answer.choice) || 'No words'}</p>
+            {str(answer.swarmReason) ? <p className="hint">{str(answer.swarmReason)}</p> : null}
+            <div className="actions review-decide">
+              <Decision action="swarm-review" idName="answer" id={Number(answer.id)} decision="approve" label="Show in the swarm" keyName="a" tone="teal" next="/master/review/swarm" testId="swarm-review-approve" />
+              <Decision action="swarm-review" idName="answer" id={Number(answer.id)} decision="keep" label="Keep hidden" keyName="r" tone="ghost" next="/master/review/swarm" testId="swarm-review-keep" />
+            </div>
+          </div>
+        </section>
+      )) : <p className="empty">Nothing is waiting. Harmful or phishing answers appear here when the screen hides them.</p>}
     </Frame>
   )
 }

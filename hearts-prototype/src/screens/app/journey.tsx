@@ -1,5 +1,7 @@
 import { cookies } from 'next/headers'
 import type { Payload } from 'payload'
+import { JourneyErrorBoundary } from '@/components/app/error-boundary'
+import { PageHelp } from '@/components/app/page-help'
 import { Journey } from '@/components/journey/journey'
 import { resolveSlots, subjectFrom } from '@/server/experiments'
 import { OPENER } from '@/lib/opening-data'
@@ -33,7 +35,7 @@ async function mainsShelf(payload: Payload) {
   return shelf
 }
 
-/** The one continuous learner surface: opener, six scenes, the door, and the feed (spec 7 and 7A). */
+/** The one continuous learner surface: opener, scenes, the door, and the feed (spec 7 and 7A). */
 export async function JourneyScreen({ payload, portal, user, base, initial, viewAs, query = {} }: { payload: Payload; portal: PortalDoc; user: SessionUser | null; base: string; initial: 'opener' | 'help' | 'feed'; viewAs: boolean; query?: Record<string, string | undefined> }) {
   const deviceId = (await cookies()).get('hearts_device')?.value
   const [opening, flags, mains, unread, doors, live, variants] = await Promise.all([
@@ -49,26 +51,29 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
     <div className="app-stage dusk">
       {initial === 'feed' && user ? <FeedLiveBanner portal={String(portal.slug)} base={base} session={live.live} /> : null}
       <main className="app dark journey-frame" data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
-        <Journey
-          base={base}
-          opening={opening}
-          opener={OPENER}
-          initial={initial}
-          signedIn={Boolean(user)}
-          learner={user?.role === 'learner'}
-          viewAs={viewAs}
-          keepPlace={Boolean(user?.keepPlace)}
-          trendsOptIn={Boolean(user?.trendsOptIn)}
-          startingDoor={doorNumberOfClause(user?.startingClause, doors)}
-          flags={flags}
-          mains={mains}
-          unread={unread}
-          lane={typeof query.lane === 'string' && /^[a-z-]{2,40}$/.test(query.lane) ? query.lane : null}
-          clip={Number(query.clip) || null}
-          play={query.play === 'appetiser' ? 'appetiser' : null}
-          afterPlacing={query.after === 'placing'}
-          variants={variants}
-        />
+        <PageHelp page={initial === 'feed' ? 'feed' : 'start'} />
+        <JourneyErrorBoundary homeHref={base}>
+          <Journey
+            base={base}
+            opening={opening}
+            opener={OPENER}
+            initial={initial}
+            signedIn={Boolean(user)}
+            learner={user?.role === 'learner'}
+            viewAs={viewAs}
+            keepPlace={Boolean(user?.keepPlace)}
+            trendsOptIn={Boolean(user?.trendsOptIn)}
+            startingDoor={doorNumberOfClause(user?.startingClause, doors)}
+            flags={flags}
+            mains={mains}
+            unread={unread}
+            lane={typeof query.lane === 'string' && /^[a-z-]{2,40}$/.test(query.lane) ? query.lane : null}
+            clip={Number(query.clip) || null}
+            play={query.play === 'appetiser' ? 'appetiser' : null}
+            afterPlacing={query.after === 'placing'}
+            variants={variants}
+          />
+        </JourneyErrorBoundary>
       </main>
     </div>
   )

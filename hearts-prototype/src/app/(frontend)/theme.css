@@ -1,6 +1,5 @@
 /*
- * HEARTS look: one token set, two themes.
- * Evening is the deep teal and lantern gold. Dawn is the same garden in rose-gold mist.
+ * HEARTS look: one token set. Evening garden at every hour.
  * Components read the tokens. Screens do not restyle themselves.
  * Garden rings stay a gradient with white figures (the path layout is untouched).
  * The appetiser's next-talk card stays an opaque colour.
@@ -86,44 +85,44 @@ html[data-theme='evening'] {
   color-scheme: dark;
 }
 
-/* —— Dawn: pale misty teal, rose-gold light, deep teal ink —— */
+/* Dawn is retired. A leftover data-theme="dawn" still uses the evening tokens. */
 html[data-theme='dawn'] {
-  --cream: #dceee9;
-  --paper: #e7f3f0;
-  --card: #f4faf8;
-  --ink: #102e2c;
-  --ink-2: #1e4540;
-  --muted: #3d5c57;
-  --line: #b7d4cc;
-  --gold: #c47a45;
-  --gold-deep: #7a3f28;
-  --gold-glow: #e8b089;
-  --gold-ink: #1a120c;
-  --teal: #1a6b5e;
-  --teal-deep: #0f4f46;
-  --teal-fill: #1f6f62;
-  --mint: #d5ebe4;
-  --purple: #6a4a86;
-  --lavender: #f4e8ee;
-  --orange: #a85a32;
-  --rose: #8f3d4a;
-  --rose-bg: #f3e4e2;
-  --indigo: #1b3b38;
-  --night: #12302f;
-  --red-clause: #8f2f2a;
-  --bg-solid: #d7ebe6;
-  --scrim: rgba(220, 236, 232, 0.84);
-  --scrim-deep: rgba(236, 210, 198, 0.78);
-  --glass: rgba(244, 250, 248, 0.78);
-  --glass-solid: #f4faf8;
-  --field: #f7fbfa;
-  --ring-from: #6a4038;
-  --ring-to: #1a4a44;
-  --scene: url('/theme/dawn-courtyard.jpg');
-  --focus: #102e2c;
+  --cream: #0e2a2b;
+  --paper: #102e2c;
+  --card: #163633;
+  --ink: #f6eedc;
+  --ink-2: #e7dcc8;
+  --muted: #d7cbb8;
+  --line: rgba(212, 168, 75, 0.42);
+  --gold: #d4a84b;
+  --gold-deep: #c4923a;
+  --gold-glow: #f1d58a;
+  --gold-ink: #1a1408;
+  --teal: #c9d6b0;
+  --teal-deep: #e7f3ec;
+  --teal-fill: #245e54;
+  --mint: #1a3f38;
+  --purple: #e4d4f4;
+  --lavender: #2a2436;
+  --orange: #e8a15a;
+  --rose: #e7a0b4;
+  --rose-bg: #3a242c;
+  --indigo: #12302f;
+  --night: #0e2a2b;
+  --red-clause: #f0b4b0;
+  --bg-solid: #0e2a2b;
+  --scrim: rgba(14, 42, 43, 0.86);
+  --scrim-deep: rgba(14, 42, 43, 0.93);
+  --glass: rgba(18, 48, 47, 0.8);
+  --glass-solid: #163633;
+  --field: rgba(8, 26, 26, 0.72);
+  --ring-from: #1b4a46;
+  --ring-to: #0e2a2b;
+  --scene: url('/theme/evening-courtyard.jpg');
+  --focus: #f1d58a;
   color: var(--ink);
   background: var(--bg-solid);
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 /* Scenic wash. The star lattice stays off the page itself: 7% in the file, and only on headers and empty states. */
@@ -155,10 +154,12 @@ html[data-theme] .app.dark {
 
 html[data-theme] .app-head,
 html[data-theme] .main-head {
+  background-color: var(--paper);
   background-image: var(--lattice);
   background-size: 140px;
   background-repeat: repeat;
   border-radius: 12px;
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* Door, join, sign-in */
@@ -292,6 +293,24 @@ html[data-theme] :focus-visible {
   outline-offset: 2px;
 }
 
+html[data-theme] .page-help-btn {
+  background: var(--glass-solid);
+  color: var(--ink);
+  border-color: var(--line);
+}
+html[data-theme] .page-help-card {
+  background: var(--card);
+  color: var(--ink);
+}
+html[data-theme] .swarm-tools .chip {
+  background: var(--glass-solid);
+  color: var(--ink);
+  border-color: var(--line);
+}
+html[data-theme] .swarm-tools .chip.on {
+  background: var(--gold);
+  color: var(--gold-ink);
+}
 html[data-theme] .chip {
   border: 1px solid transparent;
 }
@@ -384,6 +403,8 @@ html[data-theme='dawn'] .tabbar:not(.dark) {
   border-top-color: rgba(196, 122, 69, 0.55);
 }
 html[data-theme] .tab { color: #d7cbb8; position: relative; }
+html[data-theme] .tabbar.dark .tab,
+html[data-theme] .tabbar.evening .tab { color: #d7cbb8; }
 html[data-theme='dawn'] .tabbar:not(.dark) .tab { color: #2a4a46; }
 html[data-theme] .tab.on { color: #f1d58a; }
 html[data-theme='dawn'] .tabbar:not(.dark) .tab.on { color: #7a3f28; }
@@ -560,10 +581,16 @@ html[data-theme='dawn'] .chip-row a,
 html[data-theme='dawn'] .chip-row span { color: var(--gold-deep); border-color: var(--gold-deep); }
 html[data-theme] .chip-row .on,
 html[data-theme] .chip-row a.on,
-html[data-theme] .chip-row span.on {
+html[data-theme] .chip-row span.on,
+html[data-theme] .chip-row a.on .count,
+html[data-theme] .chip-row span.on .count {
   background: var(--gold);
   color: var(--gold-ink);
   border-color: var(--gold);
+}
+html[data-theme] .harvest-new {
+  background: var(--gold);
+  color: var(--gold-ink);
 }
 html[data-theme] .chip-row.soft a,
 html[data-theme] .chip-row.soft span {
@@ -798,13 +825,16 @@ html[data-theme] .desk input[type='password'] {
   --gd-teal-line: #1f6b60;
   --gd-gold: #d4a84b;
   --gd-gold-deep: #a8791f;
-  --gd-parchment: #f5ecd6;
-  --gd-parchment-2: #ebdcbb;
-  --gd-ink: #1b2a27;
+  --gd-ink: #f6eedc;
   --ink: var(--gd-ink);
-  --ink-2: #3c4b47;
-  --muted: #5f6a65;
-  --line: rgba(31, 107, 96, 0.35);
+  --ink-2: #e4d3a4;
+  --muted: #e4d3a4;
+  --line: rgba(212, 168, 75, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100dvh;
   position: relative;
   isolation: isolate;
   background: var(--gd-teal);
@@ -830,8 +860,8 @@ html[data-theme] .desk input[type='password'] {
     linear-gradient(180deg, rgba(10, 40, 40, 0.58), rgba(7, 28, 28, 0.84));
 }
 :is(html, html[data-theme]) .garden-door .door-card {
-  background: linear-gradient(180deg, var(--gd-parchment), var(--gd-parchment-2));
-  color: var(--gd-ink);
+  background: linear-gradient(180deg, #f5ecd6, #ebdcbb);
+  color: #1b2a27;
   border: 1px solid rgba(212, 168, 75, 0.7);
   border-radius: 26px;
   padding: 30px 24px 26px;
@@ -839,17 +869,17 @@ html[data-theme] .desk input[type='password'] {
   backdrop-filter: none;
 }
 :is(html, html[data-theme]) .garden-door .door-card h1 { color: #123f3a; }
-:is(html, html[data-theme]) .garden-door .door-card p.lede { color: var(--ink-2); }
+:is(html, html[data-theme]) .garden-door .door-card p.lede { color: #3c4b47; }
 :is(html, html[data-theme]) .garden-door .brand-mark {
   background: radial-gradient(circle at 50% 35%, #17504a, var(--gd-teal) 70%);
   color: var(--gd-gold);
   box-shadow: 0 0 0 2px var(--gd-gold), 0 10px 26px rgba(14, 47, 46, 0.35);
 }
-:is(html, html[data-theme]) .garden-door .brand-word { color: var(--gd-gold-deep); font-weight: 700; }
+:is(html, html[data-theme]) .garden-door .brand-word { color: #5c3f10; font-weight: 700; }
 :is(html, html[data-theme]) .garden-door .door-form label { color: #23443f; }
 :is(html, html[data-theme]) .garden-door .field {
   background: #fbf5e6;
-  color: var(--gd-ink);
+  color: #1b2a27;
   border: 1.5px solid var(--gd-teal-line);
   border-radius: 14px;
 }
@@ -870,4 +900,86 @@ html[data-theme] .desk input[type='password'] {
 }
 :is(html, html[data-theme]) .garden-door .door-links { color: #14564c; }
 :is(html, html[data-theme]) .garden-door .door-links a { border-bottom-color: rgba(168, 121, 31, 0.6); }
-:is(html, html[data-theme]) .garden-door .door-hint { color: var(--muted); }
+:is(html, html[data-theme]) .garden-door .door-hint { color: #5f6a65; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-card {
+  width: min(360px, calc(100% - 36px));
+  flex: 0 0 auto;
+  align-self: center;
+  margin: 12px auto 28px;
+  background: #163633;
+  color: #f6eedc;
+  border: 1px solid rgba(212, 168, 75, 0.55);
+  border-radius: 20px;
+  padding: 22px 20px 18px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.38);
+}
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-card h1 { color: #f6eedc; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-card p.lede { color: #e4d3a4; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .brand-word { color: #f6eedc; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-form label { color: #e4d3a4; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .field {
+  background: #102e2c;
+  color: #f6eedc;
+  border-color: #c4923a;
+}
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .field::placeholder { color: #c8b88a; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-links { color: #f6eedc; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-hint { color: #e4d3a4; }
+
+/* Proposed Compass mock: evening-garden desk (deep teal, warm gold, cream type). Live Compass stays parchment. */
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"],
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"].gather-desk {
+  --desk-page: #0e2a2b;
+  --desk-card: #163633;
+  --desk-ink: #f6eedc;
+  --desk-heading: #f6eedc;
+  --desk-muted: #e4d3a4;
+  --desk-line: #c4923a;
+  --desk-gold: #d4a84b;
+  --desk-gold-ink: #1a1408;
+  --desk-field: #102e2c;
+  --cream: #0e2a2b;
+  --paper: #0e2a2b;
+  --card: #163633;
+  --ink: #f6eedc;
+  --ink-2: #e4d3a4;
+  --muted: #e4d3a4;
+  --line: #c4923a;
+  --gold: #d4a84b;
+  --gold-ink: #1a1408;
+  --heading: #f6eedc;
+  --field: #102e2c;
+  --g-page: #0e2a2b;
+  --g-card: #163633;
+  --g-heading: #f6eedc;
+  --parchment: #f6eedc;
+  color: #f6eedc;
+  background: #0e2a2b;
+  color-scheme: dark;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .main,
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .main-head,
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .main-head h1,
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .main-head p,
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .hint {
+  background: #0e2a2b;
+  color: #f6eedc;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .panel {
+  background: #163633;
+  color: #f6eedc;
+  border-color: #c4923a;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .panel > header {
+  background: #0f3b3a;
+  color: #f6eedc;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .panel .body,
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .panel p {
+  color: #f6eedc;
+}
+
+/* Keep the 16px floor after later theme and gather rules, so iOS does not zoom on focus. */
+:is(html, html[data-theme]) :is(.app, .door, .splash, .journey, .public-gather) :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']) {
+  font-size: 16px;
+}

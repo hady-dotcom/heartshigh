@@ -6,6 +6,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { newViewingId, POLL_MS, PopupWatcher, type PopupPoint } from '@/lib/popups'
 import { placeDots } from '@/lib/timeline-dots'
 import { createPlayer, destroyPlayer, getPlayer, resume, STATE, UNPLAYABLE } from '@/lib/yt'
+import { SwarmList } from '@/components/app/swarm-list'
+import { initialsOf } from '@/lib/swarm-sort'
 import { HeartIcon, ImageIcon, LockIcon, MicIcon, PauseIcon, PlayIcon } from '../icons'
 import { track } from '@/lib/experiment-track'
 
@@ -29,7 +31,7 @@ export type PointView = {
   gatherings?: { href: string; title: string; when: string }[]
 }
 
-export type SwarmItem = { name: string; body: string; image?: string | null; circle?: boolean }
+export type SwarmItem = { name: string; body: string; image?: string | null; circle?: boolean; initials?: string }
 
 function clock(total: number) {
   const value = Math.max(0, Math.floor(total))
@@ -41,7 +43,6 @@ function clock(total: number) {
 
 const KIND_LABEL: Record<PointView['kind'], string> = { question: 'Question', task: 'Task', reflection: 'Reflection', multiple_choice: 'Multi-choice' }
 const SUBMIT: Record<PointView['kind'], string> = { question: 'answer', task: 'task', reflection: 'reflection', multiple_choice: 'choice' }
-const DOTS = ['#ef7b4a', '#1f8a78', '#7a4fa8', '#dca643', '#c47a45']
 
 const PLAYER_ID = 'lesson'
 /** The longest jump between two time readings that still counts as playing; anything longer is a seek. */
@@ -677,26 +678,12 @@ function Sheet({
             {!point.answered ? <button type="button" className="link-btn" onClick={later} data-testid="answer-later" style={{ width: '100%' }}>Answer later</button> : null}
           </form>
         ) : null}
-        {swarmOn || point.answered ? (
-        <div className="others" data-testid="swarm">
-          <p className="eyebrow">What others said</p>
-          {swarm.length ? (
-            swarm.map((item, at) => (
-              <div className="other" key={at} data-testid="swarm-item" data-source={item.circle ? 'circle' : 'learner'}>
-                <span className="dot" style={{ background: DOTS[at % DOTS.length] }} />
-                <div>
-                  <b>{item.name}</b>
-                  {item.circle && circleLabel ? <small className="circle-note" data-testid="circle-label">{circleLabel}</small> : null}
-                  <p>“{item.body}”</p>
-                  {item.image ? <img src={item.image} alt={`Shared by ${item.name}`} /> : null}
-                </div>
-                <span className="heart"><HeartIcon size={18} /></span>
-              </div>
-            ))
-          ) : (
-            <p className="muted" style={{ fontSize: 14 }} data-testid="swarm-empty">Nobody has shared an answer here yet. Private answers never appear in this list.</p>
-          )}
-        </div>
+        {swarmOn ? (
+          <SwarmList
+            items={swarm.map((item) => ({ ...item, initials: item.initials || initialsOf(item.name) }))}
+            mine={point.myAnswer}
+            circleLabel={circleLabel}
+          />
         ) : null}
       </section>
     </>

@@ -102,7 +102,7 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
 
   // Scenes start as drafts, then the one carrying the crisis option is published first so the publish rules hold.
   const sceneIds = new Map<string, number>()
-  for (const scene of SCENES) {
+  for (const scene of SCENES.filter((row) => row.key !== 'account')) {
     const existing = await one(payload, 'opening-scenes', { key: { equals: scene.key } })
     const data = {
       key: scene.key,
@@ -130,7 +130,7 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
       : ((await payload.create({ collection: 'opening-scenes', overrideAccess: true, data: { ...data, status: 'draft' } as never })) as unknown as Doc)
     sceneIds.set(scene.key, doc.id)
   }
-  const publishOrder = [...SCENES].sort((a, b) => Number(b.options.some((o) => o.crisis)) - Number(a.options.some((o) => o.crisis)))
+  const publishOrder = SCENES.filter((row) => row.key !== 'account').sort((a, b) => Number(b.options.some((o) => o.crisis)) - Number(a.options.some((o) => o.crisis)))
   for (const scene of publishOrder) {
     const doc = await payload.findByID({ collection: 'opening-scenes', id: sceneIds.get(scene.key)!, overrideAccess: true, depth: 0 })
     if ((doc as { status?: string }).status !== 'published') {

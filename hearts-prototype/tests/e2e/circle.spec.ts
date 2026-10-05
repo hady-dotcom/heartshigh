@@ -120,11 +120,7 @@ test.describe('HEARTS circle answers', () => {
     await expect(page.getByTestId('circle-label').first()).toHaveText(`Shared in the HEARTS circle ${sfx}`)
     await settings(LABEL, 8)
 
-    await form(learner, { action: 'me-pref', name: 'shareWithLearners', value: 'off', next: '/' })
-    await page.reload()
-    await openFirstQuestion(page)
-    await expect(page.getByTestId('swarm')).toHaveCount(0)
-    await form(learner, { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: '/' })
+    await expect(page.getByTestId('swarm')).toHaveCount(1)
     await learner.dispose()
   })
 

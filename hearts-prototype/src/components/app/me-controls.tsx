@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { readHeart, writeHeart, writePending, writePref } from '@/lib/device'
+import { readHeart, readPref, writeHeart, writePending, writePref } from '@/lib/device'
 import { freshState } from '@/lib/heart'
 
 /** One setting on the Me tab. Haptics also lives on the device, so the feed can read it without a request. */
@@ -35,6 +35,30 @@ export function PrefToggle({ name, label, hint, checked, next }: { name: string;
   )
 }
 
+/** Sound starts on for this phone only. The feed reads it without a request. */
+export function SoundOnToggle() {
+  const [on, setOn] = useState<boolean | null>(null)
+  useEffect(() => setOn(readPref('soundOn', false)), [])
+  return (
+    <label className="toggle pref-row" data-testid="pref-soundOn">
+      <input
+        type="checkbox"
+        checked={Boolean(on)}
+        disabled={on === null}
+        data-testid="pref-soundOn-input"
+        onChange={(event) => {
+          writePref('soundOn', event.target.checked)
+          setOn(event.target.checked)
+        }}
+      />
+      <span>
+        Start with sound on
+        <small className="muted" style={{ display: 'block', fontWeight: 500, fontSize: 13 }}>The next clip starts with sound, when the browser allows it.</small>
+      </span>
+    </label>
+  )
+}
+
 export function StartAgain({ base }: { base: string }) {
   const [asking, setAsking] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -56,7 +80,7 @@ export function StartAgain({ base }: { base: string }) {
   if (!asking) {
     return (
       <button type="button" className="pill outline block" onClick={() => setAsking(true)} data-testid="start-again">
-        Start again
+        Redo my opening
       </button>
     )
   }

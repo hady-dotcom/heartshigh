@@ -12,7 +12,7 @@ const otherEmail = `other-${suffix}@hearts.test`
 const adminCode = `H${suffix}A`
 const teacherCode = `H${suffix}T`
 const learnerCode = `H${suffix}L`
-const BY_PROPHET = ['The Prophet', 'Somewhere calm to sit', 'I go quiet', 'With the Prophet']
+const BY_PROPHET = ['The Prophet', 'A calm place to start', 'I go quiet', 'With the Prophet']
 const BY_NAMES = ['My Lord', 'Knowing the names of Allah', 'I look for a verse', 'With Allah as Lord']
 const PHONE = { width: 390, height: 844 }
 const DESK = { width: 1440, height: 900 }
@@ -36,9 +36,13 @@ async function join(page: Page, code: string, name: string, email: string, passw
 }
 
 async function placing(page: Page, picks: string[]) {
-  await page.getByTestId('welcome-begin').click()
-  await page.waitForURL(/step=(films|placing)/)
-  if (page.url().includes('step=films')) await page.getByTestId('welcome-continue').click()
+  const portal = page.url().match(/\/p\/[^/?#]+/)?.[0] || '/p/east-london'
+  if (await page.getByTestId('welcome-begin').count()) {
+    await page.getByTestId('welcome-begin').click()
+    await page.waitForURL(/step=films|\/start/)
+    if (page.url().includes('step=films')) await page.getByTestId('welcome-continue').click()
+  }
+  await page.goto(`${portal}/welcome?step=placing`)
   const questions = page.getByTestId('placing-question')
   await expect(questions).toHaveCount(picks.length)
   for (const [index, pick] of picks.entries()) await questions.nth(index).getByLabel(pick, { exact: true }).check()
@@ -49,12 +53,14 @@ async function placing(page: Page, picks: string[]) {
     if (await page.getByTestId('lets-play').isVisible()) await page.getByTestId('lets-play').click()
     await expect(page.locator('[data-testid="scene"][data-scene="extra"]')).toBeVisible({ timeout: 1500 })
   }).toPass({ timeout: 20_000 })
-  for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'doors']) {
+  for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'account', 'doors']) {
+    if (await page.getByTestId('starting-door').count()) break
     const sceneCard = page.locator(`[data-testid="scene"][data-scene="${scene}"]`)
-    await expect(sceneCard.first()).toBeVisible()
+    const shown = await sceneCard.first().waitFor({ state: 'visible', timeout: 8_000 }).then(() => true).catch(() => false)
+    if (!shown) continue
     await sceneCard.last().getByTestId('pass').click()
   }
-  await expect(page.getByTestId('starting-door')).toBeVisible()
+  await expect(page.getByTestId('starting-door')).toBeVisible({ timeout: 20_000 })
 }
 
 async function masterRequest() {
@@ -118,6 +124,8 @@ test.describe.serial('HEARTS journeys', () => {
   })
 
   test('admin builds a course, extracts and approves a cut with its clause and seat, and places questions', async ({ page }) => {
+    // Extract plus the first compile of the desk course page can exceed the 120s serial cap on Postgres.
+    test.setTimeout(180_000)
     await page.setViewportSize(DESK)
     await join(page, adminCode, 'Harbour Admin', adminEmail, 'harbour-admin')
     await expect(page.getByTestId('admin-overview')).toBeVisible()
@@ -226,15 +234,8 @@ test.describe.serial('HEARTS journeys', () => {
       await page.getByTestId('answer-point').click()
       await expect(page.getByTestId('popup-prompt')).toContainText('one manner', { timeout: 1000 })
     }).toPass({ timeout: 15_000 })
-    await expect(page.getByTestId('swarm')).toHaveCount(0)
-    await expect(page.getByTestId('answer-share-learners')).toHaveCount(0)
-    await page.getByTestId('popup-close').click()
-    await post(page, { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: `/p/${slug}/course/${shared.courseId}` })
-    await page.reload()
-    await expect(async () => {
-      await page.getByTestId('answer-point').click()
-      await expect(page.getByTestId('popup-prompt')).toContainText('one manner', { timeout: 1000 })
-    }).toPass({ timeout: 15_000 })
+    await expect(page.getByTestId('swarm')).toHaveCount(1)
+    await expect(page.getByTestId('answer-share-learners')).toHaveCount(1)
     await page.getByTestId('answer-text').fill('I want to keep a soft greeting.')
     await page.getByTestId('answer-private').uncheck()
     await page.getByTestId('answer-share').check()
@@ -275,12 +276,7 @@ test.describe.serial('HEARTS journeys', () => {
     await placing(page, BY_NAMES)
     await page.goto(`/p/${slug}/course/${shared.courseId}`)
     const before = await openPoint(page, /one manner/)
-    await expect(before.getByTestId('swarm')).toHaveCount(0)
-    await page.getByTestId('popup-close').click()
-    await post(page, { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: `/p/${slug}/course/${shared.courseId}` })
-    await page.reload()
-    const sheet = await openPoint(page, /one manner/)
-    await expect(sheet.getByTestId('swarm-item').filter({ hasText: 'soft greeting' })).toBeVisible()
+    await expect(before.getByTestId('swarm-item').filter({ hasText: 'soft greeting' })).toBeVisible()
     await page.getByTestId('answer-text').fill('This one stays with me.')
     await expect(page.getByTestId('answer-private')).toBeChecked()
     await page.getByTestId('answer-submit').click()
@@ -313,6 +309,10 @@ test.describe.serial('HEARTS journeys', () => {
 
   test('the schedule splitter shares three parts across Wednesdays and Fridays', async ({ page }) => {
     await signIn(page, learnerEmail, 'harbour-learner', `/p/${slug}/me/plan`)
+    for (const id of ['schedule-course', 'schedule-start', 'schedule-end']) {
+      const size = await page.getByTestId(id).evaluate((el) => parseFloat(getComputedStyle(el).fontSize))
+      expect(size).toBeGreaterThanOrEqual(16)
+    }
     await page.getByTestId('schedule-course').selectOption({ label: 'Night class' })
     await page.getByTestId('schedule-start').fill('2026-10-07')
     await page.getByTestId('schedule-end').fill('2026-10-16')

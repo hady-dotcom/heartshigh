@@ -16,6 +16,7 @@ import * as migration_20261004_180000_experiments from './20261004_180000_experi
 import * as migration_20261004_180000_framing_track from './20261004_180000_framing_track';
 import * as migration_20261004_210000_schedule_minutes from './20261004_210000_schedule_minutes';
 import * as migration_20261004_210000_live_sessions from './20261004_210000_live_sessions';
+import * as migration_20261005_010000_swarm_hidden from './20261005_010000_swarm_hidden';
 
 export const migrations = [
   {
@@ -107,5 +108,10 @@ export const migrations = [
     up: migration_20261004_210000_live_sessions.up,
     down: migration_20261004_210000_live_sessions.down,
     name: '20261004_210000_live_sessions',
+  },
+  {
+    up: migration_20261005_010000_swarm_hidden.up,
+    down: migration_20261005_010000_swarm_hidden.down,
+    name: '20261005_010000_swarm_hidden',
   },
 ];

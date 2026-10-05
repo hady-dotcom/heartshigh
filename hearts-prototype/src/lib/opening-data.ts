@@ -1,4 +1,4 @@
-// Seed data for the opening ("Shine and dust"): Leon's ten scales, the Jibril lanes, and the six scenes.
+// Seed data for the opening ("Shine and dust"): Leon's ten scales, the Jibril lanes, and the scenes.
 // Copy comes from ux-first-run.md and the build spec (sections 2.1, 2.7, 2.8). Plain module, no path aliases,
 // so the seed, the server, the browser and the tests can all import it.
 import type { LaneDef, ScaleDef, ScaleKey, SceneDef } from './heart'
@@ -43,6 +43,9 @@ export const LANES: (LaneDef & { seriesNote: string })[] = [
 export const DEFAULT_LANE = 'default'
 
 const n = (scale: ScaleKey, delta: -1 | 0 | 1) => ({ scale, delta })
+
+/** The opening's own heading. Not a placing option and not a seed answer. */
+export const OPENING_HEADING = 'A calm place to start'
 
 export const SCENES: SceneDef[] = [
   {
@@ -118,8 +121,22 @@ export const SCENES: SceneDef[] = [
     ],
   },
   {
-    key: 'doors',
+    key: 'account',
     order: 6,
+    layout: 'bubbles',
+    caption: 'When you think about who you **answer to**, who comes to mind first?',
+    subline: 'Go with the first name that arrives. There is no right one.',
+    adaptedFrom: 'Placing question 1. A different pull from the scenes: accountability, not a situation.',
+    options: [
+      { key: 'lord', label: 'My Lord', replyPill: 'Straight to the One who sees.', nudges: [n('faith', 1)] },
+      { key: 'prophet', label: 'The Prophet', replyPill: 'A beautiful first thought.', nudges: [n('faith', 1), n('discipline', 1)] },
+      { key: 'people', label: 'The people I look after', replyPill: 'The ones who eat with you.', nudges: [n('belonging', 1), n('compassion', 1)] },
+      { key: 'unsure', label: 'I am not sure yet', replyPill: 'That is a fair place to stand.', nudges: [] },
+    ],
+  },
+  {
+    key: 'doors',
+    order: 7,
     layout: 'doorsCarousel',
     caption: "Six **doors**. Which one's calling you?",
     subline: 'No wrong door.',

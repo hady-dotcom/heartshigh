@@ -138,7 +138,7 @@ test('the opening at phone size', async ({ page }) => {
   await page.route(/youtube\.com\/(embed|iframe_api)|googlevideo/, (route) => route.abort())
   await shot(page, 'opening-01-opener', '/p/east-london/start')
   await page.getByTestId('lets-play').click()
-  const picks: [string, string][] = [['extra', 'pause'], ['queue', 'let-go'], ['thumb', 'lives'], ['visitor', 'spin'], ['news', 'nobody'], ['doors', 'calmer']]
+  const picks: [string, string][] = [['extra', 'pause'], ['queue', 'let-go'], ['thumb', 'lives'], ['visitor', 'spin'], ['news', 'nobody'], ['account', 'lord'], ['doors', 'calmer']]
   for (const [at, [scene, option]] of picks.entries()) {
     await expect(page.locator(`[data-testid="scene"][data-scene="${scene}"]`)).toBeVisible()
     await page.waitForTimeout(700)
@@ -147,12 +147,12 @@ test('the opening at phone size', async ({ page }) => {
   }
   await expect(page.getByTestId('journey')).toHaveAttribute('data-phase', 'feed', { timeout: 15_000 })
   await page.waitForTimeout(1200)
-  await page.screenshot({ path: `${dir}/opening-08-feed.png`, caret: 'initial' })
+  await page.screenshot({ path: `${dir}/opening-09-feed.png`, caret: 'initial' })
   await page.getByTestId('fave').click()
   await expect(page.getByTestId('keep-sheet')).toBeVisible()
   await page.waitForTimeout(500)
-  await page.screenshot({ path: `${dir}/opening-09-keep-sheet.png`, caret: 'initial' })
-  await shot(page, 'opening-10-help', '/p/east-london/help')
+  await page.screenshot({ path: `${dir}/opening-10-keep-sheet.png`, caret: 'initial' })
+  await shot(page, 'opening-11-help', '/p/east-london/help')
 })
 
 test('view as, from the portal desk', async ({ page }) => {
