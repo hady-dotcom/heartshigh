@@ -28,11 +28,19 @@ const PAGES: Record<string, HelpCopy> = {
       'Tap Ready for more? under a clip, or on a scenic card, to sit with the longer cut.',
     ],
   },
+  appetiser: {
+    title: 'How to use Ready for more?',
+    body: [
+      'This is the longer cut of the same talk, still full-screen.',
+      'Tap Back to return to the short clips. The clock shows how far you are through this cut.',
+      'Learn more opens the whole talk when you want to sit with it.',
+    ],
+  },
   start: {
     title: 'How to use the opening',
     body: [
       'A few short scenes help us choose your first talk. There is no right answer.',
-      'Skip any scene you would rather not sit with.',
+      'Let\'s play always starts from the first scene. Skip any scene you would rather not sit with.',
       'Only you see these answers unless you later share them with a teacher.',
     ],
   },
@@ -54,15 +62,15 @@ const PAGES: Record<string, HelpCopy> = {
     title: 'How to use Lanes',
     body: [
       'Each lane is one theme: a path to walk, one subject at a time.',
-      'Tap a lane to watch its clips. Courses sit underneath, this week first.',
+      'Tap a lane to watch its clips. Courses that already appear in those clips are open now. Others open one a day.',
     ],
   },
   garden: {
     title: 'How to use the Garden',
     body: [
       'The garden is a quiet picture of time you have given.',
-      'Each planter belongs to a theme. It starts as a seedling and grows as you watch a full talk and sit with a question.',
-      'Tap a planter to see that theme\'s talks.',
+      'Finished counts a talk once you watch it to the end or tap I have watched this part. Short clips do not count. Your path is this course only.',
+      'Each planter belongs to a theme. It starts as a seedling and grows as you finish a talk and sit with a question.',
     ],
   },
   'garden-general': {
@@ -117,8 +125,8 @@ const PAGES: Record<string, HelpCopy> = {
   plan: {
     title: 'How to use My week',
     body: [
-      'Pick a course and the days that suit you. The talks are shared out in order.',
-      'It is a guide only. You can always watch at your own pace.',
+      'Pick a course and the days that suit you. Daily spans space the talks; chosen weekdays land on the first sittings.',
+      'Days with a sitting get a gold mark on the week strip. It is a guide only. You can always watch at your own pace.',
     ],
   },
   'learner-path': {
@@ -131,7 +139,7 @@ const PAGES: Record<string, HelpCopy> = {
   course: {
     title: 'How to use a talk',
     body: [
-      'The film sits at the top. Questions stay hidden until their moment, then the talk pauses.',
+      'The film sits at the top. Tap a question dot on the timeline to jump there; the talk pauses so you can write.',
       'What others said is a quiet list of initials, not names. There is no rating.',
     ],
   },
@@ -170,7 +178,7 @@ export const LEARNER_HELP: Record<string, string> = {
   announce:
     'A short note from your masjid or school. It stays at the top of Home until you dismiss it. You cannot reply here — write to your teacher if you have a question.',
   'hide-until-moment':
-    'Questions stay hidden until their moment in the talk. The dots light when that time arrives. The list of talks never shows the questions.',
+    'The list stays quiet until you reach a question, or tap its dot on the timeline to jump there. The course page never previews the questions.',
 }
 
 export function learnerHelp(topic: string) {

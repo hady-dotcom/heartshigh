@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { Flash } from '@/components/app/shell'
 import { BrandLockup } from '@/components/brand'
 import { portalIdOf } from '@/lib/ids'
+import { portalHomePath } from '@/lib/landing'
 import { getSession } from '@/server/context'
 
 export default async function Door({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string }> }) {
@@ -14,7 +15,7 @@ export default async function Door({ searchParams }: { searchParams: Promise<{ e
     const portalId = portalIdOf(user)
     const portal = portalId ? await payload.findByID({ collection: 'portals', id: portalId, overrideAccess: true, depth: 0 }).catch(() => null) : null
     const slug = (portal as { slug?: string } | null)?.slug
-    if (slug) home = user.role === 'learner' ? `/p/${slug}` : `/p/${slug}/admin`
+    if (slug) home = portalHomePath(slug, user.role)
   }
   // A signed-in visit to the door goes home. An error or notice stays here so the flash can be read.
   if (user && home !== '/login' && !query.error && !query.notice) redirect(home)

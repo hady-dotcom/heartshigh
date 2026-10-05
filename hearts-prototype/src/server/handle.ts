@@ -27,6 +27,7 @@ import { doorOfClause } from '@/lib/doors'
 import { loadDoors } from './doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { killListHits } from '@/lib/opening-data'
+import { afterJoinPath, portalHomePath } from '@/lib/landing'
 import { HORS_MAX, HORS_MIN, tierTimings } from '@/lib/tiers'
 import { completionVerdict } from '@/lib/nesting'
 import { placeOfLesson } from './harvest'
@@ -129,7 +130,7 @@ async function landingPath(payload: Awaited<ReturnType<typeof getSession>>['payl
   const doc = await payload.findByID({ collection: 'portals', id: portalId, overrideAccess: true, depth: 0 }).catch(() => null)
   const slug = (doc as { slug?: string } | null)?.slug
   if (!slug) return '/'
-  return user.role === 'learner' ? `/p/${slug}` : `/p/${slug}/admin`
+  return portalHomePath(slug, user.role)
 }
 
 async function loginResponse(req: Request, email: string, password: string, next: string) {
@@ -631,7 +632,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     }
     const after = text(form, 'after')
     const gatherNext = after.startsWith(`/p/${slug}/`) ? after : ''
-    const next = gatherNext || (codeRole === 'learner' || codeRole === 'parent' ? `/p/${slug}/welcome` : `/p/${slug}/admin`)
+    const next = gatherNext || afterJoinPath(slug, codeRole)
     return loginResponse(req, email, password, next)
   }
 
@@ -1632,10 +1633,12 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   }
 
   if (action === 'ritual') {
+    const note = text(form, 'note').slice(0, 280)
+    if (!note) return redirectTo(req, text(form, 'next') || '/', 'Write the small act first, then keep it.')
     await payload.create({
       collection: 'rituals',
       overrideAccess: true,
-      data: { user: user.id, note: text(form, 'note').slice(0, 280) || 'I held back a harsh word.', portal: portalIdOf(user) || undefined },
+      data: { user: user.id, note, portal: portalIdOf(user) || undefined },
     })
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Thank you. That is noted in your Garden.')
   }
@@ -2184,6 +2187,35 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const weight = Math.min(1, Math.max(0, Number(text(form, 'weight') || tag.weight || 1)))
     await payload.update({ collection: 'tags', id: tag.id, overrideAccess: true, data: { state: 'confirmed', weight } as never })
     return redirectTo(req, back, undefined, 'Lane confirmed. The clip can now be routed in that lane.')
+  }
+
+  if (action === 'opening-extra-scene' || action === 'opening-extra-scene-remove') {
+    const back = text(form, 'next') || '/'
+    if (user.role !== 'master' && user.role !== 'portal-admin') return redirectTo(req, back, 'Only a portal admin changes the opening.')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, back, acting.error)
+    const portalId = acting.portal.id
+    const found = await payload.find({ collection: 'opening-configs', overrideAccess: true, depth: 0, limit: 1, where: { portal: { equals: portalId } } })
+    const config = (found.docs[0] as unknown as (Record<string, unknown> & { id: number }) | undefined) || ((await payload.create({ collection: 'opening-configs', overrideAccess: true, data: { portal: portalId } as never })) as unknown as Record<string, unknown> & { id: number })
+    const { cleanPortalScenes, portalSceneFromForm } = await import('@/lib/portal-scenes')
+    const current = cleanPortalScenes(config.extraScenes).scenes
+    let next = current
+    if (action === 'opening-extra-scene-remove') {
+      const key = text(form, 'key')
+      next = current.filter((scene) => scene.key !== key)
+    } else {
+      const labels = [text(form, 'opt1'), text(form, 'opt2'), text(form, 'opt3'), text(form, 'opt4'), text(form, 'opt5'), text(form, 'opt6')]
+      const result = portalSceneFromForm({ caption: text(form, 'caption'), subline: text(form, 'subline'), labels, existing: current })
+      if (result.error) return redirectTo(req, back, result.error)
+      if (result.scenes.length <= current.length) return redirectTo(req, back, 'Write a question and at least two answers.')
+      next = result.scenes
+    }
+    try {
+      await payload.update({ collection: 'opening-configs', id: config.id, overrideAccess: true, data: { extraScenes: next } as never })
+    } catch (error) {
+      return redirectTo(req, back, publicMessage(error, 'That question was not saved.'))
+    }
+    return redirectTo(req, back, undefined, action === 'opening-extra-scene-remove' ? 'Question removed.' : 'Question added for this portal.')
   }
 
   if (action === 'opening-config' || action === 'help-contact' || action === 'help-contact-remove') {

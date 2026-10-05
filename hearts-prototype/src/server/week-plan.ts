@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
-import { dayTalkCounts, minutesLabel, talksLabel, weekStrip, zoneOrToronto, dateKeyInZone, type WeekDay } from '@/lib/week'
+import { dayTalkCounts, minutesLabel, talksLabel, scheduledInWeek, weekStrip, zoneOrToronto, dateKeyInZone, type WeekDay } from '@/lib/week'
 import { overMinutesNote, spreadNote, studyDates } from '@/lib/schedule'
 import { isTimeZone, portalTimeZone } from '@/lib/zone-time'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
@@ -36,6 +36,7 @@ export type WeekCourse = { id: number; title: string; talks: number; seconds: nu
 export type WeekView = {
   days: WeekDay[]
   today: WeekSlot | null
+  scheduledKeys: string[]
   plans: WeekPlanCard[]
   courses: WeekCourse[]
   zone: string
@@ -101,12 +102,13 @@ export async function weekView(payload: Payload, user: SessionUser, portal: Port
       }
     })
     const weekdays = Array.isArray(plan.weekdays) ? (plan.weekdays as number[]) : []
-    let studyDays = new Set(slots.map((slot) => slot.date)).size
+    let study: string[] = []
     try {
-      if (plan.startDate && plan.endDate && weekdays.length) studyDays = studyDates(str(plan.startDate), str(plan.endDate), weekdays).length
+      if (plan.startDate && plan.endDate && weekdays.length) study = studyDates(str(plan.startDate), str(plan.endDate), weekdays)
     } catch {
       // Keep the count from the slots we already have.
     }
+    const studyDays = study.length || new Set(slots.map((slot) => slot.date)).size
     const firstDate = slots[0]?.date || str(plan.startDate)
     const lastDate = slots[slots.length - 1]?.date || str(plan.endDate)
     const perDay = Number(plan.minutesPerDay || 0)
@@ -119,13 +121,14 @@ export async function weekView(payload: Payload, user: SessionUser, portal: Port
       end: lastDate,
       weekdays,
       locked: staff(ref(plan.owner)) && ref(plan.owner) !== user.id,
-      note: spreadNote(slots.length, studyDays, slots.map((slot) => slot.date)),
+      note: spreadNote(slots.length, studyDays, study),
       overMinutes: overMinutesNote(slots.map((slot) => slot.minutes), perDay),
       dayCounts: dayTalkCounts(slots),
     }
   })
   const today = cards.flatMap((plan) => plan.slots).find((slot) => slot.today) || null
-  return { days, today, plans: cards, courses, zone, todayKey }
+  const scheduledKeys = scheduledInWeek(days, cards.flatMap((plan) => plan.slots.map((slot) => slot.date)))
+  return { days, today, scheduledKeys, plans: cards, courses, zone, todayKey }
 }
 
 export function todayLine(slot: WeekSlot | null) {

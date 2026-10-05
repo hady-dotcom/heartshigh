@@ -2,7 +2,6 @@ import { cookies } from 'next/headers'
 import type { Payload } from 'payload'
 import { InsightTracker } from '@/components/app/insight-tracker'
 import { JourneyErrorBoundary } from '@/components/app/error-boundary'
-import { PageHelp } from '@/components/app/page-help'
 import { Journey } from '@/components/journey/journey'
 import { resolveSlots, subjectFrom } from '@/server/experiments'
 import { OPENER } from '@/lib/opening-data'
@@ -72,7 +71,6 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
     <div className="app-stage dusk">
       {initial === 'feed' && user && featureOn(portal, 'live') ? <FeedLiveBanner portal={String(portal.slug)} base={base} session={live.live} /> : null}
       <main className="app dark journey-frame" data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
-        <PageHelp page={initial === 'feed' ? 'feed' : 'start'} />
         <InsightTracker trendsOptIn={Boolean(user?.trendsOptIn)} />
         {mission && initial === 'feed' && featureOn(portal, 'missions') ? <div className="feed-mission" data-testid="feed-mission">{mission}</div> : null}
         <JourneyErrorBoundary homeHref={base}>

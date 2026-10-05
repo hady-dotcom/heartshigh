@@ -7,6 +7,7 @@ import { httpsHref, plainText, telHref } from '@/lib/text-safety'
 import { Arch } from '@/components/arch'
 import { COMPASS_DISCLOSURE, compassPrivacyOn } from '@/lib/compass-privacy'
 import { OPENING_HEADING } from '@/lib/opening-data'
+import { openingStepLabel } from '@/lib/opening-progress'
 import { BUBBLE_TINTS, DOOR_TINTS, Glyph } from './glyphs'
 
 export function Caption({ text, className = 'j-caption', testId, as: Tag = 'h1' }: { text: string; className?: string; testId?: string; as?: 'h1' | 'h2' | 'p' }) {
@@ -18,7 +19,7 @@ export function Caption({ text, className = 'j-caption', testId, as: Tag = 'h1' 
   )
 }
 
-export function Opener({ caption, subline, onPlay, onJustShow, loginHref, signedIn }: { caption: string; subline: string; onPlay: () => void; onJustShow: () => void; loginHref: string; signedIn: boolean }) {
+export function Opener({ caption, subline, onPlay, onJustShow, loginHref, signedIn, sceneCount = 7 }: { caption: string; subline: string; onPlay: () => void; onJustShow: () => void; loginHref: string; signedIn: boolean; sceneCount?: number }) {
   return (
     <section className="j-screen j-opener" data-screen="opener" data-testid="opener">
       <header className="j-top">
@@ -27,7 +28,7 @@ export function Opener({ caption, subline, onPlay, onJustShow, loginHref, signed
       </header>
       <span className="j-arch" aria-hidden style={{ opacity: 0.15 }}><Arch size={120} /></span>
       <div className="j-body">
-        <p className="j-progress" data-testid="progress">1 of 8</p>
+        <p className="j-progress" data-testid="progress">{openingStepLabel(1, sceneCount)}</p>
         <h1 className="j-heading" data-testid="opener-heading">{OPENING_HEADING}</h1>
         <Caption text={caption} testId="opener-caption" as="p" />
         <p className="j-sub">{subline}</p>
@@ -53,7 +54,8 @@ type SceneProps = {
   onBrowse?: () => void
 }
 
-export function SceneCard({ scene, index, total = 8, selected, reply, picked, onPick, onPass, onJustShow }: SceneProps) {
+export function SceneCard({ scene, index, total, selected, reply, picked, onPick, onPass, onJustShow }: SceneProps) {
+  const steps = total ?? index + 2
   const pillRef = useRef<HTMLParagraphElement>(null)
   const tilesRef = useRef<HTMLDivElement>(null)
   const swipe = useRef<{ x: number; y: number } | null>(null)
@@ -87,7 +89,7 @@ export function SceneCard({ scene, index, total = 8, selected, reply, picked, on
         <button type="button" className="j-pass" onClick={onPass} disabled={locked} data-testid="pass">Skip</button>
       </header>
       <div className="j-body">
-        <p className="j-progress" data-testid="progress">{index + 2} of {total}</p>
+        <p className="j-progress" data-testid="progress">{openingStepLabel(index + 2, Math.max(0, steps - 1))}</p>
         <Caption text={scene.caption} testId="scene-caption" />
         <p className="j-sub">{scene.subline}</p>
         {index === 0 && compassPrivacyOn() ? <p className="j-sub" data-testid="compass-disclosure">{COMPASS_DISCLOSURE}</p> : null}

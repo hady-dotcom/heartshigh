@@ -1,6 +1,7 @@
 import type { Payload, Where } from 'payload'
 import { buildFeed, type CutInfo, type FeedPlan, type FeedSlot, type LaneDef, type ScaleDef, type SceneDef, type SceneOption } from '@/lib/heart'
 import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE, SCENES as DEFAULT_SCENES } from '@/lib/opening-data'
+import { cleanPortalScenes } from '@/lib/portal-scenes'
 import { idOf } from '@/lib/ids'
 import { doorNumberOfClause, type Door } from '@/lib/doors'
 import { loadDoors } from './doors'
@@ -491,6 +492,11 @@ function effectiveScenes(scenes: Row[], laneKey: Map<number, string>, own: Row |
   if (!published.some((scene) => scene.key === 'account')) {
     const extra = DEFAULT_SCENES.find((scene) => scene.key === 'account')
     if (extra) published.splice(Math.max(0, published.length - 1), 0, { ...extra, version: 1 } as SceneDef & { version: number })
+  }
+  const ownKeys = new Set(published.map((scene) => scene.key))
+  const extras = cleanPortalScenes(own?.extraScenes, ownKeys).scenes
+  for (const scene of extras) {
+    published.push({ ...scene, version: 1 } as SceneDef & { version: number })
   }
   return published
 }

@@ -33,6 +33,12 @@ export function mondayKey(date: Date, timeZone = LEARNER_ZONE) {
 
 export type WeekDay = { key: string; label: string; day: number; weekday: number; today: boolean }
 
+/** Sitting dates that fall inside this calendar week. */
+export function scheduledInWeek(days: WeekDay[], slotDates: string[]) {
+  const week = new Set(days.map((day) => day.key))
+  return [...new Set(slotDates.filter((date) => week.has(date)))]
+}
+
 /** Seven days, Monday first, with today marked. */
 export function weekStrip(now: Date, timeZone = LEARNER_ZONE): WeekDay[] {
   const monday = mondayKey(now, timeZone)
@@ -86,7 +92,7 @@ export function minutesLabel(seconds: number) {
   return `${Math.max(1, Math.round(seconds / 60))} min`
 }
 
-/** Dates a plan will actually use. One talk stays on the first day; fewer talks than days are spaced (3 over 12 → 1, 5, 9). */
+/** Dates a plan will actually use. One talk stays on the first day. Daily spans space talks (3 over 12 → 1, 5, 9). Chosen weekdays that skip days land on the first sittings. */
 export function fitDatesToTalks(dates: string[], talks: number): { dates: string[]; note: string | null } {
   if (talks <= 0 || !dates.length) return { dates: [], note: null }
   const planned = planAcrossDays(Array.from({ length: talks }, (_, index) => index), dates)

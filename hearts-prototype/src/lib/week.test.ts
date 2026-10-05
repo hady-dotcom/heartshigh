@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { dateKeyInZone, dayTalkCounts, fitDatesToTalks, formatLearnerDate, listDates, mondayKey, parseWeekdays, planKeepPath, planNotify, planToast, talksLabel, weekStrip, weekdayList } from './week'
+import { dateKeyInZone, dayTalkCounts, fitDatesToTalks, formatLearnerDate, listDates, mondayKey, parseWeekdays, planKeepPath, planNotify, planToast, scheduledInWeek, talksLabel, weekStrip, weekdayList } from './week'
 
 test('the week strip is Monday first and marks today in Toronto', () => {
   const sunday = new Date('2026-10-04T16:00:00Z')
@@ -11,6 +11,7 @@ test('the week strip is Monday first and marks today in Toronto', () => {
   assert.equal(days.find((day) => day.today)?.key, '2026-10-04')
   assert.equal(mondayKey(sunday, 'America/Toronto'), '2026-09-28')
   assert.equal(dateKeyInZone(sunday, 'America/Toronto'), '2026-10-04')
+  assert.deepEqual(scheduledInWeek(days, ['2026-09-29', '2026-10-01', '2026-10-08']), ['2026-09-29', '2026-10-01'])
 })
 
 test('one sitting never keeps leftover empty days, and several talks span the range', () => {
@@ -19,7 +20,7 @@ test('one sitting never keeps leftover empty days, and several talks span the ra
   assert.deepEqual(one.dates, ['2026-10-05'])
   assert.match(one.note || '', /1 talk/)
   const three = fitDatesToTalks(dates, 3)
-  assert.deepEqual(three.dates, ['2026-10-05', '2026-10-09', '2026-10-16'])
+  assert.deepEqual(three.dates, ['2026-10-05', '2026-10-07', '2026-10-09'])
   const twelve = Array.from({ length: 12 }, (_, index) => `2026-10-${String(index + 5).padStart(2, '0')}`)
   const spread = fitDatesToTalks(twelve, 3)
   assert.deepEqual(spread.dates, [twelve[0], twelve[4], twelve[8]])

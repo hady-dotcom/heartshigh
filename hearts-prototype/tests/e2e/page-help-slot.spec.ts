@@ -54,6 +54,22 @@ test('the page ? sits in its own slot on Home, Lanes, Me, the course and join', 
   await assertHelpClear(page, 'opening')
 })
 
+test('the help Close sits above the tab bar on a phone', async ({ page }) => {
+  await page.setViewportSize(PHONE)
+  await signIn(page)
+  await page.goto(`${BASE}/lanes`)
+  await expect(page.getByTestId('lanes')).toBeVisible()
+  await page.getByTestId('page-help-open').click()
+  const close = page.getByTestId('page-help-close')
+  const tab = page.getByTestId('tab-week')
+  await expect(close).toBeVisible()
+  const closeBox = (await close.boundingBox())!
+  const tabBox = (await tab.boundingBox())!
+  expect(closeBox.y + closeBox.height, 'Close should sit above My week').toBeLessThanOrEqual(tabBox.y + 1)
+  await close.click()
+  await expect(page.getByTestId('page-help-sheet')).toHaveCount(0)
+})
+
 test('Home and Me use the same day count', async ({ page }) => {
   await page.setViewportSize(PHONE)
   await signIn(page)

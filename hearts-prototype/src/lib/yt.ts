@@ -75,7 +75,7 @@ export function preloadApi() {
 /** Feed clips and the course player are both chromeless. Captions, the title bar, the logo and the red button stay off. */
 export type PlayerKind = 'hors' | 'appetiser' | 'full'
 
-export function playerVars(kind: PlayerKind, start: number, end?: number | null) {
+export function playerVars(kind: PlayerKind, start: number, end?: number | null, autoplay = 0) {
   const base = {
     start: Math.max(0, Math.floor(start)),
     playsinline: 1,
@@ -85,7 +85,7 @@ export function playerVars(kind: PlayerKind, start: number, end?: number | null)
     cc_load_policy: 0,
     enablejsapi: 1,
     origin: typeof window === 'undefined' ? undefined : window.location.origin,
-    autoplay: 0,
+    autoplay,
   }
   // A language preference is itself a nudge to load captions. None of the learner players send one.
   if (kind === 'hors') return { ...base, end: end ? Math.ceil(end) : undefined, controls: 0, fs: 0, disablekb: 1 }

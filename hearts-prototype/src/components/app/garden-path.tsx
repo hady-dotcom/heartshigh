@@ -26,7 +26,7 @@ export function GardenPath({ title, nodes }: { title: string; nodes: PathNode[] 
   }, [])
   return (
     <section className="garden-path" data-testid="garden-path">
-      <p className="eyebrow">Your path</p>
+      <p className="eyebrow">Your path · this course</p>
       <h3>{title}</h3>
       <ol ref={ref}>
         {nodes.map((node, at) => (

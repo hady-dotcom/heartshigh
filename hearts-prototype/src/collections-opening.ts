@@ -251,6 +251,7 @@ export const OpeningConfigs: CollectionConfig = {
     { name: 'defaultClip', type: 'relationship', relationTo: 'cuts' },
     { name: 'helpContacts', type: 'array', fields: [{ name: 'label', type: 'text', required: true }, { name: 'phone', type: 'text' }, { name: 'url', type: 'text' }, { name: 'hours', type: 'text' }] },
     { name: 'trendsContributionPrompt', type: 'checkbox', defaultValue: true },
+    { name: 'extraScenes', type: 'json', admin: { description: 'Questions this portal added on top of the starter set. Not Islamic-only.' } },
   ],
 }
 

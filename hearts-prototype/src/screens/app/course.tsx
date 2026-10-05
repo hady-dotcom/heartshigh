@@ -7,7 +7,8 @@ import { Avatar, FollowButton } from '@/components/app/feed'
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
 import { PlayIcon } from '@/components/icons'
 import { clockEnabled, now } from '@/lib/clock'
-import { doorLabel, doorOfClause, groupByDoor, type Door } from '@/lib/doors'
+import { doorLabel, groupByDoor, type Door } from '@/lib/doors'
+import { courseDoorHeadingVisible, lessonDoor } from '@/lib/course-doors'
 import { loadDoors } from '@/server/doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { visibleCourseIds } from '@/server/context'
@@ -21,6 +22,7 @@ import { appetiserStop } from '@/lib/tiers'
 import { lineAt } from '@/lib/harvest'
 import { answerCounts, courseProgress } from '@/lib/nesting'
 import { type Ctx, type Row, clock, one, ref, rows, str, unreadCount } from '../common'
+import { lastPartCopy, playerPartLabel, resolvePartIndex } from '@/lib/player-labels'
 import { nextPartLabel } from '@/lib/study-plan'
 import { talksLabel } from '@/lib/week'
 import { masterFlags } from './journey'
@@ -42,10 +44,8 @@ function nextCoursePart(lessons: Row[], partIndex: number, hrefBase: string) {
   return { label: nextPartLabel(partIndex + 2), href: `${hrefBase}?part=${pick.id}` }
 }
 
-function partHeading(index: number, lesson: Row, courseTitle: string, sep: string) {
-  const name = partTitle(lesson, courseTitle)
-  if (/· Part \d+$/.test(name) || /^Part \d+$/.test(name)) return name
-  return `Part ${index}${sep}${name}`
+function partHeading(index: number, lesson: Row, courseTitle: string, total: number) {
+  return playerPartLabel({ index, total, name: partTitle(lesson, courseTitle), courseTitle })
 }
 
 export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx, speakerSlug: string) {
@@ -113,13 +113,11 @@ export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx,
   )
 }
 
-/** A part sits under the door of its first approved cut (or its first cut when none is approved yet). */
-function courseDoors(lessons: Row[], cuts: Row[], doors: Door[]) {
+/** A part sits under the door of its title, or of the cut that actually carries the talk. */
+function courseDoors(lessons: Row[], cuts: Row[], doors: Door[], courseTitle: string) {
   return groupByDoor(lessons, (lesson) => {
     const own = cuts.filter((cut) => ref(cut.lesson) === lesson.id && Number(cut.bestClause))
-    const approved = own.filter((cut) => cut.status === 'approved')
-    const pool = (approved.length ? approved : own).slice().sort((a, b) => Number(a.start) - Number(b.start))
-    return doorOfClause(Number(pool[0]?.bestClause || 0), doors)
+    return lessonDoor({ lessonTitle: str(lesson.title), courseTitle, cuts: own, doors })
   })
 }
 
@@ -202,7 +200,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   if (!query.part) {
     return CourseOverview(ctx, course, lessons)
   }
-  const partIndex = Math.max(0, lessons.findIndex((lesson) => lesson.id === Number(query.part)))
+  const partIndex = resolvePartIndex(lessons, query.part)
   const lesson = lessons[partIndex]
   const lessonId = lesson.id
 
@@ -323,7 +321,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const following = nextCoursePart(lessons, partIndex, `${base}/course/${courseId}`)
   const upNext = nextLesson && following
     ? { href: following.href, label: following.label, minutes: Math.max(1, Math.round(Number(nextLesson.durationSeconds || 0) / 60)), last: false }
-    : { href: courseHref, label: 'Choose what\'s next', minutes: 0, last: true }
+    : { href: courseHref, label: lastPartCopy(lessons.length), minutes: 0, last: true }
   const thinks = (await rows(payload, 'notifications', { and: [{ user: { equals: user.id } }, { channel: { equals: 'think' } }, { read: { not_equals: true } }] }, { limit: 50 }))
     .map((row) => {
       try {
@@ -371,7 +369,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           courseTitle={tidyTalkTitle(str(course.title))}
           backHref={`${base}/lanes`}
           lessonId={lessonId}
-          partLabel={partHeading(partIndex + 1, lesson, tidyTalkTitle(str(course.title)), ' · ')}
+          partLabel={partHeading(partIndex + 1, lesson, tidyTalkTitle(str(course.title)), lessons.length)}
           youtubeId={youtubeId}
           film={film}
           poster={shownPoster(posterFor(youtubeId)) || portraitFor(slugify(str(lesson.speaker || course.speaker)))}
@@ -405,19 +403,22 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
             ))}
           </section>
         ) : null}
-        {lessons.length >= 2 && featureOn(portal, 'planner') ? <p style={{ margin: '16px 0 0' }}><Link className="pill outline" href={`${base}/me/plan?course=${courseId}`} data-testid="plan-rest">Plan the rest of this course</Link></p> : null}
+        {featureOn(portal, 'planner') ? <p style={{ margin: '16px 0 0' }}><Link className="pill outline" href={`${base}/week?course=${courseId}&view=new&from=course`} data-testid={lessons.length >= 2 ? 'plan-rest' : 'schedule-this'}>{lessons.length >= 2 ? 'Plan the rest of this course' : 'Schedule this talk'}</Link></p> : null}
         <p className="eyebrow">Parts of this course</p>
-        {courseDoors(lessons, partCuts, doors).map((group) => (
+        {(() => {
+          const groups = courseDoors(lessons, partCuts, doors, str(course.title))
+          const heading = courseDoorHeadingVisible(groups, str(course.title))
+          return groups.map((group) => (
           <section key={group.door?.number || 'open'} className="door-course" data-testid="course-door" data-door={group.door?.number || ''}>
-            {group.door ? <h2>{doorLabel(group.door)}</h2> : null}
-            {group.door?.teaching ? <p>{group.door.teaching}</p> : null}
+            {heading && group.door ? <h2>{doorLabel(group.door)}</h2> : null}
+            {heading && group.door?.teaching ? <p>{group.door.teaching}</p> : null}
             {group.items.map((row) => {
               const index = lessons.findIndex((lesson) => lesson.id === row.id)
               const tier = partTiers.find((item) => ref(item.lesson) === row.id && Number(item.appetiserEnd) > Number(item.appetiserStart))
               return (
                 <div key={row.id}>
                   <Link className="list-link" href={`${base}/course/${courseId}?part=${row.id}`} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
-                    <span className="grow">{partHeading(index + 1, row, tidyTalkTitle(str(course.title)), '. ')}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small></span>
+                    <span className="grow">{partHeading(index + 1, row, tidyTalkTitle(str(course.title)), lessons.length)}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small></span>
                     {row.id === lessonId ? <span className="badge" style={{ color: 'var(--purple)', fontWeight: 700, fontSize: 13 }}>Playing</span> : '›'}
                   </Link>
                   {tier ? (
@@ -429,7 +430,8 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
               )
             })}
           </section>
-        ))}
+        ))
+        })()}
         {clockEnabled() && user.role === 'master' ? (
           <details className="card" style={{ marginTop: 16 }}>
             <summary style={{ fontWeight: 700 }}>Test clock</summary>

@@ -58,6 +58,9 @@
   z-index: 22;
   pointer-events: none;
 }
+.page-help.is-open {
+  z-index: 90;
+}
 .page-help-btn,
 .page-help-sheet { pointer-events: auto; }
 .app > .page-help,
@@ -71,7 +74,8 @@
 }
 /* On the opening the Skip / Log in control sits top-right; keep ? beside the arch. */
 .app.journey-frame > .page-help,
-.journey-frame > .page-help {
+.journey-frame > .page-help,
+.journey-frame .journey > .page-help {
   position: absolute;
   top: calc(14px + var(--safe-top, env(safe-area-inset-top, 0px)));
   left: 56px;
@@ -83,6 +87,20 @@
   z-index: 12;
   pointer-events: none;
 }
+.app.journey-frame > .page-help.is-open,
+.journey-frame > .page-help.is-open,
+.journey-frame .journey > .page-help.is-open {
+  z-index: 90;
+}
+/* Feed and appetiser put ‹ Back on the left; move ? to the right so Back stays tappable. */
+.journey-frame:has(.journey[data-phase="feed"]) > .page-help,
+.journey-frame:has(.journey[data-mode="appetiser"]) > .page-help,
+.journey-frame .journey[data-phase="feed"] > .page-help,
+.journey-frame .journey[data-mode="appetiser"] > .page-help {
+  left: auto;
+  right: 16px;
+  justify-content: flex-end;
+}
 .journey-frame > .page-help .page-help-btn {
   background: rgba(18, 48, 47, 0.72);
   color: #f6eedc;
@@ -93,7 +111,7 @@
   border: 1.5px solid var(--line); background: var(--glass-solid, var(--card));
   color: var(--ink); font-weight: 700; font-size: 16px; cursor: pointer;
 }
-.page-help-sheet { position: fixed; inset: 0; z-index: 80; background: rgba(8, 20, 20, 0.55); display: grid; place-items: end center; padding: calc(18px + env(safe-area-inset-top, 0px)) 18px calc(18px + env(safe-area-inset-bottom, 0px)); }
+.page-help-sheet { position: fixed; inset: 0; z-index: 120; background: rgba(8, 20, 20, 0.55); display: grid; place-items: end center; padding: calc(18px + env(safe-area-inset-top, 0px)) 18px calc(104px + env(safe-area-inset-bottom, 0px)); }
 .page-help-card { width: min(390px, 100%); background: var(--card); color: var(--ink); border-radius: 22px; padding: 22px 20px 18px; box-shadow: var(--shadow-soft); }
 .page-help-card h2 { margin: 0 0 10px; font-size: 20px; }
 .page-help-card p { margin: 0 0 10px; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
@@ -714,8 +732,9 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .week-day { display: grid; justify-items: center; gap: 2px; padding: 6px 0 8px; border-radius: 14px; font-size: 12px; position: relative; }
 .week-day small { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #D4A84B; }
 .week-day b { font-size: 16px; }
-.week-day.today { background: #0F2E2C; color: #F1E4C6; }
+.week-day.today { background: #163d3a; color: #F1E4C6; }
 .week-day.today small { color: #D4A84B; }
+.week-day.scheduled { background: #163d3a; }
 .week-day .dot { width: 6px; height: 6px; border-radius: 50%; background: #D4A84B; }
 .week-today { display: block; margin-top: 10px; font-weight: 700; color: #F1E4C6; text-decoration: none; min-height: 44px; display: flex; align-items: center; }
 .week-today.empty { color: #E8D6AE; }

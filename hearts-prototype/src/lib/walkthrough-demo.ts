@@ -26,7 +26,7 @@ export const DEFAULT_WALKTHROUGH_PASSWORD = 'walkthrough-afternoon'
 
 export const WALKTHROUGH_TIME_ZONE = LEARNER_ZONE
 
-export function passwordForNewWalkthrough(isNew: boolean, env: NodeJS.ProcessEnv = process.env) {
+export function passwordForNewWalkthrough(isNew: boolean, env: { HEARTS_DEMO_WALKTHROUGH_PASSWORD?: string } = process.env as { HEARTS_DEMO_WALKTHROUGH_PASSWORD?: string }) {
   if (!isNew) return null
   const fromEnv = (env.HEARTS_DEMO_WALKTHROUGH_PASSWORD || '').trim()
   return fromEnv.length >= 12 ? fromEnv : DEFAULT_WALKTHROUGH_PASSWORD
