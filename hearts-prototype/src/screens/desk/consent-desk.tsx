@@ -124,7 +124,10 @@ export async function learnerConsentHint(payload: Ctx['payload'], learnerId: num
   const [recorded, { age }] = await Promise.all([recordedConsents(payload, learnerId, portalId), loadAgeProfile(payload, learnerId)])
   const privacy = recorded.find((row) => row.kind === 'privacy')
   return {
-    agreed: privacy ? `Agreed ${privacy.acceptedAt ? longDate(privacy.acceptedAt) : ''}, version ${privacy.version}` : 'Not yet agreed',
+    agreed: privacy ? 'Agreed' : 'Waiting',
+    detail: privacy
+      ? `Agreed ${privacy.acceptedAt ? longDate(privacy.acceptedAt) : ''}, version ${privacy.version}. Guardian consent: ${guardianStatusLabel(age)}`
+      : `Not yet agreed. Guardian consent: ${guardianStatusLabel(age)}`,
     guardian: guardianStatusLabel(age),
   }
 }
