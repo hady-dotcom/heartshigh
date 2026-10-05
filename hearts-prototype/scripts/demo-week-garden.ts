@@ -17,5 +17,5 @@ if (!result.ok) {
   console.error(result.reason)
   process.exit(1)
 }
-console.log(`Afternoon walk on /p/${result.portal} for ${result.email}: ${result.slots} talks across the week, ${result.talks} garden talks, ${result.completions} new parts watched, ${result.answers} new answers. Nothing else was wiped.`)
+console.log(`Afternoon walk on /p/${result.portal} for ${result.email}: ${result.slots} talks across the week, ${result.talks} garden talks, ${result.completions} new parts watched, ${result.answers} new answers, ${result.harvest} harvest lines, ${result.field} field seats, ${result.acts} small acts. Nothing else was wiped.`)
 process.exit(0)

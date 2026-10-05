@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
-import { dayTalkCounts, minutesLabel, talksLabel, scheduledInWeek, weekStrip, zoneOrToronto, dateKeyInZone, type WeekDay } from '@/lib/week'
+import { dayTalkCounts, minutesLabel, talksLabel, scheduledInWeek, weekBusy, weekStrip, zoneOrToronto, dateKeyInZone, type WeekDay } from '@/lib/week'
 import { overMinutesNote, spreadNote, studyDates } from '@/lib/schedule'
 import { isTimeZone, portalTimeZone } from '@/lib/zone-time'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
@@ -129,7 +129,19 @@ export async function weekView(payload: Payload, user: SessionUser, portal: Port
     }
   })
   const today = cards.flatMap((plan) => plan.slots).find((slot) => slot.today) || null
-  const scheduledKeys = scheduledInWeek(days, cards.flatMap((plan) => plan.slots.map((slot) => slot.date)))
+  const busy = weekBusy({
+    days,
+    slots: cards.flatMap((plan) => plan.slots),
+    plans: mine.map((plan) => ({
+      start: str(plan.startDate) || str(plan.endDate),
+      end: str(plan.endDate) || str(plan.startDate),
+      weekdays: Array.isArray(plan.weekdays) ? (plan.weekdays as number[]) : [],
+    })),
+  })
+  const scheduledKeys = [...new Set([
+    ...scheduledInWeek(days, cards.flatMap((plan) => plan.slots.map((slot) => slot.date))),
+    ...days.filter((day) => busy.has(day.key)).map((day) => day.key),
+  ])]
   return { days, today, scheduledKeys, plans: cards, courses, zone, todayKey }
 }
 

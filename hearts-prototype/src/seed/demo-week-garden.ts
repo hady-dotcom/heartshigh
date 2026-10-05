@@ -16,6 +16,9 @@ export type DemoWeekGardenResult = {
   completions: number
   answers: number
   slots: number
+  harvest: number
+  field: number
+  acts: number
 } | { ok: false; reason: string }
 
 type Doc = { id: number; title?: string; course?: unknown; bestClause?: unknown; lesson?: unknown; second?: unknown; status?: unknown; name?: string }
@@ -234,6 +237,79 @@ export async function seedDemoWeekGarden(
     await payload.create({ collection: 'schedules', overrideAccess: true, data: data as never })
   }
 
+  let harvest = 0
+  let field = 0
+  let acts = 0
+  const haveHarvest = await payload.find({
+    collection: 'harvest-entries',
+    overrideAccess: true,
+    depth: 0,
+    limit: 1,
+    where: { user: { equals: learner.id } },
+  })
+  if (!haveHarvest.docs.length) {
+    const lines = [
+      { kind: 'line', text: 'A line I am carrying from this sitting into an ordinary day.' },
+      { kind: 'line', text: 'Mercy is a practice, not a mood.' },
+      { kind: 'line', text: 'I will leave the sitting slower than I arrived.' },
+    ]
+    for (const [index, line] of lines.entries()) {
+      const lesson = picked[index] || picked[0]
+      if (!lesson) continue
+      const at = demoGardenAt(now(), index)
+      await payload.create({
+        collection: 'harvest-entries',
+        overrideAccess: true,
+        data: {
+          user: learner.id,
+          lesson: lesson.id,
+          portal: portal.id,
+          kind: line.kind,
+          text: line.text,
+          surface: 'talk',
+          gatheredAt: at,
+          createdAt: at,
+          updatedAt: at,
+        } as never,
+      })
+      harvest += 1
+    }
+  }
+  const seats = (await payload.find({ collection: 'seats', overrideAccess: true, depth: 0, limit: 6, sort: 'position' })).docs as Doc[]
+  for (const seat of seats.slice(0, 3)) {
+    const have = await payload.find({
+      collection: 'seat-visits',
+      overrideAccess: true,
+      depth: 0,
+      limit: 1,
+      where: { and: [{ user: { equals: learner.id } }, { seat: { equals: seat.id } }] },
+    })
+    if (have.docs.length) continue
+    await payload.create({
+      collection: 'seat-visits',
+      overrideAccess: true,
+      data: { user: learner.id, seat: seat.id, returned: false, portal: portal.id } as never,
+    })
+    field += 1
+  }
+  const haveActs = await payload.find({
+    collection: 'rituals',
+    overrideAccess: true,
+    depth: 0,
+    limit: 1,
+    where: { user: { equals: learner.id } },
+  })
+  if (!haveActs.docs.length) {
+    for (const note of ['I held back a harsh word.', 'I sat a little longer after the prayer.']) {
+      await payload.create({
+        collection: 'rituals',
+        overrideAccess: true,
+        data: { user: learner.id, note, portal: portal.id } as never,
+      })
+      acts += 1
+    }
+  }
+
   return {
     ok: true,
     portal: portalSlug,
@@ -242,5 +318,8 @@ export async function seedDemoWeekGarden(
     completions,
     answers,
     slots: slots.length,
+    harvest,
+    field,
+    acts,
   }
 }
