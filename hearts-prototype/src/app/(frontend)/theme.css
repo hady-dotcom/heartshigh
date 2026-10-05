@@ -454,6 +454,7 @@ html[data-theme] .weekdays input:checked + span {
 }
 html[data-theme] .q-list li.done { color: #D4A84B; border-color: #D4A84B; }
 html[data-theme] .q-list li.open { color: #e6efe8; }
+html[data-theme] .q-list li.coming { color: #8aa0a0; }
 html[data-theme] .flash.error { background: var(--rose-bg); color: var(--red-clause); border-color: transparent; }
 html[data-theme] .flash.notice { background: var(--mint); color: var(--teal-deep); border-color: transparent; }
 html[data-theme='evening'] .flash.error { color: #ffd0d4; }

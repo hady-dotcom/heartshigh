@@ -340,6 +340,7 @@
 .time-left { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: var(--orange); }
 .q-list { list-style: none; margin: 10px 2px 0; padding: 0; display: grid; gap: 6px; }
 .q-list li { margin: 0; padding: 8px 12px; border-radius: 12px; font-size: 13px; line-height: 1.35; background: #0F2E2C; color: #e6efe8; border: 1px solid rgba(212, 168, 75, 0.35); }
+.q-list li.coming { color: #8aa0a0; border-color: rgba(138, 160, 160, 0.35); }
 .q-list li.done { border-color: #D4A84B; color: #D4A84B; }
 @media (prefers-reduced-motion: reduce) { .sheet, .sheet.leaving { animation: none; transform: translateX(-50%); } }
 .sheet-close { position: absolute; right: 14px; top: 12px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: #f2ede3; font-size: 20px; }

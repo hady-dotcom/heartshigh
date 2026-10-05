@@ -135,6 +135,9 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
   await expect(player.getByTestId('question-strip')).toBeVisible()
   await expect(player.getByTestId('strip-dot').first()).toBeVisible()
   await expect(player.getByTestId('strip-dot').first()).not.toHaveText(/^[1-4]$/)
+  await expect(player.getByTestId('strip-dot').first()).toHaveAttribute('data-revealed', 'no')
+  await expect(player.getByTestId('strip-dot').first()).toHaveText(/Question 1 comes at \d+:\d+/)
+  await expect(player.getByTestId('strip-dot').first()).not.toContainText(/What stayed with you|The speaker says/)
   await expect(player.getByTestId('answer-point')).toBeVisible()
   await expect(page.getByTestId('course-overview')).toHaveCount(0)
   await hold(page, '05-player-from-plan-row')
@@ -142,6 +145,12 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
     await page.getByTestId('timeline-dot').first().click()
     await expect(page.getByTestId('popup')).toBeVisible()
     await expect(page.getByTestId('paused-note')).toContainText('Paused')
+    await expect(player.getByTestId('strip-dot').first()).toHaveAttribute('data-revealed', 'yes')
+    await expect(player.getByTestId('strip-dot').first()).toContainText(/What stayed with you/)
+    if (await player.getByTestId('strip-dot').count() > 1) {
+      await expect(player.getByTestId('strip-dot').nth(1)).toHaveAttribute('data-revealed', 'no')
+      await expect(player.getByTestId('strip-dot').nth(1)).toHaveText(/Question 2 comes at/)
+    }
     await expect(page.getByTestId('think-about-this')).toContainText('Think about this for this session')
     await expect(page.getByTestId('answer-later')).toBeVisible()
     await hold(page, '06-think-about-this', 1600)
