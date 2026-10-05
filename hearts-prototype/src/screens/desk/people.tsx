@@ -77,7 +77,17 @@ export async function TeachScreen(ctx: Ctx) {
                 const onTime = formatOnTime(progress)
                 return (
                   <tr key={learner.id} data-testid="learner-row">
-                    <td><b>{str(learner.name)}</b>{learner.audience && learner.audience !== 'learner' ? <div className="hint">{str(learner.audience)}</div> : null}</td>
+                    <td>
+                      <b>{str(learner.name)}</b>
+                      {learner.audience && learner.audience !== 'learner' ? <div className="hint">{str(learner.audience)}</div> : null}
+                      <PersonActions
+                        person={learner as never}
+                        next={here}
+                        canPause={user.role === 'master' || user.role === 'portal-admin'}
+                        canTemp
+                        canRole={user.role === 'master' || user.role === 'portal-admin'}
+                      />
+                    </td>
                     <td className="email-cell"><span title={str(learner.email)} data-testid="learner-email">{str(learner.email)}</span></td>
                     <td className="num">{dayNumber(learner as never)}</td>
                     <td className="num" data-testid="learner-progress">{done.length}</td>
@@ -94,13 +104,6 @@ export async function TeachScreen(ctx: Ctx) {
                           <span className="btn ghost small" aria-disabled="true" data-testid="workbook-csv" title="Nothing to download yet">Workbook</span>
                         )) : null}
                         {user.role !== 'teacher' ? <ViewAsButton targetId={learner.id} name={str(learner.name) || 'this learner'} landing={`${base}`} /> : null}
-                        <PersonActions
-                          person={learner as never}
-                          next={here}
-                          canPause={user.role === 'master' || user.role === 'portal-admin'}
-                          canTemp
-                          canRole={user.role === 'master' || user.role === 'portal-admin'}
-                        />
                       </div>
                     </td>
                   </tr>
