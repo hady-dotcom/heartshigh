@@ -21,13 +21,18 @@ test('A19: delete request emails, signing in cancels, and the job runs after the
   await expect(page.getByTestId('notice')).toContainText('14 days')
 
   const master = await asUser('master@hearts.test', 'hearts-master')
-  const clock = await postAction(master, { action: 'clock', iso: '2026-11-01T12:00:00.000Z', next: '/master' })
-  expect(clock.status(), 'clock').toBeLessThan(400)
-  const jobs = await master.post('/api/hearts/jobs')
-  expect(jobs.ok()).toBeTruthy()
-  const body = await jobs.json()
-  expect(body, JSON.stringify(body)).toHaveProperty('deletions')
-  expect(Array.isArray(body.deletions)).toBeTruthy()
-  expect(body.deletions.some((row: { pending?: boolean; ok?: boolean }) => row.pending || row.ok), JSON.stringify(body.deletions)).toBeTruthy()
-  await master.dispose()
+  try {
+    const clock = await postAction(master, { action: 'clock', iso: '2026-11-01T12:00:00.000Z', next: '/master' })
+    expect(clock.status(), 'clock').toBeLessThan(400)
+    const jobs = await master.post('/api/hearts/jobs')
+    expect(jobs.ok()).toBeTruthy()
+    const body = await jobs.json()
+    expect(body, JSON.stringify(body)).toHaveProperty('deletions')
+    expect(Array.isArray(body.deletions)).toBeTruthy()
+    expect(body.deletions.some((row: { pending?: boolean; ok?: boolean }) => row.pending || row.ok), JSON.stringify(body.deletions)).toBeTruthy()
+  } finally {
+    // The clock is process-wide. Leave it unset so later files in this run still see today.
+    await postAction(master, { action: 'clock', iso: '', next: '/' })
+    await master.dispose()
+  }
 })
