@@ -1,6 +1,6 @@
 import { getSession } from '@/server/context'
 
-/** The view-as bar inside the Payload admin. Exit and the timers live on the HEARTS screens. */
+/** The view-as bar inside the Payload admin. Exit and the timers live on the Hady Core screens. */
 export async function ViewAsAdminBanner() {
   const { viewAs } = await getSession()
   if (!viewAs) return null

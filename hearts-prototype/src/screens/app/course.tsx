@@ -285,7 +285,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
       ;(swarm[pointId] ||= []).push({ name, body: str(answer.body) || str(answer.choice) || 'Shared a photo', image: imageSrc, initials: initialsOf(name), id: answer.id, kind: 'answer' })
     }
     if (featureOn(portal, 'circle')) {
-      // HEARTS circle answers fill the swarm while it is quiet and step back as real shared answers arrive.
+      // Hady Core circle answers fill the swarm while it is quiet and step back as real shared answers arrive.
       const [circle, settings] = await Promise.all([circleForPoints(payload, points.map((point) => point.id), portal.id), circleSettings(payload)])
       circleLabel = settings.label
       for (const point of points) {

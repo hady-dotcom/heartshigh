@@ -1,5 +1,5 @@
 /**
- * Adds HEARTS circle answers where a question has fewer than four.
+ * Adds Hady Core circle answers where a question has fewer than four.
  * Additive: it never deletes or rewrites an answer that is already there.
  * Refuses a production or remote database. `--dry-run` prints the plan and writes nothing.
  *

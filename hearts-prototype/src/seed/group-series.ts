@@ -69,7 +69,7 @@ export async function applySeriesGroups(payload: Payload) {
   const courseByTitle = new Map<string, Doc>()
   for (const group of plan.groups) {
     const first = lessons.find((row) => row.id === group.lessonIds[0])
-    const speaker = group.speaker || String(first?.speaker || 'HEARTS')
+    const speaker = group.speaker || String(first?.speaker || 'Hady Core')
     const summary = `${group.title}: every long sitting of this series that is in the library.`
     const course = await ensureCourse(payload, group.title, speaker, summary)
     courseByTitle.set(group.title, course)

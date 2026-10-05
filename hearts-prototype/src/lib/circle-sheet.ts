@@ -9,7 +9,7 @@ export const CIRCLE_COLUMNS = ['talk_key', 'youtube_id', 'question_id', 'circle_
 export type CircleColumn = (typeof CIRCLE_COLUMNS)[number]
 
 export const CIRCLE_NOTE =
-  'HEARTS circle answers. One row is one answer shown under a question in “What others said” until real answers arrive. question_id is the number from the Questions tab. Leave circle_id blank to add an answer, or fill it in to change that answer. tone is warm, honest, practical, searching or quiet. length is short, medium or long. origin is ai or staff. enabled is yes or no. Put delete in status to remove the answer. Circle answers are never counted as answers.'
+  'Hady Core circle answers. One row is one answer shown under a question in “What others said” until real answers arrive. question_id is the number from the Questions tab. Leave circle_id blank to add an answer, or fill it in to change that answer. tone is warm, honest, practical, searching or quiet. length is short, medium or long. origin is ai or staff. enabled is yes or no. Put delete in status to remove the answer. Circle answers are never counted as answers.'
 
 export type CircleSheetRow = {
   circleId: number | null

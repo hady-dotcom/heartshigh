@@ -61,7 +61,7 @@ export function payloadSecret(env: Env = process.env) {
   const secret = env.PAYLOAD_SECRET?.trim() || ''
   if (isProduction(env) && !isBuildPhase(env)) {
     const problem = secretProblem(secret)
-    if (problem) throw new Error(`HEARTS cannot start. ${problem}`)
+    if (problem) throw new Error(`Hady Core cannot start. ${problem}`)
   }
   return secret || DEV_SECRET
 }
@@ -201,7 +201,7 @@ export function assertProductionEnv(env: Env, opts: { hops: number; platformHead
   if (!isProduction(env) || isBuildPhase(env)) return
   const problems = productionProblems(env, opts)
   if (!problems.length) return
-  throw new Error(`HEARTS cannot start:\n- ${problems.join('\n- ')}`)
+  throw new Error(`Hady Core cannot start:\n- ${problems.join('\n- ')}`)
 }
 
 export function bootstrapIdentity(env: Env = process.env) {

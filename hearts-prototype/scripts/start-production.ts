@@ -39,7 +39,7 @@ try {
   })
   if (demo.totalDocs) {
     console.error(
-      'HEARTS cannot start: this database still has demo accounts (addresses ending in @hearts.test, such as master@hearts.test). Those accounts use passwords that are written in the README. Remove them before hosting this for real people. Nothing was started.',
+      'Hady Core cannot start: this database still has demo accounts (addresses ending in @hearts.test, such as master@hearts.test). Those accounts use passwords that are written in the README. Remove them before hosting this for real people. Nothing was started.',
     )
     process.exit(1)
   }

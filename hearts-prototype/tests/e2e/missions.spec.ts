@@ -76,7 +76,7 @@ async function filmedAuthed(browser: Browser, dest: string, state: Awaited<Retur
   }
 }
 
-test.describe('Help shape HEARTS', () => {
+test.describe('Help shape Hady Core', () => {
   test('admin writes a mission, two learners join, both get the thank-you', async ({ browser }) => {
     const desk = await browser.newPage()
     const deskErrors: string[] = []

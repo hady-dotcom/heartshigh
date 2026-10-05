@@ -49,7 +49,7 @@ export function planIcs(input: { name: string; slots: IcsSlot[]; zone?: string; 
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//HEARTS//Study plan//EN',
+    'PRODID:-//Hady Core//Study plan//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     foldIcsLine(`X-WR-CALNAME:${escapeIcs(input.name || 'My week')}`),

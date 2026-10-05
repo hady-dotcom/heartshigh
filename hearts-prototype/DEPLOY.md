@@ -45,7 +45,7 @@ You will need a card on the account. The smallest sizes are enough to start. Giv
 6. Set the **branch** to the branch you were given. Deploy that branch. After the hosting work is merged, you can switch this setting to the project branch and Railway will redeploy.
 7. Leave the start command empty. The Dockerfile already knows how to start.
 
-The first deploy may fail on purpose. The app refuses to start until the variables in the next steps are filled in. The log will say `HEARTS cannot start` and list what is missing, in plain sentences. That is the check working.
+The first deploy may fail on purpose. The app refuses to start until the variables in the next steps are filled in. The log will say `Hady Core cannot start` and list what is missing, in plain sentences. That is the check working.
 
 ## 3. Add the database
 
@@ -89,7 +89,7 @@ Open the app service, then **Variables**, then **New Variable**. Add these. For 
 | `BOOTSTRAP_ADMIN_PASSWORD` | A password you choose | At least 12 characters. Not `hearts-master`, `portal-admin`, `portal-teacher`, or `portal-learner`. |
 | `BOOTSTRAP_ADMIN_NAME` | Your name | Optional. If you leave it out, the account is called Master. |
 
-Optional, only if Cloudflare sits in front of the site. Do not change DNS or Turnstile from this repository. See **Cloudflare in front of HEARTS** in the README for the dashboard steps.
+Optional, only if Cloudflare sits in front of the site. Do not change DNS or Turnstile from this repository. See **Cloudflare in front of Hady Core** in the README for the dashboard steps.
 
 | Variable | What to put | Notes |
 | --- | --- | --- |
@@ -104,7 +104,7 @@ Click **Deploy** (or wait for the automatic redeploy) after the variables are sa
 ## 7. Check that it started
 
 1. Open the app service and read the **Deployments** log.
-2. If a line starts with `HEARTS cannot start`, the lines under it say which variable to fix. Fix it and let it deploy again. Nothing has been deleted.
+2. If a line starts with `Hady Core cannot start`, the lines under it say which variable to fix. Fix it and let it deploy again. Nothing has been deleted.
 3. When the deploy is healthy, open `https://your-domain/api/health` in a browser.
 
 You want:
@@ -205,7 +205,7 @@ Your master password is not reset by a deploy. Bootstrap does not need to be run
 
 ## If something goes wrong
 
-- `/api/health` does not load: open the deploy log. The first error is the one to fix. A line that starts with `HEARTS cannot start` lists every missing variable at once.
+- `/api/health` does not load: open the deploy log. The first error is the one to fix. A line that starts with `Hady Core cannot start` lists every missing variable at once.
 - The health page says `storage` is `local`: the bucket variables are missing or misnamed. Fix them and redeploy before anyone uploads.
 - Sign-in says the email or password did not match: use the bootstrap email and password, not the README demo ones. The demo ones are rejected on purpose.
 - The shell command failed halfway through the talks: run `npm run seed:starters` again. It continues from what was saved.

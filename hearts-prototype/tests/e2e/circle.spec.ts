@@ -1,7 +1,7 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 import { E2E_BASE } from '../env'
 
-// HEARTS circle answers: drafted or written answers that sit in a question's swarm until real answers arrive.
+// Hady Core circle answers: drafted or written answers that sit in a question's swarm until real answers arrive.
 
 const PORTAL = 'east-london'
 const sfx = Date.now().toString().slice(-6)
@@ -58,7 +58,7 @@ test.afterAll(async () => {
   await master?.dispose()
 })
 
-test.describe('HEARTS circle answers', () => {
+test.describe('Hady Core circle answers', () => {
   test('generation: the master desk drafts answers with the chosen count, tones and lengths, with the built-in drafts when there is no AI key', async ({ page }) => {
     const nur = await lessonOf('NIR88RRpat4')
     const before = await circleRows(`where[lesson][equals]=${nur.id}`)

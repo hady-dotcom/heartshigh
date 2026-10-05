@@ -311,7 +311,7 @@ export const STEP_SPECS: StepSpec[] = [
   {
     slug: 'language-inference',
     name: 'Language inference',
-    description: 'Reads the transcript and names the language the speaker uses to explain, not the language of a quoted verse. The code is kept on this talk’s ingest card so later steps can skip a garbled or unexpected language. Learners never see it.',
+    description: 'Reads the transcript and names the language the speaker uses to explain, not the language of a quoted verse. The code is kept on this talk’s Bring in card so later steps can skip a garbled or unexpected language. Learners never see it.',
     placeholders: [{ token: 'TRANSCRIPT', meaning: 'The talk transcript, with timestamps.', required: true }],
     provider: 'anthropic',
     model: 'claude-sonnet-4-5',
@@ -321,7 +321,7 @@ export const STEP_SPECS: StepSpec[] = [
     inPipeline: true,
     fillsTier: null,
     fillsPoints: null,
-    fills: 'Ingest card only. It does not fill a tier or a pop-up.',
+    fills: 'Bring in card only. It does not fill a tier or a pop-up.',
     outputSchema: obj({ language: { type: ['string', 'null'] } }, ['language']),
     prompt: `You determine the PRIMARY spoken language of a talk from its transcript. The user message is the transcript, with timestamps.
 
@@ -475,7 +475,7 @@ role is hors, hook, turn, land or quote. raw is the line exactly as given. text 
   {
     slug: 'jibril-seat',
     name: 'Jibril and Ghunya tagger',
-    description: 'Says which of the 41 Hadith Jibril clauses this talk is teaching, and which Ghunya seat that clause already prints. It hangs by the teaching, not by a shared word. It never invents a page. The tag is kept on the ingest card for the reviewer; it does not by itself change what learners play.',
+    description: 'Says which of the 41 Hadith Jibril clauses this talk is teaching, and which Ghunya seat that clause already prints. It hangs by the teaching, not by a shared word. It never invents a page. The tag is kept on the Bring in card for the reviewer; it does not by itself change what learners play.',
     placeholders: [
       { token: 'HOOK', meaning: 'The appetiser hook.', required: true },
       { token: 'TURN', meaning: 'The appetiser turn.', required: true },
@@ -491,7 +491,7 @@ role is hors, hook, turn, land or quote. raw is the line exactly as given. text 
     inPipeline: true,
     fillsTier: null,
     fillsPoints: null,
-    fills: 'Ingest card: clause number, hang strength, a one-line reason, and a seat only when the clause card prints one.',
+    fills: 'Bring in card: clause number, hang strength, a one-line reason, and a seat only when the clause card prints one.',
     outputSchema: obj(
       {
         clause: intOrNull,
@@ -522,7 +522,7 @@ clause is 1 to 41 or null. hangStrength is strong, medium, stretch or no_clean_h
   {
     slug: 'quran-harvest',
     name: "Qur'an harvest",
-    description: 'Finds the Qur’an the speaker actually quotes, with the timestamp of that line and a reference only when the speaker names one. The rows stay on the ingest card as a draft for a person to read. They are not written into a learner’s own harvest.',
+    description: 'Finds the Qur’an the speaker actually quotes, with the timestamp of that line and a reference only when the speaker names one. The rows stay on the Bring in card as a draft for a person to read. They are not written into a learner’s own harvest.',
     placeholders: [{ token: 'TRANSCRIPT', meaning: 'The talk transcript.', required: true }],
     provider: 'anthropic',
     model: 'claude-sonnet-4-5',
@@ -532,7 +532,7 @@ clause is 1 to 41 or null. hangStrength is strong, medium, stretch or no_clean_h
     inPipeline: true,
     fillsTier: null,
     fillsPoints: null,
-    fills: "Ingest card: Qur'an mentions (the speaker's words, a reference only if they named one, the timestamp, the surrounding line). Not the learner harvest.",
+    fills: "Bring in card: Qur'an mentions (the speaker's words, a reference only if they named one, the timestamp, the surrounding line). Not the learner harvest.",
     outputSchema: obj({ mentions: { type: 'array', items: mentionSchema } }, ['mentions']),
     prompt: `You catalogue Qur'an the speaker quotes in this talk. The user message is the transcript, with timestamps.
 
@@ -548,7 +548,7 @@ reference is "" when the speaker did not name one. context is one or two sentenc
   {
     slug: 'hadith-extraction',
     name: 'Hadith extraction',
-    description: 'Finds hadith the speaker quotes, copied from the transcript, with a collection or grading only when the speaker states it. A Hadith Jibril identification may be noted when the wording is unmistakable. The rows stay on the ingest card. No chain and no page is invented.',
+    description: 'Finds hadith the speaker quotes, copied from the transcript, with a collection or grading only when the speaker states it. A Hadith Jibril identification may be noted when the wording is unmistakable. The rows stay on the Bring in card. No chain and no page is invented.',
     placeholders: [{ token: 'TRANSCRIPT', meaning: 'The talk transcript.', required: true }],
     provider: 'anthropic',
     model: 'claude-sonnet-4-5',
@@ -558,7 +558,7 @@ reference is "" when the speaker did not name one. context is one or two sentenc
     inPipeline: true,
     fillsTier: null,
     fillsPoints: null,
-    fills: 'Ingest card: hadith mentions (the speaker’s words, a reference only if they named a collection, the timestamp, the surrounding line).',
+    fills: 'Bring in card: hadith mentions (the speaker’s words, a reference only if they named a collection, the timestamp, the surrounding line).',
     outputSchema: obj({ mentions: { type: 'array', items: mentionSchema } }, ['mentions']),
     prompt: `You catalogue hadith the speaker quotes in this talk. The user message is the transcript, with timestamps.
 
@@ -614,7 +614,7 @@ Two or three prompts. If the talk supports none, return {"questions": []}. No te
   {
     slug: 'clip-critic',
     name: 'Clip critic',
-    description: 'Scores the hors d’oeuvre and the appetiser against the live rubric. It checks the clip as heard, not the title we attached to it, and it is calibrated to call an ordinary clip a 3. The scores stay on the ingest card. The critic does not rewrite the cut.',
+    description: 'Scores the hors d’oeuvre and the appetiser against the live rubric. It checks the clip as heard, not the title we attached to it, and it is calibrated to call an ordinary clip a 3. The scores stay on the Bring in card. The critic does not rewrite the cut.',
     placeholders: [
       { token: 'RUBRIC', meaning: 'The live rubric text.', required: true },
       { token: 'CLIP', meaning: 'The hors d’oeuvre and the appetiser, with sentence ids.', required: true },
@@ -628,7 +628,7 @@ Two or three prompts. If the talk supports none, return {"questions": []}. No te
     inPipeline: true,
     fillsTier: null,
     fillsPoints: null,
-    fills: 'Ingest card: four scores for the cut already drafted. It does not change the tier.',
+    fills: 'Bring in card: four scores for the cut already drafted. It does not change the tier.',
     outputSchema: obj(
       {
         axes: {

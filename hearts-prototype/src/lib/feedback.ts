@@ -449,7 +449,7 @@ export function feedbackCsv(built: BuiltFeedback) {
 
 export async function feedbackXlsx(built: BuiltFeedback) {
   const book = new ExcelJS.Workbook()
-  book.creator = 'HEARTS'
+  book.creator = 'Hady Core'
   const sheet = book.addWorksheet('Feedback')
   const note = sheet.addRow([
     built.anonymised
@@ -501,7 +501,7 @@ export function feedbackPdf(built: BuiltFeedback, summaries: DigestSummary[] = [
 function coverPage(built: BuiltFeedback, portal: string, from?: string | null, to?: string | null) {
   const ops = paper()
   ops.push(`${TEAL} rg`, '0 520 595 322 re f', `${GOLD} rg`, '0 512 595 8 re f')
-  text(ops, 56, 760, 'HEARTS', 'F2', 12, GOLD)
+  text(ops, 56, 760, 'Hady Core', 'F2', 12, GOLD)
   text(ops, 56, 718, 'Feedback for teachers', 'F2', 28, CREAM)
   for (const [index, line] of wrap(portal, 32).entries()) text(ops, 56, 672 - index * 26, line, 'F2', 20, CREAM)
   text(ops, 56, 460, dateRange(built, from, to), 'F1', 14, INK)

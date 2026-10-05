@@ -1217,7 +1217,7 @@ export const Rituals: CollectionConfig = {
 }
 
 /**
- * HEARTS circle answers: written by staff or drafted by AI, shown in a question's swarm with a light label, and never
+ * Hady Core circle answers: written by staff or drafted by AI, shown in a question's swarm with a light label, and never
  * counted as answers. With no portal they show in every portal that has the question; otherwise in that portal only.
  */
 export const CircleAnswers: CollectionConfig = {

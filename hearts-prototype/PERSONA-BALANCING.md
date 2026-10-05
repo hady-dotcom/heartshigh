@@ -6,7 +6,7 @@ Doc A is not the master. Where the three documents disagree, this note says whic
 
 ## What each document actually contains
 
-- **Doc A** (`A-hadeeth-bandwidth-scales`) is the only place with numeric ranges. Its persona table is not the ten HEARTS scales. The columns are Discipline, Desires, Ego, Anxiety, Trust, Belonging, Gratitude, Faith, Compassion and Self-Control. Anger and Greed are absent. Trust is not a separate HEARTS scale. Anxiety is the dust side of Worry. Discipline and Self-Control both describe the HEARTS discipline scale, so v2 uses their overlap when both are present.
+- **Doc A** (`A-hadeeth-bandwidth-scales`) is the only place with numeric ranges. Its persona table is not the ten Hady Core scales. The columns are Discipline, Desires, Ego, Anxiety, Trust, Belonging, Gratitude, Faith, Compassion and Self-Control. Anger and Greed are absent. Trust is not a separate Hady Core scale. Anxiety is the dust side of Worry. Discipline and Self-Control both describe the Hady Core discipline scale, so v2 uses their overlap when both are present.
 - **Doc B** (`B-overview-personas-short`) and **Doc C** (`C-overview-personas-full`) are portraits: generation, culture, language, gender, and a worked example. They do not give numbers. Doc C also prints the −10 to +10 ladders for the scales. Where a portrait and Doc A’s box disagree about who a person is, the portrait decides the centre and Doc A’s box is tightened so the bands no longer contain each other.
 - **scales-to-jibril.md** chooses the doors. A low scale leans on the remedy door in that note, not on a door picked for the shape of a sentence.
 

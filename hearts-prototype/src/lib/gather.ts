@@ -323,7 +323,7 @@ export function toIcs(input: { uid: string; title: string; startsAt: string; end
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//HEARTS//Gather//EN',
+    'PRODID:-//Hady Core//Gather//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',

@@ -13,7 +13,7 @@ export class JourneyErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('HEARTS clip failed', error, info.componentStack)
+    console.error('Hady Core clip failed', error, info.componentStack)
   }
 
   render() {

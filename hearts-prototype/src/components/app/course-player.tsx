@@ -90,7 +90,7 @@ export function CoursePlayer({
   swarm: Record<number, SwarmItem[]>
   /** The learner opted in to sharing with other learners, so the swarm and its share box are shown. */
   swarmOn?: boolean
-  /** The light label under HEARTS circle answers (master flag circleLabel). */
+  /** The light label under Hady Core circle answers (master flag circleLabel). */
   circleLabel?: string
   serverNow: string
   next: string

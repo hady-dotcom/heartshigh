@@ -1,6 +1,6 @@
 # Gather
 
-Gather is how HEARTS takes a talk off the phone and into the room. A portal admin or an imam plans the meeting. A learner can suggest one. People who are not on HEARTS yet can still say they are coming.
+Gather is how Hady Core takes a talk off the phone and into the room. A portal admin or an imam plans the meeting. A learner can suggest one. People who are not on Hady Core yet can still say they are coming.
 
 The name stays Gather. It is the ordinary word for meeting, and it sits next to the garden and the harvest without sounding like a campaign.
 
