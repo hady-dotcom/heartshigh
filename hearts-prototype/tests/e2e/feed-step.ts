@@ -33,8 +33,8 @@ function boxesOverlap(left: { x: number; y: number; width: number; height: numbe
   return left.x < right.x + right.width && left.x + left.width > right.x && left.y < right.y + right.height && left.y + left.height > right.y
 }
 
-const CHROME_IDS = ['feed-mission', 'swipe-hint', 'lane-chip', 'clip-timer', 'tap-sound', 'top-speaker', 'speaker-link', 'caption', 'learn-more', 'share', 'fave', 'save'] as const
-const REQUIRED_CHROME = ['swipe-hint', 'clip-timer', 'tap-sound', 'learn-more', 'share', 'fave', 'save'] as const
+const CHROME_IDS = ['feed-mission', 'swipe-hint', 'lane-chip', 'clip-timer', 'level-steps', 'top-speaker', 'speaker-link', 'caption', 'learn-more', 'share', 'fave', 'save'] as const
+const REQUIRED_CHROME = ['swipe-hint', 'clip-timer', 'level-steps', 'learn-more', 'share', 'fave', 'save'] as const
 
 /** elementFromPoint at each chrome centre, plus every pair of bounding boxes. */
 export async function chromeCentresClear(page: Page, extraIds: string[] = []) {
@@ -86,14 +86,13 @@ export async function chromeCentresClear(page: Page, extraIds: string[] = []) {
   return foundIds
 }
 
-/** Header, lane chip, timer and Tap for sound must not share pixels, in either layout. */
+/** Header, lane chip and timer must not share pixels, in either layout. */
 export async function chromeBoxesClear(page: Page) {
   const named = [
     ['header', '[data-testid="top-speaker"]'],
     ['header', '[data-testid="speaker-link"]'],
     ['chip', '[data-testid="lane-chip"]'],
     ['timer', '[data-testid="clip-timer"]'],
-    ['sound', '[data-testid="tap-sound"]'],
   ] as const
   const found: { name: string; box: { x: number; y: number; width: number; height: number } }[] = []
   const seen = new Set<string>()

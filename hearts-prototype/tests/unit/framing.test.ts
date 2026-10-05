@@ -175,6 +175,8 @@ test('F text is the timed transcript now, never a talk title, and nothing in a g
     assert.equal(sameSpokenText(line.text, title), false)
   }
   assert.equal(spokenLine(sentences, 15.9, { from: 16, to: 24 }), null)
+  assert.equal(spokenLine([{ text: title, s: 16, e: 20, words: [] }], 17, { title, titles: [title, 'The series'] }), null)
+  assert.equal(spokenLine([{ text: 'A line he actually says.', s: 16, e: 20, words: [] }], 17, { title })?.text, 'A line he actually says.')
 })
 
 test('spoken words ignore the sentence that ended at the clip in-point', () => {

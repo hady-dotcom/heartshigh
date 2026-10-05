@@ -35,6 +35,22 @@ export function appendUnseenItems<T extends Pick<NavItem, 'cutId' | 'card' | 'id
   return [...existing, ...incoming.filter((row) => !have.has(itemKey(row)))]
 }
 
+/**
+ * Real talks from the catalogue that this feed has not loaded yet.
+ * A routed batch is only a handful of slots; the rest of the library stays available.
+ */
+export function catalogueRemainder<T extends Pick<NavItem, 'cutId' | 'card'>>(loaded: T[], catalogue: T[]): T[] {
+  const have = new Set(loaded.map((row) => row.cutId))
+  const out: T[] = []
+  const added = new Set<number>()
+  for (const row of catalogue) {
+    if (isInterstitial(row) || have.has(row.cutId) || added.has(row.cutId)) continue
+    added.add(row.cutId)
+    out.push(row)
+  }
+  return out
+}
+
 function ring(length: number, from: number, step: 1 | -1) {
   return Array.from({ length: Math.max(0, length - 1) }, (_, offset) => (((from + step * (offset + 1)) % length) + length) % length)
 }
@@ -73,8 +89,9 @@ export function swipeTarget(list: NavItem[], index: number, level: FeedLevel, sw
   }
   const talks = ring(list.length, index, 1).filter((at) => list[at].cutId !== item.cutId && !isInterstitial(list[at]))
   const unused = talks.filter((at) => unseenCard(list, at, level, seen))
-  if (swipe === 'topic') return unused[0] ?? null
-  if (swipe === 'speaker') return unused.find((at) => list[at].speaker === item.speaker) ?? null
+  if (swipe === 'topic') return unused.find((at) => list[at].lane === item.lane) ?? unused[0] ?? null
+  // Same speaker first. If that person has no further talk, keep going through the rest of the real catalogue.
+  if (swipe === 'speaker') return unused.find((at) => list[at].speaker === item.speaker) ?? unused[0] ?? null
   return unused.find((at) => list[at].lane !== item.lane) ?? unused[0] ?? null
 }
 

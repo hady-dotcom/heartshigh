@@ -5,6 +5,7 @@
   width: min(430px, 100%); margin: 0 auto; overflow: hidden;
   background: var(--dusk-0); color: #fff; touch-action: manipulation; user-select: none;
 }
+.journey.phase-feed { touch-action: none; overscroll-behavior: none; }
 .journey a, .journey img { -webkit-user-drag: none; }
 
 /* Sky: eight layers from dusk to first light, lit one by one as the scenes go by. */
@@ -105,8 +106,9 @@
 .j-slot { position: absolute; inset: 0; overflow: hidden; }
 .yt-host { position: absolute; inset: 0; }
 .yt-host.off { left: -200vw; right: auto; width: 100%; }
-/* The film is cropped to fill the phone; the extra 64px above and below keep YouTube's title and control bars off screen. */
-.yt-host iframe { position: absolute; top: -64px; left: 50%; height: calc(100% + 128px); width: max(100%, calc((100dvh + 128px) * 16 / 9)); transform: translateX(-50%); border: 0; }
+/* The film is cropped to fill the phone; the extra 88px above and below keep YouTube's title and control bars off screen. */
+.yt-host iframe { position: absolute; top: -88px; left: 50%; height: calc(100% + 176px); width: max(100%, calc((100dvh + 176px) * 16 / 9)); transform: translateX(-50%); border: 0; }
+.yt-title-mask { position: absolute; left: 0; right: 0; top: 0; height: 56px; z-index: 2; pointer-events: none; background: linear-gradient(#000 0 70%, transparent); }
 .yt-host iframe, .overlay .yt-host iframe, .strict .yt-host iframe { pointer-events: none; }
 .journey[data-playing='yes'] .j-poster-play,
 .journey[data-playing='yes'] video::-webkit-media-controls,
@@ -166,7 +168,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 @keyframes shimmer { to { background-position: -200% 0; } }
 .j-sound { position: static; transform: none; background: rgba(0, 0, 0, 0.6); color: #fff; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; }
 .j-speaker { display: flex; align-items: center; gap: 10px; }
-/* Speaker sits under the chips, timer and Tap for sound, never over them. */
+/* Speaker sits under the chips and the timer, never over them. */
 .j-top-speaker { position: absolute; top: calc(136px + var(--safe-top)); left: 16px; right: 16px; pointer-events: auto; z-index: 5; }
 .strict .j-top-speaker,
 .journey[data-mode='appetiser'] .j-top-speaker { top: calc(88px + var(--safe-top)); }
@@ -247,7 +249,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 
 /* Strict layout: the player keeps its own 16:9 band and nothing sits over it. */
 .strict .j-slot { top: calc(48px + var(--safe-top)); bottom: auto; height: calc(min(430px, 100vw) * 9 / 16); }
-.strict .yt-host iframe { top: 0; width: 100%; height: 100%; left: 0; transform: none; }
+.strict .yt-host iframe { top: -48px; width: 100%; height: calc(100% + 72px); left: 0; transform: none; }
 .strict .j-chrome .caption { top: calc(64px + var(--safe-top) + min(430px, 100vw) * 9 / 16); font-size: 26px; }
 .strict .j-hairline-row { top: calc(20px + var(--safe-top)); }
 .strict[data-words-in-picture='yes'] .j-slot { top: calc(142px + var(--safe-top)); }
@@ -322,28 +324,54 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
   cursor: pointer;
 }
-.j-levels {
-  position: static;
+.j-level-choices {
+  position: absolute;
+  left: 16px;
+  /* Lower-left quarter of the full-bleed player, above the speaker row so the buttons stay readable. */
+  bottom: calc(272px + var(--safe-bottom));
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: min(46vw, 188px);
+  pointer-events: auto;
+}
+.j-level-choices button {
+  appearance: none;
+  border: 1px solid rgba(241, 213, 138, 0.85);
+  background: rgba(14, 42, 43, 0.92);
+  color: #f6eedc;
+  border-radius: 999px;
+  padding: 10px 12px;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.2;
+  text-align: center;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+.j-level-choices button.on {
+  background: #d4a84b;
+  color: #1a1408;
+  border-color: #d4a84b;
+}
+.journey.phase-feed.overlay:not([data-words-in-picture='yes']) .j-chrome .caption { left: calc(16px + min(46vw, 188px) + 12px); }
+.journey[data-mode='appetiser']:not(.strict):not([data-words-in-picture='yes']) .j-level-choices {
+  position: relative;
   left: auto;
   right: auto;
+  top: auto;
   bottom: auto;
-  z-index: auto;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
-  margin: 0;
-  padding: 0 0 8px;
-  border-bottom: 1px solid rgba(246, 238, 220, 0.28);
-  color: #f6eedc;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.3;
-  pointer-events: none;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  align-self: flex-start;
 }
-.j-levels .on { color: #fff; }
-.j-levels i { font-style: normal; opacity: 0.7; }
+.strict .j-level-choices {
+  top: calc(48px + var(--safe-top) + min(430px, 100vw) * 9 / 16 - 140px);
+  bottom: auto;
+}
+.journey[data-words-in-picture='yes'] .j-level-choices {
+  top: calc(190px + var(--safe-top) + min(430px, 100vw) * 9 / 16 - 140px);
+  bottom: auto;
+}
 .j-credits .j-speaker { margin-top: 0; }
 .j-credits .pill.gold.block {
   display: -webkit-box;
@@ -401,4 +429,3 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-coach-card li { font-size: 14px; line-height: 1.35; }
 .j-coach-card b { display: inline; margin-right: 6px; color: #f1d58a; }
 .j-coach-card p { margin: 0; font-size: 13px; color: rgba(246, 238, 220, 0.78); }
-.journey[data-mode='appetiser'] .j-levels { position: static; margin: 0 0 4px; }

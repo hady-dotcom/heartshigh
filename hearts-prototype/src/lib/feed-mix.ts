@@ -1,4 +1,5 @@
 import { CATALOGUE, backgroundSrc, pickBackground, type Background } from '@/lib/backgrounds'
+import { appendUnseenItems, catalogueRemainder } from '@/lib/feed-nav'
 import { pickScene } from '@/lib/scenes'
 import { beatLine } from '@/lib/sentences'
 import type { FeedItem, SlideStyle } from '@/server/learner'
@@ -21,6 +22,18 @@ export function clipsFromRoute(
   }
   if (mapped.length) return mapped
   return Object.values(clips)
+}
+
+/**
+ * The routed batch is only the opening handful. The session keeps that order,
+ * then every other real talk already in the catalogue. There is no length cap.
+ */
+export function sessionPlaylist(routed: FeedItem[], catalogue: FeedItem[] | Record<string, FeedItem>, visit = 0, backgroundsBaseUrl: string | null = null): FeedItem[] {
+  const library = Array.isArray(catalogue) ? catalogue : Object.values(catalogue)
+  const front = mixFeed(routed, visit, backgroundsBaseUrl)
+  const more = catalogueRemainder(front, library)
+  if (!more.length) return front
+  return appendUnseenItems(front, mixFeed(more, visit, backgroundsBaseUrl))
 }
 
 type CardBeat = NonNullable<FeedItem['beats']>[number]

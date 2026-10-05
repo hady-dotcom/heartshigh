@@ -71,14 +71,18 @@ test('phone feed proof: no repeats, taqwa, caption bar, advancing mute log', asy
   await captionIsSpoken(page, openingEarly.clips)
   await shot('01-levels-above-speaker', 'Level steps sit above the speaker. Caption is the timed line, not the talk title.')
 
-  if (await page.getByTestId('tap-sound').count()) await page.getByTestId('tap-sound').first().click()
-  const mutedBefore = (await snap(page))[0]
-  const firstTime = mutedBefore?.currentTime ?? 0
+  await expect(page.getByTestId('tap-to-play')).toHaveCount(0)
+  await expect(page.getByTestId('tap-sound')).toHaveCount(0)
+  const before = (await snap(page))[0]
+  const firstTime = before?.currentTime ?? 0
   await page.waitForTimeout(1100)
   const laterSnap = (await snap(page))[0]
   const laterTime = laterSnap?.currentTime ?? 0
   expect(laterTime, 'the fake player must advance while playing').toBeGreaterThan(firstTime + 0.4)
-  expect(laterSnap?.muted, 'sound stays off until Tap for sound, then on').toBe(false)
+  const layer = (await page.getByTestId('gesture-layer').boundingBox())!
+  await page.mouse.click(layer.x + layer.width * 0.62, layer.y + layer.height * 0.28)
+  await expect.poll(async () => (await snap(page)).find((row) => !row.hidden)?.muted, 'a tap turns sound on, without a Tap to play label').toBe(false)
+  await expect(page.getByTestId('tap-to-play')).toHaveCount(0)
   await shot('02-sound-advancing', `Sound on, player time moving ${firstTime.toFixed(2)} -> ${laterTime.toFixed(2)}.`)
 
   const seenTalks: string[] = []
