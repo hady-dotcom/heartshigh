@@ -2071,7 +2071,7 @@ function planExtracts(working: Working, rows: InputRow[]) {
     if (draft.turn) data.turn = draft.turn
     if (draft.land) data.land = draft.land
     if (draft.parent) data.parent = draft.parent
-    data.source = 'master sheet'
+    if (!existing) data.source = 'master sheet'
     const lessonRef: Ref = lesson ? { id: lesson.id } : { temp: pending || talkKey }
     if (implied && !existing) {
       working.unchanged += 1
