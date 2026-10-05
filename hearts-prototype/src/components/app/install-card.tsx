@@ -90,6 +90,10 @@ export function InstallCard({ forced = false, onDismiss, sheet = false }: { forc
       window.__heartsBeforeInstall = null
       if (choice?.outcome === 'accepted') {
         try { localStorage.setItem(INSTALL_INSTALLED_KEY, '1') } catch { /* private mode */ }
+        try {
+          const { track } = await import('@/lib/experiment-track')
+          track('install_card_accept', { kind: state.kind })
+        } catch { /* ignore */ }
         setState({ ...state, installed: true, prompt: false })
         return
       }

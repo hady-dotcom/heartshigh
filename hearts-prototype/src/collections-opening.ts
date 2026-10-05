@@ -437,6 +437,17 @@ export const MasterFlags: GlobalConfig = {
       max: 180,
       admin: { description: "Longest hors d'oeuvre the desk will save, in seconds. 15 to 30 is the usual length; longer is only a warning. Longer than this is refused." },
     },
+    {
+      name: 'experimentsOff',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: { description: 'Kill switch. On, every running experiment pauses and learners see the usual defaults.' },
+    },
+    {
+      name: 'experimentDefaults',
+      type: 'json',
+      admin: { description: 'Winning payloads promoted from Experiments, keyed by slot.' },
+    },
   ],
 }
 

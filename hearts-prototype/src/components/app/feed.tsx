@@ -311,13 +311,13 @@ export function Feed({ items, base, startLane }: { items: FeedItem[]; base: stri
   )
 }
 
-export function Slide({ item, style, onMore }: { item: FeedItem; style: SlideStyle; onMore: () => void }) {
+export function Slide({ item, style, onMore, ctaLabel = 'Learn more' }: { item: FeedItem; style: SlideStyle; onMore: () => void; ctaLabel?: string }) {
   const hook = item.hookTidy || item.hook
   const turn = item.turnTidy || item.turn
   const land = item.landTidy || item.land
   const cta = (cls: string) => (
     <button type="button" className={`pill ${cls}`} onClick={onMore} data-testid="learn-more" data-parent={item.parents?.hors.parentId || ''} data-parent-level="appetiser">
-      Learn more <ArrowIcon />
+      {ctaLabel} <ArrowIcon />
     </button>
   )
   const lane = item.laneLabel

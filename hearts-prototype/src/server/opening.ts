@@ -362,6 +362,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     courseId: course.id,
     courseTitle: String(course.title || ''),
     lessonId: lesson.id,
+    durationSeconds: Number((lesson as { durationSeconds?: number }).durationSeconds || 0),
     lessonTitle: partTitle(lesson, String(course.title || '')),
     style: slide ? STYLES[index % STYLES.length] : null,
     typography: typographyFor(data, lesson, data.tiers.find((row) => idOf(row.lesson) === lesson.id)),

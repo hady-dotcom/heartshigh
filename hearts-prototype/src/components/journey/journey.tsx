@@ -21,6 +21,9 @@ import { HeartIcon, PlayIcon, SaveIcon, ShareIcon } from '../icons'
 import { HelpScreen, Opener, SceneCard } from './scenes'
 import { TeachingCard } from './teaching-card'
 import { KeepPlaceSheet, type SheetReason } from './sheet'
+import { track } from '@/lib/experiment-track'
+import { formatSlotLabel } from '@/lib/experiment-slots'
+import { useVariant, type VariantMap } from '@/lib/use-variant'
 
 type Phase = 'opener' | 'scene' | 'help' | 'handoff' | 'feed'
 type Mode = 'hors' | 'appetiser'
@@ -49,6 +52,7 @@ export type JourneyProps = {
   play?: 'appetiser' | null
   /** After placing, the quiz returns to the first-talk screen instead of the feed. */
   afterPlacing?: boolean
+  variants?: VariantMap
 }
 
 const TAB_DELAY = 200
@@ -108,6 +112,8 @@ function useStoredSet(name: string) {
 }
 
 export function Journey(props: JourneyProps) {
+  const clipCta = useVariant('feed-cta-label', props.variants?.['feed-cta-label'])
+  const talkCta = useVariant('full-talk-cta-label', props.variants?.['full-talk-cta-label'])
   const { base, opening, flags } = props
   const router = useRouter()
   const overlay = flags.chromeOverPlayer
@@ -879,7 +885,16 @@ export function Journey(props: JourneyProps) {
     form.set('start', String(Math.floor(piece.start)))
     form.set('end', String(Math.ceil(piece.end)))
     form.set('parent', parent)
-    void fetch('/api/hearts', { method: 'POST', headers: { accept: 'application/json' }, body: form }).catch(() => undefined)
+    void fetch('/api/hearts', { method: 'POST', headers: { accept: 'application/json' }, body: form, keepalive: true }).catch(() => undefined)
+    const seconds = Math.max(0, Math.round(piece.end - piece.start))
+    if (event === 'linger' && level === 'hors') {
+      track('clip_watch_seconds', { seconds, lesson: current.lessonId })
+      track('clip_watch_completion', { lesson: current.lessonId })
+    }
+    if (event === 'linger' && level === 'appetiser') {
+      track('clip_watch_seconds', { seconds, lesson: current.lessonId, level: 'appetiser' })
+      track('appetiser_complete', { lesson: current.lessonId })
+    }
   }, [signedIn])
 
   const leaveSignal = useCallback(() => {
@@ -1100,6 +1115,7 @@ export function Journey(props: JourneyProps) {
       // The tap is the gesture that turns voice on. The appetiser player is built after this and reads the same flag.
       soundOn(hosts.current[visibleRef.current].playerId || '')
       noteBrowse('learn-more')
+      track('clip_cta_tap', { level: 'hors', lesson: current.lessonId })
       const url = new URL(window.location.href)
       url.searchParams.set('clip', String(step.cutId))
       url.searchParams.set('play', 'appetiser')
@@ -1111,6 +1127,8 @@ export function Journey(props: JourneyProps) {
     if (needsAccount('save')) return
     signal('start-course')
     noteBrowse('learn-more')
+    track('clip_cta_tap', { level: 'appetiser', lesson: current.lessonId })
+    track('full_talk_start', { lesson: current.lessonId })
     haptic(10)
     stopVisible()
     const node = event?.currentTarget
@@ -1439,11 +1457,11 @@ export function Journey(props: JourneyProps) {
         {mode === 'hors' ? (
           <>
             {wordsInPicture && !cardKind ? null : speakerRow}
-            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" onClick={() => void stepUp()}>Learn more</button>
+            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" onClick={() => void stepUp()}>{clipCta.label}</button>
           </>
         ) : (
           <>
-            <a className="pill gold block" href={course} onClick={(event) => void stepUp(event)} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk">Learn more</a>
+            <a className="pill gold block" href={course} onClick={(event) => void stepUp(event)} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk">{formatSlotLabel(talkCta.label, Math.max(1, Math.round((item.durationSeconds || 0) / 60) || 3))}</a>
             {wordsInPicture && videoAppetiser ? null : (
               <div className="speaker-card">
                 <Avatar name={item.speaker} portrait={item.portrait} />
@@ -1538,12 +1556,12 @@ export function Journey(props: JourneyProps) {
         </div>
         {slide && item ? (
           <div className="j-slide" data-testid="gesture-layer" {...swipe}>
-            <Slide item={item} style={slide} onMore={() => void stepUp()} />
+            <Slide item={item} style={slide} onMore={() => void stepUp()} ctaLabel={clipCta.label} />
           </div>
         ) : null}
         {scenic && item?.scene ? (
           <div className="j-slide" data-testid="gesture-layer" {...swipe}>
-            <TeachingCard key={item.id} scene={item.scene} speaker={item.speaker} course={item.courseTitle} lane={item.laneLabel} onClip={() => void stepUp()} />
+            <TeachingCard key={item.id} scene={item.scene} speaker={item.speaker} course={item.courseTitle} lane={item.laneLabel} onClip={() => void stepUp()} cta={clipCta.label} />
           </div>
         ) : null}
         <div className="j-chrome" data-swipe={overlay && !feedCard ? undefined : ''} {...(overlay && !feedCard ? {} : swipe)}>

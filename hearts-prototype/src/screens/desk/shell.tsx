@@ -4,7 +4,7 @@ import type { Payload } from 'payload'
 import { BrandMark } from '@/components/brand'
 import { DeskFade } from '@/components/app/route-fade'
 import { Flash, Hidden } from '@/components/app/shell'
-import { BellIcon, BookIcon, HeartIcon, CalendarIcon, CogIcon, GlobeIcon, HomeIcon, KeyIcon, LibraryIcon, MicIcon, MoonIcon, PeopleIcon, QuestionIcon } from '@/components/icons'
+import { BellIcon, BeakerIcon, BookIcon, HeartIcon, CalendarIcon, CogIcon, GlobeIcon, HomeIcon, KeyIcon, LibraryIcon, MicIcon, MoonIcon, PeopleIcon, QuestionIcon } from '@/components/icons'
 import type { SessionUser } from '@/server/context'
 import { rows, shortDate, str } from '../common'
 
@@ -34,6 +34,7 @@ export function portalNav(base: string, user: SessionUser): { group: string; ite
         { key: 'opening', label: 'Opening', href: `${base}/admin/opening`, icon: <HeartIcon /> },
         { key: 'circle', label: 'Circle answers', href: `${base}/admin/circle`, icon: <PeopleIcon /> },
         { key: 'ai', label: 'AI steps', href: `${base}/admin/ai`, icon: <CogIcon /> },
+        { key: 'experiments', label: 'Experiments', href: `${base}/admin/experiments`, icon: <BeakerIcon /> },
       ],
     },
     { group: 'People', items: teach },
@@ -57,6 +58,7 @@ export function masterNav(): { group: string; items: NavItem[] }[] {
         { key: 'questions', label: 'Placing questions', href: '/master/questions', icon: <QuestionIcon /> },
         { key: 'circle', label: 'Circle answers', href: '/master/circle', icon: <PeopleIcon /> },
         { key: 'live', label: 'Live', href: '/master/live', icon: <MicIcon /> },
+        { key: 'experiments', label: 'Experiments', href: '/master/experiments', icon: <BeakerIcon /> },
       ],
     },
     {
@@ -105,7 +107,7 @@ export async function DeskFrame({
   brandHref: string
   extraLinks?: { label: string; href: string }[]
   tools?: ReactNode
-  query: { error?: string; notice?: string }
+  query: { error?: string | string[]; notice?: string | string[] }
   testId?: string
   evening?: boolean
   /** A portal logo, when one has been set. Otherwise the HEARTS arch. */

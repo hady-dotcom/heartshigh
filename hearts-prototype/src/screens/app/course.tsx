@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { cookies } from 'next/headers'
 import { DoorChips } from '@/components/app/doors'
 import { notFound, redirect } from 'next/navigation'
 import { CoursePlayer, type PointView, type SwarmItem } from '@/components/app/course-player'
@@ -146,6 +147,12 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
 
   const visits = await rows(payload, 'lesson-visits', { and: [{ user: { equals: user.id } }, { lesson: { equals: lessonId } }] }, { limit: 1, sort: 'createdAt' })
   if (!visits.length) await payload.create({ collection: 'lesson-visits', overrideAccess: true, data: { user: user.id, lesson: lessonId, portal: portal.id } })
+  if (query.from === 'lanes') {
+    const deviceId = (await cookies()).get('hearts_device')?.value
+    void import('@/server/experiments').then(({ recordLearnerEvent }) =>
+      recordLearnerEvent(payload, { user, deviceId, event: 'lanes_course_start', props: { course: courseId, from: 'lanes' }, portalId: portal.id }),
+    )
+  }
   const seenAt = visits[0]?.createdAt ? new Date(visits[0].createdAt) : now()
 
   const lessonIds = lessons.map((row) => row.id)

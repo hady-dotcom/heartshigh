@@ -33,6 +33,8 @@ export type FeedItem = {
   courseId: number
   courseTitle: string
   lessonId: number
+  /** Whole-talk length, used to fill {n} in a full-talk CTA. */
+  durationSeconds?: number
   /** `lines` are the captions with when each is said, so the caption follows the speaker. */
   hors: { start: number; end: number; quote: string; lines?: TimedCaption[] }
   appetiser: { start: number; end: number; quote: string; lines?: TimedCaption[]; spans?: { role?: 'hook' | 'turn' | 'land'; start: number; end: number }[] }

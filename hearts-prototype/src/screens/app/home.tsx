@@ -200,7 +200,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
                 <DoorChips doors={course.doors} />
               </span>
               {course.open ? (
-                <Link className={`start ${START[index % START.length]}`} href={href} data-testid="lesson-link">Start</Link>
+                <Link className={`start ${START[index % START.length]}`} href={`${href}?from=lanes`} data-testid="lesson-link">Start</Link>
               ) : (
                 <Link className="start soft" href={href} data-testid="peek">Peek now</Link>
               )}

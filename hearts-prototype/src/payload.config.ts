@@ -9,6 +9,7 @@ import { s3Storage } from '@payloadcms/storage-s3'
 import { buildConfig } from 'payload'
 import { aiCollections } from './collections-ai'
 import { collections } from './collections'
+import { experimentCollections } from './collections-experiments'
 import { gatherCollections } from './collections-gather'
 import { liveCollections } from './collections-live'
 import { sheetCollections } from './collections-sheet'
@@ -42,7 +43,7 @@ export default buildConfig({
       header: ['/components/viewas-admin-banner#ViewAsAdminBanner'],
     },
   },
-  collections: [...collections, ...aiCollections, ...sheetCollections, ...gatherCollections, ...liveCollections].map((collection) => ({
+  collections: [...collections, ...aiCollections, ...sheetCollections, ...experimentCollections, ...gatherCollections, ...liveCollections].map((collection) => ({
     ...collection,
     hooks: { ...collection.hooks, beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never] },
   })),

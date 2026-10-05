@@ -1,5 +1,7 @@
+import { cookies } from 'next/headers'
 import type { Payload } from 'payload'
 import { Journey } from '@/components/journey/journey'
+import { resolveSlots, subjectFrom } from '@/server/experiments'
 import { OPENER } from '@/lib/opening-data'
 import { idOf } from '@/lib/ids'
 import type { PortalDoc, SessionUser } from '@/server/context'
@@ -33,7 +35,16 @@ async function mainsShelf(payload: Payload) {
 
 /** The one continuous learner surface: opener, six scenes, the door, and the feed (spec 7 and 7A). */
 export async function JourneyScreen({ payload, portal, user, base, initial, viewAs, query = {} }: { payload: Payload; portal: PortalDoc; user: SessionUser | null; base: string; initial: 'opener' | 'help' | 'feed'; viewAs: boolean; query?: Record<string, string | undefined> }) {
-  const [opening, flags, mains, unread, doors, live] = await Promise.all([loadOpening(payload, portal, user), masterFlags(payload), mainsShelf(payload), user ? unreadCount(payload, user) : Promise.resolve(0), loadDoors(payload), user ? homeLive(payload, portal, user) : Promise.resolve({ live: null, upcoming: [], pollMs: 12_000 })])
+  const deviceId = (await cookies()).get('hearts_device')?.value
+  const [opening, flags, mains, unread, doors, live, variants] = await Promise.all([
+    loadOpening(payload, portal, user),
+    masterFlags(payload),
+    mainsShelf(payload),
+    user ? unreadCount(payload, user) : Promise.resolve(0),
+    loadDoors(payload),
+    user ? homeLive(payload, portal, user) : Promise.resolve({ live: null, upcoming: [], pollMs: 12_000 }),
+    resolveSlots(payload, ['feed-cta-label', 'full-talk-cta-label', 'wide-video-framing'], subjectFrom(user, deviceId, portal.id)),
+  ])
   return (
     <div className="app-stage dusk">
       {initial === 'feed' && user ? <FeedLiveBanner portal={String(portal.slug)} base={base} session={live.live} /> : null}
@@ -56,6 +67,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
           clip={Number(query.clip) || null}
           play={query.play === 'appetiser' ? 'appetiser' : null}
           afterPlacing={query.after === 'placing'}
+          variants={variants}
         />
       </main>
     </div>
