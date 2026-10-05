@@ -281,6 +281,22 @@ test('kinetic extract lines drop a repeated word and a false start next to its r
   assert.equal(kineticExtractLine('You You ever put in a dozen'), 'You ever put in a dozen')
   assert.equal(kineticExtractLine('A clear line.'), 'A clear line.')
   assert.equal(said, "You're not You're not the uncle doing parking duty.")
+  const item = {
+    id: 'cut-1',
+    lessonId: 1,
+    extractId: null as number | null,
+    extracts: [extract({ id: 11, kind: 'hors', start: 10, end: 30, quote: said, words: [{ at: 10, text: said }] })],
+    hors: { start: 10, end: 30, quote: said, lines: [{ at: 10, text: said }] },
+    appetiser: { start: 0, end: 180, quote: 'Land' },
+    hook: said,
+    turn: 'Turn',
+    land: 'Land',
+    parents: extractParents(extract({ id: 11, kind: 'hors', start: 10, end: 30 }), null, 1),
+  }
+  const shown = expandTalkExtracts(item)[0]
+  assert.equal(shown.hors.quote, "You're not the uncle doing parking duty.")
+  assert.equal(shown.hors.lines?.[0]?.text, "You're not the uncle doing parking duty.")
+  assert.equal(item.extracts?.[0]?.quote, said)
 })
 
 test('suggested hors stay off the learner feed until they are approved', () => {

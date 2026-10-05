@@ -24,12 +24,19 @@ test('admin timeline nests hors under their appetiser, and Learn more opens that
   const master = await playwrightRequest.newContext({ baseURL: E2E_BASE })
   expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
 
-  const lessons = ((await json(master, '/api/lessons?limit=80&depth=0')).docs || []) as { id: number; course: number; durationSeconds?: number; title?: string }[]
-  const extracts = ((await json(master, '/api/talk-extracts?limit=200&depth=0')).docs || []) as { id: number; lesson: number; kind: string; start: number; end: number }[]
+  const lessons = ((await json(master, '/api/lessons?limit=80&depth=0&sort=id')).docs || []) as { id: number; course: number; durationSeconds?: number; title?: string }[]
+  const extracts = ((await json(master, '/api/talk-extracts?limit=500&depth=0')).docs || []) as { id: number; lesson: number; kind: string; start: number; end: number }[]
   const withPair = lessons.find((lesson) => {
-    const own = extracts.filter((row) => row.lesson === lesson.id)
-    const appetiser = own.find((row) => row.kind === 'appetiser')
-    return Boolean(appetiser && own.some((row) => row.kind === 'hors') && Number(lesson.durationSeconds || 0) >= 180 && appetiser.end < Number(lesson.durationSeconds) - 30)
+    const own = extracts.filter((row) => Number(row.lesson) === Number(lesson.id))
+    const appetisers = own.filter((row) => row.kind === 'appetiser')
+    const appetiser = appetisers[0]
+    return Boolean(
+      appetiser &&
+      appetisers.length === 1 &&
+      own.some((row) => row.kind === 'hors') &&
+      Number(lesson.durationSeconds || 0) >= 180 &&
+      appetiser.end + 90 < Number(lesson.durationSeconds),
+    )
   })
   expect(withPair, 'a seeded talk with a copied hors and appetiser').toBeTruthy()
   const lesson = withPair!

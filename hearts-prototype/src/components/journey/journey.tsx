@@ -522,7 +522,7 @@ export function Journey(props: JourneyProps) {
     refilling.current = true
     try {
       const data = await fetchFeed(heartRef.current)
-      adopt(presentClips(mixFeed(data.clips, heartRef.current?.served.length || 0, backgroundsBase)), data.items, data.spinePointer, false)
+      adopt(mixFeed(presentClips(data.clips), heartRef.current?.served.length || 0, backgroundsBase), data.items, data.spinePointer, false)
     } catch {
       // Offline: carry on with what is here.
     } finally {
@@ -555,7 +555,7 @@ export function Journey(props: JourneyProps) {
           clips = [{ ...asked, laneKey: null }, ...clips.filter((clip) => clip.cutId !== asked.cutId)]
           if (props.play === 'appetiser') firstMode = 'appetiser'
         }
-        clips = presentClips(mixFeed(clips, state.served.length, backgroundsBase))
+        clips = mixFeed(presentClips(clips), state.served.length, backgroundsBase)
         adopt(clips, data.items, data.spinePointer, true)
         await showItem(0, firstMode)
         if (signedIn) setTabs(true)

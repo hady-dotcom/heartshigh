@@ -432,7 +432,12 @@ export function expandTalkExtracts<T extends ExtractableItem>(item: T, showUnche
       id: row.id != null ? `${item.id}-ex-${row.id}` : item.id,
       extractId: row.id ?? null,
       parentExtractId: parent?.id ?? null,
-      hors: { start: row.start, end: row.end, quote: row.quote, lines: lines.length ? lines : undefined },
+      hors: {
+        start: row.start,
+        end: row.end,
+        quote: kineticExtractLine(row.quote),
+        lines: lines.length ? lines.map((line) => ({ ...line, text: kineticExtractLine(line.text) })) : undefined,
+      },
       appetiser: parent
         ? {
             start: parent.start,
