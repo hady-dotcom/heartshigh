@@ -14,7 +14,7 @@ async function scan(page: import('@playwright/test').Page, name: string) {
   return { results, serious }
 }
 
-test('X01 axe-core on main learner and desk pages', async ({ page, browser }) => {
+test('X01 axe-core on main learner and desk pages', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByTestId('skip-link')).toBeAttached()
   const door = await scan(page, 'after-door')
@@ -29,13 +29,11 @@ test('X01 axe-core on main learner and desk pages', async ({ page, browser }) =>
   const me = await scan(page, 'after-me')
   expect(me.serious, me.serious.map((row) => row.id).join(', ')).toEqual([])
 
-  const desk = await browser.newPage()
-  await desk.setViewportSize({ width: 1440, height: 900 })
-  await signIn(desk, 'leeds-admin@hearts.test', 'portal-admin', '/p/leeds/admin')
-  await expect(desk.getByTestId('admin-overview').or(desk.locator('.desk'))).toBeVisible()
-  const overview = await scan(desk, 'after-desk')
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await signIn(page, 'leeds-admin@hearts.test', 'portal-admin', '/p/leeds/admin')
+  await expect(page.getByTestId('admin-overview').or(page.locator('.desk')).first()).toBeVisible()
+  const overview = await scan(page, 'after-desk')
   expect(overview.serious, overview.serious.map((row) => row.id).join(', ')).toEqual([])
-  await desk.close()
 })
 
 test('H01 help mark is on learner and desk frames', async ({ page }) => {
