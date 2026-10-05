@@ -462,7 +462,7 @@ function extractFields(data: Loaded, lessonId: number, fallback: { hors: PieceRe
   const parent = first ? (appetisers.find((row) => row.id === first.parent) || parentAppetiserFor(first, appetisers)) : appetisers[0] || null
   return {
     extracts: linked,
-    extractId: null as number | null,
+    extractId: first?.id ?? null,
     parentExtractId: parent?.id ?? null,
     parents: first ? extractParents(first, parent, lessonId) : fallback,
   }

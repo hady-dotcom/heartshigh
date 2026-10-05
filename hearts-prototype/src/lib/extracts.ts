@@ -336,6 +336,56 @@ export function verbatimProblem(quote: string, source: string) {
   return saidInTalk(quote, source) ? null : "The extract has to be the speaker's words, word for word from the transcript."
 }
 
+function foldSpokenWord(text: string) {
+  return text.toLowerCase().replace(/[’‘]/g, "'").replace(/[^a-z0-9']/g, '')
+}
+
+/**
+ * Kinetic display of an extract line. Drop a word said twice in a row, and a false start
+ * that sits next to the restarted phrase. The transcript and the stored quote stay as said.
+ */
+export function kineticExtractWords<T extends { text: string }>(words: T[]): T[] {
+  if (!words.length) return words
+  const deduped: T[] = []
+  for (const word of words) {
+    const prev = deduped[deduped.length - 1]
+    const a = prev ? foldSpokenWord(prev.text) : ''
+    const b = foldSpokenWord(word.text)
+    if (prev && a && a === b) {
+      deduped[deduped.length - 1] = word
+      continue
+    }
+    deduped.push(word)
+  }
+  const out: T[] = []
+  let index = 0
+  while (index < deduped.length) {
+    let skip = 0
+    const longest = Math.min(4, Math.floor((deduped.length - index) / 2))
+    for (let size = longest; size >= 2; size--) {
+      const left = deduped.slice(index, index + size).map((row) => foldSpokenWord(row.text)).join(' ')
+      const right = deduped.slice(index + size, index + 2 * size).map((row) => foldSpokenWord(row.text)).join(' ')
+      if (left && left === right) {
+        skip = size
+        break
+      }
+    }
+    if (skip) {
+      index += skip
+      continue
+    }
+    out.push(deduped[index])
+    index += 1
+  }
+  return out
+}
+
+export function kineticExtractLine(text: string) {
+  return kineticExtractWords(text.split(/\s+/).filter(Boolean).map((word) => ({ text: word })))
+    .map((word) => word.text)
+    .join(' ')
+}
+
 /** Drop a run of the same extract. Different extracts from one talk may sit next to each other. */
 export function withoutBackToBackExtract<T extends { extractId?: number | null; id?: string }>(items: T[]) {
   const out: T[] = []
@@ -369,10 +419,11 @@ export type ExtractableItem = {
  */
 export function expandTalkExtracts<T extends ExtractableItem>(item: T, showUnchecked = false): T[] {
   if (item.card && item.card !== 'talk') return [item]
-  if (item.extractId != null) return [item]
   const all = item.extracts || []
   const hors = all.filter((row) => row.kind === 'hors' && extractVisible(row, showUnchecked))
   const appetisers = all.filter((row) => row.kind === 'appetiser' && extractVisible(row, showUnchecked))
+  if (!all.length) return [item]
+  if (item.extractId != null && hors.length <= 1) return [item]
   const asItem = (row: TalkExtract): T => {
     const parent = (row.parent != null ? appetisers.find((appetiser) => appetiser.id === row.parent) : null) || parentAppetiserFor(row, appetisers)
     const lines = (row.words || []).map((word) => ({ at: word.at, text: word.text }))

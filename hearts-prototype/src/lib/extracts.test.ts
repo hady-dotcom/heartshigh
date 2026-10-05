@@ -20,6 +20,7 @@ import {
   timeInTalkProblem,
   verbatimProblem,
   windowInside,
+  kineticExtractLine,
   neighborSuggested,
   parseExtractStatus,
   reviewAfterDecision,
@@ -252,6 +253,8 @@ test('a talk with one hors stays one feed item; several hors expand', () => {
   }
   assert.equal(expandTalkExtracts(one).length, 1)
   assert.equal(expandTalkExtracts(one)[0].id, 'cut-1')
+  assert.equal(expandTalkExtracts(one)[0].extractId, 11)
+  assert.equal(expandTalkExtracts({ ...one, extractId: 11 })[0].extractId, 11)
   const many = {
     ...one,
     extracts: [
@@ -268,6 +271,16 @@ test('a talk with one hors stays one feed item; several hors expand', () => {
   assert.equal(expanded[1].hors.quote, 'Land line.')
   assert.equal(expanded[0].hors.lines?.[0]?.text, 'Hook line.')
   assert.equal(expanded[1].hors.lines, undefined)
+  assert.equal(expandTalkExtracts({ ...many, extractId: 11 }).length, 2)
+})
+
+test('kinetic extract lines drop a repeated word and a false start next to its restart', () => {
+  const said = "You're not You're not the uncle doing parking duty."
+  assert.equal(kineticExtractLine(said), "You're not the uncle doing parking duty.")
+  assert.equal(kineticExtractLine('the the uncle'), 'the uncle')
+  assert.equal(kineticExtractLine('You You ever put in a dozen'), 'You ever put in a dozen')
+  assert.equal(kineticExtractLine('A clear line.'), 'A clear line.')
+  assert.equal(said, "You're not You're not the uncle doing parking duty.")
 })
 
 test('suggested hors stay off the learner feed until they are approved', () => {
