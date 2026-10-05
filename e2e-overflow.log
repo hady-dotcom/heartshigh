@@ -1,0 +1,28 @@
+Wiped the database (99 tables).
+[⣷] Pulling schema from database...
+[2K[1G[✓] Pulling schema from database...
+[01:25:39] [33mWARN[39m: [36mNo email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.[39m
+Harvest: 172 verses and hadith across 31 talks. No quotation found in 5: Gratitude is the Greatest Blessing | Gems from Ibn Ata Illah Ep. 1 | Shaykh Mikaeel Ahmed Smith; How to Manage Your Anger - Amjad Tarsin; Moments of Solitude: Closeness to God | Jummah Khutbah | Imam Khalid Latif | 3.11.2022; On Mosques, Companionship, & Knowledge; Quranic Connection #26: A Cure for Anxiety | Shaykh Suleiman Hani.
+Harvest sample: 4 lines kept for Maryam.
+Feedback demo: sample answers are on the East London and Leeds desks.
+Seeded HEARTS. Master: master@hearts.test / hearts-master
+Access codes (also on the master desk, and in data/seed-codes-test.json):
+  elm-teacher    ELM-9N3F-P8VW
+  elm-admin      ELM-DN3N-YNKK
+  elm-learner    ELM-GUWA-F8FN
+  elm-parent     ELM-NJ78-U3WR
+  leeds-teacher  LEEDS-MBKE-TEY8
+  leeds-learner  LEEDS-84UM-NN8K
+
+Running 1 test using 1 worker
+
+(node:27068) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:27068) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/1] tests/e2e/round2-integration.spec.ts:69:1 › desks wear the evening garden: deep teal page and panels, gold buttons
+  1 passed (1.4m)
