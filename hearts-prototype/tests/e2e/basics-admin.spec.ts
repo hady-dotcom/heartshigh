@@ -218,10 +218,11 @@ test.describe('Lane D hostile API', () => {
     const stealAudit = await elm.get('/api/hearts/audit.csv?portal=leeds')
     expect(stealAudit.ok()).toBeFalsy()
 
-    const marked = await master.patch(`/api/portals/${leedsPortal.id}`, { data: { organisationName: 'Leeds Chapter' } })
+    const marked = await master.patch(`/api/portals/${leedsPortal.id}`, { data: { welcome: `Leeds drill ${Date.now()}` } })
     expect(marked.ok(), await marked.text()).toBeTruthy()
-    const leedsAuditList = ((await (await master.get('/api/audit-log?limit=200&depth=0')).json()).docs || []) as { id: number; portal?: number; event?: string }[]
-    const leedsRow = leedsAuditList.find((row) => row.portal === leedsPortal.id)
+    const leedsAuditList = ((await (await master.get('/api/audit-log?limit=200&depth=0')).json()).docs || []) as { id: number; portal?: number | { id?: number }; event?: string }[]
+    const portalIdOfRow = (row: { portal?: number | { id?: number } }) => typeof row.portal === 'object' ? row.portal?.id : row.portal
+    const leedsRow = leedsAuditList.find((row) => portalIdOfRow(row) === leedsPortal.id)
     expect(leedsRow, 'the master list includes a Leeds row').toBeTruthy()
     const stealById = await elm.get(`/api/audit-log/${leedsRow!.id}?depth=0`)
     expect(stealById.ok()).toBeFalsy()
