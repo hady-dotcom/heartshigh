@@ -8,7 +8,8 @@ import { comingAnswerLabel, comingQuestionLabel, questionMomentReached, question
 import { TopicHelp } from '@/components/app/page-help'
 import { placeDots } from '@/lib/timeline-dots'
 import { coursePlayVisible } from '@/lib/course-controls'
-import { createPlayer, destroyPlayer, getPlayer, resume, STATE, UNPLAYABLE } from '@/lib/yt'
+import { nextPlaybackRate } from '@/lib/playback-rate'
+import { createPlayer, destroyPlayer, getPlayer, hasSound, pauseKeepingSound, resume, soundOn, STATE, UNPLAYABLE } from '@/lib/yt'
 import { SwarmList } from '@/components/app/swarm-list'
 import { initialsOf } from '@/lib/swarm-sort'
 import { tidyTalkTitle } from '@/lib/talk-title'
@@ -124,6 +125,8 @@ export function CoursePlayer({
   timeRef.current = time
   const [length, setLength] = useState(duration)
   const [playing, setPlaying] = useState(false)
+  const [speed, setSpeed] = useState(1)
+  const speedRef = useRef(1)
   const [ended, setEnded] = useState(false)
   const [openId, setOpenId] = useState<number | null>(null)
   const [fromTrigger, setFromTrigger] = useState(false)
@@ -222,11 +225,19 @@ export function CoursePlayer({
         setMode('youtube')
         const total = player.getDuration() || 0
         if (total > 0) setLength(total)
+        const activation = typeof navigator !== 'undefined' && Boolean(navigator.userActivation?.isActive || navigator.userActivation?.hasBeenActive)
+        if (activation) {
+          soundOn(PLAYER_ID)
+          player.unMute()
+        }
         resume(PLAYER_ID)
       },
       onState: (state) => {
         setPlaying(state === STATE.PLAYING)
-        if (state === STATE.PLAYING) setLit(true)
+        if (state === STATE.PLAYING) {
+          setLit(true)
+          getPlayer(PLAYER_ID)?.setPlaybackRate?.(speedRef.current)
+        }
         if (state === STATE.ENDED) setEnded(true)
       },
       onError: (code) => {
@@ -325,8 +336,7 @@ export function CoursePlayer({
 
   const pause = () => {
     const player = getPlayer(PLAYER_ID)
-    player?.pauseVideo()
-    player?.mute?.()
+    if (player) pauseKeepingSound(player, hasSound() || !player.isMuted())
     videoRef.current?.pause()
     filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'pause' }), '*')
     setPlaying(false)
@@ -339,10 +349,7 @@ export function CoursePlayer({
     const timer = window.setInterval(() => {
       const player = getPlayer(PLAYER_ID)
       const state = player?.getPlayerState()
-      if (state === STATE.PLAYING || state === STATE.BUFFERING) {
-        player?.pauseVideo()
-        player?.mute?.()
-      }
+      if (state === STATE.PLAYING || state === STATE.BUFFERING) player?.pauseVideo()
       if (videoRef.current && !videoRef.current.paused) videoRef.current.pause()
       filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'pause' }), '*')
       const at = player?.getCurrentTime()
@@ -439,7 +446,24 @@ export function CoursePlayer({
     return () => observer.disconnect()
   }, [])
 
+  const applySpeed = (rate: number) => {
+    getPlayer(PLAYER_ID)?.setPlaybackRate?.(rate)
+    if (videoRef.current) videoRef.current.playbackRate = rate
+    filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'setPlaybackRate', value: rate }), '*')
+  }
+
+  const cycleSpeed = () => {
+    const next = nextPlaybackRate(speedRef.current)
+    speedRef.current = next
+    setSpeed(next)
+    applySpeed(next)
+  }
+
   const resumeNow = () => {
+    soundOn(PLAYER_ID)
+    getPlayer(PLAYER_ID)?.unMute()
+    if (videoRef.current) videoRef.current.muted = false
+    applySpeed(speedRef.current)
     if (mode === 'youtube') resume(PLAYER_ID)
     else if (mode === 'file') void videoRef.current?.play()
     else if (mode === 'vimeo') filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'play' }), '*')
@@ -447,24 +471,11 @@ export function CoursePlayer({
   }
 
   const togglePlay = () => {
-    if (mode === 'youtube') {
-      // A question pause mutes, so YouTube cannot talk over the sheet. A learner pause only stops the film.
-      if (playing) {
-        getPlayer(PLAYER_ID)?.pauseVideo()
-        setPlaying(false)
-      } else resume(PLAYER_ID)
+    if (playing) {
+      pause()
       return
     }
-    if (mode === 'file') {
-      if (playing) videoRef.current?.pause()
-      else void videoRef.current?.play()
-      return
-    }
-    if (mode === 'vimeo') {
-      filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: playing ? 'pause' : 'play' }), '*')
-      return
-    }
-    setPlaying((value) => !value)
+    resumeNow()
   }
 
   /** Close the card; when the player paused for it, playback resumes within 300 ms (spec 7A.11). */
@@ -546,6 +557,7 @@ export function CoursePlayer({
               {playing ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
               <span>{playing ? 'Pause' : 'Play'}</span>
             </button>
+            <button type="button" className="lecture-speed" data-testid="lecture-speed" aria-label="Playback speed" onClick={cycleSpeed}>{speed}×</button>
           </>
         ) : null}
         <div className="timeline" data-testid="timeline" ref={timelineRef}>

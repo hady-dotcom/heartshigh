@@ -417,9 +417,9 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
             {group.items.map((row) => {
               const index = lessons.findIndex((lesson) => lesson.id === row.id)
               return (
-                <Link key={row.id} className="list-link" href={`${base}/course/${courseId}?part=${row.id}`} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
+                <Link key={row.id} className="part-row" href={`${base}/course/${courseId}?part=${row.id}`} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
                   <span className="grow">{partHeading(index + 1, row, tidyTalkTitle(str(course.title)), lessons.length)}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small></span>
-                  {row.id === lessonId ? <span className="badge" style={{ color: 'var(--purple)', fontWeight: 700, fontSize: 13 }}>Playing</span> : '›'}
+                  {row.id === lessonId ? <span className="part-status" data-testid="part-playing">Playing</span> : <span className="part-chevron" aria-hidden="true">›</span>}
                 </Link>
               )
             })}
