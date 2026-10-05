@@ -17,6 +17,26 @@ function proofShot(page: Page, name: string) {
   return page.screenshot({ path: path.join(PROOF, `${name}.png`), fullPage: false })
 }
 
+function paintAlpha(color: string) {
+  const match = /rgba?\(([^)]+)\)/.exec(color)
+  if (!match) return color === 'transparent' ? 0 : 1
+  const parts = match[1].split(',').map((part) => part.trim())
+  return parts.length < 4 ? 1 : Number(parts[3])
+}
+
+async function waitForSheet(page: Page) {
+  await expect(page.getByTestId('popup')).toBeVisible()
+  await expect(page.getByTestId('popup-close')).toBeVisible()
+  await expect(page.locator('[data-testid=popup] .handle')).toBeVisible()
+  await page.waitForFunction(() => {
+    const sheet = document.querySelector('[data-testid="popup"]')
+    if (!sheet) return false
+    const style = getComputedStyle(sheet)
+    if (Number(style.opacity) < 0.99) return false
+    return [...document.getAnimations()].every((animation) => animation.playState !== 'running' || animation.effect?.getComputedTiming().iterations === Infinity)
+  })
+}
+
 let master: APIRequestContext
 
 test.beforeAll(async () => {
@@ -144,7 +164,8 @@ test.describe('courses and planning', () => {
     await expect(page.getByTestId('player-time')).toContainText('0:00')
     await proofShot(page, 'round8-at-zero')
     await page.getByTestId('timeline-dot').first().click()
-    await expect(page.getByTestId('popup')).toBeVisible()
+    await waitForSheet(page)
+    await expect(page.getByTestId('player-time')).toContainText('0:30')
     await expect(page.getByTestId('answer-point')).toContainText('Answer question 1')
     await expect(rows.first()).toHaveAttribute('data-revealed', 'yes')
     await expect(rows.first()).toContainText('What stayed with you from sitting 1, question 1')
@@ -154,10 +175,37 @@ test.describe('courses and planning', () => {
     await page.getByTestId('think-about-this').click()
     await expect(page.getByTestId('popup')).toHaveCount(0)
     await expect(rows.first()).toHaveAttribute('data-revealed', 'yes')
+    await expect(rows.first()).toContainText('What stayed with you from sitting 1, question 1')
+    await proofShot(page, 'round8-row-revealed')
     await page.reload()
     await expect(page.getByTestId('strip-dot').first()).toHaveAttribute('data-revealed', 'yes')
     await expect(page.getByTestId('strip-dot').first()).toContainText('question 1')
     await expect(page.getByTestId('strip-dot').nth(1)).toHaveAttribute('data-revealed', 'no')
+  })
+
+  test('the answer sheet sits opaque over the page after it settles', async ({ page }) => {
+    await page.setViewportSize(PHONE)
+    await fakeYouTube(page)
+    const proof = await ensureProofCourse(master)
+    await signIn(page, `${BASE}/course/${proof.courseId}?part=${proof.lessons[0].id}`, 'elm-learner2@hearts.test')
+    await expect(page.getByTestId('player')).toBeVisible()
+    if (!(await page.getByTestId('popup').count())) await page.getByTestId('timeline-dot').first().click()
+    await waitForSheet(page)
+    await expect(page.getByTestId('player-time')).toContainText('0:30')
+    const paint = await page.getByTestId('popup').evaluate((sheet) => getComputedStyle(sheet).backgroundColor)
+    expect(paintAlpha(paint), `sheet background ${paint} must be opaque`).toBeGreaterThanOrEqual(0.99)
+    const save = page.getByTestId('answer-submit')
+    await expect(save).toBeVisible()
+    const box = await save.boundingBox()
+    expect(box, 'Save sits on screen').toBeTruthy()
+    const hit = await page.evaluate(({ x, y }) => {
+      const node = document.elementFromPoint(x, y)
+      return node instanceof Element ? (node.closest('[data-testid="answer-submit"]')?.getAttribute('data-testid') || node.getAttribute('data-testid')) : null
+    }, { x: box!.x + box!.width / 2, y: box!.y + box!.height / 2 })
+    expect(hit).toBe('answer-submit')
+    await page.getByTestId('popup-close').click()
+    await expect(page.getByTestId('popup')).toHaveCount(0)
+    await expect(page.getByTestId('strip-dot').first()).toHaveAttribute('data-revealed', 'yes')
   })
 
   test('B6, B11 and B15: the player pauses, thinks, and always has a next part', async ({ page }) => {

@@ -144,7 +144,9 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
   if (await page.getByTestId('timeline-dot').count()) {
     await page.getByTestId('timeline-dot').first().click()
     await expect(page.getByTestId('popup')).toBeVisible()
-    await expect(page.getByTestId('paused-note')).toContainText('Paused')
+    await page.waitForFunction(() => [...document.getAnimations()].every((animation) => animation.playState !== 'running' || animation.effect?.getComputedTiming().iterations === Infinity))
+    await expect(page.getByTestId('player-time')).toContainText('0:30')
+    await expect(page.getByTestId('paused-note').first()).toContainText('Paused')
     await expect(player.getByTestId('strip-dot').first()).toHaveAttribute('data-revealed', 'yes')
     await expect(player.getByTestId('strip-dot').first()).toContainText(/What stayed with you/)
     if (await player.getByTestId('strip-dot').count() > 1) {

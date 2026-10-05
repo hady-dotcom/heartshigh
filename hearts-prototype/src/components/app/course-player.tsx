@@ -273,6 +273,16 @@ export function CoursePlayer({
   const show = useCallback(
     (id: number, triggered: boolean) => {
       reveal(id)
+      const point = viewsRef.current.find((row) => row.id === id)
+      if (point) {
+        const at = point.second
+        lastTime.current = at
+        setTime(at)
+        getPlayer(PLAYER_ID)?.seekTo(at, true)
+        if (videoRef.current) videoRef.current.currentTime = at
+        vimeoTime.current = at
+        filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'setCurrentTime', value: at }), '*')
+      }
       placeSheet()
       setFromTrigger(triggered)
       setOpenId(id)
