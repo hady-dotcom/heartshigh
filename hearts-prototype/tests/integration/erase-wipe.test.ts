@@ -310,9 +310,26 @@ describe('erase wipe on a real database', { timeout: 180_000 }, () => {
     const storedName = String(media.filename || filename)
     const storedPath = path.join(process.cwd(), 'media', storedName)
     writeFileSync(storedPath, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64'))
-    const course = (await payload.find({ collection: 'courses', overrideAccess: true, limit: 1 })).docs[0] as { id: number }
-    const lesson = (await payload.find({ collection: 'lessons', overrideAccess: true, limit: 1, where: { course: { equals: course.id } } })).docs[0] as { id: number }
-    const point = (await payload.find({ collection: 'engagement-points', overrideAccess: true, limit: 1, where: { lesson: { equals: lesson.id } } })).docs[0] as { id: number }
+    const course = (await payload.create({
+      collection: 'courses',
+      overrideAccess: true,
+      data: { title: `Retry talk ${suffix}`, origin: 'master', importable: true },
+    })) as { id: number }
+    const unit = (await payload.create({
+      collection: 'units',
+      overrideAccess: true,
+      data: { title: 'Retry part', course: course.id, order: 1 },
+    })) as { id: number }
+    const lesson = (await payload.create({
+      collection: 'lessons',
+      overrideAccess: true,
+      data: { title: `Retry lesson ${suffix}`, course: course.id, unit: unit.id, order: 1, master: true },
+    })) as { id: number }
+    const point = (await payload.create({
+      collection: 'engagement-points',
+      overrideAccess: true,
+      data: { lesson: lesson.id, second: 8, prompt: 'Retry prompt', kind: 'reflection', status: 'published' },
+    })) as { id: number }
     await payload.create({
       collection: 'answers',
       overrideAccess: true,
