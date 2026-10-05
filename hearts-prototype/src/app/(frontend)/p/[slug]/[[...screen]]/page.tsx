@@ -26,6 +26,9 @@ import { PortalCreatorScreen } from '@/screens/desk/creator-screen'
 import { PortalSheetScreen } from '@/screens/desk/sheet'
 import { FeedbackScreen } from '@/screens/desk/feedback'
 import { GatherAttendanceScreen, GatherDeskScreen } from '@/screens/desk/gather'
+import { PortalActivityScreen } from '@/screens/desk/activity'
+import { ClassesScreen } from '@/screens/desk/classes'
+import { PeopleImportScreen } from '@/screens/desk/people-import'
 import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
 import { PortalCircle } from '@/screens/desk/circle'
 import { FeatureUnavailable } from '@/components/app/feature-unavailable'
@@ -97,9 +100,18 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       case 'library':
         return LibraryScreen(ctx)
       case 'access':
+        if (b === 'import') {
+          guardAdmin(ctx)
+          return PeopleImportScreen(ctx)
+        }
         return AccessScreen(ctx)
       case 'teach':
         return TeachScreen(ctx)
+      case 'classes':
+        return ClassesScreen(ctx)
+      case 'activity':
+        if (user.role === 'teacher') redirect(`${base}/admin?error=${plain('The activity log is for the portal admin.')}`)
+        return PortalActivityScreen(ctx)
       case 'feedback':
         return gated(ctx, 'feedback', true) || FeedbackScreen(ctx)
       case 'compass':

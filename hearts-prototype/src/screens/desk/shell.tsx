@@ -16,60 +16,76 @@ type NavItem = { key: string; label: string; href: string; icon: ReactNode }
 
 export function portalNav(base: string, user: SessionUser, portal?: FeatureSource): { group: string; items: NavItem[] }[] {
   const keep = (items: NavItem[]) => items.filter((item) => deskNavAllowed(portal, item.key))
-  const teach: NavItem[] = keep([
+  const beginner = keep([
+    { key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> },
     { key: 'teach', label: 'Teach', href: `${base}/admin/teach`, icon: <PeopleIcon /> },
+    { key: 'classes', label: 'Classes', href: `${base}/admin/classes`, icon: <PeopleIcon /> },
+    { key: 'access', label: 'Access codes', href: `${base}/admin/access`, icon: <KeyIcon /> },
+    { key: 'nights', label: 'Nights', href: `${base}/admin/nights`, icon: <MoonIcon /> },
+    { key: 'gather', label: 'Gather', href: `${base}/admin/gather`, icon: <PeopleIcon /> },
+    { key: 'settings', label: 'Settings', href: `${base}/admin/settings`, icon: <CogIcon /> },
+  ])
+  const intermediate = keep([
     { key: 'feedback', label: 'Feedback', href: `${base}/admin/feedback`, icon: <QuestionIcon /> },
     { key: 'compass', label: 'Compass', href: `${base}/admin/compass`, icon: <HeartIcon /> },
     { key: 'plans', label: 'Study plans', href: `${base}/admin/plans`, icon: <CalendarIcon /> },
-    { key: 'nights', label: 'Nights', href: `${base}/admin/nights`, icon: <MoonIcon /> },
-    { key: 'gather', label: 'Gather', href: `${base}/admin/gather`, icon: <PeopleIcon /> },
+    { key: 'content', label: 'Content', href: `${base}/admin/content`, icon: <BookIcon /> },
+    { key: 'library', label: 'Library', href: `${base}/admin/library`, icon: <LibraryIcon /> },
+    { key: 'opening', label: 'Opening', href: `${base}/admin/opening`, icon: <HeartIcon /> },
+    { key: 'circle', label: 'Circle answers', href: `${base}/admin/circle`, icon: <PeopleIcon /> },
+    { key: 'sheet', label: 'Master sheet', href: `${base}/admin/sheet`, icon: <BookIcon /> },
   ])
-  if (user.role === 'teacher') return [{ group: 'Portal', items: [{ key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> }, ...teach] }]
+  const indepth = keep([
+    { key: 'create', label: 'Sheet creator', href: `${base}/admin/sheet/create`, icon: <BookIcon /> },
+    { key: 'ai', label: 'AI steps', href: `${base}/admin/ai`, icon: <CogIcon /> },
+    { key: 'activity', label: 'Activity log', href: `${base}/admin/activity`, icon: <BookIcon /> },
+  ])
+  if (user.role === 'teacher') {
+    return [
+      { group: 'Beginner', items: beginner.filter((item) => !['access', 'settings'].includes(item.key)) },
+      { group: 'Intermediate', items: intermediate.filter((item) => ['feedback', 'compass', 'plans'].includes(item.key)) },
+    ].filter((group) => group.items.length)
+  }
   return [
-    {
-      group: 'Portal',
-      items: keep([
-        { key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> },
-        { key: 'content', label: 'Content', href: `${base}/admin/content`, icon: <BookIcon /> },
-        { key: 'sheet', label: 'Master sheet', href: `${base}/admin/sheet`, icon: <BookIcon /> },
-        { key: 'create', label: 'Sheet creator', href: `${base}/admin/sheet/create`, icon: <BookIcon /> },
-        { key: 'library', label: 'Library', href: `${base}/admin/library`, icon: <LibraryIcon /> },
-        { key: 'access', label: 'Access codes', href: `${base}/admin/access`, icon: <KeyIcon /> },
-        { key: 'opening', label: 'Opening', href: `${base}/admin/opening`, icon: <HeartIcon /> },
-        { key: 'circle', label: 'Circle answers', href: `${base}/admin/circle`, icon: <PeopleIcon /> },
-        { key: 'ai', label: 'AI steps', href: `${base}/admin/ai`, icon: <CogIcon /> },
-      ]),
-    },
-    { group: 'People', items: teach },
-    { group: 'Setup', items: [{ key: 'settings', label: 'Settings', href: `${base}/admin/settings`, icon: <CogIcon /> }] },
+    { group: 'Beginner', items: beginner },
+    { group: 'Intermediate', items: intermediate },
+    { group: 'In-depth', items: indepth },
   ]
 }
 
 export function masterNav(): { group: string; items: NavItem[] }[] {
   return [
     {
-      group: 'Master desk',
+      group: 'Beginner',
       items: [
         { key: 'portals', label: 'Portals', href: '/master', icon: <GlobeIcon /> },
         { key: 'library', label: 'Library', href: '/master/library', icon: <LibraryIcon /> },
-        { key: 'review', label: 'Review', href: '/master/review', icon: <QuestionIcon /> },
-        { key: 'ai', label: 'AI steps', href: '/master/ai', icon: <CogIcon /> },
-        { key: 'tiers', label: 'Talk tiers', href: '/master/tiers', icon: <BookIcon /> },
-        { key: 'packs', label: 'Course packs', href: '/master/packs', icon: <BookIcon /> },
-        { key: 'sheet', label: 'Master sheet', href: '/master/sheet', icon: <BookIcon /> },
-        { key: 'create', label: 'Sheet creator', href: '/master/sheet/create', icon: <BookIcon /> },
-        { key: 'questions', label: 'Placing questions', href: '/master/questions', icon: <QuestionIcon /> },
-        { key: 'circle', label: 'Circle answers', href: '/master/circle', icon: <PeopleIcon /> },
       ],
     },
     {
-      group: 'Opening',
+      group: 'Intermediate',
       items: [
+        { key: 'people', label: 'People', href: '/master/people', icon: <PeopleIcon /> },
+        { key: 'review', label: 'Review', href: '/master/review', icon: <QuestionIcon /> },
+        { key: 'tiers', label: 'Talk tiers', href: '/master/tiers', icon: <BookIcon /> },
+        { key: 'packs', label: 'Course packs', href: '/master/packs', icon: <BookIcon /> },
+        { key: 'sheet', label: 'Master sheet', href: '/master/sheet', icon: <BookIcon /> },
+        { key: 'questions', label: 'Placing questions', href: '/master/questions', icon: <QuestionIcon /> },
+        { key: 'circle', label: 'Circle answers', href: '/master/circle', icon: <PeopleIcon /> },
         { key: 'opening', label: 'Scenes', href: '/master/opening', icon: <HeartIcon /> },
         { key: 'lanes', label: 'Lanes', href: '/master/lanes', icon: <BookIcon /> },
+        { key: 'activity', label: 'Activity log', href: '/master/activity', icon: <BookIcon /> },
+      ],
+    },
+    {
+      group: 'In-depth',
+      items: [
+        { key: 'ai', label: 'AI steps', href: '/master/ai', icon: <CogIcon /> },
+        { key: 'create', label: 'Sheet creator', href: '/master/sheet/create', icon: <BookIcon /> },
         { key: 'simulator', label: 'Simulator', href: '/master/simulator', icon: <CogIcon /> },
         { key: 'personas', label: 'Scales and bands', href: '/master/personas', icon: <HeartIcon /> },
         { key: 'trends', label: 'Network trends', href: '/master/trends', icon: <GlobeIcon /> },
+        { key: 'system', label: 'System', href: '/master/system', icon: <CogIcon /> },
       ],
     },
   ]

@@ -58,9 +58,7 @@ export function hashIp(ip: string | null | undefined) {
   return createHash('sha256').update(`${process.env.PAYLOAD_SECRET || 'hearts'}:${ip}`).digest('hex').slice(0, 16)
 }
 
-export async function audit(payload: Payload, event: string, fields: Record<string, unknown>) {
-  await payload.create({ collection: 'audit-log', overrideAccess: true, data: { event, at: now().toISOString(), ...fields } as never })
-}
+export { audit } from './audit'
 
 /** The table in spec 6A. Returns null when allowed, or the reason it is not. */
 export function refusal(actor: Person, target: Person | null) {

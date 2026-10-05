@@ -197,6 +197,8 @@ docker run --rm -e DATABASE_PUBLIC_URL postgres:16-alpine sh -c 'pg_dump --dbnam
 
 The bucket is separate from the database. A database backup does not contain the uploaded files. Railway keeps the bucket across deploys. If you ever need a copy of the bucket, use the same keys from the Variables page with any S3 client. Do not delete the bucket to “tidy up”.
 
+Automatic daily backups (database **and** the bucket), encryption, retention and a restore drill are in `docs/BACKUPS.md`. Use that page for the Railway cron. This section stays as the manual one-off copy.
+
 ## 13. Updating later
 
 Push to the branch Railway is watching. It builds and deploys on its own. Migrations run as the app starts. They add what is missing. They do not wipe the database, and they do not reseed.

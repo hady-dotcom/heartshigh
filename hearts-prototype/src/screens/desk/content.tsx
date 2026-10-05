@@ -637,6 +637,10 @@ export async function AccessScreen(ctx: Ctx) {
   const requiredGroups = await groupThese(payload, courses.map((course) => ({ id: course.id, title: str(course.title), summary: str(course.summary) })))
   return (
     <AdminFrame ctx={ctx} active="access" title="Access codes" intro="A code says who someone is in the portal and which course pack they see. Send the link rather than the code, so nobody has to type it." testId="admin-access">
+      <p className="hint" style={{ marginBottom: 12 }}>
+        <Link className="btn ghost small" href={`${base}/admin/access/import`} data-testid="people-import-link">Add people from a list</Link>
+        {' '}A class list becomes accounts after a preview.
+      </p>
       <section className="panel" style={{ marginBottom: 18 }}>
         <div className="table-wrap">
           <table className="data">

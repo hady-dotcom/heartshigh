@@ -63,6 +63,16 @@ export const PAGE: Record<string, string> = {
     'This is one learner’s Compass over the months. You see the scales and why a talk was put forward. They still only see a gentle line, never these numbers.',
   attendance:
     'This is the register for gatherings. Who said they would come, who arrived, and a download when you need a list. It does not change who is invited.',
+  activity:
+    'The activity log is a calm list of staff changes: codes, people, classes and settings. Portal admins see only their own community. Downloads are written here too.',
+  classes:
+    'A class is a group inside this portal, such as Saturday Year 5 or a sisters’ circle. Add people, then give a course or a plan to the whole class. A code can drop new joiners into a class.',
+  peopleImport:
+    'Paste a class list or upload a spreadsheet. Preview first — rows with a rose first cell will not be added. Accounts are created with a temporary password you can print for the teacher.',
+  people:
+    'Everyone in one portal, grouped by role. Tick a group of people, then give a course, add them to a class, or download the list. Answers never leave this page.',
+  system:
+    'System is a health check: database, files, email, the last backup and the last restore drill. It does not show anyone’s reflections. Use it when something feels off.',
 }
 
 export const TOOL: Record<string, string> = {
@@ -146,6 +156,24 @@ export const TOOL: Record<string, string> = {
     'These are library courses this portal may link. Tick the ones they will use. You can add more later from the portal library. Nothing is copied; the original stays as the master desk set it.',
   portalFeatures:
     'Each switch is one part of HEARTS. Start small keeps videos, questions and the Garden. Add the community brings circle answers and the planner, and Everything turns every switch on. Saving takes effect at once.',
+  activityFilters:
+    'Person, action and date narrow the list. Times follow the portal’s city. An empty view means nothing matches, not that the log was wiped.',
+  activityExport:
+    'Download writes the sentences you can see now. The download itself is logged. If the list is empty the button stays still, so you do not take a blank file.',
+  classes:
+    'Give the class a name people will recognise. The colour is only a mark on the desk. Deleting a class does not delete the people.',
+  classJoin:
+    'Pick a code and new joiners on that link land in this class. Leave it empty if people should be added by hand. The code itself does not change.',
+  peopleImport:
+    'Name, email and an access code are required. Role is learner unless you say teacher or admin. A class name must already exist here, or leave that cell blank.',
+  peopleExport:
+    'The file has names, emails, roles, codes, joined dates and progress. It never includes answers. If nobody is on the list, the button stays still.',
+  bulkPeople:
+    'Tick the people, choose one action, and confirm. You will see how many will change. Pause needs a short reason. One line goes on the activity log.',
+  systemHealth:
+    'Fine means that part answered. Off means it is not wired yet, such as email. Down means it failed. The note never includes a secret or a request body.',
+  retention:
+    'Each row is how long we keep that kind of data. The nightly job removes what is due. Closed portals are not wiped; the master is asked after 90 days.',
 }
 
 const TEST_IDS: Record<string, string> = {
@@ -190,6 +218,12 @@ const TEST_IDS: Record<string, string> = {
   'master-trends': 'trends',
   'compass-learner': 'compassLearner',
   'gather-attendance': 'attendance',
+  'admin-activity': 'activity',
+  'master-activity': 'activity',
+  'admin-classes': 'classes',
+  'admin-people-import': 'peopleImport',
+  'master-people': 'people',
+  'master-system': 'system',
 }
 
 /** Page copy for a desk frame, from the nav key or the screen test id. */

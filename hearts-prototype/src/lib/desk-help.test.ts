@@ -34,6 +34,11 @@ const PAGES = [
   'attendance',
   'portalCreate',
   'portalEdit',
+  'activity',
+  'classes',
+  'peopleImport',
+  'people',
+  'system',
 ]
 
 describe('desk help', () => {

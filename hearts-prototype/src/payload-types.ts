@@ -135,6 +135,9 @@ export interface Config {
     'gather-checkins': GatherCheckin;
     'gather-reflections': GatherReflection;
     'gather-photos': GatherPhoto;
+    classes: Class;
+    'class-join-rules': ClassJoinRule;
+    'ops-events': OpsEvent;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -210,6 +213,9 @@ export interface Config {
     'gather-checkins': GatherCheckinsSelect<false> | GatherCheckinsSelect<true>;
     'gather-reflections': GatherReflectionsSelect<false> | GatherReflectionsSelect<true>;
     'gather-photos': GatherPhotosSelect<false> | GatherPhotosSelect<true>;
+    classes: ClassesSelect<false> | ClassesSelect<true>;
+    'class-join-rules': ClassJoinRulesSelect<false> | ClassJoinRulesSelect<true>;
+    'ops-events': OpsEventsSelect<false> | OpsEventsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -2258,6 +2264,55 @@ export interface GatherPhoto {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "classes".
+ */
+export interface Class {
+  id: number;
+  portal?: (number | null) | Portal;
+  name: string;
+  colour?: ('#0E2A2B' | '#163633' | '#1A5552' | '#8A6A1F' | '#1A1408') | null;
+  teachers?: (number | User)[] | null;
+  learners?: (number | User)[] | null;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "class-join-rules".
+ */
+export interface ClassJoinRule {
+  id: number;
+  portal?: (number | null) | Portal;
+  accessCode: number | AccessCode;
+  class: number | Class;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ops-events".
+ */
+export interface OpsEvent {
+  id: number;
+  kind: 'backup' | 'restore' | 'retention' | 'closed-portal';
+  ok?: boolean | null;
+  at: string;
+  detail?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  portal?: (number | null) | Portal;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -2551,6 +2606,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'gather-photos';
         value: number | GatherPhoto;
+      } | null)
+    | ({
+        relationTo: 'classes';
+        value: number | Class;
+      } | null)
+    | ({
+        relationTo: 'class-join-rules';
+        value: number | ClassJoinRule;
+      } | null)
+    | ({
+        relationTo: 'ops-events';
+        value: number | OpsEvent;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -3906,6 +3973,44 @@ export interface GatherPhotosSelect<T extends boolean = true> {
   caption?: T;
   consent?: T;
   postedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "classes_select".
+ */
+export interface ClassesSelect<T extends boolean = true> {
+  portal?: T;
+  name?: T;
+  colour?: T;
+  teachers?: T;
+  learners?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "class-join-rules_select".
+ */
+export interface ClassJoinRulesSelect<T extends boolean = true> {
+  portal?: T;
+  accessCode?: T;
+  class?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ops-events_select".
+ */
+export interface OpsEventsSelect<T extends boolean = true> {
+  kind?: T;
+  ok?: T;
+  at?: T;
+  detail?: T;
+  portal?: T;
   updatedAt?: T;
   createdAt?: T;
 }
