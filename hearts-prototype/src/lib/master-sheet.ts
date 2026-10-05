@@ -2041,7 +2041,7 @@ function planExtracts(working: Working, rows: InputRow[]) {
       land: textOf(row, 'land_text') || existing?.land || '',
     }
     const siblings = [
-      ...(byLesson.get(lesson?.id || pending || '') || []).filter((item) => item.id !== draft.id),
+      ...(byLesson.get(lesson?.id || pending || '') || []).filter((item) => item.id == null || draft.id == null || item.id !== draft.id),
       draft,
     ]
     const overlap = sameTypeOverlapProblem(siblings)

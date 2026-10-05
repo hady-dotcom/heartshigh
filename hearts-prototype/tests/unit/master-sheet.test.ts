@@ -600,20 +600,30 @@ test('the Extracts tab adds one hors or appetiser per row, and refuses overlap o
     questions: [],
     resources: [],
     extracts: [
-      cells(3, { talk_key: 'yt-NIR88RRpat4', extract_type: 'appetiser', start: 0, end: 90, text: '', status: 'approved', hook_text: 'The light enters the heart', land_text: 'The light enters the heart' }),
-      cells(4, { talk_key: 'yt-NIR88RRpat4', extract_type: 'hors', start: 10, end: 28, text: '', status: 'approved', arc: 'hook' }),
+      cells(3, { talk_key: 'yt-NIR88RRpat4', extract_type: 'appetiser', start: 70, end: 118, text: '', status: 'approved', hook_text: 'The light enters the heart', land_text: 'The light enters the heart' }),
+      cells(4, { talk_key: 'yt-NIR88RRpat4', extract_type: 'hors', start: 90, end: 108, text: '', status: 'approved', arc: 'hook' }),
     ],
     errors: [],
   }, catalogue)
   assert.deepEqual(created.errors, [])
   assert.equal(created.ops.filter((op) => op.op === 'extract.create').length, 2)
+  const suggested = planSheet({
+    talks: [],
+    questions: [],
+    resources: [],
+    extracts: [cells(3, { talk_key: 'yt-NIR88RRpat4', extract_type: 'hors', start: 90, end: 108, text: '', status: 'pass' })],
+    errors: [],
+  }, catalogue)
+  assert.deepEqual(suggested.errors, [])
+  const made = suggested.ops.find((op) => op.op === 'extract.create') as { data?: { status?: string } } | undefined
+  assert.equal(made?.data?.status, 'suggested')
   const overlap = planSheet({
     talks: [],
     questions: [],
     resources: [],
     extracts: [
-      cells(3, { talk_key: 'yt-NIR88RRpat4', extract_type: 'hors', start: 10, end: 30, text: '' }),
-      cells(4, { talk_key: 'yt-NIR88RRpat4', extract_type: 'hors', start: 20, end: 40, text: '' }),
+      cells(3, { talk_key: 'yt-NIR88RRpat4', extract_type: 'hors', start: 50, end: 70, text: '' }),
+      cells(4, { talk_key: 'yt-NIR88RRpat4', extract_type: 'hors', start: 60, end: 80, text: '' }),
     ],
     errors: [],
   }, catalogue)
@@ -629,11 +639,11 @@ test('the Extracts tab adds one hors or appetiser per row, and refuses overlap o
 })
 
 test('the Extracts tab still sits beside the old Talks pair', async () => {
-  const workbook = await templateWorkbook()
-  const names = workbook.worksheets.map((sheet) => sheet.name)
-  assert.ok(names.includes(EXTRACT_TAB))
-  const sheet = workbook.getWorksheet(EXTRACT_TAB)
-  const header = sheet?.getRow(2)
+  const buffer = await templateWorkbook()
+  const book = new ExcelJS.Workbook()
+  await book.xlsx.load(buffer as unknown as Parameters<typeof book.xlsx.load>[0])
+  assert.ok(book.worksheets.map((sheet) => sheet.name).includes(EXTRACT_TAB))
+  const header = book.getWorksheet(EXTRACT_TAB)?.getRow(2)
   const columns = new Set<string>()
   header?.eachCell((cell) => columns.add(String(cell.value || '')))
   for (const name of EXTRACT_COLUMNS) assert.ok(columns.has(name), `missing ${name}`)
