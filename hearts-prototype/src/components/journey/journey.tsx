@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
-import { mixFeed } from '@/lib/feed-mix'
+import { clipsFromRoute, mixFeed } from '@/lib/feed-mix'
 import { clipStepUpLabel, onlyClipToast, pieceSeconds, poolEndToast, READY_FOR_MORE, talkStepUpLabel, withTalkDetail } from '@/lib/feed-copy'
 import { appendUnseenItems, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
@@ -593,13 +593,7 @@ export function Journey(props: JourneyProps) {
       let route: { items: FeedSlot[]; spinePointer: number } = routeFeed(state, local, { justShow })
       // Once the learner has seen everything, start the spine again rather than leave the feed empty.
       if (!route.items.length) route = buildFeed({ ...planFrom(state, local, { justShow }), served: [], spinePointer: 0 }, local)
-      const clips = route.items
-        .map((slot): FeedItem | null => {
-          const clip = opening.clips[String(slot.cutId)]
-          if (!clip) return null
-          return slot.laneKey ? { ...clip, laneKey: slot.laneKey, lane: slot.laneKey, laneLabel: opening.laneTitles[slot.laneKey] || clip.laneLabel } : { ...clip, laneKey: null }
-        })
-        .filter((clip): clip is FeedItem => Boolean(clip))
+      const clips = clipsFromRoute(route.items, opening.clips, opening.laneTitles)
       return { items: route.items, clips, spinePointer: route.spinePointer }
     },
     [ctx, opening.clips, opening.laneTitles],

@@ -557,7 +557,12 @@ export async function serveFeed(payload: Payload, portal: PortalDoc, user: Sessi
       return row ? itemFor(data, row, slot.laneKey, laneTitles, index) : null
     })
     .filter((item): item is FeedItem => Boolean(item))
-  const items = mixFeed(talks, plan.served.length, readBackgroundsBaseUrl())
+  const fallback = talks.length
+    ? talks
+    : data.cuts
+        .map((row, index) => itemFor(data, row, null, laneTitles, index))
+        .filter((item): item is FeedItem => Boolean(item))
+  const items = mixFeed(fallback, plan.served.length, readBackgroundsBaseUrl())
   return { slots, items, spinePointer: built.spinePointer }
 }
 
