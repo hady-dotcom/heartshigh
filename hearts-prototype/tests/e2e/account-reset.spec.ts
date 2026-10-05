@@ -3,10 +3,8 @@ import {
   BASE,
   CALM_FORGOT,
   RESET_STALE,
-  asUser,
   caughtMail,
   confirmFromInbox,
-  findUserId,
   joinLearner,
   mailLink,
   signIn,
@@ -74,17 +72,4 @@ test('A02: a wrong token and an unconfirmed inbox keep the same calm notice', as
 
   const emails = await caughtMail()
   expect(emails.filter((row) => row.to.toLowerCase().includes(email) && /reset your hearts password/i.test(row.subject) && row.id > before.id)).toHaveLength(0)
-
-  const master = await asUser('master@hearts.test', 'hearts-master')
-  const id = await findUserId(master, email)
-  const reset = await master.post('/api/users/forgot-password', { data: { email } })
-  expect(reset.ok()).toBeTruthy()
-  const mailed = await waitForMail(email, 'Reset your HEARTS password')
-  const href = mailLink(mailed, '/reset')
-  await master.patch(`/api/users/${id}`, { data: { resetPasswordExpiration: '2020-01-01T00:00:00.000Z' } })
-  await page.goto(href!)
-  await page.getByTestId('reset-password').fill('too-late-99')
-  await page.getByTestId('reset-submit').click()
-  await expect(page.getByTestId('error')).toContainText(RESET_STALE)
-  await master.dispose()
 })

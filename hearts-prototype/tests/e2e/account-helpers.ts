@@ -13,12 +13,16 @@ export function uniqueEmail(label: string) {
 }
 
 export async function asUser(email: string, password: string) {
-  const ctx = await playwrightRequest.newContext({ baseURL: E2E_BASE, extraHTTPHeaders: { accept: 'application/json' } })
-  const login = await ctx.post('/api/users/login', { data: { email, password } })
+  const bootstrap = await playwrightRequest.newContext({ baseURL: E2E_BASE, extraHTTPHeaders: { accept: 'application/json' } })
+  const login = await bootstrap.post('/api/users/login', { data: { email, password } })
   const body = await login.json().catch(() => ({}))
   expect(login.ok(), `login ${email} (${login.status()} ${JSON.stringify(body)})`).toBeTruthy()
-  expect(body.user?.id || body.token, `login body ${email}`).toBeTruthy()
-  return ctx
+  expect(body.token, `login token ${email}`).toBeTruthy()
+  await bootstrap.dispose()
+  return playwrightRequest.newContext({
+    baseURL: E2E_BASE,
+    extraHTTPHeaders: { accept: 'application/json', Authorization: `JWT ${body.token}` },
+  })
 }
 
 export async function signIn(page: Page, email: string, password: string, next = SETTINGS) {
@@ -98,10 +102,12 @@ export async function findPortalId(master: APIRequestContext, slug: string) {
 }
 
 export async function sessionUserId(page: Page) {
+  const fromName = await page.getByTestId('me-name').getAttribute('data-user-id')
+  if (fromName) return Number(fromName)
   const res = await page.request.get('/api/users/me')
   const body = await res.json()
-  const id = body.user?.id || body.id
-  expect(id, `session user ${res.status()}`).toBeTruthy()
+  const id = body.user?.id || body.doc?.id || body.id
+  expect(id, `session user ${res.status()} ${JSON.stringify(body).slice(0, 200)}`).toBeTruthy()
   return Number(id)
 }
 

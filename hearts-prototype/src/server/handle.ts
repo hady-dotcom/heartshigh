@@ -451,7 +451,7 @@ export async function handlePost(req: Request) {
   const action = text(form, 'action')
   const session = await getSession({ touch: action !== 'clock' })
   const { payload, viewAs } = session
-  if (session.dropSession && !['login', 'forgot-password', 'reset-password', 'join', 'logout', 'verify-totp', 'confirm-totp', 'setup-totp'].includes(action)) {
+  if (session.dropSession && !['login', 'forgot-password', 'reset-password', 'join', 'logout', 'verify-totp', 'confirm-totp', 'setup-totp', 'clock'].includes(action)) {
     const response = redirectTo(req, '/login', session.dropSession === 'paused' ? 'This account is paused. Please speak to your masjid or school.' : 'Please sign in again.')
     response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, '', 0))
     return response

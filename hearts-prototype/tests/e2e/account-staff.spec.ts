@@ -4,8 +4,8 @@ import {
   SETTINGS,
   asUser,
   confirmFromInbox,
-  findUserId,
   joinLearner,
+  sessionUserId,
   mailLink,
   postAction,
   signIn,
@@ -43,7 +43,7 @@ test('A06: change email writes to both inboxes and switches only after confirm',
   expect(href).toBeTruthy()
   await page.goto(href!)
   await expect(page.getByTestId('notice')).toContainText('email is updated')
-  await page.getByTestId('logout').click()
+  await page.request.post('/api/hearts', { form: { action: 'logout', next: '/' } })
   await signIn(page, next, 'email-change-1', SETTINGS)
   await page.waitForURL((url) => url.pathname.includes('/me/settings'))
 })
@@ -51,8 +51,9 @@ test('A06: change email writes to both inboxes and switches only after confirm',
 test('A22: a temporary password forces a change at the next sign-in', async ({ page }) => {
   const email = uniqueEmail('a22-temp')
   await joinLearner(page, 'Temp Learner', email, 'old-password-1')
+  await page.goto(`${BASE}/me`)
+  const id = await sessionUserId(page)
   const admin = await asUser('elm-admin@hearts.test', 'portal-admin')
-  const id = await findUserId(admin, email)
   const set = await postAction(admin, { action: 'set-temp-password', userId: String(id), password: 'temp-pass-99', next: `${BASE}/admin/teach` })
   expect(set.status()).toBeLessThan(400)
   await admin.dispose()
@@ -72,15 +73,17 @@ test('A22: a temporary password forces a change at the next sign-in', async ({ p
 test('A15: a confirmed learner can be made a teacher; an unconfirmed one cannot', async ({ page }) => {
   const unconfirmed = uniqueEmail('a15-raw')
   await joinLearner(page, 'Role Raw', unconfirmed, 'role-raw-1')
+  await page.goto(`${BASE}/me`)
+  const rawId = await sessionUserId(page)
   const admin = await asUser('elm-admin@hearts.test', 'portal-admin')
-  const rawId = await findUserId(admin, unconfirmed)
   const refused = await postAction(admin, { action: 'change-role', userId: String(rawId), role: 'teacher', next: `${BASE}/admin/teach` })
   expect(refused.status()).toBe(403)
 
   const email = uniqueEmail('a15-ok')
   await joinLearner(page, 'Role Ok', email, 'role-ok-99')
   await confirmFromInbox(page, email)
-  const id = await findUserId(admin, email)
+  await page.goto(`${BASE}/me`)
+  const id = await sessionUserId(page)
   const ok = await postAction(admin, { action: 'change-role', userId: String(id), role: 'teacher', next: `${BASE}/admin/teach` })
   expect(ok.status()).toBeLessThan(400)
   await admin.dispose()

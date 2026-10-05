@@ -6,7 +6,7 @@ test('A20: Download my data emails a zip link that contains data.json and my-hea
   await joinLearner(page, 'Data Learner', email, 'data-zip-1')
   await page.goto(`${SETTINGS}?account=data`)
   await page.getByTestId('download-data-submit').click()
-  await expect(page.getByTestId('notice').or(page.locator('body'))).toBeVisible()
+  await expect(page.getByTestId('notice')).toContainText('download')
 
   const mail = await waitForMail(email, 'data is ready')
   const href = mailLink(mail, '/api/hearts/my-data')

@@ -14,8 +14,7 @@ export async function runDeletionWipes(payload: Payload) {
     collection: 'users',
     overrideAccess: true,
     depth: 0,
-    limit: 100,
-    where: { deletionRequestedAt: { exists: true } },
+    limit: 200,
   })
   const results: { id: number; ok: boolean; pending?: boolean; error?: string }[] = []
   for (const person of found.docs as { id: number; name?: string; email?: string; deletionRequestedAt?: string }[]) {
