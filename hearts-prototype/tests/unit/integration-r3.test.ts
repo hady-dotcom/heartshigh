@@ -51,6 +51,7 @@ test('posters: YouTube\'s titled thumbnails and their /clips/ copies are never o
   assert.ok(isTitledThumbnail('https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg'))
   assert.ok(isTitledThumbnail('https://img.youtube.com/vi/abcdefghijk/maxresdefault.jpg'))
   assert.ok(isTitledThumbnail('/clips/HfIT8TSoHiE.jpg'))
+  assert.ok(isTitledThumbnail('https://i.ytimg.com/vi/HfIT8TSoHiE/hqdefault.jpg'))
   assert.ok(!isTitledThumbnail('/slides/bg-cinema-road.jpg'))
   assert.ok(!isTitledThumbnail(null))
   assert.equal(cleanThumbnail({ youtubeId: 'abcdefghijk', thumbnailClean: true }), 'https://i.ytimg.com/vi/abcdefghijk/maxresdefault.jpg')

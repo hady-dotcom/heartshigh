@@ -14,7 +14,7 @@ import { one, ref, rows, str } from '../common'
 import { CourseEditorBody } from './content'
 import { DeskFrame, masterNav } from './shell'
 
-type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string; part?: string } }
+type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string; part?: string; extract?: string } }
 
 function kindLabel(value: unknown) {
   const text = str(value).replace(/[_-]+/g, ' ').trim()
@@ -22,9 +22,9 @@ function kindLabel(value: unknown) {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
-function MasterFrame({ ctx, active, title, intro, children, testId }: { ctx: MasterCtx; active: string; title: string; intro?: ReactNode; children: ReactNode; testId?: string }) {
+function MasterFrame({ ctx, active, title, intro, children, testId, evening }: { ctx: MasterCtx; active: string; title: string; intro?: ReactNode; children: ReactNode; testId?: string; evening?: boolean }) {
   return (
-    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
+    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId} evening={evening}>
       {children}
     </DeskFrame>
   )
@@ -198,9 +198,9 @@ export async function MasterLibrary(ctx: MasterCtx) {
 export async function MasterCourse(ctx: MasterCtx, courseId: number) {
   const course = await one(ctx.payload, 'courses', courseId)
   if (!course) notFound()
-  const body = await CourseEditorBody({ payload: ctx.payload, user: ctx.user, portal: null, editorHref: `/master/library/${courseId}`, courseId, part: ctx.query.part })
+  const body = await CourseEditorBody({ payload: ctx.payload, user: ctx.user, portal: null, editorHref: `/master/library/${courseId}`, courseId, part: ctx.query.part, extract: ctx.query.extract })
   return (
-    <MasterFrame ctx={ctx} active="library" title={str(course.title)} intro={<Link href="/master/library">‹ Library</Link>} testId="master-course">
+    <MasterFrame ctx={ctx} active="library" title={str(course.title)} intro={<Link href="/master/library">‹ Library</Link>} testId="master-course" evening>
       {body}
     </MasterFrame>
   )

@@ -88,6 +88,7 @@ export interface Config {
     notifications: Notification;
     'access-codes': AccessCode;
     'talk-tiers': TalkTier;
+    'talk-extracts': TalkExtract;
     adoptions: Adoption;
     'placing-questions': PlacingQuestion;
     'placing-answers': PlacingAnswer;
@@ -163,6 +164,7 @@ export interface Config {
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
     'access-codes': AccessCodesSelect<false> | AccessCodesSelect<true>;
     'talk-tiers': TalkTiersSelect<false> | TalkTiersSelect<true>;
+    'talk-extracts': TalkExtractsSelect<false> | TalkExtractsSelect<true>;
     adoptions: AdoptionsSelect<false> | AdoptionsSelect<true>;
     'placing-questions': PlacingQuestionsSelect<false> | PlacingQuestionsSelect<true>;
     'placing-answers': PlacingAnswersSelect<false> | PlacingAnswersSelect<true>;
@@ -931,6 +933,52 @@ export interface TalkTier {
     | number
     | boolean
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "talk-extracts".
+ */
+export interface TalkExtract {
+  id: number;
+  lesson: number | Lesson;
+  kind: 'hors' | 'appetiser';
+  start: number;
+  end: number;
+  quote?: string | null;
+  /**
+   * Timed spoken words: [{ at, text }]. The only text over a speaker.
+   */
+  words?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  score?: number | null;
+  status?: ('draft' | 'suggested' | 'approved' | 'rejected') | null;
+  /**
+   * Jibril door hang, 1 to 20.
+   */
+  door?: number | null;
+  seat?: (number | null) | Seat;
+  order?: number | null;
+  /**
+   * The appetiser this hors d'oeuvre sits inside. Empty until overlap finds one.
+   */
+  parent?: (number | null) | TalkExtract;
+  /**
+   * Which part of the parent appetiser this hors comes from.
+   */
+  arc?: ('hook' | 'turn' | 'land') | null;
+  hook?: string | null;
+  turn?: string | null;
+  land?: string | null;
+  source?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2353,6 +2401,10 @@ export interface PayloadLockedDocument {
         value: number | TalkTier;
       } | null)
     | ({
+        relationTo: 'talk-extracts';
+        value: number | TalkExtract;
+      } | null)
+    | ({
         relationTo: 'adoptions';
         value: number | Adoption;
       } | null)
@@ -3044,6 +3096,31 @@ export interface TalkTiersSelect<T extends boolean = true> {
   note?: T;
   checkedBy?: T;
   parents?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "talk-extracts_select".
+ */
+export interface TalkExtractsSelect<T extends boolean = true> {
+  lesson?: T;
+  kind?: T;
+  start?: T;
+  end?: T;
+  quote?: T;
+  words?: T;
+  score?: T;
+  status?: T;
+  door?: T;
+  seat?: T;
+  order?: T;
+  parent?: T;
+  arc?: T;
+  hook?: T;
+  turn?: T;
+  land?: T;
+  source?: T;
   updatedAt?: T;
   createdAt?: T;
 }

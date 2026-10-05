@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { test } from 'node:test'
 import { securityHeaders } from '../../security-headers.mjs'
@@ -144,7 +144,6 @@ test('the Dockerfile bakes no secret or database address into the image', () => 
 })
 
 test('the latest Postgres migration has a table for every collection and global', async () => {
-  const { readdirSync } = await import('node:fs')
   const { collections } = await import('../../src/collections')
   const { aiCollections } = await import('../../src/collections-ai')
   const { MasterFlags } = await import('../../src/collections-opening')
@@ -152,6 +151,10 @@ test('the latest Postgres migration has a table for every collection and global'
   const dir = path.join(root, 'src/migrations')
   const latest = readdirSync(dir).filter((name) => name.endsWith('.json')).sort().at(-1)!
   const tables = new Set(Object.keys(JSON.parse(readFileSync(path.join(dir, latest), 'utf8')).tables).map((name) => name.replace(/^public\./, '')))
+  for (const name of readdirSync(dir).filter((file) => file.endsWith('.ts') && file !== 'index.ts')) {
+    const src = readFileSync(path.join(dir, name), 'utf8')
+    for (const match of src.matchAll(/CREATE TABLE(?: IF NOT EXISTS)? "([^"]+)"/gi)) tables.add(match[1])
+  }
   const slugs = [...collections, ...aiCollections, ...sheetCollections, MasterFlags].map((item) => item.slug.replace(/-/g, '_'))
   const missing = slugs.filter((slug) => !tables.has(slug))
   assert.deepEqual(missing, [], `run npx payload migrate:create against Postgres; ${latest} lacks ${missing.join(', ')}`)

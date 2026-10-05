@@ -146,7 +146,7 @@ test.describe('harvest', () => {
     await expect(page.getByTestId('harvest-item')).toHaveCount(5)
   })
 
-  test('a seeded learner’s harvest groups under the doors of the hadith of Jibril', async ({ page }) => {
+  test('Maryam’s seeded harvest groups under the doors of the hadith of Jibril', async ({ page }) => {
     await signIn(page, 'elm-learner@hearts.test', 'portal-learner', `${BASE}/garden/harvest?group=door`)
     const groups = await page.getByTestId('harvest-group').evaluateAll((rows) => rows.map((row) => row.getAttribute('data-group')))
     expect(groups.some((key) => key && /^door-\d+$/.test(key))).toBe(true)

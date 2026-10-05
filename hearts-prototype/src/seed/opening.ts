@@ -369,6 +369,8 @@ async function seedTier(payload: Payload, lesson: Doc, youtubeId: string, length
   }
   if (existing) await payload.update({ collection: 'talk-tiers', id: existing.id, overrideAccess: true, data: data as never })
   else await payload.create({ collection: 'talk-tiers', overrideAccess: true, data: data as never })
+  const { syncExtractsFromTier } = await import('../server/extracts')
+  await syncExtractsFromTier(payload, lesson.id, { ...data, lesson: lesson.id })
   const drafts = await payload.count({ collection: 'engagement-points', overrideAccess: true, where: { and: [{ lesson: { equals: lesson.id } }, { status: { equals: 'draft' } }] } })
   if (!drafts.totalDocs) {
     for (const popup of draft.popups) {
