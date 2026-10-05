@@ -73,28 +73,28 @@ test('Ready for more? opens the same speaker, and the step-up names a duration o
   await expect(page.getByTestId('level-chip')).toHaveText('Ready for more?')
 })
 
-test('Tap for sound unmutes and plays, and the next clip keeps sound', async ({ page }) => {
+test('Today’s clips autoplay, and no Tap to play label stays on the clip', async ({ page }) => {
   test.setTimeout(90_000)
   await page.setViewportSize(PHONE)
-  await fakeYouTube(page, { blockAutoplay: true })
+  await fakeYouTube(page)
   await signIn(page)
   const feed = page.getByTestId('journey')
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
   await settled(page)
   if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').click()
-  await expect(page.getByTestId('tap-sound').first()).toBeVisible({ timeout: 15_000 })
-  for (let tryNo = 0; tryNo < 10; tryNo++) {
-    if (await page.getByTestId('tap-sound').count()) await page.getByTestId('tap-sound').first().click()
-    else if (await page.getByTestId('tap-to-play').count()) await page.getByTestId('tap-to-play').click()
-    await expect.poll(async () => feed.getAttribute('data-player-muted')).toBe('no')
-    const frozen = (await feed.getAttribute('data-player-state')) === '2' && (await page.getByTestId('tap-to-play').count()) === 0
-    expect(frozen, `try ${tryNo + 1} left paused with no Tap to play`).toBe(false)
-  }
+  await expect(page.getByTestId('tap-to-play')).toHaveCount(0)
+  await expect(page.getByTestId('tap-sound')).toHaveCount(0)
+  await expect(page.getByText('Tap to play')).toHaveCount(0)
+  await expect(page.getByText('Tap for sound')).toHaveCount(0)
+  await expect.poll(async () => feed.getAttribute('data-playing'), { timeout: 15_000 }).toBe('yes')
+  const layer = (await page.getByTestId('gesture-layer').boundingBox())!
+  await page.mouse.click(layer.x + layer.width * 0.62, layer.y + layer.height * 0.28)
+  await expect.poll(async () => feed.getAttribute('data-player-muted')).toBe('no')
+  await expect(page.getByTestId('tap-to-play')).toHaveCount(0)
   await page.getByTestId('gesture-next').dispatchEvent('click')
   await settled(page)
-  const mutedAgain = await feed.getAttribute('data-player-muted')
-  const pill = await page.getByTestId('tap-sound').count()
-  expect(mutedAgain === 'no' || pill > 0).toBe(true)
+  await expect(feed).toHaveAttribute('data-player-muted', 'no')
+  await expect(page.getByTestId('tap-sound')).toHaveCount(0)
 })
 
 test('hidden hosts stay paused and muted across clip-end, swipe and a sit on a scenic card', async ({ page }) => {
@@ -243,7 +243,8 @@ test('every chrome pair is clear at its centre, with and without words in the pi
   }
   await expect(feed).toHaveAttribute('data-card', 'talk')
   await chromeBoxesClear(page)
-  await expect(page.getByTestId('tap-sound').first()).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByTestId('level-steps')).toBeVisible()
+  await expect(page.getByTestId('tap-to-play')).toHaveCount(0)
   await chromeCentresClear(page)
   const lessonId = await feed.getAttribute('data-lesson')
   const cut = await feed.getAttribute('data-cut')

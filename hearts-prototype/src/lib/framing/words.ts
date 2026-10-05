@@ -117,9 +117,13 @@ export function sameSpokenText(a: string, b: string) {
 export function spokenLine(
   sentences: FramingSentence[],
   time: number,
-  options?: { from?: number; to?: number; title?: string | null },
+  options?: { from?: number; to?: number; title?: string | null; titles?: (string | null | undefined)[] },
 ) {
   const live =
     options?.from != null && options?.to != null ? sentencesInWindow(sentences, options.from, options.to) : sentences
-  return currentSentence(live, time)
+  const sentence = currentSentence(live, time)
+  if (!sentence) return null
+  const titles = [options?.title, ...(options?.titles || [])]
+  if (titles.some((title) => title && sameSpokenText(sentence.text, title))) return null
+  return sentence
 }

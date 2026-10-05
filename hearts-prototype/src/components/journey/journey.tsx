@@ -6,7 +6,7 @@ import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
 import { clipsFromRoute, mixFeed } from '@/lib/feed-mix'
 import { clipStepUpLabel, onlyClipToast, pieceSeconds, poolEndToast, READY_FOR_MORE, talkStepUpLabel, withTalkDetail } from '@/lib/feed-copy'
-import { appendUnseenItems, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
+import { appendUnseenItems, catalogueRemainder, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readCoachDismissed, readFeedPlace, readHeart, readPending, rememberSeenCard, sessionFlags, sessionSeenCards, sessionSeenCuts, setSessionFlags, viewAsId, writeCoachDismissed, writeFeedPlace, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
@@ -99,6 +99,13 @@ const appetiserEnd = (item: FeedItem) => appetiserStop(item.appetiser)
 function clock(total: number) {
   const value = Math.max(0, Math.round(total))
   return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`
+}
+
+/** The routed batch is only the opening handful. Keep every real talk this learner can already see. */
+function widenWithCatalogue(list: FeedItem[], catalogue: Record<string, FeedItem>, visit: number, backgrounds: string | null) {
+  const more = catalogueRemainder(list, Object.values(catalogue))
+  if (!more.length) return list
+  return appendUnseenItems(list, mixFeed(more, visit, backgrounds))
 }
 
 function useStoredSet(name: string) {
@@ -196,7 +203,6 @@ export function Journey(props: JourneyProps) {
   const [saved, toggleSave] = useStoredSet('hearts.saved.v1')
   const [firstEver, setFirstEver] = useState(false)
   const [coach, setCoach] = useState(false)
-  const [needPlay, setNeedPlay] = useState(false)
   const [seenCuts, setSeenCuts] = useState<number[]>([])
   const [seenCards, setSeenCards] = useState<string[]>([])
   const seenRef = useRef<Set<string>>(new Set())
@@ -416,6 +422,7 @@ export function Journey(props: JourneyProps) {
       setBuffering(false)
       setSlow('none')
       setErrorNote(null)
+      setAppetiserHeld(false)
       const player = host.playerId ? getPlayer(host.playerId) : null
       setMuted(player ? player.isMuted() : true)
       if (!firstPlaying.current) {
@@ -550,7 +557,6 @@ export function Journey(props: JourneyProps) {
       setErrorNote(null)
       setSlow('none')
       setBuffering(false)
-      setNeedPlay(false)
       setLineAt(-1)
       setSpokenAt(null)
       setAppetiserOver(false)
@@ -626,13 +632,15 @@ export function Journey(props: JourneyProps) {
     refilling.current = true
     try {
       const data = await fetchFeed(heartRef.current)
-      adopt(mixFeed(data.clips, heartRef.current?.served.length || 0, backgroundsBase), data.items, data.spinePointer, false)
+      const visit = heartRef.current?.served.length || 0
+      const mixed = widenWithCatalogue(mixFeed(data.clips, visit, backgroundsBase), opening.clips, visit, backgroundsBase)
+      adopt(mixed, data.items, data.spinePointer, false)
     } catch {
       // Offline: carry on with what is here.
     } finally {
       refilling.current = false
     }
-  }, [adopt, backgroundsBase, fetchFeed])
+  }, [adopt, backgroundsBase, fetchFeed, opening.clips])
 
   // Arriving straight at the feed (a returning visitor, or Home › feed).
   useEffect(() => {
@@ -659,7 +667,7 @@ export function Journey(props: JourneyProps) {
           clips = [{ ...asked, laneKey: null }, ...clips.filter((clip) => clip.cutId !== asked.cutId)]
           if (props.play === 'appetiser') firstMode = 'appetiser'
         }
-        clips = mixFeed(clips, state.served.length, backgroundsBase)
+        clips = widenWithCatalogue(mixFeed(clips, state.served.length, backgroundsBase), opening.clips, state.served.length, backgroundsBase)
         const stored = !props.clip && !props.lane ? readFeedPlace() : null
         const saved = stored?.cutId ? opening.clips[String(stored.cutId)] : undefined
         if (saved && !clips.some((row) => row.cutId === saved.cutId)) clips = [{ ...saved, laneKey: null }, ...clips]
@@ -865,7 +873,8 @@ export function Journey(props: JourneyProps) {
       tryPlay()
       const data = await feed
       if (data) {
-        const mixed = mixFeed(data.clips.length ? data.clips : itemsRef.current, state.served.length, backgroundsBase)
+        const seeded = data.clips.length ? data.clips : itemsRef.current
+        const mixed = widenWithCatalogue(mixFeed(seeded, state.served.length, backgroundsBase), opening.clips, state.served.length, backgroundsBase)
         adopt(mixed.length ? mixed : itemsRef.current, data.items, data.spinePointer, true)
         if (!starter && mixed[0]) await showItem(0)
         else preloadNext(0)
@@ -1269,16 +1278,27 @@ export function Journey(props: JourneyProps) {
     if (!current) return
     hushLeaving()
     dismissCoach()
-    const target = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, swipe, seenRef.current)
+    let list = itemsRef.current
+    let target = swipeTarget(list, indexRef.current, modeRef.current, swipe, seenRef.current)
     if (target === null) {
+      const wider = widenWithCatalogue(list, opening.clips, heartRef.current?.served.length || 0, backgroundsBase)
+      if (wider.length > list.length) {
+        itemsRef.current = wider
+        setItems(wider)
+        list = wider
+        target = swipeTarget(list, indexRef.current, modeRef.current, swipe, seenRef.current)
+      }
+    }
+    if (target === null) {
+      markSwipe(false)
       springBack()
       if (swipe === 'speaker') return setToast(`That's everything from ${current.speaker} for now.`)
       if (swipe === 'topic') return setToast("That's everything on this topic for now.")
       return setToast(itemsRef.current.length < 2 ? onlyClipToast(modeRef.current) : poolEndToast())
     }
-    const laneLabel = itemsRef.current[target]?.laneLabel?.trim()
+    const laneLabel = list[target]?.laneLabel?.trim()
     if (swipe === 'lane' && laneLabel) setToast(`Lane · ${laneLabel}`)
-    if (swipe === 'topic') setToast('More on this topic.')
+    if (swipe === 'topic' && list[target]?.lane === current.lane) setToast('More on this topic.')
     if (swipe === 'speaker') setToast(`More from ${current.speaker}.`)
     try {
       const host = hosts.current[visibleRef.current]
@@ -1289,7 +1309,7 @@ export function Journey(props: JourneyProps) {
       const span = Math.max(0.5, end - start)
       const watchPct = Math.max(0, Math.min(100, Math.round(((time - start) / span) * 100)))
       window.dispatchEvent(new CustomEvent('hearts-insight', { detail: { kind: 'clip_swipe', clipId: String(current.cutId || current.id || ''), watchPct, lane: current.laneKey } }))
-      window.dispatchEvent(new CustomEvent('hearts-insight', { detail: { kind: 'route', route: window.location.pathname, lane: itemsRef.current[target]?.laneKey } }))
+      window.dispatchEvent(new CustomEvent('hearts-insight', { detail: { kind: 'route', route: window.location.pathname, lane: list[target]?.laneKey } }))
     } catch {
       // ignore
     }
@@ -1345,6 +1365,21 @@ export function Journey(props: JourneyProps) {
     router.push(step.href)
   }
 
+  const watchFull = () => {
+    const current = itemsRef.current[indexRef.current]
+    if (!current) return
+    if (needsAccount('save')) return
+    const href = learnMore(current, 'appetiser', base)?.href
+    if (!href) return
+    signal('start-course')
+    noteBrowse('learn-more')
+    track('full_talk_start', { lesson: current.lessonId })
+    haptic(10)
+    hushLeaving()
+    stopVisible()
+    router.push(href)
+  }
+
   const fave = () => {
     if (!item) return
     if (needsAccount('save')) return
@@ -1381,30 +1416,24 @@ export function Journey(props: JourneyProps) {
       void typeRef.current.play().catch(() => undefined)
     }
     setMuted(false)
-    setNeedPlay(false)
-    window.setTimeout(() => {
-      const now = hosts.current[visibleRef.current]
-      const player = now.playerId ? getPlayer(now.playerId) : null
-      const film = typeRef.current
-      const playing = (player && player.getPlayerState() === STATE.PLAYING) || (film && !film.paused)
-      if (!playing) setNeedPlay(true)
-    }, 300)
   }
 
   const tapPicture = () => {
     const host = hosts.current[visibleRef.current]
     const player = host.playerId ? getPlayer(host.playerId) : null
     const real = player?.getPlayerState()
+    // The first tap is the gesture that turns sound on. It must not leave a label sitting on the clip.
+    if (!hasSound()) {
+      tapSound()
+      return
+    }
     if (player && real === STATE.PLAYING) {
       player.pauseVideo()
       return
     }
     if (player) {
-      if (hasSound()) player.unMute()
+      player.unMute()
       player.playVideo()
-      window.setTimeout(() => {
-        if (getPlayer(host.playerId || '')?.getPlayerState() !== STATE.PLAYING) setNeedPlay(true)
-      }, 300)
       return
     }
     tryPlay()
@@ -1493,13 +1522,20 @@ export function Journey(props: JourneyProps) {
       hushLeaving()
       markSwipe(true)
     }
-    if (clipRef.current && Math.abs(dx) > Math.abs(dy) && start.moved) {
-      clipRef.current.style.transform = `translateX(${dx}px)`
-      const topic = peekEls.current.topic
-      const speaker = peekEls.current.speaker
-      if (topic) topic.style.transform = `translateX(calc(100% + ${dx}px))`
-      if (speaker) speaker.style.transform = `translateX(calc(-100% + ${dx}px))`
+    if (!clipRef.current || !start.moved) return
+    const vertical = Math.abs(dy) > Math.abs(dx)
+    if (vertical) {
+      clipRef.current.style.transform = `translateY(${dy}px)`
+      const down = dy > 0
+      const peek = down ? peekEls.current.lane : peekEls.current.next
+      if (peek) peek.style.transform = down ? `translateY(calc(-100% + ${dy}px))` : `translateY(calc(100% + ${dy}px))`
+      return
     }
+    clipRef.current.style.transform = `translateX(${dx}px)`
+    const topic = peekEls.current.topic
+    const speaker = peekEls.current.speaker
+    if (topic) topic.style.transform = `translateX(calc(100% + ${dx}px))`
+    if (speaker) speaker.style.transform = `translateX(calc(-100% + ${dx}px))`
   }
   const onUp = (event: ReactPointerEvent) => {
     const start = gesture.current
@@ -1510,16 +1546,13 @@ export function Journey(props: JourneyProps) {
     const dy = event.clientY - start.y
     const elapsed = Math.max(1, performance.now() - start.t)
     const width = clipRef.current?.clientWidth || 390
+    const height = clipRef.current?.clientHeight || 700
     const far = Math.max(Math.abs(dx), Math.abs(dy))
-    const quick = far / elapsed >= 0.5
-    if (Math.abs(dy) > Math.abs(dx) && clipRef.current) {
-      clipRef.current.style.transform = ''
-      for (const side of ['topic', 'speaker'] as const) {
-        const peek = peekEls.current[side]
-        if (peek) peek.style.transform = peekRest(side)
-      }
-    }
-    if (far < 40 || (far < width * 0.25 && !quick)) {
+    const vertical = Math.abs(dy) > Math.abs(dx)
+    const quick = far / elapsed >= 0.35
+    // A downward swipe used to be judged against the screen width, so an ordinary swipe down never landed.
+    const commit = vertical ? far >= 48 || (far >= 32 && quick) : far >= 40 && (far >= width * 0.25 || quick || far >= height * 0.12)
+    if (!commit) {
       markSwipe(false)
       springBack()
       if (!start.moved && overlay && !slide && cardKind !== 'question' && cardKind !== 'text') {
@@ -1527,9 +1560,14 @@ export function Journey(props: JourneyProps) {
       }
       return
     }
-    if (Math.abs(dy) > Math.abs(dx)) {
-      if (dy < 0) replay()
-      else nextLane()
+    if (vertical) {
+      if (dy < 0) {
+        markSwipe(false)
+        if (clipRef.current) clipRef.current.style.transform = ''
+        const peek = peekEls.current.next
+        if (peek) peek.style.transform = peekRest('next')
+        replay()
+      } else nextLane()
     } else if (dx < 0) moreLikeThis()
     else moreFromSpeaker()
   }
@@ -1542,7 +1580,7 @@ export function Journey(props: JourneyProps) {
   }
   const springBack = () => {
     const el = clipRef.current
-    for (const side of ['topic', 'speaker'] as const) {
+    for (const side of ['topic', 'speaker', 'lane', 'next'] as const) {
       const peek = peekEls.current[side]
       if (!peek || !peek.style.transform.includes('calc')) continue
       const from = peek.style.transform
@@ -1552,7 +1590,7 @@ export function Journey(props: JourneyProps) {
     if (!el || !el.style.transform) return
     const from = el.style.transform
     el.style.transform = ''
-    animate(el, [{ transform: from }, { transform: 'translateX(0)' }], T.sheet, EASE.calm, { id: 'spring-back', fill: 'none' })
+    animate(el, [{ transform: from }, { transform: 'translate(0, 0)' }], T.sheet, EASE.calm, { id: 'spring-back', fill: 'none' })
   }
   const swipe = { onPointerDown: onDown, onPointerMove: onMove, onPointerUp: onUp, onPointerCancel: onCancel }
 
@@ -1710,7 +1748,6 @@ export function Journey(props: JourneyProps) {
               {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
               {clipPlaying ? <span className="chip dark" data-testid="clip-timer">{clock(clipLeft)}</span> : null}
             </div>
-            {!typeClip && muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
           </div>
           </>
         ) : (
@@ -1719,7 +1756,6 @@ export function Journey(props: JourneyProps) {
               <button type="button" className="chip white" onClick={() => { window.location.assign(`${base}/feed`) }} data-testid="appetiser-back">‹ Back</button>
               <span className="chip gold" data-testid="level-chip">{READY_FOR_MORE}</span>
             </div>
-            {muted && (typeClip || (!hasSound() && playerReady)) ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
           </div>
         )}
       </div>
@@ -1746,17 +1782,17 @@ export function Journey(props: JourneyProps) {
         <button type="button" aria-pressed={faves.includes(item.id)} onClick={fave} data-testid="fave"><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
         <button type="button" aria-pressed={saved.includes(item.id)} onClick={() => !needsAccount('save') && toggleSave(item.id)} data-testid="save"><span className="bubble"><SaveIcon /></span>{saved.includes(item.id) ? 'Saved' : 'Save'}</button>
       </div>
-      {needPlay ? (
-        <button type="button" className="j-tap-play" data-testid="tap-to-play" onClick={tapSound}>Tap to play</button>
-      ) : null}
+      <div
+        className="j-level-choices"
+        data-testid="level-steps"
+        aria-label="Choose how much to watch"
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <button type="button" className={mode === 'hors' ? 'on' : undefined} data-testid="level-clip" aria-pressed={mode === 'hors'} onClick={() => { if (mode !== 'hors') void showItem(index, 'hors') }}>Clip</button>
+        <button type="button" className={mode === 'appetiser' ? 'on' : undefined} data-testid="level-minutes" aria-pressed={mode === 'appetiser'} onClick={() => { if (mode !== 'appetiser') void stepUp() }}>3 minutes</button>
+        <button type="button" data-testid="level-lecture" onClick={watchFull}>Full lecture</button>
+      </div>
       <div className="clip-foot j-credits">
-        <div className="j-levels" data-testid="level-steps" aria-label="Where you are">
-          <span className={mode === 'hors' ? 'on' : undefined}>Clip</span>
-          <i aria-hidden>·</i>
-          <span className={mode === 'appetiser' ? 'on' : undefined}>3-minute version</span>
-          <i aria-hidden>·</i>
-          <span>Full talk</span>
-        </div>
         {mode === 'hors' ? (
           <>
             {wordsInPicture && !cardKind ? null : speakerRow}
@@ -1833,12 +1869,14 @@ export function Journey(props: JourneyProps) {
               style={{ visibility: at === visibleHost && playerReady ? 'visible' : 'hidden' }}
             />
           ))}
+          {!overlay && !wordsInPicture ? <div className="yt-title-mask" data-testid="yt-title-mask" aria-hidden /> : null}
           {framingMode === 'F' && item?.framingTrack?.sentences?.length ? (
             <SpokenWords
               sentences={item.framingTrack.sentences}
               time={spokenAt ?? item.hors.start}
               speaker={item.speaker}
               title={item.lessonTitle || item.courseTitle}
+              titles={[item.lessonTitle, item.courseTitle]}
               from={item.hors.start}
               to={item.hors.end}
             />
@@ -1874,7 +1912,7 @@ export function Journey(props: JourneyProps) {
               <PosterStill item={item} mode={mode} />
               <span className="j-poster-mark" aria-hidden><Arch size={28} /></span>
               {waitingToPlay && slow !== 'retry' ? (
-                <button type="button" className="j-poster-play" aria-label="Play with sound" data-testid="poster-play" onClick={() => { tapSound(); tryPlay() }}>
+                <button type="button" className="j-poster-play" aria-label="Play" data-testid="poster-play" onClick={() => { tapSound(); tryPlay() }}>
                   <PlayIcon size={30} />
                 </button>
               ) : null}

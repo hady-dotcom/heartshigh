@@ -10,6 +10,7 @@ export function SpokenWords({
   from,
   to,
   title,
+  titles,
 }: {
   sentences: FramingSentence[]
   time: number
@@ -18,9 +19,10 @@ export function SpokenWords({
   to?: number
   /** Talk title — never shown in place of timed words. */
   title?: string | null
+  titles?: (string | null | undefined)[]
 }) {
   const live = from != null && to != null ? sentencesInWindow(sentences, from, to) : sentences
-  const sentence = spokenLine(sentences, time, { from, to, title })
+  const sentence = spokenLine(sentences, time, { from, to, title, titles })
   if (!sentence) return <div className="fr-words" data-testid="spoken-words" data-empty="yes" />
   const lines = wrapWordLines(sentence.words.map((row) => row.w), 20).slice(0, 5)
   return (

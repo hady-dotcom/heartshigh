@@ -3,7 +3,7 @@ import { E2E_BASE } from '../env'
 import { fakeYouTube } from './fake-youtube'
 import { settled as feedSettled, stepFeed, stepToCard } from './feed-step'
 
-// Follow-ups from the live check: one Tap for sound, readable chrome on cream cards, scenic cards for talks
+// Follow-ups from the live check: no play-gate label, readable chrome on cream cards, scenic cards for talks
 // without a voice, tidy harvest lines with one count everywhere, and portal names instead of slugs.
 
 const PHONE = { width: 390, height: 844 }
@@ -48,7 +48,7 @@ async function contrasts(page: Page, selector: string) {
   }, selector)
 }
 
-test('one Tap for sound on the first clip and on the 3-minute version; scenic chrome stays readable', async ({ page }) => {
+test('Today’s clips autoplay with no Tap for sound, and scenic chrome stays readable', async ({ page }) => {
   test.setTimeout(120_000)
   await page.setViewportSize(PHONE)
   await fakeYouTube(page)
@@ -57,8 +57,11 @@ test('one Tap for sound on the first clip and on the 3-minute version; scenic ch
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
   await settled(feed, page)
   await expect(feed).toHaveAttribute('data-card', 'talk')
-  await expect(page.getByTestId('tap-sound').first()).toBeVisible({ timeout: 15_000 })
-  await expect(page.getByTestId('tap-sound')).toHaveCount(1)
+  await expect(page.getByTestId('tap-sound')).toHaveCount(0)
+  await expect(page.getByTestId('tap-to-play')).toHaveCount(0)
+  await expect(page.getByTestId('level-clip')).toBeVisible()
+  await expect(page.getByTestId('level-minutes')).toBeVisible()
+  await expect(page.getByTestId('level-lecture')).toBeVisible()
 
   await stepTo(page, feed, 'scene')
   const rows = await contrasts(page, '.j-chrome .rail button, .j-chrome .speaker-row b, [data-testid="scene-card"] h2, [data-testid="scene-quote"], [data-testid="scene-next"]')
@@ -72,7 +75,9 @@ test('one Tap for sound on the first clip and on the 3-minute version; scenic ch
   await page.getByTestId('learn-more').click()
   await expect(feed).toHaveAttribute('data-mode', 'appetiser')
   await page.waitForTimeout(1500)
-  expect(await page.getByTestId('tap-sound').count()).toBeLessThanOrEqual(1)
+  await expect(page.getByTestId('tap-sound')).toHaveCount(0)
+  await expect(page.getByTestId('tap-to-play')).toHaveCount(0)
+  await expect(page.getByTestId('level-minutes')).toHaveAttribute('aria-pressed', 'true')
 })
 
 test('every scenic card in the feed keeps its words inside the card, never shifts the screen, and offers Mute only with audio', async ({ page }) => {

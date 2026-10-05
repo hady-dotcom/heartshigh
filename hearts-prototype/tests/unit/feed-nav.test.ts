@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { mixFeed } from '../../src/lib/feed-mix'
-import { appendUnseenItems, cardKey, isInterstitial, learnMoreTarget, settleOnLevel, swipeTarget, type FeedLevel, type Swipe } from '../../src/lib/feed-nav'
+import { appendUnseenItems, cardKey, catalogueRemainder, isInterstitial, learnMoreTarget, settleOnLevel, swipeTarget, type FeedLevel, type Swipe } from '../../src/lib/feed-nav'
 import type { FeedItem } from '../../src/server/learner'
 
 const BASE = '/p/east-london'
@@ -191,6 +191,25 @@ test('a talk seen as a clip can still open as a 3-minute version', () => {
   assert.equal(swipeTarget(list, talks[0].index, 'hors', 'next', horsSeen), null)
   const next = swipeTarget(list, talks[0].index, 'appetiser', 'next', horsSeen)
   assert.equal(list[next!].cutId, talks[1].row.cutId)
+})
+
+test('a two-clip batch is not the end of the library: speaker, topic and lane still reach real catalogue talks', () => {
+  const loaded = mixFeed([talk(1, 'trust', 'McCarl Smith', false), talk(2, 'trust', 'Ada Yusuf', false)])
+  const catalogue = [talk(1, 'trust', 'McCarl Smith', false), talk(2, 'trust', 'Ada Yusuf', false), talk(3, 'quiet', 'McCarl Smith', false), talk(4, 'company', 'Speaker C', false), talk(5, 'trust', 'McCarl Smith', false)]
+  const more = catalogueRemainder(loaded, catalogue)
+  assert.deepEqual(more.map((row) => row.cutId), [3, 4, 5])
+  const list = [...loaded, ...more]
+  const seen = new Set(loaded.map((row) => cardKey(row, 'hors')))
+  const first = list.findIndex((row) => row.cutId === 1 && !isInterstitial(row))
+  const speaker = swipeTarget(list, first, 'hors', 'speaker', seen)
+  assert.equal(list[speaker!].speaker, 'McCarl Smith')
+  assert.notEqual(list[speaker!].cutId, 1)
+  const lane = swipeTarget(list, first, 'hors', 'lane', seen)
+  assert.notEqual(list[lane!].lane, list[first].lane)
+  const topic = swipeTarget(list, first, 'hors', 'topic', seen)
+  assert.notEqual(topic, null)
+  assert.notEqual(list[topic!].cutId, list[first].cutId)
+  assert.equal(catalogueRemainder(list, catalogue).length, 0)
 })
 
 test('a refill does not append a second talk or scene for a cut already in the mix', () => {
