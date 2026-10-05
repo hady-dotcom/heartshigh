@@ -9,6 +9,7 @@ import { loadOpening } from '@/server/opening'
 import { loadDoors } from '@/server/doors'
 import { doorNumberOfClause } from '@/lib/doors'
 import { unreadCount } from '../common'
+import { featuresOf } from '@/lib/features'
 
 export async function masterFlags(payload: Payload) {
   const flags = (await payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null)) as { popupOverPlayer?: boolean; chromeOverPlayer?: boolean; showUnchecked?: boolean } | null
@@ -53,6 +54,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
           clip={Number(query.clip) || null}
           play={query.play === 'appetiser' ? 'appetiser' : null}
           afterPlacing={query.after === 'placing'}
+          features={featuresOf(portal)}
         />
       </main>
     </div>

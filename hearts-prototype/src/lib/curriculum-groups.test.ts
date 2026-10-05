@@ -27,7 +27,7 @@ test('a course sits in the door most of its talks belong to, and the rest are ta
   )
   assert.equal(groups.length, 1)
   assert.equal(groups[0].code, 'W5')
-  assert.equal(groups[0].heading, 'W5 · Prayer')
+  assert.equal(groups[0].heading, 'Door 5 · Prayer')
   assert.equal(groups[0].courses[0].door, 5)
   assert.deepEqual(groups[0].courses[0].otherDoors.map((door) => door.code), ['W7'])
   assert.equal(groups[0].courses[0].talkCount, 4)

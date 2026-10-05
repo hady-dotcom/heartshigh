@@ -21,11 +21,11 @@ test('Shorts: a /shorts/ link or a 9:16 size is vertical, a watch link or a 16:9
   assert.ok(!isVerticalLesson(null))
 })
 
-test('export times: the portal zone (Europe/London unless set), the viewer\'s language, and a short zone label', async () => {
+test('export times: the portal zone (America/Toronto unless set), the viewer\'s language, and a short zone label', async () => {
   const { DEFAULT_TIME_ZONE, isTimeZone, localeFromAcceptLanguage, portalTimeZone, zonedTime, zoneCity } = await import('../../src/lib/zone-time')
-  assert.equal(DEFAULT_TIME_ZONE, 'Europe/London')
-  assert.equal(portalTimeZone(null), 'Europe/London')
-  assert.equal(portalTimeZone({ timeZone: 'Not/AZone' }), 'Europe/London')
+  assert.equal(DEFAULT_TIME_ZONE, 'America/Toronto')
+  assert.equal(portalTimeZone(null), 'America/Toronto')
+  assert.equal(portalTimeZone({ timeZone: 'Not/AZone' }), 'America/Toronto')
   assert.equal(portalTimeZone({ timeZone: 'Asia/Dubai' }), 'Asia/Dubai')
   assert.ok(isTimeZone('America/Los_Angeles') && !isTimeZone('Mars/Olympus'))
   assert.equal(localeFromAcceptLanguage('de-DE,de;q=0.9,en;q=0.8'), 'de-DE')
@@ -34,6 +34,7 @@ test('export times: the portal zone (Europe/London unless set), the viewer\'s la
   assert.equal(zonedTime('2026-10-04T05:12:00.000Z', 'Europe/London', 'en-GB'), '4 Oct 2026, 06:12 BST')
   assert.equal(zonedTime('2026-12-04T05:12:00.000Z', 'Europe/London', 'en-GB'), '4 Dec 2026, 05:12 GMT')
   assert.equal(zonedTime('2026-10-04T05:12:00.000Z', 'Asia/Dubai', 'en-GB'), '4 Oct 2026, 09:12 GST')
+  assert.equal(zonedTime('2026-10-05T00:36:00.000Z', 'America/Toronto', 'en-GB'), '4 Oct 2026, 20:36 ET')
   assert.match(zonedTime('2026-10-04T05:12:00.000Z', 'Europe/London', 'en-US'), /^Oct 4, 2026, 06:12 AM GMT\+1$/)
   assert.equal(zonedTime('nonsense', 'Europe/London'), '')
   assert.equal(zoneCity('America/Los_Angeles'), 'Los Angeles')

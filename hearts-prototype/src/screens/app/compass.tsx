@@ -42,7 +42,7 @@ export async function LearnerPathScreen({ payload, user, portal, base, query }: 
         })}
         {!summary.areas.length ? <p className="card" data-testid="path-empty">When you have sat with the opening, a few next steps will be here.</p> : null}
       </div>
-      <TabBar base={base} active="me" unread={0} />
+      <TabBar base={base} active="me" portal={portal} unread={0} />
     </AppFrame>
   )
 }
@@ -65,7 +65,7 @@ export async function RecalibrateScreen({ payload, user, portal, base, query }: 
           next={`${base}/me/path`}
         />
       </div>
-      <TabBar base={base} active="home" unread={0} />
+      <TabBar base={base} active="home" portal={portal} unread={0} />
     </AppFrame>
   )
 }

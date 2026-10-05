@@ -347,7 +347,9 @@ async function main() {
   console.log(`Compass demo is in place on ${SLUG}. ${createdAccounts ? `New accounts use ${passwordForNewAccount(true)}.` : 'No new accounts.'} Existing accounts keep their password.`)
 }
 
-main().catch((error) => {
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
   const detail = error && typeof error === 'object' && 'data' in error ? (error as { data?: unknown }).data : undefined
   console.error(error instanceof Error ? error.message : error)
   if (detail) console.error(JSON.stringify(detail, null, 2))

@@ -89,6 +89,14 @@ Open the app service, then **Variables**, then **New Variable**. Add these. For 
 | `BOOTSTRAP_ADMIN_PASSWORD` | A password you choose | At least 12 characters. Not `hearts-master`, `portal-admin`, `portal-teacher`, or `portal-learner`. |
 | `BOOTSTRAP_ADMIN_NAME` | Your name | Optional. If you leave it out, the account is called Master. |
 
+Optional, only if Cloudflare sits in front of the site. Do not change DNS or Turnstile from this repository. See **Cloudflare in front of HEARTS** in the README for the dashboard steps.
+
+| Variable | What to put | Notes |
+| --- | --- | --- |
+| `TURNSTILE_SITE_KEY` | The Turnstile site key | Both keys must be set. Missing keys leave join, sign-in and password reset unchanged. |
+| `TURNSTILE_SECRET_KEY` | The Turnstile secret key | Keep this on the host only. |
+| `CF_CONNECTING_IP` | `1` | Trust Cloudflare’s visitor address header. |
+
 `NODE_ENV` is already `production` inside the image. You do not need to set it.
 
 Click **Deploy** (or wait for the automatic redeploy) after the variables are saved.
@@ -188,6 +196,8 @@ docker run --rm -e DATABASE_PUBLIC_URL postgres:16-alpine sh -c 'pg_dump --dbnam
 5. Keep the file somewhere private. It contains every account and every answer.
 
 The bucket is separate from the database. A database backup does not contain the uploaded files. Railway keeps the bucket across deploys. If you ever need a copy of the bucket, use the same keys from the Variables page with any S3 client. Do not delete the bucket to “tidy up”.
+
+Automatic daily backups (database **and** the bucket), encryption, retention and a restore drill are in `docs/BACKUPS.md`. Use that page for the Railway cron. This section stays as the manual one-off copy.
 
 ## 13. Updating later
 

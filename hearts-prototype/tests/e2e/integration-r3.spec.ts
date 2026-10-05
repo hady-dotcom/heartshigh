@@ -95,11 +95,11 @@ test('the export log shows times in the portal\'s zone with a short label, in th
     await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${PORTAL}/admin/feedback`)
     expect((await page.request.get('/api/feedback?portal=east-london&format=csv')).ok()).toBeTruthy()
     await page.reload()
-    await expect(page.getByTestId('audit-zone')).toHaveText('Times in London time')
+    await expect(page.getByTestId('audit-zone')).toHaveText('Times in Toronto time')
     const when = page.getByTestId('audit-when').first()
     const at = (await when.getAttribute('data-at'))!
-    await expect(when).toHaveText(zonedTime(at, 'Europe/London', locale))
-    if (locale === 'en-GB') await expect(when).toHaveText(/\d{1,2} \w{3} \d{4}, \d{2}:\d{2} (BST|GMT)$/)
+    await expect(when).toHaveText(zonedTime(at, 'America/Toronto', locale))
+    if (locale === 'en-GB') await expect(when).toHaveText(/\d{1,2} \w{3} \d{4}, \d{2}:\d{2} (EDT|EST|ET)$/)
     else await expect(when).toHaveText(/^\d{1,2}\. \w+\.? \d{4}, \d{2}:\d{2} /)
     await context.close()
   }
@@ -118,9 +118,9 @@ test('the export log shows times in the portal\'s zone with a short label, in th
     await expect(when).toHaveText(/GST$/)
   } finally {
     await page.goto(`${PORTAL}/admin/settings`)
-    await page.getByTestId('time-zone').selectOption('Europe/London')
+    await page.getByTestId('time-zone').selectOption('America/Toronto')
     await page.getByTestId('save-settings').click()
-    await expect(page.getByTestId('time-zone')).toHaveValue('Europe/London')
+    await expect(page.getByTestId('time-zone')).toHaveValue('America/Toronto')
     await context.close()
   }
 })
@@ -142,16 +142,30 @@ test('small fixes: favicon, Teach emails end in an ellipsis, and the install car
     expect(await cell.evaluate((el) => el.getClientRects().length)).toBe(1)
   }
 
-  const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
+  const phone = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+  })
   const app = await phone.newPage()
   await signIn(app, 'elm-learner@hearts.test', 'portal-learner', PORTAL)
   const card = app.getByTestId('install-card')
+  const carryOn = app.getByTestId('continue')
   await expect(card).toBeVisible()
-  expect(await card.evaluate((el) => getComputedStyle(el).position)).toBe('fixed')
-  await card.evaluate((el) => Promise.all(el.getAnimations().map((animation) => animation.finished)))
-  const tabs = await app.locator('[data-testid="tabbar"]').first().boundingBox()
+  await expect(carryOn).toBeVisible()
+  expect(await card.getAttribute('data-variant')).toBe('strip')
+  expect(await card.getAttribute('data-surface')).toBe('phone')
+  expect(await card.evaluate((el) => getComputedStyle(el).position)).not.toBe('fixed')
+  await expect(card.locator('h2')).toContainText('phone')
+  await expect(card.locator('h2')).not.toContainText('computer')
+  const carryBox = await carryOn.boundingBox()
   const box = await card.boundingBox()
-  if (tabs && box) expect(box.y + box.height).toBeLessThanOrEqual(tabs.y + 1)
+  expect(carryBox && box, 'Continue and the install strip both have a box').toBeTruthy()
+  if (carryBox && box) {
+    expect(box.y, 'the install strip sits below Continue').toBeGreaterThanOrEqual(carryBox.y + carryBox.height - 1)
+    expect(carryBox.y + carryBox.height, 'Continue is not covered').toBeLessThanOrEqual(box.y + 1)
+  }
   await phone.close()
 })
 

@@ -3,6 +3,7 @@ import { DoorChips } from '@/components/app/doors'
 import { InstallCard } from '@/components/app/install-card'
 import { redirect } from 'next/navigation'
 import { Avatar } from '@/components/app/feed'
+import { SavedCount, SavedToast } from '@/components/app/saved-list'
 import { AppFrame, Flash, TabBar } from '@/components/app/shell'
 import { PlayIcon } from '@/components/icons'
 import { displayTalkTitle } from '@/lib/talk-title'
@@ -15,6 +16,7 @@ import { continueOrder, dateKeyInZone, minutesADay, tonightLabel, tonightSlot } 
 import { now as clockNow } from '@/lib/clock'
 import { growth, Rings } from './garden'
 import { HomeGather, homeGatherings } from './gather'
+import { featureOn } from '@/lib/features'
 import { type Ctx, ref, rows, str, unreadCount } from '../common'
 
 function minutesLeft(seconds: number, percent: number) {
@@ -26,7 +28,7 @@ function minutesLeft(seconds: number, percent: number) {
 /** Home: the growth banner, what to carry on with, then the way into today's clips (board 00). */
 export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   if (user.role === 'learner' && !user.onboarded) redirect(user.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
-  const [g, unread, { items }, courses, due, gatherings] = await Promise.all([growth(payload, user), unreadCount(payload, user), learnerClips(payload, portal, user), courseCards(payload, user), user.role === 'learner' ? recalibrationDueFor(payload, user.id) : Promise.resolve(false), homeGatherings({ payload, portal, user, base })])
+  const [g, unread, { items }, courses, due, gatherings] = await Promise.all([growth(payload, user), unreadCount(payload, user), learnerClips(payload, portal, user), courseCards(payload, user), user.role === 'learner' && featureOn(portal, 'compass') ? recalibrationDueFor(payload, user.id) : Promise.resolve(false), featureOn(portal, 'gather') ? homeGatherings({ payload, portal, user, base }) : Promise.resolve([])])
   if (due) await ensureMonthNote(payload, user.id, portal.id, String(portal.slug || ''))
   const [visits, sessions] = await Promise.all([
     rows(payload, 'lesson-visits', { user: { equals: user.id } }, { sort: '-updatedAt', limit: 40 }),
@@ -68,7 +70,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   const fallback = carryOn.length ? [] : courses.filter((course) => course.open).slice(0, 2)
   const plans = await rows(payload, 'schedules', { portal: { equals: portal.id } }, { sort: '-createdAt', limit: 20 })
   const plan = plans.find((row) => ref(row.owner) === user.id || ((row.learners as unknown[]) || []).some((item) => ref(item) === user.id))
-  const slot = plan ? tonightSlot((plan.slots as { date?: string; lessonId?: number | null; title?: string }[]) || [], dateKeyInZone(clockNow(), portal.timeZone || 'Europe/London'), done) : null
+  const slot = plan ? tonightSlot((plan.slots as { date?: string; lessonId?: number | null; title?: string }[]) || [], dateKeyInZone(clockNow(), portal.timeZone || 'America/Toronto'), done) : null
   const planLesson = slot?.lessonId ? (await rows(payload, 'lessons', { id: { equals: slot.lessonId } }, { limit: 1 }))[0] : null
   const planMinutes = minutesADay(plan?.minutesPerDay) || 20
   const tonight = planLesson
@@ -81,27 +83,32 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
       <div className="app-scroll">
         <div className="app-head">
           <h1>Home</h1>
-          <Link href={`${base}/me`} aria-label="Me" data-testid="home-avatar"><Avatar name={user.name || 'You'} portrait={null} size={40} /></Link>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <SavedCount base={base} />
+            <Link href={`${base}/me`} aria-label="Me" data-testid="home-avatar"><Avatar name={user.name || 'You'} portrait={null} size={40} /></Link>
+          </span>
         </div>
+        <SavedToast />
         <span className="sr-only">{portalName(portal)}</span>
         <Flash error={query.error} notice={query.notice} />
-        <InstallCard sheet />
+        {featureOn(portal, 'garden') ? (
         <section className="grow-banner" data-testid="grow-banner">
           <p className="eyebrow">Your growth</p>
           <h2 data-testid="days-count">{days ? `${days} day${days === 1 ? '' : 's'} with us so far` : 'Your garden starts today'}</h2>
           <span className="tree-art" aria-hidden />
           <p className="grow-sub">Five ways to see it</p>
-          <Rings g={g} base={base} />
+          <Rings g={g} base={base} portal={portal} />
           <Link className="pill gold block" href={`${base}/garden`} data-testid="see-sown">See what you&apos;ve sown</Link>
         </section>
-        {due ? (
+        ) : null}
+        {due && featureOn(portal, 'compass') ? (
           <section className="card" data-testid="recalibrate-card" style={{ marginBottom: 16 }}>
             <h2 style={{ marginTop: 0 }}>A fresh look, when you have a moment</h2>
             <p>Five short questions, in different words, and one line about life just now.</p>
             <Link className="pill ink" href={`${base}/recalibrate`} data-testid="recalibrate-open">Take a few moments</Link>
           </section>
         ) : null}
-        {tonight ? (
+        {tonight && featureOn(portal, 'planner') ? (
           <section className="card home-plan" data-testid="home-plan">
             <p className="eyebrow">Your plan</p>
             <h2 data-testid="home-plan-line">{tonight.label}</h2>
@@ -125,7 +132,8 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
           ))}
           {!carryOn.length && !fallback.length ? <p className="muted">Start a course from Lanes and it will wait for you here.</p> : null}
         </div>
-        <HomeGather cards={gatherings} base={base} masjid={portalName(portal)} />
+        <InstallCard strip />
+        {featureOn(portal, 'gather') ? <HomeGather cards={gatherings} base={base} masjid={portalName(portal)} /> : null}
         <p className="eyebrow">Today&apos;s clips <span className="muted" style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }} data-testid="day-number">· Day {dayNumber(user)}</span></p>
         <Link className="feed-door" href={`${base}/feed`} data-testid="open-feed">
           <span className="strip">
@@ -136,7 +144,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
           <span className="go"><PlayIcon size={22} /> Watch today&apos;s clips</span>
         </Link>
       </div>
-      <TabBar base={base} active="home" unread={unread} />
+      <TabBar base={base} active="home" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -210,7 +218,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
           {courses.length} course{courses.length === 1 ? '' : 's'} open to you. A new one opens each day, and you can always peek ahead.
         </p>
       </div>
-      <TabBar base={base} active="lanes" unread={unread} />
+      <TabBar base={base} active="lanes" portal={portal} unread={unread} />
     </AppFrame>
   )
 }

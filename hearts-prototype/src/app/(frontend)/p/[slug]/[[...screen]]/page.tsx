@@ -26,14 +26,25 @@ import { PortalCreatorScreen } from '@/screens/desk/creator-screen'
 import { PortalSheetScreen } from '@/screens/desk/sheet'
 import { FeedbackScreen } from '@/screens/desk/feedback'
 import { GatherAttendanceScreen, GatherDeskScreen } from '@/screens/desk/gather'
+import { PortalActivityScreen } from '@/screens/desk/activity'
+import { ClassesScreen } from '@/screens/desk/classes'
+import { PortalTrashScreen } from '@/screens/desk/trash'
+import { PeopleImportScreen } from '@/screens/desk/people-import'
 import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
 import { PortalCircle } from '@/screens/desk/circle'
+import { FeatureUnavailable } from '@/components/app/feature-unavailable'
+import { featureOn, type FeatureKey } from '@/lib/features'
 
 function originOf(reqHeaders: Headers) {
   return shareOrigin(reqHeaders)
 }
 
 const plain = (value: string) => encodeURIComponent(value)
+
+function gated(ctx: Ctx, key: FeatureKey, desk = false) {
+  if (featureOn(ctx.portal, key)) return null
+  return FeatureUnavailable({ base: ctx.base, feature: key, desk })
+}
 
 const OPEN_TO_ALL = new Set(['start', 'help', 'feed'])
 
@@ -90,20 +101,35 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       case 'library':
         return LibraryScreen(ctx)
       case 'access':
+        if (b === 'import') {
+          guardAdmin(ctx)
+          return PeopleImportScreen(ctx)
+        }
         return AccessScreen(ctx)
       case 'teach':
         return TeachScreen(ctx)
+      case 'classes':
+        return ClassesScreen(ctx)
+      case 'activity':
+        if (user.role === 'teacher') redirect(`${base}/admin?error=${plain('The activity log is for the portal admin.')}`)
+        return PortalActivityScreen(ctx)
+      case 'trash':
+        if (user.role === 'teacher') redirect(`${base}/admin?error=${plain('Recently removed is for the portal admin.')}`)
+        return PortalTrashScreen(ctx)
       case 'feedback':
-        return FeedbackScreen(ctx)
+        return gated(ctx, 'feedback', true) || FeedbackScreen(ctx)
       case 'compass':
-        return b ? StaffLearnerCompass(ctx, Number(b)) : PortalCompassScreen(ctx)
+        return gated(ctx, 'compass', true) || (b ? StaffLearnerCompass(ctx, Number(b)) : PortalCompassScreen(ctx))
       case 'plans':
-        return PlansScreen(ctx)
+        return gated(ctx, 'planner', true) || PlansScreen(ctx)
       case 'nights':
-        return NightsScreen(ctx)
-      case 'gather':
+        return gated(ctx, 'gather', true) || NightsScreen(ctx)
+      case 'gather': {
+        const closed = gated(ctx, 'gather', true)
+        if (closed) return closed
         if (b === 'attendance') return GatherAttendanceScreen(ctx)
         return GatherDeskScreen(ctx)
+      }
       case 'settings':
         guardAdmin(ctx)
         return PortalSettingsScreen(ctx)
@@ -115,7 +141,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         return PortalOpeningScreen(ctx)
       case 'circle':
         guardAdmin(ctx)
-        return PortalCircle(ctx)
+        return gated(ctx, 'circle', true) || PortalCircle(ctx)
       case 'ai':
         guardAdmin(ctx)
         return AiPages({ ctx, path: screen.slice(2) })
@@ -139,13 +165,16 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       return HomeScreen(ctx)
     case 'lanes':
       return LanesScreen(ctx)
-    case 'gather':
+    case 'gather': {
+      const closed = gated(ctx, 'gather')
+      if (closed) return closed
       if (!a) return GatherListScreen(ctx)
       if (a === 'propose') return GatherProposeScreen(ctx)
       if (!Number(a)) notFound()
       if (b === 'door') return GatherDoorScreen(ctx, Number(a))
       if (b === 'reflect') return GatherReflectScreen(ctx, Number(a))
       return GatherDetailScreen(ctx, Number(a))
+    }
     case 'speaker':
       if (!a) notFound()
       return SpeakerScreen(ctx, a)
@@ -153,22 +182,26 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       if (!a || !Number(a)) notFound()
       return CourseScreen(ctx, Number(a))
     case 'garden':
+      if (a === 'workbook') return gated(ctx, 'workbook') || GardenWorkbook(ctx)
+      {
+        const closed = gated(ctx, 'garden')
+        if (closed) return closed
+      }
       if (!a) return GardenScreen(ctx)
       if (a === 'general') return GardenGeneral(ctx)
       if (a === 'jibril') return b ? GardenDoor(ctx, b) : GardenJibril(ctx)
       if (a === 'ghunya') return GardenGhunya(ctx)
       if (a === 'harvest') return GardenHarvest(ctx)
-      if (a === 'workbook') return GardenWorkbook(ctx)
       notFound()
     case 'me':
       if (!a) return MeScreen(ctx)
-      if (a === 'plan') return PlanScreen(ctx)
+      if (a === 'plan' || a === 'week') return gated(ctx, 'planner') || PlanScreen(ctx)
       if (a === 'circle') return CircleScreen(ctx)
       if (a === 'settings') return SettingsScreen(ctx)
-      if (a === 'path') return LearnerPathScreen(ctx)
+      if (a === 'path') return gated(ctx, 'compass') || LearnerPathScreen(ctx)
       notFound()
     case 'recalibrate':
-      return RecalibrateScreen(ctx)
+      return gated(ctx, 'compass') || RecalibrateScreen(ctx)
     case 'welcome':
       return WelcomeScreen(ctx)
     case 'about':
@@ -176,7 +209,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
     case 'path':
       redirect(`${base}/lanes`)
     case 'grow':
-      redirect(`${base}/garden`)
+      redirect(featureOn(ctx.portal, 'garden') ? `${base}/garden` : base)
     case 'chapter':
     case 'night':
       redirect(`${base}/me/circle`)

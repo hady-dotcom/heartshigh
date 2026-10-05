@@ -1,25 +1,31 @@
 /**
  * First-open guidance for adding HEARTS to the home screen.
- * The card is skippable. Once it is dismissed it stays hidden for 30 days on this device,
- * then it may appear again. An installed app (standalone) never shows the steps.
- * Me can still open it with “Show me again”.
+ * The Home strip is skippable. Once dismissed it stays hidden for 14 days,
+ * unless someone opens it again from Me. An installed app (standalone) never shows the steps.
  */
 
 export const INSTALL_DISMISSED_KEY = 'hearts.install.dismissed'
-export const INSTALL_HIDE_MS = 30 * 24 * 60 * 60 * 1000
+export const INSTALL_DISMISS_MS = 14 * 24 * 60 * 60 * 1000
+export const INSTALL_HIDE_MS = INSTALL_DISMISS_MS
 
-/** Epoch ms until which a dismissal hides the sheet. */
+/** Epoch ms until which a dismissal hides the strip. */
 export function dismissUntil(now = Date.now()) {
   return String(now + INSTALL_HIDE_MS)
 }
 
-/** True while a stored dismissal is still inside its 30 days. A legacy `'1'` counts as dismissed. */
+/** True while a stored dismissal is still inside its 14 days. A legacy `'1'` counts as dismissed. */
 export function installHidden(raw: string | null | undefined, now = Date.now()) {
   if (!raw) return false
   if (raw === '1') return true
   const until = Number(raw)
   return Number.isFinite(until) && until > now
 }
+
+/** Same window as installHidden; kept for tests that store a dismiss time. */
+export function isInstallDismissed(raw: string | null, now = Date.now()) {
+  return installHidden(raw, now)
+}
+
 export const INSTALL_INSTALLED_KEY = 'hearts.install.installed'
 export const INSTALL_SKIP = 'Not now'
 export const INSTALL_AGAIN = 'Show me again'
@@ -62,8 +68,19 @@ const IOS_STEPS: InstallCopy['steps'] = [
 
 const ANDROID_STEPS: InstallCopy['steps'] = [
   { glyph: 'menu', text: 'Tap the menu, the three dots at the top of Chrome.' },
-  { glyph: 'add', text: 'Tap Install app, or Add to Home screen.' },
+  { glyph: 'add', text: 'Tap Install.' },
 ]
+
+const GENERIC_PHONE_STEPS: InstallCopy['steps'] = [
+  { glyph: 'share', text: 'On iPhone, tap Share in Safari, then Add to Home Screen.' },
+  { glyph: 'menu', text: 'On Android, tap the Chrome menu, then Install.' },
+]
+
+export function installSurface(kind: InstallKind, opts?: { narrow?: boolean; coarse?: boolean }): 'phone' | 'computer' {
+  if (kind !== 'desktop') return 'phone'
+  if (opts?.narrow || opts?.coarse) return 'phone'
+  return 'computer'
+}
 
 /** iPhone and iPad, including iPad desktop mode (Macintosh with a touch screen). */
 export function installKind(ua: string, opts?: { maxTouchPoints?: number }): InstallKind {
@@ -100,10 +117,14 @@ export function offersInstallButton(kind: InstallKind) {
   return kind === 'android-chrome' || kind === 'android-other' || kind === 'desktop'
 }
 
-export function installCopy(kind: InstallKind, prompt: boolean): InstallCopy {
+export function installCopy(kind: InstallKind, prompt: boolean, surface: 'phone' | 'computer' = kind === 'desktop' ? 'computer' : 'phone'): InstallCopy {
+  const heading = surface === 'phone' ? PHONE_HEADING : COMPUTER_HEADING
   if (kind === 'desktop') {
+    if (surface === 'phone') {
+      return { heading, lead: LEAD, steps: GENERIC_PHONE_STEPS }
+    }
     return {
-      heading: COMPUTER_HEADING,
+      heading,
       lead: LEAD,
       steps: [],
       action: prompt ? 'Install HEARTS' : undefined,
@@ -112,19 +133,19 @@ export function installCopy(kind: InstallKind, prompt: boolean): InstallCopy {
   }
   const phone = kind === 'android-chrome' || kind === 'android-other'
   if (phone && prompt) {
-    return { heading: PHONE_HEADING, lead: LEAD, steps: [], action: 'Add HEARTS' }
+    return { heading, lead: LEAD, steps: [], action: 'Add HEARTS' }
   }
   if (phone) {
     const steps = kind === 'android-other'
       ? [
           { glyph: 'menu' as const, text: 'Tap the menu in your browser.' },
-          { glyph: 'add' as const, text: 'Tap Install app, or Add to Home screen.' },
+          { glyph: 'add' as const, text: 'Tap Install.' },
         ]
       : ANDROID_STEPS
-    return { heading: PHONE_HEADING, lead: LEAD, steps }
+    return { heading, lead: LEAD, steps }
   }
   return {
-    heading: PHONE_HEADING,
+    heading,
     lead: LEAD,
     note: kind === 'ios-other' ? 'Open this page in Safari first. That is the browser that can add it.' : undefined,
     steps: IOS_STEPS,
@@ -144,22 +165,22 @@ export function installSlides(kind: InstallKind): InstallSlide[] {
   if (kind === 'android-chrome') {
     return [
       { id: 'android-menu', caption: 'Tap the menu, the three dots at the top.' },
-      { id: 'android-install', caption: 'Tap Install app.' },
+      { id: 'android-install', caption: 'Tap Install.' },
       { id: 'android-home', caption: 'HEARTS lands on your home screen.' },
     ]
   }
   if (kind === 'android-other') {
     return [
       { id: 'android-menu', caption: 'Tap the menu in your browser.' },
-      { id: 'android-install', caption: 'Tap Install app, or Add to Home screen.' },
+      { id: 'android-install', caption: 'Tap Install.' },
       { id: 'android-home', caption: 'HEARTS lands on your home screen.' },
     ]
   }
   return []
 }
 
-export function installEntry(kind: InstallKind, installed: boolean) {
-  const computer = kind === 'desktop'
+export function installEntry(kind: InstallKind, installed: boolean, surface: 'phone' | 'computer' = kind === 'desktop' ? 'computer' : 'phone') {
+  const computer = surface === 'computer'
   if (installed) {
     return {
       title: computer ? 'HEARTS is on this computer' : 'HEARTS is on this phone',
