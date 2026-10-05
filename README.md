@@ -29,3 +29,9 @@ British English, evening-garden teal `#0E2A2B` and gold `#D4A84B`.
 - `13-master-email-panel.png` — Master Settings, In-depth email panel (catcher banner + test button)
 
 Raw files: `https://raw.githubusercontent.com/hady-dotcom/heartshigh/artifacts/basics-accounts/<filename>`
+
+
+## Film
+
+- `reset-2fa-pause.mp4` — join, reset from the emailed gold button, two-step QR/backups/code door, pause on Teach, master email panel
+- `paused-sign-in.mp4` — the paused person is refused: “This account is paused. Please speak to your masjid or school.”
