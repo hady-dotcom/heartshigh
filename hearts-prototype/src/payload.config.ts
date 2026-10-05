@@ -102,7 +102,9 @@ export default buildConfig({
     s3Storage({
       enabled: Boolean(s3),
       alwaysInsertFields: true,
-      collections: { media: true },
+      acl: 'private',
+      signedDownloads: { expiresIn: 300 },
+      collections: { media: { signedDownloads: { expiresIn: 300 } } },
       bucket: s3?.bucket || 'hearts-local',
       config: s3
         ? {

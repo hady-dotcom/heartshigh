@@ -196,8 +196,9 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
       if (!pointId) continue
       const author = answer.user as { name?: string; shareWithLearners?: boolean } | null
       if (!author?.shareWithLearners) continue
-      const image = answer.image as { url?: string } | null
-      ;(swarm[pointId] ||= []).push({ name: author?.name || 'Someone in your circle', body: str(answer.body) || str(answer.choice) || 'Shared a photo', image: image?.url || null })
+      const image = answer.image as { url?: string; id?: number } | null
+      const imageSrc = image?.id ? `/api/hearts/file/${image.id}` : image?.url || null
+      ;(swarm[pointId] ||= []).push({ name: author?.name || 'Someone in your circle', body: str(answer.body) || str(answer.choice) || 'Shared a photo', image: imageSrc })
     }
     // HEARTS circle answers fill the swarm while it is quiet and step back as real shared answers arrive.
     const [circle, settings] = await Promise.all([circleForPoints(payload, points.map((point) => point.id), portal.id), circleSettings(payload)])

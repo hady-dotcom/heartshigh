@@ -88,6 +88,9 @@ export type WorkbookAnswer = {
   shared: boolean
   reply: string | null
   kind: string
+  imageId: number | null
+  audioId: number | null
+  videoId: number | null
 }
 export type WorkbookOpen = { pointId: number; question: string; video: string; lessonId: number; kind: string; family: string; evidence: string; dueDays: number | null; showImam: boolean }
 export type Workbook = { learner: { id: number; name: string }; opening: WorkbookOpeningRow[]; answers: WorkbookAnswer[]; open: WorkbookOpen[] }
@@ -151,6 +154,9 @@ export async function workbookFor(payload: Payload, learner: SessionUser, reader
       shared: Boolean(row.shareWithTeacher),
       reply: owner || row.shareWithTeacher ? ((entry?.teacherReply as string) || null) : null,
       kind: String(point?.kind || ''),
+      imageId: idOf(row.image),
+      audioId: idOf(row.audio),
+      videoId: idOf(row.video),
     }
   })
   const answered = new Set(list.map((row) => row.pointId))

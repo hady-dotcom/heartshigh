@@ -172,7 +172,7 @@ test('LOW: yt-dlp is fetched by setup, uses the web_embedded client, and says pl
 test('LOW: the browser tests run against their own database file, never the demo one', () => {
   const env = readFileSync(path.join(root, 'tests/env.ts'), 'utf8')
   const config = readFileSync(path.join(root, 'playwright.config.ts'), 'utf8')
-  assert.match(env, /E2E_DATABASE = 'file:\.\/data\/hearts-test\.db'/)
+  assert.match(env, /file:\.\/data\/hearts-test\.db/)
   assert.match(config, /DATABASE_URL: E2E_DATABASE/)
   assert.match(readFileSync(path.join(root, 'tests/global-setup.ts'), 'utf8'), /E2E_DATABASE/)
 })

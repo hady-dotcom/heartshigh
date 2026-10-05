@@ -101,7 +101,9 @@ async function ensureUser(payload: Awaited<ReturnType<typeof getPayload>>, data:
  */
 /** The e2e database keeps its codes in its own file, so the codes `npm run go` printed stay true. */
 function codesFile() {
-  return /hearts-test\.db/.test(process.env.DATABASE_URL || '') ? 'data/seed-codes-test.json' : 'data/seed-codes.json'
+  return process.env.HEARTS_E2E === '1' || /hearts-test/.test(process.env.DATABASE_URL || '')
+    ? 'data/seed-codes-test.json'
+    : 'data/seed-codes.json'
 }
 
 async function wipe() {
