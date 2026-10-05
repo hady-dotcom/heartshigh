@@ -72,7 +72,6 @@ async function watchFrames(page: Page) {
         const clip = document.querySelector<HTMLElement>('.j-clip, [data-testid="player-slot"]')
         const box = (clip || root).getBoundingClientRect()
         const layers: { rect: DOMRect; ready: boolean; name: string }[] = []
-        const clip = document.querySelector('.j-clip')
         if (clip) layers.push({ rect: clip.getBoundingClientRect(), ready: true, name: 'card' })
         document.querySelectorAll<HTMLElement>('.j-peek').forEach((peek) => {
           const image = peek.querySelector('img')
