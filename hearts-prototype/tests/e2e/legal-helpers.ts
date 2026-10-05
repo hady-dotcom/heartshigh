@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test'
+import { expect, type APIRequestContext, type Page } from '@playwright/test'
 
 export async function completeConsent(page: Page, age: 'under-13' | '13-17' | '18+' = '18+') {
   if (!page.url().includes('/consent')) return
@@ -32,4 +32,12 @@ export async function signIn(page: Page, email: string, password: string, next: 
   await page.getByTestId('login-password').fill(password)
   await page.getByTestId('login-submit').click()
   await page.waitForURL((url) => !url.pathname.startsWith('/login'))
+}
+
+/** For API-joined e2e learners. UI joins still go through the consent screen. */
+export async function acceptConsentViaApi(ctx: APIRequestContext, ageBand: 'under-13' | '13-17' | '18+' = '18+') {
+  return ctx.post('/api/hearts', {
+    form: { action: 'accept-consent', agree: 'on', ageBand, after: '/', next: '/' },
+    maxRedirects: 0,
+  })
 }

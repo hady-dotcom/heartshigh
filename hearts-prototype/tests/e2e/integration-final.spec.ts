@@ -205,7 +205,7 @@ test('a portal admin walks the short setup and lands back on the overview', asyn
   await page.getByRole('button', { name: 'Next' }).click()
   await page.waitForURL(/step=2/)
   await expect(page.getByTestId('wizard-course')).toBeVisible()
-  await page.getByRole('link', { name: 'Skip' }).click()
+  await page.getByTestId('wizard').getByRole('link', { name: 'Skip', exact: true }).click()
   await page.waitForURL(/step=3/)
   await page.getByTestId('wizard-finish').click()
   await page.waitForURL((url) => url.pathname === `${BASE}/admin`)

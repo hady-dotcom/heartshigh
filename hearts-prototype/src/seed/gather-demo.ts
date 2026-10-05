@@ -3,6 +3,7 @@ import { DEMO_PORTAL_SLUG, demoPortalGuard, linkLabel } from '@/lib/gather'
 import { DOORS, doorCode } from '@/lib/doors'
 import { portalIdOf } from '@/lib/ids'
 import type { SessionUser } from '@/server/context'
+import { grantCurrentConsents } from '@/server/consent'
 
 const LEARNERS = ['demo-learner@hearts.foundation', 'demo-complete@hearts.foundation']
 
@@ -114,6 +115,7 @@ export async function seedGatherDemo(payload: Payload) {
       })
       row = { id: made.id }
     }
+    await grantCurrentConsents(payload, row.id, portalId)
     bringers.push({ id: row.id, name: person.name })
   }
   let courseId: number | null = null
