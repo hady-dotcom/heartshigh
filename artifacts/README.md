@@ -14,6 +14,7 @@ Stills and films from `cursor/basics-legal-0004`.
 - still-contacts-desk.png — P11 contacts and L06 agreement
 - join_consent_search_and_desk.webm — walkthrough film
 - axe-before.json / axe-after-*.json — axe-core before and after
+- SUITE.md — Lane B full-suite before/after notes (moved off the code branch)
 
 ## Round 2
 
