@@ -1,3 +1,5 @@
+import type { Where } from 'payload'
+
 import { idOf, portalIdOf } from './ids'
 
 export const MEDIA_PURPOSES = ['answer', 'gather-photo', 'portal-asset', 'film', 'feedback'] as const
@@ -95,15 +97,13 @@ export function canReadMedia(user: MediaReader, media: MediaDoc, answer: LinkedA
 }
 
 /** Where clause for a media list: portal assets, films, and gather photos. Never answer files. */
-export function mediaListWhere(user: NonNullable<MediaReader>) {
+export function mediaListWhere(user: NonNullable<MediaReader>): Where {
   const portal = portalIdOf(user)
   const publicPurposes = [...PUBLIC_MEDIA_PURPOSES]
   if (user.role === 'master') {
     return { purpose: { in: [...publicPurposes, 'gather-photo'] } }
   }
   if (!portal) return { id: { equals: -1 } }
-  if (user.role === 'learner') {
-    return { and: [{ portal: { equals: portal } }, { purpose: { in: publicPurposes } }] }
-  }
-  return { and: [{ portal: { equals: portal } }, { purpose: { in: [...publicPurposes, 'gather-photo'] } }] }
+  const purposes = user.role === 'learner' ? publicPurposes : [...publicPurposes, 'gather-photo']
+  return { and: [{ portal: { equals: portal } }, { purpose: { in: purposes } }] }
 }
