@@ -36,6 +36,10 @@ export const NOISY_USER_FIELDS = new Set([
   'lastLoggedInAt',
   'loginAttempts',
   'lockUntil',
+  'onboarded',
+  'seenWelcome',
+  'sessions',
+  'collection',
 ])
 
 export type AuditSentenceInput = {

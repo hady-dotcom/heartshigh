@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { audit, staffAuditAfterChange } from '../../src/server/audit'
+import { audit, flushAuditWrites, staffAuditAfterChange } from '../../src/server/audit'
 
 function fakePayload() {
   const created: Record<string, unknown>[] = []
@@ -68,10 +68,27 @@ describe('D01 audit helper', () => {
       collection: { slug: 'users' },
       req: { user: { id: 2, role: 'portal-admin' }, payload },
     })
+    assert.equal(created.length, 0)
+    await flushAuditWrites()
     assert.equal(created.length, 1)
     assert.equal(created[0].event, 'users.grant')
     assert.equal(created[0].actor, 2)
     assert.equal(created[0].target, 9)
     assert.equal(created[0].portal, 3)
+  })
+
+  it('a failed audit write does not fail the staff change', async () => {
+    const payload = {
+      create: async () => {
+        throw new Error('insert or update on table "audit_log" violates foreign key constraint')
+      },
+    } as never
+    await staffAuditAfterChange({
+      doc: { id: 22, role: 'teacher', name: 'By Master', portal: 3 },
+      operation: 'create',
+      collection: { slug: 'users' },
+      req: { user: { id: 1, role: 'master' }, payload },
+    })
+    await flushAuditWrites()
   })
 })

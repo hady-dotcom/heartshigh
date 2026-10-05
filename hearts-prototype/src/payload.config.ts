@@ -18,7 +18,7 @@ import { databaseKind, payloadSecret, postgresPush, readS3, serverOrigins, sqlit
 import { migrations } from './migrations'
 import { TRASH_SLUGS } from './lib/trash'
 import { assignJoinerToClass } from './server/classes'
-import { staffAuditAfterChange, staffAuditAfterDelete } from './server/audit'
+import { enqueueAudit, staffAuditAfterChange, staffAuditAfterDelete } from './server/audit'
 import { viewAsGlobalGuard, viewAsGuard } from './server/viewas'
 
 const filename = fileURLToPath(import.meta.url)
@@ -56,7 +56,8 @@ export default buildConfig({
     if (collection.slug === 'users') {
       afterChange.push((async ({ doc, operation, req }: { doc: { id: number; accessCode?: unknown; role?: string | null }; operation: string; req: { payload?: typeof import('payload') } }) => {
         if (operation !== 'create' || !req.payload) return
-        await assignJoinerToClass(req.payload as never, doc)
+        const payload = req.payload
+        enqueueAudit(() => assignJoinerToClass(payload as never, doc))
       }) as never)
     }
     return {

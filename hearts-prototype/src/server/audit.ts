@@ -52,29 +52,54 @@ export function markSkipAudit(req?: ReqLike | null) {
   req.context = { ...(req.context || {}), skipAudit: true }
 }
 
+const pendingWrites: Promise<void>[] = []
+
+/** Run after the current request's transaction has committed, so a new user or pack is visible to the audit row. */
+export function enqueueAudit(work: () => Promise<void>) {
+  const task = new Promise<void>((resolve) => {
+    setImmediate(() => {
+      Promise.resolve()
+        .then(work)
+        .catch((error) => {
+          console.error('audit write failed', error)
+        })
+        .finally(resolve)
+    })
+  })
+  pendingWrites.push(task)
+}
+
+export async function flushAuditWrites() {
+  while (pendingWrites.length) await pendingWrites.shift()
+}
+
 /** One row in the audit log. Callers from view-as, feedback and the sheet keep the same arguments. */
 export async function audit(payload: Payload, event: string, fields: AuditInput & Record<string, unknown> = {}) {
   const actor = personId(fields.actor as ActorLike)
   const target = personId(fields.target as ActorLike)
   const portal = idOf(fields.portal) || undefined
   const detail = safeAuditDetail((fields.detail as Record<string, unknown>) || undefined)
-  await payload.create({
-    collection: 'audit-log',
-    overrideAccess: true,
-    data: {
-      event,
-      actor,
-      actorRole: personRole(fields.actor as ActorLike, fields.actorRole) || undefined,
-      target,
-      targetRole: personRole(fields.target as ActorLike, fields.targetRole) || undefined,
-      portal,
-      sessionId: fields.sessionId || undefined,
-      reason: fields.reason || undefined,
-      at: fields.at || now().toISOString(),
-      ipHash: fields.ipHash || undefined,
-      detail,
-    } as never,
-  })
+  try {
+    await payload.create({
+      collection: 'audit-log',
+      overrideAccess: true,
+      data: {
+        event,
+        actor,
+        actorRole: personRole(fields.actor as ActorLike, fields.actorRole) || undefined,
+        target,
+        targetRole: personRole(fields.target as ActorLike, fields.targetRole) || undefined,
+        portal,
+        sessionId: fields.sessionId || undefined,
+        reason: fields.reason || undefined,
+        at: fields.at || now().toISOString(),
+        ipHash: fields.ipHash || undefined,
+        detail,
+      } as never,
+    })
+  } catch (error) {
+    console.error('audit write failed', error)
+  }
 }
 
 function isStaff(user?: { role?: string | null } | null) {
@@ -143,14 +168,15 @@ export async function staffAuditAfterChange(args: {
   if (SECRET_FIELDS.has('password') && fields.length === 1 && fields[0] === 'password' && !isStaff(user)) return
   const event = eventForStaffChange(slug, args.operation === 'create' ? 'create' : 'update', fields)
   const target = slug === 'users' ? args.doc : undefined
-  await audit(payload, event, {
+  const row = {
     actor: user,
     actorRole: user?.role,
     target,
     targetRole: target ? String(target.role || '') : undefined,
     portal: portalFromDoc(args.doc, user as { tenants?: { tenant?: unknown }[] }, slug),
     detail: { fields, collection: slug, id: args.doc.id },
-  })
+  }
+  enqueueAudit(() => audit(payload, event, row))
 }
 
 export async function staffAuditAfterDelete(args: {
@@ -166,12 +192,12 @@ export async function staffAuditAfterDelete(args: {
   if (!isAuditedCollection(slug)) return
   const payload = req?.payload
   if (!payload) return
-  await audit(payload, eventForStaffChange(slug, 'delete', []), {
+  enqueueAudit(() => audit(payload, eventForStaffChange(slug, 'delete', []), {
     actor: user,
     actorRole: user?.role,
     target: slug === 'users' ? args.doc : undefined,
     targetRole: slug === 'users' ? String(args.doc.role || '') : undefined,
     portal: portalFromDoc(args.doc, user as { tenants?: { tenant?: unknown }[] }, slug),
     detail: { collection: slug, id: args.doc.id },
-  })
+  }))
 }
