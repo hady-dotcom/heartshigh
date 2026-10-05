@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { overMinutesNote, planAcrossDays, splitEvenly, spreadIndices, studyDates } from './schedule'
+import { flattenSlots, overMinutesNote, planAcrossDays, splitEvenly, spreadIndices, studyDates } from './schedule'
 
 test('splits a pack evenly across Wednesday and Friday only', () => {
   const dates = studyDates('2026-10-07', '2026-10-16', [3, 5])
@@ -62,6 +62,23 @@ test('Tue and Thu land the first talks on Tuesday then Thursday', () => {
 test('a talk longer than the day is named, not silently crushed', () => {
   assert.match(overMinutesNote([39], 20) || '', /39 minutes/)
   assert.equal(overMinutesNote([15], 20), null)
+})
+
+test('flattened slots keep each talk on its own course', () => {
+  const planned = planAcrossDays(
+    [
+      { id: 1, title: 'One', courseId: 22 },
+      { id: 2, title: 'Two', courseId: 7 },
+    ],
+    ['2026-10-05', '2026-10-06'],
+  )
+  assert.deepEqual(
+    flattenSlots(planned.slots),
+    [
+      { date: '2026-10-05', title: 'One', lessonId: 1, courseId: 22 },
+      { date: '2026-10-06', title: 'Two', lessonId: 2, courseId: 7 },
+    ],
+  )
 })
 
 test('rejects an empty weekday set and a range with no matching days', () => {

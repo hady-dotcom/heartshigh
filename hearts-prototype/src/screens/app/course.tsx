@@ -148,6 +148,9 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
         <Link className="pill outline block" href={`${base}/week?course=${course.id}&view=new&from=course`} data-testid="schedule-all" style={{ marginTop: 10 }}>
           {lessons.length === 1 ? 'Schedule this talk' : 'Schedule all of these'}
         </Link>
+        <p className="muted" data-testid="buffet-note" style={{ margin: '10px 2px 0', fontSize: 13 }}>
+          Questions appear inside each talk, once you open it.
+        </p>
         <p className="eyebrow">Talks in this course</p>
         {lessons.map((lesson, index) => {
           const secondsHere = Number(lesson.durationSeconds || 0)

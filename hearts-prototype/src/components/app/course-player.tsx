@@ -414,6 +414,14 @@ export function CoursePlayer({
     }
   }, [time, length, mode])
 
+  const postedWatch = useRef(0)
+  useEffect(() => {
+    if (watched < 8 || watched - postedWatch.current < 15) return
+    postedWatch.current = watched
+    const body = new URLSearchParams({ action: 'watch', lesson: String(lessonId), seconds: String(Math.floor(watched)) })
+    void fetch('/api/hearts', { method: 'POST', headers: { accept: 'application/json' }, body }).catch(() => undefined)
+  }, [lessonId, watched])
+
   useEffect(() => {
     for (const point of points) {
       if (point.answered || answered[point.id] !== undefined || time + 0.01 >= point.second) reveal(point.id)
@@ -641,6 +649,7 @@ export function CoursePlayer({
         <input type="hidden" name="level" value="talk" />
         <input type="hidden" name="lesson" value={lessonId} />
         <input type="hidden" name="seconds" value={Math.floor(watched)} />
+        {length ? <input type="hidden" name="media" value={Math.floor(length)} /> : null}
         {ended ? <input type="hidden" name="ended" value="yes" /> : null}
         <input type="hidden" name="next" value={next} />
         <button className="link-btn" type="submit" data-testid="mark-watched">I have watched this part</button>

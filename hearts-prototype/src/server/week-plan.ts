@@ -5,6 +5,7 @@ import { overMinutesNote, spreadNote, studyDates } from '@/lib/schedule'
 import { isTimeZone, portalTimeZone } from '@/lib/zone-time'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
+import { slotCourseId, slotHref } from '@/lib/slot-course'
 import { type Row, ref, rows, str } from '@/screens/common'
 
 export type WeekSlot = {
@@ -87,16 +88,16 @@ export async function weekView(payload: Payload, user: SessionUser, portal: Port
   })
   const cards: WeekPlanCard[] = mine.map((plan) => {
     const courseId = ref(plan.course)
-    const slots = ((plan.slots as { date?: string; title?: string; lessonId?: number }[]) || []).map((slot) => {
+    const slots = ((plan.slots as { date?: string; title?: string; lessonId?: number; courseId?: number }[]) || []).map((slot) => {
       const lesson = slot.lessonId ? lessonsById.get(slot.lessonId) : null
       const minutes = lesson ? Math.max(0, Math.round(Number(lesson.durationSeconds || 0) / 60)) : 0
-      const href = slot.lessonId && (courseId || ref(lesson?.course)) ? `${base}/course/${courseId || ref(lesson?.course)}?part=${slot.lessonId}` : null
+      const ownCourse = slotCourseId({ lessonCourse: lesson?.course, slotCourseId: slot.courseId, planCourseId: courseId })
+      const href = slotHref(base, slot.lessonId, ownCourse)
       return {
         date: String(slot.date || ''),
         title: lesson ? partTitle(lesson, courseRows.find((course) => course.id === ref(lesson.course))?.title) : tidyTalkTitle(String(slot.title || 'Sitting')),
         lessonId: slot.lessonId || null,
-        courseId: courseId || ref(lesson?.course) || null,
-        href,
+        courseId: ownCourse,
         minutes,
         today: slot.date === todayKey,
       }

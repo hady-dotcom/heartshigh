@@ -40,10 +40,24 @@ export type CompletionVerdict = { counts: true; percent: number } | { counts: fa
  * to the end, or starting where the appetiser ended, does not stand in for watching. A talk with no known length
  * counts when it played through to its end.
  */
-export function completionVerdict({ duration, watched, ended }: { duration: number; watched: number; ended: boolean }): CompletionVerdict {
+export function completionVerdict({
+  duration,
+  watched,
+  ended,
+  media = 0,
+}: {
+  duration: number
+  watched: number
+  ended: boolean
+  /** The length the player actually ran, when the lesson row overstates it. */
+  media?: number
+}): CompletionVerdict {
   const seconds = Number.isFinite(watched) && watched > 0 ? watched : 0
-  if (duration > 0) {
-    const share = seconds / duration
+  const stored = Number.isFinite(duration) && duration > 0 ? duration : 0
+  const played = Number.isFinite(media) && media > 0 ? media : 0
+  const length = stored && played ? Math.min(stored, played) : stored || played
+  if (length > 0) {
+    const share = seconds / length
     if (share < COMPLETION_SHARE) return { counts: false, reason: 'A sitting counts once most of the talk has played here in the course.' }
     return { counts: true, percent: Math.min(100, Math.round(share * 100)) }
   }

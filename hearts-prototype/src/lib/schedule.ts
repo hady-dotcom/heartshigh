@@ -128,16 +128,17 @@ export function overMinutesNote(talkMinutes: number[], minutesPerDay: number) {
   return `${long.length} talks are longer than the ${minutesPerDay} minutes you set for a day. Sit with each in one go, or split the longest ones.`
 }
 
-export function flattenSlots<T extends { id?: number; title?: string }>(
+export function flattenSlots<T extends { id?: number; title?: string; courseId?: number | null }>(
   slots: Slot<T>[],
-): { date: string; title: string; lessonId: number | null }[] {
-  const rows: { date: string; title: string; lessonId: number | null }[] = []
+): { date: string; title: string; lessonId: number | null; courseId: number | null }[] {
+  const rows: { date: string; title: string; lessonId: number | null; courseId: number | null }[] = []
   for (const slot of slots) {
     for (const item of slot.items) {
       rows.push({
         date: slot.date,
         title: item.title || 'Sitting',
         lessonId: typeof item.id === 'number' ? item.id : null,
+        courseId: typeof item.courseId === 'number' ? item.courseId : null,
       })
     }
   }

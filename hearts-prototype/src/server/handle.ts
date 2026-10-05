@@ -9,6 +9,7 @@ import { clipWords } from '@/lib/sentences'
 import { extractWithFallback, llmStatus } from '@/lib/llm'
 import { defaultPlanName, flattenSlots, planAcrossDays, plural, studyDates } from '@/lib/schedule'
 import { sortParts } from '@/lib/part-order'
+import { lessonsByCourseOrder } from '@/lib/slot-course'
 import { minutesADay } from '@/lib/study-plan'
 import { partTitle } from '@/lib/talk-title'
 import { planKeepPath, planNotify, planToast } from '@/lib/week'
@@ -286,7 +287,8 @@ async function orderedLessons(payload: Awaited<ReturnType<typeof getSession>>['p
     sort: 'order',
   })
   const unitOrder = new Map(units.docs.map((doc, index) => [doc.id, index]))
-  return sortParts(lessons.docs as { id: number; title?: string; course?: unknown; order?: number | null; unit?: unknown }[], (row) => unitOrder.get(idOf(row.unit) || 0) ?? 0)
+  const ordered = sortParts(lessons.docs as { id: number; title?: string; course?: unknown; order?: number | null; unit?: unknown }[], (row) => unitOrder.get(idOf(row.unit) || 0) ?? 0)
+  return lessonsByCourseOrder(ordered, courseIds)
 }
 
 export type AnswerInput = {
@@ -1342,7 +1344,11 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const minutesRaw = text(form, 'minutes')
     const minutes = minutesRaw ? minutesADay(minutesRaw) : 20
     if (!minutes) return redirectTo(req, text(form, 'next') || '/', 'Choose 10, 20, 30 or 45 minutes a day.')
-    const planned = planAcrossDays(lessons.map((lesson) => ({ id: lesson.id, title: partTitle(lesson, courseTitle) })), dates)
+    const planned = planAcrossDays(lessons.map((lesson) => ({
+      id: lesson.id,
+      title: partTitle(lesson, courseTitle),
+      courseId: idOf(lesson.course),
+    })), dates)
     const slots = flattenSlots(planned.slots)
     const learnerIds = [...new Set(form.getAll('learner').map((value) => Number(value)).filter(Boolean))]
     if (learnerIds.length && user.role === 'learner') return redirectTo(req, text(form, 'next') || '/', 'You can plan your own days. A teacher plans for others.')
@@ -1550,6 +1556,28 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Kept with the speakers you are drawn to.')
   }
 
+  if (action === 'watch') {
+    const lessonId = Number(text(form, 'lesson'))
+    const seconds = Number(text(form, 'seconds') || 0)
+    const portal = portalIdOf(user)
+    const lesson = await findDoc(payload, 'lessons', lessonId)
+    const asJson = (req.headers.get('accept') || '').includes('application/json')
+    if (!lesson || !(await visibleCourseIds(payload, user)).includes(idOf(lesson.course) || 0)) {
+      if (asJson) return NextResponse.json({ error: 'That film is not in your portal.', counted: false }, { status: 403 })
+      return redirectTo(req, text(form, 'next') || '/', 'That film is not in your portal.')
+    }
+    const duration = Number((lesson as { durationSeconds?: number }).durationSeconds || 0)
+    const { recordPersonalWatch } = await import('./missions')
+    await recordPersonalWatch(payload, {
+      userId: user.id,
+      lessonId,
+      seconds: duration > 0 ? Math.min(Math.max(0, seconds), duration) : Math.min(Math.max(0, seconds), 3600),
+      portalId: portal,
+    })
+    if (asJson) return NextResponse.json({ ok: true, counted: false })
+    return redirectTo(req, text(form, 'next') || '/', undefined, 'Kept with the time you have given.')
+  }
+
   if (action === 'complete') {
     const lessonId = Number(text(form, 'lesson'))
     if (!countsTowardProgress({ level: pieceLevel(text(form, 'level') || 'talk'), inCourse: true, event: 'watch' })) {
@@ -1560,7 +1588,12 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (!lesson || !(await visibleCourseIds(payload, user)).includes(idOf(lesson.course) || 0)) return redirectTo(req, '/', 'That film is not in your portal.')
     const duration = Number((lesson as { durationSeconds?: number }).durationSeconds || 0)
     const seconds = Number(text(form, 'seconds') || 0)
-    const verdict = completionVerdict({ duration, watched: seconds, ended: text(form, 'ended') === 'yes' })
+    const media = Number(text(form, 'media') || 0)
+    const { recordPersonalWatch } = await import('./missions')
+    if (seconds > 0) {
+      await recordPersonalWatch(payload, { userId: user.id, lessonId, seconds: duration > 0 ? Math.min(seconds, duration) : Math.min(seconds, 3600), portalId: portal })
+    }
+    const verdict = completionVerdict({ duration, watched: seconds, ended: text(form, 'ended') === 'yes', media })
     if (!verdict.counts) return redirectTo(req, text(form, 'next') || '/', verdict.reason)
     const percent = verdict.percent
     let onTime = false
@@ -1594,9 +1627,6 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         data: { user: user.id, lesson: lessonId, portal: portal || undefined, percent, onTime, sourceLevel: 'talk' },
       })
     }
-    const watched = duration > 0 ? Math.min(seconds, duration) : Math.min(seconds, 3600)
-    const { recordPersonalWatch } = await import('./missions')
-    await recordPersonalWatch(payload, { userId: user.id, lessonId, seconds: watched, portalId: portal })
     const transcript = (lesson as { transcript?: string }).transcript || ''
     if (transcript) {
       const already = await payload.find({

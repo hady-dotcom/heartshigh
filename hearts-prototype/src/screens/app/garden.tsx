@@ -12,6 +12,7 @@ import { workbookFor } from '@/server/workbook'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { learnerWords } from '@/lib/tidy-caption'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
+import { countedTalkCompletions, growthLessonIds, watchedLessonIds } from '@/lib/watch-growth'
 import { isLongTalk, matchDoorTalk } from '@/lib/first-course'
 import { FilePick } from '@/components/app/file-pick'
 import { posterFor, shownPoster } from '@/server/learner'
@@ -60,7 +61,7 @@ export type Growth = {
 
 export async function growth(payload: Payload, user: SessionUser): Promise<Growth> {
   const mine = { user: { equals: user.id } }
-  const [clauses, seats, completions, seatVisits, harvest, allWorkbook, allAnswers, rituals, visits, tags, doors] = await Promise.all([
+  const [clauses, seats, completions, seatVisits, harvest, allWorkbook, allAnswers, rituals, visits, tags, doors, sessions] = await Promise.all([
     rows(payload, 'clauses', undefined, { sort: 'number', limit: 50 }),
     rows(payload, 'seats', undefined, { sort: 'position', limit: 400 }),
     rows(payload, 'completions', mine),
@@ -72,14 +73,16 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
     rows(payload, 'lesson-visits', mine),
     rows(payload, 'tags', { state: { equals: 'confirmed' } }, { limit: 1000 }),
     loadDoors(payload),
+    rows(payload, 'watch-sessions', mine, { limit: 500 }),
   ])
   const answers = allAnswers.filter(answerCounts)
   const browsed = new Set(allAnswers.filter((row) => !answerCounts(row)).map((row) => row.id))
   const workbook = allWorkbook.filter((row) => !browsed.has(ref(row.answer) || 0))
-  const lessonIds = [...new Set([...completions, ...visits, ...answers].map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))]
-  const lessons = lessonIds.length ? await rows(payload, 'lessons', { id: { in: lessonIds } }) : []
-  const inCourse = (lessonId: number | null) => Boolean(lessonId && ref(lessons.find((row) => row.id === lessonId)?.course))
-  const countedCompletions = completions.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'watch' }))
+  const lessonIds = growthLessonIds({ completions, visits, answers, sessions })
+  const lessons = lessonIds.length ? await rows(payload, 'lessons', { id: { in: lessonIds } }, { limit: 800 }) : []
+  const courseByLesson = new Map(lessons.map((row) => [row.id, ref(row.course)]))
+  const inCourse = (lessonId: number | null) => Boolean(lessonId && courseByLesson.get(lessonId))
+  const countedCompletions = countedTalkCompletions({ completions, courseByLesson })
   const countedAnswers = answers.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'question', viaGathering: row.viaGathering === true }))
   const done = new Set(countedCompletions.map((row) => ref(row.lesson)))
   const watchedIds = new Set(
