@@ -23,7 +23,7 @@ export type GardenAreaId = 'quran' | 'hadith' | 'character' | 'society' | 'spiri
 export type GardenArea = {
   id: GardenAreaId
   title: string
-  /** Painted on the blank plaque. Cinzel, with a real apostrophe in Qur’an. */
+  /** Painted on the blank plaque in the learner sans, with a real apostrophe in Qur’an. */
   plaque: string
   /** One line under the plaque. */
   note: string

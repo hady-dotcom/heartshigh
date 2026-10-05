@@ -23,7 +23,7 @@ One combined file per area, per stage. Stage 0 is a sapling. Stage 4 is full. Th
 
 `{area}` is `quran`, `hadith`, `character`, `society` or `spirituality`. `{stage}` is `0` to `4`.
 
-Plaques in the art are blank. The page draws the name in Cinzel 600, at least 9.5pt, centred on the plaque face (about 91% down the canvas). Qur’an uses a real apostrophe: QUR’AN.
+Plaques in the art are blank. The page draws the name in the learner sans (`--sans`), small enough to sit inside the dark banner on a 390-wide phone. Qur’an uses a real apostrophe: QUR’AN.
 
 The five pads are a smile. Qur’an is back-left, Spirituality back-right, Hadith middle-left, Society middle-right, Character front-centre and in front. A sapling (stage 0 or 1) paints above a fuller tree so a small one is not hidden, and the outer plaques stay out to the sides.
 
