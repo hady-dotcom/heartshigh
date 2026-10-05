@@ -15,49 +15,55 @@ export function PersonActions({
   canTemp?: boolean
   canPause?: boolean
 }) {
+  if (!canPause && !canTemp && !canRole) return null
   return (
-    <div data-testid="person-actions" style={{ display: 'grid', gap: 8, justifyItems: 'end' }}>
-      {canPause ? (
-        person.suspendedAt ? (
-          <form action="/api/hearts" method="post">
-            <Hidden fields={{ action: 'restore-person', userId: person.id, next }} />
-            <button className="btn teal small" type="submit" data-testid="restore-person">Restore</button>
-          </form>
-        ) : (
-          <details>
-            <summary className="btn danger small" data-testid="suspend-open">Pause this account <HelpTip topic="suspend" place="end">{TOOL.suspend}</HelpTip></summary>
-            <form className="form" action="/api/hearts" method="post" style={{ marginTop: 8, minWidth: 220 }}>
-              <Hidden fields={{ action: 'suspend-person', userId: person.id, next }} />
-              <label className="stack">Reason<input name="reason" required minLength={3} data-testid="suspend-reason" /></label>
-              <button className="btn danger small" type="submit" data-testid="suspend-submit">Pause</button>
+    <details data-testid="person-actions" style={{ position: 'relative', justifySelf: 'end' }}>
+      <summary className="btn ghost small" data-testid="person-account-open">
+        Account <HelpTip topic="suspend" place="end">{TOOL.suspend}</HelpTip>
+      </summary>
+      <div className="form" style={{ position: 'absolute', right: 0, zIndex: 6, marginTop: 8, width: 168, display: 'grid', gap: 8 }}>
+        {canPause ? (
+          person.suspendedAt ? (
+            <form action="/api/hearts" method="post">
+              <Hidden fields={{ action: 'restore-person', userId: person.id, next }} />
+              <button className="btn teal small" type="submit" data-testid="restore-person">Restore</button>
             </form>
-          </details>
-        )
-      ) : null}
-      {canTemp ? (
-        <details>
-          <summary className="btn ghost small" data-testid="temp-password-open">Set a temporary password <HelpTip topic="tempPassword" place="end">{TOOL.tempPassword}</HelpTip></summary>
-          <form className="form" action="/api/hearts" method="post" style={{ marginTop: 8, minWidth: 220 }}>
+          ) : (
+            <form action="/api/hearts" method="post">
+              <Hidden fields={{ action: 'suspend-person', userId: person.id, next }} />
+              <label className="stack">
+                Pause
+                <input name="reason" required minLength={3} data-testid="suspend-reason" placeholder="Reason" />
+              </label>
+              <button className="btn danger small" type="submit" data-testid="suspend-open">Pause</button>
+            </form>
+          )
+        ) : null}
+        {canTemp ? (
+          <form action="/api/hearts" method="post">
             <Hidden fields={{ action: 'set-temp-password', userId: person.id, next }} />
-            <label className="stack">New temporary password<input name="password" type="password" minLength={8} required data-testid="temp-password" /></label>
-            <button className="btn ink small" type="submit" data-testid="temp-password-submit">Set password</button>
+            <label className="stack">
+              Temporary password
+              <input name="password" type="password" minLength={8} required data-testid="temp-password" />
+            </label>
+            <button className="btn ink small" type="submit" data-testid="temp-password-open">Set password</button>
           </form>
-        </details>
-      ) : null}
-      {canRole ? (
-        <details>
-          <summary className="btn ghost small" data-testid="change-role-open">Change role <HelpTip topic="changeRole" place="end">{TOOL.changeRole}</HelpTip></summary>
-          <form className="form" action="/api/hearts" method="post" style={{ marginTop: 8, minWidth: 220 }}>
+        ) : null}
+        {canRole ? (
+          <form action="/api/hearts" method="post">
             <Hidden fields={{ action: 'change-role', userId: person.id, next }} />
-            <select name="role" defaultValue={person.role || 'learner'} data-testid="change-role">
-              <option value="learner">Learner</option>
-              <option value="teacher">Teacher</option>
-              <option value="portal-admin">Portal admin</option>
-            </select>
-            <button className="btn ink small" type="submit" data-testid="change-role-submit">Save role</button>
+            <label className="stack">
+              Role
+              <select name="role" defaultValue={person.role || 'learner'} data-testid="change-role">
+                <option value="learner">Learner</option>
+                <option value="teacher">Teacher</option>
+                <option value="portal-admin">Portal admin</option>
+              </select>
+            </label>
+            <button className="btn ink small" type="submit" data-testid="change-role-open">Save role</button>
           </form>
-        </details>
-      ) : null}
-    </div>
+        ) : null}
+      </div>
+    </details>
   )
 }
