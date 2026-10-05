@@ -7,7 +7,15 @@ export const E2E_DATABASE = process.env.HEARTS_E2E_DATABASE || 'file:./data/hear
 
 /** A seeded access code by its label. Codes are random on every reseed, so read them after global setup has run. */
 export function seedCode(label: string) {
-  const codes = JSON.parse(readFileSync(path.join(process.cwd(), 'data', 'seed-codes-test.json'), 'utf8')) as Record<string, string>
-  if (!codes[label]) throw new Error(`No seeded access code labelled ${label}.`)
-  return codes[label]
+  const dir = process.cwd()
+  const files = ['seed-codes-test.json', 'seed-codes.json']
+  for (const file of files) {
+    try {
+      const codes = JSON.parse(readFileSync(path.join(dir, 'data', file), 'utf8')) as Record<string, string>
+      if (codes[label]) return codes[label]
+    } catch {
+      // Try the other file. Postgres e2e writes seed-codes.json unless HEARTS_E2E_DATABASE is set.
+    }
+  }
+  throw new Error(`No seeded access code labelled ${label}.`)
 }
