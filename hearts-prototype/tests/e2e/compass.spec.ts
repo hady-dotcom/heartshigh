@@ -10,8 +10,9 @@ const PASSWORD = 'compass-demo'
 const database = process.env.HEARTS_E2E_DATABASE || E2E_DATABASE
 
 test.beforeAll(() => {
+  test.setTimeout(180_000)
   execSync('npx tsx src/seed/compass-demo.ts', { stdio: 'inherit', env: { ...process.env, DATABASE_URL: database } })
-}, { timeout: 180_000 })
+})
 
 test('a learner cannot fetch their own scores from any compass API', async () => {
   const learner = await playwrightRequest.newContext({ baseURL: E2E_BASE })
