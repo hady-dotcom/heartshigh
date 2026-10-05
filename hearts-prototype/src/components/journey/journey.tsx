@@ -1995,17 +1995,17 @@ export function Journey(props: JourneyProps) {
         <button type="button" aria-pressed={faves.includes(item.id)} onClick={fave} data-testid="fave"><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
         <button type="button" aria-pressed={saved.includes(item.id)} onClick={() => !needsAccount('save') && toggleSave(item.id)} data-testid="save"><span className="bubble"><SaveIcon /></span>{saved.includes(item.id) ? 'Saved' : 'Save'}</button>
       </div>
-      <div
-        className="j-level-choices"
-        data-testid="level-steps"
-        aria-label="Choose how much to watch"
-        onPointerDown={(event) => event.stopPropagation()}
-      >
-        <button type="button" className={mode === 'hors' ? 'on' : undefined} data-testid="level-clip" aria-pressed={mode === 'hors'} onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); requestClip() }} onClick={(event) => { event.preventDefault(); requestClip() }}>{LEVEL_WORDS[0]}</button>
-        <button type="button" className={mode === 'appetiser' ? 'on' : undefined} data-testid="level-minutes" aria-pressed={mode === 'appetiser'} onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); requestExtract() }} onClick={(event) => { event.preventDefault(); requestExtract() }}>{LEVEL_WORDS[1]}</button>
-        <button type="button" data-testid="level-lecture" onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); requestTalk() }} onClick={(event) => { event.preventDefault(); requestTalk() }}>{LEVEL_WORDS[2]}</button>
-      </div>
       <div className="clip-foot j-credits">
+        <div
+          className="j-level-choices"
+          data-testid="level-steps"
+          aria-label="Choose how much to watch"
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <button type="button" className={mode === 'hors' ? 'on' : undefined} data-testid="level-clip" aria-pressed={mode === 'hors'} onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); requestClip() }} onClick={(event) => { event.preventDefault(); requestClip() }}>{LEVEL_WORDS[0]}</button>
+          <button type="button" className={mode === 'appetiser' ? 'on' : undefined} data-testid="level-minutes" aria-pressed={mode === 'appetiser'} onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); requestExtract() }} onClick={(event) => { event.preventDefault(); requestExtract() }}>{LEVEL_WORDS[1]}</button>
+          <button type="button" data-testid="level-lecture" onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); requestTalk() }} onClick={(event) => { event.preventDefault(); requestTalk() }}>{LEVEL_WORDS[2]}</button>
+        </div>
         {mode === 'hors' ? (
           <>
             {wordsInPicture && !cardKind ? null : speakerRow}
