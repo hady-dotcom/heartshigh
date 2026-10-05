@@ -82,5 +82,7 @@ describe('account rules', () => {
   it('treats 22:00 to 07:00 in the portal zone as quiet', () => {
     assert.equal(isQuietHour(new Date('2026-10-04T21:30:00Z'), 'Europe/London'), true)
     assert.equal(isQuietHour(new Date('2026-10-04T12:00:00Z'), 'Europe/London'), false)
+    assert.equal(isQuietHour(new Date('2026-10-19T02:00:00Z'), 'America/Toronto'), true)
+    assert.equal(isQuietHour(new Date('2026-10-19T01:30:00Z'), 'America/Toronto'), false)
   })
 })

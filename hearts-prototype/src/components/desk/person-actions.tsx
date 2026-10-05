@@ -8,12 +8,14 @@ export function PersonActions({
   canRole,
   canTemp,
   canPause,
+  pausedWhen,
 }: {
   person: { id: number; name?: string | null; role?: string | null; suspendedAt?: string | null; emailConfirmedAt?: string | null }
   next: string
   canRole?: boolean
   canTemp?: boolean
   canPause?: boolean
+  pausedWhen?: string
 }) {
   if (!canPause && !canTemp && !canRole) return null
   return (
@@ -26,6 +28,7 @@ export function PersonActions({
           person.suspendedAt ? (
             <form action="/api/hearts" method="post">
               <Hidden fields={{ action: 'restore-person', userId: person.id, next }} />
+              {pausedWhen ? <p className="hint" data-testid="paused-when">Paused {pausedWhen}</p> : null}
               <button className="btn teal small" type="submit" data-testid="restore-person">Restore</button>
             </form>
           ) : (

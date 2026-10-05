@@ -73,7 +73,7 @@ const BODY: Record<MailKind, (portal: string) => string> = {
   reset: () => 'Use the button to choose a new password. The link lasts one hour.',
   'password-changed': () => 'Your password was changed just now. If that was not you, please speak to your teacher or masjid.',
   confirm: () => 'Please confirm this email belongs to you. You can keep using HEARTS in the meantime.',
-  'email-changed-new': () => 'Someone asked to use this address for a HEARTS account. Confirm it to finish the change.',
+  'email-changed-new': () => 'A request was made to use this address for a HEARTS account. Confirm it to finish the change.',
   'email-changed-old': () => 'A request was made to change the email on this HEARTS account. If that was not you, sign in and speak to your teacher.',
   suspended: () => 'This account has been paused. Your learning is kept. Please speak to your masjid or school.',
   restored: () => 'This account is open again. You can sign in as before.',
@@ -94,10 +94,10 @@ const BODY: Record<MailKind, (portal: string) => string> = {
 
 const DEFAULT_WHY: Record<MailKind, string> = {
   test: 'You asked the desk to send a test email.',
-  reset: 'Someone asked to reset the password on this address.',
+  reset: 'someone asked to reset the password on this address.',
   'password-changed': 'We tell you when the password on this account changes.',
-  confirm: 'This address was used to join HEARTS.',
-  'email-changed-new': 'Someone asked to move a HEARTS account to this address.',
+  confirm: 'this address was used to join HEARTS.',
+  'email-changed-new': 'someone asked to move a HEARTS account to this address.',
   'email-changed-old': 'This was the email on a HEARTS account that is being changed.',
   suspended: 'A teacher or admin paused this account.',
   restored: 'A teacher or admin opened this account again.',
@@ -137,17 +137,37 @@ export function greetingName(name?: string | null) {
   return trimmed || 'there'
 }
 
+export function mailPortalLabel(name?: string | null) {
+  const trimmed = (name || '').trim()
+  return trimmed && trimmed.toLowerCase() !== 'hearts' ? trimmed : 'this circle'
+}
+
+export function mailSignOff(portal: string) {
+  return `${portal} on HEARTS`
+}
+
+export function mailIgnoreLine(kind: MailKind) {
+  if (kind === 'reset') return "If this wasn't you, you can ignore this email. Your password stays the same."
+  if (kind === 'confirm' || kind === 'email-changed-new') return "If this wasn't you, you can ignore this email."
+  if (kind === 'suspended') return "If this wasn't you, please speak to your masjid or school."
+  return ''
+}
+
 export function renderMail(kind: MailKind, vars: MailVars = {}): RenderedMail {
-  const portal = (vars.portalName || 'HEARTS').trim() || 'HEARTS'
+  const portal = mailPortalLabel(vars.portalName)
   const name = greetingName(vars.name)
   const body = vars.extra ? `${BODY[kind](portal)} ${vars.extra}`.trim() : BODY[kind](portal)
   const why = vars.why || DEFAULT_WHY[kind]
+  const ignore = mailIgnoreLine(kind)
+  const signOff = mailSignOff(portal)
   const buttonLabel = vars.buttonLabel || DEFAULT_BUTTON[kind]
   const buttonUrl = vars.buttonUrl
   const subject = SUBJECT[kind]
   const textLines = [`Assalamu alaikum, ${name}.`, '', body]
   if (buttonUrl) textLines.push('', buttonLabel ? `${buttonLabel}: ${buttonUrl}` : buttonUrl)
-  textLines.push('', `You received this because ${why}`, '', `— ${portal} on HEARTS`)
+  textLines.push('', `You received this because ${why}`)
+  if (ignore) textLines.push('', ignore)
+  textLines.push('', signOff)
   const text = textLines.join('\n')
   const button = buttonUrl
     ? `<p style="margin:28px 0 8px"><a href="${escapeHtml(buttonUrl)}" style="background:${GOLD};color:${GOLD_INK};padding:12px 22px;border-radius:999px;text-decoration:none;font-weight:700;display:inline-block">${escapeHtml(buttonLabel || 'Open')}</a></p>`
@@ -160,7 +180,8 @@ export function renderMail(kind: MailKind, vars: MailVars = {}): RenderedMail {
     <p style="margin:0 0 12px">${escapeHtml(body)}</p>
     ${button}
     <p style="margin:28px 0 0;font-size:13px;color:#5a4a28">You received this because ${escapeHtml(why)}</p>
-    <p style="margin:8px 0 0;font-size:13px;color:#5a4a28">— ${escapeHtml(portal)} on HEARTS</p>
+    ${ignore ? `<p style="margin:12px 0 0;font-size:13px;color:#5a4a28">${escapeHtml(ignore)}</p>` : ''}
+    <p style="margin:8px 0 0;font-size:13px;color:#5a4a28">${escapeHtml(signOff)}</p>
   </div>
 </body></html>`
   return { subject, text, html }

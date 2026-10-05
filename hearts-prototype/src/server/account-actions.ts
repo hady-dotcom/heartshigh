@@ -12,6 +12,7 @@ import {
   canSuspend,
   CONFIRM_MS,
   CONFIRM_STALE,
+  deleteDueAt,
   EMAIL_CHANGE_MS,
   exportAllowed,
   HALF_SESSION_MS,
@@ -37,6 +38,8 @@ import { eraseUser } from './erase-user'
 import { runAccountJobs } from './account-jobs'
 import { sendQueuedNotification } from './notify-email'
 import { audit } from './viewas'
+import { britishPortalTime, portalTimeZone } from '@/lib/zone-time'
+import { portalDisplayName } from '@/lib/portal-name'
 
 type AccountUser = SessionUser & {
   emailConfirmedAt?: string | null
@@ -84,6 +87,17 @@ async function loadUser(payload: Payload, id: number) {
   return (await payload.findByID({ collection: 'users', id, overrideAccess: true, depth: 1 }).catch(() => null)) as AccountUser | null
 }
 
+async function portalMail(payload: Payload, user: { tenants?: { tenant?: unknown }[] } | null | undefined) {
+  const portalId = portalIdOf(user as never)
+  const portal = portalId
+    ? ((await payload.findByID({ collection: 'portals', id: portalId, overrideAccess: true, depth: 0 }).catch(() => null)) as { name?: string; organisationName?: string; timeZone?: string } | null)
+    : null
+  return {
+    portalName: portalDisplayName(portal) || undefined,
+    timeZone: portalTimeZone(portal),
+  }
+}
+
 async function findByEmail(payload: Payload, email: string) {
   const found = await payload.find({ collection: 'users', overrideAccess: true, depth: 1, limit: 1, where: { email: { equals: email.toLowerCase() } } })
   return (found.docs[0] as AccountUser | undefined) || null
@@ -98,10 +112,11 @@ export async function issueConfirmEmail(payload: Payload, user: { id: number; em
     overrideAccess: true,
     data: { emailConfirmToken: hashToken(token), emailConfirmExpiresAt: expiresAt, lastConfirmSentAt: now().toISOString() } as never,
   })
+  const mail = portalName ? { portalName } : await portalMail(payload, user as { tenants?: { tenant?: unknown }[] })
   return sendMail(payload, {
     to: user.email,
     kind: 'confirm',
-    vars: { name: user.name || undefined, portalName, buttonUrl: mailPublicUrl(`/confirm?token=${token}`, origin) },
+    vars: { name: user.name || undefined, portalName: portalName || mail.portalName, buttonUrl: mailPublicUrl(`/confirm?token=${token}`, origin) },
   })
 }
 
@@ -307,8 +322,15 @@ async function resendConfirm(req: Request, payload: Payload, user: SessionUser, 
 async function requestDelete(req: Request, form: FormData, payload: Payload, user: SessionUser, origin: string) {
   const next = text(form, 'next') || '/'
   if (text(form, 'confirm') !== 'delete') return redirectTo(req, next, 'Type delete to confirm.')
-  await payload.update({ collection: 'users', id: user.id, overrideAccess: true, data: { deletionRequestedAt: now().toISOString() } as never })
-  await sendMail(payload, { to: user.email, kind: 'delete-requested', vars: { name: user.name || undefined } })
+  const requestedAt = now()
+  await payload.update({ collection: 'users', id: user.id, overrideAccess: true, data: { deletionRequestedAt: requestedAt.toISOString() } as never })
+  const mail = await portalMail(payload, user)
+  const when = britishPortalTime(deleteDueAt(requestedAt), mail.timeZone)
+  await sendMail(payload, {
+    to: user.email,
+    kind: 'delete-requested',
+    vars: { name: user.name || undefined, portalName: mail.portalName, extra: when ? `That is ${when}.` : undefined },
+  })
   await audit(payload, 'account.delete-requested', { actor: user.id, target: user.id })
   return redirectTo(req, next, undefined, 'We will delete this account in 14 days. Signing in before then cancels it.')
 }
@@ -374,7 +396,10 @@ async function suspendPerson(req: Request, form: FormData, payload: Payload, act
       ? { suspendedAt: now().toISOString(), suspendedBy: actor.id, suspendReason: reason, sessions: [] }
       : { suspendedAt: null, suspendedBy: null, suspendReason: null },
   } as never)
-  await sendMail(payload, { to: target.email, kind: pause ? 'suspended' : 'restored', vars: { name: target.name || undefined, extra: pause ? reason : undefined } })
+  const mail = await portalMail(payload, target)
+  const pausedAt = pause ? britishPortalTime(now(), mail.timeZone) : ''
+  const extra = pause ? [pausedAt ? `This was at ${pausedAt}.` : '', reason].filter(Boolean).join(' ') : undefined
+  await sendMail(payload, { to: target.email, kind: pause ? 'suspended' : 'restored', vars: { name: target.name || undefined, portalName: mail.portalName, extra } })
   await audit(payload, pause ? 'account.suspended' : 'account.restored', { actor: actor.id, actorRole: actor.role, target: target.id, portal: portalIdOf(target), reason })
   return redirectTo(req, next, undefined, pause ? 'That account is paused.' : 'That account is open again.')
 }

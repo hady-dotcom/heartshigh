@@ -12,7 +12,7 @@ import { collections } from './collections'
 import { gatherCollections } from './collections-gather'
 import { sheetCollections } from './collections-sheet'
 import { MasterFlags } from './collections-opening'
-import { databaseKind, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
+import { databaseKind, payloadCsrf, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
 import { migrations } from './migrations'
 import { viewAsGlobalGuard, viewAsGuard } from './server/viewas'
 import { emailAdapter } from './lib/email-adapter'
@@ -52,9 +52,9 @@ export default buildConfig({
   email: emailAdapter(),
   serverURL: origins[0],
   cors: origins.length ? origins : undefined,
-  // Playwright's APIRequestContext has no Origin header. Enabling CSRF from SERVER_URL
-  // makes cookie REST calls 403 and breaks the existing suite. E2E keeps CSRF off.
-  csrf: process.env.HEARTS_E2E === '1' ? undefined : origins.length ? origins : undefined,
+  // Playwright's APIRequestContext has no Origin header, so HEARTS_E2E may blank CSRF
+  // in development. payloadCsrf ignores that switch when NODE_ENV=production.
+  csrf: payloadCsrf(origins),
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },

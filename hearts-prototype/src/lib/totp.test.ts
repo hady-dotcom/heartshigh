@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { makeBackupCodes, takeBackupCode, totpNow, totpOk, totpUri, newTotpSecret } from './totp'
+import { groupSecret, makeBackupCodes, takeBackupCode, totpNow, totpOk, totpUri, newTotpSecret } from './totp'
 
 describe('totp', () => {
   it('accepts the current code and refuses a wrong one', () => {
@@ -18,5 +18,9 @@ describe('totp', () => {
     assert.ok(left)
     assert.equal(left!.length, 9)
     assert.equal(takeBackupCode(left!, plain[0]), null)
+  })
+
+  it('groups a key in fours for typing', () => {
+    assert.equal(groupSecret('ABCD2EFG3HIJ4KLM'), 'ABCD 2EFG 3HIJ 4KLM')
   })
 })

@@ -3,9 +3,10 @@ import { redirect } from 'next/navigation'
 import { Flash, Hidden } from '@/components/app/shell'
 import { BrandLockup } from '@/components/brand'
 import { PageHelp } from '@/components/app/page-help'
+import { CopyLink } from '@/components/app/copy-link'
 import { Qr } from '@/components/qr'
 import { readHalfSession } from '@/lib/account-crypto'
-import { newTotpSecret, sealTotpSecret } from '@/lib/totp'
+import { groupSecret, newTotpSecret, sealTotpSecret } from '@/lib/totp'
 import { getPayloadClient, getSession } from '@/server/context'
 import { setupTotpState } from '@/server/account-actions'
 
@@ -33,7 +34,7 @@ export default async function LoginSetup({ searchParams }: { searchParams: Promi
     <main className="door garden-door" data-testid="login-setup">
       <div className="door-card">
         <BrandLockup size={72} />
-        <h1>Set up two-step sign-in <PageHelp topic="loginSetup" /></h1>
+        <h1><span style={{ whiteSpace: 'nowrap' }}>Set up two-step sign&#8209;in</span> <PageHelp topic="loginSetup" /></h1>
         <p className="lede">A code from an app on your phone, as well as your password.</p>
         <Flash error={query.error} notice={query.notice} />
         {backups.length ? (
@@ -45,7 +46,13 @@ export default async function LoginSetup({ searchParams }: { searchParams: Promi
         ) : (
           <>
             {setup ? <div style={{ display: 'grid', placeItems: 'center', margin: '12px 0' }}><Qr value={setup.uri} testId="totp-qr" /></div> : null}
-            <p className="door-hint" data-testid="totp-secret">Or type this key: {setup?.secret}</p>
+            {setup ? (
+              <div className="door-hint" data-testid="totp-secret">
+                <p style={{ margin: '0 0 8px' }}>Or type this key:</p>
+                <code style={{ display: 'block', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', letterSpacing: '0.06em', fontSize: 15 }}>{groupSecret(setup.secret)}</code>
+                <div style={{ marginTop: 8 }}><CopyLink value={setup.secret} testId="totp-secret-copy" label="Copy key" className="pill outline small" /></div>
+              </div>
+            ) : null}
             <form className="door-form" action="/api/hearts" method="post">
               <Hidden fields={{ action: 'confirm-totp', next }} />
               <label>Code from the app<input className="field" data-testid="totp-setup-code" name="code" inputMode="numeric" autoComplete="one-time-code" required /></label>

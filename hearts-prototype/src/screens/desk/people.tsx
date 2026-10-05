@@ -15,6 +15,7 @@ import { now } from '@/lib/clock'
 import { visibleCourseIds } from '@/server/context'
 import { dayNumber } from '@/server/learner'
 import { type Ctx, clock, longDate, portalPeople, ref, rows, shortDate, str } from '../common'
+import { britishPortalTime, portalTimeZone } from '@/lib/zone-time'
 import { AdminFrame } from './overview'
 import { featureOn } from '@/lib/features'
 import { PersonActions } from '@/components/desk/person-actions'
@@ -86,6 +87,7 @@ export async function TeachScreen(ctx: Ctx) {
                         canPause={user.role === 'master' || user.role === 'portal-admin'}
                         canTemp
                         canRole={user.role === 'master' || user.role === 'portal-admin'}
+                        pausedWhen={learner.suspendedAt ? britishPortalTime(str(learner.suspendedAt), portalTimeZone(portal)) : undefined}
                       />
                     </td>
                     <td className="email-cell"><span title={str(learner.email)} data-testid="learner-email">{str(learner.email)}</span></td>

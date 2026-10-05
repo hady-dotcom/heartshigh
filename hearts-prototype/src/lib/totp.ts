@@ -26,6 +26,10 @@ export function totpNow(secret: string) {
   return generateSync({ secret })
 }
 
+export function groupSecret(secret: string) {
+  return secret.replace(/\s+/g, '').replace(/(.{4})/g, '$1 ').trim()
+}
+
 export function sealTotpSecret(secret: string) {
   return encryptSecret(secret)
 }

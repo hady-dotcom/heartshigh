@@ -217,6 +217,7 @@ async function main() {
       teacherLabel: 'Teacher',
       wizardDone: true,
       colour: '#1f4d3a',
+      timeZone: 'America/Toronto',
     },
     {
       name: 'Leeds Chapter',
@@ -231,7 +232,11 @@ async function main() {
   const portalIds = new Map<string, number>()
   for (const portal of startersOnly ? [] : portals) {
     const found = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: portal.slug } } })
-    const doc = found.docs[0] || (await payload.create({ collection: 'portals', overrideAccess: true, data: portal }))
+    const doc = found.docs[0]
+      ? portal.timeZone && (found.docs[0] as { timeZone?: string }).timeZone !== portal.timeZone
+        ? await payload.update({ collection: 'portals', id: found.docs[0].id, overrideAccess: true, data: { timeZone: portal.timeZone } })
+        : found.docs[0]
+      : await payload.create({ collection: 'portals', overrideAccess: true, data: portal })
     portalIds.set(portal.slug, doc.id)
   }
 

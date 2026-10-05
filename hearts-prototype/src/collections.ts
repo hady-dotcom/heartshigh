@@ -7,13 +7,16 @@ import { authorTextProblems, markupProblems } from './lib/opening-data'
 import { changedTierFields, horsCapOf, saidInTalk, TIER_TIMING_FIELDS, tierProblem, timingProblems } from './lib/tiers'
 import { talkChain } from './lib/nesting'
 import { isShortsUrl } from './lib/shorts'
-import { DEFAULT_TIME_ZONE, isTimeZone } from './lib/zone-time'
+import { britishPortalTime, DEFAULT_TIME_ZONE, isTimeZone, portalTimeZone } from './lib/zone-time'
 import { linkLadderParents } from './server/piece-parents'
 import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
 import { circleProblems } from './lib/circle'
 import { cookiesSecure, serverURL } from './lib/env'
 import { renderMail } from './lib/email-templates'
+import { now } from './lib/clock'
+import { RESET_MS } from './lib/account-rules'
+import { portalDisplayName } from './lib/portal-name'
 import { clientIp, hitAuth, limitsRelaxed } from './lib/rate-limit'
 import { DOOR_SECTIONS } from './lib/doors'
 
@@ -148,10 +151,20 @@ export const Users: CollectionConfig = {
       expiration: 60 * 60 * 1000,
       generateEmailSubject: () => 'Reset your HEARTS password',
       generateEmailHTML: ({ token, user } = {}) => {
-        const name = user && typeof user === 'object' && 'name' in user ? String((user as { name?: string }).name || '') : ''
+        const person = user && typeof user === 'object' ? (user as { name?: string; tenants?: { tenant?: { name?: string; organisationName?: string; timeZone?: string } | number }[] }) : null
+        const name = person?.name || ''
+        const tenant = person?.tenants?.[0]?.tenant
+        const portal = tenant && typeof tenant === 'object' ? tenant : null
+        const portalName = portalDisplayName(portal) || undefined
+        const expires = britishPortalTime(new Date(now().getTime() + RESET_MS), portalTimeZone(portal))
         const base = (serverURL() || process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '')
         const href = `${base || ''}/reset?token=${token || ''}`
-        return renderMail('reset', { name, buttonUrl: href }).html
+        return renderMail('reset', {
+          name,
+          portalName,
+          buttonUrl: href,
+          extra: expires ? `The link expires at ${expires}.` : undefined,
+        }).html
       },
     },
   },

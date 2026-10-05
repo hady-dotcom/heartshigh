@@ -3,6 +3,7 @@
 
 import { getPayload, type Payload } from 'payload'
 import config from '../payload.config'
+import { closePayload } from '../lib/prepare-db'
 import { formForRound } from '../lib/compass-bank'
 import { lifeForDemo, passwordForNewAccount } from '../lib/compass-demo-plan'
 import { DEFAULT_MIX, SCALE_DOOR, whyDeficit } from '../lib/compass-feed'
@@ -345,11 +346,14 @@ async function main() {
     }
   }
   console.log(`Compass demo is in place on ${SLUG}. ${createdAccounts ? `New accounts use ${passwordForNewAccount(true)}.` : 'No new accounts.'} Existing accounts keep their password.`)
+  await closePayload(payload)
 }
 
-main().catch((error) => {
-  const detail = error && typeof error === 'object' && 'data' in error ? (error as { data?: unknown }).data : undefined
-  console.error(error instanceof Error ? error.message : error)
-  if (detail) console.error(JSON.stringify(detail, null, 2))
-  process.exit(1)
-})
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    const detail = error && typeof error === 'object' && 'data' in error ? (error as { data?: unknown }).data : undefined
+    console.error(error instanceof Error ? error.message : error)
+    if (detail) console.error(JSON.stringify(detail, null, 2))
+    process.exit(1)
+  })

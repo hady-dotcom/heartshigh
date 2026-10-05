@@ -17,7 +17,8 @@ import { featureOn } from '@/lib/features'
 import { type Ctx, longDate, ref, rows, shortDate, str, unreadCount } from '../common'
 import { ConfirmStrip } from '@/components/app/confirm-strip'
 import { PageHelp } from '@/components/app/page-help'
-import { isEmailConfirmed } from '@/lib/account-rules'
+import { deleteDueAt, isEmailConfirmed } from '@/lib/account-rules'
+import { britishPortalTime, portalTimeZone } from '@/lib/zone-time'
 import { KIND_LABEL, NOTIFY_KINDS, parsePrefs } from '@/lib/notify-prefs'
 
 /** Notices written before prompts were clipped on a word were cut mid-word at 60 characters; they read the same way now. */
@@ -232,6 +233,8 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
   const prefs = parsePrefs(user.notificationPrefs, user.nightAlerts)
   const deletePage = query.account === 'delete'
   const dataPage = query.account === 'data'
+  const zone = portalTimeZone(portal)
+  const deleteWhen = britishPortalTime(deleteDueAt(user.deletionRequestedAt || now()), zone)
   return (
     <AppFrame testId="settings">
       <div className="app-scroll">
@@ -242,7 +245,7 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
         {deletePage ? (
           <section className="card" data-testid="delete-account">
             <h3>Delete my account <PageHelp topic="deleteAccount" /></h3>
-            <p>We will delete your name, email, answers, plans and uploads after 14 days. Anonymous counts stay, so a course can still say how many people finished it. Signing in before then cancels this.</p>
+            <p>We will delete your name, email, answers, plans and uploads after 14 days. That is <time data-testid="delete-when">{deleteWhen}</time>. Anonymous counts stay, so a course can still say how many people finished it. Signing in before then cancels this.</p>
             <form className="form-stack" action="/api/hearts" method="post">
               <Hidden fields={{ action: 'request-delete', next: here, confirm: 'delete' }} />
               <button className="pill outline block" type="submit" data-testid="delete-account-submit">Delete my account</button>
@@ -291,7 +294,7 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
                 </select>
               </label>
             ))}
-            <label className="toggle"><input type="checkbox" name="quietNight" defaultChecked={prefs.quietNight} data-testid="quiet-night" /> Quiet at night (no emails 22:00 to 07:00)</label>
+            <label className="toggle"><input type="checkbox" name="quietNight" defaultChecked={prefs.quietNight} data-testid="quiet-night" /> Quiet at night (no emails 22:00 to 07:00 in the portal&apos;s time zone)</label>
             <label className="toggle"><input type="checkbox" name="emailNews" defaultChecked={Boolean(prefs.emailNewsAt)} data-testid="email-news" /> I am happy to receive these emails (not required to use HEARTS)</label>
             <button className="pill outline small" type="submit" data-testid="notify-prefs-save">Save</button>
           </form>

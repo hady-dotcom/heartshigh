@@ -35,7 +35,7 @@ import { handleCircle } from './circle'
 import { randomUUID } from 'node:crypto'
 import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourseIds, type Session, type SessionUser } from './context'
 import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCookie, wrote } from './viewas'
-import { isTimeZone } from '@/lib/zone-time'
+import { britishPortalTime, isTimeZone, portalTimeZone } from '@/lib/zone-time'
 import { parseLengthInput } from '@/lib/length'
 import { FEATURE_UNAVAILABLE, featuresFromForm } from '@/lib/features'
 import { adoptLibraryCourses, loadPortalById, refuseFeature } from './features'
@@ -43,6 +43,7 @@ import { afterPasswordChanged, afterPasswordLogin, handleAccountAction, issueCon
 import { SUSPEND_MESSAGE } from '@/lib/account-rules'
 import { sendQueuedNotification } from './notify-email'
 import { notifyKey } from '@/lib/notify-prefs'
+import { requestOriginAllowed } from '@/lib/env'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
@@ -116,7 +117,14 @@ async function loginResponse(req: Request, email: string, password: string, next
     return afterPasswordLogin(req, payload, result as never, land)
   } catch (error) {
     const message = error instanceof Error ? error.message : ''
-    if (/paused|masjid or school/i.test(message)) return redirectTo(req, '/login', SUSPEND_MESSAGE)
+    if (/paused|masjid or school/i.test(message)) {
+      const found = await payload.find({ collection: 'users', overrideAccess: true, depth: 1, limit: 1, where: { email: { equals: email.toLowerCase() } } })
+      const person = found.docs[0] as { suspendedAt?: string | null; tenants?: { tenant?: { timeZone?: string } | number }[] } | undefined
+      const tenant = person?.tenants?.[0]?.tenant
+      const zone = portalTimeZone(tenant && typeof tenant === 'object' ? tenant : null)
+      const when = britishPortalTime(person?.suspendedAt, zone)
+      return redirectTo(req, '/login', when ? `${SUSPEND_MESSAGE} This was at ${when}.` : SUSPEND_MESSAGE)
+    }
     return redirectTo(req, '/login', 'That email or password did not match.')
   }
 }
@@ -451,6 +459,9 @@ export async function handlePost(req: Request) {
   } catch {
     return redirectTo(req, '/', 'That form could not be read. Please try again.')
   }
+  if (!requestOriginAllowed(req.headers)) {
+    return NextResponse.json({ error: 'This request was refused.' }, { status: 403 })
+  }
   const action = text(form, 'action')
   const session = await getSession({ touch: action !== 'clock' })
   const { payload, viewAs } = session
@@ -513,7 +524,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     } catch {
       // Same notice either way, so a guesser cannot tell whether the email is on the books.
     }
-    return redirectTo(req, '/forgot', undefined, 'If that email has an account, we have sent a reset link.')
+    const sent = new URLSearchParams({ sent: '1' })
+    if (email) sent.set('email', email)
+    return redirectTo(req, `/forgot?${sent}`, undefined, 'If that email has an account, we have sent a reset link.')
   }
 
   if (action === 'reset-password') {

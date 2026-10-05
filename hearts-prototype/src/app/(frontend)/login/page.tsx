@@ -13,6 +13,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
         <h1>Welcome back</h1>
         <p className="lede">Sign in and we will take you to where you left off.</p>
         <Flash error={query.error} notice={query.notice} />
+        {query.error && /paused/i.test(query.error) ? <p className="lede" data-testid="paused-when">{query.error}</p> : null}
         <form className="door-form" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'login', next }} />
           <label>Email<input className="field" data-testid="login-email" name="email" type="email" autoComplete="username" required /></label>
