@@ -4,6 +4,8 @@ import { test } from 'node:test'
 import { DRAFT_NOTE } from '../../src/lib/tiers'
 import { CIRCLE_COLUMNS } from '../../src/lib/circle-sheet'
 import {
+  EXTRACT_COLUMNS,
+  EXTRACT_TAB,
   QUESTION_COLUMNS,
   TALK_COLUMNS,
   addNewCoursesToPack,
@@ -172,7 +174,7 @@ test('the pack column is optional, exported blank, and a blank cell leaves packs
   assert.equal(plan.ops.length, 0)
 })
 
-test('the blank template has five tabs, a note and the header row', async () => {
+test('the blank template has six tabs, a note and the header row', async () => {
   const buffer = await templateWorkbook()
   const parsed = await readWorkbook(buffer)
   assert.deepEqual(parsed.errors, [])
@@ -180,7 +182,7 @@ test('the blank template has five tabs, a note and the header row', async () => 
   assert.deepEqual(parsed.circle, [])
   const book = new ExcelJS.Workbook()
   await book.xlsx.load(buffer as unknown as Parameters<typeof book.xlsx.load>[0])
-  assert.deepEqual(book.worksheets.map((sheet) => sheet.name), ['Talks', 'Questions', 'Resources', 'CircleAnswers', 'Speakers'])
+  assert.deepEqual(book.worksheets.map((sheet) => sheet.name), ['Talks', 'Questions', 'Resources', 'Extracts', 'CircleAnswers', 'Speakers'])
   assert.match(String(book.getWorksheet('CircleAnswers')?.getRow(1).getCell(1).value), /never counted/)
   assert.deepEqual((book.getWorksheet('CircleAnswers')?.getRow(2).values as unknown[]).slice(1), [...CIRCLE_COLUMNS])
   assert.equal(TALK_COLUMNS.includes('talk_key'), true)
@@ -589,6 +591,57 @@ test('a door alone keeps the clause a seat names inside that door', () => {
   const plan = planSheet({ talks: [cells(3, { talk_key: 'yt-NIR88RRpat4', jibril_door: 'W2', ghunya_seat: '9.1' })], questions: [], resources: [], errors: [] }, catalogue)
   assert.deepEqual(plan.errors, [])
   assert.deepEqual(plan.ops, [{ op: 'cut.update', id: 2, patch: { bestClause: 9, clauseFragment: 'W2 · The sitting: How he came and sat with the Messenger', seat: 6 } }])
+})
+
+test('the Extracts tab adds one hors or appetiser per row, and refuses overlap or a time past the talk', () => {
+  const catalogue = fixture()
+  const created = planSheet({
+    talks: [],
+    questions: [],
+    resources: [],
+    extracts: [
+      cells(3, { talk_key: 'yt-NIR88RRpat4', extract_type: 'appetiser', start: 0, end: 90, text: '', status: 'approved', hook_text: 'The light enters the heart', land_text: 'The light enters the heart' }),
+      cells(4, { talk_key: 'yt-NIR88RRpat4', extract_type: 'hors', start: 10, end: 28, text: '', status: 'approved', arc: 'hook' }),
+    ],
+    errors: [],
+  }, catalogue)
+  assert.deepEqual(created.errors, [])
+  assert.equal(created.ops.filter((op) => op.op === 'extract.create').length, 2)
+  const overlap = planSheet({
+    talks: [],
+    questions: [],
+    resources: [],
+    extracts: [
+      cells(3, { talk_key: 'yt-NIR88RRpat4', extract_type: 'hors', start: 10, end: 30, text: '' }),
+      cells(4, { talk_key: 'yt-NIR88RRpat4', extract_type: 'hors', start: 20, end: 40, text: '' }),
+    ],
+    errors: [],
+  }, catalogue)
+  assert.ok(overlap.errors.some((issue) => issue.tab === EXTRACT_TAB && /hors/.test(issue.message)))
+  const late = planSheet({
+    talks: [],
+    questions: [],
+    resources: [],
+    extracts: [cells(3, { talk_key: 'yt-NIR88RRpat4', extract_type: 'hors', start: 100, end: 140, text: '' })],
+    errors: [],
+  }, catalogue)
+  assert.ok(late.errors.some((issue) => issue.tab === EXTRACT_TAB && /after the talk/.test(issue.message)))
+})
+
+test('the Extracts tab still sits beside the old Talks pair', async () => {
+  const workbook = await templateWorkbook()
+  const names = workbook.worksheets.map((sheet) => sheet.name)
+  assert.ok(names.includes(EXTRACT_TAB))
+  const sheet = workbook.getWorksheet(EXTRACT_TAB)
+  const header = sheet?.getRow(2)
+  const columns = new Set<string>()
+  header?.eachCell((cell) => columns.add(String(cell.value || '')))
+  for (const name of EXTRACT_COLUMNS) assert.ok(columns.has(name), `missing ${name}`)
+})
+
+test('undo remaps a restored hors onto its new parent appetiser id', () => {
+  const moved = new Map([['talk-extracts', new Map([[11, 91]])]])
+  assert.deepEqual(remapRefs({ lesson: 10, parent: 11, kind: 'hors' }, moved), { lesson: 10, parent: 91, kind: 'hors' })
 })
 
 test('a sheet with no door column imports exactly as before', async () => {

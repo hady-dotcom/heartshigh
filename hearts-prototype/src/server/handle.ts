@@ -1068,6 +1068,57 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, text(form, 'next') || '/', undefined, status === 'approved' ? 'Clip approved for the feed.' : status === 'rejected' ? 'Clip set aside.' : 'Clip moved back to draft.')
   }
 
+  if (action === 'extract-status') {
+    if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot review extracts.')
+    const item = await findDoc(payload, 'talk-extracts', Number(text(form, 'extract')))
+    if (!item) return redirectTo(req, text(form, 'next') || '/', 'That extract could not be found.')
+    const owned = await courseOfLesson(payload, idOf(item.lesson) || 0)
+    const denied = editError(user, owned.course as Doc | null)
+    if (denied) return redirectTo(req, text(form, 'next') || '/', denied)
+    const raw = text(form, 'status')
+    const status = raw === 'approved' ? 'approved' : raw === 'rejected' ? 'rejected' : raw === 'suggested' ? 'suggested' : 'draft'
+    await payload.update({ collection: 'talk-extracts', id: item.id, overrideAccess: true, data: { status } })
+    return redirectTo(
+      req,
+      text(form, 'next') || '/',
+      undefined,
+      status === 'approved'
+        ? 'Extract approved. Learners can now see it.'
+        : status === 'rejected'
+          ? 'Extract set aside.'
+          : status === 'suggested'
+            ? 'Extract moved back to suggested.'
+            : 'Extract moved back to draft.',
+    )
+  }
+
+  if (action === 'extract-nudge') {
+    if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot review extracts.')
+    const item = await findDoc(payload, 'talk-extracts', Number(text(form, 'extract')))
+    if (!item) return redirectTo(req, text(form, 'next') || '/', 'That extract could not be found.')
+    const owned = await courseOfLesson(payload, idOf(item.lesson) || 0)
+    const denied = editError(user, owned.course as Doc | null)
+    if (denied) return redirectTo(req, text(form, 'next') || '/', denied)
+    const lesson = await findDoc(payload, 'lessons', idOf(item.lesson) || 0)
+    const { sentencesOf } = await import('@/lib/tiers')
+    const { tierSourceText } = await import('@/server/tier-source')
+    const { nudgeBySentence, relinkExtractParents } = await import('@/lib/extracts').then(async (lib) => ({ ...lib, relinkExtractParents: (await import('@/server/extracts')).relinkExtractParents }))
+    const sentences = sentencesOf(tierSourceText(lesson as { youtubeId?: string; transcript?: string } | null))
+    const edge = text(form, 'edge') === 'end' ? 'end' : 'start'
+    const step = text(form, 'step') === 'back' ? -1 : 1
+    const moved = nudgeBySentence(
+      { lesson: idOf(item.lesson) || 0, kind: item.kind === 'appetiser' ? 'appetiser' : 'hors', start: Number(item.start), end: Number(item.end), quote: String(item.quote || ''), status: (item.status || 'draft') as 'draft', order: Number(item.order || 1) },
+      sentences,
+      edge,
+      step,
+    )
+    if (!moved) return redirectTo(req, text(form, 'next') || '/', 'There is no more sentence that way.')
+    await payload.update({ collection: 'talk-extracts', id: item.id, overrideAccess: true, data: { start: moved.start, end: moved.end } })
+    const lessonId = idOf(item.lesson)
+    if (lessonId) await relinkExtractParents(payload, lessonId)
+    return redirectTo(req, text(form, 'next') || '/', undefined, 'Times moved by a sentence.')
+  }
+
   if (action === 'create-point') {
     if (user.role === 'learner') return redirectTo(req, '/', 'You cannot place a question.')
     const prompt = text(form, 'prompt')

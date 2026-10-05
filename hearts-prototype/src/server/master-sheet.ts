@@ -9,6 +9,8 @@ import { audit } from '@/server/viewas'
 import { horsCapOf, normaliseSpans, type AppetiserSpan } from '@/lib/tiers'
 import { transcriptFileKind, transcriptFromFile } from '@/lib/transcript-file'
 import { tierSourceText } from '@/server/tier-source'
+import { parseExtractStatus, sameExtractWindow } from '@/lib/extracts'
+import { extractsForLesson, relinkExtractParents, syncExtractsFromTier } from '@/server/extracts'
 import {
   addNewCoursesToPack,
   buildWorkbook,
@@ -50,7 +52,7 @@ export type SheetSnapshot = {
   pushed?: { user: number; courses: number[] }[]
 }
 
-const CHILD_ORDER = ['circle-answers', 'engagement-points', 'resources', 'talk-tiers', 'sheet-keys', 'cuts', 'ladder-items', 'lessons', 'units', 'courses', 'speakers']
+const CHILD_ORDER = ['circle-answers', 'engagement-points', 'resources', 'talk-extracts', 'talk-tiers', 'sheet-keys', 'cuts', 'ladder-items', 'lessons', 'units', 'courses', 'speakers']
 
 function emptySnapshot(): SheetSnapshot {
   return { created: {}, updated: [], deleted: [] }
@@ -80,11 +82,12 @@ function num(value: unknown) {
 }
 
 export async function loadCatalogue(payload: Payload, scope: SheetScope): Promise<SheetCatalogue> {
-  const [courses, units, lessons, tiers, points, resources, keys, cuts, seats, clauses, circle, packs, doors, speakers] = await Promise.all([
+  const [courses, units, lessons, tiers, extracts, points, resources, keys, cuts, seats, clauses, circle, packs, doors, speakers] = await Promise.all([
     allDocs(payload, 'courses'),
     allDocs(payload, 'units'),
     allDocs(payload, 'lessons'),
     allDocs(payload, 'talk-tiers'),
+    allDocs(payload, 'talk-extracts').catch(() => [] as Doc[]),
     allDocs(payload, 'engagement-points'),
     allDocs(payload, 'resources'),
     allDocs(payload, 'sheet-keys').catch(() => [] as Doc[]),
@@ -130,6 +133,24 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
     appetiserSpans: spansOf(tier.appetiserSpans),
     hook: String(tier.hook || ''), turn: String(tier.turn || ''), land: String(tier.land || ''), note: String(tier.note || ''), status: String(tier.status || 'draft'),
   }))
+  const extractRows = extracts.map((row) => ({
+    id: row.id,
+    lesson: num(row.lesson) || 0,
+    kind: row.kind === 'appetiser' ? 'appetiser' as const : 'hors' as const,
+    start: Number(row.start),
+    end: Number(row.end),
+    quote: String(row.quote || ''),
+    score: row.score == null || row.score === '' ? null : Number(row.score),
+    status: parseExtractStatus(row.status),
+    door: row.door == null || row.door === '' ? null : Number(row.door),
+    seat: num(row.seat),
+    order: Number(row.order || 1),
+    parent: num(row.parent),
+    arc: row.arc === 'hook' || row.arc === 'turn' || row.arc === 'land' ? row.arc : null,
+    hook: String(row.hook || ''),
+    turn: String(row.turn || ''),
+    land: String(row.land || ''),
+  }))
   const pointRows: PointRow[] = points.map((point) => ({
     id: point.id, lesson: num(point.lesson) || 0, second: Number(point.second || 0), kind: String(point.kind || 'reflection'), prompt: String(point.prompt || ''),
     options: Array.isArray(point.options) ? (point.options as unknown[]).map(String) : [], correctOption: String(point.correctOption || ''), status: String(point.status || 'published'), draftNote: String(point.draftNote || ''),
@@ -163,7 +184,7 @@ export async function loadCatalogue(payload: Payload, scope: SheetScope): Promis
     links: linkRows(speaker.links), sources: String(speaker.sources || ''), status: String(speaker.status || 'draft'),
   }))
   return {
-    scopeKind: scope.kind, portalId: scope.portalId, courseId: scope.courseId, courses: courseRows, units: unitRows, lessons: lessonRows, tiers: tierRows, points: pointRows, resources: resourceRows, keys: keyRows, cuts: cutRows, seats: seatRows, doors,
+    scopeKind: scope.kind, portalId: scope.portalId, courseId: scope.courseId, courses: courseRows, units: unitRows, lessons: lessonRows, tiers: tierRows, extracts: extractRows, points: pointRows, resources: resourceRows, keys: keyRows, cuts: cutRows, seats: seatRows, doors,
     circle: circleRows, circlePortal: scope.desk === 'portal' ? scope.portalId : null, speakers: speakerRows,
     packs: packs.map((pack): PackRow => ({
       id: pack.id, title: String(pack.title || ''), owner: String(pack.owner || 'master'), portal: num(pack.portal),
@@ -290,6 +311,7 @@ async function wipeLesson(payload: Payload, snapshot: SheetSnapshot, lessonId: n
     ['circle-answers', pointIds.length ? { or: [{ lesson: { equals: lessonId } }, { point: { in: pointIds } }] } : { lesson: { equals: lessonId } }],
     ['engagement-points', { lesson: { equals: lessonId } }],
     ['resources', { lesson: { equals: lessonId } }],
+    ['talk-extracts', { lesson: { equals: lessonId } }],
     ['talk-tiers', { lesson: { equals: lessonId } }],
     ['sheet-keys', { lesson: { equals: lessonId } }],
     ['cuts', { lesson: { equals: lessonId } }],
@@ -399,12 +421,23 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
       data.checkedBy = actorId
       data.checkedAt = now().toISOString()
     }
+    const lessonId = op.op === 'tier.create' ? resolveRef(op.lesson, temps) : 0
     if (op.op === 'tier.create') {
-      const doc = (await payload.create({ collection: 'talk-tiers', overrideAccess: true, data: { ...data, lesson: resolveRef(op.lesson, temps), offerResume: true, source: 'master sheet' } as never })) as unknown as Doc
+      const doc = (await payload.create({ collection: 'talk-tiers', overrideAccess: true, data: { ...data, lesson: lessonId, offerResume: true, source: 'master sheet' } as never })) as unknown as Doc
       rememberCreated(snapshot, 'talk-tiers', doc.id)
+      const after = await payload.findByID({ collection: 'talk-tiers', id: doc.id, depth: 0, overrideAccess: true })
+      const made = await syncExtractsFromTier(payload, lessonId, after as never)
+      for (const row of made) if (row.id) rememberCreated(snapshot, 'talk-extracts', row.id)
     } else {
       await remember(payload, snapshot, 'talk-tiers', op.id, data)
       await payload.update({ collection: 'talk-tiers', id: op.id, overrideAccess: true, data: data as never })
+      const after = await payload.findByID({ collection: 'talk-tiers', id: op.id, depth: 0, overrideAccess: true })
+      const lesson = idOf((after as { lesson?: unknown }).lesson)
+      if (lesson) {
+        const before = new Set((await payload.find({ collection: 'talk-extracts', overrideAccess: true, depth: 0, limit: 200, where: { lesson: { equals: lesson } } })).docs.map((row) => row.id))
+        const made = await syncExtractsFromTier(payload, lesson, after as never)
+        for (const row of made) if (row.id && !before.has(row.id)) rememberCreated(snapshot, 'talk-extracts', row.id)
+      }
     }
     return
   }
@@ -414,6 +447,38 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
     for (const key of STRIP) delete data[key]
     snapshot.deleted.push({ collection: 'talk-tiers', data, formerId: op.id })
     await payload.delete({ collection: 'talk-tiers', id: op.id, overrideAccess: true })
+    return
+  }
+  if (op.op === 'extract.create' || op.op === 'extract.update') {
+    const data = { ...(op.op === 'extract.create' ? op.data : op.patch) }
+    if ('parent' in data && data.parent && typeof data.parent === 'object') data.parent = relationId(data.parent, temps)
+    if (op.op === 'extract.create') {
+      const lessonId = resolveRef(op.lesson, temps)
+      const already = (await extractsForLesson(payload, lessonId)).find((row) =>
+        sameExtractWindow(row, { kind: data.kind === 'appetiser' ? 'appetiser' : 'hors', start: Number(data.start), end: Number(data.end) }),
+      )
+      if (already) {
+        await relinkExtractParents(payload, lessonId)
+        return
+      }
+      const doc = (await payload.create({ collection: 'talk-extracts', overrideAccess: true, data: { ...data, lesson: lessonId } as never })) as unknown as Doc
+      rememberCreated(snapshot, 'talk-extracts', doc.id)
+      if (data.kind === 'appetiser' || data.kind === 'hors') await relinkExtractParents(payload, lessonId)
+    } else {
+      await remember(payload, snapshot, 'talk-extracts', op.id, data)
+      await payload.update({ collection: 'talk-extracts', id: op.id, overrideAccess: true, data: data as never })
+      const after = await payload.findByID({ collection: 'talk-extracts', id: op.id, depth: 0, overrideAccess: true })
+      const lesson = idOf((after as { lesson?: unknown }).lesson)
+      if (lesson) await relinkExtractParents(payload, lesson)
+    }
+    return
+  }
+  if (op.op === 'extract.delete') {
+    const doc = (await payload.findByID({ collection: 'talk-extracts', id: op.id, depth: 0, overrideAccess: true })) as unknown as Doc
+    const data = { ...doc }
+    for (const key of STRIP) delete data[key]
+    snapshot.deleted.push({ collection: 'talk-extracts', data, formerId: op.id })
+    await payload.delete({ collection: 'talk-extracts', id: op.id, overrideAccess: true })
     return
   }
   if (op.op === 'point.create' || op.op === 'point.update') {
@@ -527,7 +592,7 @@ async function takeOut(payload: Payload, collection: 'packs' | 'users', id: numb
   await payload.update({ collection, id, overrideAccess: true, data: { [field]: kept } as never })
 }
 
-const RESTORE_ORDER = ['courses', 'units', 'lessons', 'talk-tiers', 'cuts', 'engagement-points', 'circle-answers', 'resources', 'sheet-keys', 'ladder-items']
+const RESTORE_ORDER = ['courses', 'units', 'lessons', 'talk-tiers', 'talk-extracts', 'cuts', 'engagement-points', 'circle-answers', 'resources', 'sheet-keys', 'ladder-items']
 
 /** A created talk or question that a learner has already answered stays. Undo must not remove their work. */
 export async function undoBlockedReason(payload: Payload, snapshot: SheetSnapshot): Promise<string | null> {
@@ -563,7 +628,15 @@ export async function undoSnapshot(payload: Payload, snapshot: SheetSnapshot) {
       await payload.delete({ collection: collection as never, id, overrideAccess: true }).catch(() => undefined)
     }
   }
-  const deleted = [...snapshot.deleted].sort((a, b) => RESTORE_ORDER.indexOf(a.collection) - RESTORE_ORDER.indexOf(b.collection))
+  const deleted = [...snapshot.deleted].sort((a, b) => {
+    const order = RESTORE_ORDER.indexOf(a.collection) - RESTORE_ORDER.indexOf(b.collection)
+    if (order) return order
+    if (a.collection === 'talk-extracts') {
+      const rank = (row: { data: Record<string, unknown> }) => (row.data.kind === 'appetiser' ? 0 : 1)
+      return rank(a) - rank(b)
+    }
+    return 0
+  })
   // Postgres gives a restored row a new id, so rows restored after it are pointed at the new one.
   const moved = new Map<string, Map<number, number>>()
   for (const row of deleted) {

@@ -15,6 +15,8 @@ import { filmsForTalk, mixFeed, readFilmCatalogue, type BeatFilm } from '@/lib/f
 import { filesForTalk, isTypographyStyle, readTypographyManifest, type TypographyManifest } from '@/lib/typography'
 import { clipWords, displayLine, feedTidy, parseLineTidy } from '@/lib/tidy-caption'
 import { partTitle } from '@/lib/talk-title'
+import { attachHorsToAppetisers, extractParents, extractVisible, parentAppetiserFor, presentClips, type TalkExtract } from '@/lib/extracts'
+import { extractsForLessons } from './extracts'
 import { laneOf, portraitFor, SLIDE_ART, slugify, type FeedItem, type SlideStyle } from './learner'
 
 type Row = Record<string, unknown> & { id: number }
@@ -73,6 +75,7 @@ type Loaded = {
   clauses: Row[]
   doors: Door[]
   tiers: Row[]
+  extracts: TalkExtract[]
   showUnchecked: boolean
   /** Old cut ids that now stand for their talk's one tier clip. */
   alias: Map<number, number>
@@ -131,7 +134,7 @@ async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
   const typography = readTypographyManifest()
   const films = readFilmCatalogue()
   const cards = readCardCatalogue()
-  if (!courseIds.length) return { lanes, scales, clauses, doors, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [], showUnchecked: false, alias: new Map(), typography, films, cards }
+  if (!courseIds.length) return { lanes, scales, clauses, doors, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [], extracts: [], showUnchecked: false, alias: new Map(), typography, films, cards }
   const [courses, lessons, showUnchecked] = await Promise.all([all(payload, 'courses', { id: { in: courseIds } }), all(payload, 'lessons', { course: { in: courseIds } }), showUncheckedTalks(payload)])
   const lessonIds = lessons.map((row) => row.id)
   const [rawCuts, tiers] = await Promise.all([
@@ -159,9 +162,10 @@ async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
     else alias.set(cut.id, carrier.id)
   }
   const cutIds = [...cuts.map((row) => row.id), ...alias.keys()]
-  const [tags, ladder] = await Promise.all([
+  const [tags, ladder, extracts] = await Promise.all([
     cutIds.length ? all(payload, 'tags', { 'item.value': { in: cutIds } }) : Promise.resolve([] as Row[]),
     lessonIds.length ? all(payload, 'ladder-items', { and: [{ lesson: { in: lessonIds } }, { status: { equals: 'approved' } }] }) : Promise.resolve([] as Row[]),
+    lessonIds.length ? extractsForLessons(payload, lessonIds) : Promise.resolve([] as TalkExtract[]),
   ])
   const cutTags = tags
     .filter((tag) => (tag.item as { relationTo?: string } | undefined)?.relationTo === 'cuts')
@@ -169,7 +173,7 @@ async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
       const value = idOf((tag.item as { value?: unknown }).value) || 0
       return alias.has(value) ? { ...tag, item: { relationTo: 'cuts', value: alias.get(value) } } : tag
     })
-  return { lanes, scales, clauses, doors, cuts, lessons, courses, tags: cutTags, ladder, tiers: tiers.filter((tier) => tierVisible(tier, showUnchecked)), showUnchecked, alias, typography, films, cards }
+  return { lanes, scales, clauses, doors, cuts, lessons, courses, tags: cutTags, ladder, tiers: tiers.filter((tier) => tierVisible(tier, showUnchecked)), extracts, showUnchecked, alias, typography, films, cards }
 }
 
 function laneDefs(data: Loaded): LaneDef[] {
@@ -227,7 +231,7 @@ function cutInfos(data: Loaded, portal: PortalDoc): CutInfo[] {
         approved: cut.status === 'approved',
         placeholder: Boolean(cut.placeholder),
         withheld: cut.status === 'rejected',
-        hasHors: data.tiers.some((tier) => idOf(tier.lesson) === idOf(cut.lesson)) || data.ladder.some((item) => item.kind === 'hors' && idOf(item.lesson) === idOf(cut.lesson) && Number(item.start) >= Number(cut.start) - 1 && Number(item.end) <= Number(cut.end) + 1),
+        hasHors: data.tiers.some((tier) => idOf(tier.lesson) === idOf(cut.lesson)) || data.extracts.some((row) => row.kind === 'hors' && row.lesson === idOf(cut.lesson) && extractVisible(row, data.showUnchecked)) || data.ladder.some((item) => item.kind === 'hors' && idOf(item.lesson) === idOf(cut.lesson) && Number(item.start) >= Number(cut.start) - 1 && Number(item.end) <= Number(cut.end) + 1),
         portalOwn: Boolean(course && course.origin === 'local' && idOf(course.portal) === portal.id),
         starter: starters.get(cut.id),
       }
@@ -412,7 +416,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
       placeholder: false,
       tierStatus: tier.status === 'checked' ? 'checked' : 'draft',
       offerResume: tier.offerResume !== false,
-      parents: parentsFor(lesson.id, data.ladder.filter((item) => idOf(item.lesson) === lesson.id)),
+      ...extractFields(data, lesson.id, parentsFor(lesson.id, data.ladder.filter((item) => idOf(item.lesson) === lesson.id))),
     }
   }
   const start = Number(cut.start)
@@ -445,7 +449,22 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     placeholder,
     tierStatus: null,
     offerResume: true,
-    parents: parentsFor(lesson.id, data.ladder.filter((item) => idOf(item.lesson) === lesson.id)),
+    ...extractFields(data, lesson.id, parentsFor(lesson.id, data.ladder.filter((item) => idOf(item.lesson) === lesson.id))),
+  }
+}
+
+function extractFields(data: Loaded, lessonId: number, fallback: { hors: PieceRef; appetiser: PieceRef }) {
+  const linked = attachHorsToAppetisers(data.extracts.filter((row) => row.lesson === lessonId))
+  const visible = linked.filter((row) => extractVisible(row, data.showUnchecked))
+  const hors = visible.filter((row) => row.kind === 'hors')
+  const appetisers = visible.filter((row) => row.kind === 'appetiser')
+  const first = hors[0]
+  const parent = first ? (appetisers.find((row) => row.id === first.parent) || parentAppetiserFor(first, appetisers)) : appetisers[0] || null
+  return {
+    extracts: linked,
+    extractId: null as number | null,
+    parentExtractId: parent?.id ?? null,
+    parents: first ? extractParents(first, parent, lessonId) : fallback,
   }
 }
 
@@ -547,7 +566,7 @@ export async function serveFeed(payload: Payload, portal: PortalDoc, user: Sessi
       return row ? itemFor(data, row, slot.laneKey, laneTitles, index) : null
     })
     .filter((item): item is FeedItem => Boolean(item))
-  const items = mixFeed(talks, plan.served.length, readBackgroundsBaseUrl())
+  const items = presentClips(mixFeed(talks, plan.served.length, readBackgroundsBaseUrl()))
   return { slots, items, spinePointer: built.spinePointer }
 }
 
@@ -568,5 +587,5 @@ export async function mainsFor(payload: Payload, laneKeyValue: string) {
  */
 export async function learnerClips(payload: Payload, portal: PortalDoc, user: SessionUser | null) {
   const opening = await loadOpening(payload, portal, user)
-  return { opening, items: Object.values(opening.clips) }
+  return { opening, items: presentClips(Object.values(opening.clips)) }
 }

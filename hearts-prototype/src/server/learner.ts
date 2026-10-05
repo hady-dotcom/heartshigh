@@ -77,6 +77,12 @@ export type FeedItem = {
   offerResume?: boolean
   /** Hors d'oeuvre -> its appetiser -> its full talk. Learn more uses the current piece's parent only. */
   parents: { hors: PieceRef; appetiser: PieceRef }
+  /** The extract this clip was built from. Empty on the unexpanded talk item. */
+  extractId?: number | null
+  /** The parent appetiser extract, when overlap (or a later file) named one. */
+  parentExtractId?: number | null
+  /** Every extract on this talk. The feed expands these when there is more than one hors. */
+  extracts?: import('@/lib/extracts').TalkExtract[]
 }
 
 export type CourseCard = {
