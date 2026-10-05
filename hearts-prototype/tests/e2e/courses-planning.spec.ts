@@ -146,18 +146,31 @@ test.describe('courses and planning', () => {
       await page.getByTestId('think-about-this').click()
       await expect(page.getByTestId('popup')).toHaveCount(0)
     }
-    await page.setViewportSize(DESK)
+    await page.setViewportSize(PHONE)
     await page.goto(`${BASE}/course/${courseId}?part=${first.id}`)
-    await expect(page.getByTestId('up-next')).toBeVisible()
     await expect(page.getByTestId('player')).toBeVisible()
-    const garden = await page.getByTestId('course-garden').evaluate((card) => {
+    await expect(page.getByTestId('up-next')).toBeVisible()
+    if (await page.getByTestId('popup').count()) {
+      const later = page.getByTestId('answer-later')
+      if (await later.count()) await later.click()
+      else await page.keyboard.press('Escape')
+    }
+    await expect(page.getByTestId('popup')).toHaveCount(0)
+    await expect(page.getByTestId('timeline-dot').first()).toBeVisible()
+    await proofShot(page, 'round7-player-bar')
+    const gardenCard = page.getByTestId('course-garden')
+    await gardenCard.scrollIntoViewIfNeeded()
+    const garden = await gardenCard.evaluate((card) => {
       const style = getComputedStyle(card)
       return { bg: style.backgroundColor, color: style.color, border: style.borderColor }
     })
     expect(garden.bg.replace(/\s/g, '')).toMatch(/rgb\(14,\s*42,\s*43\)/)
     expect(garden.bg).not.toMatch(/42,\s*36,\s*72|36,\s*54,\s*40/)
     await proofShot(page, 'round7-garden-card')
-    await proofShot(page, 'round7-player-bar')
+    await page.setViewportSize(DESK)
+    await page.goto(`${BASE}/course/${courseId}?part=${first.id}`)
+    await expect(page.getByTestId('up-next')).toBeVisible()
+    await expect(page.getByTestId('player')).toBeVisible()
   })
 
   test('B25: the workbook summarises and links back to the talk', async ({ page }) => {
