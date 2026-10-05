@@ -3,6 +3,9 @@ import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
 import { cookiesSecure } from '@/lib/env'
 import { idOf, portalIdOf } from '@/lib/ids'
+import { audit } from './audit'
+
+export { audit }
 
 export const VIEWAS_COOKIE = 'hearts_viewas'
 export const IDLE_MS = 15 * 60_000
@@ -57,8 +60,6 @@ export function hashIp(ip: string | null | undefined) {
   if (!ip) return undefined
   return createHash('sha256').update(`${process.env.PAYLOAD_SECRET || 'hearts'}:${ip}`).digest('hex').slice(0, 16)
 }
-
-export { audit } from './audit'
 
 /** The table in spec 6A. Returns null when allowed, or the reason it is not. */
 export function refusal(actor: Person, target: Person | null) {
