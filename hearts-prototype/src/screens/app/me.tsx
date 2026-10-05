@@ -15,6 +15,10 @@ import { visibleCourseIds } from '@/server/context'
 import { dayNumber, portalName } from '@/server/learner'
 import { featureOn } from '@/lib/features'
 import { type Ctx, longDate, ref, rows, shortDate, str, unreadCount } from '../common'
+import { ConfirmStrip } from '@/components/app/confirm-strip'
+import { PageHelp } from '@/components/app/page-help'
+import { isEmailConfirmed } from '@/lib/account-rules'
+import { KIND_LABEL, NOTIFY_KINDS, parsePrefs } from '@/lib/notify-prefs'
 
 /** Notices written before prompts were clipped on a word were cut mid-word at 60 characters; they read the same way now. */
 function noteBody(body: string) {
@@ -225,12 +229,75 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
 export async function SettingsScreen({ payload, user, portal, base, query }: Ctx) {
   const unread = await unreadCount(payload, user)
   const here = `${base}/me/settings`
+  const prefs = parsePrefs(user.notificationPrefs, user.nightAlerts)
+  const deletePage = query.account === 'delete'
+  const dataPage = query.account === 'data'
   return (
     <AppFrame testId="settings">
       <div className="app-scroll">
         <Back href={`${base}/me`} label="Me" />
-        <div className="app-head"><h1>Settings</h1></div>
+        <div className="app-head"><h1>Settings <PageHelp topic="settings" /></h1></div>
         <Flash error={query.error} notice={query.notice} />
+        {!isEmailConfirmed(user) ? <ConfirmStrip next={here} required={Boolean(portal.requireEmailConfirm)} /> : null}
+        {deletePage ? (
+          <section className="card" data-testid="delete-account">
+            <h3>Delete my account <PageHelp topic="deleteAccount" /></h3>
+            <p>We will delete your name, email, answers, plans and uploads after 14 days. Anonymous counts stay, so a course can still say how many people finished it. Signing in before then cancels this.</p>
+            <form className="form-stack" action="/api/hearts" method="post">
+              <Hidden fields={{ action: 'request-delete', next: here, confirm: 'delete' }} />
+              <button className="pill outline block" type="submit" data-testid="delete-account-submit">Delete my account</button>
+            </form>
+          </section>
+        ) : null}
+        {dataPage ? (
+          <section className="card" data-testid="download-data">
+            <h3>Download my data <PageHelp topic="downloadData" /></h3>
+            <p>A zip of your profile, answers and uploads. If email is off, the file downloads here.</p>
+            <form action="/api/hearts" method="post">
+              <Hidden fields={{ action: 'download-data', next: here }} />
+              <button className="pill gold small" type="submit" data-testid="download-data-submit">Download my data</button>
+            </form>
+          </section>
+        ) : null}
+        <section className="card form-stack" data-testid="change-password">
+          <h3>Change password <PageHelp topic="changePassword" /></h3>
+          <form className="form-stack" action="/api/hearts" method="post">
+            <Hidden fields={{ action: 'change-password', next: here }} />
+            <label>Current password<input className="field" data-testid="current-password" name="currentPassword" type="password" autoComplete="current-password" required /></label>
+            <label>New password<input className="field" data-testid="new-password" name="password" type="password" minLength={8} autoComplete="new-password" required /></label>
+            <label>New password again<input className="field" data-testid="new-password-again" name="passwordAgain" type="password" minLength={8} autoComplete="new-password" required /></label>
+            <button className="pill ink small" type="submit" data-testid="change-password-submit">Save password</button>
+          </form>
+        </section>
+        <section className="card form-stack" data-testid="change-email">
+          <h3>Change email</h3>
+          <p className="muted" style={{ fontSize: 13 }}>We write to the new address. The change happens only after you confirm it. We also tell the old address.</p>
+          <form className="form-stack" action="/api/hearts" method="post">
+            <Hidden fields={{ action: 'change-email', next: here }} />
+            <label>New email<input className="field" data-testid="change-email-input" name="email" type="email" defaultValue={user.pendingEmail || ''} required /></label>
+            <button className="pill outline small" type="submit" data-testid="change-email-submit">Send confirmation</button>
+          </form>
+        </section>
+        <section className="card" data-testid="notify-prefs">
+          <h3>Notifications <PageHelp topic="notifications" /></h3>
+          <form className="form-stack" action="/api/hearts" method="post">
+            <Hidden fields={{ action: 'save-notify-prefs', next: here }} />
+            {NOTIFY_KINDS.map((kind) => (
+              <label key={kind} className="stack">{KIND_LABEL[kind]}
+                <select className="field" name={`pref-${kind}`} defaultValue={prefs.channels[kind]} data-testid={`pref-${kind}`}>
+                  <option value="in-app">In the app</option>
+                  <option value="email">Email</option>
+                  <option value="off">Off</option>
+                </select>
+              </label>
+            ))}
+            <label className="toggle"><input type="checkbox" name="quietNight" defaultChecked={prefs.quietNight} data-testid="quiet-night" /> Quiet at night (no emails 22:00 to 07:00)</label>
+            <label className="toggle"><input type="checkbox" name="emailNews" defaultChecked={Boolean(prefs.emailNewsAt)} data-testid="email-news" /> I am happy to receive these emails (not required to use HEARTS)</label>
+            <button className="pill outline small" type="submit" data-testid="notify-prefs-save">Save</button>
+          </form>
+        </section>
+        <p><Link href={`${here}?account=data`} data-testid="download-data-link">Download my data</Link></p>
+        <p><Link href={`${here}?account=delete`} data-testid="delete-account-link">Delete my account</Link></p>
         {featureOn(portal, 'gather') ? (
         <form className="card form-stack" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'night-alerts', next: here }} />

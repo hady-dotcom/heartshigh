@@ -12,6 +12,7 @@ import { type Ctx, portalPeople, rows, str } from '../common'
 import { DeskFrame, portalNav } from './shell'
 import { PORTAL_TIME_ZONES, portalTimeZone, zoneCity } from '@/lib/zone-time'
 import { displayPortalAddress } from '@/lib/portal-address'
+import { TwoStepPanel } from '@/components/desk/two-step-panel'
 
 export async function AdminFrame({ ctx, active, title, intro, tools, children, testId, tone }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening' }) {
   const { payload, user, portal, base, query } = ctx
@@ -204,6 +205,15 @@ export async function PortalSettingsScreen(ctx: Ctx) {
               </div>
             </div>
             <div className="actions"><button className="btn ink" data-testid="save-settings" type="submit">Save settings</button></div>
+          </form>
+        </section>
+        {ctx.user.role === 'portal-admin' || ctx.user.role === 'master' ? <TwoStepPanel enabled={Boolean(ctx.user.totpEnabledAt)} next={`${base}/admin/settings`} /> : null}
+        <section className="panel" data-testid="email-confirm-policy">
+          <header className="light"><h2>Email confirmation</h2></header>
+          <form className="body form" action="/api/hearts" method="post">
+            <Hidden fields={{ action: 'portal-email-policy', portalSlug: portal.slug, next: `${base}/admin/settings` }} />
+            <label className="check"><input type="checkbox" name="requireEmailConfirm" defaultChecked={Boolean(portal.requireEmailConfirm)} data-testid="require-email-confirm" /> School portals: require a confirmed email before people go further</label>
+            <div className="actions"><button className="btn ghost small" type="submit">Save</button></div>
           </form>
         </section>
         <section className="panel">

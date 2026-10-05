@@ -17,6 +17,7 @@ import { dayNumber } from '@/server/learner'
 import { type Ctx, clock, longDate, portalPeople, ref, rows, shortDate, str } from '../common'
 import { AdminFrame } from './overview'
 import { featureOn } from '@/lib/features'
+import { PersonActions } from '@/components/desk/person-actions'
 
 export async function TeachScreen(ctx: Ctx) {
   const { payload, user, portal, base, query } = ctx
@@ -93,6 +94,13 @@ export async function TeachScreen(ctx: Ctx) {
                           <span className="btn ghost small" aria-disabled="true" data-testid="workbook-csv" title="Nothing to download yet">Workbook</span>
                         )) : null}
                         {user.role !== 'teacher' ? <ViewAsButton targetId={learner.id} name={str(learner.name) || 'this learner'} landing={`${base}`} /> : null}
+                        <PersonActions
+                          person={learner as never}
+                          next={here}
+                          canPause={user.role === 'master' || user.role === 'portal-admin'}
+                          canTemp
+                          canRole={user.role === 'master' || user.role === 'portal-admin'}
+                        />
                       </div>
                     </td>
                   </tr>

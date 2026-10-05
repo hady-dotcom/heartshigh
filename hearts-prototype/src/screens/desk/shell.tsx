@@ -60,6 +60,8 @@ export function masterNav(): { group: string; items: NavItem[] }[] {
         { key: 'create', label: 'Sheet creator', href: '/master/sheet/create', icon: <BookIcon /> },
         { key: 'questions', label: 'Placing questions', href: '/master/questions', icon: <QuestionIcon /> },
         { key: 'circle', label: 'Circle answers', href: '/master/circle', icon: <PeopleIcon /> },
+        { key: 'learners', label: 'People', href: '/master/learners', icon: <PeopleIcon /> },
+        { key: 'settings', label: 'Settings', href: '/master/settings', icon: <CogIcon /> },
       ],
     },
     {

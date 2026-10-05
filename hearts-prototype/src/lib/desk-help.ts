@@ -63,6 +63,10 @@ export const PAGE: Record<string, string> = {
     'This is one learner’s Compass over the months. You see the scales and why a talk was put forward. They still only see a gentle line, never these numbers.',
   attendance:
     'This is the register for gatherings. Who said they would come, who arrived, and a download when you need a list. It does not change who is invited.',
+  learners:
+    'Everyone who has an account, across portals. Pause keeps their learning but stops sign-in. Restore opens it again. Change a role only when their email is confirmed.',
+  masterSettings:
+    'Email and two-step sign-in sit here. A test email goes to your own inbox. Resetting two-step for someone needs a reason, and is written in the activity log.',
 }
 
 export const TOOL: Record<string, string> = {
@@ -146,6 +150,18 @@ export const TOOL: Record<string, string> = {
     'These are library courses this portal may link. Tick the ones they will use. You can add more later from the portal library. Nothing is copied; the original stays as the master desk set it.',
   portalFeatures:
     'Each switch is one part of HEARTS. Start small keeps videos, questions and the Garden. Add the community brings circle answers and the planner, and Everything turns every switch on. Saving takes effect at once.',
+  suspend:
+    'Pause stops this person signing in and hides their shared answers. Their learning stays. Restore opens the account again. Write a short reason; it is kept in the activity log.',
+  tempPassword:
+    'Use this when someone has no email of their own. They must choose a new password the next time they sign in. You never see their old password.',
+  changeRole:
+    'Make teacher, portal admin, or learner. A role above learner needs a confirmed email. A portal admin can promote up to teacher only.',
+  emailJoin:
+    'Paste up to 200 addresses. Each person gets a warm note with the join button. We record who you wrote to. Every email has a way to stop further ones.',
+  emailTransport:
+    'This shows whether HEARTS can send mail. A test goes to your own inbox. If transport is off, we say so and never pretend a letter went out.',
+  twoStep:
+    'A code from an app on your phone, as well as your password. Master and portal admins need this, because they can see children’s answers. Backup codes each work once.',
 }
 
 const TEST_IDS: Record<string, string> = {
@@ -188,6 +204,8 @@ const TEST_IDS: Record<string, string> = {
   'master-simulator': 'simulator',
   'master-personas': 'personas',
   'master-trends': 'trends',
+  'master-settings': 'masterSettings',
+  'master-people': 'learners',
   'compass-learner': 'compassLearner',
   'gather-attendance': 'attendance',
 }

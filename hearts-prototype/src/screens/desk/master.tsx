@@ -14,7 +14,7 @@ import { one, ref, rows, str } from '../common'
 import { CourseEditorBody } from './content'
 import { DeskFrame, masterNav } from './shell'
 
-export type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string; part?: string } }
+export type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string; part?: string; hideTest?: string } }
 
 function kindLabel(value: unknown) {
   const text = str(value).replace(/[_-]+/g, ' ').trim()

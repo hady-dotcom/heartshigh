@@ -18,6 +18,7 @@ import { growth, Rings } from './garden'
 import { HomeGather, homeGatherings } from './gather'
 import { featureOn } from '@/lib/features'
 import { type Ctx, ref, rows, str, unreadCount } from '../common'
+import { ConfirmStrip } from '@/components/app/confirm-strip'
 
 function minutesLeft(seconds: number, percent: number) {
   if (!seconds) return null
@@ -91,6 +92,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         <SavedToast />
         <span className="sr-only">{portalName(portal)}</span>
         <Flash error={query.error} notice={query.notice} />
+        {!user.emailConfirmedAt ? <ConfirmStrip next={`${base}`} required={Boolean(portal.requireEmailConfirm)} /> : null}
         {featureOn(portal, 'garden') ? (
         <section className="grow-banner" data-testid="grow-banner">
           <p className="eyebrow">Your growth</p>

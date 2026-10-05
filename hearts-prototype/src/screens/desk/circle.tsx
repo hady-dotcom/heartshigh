@@ -115,7 +115,10 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
   const [circle, real] = await Promise.all([
     ids.length ? rows(payload, 'circle-answers', { point: { in: ids } }, { limit: 2000, sort: 'createdAt' }) : Promise.resolve([]),
     ids.length
-      ? rows(payload, 'answers', { and: [{ point: { in: ids } }, { shareWithLearners: { equals: true } }, { keepPrivate: { not_equals: true } }, ...(scope.portal ? [{ portal: { equals: scope.portal } }] : [])] }, { limit: 5000, depth: 1 }).then((list) => list.filter((row) => (row.user as { shareWithLearners?: boolean } | null)?.shareWithLearners))
+      ? rows(payload, 'answers', { and: [{ point: { in: ids } }, { shareWithLearners: { equals: true } }, { keepPrivate: { not_equals: true } }, ...(scope.portal ? [{ portal: { equals: scope.portal } }] : [])] }, { limit: 5000, depth: 1 }).then((list) => list.filter((row) => {
+          const author = row.user as { shareWithLearners?: boolean; suspendedAt?: string | null; removed?: boolean | null } | null
+          return Boolean(author?.shareWithLearners) && !author?.suspendedAt && !author?.removed
+        }))
       : Promise.resolve([]),
   ])
   const mine = circle.filter((row) => user.role === 'master' || !idOf(row.portal) || idOf(row.portal) === scope.portal)

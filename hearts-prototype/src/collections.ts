@@ -12,7 +12,8 @@ import { linkLadderParents } from './server/piece-parents'
 import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
 import { circleProblems } from './lib/circle'
-import { cookiesSecure } from './lib/env'
+import { cookiesSecure, serverURL } from './lib/env'
+import { renderMail } from './lib/email-templates'
 import { clientIp, hitAuth, limitsRelaxed } from './lib/rate-limit'
 import { DOOR_SECTIONS } from './lib/doors'
 
@@ -112,6 +113,7 @@ export const Portals: CollectionConfig = {
     { name: 'learnerLabel', type: 'text', defaultValue: 'Learner' },
     { name: 'teacherLabel', type: 'text', defaultValue: 'Teacher' },
     { name: 'wizardDone', type: 'checkbox', defaultValue: false },
+    { name: 'requireEmailConfirm', type: 'checkbox', defaultValue: false, label: 'Ask people to confirm their email before they join as staff or reset a password' },
     {
       name: 'features',
       type: 'json',
@@ -142,6 +144,16 @@ export const Users: CollectionConfig = {
       secure: cookiesSecure(),
       sameSite: 'Lax',
     },
+    forgotPassword: {
+      expiration: 60 * 60 * 1000,
+      generateEmailSubject: () => 'Reset your HEARTS password',
+      generateEmailHTML: ({ token, user } = {}) => {
+        const name = user && typeof user === 'object' && 'name' in user ? String((user as { name?: string }).name || '') : ''
+        const base = (serverURL() || process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '')
+        const href = `${base}/reset?token=${token || ''}`
+        return renderMail('reset', { name, buttonUrl: href }).html
+      },
+    },
   },
   hooks: {
     beforeOperation: [
@@ -151,7 +163,14 @@ export const Users: CollectionConfig = {
       },
     ],
     beforeLogin: [
-      ({ req }) => {
+      async ({ req, user }) => {
+        const person = user as { suspendedAt?: string | null; removed?: boolean | null; role?: string; totpEnabledAt?: string | null; email?: string } | undefined
+        if (person?.suspendedAt || person?.removed) {
+          throw new APIError('This account is paused. Please speak to your masjid or school.', 403, undefined, true)
+        }
+        if (req.payloadAPI === 'REST' && person && (person.role === 'master' || person.role === 'portal-admin') && person.totpEnabledAt) {
+          throw new APIError('Sign in at /login so you can enter your two-step code.', 403, undefined, true)
+        }
         if (req.payloadAPI !== 'REST' || limitsRelaxed()) return
         const headers = req.headers
         const read = (name: string) => (headers && typeof headers.get === 'function' ? headers.get(name) : '') || ''
@@ -162,7 +181,7 @@ export const Users: CollectionConfig = {
             'fly-client-ip': read('fly-client-ip'),
           },
         })
-        const email = typeof (req as { data?: { email?: unknown } }).data?.email === 'string' ? (req as { data: { email: string } }).data.email : ''
+        const email = typeof (req as { data?: { email?: unknown } }).data?.email === 'string' ? (req as { data: { email: string } }).data.email : person?.email || ''
         const limited = hitAuth('login', clientIp(fake), email)
         if (!limited.allowed) {
           throw new APIError('Too many sign-in tries from here. Wait a few minutes, then try again.', 429, undefined, true)
@@ -212,6 +231,30 @@ export const Users: CollectionConfig = {
     { name: 'shareWithLearners', type: 'checkbox', defaultValue: false, label: 'Share answers with other learners, and see the answers they share' },
     { name: 'haptics', type: 'checkbox', defaultValue: true },
     { name: 'removed', type: 'checkbox', defaultValue: false },
+    { name: 'emailConfirmedAt', type: 'date' },
+    { name: 'emailConfirmToken', type: 'text', access: { read: () => false }, admin: { hidden: true } },
+    { name: 'emailConfirmExpiresAt', type: 'date', admin: { hidden: true } },
+    { name: 'lastConfirmSentAt', type: 'date', admin: { hidden: true } },
+    { name: 'pendingEmail', type: 'email', admin: { hidden: true } },
+    { name: 'pendingEmailToken', type: 'text', access: { read: () => false }, admin: { hidden: true } },
+    { name: 'pendingEmailExpiresAt', type: 'date', admin: { hidden: true } },
+    { name: 'totpSecret', type: 'text', access: { read: () => false, update: () => false }, admin: { hidden: true } },
+    { name: 'totpEnabledAt', type: 'date' },
+    { name: 'totpPendingSecret', type: 'text', access: { read: () => false }, admin: { hidden: true } },
+    { name: 'backupCodes', type: 'json', access: { read: () => false }, admin: { hidden: true } },
+    { name: 'suspendedAt', type: 'date' },
+    { name: 'suspendedBy', type: 'relationship', relationTo: 'users' },
+    { name: 'suspendReason', type: 'text' },
+    { name: 'deletionRequestedAt', type: 'date' },
+    { name: 'mustChangePassword', type: 'checkbox', defaultValue: false },
+    { name: 'notificationPrefs', type: 'json' },
+    { name: 'lastDataExportAt', type: 'date' },
+    { name: 'dataExportToken', type: 'text', access: { read: () => false }, admin: { hidden: true } },
+    { name: 'dataExportExpiresAt', type: 'date', admin: { hidden: true } },
+    { name: 'dataExportFile', type: 'text', admin: { hidden: true } },
+    { name: 'tokenVersion', type: 'number', defaultValue: 0, saveToJWT: true },
+    { name: 'passwordChangedAt', type: 'date' },
+    { name: 'circleMutedUntil', type: 'date' },
     { name: 'updatedBy', type: 'relationship', relationTo: 'users' },
     { name: 'onBehalfOf', type: 'relationship', relationTo: 'users' },
   ],

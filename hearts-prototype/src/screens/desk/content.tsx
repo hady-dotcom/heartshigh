@@ -14,6 +14,7 @@ import { CodeLimits, CodeStatus } from '@/components/desk/codes'
 import { PointPicker } from '@/components/desk/tools'
 import { Qr } from '@/components/qr'
 import { ShareLinks } from '@/components/desk/share-links'
+import { EmailJoinLink } from '@/components/desk/email-join-link'
 import { adoptedCourseIds, type PortalDoc, type SessionUser } from '@/server/context'
 import { partTitle } from '@/lib/talk-title'
 import { type Ctx, type Row, clock, one, portalPeople, ref, rows, str } from '../common'
@@ -656,6 +657,7 @@ export async function AccessScreen(ctx: Ctx) {
                     <td>
                       <div className="address" style={{ fontSize: 12 }} data-testid="share-url">{share}</div>
                       <ShareLinks value={share} testId="code-copy" />
+                      <EmailJoinLink codeId={code.id} shareUrl={share} portalName={str(portal.name) || 'HEARTS'} next={here} />
                     </td>
                     <td><div style={{ width: 84 }} className="qr-small"><Qr value={share} testId="code-qr" /></div></td>
                     <td>

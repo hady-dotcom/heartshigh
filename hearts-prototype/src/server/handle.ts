@@ -39,6 +39,9 @@ import { isTimeZone } from '@/lib/zone-time'
 import { parseLengthInput } from '@/lib/length'
 import { FEATURE_UNAVAILABLE, featuresFromForm } from '@/lib/features'
 import { adoptLibraryCourses, loadPortalById, refuseFeature } from './features'
+import { afterPasswordChanged, afterPasswordLogin, handleAccountAction, issueConfirmEmail, prepareForgot } from './account-actions'
+import { sendQueuedNotification } from './notify-email'
+import { notifyKey } from '@/lib/notify-prefs'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
@@ -108,10 +111,8 @@ async function loginResponse(req: Request, email: string, password: string, next
   const { payload } = await getSession()
   try {
     const result = await payload.login({ collection: 'users', data: { email, password } })
-    if (!result.token || !result.user) return redirectTo(req, '/login', 'That email or password did not match.')
-    const response = redirectTo(req, await landingPath(payload, result.user as SessionUser, next))
-    response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, result.token, 7200))
-    return response
+    const land = await landingPath(payload, (result.user || {}) as SessionUser, next)
+    return afterPasswordLogin(req, payload, result as never, land)
   } catch {
     return redirectTo(req, '/login', 'That email or password did not match.')
   }
@@ -450,6 +451,11 @@ export async function handlePost(req: Request) {
   const action = text(form, 'action')
   const session = await getSession({ touch: action !== 'clock' })
   const { payload, viewAs } = session
+  if (session.dropSession && !['login', 'forgot-password', 'reset-password', 'join', 'logout', 'verify-totp', 'confirm-totp', 'setup-totp'].includes(action)) {
+    const response = redirectTo(req, '/login', session.dropSession === 'paused' ? 'This account is paused. Please speak to your masjid or school.' : 'Please sign in again.')
+    response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, '', 0))
+    return response
+  }
   if (viewAs && action === 'logout') {
     const live = await payload.find({ collection: 'view-as-sessions', overrideAccess: true, depth: 0, limit: 1, where: { id: { equals: viewAs.id } } })
     if (live.docs[0]) await endSession(payload, live.docs[0] as never, 'actor-signed-out')
@@ -479,6 +485,8 @@ export async function handlePost(req: Request) {
 }
 
 async function handleForm(req: Request, form: FormData, session: Session) {
+  const account = await handleAccountAction(req, form, session)
+  if (account) return account
   const action = text(form, 'action')
   const { payload, user } = session
 
@@ -495,7 +503,10 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const blocked = await gateAuth(req, form, 'forgot', email, '/forgot')
     if (blocked) return blocked
     try {
-      if (email) await payload.forgotPassword({ collection: 'users', data: { email } })
+      if (email) {
+        const prepared = await prepareForgot(payload, email)
+        if (!prepared.skipped) await payload.forgotPassword({ collection: 'users', data: { email } })
+      }
     } catch {
       // Same notice either way, so a guesser cannot tell whether the email is on the books.
     }
@@ -509,7 +520,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (blocked) return blocked
     if (!token || password.length < 8) return redirectTo(req, '/reset', 'Use the link from your email, and at least 8 characters for the password.')
     try {
-      await payload.resetPassword({ collection: 'users', data: { token, password }, overrideAccess: true })
+      const reset = await payload.resetPassword({ collection: 'users', data: { token, password }, overrideAccess: true })
+      const person = reset?.user ? ((await payload.findByID({ collection: 'users', id: (reset.user as { id: number }).id, overrideAccess: true, depth: 0 })) as never) : null
+      if (person) await afterPasswordChanged(payload, person)
     } catch {
       return redirectTo(req, '/reset', 'That reset link is not valid any more. Ask for a new one.')
     }
@@ -595,6 +608,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (guest && createdId) {
       const { claimGuestRsvp } = await import('./gather')
       await claimGuestRsvp(payload, guest, createdId)
+    }
+    if (createdId) {
+      await issueConfirmEmail(payload, { id: createdId, email, name }, (portalDoc as { name?: string }).name, `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('x-forwarded-host') || req.headers.get('host') || ''}`)
     }
     const after = text(form, 'after')
     const gatherNext = after.startsWith(`/p/${slug}/`) ? after : ''
@@ -1398,29 +1414,14 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const learnerId = idOf((entry as { user?: unknown }).user)
     if (learnerId) {
       const portal = idOf((entry as { portal?: unknown }).portal)
-      await payload.create({
-        collection: 'notifications',
-        overrideAccess: true,
-        data: {
-          user: learnerId,
-          portal: portal || undefined,
-          title: 'Your teacher replied',
-          body: reply,
-          href: text(form, 'href') || '/',
-          channel: 'in-app' as const,
-        },
-      })
-      await payload.create({
-        collection: 'notifications',
-        overrideAccess: true,
-        data: {
-          user: learnerId,
-          portal: portal || undefined,
-          title: 'Email not sent',
-          body: 'Email is stubbed in this prototype. The reply is waiting in the bell.',
-          href: text(form, 'href') || '/',
-          channel: 'email-stub' as const,
-        },
+      await sendQueuedNotification(payload, {
+        userId: learnerId,
+        portalId: portal,
+        kind: 'teacher-reply',
+        title: 'Your teacher replied',
+        body: reply,
+        href: text(form, 'href') || '/',
+        key: notifyKey('teacher-reply', String(entryId)),
       })
     }
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Reply saved.')

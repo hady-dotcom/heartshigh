@@ -15,6 +15,7 @@ import { MasterFlags } from './collections-opening'
 import { databaseKind, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
 import { migrations } from './migrations'
 import { viewAsGlobalGuard, viewAsGuard } from './server/viewas'
+import { emailAdapter } from './lib/email-adapter'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -48,6 +49,7 @@ export default buildConfig({
   globals: [MasterFlags].map((global) => ({ ...global, hooks: { ...global.hooks, beforeChange: [viewAsGlobalGuard as never, ...(global.hooks?.beforeChange || [])] } })),
   editor: lexicalEditor(),
   secret: payloadSecret(),
+  email: emailAdapter(),
   serverURL: origins[0],
   cors: origins.length ? origins : undefined,
   csrf: origins.length ? origins : undefined,

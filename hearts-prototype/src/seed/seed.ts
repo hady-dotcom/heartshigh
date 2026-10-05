@@ -92,7 +92,7 @@ const PLACING = [
 async function ensureUser(payload: Awaited<ReturnType<typeof getPayload>>, data: Partial<User> & { email: string; password: string }) {
   const found = await payload.find({ collection: 'users', overrideAccess: true, limit: 1, where: { email: { equals: data.email } } })
   if (found.docs[0]) return found.docs[0]
-  return payload.create({ collection: 'users', overrideAccess: true, data: data as User & { password: string } })
+  return payload.create({ collection: 'users', overrideAccess: true, data: { emailConfirmedAt: new Date().toISOString(), ...data } as User & { password: string } })
 }
 
 /**

@@ -207,8 +207,8 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
       if (answer.keepPrivate === true || answer.shareWithLearners !== true || ref(answer.user) === user.id) continue
       const pointId = ref(answer.point)
       if (!pointId) continue
-      const author = answer.user as { name?: string; shareWithLearners?: boolean } | null
-      if (!author?.shareWithLearners) continue
+      const author = answer.user as { name?: string; shareWithLearners?: boolean; suspendedAt?: string | null; removed?: boolean | null } | null
+      if (!author?.shareWithLearners || author.suspendedAt || author.removed) continue
       const image = answer.image as { url?: string } | null
       ;(swarm[pointId] ||= []).push({ name: author?.name || 'Someone in your circle', body: str(answer.body) || str(answer.choice) || 'Shared a photo', image: image?.url || null })
     }

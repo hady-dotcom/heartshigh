@@ -29,6 +29,8 @@ import { GatherAttendanceScreen, GatherDeskScreen } from '@/screens/desk/gather'
 import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
 import { PortalCircle } from '@/screens/desk/circle'
 import { FeatureUnavailable } from '@/components/app/feature-unavailable'
+import { ConfirmStrip } from '@/components/app/confirm-strip'
+import { PageHelp } from '@/components/app/page-help'
 import { featureOn, type FeatureKey } from '@/lib/features'
 
 function originOf(reqHeaders: Headers) {
@@ -68,6 +70,17 @@ export default async function PortalScreen({ params, searchParams }: { params: P
 
   const { payload, user, portal } = await requirePortal(slug)
   const ctx: Ctx = { payload, user, portal, slug, base, origin: originOf(await headers()), query }
+
+  if (portal.requireEmailConfirm && !user.emailConfirmedAt && user.role === 'learner' && !(area === 'me' && a === 'settings')) {
+    return (
+      <AppFrame testId="confirm-needed">
+        <div className="app-scroll">
+          <div className="app-head"><h1>Confirm your email <PageHelp topic="confirmNeeded" /></h1></div>
+          <ConfirmStrip next={`${base}/me/settings`} required />
+        </div>
+      </AppFrame>
+    )
+  }
 
   if (portal.closed && user.role === 'learner') {
     return (
