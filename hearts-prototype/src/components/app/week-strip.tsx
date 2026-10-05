@@ -6,27 +6,33 @@ import { todayLine } from '@/server/week-plan'
 export function WeekStrip({
   days,
   today,
+  scheduledKeys = [],
   href,
   emptyHref,
   compact = false,
 }: {
   days: WeekDay[]
   today: WeekSlot | null
+  scheduledKeys?: string[]
   href: string
   emptyHref: string
   compact?: boolean
 }) {
   const line = todayLine(today)
+  const scheduled = new Set(scheduledKeys)
   return (
     <section className="week-strip" data-testid="week-strip">
       <div className="week-days" data-testid="week-days">
-        {days.map((day) => (
-          <span key={day.key} className={`week-day${day.today ? ' today' : ''}`} data-testid="week-day" data-today={day.today ? 'yes' : 'no'} data-key={day.key}>
+        {days.map((day) => {
+          const sitting = scheduled.has(day.key)
+          return (
+          <span key={day.key} className={`week-day${day.today ? ' today' : ''}${sitting ? ' scheduled' : ''}`} data-testid="week-day" data-today={day.today ? 'yes' : 'no'} data-scheduled={sitting ? 'yes' : 'no'} data-key={day.key}>
             <small>{day.label}</small>
             <b>{day.day}</b>
-            {today && today.date === day.key ? <i className="dot" data-testid="week-dot" /> : null}
+            {sitting ? <i className="dot" data-testid="week-dot" /> : null}
           </span>
-        ))}
+          )
+        })}
       </div>
       {compact ? null : line && today?.href ? (
         <Link className="week-today" href={today.href} data-testid="week-today">

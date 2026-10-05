@@ -37,17 +37,26 @@ test('balanced split V=8 D=4 is 2,2,2,2 and never the old 3,3,2,0', () => {
 
 test('V=3 D=12 lands on days 1, 5 and 9', () => {
   assert.deepEqual(spreadIndices(3, 12), [0, 4, 8])
-  const dates = Array.from({ length: 12 }, (_, index) => `d${index + 1}`)
+  const dates = Array.from({ length: 12 }, (_, index) => `2026-10-${String(index + 5).padStart(2, '0')}`)
   const planned = planAcrossDays(['a', 'b', 'c'], dates)
-  assert.deepEqual(planned.slots.map((slot) => slot.date), ['d1', 'd5', 'd9'])
+  assert.deepEqual(planned.slots.map((slot) => slot.date), [dates[0], dates[4], dates[8]])
   assert.match(planned.note || '', /spaced across the span/)
 })
 
 test('V=1 D=8 offers one date, never a spread sitting', () => {
-  const dates = Array.from({ length: 8 }, (_, index) => `d${index + 1}`)
+  const dates = Array.from({ length: 8 }, (_, index) => `2026-10-${String(index + 5).padStart(2, '0')}`)
   const planned = planAcrossDays(['only'], dates)
-  assert.deepEqual(planned.slots.map((slot) => slot.date), ['d1'])
+  assert.deepEqual(planned.slots.map((slot) => slot.date), [dates[0]])
   assert.match(planned.note || '', /1 talk/)
+})
+
+test('Tue and Thu land the first talks on Tuesday then Thursday', () => {
+  const dates = studyDates('2026-10-06', '2026-10-29', [2, 4])
+  assert.ok(dates.includes('2026-10-06'))
+  assert.ok(dates.includes('2026-10-08'))
+  const planned = planAcrossDays(['first', 'second'], dates)
+  assert.deepEqual(planned.slots.map((slot) => slot.date), ['2026-10-06', '2026-10-08'])
+  assert.match(planned.note || '', /first 2 days you picked/)
 })
 
 test('a talk longer than the day is named, not silently crushed', () => {

@@ -143,7 +143,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
           </section>
         ) : null}
         <p className="eyebrow">This week</p>
-        <WeekStrip days={week.days} today={week.today} href={`${base}/week`} emptyHref={`${base}/week`} />
+        <WeekStrip days={week.days} today={week.today} scheduledKeys={week.scheduledKeys} href={`${base}/week`} emptyHref={`${base}/week`} />
         <p className="eyebrow">Continue</p>
         <div data-testid="continue">
           {carryOn.map((row) => (
@@ -251,7 +251,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
         })}
         {!courses.length ? <p className="muted" data-testid="no-courses">Your access code does not include any courses yet. Ask your teacher.</p> : null}
         <p className="muted" style={{ fontSize: 13, marginTop: 14 }} data-testid="visible-courses">
-          {courses.length} course{courses.length === 1 ? '' : 's'} open to you. A new one opens each day, and you can always peek ahead.
+          {courses.length} course{courses.length === 1 ? '' : 's'} in your library. Courses already in your clips are open; others open one a day, and you can always peek ahead.
         </p>
       </div>
       <TabBar base={base} active="lanes" portal={portal} unread={unread} />

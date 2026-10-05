@@ -44,5 +44,8 @@ Why it works:
 - Colours: the evening-garden look (deep teal, warm parchment, gold), not the pale cream in the original mocks.
 - The middle level is labelled ‘Ready for more?’ for learners. Staff desks still say appetiser.
 - Mains must be real long talks. Opening a main first shows the whole course (every talk, counts, total time, ‘Plan the rest of this course’ when there are two or more parts), and questions only appear inside the video.
-- Hors d'oeuvres and appetisers never count towards course completion or the garden.
+- Hors d'oeuvres and appetisers never count towards course completion or the garden. Finished is every full talk; Your path is the current course only.
+- Let's play always starts the opening from the first scene. Leftover taps must not skip questions.
+- Courses already in the clip feed are open on Lanes. The rest still open one a day.
+- Chosen weekdays that skip days (Tue and Thu) land talks on the first sittings, not a spread that can miss a weekday. The week strip marks days with a sitting.
 - Wide video on phones: small and uncropped on top with typography below, never centre-crop, and never tell learners to turn the phone.

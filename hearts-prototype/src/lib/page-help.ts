@@ -40,7 +40,7 @@ const PAGES: Record<string, HelpCopy> = {
     title: 'How to use the opening',
     body: [
       'A few short scenes help us choose your first talk. There is no right answer.',
-      'Skip any scene you would rather not sit with.',
+      'Let\'s play always starts from the first scene. Skip any scene you would rather not sit with.',
       'Only you see these answers unless you later share them with a teacher.',
     ],
   },
@@ -62,14 +62,14 @@ const PAGES: Record<string, HelpCopy> = {
     title: 'How to use Lanes',
     body: [
       'Each lane is one theme: a path to walk, one subject at a time.',
-      'Tap a lane to watch its clips. Courses sit underneath, this week first.',
+      'Tap a lane to watch its clips. Courses that already appear in those clips are open now. Others open one a day.',
     ],
   },
   garden: {
     title: 'How to use the Garden',
     body: [
       'The garden is a quiet picture of time you have given.',
-      'Finished counts a talk once you watch it to the end or tap I have watched this part. Short clips do not count.',
+      'Finished counts a talk once you watch it to the end or tap I have watched this part. Short clips do not count. Your path is this course only.',
       'Each planter belongs to a theme. It starts as a seedling and grows as you finish a talk and sit with a question.',
     ],
   },
@@ -125,8 +125,8 @@ const PAGES: Record<string, HelpCopy> = {
   plan: {
     title: 'How to use My week',
     body: [
-      'Pick a course and the days that suit you. The talks are shared out in order.',
-      'It is a guide only. You can always watch at your own pace.',
+      'Pick a course and the days that suit you. Daily spans space the talks; chosen weekdays land on the first sittings.',
+      'Days with a sitting get a gold mark on the week strip. It is a guide only. You can always watch at your own pace.',
     ],
   },
   'learner-path': {

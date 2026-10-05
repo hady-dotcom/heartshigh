@@ -86,7 +86,9 @@ function consecutiveDates(dates: string[]) {
 export function spreadNote(talks: number, studyDays: number, slotDates: string[] = []) {
   if (talks === 1 && studyDays > 1) return 'This course has 1 talk, so it fits in one day.'
   if (talks > 1 && talks < studyDays) {
-    if (slotDates.length && consecutiveDates(slotDates)) return null
+    if (slotDates.length && !consecutiveDates(slotDates)) {
+      return `This course has ${talks} talks and ${studyDays} study days. The talks land on the first ${talks} days you picked.`
+    }
     return `This course has ${talks} talks and ${studyDays} study days. The talks are spaced across the span. You could pick fewer days, or add more talks.`
   }
   return null
@@ -107,9 +109,9 @@ export function spreadIndices(talks: number, days: number) {
 export function planAcrossDays<T>(items: T[], dates: string[]): { slots: Slot<T>[]; note: string | null } {
   if (!dates.length) throw new Error('There are no study days to split across.')
   if (!items.length) return { slots: [], note: null }
-  const note = spreadNote(items.length, dates.length)
+  const note = spreadNote(items.length, dates.length, dates)
   if (items.length < dates.length) {
-    const at = spreadIndices(items.length, dates.length)
+    const at = consecutiveDates(dates) ? spreadIndices(items.length, dates.length) : items.map((_, index) => index)
     return { slots: items.map((item, index) => ({ date: dates[at[index]] || dates[0], items: [item] })), note }
   }
   return { slots: splitEvenly(items, dates).filter((slot) => slot.items.length), note }

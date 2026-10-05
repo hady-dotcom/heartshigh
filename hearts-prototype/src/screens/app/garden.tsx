@@ -60,7 +60,7 @@ export type Growth = {
 
 export async function growth(payload: Payload, user: SessionUser): Promise<Growth> {
   const mine = { user: { equals: user.id } }
-  const [clauses, seats, completions, seatVisits, harvest, allWorkbook, allAnswers, rituals, visits, tags, doors, sessions] = await Promise.all([
+  const [clauses, seats, completions, seatVisits, harvest, allWorkbook, allAnswers, rituals, visits, tags, doors] = await Promise.all([
     rows(payload, 'clauses', undefined, { sort: 'number', limit: 50 }),
     rows(payload, 'seats', undefined, { sort: 'position', limit: 400 }),
     rows(payload, 'completions', mine),
@@ -72,7 +72,6 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
     rows(payload, 'lesson-visits', mine),
     rows(payload, 'tags', { state: { equals: 'confirmed' } }, { limit: 1000 }),
     loadDoors(payload),
-    rows(payload, 'watch-sessions', mine, { limit: 200 }),
   ])
   const answers = allAnswers.filter(answerCounts)
   const browsed = new Set(allAnswers.filter((row) => !answerCounts(row)).map((row) => row.id))
@@ -84,7 +83,8 @@ export async function growth(payload: Payload, user: SessionUser): Promise<Growt
   const countedAnswers = answers.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: inCourse(ref(row.lesson)), event: 'question', viaGathering: row.viaGathering === true }))
   const done = new Set(countedCompletions.map((row) => ref(row.lesson)))
   const watchedIds = new Set(
-    [...completions, ...sessions.filter((row) => Number(row.seconds || 0) > 0)]
+    countedCompletions
+      .filter((row) => Number(row.percent ?? 100) >= 90)
       .map((row) => ref(row.lesson))
       .filter((id): id is number => Boolean(id)),
   )
@@ -131,7 +131,7 @@ function seatsOf(g: Growth, door: Door) {
 export function Rings({ g, base, portal }: { g: Growth; base: string; portal?: import('@/lib/features').FeatureSource }) {
   const sections = SECTIONS.filter((section) => sectionOf(g.doors, section.key).some((door) => (g.activityLit || g.lit).has(door.number))).length
   const items: [string, number, string, string, number?, string?][] = [
-    ['Finished', g.watched || g.completions.length, '#e2c27a', `${base}/garden/general`, undefined, 'ring-watched'],
+    ['Finished', g.watched, '#e2c27a', `${base}/garden/general`, undefined, 'ring-watched'],
     ['Sections', sections, '#f0e2c4', `${base}/garden/jibril`],
     ['Field', g.seatVisits.length, '#b7c7a4', `${base}/garden/ghunya`],
     ['Harvest', g.harvest.length, '#8fbfb4', `${base}/garden/harvest`, g.harvestNew || undefined],
@@ -244,7 +244,7 @@ export async function GardenScreen({ payload, user, portal, base, query }: Ctx) 
         <section className="garden-rings card" data-testid="garden-rings">
           <p className="eyebrow" style={{ margin: '0 0 8px' }}>Five ways to see it</p>
           <Rings g={g} base={base} portal={portal} />
-          <p className="muted" style={{ fontSize: 13, margin: '10px 0 0' }} data-testid="watched-rule">Finished counts a full talk, not a clip or a talk left mid-way.</p>
+          <p className="muted" style={{ fontSize: 13, margin: '10px 0 0' }} data-testid="watched-rule">Finished counts every full talk you have sat with. Your path below is this course only.</p>
         </section>
         {path ? <GardenPath title={path.title} nodes={path.nodes} /> : (
           <EmptyState testId="garden-empty" action={{ href: `${base}/lanes`, label: 'Browse courses' }}>

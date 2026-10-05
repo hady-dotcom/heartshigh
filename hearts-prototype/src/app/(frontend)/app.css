@@ -732,8 +732,9 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .week-day { display: grid; justify-items: center; gap: 2px; padding: 6px 0 8px; border-radius: 14px; font-size: 12px; position: relative; }
 .week-day small { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #D4A84B; }
 .week-day b { font-size: 16px; }
-.week-day.today { background: #0F2E2C; color: #F1E4C6; }
+.week-day.today { background: #163d3a; color: #F1E4C6; }
 .week-day.today small { color: #D4A84B; }
+.week-day.scheduled { background: #163d3a; }
 .week-day .dot { width: 6px; height: 6px; border-radius: 50%; background: #D4A84B; }
 .week-today { display: block; margin-top: 10px; font-weight: 700; color: #F1E4C6; text-decoration: none; min-height: 44px; display: flex; align-items: center; }
 .week-today.empty { color: #E8D6AE; }

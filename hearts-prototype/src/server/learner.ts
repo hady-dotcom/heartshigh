@@ -13,6 +13,7 @@ import type { PieceRef } from '@/lib/nesting'
 import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
 import type { FramingTrack } from '@/lib/framing/types'
 import { tidyTalkTitle } from '@/lib/talk-title'
+import { courseIsOpen, opensOnDay } from '@/lib/drip'
 
 export type SlideStyle = 'kinetic' | 'cinema' | 'windows' | 'conversation' | 'unfold'
 
@@ -189,6 +190,15 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
   const cuts = lessons.length
     ? ((await payload.find({ collection: 'cuts', overrideAccess: true, depth: 0, limit: 400, where: { lesson: { in: lessons.map((lesson) => lesson.id) } } })).docs as unknown as Row[])
     : []
+  const tiers = lessons.length
+    ? ((await payload.find({ collection: 'talk-tiers', overrideAccess: true, depth: 0, limit: 400, where: { lesson: { in: lessons.map((lesson) => lesson.id) } } })).docs as unknown as Row[])
+    : []
+  const feedCourseIds = new Set(
+    tiers
+      .filter((tier) => Number(tier.appetiserEnd) > Number(tier.appetiserStart) || Number(tier.horsEnd) > Number(tier.horsStart))
+      .map((tier) => idOf(lessons.find((lesson) => lesson.id === idOf(tier.lesson))?.course))
+      .filter((id): id is number => Boolean(id)),
+  )
   const doors = await loadDoors(payload)
   const cutRows = cuts.map((cut) => ({ lessonId: idOf(cut.lesson) || 0, bestClause: (cut.bestClause as number) || null, approved: cut.status === 'approved' }))
   const firstPick = user.startingClause
@@ -233,8 +243,8 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
       parts: own.length,
       poster: posterFor((own.find((lesson) => lesson.youtubeId)?.youtubeId as string) || null),
       firstLessonId: own[0]?.id ?? null,
-      opensOnDay: index + 1,
-      open: index + 1 <= today,
+      opensOnDay: opensOnDay({ index, inFeed: feedCourseIds.has(course.id) }),
+      open: courseIsOpen({ index, today, inFeed: feedCourseIds.has(course.id) }),
       recommended: course.id === recommendedCourse,
       doors: [...courseDoors.entries()].sort((a, b) => a[0] - b[0]).map(([number, title]) => ({ number, title })),
     }

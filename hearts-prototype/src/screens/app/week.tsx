@@ -36,7 +36,7 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
         <Back href={back.href} label={back.label} />
         <div className="app-head"><h1>My week</h1></div>
         <Flash error={query.error} notice={query.notice} />
-        <WeekStrip days={view.days} today={view.today} href={`${base}/week`} emptyHref={`${base}/week?view=new`} compact={view.plans.length > 0} />
+        <WeekStrip days={view.days} today={view.today} scheduledKeys={view.scheduledKeys} href={`${base}/week`} emptyHref={`${base}/week?view=new`} compact={view.plans.length > 0} />
         {view.plans.length ? (
           <p style={{ margin: '0 0 12px' }}>
             <a className="pill outline" href="/api/hearts/week.ics" data-testid="plan-ics">Add these days to your calendar</a>

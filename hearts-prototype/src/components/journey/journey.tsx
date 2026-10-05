@@ -440,12 +440,22 @@ export function Journey(props: JourneyProps) {
       const gen = (prepareGen.current[at] += 1)
       if (host.spec?.key === spec.key && host.playerId) return
       const existing = host.playerId ? getPlayer(host.playerId) : null
-      if (existing && host.spec?.kind === spec.kind) {
+      const sameFilm = host.spec?.videoId === spec.videoId
+      if (existing && (host.spec?.kind === spec.kind || sameFilm)) {
         host.spec = spec
         host.played = false
-        if (at !== visibleRef.current) silence(host.playerId!)
-        cue(host.playerId!, existing, spec.videoId, spec.start, spec.end)
         host.ready = true
+        if (at !== visibleRef.current) {
+          cue(host.playerId!, existing, spec.videoId, spec.start, spec.end)
+          silence(host.playerId!)
+        } else if (sameFilm && existing.loadVideoById) {
+          if (hasSound()) existing.unMute()
+          else existing.mute()
+          existing.loadVideoById({ videoId: spec.videoId, startSeconds: spec.start, ...(spec.end ? { endSeconds: spec.end } : {}) })
+        } else {
+          cue(host.playerId!, existing, spec.videoId, spec.start, spec.end)
+          playOnly(host.playerId!)
+        }
         setReadyTick((value) => value + 1)
         return
       }
@@ -563,8 +573,8 @@ export function Journey(props: JourneyProps) {
       const current = visibleRef.current
       const other: 0 | 1 = current === 0 ? 1 : 0
       let target: 0 | 1 = other
-      if (hosts.current[current].spec?.key === spec.key) target = current
-      else if (hosts.current[other].spec?.key === spec.key) target = other
+      if (hosts.current[current].spec?.videoId === spec.videoId || hosts.current[current].spec?.key === spec.key) target = current
+      else if (hosts.current[other].spec?.key === spec.key || hosts.current[other].spec?.videoId === spec.videoId) target = other
       else if (!hosts.current[current].playerId) target = current
       if (target !== current) {
         hushHost(current)
@@ -915,17 +925,6 @@ export function Journey(props: JourneyProps) {
     window.history.replaceState(window.history.state, '', `${base}/start`)
     setPhase('opener')
     pendingEnter.current = 'fade'
-  }
-
-  const resume = () => {
-    const answered = new Set(heartRef.current?.taps.map((tap) => tap.scene) || [])
-    const next = Math.max(0, scenes.findIndex((scene) => !answered.has(scene.key)))
-    if (!takeTap()) return
-    haptic(10)
-    preloadApi()
-    depth.current += 1
-    push(`${base}/start/${next + 1}`, { scene: next })
-    goScene(next, reducedMotion() ? 'fade' : 'up', null)
   }
 
   useEffect(() => {
@@ -1310,6 +1309,7 @@ export function Journey(props: JourneyProps) {
     if (step.level === 'appetiser' && !stepUpIsOwn(current, own)) {
       const fallback = itemsRef.current.findIndex((row) => row.cutId === current.cutId && row.lessonId === current.lessonId && !isInterstitial(row))
       hushLeaving()
+      setAppetiserHeld(false)
       soundOn(hosts.current[visibleRef.current].playerId || '')
       noteBrowse('learn-more')
       void showItem(fallback >= 0 ? fallback : indexRef.current, 'appetiser')
@@ -1318,7 +1318,8 @@ export function Journey(props: JourneyProps) {
     if (step.level === 'appetiser') {
       signal('watch-full')
       hushLeaving()
-      // The tap is the gesture that turns voice on. The 3-minute player is built after this and reads the same flag.
+      setAppetiserHeld(false)
+      // The tap is the gesture that turns voice on. Reuse the same player so play stays in this tap.
       soundOn(hosts.current[visibleRef.current].playerId || '')
       noteBrowse('learn-more')
       track('clip_cta_tap', { level: 'hors', lesson: current.lessonId })
@@ -1606,7 +1607,7 @@ export function Journey(props: JourneyProps) {
   useEffect(() => {
     setCaptionOpen(false)
     setAppetiserHeld(true)
-  }, [item?.id, mode])
+  }, [item?.id])
   const slide = phase === 'feed' && mode === 'hors' && item?.style && !typeClip ? item.style : null
   const course = (item && learnMore(item, 'appetiser', base)?.href) || base
   const horsParent = item?.parents?.hors
@@ -1922,11 +1923,11 @@ export function Journey(props: JourneyProps) {
       {phase === 'opener' || phase === 'scene' || phase === 'handoff' ? (
         <div className="j-layer" data-testid="scene-layer">
           {phase === 'opener' ? (
-            <Opener caption={props.opener.caption} subline={props.opener.subline} onPlay={heart?.taps.length ? resume : letsPlay} onJustShow={justShow} loginHref={loginHref} signedIn={signedIn} />
+            <Opener caption={props.opener.caption} subline={props.opener.subline} onPlay={letsPlay} onJustShow={justShow} loginHref={loginHref} signedIn={signedIn} sceneCount={scenes.length} />
           ) : null}
           {leaving !== null && scenes[leaving] && phase === 'scene' ? (
             <div ref={leavingRef} className="j-scene-wrap leaving" aria-hidden>
-              <SceneCard scene={scenes[leaving]} index={leaving} selected={null} reply={null} picked={null} onPick={() => undefined} onPass={() => undefined} onJustShow={() => undefined} />
+              <SceneCard scene={scenes[leaving]} index={leaving} total={scenes.length + 1} selected={null} reply={null} picked={null} onPick={() => undefined} onPass={() => undefined} onJustShow={() => undefined} />
             </div>
           ) : null}
           {(phase === 'scene' || phase === 'handoff') && scenes[sceneAt] ? (
@@ -1934,6 +1935,7 @@ export function Journey(props: JourneyProps) {
               <SceneCard
                 scene={scenes[sceneAt]}
                 index={sceneAt}
+                total={scenes.length + 1}
                 selected={heart?.taps.find((tap) => tap.scene === scenes[sceneAt].key)?.option || null}
                 reply={reply}
                 picked={picked || (phase === 'handoff' ? 'x' : null)}
