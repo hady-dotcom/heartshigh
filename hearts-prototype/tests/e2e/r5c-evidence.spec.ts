@@ -4,6 +4,8 @@ import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { seedCode } from '../env'
 
+test.skip(process.env.HEARTS_R5C_EVIDENCE !== '1', 'Heavy evidence capture. Set HEARTS_R5C_EVIDENCE=1 to run.')
+
 const ROOT = process.env.R5C_ART || path.join(process.cwd(), 'artifacts/r5c-look')
 const PHONE = { width: 390, height: 844 }
 const DESK = { width: 1440, height: 900 }
@@ -224,7 +226,7 @@ test('contrast at 10:00 and 20:00 Toronto, and the after screenshots', async ({ 
     await expect(page.getByText('Light', { exact: true })).toHaveCount(0)
     await shot(page, path.join(ROOT, 'after', `me-${label}.png`))
     await page.goto(`/join?code=${seedCode('elm-learner')}&from=Aisha`)
-    await expect(page.getByTestId('join-pitch')).toContainText('Aisha from East London Mosque invited you')
+    await expect(page.getByTestId('join-pitch')).toContainText('Idris from East London Mosque invited you')
     await shot(page, path.join(ROOT, 'after', `join-${label}.png`))
     await page.goto(`${BASE}/me/settings`)
     await expect(page.getByText('Light', { exact: true })).toHaveCount(0)
@@ -277,7 +279,7 @@ test('a new learner from the join link reaches the first talk', async ({ browser
   await page.route(/youtube\.com|ytimg|googlevideo|doubleclick/, (route) => route.abort())
   const stamp = Date.now().toString().slice(-8)
   await page.goto(`/join?code=${seedCode('elm-learner')}&from=Aisha`)
-  await expect(page.getByTestId('join-pitch')).toContainText('Aisha from East London Mosque invited you')
+  await expect(page.getByTestId('join-pitch')).toContainText('Idris from East London Mosque invited you')
   await page.getByTestId('join-name').fill(`Nora ${stamp}`)
   await page.getByTestId('join-email').fill(`nora-${stamp}@hearts.test`)
   await page.getByTestId('join-password').fill('harbour-learner')

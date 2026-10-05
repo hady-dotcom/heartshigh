@@ -124,6 +124,8 @@ test.describe.serial('HEARTS journeys', () => {
   })
 
   test('admin builds a course, extracts and approves a cut with its clause and seat, and places questions', async ({ page }) => {
+    // Extract plus the first compile of the desk course page can exceed the 120s serial cap on Postgres.
+    test.setTimeout(180_000)
     await page.setViewportSize(DESK)
     await join(page, adminCode, 'Harbour Admin', adminEmail, 'harbour-admin')
     await expect(page.getByTestId('admin-overview')).toBeVisible()

@@ -6,7 +6,7 @@ import { Avatar } from '@/components/app/feed'
 import { AppFrame, Flash, TabBar } from '@/components/app/shell'
 import { PlayIcon } from '@/components/icons'
 import { displayTalkTitle } from '@/lib/talk-title'
-import { daysWithUs, daysWithUsLabel } from '@/lib/days-with-us'
+import { daysWithUsLabel } from '@/lib/days-with-us'
 import { learnerWords } from '@/lib/tidy-caption'
 import { courseCards, dayNumber, portalName, posterFor, shownPoster } from '@/server/learner'
 import { ensureMonthNote, recalibrationDueFor } from '@/server/compass'
@@ -76,7 +76,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   const tonight = planLesson
     ? { label: tonightLabel(Number(planLesson.order || 1), planMinutes), href: `${base}/course/${ref(planLesson.course)}?part=${planLesson.id}`, title: learnerWords(displayTalkTitle({ title: str(planLesson.title), sourceTitle: str(planLesson.sourceTitle), part: Number(planLesson.order || 1), youtubeId: str(planLesson.youtubeId), vimeoId: str(planLesson.vimeoId) })) }
     : null
-  const days = daysWithUs(user.joinedAt || user.createdAt)
+  const days = dayNumber(user)
   const clips = items.slice(0, 3)
   return (
     <AppFrame testId="home">
