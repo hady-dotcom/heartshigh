@@ -114,10 +114,8 @@
 
 .plaque-name {
   position: absolute;
-  /* Optical centre of the dark plaque face on the 512×640 planter.
-     The face runs from the inner gold edge (~157px) to the start of the dim right rim (~356px), so its centre is 256.5px (50.1%).
-     51.2% included that rim and sat the ink about 4px right, leaving more empty band on the left. */
-  left: 50.1%;
+  /* Front of the wrapped ribbon. The ribbon is centred on the pot, at 256px of the 512 canvas. */
+  left: 50%;
   top: 91.25%;
   transform: translate(-50%, -50%);
   z-index: 2;
