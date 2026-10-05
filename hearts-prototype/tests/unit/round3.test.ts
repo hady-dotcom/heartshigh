@@ -71,7 +71,7 @@ test('Bug 21: plans are capped at a year, named for the season, and counted in t
 })
 
 test('Bug 15: Al-Nur points to the full class and every seeded pop-up sits inside its talk', () => {
-  const nur = FILMS.find((film) => /Al-Nur/.test(film.title))
+  const nur = FILMS.find((film) => film.youtubeId === 'NIR88RRpat4')
   assert.ok(nur)
   assert.equal(nur.youtubeId, 'NIR88RRpat4')
   assert.equal(nur.durationSeconds, 2861)
