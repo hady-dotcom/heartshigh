@@ -85,6 +85,13 @@ export function swipeTarget(list: NavItem[], index: number, level: FeedLevel, sw
   if (swipe === 'next' || swipe === 'prev') {
     const step = swipe === 'next' ? 1 : -1
     const order = ring(list.length, index, step)
+    // Next still skips a card the learner has already been shown, then stops at the end of the pool.
+    // Prev is one step back to the previous talk clip. It must not skip that clip for being seen,
+    // and it must not stop on the scenic card that sits between two talks — that jump landed on
+    // an older unseen speaker instead of the clip just left.
+    if (swipe === 'prev') {
+      return order.find((at) => onLevel(list[at], level) && (level !== 'hors' || !isInterstitial(list[at]))) ?? null
+    }
     return order.find((at) => onLevel(list[at], level) && unseenCard(list, at, level, seen)) ?? null
   }
   const talks = ring(list.length, index, 1).filter((at) => list[at].cutId !== item.cutId && !isInterstitial(list[at]))

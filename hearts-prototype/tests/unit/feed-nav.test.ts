@@ -164,6 +164,17 @@ test('every clip steps up to its own speaker and lesson, never a neighbour’s',
   })
 })
 
+test('prev steps back to the previous clip even when it was seen and a card sits between', () => {
+  const list = feed()
+  const talks = list.map((row, index) => ({ row, index })).filter(({ row }) => !isInterstitial(row))
+  const seen = new Set(list.map((row) => cardKey(row, 'hors')))
+  for (let i = 1; i < talks.length; i++) {
+    assert.equal(swipeTarget(list, talks[i].index, 'hors', 'prev', seen), talks[i - 1].index, `back from ${talks[i].row.speaker}`)
+  }
+  assert.equal(swipeTarget(list, talks[0].index, 'hors', 'next', seen), null)
+  assert.equal(list[swipeTarget(list, talks[0].index, 'hors', 'prev', seen)!].cutId, talks[talks.length - 1].row.cutId)
+})
+
 test('next skips a seen card until the pool is used up, then it stops', () => {
   const list = feed()
   const firstTalk = list.findIndex((row) => !isInterstitial(row))
