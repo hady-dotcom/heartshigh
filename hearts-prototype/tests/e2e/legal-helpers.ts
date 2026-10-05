@@ -1,7 +1,12 @@
 import { expect, type APIRequestContext, type Page } from '@playwright/test'
 
 export async function completeConsent(page: Page, age: 'under-13' | '13-17' | '18+' = '18+') {
-  if (!page.url().includes('/consent')) return
+  if (!page.url().includes('/consent')) {
+    const slug = page.url().match(/\/p\/([^/?#]+)/)?.[1]
+    if (!slug) return
+    await page.goto(`/p/${slug}/consent`)
+  }
+  if ((await page.getByTestId('consent').count()) === 0) return
   await expect(page.getByTestId('consent')).toBeVisible()
   await page.getByTestId(`age-${age}`).check()
   await page.getByTestId('consent-agree').check()
