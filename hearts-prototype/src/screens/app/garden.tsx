@@ -26,6 +26,7 @@ import { featureOn } from '@/lib/features'
 import { listGatherings } from '@/server/gather'
 import { type Ctx, type Row, clock, ref, rows, shortDate, str, unreadCount } from '../common'
 import { ReportButton } from '@/components/app/report-sheet'
+import { RitualForm } from '@/components/app/ritual-form'
 
 const SECTIONS: { key: string; title: string; colour: string }[] = [
   { key: 'Sitting', title: 'The sitting', colour: '#e98fb0' },
@@ -129,8 +130,8 @@ function seatsOf(g: Growth, door: Door) {
 
 export function Rings({ g, base, portal }: { g: Growth; base: string; portal?: import('@/lib/features').FeatureSource }) {
   const sections = SECTIONS.filter((section) => sectionOf(g.doors, section.key).some((door) => (g.activityLit || g.lit).has(door.number))).length
-  const items: [string, number, string, string, number?][] = [
-    ['Watched', g.watched || g.completions.length, '#e2c27a', `${base}/garden/general`],
+  const items: [string, number, string, string, number?, string?][] = [
+    ['Finished', g.watched || g.completions.length, '#e2c27a', `${base}/garden/general`, undefined, 'ring-watched'],
     ['Sections', sections, '#f0e2c4', `${base}/garden/jibril`],
     ['Field', g.seatVisits.length, '#b7c7a4', `${base}/garden/ghunya`],
     ['Harvest', g.harvest.length, '#8fbfb4', `${base}/garden/harvest`, g.harvestNew || undefined],
@@ -138,8 +139,8 @@ export function Rings({ g, base, portal }: { g: Growth; base: string; portal?: i
   ]
   return (
     <div className="rings" data-testid="rings">
-      {items.map(([label, value, colour, href, fresh]) => (
-        <Link key={label} className="ring-stat" href={href} data-testid={`ring-${label.toLowerCase()}`}>
+      {items.map(([label, value, colour, href, fresh, testId]) => (
+        <Link key={label} className="ring-stat" href={href} data-testid={testId || `ring-${label.toLowerCase()}`}>
           <span className="r" style={{ borderColor: colour }}>{value}</span>
           {label}
           {fresh ? <em className="ring-new" data-testid={`ring-${label.toLowerCase()}-new`}>{fresh} new</em> : null}
@@ -243,6 +244,7 @@ export async function GardenScreen({ payload, user, portal, base, query }: Ctx) 
         <section className="garden-rings card" data-testid="garden-rings">
           <p className="eyebrow" style={{ margin: '0 0 8px' }}>Five ways to see it</p>
           <Rings g={g} base={base} portal={portal} />
+          <p className="muted" style={{ fontSize: 13, margin: '10px 0 0' }} data-testid="watched-rule">Finished counts a full talk, not a clip or a talk left mid-way.</p>
         </section>
         {path ? <GardenPath title={path.title} nodes={path.nodes} /> : (
           <EmptyState testId="garden-empty" action={{ href: `${base}/lanes`, label: 'Browse courses' }}>
@@ -261,11 +263,7 @@ export async function GardenScreen({ payload, user, portal, base, query }: Ctx) 
         <p className="eyebrow">A small act</p>
         <section className="card">
           <p style={{ marginBottom: 10 }}>Something you did today because of what you heard. Only you see this.</p>
-          <form className="form-stack" action="/api/hearts" method="post">
-            <Hidden fields={{ action: 'ritual', next: `${base}/garden` }} />
-            <input className="field" data-testid="ritual-note" name="note" maxLength={280} placeholder="I held back a harsh word." />
-            <button className="pill teal" type="submit" data-testid="ritual-submit">Keep this</button>
-          </form>
+          <RitualForm next={`${base}/garden`} />
           <p className="muted" style={{ fontSize: 13, marginTop: 10 }} data-testid="ritual-count">{g.rituals.length} small act{g.rituals.length === 1 ? '' : 's'} kept so far.</p>
         </section>
         </div>
@@ -315,7 +313,7 @@ export async function GardenGeneral({ payload, user, portal, base }: Ctx) {
       <section className="time-card">
         <p className="eyebrow">Time given</p>
         <div className="big" data-testid="time-given">{hours ? `${hours}h ` : ''}{minutes}m</div>
-        <p style={{ margin: 0, opacity: 0.8, fontSize: 14 }}>Counted from the parts you marked as watched.</p>
+        <p style={{ margin: 0, opacity: 0.8, fontSize: 14 }}>Counted from talks you finished or marked as watched. Clips do not count.</p>
       </section>
       <div className="stat-grid">
         <div className="stat-box"><b data-testid="stat-sittings">{g.completions.length}</b><small>Parts watched</small></div>

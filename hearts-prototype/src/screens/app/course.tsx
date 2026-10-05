@@ -21,6 +21,7 @@ import { appetiserStop } from '@/lib/tiers'
 import { lineAt } from '@/lib/harvest'
 import { answerCounts, courseProgress } from '@/lib/nesting'
 import { type Ctx, type Row, clock, one, ref, rows, str, unreadCount } from '../common'
+import { lastPartCopy, playerPartLabel, resolvePartIndex } from '@/lib/player-labels'
 import { nextPartLabel } from '@/lib/study-plan'
 import { talksLabel } from '@/lib/week'
 import { masterFlags } from './journey'
@@ -42,10 +43,8 @@ function nextCoursePart(lessons: Row[], partIndex: number, hrefBase: string) {
   return { label: nextPartLabel(partIndex + 2), href: `${hrefBase}?part=${pick.id}` }
 }
 
-function partHeading(index: number, lesson: Row, courseTitle: string, sep: string) {
-  const name = partTitle(lesson, courseTitle)
-  if (/· Part \d+$/.test(name) || /^Part \d+$/.test(name)) return name
-  return `Part ${index}${sep}${name}`
+function partHeading(index: number, lesson: Row, courseTitle: string, total: number) {
+  return playerPartLabel({ index, total, name: partTitle(lesson, courseTitle), courseTitle })
 }
 
 export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx, speakerSlug: string) {
@@ -202,7 +201,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   if (!query.part) {
     return CourseOverview(ctx, course, lessons)
   }
-  const partIndex = Math.max(0, lessons.findIndex((lesson) => lesson.id === Number(query.part)))
+  const partIndex = resolvePartIndex(lessons, query.part)
   const lesson = lessons[partIndex]
   const lessonId = lesson.id
 
@@ -323,7 +322,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const following = nextCoursePart(lessons, partIndex, `${base}/course/${courseId}`)
   const upNext = nextLesson && following
     ? { href: following.href, label: following.label, minutes: Math.max(1, Math.round(Number(nextLesson.durationSeconds || 0) / 60)), last: false }
-    : { href: courseHref, label: 'Choose what\'s next', minutes: 0, last: true }
+    : { href: courseHref, label: lastPartCopy(lessons.length), minutes: 0, last: true }
   const thinks = (await rows(payload, 'notifications', { and: [{ user: { equals: user.id } }, { channel: { equals: 'think' } }, { read: { not_equals: true } }] }, { limit: 50 }))
     .map((row) => {
       try {
@@ -371,7 +370,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           courseTitle={tidyTalkTitle(str(course.title))}
           backHref={`${base}/lanes`}
           lessonId={lessonId}
-          partLabel={partHeading(partIndex + 1, lesson, tidyTalkTitle(str(course.title)), ' · ')}
+          partLabel={partHeading(partIndex + 1, lesson, tidyTalkTitle(str(course.title)), lessons.length)}
           youtubeId={youtubeId}
           film={film}
           poster={shownPoster(posterFor(youtubeId)) || portraitFor(slugify(str(lesson.speaker || course.speaker)))}
@@ -405,7 +404,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
             ))}
           </section>
         ) : null}
-        {lessons.length >= 2 && featureOn(portal, 'planner') ? <p style={{ margin: '16px 0 0' }}><Link className="pill outline" href={`${base}/me/plan?course=${courseId}`} data-testid="plan-rest">Plan the rest of this course</Link></p> : null}
+        {featureOn(portal, 'planner') ? <p style={{ margin: '16px 0 0' }}><Link className="pill outline" href={`${base}/week?course=${courseId}&view=new&from=course`} data-testid={lessons.length >= 2 ? 'plan-rest' : 'schedule-this'}>{lessons.length >= 2 ? 'Plan the rest of this course' : 'Schedule this talk'}</Link></p> : null}
         <p className="eyebrow">Parts of this course</p>
         {courseDoors(lessons, partCuts, doors).map((group) => (
           <section key={group.door?.number || 'open'} className="door-course" data-testid="course-door" data-door={group.door?.number || ''}>
@@ -417,7 +416,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
               return (
                 <div key={row.id}>
                   <Link className="list-link" href={`${base}/course/${courseId}?part=${row.id}`} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
-                    <span className="grow">{partHeading(index + 1, row, tidyTalkTitle(str(course.title)), '. ')}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small></span>
+                    <span className="grow">{partHeading(index + 1, row, tidyTalkTitle(str(course.title)), lessons.length)}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small></span>
                     {row.id === lessonId ? <span className="badge" style={{ color: 'var(--purple)', fontWeight: 700, fontSize: 13 }}>Playing</span> : '›'}
                   </Link>
                   {tier ? (

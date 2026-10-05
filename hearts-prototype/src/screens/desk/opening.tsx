@@ -10,6 +10,7 @@ import { TRENDS_MIN, trendsFrom, type Contribution } from '@/lib/trends'
 import { loadPersonaLens } from '@/server/persona'
 import { loadPortal, type SessionUser } from '@/server/context'
 import { loadOpening } from '@/server/opening'
+import { cleanPortalScenes } from '@/lib/portal-scenes'
 import { partTitle } from '@/lib/talk-title'
 import { portalDisplayName, showPortalName } from '@/lib/portal-name'
 import { HelpTip } from '@/components/desk/help'
@@ -288,8 +289,9 @@ export async function PortalOpeningScreen(ctx: Ctx) {
   const wording = (config?.wording as { scene?: unknown; caption?: string; subline?: string }[]) || []
   const hidden = new Set(((config?.hiddenScenes as unknown[]) || []).map((row) => idOf(row)))
   const contacts = (config?.helpContacts as { label?: string; phone?: string; url?: string; hours?: string }[]) || []
+  const extras = cleanPortalScenes(config?.extraScenes).scenes
   return (
-    <AdminFrame ctx={ctx} active="opening" title="Opening" intro="The scenes a newcomer sees before the feed. You can change the words for your community or leave a scene out. The options and what they mean stay as the master desk set them." testId="admin-opening">
+    <AdminFrame ctx={ctx} active="opening" title="Opening questions" intro="These are the questions a newcomer sees before the feed. Keep the starter set, change the words, leave a scene out, or add your own. Your own questions belong to this portal and can be for any kind of work." testId="admin-opening">
       {scenes.map((scene) => {
         const own = wording.find((row) => idOf(row.scene) === scene.id)
         const crisis = ((scene.options as Option[]) || []).some((option) => option.crisis)
@@ -316,6 +318,41 @@ export async function PortalOpeningScreen(ctx: Ctx) {
           </section>
         )
       })}
+      <section className="panel" style={{ marginBottom: 18 }} data-testid="portal-own-scenes">
+        <header className="light">
+          <h2>Your questions <HelpTip topic="add-opening-scene">{TOOL.addOpeningScene}</HelpTip></h2>
+          <span className="hint">On top of the starter set</span>
+        </header>
+        <div className="body" style={{ display: 'grid', gap: 12 }}>
+          {extras.map((scene) => (
+            <div className="count-tile" key={scene.key} data-testid="portal-own-scene">
+              <span>
+                <b>{scene.caption.replace(/\*\*/g, '')}</b>
+                <span className="hint" style={{ display: 'block', fontWeight: 500 }}>{scene.options.map((option) => option.label).join(' · ')}</span>
+              </span>
+              <form action="/api/hearts" method="post">
+                <Hidden fields={{ action: 'opening-extra-scene-remove', portalSlug: portal.slug, key: scene.key, next: here }} />
+                <button className="btn ghost small" type="submit" data-testid="portal-own-remove">Remove</button>
+              </form>
+            </div>
+          ))}
+          {!extras.length ? <p className="hint" data-testid="portal-own-empty">None of your own yet. The starter set still plays. Add a question for estate-agent training, self-development, or any work that is not the HEARTS bank.</p> : null}
+          <form className="form" action="/api/hearts" method="post" data-testid="portal-own-form">
+            <Hidden fields={{ action: 'opening-extra-scene', portalSlug: portal.slug, next: here }} />
+            <div className="cols">
+              <label className="stack">Question<input type="text" name="caption" required data-testid="portal-own-caption" /></label>
+              <label className="stack">Second line<input type="text" name="subline" /></label>
+            </div>
+            <div className="cols">
+              <label className="stack">Answer 1<input type="text" name="opt1" required data-testid="portal-own-opt1" /></label>
+              <label className="stack">Answer 2<input type="text" name="opt2" required data-testid="portal-own-opt2" /></label>
+              <label className="stack">Answer 3<input type="text" name="opt3" data-testid="portal-own-opt3" /></label>
+              <label className="stack">Answer 4<input type="text" name="opt4" data-testid="portal-own-opt4" /></label>
+            </div>
+            <div className="actions"><button className="btn ink small" type="submit" data-testid="portal-own-save">Add question</button></div>
+          </form>
+        </div>
+      </section>
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', alignItems: 'start' }}>
         <section className="panel" data-testid="help-contacts">
           <header className="light"><h2>Help contacts <HelpTip topic="help-contacts">{TOOL.helpContacts}</HelpTip></h2><span className="hint">Shown on the help screen</span></header>

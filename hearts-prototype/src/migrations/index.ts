@@ -23,6 +23,7 @@ import * as migration_20261004_235900_insight_privacy from './20261004_235900_in
 import * as migration_20261005_010000_swarm_hidden from './20261005_010000_swarm_hidden';
 import * as migration_20261005_120000_safety from './20261005_120000_safety';
 import * as migration_20261005_121000_safety_locks from './20261005_121000_safety_locks';
+import * as migration_20261005_161000_portal_extra_scenes from './20261005_161000_portal_extra_scenes';
 
 export const migrations = [
   {
@@ -149,5 +150,10 @@ export const migrations = [
     up: migration_20261005_121000_safety_locks.up,
     down: migration_20261005_121000_safety_locks.down,
     name: '20261005_121000_safety_locks',
+  },
+  {
+    up: migration_20261005_161000_portal_extra_scenes.up,
+    down: migration_20261005_161000_portal_extra_scenes.down,
+    name: '20261005_161000_portal_extra_scenes',
   },
 ];

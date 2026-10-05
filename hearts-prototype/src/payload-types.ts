@@ -1646,6 +1646,18 @@ export interface OpeningConfig {
       }[]
     | null;
   trendsContributionPrompt?: boolean | null;
+  /**
+   * Questions this portal added on top of the starter set. Not Islamic-only.
+   */
+  extraScenes?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -4089,6 +4101,7 @@ export interface OpeningConfigsSelect<T extends boolean = true> {
         id?: T;
       };
   trendsContributionPrompt?: T;
+  extraScenes?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -7,6 +7,7 @@ import { Flash, Hidden } from '@/components/app/shell'
 import { HelpTip } from '@/components/desk/help'
 import { SideNav } from '@/components/desk/side-nav'
 import { pageHelp } from '@/lib/desk-help'
+import { deskAppHref } from '@/lib/landing'
 import { BellIcon, BeakerIcon, BookIcon, CalendarIcon, ChartIcon, ClapperIcon, CogIcon, CompassIcon, FilmIcon, FlagIcon, FrameIcon, GlobeIcon, HeartIcon, HomeIcon, KeyIcon, LibraryIcon, MicIcon, MoonIcon, NetworkIcon, PathIcon, PeopleIcon, QuestionIcon, ScaleIcon, SheetIcon, SparkIcon } from '@/components/icons'
 import type { SessionUser } from '@/server/context'
 import { deskNavAllowed, type FeatureSource } from '@/lib/features'
@@ -181,6 +182,11 @@ export async function DeskFrame({
       <BrandMark size={44} />
       <h1>Open this on a laptop or desktop</h1>
       <p>The {deskName || subBrand.toLowerCase()} needs a wider screen than this. Your work is saved, so you can carry on from a computer.</p>
+      {deskAppHref(brandHref) ? (
+        <p>
+          <Link className="btn ink" href={deskAppHref(brandHref)!} data-testid="desk-open-app">Open the app</Link>
+        </p>
+      ) : null}
       <form action="/api/hearts" method="post">
         <Hidden fields={{ action: 'logout' }} />
         <button type="submit" className="btn ghost">Sign out</button>

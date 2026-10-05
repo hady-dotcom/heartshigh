@@ -26,7 +26,7 @@ export const PAGE: Record<string, string> = {
   access:
     'An access code says who someone is and which course pack they see. Send the link, a copy or the QR, so nobody has to type the letters. Learner and parent codes need a teacher code so someone can see their progress.',
   opening:
-    'These are the scenes a newcomer sees before the feed. You may change the words for your community or leave a scene out. The choices and what they mean stay as the master desk set them.',
+    'These are the questions a newcomer sees before the feed. Keep the starter set, change the words, leave a scene out, or add your own. Your own questions belong to this portal and can be for any kind of work, not only HEARTS.',
   circle:
     'Circle answers are light, written examples that sit beside real shared answers so a question is never empty. They are never counted in progress, trends or exports. You can write them, draft a handful, or switch a talk’s set on or off.',
   ai:
@@ -135,7 +135,9 @@ export const TOOL: Record<string, string> = {
   creatorSearch:
     'Search looks on YouTube for talks on this topic. Tick the ones you want, or paste links and upload a file. Build draft writes a workbook; apply it on the sheet page when you are happy.',
   hideScene:
-    'Leave this scene out hides it for your community only. The scene that opens the help screen cannot be hidden. The choices still mean what the master desk set.',
+    'Leave this scene out hides it for your community only. The scene that opens the help screen cannot be hidden. The starter choices still mean what Hady Core set.',
+  addOpeningScene:
+    'Add a question writes one of your own scenes for this portal. Learners see it after the starter set you kept. Use it for estate-agent training, self-development, or any work that is not the HEARTS bank.',
   helpContacts:
     'Help contacts are shown on the help screen. Add a local line if you have one. With none of your own, the national lines are shown.',
   circleTones:

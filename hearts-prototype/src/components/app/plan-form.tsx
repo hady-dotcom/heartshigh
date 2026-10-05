@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Hidden } from '@/components/app/shell'
 import { MINUTES_A_DAY } from '@/lib/study-plan'
 import { formatLearnerDate, planKeepPath } from '@/lib/week'
@@ -39,6 +39,9 @@ export function PlanForm({
 }) {
   const initial = selected || courses[0]?.id || 0
   const [courseId, setCourseId] = useState(initial)
+  useEffect(() => {
+    if (selected) setCourseId(selected)
+  }, [selected])
   const [from, setFrom] = useState(start)
   const [until, setUntil] = useState(end)
   const [daysOn, setDaysOn] = useState<number[]>(weekdays)

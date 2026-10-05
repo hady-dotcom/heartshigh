@@ -16,7 +16,8 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
   const today = dateKeyInZone(now(), view.zone)
   const later = dateKeyInZone(new Date(now().getTime() + 27 * 86_400_000), view.zone)
   const latest = view.plans[0]
-  const selected = Number(query.course) || latest?.courseId || null
+  const fromQuery = query.course != null && query.course !== '' ? Number(query.course) : NaN
+  const selected = Number.isFinite(fromQuery) && fromQuery > 0 ? fromQuery : latest?.courseId || null
   const start = String(query.start || latest?.start || today)
   const end = String(query.end || latest?.end || later)
   const weekdays = parseWeekdays(query.days)
@@ -97,6 +98,7 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
           )
         })}
         <PlanForm
+          key={selected || 'none'}
           courses={view.courses}
           selected={selected}
           start={start}

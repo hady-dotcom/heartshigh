@@ -10,7 +10,7 @@ import { getSession, loadPortal, requirePortal } from '@/server/context'
 import { JourneyScreen } from '@/screens/app/journey'
 import { shareOrigin } from '@/lib/site-origin'
 import { portalName } from '@/server/learner'
-import type { Ctx, Query } from '@/screens/common'
+import { rows, type Ctx, type Query } from '@/screens/common'
 import { LearnerPathScreen, RecalibrateScreen } from '@/screens/app/compass'
 import { GatherDetailScreen, GatherDoorScreen, GatherListScreen, GatherProposeScreen, GatherReflectScreen } from '@/screens/app/gather'
 import { HomeScreen, LanesScreen } from '@/screens/app/home'
@@ -71,7 +71,10 @@ export default async function PortalScreen({ params, searchParams }: { params: P
     const shut = portal.closed && (!visitor || visitor.role === 'learner')
     if (!shut && area === undefined) {
       if (!visitor) redirect((await cookies()).get('hearts_opened')?.value === '1' ? `${base}/feed` : `${base}/start`)
-      if (visitor.role === 'learner' && !visitor.onboarded) redirect(visitor.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
+      if (visitor.role === 'learner' && !visitor.onboarded) {
+        const started = await rows(session.payload, 'lesson-visits', { user: { equals: visitor.id } }, { limit: 1 })
+        if (!started.length) redirect(visitor.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
+      }
     } else if (!shut) {
       return JourneyScreen({ payload: session.payload, portal, user: visitor, base, initial: area === 'feed' ? 'feed' : area === 'help' ? 'help' : 'opener', viewAs: Boolean(session.viewAs), query: query as Record<string, string | undefined> })
     }

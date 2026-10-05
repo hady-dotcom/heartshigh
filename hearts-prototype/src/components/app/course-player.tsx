@@ -284,7 +284,7 @@ export function CoursePlayer({
     (id: number, triggered: boolean) => {
       const point = viewsRef.current.find((row) => row.id === id)
       if (!point) return
-      if (!triggered && !questionMomentReached({ second: point.second, time: timeRef.current, answered: point.answered })) return
+      if (!triggered && point.state !== 'open' && !questionMomentReached({ second: point.second, time: timeRef.current, answered: point.answered })) return
       reveal(id)
       const at = point.second
       lastTime.current = at
@@ -483,7 +483,7 @@ export function CoursePlayer({
     close()
   }
 
-  const nextPoint = views.find((point) => point.state === 'open' && !point.answered && questionMomentReached({ second: point.second, time, answered: point.answered })) || null
+  const nextPoint = views.find((point) => point.state === 'open' && !point.answered) || null
   const waitingOnFilm = views.some((point) => !point.answered)
   const open = views.find((point) => point.id === openId) || null
   const total = length || Math.max(60, ...views.map((point) => point.second + 30))
@@ -537,14 +537,14 @@ export function CoursePlayer({
           {views.map((point) => {
             const place = places.get(point.id)
             const reached = questionMomentReached({ second: point.second, time, answered: point.answered })
-            const locked = !point.answered && (!reached || point.state !== 'open')
+            const locked = !point.answered && point.state !== 'open'
             return (
             <button
               key={point.id}
               type="button"
               className={`dot${point.answered ? ' done' : locked ? ' locked' : ''}`}
               style={{ left: `${place?.left ?? 2}%` }}
-              aria-label={reached ? `Question ${point.number} at ${clock(point.second)}` : `Question ${point.number} comes at ${clock(point.second)}`}
+              aria-label={reached ? `Question ${point.number} at ${clock(point.second)}` : `Question ${point.number} at ${clock(point.second)}`}
               data-testid="timeline-dot"
               data-state={point.state}
               data-second={point.second}
@@ -553,7 +553,7 @@ export function CoursePlayer({
               onClick={() => {
                 if (locked) return
                 pause()
-                show(point.id, false)
+                show(point.id, true)
               }}
             >
               <i>{reached ? point.number : ''}</i>
@@ -592,7 +592,7 @@ export function CoursePlayer({
           {upNext.label}{upNext.minutes ? ` (${upNext.minutes} min)` : ''}
         </Link>
       ) : (
-        <p className="up-next-row last" data-testid="up-next">This is the last part of this course.</p>
+        <p className="up-next-row last" data-testid="up-next">{upNext?.label || 'This is the last part of this course.'}</p>
       )}
       {endCard ? (
         <section className="up-next-card" data-testid="up-next-card">
@@ -615,7 +615,7 @@ export function CoursePlayer({
         </section>
       ) : null}
       <div className="answer-row" data-testid="answer-row">
-        <button type="button" className="answer-btn" disabled={!nextPoint} onClick={() => nextPoint && show(nextPoint.id, false)} data-testid="answer-point">
+        <button type="button" className="answer-btn" disabled={!nextPoint} onClick={() => nextPoint && show(nextPoint.id, true)} data-testid="answer-point">
           {nextPoint ? `Answer question ${nextPoint.number} →` : waitingOnFilm ? comingAnswerLabel() : views.length ? 'All questions answered' : 'No questions on this part yet'}
         </button>
         {waitingOnFilm && !nextPoint ? <TopicHelp topic="hide-until-moment" label="When do questions appear?" /> : null}

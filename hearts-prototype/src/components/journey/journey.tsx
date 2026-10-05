@@ -16,6 +16,7 @@ import { learnMore } from '@/lib/nesting'
 import { laneClips } from '@/lib/lanes'
 import { isoWeek } from '@/lib/trends'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, hydrateSound, lowData, playOnly, playerSnapshot, preloadApi, setHidden, silence, silenceHidden, silenceOthers, soundOn, type PlayerKind } from '@/lib/yt'
+import { PageHelp } from '@/components/app/page-help'
 import { Arch } from '@/components/arch'
 import { TabBar } from '../app/shell'
 import { ART as SLIDE_BACKDROP, Avatar, FollowButton, Slide } from '../app/feed'
@@ -795,6 +796,18 @@ export function Journey(props: JourneyProps) {
       const handed = { ...state, handedOffAt: Date.now() } as HeartState
       setHeart(handed)
       if (!props.viewAs) document.cookie = `hearts_opened=1; Path=/p/${opening.portal}; Max-Age=31536000; SameSite=Lax`
+      if (props.signedIn && props.learner && !props.viewAs) {
+        try {
+          await fetch(`/api/workbook/opening?portal=${opening.portal}`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ scenesVersion: state.scenesVersion, taps: state.taps.map((tap) => ({ sceneKey: tap.scene, optionKey: tap.option, answeredAt: tap.at })) }),
+          })
+          setHeart({ ...handed, synced: true } as HeartState)
+        } catch {
+          // Feed still opens. Home treats visits and saved taps as enough to stay in the app.
+        }
+      }
       if (starter) {
         itemsRef.current = [starter]
         setItems([starter])
@@ -1579,7 +1592,7 @@ export function Journey(props: JourneyProps) {
   const feedCard = phase === 'feed' && (cardKind === 'question' || cardKind === 'text')
   const started = playerReady && host.played && LIVE.has(host.state)
   const playingOut = playerReady && host.played && host.state === STATE.PLAYING
-  const keepAppetiserPoster = mode === 'appetiser' && appetiserHeld
+  const keepAppetiserPoster = mode === 'appetiser' && appetiserHeld && host.state !== STATE.PLAYING
   const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (keepAppetiserPoster || !playingOut || Boolean(errorNote) || offline)))
   const waitingToPlay = phase === 'feed' && playerReady && (keepAppetiserPoster || !playingOut) && !errorNote && !offline
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
@@ -1702,7 +1715,7 @@ export function Journey(props: JourneyProps) {
         ) : (
           <div className="clip-row">
             <div className="clip-row-top">
-              <button type="button" className="chip white" onClick={() => window.history.back()} data-testid="appetiser-back">‹ Back</button>
+              <button type="button" className="chip white" onClick={() => { window.location.assign(`${base}/feed`) }} data-testid="appetiser-back">‹ Back</button>
               <span className="chip gold" data-testid="level-chip">{READY_FOR_MORE}</span>
             </div>
             {muted && (typeClip || (!hasSound() && playerReady)) ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
@@ -1790,7 +1803,8 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING && !keepAppetiserPoster ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing={framingMode || undefined} data-player-state={host.state} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
+    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing={framingMode || undefined} data-player-state={host.state} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
+      <PageHelp page={phase === 'feed' ? (mode === 'appetiser' ? 'appetiser' : 'feed') : 'start'} />
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />

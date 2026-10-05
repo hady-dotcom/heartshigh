@@ -36,7 +36,11 @@ function minutesLeft(seconds: number, percent: number) {
 
 /** Home: the growth banner, what to carry on with, then the way into today's clips (board 00). */
 export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
-  if (user.role === 'learner' && !user.onboarded) redirect(user.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
+  if (user.role === 'learner' && !user.onboarded) {
+    const started = await rows(payload, 'lesson-visits', { user: { equals: user.id } }, { limit: 1 })
+    const taps = started.length ? [] : await rows(payload, 'opening-answers', { user: { equals: user.id } }, { limit: 1 })
+    if (!started.length && !taps.length) redirect(user.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
+  }
   const [g, unread, { items }, courses, due, gatherings, liveBits, week] = await Promise.all([
     growth(payload, user),
     unreadCount(payload, user),
