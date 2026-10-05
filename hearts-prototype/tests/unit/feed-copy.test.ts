@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { clipStepUpLabel, forbiddenLearnerWords, pieceSeconds, poolEndToast, READY_FOR_MORE, talkStepUpLabel, withTalkDetail } from '../../src/lib/feed-copy'
+import { clipStepUpLabel, forbiddenLearnerWords, LEVEL_WORDS, pieceSeconds, poolEndToast, READY_FOR_MORE, talkStepUpLabel, withTalkDetail } from '../../src/lib/feed-copy'
 
 test('level buttons use one set of words, with minutes rounded up', () => {
+  assert.deepEqual(LEVEL_WORDS, ['Clip', 'extract', 'Full talk'])
+  for (const word of LEVEL_WORDS) {
+    assert.equal(forbiddenLearnerWords(word), false, word)
+    assert.equal(/\bappetiser\b|\borders\b/i.test(word), false, word)
+  }
   assert.equal(clipStepUpLabel(), 'Ready for more?')
   assert.equal(READY_FOR_MORE, 'Ready for more?')
   assert.equal(talkStepUpLabel(1, 58 * 60), 'Watch the whole talk (58 min)')

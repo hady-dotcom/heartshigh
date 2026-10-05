@@ -1,6 +1,6 @@
-// Learner-facing words for the three levels. Internal names (hors, appetiser) never appear on screen.
+// Learner-facing words for the hors d'oeuvre ladder. Internal names never appear on screen.
 
-export const LEVEL_WORDS = ['clip', '3-minute version', 'full talk'] as const
+export const LEVEL_WORDS = ['Clip', 'extract', 'Full talk'] as const
 export const READY_FOR_MORE = 'Ready for more?'
 
 export function clipStepUpLabel() {
