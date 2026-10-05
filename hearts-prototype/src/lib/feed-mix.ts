@@ -1,5 +1,5 @@
 import { CATALOGUE, backgroundSrc, pickBackground, type Background } from '@/lib/backgrounds'
-import { extractVisible, kineticExtractLine, kineticExtractWords } from '@/lib/extracts'
+import { kineticExtractLine, kineticExtractWords } from '@/lib/extracts'
 import { pickScene } from '@/lib/scenes'
 import { beatLine } from '@/lib/sentences'
 import type { FeedItem, SlideStyle } from '@/server/learner'
@@ -14,29 +14,28 @@ function pickStyle(index: number, visit: number, previous: string, base = 0): Sl
   return STYLE_LIST[at]
 }
 
-function paintExtractBeat(quote: string, fromExtract: boolean) {
+function paintExtractBeat(quote: string) {
   const line = beatLine(quote || '')
   if (!line) return ''
-  return fromExtract ? kineticExtractLine(line) : line
+  return kineticExtractLine(line)
 }
 
 /** Every beat, voiced or not, is at most two sentences and about 30 words, and never stops on a hanging word. */
 function beatsOf(item: FeedItem): CardBeat[] {
-  const fromExtract = item.extractId != null || Boolean(item.extracts?.some((row) => extractVisible(row)))
   if (item.beats?.length) {
     return item.beats
       .map((row) => {
         const quote = beatLine(row.quote || '') || row.quote
         return {
           ...row,
-          quote: fromExtract ? kineticExtractLine(quote) : quote,
-          words: fromExtract && row.words?.length ? kineticExtractWords(row.words) : row.words,
+          quote: kineticExtractLine(quote),
+          words: row.words?.length ? kineticExtractWords(row.words) : row.words,
         }
       })
       .filter((row) => row.quote)
   }
   return (['hook', 'turn', 'land'] as const)
-    .map((beat) => ({ beat, quote: paintExtractBeat(item[beat] || '', fromExtract), gold: '', audio: null }))
+    .map((beat) => ({ beat, quote: paintExtractBeat(item[beat] || ''), gold: '', audio: null }))
     .filter((row) => row.quote)
 }
 

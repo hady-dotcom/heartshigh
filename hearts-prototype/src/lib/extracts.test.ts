@@ -297,6 +297,11 @@ test('kinetic extract lines drop a repeated word and a false start next to its r
   assert.equal(shown.hors.quote, "You're not the uncle doing parking duty.")
   assert.equal(shown.hors.lines?.[0]?.text, "You're not the uncle doing parking duty.")
   assert.equal(item.extracts?.[0]?.quote, said)
+  const stamped = expandTalkExtracts({ ...item, extractId: 11 })[0]
+  assert.equal(stamped.hors.quote, "You're not the uncle doing parking duty.")
+  const seedOnly = expandTalkExtracts({ ...item, extractId: null, extracts: [] })[0]
+  assert.equal(seedOnly.hors.quote, "You're not the uncle doing parking duty.")
+  assert.equal(seedOnly.hors.lines?.[0]?.text, "You're not the uncle doing parking duty.")
 })
 
 test('suggested hors stay off the learner feed until they are approved', () => {

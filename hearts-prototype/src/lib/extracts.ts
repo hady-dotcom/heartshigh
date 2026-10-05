@@ -413,6 +413,22 @@ export type ExtractableItem = {
   card?: 'talk' | 'film' | 'text' | 'question' | 'scene'
 }
 
+/** Learner-facing hors words only. The stored quote and the transcript stay as said. */
+function tidyHorsDisplay<T extends ExtractableItem>(item: T): T {
+  const hors = item.hors
+  if (!hors) return item
+  const quote = hors.quote ? kineticExtractLine(hors.quote) : hors.quote
+  const lines = hors.lines?.map((line) => ({ ...line, text: kineticExtractLine(line.text) }))
+  return {
+    ...item,
+    hors: {
+      ...hors,
+      quote: quote || hors.quote,
+      lines: lines ?? hors.lines,
+    },
+  }
+}
+
 /**
  * One feed item per approved hors when a talk holds several. A single hors stays one item
  * so existing talks (the old pair) keep their place in the loop.
@@ -422,8 +438,8 @@ export function expandTalkExtracts<T extends ExtractableItem>(item: T, showUnche
   const all = item.extracts || []
   const hors = all.filter((row) => row.kind === 'hors' && extractVisible(row, showUnchecked))
   const appetisers = all.filter((row) => row.kind === 'appetiser' && extractVisible(row, showUnchecked))
-  if (!all.length) return [item]
-  if (item.extractId != null && hors.length <= 1) return [item]
+  if (!all.length) return [tidyHorsDisplay(item)]
+  if (item.extractId != null && hors.length <= 1) return [tidyHorsDisplay(item)]
   const asItem = (row: TalkExtract): T => {
     const parent = (row.parent != null ? appetisers.find((appetiser) => appetiser.id === row.parent) : null) || parentAppetiserFor(row, appetisers)
     const lines = (row.words || []).map((word) => ({ at: word.at, text: word.text }))
