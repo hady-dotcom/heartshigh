@@ -120,7 +120,7 @@ export function totpNow(secret: string) {
 }
 
 export function secretFromSetup(text: string) {
-  const match = text.replace(/\s+/g, '').match(/[A-Z2-7]{16,}/i)
+  const match = text.replace(/\s+/g, '').match(/[A-Z2-7]{16,}/)
   expect(match, 'setup secret on the page').toBeTruthy()
   return match![0]
 }
