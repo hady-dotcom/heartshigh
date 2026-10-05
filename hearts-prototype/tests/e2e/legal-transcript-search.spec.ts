@@ -3,9 +3,9 @@ import { signIn } from './legal-helpers'
 
 test('C06 C07 C10 captions, transcript and search', async ({ page }) => {
   await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london')
-  await page.goto('/p/east-london/search?q=jibril')
+  await page.goto('/p/east-london/search?q=salah')
   await expect(page.getByTestId('search')).toBeVisible()
-  await expect(page.getByTestId('search-hit').or(page.getByTestId('search-empty')).first()).toBeVisible()
+  await expect(page.getByTestId('search-hit').first()).toBeVisible()
   await page.goto('/p/east-london/lanes')
   await expect(page.getByTestId('learner-search')).toBeVisible()
   const course = page.getByTestId('path-course').first()
