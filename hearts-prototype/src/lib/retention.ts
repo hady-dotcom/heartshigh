@@ -93,6 +93,15 @@ export const RETENTION_RULES: RetentionRule[] = [
     extraWhere: { closed: { equals: true } },
     note: 'A closed portal is not wiped automatically. After 90 days the System page asks the master.',
   },
+  {
+    id: 'recently-removed',
+    label: 'Recently removed',
+    keep: '30 days, then emptied',
+    days: 30,
+    collection: '*trash',
+    dateField: 'deletedAt',
+    note: 'Courses, talks, codes and packs sit here after they are taken off. Then they are removed for good. People and answers never wait here.',
+  },
 ]
 
 export function retentionCutoff(rule: RetentionRule, when: Date = now()) {
@@ -115,7 +124,7 @@ export type RetentionPlanItem = {
   dateField: string
   before: string
   extraWhere?: Record<string, unknown>
-  mode: 'delete' | 'clear-ip' | 'ask-master'
+  mode: 'delete' | 'clear-ip' | 'ask-master' | 'empty-trash'
 }
 
 /** What the nightly job will do. Pure: no database. */
@@ -125,6 +134,7 @@ export function planRetention(when: Date = now()): RetentionPlanItem[] {
     let mode: RetentionPlanItem['mode'] = 'delete'
     if (rule.id === 'audit-ip') mode = 'clear-ip'
     if (rule.id === 'closed-portals') mode = 'ask-master'
+    if (rule.id === 'recently-removed') mode = 'empty-trash'
     return {
       id: rule.id,
       collection: rule.collection || rule.id,

@@ -24,6 +24,9 @@ describe('D01 audit events', () => {
       'people.import',
       'people.bulk',
       'view_as.start',
+      'trash.remove',
+      'trash.restore',
+      'trash.empty',
     ]
     for (const event of events) {
       const sentence = auditSentence({ event, actorName: 'Aisha', actorRole: 'portal-admin', targetName: 'Yusuf', portalName: 'East London', reason: 'Lost phone' })

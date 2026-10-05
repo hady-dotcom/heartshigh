@@ -39,6 +39,7 @@ export function portalNav(base: string, user: SessionUser, portal?: FeatureSourc
     { key: 'create', label: 'Sheet creator', href: `${base}/admin/sheet/create`, icon: <BookIcon /> },
     { key: 'ai', label: 'AI steps', href: `${base}/admin/ai`, icon: <CogIcon /> },
     { key: 'activity', label: 'Activity log', href: `${base}/admin/activity`, icon: <BookIcon /> },
+    { key: 'trash', label: 'Recently removed', href: `${base}/admin/trash`, icon: <BookIcon /> },
   ])
   if (user.role === 'teacher') {
     return [
@@ -86,6 +87,7 @@ export function masterNav(): { group: string; items: NavItem[] }[] {
         { key: 'personas', label: 'Scales and bands', href: '/master/personas', icon: <HeartIcon /> },
         { key: 'trends', label: 'Network trends', href: '/master/trends', icon: <GlobeIcon /> },
         { key: 'system', label: 'System', href: '/master/system', icon: <CogIcon /> },
+        { key: 'trash', label: 'Recently removed', href: '/master/trash', icon: <BookIcon /> },
       ],
     },
   ]

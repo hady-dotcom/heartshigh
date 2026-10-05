@@ -112,6 +112,40 @@ test.describe('Lane D admin desk', () => {
     await master.dispose()
   })
 
+  test('C15 recently removed restore and portal scope', async ({ page }) => {
+    const master = await as('master@hearts.test', 'hearts-master')
+    const elm = (await (await master.get('/api/portals?where[slug][equals]=east-london&depth=0')).json()).docs[0]
+    const title = `Trash drill ${Date.now().toString().slice(-6)}`
+    const created = await master.post('/api/courses', { data: { title, origin: 'local', portal: elm.id, visibility: 'draft' } })
+    expect(created.ok(), await created.text()).toBeTruthy()
+    const course = await created.json() as { id: number; title?: string }
+
+    await signIn(page, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin/trash')
+    await expect(page.getByTestId('admin-trash')).toBeVisible()
+    await expect(page.getByTestId('nav-trash')).toBeVisible()
+    await page.evaluate(async (id: number) => {
+      const body = new URLSearchParams({
+        action: 'trash-remove',
+        collection: 'courses',
+        id: String(id),
+        portalSlug: 'east-london',
+        next: '/p/east-london/admin/trash',
+      })
+      await fetch('/api/hearts', { method: 'POST', body, redirect: 'manual' })
+    }, course.id)
+    await page.reload()
+    const row = page.getByTestId('trash-row').filter({ hasText: title })
+    await expect(row).toBeVisible()
+    const hidden = await master.get(`/api/courses/${course.id}?depth=0`)
+    expect(hidden.ok()).toBeFalsy()
+    await row.getByTestId('trash-restore').click()
+    await expect(page.getByTestId('trash-row').filter({ hasText: title })).toHaveCount(0)
+    const live = await master.get(`/api/courses/${course.id}?depth=0`)
+    expect(live.ok()).toBeTruthy()
+    expect((await live.json()).title).toBe(title)
+    await master.dispose()
+  })
+
   test('D06 system page is on the master desk', async ({ page }) => {
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master/system')
     await expect(page.getByTestId('master-system')).toBeVisible()
@@ -144,6 +178,25 @@ test.describe('Lane D hostile API', () => {
 
     const stealAudit = await elm.get('/api/hearts/audit.csv?portal=leeds')
     expect(stealAudit.ok()).toBeFalsy()
+
+    const foreign = await master.post('/api/courses', { data: { title: `Leeds trash ${Date.now().toString().slice(-4)}`, origin: 'local', portal: leedsPortal.id, visibility: 'draft' } })
+    if (foreign.ok()) {
+      const course = await foreign.json() as { id: number }
+      const stealTrash = await elm.post('/api/hearts', {
+        form: {
+          action: 'trash-remove',
+          collection: 'courses',
+          id: String(course.id),
+          portalSlug: 'east-london',
+          next: '/p/east-london/admin/trash',
+        },
+        maxRedirects: 0,
+      })
+      const status = stealTrash.status()
+      expect(status === 303 || status === 302 || !stealTrash.ok()).toBeTruthy()
+      const stillLive = await master.get(`/api/courses/${course.id}?depth=0`)
+      expect(stillLive.ok()).toBeTruthy()
+    }
 
     const learner = await as('elm-learner@hearts.test', 'portal-learner')
     expect((await learner.get('/api/hearts/people.csv?portal=east-london')).ok()).toBeFalsy()

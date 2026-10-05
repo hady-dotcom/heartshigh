@@ -156,6 +156,8 @@ export function auditSentence(input: AuditSentenceInput) {
       return `${actor} changed who is in a class${inPortal}.`
     case 'class.join-rule':
       return `${actor} set a class for new joiners on a code${inPortal}.`
+    case 'trash.remove':
+      return `${actor} moved something to Recently removed${inPortal}.`
     case 'trash.restore':
       return `${actor} restored something from Recently removed${inPortal}.`
     case 'trash.empty':

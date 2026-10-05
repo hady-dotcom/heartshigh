@@ -16,6 +16,7 @@ import { MasterFlags } from './collections-opening'
 import { AUDITED_COLLECTIONS } from './lib/audit-events'
 import { databaseKind, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
 import { migrations } from './migrations'
+import { TRASH_SLUGS } from './lib/trash'
 import { assignJoinerToClass } from './server/classes'
 import { staffAuditAfterChange, staffAuditAfterDelete } from './server/audit'
 import { viewAsGlobalGuard, viewAsGuard } from './server/viewas'
@@ -60,6 +61,8 @@ export default buildConfig({
     }
     return {
       ...collection,
+      // C15: trash on content collections only. Do not edit collections.ts (A owns Users, C owns Media).
+      trash: collection.trash || TRASH_SLUGS.includes(collection.slug),
       hooks: {
         ...collection.hooks,
         beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never],

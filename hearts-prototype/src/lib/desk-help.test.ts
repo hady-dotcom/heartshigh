@@ -39,6 +39,7 @@ const PAGES = [
   'peopleImport',
   'people',
   'system',
+  'trash',
 ]
 
 describe('desk help', () => {

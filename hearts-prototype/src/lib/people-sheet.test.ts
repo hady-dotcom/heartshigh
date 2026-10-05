@@ -58,6 +58,7 @@ describe('D04 retention', () => {
     assert.ok(audit && new Date(audit.before) < when)
     assert.equal(plan.find((row) => row.id === 'audit-ip')?.mode, 'clear-ip')
     assert.equal(plan.find((row) => row.id === 'closed-portals')?.mode, 'ask-master')
+    assert.equal(plan.find((row) => row.id === 'recently-removed')?.mode, 'empty-trash')
   })
 })
 

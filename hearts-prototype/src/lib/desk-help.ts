@@ -73,6 +73,8 @@ export const PAGE: Record<string, string> = {
     'Everyone in one portal, grouped by role. Tick a group of people, then give a course, add them to a class, or download the list. Answers never leave this page.',
   system:
     'System is a health check: database, files, email, the last backup and the last restore drill. It does not show anyone’s reflections. Use it when something feels off.',
+  trash:
+    'Recently removed is a short pause after a course, talk, code or pack is taken off. You can restore it for 30 days. After that a nightly job empties it for good. People and their answers are never kept here.',
 }
 
 export const TOOL: Record<string, string> = {
@@ -174,6 +176,10 @@ export const TOOL: Record<string, string> = {
     'Fine means that part answered. Off means it is not wired yet, such as email. Down means it failed. The note never includes a secret or a request body.',
   retention:
     'Each row is how long we keep that kind of data. The nightly job removes what is due. Closed portals are not wiped; the master is asked after 90 days.',
+  trashRestore:
+    'Restore puts this back where it was. Learners will see it again if it was published. The activity log keeps a line.',
+  trashEmpty:
+    'Empty now removes these items for good. Type yes first. Personal wipes never wait here — they skip this list and erase at once.',
 }
 
 const TEST_IDS: Record<string, string> = {
@@ -224,6 +230,8 @@ const TEST_IDS: Record<string, string> = {
   'admin-people-import': 'peopleImport',
   'master-people': 'people',
   'master-system': 'system',
+  'admin-trash': 'trash',
+  'master-trash': 'trash',
 }
 
 /** Page copy for a desk frame, from the nav key or the screen test id. */

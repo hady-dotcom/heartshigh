@@ -16,6 +16,8 @@ import { refuseFeature, loadPortalById } from './features'
 import { recordOpsEvent } from './ops'
 import { createImportedUser, peopleInScope, staffMayTouchPerson, temporaryPassword } from './people'
 import { runRetention } from './retention'
+import { emptyTrash, listTrash, loadTrashDoc, moveToTrash, portalOfTrashDoc, restoreFromTrash } from './trash'
+import { isTrashCollection, staffMayUseTrash } from '@/lib/trash'
 
 type Redirect = (path: string, error?: string, notice?: string) => Response
 
@@ -30,6 +32,9 @@ const ACTIONS = new Set([
   'class-join-rule',
   'retention-run',
   'ops-record',
+  'trash-remove',
+  'trash-restore',
+  'trash-empty',
 ])
 
 function text(form: FormData, key: string) {
@@ -114,6 +119,50 @@ export async function handleAdminActions(
     if (user.role !== 'master') return redirectTo(next, 'Only the master desk runs the clean-up.')
     await runRetention(payload, user)
     return redirectTo(next, undefined, 'The clean-up ran. Old rows that were due have been removed.')
+  }
+
+  if (action === 'trash-remove' || action === 'trash-restore' || action === 'trash-empty') {
+    if (!staffMayUseTrash(user.role)) return redirectTo(next, 'Recently removed is for the portal admin.')
+    const collection = text(form, 'collection')
+    const id = Number(text(form, 'id') || 0)
+    if (action === 'trash-empty' && text(form, 'scope') === 'all') {
+      if (user.role !== 'master') return redirectTo(next, 'Only the master desk empties every portal.')
+      if (text(form, 'confirm') !== 'yes') return redirectTo(next, 'Type yes to empty Recently removed. Nothing was removed.')
+      const items = await listTrash(payload, null)
+      const removed = await emptyTrash(payload, items)
+      await audit(payload, 'trash.empty', { actor: user, actorRole: user.role, detail: { count: removed, scope: 'all' } })
+      return redirectTo(next, undefined, removed ? `${removed === 1 ? '1 item was' : `${removed} items were`} emptied.` : 'Recently removed was already empty.')
+    }
+    const acting = await actingPortal(payload, user, form).catch(() => null)
+    const portalId = acting && 'portal' in acting ? acting.portal.id : user.role === 'master' ? null : portalIdOf(user)
+    if (user.role !== 'master' && !portalId) return redirectTo(next, 'Your account is not in a portal.')
+
+    if (action === 'trash-empty') {
+      if (text(form, 'confirm') !== 'yes') return redirectTo(next, 'Type yes to empty Recently removed. Nothing was removed.')
+      const items = (await listTrash(payload, portalId)).filter((item) => !collection || item.collection === collection)
+      const removed = await emptyTrash(payload, items)
+      await audit(payload, 'trash.empty', { actor: user, actorRole: user.role, portal: portalId || undefined, detail: { count: removed, collection: collection || 'all' } })
+      return redirectTo(next, undefined, removed ? `${removed === 1 ? '1 item was' : `${removed} items were`} emptied.` : 'Nothing in that group was waiting.')
+    }
+
+    if (!isTrashCollection(collection) || !id) return redirectTo(next, 'Choose something from Recently removed.')
+    const doc = await loadTrashDoc(payload, collection, id)
+    if (!doc) return redirectTo(next, 'That item could not be found.')
+    const itemPortal = await portalOfTrashDoc(payload, collection, doc)
+    if (user.role !== 'master' && itemPortal && itemPortal !== portalId) return redirectTo(next, 'That item is not in this portal.')
+    if (user.role !== 'master' && !itemPortal && collection !== 'units' && collection !== 'engagement-points') {
+      return redirectTo(next, 'That item is not in this portal.')
+    }
+
+    if (action === 'trash-remove') {
+      await moveToTrash(payload, collection, id)
+      await audit(payload, 'trash.remove', { actor: user, actorRole: user.role, portal: itemPortal || portalId || undefined, detail: { collection, id } })
+      return redirectTo(next, undefined, 'It is in Recently removed for 30 days.')
+    }
+
+    await restoreFromTrash(payload, collection, id)
+    await audit(payload, 'trash.restore', { actor: user, actorRole: user.role, portal: itemPortal || portalId || undefined, detail: { collection, id } })
+    return redirectTo(next, undefined, 'Restored. It is back where it was.')
   }
 
   const acting = await actingPortal(payload, user, form)

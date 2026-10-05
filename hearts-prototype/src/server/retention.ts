@@ -2,6 +2,7 @@ import type { Payload, Where } from 'payload'
 import { now } from '@/lib/clock'
 import { planRetention } from '@/lib/retention'
 import { audit } from './audit'
+import { emptyExpiredTrash } from './trash'
 
 type Doc = { id: number } & Record<string, unknown>
 
@@ -24,6 +25,12 @@ export async function runRetention(payload: Payload, actor?: { id: number; role?
   const results: RetentionResult[] = []
 
   for (const item of plan) {
+    if (item.mode === 'empty-trash') {
+      const removed = await emptyExpiredTrash(payload)
+      results.push({ id: item.id, collection: item.collection, mode: item.mode, removed, asked: 0 })
+      continue
+    }
+
     if (!(await collectionExists(payload, item.collection))) {
       results.push({ id: item.id, collection: item.collection, mode: item.mode, removed: 0, asked: 0, skipped: item.optional ? 'collection not on this branch' : 'collection missing' })
       continue

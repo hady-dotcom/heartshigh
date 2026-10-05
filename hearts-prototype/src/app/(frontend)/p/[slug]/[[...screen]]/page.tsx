@@ -28,6 +28,7 @@ import { FeedbackScreen } from '@/screens/desk/feedback'
 import { GatherAttendanceScreen, GatherDeskScreen } from '@/screens/desk/gather'
 import { PortalActivityScreen } from '@/screens/desk/activity'
 import { ClassesScreen } from '@/screens/desk/classes'
+import { PortalTrashScreen } from '@/screens/desk/trash'
 import { PeopleImportScreen } from '@/screens/desk/people-import'
 import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
 import { PortalCircle } from '@/screens/desk/circle'
@@ -112,6 +113,9 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       case 'activity':
         if (user.role === 'teacher') redirect(`${base}/admin?error=${plain('The activity log is for the portal admin.')}`)
         return PortalActivityScreen(ctx)
+      case 'trash':
+        if (user.role === 'teacher') redirect(`${base}/admin?error=${plain('Recently removed is for the portal admin.')}`)
+        return PortalTrashScreen(ctx)
       case 'feedback':
         return gated(ctx, 'feedback', true) || FeedbackScreen(ctx)
       case 'compass':

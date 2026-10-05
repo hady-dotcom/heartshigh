@@ -395,6 +395,7 @@ export interface AccessCode {
   disabled?: boolean | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -409,6 +410,7 @@ export interface Pack {
   courses?: (number | Course)[] | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -429,6 +431,7 @@ export interface Course {
   visibility?: ('draft' | 'published') | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -579,6 +582,7 @@ export interface Unit {
   order?: number | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -632,6 +636,7 @@ export interface Lesson {
   sourceTitle?: string | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -785,6 +790,7 @@ export interface EngagementPoint {
   showImam?: boolean | null;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1386,6 +1392,7 @@ export interface CircleAnswer {
   author?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2851,6 +2858,7 @@ export interface CoursesSelect<T extends boolean = true> {
   visibility?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2862,6 +2870,7 @@ export interface UnitsSelect<T extends boolean = true> {
   order?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2896,6 +2905,7 @@ export interface LessonsSelect<T extends boolean = true> {
   sourceTitle?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2924,6 +2934,7 @@ export interface PacksSelect<T extends boolean = true> {
   courses?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3012,6 +3023,7 @@ export interface EngagementPointsSelect<T extends boolean = true> {
   showImam?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3094,6 +3106,7 @@ export interface AccessCodesSelect<T extends boolean = true> {
   disabled?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3389,6 +3402,7 @@ export interface CircleAnswersSelect<T extends boolean = true> {
   author?: T;
   updatedAt?: T;
   createdAt?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
