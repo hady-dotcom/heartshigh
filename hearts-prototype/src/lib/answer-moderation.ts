@@ -39,7 +39,6 @@ export function screenAnswer(text: string): SwarmScreen {
   }
   return { show: true, reason: 'Clear.', atRisk: false }
 }
-}
 
 export function hasModelKey() {
   return Boolean(process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY)

@@ -6,7 +6,7 @@ import { fallbackTrack, validateTrack } from '../../src/lib/framing/validate'
 import { currentSentence, sameSpokenText, sentencesFromWords, sentencesInWindow, spokenLine, wordsFromCues, wrapWordLines } from '../../src/lib/framing/words'
 import { boxOnStage, coverPosition, coverSourceToBox, cssVars, filmOnStage, layoutFor } from '../../src/lib/framing/layout'
 import { PLACEHOLDER_FACE, PLACEHOLDER_FACE_FOCUS } from '../../src/lib/framing/placeholder'
-import type { ShotAnalysis } from '../../src/lib/framing/types'
+import type { FramingTrack, ShotAnalysis } from '../../src/lib/framing/types'
 import { framingVariant } from '../../src/lib/experiments'
 import sample from '../fixtures/framing-track.json'
 import switching from '../fixtures/framing-switch.json'
@@ -25,15 +25,16 @@ const shot = (over: Partial<ShotAnalysis>): ShotAnalysis => ({
 })
 
 test('track validation accepts a contiguous A–F list and refuses gaps, overlaps and short holds', () => {
-  const ok = validateTrack(sample)
+  const track = sample as FramingTrack
+  const ok = validateTrack(track)
   assert.equal(ok.length, 0)
-  const gap = structuredClone(sample)
+  const gap = structuredClone(track)
   gap.segments[1].start = 18
   assert.ok(validateTrack(gap).some((row) => /gap/.test(row.message)))
-  const overlap = structuredClone(sample)
+  const overlap = structuredClone(track)
   overlap.segments[1].start = 14
   assert.ok(validateTrack(overlap).some((row) => /overlap/.test(row.message)))
-  const short = structuredClone(sample)
+  const short = structuredClone(track)
   short.segments[0].end = 12
   short.segments[1].start = 12
   assert.ok(validateTrack(short).some((row) => /Hold a mode/.test(row.message)))
@@ -153,10 +154,12 @@ test('word clocks stay inside each caption cue instead of a clip-wide estimate',
     { start: 10, end: 12, text: 'one two' },
     { start: 20, end: 22, text: 'three four' },
   ])
-  assert.equal(words[0].t, 10)
-  assert.ok(words[1].e <= 12.01)
-  assert.equal(words[2].t, 20)
-  assert.ok(words[3].e <= 22.01)
+  const [one, two, three, four] = words
+  if (!one || !two || !three || !four) throw new Error('expected four timed words')
+  assert.equal(one.t, 10)
+  assert.ok((two.e ?? 99) <= 12.01)
+  assert.equal(three.t, 20)
+  assert.ok((four.e ?? 99) <= 22.01)
 })
 
 test('F text is the timed transcript now, never a talk title, and nothing in a gap', () => {

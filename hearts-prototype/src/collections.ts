@@ -158,12 +158,13 @@ export const Users: CollectionConfig = {
         const read = (name: string) => (headers && typeof headers.get === 'function' ? headers.get(name) : '') || ''
         const fake = new Request('http://local', {
           headers: {
-            'cf-connecting-ip': read('cf-connecting-ip'),
-            'x-forwarded-for': read('x-forwarded-for'),
-            'fly-client-ip': read('fly-client-ip'),
+            'cf-connecting-ip': read('cf-connecting-ip') || '',
+            'x-forwarded-for': read('x-forwarded-for') || '',
+            'fly-client-ip': read('fly-client-ip') || '',
           },
         })
-        const email = typeof (req as { data?: { email?: unknown } }).data?.email === 'string' ? (req as { data: { email: string } }).data.email : ''
+        const login = (req as unknown as { data?: { email?: unknown } }).data
+        const email = typeof login?.email === 'string' ? login.email : ''
         const limited = hitAuth('login', clientIp(fake), email)
         if (!limited.allowed) {
           throw new APIError('Too many sign-in tries from here. Wait a few minutes, then try again.', 429, undefined, true)
@@ -225,7 +226,7 @@ export const Media: CollectionConfig = {
     mimeTypes: ['image/*', 'audio/*', 'video/*', 'application/pdf', 'text/*'],
   },
   access: {
-    read: mediaReadAccess,
+    read: mediaReadAccess as NonNullable<CollectionConfig['access']>['read'],
     create: master,
     update: master,
     delete: master,

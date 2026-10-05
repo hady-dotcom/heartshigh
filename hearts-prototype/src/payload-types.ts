@@ -150,6 +150,13 @@ export interface Config {
     'live-questions': LiveQuestion;
     'live-reminders': LiveReminder;
     'live-presence': LivePresence;
+    reports: Report;
+    'moderation-hides': ModerationHide;
+    'safeguarding-alerts': SafeguardingAlert;
+    announcements: Announcement;
+    'announcement-dismissals': AnnouncementDismissal;
+    'rate-hits': RateHit;
+    'circle-mutes': CircleMute;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -240,6 +247,13 @@ export interface Config {
     'live-questions': LiveQuestionsSelect<false> | LiveQuestionsSelect<true>;
     'live-reminders': LiveRemindersSelect<false> | LiveRemindersSelect<true>;
     'live-presence': LivePresenceSelect<false> | LivePresenceSelect<true>;
+    reports: ReportsSelect<false> | ReportsSelect<true>;
+    'moderation-hides': ModerationHidesSelect<false> | ModerationHidesSelect<true>;
+    'safeguarding-alerts': SafeguardingAlertsSelect<false> | SafeguardingAlertsSelect<true>;
+    announcements: AnnouncementsSelect<false> | AnnouncementsSelect<true>;
+    'announcement-dismissals': AnnouncementDismissalsSelect<false> | AnnouncementDismissalsSelect<true>;
+    'rate-hits': RateHitsSelect<false> | RateHitsSelect<true>;
+    'circle-mutes': CircleMutesSelect<false> | CircleMutesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -511,6 +525,10 @@ export interface Media {
   id: number;
   alt?: string | null;
   portal?: (number | null) | Portal;
+  owner?: (number | null) | User;
+  purpose?: ('answer' | 'gather-photo' | 'portal-asset' | 'film' | 'feedback') | null;
+  collection?: string | null;
+  deletedAt?: string | null;
   prefix?: string | null;
   _objectKey?: string | null;
   updatedAt: string;
@@ -2392,6 +2410,78 @@ export interface LivePresence {
   updatedAt: string;
   createdAt: string;
 }
+export interface Report {
+  id: number;
+  portal?: (number | null) | Portal;
+  reporter: number | User;
+  targetType: string;
+  targetId: number;
+  reason: string;
+  note?: string | null;
+  status?: 'open' | 'hidden' | 'kept' | 'escalated' | null;
+  handledBy?: (number | null) | User;
+  handledAt?: string | null;
+  handleNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+export interface ModerationHide {
+  id: number;
+  targetType: string;
+  targetId: number;
+  reason?: string | null;
+  source?: 'report' | 'screen' | 'staff' | null;
+  hidden?: boolean | null;
+  by?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+export interface SafeguardingAlert {
+  id: number;
+  learner: number | User;
+  source: 'crisis' | 'screen' | 'report';
+  targetType?: string | null;
+  targetId?: number | null;
+  seenBy?: (number | null) | User;
+  seenAt?: string | null;
+  outcome?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+export interface Announcement {
+  id: number;
+  portal?: (number | null) | Portal;
+  body: string;
+  audience?: 'everyone' | 'teachers' | 'code' | null;
+  accessCode?: (number | null) | AccessCode;
+  publishAt?: string | null;
+  createdBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+export interface AnnouncementDismissal {
+  id: number;
+  announcement: number | Announcement;
+  user: number | User;
+  updatedAt: string;
+  createdAt: string;
+}
+export interface RateHit {
+  id: number;
+  key: string;
+  at: string;
+  updatedAt: string;
+  createdAt: string;
+}
+export interface CircleMute {
+  id: number;
+  user: number | User;
+  until: string;
+  by?: (number | null) | User;
+  reason?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "experiments".
@@ -3135,6 +3225,10 @@ export interface UsersSelect<T extends boolean = true> {
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   portal?: T;
+  owner?: T;
+  purpose?: T;
+  collection?: T;
+  deletedAt?: T;
   prefix?: T;
   _objectKey?: T;
   updatedAt?: T;
@@ -4639,6 +4733,71 @@ export interface LivePresenceSelect<T extends boolean = true> {
   session?: T;
   user?: T;
   lastSeenAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+export interface ReportsSelect<T extends boolean = true> {
+  portal?: T;
+  reporter?: T;
+  targetType?: T;
+  targetId?: T;
+  reason?: T;
+  note?: T;
+  status?: T;
+  handledBy?: T;
+  handledAt?: T;
+  handleNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+export interface ModerationHidesSelect<T extends boolean = true> {
+  targetType?: T;
+  targetId?: T;
+  reason?: T;
+  source?: T;
+  hidden?: T;
+  by?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+export interface SafeguardingAlertsSelect<T extends boolean = true> {
+  learner?: T;
+  source?: T;
+  targetType?: T;
+  targetId?: T;
+  seenBy?: T;
+  seenAt?: T;
+  outcome?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+export interface AnnouncementsSelect<T extends boolean = true> {
+  portal?: T;
+  body?: T;
+  audience?: T;
+  accessCode?: T;
+  publishAt?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+export interface AnnouncementDismissalsSelect<T extends boolean = true> {
+  announcement?: T;
+  user?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+export interface RateHitsSelect<T extends boolean = true> {
+  key?: T;
+  at?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+export interface CircleMutesSelect<T extends boolean = true> {
+  user?: T;
+  until?: T;
+  by?: T;
+  reason?: T;
   updatedAt?: T;
   createdAt?: T;
 }

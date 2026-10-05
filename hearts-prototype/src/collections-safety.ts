@@ -141,7 +141,7 @@ export const safetyCollections = [Reports, ModerationHides, SafeguardingAlerts, 
 export function mediaReadAccess({ req, id }: { req: { user?: { id: number; role?: string; tenants?: { tenant?: unknown }[] } | null; payload?: { findByID?: Function; find?: Function } }; id?: string | number }) {
   const user = req.user
   if (!user) return false
-  if (!id) return mediaListWhere(user) as Where
+  if (!id) return mediaListWhere(user) as unknown as Where
   return (async () => {
     const payload = req.payload
     if (!payload?.findByID) return false

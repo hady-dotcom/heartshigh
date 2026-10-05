@@ -9,7 +9,7 @@ import type { FeedItem } from '@/server/learner'
 export type FeedLevel = 'hors' | 'appetiser'
 export type Swipe = 'topic' | 'speaker' | 'lane' | 'next' | 'prev'
 
-type NavItem = Pick<FeedItem, 'cutId' | 'lane' | 'speaker' | 'card' | 'courseId' | 'lessonId' | 'parents'>
+type NavItem = Pick<FeedItem, 'id' | 'cutId' | 'lane' | 'speaker' | 'card' | 'courseId' | 'lessonId' | 'parents'>
 
 /** Film, scene and text cards that follow a talk and share its cut. They live only at the clip level. */
 export function isInterstitial(item: Pick<FeedItem, 'card'> | undefined) {

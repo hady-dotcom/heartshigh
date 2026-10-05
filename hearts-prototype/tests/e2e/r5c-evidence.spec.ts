@@ -145,7 +145,9 @@ async function audit(page: Page, route: string, href: string): Promise<ContrastR
     const seen = new Set<string>()
     for (const el of document.querySelectorAll<HTMLElement>('h1, h2, h3, h4, p, a, button, label, span, small, li, td, th, legend, summary, b, em, strong, figcaption')) {
       if (skip(el)) continue
-      const text = (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3 ? el.textContent : [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('')).replace(/\s+/g, ' ').trim()
+      const first = el.childNodes[0]
+      const raw = el.childNodes.length === 1 && first && first.nodeType === 3 ? el.textContent || '' : [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent || '').join('')
+      const text = raw.replace(/\s+/g, ' ').trim()
       if (!text || text.length < 2) continue
       const style = getComputedStyle(el)
       const size = parseFloat(style.fontSize)

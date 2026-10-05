@@ -167,7 +167,13 @@ test('every clip steps up to its own speaker and lesson, never a neighbour’s',
 test('next skips a seen card until the pool is used up, then it stops', () => {
   const list = feed()
   const firstTalk = list.findIndex((row) => !isInterstitial(row))
-  const lastOfFirst = list.findLastIndex((row) => row.cutId === list[firstTalk].cutId)
+  let lastOfFirst = -1
+  for (let i = list.length - 1; i >= 0; i--) {
+    if (list[i].cutId === list[firstTalk].cutId) {
+      lastOfFirst = i
+      break
+    }
+  }
   const seen = new Set([cardKey(list[firstTalk], 'hors')])
   const afterTalk = swipeTarget(list, firstTalk, 'hors', 'next', seen)!
   assert.equal(list[afterTalk].cutId, list[firstTalk].cutId)

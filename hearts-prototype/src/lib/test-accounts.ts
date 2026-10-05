@@ -27,6 +27,6 @@ export function hideTestFromQuery(query: { hideTest?: string; showTest?: string 
   return query.hideTest !== '0'
 }
 
-export function visiblePeople<T extends { email?: string | null; name?: string | null }>(people: T[], hide: boolean) {
+export function visiblePeople<T extends { id?: number; email?: string | null; name?: string | null }>(people: T[], hide: boolean): T[] {
   return hide ? people.filter((person) => !isTestAccount(person.email, person.name)) : people
 }

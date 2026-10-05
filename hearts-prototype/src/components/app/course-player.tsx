@@ -649,6 +649,7 @@ export function CoursePlayer({
           onResume={() => { if (fromTrigger) resumeNow() }}
           onClose={close}
           onThink={() => thinkAbout(open.id)}
+          next={next}
         />
       ) : null}
     </div>
@@ -686,6 +687,7 @@ function Sheet({
   onResume,
   onClose,
   onThink,
+  next,
 }: {
   point: PointView
   lessonId: number
@@ -700,6 +702,7 @@ function Sheet({
   onResume?: () => void
   onClose: (saved?: Saved) => void
   onThink: () => void
+  next: string
 }) {
   const [keepPrivate, setKeepPrivate] = useState(true)
   const [error, setError] = useState('')

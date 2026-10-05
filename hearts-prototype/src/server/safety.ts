@@ -1,4 +1,4 @@
-import type { Payload } from 'payload'
+import type { Payload, Where } from 'payload'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { now } from '@/lib/clock'
 import { screenAnswer } from '@/lib/answer-moderation'
@@ -266,16 +266,16 @@ export async function samePortal(user: SessionUser, portalId: number) {
 }
 
 export async function loadQueue(payload: Payload, portalId: number | null) {
-  const scoped = (extra: Record<string, unknown> = {}) => (portalId ? { and: [{ portal: { equals: portalId } }, extra] } : extra)
+  const scoped = (extra: Record<string, unknown> = {}): Where => (portalId ? { and: [{ portal: { equals: portalId } }, extra] } : extra) as Where
   const [reports, hides, alerts] = await Promise.all([
     payload.find({ collection: 'reports', overrideAccess: true, depth: 1, limit: 80, sort: '-createdAt', where: scoped() }),
     payload.find({ collection: 'moderation-hides', overrideAccess: true, depth: 0, limit: 80, sort: '-updatedAt', where: scoped({ hidden: { equals: true } }) }),
     payload.find({ collection: 'safeguarding-alerts', overrideAccess: true, depth: 1, limit: 40, sort: '-createdAt', where: scoped() }),
   ])
   return {
-    reports: reports.docs as Doc[],
-    hides: hides.docs as Doc[],
-    alerts: alerts.docs as Doc[],
+    reports: reports.docs as unknown as Doc[],
+    hides: hides.docs as unknown as Doc[],
+    alerts: alerts.docs as unknown as Doc[],
   }
 }
 
@@ -307,5 +307,5 @@ export async function openAnnouncements(payload: Payload, user: SessionUser, por
       })
     : { docs: [] }
   const gone = new Set(dismissed.docs.map((row) => idOf((row as { announcement?: unknown }).announcement)))
-  return mine.filter((row) => !gone.has(row.id)) as Doc[]
+  return mine.filter((row) => !gone.has(row.id)) as unknown as Doc[]
 }

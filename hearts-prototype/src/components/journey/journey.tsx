@@ -1612,7 +1612,6 @@ export function Journey(props: JourneyProps) {
       data-slot={wordsInPicture ? 'bar' : 'over'}
       data-at={horsLine ? String(horsLine.at) : ''}
       data-line={lineShown}
-      data-at={horsLine ? String(horsLine.at) : ''}
       data-expanded={captionOpen ? 'true' : 'false'}
       aria-expanded={captionOpen}
       key={mode}
@@ -1887,7 +1886,7 @@ export function Journey(props: JourneyProps) {
         </div>
         {slide && item ? (
           <div className="j-slide" data-testid="gesture-layer" {...swipe}>
-            <Slide item={item} style={slide} onMore={() => void stepUp()} ctaLabel={clipCta.label} />
+            <Slide item={item} style={slide} onMore={() => void stepUp()} />
           </div>
         ) : null}
         {scenic && item?.scene ? (

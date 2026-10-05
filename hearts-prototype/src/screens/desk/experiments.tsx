@@ -395,7 +395,8 @@ async function EditPage({ ctx, master, base, id, fromInsight }: { ctx: Ctx | nul
   if (id && !current) return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-missing"><p>That experiment was not found.</p></Frame>
   const portals = await rows(payload, 'portals', undefined, { sort: 'name', limit: 40 })
   const query = queryOf(ctx, master)
-  const insightSlot = fromInsight?.slot && EXPERIMENT_SLOTS.some((slot) => slot.key === fromInsight.slot) ? fromInsight.slot : ''
+  const insightSlotRaw = queryText(fromInsight || {}, 'slot')
+  const insightSlot = insightSlotRaw && EXPERIMENT_SLOTS.some((slot) => slot.key === insightSlotRaw) ? insightSlotRaw : ''
   const insightNote = fromInsight?.from === 'insight' ? `From Insights${fromInsight.route ? ` · ${fromInsight.route}` : ''}${fromInsight.reason ? ` · ${fromInsight.reason}` : ''}` : ''
   const variantText = queryText(query, 'variants') || (current?.variants || []).map((row) => `${row.key} | ${row.label}`).join('\n')
   return (
@@ -409,7 +410,7 @@ async function EditPage({ ctx, master, base, id, fromInsight }: { ctx: Ctx | nul
           name: queryText(query, 'name') || current?.name || (insightNote ? 'From Insights' : ''),
           description: queryText(query, 'description') || current?.description || insightNote,
           slot: queryText(query, 'slot') || current?.slot || insightSlot || 'feed-cta-label',
-          slotOverride: queryText(query, 'slotOverride'),
+          slotOverride: queryText(query, 'slotOverride') || '',
           portal: queryText(query, 'portal') || (current ? String(idOfPortal(current) || '') : ''),
           allocation: queryText(query, 'allocation') || current?.allocation || 'fixed',
           primaryMetric: queryText(query, 'primaryMetric') || current?.primaryMetric || 'clip_cta_tap',

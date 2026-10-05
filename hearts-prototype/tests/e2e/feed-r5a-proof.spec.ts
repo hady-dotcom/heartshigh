@@ -31,7 +31,7 @@ async function boxesOverlap(page: Page, a: string, b: string) {
   const left = await first.boundingBox()
   const right = await second.boundingBox()
   if (!left || !right) return false
-  return left.left < right.right && left.right > right.left && left.top < right.bottom && left.bottom > right.top
+  return left.x < right.x + right.width && left.x + left.width > right.x && left.y < right.y + right.height && left.y + left.height > right.y
 }
 
 test('phone feed proof: no repeats, taqwa, caption bar, advancing mute log', async ({ page, playwright }, info) => {
@@ -132,7 +132,7 @@ test('phone feed proof: no repeats, taqwa, caption bar, advancing mute log', asy
   const master = await playwright.request.newContext({ baseURL: E2E_BASE })
   expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
   const opening = (await (await master.get('/api/hearts/opening?portal=east-london')).json()) as {
-    clips: Record<string, { cutId: number; youtubeId?: string; lessonId?: number; hors?: { quote?: string; lines?: { text: string; tidy?: string }[] } }>
+    clips: Record<string, OpeningClip & { youtubeId?: string; lessonId?: number }>
   }
   const taqwa = Object.values(opening.clips).find((clip) => {
     const lines = clip.hors?.lines || []

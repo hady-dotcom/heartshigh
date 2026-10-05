@@ -38,7 +38,7 @@ export function sentencesFromWords(words: SpokenWord[], clipEnd?: number): Frami
     }
   }
   if (current.length) groups.push(current)
-  const sentences = groups.map((group) => {
+  const sentences: FramingSentence[] = groups.map((group) => {
     const text = group.map((row) => row.w).join(' ')
     const key = pickKey(group)
     return {

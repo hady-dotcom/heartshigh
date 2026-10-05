@@ -60,7 +60,7 @@ export async function CareSafetyBody({
               <p><b>A learner may need support</b></p>
               {showAlert(alert) ? (
                 <>
-                  <p className="hint">{personName(alert.learner)} · {str(alert.source)} · {shortDate(alert.createdAt)}</p>
+                  <p className="hint">{personName(alert.learner)} · {str(alert.source)} · {shortDate(str(alert.createdAt))}</p>
                   {alert.outcome ? <p data-testid="safeguard-outcome">Note: {str(alert.outcome)}</p> : (
                     <form className="form" action="/api/hearts" method="post">
                       <Hidden fields={{ action: 'safety-outcome', alert: alert.id, portal: portalId || idOf((alert as { portal?: unknown }).portal) || '', next: here }} />
@@ -85,7 +85,7 @@ export async function CareSafetyBody({
             const person = authors.get(report.id) || ''
             return (
               <article key={report.id} className="lib-card" data-testid="report-row" data-status={str(report.status)}>
-                <p><b>{REPORT_LABEL[str(report.reason) as keyof typeof REPORT_LABEL] || str(report.reason)}</b> · {str(report.targetType)} · {shortDate(report.createdAt)}</p>
+                <p><b>{REPORT_LABEL[str(report.reason) as keyof typeof REPORT_LABEL] || str(report.reason)}</b> · {str(report.targetType)} · {shortDate(str(report.createdAt))}</p>
                 {report.note ? <p>{str(report.note)}</p> : null}
                 <p className="hint">Status: {str(report.status)}</p>
                 <div className="actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
