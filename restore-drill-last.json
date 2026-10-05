@@ -1,0 +1,27 @@
+{
+  "ok": true,
+  "at": "2026-10-05T00:03:14.869Z",
+  "source": "/workspace/hearts-prototype/.backups/fixture-run/2026-10-05T000314867Z",
+  "destination": "/workspace/hearts-prototype/.backups/scratch",
+  "database": {
+    "before": {
+      "answers": 2,
+      "audit_log": 2,
+      "users": 2
+    },
+    "after": {
+      "answers": 2,
+      "audit_log": 2,
+      "users": 2
+    },
+    "matched": true
+  },
+  "files": {
+    "before": 3,
+    "after": 3,
+    "matched": true
+  },
+  "notes": [
+    "Local SQLite drill. Production uses pg_dump --format=custom and a second bucket. See docs/BACKUPS.md."
+  ]
+}

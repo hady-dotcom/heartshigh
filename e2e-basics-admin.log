@@ -1,0 +1,34 @@
+Wiped the database (99 tables).
+[⣷] Pulling schema from database...
+[2K[1G[✓] Pulling schema from database...
+[00:21:24] [33mWARN[39m: [36mNo email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.[39m
+Harvest: 172 verses and hadith across 31 talks. No quotation found in 5: Gratitude is the Greatest Blessing | Gems from Ibn Ata Illah Ep. 1 | Shaykh Mikaeel Ahmed Smith; How to Manage Your Anger - Amjad Tarsin; Moments of Solitude: Closeness to God | Jummah Khutbah | Imam Khalid Latif | 3.11.2022; On Mosques, Companionship, & Knowledge; Quranic Connection #26: A Cure for Anxiety | Shaykh Suleiman Hani.
+Harvest sample: 4 lines kept for Maryam.
+Feedback demo: sample answers are on the East London and Leeds desks.
+Seeded HEARTS. Master: master@hearts.test / hearts-master
+Access codes (also on the master desk, and in data/seed-codes-test.json):
+  elm-teacher    ELM-BDEB-KNKM
+  elm-admin      ELM-XG9K-EPF7
+  elm-learner    ELM-RR3Y-NWAC
+  elm-parent     ELM-PUTV-EKAX
+  leeds-teacher  LEEDS-AFHC-46N6
+  leeds-learner  LEEDS-P4QY-F7PN
+
+Running 7 tests using 1 worker
+
+(node:12361) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:12361) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/7] tests/e2e/basics-admin.spec.ts:27:3 › Lane D admin desk › D02 activity log shows a plain sentence and filters to this portal
+[2/7] tests/e2e/basics-admin.spec.ts:51:3 › Lane D admin desk › A12 bulk add from a list previews problems then creates accounts
+[3/7] tests/e2e/basics-admin.spec.ts:84:3 › Lane D admin desk › A13 people CSV is portal-scoped and audited
+[4/7] tests/e2e/basics-admin.spec.ts:102:3 › Lane D admin desk › K03 classes: create, add a person, see the group
+[5/7] tests/e2e/basics-admin.spec.ts:115:3 › Lane D admin desk › C15 recently removed restore and portal scope
+[6/7] tests/e2e/basics-admin.spec.ts:154:3 › Lane D admin desk › D06 system page is on the master desk
+[7/7] tests/e2e/basics-admin.spec.ts:164:3 › Lane D hostile API › a portal admin sees only their portal audit and people
+  7 passed (1.0m)
