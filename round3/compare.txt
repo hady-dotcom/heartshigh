@@ -1,0 +1,42 @@
+BASE start base 2026-10-05T05:16:56Z root=/tmp/hearts-base/hearts-prototype db=postgresql://ubuntu:hearts@127.0.0.1:5432/hearts_e2e_base port=3101
+3ca8534c3604f586181f8958f2cb283d19ae5dd8
+3ca8534c3604f586181f8958f2cb283d19ae5dd8
+end base 2026-10-05T05:59:10Z
+
+BASE unit 1 tsc 0 pw 1
+BASE summary   19 failed ...   174 passed
+BASE fails
+  tests/e2e/auth-garden.spec.ts:69
+  tests/e2e/compass.spec.ts:14
+  tests/e2e/feed-polish.spec.ts:148
+  tests/e2e/harvest-lines.spec.ts:65
+  tests/e2e/harvest.spec.ts:69
+  tests/e2e/integration-final.spec.ts:67
+  tests/e2e/journeys.spec.ts:200
+  tests/e2e/library-teach.spec.ts:83
+  tests/e2e/nesting.spec.ts:70
+  tests/e2e/round3.spec.ts:75
+  tests/e2e/round3.spec.ts:168
+  tests/e2e/round4.spec.ts:148
+  tests/e2e/round4.spec.ts:171
+  tests/e2e/screenshots.spec.ts:33
+  tests/e2e/screenshots.spec.ts:185
+  tests/e2e/sheet-packs.spec.ts:65
+TIP start tip 2026-10-05T05:59:10Z root=/workspace/hearts-prototype db=postgresql://ubuntu:hearts@127.0.0.1:5432/hearts_e2e port=3100
+b1de78dee629120868db7abd89e1671793e7058e
+b1de78dee629120868db7abd89e1671793e7058e
+end tip 2026-10-05T07:01:00Z
+
+TIP unit 0 tsc 0 pw 1
+TIP summary None
+TIP fails
+  tests/e2e/feed-polish.spec.ts:147
+  tests/e2e/harvest-lines.spec.ts:65
+  tests/e2e/planner-demo.spec.ts:58
+  tests/e2e/screenshots.spec.ts:33
+  tests/e2e/talk-extracts.spec.ts:22
+NEW ON TIP
+  tests/e2e/feed-polish.spec.ts:147
+  tests/e2e/planner-demo.spec.ts:58
+  tests/e2e/talk-extracts.spec.ts:22
+new_count 3

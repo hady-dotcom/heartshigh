@@ -1,0 +1,36 @@
+unit.exit=0
+tsc.exit=0
+playwright.exit=1
+=== unit.log tail ===
+ange is still checked
+  ---
+  duration_ms: 5242.186432
+  ...
+# Subtest: typography: the three seeded talks put only the speaker’s words on screen, and never early
+ok 402 - typography: the three seeded talks put only the speaker’s words on screen, and never early
+  ---
+  duration_ms: 1680.848718
+  ...
+# Subtest: every appetiser beat opens and closes on the pause around a whole sentence
+ok 403 - every appetiser beat opens and closes on the pause around a whole sentence
+  ---
+  duration_ms: 1567.04887
+  ...
+# Subtest: a long appetiser beat shows one card of words, then the next
+ok 404 - a long appetiser beat shows one card of words, then the next
+  ---
+  duration_ms: 0.403724
+  ...
+1..404
+# tests 404
+# suites 0
+# pass 404
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 28374.007925
+
+=== tsc.log ===
+=== TSC tip 2026-10-05T05:59:39Z ===
+

@@ -1,0 +1,4 @@
+start tip 2026-10-05T05:59:10Z root=/workspace/hearts-prototype db=postgresql://ubuntu:hearts@127.0.0.1:5432/hearts_e2e port=3100
+b1de78dee629120868db7abd89e1671793e7058e
+b1de78dee629120868db7abd89e1671793e7058e
+end tip 2026-10-05T07:01:00Z

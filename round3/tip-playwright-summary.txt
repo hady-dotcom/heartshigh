@@ -1,0 +1,63 @@
+ts:51:3 › view as › 38. a portal admin views as a learner with a reason, read-only by default
+[212/223] tests/e2e/view-as.spec.ts:58:3 › view as › 39. a view without a reason is refused
+[213/223] tests/e2e/view-as.spec.ts:68:3 › view as › 40. while read-only, answers and settings are refused and logged
+[214/223] tests/e2e/view-as.spec.ts:78:3 › view as › 41. the learner’s private opening answers are not shown in view-as
+[215/223] tests/e2e/view-as.spec.ts:87:3 › view as › 42. the viewer’s own device state is left alone, and the view’s keys are wiped on exit
+[216/223] tests/e2e/view-as.spec.ts:108:3 › view as › 43. Exit returns to where the view started and ends the session
+[217/223] tests/e2e/view-as.spec.ts:118:3 › view as › 44. a teacher has no View as, and the server refuses one
+[218/223] tests/e2e/view-as.spec.ts:126:3 › view as › 45. a portal admin cannot view as a learner in another portal
+[219/223] tests/e2e/view-as.spec.ts:133:3 › view as › 46. the master views as a portal admin, but never as another master
+[220/223] tests/e2e/view-as.spec.ts:147:3 › view as › 47. start and stop are written to the audit log with the reason
+[221/223] tests/e2e/view-as.spec.ts:156:3 › view as › 48. allowing changes needs a reason, and then a change goes through and is logged
+[222/223] tests/e2e/view-as.spec.ts:174:3 › view as › 49. some things stay closed even with changes allowed: the opening and Start again
+(node:92372) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:92372) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[223/223] tests/e2e/planner-demo.spec.ts:58:1 › phone walk: buffet, plan, think, swipe, home, workbook, retry, next part
+  5) tests/e2e/planner-demo.spec.ts:58:1 › phone walk: buffet, plan, think, swipe, home, workbook, retry, next part 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByTestId('question-strip')
+    Expected: 0
+    Received: 1
+    Timeout:  20000ms
+
+    Call log:
+      - Expect "toHaveCount" getByTestId('question-strip') with timeout 20000ms
+      - waiting for getByTestId('question-strip')
+        44 × locator resolved to 1 element
+           - unexpected value "1"
+
+
+      129 |   await expect(page.getByTestId('fruit-explain')).toBeVisible()
+      130 |   await expect(page.getByTestId('player-poster').or(page.locator('[data-fake=youtube]'))).toBeVisible()
+    > 131 |   await expect(page.getByTestId('question-strip')).toHaveCount(0)
+          |                                                    ^
+      132 |   await hold(page, '05-player-from-plan-row')
+      133 |   if (await page.getByTestId('timeline-dot').count()) {
+      134 |     await page.getByTestId('timeline-dot').first().click()
+        at /workspace/hearts-prototype/tests/e2e/planner-demo.spec.ts:131:52
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/planner-demo-phone-walk-bu-9d40c-me-workbook-retry-next-part/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/planner-demo-phone-walk-bu-9d40c-me-workbook-retry-next-part/error-context.md
+
+    Error Context: test-results/planner-demo-phone-walk-bu-9d40c-me-workbook-retry-next-part/error-context.md
+
+
+  5 failed
+    tests/e2e/feed-polish.spec.ts:147:1 › Home Your plan heading reads at AA on the teal card ──────
+    tests/e2e/harvest-lines.spec.ts:65:1 › a fresh learner sees the sample, then a short clip keeps a real line and parts watched stays at 0 
+    tests/e2e/planner-demo.spec.ts:58:1 › phone walk: buffet, plan, think, swipe, home, workbook, retry, next part 
+    tests/e2e/screenshots.spec.ts:33:1 › a week of use, so the garden has something in it ──────────
+    tests/e2e/talk-extracts.spec.ts:22:1 › admin timeline nests hors under their appetiser, and Learn more opens that parent first 
+  1 skipped
+  217 passed (30.2m)

@@ -6,3 +6,5 @@ learner-feed-several.png       learner feed hors from How to Give Good Advice
 approve-next-learner-proof.mp4 approve and next, then hors to appetiser to talk
 import-log.txt                 Postgres migrate + importer counts
 hearts-density-30-extracts.xlsx 30 talks, 1150 suggested extracts
+round3/                        clean dual Postgres suite, data-extract fix, kinetic tidy, desk tokens
+round3/REPORT.md               tip SHA, base and branch numbers, new vs flake fails, raw URLs

@@ -1,0 +1,4 @@
+start base 2026-10-05T05:16:56Z root=/tmp/hearts-base/hearts-prototype db=postgresql://ubuntu:hearts@127.0.0.1:5432/hearts_e2e_base port=3101
+3ca8534c3604f586181f8958f2cb283d19ae5dd8
+3ca8534c3604f586181f8958f2cb283d19ae5dd8
+end base 2026-10-05T05:59:10Z

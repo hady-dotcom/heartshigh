@@ -1,0 +1,70 @@
+eedCode(label: string) {
+    > 11 |   const codes = JSON.parse(readFileSync(path.join(process.cwd(), 'data', 'seed-codes-test.json'), 'utf8')) as Record<string, string>
+         |                            ^
+      12 |   if (!codes[label]) throw new Error(`No seeded access code labelled ${label}.`)
+      13 |   return codes[label]
+      14 | }
+        at seedCode (/tmp/hearts-base/hearts-prototype/tests/env.ts:11:28)
+        at /tmp/hearts-base/hearts-prototype/tests/e2e/sheet-packs.spec.ts:45:68
+
+    Error Context: test-results/sheet-packs-the-pack-colum-903a4-they-are-and-that-is-logged/error-context.md
+
+    Error Context: test-results/sheet-packs-the-pack-colum-903a4-they-are-and-that-is-logged/error-context.md
+
+
+[206/222] tests/e2e/sheet-packs.spec.ts:84:1 › the preview offers the pack choice with the push tick box off by default
+[207/222] tests/e2e/sheet-packs.spec.ts:99:1 › choosing a pack for new courses and ticking push gives them to learners who already hold the pack; undo takes both back out
+[208/222] tests/e2e/sheet-packs.spec.ts:126:1 › a portal admin cannot name a master pack or another portal’s pack
+(node:81723) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:81723) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[209/222] tests/e2e/typography.spec.ts:27:1 › Typography panel lists the five styles and can stand in for the hors d’oeuvre
+[210/222] tests/e2e/view-as.spec.ts:51:3 › view as › 38. a portal admin views as a learner with a reason, read-only by default
+[211/222] tests/e2e/view-as.spec.ts:58:3 › view as › 39. a view without a reason is refused
+[212/222] tests/e2e/view-as.spec.ts:68:3 › view as › 40. while read-only, answers and settings are refused and logged
+[213/222] tests/e2e/view-as.spec.ts:78:3 › view as › 41. the learner’s private opening answers are not shown in view-as
+[214/222] tests/e2e/view-as.spec.ts:87:3 › view as › 42. the viewer’s own device state is left alone, and the view’s keys are wiped on exit
+[215/222] tests/e2e/view-as.spec.ts:108:3 › view as › 43. Exit returns to where the view started and ends the session
+[216/222] tests/e2e/view-as.spec.ts:118:3 › view as › 44. a teacher has no View as, and the server refuses one
+[217/222] tests/e2e/view-as.spec.ts:126:3 › view as › 45. a portal admin cannot view as a learner in another portal
+[218/222] tests/e2e/view-as.spec.ts:133:3 › view as › 46. the master views as a portal admin, but never as another master
+[219/222] tests/e2e/view-as.spec.ts:147:3 › view as › 47. start and stop are written to the audit log with the reason
+[220/222] tests/e2e/view-as.spec.ts:156:3 › view as › 48. allowing changes needs a reason, and then a change goes through and is logged
+[221/222] tests/e2e/view-as.spec.ts:174:3 › view as › 49. some things stay closed even with changes allowed: the opening and Start again
+(node:82486) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+(node:82486) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[222/222] tests/e2e/planner-demo.spec.ts:58:1 › phone walk: buffet, plan, think, swipe, home, workbook, retry, next part
+  19 failed
+    tests/e2e/auth-garden.spec.ts:69:5 › join with the code in the link is the evening garden (phone, dawn) 
+    tests/e2e/auth-garden.spec.ts:69:5 › join with the code in the link is the evening garden (phone, evening) 
+    tests/e2e/auth-garden.spec.ts:69:5 › join with the code in the link is the evening garden (desk, dawn) 
+    tests/e2e/auth-garden.spec.ts:69:5 › join with the code in the link is the evening garden (desk, evening) 
+    tests/e2e/compass.spec.ts:14:1 › a learner cannot fetch their own scores from any compass API ──
+    tests/e2e/feed-polish.spec.ts:148:1 › Home Your plan heading reads at AA on the teal card ──────
+    tests/e2e/harvest-lines.spec.ts:65:1 › a fresh learner sees the sample, then a short clip keeps a real line and parts watched stays at 0 
+    tests/e2e/harvest.spec.ts:69:3 › harvest › finishing a talk fills Harvest with what was said, verses placed only when the match is sure 
+    tests/e2e/integration-final.spec.ts:67:1 › a learner joins by code, takes the persona quiz, stays on level, steps up by Learn more, answers an imported pop-up and finds it all again 
+    tests/e2e/journeys.spec.ts:200:3 › HEARTS journeys › the approved cut reaches the learner feed; placing answers choose the first course 
+    tests/e2e/library-teach.spec.ts:83:1 › demo learners show varied on-time fractions on Teach ────
+    tests/e2e/nesting.spec.ts:70:1 › every seeded hors d'oeuvre sits inside its appetiser, and every appetiser inside its full talk 
+    tests/e2e/round3.spec.ts:75:3 › round 3 API › Bug 2: codes have expiry, max uses and a switch; a one-use code refuses a second person; guessing is throttled; seed codes are random 
+    tests/e2e/round3.spec.ts:168:3 › round 3 API › Bug 8: joining is refused and audited while viewing as someone, even with changes allowed 
+    tests/e2e/round4.spec.ts:148:3 › round 4 API › N1: 210 failures from rotating addresses never block a valid code; one address is limited by its own failures, whatever it writes on the left 
+    tests/e2e/round4.spec.ts:171:3 › round 4 API › N3: a contribution counts only from an account that has finished a video and is at least a day old 
+    tests/e2e/screenshots.spec.ts:33:1 › a week of use, so the garden has something in it ──────────
+    tests/e2e/screenshots.spec.ts:185:1 › door, sign-in and join ───────────────────────────────────
+    tests/e2e/sheet-packs.spec.ts:65:1 › the pack column puts a new course in the pack; without the tick box existing learners are left as they are, and that is logged 
+  1 skipped
+  28 did not run
+  174 passed (27.8m)
