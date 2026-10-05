@@ -26,6 +26,8 @@ import { listGatherings } from '@/server/gather'
 import { mixSwarm } from '@/lib/circle'
 import { circleForPoints, circleSettings } from '@/server/circle'
 import { featureOn } from '@/lib/features'
+import { hiddenIds } from '@/server/safety'
+import { ReportButton } from '@/components/app/report-sheet'
 
 const START = ['orange', 'gold', 'teal']
 
@@ -203,22 +205,27 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
       { and: [{ point: { in: points.map((point) => point.id) } }, { portal: { equals: portal.id } }, { shareWithLearners: { equals: true } }, { keepPrivate: { not_equals: true } }] },
       { depth: 1, sort: '-createdAt', limit: 200 },
     )
+    const hiddenAnswers = await hiddenIds(payload, 'answer', shared.map((row) => row.id))
     for (const answer of shared) {
+      if (hiddenAnswers.has(answer.id)) continue
       if (answer.keepPrivate === true || answer.shareWithLearners !== true || ref(answer.user) === user.id) continue
       const pointId = ref(answer.point)
       if (!pointId) continue
       const author = answer.user as { name?: string; shareWithLearners?: boolean } | null
       if (!author?.shareWithLearners) continue
-      const image = answer.image as { url?: string } | null
-      ;(swarm[pointId] ||= []).push({ name: author?.name || 'Someone in your circle', body: str(answer.body) || str(answer.choice) || 'Shared a photo', image: image?.url || null })
+      const image = answer.image as { url?: string; id?: number } | null
+      const imageSrc = image?.id ? `/api/hearts/file/${image.id}` : image?.url || null
+      ;(swarm[pointId] ||= []).push({ name: author?.name || 'Someone in your circle', body: str(answer.body) || str(answer.choice) || 'Shared a photo', image: imageSrc, id: answer.id, kind: 'answer' })
     }
     if (featureOn(portal, 'circle')) {
       // HEARTS circle answers fill the swarm while it is quiet and step back as real shared answers arrive.
       const [circle, settings] = await Promise.all([circleForPoints(payload, points.map((point) => point.id), portal.id), circleSettings(payload)])
       circleLabel = settings.label
       for (const point of points) {
-        const extra = (circle.get(point.id) || []).map((row): SwarmItem => ({ name: row.name, body: row.body, circle: true }))
-        const mixed = mixSwarm(swarm[point.id] || [], extra, `${user.id}:${point.id}`, settings.threshold)
+        const extra = (circle.get(point.id) || []).map((row): SwarmItem => ({ name: row.name, body: row.body, circle: true, id: row.id, kind: 'circle-answer' }))
+        const hiddenCircle = await hiddenIds(payload, 'circle-answer', extra.map((row) => row.id!).filter(Boolean))
+        const visibleExtra = extra.filter((row) => !row.id || !hiddenCircle.has(row.id))
+        const mixed = mixSwarm(swarm[point.id] || [], visibleExtra, `${user.id}:${point.id}`, settings.threshold)
         if (mixed.length) swarm[point.id] = mixed
       }
     }
@@ -298,7 +305,10 @@ export async function CourseScreen({ payload, user, portal, base, query }: Ctx, 
           <section className="card" data-testid="in-video-feedback" style={{ marginTop: 14 }}>
             <h3>Feedback from your teacher</h3>
             {marks.map((mark) => (
-              <p key={mark.id} data-testid="feedback-mark"><b style={{ color: 'var(--orange)' }}>{clock(Number(mark.second || 0))}</b> {str(mark.body)}</p>
+              <p key={mark.id} data-testid="feedback-mark">
+                <b style={{ color: 'var(--orange)' }}>{clock(Number(mark.second || 0))}</b> {str(mark.body)}
+                <ReportButton targetType="teacher-reply" targetId={mark.id} next={here} />
+              </p>
             ))}
           </section>
         ) : null}

@@ -73,7 +73,7 @@ export async function POST(req: Request) {
     try {
       const media = await payload.create({
         collection: 'media', overrideAccess: true,
-        data: { alt: file.name.slice(0, 120), portal: portal || undefined },
+        data: { alt: file.name.slice(0, 120), portal: portal || undefined, owner: user!.id, purpose: 'film' },
         file: { data: Buffer.from(await file.arrayBuffer()), mimetype: mime, name: `${randomUUID()}${(file.name.match(/\.[a-z0-9]{1,5}$/i)?.[0] || '.mp4').toLowerCase()}`, size: file.size },
       })
       return NextResponse.json({ ok: true, mediaId: media.id, name: file.name })

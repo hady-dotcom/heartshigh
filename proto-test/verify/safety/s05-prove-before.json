@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-04T23:58:53.309Z",
+  "branch": "cursor/basics-safety-c9aa",
+  "aliceAnswerId": 29,
+  "mediaId": 1,
+  "filename": "08ebb59f-58de-43a6-96d5-08718de5dca5.png",
+  "mediaUrl": "/api/media/file/08ebb59f-58de-43a6-96d5-08718de5dca5.png",
+  "bobListCount": 1,
+  "bobListIncludesAlice": true,
+  "bobFetchByIdStatus": 200,
+  "bobFetchByIdOk": true,
+  "bobFetchByIdHasFilename": true,
+  "bobFetchByFileStatus": 200,
+  "bobFetchByFileOk": true,
+  "bobFetchByUrlStatus": 200,
+  "bobFetchByUrlOk": true,
+  "leak": true
+}

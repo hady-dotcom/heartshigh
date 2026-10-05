@@ -7,6 +7,7 @@ import { newViewingId, POLL_MS, PopupWatcher, type PopupPoint } from '@/lib/popu
 import { placeDots } from '@/lib/timeline-dots'
 import { createPlayer, destroyPlayer, getPlayer, resume, STATE, UNPLAYABLE } from '@/lib/yt'
 import { HeartIcon, ImageIcon, LockIcon, MicIcon, PauseIcon, PlayIcon } from '../icons'
+import { ReportButton } from '@/components/app/report-sheet'
 
 export type PointView = {
   id: number
@@ -28,7 +29,7 @@ export type PointView = {
   gatherings?: { href: string; title: string; when: string }[]
 }
 
-export type SwarmItem = { name: string; body: string; image?: string | null; circle?: boolean }
+export type SwarmItem = { name: string; body: string; image?: string | null; circle?: boolean; id?: number; kind?: 'answer' | 'circle-answer' }
 
 function clock(total: number) {
   const value = Math.max(0, Math.floor(total))
@@ -684,6 +685,7 @@ function Sheet({
                   {item.circle && circleLabel ? <small className="circle-note" data-testid="circle-label">{circleLabel}</small> : null}
                   <p>“{item.body}”</p>
                   {item.image ? <img src={item.image} alt={`Shared by ${item.name}`} /> : null}
+                  {item.id && item.kind ? <ReportButton targetType={item.kind} targetId={item.id} next={next} /> : null}
                 </div>
                 <span className="heart"><HeartIcon size={18} /></span>
               </div>

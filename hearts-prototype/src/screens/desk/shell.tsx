@@ -23,6 +23,8 @@ export function portalNav(base: string, user: SessionUser, portal?: FeatureSourc
     { key: 'plans', label: 'Study plans', href: `${base}/admin/plans`, icon: <CalendarIcon /> },
     { key: 'nights', label: 'Nights', href: `${base}/admin/nights`, icon: <MoonIcon /> },
     { key: 'gather', label: 'Gather', href: `${base}/admin/gather`, icon: <PeopleIcon /> },
+    { key: 'safety', label: 'Care and safety', href: `${base}/admin/safety`, icon: <HeartIcon /> },
+    { key: 'announcements', label: 'Announcements', href: `${base}/admin/announcements`, icon: <BellIcon /> },
   ])
   if (user.role === 'teacher') return [{ group: 'Portal', items: [{ key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> }, ...teach] }]
   return [
@@ -60,6 +62,8 @@ export function masterNav(): { group: string; items: NavItem[] }[] {
         { key: 'create', label: 'Sheet creator', href: '/master/sheet/create', icon: <BookIcon /> },
         { key: 'questions', label: 'Placing questions', href: '/master/questions', icon: <QuestionIcon /> },
         { key: 'circle', label: 'Circle answers', href: '/master/circle', icon: <PeopleIcon /> },
+        { key: 'safety', label: 'Care and safety', href: '/master/safety', icon: <HeartIcon /> },
+        { key: 'announcements', label: 'Announcements', href: '/master/announcements', icon: <BellIcon /> },
       ],
     },
     {

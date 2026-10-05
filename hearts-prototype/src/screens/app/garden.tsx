@@ -22,6 +22,7 @@ import { taskWantsCompany } from '@/lib/gather'
 import { featureOn } from '@/lib/features'
 import { listGatherings } from '@/server/gather'
 import { type Ctx, type Row, clock, ref, rows, shortDate, str, unreadCount } from '../common'
+import { ReportButton } from '@/components/app/report-sheet'
 
 const SECTIONS: { key: string; title: string; colour: string }[] = [
   { key: 'Sitting', title: 'The sitting', colour: '#e98fb0' },
@@ -566,7 +567,12 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
                             <button className="mini-btn" type="submit" data-testid="consent-toggle">{row.shared ? 'Make private' : 'Share with my teacher'}</button>
                           </form>
                         ) : null}
-                        {row.reply && featureOn(portal, 'feedback') ? <div className="reply" data-testid="teacher-reply"><b>Your teacher replied</b>{row.reply}</div> : null}
+                        {row.reply && featureOn(portal, 'feedback') ? (
+                          <div className="reply" data-testid="teacher-reply">
+                            <b>Your teacher replied</b>{row.reply}
+                            {row.entryId ? <ReportButton targetType="teacher-reply" targetId={row.entryId} next={here} /> : null}
+                          </div>
+                        ) : null}
                       </article>
                     ))}
                   </div>

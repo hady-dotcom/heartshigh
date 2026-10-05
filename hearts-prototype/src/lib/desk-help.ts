@@ -63,6 +63,10 @@ export const PAGE: Record<string, string> = {
     'This is one learner’s Compass over the months. You see the scales and why a talk was put forward. They still only see a gentle line, never these numbers.',
   attendance:
     'This is the register for gatherings. Who said they would come, who arrived, and a download when you need a list. It does not change who is invited.',
+  safety:
+    'Care and safety is where the portal team looks at concerns people raise, and at words the screen held back. Hide or keep an item, and send a short note. A gold box at the top is for the named person when someone may need support.',
+  announcements:
+    'Write a short note for everyone, for teachers, or for one access code. It appears on Home until they dismiss it. Learners cannot reply here — they write to their teacher.',
 }
 
 export const TOOL: Record<string, string> = {
@@ -146,6 +150,8 @@ export const TOOL: Record<string, string> = {
     'These are library courses this portal may link. Tick the ones they will use. You can add more later from the portal library. Nothing is copied; the original stays as the master desk set it.',
   portalFeatures:
     'Each switch is one part of HEARTS. Start small keeps videos, questions and the Garden. Add the community brings circle answers and the planner, and Everything turns every switch on. Saving takes effect at once.',
+  safeguarding:
+    'This box is for the named safeguarding lead. Other staff only see that a person is needed. The email says to look today and does not add extra personal detail.',
 }
 
 const TEST_IDS: Record<string, string> = {
@@ -190,6 +196,10 @@ const TEST_IDS: Record<string, string> = {
   'master-trends': 'trends',
   'compass-learner': 'compassLearner',
   'gather-attendance': 'attendance',
+  'admin-safety': 'safety',
+  'master-safety': 'safety',
+  'admin-announcements': 'announcements',
+  'master-announcements': 'announcements',
 }
 
 /** Page copy for a desk frame, from the nav key or the screen test id. */
