@@ -219,7 +219,6 @@ async function main() {
       teacherLabel: 'Teacher',
       wizardDone: true,
       colour: '#1f4d3a',
-      timeZone: 'America/Toronto',
     },
     {
       name: 'Leeds Chapter',
