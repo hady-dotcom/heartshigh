@@ -26,6 +26,8 @@ describe('email templates', () => {
     assert.doesNotMatch(confirm.text, /—/)
     const paused = renderMail('suspended', { portalName: 'East London circle' })
     assert.match(paused.text, /East London circle on HEARTS/)
+    assert.match(paused.text, /because a teacher or admin paused/)
+    assert.doesNotMatch(paused.text, /because A /)
     assert.doesNotMatch(paused.text, /—/)
     assert.ok(contrastRatio('#F6EEDC', '#0E2A2B') >= 4.5)
   })
