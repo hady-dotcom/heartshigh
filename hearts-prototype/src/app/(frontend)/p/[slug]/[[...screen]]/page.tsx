@@ -1,4 +1,5 @@
 import { PortalOpeningScreen } from '@/screens/desk/opening'
+import { PortalQuestionsScreen } from '@/screens/desk/placing'
 import { cookies, headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { AppFrame } from '@/components/app/shell'
@@ -135,6 +136,9 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       case 'opening':
         guardAdmin(ctx)
         return PortalOpeningScreen(ctx)
+      case 'questions':
+        guardAdmin(ctx)
+        return PortalQuestionsScreen(ctx)
       case 'circle':
         guardAdmin(ctx)
         return gated(ctx, 'circle', true) || PortalCircle(ctx)

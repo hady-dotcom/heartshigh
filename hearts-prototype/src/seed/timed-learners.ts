@@ -70,6 +70,11 @@ async function main() {
   const course = await ensureCourse(payload, portal.id)
   const lessons = await ensureLessons(payload, course.id, portal.id)
   const points = await ensurePoints(payload, lessons)
+  const { fillMissingCircleAnswers } = await import('./circle-seed')
+  const { attachExtraPlacing, ensureDefaultPlacing } = await import('./placing-seed')
+  await ensureDefaultPlacing(payload)
+  await attachExtraPlacing(payload, portal.id)
+  await fillMissingCircleAnswers(payload)
   const admin = await ensureUser(payload, portal.id, { ...ADMIN, role: 'portal-admin' })
   const timeline = demoTimeline(today, lessons.map((lesson) => lesson.id))
   const learners = []
