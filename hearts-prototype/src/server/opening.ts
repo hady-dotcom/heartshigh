@@ -365,6 +365,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     lessonId: lesson.id,
     durationSeconds: Number((lesson as { durationSeconds?: number }).durationSeconds || 0),
     lessonTitle: partTitle(lesson, String(course.title || '')),
+    talkSeconds: Number((lesson as { durationSeconds?: number }).durationSeconds) || null,
     style: slide ? STYLES[index % STYLES.length] : null,
     typography: typographyFor(data, lesson, data.tiers.find((row) => idOf(row.lesson) === lesson.id)),
     films: filmsForTalk(data.films, youtubeId),

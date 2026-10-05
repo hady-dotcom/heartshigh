@@ -4,13 +4,14 @@ import Link from 'next/link'
 import { track } from '@/lib/experiment-track'
 import { useVariant } from '@/lib/use-variant'
 
-export type Tab = 'home' | 'lanes' | 'garden' | 'me'
+export type Tab = 'home' | 'lanes' | 'week' | 'garden' | 'me' | 'gather'
 
-export function TabBar({ base, active, dark = false, evening = false, unread = 0 }: { base: string; active: Tab; dark?: boolean; evening?: boolean; unread?: number }) {
+export function TabBar({ base, active = null, dark = false, evening = false, unread = 0 }: { base: string; active?: Tab | null; dark?: boolean; evening?: boolean; unread?: number }) {
   const lanes = useVariant('lanes-tab-label')
   const tabs: [Tab, string, string][] = [
     ['home', 'Home', base],
     ['lanes', lanes.label || 'Lanes', `${base}/lanes`],
+    ['week', 'My week', `${base}/week`],
     ['garden', 'Garden', `${base}/garden`],
     ['me', 'Me', `${base}/me`],
   ]
@@ -50,6 +51,16 @@ function TabIcon({ tab, on }: { tab: Tab; on: boolean }) {
         <rect x="3.5" y="4" width="5" height="16" rx="1.5" />
         <rect x="9.5" y="4" width="5" height="16" rx="1.5" fill={on ? 'currentColor' : 'none'} fillOpacity={on ? 0.12 : 0} />
         <path d="m16.2 5.2 3.6-1 3 15.2-3.6 1z" />
+      </svg>
+    )
+  if (tab === 'week')
+    return (
+      <svg {...common} className="tab-icon">
+        <rect x="3.5" y="5" width="17" height="16" rx="2" />
+        <path d="M3.5 10h17" />
+        <path d="M8 3v4" />
+        <path d="M16 3v4" />
+        <path d="M8 14h.01M12 14h.01M16 14h.01" />
       </svg>
     )
   if (tab === 'garden')
