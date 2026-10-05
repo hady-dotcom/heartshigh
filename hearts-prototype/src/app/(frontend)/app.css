@@ -758,6 +758,32 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .slot { text-decoration: none; color: inherit; }
 .slot .today-badge { display: inline-block; margin-left: 8px; background: var(--gold); color: var(--gold-ink); border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
 .date-field, .field[type='date'] { max-width: 100%; width: 100%; box-sizing: border-box; }
+/* iOS draws a native date control as content-box, so the field padding and border
+   are added past the right edge and the rounded corner is clipped. Name and Course
+   already use the shared field box. Make From and Until use that same box. */
+.plan-form { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.plan-form > label { min-width: 0; max-width: 100%; }
+.plan-form .date-field {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: left;
+}
+.plan-form .date-field::-webkit-date-and-time-value {
+  text-align: left;
+  margin: 0;
+  min-width: 0;
+}
+.plan-form .date-field::-webkit-datetime-edit,
+.plan-form .date-field::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
 .date-read { display: block; font-weight: 600; font-size: 13px; color: var(--ink-2); }
 .week-strip { background: #0F2E2C; color: #F1E4C6; border-radius: 20px; padding: 14px 12px 12px; margin-bottom: 14px; }
 .week-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
