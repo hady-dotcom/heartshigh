@@ -166,24 +166,26 @@ async function handleRequestGuardian(req: Request, form: FormData, session: Sess
 }
 
 async function sendGuardianMail(to: string, childName: string, link: string) {
+  const transportOn = Boolean(process.env.SMTP_URL || process.env.RESEND_API_KEY)
+  if (!transportOn) {
+    console.info('email not sent: transport off', { to, kind: 'guardian-consent' })
+    return false
+  }
   try {
     const { getPayload } = await import('payload')
     const config = (await import('@payload-config')).default
     const payload = await getPayload({ config })
-    if (typeof payload.sendEmail === 'function') {
-      await payload.sendEmail({
-        to,
-        subject: 'A child needs you to agree on HEARTS',
-        html: `<p>Assalamu alaikum.</p><p>${childName} would like to use HEARTS, a free Islamic learning app. Please read the short note and agree if you are happy for them to join.</p><p><a href="${link}">I agree for my child</a></p>`,
-        text: `A child (${childName}) would like to use HEARTS. Open this link if you agree: ${link}`,
-      })
-      return true
-    }
+    await payload.sendEmail({
+      to,
+      subject: 'A child needs you to agree on HEARTS',
+      html: `<p>Assalamu alaikum.</p><p>${childName} would like to use HEARTS, a free Islamic learning app. Please read the short note and agree if you are happy for them to join.</p><p><a href="${link}">I agree for my child</a></p>`,
+      text: `A child (${childName}) would like to use HEARTS. Open this link if you agree: ${link}`,
+    })
+    return true
   } catch {
-    // Transport is off on this branch.
+    console.info('email not sent: transport off', { to, kind: 'guardian-consent' })
+    return false
   }
-  console.info('email not sent: transport off', { to, kind: 'guardian-consent' })
-  return false
 }
 
 async function handleConfirmGuardian(req: Request, form: FormData, session: Session) {

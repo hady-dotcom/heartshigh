@@ -1,8 +1,6 @@
 import Link from 'next/link'
 import { AppFrame, Back, TabBar } from '@/components/app/shell'
-import { PageHelp } from '@/components/app/page-help'
 import { SearchBox } from '@/components/app/search-box'
-import { learnerHelp } from '@/lib/learner-help'
 import { groupHits } from '@/lib/learner-search'
 import { searchPortal } from '@/server/learner-search'
 import { unreadCount, type Ctx } from '../common'
@@ -18,7 +16,6 @@ export async function SearchScreen({ payload, user, portal, base, query }: Ctx) 
         <Back href={base} label="Home" />
         <div className="app-head">
           <h1>Search</h1>
-          <PageHelp topic="search">{learnerHelp('search')}</PageHelp>
         </div>
         <SearchBox action={`${base}/search`} defaultValue={q} />
         {!q.trim() ? <p className="muted">Type a talk, a speaker or a topic.</p> : null}

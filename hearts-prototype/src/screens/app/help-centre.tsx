@@ -1,6 +1,4 @@
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
-import { PageHelp } from '@/components/app/page-help'
-import { learnerHelp } from '@/lib/learner-help'
 import { loadPortalContacts } from '@/server/consent'
 import { unreadCount, type Ctx } from '../common'
 
@@ -15,7 +13,6 @@ export async function HelpCentreScreen({ payload, user, portal, base, query }: C
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head">
           <h1>Get help</h1>
-          <PageHelp topic="help">{learnerHelp('help')}</PageHelp>
         </div>
         <Flash error={query.error} notice={query.notice} />
         <p className="lede">Three doors. Pick the one that fits.</p>

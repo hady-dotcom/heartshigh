@@ -1,8 +1,6 @@
 import Link from 'next/link'
 import { AppFrame, Back } from '@/components/app/shell'
 import { LegalLinks } from '@/components/app/legal-links'
-import { PageHelp } from '@/components/app/page-help'
-import { learnerHelp } from '@/lib/learner-help'
 import { renderLegalMarkdown, type LegalKind } from '@/lib/legal'
 import { loadPortalContacts, publishedLegal } from '@/server/consent'
 import type { Ctx } from '../common'
@@ -27,7 +25,6 @@ export async function LegalScreen({ payload, portal, base, slug }: { payload: Ct
         {base ? <Back href={base} label="Home" /> : <p className="door-links"><Link href="/">Back</Link></p>}
         <div className="app-head">
           <h1>{title}</h1>
-          <PageHelp topic={testId}>{learnerHelp(testId)}</PageHelp>
         </div>
         {page?.draftForAdviserReview !== false ? (
           <p className="legal-draft" data-testid="legal-draft">Draft for adviser review</p>

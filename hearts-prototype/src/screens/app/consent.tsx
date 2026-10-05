@@ -1,7 +1,5 @@
 import Link from 'next/link'
 import { AppFrame, Flash, Hidden } from '@/components/app/shell'
-import { PageHelp } from '@/components/app/page-help'
-import { learnerHelp } from '@/lib/learner-help'
 import { AGE_LABEL, type AgeBand } from '@/lib/child-safety'
 import { currentLegalPages, loadAgeProfile, loadPortalContacts } from '@/server/consent'
 import { codeIsForChildren } from '@/server/consent-actions'
@@ -24,7 +22,6 @@ export async function ConsentScreen({ payload, user, portal, base, query }: Ctx)
       <div className="app-scroll">
         <div className="app-head">
           <h1>Before you begin</h1>
-          <PageHelp topic="consent">{learnerHelp('consent')}</PageHelp>
         </div>
         <Flash error={query.error} notice={query.notice} />
         <p className="lede">A short note on how we look after each other, then one tick.</p>
