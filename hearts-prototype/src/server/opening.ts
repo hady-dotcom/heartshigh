@@ -535,10 +535,7 @@ export async function loadOpening(payload: Payload, portal: PortalDoc, user: Ses
     if (item) clips[String(info.id)] = presentClips([item], data.showUnchecked)[0] || item
   }
   const alias: Record<string, number> = {}
-  for (const [from, to] of data.alias) {
-    alias[String(from)] = to
-    if (clips[String(to)] && !clips[String(from)]) clips[String(from)] = clips[String(to)]
-  }
+  for (const [from, to] of data.alias) alias[String(from)] = to
   return {
     portal: portal.slug,
     scenesVersion: Math.max(1, ...scenes.map((scene) => (scene as SceneDef & { version: number }).version)),
