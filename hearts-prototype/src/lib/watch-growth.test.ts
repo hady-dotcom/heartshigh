@@ -41,16 +41,34 @@ test('Garden days prefer the sitting or answer time over the row time', () => {
   assert.equal(activityDay({ createdAt: '2026-10-01T08:00:00.000Z' }), '2026-10-01')
 })
 
-test('Your path keeps every watched talk, not only the current course', () => {
-  const nodes = gardenPathNodes(
-    [
-      { id: 4, title: 'One', href: '/c/1?part=4', done: true },
-      { id: 9, title: 'Two', href: '/c/2?part=9', done: true },
-    ],
-    [{ id: 4, title: 'One', href: '/c/1?part=4', done: true }],
-  )
-  assert.deepEqual(nodes.map((row) => row.id), [4, 9])
-  assert.equal(nodes.length, 2)
+test('Your path lists only the talks in this course, in course order', () => {
+  const watched = [
+    { id: 4, title: 'Sheltered', href: '/c/1?part=4', done: true },
+    { id: 9, title: 'Tawakkul', href: '/c/2?part=9', done: true },
+    { id: 12, title: 'Dua 1', href: '/c/3?part=12', done: true },
+  ]
+  const sheltered = [
+    { id: 4, title: 'Sheltered', href: '/c/1?part=4', done: false },
+    { id: 5, title: 'Next part', href: '/c/1?part=5', done: false },
+    { id: 6, title: 'Later part', href: '/c/1?part=6', done: true },
+  ]
+  const nodes = gardenPathNodes(watched, sheltered)
+  assert.deepEqual(nodes.map((row) => ({ id: row.id, state: row.state })), [
+    { id: 4, state: 'done' },
+    { id: 5, state: 'active' },
+    { id: 6, state: 'done' },
+  ])
+  assert.equal(nodes.some((row) => row.id === 9 || row.id === 12), false)
+
+  const tawakkul = [
+    { id: 9, title: 'Tawakkul', href: '/c/2?part=9', done: true },
+    { id: 10, title: 'Trust', href: '/c/2?part=10', done: false },
+  ]
+  const switched = gardenPathNodes(watched, tawakkul)
+  assert.deepEqual(switched.map((row) => ({ id: row.id, state: row.state })), [
+    { id: 9, state: 'done' },
+    { id: 10, state: 'active' },
+  ])
 })
 
 test('a sitting or an answer on a cut lights that door’s section', () => {

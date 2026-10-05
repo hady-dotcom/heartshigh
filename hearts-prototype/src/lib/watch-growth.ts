@@ -45,16 +45,18 @@ export function activityDay(row: { watchedAt?: unknown; answeredAt?: unknown; cr
 export type PathTalk = { id: number; title: string; href: string; done: boolean }
 
 /**
- * Your path lists every watched talk, then the rest of the current course.
- * Watched 2 must not collapse to a one-talk course path.
+ * Your path is this course only, in course order.
+ * A talk the learner has sat with on another course stays off this list.
+ * Finished counts those sittings separately.
  */
 export function gardenPathNodes(watched: PathTalk[], courseLessons: PathTalk[]) {
+  const watchedDone = new Set(watched.filter((row) => row.done).map((row) => row.id))
   const ordered: PathTalk[] = []
   const seen = new Set<number>()
-  for (const lesson of [...watched, ...courseLessons]) {
+  for (const lesson of courseLessons) {
     if (!lesson.id || seen.has(lesson.id)) continue
     seen.add(lesson.id)
-    ordered.push(lesson)
+    ordered.push(watchedDone.has(lesson.id) ? { ...lesson, done: true } : lesson)
   }
   const firstOpen = ordered.find((row) => !row.done)
   return ordered.map((row) => ({
