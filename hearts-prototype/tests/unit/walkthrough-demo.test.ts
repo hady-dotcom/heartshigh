@@ -32,6 +32,7 @@ test('key demo talks match on title, token or YouTube id', () => {
   assert.equal(matchCourseKey({ title: 'Divinely Sheltered' }), 'sheltered')
   assert.equal(matchCourseKey({ title: 'A Divine Shelter for the Heart' }), 'sheltered')
   assert.equal(matchCourseKey({ title: 'Quranic Connection #26: A Cure for Anxiety' }), 'starter')
+  assert.equal(matchCourseKey({ title: 'Dua 1: O Allah, I am Your Servant | Prophetic Dua' }), 'starter')
   assert.equal(matchCourseKey({ title: 'A talk from another chapter' }), null)
 })
 
