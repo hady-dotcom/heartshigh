@@ -159,6 +159,7 @@ export function Journey(props: JourneyProps) {
   const modeRef = useRef<Mode>('hors')
   const [captionOpen, setCaptionOpen] = useState(false)
   const [appetiserOver, setAppetiserOver] = useState(false)
+  const [appetiserHeld, setAppetiserHeld] = useState(true)
   const spanJoin = useRef<number | null>(null)
   const hosts = useRef<[Host, Host]>([
     { spec: null, playerId: null, ready: false, state: -1, played: false },
@@ -1334,6 +1335,7 @@ export function Journey(props: JourneyProps) {
   }
 
   const tapSound = () => {
+    setAppetiserHeld(false)
     const host = hosts.current[visibleRef.current]
     setSessionFlags({ ...sessionFlags(), unmuted: true })
     if (host.playerId) {
@@ -1556,8 +1558,9 @@ export function Journey(props: JourneyProps) {
   const feedCard = phase === 'feed' && (cardKind === 'question' || cardKind === 'text')
   const started = playerReady && host.played && LIVE.has(host.state)
   const playingOut = playerReady && host.played && host.state === STATE.PLAYING
-  const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (!playingOut || Boolean(errorNote) || offline)))
-  const waitingToPlay = phase === 'feed' && playerReady && !playingOut && !errorNote && !offline
+  const keepAppetiserPoster = mode === 'appetiser' && appetiserHeld
+  const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (keepAppetiserPoster || !playingOut || Boolean(errorNote) || offline)))
+  const waitingToPlay = phase === 'feed' && playerReady && (keepAppetiserPoster || !playingOut) && !errorNote && !offline
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const lineShown = mode === 'hors' && lineAt >= 0 ? lineAt : -1
   const horsLine = lineShown >= 0 ? piece?.lines?.[lineShown] : null
@@ -1568,6 +1571,7 @@ export function Journey(props: JourneyProps) {
   const scenicLines = scenicAppetiser ? [item?.scenic?.hook, item?.scenic?.turn, item?.scenic?.land].filter((line): line is string => Boolean(line)) : []
   useEffect(() => {
     setCaptionOpen(false)
+    setAppetiserHeld(true)
   }, [item?.id, mode])
   const slide = phase === 'feed' && mode === 'hors' && item?.style && !typeClip ? item.style : null
   const course = (item && learnMore(item, 'appetiser', base)?.href) || base
