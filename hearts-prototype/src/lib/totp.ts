@@ -1,27 +1,29 @@
 import { createHash, randomBytes } from 'node:crypto'
-import { authenticator } from 'otplib'
+import { generateSecret, generateSync, generateURI, verifySync } from 'otplib'
 import { decryptSecret, encryptSecret, hashToken } from './account-crypto'
-
-authenticator.options = { window: 1, step: 30 }
 
 export const BACKUP_COUNT = 10
 
 export function newTotpSecret() {
-  return authenticator.generateSecret()
+  return generateSecret()
 }
 
 export function totpUri(email: string, secret: string, issuer = 'HEARTS') {
-  return authenticator.keyuri(email, issuer, secret)
+  return generateURI({ issuer, label: email, secret })
 }
 
 export function totpOk(code: string, secret: string) {
   const trimmed = code.replace(/\s+/g, '')
   if (!/^\d{6}$/.test(trimmed)) return false
   try {
-    return authenticator.check(trimmed, secret)
+    return Boolean(verifySync({ secret, token: trimmed, epochTolerance: 30 }).valid)
   } catch {
     return false
   }
+}
+
+export function totpNow(secret: string) {
+  return generateSync({ secret })
 }
 
 export function sealTotpSecret(secret: string) {

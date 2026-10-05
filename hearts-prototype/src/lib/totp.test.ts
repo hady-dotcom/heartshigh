@@ -1,12 +1,11 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { authenticator } from 'otplib'
-import { makeBackupCodes, takeBackupCode, totpOk, totpUri } from './totp'
+import { makeBackupCodes, takeBackupCode, totpNow, totpOk, totpUri, newTotpSecret } from './totp'
 
 describe('totp', () => {
   it('accepts the current code and refuses a wrong one', () => {
-    const secret = authenticator.generateSecret()
-    const code = authenticator.generate(secret)
+    const secret = newTotpSecret()
+    const code = totpNow(secret)
     assert.equal(totpOk(code, secret), true)
     assert.equal(totpOk('000000', secret), false)
     assert.match(totpUri('imam@masjid.org', secret), /otpauth:\/\/totp/)

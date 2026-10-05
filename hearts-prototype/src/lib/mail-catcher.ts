@@ -59,8 +59,8 @@ export function linkFromMail(mail: CaughtMail | null, pathStart: string) {
   if (!mail) return null
   const blob = `${mail.text}\n${mail.html}`
   const escaped = pathStart.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const absolute = blob.match(new RegExp(`https?://\\S*${escaped}\\S*`, 'i'))
+  const absolute = blob.match(new RegExp(`https?://[^\\s"'<>]*${escaped}[^\\s"'<>]*`, 'i'))
   if (absolute) return absolute[0].replace(/[).,;"']+$/, '')
-  const relative = blob.match(new RegExp(`(?:href=["'])?(${escaped.startsWith('/') ? '' : '/'}${escaped}\\S*)`, 'i'))
+  const relative = blob.match(new RegExp(`(?:href=["'])(${escaped.startsWith('/') ? '' : '/'}${escaped}[^\\s"'<>]*)`, 'i'))
   return relative ? relative[1].replace(/[).,;"']+$/, '') : null
 }

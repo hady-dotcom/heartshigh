@@ -284,6 +284,7 @@ export interface Portal {
   learnerLabel?: string | null;
   teacherLabel?: string | null;
   wizardDone?: boolean | null;
+  requireEmailConfirm?: boolean | null;
   /**
    * Per-portal feature switches. Empty means every feature that exists today stays on, so live portals do not change.
    */
@@ -332,6 +333,46 @@ export interface User {
   shareWithLearners?: boolean | null;
   haptics?: boolean | null;
   removed?: boolean | null;
+  emailConfirmedAt?: string | null;
+  emailConfirmToken?: string | null;
+  emailConfirmExpiresAt?: string | null;
+  lastConfirmSentAt?: string | null;
+  pendingEmail?: string | null;
+  pendingEmailToken?: string | null;
+  pendingEmailExpiresAt?: string | null;
+  totpSecret?: string | null;
+  totpEnabledAt?: string | null;
+  totpPendingSecret?: string | null;
+  backupCodes?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  suspendedAt?: string | null;
+  suspendedBy?: (number | null) | User;
+  suspendReason?: string | null;
+  deletionRequestedAt?: string | null;
+  mustChangePassword?: boolean | null;
+  notificationPrefs?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  lastDataExportAt?: string | null;
+  dataExportToken?: string | null;
+  dataExportExpiresAt?: string | null;
+  dataExportFile?: string | null;
+  tokenVersion?: number | null;
+  passwordChangedAt?: string | null;
+  circleMutedUntil?: string | null;
   updatedBy?: (number | null) | User;
   onBehalfOf?: (number | null) | User;
   tenants?:
@@ -2621,6 +2662,7 @@ export interface PortalsSelect<T extends boolean = true> {
   learnerLabel?: T;
   teacherLabel?: T;
   wizardDone?: T;
+  requireEmailConfirm?: T;
   features?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2649,6 +2691,30 @@ export interface UsersSelect<T extends boolean = true> {
   shareWithLearners?: T;
   haptics?: T;
   removed?: T;
+  emailConfirmedAt?: T;
+  emailConfirmToken?: T;
+  emailConfirmExpiresAt?: T;
+  lastConfirmSentAt?: T;
+  pendingEmail?: T;
+  pendingEmailToken?: T;
+  pendingEmailExpiresAt?: T;
+  totpSecret?: T;
+  totpEnabledAt?: T;
+  totpPendingSecret?: T;
+  backupCodes?: T;
+  suspendedAt?: T;
+  suspendedBy?: T;
+  suspendReason?: T;
+  deletionRequestedAt?: T;
+  mustChangePassword?: T;
+  notificationPrefs?: T;
+  lastDataExportAt?: T;
+  dataExportToken?: T;
+  dataExportExpiresAt?: T;
+  dataExportFile?: T;
+  tokenVersion?: T;
+  passwordChangedAt?: T;
+  circleMutedUntil?: T;
   updatedBy?: T;
   onBehalfOf?: T;
   tenants?:

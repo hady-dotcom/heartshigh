@@ -1,5 +1,5 @@
 import { expect, request as playwrightRequest, type APIRequestContext, type Page } from '@playwright/test'
-import { authenticator } from 'otplib'
+import { totpNow as codeFromSecret } from '../../src/lib/totp'
 import { E2E_BASE, seedCode } from '../env'
 
 export const PORTAL = 'east-london'
@@ -61,9 +61,9 @@ export async function waitForMail(to: string, subjectPart?: string, afterId?: st
 export function mailLink(mail: { text: string; html: string }, pathStart: string) {
   const blob = `${mail.text}\n${mail.html}`
   const escaped = pathStart.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const absolute = blob.match(new RegExp(`https?://\\S*${escaped}\\S*`, 'i'))
+  const absolute = blob.match(new RegExp(`https?://[^\\s"'<>]*${escaped}[^\\s"'<>]*`, 'i'))
   if (absolute) return absolute[0].replace(/[).,;"']+$/, '')
-  const relative = blob.match(new RegExp(`(?:href=["'])?(${escaped.startsWith('/') ? '' : '/'}${escaped}\\S*)`, 'i'))
+  const relative = blob.match(new RegExp(`(?:href=["'])(${escaped.startsWith('/') ? '' : '/'}${escaped}[^\\s"'<>]*)`, 'i'))
   return relative ? relative[1].replace(/[).,;"']+$/, '') : null
 }
 
@@ -94,7 +94,7 @@ export async function postAction(ctx: APIRequestContext, fields: Record<string, 
 }
 
 export function totpNow(secret: string) {
-  return authenticator.generate(secret.replace(/\s+/g, ''))
+  return codeFromSecret(secret.replace(/\s+/g, ''))
 }
 
 export function secretFromSetup(text: string) {
