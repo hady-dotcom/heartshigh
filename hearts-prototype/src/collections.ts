@@ -179,7 +179,9 @@ export const Users: CollectionConfig = {
     beforeLogin: [
       async ({ req, user }) => {
         const person = user as { suspendedAt?: string | null; removed?: boolean | null; role?: string; totpEnabledAt?: string | null; email?: string } | undefined
-        if (person?.suspendedAt || person?.removed) {
+        const signingIn = (req as { user?: { removed?: boolean } }).user
+        if (signingIn?.removed || person?.removed) throw new APIError('That account is no longer here.', 401, undefined, true)
+        if (person?.suspendedAt) {
           throw new APIError('This account is paused. Please speak to your masjid or school.', 403, undefined, true)
         }
         if (req.payloadAPI === 'REST' && person && (person.role === 'master' || person.role === 'portal-admin') && person.totpEnabledAt) {

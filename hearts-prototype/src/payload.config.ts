@@ -18,6 +18,7 @@ import { AUDITED_COLLECTIONS } from './lib/audit-events'
 import { databaseKind, payloadCsrf, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
 import { migrations } from './migrations'
 import { TRASH_SLUGS } from './lib/trash'
+import { TENANT_COLLECTIONS } from './lib/tenant-collections'
 import { assignJoinerToClass } from './server/classes'
 import { enqueueAudit, staffAuditAfterChange, staffAuditAfterDelete } from './server/audit'
 import { viewAsGlobalGuard, viewAsGuard } from './server/viewas'
@@ -107,37 +108,7 @@ export default buildConfig({
       tenantsSlug: 'portals',
       tenantField: { name: 'portal' },
       tenantSelectorLabel: 'Portal',
-      collections: {
-        messages: {},
-        events: {},
-        rsvps: {},
-        checkins: {},
-        'workbook-entries': {},
-        answers: {},
-        'access-codes': {},
-        schedules: {},
-        notifications: {},
-        completions: {},
-        'watch-sessions': {},
-        adoptions: {},
-        'harvest-entries': {},
-        'drawn-to': {},
-        'lesson-visits': {},
-        'seat-visits': {},
-        rituals: {},
-        'placing-answers': {},
-        'feedback-notes': {},
-        gatherings: {},
-        'gather-rsvps': {},
-        'gather-checkins': {},
-        'gather-reflections': {},
-        'gather-photos': {},
-        consents: {},
-        'age-profiles': {},
-        'help-requests': {},
-        classes: {},
-        'class-join-rules': {},
-      },
+      collections: { ...TENANT_COLLECTIONS },
       userHasAccessToAllTenants: (user) => (user as { role?: string } | null)?.role === 'master',
     }),
     // The prefix column is part of the schema even when the bucket is off, so SQLite and Postgres stay aligned.

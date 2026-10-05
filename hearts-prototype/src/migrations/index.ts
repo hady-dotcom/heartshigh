@@ -19,6 +19,9 @@ import * as migration_20261005_010000_admin_ops from './20261005_010000_admin_op
 import * as migration_20261005_020000_accounts from './20261005_020000_accounts';
 import * as migration_20261005_021000_trash from './20261005_021000_trash';
 import * as migration_20261005_120000_consent from './20261005_120000_consent';
+import * as migration_20261005_130000_erase_cascades from './20261005_130000_erase_cascades';
+import * as migration_20261005_131000_erase_parent_cascades from './20261005_131000_erase_parent_cascades';
+import * as migration_20261005_132000_erase_s3_retries from './20261005_132000_erase_s3_retries';
 
 export const migrations = [
   {
@@ -125,5 +128,20 @@ export const migrations = [
     up: migration_20261005_120000_consent.up,
     down: migration_20261005_120000_consent.down,
     name: '20261005_120000_consent',
+  },
+  {
+    up: migration_20261005_130000_erase_cascades.up,
+    down: migration_20261005_130000_erase_cascades.down,
+    name: '20261005_130000_erase_cascades',
+  },
+  {
+    up: migration_20261005_131000_erase_parent_cascades.up,
+    down: migration_20261005_131000_erase_parent_cascades.down,
+    name: '20261005_131000_erase_parent_cascades',
+  },
+  {
+    up: migration_20261005_132000_erase_s3_retries.up,
+    down: migration_20261005_132000_erase_s3_retries.down,
+    name: '20261005_132000_erase_s3_retries',
   },
 ];

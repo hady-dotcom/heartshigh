@@ -105,7 +105,8 @@ async function readSession(touch: boolean): Promise<Session> {
     id: result.user.id,
     overrideAccess: true,
     depth: 0,
-  })) as unknown as SessionUser
+  }).catch(() => null)) as unknown as SessionUser | null
+  if (!full || full.removed) return { payload, user: null, actor: null, viewAs: null, viewAsEnded: null }
   if (isSuspended(full)) {
     return { payload, user: null, actor: null, viewAs: null, viewAsEnded: null, dropSession: 'paused' }
   }

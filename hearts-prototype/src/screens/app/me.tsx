@@ -13,6 +13,7 @@ import { featureOn } from '@/lib/features'
 import { type Ctx, longDate, ref, rows, shortDate, str, unreadCount } from '../common'
 import { ConfirmStrip } from '@/components/app/confirm-strip'
 import { PageHelp } from '@/components/app/page-help'
+import { DeleteAccount } from '@/components/app/delete-account'
 import { deleteDueAt, isEmailConfirmed } from '@/lib/account-rules'
 import { britishPortalTime, portalTimeZone } from '@/lib/zone-time'
 import { KIND_LABEL, NOTIFY_KINDS, parsePrefs } from '@/lib/notify-prefs'
@@ -266,6 +267,7 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
           <Hidden fields={{ action: 'logout' }} />
           <button className="pill outline block" type="submit" data-testid="logout">Sign out</button>
         </form>
+        <DeleteAccount name={user.name || user.email} next={`${base}/me/settings`} />
       </div>
       <TabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>

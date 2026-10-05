@@ -22,6 +22,7 @@ import { britishPortalTime, portalTimeZone } from '@/lib/zone-time'
 import { AdminFrame } from './overview'
 import { featureOn } from '@/lib/features'
 import { PersonActions } from '@/components/desk/person-actions'
+import { ErasePanel } from '@/components/desk/erase-panel'
 
 export async function TeachScreen(ctx: Ctx) {
   const { payload, user, portal, base, query } = ctx
@@ -124,14 +125,29 @@ export async function TeachScreen(ctx: Ctx) {
                     <td>
                       <GiveCourse learnerId={learner.id} learnerName={str(learner.name) || 'this learner'} courses={courses.map((course) => ({ id: course.id, title: str(course.title) }))} next={here} />
                     </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'start' }}>
+                    <td className="row-actions">
+                      <div className="row-actions-inner">
                         {featureOn(portal, 'workbook') ? (answers.filter((row) => ref(row.user) === learner.id).length ? (
                           <a className="btn ghost small" href={`/api/workbook/${learner.id}?format=csv`} data-testid="workbook-csv">Workbook</a>
                         ) : (
                           <span className="btn ghost small" aria-disabled="true" data-testid="workbook-csv" title="Nothing to download yet">Workbook</span>
                         )) : null}
                         {user.role !== 'teacher' ? <ViewAsButton targetId={learner.id} name={str(learner.name) || 'this learner'} landing={`${base}`} /> : null}
+                        {user.role !== 'teacher' ? (
+                          <ErasePanel
+                            action="delete-person"
+                            next={here}
+                            portalSlug={portal.slug}
+                            personId={learner.id}
+                            personName={str(learner.name) || str(learner.email)}
+                            confirmValue={str(learner.name) || str(learner.email)}
+                            kind="user"
+                            help={TOOL.deletePerson}
+                            helpTopic="delete-person"
+                            label="Delete"
+                            testId={`delete-person-${learner.id}`}
+                          />
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -142,6 +158,48 @@ export async function TeachScreen(ctx: Ctx) {
           </table>
         </div>
       </section>
+
+      {user.role !== 'teacher' ? (
+        <section className="panel" style={{ marginBottom: 18 }} data-testid="staff-people">
+          <header className="light">
+            <h2>Teachers and admins</h2>
+          </header>
+          <div className="table-wrap">
+            <table className="data">
+              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th /></tr></thead>
+              <tbody>
+                {people.filter((person) => person.role === 'teacher' || person.role === 'portal-admin').map((person) => (
+                  <tr key={person.id} data-testid="staff-row">
+                    <td><b>{str(person.name)}</b></td>
+                    <td>{str(person.email)}</td>
+                    <td>{person.role === 'portal-admin' ? 'Admin' : 'Teacher'}</td>
+                    <td className="row-actions">
+                      <div className="row-actions-inner">
+                        <ErasePanel
+                          action="delete-person"
+                          next={here}
+                          portalSlug={portal.slug}
+                          personId={person.id}
+                          personName={str(person.name) || str(person.email)}
+                          confirmValue={str(person.name) || str(person.email)}
+                          kind="user"
+                          help={TOOL.deletePerson}
+                          helpTopic="delete-person"
+                          label="Delete"
+                          testId={`delete-staff-${person.id}`}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {!people.some((person) => person.role === 'teacher' || person.role === 'portal-admin') ? (
+                  <tr><td colSpan={4} className="empty">No teachers or admins yet.</td></tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
 
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.25fr)', alignItems: 'start' }}>
         {featureOn(portal, 'workbook') ? (

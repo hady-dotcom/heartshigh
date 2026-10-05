@@ -13,6 +13,8 @@ import type { SessionUser } from '@/server/context'
 import { one, ref, rows, str } from '../common'
 import { CourseEditorBody } from './content'
 import { DeskFrame, masterNav } from './shell'
+import { ErasePanel } from '@/components/desk/erase-panel'
+import { TOOL } from '@/lib/desk-help'
 
 export type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string; part?: string; hideTest?: string; extract?: string } }
 
@@ -54,7 +56,8 @@ export async function MasterPortals(ctx: MasterCtx) {
                   <td>{portal.closed ? <span className="badge rose">Deactivated</span> : <span className="badge teal">Active</span>}</td>
                   <td className="num">{people.filter((person) => inPortal(person, portal.id)).length}</td>
                   <td className="num">{codes.filter((code) => ref(code.portal) === portal.id).length}</td>
-                  <td style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                  <td className="row-actions">
+                    <div className="row-actions-inner">
                     <Link className="btn ghost small" href={`/master/portals/${str(portal.slug)}`} data-testid="edit-portal">Features</Link>
                     <Link className="btn ghost small" href={`/p/${str(portal.slug)}/admin`}>Open admin</Link>
                     {(() => {
@@ -65,6 +68,19 @@ export async function MasterPortals(ctx: MasterCtx) {
                       <Hidden fields={{ action: 'deactivate', portalSlug: str(portal.slug), closed: portal.closed ? 'no' : 'yes', next: '/master' }} />
                       <button className={`btn ${portal.closed ? 'teal' : 'danger'} small`} data-testid="deactivate-portal" type="submit">{portal.closed ? 'Activate' : 'Deactivate'}</button>
                     </form>
+                    <ErasePanel
+                      action="delete-portal"
+                      next="/master"
+                      portalSlug={str(portal.slug)}
+                      portalId={portal.id}
+                      confirmValue={str(portal.name)}
+                      kind="portal"
+                      help={TOOL.deletePortal}
+                      helpTopic="delete-portal"
+                      label="Delete"
+                      testId={`delete-portal-${str(portal.slug)}`}
+                    />
+                    </div>
                   </td>
                 </tr>
               ))}

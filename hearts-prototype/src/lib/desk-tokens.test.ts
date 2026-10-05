@@ -25,3 +25,7 @@ test('desk type on teal panels meets 4.5:1', () => {
   assert.ok(contrastRatio(deskTokens.onDark, deskTokens.header) >= 4.5)
   assert.ok(contrastRatio(deskTokens.goldInk, deskTokens.gold) >= 4.5)
 })
+
+test('the wipe button on the dialog is danger red on white text at 4.5:1', () => {
+  assert.ok(contrastRatio('#FFFFFF', '#9B1B2E') >= 4.5)
+})
