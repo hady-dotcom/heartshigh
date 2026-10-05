@@ -93,7 +93,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
             <p data-testid="portal-closed">This portal has been paused. Your answers and your garden are kept safe, and will be here when it opens again.</p>
             <form action="/api/hearts" method="post" style={{ marginTop: 18 }}>
               <Hidden fields={{ action: 'logout' }} />
-              <button className="pill outline block" type="submit">Sign out</button>
+              <button className="pill outline block" type="submit" data-testid="logout">Log out</button>
             </form>
           </div>
         </div>
