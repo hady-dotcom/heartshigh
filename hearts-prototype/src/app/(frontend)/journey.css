@@ -277,12 +277,12 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .end-card {
   position: absolute; left: 16px; right: 16px; bottom: calc(96px + var(--safe-bottom)); z-index: 8;
   display: grid; gap: 10px; padding: 18px 16px;
-  background: linear-gradient(180deg, #f3e2c0, #e8d4a6); color: #0f3b3a;
-  border: 1px solid #d4a84b; border-radius: 22px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+  background: #163633; color: #f6eedc;
+  border: 1px solid rgba(212, 168, 75, 0.55); border-radius: 22px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
 }
-.end-card .eyebrow { margin: 0; color: #0f3b3a; letter-spacing: 0.04em; }
+.end-card .eyebrow { margin: 0; color: #e4d3a4; letter-spacing: 0.04em; }
 .end-card .end-feed, .end-card .end-next {
-  background: transparent; color: #0f3b3a; border: 1.5px solid #0f3b3a; text-align: center; justify-content: center;
+  background: transparent; color: #f6eedc; border: 1.5px solid rgba(212, 168, 75, 0.55); text-align: center; justify-content: center;
 }
 
 /* Captions and the speaker bar sit on a soft dark plate so cream robes cannot wash them out. */

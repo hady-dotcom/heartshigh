@@ -97,7 +97,7 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
           <div className="app-head"><h1>Where to begin</h1></div>
           <Flash error={query.error} notice={query.notice} />
           <p className="lead">A few short questions so your first talk is a gentle place to start. There are no wrong answers. Skip this and play the scenes instead if you would rather.</p>
-          <p><Link href={`${base}/start`}>Play the scenes instead</Link></p>
+          <p><Link className="pill outline block" href={`${base}/start`} data-testid="welcome-skip">Skip</Link></p>
           <form action="/api/hearts" method="post">
             <Hidden fields={{ action: 'placing', next: user.role === 'learner' ? `${base}/start?after=placing` : `${base}/welcome?step=done` }} />
             {questions.map((question, index) => (

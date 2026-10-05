@@ -298,8 +298,8 @@
 .window-card .lock { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); }
 .slide.windows .pill, .slide.unfold .pill.outline { color: var(--ink); border-color: var(--ink); }
 .slide.unfold .pill.ink { background: #1f2a24; }
-.peel { position: absolute; right: -2px; bottom: -2px; width: 110px; height: 110px; background: linear-gradient(225deg, #fff 0%, #f1ebdf 45%, #e0d6c3 50%, transparent 51%); border-top-left-radius: 70% 60%; box-shadow: -6px -6px 14px rgba(80,60,30,0.08); }
-.peel-label { position: absolute; right: 12px; bottom: 10px; font-family: var(--serif); font-style: italic; font-size: 13px; color: var(--ink-2); }
+.peel { position: absolute; right: -2px; bottom: -2px; width: 110px; height: 110px; background: linear-gradient(225deg, #d4a84b 0%, #163633 45%, #0e2a2b 50%, transparent 51%); border-top-left-radius: 70% 60%; box-shadow: -6px -6px 14px rgba(0,0,0,0.28); }
+.peel-label { position: absolute; right: 12px; bottom: 10px; font-family: var(--serif); font-style: italic; font-size: 13px; color: #f6eedc; }
 .slide.conversation { color: #f1efe6; }
 .slide.conversation .bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(22, 32, 28, 0.38), rgba(22, 32, 28, 0.18) 55%, rgba(22,32,28,0.48)); }
 .bubble-row { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: center; margin-bottom: 16px; }

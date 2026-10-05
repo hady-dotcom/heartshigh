@@ -3,9 +3,8 @@ import { seedCode } from '../env'
 
 // Leon's review: the door, join and sign-in pages are the evening garden at any hour, never the pale cream card.
 
-const PARCHMENT_TOP = 'rgb(245, 236, 214)'
-const FIELD = 'rgb(251, 245, 230)'
-const TEAL_LINE = 'rgb(31, 107, 96)'
+const FIELD = 'rgb(16, 46, 44)'
+const GOLD_LINE = 'rgb(196, 146, 58)'
 const GOLD = 'rgb(212, 168, 75)'
 const SIZES = [{ name: 'phone', width: 390, height: 844 }, { name: 'desk', width: 1440, height: 900 }] as const
 const HOURS = [{ name: 'dawn', at: '2026-10-04T08:00:00+01:00' }, { name: 'evening', at: '2026-10-04T20:30:00+01:00' }] as const
@@ -57,19 +56,13 @@ async function looksLikeTheGarden(page: Page, main: string) {
   expect(look.word).toBe('Hady Core')
   expect(look.button).toBe(GOLD)
   expect(luminance(look.buttonInk)).toBeLessThan(0.15)
-  if (main === 'join') {
-    expect(look.cardWidth, 'the join card stays compact').toBeLessThanOrEqual(380)
-    expect(luminance(look.cardBg), 'join card is evening teal, not parchment').toBeLessThan(0.3)
-    expect(luminance(look.cardInk), 'cream type on the join card').toBeGreaterThan(0.7)
-    expect(luminance(look.wordColour)).toBeGreaterThan(0.7)
-    return
-  }
-  expect(look.card).toContain(PARCHMENT_TOP)
-  expect(luminance(look.cardInk), 'dark ink on the parchment card').toBeLessThan(0.25)
-  expect(luminance(look.wordColour)).toBeLessThan(0.6)
+  expect(look.cardWidth, 'the garden card stays compact').toBeLessThanOrEqual(380)
+  expect(luminance(look.cardBg), 'door card is evening teal, not parchment').toBeLessThan(0.3)
+  expect(luminance(look.cardInk), 'cream type on the evening card').toBeGreaterThan(0.7)
+  expect(luminance(look.wordColour)).toBeGreaterThan(0.7)
   for (const field of look.fields) {
     expect(field.bg).toBe(FIELD)
-    expect(field.border).toBe(TEAL_LINE)
+    expect(field.border).toBe(GOLD_LINE)
   }
 }
 

@@ -863,30 +863,34 @@ html[data-theme] .desk input[type='password'] {
     linear-gradient(180deg, rgba(10, 40, 40, 0.58), rgba(7, 28, 28, 0.84));
 }
 :is(html, html[data-theme]) .garden-door .door-card {
-  background: linear-gradient(180deg, #f5ecd6, #ebdcbb);
-  color: #1b2a27;
-  border: 1px solid rgba(212, 168, 75, 0.7);
-  border-radius: 26px;
-  padding: 30px 24px 26px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  width: min(360px, calc(100% - 36px));
+  flex: 0 0 auto;
+  align-self: center;
+  margin: 12px auto 28px;
+  background: #163633;
+  color: #f6eedc;
+  border: 1px solid rgba(212, 168, 75, 0.55);
+  border-radius: 20px;
+  padding: 22px 20px 18px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.38);
   backdrop-filter: none;
 }
-:is(html, html[data-theme]) .garden-door .door-card h1 { color: #123f3a; }
-:is(html, html[data-theme]) .garden-door .door-card p.lede { color: #3c4b47; }
+:is(html, html[data-theme]) .garden-door .door-card h1 { color: #f6eedc; }
+:is(html, html[data-theme]) .garden-door .door-card p.lede { color: #e4d3a4; }
 :is(html, html[data-theme]) .garden-door .brand-mark {
   background: radial-gradient(circle at 50% 35%, #17504a, var(--gd-teal) 70%);
   color: var(--gd-gold);
   box-shadow: 0 0 0 2px var(--gd-gold), 0 10px 26px rgba(14, 47, 46, 0.35);
 }
-:is(html, html[data-theme]) .garden-door .brand-word { color: #5c3f10; font-weight: 700; }
-:is(html, html[data-theme]) .garden-door .door-form label { color: #23443f; }
+:is(html, html[data-theme]) .garden-door .brand-word { color: #f6eedc; font-weight: 700; }
+:is(html, html[data-theme]) .garden-door .door-form label { color: #e4d3a4; }
 :is(html, html[data-theme]) .garden-door .field {
-  background: #fbf5e6;
-  color: #1b2a27;
-  border: 1.5px solid var(--gd-teal-line);
+  background: #102e2c;
+  color: #f6eedc;
+  border: 1.5px solid #c4923a;
   border-radius: 14px;
 }
-:is(html, html[data-theme]) .garden-door .field::placeholder { color: #7d837c; }
+:is(html, html[data-theme]) .garden-door .field::placeholder { color: #c8b88a; }
 :is(html, html[data-theme]) .garden-door .field:focus {
   border-color: var(--gd-gold-deep);
   box-shadow: 0 0 0 3px rgba(212, 168, 75, 0.35);
@@ -898,12 +902,12 @@ html[data-theme] .desk input[type='password'] {
 }
 :is(html, html[data-theme]) .garden-door .pill.outline {
   background: transparent;
-  color: #14564c;
-  border: 1.5px solid var(--gd-teal-line);
+  color: #f6eedc;
+  border: 1.5px solid rgba(212, 168, 75, 0.55);
 }
-:is(html, html[data-theme]) .garden-door .door-links { color: #14564c; }
+:is(html, html[data-theme]) .garden-door .door-links { color: #f6eedc; }
 :is(html, html[data-theme]) .garden-door .door-links a { border-bottom-color: rgba(168, 121, 31, 0.6); }
-:is(html, html[data-theme]) .garden-door .door-hint { color: #5f6a65; }
+:is(html, html[data-theme]) .garden-door .door-hint { color: #e4d3a4; }
 :is(html, html[data-theme]) .garden-door .flash.notice {
   background: rgba(212, 168, 75, 0.16);
   color: #F1E4C6;
@@ -914,30 +918,6 @@ html[data-theme] .desk input[type='password'] {
   color: #F1E4C6;
   border: 1px solid rgba(241, 228, 198, 0.3);
 }
-:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-card {
-  width: min(360px, calc(100% - 36px));
-  flex: 0 0 auto;
-  align-self: center;
-  margin: 12px auto 28px;
-  background: #163633;
-  color: #f6eedc;
-  border: 1px solid rgba(212, 168, 75, 0.55);
-  border-radius: 20px;
-  padding: 22px 20px 18px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.38);
-}
-:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-card h1 { color: #f6eedc; }
-:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-card p.lede { color: #e4d3a4; }
-:is(html, html[data-theme]) .garden-door[data-testid="join"] .brand-word { color: #f6eedc; }
-:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-form label { color: #e4d3a4; }
-:is(html, html[data-theme]) .garden-door[data-testid="join"] .field {
-  background: #102e2c;
-  color: #f6eedc;
-  border-color: #c4923a;
-}
-:is(html, html[data-theme]) .garden-door[data-testid="join"] .field::placeholder { color: #c8b88a; }
-:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-links { color: #f6eedc; }
-:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-hint { color: #e4d3a4; }
 
 /* Proposed Compass mock: evening-garden desk (deep teal, warm gold, cream type). Live Compass stays parchment. */
 :is(html, html[data-theme]) .desk[data-testid="compass-proposed"],
