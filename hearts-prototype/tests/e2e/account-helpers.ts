@@ -37,8 +37,14 @@ export async function joinLearner(page: Page, name: string, email: string, passw
   await page.getByTestId('join-name').fill(name)
   await page.getByTestId('join-email').fill(email)
   await page.getByTestId('join-password').fill(password)
+  const joinConsent = page.getByTestId('join-consent')
+  if (await joinConsent.count()) await joinConsent.check()
   await page.getByTestId('join-submit').click()
   await page.waitForURL((url) => !url.pathname.startsWith('/join'))
+  if (page.url().includes('/consent')) {
+    const { completeConsent } = await import('./legal-helpers')
+    await completeConsent(page)
+  }
 }
 
 export async function caughtMail() {
