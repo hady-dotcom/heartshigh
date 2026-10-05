@@ -9,7 +9,7 @@ import { execOutside } from '../../src/server/erase/sql'
 
 const PG = process.env.HEARTS_ERASE_DATABASE || process.env.HEARTS_INTEGRATION_DATABASE || 'postgresql://hearts:hearts@127.0.0.1:5432/hearts_erase'
 
-describe('erase wipe on a real database', { timeout: 180_000 }, () => {
+describe('erase wipe on a real database', { timeout: 180_000, concurrency: false }, () => {
   it('the registry is complete before any seed', () => {
     assert.deepEqual(missingWipeRegistrations(), [])
   })
@@ -344,11 +344,12 @@ describe('erase wipe on a real database', { timeout: 180_000 }, () => {
       confirmName: person.name,
     })
     delete process.env.HEARTS_ERASE_FAIL_STORAGE
-    assert.equal(failed.ok, true, failed.ok ? '' : failed.error)
-    if (failed.ok) assert.ok((failed.fileFailures || 0) >= 1)
-    assert.equal(existsSync(storedPath), true)
+    assert.equal(failed.ok, true, failed.ok ? '' : JSON.stringify(failed))
+    assert.ok(failed.ok && (failed.filesQueued || 0) >= 1, `expected a queued file, got ${JSON.stringify(failed)}`)
+    assert.ok(failed.ok && (failed.fileFailures || 0) >= 1, `expected a storage failure, got ${JSON.stringify(failed)}`)
+    assert.equal(existsSync(storedPath), true, 'forced failure must leave the file on disk')
     const queued = await execOutside(payload, 'SELECT COUNT(*) AS n FROM erase_s3_retries')
-    assert.ok(Number(queued.rows[0]?.n || 0) >= 1)
+    assert.ok(Number(queued.rows[0]?.n || 0) >= 1, 'forced failure must land in erase_s3_retries')
     const retried = await retryFailedFiles(payload)
     assert.ok(retried.removed >= 1)
     assert.equal(existsSync(storedPath), false)

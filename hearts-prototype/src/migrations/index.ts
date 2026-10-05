@@ -16,6 +16,7 @@ import * as migration_20261004_210000_schedule_minutes from './20261004_210000_s
 import * as migration_20261004_230000_portal_features from './20261004_230000_portal_features';
 import * as migration_20261005_010000_erase_cascades from './20261005_010000_erase_cascades';
 import * as migration_20261005_020000_erase_parent_cascades from './20261005_020000_erase_parent_cascades';
+import * as migration_20261005_030000_erase_s3_retries from './20261005_030000_erase_s3_retries';
 
 export const migrations = [
   {
@@ -107,5 +108,10 @@ export const migrations = [
     up: migration_20261005_020000_erase_parent_cascades.up,
     down: migration_20261005_020000_erase_parent_cascades.down,
     name: '20261005_020000_erase_parent_cascades',
+  },
+  {
+    up: migration_20261005_030000_erase_s3_retries.up,
+    down: migration_20261005_030000_erase_s3_retries.down,
+    name: '20261005_030000_erase_s3_retries',
   },
 ];
