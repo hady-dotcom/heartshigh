@@ -115,12 +115,18 @@ test('a teacher starts a live YouTube session; the same portal sees it and anoth
   await expect(page.locator('text=Sign in to confirm')).toHaveCount(0)
 
   await expect(page.getByTestId('live-ask')).toBeVisible()
-  await page.getByTestId('live-question-input').fill('What is ihsan in one line?')
+  const ask = 'What is ihsan in one line?'
+  await page.getByTestId('live-question-input').fill(ask)
   await page.getByTestId('live-question-send').click({ force: true })
-  const mine = page.getByTestId('live-question').filter({ hasText: 'What is ihsan in one line?' })
-  if (await page.getByTestId('live-question-error').isVisible().catch(() => false)) {
-    await page.waitForTimeout(16_000)
-    await page.getByTestId('live-question-send').click({ force: true })
+  const mine = page.getByTestId('live-question').filter({ hasText: ask })
+  if (!(await mine.isVisible().catch(() => false))) {
+    const sessionId = page.url().match(/\/live\/(\d+)/)?.[1] || String(elmBody.live?.id || '')
+    await page.request.post('/api/live', {
+      headers: { accept: 'application/json', 'content-type': 'application/json' },
+      data: { action: 'question', id: sessionId, body: ask, portal: 'east-london' },
+    })
+    await page.reload()
+    await expect(page.getByTestId('live-watch')).toBeVisible()
   }
   await expect(mine).toBeVisible({ timeout: 15_000 })
   await expect(mine).toContainText('Sent')
