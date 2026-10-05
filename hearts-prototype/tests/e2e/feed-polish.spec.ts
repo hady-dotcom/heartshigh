@@ -149,7 +149,7 @@ test('Home Your plan heading reads at AA on the teal card', async ({ page }) => 
   await signIn(page, 'elm-learner@hearts.test', 'portal-learner', PORTAL)
   await page.goto(PORTAL)
   const plan = page.getByTestId('home-plan')
-  if (!(await plan.count())) return
+  await expect(plan).toBeVisible()
   const rows = await page.evaluate(() => {
     const rgb = (value: string) => (value.match(/[\d.]+/g) || []).map(Number)
     const lum = ([r, g, b]: number[]) => {

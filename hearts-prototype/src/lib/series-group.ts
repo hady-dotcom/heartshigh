@@ -52,16 +52,18 @@ const NAMES_CLASS = /the names class\s*\d+/i
 const SHORT_CLIP = /short clip/i
 const NUMBERED = /(?:session|class|episode|ep\.?|part|day)\s*\d+/i
 
-export function groupSeriesEnabled(env: { HEARTS_GROUP_SERIES?: string } = process.env) {
+type FlagEnv = Record<string, string | undefined>
+
+export function groupSeriesEnabled(env: FlagEnv = process.env) {
   return env[GROUP_SERIES_FLAG] === '1'
 }
 
 /** Off unless HEARTS_DEMOTE_SHORT_MAINS=1 or HEARTS_GROUP_SERIES=1. Nothing is written when it is off. */
-export function demoteShortMainsEnabled(env: { HEARTS_GROUP_SERIES?: string; HEARTS_DEMOTE_SHORT_MAINS?: string } = process.env) {
+export function demoteShortMainsEnabled(env: FlagEnv = process.env) {
   return env[DEMOTE_SHORT_MAINS_FLAG] === '1' || env[GROUP_SERIES_FLAG] === '1'
 }
 
-export function shortMainThreshold(env: { HEARTS_GROUP_SERIES?: string; HEARTS_DEMOTE_SHORT_MAINS?: string } = process.env) {
+export function shortMainThreshold(env: FlagEnv = process.env) {
   return demoteShortMainsEnabled(env) ? GENUINE_MAIN_SECONDS : LONG_MAIN_SECONDS
 }
 

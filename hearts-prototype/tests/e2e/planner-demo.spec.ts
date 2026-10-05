@@ -80,6 +80,7 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
 
   await page.goto(href!)
   await expect(page.getByTestId('course-overview')).toBeVisible()
+  await expect(page.getByTestId('question-strip')).toHaveCount(0)
   await expect(page.getByTestId('buffet-talk')).toHaveCount(10)
   const talkHrefs = await page.getByTestId('buffet-talk').evaluateAll((nodes) => nodes.map((node) => (node as HTMLAnchorElement).getAttribute('href') || ''))
   const talkIds = talkHrefs.map((link) => Number(/part=(\d+)/.exec(link)?.[1] || 0)).filter(Boolean)
@@ -128,7 +129,11 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
   await expect(page.getByTestId('garden-next')).toContainText('Part 2 · Next')
   await expect(page.getByTestId('fruit-explain')).toBeVisible()
   await expect(page.getByTestId('player-poster').or(page.locator('[data-fake=youtube]'))).toBeVisible()
-  await expect(page.getByTestId('question-strip')).toHaveCount(0)
+  const player = page.getByTestId('player')
+  await expect(player.getByTestId('question-strip')).toBeVisible()
+  await expect(player.getByTestId('strip-dot').first()).toBeVisible()
+  await expect(player.getByTestId('answer-point')).toBeVisible()
+  await expect(page.getByTestId('course-overview')).toHaveCount(0)
   await hold(page, '05-player-from-plan-row')
   if (await page.getByTestId('timeline-dot').count()) {
     await page.getByTestId('timeline-dot').first().click()

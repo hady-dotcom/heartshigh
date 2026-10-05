@@ -56,6 +56,16 @@ const TAB_DELAY = 200
 /** Which way the outgoing card leaves. A swipe to the left sends it left, and the next card comes in from the right. */
 type Exit = 'left' | 'right' | 'up' | 'down'
 const EXIT_FROM: Record<Exit, string> = { left: 'translateX(0)', right: 'translateX(0)', up: 'translateY(0)', down: 'translateY(0)' }
+/** The clip's own timed line at its start, or the start itself when no line has begun. */
+function harvestAt(piece: { start: number; lines?: { at: number }[] }) {
+  const start = Number(piece.start) || 0
+  const lines = piece.lines || []
+  const showing = captionIndex(lines, start)
+  const line = showing >= 0 ? lines[showing] : lines[0]
+  const at = line?.at
+  return typeof at === 'number' && Number.isFinite(at) ? at : start
+}
+
 const EXIT_TO: Record<Exit, string> = { left: 'translateX(-100%)', right: 'translateX(100%)', up: 'translateY(-100%)', down: 'translateY(100%)' }
 const ENTER_FROM: Record<Exit, string> = { left: 'translateX(100%)', right: 'translateX(-100%)', up: 'translateY(100%)', down: 'translateY(-100%)' }
 // The card leaves at the finger's pace and the next one glides in evenly; a front-loaded curve reads as a pop.
@@ -185,6 +195,7 @@ export function Journey(props: JourneyProps) {
   const captionDrag = useRef(false)
   const counter = useRef(0)
   const gathered = useRef(new Set<string>())
+  const keepHarvestRef = useRef<() => void>(() => {})
 
   const setHeart = useCallback((next: HeartState) => {
     heartRef.current = next
@@ -416,7 +427,10 @@ export function Journey(props: JourneyProps) {
           onError: (code) => host.playerId === id && window.dispatchEvent(new CustomEvent('hearts:player-error', { detail: { code, at } })),
         })
       } catch {
-        if (host.playerId === id) setSlow('retry')
+        if (host.playerId === id) {
+          setSlow('retry')
+          keepHarvestRef.current()
+        }
       }
     },
     [onPlayerState, tryPlay],
@@ -571,30 +585,29 @@ export function Journey(props: JourneyProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // A short clip keeps the transcript line at the timestamp on screen. The server copies the words; this only sends the time.
-  useEffect(() => {
-    if (!signedIn || props.viewAs || phase !== 'feed') return
-    const current = items[index]
-    if (!current?.lessonId) return
-    const piece = mode === 'hors' ? current.hors : current.appetiser
-    if (lineAt < 0) return
-    const line = piece.lines?.[lineAt]
-    const at = line?.at
-    const seconds = typeof at === 'number' && Number.isFinite(at) ? at : mode === 'hors' ? current.hors.start : current.appetiser.start
+  // Captions wait on lineAt. Harvest does not: keep a line when the clip ends, errors or is swiped.
+  const keepHarvest = useCallback(() => {
+    if (!signedIn || props.viewAs) return
+    const current = itemsRef.current[indexRef.current]
+    const level = modeRef.current
+    if (!current?.lessonId || (level !== 'hors' && level !== 'appetiser')) return
+    const piece = level === 'hors' ? current.hors : current.appetiser
+    const seconds = harvestAt(piece)
     if (!Number.isFinite(seconds)) return
-    const key = `${current.lessonId}:${mode}:${Math.round(seconds)}`
+    const key = `${current.lessonId}:${level}:${Math.round(seconds)}`
     if (gathered.current.has(key)) return
     gathered.current.add(key)
     void fetch('/api/hearts/harvest', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ lessonId: current.lessonId, seconds, surface: mode }),
+      body: JSON.stringify({ lessonId: current.lessonId, seconds, surface: level }),
     }).then((response) => {
       if (!response.ok) gathered.current.delete(key)
     }).catch(() => {
       gathered.current.delete(key)
     })
-  }, [signedIn, props.viewAs, phase, items, index, mode, lineAt])
+  }, [signedIn, props.viewAs])
+  keepHarvestRef.current = keepHarvest
 
   // ---------- opening flow ----------
   const sceneEnter = useCallback((direction: 'up' | 'back' | 'fade') => {
@@ -915,6 +928,7 @@ export function Journey(props: JourneyProps) {
 
   const advance = useCallback(
     async (to: number, how: 'swipe' | 'auto' = 'swipe', exit: Exit = 'up', via?: Swipe) => {
+      keepHarvest()
       const list = itemsRef.current
       if (!list.length) return
       // Whatever moves the feed, it stays on the level being watched.
@@ -957,11 +971,12 @@ export function Journey(props: JourneyProps) {
       markSwipe(false)
       void refill()
     },
-    [leaveSignal, refill, showItem],
+    [keepHarvest, leaveSignal, refill, showItem],
   )
 
   useEffect(() => {
     const onEnded = () => {
+      keepHarvest()
       if (modeRef.current !== 'hors') return
       const flagsNow = sessionFlags()
       if (!signedIn && !flagsNow.firstEnded) {
@@ -976,6 +991,7 @@ export function Journey(props: JourneyProps) {
     const onError = (event: Event) => {
       const { code, at } = (event as CustomEvent<{ code: number; at: number }>).detail
       if (at !== visibleRef.current || !UNPLAYABLE.has(code)) return
+      keepHarvest()
       const current = itemsRef.current[indexRef.current]
       setErrorNote("This one can't play here")
       if (current && signedIn) void fetch('/api/hearts/unplayable', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cutId: current.cutId, code }) }).catch(() => undefined)
@@ -987,7 +1003,7 @@ export function Journey(props: JourneyProps) {
       window.removeEventListener('hearts:ended', onEnded)
       window.removeEventListener('hearts:player-error', onError)
     }
-  }, [advance, openSheet, signedIn])
+  }, [advance, keepHarvest, openSheet, signedIn])
 
   const pendingAfterSheet = useRef<'next' | null>(null)
   const closeSheet = () => {
