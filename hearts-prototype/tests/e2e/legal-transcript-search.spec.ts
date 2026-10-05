@@ -23,6 +23,7 @@ test('C06 C07 C10 captions, transcript and search', async ({ page }) => {
   const course = page.getByTestId('path-course').first()
   if (await course.count()) {
     await course.locator('a').first().click()
+    await expect(page.getByTestId('course-overview').or(page.getByTestId('course')).or(page.getByTestId('player')).first()).toBeVisible()
     if (await page.getByTestId('course-overview').count()) {
       await page.getByTestId('start-part').click()
     }
