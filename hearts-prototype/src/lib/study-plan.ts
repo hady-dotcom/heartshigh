@@ -22,6 +22,11 @@ export function tonightLabel(part: number, minutes: number) {
   return `Tonight: Part ${part}, ${minutes} min`
 }
 
+/** One next-part line for the player and the garden. */
+export function nextPartLabel(part: number) {
+  return `Part ${part} · Next`
+}
+
 /** Continue rows: last watched first, then visits that have no watch yet. */
 export function continueOrder(watched: number[], visited: number[], done: Set<number>, limit = 3) {
   const seen = new Set<number>()

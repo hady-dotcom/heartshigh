@@ -101,7 +101,9 @@ async function ensureUser(payload: Awaited<ReturnType<typeof getPayload>>, data:
  */
 /** The e2e database keeps its codes in its own file, so the codes `npm run go` printed stay true. */
 function codesFile() {
-  return /hearts-test\.db/.test(process.env.DATABASE_URL || '') ? 'data/seed-codes-test.json' : 'data/seed-codes.json'
+  const url = process.env.DATABASE_URL || ''
+  if (process.env.HEARTS_E2E === '1' || /hearts-test\.db|_e2e/.test(url)) return 'data/seed-codes-test.json'
+  return 'data/seed-codes.json'
 }
 
 async function wipe() {
@@ -513,8 +515,14 @@ async function main() {
   }
 
   const opening = await seedOpening(payload, { clauseIds, portalIds, now: new Date(), showUnchecked: !startersOnly })
+  const groupedIds: number[] = []
+  if (process.env.HEARTS_GROUP_SERIES === '1') {
+    const { applySeriesGroups } = await import('./group-series')
+    const grouped = await applySeriesGroups(payload)
+    groupedIds.push(...grouped.courseIds)
+  }
   await seedSpeakers(payload)
-  if (!startersOnly) await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...courseIds, ...opening.starterCourseIds] })
+  if (!startersOnly) await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...new Set([...groupedIds, ...opening.starterCourseIds, ...courseIds])] })
   await seedHarvest(payload, { now: new Date(), demo: !startersOnly })
   if (!startersOnly) {
     const { seedDemoHarvest } = await import('./harvest-seed')

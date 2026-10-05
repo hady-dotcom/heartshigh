@@ -73,5 +73,5 @@ export function recommendLesson(
     const score = scores.get(lessonId) || 0
     if (score > 0 && (best === null || score > (scores.get(best) || 0))) best = lessonId
   }
-  return best ?? lessonOrder[0] ?? null
+  return best
 }
