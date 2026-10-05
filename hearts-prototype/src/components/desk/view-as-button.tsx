@@ -26,7 +26,9 @@ export function ViewAsButton({ targetId, name, landing }: { targetId: number; na
     window.location.assign(landing)
   }
   if (!open) {
-    return <button type="button" className="btn ghost small" onClick={() => setOpen(true)} data-testid="view-as">View as</button>
+    return (
+      <button type="button" className="btn ghost small" onClick={() => setOpen(true)} data-testid="view-as">View as</button>
+    )
   }
   return (
     <div className="view-as-ask" data-testid="view-as-ask">

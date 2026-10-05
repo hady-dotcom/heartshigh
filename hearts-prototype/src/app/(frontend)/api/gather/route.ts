@@ -17,6 +17,9 @@ import {
 } from '@/server/gather'
 import { blocked, READ_ONLY } from '@/server/viewas'
 import type { RsvpChoice } from '@/lib/gather'
+import { FEATURE_UNAVAILABLE, featureOn } from '@/lib/features'
+import { featureGoneJson, loadPortalById } from '@/server/features'
+import { idOf } from '@/lib/ids'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,6 +60,8 @@ export async function GET(req: Request) {
   if (!session.user || session.user.role === 'learner') return NextResponse.json({ error: 'The desk export is for the portal team.' }, { status: 403 })
   const portal = await portalOf(session.payload, session.user, url.searchParams.get('portal') || '')
   if (!portal) return NextResponse.json({ error: 'That portal is not yours.' }, { status: 404 })
+  const gone = featureGoneJson(portal, 'gather')
+  if (gone) return gone
   const csv = attendanceCsv(await attendanceReport(session.payload, portal.id))
   return new NextResponse(csv, {
     headers: {
@@ -75,6 +80,8 @@ export async function POST(req: Request) {
   if (action === 'guest') {
     const row = await gatheringBySlug(session.payload, text(form, 'slug'))
     if (!row) return redirectTo(req, next, 'That gathering could not be found.')
+    const host = await loadPortalById(session.payload, idOf(row.portal) || 0)
+    if (!featureOn(host, 'gather')) return redirectTo(req, next, FEATURE_UNAVAILABLE)
     const name = text(form, 'name')
     const contact = text(form, 'contact')
     if (name.length < 2) return redirectTo(req, next, 'Tell us what to call you.')
@@ -110,6 +117,7 @@ export async function POST(req: Request) {
   if (action === 'save' || action === 'propose') {
     const portal = await portalOf(payload, user, text(form, 'portal'))
     if (!portal) return redirectTo(req, next, 'That portal is not yours.')
+    if (!featureOn(portal, 'gather')) return redirectTo(req, next, FEATURE_UNAVAILABLE)
     const propose = action === 'propose'
     if (propose && user.role !== 'learner') return redirectTo(req, next, 'Learners propose. The desk publishes.')
     if (!propose && user.role === 'learner') return redirectTo(req, next, 'Ask your imam or the portal admin to publish a gathering.')
@@ -142,6 +150,7 @@ export async function POST(req: Request) {
     if (user.role === 'learner') return redirectTo(req, next, 'Only the desk can publish a gathering.')
     const portal = await portalOf(payload, user, text(form, 'portal'))
     if (!portal) return redirectTo(req, next, 'That portal is not yours.')
+    if (!featureOn(portal, 'gather')) return redirectTo(req, next, FEATURE_UNAVAILABLE)
     const status = text(form, 'status') === 'cancelled' ? 'cancelled' : 'published'
     const result = await setGatheringStatus(payload, portal.id, Number(text(form, 'id')), status)
     if (!result.ok) return redirectTo(req, next, result.error)
@@ -151,6 +160,7 @@ export async function POST(req: Request) {
   if (action === 'rsvp') {
     const row = await gatheringById(payload, Number(text(form, 'id')))
     if (!row) return redirectTo(req, next, 'That gathering could not be found.')
+    if (!featureOn(await loadPortalById(payload, idOf(row.portal) || 0), 'gather')) return redirectTo(req, next, FEATURE_UNAVAILABLE)
     const choice = text(form, 'choice') as RsvpChoice
     const result = await respondToGathering(payload, {
       gathering: row,
@@ -167,6 +177,7 @@ export async function POST(req: Request) {
   if (action === 'checkin') {
     const row = await gatheringById(payload, Number(text(form, 'id')))
     if (!row) return checkinReply(req, next, 'That gathering could not be found.')
+    if (!featureOn(await loadPortalById(payload, idOf(row.portal) || 0), 'gather')) return checkinReply(req, next, FEATURE_UNAVAILABLE)
     const method = text(form, 'method') === 'host' ? 'host' : text(form, 'method') === 'code' ? 'code' : 'qr'
     if (method === 'host') {
       if (user.role === 'learner') return checkinReply(req, next, 'Only the host can check someone in by hand.')
@@ -186,6 +197,7 @@ export async function POST(req: Request) {
   if (action === 'reflect') {
     const row = await gatheringById(payload, Number(text(form, 'id')))
     if (!row) return redirectTo(req, next, 'That gathering could not be found.')
+    if (!featureOn(await loadPortalById(payload, idOf(row.portal) || 0), 'gather')) return redirectTo(req, next, FEATURE_UNAVAILABLE)
     const result = await saveReflection(payload, row, user, text(form, 'body'))
     if (!result.ok) return redirectTo(req, next, result.error)
     return redirectTo(req, next, undefined, 'Saved. You’ll find it in your harvest.')
@@ -194,6 +206,7 @@ export async function POST(req: Request) {
   if (action === 'photo') {
     const row = await gatheringById(payload, Number(text(form, 'id')))
     if (!row) return redirectTo(req, next, 'That gathering could not be found.')
+    if (!featureOn(await loadPortalById(payload, idOf(row.portal) || 0), 'gather')) return redirectTo(req, next, FEATURE_UNAVAILABLE)
     const file = form.get('image')
     const result = await savePhoto(payload, row, user, file instanceof File ? file : new File([], ''), text(form, 'caption'), form.get('consent') === 'on')
     if (!result.ok) return redirectTo(req, next, result.error)
@@ -203,6 +216,7 @@ export async function POST(req: Request) {
   if (action === 'split') {
     const row = await gatheringById(payload, Number(text(form, 'id')))
     if (!row) return redirectTo(req, next, 'That gathering could not be found.')
+    if (!featureOn(await loadPortalById(payload, idOf(row.portal) || 0), 'gather')) return redirectTo(req, next, FEATURE_UNAVAILABLE)
     const hostId = typeof row.host === 'object' && row.host && 'id' in row.host ? Number((row.host as { id: number }).id) : Number(row.host)
     if (user.role === 'learner' && hostId !== user.id) return redirectTo(req, next, 'The host splits the room.')
     const result = await splitCircles(payload, row)
@@ -214,6 +228,7 @@ export async function POST(req: Request) {
     if (user.role === 'learner') return redirectTo(req, next, 'The desk sends the welcome.')
     const portal = await portalOf(payload, user, text(form, 'portal'))
     if (!portal) return redirectTo(req, next, 'That portal is not yours.')
+    if (!featureOn(portal, 'gather')) return redirectTo(req, next, FEATURE_UNAVAILABLE)
     const sent = await welcomeNewcomers(payload, portal.id, portal.slug || '')
     return redirectTo(req, next, undefined, sent ? `Welcome sent to ${sent}.` : 'No newcomers are waiting.')
   }

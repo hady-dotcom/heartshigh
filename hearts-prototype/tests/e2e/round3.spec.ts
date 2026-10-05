@@ -392,6 +392,7 @@ test.describe('round 3 screens', () => {
     await page.getByTestId('join-name').fill('Round Three Admin')
     await page.getByTestId('join-email').fill(`r3-church-${sfx}@hearts.test`)
     await page.getByTestId('join-password').fill('round-three-1')
+    await page.getByTestId('join-consent').check()
     await page.getByTestId('join-submit').click()
     await page.waitForURL(/\/admin/)
     await page.goto(`/p/${slug}/admin/library`)

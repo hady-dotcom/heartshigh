@@ -116,7 +116,7 @@ function PhoneDemo({ scene, playing }: { scene: InstallSlideId; playing: boolean
           <AndroidChrome menu>
             <div className="demo-menu">
               <div className="demo-row">New tab</div>
-              <div className="demo-row demo-target">Install app<Finger /></div>
+              <div className="demo-row demo-target">Install<Finger /></div>
               <div className="demo-row">Bookmarks</div>
               <div className="demo-row">History</div>
             </div>

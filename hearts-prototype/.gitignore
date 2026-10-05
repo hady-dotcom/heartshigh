@@ -11,7 +11,9 @@ test-results
 .DS_Store
 tsconfig.tsbuildinfo
 artifacts/
+proto-test/verify/
 .next-e2e
+.next-turnstile
 bin/
 content/audio/*
 !content/audio/.gitkeep

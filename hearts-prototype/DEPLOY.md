@@ -89,6 +89,14 @@ Open the app service, then **Variables**, then **New Variable**. Add these. For 
 | `BOOTSTRAP_ADMIN_PASSWORD` | A password you choose | At least 12 characters. Not `hearts-master`, `portal-admin`, `portal-teacher`, or `portal-learner`. |
 | `BOOTSTRAP_ADMIN_NAME` | Your name | Optional. If you leave it out, the account is called Master. |
 
+Optional, only if Cloudflare sits in front of the site. Do not change DNS or Turnstile from this repository. See **Cloudflare in front of HEARTS** in the README for the dashboard steps.
+
+| Variable | What to put | Notes |
+| --- | --- | --- |
+| `TURNSTILE_SITE_KEY` | The Turnstile site key | Both keys must be set. Missing keys leave join, sign-in and password reset unchanged. |
+| `TURNSTILE_SECRET_KEY` | The Turnstile secret key | Keep this on the host only. |
+| `CF_CONNECTING_IP` | `1` | Trust Cloudflare’s visitor address header. |
+
 `NODE_ENV` is already `production` inside the image. You do not need to set it.
 
 Click **Deploy** (or wait for the automatic redeploy) after the variables are saved.

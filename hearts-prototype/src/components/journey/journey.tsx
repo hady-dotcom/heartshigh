@@ -21,6 +21,7 @@ import { HeartIcon, PlayIcon, SaveIcon, ShareIcon } from '../icons'
 import { HelpScreen, Opener, SceneCard } from './scenes'
 import { TeachingCard } from './teaching-card'
 import { KeepPlaceSheet, type SheetReason } from './sheet'
+import { FeedKeys } from './feed-keys'
 
 type Phase = 'opener' | 'scene' | 'help' | 'handoff' | 'feed'
 type Mode = 'hors' | 'appetiser'
@@ -49,6 +50,7 @@ export type JourneyProps = {
   play?: 'appetiser' | null
   /** After placing, the quiz returns to the first-talk screen instead of the feed. */
   afterPlacing?: boolean
+  features?: import('@/lib/features').FeatureMap
 }
 
 const TAB_DELAY = 200
@@ -1603,6 +1605,7 @@ export function Journey(props: JourneyProps) {
 
       {toast?.trim() ? <div className="lane-switch" data-testid="toast"><span key={toast}>{toast.trim()}</span></div> : null}
 
+      {phase === 'feed' ? <FeedKeys /> : null}
       <div className="sr-only">
         {phase === 'feed' ? (
           <>
@@ -1612,6 +1615,12 @@ export function Journey(props: JourneyProps) {
             <button type="button" data-testid="gesture-right" onClick={moreFromSpeaker}>More from this speaker</button>
             <button type="button" data-testid="gesture-next" onClick={() => stepLoop(1)}>Next clip on this level</button>
             <button type="button" data-testid="gesture-prev" onClick={() => stepLoop(-1)}>Previous clip on this level</button>
+            <button type="button" data-testid="gesture-pause" onClick={() => {
+              const player = host.playerId ? getPlayer(host.playerId) : null
+              if (!player) return
+              if (host.state === STATE.PLAYING) player.pauseVideo()
+              else player.playVideo?.()
+            }}>Pause or play this clip</button>
           </>
         ) : null}
       </div>
@@ -1620,6 +1629,7 @@ export function Journey(props: JourneyProps) {
         <TabEntry
           base={base}
           unread={props.unread}
+          features={props.features}
           onGuard={(event) => {
             if (signedIn) return
             const target = (event.target as HTMLElement).closest('a')
@@ -1709,14 +1719,24 @@ function PeekFace({ item, mode }: { item: FeedItem; mode: Mode }) {
   )
 }
 
-function TabEntry({ base, unread, onGuard }: { base: string; unread: number; onGuard: (event: React.MouseEvent) => void }) {
+function TabEntry({
+  base,
+  unread,
+  features,
+  onGuard,
+}: {
+  base: string
+  unread: number
+  features?: import('@/lib/features').FeatureMap
+  onGuard: (event: React.MouseEvent) => void
+}) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     animate(ref.current, [{ transform: 'translateY(100%)' }, { transform: 'translateY(0)' }], 300, EASE.enter, { id: 'tabbar-in' })
   }, [])
   return (
     <div ref={ref} className="j-tabs" onClickCapture={onGuard}>
-      <TabBar base={`${base}`} active="home" dark unread={unread} />
+      <TabBar base={`${base}`} active="home" portal={{ features }} dark unread={unread} />
     </div>
   )
 }

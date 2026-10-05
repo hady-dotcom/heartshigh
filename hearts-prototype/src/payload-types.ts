@@ -135,6 +135,12 @@ export interface Config {
     'gather-checkins': GatherCheckin;
     'gather-reflections': GatherReflection;
     'gather-photos': GatherPhoto;
+    'legal-pages': LegalPage;
+    consents: Consent;
+    'age-profiles': AgeProfile;
+    'portal-contacts': PortalContact;
+    'child-code-flags': ChildCodeFlag;
+    'help-requests': HelpRequest;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -210,6 +216,12 @@ export interface Config {
     'gather-checkins': GatherCheckinsSelect<false> | GatherCheckinsSelect<true>;
     'gather-reflections': GatherReflectionsSelect<false> | GatherReflectionsSelect<true>;
     'gather-photos': GatherPhotosSelect<false> | GatherPhotosSelect<true>;
+    'legal-pages': LegalPagesSelect<false> | LegalPagesSelect<true>;
+    consents: ConsentsSelect<false> | ConsentsSelect<true>;
+    'age-profiles': AgeProfilesSelect<false> | AgeProfilesSelect<true>;
+    'portal-contacts': PortalContactsSelect<false> | PortalContactsSelect<true>;
+    'child-code-flags': ChildCodeFlagsSelect<false> | ChildCodeFlagsSelect<true>;
+    'help-requests': HelpRequestsSelect<false> | HelpRequestsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -284,6 +296,18 @@ export interface Portal {
   learnerLabel?: string | null;
   teacherLabel?: string | null;
   wizardDone?: boolean | null;
+  /**
+   * Per-portal feature switches. Empty means every feature that exists today stays on, so live portals do not change.
+   */
+  features?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2245,6 +2269,130 @@ export interface GatherPhoto {
   createdAt: string;
 }
 /**
+ * Draft wording for adviser review. Publishing a new version asks people to agree again.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "legal-pages".
+ */
+export interface LegalPage {
+  id: number;
+  kind: 'privacy' | 'terms' | 'guidelines' | 'portal-agreement';
+  version: string;
+  title: string;
+  /**
+   * One line learners see first. No legal words.
+   */
+  summary: string;
+  body: string;
+  published?: boolean | null;
+  /**
+   * Keep this ticked until Leon’s adviser has signed off the wording.
+   */
+  draftForAdviserReview?: boolean | null;
+  /**
+   * The date shown on the page, such as 4 October 2026.
+   */
+  updatedLabel?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * A record that someone agreed to a named version, with the time.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "consents".
+ */
+export interface Consent {
+  id: number;
+  portal?: (number | null) | Portal;
+  user: number | User;
+  kind: 'privacy' | 'terms' | 'guidelines' | 'guardian' | 'email-news' | 'portal-agreement';
+  version: string;
+  acceptedAt: string;
+  ipHash?: string | null;
+  byGuardian?: boolean | null;
+  guardianEmail?: string | null;
+  staffActor?: (number | null) | User;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * An age band only — never a date of birth. Used for children’s defaults and guardian consent.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "age-profiles".
+ */
+export interface AgeProfile {
+  id: number;
+  portal?: (number | null) | Portal;
+  user: number | User;
+  ageBand: 'under-13' | '13-17' | '18+';
+  guardianEmail?: string | null;
+  guardianTokenHash?: string | null;
+  guardianTokenExpiresAt?: string | null;
+  waitingForGuardian?: boolean | null;
+  guardianAcceptedAt?: string | null;
+  schoolOfflineAt?: string | null;
+  schoolOfflineBy?: (number | null) | User;
+  schoolOfflineNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Named privacy and safeguarding people for one portal. Lane C reads the safeguarding lead.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "portal-contacts".
+ */
+export interface PortalContact {
+  id: number;
+  portal: number | Portal;
+  privacyName?: string | null;
+  privacyEmail?: string | null;
+  safeguardingName?: string | null;
+  safeguardingEmail?: string | null;
+  safeguardingPhone?: string | null;
+  schoolOfflineConsent?: boolean | null;
+  agreementAcceptedAt?: string | null;
+  agreementName?: string | null;
+  agreementVersion?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Marks an access code as for children, so the age step is pre-filled.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "child-code-flags".
+ */
+export interface ChildCodeFlag {
+  id: number;
+  accessCode: number | AccessCode;
+  forChildren?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Something is not working, a learning question, or something worrying.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "help-requests".
+ */
+export interface HelpRequest {
+  id: number;
+  portal?: (number | null) | Portal;
+  user: number | User;
+  kind: 'broken' | 'learning' | 'worrying';
+  page?: string | null;
+  device?: string | null;
+  note?: string | null;
+  status?: ('open' | 'sent' | 'closed') | null;
+  happenedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -2539,6 +2687,30 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'gather-photos';
         value: number | GatherPhoto;
+      } | null)
+    | ({
+        relationTo: 'legal-pages';
+        value: number | LegalPage;
+      } | null)
+    | ({
+        relationTo: 'consents';
+        value: number | Consent;
+      } | null)
+    | ({
+        relationTo: 'age-profiles';
+        value: number | AgeProfile;
+      } | null)
+    | ({
+        relationTo: 'portal-contacts';
+        value: number | PortalContact;
+      } | null)
+    | ({
+        relationTo: 'child-code-flags';
+        value: number | ChildCodeFlag;
+      } | null)
+    | ({
+        relationTo: 'help-requests';
+        value: number | HelpRequest;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2609,6 +2781,7 @@ export interface PortalsSelect<T extends boolean = true> {
   learnerLabel?: T;
   teacherLabel?: T;
   wizardDone?: T;
+  features?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3893,6 +4066,103 @@ export interface GatherPhotosSelect<T extends boolean = true> {
   caption?: T;
   consent?: T;
   postedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "legal-pages_select".
+ */
+export interface LegalPagesSelect<T extends boolean = true> {
+  kind?: T;
+  version?: T;
+  title?: T;
+  summary?: T;
+  body?: T;
+  published?: T;
+  draftForAdviserReview?: T;
+  updatedLabel?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "consents_select".
+ */
+export interface ConsentsSelect<T extends boolean = true> {
+  portal?: T;
+  user?: T;
+  kind?: T;
+  version?: T;
+  acceptedAt?: T;
+  ipHash?: T;
+  byGuardian?: T;
+  guardianEmail?: T;
+  staffActor?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "age-profiles_select".
+ */
+export interface AgeProfilesSelect<T extends boolean = true> {
+  portal?: T;
+  user?: T;
+  ageBand?: T;
+  guardianEmail?: T;
+  guardianTokenHash?: T;
+  guardianTokenExpiresAt?: T;
+  waitingForGuardian?: T;
+  guardianAcceptedAt?: T;
+  schoolOfflineAt?: T;
+  schoolOfflineBy?: T;
+  schoolOfflineNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "portal-contacts_select".
+ */
+export interface PortalContactsSelect<T extends boolean = true> {
+  portal?: T;
+  privacyName?: T;
+  privacyEmail?: T;
+  safeguardingName?: T;
+  safeguardingEmail?: T;
+  safeguardingPhone?: T;
+  schoolOfflineConsent?: T;
+  agreementAcceptedAt?: T;
+  agreementName?: T;
+  agreementVersion?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "child-code-flags_select".
+ */
+export interface ChildCodeFlagsSelect<T extends boolean = true> {
+  accessCode?: T;
+  forChildren?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "help-requests_select".
+ */
+export interface HelpRequestsSelect<T extends boolean = true> {
+  portal?: T;
+  user?: T;
+  kind?: T;
+  page?: T;
+  device?: T;
+  note?: T;
+  status?: T;
+  happenedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
