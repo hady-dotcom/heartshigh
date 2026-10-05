@@ -5,6 +5,7 @@ import { ViewAsButton } from '@/components/desk/view-as-button'
 import Link from 'next/link'
 import { Hidden } from '@/components/app/shell'
 import { EvidencePlayer } from '@/components/desk/tools'
+import { heartsFileUrl } from '@/lib/media-access'
 import { now } from '@/lib/clock'
 import { visibleCourseIds } from '@/server/context'
 import { dayNumber } from '@/server/learner'
@@ -27,7 +28,13 @@ export async function TeachScreen(ctx: Ctx) {
   const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }, { sort: 'title' }) : []
   const shared = entries.filter((entry) => entry.consent)
   const kept = entries.length - shared.length
-  const evidence = answers.filter((answer) => answer.video || answer.audio)
+  const consented = new Set(shared.map((entry) => ref(entry.answer)))
+  const evidence = answers.filter(
+    (answer) =>
+      (answer.video || answer.audio) &&
+      answer.keepPrivate !== true &&
+      (answer.shareWithTeacher === true || consented.has(answer.id)),
+  )
   const picked = evidence.find((answer) => answer.id === Number(query.answer)) || evidence[0]
   const here = `${base}/admin/teach`
   const today = dateKey(now())
@@ -97,6 +104,7 @@ export async function TeachScreen(ctx: Ctx) {
                   {prompt ? <p className="hint" style={{ margin: 0 }}>Question: {prompt}</p> : null}
                   {(answer?.point as { kind?: string } | undefined)?.kind === 'task' ? <p className="badge" data-testid="activation-task">Activation task</p> : null}
                   <p style={{ fontSize: 15, color: 'var(--ink)' }}>{str(entry.body) || 'A photo or recording'}</p>
+                  {heartsFileUrl(answer?.image) ? <img data-testid="teach-answer-media" src={heartsFileUrl(answer?.image)!} alt="" style={{ maxWidth: '100%', borderRadius: 8 }} /> : null}
                   {entry.teacherReply ? <p className="count-tile" style={{ display: 'block', background: 'var(--mint)' }} data-testid="teacher-reply">Your reply: {str(entry.teacherReply)}</p> : null}
                   <form className="form" action="/api/hearts" method="post">
                     <Hidden fields={{ action: 'reply', entry: entry.id, href: `${base}/garden/workbook`, next: here }} />
@@ -116,7 +124,7 @@ export async function TeachScreen(ctx: Ctx) {
             {picked ? (
               <div className="evidence">
                 <EvidencePlayer
-                  src={((picked.video || picked.audio) as { url?: string } | null)?.url || null}
+                  src={heartsFileUrl(picked.video || picked.audio)}
                   kind={picked.video ? 'video' : 'audio'}
                   answerId={picked.id}
                   next={`${here}?answer=${picked.id}`}

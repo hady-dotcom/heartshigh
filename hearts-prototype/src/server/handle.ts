@@ -33,6 +33,7 @@ import { randomUUID } from 'node:crypto'
 import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourseIds, type Session, type SessionUser } from './context'
 import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCookie, wrote } from './viewas'
 import { isTimeZone } from '@/lib/zone-time'
+import { saveOwnedMedia } from './media'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
@@ -180,15 +181,15 @@ async function notify(payload: Payload, data: { user: number; portal?: number | 
   })
 }
 
-async function saveUpload(payload: Payload, file: File, portal: number | null, fallbackType: string) {
-  const ext = (file.name.match(/\.[a-z0-9]{1,5}$/i)?.[0] || '').toLowerCase()
-  const media = await payload.create({
-    collection: 'media',
-    overrideAccess: true,
-    data: { alt: file.name.slice(0, 120), portal: portal || undefined },
-    file: { data: Buffer.from(await file.arrayBuffer()), mimetype: file.type || fallbackType, name: `${randomUUID()}${ext}`, size: file.size },
-  })
-  return media.id as number
+async function saveUpload(
+  payload: Payload,
+  file: File,
+  portal: number | null,
+  fallbackType: string,
+  owner?: number | null,
+  purpose: 'answer' | 'feedback' = 'answer',
+) {
+  return saveOwnedMedia(payload, file, { portal, owner, purpose, fallbackType, alt: file.name })
 }
 
 async function clauseCards(payload: Awaited<ReturnType<typeof getSession>>['payload']): Promise<ClauseCard[]> {
@@ -312,16 +313,16 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
     let imageId: number | undefined
     if (image instanceof File && image.size > 0) {
       if (!image.type.startsWith('image/')) return fail(400, 'That file needs to be an image.')
-      imageId = await saveUpload(payload, image, portal, 'image/jpeg')
+      imageId = await saveUpload(payload, image, portal, 'image/jpeg', user.id, 'answer')
     }
     const audio = audioFile
     let audioId: number | undefined
     if (audio instanceof File && audio.size > 0) {
-      audioId = await saveUpload(payload, audio, portal, 'audio/webm')
+      audioId = await saveUpload(payload, audio, portal, 'audio/webm', user.id, 'answer')
     }
     let videoId: number | undefined
     if (video instanceof File && video.size > 0) {
-      videoId = await saveUpload(payload, video, portal, 'video/mp4')
+      videoId = await saveUpload(payload, video, portal, 'video/mp4', user.id, 'answer')
     }
     const keepPrivate = Boolean(input.keepPrivate)
     const shareWithTeacher = Boolean(input.shareWithTeacher) || Boolean(point.showImam)
@@ -1650,7 +1651,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     let audioId: number | undefined
     if (audio instanceof File && audio.size > 0) {
       if (tooBig(audio)) return redirectTo(req, text(form, 'next') || '/', 'That file is over 200 MB.')
-      audioId = await saveUpload(payload, audio, idOf(answer.portal), 'audio/webm')
+      audioId = await saveUpload(payload, audio, idOf(answer.portal), 'audio/webm', user.id, 'feedback')
     }
     await payload.create({
       collection: 'feedback-notes',

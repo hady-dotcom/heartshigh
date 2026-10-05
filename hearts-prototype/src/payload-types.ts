@@ -455,6 +455,8 @@ export interface Media {
   id: number;
   alt?: string | null;
   portal?: (number | null) | Portal;
+  owner?: (number | null) | User;
+  purpose?: ('answer' | 'gather-photo' | 'portal-asset' | 'film' | 'feedback') | null;
   prefix?: string | null;
   _objectKey?: string | null;
   updatedAt: string;
@@ -2399,6 +2401,8 @@ export interface UsersSelect<T extends boolean = true> {
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   portal?: T;
+  owner?: T;
+  purpose?: T;
   prefix?: T;
   _objectKey?: T;
   updatedAt?: T;

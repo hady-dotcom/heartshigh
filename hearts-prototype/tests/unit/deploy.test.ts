@@ -143,6 +143,13 @@ test('the Dockerfile bakes no secret or database address into the image', () => 
   assert.throws(() => payloadSecret({ NODE_ENV: 'production', PAYLOAD_SECRET: DEV_SECRET }), /sample value/)
 })
 
+test('uploaded files go to a private bucket and are fetched with short signed links', () => {
+  const config = readFileSync(path.join(root, 'src/payload.config.ts'), 'utf8')
+  assert.match(config, /acl:\s*'private'/)
+  assert.match(config, /signedDownloads:\s*\{\s*expiresIn:\s*300/)
+  assert.match(config, /collections:\s*\{\s*media:\s*\{\s*signedDownloads:\s*\{\s*expiresIn:\s*300/)
+})
+
 test('the latest Postgres migration has a table for every collection and global', async () => {
   const { readdirSync } = await import('node:fs')
   const { collections } = await import('../../src/collections')

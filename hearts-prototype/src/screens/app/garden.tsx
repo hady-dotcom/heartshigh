@@ -551,6 +551,9 @@ export async function GardenWorkbook({ payload, user, base, query }: Ctx) {
                         <p className="asked">Video question was:</p>
                         <p className="q">{row.question}</p>
                         <blockquote data-testid="workbook-answer">{row.answer}</blockquote>
+                        {row.imageId ? <img data-testid="workbook-media" src={`/api/hearts/file/${row.imageId}`} alt="" style={{ maxWidth: '100%', borderRadius: 8, marginTop: 8 }} /> : null}
+                        {row.audioId ? <audio data-testid="workbook-media" controls src={`/api/hearts/file/${row.audioId}`} style={{ width: '100%', marginTop: 8 }} /> : null}
+                        {row.videoId ? <video data-testid="workbook-media" controls src={`/api/hearts/file/${row.videoId}`} style={{ width: '100%', marginTop: 8, borderRadius: 8 }} /> : null}
                         {row.video && row.course ? (
                           <Link className="from-lesson" href={`${base}/course/${row.course.id}?part=${row.video.id}&t=${Math.max(0, Number(row.atSecond || 0) - 5)}`}>
                             <span>Back to the moment</span>

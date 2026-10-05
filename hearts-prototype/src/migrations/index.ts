@@ -9,6 +9,7 @@ import * as migration_20261003_220000_feedback from './20261003_220000_feedback'
 import * as migration_20261004_060000_shorts from './20261004_060000_shorts';
 import * as migration_20261004_061000_portal_time_zone from './20261004_061000_portal_time_zone';
 import * as migration_20261004_080000_lesson_picture_flags from './20261004_080000_lesson_picture_flags';
+import * as migration_20261005_013000_media_privacy from './20261005_013000_media_privacy';
 
 export const migrations = [
   {
@@ -65,5 +66,10 @@ export const migrations = [
     up: migration_20261004_080000_lesson_picture_flags.up,
     down: migration_20261004_080000_lesson_picture_flags.down,
     name: '20261004_080000_lesson_picture_flags',
+  },
+  {
+    up: migration_20261005_013000_media_privacy.up,
+    down: migration_20261005_013000_media_privacy.down,
+    name: '20261005_013000_media_privacy',
   },
 ];

@@ -2,6 +2,8 @@ import type { CollectionConfig } from 'payload'
 
 import type { Access, Where } from 'payload'
 import { portalIdOf } from './lib/ids'
+import { canReadMedia, MEDIA_PURPOSES, mediaListWhere } from './lib/media-access'
+import { findLinkedAnswer } from './server/media'
 import { slugProblem } from './lib/text-safety'
 import { authorTextProblems, markupProblems } from './lib/opening-data'
 import { changedTierFields, horsCapOf, saidInTalk, TIER_TIMING_FIELDS, tierProblem, timingProblems } from './lib/tiers'
@@ -189,6 +191,27 @@ export const Users: CollectionConfig = {
   ],
 }
 
+/**
+ * S05: listing never includes answer or feedback files. A read by id follows the
+ * linked answer's keepPrivate / share flags. Public Media rows are `portal-asset`
+ * (speaker photos, leftover portal uploads) and `film` (lesson file). Talk
+ * thumbnails, speaker stills and scenic art that live under /clips, /speakers,
+ * /slides and /theme are not Media rows and stay readable signed out.
+ */
+const mediaReadAccess: Access = ({ req, id }) => {
+  const user = req.user as { id: number; role?: string; tenants?: { tenant?: unknown }[] } | null
+  if (!user) return false
+  if (!id) return mediaListWhere(user)
+  return (async () => {
+    const payload = req.payload
+    if (!payload?.findByID) return false
+    const media = await payload.findByID({ collection: 'media', id, overrideAccess: true, depth: 0 }).catch(() => null)
+    if (!media) return false
+    const answer = await findLinkedAnswer(payload, Number(media.id))
+    return canReadMedia(user, media, answer, false)
+  })()
+}
+
 export const Media: CollectionConfig = {
   slug: 'media',
   upload: {
@@ -196,11 +219,7 @@ export const Media: CollectionConfig = {
     mimeTypes: ['image/*', 'audio/*', 'video/*', 'application/pdf', 'text/*'],
   },
   access: {
-    read: ({ req }) => {
-      if (req.user?.role === 'master') return true
-      const portal = portalIdOf(req.user as { tenants?: { tenant?: unknown }[] } | null)
-      return portal ? { portal: { equals: portal } } : false
-    },
+    read: mediaReadAccess,
     create: master,
     update: master,
     delete: master,
@@ -208,6 +227,24 @@ export const Media: CollectionConfig = {
   fields: [
     { name: 'alt', type: 'text' },
     { name: 'portal', type: 'relationship', relationTo: 'portals' },
+    { name: 'owner', type: 'relationship', relationTo: 'users' },
+    {
+      name: 'purpose',
+      type: 'select',
+      options: MEDIA_PURPOSES.map((value) => ({
+        label:
+          value === 'answer'
+            ? 'Answer'
+            : value === 'gather-photo'
+              ? 'Gather photo'
+              : value === 'portal-asset'
+                ? 'Portal asset'
+                : value === 'film'
+                  ? 'Film'
+                  : 'Feedback',
+        value,
+      })),
+    },
   ],
 }
 

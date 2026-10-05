@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { parsePastedSources, searchTalks } from '@/lib/sheet-search'
@@ -6,6 +5,7 @@ import { getSession } from '@/server/context'
 import { planBuffer, summaryOf, writeAudit, type SheetScope } from '@/server/master-sheet'
 import { draftWorkbook, type CreatorSource } from '@/server/sheet-creator'
 import { resolveScope } from '@/server/sheet-scope'
+import { saveOwnedMedia } from '@/server/media'
 
 export const dynamic = 'force-dynamic'
 
@@ -71,12 +71,8 @@ export async function POST(req: Request) {
     if (!mime.startsWith('video/') && !/\.(mp4|webm|mov|m4v)$/i.test(file.name)) return fail('That file needs to be a video.')
     const portal = user!.role === 'portal-admin' ? portalIdOf(user) : null
     try {
-      const media = await payload.create({
-        collection: 'media', overrideAccess: true,
-        data: { alt: file.name.slice(0, 120), portal: portal || undefined },
-        file: { data: Buffer.from(await file.arrayBuffer()), mimetype: mime, name: `${randomUUID()}${(file.name.match(/\.[a-z0-9]{1,5}$/i)?.[0] || '.mp4').toLowerCase()}`, size: file.size },
-      })
-      return NextResponse.json({ ok: true, mediaId: media.id, name: file.name })
+      const mediaId = await saveOwnedMedia(payload, file, { portal, owner: user!.id, purpose: 'film', fallbackType: mime, alt: file.name })
+      return NextResponse.json({ ok: true, mediaId, name: file.name })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'That video could not be stored.'
       return fail(message.includes('invalid') ? 'That video file could not be stored. Use an mp4, webm or mov.' : message)
