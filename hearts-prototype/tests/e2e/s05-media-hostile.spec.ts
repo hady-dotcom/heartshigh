@@ -4,7 +4,7 @@ import path from 'node:path'
 import { E2E_BASE } from '../env'
 
 const PNG = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'iVBORw0KGgoAAAANSUhEUgAAAKAAAABkCAIAAACO1KzYAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAB1UlEQVR4nO2VAQ3AIADDUDU1lzthV/E0400qgKwUTp9I7x3h4CeQKthLUAv2EtQnuv/7EfyDgztQMD9TZ7Hg4A4UzM/UWSw4uAMF8zN1FgsO7kDB/EydxYKDO1AwP1NnseDgDhTMz9RZLDi4AwXzM3UWCw7uQMH8TJ3FgoM7UDA/U2ex4OAOFMzP1FksOLgDBfMzdRYLDu5AwfxMncWCgztQMD9TZ7Hg4A4UzM/UWSw4uAMF8zN1FgsO7kDB/EydxYKDO1AwP1NnseDgDhTMz9RZLDi4AwXzM3UWCw7uQMH8TJ3FgoM7UDA/U2ex4OAOFMzP1FksOLgDBfMzdRYLDu5AwfxMncWCgztQMD9TZ7Hg4A4UzM/UWSw4uAMF8zN1FgsO7kDB/EydxYKDO1AwP1NnseDgDhTMz9RZLDi4AwXzM3UWCw7uQMH8TJ3FgoM7UDA/U2ex4OAOFMzP1FksOLgDBfMzdRYLDu5AwfxMncWCgztQMD9TZ7Hg4A4UzM/UWSw4uAMF8zN1FgsO7kDB/EydxYKDO1AwP1NnseDgDhTMz9RZLDi4AwXzM3UWCw7uQMH8TJ3FgoM7UDA/U2ex4OAOFMzP1FksOLgDBfMzdRYLDu5AwfxMncWCgztQMD9TZ7Hg4A4UzM/UWSw4uAMF8zN1FgsO7kDB/EydxYKDO1AwP1NnseDgDhTMz9RZLDi4AwXzM3UWCw7uQMH8TJ3FgoM7UDA/U2ex4OAOFMzP1FksOLgDBfMzdRYLDu7gU14u5IPeQpSrKgAAAABJRU5ErkJggg==',
   'base64',
 )
 
@@ -116,11 +116,13 @@ test('S05: learner B cannot list or fetch learner A private answer media', async
   await page.getByTestId('login-password').fill('portal-learner')
   await page.getByTestId('login-submit').click()
   await page.waitForURL((url) => !url.pathname.startsWith('/login'))
-  await expect(page.getByTestId('workbook-media').first()).toBeVisible()
+  const ownerImage = page.getByTestId('workbook-media').first()
+  await expect(ownerImage).toBeVisible()
+  await expect(ownerImage).toHaveJSProperty('naturalWidth', 160)
   const shots = path.join(process.cwd(), '..', 'proto-test', 'verify', 'hotfix-s05')
   mkdirSync(shots, { recursive: true })
-  await page.getByTestId('workbook-media').first().scrollIntoViewIfNeeded()
-  await page.screenshot({ path: path.join(shots, 'workbook-owner-file.png'), fullPage: true })
+  await ownerImage.scrollIntoViewIfNeeded()
+  await page.screenshot({ path: path.join(shots, 'workbook-owner-file.png'), fullPage: false })
 
   await page.context().clearCookies()
   await page.goto(`/login?next=${encodeURIComponent('/p/east-london/garden/workbook')}`)
