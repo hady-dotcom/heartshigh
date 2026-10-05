@@ -1,0 +1,7 @@
+tabbar: Home · Lanes · My week · Garden · Me
+caption: none on this card
+course overview: Schedule all of these, no question preview
+player: question strip waits until its moment (none on screen yet)
+desk nav: Beginner / Intermediate / In-depth
+hostile file: learner B got 403 for media 1
+course=Ten sittings
