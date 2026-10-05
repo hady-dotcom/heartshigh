@@ -70,7 +70,11 @@ function zoneOf(timeZone: string) {
 export function zonedTime(iso: string | Date | null | undefined, timeZone: string, locale = 'en-GB') {
   const date = asDate(iso)
   if (!date) return ''
-  return new Intl.DateTimeFormat(locale, { timeZone: zoneOf(timeZone), day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }).format(date)
+  const zone = zoneOf(timeZone)
+  const formatted = new Intl.DateTimeFormat(locale, { timeZone: zone, day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }).format(date)
+  const letter = ZONE_LETTERS[zone]
+  if (!letter) return formatted
+  return formatted.replace(/\s(?:GMT[+\-−]\d+(?::\d+)?|UTC|EDT|EST|ET|CDT|CST|MDT|MST|PDT|PST)$/u, ` ${letter}`)
 }
 
 export function zoneLetter(timeZone: string) {
