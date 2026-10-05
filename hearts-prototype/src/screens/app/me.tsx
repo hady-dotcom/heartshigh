@@ -8,11 +8,18 @@ import { OptInLane, PrefToggle, StartAgain } from '@/components/app/me-controls'
 import { EmptyState } from '@/components/app/empty'
 import { KeepHearts } from '@/components/app/install-card'
 import { ThemePinControl } from '@/components/theme/theme-pin'
+import { SavedList, SavedToast } from '@/components/app/saved-list'
 import { Qr } from '@/components/qr'
 import { now } from '@/lib/clock'
 import { visibleCourseIds } from '@/server/context'
 import { dayNumber, portalName } from '@/server/learner'
+import { featureOn } from '@/lib/features'
 import { type Ctx, longDate, ref, rows, shortDate, str, unreadCount } from '../common'
+import { ConfirmStrip } from '@/components/app/confirm-strip'
+import { PageHelp } from '@/components/app/page-help'
+import { deleteDueAt, isEmailConfirmed } from '@/lib/account-rules'
+import { britishPortalTime, portalTimeZone } from '@/lib/zone-time'
+import { KIND_LABEL, NOTIFY_KINDS, parsePrefs } from '@/lib/notify-prefs'
 
 /** Notices written before prompts were clipped on a word were cut mid-word at 60 characters; they read the same way now. */
 function noteBody(body: string) {
@@ -23,10 +30,10 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 30 })).filter((note) => note.channel !== 'email-stub')
   const unread = notes.filter((note) => !note.read).length
   const links: [string, string, string, string][] = [
-    ['path', 'Your path', 'Where a little time will help, in plain words', 'me/path'],
-    ['plan', 'My study plan', 'Spread a course across the days that suit you', 'me/plan'],
-    ['circle', 'Circle and nights', 'Your board, and the evenings you can come to', 'me/circle'],
-    ['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'],
+    ...(featureOn(portal, 'compass') ? [['path', 'Your path', 'Where a little time will help, in plain words', 'me/path'] as [string, string, string, string]] : []),
+    ...(featureOn(portal, 'planner') ? [['plan', 'My study plan', 'Spread a course across the days that suit you', 'me/plan'] as [string, string, string, string]] : []),
+    ['circle', featureOn(portal, 'gather') ? 'Circle and nights' : 'Circle', featureOn(portal, 'gather') ? 'Your board, and the evenings you can come to' : 'Your board', 'me/circle'],
+    ...(featureOn(portal, 'workbook') ? [['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'] as [string, string, string, string]] : []),
     ['settings', 'Settings', 'Night alerts, watch history and signing out', 'me/settings'],
   ]
   if (user.role !== 'learner') links.unshift(['desk', 'Portal desk', 'Courses, codes and learners', 'admin'])
@@ -37,9 +44,12 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
         <Flash error={query.error} notice={query.notice} />
         <div className="profile">
           <Avatar name={user.name || user.email} portrait={null} size={58} />
-          <span><b data-testid="me-name">{user.name || user.email}</b><small className="muted">{portalName(portal)} · day {dayNumber(user)}</small></span>
+          <span><b data-testid="me-name" data-user-id={user.id}>{user.name || user.email}</b><small className="muted">{portalName(portal)} · day {dayNumber(user)}</small></span>
         </div>
         <ThemePinControl />
+        <SavedToast />
+        <p className="eyebrow" id="saved" style={{ marginTop: 18 }}>Saved</p>
+        <SavedList base={base} />
         <details className="card name-edit" data-testid="name-edit">
           <summary>Change the name we use</summary>
           <form className="form-stack" action="/api/hearts" method="post" style={{ marginTop: 10 }}>
@@ -80,10 +90,10 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
             <small className="muted">{shortDate(note.createdAt)}</small>
           </Link>
         )) : (
-          <EmptyState testId="notes-empty" action={{ href: `${base}/garden`, label: 'Open the garden' }}>Nothing new. Replies from your teacher and new nights will show here.</EmptyState>
+          <EmptyState testId="notes-empty" action={featureOn(portal, 'garden') ? { href: `${base}/garden`, label: 'Open the garden' } : { href: base, label: 'Back home' }}>Nothing new. Replies from your teacher and new nights will show here.</EmptyState>
         )}
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      <TabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -146,7 +156,7 @@ export async function PlanScreen({ payload, user, portal, base, query }: Ctx) {
           )
         })}
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      <TabBar base={base} active={featureOn(portal, 'gather') || !featureOn(portal, 'planner') ? 'me' : 'week'} portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -166,7 +176,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>Circle</h1></div>
         <Flash error={query.error} notice={query.notice} />
-        <p className="eyebrow" style={{ marginTop: 6 }}>Nights</p>
+        {featureOn(portal, 'gather') ? <><p className="eyebrow" style={{ marginTop: 6 }}>Nights</p>
         {events.length ? events.map((event) => {
           const mine = rsvps.find((row) => ref(row.event) === event.id && ref(row.user) === user.id)
           const coming = rsvps.filter((row) => ref(row.event) === event.id).length
@@ -198,7 +208,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
               )}
             </article>
           )
-        }) : <p className="muted">No nights are planned yet.</p>}
+        }) : <p className="muted">No nights are planned yet.</p>}</> : null}
         <p className="eyebrow">Board</p>
         <form className="card form-stack" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'board', next: here }} />
@@ -212,7 +222,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
           </div>
         ))}
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      <TabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -220,17 +230,84 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
 export async function SettingsScreen({ payload, user, portal, base, query }: Ctx) {
   const unread = await unreadCount(payload, user)
   const here = `${base}/me/settings`
+  const prefs = parsePrefs(user.notificationPrefs, user.nightAlerts)
+  const deletePage = query.account === 'delete'
+  const dataPage = query.account === 'data'
+  const zone = portalTimeZone(portal)
+  const deleteWhen = britishPortalTime(deleteDueAt(user.deletionRequestedAt || now()), zone)
   return (
     <AppFrame testId="settings">
       <div className="app-scroll">
         <Back href={`${base}/me`} label="Me" />
-        <div className="app-head"><h1>Settings</h1></div>
+        <div className="app-head"><h1>Settings <PageHelp topic="settings" /></h1></div>
         <Flash error={query.error} notice={query.notice} />
+        {!isEmailConfirmed(user) ? <ConfirmStrip next={here} required={Boolean(portal.requireEmailConfirm)} /> : null}
+        {deletePage ? (
+          <section className="card" data-testid="delete-account">
+            <h3>Delete my account <PageHelp topic="deleteAccount" /></h3>
+            <p>We will delete your name, email, answers, plans and uploads after 14 days. That is <time data-testid="delete-when">{deleteWhen}</time>. Anonymous counts stay, so a course can still say how many people finished it. Signing in before then cancels this.</p>
+            <form className="form-stack" action="/api/hearts" method="post">
+              <Hidden fields={{ action: 'request-delete', next: here, confirm: 'delete' }} />
+              <button className="pill outline block" type="submit" data-testid="delete-account-submit">Delete my account</button>
+            </form>
+          </section>
+        ) : null}
+        {dataPage ? (
+          <section className="card" data-testid="download-data">
+            <h3>Download my data <PageHelp topic="downloadData" /></h3>
+            <p>A zip of your profile, answers and uploads. If email is off, the file downloads here.</p>
+            <form action="/api/hearts" method="post">
+              <Hidden fields={{ action: 'download-data', next: here }} />
+              <button className="pill gold small" type="submit" data-testid="download-data-submit">Download my data</button>
+            </form>
+          </section>
+        ) : null}
+        <section className="card form-stack" data-testid="change-password">
+          <h3>Change password <PageHelp topic="changePassword" /></h3>
+          <form className="form-stack" action="/api/hearts" method="post">
+            <Hidden fields={{ action: 'change-password', next: here }} />
+            <label>Current password<input className="field" data-testid="current-password" name="currentPassword" type="password" autoComplete="current-password" required /></label>
+            <label>New password<input className="field" data-testid="new-password" name="password" type="password" minLength={8} autoComplete="new-password" required /></label>
+            <label>New password again<input className="field" data-testid="new-password-again" name="passwordAgain" type="password" minLength={8} autoComplete="new-password" required /></label>
+            <button className="pill ink small" type="submit" data-testid="change-password-submit">Save password</button>
+          </form>
+        </section>
+        <section className="card form-stack" data-testid="change-email">
+          <h3>Change email</h3>
+          <p className="muted" style={{ fontSize: 13 }}>We write to the new address. The change happens only after you confirm it. We also tell the old address.</p>
+          <form className="form-stack" action="/api/hearts" method="post">
+            <Hidden fields={{ action: 'change-email', next: here }} />
+            <label>New email<input className="field" data-testid="change-email-input" name="email" type="email" defaultValue={user.pendingEmail || ''} required /></label>
+            <button className="pill outline small" type="submit" data-testid="change-email-submit">Send confirmation</button>
+          </form>
+        </section>
+        <section className="card" data-testid="notify-prefs">
+          <h3>Notifications <PageHelp topic="notifications" /></h3>
+          <form className="form-stack" action="/api/hearts" method="post">
+            <Hidden fields={{ action: 'save-notify-prefs', next: here }} />
+            {NOTIFY_KINDS.map((kind) => (
+              <label key={kind} className="stack">{KIND_LABEL[kind]}
+                <select className="field" name={`pref-${kind}`} defaultValue={prefs.channels[kind]} data-testid={`pref-${kind}`}>
+                  <option value="in-app">In the app</option>
+                  <option value="email">Email</option>
+                  <option value="off">Off</option>
+                </select>
+              </label>
+            ))}
+            <label className="toggle"><input type="checkbox" name="quietNight" defaultChecked={prefs.quietNight} data-testid="quiet-night" /> Quiet at night (no emails 22:00 to 07:00 in the portal&apos;s time zone)</label>
+            <label className="toggle"><input type="checkbox" name="emailNews" defaultChecked={Boolean(prefs.emailNewsAt)} data-testid="email-news" /> I am happy to receive these emails (not required to use HEARTS)</label>
+            <button className="pill outline small" type="submit" data-testid="notify-prefs-save">Save</button>
+          </form>
+        </section>
+        <p><Link href={`${here}?account=data`} data-testid="download-data-link">Download my data</Link></p>
+        <p><Link href={`${here}?account=delete`} data-testid="delete-account-link">Delete my account</Link></p>
+        {featureOn(portal, 'gather') ? (
         <form className="card form-stack" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'night-alerts', next: here }} />
           <label className="toggle" style={{ marginTop: 0 }}><input type="checkbox" name="nightAlerts" defaultChecked={Boolean(user.nightAlerts)} data-testid="night-alerts" /> Tell me when a new night opens</label>
           <button className="pill outline small" type="submit" data-testid="night-alerts-save">Save</button>
         </form>
+        ) : null}
         <form className="card form-stack" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'watch-opt-in', next: here }} />
           <label className="toggle" style={{ marginTop: 0 }}><input data-testid="share-watch" type="checkbox" name="shareWatch" defaultChecked={Boolean(user.shareWatch)} /> Share my detailed watch history with my teachers</label>
@@ -246,7 +323,7 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
           <button className="pill outline block" type="submit" data-testid="logout">Sign out</button>
         </form>
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      <TabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>
   )
 }

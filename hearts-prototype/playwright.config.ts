@@ -34,6 +34,7 @@ export default defineConfig({
       HEARTS_TRUSTED_PROXY_HOPS: '1',
       HEARTS_SEARCH_FIXTURE: 'tests/fixtures/youtube-search.json',
       HEARTS_TRANSCRIPT_FIXTURE: 'tests/fixtures/transcripts.json',
+      HEARTS_MAIL_CATCHER: '1',
     } as Record<string, string>,
   },
 })

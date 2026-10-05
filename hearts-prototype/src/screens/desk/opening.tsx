@@ -12,6 +12,8 @@ import { loadPortal, type SessionUser } from '@/server/context'
 import { loadOpening } from '@/server/opening'
 import { partTitle } from '@/lib/talk-title'
 import { portalDisplayName, showPortalName } from '@/lib/portal-name'
+import { HelpTip } from '@/components/desk/help'
+import { TOOL } from '@/lib/desk-help'
 import { type Ctx, ref, rows, str } from '../common'
 import { masterFlags } from '../app/journey'
 import { AdminFrame } from './overview'
@@ -304,7 +306,10 @@ export async function PortalOpeningScreen(ctx: Ctx) {
                 <label className="stack">Second line<input type="text" name="subline" defaultValue={own?.subline || ''} placeholder={str(scene.subline)} /></label>
               </div>
               {crisis ? <p className="hint" style={{ margin: 0 }}>This scene holds the option that opens the help screen, so it is always shown.</p> : (
-                <label className="check"><input type="checkbox" name="hidden" defaultChecked={hidden.has(scene.id)} data-testid="portal-hide" /> Leave this scene out for {showPortalName(portal.name)}</label>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <label className="check"><input type="checkbox" name="hidden" defaultChecked={hidden.has(scene.id)} data-testid="portal-hide" /> Leave this scene out for {showPortalName(portal.name)}</label>
+                  <HelpTip topic="hide-scene">{TOOL.hideScene}</HelpTip>
+                </span>
               )}
               <div className="actions"><button className="btn ink small" type="submit" data-testid="portal-scene-save">Save</button></div>
             </form>
@@ -313,7 +318,7 @@ export async function PortalOpeningScreen(ctx: Ctx) {
       })}
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', alignItems: 'start' }}>
         <section className="panel" data-testid="help-contacts">
-          <header className="light"><h2>Help contacts</h2><span className="hint">Shown on the help screen</span></header>
+          <header className="light"><h2>Help contacts <HelpTip topic="help-contacts">{TOOL.helpContacts}</HelpTip></h2><span className="hint">Shown on the help screen</span></header>
           <div className="body" style={{ display: 'grid', gap: 10 }}>
             {contacts.map((contact, index) => (
               <div className="count-tile" key={`${contact.label}-${index}`} data-testid="help-contact">

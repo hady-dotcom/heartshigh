@@ -1,13 +1,27 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { deskTokens } from './desk-tokens'
+import { contrastRatio, deskTokens } from './desk-tokens'
 
-test('desk tokens are the shared parchment, ink and teal values', () => {
-  assert.equal(deskTokens.page, '#EFE3C8')
-  assert.equal(deskTokens.card, '#F7EEDB')
-  assert.equal(deskTokens.ink, '#1F2A2A')
-  assert.equal(deskTokens.heading, '#0F3B3A')
+test('desk tokens are the evening-garden teal, gold and cream values', () => {
+  assert.equal(deskTokens.page, '#0E2A2B')
+  assert.equal(deskTokens.card, '#163633')
+  assert.equal(deskTokens.ink, '#F6EEDC')
+  assert.equal(deskTokens.heading, '#F6EEDC')
+  assert.notEqual(deskTokens.page.toLowerCase(), '#efe3c8')
   const css = readFileSync(new URL('../app/(frontend)/theme.css', import.meta.url), 'utf8')
+  const desk = readFileSync(new URL('../app/(frontend)/desk.css', import.meta.url), 'utf8')
   for (const value of Object.values(deskTokens)) assert.match(css, new RegExp(value))
+  assert.match(desk, /--paper:\s*var\(--desk-page/)
+  assert.match(desk, /--card:\s*var\(--desk-card/)
+})
+
+test('desk type on teal panels meets 4.5:1', () => {
+  assert.ok(contrastRatio(deskTokens.ink, deskTokens.page) >= 4.5)
+  assert.ok(contrastRatio(deskTokens.ink, deskTokens.card) >= 4.5)
+  assert.ok(contrastRatio(deskTokens.heading, deskTokens.page) >= 4.5)
+  assert.ok(contrastRatio(deskTokens.muted, deskTokens.card) >= 4.5)
+  assert.ok(contrastRatio(deskTokens.muted, deskTokens.page) >= 4.5)
+  assert.ok(contrastRatio(deskTokens.onDark, deskTokens.header) >= 4.5)
+  assert.ok(contrastRatio(deskTokens.goldInk, deskTokens.gold) >= 4.5)
 })

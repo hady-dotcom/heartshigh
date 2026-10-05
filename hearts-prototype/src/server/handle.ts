@@ -13,7 +13,8 @@ import { minutesADay } from '@/lib/study-plan'
 import { clockEnabled, setTestNow } from '@/lib/clock'
 import { authCookie } from '@/lib/cookies'
 import { logError } from '@/lib/log'
-import { clientIp, hit, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
+import { gateAuth, tooManyAnswers } from '@/lib/auth-gate'
+import { clientIp, hit, hitAnswer, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
 import { slugProblem } from '@/lib/text-safety'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
 import { ingestYoutubeUrl } from '@/lib/youtube'
@@ -34,7 +35,15 @@ import { handleCircle } from './circle'
 import { randomUUID } from 'node:crypto'
 import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourseIds, type Session, type SessionUser } from './context'
 import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCookie, wrote } from './viewas'
-import { isTimeZone } from '@/lib/zone-time'
+import { britishPortalTime, isTimeZone, portalTimeZone } from '@/lib/zone-time'
+import { parseLengthInput } from '@/lib/length'
+import { FEATURE_UNAVAILABLE, featuresFromForm } from '@/lib/features'
+import { adoptLibraryCourses, loadPortalById, refuseFeature } from './features'
+import { afterPasswordChanged, afterPasswordLogin, handleAccountAction, issueConfirmEmail, prepareForgot } from './account-actions'
+import { pausedSinceMessage, SUSPEND_MESSAGE } from '@/lib/account-rules'
+import { sendQueuedNotification } from './notify-email'
+import { notifyKey } from '@/lib/notify-prefs'
+import { requestOriginAllowed } from '@/lib/env'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
@@ -104,11 +113,18 @@ async function loginResponse(req: Request, email: string, password: string, next
   const { payload } = await getSession()
   try {
     const result = await payload.login({ collection: 'users', data: { email, password } })
-    if (!result.token || !result.user) return redirectTo(req, '/login', 'That email or password did not match.')
-    const response = redirectTo(req, await landingPath(payload, result.user as SessionUser, next))
-    response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, result.token, 7200))
-    return response
-  } catch {
+    const land = await landingPath(payload, (result.user || {}) as SessionUser, next)
+    return afterPasswordLogin(req, payload, result as never, land)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : ''
+    if (/paused|masjid or school/i.test(message)) {
+      const found = await payload.find({ collection: 'users', overrideAccess: true, depth: 1, limit: 1, where: { email: { equals: email.toLowerCase() } } })
+      const person = found.docs[0] as { suspendedAt?: string | null; tenants?: { tenant?: { timeZone?: string } | number }[] } | undefined
+      const tenant = person?.tenants?.[0]?.tenant
+      const zone = portalTimeZone(tenant && typeof tenant === 'object' ? tenant : null)
+      const when = britishPortalTime(person?.suspendedAt, zone, 'at')
+      return redirectTo(req, '/login', pausedSinceMessage(when))
+    }
     return redirectTo(req, '/login', 'That email or password did not match.')
   }
 }
@@ -139,6 +155,22 @@ async function actingPortal(payload: Awaited<ReturnType<typeof getSession>>['pay
   const found = await loadPortal(payload, slug)
   if (!found) return { error: 'That portal could not be found.' as const }
   return { portal: { id: found.id, slug: found.slug } }
+}
+
+async function featureBlock(
+  payload: Awaited<ReturnType<typeof getSession>>['payload'],
+  user: SessionUser,
+  form: FormData,
+  key: 'gather' | 'planner' | 'compass' | 'circle' | 'feedback' | 'workbook',
+) {
+  let id = portalIdOf(user)
+  if (user.role === 'master' && text(form, 'portalSlug')) {
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return acting.error
+    id = acting.portal.id
+  }
+  if (!id) return null
+  return refuseFeature(await loadPortalById(payload, id), key)
 }
 
 async function courseOfLesson(payload: Awaited<ReturnType<typeof getSession>>['payload'], lessonId: number) {
@@ -427,9 +459,17 @@ export async function handlePost(req: Request) {
   } catch {
     return redirectTo(req, '/', 'That form could not be read. Please try again.')
   }
+  if (!requestOriginAllowed(req.headers)) {
+    return NextResponse.json({ error: 'This request was refused.' }, { status: 403 })
+  }
   const action = text(form, 'action')
   const session = await getSession({ touch: action !== 'clock' })
   const { payload, viewAs } = session
+  if (session.dropSession && !['login', 'forgot-password', 'reset-password', 'join', 'logout', 'verify-totp', 'confirm-totp', 'setup-totp', 'clock'].includes(action)) {
+    const response = redirectTo(req, '/login', session.dropSession === 'paused' ? 'This account is paused. Please speak to your masjid or school.' : 'Please sign in again.')
+    response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, '', 0))
+    return response
+  }
   if (viewAs && action === 'logout') {
     const live = await payload.find({ collection: 'view-as-sessions', overrideAccess: true, depth: 0, limit: 1, where: { id: { equals: viewAs.id } } })
     if (live.docs[0]) await endSession(payload, live.docs[0] as never, 'actor-signed-out')
@@ -459,12 +499,50 @@ export async function handlePost(req: Request) {
 }
 
 async function handleForm(req: Request, form: FormData, session: Session) {
+  const account = await handleAccountAction(req, form, session)
+  if (account) return account
   const action = text(form, 'action')
   const { payload, user } = session
 
   if (action === 'login') {
     const next = text(form, 'next') || '/'
-    return loginResponse(req, text(form, 'email').toLowerCase(), text(form, 'password'), next)
+    const email = text(form, 'email').toLowerCase()
+    const blocked = await gateAuth(req, form, 'login', email, '/login')
+    if (blocked) return blocked
+    return loginResponse(req, email, text(form, 'password'), next)
+  }
+
+  if (action === 'forgot-password') {
+    const email = text(form, 'email').toLowerCase()
+    const blocked = await gateAuth(req, form, 'forgot', email, '/forgot')
+    if (blocked) return blocked
+    try {
+      if (email) {
+        const prepared = await prepareForgot(payload, email)
+        if (!prepared.skipped) await payload.forgotPassword({ collection: 'users', data: { email } })
+      }
+    } catch {
+      // Same notice either way, so a guesser cannot tell whether the email is on the books.
+    }
+    const sent = new URLSearchParams({ sent: '1' })
+    if (email) sent.set('email', email)
+    return redirectTo(req, `/forgot?${sent}`, undefined, 'If that email has an account, we have sent a reset link.')
+  }
+
+  if (action === 'reset-password') {
+    const token = text(form, 'token')
+    const password = text(form, 'password')
+    const blocked = await gateAuth(req, form, 'reset', '', `/reset${token ? `?token=${encodeURIComponent(token)}` : ''}`)
+    if (blocked) return blocked
+    if (!token || password.length < 8) return redirectTo(req, '/reset', 'Use the link from your email, and at least 8 characters for the password.')
+    try {
+      const reset = await payload.resetPassword({ collection: 'users', data: { token, password }, overrideAccess: true })
+      const person = reset?.user ? ((await payload.findByID({ collection: 'users', id: (reset.user as { id: number }).id, overrideAccess: true, depth: 0 })) as never) : null
+      if (person) await afterPasswordChanged(payload, person)
+    } catch {
+      return redirectTo(req, '/reset', 'That reset link is not valid any more. Ask for a new one.')
+    }
+    return redirectTo(req, '/login', undefined, 'Your password is updated. Sign in with the new one.')
   }
 
   if (action === 'logout') {
@@ -480,6 +558,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const password = text(form, 'password')
     if (!name || !email || !password) return redirectTo(req, `/join?code=${encodeURIComponent(codeValue)}`, 'Name, email and a password are all needed.')
     if (password.length < 8) return redirectTo(req, `/join?code=${encodeURIComponent(codeValue)}`, 'Use at least 8 characters for the password.')
+    const joinBack = `/join?code=${encodeURIComponent(codeValue)}`
+    const blocked = await gateAuth(req, form, 'join', email, joinBack)
+    if (blocked) return blocked
     const keys = joinFailKeys(clientIp(req), codeValue)
     if (!peek(keys.pair, JOIN_FAILS_PER_CODE, JOIN_WINDOW_MS).allowed || (keys.address && !peek(keys.address, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS).allowed)) return tooManyJoins()
     const found = await payload.find({
@@ -544,6 +625,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       const { claimGuestRsvp } = await import('./gather')
       await claimGuestRsvp(payload, guest, createdId)
     }
+    if (createdId) {
+      await issueConfirmEmail(payload, { id: createdId, email, name }, (portalDoc as { name?: string }).name, `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('x-forwarded-host') || req.headers.get('host') || ''}`)
+    }
     const after = text(form, 'after')
     const gatherNext = after.startsWith(`/p/${slug}/`) ? after : ''
     const next = gatherNext || (codeRole === 'learner' || codeRole === 'parent' ? `/p/${slug}/welcome` : `/p/${slug}/admin`)
@@ -581,7 +665,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (slugIssue) return redirectTo(req, '/master', slugIssue)
     const clash = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: slug } } })
     if (clash.docs.length) return redirectTo(req, '/master', 'That address is already in use.')
-    await payload.create({
+    const features = form.get('featuresForm') === 'yes' ? featuresFromForm(form) : undefined
+    const created = await payload.create({
       collection: 'portals',
       overrideAccess: true,
       data: {
@@ -592,9 +677,27 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         colour: text(form, 'colour') || '#1f4d3a',
         watchHistoryOptIn: false,
         wizardDone: true,
+        ...(features ? { features } : {}),
       },
     })
-    return redirectTo(req, '/master', undefined, `${name} is open.`)
+    const courseIds = form.getAll('course').map((value) => Number(value)).filter(Boolean)
+    if (courseIds.length) await adoptLibraryCourses(payload, created.id, courseIds)
+    return redirectTo(req, text(form, 'next') || '/master', undefined, `${name} is open.`)
+  }
+
+  if (action === 'portal-features') {
+    if (user.role !== 'master') return redirectTo(req, '/', 'Only the master desk can change portal features.')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, text(form, 'next') || '/master', acting.error)
+    const data: Record<string, unknown> = {}
+    if (form.has('name') && text(form, 'name')) data.name = text(form, 'name')
+    if (form.has('welcome')) data.welcome = text(form, 'welcome')
+    if (form.has('kind') && ['mosque', 'church', 'synagogue', 'other'].includes(text(form, 'kind'))) data.kind = text(form, 'kind')
+    if (form.get('featuresForm') === 'yes') data.features = featuresFromForm(form)
+    await payload.update({ collection: 'portals', id: acting.portal.id, overrideAccess: true, data })
+    const courseIds = form.getAll('course').map((value) => Number(value)).filter(Boolean)
+    if (form.has('course') || form.get('featuresForm') === 'yes') await adoptLibraryCourses(payload, acting.portal.id, courseIds, true)
+    return redirectTo(req, text(form, 'next') || `/master/portals/${acting.portal.slug}`, undefined, 'Features saved. They are live now.')
   }
 
   if (action === 'create-pack') {
@@ -721,6 +824,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       data: { title: text(form, 'unit') || 'Unit 1', course: course.id, order: 1 },
     })
     const lessonTitle = text(form, 'lesson') || title
+    const length = parseLengthInput(text(form, 'duration'))
+    if (!length.ok) return redirectTo(req, next, length.message)
     await payload.create({
       collection: 'lessons',
       overrideAccess: true,
@@ -733,7 +838,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         order: 1,
         speaker: text(form, 'speaker'),
         transcriptSource: 'none',
-        durationSeconds: Number(text(form, 'duration') || 0) || undefined,
+        durationSeconds: length.seconds,
       },
     })
     const packId = Number(text(form, 'pack') || 0)
@@ -1123,6 +1228,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   }
 
   if (action === 'answer') {
+    const limited = hitAnswer(user.id, clientIp(req))
+    if (!limited.allowed) return tooManyAnswers(limited.retryAfterSec, false)
     const result = await saveAnswer(payload, user, {
       pointId: Number(text(form, 'point')),
       body: text(form, 'body'),
@@ -1177,6 +1284,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   if (action === 'schedule') {
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
+    if (refuseFeature(await loadPortalById(payload, acting.portal.id), 'planner')) {
+      return redirectTo(req, text(form, 'next') || '/', FEATURE_UNAVAILABLE)
+    }
     const portal = acting.portal.id
     const name = text(form, 'name').slice(0, 80) || defaultPlanName(now())
     const targetType = text(form, 'targetType') === 'pack' ? 'pack' : 'course'
@@ -1241,6 +1351,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const eventId = Number(text(form, 'event'))
     const event = await findDoc(payload, 'events', eventId)
     if (!event || (user.role !== 'master' && idOf(event.portal) !== portal)) return redirectTo(req, '/', 'That night is not in your portal.')
+    if (refuseFeature(await loadPortalById(payload, idOf(event.portal) || portal || 0), 'gather')) {
+      return redirectTo(req, text(form, 'next') || '/', FEATURE_UNAVAILABLE)
+    }
     const eventPortal = idOf(event.portal)
     if (action === 'rsvp') {
       const existing = await payload.find({
@@ -1305,6 +1418,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       return redirectTo(req, '/', 'That workbook is not in your portal.')
     }
     if (!entry.consent) return redirectTo(req, text(form, 'next') || '/', 'The learner has kept this entry to themselves, so it cannot be replied to.')
+    if (refuseFeature(await loadPortalById(payload, idOf(entry.portal) || portalIdOf(user) || 0), 'feedback')) {
+      return redirectTo(req, text(form, 'next') || '/', FEATURE_UNAVAILABLE)
+    }
     await payload.update({
       collection: 'workbook-entries',
       id: entryId,
@@ -1314,29 +1430,14 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const learnerId = idOf((entry as { user?: unknown }).user)
     if (learnerId) {
       const portal = idOf((entry as { portal?: unknown }).portal)
-      await payload.create({
-        collection: 'notifications',
-        overrideAccess: true,
-        data: {
-          user: learnerId,
-          portal: portal || undefined,
-          title: 'Your teacher replied',
-          body: reply,
-          href: text(form, 'href') || '/',
-          channel: 'in-app' as const,
-        },
-      })
-      await payload.create({
-        collection: 'notifications',
-        overrideAccess: true,
-        data: {
-          user: learnerId,
-          portal: portal || undefined,
-          title: 'Email not sent',
-          body: 'Email is stubbed in this prototype. The reply is waiting in the bell.',
-          href: text(form, 'href') || '/',
-          channel: 'email-stub' as const,
-        },
+      await sendQueuedNotification(payload, {
+        userId: learnerId,
+        portalId: portal,
+        kind: 'teacher-reply',
+        title: 'Your teacher replied',
+        body: reply,
+        href: text(form, 'href') || '/',
+        key: notifyKey('teacher-reply', String(entryId)),
       })
     }
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Reply saved.')
@@ -1672,6 +1773,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (!answer) return redirectTo(req, text(form, 'next') || '/', 'That answer could not be found.')
     if (user.role !== 'master' && idOf(answer.portal) !== portalIdOf(user)) {
       return redirectTo(req, '/', 'That answer is not in your portal.')
+    }
+    if (refuseFeature(await loadPortalById(payload, idOf(answer.portal) || portalIdOf(user) || 0), 'feedback')) {
+      return redirectTo(req, text(form, 'next') || '/', FEATURE_UNAVAILABLE)
     }
     const body = text(form, 'body')
     if (!body) return redirectTo(req, text(form, 'next') || '/', 'Write the feedback first.')
@@ -2028,7 +2132,11 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, text(form, 'next') || '/')
   }
 
-  if (action.startsWith('circle-')) return handleCircle(action, form, payload, user, (path, error, notice) => redirectTo(req, path, error, notice))
+  if (action.startsWith('circle-')) {
+    const blocked = await featureBlock(payload, user, form, 'circle')
+    if (blocked) return redirectTo(req, text(form, 'next') || '/', blocked)
+    return handleCircle(action, form, payload, user, (path, error, notice) => redirectTo(req, path, error, notice))
+  }
 
   return redirectTo(req, '/', 'That action is not known.')
 }

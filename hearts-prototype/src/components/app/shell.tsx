@@ -1,26 +1,38 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { RouteFade } from '@/components/app/route-fade'
+import { learnerBar, type BarKey, type FeatureSource } from '@/lib/features'
 
-export type Tab = 'home' | 'lanes' | 'gather' | 'garden' | 'me'
+export type Tab = BarKey
 
-export function TabBar({ base, active, dark = false, evening = false, unread = 0 }: { base: string; active: Tab; dark?: boolean; evening?: boolean; unread?: number }) {
-  const tabs: [Tab, string, string][] = [
-    ['home', 'Home', base],
-    ['lanes', 'Lanes', `${base}/lanes`],
-    ['gather', 'Gather', `${base}/gather`],
-    ['garden', 'Garden', `${base}/garden`],
-    ['me', 'Me', `${base}/me`],
-  ]
+export function TabBar({
+  base,
+  active,
+  portal,
+  dark = false,
+  evening = false,
+  unread = 0,
+}: {
+  base: string
+  active: Tab
+  portal?: FeatureSource
+  dark?: boolean
+  evening?: boolean
+  unread?: number
+}) {
+  const tabs = learnerBar(portal)
   return (
     <nav className={`tabbar${dark ? ' dark' : ''}${evening ? ' evening' : ''}`} aria-label="Main" data-testid="tabbar">
-      {tabs.map(([key, label, href]) => (
-        <Link key={key} href={href} className={`tab${active === key ? ' on' : ''}`} aria-current={active === key ? 'page' : undefined} data-testid={`tab-${key}`}>
-          <TabIcon tab={key} on={active === key} />
-          {key === 'me' && unread > 0 ? <span className="badge" data-testid="unread-badge">{unread}</span> : null}
-          {label}
-        </Link>
-      ))}
+      {tabs.map((item) => {
+        const href = `${base}${item.path}`
+        return (
+          <Link key={item.key} href={href} className={`tab${active === item.key ? ' on' : ''}`} aria-current={active === item.key ? 'page' : undefined} data-testid={`tab-${item.key}`}>
+            <TabIcon tab={item.key} on={active === item.key} />
+            {item.key === 'me' && unread > 0 ? <span className="badge" data-testid="unread-badge">{unread}</span> : null}
+            {item.label}
+          </Link>
+        )
+      })}
     </nav>
   )
 }
@@ -51,6 +63,14 @@ function TabIcon({ tab, on }: { tab: Tab; on: boolean }) {
         <path d="M9 8.5c.4-2 1.4-3.5 3-4.5 1.6 1 2.6 2.5 3 4.5" />
       </svg>
     )
+  if (tab === 'week')
+    return (
+      <svg {...common} className="tab-icon">
+        <rect x="4" y="5" width="16" height="15" rx="2" fill={on ? 'currentColor' : 'none'} fillOpacity={on ? 0.12 : 0} />
+        <path d="M8 3.5v3M16 3.5v3M4 10h16" />
+        <path d="M8 14h2M12 14h2M8 17h2" />
+      </svg>
+    )
   if (tab === 'garden')
     return (
       <svg {...common} className="tab-icon">
@@ -68,9 +88,10 @@ function TabIcon({ tab, on }: { tab: Tab; on: boolean }) {
 }
 
 export function Flash({ error, notice }: { error?: string; notice?: string }) {
+  const paused = Boolean(error && /this account is paused/i.test(error))
   return (
     <>
-      {error ? <div className="flash error" role="alert" data-testid="error">{error}</div> : null}
+      {error ? <div className="flash error" role="alert" data-testid="error" {...(paused ? { 'data-paused-when': error } : {})}>{error}</div> : null}
       {notice ? <div className="flash notice" role="status" data-testid="notice">{notice}</div> : null}
     </>
   )

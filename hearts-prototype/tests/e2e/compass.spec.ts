@@ -8,8 +8,12 @@ const IMAM = 'demo-imam@hearts.foundation'
 const PASSWORD = 'compass-demo'
 
 test.beforeAll(() => {
-  execSync('npx tsx src/seed/compass-demo.ts', { stdio: 'inherit', env: { ...process.env, DATABASE_URL: E2E_DATABASE } })
-})
+  execSync('npx tsx src/seed/compass-demo.ts', {
+    stdio: 'inherit',
+    timeout: 180_000,
+    env: { ...process.env, DATABASE_URL: E2E_DATABASE },
+  })
+}, { timeout: 180_000 })
 
 test('a learner cannot fetch their own scores from any compass API', async () => {
   const learner = await playwrightRequest.newContext({ baseURL: E2E_BASE })

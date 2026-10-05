@@ -7,6 +7,10 @@ import { staffLearner, staffPortal } from '@/server/compass'
 import { type Ctx } from '../common'
 import { AdminFrame } from './overview'
 import { Hidden } from '@/components/app/shell'
+import { HelpTip } from '@/components/desk/help'
+import { HideTestFilter } from '@/components/desk/hide-test'
+import { TOOL } from '@/lib/desk-help'
+import { hideTestFromQuery, visiblePeople } from '@/lib/test-accounts'
 
 function signed(value: number | null) {
   if (value == null) return '—'
@@ -67,10 +71,12 @@ export async function PortalCompassScreen(ctx: Ctx) {
   const summary = await staffPortal(ctx.payload, ctx.user, ctx.portal.id)
   if (!summary) notFound()
   const peak = Math.max(1, ...summary.personas.map((row) => row.count))
+  const hideTest = hideTestFromQuery(ctx.query)
+  const learners = visiblePeople(summary.learners, hideTest)
   return (
     <AdminFrame ctx={ctx} active="compass" title="Compass" intro="Scores run from -10 to +10. Learners see a gentle Focusing on line, never a label and never a number." testId="compass-portal">
       <section className="panel" data-testid="cohort" style={{ marginBottom: 18 }}>
-        <header><h2>The circle, with no names</h2><span className="hint">{summary.learners.length} learners</span></header>
+        <header><h2>The circle, with no names <HelpTip topic="compass-scores">{TOOL.compassScores}</HelpTip></h2><span className="hint">{learners.length} learners</span></header>
         <div className="body cohort">
           <div data-testid="cohort-personas">
             {summary.personas.map((row) => (
@@ -99,6 +105,7 @@ export async function PortalCompassScreen(ctx: Ctx) {
           <label>Steady scales <input name="strength" type="number" min={0} max={100} defaultValue={summary.mix.strength} /></label>
           <label>A new door <input name="discovery" type="number" min={0} max={100} defaultValue={summary.mix.discovery} /></label>
           <button className="btn gold" type="submit">Save the mix</button>
+          <HelpTip topic="mix">{TOOL.mix}</HelpTip>
           <p className="hint">Shares are scaled to 100. The usual mix is 60, 25 and 15.</p>
         </form>
       </section>
@@ -141,12 +148,12 @@ export async function PortalCompassScreen(ctx: Ctx) {
         </div>
       </section>
       <section className="panel">
-        <header><h2>Each learner</h2></header>
+        <header><h2>Each learner</h2><HideTestFilter action={`${ctx.base}/admin/compass`} hide={hideTest} /></header>
         <div className="body" style={{ display: 'grid', gap: 8 }}>
-          {summary.learners.map((learner) => (
+          {learners.map((learner) => (
             <Link key={learner.id} href={`${ctx.base}/admin/compass/${learner.id}`} data-testid="compass-learner">{learner.name} · {learner.attempts} {learner.attempts === 1 ? 'look' : 'looks'}</Link>
           ))}
-          {!summary.learners.length ? <p>No learners in this portal yet.</p> : null}
+          {!learners.length ? <p>No learners in this portal yet.</p> : null}
         </div>
       </section>
     </AdminFrame>

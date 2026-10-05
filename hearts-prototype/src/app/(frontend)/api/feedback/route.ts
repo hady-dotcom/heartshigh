@@ -3,6 +3,7 @@ import { anonymiseFromQuery, canNameExport, canReadFeedback, parseFilters } from
 import { json, portalOf, viewAsRefusal } from '@/server/api'
 import { getSession } from '@/server/context'
 import { portalDisplayName } from '@/lib/portal-name'
+import { featureGoneJson } from '@/server/features'
 import { checkQuestions, draftQuestionSummary, exportFilename, feedbackFor, includeSummary, includedSummaries, recordExport, renderExport } from '@/server/feedback'
 
 export const dynamic = 'force-dynamic'
@@ -28,6 +29,8 @@ export async function GET(req: Request) {
   if (refused) return refused
   const portal = await portalOf(session, req)
   if (!portal) return json({ error: 'That portal is not yours.' }, 403)
+  const gone = featureGoneJson(portal, 'feedback')
+  if (gone) return gone
   const url = new URL(req.url)
   const format = url.searchParams.get('format') || ''
   const query = Object.fromEntries(url.searchParams.entries())
@@ -58,6 +61,8 @@ export async function POST(req: Request) {
   if (refused) return refused
   const portal = await portalOf(session, req)
   if (!portal) return redirectTo(req, '/', 'That portal is not yours.')
+  const gone = featureGoneJson(portal, 'feedback')
+  if (gone) return gone
   const form = await req.formData().catch(() => null)
   if (!form) return json({ error: 'The form was empty.' }, 400)
   const next = text(form, 'next') || `/p/${portal.slug}/admin/feedback`
