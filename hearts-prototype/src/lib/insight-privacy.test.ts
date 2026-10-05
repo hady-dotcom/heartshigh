@@ -77,7 +77,7 @@ test('UK dates are day month year', () => {
 
 test('insights collections, props and stored rows never hold a learner or device', () => {
   for (const collection of insightCollections) {
-    const names = collection.fields.map((field) => field.name)
+    const names = collection.fields.map((field) => ('name' in field ? field.name : undefined))
     assert.ok(!names.includes('learner'), `${collection.slug} must not have learner`)
     assert.ok(!names.includes('deviceId'), `${collection.slug} must not have deviceId`)
     assert.deepEqual(insightHoldsPerson({ fields: names }), [])

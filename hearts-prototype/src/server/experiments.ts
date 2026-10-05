@@ -83,13 +83,13 @@ function assertEdit(actor: Actor) {
 }
 
 function asDoc(row: Record<string, unknown>): ExperimentDoc {
-  const variants = ((row.variants as ExperimentVariant[]) || []).map((item) => ({
+  const variants: ExperimentVariant[] = ((row.variants as ExperimentVariant[] | undefined) || []).map((item) => ({
     key: String(item.key || ''),
     label: String(item.label || ''),
     payload: item.payload && typeof item.payload === 'object' && !Array.isArray(item.payload) ? (item.payload as Record<string, unknown>) : {},
     weight: Number(item.weight || 0),
     approved: Boolean(item.approved),
-    source: item.source === 'ai' || item.source === 'mock' ? item.source : 'staff',
+    source: (item.source === 'ai' || item.source === 'mock' ? item.source : 'staff') as ExperimentVariant['source'],
   }))
   const secondary = Array.isArray(row.secondaryMetrics)
     ? (row.secondaryMetrics as unknown[]).map((item) => String(item)).filter(Boolean)
@@ -816,7 +816,7 @@ export async function logExposure(payload: Payload, slot: string, subject: Subje
     if (!assigned.running || !assigned.experimentKey || !assigned.variantKey) return { ok: false as const }
     const experiment = await loadExperiment(payload, assigned.experimentKey)
     if (!experiment) return { ok: false as const }
-    const since = sessionId
+    const since: Where = sessionId
       ? { sessionId: { equals: sessionId } }
       : { at: { greater_than_equal: `${now().toISOString().slice(0, 10)}T00:00:00.000Z` } }
     const seen = await payload.find({

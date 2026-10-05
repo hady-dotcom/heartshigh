@@ -13,6 +13,23 @@ export function talkMinutes(seconds: number | null | undefined) {
   return Math.max(1, Math.ceil(value / 60))
 }
 
+/** Real length of a hors or appetiser cut from its spans or start/end. Never invents a number. */
+export function pieceSeconds(piece?: { start?: number; end?: number; spans?: { start?: number; end?: number }[] } | null) {
+  if (!piece) return null
+  if (Array.isArray(piece.spans) && piece.spans.length) {
+    const total = piece.spans.reduce((sum, span) => {
+      const start = Number(span.start)
+      const end = Number(span.end)
+      return sum + (Number.isFinite(start) && Number.isFinite(end) && end > start ? end - start : 0)
+    }, 0)
+    return total > 0 ? total : null
+  }
+  const start = Number(piece.start)
+  const end = Number(piece.end)
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null
+  return end - start
+}
+
 export function talkStepUpLabel(talks: number, seconds?: number | null) {
   const count = Math.max(1, Math.round(talks) || 1)
   if (count > 1) return `See the whole course (${count} talks)`

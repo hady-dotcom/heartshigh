@@ -205,7 +205,11 @@ async function DetailPage({ ctx, master, base, id, suggest }: { ctx: Ctx | null;
   const user = ctx?.user || master!.user
   let results: ExperimentResults
   try {
-    results = await resultsFor(payload, user, Number(id) || id)
+    const experimentId = Number(id)
+    if (!Number.isFinite(experimentId) || experimentId <= 0) {
+      return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-missing"><p>That experiment was not found.</p></Frame>
+    }
+    results = await resultsFor(payload, user, experimentId)
   } catch (error) {
     return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-missing"><p>{error instanceof Error ? error.message : 'That experiment was not found.'}</p></Frame>
   }

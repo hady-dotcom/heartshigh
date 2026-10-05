@@ -5,7 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
 import { mixFeed } from '@/lib/feed-mix'
-import { clipStepUpLabel, onlyClipToast, poolEndToast, READY_FOR_MORE, talkStepUpLabel, withTalkDetail } from '@/lib/feed-copy'
+import { clipStepUpLabel, onlyClipToast, pieceSeconds, poolEndToast, READY_FOR_MORE, talkStepUpLabel, withTalkDetail } from '@/lib/feed-copy'
 import { appendUnseenItems, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readCoachDismissed, readFeedPlace, readHeart, readPending, rememberSeenCard, sessionFlags, sessionSeenCards, sessionSeenCuts, setSessionFlags, viewAsId, writeCoachDismissed, writeFeedPlace, writeHeart, writePending } from '@/lib/device'
@@ -1555,7 +1555,8 @@ export function Journey(props: JourneyProps) {
   const scenic = Boolean(phase === 'feed' && cardKind === 'scene' && mode === 'hors' && item?.scene)
   const feedCard = phase === 'feed' && (cardKind === 'question' || cardKind === 'text')
   const started = playerReady && host.played && LIVE.has(host.state)
-  const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (!started || Boolean(errorNote) || offline)))
+  const playingOut = playerReady && host.played && host.state === STATE.PLAYING
+  const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (!playingOut || Boolean(errorNote) || offline)))
   const waitingToPlay = phase === 'feed' && playerReady && !started && !errorNote && !offline
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const lineShown = mode === 'hors' && lineAt >= 0 ? lineAt : -1
@@ -1691,7 +1692,11 @@ export function Journey(props: JourneyProps) {
           <>
             {wordsInPicture && !cardKind ? null : speakerRow}
             <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onClick={moreFromSpeaker}>More from {item.speaker} ›</button>
-            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" data-speaker={item.speaker} data-lesson={item.lessonId} onClick={() => void stepUp()}>{clipCta.label && !/^learn more\b/i.test(clipCta.label) ? clipCta.label : clipStepUpLabel()}</button>
+            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" data-speaker={item.speaker} data-lesson={item.lessonId} onClick={() => void stepUp()}>{(() => {
+              const lead = clipCta.label && !/^learn more\b/i.test(clipCta.label) ? clipCta.label : clipStepUpLabel()
+              const seconds = item.talkSeconds || pieceSeconds(item.appetiser)
+              return withTalkDetail(lead, 1, seconds)
+            })()}</button>
           </>
         ) : (
           <>
@@ -1790,7 +1795,7 @@ export function Journey(props: JourneyProps) {
               ) : null}
             </div>
           ) : null}
-          {phase === 'feed' && !item ? <div className="j-poster" data-testid="poster-frame" data-empty="" /> : null}
+          {phase === 'feed' && !item ? <div className="j-poster" data-testid="poster-frame" data-poster="own" data-empty="" /> : null}
           {overlay && phase === 'feed' && !slide && !scenic ? <div className="j-gesture" data-testid="gesture-layer" {...swipe} /> : null}
         </div>
         {slide && item ? (
@@ -1937,7 +1942,7 @@ function PosterStill({ item, mode, peek = false }: { item: FeedItem; mode: Mode;
       ) : item.poster ? (
         <img src={item.poster} alt="" />
       ) : null}
-      {mode === 'appetiser' && item.youtubeId && !frame ? (
+      {mode === 'appetiser' ? (
         <div className="j-poster-title" data-testid={peek ? undefined : 'poster-title'}>
           <small>{READY_FOR_MORE}</small>
           <b>{item.lessonTitle || item.courseTitle}</b>

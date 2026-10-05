@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { clipStepUpLabel, forbiddenLearnerWords, poolEndToast, READY_FOR_MORE, talkStepUpLabel, withTalkDetail } from '../../src/lib/feed-copy'
+import { clipStepUpLabel, forbiddenLearnerWords, pieceSeconds, poolEndToast, READY_FOR_MORE, talkStepUpLabel, withTalkDetail } from '../../src/lib/feed-copy'
 
 test('level buttons use one set of words, with minutes rounded up', () => {
   assert.equal(clipStepUpLabel(), 'Watch the 3-minute version')
@@ -11,6 +11,12 @@ test('level buttons use one set of words, with minutes rounded up', () => {
   assert.equal(withTalkDetail('Sit with the Friday talk ›', 1, 12 * 60), 'Sit with the Friday talk (12 min) ›')
   assert.equal(withTalkDetail('Sit with the Friday talk ›', 5), 'Sit with the Friday talk (5 talks) ›')
   assert.equal(withTalkDetail('Watch the whole talk', 1, 12 * 60), 'Watch the whole talk (12 min)')
+  assert.equal(withTalkDetail("Watch a Friday reminder before Jumu'ah ›", 1, 12 * 60), "Watch a Friday reminder before Jumu'ah (12 min) ›")
+  assert.equal(withTalkDetail('Watch the 3-minute version', 1, 185), 'Watch the 3-minute version (4 min)')
+  assert.equal(withTalkDetail("Watch a Friday reminder before Jumu'ah ›", 1, null), "Watch a Friday reminder before Jumu'ah ›")
+  assert.equal(pieceSeconds({ start: 10, end: 190 }), 180)
+  assert.equal(pieceSeconds({ spans: [{ start: 0, end: 60 }, { start: 80, end: 140 }] }), 120)
+  assert.equal(pieceSeconds({ start: 10, end: 10 }), null)
   for (const line of [clipStepUpLabel(), READY_FOR_MORE, talkStepUpLabel(1, 120), talkStepUpLabel(3)]) {
     assert.equal(forbiddenLearnerWords(line), false, line)
   }

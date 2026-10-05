@@ -239,7 +239,7 @@ export function experimentDraftProblems(input: {
   slot?: string
   primaryMetric?: string
   secondaryMetrics?: string[]
-  variants?: { key?: string; label?: string; payload?: unknown; weight?: number }[]
+  variants?: { key?: string; label?: string; payload?: unknown; weight?: number; approved?: boolean; source?: 'ai' | 'staff' | 'mock' | string }[]
   allocation?: string
 }): string[] {
   const problems: string[] = []
