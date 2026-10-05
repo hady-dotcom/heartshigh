@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { after, before, describe, it } from 'node:test'
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { closePayload } from '../../src/lib/prepare-db'
@@ -100,8 +100,11 @@ describe('erase wipe on a real database', { timeout: 180_000 }, () => {
       overrideAccess: true,
       data: { alt: 'wipe file', portal: wipePortalDoc.id },
       filePath,
-    })) as { id: number }
+    })) as { id: number; filename?: string }
     mediaId = media.id
+    mediaName = String(media.filename || filename)
+    const storedPath = path.join(dir, mediaName)
+    if (!existsSync(storedPath)) writeFileSync(storedPath, readFileSync(filePath))
 
     learner = (await payload.create({
       collection: 'users',
@@ -221,12 +224,15 @@ describe('erase wipe on a real database', { timeout: 180_000 }, () => {
     })
   })
 
-  after(async () => {
-    if (!payload) return
-    const pool = (payload.db as { pool?: { end?: () => Promise<unknown> } }).pool
-    if (pool?.end) await pool.end().catch(() => undefined)
-    await closePayload(payload)
-    setTimeout(() => process.exit(0), 50).unref()
+  after(() => {
+    try {
+      const pool = (payload?.db as { pool?: { end?: () => Promise<unknown> } } | undefined)?.pool
+      void pool?.end?.()
+      if (payload) void closePayload(payload)
+    } catch {
+      // The suite exits below so leftover handles cannot hang the run.
+    }
+    setTimeout(() => process.exit(0), 100).unref()
   })
 
   it('wiping a learner leaves no rows for them and keeps the other portal and the library talk', async () => {
@@ -244,7 +250,8 @@ describe('erase wipe on a real database', { timeout: 180_000 }, () => {
     assert.equal(circle.totalDocs, 0)
     const gone = await payload.findByID({ collection: 'users', id: learner.id, overrideAccess: true }).catch(() => null)
     assert.equal(gone, null)
-    assert.equal(existsSync(path.join(process.cwd(), 'media', mediaName)), false)
+    assert.ok(result.ok && (result.filesQueued || 0) >= 1, 'the wipe should queue the answer file')
+    assert.equal(existsSync(path.join(process.cwd(), 'media', mediaName)), false, `${mediaName} should be gone after commit`)
     const keepAnswers = await payload.find({ collection: 'answers', overrideAccess: true, where: { user: { equals: otherLearner.id } } })
     assert.equal(keepAnswers.totalDocs, 1)
     const talk = await payload.findByID({ collection: 'lessons', id: libraryLesson.id, overrideAccess: true })
