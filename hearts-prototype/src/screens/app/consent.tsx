@@ -1,6 +1,7 @@
 import Link from 'next/link'
+import { ConsentForm } from '@/components/app/consent-form'
 import { AppFrame, Flash, Hidden } from '@/components/app/shell'
-import { AGE_LABEL, type AgeBand } from '@/lib/child-safety'
+import type { AgeBand } from '@/lib/child-safety'
 import { currentLegalPages, loadAgeProfile, loadPortalContacts } from '@/server/consent'
 import { codeIsForChildren } from '@/server/consent-actions'
 import { portalIdOf } from '@/lib/ids'
@@ -56,23 +57,7 @@ export async function ConsentScreen({ payload, user, portal, base, query }: Ctx)
         {need === 'school' ? (
           <p className="card" data-testid="school-wait">Your school collects this on paper. You can watch in the meantime. Answers stay with you until they tick the box.</p>
         ) : null}
-        <form className="card form-stack" action="/api/hearts" method="post" data-testid="consent-form">
-          <Hidden fields={{ action: 'accept-consent', after, next: `${base}/consent` }} />
-          <fieldset className="age-bands" data-testid="age-bands">
-            <legend>How old are you?</legend>
-            {(['under-13', '13-17', '18+'] as AgeBand[]).map((band) => (
-              <label key={band} className="check">
-                <input type="radio" name="ageBand" value={band} required defaultChecked={preset === band} data-testid={`age-${band}`} />
-                {AGE_LABEL[band]}
-              </label>
-            ))}
-          </fieldset>
-          <label className="consent-line">
-            <input type="checkbox" name="agree" value="on" required data-testid="consent-agree" />
-            <span>I agree. Let’s begin.</span>
-          </label>
-          <button className="pill gold block" type="submit" data-testid="consent-submit">I agree, let’s begin</button>
-        </form>
+        <ConsentForm after={after} next={`${base}/consent`} preset={preset} />
         {portalIdOf(user) ? <p className="muted">We keep the version and the time, so we can show that you agreed.</p> : null}
       </div>
     </AppFrame>

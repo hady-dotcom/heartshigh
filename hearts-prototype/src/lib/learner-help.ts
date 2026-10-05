@@ -14,7 +14,7 @@ export const LEARNER_HELP: Record<string, string> = {
   privacy: 'This is what we keep, why, who can see it, and your choices. The short line at the top is enough for most people; the full notice is below.',
   terms: 'These are the short rules for using HEARTS. The community guidelines sit beside them. A tap opens the full wording.',
   guidelines: 'How we speak to each other here: adab, no harm, no selling, and no sharing someone else’s answers. Report points here.',
-  search: 'Search looks at talk titles, speakers, course names and the start of a transcript. You only see what this portal has opened for you.',
+  search: 'Search looks at talk titles, speakers, course names and the words in a transcript. When a talk matches a spoken line, you will see that line, the word, and the time, and a tap opens the talk there. You only see what this portal has opened for you.',
   help: 'Get help has three doors. Something broken goes to HEARTS. A learning question goes to your teacher. Something worrying goes to the people who look after safety.',
   plan: 'Your study plan spreads a course across the days you chose. It is a guide. You can still watch at your own pace.',
   circle: 'Circle is your board and the evenings you can come to. What you write here is for your group, not the whole internet.',

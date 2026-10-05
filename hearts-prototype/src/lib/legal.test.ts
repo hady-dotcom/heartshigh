@@ -3,8 +3,9 @@ import { test } from 'node:test'
 import { cookieSectionMarkdown, escapeHtml, nextLegalVersion, renderLegalMarkdown } from './legal'
 import { storageNoticeRows } from './storage-keys'
 import { childDefaults, childShareRefusal, liveQuestionName } from './child-safety'
-import { missingLearnerConsents, needsLearnerConsent } from './consent'
-import { searchDocs, searchTerms } from './learner-search'
+import { guardianStatusLabel, missingLearnerConsents, needsLearnerConsent } from './consent'
+import { DISPLAY_FONT, displayFontLoaded } from './fonts'
+import { highlightParts, searchDocs, searchTerms, transcriptMatch } from './learner-search'
 import { captionCues, spokenCaptionAt, transcriptParagraphs } from './spoken-caption'
 import { learnerHelp, learnerHelpKeys } from './learner-help'
 import { helpSentenceCount } from './desk-help'
@@ -65,6 +66,42 @@ test('learner search groups talks, courses and speakers', () => {
   )
   assert.ok(hits.some((hit) => hit.kind === 'talk'))
   assert.ok(hits.some((hit) => hit.kind === 'speaker'))
+})
+
+test('transcript match shows the spoken line, the word and the time', () => {
+  const raw = 'WEBVTT\n\n00:00:47.000 --> 00:00:51.000\nprophet mohammed salah salem\n'
+  const spoken = transcriptMatch(raw, ['salah'])
+  assert.ok(spoken)
+  assert.match(spoken!.snippet, /salah/)
+  assert.equal(spoken!.match, 'salah')
+  assert.equal(spoken!.seconds, 47)
+  assert.equal(spoken!.timestamp, '0:47')
+  const marked = highlightParts(spoken!.snippet, spoken!.match)
+  assert.ok(marked.some((part) => part.mark && part.text.toLowerCase() === 'salah'))
+  const hits = searchDocs(
+    [{ kind: 'talk', id: 1, title: 'Dua 1', speaker: 'Yasir Fahmy', transcript: raw, href: '/p/east-london/course/1?part=9' }],
+    'salah',
+  )
+  assert.equal(hits[0]?.href, '/p/east-london/course/1?part=9&t=47')
+  assert.equal(hits[0]?.timestamp, '0:47')
+  assert.match(hits[0]?.snippet || '', /salah/)
+})
+
+test('guardian status waits when age is not yet known', () => {
+  assert.equal(guardianStatusLabel(null), 'We’ll know once they answer the age question')
+  assert.equal(
+    guardianStatusLabel({ ageBand: null, waitingForGuardian: false, guardianAcceptedAt: null, schoolOfflineAt: null, guardianEmail: null }),
+    'We’ll know once they answer the age question',
+  )
+  assert.equal(
+    guardianStatusLabel({ ageBand: '18+', waitingForGuardian: false, guardianAcceptedAt: null, schoolOfflineAt: null, guardianEmail: null }),
+    'Not needed',
+  )
+})
+
+test('display font helper names the self-hosted serif', () => {
+  assert.equal(DISPLAY_FONT, 'Cormorant Garamond')
+  assert.equal(displayFontLoaded({ check: (font) => font.includes('Cormorant Garamond') }), true)
 })
 
 test('spoken caption is one punctuated line; transcript is a separate list', () => {

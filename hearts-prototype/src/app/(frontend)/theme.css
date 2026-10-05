@@ -847,6 +847,19 @@ html[data-theme] .desk input[type='password'] {
 }
 :is(html, html[data-theme]) .garden-door .brand-word { color: var(--gd-gold-deep); font-weight: 700; }
 :is(html, html[data-theme]) .garden-door .door-form label { color: #23443f; }
+:is(html, html[data-theme]) .garden-door .door-form label.consent-line {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  color: #23443f;
+}
+:is(html, html[data-theme]) .garden-door .door-form label.consent-line input {
+  margin: 0;
+  width: 20px;
+  height: 20px;
+}
 :is(html, html[data-theme]) .garden-door .field {
   background: #fbf5e6;
   color: var(--gd-ink);

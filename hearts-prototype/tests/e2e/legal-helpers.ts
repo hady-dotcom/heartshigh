@@ -8,8 +8,10 @@ export async function completeConsent(page: Page, age: 'under-13' | '13-17' | '1
   }
   if ((await page.getByTestId('consent').count()) === 0) return
   await expect(page.getByTestId('consent')).toBeVisible()
+  await expect(page.getByTestId('consent-submit')).toBeDisabled()
   await page.getByTestId(`age-${age}`).check()
   await page.getByTestId('consent-agree').check()
+  await expect(page.getByTestId('consent-submit')).toBeEnabled()
   await page.getByTestId('consent-submit').click()
 }
 

@@ -29,6 +29,7 @@ export const CONSENT_FREE_ACTIONS = new Set([
   'save-portal-contacts',
   'save-children-settings',
   'mark-child-code',
+  'mark-child-codes',
   'save-legal-page',
   'publish-legal-page',
   'portal-agreement',
@@ -64,7 +65,8 @@ export function parseAgeBand(value: unknown): AgeBand | null {
 }
 
 export function guardianStatusLabel(age: AgeState | null) {
-  if (!age || age.ageBand !== 'under-13') return 'Not needed'
+  if (!age || !age.ageBand) return 'We’ll know once they answer the age question'
+  if (age.ageBand !== 'under-13') return 'Not needed'
   if (age.guardianAcceptedAt) return 'Yes, a grown-up agreed'
   if (age.schoolOfflineAt) return 'Yes, the school collected it'
   if (age.waitingForGuardian) return 'Waiting'

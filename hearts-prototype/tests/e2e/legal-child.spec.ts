@@ -24,6 +24,8 @@ test('L04 school-offline path: staff can tick a child', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await signIn(page, 'leeds-admin@hearts.test', 'portal-admin', '/p/leeds/admin/children')
   await expect(page.getByTestId('admin-children')).toBeVisible()
+  await expect(page.getByTestId('guardian-status').first()).toContainText(/We’ll know once they answer the age question|Not needed|Waiting|Yes/)
+  await expect(page.getByTestId('child-codes-form')).toBeVisible()
   await page.getByTestId('school-offline').check()
   await page.getByTestId('save-children').click()
   await expect(page.getByTestId('notice')).toContainText(/saved|Children/i)

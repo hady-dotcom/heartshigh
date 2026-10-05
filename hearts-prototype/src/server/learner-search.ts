@@ -51,7 +51,7 @@ export async function searchPortal(payload: Payload, user: SessionUser, portal: 
       }),
       speaker: lesson.speaker || '',
       courseTitle: course?.title || '',
-      transcript: String(lesson.transcript || '').slice(0, 2000),
+      transcript: String(lesson.transcript || '').slice(0, 50_000),
       href: `${base}/course/${courseId}?part=${lesson.id}`,
     })
     if (lesson.speaker) speakers.set(slugify(lesson.speaker), { name: lesson.speaker, href: `${base}/speaker/${slugify(lesson.speaker)}` })

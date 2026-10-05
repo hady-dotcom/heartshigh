@@ -308,16 +308,32 @@ async function handleChildrenSettings(req: Request, form: FormData, session: Ses
   return redirectTo(req, text(form, 'next') || '/', undefined, 'Children settings saved.')
 }
 
+async function upsertChildCodeFlag(payload: Payload, codeId: number, on: boolean) {
+  const found = await payload.find({ collection: 'child-code-flags', overrideAccess: true, limit: 1, where: { accessCode: { equals: codeId } } })
+  if (found.docs[0]) await payload.update({ collection: 'child-code-flags', id: (found.docs[0] as { id: number }).id, overrideAccess: true, data: { forChildren: on } })
+  else await payload.create({ collection: 'child-code-flags', overrideAccess: true, data: { accessCode: codeId, forChildren: on } as never })
+}
+
 async function handleMarkChildCode(req: Request, form: FormData, session: Session) {
   const { payload, user } = session
   if (!user || (user.role !== 'master' && user.role !== 'portal-admin')) return refuse(req, 'That page is for the portal team.')
   const codeId = Number(text(form, 'accessCode'))
   if (!codeId) return redirectTo(req, text(form, 'next') || '/', 'Name the code.')
   const on = form.get('forChildren') === 'on'
-  const found = await payload.find({ collection: 'child-code-flags', overrideAccess: true, limit: 1, where: { accessCode: { equals: codeId } } })
-  if (found.docs[0]) await payload.update({ collection: 'child-code-flags', id: (found.docs[0] as { id: number }).id, overrideAccess: true, data: { forChildren: on } })
-  else await payload.create({ collection: 'child-code-flags', overrideAccess: true, data: { accessCode: codeId, forChildren: on } as never })
+  await upsertChildCodeFlag(payload, codeId, on)
   return redirectTo(req, text(form, 'next') || '/', undefined, on ? 'This code is marked for children.' : 'This code is no longer marked for children.')
+}
+
+async function handleMarkChildCodes(req: Request, form: FormData, session: Session) {
+  const { payload, user } = session
+  if (!user || (user.role !== 'master' && user.role !== 'portal-admin')) return refuse(req, 'That page is for the portal team.')
+  const ids = text(form, 'codeIds')
+    .split(',')
+    .map((value) => Number(value.trim()))
+    .filter((id) => id > 0)
+  const on = new Set(form.getAll('childCodes').map((value) => Number(value)).filter((id) => id > 0))
+  for (const codeId of ids) await upsertChildCodeFlag(payload, codeId, on.has(codeId))
+  return redirectTo(req, text(form, 'next') || '/', undefined, 'Children codes saved.')
 }
 
 async function handleSaveLegal(req: Request, form: FormData, session: Session) {
@@ -430,6 +446,7 @@ const ACTIONS = new Set([
   'save-portal-contacts',
   'save-children-settings',
   'mark-child-code',
+  'mark-child-codes',
   'save-legal-page',
   'publish-legal-page',
   'portal-agreement',
@@ -450,6 +467,7 @@ export async function handleConsentActions(req: Request, form: FormData, session
     if (action === 'save-portal-contacts') return handleContacts(req, form, session)
     if (action === 'save-children-settings') return handleChildrenSettings(req, form, session)
     if (action === 'mark-child-code') return handleMarkChildCode(req, form, session)
+    if (action === 'mark-child-codes') return handleMarkChildCodes(req, form, session)
     if (action === 'save-legal-page') return handleSaveLegal(req, form, session)
     if (action === 'publish-legal-page') return handlePublishLegal(req, form, session)
     if (action === 'portal-agreement') return handlePortalAgreement(req, form, session)

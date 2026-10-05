@@ -105,16 +105,25 @@ export async function ChildrenScreen(ctx: Ctx) {
       </section>
       <section className="panel" style={{ marginTop: 18 }}>
         <header className="light"><h2>Codes for children</h2></header>
-        <div className="body">
-          {codes.map((code) => (
-            <form key={code.id} action="/api/hearts" method="post" className="row" style={{ alignItems: 'center', gap: 12 }}>
-              <Hidden fields={{ action: 'mark-child-code', accessCode: code.id, next: `${base}/admin/children` }} />
-              <span><b>{str(code.code)}</b> · {str(code.label) || str(code.role)}</span>
-              <label className="check"><input type="checkbox" name="forChildren" defaultChecked={flagged.has(code.id)} /> For children</label>
-              <button className="btn ghost small" type="submit">Save</button>
-            </form>
-          ))}
-        </div>
+        <form className="body child-codes" action="/api/hearts" method="post" data-testid="child-codes-form">
+          <Hidden fields={{ action: 'mark-child-codes', next: `${base}/admin/children`, codeIds: codes.map((code) => code.id).join(',') }} />
+          <ul className="child-code-list">
+            {codes.map((code) => (
+              <li key={code.id} className="child-code-row" data-testid="child-code-row">
+                <span><b>{str(code.code)}</b> · {str(code.label) || str(code.role)}</span>
+                <label className="consent-line">
+                  <input type="checkbox" name="childCodes" value={String(code.id)} defaultChecked={flagged.has(code.id)} data-testid="child-code-flag" />
+                  <span>For children</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+          {codes.length ? (
+            <div className="actions"><button className="btn ink" type="submit" data-testid="save-child-codes">Save codes</button></div>
+          ) : (
+            <p className="hint">No codes yet.</p>
+          )}
+        </form>
       </section>
     </AdminFrame>
   )

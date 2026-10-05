@@ -1,3 +1,4 @@
+import './fonts-local.css'
 import './globals.css'
 import './app.css'
 import './desk.css'
@@ -13,7 +14,6 @@ import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import { ViewAsBanner } from '@/components/viewas-banner'
 import { SkipLink } from '@/components/app/skip-link'
-import './fonts-local.css'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,6 +47,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="en-GB" suppressHydrationWarning>
       <head>
+        <link rel="preload" href="/fonts/cormorant-garamond-600.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <script dangerouslySetInnerHTML={{ __html: themeBootScript() }} />
         <script dangerouslySetInnerHTML={{ __html: installBootScript() }} />
       </head>

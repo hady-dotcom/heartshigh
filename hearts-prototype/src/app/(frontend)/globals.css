@@ -131,19 +131,55 @@ body:has(.viewas-bar) { --viewas-h: 46px; }
 }
 .skip-link:focus { transform: none; outline: 3px solid #d4a84b; outline-offset: 2px; }
 
-.consent-line { display: flex; gap: 10px; align-items: flex-start; text-align: left; font-size: 14px; line-height: 1.45; margin: 8px 0 4px; }
-.consent-line input { margin-top: 3px; }
+.consent-line,
+.age-band,
+.door-form label.consent-line,
+.form-stack label.consent-line,
+.form-stack label.age-band {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0;
+}
+.consent-line input,
+.age-band input,
+.door-form label.consent-line input,
+.form-stack label.consent-line input,
+.form-stack label.age-band input {
+  margin: 0;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  accent-color: #d4a84b;
+}
 .legal-page .lede, .legal-summary { font-size: 17px; line-height: 1.45; }
 .legal-draft { display: inline-block; background: #163633; color: #d4a84b; border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; }
 .legal-body { display: grid; gap: 12px; font-size: 16px; line-height: 1.55; }
 .legal-body h1, .legal-body h2, .legal-body h3 { font-family: var(--serif); margin: 8px 0 0; }
 .legal-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .legal-table th, .legal-table td { border: 1px solid rgba(246, 238, 220, 0.2); padding: 8px; text-align: left; vertical-align: top; }
-.age-bands { border: 0; padding: 0; display: grid; gap: 8px; }
+.age-bands { border: 0; padding: 0; display: grid; gap: 4px; }
 .age-bands legend { font-weight: 700; margin-bottom: 6px; }
 .consent-summaries { list-style: none; padding: 0; display: grid; gap: 10px; }
+.consent-summaries .card { padding: 16px 18px; }
 .learner-search { display: flex; gap: 8px; margin: 0 0 14px; }
 .learner-search .field { flex: 1; }
+.search-hit-snippet { display: block; margin-top: 6px; font-size: 14px; line-height: 1.45; font-weight: 500; }
+.search-hit-time { color: #d4a84b; font-weight: 700; margin-right: 8px; }
+.search-hit-snippet mark,
+[data-testid="search-highlight"] {
+  background: #d4a84b;
+  color: #0e2a2b;
+  padding: 0 3px;
+  border-radius: 3px;
+  font-weight: 700;
+}
 .app-stage > .page-help, .app > .page-help { position: static; display: flex; justify-content: flex-end; padding: 6px 10px 0; z-index: 5; }
 .talk-captions { position: absolute; left: 12px; right: 12px; bottom: 42px; pointer-events: none; z-index: 3; }
 .cc-toggle { pointer-events: auto; position: absolute; right: 0; bottom: 100%; margin-bottom: 6px; width: 36px; height: 28px; border-radius: 8px; border: 1px solid #f6eedc; background: rgba(14, 42, 43, 0.7); color: #f6eedc; font: 700 12px/1 var(--sans); }
