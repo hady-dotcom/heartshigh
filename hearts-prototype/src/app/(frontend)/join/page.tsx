@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Flash, Hidden } from '@/components/app/shell'
+import { TurnstileField } from '@/components/app/turnstile-field'
 import { BrandLockup } from '@/components/brand'
 
 export default async function Join({ searchParams }: { searchParams: Promise<{ error?: string; code?: string; name?: string; gatherGuest?: string; after?: string }> }) {
@@ -16,8 +17,9 @@ export default async function Join({ searchParams }: { searchParams: Promise<{ e
           <Hidden fields={{ action: 'join', gatherGuest: query.gatherGuest, after: query.after }} />
           <label>Access code<input className="field" data-testid="join-code" name="code" defaultValue={code} autoCapitalize="characters" required /></label>
           <label>Your name<input className="field" data-testid="join-name" name="name" defaultValue={query.name || ''} autoComplete="name" required /></label>
-          <label>E-mail<input className="field" data-testid="join-email" name="email" type="email" autoComplete="email" required /></label>
+          <label>Email<input className="field" data-testid="join-email" name="email" type="email" autoComplete="email" required /></label>
           <label>Password<input className="field" data-testid="join-password" name="password" type="password" minLength={8} autoComplete="new-password" required /></label>
+          <TurnstileField />
           <button className="pill gold block" data-testid="join-submit" type="submit">Join</button>
         </form>
         {code ? null : <p className="door-hint">Use the code your masjid gave you.</p>}

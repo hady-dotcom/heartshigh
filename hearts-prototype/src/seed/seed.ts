@@ -101,7 +101,9 @@ async function ensureUser(payload: Awaited<ReturnType<typeof getPayload>>, data:
  */
 /** The e2e database keeps its codes in its own file, so the codes `npm run go` printed stay true. */
 function codesFile() {
-  return /hearts-test\.db/.test(process.env.DATABASE_URL || '') ? 'data/seed-codes-test.json' : 'data/seed-codes.json'
+  const url = process.env.DATABASE_URL || ''
+  const e2e = process.env.HEARTS_E2E === '1' || Boolean(process.env.HEARTS_E2E_DATABASE) || /hearts-test\.db/.test(url)
+  return e2e ? 'data/seed-codes-test.json' : 'data/seed-codes.json'
 }
 
 async function wipe() {
@@ -469,6 +471,17 @@ async function main() {
     seenWelcome: true,
     startingClause: 22,
     joinedAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
+    courseList: learnerList,
+  })
+  await ensureUser(payload, {
+    email: 'qa-desk@hearts.foundation',
+    password: 'portal-learner',
+    name: 'QA Desk Learner',
+    role: 'learner',
+    audience: 'learner' as const,
+    tenants: [{ tenant: elm }],
+    onboarded: true,
+    seenWelcome: true,
     courseList: learnerList,
   })
   await ensureUser(payload, {

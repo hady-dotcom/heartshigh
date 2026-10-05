@@ -81,7 +81,7 @@ test('library packs are summaries, and the course picker is the door tree', asyn
 })
 
 test('demo learners show varied on-time fractions on Teach', async ({ page }) => {
-  execSync('npm run demo:timed-learners', { stdio: 'inherit', env: { ...process.env, DATABASE_URL: E2E_DATABASE } })
+  execSync('npm run demo:timed-learners', { stdio: 'inherit', env: { ...process.env, DATABASE_URL: process.env.HEARTS_E2E_DATABASE || E2E_DATABASE } })
   await page.setViewportSize(DESK)
   await signIn(page, 'demo-admin@hearts-demo.test', 'demo-timed', '/p/hearts-demo/admin/teach')
   await expect(page.getByTestId('on-time-header')).toHaveAttribute('title', /study plan/)

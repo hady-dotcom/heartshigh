@@ -13,6 +13,7 @@ import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
 import { circleProblems } from './lib/circle'
 import { cookiesSecure } from './lib/env'
+import { clientIp, hitAuth, limitsRelaxed } from './lib/rate-limit'
 import { DOOR_SECTIONS } from './lib/doors'
 
 // The app's own screens and actions use the local API with explicit portal checks.
@@ -111,6 +112,14 @@ export const Portals: CollectionConfig = {
     { name: 'learnerLabel', type: 'text', defaultValue: 'Learner' },
     { name: 'teacherLabel', type: 'text', defaultValue: 'Teacher' },
     { name: 'wizardDone', type: 'checkbox', defaultValue: false },
+    {
+      name: 'features',
+      type: 'json',
+      admin: {
+        description:
+          'Per-portal feature switches. Empty means every feature that exists today stays on, so live portals do not change.',
+      },
+    },
   ],
 }
 
@@ -139,6 +148,27 @@ export const Users: CollectionConfig = {
       ({ args, operation, req }) => {
         refuseOutsideAccountCreation({ operation, req })
         return args
+      },
+    ],
+    beforeLogin: [
+      ({ req }) => {
+        const signingIn = (req as { user?: { removed?: boolean } }).user
+        if (signingIn?.removed) throw new APIError('That account is no longer here.', 401, undefined, true)
+        if (req.payloadAPI !== 'REST' || limitsRelaxed()) return
+        const headers = req.headers
+        const read = (name: string) => (headers && typeof headers.get === 'function' ? headers.get(name) : '') || ''
+        const fake = new Request('http://local', {
+          headers: {
+            'cf-connecting-ip': read('cf-connecting-ip'),
+            'x-forwarded-for': read('x-forwarded-for'),
+            'fly-client-ip': read('fly-client-ip'),
+          },
+        })
+        const email = typeof (req as { data?: { email?: unknown } }).data?.email === 'string' ? (req as { data: { email: string } }).data.email : ''
+        const limited = hitAuth('login', clientIp(fake), email)
+        if (!limited.allowed) {
+          throw new APIError('Too many sign-in tries from here. Wait a few minutes, then try again.', 429, undefined, true)
+        }
       },
     ],
     beforeValidate: [

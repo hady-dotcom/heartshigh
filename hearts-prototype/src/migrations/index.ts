@@ -13,6 +13,10 @@ import * as migration_20261004_120000_compass_v2 from './20261004_120000_compass
 import * as migration_20261004_031500_gather from './20261004_031500_gather';
 import * as migration_20261004_180000_gather_entry_code from './20261004_180000_gather_entry_code';
 import * as migration_20261004_210000_schedule_minutes from './20261004_210000_schedule_minutes';
+import * as migration_20261004_230000_portal_features from './20261004_230000_portal_features';
+import * as migration_20261005_010000_erase_cascades from './20261005_010000_erase_cascades';
+import * as migration_20261005_020000_erase_parent_cascades from './20261005_020000_erase_parent_cascades';
+import * as migration_20261005_030000_erase_s3_retries from './20261005_030000_erase_s3_retries';
 
 export const migrations = [
   {
@@ -89,5 +93,25 @@ export const migrations = [
     up: migration_20261004_210000_schedule_minutes.up,
     down: migration_20261004_210000_schedule_minutes.down,
     name: '20261004_210000_schedule_minutes',
+  },
+  {
+    up: migration_20261004_230000_portal_features.up,
+    down: migration_20261004_230000_portal_features.down,
+    name: '20261004_230000_portal_features',
+  },
+  {
+    up: migration_20261005_010000_erase_cascades.up,
+    down: migration_20261005_010000_erase_cascades.down,
+    name: '20261005_010000_erase_cascades',
+  },
+  {
+    up: migration_20261005_020000_erase_parent_cascades.up,
+    down: migration_20261005_020000_erase_parent_cascades.down,
+    name: '20261005_020000_erase_parent_cascades',
+  },
+  {
+    up: migration_20261005_030000_erase_s3_retries.up,
+    down: migration_20261005_030000_erase_s3_retries.down,
+    name: '20261005_030000_erase_s3_retries',
   },
 ];

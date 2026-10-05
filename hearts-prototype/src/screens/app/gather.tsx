@@ -72,7 +72,7 @@ export async function GatherListScreen(ctx: Ctx) {
         ))}
         <Link className="pill outline block" href={`${base}/gather/propose`} data-testid="gather-propose" style={{ marginTop: 8 }}>Suggest a gathering</Link>
       </div>
-      <TabBar base={base} active="gather" evening unread={unread} />
+      <TabBar base={base} active="gather" portal={portal} evening unread={unread} />
     </AppFrame>
   )
 }
@@ -186,7 +186,7 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
         {host ? <Link className="pill outline" href={`${base}/gather/${id}/door`} data-testid="door-link">Door code for tonight</Link> : null}
         <p className="muted" style={{ marginTop: 16 }}>A reminder is set when you say you’re coming. It stays on this page and in your bell.</p>
       </div>
-      <TabBar base={base} active="gather" evening unread={unread} />
+      <TabBar base={base} active="gather" portal={portal} evening unread={unread} />
     </AppFrame>
   )
 }
@@ -227,7 +227,7 @@ export async function GatherProposeScreen(ctx: Ctx) {
           <button className="pill gold block" type="submit" data-testid="propose-submit">Send it to the desk</button>
         </form>
       </div>
-      <TabBar base={base} active="gather" evening unread={unread} />
+      <TabBar base={base} active="gather" portal={portal} evening unread={unread} />
     </AppFrame>
   )
 }
@@ -279,7 +279,7 @@ export async function GatherDoorScreen(ctx: Ctx, id: number) {
           <button className="pill gold" type="submit" data-testid="photo-save">Keep the photo</button>
         </form>
       </div>
-      <TabBar base={base} active="gather" evening />
+      <TabBar base={base} active="gather" portal={portal} evening />
     </AppFrame>
   )
 }
@@ -303,7 +303,7 @@ export async function GatherReflectScreen(ctx: Ctx, id: number) {
           <button className="pill gold block" type="submit" data-testid="reflect-submit" style={{ marginTop: 12 }}>Keep it</button>
         </form>
       </div>
-      <TabBar base={base} active="gather" evening unread={unread} />
+      <TabBar base={base} active="gather" portal={portal} evening unread={unread} />
     </AppFrame>
   )
 }

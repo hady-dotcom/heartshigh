@@ -2,6 +2,12 @@ import { defaultPlanName } from '@/lib/schedule'
 import { now as clockNow } from '@/lib/clock'
 import { dateKey, formatOnTime, onTimeProgress, ON_TIME_HINT, type PlanSlot } from '@/lib/on-time'
 import { ViewAsButton } from '@/components/desk/view-as-button'
+import { GiveCourse } from '@/components/desk/give-course'
+import { HideTestFilter } from '@/components/desk/hide-test'
+import { HelpTip } from '@/components/desk/help'
+import { TOOL } from '@/lib/desk-help'
+import { hideTestFromQuery, visiblePeople } from '@/lib/test-accounts'
+import { cleanTitle } from '@/lib/clean-title'
 import Link from 'next/link'
 import { Hidden } from '@/components/app/shell'
 import { EvidencePlayer } from '@/components/desk/tools'
@@ -10,11 +16,14 @@ import { visibleCourseIds } from '@/server/context'
 import { dayNumber } from '@/server/learner'
 import { type Ctx, clock, longDate, portalPeople, ref, rows, shortDate, str } from '../common'
 import { AdminFrame } from './overview'
+import { featureOn } from '@/lib/features'
+import { ErasePanel } from '@/components/desk/erase-panel'
 
 export async function TeachScreen(ctx: Ctx) {
   const { payload, user, portal, base, query } = ctx
   const people = await portalPeople(payload, portal.id)
-  const learners = people.filter((person) => person.role === 'learner')
+  const hideTest = hideTestFromQuery(query)
+  const learners = visiblePeople(people.filter((person) => person.role === 'learner'), hideTest)
   const [entries, answers, completions, notes, watches, courseIds, plans] = await Promise.all([
     rows(payload, 'workbook-entries', { portal: { equals: portal.id } }, { depth: 1, sort: '-createdAt' }),
     rows(payload, 'answers', { portal: { equals: portal.id } }, { depth: 1, sort: '-createdAt', limit: 500 }),
@@ -45,10 +54,22 @@ export async function TeachScreen(ctx: Ctx) {
   return (
     <AdminFrame ctx={ctx} active="teach" title="Teach" intro="See how each learner is getting on, reply to what they have shared, and leave notes on their recordings." testId="admin-teach">
       <section className="panel" style={{ marginBottom: 18 }}>
-        <header className="light"><h2>Learners ({learners.length})</h2></header>
+        <header className="light">
+          <h2 data-testid="learner-count">Learners ({learners.length})</h2>
+          <HideTestFilter action={here} hide={hideTest} />
+        </header>
         <div className="table-wrap">
           <table className="data">
-            <thead><tr><th>Name</th><th>E-mail</th><th className="num">Day</th><th className="num">Parts watched</th><th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr></th><th className="num">Answers</th><th>Give a course</th><th /></tr></thead>
+            <thead><tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th className="num">Day</th>
+              <th className="num">Parts watched</th>
+              <th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr></th>
+              <th className="num">Answers</th>
+              <th>Give a course <HelpTip topic="give-course" label="What is Give a course?" place="end">{TOOL.giveCourse}</HelpTip></th>
+              <th />
+            </tr></thead>
             <tbody>
               {learners.map((learner) => {
                 const done = completions.filter((row) => ref(row.user) === learner.id)
@@ -63,16 +84,31 @@ export async function TeachScreen(ctx: Ctx) {
                     <td className="num" data-testid="on-time" title={progress.planned ? ON_TIME_HINT : 'No study plan yet'}>{onTime}</td>
                     <td className="num" data-testid="learner-answers">{answers.filter((row) => ref(row.user) === learner.id).length}</td>
                     <td>
-                      <form action="/api/hearts" method="post" style={{ display: 'flex', gap: 8 }}>
-                        <Hidden fields={{ action: 'grant', learner: learner.id, next: here }} />
-                        <select name="course" style={{ minWidth: 0, width: 170 }}>{courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}</select>
-                        <button className="btn small" data-testid="grant-course" type="submit">Give</button>
-                      </form>
+                      <GiveCourse learnerId={learner.id} learnerName={str(learner.name) || 'this learner'} courses={courses.map((course) => ({ id: course.id, title: str(course.title) }))} next={here} />
                     </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'start' }}>
-                        <a className="btn ghost small" href={`/api/workbook/${learner.id}?format=csv`} data-testid="workbook-csv">Workbook</a>
+                    <td className="row-actions">
+                      <div className="row-actions-inner">
+                        {featureOn(portal, 'workbook') ? (answers.filter((row) => ref(row.user) === learner.id).length ? (
+                          <a className="btn ghost small" href={`/api/workbook/${learner.id}?format=csv`} data-testid="workbook-csv">Workbook</a>
+                        ) : (
+                          <span className="btn ghost small" aria-disabled="true" data-testid="workbook-csv" title="Nothing to download yet">Workbook</span>
+                        )) : null}
                         {user.role !== 'teacher' ? <ViewAsButton targetId={learner.id} name={str(learner.name) || 'this learner'} landing={`${base}`} /> : null}
+                        {user.role !== 'teacher' ? (
+                          <ErasePanel
+                            action="delete-person"
+                            next={here}
+                            portalSlug={portal.slug}
+                            personId={learner.id}
+                            personName={str(learner.name) || str(learner.email)}
+                            confirmValue={str(learner.name) || str(learner.email)}
+                            kind="user"
+                            help={TOOL.deletePerson}
+                            helpTopic="delete-person"
+                            label="Delete"
+                            testId={`delete-person-${learner.id}`}
+                          />
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -84,7 +120,50 @@ export async function TeachScreen(ctx: Ctx) {
         </div>
       </section>
 
+      {user.role !== 'teacher' ? (
+        <section className="panel" style={{ marginBottom: 18 }} data-testid="staff-people">
+          <header className="light">
+            <h2>Teachers and admins</h2>
+          </header>
+          <div className="table-wrap">
+            <table className="data">
+              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th /></tr></thead>
+              <tbody>
+                {people.filter((person) => person.role === 'teacher' || person.role === 'portal-admin').map((person) => (
+                  <tr key={person.id} data-testid="staff-row">
+                    <td><b>{str(person.name)}</b></td>
+                    <td>{str(person.email)}</td>
+                    <td>{person.role === 'portal-admin' ? 'Admin' : 'Teacher'}</td>
+                    <td className="row-actions">
+                      <div className="row-actions-inner">
+                        <ErasePanel
+                          action="delete-person"
+                          next={here}
+                          portalSlug={portal.slug}
+                          personId={person.id}
+                          personName={str(person.name) || str(person.email)}
+                          confirmValue={str(person.name) || str(person.email)}
+                          kind="user"
+                          help={TOOL.deletePerson}
+                          helpTopic="delete-person"
+                          label="Delete"
+                          testId={`delete-staff-${person.id}`}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {!people.some((person) => person.role === 'teacher' || person.role === 'portal-admin') ? (
+                  <tr><td colSpan={4} className="empty">No teachers or admins yet.</td></tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
+
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.25fr)', alignItems: 'start' }}>
+        {featureOn(portal, 'workbook') ? (
         <section className="panel" data-testid="workbook-inbox">
           <header><div><h2>Workbook entries shared with you ({shared.length})</h2><p>{kept} kept private by their writers and not shown here</p></div></header>
           <div className="body" style={{ display: 'grid', gap: 14 }}>
@@ -97,19 +176,23 @@ export async function TeachScreen(ctx: Ctx) {
                   {prompt ? <p className="hint" style={{ margin: 0 }}>Question: {prompt}</p> : null}
                   {(answer?.point as { kind?: string } | undefined)?.kind === 'task' ? <p className="badge" data-testid="activation-task">Activation task</p> : null}
                   <p style={{ fontSize: 15, color: 'var(--ink)' }}>{str(entry.body) || 'A photo or recording'}</p>
-                  {entry.teacherReply ? <p className="count-tile" style={{ display: 'block', background: 'var(--mint)' }} data-testid="teacher-reply">Your reply: {str(entry.teacherReply)}</p> : null}
+                  {entry.teacherReply && featureOn(portal, 'feedback') ? <p className="count-tile" style={{ display: 'block', background: 'var(--mint)' }} data-testid="teacher-reply">Your reply: {str(entry.teacherReply)}</p> : null}
+                  {featureOn(portal, 'feedback') ? (
                   <form className="form" action="/api/hearts" method="post">
                     <Hidden fields={{ action: 'reply', entry: entry.id, href: `${base}/garden/workbook`, next: here }} />
                     <textarea data-testid="reply-text" name="reply" placeholder="Write a reply. They will see it in their workbook." required />
                     <div className="actions"><button className="btn ink small" data-testid="reply-submit" type="submit">{entry.teacherReply ? 'Send another reply' : 'Send reply'}</button></div>
                   </form>
+                  ) : null}
                 </article>
               )
             })}
             {!shared.length ? <p className="empty">Nothing shared yet. Learners choose, answer by answer, whether you can read it.</p> : null}
           </div>
         </section>
+        ) : null}
 
+        {featureOn(portal, 'feedback') ? (
         <section className="panel" data-testid="evidence">
           <header><div><h2>Recordings to give feedback on ({evidence.length})</h2><p>Pause at a moment and add a note; the learner sees it on their timeline</p></div></header>
           <div className="body">
@@ -136,6 +219,7 @@ export async function TeachScreen(ctx: Ctx) {
             ) : <p className="empty">No recordings yet. When a learner answers with a video or a voice note, it appears here.</p>}
           </div>
         </section>
+        ) : null}
       </div>
 
       <section className="panel" style={{ marginTop: 18 }}>
@@ -178,14 +262,15 @@ export async function PlansScreen(ctx: Ctx) {
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'schedule', portalSlug: portal.slug, targetType: 'course', next: here }} />
             <label className="stack">Name<input type="text" name="name" defaultValue={defaultPlanName(clockNow())} /></label>
-            <label className="stack">Course<select data-testid="schedule-course" name="course">{courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}</select></label>
+            <label className="stack">Course<select data-testid="schedule-course" name="course">{courses.map((course) => <option key={course.id} value={course.id}>{cleanTitle(str(course.title))}</option>)}</select></label>
             <div className="cols">
               <label className="stack">From<input data-testid="schedule-start" type="date" name="start" defaultValue={today} /></label>
               <label className="stack">Until<input data-testid="schedule-end" type="date" name="end" defaultValue={later} /></label>
             </div>
             <div className="checks">{DAYS.map((label, index) => <label className="check" key={label}><input data-testid={`weekday-${index}`} type="checkbox" name="weekday" value={index} /> {label}</label>)}</div>
+            <p className="hint" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>Days the plan should use <HelpTip topic="weekdays">{TOOL.weekdays}</HelpTip></p>
             <div className="hint">For</div>
-            <div className="checks" style={{ flexDirection: 'column' }}>{learners.map((learner) => <label className="check" key={learner.id}><input type="checkbox" name="learner" value={learner.id} data-testid="plan-learner" /> {str(learner.name)}</label>)}</div>
+            <div className="checks" style={{ flexDirection: 'column' }}>{visiblePeople(learners, hideTestFromQuery(ctx.query)).map((learner) => <label className="check" key={learner.id}><input type="checkbox" name="learner" value={learner.id} data-testid="plan-learner" /> {str(learner.name)}</label>)}</div>
             <div className="actions"><button className="btn ink" data-testid="schedule-submit" type="submit">Share out the parts</button></div>
           </form>
         </section>
@@ -240,7 +325,7 @@ export async function NightsScreen(ctx: Ctx) {
                 <header><div><h2>{str(event.title)}</h2><p>{longDate(str(event.startsAt))}{event.place ? ` · ${str(event.place)}` : ''}</p></div><span className="badge gold">{going.length} coming · {inside.length} here</span></header>
                 <div className="table-wrap">
                   <table className="data">
-                    <thead><tr><th>Name</th><th>Ticket</th><th>Kind</th><th>Arrived</th></tr></thead>
+                    <thead><tr><th>Name</th><th>Ticket</th><th>Kind <HelpTip topic="ticket" label="What is a ticket kind?">{TOOL.earnedTicket}</HelpTip></th><th>Arrived</th></tr></thead>
                     <tbody>
                       {going.map((row) => {
                         const arrived = inside.find((item) => ref(item.user) === ref(row.user))
@@ -264,9 +349,10 @@ export async function NightsScreen(ctx: Ctx) {
                   <Hidden fields={{ action: 'checkin', event: event.id, next: here }} />
                   <select name="learner" data-testid="checkin-learner" style={{ maxWidth: 260 }} required>
                     <option value="">Who has arrived?</option>
-                    {people.map((person) => <option key={person.id} value={person.id}>{str(person.name)}</option>)}
+                    {visiblePeople(people, hideTestFromQuery(ctx.query)).map((person) => <option key={person.id} value={person.id}>{str(person.name)}</option>)}
                   </select>
                   <label className="check"><input type="checkbox" name="override" data-testid="checkin-override" /> Let them in anyway</label>
+                  <HelpTip topic="checkin">{TOOL.checkinOverride}</HelpTip>
                   <button className="btn ink small" type="submit" data-testid="staff-checkin">Check in</button>
                 </form>
               </section>

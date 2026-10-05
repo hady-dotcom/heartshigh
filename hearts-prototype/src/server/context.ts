@@ -56,6 +56,8 @@ export type PortalDoc = {
   teacherLabel?: string | null
   wizardDone?: boolean | null
   timeZone?: string | null
+  /** Null or missing: every switch uses its registry default (shipped features on). */
+  features?: Record<string, boolean> | null
 }
 
 /**
@@ -89,7 +91,8 @@ async function readSession(touch: boolean): Promise<Session> {
     id: result.user.id,
     overrideAccess: true,
     depth: 0,
-  })) as unknown as SessionUser
+  }).catch(() => null)) as unknown as SessionUser | null
+  if (!full || full.removed) return { payload, user: null, actor: null, viewAs: null, viewAsEnded: null }
   const token = cookieValue(reqHeaders.get('cookie'))
   const { viewAs, ended } = await loadViewAs(payload, full, token, touch)
   let viewAsEnded = ended
