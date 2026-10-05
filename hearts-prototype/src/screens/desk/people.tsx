@@ -135,19 +135,21 @@ export async function TeachScreen(ctx: Ctx) {
                     <td>{str(person.email)}</td>
                     <td>{person.role === 'portal-admin' ? 'Admin' : 'Teacher'}</td>
                     <td className="row-actions">
-                      <ErasePanel
-                        action="delete-person"
-                        next={here}
-                        portalSlug={portal.slug}
-                        personId={person.id}
-                        personName={str(person.name) || str(person.email)}
-                        confirmValue={str(person.name) || str(person.email)}
-                        kind="user"
-                        help={TOOL.deletePerson}
-                        helpTopic="delete-person"
-                        label="Delete"
-                        testId={`delete-staff-${person.id}`}
-                      />
+                      <div className="row-actions-inner">
+                        <ErasePanel
+                          action="delete-person"
+                          next={here}
+                          portalSlug={portal.slug}
+                          personId={person.id}
+                          personName={str(person.name) || str(person.email)}
+                          confirmValue={str(person.name) || str(person.email)}
+                          kind="user"
+                          help={TOOL.deletePerson}
+                          helpTopic="delete-person"
+                          label="Delete"
+                          testId={`delete-staff-${person.id}`}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}

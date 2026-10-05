@@ -182,7 +182,7 @@ Add the slug to `TENANT_COLLECTIONS` if it is tenant-scoped, and call `registerW
 5. Delete the user row (sessions cascade) or, if they still belong to another portal, remove only this membership and this portal’s rows.
 6. Never delete the last master admin.
 7. After commit, delete S3 / disk objects; keep a retry list if that fails.
-8. A read-only `db:orphans` report must then be clean. The script only SELECTs. Tables that are not in the database (later PRs such as #20, #22, #25, #26, #27, or a live schema that is behind) are skipped. It does not create `erase_s3_retries` or any other table. Safe to run on today’s live schema.
+8. A read-only `db:orphans` report must then be clean. The script only SELECTs. Tables that are not in the database (later PRs such as #20 live, #22 experiments, #25, #26 courses / My week, #27 insights / missions, or a live schema that is behind) are skipped after an `information_schema` / `sqlite_master` check. It does not create `erase_s3_retries` or any other table. Safe to run on today’s live schema: missing tables do not error, and nothing is written unless you pass `--fix`.
 
 ## Sources
 

@@ -331,4 +331,19 @@ describe('erase wipe on a real database', { timeout: 180_000 }, () => {
     const left = await execOutside(payload, 'SELECT COUNT(*) AS n FROM erase_s3_retries')
     assert.equal(Number(left.rows[0]?.n || 0), 0)
   })
+
+  it('db:orphans stays quiet when later-PR tables and the retry table are missing', async () => {
+    await execOutside(payload, 'DROP TABLE IF EXISTS erase_s3_retries')
+    for (const table of ['live_sessions', 'experiments', 'experiment_assignments', 'planner_weeks', 'insights', 'missions']) {
+      const exists = await execOutside(
+        payload,
+        `SELECT 1 AS ok FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '${table}'`,
+      )
+      assert.equal(exists.rows.length, 0, table)
+    }
+    const report = await findOrphans(payload)
+    assert.ok(Array.isArray(report.orphans))
+    assert.equal(report.s3Retries.length, 0)
+    assert.match(formatOrphanReport(report), /No orphans|orphan row/)
+  })
 })

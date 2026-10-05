@@ -21,4 +21,8 @@ describe('db:orphans stays read-only on an older schema', () => {
     assert.match(source, /if \(!\(await tableExists/)
     assert.match(source, /erase_s3_retries/)
   })
+
+  it('does not hard-code later-PR tables, so today’s live schema cannot error on those names', () => {
+    assert.doesNotMatch(source, /live_sessions|experiments|week_plans|insights|missions/)
+  })
 })

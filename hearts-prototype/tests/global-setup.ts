@@ -15,7 +15,15 @@ async function serverClock() {
 }
 
 export default async function setup() {
-  execSync('npx tsx src/seed/seed.ts --reset', { stdio: 'inherit', env: { ...process.env, DATABASE_URL: E2E_DATABASE } })
+  const database = process.env.HEARTS_E2E_DATABASE || E2E_DATABASE
+  execSync('npx tsx src/seed/seed.ts --reset', {
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      DATABASE_URL: database,
+      DATABASE_ADAPTER: /^postgres/i.test(database) ? 'postgres' : 'sqlite',
+    },
+  })
   if (!(await serverClock())) {
     throw new Error(`The server at ${E2E_BASE} is running without HEARTS_TEST_CLOCK=1. Stop it, or let the tests start their own server (unset HEARTS_E2E_REUSE).`)
   }

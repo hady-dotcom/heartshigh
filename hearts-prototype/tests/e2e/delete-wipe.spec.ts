@@ -14,6 +14,28 @@ async function shot(page: Page, name: string) {
   await page.screenshot({ path: path.join(shots, `${name}.png`), fullPage: false })
 }
 
+async function assertDeskFits(page: Page) {
+  await expect(page.locator('.desk')).toHaveCSS('overflow-x', 'hidden')
+  const size = await page.locator('.desk').evaluate((el) => ({ scroll: el.scrollWidth, client: el.clientWidth }))
+  expect(size.scroll, 'desk must not grow wider than the viewport').toBeLessThanOrEqual(size.client + 1)
+}
+
+async function assertCentredDialog(page: Page, testId: string) {
+  const panel = page.getByTestId(`${testId}-panel`)
+  await expect(panel).toBeVisible()
+  await expect(panel).toHaveAttribute('role', 'dialog')
+  const box = await panel.boundingBox()
+  const viewport = page.viewportSize()
+  expect(box, 'dialog should have a box').toBeTruthy()
+  expect(viewport).toBeTruthy()
+  if (box && viewport) {
+    const mid = box.x + box.width / 2
+    expect(mid).toBeGreaterThan(viewport.width * 0.3)
+    expect(mid).toBeLessThan(viewport.width * 0.7)
+    expect(box.y).toBeGreaterThan(20)
+  }
+}
+
 async function signIn(page: Page, email: string, password: string, next: string) {
   await page.goto(`/login?next=${encodeURIComponent(next)}`)
   await page.getByTestId('login-email').fill(email)
@@ -87,19 +109,19 @@ test.describe('desk delete flows', () => {
 
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master')
     await expect(page.getByTestId('master')).toBeVisible()
-    await expect(page.locator('.desk')).toHaveCSS('overflow-x', 'hidden')
+    await assertDeskFits(page)
     const open = page.getByTestId(`delete-portal-${slug}-open`)
     await open.scrollIntoViewIfNeeded()
     await open.click()
     const panel = page.getByTestId(`delete-portal-${slug}-panel`)
-    await expect(panel).toBeVisible()
-    await expect(panel).toHaveAttribute('role', 'dialog')
+    await assertCentredDialog(page, `delete-portal-${slug}`)
     await page.keyboard.press('Escape')
     await expect(panel).toHaveCount(0)
     await open.click()
     await expect(page.getByTestId(`delete-portal-${slug}-summary`)).toBeVisible()
     await expect(page.getByTestId(`delete-portal-${slug}-counts`)).toContainText(/[1-9].*learner/i)
     await expect(page.getByTestId(`delete-portal-${slug}-counts`)).toContainText(/[1-9].*answer/i)
+    await expect(page.getByTestId(`delete-portal-${slug}-counts`)).toContainText(/[1-9].*(workbook|garden|file|watch)/i)
     await expect(page.getByTestId(`delete-portal-${slug}-export`)).toBeVisible()
     await shot(page, 'master-delete-summary')
     await page.getByTestId(`delete-portal-${slug}-confirm`).fill(name)
@@ -135,13 +157,12 @@ test.describe('desk delete flows', () => {
     const adminPage = await browser.newPage()
     await adminPage.setViewportSize({ width: 1440, height: 900 })
     await signIn(adminPage, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin/teach?hideTest=0')
-    await expect(adminPage.locator('.desk')).toHaveCSS('overflow-x', 'hidden')
+    await assertDeskFits(adminPage)
     const open = adminPage.getByTestId(`delete-person-${learner.id}-open`)
     await open.scrollIntoViewIfNeeded()
     await open.click()
     const panel = adminPage.getByTestId(`delete-person-${learner.id}-panel`)
-    await expect(panel).toBeVisible()
-    await expect(panel).toHaveAttribute('role', 'dialog')
+    await assertCentredDialog(adminPage, `delete-person-${learner.id}`)
     await expect(adminPage.getByTestId(`delete-person-${learner.id}-one-home`)).toBeVisible()
     await expect(adminPage.getByTestId(`delete-person-${learner.id}-counts`)).toContainText(/[1-9].*answer/i)
     await expect(adminPage.getByTestId(`delete-person-${learner.id}-counts`)).toContainText(/[1-9].*(workbook|garden|file|watch)/i)
@@ -166,6 +187,43 @@ test.describe('desk delete flows', () => {
     await learnerPage.close()
     await adminPage.close()
   })
+})
+
+test('seeded east london and maryam show real wipe counts in a centred dialog', async ({ page }) => {
+  const master = await masterApi()
+  const portal = (await (await master.get('/api/portals?where[slug][equals]=east-london&depth=0')).json()).docs[0]
+  const maryam = (await (await master.get('/api/users?where[email][equals]=elm-learner@hearts.test&depth=0')).json()).docs[0]
+  await seedWork(master, maryam.id, portal.id)
+  await master.dispose()
+
+  await signIn(page, 'master@hearts.test', 'hearts-master', '/master')
+  await expect(page.getByTestId('master')).toBeVisible()
+  await assertDeskFits(page)
+  const portalOpen = page.getByTestId('delete-portal-east-london-open')
+  await portalOpen.scrollIntoViewIfNeeded()
+  await portalOpen.click()
+  await assertCentredDialog(page, 'delete-portal-east-london')
+  await expect(page.getByTestId('delete-portal-east-london-counts')).toContainText(/[1-9].*learner/i)
+  await expect(page.getByTestId('delete-portal-east-london-counts')).toContainText(/[1-9].*answer/i)
+  await expect(page.getByTestId('delete-portal-east-london-counts')).toContainText(/[1-9].*(workbook|garden|file|watch)/i)
+  await shot(page, 'master-seeded-portal-summary')
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('delete-portal-east-london-panel')).toHaveCount(0)
+
+  await signIn(page, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin/teach?hideTest=0')
+  await assertDeskFits(page)
+  await expect(page.getByText('Aisha Patel')).toBeVisible()
+  const open = page.getByTestId(`delete-person-${maryam.id}-open`)
+  await open.scrollIntoViewIfNeeded()
+  await open.click()
+  await assertCentredDialog(page, `delete-person-${maryam.id}`)
+  await expect(page.getByTestId(`delete-person-${maryam.id}-counts`)).toContainText(/[1-9].*answer/i)
+  await expect(page.getByTestId(`delete-person-${maryam.id}-counts`)).toContainText(/[1-9].*workbook/i)
+  await expect(page.getByTestId(`delete-person-${maryam.id}-counts`)).toContainText(/[1-9].*garden/i)
+  await expect(page.getByTestId(`delete-person-${maryam.id}-counts`)).toContainText(/[1-9].*file/i)
+  await expect(page.getByTestId(`delete-person-${maryam.id}-counts`)).toContainText(/[1-9].*watch/i)
+  await shot(page, 'admin-seeded-learner-summary')
+  await page.keyboard.press('Escape')
 })
 
 test('a learner can delete their own account from Me', async ({ page }) => {

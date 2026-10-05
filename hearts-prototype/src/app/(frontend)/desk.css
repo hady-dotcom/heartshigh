@@ -1,9 +1,14 @@
 /* Desktop CMS for the master desk and portal admins. Sidebar layout; collapses to a note under 900px.
    Evening garden tokens live in src/lib/desk-tokens.ts and :root --desk-* in theme.css.
    Deep teal page and panels, warm dark gold, cream type. The learner app keeps its own colours. */
+html:has(.desk),
+body:has(.desk) {
+  overflow-x: hidden;
+  max-width: 100%;
+}
 .desk {
   width: 100%;
-  max-width: 100vw;
+  max-width: 100%;
   overflow-x: hidden;
   --paper: var(--desk-page, #0E2A2B);
   --card: var(--desk-card, #163633);

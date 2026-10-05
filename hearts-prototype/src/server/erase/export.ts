@@ -77,9 +77,10 @@ async function toXlsx(data: Record<string, unknown[]>) {
 export async function exportPortalCopy(payload: Payload, actor: SessionUser | null, portalId: number, format: 'json' | 'xlsx') {
   const summary = await portalSummary(payload, actor, portalId)
   if ('error' in summary) return summary
-  const data = { summary, ...await portalDump(payload, portalId) }
+  const dump = await portalDump(payload, portalId)
+  const data = { summary, ...dump }
   if (format === 'json') return { filename: `portal-${summary.slug || portalId}.json`, body: Buffer.from(JSON.stringify(data, null, 2)), type: 'application/json' }
-  return { filename: `portal-${summary.slug || portalId}.xlsx`, body: await toXlsx(data as Record<string, unknown[]>), type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+  return { filename: `portal-${summary.slug || portalId}.xlsx`, body: await toXlsx(dump), type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
 }
 
 export async function exportPersonCopy(
@@ -93,8 +94,9 @@ export async function exportPersonCopy(
 ) {
   const summary = await personSummary(payload, actor, userId, portalId, mode, self)
   if ('error' in summary) return summary
-  const data = { summary, ...await userDump(payload, userId) }
+  const dump = await userDump(payload, userId)
+  const data = { summary, ...dump }
   const slug = (summary.email || `user-${userId}`).replace(/[^a-z0-9._-]+/gi, '-')
   if (format === 'json') return { filename: `${slug}.json`, body: Buffer.from(JSON.stringify(data, null, 2)), type: 'application/json' }
-  return { filename: `${slug}.xlsx`, body: await toXlsx(data as Record<string, unknown[]>), type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+  return { filename: `${slug}.xlsx`, body: await toXlsx(dump), type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
 }
