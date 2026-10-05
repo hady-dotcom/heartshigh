@@ -1,12 +1,14 @@
-# r5b-courses proof (round 4)
+# r5b-courses proof (round 6)
 
-Proof on `cursor/courses-planning-3b48`. Nothing was merged, deployed, or written to production. `HEARTS_GROUP_SERIES` and `HEARTS_DEMOTE_SHORT_MAINS` stay off. The 3,3,2,2 sitting is built in the test database only.
+Proof on `cursor/courses-planning-3b48` tip `3ca8534`. Nothing was merged, deployed, or written to production. `HEARTS_GROUP_SERIES` and `HEARTS_DEMOTE_SHORT_MAINS` stay off. The 3,3,2,2 sitting is built in the test database only.
 
 Phone walk is 390×844 mp4. It starts on Home (not a white frame) and ends on Ten sittings part 2 with Part 3 · Next.
 
 ## Walk
-- `phone-walk-390x844.mp4` — Home, buffet, 3,3,2,2, sideways swipe, Ready for more? on the chip, courtyard posters, Tawakkul retry, clear next part
+- `phone-walk-390x844.mp4` — Home, buffet, 3,3,2,2, player with question strip and Answer question 1, think-about-this, up-next, swipe, Ready for more?, courtyard posters, Tawakkul retry, clear next part
 - `00-home.png` … `15-clear-next-part.png` — stills from that walk
+- `05-player-from-plan-row.png` — question strip and Answer question 1 live inside the player
+- `02-buffet.png` — course overview has no question strip
 
 ## Planner
 - `planner-before-390x844.png` / `planner-before-list-390x844.png`

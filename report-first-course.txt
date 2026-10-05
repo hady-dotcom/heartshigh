@@ -1,10 +1,3 @@
-
-> hearts-prototype@1.0.0 report:first-course
-> tsx scripts/report-first-course.ts
-
-[⣷] Pulling schema from database...
-[✓] Pulling schema from database...
-[21:13:39] WARN: No email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.
 First-course report (read-only). Nothing is written.
 
 Door 1 One day
@@ -83,7 +76,7 @@ Door 15 Qadar, good and evil
   matched text: none — a longer talk for this door is on its way
   This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK
 Door 16 Ihsan: worship as though you see Him
-  clause 29  current hit: 1 How to Live Like the Prophet, Session 6
+  clause 29  current hit: 64 Night class
   would offer: (none)
   matched text: none — a longer talk for this door is on its way
   This door has no on-topic long talk in the library.  NO ON-TOPIC LONG TALK

@@ -1,10 +1,3 @@
-
-> hearts-prototype@1.0.0 report:mains
-> tsx scripts/report-mains.ts
-
-[⣷] Pulling schema from database...
-[✓] Pulling schema from database...
-[21:13:50] WARN: No email adapter provided. Email will be written to console. More info at https://payloadcms.com/docs/email/overview.
 Mains report (read-only). Nothing is written.
 
 Short-main threshold: 20 min (HEARTS_DEMOTE_SHORT_MAINS on).
@@ -73,6 +66,32 @@ Short-main threshold: 20 min (HEARTS_DEMOTE_SHORT_MAINS on).
   31  Alhamdulillah! Allah Chose You to Be a Believer  id=tidGQC4SrgA  stored=27:34  live=title only  yt="Alhamdulillah! Allah Chose You to Be a Believer"
 # 32 The Names: short clips · 1 talks
   32  The Names Class 20: Al-Nūr  id=MK5q_zMiX1g  stored=1:38  live=title only  yt="The Names Class 20: Al-Nūr"  !! UNDER 20 MIN → clip
+# 33 Putting the screen down · 1 talks
+  33  Putting the screen down  id=—  stored=3:00  live=—  yt="—"  !! UNDER 20 MIN → Ready for more?, NO YOUTUBE ID
+# 34 A portion set aside · 1 talks
+  34  A portion set aside  id=—  stored=3:00  live=—  yt="—"  !! UNDER 20 MIN → Ready for more?, NO YOUTUBE ID
+# 35 Letting the heat pass · 1 talks
+  35  Letting the heat pass  id=—  stored=3:00  live=—  yt="—"  !! UNDER 20 MIN → Ready for more?, NO YOUTUBE ID
+# 36 Passing the credit on · 1 talks
+  36  Passing the credit on  id=—  stored=3:00  live=—  yt="—"  !! UNDER 20 MIN → Ready for more?, NO YOUTUBE ID
+# 37 Leaving the outcome · 1 talks
+  37  Leaving the outcome  id=—  stored=0:25  live=—  yt="—"  !! UNDER 20 MIN → clip, NO YOUTUBE ID
+# 38 Sitting with the circle · 1 talks
+  38  Sitting with the circle  id=—  stored=3:00  live=—  yt="—"  !! UNDER 20 MIN → Ready for more?, NO YOUTUBE ID
+# 39 Noticing a small gift · 1 talks
+  39  Noticing a small gift  id=—  stored=0:25  live=—  yt="—"  !! UNDER 20 MIN → clip, NO YOUTUBE ID
+# 40 A word before sleep · 1 talks
+  40  A word before sleep  id=—  stored=3:00  live=—  yt="—"  !! UNDER 20 MIN → Ready for more?, NO YOUTUBE ID
+# 41 Stopping for a stranger · 1 talks
+  41  Stopping for a stranger  id=—  stored=3:00  live=—  yt="—"  !! UNDER 20 MIN → Ready for more?, NO YOUTUBE ID
+# 42 Praying it on time · 1 talks
+  42  Praying it on time  id=—  stored=3:00  live=—  yt="—"  !! UNDER 20 MIN → Ready for more?, NO YOUTUBE ID
+# 45 Imported sitting 943086 · 1 talks
+  63  A sitting 943086  id=Fin943086xy  stored=10:00  live=—  yt="—"  !! UNDER 20 MIN → Ready for more?, YOUTUBE MISSING
+# 46 Night class · 3 talks
+  66  Part 3  id=—  stored=—  live=—  yt="—"  !! NO YOUTUBE ID
+  65  Part 2  id=—  stored=—  live=—  yt="—"  !! NO YOUTUBE ID
+  64  Night class  id=—  stored=0:08  live=—  yt="—"  !! UNDER 20 MIN → clip, NO YOUTUBE ID
 
 ## Short mains (under 10 minutes)
 - East London circle notes: How we sit (0:08) — propose as a clip, not a main
@@ -92,6 +111,18 @@ Short-main threshold: 20 min (HEARTS_DEMOTE_SHORT_MAINS on).
 - Which People Receive Allah's Mercy?: Which People Receive Allah's Mercy? (2:05) — propose as a clip, not a main
 - The Servant Prophet ﷺ: The Servant Prophet ﷺ (9:01) — propose as Ready for more?, not a main
 - The Names: short clips: The Names Class 20: Al-Nūr (1:38) — propose as a clip, not a main
+- Putting the screen down: Putting the screen down (3:00) — propose as Ready for more?, not a main
+- A portion set aside: A portion set aside (3:00) — propose as Ready for more?, not a main
+- Letting the heat pass: Letting the heat pass (3:00) — propose as Ready for more?, not a main
+- Passing the credit on: Passing the credit on (3:00) — propose as Ready for more?, not a main
+- Leaving the outcome: Leaving the outcome (0:25) — propose as a clip, not a main
+- Sitting with the circle: Sitting with the circle (3:00) — propose as Ready for more?, not a main
+- Noticing a small gift: Noticing a small gift (0:25) — propose as a clip, not a main
+- A word before sleep: A word before sleep (3:00) — propose as Ready for more?, not a main
+- Stopping for a stranger: Stopping for a stranger (3:00) — propose as Ready for more?, not a main
+- Praying it on time: Praying it on time (3:00) — propose as Ready for more?, not a main
+- Imported sitting 943086: A sitting 943086 (10:00) — propose as Ready for more?, not a main
+- Night class: Night class (0:08) — propose as a clip, not a main
 
 ## Title mismatches
 - 2: stored "The Names Class 19: Ar-Rabb" vs YouTube "Who Is Truly Nurturing You?"
@@ -102,7 +133,7 @@ Short-main threshold: 20 min (HEARTS_DEMOTE_SHORT_MAINS on).
 - lesson 2 title stays "The Names Class 19: Ar-Rabb" (YouTube is "Who Is Truly Nurturing You? | The Names Class 19: Ar-Rabb | Shaykh Mikaeel Smith"; do not write the raw title)
 - lesson 3 title stays "The Names Class 20: Al-Nur" (YouTube is "Why You Feel Empty… And How Ramadan Fixes It | The Names Class 20: An-Nūr | Shaykh Mikaeel Smith"; do not write the raw title)
 
-32 courses, 32 lessons. Later parts flagged: 6.
+44 courses, 46 lessons. Later parts flagged: 8.
 
 ## Series grouping (would apply only if HEARTS_GROUP_SERIES=1; now off)
 Railway must not group without Leon. Leftover long talks are never bundled.
@@ -112,13 +143,25 @@ Railway must not group without Leon. Leftover long talks are never bundled.
 
 ## Short mains after grouping — propose as clips or Ready for more?, not as mains
 - "Ramadan Muslims" - Ep. 10: Grateful: "Ramadan Muslims" - Ep. 10: Grateful (2:44) → clip
+- A portion set aside: A portion set aside (3:00) → Ready for more?
+- A word before sleep: A word before sleep (3:00) → Ready for more?
 - DUA: The Answered Prayer: What is Dua? (3:50) → Ready for more?
 - East London circle notes: How we sit (0:08) → clip
 - Gratitude is the Greatest Blessing: Gratitude is the Greatest Blessing (6:37) → Ready for more?
 - Habits To Win Here and Hereafter: Ep. 1: Know Your Purpose (3:47) → Ready for more?
 - How to Manage Your Anger - Amjad Tarsin: How to Manage Your Anger - Amjad Tarsin (4:20) → Ready for more?
+- Imported sitting 943086: A sitting 943086 (10:00) → Ready for more?
+- Leaving the outcome: Leaving the outcome (0:25) → clip
+- Letting the heat pass: Letting the heat pass (3:00) → Ready for more?
+- Night class: Night class (0:08) → clip
+- Noticing a small gift: Noticing a small gift (0:25) → clip
+- Passing the credit on: Passing the credit on (3:00) → Ready for more?
+- Praying it on time: Praying it on time (3:00) → Ready for more?
 - Prophetic Duas: Dua 1: O Allah, I am Your Servant (12:43) → Ready for more?
+- Putting the screen down: Putting the screen down (3:00) → Ready for more?
 - Quranic Connection #26: A Cure for Anxiety: Quranic Connection #26: A Cure for Anxiety (1:04) → clip
+- Sitting with the circle: Sitting with the circle (3:00) → Ready for more?
+- Stopping for a stranger: Stopping for a stranger (3:00) → Ready for more?
 - Tawakkul: Supreme Trust in Allah: Tawakkul: Supreme Trust in Allah (19:43) → Ready for more?
 - The BEST Islamic Approach To Wealth: The BEST Islamic Approach To Wealth (6:34) → Ready for more?
 - The Road Ahead: On Mosques, Companionship, & Knowledge (7:23) → Ready for more?
