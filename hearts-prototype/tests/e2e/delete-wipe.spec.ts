@@ -61,33 +61,44 @@ async function postOk(api: APIRequestContext, url: string, data: Record<string, 
   expect(response.ok(), `${label}: ${await response.text()}`).toBeTruthy()
 }
 
-async function seedWork(api: APIRequestContext, userId: number, portalId: number) {
-  const lesson = (await (await api.get('/api/lessons?limit=1&depth=0&where[master][equals]=true')).json()).docs[0] as { id: number }
+async function seedWork(
+  master: APIRequestContext,
+  opts: { userId: number; portalId: number; email: string; password: string },
+) {
+  const lesson = (await (await master.get('/api/lessons?limit=1&depth=1&where[master][equals]=true')).json()).docs[0] as {
+    id: number
+    course?: { id?: number } | number
+  }
   expect(lesson?.id, 'need a library talk to hang work on').toBeTruthy()
-  let point = (await (await api.get(`/api/engagement-points?where[lesson][equals]=${lesson.id}&limit=1&depth=0`)).json()).docs[0] as { id: number } | undefined
+  const courseId = typeof lesson.course === 'object' ? Number(lesson.course?.id) : Number(lesson.course)
+  expect(courseId, 'need the talk’s course').toBeTruthy()
+  let point = (await (await master.get(`/api/engagement-points?where[lesson][equals]=${lesson.id}&limit=1&depth=0`)).json()).docs[0] as { id: number } | undefined
   if (!point?.id) {
-    const made = await api.post('/api/engagement-points', {
+    const made = await master.post('/api/engagement-points', {
       data: { lesson: lesson.id, second: 12, prompt: 'What stayed with you?', kind: 'reflection', status: 'published' },
     })
     expect(made.ok(), await made.text()).toBeTruthy()
     point = (await made.json()).doc
   }
-  const mediaRes = await api.post('/api/media', {
+  await master.post('/api/adoptions', { data: { kind: 'course', course: courseId, portal: opts.portalId } })
+  const granted = await master.patch(`/api/users/${opts.userId}`, { data: { courseList: [courseId] } })
+  expect(granted.ok(), await granted.text()).toBeTruthy()
+
+  const learner = await playwrightRequest.newContext({ baseURL: E2E_BASE })
+  expect((await learner.post('/api/users/login', { data: { email: opts.email, password: opts.password } })).ok()).toBeTruthy()
+  const answered = await learner.post('/api/answers', {
     multipart: {
-      file: { name: `wipe-${userId}.png`, mimeType: 'image/png', buffer: PNG },
-      alt: 'wipe file',
-      portal: String(portalId),
+      pointId: String(point!.id),
+      body: 'A seeded answer',
+      image: { name: `wipe-${opts.userId}.png`, mimeType: 'image/png', buffer: PNG },
     },
   })
-  const mediaBody = (await mediaRes.json().catch(() => ({}))) as { doc?: { id?: number }; id?: number }
-  const mediaId = mediaBody.doc?.id || mediaBody.id
-  expect(mediaRes.ok(), `media: ${JSON.stringify(mediaBody)}`).toBeTruthy()
-  expect(mediaId, 'media id').toBeTruthy()
-  await postOk(api, '/api/answers', { point: point!.id, user: userId, portal: portalId, lesson: lesson.id, body: 'A seeded answer', image: mediaId }, 'answers')
-  await postOk(api, '/api/workbook-entries', { user: userId, portal: portalId, lesson: lesson.id, body: 'A workbook note' }, 'workbook')
-  await postOk(api, '/api/rituals', { user: userId, portal: portalId, note: 'A garden note' }, 'garden')
-  await postOk(api, '/api/completions', { user: userId, portal: portalId, lesson: lesson.id, percent: 100 }, 'completions')
-  await postOk(api, '/api/watch-sessions', { user: userId, portal: portalId, lesson: lesson.id, seconds: 40 }, 'watches')
+  expect(answered.ok(), await answered.text()).toBeTruthy()
+  await learner.dispose()
+
+  await postOk(master, '/api/rituals', { user: opts.userId, portal: opts.portalId, note: 'A garden note' }, 'garden')
+  await postOk(master, '/api/completions', { user: opts.userId, portal: opts.portalId, lesson: lesson.id, percent: 100 }, 'completions')
+  await postOk(master, '/api/watch-sessions', { user: opts.userId, portal: opts.portalId, lesson: lesson.id, seconds: 40 }, 'watches')
 }
 
 test.describe('desk delete flows', () => {
@@ -110,7 +121,13 @@ test.describe('desk delete flows', () => {
       },
     })
     expect(learner.ok(), await learner.text()).toBeTruthy()
-    await seedWork(master, (await learner.json()).doc.id, portal.id)
+    const learnerDoc = (await learner.json()).doc
+    await seedWork(master, {
+      userId: learnerDoc.id,
+      portalId: portal.id,
+      email: `gate-learner-${sfx}@example.com`,
+      password: 'a-long-password-here',
+    })
     await master.dispose()
 
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master')
@@ -153,7 +170,7 @@ test.describe('desk delete flows', () => {
     })
     expect(made.ok(), await made.text()).toBeTruthy()
     const learner = (await made.json()).doc
-    await seedWork(master, learner.id, portal.id)
+    await seedWork(master, { userId: learner.id, portalId: portal.id, email, password: 'a-long-password-here' })
     await master.dispose()
 
     const learnerPage = await browser.newPage()
@@ -199,7 +216,7 @@ test('seeded east london and maryam show real wipe counts in a centred dialog', 
   const master = await masterApi()
   const portal = (await (await master.get('/api/portals?where[slug][equals]=east-london&depth=0')).json()).docs[0]
   const maryam = (await (await master.get('/api/users?where[email][equals]=elm-learner@hearts.test&depth=0')).json()).docs[0]
-  await seedWork(master, maryam.id, portal.id)
+  await seedWork(master, { userId: maryam.id, portalId: portal.id, email: 'elm-learner@hearts.test', password: 'portal-learner' })
   await master.dispose()
 
   await signIn(page, 'master@hearts.test', 'hearts-master', '/master')
@@ -241,7 +258,12 @@ test('a learner can delete their own account from Me', async ({ page }) => {
     data: { email, password: 'a-long-password-here', name, role: 'learner', tenants: [{ tenant: portal.id }] },
   })
   expect(made.ok(), await made.text()).toBeTruthy()
-  await seedWork(master, (await made.json()).doc.id, portal.id)
+  await seedWork(master, {
+    userId: (await made.json()).doc.id,
+    portalId: portal.id,
+    email,
+    password: 'a-long-password-here',
+  })
   await master.dispose()
 
   await signIn(page, email, 'a-long-password-here', '/p/east-london/me/settings')
