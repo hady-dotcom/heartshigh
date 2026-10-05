@@ -7,7 +7,7 @@ import { bind, execOutside, quoteIdent } from './sql'
 import type { CountRow, EraseSummary, PersonMode } from './types'
 
 async function countWhere(payload: Payload, table: string, where: string) {
-  const result = await execOutside(payload, `SELECT COUNT(*) AS n FROM ${quoteIdent(table)} WHERE ${where}`)
+  const result = await execOutside(payload, `SELECT COUNT(*) AS n FROM ${quoteIdent(table)} WHERE ${where}`).catch(() => ({ rows: [] as Record<string, unknown>[] }))
   return Number(result.rows[0]?.n || 0)
 }
 

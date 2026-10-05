@@ -1,7 +1,18 @@
-import { expect, request as playwrightRequest, test, type Page } from '@playwright/test'
+import { mkdirSync } from 'node:fs'
+import path from 'node:path'
+import { expect, request as playwrightRequest, test, type APIRequestContext, type Page } from '@playwright/test'
 import { E2E_BASE } from '../env'
 
 const sfx = Date.now().toString().slice(-6)
+const shots = process.env.HEARTS_ERASE_PROOF || '/opt/cursor/artifacts/delete-and-wipe'
+mkdirSync(shots, { recursive: true })
+test.use({ video: { mode: 'on', size: { width: 1440, height: 900 } } })
+
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
+
+async function shot(page: Page, name: string) {
+  await page.screenshot({ path: path.join(shots, `${name}.png`), fullPage: false })
+}
 
 async function signIn(page: Page, email: string, password: string, next: string) {
   await page.goto(`/login?next=${encodeURIComponent(next)}`)
@@ -23,6 +34,34 @@ async function adminApi() {
   return ctx
 }
 
+async function seedWork(api: APIRequestContext, userId: number, portalId: number) {
+  const lesson = (await (await api.get('/api/lessons?limit=1&depth=0&where[master][equals]=true')).json()).docs[0] as { id: number }
+  const point = (await (await api.get(`/api/engagement-points?where[lesson][equals]=${lesson.id}&limit=1&depth=0`)).json()).docs[0] as { id: number }
+  const mediaRes = await api.post('/api/media', {
+    multipart: {
+      file: { name: `wipe-${userId}.png`, mimeType: 'image/png', buffer: PNG },
+      alt: 'wipe file',
+      portal: String(portalId),
+    },
+  })
+  const mediaId = ((await mediaRes.json().catch(() => ({}))) as { doc?: { id?: number } }).doc?.id
+  expect((await api.post('/api/answers', {
+    data: { point: point.id, user: userId, portal: portalId, lesson: lesson.id, body: 'A seeded answer', image: mediaId },
+  })).ok()).toBeTruthy()
+  expect((await api.post('/api/workbook-entries', {
+    data: { user: userId, portal: portalId, lesson: lesson.id, body: 'A workbook note' },
+  })).ok()).toBeTruthy()
+  expect((await api.post('/api/rituals', {
+    data: { user: userId, portal: portalId, note: 'A garden note' },
+  })).ok()).toBeTruthy()
+  expect((await api.post('/api/completions', {
+    data: { user: userId, portal: portalId, lesson: lesson.id, percent: 100 },
+  })).ok()).toBeTruthy()
+  expect((await api.post('/api/watch-sessions', {
+    data: { user: userId, portal: portalId, lesson: lesson.id, seconds: 40 },
+  })).ok()).toBeTruthy()
+}
+
 test.describe('desk delete flows', () => {
   test.use({ viewport: { width: 1440, height: 900 } })
 
@@ -32,19 +71,41 @@ test.describe('desk delete flows', () => {
     const slug = `wipe-gate-${sfx}`
     const made = await master.post('/api/portals', { data: { name, slug, kind: 'mosque' } })
     expect(made.ok(), await made.text()).toBeTruthy()
+    const portal = (await made.json()).doc
+    const learner = await master.post('/api/users', {
+      data: {
+        email: `gate-learner-${sfx}@example.com`,
+        password: 'a-long-password-here',
+        name: `Gate Learner ${sfx}`,
+        role: 'learner',
+        tenants: [{ tenant: portal.id }],
+      },
+    })
+    expect(learner.ok(), await learner.text()).toBeTruthy()
+    await seedWork(master, (await learner.json()).doc.id, portal.id)
     await master.dispose()
 
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master')
     await expect(page.getByTestId('master')).toBeVisible()
+    await expect(page.locator('.desk')).toHaveCSS('overflow-x', 'hidden')
     const open = page.getByTestId(`delete-portal-${slug}-open`)
     await open.scrollIntoViewIfNeeded()
     await open.click()
-    await expect(page.getByTestId(`delete-portal-${slug}-panel`)).toBeVisible()
+    const panel = page.getByTestId(`delete-portal-${slug}-panel`)
+    await expect(panel).toBeVisible()
+    await expect(panel).toHaveAttribute('role', 'dialog')
+    await page.keyboard.press('Escape')
+    await expect(panel).toHaveCount(0)
+    await open.click()
     await expect(page.getByTestId(`delete-portal-${slug}-summary`)).toBeVisible()
+    await expect(page.getByTestId(`delete-portal-${slug}-counts`)).toContainText(/[1-9].*learner/i)
+    await expect(page.getByTestId(`delete-portal-${slug}-counts`)).toContainText(/[1-9].*answer/i)
     await expect(page.getByTestId(`delete-portal-${slug}-export`)).toBeVisible()
+    await shot(page, 'master-delete-summary')
     await page.getByTestId(`delete-portal-${slug}-confirm`).fill(name)
     await page.getByTestId(`delete-portal-${slug}-submit`).click()
     await expect(page.getByText('The portal and everything in it has been wiped.')).toBeVisible()
+    await shot(page, 'master-delete-done')
     await expect(page.getByTestId(`delete-portal-${slug}-open`)).toHaveCount(0)
 
     const check = await playwrightRequest.newContext({ baseURL: E2E_BASE })
@@ -64,6 +125,7 @@ test.describe('desk delete flows', () => {
     })
     expect(made.ok(), await made.text()).toBeTruthy()
     const learner = (await made.json()).doc
+    await seedWork(master, learner.id, portal.id)
     await master.dispose()
 
     const learnerPage = await browser.newPage()
@@ -73,14 +135,25 @@ test.describe('desk delete flows', () => {
     const adminPage = await browser.newPage()
     await adminPage.setViewportSize({ width: 1440, height: 900 })
     await signIn(adminPage, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin/teach?hideTest=0')
+    await expect(adminPage.locator('.desk')).toHaveCSS('overflow-x', 'hidden')
     const open = adminPage.getByTestId(`delete-person-${learner.id}-open`)
     await open.scrollIntoViewIfNeeded()
     await open.click()
-    await expect(adminPage.getByTestId(`delete-person-${learner.id}-panel`)).toBeVisible()
+    const panel = adminPage.getByTestId(`delete-person-${learner.id}-panel`)
+    await expect(panel).toBeVisible()
+    await expect(panel).toHaveAttribute('role', 'dialog')
     await expect(adminPage.getByTestId(`delete-person-${learner.id}-one-home`)).toBeVisible()
+    await expect(adminPage.getByTestId(`delete-person-${learner.id}-counts`)).toContainText(/[1-9].*answer/i)
+    await expect(adminPage.getByTestId(`delete-person-${learner.id}-counts`)).toContainText(/[1-9].*(workbook|garden|file|watch)/i)
+    await adminPage.keyboard.press('Escape')
+    await expect(panel).toHaveCount(0)
+    await open.click()
+    await expect(adminPage.getByTestId(`delete-person-${learner.id}-confirm`)).toBeVisible()
+    await shot(adminPage, 'admin-delete-summary')
     await adminPage.getByTestId(`delete-person-${learner.id}-confirm`).fill(name)
     await adminPage.getByTestId(`delete-person-${learner.id}-submit`).click()
     await expect(adminPage.getByText('That person and their data have been wiped.')).toBeVisible()
+    await shot(adminPage, 'admin-delete-done')
 
     await learnerPage.reload()
     await expect(learnerPage).not.toHaveURL(/\/p\/east-london\/me/)
@@ -89,6 +162,7 @@ test.describe('desk delete flows', () => {
     await learnerPage.getByTestId('login-password').fill('a-long-password-here')
     await learnerPage.getByTestId('login-submit').click()
     await expect(learnerPage.getByText(/did not match|no longer here/i)).toBeVisible()
+    await shot(learnerPage, 'admin-delete-session-dead')
     await learnerPage.close()
     await adminPage.close()
   })
@@ -103,16 +177,22 @@ test('a learner can delete their own account from Me', async ({ page }) => {
     data: { email, password: 'a-long-password-here', name, role: 'learner', tenants: [{ tenant: portal.id }] },
   })
   expect(made.ok(), await made.text()).toBeTruthy()
+  await seedWork(master, (await made.json()).doc.id, portal.id)
   await master.dispose()
 
   await signIn(page, email, 'a-long-password-here', '/p/east-london/me/settings')
   await expect(page.getByTestId('settings')).toBeVisible()
   await page.getByTestId('delete-account-open').click()
   await expect(page.getByTestId('delete-account-panel')).toBeVisible()
+  await expect(page.getByTestId('delete-account-confirm')).toBeVisible()
+  await expect(page.getByTestId('delete-account-counts')).toContainText(/[1-9].*answer/i)
+  await page.getByTestId('delete-account').scrollIntoViewIfNeeded()
+  await shot(page, 'learner-self-delete-confirm')
   await page.getByTestId('delete-account-confirm').fill(name)
   await page.getByTestId('delete-account-submit').click()
   await expect(page).toHaveURL(/\/login/)
   await expect(page.getByText('Your account and its data have been wiped.')).toBeVisible()
+  await shot(page, 'learner-self-delete-done')
   await page.getByTestId('login-email').fill(email)
   await page.getByTestId('login-password').fill('a-long-password-here')
   await page.getByTestId('login-submit').click()

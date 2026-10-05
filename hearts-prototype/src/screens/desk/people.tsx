@@ -86,8 +86,8 @@ export async function TeachScreen(ctx: Ctx) {
                     <td>
                       <GiveCourse learnerId={learner.id} learnerName={str(learner.name) || 'this learner'} courses={courses.map((course) => ({ id: course.id, title: str(course.title) }))} next={here} />
                     </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'start' }}>
+                    <td className="row-actions">
+                      <div className="row-actions-inner">
                         {featureOn(portal, 'workbook') ? (answers.filter((row) => ref(row.user) === learner.id).length ? (
                           <a className="btn ghost small" href={`/api/workbook/${learner.id}?format=csv`} data-testid="workbook-csv">Workbook</a>
                         ) : (
@@ -134,7 +134,7 @@ export async function TeachScreen(ctx: Ctx) {
                     <td><b>{str(person.name)}</b></td>
                     <td>{str(person.email)}</td>
                     <td>{person.role === 'portal-admin' ? 'Admin' : 'Teacher'}</td>
-                    <td>
+                    <td className="row-actions">
                       <ErasePanel
                         action="delete-person"
                         next={here}

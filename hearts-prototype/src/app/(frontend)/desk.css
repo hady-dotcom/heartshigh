@@ -2,6 +2,9 @@
    Evening garden tokens live in src/lib/desk-tokens.ts and :root --desk-* in theme.css.
    Deep teal page and panels, warm dark gold, cream type. The learner app keeps its own colours. */
 .desk {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
   --paper: var(--desk-page, #0E2A2B);
   --card: var(--desk-card, #163633);
   --ink: var(--desk-ink, #F6EEDC);
@@ -14,13 +17,13 @@
   --gold-ink: var(--desk-gold-ink, #1A1408);
   --mint: var(--desk-field, #102E2C);
   display: grid;
-  grid-template-columns: 248px 1fr;
+  grid-template-columns: 248px minmax(0, 1fr);
   min-height: 100vh;
   background: var(--paper);
   color: var(--ink);
 }
 .desk .body.grid.two { align-items: start; }
-.side { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden; background: var(--teal-deep); color: #f7eedb; border-right: 0; padding: 22px 16px 14px; display: flex; flex-direction: column; gap: 4px; }
+.side { position: sticky; top: 0; z-index: 2; height: 100vh; height: 100dvh; overflow: hidden; background: var(--teal-deep); color: #f7eedb; border-right: 0; padding: 22px 16px 14px; display: flex; flex-direction: column; gap: 4px; }
 .side-brand { flex: none; }
 /* The nav scrolls on a short screen; the brand and the footer (learner app, who, Sign out) always stay in view. */
 .side-nav-wrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; position: relative; overflow: hidden; }
@@ -61,7 +64,7 @@
 .side-foot button { width: 100%; text-align: left; background: none; border: 0; padding: 8px 12px; border-radius: 10px; color: #f7eedb; font-weight: 600; }
 .side-foot button:hover { background: rgba(247, 238, 219, 0.12); }
 
-.main { min-width: 0; padding: 26px 36px 60px; }
+.main { min-width: 0; max-width: 100%; overflow-x: hidden; padding: 26px 36px 60px; }
 .main-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
 .main-head h1 { margin: 0; font-size: 26px; font-weight: 750; letter-spacing: -0.01em; display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .main-head p { margin: 6px 0 0; color: var(--ink-2); max-width: 760px; line-height: 1.5; font-size: 14.5px; }
@@ -136,7 +139,27 @@
 .hint { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
 .inline-form { display: inline; }
 
-.table-wrap { overflow-x: auto; }
+.table-wrap { overflow-x: auto; max-width: 100%; }
+.desk td.row-actions { min-width: 0; }
+.desk td.row-actions .row-actions-inner { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; align-items: center; }
+.erase-dialog-back {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(8, 20, 20, 0.58);
+}
+.erase-dialog {
+  width: min(440px, 100%);
+  max-height: min(80vh, 640px);
+  overflow: auto;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.4);
+}
+.erase-trigger { display: inline-flex; }
 table.data { width: 100%; border-collapse: collapse; font-size: 14px; }
 table.data th { text-align: left; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 10px 12px; border-bottom: 1px solid var(--line); background: transparent; vertical-align: bottom; }
 table.data td { padding: 12px; border-bottom: 1px solid rgba(196, 146, 58, 0.35); vertical-align: top; }

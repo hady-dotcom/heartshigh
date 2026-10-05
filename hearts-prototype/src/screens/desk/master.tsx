@@ -56,7 +56,8 @@ export async function MasterPortals(ctx: MasterCtx) {
                   <td>{portal.closed ? <span className="badge rose">Deactivated</span> : <span className="badge teal">Active</span>}</td>
                   <td className="num">{people.filter((person) => inPortal(person, portal.id)).length}</td>
                   <td className="num">{codes.filter((code) => ref(code.portal) === portal.id).length}</td>
-                  <td style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                  <td className="row-actions">
+                    <div className="row-actions-inner">
                     <Link className="btn ghost small" href={`/master/portals/${str(portal.slug)}`} data-testid="edit-portal">Features</Link>
                     <Link className="btn ghost small" href={`/p/${str(portal.slug)}/admin`}>Open admin</Link>
                     {(() => {
@@ -79,6 +80,7 @@ export async function MasterPortals(ctx: MasterCtx) {
                       label="Delete"
                       testId={`delete-portal-${str(portal.slug)}`}
                     />
+                    </div>
                   </td>
                 </tr>
               ))}

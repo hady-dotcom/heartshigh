@@ -30,6 +30,7 @@ export default defineConfig({
       HEARTS_TEST_CLOCK: '1',
       HEARTS_E2E: '1',
       DATABASE_URL: E2E_DATABASE,
+      DATABASE_ADAPTER: /^postgres/i.test(E2E_DATABASE) ? 'postgres' : 'sqlite',
       HEARTS_DIST_DIR: '.next-e2e',
       HEARTS_TRUSTED_PROXY_HOPS: '1',
       HEARTS_SEARCH_FIXTURE: 'tests/fixtures/youtube-search.json',

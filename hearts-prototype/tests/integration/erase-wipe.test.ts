@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict'
 import { after, before, describe, it } from 'node:test'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { closePayload } from '../../src/lib/prepare-db'
-import { findOrphans, formatOrphanReport, missingWipeRegistrations, wipePortal, wipeUser } from '../../src/server/erase'
+import { findOrphans, formatOrphanReport, missingWipeRegistrations, retryFailedFiles, wipePortal, wipeUser } from '../../src/server/erase'
 import { execOutside } from '../../src/server/erase/sql'
 
 const PG = process.env.HEARTS_ERASE_DATABASE || process.env.HEARTS_INTEGRATION_DATABASE || 'postgresql://hearts:hearts@127.0.0.1:5432/hearts_erase'
@@ -22,6 +22,7 @@ describe('erase wipe on a real database', { timeout: 180_000 }, () => {
   let libraryLesson: { id: number }
   let localLesson: { id: number }
   let mediaId: number
+  let mediaName: string
   let master: { id: number; role?: string | null; name?: string | null }
 
   before(async () => {
@@ -88,6 +89,7 @@ describe('erase wipe on a real database', { timeout: 180_000 }, () => {
     const dir = path.resolve(process.cwd(), 'media')
     mkdirSync(dir, { recursive: true })
     const filename = `erase-${suffix}.png`
+    mediaName = filename
     const filePath = path.join(dir, filename)
     writeFileSync(
       filePath,
@@ -242,6 +244,7 @@ describe('erase wipe on a real database', { timeout: 180_000 }, () => {
     assert.equal(circle.totalDocs, 0)
     const gone = await payload.findByID({ collection: 'users', id: learner.id, overrideAccess: true }).catch(() => null)
     assert.equal(gone, null)
+    assert.equal(existsSync(path.join(process.cwd(), 'media', mediaName)), false)
     const keepAnswers = await payload.find({ collection: 'answers', overrideAccess: true, where: { user: { equals: otherLearner.id } } })
     assert.equal(keepAnswers.totalDocs, 1)
     const talk = await payload.findByID({ collection: 'lessons', id: libraryLesson.id, overrideAccess: true })
@@ -267,5 +270,65 @@ describe('erase wipe on a real database', { timeout: 180_000 }, () => {
     assert.equal(keepAnswers.totalDocs, 1)
     const report = await findOrphans(payload)
     assert.equal(report.clean, true, formatOrphanReport(report))
+  })
+
+  it('a forced storage failure lands in erase_s3_retries and is retried', async () => {
+    const suffix = randomUUID().slice(0, 8)
+    const portal = (await payload.create({
+      collection: 'portals',
+      overrideAccess: true,
+      data: { name: `Retry ${suffix}`, slug: `retry-${suffix}`, kind: 'mosque' },
+    })) as { id: number; name: string }
+    const person = (await payload.create({
+      collection: 'users',
+      overrideAccess: true,
+      data: {
+        email: `retry-${suffix}@hearts.test`,
+        password: 'portal-learner',
+        name: `Retry ${suffix}`,
+        role: 'learner',
+        tenants: [{ tenant: portal.id }],
+      },
+    })) as { id: number; name: string }
+    const filename = `retry-${suffix}.png`
+    const filePath = path.join(process.cwd(), 'media', filename)
+    mkdirSync(path.dirname(filePath), { recursive: true })
+    writeFileSync(filePath, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64'))
+    const media = (await payload.create({
+      collection: 'media',
+      overrideAccess: true,
+      data: { alt: 'retry file', portal: portal.id },
+      filePath,
+    })) as { id: number; filename?: string }
+    const storedName = String(media.filename || filename)
+    const storedPath = path.join(process.cwd(), 'media', storedName)
+    writeFileSync(storedPath, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64'))
+    const course = (await payload.find({ collection: 'courses', overrideAccess: true, limit: 1 })).docs[0] as { id: number }
+    const lesson = (await payload.find({ collection: 'lessons', overrideAccess: true, limit: 1, where: { course: { equals: course.id } } })).docs[0] as { id: number }
+    const point = (await payload.find({ collection: 'engagement-points', overrideAccess: true, limit: 1, where: { lesson: { equals: lesson.id } } })).docs[0] as { id: number }
+    await payload.create({
+      collection: 'answers',
+      overrideAccess: true,
+      data: { point: point.id, user: person.id, portal: portal.id, lesson: lesson.id, body: 'Retry answer', image: media.id },
+    })
+    process.env.HEARTS_ERASE_FAIL_STORAGE = '1'
+    const failed = await wipeUser(payload, {
+      actor: master,
+      userId: person.id,
+      portalId: portal.id,
+      mode: 'account',
+      confirmName: person.name,
+    })
+    delete process.env.HEARTS_ERASE_FAIL_STORAGE
+    assert.equal(failed.ok, true, failed.ok ? '' : failed.error)
+    if (failed.ok) assert.ok((failed.fileFailures || 0) >= 1)
+    assert.equal(existsSync(storedPath), true)
+    const queued = await execOutside(payload, 'SELECT COUNT(*) AS n FROM erase_s3_retries')
+    assert.ok(Number(queued.rows[0]?.n || 0) >= 1)
+    const retried = await retryFailedFiles(payload)
+    assert.ok(retried.removed >= 1)
+    assert.equal(existsSync(storedPath), false)
+    const left = await execOutside(payload, 'SELECT COUNT(*) AS n FROM erase_s3_retries')
+    assert.equal(Number(left.rows[0]?.n || 0), 0)
   })
 })

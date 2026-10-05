@@ -1,6 +1,8 @@
 /**
  * Read-only report of rows that point at a portal or user that no longer exists,
  * and media rows whose portal is gone. Safe to run on live.
+ * Tables that are not in this database (later PRs, or a live schema that is behind)
+ * are skipped. Nothing is created or altered unless you pass --fix.
  * Pass --fix only after reading the list; that deletes the orphan rows.
  */
 import { getPayload } from 'payload'

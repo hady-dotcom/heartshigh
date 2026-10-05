@@ -1,6 +1,5 @@
 import type { Payload } from 'payload'
 import { TENANT_COLLECTIONS } from '../../lib/tenant-collections'
-import { ensureRetryTable } from './media'
 import { wipeEntries } from './registry'
 import { fieldToColumn, slugToTable } from './relations'
 import { execOutside, quoteIdent } from './sql'
@@ -79,16 +78,19 @@ async function dangling(payload: Payload, table: string, column: string, parent:
 }
 
 export async function findOrphans(payload: Payload): Promise<OrphanReport> {
-  await ensureRetryTable(payload)
   const orphans: OrphanRow[] = []
   for (const row of PORTAL_COLUMNS) orphans.push(...(await dangling(payload, row.table, row.column, 'portals', 'portal')))
   for (const row of USER_COLUMNS) orphans.push(...(await dangling(payload, row.table, row.column, 'users', 'user')))
-  const files = await execOutside(
-    payload,
-    `SELECT id, filename, prefix FROM media
-      WHERE portal_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM portals p WHERE p.id = media.portal_id)`,
-  ).catch(() => ({ rows: [] as Record<string, unknown>[] }))
-  const retries = await execOutside(payload, 'SELECT id, object_key, error FROM erase_s3_retries').catch(() => ({ rows: [] as Record<string, unknown>[] }))
+  const files = (await tableExists(payload, 'media'))
+    ? await execOutside(
+      payload,
+      `SELECT id, filename, prefix FROM media
+        WHERE portal_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM portals p WHERE p.id = media.portal_id)`,
+    ).catch(() => ({ rows: [] as Record<string, unknown>[] }))
+    : { rows: [] as Record<string, unknown>[] }
+  const retries = (await tableExists(payload, 'erase_s3_retries'))
+    ? await execOutside(payload, 'SELECT id, object_key, error FROM erase_s3_retries').catch(() => ({ rows: [] as Record<string, unknown>[] }))
+    : { rows: [] as Record<string, unknown>[] }
   const filesWithoutOwner = files.rows.map((row) => ({ id: Number(row.id), filename: row.filename as string | null, prefix: row.prefix as string | null }))
   return {
     orphans,

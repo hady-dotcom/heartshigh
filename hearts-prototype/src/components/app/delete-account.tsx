@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { Hidden } from '@/components/app/shell'
+import { HelpTip } from '@/components/desk/help'
+import { TOOL } from '@/lib/desk-help'
 import type { CountRow, EraseSummary } from '@/server/erase/types'
 
 export function DeleteAccount({ name, next }: { name: string; next: string }) {
@@ -27,7 +29,10 @@ export function DeleteAccount({ name, next }: { name: string; next: string }) {
 
   return (
     <section className="card" data-testid="delete-account" style={{ marginTop: 14 }}>
-      <h3>Delete my account</h3>
+      <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        Delete my account
+        <HelpTip topic="delete-account" label="What is Delete my account?">{TOOL.deleteAccount}</HelpTip>
+      </h3>
       <p>This wipes your answers, progress and files, then signs you out. It cannot be undone.</p>
       {!open ? (
         <button className="pill outline small" type="button" data-testid="delete-account-open" onClick={() => void load()}>

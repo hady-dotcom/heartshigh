@@ -79,30 +79,37 @@ function retrySql(file: MediaTarget, bucket: string, error: string, local: strin
   return `INSERT INTO erase_s3_retries (object_key, bucket, filename, local_path, error, attempts) VALUES ('${key}', '${bucketName}', '${fileName}', '${localName}', '${err}', 1)`
 }
 
+async function deleteOne(file: MediaTarget) {
+  if (process.env.HEARTS_ERASE_FAIL_STORAGE === '1') throw new Error('Forced storage failure for tests.')
+  const s3 = readS3()
+  const key = objectKey(file)
+  const disk = localPath(file)
+  if (s3 && key) {
+    const client = new S3Client({
+      credentials: { accessKeyId: s3.accessKeyId, secretAccessKey: s3.secretAccessKey },
+      region: s3.region,
+      endpoint: s3.endpoint,
+      forcePathStyle: s3.forcePathStyle,
+    })
+    await client.send(new DeleteObjectCommand({ Bucket: s3.bucket, Key: key }))
+    return
+  }
+  if (disk) {
+    await unlink(disk).catch((error: { code?: string }) => {
+      if (error.code !== 'ENOENT') throw error
+    })
+  }
+}
+
 export async function removeStoredFiles(payload: Payload, files: MediaTarget[]) {
   const s3 = readS3()
   let removed = 0
   let failed = 0
   await ensureRetryTable(payload)
-  const client = s3
-    ? new S3Client({
-        credentials: { accessKeyId: s3.accessKeyId, secretAccessKey: s3.secretAccessKey },
-        region: s3.region,
-        endpoint: s3.endpoint,
-        forcePathStyle: s3.forcePathStyle,
-      })
-    : null
   for (const file of files) {
-    const key = objectKey(file)
     const disk = localPath(file)
     try {
-      if (client && s3 && key) {
-        await client.send(new DeleteObjectCommand({ Bucket: s3.bucket, Key: key }))
-      } else if (disk) {
-        await unlink(disk).catch((error: { code?: string }) => {
-          if (error.code !== 'ENOENT') throw error
-        })
-      }
+      await deleteOne(file)
       removed += 1
     } catch (error) {
       failed += 1
@@ -111,4 +118,32 @@ export async function removeStoredFiles(payload: Payload, files: MediaTarget[]) 
     }
   }
   return { removed, failed }
+}
+
+export async function retryFailedFiles(payload: Payload) {
+  await ensureRetryTable(payload)
+  const listed = await execOutside(payload, 'SELECT id, object_key, bucket, filename, local_path, error, attempts FROM erase_s3_retries').catch(() => ({ rows: [] as Record<string, unknown>[] }))
+  let removed = 0
+  let failed = 0
+  for (const row of listed.rows) {
+    const file: MediaTarget = {
+      id: 0,
+      filename: String(row.filename || ''),
+      objectKey: String(row.object_key || ''),
+      prefix: '',
+    }
+    try {
+      await deleteOne(file)
+      await execOutside(payload, `DELETE FROM erase_s3_retries WHERE id = ${Number(row.id)}`)
+      removed += 1
+    } catch (error) {
+      failed += 1
+      const message = error instanceof Error ? error.message : 'The file could not be removed.'
+      await execOutside(
+        payload,
+        `UPDATE erase_s3_retries SET attempts = ${(Number(row.attempts) || 0) + 1}, error = '${message.replaceAll("'", "''").slice(0, 500)}' WHERE id = ${Number(row.id)}`,
+      ).catch(() => undefined)
+    }
+  }
+  return { removed, failed, queued: listed.rows.length }
 }
