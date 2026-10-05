@@ -7,8 +7,10 @@ import { buildWorkbook } from '../../src/lib/master-sheet'
 // The CircleAnswers tab of the master sheet: circle answers come in and go out with the talks and questions,
 // and are never counted as answers, completions or done tasks.
 
+import { artifactDir } from './artifact-dir'
+
 const PORTAL = 'east-london'
-const ARTIFACTS = '/opt/cursor/artifacts'
+const ARTIFACTS = artifactDir()
 const sfx = Date.now().toString().slice(-6)
 
 type Row = Record<string, any> & { id: number }

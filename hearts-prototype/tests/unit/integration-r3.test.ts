@@ -34,6 +34,8 @@ test('export times: the portal zone (Europe/London unless set), the viewer\'s la
   assert.equal(zonedTime('2026-10-04T05:12:00.000Z', 'Europe/London', 'en-GB'), '4 Oct 2026, 06:12 BST')
   assert.equal(zonedTime('2026-12-04T05:12:00.000Z', 'Europe/London', 'en-GB'), '4 Dec 2026, 05:12 GMT')
   assert.equal(zonedTime('2026-10-04T05:12:00.000Z', 'Asia/Dubai', 'en-GB'), '4 Oct 2026, 09:12 GST')
+  assert.match(zonedTime('2026-10-04T18:57:00.000Z', 'America/Toronto', 'en-GB'), /^4 Oct 2026, 14:57 (EDT|GMT-4)$/)
+  assert.equal(zoneCity('America/Toronto'), 'Toronto')
   assert.match(zonedTime('2026-10-04T05:12:00.000Z', 'Europe/London', 'en-US'), /^Oct 4, 2026, 06:12 AM GMT\+1$/)
   assert.equal(zonedTime('nonsense', 'Europe/London'), '')
   assert.equal(zoneCity('America/Los_Angeles'), 'Los Angeles')
@@ -51,6 +53,7 @@ test('posters: YouTube\'s titled thumbnails and their /clips/ copies are never o
   assert.ok(isTitledThumbnail('https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg'))
   assert.ok(isTitledThumbnail('https://img.youtube.com/vi/abcdefghijk/maxresdefault.jpg'))
   assert.ok(isTitledThumbnail('/clips/HfIT8TSoHiE.jpg'))
+  assert.ok(isTitledThumbnail('https://i.ytimg.com/vi/HfIT8TSoHiE/hqdefault.jpg'))
   assert.ok(!isTitledThumbnail('/slides/bg-cinema-road.jpg'))
   assert.ok(!isTitledThumbnail(null))
   assert.equal(cleanThumbnail({ youtubeId: 'abcdefghijk', thumbnailClean: true }), 'https://i.ytimg.com/vi/abcdefghijk/maxresdefault.jpg')
@@ -58,14 +61,14 @@ test('posters: YouTube\'s titled thumbnails and their /clips/ copies are never o
   assert.equal(cleanThumbnail({ youtubeId: 'not an id', thumbnailClean: true }), null)
 })
 
-test('feed players keep YouTube captions and annotations off and send no caption language; the full talk still may', () => {
-  for (const kind of ['hors', 'appetiser'] as const) {
+test('feed players and the course player keep YouTube captions and annotations off and send no caption language', () => {
+  for (const kind of ['hors', 'appetiser', 'full'] as const) {
     const vars = playerVars(kind, 3, 20) as Record<string, unknown>
     assert.equal(vars.cc_load_policy, 0, kind)
     assert.equal(vars.iv_load_policy, 3, kind)
+    assert.equal(vars.controls, 0, kind)
     assert.equal('cc_lang_pref' in vars, false, kind)
   }
-  assert.equal((playerVars('full', 0) as Record<string, unknown>).cc_lang_pref, 'en')
 })
 
 test('portal names: the brand word shows as HEARTS; other names, stored values and slugs stay as typed', async () => {

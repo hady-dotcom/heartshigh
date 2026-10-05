@@ -4,9 +4,10 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { E2E_BASE } from '../env'
 import { buildWorkbook, QUESTION_COLUMNS, TALK_COLUMNS } from '../../src/lib/master-sheet'
+import { artifactDir } from './artifact-dir'
 
 const DESK = { width: 1440, height: 900 }
-const ARTIFACTS = '/opt/cursor/artifacts'
+const ARTIFACTS = artifactDir()
 const sfx = Date.now().toString().slice(-6)
 
 let master: APIRequestContext

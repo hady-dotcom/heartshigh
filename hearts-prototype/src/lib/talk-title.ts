@@ -1,7 +1,20 @@
 /**
  * A title a learner can read. Slugs, file names and video ids are not titles.
  * When neither the source title nor the stored title is a real sentence, the course name and part number stand in.
+ * A YouTube upload often appends "| Prophetic Dua | Shaykh …". That suffix is the channel, not the talk.
  */
+
+/** Drops a "| channel, series" suffix and a trailing "Khutbah by …" credit. */
+export function tidyTalkTitle(raw: string) {
+  let text = raw.replace(/\s+/g, ' ').trim()
+  const pipe = text.indexOf('|')
+  if (pipe > 0) text = text.slice(0, pipe).replace(/\s+/g, ' ').trim() || text
+  text = text.replace(/\s+[–—-]\s+(Shaykh|Sheikh|Imam|Ustadh|Dr)\b.*$/i, '')
+  text = text.replace(/\s+\((?:Shaykh|Sheikh|Imam|Ustadh|Dr)[^)]*\)\s*$/i, '')
+  text = text.replace(/\s+[-–—:]+(?:\s+|:)(?:Jum(?:'?uah|mah)\s+)?Khutbah\b.*$/i, '').trim()
+  text = text.replace(/\s+::\s+Khutbah\b.*$/i, '').trim()
+  return text
+}
 
 export function displayTalkTitle(input: {
   title?: string | null
@@ -16,7 +29,7 @@ export function displayTalkTitle(input: {
   const fallback = course ? `${course} · Part ${part}` : `Part ${part}`
   const ids = new Set([input.youtubeId, input.vimeoId].map((value) => (value || '').trim()).filter(Boolean))
   for (const raw of [input.title, input.sourceTitle]) {
-    const text = (raw || '').replace(/\s+/g, ' ').trim()
+    const text = tidyTalkTitle(raw || '')
     if (!text || isMachineTitle(text, ids)) continue
     return text
   }

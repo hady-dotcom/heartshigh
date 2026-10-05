@@ -3,6 +3,7 @@ import { E2E_BASE, E2E_DATABASE, E2E_PORT } from './tests/env'
 
 // The suite seeds and serves its own database file, so `npm run go` data and the codes it printed stay as they were.
 process.env.DATABASE_URL = E2E_DATABASE
+process.env.HEARTS_E2E = process.env.HEARTS_E2E || '1'
 
 // The suite starts its own server on its own port with the test clock on, so a `npm run go` server on :3000
 // (which runs without the test clock) is never picked up by mistake. HEARTS_E2E_REUSE=1 reuses a server that is
@@ -30,7 +31,7 @@ export default defineConfig({
       HEARTS_TEST_CLOCK: '1',
       HEARTS_E2E: '1',
       DATABASE_URL: E2E_DATABASE,
-      HEARTS_DIST_DIR: '.next-e2e',
+      HEARTS_DIST_DIR: process.env.HEARTS_DIST_DIR || '.next-e2e',
       HEARTS_TRUSTED_PROXY_HOPS: '1',
       HEARTS_SEARCH_FIXTURE: 'tests/fixtures/youtube-search.json',
       HEARTS_TRANSCRIPT_FIXTURE: 'tests/fixtures/transcripts.json',

@@ -292,7 +292,8 @@ export function bestCut(laneKey: string, ctx: RouteContext, taken: Set<number>, 
       Number(served.has(String(a.id))) - Number(served.has(String(b.id))) ||
       a.id - b.id,
   )
-  return pool[0] || null
+  const unseen = pool.filter((cut) => !served.has(String(cut.id)))
+  return unseen[0] || pool[0] || null
 }
 
 /** spine(n) from section 3.4: usable hors cuts in door order after the pointer, one door at a time. */
@@ -302,9 +303,11 @@ export function spine(n: number, ctx: RouteContext, pointer: number, taken: Set<
     .filter(({ cut, door }) => clipUsable(cut, ctx.showUnchecked) && cut.hasHors && door != null && door > pointer && !taken.has(cut.id))
     .sort((a, b) => (a.door! - b.door!) || (a.cut.clause ?? 99) - (b.cut.clause ?? 99) || Number(served.has(String(a.cut.id))) - Number(served.has(String(b.cut.id))) || a.cut.id - b.cut.id)
     .map(({ cut }) => cut)
+  const fresh = pool.filter((cut) => !served.has(String(cut.id)))
+  const ordered = fresh.length ? fresh : pool
   const picked: CutInfo[] = []
   const usedDoors = new Set<number>()
-  for (const cut of pool) {
+  for (const cut of ordered) {
     if (picked.length >= n) break
     const door = cutDoor(cut)!
     if (usedDoors.has(door)) continue
@@ -312,7 +315,7 @@ export function spine(n: number, ctx: RouteContext, pointer: number, taken: Set<
     picked.push(cut)
   }
   // Fewer distinct doors than slots: fill with the remaining cuts in the same order.
-  for (const cut of pool) {
+  for (const cut of ordered) {
     if (picked.length >= n) break
     if (!picked.includes(cut)) picked.push(cut)
   }

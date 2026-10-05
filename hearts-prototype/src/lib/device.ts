@@ -45,7 +45,7 @@ export type PendingAnswer = { pointId: number; lessonId: number; cutId?: number 
 export const readPending = () => read<PendingAnswer[]>(PENDING_KEY) || []
 export const writePending = (rows: PendingAnswer[]) => write(PENDING_KEY, rows.length ? rows : null)
 
-export type SessionFlags = { sheetCount: number; firstEnded?: boolean; unmuted?: boolean }
+export type SessionFlags = { sheetCount: number; firstEnded?: boolean; unmuted?: boolean; seenCuts?: number[]; seenCards?: string[] }
 export function sessionFlags(): SessionFlags {
   try {
     return JSON.parse(window.sessionStorage.getItem(deviceKey('hearts.session.v1')) || '{"sheetCount":0}')
@@ -60,6 +60,45 @@ export function setSessionFlags(flags: SessionFlags) {
   } catch {
     // ignore
   }
+}
+
+export type FeedPlace = { cutId: number; mode: 'hors' | 'appetiser'; card?: string | null }
+const PLACE_KEY = 'hearts.feed-place.v1'
+const COACH_KEY = 'hearts.feed-coach.v1'
+
+export const readFeedPlace = () => read<FeedPlace>(PLACE_KEY)
+export const writeFeedPlace = (place: FeedPlace | null) => write(PLACE_KEY, place)
+export const readCoachDismissed = () => Boolean(read<boolean>(COACH_KEY))
+export const writeCoachDismissed = () => write(COACH_KEY, true)
+
+export function sessionSeenCuts() {
+  return sessionFlags().seenCuts || []
+}
+
+export function sessionSeenCards() {
+  const flags = sessionFlags()
+  if (flags.seenCards?.length) return flags.seenCards
+  return (flags.seenCuts || []).map((id) => `${id}:talk`)
+}
+
+export function rememberSeenCut(cutId: number) {
+  const flags = sessionFlags()
+  const seen = flags.seenCuts || []
+  if (seen.includes(cutId)) return seen
+  const next = [...seen, cutId]
+  setSessionFlags({ ...flags, seenCuts: next })
+  return next
+}
+
+export function rememberSeenCard(cutId: number, card?: string | null, level: 'hors' | 'appetiser' = 'hors') {
+  const key = `${cutId}:${card || 'talk'}:${level}`
+  const flags = sessionFlags()
+  const cards = flags.seenCards || sessionSeenCards()
+  const nextCards = cards.includes(key) ? cards : [...cards, key]
+  const cuts = flags.seenCuts || []
+  const nextCuts = !card || card === 'talk' ? (cuts.includes(cutId) ? cuts : [...cuts, cutId]) : cuts
+  setSessionFlags({ ...flags, seenCards: nextCards, seenCuts: nextCuts })
+  return { cards: nextCards, cuts: nextCuts }
 }
 
 export const readPref = (name: string, fallback: boolean) => {

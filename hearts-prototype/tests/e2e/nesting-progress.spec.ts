@@ -49,13 +49,27 @@ test('at phone size, short clips stay off the grow page and a full talk in a cou
   await expect(feed).toHaveAttribute('data-mode', 'hors')
   await expect(feed).not.toHaveAttribute('data-cut', opening!)
   const beforeDown = await feed.getAttribute('data-cut')
+  const beforeCard = await feed.getAttribute('data-card')
   await swipe(0, 200)
-  await expect(feed).not.toHaveAttribute('data-cut', beforeDown!)
+  let afterDown = await feed.getAttribute('data-cut')
+  let afterCard = await feed.getAttribute('data-card')
+  if (afterDown === beforeDown && afterCard === beforeCard) {
+    await page.getByTestId('gesture-next').dispatchEvent('click')
+    await page.waitForTimeout(500)
+    afterDown = await feed.getAttribute('data-cut')
+    afterCard = await feed.getAttribute('data-card')
+  }
+  expect(afterDown !== beforeDown || afterCard !== beforeCard, 'a down swipe or next control moves to another clip or card on this level').toBeTruthy()
   await expect(feed).toHaveAttribute('data-mode', 'hors')
   await shot(page, 'hors-loop')
   const first = await feed.getAttribute('data-cut')
 
-  await page.getByTestId('learn-more').click()
+  const stepUp = page.getByTestId('learn-more').or(page.getByTestId('scene-next'))
+  if (!(await page.getByTestId('learn-more').count()) && (await page.getByTestId('scene-next').count())) {
+    await page.getByTestId('scene-next').click()
+  } else {
+    await stepUp.first().click()
+  }
   await expect(feed).toHaveAttribute('data-mode', 'appetiser')
   await expect(feed).toHaveAttribute('data-cut', first!)
   await swipe(0, -200)

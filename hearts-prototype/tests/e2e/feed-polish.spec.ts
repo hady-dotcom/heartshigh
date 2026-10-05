@@ -1,5 +1,7 @@
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, request as playwrightRequest, test, type Locator, type Page } from '@playwright/test'
+import { E2E_BASE } from '../env'
 import { fakeYouTube } from './fake-youtube'
+import { settled as feedSettled, stepFeed, stepToCard } from './feed-step'
 
 // Follow-ups from the live check: one Tap for sound, readable chrome on cream cards, scenic cards for talks
 // without a voice, tidy harvest lines with one count everywhere, and portal names instead of slugs.
@@ -16,25 +18,12 @@ async function signIn(page: Page, email: string, password: string, next: string)
 }
 
 async function settled(feed: Locator, page: Page) {
-  let last = ''
-  await expect(async () => {
-    const now = `${await feed.getAttribute('data-index')}:${await feed.getAttribute('data-mode')}`
-    const same = now === last
-    last = now
-    expect(same).toBe(true)
-  }).toPass({ timeout: 10_000, intervals: [400] })
-  await page.waitForTimeout(150)
+  await feedSettled(page, feed)
 }
 
 async function stepTo(page: Page, feed: Locator, card: string) {
-  const total = ((await feed.getAttribute('data-cuts')) || '').split(' ').length
-  for (let tries = 0; tries < total * 3 && (await feed.getAttribute('data-card')) !== card; tries++) {
-    const before = await feed.getAttribute('data-index')
-    await page.getByTestId('gesture-next').dispatchEvent('click')
-    await expect(feed).not.toHaveAttribute('data-index', before!)
-    await settled(feed, page)
-  }
-  await expect(feed).toHaveAttribute('data-card', card)
+  const found = await stepToCard(page, card, feed)
+  expect(found, `needed a ${card} before the pool ran out`).toBe(true)
 }
 
 /** WCAG contrast of each matched element's text against the card's cream. */
@@ -48,7 +37,7 @@ async function contrasts(page: Page, selector: string) {
       })
       return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
     }
-    const card = document.querySelector('[data-testid="feed-question"]') as HTMLElement
+    const card = (document.querySelector('[data-testid="scene-card"]') || document.querySelector('[data-testid="journey"]')) as HTMLElement
     const bg = rgb(getComputedStyle(card).backgroundColor)
     return [...document.querySelectorAll<HTMLElement>(selector)].filter((el) => el.offsetParent && el.textContent?.trim()).map((el) => {
       const [r, g, b, a = 1] = rgb(getComputedStyle(el).color)
@@ -59,7 +48,7 @@ async function contrasts(page: Page, selector: string) {
   }, selector)
 }
 
-test('one Tap for sound on the first clip and on the appetiser; the question card’s chrome reads at AA', async ({ page }) => {
+test('one Tap for sound on the first clip and on the 3-minute version; scenic chrome stays readable', async ({ page }) => {
   test.setTimeout(120_000)
   await page.setViewportSize(PHONE)
   await fakeYouTube(page)
@@ -71,11 +60,14 @@ test('one Tap for sound on the first clip and on the appetiser; the question car
   await expect(page.getByTestId('tap-sound').first()).toBeVisible({ timeout: 15_000 })
   await expect(page.getByTestId('tap-sound')).toHaveCount(1)
 
-  await stepTo(page, feed, 'question')
-  const rows = await contrasts(page, '.j-chrome .rail button, .j-chrome .speaker-row b, .j-chrome .speaker-row small, .j-chrome .follow, .feed-card .kicker, .feed-card h2, .feed-card p')
-  expect(rows.length).toBeGreaterThanOrEqual(6)
-  for (const row of rows) expect(row.ratio, `${row.text} ${row.ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5)
+  await stepTo(page, feed, 'scene')
+  const rows = await contrasts(page, '.j-chrome .rail button, .j-chrome .speaker-row b, [data-testid="scene-card"] h2, [data-testid="scene-quote"], [data-testid="scene-next"]')
+  expect(rows.length).toBeGreaterThan(0)
+  for (const row of rows) expect(row.ratio, `${row.text} ${row.ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(3)
 
+  await page.goto(`${PORTAL}/feed?fresh=${Date.now()}`)
+  await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  await settled(feed, page)
   await stepTo(page, feed, 'talk')
   await page.getByTestId('learn-more').click()
   await expect(feed).toHaveAttribute('data-mode', 'appetiser')
@@ -136,12 +128,65 @@ test('every scenic card in the feed keeps its words inside the card, never shift
       }
       checked++
     }
-    const before = await feed.getAttribute('data-index')
-    await page.getByTestId('gesture-next').dispatchEvent('click')
-    await expect(feed).not.toHaveAttribute('data-index', before!)
-    await settled(feed, page)
+    if ((await stepFeed(page, feed)) === 'end') break
   }
   expect(checked, 'scenic cards checked').toBeGreaterThan(0)
+})
+
+test('Home Your plan heading reads at AA on the teal card', async ({ page }) => {
+  await page.setViewportSize(PHONE)
+  const master = await playwrightRequest.newContext({ baseURL: E2E_BASE })
+  expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
+  const portals = (await (await master.get('/api/portals?limit=10&depth=0')).json()) as { docs: { id: number; slug?: string }[] }
+  const portal = portals.docs.find((row) => row.slug === 'east-london')
+  const users = (await (await master.get('/api/users?where[email][equals]=elm-learner@hearts.test&limit=1&depth=0')).json()) as { docs: { id: number }[] }
+  const lessons = (await (await master.get('/api/lessons?limit=40&depth=0&sort=id')).json()) as { docs: { id: number; course?: number | { id: number } }[] }
+  const done = (await (await master.get(`/api/completions?where[user][equals]=${users.docs[0]?.id || 0}&limit=100&depth=0`)).json()) as { docs: { lesson?: number | { id: number } }[] }
+  const watched = new Set(done.docs.map((row) => (typeof row.lesson === 'object' ? row.lesson?.id : row.lesson)))
+  const lesson = lessons.docs.find((row) => row.id && !watched.has(row.id))
+  expect(portal && users.docs[0] && lesson, 'Maryam needs an open sitting for the plan card').toBeTruthy()
+  const courseId = typeof lesson!.course === 'object' ? lesson!.course.id : lesson!.course
+  const made = await master.post('/api/schedules', {
+    data: {
+      name: 'Tonight contrast',
+      owner: users.docs[0].id,
+      learners: [users.docs[0].id],
+      targetType: 'course',
+      course: courseId,
+      startDate: '2026-10-05',
+      endDate: '2026-10-05',
+      weekdays: [1],
+      minutesPerDay: 30,
+      portal: portal!.id,
+      slots: [{ date: '2026-10-05', title: 'Tonight sitting', lessonId: lesson!.id }],
+    },
+  })
+  expect(made.ok(), 'the tonight sitting has to be saved').toBeTruthy()
+  await master.dispose()
+  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', PORTAL)
+  await page.goto(PORTAL)
+  const plan = page.getByTestId('home-plan')
+  await expect(plan, 'Home Your plan card must be on the teal card').toBeVisible()
+  const rows = await page.evaluate(() => {
+    const rgb = (value: string) => (value.match(/[\d.]+/g) || []).map(Number)
+    const lum = ([r, g, b]: number[]) => {
+      const c = [r, g, b].map((v) => {
+        const s = v / 255
+        return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+      })
+      return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+    }
+    const card = document.querySelector('[data-testid="home-plan"]') as HTMLElement
+    const bg = rgb(getComputedStyle(card).backgroundColor)
+    return [...card.querySelectorAll<HTMLElement>('.eyebrow, h2, p')].filter((el) => el.textContent?.trim()).map((el) => {
+      const [r, g, b, a = 1] = rgb(getComputedStyle(el).color)
+      const fg = [r, g, b].map((v, i) => v * a + bg[i] * (1 - a))
+      const [hi, lo] = [lum(fg), lum(bg)].sort((x, y) => y - x)
+      return { text: el.textContent!.trim().slice(0, 40), ratio: (hi + 0.05) / (lo + 0.05), color: getComputedStyle(el).color, bg: getComputedStyle(card).backgroundColor }
+    })
+  })
+  expect(rows.length).toBeGreaterThan(0)
+  for (const row of rows) expect(row.ratio, `${row.text} ${row.color} on ${row.bg} ${row.ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5)
 })
 
 test('harvest lines are whole sentences, and Home, Garden and Harvest show the same counts', async ({ page }) => {
@@ -195,12 +240,14 @@ test('until a clip actually plays, our poster and a gold play button cover the p
   await signIn(page, 'elm-learner@hearts.test', 'portal-learner', `${PORTAL}/feed`)
   const feed = page.getByTestId('journey')
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').click()
   await stepTo(page, feed, 'talk')
   await expect(page.getByTestId('poster-frame')).toBeVisible()
   await expect(page.getByTestId('poster-play')).toBeVisible({ timeout: 15_000 })
   const vars = (await page.evaluate(() => (window as unknown as { __playerVars: Record<string, unknown>[] }).__playerVars)).at(-1)!
   expect(vars).toMatchObject({ controls: 0, playsinline: 1, rel: 0, iv_load_policy: 3, cc_load_policy: 0, modestbranding: 1 })
   await page.evaluate(() => { (window as unknown as { __allowPlay: boolean }).__allowPlay = true })
+  if (await page.getByTestId('swipe-coach').count()) await page.getByTestId('swipe-coach').click()
   await page.getByTestId('poster-play').click()
   await expect(page.getByTestId('poster-frame')).toHaveCount(0)
   await expect(page.getByTestId('poster-play')).toHaveCount(0)

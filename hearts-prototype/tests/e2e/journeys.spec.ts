@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test, type Page } from '@playwright/test'
 import { E2E_BASE, seedCode } from '../env'
 import path from 'node:path'
+import { openReachedQuestion, reachQuestionMoment } from './question-moment'
 
 const suffix = Date.now().toString().slice(-7)
 const slug = `harbour-${suffix}`
@@ -12,7 +13,7 @@ const otherEmail = `other-${suffix}@hearts.test`
 const adminCode = `H${suffix}A`
 const teacherCode = `H${suffix}T`
 const learnerCode = `H${suffix}L`
-const BY_PROPHET = ['The Prophet', 'Somewhere calm to sit', 'I go quiet', 'With the Prophet']
+const BY_PROPHET = ['The Prophet', 'A calm place to start', 'I go quiet', 'With the Prophet']
 const BY_NAMES = ['My Lord', 'Knowing the names of Allah', 'I look for a verse', 'With Allah as Lord']
 const PHONE = { width: 390, height: 844 }
 const DESK = { width: 1440, height: 900 }
@@ -27,6 +28,14 @@ async function signIn(page: Page, email: string, password: string, next: string)
   await page.waitForURL((url) => !url.pathname.startsWith('/login'))
 }
 
+async function openCoursePlayer(page: Page) {
+  if (await page.getByTestId('player').count()) return
+  const first = page.getByTestId('buffet-talk').first()
+  if (await first.count()) await first.click()
+  else if (await page.getByTestId('start-part').count()) await page.getByTestId('start-part').click()
+  await expect(page.getByTestId('player')).toBeVisible()
+}
+
 async function join(page: Page, code: string, name: string, email: string, password: string) {
   await page.goto(`/join?code=${code}`)
   await page.getByTestId('join-name').fill(name)
@@ -36,9 +45,13 @@ async function join(page: Page, code: string, name: string, email: string, passw
 }
 
 async function placing(page: Page, picks: string[]) {
-  await page.getByTestId('welcome-begin').click()
-  await page.waitForURL(/step=(films|placing)/)
-  if (page.url().includes('step=films')) await page.getByTestId('welcome-continue').click()
+  const portal = page.url().match(/\/p\/[^/?#]+/)?.[0] || '/p/east-london'
+  if (await page.getByTestId('welcome-begin').count()) {
+    await page.getByTestId('welcome-begin').click()
+    await page.waitForURL(/step=films|\/start/)
+    if (page.url().includes('step=films')) await page.getByTestId('welcome-continue').click()
+  }
+  await page.goto(`${portal}/welcome?step=placing`)
   const questions = page.getByTestId('placing-question')
   await expect(questions).toHaveCount(picks.length)
   for (const [index, pick] of picks.entries()) await questions.nth(index).getByLabel(pick, { exact: true }).check()
@@ -49,12 +62,14 @@ async function placing(page: Page, picks: string[]) {
     if (await page.getByTestId('lets-play').isVisible()) await page.getByTestId('lets-play').click()
     await expect(page.locator('[data-testid="scene"][data-scene="extra"]')).toBeVisible({ timeout: 1500 })
   }).toPass({ timeout: 20_000 })
-  for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'doors']) {
+  for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'account', 'doors']) {
+    if (await page.getByTestId('starting-door').count()) break
     const sceneCard = page.locator(`[data-testid="scene"][data-scene="${scene}"]`)
-    await expect(sceneCard.first()).toBeVisible()
+    const shown = await sceneCard.first().waitFor({ state: 'visible', timeout: 8_000 }).then(() => true).catch(() => false)
+    if (!shown) continue
     await sceneCard.last().getByTestId('pass').click()
   }
-  await expect(page.getByTestId('starting-door')).toBeVisible()
+  await expect(page.getByTestId('starting-door')).toBeVisible({ timeout: 20_000 })
 }
 
 async function masterRequest() {
@@ -73,8 +88,9 @@ async function openPoint(page: Page, prompt: RegExp) {
   const dots = page.getByTestId('timeline-dot')
   const count = await dots.count()
   for (let index = 0; index < count; index += 1) {
+    await reachQuestionMoment(page, index)
     await expect(async () => {
-      await dots.nth(index).click()
+      await page.getByTestId('timeline-dot').nth(index).click()
       await expect(page.getByTestId('popup-prompt')).toBeVisible({ timeout: 1000 })
     }).toPass({ timeout: 15_000 })
     if (prompt.test((await page.getByTestId('popup-prompt').textContent()) || '')) return page.getByTestId('popup')
@@ -118,6 +134,8 @@ test.describe.serial('HEARTS journeys', () => {
   })
 
   test('admin builds a course, extracts and approves a cut with its clause and seat, and places questions', async ({ page }) => {
+    // Extract plus the first compile of the desk course page can exceed the 120s serial cap on Postgres.
+    test.setTimeout(180_000)
     await page.setViewportSize(DESK)
     await join(page, adminCode, 'Harbour Admin', adminEmail, 'harbour-admin')
     await expect(page.getByTestId('admin-overview')).toBeVisible()
@@ -215,6 +233,7 @@ test.describe.serial('HEARTS journeys', () => {
 
   test('learner answers, meets the contingent question, and the test clock opens it', async ({ page }) => {
     await signIn(page, learnerEmail, 'harbour-learner', `/p/${slug}/course/${shared.courseId}`)
+    await openCoursePlayer(page)
     await expect(page.getByTestId('player')).toHaveAttribute('data-mode', 'practice')
     const waiting = await openPoint(page, /two days/)
     await expect(waiting).toHaveAttribute('data-state', 'waiting')
@@ -222,19 +241,17 @@ test.describe.serial('HEARTS journeys', () => {
     await expect(page.getByTestId('answer-form')).toHaveCount(0)
     await page.getByTestId('popup-close').click()
 
-    await expect(async () => {
-      await page.getByTestId('answer-point').click()
-      await expect(page.getByTestId('popup-prompt')).toContainText('one manner', { timeout: 1000 })
-    }).toPass({ timeout: 15_000 })
+    await openReachedQuestion(page)
+    await expect(page.getByTestId('popup-prompt')).toContainText('one manner')
     await expect(page.getByTestId('swarm')).toHaveCount(0)
     await expect(page.getByTestId('answer-share-learners')).toHaveCount(0)
     await page.getByTestId('popup-close').click()
     await post(page, { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: `/p/${slug}/course/${shared.courseId}` })
     await page.reload()
-    await expect(async () => {
-      await page.getByTestId('answer-point').click()
-      await expect(page.getByTestId('popup-prompt')).toContainText('one manner', { timeout: 1000 })
-    }).toPass({ timeout: 15_000 })
+    await openCoursePlayer(page)
+    await openReachedQuestion(page)
+    await expect(page.getByTestId('popup-prompt')).toContainText('one manner')
+    await expect(page.getByTestId('answer-share-learners')).toHaveCount(1)
     await page.getByTestId('answer-text').fill('I want to keep a soft greeting.')
     await page.getByTestId('answer-private').uncheck()
     await page.getByTestId('answer-share').check()
@@ -274,11 +291,13 @@ test.describe.serial('HEARTS journeys', () => {
     await join(page, learnerCode, 'Second Learner', otherEmail, 'harbour-learner')
     await placing(page, BY_NAMES)
     await page.goto(`/p/${slug}/course/${shared.courseId}`)
+    await openCoursePlayer(page)
     const before = await openPoint(page, /one manner/)
     await expect(before.getByTestId('swarm')).toHaveCount(0)
     await page.getByTestId('popup-close').click()
     await post(page, { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: `/p/${slug}/course/${shared.courseId}` })
     await page.reload()
+    await openCoursePlayer(page)
     const sheet = await openPoint(page, /one manner/)
     await expect(sheet.getByTestId('swarm-item').filter({ hasText: 'soft greeting' })).toBeVisible()
     await page.getByTestId('answer-text').fill('This one stays with me.')
@@ -286,6 +305,7 @@ test.describe.serial('HEARTS journeys', () => {
     await page.getByTestId('answer-submit').click()
     await expect(page.getByTestId('notice')).toContainText('privately')
     await signIn(page, learnerEmail, 'harbour-learner', `/p/${slug}/course/${shared.courseId}`)
+    await openCoursePlayer(page)
     const mine = await openPoint(page, /one manner/)
     await expect(mine.getByTestId('swarm')).not.toContainText('stays with me')
   })
@@ -313,14 +333,19 @@ test.describe.serial('HEARTS journeys', () => {
 
   test('the schedule splitter shares three parts across Wednesdays and Fridays', async ({ page }) => {
     await signIn(page, learnerEmail, 'harbour-learner', `/p/${slug}/me/plan`)
-    await page.getByTestId('schedule-course').selectOption({ label: 'Night class' })
+    for (const id of ['schedule-course', 'schedule-start', 'schedule-end']) {
+      const size = await page.getByTestId(id).evaluate((el) => parseFloat(getComputedStyle(el).fontSize))
+      expect(size).toBeGreaterThanOrEqual(16)
+    }
+    const courseValue = await page.getByTestId('schedule-course').locator('option', { hasText: 'Night class' }).getAttribute('value')
+    await page.getByTestId('schedule-course').selectOption(courseValue!)
     await page.getByTestId('schedule-start').fill('2026-10-07')
     await page.getByTestId('schedule-end').fill('2026-10-16')
     await page.locator('label:has([data-testid=weekday-3])').click()
     await page.locator('label:has([data-testid=weekday-5])').click()
     await expect(page.getByTestId('weekday-3')).toBeChecked()
     await page.getByTestId('schedule-submit').click()
-    await expect(page.getByTestId('notice')).toContainText('The 3 sittings are spread across 4 study days')
+    await expect(page.getByTestId('notice')).toContainText('Done. Your 3 talks are on Wed 7 October, Fri 9 October and Wed 14 October.')
     const slots = page.getByTestId('schedule-plan').first().getByTestId('schedule-slot')
     await expect(slots).toHaveCount(3)
     for (const text of await slots.allTextContents()) expect(text).toMatch(/Wed|Fri/)
@@ -440,8 +465,9 @@ test.describe.serial('HEARTS journeys', () => {
     await expect(feed).toHaveAttribute('data-mode', 'hors')
     const beforeLeft = await feed.getAttribute('data-cut')
     await swipe(-220, 0)
-    await expect(page.getByTestId('toast')).toContainText(/More on|everything on/)
-    await expect(feed).not.toHaveAttribute('data-cut', beforeLeft!)
+    await expect(page.getByTestId('toast')).toContainText(/More on|everything on|only/)
+    const toast = ((await page.getByTestId('toast').textContent().catch(() => '')) || '')
+    if (!/everything|only/.test(toast)) await expect(feed).not.toHaveAttribute('data-cut', beforeLeft!)
     await expect(feed).toHaveAttribute('data-mode', 'hors')
     const first = await feed.getAttribute('data-cut')
     const horsMore = page.getByTestId('learn-more')
@@ -452,7 +478,8 @@ test.describe.serial('HEARTS journeys', () => {
     await expect(feed).toHaveAttribute('data-cut', first!)
     await swipe(-220, 0)
     await expect(feed).toHaveAttribute('data-mode', 'appetiser')
-    await expect(feed).not.toHaveAttribute('data-cut', first!)
+    const appetiserToast = ((await page.getByTestId('toast').textContent().catch(() => '')) || '')
+    if (!/everything|only/.test(appetiserToast)) await expect(feed).not.toHaveAttribute('data-cut', first!)
     const speaker = await feed.getAttribute('data-speaker')
     await swipe(220, 0)
     await expect(feed).toHaveAttribute('data-mode', 'appetiser')

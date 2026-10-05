@@ -12,7 +12,7 @@ const OPTIONS: { id: ThemePin; label: string }[] = [
 function apply(pin: ThemePin) {
   const theme = resolveTheme(new Date(), pin)
   document.documentElement.dataset.theme = theme
-  document.documentElement.style.colorScheme = theme === 'dawn' ? 'light' : 'dark'
+  document.documentElement.style.colorScheme = 'dark'
   try {
     if (pin === 'auto') localStorage.removeItem(THEME_STORAGE_KEY)
     else localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(pin))
@@ -26,7 +26,7 @@ function apply(pin: ThemePin) {
 export function ThemePinControl() {
   const [pin, setPin] = useState<ThemePin>('auto')
   // The time of day is read on the phone only: the server's clock is UTC, so a server label would not match.
-  const [live, setLive] = useState<'dawn' | 'evening' | null>(null)
+  const [live, setLive] = useState<'evening' | null>(null)
   useEffect(() => {
     let stored: ThemePin = 'auto'
     try {
@@ -39,7 +39,7 @@ export function ThemePinControl() {
     setLive(theme)
     if (document.documentElement.dataset.theme !== theme) {
       document.documentElement.dataset.theme = theme
-      document.documentElement.style.colorScheme = theme === 'dawn' ? 'light' : 'dark'
+      document.documentElement.style.colorScheme = 'dark'
     }
   }, [])
   return (
@@ -63,7 +63,7 @@ export function ThemePinControl() {
           </button>
         ))}
       </div>
-      <p className="muted theme-now" data-testid="theme-now">{live ? `Showing ${live === 'dawn' ? 'Dawn' : 'Evening'}.` : '\u00a0'}</p>
+      <p className="muted theme-now" data-testid="theme-now">{live ? 'Showing Evening.' : '\u00a0'}</p>
     </section>
   )
 }

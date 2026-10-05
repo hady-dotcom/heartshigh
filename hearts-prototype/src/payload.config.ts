@@ -9,6 +9,13 @@ import { s3Storage } from '@payloadcms/storage-s3'
 import { buildConfig } from 'payload'
 import { aiCollections } from './collections-ai'
 import { collections } from './collections'
+import { calendarCollections } from './collections-calendar'
+import { experimentCollections } from './collections-experiments'
+import { gatherCollections } from './collections-gather'
+import { insightCollections } from './collections-insights'
+import { liveCollections } from './collections-live'
+import { missionCollections } from './collections-missions'
+import { safetyCollections } from './collections-safety'
 import { sheetCollections } from './collections-sheet'
 import { MasterFlags } from './collections-opening'
 import { databaseKind, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
@@ -40,7 +47,7 @@ export default buildConfig({
       header: ['/components/viewas-admin-banner#ViewAsAdminBanner'],
     },
   },
-  collections: [...collections, ...aiCollections, ...sheetCollections].map((collection) => ({
+  collections: [...collections, ...aiCollections, ...sheetCollections, ...experimentCollections, ...insightCollections, ...calendarCollections, ...missionCollections, ...gatherCollections, ...liveCollections, ...safetyCollections].map((collection) => ({
     ...collection,
     hooks: { ...collection.hooks, beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never] },
   })),
@@ -94,7 +101,23 @@ export default buildConfig({
         rituals: {},
         'placing-answers': {},
         'feedback-notes': {},
-      },
+        gatherings: {},
+        'gather-rsvps': {},
+        'gather-checkins': {},
+        'gather-reflections': {},
+        'gather-photos': {},
+        'live-sessions': {},
+        'live-questions': {},
+        'live-reminders': {},
+        'live-presence': {},
+        reports: {},
+        'moderation-hides': {},
+        'safeguarding-alerts': {},
+        announcements: {},
+        'announcement-dismissals': {},
+        'rate-hits': {},
+        'circle-mutes': {},
+      } as never,
       userHasAccessToAllTenants: (user) => (user as { role?: string } | null)?.role === 'master',
     }),
     // The prefix column is part of the schema even when the bucket is off, so SQLite and Postgres stay aligned.

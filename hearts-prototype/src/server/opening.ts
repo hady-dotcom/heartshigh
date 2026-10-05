@@ -1,6 +1,6 @@
 import type { Payload, Where } from 'payload'
 import { buildFeed, type CutInfo, type FeedPlan, type FeedSlot, type LaneDef, type ScaleDef, type SceneDef, type SceneOption } from '@/lib/heart'
-import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE } from '@/lib/opening-data'
+import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE, SCENES as DEFAULT_SCENES } from '@/lib/opening-data'
 import { idOf } from '@/lib/ids'
 import { doorNumberOfClause, type Door } from '@/lib/doors'
 import { loadDoors } from './doors'
@@ -13,8 +13,9 @@ import { cardForTalk, readCardCatalogue, sceneSrc, type StoredCard } from '@/lib
 import { cleanThumbnail, hasWordsInPicture, isTitledThumbnail, isVerticalLesson } from '@/lib/shorts'
 import { filmsForTalk, mixFeed, readFilmCatalogue, type BeatFilm } from '@/lib/films'
 import { filesForTalk, isTypographyStyle, readTypographyManifest, type TypographyManifest } from '@/lib/typography'
-import { clipWords, displayLine, parseLineTidy } from '@/lib/tidy-caption'
+import { clipWords, displayLine, feedTidy, parseLineTidy } from '@/lib/tidy-caption'
 import { partTitle } from '@/lib/talk-title'
+import { trackForClip } from '@/lib/framing/store'
 import { laneOf, portraitFor, SLIDE_ART, slugify, type FeedItem, type SlideStyle } from './learner'
 
 type Row = Record<string, unknown> & { id: number }
@@ -306,15 +307,23 @@ function tidyOf(speaker: string, stored: unknown, raw: { hook: string; turn: str
   const hookTidy = line(raw.hook, tidy?.hook)
   const turnTidy = line(raw.turn, tidy?.turn)
   const landTidy = line(raw.land, tidy?.land)
+  const storedLines = tidy?.horsLines || []
+  const indexed = storedLines.length === raw.horsLines.length
   return {
     hookTidy,
     turnTidy,
     landTidy,
+    quoteTidy: tidy?.quote?.text?.trim() || '',
     scenic: { hook: clipWords(hookTidy), turn: clipWords(turnTidy), land: clipWords(landTidy) },
-    horsLines: raw.horsLines.map((row) => ({
+    horsLines: raw.horsLines.map((row, index) => ({
       at: row.at,
       text: row.text,
-      tidy: line(row.text, tidy?.horsLines.find((item) => item.raw === row.text && (item.at === undefined || Number(item.at) === row.at))),
+      tidy: feedTidy(
+        row.text,
+        storedLines.find((item) => item.raw === row.text && (item.at === undefined || Number(item.at) === row.at)),
+        indexed ? storedLines[index] : null,
+        hints,
+      ),
     })),
   }
 }
@@ -354,7 +363,9 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     courseId: course.id,
     courseTitle: String(course.title || ''),
     lessonId: lesson.id,
+    durationSeconds: Number((lesson as { durationSeconds?: number }).durationSeconds || 0),
     lessonTitle: partTitle(lesson, String(course.title || '')),
+    talkSeconds: Number((lesson as { durationSeconds?: number }).durationSeconds) || null,
     style: slide ? STYLES[index % STYLES.length] : null,
     typography: typographyFor(data, lesson, data.tiers.find((row) => idOf(row.lesson) === lesson.id)),
     films: filmsForTalk(data.films, youtubeId),
@@ -389,7 +400,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
       turnTidy: tidy.turnTidy,
       landTidy: tidy.landTidy,
       scenic: tidy.scenic,
-      hors: { start: Number(tier.horsStart), end: Number(tier.horsEnd), quote: horsQuote, lines: tidy.horsLines },
+      hors: { start: Number(tier.horsStart), end: Number(tier.horsEnd), quote: tidy.quoteTidy || horsQuote, lines: tidy.horsLines },
       appetiser: {
         ...appetiser,
         lines: [
@@ -405,6 +416,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
       tierStatus: tier.status === 'checked' ? 'checked' : 'draft',
       offerResume: tier.offerResume !== false,
       parents: parentsFor(lesson.id, data.ladder.filter((item) => idOf(item.lesson) === lesson.id)),
+      framingTrack: trackForClip(youtubeId, Number(tier.horsStart), Number(tier.horsEnd), cut.framingTrack || lesson.framingTrack),
     }
   }
   const start = Number(cut.start)
@@ -438,6 +450,7 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
     tierStatus: null,
     offerResume: true,
     parents: parentsFor(lesson.id, data.ladder.filter((item) => idOf(item.lesson) === lesson.id)),
+    framingTrack: trackForClip(youtubeId, horsStart, horsEnd, cut.framingTrack || lesson.framingTrack),
   }
 }
 
@@ -448,7 +461,7 @@ function laneTitleMap(data: Loaded) {
 function effectiveScenes(scenes: Row[], laneKey: Map<number, string>, own: Row | null) {
   const hidden = new Set(((own?.hiddenScenes as unknown[]) || []).map((row) => idOf(row)))
   const wording = new Map(((own?.wording as { scene?: unknown; caption?: string; subline?: string; labels?: Record<string, string> }[]) || []).map((row) => [idOf(row.scene), row]))
-  return scenes
+  const published = scenes
     .filter((scene) => scene.status === 'published' && !hidden.has(scene.id))
     .sort((a, b) => Number(a.order) - Number(b.order))
     .map((scene) => {
@@ -475,6 +488,11 @@ function effectiveScenes(scenes: Row[], laneKey: Map<number, string>, own: Row |
         version: Number(scene.version || 1),
       } as SceneDef & { version: number }
     })
+  if (!published.some((scene) => scene.key === 'account')) {
+    const extra = DEFAULT_SCENES.find((scene) => scene.key === 'account')
+    if (extra) published.splice(Math.max(0, published.length - 1), 0, { ...extra, version: 1 } as SceneDef & { version: number })
+  }
+  return published
 }
 
 export async function loadOpening(payload: Payload, portal: PortalDoc, user: SessionUser | null = null): Promise<OpeningData> {
@@ -539,7 +557,12 @@ export async function serveFeed(payload: Payload, portal: PortalDoc, user: Sessi
       return row ? itemFor(data, row, slot.laneKey, laneTitles, index) : null
     })
     .filter((item): item is FeedItem => Boolean(item))
-  const items = mixFeed(talks, plan.served.length, readBackgroundsBaseUrl())
+  const fallback = talks.length
+    ? talks
+    : data.cuts
+        .map((row, index) => itemFor(data, row, null, laneTitles, index))
+        .filter((item): item is FeedItem => Boolean(item))
+  const items = mixFeed(fallback, plan.served.length, readBackgroundsBaseUrl())
   return { slots, items, spinePointer: built.spinePointer }
 }
 

@@ -2,10 +2,11 @@ import { execSync } from 'node:child_process'
 import { mkdirSync } from 'node:fs'
 import { expect, request as playwrightRequest, test, type Page } from '@playwright/test'
 import { E2E_BASE, E2E_DATABASE } from '../env'
+import { artifactDir } from './artifact-dir'
 
 const DESK = { width: 1440, height: 900 }
 const PHONE = { width: 390, height: 844 }
-const shots = process.env.SCREENSHOT_DIR || '/opt/cursor/artifacts/library-teach'
+const shots = process.env.SCREENSHOT_DIR || artifactDir('library-teach')
 
 async function signIn(page: Page, email: string, password: string, next: string) {
   await page.goto(`/login?next=${encodeURIComponent(next)}`)
@@ -100,7 +101,7 @@ test('demo learners show varied on-time fractions on Teach', async ({ page }) =>
   await expect(row('Hassan Malik (demo)').getByTestId('learner-progress')).toHaveText('5')
   await expect(row('Hassan Malik (demo)').getByTestId('on-time')).toHaveText('5 of 7')
   await expect(row('Hassan Malik (demo)').getByTestId('learner-answers')).toHaveText('5')
-  await expect(page.getByTestId('learner-row')).toHaveCount(4)
+  await expect(page.getByTestId('learner-row').filter({ hasText: '(demo)' })).toHaveCount(4)
   await shot(page, 'teach-demo')
 })
 

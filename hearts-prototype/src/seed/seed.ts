@@ -5,7 +5,7 @@ import { createClient } from '@libsql/client'
 import { getPayload } from 'payload'
 import config from '../payload.config'
 import { randomCode } from '../lib/access-codes'
-import { CIRCLE_LENGTHS, CIRCLE_TONES, mockCircleAnswers } from '../lib/circle'
+import { answersForPoint } from '../lib/circle-fill'
 import { dualExtract } from '../lib/extractor'
 import { DOORS, doorLabel, doorOfClause } from '../lib/doors'
 import { parseJibrilMap } from '../lib/seats'
@@ -75,7 +75,7 @@ const PLACING = [
   {
     prompt: 'What would you most like to get from a sitting like this?',
     why: 'Some people come for prayer, some for character, some to know Allah better. We start where you are.',
-    options: ['Prayer that holds steady | 15', 'Being kinder to people | 31', 'Knowing the names of Allah | 22', 'Somewhere calm to sit | 2'],
+    options: ['Prayer that holds steady | 15', 'Being kinder to people | 31', 'Knowing the names of Allah | 22', 'A calm place to start | 2'],
   },
   {
     prompt: 'When a hard week comes, what do you usually do?',
@@ -84,7 +84,7 @@ const PLACING = [
   },
   {
     prompt: 'Where would you like your first proper talk to begin?',
-    why: 'This answer counts twice, because it tells us directly where you would like to start.',
+    why: 'This helps us pick the first talk from the door you would like to walk through.',
     options: ['With the Prophet | 3', 'With prayer | 15', 'With Allah as Lord | 22', 'With how I treat people | 31'],
   },
 ]
@@ -101,9 +101,9 @@ async function ensureUser(payload: Awaited<ReturnType<typeof getPayload>>, data:
  */
 /** The e2e database keeps its codes in its own file, so the codes `npm run go` printed stay true. */
 function codesFile() {
-  return process.env.HEARTS_E2E === '1' || /hearts-test/.test(process.env.DATABASE_URL || '')
-    ? 'data/seed-codes-test.json'
-    : 'data/seed-codes.json'
+  const url = process.env.DATABASE_URL || ''
+  if (process.env.HEARTS_E2E === '1' || /hearts-test\.db|_e2e/.test(url)) return 'data/seed-codes-test.json'
+  return 'data/seed-codes.json'
 }
 
 async function wipe() {
@@ -352,7 +352,7 @@ async function main() {
         },
       })
       pointIds.push(created.id)
-      for (const draft of mockCircleAnswers({ prompt: point.prompt, kind: point.kind, options: point.options }, 5, CIRCLE_TONES, CIRCLE_LENGTHS, created.id)) {
+      for (const draft of answersForPoint({ prompt: point.prompt, kind: point.kind, options: point.options })) {
         await payload.create({
           collection: 'circle-answers',
           overrideAccess: true,
@@ -474,6 +474,17 @@ async function main() {
     courseList: learnerList,
   })
   await ensureUser(payload, {
+    email: 'qa-desk@hearts.foundation',
+    password: 'portal-learner',
+    name: 'QA Desk Learner',
+    role: 'learner',
+    audience: 'learner' as const,
+    tenants: [{ tenant: elm }],
+    onboarded: true,
+    seenWelcome: true,
+    courseList: learnerList,
+  })
+  await ensureUser(payload, {
     email: 'leeds-learner@hearts.test',
     password: 'portal-learner',
     name: 'Yusuf Khan',
@@ -515,14 +526,27 @@ async function main() {
   }
 
   const opening = await seedOpening(payload, { clauseIds, portalIds, now: new Date(), showUnchecked: !startersOnly })
+  const { adoptPacksOnAccessCodes } = await import('../server/pack-adopt')
+  await adoptPacksOnAccessCodes(payload)
+  const groupedIds: number[] = []
+  if (process.env.HEARTS_GROUP_SERIES === '1') {
+    const { applySeriesGroups } = await import('./group-series')
+    const grouped = await applySeriesGroups(payload)
+    groupedIds.push(...grouped.courseIds)
+  }
   await seedSpeakers(payload)
-  if (!startersOnly) await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...courseIds, ...opening.starterCourseIds] })
+  if (!startersOnly) await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...new Set([...groupedIds, ...opening.starterCourseIds, ...courseIds])] })
   await seedHarvest(payload, { now: new Date(), demo: !startersOnly })
   if (!startersOnly) {
     const { seedDemoHarvest } = await import('./harvest-seed')
     await seedDemoHarvest(payload)
     const { seedFeedbackDemo } = await import('./feedback-seed')
     await seedFeedbackDemo(payload, { startersOnly })
+  }
+
+  if (!startersOnly) {
+    const { ensureStarterExperiments } = await import('../server/experiments')
+    await ensureStarterExperiments(payload)
   }
 
   const problems = await timingCheck(payload)

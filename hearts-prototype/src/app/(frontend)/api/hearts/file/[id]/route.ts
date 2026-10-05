@@ -19,7 +19,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const id = Number((await params).id)
   const { payload, user } = await getSession()
   if (!user || !id) return NextResponse.json({ error: 'Sign in first.' }, { status: 401 })
-  const media = (await payload.findByID({ collection: 'media', id, overrideAccess: true, depth: 0 }).catch(() => null)) as {
+  const media = await payload.findByID({ collection: 'media', id, overrideAccess: true, depth: 0 }).catch(() => null) as {
     id: number
     owner?: unknown
     purpose?: string | null

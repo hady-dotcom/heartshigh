@@ -1,12 +1,14 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext, type Page, type Request } from '@playwright/test'
 import { E2E_BASE } from '../env'
+import { openReachedQuestion } from './question-moment'
 
 // The opening, "Shine and dust" (psychometric-opening-build-spec section 8, browser tests).
 // Every test starts in a fresh browser context, so the device holds nothing until the test taps.
 
 const PORTAL = 'east-london'
 const START = `/p/${PORTAL}/start`
-const PICKS: [string, string][] = [['extra', 'pause'], ['queue', 'let-go'], ['thumb', 'lives'], ['visitor', 'spin'], ['news', 'nobody'], ['doors', 'calmer']]
+const PICKS: [string, string][] = [['extra', 'pause'], ['queue', 'let-go'], ['thumb', 'lives'], ['visitor', 'spin'], ['news', 'nobody'], ['account', 'lord'], ['doors', 'calmer']]
+const SIM_PICKS: [string, string][] = PICKS.filter(([scene]) => scene !== 'account')
 const suffix = Date.now().toString().slice(-7)
 
 let master: APIRequestContext
@@ -27,7 +29,7 @@ async function userId(email: string) {
 }
 
 async function nurLesson() {
-  const found = await (await master.get(`/api/lessons?where[title][equals]=${encodeURIComponent('The Names Class 20: Al-Nur')}&depth=0`)).json()
+  const found = await (await master.get(`/api/lessons?where[youtubeId][equals]=NIR88RRpat4&depth=0`)).json()
   return found.docs[0] as { id: number; course: number }
 }
 
@@ -77,6 +79,7 @@ test.describe('the opening', () => {
   test('1. a first visit to the portal lands on the opener, with its caption and both ways in', async ({ page }) => {
     await page.goto(`/p/${PORTAL}`)
     await expect(page.getByTestId('opener')).toBeVisible()
+    await expect(page.getByTestId('opener-heading')).toHaveText('A calm place to start')
     await expect(page.getByTestId('opener-caption')).toContainText('Every heart has a bit of shine')
     await expect(page.getByTestId('lets-play')).toBeVisible()
     await expect(page.getByTestId('just-show')).toBeVisible()
@@ -151,9 +154,9 @@ test.describe('the opening', () => {
   test('9. six taps hand off with the line, then the feed, at /feed', async ({ page }) => {
     await page.goto(START)
     await page.getByTestId('lets-play').click()
-    for (const [scene, option] of PICKS.slice(0, 5)) await tapScene(page, scene, option)
+    for (const [scene, option] of PICKS.slice(0, 6)) await tapScene(page, scene, option)
     await tapScene(page, 'doors', 'calmer')
-    await expect(page.getByTestId('handoff-line')).toContainText('Pull up a chair')
+    await expect(page.getByTestId('handoff-line')).toContainText('We\'ll begin with')
     await expect(page.getByTestId('journey')).toHaveAttribute('data-phase', 'feed', { timeout: 15_000 })
     await expect(page).toHaveURL(new RegExp(`/p/${PORTAL}/feed$`))
   })
@@ -238,7 +241,7 @@ test.describe('the opening', () => {
     await page.getByTestId('keep-submit').click()
     await expect(page.getByTestId('toast')).toContainText('Your place is kept')
     expect(openings).toHaveLength(1)
-    expect(JSON.parse(openings[0]).taps).toHaveLength(6)
+    expect(JSON.parse(openings[0]).taps).toHaveLength(7)
     await page.goto(`/p/${PORTAL}/garden/workbook`)
     await expect(page.getByTestId('where-you-started')).toBeVisible()
     await expect(page.getByTestId('opening-row')).toHaveCount(6)
@@ -281,7 +284,7 @@ test.describe('the opening', () => {
     await signIn(teacher, 'elm-teacher@hearts.test', 'portal-teacher', '/')
     const id = await userId('elm-learner@hearts.test')
     const shared = async () => ((await (await teacher.request.get(`/api/workbook/${id}`)).json()).opening || []).length
-    await signIn(learner, 'elm-learner@hearts.test', 'portal-learner', `/p/${PORTAL}/me`)
+    await signIn(learner, 'elm-learner@hearts.test', 'portal-learner', `/p/${PORTAL}/me/settings`)
     const toggle = learner.getByTestId('pref-shareOpening-input')
     await expect(toggle).toBeChecked()
     expect(await shared()).toBeGreaterThan(0)
@@ -291,7 +294,7 @@ test.describe('the opening', () => {
       await expect(toggle).not.toBeChecked()
       expect(await shared()).toBe(0)
     } finally {
-      await learner.goto(`/p/${PORTAL}/me`)
+      await learner.goto(`/p/${PORTAL}/me/settings`)
       if (!(await learner.getByTestId('pref-shareOpening-input').isChecked())) {
         await learner.getByTestId('pref-shareOpening-input').check()
         await expect(learner.getByTestId('notice')).toContainText('Saved')
@@ -316,7 +319,7 @@ test.describe('the opening', () => {
 
   test('23. Guarding the gaze is opt-in and kept on the device only', async ({ page }) => {
     const seen = watchRequests(page)
-    await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/me`)
+    await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/me/settings`)
     const toggle = page.locator('[data-testid="optin-guarding-gaze"] input')
     await expect(toggle).not.toBeChecked()
     await toggle.check()
@@ -335,7 +338,7 @@ test.describe('the opening', () => {
     await page.getByTestId('keep-password').fill('again-pass')
     await page.getByTestId('keep-submit').click()
     await expect(page.getByTestId('toast')).toContainText('Your place is kept')
-    await page.goto(`/p/${PORTAL}/me`)
+    await page.goto(`/p/${PORTAL}/me/settings`)
     await page.getByTestId('start-again').click()
     await page.getByTestId('start-again-yes').click()
     await expect(page.getByTestId('opener')).toBeVisible()
@@ -394,7 +397,7 @@ test.describe('pop-up questions in a lesson', () => {
     await expect(page.getByTestId('player')).toHaveAttribute('data-mode', 'practice', { timeout: 15_000 })
     const open = page.locator('[data-testid="strip-dot"][data-answered="no"]')
     const before = await open.count()
-    await page.getByTestId('answer-point').click()
+    await openReachedQuestion(page)
     const later = page.waitForResponse((response) => response.url().endsWith('/api/answers') && response.request().method() === 'POST')
     await page.getByTestId('answer-later').click()
     expect((await later).status()).toBe(200)
@@ -424,7 +427,7 @@ test.describe('pop-up questions in a lesson', () => {
     await page.setViewportSize({ width: 390, height: 844 })
     await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', await nurPath())
     await expect(page.getByTestId('player')).toHaveAttribute('data-popup-layout', 'strict')
-    await page.getByTestId('answer-point').click()
+    await openReachedQuestion(page)
     const card = await page.getByTestId('player-card').boundingBox()
     const sheet = await page.getByTestId('popup').boundingBox()
     expect(sheet!.y).toBeGreaterThanOrEqual(card!.y + card!.height - 1)
@@ -462,7 +465,7 @@ test.describe('the desks for the opening', () => {
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master/simulator')
     await expect(page.getByTestId('simulator')).toBeVisible()
     await expect(page.getByTestId('sim-lane').filter({ hasText: 'L1' })).toHaveCount(0)
-    for (const [scene, option] of PICKS) await page.getByTestId(`sim-${scene}`).selectOption(option)
+    for (const [scene, option] of SIM_PICKS) await page.getByTestId(`sim-${scene}`).selectOption(option)
     await expect(page.getByTestId('sim-lane').filter({ hasText: 'L1' })).toHaveCount(1)
     await expect(page.getByTestId('sim-feed-item').first()).toBeVisible()
     await expect(page.locator('[data-testid="sim-scale"][data-scale="desire"]')).toHaveAttribute('data-value', '0.00')
@@ -589,9 +592,10 @@ test.describe('the desks for the opening', () => {
     expect(ownText).not.toMatch(/-\d/)
     expect(ownText).not.toMatch(/"(score|scores|deficit|rung|rank|persona|scales)"/)
     expect(own.focusLine).toContain('Focusing on')
-    expect(own.movement.join(' ')).toMatch(/grown in patience/i)
-    expect(own.steps.length).toBeGreaterThanOrEqual(2)
-    expect(own.steps.length).toBeLessThanOrEqual(3)
+    expect(own.areas.length).toBeLessThanOrEqual(2)
+    expect(own.areas.every((area: { place: string | null }) => area.place == null)).toBe(true)
+    expect(own.steps.length).toBeGreaterThanOrEqual(1)
+    expect(own.steps.length).toBeLessThanOrEqual(2)
     const self = await (await learner.get(`/api/compass?portal=east-london&learner=${await userId('elm-learner@hearts.test')}`)).json()
     expect(JSON.stringify(self)).not.toMatch(/-\d/)
     expect((await learner.get(`/api/compass?portal=east-london&learner=${await userId('elm-learner2@hearts.test')}`)).status()).toBe(403)
@@ -601,9 +605,9 @@ test.describe('the desks for the opening', () => {
 
     await signIn(page, 'elm-learner@hearts.test', 'portal-learner', `/p/${PORTAL}/me/path`)
     await expect(page.getByTestId('focus-line')).toContainText('Focusing on')
-    await expect(page.getByTestId('soft-place').first()).toBeVisible()
+    await expect(page.getByTestId('soft-place')).toHaveCount(0)
     await expect(page.getByTestId('next-step').first()).toBeVisible()
-    await expect(page.getByTestId('movement').filter({ hasText: 'grown in patience' })).toBeVisible()
+    expect(await page.getByTestId('soft-area').count()).toBeLessThanOrEqual(2)
     const text = await page.getByTestId('learner-path').innerText()
     expect(text).not.toMatch(/-\d/)
     expect(text.toLowerCase()).not.toMatch(/deficit|persona|score/)
@@ -655,14 +659,21 @@ test.describe('the desks for the opening', () => {
 
   test('42. a month later the home card opens different words and a life check', async ({ page }) => {
     await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}`)
-    await expect(page.getByTestId('recalibrate-card')).toBeVisible()
-    await page.getByTestId('recalibrate-open').click()
-    await expect(page.getByTestId('month-scene').first()).toContainText('Something small and welcome')
+    if (await page.getByTestId('recalibrate-card').count()) {
+      await expect(page.getByTestId('recalibrate-card')).toBeVisible()
+      await page.getByTestId('recalibrate-open').click()
+    } else {
+      await page.goto(`/p/${PORTAL}/recalibrate`)
+    }
+    await expect(page.getByTestId('month-scene')).toHaveCount(1)
+    await expect(page.getByTestId('progress')).toHaveText('1 of 5')
+    await expect(page.getByTestId('month-scene')).toContainText('A small kindness lands in your day')
+    for (let index = 0; index < 5; index += 1) {
+      await expect(page.getByTestId('progress')).toHaveText(`${index + 1} of 5`)
+      await page.getByTestId('month-scene').locator('input[type="radio"]').first().check()
+    }
     await expect(page.getByTestId('life-check')).toContainText("What's going on in life right now")
-    const scenes = page.getByTestId('month-scene')
-    const count = await scenes.count()
-    for (let index = 0; index < count; index += 1) await scenes.nth(index).locator('input[type="radio"]').first().check()
-    await page.getByTestId('life-check').locator('input[type="radio"]').first().check()
+    await page.getByTestId('life-check').locator('input[type="checkbox"]').first().check()
     await page.getByTestId('month-save').click()
     await expect(page.getByTestId('learner-path')).toBeVisible()
     const text = await page.getByTestId('learner-path').innerText()

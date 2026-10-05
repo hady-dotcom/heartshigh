@@ -588,7 +588,7 @@ test('a door alone keeps the clause a seat names inside that door', () => {
   const catalogue = { ...fixture(), seats: [{ id: 5, clause: 12, position: 2 }, { id: 6, clause: 9, position: 1 }] }
   const plan = planSheet({ talks: [cells(3, { talk_key: 'yt-NIR88RRpat4', jibril_door: 'W2', ghunya_seat: '9.1' })], questions: [], resources: [], errors: [] }, catalogue)
   assert.deepEqual(plan.errors, [])
-  assert.deepEqual(plan.ops, [{ op: 'cut.update', id: 2, patch: { bestClause: 9, clauseFragment: 'W2 · The sitting: how he came and sat with the Messenger', seat: 6 } }])
+  assert.deepEqual(plan.ops, [{ op: 'cut.update', id: 2, patch: { bestClause: 9, clauseFragment: 'W2 · The sitting: How he came and sat with the Messenger', seat: 6 } }])
 })
 
 test('a sheet with no door column imports exactly as before', async () => {

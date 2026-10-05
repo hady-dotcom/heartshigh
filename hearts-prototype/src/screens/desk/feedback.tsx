@@ -19,12 +19,14 @@ import {
 } from '@/lib/feedback'
 import { doorLabel, DOORS } from '@/lib/doors'
 import { rows, str, type Ctx } from '../common'
+import { HelpTip } from '@/components/desk/help'
+import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
 import { exportAudit, includedSummaries, loadRawFeedback, summariesFor, weakQuestions } from '@/server/feedback'
 import styles from './feedback.module.css'
 import { localeFromAcceptLanguage, portalTimeZone, zonedTime, zoneCity } from '@/lib/zone-time'
 
-const FAMILIES: Family[] = ['popup', 'reflection', 'task', 'circle']
+const FAMILIES: Family[] = ['popup', 'reflection', 'task', 'circle', 'live']
 
 export async function FeedbackScreen(ctx: Ctx) {
   const { payload, user, portal, base, query } = ctx
@@ -51,6 +53,7 @@ export async function FeedbackScreen(ctx: Ctx) {
   const preserved = filterQuery(filters, { filters: '1', view: query.view === 'learner' ? 'learner' : 'door', anonymise: anonymised ? '1' : '' })
   const pageQuery = preserved.toString()
   const download = (format: string) => `/api/feedback?portal=${portal.slug}&format=${format}&${filterQuery(filters, { named: anonymised ? '' : '1' }).toString()}`
+  const emptyExport = built.sharedCount === 0
 
   return (
     <AdminFrame
@@ -64,10 +67,12 @@ export async function FeedbackScreen(ctx: Ctx) {
           <summary>Download</summary>
           <div className={styles.body}>
             <p className="hint" data-testid="export-mode">{anonymised ? 'Anonymise is on. Names become Learner A, Learner B, and so on. Emails are left out. This download is written to the audit log.' : 'Names are included. Emails are still left out. This named download is written to the audit log, and only covers this portal.'}</p>
+            {emptyExport ? <p className="hint" data-testid="export-empty">Nothing shared matches this view, so download is paused.</p> : null}
             <div className="actions" style={{ justifyContent: 'flex-start' }}>
-              <a className="btn" href={download('csv')} data-testid="export-csv">CSV</a>
-              <a className="btn" href={download('xlsx')} data-testid="export-xlsx">Excel</a>
-              <a className="btn" href={download('pdf')} data-testid="export-pdf">PDF digest</a>
+              {emptyExport ? <span className="btn" aria-disabled="true" data-testid="export-csv">CSV</span> : <a className="btn" href={download('csv')} data-testid="export-csv">CSV</a>}
+              {emptyExport ? <span className="btn" aria-disabled="true" data-testid="export-xlsx">Excel</span> : <a className="btn" href={download('xlsx')} data-testid="export-xlsx">Excel</a>}
+              {emptyExport ? <span className="btn" aria-disabled="true" data-testid="export-pdf">PDF digest</span> : <a className="btn" href={download('pdf')} data-testid="export-pdf">PDF digest</a>}
+              <HelpTip topic="export">{TOOL.exportFeedback}</HelpTip>
             </div>
           </div>
         </details>
@@ -101,7 +106,7 @@ export async function FeedbackScreen(ctx: Ctx) {
         </div>
 
         <form className={`panel`} action={here} method="get" data-testid="feedback-filters">
-          <header className="light"><h2>Filters</h2></header>
+          <header className="light"><h2>Filters <HelpTip topic="filters">{TOOL.filters}</HelpTip></h2></header>
           <div className="body">
             <input type="hidden" name="filters" value="1" />
             {query.view === 'learner' ? <input type="hidden" name="view" value="learner" /> : null}
@@ -158,6 +163,7 @@ export async function FeedbackScreen(ctx: Ctx) {
               <label>To<input type="text" name="to" lang="en-GB" inputMode="numeric" placeholder="dd/mm/yyyy" autoComplete="off" spellCheck={false} defaultValue={displayDay(filters.to || '')} data-testid="filter-to" /></label>
               <label className="check" style={{ alignSelf: 'center' }}>
                 <input type="checkbox" name="anonymise" value="1" defaultChecked={anonymised} data-testid="anonymise" /> Anonymise
+                <HelpTip topic="anonymise">{TOOL.anonymise}</HelpTip>
               </label>
               <div className="actions" style={{ alignSelf: 'end' }}><button className="btn" type="submit" data-testid="apply-filters">Apply</button></div>
             </div>
@@ -210,7 +216,7 @@ export async function FeedbackScreen(ctx: Ctx) {
                           <h4>{question.question}</h4>
                           {live ? (
                             <div className={styles.ai} data-testid="ai-summary">
-                              <h5>AI summary</h5>
+                              <h5>AI summary <HelpTip topic="ai-summary">{TOOL.aiSummary}</HelpTip></h5>
                               <ul>{live.themes.map((theme) => <li key={theme}>{theme}</li>)}</ul>
                               {live.quotes.map((quote) => <blockquote key={quote}>“{quote}”</blockquote>)}
                             </div>
@@ -254,7 +260,7 @@ export async function FeedbackScreen(ctx: Ctx) {
 
         <section className="panel" data-testid="weak-questions">
           <header>
-            <div><h2>Question quality</h2><p>Weak questions, with a suggested rewrite kept as a draft</p></div>
+            <div><h2>Question quality <HelpTip topic="weak-questions">{TOOL.weakQuestions}</HelpTip></h2><p>Weak questions, with a suggested rewrite kept as a draft</p></div>
             <form action={`/api/feedback?portal=${portal.slug}`} method="post">
               <Hidden fields={{ action: 'check-questions', next: `${here}?${pageQuery}` }} />
               <button className="btn small" type="submit" data-testid="check-questions">Check questions for teacher value</button>

@@ -60,6 +60,10 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
       placeholder: band.placeholder,
       identicalGroup: band.identicalGroup,
       note: band.note,
+      version: band.version || 2,
+      description: band.description || band.note,
+      doors: band.doors || [],
+      talks: band.talks || [],
       ranges: band.ranges.map((row) => ({ scale: row.scale, present: row.present, ...(row.min == null ? {} : { min: row.min }), ...(row.max == null ? {} : { max: row.max }) })),
     })
   }
@@ -98,7 +102,7 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
 
   // Scenes start as drafts, then the one carrying the crisis option is published first so the publish rules hold.
   const sceneIds = new Map<string, number>()
-  for (const scene of SCENES) {
+  for (const scene of SCENES.filter((row) => row.key !== 'account')) {
     const existing = await one(payload, 'opening-scenes', { key: { equals: scene.key } })
     const data = {
       key: scene.key,
@@ -126,7 +130,7 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
       : ((await payload.create({ collection: 'opening-scenes', overrideAccess: true, data: { ...data, status: 'draft' } as never })) as unknown as Doc)
     sceneIds.set(scene.key, doc.id)
   }
-  const publishOrder = [...SCENES].sort((a, b) => Number(b.options.some((o) => o.crisis)) - Number(a.options.some((o) => o.crisis)))
+  const publishOrder = SCENES.filter((row) => row.key !== 'account').sort((a, b) => Number(b.options.some((o) => o.crisis)) - Number(a.options.some((o) => o.crisis)))
   for (const scene of publishOrder) {
     const doc = await payload.findByID({ collection: 'opening-scenes', id: sceneIds.get(scene.key)!, overrideAccess: true, depth: 0 })
     if ((doc as { status?: string }).status !== 'published') {
@@ -152,6 +156,14 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
       }
     }
     if (!lesson) lesson = await one(payload, 'lessons', { youtubeId: { equals: row.youtubeId } })
+    if (lesson && row.youtubeId === 'NIR88RRpat4' && row.title) {
+      lesson = (await payload.update({
+        collection: 'lessons',
+        id: lesson.id,
+        overrideAccess: true,
+        data: { title: row.title, sourceTitle: row.title, youtubeId: row.youtubeId } as never,
+      })) as unknown as Doc
+    }
     const captions = starterTranscript(row.youtubeId)
     const captionFields = captions
       ? { transcript: captions, transcriptSource: 'youtube', transcriptNote: `English captions from YouTube, repeats removed (content/transcripts/starters/${row.youtubeId}.vtt).` }
@@ -302,7 +314,9 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
       data: { title: 'Starter map', summary: 'The first talk, the next talk and a longer course for each lane of the opening.', owner: 'master', courses: starterCourseIds } as never,
     })) as unknown as Doc
   }
-  for (const portalId of [elm, leeds].filter((id): id is number => Boolean(id))) {
+  const existingPortals = await payload.find({ collection: 'portals', overrideAccess: true, depth: 0, limit: 200 })
+  const adoptTargets = new Set<number>([...portalIds.values(), ...existingPortals.docs.map((doc) => doc.id)])
+  for (const portalId of adoptTargets) {
     const already = await one(payload, 'adoptions', { and: [{ portal: { equals: portalId } }, { pack: { equals: starterPack.id } }] })
     if (!already) await payload.create({ collection: 'adoptions', overrideAccess: true, data: { kind: 'pack', portal: portalId, pack: starterPack.id } as never })
   }
@@ -481,7 +495,7 @@ export async function seedPeople(payload: Payload, opts: { portalIds: Map<string
           } as never,
         })
       }
-      const nur = await one(payload, 'lessons', { title: { equals: 'The Names Class 20: Al-Nur' } })
+      const nur = await one(payload, 'lessons', { youtubeId: { equals: 'NIR88RRpat4' } })
       const points = nur ? ((await payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 10, sort: 'second', where: { lesson: { equals: nur.id } } })).docs as unknown as Doc[]) : []
       const reflection = 'First week of Ramadan. The house goes quiet before suhoor and I just sit there.'
       const picked = 'You start to incline towards the Akhira'

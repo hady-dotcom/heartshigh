@@ -2,13 +2,17 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
+import { daysWithUs } from '@/lib/days-with-us'
 import { idOf } from '@/lib/ids'
 import { recommendLesson } from '@/lib/placing'
-import { doorOfClause } from '@/lib/doors'
+import { matchDoorTalk, pickGentleFirstCourse } from '@/lib/first-course'
+import { capitalAfterColon, doorNumberOfClause, doorOfClause } from '@/lib/doors'
 import { loadDoors } from './doors'
 import { portalDisplayName } from '@/lib/portal-name'
 import type { PieceRef } from '@/lib/nesting'
 import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
+import type { FramingTrack } from '@/lib/framing/types'
+import { tidyTalkTitle } from '@/lib/talk-title'
 
 export type SlideStyle = 'kinetic' | 'cinema' | 'windows' | 'conversation' | 'unfold'
 
@@ -26,13 +30,15 @@ export type FeedItem = {
   youtubeId: string | null
   /** A Short or other 9:16 film with its words in the picture: no caption overlay, buttons above the lower third. */
   vertical?: boolean
-  /** Words in the picture (a Short, or captions burned in): our caption hides and the speaker row rises out of the lower quarter. */
+  /** Words in the picture (a Short, or captions burned in): our caption sits in the bar below the uncropped 16:9 film. */
   wordsInPicture?: boolean
   /** YouTube's large frame, only when it carries no words; otherwise the extended cut paints our own still and title. */
   cleanThumb?: string | null
   courseId: number
   courseTitle: string
   lessonId: number
+  /** Whole-talk length, used to fill {n} in a full-talk CTA. */
+  durationSeconds?: number
   /** `lines` are the captions with when each is said, so the caption follows the speaker. */
   hors: { start: number; end: number; quote: string; lines?: TimedCaption[] }
   appetiser: { start: number; end: number; quote: string; lines?: TimedCaption[]; spans?: { role?: 'hook' | 'turn' | 'land'; start: number; end: number }[] }
@@ -67,6 +73,8 @@ export type FeedItem = {
   laneKey?: string | null
   laneTags?: { lane: string; weight: number }[]
   lessonTitle?: string
+  /** Whole-talk length in seconds, for the 'Watch the whole talk (N min)' button. */
+  talkSeconds?: number | null
   placeholder?: boolean
   transcriptReady?: boolean
   /** The talk's tier record: a machine draft until a person checks it. */
@@ -75,6 +83,8 @@ export type FeedItem = {
   offerResume?: boolean
   /** Hors d'oeuvre -> its appetiser -> its full talk. Learn more uses the current piece's parent only. */
   parents: { hors: PieceRef; appetiser: PieceRef }
+  /** Live portrait treatments A–F. Missing means the player uses F. */
+  framingTrack?: FramingTrack | null
 }
 
 export type CourseCard = {
@@ -121,15 +131,23 @@ export function portraitFor(slug: string) {
 }
 
 export function posterFor(youtubeId: string | null | undefined) {
-  if (!youtubeId) return null
+  if (!youtubeId || !/^[\w-]{11}$/.test(youtubeId)) return null
   return publicFile(`clips/${youtubeId}.jpg`) || `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`
 }
 
-/** A still safe to paint as a thumbnail. YouTube's stand-in for a missing film is a grey ellipsis, so those fall through to the garden crop. */
+/** A still we can paint as a thumbnail, including YouTube frames and the copies under /clips/. */
 export function shownPoster(url: string | null | undefined) {
   if (!url) return null
-  if (/i\.ytimg\.com|img\.youtube\.com/i.test(url)) return null
   return url
+}
+
+/** Overview still: the real frame, else a speaker portrait or the courtyard, never an empty teal box. */
+export function talkStill(youtubeId: string | null | undefined, speaker?: string | null) {
+  const poster = shownPoster(posterFor(youtubeId))
+  if (poster) return { src: poster, fallback: false as const }
+  const face = speaker ? portraitFor(slugify(speaker)) : null
+  if (face) return { src: face, fallback: true as const }
+  return { src: '/theme/evening-courtyard.jpg', fallback: true as const }
 }
 
 export const SLIDE_ART: Record<SlideStyle, string> = {
@@ -151,8 +169,7 @@ export function initials(name: string) {
 }
 
 export function dayNumber(user: SessionUser & { joinedAt?: string | null; createdAt?: string }) {
-  const start = new Date(user.joinedAt || user.createdAt || now().toISOString())
-  return Math.max(1, Math.floor((now().getTime() - start.getTime()) / 86_400_000) + 1)
+  return daysWithUs(user.joinedAt || user.createdAt, now().getTime())
 }
 
 type Row = Record<string, unknown> & { id: number }
@@ -173,15 +190,28 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
     ? ((await payload.find({ collection: 'cuts', overrideAccess: true, depth: 0, limit: 400, where: { lesson: { in: lessons.map((lesson) => lesson.id) } } })).docs as unknown as Row[])
     : []
   const doors = await loadDoors(payload)
+  const cutRows = cuts.map((cut) => ({ lessonId: idOf(cut.lesson) || 0, bestClause: (cut.bestClause as number) || null, approved: cut.status === 'approved' }))
   const firstPick = user.startingClause
-    ? recommendLesson(
-        Number(user.startingClause),
-        cuts.map((cut) => ({ lessonId: idOf(cut.lesson) || 0, bestClause: (cut.bestClause as number) || null, approved: cut.status === 'approved' })),
-        lessonOrder,
-        doors,
-      )
+    ? recommendLesson(Number(user.startingClause), cutRows, lessonOrder, doors)
     : null
-  const recommendedCourse = firstPick ? idOf(lessons.find((lesson) => lesson.id === firstPick)?.course) : null
+  const startDoor = user.startingClause ? doorNumberOfClause(Number(user.startingClause), doors) : null
+  const onTopicIds = startDoor
+    ? [...new Set(cutRows.filter((cut) => doorNumberOfClause(cut.bestClause, doors) === startDoor && lessonOrder.includes(cut.lessonId)).map((cut) => cut.lessonId))]
+        .filter((lessonId) => {
+          const lesson = lessons.find((row) => row.id === lessonId)
+          const course = courses.find((row) => row.id === idOf(lesson?.course))
+          return Boolean(lesson && matchDoorTalk(startDoor, { title: String(lesson.title || ''), courseTitle: String(course?.title || '') }))
+        })
+    : []
+  const catalogue = courses.map((course) => ({
+    courseId: course.id,
+    courseTitle: String(course.title || ''),
+    lessons: lessons
+      .filter((lesson) => idOf(lesson.course) === course.id)
+      .map((lesson) => ({ id: lesson.id, title: String(lesson.title || ''), order: Number(lesson.order || 0), durationSeconds: Number(lesson.durationSeconds || 0) })),
+  }))
+  const gentle = pickGentleFirstCourse(firstPick, catalogue, onTopicIds)
+  const recommendedCourse = gentle?.courseId || (firstPick ? idOf(lessons.find((lesson) => lesson.id === firstPick)?.course) : null)
   const ordered = [...courses].sort((a, b) => (a.id === recommendedCourse ? -1 : b.id === recommendedCourse ? 1 : a.id - b.id))
   const today = dayNumber(user as SessionUser & { joinedAt?: string })
   return ordered.map((course, index) => {
@@ -192,11 +222,11 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
     for (const cut of cuts) {
       if (!ownIds.has(idOf(cut.lesson) || 0) || (cut.status !== 'approved' && !cut.placeholder)) continue
       const door = doorOfClause(Number(cut.bestClause || 0), doors)
-      if (door) courseDoors.set(door.number, door.title)
+      if (door) courseDoors.set(door.number, capitalAfterColon(door.title))
     }
     return {
       id: course.id,
-      title: String(course.title || ''),
+      title: tidyTalkTitle(String(course.title || '')),
       summary: String(course.summary || ''),
       speaker,
       speakerSlug: slugify(speaker),

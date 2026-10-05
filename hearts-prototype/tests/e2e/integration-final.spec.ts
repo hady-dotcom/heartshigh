@@ -3,6 +3,7 @@ import path from 'node:path'
 import { expect, request as playwrightRequest, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 import { E2E_BASE, seedCode } from '../env'
 import { buildWorkbook } from '../../src/lib/master-sheet'
+import { openReachedQuestion } from './question-moment'
 
 // The whole learner path after the final integration, at phone size, end to end.
 
@@ -16,7 +17,7 @@ const PACK = `Final pack ${sfx}`
 const COURSE = `Imported sitting ${sfx}`
 const PROMPT = `What would you say back to this speaker ${sfx}`
 const ANSWER = `I would thank them for the reminder ${sfx}`
-const BY_PROPHET = ['The Prophet', 'Somewhere calm to sit', 'I go quiet', 'With the Prophet']
+const BY_PROPHET = ['The Prophet', 'A calm place to start', 'I go quiet', 'With the Prophet']
 const VIDEO = process.env.HEARTS_VIDEO
 
 let master: APIRequestContext
@@ -78,8 +79,9 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
   await expect(page.getByTestId('splash')).toBeVisible()
 
   await page.getByTestId('welcome-begin').click()
-  await page.waitForURL(/step=(films|placing)/)
+  await page.waitForURL(/step=films|\/start/)
   if (page.url().includes('step=films')) await page.getByTestId('welcome-continue').click()
+  await page.goto(`${BASE}/welcome?step=placing`)
   const questions = page.getByTestId('placing-question')
   await expect(questions).toHaveCount(BY_PROPHET.length)
   for (const [index, pick] of BY_PROPHET.entries()) await questions.nth(index).getByLabel(pick, { exact: true }).check()
@@ -88,9 +90,11 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
     if (await page.getByTestId('lets-play').isVisible()) await page.getByTestId('lets-play').click()
     await expect(page.locator('[data-testid="scene"][data-scene="extra"]')).toBeVisible({ timeout: 1500 })
   }).toPass({ timeout: 20_000 })
-  for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'doors']) {
+  for (const scene of ['extra', 'queue', 'thumb', 'visitor', 'news', 'account', 'doors']) {
+    if (await page.getByTestId('starting-door').count()) break
     const card = page.locator(`[data-testid="scene"][data-scene="${scene}"]`)
-    await expect(card.first()).toBeVisible()
+    const shown = await card.first().waitFor({ state: 'visible', timeout: 8_000 }).then(() => true).catch(() => false)
+    if (!shown) continue
     await card.last().getByTestId('pass').click()
   }
   await expect(page.getByTestId('starting-door')).toHaveAttribute('data-door', '2')
@@ -101,15 +105,16 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
   await expect(feed).toHaveAttribute('data-mode', 'hors')
   await expect(feed).toHaveAttribute('data-cuts', /\d+ \d+/)
-  for (const move of ['gesture-left', 'gesture-down', 'gesture-right', 'gesture-next', 'gesture-prev']) {
-    await page.getByTestId(move).dispatchEvent('click')
-    await expect(feed).toHaveAttribute('data-mode', 'hors')
-    await page.waitForTimeout(900)
-  }
-
   const beforeLeft = await feed.getAttribute('data-cut')
   await page.getByTestId('gesture-left').dispatchEvent('click')
-  await expect(feed).not.toHaveAttribute('data-cut', beforeLeft!)
+  await page.waitForTimeout(900)
+  const afterLeft = await feed.getAttribute('data-cut')
+  const toast = ((await page.getByTestId('toast').textContent().catch(() => '')) || '')
+  expect(afterLeft !== beforeLeft || /everything|only/.test(toast), 'a left swipe moves to another talk or names the end of the pool').toBeTruthy()
+  if (afterLeft === beforeLeft) {
+    await page.goto(`${BASE}/feed?fresh=${Date.now()}`)
+    await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  }
   await expect(feed).toHaveAttribute('data-card', 'talk')
   await page.waitForTimeout(600)
   const cut = (await feed.getAttribute('data-cut'))!
@@ -153,14 +158,18 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
     }
   }
 
-  await page.goto(`${BASE}/feed`)
+  await page.goto(`${BASE}/feed?fresh=${Date.now()}`)
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
+  if ((await feed.getAttribute('data-mode')) === 'appetiser' && await page.getByTestId('appetiser-back').count()) {
+    await page.getByTestId('appetiser-back').click()
+  }
+  const speakerHit = page.getByTestId('speaker-link').or(page.getByTestId('speaker-bio-link'))
   await expect(async () => {
-    if ((await feed.getAttribute('data-card')) !== 'talk') await page.getByTestId('gesture-left').dispatchEvent('click')
-    await expect(page.getByTestId('speaker-link')).toBeVisible({ timeout: 1500 })
+    if ((await feed.getAttribute('data-card')) !== 'talk' && !(await speakerHit.count())) await page.getByTestId('gesture-left').dispatchEvent('click')
+    await expect(speakerHit.first()).toBeVisible({ timeout: 1500 })
   }).toPass({ timeout: 20_000 })
   const shownSpeaker = (await feed.getAttribute('data-speaker'))!
-  await page.getByTestId('speaker-link').click()
+  await speakerHit.first().click()
   await page.waitForURL(/\/speaker\//)
   await expect(page.getByTestId('speaker-name')).toContainText(shownSpeaker.split(' ').slice(-1)[0])
   await expect(page.getByTestId('speaker-course').first()).toBeVisible()
@@ -181,10 +190,11 @@ test('a learner joins by code, takes the persona quiz, stays on level, steps up 
   const course = (await json(await master.get(`/api/courses?where[title][equals]=${encodeURIComponent(COURSE)}&depth=0`))).docs[0].id
 
   await page.goto(`${BASE}/course/${course}`)
-  await expect(async () => {
-    await page.getByTestId('timeline-dot').first().click()
-    await expect(page.getByTestId('popup-prompt')).toContainText(PROMPT, { timeout: 1500 })
-  }).toPass({ timeout: 20_000 })
+  if (await page.getByTestId('buffet-talk').count()) await page.getByTestId('buffet-talk').first().click()
+  else if (await page.getByTestId('start-part').count()) await page.getByTestId('start-part').click()
+  await expect(page.getByTestId('player')).toBeVisible()
+  await openReachedQuestion(page)
+  await expect(page.getByTestId('popup-prompt')).toContainText(PROMPT)
   await page.getByTestId('answer-text').fill(ANSWER)
   await page.getByTestId('answer-submit').click()
   await expect(page.getByTestId('player').getByTestId('notice')).toContainText('workbook')

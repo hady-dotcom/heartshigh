@@ -2,6 +2,7 @@
 // (up to about 3 minutes, hook, turn and land), which sits inside the main (the whole talk from 0:00, with pop-ups).
 // Drafts come from the transcript in "line mode": the captions are cut into short spoken lines, and every quote is one
 // of those lines, word for word. A person still has to check each draft before it counts as checked.
+import { draftPopupPrompt } from './draft-prompt'
 import { killListHits } from './opening-data'
 import { formatTimestamp, parseTranscript, type Cue } from './transcript'
 
@@ -515,7 +516,7 @@ export function draftTiers(source: string | Cue[], durationHint?: number | null)
   const popupSecond = (index: number) => Math.min(Math.ceil(all[index].end), Math.max(0, duration - 1))
   const addPopup = (index: number) => {
     const quote = capitalise(all[index].text)
-    popups.push({ second: popupSecond(index), quote, prompt: `The speaker says: “${quote}” What from that stayed with you on the way home?` })
+    popups.push({ second: popupSecond(index), quote, prompt: draftPopupPrompt(quote, popups.length) })
   }
   const popupOk = (index: number) => scores[index] > 0 && all[index].words >= 7 && all[index].words <= 40 && closes(index) && !killListHits(all[index].text).length && !noisy(all[index])
   const ranked = all.map((_, index) => index).sort((x, y) => scores[y] - scores[x] || all[x].start - all[y].start)
@@ -721,12 +722,14 @@ export function tierHorsWarning(tier: { horsStart: number; horsEnd: number }, ca
   return horsVerdict(tier.horsEnd - tier.horsStart, cap).warning
 }
 
-/** Which timed caption is showing at `time`: the last line already said (the first until then). */
-export function captionIndex(lines: { at: number }[] | undefined, time: number) {
-  if (!lines?.length) return 0
-  let at = 0
+/** Which timed caption is showing at `time`. `-1` when no line has started yet, or there are no lines. */
+export function captionIndex(lines: { at: number; end?: number }[] | undefined, time: number) {
+  if (!lines?.length || !Number.isFinite(time)) return -1
+  let at = -1
   lines.forEach((line, index) => {
-    if (time >= line.at - 0.15) at = index
+    const start = line.at - 0.15
+    const end = line.end ?? lines[index + 1]?.at ?? Number.POSITIVE_INFINITY
+    if (time >= start && time < end) at = index
   })
   return at
 }

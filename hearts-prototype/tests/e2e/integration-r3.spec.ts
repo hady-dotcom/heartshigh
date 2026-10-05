@@ -21,13 +21,13 @@ test('Me loads with no console errors and keeps the evening palette when the pho
   page.on('console', (message) => message.type() === 'error' && errors.push(message.text()))
   page.on('pageerror', (error) => errors.push(error.message))
   await signIn(page, 'elm-learner@hearts.test', 'portal-learner', `${PORTAL}/me`)
-  await expect(page.getByTestId('theme-pin')).toBeVisible()
-  await expect(page.getByTestId('theme-now')).toHaveText('Showing Evening.')
+  await expect(page.getByTestId('theme-pin')).toHaveCount(0)
+  await expect(page.getByText('Light', { exact: true })).toHaveCount(0)
   await page.waitForTimeout(800)
   expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe('evening')
   expect(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor)).toBe('rgb(14, 42, 43)')
   await page.reload()
-  await expect(page.getByTestId('theme-now')).toHaveText('Showing Evening.')
+  await expect(page.getByTestId('me')).toBeVisible()
   await page.waitForTimeout(800)
   expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe('evening')
   expect(errors.filter((text) => !/Failed to load resource|youtube|ytimg/i.test(text)), errors.join('\n')).toEqual([])
@@ -73,7 +73,13 @@ test('a YouTube Short in the feed: no caption over its burned-in words, Follow a
     await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
     await expect(feed).toHaveAttribute('data-lesson', lessonId!)
     await expect(feed).toHaveAttribute('data-vertical', 'yes')
-    await expect(page.getByTestId('caption')).toHaveCount(0)
+    const caption = page.getByTestId('caption')
+    if (await caption.count()) {
+      await expect(caption).toHaveAttribute('data-slot', 'bar')
+      const cap = (await caption.boundingBox())!
+      const slot = (await page.getByTestId('player-slot').boundingBox())!
+      expect(cap.y, 'the caption sits in the bar below the picture, not over the film').toBeGreaterThanOrEqual(slot.y + slot.height - 12)
+    }
     const top = page.getByTestId('top-speaker')
     await expect(top.getByRole('button', { name: /follow/i })).toBeVisible()
     const box = (await top.boundingBox())!
@@ -142,16 +148,30 @@ test('small fixes: favicon, Teach emails end in an ellipsis, and the install car
     expect(await cell.evaluate((el) => el.getClientRects().length)).toBe(1)
   }
 
-  const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
+  const phone = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+  })
   const app = await phone.newPage()
   await signIn(app, 'elm-learner@hearts.test', 'portal-learner', PORTAL)
   const card = app.getByTestId('install-card')
+  const carryOn = app.getByTestId('continue')
   await expect(card).toBeVisible()
-  expect(await card.evaluate((el) => getComputedStyle(el).position)).toBe('fixed')
-  await card.evaluate((el) => Promise.all(el.getAnimations().map((animation) => animation.finished)))
-  const tabs = await app.locator('[data-testid="tabbar"]').first().boundingBox()
+  await expect(carryOn).toBeVisible()
+  expect(await card.getAttribute('data-variant')).toBe('strip')
+  expect(await card.getAttribute('data-surface')).toBe('phone')
+  expect(await card.evaluate((el) => getComputedStyle(el).position)).not.toBe('fixed')
+  await expect(card.locator('h2')).toContainText('phone')
+  await expect(card.locator('h2')).not.toContainText('computer')
+  const carryBox = await carryOn.boundingBox()
   const box = await card.boundingBox()
-  if (tabs && box) expect(box.y + box.height).toBeLessThanOrEqual(tabs.y + 1)
+  expect(carryBox && box, 'Continue and the install strip both have a box').toBeTruthy()
+  if (carryBox && box) {
+    expect(box.y, 'the install strip sits below Continue').toBeGreaterThanOrEqual(carryBox.y + carryBox.height - 1)
+    expect(carryBox.y + carryBox.height, 'Continue is not covered').toBeLessThanOrEqual(box.y + 1)
+  }
   await phone.close()
 })
 

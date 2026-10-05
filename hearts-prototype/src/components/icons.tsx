@@ -6,6 +6,7 @@ export const ShareIcon = ({ size = 22 }: P) => (<svg {...base(size)}><path d="M1
 export const HeartIcon = ({ size = 22, filled = true }: P & { filled?: boolean }) => (<svg {...base(size)} fill={filled ? 'currentColor' : 'none'}><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>)
 export const SaveIcon = ({ size = 22 }: P) => (<svg {...base(size)}><path d="M6 3h12v18l-6-4-6 4z" /></svg>)
 export const PlayIcon = ({ size = 22 }: P) => (<svg width={size} height={size} viewBox="0 0 24 24" aria-hidden><path d="M8 5v14l11-7z" fill="currentColor" /></svg>)
+export const LeafIcon = ({ size = 22 }: P) => (<svg {...base(size)}><path d="M5 19c8-1 12-8 14-16-8 1-14 6-14 14" /><path d="M8 15c2-3 5-6 9-8" /></svg>)
 export const PauseIcon = ({ size = 22 }: P) => (<svg width={size} height={size} viewBox="0 0 24 24" aria-hidden><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor" /></svg>)
 export const MicIcon = ({ size = 20 }: P) => (<svg {...base(size)}><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" /><path d="M5 11a7 7 0 0 0 14 0" /><path d="M12 18v3" /></svg>)
 export const ImageIcon = ({ size = 20 }: P) => (<svg {...base(size)}><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-9 9" /></svg>)
@@ -23,6 +24,18 @@ export const MoonIcon = ({ size = 18 }: P) => (<svg {...base(size)}><path d="M20
 export const CogIcon = ({ size = 18 }: P) => (<svg {...base(size)}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>)
 export const GlobeIcon = ({ size = 18 }: P) => (<svg {...base(size)}><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg>)
 export const QuestionIcon = ({ size = 18 }: P) => (<svg {...base(size)}><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14" /><path d="M12 17h.01" /></svg>)
+export const BeakerIcon = ({ size = 18 }: P) => (<svg {...base(size)}><path d="M9 3h6" /><path d="M10 3v6l-5 9a1 1 0 0 0 .9 1.5h12.2a1 1 0 0 0 .9-1.5l-5-9V3" /><path d="M8 14h8" /></svg>)
+export const FlagIcon = ({ size = 18 }: P) => (<svg {...base(size)}><path d="M5 21V4" /><path d="M5 4h11l-2.2 4L16 12H5" /></svg>)
+export const ChartIcon = ({ size = 18 }: P) => (<svg {...base(size)}><path d="M4 19h16" /><path d="M7 16V9" /><path d="M12 16V5" /><path d="M17 16v-6" /></svg>)
+export const SparkIcon = ({ size = 18 }: P) => (<svg {...base(size)}><path d="M12 3l1.6 5.2L19 10l-5.4 1.8L12 17l-1.6-5.2L5 10l5.4-1.8z" /></svg>)
+export const PathIcon = ({ size = 18 }: P) => (<svg {...base(size)}><circle cx="6" cy="6" r="2.2" /><circle cx="18" cy="18" r="2.2" /><path d="M8 7.5c3 1 5 8 8 9" /></svg>)
+export const ScaleIcon = ({ size = 18 }: P) => (<svg {...base(size)}><path d="M12 3v18" /><path d="M5 8h14" /><path d="M5 8l-3 6h6zM19 8l-3 6h6z" /></svg>)
+export const FilmIcon = ({ size = 18 }: P) => (<svg {...base(size)}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4" /></svg>)
+export const FrameIcon = ({ size = 18 }: P) => (<svg {...base(size)}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M8 8h3M8 8v3M16 8h-3M16 8v3M8 16h3M8 16v-3M16 16h-3M16 16v-3" /></svg>)
+export const ClapperIcon = ({ size = 18 }: P) => (<svg {...base(size)}><path d="M4 8h16v11H4z" /><path d="M4 8l16-4v4" /><path d="M8 5.2l1.6 3.2M12 4.2l1.6 3.2M16 3.2l1.6 3.2" /></svg>)
+export const CompassIcon = ({ size = 18 }: P) => (<svg {...base(size)}><circle cx="12" cy="12" r="9" /><path d="M15.5 8.5l-2.2 6.3-6.3 2.2 2.2-6.3z" /></svg>)
+export const SheetIcon = ({ size = 18 }: P) => (<svg {...base(size)}><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M8 8h8M8 12h8M8 16h5" /></svg>)
+export const NetworkIcon = ({ size = 18 }: P) => (<svg {...base(size)}><circle cx="6" cy="7" r="2" /><circle cx="18" cy="7" r="2" /><circle cx="12" cy="17" r="2" /><path d="M8 8l3 7M16 8l-3 7M8 7h8" /></svg>)
 
 export function Flower({ size = 22, colour = '#e98fb0' }: { size?: number; colour?: string }) {
   return (

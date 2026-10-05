@@ -1,5 +1,6 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 import { E2E_BASE } from '../env'
+import { openReachedQuestion as reachAndOpenQuestion } from './question-moment'
 
 // HEARTS circle answers: drafted or written answers that sit in a question's swarm until real answers arrive.
 
@@ -42,8 +43,7 @@ async function settings(label: string, threshold: number) {
   expect(loc(response)).toContain('notice=')
 }
 async function openFirstQuestion(page: Page) {
-  await page.getByTestId('answer-point').click()
-  await expect(page.getByTestId('popup')).toBeVisible()
+  await reachAndOpenQuestion(page)
   return Number(await page.getByTestId('popup').getAttribute('data-point'))
 }
 const textOf = (html: string) => html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
@@ -120,11 +120,7 @@ test.describe('HEARTS circle answers', () => {
     await expect(page.getByTestId('circle-label').first()).toHaveText(`Shared in the HEARTS circle ${sfx}`)
     await settings(LABEL, 8)
 
-    await form(learner, { action: 'me-pref', name: 'shareWithLearners', value: 'off', next: '/' })
-    await page.reload()
-    await openFirstQuestion(page)
-    await expect(page.getByTestId('swarm')).toHaveCount(0)
-    await form(learner, { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: '/' })
+    await expect(page.getByTestId('swarm')).toHaveCount(1)
     await learner.dispose()
   })
 
@@ -257,7 +253,7 @@ test.describe('HEARTS circle answers', () => {
     const seen = async (email: string, slug: string) => {
       const viewer = await page.context().browser()!.newPage()
       await signIn(viewer, email, 'portal-learner', `/p/${slug}/course/${nur.course}?part=${nur.id}`)
-      await viewer.getByTestId('answer-point').click()
+      await reachAndOpenQuestion(viewer)
       await expect(viewer.getByTestId('popup')).toBeVisible()
       await settleSwarm(viewer)
       const text = await viewer.getByTestId('swarm').textContent()
@@ -286,15 +282,14 @@ test.describe('HEARTS circle answers', () => {
 
     expect(loc(await form(master, { action: 'circle-bulk', lesson: String(nur.id), scope: 'course', enabled: 'off', next: '/master/circle' }))).toMatch(/notice=\d+ circle answers on this course switched off/)
     await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/course/${nur.course}?part=${nur.id}`)
-    await page.getByTestId('answer-point').click()
-    await expect(page.getByTestId('popup')).toBeVisible()
+    await reachAndOpenQuestion(page)
     await expect(page.locator('[data-testid="swarm-item"][data-source="circle"]')).toHaveCount(0)
     const off = await circleRows(`where[lesson][equals]=${nur.id}`)
     expect(off.length).toBeGreaterThan(0)
     expect(off.every((answer) => answer.enabled === false)).toBe(true)
     expect(loc(await form(master, { action: 'circle-bulk', lesson: String(nur.id), scope: 'talk', enabled: 'on', next: '/master/circle' }))).toContain('switched on')
     await page.reload()
-    await page.getByTestId('answer-point').click()
+    await reachAndOpenQuestion(page)
     expect(await page.locator('[data-testid="swarm-item"][data-source="circle"]').count()).toBeGreaterThan(0)
   })
 })

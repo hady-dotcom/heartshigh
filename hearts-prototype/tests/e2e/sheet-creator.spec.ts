@@ -3,9 +3,11 @@ import ExcelJS from 'exceljs'
 import { mkdirSync } from 'node:fs'
 import path from 'node:path'
 import { E2E_BASE } from '../env'
+import { artifactDir } from './artifact-dir'
+import { openReachedQuestion } from './question-moment'
 
 const DESK = { width: 1440, height: 900 }
-const ARTIFACTS = '/opt/cursor/artifacts'
+const ARTIFACTS = artifactDir()
 const PORTAL = 'east-london'
 
 let master: APIRequestContext
@@ -74,7 +76,10 @@ test('the creator drafts a sheet, then a learner completes a task the imam can s
   await page.getByTestId('creator-paste').fill('https://vimeo.com/76979871')
   await page.getByTestId('creator-file').setInputFiles(path.join(process.cwd(), 'tests/fixtures/circle-recording.mp4'))
   await expect(page.getByTestId('creator-uploaded')).toBeVisible()
-  await page.getByTestId('creator-course').selectOption({ label: 'The Names Class 20: Al-Nur' })
+  const courseLabels = await page.getByTestId('creator-course').locator('option').allTextContents()
+  const nurLabel = courseLabels.find((label) => /Al-Nur|An-N[uū]r|Why You Feel Empty/i.test(label))
+  expect(nurLabel, 'Lesson 3 is on the creator course list').toBeTruthy()
+  await page.getByTestId('creator-course').selectOption({ label: nurLabel! })
   await page.getByTestId('creator-part').fill('Creator drafts')
   await page.screenshot({ path: path.join(ARTIFACTS, 'creator-search.png'), fullPage: true })
 
@@ -133,7 +138,7 @@ test('the creator drafts a sheet, then a learner completes a task the imam can s
     await page.goto(`/p/${PORTAL}/course/${course!.id}?part=${file.id}`)
     await expect(page.getByTestId('file-player')).toHaveAttribute('src', new RegExp(`/api/hearts/film/${file.id}`))
     await page.goto(`/p/${PORTAL}/course/${course!.id}?part=${talk.id}`)
-    await page.getByTestId('answer-point').click()
+    await openReachedQuestion(page)
     await expect(page.getByTestId('task-form')).toBeVisible()
     await expect(page.getByTestId('task-due')).toContainText('7')
     await expect(page.getByTestId('task-imam')).toBeVisible()

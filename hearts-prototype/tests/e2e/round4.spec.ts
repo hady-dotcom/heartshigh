@@ -1,5 +1,7 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 import { E2E_BASE, seedCode } from '../env'
+import { fakeYouTube } from './fake-youtube'
+import { openReachedQuestion } from './question-moment'
 
 // Round 4: one test per item from the retest, named by its label. Each one failed before its fix.
 
@@ -315,15 +317,7 @@ test.describe('round 4 screens', () => {
 
   test('LOW: each Still open row in the workbook keeps the question and the talk on separate lines', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
-    const email = `r4-book-${sfx}@hearts.test`
-    const joiner = await as(undefined, undefined, { 'x-forwarded-for': '10.8.0.1' })
-    expect(loc(await form(joiner, { action: 'join', code: seedCode('elm-learner'), name: 'Round Four Book', email, password: 'round-four-1' }))).not.toContain('error=')
-    await joiner.dispose()
-    const nur = await lessonOf('NIR88RRpat4')
-    await signIn(page, email, 'round-four-1', `/p/${PORTAL}/course/${nur.course}?part=${nur.id}`)
-    await page.goto(`/p/${PORTAL}/course/${nur.course}?part=${nur.id}`)
-    await expect(page.getByTestId('player')).toBeVisible()
-    await page.goto(`/p/${PORTAL}/garden/workbook`)
+    await signIn(page, 'elm-learner@hearts.test', 'portal-learner', `/p/${PORTAL}/garden/workbook`)
     const row = page.getByTestId('open-question').first()
     await expect(row).toBeVisible()
     const [question, talk] = await Promise.all([row.locator('span').boundingBox(), row.locator('small').boundingBox()])
@@ -387,15 +381,14 @@ test.describe('round 4 screens', () => {
 
   test('LOW: a question paused over the film fades YouTube’s pause panel under a soft scrim', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
+    await fakeYouTube(page)
     const nur = await lessonOf('NIR88RRpat4')
     await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/course/${nur.course}?part=${nur.id}`)
     await page.goto(`/p/${PORTAL}/course/${nur.course}?part=${nur.id}`)
     const player = page.getByTestId('player')
     await expect(player).toHaveAttribute('data-popup-layout', 'over')
-    const ready = await expect(player).toHaveAttribute('data-mode', 'youtube', { timeout: 20_000 }).then(() => true, () => false)
-    test.skip(!ready, 'YouTube did not load in this browser, so there is no film to pause')
-    await page.getByTestId('answer-point').click()
-    await expect(page.getByTestId('popup')).toBeVisible()
+    await expect(player).toHaveAttribute('data-mode', 'youtube', { timeout: 20_000 })
+    await openReachedQuestion(page)
     await expect(page.getByTestId('paused-scrim')).toBeVisible()
     const [scrim, film] = await Promise.all([page.getByTestId('paused-scrim').boundingBox(), page.locator('.player-card .yt').boundingBox()])
     expect(Math.abs(scrim!.y - film!.y)).toBeLessThanOrEqual(1)

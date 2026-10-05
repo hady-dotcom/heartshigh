@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { Flash } from '@/components/app/shell'
 import { BrandLockup } from '@/components/brand'
 import { portalIdOf } from '@/lib/ids'
@@ -15,12 +16,15 @@ export default async function Door({ searchParams }: { searchParams: Promise<{ e
     const slug = (portal as { slug?: string } | null)?.slug
     if (slug) home = user.role === 'learner' ? `/p/${slug}` : `/p/${slug}/admin`
   }
+  // A signed-in visit to the door goes home. An error or notice stays here so the flash can be read.
+  if (user && home !== '/login' && !query.error && !query.notice) redirect(home)
   return (
     <main className="door garden-door" data-testid="door">
       <div className="door-card">
         <BrandLockup size={88} />
         <h1>Someone wanted good for you</h1>
         <p className="lede">Short films from real lectures, a few questions to sit with, and a circle of people to meet in person.</p>
+        <p className="lede" data-testid="powered-by-donations">This has been powered by donations.</p>
         <Flash error={query.error} notice={query.notice} />
         <div style={{ display: 'grid', gap: 10 }}>
           <Link className="pill gold block" href={user ? home : '/join'} data-testid="door-primary">{user ? 'Continue' : 'I have an access code'}</Link>

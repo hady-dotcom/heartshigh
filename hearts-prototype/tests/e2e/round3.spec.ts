@@ -1,5 +1,6 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 import { E2E_BASE, seedCode } from '../env'
+import { openReachedQuestion } from './question-moment'
 
 // Round 3: one test per bug from the hostile pass, named by its number. Each one failed before its fix.
 
@@ -38,7 +39,7 @@ async function signIn(page: Page, email: string, password: string, next: string)
   await page.waitForURL((url) => !url.pathname.startsWith('/login'))
 }
 const tile = (scene: string, option: string) => `[data-testid="scene"][data-scene="${scene}"] [data-testid="tile"][data-option="${option}"]`
-const PICKS: [string, string][] = [['extra', 'pause'], ['queue', 'let-go'], ['thumb', 'lives'], ['visitor', 'spin'], ['news', 'nobody'], ['doors', 'calmer']]
+const PICKS: [string, string][] = [['extra', 'pause'], ['queue', 'let-go'], ['thumb', 'lives'], ['visitor', 'spin'], ['news', 'nobody'], ['account', 'lord'], ['doors', 'calmer']]
 
 test.beforeAll(async () => {
   master = await as('master@hearts.test', 'hearts-master')
@@ -199,10 +200,15 @@ test.describe('round 3 API', () => {
     expect(loc(await hide('extra', true))).not.toContain('error=')
     expect(loc(await hide('queue', true))).not.toContain('error=')
     expect(loc(await hide('thumb', true))).toContain('error=')
-    const served = (await json(await (await as()).get(`/api/hearts/opening?portal=${PORTAL}`))).scenes as { key: string }[]
-    expect(served.length).toBe(4)
-    expect(served.map((scene) => scene.key)).toContain('visitor')
-    for (const key of ['extra', 'queue', 'thumb']) await hide(key, false)
+    try {
+      const served = (await json(await (await as()).get(`/api/hearts/opening?portal=${PORTAL}`))).scenes as { key: string }[]
+      // Two published scenes stay hidden. The runtime account scene is still injected.
+      expect(served.length).toBe(5)
+      expect(served.map((scene) => scene.key)).toContain('visitor')
+      expect(served.map((scene) => scene.key)).toContain('account')
+    } finally {
+      for (const key of ['extra', 'queue', 'thumb']) await hide(key, false)
+    }
   })
 
   test('Bug 12: reserved portal addresses are refused by the form and by REST', async () => {
@@ -226,7 +232,7 @@ test.describe('round 3 API', () => {
   })
 
   test('Bug 15: Al-Nur plays the full class and the seed holds every timing inside its talk', async () => {
-    const nur = await lessonBy(`where[title][equals]=${encodeURIComponent('The Names Class 20: Al-Nur')}`)
+    const nur = await lessonBy(`where[youtubeId][equals]=NIR88RRpat4`)
     expect(nur.youtubeId).toBe('NIR88RRpat4')
     expect(nur.durationSeconds).toBe(2861)
     const points = (await json(await master.get(`/api/engagement-points?where[lesson][equals]=${nur.id}&depth=0&limit=50`))).docs as { second: number }[]
@@ -240,7 +246,7 @@ test.describe('round 3 API', () => {
     const long = await form(learner, { action: 'schedule', name: '', targetType: 'course', course: String(nur.course), start: '2026-10-05', end: '2036-10-05', weekday: '1', next: `/p/${PORTAL}/me/plan` })
     expect(loc(long)).toContain('a year or less')
     const one = await form(learner, { action: 'schedule', name: '', targetType: 'course', course: String(nur.course), start: '2026-10-05', end: '2026-10-05', weekday: '1', next: `/p/${PORTAL}/me/plan` })
-    expect(loc(one)).toContain('The 1 sitting is spread across 1 study day')
+    expect(loc(one)).toMatch(/Done\. Your \d+ talks? (is|are) on Mon 5 October/)
     const plan = (await json(await master.get('/api/schedules?sort=-createdAt&limit=1&depth=0'))).docs[0]
     expect(plan.name).toMatch(/^(Winter|Spring|Summer|Autumn) study days$/)
   })
@@ -360,8 +366,7 @@ test.describe('round 3 screens', () => {
         await page.goto(`/p/${PORTAL}/course/${nur.course}?part=${nur.id}`)
         await expect(page.getByTestId('player')).toHaveAttribute('data-popup-layout', over ? 'over' : 'strict')
         await page.evaluate(() => window.scrollTo(0, 400))
-        await page.getByTestId('answer-point').click()
-        await expect(page.getByTestId('popup')).toBeVisible()
+        await openReachedQuestion(page)
         await page.waitForTimeout(400)
         await page.waitForFunction(() => document.getAnimations().every((animation) => animation.playState !== 'running' || animation.effect?.getComputedTiming().iterations === Infinity))
         const geo = await page.evaluate(() => {
@@ -410,19 +415,15 @@ test.describe('round 3 screens', () => {
     expect(await row.locator('.t').textContent()).toMatch(/\. \S/)
   })
 
-  test('Bug 27: What others said stays hidden until the learner opts in', async ({ page }) => {
+  test('Bug 27: What others said is on after a learner opts in, with initials and no rating', async ({ page }) => {
     const nur = await lessonBy(`where[youtubeId][equals]=NIR88RRpat4`)
-    const learner = await as('elm-learner2@hearts.test', 'portal-learner')
-    await form(learner, { action: 'me-pref', name: 'shareWithLearners', value: 'off', next: '/' })
     await signIn(page, 'elm-learner2@hearts.test', 'portal-learner', `/p/${PORTAL}/course/${nur.course}?part=${nur.id}`)
-    await page.getByTestId('answer-point').click()
-    await expect(page.getByTestId('popup')).toBeVisible()
-    await expect(page.getByTestId('swarm')).toHaveCount(0)
-    await form(learner, { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: '/' })
+    await page.request.post('/api/hearts', { form: { action: 'me-pref', name: 'shareWithLearners', value: 'on', next: `/p/${PORTAL}` }, maxRedirects: 0 })
     await page.reload()
-    await page.getByTestId('answer-point').click()
+    await openReachedQuestion(page)
     await expect(page.getByTestId('swarm')).toHaveCount(1)
-    await form(learner, { action: 'me-pref', name: 'shareWithLearners', value: 'off', next: '/' })
+    await expect(page.getByTestId('swarm')).not.toContainText('most popular')
+    await expect(page.getByTestId('swarm')).not.toContainText('most read')
   })
 
   test('Bug 28: no hydration warnings on the desks', async ({ page }) => {

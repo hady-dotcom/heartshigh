@@ -13,8 +13,10 @@ import { DEFAULT_TIME_ZONE, isTimeZone } from './lib/zone-time'
 import { linkLadderParents } from './server/piece-parents'
 import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
+import { mediaReadAccess } from './collections-safety'
 import { circleProblems } from './lib/circle'
 import { cookiesSecure } from './lib/env'
+import { clientIp, hitAuth, limitsRelaxed } from './lib/rate-limit'
 import { DOOR_SECTIONS } from './lib/doors'
 
 // The app's own screens and actions use the local API with explicit portal checks.
@@ -113,6 +115,14 @@ export const Portals: CollectionConfig = {
     { name: 'learnerLabel', type: 'text', defaultValue: 'Learner' },
     { name: 'teacherLabel', type: 'text', defaultValue: 'Teacher' },
     { name: 'wizardDone', type: 'checkbox', defaultValue: false },
+    {
+      name: 'features',
+      type: 'json',
+      admin: {
+        description:
+          'Per-portal feature switches. Empty means every feature that exists today stays on, so live portals do not change.',
+      },
+    },
   ],
 }
 
@@ -141,6 +151,26 @@ export const Users: CollectionConfig = {
       ({ args, operation, req }) => {
         refuseOutsideAccountCreation({ operation, req })
         return args
+      },
+    ],
+    beforeLogin: [
+      ({ req }) => {
+        if (req.payloadAPI !== 'REST' || limitsRelaxed()) return
+        const headers = req.headers
+        const read = (name: string) => (headers && typeof headers.get === 'function' ? headers.get(name) : '') || ''
+        const fake = new Request('http://local', {
+          headers: {
+            'cf-connecting-ip': read('cf-connecting-ip') || '',
+            'x-forwarded-for': read('x-forwarded-for') || '',
+            'fly-client-ip': read('fly-client-ip') || '',
+          },
+        })
+        const login = (req as unknown as { data?: { email?: unknown } }).data
+        const email = typeof login?.email === 'string' ? login.email : ''
+        const limited = hitAuth('login', clientIp(fake), email)
+        if (!limited.allowed) {
+          throw new APIError('Too many sign-in tries from here. Wait a few minutes, then try again.', 429, undefined, true)
+        }
       },
     ],
     beforeValidate: [
@@ -181,7 +211,7 @@ export const Users: CollectionConfig = {
     { name: 'joinedAt', type: 'date' },
     { name: 'nightAlerts', type: 'checkbox', defaultValue: false },
     { name: 'shareOpening', type: 'checkbox', defaultValue: false, label: 'Share my opening answers with my mentor' },
-    { name: 'keepPlace', type: 'checkbox', defaultValue: false, label: 'Keep my place across devices' },
+    { name: 'keepPlace', type: 'checkbox', defaultValue: false, label: 'Start where I left off' },
     { name: 'trendsOptIn', type: 'checkbox', defaultValue: false, label: 'Add my taps to the chapter’s trends' },
     { name: 'shareWithLearners', type: 'checkbox', defaultValue: false, label: 'Share answers with other learners, and see the answers they share' },
     { name: 'haptics', type: 'checkbox', defaultValue: true },
@@ -217,7 +247,7 @@ export const Media: CollectionConfig = {
     mimeTypes: ['image/*', 'audio/*', 'video/*', 'application/pdf', 'text/*'],
   },
   access: {
-    read: mediaReadAccess,
+    read: mediaReadAccess as NonNullable<CollectionConfig['access']>['read'],
     create: master,
     update: master,
     delete: master,
@@ -445,6 +475,11 @@ export const Lessons: CollectionConfig = {
     { name: 'csvSeq', type: 'number', admin: { description: 'Seq in HEARTS-8k-LINKS-for-bots.csv, for audit.' } },
     { name: 'starterLane', type: 'text' },
     { name: 'sourceTitle', type: 'text', admin: { description: 'The title exactly as YouTube and the links list have it.' } },
+    {
+      name: 'framingTrack',
+      type: 'json',
+      admin: { description: 'Live portrait framing track for the whole talk: [{ start, end, mode A–F, crop, focus, confidence }]. Written by pnpm framing:analyse. Never a rendered file.' },
+    },
   ],
 }
 
@@ -543,6 +578,11 @@ export const Cuts: CollectionConfig = {
     { name: 'kind', type: 'text' },
     { name: 'engine', type: 'text' },
     { name: 'seat', type: 'relationship', relationTo: 'seats' },
+    {
+      name: 'framingTrack',
+      type: 'json',
+      admin: { description: 'Live portrait framing track for this clip. Segments {start, end, mode A–F, crop or focus, confidence}. The player follows it; the film stays on YouTube.' },
+    },
   ],
 }
 
@@ -828,12 +868,15 @@ export const Answers: CollectionConfig = {
     { name: 'keepPrivate', type: 'checkbox', defaultValue: false },
     { name: 'shareWithTeacher', type: 'checkbox', defaultValue: false },
     { name: 'shareWithLearners', type: 'checkbox', defaultValue: false, admin: { description: 'The learner chose to let other learners on this video read it. Separate from sharing with their teacher.' } },
+    { name: 'swarmHidden', type: 'checkbox', defaultValue: false, admin: { description: 'Hidden from the swarm after a safety screen. Master review can restore it.' } },
+    { name: 'swarmReason', type: 'text', admin: { description: 'Why the safety screen hid this answer.' } },
     { name: 'cut', type: 'relationship', relationTo: 'cuts' },
     { name: 'atSecond', type: 'number' },
     { name: 'viewingId', type: 'text' },
     { name: 'answeredAt', type: 'date' },
     { name: 'pendingSync', type: 'checkbox', defaultValue: false },
     { name: 'correct', type: 'checkbox' },
+    { name: 'viaGathering', type: 'checkbox', defaultValue: false, admin: { description: 'Set when showing up at a gathering completed this activation task. That counts toward the course. A hors d\'oeuvre or appetiser watch still does not.' } },
     {
       name: 'sourceLevel',
       type: 'select',
@@ -1068,6 +1111,7 @@ export const Schedules: CollectionConfig = {
     { name: 'endDate', type: 'text', required: true },
     { name: 'weekdays', type: 'json', required: true },
     { name: 'slots', type: 'json', required: true },
+    { name: 'minutesPerDay', type: 'number', min: 10, max: 45, admin: { description: 'How many minutes a day this plan asks for: 10, 20, 30 or 45.' } },
   ],
 }
 

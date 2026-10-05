@@ -7,13 +7,14 @@ import type { Env } from './env'
 import { isProduction } from './env'
 import { FontUse, fontObjects, notoSans } from './pdf-font'
 
-export type Family = 'popup' | 'reflection' | 'task' | 'circle'
+export type Family = 'popup' | 'reflection' | 'task' | 'circle' | 'live'
 
 export const FAMILY_LABEL: Record<Family, string> = {
   popup: 'Pop-up',
   reflection: 'Reflection',
   task: 'Activation task',
   circle: 'Circle comment',
+  live: 'Live question',
 }
 
 export const EXPORT_COLUMNS = ['door', 'seat', 'course', 'talk', 'question', 'family', 'answer', 'date', 'learner', 'teacher reply'] as const
@@ -230,7 +231,7 @@ export function parseFilters(query: Record<string, string | undefined>): Feedbac
     courseId: positive(query.course),
     talkId: positive(query.talk),
     questionId: positive(query.question),
-    family: family === 'popup' || family === 'reflection' || family === 'task' || family === 'circle' ? family : '',
+    family: family === 'popup' || family === 'reflection' || family === 'task' || family === 'circle' || family === 'live' ? family : '',
     learnerId: positive(query.learner),
     from: parseDay(query.from),
     to: parseDay(query.to),
@@ -294,11 +295,13 @@ function doorNumber(value: string | undefined) {
 
 function doorKeyOf(row: { family: Family; doorNumber: number | null }) {
   if (row.family === 'circle') return 'circle'
+  if (row.family === 'live') return row.doorNumber == null ? 'live' : String(row.doorNumber)
   return row.doorNumber == null ? 'none' : String(row.doorNumber)
 }
 
 function doorTitle(row: { family: Family; door: string }) {
   if (row.family === 'circle') return 'Circle'
+  if (row.family === 'live') return row.door || 'Live'
   return row.door || 'No door yet'
 }
 

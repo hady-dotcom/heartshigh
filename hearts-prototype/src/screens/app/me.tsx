@@ -1,16 +1,15 @@
-import { defaultPlanName, plural } from '@/lib/schedule'
-import { now as clockNow } from '@/lib/clock'
 import Link from 'next/link'
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
+import { WeekScreen } from '@/screens/app/week'
 import { Avatar } from '@/components/app/feed'
-import { OptInLane, PrefToggle, StartAgain } from '@/components/app/me-controls'
+import { OptInLane, PrefToggle, SoundOnToggle, StartAgain } from '@/components/app/me-controls'
+import { SavedList, SavedToast } from '@/components/app/saved-list'
 import { EmptyState } from '@/components/app/empty'
 import { KeepHearts } from '@/components/app/install-card'
-import { ThemePinControl } from '@/components/theme/theme-pin'
 import { Qr } from '@/components/qr'
-import { now } from '@/lib/clock'
-import { visibleCourseIds } from '@/server/context'
 import { dayNumber, portalName } from '@/server/learner'
+import { shapedFor } from '@/server/missions'
+import { featureOn } from '@/lib/features'
 import { type Ctx, longDate, ref, rows, shortDate, str, unreadCount } from '../common'
 
 /** Notices written before prompts were clipped on a word were cut mid-word at 60 characters; they read the same way now. */
@@ -19,13 +18,16 @@ function noteBody(body: string) {
 }
 
 export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
-  const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 30 })).filter((note) => note.channel !== 'email-stub')
+  const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 30 })).filter((note) => note.channel !== 'email-stub' && note.channel !== 'think')
+  const shaped = await shapedFor(payload, user.id)
   const unread = notes.filter((note) => !note.read).length
   const links: [string, string, string, string][] = [
-    ['path', 'Your path', 'Where a little time will help, in plain words', 'me/path'],
-    ['plan', 'My study plan', 'Spread a course across the days that suit you', 'me/plan'],
-    ['circle', 'Circle and nights', 'Your board, and the evenings you can come to', 'me/circle'],
-    ['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'],
+    ...(featureOn(portal, 'planner') ? [['plan', 'My week', 'Spread a course across the days that suit you', 'week'] as [string, string, string, string]] : []),
+    ['saved', 'Saved', 'Clips you kept from the feed', 'me/saved'],
+    ...(featureOn(portal, 'workbook') ? [['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'] as [string, string, string, string]] : []),
+    ...(featureOn(portal, 'compass') ? [['path', 'Where to grow next', 'Plain words, only when a real talk or answer backs them', 'me/path'] as [string, string, string, string]] : []),
+    ...(featureOn(portal, 'missions') ? [['shaped', 'Things you helped shape', 'Missions you joined, and what we decided', 'me/shaped'] as [string, string, string, string]] : []),
+    ['help', 'Ask for help', 'Write to the team here. You do not need an email.', 'me/help'],
     ['settings', 'Settings', 'Night alerts, watch history and signing out', 'me/settings'],
   ]
   if (user.role !== 'learner') links.unshift(['desk', 'Portal desk', 'Courses, codes and learners', 'admin'])
@@ -36,9 +38,11 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
         <Flash error={query.error} notice={query.notice} />
         <div className="profile">
           <Avatar name={user.name || user.email} portrait={null} size={58} />
-          <span><b data-testid="me-name">{user.name || user.email}</b><small className="muted">{portalName(portal)} · day {dayNumber(user)}</small></span>
+          <span><b data-testid="me-name">{user.name || user.email}</b><small className="muted">{portalName(portal)} · day <span data-testid="day-number">{dayNumber(user)}</span></small></span>
         </div>
-        <ThemePinControl />
+        <SavedToast />
+        <p className="eyebrow" id="saved" style={{ marginTop: 18 }}>Saved</p>
+        <SavedList base={base} />
         <details className="card name-edit" data-testid="name-edit">
           <summary>Change the name we use</summary>
           <form className="form-stack" action="/api/hearts" method="post" style={{ marginTop: 10 }}>
@@ -53,16 +57,29 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
             <span className="grow">{title}<small>{sub}</small></span>›
           </Link>
         ))}
+        <p className="eyebrow" style={{ marginTop: 18 }}>Circle and nights</p>
+        <Link className="list-link" href={`${base}/me/circle`} data-testid="me-circle">
+          <span className="grow">Circle and nights<small>Your board, and the evenings you can come to</small></span>›
+        </Link>
         <p className="eyebrow" style={{ marginTop: 18 }}>Your opening and this phone</p>
         <section className="card prefs" data-testid="me-prefs">
           <PrefToggle name="keepPlace" label="Keep my place" hint="Saves where you are on our side, so another phone picks up from here. Off keeps it on this phone only." checked={Boolean(user.keepPlace)} next={`${base}/me`} />
           <PrefToggle name="shareOpening" label="Share my opening answers with my mentor" hint="Private answers stay with you either way." checked={Boolean(user.shareOpening)} next={`${base}/me`} />
           <PrefToggle name="trendsOptIn" label="Add my taps to my chapter’s trends" hint="Only counts across ten or more people, never your name." checked={Boolean(user.trendsOptIn)} next={`${base}/me`} />
-          <PrefToggle name="shareWithLearners" label="Share answers with other learners" hint="Off: nobody else on a video sees your answers, and you do not see theirs. On: you choose answer by answer." checked={Boolean(user.shareWithLearners)} next={`${base}/me`} />
+          <PrefToggle name="shareWithLearners" label="Share answers with other learners" hint="Off: nobody else on a video sees your answers. You still see what others chose to share, after you answer. On: you choose answer by answer." checked={Boolean(user.shareWithLearners)} next={`${base}/me`} />
           <PrefToggle name="haptics" label="Haptics" hint="A small buzz when you tap an answer." checked={user.haptics !== false} next={`${base}/me`} />
           <OptInLane lane="guarding-gaze" label="Private lanes: Guarding the gaze" hint="Clips on this appear only if you turn this on. It is kept on this phone and never shown to anyone." portal={portal.slug || ''} />
         </section>
-        <StartAgain base={base} />
+        {shaped.length ? (
+          <section data-testid="shaped-list">
+            <p className="eyebrow">Things you helped shape</p>
+            {shaped.map((item) => (
+              <Link key={item.id} className="list-link" href={`${base}/me/shaped`} data-testid="shaped-item">
+                <span className="grow">{item.title}<small>You helped decide: {item.result}</small></span>›
+              </Link>
+            ))}
+          </section>
+        ) : null}
         <div className="app-head" style={{ marginTop: 18 }}>
           <h2 style={{ margin: 0, fontSize: 19 }}>Notifications</h2>
           {unread ? (
@@ -79,67 +96,18 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
             <small className="muted">{shortDate(note.createdAt)}</small>
           </Link>
         )) : (
-          <EmptyState testId="notes-empty" action={{ href: `${base}/garden`, label: 'Open the garden' }}>Nothing new. Replies from your teacher and new nights will show here.</EmptyState>
+          <EmptyState testId="notes-empty" action={featureOn(portal, 'garden') ? { href: `${base}/garden`, label: 'Open the garden' } : { href: base, label: 'Back home' }}>Nothing new. Replies from your teacher and new nights will show here.</EmptyState>
         )}
+        <p className="eyebrow" style={{ marginTop: 22 }}>Opening questions</p>
+        <StartAgain base={base} />
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      <TabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
 
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-export async function PlanScreen({ payload, user, portal, base, query }: Ctx) {
-  const ids = await visibleCourseIds(payload, user)
-  const courses = ids.length ? await rows(payload, 'courses', { id: { in: ids } }) : []
-  const plans = (await rows(payload, 'schedules', { portal: { equals: portal.id } }, { sort: '-createdAt', limit: 50 })).filter((plan) => ref(plan.owner) === user.id || ((plan.learners as unknown[]) || []).some((item) => ref(item) === user.id))
-  const today = now().toISOString().slice(0, 10)
-  const later = new Date(now().getTime() + 27 * 86_400_000).toISOString().slice(0, 10)
-  const unread = await unreadCount(payload, user)
-  return (
-    <AppFrame testId="plan">
-      <div className="app-scroll">
-        <Back href={`${base}/me`} label="Me" />
-        <div className="app-head"><h1>My study plan</h1></div>
-        <Flash error={query.error} notice={query.notice} />
-        <p className="lead">Pick a course, the dates and the days of the week. The parts are shared out evenly, in order, so no day is left empty at the end. It is a guide only; you can always watch at your own pace.</p>
-        <form className="card form-stack" action="/api/hearts" method="post">
-          <Hidden fields={{ action: 'schedule', portalSlug: portal.slug, targetType: 'course', next: `${base}/me/plan` }} />
-          <label>Name<input className="field" name="name" defaultValue={defaultPlanName(clockNow())} /></label>
-          <label>Course
-            <select className="field" data-testid="schedule-course" name="course">{courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}</select>
-          </label>
-          <label>From<input className="field" data-testid="schedule-start" type="date" name="start" defaultValue={today} /></label>
-          <label>Until<input className="field" data-testid="schedule-end" type="date" name="end" defaultValue={later} /></label>
-          <div>
-            <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--ink-2)' }}>Days of the week</span>
-            <div className="weekdays" style={{ marginTop: 8 }}>
-              {DAYS.map((label, index) => (
-                <label key={label}><input data-testid={`weekday-${index}`} type="checkbox" name="weekday" value={index} /><span>{label.slice(0, 2)}</span></label>
-              ))}
-            </div>
-          </div>
-          <button className="pill purple block" data-testid="schedule-submit" type="submit">Share out the parts</button>
-        </form>
-        {plans.map((plan) => {
-          const slots = (plan.slots as { date?: string; title?: string; lessonId?: number }[]) || []
-          return (
-            <section key={plan.id} data-testid="schedule-plan" style={{ marginTop: 18 }}>
-              <h2 style={{ fontSize: 19, margin: '0 0 4px' }}>{str(plan.name)}</h2>
-              <p className="muted" style={{ margin: 0, fontSize: 13 }}>{plural(slots.length, 'part')} · {str(plan.startDate)} to {str(plan.endDate)}{ref(plan.owner) !== user.id ? ' · made by your teacher' : ''}</p>
-              {slots.map((slot, index) => (
-                <div className="slot" key={index} data-testid="schedule-slot">
-                  <span className="date">{slot.date ? new Date(`${slot.date}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', timeZone: 'UTC' }) : ''}<small>{slot.date ? new Date(`${slot.date}T12:00:00Z`).toLocaleDateString('en-GB', { month: 'short', weekday: 'short', timeZone: 'UTC' }) : ''}</small></span>
-                  <span>{str(slot.title)}</span>
-                </div>
-              ))}
-            </section>
-          )
-        })}
-      </div>
-      <TabBar base={base} active="me" unread={unread} />
-    </AppFrame>
-  )
+export async function PlanScreen(ctx: Ctx) {
+  return WeekScreen(ctx)
 }
 
 export async function CircleScreen({ payload, user, portal, base, query }: Ctx) {
@@ -157,7 +125,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>Circle</h1></div>
         <Flash error={query.error} notice={query.notice} />
-        <p className="eyebrow" style={{ marginTop: 6 }}>Nights</p>
+        {featureOn(portal, 'gather') ? <><p className="eyebrow" style={{ marginTop: 6 }}>Nights</p>
         {events.length ? events.map((event) => {
           const mine = rsvps.find((row) => ref(row.event) === event.id && ref(row.user) === user.id)
           const coming = rsvps.filter((row) => ref(row.event) === event.id).length
@@ -189,7 +157,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
               )}
             </article>
           )
-        }) : <p className="muted">No nights are planned yet.</p>}
+        }) : <p className="muted">No nights are planned yet.</p>}</> : null}
         <p className="eyebrow">Board</p>
         <form className="card form-stack" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'board', next: here }} />
@@ -203,7 +171,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
           </div>
         ))}
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      <TabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -217,25 +185,50 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>Settings</h1></div>
         <Flash error={query.error} notice={query.notice} />
-        <form className="card form-stack" action="/api/hearts" method="post">
-          <Hidden fields={{ action: 'night-alerts', next: here }} />
-          <label className="toggle" style={{ marginTop: 0 }}><input type="checkbox" name="nightAlerts" defaultChecked={Boolean(user.nightAlerts)} data-testid="night-alerts" /> Tell me when a new night opens</label>
-          <button className="pill outline small" type="submit" data-testid="night-alerts-save">Save</button>
-        </form>
-        <form className="card form-stack" action="/api/hearts" method="post">
-          <Hidden fields={{ action: 'watch-opt-in', next: here }} />
-          <label className="toggle" style={{ marginTop: 0 }}><input data-testid="share-watch" type="checkbox" name="shareWatch" defaultChecked={Boolean(user.shareWatch)} /> Share my detailed watch history with my teachers</label>
-          <p className="muted" style={{ fontSize: 13 }}>{portal.watchHistoryOptIn ? 'Your portal has asked for this. It is off unless you turn it on.' : 'Off unless you turn it on. Your teachers only see which parts you finished.'}</p>
-          <button className="pill outline small" type="submit" data-testid="share-watch-save">Save</button>
-        </form>
-        <section className="card">
-          <h3>On this device</h3>
-          <p>The speakers you follow, and the clips you like or save, are kept on this phone only.</p>
+        <p className="eyebrow">Sound and display</p>
+        <section className="card prefs" data-testid="settings-sound">
+          <PrefToggle name="haptics" label="Haptics" hint="A small buzz when you tap an answer." checked={user.haptics !== false} next={here} />
+          <SoundOnToggle />
         </section>
+        <p className="eyebrow">Privacy</p>
+        <section className="card prefs" data-testid="me-prefs">
+          <PrefToggle name="keepPlace" label="Start where I left off" hint="Open the feed on the last clip you watched, including on another phone." checked={Boolean(user.keepPlace)} next={here} />
+          <PrefToggle name="shareOpening" label="Share my opening answers with my mentor" hint="Private answers stay with you either way." checked={Boolean(user.shareOpening)} next={here} />
+          <PrefToggle name="trendsOptIn" label="Help my circle see what is popular" hint="Only counts across ten or more people, never your name." checked={Boolean(user.trendsOptIn)} next={here} />
+          <PrefToggle name="shareWatch" label="Share my detailed watch history with my teachers" hint={portal.watchHistoryOptIn ? 'Your portal has asked for this. It is off unless you turn it on.' : 'Off unless you turn it on. Your teachers only see which parts you finished.'} checked={Boolean(user.shareWatch)} next={here} />
+          <OptInLane lane="guarding-gaze" label="Private lanes: Guarding the gaze" hint="Clips on this appear only if you turn this on. It is kept on this phone and never shown to anyone." portal={portal.slug || ''} />
+          <p className="muted" style={{ fontSize: 13, margin: '8px 0 0' }}>Answers in a talk show to other learners as initials only. There is no rating. Your teacher still sees what you offer them.</p>
+        </section>
+        <p className="eyebrow">Notifications</p>
+        <section className="card prefs">
+          <PrefToggle name="nightAlerts" label="Tell me when a new night opens" checked={Boolean(user.nightAlerts)} next={here} />
+        </section>
+        <p className="eyebrow">Account</p>
+        <section className="card">
+          <h3>Privacy and this phone</h3>
+          <p>The speakers you follow, and the clips you save, are kept on this phone only.</p>
+        </section>
+        <KeepHearts />
+        <StartAgain base={base} />
         <form action="/api/hearts" method="post" style={{ marginTop: 14 }}>
           <Hidden fields={{ action: 'logout' }} />
           <button className="pill outline block" type="submit" data-testid="logout">Sign out</button>
         </form>
+      </div>
+      <TabBar base={base} active="me" portal={portal} unread={unread} />
+    </AppFrame>
+  )
+}
+
+export async function SavedScreen({ payload, user, base }: Ctx) {
+  const unread = await unreadCount(payload, user)
+  return (
+    <AppFrame testId="saved">
+      <div className="app-scroll">
+        <Back href={`${base}/me`} label="Me" />
+        <div className="app-head"><h1>Saved</h1></div>
+        <p className="lead">Clips you kept from the feed. They stay on this phone.</p>
+        <SavedList base={base} />
       </div>
       <TabBar base={base} active="me" unread={unread} />
     </AppFrame>

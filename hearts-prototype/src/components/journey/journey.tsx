@@ -4,23 +4,31 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
-import { mixFeed } from '@/lib/feed-mix'
-import { learnMoreTarget, settleOnLevel, swipeTarget, type Swipe } from '@/lib/feed-nav'
+import { clipsFromRoute, mixFeed } from '@/lib/feed-mix'
+import { clipStepUpLabel, onlyClipToast, pieceSeconds, poolEndToast, READY_FOR_MORE, talkStepUpLabel, withTalkDetail } from '@/lib/feed-copy'
+import { appendUnseenItems, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
-import { deviceKey, haptic, readHeart, readPending, sessionFlags, setSessionFlags, viewAsId, writeHeart, writePending } from '@/lib/device'
+import { deviceKey, haptic, readCoachDismissed, readFeedPlace, readHeart, readPending, rememberSeenCard, sessionFlags, sessionSeenCards, sessionSeenCuts, setSessionFlags, viewAsId, writeCoachDismissed, writeFeedPlace, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
+import { spokenCaption } from '@/lib/spoken-caption'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { laneClips } from '@/lib/lanes'
 import { isoWeek } from '@/lib/trends'
-import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, lowData, playOnly, preloadApi, setHidden, soundOn, type PlayerKind } from '@/lib/yt'
+import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, hydrateSound, lowData, playOnly, playerSnapshot, preloadApi, setHidden, silence, silenceHidden, silenceOthers, soundOn, type PlayerKind } from '@/lib/yt'
 import { Arch } from '@/components/arch'
 import { TabBar } from '../app/shell'
 import { ART as SLIDE_BACKDROP, Avatar, FollowButton, Slide } from '../app/feed'
 import { HeartIcon, PlayIcon, SaveIcon, ShareIcon } from '../icons'
+import { beginWith } from '@/lib/begin-with'
 import { HelpScreen, Opener, SceneCard } from './scenes'
 import { TeachingCard } from './teaching-card'
 import { KeepPlaceSheet, type SheetReason } from './sheet'
+import { track } from '@/lib/experiment-track'
+import { useVariant, type VariantMap } from '@/lib/use-variant'
+import { SpokenWords } from '../app/spoken-words'
+import { segmentAt } from '@/lib/framing/choose'
+import type { FramingMode } from '@/lib/framing/types'
 
 type Phase = 'opener' | 'scene' | 'help' | 'handoff' | 'feed'
 type Mode = 'hors' | 'appetiser'
@@ -49,12 +57,24 @@ export type JourneyProps = {
   play?: 'appetiser' | null
   /** After placing, the quiz returns to the first-talk screen instead of the feed. */
   afterPlacing?: boolean
+  variants?: VariantMap
+  features?: import('@/lib/features').FeatureMap
 }
 
 const TAB_DELAY = 200
 /** Which way the outgoing card leaves. A swipe to the left sends it left, and the next card comes in from the right. */
 type Exit = 'left' | 'right' | 'up' | 'down'
 const EXIT_FROM: Record<Exit, string> = { left: 'translateX(0)', right: 'translateX(0)', up: 'translateY(0)', down: 'translateY(0)' }
+/** The clip's own timed line at its start, or the start itself when no line has begun. */
+function harvestAt(piece: { start: number; lines?: { at: number }[] }) {
+  const start = Number(piece.start) || 0
+  const lines = piece.lines || []
+  const showing = captionIndex(lines, start)
+  const line = showing >= 0 ? lines[showing] : lines[0]
+  const at = line?.at
+  return typeof at === 'number' && Number.isFinite(at) ? at : start
+}
+
 const EXIT_TO: Record<Exit, string> = { left: 'translateX(-100%)', right: 'translateX(100%)', up: 'translateY(-100%)', down: 'translateY(100%)' }
 const ENTER_FROM: Record<Exit, string> = { left: 'translateX(100%)', right: 'translateX(-100%)', up: 'translateY(100%)', down: 'translateY(-100%)' }
 // The card leaves at the finger's pace and the next one glides in evenly; a front-loaded curve reads as a pop.
@@ -66,7 +86,7 @@ const PEEK_SWIPES = ['topic', 'speaker', 'lane', 'next'] as const satisfies read
 const peekRest = (swipe: Swipe) => ENTER_FROM[SWIPE_EXIT[swipe]]
 // Leaving and arriving share one curve and one duration, so the two cards move as a single strip.
 const SLIDE_PAIR = 'cubic-bezier(0.32, 0.2, 0.3, 1)'
-const PAIR_MS = 260
+const PAIR_MS = 170
 const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
 const decoded = new Map<string, HTMLImageElement>()
 const HOLD = 700
@@ -79,7 +99,6 @@ function clock(total: number) {
   const value = Math.max(0, Math.round(total))
   return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`
 }
-
 
 function useStoredSet(name: string) {
   const [values, setValues] = useState<string[]>([])
@@ -108,6 +127,8 @@ function useStoredSet(name: string) {
 }
 
 export function Journey(props: JourneyProps) {
+  const clipCta = useVariant('feed-cta-label', props.variants?.['feed-cta-label'])
+  const talkCta = useVariant('full-talk-cta-label', props.variants?.['full-talk-cta-label'])
   const { base, opening, flags } = props
   const router = useRouter()
   const overlay = flags.chromeOverPlayer
@@ -138,6 +159,15 @@ export function Journey(props: JourneyProps) {
   const [mode, setMode] = useState<Mode>('hors')
   const modeRef = useRef<Mode>('hors')
   const [captionOpen, setCaptionOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const markSwipe = (on: boolean) => {
+    const node = rootRef.current
+    if (!node) return
+    if (on) node.setAttribute('data-swiping', 'yes')
+    else node.removeAttribute('data-swiping')
+  }
+  const [appetiserOver, setAppetiserOver] = useState(false)
+  const [appetiserHeld, setAppetiserHeld] = useState(true)
   const spanJoin = useRef<number | null>(null)
   const hosts = useRef<[Host, Host]>([
     { spec: null, playerId: null, ready: false, state: -1, played: false },
@@ -149,7 +179,7 @@ export function Journey(props: JourneyProps) {
   const [readyTick, setReadyTick] = useState(0)
   const [revealed, setRevealed] = useState(false)
   const revealedRef = useRef(false)
-  const [tabs, setTabs] = useState(false)
+  const [tabs, setTabs] = useState(props.initial === 'feed')
   const firstPlaying = useRef(false)
   const [muted, setMuted] = useState(true)
   const typeRef = useRef<HTMLVideoElement>(null)
@@ -164,9 +194,19 @@ export function Journey(props: JourneyProps) {
   const [faves, toggleFave] = useStoredSet('hearts.faves.v1')
   const [saved, toggleSave] = useStoredSet('hearts.saved.v1')
   const [firstEver, setFirstEver] = useState(false)
-  const [lineAt, setLineAt] = useState(0)
+  const [coach, setCoach] = useState(false)
+  const [needPlay, setNeedPlay] = useState(false)
+  const [seenCuts, setSeenCuts] = useState<number[]>([])
+  const [seenCards, setSeenCards] = useState<string[]>([])
+  const seenRef = useRef<Set<string>>(new Set())
+  const prepareGen = useRef<[number, number]>([0, 0])
+  const showGen = useRef(0)
+  const [lineAt, setLineAt] = useState(-1)
   const [spokenAt, setSpokenAt] = useState<number | null>(null)
-  const watch = useRef<{ key: string; start: number; furthest: number; done90: boolean }>({ key: '', start: 0, furthest: 0, done90: false })
+  const [clipPlaying, setClipPlaying] = useState(false)
+  const [speed, setSpeed] = useState(1)
+  const [framingMode, setFramingMode] = useState<FramingMode | null>(null)
+  const watch = useRef<{ key: string; start: number; furthest: number; done90: boolean; ended: boolean }>({ key: '', start: 0, furthest: 0, done90: false, ended: false })
   const refilling = useRef(false)
   const clipRef = useRef<HTMLDivElement>(null)
   const peekEls = useRef<Partial<Record<Swipe, HTMLDivElement | null>>>({})
@@ -175,6 +215,7 @@ export function Journey(props: JourneyProps) {
   const captionDrag = useRef(false)
   const counter = useRef(0)
   const gathered = useRef(new Set<string>())
+  const keepHarvestRef = useRef<() => void>(() => {})
 
   const setHeart = useCallback((next: HeartState) => {
     heartRef.current = next
@@ -182,11 +223,31 @@ export function Journey(props: JourneyProps) {
     writeHeart(next)
   }, [])
 
+  const hushHost = (at: 0 | 1) => {
+    const host = hosts.current[at]
+    if (host.playerId) silence(host.playerId)
+  }
+
+  const hushLeaving = () => {
+    const hidden: 0 | 1 = visibleRef.current === 0 ? 1 : 0
+    hushHost(hidden)
+    hushHost(visibleRef.current)
+    silenceHidden()
+    silenceOthers()
+    const film = typeRef.current
+    if (film) {
+      film.pause()
+      film.muted = true
+    }
+  }
+
   const setVisibleHost = (value: 0 | 1) => {
     visibleRef.current = value
     setVisibleHostState(value)
     setHidden(hosts.current[value].playerId || '', false)
-    setHidden(hosts.current[value === 0 ? 1 : 0].playerId || '', true)
+    const other: 0 | 1 = value === 0 ? 1 : 0
+    setHidden(hosts.current[other].playerId || '', true)
+    hushHost(other)
   }
 
   // ---------- heart state on this device ----------
@@ -205,6 +266,12 @@ export function Journey(props: JourneyProps) {
     setHeartState(state)
     if (props.initial !== 'opener' || stored) writeHeart(state)
     setSessionFlags({ ...sessionFlags() })
+    hydrateSound()
+    if (hasSound()) setMuted(false)
+    seenRef.current = new Set(sessionSeenCards())
+    setSeenCards(sessionSeenCards())
+    setSeenCuts(sessionSeenCuts())
+    if (!readCoachDismissed()) setCoach(true)
     const startAt = window.location.pathname.match(/\/start\/(\d+)$/)
     if (startAt) {
       // A reload mid-opening carries on with every tap kept, never past the first unanswered scene.
@@ -335,7 +402,9 @@ export function Journey(props: JourneyProps) {
     host.state = state
     if (at === visibleRef.current && wasLive !== LIVE.has(state)) setReadyTick((value) => value + 1)
     if (at !== visibleRef.current) {
-      if (state === STATE.PLAYING && host.playerId) getPlayer(host.playerId)?.pauseVideo()
+      if ((state === STATE.PLAYING || state === STATE.BUFFERING) && host.playerId) {
+        silence(host.playerId)
+      }
       return
     }
     if (state === STATE.PLAYING) {
@@ -367,17 +436,22 @@ export function Journey(props: JourneyProps) {
       const host = hosts.current[at]
       const el = hostEls.current[at]
       if (!el) return
+      const gen = (prepareGen.current[at] += 1)
       if (host.spec?.key === spec.key && host.playerId) return
       const existing = host.playerId ? getPlayer(host.playerId) : null
       if (existing && host.spec?.kind === spec.kind) {
         host.spec = spec
         host.played = false
+        if (at !== visibleRef.current) silence(host.playerId!)
         cue(host.playerId!, existing, spec.videoId, spec.start, spec.end)
         host.ready = true
         setReadyTick((value) => value + 1)
         return
       }
-      if (host.playerId) destroyPlayer(host.playerId)
+      if (host.playerId) {
+        silence(host.playerId)
+        destroyPlayer(host.playerId)
+      }
       counter.current += 1
       const id = `h${at}-${counter.current}`
       host.spec = spec
@@ -396,17 +470,38 @@ export function Journey(props: JourneyProps) {
           kind: spec.kind,
           hidden: at !== visibleRef.current,
           onReady: (player) => {
-            if (host.playerId !== id) return
-            if (at !== visibleRef.current || !revealedRef.current) cue(id, player, spec.videoId, spec.start, spec.end)
+            if (prepareGen.current[at] !== gen || host.playerId !== id) {
+              try {
+                player.mute()
+                player.pauseVideo()
+                player.destroy()
+              } catch {
+                // A newer prepare owns this host.
+              }
+              return
+            }
+            if (at !== visibleRef.current || !revealedRef.current) {
+              player.mute()
+              cue(id, player, spec.videoId, spec.start, spec.end)
+            }
             host.ready = true
             setReadyTick((value) => value + 1)
             if (at === visibleRef.current) tryPlay()
+            else silence(id)
           },
           onState: (state) => host.playerId === id && onPlayerState(at, state),
           onError: (code) => host.playerId === id && window.dispatchEvent(new CustomEvent('hearts:player-error', { detail: { code, at } })),
         })
+        if (prepareGen.current[at] !== gen && host.playerId === id) {
+          silence(id)
+          destroyPlayer(id)
+          host.playerId = null
+        }
       } catch {
-        if (host.playerId === id) setSlow('retry')
+        if (host.playerId === id) {
+          setSlow('retry')
+          keepHarvestRef.current()
+        }
       }
     },
     [onPlayerState, tryPlay],
@@ -414,7 +509,7 @@ export function Journey(props: JourneyProps) {
 
   const stopVisible = () => {
     const host = hosts.current[visibleRef.current]
-    if (host.playerId) getPlayer(host.playerId)?.stopVideo()
+    if (host.playerId) silence(host.playerId)
   }
 
   const preloadNext = useCallback(
@@ -436,6 +531,7 @@ export function Journey(props: JourneyProps) {
   const showItem = useCallback(
     async (at: number, kind: Mode = 'hors', onShown?: () => Promise<void>) => {
       const item = itemsRef.current[at]
+      const ticket = (showGen.current += 1)
       indexRef.current = at
       modeRef.current = kind
       setIndex(at)
@@ -443,12 +539,23 @@ export function Journey(props: JourneyProps) {
       setErrorNote(null)
       setSlow('none')
       setBuffering(false)
-      setLineAt(0)
-      watch.current = { key: `${item?.cutId}:${kind}`, start: kind === 'hors' ? item?.hors.start || 0 : item?.appetiser.start || 0, furthest: 0, done90: false }
+      setNeedPlay(false)
+      setLineAt(-1)
+      setSpokenAt(null)
+      setAppetiserOver(false)
+      if (item) {
+        const seen = rememberSeenCard(item.cutId, item.card || 'talk', kind)
+        seenRef.current = new Set(seen.cards)
+        setSeenCards(seen.cards)
+        setSeenCuts(seen.cuts)
+      }
+      writeFeedPlace(item ? { cutId: item.cutId, mode: kind, card: item.card || 'talk' } : null)
+      watch.current = { key: `${item?.cutId}:${kind}:${item?.card || 'talk'}`, start: kind === 'hors' ? item?.hors.start || 0 : item?.appetiser.start || 0, furthest: 0, done90: false, ended: false }
       // The new card is on screen (and sliding in) before any player work starts.
       if (onShown) await onShown()
       const spec = specFor(item, kind)
       if (!spec) {
+        hushLeaving()
         stopVisible()
         return
       }
@@ -458,9 +565,14 @@ export function Journey(props: JourneyProps) {
       if (hosts.current[current].spec?.key === spec.key) target = current
       else if (hosts.current[other].spec?.key === spec.key) target = other
       else if (!hosts.current[current].playerId) target = current
-      if (target !== current) stopVisible()
+      if (target !== current) {
+        hushHost(current)
+        stopVisible()
+      }
       setVisibleHost(target)
+      hushHost(target === 0 ? 1 : 0)
       await prepare(target, spec)
+      if (showGen.current !== ticket) return
       tryPlay()
       if (kind === 'hors') preloadNext(at)
     },
@@ -481,13 +593,7 @@ export function Journey(props: JourneyProps) {
       let route: { items: FeedSlot[]; spinePointer: number } = routeFeed(state, local, { justShow })
       // Once the learner has seen everything, start the spine again rather than leave the feed empty.
       if (!route.items.length) route = buildFeed({ ...planFrom(state, local, { justShow }), served: [], spinePointer: 0 }, local)
-      const clips = route.items
-        .map((slot): FeedItem | null => {
-          const clip = opening.clips[String(slot.cutId)]
-          if (!clip) return null
-          return slot.laneKey ? { ...clip, laneKey: slot.laneKey, lane: slot.laneKey, laneLabel: opening.laneTitles[slot.laneKey] || clip.laneLabel } : { ...clip, laneKey: null }
-        })
-        .filter((clip): clip is FeedItem => Boolean(clip))
+      const clips = clipsFromRoute(route.items, opening.clips, opening.laneTitles)
       return { items: route.items, clips, spinePointer: route.spinePointer }
     },
     [ctx, opening.clips, opening.laneTitles],
@@ -495,7 +601,7 @@ export function Journey(props: JourneyProps) {
 
   const adopt = useCallback(
     (clips: FeedItem[], slots: FeedSlot[], spinePointer: number, replace: boolean) => {
-      const merged = replace ? clips : [...itemsRef.current, ...clips.filter((clip) => !itemsRef.current.some((row) => row.id === clip.id))]
+      const merged = replace ? clips : appendUnseenItems(itemsRef.current, clips)
       itemsRef.current = merged
       setItems(merged)
       if (heartRef.current) setHeart(markServed(heartRef.current, slots, spinePointer))
@@ -543,9 +649,16 @@ export function Journey(props: JourneyProps) {
           if (props.play === 'appetiser') firstMode = 'appetiser'
         }
         clips = mixFeed(clips, state.served.length, backgroundsBase)
+        const stored = !props.clip && !props.lane ? readFeedPlace() : null
+        const saved = stored?.cutId ? opening.clips[String(stored.cutId)] : undefined
+        if (saved && !clips.some((row) => row.cutId === saved.cutId)) clips = [{ ...saved, laneKey: null }, ...clips]
         adopt(clips, data.items, data.spinePointer, true)
-        await showItem(0, firstMode)
-        if (!data.clips[0]?.youtubeId || data.clips[0]?.style) window.setTimeout(() => setTabs(true), 1200)
+        const resumeAt = stored ? clips.findIndex((row) => row.cutId === stored.cutId && (!row.card || row.card === 'talk')) : -1
+        const startAt = resumeAt >= 0 ? resumeAt : 0
+        const startMode = resumeAt >= 0 && stored?.mode === 'appetiser' ? 'appetiser' : firstMode
+        await showItem(startAt, startMode)
+        if (signedIn) setTabs(true)
+        else window.setTimeout(() => setTabs(true), 1200)
       } catch {
         setOffline(!navigator.onLine)
         setTabs(true)
@@ -558,29 +671,29 @@ export function Journey(props: JourneyProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // A short clip keeps the transcript line at the timestamp on screen. The server copies the words; this only sends the time.
-  useEffect(() => {
-    if (!signedIn || props.viewAs || phase !== 'feed') return
-    const current = items[index]
-    if (!current?.lessonId) return
-    const piece = mode === 'hors' ? current.hors : current.appetiser
-    const line = piece.lines?.[Math.min(lineAt, Math.max(0, (piece.lines?.length || 1) - 1))]
-    const at = line?.at
-    const seconds = typeof at === 'number' && Number.isFinite(at) ? at : mode === 'hors' ? current.hors.start : current.appetiser.start
+  // Captions wait on lineAt. Harvest does not: keep a line when the clip ends, errors or is swiped.
+  const keepHarvest = useCallback(() => {
+    if (!signedIn || props.viewAs) return
+    const current = itemsRef.current[indexRef.current]
+    const level = modeRef.current
+    if (!current?.lessonId || (level !== 'hors' && level !== 'appetiser')) return
+    const piece = level === 'hors' ? current.hors : current.appetiser
+    const seconds = harvestAt(piece)
     if (!Number.isFinite(seconds)) return
-    const key = `${current.lessonId}:${mode}:${Math.round(seconds)}`
+    const key = `${current.lessonId}:${level}:${Math.round(seconds)}`
     if (gathered.current.has(key)) return
     gathered.current.add(key)
     void fetch('/api/hearts/harvest', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ lessonId: current.lessonId, seconds, surface: mode }),
+      body: JSON.stringify({ lessonId: current.lessonId, seconds, surface: level }),
     }).then((response) => {
       if (!response.ok) gathered.current.delete(key)
     }).catch(() => {
       gathered.current.delete(key)
     })
-  }, [signedIn, props.viewAs, phase, items, index, mode, lineAt])
+  }, [signedIn, props.viewAs])
+  keepHarvestRef.current = keepHarvest
 
   // ---------- opening flow ----------
   const sceneEnter = useCallback((direction: 'up' | 'back' | 'fade') => {
@@ -687,7 +800,8 @@ export function Journey(props: JourneyProps) {
         setItems([starter])
       }
       setFirstEver(true)
-      setLine(justShow ? props.opener.justShow : props.opener.handOff)
+      const topic = beginWith(state, opening.scenes)
+      setLine(justShow ? props.opener.justShow : `We'll begin with ${topic.title}.`)
       setPhase('handoff')
       performance.mark('door-tap')
       const doorAnimation = doorEl && !justShow ? animate(doorEl, [{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }], T.calm, EASE.calm, { id: 'door' }) : null
@@ -707,7 +821,7 @@ export function Journey(props: JourneyProps) {
       const spec = specFor(starter, 'hors')
       indexRef.current = 0
       setIndex(0)
-      watch.current = { key: `${starter?.cutId}:hors`, start: starter?.hors.start || 0, furthest: 0, done90: false }
+      watch.current = { key: `${starter?.cutId}:hors`, start: starter?.hors.start || 0, furthest: 0, done90: false, ended: false }
       if (spec) {
         const holder: 0 | 1 = hosts.current[0].playerId ? 0 : hosts.current[1].playerId ? 1 : 0
         setVisibleHost(holder)
@@ -728,11 +842,12 @@ export function Journey(props: JourneyProps) {
       tryPlay()
       const data = await feed
       if (data) {
-        adopt(data.clips.length ? data.clips : itemsRef.current, data.items, data.spinePointer, true)
-        if (!starter && data.clips[0]) await showItem(0)
+        const mixed = mixFeed(data.clips.length ? data.clips : itemsRef.current, state.served.length, backgroundsBase)
+        adopt(mixed.length ? mixed : itemsRef.current, data.items, data.spinePointer, true)
+        if (!starter && mixed[0]) await showItem(0)
         else preloadNext(0)
       }
-      if (!spec) window.setTimeout(() => setTabs(true), 600)
+      setTabs(true)
       void slowTimer
       void retryTimer
     },
@@ -877,7 +992,16 @@ export function Journey(props: JourneyProps) {
     form.set('start', String(Math.floor(piece.start)))
     form.set('end', String(Math.ceil(piece.end)))
     form.set('parent', parent)
-    void fetch('/api/hearts', { method: 'POST', headers: { accept: 'application/json' }, body: form }).catch(() => undefined)
+    void fetch('/api/hearts', { method: 'POST', headers: { accept: 'application/json' }, body: form, keepalive: true }).catch(() => undefined)
+    const seconds = Math.max(0, Math.round(piece.end - piece.start))
+    if (event === 'linger' && level === 'hors') {
+      track('clip_watch_seconds', { seconds, lesson: current.lessonId })
+      track('clip_watch_completion', { lesson: current.lessonId })
+    }
+    if (event === 'linger' && level === 'appetiser') {
+      track('clip_watch_seconds', { seconds, lesson: current.lessonId, level: 'appetiser' })
+      track('appetiser_complete', { lesson: current.lessonId })
+    }
   }, [signedIn])
 
   const leaveSignal = useCallback(() => {
@@ -899,10 +1023,22 @@ export function Journey(props: JourneyProps) {
     return true
   }, [])
 
+  const dismissCoach = () => {
+    if (!coach && readCoachDismissed()) return
+    setCoach(false)
+    writeCoachDismissed()
+  }
+
   const advance = useCallback(
     async (to: number, how: 'swipe' | 'auto' = 'swipe', exit: Exit = 'up', via?: Swipe) => {
+      keepHarvest()
       const list = itemsRef.current
       if (!list.length) return
+      hushLeaving()
+      if (how === 'swipe') {
+        setCoach(false)
+        writeCoachDismissed()
+      }
       // Whatever moves the feed, it stays on the level being watched.
       const target = settleOnLevel(list, to, modeRef.current, to < indexRef.current ? -1 : 1)
       if (target === null) return
@@ -915,7 +1051,8 @@ export function Journey(props: JourneyProps) {
         // Carry on from wherever the finger left the card, so the move never jumps.
         const from = el.style.transform || EXIT_FROM[exit]
         el.style.transform = ''
-        const out = animate(el, [{ transform: from }, { transform: EXIT_TO[exit] }], incoming ? PAIR_MS : 200, incoming ? SLIDE_PAIR : SLIDE_OUT, { id: 'snap' })
+        markSwipe(true)
+        const out = animate(el, [{ transform: from }, { transform: EXIT_TO[exit] }], incoming ? PAIR_MS : 160, incoming ? SLIDE_PAIR : SLIDE_OUT, { id: 'snap' })
         if (incoming) {
           const peekFrom = incoming.style.transform || ENTER_FROM[exit]
           incoming.style.transform = ENTER_FROM[exit]
@@ -937,15 +1074,17 @@ export function Journey(props: JourneyProps) {
         }
         // The poster is on screen at once; the incoming card slides in from the side opposite the exit.
         el.getAnimations().forEach((animation) => animation.cancel())
-        if (how === 'swipe') animate(el, [{ transform: ENTER_FROM[exit] }, { transform: 'translate(0, 0)' }], 380, SLIDE_IN, { id: 'enter', fill: 'none' })
+        if (how === 'swipe') animate(el, [{ transform: ENTER_FROM[exit] }, { transform: 'translate(0, 0)' }], 220, SLIDE_IN, { id: 'enter', fill: 'none' })
       })
+      markSwipe(false)
       void refill()
     },
-    [leaveSignal, refill, showItem],
+    [keepHarvest, leaveSignal, refill, showItem],
   )
 
   useEffect(() => {
     const onEnded = () => {
+      keepHarvest()
       if (modeRef.current !== 'hors') return
       const flagsNow = sessionFlags()
       if (!signedIn && !flagsNow.firstEnded) {
@@ -955,15 +1094,22 @@ export function Journey(props: JourneyProps) {
           return
         }
       }
-      void advance(indexRef.current + 1, 'auto')
+      const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current)
+      if (next == null) setToast(poolEndToast())
+      else void advance(next, 'auto')
     }
     const onError = (event: Event) => {
       const { code, at } = (event as CustomEvent<{ code: number; at: number }>).detail
       if (at !== visibleRef.current || !UNPLAYABLE.has(code)) return
+      keepHarvest()
       const current = itemsRef.current[indexRef.current]
       setErrorNote("This one can't play here")
       if (current && signedIn) void fetch('/api/hearts/unplayable', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cutId: current.cutId, code }) }).catch(() => undefined)
-      window.setTimeout(() => void advance(indexRef.current + 1, 'auto'), 900)
+      window.setTimeout(() => {
+        const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current)
+        if (next == null) setToast(poolEndToast())
+        else void advance(next, 'auto')
+      }, 900)
     }
     window.addEventListener('hearts:ended', onEnded)
     window.addEventListener('hearts:player-error', onError)
@@ -971,7 +1117,7 @@ export function Journey(props: JourneyProps) {
       window.removeEventListener('hearts:ended', onEnded)
       window.removeEventListener('hearts:player-error', onError)
     }
-  }, [advance, openSheet, signedIn])
+  }, [advance, keepHarvest, openSheet, signedIn])
 
   const pendingAfterSheet = useRef<'next' | null>(null)
   const closeSheet = () => {
@@ -980,22 +1126,36 @@ export function Journey(props: JourneyProps) {
     if (window.history.state?.hearts?.sheet) window.history.back()
     if (pendingAfterSheet.current === 'next') {
       pendingAfterSheet.current = null
-      void advance(indexRef.current + 1, 'auto')
+      const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current)
+      if (next == null) setToast(poolEndToast())
+      else void advance(next, 'auto')
     } else window.setTimeout(() => tryPlay(), 0)
   }
 
-  // Poll while playing: how far the learner got, and the 90% mark.
+  // Poll while playing: how far the learner got, the 90% mark, and any hidden host that started talking.
   useEffect(() => {
     if (phase !== 'feed') return
     const timer = window.setInterval(() => {
+      silenceHidden()
+      const hiddenAt: 0 | 1 = visibleRef.current === 0 ? 1 : 0
+      const hidden = hosts.current[hiddenAt]
+      if (hidden.playerId) {
+        const other = getPlayer(hidden.playerId)
+        const otherState = other?.getPlayerState()
+        if (other && (otherState === STATE.PLAYING || otherState === STATE.BUFFERING || !other.isMuted())) silence(hidden.playerId)
+      }
       const host = hosts.current[visibleRef.current]
-      if (host.state !== STATE.PLAYING || !host.playerId) return
-      const player = getPlayer(host.playerId)
+      const player = host.playerId ? getPlayer(host.playerId) : null
+      const realState = player ? player.getPlayerState() : host.state
+      if (realState !== STATE.PLAYING || !player) return
       const current = itemsRef.current[indexRef.current]
-      if (!player || !current) return
+      if (!current) return
       const time = player.getCurrentTime()
+      setClipPlaying(host.state === STATE.PLAYING)
       const seen = watch.current
       seen.furthest = Math.max(seen.furthest, time - seen.start)
+      const framed = current.framingTrack ? segmentAt(current.framingTrack, time) : null
+      setFramingMode((held) => (framed?.mode === held ? held : framed?.mode || null))
       // The player's own end mark is skipped when someone seeks past it, so the appetiser stops here as well.
       const lines = modeRef.current === 'hors' ? current.hors.lines : current.appetiser.lines
       const showing = captionIndex(lines, time)
@@ -1013,8 +1173,10 @@ export function Journey(props: JourneyProps) {
         }
         spanJoin.current = null
         if (join.action === 'stop') {
+          player.mute()
           player.pauseVideo()
           player.seekTo(spans[spans.length - 1].end, true)
+          setAppetiserOver(true)
           if (!seen.done90) {
             seen.done90 = true
             noteBrowse('linger')
@@ -1022,8 +1184,10 @@ export function Journey(props: JourneyProps) {
           return
         }
       } else if (modeRef.current === 'appetiser' && time >= appetiserEnd(current) - 0.25) {
+        player.mute()
         player.pauseVideo()
         player.seekTo(appetiserEnd(current), true)
+        setAppetiserOver(true)
         if (!seen.done90) {
           seen.done90 = true
           noteBrowse('linger')
@@ -1031,14 +1195,18 @@ export function Journey(props: JourneyProps) {
         return
       }
       // The player's own end mark is a whole second; the clip stops at its real out point, between sentences.
-      if (modeRef.current === 'hors' && current.hors.end > current.hors.start && time >= current.hors.end) {
+      if (modeRef.current === 'hors' && (!current.card || current.card === 'talk') && current.hors.end > current.hors.start && time >= current.hors.end) {
+        player.mute()
         player.pauseVideo()
         if (!seen.done90) {
           seen.done90 = true
           signal('watched90')
           noteBrowse('linger')
         }
-        window.dispatchEvent(new CustomEvent('hearts:ended'))
+        if (!seen.ended) {
+          seen.ended = true
+          window.dispatchEvent(new CustomEvent('hearts:ended'))
+        }
         return
       }
       if (modeRef.current === 'hors' && !seen.done90) {
@@ -1047,6 +1215,19 @@ export function Journey(props: JourneyProps) {
           seen.done90 = true
           signal('watched90')
           noteBrowse('linger')
+        }
+      }
+      const start = modeRef.current === 'hors' ? current.hors.start : current.appetiser.start
+      const end = modeRef.current === 'hors' ? current.hors.end : appetiserEnd(current)
+      const span = Math.max(0.5, end - start)
+      const watchPct = Math.max(0, Math.min(100, Math.round(((time - start) / span) * 100)))
+      const last = (seen as { lastInsightPct?: number }).lastInsightPct || 0
+      if (watchPct >= last + 8 || watchPct >= 90) {
+        ;(seen as { lastInsightPct?: number }).lastInsightPct = watchPct
+        try {
+          window.dispatchEvent(new CustomEvent('hearts-insight', { detail: { kind: 'clip_watch', clipId: String(current.cutId || current.id || ''), watchPct, lane: current.laneKey } }))
+        } catch {
+          // ignore
         }
       }
     }, 250)
@@ -1061,24 +1242,45 @@ export function Journey(props: JourneyProps) {
 
   const replay = () => {
     signal('replay')
-    void showItem(indexRef.current, modeRef.current)
     const host = hosts.current[visibleRef.current]
-    if (host.playerId && host.spec) getPlayer(host.playerId)?.seekTo(host.spec.start, true)
-    setToast('Playing this clip again')
+    if (host.playerId && host.spec && host === hosts.current[visibleRef.current]) {
+      const player = getPlayer(host.playerId)
+      player?.mute()
+      player?.pauseVideo()
+      player?.seekTo(host.spec.start, true)
+      tryPlay()
+    } else void showItem(indexRef.current, modeRef.current)
+    setToast('Playing this clip again.')
   }
   const swipeTo = (swipe: Swipe) => {
     const current = itemsRef.current[indexRef.current]
     if (!current) return
-    const target = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, swipe)
+    hushLeaving()
+    dismissCoach()
+    const target = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, swipe, seenRef.current)
     if (target === null) {
-      if (swipe === 'speaker') return setToast(`That is everything from ${current.speaker} for now`)
-      if (swipe === 'topic') return setToast('That is everything on this topic for now')
-      return setToast(modeRef.current === 'hors' ? "That is the only hors d'oeuvre here" : 'That is the only appetiser here')
+      springBack()
+      if (swipe === 'speaker') return setToast(`That's everything from ${current.speaker} for now.`)
+      if (swipe === 'topic') return setToast("That's everything on this topic for now.")
+      return setToast(itemsRef.current.length < 2 ? onlyClipToast(modeRef.current) : poolEndToast())
     }
     const laneLabel = itemsRef.current[target]?.laneLabel?.trim()
     if (swipe === 'lane' && laneLabel) setToast(`Lane · ${laneLabel}`)
-    if (swipe === 'topic') setToast('More on this topic')
-    if (swipe === 'speaker') setToast(`More from ${current.speaker}`)
+    if (swipe === 'topic') setToast('More on this topic.')
+    if (swipe === 'speaker') setToast(`More from ${current.speaker}.`)
+    try {
+      const host = hosts.current[visibleRef.current]
+      const player = host.playerId ? getPlayer(host.playerId) : null
+      const time = player?.getCurrentTime?.() ?? current.hors.start
+      const start = modeRef.current === 'hors' ? current.hors.start : current.appetiser.start
+      const end = modeRef.current === 'hors' ? current.hors.end : appetiserEnd(current)
+      const span = Math.max(0.5, end - start)
+      const watchPct = Math.max(0, Math.min(100, Math.round(((time - start) / span) * 100)))
+      window.dispatchEvent(new CustomEvent('hearts-insight', { detail: { kind: 'clip_swipe', clipId: String(current.cutId || current.id || ''), watchPct, lane: current.laneKey } }))
+      window.dispatchEvent(new CustomEvent('hearts-insight', { detail: { kind: 'route', route: window.location.pathname, lane: itemsRef.current[target]?.laneKey } }))
+    } catch {
+      // ignore
+    }
     void advance(target, 'swipe', SWIPE_EXIT[swipe], swipe)
   }
   const nextLane = () => swipeTo('lane')
@@ -1091,23 +1293,38 @@ export function Journey(props: JourneyProps) {
     if (!current) return
     const step = learnMoreTarget(itemsRef.current, indexRef.current, modeRef.current, base)
     if (!step) return
-    if (step.level === 'appetiser') {
-      signal('watch-full')
-      // The tap is the gesture that turns voice on. The appetiser player is built after this and reads the same flag.
+    const own = itemsRef.current[step.level === 'appetiser' ? step.index : indexRef.current]
+    if (step.level === 'appetiser' && !stepUpIsOwn(current, own)) {
+      const fallback = itemsRef.current.findIndex((row) => row.cutId === current.cutId && row.lessonId === current.lessonId && !isInterstitial(row))
+      hushLeaving()
       soundOn(hosts.current[visibleRef.current].playerId || '')
       noteBrowse('learn-more')
+      void showItem(fallback >= 0 ? fallback : indexRef.current, 'appetiser')
+      return
+    }
+    if (step.level === 'appetiser') {
+      signal('watch-full')
+      hushLeaving()
+      // The tap is the gesture that turns voice on. The 3-minute player is built after this and reads the same flag.
+      soundOn(hosts.current[visibleRef.current].playerId || '')
+      noteBrowse('learn-more')
+      track('clip_cta_tap', { level: 'hors', lesson: current.lessonId })
       const url = new URL(window.location.href)
-      url.searchParams.set('clip', String(step.cutId))
+      url.searchParams.set('clip', String(current.cutId))
       url.searchParams.set('play', 'appetiser')
-      push(`${url.pathname}${url.search}`, { appetiser: step.cutId })
+      push(`${url.pathname}${url.search}`, { appetiser: current.cutId })
       void showItem(step.index, 'appetiser')
       return
     }
     event?.preventDefault()
     if (needsAccount('save')) return
+    if (step.lessonId !== current.lessonId) return
     signal('start-course')
     noteBrowse('learn-more')
+    track('clip_cta_tap', { level: 'appetiser', lesson: current.lessonId })
+    track('full_talk_start', { lesson: current.lessonId })
     haptic(10)
+    hushLeaving()
     stopVisible()
     const node = event?.currentTarget
     if (node) await finished(animate(node, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.6)', opacity: 0 }], 500, EASE.enter, { id: 'mains-transform' }))
@@ -1136,10 +1353,47 @@ export function Journey(props: JourneyProps) {
   }
 
   const tapSound = () => {
+    setAppetiserHeld(false)
     const host = hosts.current[visibleRef.current]
-    if (host.playerId) soundOn(host.playerId)
-    if (typeRef.current) typeRef.current.muted = false
+    setSessionFlags({ ...sessionFlags(), unmuted: true })
+    if (host.playerId) {
+      soundOn(host.playerId)
+      const player = getPlayer(host.playerId)
+      player?.unMute()
+      player?.playVideo()
+    }
+    if (typeRef.current) {
+      typeRef.current.muted = false
+      void typeRef.current.play().catch(() => undefined)
+    }
     setMuted(false)
+    setNeedPlay(false)
+    window.setTimeout(() => {
+      const now = hosts.current[visibleRef.current]
+      const player = now.playerId ? getPlayer(now.playerId) : null
+      const film = typeRef.current
+      const playing = (player && player.getPlayerState() === STATE.PLAYING) || (film && !film.paused)
+      if (!playing) setNeedPlay(true)
+    }, 300)
+  }
+
+  const tapPicture = () => {
+    const host = hosts.current[visibleRef.current]
+    const player = host.playerId ? getPlayer(host.playerId) : null
+    const real = player?.getPlayerState()
+    if (player && real === STATE.PLAYING) {
+      player.pauseVideo()
+      return
+    }
+    if (player) {
+      if (hasSound()) player.unMute()
+      player.playVideo()
+      window.setTimeout(() => {
+        if (getPlayer(host.playerId || '')?.getPlayerState() !== STATE.PLAYING) setNeedPlay(true)
+      }, 300)
+      return
+    }
+    tryPlay()
   }
 
   const retry = () => {
@@ -1167,11 +1421,19 @@ export function Journey(props: JourneyProps) {
     return () => window.clearTimeout(timer)
   }, [toast])
 
+  useEffect(() => {
+    const store = window as Window & { __HEARTS_FEED_SNAP?: () => ReturnType<typeof playerSnapshot> }
+    store.__HEARTS_FEED_SNAP = () => playerSnapshot()
+    return () => {
+      delete store.__HEARTS_FEED_SNAP
+    }
+  }, [])
+
   const peeks = useMemo(() => {
     if (phase !== 'feed' || items.length < 2) return []
     const out: { swipe: Swipe; at: number }[] = []
     for (const swipe of PEEK_SWIPES) {
-      const raw = swipeTarget(items, index, mode, swipe)
+      const raw = swipeTarget(items, index, mode, swipe, seenRef.current)
       if (raw === null) continue
       const at = settleOnLevel(items, raw, mode, raw < index ? -1 : 1)
       if (at !== null && at !== index) out.push({ swipe, at })
@@ -1212,7 +1474,11 @@ export function Journey(props: JourneyProps) {
     if (!start) return
     const dx = event.clientX - start.x
     const dy = event.clientY - start.y
-    if (Math.max(Math.abs(dx), Math.abs(dy)) > 8) start.moved = true
+    if (Math.max(Math.abs(dx), Math.abs(dy)) > 8 && !start.moved) {
+      start.moved = true
+      hushLeaving()
+      markSwipe(true)
+    }
     if (clipRef.current && Math.abs(dx) > Math.abs(dy) && start.moved) {
       clipRef.current.style.transform = `translateX(${dx}px)`
       const topic = peekEls.current.topic
@@ -1240,12 +1506,10 @@ export function Journey(props: JourneyProps) {
       }
     }
     if (far < 40 || (far < width * 0.25 && !quick)) {
+      markSwipe(false)
       springBack()
       if (!start.moved && overlay && !slide && cardKind !== 'question' && cardKind !== 'text') {
-        const host = hosts.current[visibleRef.current]
-        const player = host.playerId ? getPlayer(host.playerId) : null
-        if (player && host.state === STATE.PLAYING) player.pauseVideo()
-        else tryPlay()
+        tapPicture()
       }
       return
     }
@@ -1259,6 +1523,7 @@ export function Journey(props: JourneyProps) {
     const start = gesture.current
     gesture.current = null
     if (start?.timer) window.clearTimeout(start.timer)
+    markSwipe(false)
     springBack()
   }
   const springBack = () => {
@@ -1313,27 +1578,33 @@ export function Journey(props: JourneyProps) {
   const scenic = Boolean(phase === 'feed' && cardKind === 'scene' && mode === 'hors' && item?.scene)
   const feedCard = phase === 'feed' && (cardKind === 'question' || cardKind === 'text')
   const started = playerReady && host.played && LIVE.has(host.state)
-  const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (!started || Boolean(errorNote) || offline)))
-  const waitingToPlay = phase === 'feed' && playerReady && !started && !errorNote && !offline
+  const playingOut = playerReady && host.played && host.state === STATE.PLAYING
+  const keepAppetiserPoster = mode === 'appetiser' && appetiserHeld
+  const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (keepAppetiserPoster || !playingOut || Boolean(errorNote) || offline)))
+  const waitingToPlay = phase === 'feed' && playerReady && (keepAppetiserPoster || !playingOut) && !errorNote && !offline
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
-  const lineShown = piece?.lines?.length ? Math.min(lineAt, piece.lines.length - 1) : 0
-  const horsLine = mode === 'hors' ? piece?.lines?.[lineShown] : null
-  const captionText = (horsLine ? horsLine.tidy || horsLine.text : mode === 'hors' ? piece?.quote : '') || ''
+  const lineShown = mode === 'hors' && lineAt >= 0 ? lineAt : -1
+  const horsLine = lineShown >= 0 ? piece?.lines?.[lineShown] : null
+  const wordsInPicture = Boolean(item?.wordsInPicture || item?.vertical)
+  const captionText = spokenCaption(horsLine, [item?.lessonTitle, item?.courseTitle])
   const videoAppetiser = mode === 'appetiser' && Boolean(item?.youtubeId)
   const scenicAppetiser = mode === 'appetiser' && !item?.youtubeId
   const scenicLines = scenicAppetiser ? [item?.scenic?.hook, item?.scenic?.turn, item?.scenic?.land].filter((line): line is string => Boolean(line)) : []
   useEffect(() => {
     setCaptionOpen(false)
+    setAppetiserHeld(true)
   }, [item?.id, mode])
   const slide = phase === 'feed' && mode === 'hors' && item?.style && !typeClip ? item.style : null
   const course = (item && learnMore(item, 'appetiser', base)?.href) || base
   const horsParent = item?.parents?.hors
   const appetiserParent = item?.parents?.appetiser
-  const captionButton = item ? (
+  const captionButton = item && captionText ? (
     <button
       type="button"
-      className={`caption${captionText.length > 120 ? ' long' : ''}${captionText ? '' : ' title-only'}`}
+      className={`caption j-caption-plate${captionText.length > 120 ? ' long' : ''}${wordsInPicture ? ' j-caption-clear' : ''}`}
       data-testid="caption"
+      data-slot={wordsInPicture ? 'bar' : 'over'}
+      data-at={horsLine ? String(horsLine.at) : ''}
       data-line={lineShown}
       data-expanded={captionOpen ? 'true' : 'false'}
       aria-expanded={captionOpen}
@@ -1366,59 +1637,92 @@ export function Journey(props: JourneyProps) {
         setCaptionOpen((open) => !open)
       }}
     >
-      {captionText || item.lessonTitle || item.courseTitle}
+      {captionText}
     </button>
   ) : null
   const laneVisible = Boolean(item) && !firstEver
-  const wordsInPicture = Boolean(item?.wordsInPicture || item?.vertical)
   void readyTick
 
-  // A Short (or a film with burned-in words) has text low in the picture: the speaker and Follow sit at the top, out of its lower quarter.
+  // A Short (or a film with burned-in words) has text in the picture: the speaker sits at the top, and our caption sits in the bar below the 16:9 band.
   const speakerRow = item ? (
-    <div className="j-speaker">
+    <div className="j-speaker j-speaker-plate">
       <a className="speaker-row" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-link" onClick={(event) => { if (needsAccount('save')) event.preventDefault() }}>
         <Avatar name={item.speaker} portrait={item.portrait} />
-        <span className="who"><b>{item.speaker}</b><small>{laneVisible ? `On ${item.laneLabel}` : item.courseTitle}</small></span>
+        <span className="who"><b>{item.speaker}</b>{laneVisible && item.laneLabel ? <small>On {item.laneLabel}</small> : null}</span>
       </a>
       <span onClickCapture={(event) => { if (needsAccount('save')) { event.preventDefault(); event.stopPropagation() } }}><FollowButton slug={item.speakerSlug} /></span>
     </div>
   ) : null
 
+  const clipStart = item ? (mode === 'hors' ? item.hors.start : item.appetiser.start) : 0
+  const clipEnd = item ? (mode === 'hors' ? item.hors.end : appetiserEnd(item)) : 0
+  const clipLength = Math.max(0, clipEnd - clipStart)
+  const clipElapsed = spokenAt != null ? Math.max(0, Math.min(clipLength, spokenAt - clipStart)) : 0
+  const clipLeft = Math.max(0, clipLength - clipElapsed)
+  const clipPct = clipLength ? Math.min(100, (clipElapsed / clipLength) * 100) : 0
+  const visiblePlayer = () => {
+    const id = hosts.current[visibleRef.current].playerId
+    return id ? getPlayer(id) : null
+  }
+  const seekBy = (delta: number) => {
+    const player = visiblePlayer()
+    if (!player) return
+    const at = player.getCurrentTime()
+    const next = Math.min(clipEnd, Math.max(clipStart, at + delta))
+    player.seekTo(next, true)
+    setSpokenAt(next)
+  }
+  const cycleSpeed = () => {
+    const next = speed === 1 ? 1.25 : speed === 1.25 ? 1.5 : speed === 1.5 ? 2 : 1
+    setSpeed(next)
+    visiblePlayer()?.setPlaybackRate?.(next)
+  }
+  const scrubTo = (ratio: number) => {
+    const player = visiblePlayer()
+    if (!player) return
+    const next = clipStart + clipLength * ratio
+    player.seekTo(next, true)
+    setSpokenAt(next)
+  }
   const chrome = item && phase === 'feed' && !slide && !scenic ? (
     <>
       <div className="j-hairline-row">
-        <div className={`j-hairline${buffering ? ' shimmer' : ''}`} data-testid="hairline"><i /></div>
+        <div className={`j-hairline${buffering ? ' shimmer' : ''}`} data-testid="hairline"><i style={{ width: `${clipPlaying ? clipPct : 0}%` }} /></div>
         {mode === 'hors' ? (
+          <>
+          <p className="j-swipe-hint" data-testid="swipe-hint">↑ swipe up to replay</p>
           <div className="clip-row">
-            {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
+            <div className="clip-row-top">
+              {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
+              {clipPlaying ? <span className="chip dark" data-testid="clip-timer">{clock(clipLeft)}</span> : null}
+            </div>
             {!typeClip && muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
-            <span className="chip dark">{clock(item.hors.end - item.hors.start)}</span>
           </div>
+          </>
         ) : (
           <div className="clip-row">
-            <button type="button" className="chip white" onClick={() => window.history.back()} data-testid="appetiser-back">‹ Back</button>
-            {!typeClip && muted && !hasSound() && playerReady ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
-            <span className="chip gold">Extended cut</span>
+            <div className="clip-row-top">
+              <button type="button" className="chip white" onClick={() => window.history.back()} data-testid="appetiser-back">‹ Back</button>
+              <span className="chip gold" data-testid="level-chip">{READY_FOR_MORE}</span>
+            </div>
+            {muted && (typeClip || (!hasSound() && playerReady)) ? <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button> : null}
           </div>
         )}
       </div>
-      {typeClip && muted ? (
-        <button type="button" className="j-sound" onClick={tapSound} data-testid="tap-sound">Tap for sound</button>
-      ) : null}
-      {(cardKind && cardKind !== 'scene') || typeClip || mode !== 'hors' || wordsInPicture ? null : captionButton}
+      {(cardKind && cardKind !== 'scene') || typeClip || mode !== 'hors' ? null : captionButton}
       {wordsInPicture && mode === 'hors' && !cardKind ? <div className="j-top-speaker" data-testid="top-speaker">{speakerRow}</div> : null}
       {wordsInPicture && mode === 'appetiser' && videoAppetiser ? (
         <div className="j-top-speaker" data-testid="top-speaker">
           <div className="speaker-card">
             <Avatar name={item.speaker} portrait={item.portrait} />
-            <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b><small>{item.courseTitle}</small></a>
+            <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b>{item.laneLabel ? <small>On {item.laneLabel}</small> : null}</a>
             <FollowButton slug={item.speakerSlug} className="follow teal" />
           </div>
         </div>
       ) : null}
       {scenicAppetiser ? (
         <div className="scenic-lines" data-testid="scenic-lines">
-          {(scenicLines.length ? scenicLines : [item.lessonTitle || item.courseTitle]).map((line) => (
+          {scenicLines.map((line) => (
             <p key={line}>{line}</p>
           ))}
         </div>
@@ -1428,19 +1732,54 @@ export function Journey(props: JourneyProps) {
         <button type="button" aria-pressed={faves.includes(item.id)} onClick={fave} data-testid="fave"><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
         <button type="button" aria-pressed={saved.includes(item.id)} onClick={() => !needsAccount('save') && toggleSave(item.id)} data-testid="save"><span className="bubble"><SaveIcon /></span>{saved.includes(item.id) ? 'Saved' : 'Save'}</button>
       </div>
-      <div className="clip-foot">
+      {needPlay ? (
+        <button type="button" className="j-tap-play" data-testid="tap-to-play" onClick={tapSound}>Tap to play</button>
+      ) : null}
+      <div className="clip-foot j-credits">
+        <div className="j-levels" data-testid="level-steps" aria-label="Where you are">
+          <span className={mode === 'hors' ? 'on' : undefined}>Clip</span>
+          <i aria-hidden>·</i>
+          <span className={mode === 'appetiser' ? 'on' : undefined}>3-minute version</span>
+          <i aria-hidden>·</i>
+          <span>Full talk</span>
+        </div>
         {mode === 'hors' ? (
           <>
             {wordsInPicture && !cardKind ? null : speakerRow}
-            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" onClick={() => void stepUp()}>Learn more</button>
+            <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onClick={moreFromSpeaker}>More from {item.speaker} ›</button>
+            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" data-speaker={item.speaker} data-lesson={item.lessonId} onClick={() => void stepUp()}>{(() => {
+              const lead = clipCta.label && !/^learn more\b/i.test(clipCta.label) ? clipCta.label : clipStepUpLabel()
+              const seconds = item.talkSeconds || pieceSeconds(item.appetiser)
+              return withTalkDetail(lead, 1, seconds)
+            })()}</button>
           </>
         ) : (
           <>
-            <a className="pill gold block" href={course} onClick={(event) => void stepUp(event)} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk">Learn more</a>
+            <div className="ready-controls" data-testid="ready-controls">
+              <button type="button" className="chip white" data-testid="skip-back" onClick={() => seekBy(-10)}>Back 10 s</button>
+              <button type="button" className="chip white" data-testid="skip-forward" onClick={() => seekBy(10)}>Forward 10 s</button>
+              <button type="button" className="chip gold" data-testid="speed" onClick={cycleSpeed}>{speed}×</button>
+              <span className="chip dark" data-testid="appetiser-timer">{clock(clipElapsed)} / {clock(clipLength)}</span>
+              <input
+                type="range"
+                min={0}
+                max={1000}
+                value={Math.round(clipPct * 10)}
+                data-testid="appetiser-scrub"
+                aria-label="Place in this talk"
+                onChange={(event) => scrubTo(Number(event.target.value) / 1000)}
+              />
+            </div>
+            <a className="pill gold block" href={course} onClick={(event) => void stepUp(event)} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk" data-speaker={item.speaker} data-lesson={item.lessonId}>{(() => {
+              const talks = Object.values(opening.clips).filter((row) => row.courseId === item.courseId).reduce((ids, row) => ids.add(row.lessonId), new Set<number>()).size
+              const computed = talkStepUpLabel(talks, item.talkSeconds)
+              const custom = talkCta.label && !/^learn more\b/i.test(talkCta.label) && talkCta.label !== talkStepUpLabel(1) && (talkCta.running || talkCta.label !== computed)
+              return custom ? withTalkDetail(talkCta.label, talks, item.talkSeconds) : computed
+            })()}</a>
             {wordsInPicture && videoAppetiser ? null : (
               <div className="speaker-card">
                 <Avatar name={item.speaker} portrait={item.portrait} />
-                <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b><small>{item.courseTitle}</small></a>
+                <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b>{item.laneLabel ? <small>On {item.laneLabel}</small> : null}</a>
                 <FollowButton slug={item.speakerSlug} className="follow teal" />
               </div>
             )}
@@ -1451,7 +1790,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined}>
+    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING && !keepAppetiserPoster ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing={framingMode || undefined} data-player-state={host.state} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />
@@ -1469,7 +1808,7 @@ export function Journey(props: JourneyProps) {
       ) : null}
 
       <div ref={clipRef} className="j-clip" data-screen={phase === 'feed' || phase === 'handoff' ? 'clip' : undefined}>
-        <div ref={slotRef} className="j-slot" data-testid="player-slot" style={{ visibility: phase === 'feed' || phase === 'handoff' ? 'visible' : 'hidden' }}>
+        <div ref={slotRef} className="j-slot" data-testid="player-slot" data-framing={item?.framingTrack ? framingMode || 'F' : undefined} style={{ visibility: phase === 'feed' || phase === 'handoff' ? 'visible' : 'hidden', ['--fr-poster' as string]: item?.youtubeId ? `url(https://i.ytimg.com/vi/${item.youtubeId}/hqdefault.jpg)` : undefined, ['--fr-tx' as string]: item?.framingTrack && framingMode === 'D' ? `${-((segmentAt(item.framingTrack, spokenAt ?? item.hors.start)?.focus?.x ?? 0.5) * 100 - 50)}%` : undefined }}>
           {[0, 1].map((at) => (
             <div
               key={at}
@@ -1479,6 +1818,16 @@ export function Journey(props: JourneyProps) {
               style={{ visibility: at === visibleHost && playerReady ? 'visible' : 'hidden' }}
             />
           ))}
+          {framingMode === 'F' && item?.framingTrack?.sentences?.length ? (
+            <SpokenWords
+              sentences={item.framingTrack.sentences}
+              time={spokenAt ?? item.hors.start}
+              speaker={item.speaker}
+              title={item.lessonTitle || item.courseTitle}
+              from={item.hors.start}
+              to={item.hors.end}
+            />
+          ) : null}
           {typeClip && typeSrc ? (
             <video
               key={item?.id}
@@ -1517,16 +1866,16 @@ export function Journey(props: JourneyProps) {
               <span className="j-poster-who">{item.speaker}</span>
               {offline ? <p className="j-poster-note" data-testid="offline-note">{phase === 'handoff' || index === 0 ? "You're offline. Your first clip will play as soon as you're back." : "You're offline. We'll carry on from here when you're back."}</p> : null}
               {errorNote ? <p className="j-poster-note" data-testid="cannot-play">{errorNote}</p> : null}
-              {slow === 'retry' && !offline ? (
+              {slow === 'retry' && !offline && phase !== 'handoff' ? (
                 item.transcriptReady ? (
-                  <a className="pill white small" href={course} data-testid="read-instead">Read it instead ›</a>
+                  <a className="pill white small j-read-instead" href={course} data-testid="read-instead">Read it instead ›</a>
                 ) : (
                   <button type="button" className="pill white small" onClick={retry} data-testid="try-again">Try again</button>
                 )
               ) : null}
             </div>
           ) : null}
-          {phase === 'feed' && !item ? <div className="j-poster" data-testid="poster-frame" data-empty="" /> : null}
+          {phase === 'feed' && !item ? <div className="j-poster" data-testid="poster-frame" data-poster="own" data-empty="" /> : null}
           {overlay && phase === 'feed' && !slide && !scenic ? <div className="j-gesture" data-testid="gesture-layer" {...swipe} /> : null}
         </div>
         {slide && item ? (
@@ -1536,12 +1885,22 @@ export function Journey(props: JourneyProps) {
         ) : null}
         {scenic && item?.scene ? (
           <div className="j-slide" data-testid="gesture-layer" {...swipe}>
-            <TeachingCard key={item.id} scene={item.scene} speaker={item.speaker} course={item.courseTitle} lane={item.laneLabel} onClip={() => void stepUp()} />
+            <TeachingCard key={item.id} scene={item.scene} speaker={item.speaker} course={item.courseTitle} lane={item.laneLabel} onClip={() => void stepUp()} cta={clipCta.label} />
           </div>
         ) : null}
         <div className="j-chrome" data-swipe={overlay && !feedCard ? undefined : ''} {...(overlay && !feedCard ? {} : swipe)}>
           {chrome}
         </div>
+        {appetiserOver && mode === 'appetiser' && item && phase === 'feed' ? (
+          <div className="end-card" data-testid="appetiser-end">
+            <p className="eyebrow">This one is finished.</p>
+            <a className="pill gold block" href={course} data-testid="end-full" onClick={(event) => void stepUp(event)}>Watch the full talk</a>
+            <button type="button" className="pill block end-feed" data-testid="end-feed" onClick={() => { setAppetiserOver(false); void showItem(index, 'hors') }}>Back to the feed</button>
+            {swipeTarget(items, index, 'appetiser', 'next') != null ? (
+              <button type="button" className="pill block end-next" data-testid="end-next" onClick={() => { const next = swipeTarget(items, index, 'appetiser', 'next'); setAppetiserOver(false); if (next != null) void advance(next) }}>Watch the next longer clip</button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {phase === 'handoff' && line ? <p className="j-line" data-testid="handoff-line">{line}</p> : null}
@@ -1599,10 +1958,26 @@ export function Journey(props: JourneyProps) {
         ) : null}
       </div>
 
+      {coach && phase === 'feed' ? (
+        <div className="j-coach" data-testid="swipe-coach" onClick={dismissCoach}>
+          <div className="j-coach-card">
+            <h2>How to move around</h2>
+            <ul>
+              <li><b>Swipe up</b> Play this clip again.</li>
+              <li><b>Swipe down</b> Switch lane.</li>
+              <li><b>Swipe left</b> More on this topic.</li>
+              <li><b>Swipe right</b> More from this speaker.</li>
+            </ul>
+            <p>Tap here, or swipe once, to hide this.</p>
+          </div>
+        </div>
+      ) : null}
+
       {tabs && phase === 'feed' ? (
         <TabEntry
           base={base}
           unread={props.unread}
+          features={props.features}
           onGuard={(event) => {
             if (signedIn) return
             const target = (event.target as HTMLElement).closest('a')
@@ -1623,7 +1998,7 @@ function stillOf(item: FeedItem | undefined, mode: Mode) {
   if (mode === 'hors' && item.card === 'scene' && item.scene) return item.scene.scene
   if (mode === 'hors' && item.style && !item.typography?.src) return SLIDE_BACKDROP[item.style]
   if (mode === 'appetiser' && item.cleanThumb) return item.cleanThumb
-  return item.poster
+  return item.poster && !/i\.ytimg\.com|img\.youtube\.com|^\/clips\//i.test(item.poster) ? item.poster : null
 }
 
 function FeedCardFace({ kicker, title, speaker }: { kicker: string; title: string; speaker: string }) {
@@ -1637,7 +2012,7 @@ function FeedCardFace({ kicker, title, speaker }: { kicker: string; title: strin
   )
 }
 
-function PosterStill({ item, mode, peek = false }: { item: FeedItem; mode: Mode; peek?: boolean }) {
+function PosterStill({ item, mode }: { item: FeedItem; mode: Mode; peek?: boolean }) {
   const [frameFailed, setFrameFailed] = useState(false)
   const frame = mode === 'appetiser' && item.cleanThumb && !frameFailed ? item.cleanThumb : null
   return (
@@ -1645,14 +2020,8 @@ function PosterStill({ item, mode, peek = false }: { item: FeedItem; mode: Mode;
       {frame ? (
         // A missing maxresdefault comes back as YouTube's 120px grey stand-in rather than an error.
         <img src={frame} alt="" onError={() => setFrameFailed(true)} onLoad={(event) => { if (event.currentTarget.naturalWidth <= 120) setFrameFailed(true) }} />
-      ) : item.poster ? (
+      ) : item.poster && !/i\.ytimg\.com|img\.youtube\.com|^\/clips\//i.test(item.poster) ? (
         <img src={item.poster} alt="" />
-      ) : null}
-      {mode === 'appetiser' && item.youtubeId && !frame ? (
-        <div className="j-poster-title" data-testid={peek ? undefined : 'poster-title'}>
-          <small>Extended cut</small>
-          <b>{item.lessonTitle || item.courseTitle}</b>
-        </div>
       ) : null}
     </>
   )
@@ -1692,14 +2061,24 @@ function PeekFace({ item, mode }: { item: FeedItem; mode: Mode }) {
   )
 }
 
-function TabEntry({ base, unread, onGuard }: { base: string; unread: number; onGuard: (event: React.MouseEvent) => void }) {
+function TabEntry({
+  base,
+  unread,
+  features,
+  onGuard,
+}: {
+  base: string
+  unread: number
+  features?: import('@/lib/features').FeatureMap
+  onGuard: (event: React.MouseEvent) => void
+}) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     animate(ref.current, [{ transform: 'translateY(100%)' }, { transform: 'translateY(0)' }], 300, EASE.enter, { id: 'tabbar-in' })
   }, [])
   return (
     <div ref={ref} className="j-tabs" onClickCapture={onGuard}>
-      <TabBar base={`${base}`} active="home" dark unread={unread} />
+      <TabBar base={`${base}`} active={null} portal={{ features }} dark unread={unread} />
     </div>
   )
 }

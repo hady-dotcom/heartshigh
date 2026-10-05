@@ -16,6 +16,17 @@ export function isProduction(env: Env = process.env) {
   return env.NODE_ENV === 'production'
 }
 
+/** Railway preview (and HEARTS_ENV=preview). Not live people — share boxes may keep leftover @hearts.test rows. */
+export function isPreviewEnvironment(env: Env = process.env) {
+  const named = (env.HEARTS_ENV || env.RAILWAY_ENVIRONMENT || env.RAILWAY_ENVIRONMENT_NAME || '').trim().toLowerCase()
+  return named === 'preview'
+}
+
+/** Production must refuse demo accounts. Preview may boot with them so a share redeploy is not blocked by test joins. */
+export function demoAccountsBlockBoot(env: Env = process.env) {
+  return !isPreviewEnvironment(env)
+}
+
 /** True while `next build` is evaluating the config, so the image can be built before the real secrets exist. */
 export function isBuildPhase(env: Env = process.env) {
   return env.NEXT_PHASE === 'phase-production-build' || env.HEARTS_BUILD === '1'
@@ -119,6 +130,29 @@ export function serverOrigins(env: Env = process.env) {
 
 export function serverURL(env: Env = process.env) {
   return serverOrigins(env)[0]
+}
+
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1'])
+
+export function isLocalHostname(hostname: string) {
+  const host = hostname.replace(/^\[|\]$/g, '').split('%')[0].toLowerCase()
+  return LOCAL_HOSTS.has(host) || host.endsWith('.localhost')
+}
+
+/** Public site origin for links people will send. Never localhost or 127.0.0.1. */
+export function publicBaseURL(env: Env = process.env, requestOrigin?: string | null) {
+  for (const raw of [env.NEXT_PUBLIC_SITE_URL, requestOrigin]) {
+    const value = (raw || '').trim()
+    if (!value) continue
+    try {
+      const url = new URL(value.includes('://') ? value : `https://${value}`)
+      if (isLocalHostname(url.hostname)) continue
+      return url.origin
+    } catch {
+      continue
+    }
+  }
+  return ''
 }
 
 /** Production cookies are always Secure. A variable cannot turn that off. */

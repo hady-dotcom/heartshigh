@@ -1,4 +1,4 @@
-// Seed data for the opening ("Shine and dust"): Leon's ten scales, the Jibril lanes, and the six scenes.
+// Seed data for the opening ("Shine and dust"): Leon's ten scales, the Jibril lanes, and the scenes.
 // Copy comes from ux-first-run.md and the build spec (sections 2.1, 2.7, 2.8). Plain module, no path aliases,
 // so the seed, the server, the browser and the tests can all import it.
 import type { LaneDef, ScaleDef, ScaleKey, SceneDef } from './heart'
@@ -39,10 +39,26 @@ export const LANES: (LaneDef & { seriesNote: string })[] = [
   { key: 'guarding-gaze', title: 'Guarding the gaze', scale: 'desire', fit: 'weak', order: 10, clauses: c([[31, 1], [29, 2], [17, 2]]), excludeClauses: [], optInOnly: true, seriesNote: 'Vol 3 ikhlas 326–350; Vol 2 tawba 105–208; Vol 1 fasting 21–23. Opt-in only. Unit 34 (marriage seat) is not a back door.' },
 ]
 
+/** Clean lane blurbs for the Lanes screen. Never a raw transcript line. */
+export const LANE_BLURBS: Record<string, string> = {
+  trust: 'Resting the heart with Allah when the week feels heavy.',
+  company: 'Finding people who lift you, and being that person for others.',
+  lightness: 'Holding wealth lightly, and giving without fear.',
+  quiet: 'Softening pride so the heart can hear again.',
+  talking: 'Speaking to Allah in the ordinary hours, not only in crisis.',
+  habits: 'Small steady acts that hold a life together.',
+  patience: 'Staying kind when anger wants the last word.',
+  gifts: 'Noticing what is already in your hands.',
+  mercy: 'Meeting people at their wounds, as you hope to be met.',
+}
+
 /** The pseudo-lane behind 'Just show me something'. Never scored, never shown. */
 export const DEFAULT_LANE = 'default'
 
 const n = (scale: ScaleKey, delta: -1 | 0 | 1) => ({ scale, delta })
+
+/** The opening's own heading. Not a placing option and not a seed answer. */
+export const OPENING_HEADING = 'A calm place to start'
 
 export const SCENES: SceneDef[] = [
   {
@@ -118,8 +134,22 @@ export const SCENES: SceneDef[] = [
     ],
   },
   {
-    key: 'doors',
+    key: 'account',
     order: 6,
+    layout: 'bubbles',
+    caption: 'When you think about who you **answer to**, who comes to mind first?',
+    subline: 'Go with the first name that arrives. There is no right one.',
+    adaptedFrom: 'Placing question 1. A different pull from the scenes: accountability, not a situation.',
+    options: [
+      { key: 'lord', label: 'My Lord', replyPill: 'Straight to the One who sees.', nudges: [n('faith', 1)] },
+      { key: 'prophet', label: 'The Prophet', replyPill: 'A beautiful first thought.', nudges: [n('faith', 1), n('discipline', 1)] },
+      { key: 'people', label: 'The people I look after', replyPill: 'The ones who eat with you.', nudges: [n('belonging', 1), n('compassion', 1)] },
+      { key: 'unsure', label: 'I am not sure yet', replyPill: 'That is a fair place to stand.', nudges: [] },
+    ],
+  },
+  {
+    key: 'doors',
+    order: 7,
     layout: 'doorsCarousel',
     caption: "Six **doors**. Which one's calling you?",
     subline: 'No wrong door.',

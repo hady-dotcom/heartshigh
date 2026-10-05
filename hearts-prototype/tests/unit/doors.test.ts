@@ -43,6 +43,7 @@ test('a talk’s door comes from its clause', () => {
   assert.equal(doorNumberOfClause(null), null)
   assert.equal(doorCode(3), 'W3')
   assert.equal(doorLabel(DOORS[2]), 'W3 · About Islam')
+  assert.equal(doorLabel(DOORS[15]), 'W16 · Ihsan: Worship as though you see Him')
 })
 
 test('a door is read as W3, w3, Door 3 or 3, and nothing out of range', () => {
@@ -90,5 +91,5 @@ test('the first course follows the starting door, not only the exact clause', ()
   ]
   assert.equal(recommendLesson(3, cuts, [1, 2, 3]), 2, 'clause 3 and clause 7 share door 2')
   assert.equal(recommendLesson(22, cuts, [1, 2, 3]), 3)
-  assert.equal(recommendLesson(30, cuts, [1, 2, 3]), 1, 'nothing in door 16 falls back to the first lesson')
+  assert.equal(recommendLesson(30, cuts, [1, 2, 3]), null, 'nothing in door 16 stays empty rather than falling back')
 })

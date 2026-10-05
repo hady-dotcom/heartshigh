@@ -35,9 +35,19 @@ export function doorCode(number: number) {
   return `W${number}`
 }
 
+/** Capitalise the first letter after a colon, so a door reads "Ihsan: Worship as though you see Him". */
+export function capitalAfterColon(value: string) {
+  return value.replace(/:\s*\p{Ll}/gu, (match) => `${match.slice(0, -1)}${match.slice(-1).toUpperCase()}`)
+}
+
 /** "W3 · About Islam", the label admins see first. */
 export function doorLabel(door: Pick<Door, 'number' | 'title'>) {
-  return `${doorCode(door.number)} · ${door.title}`
+  return `${doorCode(door.number)} · ${capitalAfterColon(door.title)}`
+}
+
+/** "Door 16 · Ihsan: Worship as though you see Him". Live desks never show the W-code. */
+export function doorSpokenLabel(door: Pick<Door, 'number' | 'title'>) {
+  return `Door ${door.number} · ${capitalAfterColon(door.title)}`
 }
 
 export function doorOfClause(clause: number | null | undefined, doors: Door[] = DOORS): Door | null {

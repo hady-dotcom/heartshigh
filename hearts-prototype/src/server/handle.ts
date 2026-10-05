@@ -7,11 +7,16 @@ import { recordShortBrowse } from './browse'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { clipWords } from '@/lib/sentences'
 import { extractWithFallback, llmStatus } from '@/lib/llm'
-import { defaultPlanName, flattenSlots, plural, splitEvenly, studyDates } from '@/lib/schedule'
+import { defaultPlanName, flattenSlots, planAcrossDays, plural, studyDates } from '@/lib/schedule'
+import { sortParts } from '@/lib/part-order'
+import { minutesADay } from '@/lib/study-plan'
+import { partTitle } from '@/lib/talk-title'
+import { planKeepPath, planNotify, planToast } from '@/lib/week'
 import { clockEnabled, setTestNow } from '@/lib/clock'
 import { authCookie } from '@/lib/cookies'
 import { logError } from '@/lib/log'
-import { clientIp, hit, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
+import { gateAuth, tooManyAnswers } from '@/lib/auth-gate'
+import { clientIp, hit, hitAnswer, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
 import { slugProblem } from '@/lib/text-safety'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
 import { ingestYoutubeUrl } from '@/lib/youtube'
@@ -29,14 +34,41 @@ import { finishedBySchedule } from '@/lib/on-time'
 import { showUncheckedTalks, tierVisible } from './opening'
 import { tierSourceText } from './tier-source'
 import { handleCircle } from './circle'
+import { handleSafetyAction } from './safety-actions'
+import { saveOwnedMedia } from './media'
+import { afterLearnerWords, circleMutedUntil } from './safety'
+import { hitShared, UPLOAD_PER_HOUR, HOUR_MS, uploadKey } from '@/lib/rate-store'
+import { SLOW_DOWN } from '@/lib/safety'
 import { randomUUID } from 'node:crypto'
 import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourseIds, type Session, type SessionUser } from './context'
 import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCookie, wrote } from './viewas'
 import { isTimeZone } from '@/lib/zone-time'
-import { saveOwnedMedia } from './media'
+import { parseLengthInput } from '@/lib/length'
+import { screenAnswerSafe } from '@/lib/answer-moderation'
+import { FEATURE_UNAVAILABLE, featuresFromForm } from '@/lib/features'
+import { adoptLibraryCourses, loadPortalById, refuseFeature } from './features'
+import { ensurePackAdopted } from './pack-adopt'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
+
+async function recordExperimentQuietly(payload: Payload, user: SessionUser, event: string, props?: Record<string, unknown>) {
+  try {
+    const { recordLearnerEvent } = await import('./experiments')
+    await recordLearnerEvent(payload, { user, event, props, portalId: portalIdOf(user) })
+  } catch {
+    // Tracking must never break a save.
+  }
+}
+
+async function recordFunnelQuietly(payload: Payload, user: SessionUser, step: string) {
+  try {
+    const { recordFunnel } = await import('./insights')
+    await recordFunnel(payload, { user, portalId: portalIdOf(user), step })
+  } catch {
+    // Tracking must never break a save.
+  }
+}
 
 function redirectTo(req: Request, path: string, error?: string, notice?: string) {
   const host = req.headers.get('x-forwarded-host') || req.headers.get('host')
@@ -80,12 +112,31 @@ function text(form: FormData, key: string) {
   return String(form.get(key) || '').trim()
 }
 
+function safeNext(next: string) {
+  const value = (next || '/').trim() || '/'
+  if (!value.startsWith('/') || value.startsWith('//')) return '/'
+  return value
+}
+
+/** Sign-in from the front door used to land back on the door. `/` means the person's own home. */
+async function landingPath(payload: Awaited<ReturnType<typeof getSession>>['payload'], user: SessionUser, next: string) {
+  const wanted = safeNext(next)
+  if (wanted !== '/') return wanted
+  if (user.role === 'master') return '/master'
+  const portalId = portalIdOf(user)
+  if (!portalId) return '/'
+  const doc = await payload.findByID({ collection: 'portals', id: portalId, overrideAccess: true, depth: 0 }).catch(() => null)
+  const slug = (doc as { slug?: string } | null)?.slug
+  if (!slug) return '/'
+  return user.role === 'learner' ? `/p/${slug}` : `/p/${slug}/admin`
+}
+
 async function loginResponse(req: Request, email: string, password: string, next: string) {
   const { payload } = await getSession()
   try {
     const result = await payload.login({ collection: 'users', data: { email, password } })
-    if (!result.token) return redirectTo(req, '/login', 'That email or password did not match.')
-    const response = redirectTo(req, next)
+    if (!result.token || !result.user) return redirectTo(req, '/login', 'That email or password did not match.')
+    const response = redirectTo(req, await landingPath(payload, result.user as SessionUser, next))
     response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, result.token, 7200))
     return response
   } catch {
@@ -119,6 +170,22 @@ async function actingPortal(payload: Awaited<ReturnType<typeof getSession>>['pay
   const found = await loadPortal(payload, slug)
   if (!found) return { error: 'That portal could not be found.' as const }
   return { portal: { id: found.id, slug: found.slug } }
+}
+
+async function featureBlock(
+  payload: Awaited<ReturnType<typeof getSession>>['payload'],
+  user: SessionUser,
+  form: FormData,
+  key: 'gather' | 'planner' | 'compass' | 'circle' | 'feedback' | 'workbook',
+) {
+  let id = portalIdOf(user)
+  if (user.role === 'master' && text(form, 'portalSlug')) {
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return acting.error
+    id = acting.portal.id
+  }
+  if (!id) return null
+  return refuseFeature(await loadPortalById(payload, id), key)
 }
 
 async function courseOfLesson(payload: Awaited<ReturnType<typeof getSession>>['payload'], lessonId: number) {
@@ -181,14 +248,7 @@ async function notify(payload: Payload, data: { user: number; portal?: number | 
   })
 }
 
-async function saveUpload(
-  payload: Payload,
-  file: File,
-  portal: number | null,
-  fallbackType: string,
-  owner?: number | null,
-  purpose: 'answer' | 'feedback' = 'answer',
-) {
+async function saveUpload(payload: Payload, file: File, portal: number | null, fallbackType: string, owner?: number | null, purpose: 'answer' | 'feedback' = 'answer') {
   return saveOwnedMedia(payload, file, { portal, owner, purpose, fallbackType, alt: file.name })
 }
 
@@ -215,23 +275,16 @@ async function orderedLessons(payload: Awaited<ReturnType<typeof getSession>>['p
     where: { course: { in: courseIds } },
     sort: 'order',
   })
-  const unitIds = units.docs.map((doc) => doc.id)
-  if (!unitIds.length) return []
   const lessons = await payload.find({
     collection: 'lessons',
     overrideAccess: true,
     depth: 0,
     limit: 800,
-    where: { unit: { in: unitIds } },
+    where: { course: { in: courseIds } },
     sort: 'order',
   })
   const unitOrder = new Map(units.docs.map((doc, index) => [doc.id, index]))
-  return [...lessons.docs].sort((a, b) => {
-    const left = unitOrder.get(idOf((a as { unit?: unknown }).unit) || 0) ?? 0
-    const right = unitOrder.get(idOf((b as { unit?: unknown }).unit) || 0) ?? 0
-    if (left !== right) return left - right
-    return ((a as { order?: number }).order || 0) - ((b as { order?: number }).order || 0)
-  }) as { id: number; title?: string; course?: unknown }[]
+  return sortParts(lessons.docs as { id: number; title?: string; course?: unknown; order?: number | null; unit?: unknown }[], (row) => unitOrder.get(idOf(row.unit) || 0) ?? 0)
 }
 
 export type AnswerInput = {
@@ -324,10 +377,16 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
     if (video instanceof File && video.size > 0) {
       videoId = await saveUpload(payload, video, portal, 'video/mp4', user.id, 'answer')
     }
+    if (imageId || audioId || videoId) {
+      const limited = await hitShared(payload, uploadKey(user.id), UPLOAD_PER_HOUR, HOUR_MS)
+      if (!limited.allowed) return fail(429, SLOW_DOWN)
+    }
     const keepPrivate = Boolean(input.keepPrivate)
     const shareWithTeacher = Boolean(input.shareWithTeacher) || Boolean(point.showImam)
     // Other learners read an answer only when its author opted in to sharing with learners and chose it here.
-    const shareWithLearners = !keepPrivate && Boolean(input.shareWithLearners) && Boolean(user.shareWithLearners)
+    let shareWithLearners = !keepPrivate && Boolean(input.shareWithLearners) && Boolean(user.shareWithLearners)
+    if (shareWithLearners && (await circleMutedUntil(payload, user.id))) shareWithLearners = false
+    const screened = await screenAnswerSafe([body, choice].filter(Boolean).join(' '))
     const correct = point.kind === 'multiple_choice' && point.correctOption ? choice === point.correctOption : null
     const extra = {
       answeredAt: input.answeredAt || now().toISOString(),
@@ -337,6 +396,8 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
       sourceLevel: (input.cutId ? input.level || 'appetiser' : 'talk') as 'hors' | 'appetiser' | 'talk',
       pendingSync: Boolean(input.pendingSync),
       correct: correct ?? undefined,
+      swarmHidden: !screened.show,
+      swarmReason: screened.show ? undefined : screened.reason,
     }
     const earlier = await payload.find({ collection: 'answers', overrideAccess: true, depth: 0, limit: 1, where: { and: [{ point: { equals: pointId } }, { user: { equals: user.id } }] } })
     if (earlier.docs.length) {
@@ -350,6 +411,8 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
       if (entry.docs[0]) {
         await payload.update({ collection: 'workbook-entries', id: entry.docs[0].id, overrideAccess: true, data: { body: body || choice, consent: shareWithTeacher, ...(imageId ? { image: imageId } : {}) } })
       }
+      const crisis = Boolean(point.crisisOption && (body === point.crisisOption || choice === point.crisisOption))
+      await afterLearnerWords(payload, user, portal, body || choice, { type: 'answer', id: earlier.docs[0].id }, crisis)
       return { ok: true as const, answerId: earlier.docs[0].id, updated: true, keepPrivate, sharedWithLearners: shareWithLearners, correct }
     }
     const answer = await payload.create({
@@ -386,7 +449,10 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
         portal,
       },
     })
+    const crisis = Boolean(point.crisisOption && (body === point.crisisOption || choice === point.crisisOption))
+    await afterLearnerWords(payload, user, portal, body || choice, { type: 'answer', id: answer.id }, crisis)
     if (shareWithTeacher) await notifyTeachers(payload, user, portal, 'A learner shared an answer', `${user.name || 'A learner'} shared an answer with you.`)
+    void recordExperimentQuietly(payload, user, 'question_answered', { point: pointId, lesson: lessonId || 0 })
     const followers = await payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 20, where: { contingent: { equals: pointId } } })
     for (const follower of followers.docs) {
       await notify(payload, {
@@ -449,7 +515,36 @@ async function handleForm(req: Request, form: FormData, session: Session) {
 
   if (action === 'login') {
     const next = text(form, 'next') || '/'
-    return loginResponse(req, text(form, 'email').toLowerCase(), text(form, 'password'), next)
+    const email = text(form, 'email').toLowerCase()
+    const blocked = await gateAuth(req, form, 'login', email, '/login')
+    if (blocked) return blocked
+    return loginResponse(req, email, text(form, 'password'), next)
+  }
+
+  if (action === 'forgot-password') {
+    const email = text(form, 'email').toLowerCase()
+    const blocked = await gateAuth(req, form, 'forgot', email, '/forgot')
+    if (blocked) return blocked
+    try {
+      if (email) await payload.forgotPassword({ collection: 'users', data: { email } })
+    } catch {
+      // Same notice either way, so a guesser cannot tell whether the email is on the books.
+    }
+    return redirectTo(req, '/forgot', undefined, 'If that email has an account, we have sent a reset link.')
+  }
+
+  if (action === 'reset-password') {
+    const token = text(form, 'token')
+    const password = text(form, 'password')
+    const blocked = await gateAuth(req, form, 'reset', '', `/reset${token ? `?token=${encodeURIComponent(token)}` : ''}`)
+    if (blocked) return blocked
+    if (!token || password.length < 8) return redirectTo(req, '/reset', 'Use the link from your email, and at least 8 characters for the password.')
+    try {
+      await payload.resetPassword({ collection: 'users', data: { token, password }, overrideAccess: true })
+    } catch {
+      return redirectTo(req, '/reset', 'That reset link is not valid any more. Ask for a new one.')
+    }
+    return redirectTo(req, '/login', undefined, 'Your password is updated. Sign in with the new one.')
   }
 
   if (action === 'logout') {
@@ -465,6 +560,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const password = text(form, 'password')
     if (!name || !email || !password) return redirectTo(req, `/join?code=${encodeURIComponent(codeValue)}`, 'Name, email and a password are all needed.')
     if (password.length < 8) return redirectTo(req, `/join?code=${encodeURIComponent(codeValue)}`, 'Use at least 8 characters for the password.')
+    const joinBack = `/join?code=${encodeURIComponent(codeValue)}`
+    const blocked = await gateAuth(req, form, 'join', email, joinBack)
+    if (blocked) return blocked
     const keys = joinFailKeys(clientIp(req), codeValue)
     if (!peek(keys.pair, JOIN_FAILS_PER_CODE, JOIN_WINDOW_MS).allowed || (keys.address && !peek(keys.address, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS).allowed)) return tooManyJoins()
     const found = await payload.find({
@@ -492,6 +590,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (existing.docs.length) return redirectTo(req, `/login?next=/p/${(portalDoc as { slug?: string }).slug || ''}`, 'That email already has an account. Sign in instead.')
     const slug = (portalDoc as { slug?: string }).slug || ''
     const packIds = (access.packs || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
+    for (const packId of packIds) await ensurePackAdopted(payload, portal, packId)
     const courseList = await coursesInPacks(payload, packIds)
     const codeRole = access.role || 'learner'
     const usesBefore = access.uses || 0
@@ -502,8 +601,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       data: { uses: usesBefore + 1 },
     })
     if (!claimed.docs.length) return redirectTo(req, '/join', 'That access code was just used by someone else. Please try again.')
+    let createdId = 0
     try {
-      await payload.create({
+      const created = await payload.create({
         collection: 'users',
         overrideAccess: true,
         data: {
@@ -518,15 +618,26 @@ async function handleForm(req: Request, form: FormData, session: Session) {
           onboarded: codeRole !== 'learner' && codeRole !== 'parent',
         },
       })
+      createdId = created.id
     } catch (error) {
       await payload.update({ collection: 'access-codes', id: access.id, overrideAccess: true, data: { uses: usesBefore } })
       throw error
     }
-    const next = codeRole === 'learner' || codeRole === 'parent' ? `/p/${slug}/welcome` : `/p/${slug}/admin`
+    const guest = text(form, 'gatherGuest')
+    if (guest && createdId) {
+      const { claimGuestRsvp } = await import('./gather')
+      await claimGuestRsvp(payload, guest, createdId)
+    }
+    const after = text(form, 'after')
+    const gatherNext = after.startsWith(`/p/${slug}/`) ? after : ''
+    const next = gatherNext || (codeRole === 'learner' || codeRole === 'parent' ? `/p/${slug}/welcome` : `/p/${slug}/admin`)
     return loginResponse(req, email, password, next)
   }
 
   if (!user) return redirectTo(req, '/login', 'Please sign in first.')
+
+  const safety = await handleSafetyAction(action, form, payload, user, req, (path, error, notice) => redirectTo(req, path, error, notice))
+  if (safety) return safety
 
   if (action === 'clock') {
     if (!clockEnabled()) return redirectTo(req, text(form, 'next') || '/', 'The test clock is off.')
@@ -557,7 +668,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (slugIssue) return redirectTo(req, '/master', slugIssue)
     const clash = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: slug } } })
     if (clash.docs.length) return redirectTo(req, '/master', 'That address is already in use.')
-    await payload.create({
+    const features = form.get('featuresForm') === 'yes' ? featuresFromForm(form) : undefined
+    const created = await payload.create({
       collection: 'portals',
       overrideAccess: true,
       data: {
@@ -568,9 +680,27 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         colour: text(form, 'colour') || '#1f4d3a',
         watchHistoryOptIn: false,
         wizardDone: true,
+        ...(features ? { features } : {}),
       },
     })
-    return redirectTo(req, '/master', undefined, `${name} is open.`)
+    const courseIds = form.getAll('course').map((value) => Number(value)).filter(Boolean)
+    if (courseIds.length) await adoptLibraryCourses(payload, created.id, courseIds)
+    return redirectTo(req, text(form, 'next') || '/master', undefined, `${name} is open.`)
+  }
+
+  if (action === 'portal-features') {
+    if (user.role !== 'master') return redirectTo(req, '/', 'Only the master desk can change portal features.')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, text(form, 'next') || '/master', acting.error)
+    const data: Record<string, unknown> = {}
+    if (form.has('name') && text(form, 'name')) data.name = text(form, 'name')
+    if (form.has('welcome')) data.welcome = text(form, 'welcome')
+    if (form.has('kind') && ['mosque', 'church', 'synagogue', 'other'].includes(text(form, 'kind'))) data.kind = text(form, 'kind')
+    if (form.get('featuresForm') === 'yes') data.features = featuresFromForm(form)
+    await payload.update({ collection: 'portals', id: acting.portal.id, overrideAccess: true, data })
+    const courseIds = form.getAll('course').map((value) => Number(value)).filter(Boolean)
+    if (form.has('course') || form.get('featuresForm') === 'yes') await adoptLibraryCourses(payload, acting.portal.id, courseIds, true)
+    return redirectTo(req, text(form, 'next') || `/master/portals/${acting.portal.slug}`, undefined, 'Features saved. They are live now.')
   }
 
   if (action === 'create-pack') {
@@ -616,6 +746,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (days !== null && (!Number.isInteger(days) || days < 1 || days > 366)) return redirectTo(req, text(form, 'next') || '/master', 'Expiry must be 1 to 366 days, or empty for none.')
     const expiresAt = days ? new Date(now().getTime() + days * 86_400_000).toISOString() : null
     if (!(await packUsable(payload, user, acting.portal.id, packId))) return redirectTo(req, text(form, 'next') || '/master', 'That course pack is not available in this portal.')
+    await ensurePackAdopted(payload, acting.portal.id, packId)
     const linkedId = Number(text(form, 'linkedTeacherCode') || 0)
     if (linkedId) {
       const teacherCode = await findDoc(payload, 'access-codes', linkedId)
@@ -697,6 +828,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       data: { title: text(form, 'unit') || 'Unit 1', course: course.id, order: 1 },
     })
     const lessonTitle = text(form, 'lesson') || title
+    const length = parseLengthInput(text(form, 'duration'))
+    if (!length.ok) return redirectTo(req, next, length.message)
     await payload.create({
       collection: 'lessons',
       overrideAccess: true,
@@ -709,7 +842,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         order: 1,
         speaker: text(form, 'speaker'),
         transcriptSource: 'none',
-        durationSeconds: Number(text(form, 'duration') || 0) || undefined,
+        durationSeconds: length.seconds,
       },
     })
     const packId = Number(text(form, 'pack') || 0)
@@ -1032,6 +1165,28 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, text(form, 'next') || '/', undefined, status === 'approved' ? 'Cut approved. Learners can now see it in their feed.' : status === 'rejected' ? 'Cut set aside.' : 'Cut saved.')
   }
 
+  if (action === 'framing-override') {
+    if (user.role !== 'master') return redirectTo(req, '/', 'Only the master desk can override framing.')
+    const cut = await findDoc(payload, 'cuts', Number(text(form, 'cut')))
+    if (!cut) return redirectTo(req, text(form, 'next') || '/', 'That clip could not be found.')
+    const lesson = await findDoc(payload, 'lessons', idOf(cut.lesson) || 0)
+    const youtubeId = String(lesson?.youtubeId || '')
+    if (!youtubeId) return redirectTo(req, text(form, 'next') || '/', 'That clip has no YouTube id.')
+    const { isFramingMode } = await import('@/lib/framing/validate')
+    const { trackForClip } = await import('@/lib/framing/store')
+    const { fallbackTrack, parseTrack, validateTrack } = await import('@/lib/framing/validate')
+    const mode = text(form, 'mode')
+    if (!isFramingMode(mode)) return redirectTo(req, text(form, 'next') || '/', 'Mode must be A, B, C, D, E or F.')
+    const index = Number(text(form, 'index'))
+    const existing = parseTrack(cut.framingTrack) || trackForClip(youtubeId, Number(cut.start), Number(cut.end), lesson?.framingTrack) || fallbackTrack(youtubeId, Number(cut.start), Number(cut.end))
+    if (!existing.segments[index]) return redirectTo(req, text(form, 'next') || '/', 'That segment is not on the track.')
+    const next = { ...existing, segments: existing.segments.map((row, at) => (at === index ? { ...row, mode } : row)) }
+    const problems = validateTrack(next)
+    if (problems.length) return redirectTo(req, text(form, 'next') || '/', problems[0].message)
+    await payload.update({ collection: 'cuts', id: cut.id, overrideAccess: true, data: { framingTrack: next } as never })
+    return redirectTo(req, text(form, 'next') || '/', undefined, `Segment now uses ${mode}.`)
+  }
+
   if (action === 'ladder-status') {
     if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot review clips.')
     const item = await findDoc(payload, 'ladder-items', Number(text(form, 'item')))
@@ -1099,6 +1254,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   }
 
   if (action === 'answer') {
+    const limited = hitAnswer(user.id, clientIp(req))
+    if (!limited.allowed) return tooManyAnswers(limited.retryAfterSec, false)
     const result = await saveAnswer(payload, user, {
       pointId: Number(text(form, 'point')),
       body: text(form, 'body'),
@@ -1153,9 +1310,11 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   if (action === 'schedule') {
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
+    if (refuseFeature(await loadPortalById(payload, acting.portal.id), 'planner')) {
+      return redirectTo(req, text(form, 'next') || '/', FEATURE_UNAVAILABLE)
+    }
     const portal = acting.portal.id
-    const name = text(form, 'name').slice(0, 80) || defaultPlanName(now())
-    const targetType = text(form, 'targetType') === 'pack' ? 'pack' : 'course'
+    const targetType: 'course' | 'pack' = text(form, 'targetType') === 'pack' ? 'pack' : 'course'
     let courseIds: number[] = []
     if (targetType === 'pack') {
       const pack = await findDoc(payload, 'packs', Number(text(form, 'pack')))
@@ -1169,13 +1328,20 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (courseIds.some((id) => !visible.has(id))) return redirectTo(req, text(form, 'next') || '/', 'That course is not in your portal.')
     const lessons = await orderedLessons(payload, courseIds)
     if (!lessons.length) return redirectTo(req, text(form, 'next') || '/', 'There are no lessons to split yet.')
+    const courseTitle = targetType === 'course' ? String((await findDoc(payload, 'courses', courseIds[0]))?.title || '') : ''
+    const name = text(form, 'name').slice(0, 80) || defaultPlanName(now())
     let dates: string[]
+    const weekdays = form.getAll('weekday').map((value) => Number(value))
     try {
-      dates = studyDates(text(form, 'start'), text(form, 'end'), form.getAll('weekday').map((value) => Number(value)))
+      dates = studyDates(text(form, 'start'), text(form, 'end'), weekdays)
     } catch (error) {
       return redirectTo(req, text(form, 'next') || '/', error instanceof Error ? error.message : 'Those dates did not work.')
     }
-    const slots = flattenSlots(splitEvenly(lessons.map((lesson) => ({ id: lesson.id, title: lesson.title || 'Sitting' })), dates))
+    const minutesRaw = text(form, 'minutes')
+    const minutes = minutesRaw ? minutesADay(minutesRaw) : 20
+    if (!minutes) return redirectTo(req, text(form, 'next') || '/', 'Choose 10, 20, 30 or 45 minutes a day.')
+    const planned = planAcrossDays(lessons.map((lesson) => ({ id: lesson.id, title: partTitle(lesson, courseTitle) })), dates)
+    const slots = flattenSlots(planned.slots)
     const learnerIds = [...new Set(form.getAll('learner').map((value) => Number(value)).filter(Boolean))]
     if (learnerIds.length && user.role === 'learner') return redirectTo(req, text(form, 'next') || '/', 'You can plan your own days. A teacher plans for others.')
     if (learnerIds.length) {
@@ -1184,28 +1350,70 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         return redirectTo(req, text(form, 'next') || '/', 'One of those learners is not in this portal.')
       }
     }
-    await payload.create({
-      collection: 'schedules',
-      overrideAccess: true,
-      data: {
+    const startDate = text(form, 'start') || slots[0]?.date || dates[0]
+    const endDate = text(form, 'end') || slots[slots.length - 1]?.date || dates[dates.length - 1]
+    const targets = learnerIds.length ? learnerIds : [user.id]
+    const staff = user.role === 'teacher' || user.role === 'portal-admin' || user.role === 'master'
+    const existing = await payload.find({ collection: 'schedules', overrideAccess: true, depth: 0, limit: 200, where: { portal: { equals: portal } } })
+    const ownerIds = [...new Set(existing.docs.map((row) => idOf(row.owner)).filter((id): id is number => Boolean(id)))]
+    const owners = ownerIds.length ? await payload.find({ collection: 'users', overrideAccess: true, depth: 0, limit: ownerIds.length, where: { id: { in: ownerIds } } }) : { docs: [] as { id: number; role?: string }[] }
+    const ownerRole = (id: number | null) => owners.docs.find((person) => person.id === id)?.role
+    const ownerIsStaff = (id: number | null) => {
+      const role = ownerRole(id)
+      return role === 'teacher' || role === 'portal-admin' || role === 'master'
+    }
+    const matchesCourse = (plan: { course?: unknown; pack?: unknown; owner?: unknown; learners?: unknown }) => {
+      const courseMatch = targetType === 'course' ? idOf(plan.course) === courseIds[0] : idOf(plan.pack) === Number(text(form, 'pack'))
+      return Boolean(courseMatch)
+    }
+    const covers = (plan: { owner?: unknown; learners?: unknown }, learnerId: number) => {
+      const learners = (plan.learners as unknown[]) || []
+      return idOf(plan.owner) === learnerId || learners.some((item) => idOf(item) === learnerId)
+    }
+    const usedDates = [...new Set(slots.map((slot) => slot.date).filter(Boolean))]
+    const keepForm = (path: string) => planKeepPath(path, {
+      course: courseIds[0],
+      start: text(form, 'start'),
+      end: text(form, 'end'),
+      weekdays,
+      minutes,
+      learners: learnerIds,
+    })
+    for (const learnerId of targets) {
+      const matching = existing.docs.filter((plan) => matchesCourse(plan) && covers(plan, learnerId))
+      const teacherPlan = matching.find((plan) => ownerIsStaff(idOf(plan.owner)) && idOf(plan.owner) !== learnerId)
+      const selfPlan = matching.find((plan) => !teacherPlan || plan.id !== teacherPlan.id)
+      if (!staff && teacherPlan) return redirectTo(req, keepForm(text(form, 'next') || '/'), 'Your teacher has set this plan. You can still watch at your own pace.')
+      if (staff && teacherPlan && idOf(teacherPlan.owner) !== user.id) return redirectTo(req, keepForm(text(form, 'next') || '/'), 'This plan has been made by another teacher.')
+      const data = {
         name,
         owner: user.id,
-        learners: learnerIds.length ? learnerIds : [user.id],
+        learners: [learnerId],
         targetType,
         course: targetType === 'course' ? courseIds[0] : undefined,
         pack: targetType === 'pack' ? Number(text(form, 'pack')) : undefined,
-        startDate: text(form, 'start'),
-        endDate: text(form, 'end'),
-        weekdays: form.getAll('weekday').map((value) => Number(value)),
+        startDate,
+        endDate,
+        weekdays,
         slots,
+        minutesPerDay: minutes,
         portal,
-      },
-    })
-    for (const learnerId of learnerIds) {
-      if (learnerId === user.id) continue
-      await notify(payload, { user: learnerId, portal, title: 'A study plan was made for you', body: `${name}: ${plural(slots.length, 'sitting')} between ${text(form, 'start')} and ${text(form, 'end')}.`, href: `/p/${acting.portal.slug}/me/plan` })
+      }
+      const keep = staff ? teacherPlan || selfPlan : selfPlan
+      if (keep) await payload.update({ collection: 'schedules', id: keep.id, overrideAccess: true, data })
+      else await payload.create({ collection: 'schedules', overrideAccess: true, data })
+      for (const extra of matching) {
+        if (keep && extra.id === keep.id) continue
+        if (staff || idOf(extra.owner) === user.id) await payload.delete({ collection: 'schedules', id: extra.id, overrideAccess: true })
+      }
+      if (staff && learnerId !== user.id) {
+        await notify(payload, { user: learnerId, portal, title: 'A study plan was made for you', body: planNotify(slots.length, usedDates), href: `/p/${acting.portal.slug}/week` })
+      }
     }
-    return redirectTo(req, text(form, 'next') || '/', undefined, `${slots.length === 1 ? 'The 1 sitting is' : `The ${slots.length} sittings are`} spread across ${plural(dates.length, 'study day')}. You can still watch at your own pace.`)
+    void recordExperimentQuietly(payload, user, 'plan_created', { name })
+    void recordFunnelQuietly(payload, user, 'study_plan_saved')
+    const toast = planToast(slots.length, usedDates)
+    return redirectTo(req, planKeepPath(text(form, 'next') || '/', { course: courseIds[0], start: text(form, 'start'), end: text(form, 'end'), weekdays, minutes }), undefined, toast)
   }
 
   if (action === 'rsvp' || action === 'checkin') {
@@ -1213,6 +1421,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const eventId = Number(text(form, 'event'))
     const event = await findDoc(payload, 'events', eventId)
     if (!event || (user.role !== 'master' && idOf(event.portal) !== portal)) return redirectTo(req, '/', 'That night is not in your portal.')
+    if (refuseFeature(await loadPortalById(payload, idOf(event.portal) || portal || 0), 'gather')) {
+      return redirectTo(req, text(form, 'next') || '/', FEATURE_UNAVAILABLE)
+    }
     const eventPortal = idOf(event.portal)
     if (action === 'rsvp') {
       const existing = await payload.find({
@@ -1277,6 +1488,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       return redirectTo(req, '/', 'That workbook is not in your portal.')
     }
     if (!entry.consent) return redirectTo(req, text(form, 'next') || '/', 'The learner has kept this entry to themselves, so it cannot be replied to.')
+    if (refuseFeature(await loadPortalById(payload, idOf(entry.portal) || portalIdOf(user) || 0), 'feedback')) {
+      return redirectTo(req, text(form, 'next') || '/', FEATURE_UNAVAILABLE)
+    }
     await payload.update({
       collection: 'workbook-entries',
       id: entryId,
@@ -1378,14 +1592,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         data: { user: user.id, lesson: lessonId, portal: portal || undefined, percent, onTime, sourceLevel: 'talk' },
       })
     }
-    const fullUser = await payload.findByID({ collection: 'users', id: user.id, overrideAccess: true, depth: 0 })
-    if ((fullUser as { shareWatch?: boolean }).shareWatch) {
-      await payload.create({
-        collection: 'watch-sessions',
-        overrideAccess: true,
-        data: { user: user.id, lesson: lessonId, seconds: Number(text(form, 'seconds') || 0), portal },
-      })
-    }
+    const watched = duration > 0 ? Math.min(seconds, duration) : Math.min(seconds, 3600)
+    const { recordPersonalWatch } = await import('./missions')
+    await recordPersonalWatch(payload, { userId: user.id, lessonId, seconds: watched, portalId: portal })
     const transcript = (lesson as { transcript?: string }).transcript || ''
     if (transcript) {
       const already = await payload.find({
@@ -1399,6 +1608,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         await giveHarvest(payload, user.id, lessonId, transcript, portal || undefined, { speaker: place?.speaker || undefined, door: place?.door || undefined, surface: 'talk', gatheredAt: now().toISOString() })
       }
     }
+    void recordExperimentQuietly(payload, user, 'full_talk_complete', { lesson: lessonId, seconds })
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Marked as watched. You will see it in your Garden.')
   }
 
@@ -1592,6 +1802,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const packId = Number(text(form, 'pack') || 0)
     if (packId && !(await packUsable(payload, user, acting.portal.id, packId))) return redirectTo(req, text(form, 'next') || '/', 'That course pack is not available in this portal.')
     const packIds = packId ? [packId] : ((code as { packs?: unknown[] }).packs || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
+    for (const id of packIds) await ensurePackAdopted(payload, acting.portal.id, id)
     if (packId) {
       await payload.update({ collection: 'access-codes', id: codeId, overrideAccess: true, data: { packs: packIds } })
     }
@@ -1644,6 +1855,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (!answer) return redirectTo(req, text(form, 'next') || '/', 'That answer could not be found.')
     if (user.role !== 'master' && idOf(answer.portal) !== portalIdOf(user)) {
       return redirectTo(req, '/', 'That answer is not in your portal.')
+    }
+    if (refuseFeature(await loadPortalById(payload, idOf(answer.portal) || portalIdOf(user) || 0), 'feedback')) {
+      return redirectTo(req, text(form, 'next') || '/', FEATURE_UNAVAILABLE)
     }
     const body = text(form, 'body')
     if (!body) return redirectTo(req, text(form, 'next') || '/', 'Write the feedback first.')
@@ -1746,7 +1960,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   if (action === 'me-pref') {
     const name = text(form, 'name')
     const value = text(form, 'value') === 'on'
-    if (!['keepPlace', 'shareOpening', 'trendsOptIn', 'haptics', 'shareWithLearners'].includes(name)) return redirectTo(req, text(form, 'next') || '/', 'That setting is not known.')
+    if (!['keepPlace', 'shareOpening', 'trendsOptIn', 'haptics', 'shareWithLearners', 'nightAlerts', 'shareWatch'].includes(name)) return redirectTo(req, text(form, 'next') || '/', 'That setting is not known.')
     await payload.update({ collection: 'users', id: user.id, overrideAccess: true, data: { [name]: value } as never })
     if (name === 'shareOpening') {
       const rows = await payload.find({ collection: 'opening-answers', overrideAccess: true, depth: 0, limit: 50, where: { user: { equals: user.id } } })
@@ -1867,6 +2081,21 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       return redirectTo(req, back, publicMessage(error, 'That review was not saved.'))
     }
     return redirectTo(req, back, undefined, status === 'published' ? 'Approved and published. Learners meet it in the main.' : status === 'rejected' ? 'Rejected. Learners never see it.' : 'Back to draft.')
+  }
+
+  if (action === 'swarm-review') {
+    const back = text(form, 'next') || '/master/review/swarm'
+    if (user.role !== 'master') return redirectTo(req, back, 'Only the master desk reviews swarm answers.')
+    const answer = await findDoc(payload, 'answers', Number(text(form, 'answer')))
+    if (!answer) return redirectTo(req, back, 'That answer was not found.')
+    const decision = text(form, 'decision')
+    const hidden = decision !== 'approve'
+    try {
+      await payload.update({ collection: 'answers', id: answer.id, overrideAccess: true, data: { swarmHidden: hidden, swarmReason: hidden ? String(answer.swarmReason || 'Kept hidden by review.') : null } as never })
+    } catch (error) {
+      return redirectTo(req, back, publicMessage(error, 'That review was not saved.'))
+    }
+    return redirectTo(req, back, undefined, hidden ? 'Kept hidden from the swarm.' : 'Shown in the swarm as initials.')
   }
 
   if (action === 'popup-approve-all') {
@@ -2000,7 +2229,11 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, text(form, 'next') || '/')
   }
 
-  if (action.startsWith('circle-')) return handleCircle(action, form, payload, user, (path, error, notice) => redirectTo(req, path, error, notice))
+  if (action.startsWith('circle-')) {
+    const blocked = await featureBlock(payload, user, form, 'circle')
+    if (blocked) return redirectTo(req, text(form, 'next') || '/', blocked)
+    return handleCircle(action, form, payload, user, (path, error, notice) => redirectTo(req, path, error, notice))
+  }
 
   return redirectTo(req, '/', 'That action is not known.')
 }

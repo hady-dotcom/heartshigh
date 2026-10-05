@@ -35,32 +35,17 @@ export async function findLinkedAnswer(payload: Payload, mediaId: number) {
     limit: 1,
     where: { or: [{ image: { equals: mediaId } }, { audio: { equals: mediaId } }, { video: { equals: mediaId } }] },
   })
-  if (found.docs[0]) {
-    return found.docs[0] as {
-      user?: unknown
-      portal?: unknown
-      keepPrivate?: boolean
-      shareWithTeacher?: boolean
-      shareWithLearners?: boolean
-    }
-  }
+  if (found.docs[0]) return found.docs[0] as { user?: unknown; portal?: unknown; keepPrivate?: boolean; shareWithTeacher?: boolean; shareWithLearners?: boolean }
   const notes = await payload.find({
     collection: 'feedback-notes',
     overrideAccess: true,
     depth: 0,
     limit: 1,
-    where: { audio: { equals: mediaId } },
+    where: { or: [{ audio: { equals: mediaId } }, { image: { equals: mediaId } }] },
   })
   const note = notes.docs[0] as { answer?: unknown } | undefined
-  const answerId =
-    typeof note?.answer === 'object' && note?.answer && 'id' in note.answer ? (note.answer as { id: number }).id : Number(note?.answer)
+  const answerId = typeof note?.answer === 'object' && note?.answer && 'id' in note.answer ? (note.answer as { id: number }).id : Number(note?.answer)
   if (!answerId) return null
   const answer = await payload.findByID({ collection: 'answers', id: answerId, overrideAccess: true, depth: 0 }).catch(() => null)
-  return answer as {
-    user?: unknown
-    portal?: unknown
-    keepPrivate?: boolean
-    shareWithTeacher?: boolean
-    shareWithLearners?: boolean
-  } | null
+  return answer as { user?: unknown; portal?: unknown; keepPrivate?: boolean; shareWithTeacher?: boolean; shareWithLearners?: boolean } | null
 }

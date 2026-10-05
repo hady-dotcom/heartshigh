@@ -9,8 +9,10 @@ import {
   bootstrapIdentity,
   cookiesSecure,
   databaseKind,
+  demoAccountsBlockBoot,
   DEMO_PASSWORDS,
   DEV_SECRET,
+  isPreviewEnvironment,
   payloadSecret,
   productionProblems,
   readS3,
@@ -107,14 +109,27 @@ test('security headers are set, and they do not trust a frame from another site'
   assert.equal(headers['X-Frame-Options'], 'DENY')
   assert.match(headers['Content-Security-Policy'], /frame-ancestors 'none'/)
   assert.match(headers['Content-Security-Policy'], /youtube-nocookie/)
+  assert.match(headers['Content-Security-Policy'], /challenges\.cloudflare\.com/)
   assert.match(headers['Strict-Transport-Security'], /max-age=/)
   assert.match(readFileSync(path.join(root, 'next.config.mjs'), 'utf8'), /securityHeaders/)
+})
+
+test('preview may boot with leftover @hearts.test accounts; production still refuses', () => {
+  assert.equal(isPreviewEnvironment({ RAILWAY_ENVIRONMENT: 'preview' }), true)
+  assert.equal(isPreviewEnvironment({ HEARTS_ENV: 'preview' }), true)
+  assert.equal(isPreviewEnvironment({ RAILWAY_ENVIRONMENT: 'production' }), false)
+  assert.equal(isPreviewEnvironment({ NODE_ENV: 'production' }), false)
+  assert.equal(demoAccountsBlockBoot({ RAILWAY_ENVIRONMENT: 'preview' }), false)
+  assert.equal(demoAccountsBlockBoot({ HEARTS_ENV: 'preview' }), false)
+  assert.equal(demoAccountsBlockBoot({ NODE_ENV: 'production', RAILWAY_ENVIRONMENT: 'production' }), true)
+  assert.equal(demoAccountsBlockBoot({ NODE_ENV: 'production' }), true)
 })
 
 test('production startup does not seed, and dev startup refuses to seed when NODE_ENV is production', () => {
   const start = readFileSync(path.join(root, 'scripts/start-production.ts'), 'utf8')
   assert.doesNotMatch(start, /seed\.ts/)
   assert.match(start, /@hearts\.test/)
+  assert.match(start, /demoAccountsBlockBoot/)
   const run = (script: string) => {
     try {
       execFileSync(process.execPath, [script], { cwd: root, env: { ...process.env, NODE_ENV: 'production' }, encoding: 'utf8' })
@@ -156,10 +171,23 @@ test('the latest Postgres migration has a table for every collection and global'
   const { aiCollections } = await import('../../src/collections-ai')
   const { MasterFlags } = await import('../../src/collections-opening')
   const { sheetCollections } = await import('../../src/collections-sheet')
+  const { experimentCollections } = await import('../../src/collections-experiments')
+  const { insightCollections } = await import('../../src/collections-insights')
+  const { calendarCollections } = await import('../../src/collections-calendar')
+  const { missionCollections } = await import('../../src/collections-missions')
+  const { gatherCollections } = await import('../../src/collections-gather')
+  const { liveCollections } = await import('../../src/collections-live')
+  const { safetyCollections } = await import('../../src/collections-safety')
   const dir = path.join(root, 'src/migrations')
-  const latest = readdirSync(dir).filter((name) => name.endsWith('.json')).sort().at(-1)!
+  const files = readdirSync(dir)
+  const stamps = files.filter((name) => /\.ts$/.test(name) && name !== 'index.ts').map((name) => name.slice(0, 15))
+  assert.equal(stamps.length, new Set(stamps).size, `migration timestamps must be unique: ${stamps.join(', ')}`)
+  const ts = files.filter((name) => name.endsWith('.ts') && name !== 'index.ts').sort()
+  const newest = ts.at(-1)!.replace(/\.ts$/, '')
+  assert.equal(files.includes(`${newest}.json`), true, `the newest migration needs a snapshot for migrate:create; ${newest}.json is missing`)
+  const latest = files.filter((name) => name.endsWith('.json')).sort().at(-1)!
   const tables = new Set(Object.keys(JSON.parse(readFileSync(path.join(dir, latest), 'utf8')).tables).map((name) => name.replace(/^public\./, '')))
-  const slugs = [...collections, ...aiCollections, ...sheetCollections, MasterFlags].map((item) => item.slug.replace(/-/g, '_'))
+  const slugs = [...collections, ...aiCollections, ...sheetCollections, ...experimentCollections, ...insightCollections, ...calendarCollections, ...missionCollections, ...gatherCollections, ...liveCollections, ...safetyCollections, MasterFlags].map((item) => item.slug.replace(/-/g, '_'))
   const missing = slugs.filter((slug) => !tables.has(slug))
   assert.deepEqual(missing, [], `run npx payload migrate:create against Postgres; ${latest} lacks ${missing.join(', ')}`)
 })

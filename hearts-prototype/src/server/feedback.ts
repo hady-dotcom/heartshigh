@@ -48,11 +48,12 @@ function dateOf(row: Doc) {
 }
 
 export async function loadRawFeedback(payload: Payload, portalId: number): Promise<RawFeedback[]> {
-  const [answers, messages, entries, doors] = await Promise.all([
+  const [answers, messages, entries, doors, liveQuestions] = await Promise.all([
     many(payload, 'answers', { portal: { equals: portalId } }),
     many(payload, 'messages', { portal: { equals: portalId } }),
     many(payload, 'workbook-entries', { portal: { equals: portalId } }),
     loadDoors(payload),
+    many(payload, 'live-questions', { and: [{ portal: { equals: portalId } }, { hidden: { not_equals: true } }] }),
   ])
   const pointIds = [...new Set(answers.map((row) => idOf(row.point)).filter((id): id is number => Boolean(id)))]
   const userIds = [...new Set([...answers.map((row) => idOf(row.user)), ...messages.map((row) => idOf(row.author))].filter((id): id is number => Boolean(id)))]
@@ -153,6 +154,46 @@ export async function loadRawFeedback(payload: Payload, portalId: number): Promi
       family: 'circle',
       reply: '',
     })
+  }
+  if (liveQuestions.length) {
+    const sessionIds = [...new Set(liveQuestions.map((row) => idOf(row.session)).filter((id): id is number => Boolean(id)))]
+    const extraUserIds = [...new Set(liveQuestions.map((row) => idOf(row.author)).filter((id): id is number => Boolean(id)))]
+    const [sessions, liveUsers] = await Promise.all([
+      sessionIds.length ? many(payload, 'live-sessions', { id: { in: sessionIds } }) : Promise.resolve([]),
+      extraUserIds.length ? many(payload, 'users', { id: { in: extraUserIds } }) : Promise.resolve([]),
+    ])
+    const sessionById = new Map(sessions.map((row) => [row.id, row]))
+    const liveUserById = new Map(liveUsers.map((row) => [row.id, row]))
+    for (const question of liveQuestions) {
+      const session = sessionById.get(idOf(question.session) || 0)
+      const user = liveUserById.get(idOf(question.author) || 0)
+      const door = doors.find((item) => item.number === Number(session?.door || 0))
+      rows.push({
+        id: `live-${question.id}`,
+        portalId,
+        keepPrivate: false,
+        shareWithTeacher: true,
+        showImam: true,
+        text: textOf(question.body),
+        date: dateOf(question),
+        learnerId: user?.id || 0,
+        learnerName: textOf(user?.name) || textOf(question.authorName) || 'Learner',
+        learnerEmail: textOf(user?.email),
+        accessCodeId: idOf(user?.accessCode),
+        doorNumber: door?.number ?? null,
+        door: door ? doorLabel(door) : 'Live',
+        seatId: null,
+        seat: '',
+        courseId: null,
+        course: '',
+        talkId: idOf(session?.replayLesson),
+        talk: textOf(session?.title) || 'Live session',
+        questionId: question.id,
+        question: session ? `Asked live: ${textOf(session.title)}` : 'Asked live',
+        family: 'live',
+        reply: '',
+      })
+    }
   }
   return rows
 }
