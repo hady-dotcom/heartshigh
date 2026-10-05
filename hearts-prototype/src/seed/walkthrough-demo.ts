@@ -91,7 +91,7 @@ async function loadMatchedLessons(payload: Payload): Promise<MatchedLesson[]> {
     collection: 'lessons',
     overrideAccess: true,
     depth: 0,
-    limit: 400,
+    limit: 1000,
     pagination: false,
   })).docs as unknown as Doc[]
   const courseIds = [...new Set(lessons.map((lesson) => idOf(lesson.course)).filter((id): id is number => Boolean(id)))]
@@ -490,7 +490,7 @@ async function fillAnswers(
     collection: 'engagement-points',
     overrideAccess: true,
     depth: 0,
-    limit: 200,
+    limit: 1000,
     pagination: false,
     where: { and: [{ lesson: { in: lessonIds } }, { status: { not_equals: 'draft' } }, { family: { not_equals: 'workbook' } }] },
   })).docs as unknown as Doc[]
@@ -608,7 +608,7 @@ async function fillCircle(payload: Payload, portalId: number, lessons: MatchedLe
     collection: 'engagement-points',
     overrideAccess: true,
     depth: 0,
-    limit: 200,
+    limit: 1000,
     pagination: false,
     where: { and: [{ lesson: { in: lessonIds } }, { status: { not_equals: 'draft' } }, { family: { not_equals: 'workbook' } }] },
   })).docs as unknown as Doc[]

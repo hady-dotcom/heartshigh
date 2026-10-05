@@ -48,7 +48,7 @@ export const COURSE_NEEDLES: CourseNeedle[] = [
   { key: 'ar-rabb', complete: true, needles: ['ar-rabb', 'ar rabb', 'names class 19', 'who is truly nurturing'], tokens: ['AR-RABB'], youtube: ['ECaTWkof57E'] },
   { key: 'prophet', complete: true, needles: ['live like the prophet'], tokens: ['FAHMY-S6'], youtube: ['TLCGBj4AlB0'] },
   { key: 'nur', complete: true, needles: ['al-nur', 'an-nur', 'an-nūr', 'names class 20', 'why you feel empty'], tokens: ['AL-NUR'], youtube: ['NIR88RRpat4'] },
-  { key: 'sheltered', complete: true, needles: ['divinely sheltered', 'divinely-sheltered'] },
+  { key: 'sheltered', complete: true, needles: ['divinely sheltered', 'divinely-sheltered', 'divine shelter'] },
   { key: 'starter', complete: true, needles: ['cure for anxiety', 'on mosques, companionship', 'best islamic approach to wealth', 'allah chose you', 'gratitude is the greatest blessing', 'using your time wisely', 'which people receive', 'what is dua'] },
 ]
 

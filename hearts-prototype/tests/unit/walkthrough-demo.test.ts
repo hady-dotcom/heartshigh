@@ -30,6 +30,7 @@ test('key demo talks match on title, token or YouTube id', () => {
   assert.equal(matchCourseKey({ title: 'How to Live Like the Prophet, Session 6' }), 'prophet')
   assert.equal(matchCourseKey({ title: 'Why You Feel Empty… And How Ramadan Fixes It | The Names Class 20: An-Nūr' }), 'nur')
   assert.equal(matchCourseKey({ title: 'Divinely Sheltered' }), 'sheltered')
+  assert.equal(matchCourseKey({ title: 'A Divine Shelter for the Heart' }), 'sheltered')
   assert.equal(matchCourseKey({ title: 'Quranic Connection #26: A Cure for Anxiety' }), 'starter')
   assert.equal(matchCourseKey({ title: 'A talk from another chapter' }), null)
 })
