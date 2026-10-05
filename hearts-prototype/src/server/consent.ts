@@ -60,6 +60,7 @@ export function draftBody(kind: LegalKind) {
 }
 
 export async function currentLegalPages(payload: Payload, kinds: LegalKind[] = [...LEARNER_CONSENT_KINDS, 'guidelines']): Promise<CurrentLegal[]> {
+  await ensureLegalPages(payload)
   const found = await payload.find({
     collection: 'legal-pages',
     overrideAccess: true,
@@ -148,6 +149,7 @@ export async function loadPortalContacts(payload: Payload, portalId: number) {
 
 export async function learnerNeedsConsent(payload: Payload, user: SessionUser) {
   if (user.role !== 'learner') return false
+  await ensureLegalPages(payload)
   const portalId = portalIdOf(user)
   const [current, recorded] = await Promise.all([currentLegalPages(payload), recordedConsents(payload, user.id, portalId)])
   return missingLearnerConsents(current, recorded).length > 0

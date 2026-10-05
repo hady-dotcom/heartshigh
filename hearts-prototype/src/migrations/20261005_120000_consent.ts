@@ -35,7 +35,7 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
   CREATE TABLE IF NOT EXISTS "age_profiles" (
     "id" serial PRIMARY KEY NOT NULL,
     "user_id" integer NOT NULL,
-    "portal_id" integer NOT NULL,
+    "portal_id" integer,
     "age_band" varchar NOT NULL,
     "guardian_email" varchar,
     "guardian_token_hash" varchar,
@@ -86,6 +86,22 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     "updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
     "created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
   );
+
+  ALTER TABLE "consents" ADD CONSTRAINT "consents_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "consents" ADD CONSTRAINT "consents_portal_id_portals_id_fk" FOREIGN KEY ("portal_id") REFERENCES "public"."portals"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "age_profiles" ADD CONSTRAINT "age_profiles_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "age_profiles" ADD CONSTRAINT "age_profiles_portal_id_portals_id_fk" FOREIGN KEY ("portal_id") REFERENCES "public"."portals"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "portal_contacts" ADD CONSTRAINT "portal_contacts_portal_id_portals_id_fk" FOREIGN KEY ("portal_id") REFERENCES "public"."portals"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "child_code_flags" ADD CONSTRAINT "child_code_flags_access_code_id_access_codes_id_fk" FOREIGN KEY ("access_code_id") REFERENCES "public"."access_codes"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "help_requests" ADD CONSTRAINT "help_requests_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "help_requests" ADD CONSTRAINT "help_requests_portal_id_portals_id_fk" FOREIGN KEY ("portal_id") REFERENCES "public"."portals"("id") ON DELETE set null ON UPDATE no action;
+
+  CREATE UNIQUE INDEX IF NOT EXISTS "age_profiles_user_idx" ON "age_profiles" USING btree ("user_id");
+  CREATE UNIQUE INDEX IF NOT EXISTS "portal_contacts_portal_idx" ON "portal_contacts" USING btree ("portal_id");
+  CREATE UNIQUE INDEX IF NOT EXISTS "child_code_flags_access_code_idx" ON "child_code_flags" USING btree ("access_code_id");
+  CREATE INDEX IF NOT EXISTS "consents_user_idx" ON "consents" USING btree ("user_id");
+  CREATE INDEX IF NOT EXISTS "consents_portal_idx" ON "consents" USING btree ("portal_id");
+  CREATE INDEX IF NOT EXISTS "help_requests_user_idx" ON "help_requests" USING btree ("user_id");
   `)
 }
 

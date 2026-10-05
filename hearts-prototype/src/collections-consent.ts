@@ -26,7 +26,6 @@ export const LegalPages: CollectionConfig = {
     useAsTitle: 'title',
     description: 'Draft wording for adviser review. Publishing a new version asks people to agree again.',
   },
-  versions: { drafts: false, maxPerDoc: 40 },
   access: {
     read: ({ req }) => (req.user?.role === 'master' ? true : { published: { equals: true } }),
     create: master,
