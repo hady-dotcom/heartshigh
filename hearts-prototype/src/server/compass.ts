@@ -566,7 +566,7 @@ export async function staffPortal(payload: Payload, actor: SessionUser, portalId
   const weakest = scales.filter((row) => row.meanNow != null).slice().sort((a, b) => (a.meanNow || 0) - (b.meanNow || 0)).slice(0, 3)
   return {
     kind: 'portal' as const,
-    learners: people.map((person) => ({ id: person.id, name: String(person.name || person.email || 'A learner'), attempts: (byUser.get(person.id) || []).length })),
+    learners: people.map((person) => ({ id: person.id, name: String(person.name || person.email || 'A learner'), email: String(person.email || ''), attempts: (byUser.get(person.id) || []).length })),
     scales,
     personas: [...personaCounts.entries()].map(([key, count]) => ({ key, title: titleOf.get(key) || key, count })).sort((a, b) => b.count - a.count || a.title.localeCompare(b.title)),
     weakest: weakest.map((row) => ({ scale: row.scale, name: row.name, mean: row.meanNow })),

@@ -1,5 +1,5 @@
 /* Compass only. Learner pages: deep teal, lantern gold, stone and ivy.
-   Desk pages: parchment, with teal kept to the sidebar and the card header bars. */
+   Desk pages: evening garden, same as the rest of the desk. */
 
 .app[data-testid="learner-path"],
 .app[data-testid="recalibrate"] {
@@ -257,8 +257,8 @@ button.month-back {
 
 .desk[data-testid="compass-portal"],
 .desk[data-testid="compass-learner"] {
-  background: #EFE3C8;
-  color: #1A1814;
+  background: #0E2A2B;
+  color: #F6EEDC;
 }
 .desk[data-testid="compass-portal"] .side,
 .desk[data-testid="compass-learner"] .side {
@@ -288,15 +288,15 @@ button.month-back {
 }
 .desk[data-testid="compass-portal"] .main-head h1,
 .desk[data-testid="compass-learner"] .main-head h1 {
-  color: #0F3B3A;
+  color: #F6EEDC;
   font-size: 40px;
   line-height: 1.1;
 }
 .desk[data-testid="compass-portal"] .panel,
 .desk[data-testid="compass-learner"] .panel {
-  background: #F7EEDB;
-  border-color: #E2D2AE;
-  color: #1A1814;
+  background: #163633;
+  border-color: #C4923A;
+  color: #F6EEDC;
 }
 .desk[data-testid="compass-portal"] .panel > header,
 .desk[data-testid="compass-learner"] .panel > header {
@@ -335,18 +335,18 @@ button.month-back {
 }
 .desk[data-testid="compass-portal"] a,
 .desk[data-testid="compass-learner"] a {
-  color: #0F3B3A;
+  color: var(--desk-heading, #F6EEDC);
 }
 .cohort { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; }
 .cohort-row { display: grid; grid-template-columns: minmax(140px, 1fr) minmax(80px, 2fr) 32px; gap: 10px; align-items: center; margin: 6px 0; }
 .cohort-row .bar { height: 10px; background: #E7D7B4; border-radius: 999px; overflow: hidden; }
 .cohort-row .bar i { display: block; height: 100%; background: #0F3B3A; }
 .mix-form { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
-.mix-form label { display: grid; gap: 6px; font-weight: 650; color: #0F3B3A; }
-.mix-form input { width: 88px; background: #fff; color: #1A1814; border: 1px solid #CDB88A; border-radius: 8px; padding: 8px; }
+.mix-form label { display: grid; gap: 6px; font-weight: 650; color: #F6EEDC; }
+.mix-form input { width: 88px; background: #102E2C; color: #F6EEDC; border: 1px solid #C4923A; border-radius: 8px; padding: 8px; }
 .sparks { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
-.spark-card { background: #FBF6E8; border: 1px solid #E2D2AE; border-radius: 14px; padding: 12px 12px 8px; }
-.spark-card header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; background: transparent; color: #0F3B3A; padding: 0; }
+.spark-card { background: #163633; border: 1px solid #C4923A; border-radius: 14px; padding: 12px 12px 8px; color: #F6EEDC; }
+.spark-card header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; background: transparent; color: #F6EEDC; padding: 0; }
 .spark-card header b { font-size: 16px; }
 .spark-card .latest { font-variant-numeric: tabular-nums; font-weight: 700; }
 .spark-card .latest.up { color: #14564C; }
@@ -502,13 +502,13 @@ button.month-back {
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"],
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] {
-  background: #e4cfa0;
-  color: #1a2422;
+  background: var(--desk-page, #0E2A2B);
+  color: var(--desk-ink, #F6EEDC);
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .side,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .side {
-  background: #0e2a2b;
-  color: #f6eedc;
+  background: var(--desk-sidebar, #0B2223);
+  color: var(--desk-on-dark, #F6EEDC);
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .main-head h1,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .main-head h1,
@@ -516,18 +516,18 @@ button.month-back {
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .persona-line,
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .mix-form label,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .mix-form label {
-  color: #0f3b3a;
+  color: var(--desk-heading, #F6EEDC);
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel {
-  background: #f3e2c0;
-  border-color: #7a6238;
-  color: #1a2422;
+  background: var(--desk-card, #163633);
+  border-color: var(--desk-line, #C4923A);
+  color: var(--desk-ink, #F6EEDC);
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel > header,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel > header {
-  background: #0f3b3a;
-  color: #f6eedc;
+  background: var(--desk-header, #0F3B3A);
+  color: var(--desk-on-dark, #F6EEDC);
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel > header h2,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel > header h2,
@@ -535,14 +535,14 @@ button.month-back {
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel > header .hint,
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel > header .spark-legend,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel > header .spark-legend {
-  color: #f6eedc;
+  color: var(--desk-on-dark, #F6EEDC);
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .spark-card,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .spark-card {
-  background: #fbf3e0;
-  border-color: #7a6238;
+  background: var(--desk-field, #102E2C);
+  border-color: var(--desk-line, #C4923A);
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .cohort-row .bar,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .cohort-row .bar {
-  background: #e4cfa0;
+  background: var(--desk-page, #0E2A2B);
 }

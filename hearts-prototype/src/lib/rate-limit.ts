@@ -42,6 +42,8 @@ export function platformClientIpHeader(env: Record<string, string | undefined> =
     return named
   }
   if (env.FLY_APP_NAME) return 'fly-client-ip'
+  // Cloudflare sets CF-Connecting-IP and overwrites any value the visitor sent.
+  if (env.CF_CONNECTING_IP === '1' || env.TURNSTILE_SECRET_KEY) return 'cf-connecting-ip'
   return null
 }
 
@@ -86,4 +88,73 @@ export function clientIp(req: Request, hops = trustedProxyHops(), env: Record<st
  */
 export function joinFailKeys(ip: string | null, code: string) {
   return { pair: `join-fail:${ip || 'unknown'}:${code}`, address: ip ? `join-fail:${ip}` : null }
+}
+
+export const AUTH_WINDOW_MS = 10 * 60 * 1000
+export const LOGIN_PER_IP = 20
+export const LOGIN_PER_EMAIL = 10
+export const JOIN_ATTEMPTS_PER_IP = 15
+export const FORGOT_PER_IP = 5
+export const FORGOT_PER_EMAIL = 3
+export const RESET_PER_IP = 8
+export const ANSWER_WINDOW_MS = 10 * 60 * 1000
+export const ANSWER_PER_USER = 40
+export const ANSWER_PER_IP = 80
+
+/** The e2e suite signs in and answers many times from one address. Do not count those runs. */
+export function limitsRelaxed(env: Record<string, string | undefined> = process.env) {
+  return env.HEARTS_E2E === '1' || env.HEARTS_TEST_CLOCK === '1'
+}
+
+export type AuthKind = 'login' | 'join' | 'forgot' | 'reset'
+
+function emailKey(email: string) {
+  return email.trim().toLowerCase().slice(0, 120)
+}
+
+export function authKeys(kind: AuthKind, ip: string | null, email?: string | null) {
+  const address = ip ? `${kind}:${ip}` : null
+  const person = email ? `${kind}-email:${emailKey(email)}` : null
+  return { address, person }
+}
+
+export function authLimit(kind: AuthKind) {
+  if (kind === 'login') return { ip: LOGIN_PER_IP, email: LOGIN_PER_EMAIL }
+  if (kind === 'join') return { ip: JOIN_ATTEMPTS_PER_IP, email: JOIN_ATTEMPTS_PER_IP }
+  if (kind === 'forgot') return { ip: FORGOT_PER_IP, email: FORGOT_PER_EMAIL }
+  return { ip: RESET_PER_IP, email: RESET_PER_IP }
+}
+
+/** Counts one auth try. Relaxed in the e2e and test-clock servers. */
+export function hitAuth(kind: AuthKind, ip: string | null, email?: string | null, env: Record<string, string | undefined> = process.env, at = Date.now()) {
+  if (limitsRelaxed(env)) return { allowed: true, retryAfterSec: 0, count: 0 }
+  const keys = authKeys(kind, ip, email)
+  const cap = authLimit(kind)
+  if (keys.address) {
+    const address = hit(keys.address, cap.ip, AUTH_WINDOW_MS, at)
+    if (!address.allowed) return address
+  }
+  if (keys.person) {
+    const person = hit(keys.person, cap.email, AUTH_WINDOW_MS, at)
+    if (!person.allowed) return person
+  }
+  return { allowed: true, retryAfterSec: 0, count: 0 }
+}
+
+export function answerKeys(userId: number | null, ip: string | null) {
+  return { person: userId ? `answer-user:${userId}` : null, address: ip ? `answer-ip:${ip}` : null }
+}
+
+export function hitAnswer(userId: number | null, ip: string | null, env: Record<string, string | undefined> = process.env, at = Date.now()) {
+  if (limitsRelaxed(env)) return { allowed: true, retryAfterSec: 0, count: 0 }
+  const keys = answerKeys(userId, ip)
+  if (keys.person) {
+    const person = hit(keys.person, ANSWER_PER_USER, ANSWER_WINDOW_MS, at)
+    if (!person.allowed) return person
+  }
+  if (keys.address) {
+    const address = hit(keys.address, ANSWER_PER_IP, ANSWER_WINDOW_MS, at)
+    if (!address.allowed) return address
+  }
+  return { allowed: true, retryAfterSec: 0, count: 0 }
 }

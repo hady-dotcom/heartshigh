@@ -147,16 +147,30 @@ test('small fixes: favicon, Teach emails end in an ellipsis, and the install car
     expect(await cell.evaluate((el) => el.getClientRects().length)).toBe(1)
   }
 
-  const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
+  const phone = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+  })
   const app = await phone.newPage()
   await signIn(app, 'elm-learner@hearts.test', 'portal-learner', PORTAL)
   const card = app.getByTestId('install-card')
+  const carryOn = app.getByTestId('continue')
   await expect(card).toBeVisible()
-  expect(await card.evaluate((el) => getComputedStyle(el).position)).toBe('fixed')
-  await card.evaluate((el) => Promise.all(el.getAnimations().map((animation) => animation.finished)))
-  const tabs = await app.locator('[data-testid="tabbar"]').first().boundingBox()
+  await expect(carryOn).toBeVisible()
+  expect(await card.getAttribute('data-variant')).toBe('strip')
+  expect(await card.getAttribute('data-surface')).toBe('phone')
+  expect(await card.evaluate((el) => getComputedStyle(el).position)).not.toBe('fixed')
+  await expect(card.locator('h2')).toContainText('phone')
+  await expect(card.locator('h2')).not.toContainText('computer')
+  const carryBox = await carryOn.boundingBox()
   const box = await card.boundingBox()
-  if (tabs && box) expect(box.y + box.height).toBeLessThanOrEqual(tabs.y + 1)
+  expect(carryBox && box, 'Continue and the install strip both have a box').toBeTruthy()
+  if (carryBox && box) {
+    expect(box.y, 'the install strip sits below Continue').toBeGreaterThanOrEqual(carryBox.y + carryBox.height - 1)
+    expect(carryBox.y + carryBox.height, 'Continue is not covered').toBeLessThanOrEqual(box.y + 1)
+  }
   await phone.close()
 })
 

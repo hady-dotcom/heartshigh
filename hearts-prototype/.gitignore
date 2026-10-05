@@ -12,6 +12,7 @@ test-results
 tsconfig.tsbuildinfo
 artifacts/
 .next-e2e
+.next-turnstile
 bin/
 content/audio/*
 !content/audio/.gitkeep

@@ -3,6 +3,8 @@
 import { useId, useState, type ReactNode } from 'react'
 import styles from './help.module.css'
 
+export { HelpTip, type HelpTipProps } from '@/components/help-tip'
+
 export function DeskHelp({
   title = 'How to use this page',
   children,
