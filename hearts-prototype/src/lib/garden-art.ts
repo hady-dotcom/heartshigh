@@ -5,7 +5,8 @@ import type { GardenAreaId, GrowthStage } from './garden-areas'
  *
  * Every tree file is a 512×640 canvas. The planter's bottom-centre anchor is
  * (256, 622), the same point in every stage, so one placement fits all five.
- * Plaques in the art are blank. Names are drawn on the planter, which never moves.
+ * Plaques in the art are blank ribbons wrapped on the round pot. Names sit on the
+ * front of the ribbon. The planter never moves.
  *
  * The canopy is a second layer on that same canvas: trunk, root flare and crown.
  * It rotates about the trunk centre on the soil line. The canopy has no pixels
