@@ -11,10 +11,20 @@ import { idOf } from '@/lib/ids'
 
 type Doc = Record<string, unknown> & { id: number }
 
+function lessonIdOf(doc: Record<string, unknown>) {
+  const related = doc.lesson
+  return (
+    idOf(related) ||
+    idOf(doc.lesson_id) ||
+    (related && typeof related === 'object' && 'value' in related ? idOf((related as { value?: unknown }).value) : null) ||
+    0
+  )
+}
+
 function asExtract(doc: Doc): TalkExtract {
   return {
     id: doc.id,
-    lesson: idOf(doc.lesson) || 0,
+    lesson: lessonIdOf(doc),
     kind: (doc.kind === 'appetiser' ? 'appetiser' : 'hors') as TalkExtract['kind'],
     start: Number(doc.start),
     end: Number(doc.end),

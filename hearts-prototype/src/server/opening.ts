@@ -454,7 +454,8 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
 }
 
 function extractFields(data: Loaded, lessonId: number, fallback: { hors: PieceRef; appetiser: PieceRef }) {
-  const linked = attachHorsToAppetisers(data.extracts.filter((row) => row.lesson === lessonId))
+  const own = data.extracts.filter((row) => Number(row.lesson) === Number(lessonId))
+  const linked = attachHorsToAppetisers(own)
   const visible = linked.filter((row) => extractVisible(row, data.showUnchecked))
   const hors = visible.filter((row) => row.kind === 'hors')
   const appetisers = visible.filter((row) => row.kind === 'appetiser')
@@ -523,13 +524,13 @@ export async function loadOpening(payload: Payload, portal: PortalDoc, user: Ses
     const row = data.cuts.find((cut) => cut.id === id)
     const info = cuts.find((cut) => cut.id === id)
     const item = row ? itemFor(data, row, info?.starter?.lane || null, laneTitles, index) : null
-    if (item) starters[String(id)] = item
+    if (item) starters[String(id)] = presentClips([item], data.showUnchecked)[0] || item
   }
   const clips: Record<string, FeedItem> = {}
   for (const [index, info] of cuts.entries()) {
     const row = data.cuts.find((cut) => cut.id === info.id)
     const item = row ? itemFor(data, row, info.starter?.lane || null, laneTitles, index) : null
-    if (item) clips[String(info.id)] = item
+    if (item) clips[String(info.id)] = presentClips([item], data.showUnchecked)[0] || item
   }
   return {
     portal: portal.slug,
