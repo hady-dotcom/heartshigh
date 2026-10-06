@@ -1464,6 +1464,46 @@
    "to": "grow, but",
    "severity": "punctuation",
    "reason": "capital mid-sentence"
+  },
+  {
+   "youtubeId": "xFRCtxz6_LA",
+   "cutId": 101,
+   "from": "enoughs",
+   "to": "endless",
+   "severity": "mishearing",
+   "reason": "not a word: \"buying consumption is endless, right?\" (the talk goes on about click-and-buy shopping)"
+  },
+  {
+   "youtubeId": "1suEmWBqlKE",
+   "cutId": 166,
+   "from": "ayada",
+   "to": "isti'adha",
+   "severity": "mishearing",
+   "reason": "seeking refuge before reciting the Qur'an (al-isti'adha), which the next line explains"
+  },
+  {
+   "youtubeId": "Mw6wrK21trY",
+   "cutId": 174,
+   "from": "summate",
+   "to": "summarize",
+   "severity": "mishearing",
+   "reason": "the hadith of Jibril: he came to teach and summarize your Deen"
+  },
+  {
+   "youtubeId": "ogAXx-3OBGg",
+   "cutId": 119,
+   "from": "zakatum",
+   "to": "zakat on them",
+   "severity": "mishearing",
+   "reason": "not a word: zakat on fruit is not due while it is still green"
+  },
+  {
+   "youtubeId": "byhbsgVKZjM",
+   "cutId": 112,
+   "from": "indentions",
+   "to": "indentations",
+   "severity": "spelling",
+   "reason": "marks the mat left on the Prophet's back"
   }
  ]
 }

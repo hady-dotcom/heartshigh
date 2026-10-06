@@ -134,3 +134,19 @@ export function boardTapNote(input: { action: 'like' | 'save'; wasOn: boolean; t
   if (input.action === 'like') return input.wasOn ? `Like removed from ${name}` : `Liked ${name}`
   return input.wasOn ? `Removed ${name} from Saved` : `Saved ${name}`
 }
+
+/** How long after the board opens or closes a click with no fresh press is treated as a leftover. */
+export const GHOST_CLICK_MS = 700
+
+/**
+ * The click a phone sends after the tap that opened (or closed) the More board belongs to that tap.
+ * The board opens on the lift, so the browser aims that click at whatever is now under the finger,
+ * with touch adjustment picking the nearest link: the board's own buttons, or the tab bar right
+ * under the More handle, which asks a guest to make an account. A click counts only if a press
+ * started after the board changed; a keyboard click (detail 0) always counts.
+ */
+export function ghostClick(input: { now: number; boardChangedAt: number; lastPressAt: number; detail: number }) {
+  if (input.detail === 0) return false
+  if (input.boardChangedAt <= 0 || input.now - input.boardChangedAt > GHOST_CLICK_MS) return false
+  return input.lastPressAt <= input.boardChangedAt
+}

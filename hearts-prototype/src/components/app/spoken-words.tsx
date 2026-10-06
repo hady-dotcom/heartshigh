@@ -1,6 +1,6 @@
 'use client'
 
-import { sentencesInWindow, spokenLine, wrapWordLines } from '@/lib/framing/words'
+import { keyWordIndex, sentencesInWindow, spokenLine, wrapWordLines } from '@/lib/framing/words'
 import type { FramingSentence } from '@/lib/framing/types'
 
 export function SpokenWords({
@@ -25,6 +25,9 @@ export function SpokenWords({
   const sentence = spokenLine(sentences, time, { from, to, title, titles })
   if (!sentence) return <div className="fr-words" data-testid="spoken-words" data-empty="yes" />
   const lines = wrapWordLines(sentence.words.map((row) => row.w), 20).slice(0, 5)
+  // One gold word per page: only the first occurrence of the key is lit, counted across the page's lines.
+  const keyAt = keyWordIndex(lines.flat(), sentence.key)
+  const starts = lines.map((_, index) => lines.slice(0, index).reduce((sum, line) => sum + line.length, 0))
   return (
     <div className="fr-words" data-testid="spoken-words" data-sentence={sentence.text} data-sentence-start={sentence.s}>
       {speaker ? <p className="fr-words-speaker">{speaker}</p> : null}
@@ -32,7 +35,7 @@ export function SpokenWords({
         {lines.map((line, index) => (
           <p key={`${index}:${line.join(' ')}`} className="fr-words-line" style={{ animationDelay: `${index * 80}ms` }}>
             {line.map((word, at) => {
-              const key = sentence.key && norm(word) === norm(sentence.key)
+              const key = starts[index] + at === keyAt
               return (
                 <span key={`${at}:${word}`} className={key ? 'fr-key' : undefined}>{word}</span>
               )
@@ -47,8 +50,4 @@ export function SpokenWords({
       </div>
     </div>
   )
-}
-
-function norm(value: string) {
-  return value.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')
 }

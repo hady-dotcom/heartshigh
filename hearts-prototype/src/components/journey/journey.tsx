@@ -16,7 +16,7 @@ import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { dedicatedLaneFeed, laneEndHref, lanesWithClips, playableLaneClips, takeDedicatedLane } from '@/lib/lanes'
 import { coverAttr, coverFallbackAction, coverHoldKey, coverHoldStep, filmCoverKey, freshCoverHold, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
-import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardShouldClose, boardShouldOpen, boardTapFires, boardTapNote, coachTapAction, feedGestureCounts, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
+import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardShouldClose, boardShouldOpen, boardTapFires, boardTapNote, coachTapAction, feedGestureCounts, ghostClick, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
 import { freshSheetHistory, sheetClosed, sheetOpened, sheetPopped, sheetUrl, type SheetHistory } from '@/lib/sheet-history'
 import { isoWeek } from '@/lib/trends'
 import { courseCatcherTap } from '@/lib/course-controls'
@@ -258,6 +258,7 @@ export function Journey(props: JourneyProps) {
   const slotRef = useRef<HTMLDivElement>(null)
   const gesture = useRef<{ x: number; y: number; t: number; moved: boolean; timer: number | null; pointerId?: number } | null>(null)
   const boardClosedAt = useRef(0)
+  const lastPressAt = useRef(0)
   const boardTap = useRef<{ control: Element | null; x: number; y: number; t: number } | null>(null)
   const captionDrag = useRef(false)
   const counter = useRef(0)
@@ -1681,12 +1682,28 @@ export function Journey(props: JourneyProps) {
     const onPointerCancel = () => {
       drag = null
     }
+    // The click a phone sends after the tap that opened or closed the board is that tap's leftover:
+    // it must not land on a tab, the speaker or Full talk and ask a guest to make an account.
+    const notePress = () => {
+      lastPressAt.current = performance.now()
+    }
+    const swallowGhost = (event: MouseEvent) => {
+      const changedAt = Math.max(boardOpenedAt.current, boardClosedAt.current)
+      if (!ghostClick({ now: performance.now(), boardChangedAt: changedAt, lastPressAt: lastPressAt.current, detail: event.detail })) return
+      event.preventDefault()
+      event.stopPropagation()
+      event.stopImmediatePropagation()
+    }
+    window.addEventListener('pointerdown', notePress, true)
+    window.addEventListener('click', swallowGhost, true)
     window.addEventListener('keydown', onKey)
     window.addEventListener('wheel', onWheel, { passive: false })
     window.addEventListener('pointerdown', onPointerDown, true)
     window.addEventListener('pointerup', onPointerUp, true)
     window.addEventListener('pointercancel', onPointerCancel, true)
     return () => {
+      window.removeEventListener('pointerdown', notePress, true)
+      window.removeEventListener('click', swallowGhost, true)
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('wheel', onWheel)
       window.removeEventListener('pointerdown', onPointerDown, true)

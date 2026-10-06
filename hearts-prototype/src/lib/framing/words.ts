@@ -41,12 +41,13 @@ export function sentencesFromWords(words: SpokenWord[], clipEnd?: number): Frami
   const sentences: FramingSentence[] = groups.map((group) => {
     const text = group.map((row) => row.w).join(' ')
     const key = pickKey(group)
+    const keyAt = keyWordIndex(group.map((row) => row.w), key)
     return {
       text,
       s: group[0].t,
       e: group[group.length - 1].e ?? group[group.length - 1].t + 0.4,
       key,
-      words: group.map((row) => ({ ...row, key: key ? norm(row.w) === norm(key) : false })),
+      words: group.map((row, index) => ({ ...row, key: index === keyAt })),
     }
   })
   sentences.forEach((row, index) => {
@@ -59,6 +60,13 @@ export function sentencesFromWords(words: SpokenWord[], clipEnd?: number): Frami
 
 export function sentencesInWindow(sentences: FramingSentence[], start: number, end: number) {
   return sentences.filter((row) => row.s < end - 0.05 && row.e > start + 0.05)
+}
+
+/** Exactly one gold word per page: the first word that matches the key, even if the key is said twice. */
+export function keyWordIndex(words: string[], key?: string | null) {
+  const want = key ? norm(key) : ''
+  if (!want) return -1
+  return words.findIndex((word) => norm(word) === want)
 }
 
 export function pickKey(words: SpokenWord[]) {
