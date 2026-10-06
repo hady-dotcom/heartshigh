@@ -505,7 +505,7 @@ export function CoursePlayer({
     event.preventDefault()
     const dy = event.clientY - start.y
     const travel = pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY })
-    if (travel >= 8 && (event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
+    if ((event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
     if (dy < -28) openDrawer()
     else if (dy > 36) closeDrawer()
     else if (travel < 14) {
