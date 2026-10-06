@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, boardClickAllowed, boardShouldClose, boardShouldOpen, isDragEnd, moreAfterAdvanceThenScrim, pictureTapIgnored, pointerTravel, saveDuringAdvanceThenTap } from '../../src/lib/board-gestures'
+import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardClickAllowed, boardShouldClose, boardShouldOpen, endCardAfterBoardClose, isDragEnd, moreAfterAdvanceThenScrim, pictureTapIgnored, pointerTravel, saveDuringAdvanceThenTap } from '../../src/lib/board-gestures'
 
 test('a click that ends a More drag is ignored', () => {
   assert.equal(isDragEnd(0), false)
@@ -39,7 +39,10 @@ test('advance, open More, close on the scrim: the film stays playing', () => {
   assert.equal(after.userPaused, false)
   assert.equal(pictureTapIgnored({ boardOpen: true, swallowUntil: 0, now: 50 }), true)
   assert.equal(pictureTapIgnored({ boardOpen: false, swallowUntil: 0, now: 50 }), false)
-  assert.equal(PICTURE_SWALLOW_MS, 480)
+  assert.equal(PICTURE_SWALLOW_MS, 400)
+  assert.equal(autoAdvanceClosesBoard('auto'), false)
+  assert.equal(autoAdvanceClosesBoard('swipe'), true)
+  assert.deepEqual(endCardAfterBoardClose({ index: 4, clipEnded: true }), { index: 4, clipEnded: true })
 })
 
 test('Save during an advance still leaves the next tap as a covered pause', () => {

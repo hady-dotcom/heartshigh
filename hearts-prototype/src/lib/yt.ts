@@ -107,7 +107,7 @@ export function playerVars(kind: PlayerKind, start: number, end?: number | null,
     controls: 0,
     rel: 0,
     iv_load_policy: 3,
-    modestbranding: 1,
+    modestbranding: 1, // Channel watermark cannot be removed via embed params.
     playsinline: 1,
     disablekb: 1,
     fs: 0,

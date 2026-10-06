@@ -134,10 +134,11 @@ export type CoverHoldMachine = {
   holdState: number
   lastTime: number
   cover: boolean
+  heldForPause: boolean
 }
 
 export function freshCoverHold(): CoverHoldMachine {
-  return { holdFor: '', playStartedAt: 0, holdState: -9, lastTime: -1, cover: true }
+  return { holdFor: '', playStartedAt: 0, holdState: -9, lastTime: -1, cover: true, heldForPause: false }
 }
 
 /**
@@ -162,14 +163,14 @@ export function coverHoldStep(
   let next = machine.holdFor === tick.holdKey ? { ...machine } : freshCoverHold()
   if (next.holdFor !== tick.holdKey) next.holdFor = tick.holdKey
   if (tick.ended || tick.userPaused) {
-    return { ...next, playStartedAt: 0, holdState: tick.state, lastTime: tick.currentTime, cover: true }
+    return { ...next, playStartedAt: 0, holdState: tick.state, lastTime: -1, cover: true, heldForPause: true }
   }
   const specOk = Boolean(tick.specKey) && tick.specKey === tick.hostSpecKey
   const confirmed = specOk && playingConfirmed(tick.state, tick.currentTime, tick.start)
   const moved = next.lastTime >= 0 && tick.currentTime > next.lastTime + 0.04
   if (!confirmed || !moved) {
     if (tick.state !== 1) {
-      return { ...next, playStartedAt: 0, holdState: tick.state, lastTime: tick.currentTime, cover: true }
+      return { ...next, playStartedAt: 0, holdState: tick.state, lastTime: tick.currentTime, cover: true, heldForPause: next.heldForPause }
     }
     return {
       ...next,
@@ -180,11 +181,12 @@ export function coverHoldStep(
     }
   }
   const advancing = true
-  if (!next.playStartedAt || coverHoldShouldRestart(tick.state, next.holdState, advancing)) {
+  if (!next.playStartedAt || next.heldForPause || coverHoldShouldRestart(tick.state, next.holdState, advancing)) {
     next.playStartedAt = tick.now
   }
   next.holdState = tick.state
   next.lastTime = tick.currentTime
+  next.heldForPause = false
   next.cover = filmCoverVisible({
     playing: true,
     playingForMs: Math.max(0, tick.now - next.playStartedAt),
@@ -233,4 +235,60 @@ export function coverAfterPlayingTicks(input: {
     coverAt6000: coverAt[coverAt.length - 1].cover,
     lifted: !at4750.cover,
   }
+}
+
+/** Pause, then PLAYING with cur moving: the 4.5s hold starts again from the resume. */
+export function coverAfterResumeTicks(input: {
+  holdKey: string
+  specKey: string
+  start?: number
+  pauseAt?: number
+  resumeAt?: number
+  tickMs?: number
+  afterResumeMs?: number
+}) {
+  const tickMs = input.tickMs ?? 250
+  const start = input.start ?? 250
+  const pauseAt = input.pauseAt ?? 259.6
+  const resumeAt = input.resumeAt ?? 263.2
+  let machine = freshCoverHold()
+  for (let now = 0; now <= 2000; now += tickMs) {
+    machine = coverHoldStep(machine, {
+      holdKey: input.holdKey,
+      specKey: input.specKey,
+      hostSpecKey: input.specKey,
+      state: 1,
+      currentTime: start + now / 1000,
+      start,
+      now,
+    })
+  }
+  machine = coverHoldStep(machine, {
+    holdKey: input.holdKey,
+    specKey: input.specKey,
+    hostSpecKey: input.specKey,
+    state: 2,
+    currentTime: pauseAt,
+    start,
+    now: 2100,
+    userPaused: true,
+  })
+  let time = resumeAt
+  const afterResumeMs = input.afterResumeMs ?? 6000
+  const coverAt: Array<{ atMs: number; cover: boolean }> = []
+  for (let now = 0; now <= afterResumeMs; now += tickMs) {
+    machine = coverHoldStep(machine, {
+      holdKey: input.holdKey,
+      specKey: input.specKey,
+      hostSpecKey: input.specKey,
+      state: 1,
+      currentTime: time,
+      start,
+      now: 2200 + now,
+    })
+    coverAt.push({ atMs: now, cover: machine.cover })
+    time += tickMs / 1000
+  }
+  const at4750 = coverAt.find((row) => row.atMs >= 4750) || coverAt[coverAt.length - 1]
+  return { coverAt, coverAt4750: at4750.cover, lifted: !at4750.cover, heldForPause: machine.heldForPause }
 }

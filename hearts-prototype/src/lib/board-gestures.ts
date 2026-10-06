@@ -8,7 +8,17 @@ export const BOARD_CLOSE_DY = 20
 export const BOARD_FLICK_DY = 8
 export const BOARD_FLICK_V = 0.35
 /** After More, the scrim, or the handle closes, ignore leftover picture taps. */
-export const PICTURE_SWALLOW_MS = 480
+export const PICTURE_SWALLOW_MS = 400
+
+/** Auto-advance keeps More open so Save still hits the board. A swipe may close it. */
+export function autoAdvanceClosesBoard(how: 'swipe' | 'auto') {
+  return how === 'swipe'
+}
+
+/** Closing More on the end card must not move the playlist. */
+export function endCardAfterBoardClose(input: { index: number; clipEnded: boolean }) {
+  return { index: input.index, clipEnded: input.clipEnded }
+}
 
 export function boardShouldClose(dy: number, velocity = 0, threshold = BOARD_CLOSE_DY) {
   return dy > threshold || (dy > BOARD_FLICK_DY && velocity >= BOARD_FLICK_V)

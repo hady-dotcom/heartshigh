@@ -239,8 +239,9 @@ export function applyPauseWhenReady(input: { pauseWhenReady: boolean; advancing:
 }
 
 /** Keep calling pauseVideo on the visible host until YouTube itself reports PAUSED. */
-export function keepVisiblePaused(input: { userPaused: boolean; liveState: number }) {
-  return input.userPaused && input.liveState !== 2 && input.liveState !== 0 && input.liveState !== 5
+export function keepVisiblePaused(input: { userPaused: boolean; liveState: number; wantsPlay?: boolean }) {
+  if (input.wantsPlay || !input.userPaused) return false
+  return input.liveState !== 2 && input.liveState !== 0 && input.liveState !== 5
 }
 
 /**

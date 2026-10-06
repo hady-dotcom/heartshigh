@@ -594,11 +594,11 @@
   left: 12px;
   top: 18px;
   z-index: 6;
-  min-width: 36px;
-  height: 28px;
-  padding: 0 8px;
-  border-radius: 8px;
-  background: rgba(8, 24, 24, 0.72);
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
   color: #f6eedc;
   font-size: 12px;
   font-weight: 700;

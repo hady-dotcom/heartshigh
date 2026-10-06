@@ -151,18 +151,6 @@
   width: auto !important;
   height: 100% !important;
 }
-/* YouTube's channel watermark / top-right embed chip sits in the uncropped 16:9 band. Mask that corner only. */
-.yt-host.on .j-film-band::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 44px;
-  height: 44px;
-  background: #0F3B3A;
-  z-index: 3;
-  pointer-events: none;
-}
 .yt-host.on:not(.is-live) .j-film-band::after {
   content: '';
   position: absolute;
@@ -592,11 +580,11 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   left: 16px;
   top: calc(64px + var(--safe-top));
   z-index: 9;
-  min-width: 36px;
-  height: 28px;
-  padding: 0 8px;
-  border-radius: 8px;
-  background: rgba(8, 24, 24, 0.72);
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
   color: #f6eedc;
   font-size: 12px;
   font-weight: 700;
@@ -684,6 +672,13 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   border-radius: 5px;
   background: rgba(241, 213, 138, 0.55);
   margin: 0 auto;
+}
+.j-board-title {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.3;
+  color: #F1E4C6;
 }
 .j-board .rail,
 .journey.phase-feed .j-chrome .j-board .rail {

@@ -53,7 +53,7 @@ test('1: More, the board and the scrim never pause the film after an advance', (
   assert.equal(after.playing, true)
   assert.equal(after.pictureIgnored, true)
   assert.equal(pictureTapIgnored({ boardOpen: true, swallowUntil: 0, now: 10 }), true)
-  assert.equal(PICTURE_SWALLOW_MS, 480)
+  assert.equal(PICTURE_SWALLOW_MS, 400)
   const closeDrawer = journey.slice(journey.indexOf('const closeDrawer'), journey.indexOf('const boardAction'))
   assert.match(closeDrawer, /swallowPicture|ignorePictureUntil/)
   assert.match(journey, /onPointerUp=\{\(event\) => \{ event\.stopPropagation\(\); event\.preventDefault\(\); closeDrawer\(event\) \}\}/)

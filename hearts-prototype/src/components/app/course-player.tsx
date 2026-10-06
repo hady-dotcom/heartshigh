@@ -13,7 +13,7 @@ import { courseCatcherTap, coursePlayVisible } from '@/lib/course-controls'
 import { nextPlaybackRate } from '@/lib/playback-rate'
 import { createPlayer, destroyPlayer, getPlayer, hasSound, pauseKeepingSound, playWithSoundFallback, resume, soundOn, STATE, UNPLAYABLE } from '@/lib/yt'
 import { PICTURE_SWALLOW_MS, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
-import { coverFallbackAction, coverHoldMsLeft, coverHoldShouldRestart, landscapeThumb, playerReadout, ytDebugOn } from '@/lib/yt-cover'
+import { coverFallbackAction, coverHoldKey, coverHoldStep, freshCoverHold, landscapeThumb, playerReadout, ytDebugOn } from '@/lib/yt-cover'
 import { SwarmList } from '@/components/app/swarm-list'
 import { initialsOf } from '@/lib/swarm-sort'
 import { HeartIcon, ImageIcon, LockIcon, MicIcon } from '../icons'
@@ -153,6 +153,7 @@ export function CoursePlayer({
   const userPausedRef = useRef(false)
   const playStartedAt = useRef(0)
   const holdState = useRef(-9)
+  const coverMachine = useRef(freshCoverHold())
   const boardOpenedAt = useRef(0)
   const ignorePictureUntil = useRef(0)
   const boardDrag = useRef<{ x: number; y: number; t: number } | null>(null)
@@ -230,6 +231,7 @@ export function CoursePlayer({
     setUserPaused(false)
     holdState.current = -9
     playStartedAt.current = 0
+    coverMachine.current = freshCoverHold()
     const failFirst = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('heartsFailFirst') === '1'
     const fallback = window.setTimeout(() => {
       if (cancelled) return
@@ -614,27 +616,34 @@ export function CoursePlayer({
   const livePlayer = getPlayer(PLAYER_ID)
   const liveState = livePlayer?.getPlayerState() ?? ytState
   const liveTime = livePlayer?.getCurrentTime() ?? time
-  const showCover = coverHeld || liveState !== STATE.PLAYING || ended || mode === 'loading' || userPaused
+  const showCover = coverHeld || ended || mode === 'loading'
   useEffect(() => {
-    const state = liveState
-    if (state === STATE.PLAYING && !ended) {
-      if (coverHoldShouldRestart(state, holdState.current, liveTime > startAt + 0.12)) {
-        playStartedAt.current = performance.now()
-        setCoverHeld(true)
-      }
-      holdState.current = state
-      if (!playStartedAt.current) {
-        playStartedAt.current = performance.now()
-        setCoverHeld(true)
-      }
-      const left = coverHoldMsLeft(playStartedAt.current, performance.now())
-      const timer = window.setTimeout(() => setCoverHeld(false), Math.max(0, left))
-      return () => window.clearTimeout(timer)
+    if (!youtubeId) return
+    const specKey = `${lessonId}:full`
+    const apply = () => {
+      const player = getPlayer(PLAYER_ID)
+      const state = player?.getPlayerState() ?? ytState
+      const currentTime = player?.getCurrentTime() ?? timeRef.current
+      const next = coverHoldStep(coverMachine.current, {
+        holdKey: coverHoldKey(lessonId, 'full', specKey),
+        specKey,
+        hostSpecKey: specKey,
+        state,
+        currentTime,
+        start: startAt,
+        now: performance.now(),
+        ended,
+        userPaused: userPausedRef.current,
+      })
+      coverMachine.current = next
+      playStartedAt.current = next.playStartedAt
+      holdState.current = next.holdState
+      setCoverHeld((held) => (held === next.cover ? held : next.cover))
     }
-    holdState.current = state
-    playStartedAt.current = 0
-    setCoverHeld(true)
-  }, [ended, liveState, liveTime, startAt])
+    apply()
+    const timer = window.setInterval(apply, 250)
+    return () => window.clearInterval(timer)
+  }, [ended, lessonId, startAt, youtubeId, ytState])
   useEffect(() => {
     if (!youtubeId || ended) return
     const begun = performance.now()

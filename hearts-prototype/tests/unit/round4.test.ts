@@ -198,4 +198,5 @@ test('feed players show none of YouTube’s chrome: no controls, inline, no rela
     assert.equal(vars.modestbranding, 1, kind)
     assert.equal(vars.fs, 0, kind)
   }
+  assert.match(readFileSync(path.join(root, 'src/lib/yt.ts'), 'utf8'), /Channel watermark cannot be removed via embed params/)
 })

@@ -58,6 +58,8 @@ test('C: course cover sits above the iframe, one player, sticky band, schedule c
   assert.match(player, /poster\.is-clear|is-clear/)
   assert.match(player, /setYtState/)
   assert.match(player, /playerReadout/)
+  assert.match(player, /coverHoldStep/)
+  assert.match(player, /setInterval\(apply, 250\)/)
   assert.match(css, /\.app\[data-testid="course"\] \.course-film \{[\s\S]*position: sticky/)
   assert.match(css, /\.course-film-band \.poster[\s\S]*z-index: 5/)
   assert.match(css, /\[data-testid="schedule-this"\][\s\S]*display: flex/)
@@ -66,10 +68,11 @@ test('C: course cover sits above the iframe, one player, sticky band, schedule c
   assert.match(course, /data-testid="start-part"/)
 })
 
-test('D: advancing closes the board without leaving a swallowed pause', () => {
+test('D: a swipe closes the board; auto-advance keeps it open', () => {
   const journey = readFileSync(path.join(process.cwd(), 'src/components/journey/journey.tsx'), 'utf8')
   assert.match(journey, /ignorePictureUntil/)
-  assert.match(journey, /boardOpenRef\.current = false/)
+  assert.match(journey, /autoAdvanceClosesBoard/)
+  assert.match(journey, /keepBoardOnShow/)
   assert.match(journey, /userPausedRef\.current = false/)
   assert.match(journey, /\{\.\.\.swipe\}/)
 })

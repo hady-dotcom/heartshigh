@@ -101,6 +101,7 @@ test('a stall then the first real tap pauses once, and a stall tap pauses when c
   assert.equal(livePictureTap({ state: 2, stalled: false }), 'play')
   assert.equal(keepVisiblePaused({ userPaused: true, liveState: 1 }), true)
   assert.equal(keepVisiblePaused({ userPaused: true, liveState: 2 }), false)
+  assert.equal(keepVisiblePaused({ userPaused: true, liveState: 1, wantsPlay: true }), false)
 
   const firstReal = stallThenTap([
     { state: 1, cur: 5628.4, atMs: 0 },

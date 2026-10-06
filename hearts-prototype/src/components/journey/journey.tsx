@@ -16,7 +16,7 @@ import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { dedicatedLaneFeed, playableLaneClips, takeDedicatedLane } from '@/lib/lanes'
 import { coverAttr, coverFallbackAction, coverHoldKey, coverHoldStep, filmCoverKey, freshCoverHold, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
-import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
+import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
 import { isoWeek } from '@/lib/trends'
 import { courseCatcherTap } from '@/lib/course-controls'
 import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, applyPauseWhenReady, bufferRetryAction, clockIsStalled, endCardPlayerAction, endedEventIsCurrent, horsWindowEnded, hostShouldShow, keepVisiblePaused, livePictureTap, pictureIsTap, pictureSwipeCommit, planFilmAdvance, playbackAction, playbackAdvancing, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe, type EndAdvanceSource } from '@/lib/film-advance'
@@ -223,6 +223,7 @@ export function Journey(props: JourneyProps) {
   const [swipeHint] = useState(true)
   const [coverHeld, setCoverHeld] = useState(true)
   const [clipEnded, setClipEnded] = useState(false)
+  const clipEndedRef = useRef(false)
   const playStartedAt = useRef(0)
   const holdState = useRef(-9)
   const coverHoldFor = useRef('')
@@ -231,6 +232,7 @@ export function Journey(props: JourneyProps) {
   const pauseWhenReadyRef = useRef(false)
   const pauseTapAt = useRef(0)
   const swallowOnShow = useRef(true)
+  const keepBoardOnShow = useRef(false)
   const clockRef = useRef({ time: -1, at: 0 })
   const ignorePictureUntil = useRef(0)
   const advancedFromRef = useRef<string | null>(null)
@@ -696,8 +698,11 @@ export function Journey(props: JourneyProps) {
       bufferingSince.current = 0
       bufferRetried.current = false
       userPausedRef.current = false
-      boardOpenRef.current = false
-      setBoardOpen(false)
+      clipEndedRef.current = false
+      if (!keepBoardOnShow.current) {
+        boardOpenRef.current = false
+        setBoardOpen(false)
+      }
       ignorePictureUntil.current = swallowOnShow.current ? showStarted + PICTURE_SWALLOW_MS : 0
       if (item) {
         const seen = rememberSeenCard(item.cutId, item.card || 'talk', kind)
@@ -1237,6 +1242,7 @@ export function Journey(props: JourneyProps) {
     userPausedRef.current = true
     wantPlayRef.current = null
     pauseWhenReadyRef.current = false
+    clipEndedRef.current = true
     boardOpenRef.current = false
     setBoardOpen(false)
     setCoverHeld(true)
@@ -1272,6 +1278,7 @@ export function Journey(props: JourneyProps) {
       // Drop any show already in flight so its prepare cannot load the clip we are leaving.
       showGen.current += 1
       swallowOnShow.current = how === 'swipe'
+      keepBoardOnShow.current = !autoAdvanceClosesBoard(how)
       if (how === 'swipe') leaveSignal()
       const el = clipRef.current
       // A second Next during the slide used to leave the card translated off the phone: a blank
@@ -1543,6 +1550,11 @@ export function Journey(props: JourneyProps) {
     setToast('Playing this clip again.')
   }
   const swipeTo = (swipe: Swipe) => {
+    if (clipEndedRef.current) {
+      markSwipe(false)
+      springBack()
+      return
+    }
     const current = itemsRef.current[indexRef.current]
     if (!current) return
     dismissCoach()
@@ -1784,6 +1796,7 @@ export function Journey(props: JourneyProps) {
 
   const tapPicture = () => {
     dismissCoach()
+    if (clipEndedRef.current) return
     if (pictureTapIgnored({ boardOpen: boardOpenRef.current, swallowUntil: ignorePictureUntil.current, now: performance.now() })) return
     const host = hosts.current[visibleRef.current]
     const player = host.playerId ? getPlayer(host.playerId) : null
@@ -1815,14 +1828,17 @@ export function Journey(props: JourneyProps) {
       return
     }
     if (action === 'play') {
+      pauseTapAt.current = 0
       pauseWhenReadyRef.current = false
       userPausedRef.current = false
       if (host.spec) armPlay(host.spec.key)
       courseCatcherTap(player)
       player?.unMute()
+      setReadyTick((value) => value + 1)
       return
     }
     if (player) {
+      pauseTapAt.current = 0
       pauseWhenReadyRef.current = false
       userPausedRef.current = false
       if (host.spec) armPlay(host.spec.key)
@@ -2052,7 +2068,7 @@ export function Journey(props: JourneyProps) {
         lastTime: clockRef.current.time,
         start: row.spec?.start || 0,
       })
-      if (userPausedRef.current && player && keepVisiblePaused({ userPaused: true, liveState })) {
+      if (userPausedRef.current && player && keepVisiblePaused({ userPaused: true, liveState, wantsPlay: false })) {
         player.pauseVideo()
         row.state = STATE.PAUSED
         wantPlayRef.current = null
@@ -2167,8 +2183,10 @@ export function Journey(props: JourneyProps) {
   useEffect(() => {
     setCaptionOpen(false)
     setAppetiserHeld(true)
-    boardOpenRef.current = false
-    setBoardOpen(false)
+    if (!keepBoardOnShow.current) {
+      boardOpenRef.current = false
+      setBoardOpen(false)
+    }
   }, [item?.id])
   useEffect(() => {
     setDebugOn(ytDebugOn(window.location.search))
@@ -2395,6 +2413,7 @@ export function Journey(props: JourneyProps) {
           <span className="j-board-handle" data-testid="board-handle" />
         </div>
         {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
+        {item.lessonTitle || item.courseTitle ? <p className="j-board-title" data-testid="board-title">{item.lessonTitle || item.courseTitle}</p> : null}
       <div className="rail">
         <button type="button" data-testid="share" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => boardAction(event, () => { void share() })} onClick={(event) => event.preventDefault()}><span className="bubble"><ShareIcon /></span>Share</button>
         <button type="button" aria-pressed={faves.includes(item.id)} data-testid="fave" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => boardAction(event, () => fave())} onClick={(event) => event.preventDefault()}><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>

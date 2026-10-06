@@ -18,6 +18,7 @@ import {
   pauseMarkVisible,
   coverAttr,
   coverAfterPlayingTicks,
+  coverAfterResumeTicks,
   coverHoldStep,
   freshCoverHold,
   playerReadout,
@@ -129,4 +130,11 @@ test('PLAYING ticks of 250ms lift the cover by 4.75s on first clip, after auto-a
   }
   assert.equal(frozen.cover, true)
   assert.equal(frozen.playStartedAt, 0, 'frozen PLAYING must not start this clip\'s hold clock')
+
+  const course = coverAfterPlayingTicks({ holdKey: '24:full:24:full', specKey: '24:full', start: 10, fromTime: 10.9 })
+  assert.equal(course.lifted, true, 'the course player uses the same 4.5s hold')
+
+  const afterResume = coverAfterResumeTicks({ holdKey: '5:hors:5:hors', specKey: '5:hors', start: 250, pauseAt: 259.6, resumeAt: 263.2 })
+  assert.equal(afterResume.lifted, true, 'resume restarts the 4.5s hold')
+  assert.equal(afterResume.coverAt.find((row) => row.atMs === 4250)?.cover, true)
 })
