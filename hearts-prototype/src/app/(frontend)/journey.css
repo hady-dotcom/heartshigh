@@ -410,7 +410,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-scene .j-actions { margin-top: 10px; }
 .strict .j-poster-play { top: 50%; }
 .end-card {
-  position: absolute; left: 16px; right: 16px; bottom: calc(96px + var(--safe-bottom)); z-index: 8;
+  position: absolute; left: 16px; right: 16px; bottom: calc(132px + var(--safe-bottom)); z-index: 8;
   display: grid; gap: 10px; padding: 18px 16px;
   background: linear-gradient(180deg, #f3e2c0, #e8d4a6); color: #0f3b3a;
   border: 1px solid #d4a84b; border-radius: 22px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
