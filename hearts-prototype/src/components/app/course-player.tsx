@@ -472,7 +472,7 @@ export function CoursePlayer({
     const start = boardDrag.current
     if (!start) return
     event.stopPropagation()
-    if ((event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
+    if ((event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
     if (!boardOpen && event.clientY < start.y - 24) setBoardOpen(true)
     if (boardOpen && event.clientY > start.y + 36) setBoardOpen(false)
   }
@@ -482,7 +482,7 @@ export function CoursePlayer({
     if (!start) return
     event.stopPropagation()
     event.preventDefault()
-    if ((event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
+    if ((event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
     const dy = event.clientY - start.y
     if (dy < -28) setBoardOpen(true)
     else if (dy > 36) setBoardOpen(false)
