@@ -15,8 +15,8 @@ import { feedFilmCaption } from '@/lib/spoken-caption'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { dedicatedLaneFeed, playableLaneClips } from '@/lib/lanes'
-import { YT_CHROME_HOLD_MS, coverFallbackAction, coverHoldShouldRestart, filmCoverKey, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
-import { BOARD_ARM_MS, boardClickAllowed, boardShouldClose, boardShouldOpen, pointerTravel } from '@/lib/board-gestures'
+import { coverFallbackAction, coverHoldKey, coverHoldMsLeft, coverHoldShouldRestart, filmCoverKey, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
+import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
 import { isoWeek } from '@/lib/trends'
 import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, hostShouldShow, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, verticalSwipe } from '@/lib/film-advance'
 import { acceptLevelTap, type LevelTap } from '@/lib/level-tap'
@@ -224,10 +224,12 @@ export function Journey(props: JourneyProps) {
   const [clipEnded, setClipEnded] = useState(false)
   const playStartedAt = useRef(0)
   const holdState = useRef(-9)
+  const coverHoldFor = useRef('')
   const ignorePictureUntil = useRef(0)
   const [debugOn, setDebugOn] = useState(false)
+  const [wordsLive, setWordsLive] = useState(false)
   const boardOpenedAt = useRef(0)
-  const boardDrag = useRef<{ x: number; y: number; opened: boolean } | null>(null)
+  const boardDrag = useRef<{ x: number; y: number; t: number; opened: boolean } | null>(null)
   const watch = useRef<{ key: string; start: number; furthest: number; done90: boolean; ended: boolean }>({ key: '', start: 0, furthest: 0, done90: false, ended: false })
   const refilling = useRef(false)
   const clipRef = useRef<HTMLDivElement>(null)
@@ -662,10 +664,11 @@ export function Journey(props: JourneyProps) {
       setCoverKey(filmCoverKey(item))
       playStartedAt.current = 0
       holdState.current = -9
+      coverHoldFor.current = ''
       userPausedRef.current = false
       boardOpenRef.current = false
       setBoardOpen(false)
-      ignorePictureUntil.current = performance.now() + 480
+      ignorePictureUntil.current = performance.now() + PICTURE_SWALLOW_MS
       if (item) {
         const seen = rememberSeenCard(item.cutId, item.card || 'talk', kind)
         seenRef.current = new Set(seen.cards)
@@ -757,7 +760,6 @@ export function Journey(props: JourneyProps) {
     if (props.initial !== 'feed') return
     let cancelled = false
     const begin = async () => {
-      await wait(0)
       const state = heartRef.current
       if (!state) return
       setFirstEver(state.served.length === 0)
@@ -1170,6 +1172,16 @@ export function Journey(props: JourneyProps) {
     writeCoachDismissed()
   }
 
+  const showLaneEnd = () => {
+    userPausedRef.current = false
+    boardOpenRef.current = false
+    setBoardOpen(false)
+    setCoverHeld(true)
+    setClipEnded(true)
+    ignorePictureUntil.current = performance.now() + PICTURE_SWALLOW_MS
+    hushLeaving()
+  }
+
   const advance = useCallback(
     async (to: number, how: 'swipe' | 'auto' = 'swipe', exit: Exit = 'up', via?: Swipe) => {
       const ticket = (advanceGen.current += 1)
@@ -1256,8 +1268,7 @@ export function Journey(props: JourneyProps) {
       }
       const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current, Boolean(props.lane))
       if (next == null) {
-        userPausedRef.current = true
-        setClipEnded(true)
+        showLaneEnd()
       } else {
         userPausedRef.current = false
         void advance(next, 'auto')
@@ -1273,7 +1284,7 @@ export function Journey(props: JourneyProps) {
       window.setTimeout(() => {
         const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current, Boolean(props.lane))
         if (next == null) {
-          setClipEnded(true)
+          showLaneEnd()
           setToast(poolEndToast())
         } else void advance(next, 'auto')
       }, 900)
@@ -1295,7 +1306,7 @@ export function Journey(props: JourneyProps) {
       pendingAfterSheet.current = null
       const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current, Boolean(props.lane))
       if (next == null) {
-        setClipEnded(true)
+        showLaneEnd()
         if (!props.lane) setToast(poolEndToast())
       } else void advance(next, 'auto')
     } else window.setTimeout(() => tryPlay(), 0)
@@ -1377,7 +1388,8 @@ export function Journey(props: JourneyProps) {
         if (!seen.ended) {
           seen.ended = true
           wantPlayRef.current = null
-          userPausedRef.current = true
+          const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current, Boolean(props.lane))
+          userPausedRef.current = next == null
           window.dispatchEvent(new CustomEvent('hearts:ended'))
         }
         return
@@ -1429,7 +1441,6 @@ export function Journey(props: JourneyProps) {
   const swipeTo = (swipe: Swipe) => {
     const current = itemsRef.current[indexRef.current]
     if (!current) return
-    hushLeaving()
     dismissCoach()
     let list = itemsRef.current
     let target = swipeTarget(list, indexRef.current, modeRef.current, swipe, seenRef.current, Boolean(props.lane))
@@ -1446,7 +1457,7 @@ export function Journey(props: JourneyProps) {
       markSwipe(false)
       springBack()
       if (props.lane && swipe === 'next') {
-        setClipEnded(true)
+        showLaneEnd()
         return
       }
       if (swipe === 'speaker') return setToast(`That's everything from ${current.speaker} for now.`)
@@ -1470,6 +1481,7 @@ export function Journey(props: JourneyProps) {
     } catch {
       // ignore
     }
+    hushLeaving()
     void advance(target, 'swipe', SWIPE_EXIT[swipe], swipe)
   }
   const nextLane = () => swipeTo('lane')
@@ -1667,8 +1679,8 @@ export function Journey(props: JourneyProps) {
   }
 
   const tapPicture = () => {
-    if (boardOpenRef.current) return
-    if (performance.now() < ignorePictureUntil.current) return
+    dismissCoach()
+    if (pictureTapIgnored({ boardOpen: boardOpenRef.current, swallowUntil: ignorePictureUntil.current, now: performance.now() })) return
     const host = hosts.current[visibleRef.current]
     const player = host.playerId ? getPlayer(host.playerId) : null
     const real = player?.getPlayerState()
@@ -1892,22 +1904,33 @@ export function Journey(props: JourneyProps) {
   const started = playerReady && host.played && LIVE.has(host.state)
   const playingOut = playerReady && host.played && host.state === STATE.PLAYING
   useEffect(() => {
+    const holdKey = coverHoldKey(item?.cutId, mode)
+    if (coverHoldFor.current !== holdKey) {
+      coverHoldFor.current = holdKey
+      playStartedAt.current = 0
+      holdState.current = -9
+      setCoverHeld(true)
+    }
     const state = host.state
     const player = host.playerId ? getPlayer(host.playerId) : null
     const now = player?.getCurrentTime() ?? 0
     const advancing = !playStartedAt.current || now > (host.spec?.start || 0) + 0.12
     if (playingOut && !clipEnded) {
-      if (coverHoldShouldRestart(state, holdState.current, advancing)) {
+      if (!playStartedAt.current || coverHoldShouldRestart(state, holdState.current, advancing)) {
         playStartedAt.current = performance.now()
         setCoverHeld(true)
       }
       holdState.current = state
-      const left = YT_CHROME_HOLD_MS - (performance.now() - playStartedAt.current)
+      if (!playStartedAt.current) {
+        setCoverHeld(true)
+        return
+      }
+      const left = coverHoldMsLeft(playStartedAt.current, performance.now())
       const timer = window.setTimeout(() => setCoverHeld(false), Math.max(0, left))
       return () => window.clearTimeout(timer)
     }
     holdState.current = state
-    playStartedAt.current = 0
+    if (!clipEnded) playStartedAt.current = 0
     setCoverHeld(true)
   }, [playingOut, clipEnded, host.state, item?.cutId, mode])
   useEffect(() => {
@@ -1968,6 +1991,7 @@ export function Journey(props: JourneyProps) {
   }, [item?.id])
   useEffect(() => {
     setDebugOn(ytDebugOn(window.location.search))
+    setWordsLive(true)
   }, [])
   const slide = null
   const course = (item && learnMore(item, 'appetiser', base)?.href) || base
@@ -2039,13 +2063,19 @@ export function Journey(props: JourneyProps) {
     ? item.framingTrack.sentences
     : sentencesFromCaptions(mode === 'hors' ? item?.hors.lines : item?.appetiser.lines, clipStart, clipEnd)
   const pausedMark = pauseMarkVisible({ paused: clipPaused, ended: clipEnded, userPaused })
+  const swallowPicture = () => {
+    ignorePictureUntil.current = performance.now() + PICTURE_SWALLOW_MS
+  }
   const openDrawer = () => {
     boardOpenedAt.current = performance.now()
     setBoardOpen(true)
   }
-  const closeDrawer = () => {
+  const closeDrawer = (event?: { stopPropagation(): void; preventDefault(): void }) => {
+    event?.stopPropagation()
+    event?.preventDefault()
     boardOpenRef.current = false
     setBoardOpen(false)
+    swallowPicture()
   }
   const boardAction = (event: { stopPropagation(): void; preventDefault(): void; clientX: number; clientY: number }, fn: () => void) => {
     event.stopPropagation()
@@ -2058,7 +2088,7 @@ export function Journey(props: JourneyProps) {
   const openBoard = (event: ReactPointerEvent) => {
     event.stopPropagation()
     event.preventDefault()
-    boardDrag.current = { x: event.clientX, y: event.clientY, opened: true }
+    boardDrag.current = { x: event.clientX, y: event.clientY, t: performance.now(), opened: true }
     event.currentTarget.setPointerCapture?.(event.pointerId)
   }
   const moveBoard = (event: ReactPointerEvent) => {
@@ -2075,11 +2105,12 @@ export function Journey(props: JourneyProps) {
     event.preventDefault()
     const dy = event.clientY - start.y
     const travel = pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY })
+    const velocity = dy / Math.max(1, performance.now() - start.t)
     if ((event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
-    if (boardShouldOpen(dy)) openDrawer()
-    else if (boardShouldClose(dy)) closeDrawer()
+    if (boardShouldOpen(dy, velocity)) openDrawer()
+    else if (boardShouldClose(dy, velocity)) closeDrawer(event)
     else if (travel < 14) {
-      if (boardOpen) closeDrawer()
+      if (boardOpen) closeDrawer(event)
       else openDrawer()
     }
   }
@@ -2130,6 +2161,7 @@ export function Journey(props: JourneyProps) {
         className="j-tap-catcher"
         data-testid="film-catcher"
         aria-label={playingOut ? 'Pause' : 'Play'}
+        data-ready="yes"
         {...swipe}
         onClick={(event) => event.preventDefault()}
       />
@@ -2143,8 +2175,8 @@ export function Journey(props: JourneyProps) {
         onPointerDown={openBoard}
         onPointerMove={moveBoard}
         onPointerUp={finishBoard}
-        onPointerCancel={() => { boardDrag.current = null }}
-        onClick={(event) => event.preventDefault()}
+        onPointerCancel={(event) => { event.stopPropagation(); boardDrag.current = null }}
+        onClick={(event) => { event.stopPropagation(); event.preventDefault() }}
       >
         <i />
         More
@@ -2153,8 +2185,9 @@ export function Journey(props: JourneyProps) {
         <div
           className="j-board-back"
           data-testid="board-back"
-          onPointerDown={(event) => { event.stopPropagation(); event.preventDefault(); closeDrawer() }}
-          onClick={(event) => { event.stopPropagation(); closeDrawer() }}
+          onPointerDown={(event) => { event.stopPropagation(); event.preventDefault() }}
+          onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); closeDrawer(event) }}
+          onClick={(event) => { event.stopPropagation(); event.preventDefault() }}
         />
       ) : null}
       {boardOpen ? (
@@ -2164,17 +2197,31 @@ export function Journey(props: JourneyProps) {
         data-armed={performance.now() - boardOpenedAt.current >= BOARD_ARM_MS ? 'yes' : 'no'}
         onPointerDown={(event) => {
           event.stopPropagation()
-          if ((event.target as HTMLElement).closest('button, a, input, textarea, select, label')) {
-            boardDrag.current = { x: event.clientX, y: event.clientY, opened: true }
-            return
-          }
-          boardDrag.current = { x: event.clientX, y: event.clientY, opened: true }
+          const onControl = Boolean((event.target as HTMLElement).closest('button, a, input, textarea, select, label'))
+          boardDrag.current = { x: event.clientX, y: event.clientY, t: performance.now(), opened: true }
+          if (onControl) return
           event.currentTarget.setPointerCapture?.(event.pointerId)
         }}
         onPointerMove={moveBoard}
         onPointerUp={finishBoard}
+        onPointerCancel={(event) => { event.stopPropagation(); boardDrag.current = null }}
+        onClick={(event) => event.stopPropagation()}
       >
-        <span className="j-board-handle" data-testid="board-handle" />
+        <div
+          className="j-board-grab"
+          data-testid="board-grab"
+          onPointerDown={(event) => {
+            event.stopPropagation()
+            event.preventDefault()
+            boardDrag.current = { x: event.clientX, y: event.clientY, t: performance.now(), opened: true }
+            event.currentTarget.setPointerCapture?.(event.pointerId)
+          }}
+          onPointerMove={moveBoard}
+          onPointerUp={finishBoard}
+          onPointerCancel={(event) => { event.stopPropagation(); boardDrag.current = null }}
+        >
+          <span className="j-board-handle" data-testid="board-handle" />
+        </div>
         {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
       <div className="rail">
         <button type="button" data-testid="share" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => boardAction(event, () => { void share() })} onClick={(event) => event.preventDefault()}><span className="bubble"><ShareIcon /></span>Share</button>
@@ -2243,7 +2290,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-cover={showPoster ? 'yes' : 'no'} data-next-clip={nextClipAt == null ? 'none' : String(nextClipAt)} data-playhead={spokenAt == null ? '' : String(Math.round(spokenAt * 10) / 10)} data-player-state={host.state} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
+    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" suppressHydrationWarning data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-cover={showPoster ? 'yes' : 'no'} data-next-clip={nextClipAt == null ? 'none' : String(nextClipAt)} data-playhead={spokenAt == null ? '' : String(Math.round(spokenAt * 10) / 10)} data-player-state={host.state} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
       <PageHelp page={phase === 'help' ? 'help' : phase === 'feed' ? (mode === 'appetiser' ? 'appetiser' : 'feed') : 'start'} />
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
@@ -2265,7 +2312,7 @@ export function Journey(props: JourneyProps) {
         <div ref={slotRef} className="j-slot" data-testid="player-slot" data-framing="F" style={{ visibility: phase === 'feed' || phase === 'handoff' ? 'visible' : 'hidden' }}>
           {[0, 1].map((at) => {
             const row = hosts.current[at as 0 | 1]
-            const filmOn = hostShouldShow(at === visibleHost, revealed, Boolean(slide || scenic || !currentSpec))
+            const filmOn = hostShouldShow(at === visibleHost, revealed, Boolean(slide || scenic || !currentSpec || clipEnded))
             const live = filmOn && at === visibleHost && playingOut
             return (
               <div
@@ -2279,15 +2326,19 @@ export function Journey(props: JourneyProps) {
             )
           })}
           {phase === 'feed' && item ? (
-            <SpokenWords
-              sentences={spokenSentences}
-              time={spokenAt != null && spokenAt >= clipStart - 0.5 && spokenAt <= clipEnd + 0.5 ? spokenAt : clipStart}
-              speaker={undefined}
-              title={item.lessonTitle || item.courseTitle}
-              titles={[item.lessonTitle, item.courseTitle]}
-              from={clipStart}
-              to={clipEnd}
-            />
+            wordsLive ? (
+              <SpokenWords
+                sentences={spokenSentences}
+                time={spokenAt != null && spokenAt >= clipStart - 0.5 && spokenAt <= clipEnd + 0.5 ? spokenAt : clipStart}
+                speaker={undefined}
+                title={item.lessonTitle || item.courseTitle}
+                titles={[item.lessonTitle, item.courseTitle]}
+                from={clipStart}
+                to={clipEnd}
+              />
+            ) : (
+              <div className="fr-words" data-testid="spoken-words" data-empty="yes" suppressHydrationWarning />
+            )
           ) : null}
           {typeClip && typeSrc ? (
             <video

@@ -12,8 +12,8 @@ import { placeDots } from '@/lib/timeline-dots'
 import { courseCatcherTap, coursePlayVisible } from '@/lib/course-controls'
 import { nextPlaybackRate } from '@/lib/playback-rate'
 import { createPlayer, destroyPlayer, getPlayer, hasSound, pauseKeepingSound, playWithSoundFallback, resume, soundOn, STATE, UNPLAYABLE } from '@/lib/yt'
-import { boardClickAllowed, boardShouldClose, boardShouldOpen, pointerTravel } from '@/lib/board-gestures'
-import { YT_CHROME_HOLD_MS, coverFallbackAction, coverHoldShouldRestart, landscapeThumb, playerReadout, ytDebugOn } from '@/lib/yt-cover'
+import { PICTURE_SWALLOW_MS, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
+import { coverFallbackAction, coverHoldMsLeft, coverHoldShouldRestart, landscapeThumb, playerReadout, ytDebugOn } from '@/lib/yt-cover'
 import { SwarmList } from '@/components/app/swarm-list'
 import { initialsOf } from '@/lib/swarm-sort'
 import { HeartIcon, ImageIcon, LockIcon, MicIcon } from '../icons'
@@ -154,7 +154,8 @@ export function CoursePlayer({
   const playStartedAt = useRef(0)
   const holdState = useRef(-9)
   const boardOpenedAt = useRef(0)
-  const boardDrag = useRef<{ x: number; y: number } | null>(null)
+  const ignorePictureUntil = useRef(0)
+  const boardDrag = useRef<{ x: number; y: number; t: number } | null>(null)
   const [count, setCount] = useState(5)
   const [held, setHeld] = useState<number[]>(deferred.map((row) => row.pointId))
   const heldRef = useRef(held)
@@ -487,7 +488,12 @@ export function CoursePlayer({
     boardOpenedAt.current = performance.now()
     setBoardOpen(true)
   }
-  const closeDrawer = () => setBoardOpen(false)
+  const closeDrawer = (event?: { stopPropagation(): void; preventDefault(): void }) => {
+    event?.stopPropagation()
+    event?.preventDefault()
+    setBoardOpen(false)
+    ignorePictureUntil.current = performance.now() + PICTURE_SWALLOW_MS
+  }
   const boardAction = (event: { stopPropagation(): void; preventDefault(): void; clientX: number; clientY: number }, fn: () => void) => {
     event.stopPropagation()
     event.preventDefault()
@@ -499,7 +505,7 @@ export function CoursePlayer({
   const openBoard = (event: ReactPointerEvent) => {
     event.stopPropagation()
     event.preventDefault()
-    boardDrag.current = { x: event.clientX, y: event.clientY }
+    boardDrag.current = { x: event.clientX, y: event.clientY, t: performance.now() }
     event.currentTarget.setPointerCapture?.(event.pointerId)
   }
   const moveBoard = (event: ReactPointerEvent) => {
@@ -516,11 +522,12 @@ export function CoursePlayer({
     event.preventDefault()
     const dy = event.clientY - start.y
     const travel = pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY })
+    const velocity = dy / Math.max(1, performance.now() - start.t)
     if ((event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
-    if (boardShouldOpen(dy)) openDrawer()
-    else if (boardShouldClose(dy)) closeDrawer()
+    if (boardShouldOpen(dy, velocity)) openDrawer()
+    else if (boardShouldClose(dy, velocity)) closeDrawer(event)
     else if (travel < 14) {
-      if (boardOpen) closeDrawer()
+      if (boardOpen) closeDrawer(event)
       else openDrawer()
     }
   }
@@ -539,6 +546,7 @@ export function CoursePlayer({
   }
 
   const togglePlay = () => {
+    if (pictureTapIgnored({ boardOpen, swallowUntil: ignorePictureUntil.current, now: performance.now() })) return
     if (mode === 'youtube' || youtubeId) {
       const player = getPlayer(PLAYER_ID)
       const action = courseCatcherTap(player)
@@ -615,7 +623,11 @@ export function CoursePlayer({
         setCoverHeld(true)
       }
       holdState.current = state
-      const left = YT_CHROME_HOLD_MS - (performance.now() - playStartedAt.current)
+      if (!playStartedAt.current) {
+        playStartedAt.current = performance.now()
+        setCoverHeld(true)
+      }
+      const left = coverHoldMsLeft(playStartedAt.current, performance.now())
       const timer = window.setTimeout(() => setCoverHeld(false), Math.max(0, left))
       return () => window.clearTimeout(timer)
     }
@@ -730,8 +742,8 @@ export function CoursePlayer({
         onPointerDown={openBoard}
         onPointerMove={moveBoard}
         onPointerUp={finishBoard}
-        onPointerCancel={() => { boardDrag.current = null }}
-        onClick={(event) => event.preventDefault()}
+        onPointerCancel={(event) => { event.stopPropagation(); boardDrag.current = null }}
+        onClick={(event) => { event.stopPropagation(); event.preventDefault() }}
       >
         <i />
         More
@@ -740,8 +752,9 @@ export function CoursePlayer({
         <div
           className="j-board-back"
           data-testid="board-back"
-          onPointerDown={(event) => { event.stopPropagation(); event.preventDefault(); closeDrawer() }}
-          onClick={(event) => { event.stopPropagation(); closeDrawer() }}
+          onPointerDown={(event) => { event.stopPropagation(); event.preventDefault() }}
+          onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); closeDrawer(event) }}
+          onClick={(event) => { event.stopPropagation(); event.preventDefault() }}
         />
       ) : null}
       {boardOpen ? (
@@ -750,14 +763,30 @@ export function CoursePlayer({
           data-testid="feed-board"
           onPointerDown={(event) => {
             event.stopPropagation()
-            boardDrag.current = { x: event.clientX, y: event.clientY }
+            boardDrag.current = { x: event.clientX, y: event.clientY, t: performance.now() }
             if ((event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
             event.currentTarget.setPointerCapture?.(event.pointerId)
           }}
           onPointerMove={moveBoard}
           onPointerUp={finishBoard}
+          onPointerCancel={(event) => { event.stopPropagation(); boardDrag.current = null }}
+          onClick={(event) => event.stopPropagation()}
         >
-          <span className="j-board-handle" data-testid="board-handle" />
+          <div
+            className="j-board-grab"
+            data-testid="board-grab"
+            onPointerDown={(event) => {
+              event.stopPropagation()
+              event.preventDefault()
+              boardDrag.current = { x: event.clientX, y: event.clientY, t: performance.now() }
+              event.currentTarget.setPointerCapture?.(event.pointerId)
+            }}
+            onPointerMove={moveBoard}
+            onPointerUp={finishBoard}
+            onPointerCancel={(event) => { event.stopPropagation(); boardDrag.current = null }}
+          >
+            <span className="j-board-handle" data-testid="board-handle" />
+          </div>
           <span className="time-read" data-testid="player-time">{clock(time)} / {clock(total)}</span>
           <button type="button" className="lecture-speed" data-testid="lecture-speed" aria-label="Playback speed" onClick={(event) => boardAction(event, cycleSpeed)}>{speed}×</button>
         <div className="timeline" data-testid="timeline" ref={timelineRef}>

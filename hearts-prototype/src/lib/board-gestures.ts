@@ -4,13 +4,43 @@ export const BOARD_ARM_MS = 300
 export const BOARD_DRAG_PX = 8
 /** Downward travel that closes the More sheet. */
 export const BOARD_CLOSE_DY = 20
+/** A short downward flick still closes, if it is fast enough. */
+export const BOARD_FLICK_DY = 8
+export const BOARD_FLICK_V = 0.35
+/** After More, the scrim, or the handle closes, ignore leftover picture taps. */
+export const PICTURE_SWALLOW_MS = 480
 
-export function boardShouldClose(dy: number, threshold = BOARD_CLOSE_DY) {
-  return dy > threshold
+export function boardShouldClose(dy: number, velocity = 0, threshold = BOARD_CLOSE_DY) {
+  return dy > threshold || (dy > BOARD_FLICK_DY && velocity >= BOARD_FLICK_V)
 }
 
-export function boardShouldOpen(dy: number, threshold = BOARD_CLOSE_DY) {
-  return dy < -threshold
+export function boardShouldOpen(dy: number, velocity = 0, threshold = BOARD_CLOSE_DY) {
+  return dy < -threshold || (dy < -BOARD_FLICK_DY && velocity <= -BOARD_FLICK_V)
+}
+
+/** A tap on the handle, board, or scrim must never toggle the film. */
+export function pictureTapIgnored(input: { boardOpen: boolean; swallowUntil: number; now: number }) {
+  return input.boardOpen || input.now < input.swallowUntil
+}
+
+/**
+ * Advance, open More, close on the scrim: leftover pointer work is swallowed
+ * and auto-advance must have cleared userPaused, so the film stays PLAYING.
+ */
+export function moreAfterAdvanceThenScrim(input: {
+  userPausedAfterAdvance: boolean
+  boardOpen: boolean
+  leftoverTapAt: number
+  swallowUntil: number
+  playerState: number
+}) {
+  const pictureIgnored = pictureTapIgnored({
+    boardOpen: input.boardOpen,
+    swallowUntil: input.swallowUntil,
+    now: input.leftoverTapAt,
+  })
+  const playing = input.playerState === 1 && !input.userPausedAfterAdvance
+  return { playing, pictureIgnored, userPaused: input.userPausedAfterAdvance }
 }
 
 export function boardSettled(openedAt: number, now: number, armMs = BOARD_ARM_MS) {

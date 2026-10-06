@@ -12,6 +12,17 @@ export function coverShouldHold(playingForMs: number, holdMs = YT_CHROME_HOLD_MS
   return playingForMs < holdMs
 }
 
+/** Never treat a missing start clock as page-uptime. No start means the full hold is still left. */
+export function coverHoldMsLeft(playStartedAt: number, now: number, holdMs = YT_CHROME_HOLD_MS) {
+  if (!playStartedAt) return holdMs
+  return holdMs - (now - playStartedAt)
+}
+
+/** Restart the 4.5s hold on every clip or level switch, including auto-advance and swipe. */
+export function coverHoldKey(cutId: number | null | undefined, mode: string) {
+  return `${cutId ?? ''}:${mode}`
+}
+
 /** Restart the hold on buffering, any other state, or a stuck clock. Continuous PLAYING may keep running. */
 export function coverHoldShouldRestart(state: number, prevState?: number, timeAdvancing = true) {
   if (state !== 1) return true

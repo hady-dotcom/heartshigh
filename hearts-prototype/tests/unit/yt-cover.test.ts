@@ -6,6 +6,8 @@ import {
   YT_STATE_FALLBACK_MS,
   advanceLeavesPlayable,
   coverFallbackAction,
+  coverHoldKey,
+  coverHoldMsLeft,
   coverHoldShouldRestart,
   coverShouldHold,
   filmCoverVisible,
@@ -72,4 +74,8 @@ test('the hold restarts on buffering or any other state, and the frame is uncrop
   assert.equal(playerReadout({ state: 1, time: 60.1, currentTime: 60.1, cover: false }), 'state 1 time 60.1 cur 60.1 cover no')
   assert.equal(advanceLeavesPlayable({ userPaused: false, boardOpen: false, swallowUntil: 10, now: 10 }), true)
   assert.equal(advanceLeavesPlayable({ userPaused: true, boardOpen: false, swallowUntil: 0, now: 20 }), false)
+  assert.equal(coverHoldMsLeft(0, 8000), YT_CHROME_HOLD_MS)
+  assert.equal(coverHoldMsLeft(1000, 2500), 3000)
+  assert.equal(coverHoldKey(3, 'hors'), '3:hors')
+  assert.notEqual(coverHoldKey(2, 'hors'), coverHoldKey(3, 'hors'))
 })

@@ -13,9 +13,22 @@ export function laneClips(clips: Record<string, FeedItem>, cuts: CutInfo[], lane
   return [...starters, ...tagged].map((row) => ({ ...row.clip, laneKey: lane, lane, laneLabel: title }))
 }
 
-/** Clips a lane can actually play: a YouTube id, and not a typing or face-film card. */
+/**
+ * The same gate the feed player uses: a YouTube talk with a real hors window,
+ * and not a styled, scene, or typography card that specFor would refuse.
+ */
+export function clipCanPlayOnLane(clip: Pick<FeedItem, 'youtubeId' | 'card' | 'hors' | 'style' | 'typography'>): boolean {
+  if (!clip.youtubeId) return false
+  if (clip.card && clip.card !== 'talk') return false
+  if (clip.style || clip.typography?.src) return false
+  const start = Number(clip.hors?.start)
+  const end = Number(clip.hors?.end)
+  return Number.isFinite(start) && Number.isFinite(end) && end > start
+}
+
+/** Clips a lane can actually play — the same list the player walks. */
 export function playableLaneClips(clips: Record<string, FeedItem>, cuts: CutInfo[], lane: string, title: string): FeedItem[] {
-  return laneClips(clips, cuts, lane, title).filter((clip) => Boolean(clip.youtubeId) && (!clip.card || clip.card === 'talk'))
+  return laneClips(clips, cuts, lane, title).filter(clipCanPlayOnLane)
 }
 
 /** A dedicated lane feed is exactly that lane's playable list. Empty when no lane is open. */

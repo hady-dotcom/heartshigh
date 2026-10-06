@@ -539,7 +539,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   pointer-events: none;
 }
 .j-coach-card {
-  pointer-events: auto;
+  pointer-events: none;
   background: rgba(14, 42, 43, 0.94);
   color: #f6eedc;
   border: 1px solid rgba(212, 168, 75, 0.45);
@@ -640,7 +640,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   z-index: 28;
   max-height: min(72%, 560px);
   overflow-y: auto;
-  padding: 10px 16px calc(16px + var(--safe-bottom));
+  padding: 0 16px calc(16px + var(--safe-bottom));
   border-radius: 22px 22px 0 0;
   background: #0F2E2C;
   color: #F1E4C6;
@@ -648,13 +648,19 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   pointer-events: auto;
   touch-action: pan-y;
 }
+.j-board-grab {
+  touch-action: none;
+  padding: 12px 16px 14px;
+  margin: 0 -16px 4px;
+  cursor: grab;
+}
 .j-board-handle {
   display: block;
   width: 44px;
   height: 5px;
   border-radius: 5px;
   background: rgba(241, 213, 138, 0.55);
-  margin: 2px auto 12px;
+  margin: 0 auto;
 }
 .j-board .rail,
 .journey.phase-feed .j-chrome .j-board .rail {
