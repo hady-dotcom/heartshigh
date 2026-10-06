@@ -365,3 +365,27 @@ export function bufferRetryAction(input: {
   if (input.bufferingForMs < BUFFER_RETRY_MS) return 'wait'
   return 'retry'
 }
+
+/**
+ * While the guest sign-up sheet is up the clip holds still. The play poll pauses a film that
+ * starts behind the sheet and runs no window end, no 90% mark and no advance until it closes.
+ */
+export function sheetPollAction(input: { sheetOpen: boolean; state: number }): 'run' | 'hold' | 'pause' {
+  if (!input.sheetOpen) return 'run'
+  return input.state === 1 || input.state === 3 ? 'pause' : 'hold'
+}
+
+export type PictureTapPlan = { pause: boolean; clearPause: boolean; soundOn: boolean; resume: 'catcher' | 'direct' | 'try' | 'none' }
+
+/**
+ * One tap on the picture does one thing. A pause tap pauses. Any other tap resumes, and it
+ * clears the pause flags first, including the tap that also turns sound on. Before this, a guest
+ * with sound still off got sound on but kept userPaused, and the paused-cover loop paused the
+ * film again within 250ms, so the tap looked dead and only the next one played.
+ */
+export function pictureTapPlan(input: { action: LiveTapIntent; hasSound: boolean; hasPlayer: boolean }): PictureTapPlan {
+  if (input.action === 'pause' || input.action === 'hold-pause') return { pause: true, clearPause: false, soundOn: false, resume: 'none' }
+  if (!input.hasSound) return { pause: false, clearPause: true, soundOn: true, resume: input.hasPlayer ? 'direct' : 'try' }
+  if (input.action === 'play') return { pause: false, clearPause: true, soundOn: false, resume: 'catcher' }
+  return { pause: false, clearPause: true, soundOn: false, resume: input.hasPlayer ? 'direct' : 'try' }
+}

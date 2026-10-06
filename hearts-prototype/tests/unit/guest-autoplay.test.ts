@@ -94,9 +94,9 @@ test('the clip-end handler never opens the Keep my place sheet', () => {
   assert.doesNotMatch(device, /sheetCount|firstEnded/)
 })
 
-test('the sheet only answers a guest tap: one reason, and only needsAccount opens it', () => {
-  assert.match(sheet, /export type SheetReason = 'save'\n/)
-  assert.doesNotMatch(sheet, /'ended'|keep your place\?/i)
+test('the sheet only answers a guest tap: no clip-end reason, and only needsAccount opens it', () => {
+  assert.match(sheet, /export type SheetReason = 'save' \| 'place'\n/)
+  assert.doesNotMatch(sheet, /'ended'/)
   const opens = [...journey.matchAll(/openSheet\(/g)].length
   assert.equal(opens, 1, 'openSheet is called from one place')
   assert.match(journey, /const needsAccount = \(reason: SheetReason\) => \{\n\s+if \(signedIn\) return false\n\s+openSheet\(reason\)\n\s+return true/)

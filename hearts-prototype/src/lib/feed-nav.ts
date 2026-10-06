@@ -153,3 +153,12 @@ export function learnMoreTarget(list: NavItem[], index: number, level: FeedLevel
 export function stepUpIsOwn(from: Pick<NavItem, 'speaker' | 'lessonId' | 'cutId'>, to: Pick<NavItem, 'speaker' | 'lessonId' | 'cutId'> | undefined) {
   return Boolean(to && to.cutId === from.cutId && to.speaker === from.speaker && to.lessonId === from.lessonId)
 }
+
+/**
+ * The clip a More-board Like or Save lands on: the one the board was titled with when the finger
+ * went down. The board stays open across an auto-advance, so the title can change before the
+ * finger lifts; the press, not the lift, decides.
+ */
+export function boardTapTarget<T>(pressed: T | null | undefined, showing: T | undefined): T | undefined {
+  return pressed ?? showing
+}

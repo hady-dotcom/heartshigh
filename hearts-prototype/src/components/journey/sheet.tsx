@@ -3,13 +3,19 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { EASE, T, animate, finished } from '@/lib/motion'
 
-export type SheetReason = 'save'
+/** save: Save, Like or Follow. place: a tab, Me, the speaker page or the full talk, where nothing was kept yet. */
+export type SheetReason = 'save' | 'place'
+
+export const SHEET_TITLES: Record<SheetReason, string> = {
+  save: 'Want us to keep that one for you?',
+  place: 'Want us to keep your place?',
+}
 
 /**
  * Sign-up for a guest. It opens only when a guest taps something that needs an account
- * (Save, Like, Follow, the speaker, the full talk, or a tab), never on its own between clips.
- * Rises over the lower half; the clip above stays paused. The account is made in the same
- * request that carries the opening off the device.
+ * (Save, Like, Follow, the speaker, the full talk, Me or another tab), never on its own between clips.
+ * Rises over the lower half; the clip above stays paused and nothing advances until it closes.
+ * The account is made in the same request that carries the opening off the device.
  */
 export function KeepPlaceSheet({ reason, loginHref, offline, onClose, onSubmit }: {
   reason: SheetReason
@@ -45,11 +51,11 @@ export function KeepPlaceSheet({ reason, loginHref, offline, onClose, onSubmit }
   return (
     <section ref={ref} className="j-sheet" role="dialog" aria-labelledby="keep-title" data-testid="keep-sheet" data-reason={reason}>
       <span className="handle" aria-hidden />
-      <h2 id="keep-title">Want us to keep that one for you?</h2>
+      <h2 id="keep-title" data-testid="keep-title">{SHEET_TITLES[reason]}</h2>
       {offline ? (
         <p data-testid="sheet-offline">Connect to keep your place. Your taps stay on this phone until then.</p>
       ) : (
-        <p>Make an account and we&apos;ll remember what you liked, so the next clips fit you better. Your taps stay on this phone until you make one.</p>
+        <p>{reason === 'place' ? <>Make an account to open this, and we&apos;ll remember where you got to and what you liked. Your taps stay on this phone until you make one.</> : <>Make an account and we&apos;ll remember what you liked, so the next clips fit you better. Your taps stay on this phone until you make one.</>}</p>
       )}
       {form && !offline ? (
         <form className="j-sheet-form" onSubmit={submit} data-testid="keep-form">

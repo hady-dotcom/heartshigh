@@ -6,7 +6,7 @@ import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
 import { clipsFromRoute, maybeWidenPlaylist, sessionPlaylist } from '@/lib/feed-mix'
 import { clipStepUpLabel, LEVEL_WORDS, onlyClipToast, pieceSeconds, poolEndToast, talkStepUpLabel, withTalkDetail } from '@/lib/feed-copy'
-import { appendUnseenItems, boardItemForPlayer, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
+import { appendUnseenItems, boardItemForPlayer, boardTapTarget, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readCoachDismissed, readFeedPlace, readHeart, readPending, rememberSeenCard, sessionFlags, sessionSeenCards, sessionSeenCuts, setSessionFlags, viewAsId, writeCoachDismissed, writeFeedPlace, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
@@ -14,12 +14,12 @@ import { nextPlaybackRate } from '@/lib/playback-rate'
 import { feedFilmCaption } from '@/lib/spoken-caption'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
-import { dedicatedLaneFeed, playableLaneClips, takeDedicatedLane } from '@/lib/lanes'
+import { dedicatedLaneFeed, laneEndHref, lanesWithClips, playableLaneClips, takeDedicatedLane } from '@/lib/lanes'
 import { coverAttr, coverFallbackAction, coverHoldKey, coverHoldStep, filmCoverKey, freshCoverHold, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
 import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
 import { isoWeek } from '@/lib/trends'
 import { courseCatcherTap } from '@/lib/course-controls'
-import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, applyPauseWhenReady, bufferRetryAction, clockIsStalled, endCardPlayerAction, endedEventIsCurrent, horsWindowEnded, hostShouldShow, keepVisiblePaused, livePictureTap, pictureIsTap, pictureSwipeCommit, planFilmAdvance, playbackAction, playbackAdvancing, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe, afterClipEnds, type EndAdvanceSource } from '@/lib/film-advance'
+import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, applyPauseWhenReady, bufferRetryAction, clockIsStalled, endCardPlayerAction, endedEventIsCurrent, horsWindowEnded, hostShouldShow, keepVisiblePaused, livePictureTap, pictureIsTap, pictureSwipeCommit, planFilmAdvance, playbackAction, playbackAdvancing, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe, afterClipEnds, pictureTapPlan, sheetPollAction, type EndAdvanceSource } from '@/lib/film-advance'
 import { acceptLevelTap, type LevelTap } from '@/lib/level-tap'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, hydrateSound, lowData, playOnly, playerSnapshot, preloadApi, setHidden, silence, silenceHidden, silenceOthers, soundOn, type PlayerKind } from '@/lib/yt'
 import { PageHelp } from '@/components/app/page-help'
@@ -157,6 +157,7 @@ export function Journey(props: JourneyProps) {
   const leavingRef = useRef<HTMLDivElement>(null)
   const skyRefs = useRef<(HTMLDivElement | null)[]>([])
 
+  const laneKeys = useMemo(() => lanesWithClips(opening.route, opening.clips, opening.laneTitles).map((lane) => lane.key), [opening.route, opening.clips, opening.laneTitles])
   const [items, setItems] = useState<FeedItem[]>(() => dedicatedLaneFeed(opening.clips, opening.route.cuts, opening.laneTitles, props.lane))
   const [coverKey, setCoverKey] = useState(() => filmCoverKey(dedicatedLaneFeed(opening.clips, opening.route.cuts, opening.laneTitles, props.lane)[0]))
   const itemsRef = useRef<FeedItem[]>(items)
@@ -229,6 +230,7 @@ export function Journey(props: JourneyProps) {
   const coverHoldFor = useRef('')
   const coverMachine = useRef(freshCoverHold())
   const lastPictureTap = useRef(0)
+  const boardPress = useRef<FeedItem | null>(null)
   const pauseWhenReadyRef = useRef(false)
   const pauseTapAt = useRef(0)
   const swallowOnShow = useRef(true)
@@ -447,7 +449,7 @@ export function Journey(props: JourneyProps) {
       const elapsed = performance.now() - nudgeRef.current
       const player = host.playerId ? getPlayer(host.playerId) : null
       const state = player ? player.getPlayerState() : host.state
-      const armed = wantPlayRef.current === key && host.spec?.key === key && Boolean(host.playerId)
+      const armed = wantPlayRef.current === key && host.spec?.key === key && Boolean(host.playerId) && !sheetRef.current
       if (!shouldNudgePlay(state, armed, userPausedRef.current, elapsed)) {
         if (!armed || userPausedRef.current || state === STATE.PLAYING || elapsed >= PLAY_NUDGE_FOR_MS) window.clearInterval(playWatch.current)
         return
@@ -485,7 +487,7 @@ export function Journey(props: JourneyProps) {
         const again = hosts.current[at]
         const player = id ? getPlayer(id) : null
         if (again.playerId !== id || again.spec?.key !== key || !player || player.getPlayerState() !== STATE.PLAYING) {
-          if (wantPlayRef.current === key && !pauseWhenReadyRef.current && !userPausedRef.current && id && again.playerId === id && performance.now() - nudgeRef.current > 80) {
+          if (wantPlayRef.current === key && !pauseWhenReadyRef.current && !userPausedRef.current && !sheetRef.current && id && again.playerId === id && performance.now() - nudgeRef.current > 80) {
             setHidden(id, false)
             playOnly(id)
           }
@@ -528,7 +530,7 @@ export function Journey(props: JourneyProps) {
     }
     const elapsed = performance.now() - nudgeRef.current
     if (
-      shouldNudgePlay(state, wantPlayRef.current === host.spec?.key && Boolean(host.playerId), userPausedRef.current, elapsed) &&
+      shouldNudgePlay(state, wantPlayRef.current === host.spec?.key && Boolean(host.playerId) && !sheetRef.current, userPausedRef.current, elapsed) &&
       elapsed > 80 &&
       host.playerId
     ) {
@@ -1173,7 +1175,7 @@ export function Journey(props: JourneyProps) {
 
   // ---------- feed behaviour ----------
   const item = boardItemForPlayer(items, index, hosts.current[visibleHost].spec?.key) || items[index]
-  const laneTags = useMemo(() => (item?.laneTags?.length ? item.laneTags : item?.laneKey ? [{ lane: item.laneKey, weight: 1 }] : []), [item])
+  const laneTags = useMemo(() => tagsOf(item), [item])
 
   const signal = useCallback(
     (kind: Signal, tags = laneTags) => {
@@ -1222,8 +1224,9 @@ export function Journey(props: JourneyProps) {
   /** Sign-up for a guest who tapped something that needs an account. Never opened on its own. */
   const openSheet = useCallback((reason: SheetReason) => {
     const host = hosts.current[visibleRef.current]
-    if (host.playerId) getPlayer(host.playerId)?.pauseVideo()
     sheetRef.current = reason
+    window.clearInterval(playWatch.current)
+    if (host.playerId) getPlayer(host.playerId)?.pauseVideo()
     setSheet(reason)
     push(window.location.pathname, { sheet: true })
   }, [])
@@ -1329,7 +1332,8 @@ export function Journey(props: JourneyProps) {
   )
 
   const runEndAdvance = useCallback((source: EndAdvanceSource, eventKey?: string | null) => {
-    if (modeRef.current !== 'hors') return
+    // The sign-up sheet holds the clip: nothing advances behind it. Closing it resumes this clip.
+    if (sheetRef.current || modeRef.current !== 'hors') return
     const current = itemsRef.current[indexRef.current]
     if (!current) return
     const clipKey = watch.current.key || `${current.cutId}:hors:${current.card || 'talk'}`
@@ -1420,6 +1424,11 @@ export function Journey(props: JourneyProps) {
       const host = hosts.current[visibleRef.current]
       const player = host.playerId ? getPlayer(host.playerId) : null
       const realState = player ? player.getPlayerState() : host.state
+      const held = sheetPollAction({ sheetOpen: Boolean(sheetRef.current), state: realState })
+      if (held !== 'run') {
+        if (held === 'pause') player?.pauseVideo()
+        return
+      }
       if (realState !== STATE.PLAYING || !player) return
       const current = itemsRef.current[indexRef.current]
       if (!current) return
@@ -1682,7 +1691,7 @@ export function Journey(props: JourneyProps) {
       return
     }
     event?.preventDefault()
-    if (needsAccount('save')) return
+    if (needsAccount('place')) return
     if (step.lessonId !== current.lessonId) return
     signal('start-course')
     noteBrowse('learn-more')
@@ -1721,7 +1730,7 @@ export function Journey(props: JourneyProps) {
   const watchFull = () => {
     const current = itemsRef.current[indexRef.current]
     if (!current) return
-    if (needsAccount('save')) return
+    if (needsAccount('place')) return
     const href = learnMore(current, 'appetiser', base)?.href
     if (!href) return
     signal('start-course')
@@ -1733,11 +1742,11 @@ export function Journey(props: JourneyProps) {
     router.push(href)
   }
 
-  const fave = () => {
-    if (!item) return
+  const fave = (target: FeedItem | undefined = item) => {
+    if (!target) return
     if (needsAccount('save')) return
-    if (!faves.includes(item.id)) signal('fave')
-    toggleFave(item.id)
+    if (!faves.includes(target.id)) signal('fave', tagsOf(target))
+    toggleFave(target.id)
   }
 
   const share = async () => {
@@ -1777,7 +1786,7 @@ export function Journey(props: JourneyProps) {
 
   const tapPicture = () => {
     dismissCoach()
-    if (clipEndedRef.current) return
+    if (clipEndedRef.current || sheetRef.current) return
     if (pictureTapIgnored({ boardOpen: boardOpenRef.current, swallowUntil: ignorePictureUntil.current, now: performance.now() })) return
     const host = hosts.current[visibleRef.current]
     const player = host.playerId ? getPlayer(host.playerId) : null
@@ -1791,7 +1800,8 @@ export function Journey(props: JourneyProps) {
       now: performance.now(),
     })
     const action = livePictureTap({ state: liveState, stalled })
-    if (action === 'pause' || action === 'hold-pause') {
+    const plan = pictureTapPlan({ action, hasSound: hasSound(), hasPlayer: Boolean(player) })
+    if (plan.pause) {
       const row = hosts.current[visibleRef.current]
       pauseTapAt.current = performance.now()
       pauseWhenReadyRef.current = true
@@ -1804,25 +1814,25 @@ export function Journey(props: JourneyProps) {
       setReadyTick((value) => value + 1)
       return
     }
-    if (!hasSound()) {
-      tapSound()
-      return
-    }
-    if (action === 'play') {
+    // Every other tap resumes. Clear the pause first, so the paused-cover loop cannot pause again what this tap starts.
+    if (plan.clearPause) {
       pauseTapAt.current = 0
       pauseWhenReadyRef.current = false
       userPausedRef.current = false
       if (host.spec) armPlay(host.spec.key)
+    }
+    if (plan.soundOn) {
+      tapSound()
+      setReadyTick((value) => value + 1)
+      return
+    }
+    if (plan.resume === 'catcher') {
       courseCatcherTap(player)
       player?.unMute()
       setReadyTick((value) => value + 1)
       return
     }
-    if (player) {
-      pauseTapAt.current = 0
-      pauseWhenReadyRef.current = false
-      userPausedRef.current = false
-      if (host.spec) armPlay(host.spec.key)
+    if (plan.resume === 'direct' && player) {
       player.unMute()
       player.playVideo()
       return
@@ -2225,7 +2235,7 @@ export function Journey(props: JourneyProps) {
   // A Short (or a film with burned-in words) has text in the picture: the speaker sits at the top, and our caption sits in the bar below the 16:9 band.
   const speakerRow = item?.speaker ? (
     <div className="j-speaker j-speaker-plate" key={item.cutId} data-speaker={item.speaker} data-cut={item.cutId}>
-      <a className="speaker-row" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-link" onClick={(event) => { if (needsAccount('save')) event.preventDefault() }}>
+      <a className="speaker-row" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-link" onClick={(event) => { if (needsAccount('place')) event.preventDefault() }}>
         <Avatar name={item.speaker} portrait={item.portrait} />
         <span className="who"><b>{item.speaker}</b>{laneVisible && item.laneLabel ? <small>On {item.laneLabel}</small> : null}</span>
       </a>
@@ -2238,6 +2248,7 @@ export function Journey(props: JourneyProps) {
   const clipLength = Math.max(0, clipEnd - clipStart)
   const clipElapsed = spokenAt != null ? Math.max(0, Math.min(clipLength, spokenAt - clipStart)) : 0
   const clipPct = clipLength ? Math.min(100, (clipElapsed / clipLength) * 100) : 0
+  const laneEndTarget = laneEndHref({ base, signedIn, current: props.lane || item?.laneKey || null, lanes: laneKeys })
   const nextClipAt = item ? swipeTarget(items, index, mode, 'next', props.lane ? undefined : seenRef.current, Boolean(props.lane)) : null
   const spokenSentences = item?.framingTrack?.sentences?.length
     ? item.framingTrack.sentences
@@ -2262,8 +2273,17 @@ export function Journey(props: JourneyProps) {
     event.preventDefault()
     const start = boardDrag.current
     const travel = start ? pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY }) : 0
-    if (!boardClickAllowed({ openedAt: boardOpenedAt.current, now: performance.now(), travel })) return
+    if (!boardClickAllowed({ openedAt: boardOpenedAt.current, now: performance.now(), travel })) {
+      boardPress.current = null
+      return
+    }
     fn()
+    boardPress.current = null
+  }
+  /** Like and Save act on the clip the board was titled with when the finger went down, even if an auto-advance re-titles it before the finger lifts. */
+  const pressBoard = (event: { stopPropagation(): void }, shown: FeedItem) => {
+    event.stopPropagation()
+    boardPress.current = shown
   }
   const openBoard = (event: ReactPointerEvent) => {
     event.stopPropagation()
@@ -2397,8 +2417,8 @@ export function Journey(props: JourneyProps) {
         {item.lessonTitle || item.courseTitle ? <p className="j-board-title" data-testid="board-title">{item.lessonTitle || item.courseTitle}</p> : null}
       <div className="rail">
         <button type="button" data-testid="share" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => boardAction(event, () => { void share() })} onClick={(event) => event.preventDefault()}><span className="bubble"><ShareIcon /></span>Share</button>
-        <button type="button" aria-pressed={faves.includes(item.id)} data-testid="fave" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => boardAction(event, () => fave())} onClick={(event) => event.preventDefault()}><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
-        <button type="button" aria-pressed={saved.includes(item.id)} data-testid="save" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => boardAction(event, () => { if (!needsAccount('save')) toggleSave(item.id) })} onClick={(event) => event.preventDefault()}><span className="bubble"><SaveIcon /></span>{saved.includes(item.id) ? 'Saved' : 'Save'}</button>
+        <button type="button" aria-pressed={faves.includes(item.id)} data-testid="fave" data-cut={item.cutId} onPointerDown={(event) => pressBoard(event, item)} onPointerUp={(event) => boardAction(event, () => fave(boardTapTarget(boardPress.current, item)))} onClick={(event) => event.preventDefault()}><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
+        <button type="button" aria-pressed={saved.includes(item.id)} data-testid="save" data-cut={item.cutId} onPointerDown={(event) => pressBoard(event, item)} onPointerUp={(event) => boardAction(event, () => { const target = boardTapTarget(boardPress.current, item); if (target && !needsAccount('save')) toggleSave(target.id) })} onClick={(event) => event.preventDefault()}><span className="bubble"><SaveIcon /></span>{saved.includes(item.id) ? 'Saved' : 'Save'}</button>
       </div>
       <div className="clip-foot j-credits">
         <div
@@ -2575,7 +2595,7 @@ export function Journey(props: JourneyProps) {
           {clipEnded && mode === 'hors' && item && phase === 'feed' && nextClipAt == null ? (
             <div className="end-card" data-testid="feed-end">
               <p className="eyebrow">That is the last clip here.</p>
-              <button type="button" className="pill gold block" data-testid="end-lanes" onClick={() => { window.location.assign(`${base}/lanes`) }}>Try another lane</button>
+              <button type="button" className="pill gold block" data-testid="end-lanes" data-href={laneEndTarget} onClick={() => { window.location.assign(laneEndTarget) }}>Try another lane</button>
             </div>
           ) : null}
           {appetiserOver && mode === 'appetiser' && item && phase === 'feed' ? (
@@ -2682,7 +2702,7 @@ export function Journey(props: JourneyProps) {
             const target = (event.target as HTMLElement).closest('a')
             if (target && target.getAttribute('data-testid') !== 'tab-home') {
               event.preventDefault()
-              needsAccount('save')
+              needsAccount('place')
             }
           }}
         />
@@ -2760,4 +2780,9 @@ function TabEntry({
       <TabBar base={`${base}`} active={null} portal={{ features }} dark unread={unread} />
     </div>
   )
+}
+
+/** A clip's lane tags for signals: its own tags, or its lane at full weight. */
+function tagsOf(item: FeedItem | undefined) {
+  return item?.laneTags?.length ? item.laneTags : item?.laneKey ? [{ lane: item.laneKey, weight: 1 }] : []
 }
