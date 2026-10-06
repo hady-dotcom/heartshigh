@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { BUFFER_RETRY_MS, PLAY_NUDGE_FOR_MS, STALL_MS, bufferRetryAction, clockIsStalled, endCardPlayerAction, endedEventIsCurrent, feedAfterEndSignals, horsWindowEnded, hostShouldShow, livePictureTap, pictureIsTap, pictureSwipeCommit, pictureTapAction, planFilmAdvance, playbackAction, playbackAdvancing, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, stallThenTap, takeEndAdvance, verticalSwipe } from '../../src/lib/film-advance'
+import { BUFFER_RETRY_MS, PLAY_NUDGE_FOR_MS, STALL_MS, bufferRetryAction, clockIsStalled, endCardPlayerAction, endedEventIsCurrent, feedAfterEndSignals, horsWindowEnded, hostShouldShow, keepVisiblePaused, livePictureTap, pictureIsTap, pictureSwipeCommit, pictureTapAction, planFilmAdvance, playbackAction, playbackAdvancing, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, stallThenTap, swapThenEarlyTap, takeEndAdvance, verticalSwipe } from '../../src/lib/film-advance'
 
 const visible = { key: '14:hors', hasPlayer: true }
 const preloaded = { key: '22:hors', hasPlayer: true }
@@ -96,9 +96,11 @@ test('a stall then the first real tap pauses once, and a stall tap pauses when c
   assert.equal(clockIsStalled({ state: 1, currentTime: 5628.4, lastTime: 5628.4, lastSeenAt: 100, now: 700 }), true)
   assert.equal(clockIsStalled({ state: 1, currentTime: 5628.4, lastTime: -1, lastSeenAt: 0, now: 900 }), false)
   assert.equal(playbackAdvancing({ state: 1, currentTime: 5628.4, lastTime: 5628.4 }), false)
-  assert.equal(livePictureTap({ state: 1, stalled: true }), 'hold-pause')
+  assert.equal(livePictureTap({ state: 1, stalled: true }), 'pause')
   assert.equal(livePictureTap({ state: 1, stalled: false }), 'pause')
   assert.equal(livePictureTap({ state: 2, stalled: false }), 'play')
+  assert.equal(keepVisiblePaused({ userPaused: true, liveState: 1 }), true)
+  assert.equal(keepVisiblePaused({ userPaused: true, liveState: 2 }), false)
 
   const firstReal = stallThenTap([
     { state: 1, cur: 5628.4, atMs: 0 },
@@ -114,9 +116,8 @@ test('a stall then the first real tap pauses once, and a stall tap pauses when c
   const duringStall = stallThenTap([
     { state: 1, cur: 4969.0, atMs: 0 },
     { state: 1, cur: 4969.0, atMs: 800, tap: true },
-    { state: 1, cur: 4969.0, atMs: 2000 },
-    { state: 1, cur: 4969.4, atMs: 9000, tap: true },
-    { state: 1, cur: 4969.8, atMs: 9250 },
+    { state: 2, cur: 4969.0, atMs: 2000 },
+    { state: 2, cur: 4969.0, atMs: 9000 },
   ])
   assert.equal(duringStall.paused, true)
   assert.equal(duringStall.pauseApplies, 1)
@@ -125,7 +126,6 @@ test('a stall then the first real tap pauses once, and a stall tap pauses when c
   const afterPause = stallThenTap([
     { state: 1, cur: 4969.0, atMs: 0 },
     { state: 1, cur: 4969.0, atMs: 800, tap: true },
-    { state: 1, cur: 4969.4, atMs: 9000 },
     { state: 2, cur: 4969.4, atMs: 9250, tap: true },
   ])
   assert.equal(afterPause.pauseApplies, 1)
@@ -138,6 +138,20 @@ test('a stall then the first real tap pauses once, and a stall tap pauses when c
   assert.equal(endCardPlayerAction({ endCard: true, state: 2 }), 'none')
   assert.equal(endCardPlayerAction({ endCard: true, state: 0 }), 'none')
   assert.equal(endCardPlayerAction({ endCard: false, state: 1 }), 'none')
+})
+
+test('a swap onto the hidden host then a tap within 1s pauses the visible host and shows the icon', () => {
+  const early = swapThenEarlyTap({ tapAtMs: 800, start: 254.7 })
+  assert.equal(early.visible, 1)
+  assert.equal(early.swapped, true)
+  assert.equal(early.readoutHost, 1)
+  assert.equal(early.state, 2)
+  assert.equal(early.icon, true)
+  assert.equal(early.cover, true)
+  const atAdvance = swapThenEarlyTap({ tapAtMs: 0, start: 301.8 })
+  assert.equal(atAdvance.visible, 1)
+  assert.equal(atAdvance.state, 2)
+  assert.equal(atAdvance.icon, true)
 })
 
 test('the film has no Prev/Next chrome, and the ladder stays a small text row', () => {

@@ -151,6 +151,18 @@
   width: auto !important;
   height: 100% !important;
 }
+/* YouTube's channel watermark / top-right embed chip sits in the uncropped 16:9 band. Mask that corner only. */
+.yt-host.on .j-film-band::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 44px;
+  height: 44px;
+  background: #0F3B3A;
+  z-index: 3;
+  pointer-events: none;
+}
 .yt-host.on:not(.is-live) .j-film-band::after {
   content: '';
   position: absolute;

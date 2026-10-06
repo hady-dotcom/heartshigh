@@ -19,7 +19,7 @@ import { coverAttr, coverFallbackAction, coverHoldKey, coverHoldStep, filmCoverK
 import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
 import { isoWeek } from '@/lib/trends'
 import { courseCatcherTap } from '@/lib/course-controls'
-import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, applyPauseWhenReady, bufferRetryAction, clockIsStalled, endCardPlayerAction, endedEventIsCurrent, horsWindowEnded, hostShouldShow, livePictureTap, pictureIsTap, pictureSwipeCommit, planFilmAdvance, playbackAction, playbackAdvancing, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe, type EndAdvanceSource } from '@/lib/film-advance'
+import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, applyPauseWhenReady, bufferRetryAction, clockIsStalled, endCardPlayerAction, endedEventIsCurrent, horsWindowEnded, hostShouldShow, keepVisiblePaused, livePictureTap, pictureIsTap, pictureSwipeCommit, planFilmAdvance, playbackAction, playbackAdvancing, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe, type EndAdvanceSource } from '@/lib/film-advance'
 import { acceptLevelTap, type LevelTap } from '@/lib/level-tap'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, hydrateSound, lowData, playOnly, playerSnapshot, preloadApi, setHidden, silence, silenceHidden, silenceOthers, soundOn, type PlayerKind } from '@/lib/yt'
 import { PageHelp } from '@/components/app/page-help'
@@ -229,6 +229,8 @@ export function Journey(props: JourneyProps) {
   const coverMachine = useRef(freshCoverHold())
   const lastPictureTap = useRef(0)
   const pauseWhenReadyRef = useRef(false)
+  const pauseTapAt = useRef(0)
+  const swallowOnShow = useRef(true)
   const clockRef = useRef({ time: -1, at: 0 })
   const ignorePictureUntil = useRef(0)
   const advancedFromRef = useRef<string | null>(null)
@@ -686,6 +688,7 @@ export function Journey(props: JourneyProps) {
       holdState.current = -9
       coverHoldFor.current = ''
       coverMachine.current = freshCoverHold()
+      const showStarted = performance.now()
       pauseWhenReadyRef.current = false
       clockRef.current = { time: -1, at: 0 }
       newClipPlayingRef.current = false
@@ -695,7 +698,7 @@ export function Journey(props: JourneyProps) {
       userPausedRef.current = false
       boardOpenRef.current = false
       setBoardOpen(false)
-      ignorePictureUntil.current = performance.now() + PICTURE_SWALLOW_MS
+      ignorePictureUntil.current = swallowOnShow.current ? showStarted + PICTURE_SWALLOW_MS : 0
       if (item) {
         const seen = rememberSeenCard(item.cutId, item.card || 'talk', kind)
         seenRef.current = new Set(seen.cards)
@@ -728,7 +731,19 @@ export function Journey(props: JourneyProps) {
       if (!prepareIsCurrent(ticket, showGen.current)) return
       await prepare(target, spec, ticket)
       if (!prepareIsCurrent(ticket, showGen.current)) return
-      tryPlay()
+      if (pauseTapAt.current >= showStarted) {
+        const row = hosts.current[visibleRef.current]
+        const player = row.playerId ? getPlayer(row.playerId) : null
+        userPausedRef.current = true
+        wantPlayRef.current = null
+        pauseWhenReadyRef.current = true
+        row.state = STATE.PAUSED
+        player?.pauseVideo()
+        setCoverHeld(true)
+        setReadyTick((value) => value + 1)
+      } else {
+        tryPlay()
+      }
       if (kind === 'hors') preloadNext(at)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1256,6 +1271,7 @@ export function Journey(props: JourneyProps) {
       if (target === null) return
       // Drop any show already in flight so its prepare cannot load the clip we are leaving.
       showGen.current += 1
+      swallowOnShow.current = how === 'swipe'
       if (how === 'swipe') leaveSignal()
       const el = clipRef.current
       // A second Next during the slide used to leave the card translated off the phone: a blank
@@ -1781,17 +1797,17 @@ export function Journey(props: JourneyProps) {
       now: performance.now(),
     })
     const action = livePictureTap({ state: liveState, stalled })
-    if (action === 'hold-pause') {
+    if (action === 'pause' || action === 'hold-pause') {
+      const row = hosts.current[visibleRef.current]
+      pauseTapAt.current = performance.now()
       pauseWhenReadyRef.current = true
-      wantPlayRef.current = null
-      return
-    }
-    if (action === 'pause') {
-      pauseWhenReadyRef.current = false
       userPausedRef.current = true
       wantPlayRef.current = null
+      row.state = STATE.PAUSED
       player?.pauseVideo()
       if (player && hasSound()) player.unMute()
+      setCoverHeld(true)
+      setReadyTick((value) => value + 1)
       return
     }
     if (!hasSound()) {
@@ -2036,11 +2052,19 @@ export function Journey(props: JourneyProps) {
         lastTime: clockRef.current.time,
         start: row.spec?.start || 0,
       })
-      if (applyPauseWhenReady({ pauseWhenReady: pauseWhenReadyRef.current, advancing }) && player) {
+      if (userPausedRef.current && player && keepVisiblePaused({ userPaused: true, liveState })) {
+        player.pauseVideo()
+        row.state = STATE.PAUSED
+        wantPlayRef.current = null
+      } else if (applyPauseWhenReady({ pauseWhenReady: pauseWhenReadyRef.current, advancing }) && player) {
         player.pauseVideo()
         userPausedRef.current = true
         wantPlayRef.current = null
+        row.state = STATE.PAUSED
+      }
+      if (userPausedRef.current && (liveState === STATE.PAUSED || liveState === STATE.CUED || liveState === STATE.ENDED)) {
         pauseWhenReadyRef.current = false
+        if (row.state !== liveState && liveState === STATE.PAUSED) row.state = STATE.PAUSED
       }
       if (clipEnded && player && endCardPlayerAction({ endCard: true, state: liveState }) === 'pause') {
         player.pauseVideo()
@@ -2118,7 +2142,9 @@ export function Journey(props: JourneyProps) {
   }, [armPlay, clipEnded, item?.cutId, mode, phase])
   const keepAppetiserPoster = mode === 'appetiser' && appetiserHeld && host.state !== STATE.PLAYING
   const userPaused = userPausedRef.current
-  const clipPaused = host.state === STATE.PAUSED
+  const liveVisibleState = host.playerId ? getPlayer(host.playerId)?.getPlayerState() ?? host.state : host.state
+  const shownState = userPaused && liveVisibleState !== STATE.ENDED && liveVisibleState !== STATE.UNSTARTED ? STATE.PAUSED : liveVisibleState
+  const clipPaused = shownState === STATE.PAUSED
   const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (keepAppetiserPoster || coverHeld || clipEnded || Boolean(errorNote) || offline || (clipPaused && userPaused))))
   const waitingToPlay = phase === 'feed' && playerReady && (keepAppetiserPoster || !playingOut) && !errorNote && !offline
   // The gold play control is a resume after a pause, or a way in when autoplay never starts.
@@ -2436,7 +2462,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" suppressHydrationWarning data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-cover={coverAttr(showPoster)} data-next-clip={nextClipAt == null ? 'none' : String(nextClipAt)} data-playhead={spokenAt == null ? '' : String(Math.round(spokenAt * 10) / 10)} data-player-state={host.state} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
+    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" suppressHydrationWarning data-phase={phase} data-mode={mode} data-playing={shownState === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-cover={coverAttr(showPoster)} data-next-clip={nextClipAt == null ? 'none' : String(nextClipAt)} data-playhead={spokenAt == null ? '' : String(Math.round(spokenAt * 10) / 10)} data-player-state={shownState} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
       <PageHelp page={phase === 'help' ? 'help' : phase === 'feed' ? (mode === 'appetiser' ? 'appetiser' : 'feed') : 'start'} />
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
@@ -2610,7 +2636,7 @@ export function Journey(props: JourneyProps) {
       {debugOn ? (
         <pre className="yt-debug" data-testid="yt-debug">
           {playerReadout({
-            state: host.playerId ? getPlayer(host.playerId)?.getPlayerState() ?? host.state : host.state,
+            state: shownState,
             time: spokenAt ?? 0,
             currentTime: host.playerId ? getPlayer(host.playerId)?.getCurrentTime() ?? 0 : 0,
             cover: showPoster,

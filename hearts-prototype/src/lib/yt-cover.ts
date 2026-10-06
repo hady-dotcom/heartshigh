@@ -96,7 +96,7 @@ export function filmCoverVisible(input: {
 
 /** The small app pause mark. Never on an ended clip — that is an advance or a calm end card. */
 export function pauseMarkVisible(input: { paused: boolean; ended: boolean; userPaused: boolean }) {
-  return input.userPaused && input.paused && !input.ended
+  return input.userPaused && !input.ended
 }
 
 /**

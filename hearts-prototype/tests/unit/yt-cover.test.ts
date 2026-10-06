@@ -43,6 +43,7 @@ test('start, resume, pause and end of the cover state machine', () => {
   assert.equal(filmCoverVisible({ playing: false, playingForMs: 0, paused: false, ended: true }), true, 'end')
   assert.equal(filmCoverVisible({ playing: true, playingForMs: 4000, paused: false, ended: false, timeAdvancing: false }), true, 'clock stuck')
   assert.equal(pauseMarkVisible({ paused: true, ended: false, userPaused: true }), true)
+  assert.equal(pauseMarkVisible({ paused: false, ended: false, userPaused: true }), true, 'a stall tap still shows the icon')
   assert.equal(pauseMarkVisible({ paused: true, ended: true, userPaused: true }), false)
   assert.equal(pauseMarkVisible({ paused: false, ended: false, userPaused: false }), false)
 })

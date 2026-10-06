@@ -229,14 +229,60 @@ export type LiveTapIntent = 'pause' | 'play' | 'hold-pause' | 'none'
 
 /** Pause vs play from live YouTube state plus a moving clock. Never from a cached flag. */
 export function livePictureTap(input: { state: number; stalled: boolean }): LiveTapIntent {
-  if (input.stalled) return 'hold-pause'
-  if (input.state === 1 || input.state === 3) return 'pause'
+  if (input.stalled || input.state === 1 || input.state === 3) return 'pause'
   if (input.state === 2 || input.state === 5) return 'play'
   return 'none'
 }
 
 export function applyPauseWhenReady(input: { pauseWhenReady: boolean; advancing: boolean }) {
   return input.pauseWhenReady && input.advancing
+}
+
+/** Keep calling pauseVideo on the visible host until YouTube itself reports PAUSED. */
+export function keepVisiblePaused(input: { userPaused: boolean; liveState: number }) {
+  return input.userPaused && input.liveState !== 2 && input.liveState !== 0 && input.liveState !== 5
+}
+
+/**
+ * Auto-advance prefers the hidden host already cued at startSeconds.
+ * A tap within 1s of that swap pauses the new visible host and shows the icon.
+ */
+export function swapThenEarlyTap(input: {
+  fromVisible?: 0 | 1
+  currentKey?: string
+  nextKey?: string
+  tapAtMs?: number
+  start?: number
+} = {}) {
+  const fromVisible = input.fromVisible ?? 0
+  const currentKey = input.currentKey ?? '4:hors'
+  const nextKey = input.nextKey ?? '5:hors'
+  const tapAtMs = input.tapAtMs ?? 800
+  const start = input.start ?? 254.7
+  const hosts: [HostHold, HostHold] = fromVisible === 0
+    ? [{ key: currentKey, hasPlayer: true }, { key: nextKey, hasPlayer: true }]
+    : [{ key: nextKey, hasPlayer: true }, { key: currentKey, hasPlayer: true }]
+  const plan = planFilmAdvance(fromVisible, nextKey, hosts)
+  const action = livePictureTap({
+    state: 1,
+    stalled: clockIsStalled({
+      state: 1,
+      currentTime: start,
+      lastTime: start,
+      lastSeenAt: 0,
+      now: tapAtMs,
+    }),
+  })
+  const paused = action === 'pause' || action === 'hold-pause'
+  return {
+    visible: plan.target,
+    swapped: plan.target !== fromVisible,
+    action,
+    state: paused ? 2 : 1,
+    icon: paused,
+    cover: true,
+    readoutHost: plan.target,
+  }
 }
 
 /**
@@ -271,8 +317,7 @@ export function stallThenTap(ticks: Array<{ state: number; cur: number; atMs: nu
     if (tick.tap) {
       taps += 1
       const action = livePictureTap({ state: paused ? 2 : tick.state, stalled })
-      if (action === 'hold-pause') pauseWhenReady = true
-      else if (action === 'pause') {
+      if (action === 'pause' || action === 'hold-pause') {
         paused = true
         pauseWhenReady = false
         pauseApplies += 1
