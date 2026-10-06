@@ -533,14 +533,16 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   background: rgba(241, 213, 138, 0.55);
   margin: 2px auto 12px;
 }
-.j-board .rail {
+.j-board .rail,
+.journey.phase-feed .j-chrome .j-board .rail {
   position: static;
   display: flex;
   justify-content: center;
   gap: 18px;
-  margin: 8px 0 0;
+  margin: 8px 0 12px;
   right: auto;
   bottom: auto;
+  z-index: auto;
 }
 .j-board .clip-foot,
 .j-board .clip-foot.j-credits {
