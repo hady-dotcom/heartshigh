@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
 import { clipsFromRoute, maybeWidenPlaylist, sessionPlaylist } from '@/lib/feed-mix'
@@ -16,7 +16,8 @@ import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { dedicatedLaneFeed, laneEndHref, lanesWithClips, playableLaneClips, takeDedicatedLane } from '@/lib/lanes'
 import { coverAttr, coverFallbackAction, coverHoldKey, coverHoldStep, filmCoverKey, freshCoverHold, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
-import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
+import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardClickFires, endCardShows, laneEndClosesBoard, boardHandleAction, boardTapFires, boardTapNote, coachTapAction, feedGestureCounts, ghostClick, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
+import { freshSheetHistory, sheetClosed, sheetOpened, sheetPopped, sheetUrl, type SheetHistory } from '@/lib/sheet-history'
 import { isoWeek } from '@/lib/trends'
 import { courseCatcherTap } from '@/lib/course-controls'
 import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, applyPauseWhenReady, bufferRetryAction, clockIsStalled, endCardPlayerAction, endedEventIsCurrent, horsWindowEnded, hostShouldShow, keepVisiblePaused, livePictureTap, pictureIsTap, pictureSwipeCommit, planFilmAdvance, playbackAction, playbackAdvancing, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe, afterClipEnds, pictureTapPlan, sheetPollAction, type EndAdvanceSource } from '@/lib/film-advance'
@@ -196,6 +197,8 @@ export function Journey(props: JourneyProps) {
   const [errorNote, setErrorNote] = useState<string | null>(null)
   const [sheet, setSheet] = useState<SheetReason | null>(null)
   const sheetRef = useRef<SheetReason | null>(null)
+  const sheetHistory = useRef<SheetHistory>(freshSheetHistory())
+  const [sheetKey, setSheetKey] = useState(0)
   const [toast, setToast] = useState<string | null>(null)
   const [notForMe, setNotForMe] = useState(false)
   const [faves, toggleFave] = useStoredSet('hearts.faves.v1')
@@ -230,6 +233,7 @@ export function Journey(props: JourneyProps) {
   const coverHoldFor = useRef('')
   const coverMachine = useRef(freshCoverHold())
   const lastPictureTap = useRef(0)
+  const closeDrawerRef = useRef<() => void>(() => undefined)
   const boardPress = useRef<FeedItem | null>(null)
   const pauseWhenReadyRef = useRef(false)
   const pauseTapAt = useRef(0)
@@ -252,7 +256,15 @@ export function Journey(props: JourneyProps) {
   const clipRef = useRef<HTMLDivElement>(null)
   const peekEls = useRef<Partial<Record<Swipe, HTMLDivElement | null>>>({})
   const slotRef = useRef<HTMLDivElement>(null)
-  const gesture = useRef<{ x: number; y: number; t: number; moved: boolean; timer: number | null } | null>(null)
+  const gesture = useRef<{ x: number; y: number; t: number; moved: boolean; timer: number | null; pointerId?: number } | null>(null)
+  const boardClosedAt = useRef(0)
+  const lastPressAt = useRef(0)
+  /** When a tap or drag of the guest's last opened or closed the board (not an auto-advance or the lane end). */
+  const boardToggledAt = useRef(0)
+  /** The press on a board control, from its pointerdown to its click; acted once pointerup has fired it. */
+  const boardTap = useRef<{ control: Element | null; x: number; y: number; t: number; acted: boolean } | null>(null)
+  /** The press on the More handle, so its click can open the board if its pointerup did not. */
+  const morePress = useRef<{ t: number; acted: boolean } | null>(null)
   const captionDrag = useRef(false)
   const counter = useRef(0)
   const gathered = useRef(new Set<string>())
@@ -701,6 +713,7 @@ export function Journey(props: JourneyProps) {
       userPausedRef.current = false
       clipEndedRef.current = false
       if (!keepBoardOnShow.current) {
+        if (boardOpenRef.current) boardClosedAt.current = performance.now()
         boardOpenRef.current = false
         setBoardOpen(false)
       }
@@ -1133,12 +1146,16 @@ export function Journey(props: JourneyProps) {
         rewinding.current = null
         return
       }
-      if (sheetRef.current) {
+      // The step back that closing the sheet makes is ours; it never closes a sheet opened since.
+      const popped = sheetPopped(sheetHistory.current)
+      sheetHistory.current = popped.next
+      if (popped.closeSheet) {
         sheetRef.current = null
         setSheet(null)
         window.setTimeout(() => tryPlay(), 0)
         return
       }
+      if (popped.consumed) return
       const feedNow = phaseRef.current === 'feed' || phaseRef.current === 'handoff'
       if (feedNow) {
         if (path.endsWith('/start') || /\/start\/\d+$/.test(path) || path.endsWith('/help')) {
@@ -1227,8 +1244,14 @@ export function Journey(props: JourneyProps) {
     sheetRef.current = reason
     window.clearInterval(playWatch.current)
     if (host.playerId) getPlayer(host.playerId)?.pauseVideo()
+    // One history entry at the exact URL the guest is on; a sheet opened over one still closing reuses it.
+    const opened = sheetOpened(sheetHistory.current, Boolean(window.history.state?.hearts?.sheet))
+    sheetHistory.current = opened.next
+    setSheetKey(opened.next.gen)
     setSheet(reason)
-    push(window.location.pathname, { sheet: true })
+    const here = sheetUrl(window.location)
+    if (opened.history === 'replace') window.history.replaceState({ ...window.history.state, hearts: { sheet: true } }, '', here)
+    else push(here, { sheet: true })
   }, [])
 
   const dismissCoach = () => {
@@ -1237,13 +1260,21 @@ export function Journey(props: JourneyProps) {
     writeCoachDismissed()
   }
 
-  const showLaneEnd = () => {
+  /**
+   * The last clip has ended (how: 'auto') or a swipe went past it ('swipe'). An open More board stays
+   * open and usable, as on an auto-advance mid-lane: a tap in progress completes on the clip shown at
+   * the press. The end card shows once the board and any sheet are shut (endCardShows).
+   */
+  const showLaneEnd = (how: 'swipe' | 'auto' = 'swipe') => {
     userPausedRef.current = true
     wantPlayRef.current = null
     pauseWhenReadyRef.current = false
     clipEndedRef.current = true
-    boardOpenRef.current = false
-    setBoardOpen(false)
+    if (laneEndClosesBoard(how) && boardOpenRef.current) {
+      boardClosedAt.current = performance.now()
+      boardOpenRef.current = false
+      setBoardOpen(false)
+    }
     setCoverHeld(true)
     setClipEnded(true)
     ignorePictureUntil.current = performance.now() + PICTURE_SWALLOW_MS
@@ -1364,7 +1395,7 @@ export function Journey(props: JourneyProps) {
     const step = afterClipEnds({ nextIndex: next })
     userPausedRef.current = next == null
     if (step.kind === 'lane-end') {
-      showLaneEnd()
+      showLaneEnd('auto')
     } else {
       newClipPlayingRef.current = false
       windowHandledRef.current = false
@@ -1393,7 +1424,7 @@ export function Journey(props: JourneyProps) {
       window.setTimeout(() => {
         const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', props.lane ? undefined : seenRef.current, Boolean(props.lane))
         if (showLaneEndNow({ thisClipEnded: true, nextIndex: next })) {
-          showLaneEnd()
+          showLaneEnd('auto')
           setToast(poolEndToast())
         } else if (next != null) void advance(next, 'auto')
       }, 900)
@@ -1402,10 +1433,20 @@ export function Journey(props: JourneyProps) {
     return () => window.removeEventListener('hearts:player-error', onError)
   }, [advance, keepHarvest, signedIn])
 
-  const closeSheet = () => {
+  /** Leaves the sheet's history entry, so the address is exactly what it was before the sheet. */
+  const leaveSheet = (gen: number | null) => {
+    const closed = sheetClosed(sheetHistory.current, gen, Boolean(window.history.state?.hearts?.sheet))
+    if (!closed.applies) return false
+    sheetHistory.current = closed.next
     sheetRef.current = null
     setSheet(null)
-    if (window.history.state?.hearts?.sheet) window.history.back()
+    if (closed.back) window.history.back()
+    return true
+  }
+
+  /** A close from an older sheet (its exit animation outlived it) is ignored: it must not shut the one open now. */
+  const closeSheet = (gen: number | null = null) => {
+    if (!leaveSheet(gen)) return
     window.setTimeout(() => tryPlay(), 0)
   }
 
@@ -1606,6 +1647,11 @@ export function Journey(props: JourneyProps) {
     let wheelLock = 0
     const typing = (event: Event) => Boolean((event.target as HTMLElement | null)?.closest?.('input, textarea, select, [contenteditable="true"]'))
     const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && boardOpenRef.current && !sheetRef.current) {
+        event.preventDefault()
+        closeDrawerRef.current()
+        return
+      }
       if (event.repeat || event.metaKey || event.ctrlKey || event.altKey || sheetRef.current || typing(event)) return
       const next = event.key === 'ArrowDown' || event.key === 'PageDown'
       const prev = event.key === 'ArrowUp' || event.key === 'PageUp'
@@ -1625,20 +1671,22 @@ export function Journey(props: JourneyProps) {
     }
     // If the YouTube iframe still receives the pointer, finish the swipe here. The gesture layer
     // handles its own events, so this only runs when the target is that iframe.
-    let drag: { x: number; y: number; pointerId: number } | null = null
+    let drag: { x: number; y: number; pointerId: number; t: number } | null = null
     const iframeInSlot = (event: Event) => {
       const node = event.target as HTMLElement | null
       return node?.tagName === 'IFRAME' && Boolean(node.closest?.('.j-slot'))
     }
     const onPointerDown = (event: PointerEvent) => {
-      if (sheetRef.current || !iframeInSlot(event)) return
-      drag = { x: event.clientX, y: event.clientY, pointerId: event.pointerId }
+      if (sheetRef.current || boardOpenRef.current || !iframeInSlot(event)) return
+      drag = { x: event.clientX, y: event.clientY, pointerId: event.pointerId, t: performance.now() }
     }
     const onPointerUp = (event: PointerEvent) => {
       if (!drag || event.pointerId !== drag.pointerId) return
       const dx = event.clientX - drag.x
       const dy = event.clientY - drag.y
+      const startedAt = drag.t
       drag = null
+      if (!feedGestureCounts({ startedAt, boardOpen: boardOpenRef.current, boardClosedAt: boardClosedAt.current })) return
       if (Math.max(Math.abs(dx), Math.abs(dy)) < 48 || Math.abs(dy) <= Math.abs(dx)) return
       if (verticalSwipe(dy) === 'next') stepLoopRef.current(1)
       else nextLaneRef.current()
@@ -1646,12 +1694,31 @@ export function Journey(props: JourneyProps) {
     const onPointerCancel = () => {
       drag = null
     }
+    // The click a phone sends after the tap that opened or closed the board is that tap's leftover:
+    // it must not land on a tab, the speaker or Full talk and ask a guest to make an account.
+    // Only the guest's own open or close arms it (not an auto-advance or the lane end shutting the board),
+    // and only the press that made that change owns the click: any press since is a fresh tap.
+    const notePress = () => {
+      lastPressAt.current = performance.now()
+    }
+    const swallowGhost = (event: MouseEvent) => {
+      if (!ghostClick({ now: performance.now(), boardChangedAt: boardToggledAt.current, lastPressAt: lastPressAt.current, detail: event.detail })) return
+      event.preventDefault()
+      event.stopPropagation()
+      event.stopImmediatePropagation()
+    }
+    window.addEventListener('pointerdown', notePress, true)
+    window.addEventListener('touchstart', notePress, { capture: true, passive: true })
+    window.addEventListener('click', swallowGhost, true)
     window.addEventListener('keydown', onKey)
     window.addEventListener('wheel', onWheel, { passive: false })
     window.addEventListener('pointerdown', onPointerDown, true)
     window.addEventListener('pointerup', onPointerUp, true)
     window.addEventListener('pointercancel', onPointerCancel, true)
     return () => {
+      window.removeEventListener('pointerdown', notePress, true)
+      window.removeEventListener('touchstart', notePress, true)
+      window.removeEventListener('click', swallowGhost, true)
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('wheel', onWheel)
       window.removeEventListener('pointerdown', onPointerDown, true)
@@ -1745,8 +1812,11 @@ export function Journey(props: JourneyProps) {
   const fave = (target: FeedItem | undefined = item) => {
     if (!target) return
     if (needsAccount('save')) return
-    if (!faves.includes(target.id)) signal('fave', tagsOf(target))
+    const wasOn = faves.includes(target.id)
+    if (!wasOn) signal('fave', tagsOf(target))
     toggleFave(target.id)
+    const note = boardTapNote({ action: 'like', wasOn, title: target.lessonTitle || target.courseTitle || '', landedOnShown: target.id === item?.id })
+    if (note) setToast(note)
   }
 
   const share = async () => {
@@ -1921,13 +1991,13 @@ export function Journey(props: JourneyProps) {
 
   // Gestures on the clip. In overlay mode the gesture layer covers the player; in strict mode only the chrome.
   const onDown = (event: ReactPointerEvent) => {
-    if (boardOpen) return
+    if (boardOpen || boardOpenRef.current) return
     if ((event.target as HTMLElement).closest('[data-testid="feed-board"], [data-testid="more-board"], [data-testid="board-back"]')) return
     ;(event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId)
     const timer = window.setTimeout(() => {
       if (gesture.current && !gesture.current.moved) setNotForMe(true)
     }, 650)
-    gesture.current = { x: event.clientX, y: event.clientY, t: performance.now(), moved: false, timer }
+    gesture.current = { x: event.clientX, y: event.clientY, t: performance.now(), moved: false, timer, pointerId: event.pointerId }
   }
   const onMove = (event: ReactPointerEvent) => {
     const start = gesture.current
@@ -1958,6 +2028,12 @@ export function Journey(props: JourneyProps) {
     gesture.current = null
     if (!start) return
     if (start.timer) window.clearTimeout(start.timer)
+    // Only a gesture that began on the feed after the board last closed may swipe or tap it.
+    if (!feedGestureCounts({ startedAt: start.t, boardOpen: boardOpenRef.current, boardClosedAt: boardClosedAt.current, pointerId: start.pointerId, upPointerId: event.pointerId })) {
+      markSwipe(false)
+      springBack()
+      return
+    }
     const dx = event.clientX - start.x
     const dy = event.clientY - start.y
     const elapsed = Math.max(1, performance.now() - start.t)
@@ -1987,6 +2063,7 @@ export function Journey(props: JourneyProps) {
     if (start?.timer) window.clearTimeout(start.timer)
     markSwipe(false)
     springBack()
+    if (start && !feedGestureCounts({ startedAt: start.t, boardOpen: boardOpenRef.current, boardClosedAt: boardClosedAt.current })) return
     if (start && !start.moved && !slide && cardKind !== 'question' && cardKind !== 'text') runPictureTap()
   }
   const springBack = () => {
@@ -2024,8 +2101,7 @@ export function Journey(props: JourneyProps) {
       await fetch('/api/answers', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ pending }) }).catch(() => writePending(pending))
     }
     setSignedIn(true)
-    sheetRef.current = null
-    setSheet(null)
+    leaveSheet(null)
     setToast('Your place is kept.')
     window.setTimeout(() => tryPlay(), 300)
     return null
@@ -2257,27 +2333,65 @@ export function Journey(props: JourneyProps) {
   const swallowPicture = () => {
     ignorePictureUntil.current = performance.now() + PICTURE_SWALLOW_MS
   }
+  /** Any feed gesture in flight is dropped when the board opens or closes; none can finish as a swipe. */
+  const dropFeedGesture = () => {
+    const held = gesture.current
+    if (held?.timer) window.clearTimeout(held.timer)
+    gesture.current = null
+  }
   const openDrawer = () => {
     boardOpenedAt.current = performance.now()
+    boardToggledAt.current = boardOpenedAt.current
+    boardOpenRef.current = true
+    dropFeedGesture()
     setBoardOpen(true)
   }
   const closeDrawer = (event?: { stopPropagation(): void; preventDefault(): void }) => {
     event?.stopPropagation()
     event?.preventDefault()
     boardOpenRef.current = false
+    boardClosedAt.current = performance.now()
+    boardToggledAt.current = boardClosedAt.current
+    boardDrag.current = null
+    boardTap.current = null
+    morePress.current = null
+    dropFeedGesture()
     setBoardOpen(false)
     swallowPicture()
   }
+  closeDrawerRef.current = closeDrawer
   const boardAction = (event: { stopPropagation(): void; preventDefault(): void; clientX: number; clientY: number }, fn: () => void) => {
     event.stopPropagation()
     event.preventDefault()
     const start = boardDrag.current
-    const travel = start ? pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY }) : 0
-    if (!boardClickAllowed({ openedAt: boardOpenedAt.current, now: performance.now(), travel })) {
-      boardPress.current = null
-      return
-    }
+    const dragTravel = start ? pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY }) : 0
+    const tap = boardTap.current
+    const control = (event as { currentTarget?: EventTarget | null }).currentTarget as Element | null
+    const pressedHere = Boolean(tap && control && tap.control === control)
+    const fires = boardTapFires({
+      pressedHere,
+      pressedAt: tap?.t ?? 0,
+      pressTravel: tap ? pointerTravel({ x: tap.x, y: tap.y }, { x: event.clientX, y: event.clientY }) : 0,
+      openedAt: boardOpenedAt.current,
+      now: performance.now(),
+      dragTravel,
+    })
+    // Kept until this press's click: acted stops the click doing it again; a press that did not act may still act on its click.
+    boardTap.current = tap && pressedHere ? { ...tap, acted: fires } : null
+    if (!fires) return
     fn()
+    boardPress.current = null
+  }
+  /** The click after a board tap. It acts only if this press's pointerup did not (see boardClickFires). */
+  const boardClick = (event: ReactMouseEvent, fn: () => void) => {
+    event.preventDefault()
+    event.stopPropagation()
+    const tap = boardTap.current
+    const control = event.currentTarget as Element
+    const pressedHere = Boolean(tap && tap.control === control)
+    const fires = boardClickFires({ detail: event.detail, boardOpen: boardOpenRef.current, pressedHere, acted: Boolean(tap?.acted), pressedAt: tap?.t ?? 0, openedAt: boardOpenedAt.current })
+    if (pressedHere) boardTap.current = null
+    if (fires) fn()
     boardPress.current = null
   }
   /** Like and Save act on the clip the board was titled with when the finger went down, even if an auto-advance re-titles it before the finger lifts. */
@@ -2289,6 +2403,7 @@ export function Journey(props: JourneyProps) {
     event.stopPropagation()
     event.preventDefault()
     boardDrag.current = { x: event.clientX, y: event.clientY, t: performance.now(), opened: true }
+    morePress.current = { t: performance.now(), acted: false }
     event.currentTarget.setPointerCapture?.(event.pointerId)
   }
   const moveBoard = (event: ReactPointerEvent) => {
@@ -2307,11 +2422,27 @@ export function Journey(props: JourneyProps) {
     const travel = pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY })
     const velocity = dy / Math.max(1, performance.now() - start.t)
     if ((event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
-    if (boardShouldOpen(dy, velocity)) openDrawer()
-    else if (boardShouldClose(dy, velocity)) closeDrawer(event)
-    else if (travel < 14) {
-      if (boardOpen) closeDrawer(event)
-      else openDrawer()
+    const action = boardHandleAction({ boardOpen: boardOpenRef.current, dy, velocity, travel })
+    if (action !== 'none' && morePress.current) morePress.current.acted = true
+    if (action === 'open') openDrawer()
+    else if (action === 'close') closeDrawer(event)
+  }
+  /** The More handle's click: opens the board when this press's pointerup did not (lost, cancelled or misread). */
+  const moreClick = (event: ReactMouseEvent) => {
+    event.stopPropagation()
+    event.preventDefault()
+    const press = morePress.current
+    morePress.current = null
+    if (boardOpenRef.current) return
+    if (event.detail === 0 || (press && !press.acted)) openDrawer()
+  }
+  const saveTap = () => {
+    if (!item) return
+    const target = boardTapTarget(boardPress.current, item)
+    if (target && !needsAccount('save')) {
+      const note = boardTapNote({ action: 'save', wasOn: saved.includes(target.id), title: target.lessonTitle || target.courseTitle || '', landedOnShown: target.id === item.id })
+      toggleSave(target.id)
+      if (note) setToast(note)
     }
   }
   const visiblePlayer = () => {
@@ -2367,7 +2498,7 @@ export function Journey(props: JourneyProps) {
         onPointerMove={moveBoard}
         onPointerUp={finishBoard}
         onPointerCancel={(event) => { event.stopPropagation(); boardDrag.current = null }}
-        onClick={(event) => { event.stopPropagation(); event.preventDefault() }}
+        onClick={moreClick}
       >
         <i />
         More
@@ -2386,6 +2517,10 @@ export function Journey(props: JourneyProps) {
         className="j-board"
         data-testid="feed-board"
         data-armed={performance.now() - boardOpenedAt.current >= BOARD_ARM_MS ? 'yes' : 'no'}
+        onPointerDownCapture={(event) => {
+          const control = (event.target as HTMLElement).closest('button, a, [role="button"]')
+          boardTap.current = { control, x: event.clientX, y: event.clientY, t: performance.now(), acted: false }
+        }}
         onPointerDown={(event) => {
           event.stopPropagation()
           const onControl = Boolean((event.target as HTMLElement).closest('button, a, input, textarea, select, label'))
@@ -2412,13 +2547,24 @@ export function Journey(props: JourneyProps) {
           onPointerCancel={(event) => { event.stopPropagation(); boardDrag.current = null }}
         >
           <span className="j-board-handle" data-testid="board-handle" />
+          <button
+            type="button"
+            className="j-board-close"
+            data-testid="board-close"
+            aria-label="Close"
+            onPointerDown={(event) => { event.stopPropagation() }}
+            onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); closeDrawer(event) }}
+            onClick={(event) => { event.stopPropagation(); event.preventDefault(); if (boardOpenRef.current) closeDrawer(event) }}
+          >
+            <span aria-hidden>⌄</span>
+          </button>
         </div>
         {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
         {item.lessonTitle || item.courseTitle ? <p className="j-board-title" data-testid="board-title">{item.lessonTitle || item.courseTitle}</p> : null}
       <div className="rail">
-        <button type="button" data-testid="share" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => boardAction(event, () => { void share() })} onClick={(event) => event.preventDefault()}><span className="bubble"><ShareIcon /></span>Share</button>
-        <button type="button" aria-pressed={faves.includes(item.id)} data-testid="fave" data-cut={item.cutId} onPointerDown={(event) => pressBoard(event, item)} onPointerUp={(event) => boardAction(event, () => fave(boardTapTarget(boardPress.current, item)))} onClick={(event) => event.preventDefault()}><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
-        <button type="button" aria-pressed={saved.includes(item.id)} data-testid="save" data-cut={item.cutId} onPointerDown={(event) => pressBoard(event, item)} onPointerUp={(event) => boardAction(event, () => { const target = boardTapTarget(boardPress.current, item); if (target && !needsAccount('save')) toggleSave(target.id) })} onClick={(event) => event.preventDefault()}><span className="bubble"><SaveIcon /></span>{saved.includes(item.id) ? 'Saved' : 'Save'}</button>
+        <button type="button" data-testid="share" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => boardAction(event, () => { void share() })} onClick={(event) => boardClick(event, () => { void share() })}><span className="bubble"><ShareIcon /></span>Share</button>
+        <button type="button" aria-pressed={faves.includes(item.id)} data-testid="fave" data-cut={item.cutId} onPointerDown={(event) => pressBoard(event, item)} onPointerUp={(event) => boardAction(event, () => fave(boardTapTarget(boardPress.current, item)))} onClick={(event) => boardClick(event, () => fave(boardTapTarget(boardPress.current, item)))}><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
+        <button type="button" aria-pressed={saved.includes(item.id)} data-testid="save" data-cut={item.cutId} onPointerDown={(event) => pressBoard(event, item)} onPointerUp={(event) => boardAction(event, saveTap)} onClick={(event) => boardClick(event, saveTap)}><span className="bubble"><SaveIcon /></span>{saved.includes(item.id) ? 'Saved' : 'Save'}</button>
       </div>
       <div className="clip-foot j-credits">
         <div
@@ -2427,9 +2573,9 @@ export function Journey(props: JourneyProps) {
           aria-label="Choose how much to watch"
           onPointerDown={(event) => event.stopPropagation()}
         >
-          <button type="button" className={mode === 'hors' ? 'on' : undefined} data-testid="level-clip" aria-pressed={mode === 'hors'} onPointerUp={(event) => boardAction(event, () => requestClip())} onClick={(event) => event.preventDefault()}>{LEVEL_WORDS[0]}</button>
-          <button type="button" className={mode === 'appetiser' ? 'on' : undefined} data-testid="level-minutes" aria-pressed={mode === 'appetiser'} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => event.preventDefault()}>{LEVEL_WORDS[1]}</button>
-          <button type="button" data-testid="level-lecture" onPointerUp={(event) => boardAction(event, () => requestTalk())} onClick={(event) => event.preventDefault()}>{LEVEL_WORDS[2]}</button>
+          <button type="button" className={mode === 'hors' ? 'on' : undefined} data-testid="level-clip" aria-pressed={mode === 'hors'} onPointerUp={(event) => boardAction(event, () => requestClip())} onClick={(event) => boardClick(event, () => requestClip())}>{LEVEL_WORDS[0]}</button>
+          <button type="button" className={mode === 'appetiser' ? 'on' : undefined} data-testid="level-minutes" aria-pressed={mode === 'appetiser'} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => boardClick(event, () => requestExtract())}>{LEVEL_WORDS[1]}</button>
+          <button type="button" data-testid="level-lecture" onPointerUp={(event) => boardAction(event, () => requestTalk())} onClick={(event) => boardClick(event, () => requestTalk())}>{LEVEL_WORDS[2]}</button>
         </div>
         {currentSpec ? (
           <div className="ready-controls" data-testid="ready-controls">
@@ -2450,8 +2596,8 @@ export function Journey(props: JourneyProps) {
         {mode === 'hors' ? (
           <>
             {speakerRow}
-            {item.speaker ? <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onPointerUp={(event) => boardAction(event, moreFromSpeaker)} onClick={(event) => event.preventDefault()}>More from {item.speaker} ›</button> : null}
-            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" data-speaker={item.speaker} data-lesson={item.lessonId} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => event.preventDefault()}>{(() => {
+            {item.speaker ? <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onPointerUp={(event) => boardAction(event, moreFromSpeaker)} onClick={(event) => boardClick(event, moreFromSpeaker)}>More from {item.speaker} ›</button> : null}
+            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" data-speaker={item.speaker} data-lesson={item.lessonId} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => boardClick(event, () => requestExtract())}>{(() => {
               const lead = clipCta.label && !/^learn more\b/i.test(clipCta.label) ? clipCta.label : clipStepUpLabel()
               const seconds = item.talkSeconds || pieceSeconds(item.appetiser)
               return withTalkDetail(lead, 1, seconds)
@@ -2459,7 +2605,7 @@ export function Journey(props: JourneyProps) {
           </>
         ) : (
           <>
-            <a className="pill gold block" href={course} onPointerUp={(event) => boardAction(event, () => requestTalk())} onClick={(event) => event.preventDefault()} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk" data-speaker={item.speaker} data-lesson={item.lessonId}>{(() => {
+            <a className="pill gold block" href={course} onPointerUp={(event) => boardAction(event, () => requestTalk())} onClick={(event) => boardClick(event, () => requestTalk())} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk" data-speaker={item.speaker} data-lesson={item.lessonId}>{(() => {
               const talks = Object.values(opening.clips).filter((row) => row.courseId === item.courseId).reduce((ids, row) => ids.add(row.lessonId), new Set<number>()).size
               const computed = talkStepUpLabel(talks, item.talkSeconds)
               const custom = talkCta.label && !/^learn more\b/i.test(talkCta.label) && talkCta.label !== talkStepUpLabel(1) && (talkCta.running || talkCta.label !== computed)
@@ -2472,7 +2618,7 @@ export function Journey(props: JourneyProps) {
                 <FollowButton slug={item.speakerSlug} className="follow teal" />
               </div>
             ) : null}
-            {item.speaker ? <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onPointerUp={(event) => boardAction(event, moreFromSpeaker)} onClick={(event) => event.preventDefault()}>More from {item.speaker} ›</button> : null}
+            {item.speaker ? <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onPointerUp={(event) => boardAction(event, moreFromSpeaker)} onClick={(event) => boardClick(event, moreFromSpeaker)}>More from {item.speaker} ›</button> : null}
           </>
         )}
       </div>
@@ -2592,7 +2738,7 @@ export function Journey(props: JourneyProps) {
         ) : null}
         <div className="j-chrome">
           {chrome}
-          {clipEnded && mode === 'hors' && item && phase === 'feed' && nextClipAt == null ? (
+          {mode === 'hors' && item && phase === 'feed' && endCardShows({ clipEnded, lastClip: nextClipAt == null, boardOpen, sheetOpen: Boolean(sheet) }) ? (
             <div className="end-card" data-testid="feed-end">
               <p className="eyebrow">That is the last clip here.</p>
               <button type="button" className="pill gold block" data-testid="end-lanes" data-href={laneEndTarget} onClick={() => { window.location.assign(laneEndTarget) }}>Try another lane</button>
@@ -2643,7 +2789,7 @@ export function Journey(props: JourneyProps) {
 
       {phase === 'help' ? <HelpScreen contacts={opening.helpContacts} onBack={backToHearts} /> : null}
 
-      {sheet ? <KeepPlaceSheet reason={sheet} loginHref={loginHref} offline={offline} onClose={closeSheet} onSubmit={signUp} /> : null}
+      {sheet ? <KeepPlaceSheet key={sheetKey} reason={sheet} loginHref={loginHref} offline={offline} onClose={() => closeSheet(sheetKey)} onSubmit={signUp} /> : null}
 
       {notForMe && item ? (
         <div className="j-notfor" data-testid="not-for-me-menu">
@@ -2678,8 +2824,38 @@ export function Journey(props: JourneyProps) {
       </div>
 
       {coach && phase === 'feed' ? (
-        <div className="j-coach" data-testid="swipe-coach" onClick={dismissCoach}>
-          <div className="j-coach-card">
+        <div className="j-coach" data-testid="swipe-coach">
+          <div
+            className="j-coach-card"
+            data-testid="coach-card"
+            role="button"
+            tabIndex={0}
+            aria-label="Hide these tips"
+            onPointerDown={(event) => { event.stopPropagation(); event.preventDefault(); onDown(event) }}
+            onPointerMove={onMove}
+            onPointerUp={(event) => {
+              event.stopPropagation()
+              event.preventDefault()
+              const start = gesture.current
+              const dx = start ? event.clientX - start.x : 0
+              const dy = start ? event.clientY - start.y : 0
+              // A tap on the card only hides it. A swipe that starts on the card still moves the feed.
+              const onCard = pictureIsTap(dx, dy)
+              swallowPicture()
+              dismissCoach()
+              if (coachTapAction({ onCard }) === 'dismiss-only' || !start) {
+                if (start?.timer) window.clearTimeout(start.timer)
+                gesture.current = null
+                markSwipe(false)
+                springBack()
+                return
+              }
+              onUp(event)
+            }}
+            onPointerCancel={(event) => { event.stopPropagation(); dropFeedGesture(); markSwipe(false); springBack() }}
+            onClick={(event) => { event.stopPropagation(); event.preventDefault(); swallowPicture(); dismissCoach() }}
+            onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); dismissCoach() } }}
+          >
             <h2>How to move around</h2>
             <ul>
               <li><b>Swipe up</b> The next clip.</li>

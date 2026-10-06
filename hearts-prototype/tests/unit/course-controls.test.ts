@@ -75,7 +75,7 @@ test('play and pause stay on the lecture while it is playing', () => {
   assert.doesNotMatch(journey, /Hide more/)
   assert.match(journey, /data-catcher="yes"/)
   assert.match(journey, /data-testid="film-catcher"/)
-  assert.match(journey, /boardClickAllowed/)
+  assert.match(journey, /boardTapFires\(/)
   assert.match(journey, /coverHoldStep/)
   const openDrawer = journey.slice(journey.indexOf('const openDrawer'), journey.indexOf('const closeDrawer'))
   assert.doesNotMatch(openDrawer, /pause|mute|playVideo|silence|stopVisible|hush/)

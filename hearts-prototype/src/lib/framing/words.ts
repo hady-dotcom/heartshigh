@@ -41,12 +41,13 @@ export function sentencesFromWords(words: SpokenWord[], clipEnd?: number): Frami
   const sentences: FramingSentence[] = groups.map((group) => {
     const text = group.map((row) => row.w).join(' ')
     const key = pickKey(group)
+    const keyAt = keyWordIndex(group.map((row) => row.w), key)
     return {
       text,
       s: group[0].t,
       e: group[group.length - 1].e ?? group[group.length - 1].t + 0.4,
       key,
-      words: group.map((row) => ({ ...row, key: key ? norm(row.w) === norm(key) : false })),
+      words: group.map((row, index) => ({ ...row, key: index === keyAt })),
     }
   })
   sentences.forEach((row, index) => {
@@ -59,6 +60,32 @@ export function sentencesFromWords(words: SpokenWord[], clipEnd?: number): Frami
 
 export function sentencesInWindow(sentences: FramingSentence[], start: number, end: number) {
   return sentences.filter((row) => row.s < end - 0.05 && row.e > start + 0.05)
+}
+
+/** Exactly one gold word per page: the first word that matches the key, even if the key is said twice. */
+export function keyWordIndex(words: string[], key?: string | null) {
+  const want = key ? norm(key) : ''
+  if (!want) return -1
+  return words.findIndex((word) => norm(word) === want)
+}
+
+/**
+ * The one gold word on a page of words (the lines actually shown). The sentence's key when it is on
+ * the page (first occurrence); otherwise the page's own best word, because a long caption-built
+ * sentence is cut to the panel and its key can sit past the cut. A page with any word always gets
+ * exactly one, even if every word is short ("Is it?"). -1 only for an empty page.
+ */
+export function pageKeyIndex(words: string[], key?: string | null) {
+  if (!words.length) return -1
+  const own = keyWordIndex(words, key)
+  if (own >= 0) return own
+  const best = keyWordIndex(words, pickKey(words.map((w) => ({ w, t: 0 }))))
+  if (best >= 0) return best
+  let longest = -1
+  words.forEach((word, index) => {
+    if (norm(word) && (longest < 0 || norm(word).length > norm(words[longest]).length)) longest = index
+  })
+  return longest >= 0 ? longest : 0
 }
 
 export function pickKey(words: SpokenWord[]) {

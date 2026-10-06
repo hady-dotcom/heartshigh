@@ -108,7 +108,7 @@ test('2: every path that could restart or advance the film checks the sheet firs
   assert.match(journey, /if \(clipEndedRef\.current \|\| sheetRef\.current\) return/)
   const tryPlay = between('const tryPlay = useCallback(', 'const onPlayerState')
   assert.match(tryPlay, /sheetRef\.current\) return/)
-  assert.match(between('const closeSheet = () => {', '// Poll while playing'), /window\.setTimeout\(\(\) => tryPlay\(\), 0\)/)
+  assert.match(between('const closeSheet = (', '// Poll while playing'), /window\.setTimeout\(\(\) => tryPlay\(\), 0\)/)
 })
 
 // ---------- 2b: the board stays open across an advance; its taps land on the titled clip ----------
@@ -131,7 +131,8 @@ test('2b: Like or Save lands on the clip the board was titled with at the press,
 
 test('2b: the board buttons record the clip on press and act on it on lift; Follow remounts with the clip', () => {
   assert.match(journey, /data-testid="fave" data-cut=\{item\.cutId\} onPointerDown=\{\(event\) => pressBoard\(event, item\)\} onPointerUp=\{\(event\) => boardAction\(event, \(\) => fave\(boardTapTarget\(boardPress\.current, item\)\)\)\}/)
-  assert.match(journey, /data-testid="save" data-cut=\{item\.cutId\} onPointerDown=\{\(event\) => pressBoard\(event, item\)\} onPointerUp=\{\(event\) => boardAction\(event, \(\) => \{ const target = boardTapTarget\(boardPress\.current, item\); if \(target && !needsAccount\('save'\)\) toggleSave\(target\.id\) \}\)\}/)
+  assert.match(journey, /data-testid="save" data-cut=\{item\.cutId\} onPointerDown=\{\(event\) => pressBoard\(event, item\)\} onPointerUp=\{\(event\) => boardAction\(event, saveTap\)\}/)
+  assert.match(between('const saveTap = () => {', 'const visiblePlayer'), /const target = boardTapTarget\(boardPress\.current, item\)\n\s+if \(target && !needsAccount\('save'\)\) \{[\s\S]*toggleSave\(target\.id\)/)
   const fave = between('const fave = (', 'const share = ')
   assert.match(fave, /toggleFave\(target\.id\)/)
   assert.match(fave, /signal\('fave', tagsOf\(target\)\)/)
@@ -210,5 +211,6 @@ test('4: tabs, Me, the speaker page and the full talk ask to keep your place; Sa
   assert.match(between('const watchFull = () => {', 'const fave = ('), /needsAccount\('place'\)/)
   assert.match(journey, /<span onClickCapture=\{\(event\) => \{ if \(needsAccount\('save'\)\)[^\n]*<FollowButton/)
   assert.match(between('const fave = (', 'const share = '), /needsAccount\('save'\)/)
-  assert.match(journey, /data-testid="save"[^\n]*needsAccount\('save'\)/)
+  assert.match(journey, /data-testid="save"[^\n]*boardAction\(event, saveTap\)/)
+  assert.match(between('const saveTap = () => {', 'const visiblePlayer'), /needsAccount\('save'\)/)
 })
