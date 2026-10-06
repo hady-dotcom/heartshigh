@@ -281,7 +281,10 @@ export function playOnly(id: string) {
  * Autoplay with sound is often blocked. Start muted, then unmute once the play call
  * has been accepted, and record hasSound when the player is actually unmuted.
  */
-export function playWithSoundFallback(player: YTPlayer, wantSound: boolean) {
+export function playWithSoundFallback(
+  player: Pick<YTPlayer, 'mute' | 'unMute' | 'playVideo' | 'isMuted'>,
+  wantSound: boolean,
+) {
   if (!wantSound) {
     player.mute()
     player.playVideo()

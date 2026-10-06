@@ -11,9 +11,6 @@ type CatcherPlayer = {
   getPlayerState(): number
   pauseVideo(): void
   playVideo(): void
-  seekTo?: (...args: unknown[]) => void
-  loadVideoById?: (...args: unknown[]) => void
-  cueVideoById?: (...args: unknown[]) => void
 }
 
 /**

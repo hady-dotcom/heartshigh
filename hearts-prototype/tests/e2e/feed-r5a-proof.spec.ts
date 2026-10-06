@@ -210,7 +210,7 @@ test('phone feed proof: no repeats, taqwa, caption bar, advancing mute log', asy
     `talks ${seenTalks.join(' ')}`,
     `scenes ${seenScenes.join(' ')}`,
     `time moved ${firstTime} -> ${laterTime}`,
-    `muted then ${mutedBefore?.muted} / later ${laterSnap?.muted}`,
+    `muted then ${before?.muted} / later ${laterSnap?.muted}`,
     `pool ended ${ended}`,
   ].join('\n'))
 })

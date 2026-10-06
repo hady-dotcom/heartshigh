@@ -19,7 +19,7 @@ test('garden plaques use the learner sans and keep every lane name', () => {
 
 test('garden plaque ribbons tuck their corners into the round pot', async () => {
   const lanes = ['quran', 'hadith', 'character', 'society', 'spirituality']
-  const lum = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b
+  const lum = (r: number, g: number, b: number) => 0.2126 * r + 0.7152 * g + 0.0722 * b
   for (const lane of lanes) {
     for (const stage of [0, 4]) {
       const file = fileURLToPath(new URL(`../../public/garden/trees/${lane}/stage-${stage}-planter.webp`, import.meta.url))
@@ -27,7 +27,7 @@ test('garden plaque ribbons tuck their corners into the round pot', async () => 
         .ensureAlpha()
         .raw()
         .toBuffer({ resolveWithObject: true })
-      const L = (x, y) => {
+      const L = (x: number, y: number) => {
         const i = (y * info.width + x) * 4
         return lum(data[i], data[i + 1], data[i + 2])
       }
