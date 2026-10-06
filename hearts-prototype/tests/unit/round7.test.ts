@@ -61,8 +61,8 @@ test('1: More, the board and the scrim never pause the film after an advance', (
   assert.doesNotMatch(scrimDown, /onPointerDown=\{\(event\) => \{ event\.stopPropagation\(\); event\.preventDefault\(\); closeDrawer/)
   assert.match(journey, /data-testid="board-handle"/)
   assert.match(journey, /pictureTapIgnored/)
-  const horsEnd = journey.slice(journey.indexOf('current.hors.end > current.hors.start'), journey.indexOf('current.hors.end > current.hors.start') + 520)
-  assert.match(horsEnd, /userPausedRef\.current = next == null/)
+  assert.match(journey, /userPausedRef\.current = next == null/)
+  assert.match(journey, /horsWindowEnded/)
 })
 
 test('2: a 20px drag or a fast flick on the grab area closes the board', () => {
@@ -81,7 +81,8 @@ test('2: a 20px drag or a fast flick on the grab area closes the board', () => {
 test('3: the end card closes the board and stays under its z-index', () => {
   assert.match(journey, /const showLaneEnd/)
   assert.match(journey, /setBoardOpen\(false\)/)
-  const endCard = journeyCss.slice(journeyCss.indexOf('.end-card {'), journeyCss.indexOf('.end-card {') + 180)
+  const endCardAt = journeyCss.indexOf('\n.end-card {')
+  const endCard = journeyCss.slice(endCardAt, endCardAt + 180)
   const board = journeyCss.slice(journeyCss.indexOf('.j-board {'), journeyCss.indexOf('.j-board {') + 280)
   assert.match(endCard, /z-index: 8/)
   assert.match(board, /z-index: 28/)
@@ -119,7 +120,7 @@ test('5: every item switch restarts the 4.5s cover hold', () => {
   assert.equal(coverHoldMsLeft(1000, 2500), 3000)
   assert.equal(coverHoldKey(8, 'hors'), '8:hors')
   assert.notEqual(coverHoldKey(2, 'hors'), coverHoldKey(3, 'hors'))
-  assert.match(journey, /coverHoldKey\(item\?\.cutId, mode\)/)
+  assert.match(journey, /coverHoldKey\(item\?\.cutId, mode/)
   assert.match(journey, /coverHoldMsLeft/)
   assert.match(journey, /if \(!playStartedAt\.current \|\| coverHoldShouldRestart/)
 })

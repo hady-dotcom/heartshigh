@@ -57,3 +57,48 @@ export function hostShouldShow(isChosen: boolean, revealed: boolean, blocked: bo
 export function verticalSwipe(dy: number): 'next' | 'lane' {
   return dy < 0 ? 'next' : 'lane'
 }
+
+/** A tap on the picture never skips. Only a vertical swipe of this many pixels does. */
+export const PICTURE_SWIPE_PX = 40
+
+/** True only for a vertical swipe of 40px or more. A tap or a short flick stays a tap. */
+export function pictureSwipeCommit(dx: number, dy: number, minPx = PICTURE_SWIPE_PX) {
+  return Math.abs(dy) > Math.abs(dx) && Math.abs(dy) >= minPx
+}
+
+/** Watch keys are `cut:hors:talk`; player specs are `cut:hors`. */
+export function endedKeysMatch(watchKey: string, eventKey?: string | null) {
+  if (!eventKey || !watchKey) return false
+  if (eventKey === watchKey) return true
+  const watchSpec = watchKey.split(':').slice(0, 2).join(':')
+  return eventKey === watchSpec || eventKey.startsWith(`${watchSpec}:`)
+}
+
+/**
+ * A leftover `hearts:ended` from the clip we just left must not run against the
+ * clip now on screen. Only this watch's own end (or YouTube state 0 on this spec) counts.
+ * An unkeyed event is only trusted when this watch has already marked ended.
+ */
+export function endedEventIsCurrent(input: {
+  watchKey: string
+  eventKey?: string | null
+  watchEnded: boolean
+  playerState?: number
+}) {
+  if (!input.eventKey) return input.watchEnded
+  if (!endedKeysMatch(input.watchKey, input.eventKey)) return false
+  return input.watchEnded || input.playerState === 0
+}
+
+/** The lane-end card is for a clip that has actually ended, with nowhere else to go. */
+export function showLaneEndNow(input: { thisClipEnded: boolean; nextIndex: number | null }) {
+  return input.thisClipEnded && input.nextIndex == null
+}
+
+/**
+ * The last clip's hors window has finished. A leftover clock from the previous
+ * film (e.g. 312s on a 0–16s last clip) must not count as this clip's end.
+ */
+export function horsWindowEnded(time: number, start: number, end: number, slack = 2) {
+  return end > start && time >= start - 0.5 && time >= end && time <= end + slack
+}

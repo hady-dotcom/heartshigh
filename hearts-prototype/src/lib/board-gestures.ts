@@ -24,6 +24,29 @@ export function pictureTapIgnored(input: { boardOpen: boolean; swallowUntil: num
 }
 
 /**
+ * Save (or any board control) at the same moment as an auto-advance: the tap
+ * may miss both clips, which is fine. The new clip still resets its cover hold,
+ * and a later picture tap pauses; it never skips.
+ */
+export function saveDuringAdvanceThenTap(input: {
+  holdReset: boolean
+  playStartedFromNewPlaying: boolean
+  tapTravelX: number
+  tapTravelY: number
+  swipePx?: number
+}) {
+  const swipePx = input.swipePx ?? 40
+  const skip = Math.abs(input.tapTravelY) > Math.abs(input.tapTravelX) && Math.abs(input.tapTravelY) >= swipePx
+  const holdReady = input.holdReset && input.playStartedFromNewPlaying
+  return {
+    registeredOrIgnored: true,
+    coverHeld: holdReady,
+    pause: !skip && holdReady,
+    skip,
+  }
+}
+
+/**
  * Advance, open More, close on the scrim: leftover pointer work is swallowed
  * and auto-advance must have cleared userPaused, so the film stays PLAYING.
  */

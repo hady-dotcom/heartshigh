@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { PLAY_NUDGE_FOR_MS, hostShouldShow, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, verticalSwipe } from '../../src/lib/film-advance'
+import { PLAY_NUDGE_FOR_MS, endedEventIsCurrent, horsWindowEnded, hostShouldShow, pictureSwipeCommit, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, verticalSwipe } from '../../src/lib/film-advance'
 
 const visible = { key: '14:hors', hasPlayer: true }
 const preloaded = { key: '22:hors', hasPlayer: true }
@@ -53,6 +53,25 @@ test('the chosen host stays visible through a clip change, and a parked host sta
 test('swipe up is the next hors d’oeuvre and swipe down stays on the lane', () => {
   assert.equal(verticalSwipe(-80), 'next')
   assert.equal(verticalSwipe(80), 'lane')
+})
+
+test('a leftover ended event does not hide the last clip, and a tap never skips', () => {
+  assert.equal(endedEventIsCurrent({ watchKey: '9:hors:talk', eventKey: '8:hors:talk', watchEnded: false, playerState: -1 }), false)
+  assert.equal(endedEventIsCurrent({ watchKey: '9:hors:talk', eventKey: '8:hors', watchEnded: false, playerState: 0 }), false)
+  assert.equal(endedEventIsCurrent({ watchKey: '9:hors:talk', eventKey: '9:hors:talk', watchEnded: true, playerState: 2 }), true)
+  assert.equal(endedEventIsCurrent({ watchKey: '9:hors:talk', eventKey: '9:hors', watchEnded: false, playerState: 0 }), true)
+  assert.equal(endedEventIsCurrent({ watchKey: '9:hors:talk', watchEnded: false, playerState: 0 }), false)
+  assert.equal(horsWindowEnded(0, 0, 16), false)
+  assert.equal(horsWindowEnded(312, 0, 16), false)
+  assert.equal(horsWindowEnded(16.2, 0, 16), true)
+  assert.equal(showLaneEndNow({ thisClipEnded: false, nextIndex: null }), false)
+  assert.equal(showLaneEndNow({ thisClipEnded: true, nextIndex: null }), true)
+  assert.equal(showLaneEndNow({ thisClipEnded: true, nextIndex: 4 }), false)
+  assert.equal(hostShouldShow(true, true, false), true, 'the last clip stays visible until it ends')
+  assert.equal(pictureSwipeCommit(0, 12), false)
+  assert.equal(pictureSwipeCommit(0, 39), false)
+  assert.equal(pictureSwipeCommit(0, 40), true)
+  assert.equal(pictureSwipeCommit(80, 12), false)
 })
 
 test('the film has no Prev/Next chrome, and the ladder stays a small text row', () => {

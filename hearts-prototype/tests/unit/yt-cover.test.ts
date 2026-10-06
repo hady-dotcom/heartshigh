@@ -7,6 +7,7 @@ import {
   advanceLeavesPlayable,
   coverFallbackAction,
   coverHoldKey,
+  coverHoldMayStart,
   coverHoldMsLeft,
   coverHoldShouldRestart,
   coverShouldHold,
@@ -78,4 +79,14 @@ test('the hold restarts on buffering or any other state, and the frame is uncrop
   assert.equal(coverHoldMsLeft(1000, 2500), 3000)
   assert.equal(coverHoldKey(3, 'hors'), '3:hors')
   assert.notEqual(coverHoldKey(2, 'hors'), coverHoldKey(3, 'hors'))
+  assert.notEqual(coverHoldKey(3, 'hors', '3:hors:talk'), coverHoldKey(4, 'hors', '4:hors:talk'))
+  assert.equal(
+    coverHoldMayStart({ holdKey: '4:hors:4:hors', holdFor: '4:hors:4:hors', specKey: '4:hors', hostSpecKey: '3:hors', state: 1, currentTime: 312, start: 0 }),
+    false,
+    'leftover PLAYING from the old spec must not start the new hold',
+  )
+  assert.equal(
+    coverHoldMayStart({ holdKey: '4:hors:4:hors', holdFor: '4:hors:4:hors', specKey: '4:hors', hostSpecKey: '4:hors', state: 1, currentTime: 0.2, start: 0 }),
+    true,
+  )
 })

@@ -42,6 +42,19 @@ export function dedicatedLaneFeed(
   return playableLaneClips(clips, cuts, lane, titles[lane] || lane)
 }
 
+/**
+ * A dedicated lane never takes the scored/mixed fetch. The card count and the
+ * player walk the same `clipCanPlayOnLane` list, in starter-then-tagged order.
+ */
+export function takeDedicatedLane(
+  lane: string | null | undefined,
+  own: FeedItem[],
+  incoming: FeedItem[],
+): FeedItem[] {
+  if (!lane) return incoming
+  return own
+}
+
 /** Mixed Home feed may grow from the session playlist. A dedicated lane must not. */
 export function feedMayWiden(lane?: string | null) {
   return !lane

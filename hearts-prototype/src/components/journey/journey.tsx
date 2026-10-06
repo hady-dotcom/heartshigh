@@ -14,11 +14,11 @@ import { nextPlaybackRate } from '@/lib/playback-rate'
 import { feedFilmCaption } from '@/lib/spoken-caption'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
-import { dedicatedLaneFeed, playableLaneClips } from '@/lib/lanes'
-import { coverFallbackAction, coverHoldKey, coverHoldMsLeft, coverHoldShouldRestart, filmCoverKey, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
+import { dedicatedLaneFeed, playableLaneClips, takeDedicatedLane } from '@/lib/lanes'
+import { coverFallbackAction, coverHoldKey, coverHoldMayStart, coverHoldMsLeft, coverHoldShouldRestart, filmCoverKey, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
 import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
 import { isoWeek } from '@/lib/trends'
-import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, hostShouldShow, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, verticalSwipe } from '@/lib/film-advance'
+import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, endedEventIsCurrent, horsWindowEnded, hostShouldShow, pictureSwipeCommit, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, verticalSwipe } from '@/lib/film-advance'
 import { acceptLevelTap, type LevelTap } from '@/lib/level-tap'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, hydrateSound, lowData, pauseKeepingSound, playOnly, playerSnapshot, preloadApi, setHidden, silence, silenceHidden, silenceOthers, soundOn, type PlayerKind } from '@/lib/yt'
 import { PageHelp } from '@/components/app/page-help'
@@ -502,7 +502,10 @@ export function Journey(props: JourneyProps) {
         if (hosts.current[visibleRef.current].state === STATE.BUFFERING) setBuffering(true)
       }, 600)
     }
-    if (state === STATE.ENDED) window.dispatchEvent(new CustomEvent('hearts:ended'))
+    if (state === STATE.ENDED) {
+      const spec = hosts.current[visibleRef.current].spec
+      window.dispatchEvent(new CustomEvent('hearts:ended', { detail: { key: spec?.key || watch.current.key } }))
+    }
     const elapsed = performance.now() - nudgeRef.current
     if (
       shouldNudgePlay(state, wantPlayRef.current === host.spec?.key && Boolean(host.playerId), userPausedRef.current, elapsed) &&
@@ -766,21 +769,40 @@ export function Journey(props: JourneyProps) {
       revealedRef.current = true
       setRevealed(true)
       try {
+        const own = props.lane
+          ? playableLaneClips(opening.clips, opening.route.cuts, props.lane, opening.laneTitles[props.lane] || props.lane)
+          : []
+        let firstMode: Mode = 'hors'
+        if (props.lane) {
+          let clips = takeDedicatedLane(props.lane, own, [])
+          const asked = props.clip ? opening.clips[String(props.clip)] : undefined
+          if (asked) {
+            clips = [{ ...asked, laneKey: props.lane, lane: asked.lane, laneLabel: asked.laneLabel }, ...own.filter((clip) => clip.cutId !== asked.cutId)]
+            if (props.play === 'appetiser') firstMode = 'appetiser'
+          }
+          clips = takeDedicatedLane(props.lane, clips, clips)
+          itemsRef.current = clips
+          setItems(clips)
+          const activation = typeof navigator !== 'undefined' && Boolean(navigator.userActivation?.isActive || navigator.userActivation?.hasBeenActive)
+          if (activation || hasSound()) {
+            soundOn(hosts.current[visibleRef.current].playerId || '')
+            setMuted(false)
+          }
+          await showItem(0, firstMode)
+          if (signedIn) setTabs(true)
+          else window.setTimeout(() => setTabs(true), 1200)
+          return
+        }
         const data = await fetchFeed(state)
         if (cancelled) return
         let clips = data.clips
-        let firstMode: Mode = 'hors'
-        if (props.lane) {
-          const own = playableLaneClips(opening.clips, opening.route.cuts, props.lane, opening.laneTitles[props.lane] || props.lane)
-          if (own.length) clips = own
-        }
         const asked = props.clip ? opening.clips[String(props.clip)] : undefined
         if (asked) {
           clips = [{ ...asked, laneKey: props.lane || null, lane: asked.lane, laneLabel: asked.laneLabel }, ...clips.filter((clip) => clip.cutId !== asked.cutId)]
           if (props.play === 'appetiser') firstMode = 'appetiser'
         }
-        clips = props.lane ? clips : sessionPlaylist(clips, opening.clips, state.served.length, backgroundsBase)
-        const stored = !props.clip && !props.lane ? readFeedPlace() : null
+        clips = sessionPlaylist(clips, opening.clips, state.served.length, backgroundsBase)
+        const stored = !props.clip ? readFeedPlace() : null
         const saved = stored?.cutId ? opening.clips[String(stored.cutId)] : undefined
         if (saved && !clips.some((row) => row.cutId === saved.cutId)) clips = [{ ...saved, laneKey: null }, ...clips]
         adopt(clips, data.items, data.spinePointer, true)
@@ -1252,9 +1274,18 @@ export function Journey(props: JourneyProps) {
   )
 
   useEffect(() => {
-    const onEnded = () => {
+    const onEnded = (event: Event) => {
       keepHarvest()
       if (modeRef.current !== 'hors') return
+      const detail = (event as CustomEvent<{ key?: string }>).detail || {}
+      const host = hosts.current[visibleRef.current]
+      const player = host.playerId ? getPlayer(host.playerId) : null
+      if (!endedEventIsCurrent({
+        watchKey: watch.current.key,
+        eventKey: detail.key,
+        watchEnded: watch.current.ended,
+        playerState: player?.getPlayerState() ?? host.state,
+      })) return
       wantPlayRef.current = null
       window.clearInterval(playWatch.current)
       const flagsNow = sessionFlags()
@@ -1266,10 +1297,10 @@ export function Journey(props: JourneyProps) {
           return
         }
       }
-      const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current, Boolean(props.lane))
-      if (next == null) {
+      const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', props.lane ? undefined : seenRef.current, Boolean(props.lane))
+      if (showLaneEndNow({ thisClipEnded: true, nextIndex: next })) {
         showLaneEnd()
-      } else {
+      } else if (next != null) {
         userPausedRef.current = false
         void advance(next, 'auto')
       }
@@ -1282,11 +1313,11 @@ export function Journey(props: JourneyProps) {
       setErrorNote("This one can't play here")
       if (current && signedIn) void fetch('/api/hearts/unplayable', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cutId: current.cutId, code }) }).catch(() => undefined)
       window.setTimeout(() => {
-        const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current, Boolean(props.lane))
-        if (next == null) {
+        const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', props.lane ? undefined : seenRef.current, Boolean(props.lane))
+        if (showLaneEndNow({ thisClipEnded: true, nextIndex: next })) {
           showLaneEnd()
           setToast(poolEndToast())
-        } else void advance(next, 'auto')
+        } else if (next != null) void advance(next, 'auto')
       }, 900)
     }
     window.addEventListener('hearts:ended', onEnded)
@@ -1304,11 +1335,11 @@ export function Journey(props: JourneyProps) {
     if (window.history.state?.hearts?.sheet) window.history.back()
     if (pendingAfterSheet.current === 'next') {
       pendingAfterSheet.current = null
-      const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current, Boolean(props.lane))
-      if (next == null) {
+      const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', props.lane ? undefined : seenRef.current, Boolean(props.lane))
+      if (showLaneEndNow({ thisClipEnded: true, nextIndex: next })) {
         showLaneEnd()
         if (!props.lane) setToast(poolEndToast())
-      } else void advance(next, 'auto')
+      } else if (next != null) void advance(next, 'auto')
     } else window.setTimeout(() => tryPlay(), 0)
   }
 
@@ -1377,7 +1408,9 @@ export function Journey(props: JourneyProps) {
         return
       }
       // The player's own end mark is a whole second; the clip stops at its real out point, between sentences.
-      if (modeRef.current === 'hors' && (!current.card || current.card === 'talk') && current.hors.end > current.hors.start && time >= current.hors.end) {
+      const currentSpec = specFor(current, modeRef.current)
+      if (host.spec?.key !== currentSpec?.key) return
+      if (modeRef.current === 'hors' && (!current.card || current.card === 'talk') && horsWindowEnded(time, current.hors.start, current.hors.end)) {
         player.mute()
         player.pauseVideo()
         if (!seen.done90) {
@@ -1388,9 +1421,9 @@ export function Journey(props: JourneyProps) {
         if (!seen.ended) {
           seen.ended = true
           wantPlayRef.current = null
-          const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current, Boolean(props.lane))
+          const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', props.lane ? undefined : seenRef.current, Boolean(props.lane))
           userPausedRef.current = next == null
-          window.dispatchEvent(new CustomEvent('hearts:ended'))
+          window.dispatchEvent(new CustomEvent('hearts:ended', { detail: { key: seen.key } }))
         }
         return
       }
@@ -1443,14 +1476,14 @@ export function Journey(props: JourneyProps) {
     if (!current) return
     dismissCoach()
     let list = itemsRef.current
-    let target = swipeTarget(list, indexRef.current, modeRef.current, swipe, seenRef.current, Boolean(props.lane))
+    let target = swipeTarget(list, indexRef.current, modeRef.current, swipe, props.lane ? undefined : seenRef.current, Boolean(props.lane))
     if (target === null) {
       const wider = maybeWidenPlaylist(list, opening.clips, heartRef.current?.served.length || 0, backgroundsBase, Boolean(props.lane))
       if (wider.length > list.length) {
         itemsRef.current = wider
         setItems(wider)
         list = wider
-        target = swipeTarget(list, indexRef.current, modeRef.current, swipe, seenRef.current, Boolean(props.lane))
+        target = swipeTarget(list, indexRef.current, modeRef.current, swipe, props.lane ? undefined : seenRef.current, Boolean(props.lane))
       }
     }
     if (target === null) {
@@ -1759,7 +1792,7 @@ export function Journey(props: JourneyProps) {
     if (phase !== 'feed' || items.length < 2) return []
     const out: { swipe: Swipe; at: number }[] = []
     for (const swipe of PEEK_SWIPES) {
-      const raw = swipeTarget(items, index, mode, swipe, seenRef.current, Boolean(props.lane))
+      const raw = swipeTarget(items, index, mode, swipe, props.lane ? undefined : seenRef.current, Boolean(props.lane))
       if (raw === null) continue
       const at = settleOnLevel(items, raw, mode, raw < index ? -1 : 1)
       if (at !== null && at !== index) out.push({ swipe, at })
@@ -1826,8 +1859,8 @@ export function Journey(props: JourneyProps) {
     const far = Math.max(Math.abs(dx), Math.abs(dy))
     const vertical = Math.abs(dy) > Math.abs(dx)
     const quick = far / elapsed >= 0.35
-    // A downward swipe used to be judged against the screen width, so an ordinary swipe down never landed.
-    const commit = vertical ? far >= 48 || (far >= 32 && quick) : far >= 40 && (far >= width * 0.25 || quick || far >= height * 0.12)
+    // A tap on the picture never skips. Only a vertical swipe of 40px+ steps the clip.
+    const commit = vertical ? pictureSwipeCommit(dx, dy) : far >= 40 && (far >= width * 0.25 || quick || far >= height * 0.12)
     if (!commit) {
       markSwipe(false)
       springBack()
@@ -1904,7 +1937,8 @@ export function Journey(props: JourneyProps) {
   const started = playerReady && host.played && LIVE.has(host.state)
   const playingOut = playerReady && host.played && host.state === STATE.PLAYING
   useEffect(() => {
-    const holdKey = coverHoldKey(item?.cutId, mode)
+    const specKey = currentSpec?.key || null
+    const holdKey = coverHoldKey(item?.cutId, mode, specKey)
     if (coverHoldFor.current !== holdKey) {
       coverHoldFor.current = holdKey
       playStartedAt.current = 0
@@ -1914,9 +1948,17 @@ export function Journey(props: JourneyProps) {
     const state = host.state
     const player = host.playerId ? getPlayer(host.playerId) : null
     const now = player?.getCurrentTime() ?? 0
-    const advancing = !playStartedAt.current || now > (host.spec?.start || 0) + 0.12
-    if (playingOut && !clipEnded) {
-      if (!playStartedAt.current || coverHoldShouldRestart(state, holdState.current, advancing)) {
+    const ready = coverHoldMayStart({
+      holdKey,
+      holdFor: coverHoldFor.current,
+      specKey,
+      hostSpecKey: host.spec?.key,
+      state,
+      currentTime: now,
+      start: host.spec?.start || 0,
+    })
+    if (playingOut && !clipEnded && ready) {
+      if (!playStartedAt.current || coverHoldShouldRestart(state, holdState.current, true)) {
         playStartedAt.current = performance.now()
         setCoverHeld(true)
       }
@@ -1932,7 +1974,7 @@ export function Journey(props: JourneyProps) {
     holdState.current = state
     if (!clipEnded) playStartedAt.current = 0
     setCoverHeld(true)
-  }, [playingOut, clipEnded, host.state, item?.cutId, mode])
+  }, [playingOut, clipEnded, currentSpec?.key, host.state, host.spec?.key, item?.cutId, mode])
   useEffect(() => {
     if (phase !== 'feed' || clipEnded || userPausedRef.current) return
     const begun = performance.now()
@@ -2058,7 +2100,7 @@ export function Journey(props: JourneyProps) {
   const clipLength = Math.max(0, clipEnd - clipStart)
   const clipElapsed = spokenAt != null ? Math.max(0, Math.min(clipLength, spokenAt - clipStart)) : 0
   const clipPct = clipLength ? Math.min(100, (clipElapsed / clipLength) * 100) : 0
-  const nextClipAt = item ? swipeTarget(items, index, mode, 'next', seenRef.current, Boolean(props.lane)) : null
+  const nextClipAt = item ? swipeTarget(items, index, mode, 'next', props.lane ? undefined : seenRef.current, Boolean(props.lane)) : null
   const spokenSentences = item?.framingTrack?.sentences?.length
     ? item.framingTrack.sentences
     : sentencesFromCaptions(mode === 'hors' ? item?.hors.lines : item?.appetiser.lines, clipStart, clipEnd)
@@ -2156,15 +2198,6 @@ export function Journey(props: JourneyProps) {
           ))}
         </div>
       ) : null}
-      <button
-        type="button"
-        className="j-tap-catcher"
-        data-testid="film-catcher"
-        aria-label={playingOut ? 'Pause' : 'Play'}
-        data-ready="yes"
-        {...swipe}
-        onClick={(event) => event.preventDefault()}
-      />
       <button
         type="button"
         className="j-more-tab"
@@ -2378,6 +2411,17 @@ export function Journey(props: JourneyProps) {
           ) : null}
           {phase === 'feed' && !item ? <div className="j-poster" data-testid="poster-frame" data-poster="own" data-empty="" /> : null}
           {phase === 'feed' && !slide && !scenic && !feedCard ? <div className="j-gesture" data-testid="gesture-layer" data-catcher="yes" data-capture="yes" {...swipe} /> : null}
+          {item && phase === 'feed' && !slide && !scenic ? (
+            <button
+              type="button"
+              className="j-tap-catcher"
+              data-testid="film-catcher"
+              aria-label={playingOut ? 'Pause' : 'Play'}
+              data-ready="yes"
+              {...swipe}
+              onClick={(event) => event.preventDefault()}
+            />
+          ) : null}
         </div>
         {slide && item ? (
           <div className="j-slide" data-testid="gesture-layer" {...swipe}>
@@ -2386,23 +2430,23 @@ export function Journey(props: JourneyProps) {
         ) : null}
         <div className="j-chrome">
           {chrome}
+          {clipEnded && mode === 'hors' && item && phase === 'feed' && nextClipAt == null ? (
+            <div className="end-card" data-testid="feed-end">
+              <p className="eyebrow">That is the last clip here.</p>
+              <button type="button" className="pill gold block" data-testid="end-lanes" onClick={() => { window.location.assign(`${base}/lanes`) }}>Try another lane</button>
+            </div>
+          ) : null}
+          {appetiserOver && mode === 'appetiser' && item && phase === 'feed' ? (
+            <div className="end-card" data-testid="appetiser-end">
+              <p className="eyebrow">This one is finished.</p>
+              <a className="pill gold block" href={course} data-testid="end-full" onPointerUp={(event) => { event.preventDefault(); requestTalk() }} onClick={(event) => { event.preventDefault(); requestTalk() }}>Watch the full talk</a>
+              <button type="button" className="pill block end-feed" data-testid="end-feed" onClick={() => { setAppetiserOver(false); void showItem(index, 'hors') }}>Back to the feed</button>
+              {swipeTarget(items, index, 'appetiser', 'next') != null ? (
+                <button type="button" className="pill block end-next" data-testid="end-next" onClick={() => { const next = swipeTarget(items, index, 'appetiser', 'next'); setAppetiserOver(false); if (next != null) void advance(next) }}>Watch the next longer clip</button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
-        {clipEnded && mode === 'hors' && item && phase === 'feed' && nextClipAt == null ? (
-          <div className="end-card" data-testid="feed-end">
-            <p className="eyebrow">That is the last clip here.</p>
-            <button type="button" className="pill gold block" data-testid="end-lanes" onClick={() => { window.location.assign(`${base}/lanes`) }}>Try another lane</button>
-          </div>
-        ) : null}
-        {appetiserOver && mode === 'appetiser' && item && phase === 'feed' ? (
-          <div className="end-card" data-testid="appetiser-end">
-            <p className="eyebrow">This one is finished.</p>
-            <a className="pill gold block" href={course} data-testid="end-full" onPointerUp={(event) => { event.preventDefault(); requestTalk() }} onClick={(event) => { event.preventDefault(); requestTalk() }}>Watch the full talk</a>
-            <button type="button" className="pill block end-feed" data-testid="end-feed" onClick={() => { setAppetiserOver(false); void showItem(index, 'hors') }}>Back to the feed</button>
-            {swipeTarget(items, index, 'appetiser', 'next') != null ? (
-              <button type="button" className="pill block end-next" data-testid="end-next" onClick={() => { const next = swipeTarget(items, index, 'appetiser', 'next'); setAppetiserOver(false); if (next != null) void advance(next) }}>Watch the next longer clip</button>
-            ) : null}
-          </div>
-        ) : null}
       </div>
 
       {phase === 'handoff' && line ? <p className="j-line" data-testid="handoff-line">{line}</p> : null}

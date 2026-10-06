@@ -19,8 +19,26 @@ export function coverHoldMsLeft(playStartedAt: number, now: number, holdMs = YT_
 }
 
 /** Restart the 4.5s hold on every clip or level switch, including auto-advance and swipe. */
-export function coverHoldKey(cutId: number | null | undefined, mode: string) {
-  return `${cutId ?? ''}:${mode}`
+export function coverHoldKey(cutId: number | null | undefined, mode: string, specKey?: string | null) {
+  return specKey ? `${cutId ?? ''}:${mode}:${specKey}` : `${cutId ?? ''}:${mode}`
+}
+
+/**
+ * The hold clock starts only on this clip's first confirmed PLAYING.
+ * Leftover PLAYING from the film we just left must not start or keep the clock.
+ */
+export function coverHoldMayStart(input: {
+  holdKey: string
+  holdFor: string
+  specKey?: string | null
+  hostSpecKey?: string | null
+  state: number
+  currentTime: number
+  start: number
+}) {
+  if (!input.holdKey || input.holdFor !== input.holdKey) return false
+  if (!input.specKey || input.hostSpecKey !== input.specKey) return false
+  return playingConfirmed(input.state, input.currentTime, input.start)
 }
 
 /** Restart the hold on buffering, any other state, or a stuck clock. Continuous PLAYING may keep running. */

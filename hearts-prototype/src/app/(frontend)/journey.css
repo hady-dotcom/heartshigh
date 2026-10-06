@@ -103,7 +103,7 @@
 .j-clip { position: absolute; inset: 0; z-index: 2; }
 .phase-feed .j-clip, .phase-handoff .j-clip { background: #0F3B3A; }
 .phase-handoff .j-clip { background: transparent; }
-.j-slot { position: absolute; inset: 0; overflow: hidden; isolation: isolate; }
+.j-slot { position: absolute; inset: 0; overflow: hidden; isolation: isolate; z-index: 1; }
 .yt-host { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
 /* A parked host used to slide to -200vw. The cropped film is wider than the phone, so that shift left the picture sticking back over the next hors d'oeuvre. */
 .yt-host.off { visibility: hidden !important; pointer-events: none !important; }
@@ -167,13 +167,14 @@
   width: 100%;
   height: calc(100vw * 9 / 16);
   max-height: 60dvh;
-  z-index: 12;
+  z-index: 20;
   background: rgba(0, 0, 0, 0.001);
   pointer-events: auto;
   touch-action: none;
   border: 0;
   padding: 0;
 }
+.j-slot .j-tap-catcher { z-index: 20; }
 .journey[data-vertical='yes'] .j-tap-catcher {
   height: min(60dvh, calc(100vw * 16 / 9));
 }
@@ -223,7 +224,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 
 /* Chrome over (or around) the clip. Controls and the caption take taps; the rest falls through to the film. */
 .j-chrome { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
-.j-chrome .rail, .j-chrome .clip-foot, .j-chrome .chip, .j-chrome .j-sound, .j-chrome .j-swipe-hint, .j-chrome button, .j-chrome a, .j-chrome .j-more-tab, .j-chrome .j-board, .j-chrome .j-board-back, .j-chrome .j-tap-catcher { pointer-events: auto; }
+.j-chrome .rail, .j-chrome .clip-foot, .j-chrome .chip, .j-chrome .j-sound, .j-chrome .j-swipe-hint, .j-chrome button, .j-chrome a, .j-chrome .j-more-tab, .j-chrome .j-board, .j-chrome .j-board-back, .j-chrome .j-tap-catcher, .j-chrome .end-card { pointer-events: auto; }
 .j-chrome .pill, .j-chrome .chip { touch-action: manipulation; }
 .j-chrome .caption {
   pointer-events: auto; cursor: pointer; background: none; border: 0; padding: 0; text-align: left;
