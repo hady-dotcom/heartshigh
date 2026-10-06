@@ -53,7 +53,7 @@ test('harvest lines: whole sentences from their own context, asides dropped, cap
   assert.equal(harvestLine('so', 'so'), null)
 })
 
-test('a scenic card for a talk without a voiced card gets whole-sentence beats, and a fragment beat is dropped', async () => {
+test('a talk with harvest lines stays a talk: the feed does not build a scenic typing card', async () => {
   const { mixFeed } = await import('../../src/lib/feed-mix')
   const item = {
     id: 'cut-9', cutId: 9, lane: 'reflections', laneLabel: 'Reflections', speaker: 'A Speaker', speakerSlug: 'a-speaker', portrait: null, poster: null,
@@ -63,11 +63,10 @@ test('a scenic card for a talk without a voiced card gets whole-sentence beats, 
     land: 'The',
     style: null, clause: null, cardStyle: 'cinema', cardScene: 'road', cardBackground: null,
   }
-  const scene = mixFeed([item as never], 1).find((row) => row.card === 'scene')
-  assert.deepEqual(scene?.scene?.beats.map((beat) => [beat.beat, beat.quote, beat.audio]), [
-    ['hook', 'And they will all stand before Him on the day of Judgment.', null],
-    ['turn', 'The Prophet said the strong one holds himself back when he is angry.', null],
-  ])
+  const mixed = mixFeed([item as never], 1)
+  assert.equal(mixed.length, 1)
+  assert.equal(mixed[0].card, undefined)
+  assert.equal(mixed.some((row) => row.card === 'scene' || row.card === 'film'), false)
 })
 
 test('a scenic beat is at most two sentences and about 30 words, never ends on a hanging word', () => {

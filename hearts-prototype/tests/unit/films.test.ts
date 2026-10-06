@@ -51,44 +51,13 @@ test('a talk with no sheet row still plays the rendered face films, and the prop
   assert.equal(filmsForTalk({ films: [] }, 'TLCGBj4AlB0').length, 0)
 })
 
-test('a session alternates a face film and a scenic card, and a return visit swaps them', () => {
+test('a session is talks only: no face film and no scenic typing card, on a return visit too', () => {
   const talk = item(1, filmsForTalk(catalogue, 'ECaTWkof57E'), { cardStyle: 'kinetic', cardScene: 'road' })
   const second = item(2, filmsForTalk(catalogue, 'NIR88RRpat4'), { cardStyle: 'windows', cardScene: 'mist' })
   const first = mixFeed([talk, second], 0)
-  assert.deepEqual(first.map((row) => row.card || 'talk'), ['talk', 'film', 'talk', 'scene'])
-  assert.equal(first[1].film?.src, '/typography/ECaTWkof57E/hook.mp4')
-  assert.equal(first.some((row) => row.card === 'question' || row.prompt === 'What stays with you from this?'), false)
-  assert.equal(first[3].scene?.destination, 'clip')
-  assert.equal(first[3].scene?.beats.length, 3)
-  assert.notEqual(first[1].film?.style, first[3].scene?.style)
-  const ids = new Set(first.map((row) => row.id))
-  assert.equal(ids.size, first.length)
-
+  assert.deepEqual(first.map((row) => row.card || 'talk'), ['talk', 'talk'])
+  assert.deepEqual(first.map((row) => row.cutId), [1, 2])
+  assert.equal(first.some((row) => row.card === 'film' || row.card === 'scene' || row.card === 'question'), false)
   const again = mixFeed([talk, second], 1)
-  assert.deepEqual(again.map((row) => row.card || 'talk'), ['talk', 'scene', 'talk', 'film'])
-  assert.equal(again[1].scene?.destination, 'clip')
-  assert.notEqual(again[1].card, first[1].card)
-  assert.notEqual(again[1].scene?.style, first[3].scene?.style)
-})
-
-test('a card keeps its own background, neighbours skip a shared tag, and learn more stays on the clip', () => {
-  const talks = [1, 2, 3].map((cutId) => item(cutId, [], {
-    cardStyle: 'kinetic',
-    cardScene: cutId === 2 ? 'sky' : 'road',
-    beats: [
-      { beat: 'hook', quote: `Hook ${cutId}`, gold: 'Hook', audio: null },
-      { beat: 'turn', quote: `Turn ${cutId}`, gold: 'Turn', audio: null },
-      { beat: 'land', quote: `Land ${cutId}`, gold: 'Land', audio: null },
-    ],
-  }))
-  const mixed = mixFeed(talks, 0).filter((row) => row.card === 'scene')
-  assert.equal(mixed.length, 3)
-  assert.equal(mixed[0].scene?.scene, '/slides/bg-cinema-road.jpg')
-  assert.equal(mixed[0].scene?.destination, 'clip')
-  assert.ok(mixed.every((row) => row.scene?.destination === 'clip'))
-  assert.notEqual(mixed[0].scene?.scene, mixed[1].scene?.scene)
-  assert.notEqual(mixed[1].scene?.scene, mixed[2].scene?.scene)
-  const returned = mixFeed(talks, 2).filter((row) => row.card === 'scene')
-  assert.ok(returned.every((row) => row.scene?.destination === 'clip'))
-  assert.equal(returned[0].scene?.scene, mixed[0].scene?.scene)
+  assert.deepEqual(again.map((row) => row.id), first.map((row) => row.id))
 })

@@ -2,8 +2,8 @@ import { learnMore } from '@/lib/nesting'
 import type { FeedItem } from '@/server/learner'
 
 /**
- * Feed navigation keeps to one level. On clips (talk clips, typography films and scenic cards)
- * a swipe stays in the clip loop; on 3-minute versions, in that loop. Only the step-up goes down a level,
+ * Feed navigation keeps to one level. A swipe stays in the clip loop, or in the 3-minute loop.
+ * Films and scenic typing cards are not part of either loop. Only the step-up goes down a level,
  * and only to the parent of the item being watched.
  */
 export type FeedLevel = 'hors' | 'appetiser'
@@ -16,9 +16,9 @@ export function isInterstitial(item: Pick<FeedItem, 'card'> | undefined) {
   return Boolean(item?.card && item.card !== 'talk')
 }
 
-/** Whether an item can be shown at this level. */
-export function onLevel(item: NavItem | undefined, level: FeedLevel) {
-  return Boolean(item) && (level === 'hors' || !isInterstitial(item))
+/** Whether an item can be shown at this level. Typing cards and face films are never shown. */
+export function onLevel(item: NavItem | undefined, _level: FeedLevel) {
+  return Boolean(item) && !isInterstitial(item)
 }
 
 export function itemKey(item: Pick<NavItem, 'cutId' | 'card'>) {
@@ -68,8 +68,8 @@ export function settleOnLevel(list: NavItem[], to: number, level: FeedLevel, ste
 
 /**
  * Where a swipe lands, or null when there is nowhere else on this level. The level never changes:
- * topic, speaker and lane move to another talk; next and previous step through the loop, and the
- * appetiser loop passes over the cards that only exist as hors d'oeuvres.
+ * topic, speaker and lane move to another talk; next and previous step from one hors d'oeuvre
+ * to the next and pass over any film or typing card still sitting in the list.
  */
 function unseenCard(list: NavItem[], at: number, level: FeedLevel, seen: ReadonlySet<string> | undefined) {
   const row = list[at]
@@ -85,10 +85,9 @@ export function swipeTarget(list: NavItem[], index: number, level: FeedLevel, sw
   if (swipe === 'next' || swipe === 'prev') {
     const step = swipe === 'next' ? 1 : -1
     const order = ring(list.length, index, step)
-    // Next still skips a card the learner has already been shown, then stops at the end of the pool.
-    // Prev is one step back to the previous talk clip. It must not skip that clip for being seen,
-    // and it must not stop on the scenic card that sits between two talks — that jump landed on
-    // an older unseen speaker instead of the clip just left.
+    // Next skips a talk the learner has already been shown, then stops at the end of the pool.
+    // It also skips a film or typing card. Prev is one step back to the previous talk clip.
+    // It must not skip that clip for being seen, and it must not stop on a card between two talks.
     if (swipe === 'prev') {
       return order.find((at) => onLevel(list[at], level) && (level !== 'hors' || !isInterstitial(list[at]))) ?? null
     }

@@ -36,7 +36,7 @@ function talk(cutId: number, lane: string, speaker: string, withFilm: boolean): 
   }
 }
 
-/** A feed as learners get it: talks with typography films and scenic cards between them. */
+/** A feed as learners get it: hors d'oeuvres only, even when the talks carry face films. */
 function feed() {
   return mixFeed([
     talk(1, 'trust', 'Speaker A', true),
@@ -47,16 +47,17 @@ function feed() {
   ])
 }
 
-test('the mixed feed really carries films and scenic cards at the clip level, and never a question card', () => {
+test('the mixed feed is hors d’oeuvres only: no film, scene, text or question card', () => {
   const list = feed()
-  const kinds = new Set(list.map((row) => row.card || 'talk'))
-  for (const kind of ['talk', 'film', 'scene']) assert.ok(kinds.has(kind as never), `missing ${kind}`)
-  assert.equal(kinds.has('question'), false)
-  assert.ok(list.every((row) => row.card !== 'question' && row.prompt !== 'What stays with you from this?'))
-  assert.ok(list.filter(isInterstitial).every((row) => list.some((own) => own.cutId === row.cutId && !isInterstitial(own))))
+  assert.deepEqual(list.map((row) => row.cutId), [1, 2, 3, 4, 5])
+  assert.ok(list.every((row) => !isInterstitial(row)))
+  assert.equal(list.some((row) => row.card === 'film' || row.card === 'scene' || row.card === 'text' || row.card === 'question'), false)
+  assert.ok(list.every((row) => row.prompt !== 'What stays with you from this?'))
+  const again = mixFeed(feed(), 3, 'https://cdn.example')
+  assert.deepEqual(again.map((row) => row.id), list.map((row) => row.id))
 })
 
-test('on hors d’oeuvres, every swipe from every item (talks, films and cards) lands on an hors d’oeuvre-level item', () => {
+test('on hors d’oeuvres, every swipe from every talk lands on another talk', () => {
   const list = feed()
   list.forEach((row, index) => {
     for (const swipe of SWIPES) {
@@ -72,7 +73,7 @@ test('on hors d’oeuvres, every swipe from every item (talks, films and cards) 
   })
 })
 
-test('the hors d’oeuvre loop steps through films and cards in order, and stops when they are all seen', () => {
+test('the hors d’oeuvre loop steps from one talk to the next, and stops when they are all seen', () => {
   const list = feed()
   const visited: number[] = []
   const seen = new Set<string>()
@@ -175,24 +176,27 @@ test('prev steps back to the previous clip even when it was seen and a card sits
   assert.equal(list[swipeTarget(list, talks[0].index, 'hors', 'prev', seen)!].cutId, talks[talks.length - 1].row.cutId)
 })
 
-test('next skips a seen card until the pool is used up, then it stops', () => {
+test('next after a talk is the next talk, never a typing card, and stops when every talk is seen', () => {
   const list = feed()
-  const firstTalk = list.findIndex((row) => !isInterstitial(row))
-  let lastOfFirst = -1
-  for (let i = list.length - 1; i >= 0; i--) {
-    if (list[i].cutId === list[firstTalk].cutId) {
-      lastOfFirst = i
-      break
-    }
-  }
-  const seen = new Set([cardKey(list[firstTalk], 'hors')])
-  const afterTalk = swipeTarget(list, firstTalk, 'hors', 'next', seen)!
-  assert.equal(list[afterTalk].cutId, list[firstTalk].cutId)
-  assert.notEqual(list[afterTalk].card || 'talk', 'talk')
-  const nextTalk = swipeTarget(list, lastOfFirst, 'hors', 'next', seen)!
-  assert.notEqual(list[nextTalk].cutId, list[firstTalk].cutId)
+  const seen = new Set([cardKey(list[0], 'hors')])
+  const after = swipeTarget(list, 0, 'hors', 'next', seen)!
+  assert.equal(list[after].cutId, list[1].cutId)
+  assert.equal(isInterstitial(list[after]), false)
   const all = new Set(list.map((row) => cardKey(row, 'hors')))
-  assert.equal(swipeTarget(list, lastOfFirst, 'hors', 'next', all), null)
+  assert.equal(swipeTarget(list, list.length - 1, 'hors', 'next', all), null)
+})
+
+test('a swipe or auto-advance skips a film or typing card and lands on the next talk', () => {
+  const talks = [talk(1, 'trust', 'Speaker A', true), talk(2, 'trust', 'Speaker B', true), talk(3, 'quiet', 'Speaker A', false)]
+  const scene = { ...talks[0], id: 'scene-1', card: 'scene' as const }
+  const film = { ...talks[1], id: 'film-2', card: 'film' as const }
+  const list = [talks[0], scene, talks[1], film, talks[2]]
+  assert.equal(swipeTarget(list, 0, 'hors', 'next'), 2)
+  assert.equal(list[swipeTarget(list, 2, 'hors', 'next')!].cutId, 3)
+  assert.equal(list[swipeTarget(list, 2, 'hors', 'prev')!].cutId, 1)
+  assert.equal(isInterstitial(list[settleOnLevel(list, 1, 'hors')!]), false)
+  assert.equal(list[settleOnLevel(list, 1, 'hors')!].cutId, 2)
+  assert.equal(mixFeed(list).some(isInterstitial), false)
 })
 
 test('a talk seen as a clip can still open as a 3-minute version', () => {
@@ -261,6 +265,6 @@ test('a refill does not append a second talk or scene for a cut already in the m
   const again = mixFeed([talk(1, 'trust', 'Speaker A', true), talk(2, 'trust', 'Speaker B', true)], 0)
   const merged = appendUnseenItems(first, again)
   assert.equal(merged.filter((row) => row.cutId === 1 && (row.card || 'talk') === 'talk').length, 1)
-  assert.equal(merged.filter((row) => row.cutId === 1 && row.card === 'film').length, 1)
+  assert.equal(merged.filter((row) => row.card === 'film' || row.card === 'scene').length, 0)
   assert.equal(merged.length, first.length)
 })

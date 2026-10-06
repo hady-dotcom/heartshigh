@@ -84,26 +84,17 @@ function talk(cutId: number, background: string): FeedItem {
   }
 }
 
-test('with a base URL the stored still is served, a similar neighbour steps on, and a return visit keeps its own', () => {
+test('a catalogue still can be addressed, and the learner mix does not turn it into a typing card', () => {
   const base = 'https://cdn.example'
   const talks = [
     talk(1, 'jpg/A-01-lake-predawn-violet.jpg'),
     talk(2, 'jpg/A-15-lake-golden-gold.jpg'),
   ]
-  const local = mixFeed(talks, 0).filter((row) => row.card === 'scene')
-  assert.equal(local[0].scene?.scene, '/slides/bg-cinema-road.jpg')
   assert.equal(backgroundSrc('jpg/A-01-lake-predawn-violet.jpg', null), null)
   assert.equal(backgroundSrc('jpg/A-01-lake-predawn-violet.jpg', base), 'https://cdn.example/backgrounds/jpg/A-01-lake-predawn-violet.jpg')
-
-  const mixed = mixFeed(talks, 0, base).filter((row) => row.card === 'scene')
-  assert.equal(mixed[0].scene?.scene, 'https://cdn.example/backgrounds/jpg/A-01-lake-predawn-violet.jpg')
-  assert.equal(mixed[0].scene?.brightness, 'dark')
-  assert.notEqual(mixed[1].scene?.scene, 'https://cdn.example/backgrounds/jpg/A-15-lake-golden-gold.jpg')
-  const second = CATALOGUE.find((row) => mixed[1].scene?.scene?.endsWith(row.file))
-  const first = CATALOGUE[0]
-  assert.ok(second)
-  assert.equal(sharesLook(first, second), false)
-  const again = mixFeed(talks, 2, `${base}/`).filter((row) => row.card === 'scene')
-  assert.equal(again[0].scene?.scene, mixed[0].scene?.scene)
-  assert.equal(again[1].scene?.scene, mixed[1].scene?.scene)
+  const mixed = mixFeed(talks, 0, base)
+  assert.deepEqual(mixed.map((row) => row.cutId), [1, 2])
+  assert.equal(mixed.some((row) => row.card === 'scene' || row.scene), false)
+  const again = mixFeed(talks, 2, `${base}/`)
+  assert.deepEqual(again.map((row) => row.id), mixed.map((row) => row.id))
 })

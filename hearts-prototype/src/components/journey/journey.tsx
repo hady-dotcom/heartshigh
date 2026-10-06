@@ -26,7 +26,6 @@ import { ART as SLIDE_BACKDROP, Avatar, FollowButton, Slide } from '../app/feed'
 import { HeartIcon, PlayIcon, SaveIcon, ShareIcon } from '../icons'
 import { beginWith } from '@/lib/begin-with'
 import { HelpScreen, Opener, SceneCard } from './scenes'
-import { TeachingCard } from './teaching-card'
 import { KeepPlaceSheet, type SheetReason } from './sheet'
 import { track } from '@/lib/experiment-track'
 import { useVariant, type VariantMap } from '@/lib/use-variant'
@@ -702,7 +701,7 @@ export function Journey(props: JourneyProps) {
 
   const adopt = useCallback(
     (clips: FeedItem[], slots: FeedSlot[], spinePointer: number, replace: boolean) => {
-      const merged = replace ? clips : appendUnseenItems(itemsRef.current, clips)
+      const merged = (replace ? clips : appendUnseenItems(itemsRef.current, clips)).filter((row) => !isInterstitial(row))
       itemsRef.current = merged
       setItems(merged)
       if (heartRef.current) setHeart(markServed(heartRef.current, slots, spinePointer))
@@ -1713,15 +1712,6 @@ export function Journey(props: JourneyProps) {
     }
   }, [peeks, items, mode])
 
-  useEffect(() => {
-    for (const row of items.slice(index + 1, index + 6)) {
-      const src = row.scene?.scene
-      if (!src) continue
-      const image = new Image()
-      image.src = src
-    }
-  }, [items, index])
-
   // Gestures on the clip. In overlay mode the gesture layer covers the player; in strict mode only the chrome.
   const onDown = (event: ReactPointerEvent) => {
     if (!(event.target as HTMLElement).closest('button, a, input, textarea, select, label')) (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId)
@@ -1837,11 +1827,12 @@ export function Journey(props: JourneyProps) {
   const host = hosts.current[visibleHost]
   const currentSpec = specFor(item, mode)
   const playerReady = Boolean(currentSpec && host.ready && host.spec?.key === currentSpec.key && revealed)
-  const cardKind = mode === 'hors' && (item?.card === 'film' || item?.card === 'text' || item?.card === 'question' || item?.card === 'scene') ? item!.card : null
-  const typeSrc = cardKind === 'film' ? item?.film?.src : item?.typography?.src
-  const typeClip = Boolean(phase === 'feed' && mode === 'hors' && typeSrc && cardKind !== 'text' && cardKind !== 'question' && cardKind !== 'scene')
-  const scenic = Boolean(phase === 'feed' && cardKind === 'scene' && mode === 'hors' && item?.scene)
-  const feedCard = phase === 'feed' && (cardKind === 'question' || cardKind === 'text')
+  // Face films, scenic typing cards, and question or text cards are not part of the learner feed.
+  const cardKind = null
+  const typeSrc = item?.typography?.src
+  const typeClip = Boolean(phase === 'feed' && mode === 'hors' && typeSrc && !isInterstitial(item))
+  const scenic = false
+  const feedCard = false
   const started = playerReady && host.played && LIVE.has(host.state)
   const playingOut = playerReady && host.played && host.state === STATE.PLAYING
   const keepAppetiserPoster = mode === 'appetiser' && appetiserHeld && host.state !== STATE.PLAYING
@@ -1991,9 +1982,9 @@ export function Journey(props: JourneyProps) {
         </div>
       ) : null}
       <div className="rail">
-        <button type="button" onClick={share} data-testid="share"><span className="bubble"><ShareIcon /></span>Share</button>
-        <button type="button" aria-pressed={faves.includes(item.id)} onClick={fave} data-testid="fave"><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
-        <button type="button" aria-pressed={saved.includes(item.id)} onClick={() => !needsAccount('save') && toggleSave(item.id)} data-testid="save"><span className="bubble"><SaveIcon /></span>{saved.includes(item.id) ? 'Saved' : 'Save'}</button>
+        <button type="button" data-testid="share" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); void share() }} onClick={(event) => event.preventDefault()}><span className="bubble"><ShareIcon /></span>Share</button>
+        <button type="button" aria-pressed={faves.includes(item.id)} data-testid="fave" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); fave() }} onClick={(event) => event.preventDefault()}><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
+        <button type="button" aria-pressed={saved.includes(item.id)} data-testid="save" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); if (!needsAccount('save')) toggleSave(item.id) }} onClick={(event) => event.preventDefault()}><span className="bubble"><SaveIcon /></span>{saved.includes(item.id) ? 'Saved' : 'Save'}</button>
       </div>
       <div className="clip-foot j-credits">
         <div
@@ -2107,20 +2098,9 @@ export function Journey(props: JourneyProps) {
               muted
               autoPlay
               data-testid="typography-player"
-              data-style={cardKind === 'film' ? item?.film?.style : item?.typography?.style}
+              data-style={item?.typography?.style}
               onEnded={() => window.dispatchEvent(new CustomEvent('hearts:ended'))}
             />
-          ) : null}
-          {phase === 'feed' && cardKind === 'question' && item ? (
-            <div className="feed-card" data-testid="feed-question" {...swipe}>
-              <FeedCardFace kicker="Question" title={item.prompt || ''} speaker={item.speaker} />
-              <button type="button" className="pill gold" onClick={() => void advance(index + 1)} data-testid="feed-card-next">Continue</button>
-            </div>
-          ) : phase === 'feed' && cardKind === 'text' && item?.film ? (
-            <div className="feed-card" data-testid="feed-text" {...swipe}>
-              <FeedCardFace kicker={item.film.beat === 'hook' ? 'Hook' : item.film.beat === 'turn' ? 'Turn' : 'Land'} title={item.film.quote || ''} speaker={item.speaker} />
-              <button type="button" className="pill gold" onClick={() => void advance(index + 1)} data-testid="feed-card-next">Continue</button>
-            </div>
           ) : null}
           {showPoster && item && !slide ? (
             <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}${scenicAppetiser ? ' scenic' : ''}`} data-testid="poster-frame" data-poster={mode === 'appetiser' && item.cleanThumb ? 'frame' : 'own'}>
@@ -2149,11 +2129,6 @@ export function Journey(props: JourneyProps) {
         {slide && item ? (
           <div className="j-slide" data-testid="gesture-layer" {...swipe}>
             <Slide item={item} style={slide} onMore={() => void stepUp()} />
-          </div>
-        ) : null}
-        {scenic && item?.scene ? (
-          <div className="j-slide" data-testid="gesture-layer" {...swipe}>
-            <TeachingCard key={item.id} scene={item.scene} speaker={item.speaker} course={item.courseTitle} lane={item.laneLabel} onClip={() => void stepUp()} cta={clipCta.label} />
           </div>
         ) : null}
         <div className="j-chrome" data-swipe={overlay && !feedCard ? undefined : ''} {...(overlay && !feedCard ? {} : swipe)}>
@@ -2264,21 +2239,9 @@ export function Journey(props: JourneyProps) {
 /** The still a card opens on: its scene, or our own poster (YouTube's large frame only when it carries no words). */
 function stillOf(item: FeedItem | undefined, mode: Mode) {
   if (!item) return null
-  if (mode === 'hors' && item.card === 'scene' && item.scene) return item.scene.scene
-  if (mode === 'hors' && item.style && !item.typography?.src) return SLIDE_BACKDROP[item.style]
+  if (mode === 'hors' && item.style && !item.typography?.src && !isInterstitial(item)) return SLIDE_BACKDROP[item.style]
   if (mode === 'appetiser' && item.cleanThumb) return item.cleanThumb
   return item.poster && !/i\.ytimg\.com|img\.youtube\.com|^\/clips\//i.test(item.poster) ? item.poster : null
-}
-
-function FeedCardFace({ kicker, title, speaker }: { kicker: string; title: string; speaker: string }) {
-  return (
-    <>
-      <span className="feed-card-bg" aria-hidden />
-      <div className="kicker">{kicker}</div>
-      <h2>{title}</h2>
-      <p>{speaker}</p>
-    </>
-  )
 }
 
 function PosterStill({ item, mode }: { item: FeedItem; mode: Mode; peek?: boolean }) {
@@ -2298,19 +2261,12 @@ function PosterStill({ item, mode }: { item: FeedItem; mode: Mode; peek?: boolea
 
 /** A neighbour as it first appears, drawn from stills already decoded: nothing here waits on a player. */
 function PeekFace({ item, mode }: { item: FeedItem; mode: Mode }) {
-  if (mode === 'hors' && (item.card === 'question' || (item.card === 'text' && item.film))) {
-    const kicker = item.card === 'question' ? 'Question' : item.film?.beat === 'hook' ? 'Hook' : item.film?.beat === 'turn' ? 'Turn' : 'Land'
+  if (isInterstitial(item)) {
     return (
-      <div className="feed-card">
-        <FeedCardFace kicker={kicker} title={(item.card === 'question' ? item.prompt : item.film?.quote) || ''} speaker={item.speaker} />
-        <span className="pill gold">Continue</span>
-      </div>
-    )
-  }
-  if (mode === 'hors' && item.card === 'scene' && item.scene) {
-    return (
-      <div className={`slide scene-${item.scene.style} ${item.scene.style}`}>
-        <div className="bg" style={{ backgroundImage: `url(${item.scene.scene})` }} />
+      <div className="j-poster">
+        <PosterStill item={item} mode={mode} peek />
+        <span className="j-poster-mark" aria-hidden><Arch size={28} /></span>
+        <span className="j-poster-who">{item.speaker}</span>
       </div>
     )
   }
