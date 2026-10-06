@@ -6,7 +6,7 @@ import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
 import { clipsFromRoute, sessionPlaylist } from '@/lib/feed-mix'
 import { clipStepUpLabel, LEVEL_WORDS, onlyClipToast, pieceSeconds, poolEndToast, talkStepUpLabel, withTalkDetail } from '@/lib/feed-copy'
-import { appendUnseenItems, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
+import { appendUnseenItems, boardItemForPlayer, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readCoachDismissed, readFeedPlace, readHeart, readPending, rememberSeenCard, sessionFlags, sessionSeenCards, sessionSeenCuts, setSessionFlags, viewAsId, writeCoachDismissed, writeFeedPlace, writeHeart, writePending } from '@/lib/device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
@@ -15,7 +15,7 @@ import { feedFilmCaption } from '@/lib/spoken-caption'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { playableLaneClips } from '@/lib/lanes'
-import { YT_CHROME_HOLD_MS, coverFallbackAction, landscapeThumb, pauseMarkVisible, ytDebugOn } from '@/lib/yt-cover'
+import { YT_CHROME_HOLD_MS, coverFallbackAction, coverHoldShouldRestart, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
 import { BOARD_ARM_MS, boardClickAllowed, boardShouldClose, boardShouldOpen, pointerTravel } from '@/lib/board-gestures'
 import { isoWeek } from '@/lib/trends'
 import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, hostShouldShow, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, verticalSwipe } from '@/lib/film-advance'
@@ -222,6 +222,9 @@ export function Journey(props: JourneyProps) {
   const [coverHeld, setCoverHeld] = useState(true)
   const [clipEnded, setClipEnded] = useState(false)
   const playStartedAt = useRef(0)
+  const holdState = useRef(-9)
+  const ignorePictureUntil = useRef(0)
+  const [debugOn, setDebugOn] = useState(false)
   const boardOpenedAt = useRef(0)
   const boardDrag = useRef<{ x: number; y: number; opened: boolean } | null>(null)
   const watch = useRef<{ key: string; start: number; furthest: number; done90: boolean; ended: boolean }>({ key: '', start: 0, furthest: 0, done90: false, ended: false })
@@ -651,7 +654,11 @@ export function Journey(props: JourneyProps) {
       setClipEnded(false)
       setCoverHeld(true)
       playStartedAt.current = 0
+      holdState.current = -9
       userPausedRef.current = false
+      boardOpenRef.current = false
+      setBoardOpen(false)
+      ignorePictureUntil.current = performance.now() + 480
       if (item) {
         const seen = rememberSeenCard(item.cutId, item.card || 'talk', kind)
         seenRef.current = new Set(seen.cards)
@@ -760,10 +767,10 @@ export function Journey(props: JourneyProps) {
         }
         const asked = props.clip ? opening.clips[String(props.clip)] : undefined
         if (asked) {
-          clips = [{ ...asked, laneKey: null }, ...clips.filter((clip) => clip.cutId !== asked.cutId)]
+          clips = [{ ...asked, laneKey: props.lane || null, lane: asked.lane, laneLabel: asked.laneLabel }, ...clips.filter((clip) => clip.cutId !== asked.cutId)]
           if (props.play === 'appetiser') firstMode = 'appetiser'
         }
-        clips = sessionPlaylist(clips, opening.clips, state.served.length, backgroundsBase)
+        clips = props.lane ? clips : sessionPlaylist(clips, opening.clips, state.served.length, backgroundsBase)
         const stored = !props.clip && !props.lane ? readFeedPlace() : null
         const saved = stored?.cutId ? opening.clips[String(stored.cutId)] : undefined
         if (saved && !clips.some((row) => row.cutId === saved.cutId)) clips = [{ ...saved, laneKey: null }, ...clips]
@@ -1091,7 +1098,7 @@ export function Journey(props: JourneyProps) {
   sceneAtRef.current = sceneAt
 
   // ---------- feed behaviour ----------
-  const item = items[index]
+  const item = boardItemForPlayer(items, index, hosts.current[visibleHost].spec?.key) || items[index]
   const laneTags = useMemo(() => (item?.laneTags?.length ? item.laneTags : item?.laneKey ? [{ lane: item.laneKey, weight: 1 }] : []), [item])
 
   const signal = useCallback(
@@ -1646,6 +1653,7 @@ export function Journey(props: JourneyProps) {
 
   const tapPicture = () => {
     if (boardOpenRef.current) return
+    if (performance.now() < ignorePictureUntil.current) return
     const host = hosts.current[visibleRef.current]
     const player = host.playerId ? getPlayer(host.playerId) : null
     const real = player?.getPlayerState()
@@ -1869,15 +1877,24 @@ export function Journey(props: JourneyProps) {
   const started = playerReady && host.played && LIVE.has(host.state)
   const playingOut = playerReady && host.played && host.state === STATE.PLAYING
   useEffect(() => {
+    const state = host.state
+    const player = host.playerId ? getPlayer(host.playerId) : null
+    const now = player?.getCurrentTime() ?? 0
+    const advancing = !playStartedAt.current || now > (host.spec?.start || 0) + 0.12
     if (playingOut && !clipEnded) {
-      if (!playStartedAt.current) playStartedAt.current = performance.now()
+      if (coverHoldShouldRestart(state, holdState.current, advancing)) {
+        playStartedAt.current = performance.now()
+        setCoverHeld(true)
+      }
+      holdState.current = state
       const left = YT_CHROME_HOLD_MS - (performance.now() - playStartedAt.current)
       const timer = window.setTimeout(() => setCoverHeld(false), Math.max(0, left))
       return () => window.clearTimeout(timer)
     }
+    holdState.current = state
     playStartedAt.current = 0
     setCoverHeld(true)
-  }, [playingOut, clipEnded, item?.cutId, mode])
+  }, [playingOut, clipEnded, host.state, item?.cutId, mode])
   useEffect(() => {
     if (phase !== 'feed' || clipEnded || userPausedRef.current) return
     const begun = performance.now()
@@ -1931,8 +1948,12 @@ export function Journey(props: JourneyProps) {
   useEffect(() => {
     setCaptionOpen(false)
     setAppetiserHeld(true)
+    boardOpenRef.current = false
     setBoardOpen(false)
   }, [item?.id])
+  useEffect(() => {
+    setDebugOn(ytDebugOn(window.location.search))
+  }, [])
   const slide = null
   const course = (item && learnMore(item, 'appetiser', base)?.href) || base
   const horsParent = item?.parents?.hors
@@ -2008,6 +2029,7 @@ export function Journey(props: JourneyProps) {
     setBoardOpen(true)
   }
   const closeDrawer = () => {
+    boardOpenRef.current = false
     setBoardOpen(false)
   }
   const boardAction = (event: { stopPropagation(): void; preventDefault(): void; clientX: number; clientY: number }, fn: () => void) => {
@@ -2093,6 +2115,7 @@ export function Journey(props: JourneyProps) {
         className="j-tap-catcher"
         data-testid="film-catcher"
         aria-label={playingOut ? 'Pause' : 'Play'}
+        {...swipe}
         onClick={(event) => event.preventDefault()}
       />
       <button
@@ -2236,7 +2259,7 @@ export function Journey(props: JourneyProps) {
                 data-testid={filmOn ? 'player-visible' : 'player-hidden'}
                 style={{ visibility: filmOn ? 'visible' : 'hidden' }}
               >
-                <div className="j-film-band" ref={(el) => { hostEls.current[at] = el }} data-testid={filmOn ? 'film-band' : undefined} />
+                <div className="j-film-band yt-crop" ref={(el) => { hostEls.current[at] = el }} data-testid={filmOn ? 'film-band' : undefined} />
               </div>
             )
           })}
@@ -2266,8 +2289,8 @@ export function Journey(props: JourneyProps) {
               onEnded={() => window.dispatchEvent(new CustomEvent('hearts:ended'))}
             />
           ) : null}
-          {showPoster && item && !slide ? (
-            <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}${scenicAppetiser ? ' scenic' : ''}${playingOut && !coverHeld ? ' is-clear' : ''}`} data-testid="poster-frame" data-poster={mode === 'appetiser' && item.cleanThumb ? 'frame' : 'own'}>
+          {item && !slide ? (
+            <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}${scenicAppetiser ? ' scenic' : ''}${showPoster ? '' : ' is-clear'}`} data-testid="poster-frame" data-poster={mode === 'appetiser' && item.cleanThumb ? 'frame' : 'own'}>
               <PosterStill item={item} mode={mode} />
               <span className="j-poster-mark" aria-hidden><Arch size={28} /></span>
               {showPlayControl ? (
@@ -2358,9 +2381,14 @@ export function Journey(props: JourneyProps) {
       ) : null}
 
       {toast?.trim() ? <div className="lane-switch" data-testid="toast"><span key={toast}>{toast.trim()}</span></div> : null}
-      {typeof window !== 'undefined' && ytDebugOn(window.location.search) ? (
+      {debugOn ? (
         <pre className="yt-debug" data-testid="yt-debug">
-          {`state ${host.state} time ${(spokenAt ?? 0).toFixed(1)} cur ${(host.playerId ? getPlayer(host.playerId)?.getCurrentTime() ?? 0 : 0).toFixed(1)} cover ${showPoster ? 'yes' : 'no'}`}
+          {playerReadout({
+            state: host.playerId ? getPlayer(host.playerId)?.getPlayerState() ?? host.state : host.state,
+            time: spokenAt ?? 0,
+            currentTime: host.playerId ? getPlayer(host.playerId)?.getCurrentTime() ?? 0 : 0,
+            cover: showPoster,
+          })}
         </pre>
       ) : null}
 

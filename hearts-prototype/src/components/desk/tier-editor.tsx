@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { APPETISER_MAX, HORS_MAX, HORS_MIN, horsNestingProblem } from '@/lib/tiers'
+import { learnerEmbedSrc } from '@/lib/yt'
 
 /** A sentence of the talk, with where a clip may open before it and close after it. */
 type Line = { start: number; end: number; text: string; inAt: number; outAt: number }
@@ -83,7 +84,7 @@ export function TierEditor({ tier, youtubeId, duration, lines, next, horsMax = 4
                 <iframe
                   key={preview.nonce}
                   title="Preview"
-                  src={`https://www.youtube-nocookie.com/embed/${youtubeId}?start=${preview.start}&end=${preview.end}&autoplay=1&playsinline=1&rel=0&cc_load_policy=1&cc_lang_pref=en`}
+                  src={learnerEmbedSrc(youtubeId, { start: preview.start, end: preview.end, autoplay: 1, playsinline: 1, rel: 0, cc_load_policy: 1, cc_lang_pref: 'en', controls: 1 })}
                   allow="autoplay; encrypted-media"
                   allowFullScreen
                   data-testid="tier-preview-frame"

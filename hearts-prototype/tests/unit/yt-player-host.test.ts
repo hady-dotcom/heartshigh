@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { PLAYER_HOST, playWithSoundFallback, playerVars } from '../../src/lib/yt'
+import { learnerEmbedSrc, PLAYER_HOST, playWithSoundFallback, playerVars } from '../../src/lib/yt'
 
 test('the learner player is created on www.youtube.com with origin and widget_referrer', () => {
   const src = readFileSync(new URL('../../src/lib/yt.ts', import.meta.url), 'utf8')
   assert.equal(PLAYER_HOST, 'https://www.youtube.com')
   assert.match(src, /host: PLAYER_HOST/)
   assert.doesNotMatch(src, /host: NOCOOKIE/)
+  assert.doesNotMatch(src, /youtube-nocookie\.com/)
+  assert.match(learnerEmbedSrc('abcDEF12345'), /^https:\/\/www\.youtube\.com\/embed\/abcDEF12345\?/)
   const vars = playerVars('hors', 0) as Record<string, unknown>
   assert.equal(vars.enablejsapi, 1)
   assert.equal('origin' in vars, true)

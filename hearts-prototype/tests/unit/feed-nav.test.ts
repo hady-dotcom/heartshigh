@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { mixFeed, sessionPlaylist } from '../../src/lib/feed-mix'
-import { appendUnseenItems, cardKey, catalogueRemainder, isInterstitial, learnMoreTarget, settleOnLevel, swipeTarget, type FeedLevel, type Swipe } from '../../src/lib/feed-nav'
+import { appendUnseenItems, boardItemForPlayer, cardKey, catalogueRemainder, isInterstitial, learnMoreTarget, settleOnLevel, swipeTarget, type FeedLevel, type Swipe } from '../../src/lib/feed-nav'
 import type { FeedItem } from '../../src/server/learner'
 
 const BASE = '/p/east-london'
@@ -276,4 +276,12 @@ test('a refill does not append a second talk or scene for a cut already in the m
   assert.equal(merged.filter((row) => row.cutId === 1 && (row.card || 'talk') === 'talk').length, 1)
   assert.equal(merged.filter((row) => row.card === 'film' || row.card === 'scene').length, 0)
   assert.equal(merged.length, first.length)
+})
+
+test('the More board reads the cut the visible player was built for', () => {
+  const list = [talk(10, 'reflections', 'Shaykh Mikaeel Smith', true), talk(20, 'patience', 'Qalam', true)]
+  assert.equal(boardItemForPlayer(list, 0, '20:hors')?.cutId, 20)
+  assert.equal(boardItemForPlayer(list, 0, '20:hors')?.speaker, 'Qalam')
+  assert.equal(boardItemForPlayer(list, 1, '10:appetiser')?.speaker, 'Shaykh Mikaeel Smith')
+  assert.equal(boardItemForPlayer(list, 1, null)?.cutId, 20)
 })

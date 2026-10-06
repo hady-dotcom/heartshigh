@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { createPlayer, destroyPlayer, getPlayer } from '@/lib/yt'
 
 function clock(total: number) {
   const value = Math.max(0, Math.floor(total))
@@ -10,34 +11,10 @@ function clock(total: number) {
   return hours ? `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}` : `${minutes}:${String(seconds).padStart(2, '0')}`
 }
 
-type YTPlayer = { getCurrentTime(): number; pauseVideo(): void; destroy(): void }
-type YTNamespace = { Player: new (el: HTMLElement, options: Record<string, unknown>) => YTPlayer }
-
-function loadYouTube(): Promise<YTNamespace> {
-  const w = window as unknown as { YT?: YTNamespace; onYouTubeIframeAPIReady?: () => void }
-  return new Promise((resolve, reject) => {
-    if (w.YT?.Player) return resolve(w.YT)
-    const timer = window.setTimeout(() => reject(new Error('timeout')), 8000)
-    const previous = w.onYouTubeIframeAPIReady
-    w.onYouTubeIframeAPIReady = () => {
-      previous?.()
-      window.clearTimeout(timer)
-      if (w.YT) resolve(w.YT)
-    }
-    if (!document.querySelector('script[data-yt-api]')) {
-      const script = document.createElement('script')
-      script.src = 'https://www.youtube.com/iframe_api'
-      script.dataset.ytApi = 'yes'
-      script.onerror = () => reject(new Error('blocked'))
-      document.head.appendChild(script)
-    }
-  })
-}
-
 /** Preview the film and pause where the question belongs; the second fills itself. Falls back to a plain clock when YouTube cannot load. */
 export function PointPicker({ youtubeId, initial = 0 }: { youtubeId: string | null; initial?: number }) {
   const holder = useRef<HTMLDivElement>(null)
-  const player = useRef<YTPlayer | null>(null)
+  const playerId = `point-picker-${youtubeId || 'none'}`
   const [second, setSecond] = useState(initial)
   const [ready, setReady] = useState(false)
   const [ticking, setTicking] = useState(false)
@@ -45,17 +22,21 @@ export function PointPicker({ youtubeId, initial = 0 }: { youtubeId: string | nu
   useEffect(() => {
     if (!youtubeId || !holder.current) return
     let cancelled = false
-    loadYouTube()
-      .then((YT) => {
-        if (cancelled || !holder.current) return
-        player.current = new YT.Player(holder.current, { videoId: youtubeId, playerVars: { rel: 0, modestbranding: 1 }, events: { onReady: () => setReady(true) } })
-      })
-      .catch(() => undefined)
+    createPlayer({
+      id: playerId,
+      host: holder.current,
+      videoId: youtubeId,
+      start: 0,
+      kind: 'full',
+      onReady: () => {
+        if (!cancelled) setReady(true)
+      },
+    }).catch(() => undefined)
     return () => {
       cancelled = true
-      player.current?.destroy()
+      destroyPlayer(playerId)
     }
-  }, [youtubeId])
+  }, [playerId, youtubeId])
 
   useEffect(() => {
     if (!ticking) return
@@ -64,9 +45,10 @@ export function PointPicker({ youtubeId, initial = 0 }: { youtubeId: string | nu
   }, [ticking])
 
   const useMoment = () => {
-    if (ready && player.current) {
-      player.current.pauseVideo()
-      setSecond(Math.floor(player.current.getCurrentTime()))
+    const player = getPlayer(playerId)
+    if (ready && player) {
+      player.pauseVideo()
+      setSecond(Math.floor(player.getCurrentTime()))
     } else setTicking(false)
   }
 

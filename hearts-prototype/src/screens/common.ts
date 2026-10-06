@@ -1,5 +1,6 @@
 import type { CollectionSlug, Payload, Where } from 'payload'
 import { idOf } from '@/lib/ids'
+import { learnerEmbedSrc } from '@/lib/yt'
 import type { PortalDoc, SessionUser } from '@/server/context'
 
 export type Query = {
@@ -42,6 +43,8 @@ export type Query = {
   showTest?: string
   origin?: string
   q?: string
+  /** `?debug=yt` — kept when moving between course links. */
+  debug?: string
 }
 
 export type Ctx = {
@@ -104,7 +107,7 @@ export function longDate(iso: string | undefined | null) {
 
 export function embedUrl(value: string) {
   const match = value.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{6,})/)
-  return match ? `https://www.youtube-nocookie.com/embed/${match[1]}` : value
+  return match ? learnerEmbedSrc(match[1]) : value
 }
 
 export async function unreadCount(payload: Payload, user: SessionUser) {

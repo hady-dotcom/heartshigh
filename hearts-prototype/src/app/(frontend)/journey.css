@@ -151,6 +151,17 @@
   width: auto !important;
   height: 100% !important;
 }
+.j-film-band.yt-crop iframe {
+  top: -18.4% !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 131.6% !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  transform: none !important;
+  object-fit: cover !important;
+}
 .yt-host.on:not(.is-live) .j-film-band::after {
   content: '';
   position: absolute;
@@ -181,7 +192,7 @@
 .journey[data-playing='yes'] video::-webkit-media-controls,
 .journey[data-playing='yes'] video::-webkit-media-controls-overlay-play-button,
 .journey[data-playing='yes'] video::-webkit-media-controls-start-playback-button { display: none !important; opacity: 0; }
-.j-poster { position: absolute; top: calc(56px + var(--safe-top)); left: 0; width: 100%; height: calc(100vw * 9 / 16); max-height: 60dvh; z-index: 4; background: #0F3B3A; transition: opacity 280ms ease; overflow: hidden; }
+.j-poster { position: absolute; top: calc(56px + var(--safe-top)); left: 0; width: 100%; height: calc(100vw * 9 / 16); max-height: 60dvh; z-index: 4; background: #0F3B3A; transition: opacity 250ms ease; overflow: hidden; }
 .j-poster.is-clear { opacity: 0; pointer-events: none; }
 html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/dawn-courtyard.jpg'); }
 .j-poster-play { position: absolute; left: 50%; top: 26%; z-index: 7; width: 76px; height: 76px; margin: -38px 0 0 -38px; border: 0; border-radius: 50%; display: grid; place-items: center; padding: 0 0 0 4px; background: #d4a84b; color: #1a1408; box-shadow: 0 10px 30px rgba(0,0,0,0.35); cursor: pointer; }

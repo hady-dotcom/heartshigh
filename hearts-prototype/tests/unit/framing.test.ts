@@ -163,11 +163,11 @@ test('word clocks stay inside each caption cue instead of a clip-wide estimate',
   assert.ok((four.e ?? 99) <= 22.01)
 })
 
-test('F text is the timed transcript now, never a talk title, and nothing in a gap', () => {
+test('F text is the timed transcript now, never a talk title, and a track holds the last line in a short gap', () => {
   const title = 'How to Live Like the Prophet'
   const sentences = switching.sentences
   assert.equal(spokenLine(sentences, 17)?.text, 'And they seem to be winning as well.')
-  assert.equal(spokenLine(sentences, 18.45), null)
+  assert.equal(spokenLine(sentences, 18.45)?.text, 'And they seem to be winning as well.')
   assert.equal(spokenLine(sentences, 19.8)?.text, 'They seem to be overcoming you.')
   assert.equal(spokenLine(sentences, 22)?.text, 'Your dignity still stands.')
   for (const time of [17, 19.8, 22]) {

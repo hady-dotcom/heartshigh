@@ -2,18 +2,24 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   YT_CHROME_HOLD_MS,
+  YT_COVER_FADE_MS,
   YT_STATE_FALLBACK_MS,
+  advanceLeavesPlayable,
   coverFallbackAction,
+  coverHoldShouldRestart,
   coverShouldHold,
   filmCoverVisible,
+  filmIframeCrop,
   landscapeThumb,
   pauseMarkVisible,
+  playerReadout,
   playingConfirmed,
   ytDebugOn,
 } from '../../src/lib/yt-cover'
 
-test('the cover holds for 3s of confirmed PLAYING, then lifts', () => {
-  assert.equal(YT_CHROME_HOLD_MS, 3000)
+test('the cover holds for 4.5s of confirmed PLAYING, then lifts', () => {
+  assert.equal(YT_CHROME_HOLD_MS, 4500)
+  assert.equal(YT_COVER_FADE_MS, 250)
   assert.equal(coverShouldHold(0), true)
   assert.equal(coverShouldHold(YT_CHROME_HOLD_MS - 1), true)
   assert.equal(coverShouldHold(YT_CHROME_HOLD_MS), false)
@@ -49,4 +55,18 @@ test('landscape thumbs and ?debug=yt', () => {
   assert.equal(ytDebugOn('?debug=yt'), true)
   assert.equal(ytDebugOn('clip=1&debug=yt'), true)
   assert.equal(ytDebugOn('?debug=off'), false)
+})
+
+test('the hold restarts on buffering or any other state, and the crop keeps the face', () => {
+  assert.equal(coverHoldShouldRestart(3, 1), true)
+  assert.equal(coverHoldShouldRestart(2, 1), true)
+  assert.equal(coverHoldShouldRestart(1, 3), true)
+  assert.equal(coverHoldShouldRestart(1, 1, true), false)
+  assert.equal(coverHoldShouldRestart(1, 1, false), true)
+  const crop = filmIframeCrop()
+  assert.equal(crop.heightPct, 131.6)
+  assert.equal(crop.topPct, -18.4)
+  assert.equal(playerReadout({ state: 1, time: 60.1, currentTime: 60.1, cover: false }), 'state 1 time 60.1 cur 60.1 cover no')
+  assert.equal(advanceLeavesPlayable({ userPaused: false, boardOpen: false, swallowUntil: 10, now: 10 }), true)
+  assert.equal(advanceLeavesPlayable({ userPaused: true, boardOpen: false, swallowUntil: 0, now: 20 }), false)
 })

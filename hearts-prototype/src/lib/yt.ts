@@ -1,10 +1,33 @@
 // YouTube IFrame Player API wrapper (spec 7A.10). Every clip, the first included, plays through here.
 // Players are created on www.youtube.com (same host as the IFrame API) so postMessage can land.
 
-export const NOCOOKIE = 'https://www.youtube-nocookie.com'
 /** The IFrame API is loaded from www.youtube.com; the player host must match or postMessage never arrives. */
 export const PLAYER_HOST = 'https://www.youtube.com'
+/** @deprecated Learner embeds use PLAYER_HOST. Kept so old imports compile. */
+export const NOCOOKIE = PLAYER_HOST
 export const API_SRC = 'https://www.youtube.com/iframe_api'
+
+/** The only URL builder for a YouTube iframe in this app. Desk previews and live use it too. */
+export function learnerEmbedSrc(videoId: string, extra: Record<string, string | number | undefined> = {}) {
+  const params = new URLSearchParams()
+  const defaults: Record<string, string | number | undefined> = {
+    autoplay: extra.autoplay ?? 0,
+    controls: extra.controls ?? 0,
+    playsinline: extra.playsinline ?? 1,
+    rel: extra.rel ?? 0,
+    modestbranding: extra.modestbranding ?? 1,
+    enablejsapi: extra.enablejsapi ?? 1,
+  }
+  for (const [key, value] of Object.entries({ ...defaults, ...extra })) {
+    if (value === undefined || value === '') continue
+    params.set(key, String(value))
+  }
+  if (typeof window !== 'undefined') {
+    if (!params.has('origin')) params.set('origin', window.location.origin)
+    if (!params.has('widget_referrer')) params.set('widget_referrer', window.location.origin)
+  }
+  return `${PLAYER_HOST}/embed/${encodeURIComponent(videoId)}?${params}`
+}
 
 export const STATE = { UNSTARTED: -1, ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 } as const
 

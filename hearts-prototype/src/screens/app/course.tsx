@@ -22,7 +22,7 @@ import { countsTowardProgress, pieceLevel } from '@/lib/progress'
 import { appetiserStop } from '@/lib/tiers'
 import { lineAt } from '@/lib/harvest'
 import { answerCounts, courseProgress } from '@/lib/nesting'
-import { type Ctx, type Row, clock, one, ref, rows, str, unreadCount } from '../common'
+import { type Ctx, type Query, type Row, clock, one, ref, rows, str, unreadCount } from '../common'
 import { lastPartCopy, playerPartLabel, resolvePartIndex } from '@/lib/player-labels'
 import { nextPartLabel } from '@/lib/study-plan'
 import { talksLabel } from '@/lib/week'
@@ -36,14 +36,15 @@ import { featureOn } from '@/lib/features'
 import { hiddenIds } from '@/server/safety'
 import { ReportButton } from '@/components/app/report-sheet'
 import { parseTrack } from '@/lib/framing/validate'
+import { withCurrentQuery } from '@/lib/keep-query'
 
 const START = ['orange', 'gold', 'teal']
 
 /** The same next part for the player and the garden. */
-function nextCoursePart(lessons: Row[], partIndex: number, hrefBase: string) {
+function nextCoursePart(lessons: Row[], partIndex: number, hrefBase: string, query?: Query) {
   const pick = lessons[partIndex + 1]
   if (!pick) return null
-  return { label: nextPartLabel(partIndex + 2), href: `${hrefBase}?part=${pick.id}` }
+  return { label: nextPartLabel(partIndex + 2), href: withCurrentQuery(`${hrefBase}?part=${pick.id}`, query) }
 }
 
 function partHeading(index: number, lesson: Row, courseTitle: string, total: number) {
@@ -142,12 +143,12 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
         <Flash error={query.error} notice={query.notice} />
         <div className="app-head"><h1 data-testid="course-title">{title}</h1></div>
         <p className="lead" data-testid="course-count">{talksLabel(lessons.length, seconds)}</p>
-        <Link className="pill gold block" href={`${base}/course/${course.id}?part=${continueId}`} data-testid="start-part">
+        <Link className="pill gold block" href={withCurrentQuery(`${base}/course/${course.id}?part=${continueId}`, query)} data-testid="start-part">
           {done.size >= lessons.length && lessons.length
             ? lessons.length === 1 ? 'Watch again' : 'Watch from part 1'
             : started ? `Continue part ${continueIndex + 1}` : 'Start part 1'}
         </Link>
-        <Link className="pill outline block" href={`${base}/week?course=${course.id}&view=new&from=course`} data-testid="schedule-all" style={{ marginTop: 10 }}>
+        <Link className="pill outline block" href={withCurrentQuery(`${base}/week?course=${course.id}&view=new&from=course`, query)} data-testid="schedule-all" style={{ marginTop: 10 }}>
           {lessons.length === 1 ? 'Schedule this talk' : 'Schedule all of these'}
         </Link>
         <p className="muted" data-testid="buffet-note" style={{ margin: '10px 2px 0', fontSize: 13 }}>
@@ -161,7 +162,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
           const still = talkStill(youtubeId, str(lesson.speaker || course.speaker))
           const week = partWeek(lesson, partCuts, doors, str(course.title))
           return (
-            <Link key={lesson.id} className="buffet-row" href={`${base}/course/${course.id}?part=${lesson.id}`} data-testid="buffet-talk">
+            <Link key={lesson.id} className="buffet-row" href={withCurrentQuery(`${base}/course/${course.id}?part=${lesson.id}`, query)} data-testid="buffet-talk">
               <span className={`thumb${still.fallback ? ' is-fallback' : ''}`} data-testid="talk-thumb">
                 <img src={still.src} alt="" />
                 {still.fallback ? <span className="thumb-title">{name}</span> : null}
@@ -321,10 +322,10 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const contextOn = query.context === '1'
   const spoken = contextOn ? lineAt(str(lesson.transcript), startAt) : null
   const unread = await unreadCount(payload, user)
-  const here = `${base}/course/${courseId}?part=${lessonId}`
-  const courseHref = `${base}/course/${courseId}`
+  const here = withCurrentQuery(`${base}/course/${courseId}?part=${lessonId}`, query)
+  const courseHref = withCurrentQuery(`${base}/course/${courseId}`, query)
   const nextLesson = lessons[partIndex + 1] || null
-  const following = nextCoursePart(lessons, partIndex, `${base}/course/${courseId}`)
+  const following = nextCoursePart(lessons, partIndex, `${base}/course/${courseId}`, query)
   const upNext = nextLesson && following
     ? { href: following.href, label: following.label, minutes: Math.max(1, Math.round(Number(nextLesson.durationSeconds || 0) / 60)), last: false }
     : { href: courseHref, label: lastPartCopy(lessons.length), minutes: 0, last: true }
@@ -373,7 +374,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
         ) : null}
         <CoursePlayer
           courseTitle={tidyTalkTitle(str(course.title))}
-          backHref={`${base}/lanes`}
+          backHref={withCurrentQuery(`${base}/lanes`, query)}
           lessonId={lessonId}
           partLabel={partHeading(partIndex + 1, lesson, tidyTalkTitle(str(course.title)), lessons.length)}
           youtubeId={youtubeId}
@@ -393,9 +394,9 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           deferred={deferred}
           initialOpenId={Number(query.answer) || deferred[0]?.pointId || null}
           sentences={parseTrack(lesson.framingTrack)?.sentences || []}
-          garden={{ done, total, gardenHref: featureOn(portal, 'garden') ? `${base}/garden` : base, nextPart: following, links: [
-            ...(featureOn(portal, 'garden') ? [{ label: "See what you've sown", href: `${base}/garden/general` }] : []),
-            ...(featureOn(portal, 'workbook') ? [{ label: 'Your workbook', href: `${base}/garden/workbook` }] : []),
+          garden={{ done, total, gardenHref: withCurrentQuery(featureOn(portal, 'garden') ? `${base}/garden` : base, query), nextPart: following, links: [
+            ...(featureOn(portal, 'garden') ? [{ label: "See what you've sown", href: withCurrentQuery(`${base}/garden/general`, query) }] : []),
+            ...(featureOn(portal, 'workbook') ? [{ label: 'Your workbook', href: withCurrentQuery(`${base}/garden/workbook`, query) }] : []),
           ] }}
         />
         {related[0] ? <TalkGatherNotice startsAt={related[0].startsAt} href={`${base}/gather/${related[0].id}`} title={related[0].title} /> : null}
@@ -410,12 +411,12 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
             ))}
           </section>
         ) : null}
-        {featureOn(portal, 'planner') ? <p style={{ margin: '16px 0 0' }}><Link className="pill outline" href={`${base}/week?course=${courseId}&view=new&from=course`} data-testid={lessons.length >= 2 ? 'plan-rest' : 'schedule-this'}>{lessons.length >= 2 ? 'Plan the rest of this course' : 'Schedule this talk'}</Link></p> : null}
+        {featureOn(portal, 'planner') ? <p style={{ margin: '16px 0 0' }}><Link className="pill outline" href={withCurrentQuery(`${base}/week?course=${courseId}&view=new&from=course`, query)} data-testid={lessons.length >= 2 ? 'plan-rest' : 'schedule-this'}>{lessons.length >= 2 ? 'Plan the rest of this course' : 'Schedule this talk'}</Link></p> : null}
         <p className="eyebrow">Parts of this course</p>
         {lessons.map((row, index) => {
           const week = partWeek(row, partCuts, doors, str(course.title))
           return (
-            <Link key={row.id} className="part-row" href={`${base}/course/${courseId}?part=${row.id}`} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
+            <Link key={row.id} className="part-row" href={withCurrentQuery(`${base}/course/${courseId}?part=${row.id}`, query)} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
               <span className="grow">
                 {partHeading(index + 1, row, tidyTalkTitle(str(course.title)), lessons.length)}
                 {week ? <small className="part-week" data-testid="part-week">{doorLabel(week)}</small> : null}

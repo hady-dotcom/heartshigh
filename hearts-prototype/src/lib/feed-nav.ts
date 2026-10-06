@@ -25,6 +25,16 @@ export function itemKey(item: Pick<NavItem, 'cutId' | 'card'>) {
   return `${item.cutId}:${item.card || 'talk'}`
 }
 
+/** The More board and captions read this item — the same cut the visible player was built for. */
+export function boardItemForPlayer<T extends { cutId: number }>(items: T[], index: number, specKey?: string | null) {
+  const cutId = specKey ? Number(String(specKey).split(':')[0]) : Number.NaN
+  if (Number.isFinite(cutId)) {
+    const found = items.find((row) => row.cutId === cutId)
+    if (found) return found
+  }
+  return items[index]
+}
+
 /** Session key: the same talk clip and its 3-minute version are different cards. */
 export function cardKey(item: Pick<NavItem, 'cutId' | 'card'>, level: FeedLevel = 'hors') {
   return `${item.cutId}:${item.card || 'talk'}:${level}`

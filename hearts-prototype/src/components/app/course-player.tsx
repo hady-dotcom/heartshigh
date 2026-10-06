@@ -13,7 +13,7 @@ import { coursePlayVisible } from '@/lib/course-controls'
 import { nextPlaybackRate } from '@/lib/playback-rate'
 import { createPlayer, destroyPlayer, getPlayer, hasSound, pauseKeepingSound, playWithSoundFallback, resume, soundOn, STATE, UNPLAYABLE } from '@/lib/yt'
 import { boardClickAllowed, boardShouldClose, boardShouldOpen, pointerTravel } from '@/lib/board-gestures'
-import { YT_CHROME_HOLD_MS, coverFallbackAction, landscapeThumb, ytDebugOn } from '@/lib/yt-cover'
+import { YT_CHROME_HOLD_MS, coverFallbackAction, coverHoldShouldRestart, landscapeThumb, playerReadout, ytDebugOn } from '@/lib/yt-cover'
 import { SwarmList } from '@/components/app/swarm-list'
 import { initialsOf } from '@/lib/swarm-sort'
 import { HeartIcon, ImageIcon, LockIcon, MicIcon } from '../icons'
@@ -147,7 +147,10 @@ export function CoursePlayer({
   const [endCard, setEndCard] = useState(false)
   const [boardOpen, setBoardOpen] = useState(false)
   const [coverHeld, setCoverHeld] = useState(true)
+  const [ytState, setYtState] = useState(-1)
+  const [debugOn, setDebugOn] = useState(false)
   const playStartedAt = useRef(0)
+  const holdState = useRef(-9)
   const boardOpenedAt = useRef(0)
   const boardDrag = useRef<{ x: number; y: number } | null>(null)
   const [count, setCount] = useState(5)
@@ -155,21 +158,12 @@ export function CoursePlayer({
   const heldRef = useRef(held)
   heldRef.current = held
   const deferredPrompts = useRef(Object.fromEntries(deferred.map((row) => [row.pointId, row.prompt])))
-  const [revealed, setRevealed] = useState<number[]>(() => {
-    const start = new Set<number>([
+  const [revealed, setRevealed] = useState<number[]>(() => [
+    ...new Set([
       ...points.filter((point) => point.answered).map((point) => point.id),
       ...deferred.map((row) => row.pointId),
-    ])
-    if (typeof sessionStorage !== 'undefined') {
-      try {
-        const stored = JSON.parse(sessionStorage.getItem(revealedStorageKey(lessonId)) || '[]') as number[]
-        for (const id of stored) if (Number.isFinite(id)) start.add(id)
-      } catch {
-        // Private mode or a bad value: start from answers only.
-      }
-    }
-    return [...start]
-  })
+    ]),
+  ])
 
   const reveal = useCallback((id: number) => {
     setRevealed((value) => {
@@ -212,10 +206,25 @@ export function CoursePlayer({
   }, [])
 
   useEffect(() => {
+    setDebugOn(ytDebugOn(window.location.search))
+    try {
+      const stored = JSON.parse(sessionStorage.getItem(revealedStorageKey(lessonId)) || '[]') as number[]
+      if (Array.isArray(stored)) setRevealed((value) => [...new Set([...value, ...stored.filter((id) => Number.isFinite(id))])])
+    } catch {
+      // Private mode.
+    }
+  }, [lessonId])
+
+  useEffect(() => {
     if (!youtubeId || !holder.current) return
     let cancelled = false
+    destroyPlayer(PLAYER_ID)
     setFailed(false)
     setMode('loading')
+    setYtState(-1)
+    setCoverHeld(true)
+    holdState.current = -9
+    playStartedAt.current = 0
     const failFirst = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('heartsFailFirst') === '1'
     const fallback = window.setTimeout(() => {
       if (cancelled) return
@@ -240,6 +249,7 @@ export function CoursePlayer({
         playWithSoundFallback(player, hasSound() || activation)
       },
       onState: (state) => {
+        setYtState(state)
         setPlaying(state === STATE.PLAYING)
         if (state === STATE.PLAYING) {
           setLit(true)
@@ -566,31 +576,53 @@ export function CoursePlayer({
   const coverUrl = landscapeThumb(youtubeId) || poster
   const places = new Map(placeDots(views.map((row) => ({ id: row.id, second: row.second })), total, trackWidth).map((row) => [row.id, row]))
 
-  const showCover = coverHeld || !playing || ended || mode === 'loading' || !lit
+  const livePlayer = getPlayer(PLAYER_ID)
+  const liveState = livePlayer?.getPlayerState() ?? ytState
+  const liveTime = livePlayer?.getCurrentTime() ?? time
+  const showCover = coverHeld || liveState !== STATE.PLAYING || ended || mode === 'loading'
   useEffect(() => {
-    if (playing && !ended) {
-      if (!playStartedAt.current) playStartedAt.current = performance.now()
+    const state = liveState
+    if (state === STATE.PLAYING && !ended) {
+      if (coverHoldShouldRestart(state, holdState.current, liveTime > startAt + 0.12)) {
+        playStartedAt.current = performance.now()
+        setCoverHeld(true)
+      }
+      holdState.current = state
       const left = YT_CHROME_HOLD_MS - (performance.now() - playStartedAt.current)
       const timer = window.setTimeout(() => setCoverHeld(false), Math.max(0, left))
       return () => window.clearTimeout(timer)
     }
+    holdState.current = state
     playStartedAt.current = 0
     setCoverHeld(true)
-  }, [playing, ended])
+  }, [ended, liveState, liveTime, startAt])
   useEffect(() => {
     if (!youtubeId || ended) return
     const begun = performance.now()
     const timer = window.setInterval(() => {
       const player = getPlayer(PLAYER_ID)
       if (!player) return
+      const polledState = player.getPlayerState()
+      const polledTime = player.getCurrentTime()
+      setYtState(polledState)
+      if (polledState === STATE.PLAYING) {
+        setPlaying(true)
+        setLit(true)
+        setMode('youtube')
+        setTime(polledTime)
+      } else if (polledState === STATE.PAUSED || polledState === STATE.ENDED) {
+        setPlaying(false)
+        if (polledState === STATE.ENDED) setEnded(true)
+        setTime(polledTime)
+      }
       const action = coverFallbackAction({
         waitedMs: performance.now() - begun,
-        eventPlaying: playing,
-        polledState: player.getPlayerState(),
-        polledTime: player.getCurrentTime(),
+        eventPlaying: polledState === STATE.PLAYING,
+        polledState,
+        polledTime,
         start: startAt,
       })
-      if (action === 'treat-playing' && !playing) {
+      if (action === 'treat-playing' && polledState !== STATE.PLAYING) {
         setPlaying(true)
         setLit(true)
         setMode('youtube')
@@ -599,12 +631,12 @@ export function CoursePlayer({
       if (action === 'retry') playWithSoundFallback(player, hasSound())
     }, 400)
     return () => window.clearInterval(timer)
-  }, [ended, playing, startAt, youtubeId])
+  }, [ended, startAt, youtubeId])
   return (
     <div data-testid="player" data-mode={mode} data-playing={playing ? 'yes' : 'no'} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-cover={showCover ? 'yes' : 'no'} data-popup-layout={overPlayer ? 'over' : 'strict'}>
-      {typeof window !== 'undefined' && ytDebugOn(window.location.search) ? (
+      {debugOn ? (
         <pre className="yt-debug" data-testid="yt-debug">
-          {`state ${playing ? 1 : ended ? 0 : 2} time ${time.toFixed(1)} cur ${(getPlayer(PLAYER_ID)?.getCurrentTime() ?? time).toFixed(1)} cover ${showCover ? 'yes' : 'no'}`}
+          {playerReadout({ state: liveState, time, currentTime: liveTime, cover: showCover })}
         </pre>
       ) : null}
       <div className="course-film">
@@ -617,7 +649,7 @@ export function CoursePlayer({
           </div>
         </div>
         <div ref={card} className={`player-card is-f course-film-band${filmed ? ' yt-on' : ''}${playing ? ' is-live' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
-          {showCover ? <div className={`poster${mode === 'loading' ? ' skeleton' : ''}`} style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : 'player-poster'} /> : null}
+          <div className={`poster${mode === 'loading' ? ' skeleton' : ''}${showCover ? '' : ' is-clear'}`} style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : 'player-poster'} />
           {mode === 'loading' && !failed ? <div className="player-veil" data-testid="player-veil" aria-hidden><span className="gold-spin" /></div> : null}
           {failed ? (
             <div className="player-retry" data-testid="player-retry">
@@ -627,7 +659,7 @@ export function CoursePlayer({
               </button>
             </div>
           ) : null}
-          {youtubeId ? <div className="yt j-film-band" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
+          {youtubeId ? <div className="yt j-film-band yt-crop" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
           {vimeoId ? (
             <div className="yt j-film-band" ref={filmBox} style={{ visibility: mode === 'vimeo' ? 'visible' : 'hidden' }}>
               <iframe title={partLabel} src={`https://player.vimeo.com/video/${vimeoId}?api=1`} allow="autoplay; fullscreen; picture-in-picture" data-testid="vimeo-player" />

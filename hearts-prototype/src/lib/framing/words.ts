@@ -157,8 +157,13 @@ export function spokenLine(
   const waitingForFirst =
     !sentence && first && options?.from != null && clock >= options.from - 0.05 && clock < first.s
   const shown = sentence || (waitingForFirst ? first : null)
-  if (!shown) return null
+  const held =
+    shown ||
+    (live.length
+      ? [...live].reverse().find((row) => clock >= row.s) || null
+      : null)
+  if (!held) return null
   const titles = [options?.title, ...(options?.titles || [])]
-  if (titles.some((title) => title && sameSpokenText(shown.text, title))) return null
-  return shown
+  if (titles.some((title) => title && sameSpokenText(held.text, title))) return null
+  return held
 }

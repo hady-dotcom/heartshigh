@@ -45,7 +45,7 @@ export const viewport: Viewport = {
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en-GB" suppressHydrationWarning>
+    <html lang="en-GB" data-theme="evening" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript() }} />
         <script dangerouslySetInnerHTML={{ __html: installBootScript() }} />

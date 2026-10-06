@@ -26,7 +26,7 @@ test('YouTube live and unlisted links parse, and Vimeo live links parse', () => 
   if (live.ok) {
     assert.equal(live.source, 'youtube')
     assert.equal(live.id, 'jNQXAC9IVRw')
-    assert.match(live.embedUrl, /youtube-nocookie.com\/embed\/jNQXAC9IVRw/)
+    assert.match(live.embedUrl, /youtube.com\/embed\/jNQXAC9IVRw/)
   }
   const watch = parseLiveSource('https://youtu.be/jNQXAC9IVRw')
   assert.equal(watch.ok, true)
