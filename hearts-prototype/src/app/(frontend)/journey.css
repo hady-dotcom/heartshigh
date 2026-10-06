@@ -167,7 +167,21 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-peek .feed-card p { visibility: hidden; }
 .j-peeks, .j-peek, .j-slot, .j-slide { overflow: hidden; }
 .j-hairline-row { position: absolute; top: calc(12px + var(--safe-top)); left: 16px; right: 16px; z-index: 6; pointer-events: auto; }
-.j-swipe-hint { position: relative; z-index: 6; margin: 8px 0 0; text-align: center; font-size: 12px; font-weight: 650; letter-spacing: 0.01em; color: rgba(255, 255, 255, 0.92); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55); }
+.j-swipe-hint {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: calc(116px + var(--safe-bottom));
+  z-index: 15;
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(241, 228, 198, 0.42);
+  text-shadow: none;
+  pointer-events: none;
+}
 .j-hairline { height: 3px; border-radius: 3px; background: rgba(255, 255, 255, 0.28); overflow: hidden; }
 .j-hairline > i { display: block; height: 100%; width: 0; background: #fff; transition: width 0.25s linear; }
 .j-hairline.shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.55), rgba(255,255,255,0.2)); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }

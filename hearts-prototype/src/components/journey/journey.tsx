@@ -5,7 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
 import { clipsFromRoute, sessionPlaylist } from '@/lib/feed-mix'
-import { clipStepUpLabel, LEVEL_WORDS, onlyClipToast, pieceSeconds, poolEndToast, READY_FOR_MORE, talkStepUpLabel, withTalkDetail } from '@/lib/feed-copy'
+import { clipStepUpLabel, LEVEL_WORDS, onlyClipToast, pieceSeconds, poolEndToast, talkStepUpLabel, withTalkDetail } from '@/lib/feed-copy'
 import { appendUnseenItems, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readCoachDismissed, readFeedPlace, readHeart, readPending, rememberSeenCard, sessionFlags, sessionSeenCards, sessionSeenCuts, setSessionFlags, viewAsId, writeCoachDismissed, writeFeedPlace, writeHeart, writePending } from '@/lib/device'
@@ -214,7 +214,11 @@ export function Journey(props: JourneyProps) {
   const [speed, setSpeed] = useState(1)
   const speedRef = useRef(1)
   const [boardOpen, setBoardOpen] = useState(false)
+  const [swipeHint, setSwipeHint] = useState(true)
   const boardDrag = useRef<{ y: number; opened: boolean } | null>(null)
+  useEffect(() => {
+    if (index !== 0) setSwipeHint(false)
+  }, [index])
   const watch = useRef<{ key: string; start: number; furthest: number; done90: boolean; ended: boolean }>({ key: '', start: 0, furthest: 0, done90: false, ended: false })
   const refilling = useRef(false)
   const clipRef = useRef<HTMLDivElement>(null)
@@ -1991,6 +1995,9 @@ export function Journey(props: JourneyProps) {
         </div>
       </div>
       {pausedMark ? <span className="j-paused-mark" data-testid="paused-mark" aria-hidden>❚❚</span> : null}
+      {swipeHint && !boardOpen && mode === 'hors' && index === 0 ? (
+        <p className="j-swipe-hint" data-testid="swipe-hint">↑ swipe up for the next clip</p>
+      ) : null}
       {scenicAppetiser ? (
         <div className="scenic-lines" data-testid="scenic-lines">
           {scenicLines.map((line) => (
@@ -2023,9 +2030,7 @@ export function Journey(props: JourneyProps) {
         onPointerUp={finishBoard}
       >
         <span className="j-board-handle" />
-        <span className="chip gold" data-testid="level-chip">{READY_FOR_MORE}</span>
         {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
-        <p className="j-swipe-hint" data-testid="swipe-hint">↑ swipe up for the next clip</p>
         {mode === 'hors' ? (
           <div className="ready-controls">
             <button type="button" className="chip gold" data-testid="speed" aria-label="Playback speed" onClick={cycleSpeed}>{speed}×</button>

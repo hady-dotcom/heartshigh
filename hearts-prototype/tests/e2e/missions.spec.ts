@@ -143,18 +143,20 @@ test.describe('Help shape HEARTS', () => {
       await joinFilm.page.getByTestId('swipe-coach').dispatchEvent('click')
     }
     await expect(joinFilm.page.getByTestId('swipe-coach')).toHaveCount(0)
+    await expect(joinFilm.page.getByTestId('swipe-hint')).toBeVisible()
     await joinFilm.page.getByTestId('more-board').click()
     await expect(joinFilm.page.getByTestId('feed-board')).toBeVisible()
     await expect(joinFilm.page.getByTestId('learn-more')).toBeVisible()
+    await expect(joinFilm.page.getByTestId('swipe-hint')).toHaveCount(0)
     if (!(await joinFilm.page.getByTestId('lane-chip').isVisible().catch(() => false))) {
-      await joinFilm.page.getByTestId('board-back').click()
+      await joinFilm.page.getByTestId('board-back').dispatchEvent('click')
       if ((await stepFeed(joinFilm.page)) === 'ok') {
         await joinFilm.page.getByTestId('more-board').click()
       }
     }
     await expect(joinFilm.page.getByTestId('learn-more')).toBeVisible()
     await expect(joinFilm.page.getByTestId('learn-more')).toHaveText(/Ready for more\?/)
-    await expect(joinFilm.page.getByTestId('swipe-hint')).toBeVisible()
+    await expect(joinFilm.page.getByTestId('swipe-hint')).toHaveCount(0)
     await expect(joinFilm.page.getByTestId('lane-chip')).toBeVisible()
     if (await joinFilm.page.getByTestId('clip-timer').count()) await expect(joinFilm.page.getByTestId('clip-timer')).toBeVisible()
     await expect(joinFilm.page.getByTestId('tab-week')).toHaveText('My week')

@@ -33,7 +33,7 @@ test('Ready for more? is on the first talk and on a scenic card', async ({ page 
   await expect(more).toHaveText(/Ready for more\?/)
   await more.click()
   await expect(feed).toHaveAttribute('data-mode', 'appetiser')
-  await expect(page.getByTestId('level-chip')).toHaveText('Ready for more?')
+  await expect(page.getByTestId('learn-more')).toBeVisible()
   await page.goto(`${PORTAL}/feed`)
   await expect(feed).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })
   await settled(page)
@@ -48,7 +48,7 @@ test('Ready for more? is on the first talk and on a scenic card', async ({ page 
     await expect(sceneNext).toHaveText(/Ready for more\?/)
     await sceneNext.click()
     await expect(feed).toHaveAttribute('data-mode', 'appetiser')
-    await expect(page.getByTestId('level-chip')).toHaveText('Ready for more?')
+    await expect(page.getByTestId('learn-more').or(page.getByTestId('scene-next'))).toBeVisible()
   }
 })
 
