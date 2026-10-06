@@ -45,12 +45,12 @@ export type PendingAnswer = { pointId: number; lessonId: number; cutId?: number 
 export const readPending = () => read<PendingAnswer[]>(PENDING_KEY) || []
 export const writePending = (rows: PendingAnswer[]) => write(PENDING_KEY, rows.length ? rows : null)
 
-export type SessionFlags = { sheetCount: number; firstEnded?: boolean; unmuted?: boolean; seenCuts?: number[]; seenCards?: string[] }
+export type SessionFlags = { unmuted?: boolean; seenCuts?: number[]; seenCards?: string[] }
 export function sessionFlags(): SessionFlags {
   try {
-    return JSON.parse(window.sessionStorage.getItem(deviceKey('hearts.session.v1')) || '{"sheetCount":0}')
+    return JSON.parse(window.sessionStorage.getItem(deviceKey('hearts.session.v1')) || '{}')
   } catch {
-    return { sheetCount: 0 }
+    return {}
   }
 }
 export function setSessionFlags(flags: SessionFlags) {

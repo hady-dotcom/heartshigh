@@ -19,7 +19,7 @@ import { coverAttr, coverFallbackAction, coverHoldKey, coverHoldStep, filmCoverK
 import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
 import { isoWeek } from '@/lib/trends'
 import { courseCatcherTap } from '@/lib/course-controls'
-import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, applyPauseWhenReady, bufferRetryAction, clockIsStalled, endCardPlayerAction, endedEventIsCurrent, horsWindowEnded, hostShouldShow, keepVisiblePaused, livePictureTap, pictureIsTap, pictureSwipeCommit, planFilmAdvance, playbackAction, playbackAdvancing, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe, type EndAdvanceSource } from '@/lib/film-advance'
+import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, applyPauseWhenReady, bufferRetryAction, clockIsStalled, endCardPlayerAction, endedEventIsCurrent, horsWindowEnded, hostShouldShow, keepVisiblePaused, livePictureTap, pictureIsTap, pictureSwipeCommit, planFilmAdvance, playbackAction, playbackAdvancing, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe, afterClipEnds, type EndAdvanceSource } from '@/lib/film-advance'
 import { acceptLevelTap, type LevelTap } from '@/lib/level-tap'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, hydrateSound, lowData, playOnly, playerSnapshot, preloadApi, setHidden, silence, silenceHidden, silenceOthers, soundOn, type PlayerKind } from '@/lib/yt'
 import { PageHelp } from '@/components/app/page-help'
@@ -240,7 +240,6 @@ export function Journey(props: JourneyProps) {
   const newClipPlayingRef = useRef(false)
   const bufferingSince = useRef(0)
   const bufferRetried = useRef(false)
-  const pendingAfterSheet = useRef<'next' | null>(null)
   const runEndAdvanceRef = useRef<(source: EndAdvanceSource, eventKey?: string | null) => void>(() => {})
   const [debugOn, setDebugOn] = useState(false)
   const [wordsLive, setWordsLive] = useState(false)
@@ -1220,16 +1219,13 @@ export function Journey(props: JourneyProps) {
     else if (seen.furthest < 10) signal('skip-3-10')
   }, [signal])
 
+  /** Sign-up for a guest who tapped something that needs an account. Never opened on its own. */
   const openSheet = useCallback((reason: SheetReason) => {
-    const flagsNow = sessionFlags()
-    if (flagsNow.sheetCount >= 2) return false
-    setSessionFlags({ ...flagsNow, sheetCount: flagsNow.sheetCount + 1 })
     const host = hosts.current[visibleRef.current]
     if (host.playerId) getPlayer(host.playerId)?.pauseVideo()
     sheetRef.current = reason
     setSheet(reason)
     push(window.location.pathname, { sheet: true })
-    return true
   }, [])
 
   const dismissCoach = () => {
@@ -1359,26 +1355,18 @@ export function Journey(props: JourneyProps) {
     wantPlayRef.current = null
     window.clearInterval(playWatch.current)
     watch.current.ended = true
-    const flagsNow = sessionFlags()
-    if (!signedIn && !flagsNow.firstEnded) {
-      setSessionFlags({ ...sessionFlags(), firstEnded: true })
-      if (openSheet('ended')) {
-        pendingAfterSheet.current = 'next'
-        userPausedRef.current = true
-        return
-      }
-    }
+    // Guests and signed-in learners run straight on to the next clip: nothing asks them to sign up here.
     const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', props.lane ? undefined : seenRef.current, Boolean(props.lane))
+    const step = afterClipEnds({ nextIndex: next })
     userPausedRef.current = next == null
-    if (showLaneEndNow({ thisClipEnded: true, nextIndex: next })) {
+    if (step.kind === 'lane-end') {
       showLaneEnd()
-    } else if (next != null) {
-      userPausedRef.current = false
+    } else {
       newClipPlayingRef.current = false
       windowHandledRef.current = false
-      void advance(next, 'auto')
+      void advance(step.next, 'auto')
     }
-  }, [advance, keepHarvest, openSheet, signedIn])
+  }, [advance, keepHarvest])
   runEndAdvanceRef.current = runEndAdvance
 
   useEffect(() => {
@@ -1414,14 +1402,7 @@ export function Journey(props: JourneyProps) {
     sheetRef.current = null
     setSheet(null)
     if (window.history.state?.hearts?.sheet) window.history.back()
-    if (pendingAfterSheet.current === 'next') {
-      pendingAfterSheet.current = null
-      const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', props.lane ? undefined : seenRef.current, Boolean(props.lane))
-      if (showLaneEndNow({ thisClipEnded: true, nextIndex: next })) {
-        showLaneEnd()
-        if (!props.lane) setToast(poolEndToast())
-      } else if (next != null) void advance(next, 'auto')
-    } else window.setTimeout(() => tryPlay(), 0)
+    window.setTimeout(() => tryPlay(), 0)
   }
 
   // Poll while playing: how far the learner got, the 90% mark, and any hidden host that started talking.
@@ -1532,7 +1513,7 @@ export function Journey(props: JourneyProps) {
 
   const needsAccount = (reason: SheetReason) => {
     if (signedIn) return false
-    if (!openSheet(reason)) setToast('Log in from the top of the opener to keep things.')
+    openSheet(reason)
     return true
   }
 

@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { EASE, T, animate, finished } from '@/lib/motion'
 
-export type SheetReason = 'ended' | 'save'
+export type SheetReason = 'save'
 
 /**
- * 'Want us to keep your place?' (ux-first-run section 6). Rises over the lower half; the clip above stays paused.
- * The account is made in the same request that carries the opening off the device.
+ * Sign-up for a guest. It opens only when a guest taps something that needs an account
+ * (Save, Like, Follow, the speaker, the full talk, or a tab), never on its own between clips.
+ * Rises over the lower half; the clip above stays paused. The account is made in the same
+ * request that carries the opening off the device.
  */
 export function KeepPlaceSheet({ reason, loginHref, offline, onClose, onSubmit }: {
   reason: SheetReason
@@ -43,7 +45,7 @@ export function KeepPlaceSheet({ reason, loginHref, offline, onClose, onSubmit }
   return (
     <section ref={ref} className="j-sheet" role="dialog" aria-labelledby="keep-title" data-testid="keep-sheet" data-reason={reason}>
       <span className="handle" aria-hidden />
-      <h2 id="keep-title">{reason === 'save' ? 'Want us to keep that one for you?' : 'Want us to keep your place?'}</h2>
+      <h2 id="keep-title">Want us to keep that one for you?</h2>
       {offline ? (
         <p data-testid="sheet-offline">Connect to keep your place. Your taps stay on this phone until then.</p>
       ) : (

@@ -343,7 +343,7 @@ export function soundOn(id: string) {
   if (typeof window !== 'undefined') {
     try {
       const key = 'hearts.session.v1'
-      const held = JSON.parse(window.sessionStorage.getItem(key) || '{"sheetCount":0}') as { sheetCount?: number; unmuted?: boolean }
+      const held = JSON.parse(window.sessionStorage.getItem(key) || '{}') as { unmuted?: boolean }
       window.sessionStorage.setItem(key, JSON.stringify({ ...held, unmuted: true }))
     } catch {
       // Private browsing: sound still stays on for this page.

@@ -109,6 +109,16 @@ export function showLaneEndNow(input: { thisClipEnded: boolean; nextIndex: numbe
   return input.thisClipEnded && input.nextIndex == null
 }
 
+export type ClipEndStep = { kind: 'advance'; next: number } | { kind: 'lane-end' }
+
+/**
+ * What follows a clip that has ended. It is the same for a guest and a signed-in
+ * learner: the next clip plays, or the lane-end card shows. No sign-up sheet waits in between.
+ */
+export function afterClipEnds(input: { nextIndex: number | null }): ClipEndStep {
+  return input.nextIndex == null ? { kind: 'lane-end' } : { kind: 'advance', next: input.nextIndex }
+}
+
 /**
  * The last clip's hors window has finished. A leftover clock from the previous
  * film (e.g. 312s on a 0–16s last clip) must not count as this clip's end.
