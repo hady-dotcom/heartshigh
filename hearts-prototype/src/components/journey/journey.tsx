@@ -19,7 +19,7 @@ import { coverAttr, coverFallbackAction, coverHoldKey, coverHoldStep, filmCoverK
 import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
 import { isoWeek } from '@/lib/trends'
 import { courseCatcherTap } from '@/lib/course-controls'
-import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, bufferRetryAction, endedEventIsCurrent, horsWindowEnded, hostShouldShow, pictureIsTap, pictureSwipeCommit, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe, type EndAdvanceSource } from '@/lib/film-advance'
+import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, applyPauseWhenReady, bufferRetryAction, clockIsStalled, endCardPlayerAction, endedEventIsCurrent, horsWindowEnded, hostShouldShow, livePictureTap, pictureIsTap, pictureSwipeCommit, planFilmAdvance, playbackAction, playbackAdvancing, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe, type EndAdvanceSource } from '@/lib/film-advance'
 import { acceptLevelTap, type LevelTap } from '@/lib/level-tap'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, hydrateSound, lowData, playOnly, playerSnapshot, preloadApi, setHidden, silence, silenceHidden, silenceOthers, soundOn, type PlayerKind } from '@/lib/yt'
 import { PageHelp } from '@/components/app/page-help'
@@ -228,6 +228,8 @@ export function Journey(props: JourneyProps) {
   const coverHoldFor = useRef('')
   const coverMachine = useRef(freshCoverHold())
   const lastPictureTap = useRef(0)
+  const pauseWhenReadyRef = useRef(false)
+  const clockRef = useRef({ time: -1, at: 0 })
   const ignorePictureUntil = useRef(0)
   const advancedFromRef = useRef<string | null>(null)
   const windowHandledRef = useRef(false)
@@ -432,6 +434,7 @@ export function Journey(props: JourneyProps) {
   // Ask again for several seconds after a load. playVideo in the same turn as loadVideoById
   // loses to the cue YouTube finishes afterwards, and the film sits at 0:00.
   const armPlay = useCallback((key: string) => {
+    if (pauseWhenReadyRef.current) return
     wantPlayRef.current = key
     userPausedRef.current = false
     nudgeRef.current = performance.now()
@@ -456,7 +459,7 @@ export function Journey(props: JourneyProps) {
     const el = slotRef.current
     if (!host.ready || !host.playerId || !revealedRef.current || sheetRef.current) return
     if (el && !halfVisible(el)) return
-    if (userPausedRef.current) return
+    if (userPausedRef.current || pauseWhenReadyRef.current) return
     if (!wantPlayRef.current || wantPlayRef.current !== host.spec?.key) return
     setHidden(host.playerId, false)
     playOnly(host.playerId)
@@ -479,7 +482,7 @@ export function Journey(props: JourneyProps) {
         const again = hosts.current[at]
         const player = id ? getPlayer(id) : null
         if (again.playerId !== id || again.spec?.key !== key || !player || player.getPlayerState() !== STATE.PLAYING) {
-          if (wantPlayRef.current === key && id && again.playerId === id && performance.now() - nudgeRef.current > 80) {
+          if (wantPlayRef.current === key && !pauseWhenReadyRef.current && !userPausedRef.current && id && again.playerId === id && performance.now() - nudgeRef.current > 80) {
             setHidden(id, false)
             playOnly(id)
           }
@@ -683,6 +686,8 @@ export function Journey(props: JourneyProps) {
       holdState.current = -9
       coverHoldFor.current = ''
       coverMachine.current = freshCoverHold()
+      pauseWhenReadyRef.current = false
+      clockRef.current = { time: -1, at: 0 }
       newClipPlayingRef.current = false
       windowHandledRef.current = false
       bufferingSince.current = 0
@@ -712,7 +717,7 @@ export function Journey(props: JourneyProps) {
         const row = hosts.current[at]
         return { key: row.spec?.key ?? null, hasPlayer: Boolean(row.playerId && getPlayer(row.playerId)) }
       }
-      // Keep the warmed iframe. Revealing the preloaded hidden one leaves the film cued at 0:00.
+      // Prefer the hidden host already cued at startSeconds. Otherwise load this id on the visible iframe.
       const target = planFilmAdvance(current, spec.key, [hold(0), hold(1)]).target
       if (target !== current) {
         hushHost(current)
@@ -1214,13 +1219,25 @@ export function Journey(props: JourneyProps) {
   }
 
   const showLaneEnd = () => {
-    userPausedRef.current = false
+    userPausedRef.current = true
+    wantPlayRef.current = null
+    pauseWhenReadyRef.current = false
     boardOpenRef.current = false
     setBoardOpen(false)
     setCoverHeld(true)
     setClipEnded(true)
     ignorePictureUntil.current = performance.now() + PICTURE_SWALLOW_MS
     hushLeaving()
+    for (const at of [0, 1] as const) {
+      const row = hosts.current[at]
+      const player = row.playerId ? getPlayer(row.playerId) : null
+      if (player && endCardPlayerAction({ endCard: true, state: player.getPlayerState() }) === 'pause') {
+        player.pauseVideo()
+        player.stopVideo()
+      }
+      if (row.playerId) silence(row.playerId)
+      row.state = STATE.PAUSED
+    }
   }
 
   const advance = useCallback(
@@ -1754,14 +1771,27 @@ export function Journey(props: JourneyProps) {
     if (pictureTapIgnored({ boardOpen: boardOpenRef.current, swallowUntil: ignorePictureUntil.current, now: performance.now() })) return
     const host = hosts.current[visibleRef.current]
     const player = host.playerId ? getPlayer(host.playerId) : null
-    const action = courseCatcherTap(player)
-    // Pause only pauses. It must not mute, or the next play comes back silent.
+    const liveState = player?.getPlayerState() ?? host.state
+    const liveTime = player?.getCurrentTime() ?? 0
+    const stalled = clockIsStalled({
+      state: liveState,
+      currentTime: liveTime,
+      lastTime: clockRef.current.time,
+      lastSeenAt: clockRef.current.at,
+      now: performance.now(),
+    })
+    const action = livePictureTap({ state: liveState, stalled })
+    if (action === 'hold-pause') {
+      pauseWhenReadyRef.current = true
+      wantPlayRef.current = null
+      return
+    }
     if (action === 'pause') {
+      pauseWhenReadyRef.current = false
       userPausedRef.current = true
       wantPlayRef.current = null
+      player?.pauseVideo()
       if (player && hasSound()) player.unMute()
-      host.state = STATE.PAUSED
-      setReadyTick((value) => value + 1)
       return
     }
     if (!hasSound()) {
@@ -1769,12 +1799,15 @@ export function Journey(props: JourneyProps) {
       return
     }
     if (action === 'play') {
+      pauseWhenReadyRef.current = false
       userPausedRef.current = false
       if (host.spec) armPlay(host.spec.key)
+      courseCatcherTap(player)
       player?.unMute()
       return
     }
     if (player) {
+      pauseWhenReadyRef.current = false
       userPausedRef.current = false
       if (host.spec) armPlay(host.spec.key)
       player.unMute()
@@ -1994,14 +2027,37 @@ export function Journey(props: JourneyProps) {
     const apply = () => {
       const row = hosts.current[visibleRef.current]
       const player = row.playerId ? getPlayer(row.playerId) : null
+      const liveState = player?.getPlayerState() ?? row.state
+      const liveTime = player?.getCurrentTime() ?? 0
+      const now = performance.now()
+      const advancing = playbackAdvancing({
+        state: liveState,
+        currentTime: liveTime,
+        lastTime: clockRef.current.time,
+        start: row.spec?.start || 0,
+      })
+      if (applyPauseWhenReady({ pauseWhenReady: pauseWhenReadyRef.current, advancing }) && player) {
+        player.pauseVideo()
+        userPausedRef.current = true
+        wantPlayRef.current = null
+        pauseWhenReadyRef.current = false
+      }
+      if (clipEnded && player && endCardPlayerAction({ endCard: true, state: liveState }) === 'pause') {
+        player.pauseVideo()
+        player.stopVideo()
+        if (row.playerId) silence(row.playerId)
+      }
+      if (clockRef.current.time < 0 || Math.abs(liveTime - clockRef.current.time) >= 0.05) {
+        clockRef.current = { time: liveTime, at: now }
+      }
       const next = coverHoldStep(coverMachine.current, {
         holdKey,
         specKey: specKey || '',
         hostSpecKey: row.spec?.key || '',
-        state: player?.getPlayerState() ?? row.state,
-        currentTime: player?.getCurrentTime() ?? 0,
+        state: liveState,
+        currentTime: liveTime,
         start: row.spec?.start || 0,
-        now: performance.now(),
+        now,
         ended: clipEnded,
         userPaused: userPausedRef.current,
       })
@@ -2019,7 +2075,7 @@ export function Journey(props: JourneyProps) {
     if (phase !== 'feed' || clipEnded || userPausedRef.current) return
     const begun = performance.now()
     const timer = window.setInterval(() => {
-      if (userPausedRef.current || boardOpenRef.current) return
+      if (userPausedRef.current || pauseWhenReadyRef.current || boardOpenRef.current) return
       const host = hosts.current[visibleRef.current]
       const player = host.playerId ? getPlayer(host.playerId) : null
       if (!player) return

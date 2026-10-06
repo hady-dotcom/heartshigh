@@ -18,6 +18,8 @@ import {
   pauseMarkVisible,
   coverAttr,
   coverAfterPlayingTicks,
+  coverHoldStep,
+  freshCoverHold,
   playerReadout,
   playingConfirmed,
   ytDebugOn,
@@ -111,4 +113,19 @@ test('PLAYING ticks of 250ms lift the cover by 4.75s on first clip, after auto-a
 
   const seekThenPlay = coverAfterPlayingTicks({ holdKey: '4:hors:4:hors', specKey: '4:hors', start: 1070, fromTime: 1070.2, earlyTime: 0 })
   assert.equal(seekThenPlay.coverAt4750, false, 'a first sample at cur 0 must not keep the cover up')
+
+  let frozen = freshCoverHold()
+  for (let now = 0; now <= 3000; now += 250) {
+    frozen = coverHoldStep(frozen, {
+      holdKey: '1:hors:1:hors',
+      specKey: '1:hors',
+      hostSpecKey: '1:hors',
+      state: 1,
+      currentTime: 109.4,
+      start: 109,
+      now,
+    })
+  }
+  assert.equal(frozen.cover, true)
+  assert.equal(frozen.playStartedAt, 0, 'frozen PLAYING must not start this clip\'s hold clock')
 })

@@ -127,7 +127,10 @@ test('5: every item switch restarts the 4.5s cover hold', () => {
 
 test('6: a last-clip swipe shows the end card, not a paused film', () => {
   const show = journey.slice(journey.indexOf('const showLaneEnd'), journey.indexOf('const advance ='))
-  assert.match(show, /userPausedRef\.current = false/)
+  assert.match(show, /userPausedRef\.current = true/)
+  assert.match(show, /endCardPlayerAction/)
+  assert.match(show, /pauseVideo\(\)/)
+  assert.match(show, /stopVideo\(\)/)
   assert.match(show, /setCoverHeld\(true\)/)
   assert.match(show, /setClipEnded\(true\)/)
   assert.match(show, /setBoardOpen\(false\)/)

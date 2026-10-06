@@ -166,18 +166,20 @@ export function coverHoldStep(
   }
   const specOk = Boolean(tick.specKey) && tick.specKey === tick.hostSpecKey
   const confirmed = specOk && playingConfirmed(tick.state, tick.currentTime, tick.start)
-  if (!confirmed) {
+  const moved = next.lastTime >= 0 && tick.currentTime > next.lastTime + 0.04
+  if (!confirmed || !moved) {
     if (tick.state !== 1) {
       return { ...next, playStartedAt: 0, holdState: tick.state, lastTime: tick.currentTime, cover: true }
     }
     return {
       ...next,
+      playStartedAt: 0,
       holdState: tick.state,
-      lastTime: tick.currentTime,
-      cover: next.playStartedAt ? coverShouldHold(tick.now - next.playStartedAt) : true,
+      lastTime: next.lastTime < 0 ? tick.currentTime : next.lastTime,
+      cover: true,
     }
   }
-  const advancing = next.lastTime < 0 || tick.currentTime >= next.lastTime
+  const advancing = true
   if (!next.playStartedAt || coverHoldShouldRestart(tick.state, next.holdState, advancing)) {
     next.playStartedAt = tick.now
   }

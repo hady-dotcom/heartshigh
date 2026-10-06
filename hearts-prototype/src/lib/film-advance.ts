@@ -14,11 +14,17 @@ export type FilmAdvance = {
   action: 'play' | 'load' | 'create'
 }
 
-/** Stay on the iframe that already played. A hidden preload must not take over. */
+/**
+ * Prefer a host that already holds this spec (cued at startSeconds).
+ * Otherwise stay on the visible iframe and load the new id there.
+ */
 export function planFilmAdvance(visible: 0 | 1, specKey: string, hosts: [HostHold, HostHold]): FilmAdvance {
   const other: 0 | 1 = visible === 0 ? 1 : 0
-  const target: 0 | 1 = hosts[visible].hasPlayer || !hosts[other].hasPlayer ? visible : other
-  return { target, action: playbackAction(hosts[target], specKey) }
+  if (hosts[other].hasPlayer && hosts[other].key === specKey) return { target: other, action: 'play' }
+  if (hosts[visible].hasPlayer && hosts[visible].key === specKey) return { target: visible, action: 'play' }
+  if (hosts[visible].hasPlayer) return { target: visible, action: 'load' }
+  if (hosts[other].hasPlayer) return { target: other, action: playbackAction(hosts[other], specKey) }
+  return { target: visible, action: 'create' }
 }
 
 export function playbackAction(hold: HostHold, specKey: string): FilmAdvance['action'] {
@@ -191,6 +197,103 @@ export function pictureTapAction(state: number | null | undefined): 'pause' | 'p
   if (state === 1 || state === 3) return 'pause'
   if (state === 2 || state === 5) return 'play'
   return 'none'
+}
+
+/** State 1 with a frozen clock for this long is a seek/buffer stall, not real playback. */
+export const STALL_MS = 500
+
+export function clockIsStalled(input: {
+  state: number
+  currentTime: number
+  lastTime: number
+  lastSeenAt: number
+  now: number
+  stallMs?: number
+}) {
+  if (input.state !== 1 || input.lastTime < 0) return false
+  const frozen = Math.abs(input.currentTime - input.lastTime) < 0.05
+  if (!frozen) return false
+  return input.now - input.lastSeenAt >= (input.stallMs ?? STALL_MS)
+}
+
+export function playbackAdvancing(input: { state: number; currentTime: number; lastTime: number; start?: number }) {
+  return (
+    input.state === 1 &&
+    input.lastTime >= 0 &&
+    input.currentTime > input.lastTime + 0.04 &&
+    input.currentTime >= (input.start ?? 0) + 0.12
+  )
+}
+
+export type LiveTapIntent = 'pause' | 'play' | 'hold-pause' | 'none'
+
+/** Pause vs play from live YouTube state plus a moving clock. Never from a cached flag. */
+export function livePictureTap(input: { state: number; stalled: boolean }): LiveTapIntent {
+  if (input.stalled) return 'hold-pause'
+  if (input.state === 1 || input.state === 3) return 'pause'
+  if (input.state === 2 || input.state === 5) return 'play'
+  return 'none'
+}
+
+export function applyPauseWhenReady(input: { pauseWhenReady: boolean; advancing: boolean }) {
+  return input.pauseWhenReady && input.advancing
+}
+
+/**
+ * Stall ticks, optional taps, then a moving clock.
+ * A stall tap pauses once playback starts. A later tap is a fresh live read.
+ */
+export function stallThenTap(ticks: Array<{ state: number; cur: number; atMs: number; tap?: boolean }>) {
+  let lastTime = -1
+  let lastSeenAt = 0
+  let pauseWhenReady = false
+  let paused = false
+  let taps = 0
+  let pauseApplies = 0
+  let playApplies = 0
+  for (const tick of ticks) {
+    const stalled = clockIsStalled({
+      state: tick.state,
+      currentTime: tick.cur,
+      lastTime: lastTime < 0 ? tick.cur : lastTime,
+      lastSeenAt,
+      now: tick.atMs,
+    })
+    const advancing = playbackAdvancing({ state: tick.state, currentTime: tick.cur, lastTime })
+    if (applyPauseWhenReady({ pauseWhenReady, advancing })) {
+      paused = true
+      pauseWhenReady = false
+      pauseApplies += 1
+      lastTime = tick.cur
+      lastSeenAt = tick.atMs
+      continue
+    }
+    if (tick.tap) {
+      taps += 1
+      const action = livePictureTap({ state: paused ? 2 : tick.state, stalled })
+      if (action === 'hold-pause') pauseWhenReady = true
+      else if (action === 'pause') {
+        paused = true
+        pauseWhenReady = false
+        pauseApplies += 1
+      } else if (action === 'play') {
+        paused = false
+        pauseWhenReady = false
+        playApplies += 1
+      }
+    }
+    if (lastTime < 0 || Math.abs(tick.cur - lastTime) >= 0.05) {
+      lastTime = tick.cur
+      lastSeenAt = tick.atMs
+    }
+  }
+  return { paused, taps, pauseApplies, playApplies }
+}
+
+export function endCardPlayerAction(input: { endCard: boolean; state: number }): 'pause' | 'none' {
+  if (!input.endCard) return 'none'
+  if (input.state === 0 || input.state === 2 || input.state === 5) return 'none'
+  return 'pause'
 }
 
 /** One seek+play after the film has sat in BUFFERING for this long. */

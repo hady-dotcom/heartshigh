@@ -1,15 +1,15 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { BUFFER_RETRY_MS, PLAY_NUDGE_FOR_MS, bufferRetryAction, endedEventIsCurrent, feedAfterEndSignals, horsWindowEnded, hostShouldShow, pictureIsTap, pictureSwipeCommit, pictureTapAction, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe } from '../../src/lib/film-advance'
+import { BUFFER_RETRY_MS, PLAY_NUDGE_FOR_MS, STALL_MS, bufferRetryAction, clockIsStalled, endCardPlayerAction, endedEventIsCurrent, feedAfterEndSignals, horsWindowEnded, hostShouldShow, livePictureTap, pictureIsTap, pictureSwipeCommit, pictureTapAction, planFilmAdvance, playbackAction, playbackAdvancing, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, stallThenTap, takeEndAdvance, verticalSwipe } from '../../src/lib/film-advance'
 
 const visible = { key: '14:hors', hasPlayer: true }
 const preloaded = { key: '22:hors', hasPlayer: true }
 const empty = { key: null, hasPlayer: false }
 
-test('a later clip stays on the iframe that already played', () => {
+test('a later clip plays the host that already holds it at its in-point', () => {
   const plan = planFilmAdvance(0, '22:hors', [visible, preloaded])
-  assert.deepEqual(plan, { target: 0, action: 'load' })
+  assert.deepEqual(plan, { target: 1, action: 'play' })
   assert.equal(playbackAction(visible, '22:hors'), 'load')
 })
 
@@ -88,6 +88,56 @@ test('window-end and state 0 for one clip step once', () => {
   assert.equal(dual.index, 2)
   assert.equal(pictureTapAction(3), 'pause')
   assert.equal(bufferRetryAction({ bufferingForMs: BUFFER_RETRY_MS, state: 3, alreadyRetried: false }), 'retry')
+})
+
+test('a stall then the first real tap pauses once, and a stall tap pauses when cur moves', () => {
+  assert.equal(STALL_MS, 500)
+  assert.equal(clockIsStalled({ state: 1, currentTime: 5628.4, lastTime: 5628.4, lastSeenAt: 0, now: 400 }), false)
+  assert.equal(clockIsStalled({ state: 1, currentTime: 5628.4, lastTime: 5628.4, lastSeenAt: 100, now: 700 }), true)
+  assert.equal(clockIsStalled({ state: 1, currentTime: 5628.4, lastTime: -1, lastSeenAt: 0, now: 900 }), false)
+  assert.equal(playbackAdvancing({ state: 1, currentTime: 5628.4, lastTime: 5628.4 }), false)
+  assert.equal(livePictureTap({ state: 1, stalled: true }), 'hold-pause')
+  assert.equal(livePictureTap({ state: 1, stalled: false }), 'pause')
+  assert.equal(livePictureTap({ state: 2, stalled: false }), 'play')
+
+  const firstReal = stallThenTap([
+    { state: 1, cur: 5628.4, atMs: 0 },
+    { state: 1, cur: 5628.4, atMs: 800 },
+    { state: 1, cur: 5628.7, atMs: 9000 },
+    { state: 1, cur: 5629.1, atMs: 9250, tap: true },
+  ])
+  assert.equal(firstReal.paused, true)
+  assert.equal(firstReal.taps, 1)
+  assert.equal(firstReal.pauseApplies, 1)
+  assert.equal(firstReal.playApplies, 0)
+
+  const duringStall = stallThenTap([
+    { state: 1, cur: 4969.0, atMs: 0 },
+    { state: 1, cur: 4969.0, atMs: 800, tap: true },
+    { state: 1, cur: 4969.0, atMs: 2000 },
+    { state: 1, cur: 4969.4, atMs: 9000, tap: true },
+    { state: 1, cur: 4969.8, atMs: 9250 },
+  ])
+  assert.equal(duringStall.paused, true)
+  assert.equal(duringStall.pauseApplies, 1)
+  assert.equal(duringStall.playApplies, 0)
+
+  const afterPause = stallThenTap([
+    { state: 1, cur: 4969.0, atMs: 0 },
+    { state: 1, cur: 4969.0, atMs: 800, tap: true },
+    { state: 1, cur: 4969.4, atMs: 9000 },
+    { state: 2, cur: 4969.4, atMs: 9250, tap: true },
+  ])
+  assert.equal(afterPause.pauseApplies, 1)
+  assert.equal(afterPause.playApplies, 1)
+  assert.equal(afterPause.paused, false)
+
+  assert.equal(endCardPlayerAction({ endCard: true, state: 1 }), 'pause')
+  assert.equal(endCardPlayerAction({ endCard: true, state: 3 }), 'pause')
+  assert.equal(endCardPlayerAction({ endCard: true, state: -1 }), 'pause')
+  assert.equal(endCardPlayerAction({ endCard: true, state: 2 }), 'none')
+  assert.equal(endCardPlayerAction({ endCard: true, state: 0 }), 'none')
+  assert.equal(endCardPlayerAction({ endCard: false, state: 1 }), 'none')
 })
 
 test('the film has no Prev/Next chrome, and the ladder stays a small text row', () => {
