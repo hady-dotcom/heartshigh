@@ -1993,7 +1993,8 @@ export function Journey(props: JourneyProps) {
       if (action === 'treat-playing' && host.state !== STATE.PLAYING) {
         host.state = STATE.PLAYING
         host.played = true
-        if (!playStartedAt.current) playStartedAt.current = performance.now()
+        const spec = specFor(itemsRef.current[indexRef.current], modeRef.current)
+        if (host.spec?.key === spec?.key && !playStartedAt.current) playStartedAt.current = performance.now()
         setReadyTick((value) => value + 1)
       }
       if (action === 'retry' && host.playerId && host.spec) {
