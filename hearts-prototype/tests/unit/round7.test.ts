@@ -121,8 +121,8 @@ test('5: every item switch restarts the 4.5s cover hold', () => {
   assert.equal(coverHoldKey(8, 'hors'), '8:hors')
   assert.notEqual(coverHoldKey(2, 'hors'), coverHoldKey(3, 'hors'))
   assert.match(journey, /coverHoldKey\(item\?\.cutId, mode/)
-  assert.match(journey, /coverHoldMsLeft/)
-  assert.match(journey, /if \(!playStartedAt\.current \|\| coverHoldShouldRestart/)
+  assert.match(journey, /coverHoldStep/)
+  assert.match(journey, /freshCoverHold/)
 })
 
 test('6: a last-clip swipe shows the end card, not a paused film', () => {

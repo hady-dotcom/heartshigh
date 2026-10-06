@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { courseCatcherTap, coursePlayVisible } from '../../src/lib/course-controls'
+import { courseCatcherTap, coursePlayVisible, feedCatcherPointer } from '../../src/lib/course-controls'
 import { maybeWidenPlaylist, sessionPlaylist } from '../../src/lib/feed-mix'
 import { dedicatedLaneFeed, playableLaneClips, takeDedicatedLane } from '../../src/lib/lanes'
 import { helpFor } from '../../src/lib/page-help'
@@ -38,6 +38,29 @@ test('a tap on the course catcher while playing calls pauseVideo, not seek or re
   assert.deepEqual(calls, ['pauseVideo'])
 })
 
+test('a feed picture tap with dy under 10 pauses, and a 40px vertical swipe does not', () => {
+  const calls: string[] = []
+  const live = {
+    getPlayerState: () => 1,
+    pauseVideo: () => calls.push('pauseVideo'),
+    playVideo: () => calls.push('playVideo'),
+    seekTo: () => calls.push('seekTo'),
+    loadVideoById: () => calls.push('loadVideoById'),
+    cueVideoById: () => calls.push('cueVideoById'),
+  }
+  assert.equal(feedCatcherPointer(live, 0, 9), 'pause')
+  assert.deepEqual(calls, ['pauseVideo'])
+  assert.equal(feedCatcherPointer(live, 0, 40), 'swipe')
+  assert.deepEqual(calls, ['pauseVideo'])
+  assert.match(journey, /courseCatcherTap/)
+  assert.match(journey, /pictureIsTap/)
+  assert.match(journey, /runPictureTap/)
+  assert.match(journey, /setPointerCapture/)
+  const catcher = journey.slice(journey.indexOf('data-testid="film-catcher"'), journey.indexOf('data-testid="film-catcher"') + 420)
+  assert.match(catcher, /onClick/)
+  assert.match(catcher, /runPictureTap/)
+})
+
 test('play and pause stay on the lecture while it is playing', () => {
   assert.equal(coursePlayVisible({ loading: false, questionOpen: false }), true)
   assert.equal(coursePlayVisible({ loading: true, questionOpen: false }), false)
@@ -53,7 +76,7 @@ test('play and pause stay on the lecture while it is playing', () => {
   assert.match(journey, /data-catcher="yes"/)
   assert.match(journey, /data-testid="film-catcher"/)
   assert.match(journey, /boardClickAllowed/)
-  assert.match(journey, /coverHoldMsLeft/)
+  assert.match(journey, /coverHoldStep/)
   const openDrawer = journey.slice(journey.indexOf('const openDrawer'), journey.indexOf('const closeDrawer'))
   assert.doesNotMatch(openDrawer, /pause|mute|playVideo|silence|stopVisible|hush/)
   assert.match(journey, /if \(boardOpenRef\.current\) return/)

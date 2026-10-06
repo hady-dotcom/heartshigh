@@ -30,3 +30,13 @@ export function courseCatcherTap(player: CatcherPlayer | null): 'pause' | 'play'
   }
   return 'none'
 }
+
+/** Feed picture: a tap uses the course catcher; a 40px vertical swipe does not. */
+export function feedCatcherPointer(
+  player: CatcherPlayer | null,
+  dx: number,
+  dy: number,
+): 'pause' | 'play' | 'none' | 'swipe' {
+  if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) >= 40) return 'swipe'
+  return courseCatcherTap(player)
+}

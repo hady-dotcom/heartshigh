@@ -36,7 +36,7 @@ test('playback rates reach 2× and return to 1×', () => {
 test('the feed pause tap does not mute, and the question handoff turns sound on first', () => {
   const journey = readFileSync(new URL('../../src/components/journey/journey.tsx', import.meta.url), 'utf8')
   const tap = journey.slice(journey.indexOf('const tapPicture'), journey.indexOf('const pauseForSwipe'))
-  assert.match(tap, /pauseKeepingSound\(/)
+  assert.match(tap, /courseCatcherTap/)
   assert.equal(tap.includes('mute('), false)
   const handOff = journey.slice(journey.indexOf('const handOff'), journey.indexOf('const justShow'))
   const beforeAwait = handOff.slice(0, handOff.indexOf('await '))

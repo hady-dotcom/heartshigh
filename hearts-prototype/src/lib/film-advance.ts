@@ -60,10 +60,18 @@ export function verticalSwipe(dy: number): 'next' | 'lane' {
 
 /** A tap on the picture never skips. Only a vertical swipe of this many pixels does. */
 export const PICTURE_SWIPE_PX = 40
+/** Pointer travel under this is always a tap, never a swipe. */
+export const PICTURE_TAP_PX = 10
 
 /** True only for a vertical swipe of 40px or more. A tap or a short flick stays a tap. */
 export function pictureSwipeCommit(dx: number, dy: number, minPx = PICTURE_SWIPE_PX) {
   return Math.abs(dy) > Math.abs(dx) && Math.abs(dy) >= minPx
+}
+
+/** dy under 10px, or any move that is not a 40px vertical swipe, is a tap. */
+export function pictureIsTap(dx: number, dy: number, tapPx = PICTURE_TAP_PX) {
+  if (Math.hypot(dx, dy) < tapPx) return true
+  return !pictureSwipeCommit(dx, dy)
 }
 
 /** Watch keys are `cut:hors:talk`; player specs are `cut:hors`. */

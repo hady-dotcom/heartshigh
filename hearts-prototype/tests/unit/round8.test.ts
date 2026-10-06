@@ -135,7 +135,7 @@ test('3: Save during advance, then a tap pauses with the cover shown and does no
     }),
     false,
   )
-  assert.match(journey, /coverHoldMayStart/)
+  assert.match(journey, /coverHoldStep/)
   assert.match(journey, /pictureSwipeCommit/)
   const catcherAt = journey.indexOf('data-testid="film-catcher"')
   const gestureAt = journey.indexOf('data-testid="gesture-layer"')

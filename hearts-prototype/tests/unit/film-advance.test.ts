@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { BUFFER_RETRY_MS, PLAY_NUDGE_FOR_MS, bufferRetryAction, endedEventIsCurrent, feedAfterEndSignals, horsWindowEnded, hostShouldShow, pictureSwipeCommit, pictureTapAction, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe } from '../../src/lib/film-advance'
+import { BUFFER_RETRY_MS, PLAY_NUDGE_FOR_MS, bufferRetryAction, endedEventIsCurrent, feedAfterEndSignals, horsWindowEnded, hostShouldShow, pictureIsTap, pictureSwipeCommit, pictureTapAction, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe } from '../../src/lib/film-advance'
 
 const visible = { key: '14:hors', hasPlayer: true }
 const preloaded = { key: '22:hors', hasPlayer: true }
@@ -72,6 +72,9 @@ test('a leftover ended event does not hide the last clip, and a tap never skips'
   assert.equal(pictureSwipeCommit(0, 39), false)
   assert.equal(pictureSwipeCommit(0, 40), true)
   assert.equal(pictureSwipeCommit(80, 12), false)
+  assert.equal(pictureIsTap(0, 9), true)
+  assert.equal(pictureIsTap(2, 6), true)
+  assert.equal(pictureIsTap(0, 40), false)
 })
 
 test('window-end and state 0 for one clip step once', () => {

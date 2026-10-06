@@ -127,3 +127,108 @@ export function landscapeThumb(youtubeId: string | null | undefined) {
 export function ytDebugOn(search: string) {
   return new URLSearchParams(search.startsWith('?') ? search.slice(1) : search).get('debug') === 'yt'
 }
+
+export type CoverHoldMachine = {
+  holdFor: string
+  playStartedAt: number
+  holdState: number
+  lastTime: number
+  cover: boolean
+}
+
+export function freshCoverHold(): CoverHoldMachine {
+  return { holdFor: '', playStartedAt: 0, holdState: -9, lastTime: -1, cover: true }
+}
+
+/**
+ * One sample of the cover hold. The clock starts on this clip's own PLAYING
+ * with cur past the in-point, and it must not reset on later ticks of the same
+ * hold. Pause or a new clip key puts the cover back.
+ */
+export function coverHoldStep(
+  machine: CoverHoldMachine,
+  tick: {
+    holdKey: string
+    specKey: string
+    hostSpecKey: string
+    state: number
+    currentTime: number
+    start: number
+    now: number
+    ended?: boolean
+    userPaused?: boolean
+  },
+): CoverHoldMachine {
+  let next = machine.holdFor === tick.holdKey ? { ...machine } : freshCoverHold()
+  if (next.holdFor !== tick.holdKey) next.holdFor = tick.holdKey
+  if (tick.ended || tick.userPaused) {
+    return { ...next, playStartedAt: 0, holdState: tick.state, lastTime: tick.currentTime, cover: true }
+  }
+  const specOk = Boolean(tick.specKey) && tick.specKey === tick.hostSpecKey
+  const confirmed = specOk && playingConfirmed(tick.state, tick.currentTime, tick.start)
+  if (!confirmed) {
+    if (tick.state !== 1) {
+      return { ...next, playStartedAt: 0, holdState: tick.state, lastTime: tick.currentTime, cover: true }
+    }
+    return {
+      ...next,
+      holdState: tick.state,
+      lastTime: tick.currentTime,
+      cover: next.playStartedAt ? coverShouldHold(tick.now - next.playStartedAt) : true,
+    }
+  }
+  const advancing = next.lastTime < 0 || tick.currentTime >= next.lastTime
+  if (!next.playStartedAt || coverHoldShouldRestart(tick.state, next.holdState, advancing)) {
+    next.playStartedAt = tick.now
+  }
+  next.holdState = tick.state
+  next.lastTime = tick.currentTime
+  next.cover = filmCoverVisible({
+    playing: true,
+    playingForMs: Math.max(0, tick.now - next.playStartedAt),
+    paused: false,
+    ended: false,
+    timeAdvancing: advancing,
+  })
+  return next
+}
+
+/** PLAYING ticks every 250ms with cur advancing: cover is down by ~4.75s. */
+export function coverAfterPlayingTicks(input: {
+  holdKey: string
+  specKey: string
+  start?: number
+  fromTime?: number
+  tickMs?: number
+  durationMs?: number
+  earlyTime?: number
+}) {
+  const tickMs = input.tickMs ?? 250
+  const durationMs = input.durationMs ?? 6000
+  const start = input.start ?? 0
+  let time = input.fromTime ?? start + 0.2
+  let machine = freshCoverHold()
+  const coverAt: Array<{ atMs: number; cover: boolean }> = []
+  for (let now = 0; now <= durationMs; now += tickMs) {
+    const currentTime = now === 0 && input.earlyTime != null ? input.earlyTime : time
+    machine = coverHoldStep(machine, {
+      holdKey: input.holdKey,
+      specKey: input.specKey,
+      hostSpecKey: input.specKey,
+      state: 1,
+      currentTime,
+      start,
+      now,
+    })
+    coverAt.push({ atMs: now, cover: machine.cover })
+    if (!(now === 0 && input.earlyTime != null)) time += tickMs / 1000
+    else time = input.fromTime ?? start + 0.2
+  }
+  const at4750 = coverAt.find((row) => row.atMs >= 4750) || coverAt[coverAt.length - 1]
+  return {
+    coverAt,
+    coverAt4750: at4750.cover,
+    coverAt6000: coverAt[coverAt.length - 1].cover,
+    lifted: !at4750.cover,
+  }
+}

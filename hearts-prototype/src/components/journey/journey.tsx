@@ -15,12 +15,13 @@ import { feedFilmCaption } from '@/lib/spoken-caption'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { dedicatedLaneFeed, playableLaneClips, takeDedicatedLane } from '@/lib/lanes'
-import { coverAttr, coverFallbackAction, coverHoldKey, coverHoldMayStart, coverHoldMsLeft, coverHoldShouldRestart, filmCoverKey, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
+import { coverAttr, coverFallbackAction, coverHoldKey, coverHoldStep, filmCoverKey, freshCoverHold, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
 import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
 import { isoWeek } from '@/lib/trends'
-import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, bufferRetryAction, endedEventIsCurrent, horsWindowEnded, hostShouldShow, pictureSwipeCommit, pictureTapAction, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe, type EndAdvanceSource } from '@/lib/film-advance'
+import { courseCatcherTap } from '@/lib/course-controls'
+import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, bufferRetryAction, endedEventIsCurrent, horsWindowEnded, hostShouldShow, pictureIsTap, pictureSwipeCommit, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe, type EndAdvanceSource } from '@/lib/film-advance'
 import { acceptLevelTap, type LevelTap } from '@/lib/level-tap'
-import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, hydrateSound, lowData, pauseKeepingSound, playOnly, playerSnapshot, preloadApi, setHidden, silence, silenceHidden, silenceOthers, soundOn, type PlayerKind } from '@/lib/yt'
+import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, hydrateSound, lowData, playOnly, playerSnapshot, preloadApi, setHidden, silence, silenceHidden, silenceOthers, soundOn, type PlayerKind } from '@/lib/yt'
 import { PageHelp } from '@/components/app/page-help'
 import { Arch } from '@/components/arch'
 import { TabBar } from '../app/shell'
@@ -225,6 +226,8 @@ export function Journey(props: JourneyProps) {
   const playStartedAt = useRef(0)
   const holdState = useRef(-9)
   const coverHoldFor = useRef('')
+  const coverMachine = useRef(freshCoverHold())
+  const lastPictureTap = useRef(0)
   const ignorePictureUntil = useRef(0)
   const advancedFromRef = useRef<string | null>(null)
   const windowHandledRef = useRef(false)
@@ -679,6 +682,7 @@ export function Journey(props: JourneyProps) {
       playStartedAt.current = 0
       holdState.current = -9
       coverHoldFor.current = ''
+      coverMachine.current = freshCoverHold()
       newClipPlayingRef.current = false
       windowHandledRef.current = false
       bufferingSince.current = 0
@@ -1750,25 +1754,24 @@ export function Journey(props: JourneyProps) {
     if (pictureTapIgnored({ boardOpen: boardOpenRef.current, swallowUntil: ignorePictureUntil.current, now: performance.now() })) return
     const host = hosts.current[visibleRef.current]
     const player = host.playerId ? getPlayer(host.playerId) : null
-    const real = player?.getPlayerState()
-    const action = pictureTapAction(real)
+    const action = courseCatcherTap(player)
     // Pause only pauses. It must not mute, or the next play comes back silent.
-    if (player && action === 'pause') {
+    if (action === 'pause') {
       userPausedRef.current = true
       wantPlayRef.current = null
-      const heard = hasSound() || !player.isMuted()
-      pauseKeepingSound(player, heard)
+      if (player && hasSound()) player.unMute()
+      host.state = STATE.PAUSED
+      setReadyTick((value) => value + 1)
       return
     }
     if (!hasSound()) {
       tapSound()
       return
     }
-    if (player && action === 'play') {
+    if (action === 'play') {
       userPausedRef.current = false
       if (host.spec) armPlay(host.spec.key)
-      player.unMute()
-      player.playVideo()
+      player?.unMute()
       return
     }
     if (player) {
@@ -1779,6 +1782,13 @@ export function Journey(props: JourneyProps) {
       return
     }
     tryPlay()
+  }
+
+  const runPictureTap = () => {
+    const now = performance.now()
+    if (now - lastPictureTap.current < 350) return
+    lastPictureTap.current = now
+    tapPicture()
   }
 
   const pauseForSwipe = () => {
@@ -1857,7 +1867,7 @@ export function Journey(props: JourneyProps) {
   const onDown = (event: ReactPointerEvent) => {
     if (boardOpen) return
     if ((event.target as HTMLElement).closest('[data-testid="feed-board"], [data-testid="more-board"], [data-testid="board-back"]')) return
-    if (!(event.target as HTMLElement).closest('button, a, input, textarea, select, label')) (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId)
+    ;(event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId)
     const timer = window.setTimeout(() => {
       if (gesture.current && !gesture.current.moved) setNotForMe(true)
     }, 650)
@@ -1902,10 +1912,10 @@ export function Journey(props: JourneyProps) {
     const quick = far / elapsed >= 0.35
     // A tap on the picture never skips. Only a vertical swipe of 40px+ steps the clip.
     const commit = vertical ? pictureSwipeCommit(dx, dy) : far >= 40 && (far >= width * 0.25 || quick || far >= height * 0.12)
-    if (!commit) {
+    if (!commit || (vertical && pictureIsTap(dx, dy))) {
       markSwipe(false)
       springBack()
-      if (!slide && cardKind !== 'question' && cardKind !== 'text') tapPicture()
+      if (!slide && cardKind !== 'question' && cardKind !== 'text') runPictureTap()
       return
     }
     pauseForSwipe()
@@ -1921,6 +1931,7 @@ export function Journey(props: JourneyProps) {
     if (start?.timer) window.clearTimeout(start.timer)
     markSwipe(false)
     springBack()
+    if (start && !start.moved && !slide && cardKind !== 'question' && cardKind !== 'text') runPictureTap()
   }
   const springBack = () => {
     const el = clipRef.current
@@ -1977,44 +1988,33 @@ export function Journey(props: JourneyProps) {
   const started = playerReady && host.played && LIVE.has(host.state)
   const playingOut = playerReady && host.played && host.state === STATE.PLAYING
   useEffect(() => {
+    if (phase !== 'feed') return
     const specKey = currentSpec?.key || null
     const holdKey = coverHoldKey(item?.cutId, mode, specKey)
-    if (coverHoldFor.current !== holdKey) {
-      coverHoldFor.current = holdKey
-      playStartedAt.current = 0
-      holdState.current = -9
-      setCoverHeld(true)
+    const apply = () => {
+      const row = hosts.current[visibleRef.current]
+      const player = row.playerId ? getPlayer(row.playerId) : null
+      const next = coverHoldStep(coverMachine.current, {
+        holdKey,
+        specKey: specKey || '',
+        hostSpecKey: row.spec?.key || '',
+        state: player?.getPlayerState() ?? row.state,
+        currentTime: player?.getCurrentTime() ?? 0,
+        start: row.spec?.start || 0,
+        now: performance.now(),
+        ended: clipEnded,
+        userPaused: userPausedRef.current,
+      })
+      coverMachine.current = next
+      coverHoldFor.current = next.holdFor
+      playStartedAt.current = next.playStartedAt
+      holdState.current = next.holdState
+      setCoverHeld((held) => (held === next.cover ? held : next.cover))
     }
-    const state = host.state
-    const player = host.playerId ? getPlayer(host.playerId) : null
-    const now = player?.getCurrentTime() ?? 0
-    const ready = coverHoldMayStart({
-      holdKey,
-      holdFor: coverHoldFor.current,
-      specKey,
-      hostSpecKey: host.spec?.key,
-      state,
-      currentTime: now,
-      start: host.spec?.start || 0,
-    })
-    if (playingOut && !clipEnded && ready) {
-      if (!playStartedAt.current || coverHoldShouldRestart(state, holdState.current, true)) {
-        playStartedAt.current = performance.now()
-        setCoverHeld(true)
-      }
-      holdState.current = state
-      if (!playStartedAt.current) {
-        setCoverHeld(true)
-        return
-      }
-      const left = coverHoldMsLeft(playStartedAt.current, performance.now())
-      const timer = window.setTimeout(() => setCoverHeld(false), Math.max(0, left))
-      return () => window.clearTimeout(timer)
-    }
-    holdState.current = state
-    if (!clipEnded) playStartedAt.current = 0
-    setCoverHeld(true)
-  }, [playingOut, clipEnded, currentSpec?.key, host.state, host.spec?.key, item?.cutId, mode])
+    apply()
+    const timer = window.setInterval(apply, 250)
+    return () => window.clearInterval(timer)
+  }, [phase, clipEnded, currentSpec?.key, item?.cutId, mode])
   useEffect(() => {
     if (phase !== 'feed' || clipEnded || userPausedRef.current) return
     const begun = performance.now()
@@ -2051,7 +2051,6 @@ export function Journey(props: JourneyProps) {
         host.played = true
         newClipPlayingRef.current = true
         const spec = specFor(itemsRef.current[indexRef.current], modeRef.current)
-        if (host.spec?.key === spec?.key && !playStartedAt.current) playStartedAt.current = performance.now()
         setReadyTick((value) => value + 1)
       }
       if (action === 'retry' && host.playerId && host.spec) {
@@ -2477,7 +2476,10 @@ export function Journey(props: JourneyProps) {
               aria-label={playingOut ? 'Pause' : 'Play'}
               data-ready="yes"
               {...swipe}
-              onClick={(event) => event.preventDefault()}
+              onClick={(event) => {
+                event.preventDefault()
+                runPictureTap()
+              }}
             />
           ) : null}
         </div>

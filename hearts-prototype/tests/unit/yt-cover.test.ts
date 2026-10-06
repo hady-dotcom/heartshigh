@@ -17,6 +17,7 @@ import {
   landscapeThumb,
   pauseMarkVisible,
   coverAttr,
+  coverAfterPlayingTicks,
   playerReadout,
   playingConfirmed,
   ytDebugOn,
@@ -91,4 +92,23 @@ test('the hold restarts on buffering or any other state, and the frame is uncrop
     coverHoldMayStart({ holdKey: '4:hors:4:hors', holdFor: '4:hors:4:hors', specKey: '4:hors', hostSpecKey: '4:hors', state: 1, currentTime: 0.2, start: 0 }),
     true,
   )
+})
+
+test('PLAYING ticks of 250ms lift the cover by 4.75s on first clip, after auto-advance, and after a swipe', () => {
+  const first = coverAfterPlayingTicks({ holdKey: '1:hors:1:hors', specKey: '1:hors' })
+  assert.equal(first.coverAt4750, false)
+  assert.equal(first.coverAt6000, false)
+  assert.equal(first.lifted, true)
+  assert.equal(first.coverAt.find((row) => row.atMs === 4250)?.cover, true)
+
+  const afterAdvance = coverAfterPlayingTicks({ holdKey: '2:hors:2:hors', specKey: '2:hors', start: 1070, fromTime: 1070.2 })
+  assert.equal(afterAdvance.coverAt4750, false)
+  assert.equal(afterAdvance.lifted, true)
+
+  const afterSwipe = coverAfterPlayingTicks({ holdKey: '3:hors:3:hors', specKey: '3:hors', start: 80, fromTime: 80.3 })
+  assert.equal(afterSwipe.coverAt4750, false)
+  assert.equal(afterSwipe.lifted, true)
+
+  const seekThenPlay = coverAfterPlayingTicks({ holdKey: '4:hors:4:hors', specKey: '4:hors', start: 1070, fromTime: 1070.2, earlyTime: 0 })
+  assert.equal(seekThenPlay.coverAt4750, false, 'a first sample at cur 0 must not keep the cover up')
 })
