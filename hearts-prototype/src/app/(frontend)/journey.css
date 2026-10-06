@@ -171,7 +171,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   position: absolute;
   left: 20px;
   right: 20px;
-  bottom: calc(116px + var(--safe-bottom));
+  bottom: calc(136px + var(--safe-bottom));
   z-index: 15;
   margin: 0;
   text-align: center;
