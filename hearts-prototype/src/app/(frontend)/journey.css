@@ -568,10 +568,15 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-peek { background: #0F3B3A; }
 .journey.phase-feed .fr-words {
   top: calc(56px + var(--safe-top) + 100vw * 9 / 16);
-  bottom: calc(140px + var(--safe-bottom));
+  /* Ends above the "swipe up for the next clip" hint (bottom 136px, about 15px tall), so the page dots never sit on it. */
+  bottom: calc(158px + var(--safe-bottom));
   padding: 16px 20px 8px;
   justify-content: flex-start;
+  overflow: hidden;
 }
+/* A page is at most four 20-character lines; on a short screen the type steps down rather than running out of room. */
+.journey.phase-feed .fr-words-line { font-size: clamp(19px, min(6.8vw, 3.9dvh), 30px); }
+.journey.phase-feed .fr-dots { flex-shrink: 0; margin-top: 16px; }
 .journey.phase-feed[data-vertical='yes'] .fr-words {
   top: calc(56px + var(--safe-top) + min(60dvh, 100vw * 16 / 9));
 }

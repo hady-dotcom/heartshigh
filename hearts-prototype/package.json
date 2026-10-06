@@ -39,7 +39,9 @@
     "typography:export": "tsx scripts/export-typography.ts",
     "typography:render": "npm --prefix ../remotion run render",
     "framing:analyse": "tsx scripts/framing-analyse.ts",
-    "framing:record": "tsx scripts/record-framing.mts"
+    "framing:record": "tsx scripts/record-framing.mts",
+    "framing:clip-words": "tsx scripts/clip-words-from-work.ts",
+    "framing:check-clip-words": "tsx scripts/check-clip-words.ts"
   },
   "license": "UNLICENSED",
   "dependencies": {

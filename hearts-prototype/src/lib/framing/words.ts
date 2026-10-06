@@ -61,7 +61,7 @@ export function sentencesInWindow(sentences: FramingSentence[], start: number, e
   return sentences.filter((row) => row.s < end - 0.05 && row.e > start + 0.05)
 }
 
-function pickKey(words: SpokenWord[]) {
+export function pickKey(words: SpokenWord[]) {
   const scored = words
     .map((row) => row.w.replace(/[^\p{L}\p{N}’'-]+/gu, ''))
     .filter((w) => w.length > 2 && !FUNC.has(w.toLowerCase()))
@@ -116,6 +116,9 @@ export function sameSpokenText(a: string, b: string) {
  */
 const SUMMARY_ROLES = new Set(['hook', 'turn', 'land'])
 
+/** Seconds a spoken line may stay up after it ends (or show before it starts). Longer silences are empty. */
+export const HOLD_GAP = 1.5
+
 /** Timed caption cards from a cut, for F. Summary beats and empty lines stay out. */
 export function sentencesFromCaptions(
   lines: { at?: number; text?: string; tidy?: string; role?: string }[] | null | undefined,
@@ -154,13 +157,15 @@ export function spokenLine(
       : time
   const sentence = currentSentence(live, clock)
   const first = live[0]
+  // The first line may show a moment before it is said (the clip's pre-roll), never earlier.
   const waitingForFirst =
-    !sentence && first && options?.from != null && clock >= options.from - 0.05 && clock < first.s
+    !sentence && first && options?.from != null && clock >= options.from - 0.05 && clock < first.s && first.s - clock <= HOLD_GAP
   const shown = sentence || (waitingForFirst ? first : null)
+  // A short breath keeps the last line; a longer silence shows nothing, so no line sits frozen on screen.
   const held =
     shown ||
     (live.length
-      ? [...live].reverse().find((row) => clock >= row.s) || null
+      ? [...live].reverse().find((row) => clock >= row.s && clock < row.e + HOLD_GAP) || null
       : null)
   if (!held) return null
   const titles = [options?.title, ...(options?.titles || [])]
