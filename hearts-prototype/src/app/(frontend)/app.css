@@ -406,7 +406,7 @@
   z-index: 30;
 }
 .app[data-testid="course"] .app-scroll {
-  padding: 0 0 calc(148px + env(safe-area-inset-bottom, 0px));
+  padding: 0 0 calc(176px + env(safe-area-inset-bottom, 0px));
 }
 .app[data-testid="course"] .course-film {
   position: relative;
@@ -455,32 +455,34 @@
   position: absolute !important;
   top: 50% !important;
   left: 50% !important;
-  width: 104% !important;
+  width: 100% !important;
   height: auto !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
   aspect-ratio: 16 / 9 !important;
+  object-fit: contain !important;
   transform: translate(-50%, -50%) !important;
   pointer-events: none !important;
-  opacity: 0;
-  transition: opacity 240ms ease;
-}
-.app[data-testid="course"] .course-film-band.is-live iframe {
   opacity: 1;
 }
 .app[data-testid="course"] .course-film-band .j-tap-catcher,
 .app[data-testid="course"] .course-film-band .film-tap {
   position: absolute;
   inset: 0;
-  z-index: 5;
+  z-index: 8;
   width: 100%;
   height: 100%;
   aspect-ratio: auto;
   top: 0;
   border: 0;
-  background: transparent;
+  background: rgba(0, 0, 0, 0.001);
   pointer-events: auto;
 }
 .app[data-testid="course"] .course-body {
-  padding: 0 18px 24px;
+  padding: 0 18px calc(72px + env(safe-area-inset-bottom, 0px));
+}
+.app[data-testid="course"] .garden-card {
+  margin-bottom: 28px;
 }
 .app[data-testid="course"] .big-play { display: none; }
 .player-card .poster { position: absolute; inset: 0; background-size: contain; background-position: center; background-repeat: no-repeat; opacity: 1; }

@@ -108,37 +108,48 @@
 /* A parked host used to slide to -200vw. The cropped film is wider than the phone, so that shift left the picture sticking back over the next hors d'oeuvre. */
 .yt-host.off { visibility: hidden !important; pointer-events: none !important; }
 .yt-host.off iframe { top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; transform: none !important; }
-/* F band: 16:9 contain, overflow clips a few percent of YT's title strip. Faces stay in frame. */
+/* F band: 16:9 contain. Portrait sources grow the band, still uncropped. */
 .j-film-band {
   position: absolute;
   top: calc(56px + var(--safe-top));
   left: 0;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: calc(100vw * 9 / 16);
+  max-height: 60dvh;
   overflow: hidden;
   background: #0F3B3A;
   pointer-events: none;
 }
+.journey[data-vertical='yes'] .j-film-band {
+  height: min(60dvh, calc(100vw * 16 / 9));
+}
 .yt-host iframe,
-.j-film-band iframe {
+.j-film-band iframe,
+.yt-host.is-live iframe,
+.yt-host.is-live .j-film-band iframe,
+.journey[data-playing='yes'] .yt-host.on iframe,
+.overlay .yt-host iframe,
+.strict .yt-host iframe {
   position: absolute !important;
   top: 50% !important;
   left: 50% !important;
   height: auto !important;
-  width: 104% !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
   aspect-ratio: 16 / 9 !important;
-  max-height: none !important;
+  object-fit: contain !important;
   transform: translate(-50%, -50%) !important;
   border: 0;
   z-index: 0;
-  opacity: 0;
-  transition: opacity 240ms ease;
+  opacity: 1;
   pointer-events: none !important;
 }
-.yt-host.is-live iframe,
-.yt-host.is-live .j-film-band iframe,
-.journey[data-playing='yes'] .yt-host.on iframe {
-  opacity: 1;
+.journey[data-vertical='yes'] .yt-host iframe,
+.journey[data-vertical='yes'] .j-film-band iframe {
+  aspect-ratio: 9 / 16 !important;
+  width: auto !important;
+  height: 100% !important;
 }
 .yt-host.on:not(.is-live) .j-film-band::after {
   content: '';
@@ -149,26 +160,33 @@
   pointer-events: none;
 }
 .yt-title-mask { position: absolute; left: 0; right: 0; top: 0; height: 56px; z-index: 2; pointer-events: none; background: linear-gradient(#000 0 70%, transparent); }
-.yt-host iframe, .overlay .yt-host iframe, .strict .yt-host iframe, .j-film-band iframe { pointer-events: none !important; }
 .j-tap-catcher {
   position: absolute;
   top: calc(56px + var(--safe-top));
   left: 0;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  z-index: 6;
-  background: transparent;
+  height: calc(100vw * 9 / 16);
+  max-height: 60dvh;
+  z-index: 12;
+  background: rgba(0, 0, 0, 0.001);
   pointer-events: auto;
   touch-action: none;
+  border: 0;
+  padding: 0;
+}
+.journey[data-vertical='yes'] .j-tap-catcher {
+  height: min(60dvh, calc(100vw * 16 / 9));
 }
 .journey[data-playing='yes'] .j-poster-play,
 .journey[data-playing='yes'] video::-webkit-media-controls,
 .journey[data-playing='yes'] video::-webkit-media-controls-overlay-play-button,
 .journey[data-playing='yes'] video::-webkit-media-controls-start-playback-button { display: none !important; opacity: 0; }
-.j-poster { position: absolute; inset: 0; background: #0F3B3A; }
+.j-poster { position: absolute; inset: 0; z-index: 4; background: #0F3B3A; transition: opacity 280ms ease; }
+.j-poster.is-clear { opacity: 0; pointer-events: none; }
 html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/dawn-courtyard.jpg'); }
 .j-poster-play { position: absolute; left: 50%; top: 26%; z-index: 7; width: 76px; height: 76px; margin: -38px 0 0 -38px; border: 0; border-radius: 50%; display: grid; place-items: center; padding: 0 0 0 4px; background: #d4a84b; color: #1a1408; box-shadow: 0 10px 30px rgba(0,0,0,0.35); cursor: pointer; }
-.j-poster img { position: absolute; left: 0; top: calc(56px + var(--safe-top)); width: 100%; height: auto; aspect-ratio: 16 / 9; max-width: none; object-fit: contain; opacity: 0.9; }
+.j-poster img { position: absolute; left: 0; top: calc(56px + var(--safe-top)); width: 100%; height: calc(100vw * 9 / 16); max-height: 60dvh; max-width: none; object-fit: contain; opacity: 0.9; }
+.journey[data-vertical='yes'] .j-poster img { height: min(60dvh, calc(100vw * 16 / 9)); }
 .j-poster::after { content: none; }
 .j-poster.breathe img { animation: breathe 2.4s ease-in-out infinite; }
 @keyframes breathe { 50% { opacity: 0.55; } }
@@ -191,7 +209,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 
 /* Chrome over (or around) the clip. Controls and the caption take taps; the rest falls through to the film. */
 .j-chrome { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
-.j-chrome .rail, .j-chrome .clip-foot, .j-chrome .chip, .j-chrome .j-sound, .j-chrome .j-swipe-hint, .j-chrome button, .j-chrome a, .j-chrome .j-more-tab, .j-chrome .j-board, .j-chrome .j-board-back { pointer-events: auto; }
+.j-chrome .rail, .j-chrome .clip-foot, .j-chrome .chip, .j-chrome .j-sound, .j-chrome .j-swipe-hint, .j-chrome button, .j-chrome a, .j-chrome .j-more-tab, .j-chrome .j-board, .j-chrome .j-board-back, .j-chrome .j-tap-catcher { pointer-events: auto; }
 .j-chrome .pill, .j-chrome .chip { touch-action: manipulation; }
 .j-chrome .caption {
   pointer-events: auto; cursor: pointer; background: none; border: 0; padding: 0; text-align: left;
@@ -251,12 +269,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   box-shadow: none;
 }
 .journey[data-words-in-picture='yes'] .yt-host iframe {
-  top: calc(56px + var(--safe-top)) !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: auto !important;
-  aspect-ratio: 16 / 9 !important;
-  transform: none !important;
+  pointer-events: none !important;
 }
 .journey[data-words-in-picture='yes'] .j-chrome .caption,
 .j-caption-clear {
@@ -336,10 +349,14 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .strict .j-film-band iframe {
   top: 50% !important;
   left: 50% !important;
-  width: 104% !important;
+  width: 100% !important;
   height: auto !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
   aspect-ratio: 16 / 9 !important;
+  object-fit: contain !important;
   transform: translate(-50%, -50%) !important;
+  pointer-events: none !important;
 }
 .strict .j-chrome .caption { display: none; }
 .strict .j-hairline-row { top: calc(12px + var(--safe-top)); }
@@ -419,19 +436,19 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
    It stays in normal flow, left-aligned, so its hit boxes sit above the speed chip and the talk button. */
 .j-chrome .clip-foot .j-level-choices {
   position: static;
-  justify-self: start;
-  align-self: flex-start;
+  justify-self: stretch;
+  align-self: stretch;
   flex: none;
   z-index: auto;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  width: max-content;
-  max-width: 11rem;
-  margin: 0 0 2px;
-  padding: 4px 8px;
-  border-radius: 12px;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+  max-width: none;
+  margin: 0 0 10px;
+  padding: 4px;
+  border-radius: 14px;
   border: 1px solid rgba(241, 213, 138, 0.45);
   background: rgba(8, 24, 24, 0.82);
   pointer-events: auto;
@@ -442,23 +459,24 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   border: 0;
   background: transparent;
   color: rgba(246, 238, 220, 0.82);
-  border-radius: 6px;
-  padding: 2px 4px;
+  border-radius: 10px;
+  padding: 8px 6px;
   min-height: 0;
   min-width: 0;
   width: auto;
-  max-width: 100%;
+  flex: 1 1 0;
+  max-width: none;
   font-weight: 700;
   font-size: 12px;
   line-height: 1.25;
-  text-align: left;
+  text-align: center;
   white-space: nowrap;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
   box-shadow: none;
   touch-action: manipulation;
 }
 .j-chrome .clip-foot .j-level-choices button.on {
-  background: transparent;
+  background: rgba(241, 213, 138, 0.16);
   color: #f1d58a;
   border: 0;
 }
@@ -529,6 +547,9 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   padding: 16px 20px 8px;
   justify-content: flex-start;
 }
+.journey.phase-feed[data-vertical='yes'] .fr-words {
+  top: calc(56px + var(--safe-top) + min(60dvh, 100vw * 16 / 9));
+}
 .j-paused-mark {
   position: absolute;
   left: 16px;
@@ -576,8 +597,22 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   border-radius: 4px;
   background: #d4a84b;
 }
+.j-board .ready-controls,
+.journey.phase-feed .j-chrome .j-board .ready-controls {
+  position: static;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px 10px;
+  width: 100%;
+  margin: 0 0 12px;
+}
+.j-board .ready-controls input[type='range'] {
+  grid-column: 1 / -1;
+  width: 100%;
+}
 .j-board-back {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: 26;
   background: rgba(6, 18, 18, 0.45);

@@ -14,7 +14,9 @@ import { nextPlaybackRate } from '@/lib/playback-rate'
 import { feedFilmCaption } from '@/lib/spoken-caption'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
-import { laneClips } from '@/lib/lanes'
+import { playableLaneClips } from '@/lib/lanes'
+import { BOARD_ARM_MS, boardClickAllowed, pointerTravel } from '@/lib/board-gestures'
+import { YT_CHROME_HOLD_MS, pauseMarkVisible } from '@/lib/yt-cover'
 import { isoWeek } from '@/lib/trends'
 import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, hostShouldShow, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, verticalSwipe } from '@/lib/film-advance'
 import { acceptLevelTap, type LevelTap } from '@/lib/level-tap'
@@ -214,8 +216,14 @@ export function Journey(props: JourneyProps) {
   const [speed, setSpeed] = useState(1)
   const speedRef = useRef(1)
   const [boardOpen, setBoardOpen] = useState(false)
+  const boardOpenRef = useRef(false)
+  boardOpenRef.current = boardOpen
   const [swipeHint, setSwipeHint] = useState(true)
-  const boardDrag = useRef<{ y: number; opened: boolean } | null>(null)
+  const [coverHeld, setCoverHeld] = useState(true)
+  const [clipEnded, setClipEnded] = useState(false)
+  const playStartedAt = useRef(0)
+  const boardOpenedAt = useRef(0)
+  const boardDrag = useRef<{ x: number; y: number; opened: boolean } | null>(null)
   useEffect(() => {
     if (index !== 0) setSwipeHint(false)
   }, [index])
@@ -643,6 +651,9 @@ export function Journey(props: JourneyProps) {
       setLineAt(-1)
       setSpokenAt(null)
       setAppetiserOver(false)
+      setClipEnded(false)
+      setCoverHeld(true)
+      playStartedAt.current = 0
       if (item) {
         const seen = rememberSeenCard(item.cutId, item.card || 'talk', kind)
         seenRef.current = new Set(seen.cards)
@@ -746,7 +757,7 @@ export function Journey(props: JourneyProps) {
         let clips = data.clips
         let firstMode: Mode = 'hors'
         if (props.lane) {
-          const own = laneClips(opening.clips, opening.route.cuts, props.lane, opening.laneTitles[props.lane] || props.lane)
+          const own = playableLaneClips(opening.clips, opening.route.cuts, props.lane, opening.laneTitles[props.lane] || props.lane)
           if (own.length) clips = [...own, ...clips.filter((clip) => !own.some((row) => row.cutId === clip.cutId))]
         }
         const asked = props.clip ? opening.clips[String(props.clip)] : undefined
@@ -1220,6 +1231,9 @@ export function Journey(props: JourneyProps) {
     const onEnded = () => {
       keepHarvest()
       if (modeRef.current !== 'hors') return
+      wantPlayRef.current = null
+      userPausedRef.current = true
+      window.clearInterval(playWatch.current)
       const flagsNow = sessionFlags()
       if (!signedIn && !flagsNow.firstEnded) {
         setSessionFlags({ ...sessionFlags(), firstEnded: true })
@@ -1228,8 +1242,8 @@ export function Journey(props: JourneyProps) {
           return
         }
       }
-      const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current)
-      if (next == null) setToast(poolEndToast())
+      const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current, Boolean(props.lane))
+      if (next == null) setClipEnded(true)
       else void advance(next, 'auto')
     }
     const onError = (event: Event) => {
@@ -1240,7 +1254,7 @@ export function Journey(props: JourneyProps) {
       setErrorNote("This one can't play here")
       if (current && signedIn) void fetch('/api/hearts/unplayable', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cutId: current.cutId, code }) }).catch(() => undefined)
       window.setTimeout(() => {
-        const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current)
+        const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current, Boolean(props.lane))
         if (next == null) setToast(poolEndToast())
         else void advance(next, 'auto')
       }, 900)
@@ -1260,7 +1274,7 @@ export function Journey(props: JourneyProps) {
     if (window.history.state?.hearts?.sheet) window.history.back()
     if (pendingAfterSheet.current === 'next') {
       pendingAfterSheet.current = null
-      const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current)
+      const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current, Boolean(props.lane))
       if (next == null) setToast(poolEndToast())
       else void advance(next, 'auto')
     } else window.setTimeout(() => tryPlay(), 0)
@@ -1341,6 +1355,8 @@ export function Journey(props: JourneyProps) {
         }
         if (!seen.ended) {
           seen.ended = true
+          wantPlayRef.current = null
+          userPausedRef.current = true
           window.dispatchEvent(new CustomEvent('hearts:ended'))
         }
         return
@@ -1395,14 +1411,14 @@ export function Journey(props: JourneyProps) {
     hushLeaving()
     dismissCoach()
     let list = itemsRef.current
-    let target = swipeTarget(list, indexRef.current, modeRef.current, swipe, seenRef.current)
+    let target = swipeTarget(list, indexRef.current, modeRef.current, swipe, seenRef.current, Boolean(props.lane))
     if (target === null) {
       const wider = sessionPlaylist(list, opening.clips, heartRef.current?.served.length || 0, backgroundsBase)
       if (wider.length > list.length) {
         itemsRef.current = wider
         setItems(wider)
         list = wider
-        target = swipeTarget(list, indexRef.current, modeRef.current, swipe, seenRef.current)
+        target = swipeTarget(list, indexRef.current, modeRef.current, swipe, seenRef.current, Boolean(props.lane))
       }
     }
     if (target === null) {
@@ -1455,8 +1471,8 @@ export function Journey(props: JourneyProps) {
       stepLoopRef.current(next ? 1 : -1)
     }
     const onWheel = (event: WheelEvent) => {
-      if (sheetRef.current || typing(event)) return
-      if ((event.target as HTMLElement | null)?.closest?.('.j-sheet, .caption[data-expanded="true"]')) return
+      if (sheetRef.current || boardOpenRef.current || typing(event)) return
+      if ((event.target as HTMLElement | null)?.closest?.('.j-sheet, .caption[data-expanded="true"], [data-testid="feed-board"], [data-testid="more-board"], [data-testid="board-back"]')) return
       if (Math.abs(event.deltaY) < 24 || Math.abs(event.deltaY) < Math.abs(event.deltaX)) return
       event.preventDefault()
       const now = performance.now()
@@ -1699,7 +1715,7 @@ export function Journey(props: JourneyProps) {
     if (phase !== 'feed' || items.length < 2) return []
     const out: { swipe: Swipe; at: number }[] = []
     for (const swipe of PEEK_SWIPES) {
-      const raw = swipeTarget(items, index, mode, swipe, seenRef.current)
+      const raw = swipeTarget(items, index, mode, swipe, seenRef.current, Boolean(props.lane))
       if (raw === null) continue
       const at = settleOnLevel(items, raw, mode, raw < index ? -1 : 1)
       if (at !== null && at !== index) out.push({ swipe, at })
@@ -1843,8 +1859,20 @@ export function Journey(props: JourneyProps) {
   const feedCard = false
   const started = playerReady && host.played && LIVE.has(host.state)
   const playingOut = playerReady && host.played && host.state === STATE.PLAYING
+  useEffect(() => {
+    if (playingOut && !clipEnded) {
+      if (!playStartedAt.current) playStartedAt.current = performance.now()
+      const left = YT_CHROME_HOLD_MS - (performance.now() - playStartedAt.current)
+      const timer = window.setTimeout(() => setCoverHeld(false), Math.max(0, left))
+      return () => window.clearTimeout(timer)
+    }
+    playStartedAt.current = 0
+    setCoverHeld(true)
+  }, [playingOut, clipEnded, item?.cutId, mode])
   const keepAppetiserPoster = mode === 'appetiser' && appetiserHeld && host.state !== STATE.PLAYING
-  const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (keepAppetiserPoster || !playingOut || Boolean(errorNote) || offline)))
+  const userPaused = userPausedRef.current
+  const clipPaused = host.state === STATE.PAUSED
+  const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (keepAppetiserPoster || coverHeld || clipEnded || Boolean(errorNote) || offline || (clipPaused && userPaused))))
   const waitingToPlay = phase === 'feed' && playerReady && (keepAppetiserPoster || !playingOut) && !errorNote && !offline
   // The gold play control is a resume after a pause, or a way in when autoplay never starts.
   // It is not a gate on the way into a clip.
@@ -1918,7 +1946,7 @@ export function Journey(props: JourneyProps) {
   void readyTick
 
   // A Short (or a film with burned-in words) has text in the picture: the speaker sits at the top, and our caption sits in the bar below the 16:9 band.
-  const speakerRow = item ? (
+  const speakerRow = item?.speaker ? (
     <div className="j-speaker j-speaker-plate" key={item.cutId} data-speaker={item.speaker} data-cut={item.cutId}>
       <a className="speaker-row" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-link" onClick={(event) => { if (needsAccount('save')) event.preventDefault() }}>
         <Avatar name={item.speaker} portrait={item.portrait} />
@@ -1932,25 +1960,38 @@ export function Journey(props: JourneyProps) {
   const clipEnd = item ? (mode === 'hors' ? item.hors.end : appetiserEnd(item)) : 0
   const clipLength = Math.max(0, clipEnd - clipStart)
   const clipElapsed = spokenAt != null ? Math.max(0, Math.min(clipLength, spokenAt - clipStart)) : 0
-  const clipLeft = Math.max(0, clipLength - clipElapsed)
   const clipPct = clipLength ? Math.min(100, (clipElapsed / clipLength) * 100) : 0
+  const nextClipAt = item ? swipeTarget(items, index, mode, 'next', seenRef.current, Boolean(props.lane)) : null
   const spokenSentences = item?.framingTrack?.sentences?.length
     ? item.framingTrack.sentences
     : sentencesFromCaptions(mode === 'hors' ? item?.hors.lines : item?.appetiser.lines, clipStart, clipEnd)
-  const pausedMark = host.played && host.state === STATE.PAUSED
+  const pausedMark = pauseMarkVisible({ paused: clipPaused, ended: clipEnded, userPaused })
+  const openDrawer = () => {
+    boardOpenedAt.current = performance.now()
+    setBoardOpen(true)
+  }
+  const closeDrawer = () => {
+    setBoardOpen(false)
+  }
+  const boardAction = (event: { stopPropagation(): void; preventDefault(): void; clientX: number; clientY: number }, fn: () => void) => {
+    event.stopPropagation()
+    event.preventDefault()
+    const start = boardDrag.current
+    const travel = start ? pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY }) : 0
+    if (!boardClickAllowed({ openedAt: boardOpenedAt.current, now: performance.now(), travel })) return
+    fn()
+  }
   const openBoard = (event: ReactPointerEvent) => {
     event.stopPropagation()
     event.preventDefault()
-    boardDrag.current = { y: event.clientY, opened: true }
+    boardDrag.current = { x: event.clientX, y: event.clientY, opened: true }
     event.currentTarget.setPointerCapture?.(event.pointerId)
   }
   const moveBoard = (event: ReactPointerEvent) => {
     const start = boardDrag.current
     if (!start) return
     event.stopPropagation()
-    if ((event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
-    if (!boardOpen && event.clientY < start.y - 24) setBoardOpen(true)
-    if (boardOpen && event.clientY > start.y + 36) setBoardOpen(false)
+    event.preventDefault()
   }
   const finishBoard = (event: ReactPointerEvent) => {
     const start = boardDrag.current
@@ -1958,11 +1999,15 @@ export function Journey(props: JourneyProps) {
     if (!start) return
     event.stopPropagation()
     event.preventDefault()
-    if ((event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
     const dy = event.clientY - start.y
-    if (dy < -28) setBoardOpen(true)
-    else if (dy > 36) setBoardOpen(false)
-    else if (Math.abs(dy) < 14) setBoardOpen((open) => !open)
+    const travel = pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY })
+    if (travel >= 8 && (event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
+    if (dy < -28) openDrawer()
+    else if (dy > 36) closeDrawer()
+    else if (travel < 14) {
+      if (boardOpen) closeDrawer()
+      else openDrawer()
+    }
   }
   const visiblePlayer = () => {
     const id = hosts.current[visibleRef.current].playerId
@@ -1996,7 +2041,7 @@ export function Journey(props: JourneyProps) {
         </div>
       </div>
       {pausedMark ? <span className="j-paused-mark" data-testid="paused-mark" aria-hidden>❚❚</span> : null}
-      {swipeHint && !boardOpen && mode === 'hors' && index === 0 ? (
+      {swipeHint && !boardOpen && mode === 'hors' && nextClipAt != null ? (
         <p className="j-swipe-hint" data-testid="swipe-hint">↑ swipe up for the next clip</p>
       ) : null}
       {scenicAppetiser ? (
@@ -2006,33 +2051,49 @@ export function Journey(props: JourneyProps) {
           ))}
         </div>
       ) : null}
-      {!boardOpen ? (
-        <button
-          type="button"
-          className="j-more-tab"
-          data-testid="more-board"
-          aria-expanded={false}
-          aria-label="More"
-          onPointerDown={openBoard}
-          onPointerMove={moveBoard}
-          onPointerUp={finishBoard}
-          onPointerCancel={() => { boardDrag.current = null }}
-          onClick={(event) => event.preventDefault()}
-        >
-          <i />
-          More
-        </button>
+      <button
+        type="button"
+        className="j-tap-catcher"
+        data-testid="film-catcher"
+        aria-label={playingOut ? 'Pause' : 'Play'}
+        onClick={(event) => event.preventDefault()}
+      />
+      <button
+        type="button"
+        className="j-more-tab"
+        data-testid="more-board"
+        aria-expanded={boardOpen}
+        aria-label="More"
+        hidden={boardOpen}
+        onPointerDown={openBoard}
+        onPointerMove={moveBoard}
+        onPointerUp={finishBoard}
+        onPointerCancel={() => { boardDrag.current = null }}
+        onClick={(event) => event.preventDefault()}
+      >
+        <i />
+        More
+      </button>
+      {boardOpen ? (
+        <div
+          className="j-board-back"
+          data-testid="board-back"
+          onPointerDown={(event) => { event.stopPropagation(); event.preventDefault(); closeDrawer() }}
+          onClick={(event) => { event.stopPropagation(); closeDrawer() }}
+        />
       ) : null}
-      {boardOpen ? <div className="j-board-back" data-testid="board-back" onClick={() => setBoardOpen(false)} /> : null}
       {boardOpen ? (
       <div
-        key={item.cutId}
         className="j-board"
         data-testid="feed-board"
+        data-armed={performance.now() - boardOpenedAt.current >= BOARD_ARM_MS ? 'yes' : 'no'}
         onPointerDown={(event) => {
           event.stopPropagation()
-          if ((event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
-          boardDrag.current = { y: event.clientY, opened: true }
+          if ((event.target as HTMLElement).closest('button, a, input, textarea, select, label')) {
+            boardDrag.current = { x: event.clientX, y: event.clientY, opened: true }
+            return
+          }
+          boardDrag.current = { x: event.clientX, y: event.clientY, opened: true }
           event.currentTarget.setPointerCapture?.(event.pointerId)
         }}
         onPointerMove={moveBoard}
@@ -2040,16 +2101,10 @@ export function Journey(props: JourneyProps) {
       >
         <span className="j-board-handle" data-testid="board-handle" />
         {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
-        {mode === 'hors' ? (
-          <div className="ready-controls">
-            <button type="button" className="chip gold" data-testid="speed" aria-label="Playback speed" onClick={cycleSpeed}>{speed}×</button>
-            <span className="chip dark" data-testid="clip-timer">{clock(clipLeft)}</span>
-          </div>
-        ) : null}
       <div className="rail">
-        <button type="button" data-testid="share" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); void share() }} onClick={(event) => event.preventDefault()}><span className="bubble"><ShareIcon /></span>Share</button>
-        <button type="button" aria-pressed={faves.includes(item.id)} data-testid="fave" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); fave() }} onClick={(event) => event.preventDefault()}><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
-        <button type="button" aria-pressed={saved.includes(item.id)} data-testid="save" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); if (!needsAccount('save')) toggleSave(item.id) }} onClick={(event) => event.preventDefault()}><span className="bubble"><SaveIcon /></span>{saved.includes(item.id) ? 'Saved' : 'Save'}</button>
+        <button type="button" data-testid="share" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => boardAction(event, () => { void share() })} onClick={(event) => event.preventDefault()}><span className="bubble"><ShareIcon /></span>Share</button>
+        <button type="button" aria-pressed={faves.includes(item.id)} data-testid="fave" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => boardAction(event, () => fave())} onClick={(event) => event.preventDefault()}><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
+        <button type="button" aria-pressed={saved.includes(item.id)} data-testid="save" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => boardAction(event, () => { if (!needsAccount('save')) toggleSave(item.id) })} onClick={(event) => event.preventDefault()}><span className="bubble"><SaveIcon /></span>{saved.includes(item.id) ? 'Saved' : 'Save'}</button>
       </div>
       <div className="clip-foot j-credits">
         <div
@@ -2058,15 +2113,31 @@ export function Journey(props: JourneyProps) {
           aria-label="Choose how much to watch"
           onPointerDown={(event) => event.stopPropagation()}
         >
-          <button type="button" className={mode === 'hors' ? 'on' : undefined} data-testid="level-clip" aria-pressed={mode === 'hors'} onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); requestClip() }} onClick={(event) => { event.preventDefault(); requestClip() }}>{LEVEL_WORDS[0]}</button>
-          <button type="button" className={mode === 'appetiser' ? 'on' : undefined} data-testid="level-minutes" aria-pressed={mode === 'appetiser'} onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); requestExtract() }} onClick={(event) => { event.preventDefault(); requestExtract() }}>{LEVEL_WORDS[1]}</button>
-          <button type="button" data-testid="level-lecture" onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); requestTalk() }} onClick={(event) => { event.preventDefault(); requestTalk() }}>{LEVEL_WORDS[2]}</button>
+          <button type="button" className={mode === 'hors' ? 'on' : undefined} data-testid="level-clip" aria-pressed={mode === 'hors'} onPointerUp={(event) => boardAction(event, () => requestClip())} onClick={(event) => event.preventDefault()}>{LEVEL_WORDS[0]}</button>
+          <button type="button" className={mode === 'appetiser' ? 'on' : undefined} data-testid="level-minutes" aria-pressed={mode === 'appetiser'} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => event.preventDefault()}>{LEVEL_WORDS[1]}</button>
+          <button type="button" data-testid="level-lecture" onPointerUp={(event) => boardAction(event, () => requestTalk())} onClick={(event) => event.preventDefault()}>{LEVEL_WORDS[2]}</button>
         </div>
+        {currentSpec ? (
+          <div className="ready-controls" data-testid="ready-controls">
+            <button type="button" className="chip gold" data-testid="speed" aria-label="Playback speed" onClick={(event) => boardAction(event, cycleSpeed)}>{speed}×</button>
+            <span className="chip dark" data-testid={mode === 'appetiser' ? 'appetiser-timer' : 'clip-timer'}>{clock(clipElapsed)} / {clock(clipLength)}</span>
+            <input
+              type="range"
+              min={0}
+              max={1000}
+              value={Math.round(clipPct * 10)}
+              data-testid={mode === 'appetiser' ? 'appetiser-scrub' : 'clip-scrub'}
+              aria-label="Place in this talk"
+              onPointerDown={(event) => event.stopPropagation()}
+              onChange={(event) => scrubTo(Number(event.target.value) / 1000)}
+            />
+          </div>
+        ) : null}
         {mode === 'hors' ? (
           <>
             {speakerRow}
-            <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onClick={moreFromSpeaker}>More from {item.speaker} ›</button>
-            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" data-speaker={item.speaker} data-lesson={item.lessonId} onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); requestExtract() }} onClick={(event) => { event.preventDefault(); requestExtract() }}>{(() => {
+            {item.speaker ? <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onPointerUp={(event) => boardAction(event, moreFromSpeaker)} onClick={(event) => event.preventDefault()}>More from {item.speaker} ›</button> : null}
+            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" data-speaker={item.speaker} data-lesson={item.lessonId} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => event.preventDefault()}>{(() => {
               const lead = clipCta.label && !/^learn more\b/i.test(clipCta.label) ? clipCta.label : clipStepUpLabel()
               const seconds = item.talkSeconds || pieceSeconds(item.appetiser)
               return withTalkDetail(lead, 1, seconds)
@@ -2074,31 +2145,20 @@ export function Journey(props: JourneyProps) {
           </>
         ) : (
           <>
-            <div className="ready-controls" data-testid="ready-controls">
-              <button type="button" className="chip gold" data-testid="speed" onClick={cycleSpeed}>{speed}×</button>
-              <span className="chip dark" data-testid="appetiser-timer">{clock(clipElapsed)} / {clock(clipLength)}</span>
-              <input
-                type="range"
-                min={0}
-                max={1000}
-                value={Math.round(clipPct * 10)}
-                data-testid="appetiser-scrub"
-                aria-label="Place in this talk"
-                onChange={(event) => scrubTo(Number(event.target.value) / 1000)}
-              />
-            </div>
-            <a className="pill gold block" href={course} onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); requestTalk() }} onClick={(event) => { event.preventDefault(); requestTalk() }} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk" data-speaker={item.speaker} data-lesson={item.lessonId}>{(() => {
+            <a className="pill gold block" href={course} onPointerUp={(event) => boardAction(event, () => requestTalk())} onClick={(event) => event.preventDefault()} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk" data-speaker={item.speaker} data-lesson={item.lessonId}>{(() => {
               const talks = Object.values(opening.clips).filter((row) => row.courseId === item.courseId).reduce((ids, row) => ids.add(row.lessonId), new Set<number>()).size
               const computed = talkStepUpLabel(talks, item.talkSeconds)
               const custom = talkCta.label && !/^learn more\b/i.test(talkCta.label) && talkCta.label !== talkStepUpLabel(1) && (talkCta.running || talkCta.label !== computed)
               return custom ? withTalkDetail(talkCta.label, talks, item.talkSeconds) : computed
             })()}</a>
-            <div className="speaker-card">
-              <Avatar name={item.speaker} portrait={item.portrait} />
-              <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b>{item.laneLabel ? <small>On {item.laneLabel}</small> : null}</a>
-              <FollowButton slug={item.speakerSlug} className="follow teal" />
-            </div>
-            <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onClick={moreFromSpeaker}>More from {item.speaker} ›</button>
+            {item.speaker ? (
+              <div className="speaker-card">
+                <Avatar name={item.speaker} portrait={item.portrait} />
+                <a className="who" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-bio-link"><b>{item.speaker}</b>{item.laneLabel ? <small>On {item.laneLabel}</small> : null}</a>
+                <FollowButton slug={item.speakerSlug} className="follow teal" />
+              </div>
+            ) : null}
+            {item.speaker ? <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onPointerUp={(event) => boardAction(event, moreFromSpeaker)} onClick={(event) => event.preventDefault()}>More from {item.speaker} ›</button> : null}
           </>
         )}
       </div>
@@ -2108,7 +2168,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-player-state={host.state} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
+    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-cover={showPoster ? 'yes' : 'no'} data-next-clip={nextClipAt == null ? 'none' : String(nextClipAt)} data-playhead={spokenAt == null ? '' : String(Math.round(spokenAt * 10) / 10)} data-player-state={host.state} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
       <PageHelp page={phase === 'help' ? 'help' : phase === 'feed' ? (mode === 'appetiser' ? 'appetiser' : 'feed') : 'start'} />
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
@@ -2170,7 +2230,7 @@ export function Journey(props: JourneyProps) {
             />
           ) : null}
           {showPoster && item && !slide ? (
-            <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}${scenicAppetiser ? ' scenic' : ''}`} data-testid="poster-frame" data-poster={mode === 'appetiser' && item.cleanThumb ? 'frame' : 'own'}>
+            <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}${scenicAppetiser ? ' scenic' : ''}${playingOut && !coverHeld ? ' is-clear' : ''}`} data-testid="poster-frame" data-poster={mode === 'appetiser' && item.cleanThumb ? 'frame' : 'own'}>
               <PosterStill item={item} mode={mode} />
               <span className="j-poster-mark" aria-hidden><Arch size={28} /></span>
               {showPlayControl ? (
@@ -2198,9 +2258,15 @@ export function Journey(props: JourneyProps) {
             <Slide item={item} style={slide} onMore={() => void stepUp()} />
           </div>
         ) : null}
-        <div className="j-chrome" data-swipe={overlay && !feedCard ? undefined : ''} {...(overlay && !feedCard ? {} : swipe)}>
+        <div className="j-chrome" data-swipe={boardOpen ? undefined : ''} {...(boardOpen ? {} : swipe)}>
           {chrome}
         </div>
+        {clipEnded && mode === 'hors' && item && phase === 'feed' && nextClipAt == null ? (
+          <div className="end-card" data-testid="feed-end">
+            <p className="eyebrow">That is the last clip here.</p>
+            <button type="button" className="pill gold block" data-testid="end-lanes" onClick={() => { window.location.assign(`${base}/lanes`) }}>Try another lane</button>
+          </div>
+        ) : null}
         {appetiserOver && mode === 'appetiser' && item && phase === 'feed' ? (
           <div className="end-card" data-testid="appetiser-end">
             <p className="eyebrow">This one is finished.</p>

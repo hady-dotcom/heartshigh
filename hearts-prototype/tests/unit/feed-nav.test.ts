@@ -89,6 +89,15 @@ test('the hors d’oeuvre loop steps from one talk to the next, and stops when t
   assert.equal(swipeTarget(list, at, 'hors', 'next', seen), null)
 })
 
+test('a lane still walks later clips after they have already been marked seen', () => {
+  const list = feed()
+  const seen = new Set(list.map((row) => cardKey(row, 'hors')))
+  assert.equal(swipeTarget(list, 0, 'hors', 'next', seen, true), 1)
+  assert.equal(swipeTarget(list, 1, 'hors', 'next', seen, true), 2)
+  assert.equal(swipeTarget(list, list.length - 1, 'hors', 'next', seen, true), null)
+  assert.equal(swipeTarget(list, 0, 'hors', 'next', seen), null)
+})
+
 test('on appetisers, every swipe lands on another appetiser, never on a film, scene or question card', () => {
   const list = feed()
   const talks = list.map((row, index) => ({ row, index })).filter(({ row }) => !isInterstitial(row))

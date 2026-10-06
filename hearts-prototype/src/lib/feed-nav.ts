@@ -79,12 +79,26 @@ function unseenCard(list: NavItem[], at: number, level: FeedLevel, seen: Readonl
   return !(level === 'hors' && seen.has(itemKey(row)))
 }
 
-export function swipeTarget(list: NavItem[], index: number, level: FeedLevel, swipe: Swipe, seen?: ReadonlySet<string>): number | null {
+export function swipeTarget(list: NavItem[], index: number, level: FeedLevel, swipe: Swipe, seen?: ReadonlySet<string>, laneOrder = false): number | null {
   const item = list[index]
   if (!item || list.length < 2) return null
   if (swipe === 'next' || swipe === 'prev') {
     const step = swipe === 'next' ? 1 : -1
     const order = ring(list.length, index, step)
+    // A dedicated lane walks its list in order, even if those talks were marked seen on Home.
+    // The mixed pool still skips seen talks and stops when the pool is exhausted.
+    if (laneOrder) {
+      if (swipe === 'prev') {
+        for (let at = index - 1; at >= 0; at--) {
+          if (onLevel(list[at], level) && (level !== 'hors' || !isInterstitial(list[at]))) return at
+        }
+        return null
+      }
+      for (let at = index + 1; at < list.length; at++) {
+        if (onLevel(list[at], level)) return at
+      }
+      return null
+    }
     // Next skips a talk the learner has already been shown, then stops at the end of the pool.
     // It also skips a film or typing card. Prev is one step back to the previous talk clip.
     // It must not skip that clip for being seen, and it must not stop on a card between two talks.

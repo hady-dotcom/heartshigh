@@ -13,10 +13,15 @@ export function laneClips(clips: Record<string, FeedItem>, cuts: CutInfo[], lane
   return [...starters, ...tagged].map((row) => ({ ...row.clip, laneKey: lane, lane, laneLabel: title }))
 }
 
+/** Clips a lane can actually play: a YouTube id, and not a typing or face-film card. */
+export function playableLaneClips(clips: Record<string, FeedItem>, cuts: CutInfo[], lane: string, title: string): FeedItem[] {
+  return laneClips(clips, cuts, lane, title).filter((clip) => Boolean(clip.youtubeId) && (!clip.card || clip.card === 'talk'))
+}
+
 /** Every lane that has at least one clip, in the lanes' own order, with its clips. Opt-in lanes stay out. */
 export function lanesWithClips(route: { lanes: LaneDef[]; cuts: CutInfo[] }, clips: Record<string, FeedItem>, titles: Record<string, string>) {
   return route.lanes
     .filter((lane) => !lane.optInOnly)
-    .map((lane) => ({ key: lane.key, title: titles[lane.key] || lane.title, clips: laneClips(clips, route.cuts, lane.key, titles[lane.key] || lane.title) }))
+    .map((lane) => ({ key: lane.key, title: titles[lane.key] || lane.title, clips: playableLaneClips(clips, route.cuts, lane.key, titles[lane.key] || lane.title) }))
     .filter((lane) => lane.clips.length > 0)
 }

@@ -12,6 +12,8 @@ import { placeDots } from '@/lib/timeline-dots'
 import { coursePlayVisible } from '@/lib/course-controls'
 import { nextPlaybackRate } from '@/lib/playback-rate'
 import { createPlayer, destroyPlayer, getPlayer, hasSound, pauseKeepingSound, resume, soundOn, STATE, UNPLAYABLE } from '@/lib/yt'
+import { boardClickAllowed, pointerTravel } from '@/lib/board-gestures'
+import { YT_CHROME_HOLD_MS } from '@/lib/yt-cover'
 import { SwarmList } from '@/components/app/swarm-list'
 import { initialsOf } from '@/lib/swarm-sort'
 import { HeartIcon, ImageIcon, LockIcon, MicIcon } from '../icons'
@@ -144,7 +146,10 @@ export function CoursePlayer({
   const [boot, setBoot] = useState(0)
   const [endCard, setEndCard] = useState(false)
   const [boardOpen, setBoardOpen] = useState(false)
-  const boardDrag = useRef<{ y: number } | null>(null)
+  const [coverHeld, setCoverHeld] = useState(true)
+  const playStartedAt = useRef(0)
+  const boardOpenedAt = useRef(0)
+  const boardDrag = useRef<{ x: number; y: number } | null>(null)
   const [count, setCount] = useState(5)
   const [held, setHeld] = useState<number[]>(deferred.map((row) => row.pointId))
   const heldRef = useRef(held)
@@ -467,19 +472,30 @@ export function CoursePlayer({
     setSpeed(next)
     applySpeed(next)
   }
+  const openDrawer = () => {
+    boardOpenedAt.current = performance.now()
+    setBoardOpen(true)
+  }
+  const closeDrawer = () => setBoardOpen(false)
+  const boardAction = (event: { stopPropagation(): void; preventDefault(): void; clientX: number; clientY: number }, fn: () => void) => {
+    event.stopPropagation()
+    event.preventDefault()
+    const start = boardDrag.current
+    const travel = start ? pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY }) : 0
+    if (!boardClickAllowed({ openedAt: boardOpenedAt.current, now: performance.now(), travel })) return
+    fn()
+  }
   const openBoard = (event: ReactPointerEvent) => {
     event.stopPropagation()
     event.preventDefault()
-    boardDrag.current = { y: event.clientY }
+    boardDrag.current = { x: event.clientX, y: event.clientY }
     event.currentTarget.setPointerCapture?.(event.pointerId)
   }
   const moveBoard = (event: ReactPointerEvent) => {
     const start = boardDrag.current
     if (!start) return
     event.stopPropagation()
-    if ((event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
-    if (!boardOpen && event.clientY < start.y - 24) setBoardOpen(true)
-    if (boardOpen && event.clientY > start.y + 36) setBoardOpen(false)
+    event.preventDefault()
   }
   const finishBoard = (event: ReactPointerEvent) => {
     const start = boardDrag.current
@@ -487,11 +503,15 @@ export function CoursePlayer({
     if (!start) return
     event.stopPropagation()
     event.preventDefault()
-    if ((event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
     const dy = event.clientY - start.y
-    if (dy < -28) setBoardOpen(true)
-    else if (dy > 36) setBoardOpen(false)
-    else if (Math.abs(dy) < 14) setBoardOpen((open) => !open)
+    const travel = pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY })
+    if (travel >= 8 && (event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
+    if (dy < -28) openDrawer()
+    else if (dy > 36) closeDrawer()
+    else if (travel < 14) {
+      if (boardOpen) closeDrawer()
+      else openDrawer()
+    }
   }
 
   const resumeNow = () => {
@@ -550,9 +570,19 @@ export function CoursePlayer({
   const scenicPoster = !ownPoster
   const places = new Map(placeDots(views.map((row) => ({ id: row.id, second: row.second })), total, trackWidth).map((row) => [row.id, row]))
 
-  const showCover = !playing || ended || mode === 'loading' || !lit
+  const showCover = coverHeld || !playing || ended || mode === 'loading' || !lit
+  useEffect(() => {
+    if (playing && !ended) {
+      if (!playStartedAt.current) playStartedAt.current = performance.now()
+      const left = YT_CHROME_HOLD_MS - (performance.now() - playStartedAt.current)
+      const timer = window.setTimeout(() => setCoverHeld(false), Math.max(0, left))
+      return () => window.clearTimeout(timer)
+    }
+    playStartedAt.current = 0
+    setCoverHeld(true)
+  }, [playing, ended])
   return (
-    <div data-testid="player" data-mode={mode} data-playing={playing ? 'yes' : 'no'} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-popup-layout={overPlayer ? 'over' : 'strict'}>
+    <div data-testid="player" data-mode={mode} data-playing={playing ? 'yes' : 'no'} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-cover={showCover ? 'yes' : 'no'} data-popup-layout={overPlayer ? 'over' : 'strict'}>
       <div className="course-film">
         <div className="j-hairline-row">
           <div className={`j-hairline${mode === 'loading' ? ' shimmer' : ''}`} data-testid="hairline"><i style={{ width: `${Math.min(100, (time / total) * 100)}%` }} /></div>
@@ -598,40 +628,46 @@ export function CoursePlayer({
         </div>
         <SpokenWords sentences={sentences} time={time} title={courseTitle} titles={[courseTitle, partLabel]} from={0} to={length || duration} />
       </div>
-      {!boardOpen ? (
-        <button
-          type="button"
-          className="j-more-tab"
-          data-testid="more-board"
-          aria-expanded={false}
-          aria-label="More"
-          onPointerDown={openBoard}
-          onPointerMove={moveBoard}
-          onPointerUp={finishBoard}
-          onPointerCancel={() => { boardDrag.current = null }}
-          onClick={(event) => event.preventDefault()}
-        >
-          <i />
-          More
-        </button>
+      <button
+        type="button"
+        className="j-more-tab"
+        data-testid="more-board"
+        aria-expanded={boardOpen}
+        aria-label="More"
+        hidden={boardOpen}
+        onPointerDown={openBoard}
+        onPointerMove={moveBoard}
+        onPointerUp={finishBoard}
+        onPointerCancel={() => { boardDrag.current = null }}
+        onClick={(event) => event.preventDefault()}
+      >
+        <i />
+        More
+      </button>
+      {boardOpen ? (
+        <div
+          className="j-board-back"
+          data-testid="board-back"
+          onPointerDown={(event) => { event.stopPropagation(); event.preventDefault(); closeDrawer() }}
+          onClick={(event) => { event.stopPropagation(); closeDrawer() }}
+        />
       ) : null}
-      {boardOpen ? <div className="j-board-back" data-testid="board-back" onClick={() => setBoardOpen(false)} /> : null}
       {boardOpen ? (
         <div
           className="j-board course-board"
           data-testid="feed-board"
           onPointerDown={(event) => {
             event.stopPropagation()
+            boardDrag.current = { x: event.clientX, y: event.clientY }
             if ((event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
-            boardDrag.current = { y: event.clientY }
             event.currentTarget.setPointerCapture?.(event.pointerId)
           }}
           onPointerMove={moveBoard}
           onPointerUp={finishBoard}
         >
           <span className="j-board-handle" data-testid="board-handle" />
-          <span className="time-read" data-testid="player-time">{clock(time)}</span>
-          <button type="button" className="lecture-speed" data-testid="lecture-speed" aria-label="Playback speed" onClick={cycleSpeed}>{speed}×</button>
+          <span className="time-read" data-testid="player-time">{clock(time)} / {clock(total)}</span>
+          <button type="button" className="lecture-speed" data-testid="lecture-speed" aria-label="Playback speed" onClick={(event) => boardAction(event, cycleSpeed)}>{speed}×</button>
         <div className="timeline" data-testid="timeline" ref={timelineRef}>
           <div className="track" />
           <div className="fill" style={{ width: `${Math.min(100, (time / total) * 100)}%` }} />
