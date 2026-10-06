@@ -74,3 +74,16 @@ export function lanesWithClips(route: { lanes: LaneDef[]; cuts: CutInfo[] }, cli
     .map((lane) => ({ key: lane.key, title: titles[lane.key] || lane.title, clips: playableLaneClips(clips, route.cuts, lane.key, titles[lane.key] || lane.title) }))
     .filter((lane) => lane.clips.length > 0)
 }
+
+/**
+ * Where "Try another lane" goes. A signed-in learner gets the Lanes page. That page is personal
+ * (day count, courses, unread), so a guest is not sent there to meet a login wall: the next lane
+ * with clips starts at once, wrapping round, or the mixed feed when no other lane has clips.
+ */
+export function laneEndHref(input: { base: string; signedIn: boolean; current?: string | null; lanes: string[] }) {
+  if (input.signedIn) return `${input.base}/lanes`
+  const at = input.current ? input.lanes.indexOf(input.current) : -1
+  const next = input.lanes.length ? input.lanes[(at + 1) % input.lanes.length] : undefined
+  if (!next || next === input.current) return `${input.base}/feed`
+  return `${input.base}/feed?lane=${encodeURIComponent(next)}`
+}
