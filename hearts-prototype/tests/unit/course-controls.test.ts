@@ -13,6 +13,10 @@ test('the course parts list does not offer Ready for more? jumps', () => {
   assert.equal(courseScreen.includes('talk-tiers'), false)
   assert.match(courseScreen, /data-testid="part-link"/)
   assert.match(courseScreen, /Parts of this course/)
+  assert.match(courseScreen, /lessons\.map\(\(row, index\)/)
+  assert.equal(courseScreen.includes('courseDoors('), false)
+  assert.equal(courseScreen.includes('groupByDoor('), false)
+  assert.match(courseScreen, /data-testid="part-week"/)
 })
 
 test('play and pause stay on the lecture while it is playing', () => {

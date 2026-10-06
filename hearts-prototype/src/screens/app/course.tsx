@@ -7,8 +7,8 @@ import { Avatar, FollowButton } from '@/components/app/feed'
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
 import { PlayIcon } from '@/components/icons'
 import { clockEnabled, now } from '@/lib/clock'
-import { doorLabel, groupByDoor, type Door } from '@/lib/doors'
-import { courseDoorHeadingVisible, lessonDoor } from '@/lib/course-doors'
+import { doorLabel, type Door } from '@/lib/doors'
+import { lessonDoor } from '@/lib/course-doors'
 import { loadDoors } from '@/server/doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { visibleCourseIds } from '@/server/context'
@@ -114,19 +114,19 @@ export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx,
   )
 }
 
-/** A part sits under the door of its title, or of the cut that actually carries the talk. */
-function courseDoors(lessons: Row[], cuts: Row[], doors: Door[], courseTitle: string) {
-  return groupByDoor(lessons, (lesson) => {
-    const own = cuts.filter((cut) => ref(cut.lesson) === lesson.id && Number(cut.bestClause))
-    return lessonDoor({ lessonTitle: str(lesson.title), courseTitle, cuts: own, doors })
-  })
+/** Week or topic for a part card — never used to sort or group the list. */
+function partWeek(lesson: Row, cuts: Row[], doors: Door[], courseTitle: string) {
+  const own = cuts.filter((cut) => ref(cut.lesson) === lesson.id && Number(cut.bestClause))
+  return lessonDoor({ lessonTitle: str(lesson.title), courseTitle, cuts: own, doors })
 }
 
 async function CourseOverview({ payload, user, portal, base, query }: Ctx, course: Row, lessons: Row[]) {
   const lessonIds = lessons.map((row) => row.id)
-  const [completions, unread] = await Promise.all([
+  const [completions, unread, partCuts, doors] = await Promise.all([
     rows(payload, 'completions', { and: [{ user: { equals: user.id } }, { lesson: { in: lessonIds } }] }),
     unreadCount(payload, user),
+    lessonIds.length ? rows(payload, 'cuts', { and: [{ lesson: { in: lessonIds } }, { status: { not_equals: 'rejected' } }] }, { limit: 300 }) : Promise.resolve([] as Row[]),
+    loadDoors(payload),
   ])
   const done = new Set(completions.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: true, event: 'watch' })).map((row) => ref(row.lesson)))
   const continueId = lessons.find((lesson) => !done.has(lesson.id))?.id || lessons[0].id
@@ -158,6 +158,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
           const youtubeId = str(lesson.youtubeId) || null
           const name = partTitle(lesson, title)
           const still = talkStill(youtubeId, str(lesson.speaker || course.speaker))
+          const week = partWeek(lesson, partCuts, doors, str(course.title))
           return (
             <Link key={lesson.id} className="buffet-row" href={`${base}/course/${course.id}?part=${lesson.id}`} data-testid="buffet-talk">
               <span className={`thumb${still.fallback ? ' is-fallback' : ''}`} data-testid="talk-thumb">
@@ -167,6 +168,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
               <span className="t">
                 <small>Part {index + 1}</small>
                 <b className="talk-name">{name}</b>
+                {week ? <small className="part-week" data-testid="part-week">{doorLabel(week)}</small> : null}
                 <small>{secondsHere ? clock(secondsHere) : 'Length not known yet'}{done.has(lesson.id) ? ' · watched' : ''}</small>
               </span>
               ›
@@ -409,25 +411,19 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
         ) : null}
         {featureOn(portal, 'planner') ? <p style={{ margin: '16px 0 0' }}><Link className="pill outline" href={`${base}/week?course=${courseId}&view=new&from=course`} data-testid={lessons.length >= 2 ? 'plan-rest' : 'schedule-this'}>{lessons.length >= 2 ? 'Plan the rest of this course' : 'Schedule this talk'}</Link></p> : null}
         <p className="eyebrow">Parts of this course</p>
-        {(() => {
-          const groups = courseDoors(lessons, partCuts, doors, str(course.title))
-          const heading = courseDoorHeadingVisible(groups, str(course.title))
-          return groups.map((group) => (
-          <section key={group.door?.number || 'open'} className="door-course" data-testid="course-door" data-door={group.door?.number || ''}>
-            {heading && group.door ? <h2>{doorLabel(group.door)}</h2> : null}
-            {heading && group.door?.teaching ? <p>{group.door.teaching}</p> : null}
-            {group.items.map((row) => {
-              const index = lessons.findIndex((lesson) => lesson.id === row.id)
-              return (
-                <Link key={row.id} className="part-row" href={`${base}/course/${courseId}?part=${row.id}`} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
-                  <span className="grow">{partHeading(index + 1, row, tidyTalkTitle(str(course.title)), lessons.length)}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small></span>
-                  {row.id === lessonId ? <span className="part-status" data-testid="part-playing">Playing</span> : <span className="part-chevron" aria-hidden="true">›</span>}
-                </Link>
-              )
-            })}
-          </section>
-        ))
-        })()}
+        {lessons.map((row, index) => {
+          const week = partWeek(row, partCuts, doors, str(course.title))
+          return (
+            <Link key={row.id} className="part-row" href={`${base}/course/${courseId}?part=${row.id}`} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
+              <span className="grow">
+                {partHeading(index + 1, row, tidyTalkTitle(str(course.title)), lessons.length)}
+                {week ? <small className="part-week" data-testid="part-week">{doorLabel(week)}</small> : null}
+                <small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small>
+              </span>
+              {row.id === lessonId ? <span className="part-status" data-testid="part-playing">Playing</span> : <span className="part-chevron" aria-hidden="true">›</span>}
+            </Link>
+          )
+        })}
         {clockEnabled() && user.role === 'master' ? (
           <details className="card" style={{ marginTop: 16 }}>
             <summary style={{ fontWeight: 700 }}>Test clock</summary>

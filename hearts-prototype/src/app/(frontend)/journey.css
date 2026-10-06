@@ -109,7 +109,7 @@
 .yt-host.off { visibility: hidden !important; pointer-events: none !important; }
 .yt-host.off iframe { top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; transform: none !important; }
 /* F: the landscape talk sits whole in a 16:9 band. Never a cover or centre-crop. */
-.yt-host iframe { position: absolute; top: calc(56px + var(--safe-top)); left: 0; height: auto; width: 100%; aspect-ratio: 16 / 9; transform: none; border: 0; z-index: 0; }
+.yt-host iframe { position: absolute; top: calc(56px + var(--safe-top)) !important; left: 0 !important; height: auto !important; width: 100% !important; aspect-ratio: 16 / 9 !important; max-height: none !important; transform: none !important; border: 0; z-index: 0; }
 .yt-title-mask { position: absolute; left: 0; right: 0; top: 0; height: 56px; z-index: 2; pointer-events: none; background: linear-gradient(#000 0 70%, transparent); }
 .yt-host iframe, .overlay .yt-host iframe, .strict .yt-host iframe { pointer-events: none !important; }
 .journey[data-playing='yes'] .j-poster-play,
@@ -166,7 +166,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-peek .feed-card h2,
 .j-peek .feed-card p { visibility: hidden; }
 .j-peeks, .j-peek, .j-slot, .j-slide { overflow: hidden; }
-.j-hairline-row { position: absolute; top: calc(12px + var(--safe-top)); left: 16px; right: 16px; z-index: 6; }
+.j-hairline-row { position: absolute; top: calc(12px + var(--safe-top)); left: 16px; right: 16px; z-index: 6; pointer-events: auto; }
 .j-swipe-hint { position: relative; z-index: 6; margin: 8px 0 0; text-align: center; font-size: 12px; font-weight: 650; letter-spacing: 0.01em; color: rgba(255, 255, 255, 0.92); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55); }
 .j-hairline { height: 3px; border-radius: 3px; background: rgba(255, 255, 255, 0.28); overflow: hidden; }
 .j-hairline > i { display: block; height: 100%; width: 0; background: #fff; transition: width 0.25s linear; }
@@ -188,12 +188,12 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   box-shadow: none;
 }
 .journey[data-words-in-picture='yes'] .yt-host iframe {
-  top: calc(56px + var(--safe-top));
-  left: 0;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 9;
-  transform: none;
+  top: calc(56px + var(--safe-top)) !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 16 / 9 !important;
+  transform: none !important;
 }
 .journey[data-words-in-picture='yes'] .j-chrome .caption,
 .j-caption-clear {
@@ -268,7 +268,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 
 /* Strict layout uses the same F band as overlay: uncropped 16:9 under the chips. */
 .strict .j-slot { top: 0; bottom: 0; height: auto; background: #0F3B3A; }
-.strict .yt-host iframe { top: calc(56px + var(--safe-top)); width: 100%; height: auto; aspect-ratio: 16 / 9; left: 0; transform: none; }
+.strict .yt-host iframe { top: calc(56px + var(--safe-top)) !important; width: 100% !important; height: auto !important; aspect-ratio: 16 / 9 !important; left: 0 !important; transform: none !important; }
 .strict .j-chrome .caption { display: none; }
 .strict .j-hairline-row { top: calc(12px + var(--safe-top)); }
 .strict[data-words-in-picture='yes'] .j-slot { top: 0; }
@@ -453,7 +453,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-peek { background: #0F3B3A; }
 .journey.phase-feed .fr-words {
   top: calc(56px + var(--safe-top) + 100vw * 9 / 16);
-  bottom: calc(128px + var(--safe-bottom));
+  bottom: calc(140px + var(--safe-bottom));
   padding: 16px 20px 8px;
   justify-content: flex-start;
 }

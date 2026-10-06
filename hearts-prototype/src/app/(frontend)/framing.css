@@ -233,13 +233,13 @@
 .j-slot[data-framing='D'] .yt-host iframe,
 .j-slot[data-framing='E'] .yt-host iframe,
 .j-slot[data-framing='F'] .yt-host iframe {
-  top: calc(56px + var(--safe-top));
-  left: 0;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 9;
-  min-height: 0;
-  transform: none;
+  top: calc(56px + var(--safe-top)) !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 16 / 9 !important;
+  min-height: 0 !important;
+  transform: none !important;
 }
 .j-slot[data-framing='C']::before { content: none; }
 .journey .j-chrome .caption { display: none; }

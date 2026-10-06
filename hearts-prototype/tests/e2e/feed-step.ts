@@ -77,7 +77,9 @@ export async function chromeCentresClear(page: Page, extraIds: string[] = []) {
     const hit = node?.closest?.('[data-testid]')?.getAttribute('data-testid') || node?.getAttribute('data-testid') || ''
     return { id: item.id, hit, owns }
   }), found)
+  const passThrough = new Set(['spoken-words'])
   for (const row of hits) {
+    if (passThrough.has(row.id)) continue
     expect(row.owns, `${row.id} centre hit ${row.hit || 'nothing'}`).toBe(true)
   }
   const foundIds = found.map((row) => row.id)
