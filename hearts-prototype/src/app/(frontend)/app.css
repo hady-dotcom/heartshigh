@@ -406,7 +406,7 @@
   z-index: 30;
 }
 .app[data-testid="course"] .app-scroll {
-  padding: 0 0 calc(104px + env(safe-area-inset-bottom, 0px));
+  padding: 0 0 calc(148px + env(safe-area-inset-bottom, 0px));
 }
 .app[data-testid="course"] .course-film {
   position: relative;
