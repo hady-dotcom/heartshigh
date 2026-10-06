@@ -6,3 +6,30 @@
 export function coursePlayVisible(input: { loading: boolean; questionOpen: boolean }) {
   return !input.loading && !input.questionOpen
 }
+
+type CatcherPlayer = {
+  getPlayerState(): number
+  pauseVideo(): void
+  playVideo(): void
+  seekTo?: (...args: unknown[]) => void
+  loadVideoById?: (...args: unknown[]) => void
+  cueVideoById?: (...args: unknown[]) => void
+}
+
+/**
+ * A tap on the course picture: pause while PLAYING or BUFFERING, play while PAUSED or CUED.
+ * Never seek or reload. Same rule as the feed catcher.
+ */
+export function courseCatcherTap(player: CatcherPlayer | null): 'pause' | 'play' | 'none' {
+  if (!player) return 'none'
+  const state = player.getPlayerState()
+  if (state === 1 || state === 3) {
+    player.pauseVideo()
+    return 'pause'
+  }
+  if (state === 2 || state === 5) {
+    player.playVideo()
+    return 'play'
+  }
+  return 'none'
+}

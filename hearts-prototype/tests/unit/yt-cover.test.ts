@@ -9,6 +9,7 @@ import {
   coverHoldShouldRestart,
   coverShouldHold,
   filmCoverVisible,
+  filmCoverKey,
   filmIframeCrop,
   landscapeThumb,
   pauseMarkVisible,
@@ -57,15 +58,17 @@ test('landscape thumbs and ?debug=yt', () => {
   assert.equal(ytDebugOn('?debug=off'), false)
 })
 
-test('the hold restarts on buffering or any other state, and the crop keeps the face', () => {
+test('the hold restarts on buffering or any other state, and the frame is uncropped', () => {
   assert.equal(coverHoldShouldRestart(3, 1), true)
   assert.equal(coverHoldShouldRestart(2, 1), true)
   assert.equal(coverHoldShouldRestart(1, 3), true)
   assert.equal(coverHoldShouldRestart(1, 1, true), false)
   assert.equal(coverHoldShouldRestart(1, 1, false), true)
   const crop = filmIframeCrop()
-  assert.equal(crop.heightPct, 131.6)
-  assert.equal(crop.topPct, -18.4)
+  assert.equal(crop.heightPct, 100)
+  assert.equal(crop.topPct, 0)
+  assert.equal(filmCoverKey({ cutId: 12, youtubeId: 'FAxIZIqwfd8' }), '12:FAxIZIqwfd8')
+  assert.equal(filmCoverKey({ cutId: 1, youtubeId: null }), '')
   assert.equal(playerReadout({ state: 1, time: 60.1, currentTime: 60.1, cover: false }), 'state 1 time 60.1 cur 60.1 cover no')
   assert.equal(advanceLeavesPlayable({ userPaused: false, boardOpen: false, swallowUntil: 10, now: 10 }), true)
   assert.equal(advanceLeavesPlayable({ userPaused: true, boardOpen: false, swallowUntil: 0, now: 20 }), false)

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { coursePlayVisible } from '../../src/lib/course-controls'
+import { courseCatcherTap, coursePlayVisible } from '../../src/lib/course-controls'
 import { helpFor } from '../../src/lib/page-help'
 
 const courseScreen = readFileSync(new URL('../../src/screens/app/course.tsx', import.meta.url), 'utf8')
@@ -18,6 +18,20 @@ test('the course parts list does not offer Ready for more? jumps', () => {
   assert.equal(courseScreen.includes('courseDoors('), false)
   assert.equal(courseScreen.includes('groupByDoor('), false)
   assert.match(courseScreen, /data-testid="part-week"/)
+})
+
+test('a tap on the course catcher while playing calls pauseVideo, not seek or reload', () => {
+  const calls: string[] = []
+  const player = {
+    getPlayerState: () => 1,
+    pauseVideo: () => calls.push('pauseVideo'),
+    playVideo: () => calls.push('playVideo'),
+    seekTo: () => calls.push('seekTo'),
+    loadVideoById: () => calls.push('loadVideoById'),
+    cueVideoById: () => calls.push('cueVideoById'),
+  }
+  assert.equal(courseCatcherTap(player), 'pause')
+  assert.deepEqual(calls, ['pauseVideo'])
 })
 
 test('play and pause stay on the lecture while it is playing', () => {

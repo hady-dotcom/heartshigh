@@ -33,6 +33,18 @@ export function sessionPlaylist(routed: FeedItem[], catalogue: FeedItem[] | Reco
   return appendUnseenItems(front, mixFeed(more, visit, backgroundsBaseUrl))
 }
 
+/** A dedicated lane keeps its own list. The mixed pool may still grow from the catalogue. */
+export function maybeWidenPlaylist(
+  list: FeedItem[],
+  catalogue: FeedItem[] | Record<string, FeedItem>,
+  visit: number,
+  backgroundsBaseUrl: string | null,
+  dedicatedLane: boolean,
+): FeedItem[] {
+  if (dedicatedLane) return list
+  return sessionPlaylist(list, catalogue, visit, backgroundsBaseUrl)
+}
+
 /**
  * The learner feed is hors d'oeuvres only. Face films and scenic typing cards
  * used to follow each talk; they are not inserted, and any that arrive here are dropped.

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
-import { clipsFromRoute, sessionPlaylist } from '@/lib/feed-mix'
+import { clipsFromRoute, maybeWidenPlaylist, sessionPlaylist } from '@/lib/feed-mix'
 import { clipStepUpLabel, LEVEL_WORDS, onlyClipToast, pieceSeconds, poolEndToast, talkStepUpLabel, withTalkDetail } from '@/lib/feed-copy'
 import { appendUnseenItems, boardItemForPlayer, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
@@ -14,8 +14,8 @@ import { nextPlaybackRate } from '@/lib/playback-rate'
 import { feedFilmCaption } from '@/lib/spoken-caption'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
-import { playableLaneClips } from '@/lib/lanes'
-import { YT_CHROME_HOLD_MS, coverFallbackAction, coverHoldShouldRestart, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
+import { dedicatedLaneFeed, playableLaneClips } from '@/lib/lanes'
+import { YT_CHROME_HOLD_MS, coverFallbackAction, coverHoldShouldRestart, filmCoverKey, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
 import { BOARD_ARM_MS, boardClickAllowed, boardShouldClose, boardShouldOpen, pointerTravel } from '@/lib/board-gestures'
 import { isoWeek } from '@/lib/trends'
 import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, hostShouldShow, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, verticalSwipe } from '@/lib/film-advance'
@@ -156,8 +156,9 @@ export function Journey(props: JourneyProps) {
   const leavingRef = useRef<HTMLDivElement>(null)
   const skyRefs = useRef<(HTMLDivElement | null)[]>([])
 
-  const [items, setItems] = useState<FeedItem[]>([])
-  const itemsRef = useRef<FeedItem[]>([])
+  const [items, setItems] = useState<FeedItem[]>(() => dedicatedLaneFeed(opening.clips, opening.route.cuts, opening.laneTitles, props.lane))
+  const [coverKey, setCoverKey] = useState(() => filmCoverKey(dedicatedLaneFeed(opening.clips, opening.route.cuts, opening.laneTitles, props.lane)[0]))
+  const itemsRef = useRef<FeedItem[]>(items)
   const [index, setIndex] = useState(0)
   const indexRef = useRef(0)
   const [mode, setMode] = useState<Mode>('hors')
@@ -183,7 +184,7 @@ export function Journey(props: JourneyProps) {
   const [readyTick, setReadyTick] = useState(0)
   const [revealed, setRevealed] = useState(false)
   const revealedRef = useRef(false)
-  const [tabs, setTabs] = useState(props.initial === 'feed')
+  const [tabs, setTabs] = useState(false)
   const firstPlaying = useRef(false)
   const [muted, setMuted] = useState(true)
   const typeRef = useRef<HTMLVideoElement>(null)
@@ -320,6 +321,11 @@ export function Journey(props: JourneyProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (phase !== 'feed') return
+    setTabs(true)
+  }, [phase])
 
   // Keep my place across devices (P3): the server copy follows the device, never the other way round.
   useEffect(() => {
@@ -653,6 +659,7 @@ export function Journey(props: JourneyProps) {
       setAppetiserOver(false)
       setClipEnded(false)
       setCoverHeld(true)
+      setCoverKey(filmCoverKey(item))
       playStartedAt.current = 0
       holdState.current = -9
       userPausedRef.current = false
@@ -730,7 +737,7 @@ export function Journey(props: JourneyProps) {
   )
 
   const refill = useCallback(async () => {
-    if (refilling.current || !heartRef.current) return
+    if (props.lane || refilling.current || !heartRef.current) return
     if (itemsRef.current.length - indexRef.current - 1 > 2) return
     refilling.current = true
     try {
@@ -743,7 +750,7 @@ export function Journey(props: JourneyProps) {
     } finally {
       refilling.current = false
     }
-  }, [adopt, backgroundsBase, fetchFeed, opening.clips])
+  }, [adopt, backgroundsBase, fetchFeed, opening.clips, props.lane])
 
   // Arriving straight at the feed (a returning visitor, or Home › feed).
   useEffect(() => {
@@ -1265,8 +1272,10 @@ export function Journey(props: JourneyProps) {
       if (current && signedIn) void fetch('/api/hearts/unplayable', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cutId: current.cutId, code }) }).catch(() => undefined)
       window.setTimeout(() => {
         const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current, Boolean(props.lane))
-        if (next == null) setToast(poolEndToast())
-        else void advance(next, 'auto')
+        if (next == null) {
+          setClipEnded(true)
+          setToast(poolEndToast())
+        } else void advance(next, 'auto')
       }, 900)
     }
     window.addEventListener('hearts:ended', onEnded)
@@ -1285,8 +1294,10 @@ export function Journey(props: JourneyProps) {
     if (pendingAfterSheet.current === 'next') {
       pendingAfterSheet.current = null
       const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current, Boolean(props.lane))
-      if (next == null) setToast(poolEndToast())
-      else void advance(next, 'auto')
+      if (next == null) {
+        setClipEnded(true)
+        if (!props.lane) setToast(poolEndToast())
+      } else void advance(next, 'auto')
     } else window.setTimeout(() => tryPlay(), 0)
   }
 
@@ -1423,7 +1434,7 @@ export function Journey(props: JourneyProps) {
     let list = itemsRef.current
     let target = swipeTarget(list, indexRef.current, modeRef.current, swipe, seenRef.current, Boolean(props.lane))
     if (target === null) {
-      const wider = sessionPlaylist(list, opening.clips, heartRef.current?.served.length || 0, backgroundsBase)
+      const wider = maybeWidenPlaylist(list, opening.clips, heartRef.current?.served.length || 0, backgroundsBase, Boolean(props.lane))
       if (wider.length > list.length) {
         itemsRef.current = wider
         setItems(wider)
@@ -1434,6 +1445,10 @@ export function Journey(props: JourneyProps) {
     if (target === null) {
       markSwipe(false)
       springBack()
+      if (props.lane && swipe === 'next') {
+        setClipEnded(true)
+        return
+      }
       if (swipe === 'speaker') return setToast(`That's everything from ${current.speaker} for now.`)
       if (swipe === 'topic') return setToast("That's everything on this topic for now.")
       return setToast(itemsRef.current.length < 2 ? onlyClipToast(modeRef.current) : poolEndToast())
@@ -2259,7 +2274,7 @@ export function Journey(props: JourneyProps) {
                 data-testid={filmOn ? 'player-visible' : 'player-hidden'}
                 style={{ visibility: filmOn ? 'visible' : 'hidden' }}
               >
-                <div className="j-film-band yt-crop" ref={(el) => { hostEls.current[at] = el }} data-testid={filmOn ? 'film-band' : undefined} />
+                <div className="j-film-band" ref={(el) => { hostEls.current[at] = el }} data-testid={filmOn ? 'film-band' : undefined} />
               </div>
             )
           })}
@@ -2290,8 +2305,8 @@ export function Journey(props: JourneyProps) {
             />
           ) : null}
           {item && !slide ? (
-            <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}${scenicAppetiser ? ' scenic' : ''}${showPoster ? '' : ' is-clear'}`} data-testid="poster-frame" data-poster={mode === 'appetiser' && item.cleanThumb ? 'frame' : 'own'}>
-              <PosterStill item={item} mode={mode} />
+            <div key={coverKey || filmCoverKey(item)} className={`j-poster${slow === 'breathe' ? ' breathe' : ''}${scenicAppetiser ? ' scenic' : ''}${showPoster ? '' : ' is-clear'}`} data-testid="poster-frame" data-poster={mode === 'appetiser' && item.cleanThumb ? 'frame' : 'own'}>
+              <PosterStill key={coverKey || filmCoverKey(item)} item={item} mode={mode} />
               <span className="j-poster-mark" aria-hidden><Arch size={28} /></span>
               {showPlayControl ? (
                 <button type="button" className="j-poster-play" aria-label="Play" data-testid="poster-play" onClick={() => { tapSound(); userPausedRef.current = false; const playing = hosts.current[visibleRef.current]; if (playing.spec) wantPlayRef.current = playing.spec.key; tryPlay() }}>
@@ -2449,12 +2464,13 @@ function stillOf(item: FeedItem | undefined, mode: Mode) {
 
 function PosterStill({ item, mode }: { item: FeedItem; mode: Mode; peek?: boolean }) {
   const [frameFailed, setFrameFailed] = useState(false)
+  const key = filmCoverKey(item)
   const thumb = landscapeThumb(item.youtubeId)
   const frame = mode === 'appetiser' && item.cleanThumb && !frameFailed ? item.cleanThumb : thumb
   return (
     <>
       {frame ? (
-        <img src={frame} alt="" onError={() => setFrameFailed(true)} onLoad={(event) => { if (event.currentTarget.naturalWidth <= 120) setFrameFailed(true) }} />
+        <img key={key} src={frame} alt="" onError={() => setFrameFailed(true)} onLoad={(event) => { if (event.currentTarget.naturalWidth <= 120) setFrameFailed(true) }} />
       ) : null}
     </>
   )

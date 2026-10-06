@@ -9,7 +9,7 @@ import { TopicHelp } from '@/components/app/page-help'
 import { SpokenWords } from '@/components/app/spoken-words'
 import type { FramingSentence } from '@/lib/framing/types'
 import { placeDots } from '@/lib/timeline-dots'
-import { coursePlayVisible } from '@/lib/course-controls'
+import { courseCatcherTap, coursePlayVisible } from '@/lib/course-controls'
 import { nextPlaybackRate } from '@/lib/playback-rate'
 import { createPlayer, destroyPlayer, getPlayer, hasSound, pauseKeepingSound, playWithSoundFallback, resume, soundOn, STATE, UNPLAYABLE } from '@/lib/yt'
 import { boardClickAllowed, boardShouldClose, boardShouldOpen, pointerTravel } from '@/lib/board-gestures'
@@ -149,6 +149,8 @@ export function CoursePlayer({
   const [coverHeld, setCoverHeld] = useState(true)
   const [ytState, setYtState] = useState(-1)
   const [debugOn, setDebugOn] = useState(false)
+  const [userPaused, setUserPaused] = useState(false)
+  const userPausedRef = useRef(false)
   const playStartedAt = useRef(0)
   const holdState = useRef(-9)
   const boardOpenedAt = useRef(0)
@@ -223,6 +225,8 @@ export function CoursePlayer({
     setMode('loading')
     setYtState(-1)
     setCoverHeld(true)
+    userPausedRef.current = false
+    setUserPaused(false)
     holdState.current = -9
     playStartedAt.current = 0
     const failFirst = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('heartsFailFirst') === '1'
@@ -522,6 +526,8 @@ export function CoursePlayer({
   }
 
   const resumeNow = () => {
+    userPausedRef.current = false
+    setUserPaused(false)
     soundOn(PLAYER_ID)
     getPlayer(PLAYER_ID)?.unMute()
     if (videoRef.current) videoRef.current.muted = false
@@ -533,6 +539,26 @@ export function CoursePlayer({
   }
 
   const togglePlay = () => {
+    if (mode === 'youtube' || youtubeId) {
+      const player = getPlayer(PLAYER_ID)
+      const action = courseCatcherTap(player)
+      if (action === 'pause') {
+        userPausedRef.current = true
+        setUserPaused(true)
+        setPlaying(false)
+        videoRef.current?.pause()
+        return
+      }
+      if (action === 'play') {
+        userPausedRef.current = false
+        setUserPaused(false)
+        setPlaying(true)
+        soundOn(PLAYER_ID)
+        player?.unMute()
+        applySpeed(speedRef.current)
+        return
+      }
+    }
     if (playing) {
       pause()
       return
@@ -574,12 +600,13 @@ export function CoursePlayer({
   const total = length || Math.max(60, ...views.map((point) => point.second + 30))
   const filmed = mode === 'youtube' || mode === 'vimeo' || mode === 'file'
   const coverUrl = landscapeThumb(youtubeId) || poster
+  const coverKey = youtubeId || poster || 'none'
   const places = new Map(placeDots(views.map((row) => ({ id: row.id, second: row.second })), total, trackWidth).map((row) => [row.id, row]))
 
   const livePlayer = getPlayer(PLAYER_ID)
   const liveState = livePlayer?.getPlayerState() ?? ytState
   const liveTime = livePlayer?.getCurrentTime() ?? time
-  const showCover = coverHeld || liveState !== STATE.PLAYING || ended || mode === 'loading'
+  const showCover = coverHeld || liveState !== STATE.PLAYING || ended || mode === 'loading' || userPaused
   useEffect(() => {
     const state = liveState
     if (state === STATE.PLAYING && !ended) {
@@ -602,6 +629,15 @@ export function CoursePlayer({
     const timer = window.setInterval(() => {
       const player = getPlayer(PLAYER_ID)
       if (!player) return
+      if (userPausedRef.current) {
+        const polledState = player.getPlayerState()
+        const polledTime = player.getCurrentTime()
+        setYtState(polledState)
+        if (polledState === STATE.PLAYING || polledState === STATE.BUFFERING) player.pauseVideo()
+        setPlaying(false)
+        setTime(polledTime)
+        return
+      }
       const polledState = player.getPlayerState()
       const polledTime = player.getCurrentTime()
       setYtState(polledState)
@@ -649,7 +685,7 @@ export function CoursePlayer({
           </div>
         </div>
         <div ref={card} className={`player-card is-f course-film-band${filmed ? ' yt-on' : ''}${playing ? ' is-live' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
-          <div className={`poster${mode === 'loading' ? ' skeleton' : ''}${showCover ? '' : ' is-clear'}`} style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : 'player-poster'} />
+          <div key={coverKey} className={`poster${mode === 'loading' ? ' skeleton' : ''}${showCover ? '' : ' is-clear'}`} style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : 'player-poster'} />
           {mode === 'loading' && !failed ? <div className="player-veil" data-testid="player-veil" aria-hidden><span className="gold-spin" /></div> : null}
           {failed ? (
             <div className="player-retry" data-testid="player-retry">
@@ -659,7 +695,7 @@ export function CoursePlayer({
               </button>
             </div>
           ) : null}
-          {youtubeId ? <div className="yt j-film-band yt-crop" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
+          {youtubeId ? <div className="yt j-film-band" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
           {vimeoId ? (
             <div className="yt j-film-band" ref={filmBox} style={{ visibility: mode === 'vimeo' ? 'visible' : 'hidden' }}>
               <iframe title={partLabel} src={`https://player.vimeo.com/video/${vimeoId}?api=1`} allow="autoplay; fullscreen; picture-in-picture" data-testid="vimeo-player" />

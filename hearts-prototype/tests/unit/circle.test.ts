@@ -107,7 +107,7 @@ test('Circle: only the swarm, the circle desk, the master sheet and the seed rea
     .filter((file) => /['"]circle-answers['"]/.test(readFileSync(file, 'utf8')))
     .map((file) => path.relative(root, file))
     .sort()
-  assert.deepEqual(readers, ['collections.ts', 'screens/desk/circle.tsx', 'seed/circle-seed.ts', 'seed/seed.ts', 'server/circle.ts', 'server/master-sheet.ts'])
+  assert.deepEqual(readers, ['collections.ts', 'screens/desk/circle.tsx', 'seed/circle-seed.ts', 'seed/seed.ts', 'seed/walkthrough-demo.ts', 'server/circle.ts', 'server/master-sheet.ts'])
   for (const file of files(root)) {
     const text = readFileSync(file, 'utf8')
     if (/circleForPoints/.test(text)) assert.ok(['server/circle.ts', 'screens/app/course.tsx'].includes(path.relative(root, file)), `${file} reads circle answers`)

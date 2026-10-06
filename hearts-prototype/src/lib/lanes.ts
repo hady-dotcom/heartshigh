@@ -18,6 +18,22 @@ export function playableLaneClips(clips: Record<string, FeedItem>, cuts: CutInfo
   return laneClips(clips, cuts, lane, title).filter((clip) => Boolean(clip.youtubeId) && (!clip.card || clip.card === 'talk'))
 }
 
+/** A dedicated lane feed is exactly that lane's playable list. Empty when no lane is open. */
+export function dedicatedLaneFeed(
+  clips: Record<string, FeedItem>,
+  cuts: CutInfo[],
+  titles: Record<string, string>,
+  lane: string | null | undefined,
+): FeedItem[] {
+  if (!lane) return []
+  return playableLaneClips(clips, cuts, lane, titles[lane] || lane)
+}
+
+/** Mixed Home feed may grow from the session playlist. A dedicated lane must not. */
+export function feedMayWiden(lane?: string | null) {
+  return !lane
+}
+
 /** One name when every playable clip shares it; otherwise the lane card stays quiet. */
 export function laneCardSpeaker(clips: { speaker?: string | null }[]) {
   const names = [...new Set(clips.map((clip) => String(clip.speaker || '').trim()).filter((name) => name && !/^the speaker$/i.test(name)))]

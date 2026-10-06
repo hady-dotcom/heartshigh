@@ -56,7 +56,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           rel="stylesheet"
         />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <ViewAsBanner />
         {children}
       </body>

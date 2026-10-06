@@ -4,9 +4,9 @@ export const YT_CHROME_HOLD_MS = 4500
 export const YT_COVER_FADE_MS = 250
 /** If no PLAYING event arrives, poll the player and lift or retry after this. */
 export const YT_STATE_FALLBACK_MS = 6000
-/** Crop YouTube's title bar / related strip inside the overflow-hidden band. */
-export const YT_CROP_TOP = 0.14
-export const YT_CROP_BOTTOM = 0.1
+/** Framing F is uncropped. The cover hides chrome; the iframe shows the full 16:9 frame. */
+export const YT_CROP_TOP = 0
+export const YT_CROP_BOTTOM = 0
 
 export function coverShouldHold(playingForMs: number, holdMs = YT_CHROME_HOLD_MS) {
   return playingForMs < holdMs
@@ -19,13 +19,15 @@ export function coverHoldShouldRestart(state: number, prevState?: number, timeAd
   return timeAdvancing === false
 }
 
-/** Taller iframe, shifted up, so the title bar and related strip sit outside the visible band. */
-export function filmIframeCrop(top = YT_CROP_TOP, bottom = YT_CROP_BOTTOM) {
-  const visible = Math.max(0.2, 1 - top - bottom)
-  return {
-    heightPct: Math.round((100 / visible) * 10) / 10,
-    topPct: Math.round(((-top / visible) * 100) * 10) / 10,
-  }
+/** Framing F is a true 16:9 contain. No crop, no shift. */
+export function filmIframeCrop(_top = YT_CROP_TOP, _bottom = YT_CROP_BOTTOM) {
+  return { heightPct: 100, topPct: 0 }
+}
+
+/** Cover still for the clip that is loading. Empty when the id is missing so a previous thumb cannot linger. */
+export function filmCoverKey(clip: { cutId?: number | null; youtubeId?: string | null } | null | undefined) {
+  if (!clip?.youtubeId) return ''
+  return `${clip.cutId ?? ''}:${clip.youtubeId}`
 }
 
 /** One line for `?debug=yt`, always from the live player. */

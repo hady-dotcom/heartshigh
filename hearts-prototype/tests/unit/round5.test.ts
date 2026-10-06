@@ -23,8 +23,10 @@ test('A: the cover hold is 4.5s, restarts on buffer, and fades in 250ms', () => 
   assert.match(cover, /YT_COVER_FADE_MS = 250/)
   assert.match(cover, /coverHoldShouldRestart/)
   assert.match(journeyCss, /transition: opacity 250ms ease/)
-  assert.match(appCss, /height: 131\.6%/)
-  assert.match(appCss, /top: -18\.4%/)
+  assert.doesNotMatch(appCss, /height: 131\.6%/)
+  assert.doesNotMatch(appCss, /top: -18\.4%/)
+  assert.match(appCss, /aspect-ratio: 16 \/ 9/)
+  assert.match(appCss, /object-fit: contain/)
 })
 
 test('B: no src/ file builds a YouTube embed or new YT.Player outside the helper', () => {

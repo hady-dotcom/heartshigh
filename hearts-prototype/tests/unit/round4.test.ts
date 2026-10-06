@@ -121,10 +121,11 @@ test('N1: X-Forwarded-For is trusted only behind a configured proxy, read from t
   const req = (xff: string) => new Request('http://local/api', { headers: { 'x-forwarded-for': xff, 'x-real-ip': '6.6.6.6' } })
   assert.equal(trustedProxyHops({}), 0)
   assert.equal(trustedProxyHops({ HEARTS_TRUSTED_PROXY_HOPS: '1' }), 1)
-  assert.equal(clientIp(req('1.2.3.4'), 0), null, 'no proxy configured: the header is ignored')
-  assert.equal(clientIp(req('9.9.9.9, 10.0.0.7'), 1), '10.0.0.7', 'one proxy: the address it saw, not what the visitor wrote')
-  assert.equal(clientIp(req('9.9.9.9, 10.0.0.7, 172.16.0.2'), 2), '10.0.0.7')
-  assert.equal(clientIp(req('<script>'), 1), null)
+  const isolated = {}
+  assert.equal(clientIp(req('1.2.3.4'), 0, isolated), null, 'no proxy configured: the header is ignored')
+  assert.equal(clientIp(req('9.9.9.9, 10.0.0.7'), 1, isolated), '10.0.0.7', 'one proxy: the address it saw, not what the visitor wrote')
+  assert.equal(clientIp(req('9.9.9.9, 10.0.0.7, 172.16.0.2'), 2, isolated), '10.0.0.7')
+  assert.equal(clientIp(req('<script>'), 1, isolated), null)
 })
 
 test('N1: failed joins are keyed by address and code, and by address only when it can be trusted', () => {
