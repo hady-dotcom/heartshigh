@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import type { FeedItem } from '@/server/learner'
 import type { OpeningData } from '@/server/opening'
 import { clipsFromRoute, maybeWidenPlaylist, sessionPlaylist } from '@/lib/feed-mix'
@@ -16,7 +16,7 @@ import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { dedicatedLaneFeed, laneEndHref, lanesWithClips, playableLaneClips, takeDedicatedLane } from '@/lib/lanes'
 import { coverAttr, coverFallbackAction, coverHoldKey, coverHoldStep, filmCoverKey, freshCoverHold, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
-import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardShouldClose, boardShouldOpen, boardTapFires, boardTapNote, coachTapAction, feedGestureCounts, ghostClick, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
+import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardClickFires, boardHandleAction, boardTapFires, boardTapNote, coachTapAction, feedGestureCounts, ghostClick, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
 import { freshSheetHistory, sheetClosed, sheetOpened, sheetPopped, sheetUrl, type SheetHistory } from '@/lib/sheet-history'
 import { isoWeek } from '@/lib/trends'
 import { courseCatcherTap } from '@/lib/course-controls'
@@ -259,7 +259,12 @@ export function Journey(props: JourneyProps) {
   const gesture = useRef<{ x: number; y: number; t: number; moved: boolean; timer: number | null; pointerId?: number } | null>(null)
   const boardClosedAt = useRef(0)
   const lastPressAt = useRef(0)
-  const boardTap = useRef<{ control: Element | null; x: number; y: number; t: number } | null>(null)
+  /** When a tap or drag of the guest's last opened or closed the board (not an auto-advance or the lane end). */
+  const boardToggledAt = useRef(0)
+  /** The press on a board control, from its pointerdown to its click; acted once pointerup has fired it. */
+  const boardTap = useRef<{ control: Element | null; x: number; y: number; t: number; acted: boolean } | null>(null)
+  /** The press on the More handle, so its click can open the board if its pointerup did not. */
+  const morePress = useRef<{ t: number; acted: boolean } | null>(null)
   const captionDrag = useRef(false)
   const counter = useRef(0)
   const gathered = useRef(new Set<string>())
@@ -1684,17 +1689,19 @@ export function Journey(props: JourneyProps) {
     }
     // The click a phone sends after the tap that opened or closed the board is that tap's leftover:
     // it must not land on a tab, the speaker or Full talk and ask a guest to make an account.
+    // Only the guest's own open or close arms it (not an auto-advance or the lane end shutting the board),
+    // and only the press that made that change owns the click: any press since is a fresh tap.
     const notePress = () => {
       lastPressAt.current = performance.now()
     }
     const swallowGhost = (event: MouseEvent) => {
-      const changedAt = Math.max(boardOpenedAt.current, boardClosedAt.current)
-      if (!ghostClick({ now: performance.now(), boardChangedAt: changedAt, lastPressAt: lastPressAt.current, detail: event.detail })) return
+      if (!ghostClick({ now: performance.now(), boardChangedAt: boardToggledAt.current, lastPressAt: lastPressAt.current, detail: event.detail })) return
       event.preventDefault()
       event.stopPropagation()
       event.stopImmediatePropagation()
     }
     window.addEventListener('pointerdown', notePress, true)
+    window.addEventListener('touchstart', notePress, { capture: true, passive: true })
     window.addEventListener('click', swallowGhost, true)
     window.addEventListener('keydown', onKey)
     window.addEventListener('wheel', onWheel, { passive: false })
@@ -1703,6 +1710,7 @@ export function Journey(props: JourneyProps) {
     window.addEventListener('pointercancel', onPointerCancel, true)
     return () => {
       window.removeEventListener('pointerdown', notePress, true)
+      window.removeEventListener('touchstart', notePress, true)
       window.removeEventListener('click', swallowGhost, true)
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('wheel', onWheel)
@@ -2326,6 +2334,7 @@ export function Journey(props: JourneyProps) {
   }
   const openDrawer = () => {
     boardOpenedAt.current = performance.now()
+    boardToggledAt.current = boardOpenedAt.current
     boardOpenRef.current = true
     dropFeedGesture()
     setBoardOpen(true)
@@ -2335,8 +2344,10 @@ export function Journey(props: JourneyProps) {
     event?.preventDefault()
     boardOpenRef.current = false
     boardClosedAt.current = performance.now()
+    boardToggledAt.current = boardClosedAt.current
     boardDrag.current = null
     boardTap.current = null
+    morePress.current = null
     dropFeedGesture()
     setBoardOpen(false)
     swallowPicture()
@@ -2358,12 +2369,22 @@ export function Journey(props: JourneyProps) {
       now: performance.now(),
       dragTravel,
     })
-    boardTap.current = null
-    if (!fires) {
-      boardPress.current = null
-      return
-    }
+    // Kept until this press's click: acted stops the click doing it again; a press that did not act may still act on its click.
+    boardTap.current = tap && pressedHere ? { ...tap, acted: fires } : null
+    if (!fires) return
     fn()
+    boardPress.current = null
+  }
+  /** The click after a board tap. It acts only if this press's pointerup did not (see boardClickFires). */
+  const boardClick = (event: ReactMouseEvent, fn: () => void) => {
+    event.preventDefault()
+    event.stopPropagation()
+    const tap = boardTap.current
+    const control = event.currentTarget as Element
+    const pressedHere = Boolean(tap && tap.control === control)
+    const fires = boardClickFires({ detail: event.detail, boardOpen: boardOpenRef.current, pressedHere, acted: Boolean(tap?.acted), pressedAt: tap?.t ?? 0, openedAt: boardOpenedAt.current })
+    if (pressedHere) boardTap.current = null
+    if (fires) fn()
     boardPress.current = null
   }
   /** Like and Save act on the clip the board was titled with when the finger went down, even if an auto-advance re-titles it before the finger lifts. */
@@ -2375,6 +2396,7 @@ export function Journey(props: JourneyProps) {
     event.stopPropagation()
     event.preventDefault()
     boardDrag.current = { x: event.clientX, y: event.clientY, t: performance.now(), opened: true }
+    morePress.current = { t: performance.now(), acted: false }
     event.currentTarget.setPointerCapture?.(event.pointerId)
   }
   const moveBoard = (event: ReactPointerEvent) => {
@@ -2393,11 +2415,27 @@ export function Journey(props: JourneyProps) {
     const travel = pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY })
     const velocity = dy / Math.max(1, performance.now() - start.t)
     if ((event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
-    if (boardShouldOpen(dy, velocity)) openDrawer()
-    else if (boardShouldClose(dy, velocity)) closeDrawer(event)
-    else if (travel < 14) {
-      if (boardOpen) closeDrawer(event)
-      else openDrawer()
+    const action = boardHandleAction({ boardOpen: boardOpenRef.current, dy, velocity, travel })
+    if (action !== 'none' && morePress.current) morePress.current.acted = true
+    if (action === 'open') openDrawer()
+    else if (action === 'close') closeDrawer(event)
+  }
+  /** The More handle's click: opens the board when this press's pointerup did not (lost, cancelled or misread). */
+  const moreClick = (event: ReactMouseEvent) => {
+    event.stopPropagation()
+    event.preventDefault()
+    const press = morePress.current
+    morePress.current = null
+    if (boardOpenRef.current) return
+    if (event.detail === 0 || (press && !press.acted)) openDrawer()
+  }
+  const saveTap = () => {
+    if (!item) return
+    const target = boardTapTarget(boardPress.current, item)
+    if (target && !needsAccount('save')) {
+      const note = boardTapNote({ action: 'save', wasOn: saved.includes(target.id), title: target.lessonTitle || target.courseTitle || '', landedOnShown: target.id === item.id })
+      toggleSave(target.id)
+      if (note) setToast(note)
     }
   }
   const visiblePlayer = () => {
@@ -2453,7 +2491,7 @@ export function Journey(props: JourneyProps) {
         onPointerMove={moveBoard}
         onPointerUp={finishBoard}
         onPointerCancel={(event) => { event.stopPropagation(); boardDrag.current = null }}
-        onClick={(event) => { event.stopPropagation(); event.preventDefault() }}
+        onClick={moreClick}
       >
         <i />
         More
@@ -2474,7 +2512,7 @@ export function Journey(props: JourneyProps) {
         data-armed={performance.now() - boardOpenedAt.current >= BOARD_ARM_MS ? 'yes' : 'no'}
         onPointerDownCapture={(event) => {
           const control = (event.target as HTMLElement).closest('button, a, [role="button"]')
-          boardTap.current = { control, x: event.clientX, y: event.clientY, t: performance.now() }
+          boardTap.current = { control, x: event.clientX, y: event.clientY, t: performance.now(), acted: false }
         }}
         onPointerDown={(event) => {
           event.stopPropagation()
@@ -2517,9 +2555,9 @@ export function Journey(props: JourneyProps) {
         {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
         {item.lessonTitle || item.courseTitle ? <p className="j-board-title" data-testid="board-title">{item.lessonTitle || item.courseTitle}</p> : null}
       <div className="rail">
-        <button type="button" data-testid="share" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => boardAction(event, () => { void share() })} onClick={(event) => event.preventDefault()}><span className="bubble"><ShareIcon /></span>Share</button>
-        <button type="button" aria-pressed={faves.includes(item.id)} data-testid="fave" data-cut={item.cutId} onPointerDown={(event) => pressBoard(event, item)} onPointerUp={(event) => boardAction(event, () => fave(boardTapTarget(boardPress.current, item)))} onClick={(event) => event.preventDefault()}><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
-        <button type="button" aria-pressed={saved.includes(item.id)} data-testid="save" data-cut={item.cutId} onPointerDown={(event) => pressBoard(event, item)} onPointerUp={(event) => boardAction(event, () => { const target = boardTapTarget(boardPress.current, item); if (target && !needsAccount('save')) { const note = boardTapNote({ action: 'save', wasOn: saved.includes(target.id), title: target.lessonTitle || target.courseTitle || '', landedOnShown: target.id === item.id }); toggleSave(target.id); if (note) setToast(note) } })} onClick={(event) => event.preventDefault()}><span className="bubble"><SaveIcon /></span>{saved.includes(item.id) ? 'Saved' : 'Save'}</button>
+        <button type="button" data-testid="share" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => boardAction(event, () => { void share() })} onClick={(event) => boardClick(event, () => { void share() })}><span className="bubble"><ShareIcon /></span>Share</button>
+        <button type="button" aria-pressed={faves.includes(item.id)} data-testid="fave" data-cut={item.cutId} onPointerDown={(event) => pressBoard(event, item)} onPointerUp={(event) => boardAction(event, () => fave(boardTapTarget(boardPress.current, item)))} onClick={(event) => boardClick(event, () => fave(boardTapTarget(boardPress.current, item)))}><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>
+        <button type="button" aria-pressed={saved.includes(item.id)} data-testid="save" data-cut={item.cutId} onPointerDown={(event) => pressBoard(event, item)} onPointerUp={(event) => boardAction(event, saveTap)} onClick={(event) => boardClick(event, saveTap)}><span className="bubble"><SaveIcon /></span>{saved.includes(item.id) ? 'Saved' : 'Save'}</button>
       </div>
       <div className="clip-foot j-credits">
         <div
@@ -2528,9 +2566,9 @@ export function Journey(props: JourneyProps) {
           aria-label="Choose how much to watch"
           onPointerDown={(event) => event.stopPropagation()}
         >
-          <button type="button" className={mode === 'hors' ? 'on' : undefined} data-testid="level-clip" aria-pressed={mode === 'hors'} onPointerUp={(event) => boardAction(event, () => requestClip())} onClick={(event) => event.preventDefault()}>{LEVEL_WORDS[0]}</button>
-          <button type="button" className={mode === 'appetiser' ? 'on' : undefined} data-testid="level-minutes" aria-pressed={mode === 'appetiser'} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => event.preventDefault()}>{LEVEL_WORDS[1]}</button>
-          <button type="button" data-testid="level-lecture" onPointerUp={(event) => boardAction(event, () => requestTalk())} onClick={(event) => event.preventDefault()}>{LEVEL_WORDS[2]}</button>
+          <button type="button" className={mode === 'hors' ? 'on' : undefined} data-testid="level-clip" aria-pressed={mode === 'hors'} onPointerUp={(event) => boardAction(event, () => requestClip())} onClick={(event) => boardClick(event, () => requestClip())}>{LEVEL_WORDS[0]}</button>
+          <button type="button" className={mode === 'appetiser' ? 'on' : undefined} data-testid="level-minutes" aria-pressed={mode === 'appetiser'} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => boardClick(event, () => requestExtract())}>{LEVEL_WORDS[1]}</button>
+          <button type="button" data-testid="level-lecture" onPointerUp={(event) => boardAction(event, () => requestTalk())} onClick={(event) => boardClick(event, () => requestTalk())}>{LEVEL_WORDS[2]}</button>
         </div>
         {currentSpec ? (
           <div className="ready-controls" data-testid="ready-controls">
@@ -2551,8 +2589,8 @@ export function Journey(props: JourneyProps) {
         {mode === 'hors' ? (
           <>
             {speakerRow}
-            {item.speaker ? <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onPointerUp={(event) => boardAction(event, moreFromSpeaker)} onClick={(event) => event.preventDefault()}>More from {item.speaker} ›</button> : null}
-            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" data-speaker={item.speaker} data-lesson={item.lessonId} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => event.preventDefault()}>{(() => {
+            {item.speaker ? <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onPointerUp={(event) => boardAction(event, moreFromSpeaker)} onClick={(event) => boardClick(event, moreFromSpeaker)}>More from {item.speaker} ›</button> : null}
+            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" data-speaker={item.speaker} data-lesson={item.lessonId} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => boardClick(event, () => requestExtract())}>{(() => {
               const lead = clipCta.label && !/^learn more\b/i.test(clipCta.label) ? clipCta.label : clipStepUpLabel()
               const seconds = item.talkSeconds || pieceSeconds(item.appetiser)
               return withTalkDetail(lead, 1, seconds)
@@ -2560,7 +2598,7 @@ export function Journey(props: JourneyProps) {
           </>
         ) : (
           <>
-            <a className="pill gold block" href={course} onPointerUp={(event) => boardAction(event, () => requestTalk())} onClick={(event) => event.preventDefault()} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk" data-speaker={item.speaker} data-lesson={item.lessonId}>{(() => {
+            <a className="pill gold block" href={course} onPointerUp={(event) => boardAction(event, () => requestTalk())} onClick={(event) => boardClick(event, () => requestTalk())} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk" data-speaker={item.speaker} data-lesson={item.lessonId}>{(() => {
               const talks = Object.values(opening.clips).filter((row) => row.courseId === item.courseId).reduce((ids, row) => ids.add(row.lessonId), new Set<number>()).size
               const computed = talkStepUpLabel(talks, item.talkSeconds)
               const custom = talkCta.label && !/^learn more\b/i.test(talkCta.label) && talkCta.label !== talkStepUpLabel(1) && (talkCta.running || talkCta.label !== computed)
@@ -2573,7 +2611,7 @@ export function Journey(props: JourneyProps) {
                 <FollowButton slug={item.speakerSlug} className="follow teal" />
               </div>
             ) : null}
-            {item.speaker ? <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onPointerUp={(event) => boardAction(event, moreFromSpeaker)} onClick={(event) => event.preventDefault()}>More from {item.speaker} ›</button> : null}
+            {item.speaker ? <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onPointerUp={(event) => boardAction(event, moreFromSpeaker)} onClick={(event) => boardClick(event, moreFromSpeaker)}>More from {item.speaker} ›</button> : null}
           </>
         )}
       </div>

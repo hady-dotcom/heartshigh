@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { test } from 'node:test'
-import { BOARD_CLOSE_DY, PICTURE_SWALLOW_MS, boardShouldClose, moreAfterAdvanceThenScrim, pictureTapIgnored } from '../../src/lib/board-gestures'
+import { BOARD_CLOSE_DY, PICTURE_SWALLOW_MS, boardHandleAction, boardShouldClose, moreAfterAdvanceThenScrim, pictureTapIgnored } from '../../src/lib/board-gestures'
 import { clipCanPlayOnLane, dedicatedLaneFeed, playableLaneClips } from '../../src/lib/lanes'
 import { YT_CHROME_HOLD_MS, coverHoldKey, coverHoldMsLeft } from '../../src/lib/yt-cover'
 import type { CutInfo } from '../../src/lib/heart'
@@ -75,7 +75,9 @@ test('2: a 20px drag or a fast flick on the grab area closes the board', () => {
   assert.match(journey, /setPointerCapture/)
   const finish = journey.slice(journey.indexOf('const finishBoard'), journey.indexOf('const visiblePlayer'))
   assert.match(finish, /velocity/)
-  assert.match(finish, /boardShouldClose\(dy, velocity\)/)
+  assert.match(finish, /boardHandleAction\(\{ boardOpen: boardOpenRef\.current, dy, velocity, travel \}\)/)
+  assert.equal(boardHandleAction({ boardOpen: true, dy: 21, velocity: 0, travel: 21 }), 'close')
+  assert.equal(boardHandleAction({ boardOpen: true, dy: 12, velocity: 0.4, travel: 12 }), 'close')
 })
 
 test('3: the end card closes the board and stays under its z-index', () => {

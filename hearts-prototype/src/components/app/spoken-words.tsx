@@ -1,6 +1,6 @@
 'use client'
 
-import { keyWordIndex, sentencesInWindow, spokenLine, wrapWordLines } from '@/lib/framing/words'
+import { pageKeyIndex, sentencesInWindow, spokenLine, wrapWordLines } from '@/lib/framing/words'
 import type { FramingSentence } from '@/lib/framing/types'
 
 export function SpokenWords({
@@ -25,8 +25,9 @@ export function SpokenWords({
   const sentence = spokenLine(sentences, time, { from, to, title, titles })
   if (!sentence) return <div className="fr-words" data-testid="spoken-words" data-empty="yes" />
   const lines = wrapWordLines(sentence.words.map((row) => row.w), 20).slice(0, 5)
-  // One gold word per page: only the first occurrence of the key is lit, counted across the page's lines.
-  const keyAt = keyWordIndex(lines.flat(), sentence.key)
+  // Exactly one gold word per page, counted across the lines shown: the key's first occurrence, or the
+  // page's own best word when the key sits past the panel's cut (long caption-built sentences).
+  const keyAt = pageKeyIndex(lines.flat(), sentence.key)
   const starts = lines.map((_, index) => lines.slice(0, index).reduce((sum, line) => sum + line.length, 0))
   return (
     <div className="fr-words" data-testid="spoken-words" data-sentence={sentence.text} data-sentence-start={sentence.s}>

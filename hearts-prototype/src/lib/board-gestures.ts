@@ -148,5 +148,43 @@ export const GHOST_CLICK_MS = 700
 export function ghostClick(input: { now: number; boardChangedAt: number; lastPressAt: number; detail: number }) {
   if (input.detail === 0) return false
   if (input.boardChangedAt <= 0 || input.now - input.boardChangedAt > GHOST_CLICK_MS) return false
-  return input.lastPressAt <= input.boardChangedAt
+  // A press since the change is a fresh tap. Only the press that made the change (it began just before) owns the click.
+  if (input.lastPressAt <= 0 || input.lastPressAt > input.boardChangedAt) return false
+  return input.boardChangedAt - input.lastPressAt <= GHOST_PRESS_MS
 }
+
+/** The press that opens or closes the board begins at most this long before the change (a slow drag included). */
+export const GHOST_PRESS_MS = 2000
+
+/**
+ * The click fallback for a More-board control. The control acts on pointerup; when that did not act for
+ * this press (a pointerup that never came or was cancelled, or a guard that misread it) the browser's
+ * own click still does, once: the click only exists for a real tap that pressed and lifted on this
+ * control. It never doubles a tap that already acted, and never fires for a press from before the
+ * board opened. A keyboard click (detail 0) always acts.
+ */
+export function boardClickFires(input: { detail: number; boardOpen: boolean; pressedHere: boolean; acted: boolean; pressedAt: number; openedAt: number }) {
+  if (!input.boardOpen) return false
+  if (input.detail === 0) return true
+  if (!input.pressedHere || input.acted) return false
+  return input.openedAt > 0 && input.pressedAt >= input.openedAt
+}
+
+/**
+ * What a lift on the More handle, the board's grab row or the board itself does. Shut: a tap (any
+ * wobble inside the tap slop, in any direction) or an upward swipe opens; nothing else does, so a
+ * small downward wobble can no longer "close" a board that is already shut and eat the tap. Open: a
+ * downward swipe or flick closes, a tap closes, an upward swipe keeps it open.
+ */
+export function boardHandleAction(input: { boardOpen: boolean; dy: number; velocity: number; travel: number }): 'open' | 'close' | 'none' {
+  if (!input.boardOpen) {
+    if (boardShouldOpen(input.dy, input.velocity)) return 'open'
+    return input.travel < BOARD_TAP_SLOP_PX ? 'open' : 'none'
+  }
+  if (boardShouldClose(input.dy, input.velocity)) return 'close'
+  if (boardShouldOpen(input.dy, input.velocity)) return 'none'
+  return input.travel < BOARD_HANDLE_TAP_PX ? 'close' : 'none'
+}
+
+/** Travel under which a lift on the open board's handle or background is a tap that closes it. */
+export const BOARD_HANDLE_TAP_PX = 14

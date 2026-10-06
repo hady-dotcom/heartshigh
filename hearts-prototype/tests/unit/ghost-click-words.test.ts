@@ -59,8 +59,8 @@ test('1: the page records every press and swallows the leftover click before any
   assert.match(journey, /window\.addEventListener\('pointerdown', notePress, true\)/)
   assert.match(journey, /window\.addEventListener\('click', swallowGhost, true\)/)
   const guard = journey.slice(journey.indexOf('const swallowGhost = '), journey.indexOf("window.addEventListener('pointerdown', notePress, true)"))
-  assert.match(guard, /const changedAt = Math\.max\(boardOpenedAt\.current, boardClosedAt\.current\)/)
-  assert.match(guard, /ghostClick\(\{ now: performance\.now\(\), boardChangedAt: changedAt, lastPressAt: lastPressAt\.current, detail: event\.detail \}\)/)
+  // Armed only by the guest's own open or close (openDrawer / closeDrawer), never by an auto-advance or the lane end.
+  assert.match(guard, /ghostClick\(\{ now: performance\.now\(\), boardChangedAt: boardToggledAt\.current, lastPressAt: lastPressAt\.current, detail: event\.detail \}\)/)
   assert.match(guard, /event\.preventDefault\(\)\n\s+event\.stopPropagation\(\)\n\s+event\.stopImmediatePropagation\(\)/)
   assert.match(journey, /window\.removeEventListener\('click', swallowGhost, true\)/)
 })

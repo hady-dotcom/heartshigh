@@ -53,7 +53,7 @@ test('B: a press that began on the button after the board opened always fires, w
 })
 
 test('B: board controls record the press in the capture phase and are not pan targets', () => {
-  assert.match(journey, /onPointerDownCapture=\{\(event\) => \{\n\s+const control = \(event\.target as HTMLElement\)\.closest\('button, a, \[role="button"\]'\)\n\s+boardTap\.current = \{ control, x: event\.clientX, y: event\.clientY, t: performance\.now\(\) \}/)
+  assert.match(journey, /onPointerDownCapture=\{\(event\) => \{\n\s+const control = \(event\.target as HTMLElement\)\.closest\('button, a, \[role="button"\]'\)\n\s+boardTap\.current = \{ control, x: event\.clientX, y: event\.clientY, t: performance\.now\(\), acted: false \}/)
   const action = between('const boardAction = (', 'const pressBoard = ')
   assert.match(action, /const pressedHere = Boolean\(tap && control && tap\.control === control\)/)
   assert.match(action, /boardTapFires\(\{/)
@@ -132,7 +132,8 @@ test('B: a Like that lands on the clip shown at the press says so after an auto-
   assert.equal(boardTapNote({ action: 'save', wasOn: true, title: 'X', landedOnShown: false }), 'Removed X from Saved')
   assert.equal(boardTapNote({ action: 'like', wasOn: false, title: 'X', landedOnShown: true }), null, 'no note when the board still shows that clip')
   assert.match(between('const fave = (', 'const share = '), /boardTapNote\(\{ action: 'like', wasOn, title: [^\n]*landedOnShown: target\.id === item\?\.id \}\)/)
-  assert.match(journey, /data-testid="save"[^\n]*boardTapNote\(\{ action: 'save'/)
+  assert.match(between('const saveTap = () => {', 'const visiblePlayer'), /boardTapNote\(\{ action: 'save'/)
+  assert.match(journey, /data-testid="save"[^\n]*onPointerUp=\{\(event\) => boardAction\(event, saveTap\)\} onClick=\{\(event\) => boardClick\(event, saveTap\)\}/)
 })
 
 // ---------- URL ----------
