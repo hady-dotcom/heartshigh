@@ -206,10 +206,9 @@ test('spoken lines wrap as word arrays so display spaces cannot collapse', () =>
 })
 
 test('F holds the first caption from the clip in-point before its cue clock', () => {
-  assert.equal(
-    spokenLine([{ text: 'First said.', s: 16.4, e: 20, words: [] }], 16, { from: 16, to: 24 })?.text,
-    'First said.',
-  )
+  const first = [{ text: 'First said.', s: 16.4, e: 20, words: [] }]
+  assert.equal(spokenLine(first, 16, { from: 16, to: 24 })?.text, 'First said.')
+  assert.equal(spokenLine(first, 0, { from: 16, to: 24 })?.text, 'First said.')
 })
 
 test('caption cards become live F sentences and skip summary beats', () => {

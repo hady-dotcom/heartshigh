@@ -148,10 +148,14 @@ export function spokenLine(
 ) {
   const live =
     options?.from != null && options?.to != null ? sentencesInWindow(sentences, options.from, options.to) : sentences
-  const sentence = currentSentence(live, time)
+  const clock =
+    options?.from != null && options?.to != null && (time < options.from - 0.5 || time > options.to + 0.5)
+      ? options.from
+      : time
+  const sentence = currentSentence(live, clock)
   const first = live[0]
   const waitingForFirst =
-    !sentence && first && options?.from != null && time >= options.from - 0.05 && time < first.s
+    !sentence && first && options?.from != null && clock >= options.from - 0.05 && clock < first.s
   const shown = sentence || (waitingForFirst ? first : null)
   if (!shown) return null
   const titles = [options?.title, ...(options?.titles || [])]
