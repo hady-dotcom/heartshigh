@@ -2,7 +2,11 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { courseCatcherTap, coursePlayVisible } from '../../src/lib/course-controls'
+import { maybeWidenPlaylist, sessionPlaylist } from '../../src/lib/feed-mix'
+import { dedicatedLaneFeed, playableLaneClips, takeDedicatedLane } from '../../src/lib/lanes'
 import { helpFor } from '../../src/lib/page-help'
+import type { CutInfo } from '../../src/lib/heart'
+import type { FeedItem } from '../../src/server/learner'
 
 const courseScreen = readFileSync(new URL('../../src/screens/app/course.tsx', import.meta.url), 'utf8')
 const player = readFileSync(new URL('../../src/components/app/course-player.tsx', import.meta.url), 'utf8')
@@ -53,7 +57,27 @@ test('play and pause stay on the lecture while it is playing', () => {
   const openDrawer = journey.slice(journey.indexOf('const openDrawer'), journey.indexOf('const closeDrawer'))
   assert.doesNotMatch(openDrawer, /pause|mute|playVideo|silence|stopVisible|hush/)
   assert.match(journey, /if \(boardOpenRef\.current\) return/)
-  assert.match(journey, /if \(own\.length\) clips = own/)
+  const own = [
+    { cutId: 1, youtubeId: 'N_-YiwIb-u0', hors: { start: 0, end: 15 } },
+    { cutId: 2, youtubeId: '45XUrfJS68Q', hors: { start: 0, end: 15 } },
+    { cutId: 3, youtubeId: 'rUIMxBh3aqo', hors: { start: 0, end: 15 } },
+  ] as FeedItem[]
+  const mixed = [{ cutId: 9, youtubeId: 'UGuKJLZnbi8', hors: { start: 0, end: 15 } }, own[0]] as FeedItem[]
+  assert.deepEqual(takeDedicatedLane('company', own, mixed).map((row) => row.cutId), [1, 2, 3])
+  assert.deepEqual(takeDedicatedLane(null, own, mixed).map((row) => row.cutId), [9, 1])
+  const cuts: CutInfo[] = [
+    { id: 1, clause: null, lanes: [], approved: true, hasHors: true, portalOwn: false, starter: { lane: 'company', role: 'first' } },
+    { id: 2, clause: null, lanes: [], approved: true, hasHors: true, portalOwn: false, starter: { lane: 'company', role: 'next' } },
+    { id: 3, clause: null, lanes: [], approved: true, hasHors: true, portalOwn: false, starter: { lane: 'company', role: 'mains' } },
+    { id: 9, clause: null, lanes: [], approved: true, hasHors: true, portalOwn: false, starter: { lane: 'trust', role: 'mains' } },
+  ]
+  const clips = Object.fromEntries([...own, mixed[0]].map((row) => [String(row.cutId), row]))
+  assert.deepEqual(playableLaneClips(clips, cuts, 'company', 'Good company').map((row) => row.cutId), [1, 2, 3])
+  assert.deepEqual(dedicatedLaneFeed(clips, cuts, { company: 'Good company' }, 'company').map((row) => row.cutId), [1, 2, 3])
+  assert.deepEqual(maybeWidenPlaylist(own, mixed, 0, null, true).map((row) => row.cutId), [1, 2, 3])
+  assert.ok(sessionPlaylist(own, mixed, 0, null).some((row) => row.cutId === 9))
+  assert.match(journey, /takeDedicatedLane/)
+  assert.match(journey, /playableLaneClips/)
   assert.doesNotMatch(journey, /\.\.\.own, \.\.\.clips\.filter/)
   assert.match(journey, /data-testid="yt-debug"/)
   assert.match(journey, /Link copied/)

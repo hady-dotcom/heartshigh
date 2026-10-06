@@ -2,9 +2,12 @@ import assert from 'node:assert/strict'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { test } from 'node:test'
+import { maybeWidenPlaylist, sessionPlaylist } from '../../src/lib/feed-mix'
 import { seedTracksWithWords } from '../../src/lib/framing/store'
 import { withCurrentQuery } from '../../src/lib/keep-query'
+import { takeDedicatedLane } from '../../src/lib/lanes'
 import { learnerEmbedSrc, PLAYER_HOST } from '../../src/lib/yt'
+import type { FeedItem } from '../../src/server/learner'
 
 const root = path.join(process.cwd(), 'src')
 
@@ -74,7 +77,13 @@ test('D: advancing closes the board without leaving a swallowed pause', () => {
 test('E: the board is keyed by the visible player spec', () => {
   const journey = readFileSync(path.join(process.cwd(), 'src/components/journey/journey.tsx'), 'utf8')
   assert.match(journey, /boardItemForPlayer\(items, index, hosts\.current\[visibleHost\]\.spec\?\.key\)/)
-  assert.match(journey, /props\.lane \? clips : sessionPlaylist/)
+  const own = [{ cutId: 1 }, { cutId: 2 }, { cutId: 3 }] as FeedItem[]
+  const mixed = [{ cutId: 9 }, { cutId: 1 }, { cutId: 2 }] as FeedItem[]
+  assert.deepEqual(takeDedicatedLane('company', own, mixed).map((row) => row.cutId), [1, 2, 3])
+  assert.deepEqual(maybeWidenPlaylist(own, mixed, 0, null, true).map((row) => row.cutId), [1, 2, 3])
+  assert.ok(sessionPlaylist(mixed, own, 0, null).length >= mixed.length)
+  assert.match(journey, /takeDedicatedLane/)
+  assert.doesNotMatch(journey, /props\.lane \? clips : sessionPlaylist/)
 })
 
 test('F: seed clips with timed words are the framing tracks that ship sentences', () => {

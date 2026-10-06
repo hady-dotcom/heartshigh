@@ -1,6 +1,7 @@
 // A lane's own clips, for the Lanes screen and for /feed?lane=<key>. Plain module: the server and the device share it.
 import type { CutInfo, LaneDef } from './heart'
 import type { FeedItem } from '../server/learner'
+import { playingSpeaker } from './playing-speaker'
 
 const ROLE_ORDER = { first: 0, next: 1, mains: 2 } as const
 
@@ -62,7 +63,7 @@ export function feedMayWiden(lane?: string | null) {
 
 /** One name when every playable clip shares it; otherwise the lane card stays quiet. */
 export function laneCardSpeaker(clips: { speaker?: string | null }[]) {
-  const names = [...new Set(clips.map((clip) => String(clip.speaker || '').trim()).filter((name) => name && !/^the speaker$/i.test(name)))]
+  const names = [...new Set(clips.map((clip) => playingSpeaker(clip.speaker)).filter(Boolean))]
   return names.length === 1 ? names[0] : ''
 }
 

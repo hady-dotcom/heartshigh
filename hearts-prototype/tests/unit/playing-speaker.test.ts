@@ -7,6 +7,10 @@ import { playingSpeaker } from '../../src/lib/playing-speaker'
 test('the board names the playing lesson, or nothing when that lesson has no speaker', () => {
   assert.equal(playingSpeaker('Suleiman Hani'), 'Suleiman Hani')
   assert.equal(playingSpeaker('  Amjad Tarsin  '), 'Amjad Tarsin')
+  assert.equal(playingSpeaker('Shaykh Yasir Fahmy'), 'Yasir Fahmy')
+  assert.equal(playingSpeaker('Yasir Fahmy'), 'Yasir Fahmy')
+  assert.equal(playingSpeaker('Imam Khalid Latif'), 'Khalid Latif')
+  assert.equal(playingSpeaker('Shahid Jones'), 'Shahid Jones')
   assert.equal(playingSpeaker(''), '')
   assert.equal(playingSpeaker(null), '')
   assert.equal(playingSpeaker('The speaker'), '')
@@ -17,6 +21,7 @@ test('the board names the playing lesson, or nothing when that lesson has no spe
 
 test('a lane card names a speaker only when every playable clip shares one', () => {
   assert.equal(laneCardSpeaker([{ speaker: 'Suleiman Hani' }, { speaker: 'Suleiman Hani' }]), 'Suleiman Hani')
+  assert.equal(laneCardSpeaker([{ speaker: 'Shaykh Yasir Fahmy' }, { speaker: 'Yasir Fahmy' }]), 'Yasir Fahmy')
   assert.equal(laneCardSpeaker([{ speaker: 'Suleiman Hani' }, { speaker: 'Amjad Tarsin' }]), '')
   assert.equal(laneCardSpeaker([{ speaker: 'The speaker' }, { speaker: '' }]), '')
 })

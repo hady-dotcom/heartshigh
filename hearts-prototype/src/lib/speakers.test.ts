@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { foldSpeaker, resolveSpeaker, speakerSlug } from './speakers'
+import { foldSpeaker, resolveSpeaker, speakerSlug, stripSpeakerHonorific } from './speakers'
 
 const cases = [
   ['Sh. Mohammad Elshinawy', 'Mohammad Elshinawy', 'mohammad-elshinawy'],
@@ -22,6 +22,9 @@ test('known aliases resolve to one speaker even when the catalogue is empty', ()
   assert.notEqual(foldSpeaker('Alaeddin Albakri'), foldSpeaker('Alauddin Elbakri'))
   assert.equal(resolveSpeaker('Shahid Jones', []), null)
   assert.equal(speakerSlug('Shaykh Mikaeel Smith'), 'mikaeel-smith')
+  assert.equal(stripSpeakerHonorific('Shaykh Yasir Fahmy'), 'Yasir Fahmy')
+  assert.equal(stripSpeakerHonorific('Yasir Fahmy'), 'Yasir Fahmy')
+  assert.equal(stripSpeakerHonorific('Shahid Jones'), 'Shahid Jones')
 })
 
 test('a catalogue alias wins, and a title that already shares the page is not a new person', () => {
