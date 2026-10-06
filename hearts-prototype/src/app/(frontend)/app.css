@@ -406,10 +406,13 @@
   z-index: 30;
 }
 .app[data-testid="course"] .app-scroll {
-  padding: 0 0 calc(220px + env(safe-area-inset-bottom, 0px));
+  padding: 0 18px calc(280px + env(safe-area-inset-bottom, 0px));
 }
 .app[data-testid="course"] .course-film {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  margin: 0 -18px;
   background: #0F3B3A;
   color: #f6eedc;
 }
@@ -482,11 +485,31 @@
   padding: 0 18px calc(96px + env(safe-area-inset-bottom, 0px));
 }
 .app[data-testid="course"] .garden-card {
-  margin-bottom: 88px;
-  scroll-margin-bottom: calc(148px + env(safe-area-inset-bottom, 0px));
+  margin-bottom: 120px;
+  scroll-margin-bottom: calc(180px + env(safe-area-inset-bottom, 0px));
+}
+.app[data-testid="course"] [data-testid="schedule-this"],
+.app[data-testid="course"] [data-testid="plan-rest"] {
+  display: block;
+  margin: 16px 0 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.yt-debug {
+  position: fixed;
+  top: calc(8px + env(safe-area-inset-top, 0px));
+  left: 8px;
+  z-index: 80;
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(8, 24, 24, 0.82);
+  color: #f6eedc;
+  font: 11px/1.35 ui-monospace, monospace;
+  pointer-events: none;
 }
 .app[data-testid="course"] .big-play { display: none; }
-.player-card .poster { position: absolute; inset: 0; background-size: contain; background-position: center; background-repeat: no-repeat; opacity: 1; }
+.player-card .poster { position: absolute; inset: 0; background-size: cover; background-position: center; background-repeat: no-repeat; opacity: 1; }
 .player-card .poster.scenic { background: #0e2a2b url('/theme/evening-courtyard.jpg') center 40% / cover no-repeat; }
 .player-veil { position: absolute; inset: 0; z-index: 3; background: linear-gradient(180deg, rgba(15, 59, 58, 0.28), rgba(228, 207, 160, 0.18)); display: grid; place-items: center; }
 .gold-spin { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(212, 168, 75, 0.35); border-top-color: #f1d58a; animation: gold-spin 0.8s linear infinite; }

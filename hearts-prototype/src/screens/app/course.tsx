@@ -13,6 +13,7 @@ import { loadDoors } from '@/server/doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { visibleCourseIds } from '@/server/context'
 import { sortParts } from '@/lib/part-order'
+import { tidyQuestionPrompt } from '@/lib/question-prompt'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { courseCards, portraitFor, posterFor, shownPoster, slugify, talkStill } from '@/server/learner'
 import { speakerPage } from '@/server/speakers'
@@ -247,7 +248,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
       id: point.id,
       number: index + 1,
       second: Number(point.second || 0),
-      prompt: str(point.prompt),
+      prompt: tidyQuestionPrompt(str(point.prompt)) || `Question ${index + 1}`,
       kind: (['reflection', 'question', 'multiple_choice', 'task'].includes(str(point.kind)) ? point.kind : 'reflection') as PointView['kind'],
       options: Array.isArray(point.options) ? (point.options as unknown[]).map(String) : [],
       dueDays: point.dueDays == null || point.dueDays === '' ? null : Number(point.dueDays),

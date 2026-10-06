@@ -18,6 +18,12 @@ export function playableLaneClips(clips: Record<string, FeedItem>, cuts: CutInfo
   return laneClips(clips, cuts, lane, title).filter((clip) => Boolean(clip.youtubeId) && (!clip.card || clip.card === 'talk'))
 }
 
+/** One name when every playable clip shares it; otherwise the lane card stays quiet. */
+export function laneCardSpeaker(clips: { speaker?: string | null }[]) {
+  const names = [...new Set(clips.map((clip) => String(clip.speaker || '').trim()).filter((name) => name && !/^the speaker$/i.test(name)))]
+  return names.length === 1 ? names[0] : ''
+}
+
 /** Every lane that has at least one clip, in the lanes' own order, with its clips. Opt-in lanes stay out. */
 export function lanesWithClips(route: { lanes: LaneDef[]; cuts: CutInfo[] }, clips: Record<string, FeedItem>, titles: Record<string, string>) {
   return route.lanes

@@ -11,9 +11,9 @@ import type { FramingSentence } from '@/lib/framing/types'
 import { placeDots } from '@/lib/timeline-dots'
 import { coursePlayVisible } from '@/lib/course-controls'
 import { nextPlaybackRate } from '@/lib/playback-rate'
-import { createPlayer, destroyPlayer, getPlayer, hasSound, pauseKeepingSound, resume, soundOn, STATE, UNPLAYABLE } from '@/lib/yt'
-import { boardClickAllowed, pointerTravel } from '@/lib/board-gestures'
-import { YT_CHROME_HOLD_MS } from '@/lib/yt-cover'
+import { createPlayer, destroyPlayer, getPlayer, hasSound, pauseKeepingSound, playWithSoundFallback, resume, soundOn, STATE, UNPLAYABLE } from '@/lib/yt'
+import { boardClickAllowed, boardShouldClose, boardShouldOpen, pointerTravel } from '@/lib/board-gestures'
+import { YT_CHROME_HOLD_MS, coverFallbackAction, landscapeThumb, ytDebugOn } from '@/lib/yt-cover'
 import { SwarmList } from '@/components/app/swarm-list'
 import { initialsOf } from '@/lib/swarm-sort'
 import { HeartIcon, ImageIcon, LockIcon, MicIcon } from '../icons'
@@ -236,11 +236,8 @@ export function CoursePlayer({
         const total = player.getDuration() || 0
         if (total > 0) setLength(total)
         const activation = typeof navigator !== 'undefined' && Boolean(navigator.userActivation?.isActive || navigator.userActivation?.hasBeenActive)
-        if (activation) {
-          soundOn(PLAYER_ID)
-          player.unMute()
-        }
-        resume(PLAYER_ID)
+        if (activation) soundOn(PLAYER_ID)
+        playWithSoundFallback(player, hasSound() || activation)
       },
       onState: (state) => {
         setPlaying(state === STATE.PLAYING)
@@ -506,8 +503,8 @@ export function CoursePlayer({
     const dy = event.clientY - start.y
     const travel = pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY })
     if ((event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
-    if (dy < -28) openDrawer()
-    else if (dy > 36) closeDrawer()
+    if (boardShouldOpen(dy)) openDrawer()
+    else if (boardShouldClose(dy)) closeDrawer()
     else if (travel < 14) {
       if (boardOpen) closeDrawer()
       else openDrawer()
@@ -566,8 +563,7 @@ export function CoursePlayer({
   const open = views.find((point) => point.id === openId) || null
   const total = length || Math.max(60, ...views.map((point) => point.second + 30))
   const filmed = mode === 'youtube' || mode === 'vimeo' || mode === 'file'
-  const ownPoster = Boolean(poster && !/i\.ytimg\.com|img\.youtube\.com|^\/clips\//i.test(poster))
-  const scenicPoster = !ownPoster
+  const coverUrl = landscapeThumb(youtubeId) || poster
   const places = new Map(placeDots(views.map((row) => ({ id: row.id, second: row.second })), total, trackWidth).map((row) => [row.id, row]))
 
   const showCover = coverHeld || !playing || ended || mode === 'loading' || !lit
@@ -581,8 +577,36 @@ export function CoursePlayer({
     playStartedAt.current = 0
     setCoverHeld(true)
   }, [playing, ended])
+  useEffect(() => {
+    if (!youtubeId || ended) return
+    const begun = performance.now()
+    const timer = window.setInterval(() => {
+      const player = getPlayer(PLAYER_ID)
+      if (!player) return
+      const action = coverFallbackAction({
+        waitedMs: performance.now() - begun,
+        eventPlaying: playing,
+        polledState: player.getPlayerState(),
+        polledTime: player.getCurrentTime(),
+        start: startAt,
+      })
+      if (action === 'treat-playing' && !playing) {
+        setPlaying(true)
+        setLit(true)
+        setMode('youtube')
+        if (!playStartedAt.current) playStartedAt.current = performance.now()
+      }
+      if (action === 'retry') playWithSoundFallback(player, hasSound())
+    }, 400)
+    return () => window.clearInterval(timer)
+  }, [ended, playing, startAt, youtubeId])
   return (
     <div data-testid="player" data-mode={mode} data-playing={playing ? 'yes' : 'no'} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-cover={showCover ? 'yes' : 'no'} data-popup-layout={overPlayer ? 'over' : 'strict'}>
+      {typeof window !== 'undefined' && ytDebugOn(window.location.search) ? (
+        <pre className="yt-debug" data-testid="yt-debug">
+          {`state ${playing ? 1 : ended ? 0 : 2} time ${time.toFixed(1)} cur ${(getPlayer(PLAYER_ID)?.getCurrentTime() ?? time).toFixed(1)} cover ${showCover ? 'yes' : 'no'}`}
+        </pre>
+      ) : null}
       <div className="course-film">
         <div className="j-hairline-row">
           <div className={`j-hairline${mode === 'loading' ? ' shimmer' : ''}`} data-testid="hairline"><i style={{ width: `${Math.min(100, (time / total) * 100)}%` }} /></div>
@@ -593,7 +617,7 @@ export function CoursePlayer({
           </div>
         </div>
         <div ref={card} className={`player-card is-f course-film-band${filmed ? ' yt-on' : ''}${playing ? ' is-live' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
-          {showCover ? <div className={`poster${scenicPoster ? ' scenic' : ''}${mode === 'loading' ? ' skeleton' : ''}`} style={ownPoster ? { backgroundImage: `url(${poster})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : 'player-poster'} /> : null}
+          {showCover ? <div className={`poster${mode === 'loading' ? ' skeleton' : ''}`} style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : 'player-poster'} /> : null}
           {mode === 'loading' && !failed ? <div className="player-veil" data-testid="player-veil" aria-hidden><span className="gold-spin" /></div> : null}
           {failed ? (
             <div className="player-retry" data-testid="player-retry">

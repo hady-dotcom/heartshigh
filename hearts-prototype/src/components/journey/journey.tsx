@@ -15,8 +15,8 @@ import { feedFilmCaption } from '@/lib/spoken-caption'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { playableLaneClips } from '@/lib/lanes'
-import { BOARD_ARM_MS, boardClickAllowed, pointerTravel } from '@/lib/board-gestures'
-import { YT_CHROME_HOLD_MS, pauseMarkVisible } from '@/lib/yt-cover'
+import { YT_CHROME_HOLD_MS, coverFallbackAction, landscapeThumb, pauseMarkVisible, ytDebugOn } from '@/lib/yt-cover'
+import { BOARD_ARM_MS, boardClickAllowed, boardShouldClose, boardShouldOpen, pointerTravel } from '@/lib/board-gestures'
 import { isoWeek } from '@/lib/trends'
 import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, hostShouldShow, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, verticalSwipe } from '@/lib/film-advance'
 import { acceptLevelTap, type LevelTap } from '@/lib/level-tap'
@@ -218,15 +218,12 @@ export function Journey(props: JourneyProps) {
   const [boardOpen, setBoardOpen] = useState(false)
   const boardOpenRef = useRef(false)
   boardOpenRef.current = boardOpen
-  const [swipeHint, setSwipeHint] = useState(true)
+  const [swipeHint] = useState(true)
   const [coverHeld, setCoverHeld] = useState(true)
   const [clipEnded, setClipEnded] = useState(false)
   const playStartedAt = useRef(0)
   const boardOpenedAt = useRef(0)
   const boardDrag = useRef<{ x: number; y: number; opened: boolean } | null>(null)
-  useEffect(() => {
-    if (index !== 0) setSwipeHint(false)
-  }, [index])
   const watch = useRef<{ key: string; start: number; furthest: number; done90: boolean; ended: boolean }>({ key: '', start: 0, furthest: 0, done90: false, ended: false })
   const refilling = useRef(false)
   const clipRef = useRef<HTMLDivElement>(null)
@@ -654,6 +651,7 @@ export function Journey(props: JourneyProps) {
       setClipEnded(false)
       setCoverHeld(true)
       playStartedAt.current = 0
+      userPausedRef.current = false
       if (item) {
         const seen = rememberSeenCard(item.cutId, item.card || 'talk', kind)
         seenRef.current = new Set(seen.cards)
@@ -758,7 +756,7 @@ export function Journey(props: JourneyProps) {
         let firstMode: Mode = 'hors'
         if (props.lane) {
           const own = playableLaneClips(opening.clips, opening.route.cuts, props.lane, opening.laneTitles[props.lane] || props.lane)
-          if (own.length) clips = [...own, ...clips.filter((clip) => !own.some((row) => row.cutId === clip.cutId))]
+          if (own.length) clips = own
         }
         const asked = props.clip ? opening.clips[String(props.clip)] : undefined
         if (asked) {
@@ -1232,19 +1230,24 @@ export function Journey(props: JourneyProps) {
       keepHarvest()
       if (modeRef.current !== 'hors') return
       wantPlayRef.current = null
-      userPausedRef.current = true
       window.clearInterval(playWatch.current)
       const flagsNow = sessionFlags()
       if (!signedIn && !flagsNow.firstEnded) {
         setSessionFlags({ ...sessionFlags(), firstEnded: true })
         if (openSheet('ended')) {
           pendingAfterSheet.current = 'next'
+          userPausedRef.current = true
           return
         }
       }
       const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', seenRef.current, Boolean(props.lane))
-      if (next == null) setClipEnded(true)
-      else void advance(next, 'auto')
+      if (next == null) {
+        userPausedRef.current = true
+        setClipEnded(true)
+      } else {
+        userPausedRef.current = false
+        void advance(next, 'auto')
+      }
     }
     const onError = (event: Event) => {
       const { code, at } = (event as CustomEvent<{ code: number; at: number }>).detail
@@ -1610,13 +1613,17 @@ export function Journey(props: JourneyProps) {
     if (!item) return
     const url = `${window.location.origin}${base}/feed`
     try {
-      if (navigator.share) await navigator.share({ title: item.courseTitle, url })
-      else {
-        await navigator.clipboard.writeText(url)
-        setToast('Link copied')
-      }
+      await navigator.clipboard.writeText(url)
     } catch {
-      setToast('Sharing was cancelled')
+      // Private mode: still offer the system share sheet.
+    }
+    setToast('Link copied')
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: item.courseTitle, url })
+      } catch {
+        // The learner cancelled the sheet; the link is already copied.
+      }
     }
   }
 
@@ -1638,6 +1645,7 @@ export function Journey(props: JourneyProps) {
   }
 
   const tapPicture = () => {
+    if (boardOpenRef.current) return
     const host = hosts.current[visibleRef.current]
     const player = host.playerId ? getPlayer(host.playerId) : null
     const real = player?.getPlayerState()
@@ -1664,6 +1672,7 @@ export function Journey(props: JourneyProps) {
   }
 
   const pauseForSwipe = () => {
+    if (boardOpenRef.current) return
     const host = hosts.current[visibleRef.current]
     if (host.playerId) getPlayer(host.playerId)?.pauseVideo()
   }
@@ -1869,6 +1878,34 @@ export function Journey(props: JourneyProps) {
     playStartedAt.current = 0
     setCoverHeld(true)
   }, [playingOut, clipEnded, item?.cutId, mode])
+  useEffect(() => {
+    if (phase !== 'feed' || clipEnded || userPausedRef.current) return
+    const begun = performance.now()
+    const timer = window.setInterval(() => {
+      if (userPausedRef.current || boardOpenRef.current) return
+      const host = hosts.current[visibleRef.current]
+      const player = host.playerId ? getPlayer(host.playerId) : null
+      if (!player) return
+      const action = coverFallbackAction({
+        waitedMs: performance.now() - begun,
+        eventPlaying: host.state === STATE.PLAYING,
+        polledState: player.getPlayerState(),
+        polledTime: player.getCurrentTime(),
+        start: host.spec?.start || 0,
+      })
+      if (action === 'treat-playing' && host.state !== STATE.PLAYING) {
+        host.state = STATE.PLAYING
+        host.played = true
+        if (!playStartedAt.current) playStartedAt.current = performance.now()
+        setReadyTick((value) => value + 1)
+      }
+      if (action === 'retry' && host.playerId && host.spec) {
+        armPlay(host.spec.key)
+        playOnly(host.playerId)
+      }
+    }, 400)
+    return () => window.clearInterval(timer)
+  }, [armPlay, clipEnded, item?.cutId, mode, phase])
   const keepAppetiserPoster = mode === 'appetiser' && appetiserHeld && host.state !== STATE.PLAYING
   const userPaused = userPausedRef.current
   const clipPaused = host.state === STATE.PAUSED
@@ -2002,8 +2039,8 @@ export function Journey(props: JourneyProps) {
     const dy = event.clientY - start.y
     const travel = pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY })
     if ((event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
-    if (dy < -28) openDrawer()
-    else if (dy > 36) closeDrawer()
+    if (boardShouldOpen(dy)) openDrawer()
+    else if (boardShouldClose(dy)) closeDrawer()
     else if (travel < 14) {
       if (boardOpen) closeDrawer()
       else openDrawer()
@@ -2258,7 +2295,7 @@ export function Journey(props: JourneyProps) {
             <Slide item={item} style={slide} onMore={() => void stepUp()} />
           </div>
         ) : null}
-        <div className="j-chrome" data-swipe={boardOpen ? undefined : ''} {...(boardOpen ? {} : swipe)}>
+        <div className="j-chrome">
           {chrome}
         </div>
         {clipEnded && mode === 'hors' && item && phase === 'feed' && nextClipAt == null ? (
@@ -2321,6 +2358,11 @@ export function Journey(props: JourneyProps) {
       ) : null}
 
       {toast?.trim() ? <div className="lane-switch" data-testid="toast"><span key={toast}>{toast.trim()}</span></div> : null}
+      {typeof window !== 'undefined' && ytDebugOn(window.location.search) ? (
+        <pre className="yt-debug" data-testid="yt-debug">
+          {`state ${host.state} time ${(spokenAt ?? 0).toFixed(1)} cur ${(host.playerId ? getPlayer(host.playerId)?.getCurrentTime() ?? 0 : 0).toFixed(1)} cover ${showPoster ? 'yes' : 'no'}`}
+        </pre>
+      ) : null}
 
       <div className="sr-only">
         {phase === 'feed' ? (
@@ -2379,14 +2421,12 @@ function stillOf(item: FeedItem | undefined, mode: Mode) {
 
 function PosterStill({ item, mode }: { item: FeedItem; mode: Mode; peek?: boolean }) {
   const [frameFailed, setFrameFailed] = useState(false)
-  const frame = mode === 'appetiser' && item.cleanThumb && !frameFailed ? item.cleanThumb : null
+  const thumb = landscapeThumb(item.youtubeId)
+  const frame = mode === 'appetiser' && item.cleanThumb && !frameFailed ? item.cleanThumb : thumb
   return (
     <>
       {frame ? (
-        // A missing maxresdefault comes back as YouTube's 120px grey stand-in rather than an error.
         <img src={frame} alt="" onError={() => setFrameFailed(true)} onLoad={(event) => { if (event.currentTarget.naturalWidth <= 120) setFrameFailed(true) }} />
-      ) : item.poster && !/i\.ytimg\.com|img\.youtube\.com|^\/clips\//i.test(item.poster) ? (
-        <img src={item.poster} alt="" />
       ) : null}
     </>
   )
