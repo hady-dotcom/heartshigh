@@ -31,6 +31,7 @@ test('talk sequence reads [Ep N], Ep. N, Part N and Session N', () => {
   assert.equal(talkSequenceNumber('The Names Class 19: Ar-Rabb'), 19)
   assert.equal(talkSequenceNumber('Our Character | Day 2'), 2)
   assert.equal(talkSequenceNumber('A talk with no number'), null)
+  assert.equal(talkSequenceNumber('13 Centuries of Islamic History: Week 1 - Part 6/8'), null)
 })
 
 test('an explicit episode field wins over the title, then publish date, then stored order', () => {
@@ -76,6 +77,18 @@ test('reversedTalkCourses lists live-style Manners of the Salaf and leaves a num
   ])
   assert.deepEqual(found.map((row) => row.title), ['Manners of the Salaf'])
   assert.equal(found[0]?.talk[0]?.title, '[Ep 1] The Primacy of Adab')
+})
+
+test('The Common Man\'s Tafsir follows Class 1 to Class 19, not newest-first import order', () => {
+  const lessons = [19, 18, 1].map((n, index) => ({
+    id: index + 1,
+    order: index + 1,
+    title: `The Common Man's Tafsir - Class ${n}`,
+  }))
+  assert.deepEqual(
+    sortParts(lessons).map((row) => talkSequenceNumber(row.title)),
+    [1, 18, 19],
+  )
 })
 
 test('the lane end card sits above the More pill', () => {

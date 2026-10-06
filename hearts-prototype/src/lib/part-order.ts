@@ -14,7 +14,8 @@ export type PartLesson = {
   uploadedAt?: string | null
 }
 
-const TALK_NUMBER = /(?:\[)?\b(?:ep(?:isode)?\.?|part|session|class|day)\s*(\d+)\b/i
+const EPISODE = /(?:\[)?\b(?:ep(?:isode)?\.?|session|class|day)\s*(\d+)\b/i
+const PART = /\bpart\s*(\d+)\b(?!\s*\/)/i
 
 function firstPositive(...values: unknown[]) {
   for (const value of values) {
@@ -37,7 +38,7 @@ export function explicitTalkOrder(lesson: PartLesson) {
 /** Episode number from titles like `[Ep 2]`, `Ep. 1`, `Part 3`, or `Session 6`. */
 export function talkSequenceNumber(title?: string | null) {
   if (!title) return null
-  const match = TALK_NUMBER.exec(title)
+  const match = EPISODE.exec(title) || PART.exec(title)
   return match ? Number(match[1]) : null
 }
 
