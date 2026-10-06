@@ -620,7 +620,12 @@ export function CoursePlayer({
         <div
           className="j-board course-board"
           data-testid="feed-board"
-          onPointerDown={(event) => { event.stopPropagation(); boardDrag.current = { y: event.clientY }; event.currentTarget.setPointerCapture?.(event.pointerId) }}
+          onPointerDown={(event) => {
+            event.stopPropagation()
+            if ((event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
+            boardDrag.current = { y: event.clientY }
+            event.currentTarget.setPointerCapture?.(event.pointerId)
+          }}
           onPointerMove={moveBoard}
           onPointerUp={finishBoard}
         >

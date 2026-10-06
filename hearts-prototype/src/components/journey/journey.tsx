@@ -2029,7 +2029,12 @@ export function Journey(props: JourneyProps) {
         key={item.cutId}
         className="j-board"
         data-testid="feed-board"
-        onPointerDown={(event) => { event.stopPropagation(); boardDrag.current = { y: event.clientY, opened: true }; event.currentTarget.setPointerCapture?.(event.pointerId) }}
+        onPointerDown={(event) => {
+          event.stopPropagation()
+          if ((event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
+          boardDrag.current = { y: event.clientY, opened: true }
+          event.currentTarget.setPointerCapture?.(event.pointerId)
+        }}
         onPointerMove={moveBoard}
         onPointerUp={finishBoard}
       >
