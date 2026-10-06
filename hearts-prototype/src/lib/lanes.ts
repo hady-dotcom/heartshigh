@@ -1,6 +1,7 @@
 // A lane's own clips, for the Lanes screen and for /feed?lane=<key>. Plain module: the server and the device share it.
 import type { CutInfo, LaneDef } from './heart'
 import type { FeedItem } from '../server/learner'
+import { playingSpeaker } from './playing-speaker'
 
 const ROLE_ORDER = { first: 0, next: 1, mains: 2 } as const
 
@@ -13,10 +14,63 @@ export function laneClips(clips: Record<string, FeedItem>, cuts: CutInfo[], lane
   return [...starters, ...tagged].map((row) => ({ ...row.clip, laneKey: lane, lane, laneLabel: title }))
 }
 
+/**
+ * The same gate the feed player uses: a YouTube talk with a real hors window,
+ * and not a styled, scene, or typography card that specFor would refuse.
+ */
+export function clipCanPlayOnLane(clip: Pick<FeedItem, 'youtubeId' | 'card' | 'hors' | 'style' | 'typography'>): boolean {
+  if (!clip.youtubeId) return false
+  if (clip.card && clip.card !== 'talk') return false
+  if (clip.style || clip.typography?.src) return false
+  const start = Number(clip.hors?.start)
+  const end = Number(clip.hors?.end)
+  return Number.isFinite(start) && Number.isFinite(end) && end > start
+}
+
+/** Clips a lane can actually play — the same list the player walks. */
+export function playableLaneClips(clips: Record<string, FeedItem>, cuts: CutInfo[], lane: string, title: string): FeedItem[] {
+  return laneClips(clips, cuts, lane, title).filter(clipCanPlayOnLane)
+}
+
+/** A dedicated lane feed is exactly that lane's playable list. Empty when no lane is open. */
+export function dedicatedLaneFeed(
+  clips: Record<string, FeedItem>,
+  cuts: CutInfo[],
+  titles: Record<string, string>,
+  lane: string | null | undefined,
+): FeedItem[] {
+  if (!lane) return []
+  return playableLaneClips(clips, cuts, lane, titles[lane] || lane)
+}
+
+/**
+ * A dedicated lane never takes the scored/mixed fetch. The card count and the
+ * player walk the same `clipCanPlayOnLane` list, in starter-then-tagged order.
+ */
+export function takeDedicatedLane(
+  lane: string | null | undefined,
+  own: FeedItem[],
+  incoming: FeedItem[],
+): FeedItem[] {
+  if (!lane) return incoming
+  return own
+}
+
+/** Mixed Home feed may grow from the session playlist. A dedicated lane must not. */
+export function feedMayWiden(lane?: string | null) {
+  return !lane
+}
+
+/** One name when every playable clip shares it; otherwise the lane card stays quiet. */
+export function laneCardSpeaker(clips: { speaker?: string | null }[]) {
+  const names = [...new Set(clips.map((clip) => playingSpeaker(clip.speaker)).filter(Boolean))]
+  return names.length === 1 ? names[0] : ''
+}
+
 /** Every lane that has at least one clip, in the lanes' own order, with its clips. Opt-in lanes stay out. */
 export function lanesWithClips(route: { lanes: LaneDef[]; cuts: CutInfo[] }, clips: Record<string, FeedItem>, titles: Record<string, string>) {
   return route.lanes
     .filter((lane) => !lane.optInOnly)
-    .map((lane) => ({ key: lane.key, title: titles[lane.key] || lane.title, clips: laneClips(clips, route.cuts, lane.key, titles[lane.key] || lane.title) }))
+    .map((lane) => ({ key: lane.key, title: titles[lane.key] || lane.title, clips: playableLaneClips(clips, route.cuts, lane.key, titles[lane.key] || lane.title) }))
     .filter((lane) => lane.clips.length > 0)
 }

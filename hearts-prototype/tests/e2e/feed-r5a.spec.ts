@@ -70,7 +70,6 @@ test('Ready for more? opens the same speaker, and the step-up names a duration o
   await expect(feed).toHaveAttribute('data-speaker', speaker!)
   await expect(feed).toHaveAttribute('data-lesson', lesson!)
   await expect(page.getByTestId('learn-more')).toHaveText(/Watch the whole talk \(\d+ min\)|See the whole course \(\d+ talks\)/)
-  await expect(page.getByTestId('level-chip')).toHaveText('Ready for more?')
 })
 
 test('Today’s clips autoplay, and no Tap to play label stays on the clip', async ({ page }) => {

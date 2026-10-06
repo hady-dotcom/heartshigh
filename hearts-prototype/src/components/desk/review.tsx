@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { learnerEmbedSrc } from '@/lib/yt'
 
 type Segment = { key: string; label: string; start: number; end: number }
 
@@ -18,7 +19,7 @@ export function ReviewPlayer({ youtubeId, segments, autoplay }: { youtubeId: str
           <iframe
             key={playing.nonce}
             title={playing.segment.label}
-            src={`https://www.youtube-nocookie.com/embed/${youtubeId}?start=${Math.floor(playing.segment.start)}&end=${Math.ceil(playing.segment.end)}&autoplay=1&playsinline=1&rel=0&cc_load_policy=1&cc_lang_pref=en`}
+            src={learnerEmbedSrc(youtubeId, { start: Math.floor(playing.segment.start), end: Math.ceil(playing.segment.end), autoplay: 1, playsinline: 1, rel: 0, cc_load_policy: 1, cc_lang_pref: 'en', controls: 1 })}
             allow="autoplay; encrypted-media"
             allowFullScreen
             data-testid="review-frame"

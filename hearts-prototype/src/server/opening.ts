@@ -17,6 +17,7 @@ import { filesForTalk, isTypographyStyle, readTypographyManifest, type Typograph
 import { clipWords, displayLine, feedTidy, parseLineTidy } from '@/lib/tidy-caption'
 import { partTitle } from '@/lib/talk-title'
 import { trackForClip } from '@/lib/framing/store'
+import { playingSpeaker } from '@/lib/playing-speaker'
 import { laneOf, portraitFor, SLIDE_ART, slugify, type FeedItem, type SlideStyle } from './learner'
 
 type Row = Record<string, unknown> & { id: number }
@@ -339,8 +340,8 @@ function itemFor(data: Loaded, cut: Row, laneKey: string | null, laneTitles: Rec
   if (!lesson) return null
   const course = data.courses.find((row) => row.id === idOf(lesson.course))
   if (!course) return null
-  const speaker = String(lesson.speaker || course.speaker || 'The speaker')
-  const slug = slugify(speaker)
+  const speaker = playingSpeaker(lesson.speaker)
+  const slug = speaker ? slugify(speaker) : ''
   const youtubeId = (lesson.youtubeId as string) || null
   const tagged = laneTagsOf(data, cut.id)
   const shownLane = laneKey || tagged.find((tag) => tag.confirmed)?.lane || null

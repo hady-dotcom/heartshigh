@@ -1,5 +1,6 @@
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
+import { learnerEmbedSrc } from '@/lib/yt'
 import { doorByNumber, doorSpokenLabel } from '@/lib/doors'
 import { portraitFor, slugify } from '@/server/learner'
 import { idOf, portalIdOf } from '@/lib/ids'
@@ -119,7 +120,7 @@ function embedFor(row: Doc) {
   const youtubeId = text(row.youtubeId)
   const vimeoId = text(row.vimeoId)
   const playback = text(row.muxPlaybackId)
-  if (source === 'youtube' && youtubeId) return `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&controls=0&playsinline=1&rel=0&modestbranding=1`
+  if (source === 'youtube' && youtubeId) return learnerEmbedSrc(youtubeId, { autoplay: 1, controls: 0, playsinline: 1, rel: 0, modestbranding: 1 })
   if (source === 'vimeo' && vimeoId) return `https://player.vimeo.com/video/${vimeoId}?autoplay=1&controls=0`
   if (source === 'mux' && playback) return muxPlaybackUrl(playback)
   return ''

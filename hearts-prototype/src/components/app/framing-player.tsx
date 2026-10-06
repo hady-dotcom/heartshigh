@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { framingVariant, type FramingVariant } from '@/lib/experiments'
+import type { FramingVariant } from '@/lib/experiments'
 import { coverSourceToBox, cssVars, layoutFor } from '@/lib/framing/layout'
 import { PLACEHOLDER_FACE } from '@/lib/framing/placeholder'
 import { segmentAt } from '@/lib/framing/choose'
@@ -32,9 +32,8 @@ type Props = {
   placeholder?: boolean
 }
 
-export function effectiveMode(track: FramingTrack | null | undefined, time: number, variant?: string | null): FramingMode {
-  if (framingVariant(variant) === 'split-only') return 'F'
-  return segmentAt(track, time)?.mode || 'F'
+export function effectiveMode(_track: FramingTrack | null | undefined, _time: number, _variant?: string | null): FramingMode {
+  return 'F'
 }
 
 export function FramingPlayer({

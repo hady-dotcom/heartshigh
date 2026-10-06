@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { buildTrack, chooseMode, segmentsFromShots } from '../../src/lib/framing/choose'
 import { avoidMidSentenceSwitches, holdModes, snapClipWindow, snapIn, snapOut, snapSwitch } from '../../src/lib/framing/snap'
 import { fallbackTrack, validateTrack } from '../../src/lib/framing/validate'
-import { currentSentence, sameSpokenText, sentencesFromWords, sentencesInWindow, spokenLine, wordsFromCues, wrapWordLines } from '../../src/lib/framing/words'
+import { currentSentence, sameSpokenText, sentencesFromCaptions, sentencesFromWords, sentencesInWindow, spokenLine, wordsFromCues, wrapWordLines } from '../../src/lib/framing/words'
 import { boxOnStage, coverPosition, coverSourceToBox, cssVars, filmOnStage, layoutFor } from '../../src/lib/framing/layout'
 import { PLACEHOLDER_FACE, PLACEHOLDER_FACE_FOCUS } from '../../src/lib/framing/placeholder'
 import type { FramingTrack, ShotAnalysis } from '../../src/lib/framing/types'
@@ -132,7 +132,8 @@ test('letterbox and split film stay inside the 390×844 stage', () => {
   const split = layoutFor('F', 390, 844)
   assert.equal(split.film.left, 0)
   assert.equal(split.film.width, 390)
-  assert.equal(split.film.top, letter.film.top)
+  assert.equal(split.film.top, 56)
+  assert.ok(split.film.top < letter.film.top)
 })
 
 test('D cover crop keeps the placeholder FACE box on the 390×844 stage', () => {
@@ -162,11 +163,11 @@ test('word clocks stay inside each caption cue instead of a clip-wide estimate',
   assert.ok((four.e ?? 99) <= 22.01)
 })
 
-test('F text is the timed transcript now, never a talk title, and nothing in a gap', () => {
+test('F text is the timed transcript now, never a talk title, and a track holds the last line in a short gap', () => {
   const title = 'How to Live Like the Prophet'
   const sentences = switching.sentences
   assert.equal(spokenLine(sentences, 17)?.text, 'And they seem to be winning as well.')
-  assert.equal(spokenLine(sentences, 18.45), null)
+  assert.equal(spokenLine(sentences, 18.45)?.text, 'And they seem to be winning as well.')
   assert.equal(spokenLine(sentences, 19.8)?.text, 'They seem to be overcoming you.')
   assert.equal(spokenLine(sentences, 22)?.text, 'Your dignity still stands.')
   for (const time of [17, 19.8, 22]) {
@@ -175,6 +176,10 @@ test('F text is the timed transcript now, never a talk title, and nothing in a g
     assert.equal(sameSpokenText(line.text, title), false)
   }
   assert.equal(spokenLine(sentences, 15.9, { from: 16, to: 24 }), null)
+  assert.equal(
+    spokenLine([{ text: 'First said.', s: 16.4, e: 20, words: [] }], 16, { from: 16, to: 24 })?.text,
+    'First said.',
+  )
   assert.equal(spokenLine([{ text: title, s: 16, e: 20, words: [] }], 17, { title, titles: [title, 'The series'] }), null)
   assert.equal(spokenLine([{ text: 'A line he actually says.', s: 16, e: 20, words: [] }], 17, { title })?.text, 'A line he actually says.')
 })
@@ -198,6 +203,26 @@ test('spoken lines wrap as word arrays so display spaces cannot collapse', () =>
   assert.deepEqual(lines[0], ['Uh', 'I', 'was', 'speaking', 'at'])
   assert.ok(lines.every((line) => line.join(' ').length <= 20))
   assert.equal(lines.flat().join(' '), 'Uh I was speaking at a masid that had about 500 people in the audience.')
+})
+
+test('F holds the first caption from the clip in-point before its cue clock', () => {
+  const first = [{ text: 'First said.', s: 16.4, e: 20, words: [] }]
+  assert.equal(spokenLine(first, 16, { from: 16, to: 24 })?.text, 'First said.')
+  assert.equal(spokenLine(first, 0, { from: 16, to: 24 })?.text, 'First said.')
+})
+
+test('caption cards become live F sentences and skip summary beats', () => {
+  const sentences = sentencesFromCaptions(
+    [
+      { at: 10, text: 'Patience is a light.', role: 'hook' },
+      { at: 12, text: 'The heart finds rest.' },
+      { at: 16, text: 'And then it stands.' },
+    ],
+    11,
+    20,
+  )
+  assert.equal(sentences.some((row) => /Patience/.test(row.text)), false)
+  assert.ok(sentences.some((row) => /heart finds rest/.test(row.text)))
 })
 
 test('the framing-mode experiment stub names both variants', () => {

@@ -4,7 +4,7 @@ import path from 'node:path'
 import { test } from 'node:test'
 import { talkSources } from '../../scripts/tier-report'
 import type { CutInfo } from '../../src/lib/heart'
-import { laneClips } from '../../src/lib/lanes'
+import { laneClips, playableLaneClips } from '../../src/lib/lanes'
 import { authorTextProblems, killListHits } from '../../src/lib/opening-data'
 import { clientIp, joinFailKeys, trustedProxyHops } from '../../src/lib/rate-limit'
 import { APPETISER_MAX, HORS_MAX, HORS_MIN, captionIndex, draftTiers, onSentenceBoundary, saidInTalk, sentencesOf } from '../../src/lib/tiers'
@@ -121,10 +121,11 @@ test('N1: X-Forwarded-For is trusted only behind a configured proxy, read from t
   const req = (xff: string) => new Request('http://local/api', { headers: { 'x-forwarded-for': xff, 'x-real-ip': '6.6.6.6' } })
   assert.equal(trustedProxyHops({}), 0)
   assert.equal(trustedProxyHops({ HEARTS_TRUSTED_PROXY_HOPS: '1' }), 1)
-  assert.equal(clientIp(req('1.2.3.4'), 0), null, 'no proxy configured: the header is ignored')
-  assert.equal(clientIp(req('9.9.9.9, 10.0.0.7'), 1), '10.0.0.7', 'one proxy: the address it saw, not what the visitor wrote')
-  assert.equal(clientIp(req('9.9.9.9, 10.0.0.7, 172.16.0.2'), 2), '10.0.0.7')
-  assert.equal(clientIp(req('<script>'), 1), null)
+  const isolated = {}
+  assert.equal(clientIp(req('1.2.3.4'), 0, isolated), null, 'no proxy configured: the header is ignored')
+  assert.equal(clientIp(req('9.9.9.9, 10.0.0.7'), 1, isolated), '10.0.0.7', 'one proxy: the address it saw, not what the visitor wrote')
+  assert.equal(clientIp(req('9.9.9.9, 10.0.0.7, 172.16.0.2'), 2, isolated), '10.0.0.7')
+  assert.equal(clientIp(req('<script>'), 1, isolated), null)
 })
 
 test('N1: failed joins are keyed by address and code, and by address only when it can be trusted', () => {
@@ -146,7 +147,7 @@ test('N3: trends count only accounts that have finished a video and are at least
 })
 
 test('L1: each lane opens its own clips: its starters in order, then clips confirmed for it', () => {
-  const clip = (cutId: number): FeedItem => ({ id: String(cutId), cutId, lane: 'x', laneLabel: 'x', speaker: 's', speakerSlug: 's', portrait: null, poster: null, youtubeId: null, courseId: 1, courseTitle: 'c', lessonId: cutId, hors: { start: 0, end: 15, quote: '' }, appetiser: { start: 0, end: 60, quote: '' }, hook: '', turn: '', land: '', style: null, clause: null, parents: { hors: { id: `hors:${cutId}`, level: 'hors', parentId: `appetiser:${cutId}`, parentLevel: 'appetiser' }, appetiser: { id: `appetiser:${cutId}`, level: 'appetiser', parentId: `talk:${cutId}`, parentLevel: 'talk' } } })
+  const clip = (cutId: number): FeedItem => ({ id: String(cutId), cutId, lane: 'x', laneLabel: 'x', speaker: 's', speakerSlug: 's', portrait: null, poster: null, youtubeId: `yt${cutId}`, courseId: 1, courseTitle: 'c', lessonId: cutId, hors: { start: 0, end: 15, quote: '' }, appetiser: { start: 0, end: 60, quote: '' }, hook: '', turn: '', land: '', style: null, clause: null, parents: { hors: { id: `hors:${cutId}`, level: 'hors', parentId: `appetiser:${cutId}`, parentLevel: 'appetiser' }, appetiser: { id: `appetiser:${cutId}`, level: 'appetiser', parentId: `talk:${cutId}`, parentLevel: 'talk' } } })
   const cut = (id: number, extra: Partial<CutInfo>): CutInfo => ({ id, clause: null, lanes: [], approved: true, hasHors: true, portalOwn: false, ...extra })
   const cuts = [
     cut(1, { starter: { lane: 'trust', role: 'mains' } }),
@@ -157,6 +158,7 @@ test('L1: each lane opens its own clips: its starters in order, then clips confi
   ]
   const clips = Object.fromEntries([1, 2, 3, 4, 5].map((id) => [String(id), clip(id)]))
   assert.deepEqual(laneClips(clips, cuts, 'trust', 'Trust').map((row) => row.cutId), [2, 1, 4])
+  assert.deepEqual(playableLaneClips(clips, cuts, 'trust', 'Trust').map((row) => row.cutId), [2, 1, 4])
   assert.deepEqual(laneClips(clips, cuts, 'company', 'Company').map((row) => row.cutId), [3])
   assert.equal(laneClips(clips, cuts, 'trust', 'Trust')[0].laneLabel, 'Trust')
 })
@@ -196,4 +198,5 @@ test('feed players show none of YouTube’s chrome: no controls, inline, no rela
     assert.equal(vars.modestbranding, 1, kind)
     assert.equal(vars.fs, 0, kind)
   }
+  assert.match(readFileSync(path.join(root, 'src/lib/yt.ts'), 'utf8'), /Channel watermark cannot be removed via embed params/)
 })

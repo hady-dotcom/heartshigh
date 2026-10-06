@@ -35,3 +35,11 @@ export function fileNameFor(track: FramingTrack) {
   const stamp = `${Math.floor(track.start)}-${Math.ceil(track.end)}`
   return `${track.youtubeId}-${stamp}.json`
 }
+
+/** Seed clips that ship a timed word track (not the placeholder). */
+export function seedTracksWithWords(root = process.cwd()) {
+  return loadFramingFiles(root)
+    .filter((row) => row.youtubeId !== 'placeholder' && Boolean(row.sentences?.length || row.words?.length))
+    .map((row) => ({ youtubeId: row.youtubeId, start: row.start, end: row.end, sentences: row.sentences?.length || 0 }))
+    .sort((a, b) => a.youtubeId.localeCompare(b.youtubeId) || a.start - b.start)
+}

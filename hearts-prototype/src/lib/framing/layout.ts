@@ -31,9 +31,22 @@ export function letterbox(stageW: number, stageH: number, y = WIDE_FILM_Y) {
   return { scale: 1, tx: 0, ty: 0, film: { top, left: 0, width, height } }
 }
 
-/** F uses the same 16:9 window as B so the film stays put when words arrive. */
-export function splitFilm(stageW: number, stageH: number) {
-  return letterbox(stageW, stageH, WIDE_FILM_Y)
+/** F sits just under the top chips: full width, uncropped 16:9. */
+export const F_FILM_TOP = 56
+/** A portrait source may grow the F band up to this share of the viewport, still contained. */
+export const PORTRAIT_BAND_MAX = 0.6
+
+export function filmBandHeight(stageW: number, stageH: number, vertical = false) {
+  const landscape = stageW * (9 / 16)
+  if (!vertical) return landscape
+  return Math.min(stageH * PORTRAIT_BAND_MAX, stageW * (16 / 9))
+}
+
+export function splitFilm(stageW: number, stageH: number, vertical = false) {
+  const width = stageW
+  const height = filmBandHeight(stageW, stageH, vertical)
+  const top = Math.max(0, Math.min(stageH - height, F_FILM_TOP))
+  return { scale: 1, tx: 0, ty: 0, film: { top, left: 0, width, height } }
 }
 
 export function stageFilm(stageW: number, stageH: number) {

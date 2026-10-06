@@ -2,18 +2,21 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { newViewingId, POLL_MS, PopupWatcher, type PopupPoint } from '@/lib/popups'
 import { comingAnswerLabel, comingQuestionLabel, questionMomentReached, questionRowRevealed, revealedStorageKey } from '@/lib/question-list'
 import { TopicHelp } from '@/components/app/page-help'
+import { SpokenWords } from '@/components/app/spoken-words'
+import type { FramingSentence } from '@/lib/framing/types'
 import { placeDots } from '@/lib/timeline-dots'
-import { coursePlayVisible } from '@/lib/course-controls'
+import { courseCatcherTap, coursePlayVisible } from '@/lib/course-controls'
 import { nextPlaybackRate } from '@/lib/playback-rate'
-import { createPlayer, destroyPlayer, getPlayer, hasSound, pauseKeepingSound, resume, soundOn, STATE, UNPLAYABLE } from '@/lib/yt'
+import { createPlayer, destroyPlayer, getPlayer, hasSound, pauseKeepingSound, playWithSoundFallback, resume, soundOn, STATE, UNPLAYABLE } from '@/lib/yt'
+import { PICTURE_SWALLOW_MS, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
+import { coverFallbackAction, coverHoldKey, coverHoldStep, freshCoverHold, landscapeThumb, playerReadout, ytDebugOn } from '@/lib/yt-cover'
 import { SwarmList } from '@/components/app/swarm-list'
 import { initialsOf } from '@/lib/swarm-sort'
-import { tidyTalkTitle } from '@/lib/talk-title'
-import { HeartIcon, ImageIcon, LockIcon, MicIcon, PauseIcon, PlayIcon } from '../icons'
+import { HeartIcon, ImageIcon, LockIcon, MicIcon } from '../icons'
 import { track } from '@/lib/experiment-track'
 import { ReportButton } from '@/components/app/report-sheet'
 
@@ -80,6 +83,7 @@ export function CoursePlayer({
   courseHref = backHref,
   deferred = [],
   initialOpenId = null,
+  sentences = [],
 }: {
   courseTitle: string
   backHref: string
@@ -105,6 +109,7 @@ export function CoursePlayer({
   courseHref: string
   deferred?: { pointId: number; prompt: string }[]
   initialOpenId?: number | null
+  sentences?: FramingSentence[]
 }) {
   const router = useRouter()
   const card = useRef<HTMLDivElement>(null)
@@ -140,26 +145,29 @@ export function CoursePlayer({
   const [failed, setFailed] = useState(false)
   const [boot, setBoot] = useState(0)
   const [endCard, setEndCard] = useState(false)
+  const [boardOpen, setBoardOpen] = useState(false)
+  const [coverHeld, setCoverHeld] = useState(true)
+  const [ytState, setYtState] = useState(-1)
+  const [debugOn, setDebugOn] = useState(false)
+  const [userPaused, setUserPaused] = useState(false)
+  const userPausedRef = useRef(false)
+  const playStartedAt = useRef(0)
+  const holdState = useRef(-9)
+  const coverMachine = useRef(freshCoverHold())
+  const boardOpenedAt = useRef(0)
+  const ignorePictureUntil = useRef(0)
+  const boardDrag = useRef<{ x: number; y: number; t: number } | null>(null)
   const [count, setCount] = useState(5)
   const [held, setHeld] = useState<number[]>(deferred.map((row) => row.pointId))
   const heldRef = useRef(held)
   heldRef.current = held
   const deferredPrompts = useRef(Object.fromEntries(deferred.map((row) => [row.pointId, row.prompt])))
-  const [revealed, setRevealed] = useState<number[]>(() => {
-    const start = new Set<number>([
+  const [revealed, setRevealed] = useState<number[]>(() => [
+    ...new Set([
       ...points.filter((point) => point.answered).map((point) => point.id),
       ...deferred.map((row) => row.pointId),
-    ])
-    if (typeof sessionStorage !== 'undefined') {
-      try {
-        const stored = JSON.parse(sessionStorage.getItem(revealedStorageKey(lessonId)) || '[]') as number[]
-        for (const id of stored) if (Number.isFinite(id)) start.add(id)
-      } catch {
-        // Private mode or a bad value: start from answers only.
-      }
-    }
-    return [...start]
-  })
+    ]),
+  ])
 
   const reveal = useCallback((id: number) => {
     setRevealed((value) => {
@@ -202,10 +210,28 @@ export function CoursePlayer({
   }, [])
 
   useEffect(() => {
+    setDebugOn(ytDebugOn(window.location.search))
+    try {
+      const stored = JSON.parse(sessionStorage.getItem(revealedStorageKey(lessonId)) || '[]') as number[]
+      if (Array.isArray(stored)) setRevealed((value) => [...new Set([...value, ...stored.filter((id) => Number.isFinite(id))])])
+    } catch {
+      // Private mode.
+    }
+  }, [lessonId])
+
+  useEffect(() => {
     if (!youtubeId || !holder.current) return
     let cancelled = false
+    destroyPlayer(PLAYER_ID)
     setFailed(false)
     setMode('loading')
+    setYtState(-1)
+    setCoverHeld(true)
+    userPausedRef.current = false
+    setUserPaused(false)
+    holdState.current = -9
+    playStartedAt.current = 0
+    coverMachine.current = freshCoverHold()
     const failFirst = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('heartsFailFirst') === '1'
     const fallback = window.setTimeout(() => {
       if (cancelled) return
@@ -226,19 +252,21 @@ export function CoursePlayer({
         const total = player.getDuration() || 0
         if (total > 0) setLength(total)
         const activation = typeof navigator !== 'undefined' && Boolean(navigator.userActivation?.isActive || navigator.userActivation?.hasBeenActive)
-        if (activation) {
-          soundOn(PLAYER_ID)
-          player.unMute()
-        }
-        resume(PLAYER_ID)
+        if (activation) soundOn(PLAYER_ID)
+        playWithSoundFallback(player, hasSound() || activation)
       },
       onState: (state) => {
+        setYtState(state)
         setPlaying(state === STATE.PLAYING)
         if (state === STATE.PLAYING) {
           setLit(true)
           getPlayer(PLAYER_ID)?.setPlaybackRate?.(speedRef.current)
         }
-        if (state === STATE.ENDED) setEnded(true)
+        if (state === STATE.ENDED) {
+          setEnded(true)
+          setLit(false)
+          setPlaying(false)
+        }
       },
       onError: (code) => {
         if (cancelled) return
@@ -458,8 +486,57 @@ export function CoursePlayer({
     setSpeed(next)
     applySpeed(next)
   }
+  const openDrawer = () => {
+    boardOpenedAt.current = performance.now()
+    setBoardOpen(true)
+  }
+  const closeDrawer = (event?: { stopPropagation(): void; preventDefault(): void }) => {
+    event?.stopPropagation()
+    event?.preventDefault()
+    setBoardOpen(false)
+    ignorePictureUntil.current = performance.now() + PICTURE_SWALLOW_MS
+  }
+  const boardAction = (event: { stopPropagation(): void; preventDefault(): void; clientX: number; clientY: number }, fn: () => void) => {
+    event.stopPropagation()
+    event.preventDefault()
+    const start = boardDrag.current
+    const travel = start ? pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY }) : 0
+    if (!boardClickAllowed({ openedAt: boardOpenedAt.current, now: performance.now(), travel })) return
+    fn()
+  }
+  const openBoard = (event: ReactPointerEvent) => {
+    event.stopPropagation()
+    event.preventDefault()
+    boardDrag.current = { x: event.clientX, y: event.clientY, t: performance.now() }
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+  }
+  const moveBoard = (event: ReactPointerEvent) => {
+    const start = boardDrag.current
+    if (!start) return
+    event.stopPropagation()
+    event.preventDefault()
+  }
+  const finishBoard = (event: ReactPointerEvent) => {
+    const start = boardDrag.current
+    boardDrag.current = null
+    if (!start) return
+    event.stopPropagation()
+    event.preventDefault()
+    const dy = event.clientY - start.y
+    const travel = pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY })
+    const velocity = dy / Math.max(1, performance.now() - start.t)
+    if ((event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
+    if (boardShouldOpen(dy, velocity)) openDrawer()
+    else if (boardShouldClose(dy, velocity)) closeDrawer(event)
+    else if (travel < 14) {
+      if (boardOpen) closeDrawer(event)
+      else openDrawer()
+    }
+  }
 
   const resumeNow = () => {
+    userPausedRef.current = false
+    setUserPaused(false)
     soundOn(PLAYER_ID)
     getPlayer(PLAYER_ID)?.unMute()
     if (videoRef.current) videoRef.current.muted = false
@@ -471,6 +548,27 @@ export function CoursePlayer({
   }
 
   const togglePlay = () => {
+    if (pictureTapIgnored({ boardOpen, swallowUntil: ignorePictureUntil.current, now: performance.now() })) return
+    if (mode === 'youtube' || youtubeId) {
+      const player = getPlayer(PLAYER_ID)
+      const action = courseCatcherTap(player)
+      if (action === 'pause') {
+        userPausedRef.current = true
+        setUserPaused(true)
+        setPlaying(false)
+        videoRef.current?.pause()
+        return
+      }
+      if (action === 'play') {
+        userPausedRef.current = false
+        setUserPaused(false)
+        setPlaying(true)
+        soundOn(PLAYER_ID)
+        player?.unMute()
+        applySpeed(speedRef.current)
+        return
+      }
+    }
     if (playing) {
       pause()
       return
@@ -511,55 +609,195 @@ export function CoursePlayer({
   const open = views.find((point) => point.id === openId) || null
   const total = length || Math.max(60, ...views.map((point) => point.second + 30))
   const filmed = mode === 'youtube' || mode === 'vimeo' || mode === 'file'
-  const ownPoster = Boolean(poster && !/i\.ytimg\.com|img\.youtube\.com|^\/clips\//i.test(poster))
-  const scenicPoster = !ownPoster
+  const coverUrl = landscapeThumb(youtubeId) || poster
+  const coverKey = youtubeId || poster || 'none'
   const places = new Map(placeDots(views.map((row) => ({ id: row.id, second: row.second })), total, trackWidth).map((row) => [row.id, row]))
 
+  const livePlayer = getPlayer(PLAYER_ID)
+  const liveState = livePlayer?.getPlayerState() ?? ytState
+  const liveTime = livePlayer?.getCurrentTime() ?? time
+  const showCover = coverHeld || ended || mode === 'loading'
+  useEffect(() => {
+    if (!youtubeId) return
+    const specKey = `${lessonId}:full`
+    const apply = () => {
+      const player = getPlayer(PLAYER_ID)
+      const state = player?.getPlayerState() ?? ytState
+      const currentTime = player?.getCurrentTime() ?? timeRef.current
+      const next = coverHoldStep(coverMachine.current, {
+        holdKey: coverHoldKey(lessonId, 'full', specKey),
+        specKey,
+        hostSpecKey: specKey,
+        state,
+        currentTime,
+        start: startAt,
+        now: performance.now(),
+        ended,
+        userPaused: userPausedRef.current,
+      })
+      coverMachine.current = next
+      playStartedAt.current = next.playStartedAt
+      holdState.current = next.holdState
+      setCoverHeld((held) => (held === next.cover ? held : next.cover))
+    }
+    apply()
+    const timer = window.setInterval(apply, 250)
+    return () => window.clearInterval(timer)
+  }, [ended, lessonId, startAt, youtubeId, ytState])
+  useEffect(() => {
+    if (!youtubeId || ended) return
+    const begun = performance.now()
+    const timer = window.setInterval(() => {
+      const player = getPlayer(PLAYER_ID)
+      if (!player) return
+      if (userPausedRef.current) {
+        const polledState = player.getPlayerState()
+        const polledTime = player.getCurrentTime()
+        setYtState(polledState)
+        if (polledState === STATE.PLAYING || polledState === STATE.BUFFERING) player.pauseVideo()
+        setPlaying(false)
+        setTime(polledTime)
+        return
+      }
+      const polledState = player.getPlayerState()
+      const polledTime = player.getCurrentTime()
+      setYtState(polledState)
+      if (polledState === STATE.PLAYING) {
+        setPlaying(true)
+        setLit(true)
+        setMode('youtube')
+        setTime(polledTime)
+      } else if (polledState === STATE.PAUSED || polledState === STATE.ENDED) {
+        setPlaying(false)
+        if (polledState === STATE.ENDED) setEnded(true)
+        setTime(polledTime)
+      }
+      const action = coverFallbackAction({
+        waitedMs: performance.now() - begun,
+        eventPlaying: polledState === STATE.PLAYING,
+        polledState,
+        polledTime,
+        start: startAt,
+      })
+      if (action === 'treat-playing' && polledState !== STATE.PLAYING) {
+        setPlaying(true)
+        setLit(true)
+        setMode('youtube')
+        if (!playStartedAt.current) playStartedAt.current = performance.now()
+      }
+      if (action === 'retry') playWithSoundFallback(player, hasSound())
+    }, 400)
+    return () => window.clearInterval(timer)
+  }, [ended, startAt, youtubeId])
   return (
-    <div data-testid="player" data-mode={mode} data-popup-layout={overPlayer ? 'over' : 'strict'}>
-      <div className="app-head" style={{ marginBottom: 6 }}>
-        <Link className="back" href={backHref} data-testid="back">‹ {tidyTalkTitle(courseTitle)}</Link>
+    <div data-testid="player" data-mode={mode} data-playing={playing ? 'yes' : 'no'} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-cover={showCover ? 'yes' : 'no'} data-popup-layout={overPlayer ? 'over' : 'strict'}>
+      {debugOn ? (
+        <pre className="yt-debug" data-testid="yt-debug">
+          {playerReadout({ state: liveState, time, currentTime: liveTime, cover: showCover })}
+        </pre>
+      ) : null}
+      <div className="course-film">
+        <div className="j-hairline-row">
+          <div className={`j-hairline${mode === 'loading' ? ' shimmer' : ''}`} data-testid="hairline"><i style={{ width: `${Math.min(100, (time / total) * 100)}%` }} /></div>
+          <div className="clip-row">
+            <div className="clip-row-top">
+              <Link className="chip white" href={backHref} data-testid="back">‹ Back</Link>
+            </div>
+          </div>
+        </div>
+        <div ref={card} className={`player-card is-f course-film-band${filmed ? ' yt-on' : ''}${playing ? ' is-live' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
+          <div key={coverKey} className={`poster${mode === 'loading' ? ' skeleton' : ''}${showCover ? '' : ' is-clear'}`} style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : 'player-poster'} />
+          {mode === 'loading' && !failed ? <div className="player-veil" data-testid="player-veil" aria-hidden><span className="gold-spin" /></div> : null}
+          {failed ? (
+            <div className="player-retry" data-testid="player-retry">
+              <p>This film did not start.</p>
+              <button type="button" className="pill gold" onClick={() => { setFailed(false); setMode('loading'); setBoot((value) => value + 1) }}>
+                Try again
+              </button>
+            </div>
+          ) : null}
+          {youtubeId ? <div className="yt j-film-band" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
+          {vimeoId ? (
+            <div className="yt j-film-band" ref={filmBox} style={{ visibility: mode === 'vimeo' ? 'visible' : 'hidden' }}>
+              <iframe title={partLabel} src={`https://player.vimeo.com/video/${vimeoId}?api=1`} allow="autoplay; fullscreen; picture-in-picture" data-testid="vimeo-player" />
+            </div>
+          ) : null}
+          {fileSrc ? (
+            <div className="yt j-film-band" ref={filmBox} style={{ visibility: mode === 'file' ? 'visible' : 'hidden' }}>
+              <video ref={videoRef} src={fileSrc} playsInline data-testid="file-player" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => { setPlaying(false); setEnded(true); setLit(false) }} />
+            </div>
+          ) : null}
+          {open && overPlayer && (filmed || youtubeId) ? <div className="yt-scrim" data-testid="paused-scrim" aria-hidden /> : null}
+          {open && !playing ? (
+            <span className="paused-note on-film" data-testid="paused-note">❚❚ Paused at question {open.number}</span>
+          ) : null}
+          {!playing && filmed && lit ? <span className="j-paused-mark" data-testid="paused-mark" aria-hidden>❚❚</span> : null}
+          {open && !filmed && !playing ? (
+            <p className="paused-note" data-testid="paused-note">❚❚ Paused at question {open.number}</p>
+          ) : null}
+          {coursePlayVisible({ loading: mode === 'loading', questionOpen: open !== null }) ? (
+            <button type="button" className="j-tap-catcher film-tap" aria-label={playing ? 'Pause' : 'Play'} onClick={togglePlay} data-testid="player-play" />
+          ) : null}
+        </div>
+        <SpokenWords sentences={sentences} time={time} title={courseTitle} titles={[courseTitle, partLabel]} from={0} to={length || duration} />
       </div>
-      <div ref={card} className={`player-card${filmed ? ' yt-on' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
-        {!filmed || !lit ? <div className={`poster${scenicPoster ? ' scenic' : ''}${mode === 'loading' ? ' skeleton' : ''}`} style={ownPoster ? { backgroundImage: `url(${poster})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : 'player-poster'} /> : null}
-        {mode === 'loading' && !failed ? <div className="player-veil" data-testid="player-veil" aria-hidden><span className="gold-spin" /></div> : null}
-        {failed ? (
-          <div className="player-retry" data-testid="player-retry">
-            <p>This film did not start.</p>
-            <button type="button" className="pill gold" onClick={() => { setFailed(false); setMode('loading'); setBoot((value) => value + 1) }}>
-              Try again
-            </button>
+      <button
+        type="button"
+        className="j-more-tab"
+        data-testid="more-board"
+        aria-expanded={boardOpen}
+        aria-label="More"
+        hidden={boardOpen}
+        onPointerDown={openBoard}
+        onPointerMove={moveBoard}
+        onPointerUp={finishBoard}
+        onPointerCancel={(event) => { event.stopPropagation(); boardDrag.current = null }}
+        onClick={(event) => { event.stopPropagation(); event.preventDefault() }}
+      >
+        <i />
+        More
+      </button>
+      {boardOpen ? (
+        <div
+          className="j-board-back"
+          data-testid="board-back"
+          onPointerDown={(event) => { event.stopPropagation(); event.preventDefault() }}
+          onPointerUp={(event) => { event.stopPropagation(); event.preventDefault(); closeDrawer(event) }}
+          onClick={(event) => { event.stopPropagation(); event.preventDefault() }}
+        />
+      ) : null}
+      {boardOpen ? (
+        <div
+          className="j-board course-board"
+          data-testid="feed-board"
+          onPointerDown={(event) => {
+            event.stopPropagation()
+            boardDrag.current = { x: event.clientX, y: event.clientY, t: performance.now() }
+            if ((event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
+            event.currentTarget.setPointerCapture?.(event.pointerId)
+          }}
+          onPointerMove={moveBoard}
+          onPointerUp={finishBoard}
+          onPointerCancel={(event) => { event.stopPropagation(); boardDrag.current = null }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div
+            className="j-board-grab"
+            data-testid="board-grab"
+            onPointerDown={(event) => {
+              event.stopPropagation()
+              event.preventDefault()
+              boardDrag.current = { x: event.clientX, y: event.clientY, t: performance.now() }
+              event.currentTarget.setPointerCapture?.(event.pointerId)
+            }}
+            onPointerMove={moveBoard}
+            onPointerUp={finishBoard}
+            onPointerCancel={(event) => { event.stopPropagation(); boardDrag.current = null }}
+          >
+            <span className="j-board-handle" data-testid="board-handle" />
           </div>
-        ) : null}
-        {youtubeId ? <div className="yt" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
-        {vimeoId ? (
-          <div className="yt" ref={filmBox} style={{ visibility: mode === 'vimeo' ? 'visible' : 'hidden' }}>
-            <iframe title={partLabel} src={`https://player.vimeo.com/video/${vimeoId}?api=1`} allow="autoplay; fullscreen; picture-in-picture" data-testid="vimeo-player" />
-          </div>
-        ) : null}
-        {fileSrc ? (
-          <div className="yt" ref={filmBox} style={{ visibility: mode === 'file' ? 'visible' : 'hidden' }}>
-            <video ref={videoRef} src={fileSrc} controls playsInline data-testid="file-player" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => { setPlaying(false); setEnded(true) }} />
-          </div>
-        ) : null}
-        {open && overPlayer && (filmed || youtubeId) ? <div className="yt-scrim" data-testid="paused-scrim" aria-hidden /> : null}
-        {open && !playing ? (
-          <span className="paused-note on-film" data-testid="paused-note">❚❚ Paused at question {open.number}</span>
-        ) : null}
-        <span className="time-read" data-testid="player-time">{clock(time)}</span>
-        {open && !filmed && !playing ? (
-          <p className="paused-note" data-testid="paused-note">❚❚ Paused at question {open.number}</p>
-        ) : null}
-        {coursePlayVisible({ loading: mode === 'loading', questionOpen: open !== null }) ? (
-          <>
-            <div className="film-tap" aria-hidden onClick={togglePlay} />
-            <button type="button" className="big-play" aria-label={playing ? 'Pause' : 'Play'} onClick={togglePlay} data-testid="player-play">
-              {playing ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
-              <span>{playing ? 'Pause' : 'Play'}</span>
-            </button>
-            <button type="button" className="lecture-speed" data-testid="lecture-speed" aria-label="Playback speed" onClick={cycleSpeed}>{speed}×</button>
-          </>
-        ) : null}
+          <span className="time-read" data-testid="player-time">{clock(time)} / {clock(total)}</span>
+          <button type="button" className="lecture-speed" data-testid="lecture-speed" aria-label="Playback speed" onClick={(event) => boardAction(event, cycleSpeed)}>{speed}×</button>
         <div className="timeline" data-testid="timeline" ref={timelineRef}>
           <div className="track" />
           <div className="fill" style={{ width: `${Math.min(100, (time / total) * 100)}%` }} />
@@ -590,7 +828,9 @@ export function CoursePlayer({
             )
           })}
         </div>
-      </div>
+        </div>
+      ) : null}
+      <div className="course-body">
       <p className="part-chip off-film" data-testid="part-label">{partLabel}</p>
       {views.length ? (
         <ul className="q-list" data-testid="question-strip" aria-label="Questions in this film">
@@ -675,6 +915,7 @@ export function CoursePlayer({
         <input type="hidden" name="next" value={next} />
         <button className="link-btn" type="submit" data-testid="mark-watched">I have watched this part</button>
       </form>
+      </div>
       {open ? (
         <Sheet
           key={open.id}

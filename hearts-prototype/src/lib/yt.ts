@@ -1,8 +1,33 @@
 // YouTube IFrame Player API wrapper (spec 7A.10). Every clip, the first included, plays through here.
-// Players are created on the nocookie host, start muted, and never more than one plays at a time.
+// Players are created on www.youtube.com (same host as the IFrame API) so postMessage can land.
 
-export const NOCOOKIE = 'https://www.youtube-nocookie.com'
+/** The IFrame API is loaded from www.youtube.com; the player host must match or postMessage never arrives. */
+export const PLAYER_HOST = 'https://www.youtube.com'
+/** @deprecated Learner embeds use PLAYER_HOST. Kept so old imports compile. */
+export const NOCOOKIE = PLAYER_HOST
 export const API_SRC = 'https://www.youtube.com/iframe_api'
+
+/** The only URL builder for a YouTube iframe in this app. Desk previews and live use it too. */
+export function learnerEmbedSrc(videoId: string, extra: Record<string, string | number | undefined> = {}) {
+  const params = new URLSearchParams()
+  const defaults: Record<string, string | number | undefined> = {
+    autoplay: extra.autoplay ?? 0,
+    controls: extra.controls ?? 0,
+    playsinline: extra.playsinline ?? 1,
+    rel: extra.rel ?? 0,
+    modestbranding: extra.modestbranding ?? 1,
+    enablejsapi: extra.enablejsapi ?? 1,
+  }
+  for (const [key, value] of Object.entries({ ...defaults, ...extra })) {
+    if (value === undefined || value === '') continue
+    params.set(key, String(value))
+  }
+  if (typeof window !== 'undefined') {
+    if (!params.has('origin')) params.set('origin', window.location.origin)
+    if (!params.has('widget_referrer')) params.set('widget_referrer', window.location.origin)
+  }
+  return `${PLAYER_HOST}/embed/${encodeURIComponent(videoId)}?${params}`
+}
 
 export const STATE = { UNSTARTED: -1, ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 } as const
 
@@ -76,20 +101,25 @@ export function preloadApi() {
 export type PlayerKind = 'hors' | 'appetiser' | 'full'
 
 export function playerVars(kind: PlayerKind, start: number, end?: number | null, autoplay = 0) {
+  // Chromeless on every learner host: no bar, related strip, annotations, logo, keys or fullscreen.
   const base = {
     start: Math.max(0, Math.floor(start)),
-    playsinline: 1,
+    controls: 0,
     rel: 0,
     iv_load_policy: 3,
-    modestbranding: 1,
+    modestbranding: 1, // Channel watermark cannot be removed via embed params.
+    playsinline: 1,
+    disablekb: 1,
+    fs: 0,
     cc_load_policy: 0,
     enablejsapi: 1,
     origin: typeof window === 'undefined' ? undefined : window.location.origin,
+    widget_referrer: typeof window === 'undefined' ? undefined : window.location.origin,
     autoplay,
   }
   // A language preference is itself a nudge to load captions. None of the learner players send one.
-  if (kind === 'hors') return { ...base, end: end ? Math.ceil(end) : undefined, controls: 0, fs: 0, disablekb: 1 }
-  return { ...base, ...(end ? { end: Math.ceil(end) } : {}), controls: 0, fs: 0, disablekb: 1 }
+  if (kind === 'hors') return { ...base, end: end ? Math.ceil(end) : undefined }
+  return { ...base, ...(end ? { end: Math.ceil(end) } : {}) }
 }
 
 /**
@@ -139,7 +169,7 @@ export async function createPlayer(options: CreateOptions): Promise<YTPlayer> {
   records.push(record)
   return new Promise((resolve, reject) => {
     const player: YTPlayer = new YT.Player(mount, {
-      host: NOCOOKIE,
+      host: PLAYER_HOST,
       videoId: options.videoId,
       width: '100%',
       height: '100%',
@@ -243,10 +273,32 @@ export function playOnly(id: string) {
     hush(player)
     return
   }
-  if (unmuted) player.unMute()
-  else player.mute()
   if (record) record.playCalls += 1
+  playWithSoundFallback(player, unmuted)
+}
+
+/**
+ * Autoplay with sound is often blocked. Start muted, then unmute once the play call
+ * has been accepted, and record hasSound when the player is actually unmuted.
+ */
+export function playWithSoundFallback(
+  player: Pick<YTPlayer, 'mute' | 'unMute' | 'playVideo' | 'isMuted'>,
+  wantSound: boolean,
+) {
+  if (!wantSound) {
+    player.mute()
+    player.playVideo()
+    return { muted: true }
+  }
+  player.mute()
   player.playVideo()
+  try {
+    player.unMute()
+  } catch {
+    // The iframe may not be ready to take sound yet.
+  }
+  if (!player.isMuted()) unmuted = true
+  return { muted: player.isMuted() }
 }
 
 export type PauseSound = { hadSound: boolean; mutedBefore: boolean; mutedAfter: boolean }

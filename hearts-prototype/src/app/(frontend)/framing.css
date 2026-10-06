@@ -217,43 +217,48 @@
 .fr-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .fr-legend i { width: 10px; height: 10px; border-radius: 2px; }
 
-/* Feed: only when a track is attached. Existing clips keep today's crop. */
-.j-slot[data-framing] .yt-host iframe {
-  transition: transform var(--fr-ms, 360ms) ease, top var(--fr-ms, 360ms) ease, left var(--fr-ms, 360ms) ease, width var(--fr-ms, 360ms) ease, height var(--fr-ms, 360ms) ease;
-}
+/* Learner feed is F only: teal stage, uncropped 16:9, words below. A–E no longer move the film. */
+.j-slot,
+.j-slot[data-framing],
+.j-slot[data-framing='A'],
 .j-slot[data-framing='B'],
 .j-slot[data-framing='C'],
+.j-slot[data-framing='D'],
+.j-slot[data-framing='E'],
 .j-slot[data-framing='F'] { background: #0F3B3A; }
+.j-slot[data-framing] .j-film-band,
+.j-slot[data-framing='A'] .j-film-band,
+.j-slot[data-framing='B'] .j-film-band,
+.j-slot[data-framing='C'] .j-film-band,
+.j-slot[data-framing='D'] .j-film-band,
+.j-slot[data-framing='E'] .j-film-band,
+.j-slot[data-framing='F'] .j-film-band {
+  top: calc(56px + var(--safe-top));
+  left: 0;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+.j-slot[data-framing] .yt-host iframe,
+.j-slot[data-framing='A'] .yt-host iframe,
 .j-slot[data-framing='B'] .yt-host iframe,
-.j-slot[data-framing='C'] .yt-host iframe {
-  top: 34%;
-  left: 0;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 9;
-  transform: none;
-  max-height: 42%;
+.j-slot[data-framing='C'] .yt-host iframe,
+.j-slot[data-framing='D'] .yt-host iframe,
+.j-slot[data-framing='E'] .yt-host iframe,
+.j-slot[data-framing='F'] .yt-host iframe,
+.j-slot[data-framing] .j-film-band iframe,
+.j-slot[data-framing='F'] .j-film-band iframe {
+  top: 50% !important;
+  left: 50% !important;
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  min-height: 0 !important;
+  object-fit: contain !important;
+  transform: translate(-50%, -50%) !important;
+  pointer-events: none !important;
 }
-.j-slot[data-framing='C']::before {
-  content: '';
-  position: absolute;
-  inset: -10%;
-  background: var(--fr-poster) center / cover no-repeat;
-  filter: blur(16px) brightness(0.4);
-  z-index: 0;
-}
-.j-slot[data-framing='F'] .yt-host iframe {
-  top: 72px;
-  left: 0;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 9;
-  min-height: 200px;
-  transform: none;
-}
-.j-slot[data-framing='D'] .yt-host iframe {
-  left: 0;
-  transform: none;
-  width: 100%;
-}
-.journey[data-framing='F'] .j-chrome .caption { display: none; }
+.j-slot[data-framing='C']::before { content: none; }
+.journey .j-chrome .caption { display: none; }

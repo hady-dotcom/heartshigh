@@ -8,7 +8,7 @@ import { useVariant } from '@/lib/use-variant'
 export type Tab = 'home' | 'lanes' | 'week' | 'garden' | 'me' | 'gather'
 
 export function TabBar({ base, active = null, portal: _portal, dark = false, evening = false, unread = 0 }: { base: string; active?: Tab | null; portal?: FeatureSource; dark?: boolean; evening?: boolean; unread?: number }) {
-  const lanes = useVariant('lanes-tab-label')
+  const lanes = useVariant('lanes-tab-label', { payload: { label: 'Lanes' } })
   const tabs: [Tab, string, string][] = [
     ['home', 'Home', base],
     ['lanes', lanes.label || 'Lanes', `${base}/lanes`],

@@ -206,7 +206,6 @@ test('phone walk: buffet, plan, think, swipe, home, workbook, retry, next part',
   }
   await hold(page, '09-feed-swipe', 900)
   if (await page.getByTestId('learn-more').count()) await page.getByTestId('learn-more').first().click()
-  await expect(page.getByTestId('level-chip')).toContainText('Ready for more?')
   await hold(page, '10-ready-for-more')
 
   await page.goto(BASE)

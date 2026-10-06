@@ -14,7 +14,7 @@ import { learnerWords } from '@/lib/tidy-caption'
 import { courseCards, dayNumber, portalName, posterFor, shownPoster } from '@/server/learner'
 import { ensureMonthNote, recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
-import { lanesWithClips } from '@/lib/lanes'
+import { laneCardSpeaker, lanesWithClips } from '@/lib/lanes'
 import { LANE_BLURBS } from '@/lib/opening-data'
 import { plural } from '@/lib/schedule'
 import { continueOrder, dateKeyInZone, tonightLabel, tonightSlot } from '@/lib/study-plan'
@@ -221,7 +221,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
                 <small>Lane</small>
                 <h3>{learnerWords(lane.title)}</h3>
                 <p>{LANE_BLURBS[lane.key] || snippet(first?.hookTidy || first?.hook || first?.scenic?.hook || first?.land || first?.lessonTitle || first?.courseTitle || '', 64)}</p>
-                <p>{first?.speaker}{first?.speaker ? ' · ' : ''}{count} {count === 1 ? 'clip' : 'clips'}</p>
+                <p>{(() => { const who = laneCardSpeaker(lane.clips); return `${who}${who ? ' · ' : ''}${count} ${count === 1 ? 'clip' : 'clips'}` })()}</p>
               </div>
             </Link>
           )

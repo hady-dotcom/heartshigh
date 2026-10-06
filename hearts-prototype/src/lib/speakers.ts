@@ -22,6 +22,11 @@ export function speakerSlug(value: string) {
 // One leading title only, and ustadha before ustadh, shaykh before sh, so "Shahid" and "ustadha" stay whole.
 const HONORIFIC = /^(?:shaykh|sheikh|ustadha|ustadh|imam|doctor|dr|sh)(?:\.\s*|\s+)/i
 
+/** The same name with or without a title. Display and matching both use this. */
+export function stripSpeakerHonorific(value: string) {
+  return value.trim().replace(HONORIFIC, '').replace(/\s+/g, ' ').trim()
+}
+
 /** A folded name for matching. Titles, parentheticals, accents and hyphens do not keep two spellings apart. */
 export function foldSpeaker(value: string) {
   let text = value.normalize('NFKD').replace(/\p{M}+/gu, '')

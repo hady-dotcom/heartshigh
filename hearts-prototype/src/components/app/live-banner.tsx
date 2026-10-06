@@ -33,6 +33,7 @@ export function LiveNowBanner({
     setLive(session)
   }, [session])
   useEffect(() => {
+    if (!session) return
     let on = true
     const tick = async () => {
       const res = await fetch(`/api/live?portal=${encodeURIComponent(portal)}`, { headers: { accept: 'application/json' } }).catch(() => null)
@@ -44,7 +45,7 @@ export function LiveNowBanner({
       on = false
       window.clearInterval(id)
     }
-  }, [portal])
+  }, [portal, session])
   if (!live) return null
   return (
     <a className="live-now" href={`${href}/${live.id}`} data-testid="live-now">
@@ -71,6 +72,7 @@ export function ComingUp({
     setRows(cards)
   }, [cards])
   useEffect(() => {
+    if (!cards.length) return
     let on = true
     const tick = async () => {
       const res = await fetch(`/api/live?portal=${encodeURIComponent(portal)}`, { headers: { accept: 'application/json' } }).catch(() => null)
@@ -82,7 +84,7 @@ export function ComingUp({
       on = false
       window.clearInterval(id)
     }
-  }, [portal])
+  }, [cards.length, portal])
   if (!rows.length) return null
   return (
     <section className="live-coming" data-testid="coming-up">

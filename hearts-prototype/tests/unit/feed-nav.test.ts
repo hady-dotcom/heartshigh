@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { mixFeed, sessionPlaylist } from '../../src/lib/feed-mix'
-import { appendUnseenItems, cardKey, catalogueRemainder, isInterstitial, learnMoreTarget, settleOnLevel, swipeTarget, type FeedLevel, type Swipe } from '../../src/lib/feed-nav'
+import { appendUnseenItems, boardItemForPlayer, cardKey, catalogueRemainder, isInterstitial, learnMoreTarget, settleOnLevel, swipeTarget, type FeedLevel, type Swipe } from '../../src/lib/feed-nav'
 import type { FeedItem } from '../../src/server/learner'
 
 const BASE = '/p/east-london'
@@ -87,6 +87,15 @@ test('the hors d’oeuvre loop steps from one talk to the next, and stops when t
   }
   assert.deepEqual(visited, list.map((_, index) => index))
   assert.equal(swipeTarget(list, at, 'hors', 'next', seen), null)
+})
+
+test('a lane still walks later clips after they have already been marked seen', () => {
+  const list = feed()
+  const seen = new Set(list.map((row) => cardKey(row, 'hors')))
+  assert.equal(swipeTarget(list, 0, 'hors', 'next', seen, true), 1)
+  assert.equal(swipeTarget(list, 1, 'hors', 'next', seen, true), 2)
+  assert.equal(swipeTarget(list, list.length - 1, 'hors', 'next', seen, true), null)
+  assert.equal(swipeTarget(list, 0, 'hors', 'next', seen), null)
 })
 
 test('on appetisers, every swipe lands on another appetiser, never on a film, scene or question card', () => {
@@ -267,4 +276,12 @@ test('a refill does not append a second talk or scene for a cut already in the m
   assert.equal(merged.filter((row) => row.cutId === 1 && (row.card || 'talk') === 'talk').length, 1)
   assert.equal(merged.filter((row) => row.card === 'film' || row.card === 'scene').length, 0)
   assert.equal(merged.length, first.length)
+})
+
+test('the More board reads the cut the visible player was built for', () => {
+  const list = [talk(10, 'reflections', 'Shaykh Mikaeel Smith', true), talk(20, 'patience', 'Qalam', true)]
+  assert.equal(boardItemForPlayer(list, 0, '20:hors')?.cutId, 20)
+  assert.equal(boardItemForPlayer(list, 0, '20:hors')?.speaker, 'Qalam')
+  assert.equal(boardItemForPlayer(list, 1, '10:appetiser')?.speaker, 'Shaykh Mikaeel Smith')
+  assert.equal(boardItemForPlayer(list, 1, null)?.cutId, 20)
 })

@@ -3,6 +3,7 @@
 
 import { isProduction, isRemoteDatabase, type Env } from './env'
 import { youtubeIdFromUrl } from './extractor'
+import { learnerEmbedSrc } from './yt'
 
 export const DEMO_PORTAL_SLUG = 'hearts-demo'
 export const LIVE_DEMO_TITLES = ['Circle after Isha', 'Jumuʿah reminders', 'Friday night tafsir: Surah al-Kahf'] as const
@@ -107,7 +108,7 @@ export function providerOf(kind: LiveSource): LiveProvider {
 }
 
 function youtubeEmbed(id: string) {
-  return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&controls=0&playsinline=1&rel=0&modestbranding=1`
+  return learnerEmbedSrc(id, { autoplay: 1, controls: 0, playsinline: 1, rel: 0, modestbranding: 1 })
 }
 
 function vimeoEmbed(id: string) {

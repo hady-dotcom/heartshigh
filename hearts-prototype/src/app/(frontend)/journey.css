@@ -101,29 +101,123 @@
 
 /* The clip: one visible player and at most one hidden, cued beside it. */
 .j-clip { position: absolute; inset: 0; z-index: 2; }
-.phase-feed .j-clip, .phase-handoff .j-clip { background: #000; }
+.phase-feed .j-clip, .phase-handoff .j-clip { background: #0F3B3A; }
 .phase-handoff .j-clip { background: transparent; }
-.j-slot { position: absolute; inset: 0; overflow: hidden; isolation: isolate; }
-.yt-host { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.j-slot { position: absolute; inset: 0; overflow: hidden; isolation: isolate; z-index: 1; }
+.yt-host { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
 /* A parked host used to slide to -200vw. The cropped film is wider than the phone, so that shift left the picture sticking back over the next hors d'oeuvre. */
 .yt-host.off { visibility: hidden !important; pointer-events: none !important; }
 .yt-host.off iframe { top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; transform: none !important; }
-/* The film is cropped to fill the phone; the extra 88px above and below keep YouTube's title and control bars off screen. */
-.yt-host iframe { position: absolute; top: -88px; left: 50%; height: calc(100% + 176px); width: max(100%, calc((100dvh + 176px) * 16 / 9)); transform: translateX(-50%); border: 0; z-index: 0; }
+/* F band: 16:9 contain. Portrait sources grow the band, still uncropped. */
+.j-film-band {
+  position: absolute;
+  top: calc(56px + var(--safe-top));
+  left: 0;
+  width: 100%;
+  height: calc(100vw * 9 / 16);
+  max-height: 60dvh;
+  overflow: hidden;
+  background: #0F3B3A;
+  pointer-events: none;
+}
+.journey[data-vertical='yes'] .j-film-band {
+  height: min(60dvh, calc(100vw * 16 / 9));
+}
+.yt-host iframe,
+.j-film-band iframe,
+.yt-host.is-live iframe,
+.yt-host.is-live .j-film-band iframe,
+.journey[data-playing='yes'] .yt-host.on iframe,
+.overlay .yt-host iframe,
+.strict .yt-host iframe {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  height: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  object-fit: contain !important;
+  transform: translate(-50%, -50%) !important;
+  border: 0;
+  z-index: 0;
+  opacity: 1;
+  pointer-events: none !important;
+}
+.journey[data-vertical='yes'] .yt-host iframe,
+.journey[data-vertical='yes'] .j-film-band iframe {
+  aspect-ratio: 9 / 16 !important;
+  width: auto !important;
+  height: 100% !important;
+}
+.yt-host.on:not(.is-live) .j-film-band::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #0F3B3A;
+  z-index: 2;
+  pointer-events: none;
+}
 .yt-title-mask { position: absolute; left: 0; right: 0; top: 0; height: 56px; z-index: 2; pointer-events: none; background: linear-gradient(#000 0 70%, transparent); }
-.yt-host iframe, .overlay .yt-host iframe, .strict .yt-host iframe { pointer-events: none !important; }
+.j-tap-catcher {
+  position: absolute;
+  top: calc(56px + var(--safe-top));
+  left: 0;
+  width: 100%;
+  height: calc(100vw * 9 / 16);
+  max-height: 60dvh;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.001);
+  pointer-events: auto;
+  touch-action: none;
+  border: 0;
+  padding: 0;
+}
+.j-slot .j-tap-catcher { z-index: 20; }
+.journey[data-vertical='yes'] .j-tap-catcher {
+  height: min(60dvh, calc(100vw * 16 / 9));
+}
 .journey[data-playing='yes'] .j-poster-play,
 .journey[data-playing='yes'] video::-webkit-media-controls,
 .journey[data-playing='yes'] video::-webkit-media-controls-overlay-play-button,
 .journey[data-playing='yes'] video::-webkit-media-controls-start-playback-button { display: none !important; opacity: 0; }
-.j-poster { position: absolute; inset: 0; background: #0e2a2b url('/theme/evening-courtyard.jpg') center 40% / cover no-repeat; }
+.j-poster { position: absolute; top: calc(56px + var(--safe-top)); left: 0; width: 100%; height: calc(100vw * 9 / 16); max-height: 60dvh; z-index: 16; background: #0F3B3A; transition: opacity 250ms ease; overflow: hidden; transform: translateZ(0); }
+.j-poster.is-clear { opacity: 0; pointer-events: none; }
+.journey[data-cover='yes'] .j-poster { opacity: 1 !important; pointer-events: none; z-index: 16; }
+.journey[data-cover='no'] .j-poster { opacity: 0; pointer-events: none; }
+.journey[data-cover='yes'] .yt-host.on .j-film-band::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #0F3B3A;
+  z-index: 2;
+  pointer-events: none;
+}
 html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/dawn-courtyard.jpg'); }
 .j-poster-play { position: absolute; left: 50%; top: 26%; z-index: 7; width: 76px; height: 76px; margin: -38px 0 0 -38px; border: 0; border-radius: 50%; display: grid; place-items: center; padding: 0 0 0 4px; background: #d4a84b; color: #1a1408; box-shadow: 0 10px 30px rgba(0,0,0,0.35); cursor: pointer; }
-.j-poster img { position: absolute; left: 0; top: -17%; width: 100%; height: 134%; max-width: none; object-fit: cover; opacity: 0.8; }
-.j-poster::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.7)); }
+.j-poster img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; opacity: 1; }
+.journey[data-vertical='yes'] .j-poster { height: min(60dvh, calc(100vw * 16 / 9)); }
+.journey[data-vertical='yes'] .j-poster img { height: 100%; object-fit: cover; }
+.yt-debug {
+  position: fixed;
+  top: calc(8px + var(--safe-top));
+  left: 8px;
+  z-index: 80;
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(8, 24, 24, 0.82);
+  color: #f6eedc;
+  font: 11px/1.35 ui-monospace, monospace;
+  pointer-events: none;
+}
+.j-poster::after { content: none; }
 .j-poster.breathe img { animation: breathe 2.4s ease-in-out infinite; }
 @keyframes breathe { 50% { opacity: 0.55; } }
-.j-poster-mark { position: absolute; left: 16px; top: calc(54px + var(--safe-top)); z-index: 1; }
+.journey.phase-feed .j-poster-who,
+.journey.phase-feed .j-poster-mark { display: none; }
+.j-poster-mark { position: absolute; left: 16px; top: 12px; z-index: 1; }
 .j-poster-mark { color: #f1d58a; }
 .j-poster-who { position: absolute; left: 54px; top: calc(60px + var(--safe-top)); z-index: 1; font-weight: 650; font-size: 14px; }
 .j-poster-note { position: absolute; left: 24px; right: 24px; top: 30%; z-index: 1; text-align: center; font-weight: 650; margin: 0; }
@@ -140,7 +234,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 
 /* Chrome over (or around) the clip. Controls and the caption take taps; the rest falls through to the film. */
 .j-chrome { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
-.j-chrome .rail, .j-chrome .clip-foot, .j-chrome .chip, .j-chrome .j-sound, .j-chrome .j-swipe-hint, .j-chrome button, .j-chrome a { pointer-events: auto; }
+.j-chrome .rail, .j-chrome .clip-foot, .j-chrome .chip, .j-chrome .j-sound, .j-chrome .j-swipe-hint, .j-chrome button, .j-chrome a, .j-chrome .j-more-tab, .j-chrome .j-board, .j-chrome .j-board-back, .j-chrome .j-tap-catcher, .j-chrome .end-card { pointer-events: auto; }
 .j-chrome .pill, .j-chrome .chip { touch-action: manipulation; }
 .j-chrome .caption {
   pointer-events: auto; cursor: pointer; background: none; border: 0; padding: 0; text-align: left;
@@ -164,8 +258,22 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-peek .feed-card h2,
 .j-peek .feed-card p { visibility: hidden; }
 .j-peeks, .j-peek, .j-slot, .j-slide { overflow: hidden; }
-.j-hairline-row { position: absolute; top: calc(12px + var(--safe-top)); left: 16px; right: 16px; z-index: 6; }
-.j-swipe-hint { position: relative; z-index: 6; margin: 8px 0 0; text-align: center; font-size: 12px; font-weight: 650; letter-spacing: 0.01em; color: rgba(255, 255, 255, 0.92); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55); }
+.j-hairline-row { position: absolute; top: calc(12px + var(--safe-top)); left: 16px; right: 16px; z-index: 6; pointer-events: auto; }
+.j-swipe-hint {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: calc(136px + var(--safe-bottom));
+  z-index: 15;
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(241, 228, 198, 0.42);
+  text-shadow: none;
+  pointer-events: none;
+}
 .j-hairline { height: 3px; border-radius: 3px; background: rgba(255, 255, 255, 0.28); overflow: hidden; }
 .j-hairline > i { display: block; height: 100%; width: 0; background: #fff; transition: width 0.25s linear; }
 .j-hairline.shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.55), rgba(255,255,255,0.2)); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
@@ -177,26 +285,20 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .strict .j-top-speaker,
 .journey[data-mode='appetiser'] .j-top-speaker { top: calc(88px + var(--safe-top)); }
 .journey:is([data-vertical='yes'], [data-words-in-picture='yes']) .j-slot .j-poster-who, .journey:is([data-vertical='yes'], [data-words-in-picture='yes']) .j-slot .j-poster-mark { display: none; }
-/* Burned-in words stay in the picture: chips, then the speaker, then an uncropped 16:9 band, then our caption. */
+/* F wins over the old words-in-picture crop: same 16:9 band as every other clip. */
 .journey[data-words-in-picture='yes'] .j-slot {
-  top: calc(190px + var(--safe-top));
-  bottom: auto;
-  height: calc(min(430px, 100vw) * 9 / 16);
-  background: #16120c;
-  box-shadow: inset 0 0 0 1px rgba(241, 213, 138, 0.45);
+  top: 0;
+  bottom: 0;
+  height: auto;
+  background: #0F3B3A;
+  box-shadow: none;
 }
 .journey[data-words-in-picture='yes'] .yt-host iframe {
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  transform: none;
+  pointer-events: none !important;
 }
 .journey[data-words-in-picture='yes'] .j-chrome .caption,
 .j-caption-clear {
-  top: calc(206px + var(--safe-top) + min(430px, 100vw) * 9 / 16);
-  bottom: auto;
-  font-size: 26px;
+  display: none;
 }
 .journey[data-words-in-picture='yes'] .j-chrome .caption.j-caption-clear {
   background: rgba(8, 20, 20, 0.94);
@@ -212,8 +314,8 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
  * Appetiser with a film: the picture is the whole phone. Controls sit in a short row at the bottom.
  * There is no caption. A scrim keeps the buttons readable and leaves the top of the frame clear.
  */
-.journey[data-mode='appetiser'] .j-chrome { display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; padding: calc(52px + var(--safe-top)) 16px calc(92px + var(--safe-bottom)); }
-.journey[data-mode='appetiser'][data-video='yes'] .j-chrome { background: linear-gradient(180deg, transparent 0%, transparent 46%, rgba(8, 6, 16, 0.45) 72%, rgba(8, 6, 16, 0.82) 100%); }
+.journey[data-mode='appetiser'] .j-chrome { display: block; padding: 0; }
+.journey[data-mode='appetiser'][data-video='yes'] .j-chrome { background: none; }
 .typography-player { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #14120e; z-index: 2; }
 .feed-card {
   position: absolute; inset: 0; z-index: 4; overflow: hidden; isolation: isolate;
@@ -246,12 +348,6 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   justify-items: center;
   z-index: 8;
 }
-.journey.phase-feed .j-chrome .clip-foot.j-credits {
-  padding-right: 84px;
-}
-.journey.phase-feed .fr-words {
-  padding-right: 88px;
-}
 .journey.phase-feed .j-hairline-row {
   right: 68px;
 }
@@ -263,7 +359,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .journey[data-mode='appetiser'] .speaker-card small { color: #D4A84B; }
 .ready-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; pointer-events: auto; }
 .ready-controls input[type='range'] { width: 100%; accent-color: #D4A84B; }
-.strict.journey[data-mode='appetiser'] .j-chrome { padding-top: calc(60px + var(--safe-top) + min(430px, 100vw) * 9 / 16); background: none; }
+.strict.journey[data-mode='appetiser'] .j-chrome { padding-top: 0; background: none; }
 
 /* An appetiser with no film: a still, and three short lines. Never the transcript. */
 .j-poster.scenic { background: radial-gradient(120% 80% at 50% 20%, #3a2a52 0%, #14101f 70%); }
@@ -271,13 +367,26 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .scenic-lines p { margin: 0; font-family: var(--serif); font-weight: 600; font-size: 26px; line-height: 1.18; color: #fff; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45); }
 .scenic-lines p:first-child { font-size: 30px; }
 
-/* Strict layout: the player keeps its own 16:9 band and nothing sits over it. */
-.strict .j-slot { top: calc(48px + var(--safe-top)); bottom: auto; height: calc(min(430px, 100vw) * 9 / 16); }
-.strict .yt-host iframe { top: -48px; width: 100%; height: calc(100% + 72px); left: 0; transform: none; }
-.strict .j-chrome .caption { top: calc(64px + var(--safe-top) + min(430px, 100vw) * 9 / 16); font-size: 26px; }
-.strict .j-hairline-row { top: calc(20px + var(--safe-top)); }
-.strict[data-words-in-picture='yes'] .j-slot { top: calc(142px + var(--safe-top)); }
-.strict[data-words-in-picture='yes'] .j-chrome .caption { top: calc(158px + var(--safe-top) + min(430px, 100vw) * 9 / 16); }
+/* Strict layout uses the same F band as overlay: uncropped 16:9 under the chips. */
+.strict .j-slot { top: 0; bottom: 0; height: auto; background: #0F3B3A; }
+.strict .j-film-band { top: calc(56px + var(--safe-top)); width: 100%; }
+.strict .yt-host iframe,
+.strict .j-film-band iframe {
+  top: 50% !important;
+  left: 50% !important;
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  object-fit: contain !important;
+  transform: translate(-50%, -50%) !important;
+  pointer-events: none !important;
+}
+.strict .j-chrome .caption { display: none; }
+.strict .j-hairline-row { top: calc(12px + var(--safe-top)); }
+.strict[data-words-in-picture='yes'] .j-slot { top: 0; }
+.strict[data-words-in-picture='yes'] .j-chrome .caption { display: none; }
 
 /* Sheet, not-for-me and tabs */
 .j-sheet {
@@ -352,19 +461,19 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
    It stays in normal flow, left-aligned, so its hit boxes sit above the speed chip and the talk button. */
 .j-chrome .clip-foot .j-level-choices {
   position: static;
-  justify-self: start;
-  align-self: flex-start;
+  justify-self: stretch;
+  align-self: stretch;
   flex: none;
   z-index: auto;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  width: max-content;
-  max-width: 11rem;
-  margin: 0 0 2px;
-  padding: 4px 8px;
-  border-radius: 12px;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+  max-width: none;
+  margin: 0 0 10px;
+  padding: 4px;
+  border-radius: 14px;
   border: 1px solid rgba(241, 213, 138, 0.45);
   background: rgba(8, 24, 24, 0.82);
   pointer-events: auto;
@@ -375,23 +484,24 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   border: 0;
   background: transparent;
   color: rgba(246, 238, 220, 0.82);
-  border-radius: 6px;
-  padding: 2px 4px;
+  border-radius: 10px;
+  padding: 8px 6px;
   min-height: 0;
   min-width: 0;
   width: auto;
-  max-width: 100%;
+  flex: 1 1 0;
+  max-width: none;
   font-weight: 700;
   font-size: 12px;
   line-height: 1.25;
-  text-align: left;
+  text-align: center;
   white-space: nowrap;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
   box-shadow: none;
   touch-action: manipulation;
 }
 .j-chrome .clip-foot .j-level-choices button.on {
-  background: transparent;
+  background: rgba(241, 213, 138, 0.16);
   color: #f1d58a;
   border: 0;
 }
@@ -440,7 +550,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   pointer-events: none;
 }
 .j-coach-card {
-  pointer-events: auto;
+  pointer-events: none;
   background: rgba(14, 42, 43, 0.94);
   color: #f6eedc;
   border: 1px solid rgba(212, 168, 75, 0.45);
@@ -453,3 +563,143 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-coach-card li { font-size: 14px; line-height: 1.35; }
 .j-coach-card b { display: inline; margin-right: 6px; color: #f1d58a; }
 .j-coach-card p { margin: 0; font-size: 13px; color: rgba(246, 238, 220, 0.78); }
+
+.j-slot { background: #0F3B3A; }
+.j-peek { background: #0F3B3A; }
+.journey.phase-feed .fr-words {
+  top: calc(56px + var(--safe-top) + 100vw * 9 / 16);
+  bottom: calc(140px + var(--safe-bottom));
+  padding: 16px 20px 8px;
+  justify-content: flex-start;
+}
+.journey.phase-feed[data-vertical='yes'] .fr-words {
+  top: calc(56px + var(--safe-top) + min(60dvh, 100vw * 16 / 9));
+}
+.j-paused-mark {
+  position: absolute;
+  left: 16px;
+  top: calc(64px + var(--safe-top));
+  z-index: 9;
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #f6eedc;
+  font-size: 12px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.journey[data-board='open'] .j-more-tab,
+[data-testid="player"][data-board='open'] .j-more-tab { display: none; }
+.j-more-tab {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(76px + var(--safe-bottom));
+  z-index: 16;
+  min-width: 88px;
+  min-height: 36px;
+  padding: 6px 16px 8px;
+  border: 1px solid rgba(212, 168, 75, 0.45);
+  border-radius: 16px 16px 8px 8px;
+  background: rgba(15, 46, 44, 0.96);
+  color: #f1e4c6;
+  font-weight: 700;
+  font-size: 13px;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  pointer-events: auto;
+  touch-action: none;
+}
+.j-more-tab i {
+  display: block;
+  width: 36px;
+  height: 4px;
+  border-radius: 4px;
+  background: #d4a84b;
+}
+.j-board .ready-controls,
+.journey.phase-feed .j-chrome .j-board .ready-controls {
+  position: static;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px 10px;
+  width: 100%;
+  margin: 0 0 12px;
+}
+.j-board .ready-controls input[type='range'] {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+.j-board-back {
+  position: fixed;
+  inset: 0;
+  z-index: 26;
+  background: rgba(6, 18, 18, 0.45);
+  pointer-events: auto;
+}
+.j-board {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(76px + var(--safe-bottom));
+  z-index: 28;
+  max-height: min(72%, 560px);
+  overflow-y: auto;
+  padding: 0 16px calc(16px + var(--safe-bottom));
+  border-radius: 22px 22px 0 0;
+  background: #0F2E2C;
+  color: #F1E4C6;
+  box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+  touch-action: pan-y;
+}
+.j-board-grab {
+  touch-action: none;
+  padding: 12px 16px 14px;
+  margin: 0 -16px 4px;
+  cursor: grab;
+}
+.j-board-handle {
+  display: block;
+  width: 44px;
+  height: 5px;
+  border-radius: 5px;
+  background: rgba(241, 213, 138, 0.55);
+  margin: 0 auto;
+}
+.j-board-title {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.3;
+  color: #F1E4C6;
+}
+.j-board .rail,
+.journey.phase-feed .j-chrome .j-board .rail {
+  position: static;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin: 8px 0 12px;
+  right: auto;
+  bottom: auto;
+  z-index: auto;
+}
+.j-board .clip-foot,
+.j-board .clip-foot.j-credits {
+  position: static;
+  margin: 0;
+  padding: 0;
+  background: none;
+}
+.j-board .j-credits { background: none; }
+.journey.phase-feed .j-hairline-row { right: 68px; left: 16px; }
+.journey.phase-feed .j-hairline-row .clip-row { margin-top: 8px; }
+.j-hairline-row .clip-row-top { justify-content: flex-start; }
+.j-hairline-row .chip.white { padding: 4px 10px; font-size: 12px; min-height: 28px; }

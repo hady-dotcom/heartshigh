@@ -25,6 +25,16 @@ export function itemKey(item: Pick<NavItem, 'cutId' | 'card'>) {
   return `${item.cutId}:${item.card || 'talk'}`
 }
 
+/** The More board and captions read this item — the same cut the visible player was built for. */
+export function boardItemForPlayer<T extends { cutId: number }>(items: T[], index: number, specKey?: string | null) {
+  const cutId = specKey ? Number(String(specKey).split(':')[0]) : Number.NaN
+  if (Number.isFinite(cutId)) {
+    const found = items.find((row) => row.cutId === cutId)
+    if (found) return found
+  }
+  return items[index]
+}
+
 /** Session key: the same talk clip and its 3-minute version are different cards. */
 export function cardKey(item: Pick<NavItem, 'cutId' | 'card'>, level: FeedLevel = 'hors') {
   return `${item.cutId}:${item.card || 'talk'}:${level}`
@@ -79,12 +89,26 @@ function unseenCard(list: NavItem[], at: number, level: FeedLevel, seen: Readonl
   return !(level === 'hors' && seen.has(itemKey(row)))
 }
 
-export function swipeTarget(list: NavItem[], index: number, level: FeedLevel, swipe: Swipe, seen?: ReadonlySet<string>): number | null {
+export function swipeTarget(list: NavItem[], index: number, level: FeedLevel, swipe: Swipe, seen?: ReadonlySet<string>, laneOrder = false): number | null {
   const item = list[index]
   if (!item || list.length < 2) return null
   if (swipe === 'next' || swipe === 'prev') {
     const step = swipe === 'next' ? 1 : -1
     const order = ring(list.length, index, step)
+    // A dedicated lane walks its list in order, even if those talks were marked seen on Home.
+    // The mixed pool still skips seen talks and stops when the pool is exhausted.
+    if (laneOrder) {
+      if (swipe === 'prev') {
+        for (let at = index - 1; at >= 0; at--) {
+          if (onLevel(list[at], level) && (level !== 'hors' || !isInterstitial(list[at]))) return at
+        }
+        return null
+      }
+      for (let at = index + 1; at < list.length; at++) {
+        if (onLevel(list[at], level)) return at
+      }
+      return null
+    }
     // Next skips a talk the learner has already been shown, then stops at the end of the pool.
     // It also skips a film or typing card. Prev is one step back to the previous talk clip.
     // It must not skip that clip for being seen, and it must not stop on a card between two talks.
