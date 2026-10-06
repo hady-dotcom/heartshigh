@@ -67,6 +67,11 @@ test('feed players and the course player keep YouTube captions and annotations o
     assert.equal(vars.cc_load_policy, 0, kind)
     assert.equal(vars.iv_load_policy, 3, kind)
     assert.equal(vars.controls, 0, kind)
+    assert.equal(vars.rel, 0, kind)
+    assert.equal(vars.modestbranding, 1, kind)
+    assert.equal(vars.playsinline, 1, kind)
+    assert.equal(vars.disablekb, 1, kind)
+    assert.equal(vars.fs, 0, kind)
     assert.equal('cc_lang_pref' in vars, false, kind)
   }
 })

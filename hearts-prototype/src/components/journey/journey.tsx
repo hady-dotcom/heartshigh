@@ -1919,7 +1919,7 @@ export function Journey(props: JourneyProps) {
 
   // A Short (or a film with burned-in words) has text in the picture: the speaker sits at the top, and our caption sits in the bar below the 16:9 band.
   const speakerRow = item ? (
-    <div className="j-speaker j-speaker-plate">
+    <div className="j-speaker j-speaker-plate" key={item.cutId} data-speaker={item.speaker} data-cut={item.cutId}>
       <a className="speaker-row" href={`${base}/speaker/${item.speakerSlug}`} data-testid="speaker-link" onClick={(event) => { if (needsAccount('save')) event.preventDefault() }}>
         <Avatar name={item.speaker} portrait={item.portrait} />
         <span className="who"><b>{item.speaker}</b>{laneVisible && item.laneLabel ? <small>On {item.laneLabel}</small> : null}</span>
@@ -1942,6 +1942,7 @@ export function Journey(props: JourneyProps) {
     event.stopPropagation()
     event.preventDefault()
     boardDrag.current = { y: event.clientY, opened: true }
+    event.currentTarget.setPointerCapture?.(event.pointerId)
   }
   const moveBoard = (event: ReactPointerEvent) => {
     const start = boardDrag.current
@@ -2005,31 +2006,34 @@ export function Journey(props: JourneyProps) {
           ))}
         </div>
       ) : null}
-      <button
-        type="button"
-        className="j-more-tab"
-        data-testid="more-board"
-        aria-expanded={boardOpen}
-        aria-label={boardOpen ? 'Hide more' : 'More'}
-        onPointerDown={openBoard}
-        onPointerMove={moveBoard}
-        onPointerUp={finishBoard}
-        onPointerCancel={() => { boardDrag.current = null }}
-        onClick={(event) => event.preventDefault()}
-      >
-        <i />
-        More
-      </button>
+      {!boardOpen ? (
+        <button
+          type="button"
+          className="j-more-tab"
+          data-testid="more-board"
+          aria-expanded={false}
+          aria-label="More"
+          onPointerDown={openBoard}
+          onPointerMove={moveBoard}
+          onPointerUp={finishBoard}
+          onPointerCancel={() => { boardDrag.current = null }}
+          onClick={(event) => event.preventDefault()}
+        >
+          <i />
+          More
+        </button>
+      ) : null}
       {boardOpen ? <div className="j-board-back" data-testid="board-back" onClick={() => setBoardOpen(false)} /> : null}
       {boardOpen ? (
       <div
+        key={item.cutId}
         className="j-board"
         data-testid="feed-board"
-        onPointerDown={(event) => { event.stopPropagation(); boardDrag.current = { y: event.clientY, opened: true } }}
+        onPointerDown={(event) => { event.stopPropagation(); boardDrag.current = { y: event.clientY, opened: true }; event.currentTarget.setPointerCapture?.(event.pointerId) }}
         onPointerMove={moveBoard}
         onPointerUp={finishBoard}
       >
-        <span className="j-board-handle" />
+        <span className="j-board-handle" data-testid="board-handle" />
         {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
         {mode === 'hors' ? (
           <div className="ready-controls">
@@ -2122,14 +2126,16 @@ export function Journey(props: JourneyProps) {
           {[0, 1].map((at) => {
             const row = hosts.current[at as 0 | 1]
             const filmOn = hostShouldShow(at === visibleHost, revealed, Boolean(slide || scenic || !currentSpec))
+            const live = filmOn && at === visibleHost && playingOut
             return (
               <div
                 key={at}
-                ref={(el) => { hostEls.current[at] = el }}
-                className={`yt-host ${filmOn ? 'on' : 'off'}`}
+                className={`yt-host ${filmOn ? 'on' : 'off'}${live ? ' is-live' : ''}`}
                 data-testid={filmOn ? 'player-visible' : 'player-hidden'}
                 style={{ visibility: filmOn ? 'visible' : 'hidden' }}
-              />
+              >
+                <div className="j-film-band" ref={(el) => { hostEls.current[at] = el }} data-testid={filmOn ? 'film-band' : undefined} />
+              </div>
             )
           })}
           {phase === 'feed' && item ? (
@@ -2180,7 +2186,7 @@ export function Journey(props: JourneyProps) {
             </div>
           ) : null}
           {phase === 'feed' && !item ? <div className="j-poster" data-testid="poster-frame" data-poster="own" data-empty="" /> : null}
-          {phase === 'feed' && !slide && !scenic && !feedCard ? <div className="j-gesture" data-testid="gesture-layer" data-capture="yes" {...swipe} /> : null}
+          {phase === 'feed' && !slide && !scenic && !feedCard ? <div className="j-gesture" data-testid="gesture-layer" data-catcher="yes" data-capture="yes" {...swipe} /> : null}
         </div>
         {slide && item ? (
           <div className="j-slide" data-testid="gesture-layer" {...swipe}>

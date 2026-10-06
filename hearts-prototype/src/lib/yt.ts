@@ -76,20 +76,24 @@ export function preloadApi() {
 export type PlayerKind = 'hors' | 'appetiser' | 'full'
 
 export function playerVars(kind: PlayerKind, start: number, end?: number | null, autoplay = 0) {
+  // Chromeless on every learner host: no bar, related strip, annotations, logo, keys or fullscreen.
   const base = {
     start: Math.max(0, Math.floor(start)),
-    playsinline: 1,
+    controls: 0,
     rel: 0,
     iv_load_policy: 3,
     modestbranding: 1,
+    playsinline: 1,
+    disablekb: 1,
+    fs: 0,
     cc_load_policy: 0,
     enablejsapi: 1,
     origin: typeof window === 'undefined' ? undefined : window.location.origin,
     autoplay,
   }
   // A language preference is itself a nudge to load captions. None of the learner players send one.
-  if (kind === 'hors') return { ...base, end: end ? Math.ceil(end) : undefined, controls: 0, fs: 0, disablekb: 1 }
-  return { ...base, ...(end ? { end: Math.ceil(end) } : {}), controls: 0, fs: 0, disablekb: 1 }
+  if (kind === 'hors') return { ...base, end: end ? Math.ceil(end) : undefined }
+  return { ...base, ...(end ? { end: Math.ceil(end) } : {}) }
 }
 
 /**

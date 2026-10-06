@@ -14,7 +14,7 @@ import { nextPlaybackRate } from '@/lib/playback-rate'
 import { createPlayer, destroyPlayer, getPlayer, hasSound, pauseKeepingSound, resume, soundOn, STATE, UNPLAYABLE } from '@/lib/yt'
 import { SwarmList } from '@/components/app/swarm-list'
 import { initialsOf } from '@/lib/swarm-sort'
-import { HeartIcon, ImageIcon, LockIcon, MicIcon, PauseIcon, PlayIcon } from '../icons'
+import { HeartIcon, ImageIcon, LockIcon, MicIcon } from '../icons'
 import { track } from '@/lib/experiment-track'
 import { ReportButton } from '@/components/app/report-sheet'
 
@@ -243,7 +243,11 @@ export function CoursePlayer({
           setLit(true)
           getPlayer(PLAYER_ID)?.setPlaybackRate?.(speedRef.current)
         }
-        if (state === STATE.ENDED) setEnded(true)
+        if (state === STATE.ENDED) {
+          setEnded(true)
+          setLit(false)
+          setPlaying(false)
+        }
       },
       onError: (code) => {
         if (cancelled) return
@@ -467,6 +471,7 @@ export function CoursePlayer({
     event.stopPropagation()
     event.preventDefault()
     boardDrag.current = { y: event.clientY }
+    event.currentTarget.setPointerCapture?.(event.pointerId)
   }
   const moveBoard = (event: ReactPointerEvent) => {
     const start = boardDrag.current
@@ -545,78 +550,81 @@ export function CoursePlayer({
   const scenicPoster = !ownPoster
   const places = new Map(placeDots(views.map((row) => ({ id: row.id, second: row.second })), total, trackWidth).map((row) => [row.id, row]))
 
+  const showCover = !playing || ended || mode === 'loading' || !lit
   return (
-    <div data-testid="player" data-mode={mode} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-popup-layout={overPlayer ? 'over' : 'strict'}>
-      <div className="app-head" style={{ marginBottom: 6 }}>
-        <Link className="back" href={backHref} data-testid="back">‹ Back</Link>
+    <div data-testid="player" data-mode={mode} data-playing={playing ? 'yes' : 'no'} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-popup-layout={overPlayer ? 'over' : 'strict'}>
+      <div className="course-film">
+        <div className="j-hairline-row">
+          <div className={`j-hairline${mode === 'loading' ? ' shimmer' : ''}`} data-testid="hairline"><i style={{ width: `${Math.min(100, (time / total) * 100)}%` }} /></div>
+          <div className="clip-row">
+            <div className="clip-row-top">
+              <Link className="chip white" href={backHref} data-testid="back">‹ Back</Link>
+            </div>
+          </div>
+        </div>
+        <div ref={card} className={`player-card is-f course-film-band${filmed ? ' yt-on' : ''}${playing ? ' is-live' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
+          {showCover ? <div className={`poster${scenicPoster ? ' scenic' : ''}${mode === 'loading' ? ' skeleton' : ''}`} style={ownPoster ? { backgroundImage: `url(${poster})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : 'player-poster'} /> : null}
+          {mode === 'loading' && !failed ? <div className="player-veil" data-testid="player-veil" aria-hidden><span className="gold-spin" /></div> : null}
+          {failed ? (
+            <div className="player-retry" data-testid="player-retry">
+              <p>This film did not start.</p>
+              <button type="button" className="pill gold" onClick={() => { setFailed(false); setMode('loading'); setBoot((value) => value + 1) }}>
+                Try again
+              </button>
+            </div>
+          ) : null}
+          {youtubeId ? <div className="yt j-film-band" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
+          {vimeoId ? (
+            <div className="yt j-film-band" ref={filmBox} style={{ visibility: mode === 'vimeo' ? 'visible' : 'hidden' }}>
+              <iframe title={partLabel} src={`https://player.vimeo.com/video/${vimeoId}?api=1`} allow="autoplay; fullscreen; picture-in-picture" data-testid="vimeo-player" />
+            </div>
+          ) : null}
+          {fileSrc ? (
+            <div className="yt j-film-band" ref={filmBox} style={{ visibility: mode === 'file' ? 'visible' : 'hidden' }}>
+              <video ref={videoRef} src={fileSrc} playsInline data-testid="file-player" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => { setPlaying(false); setEnded(true); setLit(false) }} />
+            </div>
+          ) : null}
+          {open && overPlayer && (filmed || youtubeId) ? <div className="yt-scrim" data-testid="paused-scrim" aria-hidden /> : null}
+          {open && !playing ? (
+            <span className="paused-note on-film" data-testid="paused-note">❚❚ Paused at question {open.number}</span>
+          ) : null}
+          {!playing && filmed && lit ? <span className="j-paused-mark" data-testid="paused-mark" aria-hidden>❚❚</span> : null}
+          {open && !filmed && !playing ? (
+            <p className="paused-note" data-testid="paused-note">❚❚ Paused at question {open.number}</p>
+          ) : null}
+          {coursePlayVisible({ loading: mode === 'loading', questionOpen: open !== null }) ? (
+            <button type="button" className="j-tap-catcher film-tap" aria-label={playing ? 'Pause' : 'Play'} onClick={togglePlay} data-testid="player-play" />
+          ) : null}
+        </div>
+        <SpokenWords sentences={sentences} time={time} title={courseTitle} titles={[courseTitle, partLabel]} from={0} to={length || duration} />
       </div>
-      <div ref={card} className={`player-card is-f${filmed ? ' yt-on' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
-        <div className={`j-hairline${mode === 'loading' ? ' shimmer' : ''}`} data-testid="hairline"><i style={{ width: `${Math.min(100, (time / total) * 100)}%` }} /></div>
-        {!filmed || !lit ? <div className={`poster${scenicPoster ? ' scenic' : ''}${mode === 'loading' ? ' skeleton' : ''}`} style={ownPoster ? { backgroundImage: `url(${poster})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : 'player-poster'} /> : null}
-        {mode === 'loading' && !failed ? <div className="player-veil" data-testid="player-veil" aria-hidden><span className="gold-spin" /></div> : null}
-        {failed ? (
-          <div className="player-retry" data-testid="player-retry">
-            <p>This film did not start.</p>
-            <button type="button" className="pill gold" onClick={() => { setFailed(false); setMode('loading'); setBoot((value) => value + 1) }}>
-              Try again
-            </button>
-          </div>
-        ) : null}
-        {youtubeId ? <div className="yt" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
-        {vimeoId ? (
-          <div className="yt" ref={filmBox} style={{ visibility: mode === 'vimeo' ? 'visible' : 'hidden' }}>
-            <iframe title={partLabel} src={`https://player.vimeo.com/video/${vimeoId}?api=1`} allow="autoplay; fullscreen; picture-in-picture" data-testid="vimeo-player" />
-          </div>
-        ) : null}
-        {fileSrc ? (
-          <div className="yt" ref={filmBox} style={{ visibility: mode === 'file' ? 'visible' : 'hidden' }}>
-            <video ref={videoRef} src={fileSrc} controls playsInline data-testid="file-player" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => { setPlaying(false); setEnded(true) }} />
-          </div>
-        ) : null}
-        {open && overPlayer && (filmed || youtubeId) ? <div className="yt-scrim" data-testid="paused-scrim" aria-hidden /> : null}
-        {open && !playing ? (
-          <span className="paused-note on-film" data-testid="paused-note">❚❚ Paused at question {open.number}</span>
-        ) : null}
-        {!playing && filmed ? <span className="j-paused-mark" data-testid="paused-mark" aria-hidden>❚❚</span> : null}
-        {open && !filmed && !playing ? (
-          <p className="paused-note" data-testid="paused-note">❚❚ Paused at question {open.number}</p>
-        ) : null}
-        {coursePlayVisible({ loading: mode === 'loading', questionOpen: open !== null }) ? (
-          <>
-            <div className="film-tap" aria-hidden onClick={togglePlay} />
-            <button type="button" className="big-play" aria-label={playing ? 'Pause' : 'Play'} onClick={togglePlay} data-testid="player-play">
-              {playing ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
-              <span>{playing ? 'Pause' : 'Play'}</span>
-            </button>
-          </>
-        ) : null}
-      </div>
-      <SpokenWords sentences={sentences} time={time} title={courseTitle} titles={[courseTitle, partLabel]} from={0} to={length || duration} />
-      <button
-        type="button"
-        className="j-more-tab"
-        data-testid="more-board"
-        aria-expanded={boardOpen}
-        aria-label={boardOpen ? 'Hide more' : 'More'}
-        onPointerDown={openBoard}
-        onPointerMove={moveBoard}
-        onPointerUp={finishBoard}
-        onPointerCancel={() => { boardDrag.current = null }}
-        onClick={(event) => event.preventDefault()}
-      >
-        <i />
-        More
-      </button>
+      {!boardOpen ? (
+        <button
+          type="button"
+          className="j-more-tab"
+          data-testid="more-board"
+          aria-expanded={false}
+          aria-label="More"
+          onPointerDown={openBoard}
+          onPointerMove={moveBoard}
+          onPointerUp={finishBoard}
+          onPointerCancel={() => { boardDrag.current = null }}
+          onClick={(event) => event.preventDefault()}
+        >
+          <i />
+          More
+        </button>
+      ) : null}
       {boardOpen ? <div className="j-board-back" data-testid="board-back" onClick={() => setBoardOpen(false)} /> : null}
       {boardOpen ? (
         <div
           className="j-board course-board"
           data-testid="feed-board"
-          onPointerDown={(event) => { event.stopPropagation(); boardDrag.current = { y: event.clientY } }}
+          onPointerDown={(event) => { event.stopPropagation(); boardDrag.current = { y: event.clientY }; event.currentTarget.setPointerCapture?.(event.pointerId) }}
           onPointerMove={moveBoard}
           onPointerUp={finishBoard}
         >
-          <span className="j-board-handle" />
+          <span className="j-board-handle" data-testid="board-handle" />
           <span className="time-read" data-testid="player-time">{clock(time)}</span>
           <button type="button" className="lecture-speed" data-testid="lecture-speed" aria-label="Playback speed" onClick={cycleSpeed}>{speed}×</button>
         <div className="timeline" data-testid="timeline" ref={timelineRef}>
@@ -651,6 +659,7 @@ export function CoursePlayer({
         </div>
         </div>
       ) : null}
+      <div className="course-body">
       <p className="part-chip off-film" data-testid="part-label">{partLabel}</p>
       {views.length ? (
         <ul className="q-list" data-testid="question-strip" aria-label="Questions in this film">
@@ -735,6 +744,7 @@ export function CoursePlayer({
         <input type="hidden" name="next" value={next} />
         <button className="link-btn" type="submit" data-testid="mark-watched">I have watched this part</button>
       </form>
+      </div>
       {open ? (
         <Sheet
           key={open.id}
