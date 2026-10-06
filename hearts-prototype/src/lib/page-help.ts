@@ -139,7 +139,9 @@ const PAGES: Record<string, HelpCopy> = {
   course: {
     title: 'How to use a talk',
     body: [
-      'The film sits at the top in a wide band. Play and pause stay on the film. Pull More up for speed, the clock and the question dots. Tap a question dot on the timeline to jump there; the talk pauses so you can write.',
+      'The film sits at the top in a wide band. Play and pause stay on the film.',
+      'Pull the More tab up for speed, the clock and the question dots. Swipe it down, or tap outside, to put it away.',
+      'Tap a question dot on the timeline to jump there; the talk pauses so you can write.',
       'What others said is a quiet list of initials, not names. There is no rating.',
     ],
   },
