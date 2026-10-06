@@ -406,7 +406,7 @@
   z-index: 30;
 }
 .app[data-testid="course"] .app-scroll {
-  padding: 0 0 calc(176px + env(safe-area-inset-bottom, 0px));
+  padding: 0 0 calc(220px + env(safe-area-inset-bottom, 0px));
 }
 .app[data-testid="course"] .course-film {
   position: relative;
@@ -479,10 +479,11 @@
   pointer-events: auto;
 }
 .app[data-testid="course"] .course-body {
-  padding: 0 18px calc(72px + env(safe-area-inset-bottom, 0px));
+  padding: 0 18px calc(96px + env(safe-area-inset-bottom, 0px));
 }
 .app[data-testid="course"] .garden-card {
-  margin-bottom: 28px;
+  margin-bottom: 88px;
+  scroll-margin-bottom: calc(148px + env(safe-area-inset-bottom, 0px));
 }
 .app[data-testid="course"] .big-play { display: none; }
 .player-card .poster { position: absolute; inset: 0; background-size: contain; background-position: center; background-repeat: no-repeat; opacity: 1; }
