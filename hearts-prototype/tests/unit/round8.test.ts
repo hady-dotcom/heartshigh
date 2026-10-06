@@ -61,7 +61,7 @@ test('1: the last clip autoplays and the end card appears only at its end', () =
   assert.match(journey, /endedEventIsCurrent/)
   assert.match(journey, /horsWindowEnded/)
   assert.match(journey, /showLaneEndNow/)
-  assert.match(journey, /clipEnded && mode === 'hors'/)
+  assert.match(journey, /mode === 'hors' && item && phase === 'feed' && endCardShows\(\{ clipEnded, lastClip: nextClipAt == null, boardOpen, sheetOpen: Boolean\(sheet\) \}\)/)
   assert.match(journey, /swipe === 'next'\) \{\s*showLaneEnd\(\)/)
   const show = journey.slice(journey.indexOf('const showLaneEnd'), journey.indexOf('const advance ='))
   assert.match(show, /setClipEnded\(true\)/)

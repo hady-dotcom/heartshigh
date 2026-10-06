@@ -16,7 +16,7 @@ import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { dedicatedLaneFeed, laneEndHref, lanesWithClips, playableLaneClips, takeDedicatedLane } from '@/lib/lanes'
 import { coverAttr, coverFallbackAction, coverHoldKey, coverHoldStep, filmCoverKey, freshCoverHold, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
-import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardClickFires, boardHandleAction, boardTapFires, boardTapNote, coachTapAction, feedGestureCounts, ghostClick, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
+import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardClickFires, endCardShows, laneEndClosesBoard, boardHandleAction, boardTapFires, boardTapNote, coachTapAction, feedGestureCounts, ghostClick, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
 import { freshSheetHistory, sheetClosed, sheetOpened, sheetPopped, sheetUrl, type SheetHistory } from '@/lib/sheet-history'
 import { isoWeek } from '@/lib/trends'
 import { courseCatcherTap } from '@/lib/course-controls'
@@ -1260,14 +1260,21 @@ export function Journey(props: JourneyProps) {
     writeCoachDismissed()
   }
 
-  const showLaneEnd = () => {
+  /**
+   * The last clip has ended (how: 'auto') or a swipe went past it ('swipe'). An open More board stays
+   * open and usable, as on an auto-advance mid-lane: a tap in progress completes on the clip shown at
+   * the press. The end card shows once the board and any sheet are shut (endCardShows).
+   */
+  const showLaneEnd = (how: 'swipe' | 'auto' = 'swipe') => {
     userPausedRef.current = true
     wantPlayRef.current = null
     pauseWhenReadyRef.current = false
     clipEndedRef.current = true
-    if (boardOpenRef.current) boardClosedAt.current = performance.now()
-    boardOpenRef.current = false
-    setBoardOpen(false)
+    if (laneEndClosesBoard(how) && boardOpenRef.current) {
+      boardClosedAt.current = performance.now()
+      boardOpenRef.current = false
+      setBoardOpen(false)
+    }
     setCoverHeld(true)
     setClipEnded(true)
     ignorePictureUntil.current = performance.now() + PICTURE_SWALLOW_MS
@@ -1388,7 +1395,7 @@ export function Journey(props: JourneyProps) {
     const step = afterClipEnds({ nextIndex: next })
     userPausedRef.current = next == null
     if (step.kind === 'lane-end') {
-      showLaneEnd()
+      showLaneEnd('auto')
     } else {
       newClipPlayingRef.current = false
       windowHandledRef.current = false
@@ -1417,7 +1424,7 @@ export function Journey(props: JourneyProps) {
       window.setTimeout(() => {
         const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', props.lane ? undefined : seenRef.current, Boolean(props.lane))
         if (showLaneEndNow({ thisClipEnded: true, nextIndex: next })) {
-          showLaneEnd()
+          showLaneEnd('auto')
           setToast(poolEndToast())
         } else if (next != null) void advance(next, 'auto')
       }, 900)
@@ -2731,7 +2738,7 @@ export function Journey(props: JourneyProps) {
         ) : null}
         <div className="j-chrome">
           {chrome}
-          {clipEnded && mode === 'hors' && item && phase === 'feed' && nextClipAt == null ? (
+          {mode === 'hors' && item && phase === 'feed' && endCardShows({ clipEnded, lastClip: nextClipAt == null, boardOpen, sheetOpen: Boolean(sheet) }) ? (
             <div className="end-card" data-testid="feed-end">
               <p className="eyebrow">That is the last clip here.</p>
               <button type="button" className="pill gold block" data-testid="end-lanes" data-href={laneEndTarget} onClick={() => { window.location.assign(laneEndTarget) }}>Try another lane</button>

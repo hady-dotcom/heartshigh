@@ -314,8 +314,8 @@ test('wiring: board controls fall back to their click, More has a click fallback
   assert.match(journey, /data-testid="more-board"[\s\S]{0,400}onClick=\{moreClick\}/)
   assert.match(between('const openBoard = (', 'const moveBoard = '), /morePress\.current = \{ t: performance\.now\(\), acted: false \}/)
   assert.match(between('const openDrawer = () => {', 'closeDrawerRef.current = closeDrawer'), /boardToggledAt\.current = boardOpenedAt\.current[\s\S]*boardToggledAt\.current = boardClosedAt\.current/)
-  // The lane end and auto-advance close the board without arming the ghost guard.
-  assert.doesNotMatch(between('const showLaneEnd = () => {', 'const advance = useCallback('), /boardToggledAt/)
+  // The lane end (on a swipe) and auto-advance close the board without arming the ghost guard.
+  assert.doesNotMatch(between('const showLaneEnd = (', 'const advance = useCallback('), /boardToggledAt/)
   assert.match(journey, /window\.addEventListener\('touchstart', notePress, \{ capture: true, passive: true \}\)/)
 })
 

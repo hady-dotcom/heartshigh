@@ -15,6 +15,20 @@ export function autoAdvanceClosesBoard(how: 'swipe' | 'auto') {
   return how === 'swipe'
 }
 
+/**
+ * The lane end treats an open More board the way an auto-advance mid-lane does: it stays open and
+ * usable, so a Like or Save in progress lands (on the clip shown at the press). Only a swipe past the
+ * last clip, which can only start with the board shut, is a "swipe" here.
+ */
+export function laneEndClosesBoard(how: 'swipe' | 'auto') {
+  return autoAdvanceClosesBoard(how)
+}
+
+/** The lane-end card waits until the board and the sign-up sheet are both shut, then shows. */
+export function endCardShows(input: { clipEnded: boolean; lastClip: boolean; boardOpen: boolean; sheetOpen: boolean }) {
+  return input.clipEnded && input.lastClip && !input.boardOpen && !input.sheetOpen
+}
+
 /** Closing More on the end card must not move the playlist. */
 export function endCardAfterBoardClose(input: { index: number; clipEnded: boolean }) {
   return { index: input.index, clipEnded: input.clipEnded }
