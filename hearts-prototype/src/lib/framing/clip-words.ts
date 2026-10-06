@@ -3,22 +3,27 @@
  *
  * The source is content-load's work file for a talk: `words` are the caption words with their own clocks (YouTube
  * auto captions carry one per word), and `disp` is the same words, one for one, with punctuation and casing restored
- * by a local model. Nothing is reworded: a word is shown exactly as `disp` has it (a sentence's first letter is
- * capitalised and stray double quotes are dropped), or left out when it is a sound tag such as "[laughter]", a ">>"
- * speaker mark, or YouTube's "foreign" placeholder for speech it could not transcribe.
+ * by a local model. A word is shown as `disp` has it (a sentence's first letter is capitalised and stray double quotes
+ * are dropped), or left out when it is a sound tag such as "[laughter]", a ">>" speaker mark, or YouTube's "foreign"
+ * placeholder for speech it could not transcribe. The only rewording is the hand-checked mishearing fixes passed in
+ * `options.fixes` (content/framing/clip-words-fixes.json), which take over the misheard words' own span.
  *
  * The clip keeps only words that start and finish inside its window, so no line begins or ends on a cut word. A
  * sentence that the window catches by its last or first word or two is trimmed away. Long sentences are split into
  * pages that fit the F panel whole, each starting on the clock of its own first word.
  */
 import { endsSentence } from '@/lib/sentences'
-import { pickKey, wrapWordLines } from './words'
+import { applyWordFixes, type FixHit, type FixToken, type WordFix } from './clip-word-fixes'
+import { HOLD_GAP, pickKey, wrapWordLines } from './words'
 import type { FramingSentence, FramingTrack, SpokenWord } from './types'
 
 export type WorkFile = { words: [string, number, number][]; disp?: string[]; kind?: string }
 export type ClipWindow = { youtubeId: string; start: number; end: number }
 
-/** F shows at most five wrapped lines; a page stops at four so it never runs out of room. */
+/**
+ * A page is at most four wrapped lines. Five 20-character lines at the feed's smallest type (a 293 px column) push the
+ * page dots onto the "swipe up" hint, so no page, merged or not, goes past four.
+ */
 export const PAGE_LINES = 4
 export const LINE_CHARS = 20
 /** A partial sentence at a clip edge this short is the tail of the line before, or the head of the next. */
@@ -33,8 +38,15 @@ const SENTENCE_TAIL = 0.2
 const MIN_INSIDE = 0.25
 /** A page on screen for less than this is merged with a neighbour (when the two still fit the panel). */
 export const MIN_PAGE_SECONDS = 0.6
-/** The panel's hard limit (SpokenWords shows five wrapped lines). */
-const MAX_LINES = 5
+/** The panel's hard limit for a merged page: the same four lines. */
+const MAX_LINES = PAGE_LINES
+/**
+ * A silence longer than this between two words ends the page, even mid-sentence, and the page's time ends with its last
+ * word; the player keeps a line up for HOLD_GAP after it ends, so a longer pause shows nothing instead of a frozen line.
+ */
+export const PAUSE_SPLIT = HOLD_GAP
+/** A long sentence's last page keeps at least this many words, so "everything." is not left alone. */
+const MIN_TAIL_WORDS = 4
 
 const SOUND_TAG = /^\[[^\]]*\]$|^>>+$|^-+$/
 const round2 = (value: number) => Math.round(value * 100) / 100
@@ -52,7 +64,7 @@ function opening(word: string) {
   return word.replace(/^([^\p{L}]*)(\p{Ll})/u, (_, lead: string, letter: string) => `${lead}${letter.toUpperCase()}`)
 }
 
-type Timed = { w: string; t: number; e: number; endsSentence: boolean; i: number }
+type Timed = { w: string; t: number; e: number; endsSentence: boolean; i: number; pauseBefore?: boolean }
 
 /**
  * YouTube gives the first words of a caption line one shared clock (sometimes a whole line). Such a run is spread
@@ -113,29 +125,65 @@ function pagesOf(sentence: Timed[]) {
     current = [...current.slice(cut), word]
   }
   if (current.length) pages.push(current)
+  // Even out a long sentence's last page: move words down from the page before while both still fit.
+  while (pages.length > 1) {
+    const last = pages[pages.length - 1]
+    const prev = pages[pages.length - 2]
+    if (last.length >= MIN_TAIL_WORDS || prev.length <= MIN_TAIL_WORDS) break
+    const moved = [prev[prev.length - 1], ...last]
+    if (!fits(moved)) break
+    prev.pop()
+    pages[pages.length - 1] = moved
+  }
   return pages
 }
 
+/** A sentence split where the speaker pauses longer than PAUSE_SPLIT. */
+function runsOf(sentence: Timed[]) {
+  const runs: Timed[][] = []
+  for (const word of sentence) {
+    if (!runs.length || word.pauseBefore) runs.push([])
+    runs[runs.length - 1].push(word)
+  }
+  return runs
+}
+
+export type ClipWordsOptions = {
+  /** Hand-checked corrections (see clip-word-fixes.ts), applied before sentences are found. */
+  fixes?: WordFix[]
+  /** Told about every fix that changed a word. */
+  onFix?: (hit: FixHit) => void
+}
+
 /** The clip's sentences, or null when the window holds no timed words. */
-export function clipSentences(work: WorkFile, clip: ClipWindow): FramingSentence[] | null {
+export function clipSentences(work: WorkFile, clip: ClipWindow, options: ClipWordsOptions = {}): FramingSentence[] | null {
   const raw = work.words || []
   const disp = work.disp && work.disp.length === raw.length ? work.disp : raw.map((row) => row[0])
-  let afterStop = true
   let inTag = false
-  const all: (Timed | null)[] = raw.map((row, index) => {
+  const spoken: FixToken[] = []
+  raw.forEach((row, index) => {
     const token = (disp[index] ?? row[0]).trim()
     // A sound tag can span words: "[Clears throat]".
     if (inTag || (/^\[/.test(token) && !token.includes(']'))) {
       inTag = !token.includes(']')
-      return null
+      return
     }
     // YouTube writes "[foreign]" for speech it cannot transcribe (often Arabic); it arrives as the bare word.
-    if (/^foreign$/i.test(String(row[0]).trim())) return null
+    if (/^foreign$/i.test(String(row[0]).trim())) return
     const text = shown(token)
-    if (!text) return null
-    const w = afterStop ? opening(text) : text
+    if (text) spoken.push({ w: text, t: Number(row[1]), e: Number(row[2]) })
+  })
+  let fixed = spoken
+  if (options.fixes?.length) {
+    const result = applyWordFixes(spoken, options.fixes, clip)
+    fixed = result.tokens
+    if (options.onFix) result.hits.forEach(options.onFix)
+  }
+  let afterStop = true
+  const all: (Timed | null)[] = fixed.map((row, index) => {
+    const w = afterStop ? opening(row.w) : row.w
     afterStop = endsSentence(w)
-    return { w, t: Number(row[1]), e: Number(row[2]), endsSentence: afterStop, i: index }
+    return { w, t: row.t, e: row.e, endsSentence: afterStop, i: index }
   })
   const firstIn = all.findIndex((row) => row && row.t >= clip.start - 0.05)
   if (firstIn < 0) return null
@@ -156,6 +204,10 @@ export function clipSentences(work: WorkFile, clip: ClipWindow): FramingSentence
   while (picked.length && picked[picked.length - 1].t > clip.end - MIN_INSIDE) picked.pop()
   if (!picked.length) return null
   lastIn = picked[picked.length - 1].i
+  for (let index = 1; index < picked.length; index++) {
+    const prev = picked[index - 1]
+    picked[index].pauseBefore = picked[index].t - Math.min(prev.e, prev.t + LONGEST_WORD) > PAUSE_SPLIT
+  }
 
   const groups = sentencesOfSlice(picked)
   const before = all.slice(0, firstIn).reverse().find((row) => row)
@@ -166,7 +218,12 @@ export function clipSentences(work: WorkFile, clip: ClipWindow): FramingSentence
   if (!groups.length) return null
 
   type Page = { words: Timed[]; endsSentence: boolean }
-  const pages: Page[] = groups.flatMap((group) => pagesOf(group).map((page, at, list) => ({ words: page, endsSentence: at === list.length - 1 })))
+  const pages: Page[] = groups.flatMap((group) =>
+    runsOf(group).flatMap((run, runAt, runs) =>
+      pagesOf(run).map((page, at, list) => ({ words: page, endsSentence: runAt === runs.length - 1 && at === list.length - 1 })),
+    ),
+  )
+  const pauseBefore = (index: number) => Boolean(pages[index]?.words[0].pauseBefore)
   const startOf = (index: number) => (pages[index] ? pages[index].words[0].t : clip.end)
   const fitsPanel = (words: Timed[]) => wrapWordLines(words.map((row) => row.w), LINE_CHARS).length <= MAX_LINES
   // A one-word page ("No.", "Why?") would flash by: it joins the page after it, or the one before, when both fit.
@@ -174,10 +231,10 @@ export function clipSentences(work: WorkFile, clip: ClipWindow): FramingSentence
     if (pages.length < 2 || startOf(index + 1) - startOf(index) >= MIN_PAGE_SECONDS) continue
     const next = pages[index + 1]
     const prev = pages[index - 1]
-    if (next && fitsPanel([...pages[index].words, ...next.words])) {
+    if (next && !pauseBefore(index + 1) && fitsPanel([...pages[index].words, ...next.words])) {
       pages.splice(index, 2, { words: [...pages[index].words, ...next.words], endsSentence: next.endsSentence })
       index--
-    } else if (prev && fitsPanel([...prev.words, ...pages[index].words])) {
+    } else if (prev && !pauseBefore(index) && fitsPanel([...prev.words, ...pages[index].words])) {
       pages.splice(index - 1, 2, { words: [...prev.words, ...pages[index].words], endsSentence: pages[index].endsSentence })
       index -= 2
     }
@@ -186,7 +243,8 @@ export function clipSentences(work: WorkFile, clip: ClipWindow): FramingSentence
     const s = round2(page.words[0].t)
     const nextStart = round2(startOf(index + 1))
     const spokenEnd = page.words[page.words.length - 1].e
-    const e = page.endsSentence ? Math.min(nextStart, spokenEnd + SENTENCE_TAIL, clip.end) : nextStart
+    // A page ends with its last word (plus a breath), or when the next one starts; the player holds it briefly after.
+    const e = page.endsSentence || pauseBefore(index + 1) ? Math.min(nextStart, spokenEnd + SENTENCE_TAIL, clip.end) : nextStart
     // Each word keeps its own start; its end is the next word's start, so it is not repeated (the opening stays small).
     const words: SpokenWord[] = page.words.map((row) => ({ w: row.w, t: round2(row.t) }))
     return { text: words.map((row) => row.w).join(' '), s, e: round2(Math.max(e, s + 0.05)), next: nextStart, key: pickKey(words), words }
@@ -195,8 +253,8 @@ export function clipSentences(work: WorkFile, clip: ClipWindow): FramingSentence
 }
 
 /** A Framing F track (one F segment, the whole clip) that carries the clip's timed words. */
-export function clipWordsTrack(work: WorkFile, clip: ClipWindow): FramingTrack | null {
-  const sentences = clipSentences(work, clip)
+export function clipWordsTrack(work: WorkFile, clip: ClipWindow, options: ClipWordsOptions = {}): FramingTrack | null {
+  const sentences = clipSentences(work, clip, options)
   if (!sentences?.length) return null
   return {
     version: 1,
@@ -223,4 +281,12 @@ export function wordCoverage(sentences: FramingSentence[] | undefined | null, st
     reach = Math.max(reach, b)
   }
   return covered / (end - start)
+}
+
+/**
+ * Share of the window during which the player shows a line: each page from its start until HOLD_GAP after it ends (how
+ * spokenLine keeps a line through a breath). A pause longer than that shows nothing, so it counts as uncovered.
+ */
+export function shownCoverage(sentences: FramingSentence[] | undefined | null, start: number, end: number) {
+  return wordCoverage(sentences?.map((row) => ({ ...row, e: row.e + HOLD_GAP })), start, end)
 }

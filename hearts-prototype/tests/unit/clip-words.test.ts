@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { clipSentences, clipWordsTrack, wordCoverage, type WorkFile } from '../../src/lib/framing/clip-words'
+import { clipSentences, clipWordsTrack, PAGE_LINES, shownCoverage, type WorkFile } from '../../src/lib/framing/clip-words'
 import { trackForClip } from '../../src/lib/framing/store'
 import { validateTrack } from '../../src/lib/framing/validate'
 import { HOLD_GAP, spokenLine, wrapWordLines } from '../../src/lib/framing/words'
@@ -12,15 +12,15 @@ const clips = live.clips as Clip[]
 /** The 25 live clips whose F panel was blank: their tier caption lines were timed for another part of the talk. */
 const WAS_BLANK = [1, 14, 27, 42, 43, 44, 45, 46, 47, 48, 50, 51, 53, 54, 55, 56, 57, 58, 59, 60, 62, 64, 65, 66, 67]
 /**
- * Clips whose window holds long stretches with no caption words at all (laughter, silence or untranscribed speech).
- * F shows nothing there, so their time coverage is lower; every captioned word in them is still shown.
+ * Clips whose window holds long stretches with no caption words at all (Arabic recitation, laughter or silence). F
+ * shows nothing there once a line's 1.5 s hold runs out, so less of the clip has words; every captioned word is shown.
  */
 const CAPTION_SILENCE = new Map([
-  [55, 'xY7hvYifpxo: 7 s with no caption words'],
-  [68, 'vrer40sXQAQ: 3.2 s and 3.8 s with no caption words'],
+  [64, 'HZgblQ00z1U: pauses of 2.6 s and 6.2 s'],
   [74, 'GeiEP_IfXiA: 4.8 s and 3.8 s with no caption words'],
   [120, 'n72kGaJ2BPA: laughter and pauses of 5.3 s, 7 s and 4.4 s'],
-  [172, 'UBEoGquf45g: 4.9 s with no caption words'],
+  [158, 'f36YaxY8HlE: 5.5 s and 3.1 s with no caption words'],
+  [166, '1suEmWBqlKE: 19 s of recitation with no caption words'],
 ])
 
 test('the live clip list is the 138 feed clips, with the 25 that were blank', () => {
@@ -30,7 +30,7 @@ test('the live clip list is the 138 feed clips, with the 25 that were blank', ()
   assert.equal(clips.filter((row) => row.before === 'partial').length, 12)
 })
 
-test('every live clip resolves to a valid F track of timed words, covering at least 80% of its window', () => {
+test('every live clip resolves to a valid F track of timed words, showing words for at least 80% of its window', () => {
   for (const clip of clips) {
     const track = trackForClip(clip.youtubeId, clip.start, clip.end, null)
     assert.ok(track?.sentences?.length, `cut ${clip.cutId} has no words`)
@@ -38,11 +38,11 @@ test('every live clip resolves to a valid F track of timed words, covering at le
     assert.equal(track.start, clip.start)
     assert.equal(track.end, clip.end)
     assert.ok(track.segments.every((row) => row.mode === 'F'))
-    const cover = wordCoverage(track.sentences, clip.start, clip.end)
-    if (CAPTION_SILENCE.has(clip.cutId)) assert.ok(cover >= 0.55, `cut ${clip.cutId} ${cover}`)
+    const cover = shownCoverage(track.sentences, clip.start, clip.end)
+    if (CAPTION_SILENCE.has(clip.cutId)) assert.ok(cover >= 0.6, `cut ${clip.cutId} ${cover}`)
     else assert.ok(cover >= 0.8, `cut ${clip.cutId} covers only ${Math.round(cover * 100)}%`)
   }
-  const full = clips.filter((clip) => wordCoverage(trackForClip(clip.youtubeId, clip.start, clip.end, null)?.sentences, clip.start, clip.end) >= 0.8)
+  const full = clips.filter((clip) => shownCoverage(trackForClip(clip.youtubeId, clip.start, clip.end, null)?.sentences, clip.start, clip.end) >= 0.8)
   assert.equal(full.length, 133)
 })
 
@@ -51,7 +51,7 @@ test('the 25 clips that were blank now resolve to words', () => {
     const clip = clips.find((row) => row.cutId === id)!
     const track = trackForClip(clip.youtubeId, clip.start, clip.end, null)
     assert.ok((track?.sentences?.length || 0) > 0, `cut ${id}`)
-    assert.ok(wordCoverage(track?.sentences, clip.start, clip.end) >= 0.7, `cut ${id}`)
+    assert.ok(shownCoverage(track?.sentences, clip.start, clip.end) >= 0.7, `cut ${id}`)
   }
 })
 
@@ -65,7 +65,7 @@ test('words run forward in time, inside the window, and each page fits the panel
       assert.ok(page.e > page.s && page.e <= clip.end + 1e-6, `cut ${clip.cutId}: page ${page.s}-${page.e}`)
       assert.equal(page.s, page.words[0].t)
       assert.equal(page.text, page.words.map((row) => row.w).join(' '))
-      assert.ok(wrapWordLines(page.words.map((row) => row.w), 20).length <= 5, `cut ${clip.cutId}: "${page.text}" is too long for the panel`)
+      assert.ok(wrapWordLines(page.words.map((row) => row.w), 20).length <= PAGE_LINES, `cut ${clip.cutId}: "${page.text}" is too long for the panel`)
       for (const word of page.words) {
         assert.ok(word.t > last, `cut ${clip.cutId}: ${word.w} at ${word.t} is not after ${last}`)
         assert.ok(word.t >= clip.start && word.t < clip.end, `cut ${clip.cutId}: ${word.w} at ${word.t} is outside ${clip.start}-${clip.end}`)
@@ -129,4 +129,49 @@ test('a clip whose window has moved does not borrow another window\'s words; it 
   assert.equal(trackForClip('UGuKJLZnbi8', 301, 321, null), null)
   assert.ok(trackForClip('UGuKJLZnbi8', 289, 311, null)?.sentences?.length)
   assert.ok(trackForClip('UGuKJLZnbi8', 289.5, 311, null)?.sentences?.length)
+})
+
+test('a long pause mid-sentence ends the page, and the panel goes blank once the 1.5 s hold runs out', () => {
+  const said = 'The Prophet said as part of this du\'a, O Allah, in other words, make the Qur\'an central.'.split(' ')
+  const work: WorkFile = {
+    words: said.map((w, at) => {
+      const t = at < 7 ? 7.4 + at * 0.3 : 17.35 + (at - 7) * 0.3
+      return [w.toLowerCase(), t, at === 6 ? t + 1.2 : t + 0.3]
+    }),
+    disp: said,
+  }
+  const clip = { youtubeId: 'x', start: 7, end: 22 }
+  const pages = clipSentences(work, clip)!
+  assert.equal(pages[0].text, 'The Prophet said as part of this')
+  assert.ok(pages[0].e <= 7.4 + 6 * 0.3 + 1.2 + 0.21, `${pages[0].e}`)
+  assert.equal(pages[1].s, 17.35)
+  const at = (time: number) => spokenLine(pages, time, { from: clip.start, to: clip.end })?.text ?? null
+  assert.equal(at(9), 'The Prophet said as part of this')
+  assert.equal(at(pages[0].e + HOLD_GAP - 0.1), 'The Prophet said as part of this')
+  assert.equal(at(pages[0].e + HOLD_GAP + 0.1), null)
+  assert.equal(at(16), null)
+  assert.ok(at(17.5)?.startsWith("du'a, O Allah"))
+})
+
+test('live clip 40 goes blank during the recited du\'a instead of holding its first line', () => {
+  const track = trackForClip('FAxIZIqwfd8', 7, 48, null)!
+  const at = (time: number) => spokenLine(track.sentences!, time, { from: 7, to: 48 })?.text ?? null
+  assert.ok(at(9)?.startsWith('The Prophet, sallallahu alayhi wa sallam, said, as part of this'))
+  assert.equal(at(14), null)
+  assert.ok(at(17.6)?.startsWith("du'a, O Allah"))
+})
+
+test('a long sentence does not leave one or two words alone on its last page', () => {
+  for (const clip of clips) {
+    const track = trackForClip(clip.youtubeId, clip.start, clip.end, null)!
+    track.sentences!.forEach((page, index) => {
+      const before = track.sentences![index - 1]
+      // The last page of a sentence that ran straight on from the page before (not split at a pause).
+      if (before && !/[.?!]["”’')\]]*$/.test(before.text) && /[.?!]["”’')\]]*$/.test(page.text) && before.e >= page.s - 0.01) {
+        assert.ok(page.words!.length >= 3 || page.e - page.s > 1.5, `cut ${clip.cutId}: "${before.text}" / "${page.text}"`)
+      }
+    })
+  }
+  const track = trackForClip('ECaTWkof57E', 1298, 1330, null)!
+  assert.ok(!track.sentences!.some((row) => row.text === 'everything.'))
 })

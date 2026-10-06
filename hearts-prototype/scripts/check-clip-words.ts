@@ -11,7 +11,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import { gzipSync } from 'node:zlib'
-import { wordCoverage } from '../src/lib/framing/clip-words'
+import { shownCoverage } from '../src/lib/framing/clip-words'
 import { trackForClip } from '../src/lib/framing/store'
 import { sentencesFromCaptions } from '../src/lib/framing/words'
 
@@ -44,11 +44,11 @@ let shownTotal = 0
 console.log('cut  youtube      window        before  after  pages words  of spoken  source')
 for (const clip of rows) {
   const { start, end } = clip.hors
-  const was = wordCoverage(sentencesFromCaptions(clip.hors.lines, start, end), start, end)
+  const was = shownCoverage(sentencesFromCaptions(clip.hors.lines, start, end), start, end)
   const track = trackForClip(clip.youtubeId, start, end, clip.framingTrack)
   // As the feed does it: a track's words when it has any, otherwise the tier's caption lines.
   const shown = track?.sentences?.length ? track.sentences : sentencesFromCaptions(clip.hors.lines, start, end)
-  const now = wordCoverage(shown, start, end)
+  const now = shownCoverage(shown, start, end)
   if (now >= 0.8) full++
   if (was >= 0.8) before++
   if (!track?.sentences?.length) blankNow++
