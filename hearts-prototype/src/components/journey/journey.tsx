@@ -15,10 +15,10 @@ import { feedFilmCaption } from '@/lib/spoken-caption'
 import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { dedicatedLaneFeed, playableLaneClips, takeDedicatedLane } from '@/lib/lanes'
-import { coverFallbackAction, coverHoldKey, coverHoldMayStart, coverHoldMsLeft, coverHoldShouldRestart, filmCoverKey, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
+import { coverAttr, coverFallbackAction, coverHoldKey, coverHoldMayStart, coverHoldMsLeft, coverHoldShouldRestart, filmCoverKey, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
 import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
 import { isoWeek } from '@/lib/trends'
-import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, endedEventIsCurrent, horsWindowEnded, hostShouldShow, pictureSwipeCommit, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, verticalSwipe } from '@/lib/film-advance'
+import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, bufferRetryAction, endedEventIsCurrent, horsWindowEnded, hostShouldShow, pictureSwipeCommit, pictureTapAction, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe, type EndAdvanceSource } from '@/lib/film-advance'
 import { acceptLevelTap, type LevelTap } from '@/lib/level-tap'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, hydrateSound, lowData, pauseKeepingSound, playOnly, playerSnapshot, preloadApi, setHidden, silence, silenceHidden, silenceOthers, soundOn, type PlayerKind } from '@/lib/yt'
 import { PageHelp } from '@/components/app/page-help'
@@ -226,6 +226,13 @@ export function Journey(props: JourneyProps) {
   const holdState = useRef(-9)
   const coverHoldFor = useRef('')
   const ignorePictureUntil = useRef(0)
+  const advancedFromRef = useRef<string | null>(null)
+  const windowHandledRef = useRef(false)
+  const newClipPlayingRef = useRef(false)
+  const bufferingSince = useRef(0)
+  const bufferRetried = useRef(false)
+  const pendingAfterSheet = useRef<'next' | null>(null)
+  const runEndAdvanceRef = useRef<(source: EndAdvanceSource, eventKey?: string | null) => void>(() => {})
   const [debugOn, setDebugOn] = useState(false)
   const [wordsLive, setWordsLive] = useState(false)
   const boardOpenedAt = useRef(0)
@@ -479,6 +486,9 @@ export function Journey(props: JourneyProps) {
         again.state = STATE.PLAYING
         if (!again.played || !wasLive) setReadyTick((value) => value + 1)
         again.played = true
+        newClipPlayingRef.current = true
+        bufferingSince.current = 0
+        bufferRetried.current = false
         window.clearInterval(playWatch.current)
         setBuffering(false)
         setSlow('none')
@@ -498,13 +508,14 @@ export function Journey(props: JourneyProps) {
     host.state = state
     if (wasLive !== LIVE.has(state)) setReadyTick((value) => value + 1)
     if (state === STATE.BUFFERING) {
+      if (!bufferingSince.current) bufferingSince.current = performance.now()
       window.setTimeout(() => {
         if (hosts.current[visibleRef.current].state === STATE.BUFFERING) setBuffering(true)
       }, 600)
     }
     if (state === STATE.ENDED) {
       const spec = hosts.current[visibleRef.current].spec
-      window.dispatchEvent(new CustomEvent('hearts:ended', { detail: { key: spec?.key || watch.current.key } }))
+      runEndAdvanceRef.current('state0', spec?.key || watch.current.key)
     }
     const elapsed = performance.now() - nudgeRef.current
     if (
@@ -668,6 +679,10 @@ export function Journey(props: JourneyProps) {
       playStartedAt.current = 0
       holdState.current = -9
       coverHoldFor.current = ''
+      newClipPlayingRef.current = false
+      windowHandledRef.current = false
+      bufferingSince.current = 0
+      bufferRetried.current = false
       userPausedRef.current = false
       boardOpenRef.current = false
       setBoardOpen(false)
@@ -1273,38 +1288,65 @@ export function Journey(props: JourneyProps) {
     [keepHarvest, leaveSignal, refill, showItem],
   )
 
-  useEffect(() => {
-    const onEnded = (event: Event) => {
-      keepHarvest()
-      if (modeRef.current !== 'hors') return
-      const detail = (event as CustomEvent<{ key?: string }>).detail || {}
-      const host = hosts.current[visibleRef.current]
-      const player = host.playerId ? getPlayer(host.playerId) : null
-      if (!endedEventIsCurrent({
-        watchKey: watch.current.key,
-        eventKey: detail.key,
-        watchEnded: watch.current.ended,
-        playerState: player?.getPlayerState() ?? host.state,
-      })) return
-      wantPlayRef.current = null
-      window.clearInterval(playWatch.current)
-      const flagsNow = sessionFlags()
-      if (!signedIn && !flagsNow.firstEnded) {
-        setSessionFlags({ ...sessionFlags(), firstEnded: true })
-        if (openSheet('ended')) {
-          pendingAfterSheet.current = 'next'
-          userPausedRef.current = true
-          return
-        }
-      }
-      const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', props.lane ? undefined : seenRef.current, Boolean(props.lane))
-      if (showLaneEndNow({ thisClipEnded: true, nextIndex: next })) {
-        showLaneEnd()
-      } else if (next != null) {
-        userPausedRef.current = false
-        void advance(next, 'auto')
+  const runEndAdvance = useCallback((source: EndAdvanceSource, eventKey?: string | null) => {
+    if (modeRef.current !== 'hors') return
+    const current = itemsRef.current[indexRef.current]
+    if (!current) return
+    const clipKey = watch.current.key || `${current.cutId}:hors:${current.card || 'talk'}`
+    const host = hosts.current[visibleRef.current]
+    const player = host.playerId ? getPlayer(host.playerId) : null
+    if (source === 'state0' && !endedEventIsCurrent({
+      watchKey: watch.current.key,
+      eventKey: eventKey ?? host.spec?.key ?? watch.current.key,
+      watchEnded: watch.current.ended,
+      playerState: player?.getPlayerState() ?? host.state,
+    })) return
+    const decision = takeEndAdvance({
+      clipKey,
+      advancedFrom: advancedFromRef.current,
+      newClipPlaying: newClipPlayingRef.current,
+      source,
+      windowHandled: windowHandledRef.current,
+    })
+    if (!decision.take) return
+    advancedFromRef.current = decision.advancedFrom
+    if (source === 'window') windowHandledRef.current = true
+    keepHarvest()
+    wantPlayRef.current = null
+    window.clearInterval(playWatch.current)
+    watch.current.ended = true
+    const flagsNow = sessionFlags()
+    if (!signedIn && !flagsNow.firstEnded) {
+      setSessionFlags({ ...sessionFlags(), firstEnded: true })
+      if (openSheet('ended')) {
+        pendingAfterSheet.current = 'next'
+        userPausedRef.current = true
+        return
       }
     }
+    const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', props.lane ? undefined : seenRef.current, Boolean(props.lane))
+    userPausedRef.current = next == null
+    if (showLaneEndNow({ thisClipEnded: true, nextIndex: next })) {
+      showLaneEnd()
+    } else if (next != null) {
+      userPausedRef.current = false
+      newClipPlayingRef.current = false
+      windowHandledRef.current = false
+      void advance(next, 'auto')
+    }
+  }, [advance, keepHarvest, openSheet, signedIn])
+  runEndAdvanceRef.current = runEndAdvance
+
+  useEffect(() => {
+    const onEnded = (event: Event) => {
+      const detail = (event as CustomEvent<{ key?: string }>).detail || {}
+      runEndAdvanceRef.current('state0', detail.key)
+    }
+    window.addEventListener('hearts:ended', onEnded)
+    return () => window.removeEventListener('hearts:ended', onEnded)
+  }, [])
+
+  useEffect(() => {
     const onError = (event: Event) => {
       const { code, at } = (event as CustomEvent<{ code: number; at: number }>).detail
       if (at !== visibleRef.current || !UNPLAYABLE.has(code)) return
@@ -1320,15 +1362,10 @@ export function Journey(props: JourneyProps) {
         } else if (next != null) void advance(next, 'auto')
       }, 900)
     }
-    window.addEventListener('hearts:ended', onEnded)
     window.addEventListener('hearts:player-error', onError)
-    return () => {
-      window.removeEventListener('hearts:ended', onEnded)
-      window.removeEventListener('hearts:player-error', onError)
-    }
-  }, [advance, keepHarvest, openSheet, signedIn])
+    return () => window.removeEventListener('hearts:player-error', onError)
+  }, [advance, keepHarvest, signedIn])
 
-  const pendingAfterSheet = useRef<'next' | null>(null)
   const closeSheet = () => {
     sheetRef.current = null
     setSheet(null)
@@ -1411,8 +1448,6 @@ export function Journey(props: JourneyProps) {
       const currentSpec = specFor(current, modeRef.current)
       if (host.spec?.key !== currentSpec?.key) return
       if (modeRef.current === 'hors' && (!current.card || current.card === 'talk') && horsWindowEnded(time, current.hors.start, current.hors.end)) {
-        player.mute()
-        player.pauseVideo()
         if (!seen.done90) {
           seen.done90 = true
           signal('watched90')
@@ -1420,11 +1455,10 @@ export function Journey(props: JourneyProps) {
         }
         if (!seen.ended) {
           seen.ended = true
-          wantPlayRef.current = null
-          const next = swipeTarget(itemsRef.current, indexRef.current, modeRef.current, 'next', props.lane ? undefined : seenRef.current, Boolean(props.lane))
-          userPausedRef.current = next == null
-          window.dispatchEvent(new CustomEvent('hearts:ended', { detail: { key: seen.key } }))
+          runEndAdvanceRef.current('window', seen.key)
         }
+        player.mute()
+        player.pauseVideo()
         return
       }
       if (modeRef.current === 'hors' && !seen.done90) {
@@ -1717,8 +1751,9 @@ export function Journey(props: JourneyProps) {
     const host = hosts.current[visibleRef.current]
     const player = host.playerId ? getPlayer(host.playerId) : null
     const real = player?.getPlayerState()
+    const action = pictureTapAction(real)
     // Pause only pauses. It must not mute, or the next play comes back silent.
-    if (player && (real === STATE.PLAYING || real === STATE.BUFFERING)) {
+    if (player && action === 'pause') {
       userPausedRef.current = true
       wantPlayRef.current = null
       const heard = hasSound() || !player.isMuted()
@@ -1727,6 +1762,13 @@ export function Journey(props: JourneyProps) {
     }
     if (!hasSound()) {
       tapSound()
+      return
+    }
+    if (player && action === 'play') {
+      userPausedRef.current = false
+      if (host.spec) armPlay(host.spec.key)
+      player.unMute()
+      player.playVideo()
       return
     }
     if (player) {
@@ -1828,7 +1870,6 @@ export function Journey(props: JourneyProps) {
     const dy = event.clientY - start.y
     if (Math.max(Math.abs(dx), Math.abs(dy)) > 8 && !start.moved) {
       start.moved = true
-      pauseForSwipe()
       markSwipe(true)
     }
     if (!clipRef.current || !start.moved) return
@@ -1864,10 +1905,10 @@ export function Journey(props: JourneyProps) {
     if (!commit) {
       markSwipe(false)
       springBack()
-      if (start.moved) resumeAfterSwipe()
-      else if (!slide && cardKind !== 'question' && cardKind !== 'text') tapPicture()
+      if (!slide && cardKind !== 'question' && cardKind !== 'text') tapPicture()
       return
     }
+    pauseForSwipe()
     if (vertical) {
       if (verticalSwipe(dy) === 'next') stepLoop(1)
       else nextLane()
@@ -1880,7 +1921,6 @@ export function Journey(props: JourneyProps) {
     if (start?.timer) window.clearTimeout(start.timer)
     markSwipe(false)
     springBack()
-    if (start?.moved) resumeAfterSwipe()
   }
   const springBack = () => {
     const el = clipRef.current
@@ -1990,9 +2030,26 @@ export function Journey(props: JourneyProps) {
         polledTime: player.getCurrentTime(),
         start: host.spec?.start || 0,
       })
+      const polledState = player.getPlayerState()
+      if (polledState === STATE.BUFFERING) {
+        if (!bufferingSince.current) bufferingSince.current = performance.now()
+        const retry = bufferRetryAction({
+          bufferingForMs: performance.now() - bufferingSince.current,
+          state: polledState,
+          alreadyRetried: bufferRetried.current,
+        })
+        if (retry === 'retry') {
+          bufferRetried.current = true
+          player.seekTo(player.getCurrentTime(), true)
+          player.playVideo()
+        }
+      } else if (polledState === STATE.PLAYING) {
+        bufferingSince.current = 0
+      }
       if (action === 'treat-playing' && host.state !== STATE.PLAYING) {
         host.state = STATE.PLAYING
         host.played = true
+        newClipPlayingRef.current = true
         const spec = specFor(itemsRef.current[indexRef.current], modeRef.current)
         if (host.spec?.key === spec?.key && !playStartedAt.current) playStartedAt.current = performance.now()
         setReadyTick((value) => value + 1)
@@ -2324,7 +2381,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" suppressHydrationWarning data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-cover={showPoster ? 'yes' : 'no'} data-next-clip={nextClipAt == null ? 'none' : String(nextClipAt)} data-playhead={spokenAt == null ? '' : String(Math.round(spokenAt * 10) / 10)} data-player-state={host.state} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
+    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" suppressHydrationWarning data-phase={phase} data-mode={mode} data-playing={host.state === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-cover={coverAttr(showPoster)} data-next-clip={nextClipAt == null ? 'none' : String(nextClipAt)} data-playhead={spokenAt == null ? '' : String(Math.round(spokenAt * 10) / 10)} data-player-state={host.state} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
       <PageHelp page={phase === 'help' ? 'help' : phase === 'feed' ? (mode === 'appetiser' ? 'appetiser' : 'feed') : 'start'} />
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
@@ -2347,7 +2404,7 @@ export function Journey(props: JourneyProps) {
           {[0, 1].map((at) => {
             const row = hosts.current[at as 0 | 1]
             const filmOn = hostShouldShow(at === visibleHost, revealed, Boolean(slide || scenic || !currentSpec || clipEnded))
-            const live = filmOn && at === visibleHost && playingOut
+            const live = filmOn && at === visibleHost && playingOut && !showPoster
             return (
               <div
                 key={at}
@@ -2390,7 +2447,7 @@ export function Journey(props: JourneyProps) {
             />
           ) : null}
           {item && !slide ? (
-            <div key={coverKey || filmCoverKey(item)} className={`j-poster${slow === 'breathe' ? ' breathe' : ''}${scenicAppetiser ? ' scenic' : ''}${showPoster ? '' : ' is-clear'}`} data-testid="poster-frame" data-poster={mode === 'appetiser' && item.cleanThumb ? 'frame' : 'own'}>
+            <div key={coverKey || filmCoverKey(item)} className={`j-poster${slow === 'breathe' ? ' breathe' : ''}${scenicAppetiser ? ' scenic' : ''}${showPoster ? '' : ' is-clear'}`} data-testid="poster-frame" data-poster={mode === 'appetiser' && item.cleanThumb ? 'frame' : 'own'} data-cover={coverAttr(showPoster)}>
               <PosterStill key={coverKey || filmCoverKey(item)} item={item} mode={mode} />
               <span className="j-poster-mark" aria-hidden><Arch size={28} /></span>
               {showPlayControl ? (

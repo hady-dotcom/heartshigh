@@ -16,6 +16,7 @@ import {
   filmIframeCrop,
   landscapeThumb,
   pauseMarkVisible,
+  coverAttr,
   playerReadout,
   playingConfirmed,
   ytDebugOn,
@@ -72,6 +73,7 @@ test('the hold restarts on buffering or any other state, and the frame is uncrop
   assert.equal(crop.topPct, 0)
   assert.equal(filmCoverKey({ cutId: 12, youtubeId: 'FAxIZIqwfd8' }), '12:FAxIZIqwfd8')
   assert.equal(filmCoverKey({ cutId: 1, youtubeId: null }), '')
+  assert.equal(coverAttr(true), 'yes')
   assert.equal(playerReadout({ state: 1, time: 60.1, currentTime: 60.1, cover: false }), 'state 1 time 60.1 cur 60.1 cover no')
   assert.equal(advanceLeavesPlayable({ userPaused: false, boardOpen: false, swallowUntil: 10, now: 10 }), true)
   assert.equal(advanceLeavesPlayable({ userPaused: true, boardOpen: false, swallowUntil: 0, now: 20 }), false)

@@ -59,9 +59,14 @@ export function filmCoverKey(clip: { cutId?: number | null; youtubeId?: string |
   return `${clip.cutId ?? ''}:${clip.youtubeId}`
 }
 
+/** The painted cover and the `?debug=yt` readout share this word. */
+export function coverAttr(cover: boolean): 'yes' | 'no' {
+  return cover ? 'yes' : 'no'
+}
+
 /** One line for `?debug=yt`, always from the live player. */
 export function playerReadout(input: { state: number; time: number; currentTime: number; cover: boolean }) {
-  return `state ${input.state} time ${input.time.toFixed(1)} cur ${input.currentTime.toFixed(1)} cover ${input.cover ? 'yes' : 'no'}`
+  return `state ${input.state} time ${input.time.toFixed(1)} cur ${input.currentTime.toFixed(1)} cover ${coverAttr(input.cover)}`
 }
 
 /** After a board auto-close on advance, leftover pointer work must not leave the new clip paused. */

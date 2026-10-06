@@ -102,3 +102,99 @@ export function showLaneEndNow(input: { thisClipEnded: boolean; nextIndex: numbe
 export function horsWindowEnded(time: number, start: number, end: number, slack = 2) {
   return end > start && time >= start - 0.5 && time >= end && time <= end + slack
 }
+
+export type EndAdvanceSource = 'window' | 'state0'
+
+/**
+ * One clip may advance the feed once. The hors-window poll is the primary
+ * end; YouTube state 0 is only a fallback when that poll did not fire.
+ * After an advance, further ends wait until the new clip reports PLAYING.
+ */
+export function takeEndAdvance(input: {
+  clipKey: string
+  advancedFrom: string | null
+  newClipPlaying: boolean
+  source: EndAdvanceSource
+  windowHandled: boolean
+}): { take: boolean; advancedFrom: string | null } {
+  if (!input.clipKey) return { take: false, advancedFrom: input.advancedFrom }
+  if (input.advancedFrom === input.clipKey) return { take: false, advancedFrom: input.advancedFrom }
+  if (!input.newClipPlaying) return { take: false, advancedFrom: input.advancedFrom }
+  if (input.source === 'state0' && input.windowHandled) return { take: false, advancedFrom: input.advancedFrom }
+  return { take: true, advancedFrom: input.clipKey }
+}
+
+export type EndAdvanceSignal = {
+  source: EndAdvanceSource
+  clipKey?: string
+  atMs?: number
+}
+
+/**
+ * Window-end and state 0 for the same clip, even 300ms apart, step once.
+ * A leftover end on the clip we just landed on must not skip to N+2.
+ */
+export function feedAfterEndSignals(input: {
+  length: number
+  index: number
+  signals: Array<EndAdvanceSource | EndAdvanceSignal>
+}): { index: number; endCard: boolean; lastState: number } {
+  let advancedFrom: string | null = null
+  let newClipPlaying = true
+  let windowHandled = false
+  let index = input.index
+  let endCard = false
+  let lastState = 1
+
+  const rows = input.signals
+    .map((row) => (typeof row === 'string' ? { source: row } : row))
+    .sort((a, b) => (a.atMs ?? 0) - (b.atMs ?? 0))
+
+  for (const row of rows) {
+    const clipKey = row.clipKey ?? String(index)
+    const decision = takeEndAdvance({
+      clipKey,
+      advancedFrom,
+      newClipPlaying,
+      source: row.source,
+      windowHandled,
+    })
+    if (!decision.take) continue
+    advancedFrom = decision.advancedFrom
+    if (row.source === 'window') windowHandled = true
+    const next = index + 1
+    if (next >= input.length) {
+      endCard = true
+      lastState = 0
+      continue
+    }
+    index = next
+    newClipPlaying = false
+    windowHandled = false
+    lastState = -1
+  }
+
+  if (!endCard && lastState === -1) lastState = 1
+  return { index, endCard, lastState }
+}
+
+/** A tap pauses PLAYING or BUFFERING. It must not seek or reload. */
+export function pictureTapAction(state: number | null | undefined): 'pause' | 'play' | 'none' {
+  if (state === 1 || state === 3) return 'pause'
+  if (state === 2 || state === 5) return 'play'
+  return 'none'
+}
+
+/** One seek+play after the film has sat in BUFFERING for this long. */
+export const BUFFER_RETRY_MS = 6000
+
+export function bufferRetryAction(input: {
+  bufferingForMs: number
+  state: number
+  alreadyRetried: boolean
+}): 'wait' | 'retry' | 'none' {
+  if (input.state !== 3) return 'none'
+  if (input.alreadyRetried) return 'wait'
+  if (input.bufferingForMs < BUFFER_RETRY_MS) return 'wait'
+  return 'retry'
+}

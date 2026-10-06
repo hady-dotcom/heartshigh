@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { PLAY_NUDGE_FOR_MS, endedEventIsCurrent, horsWindowEnded, hostShouldShow, pictureSwipeCommit, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, verticalSwipe } from '../../src/lib/film-advance'
+import { BUFFER_RETRY_MS, PLAY_NUDGE_FOR_MS, bufferRetryAction, endedEventIsCurrent, feedAfterEndSignals, horsWindowEnded, hostShouldShow, pictureSwipeCommit, pictureTapAction, planFilmAdvance, playbackAction, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe } from '../../src/lib/film-advance'
 
 const visible = { key: '14:hors', hasPlayer: true }
 const preloaded = { key: '22:hors', hasPlayer: true }
@@ -72,6 +72,19 @@ test('a leftover ended event does not hide the last clip, and a tap never skips'
   assert.equal(pictureSwipeCommit(0, 39), false)
   assert.equal(pictureSwipeCommit(0, 40), true)
   assert.equal(pictureSwipeCommit(80, 12), false)
+})
+
+test('window-end and state 0 for one clip step once', () => {
+  const first = takeEndAdvance({ clipKey: 'n', advancedFrom: null, newClipPlaying: true, source: 'window', windowHandled: false })
+  assert.equal(first.take, true)
+  const again = takeEndAdvance({ clipKey: 'n', advancedFrom: first.advancedFrom, newClipPlaying: false, source: 'state0', windowHandled: true })
+  assert.equal(again.take, false)
+  const beforePlay = takeEndAdvance({ clipKey: 'n+1', advancedFrom: first.advancedFrom, newClipPlaying: false, source: 'state0', windowHandled: false })
+  assert.equal(beforePlay.take, false)
+  const dual = feedAfterEndSignals({ length: 4, index: 1, signals: ['window', 'state0'] })
+  assert.equal(dual.index, 2)
+  assert.equal(pictureTapAction(3), 'pause')
+  assert.equal(bufferRetryAction({ bufferingForMs: BUFFER_RETRY_MS, state: 3, alreadyRetried: false }), 'retry')
 })
 
 test('the film has no Prev/Next chrome, and the ladder stays a small text row', () => {
