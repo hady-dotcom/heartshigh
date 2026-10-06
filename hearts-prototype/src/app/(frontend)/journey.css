@@ -550,7 +550,9 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   pointer-events: none;
 }
 .j-coach-card {
-  pointer-events: none;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: pointer;
   background: rgba(14, 42, 43, 0.94);
   color: #f6eedc;
   border: 1px solid rgba(212, 168, 75, 0.45);
@@ -665,6 +667,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   touch-action: pan-y;
 }
 .j-board-grab {
+  position: relative;
   touch-action: none;
   padding: 12px 16px 14px;
   margin: 0 -16px 4px;
@@ -678,6 +681,30 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   background: rgba(241, 213, 138, 0.55);
   margin: 0 auto;
 }
+.j-board-close {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(212, 168, 75, 0.45);
+  border-radius: 50%;
+  background: rgba(241, 228, 198, 0.08);
+  color: #F1E4C6;
+  font-size: 20px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  padding: 0 0 4px;
+  cursor: pointer;
+  touch-action: none;
+}
+.j-board-close:focus-visible { outline: 2px solid #d4a84b; outline-offset: 2px; }
+/* A board control is a tap target: a small finger move must not turn the tap into a cancelled pan. */
+.j-board button,
+.j-board a,
+.j-board [role='button'] { touch-action: none; }
 .j-board-title {
   margin: 0 0 10px;
   font-family: var(--serif);

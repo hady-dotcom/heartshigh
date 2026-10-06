@@ -145,7 +145,8 @@ test('7: swipe handlers are on the catcher from the first paint', () => {
   assert.match(catcher, /data-ready="yes"/)
   assert.doesNotMatch(catcher, /revealed/)
   assert.doesNotMatch(journey, /await wait\(0\)/)
-  assert.match(journeyCss, /\.j-coach-card \{\s*pointer-events: none/)
+  // The help card takes its own taps (dismiss only) and hands a swipe on it to the feed gesture.
+  assert.match(journey, /data-testid="coach-card"[\s\S]{0,400}onPointerDown=\{\(event\) => \{ event\.stopPropagation\(\); event\.preventDefault\(\); onDown\(event\) \}\}/)
   assert.match(journey, /data-testid="gesture-layer"/)
 })
 

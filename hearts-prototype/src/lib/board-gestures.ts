@@ -93,3 +93,44 @@ export function boardClickAllowed(input: { openedAt: number; now: number; travel
 export function pointerTravel(from: { x: number; y: number }, to: { x: number; y: number }) {
   return Math.hypot(to.x - from.x, to.y - from.y)
 }
+
+/** Finger travel inside one control that still counts as a tap on it. */
+export const BOARD_TAP_SLOP_PX = 24
+
+/**
+ * Whether a More-board control fires. A press that began on this very control after the board
+ * opened is a fresh tap and always fires (within the tap slop): no arm wait, and no travel read
+ * from an older board drag. Anything else keeps the old guard (settled board, no drag end).
+ */
+export function boardTapFires(input: { pressedHere: boolean; pressedAt: number; pressTravel: number; openedAt: number; now: number; dragTravel: number }) {
+  if (input.pressedHere && input.openedAt > 0 && input.pressedAt >= input.openedAt) return input.pressTravel < BOARD_TAP_SLOP_PX
+  return boardClickAllowed({ openedAt: input.openedAt, now: input.now, travel: input.dragTravel })
+}
+
+/**
+ * A swipe or picture tap on the feed counts only for a gesture that began on the feed while the
+ * board was shut, after it last closed, with the same pointer. Closing the board (a drag down on
+ * its handle, the scrim, the close button, Escape) can never carry on into a lane or clip change.
+ */
+export function feedGestureCounts(input: { startedAt: number; boardOpen: boolean; boardClosedAt: number; pointerId?: number | null; upPointerId?: number | null }) {
+  if (input.boardOpen) return false
+  if (input.startedAt <= input.boardClosedAt) return false
+  if (input.pointerId != null && input.upPointerId != null && input.pointerId !== input.upPointerId) return false
+  return true
+}
+
+/** Only the help card's own tap dismisses it; that tap never reaches the film. */
+export function coachTapAction(input: { onCard: boolean }): 'dismiss-only' | 'film' {
+  return input.onCard ? 'dismiss-only' : 'film'
+}
+
+/**
+ * When a board Like or Save lands on the clip the board showed at the press, but an auto-advance
+ * has since moved the board on, say so: the tap worked, on the clip the guest meant.
+ */
+export function boardTapNote(input: { action: 'like' | 'save'; wasOn: boolean; title: string; landedOnShown: boolean }): string | null {
+  if (input.landedOnShown) return null
+  const name = input.title.trim() || 'that clip'
+  if (input.action === 'like') return input.wasOn ? `Like removed from ${name}` : `Liked ${name}`
+  return input.wasOn ? `Removed ${name} from Saved` : `Saved ${name}`
+}
