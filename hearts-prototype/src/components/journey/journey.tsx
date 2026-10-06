@@ -1288,7 +1288,11 @@ export function Journey(props: JourneyProps) {
       const lines = modeRef.current === 'hors' ? current.hors.lines : current.appetiser.lines
       const showing = captionIndex(lines, time)
       setLineAt((held) => (held === showing ? held : showing))
-      setSpokenAt((held) => (held !== null && Math.abs(held - time) < 0.35 ? held : time))
+      const clipFrom = modeRef.current === 'hors' ? current.hors.start : current.appetiser.start
+      const clipTo = modeRef.current === 'hors' ? current.hors.end : appetiserEnd(current)
+      if (time >= clipFrom - 0.5 && time <= clipTo + 0.5) {
+        setSpokenAt((held) => (held !== null && Math.abs(held - time) < 0.35 ? held : time))
+      }
       const spans = current.appetiser.spans
       if (modeRef.current === 'appetiser' && spans && spans.length > 1) {
         const join = appetiserJoin(spans, time)
@@ -2126,7 +2130,7 @@ export function Journey(props: JourneyProps) {
           {phase === 'feed' && item ? (
             <SpokenWords
               sentences={spokenSentences}
-              time={spokenAt ?? clipStart}
+              time={spokenAt != null && spokenAt >= clipStart - 0.5 && spokenAt <= clipEnd + 0.5 ? spokenAt : clipStart}
               speaker={undefined}
               title={item.lessonTitle || item.courseTitle}
               titles={[item.lessonTitle, item.courseTitle]}

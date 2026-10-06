@@ -176,6 +176,10 @@ test('F text is the timed transcript now, never a talk title, and nothing in a g
     assert.equal(sameSpokenText(line.text, title), false)
   }
   assert.equal(spokenLine(sentences, 15.9, { from: 16, to: 24 }), null)
+  assert.equal(
+    spokenLine([{ text: 'First said.', s: 16.4, e: 20, words: [] }], 16, { from: 16, to: 24 })?.text,
+    'First said.',
+  )
   assert.equal(spokenLine([{ text: title, s: 16, e: 20, words: [] }], 17, { title, titles: [title, 'The series'] }), null)
   assert.equal(spokenLine([{ text: 'A line he actually says.', s: 16, e: 20, words: [] }], 17, { title })?.text, 'A line he actually says.')
 })
@@ -199,6 +203,13 @@ test('spoken lines wrap as word arrays so display spaces cannot collapse', () =>
   assert.deepEqual(lines[0], ['Uh', 'I', 'was', 'speaking', 'at'])
   assert.ok(lines.every((line) => line.join(' ').length <= 20))
   assert.equal(lines.flat().join(' '), 'Uh I was speaking at a masid that had about 500 people in the audience.')
+})
+
+test('F holds the first caption from the clip in-point before its cue clock', () => {
+  assert.equal(
+    spokenLine([{ text: 'First said.', s: 16.4, e: 20, words: [] }], 16, { from: 16, to: 24 })?.text,
+    'First said.',
+  )
 })
 
 test('caption cards become live F sentences and skip summary beats', () => {

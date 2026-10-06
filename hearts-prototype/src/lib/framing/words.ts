@@ -149,8 +149,12 @@ export function spokenLine(
   const live =
     options?.from != null && options?.to != null ? sentencesInWindow(sentences, options.from, options.to) : sentences
   const sentence = currentSentence(live, time)
-  if (!sentence) return null
+  const first = live[0]
+  const waitingForFirst =
+    !sentence && first && options?.from != null && time >= options.from - 0.05 && time < first.s
+  const shown = sentence || (waitingForFirst ? first : null)
+  if (!shown) return null
   const titles = [options?.title, ...(options?.titles || [])]
-  if (titles.some((title) => title && sameSpokenText(sentence.text, title))) return null
-  return sentence
+  if (titles.some((title) => title && sameSpokenText(shown.text, title))) return null
+  return shown
 }
