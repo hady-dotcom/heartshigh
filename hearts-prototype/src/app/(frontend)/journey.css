@@ -233,22 +233,28 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .j-peek { position: absolute; inset: 0; overflow: hidden; background: #0e2a2b; will-change: transform; }
 .j-peek .feed-card { z-index: 0; }
 .j-peek .slide, .j-peek .j-slide { position: absolute; inset: 0; }
-/* Share, Like and Save sit low on the right, in thumb reach on a 390-wide phone.
-   The stack stays above the tab bar. The ladder is on the left. A right gutter keeps
-   the gold button, the speaker row and the timed words clear of the bubbles. */
-.journey.phase-feed[data-mode='hors'] .j-chrome .rail {
+/* Share, Like and Save sit in one vertical rail, low on the right, on both the clip
+   and the extract. The stack stays above the tab bar. The ladder is on the left.
+   A right gutter keeps the scrubber, the gold button, the speaker row and the timed
+   words clear of the bubbles. The top row stops short of the ? button. */
+.journey.phase-feed .j-chrome .rail {
+  position: absolute;
   right: 8px;
   bottom: calc(100px + var(--safe-bottom));
+  display: grid;
   gap: 10px;
+  justify-items: center;
+  z-index: 8;
 }
-.journey.phase-feed[data-mode='hors'] .j-chrome .clip-foot.j-credits {
+.journey.phase-feed .j-chrome .clip-foot.j-credits {
   padding-right: 84px;
 }
-.journey.phase-feed[data-mode='hors'] .fr-words {
+.journey.phase-feed .fr-words {
   padding-right: 88px;
 }
-.journey[data-mode='appetiser'] .j-chrome .rail { position: static; flex: none; display: flex; justify-content: flex-end; gap: 6px; }
-.journey[data-mode='appetiser'] .j-chrome .rail .bubble { width: 40px; height: 40px; }
+.journey.phase-feed .j-hairline-row {
+  right: 68px;
+}
 .journey[data-mode='appetiser'] .j-chrome .clip-foot { position: static; flex: none; gap: 8px; }
 .journey[data-mode='appetiser'] .j-resume { padding: 2px 0 4px; }
 .journey[data-mode='appetiser'] .j-mains { background: #24203f; backdrop-filter: none; padding: 6px; }

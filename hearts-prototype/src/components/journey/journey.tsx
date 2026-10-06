@@ -1838,6 +1838,9 @@ export function Journey(props: JourneyProps) {
   const keepAppetiserPoster = mode === 'appetiser' && appetiserHeld && host.state !== STATE.PLAYING
   const showPoster = !typeClip && !scenic && (phase === 'handoff' || (phase === 'feed' && (keepAppetiserPoster || !playingOut || Boolean(errorNote) || offline)))
   const waitingToPlay = phase === 'feed' && playerReady && (keepAppetiserPoster || !playingOut) && !errorNote && !offline
+  // The gold play control is a resume after a pause, or a way in when autoplay never starts.
+  // It is not a gate on the way into a clip.
+  const showPlayControl = waitingToPlay && ((host.played && host.state === STATE.PAUSED) || slow === 'retry')
   const piece = item ? (mode === 'hors' ? item.hors : item.appetiser) : null
   const lineShown = mode === 'hors' && lineAt >= 0 ? lineAt : -1
   const horsLine = lineShown >= 0 ? piece?.lines?.[lineShown] : null
@@ -2106,7 +2109,7 @@ export function Journey(props: JourneyProps) {
             <div className={`j-poster${slow === 'breathe' ? ' breathe' : ''}${scenicAppetiser ? ' scenic' : ''}`} data-testid="poster-frame" data-poster={mode === 'appetiser' && item.cleanThumb ? 'frame' : 'own'}>
               <PosterStill item={item} mode={mode} />
               <span className="j-poster-mark" aria-hidden><Arch size={28} /></span>
-              {waitingToPlay && slow !== 'retry' ? (
+              {showPlayControl ? (
                 <button type="button" className="j-poster-play" aria-label="Play" data-testid="poster-play" onClick={() => { tapSound(); userPausedRef.current = false; const playing = hosts.current[visibleRef.current]; if (playing.spec) wantPlayRef.current = playing.spec.key; tryPlay() }}>
                   <PlayIcon size={30} />
                 </button>
