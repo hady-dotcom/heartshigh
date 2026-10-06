@@ -34,6 +34,7 @@ import { initialsOf } from '@/lib/swarm-sort'
 import { featureOn } from '@/lib/features'
 import { hiddenIds } from '@/server/safety'
 import { ReportButton } from '@/components/app/report-sheet'
+import { parseTrack } from '@/lib/framing/validate'
 
 const START = ['orange', 'gold', 'teal']
 
@@ -388,6 +389,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           courseHref={courseHref}
           deferred={deferred}
           initialOpenId={Number(query.answer) || deferred[0]?.pointId || null}
+          sentences={parseTrack(lesson.framingTrack)?.sentences || []}
           garden={{ done, total, gardenHref: featureOn(portal, 'garden') ? `${base}/garden` : base, nextPart: following, links: [
             ...(featureOn(portal, 'garden') ? [{ label: "See what you've sown", href: `${base}/garden/general` }] : []),
             ...(featureOn(portal, 'workbook') ? [{ label: 'Your workbook', href: `${base}/garden/workbook` }] : []),

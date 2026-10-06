@@ -143,11 +143,13 @@ test.describe('Help shape HEARTS', () => {
       await joinFilm.page.getByTestId('swipe-coach').dispatchEvent('click')
     }
     await expect(joinFilm.page.getByTestId('swipe-coach')).toHaveCount(0)
+    await joinFilm.page.getByTestId('more-board').click()
+    await expect(joinFilm.page.getByTestId('feed-board')).toBeVisible()
     await expect(joinFilm.page.getByTestId('learn-more')).toBeVisible()
     if (!(await joinFilm.page.getByTestId('lane-chip').isVisible().catch(() => false))) {
-      if ((await stepFeed(joinFilm.page)) === 'ok' && !(await joinFilm.page.getByTestId('learn-more').isVisible().catch(() => false))) {
-        await joinFilm.page.getByTestId('gesture-prev').dispatchEvent('click')
-        await expect(joinFilm.page.getByTestId('learn-more')).toBeVisible()
+      await joinFilm.page.getByTestId('board-back').click()
+      if ((await stepFeed(joinFilm.page)) === 'ok') {
+        await joinFilm.page.getByTestId('more-board').click()
       }
     }
     await expect(joinFilm.page.getByTestId('learn-more')).toBeVisible()

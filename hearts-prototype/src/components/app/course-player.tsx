@@ -2,17 +2,18 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { newViewingId, POLL_MS, PopupWatcher, type PopupPoint } from '@/lib/popups'
 import { comingAnswerLabel, comingQuestionLabel, questionMomentReached, questionRowRevealed, revealedStorageKey } from '@/lib/question-list'
 import { TopicHelp } from '@/components/app/page-help'
+import { SpokenWords } from '@/components/app/spoken-words'
+import type { FramingSentence } from '@/lib/framing/types'
 import { placeDots } from '@/lib/timeline-dots'
 import { coursePlayVisible } from '@/lib/course-controls'
 import { nextPlaybackRate } from '@/lib/playback-rate'
 import { createPlayer, destroyPlayer, getPlayer, hasSound, pauseKeepingSound, resume, soundOn, STATE, UNPLAYABLE } from '@/lib/yt'
 import { SwarmList } from '@/components/app/swarm-list'
 import { initialsOf } from '@/lib/swarm-sort'
-import { tidyTalkTitle } from '@/lib/talk-title'
 import { HeartIcon, ImageIcon, LockIcon, MicIcon, PauseIcon, PlayIcon } from '../icons'
 import { track } from '@/lib/experiment-track'
 import { ReportButton } from '@/components/app/report-sheet'
@@ -80,6 +81,7 @@ export function CoursePlayer({
   courseHref = backHref,
   deferred = [],
   initialOpenId = null,
+  sentences = [],
 }: {
   courseTitle: string
   backHref: string
@@ -105,6 +107,7 @@ export function CoursePlayer({
   courseHref: string
   deferred?: { pointId: number; prompt: string }[]
   initialOpenId?: number | null
+  sentences?: FramingSentence[]
 }) {
   const router = useRouter()
   const card = useRef<HTMLDivElement>(null)
@@ -140,6 +143,8 @@ export function CoursePlayer({
   const [failed, setFailed] = useState(false)
   const [boot, setBoot] = useState(0)
   const [endCard, setEndCard] = useState(false)
+  const [boardOpen, setBoardOpen] = useState(false)
+  const boardDrag = useRef<{ y: number } | null>(null)
   const [count, setCount] = useState(5)
   const [held, setHeld] = useState<number[]>(deferred.map((row) => row.pointId))
   const heldRef = useRef(held)
@@ -458,6 +463,29 @@ export function CoursePlayer({
     setSpeed(next)
     applySpeed(next)
   }
+  const openBoard = (event: ReactPointerEvent) => {
+    event.stopPropagation()
+    event.preventDefault()
+    boardDrag.current = { y: event.clientY }
+  }
+  const moveBoard = (event: ReactPointerEvent) => {
+    const start = boardDrag.current
+    if (!start) return
+    event.stopPropagation()
+    if (!boardOpen && event.clientY < start.y - 24) setBoardOpen(true)
+    if (boardOpen && event.clientY > start.y + 36) setBoardOpen(false)
+  }
+  const finishBoard = (event: ReactPointerEvent) => {
+    const start = boardDrag.current
+    boardDrag.current = null
+    if (!start) return
+    event.stopPropagation()
+    event.preventDefault()
+    const dy = event.clientY - start.y
+    if (dy < -28) setBoardOpen(true)
+    else if (dy > 36) setBoardOpen(false)
+    else if (Math.abs(dy) < 14) setBoardOpen((open) => !open)
+  }
 
   const resumeNow = () => {
     soundOn(PLAYER_ID)
@@ -516,11 +544,12 @@ export function CoursePlayer({
   const places = new Map(placeDots(views.map((row) => ({ id: row.id, second: row.second })), total, trackWidth).map((row) => [row.id, row]))
 
   return (
-    <div data-testid="player" data-mode={mode} data-popup-layout={overPlayer ? 'over' : 'strict'}>
+    <div data-testid="player" data-mode={mode} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-popup-layout={overPlayer ? 'over' : 'strict'}>
       <div className="app-head" style={{ marginBottom: 6 }}>
-        <Link className="back" href={backHref} data-testid="back">‹ {tidyTalkTitle(courseTitle)}</Link>
+        <Link className="back" href={backHref} data-testid="back">‹ Back</Link>
       </div>
-      <div ref={card} className={`player-card${filmed ? ' yt-on' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
+      <div ref={card} className={`player-card is-f${filmed ? ' yt-on' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
+        <div className={`j-hairline${mode === 'loading' ? ' shimmer' : ''}`} data-testid="hairline"><i style={{ width: `${Math.min(100, (time / total) * 100)}%` }} /></div>
         {!filmed || !lit ? <div className={`poster${scenicPoster ? ' scenic' : ''}${mode === 'loading' ? ' skeleton' : ''}`} style={ownPoster ? { backgroundImage: `url(${poster})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : 'player-poster'} /> : null}
         {mode === 'loading' && !failed ? <div className="player-veil" data-testid="player-veil" aria-hidden><span className="gold-spin" /></div> : null}
         {failed ? (
@@ -546,7 +575,7 @@ export function CoursePlayer({
         {open && !playing ? (
           <span className="paused-note on-film" data-testid="paused-note">❚❚ Paused at question {open.number}</span>
         ) : null}
-        <span className="time-read" data-testid="player-time">{clock(time)}</span>
+        {!playing && filmed ? <span className="j-paused-mark" data-testid="paused-mark" aria-hidden>❚❚</span> : null}
         {open && !filmed && !playing ? (
           <p className="paused-note" data-testid="paused-note">❚❚ Paused at question {open.number}</p>
         ) : null}
@@ -557,9 +586,37 @@ export function CoursePlayer({
               {playing ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
               <span>{playing ? 'Pause' : 'Play'}</span>
             </button>
-            <button type="button" className="lecture-speed" data-testid="lecture-speed" aria-label="Playback speed" onClick={cycleSpeed}>{speed}×</button>
           </>
         ) : null}
+      </div>
+      <SpokenWords sentences={sentences} time={time} title={courseTitle} titles={[courseTitle, partLabel]} from={0} to={length || duration} />
+      <button
+        type="button"
+        className="j-more-tab"
+        data-testid="more-board"
+        aria-expanded={boardOpen}
+        aria-label={boardOpen ? 'Hide more' : 'More'}
+        onPointerDown={openBoard}
+        onPointerMove={moveBoard}
+        onPointerUp={finishBoard}
+        onPointerCancel={() => { boardDrag.current = null }}
+        onClick={(event) => event.preventDefault()}
+      >
+        <i />
+        More
+      </button>
+      {boardOpen ? <div className="j-board-back" data-testid="board-back" onClick={() => setBoardOpen(false)} /> : null}
+      {boardOpen ? (
+        <div
+          className="j-board course-board"
+          data-testid="feed-board"
+          onPointerDown={(event) => { event.stopPropagation(); boardDrag.current = { y: event.clientY } }}
+          onPointerMove={moveBoard}
+          onPointerUp={finishBoard}
+        >
+          <span className="j-board-handle" />
+          <span className="time-read" data-testid="player-time">{clock(time)}</span>
+          <button type="button" className="lecture-speed" data-testid="lecture-speed" aria-label="Playback speed" onClick={cycleSpeed}>{speed}×</button>
         <div className="timeline" data-testid="timeline" ref={timelineRef}>
           <div className="track" />
           <div className="fill" style={{ width: `${Math.min(100, (time / total) * 100)}%` }} />
@@ -590,7 +647,8 @@ export function CoursePlayer({
             )
           })}
         </div>
-      </div>
+        </div>
+      ) : null}
       <p className="part-chip off-film" data-testid="part-label">{partLabel}</p>
       {views.length ? (
         <ul className="q-list" data-testid="question-strip" aria-label="Questions in this film">

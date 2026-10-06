@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { buildTrack, chooseMode, segmentsFromShots } from '../../src/lib/framing/choose'
 import { avoidMidSentenceSwitches, holdModes, snapClipWindow, snapIn, snapOut, snapSwitch } from '../../src/lib/framing/snap'
 import { fallbackTrack, validateTrack } from '../../src/lib/framing/validate'
-import { currentSentence, sameSpokenText, sentencesFromWords, sentencesInWindow, spokenLine, wordsFromCues, wrapWordLines } from '../../src/lib/framing/words'
+import { currentSentence, sameSpokenText, sentencesFromCaptions, sentencesFromWords, sentencesInWindow, spokenLine, wordsFromCues, wrapWordLines } from '../../src/lib/framing/words'
 import { boxOnStage, coverPosition, coverSourceToBox, cssVars, filmOnStage, layoutFor } from '../../src/lib/framing/layout'
 import { PLACEHOLDER_FACE, PLACEHOLDER_FACE_FOCUS } from '../../src/lib/framing/placeholder'
 import type { FramingTrack, ShotAnalysis } from '../../src/lib/framing/types'
@@ -132,7 +132,8 @@ test('letterbox and split film stay inside the 390×844 stage', () => {
   const split = layoutFor('F', 390, 844)
   assert.equal(split.film.left, 0)
   assert.equal(split.film.width, 390)
-  assert.equal(split.film.top, letter.film.top)
+  assert.equal(split.film.top, 56)
+  assert.ok(split.film.top < letter.film.top)
 })
 
 test('D cover crop keeps the placeholder FACE box on the 390×844 stage', () => {
@@ -198,6 +199,20 @@ test('spoken lines wrap as word arrays so display spaces cannot collapse', () =>
   assert.deepEqual(lines[0], ['Uh', 'I', 'was', 'speaking', 'at'])
   assert.ok(lines.every((line) => line.join(' ').length <= 20))
   assert.equal(lines.flat().join(' '), 'Uh I was speaking at a masid that had about 500 people in the audience.')
+})
+
+test('caption cards become live F sentences and skip summary beats', () => {
+  const sentences = sentencesFromCaptions(
+    [
+      { at: 10, text: 'Patience is a light.', role: 'hook' },
+      { at: 12, text: 'The heart finds rest.' },
+      { at: 16, text: 'And then it stands.' },
+    ],
+    11,
+    20,
+  )
+  assert.equal(sentences.some((row) => /Patience/.test(row.text)), false)
+  assert.ok(sentences.some((row) => /heart finds rest/.test(row.text)))
 })
 
 test('the framing-mode experiment stub names both variants', () => {

@@ -114,6 +114,33 @@ export function sameSpokenText(a: string, b: string) {
  * What F (and any live caption) may put on screen: the timed transcript line
  * for this clock, or nothing. A talk title is never used as a stand-in.
  */
+const SUMMARY_ROLES = new Set(['hook', 'turn', 'land'])
+
+/** Timed caption cards from a cut, for F. Summary beats and empty lines stay out. */
+export function sentencesFromCaptions(
+  lines: { at?: number; text?: string; tidy?: string; role?: string }[] | null | undefined,
+  from: number,
+  to: number,
+): FramingSentence[] {
+  const usable = (lines || []).filter((row) => {
+    if (row.role && SUMMARY_ROLES.has(row.role)) return false
+    const text = (row.tidy || row.text || '').trim()
+    return Boolean(text) && row.at != null && Number.isFinite(row.at)
+  })
+  if (!usable.length) return []
+  const words: SpokenWord[] = []
+  usable.forEach((row, index) => {
+    const start = Number(row.at)
+    const end = Number(usable[index + 1]?.at ?? Math.min(to, start + 6))
+    const parts = splitWords(row.tidy || row.text || '')
+    const each = Math.max(0.12, (Math.max(start + 0.12, end) - start) / Math.max(1, parts.length))
+    parts.forEach((w, at) => {
+      words.push({ w, t: round3(start + each * at), e: round3(start + each * (at + 1)) })
+    })
+  })
+  return sentencesFromWords(words, to).filter((row) => row.s < to && row.e > from)
+}
+
 export function spokenLine(
   sentences: FramingSentence[],
   time: number,

@@ -23,17 +23,17 @@ const PAGES: Record<string, HelpCopy> = {
   feed: {
     title: 'How to use clips',
     body: [
-      'Swipe up for the next clip. Swipe down to change lane.',
-      'Swipe sideways for more from this speaker.',
-      'Tap Ready for more? under a clip, or on a scenic card, to sit with the longer cut.',
+      'The talk sits in a wide band at the top. The words being said appear underneath.',
+      'Swipe up for the next clip. Swipe down to change lane. Tap the picture to pause or play.',
+      'Pull the More tab up for Clip, extract, Full talk, Ready for more?, Share and Save. Swipe it down, or tap outside, to put it away.',
     ],
   },
   appetiser: {
     title: 'How to use Ready for more?',
     body: [
-      'This is the longer cut of the same talk, still full-screen.',
-      'Tap Back to return to the short clips. The clock shows how far you are through this cut.',
-      'Learn more opens the whole talk when you want to sit with it.',
+      'This is the longer cut of the same talk. The picture stays in the wide band; the words sit underneath.',
+      'Tap Back to return to the short clips.',
+      'Pull More up for the clock, Ready for more?, Watch the whole talk, and Share. Swipe it down, or tap outside, to put it away.',
     ],
   },
   start: {
@@ -139,7 +139,7 @@ const PAGES: Record<string, HelpCopy> = {
   course: {
     title: 'How to use a talk',
     body: [
-      'The film sits at the top. Play and pause stay on the film. Tap a question dot on the timeline to jump there; the talk pauses so you can write.',
+      'The film sits at the top in a wide band. Play and pause stay on the film. Pull More up for speed, the clock and the question dots. Tap a question dot on the timeline to jump there; the talk pauses so you can write.',
       'What others said is a quiet list of initials, not names. There is no rating.',
     ],
   },
