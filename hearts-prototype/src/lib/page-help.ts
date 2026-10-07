@@ -25,7 +25,7 @@ const PAGES: Record<string, HelpCopy> = {
     body: [
       'The talk sits in a wide band at the top. The words being said appear underneath.',
       'Swipe up for the next clip. Swipe down to change lane. Tap the picture to pause or play.',
-      'Pull the More tab up for Clip, extract, Full talk, Ready for more?, Share and Save. Swipe it down, or tap outside, to put it away.',
+      'Clip, extract, Full talk, Ready for more?, Share and Save sit under the words. Pull the More tab up if you have hidden them. Swipe the handle down to put them away.',
     ],
   },
   appetiser: {
@@ -33,7 +33,7 @@ const PAGES: Record<string, HelpCopy> = {
     body: [
       'This is the longer cut of the same talk. The picture stays in the wide band; the words sit underneath.',
       'Tap Back to return to the short clips.',
-      'Pull More up for the clock, Ready for more?, Watch the whole talk, and Share. Swipe it down, or tap outside, to put it away.',
+      'The clock, Ready for more?, Watch the whole talk, and Share sit under the words. Pull the More tab up if you have hidden them. Swipe the handle down to put them away.',
     ],
   },
   start: {
@@ -140,7 +140,7 @@ const PAGES: Record<string, HelpCopy> = {
     title: 'How to use a talk',
     body: [
       'The film sits at the top in a wide band. Tap the picture to pause or play.',
-      'Pull the More tab up for speed, the clock and the question dots. Swipe it down, or tap outside, to put it away.',
+      'Speed, the clock and the question dots sit under the words. Pull the More tab up if you have hidden them. Swipe the handle down to put them away.',
       'Tap a question dot on the timeline to jump there; the talk pauses so you can write.',
       'What others said is a quiet list of initials, not names. There is no rating.',
     ],

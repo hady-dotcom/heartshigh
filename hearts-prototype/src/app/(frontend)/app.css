@@ -586,6 +586,27 @@
   bottom: calc(76px + env(safe-area-inset-bottom, 0px));
   z-index: 40;
 }
+/* The open talk board sits in the page under the words, above the tab bar, instead of covering the film. */
+[data-testid="player"][data-board='open'] .j-board.course-board {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  z-index: 4;
+  max-height: none;
+  height: auto;
+  margin: 0 0 8px;
+  border-radius: 0 0 18px 18px;
+  box-shadow: none;
+  overflow: visible;
+  padding: 0 16px 12px;
+}
+.app[data-testid="course"]:has([data-testid="player"][data-board='open']) .app-scroll {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+}
+.app[data-testid="course"]:has([data-testid="player"][data-board='open']) .course-body {
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
 [data-testid="player"] .course-board .timeline { position: relative; left: auto; right: auto; bottom: auto; }
 [data-testid="player"] .course-board .time-read,
 [data-testid="player"] .course-board .lecture-speed { position: static; display: inline-flex; margin: 0 8px 12px 0; }

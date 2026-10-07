@@ -79,7 +79,9 @@ test('play and pause stay on the lecture while it is playing', () => {
   assert.match(journey, /coverHoldStep/)
   const openDrawer = journey.slice(journey.indexOf('const openDrawer'), journey.indexOf('const closeDrawer'))
   assert.doesNotMatch(openDrawer, /pause|mute|playVideo|silence|stopVisible|hush/)
-  assert.match(journey, /if \(boardOpenRef\.current\) return/)
+  assert.match(journey, /pictureTapIgnored\(\{ boardOpen: false/)
+  assert.doesNotMatch(journey, /if \(boardOpenRef\.current\) return/)
+  assert.doesNotMatch(journey, /if \(boardOpen\) return/)
   const own = [
     { cutId: 1, youtubeId: 'N_-YiwIb-u0', hors: { start: 0, end: 15 } },
     { cutId: 2, youtubeId: '45XUrfJS68Q', hors: { start: 0, end: 15 } },

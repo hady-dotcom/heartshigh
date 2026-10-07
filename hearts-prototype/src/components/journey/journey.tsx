@@ -16,7 +16,7 @@ import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { dedicatedLaneFeed, laneEndHref, lanesWithClips, playableLaneClips, takeDedicatedLane } from '@/lib/lanes'
 import { coverAttr, coverFallbackAction, coverHoldKey, coverHoldStep, filmCoverKey, freshCoverHold, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
-import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
+import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardAlreadyOpenAt, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
 import { isoWeek } from '@/lib/trends'
 import { courseCatcherTap } from '@/lib/course-controls'
 import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, applyPauseWhenReady, bufferRetryAction, clockIsStalled, endCardPlayerAction, endedEventIsCurrent, horsWindowEnded, hostShouldShow, keepVisiblePaused, livePictureTap, pictureIsTap, pictureSwipeCommit, planFilmAdvance, playbackAction, playbackAdvancing, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe, afterClipEnds, pictureTapPlan, sheetPollAction, type EndAdvanceSource } from '@/lib/film-advance'
@@ -218,8 +218,8 @@ export function Journey(props: JourneyProps) {
   const [clipPlaying, setClipPlaying] = useState(false)
   const [speed, setSpeed] = useState(1)
   const speedRef = useRef(1)
-  const [boardOpen, setBoardOpen] = useState(false)
-  const boardOpenRef = useRef(false)
+  const [boardOpen, setBoardOpen] = useState(true)
+  const boardOpenRef = useRef(true)
   boardOpenRef.current = boardOpen
   const [swipeHint] = useState(true)
   const [coverHeld, setCoverHeld] = useState(true)
@@ -246,6 +246,7 @@ export function Journey(props: JourneyProps) {
   const [debugOn, setDebugOn] = useState(false)
   const [wordsLive, setWordsLive] = useState(false)
   const boardOpenedAt = useRef(0)
+  if (boardOpenedAt.current === 0) boardOpenedAt.current = boardAlreadyOpenAt(typeof performance !== 'undefined' ? performance.now() : BOARD_ARM_MS + 1)
   const boardDrag = useRef<{ x: number; y: number; t: number; opened: boolean } | null>(null)
   const watch = useRef<{ key: string; start: number; furthest: number; done90: boolean; ended: boolean }>({ key: '', start: 0, furthest: 0, done90: false, ended: false })
   const refilling = useRef(false)
@@ -700,10 +701,11 @@ export function Journey(props: JourneyProps) {
       bufferRetried.current = false
       userPausedRef.current = false
       clipEndedRef.current = false
-      if (!keepBoardOnShow.current) {
-        boardOpenRef.current = false
-        setBoardOpen(false)
-      }
+      // Each new clip shows the controls again. A swipe used to leave the next one closed; Leon wants it open.
+      keepBoardOnShow.current = true
+      boardOpenedAt.current = boardAlreadyOpenAt(performance.now())
+      boardOpenRef.current = true
+      setBoardOpen(true)
       ignorePictureUntil.current = swallowOnShow.current ? showStarted + PICTURE_SWALLOW_MS : 0
       if (item) {
         const seen = rememberSeenCard(item.cutId, item.card || 'talk', kind)
@@ -1614,7 +1616,7 @@ export function Journey(props: JourneyProps) {
       stepLoopRef.current(next ? 1 : -1)
     }
     const onWheel = (event: WheelEvent) => {
-      if (sheetRef.current || boardOpenRef.current || typing(event)) return
+      if (sheetRef.current || typing(event)) return
       if ((event.target as HTMLElement | null)?.closest?.('.j-sheet, .caption[data-expanded="true"], [data-testid="feed-board"], [data-testid="more-board"], [data-testid="board-back"]')) return
       if (Math.abs(event.deltaY) < 24 || Math.abs(event.deltaY) < Math.abs(event.deltaX)) return
       event.preventDefault()
@@ -1787,7 +1789,8 @@ export function Journey(props: JourneyProps) {
   const tapPicture = () => {
     dismissCoach()
     if (clipEndedRef.current || sheetRef.current) return
-    if (pictureTapIgnored({ boardOpen: boardOpenRef.current, swallowUntil: ignorePictureUntil.current, now: performance.now() })) return
+    // The docked board sits under the words, so an open board must not swallow play and pause on the picture.
+    if (pictureTapIgnored({ boardOpen: false, swallowUntil: ignorePictureUntil.current, now: performance.now() })) return
     const host = hosts.current[visibleRef.current]
     const player = host.playerId ? getPlayer(host.playerId) : null
     const liveState = player?.getPlayerState() ?? host.state
@@ -1848,7 +1851,6 @@ export function Journey(props: JourneyProps) {
   }
 
   const pauseForSwipe = () => {
-    if (boardOpenRef.current) return
     const host = hosts.current[visibleRef.current]
     if (host.playerId) getPlayer(host.playerId)?.pauseVideo()
   }
@@ -1921,7 +1923,6 @@ export function Journey(props: JourneyProps) {
 
   // Gestures on the clip. In overlay mode the gesture layer covers the player; in strict mode only the chrome.
   const onDown = (event: ReactPointerEvent) => {
-    if (boardOpen) return
     if ((event.target as HTMLElement).closest('[data-testid="feed-board"], [data-testid="more-board"], [data-testid="board-back"]')) return
     ;(event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId)
     const timer = window.setTimeout(() => {
@@ -2106,7 +2107,7 @@ export function Journey(props: JourneyProps) {
     if (phase !== 'feed' || clipEnded || userPausedRef.current) return
     const begun = performance.now()
     const timer = window.setInterval(() => {
-      if (userPausedRef.current || pauseWhenReadyRef.current || boardOpenRef.current) return
+      if (userPausedRef.current || pauseWhenReadyRef.current) return
       const host = hosts.current[visibleRef.current]
       const player = host.playerId ? getPlayer(host.playerId) : null
       if (!player) return
@@ -2174,10 +2175,10 @@ export function Journey(props: JourneyProps) {
   useEffect(() => {
     setCaptionOpen(false)
     setAppetiserHeld(true)
-    if (!keepBoardOnShow.current) {
-      boardOpenRef.current = false
-      setBoardOpen(false)
-    }
+    if (clipEndedRef.current) return
+    boardOpenedAt.current = boardAlreadyOpenAt(performance.now())
+    boardOpenRef.current = true
+    setBoardOpen(true)
   }, [item?.id])
   useEffect(() => {
     setDebugOn(ytDebugOn(window.location.search))
@@ -2257,8 +2258,9 @@ export function Journey(props: JourneyProps) {
   const swallowPicture = () => {
     ignorePictureUntil.current = performance.now() + PICTURE_SWALLOW_MS
   }
-  const openDrawer = () => {
-    boardOpenedAt.current = performance.now()
+  const openDrawer = (alreadySettled = false) => {
+    boardOpenedAt.current = alreadySettled ? boardAlreadyOpenAt(performance.now()) : performance.now()
+    boardOpenRef.current = true
     setBoardOpen(true)
   }
   const closeDrawer = (event?: { stopPropagation(): void; preventDefault(): void }) => {
@@ -2295,9 +2297,17 @@ export function Journey(props: JourneyProps) {
     const start = boardDrag.current
     if (!start) return
     event.stopPropagation()
+    // The sheet body scrolls. Only the handle and the More tab claim the gesture.
+    if ((event.currentTarget as HTMLElement).dataset.testid === 'feed-board') return
     event.preventDefault()
   }
   const finishBoard = (event: ReactPointerEvent) => {
+    const grip = (event.currentTarget as HTMLElement).dataset.testid
+    if (grip === 'feed-board') {
+      event.stopPropagation()
+      boardDrag.current = null
+      return
+    }
     const start = boardDrag.current
     boardDrag.current = null
     if (!start) return
@@ -2307,11 +2317,11 @@ export function Journey(props: JourneyProps) {
     const travel = pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY })
     const velocity = dy / Math.max(1, performance.now() - start.t)
     if ((event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
-    if (boardShouldOpen(dy, velocity)) openDrawer()
+    if (boardShouldOpen(dy, velocity)) openDrawer(false)
     else if (boardShouldClose(dy, velocity)) closeDrawer(event)
     else if (travel < 14) {
       if (boardOpen) closeDrawer(event)
-      else openDrawer()
+      else openDrawer(true)
     }
   }
   const visiblePlayer = () => {
@@ -2388,10 +2398,7 @@ export function Journey(props: JourneyProps) {
         data-armed={performance.now() - boardOpenedAt.current >= BOARD_ARM_MS ? 'yes' : 'no'}
         onPointerDown={(event) => {
           event.stopPropagation()
-          const onControl = Boolean((event.target as HTMLElement).closest('button, a, input, textarea, select, label'))
           boardDrag.current = { x: event.clientX, y: event.clientY, t: performance.now(), opened: true }
-          if (onControl) return
-          event.currentTarget.setPointerCapture?.(event.pointerId)
         }}
         onPointerMove={moveBoard}
         onPointerUp={finishBoard}

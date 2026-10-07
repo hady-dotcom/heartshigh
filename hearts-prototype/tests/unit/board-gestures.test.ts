@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardClickAllowed, boardShouldClose, boardShouldOpen, endCardAfterBoardClose, isDragEnd, moreAfterAdvanceThenScrim, pictureTapIgnored, pointerTravel, saveDuringAdvanceThenTap } from '../../src/lib/board-gestures'
+import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardAlreadyOpenAt, boardClickAllowed, boardShouldClose, boardShouldOpen, endCardAfterBoardClose, isDragEnd, moreAfterAdvanceThenScrim, pictureTapIgnored, pointerTravel, saveDuringAdvanceThenTap } from '../../src/lib/board-gestures'
 
 test('a click that ends a More drag is ignored', () => {
   assert.equal(isDragEnd(0), false)
@@ -13,6 +13,8 @@ test('sheet buttons wait until the drawer has settled', () => {
   assert.equal(boardClickAllowed({ openedAt: 1000, now: 1100, travel: 0 }), false)
   assert.equal(boardClickAllowed({ openedAt: 1000, now: 1000 + BOARD_ARM_MS, travel: 0 }), true)
   assert.equal(boardClickAllowed({ openedAt: 1000, now: 2000, travel: 24 }), false)
+  assert.equal(boardClickAllowed({ openedAt: boardAlreadyOpenAt(80), now: 80, travel: 0 }), true)
+  assert.equal(boardClickAllowed({ openedAt: 0, now: 5000, travel: 0 }), false)
 })
 
 test('a short drag-down closes the More sheet', () => {

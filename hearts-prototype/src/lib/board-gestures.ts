@@ -76,8 +76,15 @@ export function moreAfterAdvanceThenScrim(input: {
   return { playing, pictureIgnored, userPaused: input.userPausedAfterAdvance }
 }
 
+/** A board already on screen (the default, or a new clip) accepts the next tap at once. */
+export function boardAlreadyOpenAt(now: number, armMs = BOARD_ARM_MS) {
+  return now - armMs - 1
+}
+
 export function boardSettled(openedAt: number, now: number, armMs = BOARD_ARM_MS) {
-  return openedAt > 0 && now - openedAt >= armMs
+  // 0 means the board was never opened. A stamp before `now` (including a negative one) is already settled.
+  if (!openedAt) return false
+  return now - openedAt >= armMs
 }
 
 export function isDragEnd(travel: number, threshold = BOARD_DRAG_PX) {
