@@ -714,7 +714,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .journey.phase-feed[data-board='open'] {
   --film-band: calc(100vw * 9 / 16);
   --tab-clearance: calc(76px + var(--safe-bottom));
-  --words-min: 150px;
+  --words-min: 132px;
   --board-dock: clamp(112px, calc(100dvh - 56px - var(--safe-top) - var(--film-band) - var(--words-min) - var(--tab-clearance)), 480px);
 }
 .journey.phase-feed[data-board='open'][data-vertical='yes'] {
@@ -765,9 +765,18 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   height: 36px;
 }
 .journey.phase-feed[data-board='open'] .j-board .rail button { font-size: 10px; gap: 2px; }
+.journey.phase-feed[data-board='open'] .j-board .chip {
+  padding: 3px 10px;
+  font-size: 12px;
+}
 .journey.phase-feed[data-board='open'] .j-board .ready-controls,
 .journey.phase-feed[data-board='open'] .j-chrome .j-board .ready-controls {
-  margin: 0 0 6px;
+  gap: 4px 8px;
+  margin: 0 0 4px;
+}
+.journey.phase-feed[data-board='open'] .j-board .ready-controls input[type='range'] {
+  height: 16px;
+  margin: 0;
 }
 .journey.phase-feed[data-board='open'] .j-board .j-level-choices,
 .journey.phase-feed[data-board='open'] .j-chrome .clip-foot .j-level-choices {
