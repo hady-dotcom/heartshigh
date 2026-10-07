@@ -2,6 +2,12 @@
 export const YT_CHROME_HOLD_MS = 4500
 /** Fade the cover only at the end of the hold. */
 export const YT_COVER_FADE_MS = 250
+/**
+ * YouTube posts its clock to the page every ~0.27 s on a desktop but can be well over 1 s apart on a phone, and
+ * getCurrentTime only guesses 1 s ahead. While still PLAYING, a clock that has not moved for less than this is a
+ * slow report, not a stall, so the hold keeps running instead of starting again.
+ */
+export const YT_CLOCK_GAP_MS = 2500
 /** If no PLAYING event arrives, poll the player and lift or retry after this. */
 export const YT_STATE_FALLBACK_MS = 6000
 /** Framing F is uncropped. The cover hides chrome; the iframe shows the full 16:9 frame. */
@@ -135,16 +141,19 @@ export type CoverHoldMachine = {
   lastTime: number
   cover: boolean
   heldForPause: boolean
+  /** When the clock last moved during this hold. */
+  movedAt?: number
 }
 
 export function freshCoverHold(): CoverHoldMachine {
-  return { holdFor: '', playStartedAt: 0, holdState: -9, lastTime: -1, cover: true, heldForPause: false }
+  return { holdFor: '', playStartedAt: 0, holdState: -9, lastTime: -1, cover: true, heldForPause: false, movedAt: 0 }
 }
 
 /**
  * One sample of the cover hold. The clock starts on this clip's own PLAYING
  * with cur past the in-point, and it must not reset on later ticks of the same
- * hold. Pause or a new clip key puts the cover back.
+ * hold. A short gap between phone clock reports is not a stall. Pause or a
+ * new clip key puts the cover back.
  */
 export function coverHoldStep(
   machine: CoverHoldMachine,
@@ -163,14 +172,21 @@ export function coverHoldStep(
   let next = machine.holdFor === tick.holdKey ? { ...machine } : freshCoverHold()
   if (next.holdFor !== tick.holdKey) next.holdFor = tick.holdKey
   if (tick.ended || tick.userPaused) {
-    return { ...next, playStartedAt: 0, holdState: tick.state, lastTime: -1, cover: true, heldForPause: true }
+    return { ...next, playStartedAt: 0, holdState: tick.state, lastTime: -1, cover: true, heldForPause: true, movedAt: 0 }
   }
   const specOk = Boolean(tick.specKey) && tick.specKey === tick.hostSpecKey
   const confirmed = specOk && playingConfirmed(tick.state, tick.currentTime, tick.start)
   const moved = next.lastTime >= 0 && tick.currentTime > next.lastTime + 0.04
   if (!confirmed || !moved) {
+    // Still PLAYING past the in-point, the hold already running, and the clock moved recently: a slow clock report
+    // from the phone's YouTube frame. Keep the hold (and a lifted cover) instead of starting it again every gap.
+    if (confirmed && next.playStartedAt && !next.heldForPause && next.movedAt && tick.now - next.movedAt < YT_CLOCK_GAP_MS) {
+      next.holdState = tick.state
+      next.cover = filmCoverVisible({ playing: true, playingForMs: Math.max(0, tick.now - next.playStartedAt), paused: false, ended: false, timeAdvancing: true })
+      return next
+    }
     if (tick.state !== 1) {
-      return { ...next, playStartedAt: 0, holdState: tick.state, lastTime: tick.currentTime, cover: true, heldForPause: next.heldForPause }
+      return { ...next, playStartedAt: 0, holdState: tick.state, lastTime: tick.currentTime, cover: true, heldForPause: next.heldForPause, movedAt: 0 }
     }
     return {
       ...next,
@@ -178,6 +194,7 @@ export function coverHoldStep(
       holdState: tick.state,
       lastTime: next.lastTime < 0 ? tick.currentTime : next.lastTime,
       cover: true,
+      movedAt: 0,
     }
   }
   const advancing = true
@@ -186,6 +203,7 @@ export function coverHoldStep(
   }
   next.holdState = tick.state
   next.lastTime = tick.currentTime
+  next.movedAt = tick.now
   next.heldForPause = false
   next.cover = filmCoverVisible({
     playing: true,
