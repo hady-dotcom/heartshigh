@@ -708,3 +708,91 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 .journey.phase-feed .j-hairline-row .clip-row { margin-top: 8px; }
 .j-hairline-row .clip-row-top { justify-content: flex-start; }
 .j-hairline-row .chip.white { padding: 4px 10px; font-size: 12px; min-height: 28px; }
+
+/* Open by default: the controls sit in the band under the spoken words and above the tab bar.
+   They do not cover the film or the words, and the scrim does not take swipes. */
+.journey.phase-feed[data-board='open'] {
+  --film-band: calc(100vw * 9 / 16);
+  --tab-clearance: calc(76px + var(--safe-bottom));
+  --words-min: 150px;
+  --board-dock: clamp(112px, calc(100dvh - 56px - var(--safe-top) - var(--film-band) - var(--words-min) - var(--tab-clearance)), 480px);
+}
+.journey.phase-feed[data-board='open'][data-vertical='yes'] {
+  --film-band: min(60dvh, calc(100vw * 16 / 9));
+}
+.journey.phase-feed[data-board='open'] .fr-words {
+  bottom: calc(var(--tab-clearance) + var(--board-dock));
+  padding: 8px 16px 2px;
+  overflow: hidden;
+}
+.journey.phase-feed[data-board='open'] .fr-words-page { gap: 2px; }
+.journey.phase-feed[data-board='open'] .fr-words-line {
+  font-size: clamp(16px, min(4.6vw, 2.5dvh), 22px);
+  line-height: 1.15;
+}
+.journey.phase-feed[data-board='open'] .fr-dots { margin-top: 6px; }
+.journey[data-board='open'] .j-board-back,
+[data-testid="player"][data-board='open'] .j-board-back {
+  display: none;
+}
+.journey.phase-feed[data-board='open'] .j-board {
+  bottom: var(--tab-clearance);
+  height: var(--board-dock);
+  max-height: var(--board-dock);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 12px 8px;
+  border-radius: 18px 18px 0 0;
+  box-shadow: none;
+  touch-action: pan-y;
+}
+.journey.phase-feed[data-board='open'] .j-board-grab {
+  padding: 6px 12px 2px;
+  margin-bottom: 0;
+}
+.journey.phase-feed[data-board='open'] .j-board-title {
+  margin: 0 0 2px;
+  font-size: 13px;
+}
+.journey.phase-feed[data-board='open'] .j-board .rail,
+.journey.phase-feed[data-board='open'] .j-chrome .j-board .rail {
+  margin: 0 0 4px;
+  gap: 12px;
+}
+.journey.phase-feed[data-board='open'] .j-board .rail .bubble {
+  width: 36px;
+  height: 36px;
+}
+.journey.phase-feed[data-board='open'] .j-board .rail button { font-size: 10px; gap: 2px; }
+.journey.phase-feed[data-board='open'] .j-board .ready-controls,
+.journey.phase-feed[data-board='open'] .j-chrome .j-board .ready-controls {
+  margin: 0 0 6px;
+}
+.journey.phase-feed[data-board='open'] .j-board .j-level-choices,
+.journey.phase-feed[data-board='open'] .j-chrome .clip-foot .j-level-choices {
+  margin: 0 0 4px;
+  padding: 2px;
+}
+.journey.phase-feed[data-board='open'] .j-chrome .clip-foot .j-level-choices button {
+  padding: 6px 4px;
+}
+.journey.phase-feed[data-board='open'] .j-board .avatar {
+  width: 28px;
+  height: 28px;
+}
+.journey.phase-feed[data-board='open'] .j-board .speaker-row b { font-size: 13px; }
+.journey.phase-feed[data-board='open'] .j-board .pill.gold.block,
+.journey.phase-feed[data-board='open'] .j-board .j-credits .pill.gold.block {
+  min-height: 36px;
+  margin-top: 2px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+.journey.phase-feed[data-board='open'] .j-board .j-more-speaker {
+  margin: 0;
+  padding: 2px 0;
+  font-size: 12px;
+}

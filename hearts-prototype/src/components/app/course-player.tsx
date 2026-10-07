@@ -12,7 +12,7 @@ import { placeDots } from '@/lib/timeline-dots'
 import { courseCatcherTap, coursePlayVisible } from '@/lib/course-controls'
 import { nextPlaybackRate } from '@/lib/playback-rate'
 import { createPlayer, destroyPlayer, getPlayer, hasSound, pauseKeepingSound, playWithSoundFallback, resume, soundOn, STATE, UNPLAYABLE } from '@/lib/yt'
-import { PICTURE_SWALLOW_MS, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
+import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, boardAlreadyOpenAt, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
 import { coverFallbackAction, coverHoldKey, coverHoldStep, freshCoverHold, landscapeThumb, playerReadout, ytDebugOn } from '@/lib/yt-cover'
 import { SwarmList } from '@/components/app/swarm-list'
 import { initialsOf } from '@/lib/swarm-sort'
@@ -145,7 +145,7 @@ export function CoursePlayer({
   const [failed, setFailed] = useState(false)
   const [boot, setBoot] = useState(0)
   const [endCard, setEndCard] = useState(false)
-  const [boardOpen, setBoardOpen] = useState(false)
+  const [boardOpen, setBoardOpen] = useState(true)
   const [coverHeld, setCoverHeld] = useState(true)
   const [ytState, setYtState] = useState(-1)
   const [debugOn, setDebugOn] = useState(false)
@@ -155,6 +155,7 @@ export function CoursePlayer({
   const holdState = useRef(-9)
   const coverMachine = useRef(freshCoverHold())
   const boardOpenedAt = useRef(0)
+  if (boardOpenedAt.current === 0) boardOpenedAt.current = boardAlreadyOpenAt(typeof performance !== 'undefined' ? performance.now() : BOARD_ARM_MS + 1)
   const ignorePictureUntil = useRef(0)
   const boardDrag = useRef<{ x: number; y: number; t: number } | null>(null)
   const [count, setCount] = useState(5)
@@ -202,6 +203,8 @@ export function CoursePlayer({
 
   useEffect(() => {
     track('full_talk_start', { lesson: lessonId })
+    boardOpenedAt.current = boardAlreadyOpenAt(performance.now())
+    setBoardOpen(true)
   }, [lessonId])
 
   useEffect(() => {
@@ -486,8 +489,8 @@ export function CoursePlayer({
     setSpeed(next)
     applySpeed(next)
   }
-  const openDrawer = () => {
-    boardOpenedAt.current = performance.now()
+  const openDrawer = (alreadySettled = false) => {
+    boardOpenedAt.current = alreadySettled ? boardAlreadyOpenAt(performance.now()) : performance.now()
     setBoardOpen(true)
   }
   const closeDrawer = (event?: { stopPropagation(): void; preventDefault(): void }) => {
@@ -514,9 +517,16 @@ export function CoursePlayer({
     const start = boardDrag.current
     if (!start) return
     event.stopPropagation()
+    if ((event.currentTarget as HTMLElement).dataset.testid === 'feed-board') return
     event.preventDefault()
   }
   const finishBoard = (event: ReactPointerEvent) => {
+    const grip = (event.currentTarget as HTMLElement).dataset.testid
+    if (grip === 'feed-board') {
+      event.stopPropagation()
+      boardDrag.current = null
+      return
+    }
     const start = boardDrag.current
     boardDrag.current = null
     if (!start) return
@@ -526,11 +536,11 @@ export function CoursePlayer({
     const travel = pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY })
     const velocity = dy / Math.max(1, performance.now() - start.t)
     if ((event.target as HTMLElement).closest('[data-testid="feed-board"]') && (event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
-    if (boardShouldOpen(dy, velocity)) openDrawer()
+    if (boardShouldOpen(dy, velocity)) openDrawer(false)
     else if (boardShouldClose(dy, velocity)) closeDrawer(event)
     else if (travel < 14) {
       if (boardOpen) closeDrawer(event)
-      else openDrawer()
+      else openDrawer(true)
     }
   }
 
@@ -548,7 +558,7 @@ export function CoursePlayer({
   }
 
   const togglePlay = () => {
-    if (pictureTapIgnored({ boardOpen, swallowUntil: ignorePictureUntil.current, now: performance.now() })) return
+    if (pictureTapIgnored({ boardOpen: false, swallowUntil: ignorePictureUntil.current, now: performance.now() })) return
     if (mode === 'youtube' || youtubeId) {
       const player = getPlayer(PLAYER_ID)
       const action = courseCatcherTap(player)
@@ -773,8 +783,6 @@ export function CoursePlayer({
           onPointerDown={(event) => {
             event.stopPropagation()
             boardDrag.current = { x: event.clientX, y: event.clientY, t: performance.now() }
-            if ((event.target as HTMLElement).closest('button, a, input, textarea, select, label')) return
-            event.currentTarget.setPointerCapture?.(event.pointerId)
           }}
           onPointerMove={moveBoard}
           onPointerUp={finishBoard}

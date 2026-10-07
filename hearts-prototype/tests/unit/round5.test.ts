@@ -68,7 +68,7 @@ test('C: course cover sits above the iframe, one player, sticky band, schedule c
   assert.match(course, /data-testid="start-part"/)
 })
 
-test('D: a swipe closes the board; auto-advance keeps it open', () => {
+test('D: a new clip opens the board again; auto-advance does not clear the pause flag', () => {
   const journey = readFileSync(path.join(process.cwd(), 'src/components/journey/journey.tsx'), 'utf8')
   assert.match(journey, /ignorePictureUntil/)
   assert.match(journey, /autoAdvanceClosesBoard/)
