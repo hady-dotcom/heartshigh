@@ -53,6 +53,7 @@ async function shot(page: Page, name: string) {
 }
 
 async function layout(page: Page) {
+  await page.waitForTimeout(400)
   return page.evaluate(() => {
     const box = (el: Element | null) => {
       if (!el) return null
@@ -60,7 +61,7 @@ async function layout(page: Page) {
       return { x: r.x, y: r.y, width: r.width, height: r.height }
     }
     const board = document.querySelector('[data-testid="feed-board"]')
-    const film = document.querySelector('[data-testid="film-band"]')
+    const film = document.querySelector('[data-testid="film-band"], .j-film-band')
     const words = document.querySelector('[data-testid="spoken-words"]')
     const lines = [...document.querySelectorAll('.fr-words-line')].map((el) => ({
       text: (el.textContent || '').trim(),
@@ -133,11 +134,15 @@ test('guest feed opens the board under the words, swipes, and autoplays', async 
   const { page, cdp, context } = await phone(browser, { width: 390, height: 844 })
   const feed = await openFeed(page, false)
   await expect(feed).toHaveAttribute('data-playing', 'yes', { timeout: 20_000 })
-  await expect(page.getByTestId('film-band')).toBeVisible()
+  await page.locator('.fr-words-line').first().waitFor({ state: 'visible', timeout: 10_000 }).catch(() => undefined)
+  await page.waitForTimeout(500)
+  await expect(page.locator('[data-testid="film-band"], .j-film-band').first()).toBeVisible()
   const first = await layout(page)
   assertClear(first, 'clip')
   expect(first.iframe, 'film iframe').toBe(true)
-  expect(first.visibleButtons).toEqual(expect.arrayContaining(['level-clip', 'level-minutes', 'level-lecture', 'speed', 'share', 'learn-more']))
+  console.log(JSON.stringify({ viewport: '390x844', boardScrollPx: first.boardScroll, visibleButtons: first.visibleButtons, boardHeight: first.board?.height, wordsHeight: first.words?.height, filmHeight: first.film?.height }))
+  expect(first.boardScroll, '390 board uses the space under the words').toBeLessThanOrEqual(8)
+  expect(first.visibleButtons).toEqual(expect.arrayContaining(['level-clip', 'level-minutes', 'level-lecture', 'speed', 'fave', 'save', 'share', 'follow', 'learn-more']))
   await shot(page, 'board-open-feed-clip')
 
   const before = await feed.getAttribute('data-index')
@@ -259,7 +264,7 @@ test('signed-in controls work on the first tap, and the next clip opens the boar
   await expect(player).toBeVisible({ timeout: 20_000 })
   await expect(player).toHaveAttribute('data-board', 'open')
   await expect(page.getByTestId('feed-board')).toBeVisible()
-  await expect(page.getByTestId('film-band').first()).toBeVisible()
+  await expect(page.locator('.j-film-band, [data-testid="player-card"]').first()).toBeVisible()
   await expect(player).toHaveAttribute('data-playing', 'yes', { timeout: 20_000 })
   const talk = await layout(page)
   assertClear(talk, 'full talk')

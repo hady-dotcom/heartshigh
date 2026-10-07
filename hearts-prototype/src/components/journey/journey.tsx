@@ -706,7 +706,10 @@ export function Journey(props: JourneyProps) {
       boardOpenedAt.current = boardAlreadyOpenAt(performance.now())
       boardOpenRef.current = true
       setBoardOpen(true)
+      // A swipe swallows the leftover tap on the clip it lands on. That window is only for that show:
+      // the next one (a level change, or another clip) must still pause when the picture is tapped.
       ignorePictureUntil.current = swallowOnShow.current ? showStarted + PICTURE_SWALLOW_MS : 0
+      swallowOnShow.current = false
       if (item) {
         const seen = rememberSeenCard(item.cutId, item.card || 'talk', kind)
         seenRef.current = new Set(seen.cards)
@@ -1924,6 +1927,8 @@ export function Journey(props: JourneyProps) {
   // Gestures on the clip. In overlay mode the gesture layer covers the player; in strict mode only the chrome.
   const onDown = (event: ReactPointerEvent) => {
     if ((event.target as HTMLElement).closest('[data-testid="feed-board"], [data-testid="more-board"], [data-testid="board-back"]')) return
+    // pointerup and the click that follows it share one tap. A new finger-down is the next tap.
+    lastPictureTap.current = 0
     ;(event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId)
     const timer = window.setTimeout(() => {
       if (gesture.current && !gesture.current.moved) setNotForMe(true)
