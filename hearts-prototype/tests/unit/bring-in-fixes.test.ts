@@ -166,6 +166,49 @@ test('the bring-in flash mentions clips only when some were set aside', () => {
   assert.match(replaced, /The previous film’s clips were set aside/)
 })
 
+test('recorded yt-dlp output with no subtitles is told as no English captions, through the bring-in', async () => {
+  const stdout = readFileSync(join(recorded, 'no-subs/stdout.txt'), 'utf8')
+  const stderr = readFileSync(join(recorded, 'no-subs/stderr.txt'), 'utf8')
+  const exitCode = readFileSync(join(recorded, 'no-subs/exit.txt'), 'utf8').trim()
+  const names = readFileSync(join(recorded, 'no-subs/files.txt'), 'utf8').split('\n').map((row) => row.trim()).filter(Boolean)
+  assert.match(`${stdout}\n${stderr}`, /\[info\] There are no subtitles for the requested languages/)
+  assert.equal(names.length, 0)
+  // A finished run does not throw, so the provider has no exit code. Exit 0 in the recording is that case.
+  const interpreted = interpretYtDlpOutput({
+    stdout,
+    stderr,
+    code: exitCode === '0' ? undefined : Number(exitCode),
+    files: names.map((name) => ({ name })),
+  })
+  assert.equal(interpreted.outcome, 'none')
+  assert.match(interpreted.message, /This film has no English captions on YouTube/)
+  const ytdlp: TranscriptProvider = {
+    name: 'yt-dlp',
+    async fetch() {
+      ytdlp.lastOutcome = interpreted.outcome
+      ytdlp.lastProblem = interpreted.message
+      ytdlp.lastDuration = interpreted.duration
+      return interpreted.text
+    },
+  }
+  const watchPage: TranscriptProvider = {
+    name: 'youtube-transcript',
+    async fetch() {
+      return null
+    },
+  }
+  const ingested = await ingestYoutubeUrl('https://www.youtube.com/watch?v=kM7LVppIMl0', {
+    providers: [ytdlp, watchPage],
+    meta: async () => ({ id: 'kM7LVppIMl0', title: 'No captions', author: 'A speaker', thumbnail: '' }),
+    duration: null,
+  })
+  assert.equal(ingested.ok, false)
+  if (ingested.ok) return
+  assert.equal(ingested.captionOutcome, 'none')
+  assert.match(ingested.error, /This film has no English captions on YouTube\./)
+  assert.doesNotMatch(ingested.error, /could not be fetched from this server/)
+})
+
 test('yt-dlp saying there are no subtitles is reported as no captions', async () => {
   const provider: TranscriptProvider = {
     name: 'yt-dlp',

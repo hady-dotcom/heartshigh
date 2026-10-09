@@ -173,6 +173,7 @@ test('LOW: yt-dlp is fetched by setup, does not force a player client, and says 
   assert.match(readFileSync(path.join(root, 'scripts/setup.mjs'), 'utf8'), /get-yt-dlp\.mjs/)
   const fetcher = readFileSync(path.join(root, 'scripts/get-yt-dlp.mjs'), 'utf8')
   assert.match(fetcher, /YT_DLP_MIN = '2026\.08\.19'/)
+  assert.match(fetcher, /export const YT_DLP_VERSION = '2026\.08\.19'/)
   assert.match(fetcher, /SHA2-256SUMS/)
   assert.match(fetcher, /YT_DLP_CHANNEL/)
   assert.doesNotMatch(fetcher, /2025\.09\.26/)
@@ -208,10 +209,16 @@ test('feed players show none of YouTube’s chrome: no controls, inline, no rela
   assert.match(readFileSync(path.join(root, 'src/lib/yt.ts'), 'utf8'), /Channel watermark cannot be removed via embed params/)
 })
 
-test('yt-dlp refuses a release older than the caption floor', async () => {
-  const { ytDlpOlderThan, YT_DLP_MIN } = await import('../../scripts/get-yt-dlp.mjs')
+test('yt-dlp refuses a release older than the caption floor and pins 2026.08.19 by default', async () => {
+  const { ytDlpOlderThan, YT_DLP_MIN, YT_DLP_VERSION, resolveYtDlp } = await import('../../scripts/get-yt-dlp.mjs')
   assert.equal(YT_DLP_MIN, '2026.08.19')
+  assert.equal(YT_DLP_VERSION, '2026.08.19')
   assert.equal(ytDlpOlderThan('2025.09.26', YT_DLP_MIN), true)
   assert.equal(ytDlpOlderThan('2026.08.19', YT_DLP_MIN), false)
   assert.equal(ytDlpOlderThan('2026.10.01', YT_DLP_MIN), false)
+  const pinned = await resolveYtDlp({})
+  assert.equal(pinned.version, '2026.08.19')
+  assert.equal(pinned.nightly, false)
+  const override = await resolveYtDlp({ YT_DLP_VERSION: '2026.10.01' })
+  assert.equal(override.version, '2026.10.01')
 })

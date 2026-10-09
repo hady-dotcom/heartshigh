@@ -12,8 +12,8 @@ RUN npm ci
 
 COPY . .
 
-# Captions. Latest stable yt-dlp (or YT_DLP_VERSION / YT_DLP_CHANNEL=nightly) is fetched here.
-# The script refuses a build older than its version floor. bin/ is not copied into the image.
+# Captions. yt-dlp 2026.08.19 is fetched here (override with YT_DLP_VERSION, or YT_DLP_CHANNEL=nightly).
+# The script checks SHA2-256SUMS and refuses a build older than its version floor. bin/ is not copied into the image.
 # Subtitles use --skip-download, so ffmpeg is not installed.
 RUN node scripts/get-yt-dlp.mjs
 

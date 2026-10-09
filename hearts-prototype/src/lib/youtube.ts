@@ -301,7 +301,9 @@ export function interpretYtDlpOutput(input: {
   }
   if (code === 'ENOENT') return { text: null, duration, outcome: 'missing', message: ytDlpProblem('', true, lang) }
   if (BOT_WALL.test(stderr)) return { text: null, duration, outcome: 'blocked', message: ytDlpProblem(stderr, false, lang) }
-  if (NO_SUBS.test(stderr)) return { text: null, duration, outcome: 'none', message: noCaptionMessage(lang) }
+  // yt-dlp 2026.08.19 prints this with to_screen, which goes to stdout unless --quiet is set.
+  const told = `${input.stdout || ''}\n${stderr}`
+  if (NO_SUBS.test(told)) return { text: null, duration, outcome: 'none', message: noCaptionMessage(lang) }
   return {
     text: null,
     duration,

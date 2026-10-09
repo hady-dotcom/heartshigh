@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Fetches yt-dlp into bin/ at build time, checked against the release SHA2-256SUMS.
-// Default is the latest stable tag, and nothing older than YT_DLP_MIN is kept.
-// YT_DLP_VERSION pins a tag. YT_DLP_CHANNEL=nightly uses yt-dlp-nightly-builds.
+// The default tag is pinned so a build is repeatable and does not call the GitHub releases API.
+// Set YT_DLP_VERSION to another tag, or YT_DLP_CHANNEL=nightly for the nightly builds.
 // YT_DLP_ALLOW_OLD=1 is the only way to keep a build below the floor.
 // Importing this file does not download. Run it: node scripts/get-yt-dlp.mjs
 import { createHash } from 'node:crypto'
@@ -12,6 +12,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { promisify } from 'node:util'
 
 export const YT_DLP_MIN = '2026.08.19'
+/** Default build pin. Override with the YT_DLP_VERSION environment variable. */
+export const YT_DLP_VERSION = '2026.08.19'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const asset = process.platform === 'win32' ? 'yt-dlp.exe' : process.platform === 'darwin' ? 'yt-dlp_macos' : process.arch === 'arm64' ? 'yt-dlp_linux_aarch64' : 'yt-dlp_linux'
@@ -69,10 +71,12 @@ async function installedVersion() {
   }
 }
 
-export async function resolveYtDlp(env = process.env) {
+export async function resolveYtDlp(env = /** @type {Record<string, string | undefined>} */ (process.env)) {
   const nightly = env.YT_DLP_CHANNEL === 'nightly'
   const repo = nightly ? 'yt-dlp/yt-dlp-nightly-builds' : 'yt-dlp/yt-dlp'
-  const version = String(env.YT_DLP_VERSION || '').replace(/^v/, '') || (await latestTag(repo))
+  const requested = String(env.YT_DLP_VERSION || '').replace(/^v/, '')
+  // Stable builds use the pin and never ask api.github.com which release is latest.
+  const version = requested || (nightly ? await latestTag(repo) : YT_DLP_VERSION)
   if (!nightly && ytDlpOlderThan(version, YT_DLP_MIN) && env.YT_DLP_ALLOW_OLD !== '1') {
     throw new Error(`yt-dlp ${version} is older than ${YT_DLP_MIN}. Captions need a current release. Set YT_DLP_VERSION to a newer tag, or YT_DLP_CHANNEL=nightly. YT_DLP_ALLOW_OLD=1 keeps an older build.`)
   }
