@@ -11,10 +11,13 @@ import {
   canSpendPortalAi,
   clientFromConnection,
   completeOpenAiCompatible,
+  estimatePortalCalls,
   mcpConnectorStatus,
   openPortalKey,
+  portalAiGate,
   publicAi,
 } from '../../src/lib/portal-ai'
+import { questionCheckCallCount } from '../../src/server/feedback'
 
 const root = path.join(path.dirname(new URL(import.meta.url).pathname), '../..')
 const secret = 'portal-ai-test-secret-32-characters'
@@ -105,11 +108,29 @@ test('each portal calls only its own endpoint with its own key', async () => {
 
 test('learners and the master desk cannot spend, and MCP is only a seam', () => {
   assert.equal(canSpendPortalAi('portal-admin'), true)
-  assert.equal(canSpendPortalAi('teacher'), true)
+  assert.equal(canSpendPortalAi('teacher'), false)
   assert.equal(canSpendPortalAi('master'), false)
   assert.equal(canSpendPortalAi('learner'), false)
   assert.equal(mcpConnectorStatus().ready, false)
   assert.equal(clientFromConnection(null), null)
   const refused = assembleConnection({ baseUrl: 'http://portal-a.test/v1', model: 'model-a', apiKey: 'portal-a-key-value' }, secret)
   assert.equal(refused.ok, false)
+})
+
+test('a portal AI run shows the call count and spends only after a portal admin confirms', () => {
+  const estimate = estimatePortalCalls(91)
+  assert.equal(estimate.calls, 91)
+  assert.match(estimate.label, /91 calls/)
+  assert.match(estimate.label, /rough estimate/)
+  assert.match(estimate.label, /\$/)
+  assert.equal(portalAiGate({ role: 'portal-admin', usePortalAi: true, confirmed: false }).error, 'Confirm the call count before this run on your portal’s AI account. Nothing was sent.')
+  assert.equal(portalAiGate({ role: 'portal-admin', usePortalAi: true, confirmed: true }).spend, true)
+  assert.equal(portalAiGate({ role: 'teacher', usePortalAi: true, confirmed: true }).error, 'AI runs are for the portal admin.')
+  assert.equal(portalAiGate({ role: 'teacher', usePortalAi: false, confirmed: false }).spend, false)
+  assert.equal(portalAiGate({ role: 'portal-admin', realRole: 'master', usePortalAi: true, confirmed: true }).spend, false)
+  assert.equal(portalAiGate({ role: 'learner', usePortalAi: true, confirmed: true }).spend, false)
+  assert.equal(questionCheckCallCount(
+    [{ id: 1, prompt: 'One' }, { id: 2, prompt: 'Two' }, { id: 3, prompt: '' }],
+    [{ point: 1, prompt: 'One' }],
+  ), 1)
 })

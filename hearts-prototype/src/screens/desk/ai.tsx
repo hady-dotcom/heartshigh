@@ -9,6 +9,7 @@ import type { Ctx } from '../common'
 import { partTitle } from '@/lib/talk-title'
 import { rows, str } from '../common'
 import { HelpTip } from '@/components/desk/help'
+import { PortalAiConfirm } from '@/components/desk/paid-ai'
 import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
 import styles from './ai.module.css'
@@ -260,6 +261,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
               <label className="stack">Draft prompt
                 <textarea name="prompt" rows={8} defaultValue={str(step.prompt)} data-testid="ai-try-prompt" />
               </label>
+              <PortalAiConfirm connected={desk.connected} master={desk.master} calls={2} />
               <button className="btn ink" type="submit" data-testid="ai-try-submit">Compare with the live output</button>
             </form>
             {compared ? (
@@ -285,7 +287,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
           <header className="light"><h2>Re-run the live version</h2></header>
           <div className="body">
             <p className="hint">Drafts land on Review. Approved cuts and anything a person has edited stay as they are, with “new draft available” beside them.</p>
-            <RerunForm base={base} slug={slug} lessons={lessons} courses={courses} />
+            <RerunForm base={base} slug={slug} lessons={lessons} courses={courses} connected={desk.connected} master={desk.master} />
           </div>
         </section>
       ) : null}
@@ -293,7 +295,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
   )
 }
 
-function RerunForm({ base, slug, lessons, courses, lessonId }: { base: string; slug: string; lessons: Doc[]; courses: Doc[]; lessonId?: number }) {
+function RerunForm({ base, slug, lessons, courses, lessonId, connected, master, perTalk = 1 }: { base: string; slug: string; lessons: Doc[]; courses: Doc[]; lessonId?: number; connected: boolean; master: boolean; perTalk?: number }) {
   return (
     <form action="/api/ai-steps" method="post" className="form" data-testid="ai-rerun">
       <Hidden fields={{ action: 'start-job', slug, jobBase: base, next: base }} />
@@ -321,6 +323,7 @@ function RerunForm({ base, slug, lessons, courses, lessonId }: { base: string; s
           {courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}
         </select>
       </label>
+      <PortalAiConfirm connected={connected} master={master} calls={null} perTalk={perTalk} />
       <button className="btn teal" type="submit" data-testid="ai-rerun-submit">Re-run</button>
     </form>
   )
@@ -420,6 +423,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
       {desk.canEdit ? (
         <form action="/api/ai-steps" method="post" className="actions" style={{ marginBottom: 14 }}>
           <Hidden fields={{ action: 'start-job', slug: 'pipeline', scope: 'talk', lesson: lesson.id, jobBase: base, next: `${base}/ingest/${lesson.id}` }} />
+          <PortalAiConfirm connected={desk.connected} master={desk.master} calls={steps.length} />
           <button className="btn ink" type="submit" data-testid="ai-run-pipeline">Run the whole pipeline</button>
         </form>
       ) : null}
@@ -447,6 +451,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
                 {desk.canEdit ? (
                   <form action="/api/ai-steps" method="post">
                     <Hidden fields={{ action: 'start-job', slug: str(step.slug), scope: 'talk', lesson: lesson.id, jobBase: base, next: `${base}/ingest/${lesson.id}` }} />
+                    <PortalAiConfirm connected={desk.connected} master={desk.master} calls={1} />
                     <button className="btn small ghost" type="submit" data-testid="ingest-run">{status === 'not-run' ? 'Run' : 'Re-run'}</button>
                   </form>
                 ) : null}
@@ -456,7 +461,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
           )
         })}
       </div>
-      {desk.canEdit ? <div style={{ marginTop: 18 }}><RerunForm base={base} slug="pipeline" lessons={[lesson, ...lessons.filter((row) => row.id !== lesson.id)].slice(0, 40)} courses={courses} lessonId={lesson.id} /></div> : null}
+      {desk.canEdit ? <div style={{ marginTop: 18 }}><RerunForm base={base} slug="pipeline" lessons={[lesson, ...lessons.filter((row) => row.id !== lesson.id)].slice(0, 40)} courses={courses} lessonId={lesson.id} connected={desk.connected} master={desk.master} perTalk={steps.length} /></div> : null}
       <p className="hint" style={{ marginTop: 8 }}>The form under the list runs the whole pipeline on a wider scope. This talk is already selected in it.</p>
     </Frame>
   )

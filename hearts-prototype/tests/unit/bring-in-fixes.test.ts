@@ -6,7 +6,7 @@ import { test } from 'node:test'
 import { draftsSkippingApproved } from '../../src/lib/extractor'
 import { extractWithFallback } from '../../src/lib/llm'
 import { suggestWording } from '../../src/lib/experiment-copy'
-import { cleanedTimedTranscript, hiddenFromLearners, interpretYtDlpOutput, isAwaitingTranscript, publishedClockSeconds, speakerForLine, splitBringInLines, ytDlpArgs } from '../../src/lib/youtube'
+import { bringInFlash, cleanedTimedTranscript, hiddenFromLearners, ingestYoutubeUrl, interpretYtDlpOutput, isAwaitingTranscript, noteAfterTranscriptUpload, publishedClockSeconds, speakerForBringIn, speakerForLine, splitBringInLines, transcriptFor, ytDlpArgs, type TranscriptProvider } from '../../src/lib/youtube'
 import { withWorkLock } from '../../src/lib/work-lock'
 import { draftCircle } from '../../src/server/circle'
 
@@ -138,4 +138,56 @@ test('the cleaned transcript drops a rolling repeat and keeps the raw text', () 
   assert.equal(stored.raw, raw)
   assert.match(stored.cleaned, /hosted by myself/)
   assert.doesNotMatch(stored.cleaned, /welcome to another episode of the remastered podcast hosted/)
+})
+
+test('a transcript on a failed film stays hidden, and a waiting film becomes visible', () => {
+  const failed = noteAfterTranscriptUpload('Bring-in: failed. [lang:en] YouTube says that film does not exist.', 'notes.vtt')
+  assert.equal(failed.hidden, true)
+  assert.equal(hiddenFromLearners(failed.transcriptNote), true)
+  assert.match(failed.transcriptNote, /Bring-in: failed/)
+  assert.match(failed.notice, /learners still do not see it/)
+  const waiting = noteAfterTranscriptUpload('Bring-in: waiting. [lang:en] captions blocked', 'notes.vtt')
+  assert.equal(waiting.hidden, false)
+  assert.equal(hiddenFromLearners(waiting.transcriptNote), false)
+  assert.match(waiting.transcriptNote, /Uploaded from notes\.vtt/)
+})
+
+test('Try again keeps the speaker named on the film', () => {
+  assert.equal(speakerForBringIn({ lineSpeaker: '', courseSpeaker: 'Alauddin Elbakri', lessonSpeaker: 'Nobody', retry: true }), 'Nobody')
+  assert.equal(speakerForBringIn({ lineSpeaker: 'Hani', courseSpeaker: 'Alauddin Elbakri', lessonSpeaker: 'Nobody', retry: true }), 'Hani')
+  assert.equal(speakerForBringIn({ lineSpeaker: '', courseSpeaker: 'Alauddin Elbakri', lessonSpeaker: 'Nobody', retry: false }), 'Alauddin Elbakri')
+})
+
+test('the bring-in flash mentions clips only when some were set aside', () => {
+  const skipped = bringInFlash({ saved: 0, waiting: 0, failed: 0, skipped: 1, clipsSetAside: 0 })
+  assert.match(skipped, /already in the library/)
+  assert.doesNotMatch(skipped, /set aside/)
+  const replaced = bringInFlash({ saved: 1, waiting: 0, failed: 0, skipped: 0, clipsSetAside: 3 })
+  assert.match(replaced, /The previous film’s clips were set aside/)
+})
+
+test('yt-dlp saying there are no subtitles is reported as no captions', async () => {
+  const provider: TranscriptProvider = {
+    name: 'yt-dlp',
+    lastProblem: null,
+    lastDuration: null,
+    lastOutcome: null,
+    async fetch() {
+      provider.lastOutcome = 'none'
+      provider.lastProblem = 'This film has no English captions on YouTube.'
+      return null
+    },
+  }
+  const found = await transcriptFor('kM7LVppIMl0', [provider])
+  assert.equal(found.outcome, 'none')
+  const ingested = await ingestYoutubeUrl('https://www.youtube.com/watch?v=kM7LVppIMl0', {
+    providers: [provider],
+    meta: async () => ({ id: 'kM7LVppIMl0', title: 'No captions', author: 'A speaker', thumbnail: '' }),
+    duration: null,
+  })
+  assert.equal(ingested.captionOutcome, 'none')
+  assert.equal(ingested.ok, false)
+  if (ingested.ok) return
+  assert.match(ingested.error, /no English captions/)
+  assert.doesNotMatch(ingested.error, /could not be fetched from this server/)
 })

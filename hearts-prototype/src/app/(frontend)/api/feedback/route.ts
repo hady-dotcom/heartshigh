@@ -5,6 +5,7 @@ import { getSession } from '@/server/context'
 import { portalDisplayName } from '@/lib/portal-name'
 import { featureGoneJson } from '@/server/features'
 import { checkQuestions, draftQuestionSummary, exportFilename, feedbackFor, includeSummary, includedSummaries, recordExport, renderExport } from '@/server/feedback'
+import { portalAiGate } from '@/lib/portal-ai'
 import { clientForPortal } from '@/server/portal-ai'
 
 export const dynamic = 'force-dynamic'
@@ -72,8 +73,9 @@ export async function POST(req: Request) {
     if (action === 'summarise') {
       const query = Object.fromEntries([...form.entries()].map(([key, value]) => [key, String(value)]))
       const built = await feedbackFor(session.payload, portal.id, parseFilters(query), anonymiseFromQuery(query))
-      const wantAi = text(form, 'usePortalAi') === 'yes'
-      const client = wantAi ? await clientForPortal(session.payload, portal.id, session.user.role, session.actor?.role) : null
+      const gate = portalAiGate({ role: session.user.role, realRole: session.actor?.role, usePortalAi: text(form, 'usePortalAi') === 'yes', confirmed: text(form, 'confirmAi') === 'yes' })
+      if (gate.error) return redirectTo(req, next, gate.error)
+      const client = gate.spend ? await clientForPortal(session.payload, portal.id, session.user.role, session.actor?.role) : null
       const result = await draftQuestionSummary(session.payload, session.user, portal.id, built, text(form, 'questionKey'), client)
       if ('error' in result && result.error) return redirectTo(req, next, result.error)
       const notice = result.paidFallback
@@ -89,8 +91,9 @@ export async function POST(req: Request) {
       return redirectTo(req, next, undefined, 'The summary is included in the PDF digest.')
     }
     if (action === 'check-questions') {
-      const wantAi = text(form, 'usePortalAi') === 'yes'
-      const client = wantAi ? await clientForPortal(session.payload, portal.id, session.user.role, session.actor?.role) : null
+      const gate = portalAiGate({ role: session.user.role, realRole: session.actor?.role, usePortalAi: text(form, 'usePortalAi') === 'yes', confirmed: text(form, 'confirmAi') === 'yes' })
+      if (gate.error) return redirectTo(req, next, gate.error)
+      const client = gate.spend ? await clientForPortal(session.payload, portal.id, session.user.role, session.actor?.role) : null
       const result = await checkQuestions(session.payload, session.user, client)
       const paid = result.paidFallback ? ` ${result.paidFallback}` : ''
       return redirectTo(req, next, undefined, `Checked ${result.checked} questions. ${result.flagged} weak ones have a draft rewrite. Nothing was published.${paid}`)

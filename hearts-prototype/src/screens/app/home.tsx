@@ -4,7 +4,8 @@ import { InstallCard } from '@/components/app/install-card'
 import { redirect } from 'next/navigation'
 import { Avatar } from '@/components/app/feed'
 import { SavedCount, SavedToast } from '@/components/app/saved-list'
-import { AppFrame, Flash, TabBar } from '@/components/app/shell'
+import { AppFrame, Flash } from '@/components/app/shell'
+import { LearnerTabBar } from '@/components/app/learner-bar'
 import { WeekStrip } from '@/components/app/week-strip'
 import { weekView } from '@/server/week-plan'
 import { PlayIcon } from '@/components/icons'
@@ -173,7 +174,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
           <span className="go"><PlayIcon size={22} /> Watch today&apos;s clips</span>
         </Link>
       </div>
-      <TabBar base={base} active="home" portal={portal} unread={unread} />
+      <LearnerTabBar base={base} active="home" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -254,7 +255,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
           {courses.length} course{courses.length === 1 ? '' : 's'} in your library. Courses already in your clips are open; others open one a day, and you can always peek ahead.
         </p>
       </div>
-      <TabBar base={base} active="lanes" portal={portal} unread={unread} />
+      <LearnerTabBar base={base} active="lanes" portal={portal} unread={unread} />
     </AppFrame>
   )
 }

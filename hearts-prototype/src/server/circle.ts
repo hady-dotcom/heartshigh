@@ -20,6 +20,7 @@ import {
 import { idOf, portalIdOf } from '@/lib/ids'
 import type { LlmClient } from '@/lib/llm'
 import { clientForPortal } from './portal-ai'
+import { portalAiGate } from '@/lib/portal-ai'
 import { parseTranscript } from '@/lib/transcript'
 import type { SessionUser } from './context'
 import { tierSourceText } from './tier-source'
@@ -182,6 +183,9 @@ export async function handleCircle(action: string, form: FormData, payload: Payl
     const pointId = Number(text(form, 'point'))
     const targets = pointsInScope(all, user).filter((point) => !pointId || point.id === pointId)
     if (!targets.length) return back(next, pointId ? 'That question is not on this talk.' : 'This talk has no questions yet.')
+    const gate = portalAiGate({ role: user.role, realRole, usePortalAi: text(form, 'usePortalAi') === 'yes', confirmed: text(form, 'confirmAi') === 'yes' })
+    if (gate.error) return back(next, gate.error)
+    const client = gate.spend ? await clientForPortal(payload, scope.portal, user.role, realRole ?? user.role) : null
     let made = 0
     let engine = ''
     for (const point of targets) {
@@ -193,10 +197,7 @@ export async function handleCircle(action: string, form: FormData, payload: Payl
         tones,
         lengths,
         existing.totalDocs + point.id,
-        {
-          usePortalAi: text(form, 'usePortalAi') === 'yes',
-          client: text(form, 'usePortalAi') === 'yes' ? await clientForPortal(payload, scope.portal, user.role, realRole ?? user.role) : null,
-        },
+        { usePortalAi: gate.spend, client },
       )
       engine = result.engine
       for (const draft of result.drafts) {

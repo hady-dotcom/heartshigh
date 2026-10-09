@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { portalIdOf } from '@/lib/ids'
+import { presentPortal } from '@/lib/portal-public'
 import { loadPortal, type PortalDoc, type Session } from './context'
 import { READ_ONLY, blocked } from './viewas'
 
@@ -27,7 +28,7 @@ export async function portalOf(session: Session, req: Request): Promise<PortalDo
   if (!slug && session.user && session.user.role !== 'master') {
     const id = portalIdOf(session.user)
     const doc = id ? await session.payload.findByID({ collection: 'portals', id, overrideAccess: true, depth: 0 }).catch(() => null) : null
-    return (doc as PortalDoc | null) || null
+    return doc ? presentPortal(doc as PortalDoc) : null
   }
   if (!slug) return null
   const portal = await loadPortal(session.payload, slug)

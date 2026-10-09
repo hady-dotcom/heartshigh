@@ -350,6 +350,24 @@ export async function weakQuestions(payload: Payload): Promise<WeakQuestion[]> {
     .sort((a, b) => a.talk.localeCompare(b.talk) || a.prompt.localeCompare(b.prompt))
 }
 
+/** How many model calls Check questions will make: one per question that is not already drafted. */
+export function questionCheckCallCount(points: { id: number; prompt?: unknown }[], existing: ReadonlyArray<Record<string, unknown>>) {
+  const already = new Set(existing.map((row) => `${idOf(row.point)}|${textOf(row.prompt)}`))
+  let calls = 0
+  for (const point of points) {
+    const prompt = textOf(point.prompt)
+    if (!prompt || already.has(`${point.id}|${prompt}`)) continue
+    calls += 1
+  }
+  return calls
+}
+
+export async function questionChecksPending(payload: Payload) {
+  const points = await many(payload, 'engagement-points', { status: { not_equals: 'rejected' } }, 800)
+  const existing = await many(payload, 'question-rewrites', undefined, 800)
+  return questionCheckCallCount(points, existing)
+}
+
 /** Runs the question-value step over imported questions and stores suggested rewrites as drafts only. */
 export async function checkQuestions(payload: Payload, actor: FeedbackActor, client: LlmClient | null = null) {
   const live = client ? await (async () => { await ensureSteps(payload); return loadLiveStep(payload, 'question-value', client) })() : null
@@ -363,10 +381,9 @@ export async function checkQuestions(payload: Payload, actor: FeedbackActor, cli
   let paidFallback = ''
   for (const point of points) {
     const prompt = textOf(point.prompt)
-    if (!prompt) continue
+    if (!prompt || already.has(`${point.id}|${prompt}`)) continue
     const family = familyOfPoint({ kind: textOf(point.kind), family: textOf(point.family) })
     const talkTitle = lessonTitle.get(idOf(point.lesson) || 0) || 'A talk'
-    if (already.has(`${point.id}|${prompt}`)) continue
     const talk: TalkContext = { ...EMPTY_TALK, title: talkTitle, transcript: prompt, question: prompt, family: FAMILY_LABEL[family] }
     let ran: { output: unknown; problems: string[] }
     if (!live) {

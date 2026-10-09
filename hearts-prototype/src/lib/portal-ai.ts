@@ -116,9 +116,47 @@ export function publicAi(raw: unknown): PublicAiConnection {
   return { connected: true, kind: stored.kind, baseUrl: stored.baseUrl, model: stored.model, keyHint: stored.keyHint, mcpReady: false }
 }
 
-/** Learners and the master desk never spend. Portal staff may, on their own connection. */
+/** Only a portal admin may spend, and only on that portal’s own connection. Teachers, learners and the master desk never do. */
 export function canSpendPortalAi(role: string | null | undefined) {
-  return role === 'portal-admin' || role === 'teacher'
+  return role === 'portal-admin'
+}
+
+/** Rough price of one short chat completion on an OpenAI-compatible account. A guide, not a bill. */
+export function estimatePortalCalls(calls: number, chars = 800) {
+  const n = Math.max(0, Math.round(calls))
+  const inputTokens = Math.ceil(Math.min(Math.max(0, chars), 24_000) / 4) + 900
+  const outputTokens = 800
+  const usd = ((inputTokens * 0.15 + outputTokens * 0.6) / 1_000_000) * n
+  const money = usd < 0.01 ? 'under 1 cent' : `about $${usd < 0.1 ? usd.toFixed(3) : usd.toFixed(2)}`
+  const noun = n === 1 ? '1 call' : `${n} calls`
+  const label = n === 0
+    ? 'No portal AI call is needed for this run.'
+    : `This run makes ${noun} on your portal’s AI account, ${money}. This is a rough estimate, not a bill. Confirm before it is sent.`
+  return { calls: n, usd, label }
+}
+
+export function portalAiPerTalkLabel(perTalk = 1) {
+  const each = perTalk <= 1
+    ? 'Each talk in this run is one call on your portal’s AI account.'
+    : `Each talk in this run is ${perTalk} calls on your portal’s AI account, one for each step.`
+  return `${each} Confirm before it is sent. The figure is a rough estimate, not a bill.`
+}
+
+/**
+ * A ticked run spends only when a portal admin has confirmed the count.
+ * A teacher who ticks the box is refused. Everyone else stays on the built-in path.
+ */
+export function portalAiGate(input: { role?: string | null; realRole?: string | null; usePortalAi: boolean; confirmed: boolean }) {
+  const signedIn = input.realRole || input.role
+  if (signedIn === 'master' || input.role === 'master' || input.role === 'learner') return { spend: false, error: null }
+  if (signedIn === 'teacher' || input.role === 'teacher') {
+    if (input.usePortalAi) return { spend: false, error: 'AI runs are for the portal admin.' }
+    return { spend: false, error: null }
+  }
+  if (!input.usePortalAi) return { spend: false, error: null }
+  if (signedIn !== 'portal-admin' || input.role !== 'portal-admin') return { spend: false, error: null }
+  if (!input.confirmed) return { spend: false, error: 'Confirm the call count before this run on your portal’s AI account. Nothing was sent.' }
+  return { spend: true, error: null }
 }
 
 export async function completeOpenAiCompatible(

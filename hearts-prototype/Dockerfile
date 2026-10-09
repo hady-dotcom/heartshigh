@@ -12,7 +12,8 @@ RUN npm ci
 
 COPY . .
 
-# Captions. The pinned binary is downloaded here because bin/ is not copied into the image.
+# Captions. Latest stable yt-dlp (or YT_DLP_VERSION / YT_DLP_CHANNEL=nightly) is fetched here.
+# The script refuses a build older than its version floor. bin/ is not copied into the image.
 # Subtitles use --skip-download, so ffmpeg is not installed.
 RUN node scripts/get-yt-dlp.mjs
 

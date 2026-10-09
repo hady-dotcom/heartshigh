@@ -4,6 +4,7 @@ import { cache } from 'react'
 import { getPayload, type Payload } from 'payload'
 import config from '@payload-config'
 import { idOf, portalIdOf } from '@/lib/ids'
+import { presentPortal } from '@/lib/portal-public'
 import { cookieValue, loadViewAs, type EndReason, type ViewAs } from './viewas'
 
 export type SessionUser = {
@@ -280,7 +281,8 @@ export async function loadPortal(payload: Payload, slug: string) {
     limit: 1,
     where: { slug: { equals: slug } },
   })
-  return (found.docs[0] as PortalDoc | undefined) || null
+  const doc = found.docs[0] as PortalDoc | undefined
+  return doc ? presentPortal(doc) : null
 }
 
 export async function requirePortal(slug: string, roles?: SessionUser['role'][]) {

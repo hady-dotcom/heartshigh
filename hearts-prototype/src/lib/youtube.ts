@@ -172,6 +172,39 @@ export function hiddenFromLearners(note: string | null | undefined) {
   return status === 'failed' || status === 'waiting' || status === 'processing'
 }
 
+/**
+ * A transcript on a failed or dead-link film stays hidden. Learners see a part only when the film plays.
+ * A film that was waiting (the video exists, the captions did not) becomes visible once a transcript is attached.
+ */
+export function noteAfterTranscriptUpload(existingNote: string | null | undefined, fileName: string) {
+  const name = String(fileName || 'the file').slice(0, 80)
+  if (bringInStatus(existingNote) === 'failed') {
+    return {
+      hidden: true,
+      transcriptNote: bringInNote('failed', `A transcript from ${name} was saved. The film does not play, so learners do not see this part.`, bringInLang(existingNote)),
+      notice: 'The transcript is saved. This film does not play, so learners still do not see it.',
+    }
+  }
+  return { hidden: false, transcriptNote: `Uploaded from ${name}.`, notice: 'Transcript uploaded.' }
+}
+
+/** Try again keeps a speaker already named on the film when the line does not name a new one. */
+export function speakerForBringIn(input: { lineSpeaker?: string | null; courseSpeaker?: string | null; lessonSpeaker?: string | null; retry?: boolean }) {
+  const line = String(input.lineSpeaker || '').trim()
+  if (input.retry && !line) return String(input.lessonSpeaker || '').trim()
+  return speakerForLine(line, input.courseSpeaker, input.lessonSpeaker)
+}
+
+/** The flash after a bring-in. Clips are mentioned only when some were actually set aside. */
+export function bringInFlash(input: { saved: number; waiting: number; failed: number; skipped: number; clipsSetAside: number }) {
+  const bits = [`Brought in ${input.saved} film${input.saved === 1 ? '' : 's'}.`]
+  if (input.waiting) bits.push(`${input.waiting} waiting for a transcript.`)
+  if (input.failed) bits.push(`${input.failed} failed and can be tried again.`)
+  if (input.skipped) bits.push(`${input.skipped} already in the library, so not added again.`)
+  if (input.clipsSetAside > 0) bits.push('The previous film’s clips were set aside.')
+  return bits.join(' ')
+}
+
 export function isAwaitingTranscript(note: string | null | undefined) {
   return bringInStatus(note) === 'waiting'
 }
@@ -471,16 +504,16 @@ export async function transcriptFor(id: string, providers: TranscriptProvider[] 
   const tried: string[] = []
   const problems: string[] = []
   let duration: number | null = null
-  let outcome: CaptionOutcome = 'failed'
+  let outcome: CaptionOutcome | null = null
   for (const provider of providers) {
     tried.push(provider.name)
     const text = await provider.fetch(id, options)
     if (!duration && provider.lastDuration && provider.lastDuration > 0) duration = provider.lastDuration
-    if (provider.lastOutcome && OUTCOME_RANK[provider.lastOutcome] > OUTCOME_RANK[outcome]) outcome = provider.lastOutcome
+    if (provider.lastOutcome && (outcome === null || OUTCOME_RANK[provider.lastOutcome] > OUTCOME_RANK[outcome])) outcome = provider.lastOutcome
     if (text && text.trim()) return { transcript: text, provider: provider.name, tried, problems, duration, outcome: 'captions' as const }
     if (provider.lastProblem) problems.push(provider.lastProblem)
   }
-  return { transcript: null, provider: null, tried, problems, duration, outcome }
+  return { transcript: null, provider: null, tried, problems, duration, outcome: outcome ?? 'failed' }
 }
 
 export async function ingestYoutubeUrl(

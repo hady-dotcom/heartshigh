@@ -8,7 +8,7 @@ import { idOf, portalIdOf } from '@/lib/ids'
 import { clipWords } from '@/lib/sentences'
 import { extractWithFallback } from '@/lib/llm'
 import { clientForPortal } from './portal-ai'
-import { assembleConnection, mcpConnectorStatus, openPortalKey, parseStored } from '@/lib/portal-ai'
+import { assembleConnection, mcpConnectorStatus, openPortalKey, parseStored, portalAiGate } from '@/lib/portal-ai'
 import { defaultPlanName, flattenSlots, planAcrossDays, plural, studyDates } from '@/lib/schedule'
 import { sortParts } from '@/lib/part-order'
 import { lessonsByCourseOrder } from '@/lib/slot-course'
@@ -22,7 +22,7 @@ import { gateAuth, tooManyAnswers } from '@/lib/auth-gate'
 import { clientIp, hit, hitAnswer, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
 import { slugProblem } from '@/lib/text-safety'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
-import { bringInNote, captionLang, cleanedTimedTranscript, ingestYoutubeUrl, isAwaitingTranscript, speakerForLine, splitBringInLines } from '@/lib/youtube'
+import { bringInFlash, bringInNote, bringInStatus, captionLang, cleanedTimedTranscript, ingestYoutubeUrl, isAwaitingTranscript, noteAfterTranscriptUpload, speakerForBringIn, splitBringInLines } from '@/lib/youtube'
 import { withWorkLock } from '@/lib/work-lock'
 import { now } from '@/lib/clock'
 import { normaliseOption, startingClause } from '@/lib/placing'
@@ -976,6 +976,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       const unit = units.docs[0]
       let orderBase = (await payload.count({ collection: 'lessons', overrideAccess: true, where: { course: { equals: course.id } } })).totalDocs
       const outcomes: string[] = []
+      let clipsSetAside = 0
       let saved = 0
       let failed = 0
       let waiting = 0
@@ -984,7 +985,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       for (let index = 0; index < lines.length; index++) {
         const line = lines[index]
         const url = line.link
-        const speaker = speakerForLine(line.speaker, course.speaker, lessonSpeaker)
+        const speaker = speakerForBringIn({ lineSpeaker: line.speaker, courseSpeaker: course.speaker, lessonSpeaker, retry })
         const useOpen = index === 0 && fillOpen
         let parsedUrl: URL | null = null
         try {
@@ -1045,12 +1046,14 @@ async function handleForm(req: Request, form: FormData, session: Session) {
           for (const cut of oldCuts.docs) {
             if ((cut as { status?: string }).status !== 'rejected') {
               await payload.update({ collection: 'cuts', id: cut.id, overrideAccess: true, data: { status: 'rejected' } })
+              clipsSetAside += 1
             }
           }
           const oldLadder = await payload.find({ collection: 'ladder-items', overrideAccess: true, limit: 200, where: { lesson: { equals: targetId } } })
           for (const item of oldLadder.docs) {
             if ((item as { status?: string }).status !== 'rejected') {
               await payload.update({ collection: 'ladder-items', id: item.id, overrideAccess: true, data: { status: 'rejected' } })
+              clipsSetAside += 1
             }
           }
         }
@@ -1167,12 +1170,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         }
       }
       if (!saved && !waiting && failed && !skipped) return redirectTo(req, next, outcomes[0] || 'Those films could not be brought in.')
-      const bits = [`Brought in ${saved} film${saved === 1 ? '' : 's'}.`]
-      if (waiting) bits.push(`${waiting} waiting for a transcript.`)
-      if (failed) bits.push(`${failed} failed and can be tried again.`)
-      if (skipped) bits.push(`${skipped} already in the library, so not added again.`)
-      if (replaceFilm) bits.push('The previous film’s clips were set aside.')
-      return redirectTo(req, next, undefined, bits.join(' '))
+      return redirectTo(req, next, undefined, bringInFlash({ saved, waiting, failed, skipped, clipsSetAside }))
     })
   }
 
@@ -1193,6 +1191,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     }
     const transcript = await file.text()
     if (!transcript.trim()) return redirectTo(req, next, 'That file was empty.')
+    const attached = noteAfterTranscriptUpload((owned.lesson as { transcriptNote?: string }).transcriptNote, file.name)
     await payload.update({
       collection: 'lessons',
       id: Number(text(form, 'lesson')),
@@ -1200,10 +1199,10 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       data: {
         transcript,
         transcriptSource: 'upload',
-        transcriptNote: `Uploaded from ${file.name}.`,
+        transcriptNote: attached.transcriptNote,
       },
     })
-    return redirectTo(req, next, undefined, 'Transcript uploaded.')
+    return redirectTo(req, next, undefined, attached.notice)
   }
 
   if (action === 'upload-transcript-file') {
@@ -1233,6 +1232,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const lessonId = Number(text(form, 'lesson'))
     const lesson = await findDoc(payload, 'lessons', lessonId)
     if (!lesson) return redirectTo(req, next, 'That talk could not be found.')
+    if (bringInStatus((lesson as { transcriptNote?: string }).transcriptNote) === 'failed') {
+      return redirectTo(req, next, 'This film does not play, so a transcript does not show it to learners.')
+    }
     if (!isAwaitingTranscript((lesson as { transcriptNote?: string }).transcriptNote) && text(form, 'force') !== 'yes') {
       return redirectTo(req, next, 'That talk is not waiting for a transcript.')
     }
@@ -1266,7 +1268,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const transcript = (lesson as { transcript?: string }).transcript || ''
     if (!transcript.trim()) return redirectTo(req, next, 'This lesson has no transcript yet. Paste a YouTube link that has captions, or upload a .vtt, .srt or .txt file.')
     const portalForAi = user.role === 'portal-admin' ? idOf((owned.course as { portal?: unknown } | null)?.portal) : null
-    const client = text(form, 'usePortalAi') === 'yes' ? await clientForPortal(payload, portalForAi, user.role, session.actor?.role || user.role) : null
+    const gate = portalAiGate({ role: user.role, realRole: session.actor?.role, usePortalAi: text(form, 'usePortalAi') === 'yes', confirmed: text(form, 'confirmAi') === 'yes' })
+    if (gate.error) return redirectTo(req, next, gate.error)
+    const client = gate.spend ? await clientForPortal(payload, portalForAi, user.role, session.actor?.role || user.role) : null
     const result = await extractWithFallback(transcript, await clauseCards(payload), { client })
     const old = await payload.find({ collection: 'cuts', overrideAccess: true, limit: 200, where: { lesson: { equals: lessonId } } })
     const keptCuts = rowsKeptOnExtract(old.docs as { id: number; status?: string | null; start?: number | null; end?: number | null }[])

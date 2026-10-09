@@ -2,6 +2,7 @@ import type { Payload } from 'payload'
 import { FEATURE_UNAVAILABLE, featureOn, type FeatureKey, type FeatureSource } from '@/lib/features'
 import { json } from './api'
 import { idOf } from '@/lib/ids'
+import { presentPortal } from '@/lib/portal-public'
 import type { PortalDoc } from './context'
 
 export { adoptPacksOnAccessCodes, ensurePackAdopted } from './pack-adopt'
@@ -64,5 +65,5 @@ export async function adoptLibraryCourses(
 
 export async function loadPortalById(payload: Payload, id: number): Promise<PortalDoc | null> {
   const doc = await payload.findByID({ collection: 'portals', id, overrideAccess: true, depth: 0 }).catch(() => null)
-  return (doc as PortalDoc | null) || null
+  return doc ? presentPortal(doc as PortalDoc) : null
 }

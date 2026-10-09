@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Payload } from 'payload'
-import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
+import { AppFrame, Back, Flash, Hidden } from '@/components/app/shell'
+import { LearnerTabBar } from '@/components/app/learner-bar'
 import { EmptyState } from '@/components/app/empty'
 import { GardenPath } from '@/components/app/garden-path'
 import { Flower, LockIcon } from '@/components/icons'
@@ -301,7 +302,7 @@ export async function GardenScreen({ payload, user, portal, base, query }: Ctx) 
         </section>
         </div>
       </div>
-      <TabBar base={base} active="garden" portal={portal} unread={unread} />
+      <LearnerTabBar base={base} active="garden" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -318,7 +319,7 @@ export function Frame({ base, title, testId, children, unread, dark, evening, po
           </>
         )}
       </div>
-      <TabBar base={base} active="garden" portal={portal} unread={unread} dark={dark} evening={evening} />
+      <LearnerTabBar base={base} active="garden" portal={portal} unread={unread} dark={dark} evening={evening} />
     </AppFrame>
   )
 }

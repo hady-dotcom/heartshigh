@@ -54,6 +54,9 @@ export async function POST(req: Request) {
   const portalId = signedIn === 'master' || user.role === 'master' ? null : portalIdOf(user)
   const client = await clientForPortal(payload, portalId, user.role, signedIn)
   const action = text(form, 'action')
+  if ((action === 'try' || action === 'start-job') && client && text(form, 'confirmAi') !== 'yes') {
+    return redirectTo(req, next, 'Confirm the call count before this run on your portal’s AI account. Nothing was sent.')
+  }
   try {
     await ensureSteps(payload)
     if (action === 'save-version') {

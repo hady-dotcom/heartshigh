@@ -169,7 +169,7 @@ Everything is bundled in `content/scripture/`, so Harvest works offline.
 
 `src/lib/youtube.ts` tries each provider in turn and uses the first transcript it gets:
 
-1. **yt-dlp.** `npm run setup` puts a pinned release (2025.09.26, checked against its published SHA-256) in `bin/`; `node scripts/get-yt-dlp.mjs` does just that step. It asks YouTube as the `web_embedded` player, which servers are blocked from least. When YouTube still blocks the network, the error says so in plain words. Set `YT_DLP_PATH` to use another copy, or `HEARTS_DISABLE_YTDLP=1` to skip it.
+1. **yt-dlp.** `npm run setup` fetches the latest stable release into `bin/` (nothing older than the floor in `scripts/get-yt-dlp.mjs`, checked against that release’s SHA2-256SUMS). `YT_DLP_VERSION` pins a tag and `YT_DLP_CHANNEL=nightly` tracks the nightly builds. When YouTube still blocks the network, the error says so in plain words. Set `YT_DLP_PATH` to use another copy, or `HEARTS_DISABLE_YTDLP=1` to skip it.
 2. **Watch page.** Reads the caption track from the YouTube watch page, as the `youtube-transcript` package does.
 3. **Your own service**, when `TRANSCRIPT_SERVICE_URL` is set. Handy for a yt-dlp box on a home connection that YouTube does not block.
 

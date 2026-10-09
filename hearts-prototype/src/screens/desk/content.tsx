@@ -302,7 +302,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                     </BusyForm>
                     {(bringInStatus(str(lesson.transcriptNote)) === 'failed' || bringInStatus(str(lesson.transcriptNote)) === 'waiting') && (youtubeId || str(lesson.sourceUrl)) ? (
                       <BusyForm action="/api/hearts" method="post" className="actions">
-                        <Hidden fields={{ action: 'ingest', lesson: lesson.id, next: here, retry: 'yes', url: youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : str(lesson.sourceUrl), fetchTranscript: 'yes', captionLang: bringInLang(str(lesson.transcriptNote)) }} />
+                        <Hidden fields={{ action: 'ingest', lesson: lesson.id, next: here, retry: 'yes', url: `${youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : str(lesson.sourceUrl)}${str(lesson.speaker) ? ` | ${str(lesson.speaker)}` : ''}`, fetchTranscript: 'yes', captionLang: bringInLang(str(lesson.transcriptNote)) }} />
                         <button className="btn ghost small" type="submit" data-testid="bring-in-retry">Try again</button>
                         <HelpTip topic="bring-in-retry">{TOOL.bringInRetry}</HelpTip>
                       </BusyForm>
@@ -315,7 +315,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                     <form action="/api/hearts" method="post">
                       <Hidden fields={{ action: 'extract', lesson: lesson.id, next: here }} />
                       <p className="hint" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Extractor <HelpTip topic="extract">{TOOL.extract}</HelpTip></p>
-                      <PortalAiChoice connected={publicAi(portal?.aiConnection).connected} master={user.role === 'master'} settingsHref={portal ? `/p/${portal.slug}/admin/settings` : undefined} />
+                      <PortalAiChoice connected={publicAi(portal?.aiConnection).connected} master={user.role === 'master'} teacher={user.role === 'teacher'} calls={1} settingsHref={portal ? `/p/${portal.slug}/admin/settings` : undefined} />
                       <button className="btn block" style={{ width: '100%' }} data-testid="extract-submit" type="submit">Run the extractor</button>
                       <p className="hint" style={{ marginTop: 6 }}>Finds short moments with a hook, a turn and a landing line. Quotes are word for word and timings come from the transcript. Running it again keeps clips you have already approved and replaces the drafts.</p>
                     </form>

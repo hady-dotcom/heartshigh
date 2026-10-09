@@ -95,9 +95,9 @@ export const TOOL: Record<string, string> = {
   filters:
     'Filters narrow the list to a door, a course, a date or a cohort. Apply after you change them. Private answers stay counted and hidden.',
   aiSummary:
-    'A summary is a draft of themes in the shared answers. With this portal’s own AI account connected, you can tick the box and that account is billed. Include it in the PDF only when you have read it. It never quotes a private answer.',
+    'A summary is a draft of themes in the shared answers. A portal admin can tick the box when this portal’s own account is connected, and must confirm the one call first. Include it in the PDF only when you have read it. It never quotes a private answer.',
   weakQuestions:
-    'This check flags questions whose answers would be yes or no, or of little use to a sheikh. With this portal’s own AI account connected, you can tick the box and that account is billed. Rewrites are drafts. Nothing overwrites the live question until you say so.',
+    'This check flags questions whose answers would be yes or no, or of little use to a sheikh. With this portal’s own AI account connected, a portal admin can tick the box: the page says how many calls that is, and you confirm before they are sent. Rewrites are drafts. Nothing overwrites the live question until you say so.',
   mix:
     'The mix is how the shelf balances quieter scales, steady ones and a new door. The three numbers are scaled to 100. The usual mix is 60, 25 and 15.',
   compassScores:
@@ -133,15 +133,15 @@ export const TOOL: Record<string, string> = {
   captionLang:
     'This is the caption language to ask YouTube for. English is the usual choice. Auto-captions in that language are used when there is no manual track.',
   bringInRetry:
-    'Try again runs the same bring-in on this row and keeps the caption language you chose. Use it when YouTube blocked the captions or the link failed. It does not start a second part.',
+    'Try again runs the same bring-in on this row, keeps the caption language, and keeps a speaker named on this film. Use it when YouTube blocked the captions or the link failed. It does not start a second part.',
   replaceFilm:
     'Replace this film changes the open part to the new link. Clips from the old film are set aside, including ones you already approved. Leave it unticked to add the links as new parts.',
   transcriptFiles:
     'Upload the timed transcript files the master sheet points at. Each file is stored and its media number is shown, so you can paste that number into the sheet. You do not need the raw data console.',
   extract:
-    'Run the extractor drafts clips from the transcript, and clips you have already approved stay. The built-in extractor needs no account. Tick the portal AI box only when a portal admin has connected one in Settings; that run is billed to the portal, not to HEARTS.',
+    'Run the extractor drafts clips from the transcript, and clips you have already approved stay. The built-in extractor needs no account. A portal admin can tick the portal AI box, confirm the one call, and that run is billed to the portal.',
   portalAi:
-    'This box sends the run to your portal’s own AI account, the address and key a portal admin saved in Settings. HEARTS does not pay for it, and learners never start a run. Leave it clear and the built-in path is used.',
+    'This box sends the run to your portal’s own AI account, the address and key saved in Settings. The line beside it says how many calls that is and a rough cost, and you confirm before anything is sent. Only a portal admin can start a run. HEARTS does not pay for it.',
   sheetScope:
     'Scope says what the workbook covers: the whole library, this portal’s own courses, or one course. Portal exports skip library courses, so they can be empty. The blank template is always safe to download.',
   sheetPreview:
@@ -155,13 +155,13 @@ export const TOOL: Record<string, string> = {
   helpContacts:
     'Help contacts are shown on the help screen. Add a local line if you have one. With none of your own, the national lines are shown.',
   circleTones:
-    'Tones and lengths shape the drafted circle answers. Tick the portal AI box only when this portal’s own account is connected; otherwise the built-in drafts are used. Every draft still goes through the same word checks as the editor. You can edit, switch off or delete any of them.',
+    'Tones and lengths shape the drafted circle answers. A portal admin can tick the portal AI box when an account is connected, and must confirm the call count first. Otherwise the built-in drafts are used. You can edit, switch off or delete any of them.',
   circleBulk:
     'All on and all off switch the circle answers for this talk or the whole course. They do not delete the words. Real shared answers are never switched off from here.',
   aiGrant:
     'This lets portal admins edit the steps, or takes that away. They can always read the list. A run uses that portal’s own AI account when one is connected in Settings.',
   aiPrompt:
-    'The prompt is the instruction sent when this portal’s own AI account is connected. Saving writes a new version; the live one stays until you mark this one live. Try it on a single talk before you roll it out. With no account connected, the try uses the built-in draft.',
+    'The prompt is the instruction sent when this portal’s own AI account is connected. Saving writes a new version; the live one stays until you mark this one live. Try it on a single talk before you roll it out, and confirm the two calls when this portal’s account is connected. With no account connected, the try uses the built-in draft.',
   adopt:
     'Link adds this library course to the portal. Learners see it once a code or grant includes it. The original stays as the master desk set it.',
   deactivate:

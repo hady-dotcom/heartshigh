@@ -123,7 +123,7 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
   const mine = circle.filter((row) => user.role === 'master' || !idOf(row.portal) || idOf(row.portal) === scope.portal)
   const aiPortal = scope.portal ? ((await payload.findByID({ collection: 'portals', id: scope.portal, depth: 0, overrideAccess: true }).catch(() => null)) as { aiConnection?: unknown; slug?: string } | null) : null
   const ai = publicAi(aiPortal?.aiConnection)
-  const aiChoice = <PortalAiChoice connected={ai.connected} master={user.role === 'master'} settingsHref={aiPortal?.slug ? `/p/${aiPortal.slug}/admin/settings` : undefined} />
+  const aiSettings = aiPortal?.slug ? `/p/${aiPortal.slug}/admin/settings` : undefined
   return (
     <div data-testid="circle-talk-detail" data-lesson={lesson.id}>
       <p><Link href={here} className="hint">‹ All talks</Link></p>
@@ -140,7 +140,7 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
         </header>
         <form className="body form circle-generate" action="/api/hearts" method="post" data-testid="circle-generate-all">
           <Hidden fields={{ action: 'circle-generate', lesson: lesson.id, next: back }} />
-          {aiChoice}
+          <PortalAiChoice connected={ai.connected} master={user.role === 'master'} teacher={user.role === 'teacher'} calls={points.length} settingsHref={aiSettings} />
           <b>Draft answers for every question on this talk <HelpTip topic="circle-tones">{TOOL.circleTones}</HelpTip></b>
           <GenerateFields />
           <div className="actions"><button className="btn ink" type="submit" data-testid="circle-generate-all-submit">Draft circle answers</button></div>
@@ -204,7 +204,7 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
                 </form>
                 <form className="form" action="/api/hearts" method="post" data-testid="circle-generate-one">
                   <Hidden fields={{ action: 'circle-generate', lesson: lesson.id, point: point.id, next: back }} />
-                  <PortalAiChoice connected={ai.connected} master={user.role === 'master'} settingsHref={aiPortal?.slug ? `/p/${aiPortal.slug}/admin/settings` : undefined} />
+                  <PortalAiChoice connected={ai.connected} master={user.role === 'master'} teacher={user.role === 'teacher'} calls={1} settingsHref={aiSettings} />
                   <b>Draft more for this question</b>
                   <GenerateFields count={3} />
                   <button className="btn ghost small" type="submit">Draft</button>

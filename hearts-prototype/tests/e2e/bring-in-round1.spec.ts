@@ -439,6 +439,51 @@ test.describe('round 1 bring-in', () => {
     await shot(page, '16-concurrent-sheet')
     await master.dispose()
   })
+
+  test('learner and teacher pages do not receive the portal AI connection', async ({ page }) => {
+    test.setTimeout(180_000)
+    const secret = 'sk-leak-probe-9f3c7a'
+    const address = 'https://leak-probe.invalid/v1'
+    await page.setViewportSize(DESK)
+    await signIn(page, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin/settings')
+    await page.getByTestId('portal-ai-url').fill(address)
+    await page.getByTestId('portal-ai-model').fill('leak-probe-model')
+    await page.getByTestId('portal-ai-key').fill(secret)
+    await page.getByTestId('portal-ai-save').click()
+    await expect(page.getByTestId('portal-ai-connected')).toContainText('leak-probe.invalid')
+
+    const master = await masterApi()
+    const listed = JSON.stringify(await (await master.get('/api/portals?where[slug][equals]=east-london&limit=5&depth=0')).json())
+    expect(listed).not.toContain('aiConnection')
+    expect(listed).not.toContain('keyCipher')
+    expect(listed).not.toContain(secret)
+    await master.dispose()
+
+    const routes = ['/p/east-london', '/p/east-london/garden', '/p/east-london/garden/harvest', '/p/east-london/me', '/p/east-london/lanes']
+    const assertClean = async (who: string) => {
+      for (const route of routes) {
+        await page.goto(route)
+        await expect(page.getByTestId('tabbar'), `${who} ${route}`).toBeVisible()
+        expect(page.url(), `${who} ${route}`).toContain(route)
+        const html = await page.content()
+        expect(html, `${who} ${route} aiConnection`).not.toContain('aiConnection')
+        expect(html, `${who} ${route} keyCipher`).not.toContain('keyCipher')
+        expect(html, `${who} ${route} key`).not.toContain(secret)
+        expect(html, `${who} ${route} address`).not.toContain('leak-probe.invalid')
+        expect(html, `${who} ${route} model`).not.toContain('leak-probe-model')
+        expect(html, `${who} ${route} emails`).not.toContain('notificationEmails')
+      }
+    }
+    await assertClean('admin')
+    await page.context().clearCookies()
+    await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london')
+    await assertClean('learner')
+    await page.context().clearCookies()
+    await signIn(page, 'elm-teacher@hearts.test', 'portal-teacher', '/p/east-london')
+    await assertClean('teacher')
+    report.portalSecretPages = routes
+    saveReport()
+  })
 })
 
 mkdirSync(ARTIFACTS, { recursive: true })

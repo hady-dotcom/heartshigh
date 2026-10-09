@@ -4,7 +4,8 @@ import { DoorChips } from '@/components/app/doors'
 import { notFound, redirect } from 'next/navigation'
 import { CoursePlayer, type PointView, type SwarmItem } from '@/components/app/course-player'
 import { Avatar, FollowButton } from '@/components/app/feed'
-import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
+import { AppFrame, Back, Flash, Hidden } from '@/components/app/shell'
+import { LearnerTabBar } from '@/components/app/learner-bar'
 import { PlayIcon } from '@/components/icons'
 import { clockEnabled, now } from '@/lib/clock'
 import { doorLabel, type Door } from '@/lib/doors'
@@ -112,7 +113,7 @@ export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx,
           </form>
         </section>
       </div>
-      <TabBar base={base} active="home" portal={portal} unread={unread} />
+      <LearnerTabBar base={base} active="home" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -179,7 +180,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
           )
         })}
       </div>
-      <TabBar base={base} active="lanes" unread={unread} />
+      <LearnerTabBar base={base} active="lanes" unread={unread} />
     </AppFrame>
   )
 }
@@ -438,7 +439,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           </details>
         ) : null}
       </div>
-      <TabBar base={base} active="lanes" portal={portal} unread={unread} />
+      <LearnerTabBar base={base} active="lanes" portal={portal} unread={unread} />
     </AppFrame>
   )
 }

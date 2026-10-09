@@ -125,12 +125,23 @@ export const Portals: CollectionConfig = {
     {
       name: 'aiConnection',
       type: 'json',
+      // The local API with overrideAccess still reads this for the desk. REST and GraphQL never return the key.
+      access: { read: () => false, create: () => false, update: () => false },
       admin: {
         description:
           'This portal’s own AI account: an OpenAI-compatible address and an encrypted key. Empty means the desk uses the built-in path. The master desk never reads it to place a call.',
       },
     },
   ],
+  hooks: {
+    afterRead: [
+      ({ doc, req }) => {
+        if (req?.payloadAPI === 'local') return doc
+        if (doc && typeof doc === 'object') delete (doc as { aiConnection?: unknown }).aiConnection
+        return doc
+      },
+    ],
+  },
 }
 
 /**
