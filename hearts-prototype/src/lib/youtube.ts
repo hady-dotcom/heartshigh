@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
 import { youtubeIdFromUrl } from './extractor'
+import { parseTranscript } from './transcript'
 
 const execFileAsync = promisify(execFile)
 
@@ -23,11 +24,13 @@ export type TranscriptProvider = {
   fetch(id: string): Promise<string | null>
   /** Why the last fetch came back empty, in plain English, when the provider can tell. */
   lastProblem?: string | null
+  /** Seconds printed by the provider, when it could read a length without a caption file. */
+  lastDuration?: number | null
 }
 
 export type YoutubeIngest =
-  | { ok: true; meta: YoutubeMeta | null; id: string; transcript: string; provider: string; tried: string[] }
-  | { ok: false; meta: YoutubeMeta | null; id: string | null; error: string; needsTranscript: boolean; tried: string[] }
+  | { ok: true; meta: YoutubeMeta | null; id: string; transcript: string; provider: string; tried: string[]; durationSeconds: number | null }
+  | { ok: false; meta: YoutubeMeta | null; id: string | null; error: string; needsTranscript: boolean; tried: string[]; durationSeconds: number | null }
 
 export function looksLikeYoutube(input: string) {
   try {
@@ -76,47 +79,176 @@ export function ytDlpBinary() {
   return existsSync(local) ? local : 'yt-dlp'
 }
 
-/** The arguments for one caption fetch. The web_embedded player client is the one YouTube blocks least from servers. */
+/**
+ * Arguments for one caption fetch.
+ * `--ignore-no-formats-error` lets captions through when YouTube refuses a video format.
+ * No player client is forced: a pinned client was what made every link say the format was unavailable.
+ */
 export function ytDlpArgs(id: string, dir: string) {
   return [
-    '--skip-download', '--write-subs', '--write-auto-subs', '--sub-langs', 'en.*,en', '--sub-format', 'vtt',
-    '--extractor-args', 'youtube:player_client=web_embedded',
-    '-o', path.join(dir, '%(id)s.%(ext)s'), `https://www.youtube.com/watch?v=${id}`,
+    '--skip-download',
+    '--ignore-no-formats-error',
+    '--write-subs',
+    '--write-auto-subs',
+    '--sub-langs', 'en-orig,en.*,en',
+    '--sub-format', 'vtt',
+    '--print', '%(duration)s',
+    '-o', path.join(dir, '%(id)s.%(ext)s'),
+    `https://www.youtube.com/watch?v=${id}`,
   ]
+}
+
+/** First positive number yt-dlp printed for %(duration)s. `NA` is not a length. */
+export function parseDurationPrint(stdout: string): number | null {
+  for (const line of stdout.split(/\r?\n/)) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.toUpperCase() === 'NA') continue
+    if (!/^\d+(\.\d+)?$/.test(trimmed)) continue
+    const seconds = Math.round(Number(trimmed))
+    return seconds > 0 ? seconds : null
+  }
+  return null
+}
+
+/** The speaker chosen in the CMS. The YouTube channel name is never written over it. */
+export function chosenSpeaker(courseSpeaker?: string | null, lessonSpeaker?: string | null) {
+  const course = String(courseSpeaker || '').trim()
+  if (course) return course
+  return String(lessonSpeaker || '').trim()
 }
 
 /** A plain-English reason from yt-dlp's error output. */
 export function ytDlpProblem(stderr: string, missing = false) {
   if (missing) return 'yt-dlp is not installed. Run npm run setup (it puts a pinned copy in bin/) or set YT_DLP_PATH.'
   if (/not a bot|sign in to confirm|429|too many requests|blocked|forbidden|403/i.test(stderr)) {
-    return 'YouTube blocked yt-dlp from this network, even with the web_embedded player. Run the import from a home connection, or set TRANSCRIPT_SERVICE_URL to a caption service that YouTube does not block.'
+    return 'YouTube blocked yt-dlp from this network. Run the bring-in from a home connection, or set TRANSCRIPT_SERVICE_URL to a caption service that YouTube does not block.'
   }
   if (/no subtitles|there are no subtitles|no captions/i.test(stderr)) return 'This film has no English captions on YouTube.'
   const line = stderr.split('\n').map((row) => row.trim()).filter((row) => /^ERROR/.test(row))[0]
   return line ? `yt-dlp could not fetch the captions: ${line.replace(/^ERROR:\s*/, '').slice(0, 200)}` : 'yt-dlp could not fetch the captions.'
 }
 
+function pickCaptionFile(files: string[]) {
+  return (
+    files.find((file) => /\.en-orig\.vtt$/i.test(file)) ||
+    files.find((file) => /\.en\.vtt$/i.test(file)) ||
+    files.find((file) => file.endsWith('.vtt')) ||
+    null
+  )
+}
+
+/** json3 events become WebVTT cues. Word offsets stay as `<c>` tags so the timing is not flattened. */
+export function json3ToVtt(raw: string): string | null {
+  let body: { events?: { tStartMs?: number; dDurationMs?: number; segs?: { utf8?: string; tOffsetMs?: number }[] }[] }
+  try {
+    body = JSON.parse(raw) as typeof body
+  } catch {
+    return null
+  }
+  const segments: { start: number; end: number; text: string }[] = []
+  for (const event of body.events || []) {
+    const segs = event.segs || []
+    const plain = segs.map((seg) => seg.utf8 || '').join('').replace(/\n/g, ' ').trim()
+    if (!plain) continue
+    const start = (event.tStartMs || 0) / 1000
+    const end = start + Math.max(0.2, (event.dDurationMs || 2000) / 1000)
+    const timed = segs.some((seg) => typeof seg.tOffsetMs === 'number')
+    const text = timed
+      ? segs
+          .map((seg) => {
+            const word = (seg.utf8 || '').replace(/\n/g, ' ')
+            if (!word.trim()) return ''
+            const at = start + (seg.tOffsetMs || 0) / 1000
+            return `<c t="${at.toFixed(3)}">${word}</c>`
+          })
+          .join('')
+      : plain
+    segments.push({ start, end, text })
+  }
+  return segments.length ? segmentsToVtt(segments) : null
+}
+
+export function durationFromTranscript(text: string): number | null {
+  const cues = parseTranscript(text).cues
+  if (!cues.length) return null
+  const end = cues.reduce((max, cue) => Math.max(max, cue.end), 0)
+  return end > 0 ? Math.round(end) : null
+}
+
+/** Length from the music player when yt-dlp prints NA. No captions come back from this call. */
+export async function fetchInnertubeDuration(id: string): Promise<number | null> {
+  try {
+    const response = await fetch('https://music.youtube.com/youtubei/v1/player?prettyPrint=false', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        videoId: id,
+        context: { client: { clientName: 'WEB_REMIX', clientVersion: '1.20251001.01.00' } },
+      }),
+      signal: AbortSignal.timeout(12_000),
+    })
+    if (!response.ok) return null
+    const body = (await response.json()) as { videoDetails?: { lengthSeconds?: string } }
+    const seconds = Number(body.videoDetails?.lengthSeconds)
+    return Number.isFinite(seconds) && seconds > 0 ? Math.round(seconds) : null
+  } catch {
+    return null
+  }
+}
+
 /** 1. yt-dlp, from bin/ (setup fetches a pinned copy) or the PATH. */
 export const ytDlpProvider: TranscriptProvider = {
   name: 'yt-dlp',
   lastProblem: null,
+  lastDuration: null,
   async fetch(id) {
     ytDlpProvider.lastProblem = null
+    ytDlpProvider.lastDuration = null
     if (process.env.HEARTS_DISABLE_YTDLP === '1') return null
     const dir = await mkdtemp(path.join(tmpdir(), 'hearts-ytdlp-'))
+    let stdout = ''
+    let stderr = ''
+    let code: string | number | undefined
     try {
-      await execFileAsync(ytDlpBinary(), ytDlpArgs(id, dir), { timeout: 60_000 })
-      const files = (await readdir(dir)).filter((file) => file.endsWith('.vtt'))
-      const preferred = files.find((file) => /\.en\.vtt$/.test(file)) || files[0]
-      if (!preferred) {
+      try {
+        const result = await execFileAsync(ytDlpBinary(), ytDlpArgs(id, dir), { timeout: 90_000, maxBuffer: 8 * 1024 * 1024 })
+        stdout = String(result.stdout || '')
+        stderr = String(result.stderr || '')
+      } catch (error) {
+        const failure = error as { code?: string | number; stderr?: string | Buffer; stdout?: string | Buffer }
+        stdout = String(failure.stdout || '')
+        stderr = String(failure.stderr || '')
+        code = failure.code
+      }
+      ytDlpProvider.lastDuration = parseDurationPrint(stdout)
+      const files = await readdir(dir).catch(() => [] as string[])
+      const vttName = pickCaptionFile(files)
+      let text: string | null = null
+      if (vttName) {
+        const raw = await readFile(path.join(dir, vttName), 'utf8')
+        text = isCaptionText(raw) ? raw : null
+      } else {
+        const json3 = files.find((file) => file.endsWith('.json3'))
+        if (json3) {
+          const converted = json3ToVtt(await readFile(path.join(dir, json3), 'utf8'))
+          text = converted && isCaptionText(converted) ? converted : null
+        }
+      }
+      if (text) return text
+      if (code === 'ENOENT') {
+        ytDlpProvider.lastProblem = ytDlpProblem('', true)
+        return null
+      }
+      const blocked = /not a bot|sign in to confirm|429|too many requests|blocked|forbidden|403/i.test(stderr)
+      if (blocked) {
+        ytDlpProvider.lastProblem = ytDlpProblem(stderr)
+        return null
+      }
+      if (!code) {
         ytDlpProvider.lastProblem = 'This film has no English captions on YouTube.'
         return null
       }
-      const text = await readFile(path.join(dir, preferred), 'utf8')
-      return isCaptionText(text) ? text : null
-    } catch (error) {
-      const failure = error as { code?: string; stderr?: string }
-      ytDlpProvider.lastProblem = ytDlpProblem(String(failure.stderr || ''), failure.code === 'ENOENT')
+      ytDlpProvider.lastProblem = ytDlpProblem(stderr)
       return null
     } finally {
       await rm(dir, { recursive: true, force: true }).catch(() => {})
@@ -199,18 +331,25 @@ export const defaultProviders = [ytDlpProvider, watchPageProvider, serviceProvid
 export async function transcriptFor(id: string, providers: TranscriptProvider[] = defaultProviders) {
   const tried: string[] = []
   const problems: string[] = []
+  let duration: number | null = null
   for (const provider of providers) {
     tried.push(provider.name)
     const text = await provider.fetch(id)
-    if (text && text.trim()) return { transcript: text, provider: provider.name, tried, problems }
+    if (!duration && provider.lastDuration && provider.lastDuration > 0) duration = provider.lastDuration
+    if (text && text.trim()) return { transcript: text, provider: provider.name, tried, problems, duration }
     if (provider.lastProblem) problems.push(provider.lastProblem)
   }
-  return { transcript: null, provider: null, tried, problems }
+  return { transcript: null, provider: null, tried, problems, duration }
 }
 
 export async function ingestYoutubeUrl(
   input: string,
-  options: { providers?: TranscriptProvider[]; meta?: (id: string) => Promise<YoutubeMeta | null | undefined> } = {},
+  options: {
+    providers?: TranscriptProvider[]
+    meta?: (id: string) => Promise<YoutubeMeta | null | undefined>
+    /** Pass null to skip the music-player length lookup. Omit it and the live lookup runs. */
+    duration?: ((id: string) => Promise<number | null>) | null
+  } = {},
 ): Promise<YoutubeIngest> {
   const id = youtubeIdFromUrl(input)
   if (!id) {
@@ -223,13 +362,20 @@ export async function ingestYoutubeUrl(
         : 'That does not look like a YouTube link. Paste a watch, share or youtu.be link.',
       needsTranscript: false,
       tried: [],
+      durationSeconds: null,
     }
   }
   const meta = await (options.meta || fetchYoutubeMeta)(id)
   if (meta === null) {
-    return { ok: false, meta: null, id, error: 'YouTube says that film does not exist or is private. Check the link and try again.', needsTranscript: false, tried: [] }
+    return { ok: false, meta: null, id, error: 'YouTube says that film does not exist or is private. Check the link and try again.', needsTranscript: false, tried: [], durationSeconds: null }
   }
   const found = await transcriptFor(id, options.providers)
+  let durationSeconds = found.duration
+  if (!durationSeconds && options.duration !== null) {
+    const lookup = options.duration || fetchInnertubeDuration
+    durationSeconds = await lookup(id)
+  }
+  if (!durationSeconds && found.transcript) durationSeconds = durationFromTranscript(found.transcript)
   if (!found.transcript) {
     return {
       ok: false,
@@ -238,7 +384,8 @@ export async function ingestYoutubeUrl(
       error: `The film is saved, but its captions could not be fetched from this server (tried ${found.tried.join(', ')}).${found.problems.length ? ` ${found.problems.join(' ')}` : ''} Upload a .vtt, .srt or .txt transcript below and the extractor will use that instead.`,
       needsTranscript: true,
       tried: found.tried,
+      durationSeconds,
     }
   }
-  return { ok: true, meta: meta || null, id, transcript: found.transcript, provider: found.provider!, tried: found.tried }
+  return { ok: true, meta: meta || null, id, transcript: found.transcript, provider: found.provider!, tried: found.tried, durationSeconds }
 }

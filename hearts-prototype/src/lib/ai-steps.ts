@@ -142,11 +142,36 @@ export function runMode(provider: ProviderName, keys: KeyPresence = keyPresence(
   return keys[provider] ? 'live' : 'mock'
 }
 
+/** Paid AI stays off unless this run was ticked. A key on its own does not send the talk. */
+export function paidRun(provider: ProviderName, keys: KeyPresence, usePaidAi: boolean): 'live' | 'mock' {
+  if (!usePaidAi) return 'mock'
+  return runMode(provider, keys)
+}
+
+export function pipelineStepCount() {
+  return STEP_SPECS.filter((step) => step.inPipeline).length
+}
+
+export const PAID_NOTE = 'Paid AI. '
+
+export function jobNote(label: string, usePaidAi: boolean) {
+  return usePaidAi ? `${PAID_NOTE}${label}` : label
+}
+
+export function paidFromNote(note: string | null | undefined) {
+  return String(note || '').startsWith(PAID_NOTE)
+}
+
+/** Approved clips already on the talk: do not write a tier that would hide them. */
+export function tierWriteBlocked(approvedCuts: number) {
+  return approvedCuts > 0 ? ('approved' as const) : null
+}
+
 export function mockBanner(keys: KeyPresence = keyPresence()) {
   if (!keys.anthropic && !keys.openai) return 'Mock mode. No model key is configured, so every step runs on the built-in stand-in. Nothing here is sent to a model, and learners are not affected until a person approves a draft.'
-  if (keys.anthropic && keys.openai) return 'A model key is set for Anthropic and for OpenAI. Each step uses the provider chosen on its card.'
-  if (keys.anthropic) return 'An Anthropic key is set. Steps set to OpenAI still run on the mock until an OpenAI key is added. Keys stay in the server environment and are never shown.'
-  return 'An OpenAI key is set. Steps set to Anthropic still run on the mock until an Anthropic key is added. Keys stay in the server environment and are never shown.'
+  if (keys.anthropic && keys.openai) return 'A model key is set for Anthropic and for OpenAI. Paid AI stays off until you tick it on a run. Each step uses the provider chosen on its card. Keys stay in the server environment and are never shown.'
+  if (keys.anthropic) return 'An Anthropic key is set. Paid AI stays off until you tick it on a run. Steps set to OpenAI still run on the built-in path until an OpenAI key is added. Keys stay in the server environment and are never shown.'
+  return 'An OpenAI key is set. Paid AI stays off until you tick it on a run. Steps set to Anthropic still run on the built-in path until an Anthropic key is added. Keys stay in the server environment and are never shown.'
 }
 
 export function tierProtect(

@@ -83,10 +83,13 @@ export function llmStatus() {
   return client ? `live:${client.name}` : 'deterministic-fallback'
 }
 
-export async function extractWithFallback(raw: string, clauses: ClauseCard[]): Promise<ExtractResult> {
+export async function extractWithFallback(raw: string, clauses: ClauseCard[], options: { usePaidAi?: boolean } = {}): Promise<ExtractResult> {
   const deterministic = dualExtract(raw, clauses)
+  if (!options.usePaidAi) return deterministic
   const client = getLlmClient()
-  if (!client) return deterministic
+  if (!client) {
+    return { ...deterministic, notes: ['Paid AI was ticked, but no model key is set, so the built-in extractor ran.', ...deterministic.notes] }
+  }
   try {
     const system = [
       loadPrompt('clipping-agent.txt'),

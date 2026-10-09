@@ -10,19 +10,22 @@ import {
   defaultModel,
   extractJson,
   fillPrompt,
+  jobNote,
   keyPresence,
   liveVersion,
   markLive,
   mockBanner,
   mockOutput,
   nextVersion,
+  paidFromNote,
+  paidRun,
   placeholderProblems,
   pointProtect,
-  runMode,
   runQueue,
   schemaProblems,
   stepBySlug,
   tierProtect,
+  tierWriteBlocked,
   type KeyPresence,
   type Placeholder,
   type ProviderName,
@@ -403,7 +406,7 @@ export async function loadLiveStep(payload: Payload, slug: string) {
     versionNumber,
     spec,
     run(talk: TalkContext) {
-      return runSpec(spec, prompt, talk).then((result) => ({ ...result, versionNumber, spec }))
+      return runSpec(spec, prompt, talk, true).then((result) => ({ ...result, versionNumber, spec }))
     },
   }
 }
@@ -414,9 +417,9 @@ export async function runPreparedStep(payload: Payload, slug: string, talk: Talk
   return live.run(talk)
 }
 
-async function runSpec(spec: StepSpec, prompt: string, talk: TalkContext) {
+async function runSpec(spec: StepSpec, prompt: string, talk: TalkContext, usePaidAi = false) {
   const keys = keyPresence()
-  const mode = runMode(spec.provider, keys)
+  const mode = paidRun(spec.provider, keys, usePaidAi)
   if (spec.slug === 'rubric' || mode === 'mock') {
     const output = mockOutput(spec, talk, prompt)
     const problems = schemaProblems(spec.outputSchema as never, output)
@@ -429,7 +432,7 @@ async function runSpec(spec: StepSpec, prompt: string, talk: TalkContext) {
   return { output, mock: false, problems }
 }
 
-export async function tryStep(payload: Payload, actor: Person, slug: string, lessonId: number, prompt: string) {
+export async function tryStep(payload: Payload, actor: Person, slug: string, lessonId: number, prompt: string, usePaidAi = false) {
   await assertEdit(payload, actor)
   const step = await one(payload, 'ai-steps', { slug: { equals: slug } })
   if (!step) throw new Error('That step is not in the registry.')
@@ -442,8 +445,8 @@ export async function tryStep(payload: Payload, actor: Person, slug: string, les
   const talk = await talkContext(payload, lesson as unknown as Doc, spec.slug === 'rubric' ? { rubric: using } : undefined)
   const liveSpec = { ...spec, prompt: String(step.prompt || spec.prompt) }
   const [draft, live] = await Promise.all([
-    runSpec({ ...spec, prompt: using }, using, talk).catch((error: Error) => ({ output: null, mock: runMode(spec.provider) === 'mock', problems: [error.message] })),
-    runSpec(liveSpec, liveSpec.prompt, talk).catch((error: Error) => ({ output: null, mock: runMode(spec.provider) === 'mock', problems: [error.message] })),
+    runSpec({ ...spec, prompt: using }, using, talk, usePaidAi).catch((error: Error) => ({ output: null, mock: paidRun(spec.provider, keyPresence(), usePaidAi) === 'mock', problems: [error.message] })),
+    runSpec(liveSpec, liveSpec.prompt, talk, usePaidAi).catch((error: Error) => ({ output: null, mock: paidRun(spec.provider, keyPresence(), usePaidAi) === 'mock', problems: [error.message] })),
   ])
   const versionNumber = Number(step.liveVersion || 1)
   await payload.create({
@@ -526,6 +529,14 @@ async function applyTier(payload: Payload, spec: StepSpec, lesson: Doc, output: 
     }
   }
   const existing = await one(payload, 'talk-tiers', { lesson: { equals: lesson.id } })
+  const approvedCuts = await payload.count({
+    collection: 'cuts',
+    overrideAccess: true,
+    where: { and: [{ lesson: { equals: lesson.id } }, { status: { equals: 'approved' } }] },
+  })
+  if (tierWriteBlocked(approvedCuts.totalDocs)) {
+    return { disposition: 'pending', protectsKind: 'talk-tier', protectsId: existing?.id, protectsReason: 'approved', written }
+  }
   const previous = await one(payload, 'ai-step-outputs', { and: [{ stepSlug: { equals: spec.slug } }, { lesson: { equals: lesson.id } }, { mode: { equals: 'run' } }, { disposition: { equals: 'applied' } }] })
   const snapshot = (previous?.written as Record<string, unknown>) || null
   const reason = tierProtect(existing, snapshot, fields)
@@ -611,19 +622,19 @@ async function applyPoints(payload: Payload, spec: StepSpec, lesson: Doc, output
   return { disposition: 'applied', written: { ids: writtenIds, skipped } }
 }
 
-export async function runOnLesson(payload: Payload, spec: StepSpec, lesson: Doc, versionNumber: number, prompt: string, jobId?: number) {
+export async function runOnLesson(payload: Payload, spec: StepSpec, lesson: Doc, versionNumber: number, prompt: string, jobId?: number, usePaidAi = false) {
   const talk = await talkContext(payload, lesson)
   let output: unknown
   let mock = false
   try {
-    const ran = await runSpec({ ...spec, prompt }, prompt, talk)
+    const ran = await runSpec({ ...spec, prompt }, prompt, talk, usePaidAi)
     output = ran.output
     mock = ran.mock
     if (ran.problems.length) {
       return record(payload, spec, lesson, versionNumber, jobId, { disposition: 'failed', error: ran.problems[0] }, output, mock)
     }
   } catch (error) {
-    return record(payload, spec, lesson, versionNumber, jobId, { disposition: 'failed', error: error instanceof Error ? error.message : 'The step failed.' }, null, runMode(spec.provider) === 'mock')
+    return record(payload, spec, lesson, versionNumber, jobId, { disposition: 'failed', error: error instanceof Error ? error.message : 'The step failed.' }, null, paidRun(spec.provider, keyPresence(), usePaidAi) === 'mock')
   }
   const applied = await applyToTalk(payload, spec, lesson, output, versionNumber)
   return record(payload, spec, lesson, versionNumber, jobId, applied, output, mock)
@@ -664,7 +675,7 @@ export async function lessonsInScope(payload: Payload, scope: string, lessonIds:
 export async function startJob(
   payload: Payload,
   actor: Person,
-  input: { slug: string; scope: string; lessonIds: number[]; courseId?: number; gapMs?: number },
+  input: { slug: string; scope: string; lessonIds: number[]; courseId?: number; gapMs?: number; usePaidAi?: boolean },
 ) {
   await assertEdit(payload, actor)
   const scope = ['talk', 'selection', 'course', 'all'].includes(input.scope) ? input.scope : 'talk'
@@ -687,7 +698,7 @@ export async function startJob(
         results: [],
         actor: actor.id,
         actorName: actor.name || actor.email || '',
-        note: input.slug === 'pipeline' ? 'Whole pipeline' : input.slug,
+        note: jobNote(input.slug === 'pipeline' ? 'Whole pipeline' : input.slug, Boolean(input.usePaidAi)),
       } as never,
     }),
   )
@@ -700,6 +711,7 @@ export async function processJob(payload: Payload, jobId: number, actor: Person,
   const job = asDoc(await payload.findByID({ collection: col('ai-step-jobs'), id: jobId, depth: 0, overrideAccess: true }))
   if (job.status === 'done' || job.status === 'failed') return job
   await payload.update({ collection: col('ai-step-jobs'), id: jobId, overrideAccess: true, data: { status: 'running' } as never })
+  const usePaidAi = paidFromNote(String(job.note || ''))
   const ids = Array.isArray(job.lessonIds) ? (job.lessonIds as unknown[]).map(Number).filter(Boolean) : []
   const lessons = await lessonsInScope(payload, 'selection', ids)
   const steps = (await many(payload, 'ai-steps', undefined, 50, 'pipelineOrder')).map(specOf).filter((step) => (job.stepSlug === 'pipeline' ? step.inPipeline : step.slug === job.stepSlug)).sort((a, b) => a.pipelineOrder - b.pipelineOrder)
@@ -712,7 +724,7 @@ export async function processJob(payload: Payload, jobId: number, actor: Person,
         const current = await one(payload, 'ai-steps', { slug: { equals: spec.slug } })
         const prompt = String(current?.prompt || spec.prompt)
         const versionNumber = Number(current?.liveVersion || 1)
-        const result = await runOnLesson(payload, { ...spec, prompt }, fresh, versionNumber, prompt, jobId)
+        const result = await runOnLesson(payload, { ...spec, prompt }, fresh, versionNumber, prompt, jobId, usePaidAi)
         stepResults.push({ slug: spec.slug, ok: result.ok, error: result.error, disposition: result.disposition })
       }
       const failed = stepResults.filter((step) => !step.ok)

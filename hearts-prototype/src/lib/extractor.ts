@@ -1,5 +1,5 @@
 import { doorCode, doorNumberOfClause } from './doors'
-import { cuesToSentences, formatTimestamp, parseTranscript, type Sentence } from './transcript'
+import { cuesToSentences, formatTimestamp, looksUnpunctuated, parseTranscript, type Sentence } from './transcript'
 
 export type ClauseCard = {
   number: number
@@ -304,7 +304,26 @@ export function dualExtract(raw: string, clauses: ClauseCard[] = []): ExtractRes
   }
 
   const thesis = cuts.find((cut) => cut.device === 'repeated_thesis')?.land || cuts[0]?.land || ''
+  const unpunctuated = looksUnpunctuated(parsed.cues)
+  if (unpunctuated && cuts.length) {
+    notes.push('These captions have no full stops. Clips were grouped by pauses and by length. Read them before you approve.')
+  }
+  if (!cuts.length) {
+    notes.push(
+      unpunctuated
+        ? 'No clips were found. These captions have no full stops, so the extractor grouped them by pauses and still found no hook, turn and landing. Add punctuation, or upload a punctuated transcript, then run the extractor again.'
+        : 'No clips were found. The extractor looks for a hook, a turn and a landing line of at least a minute. Check the transcript, then run it again.',
+    )
+  }
   return { thesis, cuts, ladder: ladderFrom(cuts, sentences), engine: 'deterministic', notes }
+}
+
+/** Approved clips stay when the extractor runs again. Drafts and set-aside rows are replaced. */
+export function rowsKeptOnExtract<T extends { status?: string | null }>(rows: T[]) {
+  return {
+    keep: rows.filter((row) => row.status === 'approved'),
+    drop: rows.filter((row) => row.status !== 'approved'),
+  }
 }
 
 /**

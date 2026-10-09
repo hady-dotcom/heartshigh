@@ -127,7 +127,11 @@ export const TOOL: Record<string, string> = {
   contentSearch:
     'Search looks at subject titles. Mine is what you made here; Library is what you linked. The list is grouped by the twenty doors of Hadith Jibril, then by Ghunya seat.',
   ingest:
-    'Paste a YouTube or share link to fetch the film and, when we can, the transcript. You can also upload a transcript file. Nothing is shown to learners until you approve cuts and questions.',
+    'Paste a YouTube or share link to bring in the film and, when we can, the transcript and its length. The speaker stays the one chosen for this course, not the YouTube channel. You can also upload a transcript file. Nothing is shown to learners until you approve cuts and questions.',
+  extract:
+    'Run the extractor drafts clips from the transcript, and clips you have already approved stay. Tick paid AI only when you want a model to draft them; the estimate is shown first. With the box clear, the built-in extractor runs and nothing is paid.',
+  paidAi:
+    'Paid AI sends this talk to Anthropic or OpenAI and can cost money. Leave it unticked and the desk uses the built-in path, which is free. The line under the box is a rough estimate, not a bill.',
   sheetScope:
     'Scope says what the workbook covers: the whole library, this portal’s own courses, or one course. Portal exports skip library courses, so they can be empty. The blank template is always safe to download.',
   sheetPreview:

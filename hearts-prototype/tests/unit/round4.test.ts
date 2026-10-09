@@ -163,8 +163,10 @@ test('L1: each lane opens its own clips: its starters in order, then clips confi
   assert.equal(laneClips(clips, cuts, 'trust', 'Trust')[0].laneLabel, 'Trust')
 })
 
-test('LOW: yt-dlp is fetched by setup, uses the web_embedded client, and says plainly when YouTube blocks it', () => {
-  assert.ok(ytDlpArgs('FAxIZIqwfd8', '/tmp').join(' ').includes('youtube:player_client=web_embedded'))
+test('LOW: yt-dlp is fetched by setup, does not force a player client, and says plainly when YouTube blocks it', () => {
+  const args = ytDlpArgs('FAxIZIqwfd8', '/tmp').join(' ')
+  assert.match(args, /--ignore-no-formats-error/)
+  assert.equal(args.includes('player_client=web_embedded'), false)
   assert.match(ytDlpProblem('ERROR: [youtube] x: Sign in to confirm you’re not a bot'), /blocked yt-dlp from this network/)
   assert.match(ytDlpProblem('', true), /not installed/)
   assert.match(readFileSync(path.join(root, 'scripts/setup.mjs'), 'utf8'), /get-yt-dlp\.mjs/)

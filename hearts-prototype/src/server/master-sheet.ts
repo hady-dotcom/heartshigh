@@ -1,12 +1,11 @@
 // Loads the library, applies a master-sheet plan, and puts the last import back.
 import { loadDoors } from './doors'
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
 import { APIError, type Payload, type Where } from 'payload'
 import { idOf } from '@/lib/ids'
 import { now } from '@/lib/clock'
 import { audit } from '@/server/viewas'
 import { horsCapOf, normaliseSpans, type AppetiserSpan } from '@/lib/tiers'
+import { readStoredMediaBytes } from '@/lib/stored-media'
 import { transcriptFileKind, transcriptFromFile } from '@/lib/transcript-file'
 import { tierSourceText } from '@/server/tier-source'
 import {
@@ -583,7 +582,7 @@ export async function undoSnapshot(payload: Payload, snapshot: SheetSnapshot) {
 async function ingestResourceFile(payload: Payload, snapshot: SheetSnapshot, lessonId: number, kind: string, file: unknown) {
   const mediaId = num(file)
   if (!lessonId || !mediaId || (kind !== 'transcript' && kind !== 'file')) return
-  const media = (await payload.findByID({ collection: 'media', id: mediaId, depth: 0, overrideAccess: true }).catch(() => null)) as { filename?: string; mimeType?: string } | null
+  const media = (await payload.findByID({ collection: 'media', id: mediaId, depth: 0, overrideAccess: true }).catch(() => null)) as { filename?: string; mimeType?: string; prefix?: string | null } | null
   if (!media?.filename) {
     if (kind === 'transcript') throw new APIError('That transcript file was not found. Upload it first, then put its media id on the row.', 400, null, true)
     return
@@ -592,12 +591,8 @@ async function ingestResourceFile(payload: Payload, snapshot: SheetSnapshot, les
     if (kind === 'transcript') throw new APIError('A transcript resource needs a text file, such as .txt or .vtt.', 400, null, true)
     return
   }
-  let bytes: Buffer
-  try {
-    bytes = readFileSync(path.join(process.cwd(), 'media', media.filename))
-  } catch {
-    throw new APIError('That transcript file was not found on disk.', 400, null, true)
-  }
+  const bytes = await readStoredMediaBytes({ filename: media.filename, prefix: media.prefix })
+  if (!bytes) throw new APIError('That transcript file was not found in storage.', 400, null, true)
   const parsed = transcriptFromFile(bytes)
   if (!parsed.ok) throw new APIError(parsed.message, 400, null, true)
   const patch = { transcript: parsed.text, transcriptSource: 'upload' }

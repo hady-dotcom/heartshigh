@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { Where } from 'payload'
-import { dualExtract, type ClauseCard } from '@/lib/extractor'
+import { dualExtract, rowsKeptOnExtract, type ClauseCard } from '@/lib/extractor'
 import { giveHarvest } from './scripture'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
 import { recordShortBrowse } from './browse'
@@ -20,7 +20,7 @@ import { gateAuth, tooManyAnswers } from '@/lib/auth-gate'
 import { clientIp, hit, hitAnswer, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
 import { slugProblem } from '@/lib/text-safety'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
-import { ingestYoutubeUrl } from '@/lib/youtube'
+import { chosenSpeaker, ingestYoutubeUrl } from '@/lib/youtube'
 import { now } from '@/lib/clock'
 import { normaliseOption, startingClause } from '@/lib/placing'
 import { attachExtraPlacing } from '@/seed/placing-seed'
@@ -948,7 +948,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   }
 
   if (action === 'ingest') {
-    if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot ingest a film.')
+    if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot bring in a film.')
     const lessonId = Number(text(form, 'lesson'))
     const next = text(form, 'next') || '/'
     if (!(await findDoc(payload, 'lessons', lessonId))) return redirectTo(req, next, 'That lesson could not be found.')
@@ -977,6 +977,11 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (!result.ok && !result.id) return redirectTo(req, next, result.error)
     if (result.id) {
       const meta = result.meta
+      const speaker = chosenSpeaker(
+        (owned.course as { speaker?: string | null } | null)?.speaker,
+        (owned.lesson as { speaker?: string | null }).speaker,
+      )
+      const duration = result.durationSeconds && result.durationSeconds > 0 ? Math.round(result.durationSeconds) : 0
       await payload.update({
         collection: 'lessons',
         id: lessonId,
@@ -985,7 +990,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
           youtubeId: result.id,
           youtubeUrl: `https://www.youtube.com/watch?v=${result.id}`,
           ...(meta && !text(form, 'keepTitle') ? { title: meta.title } : {}),
-          ...(meta ? { speaker: meta.author } : {}),
+          ...(speaker ? { speaker } : {}),
+          ...(duration > 0 ? { durationSeconds: duration } : {}),
           ...(result.ok
             ? { transcript: result.transcript, transcriptSource: 'youtube' as const, transcriptNote: `Captions fetched by ${result.provider}.` }
             : { transcriptNote: result.error }),
@@ -993,7 +999,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       })
     }
     if (!result.ok) return redirectTo(req, next, result.error)
-    return redirectTo(req, next, undefined, `The YouTube film and its captions are saved (fetched by ${result.provider}).`)
+    const length = result.durationSeconds && result.durationSeconds > 0 ? ` Length ${Math.round(result.durationSeconds)} seconds.` : ''
+    return redirectTo(req, next, undefined, `The YouTube film and its captions are saved (fetched by ${result.provider}).${length}`)
   }
 
   if (action === 'upload-transcript') {
@@ -1037,11 +1044,14 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const lesson = owned.lesson
     const transcript = (lesson as { transcript?: string }).transcript || ''
     if (!transcript.trim()) return redirectTo(req, next, 'This lesson has no transcript yet. Paste a YouTube link that has captions, or upload a .vtt, .srt or .txt file.')
-    const result = await extractWithFallback(transcript, await clauseCards(payload))
+    const usePaidAi = text(form, 'usePaidAi') === 'yes'
+    const result = await extractWithFallback(transcript, await clauseCards(payload), { usePaidAi })
     const old = await payload.find({ collection: 'cuts', overrideAccess: true, limit: 200, where: { lesson: { equals: lessonId } } })
-    for (const cut of old.docs) await payload.delete({ collection: 'cuts', id: cut.id, overrideAccess: true })
+    const keptCuts = rowsKeptOnExtract(old.docs as { id: number; status?: string | null }[])
+    for (const cut of keptCuts.drop) await payload.delete({ collection: 'cuts', id: cut.id, overrideAccess: true })
     const oldLadder = await payload.find({ collection: 'ladder-items', overrideAccess: true, limit: 200, where: { lesson: { equals: lessonId } } })
-    for (const item of oldLadder.docs) await payload.delete({ collection: 'ladder-items', id: item.id, overrideAccess: true })
+    const keptLadder = rowsKeptOnExtract(oldLadder.docs as { id: number; status?: string | null }[])
+    for (const item of keptLadder.drop) await payload.delete({ collection: 'ladder-items', id: item.id, overrideAccess: true })
     const clauseByNumber = new Map((await clauseCards(payload)).map((card) => [card.number, card]))
     const clauses = await payload.find({ collection: 'clauses', overrideAccess: true, limit: 50 })
     const clauseId = new Map(clauses.docs.map((doc) => [(doc as { number?: number }).number, doc.id]))
@@ -1104,7 +1114,13 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       })
     }
     const engineNote = result.engine === 'llm' ? `by ${llmStatus().replace('live:', '')}` : 'by the built-in extractor'
-    return redirectTo(req, next, undefined, `${result.cuts.length} cuts and ${result.ladder.length} short clips drafted ${engineNote}. Review them below.`)
+    const keptApproved = keptCuts.keep.length
+    const keptNote = keptApproved ? ` ${keptApproved} approved clip${keptApproved === 1 ? ' was' : 's were'} kept.` : ''
+    const emptyNote = result.cuts.length === 0 ? result.notes.find((note) => /No clips were found/.test(note)) : ''
+    const message = emptyNote
+      ? `${emptyNote}${keptNote}`
+      : `${result.cuts.length} cuts and ${result.ladder.length} short clips drafted ${engineNote}.${keptNote} Review them below.`
+    return redirectTo(req, next, undefined, message)
   }
 
   if (action === 'cut-status') {

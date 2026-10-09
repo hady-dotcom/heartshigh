@@ -75,7 +75,7 @@ export async function POST(req: Request) {
     if (action === 'try') {
       const lesson = Number(text(form, 'lesson'))
       const slug = text(form, 'slug')
-      await tryStep(payload, actor, slug, lesson, text(form, 'prompt'))
+      await tryStep(payload, actor, slug, lesson, text(form, 'prompt'), text(form, 'usePaidAi') === 'yes')
       const url = new URL(next, 'http://localhost')
       url.searchParams.set('tried', String(lesson))
       return redirectTo(req, `${url.pathname}${url.search}`, undefined, 'Compared with the live version. Nothing was saved for learners.')
@@ -85,7 +85,7 @@ export async function POST(req: Request) {
       const scope = text(form, 'scope') || 'talk'
       const lessonIds = ids(form)
       const courseId = Number(text(form, 'course')) || undefined
-      const { job, run } = await startJob(payload, actor, { slug, scope, lessonIds, courseId, gapMs: Number(text(form, 'gap')) || 0 })
+      const { job, run } = await startJob(payload, actor, { slug, scope, lessonIds, courseId, gapMs: Number(text(form, 'gap')) || 0, usePaidAi: text(form, 'usePaidAi') === 'yes' })
       if (text(form, 'wait') === '1') await run()
       else {
         void run().catch(async (error: unknown) => {

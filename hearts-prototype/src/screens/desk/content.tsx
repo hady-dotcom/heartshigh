@@ -22,6 +22,9 @@ import { FramingPreview } from '@/components/desk/framing-preview'
 import { trackForClip } from '@/lib/framing/store'
 import { fallbackTrack } from '@/lib/framing/validate'
 import { HelpTip } from '@/components/desk/help'
+import { PaidAiOptIn } from '@/components/desk/paid-ai'
+import { paidCostLabel } from '@/lib/ai-cost'
+import { keyPresence } from '@/lib/ai-steps'
 import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
 
@@ -258,7 +261,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
         <div style={{ display: 'grid', gap: 18, minWidth: 0 }}>
           {lesson ? (
             <section className="panel" data-testid="lesson-row">
-              <header><div><h2>Film: {partTitle(lesson, str(course.title))}</h2><p>{youtubeId ? `YouTube ${youtubeId}` : 'No film link yet'}{lesson.durationSeconds ? ` · ${clock(Number(lesson.durationSeconds))}` : ''}</p></div></header>
+              <header><div><h2>Film: {partTitle(lesson, str(course.title))}</h2><p data-testid="lesson-meta">{youtubeId ? `YouTube ${youtubeId}` : 'No film link yet'}{lesson.durationSeconds ? ` · ${clock(Number(lesson.durationSeconds))}` : ''}{str(lesson.speaker) ? ` · ${str(lesson.speaker)}` : ''}</p></div></header>
               <div className="body" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)', gap: 18 }}>
                 <div>
                   {str(lesson.videoProvider) === 'vimeo' && str(lesson.vimeoId) ? <iframe className="film-preview" style={{ padding: 0 }} title={partTitle(lesson, str(course.title))} src={`https://player.vimeo.com/video/${str(lesson.vimeoId)}`} allow="fullscreen; picture-in-picture" /> : str(lesson.videoProvider) === 'file' ? <video className="film-preview" style={{ padding: 0 }} controls src={`/api/hearts/film/${lesson.id}`} /> : youtubeId ? <iframe className="film-preview" style={{ padding: 0 }} title={partTitle(lesson, str(course.title))} src={learnerEmbedSrc(youtubeId)} allow="encrypted-media" /> : <div className="film-preview">{locked ? 'This film has no YouTube link.' : 'Paste a YouTube link to attach the film.'}</div>}
@@ -272,7 +275,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                     <form className="form" action="/api/hearts" method="post">
                       <Hidden fields={{ action: 'ingest', lesson: lesson.id, next: here }} />
                       <label className="stack">YouTube or share link <HelpTip topic="ingest">{TOOL.ingest}</HelpTip><input type="url" data-testid="youtube-url" name="url" placeholder="https://www.youtube.com/watch?v=" required /></label>
-                      <div className="actions"><button className="btn ink small" data-testid="ingest-submit" type="submit">Fetch film and transcript</button></div>
+                      <div className="actions"><button className="btn ink small" data-testid="ingest-submit" type="submit">Bring in</button></div>
                     </form>
                     <form className="form" action="/api/hearts" method="post" encType="multipart/form-data">
                       <Hidden fields={{ action: 'upload-transcript', lesson: lesson.id, next: here }} />
@@ -281,8 +284,10 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                     </form>
                     <form action="/api/hearts" method="post">
                       <Hidden fields={{ action: 'extract', lesson: lesson.id, next: here }} />
+                      <p className="hint" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Extractor <HelpTip topic="extract">{TOOL.extract}</HelpTip></p>
+                      <PaidAiOptIn hint={paidCostLabel({ chars: str(lesson.transcript).length, calls: 1, keys: keyPresence(), kind: 'extractor' })} />
                       <button className="btn block" style={{ width: '100%' }} data-testid="extract-submit" type="submit">Run the extractor</button>
-                      <p className="hint" style={{ marginTop: 6 }}>Finds short moments with a hook, a turn and a landing line. Quotes are word for word and timings come from the transcript. Running it again replaces the drafts.</p>
+                      <p className="hint" style={{ marginTop: 6 }}>Finds short moments with a hook, a turn and a landing line. Quotes are word for word and timings come from the transcript. Running it again keeps clips you have already approved and replaces the drafts.</p>
                     </form>
                   </div>
                 ) : <p className="hint">The film, transcript and cuts are looked after by the master desk.</p>}

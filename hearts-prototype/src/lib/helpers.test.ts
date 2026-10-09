@@ -138,9 +138,9 @@ test('the YouTube transcript chain tries each provider in order and stops at the
 
 test('ingesting a YouTube link explains each failure plainly', async () => {
   const meta = async (id: string) => ({ id, title: 'A talk', author: 'Someone', thumbnail: '' })
-  const ok = await ingestYoutubeUrl('https://youtu.be/ECaTWkof57E', { providers: [fake('p', VTT)], meta })
+  const ok = await ingestYoutubeUrl('https://youtu.be/ECaTWkof57E', { providers: [fake('p', VTT)], meta, duration: async () => null })
   assert.equal(ok.ok, true)
-  const blocked = await ingestYoutubeUrl('https://www.youtube.com/watch?v=ECaTWkof57E', { providers: [fake('p', null)], meta })
+  const blocked = await ingestYoutubeUrl('https://www.youtube.com/watch?v=ECaTWkof57E', { providers: [fake('p', null)], meta, duration: async () => null })
   assert.equal(blocked.ok, false)
   assert.ok(!blocked.ok && blocked.needsTranscript && /Upload a \.vtt/.test(blocked.error))
   const missing = await ingestYoutubeUrl('https://www.youtube.com/watch?v=ECaTWkof57E', { providers: [fake('p', VTT)], meta: async () => null })
