@@ -1,0 +1,807 @@
+/* The opening journey: opener, six scenes, help, hand-off and the full-bleed feed (ux-first-run, spec 7 and 7A). */
+.app.journey-frame { min-height: 100dvh; background: var(--dusk-0); }
+.journey {
+  position: fixed; inset: var(--viewas-h, 0px) 0 0 0; z-index: 1;
+  width: min(430px, 100%); margin: 0 auto; overflow: hidden;
+  background: var(--dusk-0); color: #fff; touch-action: manipulation; user-select: none;
+}
+.journey.phase-feed { touch-action: none; overscroll-behavior: none; }
+.journey a, .journey img { -webkit-user-drag: none; }
+
+/* Sky: eight layers from dusk to first light, lit one by one as the scenes go by. */
+.j-sky, .j-sky-layer { position: absolute; inset: 0; pointer-events: none; }
+.j-sky-layer { will-change: opacity; }
+.j-sky-layer.s0 { background: radial-gradient(120% 70% at 50% 0%, #2f2758 0%, var(--dusk-0) 70%); }
+.j-sky-layer.s1 { background: radial-gradient(120% 70% at 50% 100%, #3a2c5e 0%, transparent 70%), linear-gradient(180deg, #221c42, #2c2350); }
+.j-sky-layer.s2 { background: radial-gradient(120% 70% at 50% 100%, #4a3566 0%, transparent 70%), linear-gradient(180deg, #241d46, #34295a); }
+.j-sky-layer.s3 { background: radial-gradient(120% 65% at 50% 105%, #6a4466 0%, transparent 70%), linear-gradient(180deg, #261f4a, #3c2d5e); }
+.j-sky-layer.s4 { background: radial-gradient(120% 60% at 50% 105%, var(--dawn-1) 0%, transparent 70%), linear-gradient(180deg, #2a224e, #45325f); }
+.j-sky-layer.s5 { background: radial-gradient(120% 60% at 50% 108%, #b0705f 0%, transparent 72%), linear-gradient(180deg, #2c2452, #563a62); }
+.j-sky-layer.s6 { background: radial-gradient(120% 60% at 50% 110%, var(--dawn-2) 0%, transparent 72%), linear-gradient(180deg, #2e2655, #6a4664); }
+.j-sky-layer.s7 { background: radial-gradient(130% 62% at 50% 112%, var(--dawn-3) 0%, transparent 74%), linear-gradient(180deg, #302858, #7d5366); }
+
+/* Screens over the sky */
+.j-layer { position: absolute; inset: 0; z-index: 10; }
+.j-scene-wrap { position: absolute; inset: 0; }
+.j-scene-wrap.leaving { pointer-events: none; z-index: 0; }
+.j-help { z-index: 10; overflow-y: auto; }
+.j-screen { position: absolute; inset: 0; display: flex; flex-direction: column; padding: calc(10px + var(--safe-top)) 0 calc(18px + var(--safe-bottom)); }
+.j-top { display: flex; align-items: center; justify-content: space-between; padding: 0 18px; min-height: 52px; }
+.j-mark { display: grid; place-items: center; width: 34px; height: 34px; color: var(--gold, #d4a84b); }
+.j-arch { display: flex; justify-content: center; color: var(--gold, #d4a84b); margin: 8px auto 0; }
+.j-login, .j-pass { color: rgba(255, 255, 255, 0.86); font-weight: 650; font-size: 15px; background: none; border: 0; text-decoration: none; padding: 10px 4px; min-height: 44px; }
+.j-pass[disabled] { opacity: 0.4; }
+.j-arch { display: flex; justify-content: center; margin: 18px auto 0; color: var(--gold, #e0b15a); }
+.j-body { padding: 0 26px; }
+.j-heading { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1.2; margin: 8px 0 0; color: #f1d58a; }
+.j-caption { font-family: var(--serif); font-weight: 600; font-size: 34px; line-height: 1.12; margin: 14px 0 8px; letter-spacing: -0.005em; }
+.j-caption em { font-style: normal; color: #f3d38e; }
+.j-caption.small { font-size: 29px; }
+.j-sub { margin: 0; font-size: 16px; line-height: 1.45; color: rgba(255, 255, 255, 0.78); }
+.j-actions { margin-top: auto; padding: 0 22px; display: grid; gap: 6px; justify-items: center; }
+.j-actions .pill { width: 100%; }
+.j-escape { background: none; border: 0; color: rgba(255, 255, 255, 0.78); font-weight: 600; font-size: 15px; text-decoration: underline; text-underline-offset: 3px; min-height: 44px; padding: 8px 12px; }
+.j-escape[disabled] { opacity: 0.4; }
+.j-escape.dark { color: var(--ink-2); }
+.pill.outline-light { background: transparent; color: #fff; border: 1.5px solid rgba(255, 255, 255, 0.8); }
+
+/* Choices */
+.j-choices { padding: 18px 18px 0; }
+.j-reply { text-align: center; margin: 0 auto 12px; min-height: 36px; width: fit-content; max-width: 100%; background: rgba(255, 255, 255, 0.14); border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: 600; }
+.j-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.j-tile {
+  display: grid; align-content: space-between; gap: 10px; text-align: left; min-height: 112px; padding: 14px;
+  background: rgba(255, 255, 255, 0.1); border: 1.5px solid rgba(255, 255, 255, 0.16); border-radius: 20px;
+  color: #fff; font-size: 15px; line-height: 1.3; font-weight: 600; backdrop-filter: blur(6px);
+}
+.j-glyph { color: #f3d38e; display: block; }
+.j-glyph svg { width: 30px; height: 30px; }
+.j-tile.chosen, .j-bubble.chosen, .j-door.chosen { border-color: #f3d38e; }
+.j-tile.picked { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
+.j-tile.picked .j-glyph { color: var(--gold-ink); }
+.j-tile.crisis { grid-column: span 2; min-height: 52px; align-content: center; background: rgba(255, 255, 255, 0.05); border-style: dashed; font-size: 14px; font-weight: 550; color: rgba(255, 255, 255, 0.86); }
+.j-bubbles { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.j-envelope { flex-basis: 100%; display: grid; place-items: center; color: rgba(255, 255, 255, 0.7); margin-bottom: 6px; }
+.j-bubble { background: var(--tint, #fff); color: var(--ink); border: 2px solid transparent; border-radius: 22px 22px 22px 6px; padding: 12px 16px; font-size: 15px; font-weight: 650; max-width: 86%; text-align: left; }
+.j-bubble.b1, .j-bubble.b3 { border-radius: 22px 22px 6px 22px; }
+.j-bubble.picked { outline: 3px solid var(--gold); }
+.j-doors { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 18px 10px; margin: 0 -18px; scrollbar-width: none; }
+.j-doors::-webkit-scrollbar { display: none; }
+.j-door {
+  flex: 0 0 44%; scroll-snap-align: center; height: 236px; position: relative; display: flex; align-items: flex-end;
+  border: 2px solid transparent; border-radius: 999px 999px 20px 20px; padding: 0 12px 16px; color: #fff; text-align: left;
+  background: linear-gradient(180deg, var(--door-a), var(--door-b)); box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.08);
+}
+.j-arch { position: absolute; inset: 14px 14px auto; height: 92px; border-radius: 999px 999px 0 0; border: 1.5px solid rgba(255, 255, 255, 0.35); }
+.j-arch .leaf { position: absolute; left: 50%; top: 30px; width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.7); transform: translateX(-50%); }
+.j-door-label { position: relative; font-weight: 700; font-size: 15px; line-height: 1.25; }
+.j-door.picked { border-color: var(--gold); }
+
+/* Help */
+.j-contacts { list-style: none; margin: 18px 0 0; padding: 0 22px; display: grid; gap: 10px; }
+.j-contacts li { background: rgba(255, 255, 255, 0.09); border-radius: 18px; padding: 14px 16px; display: grid; gap: 4px; }
+.j-contacts b { font-size: 15px; }
+.j-contacts a { color: #f3d38e; font-weight: 700; text-decoration: none; font-size: 17px; }
+.j-contacts small { color: rgba(255, 255, 255, 0.7); }
+
+/* Hand-off line */
+.j-line { position: absolute; left: 26px; right: 26px; top: 28%; z-index: 12; margin: 0; text-align: center; font-family: var(--serif); font-weight: 600; font-size: 30px; line-height: 1.2; text-shadow: 0 2px 24px rgba(0, 0, 0, 0.4); pointer-events: none; }
+.j-read-instead, .j-poster [data-testid="read-instead"] {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  bottom: auto;
+  transform: translateX(-50%);
+  z-index: 6;
+  white-space: nowrap;
+}
+.phase-handoff .j-read-instead,
+.phase-handoff [data-testid="read-instead"],
+.phase-handoff .j-poster-title { display: none; }
+
+/* The clip: one visible player and at most one hidden, cued beside it. */
+.j-clip { position: absolute; inset: 0; z-index: 2; }
+.phase-feed .j-clip, .phase-handoff .j-clip { background: #0F3B3A; }
+.phase-handoff .j-clip { background: transparent; }
+.j-slot { position: absolute; inset: 0; overflow: hidden; isolation: isolate; z-index: 1; }
+.yt-host { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+/* A parked host used to slide to -200vw. The cropped film is wider than the phone, so that shift left the picture sticking back over the next hors d'oeuvre. */
+.yt-host.off { visibility: hidden !important; pointer-events: none !important; }
+.yt-host.off iframe { top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; transform: none !important; }
+/* F band: 16:9 contain. Portrait sources grow the band, still uncropped. */
+.j-film-band {
+  position: absolute;
+  top: calc(56px + var(--safe-top));
+  left: 0;
+  width: 100%;
+  height: calc(100vw * 9 / 16);
+  max-height: 60dvh;
+  overflow: hidden;
+  background: #0F3B3A;
+  pointer-events: none;
+}
+.journey[data-vertical='yes'] .j-film-band {
+  height: min(60dvh, calc(100vw * 16 / 9));
+}
+.yt-host iframe,
+.j-film-band iframe,
+.yt-host.is-live iframe,
+.yt-host.is-live .j-film-band iframe,
+.journey[data-playing='yes'] .yt-host.on iframe,
+.overlay .yt-host iframe,
+.strict .yt-host iframe {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  height: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  object-fit: contain !important;
+  transform: translate(-50%, -50%) !important;
+  border: 0;
+  z-index: 0;
+  opacity: 1;
+  pointer-events: none !important;
+}
+.journey[data-vertical='yes'] .yt-host iframe,
+.journey[data-vertical='yes'] .j-film-band iframe {
+  aspect-ratio: 9 / 16 !important;
+  width: auto !important;
+  height: 100% !important;
+}
+.yt-host.on:not(.is-live) .j-film-band::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #0F3B3A;
+  z-index: 2;
+  pointer-events: none;
+}
+.yt-title-mask { position: absolute; left: 0; right: 0; top: 0; height: 56px; z-index: 2; pointer-events: none; background: linear-gradient(#000 0 70%, transparent); }
+.j-tap-catcher {
+  position: absolute;
+  top: calc(56px + var(--safe-top));
+  left: 0;
+  width: 100%;
+  height: calc(100vw * 9 / 16);
+  max-height: 60dvh;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.001);
+  pointer-events: auto;
+  touch-action: none;
+  border: 0;
+  padding: 0;
+}
+.j-slot .j-tap-catcher { z-index: 20; }
+.journey[data-vertical='yes'] .j-tap-catcher {
+  height: min(60dvh, calc(100vw * 16 / 9));
+}
+.journey[data-playing='yes'] .j-poster-play,
+.journey[data-playing='yes'] video::-webkit-media-controls,
+.journey[data-playing='yes'] video::-webkit-media-controls-overlay-play-button,
+.journey[data-playing='yes'] video::-webkit-media-controls-start-playback-button { display: none !important; opacity: 0; }
+.j-poster { position: absolute; top: calc(56px + var(--safe-top)); left: 0; width: 100%; height: calc(100vw * 9 / 16); max-height: 60dvh; z-index: 16; background: #0F3B3A; transition: opacity 250ms ease; overflow: hidden; transform: translateZ(0); }
+.j-poster.is-clear { opacity: 0; pointer-events: none; }
+.journey[data-cover='yes'] .j-poster { opacity: 1 !important; pointer-events: none; z-index: 16; }
+.journey[data-cover='no'] .j-poster { opacity: 0; pointer-events: none; }
+.journey[data-cover='yes'] .yt-host.on .j-film-band::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #0F3B3A;
+  z-index: 2;
+  pointer-events: none;
+}
+html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/dawn-courtyard.jpg'); }
+.j-poster-play { position: absolute; left: 50%; top: 26%; z-index: 7; width: 76px; height: 76px; margin: -38px 0 0 -38px; border: 0; border-radius: 50%; display: grid; place-items: center; padding: 0 0 0 4px; background: #d4a84b; color: #1a1408; box-shadow: 0 10px 30px rgba(0,0,0,0.35); cursor: pointer; }
+.j-poster img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; opacity: 1; }
+.journey[data-vertical='yes'] .j-poster { height: min(60dvh, calc(100vw * 16 / 9)); }
+.journey[data-vertical='yes'] .j-poster img { height: 100%; object-fit: cover; }
+.yt-debug {
+  position: fixed;
+  top: calc(8px + var(--safe-top));
+  left: 8px;
+  z-index: 80;
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(8, 24, 24, 0.82);
+  color: #f6eedc;
+  font: 11px/1.35 ui-monospace, monospace;
+  pointer-events: none;
+}
+.j-poster::after { content: none; }
+.j-poster.breathe img { animation: breathe 2.4s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: 0.55; } }
+.journey.phase-feed .j-poster-who,
+.journey.phase-feed .j-poster-mark { display: none; }
+.j-poster-mark { position: absolute; left: 16px; top: 12px; z-index: 1; }
+.j-poster-mark { color: #f1d58a; }
+.j-poster-who { position: absolute; left: 54px; top: calc(60px + var(--safe-top)); z-index: 1; font-weight: 650; font-size: 14px; }
+.j-poster-note { position: absolute; left: 24px; right: 24px; top: 30%; z-index: 1; text-align: center; font-weight: 650; margin: 0; }
+.j-poster-title { position: absolute; left: 28px; right: 28px; top: calc(26% + 62px); z-index: 1; text-align: center; color: #f6eedc; text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5); }
+.j-poster-title small { display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.16em; color: #f1d58a; margin-bottom: 8px; }
+.j-poster-title b { display: block; font-family: var(--serif); font-weight: 600; font-size: 28px; line-height: 1.15; }
+.j-poster .pill { position: absolute; left: 50%; top: 40%; transform: translateX(-50%); z-index: 1; }
+/* Capture layer over the film. A faint fill makes phones hit-test this div instead of the YouTube iframe. */
+.j-gesture { position: absolute; inset: 0; z-index: 5; background: rgba(0, 0, 0, 0.001); touch-action: none; pointer-events: auto; }
+.j-slide { position: absolute; inset: 0; z-index: 3; }
+/* Swipes are ours: any browser pan here fires pointercancel and the swipe never lands. */
+.j-gesture, .j-slide, .j-slide *, .feed-card, .feed-card *, .j-chrome .caption, .j-chrome[data-swipe] .rail, .j-chrome[data-swipe] .clip-foot { touch-action: none; }
+.j-chrome .caption[data-expanded='true'] { touch-action: pan-y; }
+
+/* Chrome over (or around) the clip. Controls and the caption take taps; the rest falls through to the film. */
+.j-chrome { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.j-chrome .rail, .j-chrome .clip-foot, .j-chrome .chip, .j-chrome .j-sound, .j-chrome .j-swipe-hint, .j-chrome button, .j-chrome a, .j-chrome .j-more-tab, .j-chrome .j-board, .j-chrome .j-board-back, .j-chrome .j-tap-catcher, .j-chrome .end-card { pointer-events: auto; }
+.j-chrome .pill, .j-chrome .chip { touch-action: manipulation; }
+.j-chrome .caption {
+  pointer-events: auto; cursor: pointer; background: none; border: 0; padding: 0; text-align: left;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; max-height: 22vh;
+}
+.j-chrome .caption[data-expanded='true'] { display: block; -webkit-line-clamp: unset; line-clamp: unset; overflow: auto; max-height: min(36vh, 260px); }
+/* Mid-swipe: hide chrome words so captions never sit over the incoming card. */
+.journey[data-swiping] .j-chrome .caption,
+.journey[data-swiping] .j-chrome .j-speaker,
+.journey[data-swiping] .j-top-speaker,
+.journey[data-swiping] .j-poster-who,
+.journey[data-swiping] .j-poster-title {
+  opacity: 0;
+  pointer-events: none;
+}
+.j-peek .caption,
+.j-peek .j-speaker,
+.j-peek .j-top-speaker,
+.j-peek .j-poster-who,
+.j-peek .j-poster-title,
+.j-peek .feed-card h2,
+.j-peek .feed-card p { visibility: hidden; }
+.j-peeks, .j-peek, .j-slot, .j-slide { overflow: hidden; }
+.j-hairline-row { position: absolute; top: calc(12px + var(--safe-top)); left: 16px; right: 16px; z-index: 6; pointer-events: auto; }
+.j-swipe-hint {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: calc(136px + var(--safe-bottom));
+  z-index: 15;
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(241, 228, 198, 0.42);
+  text-shadow: none;
+  pointer-events: none;
+}
+.j-hairline { height: 3px; border-radius: 3px; background: rgba(255, 255, 255, 0.28); overflow: hidden; }
+.j-hairline > i { display: block; height: 100%; width: 0; background: #fff; transition: width 0.25s linear; }
+.j-hairline.shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.55), rgba(255,255,255,0.2)); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.j-sound { position: static; transform: none; background: rgba(0, 0, 0, 0.6); color: #fff; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; }
+.j-speaker { display: flex; align-items: center; gap: 10px; }
+/* Speaker sits under the chips and the timer, never over them. */
+.j-top-speaker { position: absolute; top: calc(136px + var(--safe-top)); left: 16px; right: 16px; pointer-events: auto; z-index: 5; }
+.strict .j-top-speaker,
+.journey[data-mode='appetiser'] .j-top-speaker { top: calc(88px + var(--safe-top)); }
+.journey:is([data-vertical='yes'], [data-words-in-picture='yes']) .j-slot .j-poster-who, .journey:is([data-vertical='yes'], [data-words-in-picture='yes']) .j-slot .j-poster-mark { display: none; }
+/* F wins over the old words-in-picture crop: same 16:9 band as every other clip. */
+.journey[data-words-in-picture='yes'] .j-slot {
+  top: 0;
+  bottom: 0;
+  height: auto;
+  background: #0F3B3A;
+  box-shadow: none;
+}
+.journey[data-words-in-picture='yes'] .yt-host iframe {
+  pointer-events: none !important;
+}
+.journey[data-words-in-picture='yes'] .j-chrome .caption,
+.j-caption-clear {
+  display: none;
+}
+.journey[data-words-in-picture='yes'] .j-chrome .caption.j-caption-clear {
+  background: rgba(8, 20, 20, 0.94);
+}
+.j-speaker .speaker-row { flex: 1; min-width: 0; }
+.j-resume { display: block; text-align: center; color: #fff; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; padding: 6px 0 10px; }
+.j-mains { display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 8px; color: #fff; text-decoration: none; backdrop-filter: blur(8px); }
+.j-mains .thumb { width: 72px; height: 44px; border-radius: 10px; background: #2a2640 center / cover; flex: none; }
+.j-mains small { display: block; font-size: 12px; color: rgba(255, 255, 255, 0.72); }
+.j-mains b { display: block; font-size: 14px; line-height: 1.3; }
+
+/*
+ * Appetiser with a film: the picture is the whole phone. Controls sit in a short row at the bottom.
+ * There is no caption. A scrim keeps the buttons readable and leaves the top of the frame clear.
+ */
+.journey[data-mode='appetiser'] .j-chrome { display: block; padding: 0; }
+.journey[data-mode='appetiser'][data-video='yes'] .j-chrome { background: none; }
+.typography-player { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #14120e; z-index: 2; }
+.feed-card {
+  position: absolute; inset: 0; z-index: 4; overflow: hidden; isolation: isolate;
+  background: linear-gradient(180deg, #0b2425 0%, #0f3431 48%, #0a1f20 100%); color: #f6eedc;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: calc(72px + var(--safe-top)) 36px 120px;
+}
+/* The evening garden, softened behind the words: a deep teal wash over the courtyard, never a pale page. */
+.feed-card-bg { position: absolute; inset: -24px; z-index: -1; background: url('/theme/evening-courtyard.jpg') center 40% / cover no-repeat; filter: blur(8px) saturate(0.95); opacity: 0.9; }
+.feed-card-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10, 40, 40, 0.62) 0%, rgba(14, 54, 50, 0.5) 45%, rgba(8, 28, 28, 0.86) 100%); }
+.feed-card .kicker { letter-spacing: 0.18em; text-transform: uppercase; font-size: 13px; font-weight: 700; color: #f1d58a; }
+.feed-card h2 { font-family: var(--serif, Georgia, 'Times New Roman', serif); font-weight: 600; font-size: 34px; line-height: 1.15; margin: 16px 0; color: #f6eedc; text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35); }
+.feed-card p { margin: 0 0 28px; font-size: 16px; color: #e7dcc8; }
+.feed-card .pill.gold { background: #d4a84b; color: #1a1408; border-color: #d4a84b; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35); }
+
+/* Neighbours sit beside the card, posters decoded, so the incoming side of a swipe is never bare. */
+.j-peeks { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.j-peek { position: absolute; inset: 0; overflow: hidden; background: #0e2a2b; will-change: transform; }
+.j-peek .feed-card { z-index: 0; }
+.j-peek .slide, .j-peek .j-slide { position: absolute; inset: 0; }
+/* Share, Like and Save sit in one vertical rail, low on the right, on both the clip
+   and the extract. The stack stays above the tab bar. The ladder is on the left.
+   A right gutter keeps the scrubber, the gold button, the speaker row and the timed
+   words clear of the bubbles. The top row stops short of the ? button. */
+.journey.phase-feed .j-chrome .rail {
+  position: absolute;
+  right: 8px;
+  bottom: calc(100px + var(--safe-bottom));
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  z-index: 8;
+}
+.journey.phase-feed .j-hairline-row {
+  right: 68px;
+}
+.journey[data-mode='appetiser'] .j-chrome .clip-foot { position: static; flex: none; gap: 8px; }
+.journey[data-mode='appetiser'] .j-resume { padding: 2px 0 4px; }
+.journey[data-mode='appetiser'] .j-mains { background: #24203f; backdrop-filter: none; padding: 6px; }
+.journey[data-mode='appetiser'] .j-mains .thumb { width: 60px; height: 38px; }
+.journey[data-mode='appetiser'] .speaker-card { padding: 8px 12px; background: #0F2E2C; color: #F1E4C6; border: 1px solid rgba(212, 168, 75, 0.42); }
+.journey[data-mode='appetiser'] .speaker-card small { color: #D4A84B; }
+.ready-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; pointer-events: auto; }
+.ready-controls input[type='range'] { width: 100%; accent-color: #D4A84B; }
+.strict.journey[data-mode='appetiser'] .j-chrome { padding-top: 0; background: none; }
+
+/* An appetiser with no film: a still, and three short lines. Never the transcript. */
+.j-poster.scenic { background: radial-gradient(120% 80% at 50% 20%, #3a2a52 0%, #14101f 70%); }
+.scenic-lines { position: absolute; left: 22px; right: 22px; top: 26%; z-index: 4; display: grid; gap: 10px; pointer-events: none; }
+.scenic-lines p { margin: 0; font-family: var(--serif); font-weight: 600; font-size: 26px; line-height: 1.18; color: #fff; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45); }
+.scenic-lines p:first-child { font-size: 30px; }
+
+/* Strict layout uses the same F band as overlay: uncropped 16:9 under the chips. */
+.strict .j-slot { top: 0; bottom: 0; height: auto; background: #0F3B3A; }
+.strict .j-film-band { top: calc(56px + var(--safe-top)); width: 100%; }
+.strict .yt-host iframe,
+.strict .j-film-band iframe {
+  top: 50% !important;
+  left: 50% !important;
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  object-fit: contain !important;
+  transform: translate(-50%, -50%) !important;
+  pointer-events: none !important;
+}
+.strict .j-chrome .caption { display: none; }
+.strict .j-hairline-row { top: calc(12px + var(--safe-top)); }
+.strict[data-words-in-picture='yes'] .j-slot { top: 0; }
+.strict[data-words-in-picture='yes'] .j-chrome .caption { display: none; }
+
+/* Sheet, not-for-me and tabs */
+.j-sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 30; max-height: 86%; overflow-y: auto;
+  background: var(--paper); color: var(--ink); border-radius: 26px 26px 0 0;
+  padding: 10px 22px calc(22px + var(--safe-bottom)); box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.4);
+}
+.j-sheet .handle { display: block; width: 44px; height: 5px; border-radius: 5px; background: #e2d8c5; margin: 4px auto 14px; }
+.j-sheet h2 { font-family: var(--serif); font-weight: 600; font-size: 28px; line-height: 1.15; margin: 0 0 8px; }
+.j-sheet p { color: var(--ink-2); line-height: 1.5; margin: 0 0 14px; }
+.j-sheet .j-escape { width: 100%; }
+.j-sheet-form { display: grid; gap: 10px; margin-bottom: 4px; }
+.j-sheet-error { color: #8a2335 !important; font-size: 14px; margin: 0 !important; }
+.j-sheet-small { text-align: center; font-size: 14px; margin: 4px 0 0 !important; }
+.j-notfor { position: absolute; inset: 0; z-index: 25; background: rgba(0, 0, 0, 0.6); display: grid; place-content: center; justify-items: center; gap: 10px; }
+.j-tabs { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; }
+.journey .lane-switch { z-index: 26; top: auto; bottom: calc(128px + var(--safe-bottom)); }
+.journey .lane-switch span { padding: 7px 14px; font-size: 13px; animation: toast 1.5s ease forwards; background: rgba(12, 38, 38, 0.94); color: #f6eedc; border: 1px solid rgba(212, 168, 75, 0.55); }
+.lane-switch span:empty { display: none; }
+.j-scene .j-choices { margin-top: auto; }
+.j-scene .j-actions { margin-top: 10px; }
+.strict .j-poster-play { top: 50%; }
+.end-card {
+  position: absolute; left: 16px; right: 16px; bottom: calc(132px + var(--safe-bottom)); z-index: 8;
+  display: grid; gap: 10px; padding: 18px 16px;
+  background: linear-gradient(180deg, #f3e2c0, #e8d4a6); color: #0f3b3a;
+  border: 1px solid #d4a84b; border-radius: 22px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+}
+.end-card .eyebrow { margin: 0; color: #0f3b3a; letter-spacing: 0.04em; }
+.end-card .end-feed, .end-card .end-next {
+  background: transparent; color: #0f3b3a; border: 1.5px solid #0f3b3a; text-align: center; justify-content: center;
+}
+
+/* Captions and the speaker bar sit on a soft dark plate so cream robes cannot wash them out. */
+.j-caption-plate {
+  padding: 8px 12px 10px;
+  border-radius: 12px;
+  background: linear-gradient(to top, rgba(6, 24, 24, 0.82), rgba(6, 24, 24, 0.28) 70%, transparent);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 2px 12px rgba(0, 0, 0, 0.75);
+}
+.clip-foot.j-credits,
+.j-credits {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+  background: linear-gradient(to top, rgba(6, 24, 24, 0.86), rgba(6, 24, 24, 0.35) 55%, transparent 100%);
+  margin-left: -16px;
+  margin-right: -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-bottom: 4px;
+}
+.j-speaker-plate .who b,
+.j-speaker-plate .who small {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+.j-more-speaker {
+  display: inline-flex;
+  align-self: flex-start;
+  margin: 0 0 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #f1e4c6;
+  font-weight: 650;
+  font-size: 13px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  cursor: pointer;
+}
+/* Clip / extract / Full talk is a compact group in the lower control stack.
+   It stays in normal flow, left-aligned, so its hit boxes sit above the speed chip and the talk button. */
+.j-chrome .clip-foot .j-level-choices {
+  position: static;
+  justify-self: stretch;
+  align-self: stretch;
+  flex: none;
+  z-index: auto;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+  max-width: none;
+  margin: 0 0 10px;
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid rgba(241, 213, 138, 0.45);
+  background: rgba(8, 24, 24, 0.82);
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+.j-chrome .clip-foot .j-level-choices button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: rgba(246, 238, 220, 0.82);
+  border-radius: 10px;
+  padding: 8px 6px;
+  min-height: 0;
+  min-width: 0;
+  width: auto;
+  flex: 1 1 0;
+  max-width: none;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.25;
+  text-align: center;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  box-shadow: none;
+  touch-action: manipulation;
+}
+.j-chrome .clip-foot .j-level-choices button.on {
+  background: rgba(241, 213, 138, 0.16);
+  color: #f1d58a;
+  border: 0;
+}
+.journey.phase-feed.overlay:not([data-words-in-picture='yes']) .j-chrome .caption { left: 22px; }
+.j-credits .j-speaker { margin-top: 0; }
+.j-credits .pill.gold.block {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  white-space: normal;
+  height: auto;
+  min-height: 52px;
+  max-height: calc(1.25em * 2 + 24px);
+  padding-top: 10px;
+  padding-bottom: 10px;
+  line-height: 1.25;
+  text-align: center;
+}
+.j-tap-play {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  z-index: 8;
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  border: 0;
+  border-radius: 50%;
+  background: #d4a84b;
+  color: #1a1408;
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1.15;
+  padding: 8px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+.j-coach {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: calc(10px + var(--safe-top));
+  z-index: 18;
+  pointer-events: none;
+}
+.j-coach-card {
+  pointer-events: none;
+  background: rgba(14, 42, 43, 0.94);
+  color: #f6eedc;
+  border: 1px solid rgba(212, 168, 75, 0.45);
+  border-radius: 18px;
+  padding: 10px 14px 10px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+.j-coach-card h2 { font-family: var(--serif); font-size: 22px; margin: 0 0 8px; }
+.j-coach-card ul { margin: 0 0 8px; padding: 0 0 0 16px; display: grid; gap: 4px; }
+.j-coach-card li { font-size: 14px; line-height: 1.35; }
+.j-coach-card b { display: inline; margin-right: 6px; color: #f1d58a; }
+.j-coach-card p { margin: 0; font-size: 13px; color: rgba(246, 238, 220, 0.78); }
+
+.j-slot { background: #0F3B3A; }
+.j-peek { background: #0F3B3A; }
+.journey.phase-feed .fr-words {
+  top: calc(56px + var(--safe-top) + 100vw * 9 / 16);
+  /* Ends above the "swipe up for the next clip" hint (bottom 136px, about 15px tall), so the page dots never sit on it. */
+  bottom: calc(158px + var(--safe-bottom));
+  padding: 16px 20px 8px;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+/* A page is at most four 20-character lines; on a short screen the type steps down rather than running out of room. */
+.journey.phase-feed .fr-words-line { font-size: clamp(19px, min(6.8vw, 3.9dvh), 30px); }
+.journey.phase-feed .fr-dots { flex-shrink: 0; margin-top: 16px; }
+.journey.phase-feed[data-vertical='yes'] .fr-words {
+  top: calc(56px + var(--safe-top) + min(60dvh, 100vw * 16 / 9));
+}
+.j-paused-mark {
+  position: absolute;
+  left: 16px;
+  top: calc(64px + var(--safe-top));
+  z-index: 9;
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #f6eedc;
+  font-size: 12px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.journey[data-board='open'] .j-more-tab,
+[data-testid="player"][data-board='open'] .j-more-tab { display: none; }
+.j-more-tab {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(76px + var(--safe-bottom));
+  z-index: 16;
+  min-width: 88px;
+  min-height: 36px;
+  padding: 6px 16px 8px;
+  border: 1px solid rgba(212, 168, 75, 0.45);
+  border-radius: 16px 16px 8px 8px;
+  background: rgba(15, 46, 44, 0.96);
+  color: #f1e4c6;
+  font-weight: 700;
+  font-size: 13px;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  pointer-events: auto;
+  touch-action: none;
+}
+.j-more-tab i {
+  display: block;
+  width: 36px;
+  height: 4px;
+  border-radius: 4px;
+  background: #d4a84b;
+}
+.j-board .ready-controls,
+.journey.phase-feed .j-chrome .j-board .ready-controls {
+  position: static;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px 10px;
+  width: 100%;
+  margin: 0 0 12px;
+}
+.j-board .ready-controls input[type='range'] {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+.j-board-back {
+  position: fixed;
+  inset: 0;
+  z-index: 26;
+  background: rgba(6, 18, 18, 0.45);
+  pointer-events: auto;
+}
+.j-board {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(76px + var(--safe-bottom));
+  z-index: 28;
+  max-height: min(72%, 560px);
+  overflow-y: auto;
+  padding: 0 16px calc(16px + var(--safe-bottom));
+  border-radius: 22px 22px 0 0;
+  background: #0F2E2C;
+  color: #F1E4C6;
+  box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+  touch-action: pan-y;
+}
+.j-board-grab {
+  touch-action: none;
+  padding: 12px 16px 14px;
+  margin: 0 -16px 4px;
+  cursor: grab;
+}
+.j-board-handle {
+  display: block;
+  width: 44px;
+  height: 5px;
+  border-radius: 5px;
+  background: rgba(241, 213, 138, 0.55);
+  margin: 0 auto;
+}
+.j-board-title {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.3;
+  color: #F1E4C6;
+}
+.j-board .rail,
+.journey.phase-feed .j-chrome .j-board .rail {
+  position: static;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin: 8px 0 12px;
+  right: auto;
+  bottom: auto;
+  z-index: auto;
+}
+.j-board .clip-foot,
+.j-board .clip-foot.j-credits {
+  position: static;
+  margin: 0;
+  padding: 0;
+  background: none;
+}
+.j-board .j-credits { background: none; }
+.journey.phase-feed .j-hairline-row { right: 68px; left: 16px; }
+.journey.phase-feed .j-hairline-row .clip-row { margin-top: 8px; }
+.j-hairline-row .clip-row-top { justify-content: flex-start; }
+.j-hairline-row .chip.white { padding: 4px 10px; font-size: 12px; min-height: 28px; }
+
+/* Open by default: the controls sit in the band under the spoken words and above the tab bar.
+   They do not cover the film or the words, and the scrim does not take swipes. */
+.journey.phase-feed[data-board='open'] {
+  --film-band: calc(100vw * 9 / 16);
+  --tab-clearance: calc(76px + var(--safe-bottom));
+  --words-min: 132px;
+  --board-dock: clamp(112px, calc(100dvh - 56px - var(--safe-top) - var(--film-band) - var(--words-min) - var(--tab-clearance)), 480px);
+}
+.journey.phase-feed[data-board='open'][data-vertical='yes'] {
+  --film-band: min(60dvh, calc(100vw * 16 / 9));
+}
+.journey.phase-feed[data-board='open'] .fr-words {
+  bottom: calc(var(--tab-clearance) + var(--board-dock));
+  padding: 8px 16px 2px;
+  overflow: hidden;
+}
+.journey.phase-feed[data-board='open'] .fr-words-page { gap: 2px; }
+.journey.phase-feed[data-board='open'] .fr-words-line {
+  font-size: clamp(16px, min(4.6vw, 2.5dvh), 22px);
+  line-height: 1.15;
+}
+.journey.phase-feed[data-board='open'] .fr-dots { margin-top: 6px; }
+.journey[data-board='open'] .j-board-back,
+[data-testid="player"][data-board='open'] .j-board-back {
+  display: none;
+}
+.journey.phase-feed[data-board='open'] .j-board {
+  bottom: var(--tab-clearance);
+  height: var(--board-dock);
+  max-height: var(--board-dock);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 12px 8px;
+  border-radius: 18px 18px 0 0;
+  box-shadow: none;
+  touch-action: pan-y;
+}
+.journey.phase-feed[data-board='open'] .j-board-grab {
+  padding: 6px 12px 2px;
+  margin-bottom: 0;
+}
+.journey.phase-feed[data-board='open'] .j-board-title {
+  margin: 0 0 2px;
+  font-size: 13px;
+}
+.journey.phase-feed[data-board='open'] .j-board .rail,
+.journey.phase-feed[data-board='open'] .j-chrome .j-board .rail {
+  margin: 0 0 4px;
+  gap: 12px;
+}
+.journey.phase-feed[data-board='open'] .j-board .rail .bubble {
+  width: 36px;
+  height: 36px;
+}
+.journey.phase-feed[data-board='open'] .j-board .rail button { font-size: 10px; gap: 2px; }
+.journey.phase-feed[data-board='open'] .j-board .chip {
+  padding: 3px 10px;
+  font-size: 12px;
+}
+.journey.phase-feed[data-board='open'] .j-board .ready-controls,
+.journey.phase-feed[data-board='open'] .j-chrome .j-board .ready-controls {
+  gap: 4px 8px;
+  margin: 0 0 4px;
+}
+.journey.phase-feed[data-board='open'] .j-board .ready-controls input[type='range'] {
+  height: 16px;
+  margin: 0;
+}
+.journey.phase-feed[data-board='open'] .j-board .j-level-choices,
+.journey.phase-feed[data-board='open'] .j-chrome .clip-foot .j-level-choices {
+  margin: 0 0 4px;
+  padding: 2px;
+}
+.journey.phase-feed[data-board='open'] .j-chrome .clip-foot .j-level-choices button {
+  padding: 6px 4px;
+}
+.journey.phase-feed[data-board='open'] .j-board .avatar {
+  width: 28px;
+  height: 28px;
+}
+.journey.phase-feed[data-board='open'] .j-board .speaker-row b { font-size: 13px; }
+.journey.phase-feed[data-board='open'] .j-board .pill.gold.block,
+.journey.phase-feed[data-board='open'] .j-board .j-credits .pill.gold.block {
+  min-height: 36px;
+  margin-top: 2px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+.journey.phase-feed[data-board='open'] .j-board .j-more-speaker {
+  margin: 0;
+  padding: 2px 0;
+  font-size: 12px;
+}

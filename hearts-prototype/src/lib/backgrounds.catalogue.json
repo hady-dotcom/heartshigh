@@ -1,0 +1,2402 @@
+[
+  {
+    "file": "jpg/A-01-lake-predawn-violet.jpg",
+    "slice": "A",
+    "landscape": "lake",
+    "time": "predawn",
+    "season": "spring",
+    "palette": "violet",
+    "brightness": "dark",
+    "mood": "serene"
+  },
+  {
+    "file": "jpg/A-02-fjord-dawn-rose.jpg",
+    "slice": "A",
+    "landscape": "fjord",
+    "time": "dawn",
+    "season": "winter",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "hopeful"
+  },
+  {
+    "file": "jpg/A-03-river-morning-gold.jpg",
+    "slice": "A",
+    "landscape": "river",
+    "time": "morning",
+    "season": "autumn",
+    "palette": "gold",
+    "brightness": "light",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/A-04-waterfall-noonhaze-sage.jpg",
+    "slice": "A",
+    "landscape": "waterfall",
+    "time": "noonhaze",
+    "season": "summer",
+    "palette": "sage",
+    "brightness": "mid",
+    "mood": "fresh"
+  },
+  {
+    "file": "jpg/A-05-seacliffs-golden-amber.jpg",
+    "slice": "A",
+    "landscape": "seacliffs",
+    "time": "golden",
+    "season": "autumn",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "majestic"
+  },
+  {
+    "file": "jpg/A-06-shore-dusk-rose.jpg",
+    "slice": "A",
+    "landscape": "shore",
+    "time": "dusk",
+    "season": "summer",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "tender"
+  },
+  {
+    "file": "jpg/A-07-island-bluehour-nightblue.jpg",
+    "slice": "A",
+    "landscape": "island",
+    "time": "bluehour",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "contemplative"
+  },
+  {
+    "file": "jpg/A-08-lagoon-moonlit-silver.jpg",
+    "slice": "A",
+    "landscape": "lagoon",
+    "time": "moonlit",
+    "season": "summer",
+    "palette": "silver",
+    "brightness": "dark",
+    "mood": "peaceful"
+  },
+  {
+    "file": "jpg/A-09-frozenlake-starry-nightblue.jpg",
+    "slice": "A",
+    "landscape": "frozenlake",
+    "time": "starry",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "awe"
+  },
+  {
+    "file": "jpg/A-10-rainlake-morning-silver.jpg",
+    "slice": "A",
+    "landscape": "rainlake",
+    "time": "morning",
+    "season": "autumn",
+    "palette": "silver",
+    "brightness": "mid",
+    "mood": "reflective"
+  },
+  {
+    "file": "jpg/A-11-tidepools-dawn-teal.jpg",
+    "slice": "A",
+    "landscape": "tidepools",
+    "time": "dawn",
+    "season": "spring",
+    "palette": "teal",
+    "brightness": "mid",
+    "mood": "fresh"
+  },
+  {
+    "file": "jpg/A-12-ocean-noonhaze-teal.jpg",
+    "slice": "A",
+    "landscape": "ocean",
+    "time": "noonhaze",
+    "season": "summer",
+    "palette": "teal",
+    "brightness": "light",
+    "mood": "expansive"
+  },
+  {
+    "file": "jpg/A-13-estuary-golden-gold.jpg",
+    "slice": "A",
+    "landscape": "estuary",
+    "time": "golden",
+    "season": "autumn",
+    "palette": "gold",
+    "brightness": "mid",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/A-14-mirror-dawn-amber.jpg",
+    "slice": "A",
+    "landscape": "mirror",
+    "time": "dawn",
+    "season": "autumn",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "serene"
+  },
+  {
+    "file": "jpg/A-15-lake-golden-gold.jpg",
+    "slice": "A",
+    "landscape": "lake",
+    "time": "golden",
+    "season": "summer",
+    "palette": "gold",
+    "brightness": "light",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/A-16-fjord-moonlit-silver.jpg",
+    "slice": "A",
+    "landscape": "fjord",
+    "time": "moonlit",
+    "season": "autumn",
+    "palette": "silver",
+    "brightness": "dark",
+    "mood": "mysterious"
+  },
+  {
+    "file": "jpg/A-17-river-dusk-violet.jpg",
+    "slice": "A",
+    "landscape": "river",
+    "time": "dusk",
+    "season": "spring",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "gentle"
+  },
+  {
+    "file": "jpg/A-18-waterfall-bluehour-silver.jpg",
+    "slice": "A",
+    "landscape": "waterfall",
+    "time": "bluehour",
+    "season": "winter",
+    "palette": "silver",
+    "brightness": "mid",
+    "mood": "pure"
+  },
+  {
+    "file": "jpg/A-19-seacliffs-bluehour-nightblue.jpg",
+    "slice": "A",
+    "landscape": "seacliffs",
+    "time": "bluehour",
+    "season": "spring",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "contemplative"
+  },
+  {
+    "file": "jpg/A-20-shore-morning-sage.jpg",
+    "slice": "A",
+    "landscape": "shore",
+    "time": "morning",
+    "season": "spring",
+    "palette": "sage",
+    "brightness": "light",
+    "mood": "fresh"
+  },
+  {
+    "file": "jpg/A-21-island-dusk-amber.jpg",
+    "slice": "A",
+    "landscape": "island",
+    "time": "dusk",
+    "season": "summer",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "hopeful"
+  },
+  {
+    "file": "jpg/A-22-lagoon-noonhaze-teal.jpg",
+    "slice": "A",
+    "landscape": "lagoon",
+    "time": "noonhaze",
+    "season": "spring",
+    "palette": "teal",
+    "brightness": "light",
+    "mood": "calm"
+  },
+  {
+    "file": "jpg/A-23-frozenlake-dawn-rose.jpg",
+    "slice": "A",
+    "landscape": "frozenlake",
+    "time": "dawn",
+    "season": "winter",
+    "palette": "rose",
+    "brightness": "light",
+    "mood": "pure"
+  },
+  {
+    "file": "jpg/A-24-rainlake-dusk-violet.jpg",
+    "slice": "A",
+    "landscape": "rainlake",
+    "time": "dusk",
+    "season": "summer",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "tender"
+  },
+  {
+    "file": "jpg/A-25-tidepools-moonlit-silver.jpg",
+    "slice": "A",
+    "landscape": "tidepools",
+    "time": "moonlit",
+    "season": "summer",
+    "palette": "silver",
+    "brightness": "mid",
+    "mood": "peaceful"
+  },
+  {
+    "file": "jpg/A-26-ocean-moonlit-silver.jpg",
+    "slice": "A",
+    "landscape": "ocean",
+    "time": "moonlit",
+    "season": "autumn",
+    "palette": "silver",
+    "brightness": "dark",
+    "mood": "vast"
+  },
+  {
+    "file": "jpg/A-27-estuary-predawn-nightblue.jpg",
+    "slice": "A",
+    "landscape": "estuary",
+    "time": "predawn",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "quiet"
+  },
+  {
+    "file": "jpg/A-28-mirror-bluehour-teal.jpg",
+    "slice": "A",
+    "landscape": "mirror",
+    "time": "bluehour",
+    "season": "winter",
+    "palette": "teal",
+    "brightness": "mid",
+    "mood": "still"
+  },
+  {
+    "file": "jpg/A-29-lake-starry-nightblue.jpg",
+    "slice": "A",
+    "landscape": "lake",
+    "time": "starry",
+    "season": "summer",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "awe"
+  },
+  {
+    "file": "jpg/A-30-fjord-noonhaze-sage.jpg",
+    "slice": "A",
+    "landscape": "fjord",
+    "time": "noonhaze",
+    "season": "summer",
+    "palette": "sage",
+    "brightness": "mid",
+    "mood": "expansive"
+  },
+  {
+    "file": "jpg/A-31-river-bluehour-teal.jpg",
+    "slice": "A",
+    "landscape": "river",
+    "time": "bluehour",
+    "season": "winter",
+    "palette": "teal",
+    "brightness": "light",
+    "mood": "hushed"
+  },
+  {
+    "file": "jpg/A-32-waterfall-golden-amber.jpg",
+    "slice": "A",
+    "landscape": "waterfall",
+    "time": "golden",
+    "season": "autumn",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/A-33-seacliffs-dawn-rose.jpg",
+    "slice": "A",
+    "landscape": "seacliffs",
+    "time": "dawn",
+    "season": "summer",
+    "palette": "rose",
+    "brightness": "light",
+    "mood": "uplifting"
+  },
+  {
+    "file": "jpg/A-34-shore-starry-nightblue.jpg",
+    "slice": "A",
+    "landscape": "shore",
+    "time": "starry",
+    "season": "autumn",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "awe"
+  },
+  {
+    "file": "jpg/A-35-island-morning-sage.jpg",
+    "slice": "A",
+    "landscape": "island",
+    "time": "morning",
+    "season": "spring",
+    "palette": "sage",
+    "brightness": "light",
+    "mood": "fresh"
+  },
+  {
+    "file": "jpg/A-36-lagoon-dusk-rose.jpg",
+    "slice": "A",
+    "landscape": "lagoon",
+    "time": "dusk",
+    "season": "autumn",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "tender"
+  },
+  {
+    "file": "jpg/A-37-frozenlake-moonlit-silver.jpg",
+    "slice": "A",
+    "landscape": "frozenlake",
+    "time": "moonlit",
+    "season": "winter",
+    "palette": "silver",
+    "brightness": "mid",
+    "mood": "serene"
+  },
+  {
+    "file": "jpg/A-38-rainlake-noonhaze-sage.jpg",
+    "slice": "A",
+    "landscape": "rainlake",
+    "time": "noonhaze",
+    "season": "spring",
+    "palette": "sage",
+    "brightness": "light",
+    "mood": "renewing"
+  },
+  {
+    "file": "jpg/A-39-tidepools-bluehour-teal.jpg",
+    "slice": "A",
+    "landscape": "tidepools",
+    "time": "bluehour",
+    "season": "winter",
+    "palette": "teal",
+    "brightness": "dark",
+    "mood": "contemplative"
+  },
+  {
+    "file": "jpg/A-40-ocean-dawn-rose.jpg",
+    "slice": "A",
+    "landscape": "ocean",
+    "time": "dawn",
+    "season": "spring",
+    "palette": "rose",
+    "brightness": "light",
+    "mood": "hopeful"
+  },
+  {
+    "file": "jpg/A-41-estuary-morning-sage.jpg",
+    "slice": "A",
+    "landscape": "estuary",
+    "time": "morning",
+    "season": "summer",
+    "palette": "sage",
+    "brightness": "light",
+    "mood": "peaceful"
+  },
+  {
+    "file": "jpg/A-42-mirror-golden-gold.jpg",
+    "slice": "A",
+    "landscape": "mirror",
+    "time": "golden",
+    "season": "spring",
+    "palette": "gold",
+    "brightness": "light",
+    "mood": "radiant"
+  },
+  {
+    "file": "jpg/A-43-lake-starry-violet.jpg",
+    "slice": "A",
+    "landscape": "lake",
+    "time": "starry",
+    "season": "autumn",
+    "palette": "violet",
+    "brightness": "dark",
+    "mood": "awe"
+  },
+  {
+    "file": "jpg/A-44-fjord-golden-amber.jpg",
+    "slice": "A",
+    "landscape": "fjord",
+    "time": "golden",
+    "season": "spring",
+    "palette": "amber",
+    "brightness": "light",
+    "mood": "majestic"
+  },
+  {
+    "file": "jpg/A-45-river-predawn-violet.jpg",
+    "slice": "A",
+    "landscape": "river",
+    "time": "predawn",
+    "season": "summer",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "quiet"
+  },
+  {
+    "file": "jpg/A-46-waterfall-moonlit-nightblue.jpg",
+    "slice": "A",
+    "landscape": "waterfall",
+    "time": "moonlit",
+    "season": "summer",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "mysterious"
+  },
+  {
+    "file": "jpg/A-47-seacliffs-noonhaze-silver.jpg",
+    "slice": "A",
+    "landscape": "seacliffs",
+    "time": "noonhaze",
+    "season": "winter",
+    "palette": "silver",
+    "brightness": "light",
+    "mood": "austere"
+  },
+  {
+    "file": "jpg/A-48-shore-predawn-teal.jpg",
+    "slice": "A",
+    "landscape": "shore",
+    "time": "predawn",
+    "season": "winter",
+    "palette": "teal",
+    "brightness": "dark",
+    "mood": "still"
+  },
+  {
+    "file": "jpg/A-49-island-starry-nightblue.jpg",
+    "slice": "A",
+    "landscape": "island",
+    "time": "starry",
+    "season": "autumn",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "awe"
+  },
+  {
+    "file": "jpg/A-50-lagoon-golden-gold.jpg",
+    "slice": "A",
+    "landscape": "lagoon",
+    "time": "golden",
+    "season": "winter",
+    "palette": "gold",
+    "brightness": "light",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/A-51-frozenlake-predawn-amber.jpg",
+    "slice": "A",
+    "landscape": "frozenlake",
+    "time": "predawn",
+    "season": "spring",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "hopeful"
+  },
+  {
+    "file": "jpg/A-52-rainlake-bluehour-nightblue.jpg",
+    "slice": "A",
+    "landscape": "rainlake",
+    "time": "bluehour",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "reflective"
+  },
+  {
+    "file": "jpg/A-53-tidepools-morning-sage.jpg",
+    "slice": "A",
+    "landscape": "tidepools",
+    "time": "morning",
+    "season": "autumn",
+    "palette": "sage",
+    "brightness": "mid",
+    "mood": "gentle"
+  },
+  {
+    "file": "jpg/A-54-ocean-starry-violet.jpg",
+    "slice": "A",
+    "landscape": "ocean",
+    "time": "starry",
+    "season": "summer",
+    "palette": "violet",
+    "brightness": "dark",
+    "mood": "infinite"
+  },
+  {
+    "file": "jpg/A-55-estuary-dusk-violet.jpg",
+    "slice": "A",
+    "landscape": "estuary",
+    "time": "dusk",
+    "season": "spring",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "tender"
+  },
+  {
+    "file": "jpg/A-56-mirror-predawn-violet.jpg",
+    "slice": "A",
+    "landscape": "mirror",
+    "time": "predawn",
+    "season": "summer",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "still"
+  },
+  {
+    "file": "jpg/A-57-lake-dawn-gold.jpg",
+    "slice": "A",
+    "landscape": "lake",
+    "time": "dawn",
+    "season": "winter",
+    "palette": "gold",
+    "brightness": "mid",
+    "mood": "pure"
+  },
+  {
+    "file": "jpg/A-58-ocean-dusk-amber.jpg",
+    "slice": "A",
+    "landscape": "ocean",
+    "time": "dusk",
+    "season": "winter",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "reflective"
+  },
+  {
+    "file": "jpg/A-59-shore-noonhaze-rose.jpg",
+    "slice": "A",
+    "landscape": "shore",
+    "time": "noonhaze",
+    "season": "autumn",
+    "palette": "rose",
+    "brightness": "light",
+    "mood": "gentle"
+  },
+  {
+    "file": "jpg/A-60-waterfall-morning-gold.jpg",
+    "slice": "A",
+    "landscape": "waterfall",
+    "time": "morning",
+    "season": "spring",
+    "palette": "gold",
+    "brightness": "mid",
+    "mood": "fresh"
+  },
+  {
+    "file": "jpg/B-01-dunes-predawn-silver.jpg",
+    "slice": "B",
+    "landscape": "dunes",
+    "time": "predawn",
+    "season": "winter",
+    "palette": "silver",
+    "brightness": "mid",
+    "mood": "hushed"
+  },
+  {
+    "file": "jpg/B-02-ripples-dawn-rose.jpg",
+    "slice": "B",
+    "landscape": "ripples",
+    "time": "dawn",
+    "season": "spring",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "tender"
+  },
+  {
+    "file": "jpg/B-03-canyon-morning-amber.jpg",
+    "slice": "B",
+    "landscape": "canyon",
+    "time": "morning",
+    "season": "autumn",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "majestic"
+  },
+  {
+    "file": "jpg/B-04-mesa-golden-gold.jpg",
+    "slice": "B",
+    "landscape": "mesa",
+    "time": "golden",
+    "season": "autumn",
+    "palette": "gold",
+    "brightness": "light",
+    "mood": "steadfast"
+  },
+  {
+    "file": "jpg/B-05-oasis-dusk-violet.jpg",
+    "slice": "B",
+    "landscape": "oasis",
+    "time": "dusk",
+    "season": "summer",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "peaceful"
+  },
+  {
+    "file": "jpg/B-06-saltflat-noon-ivory.jpg",
+    "slice": "B",
+    "landscape": "saltflat",
+    "time": "noon",
+    "season": "summer",
+    "palette": "ivory",
+    "brightness": "light",
+    "mood": "open"
+  },
+  {
+    "file": "jpg/B-07-milkyway-starry-nightblue.jpg",
+    "slice": "B",
+    "landscape": "milkyway",
+    "time": "starry",
+    "season": "summer",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "awe"
+  },
+  {
+    "file": "jpg/B-08-cloudscape-morning-ivory.jpg",
+    "slice": "B",
+    "landscape": "cloudscape",
+    "time": "morning",
+    "season": "spring",
+    "palette": "ivory",
+    "brightness": "light",
+    "mood": "uplifted"
+  },
+  {
+    "file": "jpg/B-09-rays-dawn-gold.jpg",
+    "slice": "B",
+    "landscape": "rays",
+    "time": "dawn",
+    "season": "winter",
+    "palette": "gold",
+    "brightness": "light",
+    "mood": "hopeful"
+  },
+  {
+    "file": "jpg/B-10-moonrise-bluehour-teal.jpg",
+    "slice": "B",
+    "landscape": "moonrise",
+    "time": "bluehour",
+    "season": "winter",
+    "palette": "teal",
+    "brightness": "mid",
+    "mood": "serene"
+  },
+  {
+    "file": "jpg/B-11-aurora-starry-teal.jpg",
+    "slice": "B",
+    "landscape": "aurora",
+    "time": "starry",
+    "season": "winter",
+    "palette": "teal",
+    "brightness": "dark",
+    "mood": "wonder"
+  },
+  {
+    "file": "jpg/B-12-crackedearth-golden-amber.jpg",
+    "slice": "B",
+    "landscape": "crackedearth",
+    "time": "golden",
+    "season": "summer",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "patient"
+  },
+  {
+    "file": "jpg/B-13-wadi-morning-silver.jpg",
+    "slice": "B",
+    "landscape": "wadi",
+    "time": "morning",
+    "season": "spring",
+    "palette": "silver",
+    "brightness": "light",
+    "mood": "renewed"
+  },
+  {
+    "file": "jpg/B-14-dunes-bluehour-violet.jpg",
+    "slice": "B",
+    "landscape": "dunes",
+    "time": "bluehour",
+    "season": "autumn",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "calm"
+  },
+  {
+    "file": "jpg/B-15-rockdesert-moonlit-silver.jpg",
+    "slice": "B",
+    "landscape": "rockdesert",
+    "time": "moonlit",
+    "season": "autumn",
+    "palette": "silver",
+    "brightness": "mid",
+    "mood": "still"
+  },
+  {
+    "file": "jpg/B-16-skyhorizon-predawn-nightblue.jpg",
+    "slice": "B",
+    "landscape": "skyhorizon",
+    "time": "predawn",
+    "season": "autumn",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "expectant"
+  },
+  {
+    "file": "jpg/B-17-canyon-dusk-rose.jpg",
+    "slice": "B",
+    "landscape": "canyon",
+    "time": "dusk",
+    "season": "spring",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "reflective"
+  },
+  {
+    "file": "jpg/B-18-oasis-morning-teal.jpg",
+    "slice": "B",
+    "landscape": "oasis",
+    "time": "morning",
+    "season": "spring",
+    "palette": "teal",
+    "brightness": "mid",
+    "mood": "fresh"
+  },
+  {
+    "file": "jpg/B-19-saltflat-bluehour-rose.jpg",
+    "slice": "B",
+    "landscape": "saltflat",
+    "time": "bluehour",
+    "season": "winter",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "dreamlike"
+  },
+  {
+    "file": "jpg/B-20-ripples-noon-ivory.jpg",
+    "slice": "B",
+    "landscape": "ripples",
+    "time": "noon",
+    "season": "summer",
+    "palette": "ivory",
+    "brightness": "light",
+    "mood": "gentle"
+  },
+  {
+    "file": "jpg/B-21-starfield-starry-violet.jpg",
+    "slice": "B",
+    "landscape": "starfield",
+    "time": "starry",
+    "season": "autumn",
+    "palette": "violet",
+    "brightness": "dark",
+    "mood": "infinite"
+  },
+  {
+    "file": "jpg/B-22-mesa-dusk-amber.jpg",
+    "slice": "B",
+    "landscape": "mesa",
+    "time": "dusk",
+    "season": "spring",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "relieved"
+  },
+  {
+    "file": "jpg/B-23-cloudscape-golden-gold.jpg",
+    "slice": "B",
+    "landscape": "cloudscape",
+    "time": "golden",
+    "season": "autumn",
+    "palette": "gold",
+    "brightness": "light",
+    "mood": "radiant"
+  },
+  {
+    "file": "jpg/B-24-dunes-moonlit-nightblue.jpg",
+    "slice": "B",
+    "landscape": "dunes",
+    "time": "moonlit",
+    "season": "summer",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "tranquil"
+  },
+  {
+    "file": "jpg/B-25-wadi-golden-amber.jpg",
+    "slice": "B",
+    "landscape": "wadi",
+    "time": "golden",
+    "season": "winter",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/B-26-crackedearth-predawn-violet.jpg",
+    "slice": "B",
+    "landscape": "crackedearth",
+    "time": "predawn",
+    "season": "summer",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "quiet"
+  },
+  {
+    "file": "jpg/B-27-rays-golden-amber.jpg",
+    "slice": "B",
+    "landscape": "rays",
+    "time": "golden",
+    "season": "summer",
+    "palette": "amber",
+    "brightness": "light",
+    "mood": "glowing"
+  },
+  {
+    "file": "jpg/B-28-moonrise-dusk-rose.jpg",
+    "slice": "B",
+    "landscape": "moonrise",
+    "time": "dusk",
+    "season": "autumn",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "tender"
+  },
+  {
+    "file": "jpg/B-29-aurora-bluehour-violet.jpg",
+    "slice": "B",
+    "landscape": "aurora",
+    "time": "bluehour",
+    "season": "winter",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "mysterious"
+  },
+  {
+    "file": "jpg/B-30-skyhorizon-noon-silver.jpg",
+    "slice": "B",
+    "landscape": "skyhorizon",
+    "time": "noon",
+    "season": "winter",
+    "palette": "silver",
+    "brightness": "light",
+    "mood": "contemplative"
+  },
+  {
+    "file": "jpg/B-31-dunes-golden-gold.jpg",
+    "slice": "B",
+    "landscape": "dunes",
+    "time": "golden",
+    "season": "autumn",
+    "palette": "gold",
+    "brightness": "mid",
+    "mood": "abundant"
+  },
+  {
+    "file": "jpg/B-32-canyon-predawn-teal.jpg",
+    "slice": "B",
+    "landscape": "canyon",
+    "time": "predawn",
+    "season": "spring",
+    "palette": "teal",
+    "brightness": "mid",
+    "mood": "solemn"
+  },
+  {
+    "file": "jpg/B-33-oasis-starry-nightblue.jpg",
+    "slice": "B",
+    "landscape": "oasis",
+    "time": "starry",
+    "season": "summer",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "sheltered"
+  },
+  {
+    "file": "jpg/B-34-saltflat-dawn-gold.jpg",
+    "slice": "B",
+    "landscape": "saltflat",
+    "time": "dawn",
+    "season": "autumn",
+    "palette": "gold",
+    "brightness": "mid",
+    "mood": "awakening"
+  },
+  {
+    "file": "jpg/B-35-ripples-bluehour-teal.jpg",
+    "slice": "B",
+    "landscape": "ripples",
+    "time": "bluehour",
+    "season": "spring",
+    "palette": "teal",
+    "brightness": "mid",
+    "mood": "cool"
+  },
+  {
+    "file": "jpg/B-36-rockdesert-noon-amber.jpg",
+    "slice": "B",
+    "landscape": "rockdesert",
+    "time": "noon",
+    "season": "summer",
+    "palette": "amber",
+    "brightness": "light",
+    "mood": "sun-warmed"
+  },
+  {
+    "file": "jpg/B-37-mesa-moonlit-teal.jpg",
+    "slice": "B",
+    "landscape": "mesa",
+    "time": "moonlit",
+    "season": "autumn",
+    "palette": "teal",
+    "brightness": "mid",
+    "mood": "watchful"
+  },
+  {
+    "file": "jpg/B-38-cloudscape-dusk-violet.jpg",
+    "slice": "B",
+    "landscape": "cloudscape",
+    "time": "dusk",
+    "season": "summer",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "gentle"
+  },
+  {
+    "file": "jpg/B-39-milkyway-starry-silver.jpg",
+    "slice": "B",
+    "landscape": "milkyway",
+    "time": "starry",
+    "season": "spring",
+    "palette": "silver",
+    "brightness": "mid",
+    "mood": "vast"
+  },
+  {
+    "file": "jpg/B-40-skyhorizon-golden-rose.jpg",
+    "slice": "B",
+    "landscape": "skyhorizon",
+    "time": "golden",
+    "season": "spring",
+    "palette": "rose",
+    "brightness": "light",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/B-41-wadi-dawn-rose.jpg",
+    "slice": "B",
+    "landscape": "wadi",
+    "time": "dawn",
+    "season": "winter",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "soft"
+  },
+  {
+    "file": "jpg/B-42-crackedearth-morning-teal.jpg",
+    "slice": "B",
+    "landscape": "crackedearth",
+    "time": "morning",
+    "season": "autumn",
+    "palette": "teal",
+    "brightness": "mid",
+    "mood": "restored"
+  },
+  {
+    "file": "jpg/B-43-dunes-dawn-ivory.jpg",
+    "slice": "B",
+    "landscape": "dunes",
+    "time": "dawn",
+    "season": "winter",
+    "palette": "ivory",
+    "brightness": "light",
+    "mood": "cleansed"
+  },
+  {
+    "file": "jpg/B-44-rays-morning-silver.jpg",
+    "slice": "B",
+    "landscape": "rays",
+    "time": "morning",
+    "season": "autumn",
+    "palette": "silver",
+    "brightness": "light",
+    "mood": "lifting"
+  },
+  {
+    "file": "jpg/B-45-moonrise-bluehour-nightblue.jpg",
+    "slice": "B",
+    "landscape": "moonrise",
+    "time": "bluehour",
+    "season": "summer",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "serene"
+  },
+  {
+    "file": "jpg/B-46-oasis-golden-amber.jpg",
+    "slice": "B",
+    "landscape": "oasis",
+    "time": "golden",
+    "season": "winter",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "welcoming"
+  },
+  {
+    "file": "jpg/B-47-canyon-noon-ivory.jpg",
+    "slice": "B",
+    "landscape": "canyon",
+    "time": "noon",
+    "season": "spring",
+    "palette": "ivory",
+    "brightness": "light",
+    "mood": "airy"
+  },
+  {
+    "file": "jpg/B-48-rockdesert-dawn-violet.jpg",
+    "slice": "B",
+    "landscape": "rockdesert",
+    "time": "dawn",
+    "season": "autumn",
+    "palette": "violet",
+    "brightness": "dark",
+    "mood": "resolute"
+  },
+  {
+    "file": "jpg/B-49-starfield-starry-nightblue.jpg",
+    "slice": "B",
+    "landscape": "starfield",
+    "time": "starry",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "boundless"
+  },
+  {
+    "file": "jpg/B-50-cloudscape-golden-gold.jpg",
+    "slice": "B",
+    "landscape": "cloudscape",
+    "time": "golden",
+    "season": "spring",
+    "palette": "gold",
+    "brightness": "mid",
+    "mood": "grace"
+  },
+  {
+    "file": "jpg/B-51-mesa-predawn-rose.jpg",
+    "slice": "B",
+    "landscape": "mesa",
+    "time": "predawn",
+    "season": "winter",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "waiting"
+  },
+  {
+    "file": "jpg/B-52-ripples-moonlit-silver.jpg",
+    "slice": "B",
+    "landscape": "ripples",
+    "time": "moonlit",
+    "season": "autumn",
+    "palette": "silver",
+    "brightness": "mid",
+    "mood": "quiet"
+  },
+  {
+    "file": "jpg/B-53-skyhorizon-dusk-amber.jpg",
+    "slice": "B",
+    "landscape": "skyhorizon",
+    "time": "dusk",
+    "season": "winter",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "closing"
+  },
+  {
+    "file": "jpg/B-54-dunes-noon-ivory.jpg",
+    "slice": "B",
+    "landscape": "dunes",
+    "time": "noon",
+    "season": "spring",
+    "palette": "ivory",
+    "brightness": "light",
+    "mood": "pure"
+  },
+  {
+    "file": "jpg/B-55-wadi-moonlit-nightblue.jpg",
+    "slice": "B",
+    "landscape": "wadi",
+    "time": "moonlit",
+    "season": "spring",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "consoling"
+  },
+  {
+    "file": "jpg/B-56-dunes-dusk-rose.jpg",
+    "slice": "B",
+    "landscape": "dunes",
+    "time": "dusk",
+    "season": "summer",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "wistful"
+  },
+  {
+    "file": "jpg/B-57-crackedearth-moonlit-silver.jpg",
+    "slice": "B",
+    "landscape": "crackedearth",
+    "time": "moonlit",
+    "season": "autumn",
+    "palette": "silver",
+    "brightness": "mid",
+    "mood": "solitary"
+  },
+  {
+    "file": "jpg/B-58-oasis-predawn-silver.jpg",
+    "slice": "B",
+    "landscape": "oasis",
+    "time": "predawn",
+    "season": "autumn",
+    "palette": "silver",
+    "brightness": "light",
+    "mood": "hushed"
+  },
+  {
+    "file": "jpg/B-59-canyon-bluehour-nightblue.jpg",
+    "slice": "B",
+    "landscape": "canyon",
+    "time": "bluehour",
+    "season": "autumn",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "deep"
+  },
+  {
+    "file": "jpg/B-60-skyhorizon-morning-teal.jpg",
+    "slice": "B",
+    "landscape": "skyhorizon",
+    "time": "morning",
+    "season": "summer",
+    "palette": "teal",
+    "brightness": "light",
+    "mood": "clear-minded"
+  },
+  {
+    "file": "jpg/C-01-snowpeaks-dawn-rose.jpg",
+    "slice": "C",
+    "landscape": "snow peaks",
+    "time": "dawn",
+    "season": "winter",
+    "palette": "rose",
+    "brightness": "light",
+    "mood": "serene"
+  },
+  {
+    "file": "jpg/C-02-ridges-predawn-violet.jpg",
+    "slice": "C",
+    "landscape": "layered ridges",
+    "time": "predawn",
+    "season": "autumn",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "contemplative"
+  },
+  {
+    "file": "jpg/C-03-cloudsea-morning-gold.jpg",
+    "slice": "C",
+    "landscape": "sea of clouds",
+    "time": "morning",
+    "season": "summer",
+    "palette": "gold",
+    "brightness": "light",
+    "mood": "uplifting"
+  },
+  {
+    "file": "jpg/C-04-rollinghills-golden-gold.jpg",
+    "slice": "C",
+    "landscape": "rolling green hills",
+    "time": "golden",
+    "season": "summer",
+    "palette": "gold",
+    "brightness": "mid",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/C-05-terraces-morning-sage.jpg",
+    "slice": "C",
+    "landscape": "terraced hills",
+    "time": "morning",
+    "season": "spring",
+    "palette": "sage",
+    "brightness": "light",
+    "mood": "fresh"
+  },
+  {
+    "file": "jpg/C-06-alpinemeadow-noonhaze-sage.jpg",
+    "slice": "C",
+    "landscape": "alpine meadow",
+    "time": "noonhaze",
+    "season": "summer",
+    "palette": "sage",
+    "brightness": "light",
+    "mood": "peaceful"
+  },
+  {
+    "file": "jpg/C-07-wildflowers-golden-rose.jpg",
+    "slice": "C",
+    "landscape": "wildflower slope",
+    "time": "golden",
+    "season": "spring",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "tender"
+  },
+  {
+    "file": "jpg/C-08-pinefog-morning-rust.jpg",
+    "slice": "C",
+    "landscape": "pine forest in fog",
+    "time": "morning",
+    "season": "autumn",
+    "palette": "rust",
+    "brightness": "light",
+    "mood": "hushed"
+  },
+  {
+    "file": "jpg/C-09-autumnwoods-golden-rust.jpg",
+    "slice": "C",
+    "landscape": "autumn woods",
+    "time": "golden",
+    "season": "autumn",
+    "palette": "rust",
+    "brightness": "mid",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/C-10-birch-noonhaze-silver.jpg",
+    "slice": "C",
+    "landscape": "birch grove",
+    "time": "noonhaze",
+    "season": "winter",
+    "palette": "silver",
+    "brightness": "light",
+    "mood": "pure"
+  },
+  {
+    "file": "jpg/C-11-olivegrove-dusk-sage.jpg",
+    "slice": "C",
+    "landscape": "olive grove",
+    "time": "dusk",
+    "season": "summer",
+    "palette": "sage",
+    "brightness": "mid",
+    "mood": "calm"
+  },
+  {
+    "file": "jpg/C-12-cedars-morning-teal.jpg",
+    "slice": "C",
+    "landscape": "cedar forest",
+    "time": "morning",
+    "season": "winter",
+    "palette": "teal",
+    "brightness": "mid",
+    "mood": "majestic"
+  },
+  {
+    "file": "jpg/C-13-palmgrove-noonhaze-gold.jpg",
+    "slice": "C",
+    "landscape": "palm grove",
+    "time": "noonhaze",
+    "season": "summer",
+    "palette": "gold",
+    "brightness": "light",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/C-14-lonetree-bluehour-nightblue.jpg",
+    "slice": "C",
+    "landscape": "lone tree on a hill",
+    "time": "bluehour",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "solitary"
+  },
+  {
+    "file": "jpg/C-15-sunbeams-morning-gold.jpg",
+    "slice": "C",
+    "landscape": "sunbeams through trees",
+    "time": "morning",
+    "season": "spring",
+    "palette": "gold",
+    "brightness": "mid",
+    "mood": "hopeful"
+  },
+  {
+    "file": "jpg/C-16-snowyforest-moonlit-nightblue.jpg",
+    "slice": "C",
+    "landscape": "snowy forest",
+    "time": "moonlit",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "still"
+  },
+  {
+    "file": "jpg/C-17-valley-dawn-teal.jpg",
+    "slice": "C",
+    "landscape": "valley",
+    "time": "dawn",
+    "season": "spring",
+    "palette": "teal",
+    "brightness": "mid",
+    "mood": "awakening"
+  },
+  {
+    "file": "jpg/C-18-snowpeaks-moonlit-silver.jpg",
+    "slice": "C",
+    "landscape": "snow peaks",
+    "time": "moonlit",
+    "season": "winter",
+    "palette": "silver",
+    "brightness": "dark",
+    "mood": "majestic"
+  },
+  {
+    "file": "jpg/C-19-ridges-noonhaze-teal.jpg",
+    "slice": "C",
+    "landscape": "layered ridges",
+    "time": "noonhaze",
+    "season": "summer",
+    "palette": "teal",
+    "brightness": "light",
+    "mood": "expansive"
+  },
+  {
+    "file": "jpg/C-20-cloudsea-dusk-violet.jpg",
+    "slice": "C",
+    "landscape": "sea of clouds",
+    "time": "dusk",
+    "season": "autumn",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "reflective"
+  },
+  {
+    "file": "jpg/C-21-rollinghills-predawn-nightblue.jpg",
+    "slice": "C",
+    "landscape": "rolling green hills",
+    "time": "predawn",
+    "season": "spring",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "quiet"
+  },
+  {
+    "file": "jpg/C-22-terraces-golden-rust.jpg",
+    "slice": "C",
+    "landscape": "terraced hills",
+    "time": "golden",
+    "season": "autumn",
+    "palette": "rust",
+    "brightness": "mid",
+    "mood": "grateful"
+  },
+  {
+    "file": "jpg/C-23-alpinemeadow-dawn-rose.jpg",
+    "slice": "C",
+    "landscape": "alpine meadow",
+    "time": "dawn",
+    "season": "spring",
+    "palette": "rose",
+    "brightness": "light",
+    "mood": "gentle"
+  },
+  {
+    "file": "jpg/C-24-wildflowers-morning-sage.jpg",
+    "slice": "C",
+    "landscape": "wildflower slope",
+    "time": "morning",
+    "season": "summer",
+    "palette": "sage",
+    "brightness": "light",
+    "mood": "joyful"
+  },
+  {
+    "file": "jpg/C-25-pinefog-bluehour-teal.jpg",
+    "slice": "C",
+    "landscape": "pine forest in fog",
+    "time": "bluehour",
+    "season": "winter",
+    "palette": "teal",
+    "brightness": "dark",
+    "mood": "mysterious"
+  },
+  {
+    "file": "jpg/C-26-autumnwoods-predawn-violet.jpg",
+    "slice": "C",
+    "landscape": "autumn woods",
+    "time": "predawn",
+    "season": "autumn",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "wistful"
+  },
+  {
+    "file": "jpg/C-27-birch-dawn-gold.jpg",
+    "slice": "C",
+    "landscape": "birch grove",
+    "time": "dawn",
+    "season": "autumn",
+    "palette": "gold",
+    "brightness": "light",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/C-28-olivegrove-morning-silver.jpg",
+    "slice": "C",
+    "landscape": "olive grove",
+    "time": "morning",
+    "season": "spring",
+    "palette": "silver",
+    "brightness": "light",
+    "mood": "peaceful"
+  },
+  {
+    "file": "jpg/C-29-cedars-dusk-rust.jpg",
+    "slice": "C",
+    "landscape": "cedar forest",
+    "time": "dusk",
+    "season": "autumn",
+    "palette": "rust",
+    "brightness": "mid",
+    "mood": "solemn"
+  },
+  {
+    "file": "jpg/C-30-palmgrove-bluehour-violet.jpg",
+    "slice": "C",
+    "landscape": "palm grove",
+    "time": "bluehour",
+    "season": "summer",
+    "palette": "violet",
+    "brightness": "dark",
+    "mood": "tranquil"
+  },
+  {
+    "file": "jpg/C-31-lonetree-dawn-gold.jpg",
+    "slice": "C",
+    "landscape": "lone tree on a hill",
+    "time": "dawn",
+    "season": "spring",
+    "palette": "gold",
+    "brightness": "light",
+    "mood": "hopeful"
+  },
+  {
+    "file": "jpg/C-32-sunbeams-golden-rust.jpg",
+    "slice": "C",
+    "landscape": "sunbeams through trees",
+    "time": "golden",
+    "season": "autumn",
+    "palette": "rust",
+    "brightness": "mid",
+    "mood": "reverent"
+  },
+  {
+    "file": "jpg/C-33-snowyforest-dawn-rose.jpg",
+    "slice": "C",
+    "landscape": "snowy forest",
+    "time": "dawn",
+    "season": "winter",
+    "palette": "rose",
+    "brightness": "light",
+    "mood": "pure"
+  },
+  {
+    "file": "jpg/C-34-valley-moonlit-silver.jpg",
+    "slice": "C",
+    "landscape": "valley",
+    "time": "moonlit",
+    "season": "summer",
+    "palette": "silver",
+    "brightness": "dark",
+    "mood": "calm"
+  },
+  {
+    "file": "jpg/C-35-snowpeaks-golden-gold.jpg",
+    "slice": "C",
+    "landscape": "snow peaks",
+    "time": "golden",
+    "season": "autumn",
+    "palette": "gold",
+    "brightness": "mid",
+    "mood": "majestic"
+  },
+  {
+    "file": "jpg/C-36-ridges-dusk-rose.jpg",
+    "slice": "C",
+    "landscape": "layered ridges",
+    "time": "dusk",
+    "season": "spring",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "wistful"
+  },
+  {
+    "file": "jpg/C-37-cloudsea-moonlit-nightblue.jpg",
+    "slice": "C",
+    "landscape": "sea of clouds",
+    "time": "moonlit",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "transcendent"
+  },
+  {
+    "file": "jpg/C-38-rollinghills-noonhaze-sage.jpg",
+    "slice": "C",
+    "landscape": "rolling green hills",
+    "time": "noonhaze",
+    "season": "spring",
+    "palette": "sage",
+    "brightness": "light",
+    "mood": "soft"
+  },
+  {
+    "file": "jpg/C-39-terraces-predawn-teal.jpg",
+    "slice": "C",
+    "landscape": "terraced hills",
+    "time": "predawn",
+    "season": "summer",
+    "palette": "teal",
+    "brightness": "mid",
+    "mood": "mystical"
+  },
+  {
+    "file": "jpg/C-40-alpinemeadow-bluehour-violet.jpg",
+    "slice": "C",
+    "landscape": "alpine meadow",
+    "time": "bluehour",
+    "season": "summer",
+    "palette": "violet",
+    "brightness": "dark",
+    "mood": "serene"
+  },
+  {
+    "file": "jpg/C-41-wildflowers-dusk-violet.jpg",
+    "slice": "C",
+    "landscape": "wildflower slope",
+    "time": "dusk",
+    "season": "summer",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "dreamy"
+  },
+  {
+    "file": "jpg/C-42-pinefog-predawn-silver.jpg",
+    "slice": "C",
+    "landscape": "pine forest in fog",
+    "time": "predawn",
+    "season": "spring",
+    "palette": "silver",
+    "brightness": "mid",
+    "mood": "hushed"
+  },
+  {
+    "file": "jpg/C-43-autumnwoods-dusk-rose.jpg",
+    "slice": "C",
+    "landscape": "autumn woods",
+    "time": "dusk",
+    "season": "autumn",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "nostalgic"
+  },
+  {
+    "file": "jpg/C-44-birch-moonlit-nightblue.jpg",
+    "slice": "C",
+    "landscape": "birch grove",
+    "time": "moonlit",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "quiet"
+  },
+  {
+    "file": "jpg/C-45-olivegrove-moonlit-silver.jpg",
+    "slice": "C",
+    "landscape": "olive grove",
+    "time": "moonlit",
+    "season": "winter",
+    "palette": "silver",
+    "brightness": "dark",
+    "mood": "peaceful"
+  },
+  {
+    "file": "jpg/C-46-cedars-predawn-nightblue.jpg",
+    "slice": "C",
+    "landscape": "cedar forest",
+    "time": "predawn",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "ancient"
+  },
+  {
+    "file": "jpg/C-47-palmgrove-dawn-rose.jpg",
+    "slice": "C",
+    "landscape": "palm grove",
+    "time": "dawn",
+    "season": "spring",
+    "palette": "rose",
+    "brightness": "light",
+    "mood": "gentle"
+  },
+  {
+    "file": "jpg/C-48-lonetree-golden-rust.jpg",
+    "slice": "C",
+    "landscape": "lone tree on a hill",
+    "time": "golden",
+    "season": "autumn",
+    "palette": "rust",
+    "brightness": "mid",
+    "mood": "reflective"
+  },
+  {
+    "file": "jpg/C-49-sunbeams-noonhaze-teal.jpg",
+    "slice": "C",
+    "landscape": "sunbeams through trees",
+    "time": "noonhaze",
+    "season": "summer",
+    "palette": "teal",
+    "brightness": "light",
+    "mood": "fresh"
+  },
+  {
+    "file": "jpg/C-50-snowyforest-noonhaze-silver.jpg",
+    "slice": "C",
+    "landscape": "snowy forest",
+    "time": "noonhaze",
+    "season": "winter",
+    "palette": "silver",
+    "brightness": "light",
+    "mood": "still"
+  },
+  {
+    "file": "jpg/C-51-valley-bluehour-teal.jpg",
+    "slice": "C",
+    "landscape": "valley",
+    "time": "bluehour",
+    "season": "autumn",
+    "palette": "teal",
+    "brightness": "dark",
+    "mood": "calm"
+  },
+  {
+    "file": "jpg/C-52-snowpeaks-bluehour-violet.jpg",
+    "slice": "C",
+    "landscape": "snow peaks",
+    "time": "bluehour",
+    "season": "winter",
+    "palette": "violet",
+    "brightness": "dark",
+    "mood": "awe"
+  },
+  {
+    "file": "jpg/C-53-ridges-golden-rust.jpg",
+    "slice": "C",
+    "landscape": "layered ridges",
+    "time": "golden",
+    "season": "autumn",
+    "palette": "rust",
+    "brightness": "mid",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/C-54-cloudsea-predawn-violet.jpg",
+    "slice": "C",
+    "landscape": "sea of clouds",
+    "time": "predawn",
+    "season": "summer",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "expectant"
+  },
+  {
+    "file": "jpg/C-55-rollinghills-dusk-rose.jpg",
+    "slice": "C",
+    "landscape": "rolling green hills",
+    "time": "dusk",
+    "season": "spring",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "tender"
+  },
+  {
+    "file": "jpg/C-56-valley-morning-sage.jpg",
+    "slice": "C",
+    "landscape": "valley",
+    "time": "morning",
+    "season": "spring",
+    "palette": "sage",
+    "brightness": "light",
+    "mood": "renewal"
+  },
+  {
+    "file": "jpg/C-57-lonetree-moonlit-silver.jpg",
+    "slice": "C",
+    "landscape": "lone tree on a hill",
+    "time": "moonlit",
+    "season": "summer",
+    "palette": "silver",
+    "brightness": "dark",
+    "mood": "solitary"
+  },
+  {
+    "file": "jpg/C-58-snowhills-bluehour-nightblue.jpg",
+    "slice": "C",
+    "landscape": "snowy rolling hills",
+    "time": "bluehour",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "still"
+  },
+  {
+    "file": "jpg/C-59-larchforest-dusk-gold.jpg",
+    "slice": "C",
+    "landscape": "larch forest",
+    "time": "dusk",
+    "season": "autumn",
+    "palette": "gold",
+    "brightness": "mid",
+    "mood": "grateful"
+  },
+  {
+    "file": "jpg/C-60-beechsunbeams-dawn-sage.jpg",
+    "slice": "C",
+    "landscape": "sunbeams through trees",
+    "time": "dawn",
+    "season": "spring",
+    "palette": "sage",
+    "brightness": "light",
+    "mood": "renewal"
+  },
+  {
+    "file": "jpg/D-01-city-dawn-rose.jpg",
+    "slice": "D-place",
+    "landscape": "distant city",
+    "time": "dawn",
+    "season": "spring",
+    "palette": "rose",
+    "brightness": "light",
+    "mood": "serene"
+  },
+  {
+    "file": "jpg/D-02-city-sunset-gold.jpg",
+    "slice": "D-place",
+    "landscape": "distant city",
+    "time": "sunset",
+    "season": "autumn",
+    "palette": "gold",
+    "brightness": "mid",
+    "mood": "reflective"
+  },
+  {
+    "file": "jpg/D-03-city-bluehour-nightblue.jpg",
+    "slice": "D-place",
+    "landscape": "distant city",
+    "time": "bluehour",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "contemplative"
+  },
+  {
+    "file": "jpg/D-04-city-morning-ivory.jpg",
+    "slice": "D-place",
+    "landscape": "distant city",
+    "time": "morning",
+    "season": "summer",
+    "palette": "ivory",
+    "brightness": "light",
+    "mood": "peaceful"
+  },
+  {
+    "file": "jpg/D-05-courtyard-dusk-amber.jpg",
+    "slice": "D-place",
+    "landscape": "courtyard",
+    "time": "dusk",
+    "season": "autumn",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "tranquil"
+  },
+  {
+    "file": "jpg/D-06-courtyard-night-nightblue.jpg",
+    "slice": "D-place",
+    "landscape": "courtyard",
+    "time": "night",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "still"
+  },
+  {
+    "file": "jpg/D-07-courtyard-morning-sage.jpg",
+    "slice": "D-place",
+    "landscape": "courtyard",
+    "time": "morning",
+    "season": "spring",
+    "palette": "sage",
+    "brightness": "light",
+    "mood": "fresh"
+  },
+  {
+    "file": "jpg/D-08-courtyard-afternoon-rose.jpg",
+    "slice": "D-place",
+    "landscape": "courtyard",
+    "time": "afternoon",
+    "season": "summer",
+    "palette": "rose",
+    "brightness": "light",
+    "mood": "gentle"
+  },
+  {
+    "file": "jpg/D-09-garden-morning-sage.jpg",
+    "slice": "D-place",
+    "landscape": "garden",
+    "time": "morning",
+    "season": "spring",
+    "palette": "sage",
+    "brightness": "light",
+    "mood": "serene"
+  },
+  {
+    "file": "jpg/D-10-garden-sunset-gold.jpg",
+    "slice": "D-place",
+    "landscape": "garden",
+    "time": "sunset",
+    "season": "summer",
+    "palette": "gold",
+    "brightness": "mid",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/D-11-garden-dusk-teal.jpg",
+    "slice": "D-place",
+    "landscape": "garden",
+    "time": "dusk",
+    "season": "autumn",
+    "palette": "teal",
+    "brightness": "mid",
+    "mood": "calm"
+  },
+  {
+    "file": "jpg/D-12-garden-night-nightblue.jpg",
+    "slice": "D-place",
+    "landscape": "garden",
+    "time": "night",
+    "season": "summer",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "peaceful"
+  },
+  {
+    "file": "jpg/D-13-tilecorridor-afternoon-teal.jpg",
+    "slice": "D-place",
+    "landscape": "arched corridor",
+    "time": "afternoon",
+    "season": "summer",
+    "palette": "teal",
+    "brightness": "mid",
+    "mood": "meditative"
+  },
+  {
+    "file": "jpg/D-14-tilecorridor-morning-ivory.jpg",
+    "slice": "D-place",
+    "landscape": "arched corridor",
+    "time": "morning",
+    "season": "spring",
+    "palette": "ivory",
+    "brightness": "light",
+    "mood": "airy"
+  },
+  {
+    "file": "jpg/D-15-tilecorridor-dusk-amber.jpg",
+    "slice": "D-place",
+    "landscape": "arched corridor",
+    "time": "dusk",
+    "season": "autumn",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/D-16-tilecorridor-bluehour-nightblue.jpg",
+    "slice": "D-place",
+    "landscape": "arched corridor",
+    "time": "bluehour",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "quiet"
+  },
+  {
+    "file": "jpg/D-17-lattice-morning-gold.jpg",
+    "slice": "D-place",
+    "landscape": "interior stone",
+    "time": "morning",
+    "season": "spring",
+    "palette": "gold",
+    "brightness": "mid",
+    "mood": "hopeful"
+  },
+  {
+    "file": "jpg/D-18-lattice-afternoon-ivory.jpg",
+    "slice": "D-place",
+    "landscape": "interior stone",
+    "time": "afternoon",
+    "season": "summer",
+    "palette": "ivory",
+    "brightness": "light",
+    "mood": "still"
+  },
+  {
+    "file": "jpg/D-19-lattice-sunset-rose.jpg",
+    "slice": "D-place",
+    "landscape": "interior stone",
+    "time": "sunset",
+    "season": "autumn",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "tender"
+  },
+  {
+    "file": "jpg/D-20-lattice-dusk-teal.jpg",
+    "slice": "D-place",
+    "landscape": "interior stone",
+    "time": "dusk",
+    "season": "winter",
+    "palette": "teal",
+    "brightness": "dark",
+    "mood": "contemplative"
+  },
+  {
+    "file": "jpg/D-21-rainwindow-morning-sage.jpg",
+    "slice": "D-place",
+    "landscape": "window",
+    "time": "morning",
+    "season": "autumn",
+    "palette": "sage",
+    "brightness": "mid",
+    "mood": "reflective"
+  },
+  {
+    "file": "jpg/D-22-rainwindow-night-amber.jpg",
+    "slice": "D-place",
+    "landscape": "window",
+    "time": "night",
+    "season": "winter",
+    "palette": "amber",
+    "brightness": "dark",
+    "mood": "cozy"
+  },
+  {
+    "file": "jpg/D-23-rainwindow-dusk-violet.jpg",
+    "slice": "D-place",
+    "landscape": "window",
+    "time": "dusk",
+    "season": "spring",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "pensive"
+  },
+  {
+    "file": "jpg/D-24-rainwindow-afternoon-ivory.jpg",
+    "slice": "D-place",
+    "landscape": "window",
+    "time": "afternoon",
+    "season": "summer",
+    "palette": "ivory",
+    "brightness": "light",
+    "mood": "gentle"
+  },
+  {
+    "file": "jpg/D-25-countrypath-dawn-gold.jpg",
+    "slice": "D-place",
+    "landscape": "countryside",
+    "time": "dawn",
+    "season": "summer",
+    "palette": "gold",
+    "brightness": "light",
+    "mood": "hopeful"
+  },
+  {
+    "file": "jpg/D-26-countrypath-morning-sage.jpg",
+    "slice": "D-place",
+    "landscape": "countryside",
+    "time": "morning",
+    "season": "spring",
+    "palette": "sage",
+    "brightness": "light",
+    "mood": "fresh"
+  },
+  {
+    "file": "jpg/D-27-countrypath-sunset-amber.jpg",
+    "slice": "D-place",
+    "landscape": "countryside",
+    "time": "sunset",
+    "season": "autumn",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "nostalgic"
+  },
+  {
+    "file": "jpg/D-28-countrypath-morning-ivory.jpg",
+    "slice": "D-place",
+    "landscape": "countryside",
+    "time": "morning",
+    "season": "winter",
+    "palette": "ivory",
+    "brightness": "light",
+    "mood": "quiet"
+  },
+  {
+    "file": "jpg/D-29-library-afternoon-amber.jpg",
+    "slice": "D-place",
+    "landscape": "library",
+    "time": "afternoon",
+    "season": "autumn",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "studious"
+  },
+  {
+    "file": "jpg/D-30-library-night-gold.jpg",
+    "slice": "D-place",
+    "landscape": "library",
+    "time": "night",
+    "season": "winter",
+    "palette": "gold",
+    "brightness": "dark",
+    "mood": "cozy"
+  },
+  {
+    "file": "jpg/D-31-library-morning-ivory.jpg",
+    "slice": "D-place",
+    "landscape": "library",
+    "time": "morning",
+    "season": "spring",
+    "palette": "ivory",
+    "brightness": "light",
+    "mood": "calm"
+  },
+  {
+    "file": "jpg/D-32-library-dusk-teal.jpg",
+    "slice": "D-place",
+    "landscape": "library",
+    "time": "dusk",
+    "season": "autumn",
+    "palette": "teal",
+    "brightness": "mid",
+    "mood": "contemplative"
+  },
+  {
+    "file": "jpg/D-33-lamp-dusk-violet.jpg",
+    "slice": "D-place",
+    "landscape": "street",
+    "time": "dusk",
+    "season": "autumn",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "solitary"
+  },
+  {
+    "file": "jpg/D-34-lamp-dusk-nightblue.jpg",
+    "slice": "D-place",
+    "landscape": "park",
+    "time": "dusk",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "quiet"
+  },
+  {
+    "file": "jpg/D-35-lamp-dusk-rose.jpg",
+    "slice": "D-place",
+    "landscape": "seaside",
+    "time": "dusk",
+    "season": "summer",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "tender"
+  },
+  {
+    "file": "jpg/D-36-lamp-dusk-teal.jpg",
+    "slice": "D-place",
+    "landscape": "lakeside",
+    "time": "dusk",
+    "season": "spring",
+    "palette": "teal",
+    "brightness": "mid",
+    "mood": "still"
+  },
+  {
+    "file": "jpg/D-37-clouds-day-ivory.jpg",
+    "slice": "D-texture",
+    "landscape": "sky texture",
+    "time": "day",
+    "season": "summer",
+    "palette": "ivory",
+    "brightness": "light",
+    "mood": "airy"
+  },
+  {
+    "file": "jpg/D-38-clouds-sunset-rose.jpg",
+    "slice": "D-texture",
+    "landscape": "sky texture",
+    "time": "sunset",
+    "season": "autumn",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "dreamy"
+  },
+  {
+    "file": "jpg/D-39-clouds-dawn-gold.jpg",
+    "slice": "D-texture",
+    "landscape": "sky texture",
+    "time": "dawn",
+    "season": "spring",
+    "palette": "gold",
+    "brightness": "light",
+    "mood": "hopeful"
+  },
+  {
+    "file": "jpg/D-40-mist-dawn-sage.jpg",
+    "slice": "D-texture",
+    "landscape": "mist texture",
+    "time": "dawn",
+    "season": "autumn",
+    "palette": "sage",
+    "brightness": "light",
+    "mood": "serene"
+  },
+  {
+    "file": "jpg/D-41-mist-night-nightblue.jpg",
+    "slice": "D-texture",
+    "landscape": "mist texture",
+    "time": "night",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "mysterious"
+  },
+  {
+    "file": "jpg/D-42-mist-morning-violet.jpg",
+    "slice": "D-texture",
+    "landscape": "mist texture",
+    "time": "morning",
+    "season": "spring",
+    "palette": "violet",
+    "brightness": "light",
+    "mood": "ethereal"
+  },
+  {
+    "file": "jpg/D-43-ripples-sunset-gold.jpg",
+    "slice": "D-texture",
+    "landscape": "water texture",
+    "time": "sunset",
+    "season": "summer",
+    "palette": "gold",
+    "brightness": "mid",
+    "mood": "calm"
+  },
+  {
+    "file": "jpg/D-44-ripples-day-teal.jpg",
+    "slice": "D-texture",
+    "landscape": "water texture",
+    "time": "day",
+    "season": "summer",
+    "palette": "teal",
+    "brightness": "mid",
+    "mood": "refreshing"
+  },
+  {
+    "file": "jpg/D-45-ripples-night-nightblue.jpg",
+    "slice": "D-texture",
+    "landscape": "water texture",
+    "time": "night",
+    "season": "autumn",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "still"
+  },
+  {
+    "file": "jpg/D-46-bokeh-night-amber.jpg",
+    "slice": "D-texture",
+    "landscape": "bokeh texture",
+    "time": "night",
+    "season": "winter",
+    "palette": "amber",
+    "brightness": "dark",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/D-47-bokeh-dusk-rose.jpg",
+    "slice": "D-texture",
+    "landscape": "bokeh texture",
+    "time": "dusk",
+    "season": "autumn",
+    "palette": "rose",
+    "brightness": "mid",
+    "mood": "tender"
+  },
+  {
+    "file": "jpg/D-48-bokeh-night-teal.jpg",
+    "slice": "D-texture",
+    "landscape": "bokeh texture",
+    "time": "night",
+    "season": "summer",
+    "palette": "teal",
+    "brightness": "dark",
+    "mood": "calm"
+  },
+  {
+    "file": "jpg/D-49-sand-morning-gold.jpg",
+    "slice": "D-texture",
+    "landscape": "sand texture",
+    "time": "morning",
+    "season": "summer",
+    "palette": "gold",
+    "brightness": "light",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/D-50-sand-sunset-amber.jpg",
+    "slice": "D-texture",
+    "landscape": "sand texture",
+    "time": "sunset",
+    "season": "autumn",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "reflective"
+  },
+  {
+    "file": "jpg/D-51-sand-dawn-rose.jpg",
+    "slice": "D-texture",
+    "landscape": "sand texture",
+    "time": "dawn",
+    "season": "winter",
+    "palette": "rose",
+    "brightness": "light",
+    "mood": "gentle"
+  },
+  {
+    "file": "jpg/D-52-silk-day-ivory.jpg",
+    "slice": "D-texture",
+    "landscape": "silk texture",
+    "time": "day",
+    "season": "spring",
+    "palette": "ivory",
+    "brightness": "light",
+    "mood": "graceful"
+  },
+  {
+    "file": "jpg/D-53-silk-dusk-violet.jpg",
+    "slice": "D-texture",
+    "landscape": "silk texture",
+    "time": "dusk",
+    "season": "autumn",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "dreamy"
+  },
+  {
+    "file": "jpg/D-54-silk-night-teal.jpg",
+    "slice": "D-texture",
+    "landscape": "silk texture",
+    "time": "night",
+    "season": "winter",
+    "palette": "teal",
+    "brightness": "dark",
+    "mood": "elegant"
+  },
+  {
+    "file": "jpg/D-55-duskysky-dusk-violet.jpg",
+    "slice": "D-texture",
+    "landscape": "sky gradient",
+    "time": "dusk",
+    "season": "summer",
+    "palette": "violet",
+    "brightness": "mid",
+    "mood": "peaceful"
+  },
+  {
+    "file": "jpg/D-56-duskysky-dusk-nightblue.jpg",
+    "slice": "D-texture",
+    "landscape": "sky gradient",
+    "time": "dusk",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "serene"
+  },
+  {
+    "file": "jpg/D-57-duskysky-dusk-amber.jpg",
+    "slice": "D-texture",
+    "landscape": "sky gradient",
+    "time": "dusk",
+    "season": "autumn",
+    "palette": "amber",
+    "brightness": "mid",
+    "mood": "warm"
+  },
+  {
+    "file": "jpg/D-58-frost-morning-ivory.jpg",
+    "slice": "D-texture",
+    "landscape": "frost texture",
+    "time": "morning",
+    "season": "winter",
+    "palette": "ivory",
+    "brightness": "light",
+    "mood": "crisp"
+  },
+  {
+    "file": "jpg/D-59-frost-dawn-rose.jpg",
+    "slice": "D-texture",
+    "landscape": "frost texture",
+    "time": "dawn",
+    "season": "winter",
+    "palette": "rose",
+    "brightness": "light",
+    "mood": "gentle"
+  },
+  {
+    "file": "jpg/D-60-frost-night-nightblue.jpg",
+    "slice": "D-texture",
+    "landscape": "frost texture",
+    "time": "night",
+    "season": "winter",
+    "palette": "nightblue",
+    "brightness": "dark",
+    "mood": "still"
+  }
+]

@@ -1,0 +1,180 @@
+/* The Garden tab. Painted evening (or dawn) scene, one tree per area. */
+
+.garden-home.app-scroll { padding: 0 0 calc(104px + var(--safe-bottom)); }
+.garden-rest { padding: 8px 18px 0; }
+
+.garden-scene {
+  position: relative;
+  height: 100dvh;
+  overflow: hidden;
+  color: #fff8ee;
+  background: #1a1428;
+}
+.garden-scene-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
+}
+
+.garden-top {
+  position: absolute;
+  z-index: 6;
+  left: 28px;
+  right: 28px;
+  top: calc(58px + var(--safe-top));
+  text-align: center;
+}
+.garden-top h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 28px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #fff8ee;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+}
+.garden-hook {
+  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #f6eedc;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+.gold-mark {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  background: #e7c56a;
+  vertical-align: 2px;
+}
+
+.garden-prop { position: absolute; z-index: 6; pointer-events: none; }
+.garden-prop.lantern {
+  right: 3%;
+  bottom: 13%;
+  width: 54px;
+  height: auto;
+  animation: lantern-pulse 2.8s ease-in-out infinite;
+}
+
+/* Trees share one canvas. The anchor (256, 622) sits on the stone pad. */
+.garden-trees { position: absolute; inset: 0; z-index: 3; }
+.garden-tree {
+  position: absolute;
+  left: var(--pad-x);
+  top: var(--pad-y);
+  width: 50%;
+  aspect-ratio: 512 / 640;
+  transform: translate(-50%, -97.1875%);
+  z-index: var(--z);
+  /* The canvas is mostly clear. Only the plaque and the medallions take a tap,
+     so a nearer sapling does not block a medallion hanging behind it. */
+  pointer-events: none;
+}
+.tree-planter, .tree-canopy { position: absolute; inset: 0; }
+.tree-planter { z-index: 1; }
+.tree-planter img, .tree-canopy > img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: block;
+  pointer-events: none;
+}
+/* Dawn tints the trees only. The dawn painting is already the background. */
+.garden-scene[data-theme='dawn'] .tree-planter img,
+.garden-scene[data-theme='dawn'] .tree-canopy > img {
+  filter: sepia(0.28) hue-rotate(292deg) saturate(0.72) brightness(1.08);
+}
+
+/* Canopy origin is the trunk centre on the soil line. The planter is not transformed. */
+.tree-canopy {
+  z-index: 2;
+  transform-origin: var(--pivot-x, 50%) var(--pivot-y, 79%);
+  pointer-events: none;
+}
+/* Half the sine period each way, so a full swing and return takes --sway-dur. */
+.garden-scene[data-sway='canopy'] .tree-canopy.sway {
+  animation-name: canopy-sway;
+  animation-duration: calc(var(--sway-dur, 5.4s) / 2);
+  animation-timing-function: cubic-bezier(0.445, 0.05, 0.55, 0.95);
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-delay: var(--sway-delay, 0s);
+}
+@keyframes canopy-sway {
+  from { transform: rotate(calc(var(--sway, 0.8deg) * -1)); }
+  to { transform: rotate(var(--sway, 0.8deg)); }
+}
+
+.plaque-name {
+  position: absolute;
+  /* Front of the wrapped ribbon. The ribbon is centred on the pot, at 256px of the 512 canvas. */
+  left: 50%;
+  top: 91.25%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 36%;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: clamp(7.5px, 2.3vw, 9px);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: #f6e7c3;
+  text-align: center;
+  text-decoration: none;
+  text-shadow: none;
+  white-space: nowrap;
+  pointer-events: auto;
+}
+
+.garden-fruits { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; }
+.medallion {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  pointer-events: auto;
+}
+.medallion a { display: grid; place-items: center; width: 44px; height: 44px; }
+.medallion img { width: 32px; height: 32px; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35)); }
+.medallion.bloom { animation: bloom 0.8s ease both; }
+
+@keyframes lantern-pulse {
+  50% { filter: drop-shadow(0 0 14px rgba(255, 196, 110, 0.95)) brightness(1.18); }
+}
+@keyframes bloom {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .garden-prop.lantern,
+  .garden-scene[data-sway='canopy'] .tree-canopy.sway,
+  .medallion.bloom { animation: none; }
+}
+
+.garden-card {
+  background: #0E2A2B;
+  color: #e6efe8;
+  border: 1px solid #D4A84B;
+}
+.garden-card .eyebrow { color: #D4A84B; }
+.garden-card h3, .garden-card small, .garden-card .garden-link { color: #e6efe8; }
+.garden-card h3 { color: #D4A84B; }
+.garden-card .bar { background: rgba(212, 168, 75, 0.22); }
+.garden-card .bar > i { background: #D4A84B; }

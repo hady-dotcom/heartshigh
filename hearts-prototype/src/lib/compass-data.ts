@@ -1,0 +1,193 @@
+// Learner-facing compass copy, the monthly wording, and the life check-in.
+// Every string here is shown to a learner, so it has to pass the kill list. Scale names such as
+// "gratitude" are on that list, so the focus word for that scale is "thankfulness".
+
+import { LIFE_EVENTS } from './compass-bank'
+import type { ScaleKey } from './heart'
+
+export type PlaceKey = 'growing' | 'steady' | 'flourishing'
+export type Frame = 'places' | 'focusing' | 'both'
+
+export type PlaceCopy = { key: PlaceKey; label: string; low: number; high: number; forward: string }
+
+export type CompassCopy = {
+  frame: Frame
+  focusLead: string
+  places: PlaceCopy[]
+  movementUp: string
+  movementSame: string
+  movementOnward: string
+}
+
+export type LifeOption = { key: string; label: string; boost: ScaleKey }
+
+export const DEFAULT_COPY: CompassCopy = {
+  frame: 'both',
+  focusLead: 'Focusing on',
+  places: [
+    { key: 'growing', label: 'Growing', low: -10, high: -3, forward: 'A few minutes with {area} will carry this forward.' },
+    { key: 'steady', label: 'Steady', low: -2, high: 2, forward: 'Keep {area} company a little this month.' },
+    { key: 'flourishing', label: 'Flourishing', low: 3, high: 10, forward: '{area} is in a good season. Let it spill into the next step.' },
+  ],
+  movementUp: "You've grown in {area} since last month.",
+  movementSame: '{area} is holding steady.',
+  movementOnward: '{area} would welcome a little more time this month.',
+}
+
+export const LIFE_PROMPT = {
+  caption: "What's going on in life right now?",
+  subline: 'One line is enough. It helps us keep this month close to you.',
+}
+
+export const LIFE_OPTIONS: LifeOption[] = LIFE_EVENTS.map((event) => ({ key: event.key, label: event.label, boost: event.scales[0] }))
+
+/**
+ * Plain names a person understands, plus a line and a small action for each.
+ * Each line is written out. Nothing here is a template filled with a name.
+ */
+export const LEARNER_VOICE: Record<ScaleKey, { name: string; line: string; step: string; action: string }> = {
+  desire: {
+    name: 'Guarding the gaze',
+    line: 'When a picture holds your eye, one breath is enough to look away.',
+    step: 'Set the screen face down once this evening.',
+    action: 'This week: set the screen face down once this evening.',
+  },
+  greed: {
+    name: 'A light hold on money',
+    line: 'A little set aside for someone else keeps the hand open.',
+    step: 'Put a small amount aside before you spend on yourself.',
+    action: 'This week: put a small amount aside before you spend on yourself.',
+  },
+  anger: {
+    name: 'Holding your temper',
+    line: 'The heat can pass before the words do. Give it that moment.',
+    step: 'When the heat rises, wait for three breaths before you answer.',
+    action: 'This week: when the heat rises, wait for three breaths before you answer.',
+  },
+  ego: {
+    name: 'Letting the credit pass',
+    line: 'The good work can stand without your name written on it.',
+    step: 'The next time you are praised, pass a share of it on.',
+    action: 'This week: when someone thanks you, name who helped.',
+  },
+  worry: {
+    name: 'Patience with worry',
+    line: 'You do not have to settle the ending tonight. Leave a piece of it.',
+    step: 'Write the worry down, then close the page.',
+    action: 'This week: write the worry down, then close the page.',
+  },
+  belonging: {
+    name: 'A seat among people',
+    line: 'One message, or one sitting, is enough to be with people again.',
+    step: 'Send one message to someone who knows you.',
+    action: 'This week: send one message to someone who knows you.',
+  },
+  gratitude: {
+    name: 'Noticing small gifts',
+    line: 'Name one small gift before the day closes. That is plenty.',
+    step: 'Before sleep, name one thing the day gave you.',
+    action: 'This week: before sleep, name one thing the day gave you.',
+  },
+  faith: {
+    name: 'Drawing a little closer',
+    line: 'A short word, said slowly, is a way back when the day has been loud.',
+    step: 'Say one short prayer before the next thing you do.',
+    action: 'This week: say one short prayer before the next thing you do.',
+  },
+  compassion: {
+    name: 'A kind word for others',
+    line: 'Someone near you is carrying a hard week. A kind word reaches them.',
+    step: 'Offer one kind word to someone near you today.',
+    action: 'This week: offer one kind word to someone near you.',
+  },
+  discipline: {
+    name: 'Showing up for the prayer',
+    line: 'The prayer time can find you in the middle of a task. Meet it, even briefly.',
+    step: 'When the time comes, pause the task and pray.',
+    action: 'This week: when the time comes, pause the task and pray.',
+  },
+}
+
+/** Short words for the "Focusing on" line. Configurable per scale. Never the dust name. */
+export const FOCUS_NAMES: Record<ScaleKey, string> = {
+  desire: LEARNER_VOICE.desire.name,
+  greed: LEARNER_VOICE.greed.name,
+  anger: LEARNER_VOICE.anger.name,
+  ego: LEARNER_VOICE.ego.name,
+  worry: LEARNER_VOICE.worry.name,
+  belonging: LEARNER_VOICE.belonging.name,
+  gratitude: LEARNER_VOICE.gratitude.name,
+  faith: LEARNER_VOICE.faith.name,
+  compassion: LEARNER_VOICE.compassion.name,
+  discipline: LEARNER_VOICE.discipline.name,
+}
+
+export type MonthWording = { caption: string; subline: string; labels: Record<string, string> }
+
+/** Same options and the same nudges. Only the words change, so a month does not feel like a repeat. */
+export const MONTH_WORDING: Record<string, MonthWording> = {
+  extra: {
+    caption: 'Something small and welcome turns up on an ordinary day.',
+    subline: 'What does the first thought do with it?',
+    labels: {
+      treat: 'Spend it on myself.',
+      tuck: 'Put it aside for later.',
+      'pass-on': 'Share some of it.',
+      pause: 'Stop, say thank you, then choose.',
+    },
+  },
+  queue: {
+    caption: 'Someone steps ahead of you while you are waiting.',
+    subline: 'What does your face do?',
+    labels: {
+      look: 'A long look. They will notice.',
+      polite: 'A few careful words.',
+      'let-go': 'Let it pass. Their day may be heavy.',
+      replay: 'Leave it, then tell the story later.',
+    },
+  },
+  thumb: {
+    caption: 'Late at night, the screen is still in your hand.',
+    subline: 'What is holding it there?',
+    labels: {
+      'one-more': 'One more clip. Then one more.',
+      lives: 'Other days look brighter than mine.',
+      off: 'Nothing. I put it down.',
+      talk: 'A talk, or a few verses.',
+    },
+  },
+  visitor: {
+    caption: 'A restless thought arrives in the small hours.',
+    subline: 'What do you reach for?',
+    labels: {
+      phone: 'The phone, to drown it out.',
+      person: 'A message to someone I trust.',
+      wudu: 'Water, then the prayer mat.',
+      spin: 'Nothing. I lie there with it.',
+      heavy: 'This is heavier than a restless night.',
+    },
+  },
+  news: {
+    caption: 'Good news arrives.',
+    subline: 'Who hears it first?',
+    labels: {
+      family: 'The family chat',
+      one: 'Just the one person I tell',
+      online: 'Everyone, out loud',
+      allah: 'Allah first, then I will see',
+      nobody: 'Nobody comes to mind',
+    },
+  },
+  doors: {
+    caption: 'Six paths. Which one draws you today?',
+    subline: 'Any path is a fair start.',
+    labels: {
+      calmer: 'A quieter mind',
+      habits: 'Small habits that stay',
+      'big-q': 'Sitting with the big questions',
+      good: 'Being of some use out there',
+      beginning: 'From the first step',
+      close: 'Feeling close again',
+    },
+  },
+}

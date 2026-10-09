@@ -1,0 +1,89 @@
+// A lane's own clips, for the Lanes screen and for /feed?lane=<key>. Plain module: the server and the device share it.
+import type { CutInfo, LaneDef } from './heart'
+import type { FeedItem } from '../server/learner'
+import { playingSpeaker } from './playing-speaker'
+
+const ROLE_ORDER = { first: 0, next: 1, mains: 2 } as const
+
+/** The lane's starter talks in order (first, next, mains), then clips confirmed for the lane, strongest first. */
+export function laneClips(clips: Record<string, FeedItem>, cuts: CutInfo[], lane: string, title: string): FeedItem[] {
+  const rows = cuts.map((cut) => ({ cut, clip: clips[String(cut.id)] })).filter((row) => Boolean(row.clip))
+  const starters = rows.filter((row) => row.cut.starter?.lane === lane).sort((a, b) => ROLE_ORDER[a.cut.starter!.role] - ROLE_ORDER[b.cut.starter!.role])
+  const weight = (cut: CutInfo) => cut.lanes.find((tag) => tag.lane === lane && tag.confirmed)?.weight ?? 0
+  const tagged = rows.filter((row) => row.cut.starter?.lane !== lane && weight(row.cut) > 0).sort((a, b) => weight(b.cut) - weight(a.cut) || a.cut.id - b.cut.id)
+  return [...starters, ...tagged].map((row) => ({ ...row.clip, laneKey: lane, lane, laneLabel: title }))
+}
+
+/**
+ * The same gate the feed player uses: a YouTube talk with a real hors window,
+ * and not a styled, scene, or typography card that specFor would refuse.
+ */
+export function clipCanPlayOnLane(clip: Pick<FeedItem, 'youtubeId' | 'card' | 'hors' | 'style' | 'typography'>): boolean {
+  if (!clip.youtubeId) return false
+  if (clip.card && clip.card !== 'talk') return false
+  if (clip.style || clip.typography?.src) return false
+  const start = Number(clip.hors?.start)
+  const end = Number(clip.hors?.end)
+  return Number.isFinite(start) && Number.isFinite(end) && end > start
+}
+
+/** Clips a lane can actually play — the same list the player walks. */
+export function playableLaneClips(clips: Record<string, FeedItem>, cuts: CutInfo[], lane: string, title: string): FeedItem[] {
+  return laneClips(clips, cuts, lane, title).filter(clipCanPlayOnLane)
+}
+
+/** A dedicated lane feed is exactly that lane's playable list. Empty when no lane is open. */
+export function dedicatedLaneFeed(
+  clips: Record<string, FeedItem>,
+  cuts: CutInfo[],
+  titles: Record<string, string>,
+  lane: string | null | undefined,
+): FeedItem[] {
+  if (!lane) return []
+  return playableLaneClips(clips, cuts, lane, titles[lane] || lane)
+}
+
+/**
+ * A dedicated lane never takes the scored/mixed fetch. The card count and the
+ * player walk the same `clipCanPlayOnLane` list, in starter-then-tagged order.
+ */
+export function takeDedicatedLane(
+  lane: string | null | undefined,
+  own: FeedItem[],
+  incoming: FeedItem[],
+): FeedItem[] {
+  if (!lane) return incoming
+  return own
+}
+
+/** Mixed Home feed may grow from the session playlist. A dedicated lane must not. */
+export function feedMayWiden(lane?: string | null) {
+  return !lane
+}
+
+/** One name when every playable clip shares it; otherwise the lane card stays quiet. */
+export function laneCardSpeaker(clips: { speaker?: string | null }[]) {
+  const names = [...new Set(clips.map((clip) => playingSpeaker(clip.speaker)).filter(Boolean))]
+  return names.length === 1 ? names[0] : ''
+}
+
+/** Every lane that has at least one clip, in the lanes' own order, with its clips. Opt-in lanes stay out. */
+export function lanesWithClips(route: { lanes: LaneDef[]; cuts: CutInfo[] }, clips: Record<string, FeedItem>, titles: Record<string, string>) {
+  return route.lanes
+    .filter((lane) => !lane.optInOnly)
+    .map((lane) => ({ key: lane.key, title: titles[lane.key] || lane.title, clips: playableLaneClips(clips, route.cuts, lane.key, titles[lane.key] || lane.title) }))
+    .filter((lane) => lane.clips.length > 0)
+}
+
+/**
+ * Where "Try another lane" goes. A signed-in learner gets the Lanes page. That page is personal
+ * (day count, courses, unread), so a guest is not sent there to meet a login wall: the next lane
+ * with clips starts at once, wrapping round, or the mixed feed when no other lane has clips.
+ */
+export function laneEndHref(input: { base: string; signedIn: boolean; current?: string | null; lanes: string[] }) {
+  if (input.signedIn) return `${input.base}/lanes`
+  const at = input.current ? input.lanes.indexOf(input.current) : -1
+  const next = input.lanes.length ? input.lanes[(at + 1) % input.lanes.length] : undefined
+  if (!next || next === input.current) return `${input.base}/feed`
+  return `${input.base}/feed?lane=${encodeURIComponent(next)}`
+}

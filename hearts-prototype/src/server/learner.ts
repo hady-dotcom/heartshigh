@@ -1,0 +1,256 @@
+import { existsSync } from 'node:fs'
+import path from 'node:path'
+import type { Payload } from 'payload'
+import { now } from '@/lib/clock'
+import { daysWithUs } from '@/lib/days-with-us'
+import { idOf } from '@/lib/ids'
+import { recommendLesson } from '@/lib/placing'
+import { matchDoorTalk, pickGentleFirstCourse } from '@/lib/first-course'
+import { capitalAfterColon, doorNumberOfClause, doorOfClause } from '@/lib/doors'
+import { loadDoors } from './doors'
+import { portalDisplayName } from '@/lib/portal-name'
+import type { PieceRef } from '@/lib/nesting'
+import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
+import type { FramingTrack } from '@/lib/framing/types'
+import { tidyTalkTitle } from '@/lib/talk-title'
+import { courseIsOpen, opensOnDay } from '@/lib/drip'
+
+export type SlideStyle = 'kinetic' | 'cinema' | 'windows' | 'conversation' | 'unfold'
+
+export type TimedCaption = { at: number; text: string; role?: 'hook' | 'turn' | 'land'; tidy?: string }
+
+export type FeedItem = {
+  id: string
+  cutId: number
+  lane: string
+  laneLabel: string
+  speaker: string
+  speakerSlug: string
+  portrait: string | null
+  poster: string | null
+  youtubeId: string | null
+  /** A Short or other 9:16 film with its words in the picture: no caption overlay, buttons above the lower third. */
+  vertical?: boolean
+  /** Words in the picture (a Short, or captions burned in): our caption sits in the bar below the uncropped 16:9 film. */
+  wordsInPicture?: boolean
+  /** YouTube's large frame, only when it carries no words; otherwise the extended cut paints our own still and title. */
+  cleanThumb?: string | null
+  courseId: number
+  courseTitle: string
+  lessonId: number
+  /** Whole-talk length, used to fill {n} in a full-talk CTA. */
+  durationSeconds?: number
+  /** `lines` are the captions with when each is said, so the caption follows the speaker. */
+  hors: { start: number; end: number; quote: string; lines?: TimedCaption[] }
+  appetiser: { start: number; end: number; quote: string; lines?: TimedCaption[]; spans?: { role?: 'hook' | 'turn' | 'land'; start: number; end: number }[] }
+  hook: string
+  turn: string
+  land: string
+  /** Tidied lines for display. `hook`, `turn` and `land` stay word for word. */
+  hookTidy?: string
+  turnTidy?: string
+  landTidy?: string
+  /** Short tidied lines for an appetiser that has no film. Never the whole transcript. */
+  scenic?: { hook: string; turn: string; land: string }
+  style: SlideStyle | null
+  /** Rendered typography standing in for the hors d'oeuvre, when an admin has chosen one. */
+  typography?: { style: SlideStyle; inPlace: true; src: string } | null
+  /** Beat films rendered for this talk. The feed alternates one of them with a scenic card. */
+  films?: { beat: 'hook' | 'turn' | 'land'; style: SlideStyle; src: string; quote: string }[]
+  /** Verbatim hook, turn and land for the scenic card, when the sheet has them. */
+  beats?: { beat: 'hook' | 'turn' | 'land'; quote: string; gold: string; audio: string | null; words?: { text: string; at: number }[]; verse?: string | null }[]
+  /** Catalogue style, local still, and stored photographic still. A return visit keeps the stored still. */
+  cardStyle?: SlideStyle | null
+  cardScene?: string | null
+  cardBackground?: string | null
+  /** Set when this card is a film, a scenic card, a line of the talk, or a question rather than the talk itself. */
+  card?: 'talk' | 'film' | 'text' | 'question' | 'scene'
+  film?: { beat: 'hook' | 'turn' | 'land'; style: SlideStyle; src: string; quote: string }
+  scene?: { style: SlideStyle; scene: string; destination: 'clip' | 'talk'; brightness?: 'light' | 'mid' | 'dark' | null; beats: { beat: 'hook' | 'turn' | 'land'; quote: string; gold: string; audio: string | null; words?: { text: string; at: number }[]; verse?: string | null }[] }
+  prompt?: string
+  clause: number | null
+  door?: number | null
+  /** The lane this slot was routed for; null for spine clips and D0. */
+  laneKey?: string | null
+  laneTags?: { lane: string; weight: number }[]
+  lessonTitle?: string
+  /** Whole-talk length in seconds, for the 'Watch the whole talk (N min)' button. */
+  talkSeconds?: number | null
+  placeholder?: boolean
+  transcriptReady?: boolean
+  /** The talk's tier record: a machine draft until a person checks it. */
+  tierStatus?: 'draft' | 'checked' | null
+  /** Show "Resume from where the appetiser ended" beside the main, which opens at 0:00. */
+  offerResume?: boolean
+  /** Hors d'oeuvre -> its appetiser -> its full talk. Learn more uses the current piece's parent only. */
+  parents: { hors: PieceRef; appetiser: PieceRef }
+  /** Live portrait treatments A–F. Missing means the player uses F. */
+  framingTrack?: FramingTrack | null
+}
+
+export type CourseCard = {
+  id: number
+  title: string
+  summary: string
+  speaker: string
+  speakerSlug: string
+  parts: number
+  poster: string | null
+  firstLessonId: number | null
+  opensOnDay: number
+  open: boolean
+  recommended: boolean
+  /** The Jibril doors this course's talks sit in, in door order. */
+  doors: { number: number; title: string }[]
+}
+
+const LANES: [RegExp, string, string][] = [
+  [/ease|harsh/i, 'ease', 'Ease'],
+  [/light|heart/i, 'light', 'Light'],
+  [/lord/i, 'lord', 'Your Lord'],
+  [/prayer/i, 'prayer', 'Prayer'],
+  [/household/i, 'home', 'Home life'],
+  [/prophet/i, 'prophet', 'The Prophet'],
+  [/story/i, 'stories', 'Stories'],
+]
+
+export function laneOf(theme: string | null | undefined) {
+  for (const [pattern, key, label] of LANES) if (pattern.test(theme || '')) return { key, label }
+  return { key: 'reflections', label: 'Reflections' }
+}
+
+export function slugify(value: string) {
+  return value.toLowerCase().replace(/^(shaykh|sheikh|imam|ustadh)\s+/i, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+function publicFile(relative: string) {
+  return existsSync(path.join(process.cwd(), 'public', relative)) ? `/${relative}` : null
+}
+
+export function portraitFor(slug: string) {
+  return publicFile(`speakers/${slug}.jpg`)
+}
+
+export function posterFor(youtubeId: string | null | undefined) {
+  if (!youtubeId || !/^[\w-]{11}$/.test(youtubeId)) return null
+  return publicFile(`clips/${youtubeId}.jpg`) || `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`
+}
+
+/** A still we can paint as a thumbnail, including YouTube frames and the copies under /clips/. */
+export function shownPoster(url: string | null | undefined) {
+  if (!url) return null
+  return url
+}
+
+/** Overview still: the real frame, else a speaker portrait or the courtyard, never an empty teal box. */
+export function talkStill(youtubeId: string | null | undefined, speaker?: string | null) {
+  const poster = shownPoster(posterFor(youtubeId))
+  if (poster) return { src: poster, fallback: false as const }
+  const face = speaker ? portraitFor(slugify(speaker)) : null
+  if (face) return { src: face, fallback: true as const }
+  return { src: '/theme/evening-courtyard.jpg', fallback: true as const }
+}
+
+export const SLIDE_ART: Record<SlideStyle, string> = {
+  kinetic: '/slides/bg-kinetic-truck.jpg',
+  cinema: '/slides/bg-cinema-road.jpg',
+  windows: '/slides/bg-windows-mist.jpg',
+  conversation: '/slides/bg-conversation-night.jpg',
+  unfold: '/slides/bg-windows-mist.jpg',
+}
+
+export function initials(name: string) {
+  return name
+    .replace(/^(shaykh|sheikh|imam|ustadh)\s+/i, '')
+    .split(/\s+/)
+    .map((part) => part[0] || '')
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+}
+
+export function dayNumber(user: SessionUser & { joinedAt?: string | null; createdAt?: string }) {
+  return daysWithUs(user.joinedAt || user.createdAt, now().getTime())
+}
+
+type Row = Record<string, unknown> & { id: number }
+
+export async function lessonsFor(payload: Payload, courseIds: number[]) {
+  if (!courseIds.length) return [] as Row[]
+  const found = await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: 400, where: { course: { in: courseIds } }, sort: 'order' })
+  return found.docs as unknown as Row[]
+}
+
+export async function courseCards(payload: Payload, user: SessionUser): Promise<CourseCard[]> {
+  const courseIds = await visibleCourseIds(payload, user)
+  if (!courseIds.length) return []
+  const courses = (await payload.find({ collection: 'courses', overrideAccess: true, depth: 0, limit: 200, where: { id: { in: courseIds } } })).docs as unknown as Row[]
+  const lessons = await lessonsFor(payload, courseIds)
+  const lessonOrder = courses.flatMap((course) => lessons.filter((lesson) => idOf(lesson.course) === course.id).map((lesson) => lesson.id))
+  const cuts = lessons.length
+    ? ((await payload.find({ collection: 'cuts', overrideAccess: true, depth: 0, limit: 400, where: { lesson: { in: lessons.map((lesson) => lesson.id) } } })).docs as unknown as Row[])
+    : []
+  const tiers = lessons.length
+    ? ((await payload.find({ collection: 'talk-tiers', overrideAccess: true, depth: 0, limit: 400, where: { lesson: { in: lessons.map((lesson) => lesson.id) } } })).docs as unknown as Row[])
+    : []
+  const feedCourseIds = new Set(
+    tiers
+      .filter((tier) => Number(tier.appetiserEnd) > Number(tier.appetiserStart) || Number(tier.horsEnd) > Number(tier.horsStart))
+      .map((tier) => idOf(lessons.find((lesson) => lesson.id === idOf(tier.lesson))?.course))
+      .filter((id): id is number => Boolean(id)),
+  )
+  const doors = await loadDoors(payload)
+  const cutRows = cuts.map((cut) => ({ lessonId: idOf(cut.lesson) || 0, bestClause: (cut.bestClause as number) || null, approved: cut.status === 'approved' }))
+  const firstPick = user.startingClause
+    ? recommendLesson(Number(user.startingClause), cutRows, lessonOrder, doors)
+    : null
+  const startDoor = user.startingClause ? doorNumberOfClause(Number(user.startingClause), doors) : null
+  const onTopicIds = startDoor
+    ? [...new Set(cutRows.filter((cut) => doorNumberOfClause(cut.bestClause, doors) === startDoor && lessonOrder.includes(cut.lessonId)).map((cut) => cut.lessonId))]
+        .filter((lessonId) => {
+          const lesson = lessons.find((row) => row.id === lessonId)
+          const course = courses.find((row) => row.id === idOf(lesson?.course))
+          return Boolean(lesson && matchDoorTalk(startDoor, { title: String(lesson.title || ''), courseTitle: String(course?.title || '') }))
+        })
+    : []
+  const catalogue = courses.map((course) => ({
+    courseId: course.id,
+    courseTitle: String(course.title || ''),
+    lessons: lessons
+      .filter((lesson) => idOf(lesson.course) === course.id)
+      .map((lesson) => ({ id: lesson.id, title: String(lesson.title || ''), order: Number(lesson.order || 0), durationSeconds: Number(lesson.durationSeconds || 0) })),
+  }))
+  const gentle = pickGentleFirstCourse(firstPick, catalogue, onTopicIds)
+  const recommendedCourse = gentle?.courseId || (firstPick ? idOf(lessons.find((lesson) => lesson.id === firstPick)?.course) : null)
+  const ordered = [...courses].sort((a, b) => (a.id === recommendedCourse ? -1 : b.id === recommendedCourse ? 1 : a.id - b.id))
+  const today = dayNumber(user as SessionUser & { joinedAt?: string })
+  return ordered.map((course, index) => {
+    const own = lessons.filter((lesson) => idOf(lesson.course) === course.id)
+    const speaker = String(course.speaker || own[0]?.speaker || '')
+    const ownIds = new Set(own.map((lesson) => lesson.id))
+    const courseDoors = new Map<number, string>()
+    for (const cut of cuts) {
+      if (!ownIds.has(idOf(cut.lesson) || 0) || (cut.status !== 'approved' && !cut.placeholder)) continue
+      const door = doorOfClause(Number(cut.bestClause || 0), doors)
+      if (door) courseDoors.set(door.number, capitalAfterColon(door.title))
+    }
+    return {
+      id: course.id,
+      title: tidyTalkTitle(String(course.title || '')),
+      summary: String(course.summary || ''),
+      speaker,
+      speakerSlug: slugify(speaker),
+      parts: own.length,
+      poster: posterFor((own.find((lesson) => lesson.youtubeId)?.youtubeId as string) || null),
+      firstLessonId: own[0]?.id ?? null,
+      opensOnDay: opensOnDay({ index, inFeed: feedCourseIds.has(course.id) }),
+      open: courseIsOpen({ index, today, inFeed: feedCourseIds.has(course.id) }),
+      recommended: course.id === recommendedCourse,
+      doors: [...courseDoors.entries()].sort((a, b) => a[0] - b[0]).map(([number, title]) => ({ number, title })),
+    }
+  })
+}
+
+export function portalName(portal: PortalDoc) {
+  return portalDisplayName(portal)
+}
