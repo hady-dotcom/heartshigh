@@ -5,9 +5,8 @@ import { gunzipSync } from 'node:zlib'
 import type { Payload } from 'payload'
 import { buildHadithIndex, matchHadith, type Hadith, type HadithIndex } from '@/lib/hadith-match'
 import { COLLECTION_NAMES, harvestTranscript, type HarvestHit } from '@/lib/harvest'
-import { getLlmClient, type LlmClient } from '@/lib/llm'
 import { buildQuranIndex, type QuranCorpus, type QuranIndex } from '@/lib/quran-match'
-import { TAFSIR_SOURCES, summaryLabel, summaryRequest, type TafsirText } from '@/lib/tafsir'
+import { TAFSIR_SOURCES, type TafsirText } from '@/lib/tafsir'
 
 const root = process.cwd()
 const QURAN_FILE = path.join(root, 'content/scripture/quran.json.gz')
@@ -244,31 +243,15 @@ export async function tafsirFor(payload: Payload, surah: number, ayah: number): 
 export type TafsirSummary = { label: string; text: string; ai: boolean; sources: string[] }
 
 /**
- * A short summary written only from the tafsir texts above, labelled with their names. With no AI
- * set up, it says so and shows al-Jalalayn, itself a short tafsir, in its own words.
+ * A short summary for a learner: the short tafsir in its own words. Learners never start a model call.
+ * A prepared summary, if the team has one, would be ordinary stored text. Today that text is al-Jalalayn.
  */
-export async function tafsirSummary(payload: Payload, surah: number, ayah: number, client: LlmClient | null = getLlmClient()): Promise<TafsirSummary | null> {
+export async function tafsirSummary(payload: Payload, surah: number, ayah: number): Promise<TafsirSummary | null> {
   const texts = await tafsirFor(payload, surah, ayah)
   if (!texts.length) return null
-  const key = `summary:${surah}:${ayah}:${texts.map((row) => row.slug).join(',')}`
-  if (client) {
-    const known = await cached<TafsirSummary>(payload, key)
-    if (known) return known
-    try {
-      const request = summaryRequest(surah, ayah, texts)
-      const reply = (await client.complete(request.llm)).trim()
-      if (reply) {
-        const summary = { label: summaryLabel(request.used), text: reply, ai: true, sources: request.used }
-        await remember(payload, key, 'summary', summary)
-        return summary
-      }
-    } catch {
-      // Fall through to the source text.
-    }
-  }
   const short = texts.find((row) => row.slug === 'en-al-jalalayn') || texts.find((row) => row.language === 'English') || texts[0]
   return {
-    label: `No AI summary is available here, so this is ${short.title} in its own words. It is itself a short tafsir.`,
+    label: `This is ${short.title} in its own words. It is itself a short tafsir, kept with the scripture.`,
     text: short.text,
     ai: false,
     sources: [short.title],

@@ -2,14 +2,10 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { dualExtract, ladderFrom, type ClauseCard, type ExtractCut, type ExtractResult } from './extractor'
 import { REWRITE_VOICE } from './human-voice'
+import type { LlmClient } from './portal-ai'
 import { cuesToSentences, formatTimestamp, isVerbatim, normaliseForMatch, parseTranscript } from './transcript'
 
-export type LlmRequest = { system: string; user: string }
-
-export interface LlmClient {
-  name: string
-  complete(request: LlmRequest): Promise<string>
-}
+export type { LlmClient, LlmRequest } from './portal-ai'
 
 function promptFile(name: string) {
   const file = path.join(process.cwd(), 'prompts', name)
@@ -24,68 +20,13 @@ export function loadPrompt(name: string) {
   return promptFile(name)
 }
 
-class AnthropicClient implements LlmClient {
-  name = 'anthropic'
-  constructor(private apiKey: string) {}
-  async complete(request: LlmRequest) {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': this.apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5',
-        max_tokens: 4000,
-        system: request.system,
-        messages: [{ role: 'user', content: request.user }],
-      }),
-    })
-    if (!response.ok) throw new Error(`Anthropic ${response.status}`)
-    const body = (await response.json()) as { content?: { text?: string }[] }
-    return body.content?.map((part) => part.text || '').join('\n') || ''
-  }
-}
-
-class OpenAIClient implements LlmClient {
-  name = 'openai'
-  constructor(private apiKey: string) {}
-  async complete(request: LlmRequest) {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: request.system },
-          { role: 'user', content: request.user },
-        ],
-      }),
-    })
-    if (!response.ok) throw new Error(`OpenAI ${response.status}`)
-    const body = (await response.json()) as { choices?: { message?: { content?: string } }[] }
-    return body.choices?.[0]?.message?.content || ''
-  }
-}
-
-export function getLlmClient(): LlmClient | null {
-  if (process.env.ANTHROPIC_API_KEY) return new AnthropicClient(process.env.ANTHROPIC_API_KEY)
-  if (process.env.OPENAI_API_KEY) return new OpenAIClient(process.env.OPENAI_API_KEY)
-  return null
-}
-
-export function llmStatus() {
-  const client = getLlmClient()
-  return client ? `live:${client.name}` : 'deterministic-fallback'
-}
-
-export async function extractWithFallback(raw: string, clauses: ClauseCard[]): Promise<ExtractResult> {
+/**
+ * The built-in extractor, unless the caller passes a client for this portal's own account.
+ * A key in the server environment is never read and never used.
+ */
+export async function extractWithFallback(raw: string, clauses: ClauseCard[], options: { client?: LlmClient | null } = {}): Promise<ExtractResult> {
   const deterministic = dualExtract(raw, clauses)
-  const client = getLlmClient()
+  const client = options.client || null
   if (!client) return deterministic
   try {
     const system = [
@@ -100,7 +41,9 @@ export async function extractWithFallback(raw: string, clauses: ClauseCard[]): P
     })
     const jsonStart = reply.indexOf('{')
     const jsonEnd = reply.lastIndexOf('}')
-    if (jsonStart === -1 || jsonEnd === -1) return deterministic
+    if (jsonStart === -1 || jsonEnd === -1) {
+      return { ...deterministic, notes: ['The portal AI account did not return cuts, so the built-in extractor was used.', ...deterministic.notes] }
+    }
     const parsed = JSON.parse(reply.slice(jsonStart, jsonEnd + 1)) as { cuts?: Record<string, unknown>[] }
     const sentences = cuesToSentences(parseTranscript(raw).cues)
     const findLine = (quote: unknown) => {
@@ -137,19 +80,19 @@ export async function extractWithFallback(raw: string, clauses: ClauseCard[]): P
     }
     const dropped = (parsed.cuts?.length || 0) - kept.length
     if (!kept.length) {
-      return { ...deterministic, notes: [`${client.name} returned no cuts whose quotes match the transcript word for word, so the built-in extractor was used.`, ...deterministic.notes] }
+      return { ...deterministic, notes: ['The portal AI account returned no cuts whose quotes match the transcript word for word, so the built-in extractor was used.', ...deterministic.notes] }
     }
     return {
       ...deterministic,
       cuts: kept,
       ladder: ladderFrom(kept, sentences),
       engine: 'llm',
-      notes: [`${client.name} drafted these cuts. ${dropped} were dropped because their quotes were not found in the transcript.`, ...deterministic.notes],
+      notes: [`This portal’s AI account drafted these cuts. ${dropped} were dropped because their quotes were not found in the transcript.`, ...deterministic.notes],
     }
   } catch (error) {
     return {
       ...deterministic,
-      notes: [`LLM call failed (${error instanceof Error ? error.message : 'unknown'}). Deterministic extractor used.`, ...deterministic.notes],
+      notes: [`The portal AI call failed (${error instanceof Error ? error.message : 'unknown'}). Deterministic extractor used.`, ...deterministic.notes],
     }
   }
 }
@@ -166,8 +109,7 @@ export function reflectionSystem() {
   return `${base.trim()}\n\n${REWRITE_VOICE}`
 }
 
-export async function suggestReflection(transcript: string): Promise<string[]> {
-  const client = getLlmClient()
+export async function suggestReflection(transcript: string, client?: LlmClient | null): Promise<string[]> {
   const fallback = REFLECTION_FALLBACK
   if (!client) return fallback
   try {

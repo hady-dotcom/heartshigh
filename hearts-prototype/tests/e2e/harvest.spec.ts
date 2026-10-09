@@ -198,7 +198,7 @@ test.describe('harvest', () => {
     await page.getByTestId('scholars-summary').click()
     await expect(page.getByTestId('harvest-panel')).toHaveAttribute('data-view', 'summary')
     const label = (await page.getByTestId('summary-label').textContent()) || ''
-    expect(label).toMatch(/^(AI summary of Tafsir .+|No AI summary is available here, so this is Tafsir al-Jalalayn in its own words\. It is itself a short tafsir\.)$/)
+    expect(label).toMatch(/^This is Tafsir al-Jalalayn in its own words\. It is itself a short tafsir, kept with the scripture\.$/)
     await expect(page.getByTestId('summary-text')).not.toBeEmpty()
 
     await page.getByTestId('summary-full').click()

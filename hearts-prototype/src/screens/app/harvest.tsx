@@ -338,6 +338,7 @@ async function openPanel(payload: Payload, entry: Row, view: View, href: (params
           <Link href={href({ item: entry.id, view: 'summary' }, anchor)} data-testid="scholars-summary">A short summary</Link>
           <Link href={href({ item: entry.id, view: 'tafsir' }, anchor)} data-testid="scholars-tafsir">Read the tafsir</Link>
         </div>
+        <p className="hint" data-testid="summary-source">A short summary is the short tafsir in its own words, kept with the scripture. Nothing here calls a model.</p>
       </div>
     )
   }

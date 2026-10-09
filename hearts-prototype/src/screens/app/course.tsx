@@ -4,7 +4,8 @@ import { DoorChips } from '@/components/app/doors'
 import { notFound, redirect } from 'next/navigation'
 import { CoursePlayer, type PointView, type SwarmItem } from '@/components/app/course-player'
 import { Avatar, FollowButton } from '@/components/app/feed'
-import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
+import { AppFrame, Back, Flash, Hidden } from '@/components/app/shell'
+import { LearnerTabBar } from '@/components/app/learner-bar'
 import { PlayIcon } from '@/components/icons'
 import { clockEnabled, now } from '@/lib/clock'
 import { doorLabel, type Door } from '@/lib/doors'
@@ -13,6 +14,7 @@ import { loadDoors } from '@/server/doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { visibleCourseIds } from '@/server/context'
 import { sortParts } from '@/lib/part-order'
+import { hiddenFromLearners } from '@/lib/youtube'
 import { tidyQuestionPrompt } from '@/lib/question-prompt'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { courseCards, portraitFor, posterFor, shownPoster, slugify, talkStill } from '@/server/learner'
@@ -111,7 +113,7 @@ export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx,
           </form>
         </section>
       </div>
-      <TabBar base={base} active="home" portal={portal} unread={unread} />
+      <LearnerTabBar base={base} active="home" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -178,7 +180,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
           )
         })}
       </div>
-      <TabBar base={base} active="lanes" unread={unread} />
+      <LearnerTabBar base={base} active="lanes" unread={unread} />
     </AppFrame>
   )
 }
@@ -203,7 +205,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
     masterFlags(payload),
   ])
   const unitRank = new Map(units.map((unit, index) => [unit.id, index]))
-  const lessons = sortParts(lessonRows, (row) => unitRank.get(ref(row.unit) || 0) ?? 99)
+  const lessons = sortParts(lessonRows, (row) => unitRank.get(ref(row.unit) || 0) ?? 99).filter((row) => !hiddenFromLearners(str(row.transcriptNote)))
   if (!lessons.length) redirect(`${base}/lanes?error=${encodeURIComponent('That course has no parts yet.')}`)
   if (!query.part) {
     return CourseOverview(ctx, course, lessons)
@@ -437,7 +439,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           </details>
         ) : null}
       </div>
-      <TabBar base={base} active="lanes" portal={portal} unread={unread} />
+      <LearnerTabBar base={base} active="lanes" portal={portal} unread={unread} />
     </AppFrame>
   )
 }

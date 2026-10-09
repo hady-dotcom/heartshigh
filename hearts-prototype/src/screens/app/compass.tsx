@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { MonthLook } from '@/components/app/month-look'
-import { AppFrame, Back, Flash, TabBar } from '@/components/app/shell'
+import { AppFrame, Back, Flash } from '@/components/app/shell'
+import { LearnerTabBar } from '@/components/app/learner-bar'
 import { LeafIcon, PlayIcon } from '@/components/icons'
 import { LIFE_EVENTS } from '@/lib/compass-bank'
 import { learnerPath, monthMoments, recalibrationDueFor } from '@/server/compass'
@@ -42,7 +43,7 @@ export async function LearnerPathScreen({ payload, user, portal, base, query }: 
         })}
         {!summary.areas.length ? <p className="card" data-testid="path-empty">When you have sat with the opening, a few next steps will be here.</p> : null}
       </div>
-      <TabBar base={base} active="me" portal={portal} unread={0} />
+      <LearnerTabBar base={base} active="me" portal={portal} unread={0} />
     </AppFrame>
   )
 }
@@ -65,7 +66,7 @@ export async function RecalibrateScreen({ payload, user, portal, base, query }: 
           next={`${base}/me/path`}
         />
       </div>
-      <TabBar base={base} active="home" portal={portal} unread={0} />
+      <LearnerTabBar base={base} active="home" portal={portal} unread={0} />
     </AppFrame>
   )
 }

@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
+import { AppFrame, Back, Flash, Hidden } from '@/components/app/shell'
+import { LearnerTabBar } from '@/components/app/learner-bar'
 import { WeekScreen } from '@/screens/app/week'
 import { Avatar } from '@/components/app/feed'
 import { OptInLane, PrefToggle, SoundOnToggle, StartAgain } from '@/components/app/me-controls'
@@ -105,7 +106,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
         <p className="eyebrow" style={{ marginTop: 22 }}>Opening questions</p>
         <StartAgain base={base} />
       </div>
-      <TabBar base={base} active="me" portal={portal} unread={unread} />
+      <LearnerTabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -175,7 +176,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
           </div>
         ))}
       </div>
-      <TabBar base={base} active="me" portal={portal} unread={unread} />
+      <LearnerTabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -219,7 +220,7 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
           <button className="pill outline block" type="submit" data-testid="logout">Log out</button>
         </form>
       </div>
-      <TabBar base={base} active="me" portal={portal} unread={unread} />
+      <LearnerTabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -234,7 +235,7 @@ export async function SavedScreen({ payload, user, base }: Ctx) {
         <p className="lead">Clips you kept from the feed. They stay on this phone.</p>
         <SavedList base={base} />
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      <LearnerTabBar base={base} active="me" unread={unread} />
     </AppFrame>
   )
 }

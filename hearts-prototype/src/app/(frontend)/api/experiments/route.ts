@@ -214,7 +214,7 @@ export async function POST(req: Request) {
     if (action === 'suggest') {
       const suggested = await suggestFor(payload, user, Number(text(form, 'id')), text(form, 'current'))
       await addSuggestedVariants(payload, user, Number(text(form, 'id')), suggested.drafts)
-      return ok(suggested.engine === 'mock' || suggested.engine.startsWith('mock') ? 'Mock drafts added. Approve each one before it can run.' : `Drafts from ${suggested.engine}. Approve each one before it can run.`)
+      return ok('Built-in drafts added. The master desk does not call a model. You can also type a line yourself. Approve each one before it can run.')
     }
     if (action === 'kill') {
       const off = text(form, 'value') !== 'off'

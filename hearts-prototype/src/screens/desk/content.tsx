@@ -22,7 +22,11 @@ import { FramingPreview } from '@/components/desk/framing-preview'
 import { trackForClip } from '@/lib/framing/store'
 import { fallbackTrack } from '@/lib/framing/validate'
 import { HelpTip } from '@/components/desk/help'
+import { PortalAiChoice } from '@/components/desk/paid-ai'
+import { publicAi } from '@/lib/portal-ai'
 import { TOOL } from '@/lib/desk-help'
+import { BusyForm } from '@/components/desk/busy-form'
+import { bringInLang, bringInStatus, CAPTION_LANGUAGES } from '@/lib/youtube'
 import { AdminFrame } from './overview'
 
 export function guardAdmin(ctx: Ctx) {
@@ -258,22 +262,51 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
         <div style={{ display: 'grid', gap: 18, minWidth: 0 }}>
           {lesson ? (
             <section className="panel" data-testid="lesson-row">
-              <header><div><h2>Film: {partTitle(lesson, str(course.title))}</h2><p>{youtubeId ? `YouTube ${youtubeId}` : 'No film link yet'}{lesson.durationSeconds ? ` · ${clock(Number(lesson.durationSeconds))}` : ''}</p></div></header>
+              <header><div><h2>Film: {partTitle(lesson, str(course.title))}</h2><p data-testid="lesson-meta">{youtubeId ? `YouTube ${youtubeId}` : 'No film link yet'}{lesson.durationSeconds ? ` · ${clock(Number(lesson.durationSeconds))}` : ''}{str(lesson.speaker) ? ` · ${str(lesson.speaker)}` : ''}</p></div></header>
               <div className="body" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)', gap: 18 }}>
                 <div>
                   {str(lesson.videoProvider) === 'vimeo' && str(lesson.vimeoId) ? <iframe className="film-preview" style={{ padding: 0 }} title={partTitle(lesson, str(course.title))} src={`https://player.vimeo.com/video/${str(lesson.vimeoId)}`} allow="fullscreen; picture-in-picture" /> : str(lesson.videoProvider) === 'file' ? <video className="film-preview" style={{ padding: 0 }} controls src={`/api/hearts/film/${lesson.id}`} /> : youtubeId ? <iframe className="film-preview" style={{ padding: 0 }} title={partTitle(lesson, str(course.title))} src={learnerEmbedSrc(youtubeId)} allow="encrypted-media" /> : <div className="film-preview">{locked ? 'This film has no YouTube link.' : 'Paste a YouTube link to attach the film.'}</div>}
                   <p className="hint" style={{ marginTop: 10 }}>
+                    {(() => {
+                      const status = bringInStatus(str(lesson.transcriptNote))
+                      const label = status === 'processed' ? 'Processed' : status === 'failed' ? 'Failed' : status === 'waiting' ? 'Waiting for transcript' : status === 'processing' ? 'Processing' : ''
+                      const tone = status === 'failed' ? 'rose' : status === 'processed' ? 'teal' : status === 'waiting' ? 'gold' : 'gold'
+                      return label ? <span className={`badge ${tone}`} data-testid="bring-in-status" data-status={status}>{label}</span> : null
+                    })()}{' '}
                     {lesson.transcript ? <span data-testid="has-transcript">Transcript attached. </span> : <span>No transcript yet. </span>}
                     {lesson.transcriptNote ? <span data-testid="transcript-note">{str(lesson.transcriptNote)}</span> : null}
                   </p>
                 </div>
                 {!locked ? (
                   <div style={{ display: 'grid', gap: 14, alignContent: 'start' }}>
-                    <form className="form" action="/api/hearts" method="post">
+                    <BusyForm className="form" action="/api/hearts" method="post">
                       <Hidden fields={{ action: 'ingest', lesson: lesson.id, next: here }} />
-                      <label className="stack">YouTube or share link <HelpTip topic="ingest">{TOOL.ingest}</HelpTip><input type="url" data-testid="youtube-url" name="url" placeholder="https://www.youtube.com/watch?v=" required /></label>
-                      <div className="actions"><button className="btn ink small" data-testid="ingest-submit" type="submit">Fetch film and transcript</button></div>
-                    </form>
+                      <label className="stack">YouTube links, one per line <HelpTip topic="ingest">{TOOL.ingest}</HelpTip><textarea data-testid="youtube-url" name="url" rows={4} placeholder={'https://www.youtube.com/watch?v=…\nhttps://youtu.be/… | Speaker name'} required defaultValue="" /></label>
+                      <input type="hidden" name="fetchTranscript" value="no" />
+                      <label className="check">
+                        <input type="checkbox" name="fetchTranscript" value="yes" defaultChecked data-testid="fetch-transcript" /> Bring in the transcript
+                      </label>
+                      <HelpTip topic="fetch-transcript">{TOOL.fetchTranscript}</HelpTip>
+                      <label className="stack">Caption language <HelpTip topic="caption-lang">{TOOL.captionLang}</HelpTip>
+                        <select name="captionLang" defaultValue={bringInLang(str(lesson.transcriptNote))} data-testid="caption-lang">
+                          {CAPTION_LANGUAGES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                        </select>
+                      </label>
+                      {youtubeId ? (
+                        <label className="check">
+                          <input type="checkbox" name="replaceFilm" value="yes" data-testid="replace-film" /> Replace this film
+                          <HelpTip topic="replace-film">{TOOL.replaceFilm}</HelpTip>
+                        </label>
+                      ) : null}
+                      <div className="actions"><button className="btn ink small" data-testid="ingest-submit" type="submit">Bring in</button></div>
+                    </BusyForm>
+                    {(bringInStatus(str(lesson.transcriptNote)) === 'failed' || bringInStatus(str(lesson.transcriptNote)) === 'waiting') && (youtubeId || str(lesson.sourceUrl)) ? (
+                      <BusyForm action="/api/hearts" method="post" className="actions">
+                        <Hidden fields={{ action: 'ingest', lesson: lesson.id, next: here, retry: 'yes', url: `${youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : str(lesson.sourceUrl)}${str(lesson.speaker) ? ` | ${str(lesson.speaker)}` : ''}`, fetchTranscript: 'yes', captionLang: bringInLang(str(lesson.transcriptNote)) }} />
+                        <button className="btn ghost small" type="submit" data-testid="bring-in-retry">Try again</button>
+                        <HelpTip topic="bring-in-retry">{TOOL.bringInRetry}</HelpTip>
+                      </BusyForm>
+                    ) : null}
                     <form className="form" action="/api/hearts" method="post" encType="multipart/form-data">
                       <Hidden fields={{ action: 'upload-transcript', lesson: lesson.id, next: here }} />
                       <label className="stack">Or upload a transcript (.vtt, .srt or .txt)<input data-testid="transcript-file" type="file" name="file" accept=".vtt,.srt,.txt,.md,text/plain" required /></label>
@@ -281,8 +314,10 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                     </form>
                     <form action="/api/hearts" method="post">
                       <Hidden fields={{ action: 'extract', lesson: lesson.id, next: here }} />
+                      <p className="hint" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Extractor <HelpTip topic="extract">{TOOL.extract}</HelpTip></p>
+                      <PortalAiChoice connected={publicAi(portal?.aiConnection).connected} master={user.role === 'master'} teacher={user.role === 'teacher'} calls={1} settingsHref={portal ? `/p/${portal.slug}/admin/settings` : undefined} />
                       <button className="btn block" style={{ width: '100%' }} data-testid="extract-submit" type="submit">Run the extractor</button>
-                      <p className="hint" style={{ marginTop: 6 }}>Finds short moments with a hook, a turn and a landing line. Quotes are word for word and timings come from the transcript. Running it again replaces the drafts.</p>
+                      <p className="hint" style={{ marginTop: 6 }}>Finds short moments with a hook, a turn and a landing line. Quotes are word for word and timings come from the transcript. Running it again keeps clips you have already approved and replaces the drafts.</p>
                     </form>
                   </div>
                 ) : <p className="hint">The film, transcript and cuts are looked after by the master desk.</p>}
@@ -325,7 +360,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                           {cut.theme ? <>Theme: {str(cut.theme)}. </> : null}
                           {door ? <>Door <strong data-testid="cut-door" style={{ color: 'var(--ink)' }}>{doorLabel(door)}</strong> <span className="hint" data-testid="cut-door-clause">(clause {clause}{cut.clauseFragment ? `: ${str(cut.clauseFragment)}` : ''})</span>. </> : null}
                           {cut.whyHang ? <>{str(cut.whyHang)} </> : null}
-                          Quote check: {str(cut.quoteConfidence, 'not run')}. Made by {cut.engine === 'llm' ? 'the language model' : 'the built-in extractor'}.
+                          Quote check: {str(cut.quoteConfidence, 'not run')}. Made by {cut.engine === 'llm' ? 'this portal’s AI account' : 'the built-in extractor'}.
                         </div>
                       </div>
                       {!locked ? (

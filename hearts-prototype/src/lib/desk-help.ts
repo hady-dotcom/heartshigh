@@ -28,11 +28,11 @@ export const PAGE: Record<string, string> = {
   opening:
     'These are the questions a newcomer sees before the feed. Keep the starter set, change the words, leave a scene out, or add your own. Your own questions belong to this portal and can be for any kind of work, not only HEARTS.',
   circle:
-    'Circle answers are light, written examples that sit beside real shared answers so a question is never empty. They are never counted in progress, trends or exports. You can write them, draft a handful, or switch a talk’s set on or off.',
+    'Circle answers are light, written examples that sit beside real shared answers so a question is never empty. They are never counted in progress, trends or exports. You can write them yourself, draft a handful from the built-in lines or this portal’s own AI account, or switch a talk’s set on or off.',
   ai:
-    'Each step is one job the model does after a talk is ingested. Edit the prompt, try it on a single talk, then mark a version live. Re-runs land as drafts on Review and leave approved work where it is.',
+    'Each step is one job after a talk is brought in. Edit the prompt, try it on a single talk, then mark a version live. A run uses your portal’s own AI account when one is connected in Settings; otherwise the built-in drafts are used. Re-runs land as drafts on Review and leave approved work where it is.',
   settings:
-    'These details are what people see: the name, welcome line, logo, time zone and the short films at the door. Sharing choices decide whether learners can see answers others chose to share. Save before you leave.',
+    'These details are what people see: the name, welcome line, logo, time zone and the short films at the door. Sharing choices decide whether learners can see answers others chose to share. A portal admin can connect this portal’s own AI account here. Save before you leave.',
   wizard:
     'Three short steps get the portal ready: a welcome line, an optional first course, then you are done. You can run this again from Settings. Nothing here deletes what you already made.',
   portals:
@@ -95,9 +95,9 @@ export const TOOL: Record<string, string> = {
   filters:
     'Filters narrow the list to a door, a course, a date or a cohort. Apply after you change them. Private answers stay counted and hidden.',
   aiSummary:
-    'An AI summary is a draft of themes in the shared answers. Include it in the PDF only when you have read it. It never quotes a private answer.',
+    'A summary is a draft of themes in the shared answers. A portal admin can tick the box when this portal’s own account is connected, and must confirm the one call first. Include it in the PDF only when you have read it. It never quotes a private answer.',
   weakQuestions:
-    'This check flags questions whose answers would be yes or no, or of little use to a sheikh. Rewrites are drafts. Nothing overwrites the live question until you say so.',
+    'This check flags questions whose answers would be yes or no, or of little use to a sheikh. With this portal’s own AI account connected, a portal admin can tick the box: the page says how many calls that is, and you confirm before they are sent. Rewrites are drafts. Nothing overwrites the live question until you say so.',
   mix:
     'The mix is how the shelf balances quieter scales, steady ones and a new door. The three numbers are scaled to 100. The usual mix is 60, 25 and 15.',
   compassScores:
@@ -127,11 +127,25 @@ export const TOOL: Record<string, string> = {
   contentSearch:
     'Search looks at subject titles. Mine is what you made here; Library is what you linked. The list is grouped by the twenty doors of Hadith Jibril, then by Ghunya seat.',
   ingest:
-    'Paste a YouTube or share link to fetch the film and, when we can, the transcript. You can also upload a transcript file. Nothing is shown to learners until you approve cuts and questions.',
+    'Paste one YouTube link, or several on their own lines, to add those films as new parts. A line may be the link, then a bar, then that film’s speaker. Otherwise the course speaker is used. This does not replace the film already open unless you tick Replace this film.',
+  fetchTranscript:
+    'Leave this ticked to pull YouTube’s own captions and keep their times. Untick it when you only want the film and will upload a transcript yourself. Nothing here calls a model.',
+  captionLang:
+    'This is the caption language to ask YouTube for. English is the usual choice. Auto-captions in that language are used when there is no manual track.',
+  bringInRetry:
+    'Try again runs the same bring-in on this row, keeps the caption language, and keeps a speaker named on this film. Use it when YouTube blocked the captions or the link failed. It does not start a second part.',
+  replaceFilm:
+    'Replace this film changes the open part to the new link. Clips from the old film are set aside, including ones you already approved. Leave it unticked to add the links as new parts.',
+  transcriptFiles:
+    'Upload the timed transcript files the master sheet points at. Each file is stored and its media number is shown, so you can paste that number into the sheet. You do not need the raw data console.',
+  extract:
+    'Run the extractor drafts clips from the transcript, and clips you have already approved stay. The built-in extractor needs no account. A portal admin can tick the portal AI box, confirm the one call, and that run is billed to the portal.',
+  portalAi:
+    'This box sends the run to your portal’s own AI account, the address and key saved in Settings. The line beside it says how many calls that is and a rough cost, and you confirm before anything is sent. Only a portal admin can start a run. HEARTS does not pay for it.',
   sheetScope:
     'Scope says what the workbook covers: the whole library, this portal’s own courses, or one course. Portal exports skip library courses, so they can be empty. The blank template is always safe to download.',
   sheetPreview:
-    'Preview shows every add, change and problem before anything is saved. Apply only when the sheet is clean. Undo takes back the last import, not older ones.',
+    'Preview lists every add, change and problem before anything is saved. Rows with a problem are reported and left out. Apply saves the clean rows. Undo takes back the last import.',
   creatorSearch:
     'Search looks on YouTube for talks on this topic. Tick the ones you want, or paste links and upload a file. Build draft writes a workbook; apply it on the sheet page when you are happy.',
   hideScene:
@@ -141,13 +155,13 @@ export const TOOL: Record<string, string> = {
   helpContacts:
     'Help contacts are shown on the help screen. Add a local line if you have one. With none of your own, the national lines are shown.',
   circleTones:
-    'Tones and lengths shape the drafted circle answers. Every draft still goes through the same word checks as the editor. You can edit, switch off or delete any of them.',
+    'Tones and lengths shape the drafted circle answers. A portal admin can tick the portal AI box when an account is connected, and must confirm the call count first. Otherwise the built-in drafts are used. You can edit, switch off or delete any of them.',
   circleBulk:
     'All on and all off switch the circle answers for this talk or the whole course. They do not delete the words. Real shared answers are never switched off from here.',
   aiGrant:
-    'This lets portal admins edit the steps, or takes that away. They can always read the list. Keys stay in the server environment and are never shown.',
+    'This lets portal admins edit the steps, or takes that away. They can always read the list. A run uses that portal’s own AI account when one is connected in Settings.',
   aiPrompt:
-    'The prompt is the instruction the model sees. Saving writes a new version; the live one stays until you mark this one live. Try it on a single talk before you roll it out.',
+    'The prompt is the instruction sent when this portal’s own AI account is connected. Saving writes a new version; the live one stays until you mark this one live. Try it on a single talk before you roll it out, and confirm the two calls when this portal’s account is connected. With no account connected, the try uses the built-in draft.',
   adopt:
     'Link adds this library course to the portal. Learners see it once a code or grant includes it. The original stays as the master desk set it.',
   deactivate:

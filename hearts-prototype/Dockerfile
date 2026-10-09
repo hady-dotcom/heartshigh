@@ -12,6 +12,11 @@ RUN npm ci
 
 COPY . .
 
+# Captions. yt-dlp 2026.08.19 is fetched here (override with YT_DLP_VERSION, or YT_DLP_CHANNEL=nightly).
+# The script checks SHA2-256SUMS and refuses a build older than its version floor. bin/ is not copied into the image.
+# Subtitles use --skip-download, so ffmpeg is not installed.
+RUN node scripts/get-yt-dlp.mjs
+
 ENV NEXT_TELEMETRY_DISABLED=1
 # No secret is passed into the image. While `next build` runs, the config sees the build phase and uses its own
 # build-only placeholder and a throwaway SQLite path; boot refuses to start without a real PAYLOAD_SECRET and

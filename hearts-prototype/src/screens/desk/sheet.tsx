@@ -6,6 +6,7 @@ import type { SessionUser } from '@/server/context'
 import type { Ctx, Row } from '../common'
 import { rows, str } from '../common'
 import { HelpTip } from '@/components/desk/help'
+import { BusyForm } from '@/components/desk/busy-form'
 import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
@@ -175,7 +176,7 @@ function SheetBody({
       {summary && counts ? (
         <section className="panel" style={{ marginTop: 18 }} data-testid="sheet-preview">
           <header>
-            <div><h2>Preview of {summary.fileName || 'the sheet'} <HelpTip topic="sheet-preview">{TOOL.sheetPreview}</HelpTip></h2><p>Check this, then apply. Rows with a problem are skipped and nothing is saved until the sheet is clean.</p></div>
+            <div><h2>Preview of {summary.fileName || 'the sheet'} <HelpTip topic="sheet-preview">{TOOL.sheetPreview}</HelpTip></h2><p>Check this, then apply. Rows with a problem are listed and left out. The other rows can be saved.</p></div>
           </header>
           <div className="body">
             <div className="stats-strip" data-testid="sheet-counts">
@@ -240,12 +241,12 @@ function SheetBody({
             ) : null}
             {(summary.changeTotal || 0) > (summary.changes?.length || 0) ? <p className="hint">Showing the first {summary.changes?.length} changes of {summary.changeTotal}.</p> : null}
             {preview?.id ? <p style={{ marginTop: 12 }}><a className="btn ghost" href={`/api/hearts/sheet/create?preview=${preview.id}`} data-testid="sheet-draft-download">Download this draft</a></p> : null}
-            <form action={action} method="post" style={{ marginTop: 16 }}>
+            <BusyForm action={action} method="post" style={{ marginTop: 16 }}>
               {hidden}
               <input type="hidden" name="intent" value="apply" />
               <input type="hidden" name="import" value={preview?.id || ''} />
               <input type="hidden" name="scope" value={desk === 'portal' ? 'portal' : 'library'} />
-              {!(counts.errors || counts.skipped) && (summary.newCourses || summary.packLinks) ? (
+              {((counts.create || 0) + (counts.update || 0) + (counts.delete || 0) > 0) && (summary.newCourses || summary.packLinks) ? (
                 <div className="form" style={{ marginBottom: 12 }} data-testid="sheet-pack-options">
                   {summary.newCourses ? (
                     <label className="stack">Add the {summary.newCourses} new course{summary.newCourses === 1 ? '' : 's'} to a pack
@@ -262,8 +263,9 @@ function SheetBody({
                   <p className="hint">Off, only people who join with the pack’s codes from now on get the courses. On, learners who already hold the pack get them straight away. Either way the choice is logged, and undo takes them back out.</p>
                 </div>
               ) : null}
-              {counts.errors || counts.skipped ? <p data-testid="sheet-blocked">Fix the rows above and upload the sheet again. Apply stays off while any row has a problem.</p> : <button className="btn teal" type="submit" data-testid="sheet-apply">Apply this import</button>}
-            </form>
+              {(counts.errors || counts.skipped) && !((counts.create || 0) + (counts.update || 0) + (counts.delete || 0) > 0) ? null : <button className="btn teal" type="submit" data-testid="sheet-apply">Apply this import</button>}
+              {counts.errors || counts.skipped ? ((counts.create || 0) + (counts.update || 0) + (counts.delete || 0) > 0 ? <p data-testid="sheet-partial">The rows above stay out. Apply saves the rest.</p> : <p data-testid="sheet-blocked">Fix the rows above and upload the sheet again. Apply stays off while every row has a problem.</p>) : null}
+            </BusyForm>
           </div>
         </section>
       ) : null}

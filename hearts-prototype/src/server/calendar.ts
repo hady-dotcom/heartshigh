@@ -179,10 +179,9 @@ export async function suggestSeasonal(payload: Payload, actor: CalendarActor, sl
   if (!canEditCalendar(actor)) throw new Error('Only the master can ask for a draft.')
   const line = suggestedContextLine(slot, contextKey)
   if (!line) throw new Error('There is no built-in draft for that slot and day.')
-  const source = process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY ? 'ai' : 'mock'
-  // The built-in lines are the mock. A model key still needs a person to approve.
+  // Built-in lines only. The master desk does not call a model.
   void payload
-  return saveCopy(payload, actor, { slot, context: contextKey, label: line, source: source === 'ai' ? 'mock' : 'mock' })
+  return saveCopy(payload, actor, { slot, context: contextKey, label: line, source: 'mock' })
 }
 
 export async function seedDefaultCopy(payload: Payload, actor?: CalendarActor | null) {

@@ -1,4 +1,6 @@
+import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
+import { withWorkLock } from '@/lib/work-lock'
 import { templateWorkbook } from '@/lib/master-sheet'
 import { getSession } from '@/server/context'
 import { applyPlan, exportBuffer, planBuffer, pushPackCourses, summaryOf, undoSnapshot, writeAudit } from '@/server/master-sheet'
@@ -112,49 +114,55 @@ export async function POST(req: Request) {
 
   const newCoursesPack = intent === 'apply' ? Number(form.get('newCoursesPack') || 0) || null : null
   const push = intent === 'apply' && form.get('push') === 'on'
+  const sheetKey = createHash('sha256').update(buffer).update('|').update(JSON.stringify({ kind: scope.kind, portalId: scope.portalId, courseId: scope.courseId })).digest('hex')
+  if (intent === 'apply') {
+    return withWorkLock(`sheet:${sheetKey}`, async () => {
+      const { plan, counts } = await planBuffer(payload, scope, buffer, { newCoursesPack, approveQuestions })
+      const summary = { ...summaryOf(plan, fileName), scope: scope.kind, portalId: scope.portalId, courseId: scope.courseId, newCoursesPack, push, approveQuestions }
+      if (plan.errors.length && !plan.ops.length) {
+        if (json) return NextResponse.json({ ok: false, ...summary }, { status: 422 })
+        return redirectTo(req, next, 'The sheet has rows to fix, and nothing else to save.')
+      }
+      if (!plan.ops.length) {
+        const notice = 'Nothing to change. The sheet matches what is already here.'
+        return json ? NextResponse.json({ ok: true, notice, ...summary }) : redirectTo(req, next, undefined, notice)
+      }
+      let snapshot
+      try {
+        snapshot = await applyPlan(payload, plan, user.id)
+      } catch (error) {
+        const partial = (error as { snapshot?: unknown }).snapshot
+        if (partial) {
+          await payload.create({ collection: 'sheet-imports', overrideAccess: true, data: { desk: scope.desk, portal: scope.portalId || undefined, actor: user.id, actorRole: user.role, fileName, state: 'applied', at: new Date().toISOString(), summary, snapshot: partial, workbook: buffer.toString('base64') } as never }).catch(() => undefined)
+        }
+        return fail(error instanceof Error ? error.message : 'The import stopped before it finished. Undo is there if any rows were saved.')
+      }
+      const pushed = push && snapshot.packs?.length ? await pushPackCourses(payload, snapshot) : null
+      const saved = importId
+        ? await payload.update({ collection: 'sheet-imports', id: importId, overrideAccess: true, data: { state: 'applied', at: new Date().toISOString(), summary, snapshot } as never })
+        : await payload.create({ collection: 'sheet-imports', overrideAccess: true, data: { desk: scope.desk, portal: scope.portalId || undefined, actor: user.id, actorRole: user.role, fileName, state: 'applied', at: new Date().toISOString(), summary, snapshot, workbook: buffer.toString('base64') } as never })
+      const packLinks = snapshot.packs || []
+      await writeAudit(payload, 'sheet.import', user, scope.portalId, { importId: saved.id, fileName, scope: scope.kind, counts, newCoursesPack, packLinks, push })
+      if (push) {
+        await writeAudit(payload, 'sheet.pack_push', user, scope.portalId, {
+          importId: saved.id, fileName, packs: [...new Set(packLinks.map((link) => link.pack))], courses: [...new Set(packLinks.map((link) => link.course))],
+          learners: pushed?.learners || 0, users: (snapshot.pushed || []).map((row) => row.user),
+        })
+      }
+      const packNote = packLinks.length ? ` ${packLinks.length} course${packLinks.length === 1 ? '' : 's'} added to a pack${push ? `, and given to ${pushed?.learners || 0} existing learner${pushed?.learners === 1 ? '' : 's'}` : '; existing learners were left as they are'}.` : ''
+      const leftOut = plan.errors.length ? ` ${plan.errors.length} row${plan.errors.length === 1 ? '' : 's'} with a problem ${plan.errors.length === 1 ? 'was' : 'were'} left out.` : ''
+      const notice = `Imported ${fileName}: ${counts.create} added, ${counts.update} updated, ${counts.delete} removed.${leftOut}${packNote}`
+      return json ? NextResponse.json({ ok: true, notice, importId: saved.id, ...summary, packLinks, pushedLearners: pushed?.learners ?? 0 }) : redirectTo(req, next, undefined, notice)
+    })
+  }
   const { plan, counts } = await planBuffer(payload, scope, buffer, { newCoursesPack, approveQuestions })
   const summary = { ...summaryOf(plan, fileName), scope: scope.kind, portalId: scope.portalId, courseId: scope.courseId, newCoursesPack, push, approveQuestions }
-  if (intent !== 'apply') {
-    const doc = await payload.create({
-      collection: 'sheet-imports', overrideAccess: true,
-      data: { desk: scope.desk, portal: scope.portalId || undefined, actor: user.id, actorRole: user.role, fileName, state: 'preview', at: new Date().toISOString(), summary, workbook: buffer.toString('base64') } as never,
-    })
-    if (json) return NextResponse.json({ ok: true, importId: doc.id, ...summary })
-    const url = new URL(next, 'http://localhost')
-    url.searchParams.set('preview', String(doc.id))
-    return redirectTo(req, `${url.pathname}${url.search}`)
-  }
-  if (plan.errors.length) {
-    if (json) return NextResponse.json({ ok: false, ...summary }, { status: 422 })
-    return redirectTo(req, next, 'The sheet still has rows to fix. Nothing was saved.')
-  }
-  if (!plan.ops.length) {
-    const notice = 'Nothing to change. The sheet matches what is already here.'
-    return json ? NextResponse.json({ ok: true, notice, ...summary }) : redirectTo(req, next, undefined, notice)
-  }
-  let snapshot
-  try {
-    snapshot = await applyPlan(payload, plan, user.id)
-  } catch (error) {
-    const partial = (error as { snapshot?: unknown }).snapshot
-    if (partial) {
-      await payload.create({ collection: 'sheet-imports', overrideAccess: true, data: { desk: scope.desk, portal: scope.portalId || undefined, actor: user.id, actorRole: user.role, fileName, state: 'applied', at: new Date().toISOString(), summary, snapshot: partial, workbook: buffer.toString('base64') } as never }).catch(() => undefined)
-    }
-    return fail(error instanceof Error ? error.message : 'The import stopped before it finished. Undo is there if any rows were saved.')
-  }
-  const pushed = push && snapshot.packs?.length ? await pushPackCourses(payload, snapshot) : null
-  const saved = importId
-    ? await payload.update({ collection: 'sheet-imports', id: importId, overrideAccess: true, data: { state: 'applied', at: new Date().toISOString(), summary, snapshot } as never })
-    : await payload.create({ collection: 'sheet-imports', overrideAccess: true, data: { desk: scope.desk, portal: scope.portalId || undefined, actor: user.id, actorRole: user.role, fileName, state: 'applied', at: new Date().toISOString(), summary, snapshot, workbook: buffer.toString('base64') } as never })
-  const packLinks = snapshot.packs || []
-  await writeAudit(payload, 'sheet.import', user, scope.portalId, { importId: saved.id, fileName, scope: scope.kind, counts, newCoursesPack, packLinks, push })
-  if (push) {
-    await writeAudit(payload, 'sheet.pack_push', user, scope.portalId, {
-      importId: saved.id, fileName, packs: [...new Set(packLinks.map((link) => link.pack))], courses: [...new Set(packLinks.map((link) => link.course))],
-      learners: pushed?.learners || 0, users: (snapshot.pushed || []).map((row) => row.user),
-    })
-  }
-  const packNote = packLinks.length ? ` ${packLinks.length} course${packLinks.length === 1 ? '' : 's'} added to a pack${push ? `, and given to ${pushed?.learners || 0} existing learner${pushed?.learners === 1 ? '' : 's'}` : '; existing learners were left as they are'}.` : ''
-  const notice = `Imported ${fileName}: ${counts.create} added, ${counts.update} updated, ${counts.delete} removed.${packNote}`
-  return json ? NextResponse.json({ ok: true, notice, importId: saved.id, ...summary, packLinks, pushedLearners: pushed?.learners ?? 0 }) : redirectTo(req, next, undefined, notice)
+  const doc = await payload.create({
+    collection: 'sheet-imports', overrideAccess: true,
+    data: { desk: scope.desk, portal: scope.portalId || undefined, actor: user.id, actorRole: user.role, fileName, state: 'preview', at: new Date().toISOString(), summary, workbook: buffer.toString('base64') } as never,
+  })
+  if (json) return NextResponse.json({ ok: true, importId: doc.id, ...summary })
+  const url = new URL(next, 'http://localhost')
+  url.searchParams.set('preview', String(doc.id))
+  return redirectTo(req, `${url.pathname}${url.search}`)
 }

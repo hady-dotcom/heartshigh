@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Payload } from 'payload'
-import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
+import { AppFrame, Back, Flash, Hidden } from '@/components/app/shell'
+import { LearnerTabBar } from '@/components/app/learner-bar'
 import { EmptyState } from '@/components/app/empty'
 import { GardenPath } from '@/components/app/garden-path'
 import { Flower, LockIcon } from '@/components/icons'
@@ -10,6 +11,7 @@ import { isNewMoment, readableHarvest } from '@/lib/harvest'
 import { getSession, type SessionUser, visibleCourseIds } from '@/server/context'
 import { workbookFor } from '@/server/workbook'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
+import { hiddenFromLearners } from '@/lib/youtube'
 import { learnerWords } from '@/lib/tidy-caption'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
 import { activityDay, countedTalkCompletions, doorsLitByCuts, gardenPathNodes, growthLessonIds, watchedLessonIds } from '@/lib/watch-growth'
@@ -189,7 +191,7 @@ export async function coursePath(payload: Payload, user: SessionUser, base: stri
   if (!id) id = (await visibleCourseIds(payload, user))[0] || null
   if (!id) return null
   const course = (await rows(payload, 'courses', { id: { equals: id } }))[0]
-  const lessons = await rows(payload, 'lessons', { course: { equals: id } }, { sort: 'order', limit: 60 })
+  const lessons = (await rows(payload, 'lessons', { course: { equals: id } }, { sort: 'order', limit: 60 })).filter((lesson) => !hiddenFromLearners(str(lesson.transcriptNote)))
   if (!course || !lessons.length) return null
   const done = new Set(g.completions.filter((row) => Number(row.percent ?? 100) >= 90).map((row) => ref(row.lesson)))
   const watchedSet = g.watchedIds || new Set<number>()
@@ -300,7 +302,7 @@ export async function GardenScreen({ payload, user, portal, base, query }: Ctx) 
         </section>
         </div>
       </div>
-      <TabBar base={base} active="garden" portal={portal} unread={unread} />
+      <LearnerTabBar base={base} active="garden" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -317,7 +319,7 @@ export function Frame({ base, title, testId, children, unread, dark, evening, po
           </>
         )}
       </div>
-      <TabBar base={base} active="garden" portal={portal} unread={unread} dark={dark} evening={evening} />
+      <LearnerTabBar base={base} active="garden" portal={portal} unread={unread} dark={dark} evening={evening} />
     </AppFrame>
   )
 }

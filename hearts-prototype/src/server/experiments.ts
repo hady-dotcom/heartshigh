@@ -908,9 +908,10 @@ export async function suggestFor(payload: Payload, actor: Actor, id: number, cur
   const experiment = await loadExperiment(payload, id)
   if (!experiment) throw new Error('That experiment was not found.')
   const slot = slotOf(experiment.slot)
-  if (!slot || slot.kind !== 'copy') throw new Error('AI suggestions are for wording slots. Layout slots are written by hand.')
+  if (!slot || slot.kind !== 'copy') throw new Error('Suggestions are for wording slots. Layout slots are written by hand.')
   const sample = current || variantCopy(experiment.variants[0]?.payload, experiment.variants[0]?.label || String(slot.fallback.label || ''))
-  const suggested = await suggestWording(experiment.slot, sample)
+  // The master desk starts experiments and never spends. Lines are the built-in set, or typed by hand.
+  const suggested = await suggestWording(experiment.slot, sample, 4)
   return { ...suggested, experiment }
 }
 

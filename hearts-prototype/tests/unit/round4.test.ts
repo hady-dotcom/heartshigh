@@ -163,12 +163,20 @@ test('L1: each lane opens its own clips: its starters in order, then clips confi
   assert.equal(laneClips(clips, cuts, 'trust', 'Trust')[0].laneLabel, 'Trust')
 })
 
-test('LOW: yt-dlp is fetched by setup, uses the web_embedded client, and says plainly when YouTube blocks it', () => {
-  assert.ok(ytDlpArgs('FAxIZIqwfd8', '/tmp').join(' ').includes('youtube:player_client=web_embedded'))
+test('LOW: yt-dlp is fetched by setup, does not force a player client, and says plainly when YouTube blocks it', () => {
+  const args = ytDlpArgs('FAxIZIqwfd8', '/tmp').join(' ')
+  assert.match(args, /--ignore-no-formats-error/)
+  assert.match(args, /--no-simulate/)
+  assert.equal(args.includes('player_client=web_embedded'), false)
   assert.match(ytDlpProblem('ERROR: [youtube] x: Sign in to confirm you’re not a bot'), /blocked yt-dlp from this network/)
   assert.match(ytDlpProblem('', true), /not installed/)
   assert.match(readFileSync(path.join(root, 'scripts/setup.mjs'), 'utf8'), /get-yt-dlp\.mjs/)
-  assert.match(readFileSync(path.join(root, 'scripts/get-yt-dlp.mjs'), 'utf8'), /YT_DLP_VERSION = '\d{4}\.\d{2}\.\d{2}'/)
+  const fetcher = readFileSync(path.join(root, 'scripts/get-yt-dlp.mjs'), 'utf8')
+  assert.match(fetcher, /YT_DLP_MIN = '2026\.08\.19'/)
+  assert.match(fetcher, /export const YT_DLP_VERSION = '2026\.08\.19'/)
+  assert.match(fetcher, /SHA2-256SUMS/)
+  assert.match(fetcher, /YT_DLP_CHANNEL/)
+  assert.doesNotMatch(fetcher, /2025\.09\.26/)
 })
 
 test('LOW: the browser tests run against their own database file, never the demo one', () => {
@@ -199,4 +207,18 @@ test('feed players show none of YouTube’s chrome: no controls, inline, no rela
     assert.equal(vars.fs, 0, kind)
   }
   assert.match(readFileSync(path.join(root, 'src/lib/yt.ts'), 'utf8'), /Channel watermark cannot be removed via embed params/)
+})
+
+test('yt-dlp refuses a release older than the caption floor and pins 2026.08.19 by default', async () => {
+  const { ytDlpOlderThan, YT_DLP_MIN, YT_DLP_VERSION, resolveYtDlp } = await import('../../scripts/get-yt-dlp.mjs')
+  assert.equal(YT_DLP_MIN, '2026.08.19')
+  assert.equal(YT_DLP_VERSION, '2026.08.19')
+  assert.equal(ytDlpOlderThan('2025.09.26', YT_DLP_MIN), true)
+  assert.equal(ytDlpOlderThan('2026.08.19', YT_DLP_MIN), false)
+  assert.equal(ytDlpOlderThan('2026.10.01', YT_DLP_MIN), false)
+  const pinned = await resolveYtDlp({})
+  assert.equal(pinned.version, '2026.08.19')
+  assert.equal(pinned.nightly, false)
+  const override = await resolveYtDlp({ YT_DLP_VERSION: '2026.10.01' })
+  assert.equal(override.version, '2026.10.01')
 })

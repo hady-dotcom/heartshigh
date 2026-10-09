@@ -9,6 +9,7 @@ import type { Ctx } from '../common'
 import { partTitle } from '@/lib/talk-title'
 import { rows, str } from '../common'
 import { HelpTip } from '@/components/desk/help'
+import { PortalAiConfirm } from '@/components/desk/paid-ai'
 import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
 import styles from './ai.module.css'
@@ -69,7 +70,8 @@ export async function AiPages({ ctx, master, path }: { ctx?: Ctx | null; master?
   const user = ctx?.user || master!.user
   const query = queryOf(ctx || null, master || null)
   const base = ctx ? `${ctx.base}/admin/ai` : '/master/ai'
-  const desk = await loadDesk(payload, user)
+  const portalId = ctx?.portal?.id || null
+  const desk = await loadDesk(payload, user, user.role === 'master' ? null : portalId)
   if (!desk.canView) return <Frame ctx={ctx || null} master={master || null} title="AI steps" intro="" testId="ai-denied"><p>The AI steps are for the master desk and portal admins.</p></Frame>
   const [head, rest] = path
   if (head === 'job' && rest) return <JobPage ctx={ctx || null} master={master || null} base={base} id={Number(rest)} desk={desk} />
@@ -81,8 +83,8 @@ export async function AiPages({ ctx, master, path }: { ctx?: Ctx | null; master?
 function Banner({ desk }: { desk: Awaited<ReturnType<typeof loadDesk>> }) {
   const mock = desk.mode === 'mock'
   return (
-    <div className={styles.banner} data-testid={mock ? 'ai-mock-mode' : 'ai-live-mode'} data-mode={desk.mode}>
-      <b>{mock ? 'Mock mode' : 'Model keys'}</b>
+    <div className={styles.banner} data-testid={mock ? 'ai-mock-mode' : 'ai-portal-connected'} data-mode={desk.mode}>
+      <b>{desk.master ? 'Built-in drafts' : mock ? 'AI is off' : 'This portal’s AI account'}</b>
       <p className={styles.quiet} style={{ margin: '4px 0 0' }}>{desk.banner}</p>
     </div>
   )
@@ -104,7 +106,7 @@ async function Registry({ ctx, master, base, desk }: { ctx: Ctx | null; master: 
   const payload = ctx?.payload || master!.payload
   const steps = await rows(payload, 'ai-steps', undefined, { limit: 30, sort: 'pipelineOrder' })
   return (
-    <Frame ctx={ctx} master={master} title="AI steps" intro="Each step is one job the model does after a talk is ingested. Edit the prompt, try it on a single talk, then mark a version live. Re-runs land as drafts on Review and leave approved work where it is." testId="ai-registry">
+    <Frame ctx={ctx} master={master} title="AI steps" intro="Each step is one job after a talk is brought in. Edit the prompt, try it on a single talk, then mark a version live. A run uses your portal’s own AI account when one is connected. Otherwise the built-in drafts are used." testId="ai-registry">
       <Banner desk={desk} />
       <Grant base={base} desk={desk} master={(ctx?.user || master?.user)?.role === 'master'} />
       <div className="actions" style={{ marginBottom: 14 }}>
@@ -126,10 +128,8 @@ async function Registry({ ctx, master, base, desk }: { ctx: Ctx | null; master: 
       </div>
       {(ctx?.user || master?.user)?.role === 'master' ? (
         <details style={{ marginTop: 18 }}>
-          <summary className={styles.quiet}>Environment variables for a real model</summary>
-          <ul className={styles.quiet} data-testid="ai-env">
-            {desk.env.map((item) => <li key={item.name}><code>{item.name}</code> — {item.purpose}</li>)}
-          </ul>
+          <summary className={styles.quiet}>Where a model call is billed</summary>
+          <p className={styles.quiet} data-testid="ai-env">A key in the server environment is ignored. A portal admin connects this portal’s own AI account in Settings. The master desk never calls a model.</p>
         </details>
       ) : null}
     </Frame>
@@ -178,7 +178,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
                   <label className="stack">Temperature<input name="temperature" type="number" step="0.1" min="0" max="1" defaultValue={String(step.temperature ?? 0)} /></label>
                   <label className="stack">Max tokens<input name="maxTokens" type="number" min="64" max="8000" defaultValue={String(step.maxTokens ?? 1200)} /></label>
                 </div>
-                <p className="hint">The API key stays in the server environment. It is never saved on the step and never shown.</p>
+                <p className="hint">A live run uses the model saved with this portal’s own AI account. The names above are only labels on the prompt card. The master desk does not call a model.</p>
                 <label className="stack">Note for this version<input name="note" placeholder="What changed, and why" data-testid="ai-note" /></label>
                 <button className="btn teal" type="submit" data-testid="ai-save">Save as a new version</button>
               </form>
@@ -261,6 +261,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
               <label className="stack">Draft prompt
                 <textarea name="prompt" rows={8} defaultValue={str(step.prompt)} data-testid="ai-try-prompt" />
               </label>
+              <PortalAiConfirm connected={desk.connected} master={desk.master} calls={2} />
               <button className="btn ink" type="submit" data-testid="ai-try-submit">Compare with the live output</button>
             </form>
             {compared ? (
@@ -286,7 +287,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
           <header className="light"><h2>Re-run the live version</h2></header>
           <div className="body">
             <p className="hint">Drafts land on Review. Approved cuts and anything a person has edited stay as they are, with “new draft available” beside them.</p>
-            <RerunForm base={base} slug={slug} lessons={lessons} courses={courses} />
+            <RerunForm base={base} slug={slug} lessons={lessons} courses={courses} connected={desk.connected} master={desk.master} />
           </div>
         </section>
       ) : null}
@@ -294,7 +295,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
   )
 }
 
-function RerunForm({ base, slug, lessons, courses, lessonId }: { base: string; slug: string; lessons: Doc[]; courses: Doc[]; lessonId?: number }) {
+function RerunForm({ base, slug, lessons, courses, lessonId, connected, master, perTalk = 1 }: { base: string; slug: string; lessons: Doc[]; courses: Doc[]; lessonId?: number; connected: boolean; master: boolean; perTalk?: number }) {
   return (
     <form action="/api/ai-steps" method="post" className="form" data-testid="ai-rerun">
       <Hidden fields={{ action: 'start-job', slug, jobBase: base, next: base }} />
@@ -322,6 +323,7 @@ function RerunForm({ base, slug, lessons, courses, lessonId }: { base: string; s
           {courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}
         </select>
       </label>
+      <PortalAiConfirm connected={connected} master={master} calls={null} perTalk={perTalk} />
       <button className="btn teal" type="submit" data-testid="ai-rerun-submit">Re-run</button>
     </form>
   )
@@ -421,6 +423,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
       {desk.canEdit ? (
         <form action="/api/ai-steps" method="post" className="actions" style={{ marginBottom: 14 }}>
           <Hidden fields={{ action: 'start-job', slug: 'pipeline', scope: 'talk', lesson: lesson.id, jobBase: base, next: `${base}/ingest/${lesson.id}` }} />
+          <PortalAiConfirm connected={desk.connected} master={desk.master} calls={steps.length} />
           <button className="btn ink" type="submit" data-testid="ai-run-pipeline">Run the whole pipeline</button>
         </form>
       ) : null}
@@ -448,6 +451,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
                 {desk.canEdit ? (
                   <form action="/api/ai-steps" method="post">
                     <Hidden fields={{ action: 'start-job', slug: str(step.slug), scope: 'talk', lesson: lesson.id, jobBase: base, next: `${base}/ingest/${lesson.id}` }} />
+                    <PortalAiConfirm connected={desk.connected} master={desk.master} calls={1} />
                     <button className="btn small ghost" type="submit" data-testid="ingest-run">{status === 'not-run' ? 'Run' : 'Re-run'}</button>
                   </form>
                 ) : null}
@@ -457,7 +461,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
           )
         })}
       </div>
-      {desk.canEdit ? <div style={{ marginTop: 18 }}><RerunForm base={base} slug="pipeline" lessons={[lesson, ...lessons.filter((row) => row.id !== lesson.id)].slice(0, 40)} courses={courses} lessonId={lesson.id} /></div> : null}
+      {desk.canEdit ? <div style={{ marginTop: 18 }}><RerunForm base={base} slug="pipeline" lessons={[lesson, ...lessons.filter((row) => row.id !== lesson.id)].slice(0, 40)} courses={courses} lessonId={lesson.id} connected={desk.connected} master={desk.master} perTalk={steps.length} /></div> : null}
       <p className="hint" style={{ marginTop: 8 }}>The form under the list runs the whole pipeline on a wider scope. This talk is already selected in it.</p>
     </Frame>
   )

@@ -332,15 +332,15 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
           <div style={{ display: 'grid', gap: 18 }}>
             {masterUser && slot?.kind === 'copy' ? (
               <section className="panel" data-testid="ai-suggest-panel">
-                <header><h2>Suggest versions with AI</h2></header>
+                <header><h2>Suggest built-in lines</h2></header>
                 <div className="body">
-                  <p className={styles.quiet}>Drafts 3 to 5 wording alternatives. Each one needs your approval before it can run. Without a model key this uses the built-in mock lines.</p>
+                  <p className={styles.quiet}>Drafts 3 to 5 wording alternatives from the built-in set. The master desk does not call a model. You can also type a line on the experiment form. Each one needs your approval before it can run.</p>
                   <form action="/api/experiments" method="post">
                     <Hidden fields={{ action: 'suggest', id: String(experiment.id), next: `${base}/${experiment.id}?suggest=1` }} />
                     <label>Current line
                       <input name="current" defaultValue={variantCopy(experiment.variants[0]?.payload, experiment.variants[0]?.label)} />
                     </label>
-                    <button className="btn" type="submit" data-testid="experiment-suggest">Suggest versions with AI</button>
+                    <button className="btn" type="submit" data-testid="experiment-suggest">Suggest built-in lines</button>
                   </form>
                   {suggest && !error ? <p className={styles.quiet} data-testid="ai-suggest-done">Drafts were added below. Approve the ones you want before you start.</p> : null}
                 </div>

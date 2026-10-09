@@ -1,8 +1,8 @@
 /**
- * Draft wording variants for a copy slot. Uses the same LLM helper as the rest of
- * the desk; without a key it returns deterministic mock lines.
+ * Draft wording variants for a copy slot. Built-in lines unless the caller passes
+ * this portal's own client. A key in the server environment is never read.
  */
-import { getLlmClient } from './llm'
+import type { LlmClient } from './llm'
 import { formatSlotLabel, payloadProblems, slotOf, type ExperimentSlot } from './experiment-slots'
 
 export type DraftVariant = { key: string; label: string; payload: Record<string, unknown>; source: 'ai' | 'mock' }
@@ -78,12 +78,12 @@ function parseReply(raw: string, slot: ExperimentSlot): DraftVariant[] {
   }
 }
 
-export async function suggestWording(slotKey: string, current: string, count = 4): Promise<{ drafts: DraftVariant[]; engine: string }> {
+export async function suggestWording(slotKey: string, current: string, count = 4, options: { usePortalAi?: boolean; client?: LlmClient | null } = {}): Promise<{ drafts: DraftVariant[]; engine: string }> {
   const slot = slotOf(slotKey)
   const fallback = mockWording(slotKey, count)
   if (!slot || slot.kind !== 'copy') return { drafts: [], engine: 'that slot is not wording' }
-  const client = getLlmClient()
-  if (!client) return { drafts: fallback, engine: 'mock' }
+  const client = options.usePortalAi ? options.client || null : null
+  if (!client) return { drafts: fallback, engine: 'built-in drafts' }
   try {
     const reply = await client.complete({
       system: [
@@ -99,9 +99,9 @@ export async function suggestWording(slotKey: string, current: string, count = 4
       user: `Slot: ${slot.name}\nWhat it does: ${slot.description}\nCurrent line: ${current || formatSlotLabel(String(slot.fallback.label || ''))}`,
     })
     const drafts = parseReply(reply, slot)
-    if (drafts.length >= 3) return { drafts: drafts.slice(0, 5), engine: client.name }
-    return { drafts: fallback, engine: `mock (${client.name} reply did not pass the checks)` }
+    if (drafts.length >= 3) return { drafts: drafts.slice(0, 5), engine: 'this portal’s AI account' }
+    return { drafts: fallback, engine: 'built-in drafts (the portal AI reply did not pass the checks)' }
   } catch {
-    return { drafts: fallback, engine: 'mock (the AI call failed)' }
+    return { drafts: fallback, engine: 'built-in drafts (the portal AI call failed)' }
   }
 }

@@ -12,6 +12,7 @@ import { type Ctx, portalPeople, rows, str } from '../common'
 import { DeskFrame, portalNav } from './shell'
 import { PORTAL_TIME_ZONES, portalTimeZone, zoneCity } from '@/lib/zone-time'
 import { displayPortalAddress } from '@/lib/portal-address'
+import { mcpConnectorStatus, publicAi } from '@/lib/portal-ai'
 
 export async function AdminFrame({ ctx, active, title, intro, tools, help, children, testId, tone }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; help?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening' }) {
   const { payload, user, portal, base, query } = ctx
@@ -166,7 +167,8 @@ export async function OverviewScreen(ctx: Ctx) {
 }
 
 export async function PortalSettingsScreen(ctx: Ctx) {
-  const { portal, base } = ctx
+  const { portal, base, user } = ctx
+  const ai = publicAi(portal.aiConnection)
   const field = (label: string, name: keyof typeof portal, extra: Record<string, string> = {}) => (
     <label className="row"><span>{label}</span><input type="text" name={name} defaultValue={str(portal[name])} {...extra} /></label>
   )
@@ -216,6 +218,24 @@ export async function PortalSettingsScreen(ctx: Ctx) {
             <Link className="btn ghost" href={`${base}/admin/wizard`}>Run the short setup again</Link>
           </div>
         </section>
+        {user.role === 'portal-admin' ? (
+          <section className="panel" data-testid="portal-ai-settings" style={{ gridColumn: '1 / -1' }}>
+            <header className="light"><h2>This portal’s AI account <HelpTip topic="portal-ai">{TOOL.portalAi}</HelpTip></h2></header>
+            <form className="body form" action="/api/hearts" method="post">
+              <Hidden fields={{ action: 'ai-connect', portalSlug: portal.slug, next: `${base}/admin/settings` }} />
+              <p className="hint">Connect your own provider. HEARTS never pays for a run, and a key in the server environment is ignored. Only a portal admin can start a run. The master desk has no spend path.</p>
+              <p className="hint" data-testid="mcp-seam">{mcpConnectorStatus().note}</p>
+              {ai.connected ? <p className="hint" data-testid="portal-ai-connected">Connected to {ai.baseUrl} as {ai.model}. Key ending {ai.keyHint}. Leave the key blank to keep it.</p> : <p className="hint" data-testid="portal-ai-missing">No account is connected. Desk tools that can use one stay on the built-in path.</p>}
+              <label className="row"><span>Address</span><input type="url" name="baseUrl" defaultValue={ai.baseUrl} placeholder="https://api.example.com/v1" data-testid="portal-ai-url" required={!ai.connected} /></label>
+              <label className="row"><span>Model</span><input type="text" name="model" defaultValue={ai.model || 'gpt-4o-mini'} data-testid="portal-ai-model" /></label>
+              <label className="row"><span>API key</span><input type="password" name="apiKey" autoComplete="off" placeholder={ai.connected ? 'Leave blank to keep the saved key' : 'Your own key'} data-testid="portal-ai-key" /></label>
+              <div className="actions">
+                <button className="btn ink" type="submit" data-testid="portal-ai-save">Save AI account</button>
+                {ai.connected ? <button className="btn ghost" type="submit" name="clear" value="yes" data-testid="portal-ai-clear">Disconnect</button> : null}
+              </div>
+            </form>
+          </section>
+        ) : null}
       </div>
     </AdminFrame>
   )

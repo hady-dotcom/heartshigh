@@ -20,9 +20,11 @@ import {
 import { doorLabel, DOORS } from '@/lib/doors'
 import { rows, str, type Ctx } from '../common'
 import { HelpTip } from '@/components/desk/help'
+import { PortalAiChoice } from '@/components/desk/paid-ai'
+import { publicAi } from '@/lib/portal-ai'
 import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
-import { exportAudit, includedSummaries, loadRawFeedback, summariesFor, weakQuestions } from '@/server/feedback'
+import { exportAudit, includedSummaries, loadRawFeedback, questionChecksPending, summariesFor, weakQuestions } from '@/server/feedback'
 import styles from './feedback.module.css'
 import { localeFromAcceptLanguage, portalTimeZone, zonedTime, zoneCity } from '@/lib/zone-time'
 
@@ -34,14 +36,16 @@ export async function FeedbackScreen(ctx: Ctx) {
     return <AdminFrame ctx={ctx} active="feedback" title="Feedback" testId="feedback-denied"><p>Feedback is for teachers and portal admins.</p></AdminFrame>
   }
   const filters = parseFilters(query)
+  const ai = publicAi(portal.aiConnection)
   const anonymised = anonymiseFromQuery(query) || !canNameExport(user.role)
   const here = `${base}/admin/feedback`
-  const [raw, codes, summaryRows, rewrites, audits] = await Promise.all([
+  const [raw, codes, summaryRows, rewrites, audits, checkCalls] = await Promise.all([
     loadRawFeedback(payload, portal.id),
     rows(payload, 'access-codes', { portal: { equals: portal.id } }, { sort: 'label', limit: 200 }),
     summariesFor(payload, portal.id),
     weakQuestions(payload),
     user.role === 'teacher' ? Promise.resolve([]) : exportAudit(payload, portal.id),
+    questionChecksPending(payload),
   ])
   const built = buildFeedback(raw, portal.id, filters, anonymised)
   const timeZone = portalTimeZone(portal)
@@ -244,7 +248,8 @@ export async function FeedbackScreen(ctx: Ctx) {
                           {!draft && !live && question.answers.length ? (
                             <form action={`/api/feedback?portal=${portal.slug}`} method="post">
                               <Hidden fields={{ action: 'summarise', questionKey: question.key, next: `${here}?${pageQuery}`, anonymise: anonymised ? '1' : '', ...Object.fromEntries(filterQuery(filters)) }} />
-                              <button className="btn small ghost" type="submit" data-testid="draft-summary">Draft an AI summary</button>
+                              <PortalAiChoice connected={ai.connected} teacher={user.role === 'teacher'} calls={1} settingsHref={user.role === 'portal-admin' ? `${base}/admin/settings` : undefined} />
+                              <button className="btn small ghost" type="submit" data-testid="draft-summary">Draft a summary</button>
                             </form>
                           ) : null}
                         </div>
@@ -263,6 +268,7 @@ export async function FeedbackScreen(ctx: Ctx) {
             <div><h2>Question quality <HelpTip topic="weak-questions">{TOOL.weakQuestions}</HelpTip></h2><p>Weak questions, with a suggested rewrite kept as a draft</p></div>
             <form action={`/api/feedback?portal=${portal.slug}`} method="post">
               <Hidden fields={{ action: 'check-questions', next: `${here}?${pageQuery}` }} />
+              <PortalAiChoice connected={ai.connected} teacher={user.role === 'teacher'} calls={checkCalls} settingsHref={user.role === 'portal-admin' ? `${base}/admin/settings` : undefined} />
               <button className="btn small" type="submit" data-testid="check-questions">Check questions for teacher value</button>
             </form>
           </header>

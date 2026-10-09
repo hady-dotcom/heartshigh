@@ -2,8 +2,8 @@
  * AI steps: the registry contract, prompt versions, the mock provider, and the rules for
  * what a re-run is allowed to touch. Nothing here talks to the database or the network.
  *
- * A model key is never accepted as an argument and never returned. Callers that speak to
- * a real model read ANTHROPIC_API_KEY or OPENAI_API_KEY from the environment themselves.
+ * A platform key is never read. A live run uses only the client the caller passes in,
+ * which is this portal's own account.
  */
 import { draftPopupPrompt } from './draft-prompt'
 import { dualExtract } from './extractor'
@@ -131,22 +131,33 @@ export function canEditSteps(actor: Actor | null | undefined, portalMayEdit: boo
   return actor?.role === 'portal-admin' && portalMayEdit
 }
 
-export type KeyPresence = { anthropic: boolean; openai: boolean }
-
-export function keyPresence(env: NodeJS.ProcessEnv = process.env): KeyPresence {
-  return { anthropic: Boolean(env.ANTHROPIC_API_KEY), openai: Boolean(env.OPENAI_API_KEY) }
+/** Live only when this portal's own connection is in use. A server environment key never counts. */
+export function portalRun(connected: boolean): 'live' | 'mock' {
+  return connected ? 'live' : 'mock'
 }
 
-/** Live when the step's own provider has a key. Otherwise the deterministic mock. The key itself is never returned. */
-export function runMode(provider: ProviderName, keys: KeyPresence = keyPresence()): 'live' | 'mock' {
-  return keys[provider] ? 'live' : 'mock'
+export function pipelineStepCount() {
+  return STEP_SPECS.filter((step) => step.inPipeline).length
 }
 
-export function mockBanner(keys: KeyPresence = keyPresence()) {
-  if (!keys.anthropic && !keys.openai) return 'Mock mode. No model key is configured, so every step runs on the built-in stand-in. Nothing here is sent to a model, and learners are not affected until a person approves a draft.'
-  if (keys.anthropic && keys.openai) return 'A model key is set for Anthropic and for OpenAI. Each step uses the provider chosen on its card.'
-  if (keys.anthropic) return 'An Anthropic key is set. Steps set to OpenAI still run on the mock until an OpenAI key is added. Keys stay in the server environment and are never shown.'
-  return 'An OpenAI key is set. Steps set to Anthropic still run on the mock until an Anthropic key is added. Keys stay in the server environment and are never shown.'
+export function jobNote(label: string, portalId: number | null) {
+  return portalId ? `portal-ai:${portalId} ${label}` : label
+}
+
+export function portalFromNote(note: string | null | undefined) {
+  const match = /^portal-ai:(\d+) /.exec(String(note || ''))
+  return match ? Number(match[1]) : null
+}
+
+/** Approved clips already on the talk: do not write a tier that would hide them. */
+export function tierWriteBlocked(approvedCuts: number) {
+  return approvedCuts > 0 ? ('approved' as const) : null
+}
+
+export function mockBanner(input: { connected: boolean; master: boolean }) {
+  if (input.master) return 'The master desk does not call a model. These steps use the built-in drafts. A portal admin connects their own AI account in that portal’s Settings, and that account is billed, not HEARTS.'
+  if (input.connected) return 'This portal’s own AI account is connected. A run on this desk is billed to that account. Learners see nothing until a person approves a draft.'
+  return 'AI is off. A portal admin connects this portal’s own account in Settings. Until then every step uses the built-in drafts, and nothing is sent out.'
 }
 
 export function tierProtect(
@@ -438,7 +449,7 @@ Two or three points, each prompt a sentence the listener can answer from their o
   {
     slug: 'tidy-caption-line',
     name: 'Tidy caption line',
-    description: 'Turns each hors d’oeuvre and appetiser caption, which arrives from YouTube in lowercase and without punctuation, into a line a learner can read. It keeps the speaker’s words, adds sentence case and punctuation, and capitalises Allah, the Prophet, Qur’an, hadith names, names of Allah, the Day of Judgement, the speaker and I. British spelling. The raw caption stays for timing. With no model key the same rules run in code, and nothing is sent out.',
+    description: 'Turns each hors d’oeuvre and appetiser caption, which arrives from YouTube in lowercase and without punctuation, into a line a learner can read. It keeps the speaker’s words, adds sentence case and punctuation, and capitalises Allah, the Prophet, Qur’an, hadith names, names of Allah, the Day of Judgement, the speaker and I. British spelling. The raw caption stays for timing. With no portal AI account connected, the same rules run in code, and nothing is sent out.',
     placeholders: [
       { token: 'LINES', meaning: 'The caption lines to tidy, one per line, still in the speaker’s words.', required: true },
       { token: 'SPEAKER', meaning: 'The speaker’s name, capitalised when it appears in a line.', required: false },
@@ -982,14 +993,8 @@ export function clipText(hook: string, turn: string, land: string) {
   return lines.map((line, index) => `s${index + 1}: ${line}`).join('\n')
 }
 
+/** A label stored on a prompt version. A live call uses the model on the portal’s own account. */
 export function defaultModel(provider: ProviderName) {
-  if (provider === 'openai') return process.env.OPENAI_MODEL || 'gpt-4o-mini'
-  return process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5'
+  if (provider === 'openai') return 'gpt-4o-mini'
+  return 'claude-sonnet-4-5'
 }
-
-export const ENV_VARS = [
-  { name: 'ANTHROPIC_API_KEY', purpose: 'Used when a step’s provider is Anthropic. Never stored and never shown.' },
-  { name: 'OPENAI_API_KEY', purpose: 'Used when a step’s provider is OpenAI. Never stored and never shown.' },
-  { name: 'ANTHROPIC_MODEL', purpose: 'Optional default when a step’s model field is left blank. The step’s own model wins.' },
-  { name: 'OPENAI_MODEL', purpose: 'Optional default when a step’s model field is left blank. The step’s own model wins.' },
-] as const

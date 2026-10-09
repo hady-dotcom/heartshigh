@@ -4,6 +4,7 @@ import { cache } from 'react'
 import { getPayload, type Payload } from 'payload'
 import config from '@payload-config'
 import { idOf, portalIdOf } from '@/lib/ids'
+import { presentPortal } from '@/lib/portal-public'
 import { cookieValue, loadViewAs, type EndReason, type ViewAs } from './viewas'
 
 export type SessionUser = {
@@ -58,6 +59,8 @@ export type PortalDoc = {
   timeZone?: string | null
   /** Null or missing: every switch uses its registry default (shipped features on). */
   features?: Record<string, boolean> | null
+  /** Encrypted portal AI account. Absent means the desk uses the built-in path. */
+  aiConnection?: unknown
 }
 
 /**
@@ -278,7 +281,8 @@ export async function loadPortal(payload: Payload, slug: string) {
     limit: 1,
     where: { slug: { equals: slug } },
   })
-  return (found.docs[0] as PortalDoc | undefined) || null
+  const doc = found.docs[0] as PortalDoc | undefined
+  return doc ? presentPortal(doc) : null
 }
 
 export async function requirePortal(slug: string, roles?: SessionUser['role'][]) {

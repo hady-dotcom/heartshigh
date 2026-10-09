@@ -340,6 +340,18 @@ export interface Portal {
     | number
     | boolean
     | null;
+  /**
+   * This portal’s own AI account: an OpenAI-compatible address and an encrypted key. Empty means the desk uses the built-in path. The master desk never reads it to place a call.
+   */
+  aiConnection?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -3234,6 +3246,7 @@ export interface PortalsSelect<T extends boolean = true> {
   teacherLabel?: T;
   wizardDone?: T;
   features?: T;
+  aiConnection?: T;
   updatedAt?: T;
   createdAt?: T;
 }

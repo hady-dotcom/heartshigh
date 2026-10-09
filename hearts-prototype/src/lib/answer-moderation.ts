@@ -1,6 +1,6 @@
 /**
  * Screen a learner answer before it appears in the swarm.
- * Mock-safe: when no model key is set, a plain word list decides.
+ * A plain word list decides. Learners never start a model call.
  * Hidden answers stay on the Care and safety desk. Teacher-facing feedback is untouched.
  */
 
@@ -40,11 +40,7 @@ export function screenAnswer(text: string): SwarmScreen {
   return { show: true, reason: 'Clear.', atRisk: false }
 }
 
-export function hasModelKey() {
-  return Boolean(process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY)
-}
-
-/** Same decision as screenAnswer. A live model can be wired later; mock mode is the default. */
+/** Same decision as screenAnswer. Learners never start a model call. */
 export async function screenAnswerSafe(text: string): Promise<SwarmScreen> {
   return screenAnswer(text)
 }

@@ -71,7 +71,7 @@ test.describe('HEARTS circle answers', () => {
     const message = loc(response)
     expect(message).toContain('notice=')
     expect(message).toContain(`${3 * points.length} circle answers added for ${points.length} questions`)
-    if (!process.env.ANTHROPIC_API_KEY && !process.env.OPENAI_API_KEY) expect(message).toContain('written by built-in drafts')
+    expect(message).toContain('written by built-in drafts')
     const after = await circleRows(`where[lesson][equals]=${nur.id}`)
     const added = after.filter((row) => !before.some((old) => old.id === row.id))
     expect(added).toHaveLength(3 * points.length)
