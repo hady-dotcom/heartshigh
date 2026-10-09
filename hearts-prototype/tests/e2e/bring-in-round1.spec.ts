@@ -291,7 +291,7 @@ test.describe('round 1 bring-in', () => {
     await page.goto(`/p/east-london/course/${saved.sheetCourseId}?part=${saved.sheetLessonId}&context=1`)
     await expect(page.getByTestId('player')).toBeVisible()
     await expect(page.getByTestId('context-transcript')).toBeVisible()
-    await expect(page.getByTestId('context-line').or(page.getByTestId('context-transcript'))).toContainText(/Big salams|0:00/)
+    await expect(page.getByTestId('context-line')).toContainText('Big salams')
     await shot(page, '13-learner-transcript')
     const play = page.getByTestId('player-play')
     if (await play.count()) await play.click()
