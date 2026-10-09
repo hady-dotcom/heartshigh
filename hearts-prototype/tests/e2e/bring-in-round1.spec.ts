@@ -336,7 +336,7 @@ test.describe('round 1 bring-in', () => {
     await shot(page, '11c-transcript-desk')
 
     await page.goto('/master/ai')
-    await expect(page.getByTestId('ai-mock-mode').or(page.getByTestId('ai-paid-off'))).toBeVisible()
+    await expect(page.getByTestId('ai-mock-mode')).toBeVisible()
     await shot(page, '12-ai-desk')
   })
 

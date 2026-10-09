@@ -82,7 +82,7 @@ export async function AiPages({ ctx, master, path }: { ctx?: Ctx | null; master?
 function Banner({ desk }: { desk: Awaited<ReturnType<typeof loadDesk>> }) {
   const mock = desk.mode === 'mock'
   return (
-    <div className={styles.banner} data-testid={mock ? 'ai-mock-mode' : 'ai-paid-off'} data-mode={desk.mode}>
+    <div className={styles.banner} data-testid={mock ? 'ai-mock-mode' : 'ai-portal-connected'} data-mode={desk.mode}>
       <b>{desk.master ? 'Built-in drafts' : mock ? 'AI is off' : 'This portal’s AI account'}</b>
       <p className={styles.quiet} style={{ margin: '4px 0 0' }}>{desk.banner}</p>
     </div>
@@ -127,7 +127,7 @@ async function Registry({ ctx, master, base, desk }: { ctx: Ctx | null; master: 
       </div>
       {(ctx?.user || master?.user)?.role === 'master' ? (
         <details style={{ marginTop: 18 }}>
-          <summary className={styles.quiet}>Environment variables for a real model</summary>
+          <summary className={styles.quiet}>Where a model call is billed</summary>
           <p className={styles.quiet} data-testid="ai-env">A key in the server environment is ignored. A portal admin connects this portal’s own AI account in Settings. The master desk never calls a model.</p>
         </details>
       ) : null}

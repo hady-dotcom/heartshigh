@@ -360,7 +360,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                           {cut.theme ? <>Theme: {str(cut.theme)}. </> : null}
                           {door ? <>Door <strong data-testid="cut-door" style={{ color: 'var(--ink)' }}>{doorLabel(door)}</strong> <span className="hint" data-testid="cut-door-clause">(clause {clause}{cut.clauseFragment ? `: ${str(cut.clauseFragment)}` : ''})</span>. </> : null}
                           {cut.whyHang ? <>{str(cut.whyHang)} </> : null}
-                          Quote check: {str(cut.quoteConfidence, 'not run')}. Made by {cut.engine === 'llm' ? 'the language model' : 'the built-in extractor'}.
+                          Quote check: {str(cut.quoteConfidence, 'not run')}. Made by {cut.engine === 'llm' ? 'this portal’s AI account' : 'the built-in extractor'}.
                         </div>
                       </div>
                       {!locked ? (
