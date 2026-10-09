@@ -6,7 +6,7 @@
   },
   "steps": {
     "build": {
-      "commands": ["HEARTS_BUILD=1 NODE_OPTIONS=--max-old-space-size=3072 npm run build"]
+      "commands": ["node scripts/get-yt-dlp.mjs", "HEARTS_BUILD=1 NODE_OPTIONS=--max-old-space-size=3072 npm run build"]
     }
   },
   "deploy": {

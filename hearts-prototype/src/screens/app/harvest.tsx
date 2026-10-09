@@ -6,6 +6,10 @@ import { ayahId as idOfAyah, ayahWindow, surahLabel } from '@/lib/quran-match'
 import { TAFSIR_CREDIT } from '@/lib/tafsir'
 import { getSession } from '@/server/context'
 import { quranIndex, tafsirFor, tafsirSummary } from '@/server/scripture'
+import { featureOn } from '@/lib/features'
+import { paidCostLabel } from '@/lib/ai-cost'
+import { keyPresence } from '@/lib/ai-steps'
+import { getLlmClient } from '@/lib/llm'
 import { now } from '@/lib/clock'
 import { type Ctx, type Row, ref, rows, str, unreadCount } from '../common'
 import { Frame } from './garden'
@@ -128,7 +132,8 @@ export async function GardenHarvest({ payload, user, portal, base, query }: Ctx)
   for (const section of sections) section.items.sort((a, b) => secondsOf(a) - secondsOf(b))
 
   const opened = openId ? shown.find((row) => row.id === openId) : null
-  const panel = opened && view ? await openPanel(payload, opened, view, href) : null
+  const allowPaidSummary = featureOn(portal, 'paidSummary')
+  const panel = opened && view ? await openPanel(payload, opened, view, href, allowPaidSummary) : null
 
   return (
     <Frame base={base} title="Harvest" testId="garden-harvest" unread={unread} portal={portal}>
@@ -294,7 +299,7 @@ function HarvestCard({ entry, talkTitle, speaker, door, commentary, context, fre
   )
 }
 
-async function openPanel(payload: Payload, entry: Row, view: View, href: (params: Record<string, string | number | null | undefined>, anchor?: string) => string) {
+async function openPanel(payload: Payload, entry: Row, view: View, href: (params: Record<string, string | number | null | undefined>, anchor?: string) => string, allowPaidSummary = false) {
   const anchor = `h-${entry.id}`
   if (entry.kind === 'hadith') {
     if (view !== 'context' || !entry.collection || !entry.hadithText) return null
@@ -338,11 +343,12 @@ async function openPanel(payload: Payload, entry: Row, view: View, href: (params
           <Link href={href({ item: entry.id, view: 'summary' }, anchor)} data-testid="scholars-summary">A short summary</Link>
           <Link href={href({ item: entry.id, view: 'tafsir' }, anchor)} data-testid="scholars-tafsir">Read the tafsir</Link>
         </div>
+        <p className="hint" data-testid="summary-cost">{allowPaidSummary ? paidCostLabel({ chars: 4000, calls: 1, keys: keyPresence(), kind: 'tafsir summary' }) : 'A short summary uses the tafsir’s own words. A master can turn on a paid summary for this portal, and the estimate is shown here first.'}</p>
       </div>
     )
   }
   if (view === 'summary') {
-    const summary = await tafsirSummary(payload, surah, ayah)
+    const summary = await tafsirSummary(payload, surah, ayah, allowPaidSummary ? getLlmClient() : null)
     if (!summary) return <div className="harvest-panel" data-testid="harvest-panel" data-view="summary"><p className="muted">The tafsir could not be reached just now. Please try again later.</p></div>
     return (
       <div className="harvest-panel" data-testid="harvest-panel" data-view="summary">

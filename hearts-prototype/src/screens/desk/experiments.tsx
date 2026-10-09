@@ -3,6 +3,9 @@ import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { ExperimentForm } from '@/components/desk/experiment-form'
 import { ExperimentHelp } from '@/components/desk/help'
+import { PaidAiOptIn } from '@/components/desk/paid-ai'
+import { paidCostLabel } from '@/lib/ai-cost'
+import { keyPresence } from '@/lib/ai-steps'
 import { LocalWhen, LocalZoneNote } from '@/components/desk/local-when'
 import {
   EXPERIMENT_RULE,
@@ -340,6 +343,7 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
                     <label>Current line
                       <input name="current" defaultValue={variantCopy(experiment.variants[0]?.payload, experiment.variants[0]?.label)} />
                     </label>
+                    <PaidAiOptIn hint={paidCostLabel({ chars: 500, calls: 1, keys: keyPresence(), kind: 'wording' })} />
                     <button className="btn" type="submit" data-testid="experiment-suggest">Suggest versions with AI</button>
                   </form>
                   {suggest && !error ? <p className={styles.quiet} data-testid="ai-suggest-done">Drafts were added below. Approve the ones you want before you start.</p> : null}

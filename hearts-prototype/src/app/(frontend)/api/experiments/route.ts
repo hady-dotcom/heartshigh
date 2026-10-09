@@ -212,9 +212,16 @@ export async function POST(req: Request) {
       return ok(action === 'approve-variant' ? 'Approved. It can run when you start the experiment.' : 'Held back. It will not receive traffic.')
     }
     if (action === 'suggest') {
-      const suggested = await suggestFor(payload, user, Number(text(form, 'id')), text(form, 'current'))
+      const usePaidAi = text(form, 'usePaidAi') === 'yes'
+      const suggested = await suggestFor(payload, user, Number(text(form, 'id')), text(form, 'current'), usePaidAi)
       await addSuggestedVariants(payload, user, Number(text(form, 'id')), suggested.drafts)
-      return ok(suggested.engine === 'mock' || suggested.engine.startsWith('mock') ? 'Mock drafts added. Approve each one before it can run.' : `Drafts from ${suggested.engine}. Approve each one before it can run.`)
+      const paidFailed = /call failed|did not pass|no model key/i.test(suggested.engine)
+      const notice = !usePaidAi
+        ? 'Built-in drafts added. Paid AI was not ticked, so nothing was sent to a model. Approve each one before it can run.'
+        : paidFailed
+          ? `The paid wording call did not finish (${suggested.engine}), so the built-in drafts were used. Approve each one before it can run.`
+          : `Drafts from ${suggested.engine}. Approve each one before it can run.`
+      return ok(notice)
     }
     if (action === 'kill') {
       const off = text(form, 'value') !== 'off'

@@ -389,13 +389,13 @@ async function completeLive(spec: StepSpec, system: string, user: string, keys: 
 }
 
 /** Runs one registered step, using the live prompt, for callers outside the ingest pipeline. */
-export async function runRegisteredStep(payload: Payload, slug: string, talk: TalkContext) {
+export async function runRegisteredStep(payload: Payload, slug: string, talk: TalkContext, usePaidAi = false) {
   await ensureSteps(payload)
-  return runPreparedStep(payload, slug, talk)
+  return runPreparedStep(payload, slug, talk, usePaidAi)
 }
 
 /** Loads the live prompt once, so a report can run the same step over many questions. */
-export async function loadLiveStep(payload: Payload, slug: string) {
+export async function loadLiveStep(payload: Payload, slug: string, usePaidAi = false) {
   const step = await one(payload, 'ai-steps', { slug: { equals: slug } })
   if (!step) throw new Error('That step is not in the registry.')
   const spec = specOf(step)
@@ -406,14 +406,14 @@ export async function loadLiveStep(payload: Payload, slug: string) {
     versionNumber,
     spec,
     run(talk: TalkContext) {
-      return runSpec(spec, prompt, talk, true).then((result) => ({ ...result, versionNumber, spec }))
+      return runSpec(spec, prompt, talk, usePaidAi).then((result) => ({ ...result, versionNumber, spec }))
     },
   }
 }
 
 /** Same as runRegisteredStep after the registry is already in place, so a report can reuse it. */
-export async function runPreparedStep(payload: Payload, slug: string, talk: TalkContext) {
-  const live = await loadLiveStep(payload, slug)
+export async function runPreparedStep(payload: Payload, slug: string, talk: TalkContext, usePaidAi = false) {
+  const live = await loadLiveStep(payload, slug, usePaidAi)
   return live.run(talk)
 }
 

@@ -326,6 +326,12 @@ export function rowsKeptOnExtract<T extends { status?: string | null }>(rows: T[
   }
 }
 
+/** Drop a new draft whose start and end match a clip that is already approved. Approving both would show the same moment twice. */
+export function draftsSkippingApproved<T extends { start: number; end: number }>(drafts: T[], approved: { start: number; end: number }[]) {
+  const taken = new Set(approved.map((row) => `${Math.round(Number(row.start))}-${Math.round(Number(row.end))}`))
+  return drafts.filter((row) => !taken.has(`${Math.round(Number(row.start))}-${Math.round(Number(row.end))}`))
+}
+
 /**
  * Hors d'oeuvre: 15 to 20 seconds from the start of the line the land sits in, moved back if it would run past the
  * appetiser, so it always plays inside it.

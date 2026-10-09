@@ -24,13 +24,15 @@ export type TranscriptProvider = {
   fetch(id: string, options?: CaptionFetchOptions): Promise<string | null>
   /** Why the last fetch came back empty, in plain English, when the provider can tell. */
   lastProblem?: string | null
-  /** Seconds printed by the provider, when it could read a length without a caption file. */
+  /** Seconds printed by the provider, when it could read a length without a caption file. Not yet the published clock. */
   lastDuration?: number | null
+  /** captions, none (yt-dlp said so), blocked, failed, or missing. */
+  lastOutcome?: CaptionOutcome | null
 }
 
 export type YoutubeIngest =
-  | { ok: true; meta: YoutubeMeta | null; id: string; transcript: string; provider: string; tried: string[]; durationSeconds: number | null }
-  | { ok: false; meta: YoutubeMeta | null; id: string | null; error: string; needsTranscript: boolean; tried: string[]; durationSeconds: number | null }
+  | { ok: true; meta: YoutubeMeta | null; id: string; transcript: string; provider: string; tried: string[]; durationSeconds: number | null; captionOutcome: 'captions' }
+  | { ok: false; meta: YoutubeMeta | null; id: string | null; error: string; needsTranscript: boolean; tried: string[]; durationSeconds: number | null; captionOutcome: CaptionOutcome | 'bad-link' }
 
 export function looksLikeYoutube(input: string) {
   try {
@@ -101,31 +103,77 @@ export function captionLang(raw: string | null | undefined) {
   return CAPTION_LANGUAGES.some((row) => row[0] === code) ? code : 'en'
 }
 
+export type BringInLine = { link: string; speaker: string }
+
+/**
+ * One film per line, up to twelve. A line may be `link | speaker`.
+ * Commas still split a line that has no speaker, so several links can share a line.
+ * Repeats are dropped.
+ */
+export function splitBringInLines(raw: string): BringInLine[] {
+  const seen = new Set<string>()
+  const lines: BringInLine[] = []
+  for (const chunk of raw.split(/\n+/)) {
+    const pieces = chunk.includes('|') ? [chunk] : chunk.split(',')
+    for (const piece of pieces) {
+      let link = piece.trim()
+      let speaker = ''
+      const bar = link.indexOf('|')
+      if (bar >= 0) {
+        speaker = link.slice(bar + 1).trim()
+        link = link.slice(0, bar).trim()
+      }
+      if (!link || seen.has(link)) continue
+      seen.add(link)
+      lines.push({ link, speaker })
+      if (lines.length >= 12) return lines
+    }
+  }
+  return lines
+}
+
 /** One link per line. Repeats are dropped. Twelve is enough for one sitting. */
 export function splitBringInLinks(raw: string) {
-  const seen = new Set<string>()
-  const links: string[] = []
-  for (const part of raw.split(/[\n,]+/)) {
-    const link = part.trim()
-    if (!link || seen.has(link)) continue
-    seen.add(link)
-    links.push(link)
-    if (links.length >= 12) break
-  }
-  return links
+  return splitBringInLines(raw).map((line) => line.link)
 }
 
-export function bringInNote(status: 'processing' | 'processed' | 'failed', detail: string) {
-  const head = status === 'processing' ? 'Bring-in: processing' : status === 'processed' ? 'Bring-in: processed' : 'Bring-in: failed'
-  return `${head}. ${detail}`.replace(/\s+/g, ' ').trim().slice(0, 500)
+/** The speaker on the line, else the course, else the lesson. Never the YouTube channel. */
+export function speakerForLine(lineSpeaker: string | null | undefined, courseSpeaker?: string | null, lessonSpeaker?: string | null) {
+  const line = String(lineSpeaker || '').trim()
+  if (line) return line
+  return chosenSpeaker(courseSpeaker, lessonSpeaker)
 }
 
-export function bringInStatus(note: string | null | undefined): 'processing' | 'processed' | 'failed' | '' {
+export type BringInState = 'processing' | 'processed' | 'failed' | 'waiting'
+
+export function bringInNote(status: BringInState, detail: string, lang = 'en') {
+  const head = `Bring-in: ${status}`
+  return `${head}. [lang:${captionLang(lang)}] ${detail}`.replace(/\s+/g, ' ').trim().slice(0, 500)
+}
+
+export function bringInStatus(note: string | null | undefined): BringInState | '' {
   const text = String(note || '')
   if (text.startsWith('Bring-in: processed')) return 'processed'
   if (text.startsWith('Bring-in: failed')) return 'failed'
+  if (text.startsWith('Bring-in: waiting')) return 'waiting'
   if (text.startsWith('Bring-in: processing')) return 'processing'
   return ''
+}
+
+/** The language stored on the bring-in note, so Try again asks for the same captions. */
+export function bringInLang(note: string | null | undefined) {
+  const match = String(note || '').match(/\[lang:([a-z]{2})\]/)
+  return captionLang(match?.[1])
+}
+
+/** Failed, waiting and still-processing rows stay on the desk. Learners do not see an empty part. */
+export function hiddenFromLearners(note: string | null | undefined) {
+  const status = bringInStatus(note)
+  return status === 'failed' || status === 'waiting' || status === 'processing'
+}
+
+export function isAwaitingTranscript(note: string | null | undefined) {
+  return bringInStatus(note) === 'waiting'
 }
 
 export function ytDlpArgs(id: string, dir: string, lang = 'en') {
@@ -133,6 +181,7 @@ export function ytDlpArgs(id: string, dir: string, lang = 'en') {
   return [
     '--skip-download',
     '--ignore-no-formats-error',
+    '--no-simulate',
     '--write-subs',
     '--write-auto-subs',
     '--sub-langs', `${code}-orig,${code}.*,${code}`,
@@ -143,16 +192,27 @@ export function ytDlpArgs(id: string, dir: string, lang = 'en') {
   ]
 }
 
-/** First positive number yt-dlp printed for %(duration)s. `NA` is not a length. */
+/** First positive number yt-dlp printed for %(duration)s. `NA` is not a length. The value is not yet the clock. */
 export function parseDurationPrint(stdout: string): number | null {
   for (const line of stdout.split(/\r?\n/)) {
     const trimmed = line.trim()
     if (!trimmed || trimmed.toUpperCase() === 'NA') continue
     if (!/^\d+(\.\d+)?$/.test(trimmed)) continue
-    const seconds = Math.round(Number(trimmed))
+    const seconds = Number(trimmed)
     return seconds > 0 ? seconds : null
   }
   return null
+}
+
+/**
+ * YouTube's lengthSeconds and an integer `%(duration)s` drop the last partial second.
+ * The clock on the watch page is one second longer (7:08 is 428, not 427).
+ * A fractional print is the real length, so it is rounded up and not increased again.
+ */
+export function publishedClockSeconds(raw: number | null | undefined): number | null {
+  if (raw == null || !Number.isFinite(raw) || raw <= 0) return null
+  if (Number.isInteger(raw)) return raw + 1
+  return Math.ceil(raw)
 }
 
 /** The speaker chosen in the CMS. The YouTube channel name is never written over it. */
@@ -162,15 +222,61 @@ export function chosenSpeaker(courseSpeaker?: string | null, lessonSpeaker?: str
   return String(lessonSpeaker || '').trim()
 }
 
+export type CaptionOutcome = 'captions' | 'none' | 'blocked' | 'failed' | 'missing'
+
+const BOT_WALL = /not a bot|sign in to confirm|429|too many requests|blocked|forbidden|403/i
+const NO_SUBS = /no subtitles|there are no subtitles|no captions/i
+
 /** A plain-English reason from yt-dlp's error output. */
-export function ytDlpProblem(stderr: string, missing = false) {
+export function ytDlpProblem(stderr: string, missing = false, lang = 'en') {
   if (missing) return 'yt-dlp is not installed. Run npm run setup (it puts a pinned copy in bin/) or set YT_DLP_PATH.'
-  if (/not a bot|sign in to confirm|429|too many requests|blocked|forbidden|403/i.test(stderr)) {
+  if (BOT_WALL.test(stderr)) {
     return 'YouTube blocked yt-dlp from this network. Run the bring-in from a home connection, or set TRANSCRIPT_SERVICE_URL to a caption service that YouTube does not block.'
   }
-  if (/no subtitles|there are no subtitles|no captions/i.test(stderr)) return 'This film has no English captions on YouTube.'
+  if (NO_SUBS.test(stderr)) return noCaptionMessage(lang)
   const line = stderr.split('\n').map((row) => row.trim()).filter((row) => /^ERROR/.test(row))[0]
   return line ? `yt-dlp could not fetch the captions: ${line.replace(/^ERROR:\s*/, '').slice(0, 200)}` : 'yt-dlp could not fetch the captions.'
+}
+
+/**
+ * What a finished yt-dlp run means.
+ * "No captions" is said only when yt-dlp itself says there are no subtitles.
+ * Exit 0 with no file (what `--print` does unless `--no-simulate` is set) is a failed fetch, not an empty film.
+ */
+export function interpretYtDlpOutput(input: {
+  stdout: string
+  stderr: string
+  code?: string | number | null
+  files: { name: string; text?: string | null }[]
+  lang?: string
+}): { text: string | null; duration: number | null; outcome: CaptionOutcome; message: string } {
+  const lang = captionLang(input.lang)
+  const duration = parseDurationPrint(input.stdout)
+  const stderr = input.stderr || ''
+  const code = input.code
+  const vtt = pickCaptionFile(input.files.map((file) => file.name), lang)
+  const vttText = vtt ? input.files.find((file) => file.name === vtt)?.text : null
+  if (vttText && isCaptionText(vttText)) {
+    return { text: vttText, duration, outcome: 'captions', message: 'Captions fetched by yt-dlp.' }
+  }
+  const json3 = input.files.find((file) => file.name.endsWith('.json3') && file.text)
+  if (json3?.text) {
+    const converted = json3ToVtt(json3.text)
+    if (converted && isCaptionText(converted)) {
+      return { text: converted, duration, outcome: 'captions', message: 'Captions fetched by yt-dlp.' }
+    }
+  }
+  if (code === 'ENOENT') return { text: null, duration, outcome: 'missing', message: ytDlpProblem('', true, lang) }
+  if (BOT_WALL.test(stderr)) return { text: null, duration, outcome: 'blocked', message: ytDlpProblem(stderr, false, lang) }
+  if (NO_SUBS.test(stderr)) return { text: null, duration, outcome: 'none', message: noCaptionMessage(lang) }
+  return {
+    text: null,
+    duration,
+    outcome: 'failed',
+    message: code
+      ? ytDlpProblem(stderr, false, lang)
+      : 'The caption fetch finished without a subtitle file. That is not the same as the film having no captions.',
+  }
 }
 
 function pickCaptionFile(files: string[], lang = 'en') {
@@ -251,9 +357,11 @@ export const ytDlpProvider: TranscriptProvider = {
   name: 'yt-dlp',
   lastProblem: null,
   lastDuration: null,
+  lastOutcome: null,
   async fetch(id, options) {
     ytDlpProvider.lastProblem = null
     ytDlpProvider.lastDuration = null
+    ytDlpProvider.lastOutcome = null
     if (process.env.HEARTS_DISABLE_YTDLP === '1') return null
     const lang = captionLang(options?.lang)
     const dir = await mkdtemp(path.join(tmpdir(), 'hearts-ytdlp-'))
@@ -271,36 +379,13 @@ export const ytDlpProvider: TranscriptProvider = {
         stderr = String(failure.stderr || '')
         code = failure.code
       }
-      ytDlpProvider.lastDuration = parseDurationPrint(stdout)
-      const files = await readdir(dir).catch(() => [] as string[])
-      const vttName = pickCaptionFile(files, lang)
-      let text: string | null = null
-      if (vttName) {
-        const raw = await readFile(path.join(dir, vttName), 'utf8')
-        text = isCaptionText(raw) ? raw : null
-      } else {
-        const json3 = files.find((file) => file.endsWith('.json3'))
-        if (json3) {
-          const converted = json3ToVtt(await readFile(path.join(dir, json3), 'utf8'))
-          text = converted && isCaptionText(converted) ? converted : null
-        }
-      }
-      if (text) return text
-      if (code === 'ENOENT') {
-        ytDlpProvider.lastProblem = ytDlpProblem('', true)
-        return null
-      }
-      const blocked = /not a bot|sign in to confirm|429|too many requests|blocked|forbidden|403/i.test(stderr)
-      if (blocked) {
-        ytDlpProvider.lastProblem = ytDlpProblem(stderr)
-        return null
-      }
-      if (!code) {
-        ytDlpProvider.lastProblem = noCaptionMessage(lang)
-        return null
-      }
-      ytDlpProvider.lastProblem = ytDlpProblem(stderr)
-      return null
+      const names = await readdir(dir).catch(() => [] as string[])
+      const files = await Promise.all(names.map(async (name) => ({ name, text: await readFile(path.join(dir, name), 'utf8').catch(() => null) })))
+      const interpreted = interpretYtDlpOutput({ stdout, stderr, code, files, lang })
+      ytDlpProvider.lastDuration = interpreted.duration
+      ytDlpProvider.lastOutcome = interpreted.outcome
+      ytDlpProvider.lastProblem = interpreted.text ? null : interpreted.message
+      return interpreted.text
     } finally {
       await rm(dir, { recursive: true, force: true }).catch(() => {})
     }
@@ -380,18 +465,22 @@ export function segmentsToVtt(segments: { start: number; end: number; text: stri
 
 export const defaultProviders = [ytDlpProvider, watchPageProvider, serviceProvider]
 
+const OUTCOME_RANK: Record<CaptionOutcome, number> = { blocked: 5, missing: 4, failed: 3, none: 2, captions: 1 }
+
 export async function transcriptFor(id: string, providers: TranscriptProvider[] = defaultProviders, options: CaptionFetchOptions = {}) {
   const tried: string[] = []
   const problems: string[] = []
   let duration: number | null = null
+  let outcome: CaptionOutcome = 'failed'
   for (const provider of providers) {
     tried.push(provider.name)
     const text = await provider.fetch(id, options)
     if (!duration && provider.lastDuration && provider.lastDuration > 0) duration = provider.lastDuration
-    if (text && text.trim()) return { transcript: text, provider: provider.name, tried, problems, duration }
+    if (provider.lastOutcome && OUTCOME_RANK[provider.lastOutcome] > OUTCOME_RANK[outcome]) outcome = provider.lastOutcome
+    if (text && text.trim()) return { transcript: text, provider: provider.name, tried, problems, duration, outcome: 'captions' as const }
     if (provider.lastProblem) problems.push(provider.lastProblem)
   }
-  return { transcript: null, provider: null, tried, problems, duration }
+  return { transcript: null, provider: null, tried, problems, duration, outcome }
 }
 
 export async function ingestYoutubeUrl(
@@ -416,29 +505,46 @@ export async function ingestYoutubeUrl(
       needsTranscript: false,
       tried: [],
       durationSeconds: null,
+      captionOutcome: 'bad-link',
     }
   }
   const meta = await (options.meta || fetchYoutubeMeta)(id)
   if (meta === null) {
-    return { ok: false, meta: null, id, error: 'YouTube says that film does not exist or is private. Check the link and try again.', needsTranscript: false, tried: [], durationSeconds: null }
+    return { ok: false, meta: null, id, error: 'YouTube says that film does not exist or is private. Check the link and try again.', needsTranscript: false, tried: [], durationSeconds: null, captionOutcome: 'bad-link' }
   }
   const found = await transcriptFor(id, options.providers, { lang: options.lang })
-  let durationSeconds = found.duration
-  if (!durationSeconds && options.duration !== null) {
+  let printed = found.duration
+  if (!printed && options.duration !== null) {
     const lookup = options.duration || fetchInnertubeDuration
-    durationSeconds = await lookup(id)
+    printed = await lookup(id)
   }
+  let durationSeconds = publishedClockSeconds(printed)
   if (!durationSeconds && found.transcript) durationSeconds = durationFromTranscript(found.transcript)
   if (!found.transcript) {
+    const outcome = found.outcome
+    const lead = outcome === 'none'
+      ? noCaptionMessage(options.lang || 'en')
+      : outcome === 'blocked'
+        ? 'YouTube asked this server to sign in, so the captions are waiting for a transcript.'
+        : 'The captions could not be fetched from this server.'
     return {
       ok: false,
       meta: meta || null,
       id,
-      error: `The film is saved, but its captions could not be fetched from this server (tried ${found.tried.join(', ')}).${found.problems.length ? ` ${found.problems.join(' ')}` : ''} Upload a .vtt, .srt or .txt transcript below and the extractor will use that instead.`,
+      error: `${lead}${found.problems.length ? ` ${found.problems.join(' ')}` : ''} (tried ${found.tried.join(', ') || 'none'}). Upload a .vtt, .srt or .txt transcript below and the extractor will use that instead.`,
       needsTranscript: true,
       tried: found.tried,
       durationSeconds,
+      captionOutcome: outcome,
     }
   }
-  return { ok: true, meta: meta || null, id, transcript: found.transcript, provider: found.provider!, tried: found.tried, durationSeconds }
+  return { ok: true, meta: meta || null, id, transcript: found.transcript, provider: found.provider!, tried: found.tried, durationSeconds, captionOutcome: 'captions' }
+}
+
+/** The timed transcript saved on the lesson: rolling captions closed and deduped. The raw text is kept beside it when it differs. */
+export function cleanedTimedTranscript(raw: string) {
+  const parsed = parseTranscript(raw)
+  if (!parsed.cues.length) return { cleaned: raw, raw }
+  const cleaned = segmentsToVtt(parsed.cues.map((cue) => ({ start: cue.start, end: cue.end, text: cue.text })))
+  return { cleaned, raw }
 }

@@ -20,6 +20,9 @@ import {
 import { doorLabel, DOORS } from '@/lib/doors'
 import { rows, str, type Ctx } from '../common'
 import { HelpTip } from '@/components/desk/help'
+import { PaidAiOptIn } from '@/components/desk/paid-ai'
+import { paidCostLabel } from '@/lib/ai-cost'
+import { keyPresence } from '@/lib/ai-steps'
 import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
 import { exportAudit, includedSummaries, loadRawFeedback, summariesFor, weakQuestions } from '@/server/feedback'
@@ -244,6 +247,7 @@ export async function FeedbackScreen(ctx: Ctx) {
                           {!draft && !live && question.answers.length ? (
                             <form action={`/api/feedback?portal=${portal.slug}`} method="post">
                               <Hidden fields={{ action: 'summarise', questionKey: question.key, next: `${here}?${pageQuery}`, anonymise: anonymised ? '1' : '', ...Object.fromEntries(filterQuery(filters)) }} />
+                              <PaidAiOptIn hint={paidCostLabel({ chars: 2000, calls: 1, keys: keyPresence(), kind: 'feedback summary' })} />
                               <button className="btn small ghost" type="submit" data-testid="draft-summary">Draft an AI summary</button>
                             </form>
                           ) : null}
@@ -263,6 +267,7 @@ export async function FeedbackScreen(ctx: Ctx) {
             <div><h2>Question quality <HelpTip topic="weak-questions">{TOOL.weakQuestions}</HelpTip></h2><p>Weak questions, with a suggested rewrite kept as a draft</p></div>
             <form action={`/api/feedback?portal=${portal.slug}`} method="post">
               <Hidden fields={{ action: 'check-questions', next: `${here}?${pageQuery}` }} />
+              <PaidAiOptIn hint={paidCostLabel({ chars: 800, calls: 1, keys: keyPresence(), kind: 'question check, once per question' })} />
               <button className="btn small" type="submit" data-testid="check-questions">Check questions for teacher value</button>
             </form>
           </header>

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { Where } from 'payload'
-import { dualExtract, rowsKeptOnExtract, type ClauseCard } from '@/lib/extractor'
+import { draftsSkippingApproved, dualExtract, rowsKeptOnExtract, youtubeIdFromUrl, type ClauseCard } from '@/lib/extractor'
 import { giveHarvest } from './scripture'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
 import { recordShortBrowse } from './browse'
@@ -20,7 +20,8 @@ import { gateAuth, tooManyAnswers } from '@/lib/auth-gate'
 import { clientIp, hit, hitAnswer, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
 import { slugProblem } from '@/lib/text-safety'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
-import { bringInNote, captionLang, chosenSpeaker, ingestYoutubeUrl, splitBringInLinks } from '@/lib/youtube'
+import { bringInNote, captionLang, cleanedTimedTranscript, ingestYoutubeUrl, isAwaitingTranscript, speakerForLine, splitBringInLines } from '@/lib/youtube'
+import { withWorkLock } from '@/lib/work-lock'
 import { now } from '@/lib/clock'
 import { normaliseOption, startingClause } from '@/lib/placing'
 import { attachExtraPlacing } from '@/seed/placing-seed'
@@ -955,128 +956,222 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const owned = await courseOfLesson(payload, lessonId)
     const denied = editError(user, owned.course as Doc | null)
     if (denied) return redirectTo(req, next, denied)
-    const links = splitBringInLinks(text(form, 'url'))
-    if (!links.length) return redirectTo(req, next, 'Paste a YouTube link first.')
+    const lines = splitBringInLines(text(form, 'url'))
+    if (!lines.length) return redirectTo(req, next, 'Paste a YouTube link first.')
     const asked = form.getAll('fetchTranscript').map(String)
     const wantTranscript = asked.length === 0 || asked.includes('yes')
     const lang = captionLang(text(form, 'captionLang'))
-    const course = owned.course as { id: number; speaker?: string | null; origin?: string; portal?: unknown }
-    const speaker = chosenSpeaker(course.speaker, (owned.lesson as { speaker?: string | null }).speaker)
-    const units = await payload.find({ collection: 'units', overrideAccess: true, limit: 1, sort: 'order', where: { course: { equals: course.id } } })
-    const unit = units.docs[0]
-    let orderBase = (await payload.count({ collection: 'lessons', overrideAccess: true, where: { course: { equals: course.id } } })).totalDocs
-    const outcomes: string[] = []
-    let saved = 0
-    let failed = 0
-    for (let index = 0; index < links.length; index++) {
-      const url = links[index]
-      let targetId = lessonId
-      if (index > 0) {
-        if (!unit) {
-          outcomes.push('This course has no unit yet, so the extra links were not added.')
-          failed += links.length - index
-          break
+    const retry = text(form, 'retry') === 'yes'
+    const replaceFilm = text(form, 'replaceFilm') === 'yes'
+    const course = owned.course as { id: number; title?: string | null; speaker?: string | null; origin?: string; portal?: unknown }
+    const lessonSpeaker = (owned.lesson as { speaker?: string | null }).speaker
+    const lockKey = `bringin:${course.id}:${lines.map((line) => line.link).sort().join('\n')}`
+    return withWorkLock(lockKey, async () => {
+      const open = (await findDoc(payload, 'lessons', lessonId)) as { youtubeId?: string | null; vimeoId?: string | null; videoProvider?: string | null; transcriptNote?: string | null } | null
+      if (!open) return redirectTo(req, next, 'That lesson could not be found.')
+      const openHasFilm = Boolean(open.youtubeId || open.vimeoId || open.videoProvider === 'file')
+      const units = await payload.find({ collection: 'units', overrideAccess: true, limit: 1, sort: 'order', where: { course: { equals: course.id } } })
+      const unit = units.docs[0]
+      let orderBase = (await payload.count({ collection: 'lessons', overrideAccess: true, where: { course: { equals: course.id } } })).totalDocs
+      const outcomes: string[] = []
+      let saved = 0
+      let failed = 0
+      let waiting = 0
+      let skipped = 0
+      const fillOpen = retry || (replaceFilm && openHasFilm) || !openHasFilm
+      for (let index = 0; index < lines.length; index++) {
+        const line = lines[index]
+        const url = line.link
+        const speaker = speakerForLine(line.speaker, course.speaker, lessonSpeaker)
+        const useOpen = index === 0 && fillOpen
+        let parsedUrl: URL | null = null
+        try {
+          parsedUrl = new URL(url)
+        } catch {
+          parsedUrl = null
         }
-        orderBase += 1
-        const created = await payload.create({
+        const previewId = youtubeIdFromUrl(url)
+        if (!previewId) {
+          const sameLine = await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: 1, where: { and: [{ course: { equals: course.id } }, { sourceUrl: { equals: url.slice(0, 500) } }] } })
+          const prior = sameLine.docs[0] as { id: number } | undefined
+          if (prior && !(useOpen && prior.id === lessonId)) {
+            outcomes.push('That line is already on this course, so it was not added again.')
+            skipped++
+            continue
+          }
+        }
+        if (previewId) {
+          const existing = await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: 1, where: { youtubeId: { equals: previewId } } })
+          const found = existing.docs[0] as { id: number; title?: string | null } | undefined
+          if (found && found.id !== lessonId) {
+            outcomes.push(`Already in the library (${found.title || previewId}). That film was not added again.`)
+            skipped++
+            continue
+          }
+          if (found && found.id === lessonId && !useOpen) {
+            outcomes.push('That film is already this part. It was not added again.')
+            skipped++
+            continue
+          }
+        }
+        let targetId = lessonId
+        if (!useOpen) {
+          if (!unit) {
+            outcomes.push('This course has no unit yet, so the extra links were not added.')
+            failed += lines.length - index
+            break
+          }
+          orderBase += 1
+          const created = await payload.create({
+            collection: 'lessons',
+            overrideAccess: true,
+            data: {
+              title: `Film ${orderBase}`,
+              unit: unit.id,
+              course: course.id,
+              portal: idOf(course.portal) || undefined,
+              master: course.origin === 'master',
+              order: orderBase,
+              ...(speaker ? { speaker } : {}),
+              transcriptSource: 'none',
+              transcriptNote: bringInNote('processing', 'Waiting for YouTube.', lang),
+            },
+          })
+          targetId = created.id
+        } else if (replaceFilm && openHasFilm && index === 0) {
+          const oldCuts = await payload.find({ collection: 'cuts', overrideAccess: true, limit: 200, where: { lesson: { equals: targetId } } })
+          for (const cut of oldCuts.docs) {
+            if ((cut as { status?: string }).status !== 'rejected') {
+              await payload.update({ collection: 'cuts', id: cut.id, overrideAccess: true, data: { status: 'rejected' } })
+            }
+          }
+          const oldLadder = await payload.find({ collection: 'ladder-items', overrideAccess: true, limit: 200, where: { lesson: { equals: targetId } } })
+          for (const item of oldLadder.docs) {
+            if ((item as { status?: string }).status !== 'rejected') {
+              await payload.update({ collection: 'ladder-items', id: item.id, overrideAccess: true, data: { status: 'rejected' } })
+            }
+          }
+        }
+        if (useOpen) {
+          await payload.update({
+            collection: 'lessons',
+            id: targetId,
+            overrideAccess: true,
+            data: { transcriptNote: bringInNote('processing', 'Waiting for YouTube.', lang) },
+          })
+        }
+        if (!parsedUrl || !/^https?:$/.test(parsedUrl.protocol)) {
+          const reason = 'That is not a web link. Paste a link that starts with https://'
+          await payload.update({
+            collection: 'lessons',
+            id: targetId,
+            overrideAccess: true,
+            data: { sourceUrl: url.slice(0, 500), transcriptNote: bringInNote('failed', reason, lang) },
+          })
+          outcomes.push(reason)
+          failed++
+          continue
+        }
+        const result = await ingestYoutubeUrl(url, wantTranscript ? { lang } : { lang, providers: [] })
+        if (!result.ok && !result.id && !/youtu\.?be/i.test(parsedUrl.hostname)) {
+          await payload.update({
+            collection: 'lessons',
+            id: targetId,
+            overrideAccess: true,
+            data: {
+              sourceUrl: url,
+              transcriptNote: bringInNote('failed', 'The link is saved. This server did not fetch the file. Upload a transcript, or paste a YouTube link.', lang),
+            },
+          })
+          outcomes.push('A share link was saved without a film file.')
+          failed++
+          continue
+        }
+        if (!result.id) {
+          const reason = result.ok ? 'That link had no film id.' : result.error
+          await payload.update({
+            collection: 'lessons',
+            id: targetId,
+            overrideAccess: true,
+            data: { sourceUrl: url, transcriptNote: bringInNote('failed', reason, lang) },
+          })
+          outcomes.push(reason)
+          failed++
+          continue
+        }
+        const meta = result.meta
+        const duration = result.durationSeconds && result.durationSeconds > 0 ? Math.round(result.durationSeconds) : 0
+        const filmOnly = !wantTranscript
+        const outcome = result.ok ? 'captions' : result.captionOutcome
+        const waitingForTranscript = !filmOnly && (outcome === 'blocked' || outcome === 'failed' || outcome === 'missing')
+        const noCaptions = !filmOnly && outcome === 'none'
+        let note = bringInNote('failed', result.ok ? 'Captions fetched.' : result.error, lang)
+        let source: 'none' | 'youtube' | 'pending' = 'none'
+        let transcript: string | undefined
+        if (result.ok) {
+          const stored = cleanedTimedTranscript(result.transcript)
+          transcript = stored.cleaned
+          source = 'youtube'
+          note = bringInNote('processed', `Captions fetched by ${result.provider}.`, lang)
+          if (stored.raw !== stored.cleaned && stored.raw.length <= 450_000) {
+            const media = await payload.create({
+              collection: 'media',
+              overrideAccess: true,
+              data: { alt: `Raw captions ${result.id}`, purpose: 'portal-asset' } as never,
+              file: {
+                data: Buffer.from(stored.raw),
+                mimetype: 'text/vtt',
+                name: `${result.id}-raw.vtt`,
+                size: Buffer.byteLength(stored.raw),
+              },
+            }).catch(() => null)
+            if (media && typeof (media as { id?: number }).id === 'number') {
+              await payload.create({
+                collection: 'resources',
+                overrideAccess: true,
+                data: { lesson: targetId, name: 'Raw captions', kind: 'transcript', file: (media as { id: number }).id },
+              }).catch(() => undefined)
+            }
+          }
+        } else if (filmOnly) {
+          note = bringInNote('processed', 'Film saved. The transcript box was clear, so captions were not fetched.', lang)
+        } else if (waitingForTranscript) {
+          source = 'pending'
+          note = bringInNote('waiting', result.error, lang)
+        } else if (noCaptions) {
+          note = bringInNote('processed', result.error, lang)
+        }
+        await payload.update({
           collection: 'lessons',
+          id: targetId,
           overrideAccess: true,
           data: {
-            title: `Film ${orderBase}`,
-            unit: unit.id,
-            course: course.id,
-            portal: idOf(course.portal) || undefined,
-            master: course.origin === 'master',
-            order: orderBase,
+            youtubeId: result.id,
+            youtubeUrl: `https://www.youtube.com/watch?v=${result.id}`,
+            ...(meta && !text(form, 'keepTitle') ? { title: meta.title } : {}),
             ...(speaker ? { speaker } : {}),
-            transcriptSource: 'none',
-            transcriptNote: bringInNote('processing', 'Waiting for YouTube.'),
+            ...(duration > 0 ? { durationSeconds: duration } : {}),
+            ...(transcript ? { transcript, transcriptSource: source } : waitingForTranscript ? { transcriptSource: 'pending' as const } : replaceFilm ? { transcript: '', transcriptSource: 'none' as const } : {}),
+            transcriptNote: note,
           },
         })
-        targetId = created.id
-      } else {
-        await payload.update({
-          collection: 'lessons',
-          id: targetId,
-          overrideAccess: true,
-          data: { transcriptNote: bringInNote('processing', 'Waiting for YouTube.') },
-        })
+        if (result.ok || filmOnly || noCaptions) saved++
+        else if (waitingForTranscript) {
+          waiting++
+          outcomes.push(result.error)
+        } else {
+          failed++
+          outcomes.push(result.error)
+        }
       }
-      let parsedUrl: URL | null = null
-      try {
-        parsedUrl = new URL(url)
-      } catch {
-        parsedUrl = null
-      }
-      if (!parsedUrl || !/^https?:$/.test(parsedUrl.protocol)) {
-        await payload.update({
-          collection: 'lessons',
-          id: targetId,
-          overrideAccess: true,
-          data: { transcriptNote: bringInNote('failed', 'That is not a web link. Paste a link that starts with https://') },
-        })
-        outcomes.push('One line was not a web link.')
-        failed++
-        continue
-      }
-      const result = await ingestYoutubeUrl(url, wantTranscript ? { lang } : { lang, providers: [] })
-      if (!result.ok && !result.id && !/youtu\.?be/i.test(parsedUrl.hostname)) {
-        await payload.update({
-          collection: 'lessons',
-          id: targetId,
-          overrideAccess: true,
-          data: {
-            sourceUrl: url,
-            transcriptNote: bringInNote('failed', 'The link is saved. This server did not fetch the file. Upload a transcript, or paste a YouTube link.'),
-          },
-        })
-        outcomes.push('A share link was saved without a film file.')
-        failed++
-        continue
-      }
-      if (!result.id) {
-        const reason = result.ok ? 'That link had no film id.' : result.error
-        await payload.update({
-          collection: 'lessons',
-          id: targetId,
-          overrideAccess: true,
-          data: { transcriptNote: bringInNote('failed', reason) },
-        })
-        outcomes.push(reason)
-        failed++
-        continue
-      }
-      const meta = result.meta
-      const duration = result.durationSeconds && result.durationSeconds > 0 ? Math.round(result.durationSeconds) : 0
-      const filmOnly = !wantTranscript
-      const processed = result.ok
-        ? bringInNote('processed', `Captions fetched by ${result.provider}.`)
-        : filmOnly
-          ? bringInNote('processed', 'Film saved. The transcript box was clear, so captions were not fetched.')
-          : bringInNote('failed', result.error)
-      await payload.update({
-        collection: 'lessons',
-        id: targetId,
-        overrideAccess: true,
-        data: {
-          youtubeId: result.id,
-          youtubeUrl: `https://www.youtube.com/watch?v=${result.id}`,
-          ...(meta && !text(form, 'keepTitle') ? { title: meta.title } : {}),
-          ...(speaker ? { speaker } : {}),
-          ...(duration > 0 ? { durationSeconds: duration } : {}),
-          ...(result.ok ? { transcript: result.transcript, transcriptSource: 'youtube' as const } : {}),
-          transcriptNote: processed,
-        },
-      })
-      if (result.ok || filmOnly) saved++
-      else {
-        failed++
-        outcomes.push(result.error)
-      }
-    }
-    if (!saved && failed) return redirectTo(req, next, outcomes[0] || 'Those films could not be brought in.')
-    const extra = failed ? ` ${failed} failed and can be tried again.` : ''
-    return redirectTo(req, next, undefined, `Brought in ${saved} film${saved === 1 ? '' : 's'}.${extra}`)
+      if (!saved && !waiting && failed && !skipped) return redirectTo(req, next, outcomes[0] || 'Those films could not be brought in.')
+      const bits = [`Brought in ${saved} film${saved === 1 ? '' : 's'}.`]
+      if (waiting) bits.push(`${waiting} waiting for a transcript.`)
+      if (failed) bits.push(`${failed} failed and can be tried again.`)
+      if (skipped) bits.push(`${skipped} already in the library, so not added again.`)
+      if (replaceFilm) bits.push('The previous film’s clips were set aside.')
+      return redirectTo(req, next, undefined, bits.join(' '))
+    })
   }
 
   if (action === 'upload-transcript') {
@@ -1109,6 +1204,54 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, next, undefined, 'Transcript uploaded.')
   }
 
+  if (action === 'upload-transcript-file') {
+    if (user.role !== 'master') return redirectTo(req, '/', 'Only the master desk stores transcript files for the sheet.')
+    const file = form.get('file')
+    const next = text(form, 'next') || '/master/transcripts'
+    if (!(file instanceof File) || file.size === 0) return redirectTo(req, next, 'Choose a .vtt, .srt or .txt transcript.')
+    const name = file.name.toLowerCase()
+    if (!name.endsWith('.vtt') && !name.endsWith('.srt') && !name.endsWith('.txt') && !name.endsWith('.md')) {
+      return redirectTo(req, next, 'Use a .vtt, .srt or .txt file.')
+    }
+    if (file.size > 5 * 1024 * 1024) return redirectTo(req, next, 'A transcript should be under 5 MB.')
+    const body = await file.text()
+    if (!body.trim()) return redirectTo(req, next, 'That file was empty.')
+    const media = await payload.create({
+      collection: 'media',
+      overrideAccess: true,
+      data: { alt: file.name.slice(0, 120), purpose: 'portal-asset' } as never,
+      file: { data: Buffer.from(body), mimetype: 'text/plain', name: file.name.replace(/[^\w.\-]+/g, '-').slice(0, 80), size: Buffer.byteLength(body) },
+    })
+    return redirectTo(req, next, undefined, `Saved “${file.name}” as media ${media.id}. Put that number in the sheet’s transcript file column.`)
+  }
+
+  if (action === 'attach-transcript') {
+    if (user.role !== 'master') return redirectTo(req, '/', 'Only the master desk can attach a waiting transcript.')
+    const next = text(form, 'next') || '/master/transcripts'
+    const lessonId = Number(text(form, 'lesson'))
+    const lesson = await findDoc(payload, 'lessons', lessonId)
+    if (!lesson) return redirectTo(req, next, 'That talk could not be found.')
+    if (!isAwaitingTranscript((lesson as { transcriptNote?: string }).transcriptNote) && text(form, 'force') !== 'yes') {
+      return redirectTo(req, next, 'That talk is not waiting for a transcript.')
+    }
+    const file = form.get('file')
+    const pasted = text(form, 'transcript')
+    const raw = file instanceof File && file.size ? await file.text() : pasted
+    if (!raw.trim()) return redirectTo(req, next, 'Paste a timed transcript, or choose a file.')
+    const stored = cleanedTimedTranscript(raw)
+    await payload.update({
+      collection: 'lessons',
+      id: lessonId,
+      overrideAccess: true,
+      data: {
+        transcript: stored.cleaned,
+        transcriptSource: 'upload',
+        transcriptNote: bringInNote('processed', 'A timed transcript was attached while this server was waiting.', captionLang(text(form, 'captionLang'))),
+      },
+    })
+    return redirectTo(req, next, undefined, 'The timed transcript is attached. The talk can be seen by learners now.')
+  }
+
   if (action === 'extract') {
     if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot run the extractor.')
     const lessonId = Number(text(form, 'lesson'))
@@ -1123,15 +1266,18 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const usePaidAi = text(form, 'usePaidAi') === 'yes'
     const result = await extractWithFallback(transcript, await clauseCards(payload), { usePaidAi })
     const old = await payload.find({ collection: 'cuts', overrideAccess: true, limit: 200, where: { lesson: { equals: lessonId } } })
-    const keptCuts = rowsKeptOnExtract(old.docs as { id: number; status?: string | null }[])
+    const keptCuts = rowsKeptOnExtract(old.docs as { id: number; status?: string | null; start?: number | null; end?: number | null }[])
     for (const cut of keptCuts.drop) await payload.delete({ collection: 'cuts', id: cut.id, overrideAccess: true })
     const oldLadder = await payload.find({ collection: 'ladder-items', overrideAccess: true, limit: 200, where: { lesson: { equals: lessonId } } })
-    const keptLadder = rowsKeptOnExtract(oldLadder.docs as { id: number; status?: string | null }[])
+    const keptLadder = rowsKeptOnExtract(oldLadder.docs as { id: number; status?: string | null; start?: number | null; end?: number | null }[])
     for (const item of keptLadder.drop) await payload.delete({ collection: 'ladder-items', id: item.id, overrideAccess: true })
     const clauseByNumber = new Map((await clauseCards(payload)).map((card) => [card.number, card]))
     const clauses = await payload.find({ collection: 'clauses', overrideAccess: true, limit: 50 })
     const clauseId = new Map(clauses.docs.map((doc) => [(doc as { number?: number }).number, doc.id]))
-    for (const cut of result.cuts) {
+    const spanOf = (row: { start?: number | null; end?: number | null }) => ({ start: Number(row.start || 0), end: Number(row.end || 0) })
+    const freshCuts = draftsSkippingApproved(result.cuts, keptCuts.keep.map(spanOf))
+    const freshLadder = draftsSkippingApproved(result.ladder, keptLadder.keep.map(spanOf))
+    for (const cut of freshCuts) {
       const saved = await payload.create({
         collection: 'cuts',
         overrideAccess: true,
@@ -1175,7 +1321,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         })
       }
           }
-    for (const item of result.ladder) {
+    for (const item of freshLadder) {
       await payload.create({
         collection: 'ladder-items',
         overrideAccess: true,
@@ -1192,10 +1338,15 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const engineNote = result.engine === 'llm' ? `by ${llmStatus().replace('live:', '')}` : 'by the built-in extractor'
     const keptApproved = keptCuts.keep.length
     const keptNote = keptApproved ? ` ${keptApproved} approved clip${keptApproved === 1 ? ' was' : 's were'} kept.` : ''
-    const emptyNote = result.cuts.length === 0 ? result.notes.find((note) => /No clips were found/.test(note)) : ''
+    const skippedDupes = result.cuts.length - freshCuts.length
+    const dupeNote = skippedDupes ? ` ${skippedDupes} new clip${skippedDupes === 1 ? '' : 's'} matched an approved one and ${skippedDupes === 1 ? 'was' : 'were'} not added again.` : ''
+    const pauseNote = result.notes.find((note) => /no full stops/i.test(note))
+    const paidNote = result.notes.find((note) => /LLM call failed|Paid AI was ticked|built-in extractor was used|Deterministic extractor used/i.test(note))
+    const emptyNote = freshCuts.length === 0 ? result.notes.find((note) => /No clips were found/.test(note)) : ''
+    const extra = [pauseNote, paidNote].filter(Boolean).join(' ')
     const message = emptyNote
-      ? `${emptyNote}${keptNote}`
-      : `${result.cuts.length} cuts and ${result.ladder.length} short clips drafted ${engineNote}.${keptNote} Review them below.`
+      ? `${emptyNote}${keptNote}${dupeNote}${extra ? ` ${extra}` : ''}`
+      : `${freshCuts.length} cuts and ${freshLadder.length} short clips drafted ${engineNote}.${keptNote}${dupeNote}${extra ? ` ${extra}` : ''} Review them below.`
     return redirectTo(req, next, undefined, message)
   }
 

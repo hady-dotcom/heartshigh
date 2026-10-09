@@ -78,12 +78,13 @@ function parseReply(raw: string, slot: ExperimentSlot): DraftVariant[] {
   }
 }
 
-export async function suggestWording(slotKey: string, current: string, count = 4): Promise<{ drafts: DraftVariant[]; engine: string }> {
+export async function suggestWording(slotKey: string, current: string, count = 4, options: { usePaidAi?: boolean; client?: { name: string; complete(request: { system: string; user: string }): Promise<string> } | null } = {}): Promise<{ drafts: DraftVariant[]; engine: string }> {
   const slot = slotOf(slotKey)
   const fallback = mockWording(slotKey, count)
   if (!slot || slot.kind !== 'copy') return { drafts: [], engine: 'that slot is not wording' }
-  const client = getLlmClient()
-  if (!client) return { drafts: fallback, engine: 'mock' }
+  if (!options.usePaidAi) return { drafts: fallback, engine: 'built-in drafts' }
+  const client = options.client === undefined ? getLlmClient() : options.client
+  if (!client) return { drafts: fallback, engine: 'built-in drafts (paid AI was ticked, but no model key is set)' }
   try {
     const reply = await client.complete({
       system: [

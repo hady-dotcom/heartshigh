@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { test } from 'node:test'
 import { estimatePaidCost, paidCostLabel } from '../../src/lib/ai-cost'
 import { jobNote, paidFromNote, paidRun, tierWriteBlocked } from '../../src/lib/ai-steps'
@@ -11,13 +13,14 @@ import { bringInNote, bringInStatus, captionLang, chosenSpeaker, durationFromTra
 import { closeOverlappingCues } from '../../src/lib/transcript'
 
 const samples = {
-  captions: '/home/ubuntu/.cursor/projects/workspace/uploads/from_box-G00001_925e.txt',
-  speech: '/home/ubuntu/.cursor/projects/workspace/uploads/speech_to_text-G00857_d662.txt',
-  auto: '/home/ubuntu/.cursor/projects/workspace/uploads/youtube-G00009_fb19.txt',
+  captions: join(dirname(fileURLToPath(import.meta.url)), '../fixtures/transcripts/from-box-timed.txt'),
+  speech: join(dirname(fileURLToPath(import.meta.url)), '../fixtures/transcripts/speech-timed.txt'),
+  auto: join(dirname(fileURLToPath(import.meta.url)), '../fixtures/transcripts/youtube-auto-timed.txt'),
 }
 
 test('yt-dlp asks for captions without a forced player client and keeps a printed length', () => {
   const args = ytDlpArgs('B4KtRL_2aXY', '/tmp/caps').join(' ')
+  assert.match(args, /--no-simulate/)
   assert.match(args, /--ignore-no-formats-error/)
   assert.match(args, /--write-auto-subs/)
   assert.match(args, /en-orig,en\.\*,en/)

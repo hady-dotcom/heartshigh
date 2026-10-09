@@ -14,16 +14,17 @@ const COURSE = `Bring-in films ${sfx}`
 const SPEAKER = 'Alauddin Elbakri'
 const SHEET_COURSE = `Storage bring-in ${sfx}`
 const LINKS = [
-  { id: 'B4KtRL_2aXY', label: 'short', url: 'https://www.youtube.com/watch?v=B4KtRL_2aXY' },
-  { id: 'UUTnGXyCHZI', label: 'hour', url: 'https://www.youtube.com/watch?v=UUTnGXyCHZI' },
-  { id: 'I7o6eqKwWio', label: 'auto', url: 'https://www.youtube.com/watch?v=I7o6eqKwWio' },
-  { id: 'kM7LVppIMl0', label: 'none', url: 'https://www.youtube.com/watch?v=kM7LVppIMl0' },
-  { id: 'notarealvid', label: 'broken', url: 'https://www.youtube.com/watch?v=notarealvid' },
+  { id: 'B4KtRL_2aXY', label: 'short', url: 'https://www.youtube.com/watch?v=B4KtRL_2aXY', speaker: '', clock: 428 },
+  { id: 'UUTnGXyCHZI', label: 'hour', url: 'https://www.youtube.com/watch?v=UUTnGXyCHZI', speaker: '', clock: 3898 },
+  { id: 'gEqJgd0zB8Q', label: 'hani', url: 'https://www.youtube.com/watch?v=gEqJgd0zB8Q', speaker: 'Hani', clock: 1498 },
+  { id: 'kM7LVppIMl0', label: 'none', url: 'https://www.youtube.com/watch?v=kM7LVppIMl0', speaker: '', clock: 0 },
+  { id: 'notarealvid', label: 'broken', url: 'https://www.youtube.com/watch?v=notarealvid', speaker: '', clock: 0 },
 ]
+const FIXTURES = path.join(process.cwd(), 'tests/fixtures/transcripts')
 const SAMPLES = {
-  boys: '/home/ubuntu/.cursor/projects/workspace/uploads/from_box-G00001_925e.txt',
-  speech: '/home/ubuntu/.cursor/projects/workspace/uploads/speech_to_text-G00857_d662.txt',
-  auto: '/home/ubuntu/.cursor/projects/workspace/uploads/youtube-G00009_fb19.txt',
+  boys: path.join(FIXTURES, 'from-box-timed.txt'),
+  speech: path.join(FIXTURES, 'speech-timed.txt'),
+  auto: path.join(FIXTURES, 'youtube-auto-timed.txt'),
 }
 
 type LessonRow = {
@@ -89,9 +90,10 @@ test.describe('round 1 bring-in', () => {
     await shot(page, '01-library-course')
     await page.getByRole('link', { name: COURSE }).click()
     await expect(page.getByTestId('youtube-url')).toBeVisible()
+    await expect(page.getByTestId('youtube-url')).toHaveValue('')
     await expect(page.getByTestId('fetch-transcript')).toBeChecked()
     await expect(page.getByTestId('caption-lang')).toHaveValue('en')
-    await page.getByTestId('youtube-url').fill(LINKS.map((row) => row.url).join('\n'))
+    await page.getByTestId('youtube-url').fill(LINKS.map((row) => (row.speaker ? `${row.url} | ${row.speaker}` : row.url)).join('\n'))
     await shot(page, '02-youtube-form')
     await page.getByTestId('ingest-submit').click()
     const flash = page.getByTestId('notice').or(page.getByTestId('error'))
@@ -120,13 +122,20 @@ test.describe('round 1 bring-in', () => {
     for (const link of LINKS) {
       const lesson = lessons.find((row) => row.youtubeId === link.id)
       expect(lesson, `${link.label} ${link.id} was saved`).toBeTruthy()
-      expect(lesson!.speaker).toBe(SPEAKER)
-      expect(lesson!.transcriptNote || '').toMatch(/^Bring-in: (processed|failed)\./)
+      expect(lesson!.speaker).toBe(link.speaker || SPEAKER)
       expect(lesson!.speaker).not.toMatch(/MCA|Yaqeen|Muslim Community|channel/i)
+      if (link.label === 'broken') {
+        expect(lesson!.transcriptNote || '').toMatch(/^Bring-in: failed\./)
+      } else {
+        expect(lesson!.transcriptNote || '').toMatch(/^Bring-in: (processed|waiting)\./)
+        if ((lesson!.transcriptNote || '').includes('waiting')) expect(lesson!.transcriptNote || '').not.toMatch(/no English captions/)
+      }
+      if (link.clock && lesson!.durationSeconds) expect(lesson!.durationSeconds).toBe(link.clock)
     }
     const broken = lessons.find((row) => row.youtubeId === 'notarealvid')
-    expect(broken!.transcriptNote || '').toMatch(/does not exist or is private|could not be fetched|not a YouTube/i)
+    expect(broken!.transcriptNote || '').toMatch(/does not exist or is private/)
     expect((broken!.transcript || '').length).toBe(0)
+    report.youtubeCourseId = course!.id
 
     const failed = lessons.filter((row) => (row.transcriptNote || '').startsWith('Bring-in: failed') && row.youtubeId)
     expect(failed.length).toBeGreaterThan(0)
@@ -134,9 +143,44 @@ test.describe('round 1 bring-in', () => {
     await expect(page.getByTestId('bring-in-status')).toHaveAttribute('data-status', 'failed')
     await expect(page.getByTestId('bring-in-retry')).toBeVisible()
     await shot(page, '04-youtube-failed-retry')
+    await expect(page.locator('form input[name="captionLang"]')).toHaveValue('en')
     await page.getByTestId('bring-in-retry').click()
     await expect(page.getByTestId('bring-in-status')).toBeVisible()
     await shot(page, '05-youtube-retry')
+
+    const keptId = lessons.find((row) => row.youtubeId === 'B4KtRL_2aXY')!
+    await page.goto(`/master/library/${course!.id}?part=${keptId.id}`)
+    await expect(page.getByTestId('youtube-url')).toHaveValue('')
+    await page.getByTestId('youtube-url').fill('https://www.youtube.com/watch?v=yl7DBZGnhNo')
+    await expect(page.getByTestId('replace-film')).not.toBeChecked()
+    await page.getByTestId('ingest-submit').click()
+    await expect(page.getByTestId('notice').or(page.getByTestId('error'))).toBeVisible()
+    const afterAdd = await lessonsFor(master, course!.id)
+    expect(afterAdd.find((row) => row.id === keptId.id)?.youtubeId).toBe('B4KtRL_2aXY')
+    expect(afterAdd.some((row) => row.youtubeId === 'yl7DBZGnhNo')).toBeTruthy()
+    await shot(page, '05b-added-not-replaced')
+
+    await page.getByTestId('caption-lang').selectOption('fr')
+    await page.getByTestId('youtube-url').fill('not a link at all')
+    await page.getByTestId('ingest-submit').click()
+    await expect(page.getByTestId('notice').or(page.getByTestId('error'))).toBeVisible()
+    const withJunk = await lessonsFor(master, course!.id)
+    const junk = withJunk.find((row) => (row.transcriptNote || '').includes('not a web link'))
+    expect(junk, 'the junk line is a failed desk row').toBeTruthy()
+    await page.goto(`/master/library/${course!.id}?part=${junk!.id}`)
+    await expect(page.getByTestId('bring-in-status')).toHaveAttribute('data-status', 'failed')
+    await expect(page.getByTestId('caption-lang')).toHaveValue('fr')
+    await expect(page.locator('form input[name="captionLang"]')).toHaveValue('fr')
+    report.youtubeLessons = withJunk.map((lesson) => ({
+      id: lesson.id,
+      title: lesson.title,
+      speaker: lesson.speaker,
+      youtubeId: lesson.youtubeId,
+      durationSeconds: lesson.durationSeconds || 0,
+      note: lesson.transcriptNote,
+      transcriptChars: (lesson.transcript || '').length,
+    }))
+    saveReport()
 
     const withTranscript = lessons.filter((row) => (row.transcript || '').includes('-->'))
     report.youtubeTranscripts = withTranscript.map((row) => row.youtubeId)
@@ -268,8 +312,28 @@ test.describe('round 1 bring-in', () => {
     report.approvedCut = approvedId
     report.cutsBefore = before
     report.cutsAfter = await page.getByTestId('cut-draft').count()
+    expect(report.cutsAfter).toBe(before)
+    const sameSpan = await page.locator(`[data-testid="cut-draft"][data-cut="${approvedId}"]`).count()
+    expect(sameSpan).toBe(1)
     saveReport()
     await shot(page, '11-extractor-rerun')
+
+    const master = await masterApi()
+    const auto = (await lessonsFor(master, saved.sheetCourseId!)).find((row) => row.youtubeId === 'SheetAuto01')
+    expect(auto?.id).toBeTruthy()
+    await page.goto(`/master/library/${saved.sheetCourseId}?part=${auto!.id}`)
+    await page.getByTestId('extract-submit').click()
+    await expect(page.getByTestId('notice')).toContainText(/no full stops/i)
+    await shot(page, '11b-no-full-stops')
+    await master.dispose()
+
+    await page.goto('/master/transcripts')
+    const sample = path.join(ARTIFACTS, 'desk-transcript.txt')
+    writeFileSync(sample, '[0:00:00] A line from the talk.\n[0:00:04] The next line.\n')
+    await page.getByTestId('sheet-transcript-file').setInputFiles(sample)
+    await page.getByTestId('sheet-transcript-upload').click()
+    await expect(page.getByTestId('notice')).toContainText(/media/i)
+    await shot(page, '11c-transcript-desk')
 
     await page.goto('/master/ai')
     await expect(page.getByTestId('ai-mock-mode').or(page.getByTestId('ai-paid-off'))).toBeVisible()
@@ -279,7 +343,7 @@ test.describe('round 1 bring-in', () => {
   test('a new joiner holding the pack can open a brought-in talk and read its transcript', async ({ page }) => {
     test.setTimeout(120_000)
     await page.setViewportSize(PHONE)
-    const saved = JSON.parse(readFileSync(path.join(ARTIFACTS, 'report.json'), 'utf8')) as { sheetCourseId?: number; sheetLessonId?: number }
+    const saved = JSON.parse(readFileSync(path.join(ARTIFACTS, 'report.json'), 'utf8')) as { sheetCourseId?: number; sheetLessonId?: number; youtubeCourseId?: number }
     const code = seedCode('elm-learner')
     const email = `joiner-${sfx}@hearts.test`
     await page.goto(`/join?code=${encodeURIComponent(code)}`)
@@ -300,6 +364,80 @@ test.describe('round 1 bring-in', () => {
     report.learnerMode = await page.getByTestId('player').getAttribute('data-mode')
     saveReport()
     await shot(page, '14-learner-play')
+
+    if (saved.youtubeCourseId) {
+      await page.goto(`/p/east-london/course/${saved.youtubeCourseId}`)
+      const body = await page.locator('body').innerText()
+      expect(body).not.toMatch(/not a link at all/i)
+      expect(body).not.toMatch(/notarealvid/)
+      await shot(page, '15-learner-no-failed-parts')
+    }
+  })
+
+  test('two identical bring-ins at once do not double the films', async ({ page }) => {
+    test.setTimeout(180_000)
+    await page.setViewportSize(DESK)
+    const title = `Concurrent films ${sfx}`
+    await signIn(page, 'master@hearts.test', 'hearts-master', '/master/library')
+    await page.getByTestId('master-course-title').fill(title)
+    await page.getByLabel('Speaker').fill('Hani')
+    await page.getByRole('button', { name: 'Add to the library' }).click()
+    await page.getByRole('link', { name: title }).click()
+    const lesson = await page.locator('input[name="lesson"]').first().inputValue()
+    const courseId = page.url().match(/library\/(\d+)/)?.[1]
+    expect(lesson).toBeTruthy()
+    const stamp = sfx.replace(/\W/g, '').slice(-6).padEnd(6, 'x')
+    const url = `https://www.youtube.com/watch?v=Ca${stamp}111\nhttps://www.youtube.com/watch?v=Cb${stamp}222`
+    const form = { action: 'ingest', lesson: lesson!, next: `/master/library/${courseId}`, url, fetchTranscript: 'yes', captionLang: 'en' }
+    await Promise.all([
+      page.request.post('/api/hearts', { form, maxRedirects: 0 }),
+      page.request.post('/api/hearts', { form, maxRedirects: 0 }),
+    ])
+    const master = await masterApi()
+    const course = await courseByTitle(master, title)
+    const lessons = await lessonsFor(master, course!.id)
+    const ids = lessons.map((row) => row.youtubeId).filter(Boolean)
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(ids.filter((id) => id === `Ca${stamp}111`).length).toBe(1)
+    expect(ids.filter((id) => id === `Cb${stamp}222`).length).toBe(1)
+    report.concurrentLessons = lessons.length
+    saveReport()
+    await master.dispose()
+  })
+
+  test('two identical sheet applies at once do not double the course', async ({ page }) => {
+    test.setTimeout(180_000)
+    await page.setViewportSize(DESK)
+    await signIn(page, 'master@hearts.test', 'hearts-master', '/master/sheet')
+    const title = `Concurrent sheet ${sfx}`
+    const buffer = Buffer.from(await buildWorkbook({
+      talks: [
+        { talk_key: `con-${sfx}-a`, youtube_id: 'ConcurA0001', title: 'Concurrent A', course: title, speaker: 'Hani', duration: 400 },
+        { talk_key: `con-${sfx}-b`, youtube_id: 'ConcurB0001', title: 'Concurrent B', course: title, speaker: 'Hani', duration: 400 },
+      ],
+    }))
+    const file = path.join(ARTIFACTS, 'concurrent.xlsx')
+    writeFileSync(file, buffer)
+    const responses = await Promise.all([1, 2].map(() => page.request.post('/api/hearts/sheet', {
+      multipart: {
+        intent: 'apply',
+        response: 'json',
+        scope: 'library',
+        next: '/master/sheet',
+        file: { name: 'concurrent.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer },
+      },
+      headers: { accept: 'application/json' },
+    })))
+    for (const response of responses) expect(response.ok(), await response.text()).toBeTruthy()
+    const master = await masterApi()
+    const found = await (await master.get(`/api/courses?where[title][equals]=${encodeURIComponent(title)}&limit=10&depth=0`)).json()
+    expect(found.docs.length).toBe(1)
+    const lessons = await lessonsFor(master, found.docs[0].id)
+    expect(lessons.length).toBe(2)
+    report.concurrentCourses = found.docs.length
+    saveReport()
+    await shot(page, '16-concurrent-sheet')
+    await master.dispose()
   })
 })
 

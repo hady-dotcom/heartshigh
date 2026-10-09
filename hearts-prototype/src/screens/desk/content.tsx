@@ -26,7 +26,8 @@ import { PaidAiOptIn } from '@/components/desk/paid-ai'
 import { paidCostLabel } from '@/lib/ai-cost'
 import { keyPresence } from '@/lib/ai-steps'
 import { TOOL } from '@/lib/desk-help'
-import { bringInStatus, CAPTION_LANGUAGES } from '@/lib/youtube'
+import { BusyForm } from '@/components/desk/busy-form'
+import { bringInLang, bringInStatus, CAPTION_LANGUAGES } from '@/lib/youtube'
 import { AdminFrame } from './overview'
 
 export function guardAdmin(ctx: Ctx) {
@@ -269,8 +270,9 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                   <p className="hint" style={{ marginTop: 10 }}>
                     {(() => {
                       const status = bringInStatus(str(lesson.transcriptNote))
-                      const label = status === 'processed' ? 'Processed' : status === 'failed' ? 'Failed' : status === 'processing' ? 'Processing' : ''
-                      return label ? <span className={`badge ${status === 'failed' ? 'rose' : status === 'processed' ? 'teal' : 'gold'}`} data-testid="bring-in-status" data-status={status}>{label}</span> : null
+                      const label = status === 'processed' ? 'Processed' : status === 'failed' ? 'Failed' : status === 'waiting' ? 'Waiting for transcript' : status === 'processing' ? 'Processing' : ''
+                      const tone = status === 'failed' ? 'rose' : status === 'processed' ? 'teal' : status === 'waiting' ? 'gold' : 'gold'
+                      return label ? <span className={`badge ${tone}`} data-testid="bring-in-status" data-status={status}>{label}</span> : null
                     })()}{' '}
                     {lesson.transcript ? <span data-testid="has-transcript">Transcript attached. </span> : <span>No transcript yet. </span>}
                     {lesson.transcriptNote ? <span data-testid="transcript-note">{str(lesson.transcriptNote)}</span> : null}
@@ -278,27 +280,33 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                 </div>
                 {!locked ? (
                   <div style={{ display: 'grid', gap: 14, alignContent: 'start' }}>
-                    <form className="form" action="/api/hearts" method="post">
+                    <BusyForm className="form" action="/api/hearts" method="post">
                       <Hidden fields={{ action: 'ingest', lesson: lesson.id, next: here }} />
-                      <label className="stack">YouTube links, one per line <HelpTip topic="ingest">{TOOL.ingest}</HelpTip><textarea data-testid="youtube-url" name="url" rows={4} placeholder="https://www.youtube.com/watch?v=" required defaultValue={youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : ''} /></label>
+                      <label className="stack">YouTube links, one per line <HelpTip topic="ingest">{TOOL.ingest}</HelpTip><textarea data-testid="youtube-url" name="url" rows={4} placeholder={'https://www.youtube.com/watch?v=…\nhttps://youtu.be/… | Speaker name'} required defaultValue="" /></label>
                       <input type="hidden" name="fetchTranscript" value="no" />
                       <label className="check">
                         <input type="checkbox" name="fetchTranscript" value="yes" defaultChecked data-testid="fetch-transcript" /> Bring in the transcript
                       </label>
                       <HelpTip topic="fetch-transcript">{TOOL.fetchTranscript}</HelpTip>
                       <label className="stack">Caption language <HelpTip topic="caption-lang">{TOOL.captionLang}</HelpTip>
-                        <select name="captionLang" defaultValue="en" data-testid="caption-lang">
+                        <select name="captionLang" defaultValue={bringInLang(str(lesson.transcriptNote))} data-testid="caption-lang">
                           {CAPTION_LANGUAGES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                         </select>
                       </label>
+                      {youtubeId ? (
+                        <label className="check">
+                          <input type="checkbox" name="replaceFilm" value="yes" data-testid="replace-film" /> Replace this film
+                          <HelpTip topic="replace-film">{TOOL.replaceFilm}</HelpTip>
+                        </label>
+                      ) : null}
                       <div className="actions"><button className="btn ink small" data-testid="ingest-submit" type="submit">Bring in</button></div>
-                    </form>
-                    {bringInStatus(str(lesson.transcriptNote)) === 'failed' && youtubeId ? (
-                      <form action="/api/hearts" method="post" className="actions">
-                        <Hidden fields={{ action: 'ingest', lesson: lesson.id, next: here, url: `https://www.youtube.com/watch?v=${youtubeId}`, fetchTranscript: 'yes', captionLang: 'en' }} />
+                    </BusyForm>
+                    {(bringInStatus(str(lesson.transcriptNote)) === 'failed' || bringInStatus(str(lesson.transcriptNote)) === 'waiting') && (youtubeId || str(lesson.sourceUrl)) ? (
+                      <BusyForm action="/api/hearts" method="post" className="actions">
+                        <Hidden fields={{ action: 'ingest', lesson: lesson.id, next: here, retry: 'yes', url: youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : str(lesson.sourceUrl), fetchTranscript: 'yes', captionLang: bringInLang(str(lesson.transcriptNote)) }} />
                         <button className="btn ghost small" type="submit" data-testid="bring-in-retry">Try again</button>
                         <HelpTip topic="bring-in-retry">{TOOL.bringInRetry}</HelpTip>
-                      </form>
+                      </BusyForm>
                     ) : null}
                     <form className="form" action="/api/hearts" method="post" encType="multipart/form-data">
                       <Hidden fields={{ action: 'upload-transcript', lesson: lesson.id, next: here }} />

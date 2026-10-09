@@ -9,6 +9,9 @@ import type { SessionUser } from '@/server/context'
 import { partTitle } from '@/lib/talk-title'
 import { type Ctx, type Row, clock, rows, str } from '../common'
 import { HelpTip } from '@/components/desk/help'
+import { PaidAiOptIn } from '@/components/desk/paid-ai'
+import { paidCostLabel } from '@/lib/ai-cost'
+import { keyPresence } from '@/lib/ai-steps'
 import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
@@ -135,6 +138,7 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
         </header>
         <form className="body form circle-generate" action="/api/hearts" method="post" data-testid="circle-generate-all">
           <Hidden fields={{ action: 'circle-generate', lesson: lesson.id, next: back }} />
+          <PaidAiOptIn hint={paidCostLabel({ chars: 2000, calls: 6, keys: keyPresence(), kind: 'circle draft' })} />
           <b>Draft answers for every question on this talk <HelpTip topic="circle-tones">{TOOL.circleTones}</HelpTip></b>
           <GenerateFields />
           <div className="actions"><button className="btn ink" type="submit" data-testid="circle-generate-all-submit">Draft circle answers</button></div>
@@ -198,6 +202,7 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
                 </form>
                 <form className="form" action="/api/hearts" method="post" data-testid="circle-generate-one">
                   <Hidden fields={{ action: 'circle-generate', lesson: lesson.id, point: point.id, next: back }} />
+                  <PaidAiOptIn hint={paidCostLabel({ chars: 2000, calls: 1, keys: keyPresence(), kind: 'circle draft' })} />
                   <b>Draft more for this question</b>
                   <GenerateFields count={3} />
                   <button className="btn ghost small" type="submit">Draft</button>

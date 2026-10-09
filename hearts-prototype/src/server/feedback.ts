@@ -254,7 +254,7 @@ const EMPTY_TALK: TalkContext = {
   clip: '',
 }
 
-export async function draftQuestionSummary(payload: Payload, actor: FeedbackActor, portalId: number, built: BuiltFeedback, questionKey: string) {
+export async function draftQuestionSummary(payload: Payload, actor: FeedbackActor, portalId: number, built: BuiltFeedback, questionKey: string, usePaidAi = false) {
   const question = built.doors.flatMap((door) => door.talks.flatMap((talk) => talk.questions)).find((item) => item.key === questionKey)
   if (!question) return { error: 'That question is not in this view.' }
   if (!question.answers.length) return { error: 'There are no shared answers to summarise.' }
@@ -269,13 +269,21 @@ export async function draftQuestionSummary(payload: Payload, actor: FeedbackActo
     family: question.familyLabel,
   }
   await ensureSteps(payload)
-  const ran = await runPreparedStep(payload, 'feedback-summary', talk)
+  let ran: { output: unknown; problems: string[]; versionNumber: number; mock?: boolean }
+  let paidFallback = ''
+  try {
+    ran = await runPreparedStep(payload, 'feedback-summary', talk, usePaidAi)
+  } catch (error) {
+    ran = { output: {}, problems: ['paid call failed'], versionNumber: 1, mock: true }
+    paidFallback = `The paid summary failed (${error instanceof Error ? error.message : 'unknown'}), so the built-in summary was used.`
+  }
   let themes = stringList((ran.output as { themes?: unknown })?.themes)
   let quotes = stringList((ran.output as { quotes?: unknown })?.quotes)
   if (ran.problems.length || !themes.length) {
     const fallback = themesFromAnswers(answers)
     themes = fallback.themes
     quotes = fallback.quotes
+    if (usePaidAi && !paidFallback) paidFallback = 'The paid summary did not return a usable draft, so the built-in summary was used.'
   }
   themes = themes.slice(0, 5)
   quotes = quotes.slice(0, 3)
@@ -294,7 +302,7 @@ export async function draftQuestionSummary(payload: Payload, actor: FeedbackActo
       portal: portalId,
     }) as never,
   })) as unknown as Doc
-  return { id: created.id, themes, quotes }
+  return { id: created.id, themes, quotes, paidFallback }
 }
 
 export async function includeSummary(payload: Payload, portalId: number, id: number) {
@@ -338,9 +346,9 @@ export async function weakQuestions(payload: Payload): Promise<WeakQuestion[]> {
 }
 
 /** Runs the question-value step over imported questions and stores suggested rewrites as drafts only. */
-export async function checkQuestions(payload: Payload, actor: FeedbackActor) {
+export async function checkQuestions(payload: Payload, actor: FeedbackActor, usePaidAi = false) {
   await ensureSteps(payload)
-  const live = await loadLiveStep(payload, 'question-value')
+  const live = await loadLiveStep(payload, 'question-value', usePaidAi)
   const points = await many(payload, 'engagement-points', { status: { not_equals: 'rejected' } }, 800)
   const lessonIds = [...new Set(points.map((point) => idOf(point.lesson)).filter((id): id is number => Boolean(id)))]
   const lessons = lessonIds.length ? await many(payload, 'lessons', { id: { in: lessonIds } }) : []
@@ -348,6 +356,7 @@ export async function checkQuestions(payload: Payload, actor: FeedbackActor) {
   const existing = await many(payload, 'question-rewrites', undefined, 800)
   const already = new Set(existing.map((row) => `${idOf(row.point)}|${textOf(row.prompt)}`))
   let flagged = 0
+  let paidFallback = ''
   for (const point of points) {
     const prompt = textOf(point.prompt)
     if (!prompt) continue
@@ -355,9 +364,16 @@ export async function checkQuestions(payload: Payload, actor: FeedbackActor) {
     const talkTitle = lessonTitle.get(idOf(point.lesson) || 0) || 'A talk'
     if (already.has(`${point.id}|${prompt}`)) continue
     const talk: TalkContext = { ...EMPTY_TALK, title: talkTitle, transcript: prompt, question: prompt, family: FAMILY_LABEL[family] }
-    const ran = await live.run(talk)
+    let ran: { output: unknown; problems: string[] }
+    try {
+      ran = await live.run(talk)
+    } catch (error) {
+      ran = { output: {}, problems: ['paid call failed'] }
+      if (usePaidAi) paidFallback = `The paid question check failed (${error instanceof Error ? error.message : 'unknown'}), so the built-in check was used.`
+    }
     const output = ran.output as { weak?: unknown; reasons?: unknown; rewrite?: unknown }
     const problems = schemaProblems({ type: 'object', properties: { weak: { type: 'boolean' }, reasons: { type: 'array', items: { type: 'string' } }, rewrite: { type: 'string' } }, required: ['weak', 'reasons', 'rewrite'] }, output)
+    if (usePaidAi && problems.length && !paidFallback) paidFallback = 'The paid question check did not return a usable draft, so the built-in check was used.'
     const fallback = assessQuestion({ prompt, talk: talkTitle, options: Array.isArray(point.options) ? point.options.map(String) : [] })
     const weak = problems.length ? fallback.weak : Boolean(output.weak)
     if (!weak) continue
@@ -379,7 +395,7 @@ export async function checkQuestions(payload: Payload, actor: FeedbackActor) {
     })
     flagged += 1
   }
-  return { checked: points.length, flagged }
+  return { checked: points.length, flagged, paidFallback }
 }
 
 export async function exportAudit(payload: Payload, portalId: number) {

@@ -13,6 +13,7 @@ import { loadDoors } from '@/server/doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
 import { visibleCourseIds } from '@/server/context'
 import { sortParts } from '@/lib/part-order'
+import { hiddenFromLearners } from '@/lib/youtube'
 import { tidyQuestionPrompt } from '@/lib/question-prompt'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { courseCards, portraitFor, posterFor, shownPoster, slugify, talkStill } from '@/server/learner'
@@ -203,7 +204,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
     masterFlags(payload),
   ])
   const unitRank = new Map(units.map((unit, index) => [unit.id, index]))
-  const lessons = sortParts(lessonRows, (row) => unitRank.get(ref(row.unit) || 0) ?? 99)
+  const lessons = sortParts(lessonRows, (row) => unitRank.get(ref(row.unit) || 0) ?? 99).filter((row) => !hiddenFromLearners(str(row.transcriptNote)))
   if (!lessons.length) redirect(`${base}/lanes?error=${encodeURIComponent('That course has no parts yet.')}`)
   if (!query.part) {
     return CourseOverview(ctx, course, lessons)

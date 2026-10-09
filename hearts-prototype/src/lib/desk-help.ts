@@ -127,13 +127,17 @@ export const TOOL: Record<string, string> = {
   contentSearch:
     'Search looks at subject titles. Mine is what you made here; Library is what you linked. The list is grouped by the twenty doors of Hadith Jibril, then by Ghunya seat.',
   ingest:
-    'Paste one YouTube link, or several on their own lines, to bring those films into this course. The speaker stays the one chosen for the course, not the YouTube channel. Each film then shows Processing, Processed or Failed.',
+    'Paste one YouTube link, or several on their own lines, to add those films as new parts. A line may be the link, then a bar, then that film’s speaker. Otherwise the course speaker is used. This does not replace the film already open unless you tick Replace this film.',
   fetchTranscript:
     'Leave this ticked to pull YouTube’s own captions and keep their times. Untick it when you only want the film and will upload a transcript yourself. Nothing here calls a paid model.',
   captionLang:
     'This is the caption language to ask YouTube for. English is the usual choice. Auto-captions in that language are used when there is no manual track.',
   bringInRetry:
-    'Try again runs the same bring-in on this film. Use it when YouTube blocked the captions or the link failed. The speaker and any approved clips stay as they are.',
+    'Try again runs the same bring-in on this row and keeps the caption language you chose. Use it when YouTube blocked the captions or the link failed. It does not start a second part.',
+  replaceFilm:
+    'Replace this film changes the open part to the new link. Clips from the old film are set aside, including ones you already approved. Leave it unticked to add the links as new parts.',
+  transcriptFiles:
+    'Upload the timed transcript files the master sheet points at. Each file is stored and its media number is shown, so you can paste that number into the sheet. You do not need the raw data console.',
   extract:
     'Run the extractor drafts clips from the transcript, and clips you have already approved stay. Tick paid AI only when you want a model to draft them; the estimate is shown first. With the box clear, the built-in extractor runs and nothing is paid.',
   paidAi:

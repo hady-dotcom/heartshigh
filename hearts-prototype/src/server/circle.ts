@@ -18,7 +18,7 @@ import {
   type CircleTone,
 } from '@/lib/circle'
 import { idOf, portalIdOf } from '@/lib/ids'
-import { getLlmClient } from '@/lib/llm'
+import { getLlmClient, type LlmClient } from '@/lib/llm'
 import { parseTranscript } from '@/lib/transcript'
 import type { SessionUser } from './context'
 import { tierSourceText } from './tier-source'
@@ -81,12 +81,12 @@ function speakerContext(lesson: Doc, second: number) {
   }
 }
 
-/** Drafts for one question: the AI when a key is set, topped up with the built-in drafts so the count is always met. */
-export async function draftCircle(point: CirclePoint, count: number, tones: CircleTone[], lengths: CircleLength[], seed: number): Promise<{ drafts: CircleDraft[]; engine: string }> {
+/** Drafts for one question. A paid model runs only when this desk ticks it. */
+export async function draftCircle(point: CirclePoint, count: number, tones: CircleTone[], lengths: CircleLength[], seed: number, options: { usePaidAi?: boolean; client?: LlmClient | null } = {}): Promise<{ drafts: CircleDraft[]; engine: string }> {
   const spread = circleSpread(count, tones, lengths)
-  const client = getLlmClient()
+  const client = options.usePaidAi ? (options.client === undefined ? getLlmClient() : options.client) : null
   let drafts: CircleDraft[] = []
-  let engine = 'built-in drafts'
+  let engine = options.usePaidAi ? 'built-in drafts (paid AI was ticked, but no model key is set)' : 'built-in drafts'
   if (client) {
     try {
       drafts = parseCircleReply(await client.complete(circleRequest(point, spread)), spread)
@@ -192,6 +192,7 @@ export async function handleCircle(action: string, form: FormData, payload: Payl
         tones,
         lengths,
         existing.totalDocs + point.id,
+        { usePaidAi: text(form, 'usePaidAi') === 'yes' },
       )
       engine = result.engine
       for (const draft of result.drafts) {

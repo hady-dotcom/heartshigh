@@ -6,6 +6,7 @@ import type { SessionUser } from '@/server/context'
 import type { Ctx, Row } from '../common'
 import { rows, str } from '../common'
 import { HelpTip } from '@/components/desk/help'
+import { BusyForm } from '@/components/desk/busy-form'
 import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
@@ -240,7 +241,7 @@ function SheetBody({
             ) : null}
             {(summary.changeTotal || 0) > (summary.changes?.length || 0) ? <p className="hint">Showing the first {summary.changes?.length} changes of {summary.changeTotal}.</p> : null}
             {preview?.id ? <p style={{ marginTop: 12 }}><a className="btn ghost" href={`/api/hearts/sheet/create?preview=${preview.id}`} data-testid="sheet-draft-download">Download this draft</a></p> : null}
-            <form action={action} method="post" style={{ marginTop: 16 }}>
+            <BusyForm action={action} method="post" style={{ marginTop: 16 }}>
               {hidden}
               <input type="hidden" name="intent" value="apply" />
               <input type="hidden" name="import" value={preview?.id || ''} />
@@ -264,7 +265,7 @@ function SheetBody({
               ) : null}
               {(counts.errors || counts.skipped) && !((counts.create || 0) + (counts.update || 0) + (counts.delete || 0) > 0) ? null : <button className="btn teal" type="submit" data-testid="sheet-apply">Apply this import</button>}
               {counts.errors || counts.skipped ? ((counts.create || 0) + (counts.update || 0) + (counts.delete || 0) > 0 ? <p data-testid="sheet-partial">The rows above stay out. Apply saves the rest.</p> : <p data-testid="sheet-blocked">Fix the rows above and upload the sheet again. Apply stays off while every row has a problem.</p>) : null}
-            </form>
+            </BusyForm>
           </div>
         </section>
       ) : null}

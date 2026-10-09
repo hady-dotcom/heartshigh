@@ -83,10 +83,10 @@ export function llmStatus() {
   return client ? `live:${client.name}` : 'deterministic-fallback'
 }
 
-export async function extractWithFallback(raw: string, clauses: ClauseCard[], options: { usePaidAi?: boolean } = {}): Promise<ExtractResult> {
+export async function extractWithFallback(raw: string, clauses: ClauseCard[], options: { usePaidAi?: boolean; client?: LlmClient | null } = {}): Promise<ExtractResult> {
   const deterministic = dualExtract(raw, clauses)
   if (!options.usePaidAi) return deterministic
-  const client = getLlmClient()
+  const client = options.client === undefined ? getLlmClient() : options.client
   if (!client) {
     return { ...deterministic, notes: ['Paid AI was ticked, but no model key is set, so the built-in extractor ran.', ...deterministic.notes] }
   }
@@ -103,7 +103,9 @@ export async function extractWithFallback(raw: string, clauses: ClauseCard[], op
     })
     const jsonStart = reply.indexOf('{')
     const jsonEnd = reply.lastIndexOf('}')
-    if (jsonStart === -1 || jsonEnd === -1) return deterministic
+    if (jsonStart === -1 || jsonEnd === -1) {
+      return { ...deterministic, notes: [`${client.name} did not return cuts, so the built-in extractor was used.`, ...deterministic.notes] }
+    }
     const parsed = JSON.parse(reply.slice(jsonStart, jsonEnd + 1)) as { cuts?: Record<string, unknown>[] }
     const sentences = cuesToSentences(parseTranscript(raw).cues)
     const findLine = (quote: unknown) => {

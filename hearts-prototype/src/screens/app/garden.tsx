@@ -10,6 +10,7 @@ import { isNewMoment, readableHarvest } from '@/lib/harvest'
 import { getSession, type SessionUser, visibleCourseIds } from '@/server/context'
 import { workbookFor } from '@/server/workbook'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
+import { hiddenFromLearners } from '@/lib/youtube'
 import { learnerWords } from '@/lib/tidy-caption'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
 import { activityDay, countedTalkCompletions, doorsLitByCuts, gardenPathNodes, growthLessonIds, watchedLessonIds } from '@/lib/watch-growth'
@@ -189,7 +190,7 @@ export async function coursePath(payload: Payload, user: SessionUser, base: stri
   if (!id) id = (await visibleCourseIds(payload, user))[0] || null
   if (!id) return null
   const course = (await rows(payload, 'courses', { id: { equals: id } }))[0]
-  const lessons = await rows(payload, 'lessons', { course: { equals: id } }, { sort: 'order', limit: 60 })
+  const lessons = (await rows(payload, 'lessons', { course: { equals: id } }, { sort: 'order', limit: 60 })).filter((lesson) => !hiddenFromLearners(str(lesson.transcriptNote)))
   if (!course || !lessons.length) return null
   const done = new Set(g.completions.filter((row) => Number(row.percent ?? 100) >= 90).map((row) => ref(row.lesson)))
   const watchedSet = g.watchedIds || new Set<number>()

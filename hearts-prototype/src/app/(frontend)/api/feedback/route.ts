@@ -71,9 +71,15 @@ export async function POST(req: Request) {
     if (action === 'summarise') {
       const query = Object.fromEntries([...form.entries()].map(([key, value]) => [key, String(value)]))
       const built = await feedbackFor(session.payload, portal.id, parseFilters(query), anonymiseFromQuery(query))
-      const result = await draftQuestionSummary(session.payload, session.user, portal.id, built, text(form, 'questionKey'))
+      const usePaidAi = text(form, 'usePaidAi') === 'yes'
+      const result = await draftQuestionSummary(session.payload, session.user, portal.id, built, text(form, 'questionKey'), usePaidAi)
       if ('error' in result && result.error) return redirectTo(req, next, result.error)
-      return redirectTo(req, next, undefined, 'An AI summary is ready as a draft. Include it when you want it in the digest.')
+      const notice = result.paidFallback
+        ? result.paidFallback
+        : usePaidAi
+          ? 'A paid summary is ready as a draft. Include it when you want it in the digest.'
+          : 'A built-in summary is ready as a draft. Paid AI was not ticked. Include it when you want it in the digest.'
+      return redirectTo(req, next, undefined, notice)
     }
     if (action === 'include-summary') {
       const result = await includeSummary(session.payload, portal.id, Number(text(form, 'id')))
@@ -81,8 +87,10 @@ export async function POST(req: Request) {
       return redirectTo(req, next, undefined, 'The AI summary is included in the PDF digest.')
     }
     if (action === 'check-questions') {
-      const result = await checkQuestions(session.payload, session.user)
-      return redirectTo(req, next, undefined, `Checked ${result.checked} questions. ${result.flagged} weak ones have a draft rewrite. Nothing was published.`)
+      const usePaidAi = text(form, 'usePaidAi') === 'yes'
+      const result = await checkQuestions(session.payload, session.user, usePaidAi)
+      const paid = result.paidFallback ? ` ${result.paidFallback}` : usePaidAi ? '' : ' Paid AI was not ticked.'
+      return redirectTo(req, next, undefined, `Checked ${result.checked} questions. ${result.flagged} weak ones have a draft rewrite. Nothing was published.${paid}`)
     }
     return redirectTo(req, next, 'That action is not known.')
   } catch (error) {

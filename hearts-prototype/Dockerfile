@@ -12,6 +12,10 @@ RUN npm ci
 
 COPY . .
 
+# Captions. The pinned binary is downloaded here because bin/ is not copied into the image.
+# Subtitles use --skip-download, so ffmpeg is not installed.
+RUN node scripts/get-yt-dlp.mjs
+
 ENV NEXT_TELEMETRY_DISABLED=1
 # No secret is passed into the image. While `next build` runs, the config sees the build phase and uses its own
 # build-only placeholder and a throwaway SQLite path; boot refuses to start without a real PAYLOAD_SECRET and
