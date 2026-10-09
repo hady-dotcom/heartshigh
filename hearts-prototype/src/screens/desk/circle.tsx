@@ -9,9 +9,8 @@ import type { SessionUser } from '@/server/context'
 import { partTitle } from '@/lib/talk-title'
 import { type Ctx, type Row, clock, rows, str } from '../common'
 import { HelpTip } from '@/components/desk/help'
-import { PaidAiOptIn } from '@/components/desk/paid-ai'
-import { paidCostLabel } from '@/lib/ai-cost'
-import { keyPresence } from '@/lib/ai-steps'
+import { PortalAiChoice } from '@/components/desk/paid-ai'
+import { publicAi } from '@/lib/portal-ai'
 import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
@@ -122,6 +121,9 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
       : Promise.resolve([]),
   ])
   const mine = circle.filter((row) => user.role === 'master' || !idOf(row.portal) || idOf(row.portal) === scope.portal)
+  const aiPortal = scope.portal ? ((await payload.findByID({ collection: 'portals', id: scope.portal, depth: 0, overrideAccess: true }).catch(() => null)) as { aiConnection?: unknown; slug?: string } | null) : null
+  const ai = publicAi(aiPortal?.aiConnection)
+  const aiChoice = <PortalAiChoice connected={ai.connected} master={user.role === 'master'} settingsHref={aiPortal?.slug ? `/p/${aiPortal.slug}/admin/settings` : undefined} />
   return (
     <div data-testid="circle-talk-detail" data-lesson={lesson.id}>
       <p><Link href={here} className="hint">‹ All talks</Link></p>
@@ -138,11 +140,11 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
         </header>
         <form className="body form circle-generate" action="/api/hearts" method="post" data-testid="circle-generate-all">
           <Hidden fields={{ action: 'circle-generate', lesson: lesson.id, next: back }} />
-          <PaidAiOptIn hint={paidCostLabel({ chars: 2000, calls: 6, keys: keyPresence(), kind: 'circle draft' })} />
+          {aiChoice}
           <b>Draft answers for every question on this talk <HelpTip topic="circle-tones">{TOOL.circleTones}</HelpTip></b>
           <GenerateFields />
           <div className="actions"><button className="btn ink" type="submit" data-testid="circle-generate-all-submit">Draft circle answers</button></div>
-          <p className="hint">Drafted by the AI when a key is set, otherwise by the built-in drafts. Every answer goes through the same word checks as the editor, and you can edit, switch off or delete any of them.</p>
+          <p className="hint">You can write an answer yourself below. A draft uses the built-in lines unless you tick this portal’s own AI account. Every answer goes through the same word checks as the editor.</p>
         </form>
       </section>
       {points.map((point) => {
@@ -166,7 +168,7 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
                     <li key={row.id} className={row.enabled === false ? 'off' : ''} data-testid="circle-answer" data-id={row.id} data-enabled={row.enabled === false ? 'no' : 'yes'} data-origin={str(row.origin)}>
                       <div className="circle-text">
                         <b>{str(row.name)}</b>
-                        <span className="hint"> {row.origin === 'ai' ? 'Drafted by AI' : 'Written by staff'}{row.tone ? `, ${str(row.tone)}` : ''}{row.length ? `, ${str(row.length)}` : ''}{row.enabled === false ? ', switched off' : ''}</span>
+                        <span className="hint"> {row.origin === 'ai' ? 'Drafted' : 'Written by staff'}{row.tone ? `, ${str(row.tone)}` : ''}{row.length ? `, ${str(row.length)}` : ''}{row.enabled === false ? ', switched off' : ''}</span>
                         <p data-testid="circle-body">{str(row.body)}</p>
                       </div>
                       <div className="circle-tools">
@@ -202,7 +204,7 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
                 </form>
                 <form className="form" action="/api/hearts" method="post" data-testid="circle-generate-one">
                   <Hidden fields={{ action: 'circle-generate', lesson: lesson.id, point: point.id, next: back }} />
-                  <PaidAiOptIn hint={paidCostLabel({ chars: 2000, calls: 1, keys: keyPresence(), kind: 'circle draft' })} />
+                  <PortalAiChoice connected={ai.connected} master={user.role === 'master'} settingsHref={aiPortal?.slug ? `/p/${aiPortal.slug}/admin/settings` : undefined} />
                   <b>Draft more for this question</b>
                   <GenerateFields count={3} />
                   <button className="btn ghost small" type="submit">Draft</button>

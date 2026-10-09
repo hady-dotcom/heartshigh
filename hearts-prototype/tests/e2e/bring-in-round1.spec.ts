@@ -295,8 +295,8 @@ test.describe('round 1 bring-in', () => {
     const saved = JSON.parse(readFileSync(path.join(ARTIFACTS, 'report.json'), 'utf8')) as { sheetCourseId?: number; sheetLessonId?: number }
     expect(saved.sheetLessonId, 'the sheet talk is there').toBeTruthy()
     await signIn(page, 'master@hearts.test', 'hearts-master', `/master/library/${saved.sheetCourseId}?part=${saved.sheetLessonId}`)
-    await expect(page.getByTestId('paid-ai-tick')).not.toBeChecked()
-    await expect(page.getByTestId('paid-ai-cost')).toBeVisible()
+    await expect(page.getByTestId('portal-ai-off')).toBeVisible()
+    await expect(page.getByTestId('portal-ai-tick')).toHaveCount(0)
     await shot(page, '09-extractor-opt-in')
     await page.getByTestId('extract-submit').click()
     await expect(page.getByTestId('cut-draft').first()).toBeVisible()

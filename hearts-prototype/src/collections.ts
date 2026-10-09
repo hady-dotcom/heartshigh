@@ -122,6 +122,14 @@ export const Portals: CollectionConfig = {
           'Per-portal feature switches. Empty means every feature that exists today stays on, so live portals do not change.',
       },
     },
+    {
+      name: 'aiConnection',
+      type: 'json',
+      admin: {
+        description:
+          'This portal’s own AI account: an OpenAI-compatible address and an encrypted key. Empty means the desk uses the built-in path. The master desk never reads it to place a call.',
+      },
+    },
   ],
 }
 

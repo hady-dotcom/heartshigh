@@ -1,7 +1,6 @@
 import type { Payload, Where } from 'payload'
 import { authorTextProblems } from '@/lib/opening-data'
 import {
-  ENV_VARS,
   STEP_SPECS,
   TIER_FIELDS,
   canEditSteps,
@@ -11,28 +10,27 @@ import {
   extractJson,
   fillPrompt,
   jobNote,
-  keyPresence,
   liveVersion,
   markLive,
   mockBanner,
   mockOutput,
   nextVersion,
-  paidFromNote,
-  paidRun,
   placeholderProblems,
   pointProtect,
+  portalFromNote,
   runQueue,
   schemaProblems,
   stepBySlug,
   tierProtect,
   tierWriteBlocked,
-  type KeyPresence,
   type Placeholder,
   type ProviderName,
   type StepSpec,
   type TalkContext,
   type VersionState,
 } from '@/lib/ai-steps'
+import type { LlmClient } from '@/lib/llm'
+import { clientForPortal, storedForPortal } from './portal-ai'
 import { saidInTalk } from '@/lib/tiers'
 import { buildLineTidy, type TidyLine } from '@/lib/tidy-caption'
 import type { SessionUser } from './context'
@@ -109,18 +107,20 @@ export async function ensureSteps(payload: Payload) {
   return settings
 }
 
-export async function loadDesk(payload: Payload, actor: Person | null) {
+export async function loadDesk(payload: Payload, actor: Person | null, portalId: number | null = null) {
   const settings = await ensureSteps(payload)
-  const keys = keyPresence()
   const may = Boolean(settings.portalMayEdit)
+  const master = actor?.role === 'master'
+  const stored = !master && portalId ? await storedForPortal(payload, portalId) : null
+  const connected = Boolean(stored)
   return {
     canEdit: canEditSteps(actor, may),
     canView: canViewSteps(actor),
     portalMayEdit: may,
-    keys,
-    mode: !keys.anthropic && !keys.openai ? ('mock' as const) : ('live' as const),
-    banner: mockBanner(keys),
-    env: ENV_VARS,
+    connected,
+    master,
+    mode: connected ? ('live' as const) : ('mock' as const),
+    banner: mockBanner({ connected, master }),
   }
 }
 
@@ -363,39 +363,14 @@ function varsFor(talk: TalkContext): Record<string, string> {
   }
 }
 
-async function completeLive(spec: StepSpec, system: string, user: string, keys: KeyPresence) {
-  const model = spec.model || defaultModel(spec.provider)
-  if (spec.provider === 'anthropic') {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY || '', 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model, max_tokens: spec.maxTokens, temperature: spec.temperature, system, messages: [{ role: 'user', content: user }] }),
-      signal: AbortSignal.timeout(90_000),
-    })
-    if (!response.ok) throw new Error(`Anthropic returned ${response.status}.`)
-    const body = (await response.json()) as { content?: { text?: string }[] }
-    return body.content?.map((part) => part.text || '').join('\n') || ''
-  }
-  if (!keys.openai) throw new Error('OpenAI has no key configured.')
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY || ''}` },
-    body: JSON.stringify({ model, temperature: spec.temperature, max_tokens: spec.maxTokens, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }),
-    signal: AbortSignal.timeout(90_000),
-  })
-  if (!response.ok) throw new Error(`OpenAI returned ${response.status}.`)
-  const body = (await response.json()) as { choices?: { message?: { content?: string } }[] }
-  return body.choices?.[0]?.message?.content || ''
-}
-
 /** Runs one registered step, using the live prompt, for callers outside the ingest pipeline. */
-export async function runRegisteredStep(payload: Payload, slug: string, talk: TalkContext, usePaidAi = false) {
+export async function runRegisteredStep(payload: Payload, slug: string, talk: TalkContext, client: LlmClient | null = null) {
   await ensureSteps(payload)
-  return runPreparedStep(payload, slug, talk, usePaidAi)
+  return runPreparedStep(payload, slug, talk, client)
 }
 
 /** Loads the live prompt once, so a report can run the same step over many questions. */
-export async function loadLiveStep(payload: Payload, slug: string, usePaidAi = false) {
+export async function loadLiveStep(payload: Payload, slug: string, client: LlmClient | null = null) {
   const step = await one(payload, 'ai-steps', { slug: { equals: slug } })
   if (!step) throw new Error('That step is not in the registry.')
   const spec = specOf(step)
@@ -406,33 +381,31 @@ export async function loadLiveStep(payload: Payload, slug: string, usePaidAi = f
     versionNumber,
     spec,
     run(talk: TalkContext) {
-      return runSpec(spec, prompt, talk, usePaidAi).then((result) => ({ ...result, versionNumber, spec }))
+      return runSpec(spec, prompt, talk, client).then((result) => ({ ...result, versionNumber, spec }))
     },
   }
 }
 
 /** Same as runRegisteredStep after the registry is already in place, so a report can reuse it. */
-export async function runPreparedStep(payload: Payload, slug: string, talk: TalkContext, usePaidAi = false) {
-  const live = await loadLiveStep(payload, slug, usePaidAi)
+export async function runPreparedStep(payload: Payload, slug: string, talk: TalkContext, client: LlmClient | null = null) {
+  const live = await loadLiveStep(payload, slug, client)
   return live.run(talk)
 }
 
-async function runSpec(spec: StepSpec, prompt: string, talk: TalkContext, usePaidAi = false) {
-  const keys = keyPresence()
-  const mode = paidRun(spec.provider, keys, usePaidAi)
-  if (spec.slug === 'rubric' || mode === 'mock') {
+async function runSpec(spec: StepSpec, prompt: string, talk: TalkContext, client: LlmClient | null) {
+  if (spec.slug === 'rubric' || !client) {
     const output = mockOutput(spec, talk, prompt)
     const problems = schemaProblems(spec.outputSchema as never, output)
-    return { output, mock: mode === 'mock' || spec.slug === 'rubric', problems }
+    return { output, mock: true, problems }
   }
   const system = fillPrompt(prompt, varsFor(talk))
-  const reply = await completeLive(spec, system, talk.transcript.slice(0, 24_000) || '(empty transcript)', keys)
+  const reply = await client.complete({ system, user: talk.transcript.slice(0, 24_000) || '(empty transcript)' })
   const output = extractJson(reply)
   const problems = schemaProblems(spec.outputSchema as never, output)
   return { output, mock: false, problems }
 }
 
-export async function tryStep(payload: Payload, actor: Person, slug: string, lessonId: number, prompt: string, usePaidAi = false) {
+export async function tryStep(payload: Payload, actor: Person, slug: string, lessonId: number, prompt: string, client: LlmClient | null = null) {
   await assertEdit(payload, actor)
   const step = await one(payload, 'ai-steps', { slug: { equals: slug } })
   if (!step) throw new Error('That step is not in the registry.')
@@ -445,8 +418,8 @@ export async function tryStep(payload: Payload, actor: Person, slug: string, les
   const talk = await talkContext(payload, lesson as unknown as Doc, spec.slug === 'rubric' ? { rubric: using } : undefined)
   const liveSpec = { ...spec, prompt: String(step.prompt || spec.prompt) }
   const [draft, live] = await Promise.all([
-    runSpec({ ...spec, prompt: using }, using, talk, usePaidAi).catch((error: Error) => ({ output: null, mock: paidRun(spec.provider, keyPresence(), usePaidAi) === 'mock', problems: [error.message] })),
-    runSpec(liveSpec, liveSpec.prompt, talk, usePaidAi).catch((error: Error) => ({ output: null, mock: paidRun(spec.provider, keyPresence(), usePaidAi) === 'mock', problems: [error.message] })),
+    runSpec({ ...spec, prompt: using }, using, talk, client).catch((error: Error) => ({ output: null, mock: !client, problems: [error.message] })),
+    runSpec(liveSpec, liveSpec.prompt, talk, client).catch((error: Error) => ({ output: null, mock: !client, problems: [error.message] })),
   ])
   const versionNumber = Number(step.liveVersion || 1)
   await payload.create({
@@ -622,19 +595,19 @@ async function applyPoints(payload: Payload, spec: StepSpec, lesson: Doc, output
   return { disposition: 'applied', written: { ids: writtenIds, skipped } }
 }
 
-export async function runOnLesson(payload: Payload, spec: StepSpec, lesson: Doc, versionNumber: number, prompt: string, jobId?: number, usePaidAi = false) {
+export async function runOnLesson(payload: Payload, spec: StepSpec, lesson: Doc, versionNumber: number, prompt: string, jobId?: number, client: LlmClient | null = null) {
   const talk = await talkContext(payload, lesson)
   let output: unknown
   let mock = false
   try {
-    const ran = await runSpec({ ...spec, prompt }, prompt, talk, usePaidAi)
+    const ran = await runSpec({ ...spec, prompt }, prompt, talk, client)
     output = ran.output
     mock = ran.mock
     if (ran.problems.length) {
       return record(payload, spec, lesson, versionNumber, jobId, { disposition: 'failed', error: ran.problems[0] }, output, mock)
     }
   } catch (error) {
-    return record(payload, spec, lesson, versionNumber, jobId, { disposition: 'failed', error: error instanceof Error ? error.message : 'The step failed.' }, null, paidRun(spec.provider, keyPresence(), usePaidAi) === 'mock')
+    return record(payload, spec, lesson, versionNumber, jobId, { disposition: 'failed', error: error instanceof Error ? error.message : 'The step failed.' }, null, !client)
   }
   const applied = await applyToTalk(payload, spec, lesson, output, versionNumber)
   return record(payload, spec, lesson, versionNumber, jobId, applied, output, mock)
@@ -675,7 +648,7 @@ export async function lessonsInScope(payload: Payload, scope: string, lessonIds:
 export async function startJob(
   payload: Payload,
   actor: Person,
-  input: { slug: string; scope: string; lessonIds: number[]; courseId?: number; gapMs?: number; usePaidAi?: boolean },
+  input: { slug: string; scope: string; lessonIds: number[]; courseId?: number; gapMs?: number; portalId?: number | null },
 ) {
   await assertEdit(payload, actor)
   const scope = ['talk', 'selection', 'course', 'all'].includes(input.scope) ? input.scope : 'talk'
@@ -698,7 +671,7 @@ export async function startJob(
         results: [],
         actor: actor.id,
         actorName: actor.name || actor.email || '',
-        note: jobNote(input.slug === 'pipeline' ? 'Whole pipeline' : input.slug, Boolean(input.usePaidAi)),
+        note: jobNote(input.slug === 'pipeline' ? 'Whole pipeline' : input.slug, input.portalId && actor.role !== 'master' ? input.portalId : null),
       } as never,
     }),
   )
@@ -711,7 +684,8 @@ export async function processJob(payload: Payload, jobId: number, actor: Person,
   const job = asDoc(await payload.findByID({ collection: col('ai-step-jobs'), id: jobId, depth: 0, overrideAccess: true }))
   if (job.status === 'done' || job.status === 'failed') return job
   await payload.update({ collection: col('ai-step-jobs'), id: jobId, overrideAccess: true, data: { status: 'running' } as never })
-  const usePaidAi = paidFromNote(String(job.note || ''))
+  const portalId = actor.role === 'master' ? null : portalFromNote(String(job.note || ''))
+  const client = await clientForPortal(payload, portalId, actor.role, actor.role)
   const ids = Array.isArray(job.lessonIds) ? (job.lessonIds as unknown[]).map(Number).filter(Boolean) : []
   const lessons = await lessonsInScope(payload, 'selection', ids)
   const steps = (await many(payload, 'ai-steps', undefined, 50, 'pipelineOrder')).map(specOf).filter((step) => (job.stepSlug === 'pipeline' ? step.inPipeline : step.slug === job.stepSlug)).sort((a, b) => a.pipelineOrder - b.pipelineOrder)
@@ -724,7 +698,7 @@ export async function processJob(payload: Payload, jobId: number, actor: Person,
         const current = await one(payload, 'ai-steps', { slug: { equals: spec.slug } })
         const prompt = String(current?.prompt || spec.prompt)
         const versionNumber = Number(current?.liveVersion || 1)
-        const result = await runOnLesson(payload, { ...spec, prompt }, fresh, versionNumber, prompt, jobId, usePaidAi)
+        const result = await runOnLesson(payload, { ...spec, prompt }, fresh, versionNumber, prompt, jobId, client)
         stepResults.push({ slug: spec.slug, ok: result.ok, error: result.error, disposition: result.disposition })
       }
       const failed = stepResults.filter((step) => !step.ok)

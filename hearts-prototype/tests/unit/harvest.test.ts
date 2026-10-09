@@ -8,7 +8,6 @@ process.env.HEARTS_SCRIPTURE_OFFLINE = '1'
 
 import { buildHadithIndex, matchHadith, narratorNamed } from '../../src/lib/hadith-match'
 import { collectionsNamed, harvestTranscript } from '../../src/lib/harvest'
-import type { LlmClient, LlmRequest } from '../../src/lib/llm'
 import { ayahWindow, matchQuran, surahLabel } from '../../src/lib/quran-match'
 import { summaryLabel, summaryRequest, TAFSIR_SOURCES } from '../../src/lib/tafsir'
 import { replayHref, REPLAY_LEAD_SECONDS } from '../../src/screens/app/harvest'
@@ -39,12 +38,6 @@ function fakePayload() {
     },
   }
   return { payload: payload as unknown as Payload, docs }
-}
-
-function mockLlm(reply: string) {
-  const calls: LlmRequest[] = []
-  const client: LlmClient = { name: 'mock', complete: async (request) => (calls.push(request), reply) }
-  return { client, calls }
 }
 
 test('Harvest: tests read the bundled scripture only, never the network', () => {
@@ -185,26 +178,12 @@ test('Summary: the model is given only the real tafsir, one text per work, and t
   assert.ok(request.llm.user.includes(kathir.text.slice(0, 200)), 'the real text is passed in')
 })
 
-test('Summary: with AI it is labelled with its sources and cached; without AI it says so and shows al-Jalalayn itself', async () => {
-  const { payload, docs } = fakePayload()
-  const { client, calls } = mockLlm('The servants of the Merciful walk with humility and answer ignorance with peace.')
-  const first = await tafsirSummary(payload, 25, 63, client)
-  assert.equal(first?.ai, true)
-  assert.equal(first?.label, "AI summary of Tafsir Ibn Kathir, Tafsir al-Jalalayn and Tafsir al-Sa'di")
-  const again = await tafsirSummary(payload, 25, 63, client)
-  assert.equal(again?.text, first?.text)
-  assert.equal(calls.length, 1, 'the second request is served from the cache')
-  assert.ok(docs.some((doc) => doc.key.startsWith('summary:25:63:')))
-
-  const plain = await tafsirSummary(fakePayload().payload, 25, 63, null)
+test('Summary: a learner sees al-Jalalayn in its own words, and no model is called', async () => {
+  const plain = await tafsirSummary(fakePayload().payload, 25, 63)
   assert.equal(plain?.ai, false)
-  assert.doesNotMatch(plain!.label, /^AI summary/)
-  assert.match(plain!.label, /No AI summary is available here, so this is Tafsir al-Jalalayn in its own words/)
+  assert.match(plain!.label, /This is Tafsir al-Jalalayn in its own words/)
   assert.equal(plain?.text, scriptureFallback().tafsir['25:63']['en-al-jalalayn'])
-
-  const failing: LlmClient = { name: 'down', complete: async () => { throw new Error('offline') } }
-  assert.equal((await tafsirSummary(fakePayload().payload, 25, 63, failing))?.ai, false)
-  assert.equal(await tafsirSummary(fakePayload().payload, 2, 255, client), null, 'no tafsir in hand, so no summary at all')
+  assert.equal(await tafsirSummary(fakePayload().payload, 2, 255), null, 'no tafsir in hand, so no summary at all')
 })
 
 test('Replay: a card replays its talk from a few seconds before the quote', () => {

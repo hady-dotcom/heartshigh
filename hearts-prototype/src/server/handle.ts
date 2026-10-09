@@ -6,7 +6,9 @@ import { countsTowardProgress, pieceLevel } from '@/lib/progress'
 import { recordShortBrowse } from './browse'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { clipWords } from '@/lib/sentences'
-import { extractWithFallback, llmStatus } from '@/lib/llm'
+import { extractWithFallback } from '@/lib/llm'
+import { clientForPortal } from './portal-ai'
+import { assembleConnection, mcpConnectorStatus, openPortalKey, parseStored } from '@/lib/portal-ai'
 import { defaultPlanName, flattenSlots, planAcrossDays, plural, studyDates } from '@/lib/schedule'
 import { sortParts } from '@/lib/part-order'
 import { lessonsByCourseOrder } from '@/lib/slot-course'
@@ -1263,8 +1265,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const lesson = owned.lesson
     const transcript = (lesson as { transcript?: string }).transcript || ''
     if (!transcript.trim()) return redirectTo(req, next, 'This lesson has no transcript yet. Paste a YouTube link that has captions, or upload a .vtt, .srt or .txt file.')
-    const usePaidAi = text(form, 'usePaidAi') === 'yes'
-    const result = await extractWithFallback(transcript, await clauseCards(payload), { usePaidAi })
+    const portalForAi = user.role === 'portal-admin' ? idOf((owned.course as { portal?: unknown } | null)?.portal) : null
+    const client = text(form, 'usePortalAi') === 'yes' ? await clientForPortal(payload, portalForAi, user.role, session.actor?.role || user.role) : null
+    const result = await extractWithFallback(transcript, await clauseCards(payload), { client })
     const old = await payload.find({ collection: 'cuts', overrideAccess: true, limit: 200, where: { lesson: { equals: lessonId } } })
     const keptCuts = rowsKeptOnExtract(old.docs as { id: number; status?: string | null; start?: number | null; end?: number | null }[])
     for (const cut of keptCuts.drop) await payload.delete({ collection: 'cuts', id: cut.id, overrideAccess: true })
@@ -1335,13 +1338,13 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         },
       })
     }
-    const engineNote = result.engine === 'llm' ? `by ${llmStatus().replace('live:', '')}` : 'by the built-in extractor'
+    const engineNote = result.engine === 'llm' ? 'by this portal’s AI account' : 'by the built-in extractor'
     const keptApproved = keptCuts.keep.length
     const keptNote = keptApproved ? ` ${keptApproved} approved clip${keptApproved === 1 ? ' was' : 's were'} kept.` : ''
     const skippedDupes = result.cuts.length - freshCuts.length
     const dupeNote = skippedDupes ? ` ${skippedDupes} new clip${skippedDupes === 1 ? '' : 's'} matched an approved one and ${skippedDupes === 1 ? 'was' : 'were'} not added again.` : ''
     const pauseNote = result.notes.find((note) => /no full stops/i.test(note))
-    const paidNote = result.notes.find((note) => /LLM call failed|Paid AI was ticked|built-in extractor was used|Deterministic extractor used/i.test(note))
+    const paidNote = result.notes.find((note) => /portal AI call failed|portal AI account|built-in extractor was used|Deterministic extractor used/i.test(note))
     const emptyNote = freshCuts.length === 0 ? result.notes.find((note) => /No clips were found/.test(note)) : ''
     const extra = [pauseNote, paidNote].filter(Boolean).join(' ')
     const message = emptyNote
@@ -1914,6 +1917,33 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       data: { user: user.id, note, portal: portalIdOf(user) || undefined },
     })
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Thank you. That is noted in your Garden.')
+  }
+
+  if (action === 'ai-connect') {
+    const next = text(form, 'next') || '/'
+    const signedIn = session.actor?.role || user?.role
+    if (!user || signedIn === 'master' || user.role !== 'portal-admin') return redirectTo(req, next, 'Only a portal admin can connect this portal’s AI account. The master desk does not spend.')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, next, acting.error)
+    if (text(form, 'kind') === 'mcp') return redirectTo(req, next, mcpConnectorStatus().note)
+    if (text(form, 'clear') === 'yes') {
+      await payload.update({ collection: 'portals', id: acting.portal.id, overrideAccess: true, data: { aiConnection: null } })
+      return redirectTo(req, next, undefined, 'This portal’s AI account is disconnected. Desk tools use the built-in path.')
+    }
+    const current = (await payload.findByID({ collection: 'portals', id: acting.portal.id, depth: 0, overrideAccess: true })) as { aiConnection?: unknown }
+    const existing = parseStored(current.aiConnection)
+    let apiKey = text(form, 'apiKey')
+    if (!apiKey && existing) {
+      try {
+        apiKey = openPortalKey(existing.keyCipher)
+      } catch {
+        apiKey = ''
+      }
+    }
+    const built = assembleConnection({ baseUrl: text(form, 'baseUrl') || existing?.baseUrl || '', model: text(form, 'model') || existing?.model || '', apiKey })
+    if (!built.ok) return redirectTo(req, next, built.error)
+    await payload.update({ collection: 'portals', id: acting.portal.id, overrideAccess: true, data: { aiConnection: built.stored } })
+    return redirectTo(req, next, undefined, 'This portal’s AI account is connected. The key is stored encrypted and is not shown again. A run is billed to that account, not to HEARTS.')
   }
 
   if (action === 'settings') {
@@ -2547,7 +2577,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   if (action.startsWith('circle-')) {
     const blocked = await featureBlock(payload, user, form, 'circle')
     if (blocked) return redirectTo(req, text(form, 'next') || '/', blocked)
-    return handleCircle(action, form, payload, user, (path, error, notice) => redirectTo(req, path, error, notice))
+    return handleCircle(action, form, payload, user, (path, error, notice) => redirectTo(req, path, error, notice), session.actor?.role || user.role)
   }
 
   return redirectTo(req, '/', 'That action is not known.')

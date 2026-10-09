@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 
 const col = (name: string) => name as 'users'
+import { portalIdOf } from '@/lib/ids'
 import { getSession } from '@/server/context'
 import { actorOf, ensureSteps, publishVersion, saveVersion, setGrant, startJob, tryStep } from '@/server/ai-desk'
+import { clientForPortal } from '@/server/portal-ai'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,11 +44,15 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const { payload, user } = await getSession()
+  const session = await getSession()
+  const { payload, user } = session
   const form = await req.formData()
   const next = text(form, 'next') || '/master/ai'
   if (!user) return redirectTo(req, `/login?next=${encodeURIComponent(next)}`, 'Sign in first.')
   const actor = actorOf(user)
+  const signedIn = session.actor?.role || user.role
+  const portalId = signedIn === 'master' || user.role === 'master' ? null : portalIdOf(user)
+  const client = await clientForPortal(payload, portalId, user.role, signedIn)
   const action = text(form, 'action')
   try {
     await ensureSteps(payload)
@@ -75,7 +81,7 @@ export async function POST(req: Request) {
     if (action === 'try') {
       const lesson = Number(text(form, 'lesson'))
       const slug = text(form, 'slug')
-      await tryStep(payload, actor, slug, lesson, text(form, 'prompt'), text(form, 'usePaidAi') === 'yes')
+      await tryStep(payload, actor, slug, lesson, text(form, 'prompt'), client)
       const url = new URL(next, 'http://localhost')
       url.searchParams.set('tried', String(lesson))
       return redirectTo(req, `${url.pathname}${url.search}`, undefined, 'Compared with the live version. Nothing was saved for learners.')
@@ -85,7 +91,7 @@ export async function POST(req: Request) {
       const scope = text(form, 'scope') || 'talk'
       const lessonIds = ids(form)
       const courseId = Number(text(form, 'course')) || undefined
-      const { job, run } = await startJob(payload, actor, { slug, scope, lessonIds, courseId, gapMs: Number(text(form, 'gap')) || 0, usePaidAi: text(form, 'usePaidAi') === 'yes' })
+      const { job, run } = await startJob(payload, actor, { slug, scope, lessonIds, courseId, gapMs: Number(text(form, 'gap')) || 0, portalId: client ? portalId : null })
       if (text(form, 'wait') === '1') await run()
       else {
         void run().catch(async (error: unknown) => {

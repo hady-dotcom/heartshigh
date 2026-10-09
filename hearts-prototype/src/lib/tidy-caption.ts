@@ -328,7 +328,7 @@ function rawsOf(stored: LineTidy) {
   return [stored.quote.raw, stored.hook.raw, stored.turn.raw, stored.land.raw, ...stored.horsLines.map((line) => `${line.at}:${line.raw}`)].join('\n')
 }
 
-/** Skip a row whose raw captions and tidy version are already stored. A fallback is redone once a model key is available. */
+/** Skip a row whose raw captions and tidy version are already stored. */
 export function tidyUnchanged(stored: LineTidy | null | undefined, sources: CaptionSources, aiAvailable: boolean) {
   if (!stored || stored.version !== TIDY_VERSION) return false
   const fresh = buildLineTidy(sources)

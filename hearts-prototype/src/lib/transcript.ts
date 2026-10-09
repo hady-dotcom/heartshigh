@@ -212,7 +212,7 @@ export function looksUnpunctuated(cues: Cue[]) {
 
 /**
  * Group unpunctuated cues into spoken stretches at pauses and at a word cap.
- * Each stretch is a complete line so the extractor can draft clips without a paid model.
+ * Each stretch is a complete line so the extractor can draft clips on the built-in path.
  */
 export function sentencesFromPauses(cues: Cue[]): Sentence[] {
   const sentences: Sentence[] = []

@@ -74,9 +74,9 @@ test.describe('AI steps', () => {
   test('registry, versions, diff, try-it and mock mode', async ({ page }) => {
     await page.setViewportSize(DESK)
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master/ai')
-    await expect(page.getByTestId('ai-mock-mode')).toContainText('Mock mode')
+    await expect(page.getByTestId('ai-mock-mode')).toContainText('Built-in drafts')
     await expect(page.getByTestId('ai-step')).toHaveCount(13)
-    await expect(page.getByTestId('ai-env')).toContainText('ANTHROPIC_API_KEY')
+    await expect(page.getByTestId('ai-env')).toContainText('server environment is ignored')
     await expect(page.getByTestId('ai-env')).not.toContainText('sk-')
     await page.screenshot({ path: `${SHOTS}/ai-registry.png`, fullPage: true })
 

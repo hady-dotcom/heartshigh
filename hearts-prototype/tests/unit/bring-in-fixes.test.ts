@@ -4,7 +4,6 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test } from 'node:test'
 import { draftsSkippingApproved } from '../../src/lib/extractor'
-import { defaultFeatures, featureOn } from '../../src/lib/features'
 import { extractWithFallback } from '../../src/lib/llm'
 import { suggestWording } from '../../src/lib/experiment-copy'
 import { cleanedTimedTranscript, hiddenFromLearners, interpretYtDlpOutput, isAwaitingTranscript, publishedClockSeconds, speakerForLine, splitBringInLines, ytDlpArgs } from '../../src/lib/youtube'
@@ -95,34 +94,29 @@ test('identical work waits its turn', async () => {
   assert.equal(max, 1)
 })
 
-test('paid AI stays off until it is asked, and a failed paid extract says so', async () => {
-  assert.equal(featureOn(null, 'paidSummary'), false)
-  assert.equal(defaultFeatures().paidSummary, false)
-  assert.equal(featureOn({ features: { paidSummary: true } }, 'paidSummary'), true)
-
+test('a portal client is used only when asked, and a failed portal extract says so', async () => {
   let calls = 0
-  const client = { name: 'anthropic', complete: async () => { calls += 1; return '{"variants":[{"label":"One"},{"label":"Two"},{"label":"Three"}]}' } }
-  const quiet = await suggestWording('lanes-tab-label', 'Lanes', 3, { usePaidAi: false, client })
+  const client = { name: 'portal', complete: async () => { calls += 1; return '{"variants":[{"label":"One"},{"label":"Two"},{"label":"Three"}]}' } }
+  const quiet = await suggestWording('lanes-tab-label', 'Lanes', 3, { usePortalAi: false, client })
   assert.equal(calls, 0)
   assert.match(quiet.engine, /built-in/)
-  const paid = await suggestWording('lanes-tab-label', 'Lanes', 3, { usePaidAi: true, client })
+  const paid = await suggestWording('lanes-tab-label', 'Lanes', 3, { usePortalAi: true, client })
   assert.equal(calls, 1)
-  assert.equal(paid.engine, 'anthropic')
+  assert.match(paid.engine, /portal’s AI account/)
 
-  const circleClient = { name: 'anthropic', complete: async () => { calls += 1; throw new Error('refused') } }
-  const circle = await draftCircle({ prompt: 'What stayed with you?', kind: 'reflection' }, 1, ['warm'], ['short'], 1, { usePaidAi: false, client: circleClient })
+  const circleClient = { name: 'portal', complete: async () => { calls += 1; throw new Error('refused') } }
+  const circle = await draftCircle({ prompt: 'What stayed with you?', kind: 'reflection' }, 1, ['warm'], ['short'], 1, { usePortalAi: false, client: circleClient })
   assert.equal(calls, 1)
   assert.match(circle.engine, /built-in drafts/)
   assert.doesNotMatch(circle.engine, /call failed/)
-  const failedCircle = await draftCircle({ prompt: 'What stayed with you?', kind: 'reflection' }, 1, ['warm'], ['short'], 2, { usePaidAi: true, client: circleClient })
+  const failedCircle = await draftCircle({ prompt: 'What stayed with you?', kind: 'reflection' }, 1, ['warm'], ['short'], 2, { usePortalAi: true, client: circleClient })
   assert.equal(calls, 2)
-  assert.match(failedCircle.engine, /AI call failed/)
+  assert.match(failedCircle.engine, /portal AI call failed/)
 
   const broken = await extractWithFallback('WEBVTT\n\n00:00:01.000 --> 00:00:04.000\nHello there friend.\n', [], {
-    usePaidAi: true,
-    client: { name: 'anthropic', complete: async () => { throw new Error('no credit') } },
+    client: { name: 'portal', complete: async () => { throw new Error('no credit') } },
   })
-  assert.match(broken.notes.join(' '), /LLM call failed/)
+  assert.match(broken.notes.join(' '), /portal AI call failed/)
   assert.match(broken.notes.join(' '), /Deterministic extractor used/)
   assert.equal(broken.engine, 'deterministic')
 })

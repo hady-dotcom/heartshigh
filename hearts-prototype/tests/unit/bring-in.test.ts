@@ -3,8 +3,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test } from 'node:test'
-import { estimatePaidCost, paidCostLabel } from '../../src/lib/ai-cost'
-import { jobNote, paidFromNote, paidRun, tierWriteBlocked } from '../../src/lib/ai-steps'
+import { jobNote, portalFromNote, portalRun, tierWriteBlocked } from '../../src/lib/ai-steps'
 import { dualExtract, rowsKeptOnExtract } from '../../src/lib/extractor'
 import { extractWithFallback } from '../../src/lib/llm'
 import { mediaObjectKeys, readStoredMediaBytes } from '../../src/lib/stored-media'
@@ -151,24 +150,17 @@ test('transcript bytes come from local storage first, then the remote bucket', a
   assert.equal(missing, null)
 })
 
-test('paid AI stays off unless the run is ticked, and the estimate is shown first', async () => {
-  const keys = { anthropic: true, openai: false }
-  assert.equal(paidRun('anthropic', keys, false), 'mock')
-  assert.equal(paidRun('anthropic', keys, true), 'live')
-  assert.equal(paidRun('openai', keys, true), 'mock')
-  assert.equal(jobNote('Whole pipeline', false), 'Whole pipeline')
-  assert.equal(paidFromNote(jobNote('Whole pipeline', true)), true)
-  assert.equal(paidFromNote('Whole pipeline'), false)
-  const estimate = estimatePaidCost({ chars: 8000, calls: 1, keys })
-  assert.ok(estimate && estimate.usd > 0)
-  assert.match(paidCostLabel({ chars: 8000, calls: 1, keys, kind: 'extractor' }), /Estimate if you tick paid AI/)
-  assert.match(paidCostLabel({ chars: 8000, calls: 1, keys: { anthropic: false, openai: false }, kind: 'extractor' }), /costs nothing/)
+test('a platform key does not make a step live, and a job note names only a portal', async () => {
+  assert.equal(portalRun(false), 'mock')
+  assert.equal(portalRun(true), 'live')
+  assert.equal(jobNote('Whole pipeline', null), 'Whole pipeline')
+  assert.equal(portalFromNote(jobNote('Whole pipeline', 12)), 12)
+  assert.equal(portalFromNote('Whole pipeline'), null)
   const previous = process.env.ANTHROPIC_API_KEY
   process.env.ANTHROPIC_API_KEY = 'sk-test-should-not-be-called'
   try {
-    const result = await extractWithFallback('A short line with a full stop. Another line follows it here today.', [], { usePaidAi: false })
+    const result = await extractWithFallback('A short line with a full stop. Another line follows it here today.', [])
     assert.equal(result.engine, 'deterministic')
-    assert.equal(result.notes.some((note) => /Paid AI was ticked/.test(note)), false)
   } finally {
     if (previous === undefined) delete process.env.ANTHROPIC_API_KEY
     else process.env.ANTHROPIC_API_KEY = previous

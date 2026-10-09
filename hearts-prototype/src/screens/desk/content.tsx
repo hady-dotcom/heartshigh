@@ -22,9 +22,8 @@ import { FramingPreview } from '@/components/desk/framing-preview'
 import { trackForClip } from '@/lib/framing/store'
 import { fallbackTrack } from '@/lib/framing/validate'
 import { HelpTip } from '@/components/desk/help'
-import { PaidAiOptIn } from '@/components/desk/paid-ai'
-import { paidCostLabel } from '@/lib/ai-cost'
-import { keyPresence } from '@/lib/ai-steps'
+import { PortalAiChoice } from '@/components/desk/paid-ai'
+import { publicAi } from '@/lib/portal-ai'
 import { TOOL } from '@/lib/desk-help'
 import { BusyForm } from '@/components/desk/busy-form'
 import { bringInLang, bringInStatus, CAPTION_LANGUAGES } from '@/lib/youtube'
@@ -316,7 +315,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                     <form action="/api/hearts" method="post">
                       <Hidden fields={{ action: 'extract', lesson: lesson.id, next: here }} />
                       <p className="hint" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Extractor <HelpTip topic="extract">{TOOL.extract}</HelpTip></p>
-                      <PaidAiOptIn hint={paidCostLabel({ chars: str(lesson.transcript).length, calls: 1, keys: keyPresence(), kind: 'extractor' })} />
+                      <PortalAiChoice connected={publicAi(portal?.aiConnection).connected} master={user.role === 'master'} settingsHref={portal ? `/p/${portal.slug}/admin/settings` : undefined} />
                       <button className="btn block" style={{ width: '100%' }} data-testid="extract-submit" type="submit">Run the extractor</button>
                       <p className="hint" style={{ marginTop: 6 }}>Finds short moments with a hook, a turn and a landing line. Quotes are word for word and timings come from the transcript. Running it again keeps clips you have already approved and replaces the drafts.</p>
                     </form>

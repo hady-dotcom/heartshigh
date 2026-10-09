@@ -19,7 +19,6 @@ export const FEATURE_KEYS = [
   'missions',
   'insights',
   'experiments',
-  'paidSummary',
 ] as const
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number]
@@ -240,20 +239,6 @@ export const FEATURES: readonly FeatureRecord[] = [
       'PR #22 — GET/POST /api/experiments (src/app/(frontend)/api/experiments/route.ts)',
     ],
     deskNav: ['experiments'],
-  },
-  {
-    key: 'paidSummary',
-    name: 'Paid tafsir summary',
-    what: 'A short paid summary of the tafsir, only when you turn it on.',
-    defaultOn: false,
-    depth: 'in-depth',
-    shipped: false,
-    dependsOn: [],
-    help: 'A short summary on Harvest can call a paid model. It stays off until you tick it here, and the estimate is shown beside the link. Leave it off and learners see the tafsir in its own words, which costs nothing.',
-    plugIn: [
-      'Learner Harvest “A short summary” (src/screens/app/harvest.tsx)',
-      'tafsirSummary is called with no model unless this switch is on',
-    ],
   },
 ] as const
 

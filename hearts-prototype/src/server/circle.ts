@@ -18,7 +18,8 @@ import {
   type CircleTone,
 } from '@/lib/circle'
 import { idOf, portalIdOf } from '@/lib/ids'
-import { getLlmClient, type LlmClient } from '@/lib/llm'
+import type { LlmClient } from '@/lib/llm'
+import { clientForPortal } from './portal-ai'
 import { parseTranscript } from '@/lib/transcript'
 import type { SessionUser } from './context'
 import { tierSourceText } from './tier-source'
@@ -81,18 +82,18 @@ function speakerContext(lesson: Doc, second: number) {
   }
 }
 
-/** Drafts for one question. A paid model runs only when this desk ticks it. */
-export async function draftCircle(point: CirclePoint, count: number, tones: CircleTone[], lengths: CircleLength[], seed: number, options: { usePaidAi?: boolean; client?: LlmClient | null } = {}): Promise<{ drafts: CircleDraft[]; engine: string }> {
+/** Drafts for one question. A model runs only when the caller passes this portal's own client. */
+export async function draftCircle(point: CirclePoint, count: number, tones: CircleTone[], lengths: CircleLength[], seed: number, options: { usePortalAi?: boolean; client?: LlmClient | null } = {}): Promise<{ drafts: CircleDraft[]; engine: string }> {
   const spread = circleSpread(count, tones, lengths)
-  const client = options.usePaidAi ? (options.client === undefined ? getLlmClient() : options.client) : null
+  const client = options.usePortalAi ? options.client || null : null
   let drafts: CircleDraft[] = []
-  let engine = options.usePaidAi ? 'built-in drafts (paid AI was ticked, but no model key is set)' : 'built-in drafts'
+  let engine = 'built-in drafts'
   if (client) {
     try {
       drafts = parseCircleReply(await client.complete(circleRequest(point, spread)), spread)
-      engine = drafts.length ? client.name : 'built-in drafts (the AI reply did not pass the checks)'
+      engine = drafts.length ? 'this portal’s AI account' : 'built-in drafts (the portal AI reply did not pass the checks)'
     } catch {
-      engine = 'built-in drafts (the AI call failed)'
+      engine = 'built-in drafts (the portal AI call failed)'
     }
   }
   if (drafts.length < spread.length) {
@@ -154,7 +155,7 @@ function publicMessage(error: unknown, fallback: string) {
 }
 
 /** Form actions whose names start with "circle-". */
-export async function handleCircle(action: string, form: FormData, payload: Payload, user: SessionUser, back: Redirect): Promise<Response> {
+export async function handleCircle(action: string, form: FormData, payload: Payload, user: SessionUser, back: Redirect, realRole?: string | null): Promise<Response> {
   const next = text(form, 'next') || (user.role === 'master' ? '/master/circle' : '/')
 
   if (action === 'circle-settings') {
@@ -192,7 +193,10 @@ export async function handleCircle(action: string, form: FormData, payload: Payl
         tones,
         lengths,
         existing.totalDocs + point.id,
-        { usePaidAi: text(form, 'usePaidAi') === 'yes' },
+        {
+          usePortalAi: text(form, 'usePortalAi') === 'yes',
+          client: text(form, 'usePortalAi') === 'yes' ? await clientForPortal(payload, scope.portal, user.role, realRole ?? user.role) : null,
+        },
       )
       engine = result.engine
       for (const draft of result.drafts) {

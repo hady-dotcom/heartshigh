@@ -5,7 +5,6 @@ import {
   canEditSteps,
   canViewSteps,
   diffLines,
-  keyPresence,
   liveVersion,
   markLive,
   mockBanner,
@@ -13,7 +12,7 @@ import {
   nextVersion,
   placeholderProblems,
   pointProtect,
-  runMode,
+  portalRun,
   runQueue,
   schemaProblems,
   stepBySlug,
@@ -142,14 +141,11 @@ test('portal admins can read, and can edit only after the master grants it', () 
   assert.equal(canEditSteps({ role: 'teacher' }, true), false)
 })
 
-test('with no key the desk says it is in mock mode, and a key is never part of that answer', () => {
-  const empty = { anthropic: false, openai: false }
-  assert.equal(runMode('anthropic', empty), 'mock')
-  assert.equal(runMode('openai', { anthropic: true, openai: false }), 'mock')
-  assert.equal(runMode('anthropic', { anthropic: true, openai: false }), 'live')
-  assert.match(mockBanner(empty), /Mock mode/)
-  const presence = keyPresence({ ANTHROPIC_API_KEY: 'sk-test-secret', OPENAI_API_KEY: '' } as unknown as NodeJS.ProcessEnv)
-  assert.equal(presence.anthropic, true)
-  assert.equal(JSON.stringify(presence).includes('sk-test'), false)
-  assert.equal(JSON.stringify(mockBanner(presence)).includes('sk-test'), false)
+test('a server key never makes a step live; only a portal connection does', () => {
+  assert.equal(portalRun(false), 'mock')
+  assert.equal(portalRun(true), 'live')
+  assert.match(mockBanner({ connected: false, master: true }), /master desk does not call a model/)
+  assert.match(mockBanner({ connected: false, master: false }), /AI is off/)
+  assert.match(mockBanner({ connected: true, master: false }), /own AI account/)
+  assert.equal(JSON.stringify(mockBanner({ connected: true, master: false })).includes('sk-'), false)
 })

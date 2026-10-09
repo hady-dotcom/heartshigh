@@ -24,6 +24,7 @@ import * as migration_20261005_010000_swarm_hidden from './20261005_010000_swarm
 import * as migration_20261005_120000_safety from './20261005_120000_safety';
 import * as migration_20261005_121000_safety_locks from './20261005_121000_safety_locks';
 import * as migration_20261005_161000_portal_extra_scenes from './20261005_161000_portal_extra_scenes';
+import * as migration_20261009_191000_portal_ai_connection from './20261009_191000_portal_ai_connection';
 
 export const migrations = [
   {
@@ -155,5 +156,10 @@ export const migrations = [
     up: migration_20261005_161000_portal_extra_scenes.up,
     down: migration_20261005_161000_portal_extra_scenes.down,
     name: '20261005_161000_portal_extra_scenes',
+  },
+  {
+    up: migration_20261009_191000_portal_ai_connection.up,
+    down: migration_20261009_191000_portal_ai_connection.down,
+    name: '20261009_191000_portal_ai_connection',
   },
 ];
