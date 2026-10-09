@@ -20,7 +20,7 @@ import { gateAuth, tooManyAnswers } from '@/lib/auth-gate'
 import { clientIp, hit, hitAnswer, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
 import { slugProblem } from '@/lib/text-safety'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
-import { chosenSpeaker, ingestYoutubeUrl } from '@/lib/youtube'
+import { bringInNote, captionLang, chosenSpeaker, ingestYoutubeUrl, splitBringInLinks } from '@/lib/youtube'
 import { now } from '@/lib/clock'
 import { normaliseOption, startingClause } from '@/lib/placing'
 import { attachExtraPlacing } from '@/seed/placing-seed'
@@ -955,36 +955,108 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const owned = await courseOfLesson(payload, lessonId)
     const denied = editError(user, owned.course as Doc | null)
     if (denied) return redirectTo(req, next, denied)
-    const url = text(form, 'url')
-    if (!url) return redirectTo(req, next, 'Paste a YouTube link first.')
-    let parsedUrl: URL | null = null
-    try {
-      parsedUrl = new URL(url)
-    } catch {
-      parsedUrl = null
-    }
-    if (!parsedUrl || !/^https?:$/.test(parsedUrl.protocol)) return redirectTo(req, next, 'That is not a web link. Paste a link that starts with https://')
-    const result = await ingestYoutubeUrl(url)
-    if (!result.ok && !result.id && !/youtu\.?be/i.test(parsedUrl.hostname)) {
-      await payload.update({
-        collection: 'lessons',
-        id: lessonId,
-        overrideAccess: true,
-        data: { sourceUrl: url, transcriptNote: 'Share link saved. The server did not download the file. Upload a transcript to extract.' },
-      })
-      return redirectTo(req, next, 'The link is saved. This server did not fetch the file. Upload a transcript, or paste a YouTube link.')
-    }
-    if (!result.ok && !result.id) return redirectTo(req, next, result.error)
-    if (result.id) {
+    const links = splitBringInLinks(text(form, 'url'))
+    if (!links.length) return redirectTo(req, next, 'Paste a YouTube link first.')
+    const asked = form.getAll('fetchTranscript').map(String)
+    const wantTranscript = asked.length === 0 || asked.includes('yes')
+    const lang = captionLang(text(form, 'captionLang'))
+    const course = owned.course as { id: number; speaker?: string | null; origin?: string; portal?: unknown }
+    const speaker = chosenSpeaker(course.speaker, (owned.lesson as { speaker?: string | null }).speaker)
+    const units = await payload.find({ collection: 'units', overrideAccess: true, limit: 1, sort: 'order', where: { course: { equals: course.id } } })
+    const unit = units.docs[0]
+    let orderBase = (await payload.count({ collection: 'lessons', overrideAccess: true, where: { course: { equals: course.id } } })).totalDocs
+    const outcomes: string[] = []
+    let saved = 0
+    let failed = 0
+    for (let index = 0; index < links.length; index++) {
+      const url = links[index]
+      let targetId = lessonId
+      if (index > 0) {
+        if (!unit) {
+          outcomes.push('This course has no unit yet, so the extra links were not added.')
+          failed += links.length - index
+          break
+        }
+        orderBase += 1
+        const created = await payload.create({
+          collection: 'lessons',
+          overrideAccess: true,
+          data: {
+            title: `Film ${orderBase}`,
+            unit: unit.id,
+            course: course.id,
+            portal: idOf(course.portal) || undefined,
+            master: course.origin === 'master',
+            order: orderBase,
+            ...(speaker ? { speaker } : {}),
+            transcriptSource: 'none',
+            transcriptNote: bringInNote('processing', 'Waiting for YouTube.'),
+          },
+        })
+        targetId = created.id
+      } else {
+        await payload.update({
+          collection: 'lessons',
+          id: targetId,
+          overrideAccess: true,
+          data: { transcriptNote: bringInNote('processing', 'Waiting for YouTube.') },
+        })
+      }
+      let parsedUrl: URL | null = null
+      try {
+        parsedUrl = new URL(url)
+      } catch {
+        parsedUrl = null
+      }
+      if (!parsedUrl || !/^https?:$/.test(parsedUrl.protocol)) {
+        await payload.update({
+          collection: 'lessons',
+          id: targetId,
+          overrideAccess: true,
+          data: { transcriptNote: bringInNote('failed', 'That is not a web link. Paste a link that starts with https://') },
+        })
+        outcomes.push('One line was not a web link.')
+        failed++
+        continue
+      }
+      const result = await ingestYoutubeUrl(url, wantTranscript ? { lang } : { lang, providers: [] })
+      if (!result.ok && !result.id && !/youtu\.?be/i.test(parsedUrl.hostname)) {
+        await payload.update({
+          collection: 'lessons',
+          id: targetId,
+          overrideAccess: true,
+          data: {
+            sourceUrl: url,
+            transcriptNote: bringInNote('failed', 'The link is saved. This server did not fetch the file. Upload a transcript, or paste a YouTube link.'),
+          },
+        })
+        outcomes.push('A share link was saved without a film file.')
+        failed++
+        continue
+      }
+      if (!result.id) {
+        const reason = result.ok ? 'That link had no film id.' : result.error
+        await payload.update({
+          collection: 'lessons',
+          id: targetId,
+          overrideAccess: true,
+          data: { transcriptNote: bringInNote('failed', reason) },
+        })
+        outcomes.push(reason)
+        failed++
+        continue
+      }
       const meta = result.meta
-      const speaker = chosenSpeaker(
-        (owned.course as { speaker?: string | null } | null)?.speaker,
-        (owned.lesson as { speaker?: string | null }).speaker,
-      )
       const duration = result.durationSeconds && result.durationSeconds > 0 ? Math.round(result.durationSeconds) : 0
+      const filmOnly = !wantTranscript
+      const processed = result.ok
+        ? bringInNote('processed', `Captions fetched by ${result.provider}.`)
+        : filmOnly
+          ? bringInNote('processed', 'Film saved. The transcript box was clear, so captions were not fetched.')
+          : bringInNote('failed', result.error)
       await payload.update({
         collection: 'lessons',
-        id: lessonId,
+        id: targetId,
         overrideAccess: true,
         data: {
           youtubeId: result.id,
@@ -992,15 +1064,19 @@ async function handleForm(req: Request, form: FormData, session: Session) {
           ...(meta && !text(form, 'keepTitle') ? { title: meta.title } : {}),
           ...(speaker ? { speaker } : {}),
           ...(duration > 0 ? { durationSeconds: duration } : {}),
-          ...(result.ok
-            ? { transcript: result.transcript, transcriptSource: 'youtube' as const, transcriptNote: `Captions fetched by ${result.provider}.` }
-            : { transcriptNote: result.error }),
+          ...(result.ok ? { transcript: result.transcript, transcriptSource: 'youtube' as const } : {}),
+          transcriptNote: processed,
         },
       })
+      if (result.ok || filmOnly) saved++
+      else {
+        failed++
+        outcomes.push(result.error)
+      }
     }
-    if (!result.ok) return redirectTo(req, next, result.error)
-    const length = result.durationSeconds && result.durationSeconds > 0 ? ` Length ${Math.round(result.durationSeconds)} seconds.` : ''
-    return redirectTo(req, next, undefined, `The YouTube film and its captions are saved (fetched by ${result.provider}).${length}`)
+    if (!saved && failed) return redirectTo(req, next, outcomes[0] || 'Those films could not be brought in.')
+    const extra = failed ? ` ${failed} failed and can be tried again.` : ''
+    return redirectTo(req, next, undefined, `Brought in ${saved} film${saved === 1 ? '' : 's'}.${extra}`)
   }
 
   if (action === 'upload-transcript') {

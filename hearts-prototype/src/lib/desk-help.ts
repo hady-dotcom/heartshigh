@@ -127,7 +127,13 @@ export const TOOL: Record<string, string> = {
   contentSearch:
     'Search looks at subject titles. Mine is what you made here; Library is what you linked. The list is grouped by the twenty doors of Hadith Jibril, then by Ghunya seat.',
   ingest:
-    'Paste a YouTube or share link to bring in the film and, when we can, the transcript and its length. The speaker stays the one chosen for this course, not the YouTube channel. You can also upload a transcript file. Nothing is shown to learners until you approve cuts and questions.',
+    'Paste one YouTube link, or several on their own lines, to bring those films into this course. The speaker stays the one chosen for the course, not the YouTube channel. Each film then shows Processing, Processed or Failed.',
+  fetchTranscript:
+    'Leave this ticked to pull YouTube’s own captions and keep their times. Untick it when you only want the film and will upload a transcript yourself. Nothing here calls a paid model.',
+  captionLang:
+    'This is the caption language to ask YouTube for. English is the usual choice. Auto-captions in that language are used when there is no manual track.',
+  bringInRetry:
+    'Try again runs the same bring-in on this film. Use it when YouTube blocked the captions or the link failed. The speaker and any approved clips stay as they are.',
   extract:
     'Run the extractor drafts clips from the transcript, and clips you have already approved stay. Tick paid AI only when you want a model to draft them; the estimate is shown first. With the box clear, the built-in extractor runs and nothing is paid.',
   paidAi:
@@ -135,7 +141,7 @@ export const TOOL: Record<string, string> = {
   sheetScope:
     'Scope says what the workbook covers: the whole library, this portal’s own courses, or one course. Portal exports skip library courses, so they can be empty. The blank template is always safe to download.',
   sheetPreview:
-    'Preview shows every add, change and problem before anything is saved. Apply only when the sheet is clean. Undo takes back the last import, not older ones.',
+    'Preview lists every add, change and problem before anything is saved. Rows with a problem are reported and left out. Apply saves the clean rows. Undo takes back the last import.',
   creatorSearch:
     'Search looks on YouTube for talks on this topic. Tick the ones you want, or paste links and upload a file. Build draft writes a workbook; apply it on the sheet page when you are happy.',
   hideScene:

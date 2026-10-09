@@ -124,9 +124,9 @@ export async function POST(req: Request) {
     url.searchParams.set('preview', String(doc.id))
     return redirectTo(req, `${url.pathname}${url.search}`)
   }
-  if (plan.errors.length) {
+  if (plan.errors.length && !plan.ops.length) {
     if (json) return NextResponse.json({ ok: false, ...summary }, { status: 422 })
-    return redirectTo(req, next, 'The sheet still has rows to fix. Nothing was saved.')
+    return redirectTo(req, next, 'The sheet has rows to fix, and nothing else to save.')
   }
   if (!plan.ops.length) {
     const notice = 'Nothing to change. The sheet matches what is already here.'
@@ -155,6 +155,7 @@ export async function POST(req: Request) {
     })
   }
   const packNote = packLinks.length ? ` ${packLinks.length} course${packLinks.length === 1 ? '' : 's'} added to a pack${push ? `, and given to ${pushed?.learners || 0} existing learner${pushed?.learners === 1 ? '' : 's'}` : '; existing learners were left as they are'}.` : ''
-  const notice = `Imported ${fileName}: ${counts.create} added, ${counts.update} updated, ${counts.delete} removed.${packNote}`
+  const leftOut = plan.errors.length ? ` ${plan.errors.length} row${plan.errors.length === 1 ? '' : 's'} with a problem ${plan.errors.length === 1 ? 'was' : 'were'} left out.` : ''
+  const notice = `Imported ${fileName}: ${counts.create} added, ${counts.update} updated, ${counts.delete} removed.${leftOut}${packNote}`
   return json ? NextResponse.json({ ok: true, notice, importId: saved.id, ...summary, packLinks, pushedLearners: pushed?.learners ?? 0 }) : redirectTo(req, next, undefined, notice)
 }

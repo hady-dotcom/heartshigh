@@ -7,7 +7,8 @@ import { dualExtract, rowsKeptOnExtract } from '../../src/lib/extractor'
 import { extractWithFallback } from '../../src/lib/llm'
 import { mediaObjectKeys, readStoredMediaBytes } from '../../src/lib/stored-media'
 import { dedupeRolling, looksUnpunctuated, parseTranscript } from '../../src/lib/transcript'
-import { chosenSpeaker, durationFromTranscript, json3ToVtt, parseDurationPrint, ytDlpArgs, ytDlpProblem } from '../../src/lib/youtube'
+import { bringInNote, bringInStatus, captionLang, chosenSpeaker, durationFromTranscript, json3ToVtt, parseDurationPrint, splitBringInLinks, ytDlpArgs, ytDlpProblem } from '../../src/lib/youtube'
+import { closeOverlappingCues } from '../../src/lib/transcript'
 
 const samples = {
   captions: '/home/ubuntu/.cursor/projects/workspace/uploads/from_box-G00001_925e.txt',
@@ -27,6 +28,25 @@ test('yt-dlp asks for captions without a forced player client and keeps a printe
   assert.equal(parseDurationPrint(''), null)
   assert.match(ytDlpProblem('ERROR: Sign in to confirm you’re not a bot'), /blocked yt-dlp/)
   assert.match(ytDlpProblem('WARNING: no formats\n', false), /could not fetch the captions/)
+})
+
+test('several links are split, a language is kept, and overlapping cues are closed', () => {
+  assert.deepEqual(splitBringInLinks(' https://youtu.be/aaaaaaaaaaa \nhttps://youtu.be/aaaaaaaaaaa\nhttps://youtu.be/bbbbbbbbbbb '), [
+    'https://youtu.be/aaaaaaaaaaa',
+    'https://youtu.be/bbbbbbbbbbb',
+  ])
+  assert.equal(captionLang('ar'), 'ar')
+  assert.equal(captionLang('nope'), 'en')
+  assert.match(ytDlpArgs('B4KtRL_2aXY', '/tmp', 'ar').join(' '), /ar-orig,ar\.\*,ar/)
+  const closed = closeOverlappingCues([
+    { start: 0, end: 5, text: 'hello world' },
+    { start: 3, end: 4, text: 'world today' },
+  ])
+  assert.equal(closed[0].end, 3)
+  assert.equal(closed[1].start, 3)
+  assert.equal(closed[1].end, 5)
+  assert.equal(bringInStatus(bringInNote('failed', 'This film has no English captions on YouTube.')), 'failed')
+  assert.equal(bringInStatus(bringInNote('processed', 'Captions fetched by yt-dlp.')), 'processed')
 })
 
 test('the CMS speaker is kept and the channel name is never written', () => {

@@ -28,13 +28,13 @@ export function parseTranscript(raw: string): { cues: Cue[]; timed: boolean; est
   const text = raw.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n')
   const estimated = /timestamps:?\**:?\s*estimated/i.test(text.slice(0, 800))
   const vtt = parseVtt(text)
-  if (vtt.length) return { cues: dedupeRolling(vtt), timed: true, estimated }
+  if (vtt.length) return { cues: tidyCues(vtt), timed: true, estimated }
   const srt = parseSrt(text)
-  if (srt.length) return { cues: dedupeRolling(srt), timed: true, estimated }
+  if (srt.length) return { cues: tidyCues(srt), timed: true, estimated }
   const marked = parseMarked(text)
-  if (marked.length) return { cues: dedupeRolling(marked), timed: true, estimated }
+  if (marked.length) return { cues: tidyCues(marked), timed: true, estimated }
   const bracketed = parseBracketed(text)
-  if (bracketed.length) return { cues: dedupeRolling(bracketed), timed: true, estimated }
+  if (bracketed.length) return { cues: tidyCues(bracketed), timed: true, estimated }
   const plain = parsePlain(text)
   return { cues: plain, timed: false, estimated: true }
 }
@@ -84,6 +84,28 @@ function parseBracketed(text: string): Cue[] {
  * YouTube auto-captions often repeat the tail of the previous line. Drop that overlap
  * and keep each cue's own start and end, so the timing is not flattened into one block.
  */
+/**
+ * YouTube cues often start before the previous cue has finished.
+ * The previous cue ends when the next one starts. A cue that was still inside the previous window
+ * keeps that window's end, so no speech time is dropped.
+ */
+export function closeOverlappingCues(cues: Cue[]): Cue[] {
+  const out = cues.map((cue) => ({ ...cue }))
+  for (let index = 0; index < out.length - 1; index++) {
+    const prev = out[index]
+    const next = out[index + 1]
+    if (prev.end <= next.start) continue
+    const prevEnd = prev.end
+    prev.end = Math.max(prev.start, next.start)
+    if (next.end < prevEnd) next.end = prevEnd
+  }
+  return out
+}
+
+function tidyCues(cues: Cue[]) {
+  return closeOverlappingCues(dedupeRolling(cues))
+}
+
 export function dedupeRolling(cues: Cue[]): Cue[] {
   const out: Cue[] = []
   for (const cue of cues) {
