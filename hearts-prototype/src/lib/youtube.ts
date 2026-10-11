@@ -144,7 +144,7 @@ export function speakerForLine(lineSpeaker: string | null | undefined, courseSpe
   return chosenSpeaker(courseSpeaker, lessonSpeaker)
 }
 
-export type BringInState = 'processing' | 'processed' | 'failed' | 'waiting'
+export type BringInState = 'queued' | 'processing' | 'processed' | 'failed' | 'waiting'
 
 export function bringInNote(status: BringInState, detail: string, lang = 'en') {
   const head = `Bring-in: ${status}`
@@ -157,6 +157,16 @@ export function bringInStatus(note: string | null | undefined): BringInState | '
   if (text.startsWith('Bring-in: failed')) return 'failed'
   if (text.startsWith('Bring-in: waiting')) return 'waiting'
   if (text.startsWith('Bring-in: processing')) return 'processing'
+  if (text.startsWith('Bring-in: queued')) return 'queued'
+  return ''
+}
+
+export function bringInStatusLabel(status: BringInState | '') {
+  if (status === 'queued') return 'Queued'
+  if (status === 'processing') return 'Processing'
+  if (status === 'waiting') return 'Waiting for transcript'
+  if (status === 'processed') return 'Processed'
+  if (status === 'failed') return 'Failed'
   return ''
 }
 
@@ -166,23 +176,37 @@ export function bringInLang(note: string | null | undefined) {
   return captionLang(match?.[1])
 }
 
-/** Failed, waiting and still-processing rows stay on the desk. Learners do not see an empty part. */
+/** Failed, waiting, queued and still-processing rows stay on the desk. Learners do not see an empty part. */
 export function hiddenFromLearners(note: string | null | undefined) {
   const status = bringInStatus(note)
-  return status === 'failed' || status === 'waiting' || status === 'processing'
+  return status === 'failed' || status === 'waiting' || status === 'processing' || status === 'queued'
 }
 
 /**
  * A transcript on a failed or dead-link film stays hidden. Learners see a part only when the film plays.
  * A film that was waiting (the video exists, the captions did not) becomes visible once a transcript is attached.
  */
-export function noteAfterTranscriptUpload(existingNote: string | null | undefined, fileName: string) {
+export function noteAfterTranscriptUpload(existingNote: string | null | undefined, fileName: string, publishState?: string | null) {
   const name = String(fileName || 'the file').slice(0, 80)
   if (bringInStatus(existingNote) === 'failed') {
     return {
       hidden: true,
       transcriptNote: bringInNote('failed', `A transcript from ${name} was saved. The film does not play, so learners do not see this part.`, bringInLang(existingNote)),
       notice: 'The transcript is saved. This film does not play, so learners still do not see it.',
+    }
+  }
+  if (publishState === 'draft') {
+    return {
+      hidden: true,
+      transcriptNote: bringInNote('processed', `A transcript from ${name} was saved. This talk is still a draft.`, bringInLang(existingNote)),
+      notice: 'The transcript is saved. This talk is still a draft, so learners cannot see it until you publish it.',
+    }
+  }
+  if (publishState === 'published') {
+    return {
+      hidden: false,
+      transcriptNote: `Uploaded from ${name}.`,
+      notice: 'Transcript uploaded. Learners who already have this course can see this talk.',
     }
   }
   return { hidden: false, transcriptNote: `Uploaded from ${name}.`, notice: 'Transcript uploaded.' }
@@ -196,12 +220,13 @@ export function speakerForBringIn(input: { lineSpeaker?: string | null; courseSp
 }
 
 /** The flash after a bring-in. Clips are mentioned only when some were actually set aside. */
-export function bringInFlash(input: { saved: number; waiting: number; failed: number; skipped: number; clipsSetAside: number }) {
+export function bringInFlash(input: { saved: number; waiting: number; failed: number; skipped: number; clipsSetAside: number; drafts?: number }) {
   const bits = [`Brought in ${input.saved} film${input.saved === 1 ? '' : 's'}.`]
   if (input.waiting) bits.push(`${input.waiting} waiting for a transcript.`)
   if (input.failed) bits.push(`${input.failed} failed and can be tried again.`)
   if (input.skipped) bits.push(`${input.skipped} already in the library, so not added again.`)
   if (input.clipsSetAside > 0) bits.push('The previous film’s clips were set aside.')
+  if (input.drafts) bits.push(`${input.drafts} saved as drafts. Learners cannot see them until you publish.`)
   return bits.join(' ')
 }
 
@@ -503,6 +528,9 @@ export const defaultProviders = [ytDlpProvider, watchPageProvider, serviceProvid
 const OUTCOME_RANK: Record<CaptionOutcome, number> = { blocked: 5, missing: 4, failed: 3, none: 2, captions: 1 }
 
 export async function transcriptFor(id: string, providers: TranscriptProvider[] = defaultProviders, options: CaptionFetchOptions = {}) {
+  if (process.env.HEARTS_CAPTION_BOT_WALL === '1') {
+    return { transcript: null, provider: null, tried: ['yt-dlp'], problems: [], duration: null, outcome: 'blocked' as const }
+  }
   const tried: string[] = []
   const problems: string[] = []
   let duration: number | null = null

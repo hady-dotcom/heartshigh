@@ -16,6 +16,7 @@ import { filmsForTalk, mixFeed, readFilmCatalogue, type BeatFilm } from '@/lib/f
 import { filesForTalk, isTypographyStyle, readTypographyManifest, type TypographyManifest } from '@/lib/typography'
 import { clipWords, displayLine, feedTidy, parseLineTidy } from '@/lib/tidy-caption'
 import { partTitle } from '@/lib/talk-title'
+import { learnerLessonVisible } from '@/lib/publish-state'
 import { trackForClip } from '@/lib/framing/store'
 import { playingSpeaker } from '@/lib/playing-speaker'
 import { laneOf, portraitFor, SLIDE_ART, slugify, type FeedItem, type SlideStyle } from './learner'
@@ -135,7 +136,8 @@ async function loadAll(payload: Payload, courseIds: number[]): Promise<Loaded> {
   const films = readFilmCatalogue()
   const cards = readCardCatalogue()
   if (!courseIds.length) return { lanes, scales, clauses, doors, cuts: [], lessons: [], courses: [], tags: [], ladder: [], tiers: [], showUnchecked: false, alias: new Map(), typography, films, cards }
-  const [courses, lessons, showUnchecked] = await Promise.all([all(payload, 'courses', { id: { in: courseIds } }), all(payload, 'lessons', { course: { in: courseIds } }), showUncheckedTalks(payload)])
+  const [courses, lessonRows, showUnchecked] = await Promise.all([all(payload, 'courses', { id: { in: courseIds } }), all(payload, 'lessons', { course: { in: courseIds } }), showUncheckedTalks(payload)])
+  const lessons = lessonRows.filter((row) => learnerLessonVisible({ publishState: row.publishState as string | null, transcriptNote: row.transcriptNote as string | null }))
   const lessonIds = lessons.map((row) => row.id)
   const [rawCuts, tiers] = await Promise.all([
     lessonIds.length

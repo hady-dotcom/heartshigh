@@ -28,6 +28,7 @@ import { MissionPages } from '@/screens/desk/missions'
 import { MissionScreen, ShapedScreen, SupportScreen } from '@/screens/app/mission'
 import { OverviewScreen, PortalSettingsScreen, WizardScreen } from '@/screens/desk/overview'
 import { AccessScreen, ContentScreen, CourseEditorScreen, LibraryScreen, guardAdmin } from '@/screens/desk/content'
+import { PortalBringInScreen } from '@/screens/desk/bring-in'
 import { PortalCompassScreen, StaffLearnerCompass } from '@/screens/desk/compass'
 import { ProposedCompassScreen } from '@/screens/desk/compass-proposed'
 import { PortalCreatorScreen } from '@/screens/desk/creator-screen'
@@ -108,6 +109,9 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         return OverviewScreen(ctx)
       case 'content':
         return b ? CourseEditorScreen(ctx, Number(b)) : ContentScreen(ctx)
+      case 'bring-in':
+        guardAdmin(ctx)
+        return PortalBringInScreen(ctx)
       case 'library':
         return LibraryScreen(ctx)
       case 'access':

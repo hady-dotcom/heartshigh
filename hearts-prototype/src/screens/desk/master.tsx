@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
+import { HelpTip } from '@/components/desk/help'
+import { TOOL } from '@/lib/desk-help'
 import { CodeLimits, CodeStatus } from '@/components/desk/codes'
 import { ViewAsButton } from '@/components/desk/view-as-button'
 import { parseOption } from '@/lib/placing'
@@ -231,6 +233,10 @@ export async function MasterPacks(ctx: MasterCtx) {
                           <form action="/api/hearts" method="post" style={{ display: 'grid', gap: 8 }}>
                             <Hidden fields={{ action: 'pack-courses', pack: pack.id, next: '/master/packs' }} />
                             <div className="checks">{library.map((course) => <label className="check" key={course.id}><input type="checkbox" name="course" value={course.id} defaultChecked={inside.includes(course.id)} /> {str(course.title)}</label>)}</div>
+                            <label className="check">
+                              <input type="checkbox" name="giveHolders" value="yes" data-testid="pack-give-holders" /> Also give newly ticked courses to learners who already hold this pack
+                              <HelpTip topic="pack-give">{TOOL.packGiveHolders}</HelpTip>
+                            </label>
                             <div><button className="btn ghost small" type="submit" data-testid="pack-save">Save courses</button></div>
                           </form>
                         ) : (() => {

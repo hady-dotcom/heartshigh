@@ -11,6 +11,7 @@ const PAGES = [
   'nights',
   'gather',
   'content',
+  'bringIn',
   'sheet',
   'create',
   'library',

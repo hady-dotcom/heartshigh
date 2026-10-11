@@ -78,6 +78,9 @@ export interface Config {
     courses: Course;
     units: Unit;
     lessons: Lesson;
+    'channel-speakers': ChannelSpeaker;
+    'helper-tokens': HelperToken;
+    'bring-in-previews': BringInPreview;
     resources: Resource;
     packs: Pack;
     cuts: Cut;
@@ -175,6 +178,9 @@ export interface Config {
     courses: CoursesSelect<false> | CoursesSelect<true>;
     units: UnitsSelect<false> | UnitsSelect<true>;
     lessons: LessonsSelect<false> | LessonsSelect<true>;
+    'channel-speakers': ChannelSpeakersSelect<false> | ChannelSpeakersSelect<true>;
+    'helper-tokens': HelperTokensSelect<false> | HelperTokensSelect<true>;
+    'bring-in-previews': BringInPreviewsSelect<false> | BringInPreviewsSelect<true>;
     resources: ResourcesSelect<false> | ResourcesSelect<true>;
     packs: PacksSelect<false> | PacksSelect<true>;
     cuts: CutsSelect<false> | CutsSelect<true>;
@@ -672,6 +678,9 @@ export interface Lesson {
   transcript?: string | null;
   transcriptSource?: ('none' | 'youtube' | 'upload' | 'pending') | null;
   transcriptNote?: string | null;
+  publishState?: ('draft' | 'published') | null;
+  jibrilSection?: string | null;
+  ghunyaHeading?: string | null;
   sourceUrl?: string | null;
   /**
    * Seq in HEARTS-8k-LINKS-for-bots.csv, for audit.
@@ -3450,6 +3459,9 @@ export interface LessonsSelect<T extends boolean = true> {
   transcript?: T;
   transcriptSource?: T;
   transcriptNote?: T;
+  publishState?: T;
+  jibrilSection?: T;
+  ghunyaHeading?: T;
   sourceUrl?: T;
   csvSeq?: T;
   starterLane?: T;
@@ -5048,6 +5060,60 @@ export interface CollectionsWidget {
  */
 export interface Auth {
   [k: string]: unknown;
+}
+
+export interface ChannelSpeaker {
+  id: number;
+  channelKey: string;
+  label?: string | null;
+  speaker: string;
+  updatedAt: string;
+  createdAt: string;
+}
+export interface ChannelSpeakersSelect<T extends boolean = true> {
+  channelKey?: T;
+  label?: T;
+  speaker?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+export interface HelperToken {
+  id: number;
+  label: string;
+  tokenHash: string;
+  tokenPrefix?: string | null;
+  createdBy?: (number | null) | User;
+  revokedAt?: string | null;
+  lastUsedAt?: string | null;
+  shownOnce?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+export interface HelperTokensSelect<T extends boolean = true> {
+  label?: T;
+  tokenHash?: T;
+  tokenPrefix?: T;
+  createdBy?: T;
+  revokedAt?: T;
+  lastUsedAt?: T;
+  shownOnce?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+export interface BringInPreview {
+  id: number;
+  actor?: (number | null) | User;
+  portal?: (number | null) | Portal;
+  body?: unknown;
+  updatedAt: string;
+  createdAt: string;
+}
+export interface BringInPreviewsSelect<T extends boolean = true> {
+  actor?: T;
+  portal?: T;
+  body?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 
 

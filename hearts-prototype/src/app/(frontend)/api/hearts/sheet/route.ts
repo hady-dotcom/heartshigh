@@ -149,9 +149,12 @@ export async function POST(req: Request) {
           learners: pushed?.learners || 0, users: (snapshot.pushed || []).map((row) => row.user),
         })
       }
-      const packNote = packLinks.length ? ` ${packLinks.length} course${packLinks.length === 1 ? '' : 's'} added to a pack${push ? `, and given to ${pushed?.learners || 0} existing learner${pushed?.learners === 1 ? '' : 's'}` : '; existing learners were left as they are'}.` : ''
+      const packNote = packLinks.length
+        ? ` ${packLinks.length} course${packLinks.length === 1 ? '' : 's'} added to a pack${push ? `. Added to ${pushed?.learners || 0} existing learner${pushed?.learners === 1 ? '' : 's'} who keep a saved course list. Anyone who reads the pack live already had them` : '. Existing learners who keep a saved list were left as they are. Anyone who joins from now on, and anyone who reads the pack live, can see the new courses'}.`
+        : ''
+      const draftNote = (snapshot.created.lessons || []).length ? ' New talks are drafts. Learners cannot see them until you publish them on Bring in.' : ''
       const leftOut = plan.errors.length ? ` ${plan.errors.length} row${plan.errors.length === 1 ? '' : 's'} with a problem ${plan.errors.length === 1 ? 'was' : 'were'} left out.` : ''
-      const notice = `Imported ${fileName}: ${counts.create} added, ${counts.update} updated, ${counts.delete} removed.${leftOut}${packNote}`
+      const notice = `Imported ${fileName}: ${counts.create} added, ${counts.update} updated, ${counts.delete} removed.${leftOut}${packNote}${draftNote}`
       return json ? NextResponse.json({ ok: true, notice, importId: saved.id, ...summary, packLinks, pushedLearners: pushed?.learners ?? 0 }) : redirectTo(req, next, undefined, notice)
     })
   }
