@@ -17,7 +17,7 @@ import {
   parseFlatPlaylistLine,
   speakerForCandidate,
 } from '../../src/lib/bring-in-plan'
-import { helperTokenFlash } from '../../src/lib/helper-token-flash'
+import { cookieValue, helperTokenFlash } from '../../src/lib/helper-token-flash'
 import { hashHelperToken, helperRateOk, helperTokenAllows, helperTokenMatches, newHelperToken, resetHelperRates } from '../../src/lib/helper-token'
 import { helperAttachResult, packSaveNotice, publishNotice } from '../../src/lib/publish-state'
 import { punctuateTimedCues } from '../../src/lib/punctuate'
@@ -144,6 +144,8 @@ test('gapless auto-captions keep their times, and a pause before “he” is not
 })
 
 test('the token is shown once, harvest samples skip drafts, and Bring in can list sheet drafts', () => {
+  assert.equal(cookieValue('hearts_helper_once=hlp_abc; hearts_device=d1', 'hearts_helper_once'), 'hlp_abc')
+  assert.equal(cookieValue('hearts_device=d1', 'hearts_helper_seen'), '')
   const first = helperTokenFlash({ once: 'hlp_abc', seen: '' })
   assert.equal(first.show, true)
   assert.equal(first.secret, 'hlp_abc')

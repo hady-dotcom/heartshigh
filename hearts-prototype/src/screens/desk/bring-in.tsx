@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { cookies } from 'next/headers'
+import { headers } from 'next/headers'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { HelpTip } from '@/components/desk/help'
@@ -8,7 +8,7 @@ import { BringInLive } from '@/components/desk/bring-in-live'
 import { DOORS, doorCode, doorLabel } from '@/lib/doors'
 import { TOOL } from '@/lib/desk-help'
 import { CAPTION_LANGUAGES, bringInStatus, bringInStatusLabel } from '@/lib/youtube'
-import { helperTokenFlash } from '@/lib/helper-token-flash'
+import { cookieValue, helperTokenFlash } from '@/lib/helper-token-flash'
 import { skipLabel, type BringInRow } from '@/lib/bring-in-plan'
 import { listDraftTalks, type PreviewBody } from '@/server/bring-in'
 import type { SessionUser } from '@/server/context'
@@ -47,8 +47,8 @@ export async function BringInBody({
         rows(payload, 'helper-tokens', undefined, { sort: '-createdAt', limit: 20 }),
       ])
     : [[], []]
-  const jar = user.role === 'master' ? await cookies() : null
-  const flash = helperTokenFlash({ once: jar?.get('hearts_helper_once')?.value, seen: jar?.get('hearts_helper_seen')?.value })
+  const sent = user.role === 'master' ? (await headers()).get('cookie') : ''
+  const flash = helperTokenFlash({ once: cookieValue(sent, 'hearts_helper_once'), seen: cookieValue(sent, 'hearts_helper_seen') })
   const secret = flash.show ? flash.secret : ''
   const draftList = await listDraftTalks(payload, user)
   const shown = new Set(brought.map((lesson) => lesson.id))
