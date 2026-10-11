@@ -14,7 +14,7 @@ import { newHelperToken } from '@/lib/helper-token'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { withWorkLock } from '@/lib/work-lock'
 import { bringInFlash, bringInNote, bringInStatus, captionLang, ingestYoutubeUrl, type YoutubeMeta } from '@/lib/youtube'
-import { decideBringInWrite } from '@/lib/bring-in-plan'
+import { decideBringInWrite, draftLessonWhere } from '@/lib/bring-in-plan'
 import type { SessionUser } from './context'
 import { giveCourseToPackHolders, packsContaining } from './publish-holders'
 import { publishNotice } from '@/lib/publish-state'
@@ -289,6 +289,42 @@ export async function commitBringIn(payload: Payload, user: SessionUser, form: F
     const notice = bringInFlash({ saved, waiting, failed, skipped, clipsSetAside: 0, drafts: lessonIds.length })
     return { notice, lessons: lessonIds, courseId: course.id }
   })
+}
+
+export async function listDraftTalks(payload: Payload, user: SessionUser) {
+  const where = draftLessonWhere({ role: user.role, portalId: portalIdOf(user) })
+  const docs: Doc[] = []
+  let page = 1
+  let more = false
+  while (docs.length < 400) {
+    const found = await payload.find({
+      collection: 'lessons',
+      overrideAccess: true,
+      depth: 0,
+      limit: 100,
+      page,
+      sort: '-updatedAt',
+      where: where as never,
+    })
+    docs.push(...(found.docs as unknown as Doc[]))
+    more = Boolean(found.hasNextPage)
+    if (!found.hasNextPage) break
+    page += 1
+  }
+  const courseIds = [...new Set(docs.map((row) => idOf(row.course)).filter((id): id is number => Boolean(id)))]
+  const courses = courseIds.length
+    ? await payload.find({ collection: 'courses', overrideAccess: true, depth: 0, limit: courseIds.length, where: { id: { in: courseIds } } })
+    : { docs: [] as { id: number; title?: string | null }[] }
+  const titles = new Map(courses.docs.map((course) => [course.id, String((course as { title?: string | null }).title || '')]))
+  return {
+    more,
+    talks: docs.map((row) => ({
+      id: row.id,
+      title: String(row.title || 'Untitled'),
+      courseTitle: titles.get(idOf(row.course) || 0) || '',
+      status: bringInStatus(String(row.transcriptNote || '')),
+    })),
+  }
 }
 
 export async function publishTalks(payload: Payload, user: SessionUser, form: FormData) {

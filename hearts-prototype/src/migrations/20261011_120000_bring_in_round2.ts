@@ -44,11 +44,33 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
       "updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
       "created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
     );
+
+    -- Payload reads these on every save. Preferences only relate to users, so that rels table is unchanged.
+    ALTER TABLE "payload_locked_documents_rels" ADD COLUMN IF NOT EXISTS "channel_speakers_id" integer;
+    ALTER TABLE "payload_locked_documents_rels" ADD COLUMN IF NOT EXISTS "helper_tokens_id" integer;
+    ALTER TABLE "payload_locked_documents_rels" ADD COLUMN IF NOT EXISTS "bring_in_previews_id" integer;
+
+    DO $$ BEGIN ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_channel_speakers_fk" FOREIGN KEY ("channel_speakers_id") REFERENCES "public"."channel_speakers"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+    DO $$ BEGIN ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_helper_tokens_fk" FOREIGN KEY ("helper_tokens_id") REFERENCES "public"."helper_tokens"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+    DO $$ BEGIN ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_bring_in_previews_fk" FOREIGN KEY ("bring_in_previews_id") REFERENCES "public"."bring_in_previews"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+    CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_channel_speakers_id_idx" ON "payload_locked_documents_rels" USING btree ("channel_speakers_id");
+    CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_helper_tokens_id_idx" ON "payload_locked_documents_rels" USING btree ("helper_tokens_id");
+    CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_bring_in_previews_id_idx" ON "payload_locked_documents_rels" USING btree ("bring_in_previews_id");
   `)
 }
 
 export async function down({ db }: MigrateDownArgs): Promise<void> {
   await db.execute(sql`
+    ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_channel_speakers_fk";
+    ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_helper_tokens_fk";
+    ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_bring_in_previews_fk";
+    DROP INDEX IF EXISTS "payload_locked_documents_rels_channel_speakers_id_idx";
+    DROP INDEX IF EXISTS "payload_locked_documents_rels_helper_tokens_id_idx";
+    DROP INDEX IF EXISTS "payload_locked_documents_rels_bring_in_previews_id_idx";
+    ALTER TABLE "payload_locked_documents_rels" DROP COLUMN IF EXISTS "channel_speakers_id";
+    ALTER TABLE "payload_locked_documents_rels" DROP COLUMN IF EXISTS "helper_tokens_id";
+    ALTER TABLE "payload_locked_documents_rels" DROP COLUMN IF EXISTS "bring_in_previews_id";
     DROP TABLE IF EXISTS "bring_in_previews";
     DROP TABLE IF EXISTS "helper_tokens";
     DROP TABLE IF EXISTS "channel_speakers";

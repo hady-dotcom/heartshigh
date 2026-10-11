@@ -244,6 +244,8 @@ test.describe('round 2 bring in', () => {
     expect(cookie?.value).toBe(state.token)
     expect(cookie?.httpOnly).toBeTruthy()
     await shot(page, '08-helper-token')
+    await page.reload()
+    await expect(page.getByTestId('helper-token-value')).toHaveCount(0)
 
     const dry = await helper(state.token, true)
     expect(dry).toMatch(/Dry run/)

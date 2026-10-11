@@ -9,19 +9,24 @@ import {
   bringInSourceKind,
   clockFromListed,
   decideBringInWrite,
+  draftLessonWhere,
   ghunyaHeading,
+  isUnavailableFilm,
   jibrilSection,
   markBringInSkips,
   parseFlatPlaylistLine,
   speakerForCandidate,
 } from '../../src/lib/bring-in-plan'
+import { helperTokenFlash } from '../../src/lib/helper-token-flash'
 import { hashHelperToken, helperRateOk, helperTokenAllows, helperTokenMatches, newHelperToken, resetHelperRates } from '../../src/lib/helper-token'
-import { packSaveNotice, publishNotice } from '../../src/lib/publish-state'
+import { helperAttachResult, packSaveNotice, publishNotice } from '../../src/lib/publish-state'
 import { punctuateTimedCues } from '../../src/lib/punctuate'
-import { hiddenFromLearners, noteAfterTranscriptUpload, transcriptFor } from '../../src/lib/youtube'
+import { bringInFlash, hiddenFromLearners, noteAfterTranscriptUpload, transcriptFor } from '../../src/lib/youtube'
+import { captionFlagFromListing, expandBringInText } from '../../src/lib/youtube-list'
+import { harvestSampleLesson } from '../../src/server/harvest'
 import { giveCourseToPackHolders } from '../../src/server/publish-holders'
 import { withWorkLock } from '../../src/lib/work-lock'
-import { attachDecision, helperGapMs, punctuateTranscript } from '../../scripts/bring-in-helper/plan'
+import { attachDecision, helperAttachMessage, helperGapMs, helperRunFailed, punctuateTranscript } from '../../scripts/bring-in-helper/plan'
 import { readFileSync } from 'node:fs'
 
 const execFileAsync = promisify(execFile)
@@ -72,6 +77,89 @@ test('a blocked or caption-less film waits, and a fetched film is saved', () => 
   const saved = decideBringInWrite({ ok: true, id: 'abc', transcript: 'WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nHello.\n', provider: 'yt-dlp', tried: [], durationSeconds: 2, captionOutcome: 'captions', meta: { id: 'abc', title: 'Hello', author: '', thumbnail: '' } }, true, 'en')
   assert.equal(saved.bucket, 'saved')
   assert.equal(hiddenFromLearners(saved.note), false)
+  const gone = decideBringInWrite({ ok: false, id: '0_kvfVpTaUs', error: 'ERROR: Video unavailable', captionOutcome: 'failed', meta: { id: '0_kvfVpTaUs', title: 'This video is not available', author: '', thumbnail: '' }, needsTranscript: true, tried: [], durationSeconds: null }, true, 'en')
+  assert.equal(gone.bucket, 'failed')
+  assert.match(gone.note, /^Bring-in: failed/)
+  const privateFilm = decideBringInWrite({ ok: false, id: 'priv0000001', error: 'Private video. Sign in if you have been granted access to this video', captionOutcome: 'blocked', meta: null, needsTranscript: true, tried: [], durationSeconds: null }, true, 'en')
+  assert.equal(privateFilm.bucket, 'failed')
+  assert.equal(isUnavailableFilm({ error: 'Requested format is not available' }), false)
+})
+
+test('automatic captions count, unavailable films start unticked, and a broken line is named', async () => {
+  const auto = `[info] Available subtitles for abcdefghijk:\nabcdefghijk has no subtitles\n[info] Available automatic captions for abcdefghijk:\nLanguage Name Formats\nen English vtt, ttml, srv3, srv2, srv1, json3\nen-orig English (Original) vtt\nen-US English (United States) vtt\n`
+  assert.equal(captionFlagFromListing(auto, 'en'), 'yes')
+  assert.equal(captionFlagFromListing('abcdefghijk has no automatic captions\nabcdefghijk has no subtitles\n', 'en'), 'no')
+  assert.equal(captionFlagFromListing("ERROR: Sign in to confirm you're not a bot", 'en'), 'unknown')
+  const rows = markBringInSkips(
+    [{ id: '0_kvfVpTaUs', url: 'https://youtu.be/0_kvfVpTaUs', title: 'This video is not available', durationSeconds: 600, channel: 'A', channelId: 'UCx', captions: 'unknown', lineSpeaker: '' }],
+    new Set(),
+  )
+  assert.equal(rows[0].skipReason, 'unavailable')
+  assert.equal(rows[0].selected, false)
+  const expanded = await expandBringInText('https://www.youtube.com/watch?v=AAAAAAAAAAAA', {
+    probeCaptions: false,
+    list: async () => ({ entries: [], error: 'That link did not return any films. Check it is a YouTube film, playlist or channel.' }),
+  })
+  assert.match(expanded.errors[0] || '', /AAAAAAAAAAAA/)
+})
+
+test('a helper attach stays a draft, and unavailable films do not fail the run', () => {
+  const attached = helperAttachResult()
+  assert.equal(attached.publishState, 'draft')
+  assert.equal(attached.learnersCanSee, false)
+  assert.match(helperAttachMessage(), /draft/)
+  assert.match(helperAttachMessage(), /cannot see it/)
+  assert.equal(helperRunFailed({ skipped: 2, attached: 0, already: 0 }), true)
+  assert.equal(helperRunFailed({ skipped: 0, attached: 0, already: 0 }), false)
+  const retry = bringInFlash({ saved: 0, waiting: 1, failed: 0, skipped: 0, clipsSetAside: 0, retry: true })
+  assert.match(retry, /^Tried again\./)
+  assert.doesNotMatch(retry, /Brought in 0/)
+  assert.doesNotMatch(retry, /saved as drafts/)
+  const replaced = bringInFlash({ saved: 1, waiting: 0, failed: 0, skipped: 0, clipsSetAside: 2, keptPublished: 1 })
+  assert.match(replaced, /stays published/)
+  assert.doesNotMatch(replaced, /saved as drafts/)
+})
+
+test('gapless auto-captions keep their times, and a pause before “he” is not a full stop', () => {
+  const gapless = punctuateTimedCues([
+    { start: 0, end: 2, text: 'the great scholar' },
+    { start: 2, end: 4, text: 'he said the name' },
+  ])
+  assert.equal(gapless[0].start, 0)
+  assert.equal(gapless[0].end, 2)
+  assert.equal(gapless[1].start, 2)
+  assert.equal(gapless[1].end, 4)
+  assert.equal(gapless[0].text, 'The great scholar')
+  assert.equal(gapless[1].text, 'he said the name.')
+  const pause = punctuateTimedCues([
+    { start: 1, end: 2, text: 'the great scholar' },
+    { start: 3, end: 5, text: 'he said the name' },
+  ])
+  assert.equal(pause[0].text, 'The great scholar,')
+  assert.equal(pause[0].start, 1)
+  assert.equal(pause[0].end, 2)
+  const self = punctuateTimedCues([{ start: 0, end: 1.5, text: 'i sit with the heart' }])
+  assert.equal(self[0].text, 'I sit with the heart.')
+  assert.equal(self[0].end, 1.5)
+})
+
+test('the token is shown once, harvest samples skip drafts, and Bring in can list sheet drafts', () => {
+  const first = helperTokenFlash({ once: 'hlp_abc', seen: '' })
+  assert.equal(first.show, true)
+  assert.equal(first.secret, 'hlp_abc')
+  assert.equal(first.setSeen, true)
+  const again = helperTokenFlash({ once: 'hlp_abc', seen: '1' })
+  assert.equal(again.show, false)
+  assert.equal(again.clear, true)
+  const transcript = `${'the heart keeps a quiet watch '.repeat(4)}and then it rests`
+  assert.equal(harvestSampleLesson({ transcript, publishState: 'draft', transcriptNote: '' }), false)
+  assert.equal(harvestSampleLesson({ transcript, publishState: 'published', transcriptNote: 'Bring-in: waiting. [lang:en] none' }), false)
+  assert.equal(harvestSampleLesson({ transcript, publishState: 'published', transcriptNote: 'Bring-in: failed. [lang:en] gone' }), false)
+  assert.equal(harvestSampleLesson({ transcript, publishState: 'published', transcriptNote: 'Uploaded from notes.vtt' }), true)
+  assert.deepEqual(draftLessonWhere({ role: 'master', portalId: null }), { publishState: { equals: 'draft' } })
+  const portal = draftLessonWhere({ role: 'portal-admin', portalId: 4 })
+  assert.match(JSON.stringify(portal), /"equals":"draft"/)
+  assert.match(JSON.stringify(portal), /"equals":4/)
 })
 
 test('the bot wall stops caption providers before they run', async () => {

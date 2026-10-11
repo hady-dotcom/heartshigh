@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { helperTokenFlash } from '@/lib/helper-token-flash'
 
 // Payload's "create the first user" screen and endpoint. The first account comes only from `npm run bootstrap`
 // (or the seed on a development machine), so both are closed everywhere.
@@ -26,6 +27,18 @@ export function middleware(request: NextRequest) {
   if (!request.cookies.get('hearts_device')) {
     const id = `d${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`.slice(0, 24)
     response.cookies.set('hearts_device', id, { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 400, secure: process.env.NODE_ENV === 'production' })
+  }
+  if (pathname.includes('/bring-in')) {
+    const flash = helperTokenFlash({
+      once: request.cookies.get('hearts_helper_once')?.value,
+      seen: request.cookies.get('hearts_helper_seen')?.value,
+    })
+    const cookieBase = { path: '/', httpOnly: true, sameSite: 'lax' as const, secure: process.env.NODE_ENV === 'production' }
+    if (flash.setSeen) response.cookies.set('hearts_helper_seen', '1', { ...cookieBase, maxAge: 180 })
+    if (flash.clear) {
+      response.cookies.set('hearts_helper_once', '', { ...cookieBase, maxAge: 0 })
+      response.cookies.set('hearts_helper_seen', '', { ...cookieBase, maxAge: 0 })
+    }
   }
   return response
 }

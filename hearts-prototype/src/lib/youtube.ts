@@ -220,12 +220,15 @@ export function speakerForBringIn(input: { lineSpeaker?: string | null; courseSp
 }
 
 /** The flash after a bring-in. Clips are mentioned only when some were actually set aside. */
-export function bringInFlash(input: { saved: number; waiting: number; failed: number; skipped: number; clipsSetAside: number; drafts?: number }) {
-  const bits = [`Brought in ${input.saved} film${input.saved === 1 ? '' : 's'}.`]
+export function bringInFlash(input: { saved: number; waiting: number; failed: number; skipped: number; clipsSetAside: number; drafts?: number; retry?: boolean; keptPublished?: number }) {
+  const bits: string[] = []
+  if (input.retry && input.saved === 0) bits.push('Tried again.')
+  else bits.push(`Brought in ${input.saved} film${input.saved === 1 ? '' : 's'}.`)
   if (input.waiting) bits.push(`${input.waiting} waiting for a transcript.`)
   if (input.failed) bits.push(`${input.failed} failed and can be tried again.`)
   if (input.skipped) bits.push(`${input.skipped} already in the library, so not added again.`)
   if (input.clipsSetAside > 0) bits.push('The previous film’s clips were set aside.')
+  if (input.keptPublished) bits.push(input.keptPublished === 1 ? 'It stays published.' : `${input.keptPublished} stayed published.`)
   if (input.drafts) bits.push(`${input.drafts} saved as drafts. Learners cannot see them until you publish.`)
   return bits.join(' ')
 }

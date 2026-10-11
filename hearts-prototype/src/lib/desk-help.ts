@@ -141,11 +141,11 @@ export const TOOL: Record<string, string> = {
   bringInGhunya:
     'A Ghunya heading is the seat line you want on this talk. It is optional and stays on the desk. Learners do not see a draft talk, heading or not.',
   bringInSkip:
-    'Untick a row to leave that film out. Films under five minutes start unticked, and so do films already in the library. You can tick a short film if you still want it.',
+    'Untick a row to leave that film out. Films under five minutes, and private or unavailable films, start unticked. Films already in the library start unticked and stay out. You can tick a short film if you still want it.',
   bringInSpeaker:
     'The speaker on the row is saved on that film. It starts from the name on the line, then the course, then a channel you have mapped. The YouTube channel name is never used by itself.',
   bringInPublish:
-    'Publish makes a draft visible to learners who already have this course. Talks still waiting for a transcript stay hidden until a transcript is attached. You can publish one row or several at once.',
+    'Publish makes a draft visible to learners who already have this course, including a draft that came from the master sheet. Talks still waiting for a transcript stay hidden until a transcript is attached. You can publish one row or several at once.',
   bringInGiveHolders:
     'Tick this to add the course to learners who already hold a pack that contains it and who keep a saved course list. Leave it unticked and those learners keep the list they joined with. People who read the pack live already see courses added to the pack.',
   bringInHelper:
@@ -161,9 +161,9 @@ export const TOOL: Record<string, string> = {
   captionLang:
     'This is the caption language to ask YouTube for. English is the usual choice. Auto-captions in that language are used when there is no manual track.',
   bringInRetry:
-    'Try again runs the same bring-in on this row, keeps the caption language, and keeps a speaker named on this film. Use it when YouTube blocked the captions or the link failed. It does not start a second part.',
+    'Try again runs the same bring-in on this row, keeps the caption language, and keeps a speaker named on this film. A film that is private or not available is marked failed, so it is not retried forever. It does not start a second part.',
   replaceFilm:
-    'Replace this film changes the open part to the new link. Clips from the old film are set aside, including ones you already approved. Leave it unticked to add the links as new parts.',
+    'Replace this film changes the open part to the new link. If learners can already see that part, it stays published. Clips from the old film are set aside, including ones you already approved. Leave it unticked to add the links as new parts.',
   transcriptFiles:
     'Upload the timed transcript files the master sheet points at. Each file is stored and its media number is shown, so you can paste that number into the sheet. You do not need the raw data console.',
   extract:

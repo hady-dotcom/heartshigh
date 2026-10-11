@@ -4,6 +4,7 @@ import { doorNumberOfClause } from '@/lib/doors'
 import { commentaryFor, firstCitation, harvestLine, kindOfLine, lineAt, type ScholarCitation } from '@/lib/harvest'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { wordSlice } from '@/lib/sentences'
+import { learnerLessonVisible } from '@/lib/publish-state'
 import { visibleCourseIds, type SessionUser } from './context'
 import { loadDoors } from './doors'
 
@@ -27,6 +28,15 @@ export type HarvestSample = {
 
 const str = (value: unknown) => (typeof value === 'string' ? value : value == null ? '' : String(value))
 const words = (text: string | undefined) => (text ? text.split(/\s+/).filter(Boolean).length : 0)
+
+/** Sample lines are for learners. Drafts, failed films, and talks still waiting stay out. */
+export function harvestSampleLesson(lesson: { transcript?: unknown; publishState?: unknown; transcriptNote?: unknown }) {
+  if (str(lesson.transcript).length <= 80) return false
+  return learnerLessonVisible({
+    publishState: typeof lesson.publishState === 'string' ? lesson.publishState : null,
+    transcriptNote: typeof lesson.transcriptNote === 'string' ? lesson.transcriptNote : null,
+  })
+}
 
 async function docs(payload: Payload, collection: string, where?: Record<string, unknown>, limit = 200) {
   const found = await payload.find({ collection: collection as 'lessons', overrideAccess: true, depth: 0, limit, ...(where ? { where: where as never } : {}) })
@@ -114,7 +124,9 @@ let sampleCache: { at: number; items: HarvestSample[] } | null = null
 /** A handful of real lines from seeded talks across different doors and speakers, so an empty harvest still shows its shape. */
 export async function sampleHarvest(payload: Payload, at = now()): Promise<HarvestSample[]> {
   if (sampleCache && at.getTime() - sampleCache.at < 60_000) return sampleCache.items
-  const lessons = (await docs(payload, 'lessons', undefined, 120)).filter((lesson) => str(lesson.transcript).length > 80)
+  const lessons = (await docs(payload, 'lessons', undefined, 120)).filter((lesson) =>
+    harvestSampleLesson({ transcript: lesson.transcript, publishState: lesson.publishState, transcriptNote: lesson.transcriptNote }),
+  )
   const lessonIds = lessons.map((lesson) => lesson.id)
   const [cuts, tiers, courses, resources, doors] = await Promise.all([
     lessonIds.length ? docs(payload, 'cuts', { lesson: { in: lessonIds } }, 600) : Promise.resolve([]),

@@ -1353,7 +1353,7 @@ export const ChannelSpeakers: CollectionConfig = {
   admin: { useAsTitle: 'label' },
   access: masterOnly,
   fields: [
-    { name: 'channelKey', type: 'text', required: true, index: true },
+    { name: 'channelKey', type: 'text', required: true, unique: true, index: true },
     { name: 'label', type: 'text' },
     { name: 'speaker', type: 'text', required: true },
   ],
@@ -1365,7 +1365,7 @@ export const HelperTokens: CollectionConfig = {
   access: masterOnly,
   fields: [
     { name: 'label', type: 'text', required: true },
-    { name: 'tokenHash', type: 'text', required: true, index: true },
+    { name: 'tokenHash', type: 'text', required: true, unique: true, index: true },
     { name: 'tokenPrefix', type: 'text' },
     { name: 'createdBy', type: 'relationship', relationTo: 'users' },
     { name: 'revokedAt', type: 'date' },

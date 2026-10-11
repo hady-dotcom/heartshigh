@@ -7,7 +7,7 @@ It can only do two things, with a token the master desk creates:
 1. List talks that are waiting for a transcript.
 2. Attach a timed transcript to one of those talks.
 
-It cannot publish, edit a course, or read anything else. Attaching a transcript does not publish the talk. Learners still cannot see a draft.
+It cannot publish, edit a course, or read anything else. Attaching a transcript does not publish the talk. A talk that had no transcript stays a draft, or becomes a draft if it was already marked published. Learners cannot see it until someone publishes it on Bring in.
 
 ## Create a token
 
@@ -45,13 +45,15 @@ Run the same command again. A talk that already has a transcript is left as it i
 
 ## What it fetches
 
-For each waiting talk it asks yt-dlp for captions. When the video has captions, those times are kept. Sentence breaks are added from the pauses (a gap of about 0.7s ends a sentence) when the captions have none. Text that already has full stops is left alone. No paid model is used.
+For each waiting talk it asks yt-dlp for captions, including YouTube’s automatic captions. When the video has captions, those times are kept. Sentence breaks are added from pauses of about 0.7 seconds when the captions have none. A pause before a word such as “and”, “but”, or “he” stays a comma, so a stop is not put in the middle of a sentence. Gapless auto-captions are not split by guesswork. The word “I” is capitalised. Cue times are not moved. Text that already has full stops is left alone. No paid model is used.
+
+A film that is private, members-only, or not available is marked failed. It is not retried on the next run, and that by itself does not make the helper exit with an error.
 
 When the video has no captions, yt-dlp downloads the audio and a local speech-to-text engine writes the words. Set `STT_ENGINE`:
 
 | `STT_ENGINE` | What it uses |
 | --- | --- |
-| `faster-whisper` | Default. A local [faster-whisper](https://github.com/SYSTRAN/faster-whisper) model. `STT_MODEL` defaults to `tiny`. Install with `pip install faster-whisper`. |
+| `faster-whisper` | Default. A local [faster-whisper](https://github.com/SYSTRAN/faster-whisper) model. `STT_MODEL` defaults to `tiny`. Install with `pip install -r scripts/bring-in-helper/requirements.txt` so `av` stays below 16. `av` 16 and newer crashes with `unexpected keyword argument 'metadata_errors'`. |
 | `whisper.cpp` | A local whisper.cpp binary. Set `WHISPER_CPP` and `WHISPER_CPP_MODEL` to files on this machine. |
 | `fixture` | Reads the audio file and returns a fixed practice transcript. For tests, and for a machine that cannot reach YouTube. |
 

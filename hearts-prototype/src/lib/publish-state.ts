@@ -5,6 +5,18 @@ export function isDraftLesson(row: { publishState?: string | null } | null | und
   return row?.publishState === 'draft'
 }
 
+/**
+ * Attaching a transcript never publishes. A talk that had none stays or becomes a draft.
+ * Round 1 talks that are already marked published still come back as drafts.
+ */
+export function helperAttachResult() {
+  return {
+    publishState: 'draft' as const,
+    learnersCanSee: false,
+    message: 'It stays a draft until someone publishes it. Learners cannot see it yet.',
+  }
+}
+
 /** Learners see a talk only after it is published and the film is ready. */
 export function learnerLessonVisible(row: { publishState?: string | null; transcriptNote?: string | null } | null | undefined) {
   if (!row) return false

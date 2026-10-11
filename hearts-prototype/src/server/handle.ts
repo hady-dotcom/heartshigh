@@ -22,6 +22,7 @@ import { gateAuth, tooManyAnswers } from '@/lib/auth-gate'
 import { clientIp, hit, hitAnswer, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
 import { slugProblem } from '@/lib/text-safety'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
+import { isUnavailableFilm } from '@/lib/bring-in-plan'
 import { bringInFlash, bringInNote, bringInStatus, captionLang, cleanedTimedTranscript, ingestYoutubeUrl, isAwaitingTranscript, noteAfterTranscriptUpload, speakerForBringIn, splitBringInLines } from '@/lib/youtube'
 import { packSaveNotice } from '@/lib/publish-state'
 import { commitBringIn, createHelperToken, deleteChannelSpeaker, previewBringIn, publishTalks, revokeHelperToken, saveChannelSpeaker } from './bring-in'
@@ -985,6 +986,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       let waiting = 0
       let skipped = 0
       let drafts = 0
+      let keptPublished = 0
       const openPublish = (open as { publishState?: string | null }).publishState
       const fillOpen = retry || (replaceFilm && openHasFilm) || !openHasFilm
       for (let index = 0; index < lines.length; index++) {
@@ -1022,9 +1024,12 @@ async function handleForm(req: Request, form: FormData, session: Session) {
             continue
           }
         }
-        const keepPublished = useOpen && retry && openPublish !== 'draft'
-        const draftPatch = keepPublished ? {} : { publishState: 'draft' as const }
-        if (!keepPublished) drafts++
+        const wasDraft = openPublish === 'draft'
+        const keepPublished = useOpen && !wasDraft && (retry || (replaceFilm && openHasFilm))
+        const makingDraft = !keepPublished && !(useOpen && wasDraft)
+        const draftPatch = makingDraft ? { publishState: 'draft' as const } : {}
+        if (makingDraft) drafts++
+        if (keepPublished) keptPublished++
         let targetId = lessonId
         if (!useOpen) {
           if (!unit) {
@@ -1117,13 +1122,16 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         const meta = result.meta
         const duration = result.durationSeconds && result.durationSeconds > 0 ? Math.round(result.durationSeconds) : 0
         const filmOnly = !wantTranscript
+        const unavailable = isUnavailableFilm({ title: meta?.title, error: result.ok ? '' : result.error })
         const outcome = result.ok ? 'captions' : result.captionOutcome
-        const waitingForTranscript = !filmOnly && (outcome === 'blocked' || outcome === 'failed' || outcome === 'missing')
-        const noCaptions = !filmOnly && outcome === 'none'
+        const waitingForTranscript = !filmOnly && !unavailable && (outcome === 'blocked' || outcome === 'failed' || outcome === 'missing')
+        const noCaptions = !filmOnly && !unavailable && outcome === 'none'
         let note = bringInNote('failed', result.ok ? 'Captions fetched.' : result.error, lang)
         let source: 'none' | 'youtube' | 'pending' = 'none'
         let transcript: string | undefined
-        if (result.ok) {
+        if (unavailable) {
+          note = bringInNote('failed', result.ok ? 'This film is not available.' : result.error || 'This film is not available.', lang)
+        } else if (result.ok) {
           const stored = cleanedTimedTranscript(result.transcript)
           transcript = stored.cleaned
           source = 'youtube'
@@ -1172,7 +1180,10 @@ async function handleForm(req: Request, form: FormData, session: Session) {
             ...draftPatch,
           },
         })
-        if (result.ok || filmOnly) saved++
+        if (unavailable) {
+          failed++
+          outcomes.push(result.ok ? 'This film is not available.' : result.error)
+        } else if (result.ok || filmOnly) saved++
         else if (waitingForTranscript || noCaptions) {
           waiting++
           outcomes.push(result.error)
@@ -1182,7 +1193,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         }
       }
       if (!saved && !waiting && failed && !skipped) return redirectTo(req, next, outcomes[0] || 'Those films could not be brought in.')
-      return redirectTo(req, next, undefined, bringInFlash({ saved, waiting, failed, skipped, clipsSetAside, drafts }))
+      return redirectTo(req, next, undefined, bringInFlash({ saved, waiting, failed, skipped, clipsSetAside, drafts, retry, keptPublished }))
     })
   }
 

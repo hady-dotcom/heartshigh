@@ -33,6 +33,7 @@
     "generate:importmap": "tsx scripts/generate-importmap.ts",
     "generate:types": "tsx scripts/generate-types.ts",
     "test:unit": "tsx --test src/lib/*.test.ts tests/unit/*.test.ts",
+    "test:postgres": "tsx --test --test-force-exit tests/postgres/*.test.ts",
     "test:e2e": "playwright test",
     "test": "npm run test:unit && npm run test:e2e",
     "screenshots": "playwright test tests/e2e/screenshots.spec.ts",

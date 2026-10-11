@@ -8,8 +8,9 @@ import { BringInLive } from '@/components/desk/bring-in-live'
 import { DOORS, doorCode, doorLabel } from '@/lib/doors'
 import { TOOL } from '@/lib/desk-help'
 import { CAPTION_LANGUAGES, bringInStatus, bringInStatusLabel } from '@/lib/youtube'
+import { helperTokenFlash } from '@/lib/helper-token-flash'
 import { skipLabel, type BringInRow } from '@/lib/bring-in-plan'
-import type { PreviewBody } from '@/server/bring-in'
+import { listDraftTalks, type PreviewBody } from '@/server/bring-in'
 import type { SessionUser } from '@/server/context'
 import { clock, rows, str, type Ctx, type Row } from '../common'
 import { AdminFrame } from './overview'
@@ -46,7 +47,12 @@ export async function BringInBody({
         rows(payload, 'helper-tokens', undefined, { sort: '-createdAt', limit: 20 }),
       ])
     : [[], []]
-  const secret = user.role === 'master' ? (await cookies()).get('hearts_helper_once')?.value || '' : ''
+  const jar = user.role === 'master' ? await cookies() : null
+  const flash = helperTokenFlash({ once: jar?.get('hearts_helper_once')?.value, seen: jar?.get('hearts_helper_seen')?.value })
+  const secret = flash.show ? flash.secret : ''
+  const draftList = await listDraftTalks(payload, user)
+  const shown = new Set(brought.map((lesson) => lesson.id))
+  const otherDrafts = draftList.talks.filter((talk) => !shown.has(talk.id))
   return (
     <div data-testid="bring-in">
       {secret ? (
@@ -99,7 +105,7 @@ export async function BringInBody({
           <header>
             <div>
               <h2>Films to bring in <HelpTip topic="bring-in-skip">{TOOL.bringInSkip}</HelpTip></h2>
-              <p>Untick any row you want to leave out. Short films and ones already in the library start unticked.</p>
+              <p>Untick any row you want to leave out. Short films, private or unavailable films, and ones already in the library start unticked.</p>
             </div>
           </header>
           <BusyForm className="body" action="/api/hearts" method="post">
@@ -140,6 +146,43 @@ export async function BringInBody({
             </BusyForm>
             <div style={{ marginTop: 16 }}>
               {brought.map((lesson) => <ResultRow key={lesson.id} lesson={lesson} next={`${next}?lessons=${lessonIds.join(',')}`} />)}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {otherDrafts.length ? (
+        <section className="panel" style={{ marginTop: 18 }} data-testid="bring-in-drafts">
+          <header>
+            <div>
+              <h2>Draft talks <HelpTip topic="bring-in-publish">{TOOL.bringInPublish}</HelpTip></h2>
+              <p>These include films from Bring in and from the master sheet. Learners cannot see them until you publish.</p>
+              {draftList.more ? <p className="hint">This list shows the latest {draftList.talks.length}. Publish these, then open Bring in again for the rest.</p> : null}
+            </div>
+          </header>
+          <div className="body">
+            <BusyForm action="/api/hearts" method="post">
+              <Hidden fields={{ action: 'publish-talks', next }} />
+              {otherDrafts.map((talk) => <input key={talk.id} type="hidden" name="lesson" value={talk.id} />)}
+              <label className="check">
+                <input type="checkbox" name="giveHolders" value="yes" data-testid="bring-in-drafts-give" /> Also give them to learners who already hold this pack
+                <HelpTip topic="bring-in-drafts-give">{TOOL.bringInGiveHolders}</HelpTip>
+              </label>
+              <div className="actions"><button className="btn ink" type="submit" data-testid="bring-in-publish-all">Publish all these drafts</button></div>
+            </BusyForm>
+            <div style={{ marginTop: 16 }}>
+              {otherDrafts.map((talk) => (
+                <div key={talk.id} data-testid="bring-in-draft-row" data-status={talk.status || 'draft'} style={{ marginBottom: 12 }}>
+                  <p><b>{talk.title}</b> {talk.courseTitle ? <span className="hint">{talk.courseTitle}</span> : null} <span className="badge gold">Draft</span> {talk.status ? <span className="badge gold">{bringInStatusLabel(talk.status)}</span> : null}</p>
+                  <BusyForm action="/api/hearts" method="post">
+                    <Hidden fields={{ action: 'publish-talks', lesson: talk.id, next }} />
+                    <label className="check">
+                      <input type="checkbox" name="giveHolders" value="yes" /> Also give it to learners who already hold this pack
+                    </label>
+                    <div className="actions"><button className="btn ghost small" type="submit" data-testid="bring-in-publish-one">Publish this talk</button></div>
+                  </BusyForm>
+                </div>
+              ))}
             </div>
           </div>
         </section>

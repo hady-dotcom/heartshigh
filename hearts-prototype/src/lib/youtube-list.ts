@@ -33,10 +33,18 @@ export async function listYoutubeUrl(pageUrl: string, run = runYtDlp): Promise<{
 export async function captionFlagFor(id: string, lang: string, run = runYtDlp): Promise<CaptionFlag> {
   const result = await run(`https://www.youtube.com/watch?v=${id}`, ['--skip-download', '--list-subs', '--no-warnings'])
   if (result.missing) return 'unknown'
-  const told = `${result.stdout}\n${result.stderr}`
-  if (/not a bot|sign in to confirm/i.test(told)) return 'unknown'
-  if (/no subtitles|there are no subtitles/i.test(told)) return 'no'
-  return subsListHasLang(told, lang) ? 'yes' : told.trim() ? 'no' : 'unknown'
+  return captionFlagFromListing(`${result.stdout}\n${result.stderr}`, lang)
+}
+
+/**
+ * yt-dlp says "has no subtitles" when there is no manual track, then lists automatic captions.
+ * en, en-orig and en-US still count as captions for English.
+ */
+export function captionFlagFromListing(output: string, lang: string): CaptionFlag {
+  if (/not a bot|sign in to confirm/i.test(output)) return 'unknown'
+  if (subsListHasLang(output, lang)) return 'yes'
+  if (/no subtitles|there are no subtitles|no automatic captions|there are no automatic captions/i.test(output)) return 'no'
+  return output.trim() ? 'no' : 'unknown'
 }
 
 export function subsListHasLang(output: string, lang: string) {
@@ -84,13 +92,13 @@ export async function expandBringInText(
     if (kind === 'video') {
       const id = youtubeIdFromUrl(link)
       if (!id) {
-        errors.push('That YouTube link is missing the film part.')
+        errors.push(`“${link.slice(0, 80)}” is missing the film part.`)
         continue
       }
       const listed = await list(link)
       const entry = listed.entries.find((row) => row.id === id) || listed.entries[0]
       if (!entry) {
-        errors.push(listed.error || `Could not read ${id}.`)
+        errors.push(namedLine(link, listed.error || `Could not read ${id}.`))
         continue
       }
       videos.push(await withClock({ ...entry, id }, link, lineSpeaker, options.lang || 'en', captions, probe))
@@ -98,7 +106,7 @@ export async function expandBringInText(
     }
     const listed = await list(link)
     if (!listed.entries.length) {
-      errors.push(listed.error || 'That playlist or channel did not return any films.')
+      errors.push(namedLine(link, listed.error || 'That playlist or channel did not return any films.'))
       continue
     }
     for (const entry of listed.entries) {
@@ -119,4 +127,9 @@ async function withClock(
   let flag: CaptionFlag = entry.captions || 'unknown'
   if (probe && !entry.captions) flag = await captions(entry.id, lang)
   return { ...entry, url, lineSpeaker, durationSeconds: clockFromListed(entry.durationRaw), captions: flag }
+}
+
+function namedLine(link: string, detail: string) {
+  const shown = link.slice(0, 80)
+  return detail.includes(shown) ? detail : `“${shown}”: ${detail}`
 }

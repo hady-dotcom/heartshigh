@@ -1,4 +1,5 @@
 import { punctuateTimedCues, cuesLackSentenceMarks, type TimedCue } from '../../src/lib/punctuate'
+import { helperAttachResult } from '../../src/lib/publish-state'
 import { parseTranscript } from '../../src/lib/transcript'
 import { segmentsToVtt } from '../../src/lib/youtube'
 
@@ -11,6 +12,15 @@ export function attachDecision(status: number): AttachDecision {
   if (status === 401 || status === 403) return 'denied'
   if (status === 429 || status >= 500) return 'retry'
   return 'failed'
+}
+
+export function helperAttachMessage() {
+  return helperAttachResult().message
+}
+
+/** Exit 1 only when a talk was skipped and nothing was attached. Unavailable films are not skips. */
+export function helperRunFailed(counts: { skipped: number; attached: number; already: number }) {
+  return counts.skipped > 0 && counts.attached === 0 && counts.already === 0
 }
 
 export function helperGapMs(raw: string | undefined, fallback = 2000) {
