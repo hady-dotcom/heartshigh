@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { bringInSourceKind, clockFromListed, parseFlatPlaylistLine, type CaptionFlag, type ListedEntry } from './bring-in-plan'
-import { captionLang, ytDlpBinary } from './youtube'
+import { captionLang, isUnavailableFilm, ytDlpBinary } from './youtube'
 import { youtubeIdFromUrl } from './extractor'
 
 const execFileAsync = promisify(execFile)
@@ -41,6 +41,7 @@ export async function captionFlagFor(id: string, lang: string, run = runYtDlp): 
  * en, en-orig and en-US still count as captions for English.
  */
 export function captionFlagFromListing(output: string, lang: string): CaptionFlag {
+  if (isUnavailableFilm({ error: output })) return 'unavailable'
   if (/not a bot|sign in to confirm/i.test(output)) return 'unknown'
   if (subsListHasLang(output, lang)) return 'yes'
   if (/no subtitles|there are no subtitles|no automatic captions|there are no automatic captions/i.test(output)) return 'no'
@@ -132,4 +133,9 @@ async function withClock(
 function namedLine(link: string, detail: string) {
   const shown = link.slice(0, 80)
   return detail.includes(shown) ? detail : `“${shown}”: ${detail}`
+}
+
+/** Every bad line, not only the first. */
+export function joinBringInErrors(errors: string[]) {
+  return errors.map((row) => row.trim()).filter(Boolean).join(' ')
 }

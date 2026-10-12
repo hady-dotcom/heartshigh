@@ -26,7 +26,7 @@ export type TranscriptProvider = {
   lastProblem?: string | null
   /** Seconds printed by the provider, when it could read a length without a caption file. Not yet the published clock. */
   lastDuration?: number | null
-  /** captions, none (yt-dlp said so), blocked, failed, or missing. */
+  /** captions, none (yt-dlp said so), blocked, failed, missing, or unavailable. */
   lastOutcome?: CaptionOutcome | null
 }
 
@@ -283,10 +283,29 @@ export function chosenSpeaker(courseSpeaker?: string | null, lessonSpeaker?: str
   return String(lessonSpeaker || '').trim()
 }
 
-export type CaptionOutcome = 'captions' | 'none' | 'blocked' | 'failed' | 'missing'
+export type CaptionOutcome = 'captions' | 'none' | 'blocked' | 'failed' | 'missing' | 'unavailable'
 
 const BOT_WALL = /not a bot|sign in to confirm|429|too many requests|blocked|forbidden|403/i
 const NO_SUBS = /no subtitles|there are no subtitles|no captions/i
+const UNAVAILABLE_FILM = /this video is not available|video unavailable|video is unavailable|private video|this video is private|members-only|members only|join this channel/i
+
+/**
+ * Private, members-only, or removed films, from a title or from yt-dlp's own line.
+ * "Requested format is not available" is a different problem and does not match.
+ */
+export function isUnavailableFilm(input: { title?: string | null; error?: string | null }) {
+  const told = `${input.title || ''}\n${input.error || ''}`
+  return UNAVAILABLE_FILM.test(told)
+}
+
+function unavailableFilmMessage(told: string) {
+  const line = told
+    .split('\n')
+    .map((row) => row.trim())
+    .find((row) => isUnavailableFilm({ error: row }))
+  const detail = (line || 'This video is not available').replace(/^ERROR:\s*/, '').slice(0, 220)
+  return `This film is not available. It will not be tried again. ${detail}`
+}
 
 /** A plain-English reason from yt-dlp's error output. */
 export function ytDlpProblem(stderr: string, missing = false, lang = 'en') {
@@ -328,9 +347,11 @@ export function interpretYtDlpOutput(input: {
     }
   }
   if (code === 'ENOENT') return { text: null, duration, outcome: 'missing', message: ytDlpProblem('', true, lang) }
+  // Read the raw lines before the bot-wall rewrite. A 403 often sits beside "Video unavailable".
+  const told = `${input.stdout || ''}\n${stderr}`
+  if (isUnavailableFilm({ error: told })) return { text: null, duration, outcome: 'unavailable', message: unavailableFilmMessage(told) }
   if (BOT_WALL.test(stderr)) return { text: null, duration, outcome: 'blocked', message: ytDlpProblem(stderr, false, lang) }
   // yt-dlp 2026.08.19 prints this with to_screen, which goes to stdout unless --quiet is set.
-  const told = `${input.stdout || ''}\n${stderr}`
   if (NO_SUBS.test(told)) return { text: null, duration, outcome: 'none', message: noCaptionMessage(lang) }
   return {
     text: null,
@@ -528,7 +549,7 @@ export function segmentsToVtt(segments: { start: number; end: number; text: stri
 
 export const defaultProviders = [ytDlpProvider, watchPageProvider, serviceProvider]
 
-const OUTCOME_RANK: Record<CaptionOutcome, number> = { blocked: 5, missing: 4, failed: 3, none: 2, captions: 1 }
+const OUTCOME_RANK: Record<CaptionOutcome, number> = { unavailable: 6, blocked: 5, missing: 4, failed: 3, none: 2, captions: 1 }
 
 export async function transcriptFor(id: string, providers: TranscriptProvider[] = defaultProviders, options: CaptionFetchOptions = {}) {
   if (process.env.HEARTS_CAPTION_BOT_WALL === '1') {
@@ -586,6 +607,18 @@ export async function ingestYoutubeUrl(
   }
   let durationSeconds = publishedClockSeconds(printed)
   if (!durationSeconds && found.transcript) durationSeconds = durationFromTranscript(found.transcript)
+  if (!found.transcript && found.outcome === 'unavailable') {
+    return {
+      ok: false,
+      meta: meta || null,
+      id,
+      error: found.problems[0] || 'This film is not available. It will not be tried again.',
+      needsTranscript: false,
+      tried: found.tried,
+      durationSeconds,
+      captionOutcome: 'unavailable',
+    }
+  }
   if (!found.transcript) {
     const outcome = found.outcome
     const lead = outcome === 'none'

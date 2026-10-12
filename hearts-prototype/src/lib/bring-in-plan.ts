@@ -1,10 +1,12 @@
 import { youtubeIdFromUrl } from './extractor'
-import { publishedClockSeconds, type YoutubeIngest, bringInNote, cleanedTimedTranscript, captionLang } from './youtube'
+import { publishedClockSeconds, type YoutubeIngest, bringInNote, cleanedTimedTranscript, captionLang, isUnavailableFilm } from './youtube'
+
+export { isUnavailableFilm }
 
 /** Films shorter than this stay unticked. Five minutes on the published clock. */
 export const MIN_BRING_IN_SECONDS = 300
 
-export type CaptionFlag = 'yes' | 'no' | 'unknown'
+export type CaptionFlag = 'yes' | 'no' | 'unknown' | 'unavailable'
 
 export type BringInRow = {
   index: number
@@ -88,7 +90,7 @@ export function markBringInSkips(
     let skipReason: BringInRow['skipReason'] = ''
     if (seen.has(row.id)) skipReason = 'duplicate'
     else if (libraryIds.has(row.id)) skipReason = 'library'
-    else if (isUnavailableFilm({ title: row.title })) skipReason = 'unavailable'
+    else if (row.captions === 'unavailable' || isUnavailableFilm({ title: row.title })) skipReason = 'unavailable'
     else if (row.durationSeconds != null && row.durationSeconds < MIN_BRING_IN_SECONDS) skipReason = 'short'
     seen.add(row.id)
     return { ...row, index, speaker: '', jibril: '', ghunya: '', skipReason, selected: skipReason === '' }
@@ -111,7 +113,7 @@ export function parseFlatPlaylistLine(line: string): ListedEntry | null {
   if (!/^[A-Za-z0-9_-]{6,}$/.test(id)) return null
   const duration = Number(parts[2])
   const flag = (parts[5] || '').trim().toLowerCase()
-  const captions: ListedEntry['captions'] = flag === 'yes' || flag === 'no' ? flag : flag === 'unknown' ? 'unknown' : ''
+  const captions: ListedEntry['captions'] = flag === 'yes' || flag === 'no' || flag === 'unavailable' ? flag : flag === 'unknown' ? 'unknown' : ''
   return {
     id,
     title: (parts[1] || '').trim() || `Film ${id}`,
@@ -129,7 +131,7 @@ export function clockFromListed(durationRaw: number | null) {
 /** "No captions" waits for the helper, which can run speech-to-text. The desk still says there are no captions. */
 export function decideBringInWrite(result: YoutubeIngest, wantTranscript: boolean, lang: string) {
   const code = captionLang(lang)
-  if (isUnavailableFilm({ title: result.meta?.title, error: result.ok ? '' : result.error })) {
+  if (isUnavailableFilm({ title: result.meta?.title, error: result.ok ? '' : result.error }) || (!result.ok && result.captionOutcome === 'unavailable')) {
     const reason = !result.ok && result.error ? result.error : 'This film is not available.'
     return {
       note: bringInNote('failed', reason, code),
@@ -202,12 +204,6 @@ export function skipLabel(reason: BringInRow['skipReason']) {
   if (reason === 'duplicate') return 'Already in this list'
   if (reason === 'unavailable') return 'Not available, left unticked'
   return ''
-}
-
-/** Private, members-only, or removed films. "Format unavailable" is a different yt-dlp problem and is not this. */
-export function isUnavailableFilm(input: { title?: string | null; error?: string | null }) {
-  const told = `${input.title || ''}\n${input.error || ''}`
-  return /this video is not available|video unavailable|video is unavailable|private video|this video is private|members-only|members only|join this channel/i.test(told)
 }
 
 /** Draft talks a desk can publish. Master sees every draft. A portal admin sees drafts made in that portal. */

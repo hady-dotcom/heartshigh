@@ -18,6 +18,7 @@ import { AdminFrame } from './overview'
 function captionsLabel(flag: string) {
   if (flag === 'yes') return 'Captions listed'
   if (flag === 'no') return 'No captions'
+  if (flag === 'unavailable') return 'Not available'
   return 'Captions unknown'
 }
 

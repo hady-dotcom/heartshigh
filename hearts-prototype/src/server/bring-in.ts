@@ -9,7 +9,7 @@ import {
   type BringInRow,
   type ChannelMapRow,
 } from '@/lib/bring-in-plan'
-import { expandBringInText } from '@/lib/youtube-list'
+import { expandBringInText, joinBringInErrors } from '@/lib/youtube-list'
 import { newHelperToken } from '@/lib/helper-token'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { withWorkLock } from '@/lib/work-lock'
@@ -70,7 +70,8 @@ export async function previewBringIn(payload: Payload, user: SessionUser, form: 
   const jibril = jibrilSection(text(form, 'jibril'))
   const ghunya = ghunyaHeading(text(form, 'ghunya'))
   const expanded = await expandBringInText(raw, { lang })
-  if (!expanded.videos.length) return { error: expanded.errors[0] || 'Those links did not return any films.' }
+  const pasteErrors = joinBringInErrors(expanded.errors)
+  if (!expanded.videos.length) return { error: pasteErrors || 'Those links did not return any films.' }
   const known = await libraryIds(payload)
   const map = await channelMap(payload)
   const marked = markBringInSkips(
@@ -120,7 +121,7 @@ export async function previewBringIn(payload: Payload, user: SessionUser, form: 
     overrideAccess: true,
     data: { actor: user.id, portal: body.portalId || undefined, body } as never,
   })
-  const notice = expanded.errors.length ? expanded.errors[0] : undefined
+  const notice = pasteErrors || undefined
   return { previewId: doc.id, notice }
 }
 

@@ -1122,7 +1122,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         const meta = result.meta
         const duration = result.durationSeconds && result.durationSeconds > 0 ? Math.round(result.durationSeconds) : 0
         const filmOnly = !wantTranscript
-        const unavailable = isUnavailableFilm({ title: meta?.title, error: result.ok ? '' : result.error })
+        const unavailable = isUnavailableFilm({ title: meta?.title, error: result.ok ? '' : result.error }) || (!result.ok && result.captionOutcome === 'unavailable')
         const outcome = result.ok ? 'captions' : result.captionOutcome
         const waitingForTranscript = !filmOnly && !unavailable && (outcome === 'blocked' || outcome === 'failed' || outcome === 'missing')
         const noCaptions = !filmOnly && !unavailable && outcome === 'none'

@@ -21,8 +21,8 @@ import { cookieValue, helperTokenFlash } from '../../src/lib/helper-token-flash'
 import { hashHelperToken, helperRateOk, helperTokenAllows, helperTokenMatches, newHelperToken, resetHelperRates } from '../../src/lib/helper-token'
 import { helperAttachResult, packSaveNotice, publishNotice } from '../../src/lib/publish-state'
 import { punctuateTimedCues } from '../../src/lib/punctuate'
-import { bringInFlash, hiddenFromLearners, noteAfterTranscriptUpload, transcriptFor } from '../../src/lib/youtube'
-import { captionFlagFromListing, expandBringInText } from '../../src/lib/youtube-list'
+import { bringInFlash, hiddenFromLearners, ingestYoutubeUrl, interpretYtDlpOutput, noteAfterTranscriptUpload, transcriptFor, type TranscriptProvider } from '../../src/lib/youtube'
+import { captionFlagFromListing, expandBringInText, joinBringInErrors } from '../../src/lib/youtube-list'
 import { harvestSampleLesson } from '../../src/server/harvest'
 import { giveCourseToPackHolders } from '../../src/server/publish-holders'
 import { withWorkLock } from '../../src/lib/work-lock'
@@ -101,6 +101,86 @@ test('automatic captions count, unavailable films start unticked, and a broken l
     list: async () => ({ entries: [], error: 'That link did not return any films. Check it is a YouTube film, playlist or channel.' }),
   })
   assert.match(expanded.errors[0] || '', /AAAAAAAAAAAA/)
+})
+
+test('real yt-dlp unavailable lines fail a film whose title is an ordinary talk', async () => {
+  const title = 'Mercy in the heart'
+  assert.equal(isUnavailableFilm({ title }), false)
+  const samples = [
+    'ERROR: [youtube] 0_kvfVpTaUs: Video unavailable. This video is not available\nERROR: unable to download video data: HTTP Error 403: Forbidden\n',
+    "ERROR: [youtube] BaW_jenozKc: Private video. Sign in if you've been granted access to this video\n",
+    "ERROR: [youtube] jNQXAC9IVRw: This video is available to this channel's members on level: Supporter (members-only)\n",
+    'ERROR: [youtube] jNQXAC9IVRw: Join this channel to get access to members-only content like this video, and other exclusive videos.\n',
+  ]
+  for (const stderr of samples) {
+    const interpreted = interpretYtDlpOutput({ stdout: '', stderr, code: 1, files: [] })
+    assert.equal(interpreted.outcome, 'unavailable', stderr)
+    assert.match(interpreted.message, /It will not be tried again/)
+    assert.equal(captionFlagFromListing(stderr, 'en'), 'unavailable')
+    const provider: TranscriptProvider = {
+      name: 'yt-dlp',
+      async fetch() {
+        this.lastOutcome = interpreted.outcome
+        this.lastProblem = interpreted.message
+        return null
+      },
+    }
+    const ingested = await ingestYoutubeUrl('https://www.youtube.com/watch?v=0_kvfVpTaUs', {
+      providers: [provider],
+      meta: async () => ({ id: '0_kvfVpTaUs', title, author: 'A speaker', thumbnail: '' }),
+      duration: async () => 600,
+    })
+    assert.equal(ingested.ok, false)
+    if (ingested.ok) continue
+    assert.equal(ingested.captionOutcome, 'unavailable')
+    assert.equal(isUnavailableFilm({ title, error: 'YouTube asked this server to sign in, so the captions are waiting for a transcript.' }), false)
+    const decision = decideBringInWrite(ingested, true, 'en')
+    assert.equal(decision.bucket, 'failed')
+    assert.match(decision.note, /^Bring-in: failed/)
+    assert.doesNotMatch(decision.note, /^Bring-in: waiting/)
+  }
+  const onStdout = interpretYtDlpOutput({
+    stdout: 'ERROR: [youtube] 0_kvfVpTaUs: This video is unavailable\n',
+    stderr: 'ERROR: HTTP Error 403: Forbidden\n',
+    code: 1,
+    files: [],
+  })
+  assert.equal(onStdout.outcome, 'unavailable')
+  const format = interpretYtDlpOutput({ stdout: '', stderr: 'WARNING: Requested format is not available\n', code: 1, files: [] })
+  assert.equal(format.outcome, 'failed')
+  const row = {
+    id: '0_kvfVpTaUs',
+    url: 'https://youtu.be/0_kvfVpTaUs',
+    title,
+    durationSeconds: 600,
+    channel: 'A channel',
+    channelId: 'UCabc',
+    lineSpeaker: '',
+  }
+  const unticked = markBringInSkips([{ ...row, captions: 'unavailable' }], new Set())
+  assert.equal(unticked[0].selected, false)
+  assert.equal(unticked[0].skipReason, 'unavailable')
+  const stillTicked = markBringInSkips([{ ...row, captions: 'unknown' }], new Set())
+  assert.equal(stillTicked[0].selected, true)
+  const listed = parseFlatPlaylistLine('0_kvfVpTaUs\tMercy in the heart\t600\tA channel\tUCabc\tunavailable')
+  assert.equal(listed?.captions, 'unavailable')
+  const previous = process.env.HEARTS_CAPTION_BOT_WALL
+  delete process.env.HEARTS_CAPTION_BOT_WALL
+  const kept = await transcriptFor('0_kvfVpTaUs', [
+    { name: 'yt-dlp', lastOutcome: 'unavailable', lastProblem: samples[0], fetch: async () => null },
+    { name: 'youtube-transcript', lastOutcome: 'blocked', lastProblem: 'YouTube asked this server to sign in.', fetch: async () => null },
+  ])
+  if (previous == null) delete process.env.HEARTS_CAPTION_BOT_WALL
+  else process.env.HEARTS_CAPTION_BOT_WALL = previous
+  assert.equal(kept.outcome, 'unavailable')
+})
+
+test('a paste names every bad link', async () => {
+  const expanded = await expandBringInText('https://example.com/one\nhttps://vimeo.com/two', { probeCaptions: false })
+  assert.equal(expanded.errors.length, 2)
+  const notice = joinBringInErrors(expanded.errors)
+  assert.match(notice, /example\.com\/one/)
+  assert.match(notice, /vimeo\.com\/two/)
 })
 
 test('a helper attach stays a draft, and unavailable films do not fail the run', () => {
