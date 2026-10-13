@@ -43,6 +43,7 @@ export async function MasterOpening(ctx: MasterCtx) {
   const laneTitle = (value: unknown) => str(lanes.find((lane) => lane.id === idOf(value))?.title)
   return (
     <Frame ctx={ctx} active="opening" title="Opening scenes" intro="The six scenes a newcomer meets before the feed. Each tap nudges the heart scales a little and may name a lane. Publishing checks the rules: four to six options, no words on the kill list, one crisis option across all scenes, and no nudges on scales that are not read at first open." testId="master-opening">
+      <div id="opening-scenes">
       <section className="panel" style={{ marginBottom: 18 }} data-testid="player-flags">
         <header className="light"><h2>Player layout</h2><span className="hint">Applies to every portal</span></header>
         <form className="body form" action="/api/hearts" method="post">
@@ -115,6 +116,7 @@ export async function MasterOpening(ctx: MasterCtx) {
           </section>
         )
       })}
+      </div>
     </Frame>
   )
 }
@@ -268,7 +270,7 @@ export async function MasterSimulator(ctx: MasterCtx) {
   const scaleNames = Object.fromEntries(SCALES.map((scale) => [scale.key, scale.leonName]))
   return (
     <Frame ctx={ctx} active="simulator" title="Simulator" intro="Pick a tap for each scene and see what the phone would work out: the scales, the lane scores and the first feed. It runs the same code as the app and keeps nothing." testId="master-simulator">
-      <form className="actions" style={{ marginBottom: 14 }}>
+      <form id="simulator" className="actions" style={{ marginBottom: 14 }}>
         <label>Portal <select name="portal" defaultValue={slug}>{portals.map((row) => <option key={row.id} value={str(row.slug)}>{str(row.name)}</option>)}</select></label>
         <button className="btn ghost small" type="submit">Use this portal</button>
       </form>

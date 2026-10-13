@@ -81,7 +81,7 @@ export async function BringInBody({
       {secret ? (
         <p className="flash notice" data-testid="helper-token-once">Copy this helper token now. It is stored as a hash and will not be shown again. <code data-testid="helper-token-value">{secret}</code></p>
       ) : null}
-      <section className="panel">
+      <section className="panel" id="bring-in-paste">
         <header>
           <div>
             <h2>Paste links <HelpTip topic="bring-in-paste">{TOOL.bringInPaste}</HelpTip></h2>

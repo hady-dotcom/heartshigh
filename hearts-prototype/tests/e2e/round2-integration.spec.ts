@@ -51,7 +51,8 @@ test('no hoopoe or Hudhud on sign-in, Home, the feed, the garden, Me, the desks 
   }
 
   await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${PORTAL}/admin`)
-  await expect(page.getByTestId('desk-narrow')).toBeVisible()
+  await expect(page.getByTestId('admin-overview')).toBeVisible()
+  await expect(page.getByTestId('nav-teach')).toBeVisible()
   await clean(page, 'desk on a phone')
 
   await page.setViewportSize(DESK)

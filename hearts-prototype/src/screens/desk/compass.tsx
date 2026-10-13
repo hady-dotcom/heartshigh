@@ -76,7 +76,7 @@ export async function PortalCompassScreen(ctx: Ctx) {
   const learners = visiblePeople(summary.learners, hideTest)
   return (
     <AdminFrame ctx={ctx} active="compass" title="Compass" intro="Scores run from -10 to +10. Learners see a gentle Focusing on line, never a label and never a number." testId="compass-portal">
-      <section className="panel" data-testid="cohort" style={{ marginBottom: 18 }}>
+      <section className="panel" id="compass-circle" data-testid="cohort" style={{ marginBottom: 18 }}>
         <header><h2>The circle, with no names <HelpTip topic="compass-scores">{TOOL.compassScores}</HelpTip></h2><span className="hint">{learners.length} learners</span></header>
         <div className="body cohort">
           <div data-testid="cohort-personas">

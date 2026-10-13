@@ -24,6 +24,7 @@ export function DeskNav({ groups, active }: { groups: NavGroup[]; active: string
         <details
           key={group.group}
           className="nav-group"
+          open
           data-group={group.group}
           data-testid={`nav-group-${group.group.toLowerCase().replace(/\s+/g, '-')}`}
         >

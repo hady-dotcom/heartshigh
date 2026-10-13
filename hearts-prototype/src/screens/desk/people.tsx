@@ -62,8 +62,8 @@ export async function TeachScreen(ctx: Ctx) {
     return slots
   }
   return (
-    <AdminFrame ctx={ctx} active="teach" title="Teach" intro="See how each learner is getting on, reply to what they have shared, and leave notes on their recordings." testId="admin-teach">
-      <section className="panel" style={{ marginBottom: 18 }}>
+    <AdminFrame ctx={ctx} active="teach" title="Learners" intro="See how each learner is getting on, reply to what they have shared, and leave notes on their recordings." testId="admin-teach">
+      <section className="panel" id="learner-list" style={{ marginBottom: 18 }}>
         <header className="light">
           <h2 data-testid="learner-count">Learners ({learners.length})</h2>
           <HideTestFilter action={here} hide={hideTest} />
@@ -242,7 +242,7 @@ export async function PlansScreen(ctx: Ctx) {
   return (
     <AdminFrame ctx={ctx} active="plans" title="Study plans" intro="Share a course out across chosen days for one learner or a whole group. The parts stay in order and are spread evenly, so no day is left empty at the end. Learners can still watch at their own pace." testId="admin-plans">
       <div className="grid" style={{ gridTemplateColumns: 'minmax(340px, 1fr) minmax(0, 1.6fr)', alignItems: 'start' }}>
-        <section className="panel">
+        <section className="panel" id="new-plan">
           <header><div><h2>New plan</h2></div></header>
           <form id="new-plan" className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'schedule', portalSlug: portal.slug, targetType: 'course', next: here }} />
@@ -346,7 +346,7 @@ export async function NightsScreen(ctx: Ctx) {
           {!events.length ? <section className="panel"><div className="body"><ExampleInUse desk title="Circle after Isha" action={{ href: '#plan-a-night', label: 'Plan a night' }}><p>Thursday · the hall · a short note for people coming</p></ExampleInUse></div></section> : null}
         </div>
         {user.role !== 'teacher' ? (
-          <section className="panel">
+          <section className="panel" id="plan-a-night">
             <header><div><h2>Plan a night</h2><p>People with night alerts on are told straight away</p></div></header>
             <form id="plan-a-night" className="body form" action="/api/hearts" method="post">
               <Hidden fields={{ action: 'create-event', portalSlug: portal.slug, next: here }} />

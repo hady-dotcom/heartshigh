@@ -180,7 +180,7 @@ export async function MasterLibrary(ctx: MasterCtx) {
             </table>
           </div>
         </section>
-        <section className="panel">
+        <section className="panel" id="new-library-course">
           <header><div><h2>New library course</h2></div></header>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-course', origin: 'master', next: '/master/library' }} />
@@ -256,7 +256,7 @@ export async function MasterPacks(ctx: MasterCtx) {
             </table>
           </div>
         </section>
-        <section className="panel">
+        <section className="panel" id="new-pack">
           <header><div><h2>New library pack</h2></div></header>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-pack', owner: 'master', next: '/master/packs' }} />
@@ -299,7 +299,7 @@ export async function MasterQuestions(ctx: MasterCtx) {
             </table>
           </div>
         </section>
-        <section className="panel">
+        <section className="panel" id="new-question">
           <header><div><h2>New question</h2><p>Put the door after a bar, for example: With prayer | W5. A clause number still works: With prayer | 15</p></div></header>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'placing-question', next: '/master/questions' }} />

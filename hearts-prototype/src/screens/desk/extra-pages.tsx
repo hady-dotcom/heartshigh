@@ -11,9 +11,9 @@ import { DeskFrame, masterNav } from './shell'
 
 type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string }; origin?: string }
 
-function Frame({ ctx, active, title, intro, testId, showOnPhone, children }: { ctx: MasterCtx; active: string; title: string; intro: string; testId: string; showOnPhone?: boolean; children: React.ReactNode }) {
+function Frame({ ctx, active, title, intro, testId, showOnPhone, primary, children }: { ctx: MasterCtx; active: string; title: string; intro: string; testId: string; showOnPhone?: boolean; primary?: { label: string; href: string }; children: React.ReactNode }) {
   return (
-    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId} showOnPhone={showOnPhone}>
+    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId} showOnPhone={showOnPhone} primary={primary}>
       {children}
     </DeskFrame>
   )
@@ -22,8 +22,9 @@ function Frame({ ctx, active, title, intro, testId, showOnPhone, children }: { c
 export async function MasterLearners(ctx: MasterCtx) {
   const people = (await rows(ctx.payload, 'users', undefined, { limit: 400, sort: 'name' })).filter((row) => row.role === 'learner')
   const portals = await rows(ctx.payload, 'portals', undefined, { sort: 'name' })
+  const first = portals[0]
   return (
-    <Frame ctx={ctx} active="learners" title="Learners" intro="Everyone learning across the portals." testId="master-learners">
+    <Frame ctx={ctx} active="learners" title="Learners" intro="Everyone learning across the portals." testId="master-learners" primary={first ? { label: 'Open their portal', href: `/p/${str(first.slug)}/admin/teach` } : undefined}>
       <section className="panel">
         <div className="table-wrap">
           <table className="data">
@@ -95,9 +96,13 @@ export async function MasterCodes(ctx: MasterCtx) {
 }
 
 export async function MasterPlans(ctx: MasterCtx) {
-  const plans = await rows(ctx.payload, 'schedules', undefined, { sort: '-createdAt', limit: 80 })
+  const [plans, portals] = await Promise.all([
+    rows(ctx.payload, 'schedules', undefined, { sort: '-createdAt', limit: 80 }),
+    rows(ctx.payload, 'portals', undefined, { sort: 'name', limit: 1 }),
+  ])
+  const slug = str(portals[0]?.slug)
   return (
-    <Frame ctx={ctx} active="plans" title="Study plans" intro="Plans learners and teachers have shared out across the days." testId="master-plans">
+    <Frame ctx={ctx} active="plans" title="Study plans" intro="Plans learners and teachers have shared out across the days." testId="master-plans" primary={slug ? { label: 'Make a plan', href: `/p/${slug}/admin/plans` } : undefined}>
       <section className="panel">
         <div className="table-wrap">
           <table className="data">
@@ -120,9 +125,13 @@ export async function MasterPlans(ctx: MasterCtx) {
 }
 
 export async function MasterNights(ctx: MasterCtx) {
-  const events = await rows(ctx.payload, 'events', undefined, { sort: 'startsAt', limit: 80 })
+  const [events, portals] = await Promise.all([
+    rows(ctx.payload, 'events', undefined, { sort: 'startsAt', limit: 80 }),
+    rows(ctx.payload, 'portals', undefined, { sort: 'name', limit: 1 }),
+  ])
+  const slug = str(portals[0]?.slug)
   return (
-    <Frame ctx={ctx} active="nights" title="Live" intro="Nights and gatherings across the portals." testId="master-nights">
+    <Frame ctx={ctx} active="nights" title="Nights" intro="Nights and gatherings across the portals." testId="master-nights" primary={slug ? { label: 'Plan a night', href: `/p/${slug}/admin/nights` } : undefined}>
       <section className="panel">
         <div className="table-wrap">
           <table className="data">
