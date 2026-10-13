@@ -45,6 +45,14 @@ export function doorLabel(door: Pick<Door, 'number' | 'title'>) {
   return `${doorCode(door.number)} · ${capitalAfterColon(door.title)}`
 }
 
+/** Select text. The code is not repeated when the label already starts with it, so a door never reads "W1 · W1". */
+export function doorOptionLabel(door: Pick<Door, 'number' | 'title'>) {
+  const label = doorLabel(door)
+  const code = doorCode(door.number)
+  if (label === code || label.startsWith(`${code} `) || label.startsWith(`${code}·`) || label.startsWith(`${code} ·`)) return label
+  return `${code} · ${label}`
+}
+
 /** "Door 16 · Ihsan: Worship as though you see Him". Live desks never show the W-code. */
 export function doorSpokenLabel(door: Pick<Door, 'number' | 'title'>) {
   return `Door ${door.number} · ${capitalAfterColon(door.title)}`

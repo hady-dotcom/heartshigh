@@ -182,22 +182,57 @@ export function hiddenFromLearners(note: string | null | undefined) {
   return status === 'failed' || status === 'waiting' || status === 'processing' || status === 'queued'
 }
 
+/** Waiting, queued, processing, or failed films are not ready to show. */
+export function captionsBlockPublish(note: string | null | undefined) {
+  return hiddenFromLearners(note)
+}
+
+const CAPTION_PUBLISH_GIVE = '[publish-when-captions-give]'
+const CAPTION_PUBLISH_MARK = '[publish-when-captions]'
+
+/** A talk marked to publish itself once a transcript is attached. Give is remembered with the mark. */
+export function captionPublishPlan(note: string | null | undefined) {
+  const text = String(note || '')
+  if (text.includes(CAPTION_PUBLISH_GIVE)) return { scheduled: true, give: true }
+  if (text.includes(CAPTION_PUBLISH_MARK)) return { scheduled: true, give: false }
+  return { scheduled: false, give: false }
+}
+
+export function withCaptionPublishPlan(note: string | null | undefined, give: boolean) {
+  const stripped = String(note || '').split(CAPTION_PUBLISH_GIVE).join('').split(CAPTION_PUBLISH_MARK).join('').replace(/\s+/g, ' ').trim()
+  return `${stripped} ${give ? CAPTION_PUBLISH_GIVE : CAPTION_PUBLISH_MARK}`.trim()
+}
+
 /**
  * A transcript on a failed or dead-link film stays hidden. Learners see a part only when the film plays.
  * A film that was waiting (the video exists, the captions did not) becomes visible once a transcript is attached.
  */
 export function noteAfterTranscriptUpload(existingNote: string | null | undefined, fileName: string, publishState?: string | null) {
   const name = String(fileName || 'the file').slice(0, 80)
+  const plan = captionPublishPlan(existingNote)
   if (bringInStatus(existingNote) === 'failed') {
     return {
       hidden: true,
+      publishState: 'draft' as const,
+      give: false,
       transcriptNote: bringInNote('failed', `A transcript from ${name} was saved. The film does not play, so learners do not see this part.`, bringInLang(existingNote)),
       notice: 'The transcript is saved. This film does not play, so learners still do not see it.',
+    }
+  }
+  if (plan.scheduled) {
+    return {
+      hidden: false,
+      publishState: 'published' as const,
+      give: plan.give,
+      transcriptNote: bringInNote('processed', `A transcript from ${name} was saved. Captions are in, so this talk is published.`, bringInLang(existingNote)),
+      notice: 'Captions are in, so this talk is published. Learners who already have this course can see it.',
     }
   }
   if (publishState === 'draft') {
     return {
       hidden: true,
+      publishState: 'draft' as const,
+      give: false,
       transcriptNote: bringInNote('processed', `A transcript from ${name} was saved. This talk is still a draft.`, bringInLang(existingNote)),
       notice: 'The transcript is saved. This talk is still a draft, so learners cannot see it until you publish it.',
     }
@@ -205,11 +240,13 @@ export function noteAfterTranscriptUpload(existingNote: string | null | undefine
   if (publishState === 'published') {
     return {
       hidden: false,
+      publishState: 'published' as const,
+      give: false,
       transcriptNote: `Uploaded from ${name}.`,
       notice: 'Transcript uploaded. Learners who already have this course can see this talk.',
     }
   }
-  return { hidden: false, transcriptNote: `Uploaded from ${name}.`, notice: 'Transcript uploaded.' }
+  return { hidden: false, publishState: undefined, give: false, transcriptNote: `Uploaded from ${name}.`, notice: 'Transcript uploaded.' }
 }
 
 /** Try again keeps a speaker already named on the film when the line does not name a new one. */

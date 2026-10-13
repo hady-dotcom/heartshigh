@@ -16,11 +16,11 @@ import { expandBringInText, joinBringInErrors } from '@/lib/youtube-list'
 import { newHelperToken } from '@/lib/helper-token'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { withWorkLock } from '@/lib/work-lock'
-import { bringInFlash, bringInNote, bringInStatus, captionLang, ingestYoutubeUrl, type YoutubeMeta } from '@/lib/youtube'
+import { bringInFlash, bringInNote, bringInStatus, captionLang, captionsBlockPublish, ingestYoutubeUrl, withCaptionPublishPlan, type YoutubeMeta } from '@/lib/youtube'
 import { decideBringInWrite, draftLessonWhere } from '@/lib/bring-in-plan'
 import type { SessionUser } from './context'
 import { giveCourseToPackHolders, packsContaining } from './publish-holders'
-import { publishNotice } from '@/lib/publish-state'
+import { captionReadyNotice, publishNotice } from '@/lib/publish-state'
 
 type Doc = Record<string, unknown> & { id: number }
 
@@ -104,6 +104,12 @@ export async function previewBringIn(payload: Payload, user: SessionUser, form: 
     jibril,
     ghunya,
   }))
+  const placed = await placeBringInRows(marked, {
+    catalogue: loadPlaceCatalogue(),
+    presetJibril: jibril,
+    presetGhunya: ghunya,
+    fetchTranscript: async (id) => (await transcriptFor(id, undefined, { lang })).transcript,
+  })
   const courseId = Number(text(form, 'course') || 0) || null
   const origin = user.role === 'master' && text(form, 'origin') !== 'local' ? 'master' : 'local'
   const body: PreviewBody = {
@@ -113,14 +119,12 @@ export async function previewBringIn(payload: Payload, user: SessionUser, form: 
     lang,
     origin,
     portalId: origin === 'local' ? portalIdOf(user) : null,
-    rows: marked,
+    rows: placed,
   }
   if (body.courseId) {
     const course = await payload.findByID({ collection: 'courses', id: body.courseId, depth: 0, overrideAccess: true }).catch(() => null)
     const denied = editDenied(user, course as { origin?: string; portal?: unknown } | null)
     if (denied) return { error: denied }
-  } else if (!body.newTitle) {
-    return { error: 'Pick a course, or type a name for a new one.' }
   }
   const doc = await payload.create({
     collection: 'bring-in-previews',
@@ -374,6 +378,52 @@ export async function publishTalks(payload: Payload, user: SessionUser, form: Fo
       holdersUpdated: given.updated,
       holdersLive: given.live,
     }),
+  }
+}
+
+/** Publish talks that already have captions, and mark the rest to publish when captions arrive. */
+export async function schedulePublishWhenCaptions(payload: Payload, user: SessionUser, form: FormData) {
+  if (!canBring(user)) return { error: 'You cannot publish a talk.' }
+  const ids = [...new Set(form.getAll('lesson').map((value) => Number(value)).filter((id) => id > 0))]
+  if (!ids.length) return { error: 'Choose at least one talk to publish.' }
+  const give = text(form, 'giveHolders') === 'yes'
+  const lessons = await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: ids.length, where: { id: { in: ids } } })
+  if (lessons.docs.length !== ids.length) return { error: 'One of those talks could not be found.' }
+  let published = 0
+  let waiting = 0
+  let failed = 0
+  const publishedCourses = new Set<number>()
+  for (const lesson of lessons.docs as unknown as Doc[]) {
+    const courseId = idOf(lesson.course)
+    const course = courseId ? await payload.findByID({ collection: 'courses', id: courseId, depth: 0, overrideAccess: true }).catch(() => null) : null
+    const denied = editDenied(user, course as { origin?: string; portal?: unknown } | null)
+    if (denied) return { error: denied }
+    const note = String(lesson.transcriptNote || '')
+    const status = bringInStatus(note)
+    if (status === 'failed') {
+      failed++
+      continue
+    }
+    if (captionsBlockPublish(note)) {
+      const marked = withCaptionPublishPlan(note, give)
+      const mark = give ? '[publish-when-captions-give]' : '[publish-when-captions]'
+      const transcriptNote = marked.length <= 500 ? marked : `${marked.slice(0, 499 - mark.length).trim()} ${mark}`
+      await payload.update({
+        collection: 'lessons',
+        id: lesson.id,
+        overrideAccess: true,
+        data: { transcriptNote } as never,
+      })
+      waiting++
+      continue
+    }
+    await payload.update({ collection: 'lessons', id: lesson.id, overrideAccess: true, data: { publishState: 'published' } as never })
+    published++
+    if (courseId) publishedCourses.add(courseId)
+  }
+  const given = give && publishedCourses.size ? await giveCourseToPackHolders(payload, [...publishedCourses]) : { updated: 0, live: 0, users: [] as number[] }
+  return {
+    notice: captionReadyNotice({ published, waiting, failed, give, holdersUpdated: given.updated }),
   }
 }
 

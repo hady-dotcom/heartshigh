@@ -1,4 +1,4 @@
-import { hiddenFromLearners } from './youtube'
+import { captionPublishPlan, hiddenFromLearners } from './youtube'
 
 /** Missing means the row predates drafts. Those talks stay published. */
 export function isDraftLesson(row: { publishState?: string | null } | null | undefined) {
@@ -9,12 +9,40 @@ export function isDraftLesson(row: { publishState?: string | null } | null | und
  * Attaching a transcript never publishes. A talk that had none stays or becomes a draft.
  * Round 1 talks that are already marked published still come back as drafts.
  */
-export function helperAttachResult() {
-  return {
-    publishState: 'draft' as const,
-    learnersCanSee: false,
-    message: 'It stays a draft until someone publishes it. Learners cannot see it yet.',
+export function helperAttachResult(existingNote?: string | null, options?: { unavailable?: boolean }) {
+  const plan = captionPublishPlan(existingNote)
+  if (options?.unavailable || !plan.scheduled) {
+    return {
+      publishState: 'draft' as const,
+      learnersCanSee: false,
+      give: false,
+      message: 'It stays a draft until someone publishes it. Learners cannot see it yet.',
+    }
   }
+  return {
+    publishState: 'published' as const,
+    learnersCanSee: true,
+    give: plan.give,
+    message: 'Captions are in, so this talk is published. Learners who already have this course can see it.',
+  }
+}
+
+export function captionReadyNotice(input: { published: number; waiting: number; failed: number; give: boolean; holdersUpdated: number }) {
+  const bits: string[] = []
+  if (input.published) bits.push(`Published ${input.published} talk${input.published === 1 ? '' : 's'} that already had captions.`)
+  if (input.waiting) {
+    bits.push(`${input.waiting} will publish when captions are ready. You do not need to publish ${input.waiting === 1 ? 'that one' : 'those'} by hand.`)
+  }
+  if (input.failed) bits.push(`${input.failed} failed, so ${input.failed === 1 ? 'it stays a draft' : 'they stay drafts'}.`)
+  if (!bits.length) bits.push('Choose at least one talk.')
+  if (input.give && input.published && input.holdersUpdated) {
+    bits.push(`Added the course to ${input.holdersUpdated} learner${input.holdersUpdated === 1 ? '' : 's'} who already hold the pack.`)
+  }
+  if (input.give && input.waiting) bits.push('When the captions arrive, learners who already hold the pack are given the course too.')
+  if (!input.give && (input.published || input.waiting)) {
+    bits.push('People who hold a pack with this course, but joined before it was on their list, were left as they are.')
+  }
+  return bits.join(' ')
 }
 
 /** Learners see a talk only after it is published and the film is ready. */
