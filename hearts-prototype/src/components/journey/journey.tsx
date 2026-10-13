@@ -22,6 +22,7 @@ import { courseCatcherTap } from '@/lib/course-controls'
 import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, applyPauseWhenReady, bufferRetryAction, clockIsStalled, endCardPlayerAction, endedEventIsCurrent, horsWindowEnded, hostShouldShow, keepVisiblePaused, livePictureTap, pictureIsTap, pictureSwipeCommit, planFilmAdvance, playbackAction, playbackAdvancing, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe, afterClipEnds, pictureTapPlan, sheetPollAction, type EndAdvanceSource } from '@/lib/film-advance'
 import { acceptLevelTap, type LevelTap } from '@/lib/level-tap'
 import { NO_EXTRACT, NO_EXTRACT_LABEL, NO_TALK, NO_TALK_LABEL, hasFullTalk, hasLongerExtract, levelSwitchPlan } from '@/lib/level-choice'
+import { appetiserSpans, piecePoint } from '@/lib/clip-piece'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, hydrateSound, lowData, playOnly, playerSnapshot, preloadApi, setHidden, silence, silenceHidden, silenceOthers, soundOn, type PlayerKind } from '@/lib/yt'
 import { PageHelp } from '@/components/app/page-help'
 import { Arch } from '@/components/arch'
@@ -99,7 +100,7 @@ const HOLD = 700
 /** A player in any other state shows YouTube's own titled thumbnail or end screen, so our poster covers it. */
 const LIVE = new Set<number>([STATE.PLAYING, STATE.PAUSED, STATE.BUFFERING])
 
-const appetiserEnd = (item: FeedItem) => appetiserStop(item.appetiser)
+const appetiserEnd = (item: { appetiser?: FeedItem['appetiser'] | null }) => (item.appetiser ? appetiserStop(item.appetiser) : 0)
 
 function clock(total: number) {
   const value = Math.max(0, Math.round(total))
@@ -198,6 +199,7 @@ export function Journey(props: JourneyProps) {
   const [sheet, setSheet] = useState<SheetReason | null>(null)
   const sheetRef = useRef<SheetReason | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [missingTalkCut, setMissingTalkCut] = useState<number | null>(null)
   const [notForMe, setNotForMe] = useState(false)
   const [faves, toggleFave] = useStoredSet('hearts.faves.v1')
   const [saved, toggleSave] = useStoredSet('hearts.saved.v1')
@@ -431,11 +433,13 @@ export function Journey(props: JourneyProps) {
     if (kind === 'hors' && (item.card === 'film' || item.card === 'text' || item.card === 'question')) return null
     if (kind === 'hors' && (item.style || item.card === 'scene' || item.typography?.src)) return null
     if (kind === 'appetiser') {
-      const spans = item.appetiser.spans
-      const multi = Boolean(spans && spans.length > 1)
-      return { key: `${item.cutId}:appetiser`, videoId: item.youtubeId, start: spans?.length ? spans[0].start : item.appetiser.start, end: multi ? null : appetiserEnd(item), kind: 'appetiser' }
+      const appetiser = item.appetiser
+      if (!appetiser) return null
+      const spans = appetiserSpans(item)
+      const multi = spans.length > 1
+      return { key: `${item.cutId}:appetiser`, videoId: item.youtubeId, start: spans.length ? piecePoint(spans[0], 'start') : piecePoint(appetiser, 'start'), end: multi ? null : appetiserEnd(item), kind: 'appetiser' }
     }
-    return { key: `${item.cutId}:hors`, videoId: item.youtubeId, start: item.hors.start, end: item.hors.end, kind: 'hors' }
+    return { key: `${item.cutId}:hors`, videoId: item.youtubeId, start: piecePoint(item.hors, 'start'), end: piecePoint(item.hors, 'end'), kind: 'hors' }
   }, [])
 
   // Ask again for several seconds after a load. playVideo in the same turn as loadVideoById
@@ -721,7 +725,7 @@ export function Journey(props: JourneyProps) {
         setSeenCuts(seen.cuts)
       }
       writeFeedPlace(item ? { cutId: item.cutId, mode: kind, card: item.card || 'talk' } : null)
-      watch.current = { key: `${item?.cutId}:${kind}:${item?.card || 'talk'}`, start: kind === 'hors' ? item?.hors.start || 0 : item?.appetiser.start || 0, furthest: 0, done90: false, ended: false }
+      watch.current = { key: `${item?.cutId}:${kind}:${item?.card || 'talk'}`, start: kind === 'hors' ? piecePoint(item?.hors, 'start') : piecePoint(item?.appetiser, 'start'), furthest: 0, done90: false, ended: false }
       // The new card is on screen (and sliding in) before any player work starts.
       if (onShown) await onShown()
       const spec = specFor(item, kind)
@@ -890,6 +894,7 @@ export function Journey(props: JourneyProps) {
     const level = modeRef.current
     if (!current?.lessonId || (level !== 'hors' && level !== 'appetiser')) return
     const piece = level === 'hors' ? current.hors : current.appetiser
+    if (!piece) return
     const seconds = harvestAt(piece)
     if (!Number.isFinite(seconds)) return
     const key = `${current.lessonId}:${level}:${Math.round(seconds)}`
@@ -1048,7 +1053,7 @@ export function Journey(props: JourneyProps) {
       const spec = specFor(starter, 'hors')
       indexRef.current = 0
       setIndex(0)
-      watch.current = { key: `${starter?.cutId}:hors`, start: starter?.hors.start || 0, furthest: 0, done90: false, ended: false }
+      watch.current = { key: `${starter?.cutId}:hors`, start: piecePoint(starter?.hors, 'start'), furthest: 0, done90: false, ended: false }
       if (spec) {
         const holder: 0 | 1 = hosts.current[0].playerId ? 0 : hosts.current[1].playerId ? 1 : 0
         setVisibleHost(holder)
@@ -1200,6 +1205,7 @@ export function Journey(props: JourneyProps) {
     const level = modeRef.current
     if (!current || (level !== 'hors' && level !== 'appetiser')) return
     const piece = level === 'hors' ? current.hors : current.appetiser
+    if (!piece) return
     const parent = (level === 'hors' ? current.parents?.hors.parentId : current.parents?.appetiser.parentId) || ''
     const form = new FormData()
     form.set('action', 'browse')
@@ -1446,16 +1452,16 @@ export function Journey(props: JourneyProps) {
       const seen = watch.current
       seen.furthest = Math.max(seen.furthest, time - seen.start)
       // The player's own end mark is skipped when someone seeks past it, so the appetiser stops here as well.
-      const lines = modeRef.current === 'hors' ? current.hors.lines : current.appetiser.lines
+      const lines = modeRef.current === 'hors' ? current.hors?.lines : current.appetiser?.lines
       const showing = captionIndex(lines, time)
       setLineAt((held) => (held === showing ? held : showing))
-      const clipFrom = modeRef.current === 'hors' ? current.hors.start : current.appetiser.start
-      const clipTo = modeRef.current === 'hors' ? current.hors.end : appetiserEnd(current)
+      const clipFrom = modeRef.current === 'hors' ? piecePoint(current.hors, 'start') : piecePoint(current.appetiser, 'start')
+      const clipTo = modeRef.current === 'hors' ? piecePoint(current.hors, 'end') : appetiserEnd(current)
       if (time >= clipFrom - 0.5 && time <= clipTo + 0.5) {
         setSpokenAt((held) => (held !== null && Math.abs(held - time) < 0.35 ? held : time))
       }
-      const spans = current.appetiser.spans
-      if (modeRef.current === 'appetiser' && spans && spans.length > 1) {
+      const spans = appetiserSpans(current)
+      if (modeRef.current === 'appetiser' && spans.length > 1) {
         const join = appetiserJoin(spans, time)
         if (join.action === 'seek' && join.at != null) {
           if (spanJoin.current !== join.at) {
@@ -1490,7 +1496,7 @@ export function Journey(props: JourneyProps) {
       // The player's own end mark is a whole second; the clip stops at its real out point, between sentences.
       const currentSpec = specFor(current, modeRef.current)
       if (host.spec?.key !== currentSpec?.key) return
-      if (modeRef.current === 'hors' && (!current.card || current.card === 'talk') && horsWindowEnded(time, current.hors.start, current.hors.end)) {
+      if (modeRef.current === 'hors' && (!current.card || current.card === 'talk') && horsWindowEnded(time, piecePoint(current.hors, 'start'), piecePoint(current.hors, 'end'))) {
         if (!seen.done90) {
           seen.done90 = true
           signal('watched90')
@@ -1505,15 +1511,15 @@ export function Journey(props: JourneyProps) {
         return
       }
       if (modeRef.current === 'hors' && !seen.done90) {
-        const length = current.hors.end - current.hors.start
+        const length = piecePoint(current.hors, 'end') - piecePoint(current.hors, 'start')
         if (length > 0 && seen.furthest >= 0.9 * length) {
           seen.done90 = true
           signal('watched90')
           noteBrowse('linger')
         }
       }
-      const start = modeRef.current === 'hors' ? current.hors.start : current.appetiser.start
-      const end = modeRef.current === 'hors' ? current.hors.end : appetiserEnd(current)
+      const start = modeRef.current === 'hors' ? piecePoint(current.hors, 'start') : piecePoint(current.appetiser, 'start')
+      const end = modeRef.current === 'hors' ? piecePoint(current.hors, 'end') : appetiserEnd(current)
       const span = Math.max(0.5, end - start)
       const watchPct = Math.max(0, Math.min(100, Math.round(((time - start) / span) * 100)))
       const last = (seen as { lastInsightPct?: number }).lastInsightPct || 0
@@ -1586,9 +1592,9 @@ export function Journey(props: JourneyProps) {
     try {
       const host = hosts.current[visibleRef.current]
       const player = host.playerId ? getPlayer(host.playerId) : null
-      const time = player?.getCurrentTime?.() ?? current.hors.start
-      const start = modeRef.current === 'hors' ? current.hors.start : current.appetiser.start
-      const end = modeRef.current === 'hors' ? current.hors.end : appetiserEnd(current)
+      const time = player?.getCurrentTime?.() ?? piecePoint(current.hors, 'start')
+      const start = modeRef.current === 'hors' ? piecePoint(current.hors, 'start') : piecePoint(current.appetiser, 'start')
+      const end = modeRef.current === 'hors' ? piecePoint(current.hors, 'end') : appetiserEnd(current)
       const span = Math.max(0.5, end - start)
       const watchPct = Math.max(0, Math.min(100, Math.round(((time - start) / span) * 100)))
       window.dispatchEvent(new CustomEvent('hearts-insight', { detail: { kind: 'clip_swipe', clipId: String(current.cutId || current.id || ''), watchPct, lane: current.laneKey } }))
@@ -1764,19 +1770,39 @@ export function Journey(props: JourneyProps) {
     watchFull()
   }
 
-  const watchFull = () => {
-    const current = item || itemsRef.current[indexRef.current]
+  const clipOnScreen = () => boardItemForPlayer(itemsRef.current, indexRef.current, hosts.current[visibleRef.current].spec?.key) || itemsRef.current[indexRef.current]
+
+  const watchFull = async () => {
+    // The clip playing now, not the one a swipe has already left behind.
+    const current = clipOnScreen()
     if (!current) {
       setToast(NO_TALK)
       return
     }
     if (needsAccount('place')) return
     if (!hasFullTalk(current)) {
+      setMissingTalkCut(current.cutId)
       setToast(NO_TALK)
       return
     }
     const href = learnMore(current, 'appetiser', base)?.href
     if (!href) {
+      setMissingTalkCut(current.cutId)
+      setToast(NO_TALK)
+      return
+    }
+    let open = false
+    try {
+      const response = await fetch(`/api/hearts/talk-part?course=${current.courseId}&lesson=${current.lessonId}`, { headers: { accept: 'application/json' } })
+      open = response.ok && Boolean((await response.json()).open)
+    } catch {
+      open = false
+    }
+    // A swipe during the check must not open the clip we have already left.
+    const still = clipOnScreen()
+    if (!still || still.cutId !== current.cutId || still.lessonId !== current.lessonId) return
+    if (!open) {
+      setMissingTalkCut(current.cutId)
       setToast(NO_TALK)
       return
     }
@@ -1938,8 +1964,16 @@ export function Journey(props: JourneyProps) {
   useEffect(() => {
     const store = window as Window & { __HEARTS_FEED_SNAP?: () => ReturnType<typeof playerSnapshot> }
     store.__HEARTS_FEED_SNAP = () => playerSnapshot()
+    const testWindow = window as Window & { __HEARTS_CLEAR_APPETISER?: () => void }
+    testWindow.__HEARTS_CLEAR_APPETISER = () => {
+      const at = indexRef.current
+      const next = itemsRef.current.map((row, index) => (index === at ? { ...row, appetiser: null as unknown as FeedItem['appetiser'] } : row))
+      itemsRef.current = next
+      setItems(next)
+    }
     return () => {
       delete store.__HEARTS_FEED_SNAP
+      delete testWindow.__HEARTS_CLEAR_APPETISER
     }
   }, [])
 
@@ -2214,8 +2248,8 @@ export function Journey(props: JourneyProps) {
     horsLine,
     piece?.lines,
     [item?.lessonTitle, item?.courseTitle],
-    [item?.hook, item?.hookTidy, item?.turn, item?.turnTidy, item?.land, item?.landTidy, item?.hors.quote],
-    item?.hors.end,
+    [item?.hook, item?.hookTidy, item?.turn, item?.turnTidy, item?.land, item?.landTidy, item?.hors?.quote],
+    item?.hors?.end,
   )
   const videoAppetiser = mode === 'appetiser' && Boolean(item?.youtubeId)
   const scenicAppetiser = mode === 'appetiser' && !item?.youtubeId
@@ -2292,8 +2326,8 @@ export function Journey(props: JourneyProps) {
     </div>
   ) : null
 
-  const clipStart = item ? (mode === 'hors' ? item.hors.start : item.appetiser.start) : 0
-  const clipEnd = item ? (mode === 'hors' ? item.hors.end : appetiserEnd(item)) : 0
+  const clipStart = item ? (mode === 'hors' ? piecePoint(item.hors, 'start') : piecePoint(item.appetiser, 'start')) : 0
+  const clipEnd = item ? (mode === 'hors' ? piecePoint(item.hors, 'end') : appetiserEnd(item)) : 0
   const clipLength = Math.max(0, clipEnd - clipStart)
   const clipElapsed = spokenAt != null ? Math.max(0, Math.min(clipLength, spokenAt - clipStart)) : 0
   const clipPct = clipLength ? Math.min(100, (clipElapsed / clipLength) * 100) : 0
@@ -2301,7 +2335,7 @@ export function Journey(props: JourneyProps) {
   const nextClipAt = item ? swipeTarget(items, index, mode, 'next', props.lane ? undefined : seenRef.current, Boolean(props.lane)) : null
   const spokenSentences = item?.framingTrack?.sentences?.length
     ? item.framingTrack.sentences
-    : sentencesFromCaptions(mode === 'hors' ? item?.hors.lines : item?.appetiser.lines, clipStart, clipEnd)
+    : sentencesFromCaptions(mode === 'hors' ? item?.hors?.lines : item?.appetiser?.lines, clipStart, clipEnd)
   const pausedMark = pauseMarkVisible({ paused: clipPaused, ended: clipEnded, userPaused })
   const swallowPicture = () => {
     ignorePictureUntil.current = performance.now() + PICTURE_SWALLOW_MS
@@ -2394,7 +2428,7 @@ export function Journey(props: JourneyProps) {
     setSpokenAt(next)
   }
   const extractReady = !item || hasLongerExtract(item)
-  const talkReady = !item || hasFullTalk(item)
+  const talkReady = (!item || hasFullTalk(item)) && missingTalkCut !== item?.cutId
   const chrome = item && phase === 'feed' && !slide && !scenic ? (
     <>
       <div className="j-hairline-row">
