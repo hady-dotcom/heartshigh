@@ -206,7 +206,7 @@ export function LiveWatchClient({
               </li>
             )
           })}
-          {!questions.length ? <li className="muted">No questions yet. Be the first.</li> : null}
+          {!questions.length ? <li className="muted">No questions yet. Yours can be the first.</li> : null}
         </ul>
       </section>
     </div>

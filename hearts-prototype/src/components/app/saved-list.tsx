@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { SAVED_KEY, cutIdFromSaved, parseIdList, savedHref } from '@/lib/saved'
+import { ExampleInUse } from '@/components/app/care'
 import { cleanTitle, uniqueSavedTalks } from '@/lib/clean-title'
 
 type SavedMeta = Record<string, { talk?: string; title?: string }>
@@ -47,7 +48,16 @@ export function SavedList({ base }: { base: string }) {
       .catch(() => setReady(true))
   }, [ids])
   if (ids == null || (ids.length > 0 && !ready)) return <p className="muted" data-testid="saved-list">Loading saved clips…</p>
-  if (!ids.length) return <p className="muted" data-testid="saved-empty">Nothing saved on this phone yet. Tap Save on a clip and it will wait here.</p>
+  if (!ids.length) {
+    return (
+      <div data-testid="saved-empty">
+        <ExampleInUse title="Patience · a short clip" action={{ href: `${base}/feed`, label: 'Watch today’s clips' }}>
+          <p>Shaykh Mikaeel Smith · The Names</p>
+          <p className="hint">Opens in today’s clips</p>
+        </ExampleInUse>
+      </div>
+    )
+  }
   const unique = uniqueSavedTalks(ids, meta)
   return (
     <div className="saved-list" data-testid="saved-list">

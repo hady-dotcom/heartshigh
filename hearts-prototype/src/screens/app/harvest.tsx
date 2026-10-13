@@ -206,7 +206,11 @@ export async function GardenHarvest({ payload, user, portal, base, query }: Ctx)
           </section>
         ))}
         {!entries.length ? (
-          <EmptyState testId="harvest-empty" action={{ href: `${base}/lanes`, label: 'Watch a talk' }}>
+          <EmptyState
+            testId="harvest-empty"
+            action={{ href: `${base}/lanes`, label: 'Watch a talk' }}
+            example={{ title: 'A verse from the talk', body: <p>Qur’an 2:152 · So remember Me; I will remember you.</p> }}
+          >
             Nothing gathered yet. When you finish a talk, the verses and hadith it quotes are collected here.
           </EmptyState>
         ) : !shown.length ? (
@@ -338,7 +342,7 @@ async function openPanel(payload: Payload, entry: Row, view: View, href: (params
           <Link href={href({ item: entry.id, view: 'summary' }, anchor)} data-testid="scholars-summary">A short summary</Link>
           <Link href={href({ item: entry.id, view: 'tafsir' }, anchor)} data-testid="scholars-tafsir">Read the tafsir</Link>
         </div>
-        <p className="hint" data-testid="summary-source">A short summary is the short tafsir in its own words, kept with the scripture. Nothing here calls a model.</p>
+        <p className="hint" data-testid="summary-source">A short summary is the short tafsir in its own words, kept with the scripture.</p>
       </div>
     )
   }

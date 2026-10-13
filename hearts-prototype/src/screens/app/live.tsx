@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { AppFrame, Flash, TabBar } from '@/components/app/shell'
+import { ExampleInUse } from '@/components/app/care'
 import { ComingUp, LiveNowBanner } from '@/components/app/live-banner'
 import { LiveWatchClient } from '@/components/app/live-watch'
 import { canGoLive, canSeeLive } from '@/lib/live'
@@ -63,7 +64,14 @@ export async function LiveIndexScreen(ctx: Ctx) {
             ))}
           </section>
         ) : null}
-        {!live && !upcoming.length && !ended.length ? <p data-testid="live-empty">Nothing is live, and nothing is scheduled.</p> : null}
+        {!live && !upcoming.length && !ended.length ? (
+          <div data-testid="live-empty">
+            <ExampleInUse title="Circle after Isha" action={{ href: base, label: 'Back home' }}>
+              <p>Live now · with your teacher</p>
+              <p className="hint">When a talk is on, you can watch it and send a question from here.</p>
+            </ExampleInUse>
+          </div>
+        ) : null}
       </div>
       <TabBar base={base} active="home" unread={unread} />
     </AppFrame>
