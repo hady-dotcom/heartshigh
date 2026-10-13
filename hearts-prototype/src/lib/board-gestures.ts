@@ -97,6 +97,17 @@ export function boardClickAllowed(input: { openedAt: number; now: number; travel
   return boardSettled(input.openedAt, input.now, input.armMs)
 }
 
+/**
+ * Distance a More-sheet control should be judged by.
+ * A swipe often leaves the sheet holding an old pointerdown (the film took the
+ * pointerup). That leftover distance is not this tap. A click that arrives
+ * with no pointerup — a phone drops it after a swipe — is still a tap.
+ */
+export function boardControlTravel(input: { fromThisPress: boolean; clickOnly: boolean; staleTravel: number }) {
+  if (input.clickOnly || input.fromThisPress) return 0
+  return input.staleTravel
+}
+
 export function pointerTravel(from: { x: number; y: number }, to: { x: number; y: number }) {
   return Math.hypot(to.x - from.x, to.y - from.y)
 }

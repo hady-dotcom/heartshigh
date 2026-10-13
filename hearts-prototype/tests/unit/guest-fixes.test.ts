@@ -207,7 +207,7 @@ test('4: tabs, Me, the speaker page and the full talk ask to keep your place; Sa
   assert.match(guard, /needsAccount\('place'\)/)
   assert.doesNotMatch(guard, /needsAccount\('save'\)/)
   assert.match(journey, /data-testid="speaker-link" onClick=\{\(event\) => \{ if \(needsAccount\('place'\)\) event\.preventDefault\(\) \}\}/)
-  assert.match(between('const watchFull = () => {', 'const fave = ('), /needsAccount\('place'\)/)
+  assert.match(between('const watchFull = async () => {', 'const fave = ('), /needsAccount\('place'\)/)
   assert.match(journey, /<span onClickCapture=\{\(event\) => \{ if \(needsAccount\('save'\)\)[^\n]*<FollowButton/)
   assert.match(between('const fave = (', 'const share = '), /needsAccount\('save'\)/)
   assert.match(journey, /data-testid="save"[^\n]*needsAccount\('save'\)/)
