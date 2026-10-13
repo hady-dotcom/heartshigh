@@ -1,12 +1,24 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardAlreadyOpenAt, boardClickAllowed, boardShouldClose, boardShouldOpen, endCardAfterBoardClose, isDragEnd, moreAfterAdvanceThenScrim, pictureTapIgnored, pointerTravel, saveDuringAdvanceThenTap } from '../../src/lib/board-gestures'
+import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardAlreadyOpenAt, boardClickAllowed, boardControlTravel, boardShouldClose, boardShouldOpen, endCardAfterBoardClose, isDragEnd, moreAfterAdvanceThenScrim, pictureTapIgnored, pointerTravel, saveDuringAdvanceThenTap } from '../../src/lib/board-gestures'
 
 test('a click that ends a More drag is ignored', () => {
   assert.equal(isDragEnd(0), false)
   assert.equal(isDragEnd(7), false)
   assert.equal(isDragEnd(8), true)
   assert.equal(pointerTravel({ x: 10, y: 200 }, { x: 12, y: 120 }) > 8, true)
+})
+
+test('a level tap after a swipe ignores the leftover drag, and a bare click still counts', () => {
+  const stale = pointerTravel({ x: 8, y: 8 }, { x: 180, y: 700 })
+  assert.equal(stale > 8, true)
+  assert.equal(boardClickAllowed({ openedAt: boardAlreadyOpenAt(5000), now: 5000, travel: stale }), false)
+  const fromThisPress = boardControlTravel({ fromThisPress: true, clickOnly: false, staleTravel: stale })
+  assert.equal(boardClickAllowed({ openedAt: boardAlreadyOpenAt(5000), now: 5000, travel: fromThisPress }), true)
+  const clickOnly = boardControlTravel({ fromThisPress: false, clickOnly: true, staleTravel: stale })
+  assert.equal(boardClickAllowed({ openedAt: boardAlreadyOpenAt(5000), now: 5000, travel: clickOnly }), true)
+  const leftover = boardControlTravel({ fromThisPress: false, clickOnly: false, staleTravel: stale })
+  assert.equal(boardClickAllowed({ openedAt: boardAlreadyOpenAt(5000), now: 5000, travel: leftover }), false)
 })
 
 test('sheet buttons wait until the drawer has settled', () => {

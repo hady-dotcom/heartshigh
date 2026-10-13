@@ -16,11 +16,12 @@ import { appetiserJoin, appetiserStop, captionIndex } from '@/lib/tiers'
 import { learnMore } from '@/lib/nesting'
 import { dedicatedLaneFeed, laneEndHref, lanesWithClips, playableLaneClips, takeDedicatedLane } from '@/lib/lanes'
 import { coverAttr, coverFallbackAction, coverHoldKey, coverHoldStep, filmCoverKey, freshCoverHold, landscapeThumb, pauseMarkVisible, playerReadout, ytDebugOn } from '@/lib/yt-cover'
-import { BOARD_ARM_MS, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardAlreadyOpenAt, boardClickAllowed, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
+import { BOARD_ARM_MS, BOARD_DRAG_PX, PICTURE_SWALLOW_MS, autoAdvanceClosesBoard, boardAlreadyOpenAt, boardClickAllowed, boardControlTravel, boardShouldClose, boardShouldOpen, pictureTapIgnored, pointerTravel } from '@/lib/board-gestures'
 import { isoWeek } from '@/lib/trends'
 import { courseCatcherTap } from '@/lib/course-controls'
 import { PLAY_NUDGE_EVERY_MS, PLAY_NUDGE_FOR_MS, applyPauseWhenReady, bufferRetryAction, clockIsStalled, endCardPlayerAction, endedEventIsCurrent, horsWindowEnded, hostShouldShow, keepVisiblePaused, livePictureTap, pictureIsTap, pictureSwipeCommit, planFilmAdvance, playbackAction, playbackAdvancing, prepareIsCurrent, shouldNudgePlay, showLaneEndNow, takeEndAdvance, verticalSwipe, afterClipEnds, pictureTapPlan, sheetPollAction, type EndAdvanceSource } from '@/lib/film-advance'
 import { acceptLevelTap, type LevelTap } from '@/lib/level-tap'
+import { NO_EXTRACT, NO_EXTRACT_LABEL, NO_TALK, NO_TALK_LABEL, hasFullTalk, hasLongerExtract, levelSwitchPlan } from '@/lib/level-choice'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, hydrateSound, lowData, playOnly, playerSnapshot, preloadApi, setHidden, silence, silenceHidden, silenceOthers, soundOn, type PlayerKind } from '@/lib/yt'
 import { PageHelp } from '@/components/app/page-help'
 import { Arch } from '@/components/arch'
@@ -705,6 +706,9 @@ export function Journey(props: JourneyProps) {
       keepBoardOnShow.current = true
       boardOpenedAt.current = boardAlreadyOpenAt(performance.now())
       boardOpenRef.current = true
+      // A swipe must not leave the sheet holding the previous finger-down. That leftover
+      // distance used to swallow every later extract and full-talk tap.
+      boardDrag.current = null
       setBoardOpen(true)
       // A swipe swallows the leftover tap on the clip it lands on. That window is only for that show:
       // the next one (a level change, or another clip) must still pause when the picture is tapped.
@@ -1665,19 +1669,25 @@ export function Journey(props: JourneyProps) {
     }
   }, [phase])
 
-  const stepUp = async (event?: React.MouseEvent<HTMLAnchorElement>) => {
-    const current = itemsRef.current[indexRef.current]
-    if (!current) return
-    const step = learnMoreTarget(itemsRef.current, indexRef.current, modeRef.current, base)
-    if (!step) return
-    const own = itemsRef.current[step.level === 'appetiser' ? step.index : indexRef.current]
+  const stepUp = async (event?: React.MouseEvent<HTMLAnchorElement>, at = indexRef.current) => {
+    const current = itemsRef.current[at]
+    if (!current) {
+      setToast(modeRef.current === 'hors' ? NO_EXTRACT : NO_TALK)
+      return
+    }
+    const step = learnMoreTarget(itemsRef.current, at, modeRef.current, base)
+    if (!step) {
+      setToast(modeRef.current === 'hors' ? NO_EXTRACT : NO_TALK)
+      return
+    }
+    const own = itemsRef.current[step.level === 'appetiser' ? step.index : at]
     if (step.level === 'appetiser' && !stepUpIsOwn(current, own)) {
       const fallback = itemsRef.current.findIndex((row) => row.cutId === current.cutId && row.lessonId === current.lessonId && !isInterstitial(row))
       hushLeaving()
       setAppetiserHeld(false)
       soundOn(hosts.current[visibleRef.current].playerId || '')
       noteBrowse('learn-more')
-      void showItem(fallback >= 0 ? fallback : indexRef.current, 'appetiser')
+      void showItem(fallback >= 0 ? fallback : at, 'appetiser')
       return
     }
     if (step.level === 'appetiser') {
@@ -1697,7 +1707,10 @@ export function Journey(props: JourneyProps) {
     }
     event?.preventDefault()
     if (needsAccount('place')) return
-    if (step.lessonId !== current.lessonId) return
+    if (step.lessonId !== current.lessonId) {
+      setToast(NO_TALK)
+      return
+    }
     signal('start-course')
     noteBrowse('learn-more')
     track('clip_cta_tap', { level: 'appetiser', lesson: current.lessonId })
@@ -1717,27 +1730,56 @@ export function Journey(props: JourneyProps) {
     return true
   }
 
+  const indexForCut = (cutId: number, lessonId: number) => {
+    const at = itemsRef.current.findIndex((row) => row.cutId === cutId && row.lessonId === lessonId && !isInterstitial(row))
+    return at >= 0 ? at : indexRef.current
+  }
+
   const requestClip = () => {
-    if (!takeLevel('hors') || modeRef.current === 'hors') return
-    void showItem(indexRef.current, 'hors')
+    if (!takeLevel('hors')) return
+    const plan = levelSwitchPlan({ shown: item, indexed: itemsRef.current[indexRef.current], intent: 'hors', mode: modeRef.current })
+    if (plan.kind !== 'switch') return
+    void showItem(indexForCut(plan.cutId, plan.lessonId), 'hors')
   }
 
   const requestExtract = () => {
-    if (!takeLevel('appetiser') || modeRef.current === 'appetiser') return
-    void stepUp()
+    if (!takeLevel('appetiser')) return
+    const plan = levelSwitchPlan({ shown: item, indexed: itemsRef.current[indexRef.current], intent: 'appetiser', mode: modeRef.current })
+    if (plan.kind === 'say') {
+      setToast(plan.message)
+      return
+    }
+    if (plan.kind !== 'switch') return
+    void stepUp(undefined, indexForCut(plan.cutId, plan.lessonId))
   }
 
   const requestTalk = () => {
     if (!takeLevel('talk')) return
+    const plan = levelSwitchPlan({ shown: item, indexed: itemsRef.current[indexRef.current], intent: 'talk', mode: modeRef.current })
+    if (plan.kind === 'say') {
+      setToast(plan.message)
+      return
+    }
+    if (plan.kind !== 'talk') return
     watchFull()
   }
 
   const watchFull = () => {
-    const current = itemsRef.current[indexRef.current]
-    if (!current) return
+    const current = item || itemsRef.current[indexRef.current]
+    if (!current) {
+      setToast(NO_TALK)
+      return
+    }
     if (needsAccount('place')) return
+    if (!hasFullTalk(current)) {
+      setToast(NO_TALK)
+      return
+    }
     const href = learnMore(current, 'appetiser', base)?.href
-    if (!href) return
+    if (!href) {
+      setToast(NO_TALK)
+      return
+    }
     signal('start-course')
     noteBrowse('learn-more')
     track('full_talk_start', { lesson: current.lessonId })
@@ -1964,6 +2006,7 @@ export function Journey(props: JourneyProps) {
     gesture.current = null
     if (!start) return
     if (start.timer) window.clearTimeout(start.timer)
+    ;(event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId)
     const dx = event.clientX - start.x
     const dy = event.clientY - start.y
     const elapsed = Math.max(1, performance.now() - start.t)
@@ -2275,15 +2318,19 @@ export function Journey(props: JourneyProps) {
     setBoardOpen(false)
     swallowPicture()
   }
-  const boardAction = (event: { stopPropagation(): void; preventDefault(): void; clientX: number; clientY: number }, fn: () => void) => {
+  const boardAction = (event: { stopPropagation(): void; preventDefault(): void; clientX: number; clientY: number; type?: string }, fn: () => void) => {
     event.stopPropagation()
-    event.preventDefault()
     const start = boardDrag.current
-    const travel = start ? pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY }) : 0
+    const stale = start ? pointerTravel({ x: start.x, y: start.y }, { x: event.clientX, y: event.clientY }) : 0
+    // A click with no pointerup, or a press that started on this control, is a tap.
+    // The swipe's old finger-down must not make extract and the full talk do nothing.
+    const travel = boardControlTravel({ fromThisPress: stale < BOARD_DRAG_PX, clickOnly: event.type === 'click', staleTravel: stale })
     if (!boardClickAllowed({ openedAt: boardOpenedAt.current, now: performance.now(), travel })) {
       boardPress.current = null
+      boardDrag.current = null
       return
     }
+    event.preventDefault()
     fn()
     boardPress.current = null
   }
@@ -2346,6 +2393,8 @@ export function Journey(props: JourneyProps) {
     player.seekTo(next, true)
     setSpokenAt(next)
   }
+  const extractReady = !item || hasLongerExtract(item)
+  const talkReady = !item || hasFullTalk(item)
   const chrome = item && phase === 'feed' && !slide && !scenic ? (
     <>
       <div className="j-hairline-row">
@@ -2437,11 +2486,14 @@ export function Journey(props: JourneyProps) {
           className="j-level-choices"
           data-testid="level-steps"
           aria-label="Choose how much to watch"
-          onPointerDown={(event) => event.stopPropagation()}
+          onPointerDown={(event) => {
+            event.stopPropagation()
+            boardDrag.current = { x: event.clientX, y: event.clientY, t: performance.now(), opened: true }
+          }}
         >
-          <button type="button" className={mode === 'hors' ? 'on' : undefined} data-testid="level-clip" aria-pressed={mode === 'hors'} onPointerUp={(event) => boardAction(event, () => requestClip())} onClick={(event) => event.preventDefault()}>{LEVEL_WORDS[0]}</button>
-          <button type="button" className={mode === 'appetiser' ? 'on' : undefined} data-testid="level-minutes" aria-pressed={mode === 'appetiser'} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => event.preventDefault()}>{LEVEL_WORDS[1]}</button>
-          <button type="button" data-testid="level-lecture" onPointerUp={(event) => boardAction(event, () => requestTalk())} onClick={(event) => event.preventDefault()}>{LEVEL_WORDS[2]}</button>
+          <button type="button" className={mode === 'hors' ? 'on' : undefined} data-testid="level-clip" aria-pressed={mode === 'hors'} onPointerUp={(event) => boardAction(event, () => requestClip())} onClick={(event) => boardAction(event, () => requestClip())}>{LEVEL_WORDS[0]}</button>
+          <button type="button" className={mode === 'appetiser' ? 'on' : undefined} data-testid="level-minutes" data-available={extractReady ? 'yes' : 'no'} aria-pressed={mode === 'appetiser'} aria-label={extractReady ? LEVEL_WORDS[1] : NO_EXTRACT} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => boardAction(event, () => requestExtract())}>{extractReady ? LEVEL_WORDS[1] : NO_EXTRACT_LABEL}</button>
+          <button type="button" data-testid="level-lecture" data-available={talkReady ? 'yes' : 'no'} aria-label={talkReady ? LEVEL_WORDS[2] : NO_TALK} onPointerUp={(event) => boardAction(event, () => requestTalk())} onClick={(event) => boardAction(event, () => requestTalk())}>{talkReady ? LEVEL_WORDS[2] : NO_TALK_LABEL}</button>
         </div>
         {currentSpec ? (
           <div className="ready-controls" data-testid="ready-controls">
@@ -2463,7 +2515,7 @@ export function Journey(props: JourneyProps) {
           <>
             {speakerRow}
             {item.speaker ? <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onPointerUp={(event) => boardAction(event, moreFromSpeaker)} onClick={(event) => event.preventDefault()}>More from {item.speaker} ›</button> : null}
-            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" data-speaker={item.speaker} data-lesson={item.lessonId} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => event.preventDefault()}>{(() => {
+            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" data-speaker={item.speaker} data-lesson={item.lessonId} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => boardAction(event, () => requestExtract())}>{(() => {
               const lead = clipCta.label && !/^learn more\b/i.test(clipCta.label) ? clipCta.label : clipStepUpLabel()
               const seconds = item.talkSeconds || pieceSeconds(item.appetiser)
               return withTalkDetail(lead, 1, seconds)
@@ -2471,7 +2523,7 @@ export function Journey(props: JourneyProps) {
           </>
         ) : (
           <>
-            <a className="pill gold block" href={course} onPointerUp={(event) => boardAction(event, () => requestTalk())} onClick={(event) => event.preventDefault()} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk" data-speaker={item.speaker} data-lesson={item.lessonId}>{(() => {
+            <a className="pill gold block" href={course} onPointerUp={(event) => boardAction(event, () => requestTalk())} onClick={(event) => boardAction(event, () => requestTalk())} data-testid="learn-more" data-parent={appetiserParent?.parentId || ''} data-parent-level="talk" data-speaker={item.speaker} data-lesson={item.lessonId}>{(() => {
               const talks = Object.values(opening.clips).filter((row) => row.courseId === item.courseId).reduce((ids, row) => ids.add(row.lessonId), new Set<number>()).size
               const computed = talkStepUpLabel(talks, item.talkSeconds)
               const custom = talkCta.label && !/^learn more\b/i.test(talkCta.label) && talkCta.label !== talkStepUpLabel(1) && (talkCta.running || talkCta.label !== computed)
