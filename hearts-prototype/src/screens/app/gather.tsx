@@ -324,7 +324,6 @@ export async function homeGatherings(ctx: Pick<Ctx, 'payload' | 'portal' | 'user
 }
 
 export function HomeGather({ cards, base, masjid }: { cards: GatherCard[]; base: string; masjid: string }) {
-  if (!cards.length) return null
   return (
     <section data-testid="home-gather">
       <p className="eyebrow">At {masjid}</p>
@@ -333,7 +332,7 @@ export function HomeGather({ cards, base, masjid }: { cards: GatherCard[]; base:
           <span className="t"><b>{card.title}</b><small>{card.when}{card.place ? ` · ${card.place}` : ''}</small></span>
         </Link>
       ))}
-      <Link href={`${base}/gather`} data-testid="home-gather-all">All gatherings</Link>
+      <Link className="pill outline" href={`${base}/gather`} data-testid="home-gather-all">{cards.length ? 'All gatherings' : 'Gather'}</Link>
     </section>
   )
 }

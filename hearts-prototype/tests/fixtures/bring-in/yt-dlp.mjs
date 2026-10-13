@@ -51,8 +51,8 @@ function byId(id) {
   return catalogue.videos.find((row) => row.id === id) || null
 }
 
-function line(video) {
-  return [video.id, video.title, video.duration, video.channel, video.channelId, video.captions].join('\t')
+function line(video, playlistTitle = '') {
+  return [video.id, video.title, video.duration, video.channel, video.channelId, video.captions, playlistTitle].join('\t')
 }
 
 function botWall() {
@@ -101,7 +101,7 @@ if (flag('--flat-playlist')) {
   if (kind === 'playlist') {
     for (const id of catalogue.playlist) {
       const video = byId(id)
-      if (video) console.log(line(video))
+      if (video) console.log(line(video, catalogue.playlistTitle || ''))
     }
     process.exit(0)
   }

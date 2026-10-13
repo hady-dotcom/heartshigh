@@ -31,8 +31,8 @@ import { talksLabel } from '@/lib/week'
 import { masterFlags } from './journey'
 import { companyGatherings, relatedCards, TalkGatherNotice } from '@/screens/app/gather'
 import { listGatherings } from '@/server/gather'
-import { mixSwarm } from '@/lib/circle'
-import { circleForPoints, circleSettings } from '@/server/circle'
+import { emptySwarmFill, mixSwarm } from '@/lib/circle'
+import { circleCoverage, circleForPoints, circleSettings } from '@/server/circle'
 import { initialsOf } from '@/lib/swarm-sort'
 import { featureOn } from '@/lib/features'
 import { hiddenIds } from '@/server/safety'
@@ -269,10 +269,10 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
 
   const swarm: Record<number, SwarmItem[]> = {}
   let circleLabel = ''
-  // The swarm is opt-in (#32): a learner sees other learners' answers only after choosing to share,
-  // and only answers whose authors chose the same. A private or hidden row never appears.
-  const swarmOn = user.role === 'learner' && Boolean(user.shareWithLearners) && portal.showOthersAnswers !== false
-  if (swarmOn && points.length) {
+  // Swarm answers are always on (Leon, 2026-10-04): initials, read-only, screened. Sharing your own answer stays a choice.
+  const swarmOn = true
+  const shareChoice = Boolean(user.shareWithLearners)
+  if (points.length) {
     const shared = await rows(
       payload,
       'answers',
@@ -292,17 +292,33 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
       const name = author?.name || 'Someone in your circle'
       ;(swarm[pointId] ||= []).push({ name, body: str(answer.body) || str(answer.choice) || 'Shared a photo', image: imageSrc, initials: initialsOf(name), id: answer.id, kind: 'answer' })
     }
+    const settings = await circleSettings(payload)
+    circleLabel = settings.label
+    const pointIds = points.map((point) => point.id)
     if (featureOn(portal, 'circle')) {
       // HEARTS circle answers fill the swarm while it is quiet and step back as real shared answers arrive.
-      const [circle, settings] = await Promise.all([circleForPoints(payload, points.map((point) => point.id), portal.id), circleSettings(payload)])
-      circleLabel = settings.label
+      const circle = await circleForPoints(payload, pointIds, portal.id)
       for (const point of points) {
+        if (str(point.family) === 'workbook') continue
         const extra = (circle.get(point.id) || []).map((row): SwarmItem => ({ name: row.name, body: row.body, circle: true, id: row.id, kind: 'circle-answer', initials: initialsOf(row.name) }))
         const hiddenCircle = await hiddenIds(payload, 'circle-answer', extra.map((row) => row.id!).filter(Boolean))
         const visibleExtra = extra.filter((row) => !row.id || !hiddenCircle.has(row.id))
         const mixed = mixSwarm(swarm[point.id] || [], visibleExtra, `${user.id}:${point.id}`, settings.threshold)
         if (mixed.length) swarm[point.id] = mixed
       }
+    }
+    const covered = await circleCoverage(payload, pointIds)
+    for (const point of points) {
+      if (str(point.family) === 'workbook') continue
+      if (swarm[point.id]?.length || covered.has(point.id)) continue
+      const options = Array.isArray(point.options) ? (point.options as unknown[]).map(String) : []
+      swarm[point.id] = emptySwarmFill({ prompt: str(point.prompt), kind: str(point.kind) || 'reflection', options }, point.id).map((row) => ({
+        name: row.name,
+        body: row.body,
+        circle: true,
+        initials: initialsOf(row.name),
+        kind: 'circle-answer' as const,
+      }))
     }
   }
 
@@ -387,6 +403,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           points={withGather}
           swarm={swarm}
           swarmOn={swarmOn}
+          shareChoice={shareChoice}
           circleLabel={circleLabel}
           serverNow={at.toISOString()}
           next={here}

@@ -73,6 +73,7 @@ export function CoursePlayer({
   points,
   swarm,
   swarmOn = false,
+  shareChoice = false,
   circleLabel = '',
   serverNow,
   next,
@@ -95,8 +96,10 @@ export function CoursePlayer({
   startAt: number
   points: PointView[]
   swarm: Record<number, SwarmItem[]>
-  /** The learner opted in to sharing with other learners, so the swarm and its share box are shown. */
+  /** What others said is always shown. Sharing your own answer stays a separate choice. */
   swarmOn?: boolean
+  /** The account chose to share with other learners, so this answer can opt in too. */
+  shareChoice?: boolean
   /** The light label under HEARTS circle answers (master flag circleLabel). */
   circleLabel?: string
   serverNow: string
@@ -934,7 +937,8 @@ export function CoursePlayer({
           triggered={fromTrigger}
           top={sheetTop}
           swarm={swarm[open.id] || []}
-          swarmOn={swarmOn}
+          swarmOn={swarmOn && open.family !== 'workbook'}
+          shareChoice={shareChoice}
           circleLabel={circleLabel}
           now={now}
           onResume={() => { if (fromTrigger) resumeNow() }}
@@ -973,6 +977,7 @@ function Sheet({
   top,
   swarm,
   swarmOn,
+  shareChoice,
   circleLabel,
   now,
   onResume,
@@ -988,6 +993,7 @@ function Sheet({
   top: number | null
   swarm: SwarmItem[]
   swarmOn: boolean
+  shareChoice: boolean
   circleLabel: string
   now: number
   onResume?: () => void
@@ -1162,7 +1168,7 @@ function Sheet({
             <label className="toggle"><input type="checkbox" name="keepPrivate" checked={keepPrivate} onChange={(event) => setKeepPrivate(event.target.checked)} data-testid="answer-private" /> Keep my answer private</label>
             {point.showImam ? <input type="hidden" name="shareWithTeacher" value="on" /> : null}
             {point.showImam ? <p data-testid="task-imam">Your imam and the portal admin can see this.</p> : <label className="toggle"><input type="checkbox" name="shareWithTeacher" data-testid="answer-share" /> Let my teacher read it</label>}
-            {swarmOn ? (
+            {shareChoice ? (
               <label className="toggle"><input type="checkbox" name="shareWithLearners" disabled={keepPrivate} data-testid="answer-share-learners" /> Let other learners on this video read it</label>
             ) : null}
             <button className="share-btn" type="submit" disabled={sending} data-testid="answer-submit">

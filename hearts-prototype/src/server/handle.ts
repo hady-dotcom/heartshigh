@@ -27,6 +27,7 @@ import { bringInFlash, bringInNote, bringInStatus, captionLang, cleanedTimedTran
 import { packSaveNotice } from '@/lib/publish-state'
 import { commitBringIn, createHelperToken, deleteChannelSpeaker, previewBringIn, publishTalks, revokeHelperToken, saveChannelSpeaker } from './bring-in'
 import { giveCourseToPackHolders } from './publish-holders'
+import { addCourseToCode, giveCourseToJoinedLearners } from './course-offer'
 import { withWorkLock } from '@/lib/work-lock'
 import { now } from '@/lib/clock'
 import { normaliseOption, startingClause } from '@/lib/placing'
@@ -559,7 +560,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   }
 
   if (action === 'logout') {
-    const response = redirectTo(req, '/')
+    const next = text(form, 'next')
+    const dest = next === '/login' ? '/login' : '/'
+    const response = redirectTo(req, dest)
     response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, '', 0))
     return response
   }
@@ -2229,6 +2232,20 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       data: { extraCourses: [...new Set([...existing, courseId])] },
     })
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Granted. They can see it on the next page, without signing in again.')
+  }
+
+  if (action === 'offer-on-code' || action === 'offer-joined') {
+    if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot put a course on a code.')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
+    const courseId = Number(text(form, 'course') || 0)
+    if (!courseId) return redirectTo(req, text(form, 'next') || '/', 'Choose a course.')
+    if (action === 'offer-joined') {
+      const given = await giveCourseToJoinedLearners(payload, acting.portal.id, courseId)
+      return redirectTo(req, text(form, 'next') || '/', given.error, given.notice)
+    }
+    const placed = await addCourseToCode(payload, { portalId: acting.portal.id, courseId, codeId: Number(text(form, 'code') || 0), giveJoined: text(form, 'giveJoined') === 'yes' })
+    return redirectTo(req, text(form, 'next') || '/', placed.error, placed.notice)
   }
 
   if (action === 'feedback') {

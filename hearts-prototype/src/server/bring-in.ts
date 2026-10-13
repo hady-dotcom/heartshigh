@@ -4,8 +4,11 @@ import type { Payload } from 'payload'
 import {
   ghunyaHeading,
   jibrilSection,
+  looseBringInPaste,
   markBringInSkips,
   speakerForCandidate,
+  suggestedCourseName,
+  suggestedCourseSpeaker,
   type BringInRow,
   type ChannelMapRow,
 } from '@/lib/bring-in-plan'
@@ -13,7 +16,8 @@ import { expandBringInText, joinBringInErrors } from '@/lib/youtube-list'
 import { newHelperToken } from '@/lib/helper-token'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { withWorkLock } from '@/lib/work-lock'
-import { bringInFlash, bringInNote, bringInStatus, captionLang, ingestYoutubeUrl, type YoutubeMeta } from '@/lib/youtube'
+import { loadPlaceCatalogue, placeBringInRows } from '@/lib/bring-in-place'
+import { bringInFlash, bringInNote, bringInStatus, captionLang, ingestYoutubeUrl, transcriptFor, type YoutubeMeta } from '@/lib/youtube'
 import { decideBringInWrite, draftLessonWhere } from '@/lib/bring-in-plan'
 import type { SessionUser } from './context'
 import { giveCourseToPackHolders, packsContaining } from './publish-holders'
@@ -66,10 +70,13 @@ export async function previewBringIn(payload: Payload, user: SessionUser, form: 
   const raw = text(form, 'urls')
   if (!raw) return { error: 'Paste a YouTube link, a playlist or a channel first.' }
   const lang = captionLang(text(form, 'captionLang'))
-  const courseSpeaker = text(form, 'speaker')
+  const typedSpeaker = text(form, 'speaker')
   const jibril = jibrilSection(text(form, 'jibril'))
   const ghunya = ghunyaHeading(text(form, 'ghunya'))
   const expanded = await expandBringInText(raw, { lang })
+  const creating = text(form, 'course') === 'new'
+  const courseSpeaker = creating ? suggestedCourseSpeaker({ typed: typedSpeaker, videos: expanded.videos }) : typedSpeaker
+  const newTitle = text(form, 'newTitle') || (creating ? suggestedCourseName({ playlistTitle: expanded.playlistTitle, loose: looseBringInPaste(raw), videos: expanded.videos }) : '')
   const pasteErrors = joinBringInErrors(expanded.errors)
   if (!expanded.videos.length) return { error: pasteErrors || 'Those links did not return any films.' }
   const known = await libraryIds(payload)
@@ -90,31 +97,35 @@ export async function previewBringIn(payload: Payload, user: SessionUser, form: 
     ...row,
     speaker: speakerForCandidate({
       lineSpeaker: row.lineSpeaker,
-      courseSpeaker,
+      courseSpeaker: typedSpeaker,
       channel: row.channel,
       channelId: row.channelId,
       channelMap: map,
-    }),
+    }) || (creating && !typedSpeaker ? String(row.channel || '').trim() : ''),
     jibril,
     ghunya,
   }))
+  const placed = await placeBringInRows(marked, {
+    catalogue: loadPlaceCatalogue(),
+    presetJibril: jibril,
+    presetGhunya: ghunya,
+    fetchTranscript: async (id) => (await transcriptFor(id, undefined, { lang })).transcript,
+  })
   const courseId = Number(text(form, 'course') || 0) || null
   const origin = user.role === 'master' && text(form, 'origin') !== 'local' ? 'master' : 'local'
   const body: PreviewBody = {
-    courseId: text(form, 'course') === 'new' ? null : courseId,
-    newTitle: text(form, 'newTitle'),
+    courseId: creating ? null : courseId,
+    newTitle,
     courseSpeaker,
     lang,
     origin,
     portalId: origin === 'local' ? portalIdOf(user) : null,
-    rows: marked,
+    rows: placed,
   }
   if (body.courseId) {
     const course = await payload.findByID({ collection: 'courses', id: body.courseId, depth: 0, overrideAccess: true }).catch(() => null)
     const denied = editDenied(user, course as { origin?: string; portal?: unknown } | null)
     if (denied) return { error: denied }
-  } else if (!body.newTitle) {
-    return { error: 'Pick a course, or type a name for a new one.' }
   }
   const doc = await payload.create({
     collection: 'bring-in-previews',
@@ -187,12 +198,21 @@ export async function commitBringIn(payload: Payload, user: SessionUser, form: F
   const picked = new Set(form.getAll('pick').map((value) => String(value)))
   const chosen = body.rows.filter((row) => picked.has(String(row.index)) && row.skipReason !== 'library' && row.skipReason !== 'duplicate')
   if (!chosen.length) return { error: 'Tick at least one film. Ones already in the library stay out.' }
-  const rows = chosen.map((row) => ({
-    ...row,
-    speaker: text(form, `speaker-${row.index}`) || row.speaker,
-    jibril: jibrilSection(text(form, `jibril-${row.index}`) || row.jibril),
-    ghunya: ghunyaHeading(text(form, `ghunya-${row.index}`) || row.ghunya),
-  }))
+  const previousSpeaker = body.courseSpeaker
+  if (!body.courseId) {
+    if (form.has('newTitle')) body.newTitle = text(form, 'newTitle')
+    if (form.has('courseSpeaker')) body.courseSpeaker = text(form, 'courseSpeaker')
+  }
+  const rows = chosen.map((row) => {
+    const posted = text(form, `speaker-${row.index}`) || row.speaker
+    const speaker = !body.courseId && posted === previousSpeaker ? body.courseSpeaker || posted : posted
+    return {
+      ...row,
+      speaker,
+      jibril: jibrilSection(text(form, `jibril-${row.index}`) || row.jibril),
+      ghunya: ghunyaHeading(text(form, `ghunya-${row.index}`) || row.ghunya),
+    }
+  })
   const lockKey = `bringin:${body.courseId || body.newTitle}:${rows.map((row) => row.id).sort().join(',')}`
   return withWorkLock(lockKey, async () => {
     const ensured = await ensureCourse(payload, user, body)
@@ -322,6 +342,7 @@ export async function listDraftTalks(payload: Payload, user: SessionUser) {
     talks: docs.map((row) => ({
       id: row.id,
       title: String(row.title || 'Untitled'),
+      courseId: idOf(row.course) || 0,
       courseTitle: titles.get(idOf(row.course) || 0) || '',
       status: bringInStatus(String(row.transcriptNote || '')),
     })),

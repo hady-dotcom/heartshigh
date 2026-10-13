@@ -105,6 +105,25 @@ export async function draftCircle(point: CirclePoint, count: number, tones: Circ
   return { drafts: drafts.slice(0, spread.length), engine }
 }
 
+/** Questions that already have circle answers, including ones the desk has switched off. */
+export async function circleCoverage(payload: Payload, pointIds: number[]) {
+  const covered = new Set<number>()
+  if (!pointIds.length) return covered
+  const found = await payload.find({
+    collection: 'circle-answers' as never,
+    overrideAccess: true,
+    depth: 0,
+    limit: Math.max(pointIds.length * 20, 20),
+    pagination: false,
+    where: { point: { in: pointIds } } as never,
+  })
+  for (const row of found.docs as unknown as { point?: unknown }[]) {
+    const point = idOf(row.point)
+    if (point) covered.add(point)
+  }
+  return covered
+}
+
 /** Switched-on circle answers for these questions, for one portal (theirs plus the master desk's). */
 export async function circleForPoints(payload: Payload, pointIds: number[], portalId: number) {
   const byPoint = new Map<number, { id: number; name: string; body: string }[]>()

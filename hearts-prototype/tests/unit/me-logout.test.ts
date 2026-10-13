@@ -17,8 +17,10 @@ test('Me ends its option list with Log out on the existing session path', () => 
 
   const handle = readFileSync(new URL('../../src/server/handle.ts', import.meta.url), 'utf8')
   const action = handle.slice(handle.indexOf("if (action === 'logout')"), handle.indexOf("if (action === 'join')"))
-  assert.match(action, /redirectTo\(req, '\/'\)/)
+  assert.match(action, /next === '\/login' \? '\/login' : '\/'/)
+  assert.match(action, /redirectTo\(req, dest\)/)
   assert.match(action, /authCookie\([^)]*'', 0\)/)
+  assert.equal(me.includes("next: '/login'"), false)
 
   const gate = readFileSync(new URL('../../src/server/context.ts', import.meta.url), 'utf8')
   const requireUser = gate.slice(gate.indexOf('export async function requireUser'), gate.indexOf('export async function requireMaster'))

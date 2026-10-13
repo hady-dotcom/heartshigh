@@ -19,6 +19,8 @@ import { dayNumber } from '@/server/learner'
 import { type Ctx, clock, longDate, portalPeople, ref, rows, shortDate, str } from '../common'
 import { AdminFrame } from './overview'
 import { featureOn } from '@/lib/features'
+import { AnswerFocus } from '@/components/desk/answer-focus'
+import { sharedAnswerText, sharedAnswersNewestFirst } from '@/lib/shared-answers'
 
 export async function TeachScreen(ctx: Ctx) {
   const { payload, user, portal, base, query } = ctx
@@ -37,13 +39,13 @@ export async function TeachScreen(ctx: Ctx) {
   const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }, { sort: 'title' }) : []
   const shared = entries.filter((entry) => entry.consent)
   const kept = entries.length - shared.length
-  const consented = new Set(shared.map((entry) => ref(entry.answer)))
-  const evidence = answers.filter(
-    (answer) =>
-      (answer.video || answer.audio) &&
-      answer.keepPrivate !== true &&
-      (answer.shareWithTeacher === true || consented.has(answer.id)),
-  )
+  const consented = new Set(shared.flatMap((entry) => {
+    const id = ref(entry.answer)
+    return id == null ? [] : [id]
+  }))
+  const sharedAnswers = sharedAnswersNewestFirst(answers, consented)
+  const evidence = sharedAnswers.filter((answer) => answer.video || answer.audio)
+  const focusId = Number(query.answer) || 0
   const picked = evidence.find((answer) => answer.id === Number(query.answer)) || evidence[0]
   const here = `${base}/admin/teach`
   const today = dateKey(now())
@@ -109,6 +111,32 @@ export async function TeachScreen(ctx: Ctx) {
               {!learners.length ? <tr><td colSpan={8} className="empty">Nobody has joined with a learner code yet.</td></tr> : null}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      {focusId ? <AnswerFocus id={`shared-answer-${focusId}`} /> : null}
+      <section className="panel" data-testid="shared-answers" style={{ marginBottom: 18 }}>
+        <header><div><h2>Answers shared with you ({sharedAnswers.length})</h2><p>Newest first. Typed answers and recordings. Anything a learner kept private stays in their workbook.</p></div></header>
+        <div className="body" style={{ display: 'grid', gap: 12 }}>
+          {sharedAnswers.map((answer) => {
+            const point = answer.point as { prompt?: string; second?: number } | null
+            const prompt = point?.prompt
+            const second = Number(answer.atSecond ?? point?.second ?? 0)
+            const talk = cleanTitle(str((answer.lesson as { title?: string } | null)?.title))
+            const focused = answer.id === focusId
+            return (
+              <article key={answer.id} id={`shared-answer-${answer.id}`} className="lib-card" data-testid="shared-answer" data-focused={focused ? 'yes' : 'no'}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                  <b>{(answer.user as { name?: string } | null)?.name || 'A learner'}</b>
+                  <span className="hint">{shortDate(answer.createdAt)}</span>
+                </div>
+                <p className="hint" style={{ margin: 0 }} data-testid="shared-answer-place">{talk || 'This talk'} · {clock(second)}</p>
+                {prompt ? <p className="hint" style={{ margin: 0 }} data-testid="shared-answer-question">{prompt}</p> : null}
+                <p data-testid="shared-answer-text" style={{ margin: 0 }}>{sharedAnswerText({ body: answer.body, choice: answer.choice, video: answer.video, audio: answer.audio, image: answer.image })}</p>
+              </article>
+            )
+          })}
+          {!sharedAnswers.length ? <p className="empty">Nothing shared yet. When a learner shares an answer, typed or recorded, it shows up here.</p> : null}
         </div>
       </section>
 

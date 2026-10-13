@@ -28,6 +28,7 @@ import { TOOL } from '@/lib/desk-help'
 import { BusyForm } from '@/components/desk/busy-form'
 import { bringInLang, bringInStatus, CAPTION_LANGUAGES } from '@/lib/youtube'
 import { AdminFrame } from './overview'
+import { CourseOnCodes } from './course-offer'
 
 export function guardAdmin(ctx: Ctx) {
   if (ctx.user.role === 'teacher') redirect(`${ctx.base}/admin?error=${encodeURIComponent('That page is for the portal admin. Ask them if you need something changed.')}`)
@@ -173,6 +174,7 @@ export async function ContentScreen(ctx: Ctx) {
                 {packs.map((pack) => <option key={pack.id} value={pack.id}>{str(pack.title)}</option>)}
               </select>
             </label>
+            <p className="hint">Leave this as Not yet and, after you save, you can put the course on a code. Learners cannot open it until it is on a code or given to them.</p>
             <div className="actions"><button className="btn ink" data-testid="local-course-submit" type="submit">Save subject</button></div>
           </form>
         </section>
@@ -223,6 +225,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
   return (
     <div data-testid="course-detail" data-locked={locked ? 'yes' : 'no'}>
       {locked ? <div className="flash notice" data-testid="readonly">This course comes from the library, so it is read only here. You can add your own questions on top; the original stays as it is for every portal.</div> : null}
+      {portal && !locked ? await CourseOnCodes({ payload, portalId: portal.id, portalSlug: portal.slug, courseId, courseTitle: str(course.title), next: editorHref, accessHref: `${editorHref.replace(/\/admin\/content.*/, '/admin/access')}` }) : null}
       <div className="builder">
         <div style={{ display: 'grid', gap: 18 }}>
           <section className="panel">

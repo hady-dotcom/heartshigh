@@ -197,9 +197,11 @@ test('the latest Postgres migration has a table for every collection and global'
   }
   assert.equal(body.tables['public.payload_preferences_rels'].columns.users_id.type, 'integer')
   assert.equal(Object.hasOwn(body.tables['public.payload_preferences_rels'].columns, 'channel_speakers_id'), false)
-  const sql = readFileSync(path.join(dir, `${newest}.ts`), 'utf8')
+  const broughtIn = readFileSync(path.join(dir, '20261011_120000_bring_in_round2.ts'), 'utf8')
   for (const name of ['channel_speakers_id', 'helper_tokens_id', 'bring_in_previews_id']) {
-    assert.match(sql, new RegExp(`ADD COLUMN IF NOT EXISTS "${name}"`))
-    assert.match(sql, new RegExp(`DROP COLUMN IF EXISTS "${name}"`))
+    assert.match(broughtIn, new RegExp(`ADD COLUMN IF NOT EXISTS "${name}"`))
+    assert.match(broughtIn, new RegExp(`DROP COLUMN IF EXISTS "${name}"`))
   }
+  const users = body.tables['public.users'].columns
+  assert.equal(users.teach_seen?.type, 'jsonb', `${latest} is missing users.teach_seen`)
 })

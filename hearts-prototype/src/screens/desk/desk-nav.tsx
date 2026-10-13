@@ -33,6 +33,7 @@ export function DeskNav({ groups, active }: { groups: NavGroup[]; active: string
             <Link key={item.key} className={`nav${item.key === active ? ' on' : ''}`} href={item.href} aria-current={item.key === active ? 'page' : undefined} data-testid={`nav-${item.key}`}>
               {item.icon}
               {item.label}
+              {item.badge ? <span className="nav-count" data-testid="new-answers-badge" aria-label={`${item.badge} new answers`}>{item.badge}</span> : null}
             </Link>
           ))}
         </details>

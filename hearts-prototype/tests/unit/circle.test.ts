@@ -11,6 +11,7 @@ import {
   circleShown,
   circleSpread,
   mixSwarm,
+  emptySwarmFill,
   mockCircleAnswers,
   parseCircleReply,
 } from '../../src/lib/circle'
@@ -44,6 +45,7 @@ test('Circle: the built-in drafts meet the count, follow the tone and length spr
   assert.ok(long.every((row, index) => row.body.length > short[index].body.length), 'long answers are longer')
   assert.deepEqual(mockCircleAnswers(POINTS[1], 5, CIRCLE_TONES, CIRCLE_LENGTHS, 9), mockCircleAnswers(POINTS[1], 5, CIRCLE_TONES, CIRCLE_LENGTHS, 9), 'deterministic per seed')
   assert.equal(new Set(mockCircleAnswers(POINTS[0], 6, CIRCLE_TONES, CIRCLE_LENGTHS, 2).map((row) => row.name)).size, 6, 'different people')
+  assert.equal(emptySwarmFill(POINTS[0], 4).length, 4, 'an empty swarm is filled without an AI call')
 })
 
 test('Circle: an AI reply only keeps answers that pass the kill list and plain-text checks', () => {

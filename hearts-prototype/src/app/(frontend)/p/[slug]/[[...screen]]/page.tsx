@@ -36,10 +36,11 @@ import { PortalSheetScreen } from '@/screens/desk/sheet'
 import { FeedbackScreen } from '@/screens/desk/feedback'
 import { GatherAttendanceScreen, GatherDeskScreen } from '@/screens/desk/gather'
 import { LiveDeskScreen } from '@/screens/desk/live'
-import { LiveWatchScreen } from '@/screens/app/live'
+import { LiveIndexScreen, LiveWatchScreen } from '@/screens/app/live'
 import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
 import { PortalCircle } from '@/screens/desk/circle'
 import { PortalAnnounceScreen, PortalSafetyScreen } from '@/screens/desk/safety'
+import { BackToDesk } from '@/components/app/back-to-desk'
 import { FeatureUnavailable } from '@/components/app/feature-unavailable'
 import { featureOn, type FeatureKey } from '@/lib/features'
 
@@ -77,7 +78,12 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         if (!started.length) redirect(visitor.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
       }
     } else if (!shut) {
-      return JourneyScreen({ payload: session.payload, portal, user: visitor, base, initial: area === 'feed' ? 'feed' : area === 'help' ? 'help' : 'opener', viewAs: Boolean(session.viewAs), query: query as Record<string, string | undefined> })
+      return (
+        <>
+          <BackToDesk user={visitor} portal={portal} />
+          {await JourneyScreen({ payload: session.payload, portal, user: visitor, base, initial: area === 'feed' ? 'feed' : area === 'help' ? 'help' : 'opener', viewAs: Boolean(session.viewAs), query: query as Record<string, string | undefined> })}
+        </>
+      )
     }
   }
 
@@ -118,6 +124,9 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         return AccessScreen(ctx)
       case 'teach':
         return TeachScreen(ctx)
+      case 'answers':
+        if (!b || !Number(b)) notFound()
+        redirect(`${base}/admin/teach?answer=${encodeURIComponent(b)}`)
       case 'feedback':
         return gated(ctx, 'feedback', true) || FeedbackScreen(ctx)
       case 'compass':
@@ -183,14 +192,28 @@ export default async function PortalScreen({ params, searchParams }: { params: P
     }
   }
 
+  return (
+    <>
+      <BackToDesk user={user} portal={portal} />
+      {await learnerArea(area, a, b, ctx, payload)}
+    </>
+  )
+}
+
+async function learnerArea(area: string | undefined, a: string | undefined, b: string | undefined, ctx: Ctx, payload: Ctx['payload']) {
+  const { base } = ctx
   switch (area) {
     case undefined:
       return HomeScreen(ctx)
     case 'lanes':
       return LanesScreen(ctx)
-    case 'live':
-      if (!a || !Number(a)) notFound()
-      return gated(ctx, 'live') || LiveWatchScreen(ctx, Number(a))
+    case 'live': {
+      const closed = gated(ctx, 'live')
+      if (closed) return closed
+      if (!a) return LiveIndexScreen(ctx)
+      if (!Number(a)) notFound()
+      return LiveWatchScreen(ctx, Number(a))
+    }
     case 'gather': {
       const closed = gated(ctx, 'gather')
       if (closed) return closed

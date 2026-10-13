@@ -12,8 +12,9 @@ import { cookieValue, helperTokenFlash } from '@/lib/helper-token-flash'
 import { skipLabel, type BringInRow } from '@/lib/bring-in-plan'
 import { listDraftTalks, type PreviewBody } from '@/server/bring-in'
 import type { SessionUser } from '@/server/context'
-import { clock, rows, str, type Ctx, type Row } from '../common'
+import { clock, ref, rows, str, type Ctx, type Row } from '../common'
 import { AdminFrame } from './overview'
+import { CourseOnCodes } from './course-offer'
 
 function captionsLabel(flag: string) {
   if (flag === 'yes') return 'Captions listed'
@@ -28,12 +29,14 @@ export async function BringInBody({
   next,
   courses,
   query,
+  portal = null,
 }: {
   payload: Payload
   user: SessionUser
   next: string
   courses: { id: number; title: string; speaker: string }[]
   query: { preview?: string; lessons?: string; token?: string; notice?: string }
+  portal?: { id: number; slug: string } | null
 }) {
   const previewId = Number(query.preview || 0)
   const preview = previewId
@@ -54,8 +57,26 @@ export async function BringInBody({
   const draftList = await listDraftTalks(payload, user)
   const shown = new Set(brought.map((lesson) => lesson.id))
   const otherDrafts = draftList.talks.filter((talk) => !shown.has(talk.id))
+  const offerIds = [...new Set([
+    ...brought.map((lesson) => ref(lesson.course)).filter((id): id is number => Boolean(id)),
+    ...otherDrafts.map((talk) => talk.courseId).filter((id) => id > 0),
+  ])]
+  const offerTitles = new Map(courses.map((course) => [course.id, course.title]))
+  for (const talk of otherDrafts) if (talk.courseId && talk.courseTitle) offerTitles.set(talk.courseId, talk.courseTitle)
   return (
     <div data-testid="bring-in">
+      {portal ? offerIds.map((courseId) => (
+        <CourseOnCodes
+          key={courseId}
+          payload={payload}
+          portalId={portal.id}
+          portalSlug={portal.slug}
+          courseId={courseId}
+          courseTitle={offerTitles.get(courseId) || 'This course'}
+          next={next}
+          accessHref={next.replace('/bring-in', '/access')}
+        />
+      )) : null}
       {secret ? (
         <p className="flash notice" data-testid="helper-token-once">Copy this helper token now. It is stored as a hash and will not be shown again. <code data-testid="helper-token-value">{secret}</code></p>
       ) : null}
@@ -69,7 +90,7 @@ export async function BringInBody({
         <BusyForm className="body form" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'preview-bring-in', next }} />
           <label className="stack">YouTube links, playlist or channel
-            <textarea data-testid="bring-in-urls" name="urls" rows={6} required placeholder={'https://www.youtube.com/watch?v=…\nhttps://www.youtube.com/watch?v=… | Speaker name\nhttps://www.youtube.com/playlist?list=…'} />
+            <textarea className="paste-example" data-testid="bring-in-urls" name="urls" rows={6} required placeholder={'https://www.youtube.com/watch?v=…\nhttps://www.youtube.com/watch?v=… | Speaker name\nhttps://www.youtube.com/playlist?list=…'} />
           </label>
           <label className="stack">Course <HelpTip topic="bring-in-course">{TOOL.bringInCourse}</HelpTip>
             <select name="course" data-testid="bring-in-course" defaultValue={body?.courseId ? String(body.courseId) : 'new'}>
@@ -111,6 +132,14 @@ export async function BringInBody({
           </header>
           <BusyForm className="body" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'commit-bring-in', next, preview: previewId }} />
+            {body.courseId ? null : (
+              <div className="form" data-testid="bring-in-review-course" style={{ marginBottom: 14 }}>
+                <div className="cols">
+                  <label className="stack">Course name<input name="newTitle" data-testid="bring-in-review-title" defaultValue={body.newTitle} /></label>
+                  <label className="stack">Speaker<input name="courseSpeaker" data-testid="bring-in-review-speaker" defaultValue={body.courseSpeaker} /></label>
+                </div>
+              </div>
+            )}
             <div className="table-wrap">
               <table className="data">
                 <thead><tr><th>Bring in</th><th>Film</th><th>Length</th><th>Captions</th><th>Speaker <HelpTip topic="row-speaker">{TOOL.bringInSpeaker}</HelpTip></th><th>Jibril</th><th>Ghunya</th></tr></thead>
@@ -253,6 +282,7 @@ export async function PortalBringInScreen(ctx: Ctx) {
         next={`${ctx.base}/admin/bring-in`}
         courses={courses.map((course) => ({ id: course.id, title: str(course.title), speaker: str(course.speaker) }))}
         query={ctx.query}
+        portal={{ id: ctx.portal.id, slug: ctx.portal.slug }}
       />
     </AdminFrame>
   )
@@ -265,7 +295,11 @@ function PreviewRow({ row }: { row: BringInRow }) {
       <td>
         <input type="checkbox" name="pick" value={row.index} defaultChecked={row.selected} disabled={locked} data-testid="bring-in-pick" aria-label={`Bring in ${row.title}`} />
       </td>
-      <td>{row.title}{row.skipReason ? <div className="hint">{skipLabel(row.skipReason)}</div> : null}</td>
+      <td>
+        {row.title}
+        {row.skipReason ? <div className="hint">{skipLabel(row.skipReason)}</div> : null}
+        <PlaceNotes row={row} />
+      </td>
       <td>{row.durationSeconds ? clock(row.durationSeconds) : 'Length unknown'}</td>
       <td data-testid="bring-in-captions">{captionsLabel(row.captions)}</td>
       <td><input name={`speaker-${row.index}`} defaultValue={row.speaker} data-testid="bring-in-row-speaker" /></td>
@@ -278,6 +312,33 @@ function PreviewRow({ row }: { row: BringInRow }) {
       <td><input name={`ghunya-${row.index}`} defaultValue={row.ghunya} data-testid="bring-in-row-ghunya" /></td>
     </tr>
   )
+}
+
+function PlaceNotes({ row }: { row: BringInRow }) {
+  const jibril = row.jibrilPlace
+  const ghunya = row.ghunyaPlace
+  if (!jibril && !ghunya) return null
+  const sameBlank = jibril && ghunya && jibril.confidence === 'low' && ghunya.confidence === 'low' && jibril.reason === ghunya.reason && !jibril.terms.length && !ghunya.terms.length
+  return (
+    <div className="hint bring-in-place" data-testid="bring-in-row-place">
+      {sameBlank ? jibril.reason : (
+        <>
+          <PlaceLine kind="Jibril" place={jibril} />
+          <PlaceLine kind="Ghunya" place={ghunya} />
+        </>
+      )}
+    </div>
+  )
+}
+
+function PlaceLine({ kind, place }: { kind: string; place?: BringInRow['jibrilPlace'] }) {
+  if (!place) return null
+  const level = place.confidence === 'high' ? 'High' : place.confidence === 'medium' ? 'Medium' : 'Low'
+  const terms = place.terms.slice(0, 3).map((term) => `${term.phrase} at ${term.at}`).join(', ')
+  if (place.confidence === 'low') {
+    return <div>{terms ? <span>{kind}: {terms}. {place.coverPct}% of the talk. {level} confidence. </span> : null}{place.reason}</div>
+  }
+  return <div>{kind} {place.value}. {terms}. {place.coverPct}% of the talk. {level} confidence.</div>
 }
 
 function ResultRow({ lesson, next }: { lesson: Row; next: string }) {

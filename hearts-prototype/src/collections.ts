@@ -233,6 +233,7 @@ export const Users: CollectionConfig = {
     { name: 'trendsOptIn', type: 'checkbox', defaultValue: false, label: 'Add my taps to the chapter’s trends' },
     { name: 'shareWithLearners', type: 'checkbox', defaultValue: false, label: 'Share answers with other learners, and see the answers they share' },
     { name: 'haptics', type: 'checkbox', defaultValue: true },
+    { name: 'teachSeen', type: 'json', admin: { description: 'When this person last opened Teach, per portal id. Used to count shared answers that arrived after that visit.' } },
     { name: 'removed', type: 'checkbox', defaultValue: false },
     { name: 'updatedBy', type: 'relationship', relationTo: 'users' },
     { name: 'onBehalfOf', type: 'relationship', relationTo: 'users' },

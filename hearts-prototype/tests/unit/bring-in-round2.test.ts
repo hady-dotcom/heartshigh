@@ -47,6 +47,10 @@ test('skip rules, speakers, doors and playlist lines', () => {
   const parsed = parseFlatPlaylistLine('short000001\tA short clip\t89\tHEARTS channel\tUCheartsround\tyes')
   assert.equal(parsed?.captions, 'yes')
   assert.equal(parsed?.durationRaw, 89)
+  assert.equal(parsed?.playlistTitle, '')
+  const titled = parseFlatPlaylistLine('short000001\tA short clip\t89\tHEARTS channel\tUCheartsround\tyes\tRound two sitting')
+  assert.equal(titled?.playlistTitle, 'Round two sitting')
+  assert.equal(titled?.captions, 'yes')
   const rows = markBringInSkips(
     [
       { id: 'long0000001', url: 'https://youtu.be/long0000001', title: 'Long', durationSeconds: 428, channel: 'HEARTS channel', channelId: 'UCheartsround', captions: 'yes', lineSpeaker: 'Hani' },

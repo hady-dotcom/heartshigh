@@ -171,6 +171,31 @@
 }
 .tab .badge { position: absolute; margin: -4px 0 0 22px; background: var(--rose); color: #fff; border-radius: 999px; font-size: 10px; padding: 1px 5px; }
 
+/* A teacher or portal admin in the learner app. Sits above the feed and the tab bar. */
+.back-to-desk {
+  position: fixed;
+  z-index: 90;
+  top: calc(10px + var(--safe-top));
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 24px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #1a160f;
+  color: #f3d38e;
+  border: 1px solid rgba(212, 175, 90, 0.75);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
 /* Full-bleed feed */
 .feed { position: fixed; inset: var(--viewas-h, 0px) 0 0 0; width: min(430px, 100%); margin: 0 auto; background: var(--night); overflow: hidden; touch-action: none; user-select: none; }
 .feed a, .feed img { -webkit-user-drag: none; }

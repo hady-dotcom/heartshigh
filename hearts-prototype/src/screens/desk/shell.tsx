@@ -14,7 +14,7 @@ import { deskNavAllowed, type FeatureSource } from '@/lib/features'
 import { rows, shortDate, str } from '../common'
 import { DeskNav } from './desk-nav'
 
-type NavItem = { key: string; label: string; href: string; icon: ReactNode }
+type NavItem = { key: string; label: string; href: string; icon: ReactNode; badge?: number }
 export type NavGroup = { group: string; description?: string; items: NavItem[] }
 
 export function portalNav(base: string, user: SessionUser, portal?: FeatureSource): NavGroup[] {
@@ -100,7 +100,7 @@ export function masterNav(): NavGroup[] {
       items: [
         { key: 'packs', label: 'Course packs', href: '/master/packs', icon: <BookIcon /> },
         { key: 'plans', label: 'Study plans', href: '/master/plans', icon: <CalendarIcon /> },
-        { key: 'circle', label: 'Gather', href: '/master/circle', icon: <PeopleIcon /> },
+        { key: 'circle', label: 'Circle answers', href: '/master/circle', icon: <PeopleIcon /> },
         { key: 'nights', label: 'Live', href: '/master/nights', icon: <MoonIcon /> },
         { key: 'missions', label: 'Missions', href: '/master/missions', icon: <FlagIcon /> },
         { key: 'safety', label: 'Care and safety', href: '/master/safety', icon: <HeartIcon /> },
@@ -151,6 +151,7 @@ export async function DeskFrame({
   evening = true,
   logoUrl,
   gatherDesk,
+  showOnPhone,
   children,
 }: {
   payload: Payload
@@ -174,6 +175,8 @@ export async function DeskFrame({
   logoUrl?: string | null
   /** Gather's desk look. Kept off the library, access and teach desks. */
   gatherDesk?: boolean
+  /** Show the desk on a phone, instead of the “open this on a laptop” note. */
+  showOnPhone?: boolean
   children: ReactNode
 }) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 12 })).filter((note) => note.channel !== 'email-stub')
@@ -187,7 +190,7 @@ export async function DeskFrame({
       <p>The {deskName || subBrand.toLowerCase()} needs a wider screen than this. Your work is saved, so you can carry on from a computer.</p>
       {deskAppHref(brandHref) ? (
         <p>
-          <Link className="btn ink" href={deskAppHref(brandHref)!} data-testid="desk-open-app">Open the app</Link>
+          <Link className="btn ink" href={deskAppHref(brandHref)!} data-testid="desk-open-app">{user.role === 'teacher' ? 'See it as a learner' : 'Open the app'}</Link>
         </p>
       ) : null}
       <form action="/api/hearts" method="post">
@@ -195,7 +198,7 @@ export async function DeskFrame({
         <button type="submit" className="btn ghost">Sign out</button>
       </form>
     </div>
-    <div className={`desk${evening ? ' evening' : ''}${gatherDesk ? ' gather-desk' : ''}`} data-testid={testId}>
+    <div className={`desk${evening ? ' evening' : ''}${gatherDesk ? ' gather-desk' : ''}${showOnPhone ? ' desk-phone' : ''}`} data-testid={testId}>
       <aside className="side">
         <Link className="side-brand" href={brandHref}>
           {logoUrl ? <img className="side-logo" alt="" src={logoUrl} /> : <BrandMark size={40} />}

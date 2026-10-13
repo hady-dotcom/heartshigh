@@ -171,7 +171,7 @@ export const FEATURES: readonly FeatureRecord[] = [
       'Home gather cards, course gather notices, nights on Circle',
       'Desk /admin/gather, /admin/nights',
       'POST/GET /api/gather and handle.ts rsvp, checkin',
-      'Learner Gather pages and Home gather cards — never the learner tab bar',
+      'Learner /p/:slug/gather, a Gather link on Home and on Lanes — never the learner tab bar',
     ],
     deskNav: ['gather', 'nights'],
     bar: { key: 'gather', label: 'Gather', path: '/gather', slot: 'middle' },
@@ -187,7 +187,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     help: 'Live is a teacher going live for this portal only. Learners see a Live now banner under the Home title. Switch it off to hide the banner, watch page and desk tools.',
     plugIn: [
       'PR #20 — Learner Home Live now / Coming up banner (src/screens/app/home.tsx)',
-      'PR #20 — Learner watch page /p/:slug/live/:id',
+      'Learner live page /p/:slug/live and watch page /p/:slug/live/:id',
       'PR #20 — Desk Go live /admin/live and /master/live',
       'PR #20 — GET/POST /api/live (src/app/(frontend)/api/live/route.ts)',
     ],

@@ -206,6 +206,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
           <span className="muted" style={{ fontSize: 13, fontWeight: 600 }} data-testid="day-number">Day {today} with us</span>
         </div>
         <Flash error={query.error} notice={query.notice} />
+        {featureOn(portal, 'gather') ? <Link className="pill outline" href={`${base}/gather`} data-testid="open-gather" style={{ marginBottom: 14 }}>Gather</Link> : null}
         {lanes.map((lane) => {
           const first = lane.clips[0]
           const count = lane.clips.length
