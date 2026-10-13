@@ -76,6 +76,11 @@ function pick<T>(items: readonly T[], at: number) {
   return items[((at % items.length) + items.length) % items.length]
 }
 
+/** Built-in circle answers for a question that has none, so “What others said” is never an empty list. No AI call. */
+export function emptySwarmFill(point: CirclePoint, seed = 0) {
+  return mockCircleAnswers(point, 4, CIRCLE_TONES, CIRCLE_LENGTHS, seed)
+}
+
 /** The built-in drafts, used when no AI key is set or the AI reply does not pass the checks. Deterministic per seed. */
 export function mockCircleAnswers(point: CirclePoint, count: number, tones: readonly CircleTone[], lengths: readonly CircleLength[], seed = 0): CircleDraft[] {
   const options = (point.options || []).filter(Boolean)

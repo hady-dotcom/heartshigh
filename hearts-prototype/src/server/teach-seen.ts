@@ -29,6 +29,19 @@ export async function countNewSharedAnswers(payload: Payload, portalId: number, 
   return found.totalDocs
 }
 
+/** Newest shared answers since the last Teach visit, for the badge and the placement list. */
+export async function newSharedAnswers(payload: Payload, portalId: number, seenAt: string | null, limit = 8) {
+  const found = await payload.find({
+    collection: 'answers',
+    overrideAccess: true,
+    depth: 1,
+    limit,
+    sort: '-createdAt',
+    where: sharedAnswerWhere(portalId, seenAt) as Where,
+  })
+  return { total: found.totalDocs, docs: found.docs }
+}
+
 export function seenFor(user: SessionUser, portalId: number) {
   return teachSeenAt(user.teachSeen, portalId)
 }

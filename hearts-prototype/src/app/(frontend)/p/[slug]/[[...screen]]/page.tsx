@@ -124,6 +124,9 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         return AccessScreen(ctx)
       case 'teach':
         return TeachScreen(ctx)
+      case 'answers':
+        if (!b || !Number(b)) notFound()
+        redirect(`${base}/admin/teach?answer=${encodeURIComponent(b)}`)
       case 'feedback':
         return gated(ctx, 'feedback', true) || FeedbackScreen(ctx)
       case 'compass':

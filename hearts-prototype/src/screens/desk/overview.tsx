@@ -8,25 +8,28 @@ import { TOOL } from '@/lib/desk-help'
 import { now } from '@/lib/clock'
 import { adoptedCourseIds } from '@/server/context'
 import { portalName } from '@/server/learner'
-import { type Ctx, portalPeople, rows, str } from '../common'
-import { countNewSharedAnswers, markTeachVisit, seenFor } from '@/server/teach-seen'
+import { type Ctx, clock, portalPeople, rows, str } from '../common'
+import { sharedAnswerText } from '@/lib/shared-answers'
+import { markTeachVisit, newSharedAnswers, seenFor } from '@/server/teach-seen'
 import { DeskFrame, portalNav, type NavGroup } from './shell'
 import { PORTAL_TIME_ZONES, portalTimeZone, zoneCity } from '@/lib/zone-time'
 import { displayPortalAddress } from '@/lib/portal-address'
 import { mcpConnectorStatus, publicAi } from '@/lib/portal-ai'
 
-function withAnswerBadge(groups: NavGroup[], count: number): NavGroup[] {
+function withAnswerBadge(groups: NavGroup[], count: number, href?: string | null): NavGroup[] {
   if (count <= 0) return groups
   return groups.map((group) => ({
     ...group,
-    items: group.items.map((item) => (item.key === 'teach' ? { ...item, badge: count } : item)),
+    items: group.items.map((item) => (item.key === 'teach' ? { ...item, badge: count, href: href || item.href } : item)),
   }))
 }
 
 export async function AdminFrame({ ctx, active, title, intro, tools, help, children, testId, tone }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; help?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening' }) {
   const { payload, user, portal, base, query } = ctx
   const seenAt = active === 'teach' ? await markTeachVisit(payload, user, portal.id) : seenFor(user, portal.id)
-  const freshAnswers = await countNewSharedAnswers(payload, portal.id, seenAt)
+  const fresh = await newSharedAnswers(payload, portal.id, seenAt, 1)
+  const freshAnswers = fresh.total
+  const newestHref = fresh.docs[0] ? `${base}/admin/answers/${fresh.docs[0].id}` : null
   const extra = [{ label: user.role === 'teacher' ? 'See it as a learner' : 'Open the learner app', href: base }]
   if (user.role === 'master') extra.push({ label: 'Back to the master desk', href: '/master' })
   return (
@@ -36,7 +39,7 @@ export async function AdminFrame({ ctx, active, title, intro, tools, help, child
       title={title}
       intro={intro}
       active={active}
-      nav={withAnswerBadge(portalNav(base, user, portal), freshAnswers)}
+      nav={withAnswerBadge(portalNav(base, user, portal), freshAnswers, newestHref)}
       brand={portalName(portal)}
       subBrand={portal.closed ? 'Deactivated' : 'Portal desk'}
       deskName={`${portalName(portal)} portal desk`}
@@ -91,15 +94,31 @@ export async function OverviewScreen(ctx: Ctx) {
   const max = Math.max(1, ...bars.map((bar) => bar.value))
   const learners = people.filter((person) => person.role === 'learner').length
   const staff = people.length - learners
-  const freshAnswers = await countNewSharedAnswers(payload, portal.id, seenFor(user, portal.id))
+  const fresh = await newSharedAnswers(payload, portal.id, seenFor(user, portal.id), 8)
 
   return (
     <AdminFrame ctx={ctx} active="overview" title="Overview" intro="Your portal at a glance: who is here, what you have made, and how people are getting on." testId="admin-overview">
       <section className="panel" data-testid="new-answers" style={{ marginBottom: 18 }}>
-        <header><div><h2>New answers</h2><p>Shared with you since you last opened Learners. Private answers are not counted.</p></div></header>
-        <div className="body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <b data-testid="new-answers-count" style={{ fontSize: 28 }}>{freshAnswers}</b>
-          <Link className="btn ink" href={`${base}/admin/teach`}>Open Learners</Link>
+        <header><div><h2>New answers</h2><p>Shared with you since you last opened Learners. Private answers are not listed. Open one to land on that answer.</p></div></header>
+        <div className="body" style={{ display: 'grid', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <b data-testid="new-answers-count" style={{ fontSize: 28 }}>{fresh.total}</b>
+            <Link className="btn ink" href={fresh.docs[0] ? `${base}/admin/answers/${fresh.docs[0].id}` : `${base}/admin/teach`}>Open Learners</Link>
+          </div>
+          {fresh.docs.map((answer) => {
+            const prompt = (answer.point as { prompt?: string; second?: number } | null)?.prompt
+            const second = Number(answer.atSecond ?? (answer.point as { second?: number } | null)?.second ?? 0)
+            const talk = str((answer.lesson as { title?: string } | null)?.title)
+            return (
+              <Link key={answer.id} className="lib-card" href={`${base}/admin/answers/${answer.id}`} data-testid="new-answer-link">
+                <b>{(answer.user as { name?: string } | null)?.name || 'A learner'}</b>
+                <p className="hint" style={{ margin: '4px 0' }} data-testid="new-answer-place">{talk || 'This talk'} · {clock(second)}</p>
+                {prompt ? <p className="hint" style={{ margin: '0 0 4px' }}>{prompt}</p> : null}
+                <p style={{ margin: 0 }}>{sharedAnswerText(answer)}</p>
+              </Link>
+            )
+          })}
+          {!fresh.total ? <p className="empty">No new answers since you last opened Learners.</p> : null}
         </div>
       </section>
       {!portal.wizardDone && user.role !== 'teacher' ? <div className="flash notice">The short setup is not finished yet. <Link href={`${base}/admin/wizard`}>Finish it now</Link>.</div> : null}
