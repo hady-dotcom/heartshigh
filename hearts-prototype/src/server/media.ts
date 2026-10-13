@@ -41,7 +41,7 @@ export async function findLinkedAnswer(payload: Payload, mediaId: number) {
     overrideAccess: true,
     depth: 0,
     limit: 1,
-    where: { or: [{ audio: { equals: mediaId } }, { image: { equals: mediaId } }] },
+    where: { audio: { equals: mediaId } },
   })
   const note = notes.docs[0] as { answer?: unknown } | undefined
   const answerId = typeof note?.answer === 'object' && note?.answer && 'id' in note.answer ? (note.answer as { id: number }).id : Number(note?.answer)

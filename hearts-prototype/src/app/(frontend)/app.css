@@ -971,6 +971,7 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .q-card .why { font-size: 13.5px; color: var(--muted); line-height: 1.5; margin: 0 0 12px; }
 .q-card fieldset { border: 0; padding: 0; margin: 0; }
 .film-frame { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 18px; background: #1c1b19; }
+.film-video { display: block; width: 100%; max-height: calc(100dvh - 220px); aspect-ratio: 9 / 16; object-fit: contain; border: 0; border-radius: 18px; background: #0b0d10; box-shadow: 0 6px 20px rgba(11, 13, 16, 0.18); }
 .step-bar { display: flex; gap: 6px; margin: 4px 0 16px; }
 .step-bar span { flex: 1; height: 5px; border-radius: 5px; background: #e6dece; }
 .step-bar span.on { background: var(--gold); }
