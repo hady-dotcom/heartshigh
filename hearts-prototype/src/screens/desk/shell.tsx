@@ -100,7 +100,7 @@ export function masterNav(): NavGroup[] {
       items: [
         { key: 'packs', label: 'Course packs', href: '/master/packs', icon: <BookIcon /> },
         { key: 'plans', label: 'Study plans', href: '/master/plans', icon: <CalendarIcon /> },
-        { key: 'circle', label: 'Gather', href: '/master/circle', icon: <PeopleIcon /> },
+        { key: 'circle', label: 'Circle answers', href: '/master/circle', icon: <PeopleIcon /> },
         { key: 'nights', label: 'Live', href: '/master/nights', icon: <MoonIcon /> },
         { key: 'missions', label: 'Missions', href: '/master/missions', icon: <FlagIcon /> },
         { key: 'safety', label: 'Care and safety', href: '/master/safety', icon: <HeartIcon /> },

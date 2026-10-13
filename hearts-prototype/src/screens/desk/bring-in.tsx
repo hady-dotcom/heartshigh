@@ -12,8 +12,9 @@ import { cookieValue, helperTokenFlash } from '@/lib/helper-token-flash'
 import { skipLabel, type BringInRow } from '@/lib/bring-in-plan'
 import { listDraftTalks, type PreviewBody } from '@/server/bring-in'
 import type { SessionUser } from '@/server/context'
-import { clock, rows, str, type Ctx, type Row } from '../common'
+import { clock, ref, rows, str, type Ctx, type Row } from '../common'
 import { AdminFrame } from './overview'
+import { CourseOnCodes } from './course-offer'
 
 function captionsLabel(flag: string) {
   if (flag === 'yes') return 'Captions listed'
@@ -28,12 +29,14 @@ export async function BringInBody({
   next,
   courses,
   query,
+  portal = null,
 }: {
   payload: Payload
   user: SessionUser
   next: string
   courses: { id: number; title: string; speaker: string }[]
   query: { preview?: string; lessons?: string; token?: string; notice?: string }
+  portal?: { id: number; slug: string } | null
 }) {
   const previewId = Number(query.preview || 0)
   const preview = previewId
@@ -54,8 +57,26 @@ export async function BringInBody({
   const draftList = await listDraftTalks(payload, user)
   const shown = new Set(brought.map((lesson) => lesson.id))
   const otherDrafts = draftList.talks.filter((talk) => !shown.has(talk.id))
+  const offerIds = [...new Set([
+    ...brought.map((lesson) => ref(lesson.course)).filter((id): id is number => Boolean(id)),
+    ...otherDrafts.map((talk) => talk.courseId).filter((id) => id > 0),
+  ])]
+  const offerTitles = new Map(courses.map((course) => [course.id, course.title]))
+  for (const talk of otherDrafts) if (talk.courseId && talk.courseTitle) offerTitles.set(talk.courseId, talk.courseTitle)
   return (
     <div data-testid="bring-in">
+      {portal ? offerIds.map((courseId) => (
+        <CourseOnCodes
+          key={courseId}
+          payload={payload}
+          portalId={portal.id}
+          portalSlug={portal.slug}
+          courseId={courseId}
+          courseTitle={offerTitles.get(courseId) || 'This course'}
+          next={next}
+          accessHref={next.replace('/bring-in', '/access')}
+        />
+      )) : null}
       {secret ? (
         <p className="flash notice" data-testid="helper-token-once">Copy this helper token now. It is stored as a hash and will not be shown again. <code data-testid="helper-token-value">{secret}</code></p>
       ) : null}
@@ -253,6 +274,7 @@ export async function PortalBringInScreen(ctx: Ctx) {
         next={`${ctx.base}/admin/bring-in`}
         courses={courses.map((course) => ({ id: course.id, title: str(course.title), speaker: str(course.speaker) }))}
         query={ctx.query}
+        portal={{ id: ctx.portal.id, slug: ctx.portal.slug }}
       />
     </AdminFrame>
   )

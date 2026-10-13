@@ -122,7 +122,10 @@ export async function LiveDeskScreen(ctx: Ctx) {
           ) : null}
         </div>
         <section className="panel">
-          <header><h2>Go live</h2></header>
+          <header>
+            <h2>Go live</h2>
+            <Link href={`${base}/live`} data-testid="desk-open-live">Open the learner page</Link>
+          </header>
           <form className="body form" action="/api/live" method="post" data-testid="desk-live-form">
             <Hidden fields={{ portal: portal.slug, next: here }} />
             <label className="stack">Title<input type="text" name="title" required data-testid="desk-live-title" placeholder="Circle after Isha" /></label>

@@ -322,6 +322,7 @@ export async function listDraftTalks(payload: Payload, user: SessionUser) {
     talks: docs.map((row) => ({
       id: row.id,
       title: String(row.title || 'Untitled'),
+      courseId: idOf(row.course) || 0,
       courseTitle: titles.get(idOf(row.course) || 0) || '',
       status: bringInStatus(String(row.transcriptNote || '')),
     })),
