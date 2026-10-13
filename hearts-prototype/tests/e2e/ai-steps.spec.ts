@@ -74,7 +74,8 @@ test.describe('AI steps', () => {
   test('registry, versions, diff, try-it and mock mode', async ({ page }) => {
     await page.setViewportSize(DESK)
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master/ai')
-    await expect(page.getByTestId('ai-mock-mode')).toContainText('Built-in drafts')
+    await expect(page.getByTestId('ai-mock-mode')).toContainText('Switch on by connecting your AI account')
+    await expect(page.getByTestId('ai-step-state').filter({ hasText: 'In the pipeline' })).toHaveCount(0)
     await expect(page.getByTestId('ai-step')).toHaveCount(13)
     await expect(page.getByTestId('ai-env')).toContainText('server environment is ignored')
     await expect(page.getByTestId('ai-env')).not.toContainText('sk-')

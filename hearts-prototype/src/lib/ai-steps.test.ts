@@ -9,6 +9,8 @@ import {
   markLive,
   mockBanner,
   mockOutput,
+  stepLine,
+  stepStatus,
   nextVersion,
   placeholderProblems,
   pointProtect,
@@ -145,7 +147,20 @@ test('a server key never makes a step live; only a portal connection does', () =
   assert.equal(portalRun(false), 'mock')
   assert.equal(portalRun(true), 'live')
   assert.match(mockBanner({ connected: false, master: true }), /master desk does not call a model/)
-  assert.match(mockBanner({ connected: false, master: false }), /AI is off/)
+  assert.match(mockBanner({ connected: false, master: false }), /connecting your AI account/)
   assert.match(mockBanner({ connected: true, master: false }), /own AI account/)
   assert.equal(JSON.stringify(mockBanner({ connected: true, master: false })).includes('sk-'), false)
+})
+
+test('a step is Ready when it works, and asks for the portal account when it does not', () => {
+  assert.equal(stepStatus('tidy-caption-line', false), 'Ready')
+  assert.equal(stepStatus('question-value', false), 'Ready')
+  assert.equal(stepStatus('hors-doeuvre', false), 'Switch on by connecting your AI account')
+  assert.equal(stepStatus('hors-doeuvre', true), 'Ready')
+  for (const step of STEP_SPECS) {
+    const line = stepLine(step.slug)
+    assert.ok(line, `${step.slug} needs a one-line description`)
+    assert.equal(line.includes('\n'), false)
+    assert.ok(line.length < 90, line)
+  }
 })

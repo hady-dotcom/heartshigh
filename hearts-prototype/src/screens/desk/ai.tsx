@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { JobPoll } from '@/components/desk/job-poll'
-import { diffLines, type Placeholder } from '@/lib/ai-steps'
+import { diffLines, stepLine, stepStatus as accountStatus, type Placeholder } from '@/lib/ai-steps'
 import type { SessionUser } from '@/server/context'
 import { loadDesk, pendingForLesson } from '@/server/ai-desk'
 import type { Ctx } from '../common'
@@ -52,10 +52,10 @@ async function Frame({
   testId: string
   children: React.ReactNode
 }) {
-  if (ctx) return <AdminFrame ctx={ctx} active="ai" title={title} intro={intro} testId={testId}>{children}</AdminFrame>
+  if (ctx) return <AdminFrame ctx={ctx} active="ai" title={title} intro={intro} testId={testId} showOnPhone>{children}</AdminFrame>
   const desk = master!
   return (
-    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="ai" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId}>
+    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="ai" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} showOnPhone>
       {children}
     </DeskFrame>
   )
@@ -84,8 +84,8 @@ function Banner({ desk }: { desk: Awaited<ReturnType<typeof loadDesk>> }) {
   const mock = desk.mode === 'mock'
   return (
     <div className={styles.banner} data-testid={mock ? 'ai-mock-mode' : 'ai-portal-connected'} data-mode={desk.mode}>
-      <b>{desk.master ? 'Built-in drafts' : mock ? 'AI is off' : 'This portal’s AI account'}</b>
-      <p className={styles.quiet} style={{ margin: '4px 0 0' }}>{desk.banner}</p>
+      <b>{desk.connected ? 'Ready' : 'Switch on by connecting your AI account'}</b>
+      <p style={{ margin: '4px 0 0' }}>{desk.banner}</p>
     </div>
   )
 }
@@ -106,7 +106,7 @@ async function Registry({ ctx, master, base, desk }: { ctx: Ctx | null; master: 
   const payload = ctx?.payload || master!.payload
   const steps = await rows(payload, 'ai-steps', undefined, { limit: 30, sort: 'pipelineOrder' })
   return (
-    <Frame ctx={ctx} master={master} title="AI steps" intro="Each step is one job after a talk is brought in. Edit the prompt, try it on a single talk, then mark a version live. A run uses your portal’s own AI account when one is connected. Otherwise the built-in drafts are used." testId="ai-registry">
+    <Frame ctx={ctx} master={master} title="AI steps" intro="Each step is one job after a talk is brought in. AI is for portal admins and runs on that portal’s own key." testId="ai-registry">
       <Banner desk={desk} />
       <Grant base={base} desk={desk} master={(ctx?.user || master?.user)?.role === 'master'} />
       <div className="actions" style={{ marginBottom: 14 }}>
@@ -117,11 +117,11 @@ async function Registry({ ctx, master, base, desk }: { ctx: Ctx | null; master: 
           <Link key={step.id} className={styles.row} href={`${base}/${step.slug}`} data-testid="ai-step" data-slug={str(step.slug)}>
             <span>
               <h2>{str(step.name)}</h2>
-              <p>{str(step.description)}</p>
+              <p data-testid="ai-step-line">{stepLine(str(step.slug)) || str(step.description)}</p>
             </span>
             <span className={styles.meta}>
-              <span className="badge grey">v{str(step.liveVersion) || '1'} live</span>
-              <span className="badge gold">{step.inPipeline ? 'In the pipeline' : 'Shared text'}</span>
+              <span className={styles.version}>v{str(step.liveVersion) || '1'} live</span>
+              <span className={styles.state} data-testid="ai-step-state" data-state={accountStatus(str(step.slug), desk.connected) === 'Ready' ? 'ready' : 'needs-account'}>{accountStatus(str(step.slug), desk.connected)}</span>
             </span>
           </Link>
         ))}

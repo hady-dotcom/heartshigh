@@ -155,9 +155,41 @@ export function tierWriteBlocked(approvedCuts: number) {
 }
 
 export function mockBanner(input: { connected: boolean; master: boolean }) {
-  if (input.master) return 'The master desk does not call a model. These steps use the built-in drafts. A portal admin connects their own AI account in that portal’s Settings, and that account is billed, not HEARTS.'
-  if (input.connected) return 'This portal’s own AI account is connected. A run on this desk is billed to that account. Learners see nothing until a person approves a draft.'
-  return 'AI is off. A portal admin connects this portal’s own account in Settings. Until then every step uses the built-in drafts, and nothing is sent out.'
+  if (input.master) return 'AI is for portal admins and runs on that portal’s own key. The master desk does not call a model. An admin connects the account in that portal’s Settings.'
+  if (input.connected) return 'This portal’s own AI account is connected. A run is billed to that account. Learners see nothing until a person approves a draft.'
+  return 'Switch on by connecting your AI account in Settings. AI is for portal admins and runs on this portal’s own key. Nothing is sent out until then.'
+}
+
+/** Steps whose real result is produced in code, with no model call and no portal key. */
+const WORKS_WITHOUT_ACCOUNT = new Set(['tidy-caption-line', 'question-value', 'feedback-summary', 'rubric'])
+
+export const NEEDS_ACCOUNT = 'Switch on by connecting your AI account'
+
+/** Ready when this desk can run the step. Otherwise say how to switch it on. */
+export function stepStatus(slug: string, connected: boolean) {
+  if (connected || WORKS_WITHOUT_ACCOUNT.has(slug)) return 'Ready'
+  return NEEDS_ACCOUNT
+}
+
+const STEP_LINES: Record<string, string> = {
+  'language-inference': 'Names the language the speaker is teaching in.',
+  'hors-doeuvre': 'Picks a 15 to 30 second clip that can be heard on its own.',
+  'appetiser-cut': 'Cuts a short opening with a hook, a turn and a land.',
+  'popup-drafter': 'Drafts the questions that pause the main talk.',
+  'tidy-caption-line': 'Turns a raw caption into a line a learner can read.',
+  'jibril-seat': 'Suggests the Jibril clause and Ghunya seat this talk teaches.',
+  'quran-harvest': 'Lists the Qur’an the speaker quotes, with the time.',
+  'hadith-extraction': 'Lists the hadith the speaker quotes, in their words.',
+  'reflection-prompts': 'Drafts two or three reflections timed to the talk.',
+  'clip-critic': 'Scores the short clips against the live rubric.',
+  rubric: 'Holds the standard the clip critic uses.',
+  'feedback-summary': 'Drafts the themes in answers learners chose to share.',
+  'question-value': 'Flags a question a teacher would not learn from, and drafts a rewrite.',
+}
+
+/** One plain line for the step list. */
+export function stepLine(slug: string) {
+  return STEP_LINES[slug] || ''
 }
 
 export function tierProtect(
