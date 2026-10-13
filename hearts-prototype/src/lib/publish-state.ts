@@ -6,8 +6,8 @@ export function isDraftLesson(row: { publishState?: string | null } | null | und
 }
 
 /**
- * Attaching a transcript never publishes. A talk that had none stays or becomes a draft.
- * Round 1 talks that are already marked published still come back as drafts.
+ * Attaching a transcript stays a draft, unless the desk asked to publish when captions are ready.
+ * A film that does not play stays a draft either way.
  */
 export function helperAttachResult(existingNote?: string | null, options?: { unavailable?: boolean }) {
   const plan = captionPublishPlan(existingNote)

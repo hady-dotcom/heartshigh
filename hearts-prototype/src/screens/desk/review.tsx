@@ -217,7 +217,7 @@ export async function MasterReviewPopups(ctx: MasterCtx) {
               <p className="hint">{str(lesson.speaker)}. The main pauses at {clock(second)}.</p>
             </div>
             <div>
-              {pending.length ? <p className="hint" data-testid="new-draft-available">New draft available. This pop-up was left as it is. <Link href={`/master/ai/ingest/${lesson.id}`}>Read the draft on the ingest view</Link>.</p> : null}
+              {pending.length ? <p className="hint" data-testid="new-draft-available">New draft available. This pop-up was left as it is. <Link href={`/master/ai/ingest/${lesson.id}`}>Open the talk’s steps</Link>.</p> : null}
               <dl className="review-lines">
                 <dt>Question <span className="hint">{clock(second)}, {str(point.kind) || 'reflection'}</span></dt>
                 <dd data-testid="review-prompt">{str(point.prompt)}</dd>
