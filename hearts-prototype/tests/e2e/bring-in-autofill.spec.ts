@@ -62,6 +62,8 @@ test('a loose link takes the film title, and the review boxes can be changed bef
   const lessons = await (await master.get(`/api/lessons?where[course][equals]=${course.id}&limit=5&depth=0`)).json()
   expect(lessons.docs?.[0]?.speaker).toBe('Shaykh Test')
   expect(lessons.docs?.[0]?.title).toBe('Goals for the month')
+  for (const lesson of lessons.docs || []) await master.delete(`/api/lessons/${lesson.id}`)
+  if (course?.id) await master.delete(`/api/courses/${course.id}`)
   await master.dispose()
 })
 

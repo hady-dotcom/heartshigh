@@ -236,6 +236,7 @@ test.describe('round 2 bring in', () => {
     await shot(joiner.page, '07-joiner-drafts-hidden')
 
     await page.goto('/master/bring-in')
+    await page.getByTestId('bring-in-advanced').locator('summary').click()
     await page.getByTestId('helper-label').fill(`Home machine ${sfx}`)
     await page.getByTestId('helper-create').click()
     await expect(page.getByTestId('helper-token-value')).toBeVisible()
@@ -342,6 +343,7 @@ test.describe('round 2 bring in', () => {
 
     await page.setViewportSize(DESK)
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master/bring-in')
+    await page.getByTestId('bring-in-advanced').locator('summary').click()
     await page.locator('[data-testid="helper-row"][data-revoked="no"]').getByTestId('helper-revoke').click()
     await expect(page.getByTestId('notice')).toContainText('revoked')
     const after = await playwrightRequest.newContext({ baseURL: E2E_BASE, extraHTTPHeaders: { authorization: `Bearer ${token}` } })

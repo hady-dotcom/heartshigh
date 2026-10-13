@@ -1,7 +1,7 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test'
 import { E2E_BASE } from '../env'
 
-const PLAYLIST = 'https://www.youtube.com/playlist?list=PLheartsround2'
+const PLAYLIST = 'https://www.youtube.com/playlist?list=PLheartsready'
 const TRANSCRIPT = 'WEBVTT\n\n00:00:00.000 --> 00:00:02.000\nA line from the fixture.\n'
 
 async function signIn(page: import('@playwright/test').Page, next = '/master/bring-in') {
