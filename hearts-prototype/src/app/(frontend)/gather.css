@@ -124,7 +124,7 @@ html[data-theme] .public-gather input.field, html[data-theme] .gather-card input
   width: 100%;
 }
 html[data-theme] .public-gather .field::placeholder,
-html[data-theme] .gather-card .field::placeholder { color: #3a4e48; opacity: 1; }
+html[data-theme] .gather-card .field::placeholder { color: #5e675f; opacity: 1; }
 /* Beat a later theme rule on .app textarea.field, which otherwise paints a dark field and a dark placeholder. */
 html[data-theme] .app.gather-shell .gather-card textarea.field,
 html[data-theme] .app.gather-shell form.gather-card textarea.field {
@@ -135,7 +135,7 @@ html[data-theme] .app.gather-shell form.gather-card textarea.field {
 }
 html[data-theme] .app.gather-shell .gather-card textarea.field::placeholder,
 html[data-theme] .app.gather-shell form.gather-card textarea.field::placeholder {
-  color: #3a4e48;
+  color: #5e675f;
   opacity: 1;
 }
 .gather-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }

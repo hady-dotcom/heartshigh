@@ -59,7 +59,7 @@
 .j-tile.chosen, .j-bubble.chosen, .j-door.chosen { border-color: #f3d38e; }
 .j-tile.picked { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
 .j-tile.picked .j-glyph { color: var(--gold-ink); }
-.j-tile.crisis { grid-column: span 2; min-height: 52px; align-content: center; background: rgba(255, 255, 255, 0.05); border-style: dashed; font-size: 14px; font-weight: 550; color: rgba(255, 255, 255, 0.86); }
+.j-tile.crisis { grid-column: span 2; min-height: 64px; align-content: center; background: rgba(246, 238, 220, 0.14); border: 1.5px solid #f3d38e; font-size: 16px; font-weight: 650; color: #f6eedc; }
 .j-bubbles { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .j-envelope { flex-basis: 100%; display: grid; place-items: center; color: rgba(255, 255, 255, 0.7); margin-bottom: 6px; }
 .j-bubble { background: var(--tint, #fff); color: var(--ink); border: 2px solid transparent; border-radius: 22px 22px 22px 6px; padding: 12px 16px; font-size: 15px; font-weight: 650; max-width: 86%; text-align: left; }
@@ -77,12 +77,15 @@
 .j-door-label { position: relative; font-weight: 700; font-size: 15px; line-height: 1.25; }
 .j-door.picked { border-color: var(--gold); }
 
-/* Help */
-.j-contacts { list-style: none; margin: 18px 0 0; padding: 0 22px; display: grid; gap: 10px; }
-.j-contacts li { background: rgba(255, 255, 255, 0.09); border-radius: 18px; padding: 14px 16px; display: grid; gap: 4px; }
-.j-contacts b { font-size: 15px; }
-.j-contacts a { color: #f3d38e; font-weight: 700; text-decoration: none; font-size: 17px; }
-.j-contacts small { color: rgba(255, 255, 255, 0.7); }
+/* Help: a calm card for each line, with the number as the step to take. */
+.j-help .j-body { display: grid; gap: 10px; }
+.j-help .j-private { margin: 0; font-size: 15px; line-height: 1.45; color: #e8dcc4; }
+.j-contacts { list-style: none; margin: 16px 0 0; padding: 0 22px; display: grid; gap: 12px; }
+.j-contacts li { background: rgba(16, 46, 44, 0.72); border: 1px solid rgba(243, 211, 142, 0.45); border-radius: 18px; padding: 14px 16px; display: grid; gap: 6px; }
+.j-contacts b { font-size: 16px; line-height: 1.35; color: #f6eedc; }
+.j-contacts a { color: #f3d38e; font-weight: 700; text-decoration: none; }
+.j-contacts a[data-testid="help-phone"] { justify-self: start; display: inline-flex; align-items: center; min-height: 44px; padding: 8px 16px; border-radius: 999px; background: #d4a84b; color: #1a1408; font-size: 16px; }
+.j-contacts small { color: #e8dcc4; font-size: 14px; line-height: 1.4; }
 
 /* Hand-off line */
 .j-line { position: absolute; left: 26px; right: 26px; top: 28%; z-index: 12; margin: 0; text-align: center; font-family: var(--serif); font-weight: 600; font-size: 30px; line-height: 1.2; text-shadow: 0 2px 24px rgba(0, 0, 0, 0.4); pointer-events: none; }

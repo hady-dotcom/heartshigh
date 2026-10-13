@@ -14,7 +14,7 @@ export default async function Forgot({ searchParams }: { searchParams: Promise<{
         <Flash error={query.error} notice={query.notice} />
         <form className="door-form" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'forgot-password' }} />
-          <label>Email<input className="field" data-testid="forgot-email" name="email" type="email" autoComplete="email" required /></label>
+          <label>Email<input className="field" data-testid="forgot-email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required /></label>
           <TurnstileField />
           <button className="pill gold block" data-testid="forgot-submit" type="submit">Send the link</button>
         </form>

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ExampleInUse } from '@/components/app/care'
 import { Flash, Hidden } from '@/components/app/shell'
 import { TurnstileField } from '@/components/app/turnstile-field'
 import { BrandLockup } from '@/components/brand'
@@ -16,12 +17,14 @@ export default async function Reset({ searchParams }: { searchParams: Promise<{ 
         {token ? (
           <form className="door-form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'reset-password', token }} />
-            <label>New password<input className="field" data-testid="reset-password" name="password" type="password" minLength={8} autoComplete="new-password" required /></label>
+            <label>New password<input className="field" data-testid="reset-password" name="password" type="password" minLength={8} autoComplete="new-password" placeholder="At least 8 characters" required /></label>
             <TurnstileField />
             <button className="pill gold block" data-testid="reset-submit" type="submit">Save password</button>
           </form>
         ) : (
-          <p className="door-hint">Open the reset link we sent, or ask for a new one.</p>
+          <ExampleInUse title="A reset link" action={{ href: '/forgot', label: 'Ask for a new link' }}>
+            <p>Open the email we sent, then choose a new password on this page.</p>
+          </ExampleInUse>
         )}
         <div className="door-links"><Link href="/forgot">Ask for a new link</Link><Link href="/login">Sign in</Link></div>
       </div>
