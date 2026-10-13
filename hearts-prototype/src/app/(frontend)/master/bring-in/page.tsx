@@ -8,7 +8,7 @@ export default async function BringInPage({ searchParams }: { searchParams: Prom
   const { payload, user } = await requireMaster()
   const courses = await rows(payload, 'courses', { origin: { equals: 'master' } }, { sort: 'title', limit: 500 })
   return (
-    <MasterFrame ctx={{ payload, user, query }} active="bring-in" title="Bring in" intro="Paste YouTube links, a playlist or a channel. Films arrive as drafts. Learners see a talk only after you publish it." testId="master-bring-in">
+    <MasterFrame ctx={{ payload, user, query }} active="bring-in" title="Bring in" intro="Paste YouTube links, a playlist or a channel. Films arrive as drafts. Learners see a talk only after you publish it." testId="master-bring-in" showOnPhone>
       <BringInBody
         payload={payload}
         user={user}

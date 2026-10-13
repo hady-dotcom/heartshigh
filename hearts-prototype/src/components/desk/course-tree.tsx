@@ -11,6 +11,7 @@ function CourseRow({
   testId,
   checked,
   onChange,
+  mode,
 }: {
   course: PlacedCourse
   name: string
@@ -18,10 +19,11 @@ function CourseRow({
   testId?: string
   checked: boolean
   onChange: (on: boolean) => void
+  mode: 'one' | 'many'
 }) {
   return (
     <label className="check tree-course" data-testid={testId} data-course={course.id}>
-      <input type="checkbox" name={name} value={course.id} checked={checked} onChange={(event) => onChange(event.target.checked)} />
+      <input type={mode === 'one' ? 'radio' : 'checkbox'} name={name} value={course.id} checked={checked} onChange={(event) => onChange(event.target.checked)} />
       <span>
         {course.title}
         {hint ? <span className="hint"> {hint}</span> : null}
@@ -44,12 +46,15 @@ export function CourseTree({
   hints,
   testId,
   courseTestId,
+  mode = 'many',
 }: {
   groups: DoorGroup[]
   name: string
   hints?: Record<number, string>
   testId: string
   courseTestId?: string
+  /** `one` picks a single course. `many` is the usual tick-several tree. */
+  mode?: 'one' | 'many'
 }) {
   const [query, setQuery] = useState('')
   const [opened, setOpened] = useState<Record<string, boolean>>({})
@@ -58,7 +63,7 @@ export function CourseTree({
   const matches = (course: PlacedCourse) => !needle || course.title.toLowerCase().includes(needle)
   const selected = Object.values(picked).filter(Boolean).length
 
-  const setCourse = (id: number, on: boolean) => setPicked((prev) => ({ ...prev, [id]: on }))
+  const setCourse = (id: number, on: boolean) => setPicked((prev) => (mode === 'one' ? (on ? { [id]: true } : {}) : { ...prev, [id]: on }))
   const setMany = (courses: PlacedCourse[], on: boolean) => setPicked((prev) => {
     const next = { ...prev }
     for (const course of courses) next[course.id] = on
@@ -128,13 +133,13 @@ export function CourseTree({
             ))}
             <div className="tree-door-body">
               {unseated.map((course) => (
-                <CourseRow key={course.id} course={course} name={name} hint={hints?.[course.id]} testId={courseTestId} checked={Boolean(picked[course.id])} onChange={(on) => setCourse(course.id, on)} />
+                <CourseRow key={course.id} course={course} name={name} hint={hints?.[course.id]} testId={courseTestId} checked={Boolean(picked[course.id])} onChange={(on) => setCourse(course.id, on)} mode={mode} />
               ))}
               {seats.map((seat) => (
                 <div key={seat.id} className="tree-seat" data-testid="tree-seat">
                   <div className="tree-seat-name" title={seat.note || seat.label} data-testid="seat-label">{seat.label}</div>
                   {seat.courses.map((course) => (
-                    <CourseRow key={course.id} course={course} name={name} hint={hints?.[course.id]} testId={courseTestId} checked={Boolean(picked[course.id])} onChange={(on) => setCourse(course.id, on)} />
+                    <CourseRow key={course.id} course={course} name={name} hint={hints?.[course.id]} testId={courseTestId} checked={Boolean(picked[course.id])} onChange={(on) => setCourse(course.id, on)} mode={mode} />
                   ))}
                 </div>
               ))}

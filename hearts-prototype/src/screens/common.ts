@@ -43,6 +43,8 @@ export type Query = {
   showTest?: string
   origin?: string
   q?: string
+  /** A code just made from a quick link, so the desk can show the address, WhatsApp and QR. */
+  fresh?: string
   /** `?debug=yt` — kept when moving between course links. */
   debug?: string
 }

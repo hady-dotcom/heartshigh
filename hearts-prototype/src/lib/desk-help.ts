@@ -68,7 +68,7 @@ export const PAGE: Record<string, string> = {
   experiments:
     'A test shows some learners one wording or layout and others another, then counts what they do. Learners are never told they are in a test. A sheikh’s words stay as they are. The kill switch stops every running test at once.',
   insights:
-    'Insights is our own look at how people move through HEARTS. Taps, scrolls and clip watches stay in our Postgres. We never store typed text or an answer.',
+    'Insights is our own look at how people move through HEARTS. Taps, scrolls and clip watches stay in our own store. We never store typed text or an answer.',
   calendar:
     'The calendar knows Friday, Ramadan, Dhul Hijjah, the two Eids and seasons you add. The Islamic day moves on at Maghrib. A suggested line never reaches a learner until you approve it.',
   missions:
@@ -149,7 +149,7 @@ export const TOOL: Record<string, string> = {
   bringInGiveHolders:
     'Tick this to add the course to learners who already hold a pack that contains it and who keep a saved course list. Leave it unticked and those learners keep the list they joined with. People who read the pack live already see courses added to the pack.',
   bringInHelper:
-    'The caption helper runs on your own machine, where YouTube is not blocked. The token can only list talks waiting for a transcript and attach one. It is stored as a hash, shown once, and you can revoke it here.',
+    'The caption helper runs on your own machine, where YouTube is not blocked. The token can only list talks waiting for a transcript and attach one. It is shown once, then kept so it cannot be read back, and you can revoke it here.',
   bringInChannel:
     'Map a channel id or channel name to a speaker. That speaker is used only when the line and the course do not name one. It does not rename films you have already brought in.',
   bringInLookup:
@@ -157,7 +157,7 @@ export const TOOL: Record<string, string> = {
   packGiveHolders:
     'Tick this to add newly ticked courses to learners who already hold this pack and keep a saved course list. Leave it unticked and those learners keep the list they joined with. People who join from now on get the courses either way.',
   fetchTranscript:
-    'Leave this ticked to pull YouTube’s own captions and keep their times. Untick it when you only want the film and will upload a transcript yourself. Nothing here calls a model.',
+    'Leave this ticked to pull YouTube’s own captions and keep their times. Untick it when you only want the film and will upload a transcript yourself. Nothing here writes the words for you.',
   captionLang:
     'This is the caption language to ask YouTube for. English is the usual choice. Auto-captions in that language are used when there is no manual track.',
   bringInRetry:

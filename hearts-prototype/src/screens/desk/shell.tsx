@@ -190,7 +190,7 @@ export async function DeskFrame({
       <p>The {deskName || subBrand.toLowerCase()} needs a wider screen than this. Your work is saved, so you can carry on from a computer.</p>
       {deskAppHref(brandHref) ? (
         <p>
-          <Link className="btn ink" href={deskAppHref(brandHref)!} data-testid="desk-open-app">{user.role === 'teacher' ? 'See it as a learner' : 'Open the app'}</Link>
+          <Link className="btn ink" href={deskAppHref(brandHref)!} data-testid="desk-open-app">{user.role === 'teacher' ? 'See what a learner sees' : 'Open the app'}</Link>
         </p>
       ) : null}
       <form action="/api/hearts" method="post">

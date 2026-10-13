@@ -61,7 +61,7 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
       ctx={ctx || null}
       master={master || null}
       title="Insights"
-      intro="Our own look at taps, drop-off and coming back. Nothing typed, no answers, all on our own Postgres."
+      intro="Our own look at taps, drop-off and coming back. Nothing typed, no answers, all stored here."
       testId="insights-desk"
       tools={
         <form action="/api/insights" method="post">
