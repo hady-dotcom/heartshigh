@@ -94,7 +94,8 @@ function finishBags(bags: PhraseBag[]): PlaceCandidate[] {
     for (const phrase of bag.body) {
       const words = phrase.split(' ').length
       const count = df.get(phrase) || 0
-      if (words >= 2 ? count <= 3 : count <= 2) phrases.add(phrase)
+      // A title's own words always count. A word or phrase from a clause counts only when few sections share it.
+      if (words >= 2 ? count <= 3 : count <= 1) phrases.add(phrase)
     }
     return { id: bag.id, label: bag.label, phrases: [...phrases].sort() }
   })
@@ -160,10 +161,6 @@ export function loadPlaceCatalogue(root = process.cwd()) {
 }
 
 type Scored = { candidate: PlaceCandidate; share: number; mass: number; covered: number; terms: PlaceTerm[] }
-
-function cueWords(text: string) {
-  return contentWords(text)
-}
 
 function phraseHits(words: string[], phrase: string) {
   const needle = phrase.split(' ')
@@ -278,7 +275,7 @@ export function scoreBringInTalk(transcript: string | null | undefined, catalogu
     return { jibril: blank, ghunya: { ...blank } }
   }
   const talkSeconds = mergedSeconds(cues.map((cue) => [cue.start, cue.end]))
-  const words = cues.map((cue) => cueWords(cue.text))
+  const words = cues.map((cue) => contentWords(cue.text))
   return {
     jibril: placementFor(catalogue.jibril.map((candidate) => scoreCandidate(cues, words, candidate, talkSeconds)), 'Jibril section'),
     ghunya: placementFor(catalogue.ghunya.map((candidate) => scoreCandidate(cues, words, candidate, talkSeconds)), 'Ghunya heading'),
@@ -325,7 +322,6 @@ export async function placeBringInRows<T extends { id: string; captions: string;
       }
     }
   }
-  const workers = Math.min(3, rows.length)
-  await Promise.all(Array.from({ length: workers }, () => worker()))
+  await Promise.all(Array.from({ length: Math.min(3, rows.length) }, () => worker()))
   return out
 }

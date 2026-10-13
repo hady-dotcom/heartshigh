@@ -37,6 +37,7 @@ import {
   type TaskRef,
 } from '@/lib/gather'
 import { capitalAfterColon, doorByNumber, doorCode, doorLabel } from '@/lib/doors'
+import { eveningName } from '@/lib/evening-name'
 import { harvestLine } from '@/lib/harvest'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { now } from '@/lib/clock'
@@ -241,8 +242,7 @@ export async function saveGathering(payload: Payload, input: {
   door?: number | null
   propose?: boolean
 }) {
-  const title = input.title.slice(0, 120)
-  if (!title) return { ok: false as const, error: 'Give the gathering a name.' }
+  const title = eveningName(input.title)
   const startsAt = londonIso(input.startsAt) || (input.startsAt ? new Date(input.startsAt).toISOString() : '')
   if (!startsAt || Number.isNaN(new Date(startsAt).getTime())) return { ok: false as const, error: 'Choose a date and a time.' }
   const kind = (KINDS.has(input.kind) ? input.kind : 'circle') as GatherKind

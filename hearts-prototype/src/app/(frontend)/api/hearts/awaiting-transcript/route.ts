@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { bringInNote, cleanedTimedTranscript, isAwaitingTranscript } from '@/lib/youtube'
 import { helperAttachResult } from '@/lib/publish-state'
+import { giveCourseToPackHolders } from '@/server/publish-holders'
+import { idOf } from '@/lib/ids'
 import { hashHelperToken, helperRateOk, helperTokenAllows, helperTokenMatches } from '@/lib/helper-token'
 import { getSession } from '@/server/context'
 
@@ -67,7 +69,7 @@ export async function GET(req: Request) {
   return NextResponse.json({ talks })
 }
 
-/** Attach a timed transcript, or mark a film that cannot be fetched. Neither call publishes. */
+/** Attach a timed transcript, or mark a film that cannot be fetched. A talk stays a draft unless the desk asked to publish when captions are ready. */
 export async function POST(req: Request) {
   const allowed = await gate(req)
   if (!allowed.ok) return allowed.response
@@ -78,10 +80,10 @@ export async function POST(req: Request) {
   const lessonId = Number(body?.lesson || 0)
   const raw = String(body?.transcript || '')
   if (!lessonId || (!body?.unavailable && !raw.trim())) return NextResponse.json({ error: 'Send a lesson id and a timed transcript.' }, { status: 400 })
-  const lesson = await allowed.payload.findByID({ collection: 'lessons', id: lessonId, depth: 0, overrideAccess: true }).catch(() => null) as { transcriptNote?: string; publishState?: string | null } | null
+  const lesson = await allowed.payload.findByID({ collection: 'lessons', id: lessonId, depth: 0, overrideAccess: true }).catch(() => null) as { transcriptNote?: string; publishState?: string | null; course?: unknown } | null
   if (!lesson) return NextResponse.json({ error: 'That talk could not be found.' }, { status: 404 })
   if (!isAwaitingTranscript(lesson.transcriptNote)) return NextResponse.json({ error: 'That talk is not waiting for a transcript.' }, { status: 409 })
-  const attached = helperAttachResult()
+  const attached = helperAttachResult(lesson.transcriptNote, { unavailable: Boolean(body?.unavailable) })
   if (body?.unavailable) {
     await allowed.payload.update({
       collection: 'lessons',
@@ -103,10 +105,16 @@ export async function POST(req: Request) {
     data: {
       transcript: stored.cleaned,
       transcriptSource: 'upload',
-      transcriptNote: bringInNote('processed', allowed.via === 'helper' ? 'A timed transcript was attached by the caption helper. This talk is a draft until someone publishes it.' : 'A timed transcript was attached by the waiting-transcript API. This talk is a draft until someone publishes it.'),
+      transcriptNote: attached.publishState === 'published'
+        ? bringInNote('processed', 'A timed transcript was attached. Captions are in, so this talk is published.')
+        : bringInNote('processed', allowed.via === 'helper' ? 'A timed transcript was attached by the caption helper. This talk is a draft until someone publishes it.' : 'A timed transcript was attached by the waiting-transcript API. This talk is a draft until someone publishes it.'),
       publishState: attached.publishState,
     },
   })
+  if (attached.give) {
+    const courseId = idOf(lesson.course)
+    if (courseId) await giveCourseToPackHolders(allowed.payload, [courseId])
+  }
   return NextResponse.json({
     ok: true,
     lesson: lessonId,
