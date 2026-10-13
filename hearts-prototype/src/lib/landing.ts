@@ -1,3 +1,5 @@
+import { portalIdOf } from './ids'
+
 /** Where a person should land after join or sign-in. */
 
 export function isAppRole(role: string | null | undefined) {
@@ -33,4 +35,15 @@ export function afterJoinPath(slug: string, codeRole: string | null | undefined)
 export function deskAppHref(brandHref: string) {
   if (brandHref.endsWith('/admin')) return brandHref.slice(0, -'/admin'.length) || '/'
   return null
+}
+
+/** A teacher or portal admin of this portal, while they are in the learner app. */
+export function staffDeskHref(
+  user: { role?: string | null; tenants?: { tenant?: unknown }[] } | null | undefined,
+  portal: { id: number; slug: string } | null | undefined,
+) {
+  if (!user || !portal) return null
+  if (user.role !== 'teacher' && user.role !== 'portal-admin') return null
+  if (portalIdOf(user) !== portal.id) return null
+  return user.role === 'teacher' ? teacherDeskPath(portal.slug) : portalDeskPath(portal.slug)
 }

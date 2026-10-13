@@ -9,13 +9,24 @@ import { now } from '@/lib/clock'
 import { adoptedCourseIds } from '@/server/context'
 import { portalName } from '@/server/learner'
 import { type Ctx, portalPeople, rows, str } from '../common'
-import { DeskFrame, portalNav } from './shell'
+import { countNewSharedAnswers, markTeachVisit, seenFor } from '@/server/teach-seen'
+import { DeskFrame, portalNav, type NavGroup } from './shell'
 import { PORTAL_TIME_ZONES, portalTimeZone, zoneCity } from '@/lib/zone-time'
 import { displayPortalAddress } from '@/lib/portal-address'
 import { mcpConnectorStatus, publicAi } from '@/lib/portal-ai'
 
+function withAnswerBadge(groups: NavGroup[], count: number): NavGroup[] {
+  if (count <= 0) return groups
+  return groups.map((group) => ({
+    ...group,
+    items: group.items.map((item) => (item.key === 'teach' ? { ...item, badge: count } : item)),
+  }))
+}
+
 export async function AdminFrame({ ctx, active, title, intro, tools, help, children, testId, tone }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; help?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening' }) {
   const { payload, user, portal, base, query } = ctx
+  const seenAt = active === 'teach' ? await markTeachVisit(payload, user, portal.id) : seenFor(user, portal.id)
+  const freshAnswers = await countNewSharedAnswers(payload, portal.id, seenAt)
   const extra = [{ label: user.role === 'teacher' ? 'See it as a learner' : 'Open the learner app', href: base }]
   if (user.role === 'master') extra.push({ label: 'Back to the master desk', href: '/master' })
   return (
@@ -25,7 +36,7 @@ export async function AdminFrame({ ctx, active, title, intro, tools, help, child
       title={title}
       intro={intro}
       active={active}
-      nav={portalNav(base, user, portal)}
+      nav={withAnswerBadge(portalNav(base, user, portal), freshAnswers)}
       brand={portalName(portal)}
       subBrand={portal.closed ? 'Deactivated' : 'Portal desk'}
       deskName={`${portalName(portal)} portal desk`}
@@ -80,9 +91,17 @@ export async function OverviewScreen(ctx: Ctx) {
   const max = Math.max(1, ...bars.map((bar) => bar.value))
   const learners = people.filter((person) => person.role === 'learner').length
   const staff = people.length - learners
+  const freshAnswers = await countNewSharedAnswers(payload, portal.id, seenFor(user, portal.id))
 
   return (
     <AdminFrame ctx={ctx} active="overview" title="Overview" intro="Your portal at a glance: who is here, what you have made, and how people are getting on." testId="admin-overview">
+      <section className="panel" data-testid="new-answers" style={{ marginBottom: 18 }}>
+        <header><div><h2>New answers</h2><p>Shared with you since you last opened Learners. Private answers are not counted.</p></div></header>
+        <div className="body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <b data-testid="new-answers-count" style={{ fontSize: 28 }}>{freshAnswers}</b>
+          <Link className="btn ink" href={`${base}/admin/teach`}>Open Learners</Link>
+        </div>
+      </section>
       {!portal.wizardDone && user.role !== 'teacher' ? <div className="flash notice">The short setup is not finished yet. <Link href={`${base}/admin/wizard`}>Finish it now</Link>.</div> : null}
       <section className="org-band">
         <div>

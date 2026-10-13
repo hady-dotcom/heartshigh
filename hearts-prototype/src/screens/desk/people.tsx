@@ -19,6 +19,7 @@ import { dayNumber } from '@/server/learner'
 import { type Ctx, clock, longDate, portalPeople, ref, rows, shortDate, str } from '../common'
 import { AdminFrame } from './overview'
 import { featureOn } from '@/lib/features'
+import { sharedAnswerText, sharedAnswersNewestFirst } from '@/lib/shared-answers'
 
 export async function TeachScreen(ctx: Ctx) {
   const { payload, user, portal, base, query } = ctx
@@ -38,12 +39,8 @@ export async function TeachScreen(ctx: Ctx) {
   const shared = entries.filter((entry) => entry.consent)
   const kept = entries.length - shared.length
   const consented = new Set(shared.map((entry) => ref(entry.answer)))
-  const evidence = answers.filter(
-    (answer) =>
-      (answer.video || answer.audio) &&
-      answer.keepPrivate !== true &&
-      (answer.shareWithTeacher === true || consented.has(answer.id)),
-  )
+  const sharedAnswers = sharedAnswersNewestFirst(answers, consented)
+  const evidence = sharedAnswers.filter((answer) => answer.video || answer.audio)
   const picked = evidence.find((answer) => answer.id === Number(query.answer)) || evidence[0]
   const here = `${base}/admin/teach`
   const today = dateKey(now())
@@ -109,6 +106,26 @@ export async function TeachScreen(ctx: Ctx) {
               {!learners.length ? <tr><td colSpan={8} className="empty">Nobody has joined with a learner code yet.</td></tr> : null}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <section className="panel" data-testid="shared-answers" style={{ marginBottom: 18 }}>
+        <header><div><h2>Answers shared with you ({sharedAnswers.length})</h2><p>Newest first. Typed answers and recordings. Anything a learner kept private stays in their workbook.</p></div></header>
+        <div className="body" style={{ display: 'grid', gap: 12 }}>
+          {sharedAnswers.map((answer) => {
+            const prompt = (answer.point as { prompt?: string } | null)?.prompt
+            return (
+              <article key={answer.id} className="lib-card" data-testid="shared-answer">
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                  <b>{(answer.user as { name?: string } | null)?.name || 'A learner'}</b>
+                  <span className="hint">{shortDate(answer.createdAt)}</span>
+                </div>
+                {prompt ? <p className="hint" style={{ margin: 0 }}>{prompt}</p> : null}
+                <p data-testid="shared-answer-text" style={{ margin: 0 }}>{sharedAnswerText(answer)}</p>
+              </article>
+            )
+          })}
+          {!sharedAnswers.length ? <p className="empty">Nothing shared yet. When a learner shares an answer, typed or recorded, it shows up here.</p> : null}
         </div>
       </section>
 

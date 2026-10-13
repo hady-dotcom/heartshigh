@@ -26,6 +26,7 @@ import * as migration_20261005_121000_safety_locks from './20261005_121000_safet
 import * as migration_20261005_161000_portal_extra_scenes from './20261005_161000_portal_extra_scenes';
 import * as migration_20261009_191000_portal_ai_connection from './20261009_191000_portal_ai_connection';
 import * as migration_20261011_120000_bring_in_round2 from './20261011_120000_bring_in_round2';
+import * as migration_20261013_190000_teach_seen from './20261013_190000_teach_seen';
 
 export const migrations = [
   {
@@ -167,5 +168,10 @@ export const migrations = [
     up: migration_20261011_120000_bring_in_round2.up,
     down: migration_20261011_120000_bring_in_round2.down,
     name: '20261011_120000_bring_in_round2',
+  },
+  {
+    up: migration_20261013_190000_teach_seen.up,
+    down: migration_20261013_190000_teach_seen.down,
+    name: '20261013_190000_teach_seen',
   },
 ];

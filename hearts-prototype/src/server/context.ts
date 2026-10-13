@@ -31,6 +31,8 @@ export type SessionUser = {
   shareWithLearners?: boolean | null
   haptics?: boolean | null
   removed?: boolean | null
+  /** Portal id to ISO time of the last Teach visit. */
+  teachSeen?: unknown
 }
 
 export type PortalDoc = {

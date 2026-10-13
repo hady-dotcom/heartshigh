@@ -14,7 +14,7 @@ import { deskNavAllowed, type FeatureSource } from '@/lib/features'
 import { rows, shortDate, str } from '../common'
 import { DeskNav } from './desk-nav'
 
-type NavItem = { key: string; label: string; href: string; icon: ReactNode }
+type NavItem = { key: string; label: string; href: string; icon: ReactNode; badge?: number }
 export type NavGroup = { group: string; description?: string; items: NavItem[] }
 
 export function portalNav(base: string, user: SessionUser, portal?: FeatureSource): NavGroup[] {

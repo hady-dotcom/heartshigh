@@ -40,6 +40,7 @@ import { LiveWatchScreen } from '@/screens/app/live'
 import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
 import { PortalCircle } from '@/screens/desk/circle'
 import { PortalAnnounceScreen, PortalSafetyScreen } from '@/screens/desk/safety'
+import { BackToDesk } from '@/components/app/back-to-desk'
 import { FeatureUnavailable } from '@/components/app/feature-unavailable'
 import { featureOn, type FeatureKey } from '@/lib/features'
 
@@ -77,7 +78,12 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         if (!started.length) redirect(visitor.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
       }
     } else if (!shut) {
-      return JourneyScreen({ payload: session.payload, portal, user: visitor, base, initial: area === 'feed' ? 'feed' : area === 'help' ? 'help' : 'opener', viewAs: Boolean(session.viewAs), query: query as Record<string, string | undefined> })
+      return (
+        <>
+          <BackToDesk user={visitor} portal={portal} />
+          {await JourneyScreen({ payload: session.payload, portal, user: visitor, base, initial: area === 'feed' ? 'feed' : area === 'help' ? 'help' : 'opener', viewAs: Boolean(session.viewAs), query: query as Record<string, string | undefined> })}
+        </>
+      )
     }
   }
 
@@ -183,6 +189,16 @@ export default async function PortalScreen({ params, searchParams }: { params: P
     }
   }
 
+  return (
+    <>
+      <BackToDesk user={user} portal={portal} />
+      {await learnerArea(area, a, b, ctx, payload)}
+    </>
+  )
+}
+
+async function learnerArea(area: string | undefined, a: string | undefined, b: string | undefined, ctx: Ctx, payload: Ctx['payload']) {
+  const { base } = ctx
   switch (area) {
     case undefined:
       return HomeScreen(ctx)
