@@ -284,7 +284,7 @@ html[data-theme] textarea::placeholder { color: var(--muted); }
 /* Bring in examples are a pale grey, so they do not look like text already typed into the dark field. */
 html[data-theme] .desk textarea.paste-example::placeholder {
   color: #b7c0be;
-  opacity: 1;
+  opacity: .45;
 }
 html[data-theme] .field:focus,
 html[data-theme] .desk input:focus,
