@@ -1,7 +1,10 @@
 import Link from 'next/link'
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
+import { ExampleInUse, Helplines } from '@/components/app/care'
 import { MissionCard } from '@/components/app/mission-card'
-import { joinCount, joinOf, loadMission, missionView, openMissionsFor, shapedFor, supportMessages, threadFor } from '@/server/missions'
+import { CARE_SUPPORT_LEAD, CARE_SUPPORT_NOW } from '@/lib/care-copy'
+import { joinCount, loadMission, missionView, openMissionsFor, shapedFor, supportMessages, threadFor } from '@/server/missions'
+import { helpContactsFor } from '@/server/opening'
 import { type Ctx, shortDate, str, unreadCount } from '../common'
 
 export async function activeMissionCard(payload: Ctx['payload'], portalId: number, base: string) {
@@ -75,7 +78,11 @@ export async function ShapedScreen({ payload, user, portal, base, query }: Ctx) 
             <h2 style={{ margin: '0 0 6px', fontSize: 18 }}>{item.title}</h2>
             <p data-testid="shaped-result">You helped decide: {item.result}</p>
           </section>
-        )) : <p className="muted">When a mission you joined is decided, it will sit here.</p>}
+        )) : (
+          <ExampleInUse testId="shaped-empty" title="The Friday reminder" action={{ href: base, label: 'Back home' }}>
+            <p>You helped decide: the button now says “Stay with this”.</p>
+          </ExampleInUse>
+        )}
       </div>
       <TabBar base={base} active="me" unread={unread} />
     </AppFrame>
@@ -85,6 +92,7 @@ export async function ShapedScreen({ payload, user, portal, base, query }: Ctx) 
 export async function SupportScreen({ payload, user, portal, base, query }: Ctx) {
   const thread = await threadFor(payload, user, portal.id)
   const messages = await supportMessages(payload, thread.id)
+  const contacts = await helpContactsFor(payload, portal.id)
   const unread = await unreadCount(payload, user)
   return (
     <AppFrame evening testId="support-page">
@@ -92,18 +100,28 @@ export async function SupportScreen({ payload, user, portal, base, query }: Ctx)
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>Ask for help</h1></div>
         <Flash error={query.error} notice={query.notice} />
-        <p className="lead">Write to the team here. You do not need an email.</p>
-        {messages.map((message) => (
+        <section className="care-panel" data-testid="support-care">
+          <h2 style={{ margin: 0, fontSize: 22 }}>A person will read this</h2>
+          <p>{CARE_SUPPORT_LEAD}</p>
+          <p>{CARE_SUPPORT_NOW}</p>
+          <Helplines contacts={contacts} />
+        </section>
+        {messages.length ? messages.map((message) => (
           <section key={message.id} className="card" data-testid="support-message" data-desk={message.fromDesk ? 'yes' : 'no'}>
-            <b>{message.fromDesk ? 'HEARTS' : 'You'}</b>
+            <b>{message.fromDesk ? 'Your portal team' : 'You'}</b>
             <p>{str(message.body)}</p>
             <small className="muted">{shortDate(message.createdAt)}</small>
           </section>
-        ))}
-        <form className="card form-stack" action="/api/missions" method="post">
+        )) : (
+          <ExampleInUse testId="support-example" title="A note, and a reply" action={{ href: '#support-write', label: 'Write to the team' }}>
+            <p><b>You</b> · I have been low this week and I do not know who to tell.</p>
+            <p style={{ marginTop: 8 }}><b>Your portal team</b> · Thank you for writing. Amina will reply here today. If you need someone sooner, the helplines above answer now.</p>
+          </ExampleInUse>
+        )}
+        <form id="support-write" className="card form-stack" action="/api/missions" method="post">
           <Hidden fields={{ action: 'support', next: `${base}/me/help` }} />
-          <label>Your note<textarea className="field" name="body" rows={4} required data-testid="support-body" /></label>
-          <button className="pill gold" type="submit" data-testid="support-send">Send</button>
+          <label>Your note<textarea className="field" name="body" rows={4} required placeholder="Write what you need, in your own words" data-testid="support-body" /></label>
+          <button className="pill gold" type="submit" data-testid="support-send">Send to the team</button>
         </form>
       </div>
       <TabBar base={base} active="me" unread={unread} />

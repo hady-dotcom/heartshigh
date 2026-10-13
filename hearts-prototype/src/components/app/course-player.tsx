@@ -1051,14 +1051,14 @@ function Sheet({
     form.set('viewingId', viewingId)
     try {
       const response = await fetch('/api/answers', { method: 'POST', body: form })
-      const result = (await response.json().catch(() => ({}))) as { error?: string; keepPrivate?: boolean; sharedWithLearners?: boolean }
+      const result = (await response.json().catch(() => ({}))) as { error?: string; keepPrivate?: boolean; sharedWithLearners?: boolean; notice?: string }
       if (!response.ok) {
         setError(result.error || 'That did not save. Try once more.')
         setSending(false)
         return
       }
       const text = String(form.get('body') || form.get('choice') || 'Saved in your workbook.')
-      leave({ pointId: point.id, text, message: result.keepPrivate ? 'Saved privately in your workbook.' : result.sharedWithLearners ? 'Saved in your workbook and shared with other learners.' : 'Saved in your workbook.' })
+      leave({ pointId: point.id, text, message: result.notice || (result.keepPrivate ? 'Saved privately in your workbook.' : result.sharedWithLearners ? 'Saved in your workbook and shared with other learners.' : 'Saved in your workbook.') })
     } catch {
       setError('You seem to be offline. Your answer is still here; try again in a moment.')
       setSending(false)

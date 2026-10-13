@@ -5,7 +5,7 @@ import { tooManyAnswers } from '@/lib/auth-gate'
 import { clientIp, hitAnswer } from '@/lib/rate-limit'
 import { getSession } from '@/server/context'
 import { json, readBody, viewAsRefusal } from '@/server/api'
-import { saveAnswer, type AnswerInput } from '@/server/handle'
+import { answerSavedMessage, saveAnswer, type AnswerInput } from '@/server/handle'
 import { portalIdOf } from '@/lib/ids'
 
 export const dynamic = 'force-dynamic'
@@ -113,9 +113,9 @@ export async function POST(req: Request) {
     const host = req.headers.get('x-forwarded-host') || req.headers.get('host')
     const proto = req.headers.get('x-forwarded-proto') || 'http'
     const url = new URL(next, host ? `${proto}://${host}` : req.url)
-    url.searchParams.set(result.ok ? 'notice' : 'error', result.ok ? 'Saved in your workbook.' : result.error)
+    url.searchParams.set(result.ok ? 'notice' : 'error', result.ok ? answerSavedMessage(result) : result.error)
     return NextResponse.redirect(url, 303)
   }
   if (!result.ok) return json({ error: result.error }, result.status)
-  return json(result, result.updated ? 200 : 201)
+  return json({ ...result, notice: answerSavedMessage(result) }, result.updated ? 200 : 201)
 }

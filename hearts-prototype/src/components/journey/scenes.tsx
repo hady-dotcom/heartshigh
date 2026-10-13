@@ -4,6 +4,7 @@ import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react
 import type { SceneDef, SceneOption } from '@/lib/heart'
 import { EASE, T, animate } from '@/lib/motion'
 import { httpsHref, plainText, telHref } from '@/lib/text-safety'
+import { CARE_HELP_NOW, CARE_HELP_PRIVATE, CARE_HELP_READY, CARE_HELP_TITLE } from '@/lib/care-copy'
 import { Arch } from '@/components/arch'
 import { COMPASS_DISCLOSURE, compassPrivacyOn } from '@/lib/compass-privacy'
 import { OPENING_HEADING } from '@/lib/opening-data'
@@ -172,20 +173,26 @@ export function HelpScreen({ contacts, onBack }: { contacts: HelpContact[]; onBa
   return (
     <section className="j-screen j-help" data-screen="help" data-testid="help">
       <div className="j-body">
-        <h1 className="j-caption small">You don&apos;t have to carry this on your own.</h1>
-        <p className="j-sub">These people are there to listen, any time you need them.</p>
+        <h1 className="j-caption small">{CARE_HELP_TITLE}</h1>
+        <p className="j-sub">{CARE_HELP_NOW}</p>
+        <p className="j-private">{CARE_HELP_PRIVATE}</p>
       </div>
       <ul className="j-contacts" data-testid="help-contacts">
-        {contacts.map((contact) => (
-          <li key={contact.label} data-testid="help-contact">
-            <b>{plainText(contact.label)}</b>
-            {contact.phone && telHref(contact.phone) ? <a href={telHref(contact.phone)!} data-testid="help-phone">{plainText(contact.phone)}</a> : null}
-            {httpsHref(contact.url) ? <a href={httpsHref(contact.url)!} target="_blank" rel="noreferrer" data-testid="help-link">{httpsHref(contact.url)!.replace(/^https:\/\//, '').replace(/\/$/, '')}</a> : null}
-            {contact.hours ? <small>{plainText(contact.hours)}</small> : null}
-          </li>
-        ))}
+        {contacts.map((contact) => {
+          const phone = contact.phone ? telHref(contact.phone) : null
+          const link = httpsHref(contact.url)
+          return (
+            <li key={contact.label} data-testid="help-contact">
+              <b>{plainText(contact.label)}</b>
+              {contact.hours ? <small>{plainText(contact.hours)}</small> : null}
+              {phone ? <a href={phone} data-testid="help-phone">Call {plainText(contact.phone || '')}</a> : null}
+              {link ? <a href={link} target="_blank" rel="noreferrer" data-testid="help-link">{link.replace(/^https:\/\//, '').replace(/\/$/, '')}</a> : null}
+            </li>
+          )
+        })}
       </ul>
       <div className="j-actions">
+        <p className="j-private" style={{ textAlign: 'center' }}>{CARE_HELP_READY}</p>
         <button type="button" className="pill outline-light block" onClick={onBack} data-testid="back-to-hearts">Back to HEARTS</button>
       </div>
     </section>
