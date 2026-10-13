@@ -26,7 +26,7 @@ export type TranscriptProvider = {
   lastProblem?: string | null
   /** Seconds printed by the provider, when it could read a length without a caption file. Not yet the published clock. */
   lastDuration?: number | null
-  /** captions, none (yt-dlp said so), blocked, failed, or missing. */
+  /** captions, none (yt-dlp said so), blocked, failed, missing, or unavailable. */
   lastOutcome?: CaptionOutcome | null
 }
 
@@ -144,7 +144,7 @@ export function speakerForLine(lineSpeaker: string | null | undefined, courseSpe
   return chosenSpeaker(courseSpeaker, lessonSpeaker)
 }
 
-export type BringInState = 'processing' | 'processed' | 'failed' | 'waiting'
+export type BringInState = 'queued' | 'processing' | 'processed' | 'failed' | 'waiting'
 
 export function bringInNote(status: BringInState, detail: string, lang = 'en') {
   const head = `Bring-in: ${status}`
@@ -157,6 +157,16 @@ export function bringInStatus(note: string | null | undefined): BringInState | '
   if (text.startsWith('Bring-in: failed')) return 'failed'
   if (text.startsWith('Bring-in: waiting')) return 'waiting'
   if (text.startsWith('Bring-in: processing')) return 'processing'
+  if (text.startsWith('Bring-in: queued')) return 'queued'
+  return ''
+}
+
+export function bringInStatusLabel(status: BringInState | '') {
+  if (status === 'queued') return 'Queued'
+  if (status === 'processing') return 'Processing'
+  if (status === 'waiting') return 'Waiting for transcript'
+  if (status === 'processed') return 'Processed'
+  if (status === 'failed') return 'Failed'
   return ''
 }
 
@@ -166,23 +176,37 @@ export function bringInLang(note: string | null | undefined) {
   return captionLang(match?.[1])
 }
 
-/** Failed, waiting and still-processing rows stay on the desk. Learners do not see an empty part. */
+/** Failed, waiting, queued and still-processing rows stay on the desk. Learners do not see an empty part. */
 export function hiddenFromLearners(note: string | null | undefined) {
   const status = bringInStatus(note)
-  return status === 'failed' || status === 'waiting' || status === 'processing'
+  return status === 'failed' || status === 'waiting' || status === 'processing' || status === 'queued'
 }
 
 /**
  * A transcript on a failed or dead-link film stays hidden. Learners see a part only when the film plays.
  * A film that was waiting (the video exists, the captions did not) becomes visible once a transcript is attached.
  */
-export function noteAfterTranscriptUpload(existingNote: string | null | undefined, fileName: string) {
+export function noteAfterTranscriptUpload(existingNote: string | null | undefined, fileName: string, publishState?: string | null) {
   const name = String(fileName || 'the file').slice(0, 80)
   if (bringInStatus(existingNote) === 'failed') {
     return {
       hidden: true,
       transcriptNote: bringInNote('failed', `A transcript from ${name} was saved. The film does not play, so learners do not see this part.`, bringInLang(existingNote)),
       notice: 'The transcript is saved. This film does not play, so learners still do not see it.',
+    }
+  }
+  if (publishState === 'draft') {
+    return {
+      hidden: true,
+      transcriptNote: bringInNote('processed', `A transcript from ${name} was saved. This talk is still a draft.`, bringInLang(existingNote)),
+      notice: 'The transcript is saved. This talk is still a draft, so learners cannot see it until you publish it.',
+    }
+  }
+  if (publishState === 'published') {
+    return {
+      hidden: false,
+      transcriptNote: `Uploaded from ${name}.`,
+      notice: 'Transcript uploaded. Learners who already have this course can see this talk.',
     }
   }
   return { hidden: false, transcriptNote: `Uploaded from ${name}.`, notice: 'Transcript uploaded.' }
@@ -196,12 +220,16 @@ export function speakerForBringIn(input: { lineSpeaker?: string | null; courseSp
 }
 
 /** The flash after a bring-in. Clips are mentioned only when some were actually set aside. */
-export function bringInFlash(input: { saved: number; waiting: number; failed: number; skipped: number; clipsSetAside: number }) {
-  const bits = [`Brought in ${input.saved} film${input.saved === 1 ? '' : 's'}.`]
+export function bringInFlash(input: { saved: number; waiting: number; failed: number; skipped: number; clipsSetAside: number; drafts?: number; retry?: boolean; keptPublished?: number }) {
+  const bits: string[] = []
+  if (input.retry && input.saved === 0) bits.push('Tried again.')
+  else bits.push(`Brought in ${input.saved} film${input.saved === 1 ? '' : 's'}.`)
   if (input.waiting) bits.push(`${input.waiting} waiting for a transcript.`)
   if (input.failed) bits.push(`${input.failed} failed and can be tried again.`)
   if (input.skipped) bits.push(`${input.skipped} already in the library, so not added again.`)
   if (input.clipsSetAside > 0) bits.push('The previous film’s clips were set aside.')
+  if (input.keptPublished) bits.push(input.keptPublished === 1 ? 'It stays published.' : `${input.keptPublished} stayed published.`)
+  if (input.drafts) bits.push(`${input.drafts} saved as drafts. Learners cannot see them until you publish.`)
   return bits.join(' ')
 }
 
@@ -255,10 +283,29 @@ export function chosenSpeaker(courseSpeaker?: string | null, lessonSpeaker?: str
   return String(lessonSpeaker || '').trim()
 }
 
-export type CaptionOutcome = 'captions' | 'none' | 'blocked' | 'failed' | 'missing'
+export type CaptionOutcome = 'captions' | 'none' | 'blocked' | 'failed' | 'missing' | 'unavailable'
 
 const BOT_WALL = /not a bot|sign in to confirm|429|too many requests|blocked|forbidden|403/i
 const NO_SUBS = /no subtitles|there are no subtitles|no captions/i
+const UNAVAILABLE_FILM = /this video is not available|video unavailable|video is unavailable|private video|this video is private|members-only|members only|join this channel/i
+
+/**
+ * Private, members-only, or removed films, from a title or from yt-dlp's own line.
+ * "Requested format is not available" is a different problem and does not match.
+ */
+export function isUnavailableFilm(input: { title?: string | null; error?: string | null }) {
+  const told = `${input.title || ''}\n${input.error || ''}`
+  return UNAVAILABLE_FILM.test(told)
+}
+
+function unavailableFilmMessage(told: string) {
+  const line = told
+    .split('\n')
+    .map((row) => row.trim())
+    .find((row) => isUnavailableFilm({ error: row }))
+  const detail = (line || 'This video is not available').replace(/^ERROR:\s*/, '').slice(0, 220)
+  return `This film is not available. It will not be tried again. ${detail}`
+}
 
 /** A plain-English reason from yt-dlp's error output. */
 export function ytDlpProblem(stderr: string, missing = false, lang = 'en') {
@@ -300,9 +347,11 @@ export function interpretYtDlpOutput(input: {
     }
   }
   if (code === 'ENOENT') return { text: null, duration, outcome: 'missing', message: ytDlpProblem('', true, lang) }
+  // Read the raw lines before the bot-wall rewrite. A 403 often sits beside "Video unavailable".
+  const told = `${input.stdout || ''}\n${stderr}`
+  if (isUnavailableFilm({ error: told })) return { text: null, duration, outcome: 'unavailable', message: unavailableFilmMessage(told) }
   if (BOT_WALL.test(stderr)) return { text: null, duration, outcome: 'blocked', message: ytDlpProblem(stderr, false, lang) }
   // yt-dlp 2026.08.19 prints this with to_screen, which goes to stdout unless --quiet is set.
-  const told = `${input.stdout || ''}\n${stderr}`
   if (NO_SUBS.test(told)) return { text: null, duration, outcome: 'none', message: noCaptionMessage(lang) }
   return {
     text: null,
@@ -500,9 +549,12 @@ export function segmentsToVtt(segments: { start: number; end: number; text: stri
 
 export const defaultProviders = [ytDlpProvider, watchPageProvider, serviceProvider]
 
-const OUTCOME_RANK: Record<CaptionOutcome, number> = { blocked: 5, missing: 4, failed: 3, none: 2, captions: 1 }
+const OUTCOME_RANK: Record<CaptionOutcome, number> = { unavailable: 6, blocked: 5, missing: 4, failed: 3, none: 2, captions: 1 }
 
 export async function transcriptFor(id: string, providers: TranscriptProvider[] = defaultProviders, options: CaptionFetchOptions = {}) {
+  if (process.env.HEARTS_CAPTION_BOT_WALL === '1') {
+    return { transcript: null, provider: null, tried: ['yt-dlp'], problems: [], duration: null, outcome: 'blocked' as const }
+  }
   const tried: string[] = []
   const problems: string[] = []
   let duration: number | null = null
@@ -555,6 +607,18 @@ export async function ingestYoutubeUrl(
   }
   let durationSeconds = publishedClockSeconds(printed)
   if (!durationSeconds && found.transcript) durationSeconds = durationFromTranscript(found.transcript)
+  if (!found.transcript && found.outcome === 'unavailable') {
+    return {
+      ok: false,
+      meta: meta || null,
+      id,
+      error: found.problems[0] || 'This film is not available. It will not be tried again.',
+      needsTranscript: false,
+      tried: found.tried,
+      durationSeconds,
+      captionOutcome: 'unavailable',
+    }
+  }
   if (!found.transcript) {
     const outcome = found.outcome
     const lead = outcome === 'none'

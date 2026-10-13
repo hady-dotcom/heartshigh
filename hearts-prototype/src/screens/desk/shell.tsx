@@ -43,6 +43,7 @@ export function portalNav(base: string, user: SessionUser, portal?: FeatureSourc
         { key: 'access', label: 'Codes', href: `${base}/admin/access`, icon: <KeyIcon /> },
         { key: 'library', label: 'Library', href: `${base}/admin/library`, icon: <LibraryIcon /> },
         { key: 'content', label: 'Content', href: `${base}/admin/content`, icon: <BookIcon /> },
+        { key: 'bring-in', label: 'Bring in', href: `${base}/admin/bring-in`, icon: <ClapperIcon /> },
       ]),
     },
     {
@@ -89,6 +90,7 @@ export function masterNav(): NavGroup[] {
         { key: 'learners', label: 'Learners', href: '/master/learners', icon: <PeopleIcon /> },
         { key: 'codes', label: 'Codes', href: '/master/codes', icon: <KeyIcon /> },
         { key: 'library', label: 'Library', href: '/master/library', icon: <LibraryIcon /> },
+        { key: 'bring-in', label: 'Bring in', href: '/master/bring-in', icon: <ClapperIcon /> },
         { key: 'live', label: 'Live', href: '/master/live', icon: <MicIcon /> },
       ],
     },

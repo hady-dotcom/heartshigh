@@ -17,6 +17,8 @@ export const PAGE: Record<string, string> = {
     'Gather is for gatherings at the masjid — classes, circles and open evenings. Publish a date, share the link, and take the register from Attendance. Suggestions from learners wait here until you open them.',
   content:
     'Build subjects here: a topic, then a film, then the questions that pause the film. Courses from the library are read only; you can still add your own questions on top. Search and Mine or Library help when the list is long.',
+  bringIn:
+    'Bring in is where films enter the library. Paste YouTube links, a playlist or a channel, then untick any you want to leave out. Films under five minutes and ones already here start unticked. Everything you bring in is a draft until you publish it.',
   sheet:
     'The master sheet is a workbook you can download, edit and upload again. Preview first — nothing is saved until you apply. An empty export is refused, so you do not download a blank file by mistake.',
   create:
@@ -127,15 +129,41 @@ export const TOOL: Record<string, string> = {
   contentSearch:
     'Search looks at subject titles. Mine is what you made here; Library is what you linked. The list is grouped by the twenty doors of Hadith Jibril, then by Ghunya seat.',
   ingest:
-    'Paste one YouTube link, or several on their own lines, to add those films as new parts. A line may be the link, then a bar, then that film’s speaker. Otherwise the course speaker is used. This does not replace the film already open unless you tick Replace this film.',
+    'Paste one YouTube link, or several on their own lines, to add those films as new parts. A line may be the link, then a bar, then that film’s speaker. New films are drafts until you publish them, and this does not replace the open film unless you tick Replace this film.',
+  bringInPaste:
+    'Paste one link, several links, a playlist or a channel. A line may end with a bar and a speaker name for that film. Look up reads the list before anything is saved.',
+  bringInCourse:
+    'Pick a course you can edit, or type a name to make a new one. The course speaker is used when a line does not name one. A new course is not shown as a talk until you publish one.',
+  bringInLanguage:
+    'This is the caption language to ask YouTube for. English is the usual choice. The same language is used for every film in this list.',
+  bringInJibril:
+    'W1 to W20 is the door of Hadith Jibril this talk sits in. Leave it blank if you are not placing it yet. You can set a different door on each row after the lookup.',
+  bringInGhunya:
+    'A Ghunya heading is the seat line you want on this talk. It is optional and stays on the desk. Learners do not see a draft talk, heading or not.',
+  bringInSkip:
+    'Untick a row to leave that film out. Films under five minutes, and private or unavailable films, start unticked. Films already in the library start unticked and stay out. You can tick a short film if you still want it.',
+  bringInSpeaker:
+    'The speaker on the row is saved on that film. It starts from the name on the line, then the course, then a channel you have mapped. The YouTube channel name is never used by itself.',
+  bringInPublish:
+    'Publish makes a draft visible to learners who already have this course, including a draft that came from the master sheet. Talks still waiting for a transcript stay hidden until a transcript is attached. You can publish one row or several at once.',
+  bringInGiveHolders:
+    'Tick this to add the course to learners who already hold a pack that contains it and who keep a saved course list. Leave it unticked and those learners keep the list they joined with. People who read the pack live already see courses added to the pack.',
+  bringInHelper:
+    'The caption helper runs on your own machine, where YouTube is not blocked. The token can only list talks waiting for a transcript and attach one. It is stored as a hash, shown once, and you can revoke it here.',
+  bringInChannel:
+    'Map a channel id or channel name to a speaker. That speaker is used only when the line and the course do not name one. It does not rename films you have already brought in.',
+  bringInLookup:
+    'Look up expands a playlist or channel into films and shows the length and whether captions are listed. Nothing is saved until you bring the ticked rows in. A failed lookup leaves the library as it was.',
+  packGiveHolders:
+    'Tick this to add newly ticked courses to learners who already hold this pack and keep a saved course list. Leave it unticked and those learners keep the list they joined with. People who join from now on get the courses either way.',
   fetchTranscript:
     'Leave this ticked to pull YouTube’s own captions and keep their times. Untick it when you only want the film and will upload a transcript yourself. Nothing here calls a model.',
   captionLang:
     'This is the caption language to ask YouTube for. English is the usual choice. Auto-captions in that language are used when there is no manual track.',
   bringInRetry:
-    'Try again runs the same bring-in on this row, keeps the caption language, and keeps a speaker named on this film. Use it when YouTube blocked the captions or the link failed. It does not start a second part.',
+    'Try again runs the same bring-in on this row, keeps the caption language, and keeps a speaker named on this film. A film that is private or not available is marked failed, so it is not retried forever. It does not start a second part.',
   replaceFilm:
-    'Replace this film changes the open part to the new link. Clips from the old film are set aside, including ones you already approved. Leave it unticked to add the links as new parts.',
+    'Replace this film changes the open part to the new link. If learners can already see that part, it stays published. Clips from the old film are set aside, including ones you already approved. Leave it unticked to add the links as new parts.',
   transcriptFiles:
     'Upload the timed transcript files the master sheet points at. Each file is stored and its media number is shown, so you can paste that number into the sheet. You do not need the raw data console.',
   extract:
@@ -208,6 +236,8 @@ const TEST_IDS: Record<string, string> = {
   'portal-create': 'portalCreate',
   'portal-edit': 'portalEdit',
   'master-library': 'library',
+  'master-bring-in': 'bringIn',
+  'admin-bring-in': 'bringIn',
   'master-course': 'course',
   'master-packs': 'packs',
   'master-questions': 'questions',

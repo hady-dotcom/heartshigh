@@ -477,6 +477,18 @@ export const Lessons: CollectionConfig = {
       ],
     },
     { name: 'transcriptNote', type: 'textarea' },
+    {
+      name: 'publishState',
+      type: 'select',
+      defaultValue: 'published',
+      options: [
+        { label: 'Draft', value: 'draft' },
+        { label: 'Published', value: 'published' },
+      ],
+      admin: { description: 'Draft talks are hidden from learners. Existing rows stay published.' },
+    },
+    { name: 'jibrilSection', type: 'text', admin: { description: 'Optional door, W1 to W20.' } },
+    { name: 'ghunyaHeading', type: 'text', admin: { description: 'Optional Ghunya heading for this talk.' } },
     { name: 'sourceUrl', type: 'text' },
     { name: 'csvSeq', type: 'number', admin: { description: 'Seq in HEARTS-8k-LINKS-for-bots.csv, for audit.' } },
     { name: 'starterLane', type: 'text' },
@@ -1336,6 +1348,42 @@ export const QuestionRewrites: CollectionConfig = {
   },
 }
 
+export const ChannelSpeakers: CollectionConfig = {
+  slug: 'channel-speakers',
+  admin: { useAsTitle: 'label' },
+  access: masterOnly,
+  fields: [
+    { name: 'channelKey', type: 'text', required: true, unique: true, index: true },
+    { name: 'label', type: 'text' },
+    { name: 'speaker', type: 'text', required: true },
+  ],
+}
+
+export const HelperTokens: CollectionConfig = {
+  slug: 'helper-tokens',
+  admin: { useAsTitle: 'label' },
+  access: masterOnly,
+  fields: [
+    { name: 'label', type: 'text', required: true },
+    { name: 'tokenHash', type: 'text', required: true, unique: true, index: true },
+    { name: 'tokenPrefix', type: 'text' },
+    { name: 'createdBy', type: 'relationship', relationTo: 'users' },
+    { name: 'revokedAt', type: 'date' },
+    { name: 'lastUsedAt', type: 'date' },
+    { name: 'shownOnce', type: 'text', admin: { description: 'Cleared after the desk shows the token once.' } },
+  ],
+}
+
+export const BringInPreviews: CollectionConfig = {
+  slug: 'bring-in-previews',
+  access: masterOnly,
+  fields: [
+    { name: 'actor', type: 'relationship', relationTo: 'users' },
+    { name: 'portal', type: 'relationship', relationTo: 'portals' },
+    { name: 'body', type: 'json' },
+  ],
+}
+
 export const collections = [
   Portals,
   Users,
@@ -1348,6 +1396,9 @@ export const collections = [
   Courses,
   Units,
   Lessons,
+  ChannelSpeakers,
+  HelperTokens,
+  BringInPreviews,
   Resources,
   Packs,
   Cuts,

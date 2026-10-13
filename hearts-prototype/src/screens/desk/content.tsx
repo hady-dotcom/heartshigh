@@ -233,7 +233,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                   <div className="unit">{str(unit.title)}</div>
                   {items.map((row) => (
                     <Link key={row.id} href={`${editorHref}?part=${row.id}`} className={row.id === lesson?.id ? 'on' : ''} data-testid="tree-lesson">
-                      ▶ {partTitle(row, str(course.title))}<small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : ''}</small>
+                      ▶ {partTitle(row, str(course.title))}<small>{row.publishState === 'draft' ? 'Draft' : ''}{row.durationSeconds ? ` ${clock(Number(row.durationSeconds))}` : ''}</small>
                     </Link>
                   ))}
                 </div>
@@ -269,9 +269,16 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                   <p className="hint" style={{ marginTop: 10 }}>
                     {(() => {
                       const status = bringInStatus(str(lesson.transcriptNote))
-                      const label = status === 'processed' ? 'Processed' : status === 'failed' ? 'Failed' : status === 'waiting' ? 'Waiting for transcript' : status === 'processing' ? 'Processing' : ''
+                      const label = status === 'processed' ? 'Processed' : status === 'failed' ? 'Failed' : status === 'waiting' ? 'Waiting for transcript' : status === 'processing' ? 'Processing' : status === 'queued' ? 'Queued' : ''
                       const tone = status === 'failed' ? 'rose' : status === 'processed' ? 'teal' : status === 'waiting' ? 'gold' : 'gold'
-                      return label ? <span className={`badge ${tone}`} data-testid="bring-in-status" data-status={status}>{label}</span> : null
+                      const published = lesson.publishState !== 'draft'
+                      return (
+                        <>
+                          <span className={`badge ${published ? 'teal' : 'gold'}`} data-testid="publish-state" data-state={published ? 'published' : 'draft'}>{published ? 'Published' : 'Draft'}</span>
+                          {' '}
+                          {label ? <span className={`badge ${tone}`} data-testid="bring-in-status" data-status={status}>{label}</span> : null}
+                        </>
+                      )
                     })()}{' '}
                     {lesson.transcript ? <span data-testid="has-transcript">Transcript attached. </span> : <span>No transcript yet. </span>}
                     {lesson.transcriptNote ? <span data-testid="transcript-note">{str(lesson.transcriptNote)}</span> : null}
@@ -299,6 +306,15 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                         </label>
                       ) : null}
                       <div className="actions"><button className="btn ink small" data-testid="ingest-submit" type="submit">Bring in</button></div>
+                      <p className="hint">New films are drafts. Learners cannot see them until you publish. <Link href={editorHref.startsWith('/master') ? '/master/bring-in' : editorHref.replace(/\/admin\/content.*/, '/admin/bring-in')}>Playlists and channels are on Bring in.</Link></p>
+                    </BusyForm>
+                    <BusyForm action="/api/hearts" method="post" className="form">
+                      <Hidden fields={{ action: 'publish-talks', lesson: lesson.id, next: here }} />
+                      <label className="check">
+                        <input type="checkbox" name="giveHolders" value="yes" data-testid="give-holders" /> Also give it to learners who already hold this pack
+                        <HelpTip topic="give-holders">{TOOL.bringInGiveHolders}</HelpTip>
+                      </label>
+                      <div className="actions"><button className="btn ink small" type="submit" data-testid="publish-talk">Publish this talk</button></div>
                     </BusyForm>
                     {(bringInStatus(str(lesson.transcriptNote)) === 'failed' || bringInStatus(str(lesson.transcriptNote)) === 'waiting') && (youtubeId || str(lesson.sourceUrl)) ? (
                       <BusyForm action="/api/hearts" method="post" className="actions">

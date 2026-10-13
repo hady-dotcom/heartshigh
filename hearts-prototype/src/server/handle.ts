@@ -22,7 +22,11 @@ import { gateAuth, tooManyAnswers } from '@/lib/auth-gate'
 import { clientIp, hit, hitAnswer, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
 import { slugProblem } from '@/lib/text-safety'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
+import { isUnavailableFilm } from '@/lib/bring-in-plan'
 import { bringInFlash, bringInNote, bringInStatus, captionLang, cleanedTimedTranscript, ingestYoutubeUrl, isAwaitingTranscript, noteAfterTranscriptUpload, speakerForBringIn, splitBringInLines } from '@/lib/youtube'
+import { packSaveNotice } from '@/lib/publish-state'
+import { commitBringIn, createHelperToken, deleteChannelSpeaker, previewBringIn, publishTalks, revokeHelperToken, saveChannelSpeaker } from './bring-in'
+import { giveCourseToPackHolders } from './publish-holders'
 import { withWorkLock } from '@/lib/work-lock'
 import { now } from '@/lib/clock'
 import { normaliseOption, startingClause } from '@/lib/placing'
@@ -981,6 +985,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       let failed = 0
       let waiting = 0
       let skipped = 0
+      let drafts = 0
+      let keptPublished = 0
+      const openPublish = (open as { publishState?: string | null }).publishState
       const fillOpen = retry || (replaceFilm && openHasFilm) || !openHasFilm
       for (let index = 0; index < lines.length; index++) {
         const line = lines[index]
@@ -1017,6 +1024,12 @@ async function handleForm(req: Request, form: FormData, session: Session) {
             continue
           }
         }
+        const wasDraft = openPublish === 'draft'
+        const keepPublished = useOpen && !wasDraft && (retry || (replaceFilm && openHasFilm))
+        const makingDraft = !keepPublished && !(useOpen && wasDraft)
+        const draftPatch = makingDraft ? { publishState: 'draft' as const } : {}
+        if (makingDraft) drafts++
+        if (keepPublished) keptPublished++
         let targetId = lessonId
         if (!useOpen) {
           if (!unit) {
@@ -1038,6 +1051,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
               ...(speaker ? { speaker } : {}),
               transcriptSource: 'none',
               transcriptNote: bringInNote('processing', 'Waiting for YouTube.', lang),
+              publishState: 'draft',
             },
           })
           targetId = created.id
@@ -1062,7 +1076,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
             collection: 'lessons',
             id: targetId,
             overrideAccess: true,
-            data: { transcriptNote: bringInNote('processing', 'Waiting for YouTube.', lang) },
+            data: { transcriptNote: bringInNote('processing', 'Waiting for YouTube.', lang), ...draftPatch },
           })
         }
         if (!parsedUrl || !/^https?:$/.test(parsedUrl.protocol)) {
@@ -1071,7 +1085,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
             collection: 'lessons',
             id: targetId,
             overrideAccess: true,
-            data: { sourceUrl: url.slice(0, 500), transcriptNote: bringInNote('failed', reason, lang) },
+            data: { sourceUrl: url.slice(0, 500), transcriptNote: bringInNote('failed', reason, lang), ...draftPatch },
           })
           outcomes.push(reason)
           failed++
@@ -1086,6 +1100,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
             data: {
               sourceUrl: url,
               transcriptNote: bringInNote('failed', 'The link is saved. This server did not fetch the file. Upload a transcript, or paste a YouTube link.', lang),
+              ...draftPatch,
             },
           })
           outcomes.push('A share link was saved without a film file.')
@@ -1098,7 +1113,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
             collection: 'lessons',
             id: targetId,
             overrideAccess: true,
-            data: { sourceUrl: url, transcriptNote: bringInNote('failed', reason, lang) },
+            data: { sourceUrl: url, transcriptNote: bringInNote('failed', reason, lang), ...draftPatch },
           })
           outcomes.push(reason)
           failed++
@@ -1107,13 +1122,16 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         const meta = result.meta
         const duration = result.durationSeconds && result.durationSeconds > 0 ? Math.round(result.durationSeconds) : 0
         const filmOnly = !wantTranscript
+        const unavailable = isUnavailableFilm({ title: meta?.title, error: result.ok ? '' : result.error }) || (!result.ok && result.captionOutcome === 'unavailable')
         const outcome = result.ok ? 'captions' : result.captionOutcome
-        const waitingForTranscript = !filmOnly && (outcome === 'blocked' || outcome === 'failed' || outcome === 'missing')
-        const noCaptions = !filmOnly && outcome === 'none'
+        const waitingForTranscript = !filmOnly && !unavailable && (outcome === 'blocked' || outcome === 'failed' || outcome === 'missing')
+        const noCaptions = !filmOnly && !unavailable && outcome === 'none'
         let note = bringInNote('failed', result.ok ? 'Captions fetched.' : result.error, lang)
         let source: 'none' | 'youtube' | 'pending' = 'none'
         let transcript: string | undefined
-        if (result.ok) {
+        if (unavailable) {
+          note = bringInNote('failed', result.ok ? 'This film is not available.' : result.error || 'This film is not available.', lang)
+        } else if (result.ok) {
           const stored = cleanedTimedTranscript(result.transcript)
           transcript = stored.cleaned
           source = 'youtube'
@@ -1144,7 +1162,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
           source = 'pending'
           note = bringInNote('waiting', result.error, lang)
         } else if (noCaptions) {
-          note = bringInNote('processed', result.error, lang)
+          source = 'pending'
+          note = bringInNote('waiting', result.error, lang)
         }
         await payload.update({
           collection: 'lessons',
@@ -1156,12 +1175,16 @@ async function handleForm(req: Request, form: FormData, session: Session) {
             ...(meta && !text(form, 'keepTitle') ? { title: meta.title } : {}),
             ...(speaker ? { speaker } : {}),
             ...(duration > 0 ? { durationSeconds: duration } : {}),
-            ...(transcript ? { transcript, transcriptSource: source } : waitingForTranscript ? { transcriptSource: 'pending' as const } : replaceFilm ? { transcript: '', transcriptSource: 'none' as const } : {}),
+            ...(transcript ? { transcript, transcriptSource: source } : waitingForTranscript || noCaptions ? { transcriptSource: 'pending' as const } : replaceFilm ? { transcript: '', transcriptSource: 'none' as const } : {}),
             transcriptNote: note,
+            ...draftPatch,
           },
         })
-        if (result.ok || filmOnly || noCaptions) saved++
-        else if (waitingForTranscript) {
+        if (unavailable) {
+          failed++
+          outcomes.push(result.ok ? 'This film is not available.' : result.error)
+        } else if (result.ok || filmOnly) saved++
+        else if (waitingForTranscript || noCaptions) {
           waiting++
           outcomes.push(result.error)
         } else {
@@ -1170,8 +1193,40 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         }
       }
       if (!saved && !waiting && failed && !skipped) return redirectTo(req, next, outcomes[0] || 'Those films could not be brought in.')
-      return redirectTo(req, next, undefined, bringInFlash({ saved, waiting, failed, skipped, clipsSetAside }))
+      return redirectTo(req, next, undefined, bringInFlash({ saved, waiting, failed, skipped, clipsSetAside, drafts, retry, keptPublished }))
     })
+  }
+
+  if (action === 'preview-bring-in' || action === 'commit-bring-in' || action === 'publish-talks' || action === 'save-channel-speaker' || action === 'delete-channel-speaker' || action === 'create-helper-token' || action === 'revoke-helper-token') {
+    if (!user) return redirectTo(req, '/login', 'Please sign in first.')
+    const next = text(form, 'next') || '/master/bring-in'
+    const result = action === 'preview-bring-in'
+      ? await previewBringIn(payload, user, form)
+      : action === 'commit-bring-in'
+        ? await commitBringIn(payload, user, form)
+        : action === 'publish-talks'
+          ? await publishTalks(payload, user, form)
+          : action === 'save-channel-speaker'
+            ? await saveChannelSpeaker(payload, user, form)
+            : action === 'delete-channel-speaker'
+              ? await deleteChannelSpeaker(payload, user, form)
+              : action === 'create-helper-token'
+                ? await createHelperToken(payload, user, form)
+                : await revokeHelperToken(payload, user, form)
+    if ('error' in result && result.error) return redirectTo(req, next, result.error)
+    const previewId = 'previewId' in result ? result.previewId : 0
+    const lessons = 'lessons' in result && Array.isArray(result.lessons) ? result.lessons.join(',') : ''
+    const url = new URL(next, 'http://localhost')
+    if (previewId) url.searchParams.set('preview', String(previewId))
+    if (lessons) url.searchParams.set('lessons', lessons)
+    const notice = 'notice' in result && typeof result.notice === 'string' ? result.notice : ''
+    if (notice) url.searchParams.set('notice', notice)
+    const response = redirectTo(req, `${url.pathname}${url.search}`)
+    const secret = 'secret' in result && typeof result.secret === 'string' ? result.secret : ''
+    if (secret) {
+      response.cookies.set('hearts_helper_once', secret, { httpOnly: true, maxAge: 120, path: '/', sameSite: 'lax' })
+    }
+    return response
   }
 
   if (action === 'upload-transcript') {
@@ -1191,7 +1246,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     }
     const transcript = await file.text()
     if (!transcript.trim()) return redirectTo(req, next, 'That file was empty.')
-    const attached = noteAfterTranscriptUpload((owned.lesson as { transcriptNote?: string }).transcriptNote, file.name)
+    const attached = noteAfterTranscriptUpload((owned.lesson as { transcriptNote?: string }).transcriptNote, file.name, (owned.lesson as { publishState?: string | null }).publishState)
     await payload.update({
       collection: 'lessons',
       id: Number(text(form, 'lesson')),
@@ -1253,7 +1308,10 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         transcriptNote: bringInNote('processed', 'A timed transcript was attached while this server was waiting.', captionLang(text(form, 'captionLang'))),
       },
     })
-    return redirectTo(req, next, undefined, 'The timed transcript is attached. The talk can be seen by learners now.')
+    const draft = (lesson as { publishState?: string | null }).publishState === 'draft'
+    return redirectTo(req, next, undefined, draft
+      ? 'The timed transcript is attached. This talk is still a draft, so learners cannot see it until you publish it.'
+      : 'The timed transcript is attached. Learners who already have this course can see this talk.')
   }
 
   if (action === 'extract') {
@@ -2052,8 +2110,12 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       const found = await payload.find({ collection: 'courses', overrideAccess: true, depth: 0, limit: courseIds.length, where: { and: [{ id: { in: courseIds } }, { origin: { equals: 'master' } }] } })
       if (found.docs.length !== courseIds.length) return redirectTo(req, text(form, 'next') || '/master/packs', 'Only library courses can go in a library pack.')
     }
+    const before = ((pack as { courses?: unknown[] }).courses || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
+    const added = courseIds.filter((id) => !before.includes(id))
     await payload.update({ collection: 'packs', id: pack.id, overrideAccess: true, data: { courses: courseIds } })
-    return redirectTo(req, text(form, 'next') || '/master/packs', undefined, 'Pack updated. Portals that linked it see the change now.')
+    const give = text(form, 'giveHolders') === 'yes'
+    const given = give && added.length ? await giveCourseToPackHolders(payload, added) : { updated: 0, live: 0, users: [] as number[] }
+    return redirectTo(req, text(form, 'next') || '/master/packs', undefined, packSaveNotice({ added: added.length, give, holdersUpdated: given.updated, holdersLive: given.live }))
   }
 
   if (action === 'read-notes') {

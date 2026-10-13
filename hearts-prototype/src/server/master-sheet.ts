@@ -2,6 +2,7 @@
 import { loadDoors } from './doors'
 import { APIError, type Payload, type Where } from 'payload'
 import { idOf } from '@/lib/ids'
+import { idList } from './context'
 import { now } from '@/lib/clock'
 import { audit } from '@/server/viewas'
 import { horsCapOf, normaliseSpans, type AppetiserSpan } from '@/lib/tiers'
@@ -233,7 +234,7 @@ export async function pushPackCourses(payload: Payload, snapshot: SheetSnapshot)
       and: [{ role: { equals: 'learner' } }, { or: [...(codes.length ? [{ accessCode: { in: codes.map((code) => code.id) } }] : []), { extraPacks: { in: [packId] } }] }],
     })
     for (const holder of holders) {
-      const list = Array.isArray(holder.courseList) ? (holder.courseList as unknown[]).map(Number).filter(Boolean) : null
+      const list = idList(holder.courseList)
       if (!list) continue
       const fresh = courseIds.filter((id) => !list.includes(id) && !gained.get(holder.id)?.has(id))
       if (!fresh.length) continue
@@ -245,7 +246,7 @@ export async function pushPackCourses(payload: Payload, snapshot: SheetSnapshot)
   snapshot.pushed = []
   for (const [userId, courses] of gained) {
     const holder = (await payload.findByID({ collection: 'users', id: userId, depth: 0, overrideAccess: true })) as unknown as Doc
-    const list = (holder.courseList as unknown[]).map(Number).filter(Boolean)
+    const list = idList(holder.courseList) || []
     await payload.update({ collection: 'users', id: userId, overrideAccess: true, data: { courseList: [...list, ...courses] } as never })
     snapshot.pushed.push({ user: userId, courses: [...courses] })
   }
@@ -374,6 +375,7 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
         youtubeUrl: op.youtubeId ? `https://www.youtube.com/watch?v=${op.youtubeId}` : undefined, order: op.order ?? 1, starterLane: op.lane, portal: op.portal || undefined, master: op.master,
         transcriptSource: op.transcriptSource || 'none', videoProvider: op.provider || undefined, vimeoId: op.vimeoId || undefined, film: op.mediaId || undefined,
         durationSeconds: op.durationSeconds ?? undefined, transcript: op.transcript || undefined, transcriptNote: op.transcriptNote || undefined,
+        publishState: 'draft',
       } as never,
     })) as unknown as Doc
     temps.set(op.temp, doc.id)

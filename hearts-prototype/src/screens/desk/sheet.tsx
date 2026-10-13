@@ -258,9 +258,10 @@ function SheetBody({
                   ) : null}
                   <label className="check">
                     <input type="checkbox" name="push" data-testid="sheet-push" />
-                    {' '}Also give these courses to existing learners who already hold that pack
+                    {' '}Also give these courses to learners who already hold that pack
+                    <HelpTip topic="bring-in-give">{TOOL.bringInGiveHolders}</HelpTip>
                   </label>
-                  <p className="hint">Off, only people who join with the pack’s codes from now on get the courses. On, learners who already hold the pack get them straight away. Either way the choice is logged, and undo takes them back out.</p>
+                  <p className="hint">Off, learners who keep a saved course list stay as they are. People who join from now on, and anyone who reads the pack live, see the new courses. On, the saved lists are updated too. New talks stay drafts until you publish them. Undo takes the change back out.</p>
                 </div>
               ) : null}
               {(counts.errors || counts.skipped) && !((counts.create || 0) + (counts.update || 0) + (counts.delete || 0) > 0) ? null : <button className="btn teal" type="submit" data-testid="sheet-apply">Apply this import</button>}

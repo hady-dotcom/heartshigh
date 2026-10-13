@@ -190,4 +190,16 @@ test('the latest Postgres migration has a table for every collection and global'
   const slugs = [...collections, ...aiCollections, ...sheetCollections, ...experimentCollections, ...insightCollections, ...calendarCollections, ...missionCollections, ...gatherCollections, ...liveCollections, ...safetyCollections, MasterFlags].map((item) => item.slug.replace(/-/g, '_'))
   const missing = slugs.filter((slug) => !tables.has(slug))
   assert.deepEqual(missing, [], `run npx payload migrate:create against Postgres; ${latest} lacks ${missing.join(', ')}`)
+  const body = JSON.parse(readFileSync(path.join(dir, latest), 'utf8'))
+  const locks = body.tables['public.payload_locked_documents_rels'].columns
+  for (const name of ['channel_speakers_id', 'helper_tokens_id', 'bring_in_previews_id']) {
+    assert.equal(locks[name]?.type, 'integer', `${latest} is missing ${name} on payload_locked_documents_rels`)
+  }
+  assert.equal(body.tables['public.payload_preferences_rels'].columns.users_id.type, 'integer')
+  assert.equal(Object.hasOwn(body.tables['public.payload_preferences_rels'].columns, 'channel_speakers_id'), false)
+  const sql = readFileSync(path.join(dir, `${newest}.ts`), 'utf8')
+  for (const name of ['channel_speakers_id', 'helper_tokens_id', 'bring_in_previews_id']) {
+    assert.match(sql, new RegExp(`ADD COLUMN IF NOT EXISTS "${name}"`))
+    assert.match(sql, new RegExp(`DROP COLUMN IF EXISTS "${name}"`))
+  }
 })

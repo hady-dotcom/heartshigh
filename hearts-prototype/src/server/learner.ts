@@ -14,6 +14,7 @@ import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
 import type { FramingTrack } from '@/lib/framing/types'
 import { tidyTalkTitle } from '@/lib/talk-title'
 import { courseIsOpen, opensOnDay } from '@/lib/drip'
+import { learnerLessonVisible } from '@/lib/publish-state'
 
 export type SlideStyle = 'kinetic' | 'cinema' | 'windows' | 'conversation' | 'unfold'
 
@@ -178,7 +179,7 @@ type Row = Record<string, unknown> & { id: number }
 export async function lessonsFor(payload: Payload, courseIds: number[]) {
   if (!courseIds.length) return [] as Row[]
   const found = await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: 400, where: { course: { in: courseIds } }, sort: 'order' })
-  return found.docs as unknown as Row[]
+  return (found.docs as unknown as Row[]).filter((lesson) => learnerLessonVisible({ publishState: lesson.publishState as string | null, transcriptNote: lesson.transcriptNote as string | null }))
 }
 
 export async function courseCards(payload: Payload, user: SessionUser): Promise<CourseCard[]> {
