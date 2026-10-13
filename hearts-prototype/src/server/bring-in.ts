@@ -345,7 +345,7 @@ export async function commitBringIn(payload: Payload, user: SessionUser, form: F
 export async function bringInAndPublish(payload: Payload, user: SessionUser, form: FormData) {
   const preview = await previewBringIn(payload, user, form)
   if ('error' in preview && preview.error) return preview
-  const previewId = 'previewId' in preview ? preview.previewId : 0
+  const previewId = Number(('previewId' in preview && preview.previewId) || 0)
   const saved = (await payload.findByID({ collection: 'bring-in-previews', id: previewId, depth: 0, overrideAccess: true }).catch(() => null)) as { body?: PreviewBody } | null
   const rows = saved?.body?.rows || []
   const commit = new FormData()

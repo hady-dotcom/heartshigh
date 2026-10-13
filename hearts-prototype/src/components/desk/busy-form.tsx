@@ -10,7 +10,15 @@ export function BusyForm({ children, ...props }: FormHTMLAttributes<HTMLFormElem
       onSubmit={(event) => {
         props.onSubmit?.(event)
         if (event.defaultPrevented) return
-        const button = event.currentTarget.querySelector('button[type="submit"]')
+        const submitter = event.nativeEvent instanceof SubmitEvent ? event.nativeEvent.submitter : null
+        if (submitter instanceof HTMLButtonElement && submitter.name) {
+          const kept = document.createElement('input')
+          kept.type = 'hidden'
+          kept.name = submitter.name
+          kept.value = submitter.value
+          event.currentTarget.appendChild(kept)
+        }
+        const button = submitter instanceof HTMLButtonElement ? submitter : event.currentTarget.querySelector('button[type="submit"]')
         if (button instanceof HTMLButtonElement) {
           button.disabled = true
           button.setAttribute('aria-busy', 'true')
