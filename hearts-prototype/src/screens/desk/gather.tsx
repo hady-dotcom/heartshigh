@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ExampleInUse } from '@/components/app/care'
 import { Hidden } from '@/components/app/shell'
 import { Qr } from '@/components/qr'
 import { GATHER_KINDS, KIND_LABEL } from '@/lib/gather'
@@ -85,7 +86,7 @@ export async function GatherDeskScreen(ctx: Ctx) {
                   </div>
                 </section>
               ))}
-              {!grouped[bucket].length ? <p className="hint">{bucket === 'upcoming' ? 'Nothing coming up.' : 'Nothing in the past yet.'}</p> : null}
+              {!grouped[bucket].length ? <ExampleInUse desk title={bucket === 'upcoming' ? 'Circle after Maghrib' : 'A night already held'} action={{ href: '#plan-a-gathering', label: 'Plan a gathering' }}><p>{bucket === 'upcoming' ? 'Thursday · the hall · twenty places' : 'Last month · twelve people came'}</p></ExampleInUse> : null}
             </section>
           ))}
         </div>
@@ -102,9 +103,9 @@ export async function GatherDeskScreen(ctx: Ctx) {
           ) : null}
         <section className="panel">
           <header><h2>Plan a gathering</h2></header>
-          <form className="body form" action="/api/gather" method="post" data-testid="desk-gather-form">
+          <form id="plan-a-gathering" className="body form" action="/api/gather" method="post" data-testid="desk-gather-form">
             <Hidden fields={{ action: 'save', portal: portal.slug, next: here }} />
-            <label className="stack">Name<input type="text" name="title" required data-testid="desk-gather-title" /></label>
+            <label className="stack">Name<input type="text" name="title" required data-testid="desk-gather-title" placeholder="Circle after Maghrib" /></label>
             <label className="stack">Kind
               <select name="kind" defaultValue="circle">{GATHER_KINDS.map((kind) => <option key={kind} value={kind}>{KIND_LABEL[kind]}</option>)}</select>
             </label>
@@ -112,7 +113,7 @@ export async function GatherDeskScreen(ctx: Ctx) {
               <select name="audience" defaultValue="all">{AUDIENCES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
             </label>
             <label className="stack">When, London time<input type="text" name="startsAt" required lang="en-GB" placeholder="DD/MM/YYYY HH:mm" autoComplete="off" data-testid="desk-gather-when" /></label>
-            <label className="stack">Place<input type="text" name="place" data-testid="desk-gather-place" /></label>
+            <label className="stack">Place<input type="text" name="place" data-testid="desk-gather-place" placeholder="The hall" /></label>
             <label className="stack">Map link<input type="url" name="mapUrl" placeholder="https://" /></label>
             <label className="stack">How many places. Leave 0 if anyone can come.<input type="number" name="capacity" min={0} defaultValue={20} /></label>
             <label className="stack">Host name on the public page<input type="text" name="hostLabel" defaultValue={str(user.name).split(' ')[0]} /></label>
@@ -125,8 +126,8 @@ export async function GatherDeskScreen(ctx: Ctx) {
             <label className="stack">Talk
               <select name="lesson" data-testid="desk-gather-lesson"><option value="">None</option>{lessons.map((lesson) => <option key={lesson.id} value={lesson.id}>{str(lesson.title)}</option>)}</select>
             </label>
-            <label className="stack">What to bring<textarea name="bring" rows={2} /></label>
-            <label className="stack">A note<textarea name="note" rows={3} /></label>
+            <label className="stack">What to bring<textarea name="bring" rows={2} placeholder="A notebook, if you like" /></label>
+            <label className="stack">A note<textarea name="note" rows={3} placeholder="A short welcome" /></label>
             <button className="btn" type="submit" data-testid="desk-gather-save">Save gathering</button>
           </form>
         </section>
@@ -167,7 +168,7 @@ export async function GatherAttendanceScreen(ctx: Ctx) {
                 ))}
               </div>
             </>
-          ) : <p>No one has checked in yet.</p>}
+          ) : <ExampleInUse desk title="Thursday circle" action={{ href: `${base}/admin/gather`, label: 'Open gatherings' }}><p>8 newcomers · 14 regulars</p></ExampleInUse>}
         </div>
       </section>
       <div className="grid two" style={{ marginTop: 18 }}>
@@ -176,7 +177,7 @@ export async function GatherAttendanceScreen(ctx: Ctx) {
           <div className="body">
             {report.brought.length ? report.brought.map((row, index) => (
               <p key={index} data-testid="brought-row"><b>{row.host}</b> brought {row.guest}{row.gathering ? ` to ${row.gathering}` : ''}.</p>
-            )) : <p>No bring-a-friend links have been used yet.</p>}
+            )) : <ExampleInUse desk title="A brother brought a friend" action={{ href: `${base}/admin/gather`, label: 'Open gatherings' }}><p>Yusuf brought Hamza to the Thursday circle.</p></ExampleInUse>}
           </div>
         </section>
         <section className="panel" data-testid="follow-up">

@@ -43,7 +43,7 @@ test('each learner surface keeps its own ? copy', () => {
   assert.notEqual(helpFor('help').title, helpFor('start').title)
   assert.notEqual(helpFor('feed').title, helpFor('appetiser').title)
   assert.notEqual(helpFor('me').title, helpFor('garden').title)
-  assert.match(helpFor('help').body.join(' '), /call or visit/)
+  assert.match(helpFor('help').body.join(' '), /call now/)
   assert.doesNotMatch(helpFor('help').body.join(' '), /first talk/)
   assert.match(helpFor('me').body.join(' '), /install card/)
 })

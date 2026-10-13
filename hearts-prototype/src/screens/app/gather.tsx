@@ -12,6 +12,7 @@ import { now } from '@/lib/clock'
 import { loadDoors } from '@/server/doors'
 import { bringLink, listGatherings, sharePack, taskMatches, type GatherCard } from '@/server/gather'
 import { type Ctx, portalPeople, ref, rows, str, unreadCount } from '../common'
+import { ExampleInUse } from '@/components/app/care'
 import { ReportButton } from '@/components/app/report-sheet'
 import { hiddenIds } from '@/server/safety'
 
@@ -59,7 +60,14 @@ export async function GatherListScreen(ctx: Ctx) {
         <div className="app-head"><h1>Gather</h1></div>
         <Flash error={query.error} notice={query.notice} />
         <p className="lead">Meetings at {portal.name}. Your masjid comes first. Say if you’re coming, and bring someone who isn’t on HEARTS yet.</p>
-        {!cards.length ? <p data-testid="gather-empty">Nothing is planned yet. You can suggest one.</p> : null}
+        {!cards.length ? (
+          <div data-testid="gather-empty">
+            <ExampleInUse title="Sisters’ circle" action={{ href: `${base}/gather/propose`, label: 'Suggest a gathering' }}>
+              <p>Thursday evening · the hall · Youth</p>
+              <p className="hint">12 of 20 places · Say if you are coming.</p>
+            </ExampleInUse>
+          </div>
+        ) : null}
         {upcoming.map((group) => (
           <section key={group.door} className="gather-door" data-testid="gather-group">
             <h2>{group.door}</h2>

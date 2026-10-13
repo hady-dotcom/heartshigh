@@ -54,6 +54,17 @@ export async function openingConfig(payload: Payload, portalId: number | null) {
   return { own, master }
 }
 
+/** The lines shown when someone needs a person now: this portal's, then the master's, then the national lines. */
+export async function helpContactsFor(payload: Payload, portalId: number | null): Promise<HelpContact[]> {
+  const { own, master } = await openingConfig(payload, portalId)
+  const contacts = ((own?.helpContacts as HelpContact[]) || []).length
+    ? (own!.helpContacts as HelpContact[])
+    : ((master?.helpContacts as HelpContact[]) || []).length
+      ? (master!.helpContacts as HelpContact[])
+      : DEFAULT_HELP_CONTACTS
+  return contacts.map(({ label, phone, url, hours }) => ({ label, phone: phone || null, url: url || null, hours: hours || null }))
+}
+
 /** Courses an anonymous visitor can play in this portal: what it adopted, plus its own published courses. */
 export async function catalogueCourseIds(payload: Payload, portal: PortalDoc) {
   const adopted = await adoptedCourseIds(payload, portal.id)

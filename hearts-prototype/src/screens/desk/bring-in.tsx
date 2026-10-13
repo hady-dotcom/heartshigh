@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ExampleInUse } from '@/components/app/care'
 import { headers } from 'next/headers'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
@@ -249,7 +250,7 @@ export async function BringInBody({
                 <p>Create a token for the script on your own machine. It can only list waiting talks and attach a transcript.</p>
               </div>
             </header>
-            <BusyForm className="body form" action="/api/hearts" method="post">
+            <BusyForm id="helper-create" className="body form" action="/api/hearts" method="post">
               <Hidden fields={{ action: 'create-helper-token', next }} />
               <label className="stack">Name<input name="label" data-testid="helper-label" placeholder="Home machine" /></label>
               <div className="actions"><button className="btn ink" type="submit" data-testid="helper-create">Create helper token</button></div>
@@ -261,8 +262,8 @@ export async function BringInBody({
                   <p><b>{str(row.label)}</b> <span className="hint">{str(row.tokenPrefix)}… {row.revokedAt ? 'Revoked' : 'Active'}</span></p>
                   {row.revokedAt ? null : <button className="btn ghost small" type="submit" data-testid="helper-revoke">Revoke</button>}
                 </form>
-              )) : <p className="hint">No helper tokens yet.</p>}
-              <p className="hint">Run instructions are in <code>scripts/bring-in-helper/README.md</code>.</p>
+              )) : <ExampleInUse desk title="Home machine" action={{ href: '#helper-create', label: 'Create a helper token' }}><p>A short-lived key for the computer that attaches captions.</p></ExampleInUse>}
+              <p className="hint">The steps for the home computer live with the caption helper notes in the project.</p>
             </div>
           </section>
         </>

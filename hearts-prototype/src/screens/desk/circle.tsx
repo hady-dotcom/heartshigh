@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Payload } from 'payload'
 import type { ReactNode } from 'react'
+import { ExampleInUse } from '@/components/app/care'
 import { Hidden } from '@/components/app/shell'
 import { CIRCLE_LENGTHS, CIRCLE_MAX_COUNT, CIRCLE_TONES, LENGTH_LABELS, TONE_LABELS, circleShown } from '@/lib/circle'
 import { idOf, portalIdOf } from '@/lib/ids'
@@ -97,7 +98,7 @@ async function Index(ctx: CircleCtx) {
                 <td><Link className="btn ghost small" href={`${ctx.here}?lesson=${lesson.id}`} data-testid="circle-open">Open</Link></td>
               </tr>
             ))}
-            {!talks.length ? <tr><td colSpan={5} className="empty">{ctx.user.role === 'master' ? 'No talk has questions yet.' : 'None of your portal’s own courses has questions yet. Add questions on a film in Content first.'}</td></tr> : null}
+            {!talks.length ? <tr><td colSpan={5}><ExampleInUse desk title="The Names, class 19" action={{ href: ctx.user.role === 'master' ? '/master/questions' : ctx.here.replace(/\/circle.*/, '/content'), label: ctx.user.role === 'master' ? 'Open questions' : 'Add a question' }}><p>One question · four to six short answers from the circle</p></ExampleInUse></td></tr> : null}
           </tbody>
         </table>
       </div>
@@ -193,7 +194,7 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
                     </li>
                   ))}
                 </ul>
-              ) : <p className="empty">No circle answers on this question yet.</p>}
+              ) : <ExampleInUse desk title="A.B." action={{ href: ctx.here, label: 'Add a sample answer' }}><p>I try ten salawat before I pick up my phone.</p></ExampleInUse>}
               <div className="circle-forms">
                 <form className="form" action="/api/hearts" method="post" data-testid="circle-add">
                   <Hidden fields={{ action: 'circle-add', point: point.id, next: back }} />
@@ -214,7 +215,7 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
           </section>
         )
       })}
-      {!points.length ? <p className="empty">This talk has no questions yet.</p> : null}
+      {!points.length ? <ExampleInUse desk title="A question on the film" action={{ href: ctx.user.role === 'master' ? '/master/questions' : `${String(ctx.here).replace(/\/circle.*/, '/content')}`, label: 'Open the films' }}><p>What will you keep from this? · at 12:30</p></ExampleInUse> : null}
     </div>
   )
 }

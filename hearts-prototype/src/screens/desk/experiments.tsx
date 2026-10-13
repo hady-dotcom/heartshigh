@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ExampleInUse } from '@/components/app/care'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { ExperimentForm } from '@/components/desk/experiment-form'
@@ -254,14 +255,14 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
         <div className={styles.meta}>
           <span className={`badge ${tone}`} data-testid="experiment-status">{label}</span>
           <span className="badge grey" data-testid="experiment-slot">{slot?.name || experiment.slot}</span>
-          <span className="badge grey">{experiment.allocation === 'auto' ? 'Auto · Thompson sampling' : 'Fixed split'}</span>
+          <span className="badge grey">{experiment.allocation === 'auto' ? 'Auto · tries the stronger version' : 'Fixed split'}</span>
           <span className="badge grey">{metricLabel(experiment.primaryMetric)}</span>
         </div>
         {testNote ? <p className={styles.test} data-testid="fake-test-data">These counts include labelled test data for a local or development database. They are not live learners.</p> : null}
         <section className={styles.summary}>
-          <div className={styles.tile}><b data-testid="stat-exposures">{totals.exposures}</b><span>Exposures</span></div>
-          <div className={styles.tile}><b data-testid="stat-conversions">{totals.conversions}</b><span>Conversions</span></div>
-          <div className={styles.tile}><b data-testid="stat-assignments">{totals.assignments}</b><span>Sticky assignments</span></div>
+          <div className={styles.tile}><b data-testid="stat-exposures">{totals.exposures}</b><span>Times shown</span></div>
+          <div className={styles.tile}><b data-testid="stat-conversions">{totals.conversions}</b><span>Times it worked</span></div>
+          <div className={styles.tile}><b data-testid="stat-assignments">{totals.assignments}</b><span>Kept on one version</span></div>
           <div className={styles.tile}><b>{variants.length}</b><span>Versions</span></div>
         </section>
         <section className={styles.verdict} data-testid="experiment-verdict">
@@ -298,8 +299,8 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
                     <th>Version</th>
                     <th>Copy</th>
                     <th>Approved</th>
-                    <th>Exposures</th>
-                    <th>Conversions</th>
+                    <th>Times shown</th>
+                    <th>Times it worked</th>
                     <th>Rate</th>
                     <th>Chance of being best</th>
                     {masterUser ? <th></th> : null}
@@ -376,7 +377,7 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
                   ))}
                 </tbody>
               </table>
-            ) : <p className={styles.quiet}>Nothing written to the audit log for this experiment yet.</p>}
+            ) : <ExampleInUse desk title="Started the test" action={{ href: base, label: 'All experiments' }}><p>A person on the desk turned it on. Learners are not told.</p></ExampleInUse>}
           </div>
         </section>
         {masterUser && portals.length ? <p className={styles.quiet}>Scope: {idOfPortal(experiment) ? portals.find((row) => row.id === idOfPortal(experiment)) ? str((portals.find((row) => row.id === idOfPortal(experiment)) as { name?: string }).name) : 'One portal' : 'Every portal'}.</p> : null}

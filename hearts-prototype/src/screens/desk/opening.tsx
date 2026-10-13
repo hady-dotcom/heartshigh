@@ -1,3 +1,4 @@
+import { ExampleInUse } from '@/components/app/care'
 import Link from 'next/link'
 import type { Payload } from 'payload'
 import type { ReactNode } from 'react'
@@ -140,7 +141,7 @@ export async function MasterLanes(ctx: MasterCtx) {
   return (
     <Frame ctx={ctx} active="lanes" title="Lanes" intro="A lane is a thread of clips for one part of the heart. A clip is routed in a lane only once its tag is confirmed here." testId="master-lanes">
       <section className="panel" style={{ marginBottom: 18 }} data-testid="tag-queue">
-        <header className="light"><h2>Waiting for a lane ({queue.length})</h2><span className="hint">Suggested by the extractor or an author</span></header>
+        <header className="light"><h2>Waiting for a lane ({queue.length})</h2><span className="hint">Suggested by the desk, or written by someone here</span></header>
         <div className="table-wrap">
           <table className="data">
             <thead><tr><th>Clip</th><th>Suggested lane</th><th className="num">Weight</th><th>Note</th><th /></tr></thead>
@@ -157,7 +158,7 @@ export async function MasterLanes(ctx: MasterCtx) {
                   </td>
                 </tr>
               ))}
-              {!queue.length ? <tr><td colSpan={5} className="empty">Nothing waiting. Every suggested lane has been looked at.</td></tr> : null}
+              {!queue.length ? <tr><td colSpan={5}><ExampleInUse desk title="Trust" action={{ href: '/master/lanes', label: 'Open lanes' }}><p>A suggested lane, waiting for a person to look.</p></ExampleInUse></td></tr> : null}
             </tbody>
           </table>
         </div>
@@ -204,7 +205,7 @@ function TrendsTable({ trends, laneTitles }: { trends: ReturnType<typeof trendsF
               ) : <td colSpan={3} className="hint">Held back until at least {TRENDS_MIN} people have taken part, so nobody can be picked out.</td>}
             </tr>
           ))}
-          {!trends.length ? <tr><td colSpan={5} className="empty">No one has added their taps yet. It is off unless a learner turns it on.</td></tr> : null}
+          {!trends.length ? <tr><td colSpan={5}><ExampleInUse desk title="East London" action={{ href: '/master/trends', label: 'How trends work' }}><p>Ten or more people · the lane they sat with most.</p><p className="hint">Off unless a learner turns it on. Names are never shown.</p></ExampleInUse></td></tr> : null}
         </tbody>
       </table>
     </div>
@@ -336,8 +337,8 @@ export async function PortalOpeningScreen(ctx: Ctx) {
               </form>
             </div>
           ))}
-          {!extras.length ? <p className="hint" data-testid="portal-own-empty">None of your own yet. The starter set still plays. Add a question for estate-agent training, self-development, or any work that is not the HEARTS bank.</p> : null}
-          <form className="form" action="/api/hearts" method="post" data-testid="portal-own-form">
+          {!extras.length ? <div data-testid="portal-own-empty"><ExampleInUse desk title="What brings you here?" action={{ href: '#portal-own-form', label: 'Add a question' }}><p>Work · family · I am not sure yet. The starter set still plays underneath.</p></ExampleInUse></div> : null}
+          <form id="portal-own-form" className="form" action="/api/hearts" method="post" data-testid="portal-own-form">
             <Hidden fields={{ action: 'opening-extra-scene', portalSlug: portal.slug, next: here }} />
             <div className="cols">
               <label className="stack">Question<input type="text" name="caption" required data-testid="portal-own-caption" /></label>
@@ -363,8 +364,8 @@ export async function PortalOpeningScreen(ctx: Ctx) {
                 <form action="/api/hearts" method="post"><Hidden fields={{ action: 'help-contact-remove', portalSlug: portal.slug, index, next: here }} /><button className="btn ghost small" type="submit">Remove</button></form>
               </div>
             ))}
-            {!contacts.length ? <p className="hint">None of your own yet, so the national lines are shown.</p> : null}
-            <form className="form" action="/api/hearts" method="post">
+            {!contacts.length ? <ExampleInUse desk title="Muslim Youth Helpline" action={{ href: '#add-help-contact', label: 'Add a local line' }}><p>0808 808 2008 · any time. National lines stay until you add your own.</p></ExampleInUse> : null}
+            <form id="add-help-contact" className="form" action="/api/hearts" method="post">
               <Hidden fields={{ action: 'help-contact', portalSlug: portal.slug, next: here }} />
               <div className="cols">
                 <label className="stack">Name<input type="text" name="label" data-testid="contact-label" /></label>

@@ -17,8 +17,8 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
         <Flash error={query.error} notice={query.notice} />
         <form className="door-form" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'login', next }} />
-          <label>Email<input className="field" data-testid="login-email" name="email" type="email" autoComplete="username" required /></label>
-          <label>Password<input className="field" data-testid="login-password" name="password" type="password" autoComplete="current-password" required /></label>
+          <label>Email<input className="field" data-testid="login-email" name="email" type="email" autoComplete="username" placeholder="you@example.com" required /></label>
+          <label>Password<input className="field" data-testid="login-password" name="password" type="password" autoComplete="current-password" placeholder="Your password" required /></label>
           <TurnstileField />
           <button className="pill gold block" data-testid="login-submit" type="submit">Sign in</button>
         </form>

@@ -9,6 +9,7 @@ import { CourseTree } from '@/components/desk/course-tree'
 import { PackContents } from '@/components/desk/pack-contents'
 import { notFound, redirect } from 'next/navigation'
 import type { Payload } from 'payload'
+import { ExampleInUse } from '@/components/app/care'
 import { Hidden } from '@/components/app/shell'
 import { CodeLimits, CodeStatus } from '@/components/desk/codes'
 import { PointPicker } from '@/components/desk/tools'
@@ -151,7 +152,7 @@ export async function ContentScreen(ctx: Ctx) {
                 <thead><tr><th>Subject</th><th>Speaker</th><th>From</th><th className="num">Films</th><th className="num">Questions</th><th className="num">Cuts live</th><th /></tr></thead>
                 <tbody>
                   {filtered.map((course) => courseRow(course.id))}
-                  {!filtered.length ? <tr><td colSpan={7} className="empty">{all.length ? 'Nothing matches this search.' : 'No courses yet. Start one on the right, or link one from the library.'}</td></tr> : null}
+                  {!filtered.length ? <tr><td colSpan={7}>{all.length ? <p className="empty">Nothing matches this search.</p> : <ExampleInUse desk title="East London circle notes" action={{ href: '#new-subject', label: 'Start a subject' }}><p>A local course · one film · questions added in the editor</p></ExampleInUse>}</td></tr> : null}
                 </tbody>
               </table>
             </div>
@@ -159,7 +160,7 @@ export async function ContentScreen(ctx: Ctx) {
         </section>
         <section className="panel">
           <header><div><h2>New subject <HelpTip topic="local-course">{TOOL.localCourse}</HelpTip></h2><p>Subject, then topic, then film. Questions are added in the editor.</p></div></header>
-          <form className="body form" action="/api/hearts" method="post">
+          <form id="new-subject" className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-course', origin: 'local', portalSlug: portal.slug, next: `${base}/admin/content` }} />
             <label className="stack">Subject name<input type="text" data-testid="local-course-title" name="title" required /></label>
             <label className="stack">First topic<input type="text" name="unit" placeholder="Topic 1" /></label>
@@ -243,7 +244,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
               ))}
             </nav>
             {!locked ? (
-              <form className="body form" action="/api/hearts" method="post" style={{ borderTop: '1px solid var(--line)' }}>
+              <form id="add-film" className="body form" action="/api/hearts" method="post" style={{ borderTop: '1px solid var(--line)' }}>
                 <Hidden fields={{ action: 'add-lesson', course: courseId, next: editorHref }} />
                 <label className="stack">Add a film<input type="text" name="title" placeholder="Part 2" required /></label>
                 <div className="actions"><button className="btn ghost small" type="submit">Add film</button></div>
@@ -326,23 +327,23 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                         <HelpTip topic="bring-in-retry">{TOOL.bringInRetry}</HelpTip>
                       </BusyForm>
                     ) : null}
-                    <form className="form" action="/api/hearts" method="post" encType="multipart/form-data">
+                    <form id="transcript" className="form" action="/api/hearts" method="post" encType="multipart/form-data">
                       <Hidden fields={{ action: 'upload-transcript', lesson: lesson.id, next: here }} />
                       <label className="stack">Or upload a transcript (.vtt, .srt or .txt)<input data-testid="transcript-file" type="file" name="file" accept=".vtt,.srt,.txt,.md,text/plain" required /></label>
                       <div className="actions"><button className="btn ghost small" data-testid="transcript-submit" type="submit">Upload transcript</button></div>
                     </form>
                     <form action="/api/hearts" method="post">
                       <Hidden fields={{ action: 'extract', lesson: lesson.id, next: here }} />
-                      <p className="hint" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Extractor <HelpTip topic="extract">{TOOL.extract}</HelpTip></p>
+                      <p className="hint" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Pull the clips <HelpTip topic="extract">{TOOL.extract}</HelpTip></p>
                       <PortalAiChoice connected={publicAi(portal?.aiConnection).connected} master={user.role === 'master'} teacher={user.role === 'teacher'} calls={1} settingsHref={portal ? `/p/${portal.slug}/admin/settings` : undefined} />
-                      <button className="btn block" style={{ width: '100%' }} data-testid="extract-submit" type="submit">Run the extractor</button>
+                      <button className="btn block" style={{ width: '100%' }} data-testid="extract-submit" type="submit">Draft clips from the words</button>
                       <p className="hint" style={{ marginTop: 6 }}>Finds short moments with a hook, a turn and a landing line. Quotes are word for word and timings come from the transcript. Running it again keeps clips you have already approved and replaces the drafts.</p>
                     </form>
                   </div>
                 ) : <p className="hint">The film, transcript and cuts are looked after by the master desk.</p>}
               </div>
             </section>
-          ) : <section className="panel"><div className="body empty">This subject has no films yet.</div></section>}
+          ) : <section className="panel"><div className="body"><ExampleInUse desk title="Part 1" action={{ href: '#add-film', label: 'Add a film' }}><p>A talk in this subject, ready for questions.</p></ExampleInUse></div></section>}
 
           {lesson && youtubeId ? (() => {
             const clip = cuts[0]
@@ -379,7 +380,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                           {cut.theme ? <>Theme: {str(cut.theme)}. </> : null}
                           {door ? <>Door <strong data-testid="cut-door" style={{ color: 'var(--ink)' }}>{doorLabel(door)}</strong> <span className="hint" data-testid="cut-door-clause">(clause {clause}{cut.clauseFragment ? `: ${str(cut.clauseFragment)}` : ''})</span>. </> : null}
                           {cut.whyHang ? <>{str(cut.whyHang)} </> : null}
-                          Quote check: {str(cut.quoteConfidence, 'not run')}. Made by {cut.engine === 'llm' ? 'this portal’s AI account' : 'the built-in extractor'}.
+                          Quote check: {str(cut.quoteConfidence, 'not checked')}. {cut.engine === 'llm' ? 'Drafted with this portal’s AI account.' : 'Drafted from the transcript.'}
                         </div>
                       </div>
                       {!locked ? (
@@ -412,7 +413,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                       ) : <div className="hint" data-testid="cut-door-readonly">{door ? <><b>{doorLabel(door)}</b><br />clause {clause}</> : ''}</div>}
                     </article>
                   )
-                }) : <p className="empty">No cuts yet. Attach a transcript, then run the extractor.</p>}
+                }) : <ExampleInUse desk title="A clip from the talk" action={{ href: '#transcript', label: 'Add the words' }}><p>0:12 to 0:28 · the line you want people to hear first.</p><p className="hint">Add the timed words, then pull the clips.</p></ExampleInUse>}
               </div>
             </section>
           ) : null}
@@ -470,15 +471,15 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                           </tr>
                         )
                       })}
-                      {!visiblePoints.length ? <tr><td colSpan={5} className="empty">No questions yet.</td></tr> : null}
+                      {!visiblePoints.length ? <tr><td colSpan={5}><ExampleInUse desk title="At 12:30" action={{ href: '#place-question', label: 'Place a question' }}><p>What will you keep from this? · everyone on this film</p></ExampleInUse></td></tr> : null}
                     </tbody>
                   </table>
                 </div>
-                <form className="form" action="/api/hearts" method="post" data-testid="point-form">
+                <form id="place-question" className="form" action="/api/hearts" method="post" data-testid="point-form">
                   <Hidden fields={{ action: 'create-point', lesson: lesson.id, next: here }} />
                   <h3 style={{ margin: 0, fontSize: 15 }}>Place a question</h3>
                   <PointPicker youtubeId={youtubeId} />
-                  <label className="stack">Question<textarea data-testid="point-prompt" name="prompt" required /></label>
+                  <label className="stack">Question<textarea data-testid="point-prompt" name="prompt" required placeholder="What will you keep from this?" /></label>
                   <div className="cols">
                     <label className="stack">Kind
                       <select name="kind" defaultValue="reflection" data-testid="point-kind">

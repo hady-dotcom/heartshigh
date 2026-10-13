@@ -1,7 +1,8 @@
 import { Hidden } from '@/components/app/shell'
 import { HelpTip } from '@/components/desk/help'
 import { TOOL } from '@/lib/desk-help'
-import { REPORT_LABEL, announceAudienceLabel } from '@/lib/safety'
+import { ExampleInUse } from '@/components/app/care'
+import { REPORT_LABEL, announceAudienceLabel, plainAlertSource, plainReportStatus, plainTarget } from '@/lib/safety'
 import { safeguardingLead } from '@/lib/portal-contacts'
 import { canSeeAlertContent } from '@/lib/safety'
 import { loadQueue, targetLearner } from '@/server/safety'
@@ -46,7 +47,7 @@ export async function CareSafetyBody({
     <>
       {portalId && !lead ? (
         <div className="flash notice" data-testid="add-safeguarding-lead">
-          Add a safeguarding lead in portal settings so a named person is told when someone may need support. Until then, portal admins and the master are told.
+          Name the person who will reach out when someone may need support. Until then, portal admins and the master are told. <a href={slug ? `/p/${slug}/admin/settings` : here}>Open portal settings</a>
         </div>
       ) : null}
       <section className="panel" style={{ marginBottom: 18, ...GOLD }} data-testid="needs-a-person">
@@ -60,11 +61,11 @@ export async function CareSafetyBody({
               <p><b>A learner may need support</b></p>
               {showAlert(alert) ? (
                 <>
-                  <p className="hint">{personName(alert.learner)} · {str(alert.source)} · {shortDate(str(alert.createdAt))}</p>
+                  <p className="hint">{personName(alert.learner)} · {plainAlertSource(str(alert.source))} · {shortDate(str(alert.createdAt))}</p>
                   {alert.outcome ? <p data-testid="safeguard-outcome">Note: {str(alert.outcome)}</p> : (
                     <form className="form" action="/api/hearts" method="post">
                       <Hidden fields={{ action: 'safety-outcome', alert: alert.id, portal: portalId || idOf((alert as { portal?: unknown }).portal) || '', next: here }} />
-                      <label className="stack">What you did<textarea name="outcome" rows={2} required data-testid="safeguard-outcome-text" /></label>
+                      <label className="stack">What you did<textarea name="outcome" rows={2} required placeholder="Who you spoke with, and what happens next" data-testid="safeguard-outcome-text" /></label>
                       <button className="btn gold small" type="submit" data-testid="safeguard-outcome-save">Save note</button>
                     </form>
                   )}
@@ -73,7 +74,17 @@ export async function CareSafetyBody({
                 <p className="hint">An alert is waiting for the named person. You do not need the details.</p>
               )}
             </article>
-          )) : <p className="empty">Nothing waiting for a person.</p>}
+          )) : (
+            <ExampleInUse
+              desk
+              testId="safety-example-person"
+              title="A learner may need support"
+              action={slug ? { href: `/p/${slug}/admin/settings`, label: 'Name who will reach out' } : { href: '/master', label: 'Open a portal' }}
+            >
+              <p>Yusuf · Their words need a person · today</p>
+              <p className="hint">A named person is asked to look today, then writes here what they did.</p>
+            </ExampleInUse>
+          )}
         </div>
       </section>
 
@@ -85,9 +96,9 @@ export async function CareSafetyBody({
             const person = authors.get(report.id) || ''
             return (
               <article key={report.id} className="lib-card" data-testid="report-row" data-status={str(report.status)}>
-                <p><b>{REPORT_LABEL[str(report.reason) as keyof typeof REPORT_LABEL] || str(report.reason)}</b> · {str(report.targetType)} · {shortDate(str(report.createdAt))}</p>
+                <p><b>{REPORT_LABEL[str(report.reason) as keyof typeof REPORT_LABEL] || 'A concern'}</b> · {plainTarget(str(report.targetType))} · {shortDate(str(report.createdAt))}</p>
                 {report.note ? <p>{str(report.note)}</p> : null}
-                <p className="hint">Status: {str(report.status)}</p>
+                <p className="hint">{plainReportStatus(str(report.status))}</p>
                 <div className="actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <form action="/api/hearts" method="post">
                     <Hidden fields={{ action: 'safety-hide', report: report.id, targetType: str(report.targetType), targetId: String(report.targetId), portal: portal || '', next: here }} />
@@ -107,30 +118,51 @@ export async function CareSafetyBody({
                 {person ? (
                   <form className="form" action="/api/hearts" method="post" style={{ marginTop: 8 }}>
                     <Hidden fields={{ action: 'safety-message', portal: portal || '', person, next: here }} />
-                    <label className="stack">Message the person<textarea name="body" rows={2} required data-testid="mod-message" /></label>
+                    <label className="stack">Message the person<textarea name="body" rows={2} required placeholder="A short, kind note they will see" data-testid="mod-message" /></label>
                     <button className="btn ink small" type="submit" data-testid="mod-message-send">Send a note</button>
                   </form>
                 ) : null}
               </article>
             )
           })}
-          {!queue.reports.length ? <p className="empty">No concerns waiting.</p> : null}
+          {!queue.reports.length ? (
+            <ExampleInUse
+              desk
+              testId="safety-example-report"
+              title="Someone may be at risk"
+              action={slug ? { href: `/p/${slug}/admin/teach`, label: 'Open shared answers' } : { href: '/master/learners', label: 'See learners' }}
+            >
+              <p>A written answer · today</p>
+              <p>They wrote that they do not feel safe at home.</p>
+              <p className="hint">Waiting for you. Hide it, keep it, or send a kind note. The writer is not told who looked.</p>
+            </ExampleInUse>
+          ) : null}
         </div>
       </section>
 
       <section className="panel" data-testid="screened-items">
-        <header className="light"><h2>Held by the word screen</h2></header>
+        <header className="light"><h2>Held for a check</h2></header>
         <div className="body">
           {queue.hides.map((hide) => (
             <article key={hide.id} className="lib-card" data-testid="hidden-row">
-              <p>{str(hide.targetType)} #{String(hide.targetId)} · {str(hide.reason)}</p>
+              <p>{plainTarget(str(hide.targetType))} · {str(hide.reason) === 'Needs a person.' ? 'Needs a person' : str(hide.reason) || 'Held for a check'}</p>
               <form action="/api/hearts" method="post">
                 <Hidden fields={{ action: 'safety-keep', targetType: str(hide.targetType), targetId: String(hide.targetId), portal: portalId || idOf((hide as { portal?: unknown }).portal) || '', next: here }} />
                 <button className="btn teal small" type="submit" data-testid="screen-keep">Keep visible</button>
               </form>
             </article>
           ))}
-          {!queue.hides.length ? <p className="empty">Nothing held by the word screen.</p> : null}
+          {!queue.hides.length ? (
+            <ExampleInUse
+              desk
+              testId="safety-example-held"
+              title="Held for a check"
+              action={slug ? { href: `/p/${slug}/admin/teach`, label: 'Open shared answers' } : { href: '/master/review/swarm', label: 'Review hidden answers' }}
+            >
+              <p>A circle answer · unkind words</p>
+              <p className="hint">It stays hidden until you choose to keep it visible.</p>
+            </ExampleInUse>
+          ) : null}
         </div>
       </section>
     </>
@@ -140,7 +172,7 @@ export async function CareSafetyBody({
 export async function PortalSafetyScreen(ctx: Ctx) {
   const here = `${ctx.base}/admin/safety`
   return (
-    <AdminFrame ctx={ctx} active="safety" title="Care and safety" intro="Concerns people raise, and items the word screen held, for this portal only." testId="admin-safety">
+    <AdminFrame ctx={ctx} active="safety" title="Care and safety" intro="When someone may need support, a named person is asked to look today and to reach out. Concerns people raise sit here, for this portal only." testId="admin-safety">
       {await CareSafetyBody({ payload: ctx.payload, user: ctx.user, portalId: ctx.portal.id, here, slug: String(ctx.portal.slug || '') })}
     </AdminFrame>
   )
@@ -148,7 +180,7 @@ export async function PortalSafetyScreen(ctx: Ctx) {
 
 export async function MasterSafetyScreen({ payload, user, query }: { payload: Payload; user: SessionUser; query: { error?: string; notice?: string } }) {
   return (
-    <DeskFrame payload={payload} user={user} title="Care and safety" intro="Concerns and alerts across every portal." active="safety" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="master-safety">
+    <DeskFrame payload={payload} user={user} title="Care and safety" intro="When someone may need support, a named person is asked to look today. This is every portal." active="safety" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="master-safety">
       {await CareSafetyBody({ payload, user, portalId: null, here: '/master/safety' })}
     </DeskFrame>
   )
@@ -181,7 +213,7 @@ function AnnounceForm({ portal, here, codes, portals }: { portal: number; here: 
   return (
     <section className="panel" style={{ marginBottom: 18 }}>
       <header className="light"><h2>Write a note</h2></header>
-      <form className="form body" action="/api/hearts" method="post" data-testid="announce-form">
+      <form id="write-a-note" className="form body" action="/api/hearts" method="post" data-testid="announce-form">
         <Hidden fields={{ action: 'announce', next: here, portal: portals ? undefined : portal }} />
         {portals ? (
           <label className="stack">Portal
@@ -191,7 +223,7 @@ function AnnounceForm({ portal, here, codes, portals }: { portal: number; here: 
           </label>
         ) : null}
         <label className="stack">Message
-          <textarea name="body" rows={4} maxLength={500} required data-testid="announce-body" />
+          <textarea name="body" rows={4} maxLength={500} required placeholder="A short note, in ordinary words" data-testid="announce-body" />
         </label>
         <label className="stack">Who should see it
           <select name="audience" data-testid="announce-audience">
@@ -227,7 +259,12 @@ function AnnounceList({ rows }: { rows: { id: number; body?: string; audience?: 
             <p className="hint">{announceAudienceLabel(String(row.audience || 'everyone'))} · {shortDate(row.createdAt)}</p>
           </article>
         ))}
-        {!rows.length ? <p className="empty">No announcements yet.</p> : null}
+        {!rows.length ? (
+          <ExampleInUse desk testId="announce-example" title="A note on Home" action={{ href: '#write-a-note', label: 'Write a note' }}>
+            <p>Circle after Isha is in the hall tonight. Come if you can.</p>
+            <p className="hint">Everyone in the portal · today</p>
+          </ExampleInUse>
+        ) : null}
       </div>
     </section>
   )

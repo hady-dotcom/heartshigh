@@ -5,6 +5,7 @@ import { WeekScreen } from '@/screens/app/week'
 import { Avatar } from '@/components/app/feed'
 import { OptInLane, PrefToggle, SoundOnToggle, StartAgain } from '@/components/app/me-controls'
 import { SavedList, SavedToast } from '@/components/app/saved-list'
+import { ExampleInUse } from '@/components/app/care'
 import { EmptyState } from '@/components/app/empty'
 import { KeepHearts } from '@/components/app/install-card'
 import { Qr } from '@/components/qr'
@@ -101,7 +102,13 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
             <small className="muted">{shortDate(note.createdAt)}</small>
           </Link>
         )) : (
-          <EmptyState testId="notes-empty" action={featureOn(portal, 'garden') ? { href: `${base}/garden`, label: 'Open the garden' } : { href: base, label: 'Back home' }}>Nothing new. Replies from your teacher and new nights will show here.</EmptyState>
+          <EmptyState
+            testId="notes-empty"
+            action={featureOn(portal, 'garden') ? { href: `${base}/garden`, label: 'Open the garden' } : { href: base, label: 'Back home' }}
+            example={{ title: 'Your teacher replied', body: <p>Amina wrote back on the answer you shared. Open your workbook to read it.</p> }}
+          >
+            Nothing new. Replies from your teacher and new nights will show here.
+          </EmptyState>
         )}
         <p className="eyebrow" style={{ marginTop: 22 }}>Opening questions</p>
         <StartAgain base={base} />
@@ -162,7 +169,12 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
               )}
             </article>
           )
-        }) : <p className="muted">No nights are planned yet.</p>}</> : null}
+        }) : (
+          <ExampleInUse title="Circle after Isha" action={{ href: `${base}/gather`, label: 'See gatherings' }}>
+            <p>Thursday · the hall · 8 coming</p>
+            <p className="hint">Your place is held until you say you will come.</p>
+          </ExampleInUse>
+        )}</> : null}
         <p className="eyebrow">Board</p>
         <form className="card form-stack" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'board', next: here }} />

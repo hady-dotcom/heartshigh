@@ -169,8 +169,8 @@ const PAGES: Record<string, HelpCopy> = {
   help: {
     title: 'How to use Help',
     body: [
-      'These are people you can call or visit if you need support now.',
-      'The numbers and links are for this portal. Back to HEARTS returns you to the opening.',
+      'These are people you can call now. They answer. You do not have to give your name.',
+      'This choice is not saved, and nobody at your masjid is told. Come back when you feel ready.',
     ],
   },
   login: {
@@ -211,8 +211,8 @@ const PAGES: Record<string, HelpCopy> = {
   'support-page': {
     title: 'How to ask for help',
     body: [
-      'Write to the portal team here. You do not need an email.',
-      'They will read it. This is not the crisis contacts on the opening.',
+      'Write to your portal team here. A person will read it and reply on this page.',
+      'If you need someone right now, call a helpline. Do not wait for the reply.',
     ],
   },
   'shaped-page': {
@@ -316,7 +316,7 @@ export function helpFor(page: string | undefined | null): HelpCopy {
 /** Learner-facing '?' copy for report and announce. Two to four short sentences. */
 export const LEARNER_HELP: Record<string, string> = {
   report:
-    'This is a quiet way to tell the portal team something does not sit right. They will look, and the other person is not told your name. If someone may be at risk, a named person is asked to look today.',
+    'This is a quiet way to tell the portal team something does not sit right. They will look, and the other person is not told your name. If someone may be at risk, a named person is asked to look today and will reach out.',
   announce:
     'A short note from your masjid or school. It stays at the top of Home until you dismiss it. You cannot reply here — write to your teacher if you have a question.',
   'hide-until-moment':

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { CARE_SAVED } from '@/lib/care-copy'
 import type { Where } from 'payload'
 import { draftsSkippingApproved, dualExtract, rowsKeptOnExtract, youtubeIdFromUrl, type ClauseCard } from '@/lib/extractor'
 import { giveHarvest } from './scripture'
@@ -318,7 +319,7 @@ export type AnswerInput = {
   pendingSync?: boolean
 }
 
-export type AnswerResult = { ok: true; answerId: number; updated: boolean; keepPrivate: boolean; sharedWithLearners: boolean; correct: boolean | null } | { ok: false; status: number; error: string }
+export type AnswerResult = { ok: true; answerId: number; updated: boolean; keepPrivate: boolean; sharedWithLearners: boolean; correct: boolean | null; care?: boolean } | { ok: false; status: number; error: string }
 
 /** Saves one pop-up answer and its workbook entry, for the answer sheet and for POST /api/answers. */
 export async function saveAnswer(payload: Payload, user: SessionUser, input: AnswerInput): Promise<AnswerResult> {
@@ -399,6 +400,8 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
     let shareWithLearners = !keepPrivate && Boolean(input.shareWithLearners) && Boolean(user.shareWithLearners)
     if (shareWithLearners && (await circleMutedUntil(payload, user.id))) shareWithLearners = false
     const screened = await screenAnswerSafe([body, choice].filter(Boolean).join(' '))
+    const crisis = Boolean(point.crisisOption && (body === point.crisisOption || choice === point.crisisOption))
+    const care = crisis || screened.atRisk
     const correct = point.kind === 'multiple_choice' && point.correctOption ? choice === point.correctOption : null
     const extra = {
       answeredAt: input.answeredAt || now().toISOString(),
@@ -423,9 +426,8 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
       if (entry.docs[0]) {
         await payload.update({ collection: 'workbook-entries', id: entry.docs[0].id, overrideAccess: true, data: { body: body || choice, consent: shareWithTeacher, ...(imageId ? { image: imageId } : {}) } })
       }
-      const crisis = Boolean(point.crisisOption && (body === point.crisisOption || choice === point.crisisOption))
       await afterLearnerWords(payload, user, portal, body || choice, { type: 'answer', id: earlier.docs[0].id }, crisis)
-      return { ok: true as const, answerId: earlier.docs[0].id, updated: true, keepPrivate, sharedWithLearners: shareWithLearners, correct }
+      return { ok: true as const, answerId: earlier.docs[0].id, updated: true, keepPrivate, sharedWithLearners: shareWithLearners, correct, care }
     }
     const answer = await payload.create({
       collection: 'answers',
@@ -461,7 +463,6 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
         portal,
       },
     })
-    const crisis = Boolean(point.crisisOption && (body === point.crisisOption || choice === point.crisisOption))
     await afterLearnerWords(payload, user, portal, body || choice, { type: 'answer', id: answer.id }, crisis)
     if (shareWithTeacher) await notifyTeachers(payload, user, portal, 'A learner shared an answer', `${user.name || 'A learner'} shared an answer with you.`)
     void recordExperimentQuietly(payload, user, 'question_answered', { point: pointId, lesson: lessonId || 0 })
@@ -475,10 +476,11 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
         key: `queued-${follower.id}`,
       })
     }
-    return { ok: true as const, answerId: answer.id, updated: false, keepPrivate, sharedWithLearners: shareWithLearners, correct }
+    return { ok: true as const, answerId: answer.id, updated: false, keepPrivate, sharedWithLearners: shareWithLearners, correct, care }
   }
 
-export function answerSavedMessage(result: { keepPrivate: boolean; sharedWithLearners: boolean }) {
+export function answerSavedMessage(result: { keepPrivate: boolean; sharedWithLearners: boolean; care?: boolean }) {
+  if (result.care) return CARE_SAVED
   if (result.keepPrivate) return 'Saved privately in your workbook.'
   return result.sharedWithLearners ? 'Saved in your workbook and shared with other learners.' : 'Saved in your workbook.'
 }

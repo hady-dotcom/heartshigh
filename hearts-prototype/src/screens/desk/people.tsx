@@ -19,6 +19,7 @@ import { dayNumber } from '@/server/learner'
 import { type Ctx, clock, longDate, portalPeople, ref, rows, shortDate, str } from '../common'
 import { AdminFrame } from './overview'
 import { featureOn } from '@/lib/features'
+import { ExampleInUse } from '@/components/app/care'
 import { AnswerFocus } from '@/components/desk/answer-focus'
 import { sharedAnswerText, sharedAnswersNewestFirst } from '@/lib/shared-answers'
 
@@ -108,7 +109,7 @@ export async function TeachScreen(ctx: Ctx) {
                   </tr>
                 )
               })}
-              {!learners.length ? <tr><td colSpan={8} className="empty">Nobody has joined with a learner code yet.</td></tr> : null}
+              {!learners.length ? <tr><td colSpan={8}><ExampleInUse desk title="Maryam Begum" action={{ href: `${base}/admin/access`, label: 'Share a join code' }}><p>East London · day 3 · one talk finished</p></ExampleInUse></td></tr> : null}
             </tbody>
           </table>
         </div>
@@ -136,7 +137,7 @@ export async function TeachScreen(ctx: Ctx) {
               </article>
             )
           })}
-          {!sharedAnswers.length ? <p className="empty">Nothing shared yet. When a learner shares an answer, typed or recorded, it shows up here.</p> : null}
+          {!sharedAnswers.length ? <ExampleInUse desk title="After Fajr" action={{ href: `${base}/admin/content`, label: 'Open courses' }}><p>Maryam · How to Live Like the Prophet</p><p>Sending salawat before I pick up my phone.</p></ExampleInUse> : null}
         </div>
       </section>
 
@@ -166,7 +167,7 @@ export async function TeachScreen(ctx: Ctx) {
                 </article>
               )
             })}
-            {!shared.length ? <p className="empty">Nothing shared yet. Learners choose, answer by answer, whether you can read it.</p> : null}
+            {!shared.length ? <ExampleInUse desk title="A shared workbook note" action={{ href: `${base}/admin/content`, label: 'Open courses' }}><p>Hamza · I sat with the Names class and wrote one line I want to keep.</p></ExampleInUse> : null}
           </div>
         </section>
         ) : null}
@@ -195,7 +196,7 @@ export async function TeachScreen(ctx: Ctx) {
                   ))}
                 </div>
               </div>
-            ) : <p className="empty">No recordings yet. When a learner answers with a video or a voice note, it appears here.</p>}
+            ) : <ExampleInUse desk title="A voice note" action={{ href: `${base}/admin/content`, label: 'Open courses' }}><p>Maryam · 0:42 · “This is what I tried this week.”</p><p className="hint">Pause it and leave a note. They see it on the timeline.</p></ExampleInUse>}
           </div>
         </section>
         ) : null}
@@ -210,7 +211,7 @@ export async function TeachScreen(ctx: Ctx) {
               {watches.filter((row) => Boolean((row.user as { shareWatch?: boolean } | null)?.shareWatch)).map((row) => (
                 <tr key={row.id} data-testid="watch-session"><td>{(row.user as { name?: string } | null)?.name}</td><td>{(row.lesson as { title?: string } | null)?.title}</td><td className="num">{clock(Number(row.seconds || 0))}</td><td>{shortDate(row.createdAt)}</td></tr>
               ))}
-              {!watches.some((row) => Boolean((row.user as { shareWatch?: boolean } | null)?.shareWatch)) ? <tr><td colSpan={4} className="empty">Nothing here unless a learner chooses to share it.</td></tr> : null}
+              {!watches.some((row) => Boolean((row.user as { shareWatch?: boolean } | null)?.shareWatch)) ? <tr><td colSpan={4}><ExampleInUse desk title="Maryam · The Names" action={{ href: base, label: 'Open the app' }}><p>Watched up to 12:04 · yesterday</p><p className="hint">Only if they turn detailed history on.</p></ExampleInUse></td></tr> : null}
             </tbody>
           </table>
         </div>
@@ -243,7 +244,7 @@ export async function PlansScreen(ctx: Ctx) {
       <div className="grid" style={{ gridTemplateColumns: 'minmax(340px, 1fr) minmax(0, 1.6fr)', alignItems: 'start' }}>
         <section className="panel">
           <header><div><h2>New plan</h2></div></header>
-          <form className="body form" action="/api/hearts" method="post">
+          <form id="new-plan" className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'schedule', portalSlug: portal.slug, targetType: 'course', next: here }} />
             <label className="stack">Name<input type="text" name="name" defaultValue={defaultPlanName(clockNow())} /></label>
             <label className="stack">Course<select data-testid="schedule-course" name="course" defaultValue={selected || undefined}>{courses.map((course) => <option key={course.id} value={course.id}>{cleanTitle(str(course.title))}</option>)}</select></label>
@@ -277,7 +278,7 @@ export async function PlansScreen(ctx: Ctx) {
                     </tr>
                   )
                 })}
-                {!plans.length ? <tr><td colSpan={5} className="empty">No plans yet.</td></tr> : null}
+                {!plans.length ? <tr><td colSpan={5}><ExampleInUse desk title="Names class, four weeks" action={{ href: '#new-plan', label: 'Make a plan' }}><p>Maryam · Tue and Thu · 8 parts</p></ExampleInUse></td></tr> : null}
               </tbody>
             </table>
           </div>
@@ -325,11 +326,11 @@ export async function NightsScreen(ctx: Ctx) {
                       {inside.filter((item) => !going.some((row) => ref(row.user) === ref(item.user))).map((item) => (
                         <tr key={`walk-${item.id}`}><td>{name(item.user)}</td><td className="hint">No ticket</td><td><span className="badge purple">Walk-in</span></td><td><span className="badge ink">Welcomed in</span></td></tr>
                       ))}
-                      {!going.length && !inside.length ? <tr><td colSpan={4} className="empty">Nobody has said they will come yet.</td></tr> : null}
+                      {!going.length && !inside.length ? <tr><td colSpan={4}><ExampleInUse desk title="Yusuf Ali" action={{ href: `#checkin-${event.id}`, label: 'Welcome someone in' }}><p>Ticket held · not here yet</p></ExampleInUse></td></tr> : null}
                     </tbody>
                   </table>
                 </div>
-                <form className="feedback-bar" action="/api/hearts" method="post" style={{ margin: '0 18px 18px' }}>
+                <form id={`checkin-${event.id}`} className="feedback-bar" action="/api/hearts" method="post" style={{ margin: '0 18px 18px' }}>
                   <Hidden fields={{ action: 'checkin', event: event.id, next: here }} />
                   <select name="learner" data-testid="checkin-learner" style={{ maxWidth: 260 }} required>
                     <option value="">Who has arrived?</option>
@@ -342,17 +343,17 @@ export async function NightsScreen(ctx: Ctx) {
               </section>
             )
           })}
-          {!events.length ? <section className="panel"><div className="body empty">No nights yet.</div></section> : null}
+          {!events.length ? <section className="panel"><div className="body"><ExampleInUse desk title="Circle after Isha" action={{ href: '#plan-a-night', label: 'Plan a night' }}><p>Thursday · the hall · a short note for people coming</p></ExampleInUse></div></section> : null}
         </div>
         {user.role !== 'teacher' ? (
           <section className="panel">
             <header><div><h2>Plan a night</h2><p>People with night alerts on are told straight away</p></div></header>
-            <form className="body form" action="/api/hearts" method="post">
+            <form id="plan-a-night" className="body form" action="/api/hearts" method="post">
               <Hidden fields={{ action: 'create-event', portalSlug: portal.slug, next: here }} />
-              <label className="stack">Name<input type="text" data-testid="event-title" name="title" required /></label>
+              <label className="stack">Name<input type="text" data-testid="event-title" name="title" required placeholder="Circle after Isha" /></label>
               <label className="stack">Date and time<input type="datetime-local" name="startsAt" data-testid="event-starts" /></label>
-              <label className="stack">Place<input type="text" name="place" /></label>
-              <label className="stack">A note for people coming<textarea name="note" /></label>
+              <label className="stack">Place<input type="text" name="place" placeholder="The hall" /></label>
+              <label className="stack">A note for people coming<textarea name="note" placeholder="A short, warm note" /></label>
               <div className="actions"><button className="btn ink" type="submit" data-testid="event-submit">Save night</button></div>
             </form>
           </section>

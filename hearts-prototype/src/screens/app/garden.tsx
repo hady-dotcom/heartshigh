@@ -282,7 +282,11 @@ export async function GardenScreen({ payload, user, portal, base, query }: Ctx) 
           <p className="muted" style={{ fontSize: 13, margin: '10px 0 0' }} data-testid="watched-rule">Finished counts every full talk you have sat with. Your path below is this course only.</p>
         </section>
         {path ? <GardenPath title={path.title} nodes={path.nodes} /> : (
-          <EmptyState testId="garden-empty" action={{ href: `${base}/lanes`, label: 'Browse courses' }}>
+          <EmptyState
+            testId="garden-empty"
+            action={{ href: `${base}/lanes`, label: 'Browse courses' }}
+            example={{ title: 'How to Live Like the Prophet', body: <p>Part 1 watched · Part 2 is next.</p> }}
+          >
             Start a course from Lanes and its path will grow here, one lesson at a time.
           </EmptyState>
         )}
@@ -668,6 +672,7 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
           <EmptyState
             testId="workbook-empty"
             action={filter === 'all' ? { href: `${base}/lanes`, label: 'Open a course' } : { href: `${base}/garden/workbook`, label: 'Show every answer' }}
+            example={filter === 'all' ? { title: 'After Fajr', body: <p>Sending salawat before I pick up my phone. Shared with your teacher.</p> } : undefined}
           >
             {filter === 'all' ? 'Your answers will appear here, shared or private. Answer a question in any talk to start.' : 'Nothing here with this filter.'}
           </EmptyState>

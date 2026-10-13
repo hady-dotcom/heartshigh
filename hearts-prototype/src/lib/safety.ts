@@ -20,6 +20,39 @@ export type AnnounceAudience = (typeof ANNOUNCE_AUDIENCES)[number]
 
 export const SLOW_DOWN = "Let's slow down a moment. Try again in a few minutes."
 export const REPORT_THANKS = 'Thank you. A person will look at this.'
+
+export const ALERT_SOURCE_LABEL: Record<string, string> = {
+  crisis: 'They asked for help',
+  screen: 'Their words need a person',
+  report: 'Someone said they may be at risk',
+}
+
+export const TARGET_LABEL: Record<string, string> = {
+  answer: 'a written answer',
+  'circle-answer': 'a circle answer',
+  'live-question': 'a question from a live talk',
+  'gather-photo': 'a photo from a gathering',
+  'teacher-reply': 'a reply from a teacher',
+}
+
+export const REPORT_STATUS_LABEL: Record<string, string> = {
+  open: 'Waiting for you',
+  hidden: 'Hidden until you decide',
+  kept: 'Kept visible',
+  escalated: 'A named person has been asked',
+}
+
+export function plainTarget(type: string) {
+  return TARGET_LABEL[type] || 'something shared in the portal'
+}
+
+export function plainAlertSource(source: string) {
+  return ALERT_SOURCE_LABEL[source] || 'Needs a person'
+}
+
+export function plainReportStatus(status: string) {
+  return REPORT_STATUS_LABEL[status] || 'Waiting for you'
+}
 export const SAFEGUARD_EMAIL_SUBJECT = 'A learner may need support'
 export const SAFEGUARD_EMAIL_BODY = 'A learner may need support. Please look today.'
 export const ANNOUNCE_MAX = 500

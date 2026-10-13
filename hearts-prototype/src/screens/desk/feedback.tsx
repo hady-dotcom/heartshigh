@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { headers } from 'next/headers'
+import { ExampleInUse } from '@/components/app/care'
 import { Hidden } from '@/components/app/shell'
 import {
   EMPTY_FILTERS,
@@ -96,7 +97,7 @@ export async function FeedbackScreen(ctx: Ctx) {
             <div className="body">
               {built.doorCounts.length ? built.doorCounts.map((row) => (
                 <div className={styles.doorRow} key={row.key}><span>{row.label}</span><b>{countPhrase(row.shared, row.privateCount)}</b></div>
-              )) : <p className="hint">No door has an answer in this view yet.</p>}
+              )) : <ExampleInUse desk title="Patience" action={{ href: '#feedback-filters', label: 'Change the filters' }}><p>Three shared answers · two kept private</p></ExampleInUse>}
             </div>
           </section>
           <section className="panel" data-testid="question-counts">
@@ -104,12 +105,12 @@ export async function FeedbackScreen(ctx: Ctx) {
             <div className="body">
               {built.questionCounts.length ? built.questionCounts.map((row) => (
                 <div className={styles.questionRow} key={row.key}><span>{row.label}</span><b>{countPhrase(row.shared, row.privateCount)}</b></div>
-              )) : <p className="hint">No question has an answer in this view yet.</p>}
+              )) : <ExampleInUse desk title="What will you keep?" action={{ href: '#feedback-filters', label: 'Change the filters' }}><p>Four shared · one private</p></ExampleInUse>}
             </div>
           </section>
         </div>
 
-        <form className={`panel`} action={here} method="get" data-testid="feedback-filters">
+        <form id="feedback-filters" className="panel" action={here} method="get" data-testid="feedback-filters">
           <header className="light"><h2>Filters <HelpTip topic="filters">{TOOL.filters}</HelpTip></h2></header>
           <div className="body">
             <input type="hidden" name="filters" value="1" />
@@ -200,7 +201,7 @@ export async function FeedbackScreen(ctx: Ctx) {
                 </div>
               </section>
             ))}
-            {!built.learners.length ? <p className="empty">Nothing shared matches these filters.</p> : null}
+            {!built.learners.length ? <ExampleInUse desk title="A shared answer" action={{ href: '#feedback-filters', label: 'Change the filters' }}><p>Learner A · After Fajr · “Sending salawat before I pick up my phone.”</p></ExampleInUse> : null}
           </div>
         ) : (
           <div className={styles.group} data-testid="grouped-view">
@@ -259,7 +260,7 @@ export async function FeedbackScreen(ctx: Ctx) {
                 ))}
               </section>
             ))}
-            {!built.doors.length ? <p className="empty" data-testid="feedback-empty">Nothing shared matches these filters.</p> : null}
+            {!built.doors.length ? <div data-testid="feedback-empty"><ExampleInUse desk title="Door 10" action={{ href: '#feedback-filters', label: 'Change the filters' }}><p>Three shared answers on patience. Names are initials only.</p></ExampleInUse></div> : null}
           </div>
         )}
 
@@ -282,7 +283,7 @@ export async function FeedbackScreen(ctx: Ctx) {
                 <p className={styles.rewrite} data-testid="weak-rewrite">{row.rewrite}</p>
               </article>
             ))}
-            {!rewrites.length ? <p className="hint">No draft rewrites yet. Run the check when you want a list.</p> : null}
+            {!rewrites.length ? <ExampleInUse desk title="A clearer question" action={{ href: '#feedback-filters', label: 'Look at the answers' }}><p>The live question stays as it is. A draft rewrite waits for you.</p></ExampleInUse> : null}
           </div>
         </section>
 
@@ -307,7 +308,7 @@ export async function FeedbackScreen(ctx: Ctx) {
                       </tr>
                     )
                   })}
-                  {!audits.length ? <tr><td colSpan={5}>No exports yet.</td></tr> : null}
+                  {!audits.length ? <tr><td colSpan={5}><ExampleInUse desk title="Shared answers, names hidden" action={{ href: '#feedback-filters', label: 'Change the filters' }}><p>Today · 12 rows · door filter on</p></ExampleInUse></td></tr> : null}
                 </tbody>
               </table>
             </div>

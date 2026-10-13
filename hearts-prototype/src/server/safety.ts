@@ -2,6 +2,7 @@ import type { Payload, Where } from 'payload'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { now } from '@/lib/clock'
 import { screenAnswer } from '@/lib/answer-moderation'
+import { CARE_REPORT } from '@/lib/care-copy'
 import {
   REPORT_THANKS,
   SAFEGUARD_EMAIL_BODY,
@@ -192,7 +193,8 @@ export async function fileReport(payload: Payload, user: SessionUser, input: {
       { targetId: { equals: input.targetId } },
     ] },
   })
-  if (duplicate.docs.length) return { ok: true as const, already: true, thanks: REPORT_THANKS }
+  const thanks = safeguardingFromReport(input.reason) ? CARE_REPORT : REPORT_THANKS
+  if (duplicate.docs.length) return { ok: true as const, already: true, thanks }
   const report = await payload.create({
     collection: 'reports',
     overrideAccess: true,
@@ -241,7 +243,7 @@ export async function fileReport(payload: Payload, user: SessionUser, input: {
       key: `report-${report.id}`,
     })
   }
-  return { ok: true as const, already: false, thanks: REPORT_THANKS }
+  return { ok: true as const, already: false, thanks }
 }
 
 export async function targetLearner(payload: Payload, type: string, id: number) {

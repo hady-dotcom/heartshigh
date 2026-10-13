@@ -279,11 +279,15 @@ html[data-theme] .compose {
   border: 1.5px solid var(--line);
   border-radius: var(--radius-sm);
 }
+/* Placeholders stay fainter than typed text, and still clear enough to read (WCAG AA on the field). */
+html[data-theme] :is(input, textarea)::placeholder,
 html[data-theme] .field::placeholder,
-html[data-theme] textarea::placeholder { color: var(--muted); }
-/* Bring in examples are a pale grey, so they do not look like text already typed into the dark field. */
+html[data-theme] textarea::placeholder {
+  color: #a89878;
+  opacity: 1;
+}
 html[data-theme] .desk textarea.paste-example::placeholder {
-  color: #b7c0be;
+  color: #a89878;
   opacity: 1;
 }
 html[data-theme] .field:focus,
@@ -891,7 +895,7 @@ html[data-theme] .desk input[type='password'] {
   border: 1.5px solid var(--gd-teal-line);
   border-radius: 14px;
 }
-:is(html, html[data-theme]) .garden-door .field::placeholder { color: #7d837c; }
+:is(html, html[data-theme]) .garden-door .field::placeholder { color: #5e675f; opacity: 1; }
 :is(html, html[data-theme]) .garden-door .field:focus {
   border-color: var(--gd-gold-deep);
   box-shadow: 0 0 0 3px rgba(212, 168, 75, 0.35);
@@ -910,14 +914,14 @@ html[data-theme] .desk input[type='password'] {
 :is(html, html[data-theme]) .garden-door .door-links a { border-bottom-color: rgba(168, 121, 31, 0.6); }
 :is(html, html[data-theme]) .garden-door .door-hint { color: #5f6a65; }
 :is(html, html[data-theme]) .garden-door .flash.notice {
-  background: rgba(212, 168, 75, 0.16);
-  color: #F1E4C6;
-  border: 1px solid rgba(212, 168, 75, 0.45);
+  background: #e7f3ec;
+  color: #14564c;
+  border: 1px solid #9ecfb8;
 }
 :is(html, html[data-theme]) .garden-door .flash.error {
-  background: rgba(138, 35, 53, 0.28);
-  color: #F1E4C6;
-  border: 1px solid rgba(241, 228, 198, 0.3);
+  background: #fdecef;
+  color: #8a2335;
+  border: 1px solid #f4c4cd;
 }
 :is(html, html[data-theme]) .garden-door[data-testid="join"] .door-card {
   width: min(360px, calc(100% - 36px));
@@ -940,7 +944,17 @@ html[data-theme] .desk input[type='password'] {
   color: #f6eedc;
   border-color: #c4923a;
 }
-:is(html, html[data-theme]) .garden-door[data-testid="join"] .field::placeholder { color: #c8b88a; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .field::placeholder { color: #a89878; opacity: 1; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .flash.notice {
+  background: #1a3f38;
+  color: #f6eedc;
+  border: 1px solid rgba(212, 168, 75, 0.55);
+}
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .flash.error {
+  background: #3a242c;
+  color: #f6eedc;
+  border: 1px solid rgba(231, 160, 180, 0.55);
+}
 :is(html, html[data-theme]) .garden-door[data-testid="join"] .door-links { color: #f6eedc; }
 :is(html, html[data-theme]) .garden-door[data-testid="join"] .door-hint { color: #e4d3a4; }
 

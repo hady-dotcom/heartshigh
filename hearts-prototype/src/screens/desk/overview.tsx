@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { ExampleInUse } from '@/components/app/care'
 import { Hidden } from '@/components/app/shell'
 import { Qr } from '@/components/qr'
 import { HelpTip } from '@/components/desk/help'
@@ -118,7 +119,7 @@ export async function OverviewScreen(ctx: Ctx) {
               </Link>
             )
           })}
-          {!fresh.total ? <p className="empty">No new answers since you last opened Learners.</p> : null}
+          {!fresh.total ? <ExampleInUse desk title="A new answer" action={{ href: `${ctx.base}/admin/teach`, label: 'Open learners' }}><p>Maryam shared one line from this morning’s talk.</p></ExampleInUse> : null}
         </div>
       </section>
       {!portal.wizardDone && user.role !== 'teacher' ? <div className="flash notice">The short setup is not finished yet. <Link href={`${base}/admin/wizard`}>Finish it now</Link>.</div> : null}

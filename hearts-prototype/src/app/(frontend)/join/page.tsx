@@ -60,10 +60,10 @@ export default async function Join({ searchParams }: { searchParams: Promise<{ e
         <Flash error={query.error} />
         <form className="door-form" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'join', gatherGuest: query.gatherGuest, after: query.after }} />
-          <label>Access code<input className="field" data-testid="join-code" name="code" defaultValue={code} autoCapitalize="characters" required /></label>
-          <label>Your name<input className="field" data-testid="join-name" name="name" defaultValue={query.name || ''} autoComplete="name" required /></label>
-          <label>Email<input className="field" data-testid="join-email" name="email" type="email" autoComplete="email" required /></label>
-          <label>Password<input className="field" data-testid="join-password" name="password" type="password" minLength={8} autoComplete="new-password" required /></label>
+          <label>Access code<input className="field" data-testid="join-code" name="code" defaultValue={code} autoCapitalize="characters" placeholder="The code you were given" required /></label>
+          <label>Your name<input className="field" data-testid="join-name" name="name" defaultValue={query.name || ''} autoComplete="name" placeholder="Your name" required /></label>
+          <label>Email<input className="field" data-testid="join-email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required /></label>
+          <label>Password<input className="field" data-testid="join-password" name="password" type="password" minLength={8} autoComplete="new-password" placeholder="At least 8 characters" required /></label>
           <TurnstileField />
           <button className="pill gold block" data-testid="join-submit" type="submit">Join</button>
         </form>

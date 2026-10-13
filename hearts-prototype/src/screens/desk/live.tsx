@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ExampleInUse } from '@/components/app/care'
 import { Hidden } from '@/components/app/shell'
 import { LiveWhenPicker } from '@/components/desk/live-when'
 import { doorSpokenLabel } from '@/lib/doors'
@@ -83,8 +84,12 @@ export async function LiveDeskScreen(ctx: Ctx) {
                   </div>
                 </article>
               ))}
-              {live && !questions.length ? <p className="hint">No questions yet. They will appear as learners send them.</p> : null}
-              {!live ? <p className="hint">Go live and the questions will land here.</p> : null}
+              {live && !questions.length ? <p className="hint">Questions will appear here as people send them.</p> : null}
+              {!live && !scheduled.length && !ended.length ? (
+                <ExampleInUse desk title="Circle after Isha" action={{ href: '#go-live', label: 'Go live' }}>
+                  <p>Coming up · Thursday evening · questions appear here while it is on.</p>
+                </ExampleInUse>
+              ) : !live ? <p className="hint">Go live and the questions will land here.</p> : null}
             </div>
           </section>
           {scheduled.length ? (
@@ -126,7 +131,7 @@ export async function LiveDeskScreen(ctx: Ctx) {
             <h2>Go live</h2>
             <Link href={`${base}/live`} data-testid="desk-open-live">Open the learner page</Link>
           </header>
-          <form className="body form" action="/api/live" method="post" data-testid="desk-live-form">
+          <form id="go-live" className="body form" action="/api/live" method="post" data-testid="desk-live-form">
             <Hidden fields={{ portal: portal.slug, next: here }} />
             <label className="stack">Title<input type="text" name="title" required data-testid="desk-live-title" placeholder="Circle after Isha" /></label>
             <label className="stack">Door
@@ -153,7 +158,7 @@ export async function LiveDeskScreen(ctx: Ctx) {
               <button className="btn" type="submit" name="action" value="start-now" data-testid="desk-start-now" data-write>Start now</button>
               <button className="btn ghost" type="submit" name="action" value="save" data-testid="desk-schedule" data-write>Schedule</button>
             </div>
-            {!muxConfigured() ? <p className="hint">Mux stays off until the keys are in the environment. YouTube and Vimeo do not need any extra setup.</p> : null}
+            {!muxConfigured() ? <p className="hint">Mux is not set up yet. YouTube and Vimeo work without it.</p> : null}
           </form>
         </section>
       </div>
@@ -174,12 +179,12 @@ export async function MasterLiveScreen({ payload, user, query }: { payload: Payl
             return (
               <article key={row.id} data-testid="master-live-row" style={{ marginBottom: 12 }}>
                 <b>{str(row.title)}</b>
-                <p className="hint">{str(portal?.name) || 'Portal'} · {str(row.status)} · {str(row.hostName)}</p>
+                <p className="hint">{str(portal?.name) || 'Portal'} · {str(row.status) === 'live' ? 'Live now' : str(row.status) === 'ended' ? 'Ended' : 'Coming up'} · {str(row.hostName)}</p>
                 {portal ? <Link href={`/p/${str(portal.slug)}/admin/live`}>Open the desk</Link> : null}
               </article>
             )
           })}
-          {!sessions.length ? <p className="hint">No live sessions yet.</p> : null}
+          {!sessions.length ? <ExampleInUse desk title="Circle after Isha" action={{ href: '/master', label: 'Open a portal' }}><p>East London · coming up · your teacher</p></ExampleInUse> : null}
         </div>
       </section>
     </DeskFrame>

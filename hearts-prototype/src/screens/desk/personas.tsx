@@ -172,7 +172,7 @@ function BandEditor({ id, band, bands, nameOf }: { id: number; band: PersonaBand
             </select>
           </label>
         </div>
-        <label className="check"><input type="checkbox" name="placeholder" defaultChecked={band.placeholder} data-testid="band-placeholder" /> Stand-in numbers, not yet Leon’s</label>
+        <label className="check"><input type="checkbox" name="placeholder" defaultChecked={band.placeholder} data-testid="band-placeholder" /> Sample ranges, until the real ones are written in</label>
         <label className="stack">Note<textarea name="note" rows={3} defaultValue={band.note} /></label>
         <div className="table-wrap">
           <table className="data">

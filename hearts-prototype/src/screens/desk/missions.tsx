@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ExampleInUse } from '@/components/app/care'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { ukDate } from '@/lib/calendar-context'
@@ -82,7 +83,7 @@ async function ListPage({ ctx, master, base }: { ctx: Ctx | null; master: { payl
               <p className={styles.quiet}>{item.target} learners · {item.minutesAsked} minutes</p>
             </Link>
           ))}
-          {!items.length ? <p className={styles.quiet}>No missions yet. Write a warm ask when you need a hand.</p> : null}
+          {!items.length ? <ExampleInUse desk title="A short listen this week" action={canEditMissions(user) ? { href: `${base}/new`, label: 'Write a mission' } : { href: base, label: 'Stay on this page' }}><p>Ten people · five minutes · a thank-you, not a duty.</p></ExampleInUse> : null}
         </div>
         {threads.length ? (
           <section className="panel" data-testid="support-inbox">

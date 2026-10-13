@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Payload } from 'payload'
+import { ExampleInUse } from '@/components/app/care'
 import { Hidden } from '@/components/app/shell'
 import { ReviewKeys, ReviewPlayer } from '@/components/desk/review'
 import { idOf } from '@/lib/ids'
@@ -160,7 +161,7 @@ export async function MasterReview(ctx: MasterCtx) {
           </div>
         </section>
       ) : (
-        <p className="empty">No talks have tiers yet. Run npm run reseed to draft them from the shipped captions.</p>
+        <ExampleInUse desk title="The Names, class 19" action={{ href: '/master/tiers', label: 'Open tiers' }}><p>Hors d’oeuvre, appetiser and the full talk, waiting for a person to check.</p></ExampleInUse>
       )}
     </Frame>
   )
@@ -236,7 +237,7 @@ export async function MasterReviewPopups(ctx: MasterCtx) {
           </div>
         </section>
       ) : (
-        <p className="empty">No pop-ups to review.</p>
+        <ExampleInUse desk title="A question at 12:30" action={{ href: '/master/tiers', label: 'Open a talk' }}><p>“What will you keep from this?” · waiting for review</p></ExampleInUse>
       )}
     </Frame>
   )
@@ -273,7 +274,7 @@ export async function MasterReviewSwarm(ctx: MasterCtx) {
             </div>
           </div>
         </section>
-      )) : <p className="empty">Nothing is waiting. Harmful or phishing answers appear here when the screen hides them.</p>}
+      )) : <ExampleInUse desk title="A hidden answer" action={{ href: '/master/safety', label: 'Open Care and safety' }}><p>Needs a person. It stays hidden until you show it or keep it hidden.</p></ExampleInUse>}
     </Frame>
   )
 }
