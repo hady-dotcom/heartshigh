@@ -18,10 +18,6 @@ async function signIn(page: Page, email: string, password: string, next: string)
   await page.waitForURL((url) => !url.pathname.startsWith('/login'))
 }
 
-function slug(href: string) {
-  return href.replace(/[^\w]+/g, '-').replace(/^-|-$/g, '').slice(0, 80)
-}
-
 async function healthy(page: Page, where: string) {
   await expect(page.getByTestId('error'), where).toHaveCount(0)
   const body = await page.locator('body').innerText()
@@ -30,36 +26,42 @@ async function healthy(page: Page, where: string) {
   expect(body, where).not.toMatch(/Internal Server Error/)
 }
 
+function samePlace(url: URL, href: string) {
+  return url.pathname + url.search === href || url.pathname === href.split('?')[0]
+}
+
 async function walk(page: Page, home: string, view: string) {
   mkdirSync(SHOTS, { recursive: true })
+  page.setDefaultTimeout(25_000)
+  page.setDefaultNavigationTimeout(45_000)
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
   await page.goto(home)
   await expect(page.getByTestId('desk-nav')).toBeVisible()
-  const links = page.locator('[data-testid="desk-nav"] a.nav')
-  const hrefs = await links.evaluateAll((nodes) => nodes.map((node) => (node as HTMLAnchorElement).getAttribute('href') || '').filter(Boolean))
-  expect(hrefs.length).toBeGreaterThan(8)
-  for (const href of hrefs) {
-    const item = page.locator(`[data-testid="desk-nav"] a.nav[href="${href}"]`)
+  // Keys stay put. A href can change: Learners points at the newest answer until that list is opened.
+  const keys = await page.locator('[data-testid="desk-nav"] a.nav').evaluateAll((nodes) =>
+    nodes.map((node) => (node.getAttribute('data-testid') || '').replace(/^nav-/, '')).filter(Boolean),
+  )
+  expect(keys.length).toBeGreaterThan(8)
+  for (const key of keys) {
+    await page.goto(home)
+    const item = page.getByTestId(`nav-${key}`)
     await item.scrollIntoViewIfNeeded()
-    const key = ((await item.getAttribute('data-testid')) || '').replace('nav-', '')
+    const href = (await item.getAttribute('href')) || ''
     await item.click()
-    await page.waitForURL((url) => url.pathname + url.search === href || url.pathname === href.split('?')[0])
-    await healthy(page, href)
+    await page.waitForURL((url) => samePlace(url, href))
+    await healthy(page, `${key} ${href}`)
     await expect(page.getByTestId('desk-purpose').or(page.locator('.main-head h1')).first()).toBeVisible()
+    await page.screenshot({ path: path.join(SHOTS, `${view}-${key}.png`), fullPage: false })
     if (!SKIP_PRIMARY.has(key)) {
       const primary = page.getByTestId('primary-action')
-      await expect(primary, href).toBeVisible()
-      const target = await primary.getAttribute('href')
+      await expect(primary, key).toBeVisible()
+      const target = (await primary.getAttribute('href')) || ''
+      if (target.startsWith('#')) await expect(page.locator(`[id="${target.slice(1)}"]`), `${key} ${target}`).toBeAttached()
       await primary.click()
-      if (target && !target.startsWith('#')) {
-        await page.waitForLoadState('domcontentloaded')
-      }
-      await healthy(page, `${href} primary ${target}`)
+      if (target && !target.startsWith('#')) await page.waitForURL((url) => samePlace(url, target))
+      await healthy(page, `${key} primary ${target}`)
     }
-    await page.screenshot({ path: path.join(SHOTS, `${view}-${slug(href)}.png`), fullPage: false })
-    await page.goto(home)
-    await expect(page.getByTestId('desk-nav')).toBeVisible()
   }
   expect(errors, errors.join('\n')).toEqual([])
 }
