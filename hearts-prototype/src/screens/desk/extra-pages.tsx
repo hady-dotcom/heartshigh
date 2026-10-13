@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ExampleInUse } from '@/components/app/care'
 import type { Payload } from 'payload'
 import { ShareLinks } from '@/components/desk/share-links'
 import { Qr } from '@/components/qr'
@@ -40,6 +41,7 @@ export async function MasterLearners(ctx: MasterCtx) {
                   </tr>
                 )
               })}
+              {!people.length ? <tr><td colSpan={3}><ExampleInUse desk title="Maryam Begum" action={{ href: '/master', label: 'Open a portal' }}><p>elm-learner@hearts.test · East London</p></ExampleInUse></td></tr> : null}
             </tbody>
           </table>
         </div>
@@ -108,7 +110,7 @@ export async function MasterPlans(ctx: MasterCtx) {
                   <td>{str(plan.endDate)}</td>
                 </tr>
               ))}
-              {!plans.length ? <tr><td colSpan={3}>No study plans yet.</td></tr> : null}
+              {!plans.length ? <tr><td colSpan={3}><ExampleInUse desk title="Names class, four weeks" action={{ href: '/master/learners', label: 'See who is learning' }}><p>Maryam · Tue and Thu · 8 parts</p></ExampleInUse></td></tr> : null}
             </tbody>
           </table>
         </div>
@@ -133,7 +135,7 @@ export async function MasterNights(ctx: MasterCtx) {
                   <td>{str(event.place)}</td>
                 </tr>
               ))}
-              {!events.length ? <tr><td colSpan={3}>No nights listed yet.</td></tr> : null}
+              {!events.length ? <tr><td colSpan={3}><ExampleInUse desk title="Circle after Isha" action={{ href: '/master/live', label: 'See live sessions' }}><p>East London · the hall · Thursday</p></ExampleInUse></td></tr> : null}
             </tbody>
           </table>
         </div>

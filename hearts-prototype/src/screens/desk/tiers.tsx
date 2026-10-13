@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Payload } from 'payload'
+import { ExampleInUse } from '@/components/app/care'
 import { Hidden } from '@/components/app/shell'
 import { TierEditor } from '@/components/desk/tier-editor'
 import { idOf } from '@/lib/ids'
@@ -141,7 +142,7 @@ export async function MasterTiers(ctx: MasterCtx) {
                   </tr>
                 )
               })}
-              {!tiers.length ? <tr><td colSpan={6} className="empty">No talks have tiers yet. Run npm run reseed to draft them from the shipped captions.</td></tr> : null}
+              {!tiers.length ? <tr><td colSpan={6}><ExampleInUse desk title="The Names, class 19" action={{ href: '/master/bring-in', label: 'Bring a talk in' }}><p>A short clip, a longer cut, and the full talk, ready for a person to check.</p></ExampleInUse></td></tr> : null}
             </tbody>
           </table>
         </div>
@@ -226,11 +227,11 @@ export async function MasterTier(ctx: MasterCtx, tierId: number) {
                   </tr>
                 )
               })}
-              {!points.length ? <tr><td colSpan={3} className="empty">No pop-ups on this talk yet.</td></tr> : null}
+              {!points.length ? <tr><td colSpan={3}><ExampleInUse desk title="At 12:30" action={{ href: '#popup-add', label: 'Add a question' }}><p>What will you keep from this?</p></ExampleInUse></td></tr> : null}
             </tbody>
           </table>
         </div>
-        <form className="body form" action="/api/hearts" method="post" data-testid="popup-add">
+        <form id="popup-add" className="body form" action="/api/hearts" method="post" data-testid="popup-add">
           <Hidden fields={{ action: 'popup-save', lesson: lesson.id, next }} />
           <div className="cols">
             <label className="stack">At<input type="text" name="second" placeholder="12:30" style={{ width: 90 }} data-testid="popup-add-second" /></label>

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ExampleInUse } from '@/components/app/care'
 import { notFound } from 'next/navigation'
 import { combineServes, compassDate, kindLabel, monthShort, plainWhy, teachDoors, teachLine } from '@/lib/compass-feed'
 import { tidyTalkTitle } from '@/lib/talk-title'
@@ -41,7 +42,7 @@ function monthName(at: number | string) {
 function Spark({ points }: { points: { at: number | string; rung: number }[] }) {
   const width = 360
   const height = 128
-  if (!points.length) return <p className="hint">No looks yet.</p>
+  if (!points.length) return <p className="hint">No look on this scale yet.</p>
   const times = points.map((point) => new Date(point.at).getTime())
   const minT = times[0]
   const maxT = times[times.length - 1]
@@ -86,7 +87,7 @@ export async function PortalCompassScreen(ctx: Ctx) {
                 <b>{row.count}</b>
               </div>
             ))}
-            {!summary.personas.length ? <p>No monthly looks in this portal yet.</p> : null}
+            {!summary.personas.length ? <ExampleInUse desk title="Finding their feet" action={{ href: `${ctx.base}/admin/compass`, label: 'Stay with the circle' }}><p>A few people · no names · one gentle line each</p></ExampleInUse> : null}
           </div>
           <div data-testid="cohort-weak">
             <p className="eyebrow">Teach next</p>
@@ -153,7 +154,7 @@ export async function PortalCompassScreen(ctx: Ctx) {
           {learners.map((learner) => (
             <Link key={learner.id} href={`${ctx.base}/admin/compass/${learner.id}`} data-testid="compass-learner">{learner.name} · {learner.attempts} {learner.attempts === 1 ? 'look' : 'looks'}</Link>
           ))}
-          {!learners.length ? <p>No learners in this portal yet.</p> : null}
+          {!learners.length ? <div id="compass-learner"><ExampleInUse desk title="Maryam" action={{ href: `${ctx.base}/admin/access`, label: 'Share a join code' }}><p>Two looks · still finding her feet</p></ExampleInUse></div> : null}
         </div>
       </section>
     </AdminFrame>
@@ -174,7 +175,7 @@ export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
       <section className="panel" style={{ marginBottom: 18 }} data-testid="persona-timeline">
         <header><h2>Persona over time</h2></header>
         <div className="body">
-          {detail.personaTimeline.length ? <p className="persona-line">{personaSummary(detail.personaTimeline)}</p> : <p>No look yet.</p>}
+          {detail.personaTimeline.length ? <p className="persona-line">{personaSummary(detail.personaTimeline)}</p> : <ExampleInUse desk title="Finding their feet" action={{ href: `${ctx.base}/admin/compass`, label: 'Back to the circle' }}><p>One gentle line, from the first month they sat with the compass.</p></ExampleInUse>}
           <div className="persona-chips">
             {detail.personaTimeline.map((row, index) => {
               const changed = index === 0 || row.title !== detail.personaTimeline[index - 1].title
@@ -241,7 +242,7 @@ export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
           {detail.life.map((row) => (
             <li key={row.at}><time>{compassDate(row.at)}</time> {row.label}{row.note ? <span className="hint"> — {row.note}</span> : null}</li>
           ))}
-          {!detail.life.length ? <li>No life check-in yet.</li> : null}
+          {!detail.life.length ? <li><ExampleInUse desk title="A quieter week" action={{ href: `${ctx.base}/admin/compass`, label: 'Back to the circle' }}><p>They noted a busy stretch at work. Only they chose to share it.</p></ExampleInUse></li> : null}
         </ol>
       </section>
       <section className="panel" style={{ marginBottom: 18 }} data-testid="why-now">
@@ -253,7 +254,7 @@ export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
               <div>{plainWhy(row.why)}</div>
             </article>
           ))}
-          {!detail.whyNow.length ? <p>No tagged talks to put forward yet.</p> : null}
+          {!detail.whyNow.length ? <ExampleInUse desk title="A talk that fits this month" action={{ href: `${ctx.base}/admin/content`, label: 'Open the courses' }}><p>Put forward because this scale has been quiet.</p></ExampleInUse> : null}
         </div>
       </section>
       <section className="panel" style={{ marginBottom: 18 }} data-testid="feed-pushed">
@@ -265,7 +266,7 @@ export async function StaffLearnerCompass(ctx: Ctx, learnerId: number) {
               <div className="hint">{compassDate(row.at)}. {plainWhy(row.why)}</div>
             </article>
           ))}
-          {!detail.serves.length ? <p>Nothing put forward yet.</p> : null}
+          {!detail.serves.length ? <ExampleInUse desk title="A short clip in the feed" action={{ href: `${ctx.base}`, label: 'Open the learner home' }}><p>Offered once · not watched yet</p></ExampleInUse> : null}
         </div>
       </section>
       <section className="panel" data-testid="attribution">

@@ -1,3 +1,4 @@
+import { ExampleInUse } from '@/components/app/care'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { HelpTip } from '@/components/desk/help'
@@ -25,7 +26,7 @@ export async function TranscriptFilesScreen({ payload, user, query }: { payload:
             <p>The media number is what the sheet’s transcript column needs.</p>
           </div>
         </header>
-        <form className="body form" action="/api/hearts" method="post" encType="multipart/form-data">
+        <form id="transcript-upload" className="body form" action="/api/hearts" method="post" encType="multipart/form-data">
           <Hidden fields={{ action: 'upload-transcript-file', next: '/master/transcripts' }} />
           <label className="stack">Timed transcript (.vtt, .srt or .txt)<input data-testid="sheet-transcript-file" type="file" name="file" accept=".vtt,.srt,.txt,.md,text/plain" required /></label>
           <div className="actions"><button className="btn ink" type="submit" data-testid="sheet-transcript-upload">Store this file</button></div>
@@ -44,7 +45,7 @@ export async function TranscriptFilesScreen({ payload, user, query }: { payload:
               </tbody>
             </table>
           </div>
-        ) : <p className="body hint">No transcript files stored yet.</p>}
+        ) : <div className="body"><ExampleInUse desk title="names-class-19.vtt" action={{ href: '#transcript-upload', label: 'Store a transcript' }}><p>Media 12 · a timed file the sheet can point at</p></ExampleInUse></div>}
       </section>
       <section className="panel" style={{ marginTop: 18 }} data-testid="awaiting-transcripts">
         <header><h2>Waiting for a transcript</h2><p>These talks were brought in, but YouTube did not give captions. They stay off the learner side until a transcript is attached.</p></header>
@@ -58,7 +59,7 @@ export async function TranscriptFilesScreen({ payload, user, query }: { payload:
               <label className="stack">Or a file<input type="file" name="file" accept=".vtt,.srt,.txt,.md,text/plain" /></label>
               <div className="actions"><button className="btn ghost small" type="submit" data-testid="attach-transcript">Attach transcript</button></div>
             </form>
-          )) : <p className="hint" data-testid="awaiting-empty">No talks are waiting.</p>}
+          )) : <ExampleInUse desk testId="awaiting-empty" title="A talk brought in without captions" action={{ href: '#transcript-upload', label: 'Store a transcript' }}><p>It stays off the learner side until the words are attached.</p></ExampleInUse>}
         </div>
       </section>
     </DeskFrame>

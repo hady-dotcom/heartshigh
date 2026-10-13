@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ExampleInUse } from '@/components/app/care'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { routeWords } from '@/lib/insight-events'
@@ -61,7 +62,7 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
       ctx={ctx || null}
       master={master || null}
       title="Insights"
-      intro="Our own look at taps, drop-off and coming back. Nothing typed, no answers, all on our own Postgres."
+      intro="Taps, where people leave, and who comes back. Typed answers are not stored here."
       testId="insights-desk"
       tools={
         <form action="/api/insights" method="post">
@@ -118,7 +119,7 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
                   <h3>How far people scrolled</h3>
                   {desk.scroll.length ? desk.scroll.map((row) => (
                     <p key={row.route} className={styles.quiet}>{routeWords(row.route)} · {Math.round(row.max)}%</p>
-                  )) : <p className={styles.quiet}>No scroll depth yet.</p>}
+                  )) : <ExampleInUse desk title="The home feed" action={{ href: base.startsWith('/master') ? '/master' : base.replace(/\/admin\/insights.*/, ''), label: 'Open the app' }}><p>People reached about halfway down the page.</p></ExampleInUse>}
                 </div>
               </div>
             </section>
@@ -133,7 +134,7 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
                       </li>
                     ))}
                   </ol>
-                ) : <p className={styles.quiet}>No session replay yet.</p>}
+                ) : <ExampleInUse desk title="One visit" action={{ href: base.startsWith('/master') ? '/master' : base.replace(/\/admin\/insights.*/, ''), label: 'Open the app' }}><p>Opened the feed, watched a clip, left on the question.</p></ExampleInUse>}
               </div>
             </section>
           </div>
@@ -174,7 +175,7 @@ export async function InsightPages({ ctx, master }: { ctx?: Ctx | null; master?:
                     ))}
                   </tbody>
                 </table>
-              ) : <p className={styles.quiet}>No angry taps yet. That is a good day.</p>}
+              ) : <ExampleInUse desk title="A calm day" action={{ href: base.startsWith('/master') ? '/master/insights' : `${base}?tab=angry`, label: 'Stay with this view' }}><p>No repeated taps on a stuck control. That is a good day.</p></ExampleInUse>}
             </div>
           </section>
         ) : null}
