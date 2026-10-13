@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { JobPoll } from '@/components/desk/job-poll'
-import { diffLines, type Placeholder } from '@/lib/ai-steps'
+import { diffLines, stepListBadge, stepPlainLine, type Placeholder } from '@/lib/ai-steps'
 import type { SessionUser } from '@/server/context'
 import { loadDesk, pendingForLesson } from '@/server/ai-desk'
 import type { Ctx } from '../common'
@@ -117,11 +117,11 @@ async function Registry({ ctx, master, base, desk }: { ctx: Ctx | null; master: 
           <Link key={step.id} className={styles.row} href={`${base}/${step.slug}`} data-testid="ai-step" data-slug={str(step.slug)}>
             <span>
               <h2>{str(step.name)}</h2>
-              <p>{str(step.description)}</p>
+              <p data-testid="ai-step-line">{stepPlainLine(str(step.slug)) || str(step.description)}</p>
             </span>
             <span className={styles.meta}>
-              <span className="badge grey">v{str(step.liveVersion) || '1'} live</span>
-              <span className="badge gold">{step.inPipeline ? 'In the pipeline' : 'Shared text'}</span>
+              <span className={styles.mark}>v{str(step.liveVersion) || '1'} live</span>
+              <span className={styles.mark} data-testid="ai-step-state">{stepListBadge({ inPipeline: Boolean(step.inPipeline), connected: desk.connected, master: desk.master })}</span>
             </span>
           </Link>
         ))}
@@ -154,12 +154,12 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
   const canEdit = desk.canEdit
   const here = `${base}/${slug}`
   return (
-    <Frame ctx={ctx} master={master} title={str(step.name)} intro={str(step.description)} testId="ai-step-page">
+    <Frame ctx={ctx} master={master} title={str(step.name)} intro={stepPlainLine(slug) || str(step.description)} testId="ai-step-page">
       <Banner desk={desk} />
       <p style={{ marginTop: 0 }}><Link href={base}>‹ All steps</Link></p>
       <div className={styles.layout}>
         <section className="panel">
-          <header className="light"><h2>Prompt <HelpTip topic="ai-prompt">{TOOL.aiPrompt}</HelpTip></h2><span className="badge grey">Live version {str(step.liveVersion) || '1'}</span></header>
+          <header className="light"><h2>Prompt <HelpTip topic="ai-prompt">{TOOL.aiPrompt}</HelpTip></h2><span className={styles.mark}>Live version {str(step.liveVersion) || '1'}</span></header>
           <div className="body">
             {canEdit ? (
               <form action="/api/ai-steps" method="post" className="form" data-testid="ai-prompt-form">
@@ -343,7 +343,7 @@ async function JobPage({ ctx, master, base, id, desk }: { ctx: Ctx | null; maste
       <section className="panel" data-testid="ai-job-card" data-status={str(job.status)} data-finished={str(job.finished)} data-failed={str(job.failedCount)} data-total={str(job.total)}>
         <header className="light">
           <h2>{running ? 'Working through the talks' : job.status === 'failed' ? 'Stopped' : 'Finished'}</h2>
-          <span className={`badge ${job.status === 'failed' ? 'rose' : running ? 'gold' : 'teal'}`} data-testid="ai-job-progress">{str(job.finished) || '0'} of {str(job.total) || '0'}{Number(job.failedCount) ? `, ${str(job.failedCount)} with an error` : ''}</span>
+          <span className={styles.mark} data-tone={job.status === 'failed' ? 'rose' : running ? 'gold' : 'teal'} data-testid="ai-job-progress">{str(job.finished) || '0'} of {str(job.total) || '0'}{Number(job.failedCount) ? `, ${str(job.failedCount)} with an error` : ''}</span>
         </header>
         <div className="body">
           {str(job.error) ? <p className="hint">{str(job.error)}</p> : null}
@@ -397,7 +397,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
                 <h2>{partTitle(lesson)}</h2>
                 <p>{str(lesson.speaker)}{lesson.transcript || lesson.youtubeId ? '' : ' · no transcript yet'}</p>
               </span>
-              <span className="badge grey">Open</span>
+              <span className={styles.mark}>Open</span>
             </Link>
           ))}
         </div>
@@ -440,12 +440,12 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
           const reviewHref = step.fillsPoints ? '/master/review/popups' : '/master/review'
           return (
             <article key={step.id} data-testid="ingest-step" data-slug={str(step.slug)} data-status={status}>
-              <span className={`badge ${tone}`} data-testid="ingest-status">{label}</span>
+              <span className={styles.mark} data-tone={tone} data-testid="ingest-status">{label}</span>
               <span>
                 <b>{str(step.name)}</b>
-                <div className="hint">{str(step.fills)}</div>
-                {latest?.error ? <div className="hint" data-testid="ingest-error">{str(latest.error)}</div> : null}
-                {latest?.disposition === 'pending' ? <div className="hint">New draft available.</div> : null}
+                <div className={styles.note}>{str(step.fills)}</div>
+                {latest?.error ? <div className={styles.note} data-testid="ingest-error">{str(latest.error)}</div> : null}
+                {latest?.disposition === 'pending' ? <div className={styles.note}>New draft available.</div> : null}
               </span>
               <span className="actions">
                 {desk.canEdit ? (

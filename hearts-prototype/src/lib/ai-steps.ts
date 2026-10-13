@@ -160,6 +160,38 @@ export function mockBanner(input: { connected: boolean; master: boolean }) {
   return 'AI is off. A portal admin connects this portal’s own account in Settings. Until then every step uses the built-in drafts, and nothing is sent out.'
 }
 
+/** One plain sentence for the steps list. The longer description stays on the step page. */
+const STEP_LINES: Record<string, string> = {
+  'language-inference': 'Names the language the speaker uses to explain.',
+  'hors-doeuvre': 'Picks a short opening clip from the first sitting.',
+  'appetiser-cut': 'Cuts the first sitting into a hook, a turn and a land.',
+  'popup-drafter': 'Drafts the questions that pause the main talk.',
+  'tidy-caption-line': 'Turns raw captions into lines a learner can read.',
+  'jibril-seat': 'Tags the Hadith Jibril clause this talk is teaching.',
+  'quran-harvest': 'Finds the Qur’an the speaker actually quotes.',
+  'hadith-extraction': 'Finds the hadith the speaker quotes.',
+  'reflection-prompts': 'Drafts open reflections tied to lines in the talk.',
+  'clip-critic': 'Scores the short clips against the live rubric.',
+  rubric: 'Holds the shared standard the clip critic reads.',
+  'feedback-summary': 'Drafts the themes in answers people chose to share.',
+  'question-value': 'Flags a question whose answers would not help a teacher.',
+}
+
+export function stepPlainLine(slug: string) {
+  return STEP_LINES[slug] || ''
+}
+
+/**
+ * List badge for a step.
+ * Ready when this desk can run it: the master desk’s built-in drafts, or a portal admin whose own AI account is connected.
+ * A portal with no key of its own is not on. AI is admin-only and never uses a platform key.
+ */
+export function stepListBadge(input: { inPipeline: boolean; connected: boolean; master: boolean }) {
+  if (!input.inPipeline) return 'Shared text'
+  if (input.master || input.connected) return 'Ready'
+  return 'Switch on by connecting your AI account'
+}
+
 export function tierProtect(
   tier: ({ status?: string | null; source?: string | null; checkedBy?: unknown } & Record<string, unknown>) | null,
   snapshot: Record<string, unknown> | null,
