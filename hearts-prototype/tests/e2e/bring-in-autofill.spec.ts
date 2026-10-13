@@ -27,6 +27,10 @@ test('a blank new course takes the playlist title and the channel, and the examp
   await expect(page.getByTestId('bring-in-review-title')).toHaveValue('Round two sitting')
   await expect(page.getByTestId('bring-in-review-speaker')).toHaveValue('HEARTS channel')
   await expect(page.locator('[data-testid="bring-in-row"][data-id="fresh000001"] [data-testid="bring-in-row-speaker"]')).toHaveValue('HEARTS channel')
+  await expect(page.locator('[data-testid="bring-in-row"][data-id="fresh000001"] [data-testid="bring-in-row-jibril"]')).toHaveValue('')
+  await expect(page.locator('[data-testid="bring-in-row"][data-id="fresh000001"] [data-testid="bring-in-row-ghunya"]')).toHaveValue('')
+  await expect(page.locator('[data-testid="bring-in-row"][data-id="fresh000001"] [data-testid="bring-in-row-place"]')).toContainText('No captions yet')
+  await expect(page.locator('[data-testid="bring-in-row"][data-id="nocaps00001"] [data-testid="bring-in-row-place"]')).toContainText('No captions on this film')
 })
 
 test('a loose link takes the film title, and the review boxes can be changed before saving', async ({ page }) => {
@@ -52,4 +56,18 @@ test('a loose link takes the film title, and the review boxes can be changed bef
   expect(lessons.docs?.[0]?.speaker).toBe('Shaykh Test')
   expect(lessons.docs?.[0]?.title).toBe('Goals for the month')
   await master.dispose()
+})
+
+test('saving still asks for a course name when the review box is cleared', async ({ page }) => {
+  await signIn(page)
+  await page.getByTestId('bring-in-urls').fill(LOOSE)
+  await page.getByTestId('bring-in-course').selectOption('new')
+  await page.getByTestId('bring-in-new-title').fill('')
+  await page.getByTestId('bring-in-lookup').click()
+  await expect(page.getByTestId('bring-in-preview')).toBeVisible()
+  await expect(page.getByTestId('error')).toHaveCount(0)
+  await expect(page.getByTestId('bring-in-review-title')).toHaveValue('Goals for the month')
+  await page.getByTestId('bring-in-review-title').fill('')
+  await page.getByTestId('bring-in-commit').click()
+  await expect(page.getByTestId('error')).toContainText('Type a name for the new course')
 })

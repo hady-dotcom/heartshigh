@@ -295,7 +295,11 @@ function PreviewRow({ row }: { row: BringInRow }) {
       <td>
         <input type="checkbox" name="pick" value={row.index} defaultChecked={row.selected} disabled={locked} data-testid="bring-in-pick" aria-label={`Bring in ${row.title}`} />
       </td>
-      <td>{row.title}{row.skipReason ? <div className="hint">{skipLabel(row.skipReason)}</div> : null}</td>
+      <td>
+        {row.title}
+        {row.skipReason ? <div className="hint">{skipLabel(row.skipReason)}</div> : null}
+        <PlaceNotes row={row} />
+      </td>
       <td>{row.durationSeconds ? clock(row.durationSeconds) : 'Length unknown'}</td>
       <td data-testid="bring-in-captions">{captionsLabel(row.captions)}</td>
       <td><input name={`speaker-${row.index}`} defaultValue={row.speaker} data-testid="bring-in-row-speaker" /></td>
@@ -308,6 +312,33 @@ function PreviewRow({ row }: { row: BringInRow }) {
       <td><input name={`ghunya-${row.index}`} defaultValue={row.ghunya} data-testid="bring-in-row-ghunya" /></td>
     </tr>
   )
+}
+
+function PlaceNotes({ row }: { row: BringInRow }) {
+  const jibril = row.jibrilPlace
+  const ghunya = row.ghunyaPlace
+  if (!jibril && !ghunya) return null
+  const sameBlank = jibril && ghunya && jibril.confidence === 'low' && ghunya.confidence === 'low' && jibril.reason === ghunya.reason && !jibril.terms.length && !ghunya.terms.length
+  return (
+    <div className="hint bring-in-place" data-testid="bring-in-row-place">
+      {sameBlank ? jibril.reason : (
+        <>
+          <PlaceLine kind="Jibril" place={jibril} />
+          <PlaceLine kind="Ghunya" place={ghunya} />
+        </>
+      )}
+    </div>
+  )
+}
+
+function PlaceLine({ kind, place }: { kind: string; place?: BringInRow['jibrilPlace'] }) {
+  if (!place) return null
+  const level = place.confidence === 'high' ? 'High' : place.confidence === 'medium' ? 'Medium' : 'Low'
+  const terms = place.terms.slice(0, 3).map((term) => `${term.phrase} at ${term.at}`).join(', ')
+  if (place.confidence === 'low') {
+    return <div>{terms ? <span>{kind}: {terms}. {place.coverPct}% of the talk. {level} confidence. </span> : null}{place.reason}</div>
+  }
+  return <div>{kind} {place.value}. {terms}. {place.coverPct}% of the talk. {level} confidence.</div>
 }
 
 function ResultRow({ lesson, next }: { lesson: Row; next: string }) {

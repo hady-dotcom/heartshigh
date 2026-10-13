@@ -1,4 +1,5 @@
 import { youtubeIdFromUrl } from './extractor'
+import type { FieldPlacement } from './bring-in-place'
 import { publishedClockSeconds, type YoutubeIngest, bringInNote, cleanedTimedTranscript, captionLang, isUnavailableFilm } from './youtube'
 
 export { isUnavailableFilm }
@@ -21,6 +22,10 @@ export type BringInRow = {
   speaker: string
   jibril: string
   ghunya: string
+  /** Why the Jibril select was filled, or why it was left blank. */
+  jibrilPlace?: FieldPlacement
+  /** Why the Ghunya field was filled, or why it was left blank. */
+  ghunyaPlace?: FieldPlacement
   skipReason: '' | 'short' | 'duplicate' | 'library' | 'unavailable'
   selected: boolean
 }

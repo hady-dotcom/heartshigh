@@ -16,7 +16,8 @@ import { expandBringInText, joinBringInErrors } from '@/lib/youtube-list'
 import { newHelperToken } from '@/lib/helper-token'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { withWorkLock } from '@/lib/work-lock'
-import { bringInFlash, bringInNote, bringInStatus, captionLang, ingestYoutubeUrl, type YoutubeMeta } from '@/lib/youtube'
+import { loadPlaceCatalogue, placeBringInRows } from '@/lib/bring-in-place'
+import { bringInFlash, bringInNote, bringInStatus, captionLang, ingestYoutubeUrl, transcriptFor, type YoutubeMeta } from '@/lib/youtube'
 import { decideBringInWrite, draftLessonWhere } from '@/lib/bring-in-plan'
 import type { SessionUser } from './context'
 import { giveCourseToPackHolders, packsContaining } from './publish-holders'
@@ -104,6 +105,12 @@ export async function previewBringIn(payload: Payload, user: SessionUser, form: 
     jibril,
     ghunya,
   }))
+  const placed = await placeBringInRows(marked, {
+    catalogue: loadPlaceCatalogue(),
+    presetJibril: jibril,
+    presetGhunya: ghunya,
+    fetchTranscript: async (id) => (await transcriptFor(id, undefined, { lang })).transcript,
+  })
   const courseId = Number(text(form, 'course') || 0) || null
   const origin = user.role === 'master' && text(form, 'origin') !== 'local' ? 'master' : 'local'
   const body: PreviewBody = {
@@ -113,14 +120,12 @@ export async function previewBringIn(payload: Payload, user: SessionUser, form: 
     lang,
     origin,
     portalId: origin === 'local' ? portalIdOf(user) : null,
-    rows: marked,
+    rows: placed,
   }
   if (body.courseId) {
     const course = await payload.findByID({ collection: 'courses', id: body.courseId, depth: 0, overrideAccess: true }).catch(() => null)
     const denied = editDenied(user, course as { origin?: string; portal?: unknown } | null)
     if (denied) return { error: denied }
-  } else if (!body.newTitle) {
-    return { error: 'Pick a course, or type a name for a new one.' }
   }
   const doc = await payload.create({
     collection: 'bring-in-previews',
