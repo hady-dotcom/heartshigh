@@ -23,9 +23,9 @@ import { clientIp, hit, hitAnswer, joinFailKeys, peek, resetLimits } from '@/lib
 import { slugProblem } from '@/lib/text-safety'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
 import { isUnavailableFilm } from '@/lib/bring-in-plan'
-import { bringInFlash, bringInNote, bringInStatus, captionLang, cleanedTimedTranscript, ingestYoutubeUrl, isAwaitingTranscript, noteAfterTranscriptUpload, speakerForBringIn, splitBringInLines } from '@/lib/youtube'
+import { bringInFlash, bringInNote, bringInStatus, captionLang, cleanedTimedTranscript, fetchYoutubeMeta, ingestYoutubeUrl, isAwaitingTranscript, noteAfterTranscriptUpload, speakerForBringIn, splitBringInLines } from '@/lib/youtube'
 import { packSaveNotice } from '@/lib/publish-state'
-import { commitBringIn, createHelperToken, deleteChannelSpeaker, previewBringIn, publishTalks, revokeHelperToken, saveChannelSpeaker } from './bring-in'
+import { commitBringIn, createHelperToken, deleteChannelSpeaker, previewBringIn, publishTalks, revokeHelperToken, saveChannelSpeaker, schedulePublishWhenCaptions } from './bring-in'
 import { giveCourseToPackHolders } from './publish-holders'
 import { addCourseToCode, giveCourseToJoinedLearners } from './course-offer'
 import { withWorkLock } from '@/lib/work-lock'
@@ -59,6 +59,7 @@ import { screenAnswerSafe } from '@/lib/answer-moderation'
 import { FEATURE_UNAVAILABLE, featuresFromForm } from '@/lib/features'
 import { adoptLibraryCourses, loadPortalById, refuseFeature } from './features'
 import { ensurePackAdopted } from './pack-adopt'
+import { eveningName } from '@/lib/evening-name'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
 type Doc = Record<string, unknown> & { id: number }
@@ -800,6 +801,68 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, text(form, 'next') || '/master', undefined, `Access code ${code} is ready.`)
   }
 
+  if (action === 'quick-join-link') {
+    if (user.role !== 'master' && user.role !== 'portal-admin') return redirectTo(req, '/', 'You cannot make an access code.')
+    const role = text(form, 'role')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
+    if (!['admin', 'teacher', 'learner'].includes(role)) return redirectTo(req, text(form, 'next') || '/', 'Choose a teacher, a learner or an admin.')
+    const packs = await payload.find({
+      collection: 'packs',
+      overrideAccess: true,
+      depth: 0,
+      limit: 80,
+      sort: 'title',
+      where: { or: [{ and: [{ owner: { equals: 'portal' } }, { portal: { equals: acting.portal.id } }] }, { owner: { equals: 'master' } }] },
+    })
+    const own = packs.docs.find((pack) => (pack as { owner?: string }).owner === 'portal')
+    const pack = own || packs.docs[0]
+    if (!pack) return redirectTo(req, text(form, 'next') || '/', 'Make a course pack first, then the link can be made in one tap.')
+    const packId = pack.id
+    if (!(await packUsable(payload, user, acting.portal.id, packId))) return redirectTo(req, text(form, 'next') || '/', 'That course pack is not available in this portal.')
+    await ensurePackAdopted(payload, acting.portal.id, packId)
+    let teacherId = 0
+    if (role === 'learner') {
+      const teachers = await payload.find({
+        collection: 'access-codes',
+        overrideAccess: true,
+        depth: 0,
+        limit: 1,
+        where: { and: [{ portal: { equals: acting.portal.id } }, { role: { equals: 'teacher' } }, { disabled: { not_equals: true } }] },
+      })
+      const existing = teachers.docs[0] as { id: number } | undefined
+      if (existing) teacherId = existing.id
+      else {
+        const made = await payload.create({
+          collection: 'access-codes',
+          overrideAccess: true,
+          data: { code: randomCode(acting.portal.slug || ''), role: 'teacher', packs: [packId], portal: acting.portal.id, uses: 0, disabled: false, label: 'Teacher' },
+        })
+        teacherId = made.id
+      }
+    }
+    const code = randomCode(acting.portal.slug || '')
+    await payload.create({
+      collection: 'access-codes',
+      overrideAccess: true,
+      data: {
+        code,
+        role: role as 'learner',
+        packs: [packId],
+        portal: acting.portal.id,
+        linkedTeacherCode: teacherId || undefined,
+        label: role === 'admin' ? 'Admin' : role === 'teacher' ? 'Teacher' : 'Learner',
+        uses: 0,
+        disabled: false,
+      },
+    })
+    const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || ''
+    const proto = req.headers.get('x-forwarded-proto') || 'http'
+    const link = host ? `${proto}://${host}/join?code=${encodeURIComponent(code)}` : `/join?code=${code}`
+    const who = role === 'admin' ? 'admin' : role
+    return redirectTo(req, text(form, 'next') || '/', undefined, `New ${who} link: ${link}. Copy, WhatsApp and the QR are on the row below.`)
+  }
+
   if (action === 'code-switch') {
     if (user.role !== 'master' && user.role !== 'portal-admin') return redirectTo(req, '/', 'You cannot change an access code.')
     const next = text(form, 'next') || '/master'
@@ -876,8 +939,21 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   if (action === 'add-lesson') {
     if (user.role !== 'master' && user.role !== 'portal-admin') return redirectTo(req, '/', 'You cannot add a lesson.')
     const courseId = Number(text(form, 'course'))
-    const title = text(form, 'title')
-    if (!courseId || !title) return redirectTo(req, text(form, 'next') || '/', 'A lesson needs a name.')
+    const youtube = text(form, 'youtube')
+    let title = text(form, 'title')
+    let youtubeId = ''
+    let sourceTitle = ''
+    if (youtube) {
+      youtubeId = youtubeIdFromUrl(youtube) || ''
+      if (!youtubeId) return redirectTo(req, text(form, 'next') || '/', 'That does not look like a YouTube link. Paste a watch, share or youtu.be link, or type a title.')
+      if (!title) {
+        const meta = await fetchYoutubeMeta(youtubeId)
+        title = String(meta?.title || '').trim()
+        sourceTitle = title
+        if (!title) return redirectTo(req, text(form, 'next') || '/', 'YouTube did not give a title for that film. Type a title and try again.')
+      }
+    }
+    if (!courseId || !title) return redirectTo(req, text(form, 'next') || '/', 'Type a title, or paste a YouTube link and leave the title blank.')
     const courseDoc = await findDoc(payload, 'courses', courseId)
     const denied = editError(user, courseDoc)
     if (denied) return redirectTo(req, text(form, 'next') || '/', denied)
@@ -898,6 +974,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         order: count.totalDocs + 1,
         speaker: (course as { speaker?: string }).speaker,
         transcriptSource: 'none',
+        ...(youtubeId ? { youtubeId, videoProvider: 'youtube', sourceUrl: youtube.slice(0, 500), ...(sourceTitle ? { sourceTitle } : {}) } : {}),
       },
     })
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Lesson added.')
@@ -1208,7 +1285,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       : action === 'commit-bring-in'
         ? await commitBringIn(payload, user, form)
         : action === 'publish-talks'
-          ? await publishTalks(payload, user, form)
+          ? text(form, 'publishMode') === 'captions'
+            ? await schedulePublishWhenCaptions(payload, user, form)
+            : await publishTalks(payload, user, form)
           : action === 'save-channel-speaker'
             ? await saveChannelSpeaker(payload, user, form)
             : action === 'delete-channel-speaker'
@@ -1258,8 +1337,13 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         transcript,
         transcriptSource: 'upload',
         transcriptNote: attached.transcriptNote,
+        ...(attached.publishState ? { publishState: attached.publishState } : {}),
       },
     })
+    if (attached.give) {
+      const courseId = idOf((owned.lesson as { course?: unknown }).course)
+      if (courseId) await giveCourseToPackHolders(payload, [courseId])
+    }
     return redirectTo(req, next, undefined, attached.notice)
   }
 
@@ -1301,6 +1385,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const raw = file instanceof File && file.size ? await file.text() : pasted
     if (!raw.trim()) return redirectTo(req, next, 'Paste a timed transcript, or choose a file.')
     const stored = cleanedTimedTranscript(raw)
+    const publishState = (lesson as { publishState?: string | null }).publishState === 'draft' ? 'draft' : 'published'
+    const attached = noteAfterTranscriptUpload((lesson as { transcriptNote?: string }).transcriptNote, 'the pasted transcript', publishState)
     await payload.update({
       collection: 'lessons',
       id: lessonId,
@@ -1308,13 +1394,15 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       data: {
         transcript: stored.cleaned,
         transcriptSource: 'upload',
-        transcriptNote: bringInNote('processed', 'A timed transcript was attached while this server was waiting.', captionLang(text(form, 'captionLang'))),
+        transcriptNote: attached.transcriptNote,
+        ...(attached.publishState ? { publishState: attached.publishState } : {}),
       },
     })
-    const draft = (lesson as { publishState?: string | null }).publishState === 'draft'
-    return redirectTo(req, next, undefined, draft
-      ? 'The timed transcript is attached. This talk is still a draft, so learners cannot see it until you publish it.'
-      : 'The timed transcript is attached. Learners who already have this course can see this talk.')
+    if (attached.give) {
+      const courseId = idOf((lesson as { course?: unknown }).course)
+      if (courseId) await giveCourseToPackHolders(payload, [courseId])
+    }
+    return redirectTo(req, next, undefined, attached.notice)
   }
 
   if (action === 'extract') {
@@ -1838,7 +1926,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
           user: learnerId,
           portal: portal || undefined,
           title: 'Email not sent',
-          body: 'Email is stubbed in this prototype. The reply is waiting in the bell.',
+          body: 'Email is not sent from here. The reply is waiting in the bell.',
           href: text(form, 'href') || '/',
           channel: 'email-stub' as const,
         },
@@ -2084,13 +2172,13 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
     const portal = acting.portal.id
-    if (!text(form, 'title')) return redirectTo(req, text(form, 'next') || '/', 'Give the night a name.')
+    const title = eveningName(text(form, 'title'))
     if (text(form, 'startsAt') && Number.isNaN(Date.parse(text(form, 'startsAt')))) return redirectTo(req, text(form, 'next') || '/', 'That date and time could not be read.')
     await payload.create({
       collection: 'events',
       overrideAccess: true,
       data: {
-        title: text(form, 'title'),
+        title,
         place: text(form, 'place'),
         note: text(form, 'note'),
         startsAt: text(form, 'startsAt') ? new Date(text(form, 'startsAt')).toISOString() : undefined,
@@ -2099,7 +2187,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     })
     const alerted = await payload.find({ collection: 'users', overrideAccess: true, depth: 0, limit: 500, where: { and: [{ 'tenants.tenant': { equals: portal } }, { nightAlerts: { equals: true } }] } })
     for (const person of alerted.docs) {
-      await notify(payload, { user: person.id, portal, title: 'A new night is open', body: `${text(form, 'title')}${text(form, 'place') ? ` at ${text(form, 'place')}` : ''}.`, href: `/p/${acting.portal.slug}/me/circle` })
+      await notify(payload, { user: person.id, portal, title: 'A new night is open', body: `${title}${text(form, 'place') ? ` at ${text(form, 'place')}` : ''}.`, href: `/p/${acting.portal.slug}/me/circle` })
     }
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Night saved.')
   }
@@ -2139,6 +2227,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/master', acting.error)
     const closed = text(form, 'closed') !== 'no'
+    if (closed && text(form, 'confirm') !== 'yes') return redirectTo(req, text(form, 'next') || '/master', 'Tick the box to confirm before you deactivate a portal.')
     await payload.update({ collection: 'portals', id: acting.portal.id, overrideAccess: true, data: { closed } })
     return redirectTo(req, text(form, 'next') || '/master', undefined, closed ? 'Portal deactivated.' : 'Portal is active again.')
   }
@@ -2217,21 +2306,27 @@ async function handleForm(req: Request, form: FormData, session: Session) {
 
   if (action === 'grant') {
     if (user.role === 'learner') return redirectTo(req, '/', 'Learners cannot grant courses.')
-    const learnerId = Number(text(form, 'learner'))
+    const learnerIds = [...new Set(form.getAll('learner').map((value) => Number(value)).filter((id) => id > 0))]
     const courseId = Number(text(form, 'course'))
-    const learner = await findDoc(payload, 'users', learnerId)
-    if (!learner || (user.role !== 'master' && portalIdOf(learner as SessionUser) !== portalIdOf(user))) {
-      return redirectTo(req, '/', 'That learner is not in your portal.')
-    }
+    if (!learnerIds.length) return redirectTo(req, text(form, 'next') || '/', 'Choose at least one learner.')
     if (!(await visibleCourseIds(payload, user)).includes(courseId)) return redirectTo(req, text(form, 'next') || '/', 'That course is not in your portal.')
-    const existing = ((learner as { extraCourses?: unknown[] }).extraCourses || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
-    await payload.update({
-      collection: 'users',
-      id: learnerId,
-      overrideAccess: true,
-      data: { extraCourses: [...new Set([...existing, courseId])] },
-    })
-    return redirectTo(req, text(form, 'next') || '/', undefined, 'Granted. They can see it on the next page, without signing in again.')
+    for (const learnerId of learnerIds) {
+      const learner = await findDoc(payload, 'users', learnerId)
+      if (!learner || (user.role !== 'master' && portalIdOf(learner as SessionUser) !== portalIdOf(user))) {
+        return redirectTo(req, '/', 'That learner is not in your portal.')
+      }
+      const existing = ((learner as { extraCourses?: unknown[] }).extraCourses || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
+      await payload.update({
+        collection: 'users',
+        id: learnerId,
+        overrideAccess: true,
+        data: { extraCourses: [...new Set([...existing, courseId])] },
+      })
+    }
+    const notice = learnerIds.length === 1
+      ? 'Granted. They can see it on the next page, without signing in again.'
+      : `Given to ${learnerIds.length} learners. They can see it on the next page, without signing in again.`
+    return redirectTo(req, text(form, 'next') || '/', undefined, notice)
   }
 
   if (action === 'offer-on-code' || action === 'offer-joined') {
