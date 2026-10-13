@@ -92,32 +92,35 @@ export async function BringInBody({
           <label className="stack">YouTube links, playlist or channel
             <textarea className="paste-example" data-testid="bring-in-urls" name="urls" rows={6} required placeholder={'https://www.youtube.com/watch?v=…\nhttps://www.youtube.com/watch?v=… | Speaker name\nhttps://www.youtube.com/playlist?list=…'} />
           </label>
-          <label className="stack">Course <HelpTip topic="bring-in-course">{TOOL.bringInCourse}</HelpTip>
-            <select name="course" data-testid="bring-in-course" defaultValue={body?.courseId ? String(body.courseId) : 'new'}>
-              <option value="new">Create a new course</option>
-              {courses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
-            </select>
-          </label>
-          <label className="stack">New course name<input data-testid="bring-in-new-title" name="newTitle" defaultValue={body?.newTitle || ''} placeholder="Used only when Create a new course is chosen" /></label>
-          <div className="cols">
-            <label className="stack">Speaker for this course<input data-testid="bring-in-speaker" name="speaker" defaultValue={body?.courseSpeaker || ''} placeholder="Used when a line does not name one" /></label>
-            <label className="stack">Caption language <HelpTip topic="bring-in-lang">{TOOL.bringInLanguage}</HelpTip>
-              <select name="captionLang" data-testid="bring-in-lang" defaultValue={body?.lang || 'en'}>
-                {CAPTION_LANGUAGES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          <details className="more-options" data-testid="bring-in-more">
+            <summary>More options</summary>
+            <label className="stack">Course <HelpTip topic="bring-in-course">{TOOL.bringInCourse}</HelpTip>
+              <select name="course" data-testid="bring-in-course" defaultValue={body?.courseId ? String(body.courseId) : 'new'}>
+                <option value="new">Create a new course</option>
+                {courses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
               </select>
             </label>
-          </div>
-          <div className="cols">
-            <label className="stack">Jibril section <HelpTip topic="bring-in-jibril">{TOOL.bringInJibril}</HelpTip>
-              <select name="jibril" data-testid="bring-in-jibril" defaultValue="">
-                <option value="">None</option>
-                {DOORS.map((door) => <option key={door.number} value={doorCode(door.number)}>{doorCode(door.number)} · {doorLabel(door)}</option>)}
-              </select>
-            </label>
-            <label className="stack">Ghunya heading <HelpTip topic="bring-in-ghunya">{TOOL.bringInGhunya}</HelpTip>
-              <input name="ghunya" data-testid="bring-in-ghunya" placeholder="Optional" />
-            </label>
-          </div>
+            <label className="stack">New course name<input data-testid="bring-in-new-title" name="newTitle" defaultValue={body?.newTitle || ''} placeholder="Used only when Create a new course is chosen" /></label>
+            <div className="cols">
+              <label className="stack">Speaker for this course<input data-testid="bring-in-speaker" name="speaker" defaultValue={body?.courseSpeaker || ''} placeholder="Used when a line does not name one" /></label>
+              <label className="stack">Caption language <HelpTip topic="bring-in-lang">{TOOL.bringInLanguage}</HelpTip>
+                <select name="captionLang" data-testid="bring-in-lang" defaultValue={body?.lang || 'en'}>
+                  {CAPTION_LANGUAGES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                </select>
+              </label>
+            </div>
+            <div className="cols">
+              <label className="stack">Jibril section <HelpTip topic="bring-in-jibril">{TOOL.bringInJibril}</HelpTip>
+                <select name="jibril" data-testid="bring-in-jibril" defaultValue="">
+                  <option value="">None</option>
+                  {DOORS.map((door) => <option key={door.number} value={doorCode(door.number)}>{doorOptionLabel(door)}</option>)}
+                </select>
+              </label>
+              <label className="stack">Ghunya heading <HelpTip topic="bring-in-ghunya">{TOOL.bringInGhunya}</HelpTip>
+                <input name="ghunya" data-testid="bring-in-ghunya" placeholder="Optional" />
+              </label>
+            </div>
+          </details>
           <div className="actions"><button className="btn ink" type="submit" data-testid="bring-in-lookup">Look up</button> <HelpTip topic="bring-in-lookup">{TOOL.bringInLookup}</HelpTip></div>
         </BusyForm>
       </section>
@@ -141,7 +144,7 @@ export async function BringInBody({
               </div>
             )}
             <div className="table-wrap">
-              <table className="data">
+              <table className="data phone-stack">
                 <thead><tr><th>Bring in</th><th>Film</th><th>Length</th><th>Captions</th><th>Speaker <HelpTip topic="row-speaker">{TOOL.bringInSpeaker}</HelpTip></th><th>Jibril</th><th>Ghunya</th></tr></thead>
                 <tbody>
                   {body.rows.map((row) => <PreviewRow key={`${row.id}-${row.index}`} row={row} />)}
@@ -169,10 +172,13 @@ export async function BringInBody({
                 <input key={lesson.id} type="hidden" name="lesson" value={lesson.id} />
               ))}
               <label className="check">
-                <input type="checkbox" name="giveHolders" value="yes" data-testid="bring-in-give" /> Also give it to learners who already hold this pack
+                <input type="checkbox" name="giveHolders" value="yes" defaultChecked data-testid="bring-in-give" /> Also give it to learners who already hold this pack
                 <HelpTip topic="bring-in-give">{TOOL.bringInGiveHolders}</HelpTip>
               </label>
-              <div className="actions"><button className="btn ink" type="submit" data-testid="bring-in-publish">Publish these talks</button></div>
+              <div className="actions">
+                <button className="btn ink" type="submit" data-testid="bring-in-publish">Publish these talks</button>
+                <button className="btn ghost" type="submit" name="publishMode" value="captions" data-testid="publish-when-captions">Publish when captions are ready</button>
+              </div>
             </BusyForm>
             <div style={{ marginTop: 16 }}>
               {brought.map((lesson) => <ResultRow key={lesson.id} lesson={lesson} next={`${next}?lessons=${lessonIds.join(',')}`} />)}
@@ -195,10 +201,13 @@ export async function BringInBody({
               <Hidden fields={{ action: 'publish-talks', next }} />
               {otherDrafts.map((talk) => <input key={talk.id} type="hidden" name="lesson" value={talk.id} />)}
               <label className="check">
-                <input type="checkbox" name="giveHolders" value="yes" data-testid="bring-in-drafts-give" /> Also give them to learners who already hold this pack
+                <input type="checkbox" name="giveHolders" value="yes" defaultChecked data-testid="bring-in-drafts-give" /> Also give them to learners who already hold this pack
                 <HelpTip topic="bring-in-drafts-give">{TOOL.bringInGiveHolders}</HelpTip>
               </label>
-              <div className="actions"><button className="btn ink" type="submit" data-testid="bring-in-publish-all">Publish all these drafts</button></div>
+              <div className="actions">
+                <button className="btn ink" type="submit" data-testid="bring-in-publish-all">Publish all these drafts</button>
+                <button className="btn ghost" type="submit" name="publishMode" value="captions" data-testid="publish-when-captions-all">Publish when captions are ready</button>
+              </div>
             </BusyForm>
             <div style={{ marginTop: 16 }}>
               {otherDrafts.map((talk) => (
@@ -207,9 +216,12 @@ export async function BringInBody({
                   <BusyForm action="/api/hearts" method="post">
                     <Hidden fields={{ action: 'publish-talks', lesson: talk.id, next }} />
                     <label className="check">
-                      <input type="checkbox" name="giveHolders" value="yes" /> Also give it to learners who already hold this pack
+                      <input type="checkbox" name="giveHolders" value="yes" defaultChecked /> Also give it to learners who already hold this pack
                     </label>
-                    <div className="actions"><button className="btn ghost small" type="submit" data-testid="bring-in-publish-one">Publish this talk</button></div>
+                    <div className="actions">
+                      <button className="btn ghost small" type="submit" data-testid="bring-in-publish-one">Publish this talk</button>
+                      <button className="btn ghost small" type="submit" name="publishMode" value="captions" data-testid="publish-when-captions-one">Publish when captions are ready</button>
+                    </div>
                   </BusyForm>
                 </div>
               ))}
@@ -275,7 +287,7 @@ export async function BringInBody({
 export async function PortalBringInScreen(ctx: Ctx) {
   const courses = await rows(ctx.payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: ctx.portal.id } }] }, { sort: 'title', limit: 500 })
   return (
-    <AdminFrame ctx={ctx} active="bring-in" title="Bring in" intro="Paste YouTube links, a playlist or a channel. Films arrive as drafts. Learners see a talk only after you publish it." testId="admin-bring-in">
+    <AdminFrame ctx={ctx} active="bring-in" title="Bring in" intro="Paste YouTube links, a playlist or a channel. Films arrive as drafts. Learners see a talk only after you publish it." testId="admin-bring-in" showOnPhone>
       <BringInBody
         payload={ctx.payload}
         user={ctx.user}
