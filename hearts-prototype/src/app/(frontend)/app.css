@@ -439,7 +439,10 @@
 }
 .app[data-testid="course"] .player-card.course-film-band,
 .app[data-testid="course"] .player-card.is-f.course-film-band {
+  position: relative;
   width: 100%;
+  height: calc(min(430px, 100vw) * 9 / 16);
+  max-height: none;
   border-radius: 0;
   aspect-ratio: 16 / 9;
   overflow: hidden;
@@ -449,22 +452,33 @@
 .app[data-testid="course"] .course-film-band .j-film-band {
   position: absolute;
   inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  aspect-ratio: auto;
   overflow: hidden;
   pointer-events: none;
 }
 .app[data-testid="course"] .course-film-band iframe,
 .app[data-testid="course"] .course-film-band .yt iframe,
-.app[data-testid="course"] .course-film-band .j-film-band iframe {
+.app[data-testid="course"] .course-film-band .j-film-band iframe,
+.app[data-testid="course"] .course-film-band video {
   position: absolute !important;
-  top: 50% !important;
-  left: 50% !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
   width: 100% !important;
-  height: auto !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  aspect-ratio: 16 / 9 !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
   object-fit: contain !important;
-  transform: translate(-50%, -50%) !important;
+  transform: none !important;
   pointer-events: none !important;
   opacity: 1;
   z-index: 1;
