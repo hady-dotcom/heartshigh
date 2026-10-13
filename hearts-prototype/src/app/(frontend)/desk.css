@@ -296,6 +296,7 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 /* The desks need room for a sidebar and tables; on a phone they say so instead of squeezing. */
 .desk-narrow { display: none; }
+.desk-narrow .btn.ink { background: var(--desk-gold, #D4A84B); color: var(--desk-gold-ink, #1A1408); }
 @media (max-width: 899px) {
   .desk { display: none; }
   .desk-narrow { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; min-height: 100vh; padding: 48px 24px; background: var(--desk-page, #0E2A2B); color: var(--desk-ink, #F6EEDC); }

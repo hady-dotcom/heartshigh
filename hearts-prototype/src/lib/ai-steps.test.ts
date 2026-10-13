@@ -16,6 +16,8 @@ import {
   runQueue,
   schemaProblems,
   stepBySlug,
+  stepListBadge,
+  stepPlainLine,
   tierProtect,
   type TalkContext,
   type VersionState,
@@ -54,6 +56,20 @@ test('every seeded step names its placeholders, and the prompt uses them', () =>
   }
   const hors = stepBySlug('hors-doeuvre')!
   assert.match(placeholderProblems(hors.prompt.replace('{{TRANSCRIPT}}', ''), hors.placeholders).join(' '), /TRANSCRIPT/)
+})
+
+test('the steps list names each step in one line and an honest state', () => {
+  for (const step of STEP_SPECS) {
+    const line = stepPlainLine(step.slug)
+    assert.ok(line.length > 20 && line.length < 90, `${step.slug}: ${line}`)
+    assert.equal(line.includes('\n'), false, step.slug)
+    assert.equal(line.endsWith('.'), true, step.slug)
+  }
+  assert.equal(stepListBadge({ inPipeline: true, connected: true, master: false }), 'Ready')
+  assert.equal(stepListBadge({ inPipeline: true, connected: false, master: true }), 'Ready')
+  assert.equal(stepListBadge({ inPipeline: true, connected: false, master: false }), 'Switch on by connecting your AI account')
+  assert.equal(stepListBadge({ inPipeline: false, connected: false, master: false }), 'Shared text')
+  assert.equal(stepPlainLine('missing'), '')
 })
 
 test('a prompt edit adds a version, and rollback marks an older one live', () => {
