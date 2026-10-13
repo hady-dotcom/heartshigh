@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import { bringInSourceKind, clockFromListed, parseFlatPlaylistLine, type CaptionFlag, type ListedEntry } from './bring-in-plan'
+import { bringInSourceKind, cleanPlaylistTitle, clockFromListed, parseFlatPlaylistLine, type CaptionFlag, type ListedEntry } from './bring-in-plan'
 import { captionLang, isUnavailableFilm, ytDlpBinary } from './youtube'
 import { youtubeIdFromUrl } from './extractor'
 
@@ -8,13 +8,15 @@ const execFileAsync = promisify(execFile)
 
 export type ExpandedVideo = ListedEntry & { url: string; durationSeconds: number | null; lineSpeaker: string }
 
-const LIST_ARGS = ['--flat-playlist', '--no-warnings', '--print', '%(id)s\t%(title)s\t%(duration)s\t%(channel)s\t%(channel_id)s']
+const LIST_ARGS = ['--flat-playlist', '--no-warnings', '--print', '%(id)s\t%(title)s\t%(duration)s\t%(channel)s\t%(channel_id)s\t\t%(playlist_title)s']
 
 /**
  * Real yt-dlp prints five columns. A sixth column (yes, no, unknown) is optional.
  * When it is missing we ask --list-subs, unless this server is simulating a bot wall.
  */
-export async function listYoutubeUrl(pageUrl: string, run = runYtDlp): Promise<{ entries: ListedEntry[]; error: string }> {
+export type YoutubeListResult = { entries: ListedEntry[]; error: string; playlistTitle?: string }
+
+export async function listYoutubeUrl(pageUrl: string, run = runYtDlp): Promise<YoutubeListResult> {
   const result = await run(pageUrl, LIST_ARGS)
   if (result.missing) return { entries: [], error: 'yt-dlp is not installed. Run npm run setup, or set YT_DLP_PATH.' }
   const entries = result.stdout
@@ -27,7 +29,8 @@ export async function listYoutubeUrl(pageUrl: string, run = runYtDlp): Promise<{
       : 'That link did not return any films. Check it is a YouTube film, playlist or channel.'
     return { entries: [], error: problem }
   }
-  return { entries, error: '' }
+  const playlistTitle = entries.map((entry) => cleanPlaylistTitle(entry.playlistTitle)).find(Boolean) || ''
+  return { entries, playlistTitle, error: '' }
 }
 
 export async function captionFlagFor(id: string, lang: string, run = runYtDlp): Promise<CaptionFlag> {
@@ -69,13 +72,14 @@ async function runYtDlp(pageUrl: string, args: string[]) {
 
 export async function expandBringInText(
   raw: string,
-  options: { lang?: string; list?: typeof listYoutubeUrl; captions?: typeof captionFlagFor; probeCaptions?: boolean } = {},
-): Promise<{ videos: ExpandedVideo[]; errors: string[] }> {
+  options: { lang?: string; list?: (pageUrl: string) => Promise<YoutubeListResult>; captions?: typeof captionFlagFor; probeCaptions?: boolean } = {},
+): Promise<{ videos: ExpandedVideo[]; errors: string[]; playlistTitle: string }> {
   const list = options.list || listYoutubeUrl
   const captions = options.captions || captionFlagFor
   const probe = options.probeCaptions !== false && process.env.HEARTS_CAPTION_BOT_WALL !== '1'
   const videos: ExpandedVideo[] = []
   const errors: string[] = []
+  let playlistTitle = ''
   const lines = raw.split(/\n+/).map((line) => line.trim()).filter(Boolean)
   for (const line of lines) {
     let link = line
@@ -97,6 +101,7 @@ export async function expandBringInText(
         continue
       }
       const listed = await list(link)
+      playlistTitle = playlistTitle || playlistTitleOf(listed)
       const entry = listed.entries.find((row) => row.id === id) || listed.entries[0]
       if (!entry) {
         errors.push(namedLine(link, listed.error || `Could not read ${id}.`))
@@ -106,6 +111,7 @@ export async function expandBringInText(
       continue
     }
     const listed = await list(link)
+    playlistTitle = playlistTitle || playlistTitleOf(listed)
     if (!listed.entries.length) {
       errors.push(namedLine(link, listed.error || 'That playlist or channel did not return any films.'))
       continue
@@ -114,7 +120,11 @@ export async function expandBringInText(
       videos.push(await withClock(entry, `https://www.youtube.com/watch?v=${entry.id}`, lineSpeaker, options.lang || 'en', captions, probe))
     }
   }
-  return { videos, errors }
+  return { videos, errors, playlistTitle }
+}
+
+function playlistTitleOf(listed: YoutubeListResult) {
+  return cleanPlaylistTitle(listed.playlistTitle) || listed.entries.map((entry) => cleanPlaylistTitle(entry.playlistTitle)).find(Boolean) || ''
 }
 
 async function withClock(

@@ -90,7 +90,7 @@ export async function BringInBody({
         <BusyForm className="body form" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'preview-bring-in', next }} />
           <label className="stack">YouTube links, playlist or channel
-            <textarea data-testid="bring-in-urls" name="urls" rows={6} required placeholder={'https://www.youtube.com/watch?v=…\nhttps://www.youtube.com/watch?v=… | Speaker name\nhttps://www.youtube.com/playlist?list=…'} />
+            <textarea className="paste-example" data-testid="bring-in-urls" name="urls" rows={6} required placeholder={'https://www.youtube.com/watch?v=…\nhttps://www.youtube.com/watch?v=… | Speaker name\nhttps://www.youtube.com/playlist?list=…'} />
           </label>
           <label className="stack">Course <HelpTip topic="bring-in-course">{TOOL.bringInCourse}</HelpTip>
             <select name="course" data-testid="bring-in-course" defaultValue={body?.courseId ? String(body.courseId) : 'new'}>
@@ -132,6 +132,14 @@ export async function BringInBody({
           </header>
           <BusyForm className="body" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'commit-bring-in', next, preview: previewId }} />
+            {body.courseId ? null : (
+              <div className="form" data-testid="bring-in-review-course" style={{ marginBottom: 14 }}>
+                <div className="cols">
+                  <label className="stack">Course name<input name="newTitle" data-testid="bring-in-review-title" defaultValue={body.newTitle} /></label>
+                  <label className="stack">Speaker<input name="courseSpeaker" data-testid="bring-in-review-speaker" defaultValue={body.courseSpeaker} /></label>
+                </div>
+              </div>
+            )}
             <div className="table-wrap">
               <table className="data">
                 <thead><tr><th>Bring in</th><th>Film</th><th>Length</th><th>Captions</th><th>Speaker <HelpTip topic="row-speaker">{TOOL.bringInSpeaker}</HelpTip></th><th>Jibril</th><th>Ghunya</th></tr></thead>

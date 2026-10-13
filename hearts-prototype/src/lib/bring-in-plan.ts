@@ -104,6 +104,7 @@ export type ListedEntry = {
   channel: string
   channelId: string
   captions: CaptionFlag | ''
+  playlistTitle: string
 }
 
 /** One yt-dlp flat-playlist line: id, title, duration, channel, channel id, captions. */
@@ -114,6 +115,7 @@ export function parseFlatPlaylistLine(line: string): ListedEntry | null {
   const duration = Number(parts[2])
   const flag = (parts[5] || '').trim().toLowerCase()
   const captions: ListedEntry['captions'] = flag === 'yes' || flag === 'no' || flag === 'unavailable' ? flag : flag === 'unknown' ? 'unknown' : ''
+  const playlistTitle = cleanPlaylistTitle(parts[6] || (captions ? '' : parts[5] || ''))
   return {
     id,
     title: (parts[1] || '').trim() || `Film ${id}`,
@@ -121,7 +123,52 @@ export function parseFlatPlaylistLine(line: string): ListedEntry | null {
     channel: (parts[3] || '').trim(),
     channelId: (parts[4] || '').trim(),
     captions,
+    playlistTitle,
   }
+}
+
+/** yt-dlp prints NA when a film is not inside a playlist. */
+export function cleanPlaylistTitle(value: string | null | undefined) {
+  const title = String(value || '').replace(/\s+/g, ' ').trim()
+  if (!title || /^(na|none|null|undefined)$/i.test(title)) return ''
+  return title
+}
+
+/** Every pasted line is one film, not a playlist or a channel. */
+export function looseBringInPaste(raw: string) {
+  const lines = raw.split(/\n+/).map((line) => line.trim()).filter(Boolean)
+  if (!lines.length) return false
+  return lines.every((line) => bringInSourceKind(line.split('|')[0] || '') === 'video')
+}
+
+function usableFilmTitle(title: string | null | undefined) {
+  const value = String(title || '').replace(/\s+/g, ' ').trim()
+  if (!value || /^Film [A-Za-z0-9_-]{6,}$/.test(value)) return ''
+  return value
+}
+
+/**
+ * A playlist lends its title. Loose links lend the first film's title, then the channel.
+ * A channel with no playlist title lends the channel name.
+ */
+export function suggestedCourseName(input: {
+  playlistTitle?: string | null
+  loose: boolean
+  videos: { title?: string | null; channel?: string | null }[]
+}) {
+  const playlist = input.loose ? '' : cleanPlaylistTitle(input.playlistTitle)
+  const firstTitle = input.videos.map((video) => usableFilmTitle(video.title)).find(Boolean) || ''
+  const channel = input.videos.map((video) => String(video.channel || '').trim()).find(Boolean) || ''
+  const chosen = input.loose ? firstTitle || channel : playlist || channel || firstTitle
+  return chosen.slice(0, 180)
+}
+
+/** A typed speaker wins. Otherwise the channel name, so the box is not left blank. */
+export function suggestedCourseSpeaker(input: { typed?: string | null; videos: { channel?: string | null }[] }) {
+  const typed = String(input.typed || '').trim()
+  if (typed) return typed.slice(0, 120)
+  const channel = input.videos.map((video) => String(video.channel || '').trim()).find(Boolean) || ''
+  return channel.slice(0, 120)
 }
 
 export function clockFromListed(durationRaw: number | null) {
