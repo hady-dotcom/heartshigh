@@ -24,6 +24,12 @@
 }
 .row:hover { border-color: #e0d3b4; }
 .row h2 { margin: 0 0 4px; font-size: 16px; color: #1a1408; }
+/* Theme sets every desk h2 to cream at 26px. These titles sit on white cards. */
+:global(html[data-theme]) :global(.desk) .row h2 {
+  color: #1a1408;
+  font-size: 16px;
+  line-height: 1.3;
+}
 .row p { margin: 0; color: #1a1408; font-size: 14px; line-height: 1.45; max-width: 68ch; }
 .meta { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap; max-width: 18rem; }
 .mark {
