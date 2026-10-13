@@ -60,13 +60,13 @@ test('a loose link takes the film title, and the review boxes can be changed bef
 
 test('saving still asks for a course name when the review box is cleared', async ({ page }) => {
   await signIn(page)
-  await page.getByTestId('bring-in-urls').fill(LOOSE)
+  await page.getByTestId('bring-in-urls').fill('https://www.youtube.com/watch?v=kM7LVppIMl0')
   await page.getByTestId('bring-in-course').selectOption('new')
   await page.getByTestId('bring-in-new-title').fill('')
   await page.getByTestId('bring-in-lookup').click()
   await expect(page.getByTestId('bring-in-preview')).toBeVisible()
   await expect(page.getByTestId('error')).toHaveCount(0)
-  await expect(page.getByTestId('bring-in-review-title')).toHaveValue('Goals for the month')
+  await expect(page.getByTestId('bring-in-review-title')).toHaveValue('Quiet hour')
   await page.getByTestId('bring-in-review-title').fill('')
   await page.getByTestId('bring-in-commit').click()
   await expect(page.getByTestId('error')).toContainText('Type a name for the new course')
