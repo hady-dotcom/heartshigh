@@ -37,6 +37,22 @@ export function deskAppHref(brandHref: string) {
   return null
 }
 
+/** A readable role for the door, when the signed-in person opened a desk that is not theirs. */
+export function accountRoleLabel(role: string | null | undefined) {
+  if (role === 'master') return 'Master'
+  if (role === 'portal-admin') return 'Portal admin'
+  if (role === 'teacher') return 'Teacher'
+  if (role === 'parent') return 'Parent'
+  if (role === 'learner') return 'Learner'
+  return role || 'Learner'
+}
+
+/** Shown on the front door instead of a bare “not yours” error. */
+export function signedInElsewhere(name: string | null | undefined, role: string | null | undefined) {
+  const who = (name || '').trim() || 'this account'
+  return `You're signed in as ${who} (${accountRoleLabel(role)}). Sign in as someone else`
+}
+
 /** A teacher or portal admin of this portal, while they are in the learner app. */
 export function staffDeskHref(
   user: { role?: string | null; tenants?: { tenant?: unknown }[] } | null | undefined,

@@ -560,7 +560,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   }
 
   if (action === 'logout') {
-    const response = redirectTo(req, '/')
+    const next = text(form, 'next')
+    const dest = next === '/login' ? '/login' : '/'
+    const response = redirectTo(req, dest)
     response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, '', 0))
     return response
   }

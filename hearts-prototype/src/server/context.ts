@@ -271,7 +271,7 @@ export async function requireUser() {
 
 export async function requireMaster() {
   const session = await requireUser()
-  if (session.user.role !== 'master') redirect('/?error=The master desk is not yours.')
+  if (session.user.role !== 'master') redirect('/?other=1')
   return session
 }
 
