@@ -39,7 +39,10 @@ export async function TeachScreen(ctx: Ctx) {
   const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }, { sort: 'title' }) : []
   const shared = entries.filter((entry) => entry.consent)
   const kept = entries.length - shared.length
-  const consented = new Set(shared.map((entry) => ref(entry.answer)))
+  const consented = new Set(shared.flatMap((entry) => {
+    const id = ref(entry.answer)
+    return id == null ? [] : [id]
+  }))
   const sharedAnswers = sharedAnswersNewestFirst(answers, consented)
   const evidence = sharedAnswers.filter((answer) => answer.video || answer.audio)
   const focusId = Number(query.answer) || 0
@@ -129,7 +132,7 @@ export async function TeachScreen(ctx: Ctx) {
                 </div>
                 <p className="hint" style={{ margin: 0 }} data-testid="shared-answer-place">{talk || 'This talk'} · {clock(second)}</p>
                 {prompt ? <p className="hint" style={{ margin: 0 }} data-testid="shared-answer-question">{prompt}</p> : null}
-                <p data-testid="shared-answer-text" style={{ margin: 0 }}>{sharedAnswerText(answer)}</p>
+                <p data-testid="shared-answer-text" style={{ margin: 0 }}>{sharedAnswerText({ body: answer.body, choice: answer.choice, video: answer.video, audio: answer.audio, image: answer.image })}</p>
               </article>
             )
           })}
