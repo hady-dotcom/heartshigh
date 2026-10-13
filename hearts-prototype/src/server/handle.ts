@@ -1314,7 +1314,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     })
   }
 
-  if (action === 'preview-bring-in' || action === 'commit-bring-in' || action === 'publish-talks' || action === 'save-channel-speaker' || action === 'delete-channel-speaker' || action === 'create-helper-token' || action === 'revoke-helper-token') {
+  if (action === 'preview-bring-in' || action === 'bring-in-ready' || action === 'commit-bring-in' || action === 'publish-talks' || action === 'save-channel-speaker' || action === 'delete-channel-speaker' || action === 'create-helper-token' || action === 'revoke-helper-token') {
     if (!user) return redirectTo(req, '/login', 'Please sign in first.')
     const next = text(form, 'next') || '/master/bring-in'
     const result = action === 'preview-bring-in'

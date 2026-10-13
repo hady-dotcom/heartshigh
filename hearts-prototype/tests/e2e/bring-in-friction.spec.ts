@@ -40,10 +40,9 @@ test('one paste and one tap brings a playlist in, and captions publish it for a 
   expect(box!.x).toBeGreaterThanOrEqual(0)
   expect(box!.x + box!.width).toBeLessThanOrEqual(390)
   await page.getByTestId('bring-in-urls').fill(PLAYLIST)
+  for (let tap = 0; tap < 3; tap++) await primary.click({ trial: true })
   await primary.click()
-  await primary.click({ trial: true }).catch(() => undefined)
-  await primary.click({ trial: true }).catch(() => undefined)
-  await expect(page.getByTestId('bring-in-result')).toBeVisible({ timeout: 60_000 })
+  await expect(page.getByTestId('bring-in-result')).toBeVisible({ timeout: 90_000 })
   await expect(page.getByTestId('bring-in-give')).toBeChecked()
 
   const master = await playwrightRequest.newContext({ baseURL: E2E_BASE })

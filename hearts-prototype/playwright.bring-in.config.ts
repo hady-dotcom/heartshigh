@@ -27,7 +27,7 @@ export default defineConfig({
   webServer: {
     command: `npx next dev --hostname 127.0.0.1 --port ${port}`,
     url: `${base}/api/hearts`,
-    reuseExistingServer: false,
+    reuseExistingServer: process.env.HEARTS_E2E_REUSE === '1',
     timeout: 240_000,
     env: {
       ...process.env,
