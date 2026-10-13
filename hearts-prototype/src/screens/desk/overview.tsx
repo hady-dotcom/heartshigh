@@ -16,7 +16,7 @@ import { mcpConnectorStatus, publicAi } from '@/lib/portal-ai'
 
 export async function AdminFrame({ ctx, active, title, intro, tools, help, children, testId, tone }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; help?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening' }) {
   const { payload, user, portal, base, query } = ctx
-  const extra = [{ label: 'Open the learner app', href: base }]
+  const extra = [{ label: user.role === 'teacher' ? 'See it as a learner' : 'Open the learner app', href: base }]
   if (user.role === 'master') extra.push({ label: 'Back to the master desk', href: '/master' })
   return (
     <DeskFrame
@@ -31,7 +31,14 @@ export async function AdminFrame({ ctx, active, title, intro, tools, help, child
       deskName={`${portalName(portal)} portal desk`}
       brandHref={`${base}/admin`}
       extraLinks={extra}
-      tools={tools}
+      tools={
+        user.role === 'teacher' || tools ? (
+          <>
+            {user.role === 'teacher' ? <Link className="btn ghost small" href={base} data-testid="see-as-learner">See it as a learner</Link> : null}
+            {tools}
+          </>
+        ) : undefined
+      }
       help={help}
       query={query}
       testId={testId}

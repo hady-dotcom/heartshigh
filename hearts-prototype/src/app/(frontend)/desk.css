@@ -298,6 +298,47 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .desk-narrow { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; min-height: 100vh; padding: 48px 24px; background: var(--desk-page, #0E2A2B); color: var(--desk-ink, #F6EEDC); }
   .desk-narrow h1 { font-size: 24px; line-height: 1.25; margin: 8px 0 0; }
   .desk-narrow p { margin: 0; font-size: 16px; line-height: 1.5; max-width: 32rem; }
+  .desk.desk-phone { display: grid; grid-template-columns: 1fr; }
+  body:has(.desk.desk-phone) .desk-narrow { display: none; }
+}
+
+/* Master codes: the join link, Copy, WhatsApp and the small QR sit in one cell and wrap. */
+.desk .link-to-send { min-width: 0; width: 34%; max-width: 26rem; }
+.desk .link-to-send .address {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
+  max-width: 100%;
+}
+.desk .link-to-send-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; }
+.desk .link-to-send > .btn { margin-top: 8px; }
+@media (max-width: 1100px) {
+  .desk .link-to-send { width: auto; max-width: none; }
+}
+@media (max-width: 899px) {
+  .desk.desk-phone .main { padding: 16px 12px; min-width: 0; }
+  .desk.desk-phone .table-wrap { overflow-x: visible; }
+  .desk.desk-phone table.master-codes-table { display: block; }
+  .desk.desk-phone table.master-codes-table thead { display: none; }
+  .desk.desk-phone table.master-codes-table tbody,
+  .desk.desk-phone table.master-codes-table tr,
+  .desk.desk-phone table.master-codes-table td { display: block; width: auto; min-width: 0; max-width: 100%; }
+  .desk.desk-phone table.master-codes-table tr { padding: 8px 0 14px; border-bottom: 1px solid var(--line); }
+  .desk.desk-phone table.master-codes-table td { border-bottom: 0; padding: 6px 0; }
+  .desk.desk-phone table.master-codes-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .desk.desk-phone table.data td:first-child,
+  .desk.desk-phone table.data td:nth-child(2) { min-width: 0; }
 }
 
 .desk .code-joins { margin: 6px 0 0; padding-left: 18px; text-align: left; font-size: 12px; white-space: nowrap; }
