@@ -13,7 +13,7 @@ process.env.DATABASE_URL = database
 
 export default defineConfig({
   testDir: 'tests/e2e',
-  testMatch: /bring-in-(round2|autofill)\.spec\.ts/,
+  testMatch: /bring-in-(round2|autofill|friction)\.spec\.ts/,
   timeout: 180_000,
   expect: { timeout: 20_000 },
   fullyParallel: false,
