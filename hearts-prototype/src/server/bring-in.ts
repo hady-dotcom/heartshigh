@@ -17,9 +17,12 @@ import { newHelperToken } from '@/lib/helper-token'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { withWorkLock } from '@/lib/work-lock'
 import { loadPlaceCatalogue, placeBringInRows } from '@/lib/bring-in-place'
-import { bringInFlash, bringInNote, bringInStatus, captionLang, ingestYoutubeUrl, transcriptFor, type YoutubeMeta } from '@/lib/youtube'
+import { now } from '@/lib/clock'
+import { broughtInCourseName } from '@/lib/human-date'
+import { bringInFlash, bringInLang, bringInNote, bringInStatus, captionLang, ingestYoutubeUrl, readBringInFlags, stampBringInFlags, transcriptFor, type YoutubeMeta } from '@/lib/youtube'
 import { decideBringInWrite, draftLessonWhere } from '@/lib/bring-in-plan'
 import type { SessionUser } from './context'
+import { giveCourseToJoinedLearners } from './course-offer'
 import { giveCourseToPackHolders, packsContaining } from './publish-holders'
 import { publishNotice } from '@/lib/publish-state'
 
@@ -76,7 +79,8 @@ export async function previewBringIn(payload: Payload, user: SessionUser, form: 
   const expanded = await expandBringInText(raw, { lang })
   const creating = text(form, 'course') === 'new'
   const courseSpeaker = creating ? suggestedCourseSpeaker({ typed: typedSpeaker, videos: expanded.videos }) : typedSpeaker
-  const newTitle = text(form, 'newTitle') || (creating ? suggestedCourseName({ playlistTitle: expanded.playlistTitle, loose: looseBringInPaste(raw), videos: expanded.videos }) : '')
+  const loose = looseBringInPaste(raw)
+  const newTitle = text(form, 'newTitle') || (creating ? suggestedCourseName({ playlistTitle: expanded.playlistTitle, loose, videos: expanded.videos, when: now() }) || broughtInCourseName(now()) : '')
   const pasteErrors = joinBringInErrors(expanded.errors)
   if (!expanded.videos.length) return { error: pasteErrors || 'Those links did not return any films.' }
   const known = await libraryIds(payload)
@@ -198,6 +202,8 @@ export async function commitBringIn(payload: Payload, user: SessionUser, form: F
   const picked = new Set(form.getAll('pick').map((value) => String(value)))
   const chosen = body.rows.filter((row) => picked.has(String(row.index)) && row.skipReason !== 'library' && row.skipReason !== 'duplicate')
   if (!chosen.length) return { error: 'Tick at least one film. Ones already in the library stay out.' }
+  const autoPublish = text(form, 'autoPublish') === 'yes'
+  const giveHolders = autoPublish && text(form, 'giveHolders') !== 'no'
   const previousSpeaker = body.courseSpeaker
   if (!body.courseId) {
     if (form.has('newTitle')) body.newTitle = text(form, 'newTitle')
@@ -281,8 +287,8 @@ export async function commitBringIn(payload: Payload, user: SessionUser, form: F
           ...(meta?.title ? { title: meta.title, sourceTitle: meta.title } : {}),
           ...(duration > 0 ? { durationSeconds: duration } : {}),
           ...(decision.transcript ? { transcript: decision.transcript, transcriptSource: decision.source } : decision.source === 'pending' ? { transcriptSource: 'pending' as const } : {}),
-          transcriptNote: decision.note,
-          publishState: 'draft',
+          transcriptNote: stampBringInFlags(decision.note, { autoPublish: autoPublish && decision.bucket !== 'saved', giveHolders: giveHolders && decision.bucket !== 'saved' }),
+          publishState: autoPublish && decision.bucket === 'saved' ? 'published' : 'draft',
           ...(row.speaker ? { speaker: row.speaker } : {}),
           ...(row.jibril ? { jibrilSection: row.jibril } : {}),
           ...(row.ghunya ? { ghunyaHeading: row.ghunya } : {}),
@@ -307,9 +313,53 @@ export async function commitBringIn(payload: Payload, user: SessionUser, form: F
       else if (decision.bucket === 'waiting') waiting++
       else failed++
     }
-    const notice = bringInFlash({ saved, waiting, failed, skipped, clipsSetAside: 0, drafts: lessonIds.length })
+    if (autoPublish && giveHolders && saved && body.portalId) await giveCourseToJoinedLearners(payload, body.portalId, course.id)
+    const notice = [
+      bringInFlash({ saved, waiting, failed, skipped, clipsSetAside: 0, drafts: autoPublish ? 0 : lessonIds.length }),
+      autoPublish && waiting ? 'Talks still fetching captions publish themselves once ready.' : '',
+      autoPublish && saved ? 'Learners can see the ones whose captions are already in.' : '',
+    ].filter(Boolean).join(' ')
     return { notice, lessons: lessonIds, courseId: course.id }
   })
+}
+
+/** Paste, then one tap: look the list up and bring in every ticked film, publishing when captions are ready. */
+export async function bringInAndPublish(payload: Payload, user: SessionUser, form: FormData) {
+  const preview = await previewBringIn(payload, user, form)
+  if ('error' in preview && preview.error) return preview
+  const previewId = Number(('previewId' in preview && preview.previewId) || 0)
+  const saved = (await payload.findByID({ collection: 'bring-in-previews', id: previewId, depth: 0, overrideAccess: true }).catch(() => null)) as { body?: PreviewBody } | null
+  const rows = saved?.body?.rows || []
+  const commit = new FormData()
+  commit.set('preview', String(previewId))
+  commit.set('autoPublish', 'yes')
+  commit.set('giveHolders', 'yes')
+  for (const row of rows) {
+    if (row.selected && row.skipReason !== 'library' && row.skipReason !== 'duplicate') commit.append('pick', String(row.index))
+  }
+  if (![...commit.getAll('pick')].length) return { error: 'Nothing in that list is ticked. Short films and ones already here start unticked.' }
+  return commitBringIn(payload, user, commit)
+}
+
+/** When a waiting talk was brought in with the auto-publish flag, attaching captions publishes it. */
+export async function settleAutoPublish(payload: Payload, lessonId: number, previousNote: string | null | undefined) {
+  const flags = readBringInFlags(previousNote)
+  if (!flags.autoPublish) return { published: false }
+  const lesson = (await payload.findByID({ collection: 'lessons', id: lessonId, depth: 0, overrideAccess: true }).catch(() => null)) as { course?: unknown; portal?: unknown } | null
+  if (!lesson) return { published: false }
+  await payload.update({
+    collection: 'lessons',
+    id: lessonId,
+    overrideAccess: true,
+    data: {
+      publishState: 'published',
+      transcriptNote: bringInNote('processed', 'Captions are in. This talk is published.', bringInLang(previousNote)),
+    } as never,
+  })
+  const portalId = idOf(lesson.portal)
+  const courseId = idOf(lesson.course)
+  if (flags.giveHolders && portalId && courseId) await giveCourseToJoinedLearners(payload, portalId, courseId)
+  return { published: true }
 }
 
 export async function listDraftTalks(payload: Payload, user: SessionUser) {

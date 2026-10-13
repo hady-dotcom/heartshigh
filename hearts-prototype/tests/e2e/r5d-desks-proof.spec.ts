@@ -286,11 +286,11 @@ test('r5d desk proof shots', async ({ page, browser }) => {
     text: (el.textContent || '').trim(),
     clientWidth: el.clientWidth,
   }))
-  expect(wrap.lines, 'the portal address stays on one line').toBe(1)
   expect(wrap.break).not.toBe('break-all')
-  expect(wrap.overflow).toBe('ellipsis')
-  expect(wrap.text, 'address keeps the host').toMatch(/^127\.0\.0\.1/)
-  expect(wrap.text).not.toMatch(/^127\.\…/)
+  expect(wrap.overflow).not.toBe('ellipsis')
+  expect(wrap.text, 'address keeps the host and the path').toMatch(/^127\.0\.0\.1/)
+  expect(wrap.text).toMatch(/\/p\//)
+  expect(wrap.text).not.toMatch(/…/)
   expect(wrap.clientWidth, 'address box is wide enough for the host').toBeGreaterThan(140)
   const linked = page.getByTestId('linked-courses')
   await expect(linked).toBeVisible()
@@ -310,7 +310,8 @@ test('r5d desk proof shots', async ({ page, browser }) => {
 
   await page.setViewportSize(PHONE)
   await page.goto('/p/east-london/admin/teach')
-  await expect(page.getByTestId('desk-narrow')).toBeVisible()
+  await expect(page.getByTestId('admin-teach')).toBeVisible()
+  await expect(page.getByTestId('desk-narrow')).toBeHidden()
   await shot(page, 'phone-desk-narrow')
 
   await page.addInitScript(() => {

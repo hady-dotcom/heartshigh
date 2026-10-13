@@ -88,10 +88,12 @@ export async function BringInBody({
           </div>
         </header>
         <BusyForm className="body form" action="/api/hearts" method="post">
-          <Hidden fields={{ action: 'preview-bring-in', next }} />
+          <Hidden fields={{ next }} />
           <label className="stack">YouTube links, playlist or channel
-            <textarea className="paste-example" data-testid="bring-in-urls" name="urls" rows={6} required placeholder={'https://www.youtube.com/watch?v=…\nhttps://www.youtube.com/watch?v=… | Speaker name\nhttps://www.youtube.com/playlist?list=…'} />
+            <textarea className="paste-example" data-testid="bring-in-urls" name="urls" rows={6} required placeholder={'e.g. https://www.youtube.com/watch?v=…\nhttps://www.youtube.com/watch?v=… | Speaker name\nhttps://www.youtube.com/playlist?list=…'} />
           </label>
+          <details className="more-options" data-testid="bring-in-more">
+            <summary>More options</summary>
           <label className="stack">Course <HelpTip topic="bring-in-course">{TOOL.bringInCourse}</HelpTip>
             <select name="course" data-testid="bring-in-course" defaultValue={body?.courseId ? String(body.courseId) : 'new'}>
               <option value="new">Create a new course</option>
@@ -111,14 +113,19 @@ export async function BringInBody({
             <label className="stack">Jibril section <HelpTip topic="bring-in-jibril">{TOOL.bringInJibril}</HelpTip>
               <select name="jibril" data-testid="bring-in-jibril" defaultValue="">
                 <option value="">None</option>
-                {DOORS.map((door) => <option key={door.number} value={doorCode(door.number)}>{doorCode(door.number)} · {doorLabel(door)}</option>)}
+                {DOORS.map((door) => <option key={door.number} value={doorCode(door.number)}>{doorLabel(door)}</option>)}
               </select>
             </label>
             <label className="stack">Ghunya heading <HelpTip topic="bring-in-ghunya">{TOOL.bringInGhunya}</HelpTip>
               <input name="ghunya" data-testid="bring-in-ghunya" placeholder="Optional" />
             </label>
           </div>
-          <div className="actions"><button className="btn ink" type="submit" data-testid="bring-in-lookup">Look up</button> <HelpTip topic="bring-in-lookup">{TOOL.bringInLookup}</HelpTip></div>
+          </details>
+          <div className="actions">
+            <button className="btn teal" type="submit" name="action" value="bring-in-ready" data-testid="bring-in-publish-ready">Bring in and publish when captions are ready</button>
+            <button className="btn ghost" type="submit" name="action" value="preview-bring-in" data-testid="bring-in-lookup">Look up</button>
+            <HelpTip topic="bring-in-lookup">{TOOL.bringInLookup}</HelpTip>
+          </div>
         </BusyForm>
       </section>
 
@@ -148,7 +155,11 @@ export async function BringInBody({
                 </tbody>
               </table>
             </div>
-            <div className="actions" style={{ marginTop: 12 }}><button className="btn teal" type="submit" data-testid="bring-in-commit">Bring in ticked films</button></div>
+            <label className="check" style={{ marginTop: 12 }}><input type="checkbox" name="giveHolders" value="yes" defaultChecked data-testid="bring-in-commit-give" /> Also give it to learners who already hold this pack</label>
+            <div className="actions" style={{ marginTop: 12 }}>
+              <button className="btn teal" type="submit" name="autoPublish" value="yes" data-testid="bring-in-publish-ready">Bring in and publish when captions are ready</button>
+              <button className="btn ghost" type="submit" data-testid="bring-in-commit">Bring in ticked films</button>
+            </div>
           </BusyForm>
         </section>
       ) : null}
@@ -162,14 +173,14 @@ export async function BringInBody({
             </div>
           </header>
           <div className="body">
-            <BringInLive ids={lessonIds} />
+            <BringInLive ids={lessonIds} next={`${next}?lessons=${lessonIds.join(',')}`} />
             <BusyForm action="/api/hearts" method="post" style={{ marginTop: 16 }}>
               <Hidden fields={{ action: 'publish-talks', next: `${next}?lessons=${lessonIds.join(',')}` }} />
               {brought.map((lesson) => (
                 <input key={lesson.id} type="hidden" name="lesson" value={lesson.id} />
               ))}
               <label className="check">
-                <input type="checkbox" name="giveHolders" value="yes" data-testid="bring-in-give" /> Also give it to learners who already hold this pack
+                <input type="checkbox" name="giveHolders" value="yes" defaultChecked data-testid="bring-in-give" /> Also give it to learners who already hold this pack
                 <HelpTip topic="bring-in-give">{TOOL.bringInGiveHolders}</HelpTip>
               </label>
               <div className="actions"><button className="btn ink" type="submit" data-testid="bring-in-publish">Publish these talks</button></div>
@@ -195,7 +206,7 @@ export async function BringInBody({
               <Hidden fields={{ action: 'publish-talks', next }} />
               {otherDrafts.map((talk) => <input key={talk.id} type="hidden" name="lesson" value={talk.id} />)}
               <label className="check">
-                <input type="checkbox" name="giveHolders" value="yes" data-testid="bring-in-drafts-give" /> Also give them to learners who already hold this pack
+                <input type="checkbox" name="giveHolders" value="yes" defaultChecked data-testid="bring-in-drafts-give" /> Also give them to learners who already hold this pack
                 <HelpTip topic="bring-in-drafts-give">{TOOL.bringInGiveHolders}</HelpTip>
               </label>
               <div className="actions"><button className="btn ink" type="submit" data-testid="bring-in-publish-all">Publish all these drafts</button></div>
@@ -207,7 +218,7 @@ export async function BringInBody({
                   <BusyForm action="/api/hearts" method="post">
                     <Hidden fields={{ action: 'publish-talks', lesson: talk.id, next }} />
                     <label className="check">
-                      <input type="checkbox" name="giveHolders" value="yes" /> Also give it to learners who already hold this pack
+                      <input type="checkbox" name="giveHolders" value="yes" defaultChecked data-testid="bring-in-row-give" /> Also give it to learners who already hold this pack
                     </label>
                     <div className="actions"><button className="btn ghost small" type="submit" data-testid="bring-in-publish-one">Publish this talk</button></div>
                   </BusyForm>
@@ -219,7 +230,8 @@ export async function BringInBody({
       ) : null}
 
       {user.role === 'master' ? (
-        <>
+        <details data-testid="bring-in-advanced" style={{ marginTop: 18 }}>
+          <summary className="btn ghost">Advanced</summary>
           <section className="panel" style={{ marginTop: 18 }} data-testid="channel-map">
             <header><div><h2>Channel speakers <HelpTip topic="channel-map">{TOOL.bringInChannel}</HelpTip></h2><p>Used when the line and the course do not name a speaker.</p></div></header>
             <BusyForm className="body form" action="/api/hearts" method="post">
@@ -265,7 +277,7 @@ export async function BringInBody({
               <p className="hint">Run instructions are in <code>scripts/bring-in-helper/README.md</code>.</p>
             </div>
           </section>
-        </>
+        </details>
       ) : null}
       <p className="hint" style={{ marginTop: 18 }}><Link href={next.startsWith('/master') ? '/master/library' : next.replace('/bring-in', '/content')}>Back to the course tree</Link></p>
     </div>
@@ -275,7 +287,7 @@ export async function BringInBody({
 export async function PortalBringInScreen(ctx: Ctx) {
   const courses = await rows(ctx.payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: ctx.portal.id } }] }, { sort: 'title', limit: 500 })
   return (
-    <AdminFrame ctx={ctx} active="bring-in" title="Bring in" intro="Paste YouTube links, a playlist or a channel. Films arrive as drafts. Learners see a talk only after you publish it." testId="admin-bring-in">
+    <AdminFrame ctx={ctx} active="bring-in" title="Bring in" intro="Paste YouTube links, a playlist or a channel. Films arrive as drafts. Learners see a talk only after you publish it." testId="admin-bring-in" showOnPhone>
       <BringInBody
         payload={ctx.payload}
         user={ctx.user}
@@ -306,7 +318,7 @@ function PreviewRow({ row }: { row: BringInRow }) {
       <td>
         <select name={`jibril-${row.index}`} defaultValue={row.jibril} data-testid="bring-in-row-jibril">
           <option value="">None</option>
-          {DOORS.map((door) => <option key={door.number} value={doorCode(door.number)}>{doorCode(door.number)}</option>)}
+          {DOORS.map((door) => <option key={door.number} value={doorCode(door.number)}>{doorLabel(door)}</option>)}
         </select>
       </td>
       <td><input name={`ghunya-${row.index}`} defaultValue={row.ghunya} data-testid="bring-in-row-ghunya" /></td>

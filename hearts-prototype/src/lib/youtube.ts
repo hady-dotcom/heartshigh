@@ -162,12 +162,28 @@ export function bringInStatus(note: string | null | undefined): BringInState | '
 }
 
 export function bringInStatusLabel(status: BringInState | '') {
-  if (status === 'queued') return 'Queued'
-  if (status === 'processing') return 'Processing'
-  if (status === 'waiting') return 'Waiting for transcript'
-  if (status === 'processed') return 'Processed'
-  if (status === 'failed') return 'Failed'
+  if (status === 'queued' || status === 'processing' || status === 'waiting') return 'Getting captions… (usually under 30 min)'
+  if (status === 'processed') return 'Ready to publish'
+  if (status === 'failed') return "Couldn't get captions: upload a transcript"
   return ''
+}
+
+export const AUTO_PUBLISH_MARK = '[autopublish]'
+export const GIVE_HOLDERS_MARK = '[giveholders]'
+
+/** Saved when captions were not fetched here, so the helper can pick the talk up. */
+export const CAPTION_QUEUE_DETAIL = "Saved. We'll fetch captions in the background"
+
+export function stampBringInFlags(note: string, flags: { autoPublish?: boolean; giveHolders?: boolean }) {
+  let next = note
+  if (flags.autoPublish && !next.includes(AUTO_PUBLISH_MARK)) next = `${next} ${AUTO_PUBLISH_MARK}`
+  if (flags.giveHolders && !next.includes(GIVE_HOLDERS_MARK)) next = `${next} ${GIVE_HOLDERS_MARK}`
+  return next.replace(/\s+/g, ' ').trim().slice(0, 500)
+}
+
+export function readBringInFlags(note: string | null | undefined) {
+  const text = String(note || '')
+  return { autoPublish: text.includes(AUTO_PUBLISH_MARK), giveHolders: text.includes(GIVE_HOLDERS_MARK) }
 }
 
 /** The language stored on the bring-in note, so Try again asks for the same captions. */

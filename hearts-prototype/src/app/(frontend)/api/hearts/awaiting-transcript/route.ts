@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { bringInNote, cleanedTimedTranscript, isAwaitingTranscript } from '@/lib/youtube'
 import { helperAttachResult } from '@/lib/publish-state'
+import { settleAutoPublish } from '@/server/bring-in'
 import { hashHelperToken, helperRateOk, helperTokenAllows, helperTokenMatches } from '@/lib/helper-token'
 import { getSession } from '@/server/context'
 
@@ -96,6 +97,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, lesson: lessonId, marked: 'failed', publishState: attached.publishState, learnersCanSee: attached.learnersCanSee })
   }
   const stored = cleanedTimedTranscript(raw)
+  const previousNote = lesson.transcriptNote
   await allowed.payload.update({
     collection: 'lessons',
     id: lessonId,
@@ -107,10 +109,11 @@ export async function POST(req: Request) {
       publishState: attached.publishState,
     },
   })
+  const settled = await settleAutoPublish(allowed.payload, lessonId, previousNote)
   return NextResponse.json({
     ok: true,
     lesson: lessonId,
-    publishState: attached.publishState,
-    learnersCanSee: attached.learnersCanSee,
+    publishState: settled.published ? 'published' : attached.publishState,
+    learnersCanSee: settled.published ? true : attached.learnersCanSee,
   })
 }

@@ -24,9 +24,9 @@ function kindLabel(value: unknown) {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
-export function MasterFrame({ ctx, active, title, intro, children, testId }: { ctx: MasterCtx; active: string; title: string; intro?: ReactNode; children: ReactNode; testId?: string }) {
+export function MasterFrame({ ctx, active, title, intro, children, testId, showOnPhone }: { ctx: MasterCtx; active: string; title: string; intro?: ReactNode; children: ReactNode; testId?: string; showOnPhone?: boolean }) {
   return (
-    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
+    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId} showOnPhone={showOnPhone}>
       {children}
     </DeskFrame>
   )
@@ -58,15 +58,19 @@ export async function MasterPortals(ctx: MasterCtx) {
                   <td className="num">{codes.filter((code) => ref(code.portal) === portal.id).length}</td>
                   <td style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                     <Link className="btn ghost small" href={`/master/portals/${str(portal.slug)}`} data-testid="edit-portal">Features</Link>
-                    <Link className="btn ghost small" href={`/p/${str(portal.slug)}/admin`}>Open admin</Link>
+                    <Link className="btn ghost small" href={`/p/${str(portal.slug)}/admin`} data-testid="run-portal">Run this portal</Link>
                     {(() => {
                       const admin = people.find((person) => person.role === 'portal-admin' && inPortal(person, portal.id))
                       return admin ? <ViewAsButton targetId={admin.id} name={str(admin.name) || 'the portal admin'} landing={`/p/${str(portal.slug)}/admin`} /> : null
                     })()}
-                    <form action="/api/hearts" method="post">
-                      <Hidden fields={{ action: 'deactivate', portalSlug: str(portal.slug), closed: portal.closed ? 'no' : 'yes', next: '/master' }} />
-                      <button className={`btn ${portal.closed ? 'teal' : 'danger'} small`} data-testid="deactivate-portal" type="submit">{portal.closed ? 'Activate' : 'Deactivate'}</button>
-                    </form>
+                    <details className="danger-zone" data-testid="danger-zone">
+                      <summary>Danger zone</summary>
+                      <form action="/api/hearts" method="post">
+                        <Hidden fields={{ action: 'deactivate', portalSlug: str(portal.slug), closed: portal.closed ? 'no' : 'yes', next: '/master' }} />
+                        {portal.closed ? null : <label className="check"><input type="checkbox" name="confirm" value="yes" required data-testid="deactivate-confirm" /> I understand learners cannot sign in</label>}
+                        <button className={`btn ${portal.closed ? 'teal' : 'danger'} small`} data-testid="deactivate-portal" type="submit">{portal.closed ? 'Activate' : 'Deactivate'}</button>
+                      </form>
+                    </details>
                   </td>
                 </tr>
               ))}
@@ -75,7 +79,7 @@ export async function MasterPortals(ctx: MasterCtx) {
         </div>
       </section>
       <section className="panel" style={{ marginBottom: 18 }}>
-        <header><div><h2>Access codes</h2><p>Seeded codes are random each time the demo is reseeded; the seed prints them too</p></div></header>
+        <header><div><h2>Access codes</h2></div></header>
         <div className="table-wrap">
           <table className="data" data-testid="master-codes">
             <thead><tr><th>Portal</th><th>Code</th><th>Label</th><th>For</th><th>Works</th></tr></thead>
