@@ -167,9 +167,12 @@ function Stage({ sources }: { sources: Record<DemoPanel, string> }) {
     if (!introduced) return
     const leave = () => {
       setSpot(null)
-      document.querySelectorAll<HTMLIFrameElement>('.demo-frame-clip iframe').forEach((frame) => {
-        if (document.activeElement === frame) frame.blur()
-      })
+      // Blur after the click. Doing it during pointerdown cancels the click that sets the next focus.
+      window.setTimeout(() => {
+        document.querySelectorAll<HTMLIFrameElement>('.demo-frame-clip iframe').forEach((frame) => {
+          if (document.activeElement === frame) frame.blur()
+        })
+      }, 0)
     }
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') leave()
