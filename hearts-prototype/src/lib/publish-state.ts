@@ -17,12 +17,23 @@ export function helperAttachResult() {
   }
 }
 
-/** Learners see a talk only after it is published and the film is ready. */
-export function learnerLessonVisible(row: { publishState?: string | null; transcriptNote?: string | null } | null | undefined) {
+/** Learners see a talk only after it is published, the film is ready, and it is at least five minutes. */
+export function learnerLessonVisible(row: { publishState?: string | null; transcriptNote?: string | null; tooShort?: boolean | null } | null | undefined) {
   if (!row) return false
+  if (row.tooShort === true) return false
   if (isDraftLesson(row)) return false
   if (hiddenFromLearners(row.transcriptNote)) return false
   return true
+}
+
+export function asLessonVisibility(row: object | null | undefined) {
+  if (!row) return null
+  const doc = row as { publishState?: unknown; transcriptNote?: unknown; tooShort?: unknown }
+  return {
+    publishState: typeof doc.publishState === 'string' ? doc.publishState : null,
+    transcriptNote: typeof doc.transcriptNote === 'string' ? doc.transcriptNote : null,
+    tooShort: doc.tooShort === true,
+  }
 }
 
 export function publishNotice(input: {

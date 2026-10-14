@@ -11,7 +11,7 @@ import { isNewMoment, readableHarvest } from '@/lib/harvest'
 import { getSession, type SessionUser, visibleCourseIds } from '@/server/context'
 import { workbookFor } from '@/server/workbook'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
-import { learnerLessonVisible } from '@/lib/publish-state'
+import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { learnerWords } from '@/lib/tidy-caption'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
 import { activityDay, countedTalkCompletions, doorsLitByCuts, gardenPathNodes, growthLessonIds, watchedLessonIds } from '@/lib/watch-growth'
@@ -191,7 +191,7 @@ export async function coursePath(payload: Payload, user: SessionUser, base: stri
   if (!id) id = (await visibleCourseIds(payload, user))[0] || null
   if (!id) return null
   const course = (await rows(payload, 'courses', { id: { equals: id } }))[0]
-  const lessons = (await rows(payload, 'lessons', { course: { equals: id } }, { sort: 'order', limit: 60 })).filter((lesson) => learnerLessonVisible({ publishState: str(lesson.publishState), transcriptNote: str(lesson.transcriptNote) }))
+  const lessons = (await rows(payload, 'lessons', { course: { equals: id } }, { sort: 'order', limit: 60 })).filter((lesson) => learnerLessonVisible(asLessonVisibility(lesson)))
   if (!course || !lessons.length) return null
   const done = new Set(g.completions.filter((row) => Number(row.percent ?? 100) >= 90).map((row) => ref(row.lesson)))
   const watchedSet = g.watchedIds || new Set<number>()
@@ -228,7 +228,7 @@ async function areaViews(payload: Payload, user: SessionUser, base: string, g: G
     rows(payload, 'lessons', { course: { in: courseIds } }, { limit: 500 }),
     rows(payload, 'courses', { id: { in: courseIds } }, { limit: 80 }),
   ])
-  const lessons = lessonRows.filter((lesson) => learnerLessonVisible({ publishState: str(lesson.publishState), transcriptNote: str(lesson.transcriptNote) }))
+  const lessons = lessonRows.filter((lesson) => learnerLessonVisible(asLessonVisibility(lesson)))
   const lessonIds = lessons.map((lesson) => lesson.id)
   const cuts = lessonIds.length ? await rows(payload, 'cuts', { lesson: { in: lessonIds } }, { limit: 2000 }) : []
   const tags = await rows(payload, 'tags', { state: { equals: 'confirmed' } }, { limit: 2000 })

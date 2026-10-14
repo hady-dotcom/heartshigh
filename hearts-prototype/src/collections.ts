@@ -386,6 +386,7 @@ export const Courses: CollectionConfig = {
     { name: 'isPublic', type: 'checkbox', defaultValue: false },
     { name: 'importToken', type: 'text', index: true },
     { name: 'hidden', type: 'checkbox', defaultValue: false },
+    { name: 'hiddenNote', type: 'text', admin: { description: 'Why this course is hidden. Set when every talk in it is under five minutes.' } },
     {
       name: 'visibility',
       type: 'select',
@@ -465,6 +466,18 @@ export const Lessons: CollectionConfig = {
     { name: 'muxAssetId', type: 'text', admin: { description: 'Mux-ready. Unused until a Mux asset is attached.' } },
     { name: 'muxPlaybackId', type: 'text' },
     { name: 'durationSeconds', type: 'number' },
+    {
+      name: 'tooShort',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: { description: 'Under five minutes. Hidden from learners, the feed, courses, lanes, the garden and Review. Kept so it can be restored.' },
+    },
+    {
+      name: 'shortWaived',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: { description: 'A person restored this talk. The five-minute marker will not hide it again.' },
+    },
     { name: 'transcript', type: 'textarea', maxLength: 500000 },
     {
       name: 'transcriptSource',
@@ -571,6 +584,7 @@ export const Cuts: CollectionConfig = {
         { label: 'Rejected', value: 'rejected' },
       ],
     },
+    { name: 'tooShort', type: 'checkbox', defaultValue: false, admin: { description: 'Cut from a talk under five minutes. Hidden with that talk.' } },
     { name: 'placeholder', type: 'checkbox', defaultValue: false, admin: { description: 'A 0:00 to 0:20 stand-in until the cutting pass sets real in and out points.' } },
     { name: 'presentation', type: 'select', defaultValue: 'video', options: [{ label: 'Video', value: 'video' }, { label: 'Slide', value: 'slide' }] },
     { name: 'playable', type: 'checkbox', defaultValue: true },
@@ -638,6 +652,7 @@ export const LadderItems: CollectionConfig = {
         { label: 'Rejected', value: 'rejected' },
       ],
     },
+    { name: 'tooShort', type: 'checkbox', defaultValue: false, admin: { description: 'Cut from a talk under five minutes. Hidden with that talk.' } },
   ],
   hooks: {
     beforeChange: [plainFields('quote')],

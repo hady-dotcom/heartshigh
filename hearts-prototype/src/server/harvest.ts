@@ -4,7 +4,7 @@ import { doorNumberOfClause } from '@/lib/doors'
 import { commentaryFor, firstCitation, harvestLine, kindOfLine, lineAt, type ScholarCitation } from '@/lib/harvest'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { wordSlice } from '@/lib/sentences'
-import { learnerLessonVisible } from '@/lib/publish-state'
+import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { visibleCourseIds, type SessionUser } from './context'
 import { loadDoors } from './doors'
 
@@ -30,12 +30,9 @@ const str = (value: unknown) => (typeof value === 'string' ? value : value == nu
 const words = (text: string | undefined) => (text ? text.split(/\s+/).filter(Boolean).length : 0)
 
 /** Sample lines are for learners. Drafts, failed films, and talks still waiting stay out. */
-export function harvestSampleLesson(lesson: { transcript?: unknown; publishState?: unknown; transcriptNote?: unknown }) {
+export function harvestSampleLesson(lesson: { transcript?: unknown; publishState?: unknown; transcriptNote?: unknown; tooShort?: unknown }) {
   if (str(lesson.transcript).length <= 80) return false
-  return learnerLessonVisible({
-    publishState: typeof lesson.publishState === 'string' ? lesson.publishState : null,
-    transcriptNote: typeof lesson.transcriptNote === 'string' ? lesson.transcriptNote : null,
-  })
+  return learnerLessonVisible(asLessonVisibility(lesson))
 }
 
 async function docs(payload: Payload, collection: string, where?: Record<string, unknown>, limit = 200) {

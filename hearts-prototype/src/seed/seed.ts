@@ -545,6 +545,12 @@ async function main() {
     await ensureStarterExperiments(payload)
   }
 
+  const { markShortTalks } = await import('../server/short-talks')
+  const shorts = await markShortTalks(payload)
+  if (shorts.marked || shorts.coursesHidden) {
+    console.log(`Marked ${shorts.marked} talk${shorts.marked === 1 ? '' : 's'} under 5 minutes. Hid ${shorts.coursesHidden} course${shorts.coursesHidden === 1 ? '' : 's'} that had only those talks.`)
+  }
+
   const problems = await timingCheck(payload)
   if (problems.length) {
     console.error(`Timing check failed:\n${problems.join('\n')}`)

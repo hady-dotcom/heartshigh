@@ -29,6 +29,9 @@ const PLAYABLE: Where = {
   ],
 }
 
+/** Talks under five minutes stay in the library, but they are not counted as films learners can open. */
+const COUNTED: Where = { tooShort: { not_equals: true } }
+
 type FieldList = { name?: string; type?: string; relationTo?: string | string[]; fields?: FieldList[]; tabs?: { fields?: FieldList[] }[] }
 
 function relations(payload: Payload, slug: string): RelationField[] | null {
@@ -67,24 +70,24 @@ export async function libraryTotals(payload: Payload): Promise<LibraryTotals> {
     masterCourseIds(payload),
   ])
   const [films, playable, clips] = await Promise.all([
-    countChunked(payload, 'lessons', courseIds),
-    countChunked(payload, 'lessons', courseIds, PLAYABLE),
-    countChunked(payload, 'cuts', courseIds),
+    countChunked(payload, 'lessons', courseIds, COUNTED),
+    countChunked(payload, 'lessons', courseIds, { and: [PLAYABLE, COUNTED] }),
+    countChunked(payload, 'cuts', courseIds, COUNTED),
   ])
   return { courses, films, playable, clips }
 }
 
 async function statFor(payload: Payload, courseId: number): Promise<CourseStat> {
   const [films, approved, thumb] = await Promise.all([
-    countDocs(payload, 'lessons', { course: { equals: courseId } }),
-    countDocs(payload, 'cuts', { and: [{ course: { equals: courseId } }, { status: { equals: 'approved' } }] }),
+    countDocs(payload, 'lessons', { and: [{ course: { equals: courseId } }, COUNTED] }),
+    countDocs(payload, 'cuts', { and: [{ course: { equals: courseId } }, { status: { equals: 'approved' } }, COUNTED] }),
     payload.find({
       collection: 'lessons',
       overrideAccess: true,
       depth: 0,
       limit: 1,
       sort: 'order',
-      where: { and: [{ course: { equals: courseId } }, { youtubeId: { not_equals: '' } }] },
+      where: { and: [{ course: { equals: courseId } }, { youtubeId: { not_equals: '' } }, COUNTED] },
     }),
   ])
   return {

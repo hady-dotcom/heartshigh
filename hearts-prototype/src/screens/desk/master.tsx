@@ -12,14 +12,16 @@ import { ViewAsButton } from '@/components/desk/view-as-button'
 import { parseOption } from '@/lib/placing'
 import { portalDisplayName, showPortalName } from '@/lib/portal-name'
 import type { SessionUser } from '@/server/context'
-import { counted, librarySummary, listLink, youtubeThumb, youtubeWatch } from '@/lib/library-catalogue'
+import { counted, librarySummary, youtubeThumb, youtubeWatch } from '@/lib/library-catalogue'
 import { Pager } from '@/components/desk/pager'
 import { libraryPage, libraryTotals } from '@/server/library-catalogue'
 import { one, ref, rows, str } from '../common'
+import { listShortTalks } from '@/server/short-talks'
 import { CourseEditorBody } from './content'
 import { DeskFrame, masterNav } from './shell'
+import { TooShortFilter, TooShortTable } from './short-talks'
 
-export type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string; part?: string; page?: string; films?: string } }
+export type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string; part?: string; page?: string; films?: string; show?: string } }
 
 function kindLabel(value: unknown) {
   const text = str(value).replace(/[_-]+/g, ' ').trim()
@@ -147,15 +149,27 @@ export async function MasterPortals(ctx: MasterCtx) {
   )
 }
 
+function libraryHref(page: number, showShort: boolean) {
+  const params = new URLSearchParams()
+  if (showShort) params.set('show', 'too-short')
+  if (page > 1) params.set('page', String(page))
+  const text = params.toString()
+  return text ? `/master/library?${text}` : '/master/library'
+}
+
 export async function MasterLibrary(ctx: MasterCtx) {
   const { payload } = ctx
-  const [totals, listed, packs] = await Promise.all([
+  const showingShort = ctx.query.show === 'too-short'
+  const [totals, listed, packs, shortTalks] = await Promise.all([
     libraryTotals(payload),
     libraryPage(payload, ctx.query.page),
     rows(payload, 'packs', { owner: { equals: 'master' } }, { sort: 'title' }),
+    listShortTalks(payload),
   ])
   return (
     <MasterFrame ctx={ctx} active="library" title="Library" intro="The shared courses every portal can link. Portals see changes made here straight away." testId="master-library">
+      <TooShortFilter base="/master/library" count={shortTalks.length} active={showingShort} />
+      {showingShort ? <TooShortTable talks={shortTalks} next="/master/library?show=too-short" /> : null}
       <p className="library-totals" data-testid="library-totals" data-courses={totals.courses} data-films={totals.films} data-playable={totals.playable} data-clips={totals.clips}>{librarySummary(totals)}</p>
       <div className="library-layout">
         <section className="panel">
@@ -165,7 +179,7 @@ export async function MasterLibrary(ctx: MasterCtx) {
               const thumb = youtubeThumb(stat.youtubeId)
               const watch = youtubeWatch(stat.youtubeId)
               return (
-                <article key={course.id} className={`library-course${thumb ? '' : ' no-thumb'}`} data-testid="master-course" data-films={stat.films} data-approved={stat.approved}>
+                <article key={course.id} className={`library-course${thumb ? '' : ' no-thumb'}`} data-testid="master-course" data-films={stat.films} data-approved={stat.approved} data-hidden={course.hidden ? 'yes' : 'no'}>
                   {thumb && watch ? (
                     <a className="library-thumb" href={watch} target="_blank" rel="noopener noreferrer" data-testid="course-watch">
                       <img src={thumb} alt="" width={320} height={180} data-testid="course-thumb" />
@@ -175,6 +189,7 @@ export async function MasterLibrary(ctx: MasterCtx) {
                   <div className="library-course-copy">
                     <Link href={`/master/library/${course.id}`} data-testid="course-open">{str(course.title)}</Link>
                     {str(course.speaker) ? <p>{str(course.speaker)}</p> : null}
+                    {course.hidden && course.hiddenNote ? <p className="hint" data-testid="course-hidden-note">{str(course.hiddenNote)}</p> : null}
                     <p className="library-counts">
                       <span data-testid="course-films">{counted(stat.films, 'film', 'films')}</span>
                       <span data-testid="course-approved">{counted(stat.approved, 'approved clip', 'approved clips')}</span>
@@ -185,7 +200,7 @@ export async function MasterLibrary(ctx: MasterCtx) {
               )
             })}
           </div>
-          <Pager page={listed.page} pages={listed.pages} hrefFor={(page) => listLink('/master/library', page)} />
+          <Pager page={listed.page} pages={listed.pages} hrefFor={(page) => libraryHref(page, showingShort)} />
         </section>
         <section className="panel" id="new-library-course">
           <header><div><h2>New library course</h2></div></header>

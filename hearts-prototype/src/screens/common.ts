@@ -49,6 +49,8 @@ export type Query = {
   page?: string
   /** Course film-card page. */
   films?: string
+  /** Library and Review: `too-short` lists talks hidden for being under five minutes. */
+  show?: string
 }
 
 export type Ctx = {

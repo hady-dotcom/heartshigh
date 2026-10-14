@@ -56,6 +56,7 @@ import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourse
 import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCookie, wrote } from './viewas'
 import { isTimeZone } from '@/lib/zone-time'
 import { parseLengthInput } from '@/lib/length'
+import { refusalForTalk, sourceTalkSeconds } from '@/lib/talk-length'
 import { screenAnswerSafe } from '@/lib/answer-moderation'
 import { FEATURE_UNAVAILABLE, defaultFeatures, featuresFromForm } from '@/lib/features'
 import { adoptLibraryCourses, loadPortalById, refuseFeature } from './features'
@@ -818,6 +819,10 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const title = text(form, 'title')
     const next = text(form, 'next') || '/master'
     if (!title) return redirectTo(req, next, 'Give the course a name.')
+    const length = parseLengthInput(text(form, 'duration'))
+    if (!length.ok) return redirectTo(req, next, length.message)
+    const shortTalk = refusalForTalk(length.seconds)
+    if (shortTalk) return redirectTo(req, next, shortTalk)
     const origin = user.role !== 'master' || text(form, 'origin') === 'local' ? 'local' : 'master'
     let portal: number | null = null
     if (origin === 'local') {
@@ -844,8 +849,6 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       data: { title: text(form, 'unit') || 'Unit 1', course: course.id, order: 1 },
     })
     const lessonTitle = text(form, 'lesson') || title
-    const length = parseLengthInput(text(form, 'duration'))
-    if (!length.ok) return redirectTo(req, next, length.message)
     await payload.create({
       collection: 'lessons',
       overrideAccess: true,
@@ -992,6 +995,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       let skipped = 0
       let drafts = 0
       let keptPublished = 0
+      let refused = 0
       const openPublish = (open as { publishState?: string | null }).publishState
       const fillOpen = retry || (replaceFilm && openHasFilm) || !openHasFilm
       for (let index = 0; index < lines.length; index++) {
@@ -1126,6 +1130,27 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         }
         const meta = result.meta
         const duration = result.durationSeconds && result.durationSeconds > 0 ? Math.round(result.durationSeconds) : 0
+        const talkSeconds = sourceTalkSeconds({ durationSeconds: duration || null, transcript: result.ok ? result.transcript : null })
+        const refusal = refusalForTalk(talkSeconds)
+        if (refusal) {
+          if (!useOpen) await payload.delete({ collection: 'lessons', id: targetId, overrideAccess: true }).catch(() => undefined)
+          else {
+            await payload.update({
+              collection: 'lessons',
+              id: targetId,
+              overrideAccess: true,
+              data: {
+                transcriptNote: open.transcriptNote || null,
+                ...(makingDraft ? { publishState: wasDraft ? 'draft' : 'published' } : {}),
+              },
+            })
+          }
+          if (makingDraft) drafts = Math.max(0, drafts - 1)
+          if (keepPublished) keptPublished = Math.max(0, keptPublished - 1)
+          outcomes.push(refusal)
+          refused++
+          continue
+        }
         const filmOnly = !wantTranscript
         const unavailable = isUnavailableFilm({ title: meta?.title, error: result.ok ? '' : result.error }) || (!result.ok && result.captionOutcome === 'unavailable')
         const outcome = result.ok ? 'captions' : result.captionOutcome
@@ -1197,8 +1222,10 @@ async function handleForm(req: Request, form: FormData, session: Session) {
           outcomes.push(result.error)
         }
       }
+      const shortMessages = [...new Set(outcomes.filter((line) => line.includes('Talks need to be at least 5 minutes.')))]
+      if (!saved && !waiting && !skipped && !failed && shortMessages.length) return redirectTo(req, next, shortMessages.join(' '))
       if (!saved && !waiting && failed && !skipped) return redirectTo(req, next, outcomes[0] || 'Those films could not be brought in.')
-      return redirectTo(req, next, undefined, bringInFlash({ saved, waiting, failed, skipped, clipsSetAside, drafts, retry, keptPublished }))
+      return redirectTo(req, next, undefined, [bringInFlash({ saved, waiting, failed, skipped, clipsSetAside, drafts, retry, keptPublished }), shortMessages.join(' ')].filter(Boolean).join(' '))
     })
   }
 
@@ -1251,6 +1278,12 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     }
     const transcript = await file.text()
     if (!transcript.trim()) return redirectTo(req, next, 'That file was empty.')
+    const uploadedLength = sourceTalkSeconds({
+      durationSeconds: Number((owned.lesson as { durationSeconds?: number }).durationSeconds) || null,
+      transcript,
+    })
+    const uploadedRefusal = refusalForTalk(uploadedLength)
+    if (uploadedRefusal) return redirectTo(req, next, uploadedRefusal)
     const attached = noteAfterTranscriptUpload((owned.lesson as { transcriptNote?: string }).transcriptNote, file.name, (owned.lesson as { publishState?: string | null }).publishState)
     await payload.update({
       collection: 'lessons',
@@ -1303,6 +1336,12 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const raw = file instanceof File && file.size ? await file.text() : pasted
     if (!raw.trim()) return redirectTo(req, next, 'Paste a timed transcript, or choose a file.')
     const stored = cleanedTimedTranscript(raw)
+    const attachedLength = sourceTalkSeconds({
+      durationSeconds: Number((lesson as { durationSeconds?: number }).durationSeconds) || null,
+      transcript: stored.cleaned || raw,
+    })
+    const attachedRefusal = refusalForTalk(attachedLength)
+    if (attachedRefusal) return redirectTo(req, next, attachedRefusal)
     await payload.update({
       collection: 'lessons',
       id: lessonId,
@@ -2515,6 +2554,19 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const on = text(form, 'value') === 'on'
     await payload.updateGlobal({ slug: 'master-flags', overrideAccess: true, data: { showUnchecked: on } as never })
     return redirectTo(req, back, undefined, on ? 'Unchecked talks and their draft questions are shown to learners.' : 'Only approved talks and published questions are shown to learners.')
+  }
+
+  if (action === 'mark-short-talks' || action === 'restore-short-talk') {
+    if (user.role !== 'master') return redirectTo(req, '/', 'Only the master desk can change which talks are too short.')
+    const next = text(form, 'next') || '/master/library?show=too-short'
+    const { markShortTalks, restoreShortTalk } = await import('./short-talks')
+    if (action === 'restore-short-talk') {
+      const result = await restoreShortTalk(payload, Number(text(form, 'lesson')))
+      if (result.error) return redirectTo(req, next, result.error)
+      return redirectTo(req, next, undefined, result.notice)
+    }
+    const result = await markShortTalks(payload)
+    return redirectTo(req, next, undefined, `Marked ${result.marked} talk${result.marked === 1 ? '' : 's'} as too short. ${result.already} were already marked.`)
   }
 
   if (action === 'hors-max') {

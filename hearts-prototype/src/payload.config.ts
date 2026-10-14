@@ -18,7 +18,7 @@ import { missionCollections } from './collections-missions'
 import { safetyCollections } from './collections-safety'
 import { sheetCollections } from './collections-sheet'
 import { MasterFlags } from './collections-opening'
-import { databaseKind, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
+import { databaseKind, isBuildPhase, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
 import { migrations } from './migrations'
 import { viewAsGlobalGuard, viewAsGuard } from './server/viewas'
 
@@ -59,6 +59,14 @@ export default buildConfig({
   csrf: origins.length ? origins : undefined,
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
+  },
+  onInit: async (payload) => {
+    if (isBuildPhase()) return
+    const { markShortTalks } = await import('./server/short-talks')
+    const result = await markShortTalks(payload)
+    if (result.marked || result.coursesHidden) {
+      payload.logger.info(`Marked ${result.marked} talks under 5 minutes. Hid ${result.coursesHidden} courses that had only those talks.`)
+    }
   },
   db:
     kind === 'postgres'

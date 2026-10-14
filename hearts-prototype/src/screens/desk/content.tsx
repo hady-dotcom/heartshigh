@@ -30,6 +30,8 @@ import { PortalAiChoice } from '@/components/desk/paid-ai'
 import { publicAi } from '@/lib/portal-ai'
 import { TOOL } from '@/lib/desk-help'
 import { BusyForm } from '@/components/desk/busy-form'
+import { listShortTalks } from '@/server/short-talks'
+import { TooShortFilter, TooShortTable } from './short-talks'
 import { bringInLang, bringInStatus, CAPTION_LANGUAGES } from '@/lib/youtube'
 import { AdminFrame } from './overview'
 import { CourseOnCodes } from './course-offer'
@@ -79,12 +81,15 @@ export async function ContentScreen(ctx: Ctx) {
   const courseRow = (courseId: number) => {
     const course = byId.get(courseId)
     if (!course) return null
-    const own = lessons.filter((lesson) => ref(lesson.course) === course.id)
+    const own = lessons.filter((lesson) => ref(lesson.course) === course.id && lesson.tooShort !== true)
     const ownIds = new Set(own.map((lesson) => lesson.id))
     const isLocal = localIds.has(course.id)
     return (
-      <tr key={course.id} data-testid="course-row" data-origin={isLocal ? 'local' : 'imported'}>
-        <td><Link href={`${base}/admin/content/${course.id}`} style={{ fontWeight: 700 }}>{str(course.title)}</Link></td>
+      <tr key={course.id} data-testid="course-row" data-origin={isLocal ? 'local' : 'imported'} data-hidden={course.hidden ? 'yes' : 'no'}>
+        <td>
+          <Link href={`${base}/admin/content/${course.id}`} style={{ fontWeight: 700 }}>{str(course.title)}</Link>
+          {course.hidden && course.hiddenNote ? <div className="hint" data-testid="course-hidden-note">{str(course.hiddenNote)}</div> : null}
+        </td>
         <td>{str(course.speaker) || <span className="hint">Not set</span>}</td>
         <td>{isLocal ? <span className="badge teal">Made here</span> : <span className="badge gold">Library, read only</span>}</td>
         <td className="num">{own.length}</td>
@@ -614,11 +619,13 @@ const ADOPT_HELP = 'Your portal gets these courses and any updates to them from 
 export async function LibraryScreen(ctx: Ctx) {
   guardAdmin(ctx)
   const { payload, portal, base } = ctx
-  const [packs, courseDocs, adoptions, adoptedIds] = await Promise.all([
+  const showingShort = ctx.query.show === 'too-short'
+  const [packs, courseDocs, adoptions, adoptedIds, shortTalks] = await Promise.all([
     rows(payload, 'packs', { owner: { equals: 'master' } }, { sort: 'title', limit: 100 }),
     listDocs(payload, 'courses', { origin: { equals: 'master' } }),
     rows(payload, 'adoptions', { portal: { equals: portal.id } }),
     adoptedCourseIds(payload, portal.id),
+    listShortTalks(payload),
   ])
   const courses = [...courseDocs].sort((a, b) => str(a.title).localeCompare(str(b.title)))
   const catalogue = courses.map((course) => ({ id: course.id, title: str(course.title), summary: str(course.summary) }))
@@ -635,6 +642,8 @@ export async function LibraryScreen(ctx: Ctx) {
   const doors = openPack ? (await loadDoors(payload)).map((door) => ({ number: door.number, title: door.title })) : []
   return (
     <AdminFrame ctx={ctx} active="library" title="Library" intro="Courses from the main HEARTS library. Add a pack and it stays up to date." testId="admin-library">
+      <TooShortFilter base={here} count={shortTalks.length} active={showingShort} />
+      {showingShort ? <TooShortTable talks={shortTalks} next={`${here}?show=too-short`} canRestore={false} /> : null}
       <section className="panel" style={{ marginBottom: 18 }}>
         <header><h2>Library packs</h2></header>
         <div className="body lib-packs">
@@ -685,7 +694,11 @@ export async function LibraryScreen(ctx: Ctx) {
                     const viaPack = !direct && adoptedIds.includes(course.id)
                     return (
                       <tr key={course.id} data-testid="library-course">
-                        <td><b>{str(course.title)}</b>{course.summary ? <div className="hint">{str(course.summary).slice(0, 140)}</div> : null}</td>
+                        <td>
+                          <b>{str(course.title)}</b>
+                          {course.summary ? <div className="hint">{str(course.summary).slice(0, 140)}</div> : null}
+                          {course.hidden && course.hiddenNote ? <div className="hint" data-testid="course-hidden-note">{str(course.hiddenNote)}</div> : null}
+                        </td>
                         <td>{str(course.speaker)}</td>
                         <td>{direct ? <span className="badge teal">In this portal</span> : viaPack ? <span className="badge purple">Comes with a pack</span> : <span className="badge grey">Not added yet</span>}</td>
                         <td style={{ whiteSpace: 'nowrap' }}>
