@@ -1,10 +1,14 @@
-import { requireMaster } from '@/server/context'
-import { DemoStage } from './stage'
+import type { Metadata } from 'next'
+import { DemoDoor } from './door'
 import './demo-stage.css'
 
 export const dynamic = 'force-dynamic'
 
-export default async function DemoStagePage() {
-  await requireMaster()
-  return <DemoStage />
+export const metadata: Metadata = {
+  title: 'HEARTS Demo stage',
+  description: 'A live four-screen walk-through. Practice data only.',
+}
+
+export default function DemoStagePage() {
+  return <DemoDoor />
 }
