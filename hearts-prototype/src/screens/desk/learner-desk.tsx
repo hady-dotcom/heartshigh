@@ -16,9 +16,12 @@ import { HideTestFilter } from '@/components/desk/hide-test'
 import { hideTestFromQuery, visiblePeople } from '@/lib/test-accounts'
 import type { SessionUser } from '@/server/context'
 import { dayNumber } from '@/server/learner'
+import { JournalList } from '@/components/desk/journal-list'
+import { JOURNAL_LABEL } from '@/lib/journal-copy'
+import { journalAnswered, journalWhen } from '@/lib/journal-list'
 import { diaryWords } from '@/server/learner-desk'
 import { idOf } from '@/lib/ids'
-import { type Query, longDate, ref, rows, shortDate, str } from '../common'
+import { type Query, longDate, ref, rows, str } from '../common'
 import { DeskFrame, masterNav } from './shell'
 import { AdminFrame } from './overview'
 import type { Ctx } from '../common'
@@ -105,7 +108,7 @@ export async function MasterLearners(ctx: MasterCtx) {
   })
   const here = '/master/learners'
   return (
-    <Frame ctx={ctx} active="learners" title="Learners" intro="Everyone learning across the portals. Open a row to reset a password, pause them, move them, or delete the account." testId="master-learners" primary={{ label: 'Open diaries', href: '/master/diaries' }}>
+    <Frame ctx={ctx} active="learners" title="Learners" intro="Everyone learning across the portals. Open a row to reset a password, pause them, move them, or delete the account." testId="master-learners" primary={{ label: `Open ${JOURNAL_LABEL.many.toLowerCase()}`, href: '/master/diaries' }}>
       <section className="panel" id="learner-list">
         <header className="light">
           <h2 data-testid="learner-count">Learners ({visible.length})</h2>
@@ -226,7 +229,7 @@ function DetailFacts({ portal, joined, seen, progress, plans, diaries }: { porta
       <div className="count-tile"><span>Last seen</span><b data-testid="learner-last-seen">{seen}</b></div>
       <div className="count-tile"><span>Progress</span><b data-testid="learner-progress">{progress}</b></div>
       <div className="count-tile"><span>Study plans</span><b data-testid="learner-plans">{plans}</b></div>
-      <div className="count-tile"><span>Diary entries</span><b data-testid="learner-diaries">{diaries}</b></div>
+      <div className="count-tile"><span>{JOURNAL_LABEL.one} entries</span><b data-testid="learner-diaries">{diaries}</b></div>
     </div>
   )
 }
@@ -270,7 +273,7 @@ function AccountActions({
       <form className="panel" action="/api/hearts" method="post">
         <header><h2>{learner.paused ? 'Let them sign in' : 'Pause sign-in'}</h2></header>
         <div className="body form">
-          <p>{learner.paused ? 'They can sign in again. Their diary and plans stay as they are.' : 'They stay in the portal, and they cannot sign in until you let them.'}</p>
+          <p>{learner.paused ? `They can sign in again. Their ${JOURNAL_LABEL.one.toLowerCase()} and plans stay as they are.` : 'They stay in the portal, and they cannot sign in until you let them.'}</p>
           <Hidden fields={{ action: learner.paused ? 'learner-unpause' : 'learner-pause', learner: learner.id, next }} />
           <button className="btn ink" type="submit" data-testid={learner.paused ? 'unpause-learner' : 'pause-learner'}>{learner.paused ? 'Let them sign in' : 'Pause'}</button>
         </div>
@@ -278,7 +281,7 @@ function AccountActions({
       <form className="panel" action="/api/hearts" method="post" data-testid="remove-learner">
         <header><h2>Take out of this portal</h2></header>
         <div className="body form">
-          <p>They leave this portal. The account, diary and plans stay until you delete them.</p>
+          <p>They leave this portal. The account, {JOURNAL_LABEL.one.toLowerCase()} and plans stay until you delete them.</p>
           <Hidden fields={{ action: 'learner-remove', learner: learner.id, next }} />
           <label className="check"><input type="checkbox" name="sure" required data-testid="remove-confirm" /> Yes, take them out</label>
           <button className="btn ghost" type="submit">Take out of portal</button>
@@ -286,7 +289,7 @@ function AccountActions({
       </form>
       <form className="danger-zone" action="/api/hearts" method="post" data-testid="delete-account">
         <b>Delete the account</b>
-        <p>Type {learner.name} to confirm. This deletes their diary, study plans and answers. Charts keep the numbers, but not their name.</p>
+        <p>Type {learner.name} to confirm. This deletes their {JOURNAL_LABEL.one.toLowerCase()}, study plans and answers. Charts keep the numbers, but not their name.</p>
         <Hidden fields={{ action: 'learner-delete', learner: learner.id, next }} />
         <label className="stack">Their name<input name="confirm" data-testid="delete-name" required autoComplete="off" /></label>
         <button className="btn danger" type="submit" data-testid="delete-learner">Delete the account</button>
@@ -527,50 +530,41 @@ function DiaryTable({
   hrefFor,
   emptyHref,
 }: {
-  entries: { id: number; user?: unknown; portal?: unknown; createdAt?: unknown; consent?: boolean | null; body?: unknown; answer?: unknown }[]
+  entries: { id: number; user?: unknown; portal?: unknown; createdAt?: unknown; consent?: boolean | null; body?: unknown; answer?: unknown; teacherReply?: unknown; repliedAt?: unknown; doneAt?: unknown }[]
   portals: { id: number; name?: unknown; organisationName?: unknown }[]
   hrefFor: (id: number) => string
   emptyHref: string
 }) {
+  const rows = entries.map((entry) => {
+    const answer = entry.answer && typeof entry.answer === 'object' ? (entry.answer as { keepPrivate?: boolean }) : null
+    const person = entry.user && typeof entry.user === 'object' ? (entry.user as { name?: string }) : null
+    const portal = portals.find((row) => row.id === ref(entry.portal))
+    return {
+      id: String(entry.id),
+      at: str(entry.createdAt),
+      answered: journalAnswered(entry),
+      name: person?.name || 'A learner',
+      href: hrefFor(entry.id),
+      portal: portal ? portalDisplayName(portal) : '—',
+      shared: Boolean(diaryWords(entry, answer)),
+    }
+  })
   return (
-    <div className="table-wrap">
-      <table className="data people-table">
-        <thead><tr><th>Learner</th><th>Portal</th><th>When</th><th>Words</th></tr></thead>
-        <tbody>
-          {entries.map((entry) => {
-            const href = hrefFor(entry.id)
-            const portal = portals.find((row) => row.id === ref(entry.portal))
-            const answer = entry.answer && typeof entry.answer === 'object' ? (entry.answer as { keepPrivate?: boolean }) : null
-            const words = diaryWords(entry, answer)
-            const person = entry.user && typeof entry.user === 'object' ? (entry.user as { name?: string }) : null
-            return (
-              <ClickRow key={entry.id} href={href} testId="diary-row">
-                <td data-label="Learner"><a href={href} data-testid="diary-open"><b>{person?.name || 'A learner'}</b></a></td>
-                <td data-label="Portal" data-testid="diary-portal">{portal ? portalDisplayName(portal) : '—'}</td>
-                <td data-label="When">{shortDate(str(entry.createdAt)) || dated(str(entry.createdAt))}</td>
-                <td data-label="Words">{words ? <span data-testid="diary-shared">Shared</span> : <span data-testid="diary-private">Private</span>}</td>
-              </ClickRow>
-            )
-          })}
-          {!entries.length ? (
-            <tr>
-              <td colSpan={4}>
-                <ExampleInUse desk title="A line after Fajr" action={{ href: emptyHref, label: 'Open learners' }}>
-                  <p>Maryam · East London Mosque · Shared</p>
-                </ExampleInUse>
-              </td>
-            </tr>
-          ) : null}
-        </tbody>
-      </table>
-    </div>
+    <JournalList
+      rows={rows}
+      empty={(
+        <ExampleInUse desk title="A line after Fajr" action={{ href: emptyHref, label: 'Open learners' }}>
+          <p>Maryam · East London Mosque · Shared</p>
+        </ExampleInUse>
+      )}
+    />
   )
 }
 
 export async function MasterDiaries(ctx: MasterCtx) {
   const { entries, portals } = await diaryList(ctx.payload)
   return (
-    <Frame ctx={ctx} active="diaries" title="Diaries" intro="Workbook entries across the portals. Open one to read it when the learner shared it, or to delete it." testId="master-diaries" primary={{ label: 'Open learners', href: '/master/learners' }}>
+    <Frame ctx={ctx} active="diaries" title={JOURNAL_LABEL.many} intro={`${JOURNAL_LABEL.one} entries across the portals. Open one to read it when the learner shared it, or to delete it.`} testId="master-diaries" primary={{ label: 'Open learners', href: '/master/learners' }}>
       <section className="panel" id="diary-list">
         <header className="light"><h2>Entries ({entries.length})</h2></header>
         <DiaryTable entries={entries} portals={portals} hrefFor={(id) => `/master/diaries/${id}`} emptyHref="/master/learners" />
@@ -582,7 +576,7 @@ export async function MasterDiaries(ctx: MasterCtx) {
 export async function PortalDiaries(ctx: Ctx) {
   const { entries, portals } = await diaryList(ctx.payload, ctx.portal.id)
   return (
-    <AdminFrame ctx={ctx} active="diaries" title="Diaries" intro="Workbook entries in this portal. Open one to read it when the learner shared it, or to delete it." testId="portal-diaries" primary={{ label: 'Open learners', href: `${ctx.base}/admin/teach` }}>
+    <AdminFrame ctx={ctx} active="diaries" title={JOURNAL_LABEL.many} intro={`${JOURNAL_LABEL.one} entries in this portal. Open one to read it when the learner shared it, or to delete it.`} testId="portal-diaries" primary={{ label: 'Open learners', href: `${ctx.base}/admin/teach` }}>
       <section className="panel" id="diary-list">
         <header className="light"><h2>Entries ({entries.length})</h2></header>
         <DiaryTable entries={entries} portals={portals} hrefFor={(id) => `${ctx.base}/admin/diaries/${id}`} emptyHref={`${ctx.base}/admin/teach`} />
@@ -601,11 +595,11 @@ async function DiaryDetailBody({ payload, user, entryId, back }: { payload: Payl
     body?: string
     answer?: { keepPrivate?: boolean; body?: string } | number | null
   } | null
-  if (!entry) return <section className="panel"><div className="body"><p>That diary entry could not be found.</p></div></section>
+  if (!entry) return <section className="panel"><div className="body"><p>That {JOURNAL_LABEL.one.toLowerCase()} entry could not be found.</p></div></section>
   const portalId = ref(entry.portal)
   const actor = actorScope(user)
   const samePortal = user.role === 'master' || (actor.portalId != null && actor.portalId === portalId)
-  if (!samePortal) return <section className="panel"><div className="body" data-testid="diary-refused"><p>That diary is in another portal.</p></div></section>
+  if (!samePortal) return <section className="panel"><div className="body" data-testid="diary-refused"><p>That {JOURNAL_LABEL.one.toLowerCase()} is in another portal.</p></div></section>
   const portals = await rows(payload, 'portals', undefined, { limit: 100 })
   const portal = portals.find((row) => row.id === portalId)
   const answer = entry.answer && typeof entry.answer === 'object' ? entry.answer : null
@@ -617,16 +611,16 @@ async function DiaryDetailBody({ payload, user, entryId, back }: { payload: Payl
       <section className="panel">
         <header>
           <h2>{person || 'A learner'}</h2>
-          <p data-testid="diary-portal">{portal ? portalDisplayName(portal) : 'Not in a portal'} · {longDate(entry.createdAt) || shortDate(entry.createdAt)}</p>
+          <p data-testid="diary-portal">{portal ? portalDisplayName(portal) : 'Not in a portal'} · {journalWhen(entry.createdAt) || longDate(entry.createdAt)}</p>
         </header>
         <div className="body">
-          {words ? <p data-testid="diary-body">{words}</p> : <p data-testid="diary-private">This diary is private. You can see who wrote it, which portal, and when. The words stay hidden. You can still delete it.</p>}
+          {words ? <p data-testid="diary-body">{words}</p> : <p data-testid="diary-private">This {JOURNAL_LABEL.one.toLowerCase()} is private. You can see who wrote it, which portal, and when. The words stay hidden. You can still delete it.</p>}
         </div>
       </section>
       {canDelete ? (
         <form className="danger-zone" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'diary-delete', entry: entry.id, next: back }} />
-          <p>Delete this diary entry. This cannot be undone.</p>
+          <p>Delete this {JOURNAL_LABEL.one.toLowerCase()} entry. This cannot be undone.</p>
           <button className="btn danger" type="submit" data-testid="diary-delete">Delete this entry</button>
         </form>
       ) : <p className="hint">You can look. A portal admin can delete it.</p>}
@@ -636,7 +630,7 @@ async function DiaryDetailBody({ payload, user, entryId, back }: { payload: Payl
 
 export async function MasterDiaryDetail(ctx: MasterCtx, id: number) {
   return (
-    <Frame ctx={ctx} active="diaries" title="Diary entry" intro="Read it when the learner shared it. Delete it when it should not stay." testId="master-diary" primary={{ label: 'Back to diaries', href: '/master/diaries' }}>
+    <Frame ctx={ctx} active="diaries" title={`${JOURNAL_LABEL.one} entry`} intro="Read it when the learner shared it. Delete it when it should not stay." testId="master-diary" primary={{ label: `Back to ${JOURNAL_LABEL.many.toLowerCase()}`, href: '/master/diaries' }}>
       {await DiaryDetailBody({ payload: ctx.payload, user: ctx.user, entryId: id, back: '/master/diaries' })}
     </Frame>
   )
@@ -644,7 +638,7 @@ export async function MasterDiaryDetail(ctx: MasterCtx, id: number) {
 
 export async function PortalDiaryDetail(ctx: Ctx, id: number) {
   return (
-    <AdminFrame ctx={ctx} active="diaries" title="Diary entry" intro="Read it when the learner shared it. Delete it when it should not stay." testId="portal-diary" primary={{ label: 'Back to diaries', href: `${ctx.base}/admin/diaries` }}>
+    <AdminFrame ctx={ctx} active="diaries" title={`${JOURNAL_LABEL.one} entry`} intro="Read it when the learner shared it. Delete it when it should not stay." testId="portal-diary" primary={{ label: `Back to ${JOURNAL_LABEL.many.toLowerCase()}`, href: `${ctx.base}/admin/diaries` }}>
       {await DiaryDetailBody({ payload: ctx.payload, user: ctx.user, entryId: id, back: `${ctx.base}/admin/diaries` })}
     </AdminFrame>
   )

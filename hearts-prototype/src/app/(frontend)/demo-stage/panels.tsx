@@ -20,6 +20,9 @@ import {
   type PromptKind,
   type QueueKind,
 } from '@/lib/demo-stage'
+import { JournalList } from '@/components/desk/journal-list'
+import { JOURNAL_LABEL } from '@/lib/journal-copy'
+import { journalWhen } from '@/lib/journal-list'
 import { useDemo } from './store'
 
 function Desk({
@@ -245,7 +248,14 @@ function CoveragePage({ row, onRun }: { row: CoverageRow; onRun: (action: DemoAc
             <button type="submit" className="btn small" data-testid={`demo-cover-go-${row.role}-${row.key}`} disabled={typed && !text.trim()}>{goLabel(row, state)}</button>
           </form>
         ) : null}
-        {lines.length ? (
+        {row.key === 'diaries' ? (
+          <div data-testid={`demo-live-${row.role}-${row.key}`}>
+            <JournalList
+              mode="lines"
+              rows={state.diary.map((item) => ({ id: item.id, at: item.at || '', text: item.text }))}
+            />
+          </div>
+        ) : lines.length ? (
           <div className="demo-list" data-testid={`demo-live-${row.role}-${row.key}`}>
             {lines.map((line, index) => (
               <p key={`${line}-${index}`}>{line}</p>
@@ -534,11 +544,11 @@ function Learner({ onRun, onWrite }: { onRun: (action: DemoAction) => void; onWr
           </section>
           <PhonePlace />
           <PhoneWrite
-            label="Diary"
-            placeholder="Write a diary line"
+            label={JOURNAL_LABEL.one}
+            placeholder={`Write a ${JOURNAL_LABEL.one.toLowerCase()} line`}
             testId="demo-diary-body"
             buttonId="demo-add-diary"
-            button="Save diary line"
+            button={`Save ${JOURNAL_LABEL.one.toLowerCase()} line`}
             value={diary}
             setValue={setDiary}
             onSend={(text) => onRun({ type: 'add-diary', text })}
@@ -586,7 +596,7 @@ function Learner({ onRun, onWrite }: { onRun: (action: DemoAction) => void; onWr
 
 function PhonePlace() {
   const { state } = useDemo()
-  const bits = [
+  const bits: { id: string; eyebrow: string; text: string; when?: string }[] = [
     ...state.packs.map((item) => ({ id: item.id, eyebrow: 'Pack', text: item.text })),
     ...state.events.map((item) => ({ id: item.id, eyebrow: item.kind === 'night' ? 'Night' : item.kind === 'gathering' ? 'Gathering' : 'Event', text: item.title })),
     ...state.plans.map((item) => ({ id: item.id, eyebrow: 'Study plan', text: item.text })),
@@ -595,7 +605,7 @@ function PhonePlace() {
     ...state.missions.map((item) => ({ id: item.id, eyebrow: 'Mission', text: item.text })),
     ...state.lanes.map((item) => ({ id: item.id, eyebrow: 'Lane', text: item.text })),
     ...state.scenes.map((item) => ({ id: item.id, eyebrow: 'Opening', text: item.text })),
-    ...state.diary.map((item) => ({ id: item.id, eyebrow: 'Diary', text: item.text })),
+    ...state.diary.map((item) => ({ id: item.id, eyebrow: JOURNAL_LABEL.one, text: item.text, when: item.at ? journalWhen(item.at) : '' })),
     ...state.compass.map((item) => ({ id: item.id, eyebrow: 'Feeling', text: item.text })),
   ]
   return (
@@ -611,6 +621,7 @@ function PhonePlace() {
       {bits.map((bit) => (
         <Fresh id={bit.id} key={bit.id} className="demo-phone-card">
           <p className="eyebrow">{bit.eyebrow}</p>
+          {'when' in bit && bit.when ? <p className="hint" data-testid="demo-journal-when">{bit.when}</p> : null}
           <p>{bit.text}</p>
         </Fresh>
       ))}

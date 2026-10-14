@@ -236,10 +236,10 @@ describe('every left-nav item is covered', () => {
   it('sends a learner diary, a feeling and a help ask back up, and a night down to the phone', () => {
     const diary = reduceDemo(seedDemo(), { type: 'add-diary', text: 'I wrote this on the phone.' })
     assert.equal(diary.diary[0]?.text, 'I wrote this on the phone.')
-    assert.deepEqual(alertsFor(diary, 'teacher').map((row) => row.text), ['{learner} wrote in the diary.', '3 notes are waiting for a reply.'])
-    assert.equal(alertsFor(diary, 'portal')[0]?.text, '{learner} wrote in the diary.')
-    assert.equal(alertsFor(diary, 'master')[0]?.text, '{learner} wrote in the diary.')
-    assert.equal(diary.activity[0]?.text, '{learner} wrote in the diary.')
+    assert.deepEqual(alertsFor(diary, 'teacher').map((row) => row.text), ['{learner} wrote in the journal.', '3 notes are waiting for a reply.'])
+    assert.equal(alertsFor(diary, 'portal')[0]?.text, '{learner} wrote in the journal.')
+    assert.equal(alertsFor(diary, 'master')[0]?.text, '{learner} wrote in the journal.')
+    assert.equal(diary.activity[0]?.text, '{learner} wrote in the journal.')
 
     const feeling = reduceDemo(seedDemo(), { type: 'add-compass', text: 'Hopeful' })
     assert.equal(feeling.compass[0]?.text, 'Hopeful')

@@ -1,3 +1,5 @@
+import { JOURNAL_LABEL } from './journal-copy'
+
 /**
  * One filmed demo per page. Help keys on that page share its video.
  * `npm run see-how:record` walks this list on port 3100.
@@ -1242,20 +1244,20 @@ export const SEE_HOW_PAGES: SeeHowPageSpec[] = [
   }),
   clip({
     id: 'master-diaries',
-    title: 'Diaries',
+    title: JOURNAL_LABEL.many,
     keys: ['master-diaries', 'portal-diaries'],
     path: '/master/diaries',
     role: 'master',
     viewport: desk,
     ready: '[data-testid=master-diaries]',
     steps: [
-      hold('Each row is a workbook entry. You see who wrote it, which portal, and when.'),
+      hold(`Each row is a ${JOURNAL_LABEL.one.toLowerCase()} entry. You see who wrote it, which portal, and when.`),
       click('Open one to read it when the learner shared it.', '[data-testid=diary-open]', true),
     ],
   }),
   clip({
     id: 'master-diary',
-    title: 'One diary entry',
+    title: `One ${JOURNAL_LABEL.one.toLowerCase()} entry`,
     keys: ['master-diary', 'portal-diary'],
     path: '/master/diaries/1',
     role: 'master',
