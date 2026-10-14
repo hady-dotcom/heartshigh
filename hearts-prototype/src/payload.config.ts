@@ -53,11 +53,6 @@ export default buildConfig({
     hooks: { ...collection.hooks, beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never] },
   })),
   globals: [MasterFlags].map((global) => ({ ...global, hooks: { ...global.hooks, beforeChange: [viewAsGlobalGuard as never, ...(global.hooks?.beforeChange || [])] } })),
-  onInit: async (payload) => {
-    await copyPackCoursesOntoCodes(payload).catch((error) => {
-      console.error('Could not copy pack courses onto access codes.', error)
-    })
-  },
   editor: lexicalEditor(),
   secret: payloadSecret(),
   serverURL: origins[0],
@@ -73,6 +68,9 @@ export default buildConfig({
     if (result.marked || result.coursesHidden) {
       payload.logger.info(`Marked ${result.marked} talks under 5 minutes. Hid ${result.coursesHidden} courses that had only those talks.`)
     }
+    await copyPackCoursesOntoCodes(payload).catch((error) => {
+      payload.logger.error({ err: error, msg: 'Could not copy pack courses onto access codes.' })
+    })
   },
   db:
     kind === 'postgres'
