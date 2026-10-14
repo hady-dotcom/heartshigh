@@ -241,7 +241,7 @@ html[data-theme] .note p,
 html[data-theme] .clause-card p,
 html[data-theme] .summary-card p { color: var(--ink-2); }
 html[data-theme] .harvest-card small,
-html[data-theme] .drawn-meta { color: var(--ink-2); font-size: 13px; font-weight: 600; line-height: 1.45; }
+html[data-theme] .drawn-meta { color: var(--ink-2); font-size: 15px; font-weight: 600; line-height: 1.45; }
 html[data-theme] .card h3,
 html[data-theme] .days-card h3,
 html[data-theme] .theme-pin h3 { color: var(--ink); font-family: var(--serif); font-weight: 600; }
@@ -337,7 +337,7 @@ html[data-theme] .theme-choice.on {
   color: var(--gold-ink);
   box-shadow: var(--shadow-glow);
 }
-html[data-theme] .theme-now { margin: 10px 0 0; font-size: 13px; }
+html[data-theme] .theme-now { margin: 10px 0 0; font-size: 15px; }
 
 /* Buttons */
 html[data-theme] .pill.gold,
@@ -895,7 +895,7 @@ html[data-theme] .desk input[type='password'] {
   border: 1.5px solid var(--gd-teal-line);
   border-radius: 14px;
 }
-:is(html, html[data-theme]) .garden-door .field::placeholder { color: #5e675f; opacity: 1; }
+:is(html, html[data-theme]) .garden-door .field::placeholder { color: #5c5348; opacity: 1; }
 :is(html, html[data-theme]) .garden-door .field:focus {
   border-color: var(--gd-gold-deep);
   box-shadow: 0 0 0 3px rgba(212, 168, 75, 0.35);
@@ -912,7 +912,7 @@ html[data-theme] .desk input[type='password'] {
 }
 :is(html, html[data-theme]) .garden-door .door-links { color: #14564c; }
 :is(html, html[data-theme]) .garden-door .door-links a { border-bottom-color: rgba(168, 121, 31, 0.6); }
-:is(html, html[data-theme]) .garden-door .door-hint { color: #5f6a65; }
+:is(html, html[data-theme]) .garden-door .door-hint { color: #3a332c; }
 :is(html, html[data-theme]) .garden-door .flash.notice {
   background: #e7f3ec;
   color: #14564c;
@@ -1010,6 +1010,92 @@ html[data-theme] .desk input[type='password'] {
 :is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .panel p {
   color: #f6eedc;
 }
+
+/* Evening cream (--ink) is for the dark teal only. A light card, parchment page or white
+   row rebinds these tokens so headings, hints and ghost buttons stay dark.
+   Placeholders on those surfaces are fainter than typed text and still clear of AA. */
+html[data-theme='evening'],
+html[data-theme='dawn'] {
+  --on-light: #1a1408;
+  --on-light-2: #2a241c;
+  --on-light-muted: #3e362c;
+  --on-light-heading: #102e2c;
+  --on-light-placeholder: #5c5348;
+  --text-body: 15px;
+}
+html[data-theme] :is(
+  .demo-note,
+  .desk-help-pop,
+  .row-menu-drop,
+  .view-as-ask,
+  .garden-door:not([data-testid='join']) .door-card,
+  .desk[data-testid='desk-live'] .main,
+  .desk[data-testid='master-live'] .main
+) {
+  --ink: var(--on-light);
+  --ink-2: var(--on-light-2);
+  --muted: var(--on-light-muted);
+  --desk-ink: var(--on-light);
+  --desk-heading: var(--on-light-heading);
+  --desk-muted: var(--on-light-muted);
+  --heading: var(--on-light-heading);
+  --parchment: var(--on-light);
+  --g-ink: var(--on-light);
+  --g-heading: var(--on-light-heading);
+  --g-muted: var(--on-light-muted);
+  color: var(--on-light);
+}
+html[data-theme] :is(
+  .demo-note,
+  .desk-help-pop,
+  .garden-door:not([data-testid='join']) .door-card
+) :is(input, textarea)::placeholder {
+  color: var(--on-light-placeholder);
+  opacity: 1;
+}
+/* The live page is parchment, but its fields stay the dark evening field. */
+html[data-theme] :is(.desk[data-testid='desk-live'], .desk[data-testid='master-live']) :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']) {
+  --ink: #f6eedc;
+  --desk-ink: #f6eedc;
+  --g-ink: #f6eedc;
+  color: #f6eedc;
+  background-color: #102e2c;
+}
+html[data-theme] :is(.desk[data-testid='desk-live'], .desk[data-testid='master-live']) :is(input, textarea)::placeholder {
+  color: #c8b88a;
+  opacity: 1;
+}
+html[data-theme] .desk :is(p, .hint, label.stack, legend) {
+  font-size: var(--text-body);
+  line-height: 1.45;
+}
+html[data-theme] .desk table :is(p, label, legend) {
+  font-size: inherit;
+}
+html[data-theme] .panel > header p { opacity: 1; }
+
+/* Gold chips are a light surface. The dark sample card stays cream.
+   Gather paints panel paragraphs with color: var(--g-ink), so the token
+   has to change on the element itself. */
+:is(html, html[data-theme]) .example-kicker {
+  --g-ink: var(--gold-ink, #1a1408);
+  --ink: var(--gold-ink, #1a1408);
+  color: var(--gold-ink, #1a1408);
+}
+:is(html, html[data-theme]) .example-sample {
+  --ink: #f6eedc;
+  --ink-2: #e4d3a4;
+  --muted: #e4d3a4;
+  --g-ink: #f6eedc;
+  --g-heading: #f6eedc;
+  --g-muted: #e4d3a4;
+  --desk-ink: #f6eedc;
+  --desk-heading: #f6eedc;
+  --desk-muted: #e4d3a4;
+  color: #f6eedc;
+  background-color: #163633;
+}
+:is(html, html[data-theme]) .desk .example-sample { background-color: #102e2c; }
 
 /* Keep the 16px floor after later theme and gather rules, so iOS does not zoom on focus. */
 :is(html, html[data-theme]) :is(.app, .door, .splash, .journey, .public-gather) :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']) {

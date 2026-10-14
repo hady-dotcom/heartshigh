@@ -213,7 +213,7 @@
   cursor: pointer;
 }
 .fr-seg.on { outline: 2px solid #d4a84b; outline-offset: -2px; }
-.fr-legend { display: flex; flex-wrap: wrap; gap: 10px 14px; margin: 10px 0 0; font-size: 13px; color: #243532; }
+.fr-legend { display: flex; flex-wrap: wrap; gap: 10px 14px; margin: 10px 0 0; font-size: 15px; color: var(--ink, #f6eedc); }
 .fr-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .fr-legend i { width: 10px; height: 10px; border-radius: 2px; }
 
