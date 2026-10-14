@@ -70,6 +70,7 @@ export interface Config {
     portals: Portal;
     users: User;
     media: Media;
+    'see-how-clips': SeeHowClip;
     clauses: Clause;
     doors: Door;
     seats: Seat;
@@ -170,6 +171,7 @@ export interface Config {
     portals: PortalsSelect<false> | PortalsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'see-how-clips': SeeHowClipsSelect<false> | SeeHowClipsSelect<true>;
     clauses: ClausesSelect<false> | ClausesSelect<true>;
     doors: DoorsSelect<false> | DoorsSelect<true>;
     seats: SeatsSelect<false> | SeatsSelect<true>;
@@ -579,6 +581,30 @@ export interface Media {
   focalY?: number | null;
 }
 /**
+ * One replacement video per See how page.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "see-how-clips".
+ */
+export interface SeeHowClip {
+  id: number;
+  page: string;
+  alt?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "clauses".
  */
@@ -593,7 +619,7 @@ export interface Clause {
   createdAt: string;
 }
 /**
- * The 20 working doors learners see. Each absorbs one or more of the 41 clauses; a talk’s door comes from its clause.
+ * The 20 doors learners see, from the hadith of Jibril. A talk sits in one door.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "doors".
@@ -604,7 +630,7 @@ export interface Door {
   section: 'Sitting' | 'Islam' | 'Iman' | 'Ihsan' | 'Hour' | 'Trunk';
   title: string;
   /**
-   * The clause numbers this door absorbs, for example [13, 19, 20].
+   * The pieces of the hadith this door covers, for example [13, 19, 20].
    */
   clauses:
     | {
@@ -1263,7 +1289,7 @@ export interface Lane {
   seriesNote?: string | null;
   optInOnly?: boolean | null;
   /**
-   * Never served in this lane during a learner’s first 7 days.
+   * Doors never offered in this lane during a learner’s first 7 days.
    */
   excludeClauses?: (number | Clause)[] | null;
   order?: number | null;
@@ -1359,7 +1385,7 @@ export interface HarvestEntry {
   seenAt?: string | null;
   speaker?: string | null;
   /**
-   * The Hadith Jibril working door (1 to 20) of the talk, worked out from its clause.
+   * The door of Hadith Jibril this talk sits in, from 1 to 20.
    */
   door?: number | null;
   /**
@@ -2959,6 +2985,10 @@ export interface PayloadLockedDocument {
         value: number | Media;
       } | null)
     | ({
+        relationTo: 'see-how-clips';
+        value: number | SeeHowClip;
+      } | null)
+    | ({
         relationTo: 'clauses';
         value: number | Clause;
       } | null)
@@ -3455,6 +3485,27 @@ export interface MediaSelect<T extends boolean = true> {
   portal?: T;
   owner?: T;
   purpose?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "see-how-clips_select".
+ */
+export interface SeeHowClipsSelect<T extends boolean = true> {
+  page?: T;
+  alt?: T;
   prefix?: T;
   _objectKey?: T;
   updatedAt?: T;

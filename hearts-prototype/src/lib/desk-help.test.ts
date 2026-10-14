@@ -38,6 +38,7 @@ const PAGES = [
   'insights',
   'calendar',
   'live',
+  'framing',
   'missions',
   'portalCreate',
   'portalEdit',
@@ -71,6 +72,9 @@ describe('desk help', () => {
     assert.match(PAGE.nights, /Live in person/)
     assert.match(PAGE.live, /Live recordings/)
     assert.equal(pageHelp('live', 'desk-live'), PAGE.live)
+    assert.equal(pageHelp('live', 'master-live'), PAGE.live)
+    assert.equal(pageHelp('framing', 'master-framing'), PAGE.framing)
+    assert.equal(pageHelp('framing', 'framing-clip'), PAGE.framing)
     assert.equal(pageHelp('nights', 'master-nights'), PAGE.nights)
     assert.ok(Object.keys(TOOL).length > 10)
   })

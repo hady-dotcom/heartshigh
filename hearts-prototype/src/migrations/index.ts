@@ -33,6 +33,7 @@ import * as migration_20261014_210000_experiment_duration from './20261014_21000
 import * as migration_20261014_220000_transcript_edits from './20261014_220000_transcript_edits';
 import * as migration_20261014_231000_learner_desk from './20261014_231000_learner_desk';
 import * as migration_20261014_233000_reply_done from './20261014_233000_reply_done';
+import * as migration_20261014_235000_see_how_clips from './20261014_235000_see_how_clips';
 
 export const migrations = [
   {
@@ -209,5 +210,10 @@ export const migrations = [
     up: migration_20261014_233000_reply_done.up,
     down: migration_20261014_233000_reply_done.down,
     name: '20261014_233000_reply_done',
+  },
+  {
+    up: migration_20261014_235000_see_how_clips.up,
+    down: migration_20261014_235000_see_how_clips.down,
+    name: '20261014_235000_see_how_clips',
   },
 ];

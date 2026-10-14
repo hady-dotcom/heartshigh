@@ -135,7 +135,7 @@ export default buildConfig({
       alwaysInsertFields: true,
       acl: 'private',
       signedDownloads: { expiresIn: 300 },
-      collections: { media: { signedDownloads: { expiresIn: 300 } } },
+      collections: { media: { signedDownloads: { expiresIn: 300 } }, 'see-how-clips': { signedDownloads: { expiresIn: 300 } } },
       bucket: s3?.bucket || 'hearts-local',
       config: s3
         ? {

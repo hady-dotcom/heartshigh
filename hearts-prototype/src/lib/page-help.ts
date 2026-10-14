@@ -349,3 +349,8 @@ export const LEARNER_HELP: Record<string, string> = {
 export function learnerHelp(topic: string) {
   return LEARNER_HELP[topic] || ''
 }
+
+/** Every learner help lookup: page copy, aliases, topic tips, and the fallback key. */
+export function learnerHelpKeys() {
+  return [...Object.keys(PAGES), ...Object.keys(ALIASES), ...Object.keys(LEARNER_HELP), 'default']
+}

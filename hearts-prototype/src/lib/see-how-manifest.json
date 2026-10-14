@@ -1,0 +1,2158 @@
+{
+  "pages": {
+    "door": {
+      "title": "The front door",
+      "video": "/see-how/door.webm",
+      "poster": "/see-how/door.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 6.6,
+          "text": "This is the front door. Someone wanted good for you."
+        },
+        {
+          "start": 6.6,
+          "end": 8.1,
+          "text": "Tap I have an access code if a mosque gave you one."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 4.8
+    },
+    "join": {
+      "title": "Join",
+      "video": "/see-how/join.webm",
+      "poster": "/see-how/join.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.7,
+          "text": "The code may already be filled in. Type your name."
+        },
+        {
+          "start": 4.7,
+          "end": 7.5,
+          "text": "Type an email you can open later."
+        },
+        {
+          "start": 7.5,
+          "end": 9.9,
+          "text": "Pick a password you will remember."
+        },
+        {
+          "start": 9.9,
+          "end": 13.2,
+          "text": "Tap Join. That is enough to come in."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 13.2
+    },
+    "feed": {
+      "title": "Clips",
+      "video": "/see-how/feed.webm",
+      "poster": "/see-how/feed.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.2,
+          "text": "The short film sits at the top. The words being said sit underneath."
+        },
+        {
+          "start": 2.2,
+          "end": 20,
+          "text": "Pull the More tab up. Like, Save and Ready for more? sit under the words."
+        },
+        {
+          "start": 20,
+          "end": 22.1,
+          "text": "Tap the heart to keep this clip."
+        },
+        {
+          "start": 22.1,
+          "end": 23.6,
+          "text": "Tap Ready for more? when you want the longer cut."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 23.5
+    },
+    "start": {
+      "title": "Opening",
+      "video": "/see-how/start.webm",
+      "poster": "/see-how/start.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.2,
+          "text": "A few short scenes help pick your first talk. There is no right answer."
+        },
+        {
+          "start": 3.2,
+          "end": 5.3,
+          "text": "Tap Let’s play."
+        },
+        {
+          "start": 5.3,
+          "end": 7.2,
+          "text": "Tap the picture that feels closest. You can skip a scene you would rather not sit with."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 7.2
+    },
+    "welcome": {
+      "title": "Welcome",
+      "video": "/see-how/welcome.webm",
+      "poster": "/see-how/welcome.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.6,
+          "text": "Someone in your circle opened HEARTS for you."
+        },
+        {
+          "start": 3.6,
+          "end": 6.2,
+          "text": "Tap Begin when you are ready."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6.2
+    },
+    "welcome-films": {
+      "title": "Welcome films",
+      "video": "/see-how/welcome-films.webm",
+      "poster": "/see-how/welcome-films.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.2,
+          "text": "A short welcome film may play here. You can watch it, or move on."
+        },
+        {
+          "start": 3.2,
+          "end": 6.3,
+          "text": "Tap Continue when you are ready for the next step."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6.3
+    },
+    "placing": {
+      "title": "Where to begin",
+      "video": "/see-how/placing.webm",
+      "poster": "/see-how/placing.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.7,
+          "text": "A few short questions help pick a gentle first talk."
+        },
+        {
+          "start": 3.7,
+          "end": 5.7,
+          "text": "Tap the answer that fits. There is no wrong one."
+        },
+        {
+          "start": 5.7,
+          "end": 7.3,
+          "text": "Tap Find my first talk when you have answered."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 7.3
+    },
+    "placing-result": {
+      "title": "A good place to start",
+      "video": "/see-how/placing-result.webm",
+      "poster": "/see-how/placing-result.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.3,
+          "text": "This is a first talk picked from what you said."
+        },
+        {
+          "start": 3.3,
+          "end": 6.7,
+          "text": "Tap to start it, or go to your clips if you would rather watch something short first."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6.7
+    },
+    "lanes": {
+      "title": "Lanes",
+      "video": "/see-how/lanes.webm",
+      "poster": "/see-how/lanes.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.8,
+          "text": "Each lane is one theme. Walk one subject at a time."
+        },
+        {
+          "start": 3.8,
+          "end": 6.8,
+          "text": "Tap a lane to watch its clips."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6.8
+    },
+    "speaker": {
+      "title": "A speaker",
+      "video": "/see-how/speaker.webm",
+      "poster": "/see-how/speaker.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.8,
+          "text": "This is one teacher and the talks they gave."
+        },
+        {
+          "start": 3.8,
+          "end": 6.6,
+          "text": "Tap a talk to start it, or watch a short clip first."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6.6
+    },
+    "course-overview": {
+      "title": "A course",
+      "video": "/see-how/course-overview.webm",
+      "poster": "/see-how/course-overview.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.2,
+          "text": "This is the whole course: every talk, the count, and the time. Questions stay inside each talk."
+        },
+        {
+          "start": 3.2,
+          "end": 5.3,
+          "text": "Tap Start to open the first talk."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.3
+    },
+    "login": {
+      "title": "Sign in",
+      "video": "/see-how/login.webm",
+      "poster": "/see-how/login.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.4,
+          "text": "Type the email you joined with."
+        },
+        {
+          "start": 3.4,
+          "end": 5.8,
+          "text": "Type your password. The dots hide it."
+        },
+        {
+          "start": 5.8,
+          "end": 9.8,
+          "text": "Tap Sign in. Home opens when it matches."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 9.8
+    },
+    "home": {
+      "title": "Home",
+      "video": "/see-how/home.webm",
+      "poster": "/see-how/home.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.5,
+          "text": "Home is where you come back. A note from your mosque sits at the top when there is one."
+        },
+        {
+          "start": 2.5,
+          "end": 5.5,
+          "text": "Tap Watch today’s clips for a short film."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.5
+    },
+    "course": {
+      "title": "A talk",
+      "video": "/see-how/course.webm",
+      "poster": "/see-how/course.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.3,
+          "text": "The film sits at the top. Questions stay quiet until you reach them, or tap a dot on the line."
+        },
+        {
+          "start": 2.3,
+          "end": 4.4,
+          "text": "Tap a dot to jump to a question. The talk pauses so you can write."
+        },
+        {
+          "start": 4.4,
+          "end": 7.7,
+          "text": "Type a sample answer in your own words."
+        },
+        {
+          "start": 7.7,
+          "end": 11.7,
+          "text": "If something someone else wrote does not sit right, tap the report mark and say so."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 11.7
+    },
+    "garden": {
+      "title": "Garden",
+      "video": "/see-how/garden.webm",
+      "poster": "/see-how/garden.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.9,
+          "text": "The garden is a quiet picture of time you have given. It is not a score."
+        },
+        {
+          "start": 3.9,
+          "end": 6,
+          "text": "Tap Keep this to write one small thing you did today."
+        },
+        {
+          "start": 6,
+          "end": 9.1,
+          "text": "Type a sample line. Only you see it."
+        },
+        {
+          "start": 9.1,
+          "end": 16.4,
+          "text": "Tap Keep this again to save it."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 16.4
+    },
+    "garden-general": {
+      "title": "Garden counts",
+      "video": "/see-how/garden-general.webm",
+      "poster": "/see-how/garden-general.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.6,
+          "text": "These are plain counts of time you have given: talks, answers, seats and lines. Nothing here is a score."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 3.2
+    },
+    "garden-jibril": {
+      "title": "Twenty doors",
+      "video": "/see-how/garden-jibril.webm",
+      "poster": "/see-how/garden-jibril.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.5,
+          "text": "These doors come from the hadith of Jibril. A door lights when you finish a talk placed in it."
+        },
+        {
+          "start": 3.5,
+          "end": 5.3,
+          "text": "Tap a door to read it."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.3
+    },
+    "garden-door": {
+      "title": "One door",
+      "video": "/see-how/garden-door.webm",
+      "poster": "/see-how/garden-door.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.9,
+          "text": "Read the door, then look at the talks that sit here."
+        },
+        {
+          "start": 3.9,
+          "end": 7.7,
+          "text": "Tap I’ve read this on a seat when you have sat with it."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 7.7
+    },
+    "garden-ghunya": {
+      "title": "Seats",
+      "video": "/see-how/garden-ghunya.webm",
+      "poster": "/see-how/garden-ghunya.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.5,
+          "text": "These are seats from al-Ghunya, grouped by door."
+        },
+        {
+          "start": 3.5,
+          "end": 5.3,
+          "text": "Tap a door to see its seats."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.3
+    },
+    "garden-workbook": {
+      "title": "Workbook",
+      "video": "/see-how/garden-workbook.webm",
+      "poster": "/see-how/garden-workbook.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 5.1,
+          "text": "Answers you write in a talk are kept here, whether you share them or not. A teacher’s reply sits under the ones you offered."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.1
+    },
+    "garden-harvest": {
+      "title": "Harvest",
+      "video": "/see-how/garden-harvest.webm",
+      "poster": "/see-how/garden-harvest.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.8,
+          "text": "Lines you kept from talks sit here: verses, hadith and short sayings."
+        },
+        {
+          "start": 4.8,
+          "end": 6.9,
+          "text": "Tap By speaker to group them another way."
+        },
+        {
+          "start": 6.9,
+          "end": 8.4,
+          "text": "Open one line to read it again."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 7.5
+    },
+    "me": {
+      "title": "Me",
+      "video": "/see-how/me.webm",
+      "poster": "/see-how/me.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.4,
+          "text": "This is your name, your week, your saved clips and your settings."
+        },
+        {
+          "start": 3.4,
+          "end": 5.5,
+          "text": "Open the name row."
+        },
+        {
+          "start": 5.5,
+          "end": 8,
+          "text": "Type the name you want on this phone."
+        },
+        {
+          "start": 8,
+          "end": 11.8,
+          "text": "Tap Save name."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 11.8
+    },
+    "settings": {
+      "title": "Settings",
+      "video": "/see-how/settings.webm",
+      "poster": "/see-how/settings.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.2,
+          "text": "Each switch saves as you flip it. Sound, privacy and the account sit in their own groups."
+        },
+        {
+          "start": 3.2,
+          "end": 5.1,
+          "text": "Flip one switch. It saves on its own."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.1
+    },
+    "circle": {
+      "title": "Circle",
+      "video": "/see-how/circle.webm",
+      "poster": "/see-how/circle.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3,
+          "text": "Nights are the evenings you can come to in person. The board is a note for everyone in your circle."
+        },
+        {
+          "start": 3,
+          "end": 6.2,
+          "text": "Type a short note for the board."
+        },
+        {
+          "start": 6.2,
+          "end": 9.9,
+          "text": "Tap Post."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 9.9
+    },
+    "saved": {
+      "title": "Saved",
+      "video": "/see-how/saved.webm",
+      "poster": "/see-how/saved.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.5,
+          "text": "Clips you kept sit here. Open one to watch it again. Nothing here is a test."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 3.2
+    },
+    "learner-path": {
+      "title": "Your path",
+      "video": "/see-how/learner-path.webm",
+      "poster": "/see-how/learner-path.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.2,
+          "text": "These lines come from time you have actually given, not from a label. If a row has no reason yet, you have not sat with that theme this week."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 3.2
+    },
+    "recalibrate": {
+      "title": "A fresh look",
+      "video": "/see-how/recalibrate.webm",
+      "poster": "/see-how/recalibrate.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.7,
+          "text": "Five short questions, in different words from last time. There is no right answer."
+        },
+        {
+          "start": 3.7,
+          "end": 7.2,
+          "text": "Tap the line that fits. The next question comes up on its own."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 7.2
+    },
+    "help": {
+      "title": "Help",
+      "video": "/see-how/help.webm",
+      "poster": "/see-how/help.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.5,
+          "text": "These are people you can call or visit if you need support now. The numbers are for this mosque. Back to HEARTS returns you to the opening."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.2
+    },
+    "support-page": {
+      "title": "Ask for help",
+      "video": "/see-how/support-page.webm",
+      "poster": "/see-how/support-page.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 5.8,
+          "text": "Write to the team here. You do not need an email."
+        },
+        {
+          "start": 5.8,
+          "end": 8.6,
+          "text": "Tap Send. They will read it."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 8.6
+    },
+    "shaped-page": {
+      "title": "What you shaped",
+      "video": "/see-how/shaped-page.webm",
+      "poster": "/see-how/shaped-page.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.2,
+          "text": "Missions you joined, and what the group decided, sit here. You cannot change a decision from this list."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 3.2
+    },
+    "gather": {
+      "title": "Gather",
+      "video": "/see-how/gather.webm",
+      "poster": "/see-how/gather.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.8,
+          "text": "These are meetings at your mosque or school. Say if you are coming."
+        },
+        {
+          "start": 3.8,
+          "end": 6.2,
+          "text": "Tap Suggest a gathering if you want to propose one."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6.2
+    },
+    "gather-propose": {
+      "title": "Suggest a gathering",
+      "video": "/see-how/gather-propose.webm",
+      "poster": "/see-how/gather-propose.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 5.2,
+          "text": "Type a name for the evening."
+        },
+        {
+          "start": 5.2,
+          "end": 7.8,
+          "text": "Type when it is, as day, month, year, then the time."
+        },
+        {
+          "start": 7.8,
+          "end": 11.8,
+          "text": "Tap Send it to the desk. This does not book the room on its own."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 11.8
+    },
+    "gather-reflect": {
+      "title": "After the gathering",
+      "video": "/see-how/gather-reflect.webm",
+      "poster": "/see-how/gather-reflect.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2,
+          "text": "A short note after the gathering. Only you and the team see it unless you share."
+        },
+        {
+          "start": 2,
+          "end": 5.7,
+          "text": "Type one thing you will carry."
+        },
+        {
+          "start": 5.7,
+          "end": 8.4,
+          "text": "Tap Send. You can still change the words later."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 8.4
+    },
+    "admin-overview": {
+      "title": "Portal overview",
+      "video": "/see-how/admin-overview.webm",
+      "poster": "/see-how/admin-overview.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.2,
+          "text": "This is the front door of the desk. The counts are who has joined and how busy the last two weeks have been."
+        },
+        {
+          "start": 4.2,
+          "end": 5.7,
+          "text": "Tap Copy to put the join link on your clipboard."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 4.4
+    },
+    "admin-teach": {
+      "title": "Learners",
+      "video": "/see-how/admin-teach.webm",
+      "poster": "/see-how/admin-teach.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.5,
+          "text": "Each row is a learner. Hide test accounts stays on so practice logins do not clutter the list."
+        },
+        {
+          "start": 3.5,
+          "end": 5.6,
+          "text": "Choose a course for the first learner. The Give button stays still until you do."
+        },
+        {
+          "start": 5.6,
+          "end": 7.1,
+          "text": "Tap Give. Confirm it, and they see the course on Lanes next time they open the app."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6.8
+    },
+    "feedback-desk": {
+      "title": "Feedback",
+      "video": "/see-how/feedback-desk.webm",
+      "poster": "/see-how/feedback-desk.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.1,
+          "text": "Only answers a learner chose to share appear here. Private ones are counted and never shown."
+        },
+        {
+          "start": 4.1,
+          "end": 6.1,
+          "text": "Tick Anonymise to turn names into Learner A, Learner B, and so on."
+        },
+        {
+          "start": 6.1,
+          "end": 7.6,
+          "text": "Open the download box when you need a file. The download is written down."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6.6
+    },
+    "compass-portal": {
+      "title": "Compass",
+      "video": "/see-how/compass-portal.webm",
+      "poster": "/see-how/compass-portal.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.7,
+          "text": "Compass is a gentle monthly look. Learners never see a number. You see the scales."
+        },
+        {
+          "start": 3.7,
+          "end": 6.1,
+          "text": "Open one learner to see why a talk was put forward."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6.1
+    },
+    "compass-learner": {
+      "title": "One learner’s Compass",
+      "video": "/see-how/compass-learner.webm",
+      "poster": "/see-how/compass-learner.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.6,
+          "text": "This is one learner over the months. They still only see a gentle line, never these numbers."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.6
+    },
+    "admin-plans": {
+      "title": "Study plans",
+      "video": "/see-how/admin-plans.webm",
+      "poster": "/see-how/admin-plans.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.3,
+          "text": "A study plan spreads one course across the days you tick. Parts stay in order."
+        },
+        {
+          "start": 3.3,
+          "end": 5.9,
+          "text": "Tick a day the plan should use. Leave a day unticked and nothing is placed on it."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.9
+    },
+    "admin-nights": {
+      "title": "Nights",
+      "video": "/see-how/admin-nights.webm",
+      "poster": "/see-how/admin-nights.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.5,
+          "text": "Earned means they watched a part this week. Held means you welcome them in at the door."
+        },
+        {
+          "start": 3.5,
+          "end": 5,
+          "text": "Tick Let them in anyway when you are letting someone in without a ticket."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 4.2
+    },
+    "desk-gather": {
+      "title": "Gather desk",
+      "video": "/see-how/desk-gather.webm",
+      "poster": "/see-how/desk-gather.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.3,
+          "text": "Publish a date, share the link, and take the register from Attendance."
+        },
+        {
+          "start": 3.3,
+          "end": 5.7,
+          "text": "Open Attendance when you need the list of who came."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.7
+    },
+    "desk-attendance": {
+      "title": "Attendance",
+      "video": "/see-how/desk-attendance.webm",
+      "poster": "/see-how/desk-attendance.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.8,
+          "text": "This is the register. Who said they would come, who arrived, and a download when you need a list. It does not change who is invited."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.1
+    },
+    "admin-safety": {
+      "title": "Care and safety",
+      "video": "/see-how/admin-safety.webm",
+      "poster": "/see-how/admin-safety.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.6,
+          "text": "This is where the team looks at concerns, and at words the screen held back. A gold box at the top is for the named person when someone may need support today."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2
+    },
+    "master-safety": {
+      "title": "Care and safety across portals",
+      "video": "/see-how/master-safety.webm",
+      "poster": "/see-how/master-safety.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.6,
+          "text": "The same care list, across every mosque. Hide or keep an item, and send a short note."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2
+    },
+    "admin-announcements": {
+      "title": "Announcements",
+      "video": "/see-how/admin-announcements.webm",
+      "poster": "/see-how/admin-announcements.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 6.5,
+          "text": "Write a short note. It appears on Home until they dismiss it."
+        },
+        {
+          "start": 6.5,
+          "end": 8,
+          "text": "Tap Share this note."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 7.4
+    },
+    "master-announcements": {
+      "title": "Announcements for a portal",
+      "video": "/see-how/master-announcements.webm",
+      "poster": "/see-how/master-announcements.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 5.1,
+          "text": "Write a short note for one mosque. Learners see it on Home."
+        },
+        {
+          "start": 5.1,
+          "end": 6.6,
+          "text": "Tap Share this note."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6.6
+    },
+    "admin-content": {
+      "title": "Content",
+      "video": "/see-how/admin-content.webm",
+      "poster": "/see-how/admin-content.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.9,
+          "text": "Search looks at subject titles."
+        },
+        {
+          "start": 4.9,
+          "end": 7.5,
+          "text": "Or type a new subject of your own. It belongs to this mosque."
+        },
+        {
+          "start": 7.5,
+          "end": 10.4,
+          "text": "Tap Save subject when the name is right. Questions are added in the editor."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 10.4
+    },
+    "admin-course": {
+      "title": "One course",
+      "video": "/see-how/admin-course.webm",
+      "poster": "/see-how/admin-course.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.9,
+          "text": "This is one subject: its topics, films, and the questions that pause them."
+        },
+        {
+          "start": 3.9,
+          "end": 8.4,
+          "text": "Paste a YouTube link to add a film. A new film is a draft until you publish it."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 8.4
+    },
+    "admin-library": {
+      "title": "Portal library",
+      "video": "/see-how/admin-library.webm",
+      "poster": "/see-how/admin-library.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.4,
+          "text": "The library is the shared catalogue. Link a course so learners can open it."
+        },
+        {
+          "start": 4.4,
+          "end": 5.9,
+          "text": "Open a pack to see the courses inside. Adding one keeps it in step with the shared library."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 4.5
+    },
+    "admin-access": {
+      "title": "Access codes",
+      "video": "/see-how/admin-access.webm",
+      "poster": "/see-how/admin-access.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4,
+          "text": "A code says who someone is and which courses they see. Send the link so nobody has to type the letters."
+        },
+        {
+          "start": 4,
+          "end": 5.5,
+          "text": "Tap Copy on a code. WhatsApp and the QR use the same address."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 4.3
+    },
+    "admin-opening": {
+      "title": "Opening questions",
+      "video": "/see-how/admin-opening.webm",
+      "poster": "/see-how/admin-opening.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.4,
+          "text": "These are the questions a newcomer sees before the clips. You can keep them, change the words, or leave a scene out."
+        },
+        {
+          "start": 3.4,
+          "end": 6,
+          "text": "The help contacts on this page are what the help screen shows."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6
+    },
+    "admin-questions": {
+      "title": "Joining questions",
+      "video": "/see-how/admin-questions.webm",
+      "poster": "/see-how/admin-questions.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.8,
+          "text": "Joining questions are asked once. Each answer points to a door. The door with the most answers chooses the first course."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 3.8
+    },
+    "admin-bring-in": {
+      "title": "Bring in",
+      "video": "/see-how/admin-bring-in.webm",
+      "poster": "/see-how/admin-bring-in.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 6.7,
+          "text": "Paste a YouTube link. A line may end with a bar and a speaker name."
+        },
+        {
+          "start": 6.7,
+          "end": 9.1,
+          "text": "Type a name if you are making a new course. Nothing is saved until you bring the ticked rows in."
+        },
+        {
+          "start": 9.1,
+          "end": 11.8,
+          "text": "Look up reads the list before anything is saved."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 11.8
+    },
+    "master-bring-in": {
+      "title": "Bring in on the master desk",
+      "video": "/see-how/master-bring-in.webm",
+      "poster": "/see-how/master-bring-in.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 5.8,
+          "text": "Paste one link, a playlist, or a channel."
+        },
+        {
+          "start": 5.8,
+          "end": 7.8,
+          "text": "Pick the caption language. English is the usual choice."
+        },
+        {
+          "start": 7.8,
+          "end": 9.3,
+          "text": "Look up shows the length and whether captions are listed. Nothing is saved yet."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 8.6
+    },
+    "portal-sheet": {
+      "title": "Sheet for this portal",
+      "video": "/see-how/portal-sheet.webm",
+      "poster": "/see-how/portal-sheet.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.7,
+          "text": "The sheet is a workbook you can download, edit, and upload again. Preview first. Nothing is saved until you apply."
+        },
+        {
+          "start": 3.7,
+          "end": 5.8,
+          "text": "Tap the blank template. An empty export of real courses is refused, so the blank one is the safe download."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.8
+    },
+    "master-sheet": {
+      "title": "Master sheet",
+      "video": "/see-how/master-sheet.webm",
+      "poster": "/see-how/master-sheet.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.3,
+          "text": "Scope says what the workbook covers: the whole library, one mosque, or one course."
+        },
+        {
+          "start": 4.3,
+          "end": 7.1,
+          "text": "Download the blank template, edit it, then upload it and preview before anything is saved."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 7.1
+    },
+    "portal-creator": {
+      "title": "Sheet creator",
+      "video": "/see-how/portal-creator.webm",
+      "poster": "/see-how/portal-creator.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.3,
+          "text": "Search for talks on a topic. Nothing goes live until you apply the preview on the sheet page."
+        },
+        {
+          "start": 3.3,
+          "end": 5.5,
+          "text": "Type what the sheet should be about."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.5
+    },
+    "master-creator": {
+      "title": "Sheet creator on the master desk",
+      "video": "/see-how/master-creator.webm",
+      "poster": "/see-how/master-creator.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.1,
+          "text": "Name a topic and the desk drafts a workbook. You still preview and apply it before learners see anything."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.2
+    },
+    "transcript-files": {
+      "title": "Transcript files",
+      "video": "/see-how/transcript-files.webm",
+      "poster": "/see-how/transcript-files.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.8,
+          "text": "Upload the timed transcript a sheet points at. Each file gets a number you can paste back into the sheet. You do not need the raw data console."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2
+    },
+    "portal-circle": {
+      "title": "Circle answers",
+      "video": "/see-how/portal-circle.webm",
+      "poster": "/see-how/portal-circle.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.1,
+          "text": "Circle answers are light examples so a question is never empty. They are never counted as progress."
+        },
+        {
+          "start": 4.1,
+          "end": 5.8,
+          "text": "Open a talk to draft or edit its examples."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.8
+    },
+    "master-circle": {
+      "title": "Circle answers on the master desk",
+      "video": "/see-how/master-circle.webm",
+      "poster": "/see-how/master-circle.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4,
+          "text": "The same circle answers, for the shared library."
+        },
+        {
+          "start": 4,
+          "end": 6.6,
+          "text": "Open a talk."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6.6
+    },
+    "ai-registry": {
+      "title": "AI steps",
+      "video": "/see-how/ai-registry.webm",
+      "poster": "/see-how/ai-registry.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 5.9,
+          "text": "Each step is one job after a talk is brought in. A run uses that mosque’s own AI account when one is connected. Otherwise the built-in drafts are used."
+        },
+        {
+          "start": 5.9,
+          "end": 7.4,
+          "text": "Open a step to read its prompt."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 4.1
+    },
+    "ai-step-page": {
+      "title": "One AI step",
+      "video": "/see-how/ai-step-page.webm",
+      "poster": "/see-how/ai-step-page.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.6,
+          "text": "The prompt is the instruction. Saving writes a new version. The live one stays until you mark this one live. Try it on a single talk first."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.6
+    },
+    "admin-settings": {
+      "title": "Portal settings",
+      "video": "/see-how/admin-settings.webm",
+      "poster": "/see-how/admin-settings.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 5.8,
+          "text": "Change the name people see, then save before you leave."
+        },
+        {
+          "start": 5.8,
+          "end": 9.2,
+          "text": "The time zone is the city of the mosque. It does not change the clocks on people’s phones."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 9.2
+    },
+    "experiments-desk": {
+      "title": "Experiments",
+      "video": "/see-how/experiments-desk.webm",
+      "poster": "/see-how/experiments-desk.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 5.9,
+          "text": "A test shows some learners one wording and others another, then counts what they do. Learners are never told. A teacher’s words are never tested."
+        },
+        {
+          "start": 5.9,
+          "end": 10.8,
+          "text": "The kill switch stops every running test at once. Everyone sees the usual words again."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 10.8
+    },
+    "insights-desk": {
+      "title": "Insights",
+      "video": "/see-how/insights-desk.webm",
+      "poster": "/see-how/insights-desk.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 6.4,
+          "text": "Insights is a look at how people move through HEARTS. Taps and clip watches stay as counts. Typed text and answers are never stored."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6.4
+    },
+    "calendar-desk": {
+      "title": "Calendar",
+      "video": "/see-how/calendar-desk.webm",
+      "poster": "/see-how/calendar-desk.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 6,
+          "text": "The calendar knows Friday, Ramadan, the two Eids, and seasons you add. The Islamic day moves on at sunset. A suggested line never reaches a learner until you approve it."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2
+    },
+    "missions-desk": {
+      "title": "Missions",
+      "video": "/see-how/missions-desk.webm",
+      "poster": "/see-how/missions-desk.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 5.7,
+          "text": "A mission is a warm ask, never a scolding."
+        },
+        {
+          "start": 5.7,
+          "end": 7.2,
+          "text": "Open one, or start a new ask."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 4
+    },
+    "master": {
+      "title": "Portals",
+      "video": "/see-how/master.webm",
+      "poster": "/see-how/master.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.5,
+          "text": "Each portal is one mosque, with its own admin, codes and people."
+        },
+        {
+          "start": 4.5,
+          "end": 7.3,
+          "text": "Open the studio when you want to choose courses and features."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 7.3
+    },
+    "portal-create": {
+      "title": "Open a portal",
+      "video": "/see-how/portal-create.webm",
+      "poster": "/see-how/portal-create.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 5.2,
+          "text": "Type the name people will see."
+        },
+        {
+          "start": 5.2,
+          "end": 7.5,
+          "text": "Type a short address. It becomes the link."
+        },
+        {
+          "start": 7.5,
+          "end": 9.9,
+          "text": "Tap Next for courses, then features. Do not open it until you mean to."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 9.9
+    },
+    "portal-edit": {
+      "title": "Portal features",
+      "video": "/see-how/portal-edit.webm",
+      "poster": "/see-how/portal-edit.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 6,
+          "text": "Features decide what this mosque shows. Saving takes effect at once."
+        },
+        {
+          "start": 6,
+          "end": 8.1,
+          "text": "Tap Start small for videos, questions and the Garden only."
+        },
+        {
+          "start": 8.1,
+          "end": 10.7,
+          "text": "Tap Everything if you want every switch on. Leave the page without saving if you were only looking."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 10.7
+    },
+    "master-library": {
+      "title": "Shared library",
+      "video": "/see-how/master-library.webm",
+      "poster": "/see-how/master-library.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 6.5,
+          "text": "The shared courses every mosque can link. Changes you make here show up for them straight away."
+        },
+        {
+          "start": 6.5,
+          "end": 8.9,
+          "text": "Open a course to edit it."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 8.9
+    },
+    "master-course": {
+      "title": "A library course",
+      "video": "/see-how/master-course.webm",
+      "poster": "/see-how/master-course.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 5.1,
+          "text": "This is one shared subject. Mosques link it. They do not get their own copy."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.4
+    },
+    "master-packs": {
+      "title": "Course packs",
+      "video": "/see-how/master-packs.webm",
+      "poster": "/see-how/master-packs.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4,
+          "text": "A pack is the set of courses a code opens. Tick the box only when you want people who already hold the pack to receive a new course too."
+        },
+        {
+          "start": 4,
+          "end": 5.5,
+          "text": "The tick adds newly ticked courses to learners who keep a saved course list. Leave it unticked and they keep the list they joined with."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 4.2
+    },
+    "master-plans": {
+      "title": "Plans across portals",
+      "video": "/see-how/master-plans.webm",
+      "poster": "/see-how/master-plans.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.8,
+          "text": "Plans learners and teachers have shared out across the days. It is a guide. People can still watch at their own pace."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2
+    },
+    "master-nights": {
+      "title": "Nights across portals",
+      "video": "/see-how/master-nights.webm",
+      "poster": "/see-how/master-nights.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.1,
+          "text": "Nights and gatherings across the mosques. Open a portal desk to take the register."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2
+    },
+    "master-opening": {
+      "title": "Opening scenes",
+      "video": "/see-how/master-opening.webm",
+      "poster": "/see-how/master-opening.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 5.2,
+          "text": "The scenes a newcomer meets before the clips. Publishing checks the rules: enough options, no blocked words, and one crisis option."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.2
+    },
+    "master-lanes": {
+      "title": "Lanes on the master desk",
+      "video": "/see-how/master-lanes.webm",
+      "poster": "/see-how/master-lanes.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4,
+          "text": "Lanes are the themes the opening uses to pick clips. The titles here are what learners see. Change one with care."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2
+    },
+    "master-simulator": {
+      "title": "Simulator",
+      "video": "/see-how/master-simulator.webm",
+      "poster": "/see-how/master-simulator.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.5,
+          "text": "Walk the opening as a newcomer would, without making an account. Nothing here is saved against a real person."
+        },
+        {
+          "start": 4.5,
+          "end": 7.1,
+          "text": "Pick a tap for a scene and see what the phone would work out."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 7.1
+    },
+    "master-personas": {
+      "title": "Scales",
+      "video": "/see-how/master-personas.webm",
+      "poster": "/see-how/master-personas.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 5,
+          "text": "Scales and bands are the Compass language. Learners never see these names, only a gentle line. Change them with care."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.3
+    },
+    "master-questions": {
+      "title": "Placing questions",
+      "video": "/see-how/master-questions.webm",
+      "poster": "/see-how/master-questions.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.4,
+          "text": "Asked once when someone joins, so the first talk is a gentle place to start. The default set is already on every mosque."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.2
+    },
+    "master-trends": {
+      "title": "Network trends",
+      "video": "/see-how/master-trends.webm",
+      "poster": "/see-how/master-trends.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.2,
+          "text": "Counts across mosques that opted in. A trend only appears when enough people are in the group. A name is never shown."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.1
+    },
+    "master-review": {
+      "title": "Review",
+      "video": "/see-how/master-review.webm",
+      "poster": "/see-how/master-review.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 6.6,
+          "text": "Machine drafts wait here for a person. Approve what reads true. Send back what does not."
+        },
+        {
+          "start": 6.6,
+          "end": 8.1,
+          "text": "Tap Approve when a row is ready for learners."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.5
+    },
+    "master-review-popups": {
+      "title": "Review questions",
+      "video": "/see-how/master-review-popups.webm",
+      "poster": "/see-how/master-review-popups.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.6,
+          "text": "Questions that pause a film wait here. Approve what reads true. Approved work is what learners see."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.2
+    },
+    "master-review-swarm": {
+      "title": "Review swarm answers",
+      "video": "/see-how/master-review-swarm.webm",
+      "poster": "/see-how/master-review-swarm.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.3,
+          "text": "Answers the safety screen hid wait here. Show the ones that are fine. Keep the rest hidden."
+        },
+        {
+          "start": 4.3,
+          "end": 5.9,
+          "text": "Tap Show in the swarm when an answer is fine for other learners to see."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.9
+    },
+    "master-tiers": {
+      "title": "Talk tiers",
+      "video": "/see-how/master-tiers.webm",
+      "poster": "/see-how/master-tiers.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 6.7,
+          "text": "Tiers are the short, medium and longer ways into the same talk. Learners only see checked work."
+        },
+        {
+          "start": 6.7,
+          "end": 8.2,
+          "text": "Open one to check the times and the lines."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 4.2
+    },
+    "master-tier": {
+      "title": "One talk tier",
+      "video": "/see-how/master-tier.webm",
+      "poster": "/see-how/master-tier.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.5,
+          "text": "Check the times and the lines before you mark a talk as checked."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.1
+    },
+    "plan": {
+      "title": "My week",
+      "video": "/see-how/plan.webm",
+      "poster": "/see-how/plan.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.8,
+          "text": "Pick a course. The talks stay in order."
+        },
+        {
+          "start": 4.8,
+          "end": 26.6,
+          "text": "Tick the days that suit you. Leave a day unticked and nothing lands on it."
+        },
+        {
+          "start": 26.6,
+          "end": 28.1,
+          "text": "Tap the button to put the talks on your week. It is a guide. You can still watch at your own pace."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 28
+    },
+    "gather-detail": {
+      "title": "One gathering",
+      "video": "/see-how/gather-detail.webm",
+      "poster": "/see-how/gather-detail.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.2,
+          "text": "Say if you are coming, maybe, or cannot this time."
+        },
+        {
+          "start": 2.2,
+          "end": 7.2,
+          "text": "Tap I’m coming."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 7.2
+    },
+    "wizard": {
+      "title": "Set up",
+      "video": "/see-how/wizard.webm",
+      "poster": "/see-how/wizard.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 4.9,
+          "text": "Three short steps. First, a line of welcome."
+        },
+        {
+          "start": 4.9,
+          "end": 7.4,
+          "text": "Tap Next. You can run this again from Settings. Nothing here deletes what you already made."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 7.4
+    },
+    "appetiser": {
+      "title": "Ready for more?",
+      "video": "/see-how/appetiser.webm",
+      "poster": "/see-how/appetiser.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 5,
+          "text": "A short clip is playing. The longer cut is under More."
+        },
+        {
+          "start": 5,
+          "end": 22.8,
+          "text": "Pull the More tab up."
+        },
+        {
+          "start": 22.8,
+          "end": 24.9,
+          "text": "Tap Ready for more?. This is the longer cut of the same talk."
+        },
+        {
+          "start": 24.9,
+          "end": 28,
+          "text": "Tap Back when you want the short clips again."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 28
+    },
+    "desk-live": {
+      "title": "Live recordings",
+      "video": "/see-how/desk-live.webm",
+      "poster": "/see-how/desk-live.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.3,
+          "text": "This is where a live session starts for the people in this portal."
+        },
+        {
+          "start": 2.3,
+          "end": 4.9,
+          "text": "Give the session a name people will recognise."
+        },
+        {
+          "start": 4.9,
+          "end": 9,
+          "text": "Paste a YouTube or Vimeo link if that is where you are streaming."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 9
+    },
+    "master-live": {
+      "title": "Live recordings across portals",
+      "video": "/see-how/master-live.webm",
+      "poster": "/see-how/master-live.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.7,
+          "text": "Every portal’s live sessions sit here. Open a portal desk to start or end one."
+        },
+        {
+          "start": 2.7,
+          "end": 5.2,
+          "text": "Open a portal desk when you need to go live for that mosque."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.2
+    },
+    "master-framing": {
+      "title": "Framing",
+      "video": "/see-how/master-framing.webm",
+      "poster": "/see-how/master-framing.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 5.3,
+          "text": "Each row is a clip. The coloured words are how the director framed it on the phone."
+        },
+        {
+          "start": 5.3,
+          "end": 7.7,
+          "text": "Open a clip when you want to change one segment."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 7.7
+    },
+    "framing-clip": {
+      "title": "One clip’s framing",
+      "video": "/see-how/framing-clip.webm",
+      "poster": "/see-how/framing-clip.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.6,
+          "text": "Play the crop, then change a segment when the pick is wrong. The film stays where it is."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.6
+    },
+    "live-home": {
+      "title": "Live recordings in the app",
+      "video": "/see-how/live-home.webm",
+      "poster": "/see-how/live-home.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.2,
+          "text": "Live recordings are the video sessions for your portal."
+        },
+        {
+          "start": 2.2,
+          "end": 4.8,
+          "text": "When one is on you can watch and send a question. A replay sits here afterwards if your teacher kept one."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 4.8
+    },
+    "lane": {
+      "title": "One lane",
+      "video": "/see-how/lane.webm",
+      "poster": "/see-how/lane.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.3,
+          "text": "These talks belong together, in the order to watch them."
+        },
+        {
+          "start": 2.3,
+          "end": 5.7,
+          "text": "Continue plays the next one you have not watched."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.7
+    },
+    "transcripts": {
+      "title": "Transcripts",
+      "video": "/see-how/transcripts.webm",
+      "poster": "/see-how/transcripts.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.3,
+          "text": "Every talk is listed with the speaker, the length and a picture."
+        },
+        {
+          "start": 3.3,
+          "end": 6.8,
+          "text": "Open a talk to fix a line."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6.8
+    },
+    "transcript-editor": {
+      "title": "One transcript",
+      "video": "/see-how/transcript-editor.webm",
+      "poster": "/see-how/transcript-editor.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.7,
+          "text": "Fix a line, replace a word, or save. Learners hear these lines on the clips."
+        },
+        {
+          "start": 2.7,
+          "end": 5.5,
+          "text": "Find a word in this talk."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.5
+    },
+    "portal-learner": {
+      "title": "One learner",
+      "video": "/see-how/portal-learner.webm",
+      "poster": "/see-how/portal-learner.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.2,
+          "text": "Their portal, when they joined, when they were last seen, and what to do next."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.2
+    },
+    "master-diaries": {
+      "title": "Diaries",
+      "video": "/see-how/master-diaries.webm",
+      "poster": "/see-how/master-diaries.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3,
+          "text": "Each row is a workbook entry. You see who wrote it, which portal, and when."
+        },
+        {
+          "start": 3,
+          "end": 6.4,
+          "text": "Open one to read it when the learner shared it."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6.4
+    },
+    "master-diary": {
+      "title": "One diary entry",
+      "video": "/see-how/master-diary.webm",
+      "poster": "/see-how/master-diary.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.6,
+          "text": "The words show only when the learner shared them. You can still delete an entry."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.6
+    }
+  },
+  "keys": {
+    "door": "door",
+    "join": "join",
+    "feed": "feed",
+    "start": "start",
+    "welcome": "welcome",
+    "welcome-films": "welcome-films",
+    "placing": "placing",
+    "placing-result": "placing-result",
+    "lanes": "lanes",
+    "speaker": "speaker",
+    "course-overview": "course-overview",
+    "login": "login",
+    "forgot": "login",
+    "reset": "login",
+    "home": "home",
+    "announce": "home",
+    "course": "course",
+    "hide-until-moment": "course",
+    "report": "course",
+    "garden": "garden",
+    "garden-general": "garden-general",
+    "garden-jibril": "garden-jibril",
+    "garden-door": "garden-door",
+    "garden-ghunya": "garden-ghunya",
+    "garden-workbook": "garden-workbook",
+    "garden-harvest": "garden-harvest",
+    "me": "me",
+    "settings": "settings",
+    "circle": "circle",
+    "saved": "saved",
+    "learner-path": "learner-path",
+    "recalibrate": "recalibrate",
+    "help": "help",
+    "support-page": "support-page",
+    "shaped-page": "shaped-page",
+    "gather": "gather",
+    "gather-propose": "gather-propose",
+    "gather-reflect": "gather-reflect",
+    "admin-overview": "admin-overview",
+    "deactivate": "admin-overview",
+    "activity": "admin-overview",
+    "admin-teach": "admin-teach",
+    "give-course": "admin-teach",
+    "hide-test": "admin-teach",
+    "feedback-desk": "feedback-desk",
+    "feedback-denied": "feedback-desk",
+    "export": "feedback-desk",
+    "filters": "feedback-desk",
+    "anonymise": "feedback-desk",
+    "ai-summary": "feedback-desk",
+    "weak-questions": "feedback-desk",
+    "compass-portal": "compass-portal",
+    "compass-scores": "compass-portal",
+    "mix": "compass-portal",
+    "compass-proposed": "compass-portal",
+    "compass-learner": "compass-learner",
+    "admin-plans": "admin-plans",
+    "weekdays": "admin-plans",
+    "admin-nights": "admin-nights",
+    "ticket": "admin-nights",
+    "checkin": "admin-nights",
+    "desk-gather": "desk-gather",
+    "attendance": "desk-gather",
+    "desk-attendance": "desk-attendance",
+    "gather-attendance": "desk-attendance",
+    "admin-safety": "admin-safety",
+    "safeguarding": "admin-safety",
+    "master-safety": "master-safety",
+    "admin-announcements": "admin-announcements",
+    "master-announcements": "master-announcements",
+    "admin-content": "admin-content",
+    "content-search": "admin-content",
+    "local-course": "admin-content",
+    "admin-course": "admin-course",
+    "ingest": "admin-course",
+    "fetch-transcript": "admin-course",
+    "caption-lang": "admin-course",
+    "replace-film": "admin-course",
+    "give-holders": "admin-course",
+    "bring-in-retry": "admin-course",
+    "extract": "admin-course",
+    "admin-library": "admin-library",
+    "adopt": "admin-library",
+    "admin-access": "admin-access",
+    "copy-link": "admin-access",
+    "required": "admin-access",
+    "code-limits": "admin-access",
+    "teacher-code": "admin-access",
+    "admin-opening": "admin-opening",
+    "hide-scene": "admin-opening",
+    "add-opening-scene": "admin-opening",
+    "help-contacts": "admin-opening",
+    "admin-questions": "admin-questions",
+    "admin-bring-in": "admin-bring-in",
+    "master-bring-in": "master-bring-in",
+    "bring-in-paste": "master-bring-in",
+    "bring-in-course": "master-bring-in",
+    "bring-in-lang": "master-bring-in",
+    "bring-in-jibril": "master-bring-in",
+    "bring-in-ghunya": "master-bring-in",
+    "bring-in-lookup": "master-bring-in",
+    "bring-in-skip": "master-bring-in",
+    "row-speaker": "master-bring-in",
+    "bring-in-publish": "master-bring-in",
+    "bring-in-give": "master-bring-in",
+    "bring-in-drafts-give": "master-bring-in",
+    "channel-map": "master-bring-in",
+    "helper-token": "master-bring-in",
+    "portal-sheet": "portal-sheet",
+    "master-sheet": "master-sheet",
+    "sheet-scope": "master-sheet",
+    "sheet-preview": "master-sheet",
+    "portal-creator": "portal-creator",
+    "creator-search": "portal-creator",
+    "master-creator": "master-creator",
+    "transcript-files": "transcript-files",
+    "portal-circle": "portal-circle",
+    "circle-bulk": "portal-circle",
+    "circle-tones": "portal-circle",
+    "master-circle": "master-circle",
+    "ai-registry": "ai-registry",
+    "ai-grant": "ai-registry",
+    "ai-denied": "ai-registry",
+    "ai-missing": "ai-registry",
+    "ai-job-missing": "ai-registry",
+    "ai-job": "ai-registry",
+    "ai-ingest": "ai-registry",
+    "ai-ingest-missing": "ai-registry",
+    "ai-ingest-talk": "ai-registry",
+    "ai-step-page": "ai-step-page",
+    "ai-prompt": "ai-step-page",
+    "admin-settings": "admin-settings",
+    "time-zone": "admin-settings",
+    "watch-history": "admin-settings",
+    "embed": "admin-settings",
+    "portal-ai": "admin-settings",
+    "experiments-desk": "experiments-desk",
+    "experiments-denied": "experiments-desk",
+    "experiment-missing": "experiments-desk",
+    "experiment-detail": "experiments-desk",
+    "experiment-edit-denied": "experiments-desk",
+    "experiment-edit": "experiments-desk",
+    "insights-desk": "insights-desk",
+    "insights-denied": "insights-desk",
+    "calendar-desk": "calendar-desk",
+    "calendar-denied": "calendar-desk",
+    "missions-desk": "missions-desk",
+    "missions-denied": "missions-desk",
+    "mission-detail": "missions-desk",
+    "mission-edit-denied": "missions-desk",
+    "mission-edit": "missions-desk",
+    "master": "master",
+    "portal-create": "portal-create",
+    "portal-edit": "portal-edit",
+    "portal-details": "portal-edit",
+    "portal-courses": "portal-edit",
+    "portal-features": "portal-edit",
+    "feature-garden": "portal-edit",
+    "feature-workbook": "portal-edit",
+    "feature-circle": "portal-edit",
+    "feature-planner": "portal-edit",
+    "feature-compass": "portal-edit",
+    "feature-feedback": "portal-edit",
+    "feature-gather": "portal-edit",
+    "feature-live": "portal-edit",
+    "feature-missions": "portal-edit",
+    "feature-insights": "portal-edit",
+    "feature-experiments": "portal-edit",
+    "master-library": "master-library",
+    "master-course": "master-course",
+    "master-packs": "master-packs",
+    "pack-give": "master-packs",
+    "master-plans": "master-plans",
+    "master-nights": "master-nights",
+    "master-opening": "master-opening",
+    "master-lanes": "master-lanes",
+    "master-simulator": "master-simulator",
+    "simulator": "master-simulator",
+    "master-personas": "master-personas",
+    "master-questions": "master-questions",
+    "master-trends": "master-trends",
+    "master-review": "master-review",
+    "master-review-popups": "master-review-popups",
+    "master-review-swarm": "master-review-swarm",
+    "master-tiers": "master-tiers",
+    "master-tier": "master-tier",
+    "plan": "plan",
+    "gather-detail": "gather-detail",
+    "wizard": "wizard",
+    "appetiser": "appetiser",
+    "desk-live": "desk-live",
+    "master-live": "master-live",
+    "master-framing": "master-framing",
+    "framing-desk": "master-framing",
+    "framing-clip": "framing-clip",
+    "live-home": "live-home",
+    "feature-announcements": "portal-edit",
+    "feature-calendar": "portal-edit",
+    "feature-ai": "portal-edit",
+    "lane": "lane",
+    "transcripts": "transcripts",
+    "transcript-editor": "transcript-editor",
+    "transcript-editor-page": "transcript-editor",
+    "portal-learner": "portal-learner",
+    "master-diaries": "master-diaries",
+    "portal-diaries": "master-diaries",
+    "master-diary": "master-diary",
+    "portal-diary": "master-diary"
+  },
+  "skipped": {
+    "default": "Fallback sentences for a screen with no page of its own. There is no task to film.",
+    "closed": "Shown only when a portal is paused. The seeded demo stays open so the other pages can be filmed.",
+    "feature-unavailable": "Shown only when a feature is switched off. The seeded demo has every feature on.",
+    "mission-page": "The seeded demo has no A mission screen to open.",
+    "mission-missing": "The seeded demo has no A mission screen to open.",
+    "live-screen": "The seeded demo has no A live talk screen to open.",
+    "gather-door": "The seeded demo has no At the door screen to open.",
+    "master-plan": "The seeded demo has no One study plan screen to open.",
+    "portal-plan": "The seeded demo has no One study plan screen to open."
+  }
+}

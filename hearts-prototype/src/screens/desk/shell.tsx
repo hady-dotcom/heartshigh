@@ -128,6 +128,7 @@ export function masterNav(): NavGroup[] {
         { key: 'questions', label: 'Placing questions', href: '/master/questions', icon: <QuestionIcon /> },
         { key: 'ai', label: 'AI steps', href: '/master/ai', icon: <CogIcon /> },
         { key: 'framing', label: 'Framing director', href: '/master/framing', icon: <FrameIcon /> },
+        { key: 'see-how', label: 'See how', href: '/master/see-how', icon: <FilmIcon /> },
         { key: 'sheet', label: 'Master sheet', href: '/master/sheet', icon: <SheetIcon /> },
         { key: 'transcripts', label: 'Transcripts', href: '/master/transcripts', icon: <SheetIcon /> },
         { key: 'create', label: 'Sheet creator', href: '/master/sheet/create', icon: <BookIcon /> },

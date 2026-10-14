@@ -75,6 +75,8 @@ export const PAGE: Record<string, string> = {
     'Event Calendar knows Friday, Ramadan, Dhul Hijjah, the two Eids and seasons you add. The Islamic day changes at Maghrib. A suggested line never reaches a learner until you approve it.',
   live:
     'Live recordings are video sessions for this portal, including ones already held. Learners see a session while it is on, and a replay afterwards if you keep one. Paste a YouTube or Vimeo link, or use Mux when it is configured.',
+  framing:
+    'Framing is how a clip sits on the phone. The coloured segments are the director’s pick. Play it through, then change a segment when the crop is wrong. The film itself stays where it is.',
   missions:
     'A mission is a warm ask, never a scolding. Write what you are asking, why it matters, how many minutes, the dates, a target, and which portals. Ask for help is the thread inside the app, so nobody needs a support email.',
   safety:
@@ -222,7 +224,7 @@ export const EXPERIMENT_HELP: { title?: string; body: string }[] = [
   { body: 'A sheikh’s words are never tested. The talk, the Qur’an, the hadith, and the meaning of a question stay as they are.' },
 ]
 
-const TEST_IDS: Record<string, string> = {
+export const TEST_IDS: Record<string, string> = {
   'admin-overview': 'overview',
   'admin-teach': 'teach',
   'feedback-desk': 'feedback',
@@ -234,6 +236,9 @@ const TEST_IDS: Record<string, string> = {
   'master-nights': 'nights',
   'desk-live': 'live',
   'master-live': 'live',
+  'master-framing': 'framing',
+  'framing-clip': 'framing',
+  'framing-desk': 'framing',
   'desk-gather': 'gather',
   'admin-content': 'content',
   'admin-course': 'course',
@@ -280,6 +285,8 @@ const TEST_IDS: Record<string, string> = {
   'master-safety': 'safety',
   'admin-announcements': 'announcements',
   'master-announcements': 'announcements',
+  transcripts: 'transcripts',
+  'transcript-editor-page': 'transcripts',
 }
 
 /** Page copy for a desk frame, from the nav key or the screen test id. */
@@ -287,6 +294,14 @@ export function pageHelp(active?: string, testId?: string) {
   if (testId && PAGE[TEST_IDS[testId] || testId]) return PAGE[TEST_IDS[testId] || testId]
   if (active && PAGE[active]) return PAGE[active]
   return ''
+}
+
+export function deskPageCopyKeys() {
+  return Object.keys(PAGE)
+}
+
+export function deskTestIdKeys() {
+  return Object.keys(TEST_IDS)
 }
 
 export function helpSentenceCount(text: string) {
