@@ -148,7 +148,7 @@ async function releasePlans(payload: Payload, userId: number) {
     payload.find({ collection: 'schedules', overrideAccess: true, depth: 0, limit: 200, where: { learners: { contains: userId } } }),
   ])
   const plans = new Map<number, Doc>()
-  for (const doc of [...owned.docs, ...listed.docs]) plans.set(doc.id, doc as Doc)
+  for (const doc of [...owned.docs, ...listed.docs]) plans.set(doc.id, doc as unknown as Doc)
   for (const plan of plans.values()) {
     const learnerIds = ((plan.learners as unknown[]) || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
     const next = planAfterLearnerGone({ ownerId: idOf(plan.owner), learnerIds }, userId)
@@ -169,7 +169,7 @@ async function anonymiseAnalytics(payload: Payload, learner: Doc) {
   const email = typeof learner.email === 'string' ? learner.email : null
   const name = typeof learner.name === 'string' ? learner.name : null
   const hints = { id: learner.id, email, name }
-  const personWhere = {
+  const personWhere: Where = {
     or: [
       { learner: { equals: learner.id } },
       { subject: { equals: String(learner.id) } },
@@ -178,7 +178,7 @@ async function anonymiseAnalytics(payload: Payload, learner: Doc) {
     ],
   }
   const events = await payload.find({ collection: 'experiment-events', overrideAccess: true, depth: 0, limit: 200, where: personWhere })
-  for (const doc of events.docs as Doc[]) {
+  for (const doc of events.docs as unknown as Doc[]) {
     await payload.update({
       collection: 'experiment-events',
       id: doc.id,
@@ -187,7 +187,7 @@ async function anonymiseAnalytics(payload: Payload, learner: Doc) {
     })
   }
   const assignments = await payload.find({ collection: 'experiment-assignments', overrideAccess: true, depth: 0, limit: 200, where: personWhere })
-  for (const doc of assignments.docs as Doc[]) {
+  for (const doc of assignments.docs as unknown as Doc[]) {
     await payload.update({
       collection: 'experiment-assignments',
       id: doc.id,
@@ -198,7 +198,7 @@ async function anonymiseAnalytics(payload: Payload, learner: Doc) {
   const or: Where[] = [{ subject: { equals: String(learner.id) } }, { subject: { equals: `learner:${learner.id}` } }]
   if (email) or.push({ subject: { equals: email } })
   const insights = await payload.find({ collection: 'insight-events', overrideAccess: true, depth: 0, limit: 200, where: { or } })
-  for (const doc of insights.docs as Doc[]) {
+  for (const doc of insights.docs as unknown as Doc[]) {
     await payload.update({
       collection: 'insight-events',
       id: doc.id,

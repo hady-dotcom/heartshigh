@@ -1849,6 +1849,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "hidden_note": {
+          "name": "hidden_note",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -2281,6 +2287,20 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "too_short": {
+          "name": "too_short",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "short_waived": {
+          "name": "short_waived",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {
@@ -3082,6 +3102,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "too_short": {
+          "name": "too_short",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {
@@ -3282,6 +3309,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "too_short": {
+          "name": "too_short",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {

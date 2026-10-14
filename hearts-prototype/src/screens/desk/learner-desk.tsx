@@ -527,7 +527,7 @@ function DiaryTable({
   hrefFor,
   emptyHref,
 }: {
-  entries: { id: number; user?: unknown; portal?: unknown; createdAt?: unknown; consent?: unknown; body?: unknown; answer?: unknown }[]
+  entries: { id: number; user?: unknown; portal?: unknown; createdAt?: unknown; consent?: boolean | null; body?: unknown; answer?: unknown }[]
   portals: { id: number; name?: unknown; organisationName?: unknown }[]
   hrefFor: (id: number) => string
   emptyHref: string

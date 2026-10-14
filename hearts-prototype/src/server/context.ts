@@ -273,7 +273,8 @@ export async function adoptedCourseIds(payload: Payload, portalId: number) {
 export async function requireUser() {
   const session = await getSession()
   const path = (await headers()).get('x-hearts-path') || '/'
-  if (!session.user || !session.actor) redirect(`/login?next=${encodeURIComponent(path)}`)
+  if (!session.user) redirect(`/login?next=${encodeURIComponent(path)}`)
+  if (!session.actor) redirect(`/login?next=${encodeURIComponent(path)}`)
   if (session.actor.mustChangePassword && !path.startsWith('/change-password')) redirect('/change-password')
   return session as Session & { user: SessionUser; actor: SessionUser }
 }
