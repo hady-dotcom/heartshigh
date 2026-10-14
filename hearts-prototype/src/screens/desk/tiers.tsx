@@ -76,9 +76,9 @@ function BeatFilms({ lesson }: { lesson: Record<string, unknown> }) {
   )
 }
 
-function Frame({ ctx, title, intro, children, testId }: { ctx: MasterCtx; title: string; intro: string; children: React.ReactNode; testId: string }) {
+function Frame({ ctx, title, intro, children, testId, showOnPhone }: { ctx: MasterCtx; title: string; intro: string; children: React.ReactNode; testId: string; showOnPhone?: boolean }) {
   return (
-    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active="tiers" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
+    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active="tiers" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId} showOnPhone={showOnPhone}>
       {children}
     </DeskFrame>
   )
@@ -171,7 +171,7 @@ export async function MasterTier(ctx: MasterCtx, tierId: number) {
   const next = `/master/tiers/${tier.id}`
   const title = partTitle(lesson)
   return (
-    <Frame ctx={ctx} title={title} intro={`${str(lesson.speaker)}. ${str(tier.note) || 'Times and lines come from the captions by machine. Watch each tier and fix what reads wrong before marking it checked.'}`} testId="master-tier">
+    <Frame ctx={ctx} title={title} intro={`${str(lesson.speaker)}. ${str(tier.note) || 'Times and lines come from the captions by machine. Watch each tier and fix what reads wrong before marking it checked.'}`} testId="master-tier" showOnPhone>
       <p style={{ marginTop: 0 }}><Link href="/master/tiers" data-testid="tiers-back">‹ All talk tiers</Link></p>
       <TierEditor
         tier={{
@@ -184,6 +184,9 @@ export async function MasterTier(ctx: MasterCtx, tierId: number) {
           hook: str(tier.hook),
           turn: str(tier.turn),
           land: str(tier.land),
+          hookAt: tier.hookAt == null ? null : Number(tier.hookAt),
+          turnAt: tier.turnAt == null ? null : Number(tier.turnAt),
+          landAt: tier.landAt == null ? null : Number(tier.landAt),
           offerResume: tier.offerResume !== false,
           note: str(tier.note),
           checked: tier.status === 'checked',

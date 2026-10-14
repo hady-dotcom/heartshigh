@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { KineticPreview } from '@/components/desk/kinetic-preview'
 import { APPETISER_MAX, HORS_MAX, HORS_MIN, horsNestingProblem } from '@/lib/tiers'
 import { learnerEmbedSrc } from '@/lib/yt'
 
@@ -16,6 +17,9 @@ type Tier = {
   hook: string
   turn: string
   land: string
+  hookAt?: number | null
+  turnAt?: number | null
+  landAt?: number | null
   offerResume: boolean
   note: string
   checked: boolean
@@ -119,7 +123,19 @@ export function TierEditor({ tier, youtubeId, duration, lines, next, horsMax = 4
       </div>
       <section className="panel" style={{ marginTop: 18 }}>
         <header className="light"><h2>Hook, turn and land</h2><span className="hint">Word for word from the talk</span></header>
-        <div className="body form">
+        <div className="body form kinetic-desk-grid">
+          <KineticPreview
+            youtubeId={youtubeId}
+            hook={text.hook}
+            turn={text.turn}
+            land={text.land}
+            hookAt={tier.hookAt}
+            turnAt={tier.turnAt}
+            landAt={tier.landAt}
+            appetiserStart={as}
+            appetiserEnd={ae}
+          />
+          <div>
           <label className="stack">Hook<textarea rows={2} {...field('hook')} data-testid="tier-hook" /></label>
           <label className="stack">Turn<textarea rows={2} {...field('turn')} data-testid="tier-turn" /></label>
           <label className="stack">Land<textarea rows={2} {...field('land')} data-testid="tier-land" /></label>
@@ -132,6 +148,7 @@ export function TierEditor({ tier, youtubeId, duration, lines, next, horsMax = 4
             ) : (
               <button className="btn teal small" type="submit" name="check" value="yes" data-testid="tier-check">Save and mark as checked</button>
             )}
+          </div>
           </div>
         </div>
       </section>
