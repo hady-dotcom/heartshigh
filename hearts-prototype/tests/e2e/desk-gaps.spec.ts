@@ -37,7 +37,7 @@ test('the learner live page opens, and Live recordings links to it', async ({ pa
   await page.setViewportSize({ width: 1280, height: 900 })
   await signIn(page, 'elm-teacher@hearts.test', 'portal-teacher', '/p/east-london/admin/live')
   await expect(page.getByTestId('desk-live')).toBeVisible()
-  await expect(page.locator('h1').first()).toContainText('Live recordings')
+  await expect(page.locator('.desk h1').first()).toContainText('Live recordings')
   await expect(page.getByTestId('desk-open-live')).toHaveAttribute('href', '/p/east-london/live')
   await page.getByTestId('desk-open-live').click()
   await expect(page.getByTestId('live-home')).toBeVisible()
