@@ -30,6 +30,7 @@ import { CAPTION_QUEUE_DETAIL, bringInFlash, bringInNote, bringInStatus, caption
 import { runTranscriptAction } from './transcript-desk'
 import { packSaveNotice } from '@/lib/publish-state'
 import { bringInAndPublish, commitBringIn, createHelperToken, deleteChannelSpeaker, previewBringIn, publishTalks, revokeHelperToken, saveChannelSpeaker, settleAutoPublish } from './bring-in'
+import { replaceSeeHowClip, resetSeeHowClip } from './see-how-clips'
 import { giveCourseToPackHolders } from './publish-holders'
 import { addCourseToCode, giveCourseToJoinedLearners } from './course-offer'
 import { withWorkLock } from '@/lib/work-lock'
@@ -1408,6 +1409,16 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       response.cookies.set('hearts_helper_once', secret, { httpOnly: true, maxAge: 120, path: '/', sameSite: 'lax' })
     }
     return response
+  }
+
+  if (action === 'see-how-replace' || action === 'see-how-reset') {
+    const next = safeNext(text(form, 'next') || '/master/see-how')
+    if (!user || user.role !== 'master') return redirectTo(req, next, 'Only the master desk can change a See how clip.')
+    const pageId = text(form, 'page')
+    const result = action === 'see-how-reset'
+      ? await resetSeeHowClip(payload, pageId)
+      : await replaceSeeHowClip(payload, pageId, form.get('file') instanceof File ? (form.get('file') as File) : new File([], ''))
+    return redirectTo(req, next, result.error, result.notice)
   }
 
   if (action === 'upload-transcript') {

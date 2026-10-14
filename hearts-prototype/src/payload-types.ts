@@ -70,6 +70,7 @@ export interface Config {
     portals: Portal;
     users: User;
     media: Media;
+    'see-how-clips': SeeHowClip;
     clauses: Clause;
     doors: Door;
     seats: Seat;
@@ -170,6 +171,7 @@ export interface Config {
     portals: PortalsSelect<false> | PortalsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'see-how-clips': SeeHowClipsSelect<false> | SeeHowClipsSelect<true>;
     clauses: ClausesSelect<false> | ClausesSelect<true>;
     doors: DoorsSelect<false> | DoorsSelect<true>;
     seats: SeatsSelect<false> | SeatsSelect<true>;
@@ -564,6 +566,30 @@ export interface Media {
   portal?: (number | null) | Portal;
   owner?: (number | null) | User;
   purpose?: ('answer' | 'gather-photo' | 'portal-asset' | 'film' | 'feedback') | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * One replacement video per See how page.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "see-how-clips".
+ */
+export interface SeeHowClip {
+  id: number;
+  page: string;
+  alt?: string | null;
   prefix?: string | null;
   _objectKey?: string | null;
   updatedAt: string;
@@ -2959,6 +2985,10 @@ export interface PayloadLockedDocument {
         value: number | Media;
       } | null)
     | ({
+        relationTo: 'see-how-clips';
+        value: number | SeeHowClip;
+      } | null)
+    | ({
         relationTo: 'clauses';
         value: number | Clause;
       } | null)
@@ -3455,6 +3485,27 @@ export interface MediaSelect<T extends boolean = true> {
   portal?: T;
   owner?: T;
   purpose?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "see-how-clips_select".
+ */
+export interface SeeHowClipsSelect<T extends boolean = true> {
+  page?: T;
+  alt?: T;
   prefix?: T;
   _objectKey?: T;
   updatedAt?: T;

@@ -26,6 +26,7 @@ export type SeeHowDiscover =
   | 'compass-learner'
   | 'ai-step'
   | 'tier'
+  | 'framing'
 
 export type SeeHowPageSpec = {
   id: string
@@ -1300,6 +1301,70 @@ export const SEE_HOW_PAGES: SeeHowPageSpec[] = [
     discover: 'tier',
     soft: true,
     steps: [hold('Check the times and the lines before you mark a talk as checked.')],
+  }),
+  clip({
+    id: 'live-home',
+    title: 'Live recordings in the app',
+    keys: ['live-home'],
+    path: '/p/east-london/live',
+    role: 'learner',
+    viewport: phone,
+    ready: '[data-testid=live-home]',
+    steps: [
+      hold('Live recordings are the video sessions for your portal.'),
+      hold('When one is on you can watch and send a question. A replay sits here afterwards if your teacher kept one.'),
+    ],
+  }),
+  clip({
+    id: 'desk-live',
+    title: 'Live recordings',
+    keys: ['desk-live'],
+    path: '/p/east-london/admin/live',
+    role: 'portal',
+    viewport: desk,
+    ready: '[data-testid=desk-live]',
+    steps: [
+      hold('This is where a live session starts for the people in this portal.'),
+      fill('Give the session a name people will recognise.', '[data-testid=desk-live-title]', 'Circle after Isha'),
+      fill('Paste a YouTube or Vimeo link if that is where you are streaming.', '[data-testid=desk-live-url]', 'https://www.youtube.com/live/see-how'),
+    ],
+  }),
+  clip({
+    id: 'master-live',
+    title: 'Live recordings across portals',
+    keys: ['master-live'],
+    path: '/master/live',
+    role: 'master',
+    viewport: desk,
+    ready: '[data-testid=master-live]',
+    steps: [
+      hold('Every portal’s live sessions sit here. Open a portal desk to start or end one.'),
+      click('Open a portal desk when you need to go live for that mosque.', 'a[href*="/admin/live"]', true),
+    ],
+  }),
+  clip({
+    id: 'master-framing',
+    title: 'Framing',
+    keys: ['master-framing', 'framing-desk'],
+    path: '/master/framing',
+    role: 'master',
+    viewport: desk,
+    ready: '[data-testid=master-framing]',
+    steps: [
+      hold('Each row is a clip. The coloured words are how the director framed it on the phone.'),
+      click('Open a clip when you want to change one segment.', '[data-testid=framing-open]', true),
+    ],
+  }),
+  clip({
+    id: 'framing-clip',
+    title: 'One clip’s framing',
+    keys: ['framing-clip'],
+    path: '/master/framing',
+    role: 'master',
+    viewport: desk,
+    ready: '[data-testid=framing-clip]',
+    discover: 'framing',
+    steps: [hold('Play the crop, then change a segment when the pick is wrong. The film stays where it is.')],
   }),
 ]
 

@@ -5,6 +5,10 @@ import { createPortal } from 'react-dom'
 import { seeHowCaptionAt, seeHowFor, type SeeHowPage } from '@/lib/see-how'
 import styles from './see-how.module.css'
 
+function filmedSrc(page: SeeHowPage, src: string) {
+  return src === page.video || (Boolean(page.overrideVideo) && src === page.overrideVideo)
+}
+
 function Player({ page, helpKey, onClose }: { page: SeeHowPage & { id: string }; helpKey: string; onClose: () => void }) {
   const titleId = useId()
   const [src, setSrc] = useState(page.overrideVideo || page.video)
@@ -12,13 +16,21 @@ function Player({ page, helpKey, onClose }: { page: SeeHowPage & { id: string };
 
   useEffect(() => {
     let cancel = false
-    fetch('/see-how/overrides.json')
-      .then((response) => (response.ok ? response.json() : {}))
-      .then((data: Record<string, unknown>) => {
-        const custom = data?.[page.id] ?? data?.[helpKey]
-        if (!cancel && typeof custom === 'string' && custom && !custom.startsWith('_')) setSrc(custom)
-      })
-      .catch(() => {})
+    Promise.all([
+      fetch('/api/see-how').then((response) => (response.ok ? response.json() : {})).catch(() => ({})),
+      fetch('/see-how/overrides.json').then((response) => (response.ok ? response.json() : {})).catch(() => ({})),
+    ]).then(([stored, file]) => {
+      if (cancel) return
+      const fromDesk = (stored as { clips?: Record<string, unknown> })?.clips?.[page.id]
+      if (typeof fromDesk === 'string' && fromDesk) {
+        setSrc(fromDesk)
+        setCaption('')
+        return
+      }
+      const data = file as Record<string, unknown>
+      const custom = data?.[page.id] ?? data?.[helpKey]
+      if (typeof custom === 'string' && custom && !custom.startsWith('_')) setSrc(custom)
+    })
     return () => {
       cancel = true
     }
@@ -56,9 +68,11 @@ function Player({ page, helpKey, onClose }: { page: SeeHowPage & { id: string };
           muted
           playsInline
           autoPlay
-          onTimeUpdate={(event) => setCaption(seeHowCaptionAt(page, event.currentTarget.currentTime))}
+          onTimeUpdate={(event) => {
+            if (filmedSrc(page, src)) setCaption(seeHowCaptionAt(page, event.currentTarget.currentTime))
+          }}
         />
-        {caption ? <p className={styles.caption} data-testid="see-how-caption">{caption}</p> : null}
+        {caption && filmedSrc(page, src) ? <p className={styles.caption} data-testid="see-how-caption">{caption}</p> : null}
       </div>
     </div>,
     document.body,
@@ -87,5 +101,20 @@ export function SeeHowLink({ helpKey }: { helpKey?: string }) {
       </button>
       {open ? <Player page={page} helpKey={helpKey} onClose={() => setOpen(false)} /> : null}
     </div>
+  )
+}
+
+/** Play button for one filmed page. Used on the master desk list. */
+export function SeeHowPlay({ pageId }: { pageId: string }) {
+  const page = seeHowFor(pageId)
+  const [open, setOpen] = useState(false)
+  if (!page) return null
+  return (
+    <>
+      <button type="button" className="btn ghost small" data-testid="see-how-play" data-page={pageId} onClick={() => setOpen(true)}>
+        Play
+      </button>
+      {open ? <Player page={page} helpKey={pageId} onClose={() => setOpen(false)} /> : null}
+    </>
   )
 }

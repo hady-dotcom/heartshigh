@@ -312,6 +312,10 @@ async function discoverPath(browser: Browser, spec: SeeHowPageSpec, storage?: st
       await page.goto('/master/tiers')
       return await hrefOf(page, '[data-testid=tier-open]')
     }
+    if (kind === 'framing') {
+      await page.goto('/master/framing')
+      return await hrefOf(page, '[data-testid=framing-open]')
+    }
     return spec.path
   } catch (error) {
     console.log(`discover ${spec.id}: ${error instanceof Error ? error.message.split('\n')[0] : error}`)

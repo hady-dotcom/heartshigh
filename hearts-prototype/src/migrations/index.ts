@@ -31,6 +31,7 @@ import * as migration_20261014_120000_portal_ai_forks from './20261014_120000_po
 import * as migration_20261014_150000_short_talks from './20261014_150000_short_talks';
 import * as migration_20261014_210000_experiment_duration from './20261014_210000_experiment_duration';
 import * as migration_20261014_220000_transcript_edits from './20261014_220000_transcript_edits';
+import * as migration_20261014_223000_see_how_clips from './20261014_223000_see_how_clips';
 import * as migration_20261014_231000_learner_desk from './20261014_231000_learner_desk';
 import * as migration_20261014_233000_reply_done from './20261014_233000_reply_done';
 
@@ -199,6 +200,11 @@ export const migrations = [
     up: migration_20261014_220000_transcript_edits.up,
     down: migration_20261014_220000_transcript_edits.down,
     name: '20261014_220000_transcript_edits',
+  },
+  {
+    up: migration_20261014_223000_see_how_clips.up,
+    down: migration_20261014_223000_see_how_clips.down,
+    name: '20261014_223000_see_how_clips',
   },
   {
     up: migration_20261014_231000_learner_desk.up,

@@ -1733,6 +1733,101 @@
       ],
       "overrideVideo": "",
       "seconds": 28
+    },
+    "desk-live": {
+      "title": "Live recordings",
+      "video": "/see-how/desk-live.webm",
+      "poster": "/see-how/desk-live.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.3,
+          "text": "This is where a live session starts for the people in this portal."
+        },
+        {
+          "start": 2.3,
+          "end": 4.9,
+          "text": "Give the session a name people will recognise."
+        },
+        {
+          "start": 4.9,
+          "end": 9,
+          "text": "Paste a YouTube or Vimeo link if that is where you are streaming."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 9
+    },
+    "master-live": {
+      "title": "Live recordings across portals",
+      "video": "/see-how/master-live.webm",
+      "poster": "/see-how/master-live.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.7,
+          "text": "Every portal’s live sessions sit here. Open a portal desk to start or end one."
+        },
+        {
+          "start": 2.7,
+          "end": 5.2,
+          "text": "Open a portal desk when you need to go live for that mosque."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.2
+    },
+    "master-framing": {
+      "title": "Framing",
+      "video": "/see-how/master-framing.webm",
+      "poster": "/see-how/master-framing.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 5.3,
+          "text": "Each row is a clip. The coloured words are how the director framed it on the phone."
+        },
+        {
+          "start": 5.3,
+          "end": 7.7,
+          "text": "Open a clip when you want to change one segment."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 7.7
+    },
+    "framing-clip": {
+      "title": "One clip’s framing",
+      "video": "/see-how/framing-clip.webm",
+      "poster": "/see-how/framing-clip.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.6,
+          "text": "Play the crop, then change a segment when the pick is wrong. The film stays where it is."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.6
+    },
+    "live-home": {
+      "title": "Live recordings in the app",
+      "video": "/see-how/live-home.webm",
+      "poster": "/see-how/live-home.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.2,
+          "text": "Live recordings are the video sessions for your portal."
+        },
+        {
+          "start": 2.2,
+          "end": 4.8,
+          "text": "When one is on you can watch and send a question. A replay sits here afterwards if your teacher kept one."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 4.8
     }
   },
   "keys": {
@@ -1925,7 +2020,13 @@
     "plan": "plan",
     "gather-detail": "gather-detail",
     "wizard": "wizard",
-    "appetiser": "appetiser"
+    "appetiser": "appetiser",
+    "desk-live": "desk-live",
+    "master-live": "master-live",
+    "master-framing": "master-framing",
+    "framing-desk": "master-framing",
+    "framing-clip": "framing-clip",
+    "live-home": "live-home"
   },
   "skipped": {
     "default": "Fallback sentences for a screen with no page of its own. There is no task to film.",

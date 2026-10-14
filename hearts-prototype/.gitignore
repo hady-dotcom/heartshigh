@@ -5,6 +5,7 @@ node_modules
 .next
 data
 media
+see-how-uploads
 playwright-report
 test-results
 *.log

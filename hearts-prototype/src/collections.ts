@@ -250,6 +250,26 @@ export const Users: CollectionConfig = {
  * thumbnails, speaker stills and scenic art that live under /clips, /speakers,
  * /slides and /theme are not Media rows and stay readable signed out.
  */
+/** A video the master desk put in place of one filmed See how demo. Public to read, so a signed-out learner can play it. */
+export const SeeHowClips: CollectionConfig = {
+  slug: 'see-how-clips',
+  admin: { useAsTitle: 'page', description: 'One replacement video per See how page.' },
+  upload: {
+    staticDir: 'see-how-uploads',
+    mimeTypes: ['video/webm', 'video/mp4', 'video/quicktime'],
+  },
+  access: {
+    read: () => true,
+    create: master,
+    update: master,
+    delete: master,
+  },
+  fields: [
+    { name: 'page', type: 'text', required: true, unique: true, index: true },
+    { name: 'alt', type: 'text' },
+  ],
+}
+
 export const Media: CollectionConfig = {
   slug: 'media',
   upload: {
@@ -1409,6 +1429,7 @@ export const collections = [
   Portals,
   Users,
   Media,
+  SeeHowClips,
   Clauses,
   Doors,
   Seats,

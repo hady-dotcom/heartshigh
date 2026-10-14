@@ -8,10 +8,9 @@ export type SeeHowPage = {
   poster: string
   captions: SeeHowCaption[]
   /**
-   * When set, the player uses this URL instead of `video`.
-   * An admin upload can write the path here, or set the same page id in
-   * `/see-how/overrides.json` (that file wins, so a later upload need not
-   * regenerate the filmed demos).
+   * When set, the player uses this URL instead of `video`, unless the master
+   * desk has stored a replacement. A stored clip wins, then this field, then
+   * the same page id in `/see-how/overrides.json`.
    */
   overrideVideo: string
   seconds?: number

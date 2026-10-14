@@ -75,6 +75,8 @@ export const PAGE: Record<string, string> = {
     'Event Calendar knows Friday, Ramadan, Dhul Hijjah, the two Eids and seasons you add. The Islamic day changes at Maghrib. A suggested line never reaches a learner until you approve it.',
   live:
     'Live recordings are video sessions for this portal, including ones already held. Learners see a session while it is on, and a replay afterwards if you keep one. Paste a YouTube or Vimeo link, or use Mux when it is configured.',
+  framing:
+    'Framing is how a clip sits on the phone. The coloured segments are the director’s pick. Play it through, then change a segment when the crop is wrong. The film itself stays where it is.',
   missions:
     'A mission is a warm ask, never a scolding. Write what you are asking, why it matters, how many minutes, the dates, a target, and which portals. Ask for help is the thread inside the app, so nobody needs a support email.',
   safety:
@@ -234,6 +236,9 @@ export const TEST_IDS: Record<string, string> = {
   'master-nights': 'nights',
   'desk-live': 'live',
   'master-live': 'live',
+  'master-framing': 'framing',
+  'framing-clip': 'framing',
+  'framing-desk': 'framing',
   'desk-gather': 'gather',
   'admin-content': 'content',
   'admin-course': 'course',
