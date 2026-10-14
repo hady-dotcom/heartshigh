@@ -10,6 +10,7 @@ import {
   duplicateLine,
   flatLaneLine,
   newcomerPicks,
+  pullWords,
   reviewOpeningQuestions,
   shortLaneLine,
   type FeelingName,
@@ -112,17 +113,36 @@ export function Simulator({ scenes, scales, feelings, edits, route, cutTitles }:
           {result.crisis ? <p className="flash error" data-testid="sim-crisis">This path opens the help screen before any clip.</p> : null}
           <section className="panel">
             <header className="light"><h2>Feelings after these answers</h2></header>
-            <div className="body" style={{ display: 'grid', gap: 6 }}>
+            <div className="body" style={{ display: 'grid', gap: 10 }} data-testid="feeling-plain">
               {scales.map((scale) => {
                 const value = result.state.s[scale.key] || 0
+                const words = pullWords(value, feelingName(scale.key))
                 return (
                   <div key={scale.key} className="sim-scale" data-testid="sim-scale" data-scale={scale.key} data-value={value.toFixed(2)}>
-                    <span>{feelingName(scale.key)}{scale.firstOpenRead ? '' : ' (not used on the first questions)'}</span>
-                    <span className="sim-bar"><i style={{ left: value < 0 ? `${50 + value * 50}%` : '50%', width: `${Math.abs(value) * 50}%`, background: value < 0 ? 'var(--orange)' : 'var(--teal)' }} /></span>
-                    <b>{value.toFixed(2)}</b>
+                    <span className="sim-top">
+                      <span>{feelingName(scale.key)}{scale.firstOpenRead ? '' : ' (not used on the first questions)'}</span>
+                      <b className="sim-words">{words}</b>
+                    </span>
+                    <span className="sim-bar" aria-hidden><i style={{ left: value < 0 ? `${50 + value * 50}%` : '50%', width: `${Math.abs(value) * 50}%`, background: value < 0 ? 'var(--orange)' : 'var(--teal)' }} /></span>
                   </div>
                 )
               })}
+              <details className="for-techies" data-testid="feeling-techies">
+                <summary>For techies</summary>
+                <div className="table-wrap">
+                  <table className="data">
+                    <thead><tr><th>Feeling</th><th className="num">Amount</th></tr></thead>
+                    <tbody>
+                      {scales.map((scale) => (
+                        <tr key={scale.key}>
+                          <td>{feelingName(scale.key)}</td>
+                          <td className="num">{(result.state.s[scale.key] || 0).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
             </div>
           </section>
           <section className="panel">
@@ -179,7 +199,7 @@ export function Simulator({ scenes, scales, feelings, edits, route, cutTitles }:
           <span className="hint">Plain sums, no AI call</span>
         </header>
         <div className="body" style={{ display: 'grid', gap: 14 }}>
-          <p style={{ margin: 0 }}>Each row is an answer. Each column is a feeling. The number is how far that answer moves the feeling. A minus means the feeling is low, so that lane gets stronger.</p>
+          <p style={{ margin: 0 }}>Each row is an answer. Each column is a feeling. The words say which way that answer pulls. A pull away means the feeling is low, so that lane gets stronger.</p>
           {flags.map((flag) => <p key={flag} data-testid="review-flag" style={{ margin: 0 }}>{flag}</p>)}
           {review.suggestions.map((line) => <p key={line} data-testid="review-suggestion" style={{ margin: 0 }}>{line}</p>)}
           {review.questions.map((question) => (
@@ -189,7 +209,7 @@ export function Simulator({ scenes, scales, feelings, edits, route, cutTitles }:
                 <a href={edits[question.key] || '/master/opening'} data-testid="edit-question">Edit question</a>
               </p>
               <div className="q-heat-wrap">
-                <table className="data q-heat">
+                <table className="data q-heat q-words">
                   <thead>
                     <tr>
                       <th>Answer</th>
@@ -203,7 +223,7 @@ export function Simulator({ scenes, scales, feelings, edits, route, cutTitles }:
                         <td>{row.label}</td>
                         {feelings.map((feeling) => {
                           const amount = row.amounts[feeling.key] || 0
-                          return <td key={feeling.key} style={heatStyle(amount)} data-amount={amount.toFixed(2)}>{amountText(amount)}</td>
+                          return <td key={feeling.key} style={heatStyle(amount)} data-amount={amount.toFixed(2)}>{pullWords(amount, feeling.name)}</td>
                         })}
                         <td>{row.laneTitle}</td>
                       </tr>
@@ -211,6 +231,30 @@ export function Simulator({ scenes, scales, feelings, edits, route, cutTitles }:
                   </tbody>
                 </table>
               </div>
+              <details className="for-techies" data-testid="heat-techies">
+                <summary>For techies</summary>
+                <div className="q-heat-wrap">
+                  <table className="data q-heat">
+                    <thead>
+                      <tr>
+                        <th>Answer</th>
+                        {feelings.map((feeling) => <th key={feeling.key}>{feeling.name}</th>)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {question.rows.map((row) => (
+                        <tr key={row.key}>
+                          <td>{row.label}</td>
+                          {feelings.map((feeling) => {
+                            const amount = row.amounts[feeling.key] || 0
+                            return <td key={feeling.key} data-amount={amount.toFixed(2)}>{amountText(amount)}</td>
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
             </div>
           ))}
           <div className="actions">

@@ -148,18 +148,22 @@ export type OpeningReview = {
 
 const FLOOR = 0.051
 
-function formatAmount(amount: number) {
-  const sign = amount > 0 ? '+' : '−'
-  return `${sign}${Math.abs(amount).toFixed(2)}`
+/** Words for a feeling move. Near zero is barely anything; one full answer is a pull; more than that is strong. */
+export function pullWords(amount: number, name?: string) {
+  const size = Math.abs(amount)
+  if (size < 0.08) return 'barely moves anything'
+  const strength = size < 0.2 ? 'a small pull' : size < 0.45 ? 'a pull' : 'a strong pull'
+  if (!name) return amount < 0 ? `${strength} away` : strength
+  return amount < 0 ? `${strength} away from ${name}` : `${strength} to ${name}`
 }
 
 function effectDetail(option: SceneOption, scales: ScaleDef[], lanes: LaneDef[]) {
   const moves = [...appliedMoves(option, scales).entries()].filter(([, amount]) => amount !== 0)
-  const bits = moves.map(([scale, amount]) => `${laneTitle(lanes, lanes.find((lane) => lane.scale === scale)?.key) || scale} by ${formatAmount(amount)}`)
+  const bits = moves.map(([scale, amount]) => pullWords(amount, laneTitle(lanes, lanes.find((lane) => lane.scale === scale)?.key) || scale))
   if (option.intentLane) bits.push(`names ${laneTitle(lanes, option.intentLane)}`)
   if (option.spineFirst) bits.push('opens the main path first')
   if (!bits.length) return 'None of them moves a feeling.'
-  return `They move ${bits.join(' and ')}.`
+  return `They are ${bits.join(' and ')}.`
 }
 
 function laneTitle(lanes: LaneDef[], key?: string) {
@@ -337,7 +341,7 @@ export function duplicateLine(labels: string[], detail: string) {
 }
 
 export function flatLaneLine(lane: LaneFinding) {
-  return `${lane.title} is only ${lane.best.toFixed(2)} on every path. No question moves it.`
+  return `${lane.title} barely moves on every path. No question moves it.`
 }
 
 export function shortLaneLine(lane: LaneFinding) {

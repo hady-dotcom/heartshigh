@@ -10,6 +10,7 @@ import {
   duplicateLine,
   flatLaneLine,
   newcomerPicks,
+  pullWords,
   reviewOpeningQuestions,
   serveOpeningScenes,
   type RouteSlice,
@@ -98,7 +99,8 @@ test('a bank with no patience answer asks for one, in plain words', () => {
   const review = reviewOpeningQuestions(scenes, SCALES, routed(lanes))
   assert.equal(review.suggestions.includes('Add an answer that leans to Patience.'), true)
   assert.equal(review.flatLanes.some((lane) => lane.title === 'Patience'), true)
-  assert.match(flatLaneLine(review.flatLanes.find((lane) => lane.title === 'Patience')!), /only 0\.05/)
+  assert.match(flatLaneLine(review.flatLanes.find((lane) => lane.title === 'Patience')!), /barely moves/)
+  assert.doesNotMatch(flatLaneLine(review.flatLanes.find((lane) => lane.title === 'Patience')!), /\d\.\d/)
   assert.equal(review.suggestions.includes('Add an answer that leans to Trust.'), false)
 })
 
@@ -142,6 +144,15 @@ test('a newcomer pick skips the help-screen answer', () => {
   assert.equal(picks.visitor, 'phone')
   assert.notEqual(picks.visitor, 'heavy')
   assert.equal(Object.keys(picks).length, SCENES.length)
+})
+
+test('a feeling move is said in words, and the raw size stays out of that sentence', () => {
+  assert.equal(pullWords(0, 'Trust'), 'barely moves anything')
+  assert.equal(pullWords(0.05, 'Trust'), 'barely moves anything')
+  assert.equal(pullWords(0.3, 'Trust'), 'a pull to Trust')
+  assert.equal(pullWords(-0.3, 'Lightness and giving'), 'a pull away from Lightness and giving')
+  assert.equal(pullWords(0.6, 'Trust'), 'a strong pull to Trust')
+  assert.doesNotMatch(pullWords(-0.3, 'Trust'), /\d/)
 })
 
 test('the simulator help is short and does not say tap', () => {
