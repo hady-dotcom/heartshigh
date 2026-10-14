@@ -45,6 +45,10 @@ export type Query = {
   q?: string
   /** `?debug=yt` — kept when moving between course links. */
   debug?: string
+  /** Library list page. */
+  page?: string
+  /** Course film-card page. */
+  films?: string
 }
 
 export type Ctx = {
@@ -59,16 +63,86 @@ export type Ctx = {
 
 export type Row = Record<string, unknown> & { id: number; createdAt?: string }
 
-export async function rows(payload: Payload, collection: string, where?: Where, options: { limit?: number; sort?: string; depth?: number } = {}) {
+/** Page size used when a caller does not ask for a page. Do not treat this as the size of the library. */
+export const ROW_PAGE = 300
+
+/** Library lists are built for about this many courses, films or clips, one page at a time. */
+export const CATALOGUE_CEILING = 6000
+
+export function pageCount(total: number, size: number) {
+  if (total <= 0 || size <= 0) return 1
+  return Math.ceil(total / size)
+}
+
+export function clampPage(raw: string | number | undefined, pages: number) {
+  const value = typeof raw === 'number' ? raw : Number(raw)
+  if (!Number.isFinite(value) || value < 1) return 1
+  return Math.min(Math.floor(value), Math.max(1, pages))
+}
+
+export async function countDocs(payload: Payload, collection: string, where?: Where) {
+  const found = await payload.count({
+    collection: collection as CollectionSlug,
+    overrideAccess: true,
+    where,
+  })
+  return found.totalDocs
+}
+
+export async function pageDocs(
+  payload: Payload,
+  collection: string,
+  where: Where | undefined,
+  options: { page: number; limit: number; sort?: string; depth?: number },
+) {
+  const limit = Math.max(1, options.limit)
+  const page = Math.max(1, Math.floor(options.page) || 1)
   const found = await payload.find({
     collection: collection as CollectionSlug,
     overrideAccess: true,
     depth: options.depth ?? 0,
-    limit: options.limit ?? 300,
+    limit,
+    page,
     sort: options.sort,
     where,
   })
-  return found.docs as unknown as Row[]
+  const total = found.totalDocs
+  return {
+    docs: found.docs as unknown as Row[],
+    total,
+    page: found.page || page,
+    pages: pageCount(total, limit),
+  }
+}
+
+/** Every matching row, fetched in pages, so a list is not cut off at 300. Stops at CATALOGUE_CEILING. */
+export async function allDocs(
+  payload: Payload,
+  collection: string,
+  where?: Where,
+  options: { sort?: string; depth?: number; pageSize?: number; max?: number } = {},
+) {
+  const pageSize = options.pageSize ?? 200
+  const max = options.max ?? CATALOGUE_CEILING
+  const docs: Row[] = []
+  let page = 1
+  for (;;) {
+    const found = await pageDocs(payload, collection, where, { page, limit: pageSize, sort: options.sort, depth: options.depth })
+    docs.push(...found.docs)
+    if (!found.docs.length || docs.length >= found.total || docs.length >= max || page >= found.pages) break
+    page += 1
+  }
+  return docs.slice(0, max)
+}
+
+export async function rows(payload: Payload, collection: string, where?: Where, options: { limit?: number; sort?: string; depth?: number } = {}) {
+  const found = await pageDocs(payload, collection, where, {
+    page: 1,
+    limit: options.limit ?? ROW_PAGE,
+    sort: options.sort,
+    depth: options.depth,
+  })
+  return found.docs
 }
 
 export async function one(payload: Payload, collection: string, id: number | null | undefined) {
