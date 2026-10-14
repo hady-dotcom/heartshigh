@@ -166,6 +166,7 @@ test.describe('learner, plan and diary desk actions', () => {
     await page.getByTestId('plan-name').fill('Desk proof plan edited')
     await page.getByTestId('plan-save').click()
     await expect(page.getByTestId('notice')).toBeVisible()
+    await page.getByTestId('plan-delete-sure').check()
     await page.getByTestId('plan-delete').click()
     await expect(page.getByTestId('notice')).toContainText('deleted')
     await expect(page.getByTestId('schedule-plan').filter({ hasText: 'Desk proof plan' })).toHaveCount(0)

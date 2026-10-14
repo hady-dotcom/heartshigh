@@ -41,6 +41,7 @@ import { LiveIndexScreen, LiveWatchScreen } from '@/screens/app/live'
 import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
 import { PortalDiaries, PortalDiaryDetail, PortalLearnerDetail, PortalPlanDetail } from '@/screens/desk/learner-desk'
 import { PortalCircle } from '@/screens/desk/circle'
+import { PortalBin } from '@/screens/desk/bin'
 import { PortalAnnounceScreen, PortalSafetyScreen } from '@/screens/desk/safety'
 import { BackToDesk } from '@/components/app/back-to-desk'
 import { FeatureUnavailable } from '@/components/app/feature-unavailable'
@@ -193,6 +194,9 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         return PortalSafetyScreen(ctx)
       case 'announcements':
         return gated(ctx, 'announcements', true) || PortalAnnounceScreen(ctx)
+      case 'bin':
+        guardAdmin(ctx)
+        return PortalBin(ctx)
       case 'sheet':
         guardAdmin(ctx)
         if (b === 'create') return PortalCreatorScreen(ctx)

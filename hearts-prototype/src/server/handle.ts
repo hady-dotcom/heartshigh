@@ -739,9 +739,16 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     action === 'plan-edit' ||
     action === 'plan-delete' ||
     action === 'plan-bulk-delete' ||
-    action === 'diary-delete'
+    action === 'diary-delete' ||
+    action === 'diary-bulk-delete'
   ) {
     const result = await dispatchLearnerDesk(payload, user, form)
+    return redirectTo(req, text(form, 'next') || '/', result.error, result.notice)
+  }
+
+  if (action === 'desk-delete' || action === 'desk-bulk-delete' || action === 'desk-undo') {
+    const { runDeskDelete } = await import('./desk-delete')
+    const result = await runDeskDelete(payload, user, form)
     return redirectTo(req, text(form, 'next') || '/', result.error, result.notice)
   }
 
@@ -1419,6 +1426,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const next = safeNext(text(form, 'next') || '/master/see-how')
     if (!user || user.role !== 'master') return redirectTo(req, next, 'Only the master desk can change a See how clip.')
     const pageId = text(form, 'page')
+    if (action === 'see-how-reset' && text(form, 'sure') !== 'yes') return redirectTo(req, next, 'Tick Yes, delete it. Nothing was deleted.')
     const result = action === 'see-how-reset'
       ? await resetSeeHowClip(payload, pageId)
       : await replaceSeeHowClip(payload, pageId, form.get('file') instanceof File ? (form.get('file') as File) : new File([], ''))
@@ -2359,6 +2367,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
     const adoption = await payload.findByID({ collection: 'adoptions', id: Number(text(form, 'adoption')), overrideAccess: true, depth: 0 })
     if (idOf((adoption as { portal?: unknown }).portal) !== acting.portal.id) return redirectTo(req, '/', 'That link is not in your portal.')
+    if (text(form, 'sure') !== 'yes') return redirectTo(req, text(form, 'next') || '/', 'Tick Yes, delete it. Nothing was deleted.')
     await payload.delete({ collection: 'adoptions', id: adoption.id, overrideAccess: true })
     return redirectTo(req, text(form, 'next') || '/', undefined, 'The link is removed. The library course is unchanged.')
   }
@@ -2834,6 +2843,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const current = cleanPortalScenes(config.extraScenes).scenes
     let next = current
     if (action === 'opening-extra-scene-remove') {
+      if (text(form, 'sure') !== 'yes') return redirectTo(req, back, 'Tick Yes, delete it. Nothing was deleted.')
       const key = text(form, 'key')
       next = current.filter((scene) => scene.key !== key)
     } else {
@@ -2883,7 +2893,10 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       return redirectTo(req, back, undefined, 'Opening saved for your portal.')
     }
     const contacts = ((config.helpContacts as { label?: string; phone?: string; url?: string; hours?: string }[]) || []).map(({ label, phone, url, hours }) => ({ label, phone, url, hours }))
-    if (action === 'help-contact-remove') contacts.splice(Number(text(form, 'index')), 1)
+    if (action === 'help-contact-remove') {
+      if (text(form, 'sure') !== 'yes') return redirectTo(req, back, 'Tick Yes, delete it. Nothing was deleted.')
+      contacts.splice(Number(text(form, 'index')), 1)
+    }
     else {
       const label = text(form, 'label').slice(0, 80)
       if (!label || (!text(form, 'phone') && !text(form, 'url'))) return redirectTo(req, back, 'A help contact needs a name and a phone number or a link.')

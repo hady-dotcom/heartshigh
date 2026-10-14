@@ -19,6 +19,7 @@ import { visibleCourseIds } from '@/server/context'
 import { dayNumber } from '@/server/learner'
 import { type Ctx, clock, longDate, portalPeople, ref, rows, shortDate, str } from '../common'
 import { AdminFrame } from './overview'
+import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
 import { featureOn } from '@/lib/features'
 import { ExampleInUse } from '@/components/app/care'
 import { AnswerFocus } from '@/components/desk/answer-focus'
@@ -364,6 +365,7 @@ export async function NightsScreen(ctx: Ctx) {
     <AdminFrame ctx={ctx} active="nights" title="Live in person" intro="Evenings in person. Learners who watched a part in the last week get a ticket they can use themselves; anyone else has a place held and you welcome them in at the door." testId="admin-nights">
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.7fr) minmax(320px, 1fr)', alignItems: 'start' }}>
         <div style={{ display: 'grid', gap: 18 }}>
+          {user.role !== 'teacher' ? <DeleteMany kind="night" next={here} portalSlug={portal.slug} formId="bulk-night" /> : null}
           {events.map((event) => {
             const going = rsvps.filter((row) => ref(row.event) === event.id)
             const inside = checkins.filter((row) => ref(row.event) === event.id)
@@ -402,6 +404,12 @@ export async function NightsScreen(ctx: Ctx) {
                   <HelpTip topic="checkin">{TOOL.checkinOverride}</HelpTip>
                   <button className="btn ink small" type="submit" data-testid="staff-checkin">Check in</button>
                 </form>
+                {user.role !== 'teacher' ? (
+                  <div style={{ margin: '0 18px 18px' }}>
+                    <DeletePick formId="bulk-night" id={event.id} label={str(event.title)} />
+                    <DeleteInline kind="night" id={event.id} next={here} portalSlug={portal.slug} testId={`delete-night-${event.id}`} />
+                  </div>
+                ) : null}
               </section>
             )
           })}

@@ -22,6 +22,7 @@ export const CONTEXT_KEYS = [
 export type BuiltInContext = (typeof CONTEXT_KEYS)[number]
 
 export type AdminSeason = {
+  id?: number
   key: string
   name: string
   theme?: string | null

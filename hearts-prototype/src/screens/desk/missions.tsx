@@ -11,6 +11,7 @@ import type { Ctx } from '../common'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
 import styles from './desk-extra.module.css'
+import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
 
 type Query = Record<string, string | undefined>
 
@@ -74,14 +75,23 @@ async function ListPage({ ctx, master, base }: { ctx: Ctx | null; master: { payl
       tools={canEditMissions(user) ? <Link className="btn" href={`${base}/new`} data-testid="mission-new">New mission</Link> : null}
     >
       <div className={styles.page}>
+        {canEditMissions(user) ? <DeleteMany kind="mission" next={base} formId="bulk-mission" /> : null}
         <div className={styles.cards}>
           {items.map((item) => (
-            <Link key={item.id} className={styles.card} href={`${base}/${item.id}`} data-testid="mission-card" data-status={item.status}>
-              <span className={`badge ${item.status === 'open' ? 'teal' : item.status === 'shared' ? 'gold' : 'grey'}`}>{item.status}</span>
-              <h3>{item.title}</h3>
-              <p>{item.ask}</p>
-              <p className={styles.quiet}>{item.target} learners · {item.minutesAsked} minutes</p>
-            </Link>
+            <div key={item.id}>
+              <Link className={styles.card} href={`${base}/${item.id}`} data-testid="mission-card" data-status={item.status}>
+                <span className={`badge ${item.status === 'open' ? 'teal' : item.status === 'shared' ? 'gold' : 'grey'}`}>{item.status}</span>
+                <h3>{item.title}</h3>
+                <p>{item.ask}</p>
+                <p className={styles.quiet}>{item.target} learners · {item.minutesAsked} minutes</p>
+              </Link>
+              {canEditMissions(user) ? (
+                <>
+                  <DeletePick formId="bulk-mission" id={item.id} label={item.title} />
+                  <DeleteInline kind="mission" id={item.id} next={base} testId={`delete-mission-${item.id}`} />
+                </>
+              ) : null}
+            </div>
           ))}
           {!items.length ? <ExampleInUse desk title="A short listen this week" action={canEditMissions(user) ? { href: `${base}/new`, label: 'Write a mission' } : { href: base, label: 'Stay on this page' }}><p>Ten people · five minutes · a thank-you, not a duty.</p></ExampleInUse> : null}
         </div>
@@ -127,6 +137,7 @@ async function DetailPage({ ctx, master, base, id }: { ctx: Ctx | null; master: 
               <form action="/api/missions" method="post"><Hidden fields={{ action: 'close', id: String(mission.id), next: `${base}/${mission.id}` }} /><button className="btn ghost" type="submit" data-testid="mission-close">Close</button></form>
             ) : null}
             <Link className="btn ghost" href={`${base}/${mission.id}/edit`}>Edit</Link>
+            <DeleteInline kind="mission" id={mission.id} next={base} testId="delete-mission" />
           </div>
         ) : null}
         {masterUser ? (

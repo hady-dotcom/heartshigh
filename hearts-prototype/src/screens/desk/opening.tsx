@@ -21,6 +21,8 @@ import { type Ctx, ref, rows, str } from '../common'
 import { masterFlags } from '../app/journey'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
+import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
+import { openBinRecordIds } from '@/server/desk-delete'
 
 type MasterCtx = { payload: Payload; user: SessionUser; query: Record<string, string | undefined> }
 type Option = { key?: string; label?: string; replyPill?: string; nudges?: { scale?: string; delta?: number }[]; intentLane?: unknown; spineFirst?: boolean; crisis?: boolean; sensitivity?: string }
@@ -39,7 +41,8 @@ const plainCaption = (text: string) => text.replace(/\*\*/g, '')
 
 export async function MasterOpening(ctx: MasterCtx) {
   const { payload } = ctx
-  const [scenes, lanes, flags] = await Promise.all([rows(payload, 'opening-scenes', undefined, { sort: 'order', limit: 50 }), rows(payload, 'lanes', undefined, { limit: 50 }), masterFlags(payload)])
+  const [allScenes, lanes, flags, binnedScenes] = await Promise.all([rows(payload, 'opening-scenes', undefined, { sort: 'order', limit: 50 }), rows(payload, 'lanes', undefined, { limit: 50 }), masterFlags(payload), openBinRecordIds(payload, 'scene')])
+  const scenes = allScenes.filter((scene) => !binnedScenes.has(scene.id))
   const problems = await Promise.all(scenes.map((scene) => sceneProblems(payload as never, { ...(scene as Record<string, unknown>), status: 'published' } as never)))
   const laneTitle = (value: unknown) => str(lanes.find((lane) => lane.id === idOf(value))?.title)
   return (
@@ -112,6 +115,7 @@ export async function MasterOpening(ctx: MasterCtx) {
                 <select name="status" defaultValue={str(scene.status) || 'draft'}><option value="draft">Draft</option><option value="published">Published</option></select>
                 <button className="btn ink small" type="submit" data-testid="scene-save">Save scene</button>
                 <Link className="btn ghost small" href={`/admin/collections/opening-scenes/${scene.id}`}>Options and nudges</Link>
+                <DeleteInline kind="scene" id={scene.id} next="/master/opening" testId={`delete-scene-${scene.id}`} />
               </div>
             </form>
           </section>
@@ -167,6 +171,7 @@ export async function MasterLanes(ctx: MasterCtx) {
         </div>
       </section>
       <section className="panel">
+        <DeleteMany kind="lane" next="/master/lanes" formId="bulk-lane" />
         <div className="table-wrap">
           <table className="data">
             <thead><tr><th>Lane</th><th>Scale</th><th>Fit</th><th className="num">Starters</th><th className="num">Confirmed clips</th><th>Who sees it</th></tr></thead>
@@ -178,7 +183,15 @@ export async function MasterLanes(ctx: MasterCtx) {
                   <td>{str(lane.fit)}</td>
                   <td className="num">{((lane.starters as unknown[]) || []).length}</td>
                   <td className="num">{tags.filter((tag) => idOf(tag.lane) === lane.id && tag.state === 'confirmed').length}</td>
-                  <td>{lane.pseudo ? <span className="badge grey">Default, never scored</span> : lane.optInOnly ? <span className="badge ink">Only after opting in</span> : <span className="badge teal">Everyone</span>}</td>
+                  <td>
+                    {lane.pseudo ? <span className="badge grey">Default, never scored</span> : lane.optInOnly ? <span className="badge ink">Only after opting in</span> : <span className="badge teal">Everyone</span>}
+                    {lane.pseudo ? null : (
+                      <>
+                        <DeletePick formId="bulk-lane" id={lane.id} label={str(lane.title)} />
+                        <DeleteInline kind="lane" id={lane.id} next="/master/lanes" testId={`delete-lane-${lane.id}`} />
+                      </>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -338,6 +351,8 @@ export async function PortalOpeningScreen(ctx: Ctx) {
               </span>
               <form action="/api/hearts" method="post">
                 <Hidden fields={{ action: 'opening-extra-scene-remove', portalSlug: portal.slug, key: scene.key, next: here }} />
+                <p>Delete this question? Newcomers will no longer see it. This can't be undone.</p>
+                <label className="check"><input type="checkbox" name="sure" value="yes" required data-testid="portal-own-sure" /> Yes, delete it</label>
                 <button className="btn ghost small" type="submit" data-testid="portal-own-remove">Remove</button>
               </form>
             </div>
@@ -366,7 +381,12 @@ export async function PortalOpeningScreen(ctx: Ctx) {
             {contacts.map((contact, index) => (
               <div className="count-tile" key={`${contact.label}-${index}`} data-testid="help-contact">
                 <span>{contact.label}<span className="hint" style={{ display: 'block', fontWeight: 500 }}>{[contact.phone, contact.url, contact.hours].filter(Boolean).join(' · ')}</span></span>
-                <form action="/api/hearts" method="post"><Hidden fields={{ action: 'help-contact-remove', portalSlug: portal.slug, index, next: here }} /><button className="btn ghost small" type="submit">Remove</button></form>
+                <form action="/api/hearts" method="post">
+                  <Hidden fields={{ action: 'help-contact-remove', portalSlug: portal.slug, index, next: here }} />
+                  <p>Delete this help contact? The help screen will no longer show it. This can't be undone.</p>
+                  <label className="check"><input type="checkbox" name="sure" value="yes" required data-testid="help-contact-sure" /> Yes, delete it</label>
+                  <button className="btn ghost small" type="submit" data-testid="help-contact-remove">Remove</button>
+                </form>
               </div>
             ))}
             {!contacts.length ? <ExampleInUse desk title="Muslim Youth Helpline" action={{ href: '#add-help-contact', label: 'Add a local line' }}><p>0808 808 2008 · any time. National lines stay until you add your own.</p></ExampleInUse> : null}

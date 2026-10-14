@@ -17,7 +17,7 @@ artifacts/
 .next-turnstile
 .next-see-how
 .see-how-tmp
-bin/
+/bin/
 content/audio/*
 !content/audio/.gitkeep
 scripts/framing/yunet.onnx

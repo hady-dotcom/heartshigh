@@ -9,6 +9,7 @@ import { HelpTip } from '@/components/desk/help'
 import { BusyForm } from '@/components/desk/busy-form'
 import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
+import { DeleteInline } from '@/components/desk/delete-controls'
 import { DeskFrame, masterNav } from './shell'
 
 type Query = { error?: string; notice?: string; preview?: string }
@@ -169,6 +170,7 @@ function SheetBody({
                 <p data-testid="sheet-last">{str(last.fileName) || 'The last workbook'} can be undone. Only the latest import comes back.</p>
                 <button className="btn danger" type="submit" data-testid="sheet-undo">Undo the last import</button>
               </form>
+              <DeleteInline kind="sheet" id={last.id} next={next} portalSlug={portalSlug} testId="delete-sheet" label="Delete this import record" />
             </section>
           ) : null}
         </div>

@@ -91,7 +91,10 @@ test.describe('opening questions simulator', () => {
     } finally {
       await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `/p/${PORTAL}/admin/opening`)
       const row = page.getByTestId('portal-own-scene').filter({ hasText: 'A quiet afternoon turns up.' })
-      if (await row.count()) await row.getByTestId('portal-own-remove').click()
+      if (await row.count()) {
+        await row.getByTestId('portal-own-sure').check()
+        await row.getByTestId('portal-own-remove').click()
+      }
     }
   })
 

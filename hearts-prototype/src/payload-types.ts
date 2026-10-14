@@ -82,6 +82,7 @@ export interface Config {
     'channel-speakers': ChannelSpeaker;
     'helper-tokens': HelperToken;
     'bring-in-previews': BringInPreview;
+    'desk-bin': DeskBin;
     resources: Resource;
     packs: Pack;
     cuts: Cut;
@@ -183,6 +184,7 @@ export interface Config {
     'channel-speakers': ChannelSpeakersSelect<false> | ChannelSpeakersSelect<true>;
     'helper-tokens': HelperTokensSelect<false> | HelperTokensSelect<true>;
     'bring-in-previews': BringInPreviewsSelect<false> | BringInPreviewsSelect<true>;
+    'desk-bin': DeskBinSelect<false> | DeskBinSelect<true>;
     resources: ResourcesSelect<false> | ResourcesSelect<true>;
     packs: PacksSelect<false> | PacksSelect<true>;
     cuts: CutsSelect<false> | CutsSelect<true>;
@@ -828,6 +830,31 @@ export interface BringInPreview {
     | number
     | boolean
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "desk-bin".
+ */
+export interface DeskBin {
+  id: number;
+  kind: string;
+  title: string;
+  recordId?: number | null;
+  portal?: (number | null) | Portal;
+  actor?: (number | null) | User;
+  mode: 'hide' | 'gone';
+  snapshot:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  undone?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -3033,6 +3060,10 @@ export interface PayloadLockedDocument {
         value: number | BringInPreview;
       } | null)
     | ({
+        relationTo: 'desk-bin';
+        value: number | DeskBin;
+      } | null)
+    | ({
         relationTo: 'resources';
         value: number | Resource;
       } | null)
@@ -3696,6 +3727,22 @@ export interface BringInPreviewsSelect<T extends boolean = true> {
   actor?: T;
   portal?: T;
   body?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "desk-bin_select".
+ */
+export interface DeskBinSelect<T extends boolean = true> {
+  kind?: T;
+  title?: T;
+  recordId?: T;
+  portal?: T;
+  actor?: T;
+  mode?: T;
+  snapshot?: T;
+  undone?: T;
   updatedAt?: T;
   createdAt?: T;
 }

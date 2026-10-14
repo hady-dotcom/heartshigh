@@ -39,6 +39,8 @@ export async function MasterSeeHowScreen({ payload, user, query }: { payload: Pa
                       </form>
                       <form action="/api/hearts" method="post" style={{ marginTop: 8 }}>
                         <Hidden fields={{ action: 'see-how-reset', page: page.id, next: '/master/see-how' }} />
+                        <p data-testid="see-how-reset-copy">Delete this clip override? Learners will see the recorded one again. This can't be undone.</p>
+                        <label className="check"><input type="checkbox" name="sure" value="yes" required={custom} data-testid="see-how-sure" data-page={page.id} disabled={!custom} /> Yes, delete it</label>
                         <button className="btn ghost small" type="submit" data-testid="see-how-reset" data-page={page.id} disabled={!custom}>Back to the recorded one</button>
                       </form>
                     </td>

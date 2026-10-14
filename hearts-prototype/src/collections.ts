@@ -1425,6 +1425,24 @@ export const BringInPreviews: CollectionConfig = {
   ],
 }
 
+/** A copy of something the desk deleted, so it can be put back. */
+export const DeskBin: CollectionConfig = {
+  slug: 'desk-bin',
+  labels: { singular: 'Deleted item', plural: 'Bin' },
+  admin: { useAsTitle: 'title' },
+  access: masterOnly,
+  fields: [
+    { name: 'kind', type: 'text', required: true, index: true },
+    { name: 'title', type: 'text', required: true },
+    { name: 'recordId', type: 'number', index: true },
+    { name: 'portal', type: 'relationship', relationTo: 'portals' },
+    { name: 'actor', type: 'relationship', relationTo: 'users' },
+    { name: 'mode', type: 'select', required: true, options: [{ label: 'Hidden', value: 'hide' }, { label: 'Removed', value: 'gone' }] },
+    { name: 'snapshot', type: 'json', required: true },
+    { name: 'undone', type: 'checkbox', defaultValue: false, index: true },
+  ],
+}
+
 export const collections = [
   Portals,
   Users,
@@ -1441,6 +1459,7 @@ export const collections = [
   ChannelSpeakers,
   HelperTokens,
   BringInPreviews,
+  DeskBin,
   Resources,
   Packs,
   Cuts,

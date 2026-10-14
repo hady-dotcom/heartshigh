@@ -188,6 +188,8 @@ async function Talk(ctx: CircleCtx, lessonId: number) {
                         </details>
                         <form action="/api/hearts" method="post">
                           <Hidden fields={{ action: 'circle-delete', id: row.id, next: back }} />
+                          <p>Delete this circle answer? Learners will no longer see it. This can't be undone.</p>
+                          <label className="check"><input type="checkbox" name="sure" value="yes" required data-testid="circle-delete-sure" /> Yes, delete it</label>
                           <button className="btn ghost small" type="submit" data-testid="circle-delete">Delete</button>
                         </form>
                       </div>

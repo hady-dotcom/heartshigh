@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ExampleInUse } from '@/components/app/care'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
+import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
 import { ExperimentForm } from '@/components/desk/experiment-form'
 import { ExperimentPhones } from '@/components/desk/experiment-mock'
 import { ExperimentHelp } from '@/components/desk/help'
@@ -179,6 +180,7 @@ async function ListPage({ ctx, master, base }: { ctx: Ctx | null; master: { payl
             <button className="btn ghost" type="submit">{killed ? 'Turn the kill switch off' : 'Turn the kill switch on'}</button>
           </form>
         ) : null}
+        {user.role === 'master' || ctx ? <DeleteMany kind="experiment" next={base} portalSlug={ctx?.portal.slug} formId="bulk-experiment" /> : null}
         <div className={styles.groups} id="experiment-list">
           {groups.map((group) => {
             const rows = items.filter((item) => item.status === group.key)
@@ -190,8 +192,11 @@ async function ListPage({ ctx, master, base }: { ctx: Ctx | null; master: { payl
                   {rows.map((item) => {
                     const [label, tone] = STATUS_BADGE[item.status]
                     const slot = EXPERIMENT_SLOTS.find((row) => row.key === item.slot)
+                    const portalOfItem = idOfPortal(item)
+                    const canDelete = user.role === 'master' || (ctx != null && portalOfItem === ctx.portal.id)
                     return (
-                      <Link key={item.id} className={styles.card} href={`${base}/${item.id}`} data-testid="experiment-card" data-key={item.key} data-status={item.status}>
+                      <div key={item.id}>
+                      <Link className={styles.card} href={`${base}/${item.id}`} data-testid="experiment-card" data-key={item.key} data-status={item.status}>
                         <div className={styles.meta}>
                           <span className={`badge ${tone}`}>{label}</span>
                           <span className="badge grey">{slot?.name || item.slot}</span>
@@ -200,8 +205,15 @@ async function ListPage({ ctx, master, base }: { ctx: Ctx | null; master: { payl
                         <h3>{item.name}</h3>
                         <ExperimentPhones slot={item.slot} versions={mockFaces(item.variants)} compact />
                         <p>{item.description || `${item.variants.length} versions · ${metricLabel(item.primaryMetric)}`}</p>
-                        <p className={styles.quiet}>{item.variants.length} versions · {idOfPortal(item) ? 'One portal' : 'Every portal'}</p>
+                        <p className={styles.quiet}>{item.variants.length} versions · {portalOfItem ? 'One portal' : 'Every portal'}</p>
                       </Link>
+                      {canDelete ? (
+                        <>
+                          <DeletePick formId="bulk-experiment" id={item.id} label={item.name} />
+                          <DeleteInline kind="experiment" id={item.id} next={base} portalSlug={ctx?.portal.slug} testId={`delete-experiment-${item.id}`} />
+                        </>
+                      ) : null}
+                      </div>
                     )
                   })}
                 </div>
@@ -344,6 +356,7 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
               <button className="btn teal" type="submit" data-testid="experiment-use-winner" disabled={!verdict.leaderKey}>Use the winner</button>
             </form>
             <Link className="btn ghost" href={`${base}/${experiment.id}/edit`}>Edit</Link>
+            <DeleteInline kind="experiment" id={experiment.id} next={base} portalSlug={ctx?.portal.slug} testId="delete-experiment" />
             <a className="btn ghost" href={`/api/experiments?action=export&id=${experiment.id}`} data-testid="experiment-csv">CSV</a>
             <form action="/api/experiments" method="post"><Hidden fields={{ action: 'test-data', id: String(experiment.id), next: `${base}/${experiment.id}` }} /><button className="btn ghost" type="submit" data-testid="experiment-test-data">Fill with labelled test numbers</button></form>
           </div>
