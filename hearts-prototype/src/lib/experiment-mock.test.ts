@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { EXPERIMENT_SLOTS } from './experiment-slots'
-import { mockFaces, mockLine, mockTarget } from './experiment-mock'
+import { applyLiveLabels, mockFaces, mockLine, mockTarget } from './experiment-mock'
 
 test('every experiment slot maps to a learner screen and a highlighted element', () => {
   const feed = mockTarget('feed-cta-label')
@@ -35,4 +35,17 @@ test('the mock shows version A and version B with the real words', () => {
   assert.equal(mockLine(faces[1].text, 'talk-button'), 'Start this course')
   assert.equal(mockLine('split', 'video-frame'), 'split')
   assert.equal(mockLine('face-crop', 'video-frame'), 'face-crop')
+})
+
+test('an edited version line replaces that face and leaves the other', () => {
+  const faces = mockFaces([
+    { key: 'watch-whole', label: 'Watch the whole talk ({n} min)', payload: { label: 'Watch the whole talk ({n} min)' } },
+    { key: 'start-course', label: 'Start this course', payload: { label: 'Start this course' } },
+  ])
+  const same = applyLiveLabels(faces, { 'start-course': 'Start this course' })
+  assert.equal(same, faces)
+  const next = applyLiveLabels(faces, { 'start-course': 'Begin the sitting' })
+  assert.equal(next[0].text, faces[0].text)
+  assert.equal(next[1].text, 'Begin the sitting')
+  assert.equal(mockLine(next[1].text, 'talk-button'), 'Begin the sitting')
 })

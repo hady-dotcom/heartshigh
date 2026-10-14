@@ -76,3 +76,18 @@ export function mockLine(text: string, kind: MockKind) {
   if (kind === 'video-frame') return text.trim() || 'face-crop'
   return formatSlotLabel(text, 18) || text
 }
+
+/**
+ * Copy edited version lines onto the matching faces.
+ * Returns the same array when nothing changed, so a live preview can poll safely.
+ */
+export function applyLiveLabels(faces: MockFace[], values: Record<string, string>): MockFace[] {
+  let changed = false
+  const next = faces.map((face) => {
+    const value = values[face.key]
+    if (value == null || value === face.text) return face
+    changed = true
+    return { ...face, text: value }
+  })
+  return changed ? next : faces
+}

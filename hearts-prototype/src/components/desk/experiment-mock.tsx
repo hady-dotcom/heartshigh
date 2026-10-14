@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { mockLine, mockTarget, type MockFace, type MockKind, type MockTarget } from '@/lib/experiment-mock'
+import { applyLiveLabels, mockLine, mockTarget, type MockFace, type MockKind, type MockTarget } from '@/lib/experiment-mock'
 import styles from './experiment-mock.module.css'
 
 function Arrow({ down = false }: { down?: boolean }) {
@@ -79,14 +79,27 @@ export function ExperimentPhones({
   const [faces, setFaces] = useState(versions)
   useEffect(() => {
     if (!live) return
-    const onInput = (event: Event) => {
-      const target = event.target
-      if (!(target instanceof HTMLInputElement) || !target.name.startsWith('label_')) return
-      const key = target.name.slice('label_'.length)
-      setFaces((current) => current.map((face) => (face.key === key ? { ...face, text: target.value } : face)))
+    let frame = 0
+    let stop = false
+    const read = () => {
+      const values: Record<string, string> = {}
+      for (const input of document.querySelectorAll<HTMLInputElement>('input[name^="label_"]')) {
+        values[input.name.slice('label_'.length)] = input.value
+      }
+      setFaces((current) => applyLiveLabels(current, values))
     }
-    document.addEventListener('input', onInput)
-    return () => document.removeEventListener('input', onInput)
+    const loop = () => {
+      if (stop) return
+      read()
+      frame = window.requestAnimationFrame(loop)
+    }
+    document.addEventListener('input', read)
+    frame = window.requestAnimationFrame(loop)
+    return () => {
+      stop = true
+      document.removeEventListener('input', read)
+      window.cancelAnimationFrame(frame)
+    }
   }, [live])
   const spec = mockTarget(slot)
   const shown = faces.slice(0, 2)
