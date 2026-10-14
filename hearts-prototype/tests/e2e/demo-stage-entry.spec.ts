@@ -1,8 +1,18 @@
+import { mkdirSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
 
 const LINE = 'A live four-screen walk-through: master, portal admin, teacher, learner. Practice data only. Nothing here changes real portals.'
+const shots = process.env.SCREENSHOT_DIR || 'artifacts/screenshots'
 
 test('a signed-out visitor sees the demo stage entry, then the demo master login', async ({ page }) => {
+  mkdirSync(shots, { recursive: true })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/demo-stage')
+  await expect(page.getByRole('heading', { name: 'Hady Core Demo stage' })).toBeVisible()
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1)
+  expect(overflow).toBe(false)
+  await page.screenshot({ path: `${shots}/demo-stage-entry-phone.png` })
+
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/demo-stage')
   await expect(page.getByTestId('demo-stage-entry')).toBeVisible()
@@ -16,6 +26,7 @@ test('a signed-out visitor sees the demo stage entry, then the demo master login
   await expect(page).toHaveTitle('Hady Core Demo stage')
   const background = await page.getByTestId('demo-stage-entry').evaluate((el) => getComputedStyle(el).backgroundColor)
   expect(background).toBe('rgb(18, 16, 24)')
+  await page.screenshot({ path: `${shots}/demo-stage-entry.png` })
 
   await page.getByTestId('demo-stage-sign-in').click()
   await expect(page).toHaveURL(/\/login/)
@@ -27,6 +38,7 @@ test('a signed-out visitor sees the demo stage entry, then the demo master login
   await expect(page.getByText('This sign-in is for the demo. It uses the master login and returns you to the Demo stage.')).toBeVisible()
   await expect(page.locator('body')).not.toContainText(/HEARTS/i)
   await expect(page.getByRole('heading', { name: 'Welcome back' })).toHaveCount(0)
+  await page.screenshot({ path: `${shots}/demo-stage-login.png` })
 
   await page.getByTestId('login-email').fill('master@hearts.test')
   await page.getByTestId('login-password').fill('not-the-password')
