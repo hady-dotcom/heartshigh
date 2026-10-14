@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { helperTokenFlash } from '@/lib/helper-token-flash'
+import { stageFlagRedirect, stageWriteBlocked } from '@/lib/stage-readonly'
 
 // Payload's "create the first user" screen and endpoint. The first account comes only from `npm run bootstrap`
 // (or the seed on a development machine), so both are closed everywhere.
@@ -7,6 +8,16 @@ const FIRST_USER_PATHS = [/^\/admin\/create-first-user\/?$/, /^\/api\/users\/fir
 
 export function middleware(request: NextRequest) {
   const { pathname, search, searchParams } = request.nextUrl
+  const here = `${pathname}${search}`
+  const referer = request.headers.get('referer')
+  if (stageWriteBlocked(request.method, here, referer)) {
+    return NextResponse.json({ error: 'The demo stage only looks. Nothing here is saved.' }, { status: 403 })
+  }
+  if (stageFlagRedirect({ method: request.method, url: here, referer, dest: request.headers.get('sec-fetch-dest') })) {
+    const next = request.nextUrl.clone()
+    next.searchParams.set('stage', '1')
+    return NextResponse.redirect(next)
+  }
   if (FIRST_USER_PATHS.some((pattern) => pattern.test(pathname))) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ errors: [{ message: 'The first account is created with npm run bootstrap.' }] }, { status: 403 })
@@ -43,4 +54,4 @@ export function middleware(request: NextRequest) {
   return response
 }
 
-export const config = { matcher: ['/', '/change-password', '/p/:path*', '/master/:path*', '/api/experiments', '/admin/create-first-user', '/admin/create-first-user/', '/api/users/first-register', '/api/users/first-register/'] }
+export const config = { matcher: ['/', '/change-password', '/p/:path*', '/master', '/master/:path*', '/api/:path*', '/admin/create-first-user', '/admin/create-first-user/', '/api/users/first-register', '/api/users/first-register/'] }
