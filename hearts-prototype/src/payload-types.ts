@@ -619,7 +619,7 @@ export interface Clause {
   createdAt: string;
 }
 /**
- * The 20 working doors learners see. Each absorbs one or more of the 41 clauses; a talk’s door comes from its clause.
+ * The 20 doors learners see, from the hadith of Jibril. A talk sits in one door.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "doors".
@@ -630,7 +630,7 @@ export interface Door {
   section: 'Sitting' | 'Islam' | 'Iman' | 'Ihsan' | 'Hour' | 'Trunk';
   title: string;
   /**
-   * The clause numbers this door absorbs, for example [13, 19, 20].
+   * The pieces of the hadith this door covers, for example [13, 19, 20].
    */
   clauses:
     | {
@@ -1289,7 +1289,7 @@ export interface Lane {
   seriesNote?: string | null;
   optInOnly?: boolean | null;
   /**
-   * Never served in this lane during a learner’s first 7 days.
+   * Doors never offered in this lane during a learner’s first 7 days.
    */
   excludeClauses?: (number | Clause)[] | null;
   order?: number | null;
@@ -1385,7 +1385,7 @@ export interface HarvestEntry {
   seenAt?: string | null;
   speaker?: string | null;
   /**
-   * The Hadith Jibril working door (1 to 20) of the talk, worked out from its clause.
+   * The door of Hadith Jibril this talk sits in, from 1 to 20.
    */
   door?: number | null;
   /**
