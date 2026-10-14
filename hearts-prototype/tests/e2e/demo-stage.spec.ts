@@ -99,6 +99,8 @@ async function loopAndFocus(page: Page) {
   await page.getByTestId('demo-focus').click()
   await expect(page.getByTestId('demo-board')).toHaveAttribute('data-focus', 'off')
   await expect(page.locator('.demo-cell.is-dim')).toHaveCount(0)
+  await page.getByTestId('demo-focus').click()
+  await expect(page.getByTestId('demo-focus')).toHaveAttribute('aria-pressed', 'true')
 }
 
 test('the real desks on a 1920 screen and a 1280 screen', async ({ page }) => {
