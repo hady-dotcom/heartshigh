@@ -8,6 +8,7 @@ const PAGES = [
   'feedback',
   'compass',
   'plans',
+  'diaries',
   'nights',
   'gather',
   'content',

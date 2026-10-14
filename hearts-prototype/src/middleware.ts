@@ -43,4 +43,4 @@ export function middleware(request: NextRequest) {
   return response
 }
 
-export const config = { matcher: ['/', '/p/:path*', '/master/:path*', '/api/experiments', '/admin/create-first-user', '/admin/create-first-user/', '/api/users/first-register', '/api/users/first-register/'] }
+export const config = { matcher: ['/', '/change-password', '/p/:path*', '/master/:path*', '/api/experiments', '/admin/create-first-user', '/admin/create-first-user/', '/api/users/first-register', '/api/users/first-register/'] }

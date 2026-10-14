@@ -39,6 +39,7 @@ import { GatherAttendanceScreen, GatherDeskScreen } from '@/screens/desk/gather'
 import { LiveDeskScreen } from '@/screens/desk/live'
 import { LiveIndexScreen, LiveWatchScreen } from '@/screens/app/live'
 import { NightsScreen, PlansScreen, TeachScreen } from '@/screens/desk/people'
+import { PortalDiaries, PortalDiaryDetail, PortalLearnerDetail, PortalPlanDetail } from '@/screens/desk/learner-desk'
 import { PortalCircle } from '@/screens/desk/circle'
 import { PortalAnnounceScreen, PortalSafetyScreen } from '@/screens/desk/safety'
 import { BackToDesk } from '@/components/app/back-to-desk'
@@ -124,6 +125,10 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       case 'access':
         return AccessScreen(ctx)
       case 'teach':
+        if (b) {
+          if (!Number(b)) notFound()
+          return PortalLearnerDetail(ctx, Number(b))
+        }
         return TeachScreen(ctx)
       case 'answers':
         if (!b || !Number(b)) notFound()
@@ -133,7 +138,17 @@ export default async function PortalScreen({ params, searchParams }: { params: P
       case 'compass':
         return gated(ctx, 'compass', true) || (b === 'proposed' ? ProposedCompassScreen(ctx) : b ? StaffLearnerCompass(ctx, Number(b)) : PortalCompassScreen(ctx))
       case 'plans':
+        if (b) {
+          if (!Number(b)) notFound()
+          return gated(ctx, 'planner', true) || PortalPlanDetail(ctx, Number(b))
+        }
         return gated(ctx, 'planner', true) || PlansScreen(ctx)
+      case 'diaries':
+        if (b) {
+          if (!Number(b)) notFound()
+          return gated(ctx, 'workbook', true) || PortalDiaryDetail(ctx, Number(b))
+        }
+        return gated(ctx, 'workbook', true) || PortalDiaries(ctx)
       case 'nights':
         return gated(ctx, 'gather', true) || NightsScreen(ctx)
       case 'gather': {

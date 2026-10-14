@@ -11,6 +11,8 @@ export const PAGE: Record<string, string> = {
     'Compass is a gentle monthly look at how people are doing, scored from −10 to +10. Learners never see a number or a label, only a line about what to focus on. The mix decides how the shelf balances quieter ones, steady ones, and a new door.',
   plans:
     'A study plan spreads one course across the days you tick. Talks stay in order and are shared out evenly, so the last day is not empty. It is a guide. People can still watch at their own pace.',
+  diaries:
+    'Each row is a workbook entry. You see who wrote it, which portal, and when. The words show only when the learner shared them and did not keep the answer private. You can still delete an entry.',
   nights:
     'Live in person is evenings in person. Someone who watched a part this week has their own ticket. Everyone else has a place held, and you welcome them in at the door. Check-in is on this page.',
   gather:
@@ -226,6 +228,8 @@ const TEST_IDS: Record<string, string> = {
   'feedback-desk': 'feedback',
   'compass-portal': 'compass',
   'admin-plans': 'plans',
+  'master-diaries': 'diaries',
+  'portal-diaries': 'diaries',
   'admin-nights': 'nights',
   'master-nights': 'nights',
   'desk-live': 'live',

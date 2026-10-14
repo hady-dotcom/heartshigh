@@ -3,11 +3,12 @@ import { ExampleInUse } from '@/components/app/care'
 import type { Payload } from 'payload'
 import { ShareLinks } from '@/components/desk/share-links'
 import { Qr } from '@/components/qr'
-import { portalDisplayName } from '@/lib/portal-name'
 import type { SessionUser } from '@/server/context'
 import { CodeStatus } from '@/components/desk/codes'
 import { ref, rows, shortDate, str } from '../common'
 import { DeskFrame, masterNav } from './shell'
+
+export { MasterLearners, MasterPlans } from './learner-desk'
 
 type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string }; origin?: string }
 
@@ -16,38 +17,6 @@ function Frame({ ctx, active, title, intro, testId, showOnPhone, primary, childr
     <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId} showOnPhone={showOnPhone} primary={primary}>
       {children}
     </DeskFrame>
-  )
-}
-
-export async function MasterLearners(ctx: MasterCtx) {
-  const people = (await rows(ctx.payload, 'users', undefined, { limit: 400, sort: 'name' })).filter((row) => row.role === 'learner')
-  const portals = await rows(ctx.payload, 'portals', undefined, { sort: 'name' })
-  const first = portals[0]
-  return (
-    <Frame ctx={ctx} active="learners" title="Learners" intro="Everyone learning across the portals." testId="master-learners" primary={first ? { label: 'Open their portal', href: `/p/${str(first.slug)}/admin/teach` } : undefined}>
-      <section className="panel">
-        <div className="table-wrap">
-          <table className="data">
-            <thead><tr><th>Name</th><th>E-mail</th><th>Portal</th></tr></thead>
-            <tbody>
-              {people.map((person) => {
-                const portalId = (person.tenants as { tenant?: unknown }[] | undefined)?.[0]?.tenant
-                const id = typeof portalId === 'object' && portalId && 'id' in portalId ? Number((portalId as { id: number }).id) : Number(portalId)
-                const portal = portals.find((row) => row.id === id)
-                return (
-                  <tr key={person.id} data-testid="learner-row">
-                    <td><b>{str(person.name)}</b></td>
-                    <td>{str(person.email)}</td>
-                    <td>{portal ? portalDisplayName(portal) : '—'}</td>
-                  </tr>
-                )
-              })}
-              {!people.length ? <tr><td colSpan={3}><ExampleInUse desk title="Maryam Begum" action={{ href: '/master', label: 'Open a portal' }}><p>elm-learner@hearts.test · East London</p></ExampleInUse></td></tr> : null}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </Frame>
   )
 }
 
@@ -87,35 +56,6 @@ export async function MasterCodes(ctx: MasterCtx) {
                 )
               })}
               {!codes.length ? <tr><td colSpan={6} className="empty">No codes yet.</td></tr> : null}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </Frame>
-  )
-}
-
-export async function MasterPlans(ctx: MasterCtx) {
-  const [plans, portals] = await Promise.all([
-    rows(ctx.payload, 'schedules', undefined, { sort: '-createdAt', limit: 80 }),
-    rows(ctx.payload, 'portals', undefined, { sort: 'name', limit: 1 }),
-  ])
-  const slug = str(portals[0]?.slug)
-  return (
-    <Frame ctx={ctx} active="plans" title="Study plans" intro="Plans learners and teachers have shared out across the days." testId="master-plans" primary={slug ? { label: 'Make a plan', href: `/p/${slug}/admin/plans` } : undefined}>
-      <section className="panel">
-        <div className="table-wrap">
-          <table className="data">
-            <thead><tr><th>Name</th><th>From</th><th>Until</th></tr></thead>
-            <tbody>
-              {plans.map((plan) => (
-                <tr key={plan.id}>
-                  <td>{str(plan.name)}</td>
-                  <td>{str(plan.startDate)}</td>
-                  <td>{str(plan.endDate)}</td>
-                </tr>
-              ))}
-              {!plans.length ? <tr><td colSpan={3}><ExampleInUse desk title="Names class, four weeks" action={{ href: '/master/learners', label: 'See who is learning' }}><p>Maryam · Tue and Thu · 8 parts</p></ExampleInUse></td></tr> : null}
             </tbody>
           </table>
         </div>

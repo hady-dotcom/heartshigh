@@ -43,6 +43,8 @@ export type Query = {
   showTest?: string
   origin?: string
   q?: string
+  /** Learner list: a portal id, or empty for every portal. */
+  portal?: string
   /** `?debug=yt` — kept when moving between course links. */
   debug?: string
   /** Library list page. */

@@ -15,6 +15,11 @@ const MASTER: Record<string, Lead> = {
     label: 'Open a portal',
     href: '/master/create',
   },
+  diaries: {
+    line: 'Workbook entries across the portals. Learners see their own words. A private entry stays hidden here.',
+    label: 'Open learners',
+    href: '/master/learners',
+  },
   library: {
     line: 'Shared courses any portal can link. Learners see a course only after their portal links it.',
     label: 'Add a course',
@@ -158,6 +163,11 @@ const PORTAL: Record<string, { line: string; label: string; path: string }> = {
     line: 'How each learner is getting on. They do not see this page; a reply shows in their workbook.',
     label: 'See the list',
     path: '#learner-list',
+  },
+  diaries: {
+    line: 'Workbook entries in this portal. Learners see their own words. A private entry stays hidden here.',
+    label: 'Open learners',
+    path: 'teach',
   },
   feedback: {
     line: 'Answers a learner chose to share. Private answers stay off this page.',

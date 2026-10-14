@@ -22,12 +22,17 @@ import { featureOn } from '@/lib/features'
 import { ExampleInUse } from '@/components/app/care'
 import { AnswerFocus } from '@/components/desk/answer-focus'
 import { sharedAnswerText, sharedAnswersNewestFirst } from '@/lib/shared-answers'
+import { ClickRow } from '@/components/desk/row-link'
+import { portalDisplayName } from '@/lib/portal-name'
+import { managesLearnerAccounts, matchesLearnerSearch } from '@/lib/learner-desk'
+import { BulkBar, LearnerFilters } from './learner-desk'
 
 export async function TeachScreen(ctx: Ctx) {
   const { payload, user, portal, base, query } = ctx
   const people = await portalPeople(payload, portal.id)
   const hideTest = hideTestFromQuery(query)
-  const learners = visiblePeople(people.filter((person) => person.role === 'learner'), hideTest)
+  const learners = visiblePeople(people.filter((person) => person.role === 'learner'), hideTest).filter((learner) => matchesLearnerSearch(str(learner.name), str(learner.email), query.q || ''))
+  const manage = managesLearnerAccounts(user.role)
   const [entries, answers, completions, notes, watches, courseIds, plans] = await Promise.all([
     rows(payload, 'workbook-entries', { portal: { equals: portal.id } }, { depth: 1, sort: '-createdAt' }),
     rows(payload, 'answers', { portal: { equals: portal.id } }, { depth: 1, sort: '-createdAt', limit: 500 }),
@@ -68,11 +73,30 @@ export async function TeachScreen(ctx: Ctx) {
           <h2 data-testid="learner-count">Learners ({learners.length})</h2>
           <HideTestFilter action={here} hide={hideTest} />
         </header>
+        <div className="body">
+          <LearnerFilters action={here} query={query} portals={[{ id: portal.id, name: portalDisplayName(portal) }]} locked />
+          {manage ? (
+            <BulkBar
+              id="learner-bulk"
+              action="learner-bulk"
+              next={here}
+              pick="learner"
+              confirmHint="Type delete or remove"
+              buttons={[
+                { op: 'reset', label: 'New passwords', testId: 'bulk-reset' },
+                { op: 'remove', label: 'Take out of portal', testId: 'bulk-remove' },
+                { op: 'delete', label: 'Delete accounts', testId: 'bulk-delete', danger: true },
+              ]}
+            />
+          ) : null}
+        </div>
         <div className="table-wrap">
-          <table className="data">
+          <table className="data people-table">
             <thead><tr>
+              {manage ? <th>Pick</th> : null}
               <th>Name</th>
               <th>Email</th>
+              <th>Portal</th>
               <th className="num">Day</th>
               <th className="num">Parts watched</th>
               <th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr></th>
@@ -85,15 +109,18 @@ export async function TeachScreen(ctx: Ctx) {
                 const done = completions.filter((row) => ref(row.user) === learner.id)
                 const progress = onTimeProgress(slotsFor(learner.id), done.map((row) => ({ lessonId: ref(row.lesson) || 0, watchedOn: dateKey(row.watchedAt || row.createdAt) })), today)
                 const onTime = formatOnTime(progress)
+                const open = `${base}/admin/teach/${learner.id}`
                 return (
-                  <tr key={learner.id} data-testid="learner-row">
-                    <td><b>{str(learner.name)}</b>{learner.audience && learner.audience !== 'learner' ? <div className="hint">{str(learner.audience)}</div> : null}</td>
-                    <td className="email-cell"><span title={str(learner.email)} data-testid="learner-email">{str(learner.email)}</span></td>
-                    <td className="num">{dayNumber(learner as never)}</td>
-                    <td className="num" data-testid="learner-progress">{done.length}</td>
-                    <td className="num" data-testid="on-time" title={progress.planned ? ON_TIME_HINT : 'No study plan yet'}>{onTime}</td>
-                    <td className="num" data-testid="learner-answers">{answers.filter((row) => ref(row.user) === learner.id).length}</td>
-                    <td>
+                  <ClickRow key={learner.id} href={open} testId="learner-row">
+                    {manage ? <td data-label="Pick"><input form="learner-bulk" type="checkbox" name="learner" value={learner.id} data-testid="learner-pick" aria-label={`Select ${str(learner.name)}`} /></td> : null}
+                    <td data-label="Name"><a href={open} data-testid="learner-open"><b>{str(learner.name)}</b></a>{learner.audience && learner.audience !== 'learner' ? <div className="hint">{str(learner.audience)}</div> : null}{learner.paused ? <div className="badge rose" data-testid="learner-paused">Paused</div> : null}</td>
+                    <td data-label="Email" className="email-cell"><span title={str(learner.email)} data-testid="learner-email">{str(learner.email)}</span></td>
+                    <td data-label="Portal" data-testid="learner-portal">{portalDisplayName(portal)}</td>
+                    <td data-label="Day" className="num">{dayNumber(learner as never)}</td>
+                    <td data-label="Parts watched" className="num" data-testid="learner-progress">{done.length}</td>
+                    <td data-label="On time" className="num" data-testid="on-time" title={progress.planned ? ON_TIME_HINT : 'No study plan yet'}>{onTime}</td>
+                    <td data-label="Answers" className="num" data-testid="learner-answers">{answers.filter((row) => ref(row.user) === learner.id).length}</td>
+                    <td data-label="Give a course">
                       <GiveCourse learnerId={learner.id} learnerName={str(learner.name) || 'this learner'} courses={courses.map((course) => ({ id: course.id, title: str(course.title) }))} next={here} />
                     </td>
                     <td>
@@ -106,10 +133,10 @@ export async function TeachScreen(ctx: Ctx) {
                         {user.role !== 'teacher' ? <ViewAsButton targetId={learner.id} name={str(learner.name) || 'this learner'} landing={`${base}`} /> : null}
                       </div>
                     </td>
-                  </tr>
+                  </ClickRow>
                 )
               })}
-              {!learners.length ? <tr><td colSpan={8}><ExampleInUse desk title="Maryam Begum" action={{ href: `${base}/admin/access`, label: 'Share a join code' }}><p>East London · day 3 · one talk finished</p></ExampleInUse></td></tr> : null}
+              {!learners.length ? <tr><td colSpan={manage ? 10 : 9}><ExampleInUse desk title="Maryam Begum" action={{ href: query.q ? here : `${base}/admin/access`, label: query.q ? 'Show everyone' : 'Share a join code' }}><p>East London · day 3 · one talk finished</p></ExampleInUse></td></tr> : null}
             </tbody>
           </table>
         </div>
@@ -241,7 +268,7 @@ export async function PlansScreen(ctx: Ctx) {
   const here = `${base}/admin/plans`
   return (
     <AdminFrame ctx={ctx} active="plans" title="Study plans" intro="Share a course out across chosen days for one learner or a whole group. The parts stay in order and are spread evenly, so no day is left empty at the end. Learners can still watch at their own pace." testId="admin-plans">
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(340px, 1fr) minmax(0, 1.6fr)', alignItems: 'start' }}>
+      <div className="grid desk-split">
         <section className="panel">
           <header><div><h2>New plan</h2></div></header>
           <form id="new-plan" className="body form" action="/api/hearts" method="post">
@@ -261,24 +288,30 @@ export async function PlansScreen(ctx: Ctx) {
         </section>
         <section className="panel">
           <header className="light"><h2>Plans ({plans.length})</h2></header>
+          <div className="body">
+            <BulkBar id="plan-bulk" action="plan-bulk-delete" next={here} pick="plan" confirmHint="Type delete" buttons={[{ label: 'Delete plans', testId: 'plan-bulk-delete', danger: true }]} />
+          </div>
           <div className="table-wrap">
-            <table className="data">
-              <thead><tr><th>Plan</th><th>For</th><th>Dates</th><th className="num">Parts</th><th>Days</th></tr></thead>
+            <table className="data people-table">
+              <thead><tr><th>Pick</th><th>Plan</th><th>Portal</th><th>Learner</th><th>Dates</th><th className="num">Parts</th><th>Days</th></tr></thead>
               <tbody>
                 {plans.map((plan) => {
                   const slots = (plan.slots as { date?: string; title?: string }[]) || []
                   const names = ((plan.learners as unknown[]) || []).map((item) => str(people.find((person) => person.id === ref(item))?.name)).filter(Boolean)
+                  const open = `${base}/admin/plans/${plan.id}`
                   return (
                     <tr key={plan.id} data-testid="schedule-plan">
-                      <td><b>{str(plan.name)}</b><details><summary className="hint" style={{ cursor: 'pointer' }}>See the days</summary>{slots.map((slot, index) => <div key={index} className="hint" data-testid="schedule-slot">{slot.date}: {slot.title}</div>)}</details></td>
-                      <td>{names.join(', ') || 'Themselves'}</td>
-                      <td style={{ whiteSpace: 'nowrap' }}>{str(plan.startDate)} to {str(plan.endDate)}</td>
-                      <td className="num">{slots.length}</td>
-                      <td>{((plan.weekdays as number[]) || []).map((day) => DAYS[day]).join(', ')}</td>
+                      <td data-label="Pick"><input form="plan-bulk" type="checkbox" name="plan" value={plan.id} data-testid="plan-pick" aria-label={`Select ${str(plan.name)}`} /></td>
+                      <td data-label="Plan"><a href={open} data-testid="plan-open"><b>{str(plan.name)}</b></a><details><summary className="hint" style={{ cursor: 'pointer' }}>See the days</summary>{slots.map((slot, index) => <div key={index} className="hint" data-testid="schedule-slot">{slot.date}: {slot.title}</div>)}</details></td>
+                      <td data-label="Portal" data-testid="plan-portal">{portalDisplayName(portal)}</td>
+                      <td data-label="Learner" data-testid="plan-for">{names.join(', ') || 'Themselves'}</td>
+                      <td data-label="Dates" style={{ whiteSpace: 'nowrap' }}>{str(plan.startDate)} to {str(plan.endDate)}</td>
+                      <td data-label="Parts" className="num">{slots.length}</td>
+                      <td data-label="Days">{((plan.weekdays as number[]) || []).map((day) => DAYS[day]).join(', ')}</td>
                     </tr>
                   )
                 })}
-                {!plans.length ? <tr><td colSpan={5}><ExampleInUse desk title="Names class, four weeks" action={{ href: '#new-plan', label: 'Make a plan' }}><p>Maryam · Tue and Thu · 8 parts</p></ExampleInUse></td></tr> : null}
+                {!plans.length ? <tr><td colSpan={7}><ExampleInUse desk title="Names class, four weeks" action={{ href: '#new-plan', label: 'Make a plan' }}><p>Maryam · East London Mosque · Tue and Thu · 8 parts</p></ExampleInUse></td></tr> : null}
               </tbody>
             </table>
           </div>
