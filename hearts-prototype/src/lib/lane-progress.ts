@@ -1,9 +1,14 @@
 // Progress for one learner lane. Lane ids stay in opening-data (`LANES[].key`).
 // Garden branches and the learner route `/lanes/[id]` both use those ids.
-// Pure module: no server imports, so the phone, the desk and the tests can share it.
+// The count is watched talks and clips in that lane, against how many the lane lists.
+// A film's unit is not a group: live data has one unit per film, so grouping by unit
+// would not describe the lane. Pure module, no server imports.
 import { LANES } from './opening-data'
 
-/** A talk or clip in lane order. `start` and `end` are its window inside the talk, in seconds. */
+/**
+ * One talk or clip in lane order. `start` and `end` are its window inside the talk, in seconds.
+ * `unitId` is ignored. Each film currently has its own unit, so the lane does not group by it.
+ */
 export type LaneProgressClip = {
   cutId: number
   lessonId: number
@@ -11,6 +16,7 @@ export type LaneProgressClip = {
   end?: number
   /** Whole-talk length, used when a finished talk has no watch-session row. */
   durationSeconds?: number
+  unitId?: number | null
 }
 
 /** Real learner rows. Several sessions for one talk keep the furthest second. */
@@ -111,13 +117,20 @@ function clipDone(clip: LaneProgressClip, percent: number, seconds: number) {
 
 /**
  * How far one learner is along a lane.
- * `clips` are that lane's talks in play order. `watch` is their real completions and watch sessions.
+ * `clips` are that lane's talks in play order. Each one counts, even when several belong to one film.
+ * `watch` is their real completions and watch sessions.
  * Call `getLaneProgress(laneId)` alone to read the lane's name. With no clips yet, `total` is the lane's door count
  * so a Garden branch still has a length. Pass clips and watch for the real count.
  */
 export function getLaneProgress(laneId: string, clips: LaneProgressClip[] = [], watch: LaneWatch = {}): LaneProgress {
   const known = LANES.find((lane) => lane.key === laneId)
-  const list = clips.filter((clip) => clip.cutId && clip.lessonId)
+  const seen = new Set<number>()
+  const list = clips.filter((clip) => {
+    const cutId = Number(clip.cutId)
+    if (!cutId || seen.has(cutId)) return false
+    seen.add(cutId)
+    return true
+  })
   const percentOf = maxByLesson((watch.completions || []).map((row) => ({ lessonId: row.lessonId, value: Number(row.percent) })))
   const secondsOf = maxByLesson((watch.sessions || []).map((row) => ({ lessonId: row.lessonId, value: Number(row.seconds) })))
   const durationOf = maxByLesson([

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { LANE_PROGRESS_EXAMPLE, type LaneProgress } from '@/lib/lane-progress'
 
-/** The "4 of 12 done" unit: a count, a bar, and minutes watched. */
+/** Watched talks and clips in this lane, against the lane's own list: a count, a bar, and minutes watched. */
 export function LaneProgressUnit({
   done,
   total,

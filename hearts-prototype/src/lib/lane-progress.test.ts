@@ -46,7 +46,7 @@ test('a lane with no watching is not started, and the example is labelled 4 of 1
   assert.equal(minutesWatchedLabel(0, 20), 'Under a minute watched')
 })
 
-test('a finished talk marks its clips done, and minutes are counted once', () => {
+test('a finished talk marks each of its clips in the lane, and the total stays the clip list', () => {
   const progress = getLaneProgress('company', clips, {
     completions: [{ lessonId: 1, percent: 100 }],
   })
@@ -60,6 +60,23 @@ test('a finished talk marks its clips done, and minutes are counted once', () =>
   assert.equal(progress.playCutId, 12)
   assert.equal(progress.minutesWatched, 10)
   assert.equal(progress.minutesLabel, '10 minutes watched')
+})
+
+test('lane progress counts talks and clips, not film units', () => {
+  // Live data has one unit per film. Grouping by that unit would hide the extra clip.
+  const laneClips: LaneProgressClip[] = [
+    { cutId: 1, lessonId: 10, unitId: 10, start: 0, end: 18, durationSeconds: 600 },
+    { cutId: 2, lessonId: 10, unitId: 10, start: 40, end: 70, durationSeconds: 600 },
+    { cutId: 3, lessonId: 11, unitId: 11, start: 0, end: 20, durationSeconds: 180 },
+  ]
+  const progress = getLaneProgress('trust', laneClips, { completions: [{ lessonId: 10, percent: 100 }] })
+  const units = new Set(laneClips.map((clip) => clip.unitId)).size
+  assert.equal(units, 2)
+  assert.equal(progress.total, laneClips.length)
+  assert.notEqual(progress.total, units)
+  assert.equal(progress.done, 2)
+  assert.equal(progress.line, '2 of 3 done')
+  assert.deepEqual(progress.doneCutIds, [1, 2])
 })
 
 test('a short watch finishes only the clips it has reached', () => {
