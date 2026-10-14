@@ -335,7 +335,7 @@ export interface Portal {
   teacherLabel?: string | null;
   wizardDone?: boolean | null;
   /**
-   * Per-portal feature switches. Empty means every feature that exists today stays on, so live portals do not change.
+   * Per-portal feature switches. Empty means the portal keeps every part it already had. A new portal is saved with an explicit map: beginner stays on, intermediate starts on, extras start off.
    */
   features?:
     | {
@@ -494,6 +494,9 @@ export interface Course {
   isPublic?: boolean | null;
   importToken?: string | null;
   hidden?: boolean | null;
+  /**
+   * Why this course is hidden. Set when every talk in it is under five minutes.
+   */
   hiddenNote?: string | null;
   visibility?: ('draft' | 'published') | null;
   updatedAt: string;
@@ -2720,7 +2723,7 @@ export interface GatherPhoto {
   createdAt: string;
 }
 /**
- * A teacher going live for the learners of one portal.
+ * A video session for the learners of one portal.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "live-sessions".

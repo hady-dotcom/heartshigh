@@ -11,7 +11,7 @@ import { showUncheckedTalks } from '@/server/opening'
 import type { SessionUser } from '@/server/context'
 import { partTitle } from '@/lib/talk-title'
 import { listShortTalks } from '@/server/short-talks'
-import { rows, str } from '../common'
+import { type Row, rows, str } from '../common'
 import { DeskFrame, masterNav } from './shell'
 import { TooShortFilter, TooShortTable } from './short-talks'
 
@@ -95,7 +95,7 @@ export async function MasterReview(ctx: MasterCtx) {
     : { status: { equals: 'draft' } }
   const drafts = await payload.count({ collection: 'engagement-points', overrideAccess: true, where: popupWhere as never })
   const horsMax = horsCapOf(flags?.horsMaxSeconds)
-  const inPool = (tier: { lesson?: unknown }) => shortIds.has(Number(idOf(tier.lesson))) === showShort
+  const inPool = (tier: Row) => shortIds.has(Number(idOf(tier.lesson))) === showShort
   const sorted = [...tiers].filter(inPool).sort((a, b) => (STATUS_ORDER[str(a.status) || 'draft'] ?? 0) - (STATUS_ORDER[str(b.status) || 'draft'] ?? 0) || Number(a.id) - Number(b.id))
   const listed = tiers.filter((tier) => !shortIds.has(Number(idOf(tier.lesson))))
   const waiting = listed.filter((tier) => (tier.status || 'draft') === 'draft').length
@@ -209,7 +209,7 @@ export async function MasterReviewPopups(ctx: MasterCtx) {
   ])
   const shortIds = new Set(shortTalks.map((talk) => talk.id))
   const tierLessons = new Set(tiers.map((tier) => idOf(tier.lesson)))
-  const inPool = (point: { lesson?: unknown }) => shortIds.has(Number(idOf(point.lesson))) === showShort
+  const inPool = (point: Row) => shortIds.has(Number(idOf(point.lesson))) === showShort
   const own = points.filter((point) => tierLessons.has(idOf(point.lesson)) && inPool(point))
   const listed = points.filter((point) => tierLessons.has(idOf(point.lesson)) && !shortIds.has(Number(idOf(point.lesson))))
   const sorted = [...own].sort((a, b) => (STATUS_ORDER[str(a.status) || 'draft'] ?? 0) - (STATUS_ORDER[str(b.status) || 'draft'] ?? 0) || Number(idOf(a.lesson)) - Number(idOf(b.lesson)) || Number(a.second) - Number(b.second))
