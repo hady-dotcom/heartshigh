@@ -54,7 +54,7 @@ export const PAGE: Record<string, string> = {
   lanes:
     'Lanes are the themes the opening uses to pick clips. The titles here are what learners see on Lanes. Change a title with care, because it shows on every phone in that portal.',
   simulator:
-    'The simulator lets you walk the opening as a newcomer would, without making an account. Use it to check the words and the route before you publish a change. Nothing here is saved against a real person.',
+    'Answer the opening questions here the way a new person would, without making an account. Pick one answer for each question. You will see how the feelings move, which lane comes first, and which clips would play. Nothing on this page is saved.',
   personas:
     'Scales and bands are the words Compass uses behind the scenes. Learners never see these names, only a gentle line. Change them with care. They shape every monthly look.',
   trends:

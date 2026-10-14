@@ -464,9 +464,9 @@ test.describe('the desks for the opening', () => {
   test('32. the simulator runs the phone’s routing on picked taps', async ({ page }) => {
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master/simulator')
     await expect(page.getByTestId('simulator')).toBeVisible()
-    await expect(page.getByTestId('sim-lane').filter({ hasText: 'L1' })).toHaveCount(0)
+    await expect(page.getByTestId('sim-lane').filter({ hasText: 'this lane comes first' })).toHaveCount(0)
     for (const [scene, option] of SIM_PICKS) await page.getByTestId(`sim-${scene}`).selectOption(option)
-    await expect(page.getByTestId('sim-lane').filter({ hasText: 'L1' })).toHaveCount(1)
+    await expect(page.getByTestId('sim-lane').filter({ hasText: 'this lane comes first' })).toHaveCount(1)
     await expect(page.getByTestId('sim-feed-item').first()).toBeVisible()
     await expect(page.locator('[data-testid="sim-scale"][data-scale="desire"]')).toHaveAttribute('data-value', '0.00')
     await page.getByTestId('sim-visitor').selectOption('heavy')

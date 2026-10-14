@@ -126,7 +126,9 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
       })),
     }
     const doc = existing
-      ? existing
+      ? Number(existing.order) === scene.order
+        ? existing
+        : ((await payload.update({ collection: 'opening-scenes', id: existing.id, overrideAccess: true, data: { order: scene.order } as never })) as unknown as Doc)
       : ((await payload.create({ collection: 'opening-scenes', overrideAccess: true, data: { ...data, status: 'draft' } as never })) as unknown as Doc)
     sceneIds.set(scene.key, doc.id)
   }

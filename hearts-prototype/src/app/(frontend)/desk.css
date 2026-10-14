@@ -264,11 +264,26 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 .desk p, .desk td { overflow-wrap: break-word; word-break: break-word; }
 .view-as-ask { display: grid; gap: 8px; min-width: 260px; text-align: left; }
-.sim-scale { display: grid; grid-template-columns: 220px 1fr 48px; gap: 10px; align-items: center; font-size: 14px; }
+.sim-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 18px; align-items: start; }
+.sim-scale { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr) 48px; gap: 10px; align-items: center; font-size: 14px; }
 .sim-bar { position: relative; height: 8px; border-radius: 8px; background: #efebe3; }
 .sim-bar::after { content: ''; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--ink-2); }
 .sim-bar i { position: absolute; top: 0; bottom: 0; border-radius: 8px; }
 .sim-scale b { text-align: right; font-variant-numeric: tabular-nums; }
+.q-heat-wrap { overflow-x: auto; max-width: 100%; }
+.q-heat { font-size: 13px; }
+.q-heat th, .q-heat td { white-space: nowrap; }
+.q-heat td:first-child, .q-heat th:first-child { white-space: normal; text-align: left; min-width: 140px; }
+.sim-lanes { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }
+.sim-lanes li { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.for-techies { margin-top: 8px; }
+.for-techies > summary { font-weight: 700; }
+.for-techies .table-wrap { margin-top: 10px; }
+@media (max-width: 900px) {
+  .sim-layout { grid-template-columns: minmax(0, 1fr); }
+  .sim-scale { grid-template-columns: minmax(0, 1fr) 48px; }
+  .sim-bar { grid-column: 1 / -1; }
+}
 
 .tier-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: start; }
 .tier-player { aspect-ratio: 16 / 9; background: #1c1b19; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 12px; }
@@ -309,7 +324,7 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .desk-narrow { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; min-height: 100vh; padding: 48px 24px; background: var(--desk-page, #0E2A2B); color: var(--desk-ink, #F6EEDC); }
   .desk-narrow h1 { font-size: 24px; line-height: 1.25; margin: 8px 0 0; }
   .desk-narrow p { margin: 0; font-size: 16px; line-height: 1.5; max-width: 32rem; }
-  .desk.desk-phone { display: grid; grid-template-columns: 1fr; }
+  .desk.desk-phone { display: grid; grid-template-columns: minmax(0, 1fr); }
   body:has(.desk.desk-phone) .desk-narrow { display: none; }
 }
 
@@ -350,6 +365,10 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
   }
   .desk.desk-phone table.data td:first-child,
   .desk.desk-phone table.data td:nth-child(2) { min-width: 0; }
+  .desk.desk-phone .panel,
+  .desk.desk-phone .q-heat-wrap,
+  .desk.desk-phone .side { max-width: 100%; }
+  .desk.desk-phone .for-techies .table-wrap { overflow-x: auto; max-width: 100%; }
 }
 
 .desk .code-joins { margin: 6px 0 0; padding-left: 18px; text-align: left; font-size: 12px; white-space: nowrap; }

@@ -71,9 +71,9 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
         <section className="card prefs" data-testid="me-prefs">
           <PrefToggle name="keepPlace" label="Keep my place" hint="Saves where you are on our side, so another phone picks up from here. Off keeps it on this phone only." checked={Boolean(user.keepPlace)} next={`${base}/me`} />
           <PrefToggle name="shareOpening" label="Share my opening answers with my mentor" hint="Private answers stay with you either way." checked={Boolean(user.shareOpening)} next={`${base}/me`} />
-          <PrefToggle name="trendsOptIn" label="Add my taps to my chapter’s trends" hint="Only counts across ten or more people, never your name." checked={Boolean(user.trendsOptIn)} next={`${base}/me`} />
+          <PrefToggle name="trendsOptIn" label="Add my answers to my chapter’s trends" hint="Only counts across ten or more people, never your name." checked={Boolean(user.trendsOptIn)} next={`${base}/me`} />
           <PrefToggle name="shareWithLearners" label="Share answers with other learners" hint="Off: nobody else on a video sees your answers. You still see what others chose to share. On: you choose, answer by answer, whether yours join that list." checked={Boolean(user.shareWithLearners)} next={`${base}/me`} />
-          <PrefToggle name="haptics" label="Haptics" hint="A small buzz when you tap an answer." checked={user.haptics !== false} next={`${base}/me`} />
+          <PrefToggle name="haptics" label="Haptics" hint="A small buzz when you choose an answer." checked={user.haptics !== false} next={`${base}/me`} />
           <OptInLane lane="guarding-gaze" label="Private lanes: Guarding the gaze" hint="Clips on this appear only if you turn this on. It is kept on this phone and never shown to anyone." portal={portal.slug || ''} />
         </section>
         {shaped.length ? (
@@ -204,7 +204,7 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
         <Flash error={query.error} notice={query.notice} />
         <p className="eyebrow">Sound and display</p>
         <section className="card prefs" data-testid="settings-sound">
-          <PrefToggle name="haptics" label="Haptics" hint="A small buzz when you tap an answer." checked={user.haptics !== false} next={here} />
+          <PrefToggle name="haptics" label="Haptics" hint="A small buzz when you choose an answer." checked={user.haptics !== false} next={here} />
           <SoundOnToggle />
         </section>
         <p className="eyebrow">Privacy</p>

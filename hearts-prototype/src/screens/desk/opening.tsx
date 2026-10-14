@@ -10,8 +10,9 @@ import { SCALES } from '@/lib/opening-data'
 import { TRENDS_MIN, trendsFrom, type Contribution } from '@/lib/trends'
 import { loadPersonaLens } from '@/server/persona'
 import { loadPortal, type SessionUser } from '@/server/context'
-import { loadOpening } from '@/server/opening'
+import { loadOpening, openingConfig } from '@/server/opening'
 import { cleanPortalScenes } from '@/lib/portal-scenes'
+import type { ScaleKey } from '@/lib/heart'
 import { partTitle } from '@/lib/talk-title'
 import { portalDisplayName, showPortalName } from '@/lib/portal-name'
 import { HelpTip } from '@/components/desk/help'
@@ -42,7 +43,7 @@ export async function MasterOpening(ctx: MasterCtx) {
   const problems = await Promise.all(scenes.map((scene) => sceneProblems(payload as never, { ...(scene as Record<string, unknown>), status: 'published' } as never)))
   const laneTitle = (value: unknown) => str(lanes.find((lane) => lane.id === idOf(value))?.title)
   return (
-    <Frame ctx={ctx} active="opening" title="Opening scenes" intro="The six scenes a newcomer meets before the feed. Each tap nudges the heart scales a little and may name a lane. Publishing checks the rules: four to six options, no words on the kill list, one crisis option across all scenes, and no nudges on scales that are not read at first open." testId="master-opening">
+    <Frame ctx={ctx} active="opening" title="Opening scenes" intro="The scenes a newcomer meets before the feed. Each answer moves the feelings a little and may name a lane. Publishing checks the rules: four to six options, no words on the kill list, one crisis option across all scenes, and no nudges on feelings that are not used on the first questions." testId="master-opening">
       <div id="opening-scenes">
       <section className="panel" style={{ marginBottom: 18 }} data-testid="player-flags">
         <header className="light"><h2>Player layout</h2><span className="hint">Applies to every portal</span></header>
@@ -56,7 +57,7 @@ export async function MasterOpening(ctx: MasterCtx) {
       {scenes.map((scene, index) => {
         const options = (scene.options as Option[]) || []
         return (
-          <section className="panel" key={scene.id} style={{ marginBottom: 18 }} data-testid="scene-panel" data-scene={str(scene.key)}>
+          <section className="panel" id={`scene-${str(scene.key)}`} key={scene.id} style={{ marginBottom: 18 }} data-testid="scene-panel" data-scene={str(scene.key)}>
             <header className="light">
               <div><h2>{str(scene.order)}. {plainCaption(str(scene.caption))}</h2><p>{str(scene.key)} · {str(scene.layout)} · version {str(scene.version) || '1'}</p></div>
               <span className={`badge ${scene.status === 'published' ? 'teal' : 'grey'}`}>{scene.status === 'published' ? 'Published' : 'Draft'}</span>
@@ -227,7 +228,7 @@ export async function MasterTrends(ctx: MasterCtx) {
   const [all, portals, laneTitles, lens] = await Promise.all([contributions(payload), rows(payload, 'portals', undefined, { sort: 'name' }), laneTitleMap(payload), loadPersonaLens(payload)])
   const bandTitle = Object.fromEntries(lens.bands.map((band) => [band.key, band.title]))
   return (
-    <Frame ctx={ctx} active="trends" title="Network trends" intro={`Counts from learners who chose to add their taps. No names, no answers to private scenes, and nothing shown for a group under ${TRENDS_MIN}.`} testId="master-trends">
+    <Frame ctx={ctx} active="trends" title="Network trends" intro={`Counts from learners who chose to add their answers. No names, no answers to private scenes, and nothing shown for a group under ${TRENDS_MIN}.`} testId="master-trends">
       <section className="panel" style={{ marginBottom: 18 }} data-testid="persona-lens">
         <header className="light"><h2>Persona lens</h2><span className="badge grey">Staff only</span></header>
         <div className="body">
@@ -261,20 +262,22 @@ export async function MasterSimulator(ctx: MasterCtx) {
   const slug = query.portal || str(portals[0]?.slug)
   const portal = slug ? await loadPortal(payload, slug) : null
   if (!portal) return <Frame ctx={ctx} active="simulator" title="Simulator"><p>Open a portal first.</p></Frame>
-  const opening = await loadOpening(payload, portal, null)
+  const [opening, config] = await Promise.all([loadOpening(payload, portal, null), openingConfig(payload, portal.id)])
   const [cuts, lessons] = await Promise.all([rows(payload, 'cuts', { id: { in: opening.route.cuts.map((cut) => cut.id) } }, { limit: 2000 }), rows(payload, 'lessons', undefined, { limit: 2000 })])
   const cutTitles = Object.fromEntries(cuts.map((cut) => {
     const lesson = lessons.find((row) => row.id === idOf(cut.lesson))
     return [cut.id, lesson ? partTitle(lesson) : `Clip ${cut.id}`]
   }))
-  const scaleNames = Object.fromEntries(SCALES.map((scale) => [scale.key, scale.leonName]))
+  const feelings = SCALES.map((scale) => ({ key: scale.key as ScaleKey, name: scale.polishLabel }))
+  const portalKeys = new Set(cleanPortalScenes(config.own?.extraScenes).scenes.map((scene) => scene.key))
+  const edits = Object.fromEntries(opening.scenes.map((scene) => [scene.key, portalKeys.has(scene.key) ? `/p/${slug}/admin/opening#own-${scene.key}` : `/master/opening#scene-${scene.key}`]))
   return (
-    <Frame ctx={ctx} active="simulator" title="Simulator" intro="Pick a tap for each scene and see what the phone would work out: the scales, the lane scores and the first feed. It runs the same code as the app and keeps nothing." testId="master-simulator">
+    <Frame ctx={ctx} active="simulator" title="Simulator" intro="Choose an answer for each question and see what the phone would work out: the feelings, the lanes and the first clips. It runs the same sums as the app and keeps nothing." testId="master-simulator">
       <form id="simulator" className="actions" style={{ marginBottom: 14 }}>
         <label>Portal <select name="portal" defaultValue={slug}>{portals.map((row) => <option key={row.id} value={str(row.slug)}>{str(row.name)}</option>)}</select></label>
         <button className="btn ghost small" type="submit">Use this portal</button>
       </form>
-      <Simulator scenes={opening.scenes} scales={opening.scales} route={opening.route} scaleNames={scaleNames} cutTitles={cutTitles} />
+      <Simulator scenes={opening.scenes} scales={opening.scales} feelings={feelings} edits={edits} route={opening.route} cutTitles={cutTitles} />
     </Frame>
   )
 }
@@ -328,7 +331,7 @@ export async function PortalOpeningScreen(ctx: Ctx) {
         </header>
         <div className="body" style={{ display: 'grid', gap: 12 }}>
           {extras.map((scene) => (
-            <div className="count-tile" key={scene.key} data-testid="portal-own-scene">
+            <div className="count-tile" id={`own-${scene.key}`} key={scene.key} data-testid="portal-own-scene">
               <span>
                 <b>{scene.caption.replace(/\*\*/g, '')}</b>
                 <span className="hint" style={{ display: 'block', fontWeight: 500 }}>{scene.options.map((option) => option.label).join(' · ')}</span>
