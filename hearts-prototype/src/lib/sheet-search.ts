@@ -3,8 +3,10 @@
 import { execFile } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { promisify } from 'node:util'
+import { MIN_BRING_IN_SECONDS } from './bring-in-plan'
 import { parseVimeoId, parseYoutubeId } from './master-sheet'
 import { ytDlpBinary } from './youtube'
+import { captionFlagFor } from './youtube-list'
 
 const execFileAsync = promisify(execFile)
 
@@ -15,7 +17,7 @@ export type TalkCandidate = {
   channel: string
   durationSeconds: number | null
   thumbnail: string | null
-  captions: 'yes' | 'no' | 'unknown'
+  captions: 'yes' | 'no' | 'unknown' | 'unavailable'
   url: string
 }
 
@@ -26,6 +28,12 @@ type SearchDeps = {
   apiKey?: string | null
   fixture?: TalkCandidate[] | null
   ytdlp?: (query: string, limit: number) => Promise<TalkCandidate[]>
+  captions?: (id: string) => Promise<'yes' | 'no' | 'unknown' | 'unavailable'>
+}
+
+/** Blank shortest means five minutes. A number the desk typed, including one under five minutes, is kept. */
+export function creatorMinSeconds(value: number | null | undefined) {
+  return value == null ? MIN_BRING_IN_SECONDS : value
 }
 
 export function parseIsoDuration(value: string): number | null {
@@ -128,11 +136,41 @@ export function parsePastedSources(text: string): { ok: true; sources: { provide
   return { ok: true, sources }
 }
 
+/** yt-dlp --list-subs, with a short wait so a stuck film does not hold the whole search. */
+async function probeCaptionFlag(id: string): Promise<'yes' | 'no' | 'unknown' | 'unavailable'> {
+  const flag = await captionFlagFor(id, 'en', async (pageUrl, args) => {
+    try {
+      const result = await execFileAsync(ytDlpBinary(), [...args, pageUrl], { timeout: 12_000, maxBuffer: 2_000_000 })
+      return { stdout: String(result.stdout || ''), stderr: String(result.stderr || ''), missing: false }
+    } catch (error) {
+      const failure = error as { code?: string | number; stderr?: string | Buffer; stdout?: string | Buffer }
+      return { stdout: String(failure.stdout || ''), stderr: String(failure.stderr || ''), missing: failure.code === 'ENOENT' }
+    }
+  })
+  if (flag === 'yes' || flag === 'no' || flag === 'unavailable') return flag
+  return 'unknown'
+}
+
+async function withCaptionFlags(rows: TalkCandidate[], probe: (id: string) => Promise<'yes' | 'no' | 'unknown' | 'unavailable'>) {
+  return Promise.all(rows.map(async (item) => {
+    if (item.captions === 'yes' || item.captions === 'no') return item
+    try {
+      const flag = await probe(item.id)
+      if (flag === 'yes' || flag === 'no' || flag === 'unavailable') return { ...item, captions: flag }
+    } catch {
+      // The list stays as yt-dlp's flat search left it.
+    }
+    return item
+  }))
+}
+
 /** Candidates for one topic. Length bounds drop films whose duration is known to fall outside them. */
 export async function searchTalks(query: SearchQuery, deps: SearchDeps = {}): Promise<{ ok: true; candidates: TalkCandidate[]; via: string } | { ok: false; error: string }> {
   const topic = query.topic.trim()
   if (topic.length < 2) return { ok: false, error: 'Name the topic in at least two characters.' }
   const limit = Math.min(25, Math.max(1, query.limit || 8))
+  // Ask for a wider page when a length bound will throw some of them away.
+  const ask = query.minSeconds != null || query.maxSeconds != null ? 25 : limit
   const fixture = deps.fixture === undefined ? searchFixture() : deps.fixture
   let via = 'fixture'
   let rows: TalkCandidate[] = []
@@ -141,20 +179,21 @@ export async function searchTalks(query: SearchQuery, deps: SearchDeps = {}): Pr
     const key = deps.apiKey === undefined ? process.env.YOUTUBE_API_KEY || process.env.YOUTUBE_DATA_API_KEY || '' : deps.apiKey || ''
     if (key) {
       try {
-        rows = await youtubeApiSearch(query, deps, key)
+        rows = await youtubeApiSearch({ ...query, limit: ask }, deps, key)
         via = 'youtube'
       } catch (error) {
-        const fallback = await (deps.ytdlp || ytdlpSearch)(queryText(query), limit)
+        const fallback = await (deps.ytdlp || ytdlpSearch)(queryText(query), ask)
         if (!fallback.length) return { ok: false, error: error instanceof Error ? error.message : 'YouTube search failed.' }
         rows = fallback
         via = 'yt-dlp'
       }
     } else {
-      rows = await (deps.ytdlp || ytdlpSearch)(queryText(query), limit)
+      rows = await (deps.ytdlp || ytdlpSearch)(queryText(query), ask)
       via = 'yt-dlp'
       if (!rows.length) return { ok: false, error: 'Search needs a YouTube Data API key (YOUTUBE_API_KEY), or yt-dlp on this machine.' }
     }
   }
-  const candidates = rows.filter((item) => within(item, query)).slice(0, limit)
+  let candidates = rows.filter((item) => within(item, query)).slice(0, limit)
+  if (via === 'yt-dlp') candidates = await withCaptionFlags(candidates, deps.captions || probeCaptionFlag)
   return { ok: true, candidates, via }
 }

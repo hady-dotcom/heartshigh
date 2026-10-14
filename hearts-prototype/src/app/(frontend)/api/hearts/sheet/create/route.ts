@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import { idOf, portalIdOf } from '@/lib/ids'
-import { parsePastedSources, searchTalks } from '@/lib/sheet-search'
+import { creatorMinSeconds, searchTalks } from '@/lib/sheet-search'
 import { getSession } from '@/server/context'
 import { planBuffer, summaryOf, writeAudit, type SheetScope } from '@/server/master-sheet'
-import { draftWorkbook, type CreatorSource } from '@/server/sheet-creator'
+import { buildWorkbook } from '@/lib/master-sheet'
+import { collectCreatorSources, draftOne, draftWorkbook, type CreatorSource } from '@/server/sheet-creator'
 import { resolveScope } from '@/server/sheet-scope'
 import { saveOwnedMedia } from '@/server/media'
 
@@ -79,43 +80,107 @@ export async function POST(req: Request) {
     }
   }
 
-  if (intent === 'search') {
-    const found = await searchTalks({
-      topic: String(body.topic || ''),
-      speaker: String(body.speaker || ''),
-      limit: numberOrNull(body.count) || 8,
-      minSeconds: numberOrNull(body.minSeconds ?? body.min),
-      maxSeconds: numberOrNull(body.maxSeconds ?? body.max),
+  try {
+    if (intent === 'search') {
+      const found = await searchTalks({
+        topic: String(body.topic || ''),
+        speaker: String(body.speaker || ''),
+        limit: numberOrNull(body.count) || 8,
+        minSeconds: creatorMinSeconds(numberOrNull(body.minSeconds ?? body.min)),
+        maxSeconds: numberOrNull(body.maxSeconds ?? body.max),
+      })
+      if (!found.ok) return fail(found.error)
+      return NextResponse.json({ ok: true, via: found.via, candidates: found.candidates })
+    }
+
+    const placed = await place(payload, user!, body)
+    if ('error' in placed) return placed.error
+    const { scope, course, part } = placed
+    const topic = String(body.topic || '')
+
+    if (intent === 'collect') {
+      const collected = collectCreatorSources({ sources: body.sources ?? form?.get('sources'), pasted: body.pasted })
+      if (!collected.ok) return fail(collected.error)
+      return NextResponse.json({ ok: true, sources: collected.sources, course: course.title, part })
+    }
+
+    if (intent === 'draft-one') {
+      const source = normaliseOne(body.source)
+      if (!source) return fail('A source is youtube, vimeo or an uploaded file.')
+      const one = await draftOne(payload, { topic, course: course.title, part }, source)
+      return NextResponse.json({ ok: true, ...one })
+    }
+
+    if (intent === 'assemble') {
+      const saved = await saveDraft(payload, user!, scope, course.title, part, body)
+      if ('error' in saved) return saved.error
+      return saved.response
+    }
+
+    const collected = collectCreatorSources({ sources: body.sources ?? form?.get('sources'), pasted: body.pasted })
+    if (!collected.ok) return fail(collected.error)
+    const draft = await draftWorkbook(payload, scope, { topic, course: course.title, part, sources: collected.sources })
+    const saved = await saveDraft(payload, user!, scope, course.title, part, {
+      talks: draft.results.filter((result) => result.included && result.talk).map((result) => result.talk),
+      questions: draft.results.flatMap((result) => result.questions || []),
+      resources: draft.results.flatMap((result) => result.resources || []),
+      notices: draft.results.filter((result) => result.warn).map((result) => `${result.title}: ${result.detail}`),
     })
-    if (!found.ok) return fail(found.error)
-    return NextResponse.json({ ok: true, via: found.via, candidates: found.candidates })
+    if ('error' in saved) return saved.error
+    return saved.response
+  } catch (error) {
+    console.error('[sheet-creator]', intent, error)
+    const message = error instanceof Error && error.message ? error.message : 'The draft could not be built.'
+    return fail(message)
   }
+}
 
-  const scopeFields = fieldsOf({ ...body, scope: 'course', desk: user!.role === 'portal-admin' ? 'portal' : 'master' })
+function normaliseOne(value: unknown): CreatorSource | null {
+  const collected = collectCreatorSources({ sources: [value], pasted: '' })
+  return collected.ok ? collected.sources[0] || null : null
+}
+
+async function place(payload: Awaited<ReturnType<typeof getSession>>['payload'], user: NonNullable<Awaited<ReturnType<typeof getSession>>['user']>, body: Record<string, unknown>) {
+  const scopeFields = fieldsOf({ ...body, scope: 'course', desk: user.role === 'portal-admin' ? 'portal' : 'master' })
   const resolved = await resolveScope(scopeFields)
-  if ('error' in resolved) return fail(resolved.error, resolved.status)
+  if ('error' in resolved) return { error: fail(resolved.error, resolved.status) }
   const scope: SheetScope = resolved.scope
-  if (scope.kind !== 'course' || !scope.courseId) return fail('Choose the course this sheet is for.')
+  if (scope.kind !== 'course' || !scope.courseId) return { error: fail('Choose the course this sheet is for.') }
   const course = await payload.findByID({ collection: 'courses', id: scope.courseId, depth: 0, overrideAccess: true }).catch(() => null) as { title?: string } | null
-  if (!course?.title) return fail('That course was not found.', 404)
+  if (!course?.title) return { error: fail('That course was not found.', 404) }
+  const part = String(body.part || '').trim() || 'Talks'
+  return { scope, course: { title: course.title }, part }
+}
 
-  const chosen = Array.isArray(body.sources) ? (body.sources as CreatorSource[]) : []
-  const pasted = parsePastedSources(String(body.pasted || ''))
-  if (!pasted.ok) return fail(pasted.error)
-  const sources = [...chosen, ...pasted.sources].slice(0, 25)
-  if (!sources.length) return fail('Choose at least one talk, or paste a link.')
-  for (const source of sources) {
-    if (source.provider !== 'youtube' && source.provider !== 'vimeo' && source.provider !== 'file') return fail('A source is youtube, vimeo or an uploaded file.')
-    if (source.provider === 'file' && !source.mediaId) return fail('An uploaded film is missing its media id. Upload it again.')
-  }
-  const draft = await draftWorkbook(payload, scope, { topic: String(body.topic || ''), course: course.title, part: String(body.part || 'Talks'), sources })
+async function saveDraft(
+  payload: Awaited<ReturnType<typeof getSession>>['payload'],
+  user: NonNullable<Awaited<ReturnType<typeof getSession>>['user']>,
+  scope: SheetScope,
+  course: string,
+  part: string,
+  body: { talks?: unknown; questions?: unknown; resources?: unknown; notices?: unknown },
+) {
+  const talks = rowsOf(body.talks).map((talk) => ({ ...talk, course, part }))
+  const questions = rowsOf(body.questions)
+  const resources = rowsOf(body.resources)
+  const notices = Array.isArray(body.notices) ? body.notices.map((item) => String(item || '').trim()).filter(Boolean) : []
+  if (!talks.length) return { error: fail(notices.join('\n') || 'Choose at least one talk, or paste a link.') }
+  const buffer = await buildWorkbook({ talks, questions, resources })
   const fileName = 'hearts-draft.xlsx'
-  const { plan, counts } = await planBuffer(payload, scope, draft.buffer)
+  const { plan, counts } = await planBuffer(payload, scope, buffer)
   const summary = { ...summaryOf(plan, fileName), scope: scope.kind, portalId: scope.portalId, courseId: scope.courseId }
+  const extra = notices.map((message) => ({ tab: 'Talks' as const, row: 0, column: 'notes', message }))
+  summary.warnings = [...(summary.warnings || []), ...extra]
+  summary.warningTotal = summary.warnings.length
   const doc = await payload.create({
     collection: 'sheet-imports', overrideAccess: true,
-    data: { desk: scope.desk, portal: scope.portalId || undefined, actor: user!.id, actorRole: user!.role, fileName, state: 'preview', at: new Date().toISOString(), summary, workbook: draft.buffer.toString('base64') },
+    data: { desk: scope.desk, portal: scope.portalId || undefined, actor: user.id, actorRole: user.role, fileName, state: 'preview', at: new Date().toISOString(), summary, workbook: buffer.toString('base64') },
   })
   await writeAudit(payload, 'sheet.draft', user, scope.portalId, { importId: doc.id, fileName, counts })
-  return NextResponse.json({ ok: true, importId: doc.id, ...summary, talks: draft.talks, questions: draft.questions, resources: draft.resources })
+  return { response: NextResponse.json({ ok: true, importId: doc.id, ...summary, talks: talks.length, questions: questions.length, resources: resources.length, notices }) }
+}
+
+function rowsOf(value: unknown) {
+  if (!Array.isArray(value)) return []
+  return value.filter((item): item is Record<string, string | number | null> => Boolean(item) && typeof item === 'object')
 }

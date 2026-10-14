@@ -84,7 +84,7 @@ function SheetBody({
         <div className="stat-chip" data-testid="sheet-circle-count"><b>{libraryCounts.circle}</b><span>Circle answers (never counted)</span></div>
         <div className="stat-chip"><b>{last ? '1' : '0'}</b><span>Import waiting to undo</span></div>
       </div>
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.1fr) minmax(280px, 0.9fr)', alignItems: 'start' }}>
+      <div className="grid sheet-split" style={{ gridTemplateColumns: 'minmax(0, 1.1fr) minmax(280px, 0.9fr)', alignItems: 'start' }}>
         <section className="panel">
           <header><div><h2>Upload a sheet</h2><p>Nothing is saved until you apply the preview.</p></div></header>
           <form className="body form" action={action} method="post" encType="multipart/form-data" data-testid="sheet-upload">

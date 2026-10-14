@@ -2,7 +2,8 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { emptyCatalogue, planCounts, planSheet, readWorkbook } from '../../src/lib/master-sheet'
 import { draftResources, draftTalk } from '../../src/lib/sheet-draft'
-import { parseIsoDuration, parsePastedSources, searchTalks, type TalkCandidate } from '../../src/lib/sheet-search'
+import { creatorMinSeconds, parseIsoDuration, parsePastedSources, searchTalks, type TalkCandidate } from '../../src/lib/sheet-search'
+import { collectCreatorSources, draftOne, draftSources, NO_CAPTIONS, TOO_LONG } from '../../src/server/sheet-creator'
 
 const CAPTIONS = `WEBVTT
 
@@ -129,4 +130,91 @@ test('a drafted sheet stays a draft until it is applied, including the activatio
   assert.equal(point.data.family, 'task')
   assert.ok(plan.ops.some((op) => op.op === 'resource.create' && op.data.kind === 'reading'))
   assert.ok(plan.ops.every((op) => op.op !== 'point.create' || op.data.status === 'draft'))
+})
+
+test('a blank shortest is five minutes, and yt-dlp search drops shorter films once captions are known', async () => {
+  assert.equal(creatorMinSeconds(null), 300)
+  assert.equal(creatorMinSeconds(undefined), 300)
+  assert.equal(creatorMinSeconds(60), 60)
+
+  const found = await searchTalks({ topic: 'patience', minSeconds: creatorMinSeconds(null) }, {
+    fixture: null,
+    apiKey: '',
+    ytdlp: async () => [
+      { provider: 'youtube', id: 'hascaps0001', title: 'Patience in the evening', channel: 'The circle', durationSeconds: 640, thumbnail: null, captions: 'unknown', url: 'https://www.youtube.com/watch?v=hascaps0001' },
+      { provider: 'youtube', id: 'nocaps00001', title: 'A talk with no captions', channel: 'The circle', durationSeconds: 720, thumbnail: null, captions: 'unknown', url: 'https://www.youtube.com/watch?v=nocaps00001' },
+      { provider: 'youtube', id: 'tooshort001', title: 'A ninety second clip', channel: 'The circle', durationSeconds: 89, thumbnail: null, captions: 'yes', url: 'https://www.youtube.com/watch?v=tooshort001' },
+    ],
+    captions: async (id) => (id === 'hascaps0001' ? 'yes' : 'no'),
+  })
+  assert.equal(found.ok, true)
+  if (!found.ok) return
+  assert.equal(found.via, 'yt-dlp')
+  assert.deepEqual(found.candidates.map((item) => [item.id, item.captions]), [['hascaps0001', 'yes'], ['nocaps00001', 'no']])
+})
+
+test('ticked talks and pasted links are read together, and a bad payload says so', () => {
+  const merged = collectCreatorSources({
+    sources: JSON.stringify([{ provider: 'youtube', id: 'ccccccccccc', title: 'The light of the name' }]),
+    pasted: 'https://vimeo.com/76979871',
+  })
+  assert.equal(merged.ok, true)
+  if (!merged.ok) return
+  assert.deepEqual(merged.sources.map((source) => source.provider), ['youtube', 'vimeo'])
+
+  const shaped = collectCreatorSources({ sources: { nope: true }, pasted: '' })
+  assert.equal(shaped.ok, false)
+  if (shaped.ok) return
+  assert.match(shaped.error, /shape the desk could read/)
+
+  const empty = collectCreatorSources({ sources: [], pasted: '   ' })
+  assert.equal(empty.ok, false)
+  if (empty.ok) return
+  assert.match(empty.error, /Choose at least one talk/)
+})
+
+test('a talk with no captions stays in the draft, and the rest are still built', async () => {
+  const previous = process.env.HEARTS_TRANSCRIPT_FIXTURE
+  process.env.HEARTS_TRANSCRIPT_FIXTURE = JSON.stringify({ ccccccccccc: CAPTIONS })
+  const payload = { find: async () => ({ docs: [] }) }
+  try {
+    const drafted = await draftSources(payload as never, {
+      topic: 'light',
+      course: 'The Names',
+      part: 'Talks',
+      sources: [
+        { provider: 'youtube', id: 'ccccccccccc', title: 'The light of the name', durationSeconds: 640 },
+        { provider: 'youtube', id: 'nocaps00001', title: 'A talk with no captions', durationSeconds: 720 },
+      ],
+    })
+    assert.equal(drafted.talks.length, 2)
+    assert.equal(drafted.results[1].included, true)
+    assert.equal(drafted.results[1].detail, NO_CAPTIONS)
+    assert.equal(drafted.results[1].talk?.hors_in, null)
+    assert.equal(drafted.results[0].warn, false)
+  } finally {
+    if (previous == null) delete process.env.HEARTS_TRANSCRIPT_FIXTURE
+    else process.env.HEARTS_TRANSCRIPT_FIXTURE = previous
+  }
+})
+
+test('a caption read that runs too long still keeps the talk', { timeout: 10_000 }, async () => {
+  const previousFixture = process.env.HEARTS_TRANSCRIPT_FIXTURE
+  const previousBin = process.env.YT_DLP_PATH
+  delete process.env.HEARTS_TRANSCRIPT_FIXTURE
+  process.env.YT_DLP_PATH = new URL('../fixtures/sheet-creator/slow-yt-dlp.mjs', import.meta.url).pathname
+  const payload = { find: async () => ({ docs: [] }) }
+  try {
+    const one = await draftOne(payload as never, { topic: 'light', course: 'The Names', part: 'Talks' }, {
+      provider: 'youtube', id: 'hascaps0001', title: 'Patience in the evening', durationSeconds: 640,
+    }, { captionTimeoutMs: 400, seats: [] })
+    assert.equal(one.included, true)
+    assert.equal(one.detail, TOO_LONG)
+    assert.equal(one.talk?.hors_in, null)
+  } finally {
+    if (previousFixture == null) delete process.env.HEARTS_TRANSCRIPT_FIXTURE
+    else process.env.HEARTS_TRANSCRIPT_FIXTURE = previousFixture
+    if (previousBin == null) delete process.env.YT_DLP_PATH
+    else process.env.YT_DLP_PATH = previousBin
+  }
 })

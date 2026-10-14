@@ -71,7 +71,7 @@ test('the creator drafts a sheet, then a learner completes a task the imam can s
   await page.getByTestId('creator-topic').fill('the light of the name')
   await page.getByTestId('creator-speaker').fill('Mikaeel Smith')
   await page.getByTestId('creator-search').click()
-  await expect(page.getByTestId('creator-candidate')).toHaveCount(3)
+  await expect(page.getByTestId('creator-candidate')).toHaveCount(2)
   await page.locator('[data-testid="creator-candidate"][data-id="ccccccccccc"] [data-testid="creator-include"]').check()
   await page.getByTestId('creator-paste').fill('https://vimeo.com/76979871')
   await page.getByTestId('creator-file').setInputFiles(path.join(process.cwd(), 'tests/fixtures/circle-recording.mp4'))
