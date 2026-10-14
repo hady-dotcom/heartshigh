@@ -200,7 +200,7 @@ const STARTERS: Omit<ExperimentDoc, 'id' | 'createdBy' | 'approvedBy' | 'created
   {
     key: 'wide-video-framing',
     name: 'Wide-video framing',
-    description: 'Split (small uncropped video on top, timed words below) versus the current face-crop. The split player is not wired yet; this only registers the slot.',
+    description: 'Learners already see split words: the wide video on top and the timed words below. This experiment is not wired, so a saved version does not change the phone.',
     status: 'draft',
     slot: 'wide-video-framing',
     surface: 'feed',

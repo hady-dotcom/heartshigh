@@ -158,8 +158,8 @@ export async function MasterFraming(ctx: MasterCtx) {
     <Frame ctx={ctx} active="framing" title="Framing director" intro="How a clip is framed on the phone. The split player is registered; talk words stay as the sheikh said them." testId="framing-desk">
       <section className="panel">
         <div className="body">
-          <p>Wide landscape talks can sit as a face-crop (what learners see now) or as a split: a small uncropped picture above timed words.</p>
-          <p>That choice is a layout experiment. It never rewrites the talk.</p>
+          <p>Learners see one crop: the wide video in a band at the top, and the words underneath. Other crops are experiments and are not on the phone.</p>
+          <p>That choice never rewrites the talk.</p>
           <p><Link className="btn" href="/master/experiments">Open the Experiments desk</Link></p>
         </div>
       </section>

@@ -140,6 +140,25 @@ export function layoutFor(mode: FramingMode, stageW: number, stageH: number, cro
   return { mode, chromePad: CHROME, ...film, ...pin(focusX, focusY, film.film, crop) }
 }
 
+/**
+ * Size a 16:9 iframe so it covers a film window the way object-fit:cover would.
+ * YouTube draws inside the iframe, so object-fit on the iframe element cannot crop it.
+ * The film window clips this frame. A 16:9 window gets the whole picture, uncropped.
+ */
+export function coverFrame(boxW: number, boxH: number, objectX: number, objectY: number, sourceAspect = 16 / 9) {
+  const safeW = Math.max(1, boxW)
+  const safeH = Math.max(1, boxH)
+  const boxAspect = safeW / safeH
+  if (sourceAspect >= boxAspect) {
+    const height = safeH
+    const width = height * sourceAspect
+    return { width, height, left: -clamp(objectX, 0, 1) * Math.max(0, width - safeW), top: 0 }
+  }
+  const width = safeW
+  const height = width / sourceAspect
+  return { width, height, left: 0, top: -clamp(objectY, 0, 1) * Math.max(0, height - safeH) }
+}
+
 export function cssVars(layout: FramingLayout) {
   return {
     '--fr-scale': String(layout.scale),

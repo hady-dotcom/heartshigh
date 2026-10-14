@@ -4,7 +4,9 @@ import { buildTrack, chooseMode, segmentsFromShots } from '../../src/lib/framing
 import { avoidMidSentenceSwitches, holdModes, snapClipWindow, snapIn, snapOut, snapSwitch } from '../../src/lib/framing/snap'
 import { fallbackTrack, validateTrack } from '../../src/lib/framing/validate'
 import { currentSentence, sameSpokenText, sentencesFromCaptions, sentencesFromWords, sentencesInWindow, spokenLine, wordsFromCues, wrapWordLines } from '../../src/lib/framing/words'
-import { boxOnStage, coverPosition, coverSourceToBox, cssVars, filmOnStage, layoutFor } from '../../src/lib/framing/layout'
+import { boxOnStage, coverFrame, coverPosition, coverSourceToBox, cssVars, filmOnStage, layoutFor } from '../../src/lib/framing/layout'
+import { effectiveMode } from '../../src/components/app/framing-player'
+import { applyFramingOverride, FACE_TRACK_NOTE, faceTrackingRan, learnerFramingMode } from '../../src/lib/framing/learner'
 import { PLACEHOLDER_FACE, PLACEHOLDER_FACE_FOCUS } from '../../src/lib/framing/placeholder'
 import type { FramingTrack, ShotAnalysis } from '../../src/lib/framing/types'
 import { framingVariant } from '../../src/lib/experiments'
@@ -117,6 +119,44 @@ test('buildTrack snaps the window, holds modes, and writes a valid track', () =>
   assert.ok(track.segments.every((row) => row.end - row.start >= 4 - 0.05))
   assert.ok(track.segments.some((row) => row.mode === 'D' || row.mode === 'F'))
   assert.equal(segmentsFromShots([shot({ textScore: 0.02 })]).at(0)?.mode, 'B')
+})
+
+test('a 16:9 window shows the whole picture and a portrait window centre-crops it', () => {
+  const wide = coverFrame(390, 390 * (9 / 16), 0.5, 0.5)
+  assert.ok(Math.abs(wide.width - 390) < 0.5)
+  assert.ok(Math.abs(wide.left) < 0.5)
+  const tall = coverFrame(390, 844, 0.5, 0.5)
+  assert.ok(tall.width > 390)
+  assert.ok(tall.left < -100)
+  const centre = 0.5 * tall.width
+  const visibleLeft = -tall.left
+  assert.ok(visibleLeft < centre && centre < visibleLeft + 390)
+})
+
+test('the learner player ignores segment overrides and still plays F', () => {
+  const track = structuredClone(sample) as FramingTrack
+  track.segments[0].mode = 'D'
+  track.segments[0].confidence = 0.9
+  assert.equal(learnerFramingMode(track, track.segments[0].start, 'ai-director'), 'F')
+  assert.equal(effectiveMode(track, track.segments[0].start, 'ai-director'), 'F')
+  assert.equal(effectiveMode(track, track.segments[0].start, 'split-only', 'A'), 'A')
+  const saved = applyFramingOverride(track, 0, 'B')
+  assert.equal(saved.ok, true)
+  if (!saved.ok) return
+  assert.equal(saved.track.segments[0].mode, 'B')
+  assert.equal(learnerFramingMode(saved.track, saved.track.start), 'F')
+  assert.match(saved.notice, /Learners still see/)
+  const bare = fallbackTrack('abc', 0, 30)
+  assert.equal(faceTrackingRan(bare), false)
+  const refused = applyFramingOverride(bare, 0, 'D')
+  assert.equal(refused.ok, false)
+  if (refused.ok) return
+  assert.equal(refused.error, FACE_TRACK_NOTE)
+  assert.equal(faceTrackingRan(track), true)
+  const faced = applyFramingOverride(track, 0, 'D')
+  assert.equal(faced.ok, true)
+  if (!faced.ok) return
+  assert.equal(effectiveMode(faced.track, faced.track.start), 'F')
 })
 
 test('letterbox and split film stay inside the 390×844 stage', () => {

@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FramingVariant } from '@/lib/experiments'
-import { coverSourceToBox, cssVars, layoutFor } from '@/lib/framing/layout'
+import { coverFrame, coverSourceToBox, cssVars, layoutFor } from '@/lib/framing/layout'
+import { learnerFramingMode } from '@/lib/framing/learner'
 import { PLACEHOLDER_FACE } from '@/lib/framing/placeholder'
 import { segmentAt } from '@/lib/framing/choose'
-import { fallbackTrack } from '@/lib/framing/validate'
+import { fallbackTrack, isFramingMode } from '@/lib/framing/validate'
 import { TRANSITION_MS, type FramingMode, type FramingTrack } from '@/lib/framing/types'
 import { SpokenWords } from './spoken-words'
 import { createPlayer, destroyPlayer, getPlayer, playOnly, soundOn, STATE, type YTPlayer } from '@/lib/yt'
@@ -30,10 +31,25 @@ type Props = {
   title?: string | null
   /** Local test-pattern film when YouTube cannot play. Labelled on screen. */
   placeholder?: boolean
+  /**
+   * Desk lab only. Learners never pass this.
+   * Without it the player always draws F, whatever the stored segments say.
+   */
+  labMode?: FramingMode | null
 }
 
-export function effectiveMode(_track: FramingTrack | null | undefined, _time: number, _variant?: string | null): FramingMode {
-  return 'F'
+/**
+ * The crop this player draws.
+ * Learners always get F. A desk lab preview may pass labMode to draw A–E on the same component.
+ */
+export function effectiveMode(
+  track: FramingTrack | null | undefined,
+  time: number,
+  variant?: string | null,
+  labMode?: FramingMode | null,
+): FramingMode {
+  if (labMode && isFramingMode(labMode)) return labMode
+  return learnerFramingMode(track, time, variant)
 }
 
 export function FramingPlayer({
@@ -50,6 +66,7 @@ export function FramingPlayer({
   speaker,
   title,
   placeholder = false,
+  labMode = null,
 }: Props) {
   const host = useRef<HTMLDivElement>(null)
   const video = useRef<HTMLVideoElement>(null)
@@ -57,9 +74,11 @@ export function FramingPlayer({
   const [ready, setReady] = useState(false)
   const [time, setTime] = useState(track && 'start' in track ? track.start : 0)
   const resolved = useMemo(() => track ?? fallbackTrack(youtubeId, 0, 30), [track, youtubeId])
-  const mode = effectiveMode(resolved, time, variant)
+  const mode = effectiveMode(resolved, time, variant, labMode)
   const segment = segmentAt(resolved, time)
   const layout = layoutFor(mode, width, height, segment?.crop, segment?.focus)
+  const crops = mode === 'A' || mode === 'D' || mode === 'E'
+  const iframeCover = crops ? coverFrame(layout.film.width, layout.film.height, layout.objectX, layout.objectY) : null
   const inWindow = time >= resolved.start - 0.75 && time < resolved.end
   const faceHit =
     placeholder && mode === 'D'
@@ -183,7 +202,12 @@ export function FramingPlayer({
               onLoadedData={() => setReady(true)}
             />
           ) : (
-            <div ref={host} className="fr-host" data-testid="framing-host">
+            <div
+              ref={host}
+              className={`fr-host${iframeCover ? ' fr-cover' : ''}`}
+              data-testid="framing-host"
+              style={iframeCover ? { width: iframeCover.width, height: iframeCover.height, left: iframeCover.left, top: iframeCover.top } : undefined}
+            >
               {/* iframe is mounted here; testid is copied onto it after create */}
             </div>
           )}

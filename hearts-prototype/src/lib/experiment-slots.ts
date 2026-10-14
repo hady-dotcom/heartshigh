@@ -76,7 +76,7 @@ export const EXPERIMENT_SLOTS: readonly ExperimentSlot[] = [
     name: 'Wide-video framing',
     kind: 'layout',
     surface: 'feed',
-    description: 'How a single-speaker landscape clip is framed. Registered for the split player; the player itself is not swapped yet.',
+    description: 'Registered only. Learners always see split words: the wide video on top and the timed words below. This switch does not change the phone.',
     fallback: { framing: 'face-crop' },
     fields: [{ name: 'framing', type: 'enum', values: ['split', 'face-crop'] }],
     wired: false,
