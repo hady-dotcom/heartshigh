@@ -2026,7 +2026,10 @@
     "master-framing": "master-framing",
     "framing-desk": "master-framing",
     "framing-clip": "framing-clip",
-    "live-home": "live-home"
+    "live-home": "live-home",
+    "feature-announcements": "portal-edit",
+    "feature-calendar": "portal-edit",
+    "feature-ai": "portal-edit"
   },
   "skipped": {
     "default": "Fallback sentences for a screen with no page of its own. There is no task to film.",
