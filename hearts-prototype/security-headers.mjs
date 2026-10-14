@@ -1,11 +1,12 @@
 // Sent on every response. YouTube embeds and the Google fonts the pages use are allowed.
-// frame-ancestors none stops other sites framing this app. Scripts stay on this host, plus the YouTube player.
+// Same-origin pages may frame this app (the demo stage phone). Other sites may not.
+// Scripts stay on this host, plus the YouTube player.
 
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
   "form-action 'self'",
-  "frame-ancestors 'none'",
+  "frame-ancestors 'self'",
   "object-src 'none'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube-nocookie.com https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
@@ -19,7 +20,7 @@ const contentSecurityPolicy = [
 
 export const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
-  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=(), payment=()' },
   { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },

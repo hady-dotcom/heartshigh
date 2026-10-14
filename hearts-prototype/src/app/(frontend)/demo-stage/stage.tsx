@@ -17,6 +17,7 @@ import {
 } from '@/lib/demo-stage'
 import { CastScreen } from './cast'
 import { Board } from './panels'
+import { RealPhone } from './phone'
 import { DemoProvider, useDemo } from './store'
 
 const PANELS: { slot: DemoPanel; phone?: boolean }[] = [
@@ -130,15 +131,15 @@ function Strip({ cast, slot, setCast }: { cast: DemoCast; slot: DemoPanel; setCa
   )
 }
 
-export function DemoStage() {
+export function DemoStage({ learnerSrc }: { learnerSrc: string }) {
   return (
     <DemoProvider>
-      <Stage />
+      <Stage learnerSrc={learnerSrc} />
     </DemoProvider>
   )
 }
 
-function Stage() {
+function Stage({ learnerSrc }: { learnerSrc: string }) {
   const { state, cast, setCast, glow, replace, pulse } = useDemo()
   const stateRef = useRef(state)
   stateRef.current = state
@@ -171,6 +172,47 @@ function Stage() {
     playing.current = false
     window.clearTimeout(timer.current)
   }, [])
+
+  useEffect(() => {
+    if (!introduced) return
+    const leave = () => {
+      setSpot(null)
+      const frame = document.querySelector<HTMLIFrameElement>('[data-testid="demo-learner-frame"]')
+      if (document.activeElement === frame) frame.blur()
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') leave()
+    }
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target
+      if (!(target instanceof Element)) return
+      if (target.closest('.demo-cell, .demo-cast-layer')) return
+      leave()
+    }
+    const frame = document.querySelector<HTMLIFrameElement>('[data-testid="demo-learner-frame"]')
+    const hookFrame = () => {
+      try {
+        frame?.contentWindow?.removeEventListener('keydown', onKey)
+        frame?.contentWindow?.addEventListener('keydown', onKey)
+      } catch {
+        // A cross-origin frame cannot be hooked. The parent listener still covers the desks.
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('pointerdown', onPointerDown)
+    frame?.addEventListener('load', hookFrame)
+    hookFrame()
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('pointerdown', onPointerDown)
+      frame?.removeEventListener('load', hookFrame)
+      try {
+        frame?.contentWindow?.removeEventListener('keydown', onKey)
+      } catch {
+        // The frame may already be gone.
+      }
+    }
+  }, [introduced])
 
   function drag(at: number, event: ReactPointerEvent) {
     event.preventDefault()
@@ -331,21 +373,7 @@ function Stage() {
                 <Strip cast={cast} slot={panel.slot} setCast={setCast} />
                 <div className="demo-view">
                   {panel.phone ? (
-                    <div className="demo-phone" data-testid="demo-phone">
-                      <div className="demo-bezel">
-                        <div className="demo-notch" />
-                        <Board
-                          only="learner"
-                          homeTick={homeTick}
-                          onRun={(action) => apply(action, 'learner')}
-                          onCourse={(title) => apply({ type: 'add-course', title }, 'master')}
-                          onNote={(body) => apply({ type: 'post-note', body }, 'portal')}
-                          onPrompt={(kind, text) => apply({ type: 'set-prompt', kind, text }, 'teacher')}
-                          onWrite={(kind, body, promptId) => apply({ type: 'write', kind, body, promptId }, 'learner')}
-                          onReply={(id, body) => apply({ type: 'reply', id, body }, 'teacher')}
-                        />
-                      </div>
-                    </div>
+                    <RealPhone src={learnerSrc} />
                   ) : (
                     <Board
                       only={panel.slot}
