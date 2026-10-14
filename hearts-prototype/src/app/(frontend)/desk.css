@@ -265,7 +265,9 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .desk p, .desk td { overflow-wrap: break-word; word-break: break-word; }
 .view-as-ask { display: grid; gap: 8px; min-width: 260px; text-align: left; }
 .sim-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 18px; align-items: start; }
-.sim-scale { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr) 48px; gap: 10px; align-items: center; font-size: 14px; }
+.sim-scale { display: grid; gap: 6px; font-size: 14px; }
+.sim-top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.sim-words { text-align: right; }
 .sim-bar { position: relative; height: 8px; border-radius: 8px; background: #efebe3; }
 .sim-bar::after { content: ''; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--ink-2); }
 .sim-bar i { position: absolute; top: 0; bottom: 0; border-radius: 8px; }
@@ -281,8 +283,8 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .for-techies .table-wrap { margin-top: 10px; }
 @media (max-width: 900px) {
   .sim-layout { grid-template-columns: minmax(0, 1fr); }
-  .sim-scale { grid-template-columns: minmax(0, 1fr) 48px; }
-  .sim-bar { grid-column: 1 / -1; }
+  .sim-top { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .sim-words { text-align: left; }
 }
 
 .tier-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: start; }
