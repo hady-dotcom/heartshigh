@@ -96,5 +96,22 @@ check('a saved choice is what the feed reads back',
   && fed.beats.land.text === fine.land.text);
 check('an unsaved clip does not change the feed', HTL.forFeed(hero) === null);
 
+const seq = {
+  hook: { text: 'Hook line for the opening of this moment.', t0: 0, t1: 4 },
+  turn: { text: 'Turn line that follows once the hook has spoken.', t0: 4.2, t1: 9 },
+  land: { text: 'Land line that closes the moment on its own.', t0: 9.2, t1: 15 },
+};
+check('only the hook is up during its audio', HTL.activeRole(seq, 1.2) === 'hook');
+check('the turn replaces the hook when its audio starts', HTL.activeRole(seq, 6) === 'turn');
+check('the land replaces the turn when its audio starts', HTL.activeRole(seq, 12) === 'land');
+check('a saved blurred frame is not the kinetic background', (function () {
+  HTL.save('blur-clip', {
+    delivery: 'kinetic', style: 'kinetic', background: 'blur', mask: 'arch',
+    solid: 'ground', gradient: 'dusk', beats: seq,
+  });
+  var d = HTL.draft({ id: 'blur-clip', hook: 'a', turn: 'b', land: 'c', len: 18 });
+  return d.background === 'gradient' && d.style === 'kinetic';
+})());
+
 console.log(failed ? '\n' + failed + ' failed' : '\nall passed');
 process.exit(failed ? 1 : 0);

@@ -413,6 +413,10 @@
       lab.className = 'htl-pick-lab';
       lab.textContent = 'Learners get';
       box.appendChild(lab);
+      var note = document.createElement('p');
+      note.className = 'htl-delivery-note';
+      note.textContent = 'Kinetic cards are this same moment, text only: hook, then turn, then land, each on its own audio. No picture of the clip.';
+      box.appendChild(note);
       var row = document.createElement('div');
       row.className = 'htl-picks';
       row.dataset.htlDelivery = '1';

@@ -19,10 +19,9 @@
     { id: 'unfold', name: 'Unfold' }
   ];
   var BACKGROUNDS = [
-    { id: 'blur', name: 'Blurred frame' },
+    { id: 'gradient', name: 'Gradient' },
     { id: 'mask', name: 'Mask' },
-    { id: 'solid', name: 'Solid' },
-    { id: 'gradient', name: 'Gradient' }
+    { id: 'solid', name: 'Solid' }
   ];
   var MASKS = [
     { id: 'arch', name: 'Arch' },
@@ -177,11 +176,6 @@
     } catch (e) {}
   }
 
-  function styleFromTreatment(t) {
-    if (t === 'conversation' || t === 'unfold' || t === 'cinema' || t === 'kinetic' || t === 'windows') return t;
-    return 'cinema';
-  }
-
   function beatOf(saved, role, caps, clip) {
     if (saved && saved.beats && saved.beats[role] && typeof saved.beats[role].text === 'string') {
       return {
@@ -204,14 +198,16 @@
     var saved = storageGet()[clip && clip.id] || null;
     var beats = {};
     ROLES.forEach(function (role) { beats[role] = beatOf(saved, role, caps, clip); });
+    var bg = (saved && saved.background) || 'gradient';
+    if (bg === 'blur') bg = 'gradient';
     return {
       clip: clip,
       captions: caps,
       window: win,
       beats: beats,
       delivery: (saved && saved.delivery) || 'kinetic',
-      style: (saved && saved.style) || styleFromTreatment(clip && clip.treatment),
-      background: (saved && saved.background) || 'gradient',
+      style: (saved && saved.style) || 'kinetic',
+      background: bg,
       mask: (saved && saved.mask) || 'arch',
       solid: (saved && saved.solid) || 'ground',
       gradient: (saved && saved.gradient) || 'dusk',
@@ -324,6 +320,16 @@
       });
     }
     return notes;
+  }
+
+  /* The line whose audio has started, and no later line has. One at a time. */
+  function activeRole(beats, t) {
+    var active = null;
+    ROLES.forEach(function (role) {
+      var b = beats && beats[role];
+      if (b && t + 0.04 >= (Number(b.t0) || 0)) active = role;
+    });
+    return active;
   }
 
   function fmt(s) {
@@ -461,10 +467,7 @@
       });
       applyChrome(s);
       if (sig !== builtSig) { rebuild(s); builtSig = sig; }
-      var current = 'hook';
-      ROLES.forEach(function (role) {
-        if (t + 0.04 >= (Number(s.beats[role].t0) || 0)) current = role;
-      });
+      var current = activeRole(s.beats, t) || '';
       host.dataset.beat = current;
       host.dataset.t = t.toFixed(2);
       host.dataset.playing = paused ? '' : '1';
@@ -472,13 +475,13 @@
       for (var i = 0; i < nodes.length; i++) {
         var line = nodes[i];
         var role = line.dataset.role;
-        var arrived = t + 0.04 >= (Number(s.beats[role].t0) || 0);
-        line.classList.toggle('in', arrived);
-        line.classList.toggle('now', role === current && arrived);
+        var onStage = role === current;
+        line.classList.toggle('in', onStage);
+        line.classList.toggle('now', onStage);
         var ws = line.querySelectorAll('.htl-word');
         for (var k = 0; k < ws.length; k++) {
           var wt = Number(ws[k].dataset.t0);
-          ws[k].classList.toggle('on', arrived && (isNaN(wt) || t + 0.02 >= wt));
+          ws[k].classList.toggle('on', onStage && (isNaN(wt) || t + 0.02 >= wt));
         }
       }
       clock.textContent = fmt(t) + ' / ' + fmt(len);
@@ -571,6 +574,7 @@
     MASKS: MASKS,
     SOLIDS: SOLIDS,
     GRADIENTS: GRADIENTS,
+    activeRole: activeRole,
     wordCount: wordCount,
     normalize: normalize,
     captions: captions,

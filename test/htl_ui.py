@@ -77,11 +77,28 @@ with sync_playwright() as pw:
     check("desktop preview clock advances", t2 > t1, "%s -> %s" % (t1, t2))
     check("desktop kinetic line is visible",
           pg.evaluate("""() => {
-            const w = document.querySelector('.htl-stage .htl-word.on');
+            const w = document.querySelector('.htl-stage .htl-line.now .htl-word.on');
             if (!w) return false;
             const r = w.getBoundingClientRect();
             const s = getComputedStyle(w);
             return r.width > 4 && r.height > 4 && Number(s.opacity) > 0.5;
+          }"""))
+    check("kinetic preview is one line, text only, graphic background",
+          pg.evaluate("""() => {
+            const stage = document.querySelector('.htl-stage');
+            const vid = stage.querySelector('video');
+            const vs = getComputedStyle(vid);
+            const vr = vid.getBoundingClientRect();
+            const now = [...stage.querySelectorAll('.htl-line.now')];
+            const others = [...stage.querySelectorAll('.htl-line:not(.now)')];
+            const hidden = others.every(n => getComputedStyle(n).visibility === 'hidden' || Number(getComputedStyle(n).opacity) === 0);
+            return stage.dataset.delivery === 'kinetic'
+              && stage.dataset.bg !== 'blur'
+              && !document.querySelector('[data-bg=blur]')
+              && now.length === 1
+              && hidden
+              && (vs.opacity === '0' || vr.width < 4)
+              && vr.width < 8;
           }"""))
     shot(pg, "htl_desktop_1280_timeline_preview.png")
 
@@ -126,9 +143,38 @@ with sync_playwright() as pw:
     check("phone preview is playing a line",
           ph.evaluate("""() => {
             const s = document.querySelector('.htl-stage');
-            const w = s && s.querySelector('.htl-word.on');
-            return !!(s && s.dataset.playing==='1' && Number(s.dataset.t) > 0.3 && w && w.getBoundingClientRect().height > 4);
+            const w = s && s.querySelector('.htl-line.now .htl-word.on');
+            const vid = s && s.querySelector('video');
+            const vr = vid.getBoundingClientRect();
+            return !!(s && s.dataset.playing==='1' && Number(s.dataset.t) > 0.3
+              && s.querySelectorAll('.htl-line.now').length === 1
+              && w && w.getBoundingClientRect().height > 4
+              && vr.width < 8);
           }"""))
+    # The file's audio is the clock. The turn replaces the hook when that line starts.
+    ph.wait_for_function(
+        "() => document.querySelector('.htl-stage').dataset.beat === 'turn'",
+        timeout=12000)
+    turn_state = ph.evaluate("""() => {
+            const s = document.querySelector('.htl-stage');
+            const now = s.querySelector('.htl-line.now');
+            const others = [...s.querySelectorAll('.htl-line:not(.now)')];
+            const hidden = others.every(n => getComputedStyle(n).visibility === 'hidden' && Number(getComputedStyle(n).opacity) === 0);
+            const turn = HTL.draft(HUDHUD.appetiserHero).beats.turn.t0;
+            const vid = s.querySelector('video');
+            return {
+              ok: s.dataset.beat === 'turn' && now && now.dataset.role === 'turn'
+                && s.querySelectorAll('.htl-line.now').length === 1
+                && hidden
+                && Number(s.dataset.t) + 0.15 >= turn
+                && vid.getBoundingClientRect().width < 8,
+              beat: s.dataset.beat, role: now && now.dataset.role, t: s.dataset.t, turn: turn,
+              text: now ? now.innerText.slice(0, 80) : '',
+              hidden: hidden,
+              vis: others.map(n => getComputedStyle(n).visibility + '/' + getComputedStyle(n).opacity)
+            };
+          }""")
+    check("the turn takes the screen when its audio starts", turn_state["ok"], str(turn_state))
     shot(ph, "htl_phone_390_timeline_preview.png")
 
     print("== review page has the same card")
