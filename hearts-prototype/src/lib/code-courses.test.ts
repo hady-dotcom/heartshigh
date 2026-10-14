@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 import test from 'node:test'
-import { COPY_PACK_COURSES_SQL } from './code-courses-sql'
+import { COPY_PACK_COURSES_SQL, MISSING_PACK_COURSES_SQL } from './code-courses-sql'
 import {
   LIVE_JOIN_CODES,
   coursesAfterPackCopy,
@@ -114,6 +114,43 @@ test('the migration copies course links and does not rewrite a join code', () =>
   assert.doesNotMatch(source, /SET\s+"code"/i)
   assert.doesNotMatch(COPY_PACK_COURSES_SQL, /UPDATE\s+"access_codes"/i)
   assert.doesNotMatch(source + COPY_PACK_COURSES_SQL, /HEARTSDE-/)
+})
+
+test('elm-teacher keeps courses 33 and 34 from its pack on top of the courses already stored', () => {
+  const db = new DatabaseSync(':memory:')
+  db.exec(`
+    CREATE TABLE access_codes (id INTEGER PRIMARY KEY, code TEXT, label TEXT);
+    CREATE TABLE access_codes_rels (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      "order" INTEGER,
+      parent_id INTEGER NOT NULL,
+      path TEXT NOT NULL,
+      packs_id INTEGER,
+      courses_id INTEGER
+    );
+    CREATE TABLE packs_rels (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      "order" INTEGER,
+      parent_id INTEGER NOT NULL,
+      path TEXT NOT NULL,
+      courses_id INTEGER
+    );
+  `)
+  db.prepare('INSERT INTO access_codes (id, code, label) VALUES (1, ?, ?)').run('ELM-TEACHER', 'elm-teacher')
+  db.prepare('INSERT INTO access_codes_rels ("order", parent_id, path, packs_id) VALUES (1, 1, ?, 1)').run('packs')
+  for (let courseId = 1; courseId <= 34; courseId += 1) {
+    db.prepare('INSERT INTO packs_rels ("order", parent_id, path, courses_id) VALUES (?, 1, ?, ?)').run(courseId, 'courses', courseId)
+  }
+  for (let courseId = 1; courseId <= 32; courseId += 1) {
+    db.prepare('INSERT INTO access_codes_rels ("order", parent_id, path, courses_id) VALUES (?, 1, ?, ?)').run(courseId + 1, 'courses', courseId)
+  }
+  db.exec(COPY_PACK_COURSES_SQL)
+  const stored = (db.prepare(`SELECT courses_id FROM access_codes_rels WHERE parent_id = 1 AND path = 'courses' ORDER BY courses_id`).all() as { courses_id: number }[]).map((row) => row.courses_id)
+  assert.deepEqual(stored, Array.from({ length: 34 }, (_, index) => index + 1))
+  assert.equal((db.prepare('SELECT code FROM access_codes WHERE id = 1').get() as { code: string }).code, 'ELM-TEACHER')
+  const missing = db.prepare(MISSING_PACK_COURSES_SQL).all() as unknown[]
+  assert.deepEqual(missing, [])
+  db.close()
 })
 
 test('the copy gives admin, learner and teacher exactly courses 1 to 75 from pack 3', () => {

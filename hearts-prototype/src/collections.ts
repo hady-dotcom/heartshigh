@@ -14,7 +14,7 @@ import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
 import { mediaReadAccess } from './collections-safety'
 import { circleProblems } from './lib/circle'
-import { cookiesSecure } from './lib/env'
+import { cookiesSecure, isBuildPhase } from './lib/env'
 import { clientIp, hitAuth, limitsRelaxed } from './lib/rate-limit'
 import { DOOR_SECTIONS } from './lib/doors'
 
@@ -26,6 +26,15 @@ const masterOnly = { read: master, create: master, update: master, delete: maste
 
 function refuse(problems: string[]) {
   if (problems.length) throw new APIError(problems[0], 400, null, true)
+}
+
+/** After a pack or a code is saved, every code keeps the courses it already had plus the courses on its packs. */
+async function carryPackCourses({ req }: { req: { payload: import('payload').Payload } }) {
+  if (isBuildPhase()) return
+  const { copyPackCoursesOntoCodes } = await import('./server/code-courses')
+  await copyPackCoursesOntoCodes(req.payload).catch((error: unknown) => {
+    req.payload.logger.error({ err: error, msg: 'Could not copy pack courses onto access codes.' })
+  })
 }
 
 /** Markup is refused on every save of these fields: they reach learners as text. */
@@ -575,6 +584,7 @@ export const Packs: CollectionConfig = {
     description: 'Hidden. The desk picks courses on each code. This list stays so older codes can still be read.',
   },
   access: masterOnly,
+  hooks: { afterChange: [carryPackCourses] },
   fields: [
     { name: 'title', type: 'text', required: true },
     { name: 'summary', type: 'textarea' },
@@ -988,6 +998,7 @@ export const AccessCodes: CollectionConfig = {
   labels: { singular: 'Access code', plural: 'Access codes' },
   admin: { useAsTitle: 'code' },
   access: masterOnly,
+  hooks: { afterChange: [carryPackCourses] },
   fields: [
     { name: 'code', type: 'text', required: true, unique: true, index: true },
     {

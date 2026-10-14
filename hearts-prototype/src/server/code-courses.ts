@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm'
 import type { Payload } from 'payload'
-import { COPY_PACK_COURSES_SQL } from '@/lib/code-courses-sql'
+import { COPY_PACK_COURSES_SQL, MISSING_PACK_COURSES_SQL } from '@/lib/code-courses-sql'
 import { capitalAfterColon, doorByNumber, doorCode, parseDoor, type Door } from '@/lib/doors'
 import {
   coursesOpenedByCode,
@@ -71,28 +71,63 @@ export async function openedCourseIdsForCode(payload: Payload, code: { courses?:
   return coursesOpenedByCode({ courses: ids(code.courses), packs: packIds }, packRows(packs))
 }
 
+type SqlResult = { rowsAffected?: number; rowCount?: number | null; rows?: Record<string, unknown>[] }
+
 type CopyDb = {
   name?: string
-  client?: { execute: (statement: string) => Promise<{ rowsAffected?: number }> }
-  drizzle?: { execute?: (query: unknown) => Promise<{ rowCount?: number | null }> }
+  client?: { execute: (statement: string) => Promise<SqlResult> }
+  drizzle?: { execute?: (query: unknown) => Promise<SqlResult> }
+}
+
+async function runSql(payload: Payload, statement: string) {
+  const db = payload.db as unknown as CopyDb
+  const result = db.name === 'postgres'
+    ? await db.drizzle?.execute?.(sql.raw(statement))
+    : await db.client?.execute(statement)
+  if (!result) throw new Error('The database could not copy pack courses onto access codes.')
+  return result
+}
+
+function rowsOf(result: SqlResult) {
+  if (Array.isArray(result.rows)) return result.rows
+  if (Array.isArray(result)) return result as Record<string, unknown>[]
+  return []
+}
+
+function insertMissingCourse(parentId: number, courseId: number) {
+  return `
+INSERT INTO "access_codes_rels" ("order", "parent_id", "path", "courses_id")
+SELECT COALESCE((SELECT MAX("order") FROM "access_codes_rels" WHERE "parent_id" = ${parentId}), 0) + 1,
+       ${parentId}, 'courses', ${courseId}
+WHERE NOT EXISTS (
+  SELECT 1 FROM "access_codes_rels" already
+  WHERE already."parent_id" = ${parentId}
+    AND already."path" = 'courses'
+    AND already."courses_id" = ${courseId}
+);
+`
 }
 
 /**
  * Store each pack's courses on the codes that use that pack.
- * Writes the link rows directly. A short read of a relationship list cannot drop courses,
- * and courses already on the code are never removed.
+ * Stored courses become the ones already on the code plus every course its packs open.
+ * A short read of a relationship list cannot drop a course, and nothing already stored is removed.
  * Does not change the code string, and does not remove the pack link.
  * Safe to run more than once.
  */
 export async function copyPackCoursesOntoCodes(payload: Payload) {
-  const db = payload.db as unknown as CopyDb
-  const query = sql.raw(COPY_PACK_COURSES_SQL)
-  const result = db.name === 'postgres'
-    ? await db.drizzle?.execute?.(query)
-    : await db.client?.execute(COPY_PACK_COURSES_SQL)
-  if (!result) throw new Error('The database could not copy pack courses onto access codes.')
-  const counted = result as { rowsAffected?: number; rowCount?: number | null }
-  const updated = Number(counted.rowsAffected ?? counted.rowCount ?? 0)
+  const result = await runSql(payload, COPY_PACK_COURSES_SQL)
+  const missing = rowsOf(await runSql(payload, MISSING_PACK_COURSES_SQL))
+  let repaired = 0
+  for (const row of missing) {
+    const parentId = Number(row.parent_id ?? row.parentId)
+    const courseId = Number(row.courses_id ?? row.coursesId)
+    if (!Number.isInteger(parentId) || parentId <= 0 || !Number.isInteger(courseId) || courseId <= 0) continue
+    const inserted = await runSql(payload, insertMissingCourse(parentId, courseId))
+    repaired += Number(inserted.rowsAffected ?? inserted.rowCount ?? 0)
+  }
+  const counted = result as SqlResult
+  const updated = Number(counted.rowsAffected ?? counted.rowCount ?? 0) + repaired
   const codes = await payload.count({ collection: 'access-codes', overrideAccess: true })
   return { updated, codes: codes.totalDocs }
 }

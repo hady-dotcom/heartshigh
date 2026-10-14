@@ -35,3 +35,26 @@ WHERE NOT EXISTS (
     AND already."courses_id" = picked.courses_id
 );
 `
+
+/** Pack courses that are still missing from the code. Stored courses stay; this is only the gap. */
+export const MISSING_PACK_COURSES_SQL = `
+SELECT picked."parent_id" AS parent_id, picked."courses_id" AS courses_id
+FROM (
+  SELECT DISTINCT code_pack."parent_id" AS parent_id, pack_course."courses_id" AS courses_id
+  FROM "access_codes_rels" code_pack
+  JOIN "packs_rels" pack_course
+    ON pack_course."parent_id" = code_pack."packs_id"
+   AND pack_course."path" = 'courses'
+   AND pack_course."courses_id" IS NOT NULL
+  WHERE code_pack."path" = 'packs'
+    AND code_pack."packs_id" IS NOT NULL
+) picked
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM "access_codes_rels" already
+  WHERE already."parent_id" = picked."parent_id"
+    AND already."path" = 'courses'
+    AND already."courses_id" = picked."courses_id"
+)
+ORDER BY picked."parent_id", picked."courses_id"
+`
