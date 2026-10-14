@@ -201,12 +201,19 @@ test.describe('Experiments', () => {
     await expect(page.getByTestId('experiments-killed')).toHaveCount(0)
   })
 
-  test('a portal admin can read results and cannot create', async ({ page }) => {
+  test('a portal admin can read results and starts from a plain goal', async ({ page }) => {
     await page.setViewportSize(DESK)
     await signIn(page, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin/experiments')
     await expect(page.getByTestId('experiments-desk')).toBeVisible()
-    await expect(page.getByTestId('experiment-new')).toHaveCount(0)
-    await page.goto('/p/east-london/admin/experiments/new')
+    await expect(page.getByTestId('experiment-new')).toBeVisible()
+    await page.goto('/p/east-london/admin/experiments/new?advanced=1')
     await expect(page.getByTestId('experiment-edit-denied')).toBeVisible()
+    await page.goto('/p/east-london/admin/experiments/new')
+    await expect(page.getByTestId('experiment-goal')).toBeVisible()
+    await expect(page.getByTestId('experiment-defaults')).toContainText(/No model/i)
+    await page.getByTestId('experiment-goal').fill('the courses tab')
+    await page.getByTestId('experiment-show-setup').click()
+    await expect(page.getByTestId('experiment-preview')).toBeVisible()
+    await expect(page.getByTestId('experiment-design-source')).toContainText(/No model/i)
   })
 })

@@ -5,7 +5,9 @@ import { Hidden } from '@/components/app/shell'
 import { ExperimentForm } from '@/components/desk/experiment-form'
 import { ExperimentHelp } from '@/components/desk/help'
 import { LocalWhen, LocalZoneNote } from '@/components/desk/local-when'
-import { DEFAULT_EXPERIMENT_DAYS, EXPERIMENT_PRESETS } from '@/lib/experiment-presets'
+import { estimatePortalCalls } from '@/lib/portal-ai'
+import { portalIdOf } from '@/lib/ids'
+import { safetyLabel } from '@/lib/experiment-guard'
 import {
   EXPERIMENT_RULE,
   EXPERIMENT_SLOTS,
@@ -15,6 +17,8 @@ import {
   variantCopy,
 } from '@/lib/experiment-slots'
 import type { SessionUser } from '@/server/context'
+import { getSession } from '@/server/context'
+import { storedForPortal } from '@/server/portal-ai'
 import {
   canEditExperiments,
   canViewExperiments,
@@ -112,7 +116,8 @@ export async function ExperimentPages({ ctx, master, path }: { ctx?: Ctx | null;
   await ensureStarterExperiments(payload, user)
   const [head, rest] = path
   if (head === 'new' && queryText(query, 'advanced') === '1') return <EditPage ctx={ctx || null} master={master || null} base={base} fromInsight={query} />
-  if (head === 'new') return <StartPage ctx={ctx || null} master={master || null} base={base} portalId={queryText(query, 'portal')} />
+  if (head === 'new' && queryText(query, 'draft')) return <PreviewPage ctx={ctx || null} master={master || null} base={base} id={queryText(query, 'draft')} goal={queryText(query, 'goal')} />
+  if (head === 'new') return <StartPage ctx={ctx || null} master={master || null} base={base} goal={queryText(query, 'goal')} />
   if (head && rest === 'edit') return <EditPage ctx={ctx || null} master={master || null} base={base} id={Number(head)} />
   if (head) return <DetailPage ctx={ctx || null} master={master || null} base={base} id={head} suggest={queryText(query, 'suggest') === '1'} error={queryText(query, 'error')} />
   return <ListPage ctx={ctx || null} master={master || null} base={base} />
@@ -145,6 +150,7 @@ async function ListPage({ ctx, master, base }: { ctx: Ctx | null; master: { payl
     { key: 'finished', title: 'Finished' },
   ]
   const masterUser = user.role === 'master'
+  const canStart = user.role === 'master' || user.role === 'portal-admin'
   return (
     <Frame
       ctx={ctx}
@@ -152,7 +158,7 @@ async function ListPage({ ctx, master, base }: { ctx: Ctx | null; master: { payl
       title="Experiments"
       intro="Test small words, buttons and layouts as learners use the app, and let the winners take over."
       testId="experiments-desk"
-      tools={masterUser ? <Link className="btn" href={`${base}/new`} data-testid="experiment-new">Start a new experiment</Link> : null}
+      tools={canStart ? <Link className="btn" href={`${base}/new`} data-testid="experiment-new">Start a new experiment</Link> : null}
     >
       <div className={styles.page}>
         <Rule />
@@ -435,31 +441,98 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
   )
 }
 
-async function StartPage({ ctx, master, base, portalId }: { ctx: Ctx | null; master: { payload: Payload; user: SessionUser; query: Query } | null; base: string; portalId: string }) {
+function splitWho(description: string) {
+  const marker = '\n\nWho: '
+  const at = description.lastIndexOf(marker)
+  if (at === -1) return { explanation: description, who: '' }
+  return { explanation: description.slice(0, at), who: description.slice(at + marker.length) }
+}
+
+async function StartPage({ ctx, master, base, goal }: { ctx: Ctx | null; master: { payload: Payload; user: SessionUser; query: Query } | null; base: string; goal: string }) {
+  const payload = ctx?.payload || master!.payload
   const user = ctx?.user || master!.user
-  if (!canEditExperiments(user)) {
-    return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-edit-denied"><p>Only the master can start an experiment.</p></Frame>
+  const session = await getSession()
+  const actor = session.actor?.id ? session.actor : user
+  if (actor.role !== 'master' && actor.role !== 'portal-admin') {
+    return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-edit-denied"><p>Only the master or a portal admin can start an experiment.</p></Frame>
   }
+  const portalId = actor.role === 'portal-admin' ? portalIdOf(actor) : null
+  const connected = Boolean(portalId && await storedForPortal(payload, portalId))
+  const willCall = connected && actor.role === 'portal-admin'
   return (
-    <Frame ctx={ctx} master={master} title="Start a new experiment" intro="Pick what to try. The split and the length are already chosen." testId="experiment-start-page">
+    <Frame ctx={ctx} master={master} title="Start a new experiment" intro="Say what you are trying to solve. You will see a setup before anything starts." testId="experiment-start-page">
       <form className={`panel ${styles.start}`} action="/api/experiments" method="post" data-testid="experiment-start-form">
-        <header><h2>What do you want to test?</h2></header>
+        <header><h2>What are you trying to solve?</h2></header>
         <div className="body">
-          <Hidden fields={{ action: 'preset', next: `${base}/new`, portal: portalId || '' }} />
-          <div className={styles.presets}>
-            {EXPERIMENT_PRESETS.map((preset, index) => (
-              <label key={preset.key} className={styles.preset} data-testid="experiment-preset" data-preset={preset.key}>
-                <input type="radio" name="preset" value={preset.key} defaultChecked={index === 0} required />
-                <span>
-                  <b>{preset.name}</b>
-                  <span className={styles.quiet}>{preset.description}</span>
-                </span>
-              </label>
-            ))}
-          </div>
-          <p className={styles.quiet} data-testid="experiment-defaults">The split is automatic, half and half until one version is clearly ahead. It runs for {DEFAULT_EXPERIMENT_DAYS} days. Learners are not told.</p>
+          <Hidden fields={{ action: 'design', next: `${base}/new`, portal: portalId ? String(portalId) : '' }} />
+          <label className="stack" data-testid="experiment-goal-label">
+            What are you trying to solve?
+            <textarea name="goal" required minLength={3} maxLength={400} defaultValue={goal} data-testid="experiment-goal" />
+          </label>
+          {willCall ? (
+            <>
+              <p className={styles.quiet} data-testid="experiment-ai-note">{estimatePortalCalls(1).label}</p>
+              <label className="check"><input type="checkbox" name="confirmAi" value="yes" data-testid="experiment-ai-confirm" /> Use this portal’s AI account for one setup</label>
+            </>
+          ) : (
+            <p className={styles.quiet} data-testid="experiment-defaults">Your words pick a ready-made test. No model is called.</p>
+          )}
           <div className="actions" style={{ justifyContent: 'flex-start' }}>
-            <button className="btn" type="submit" data-testid="experiment-start-save">Start this test</button>
+            <button className="btn" type="submit" data-testid="experiment-show-setup">Show a setup</button>
+            <Link className="btn ghost" href={base}>Cancel</Link>
+          </div>
+        </div>
+      </form>
+    </Frame>
+  )
+}
+
+async function PreviewPage({ ctx, master, base, id, goal }: { ctx: Ctx | null; master: { payload: Payload; user: SessionUser; query: Query } | null; base: string; id: string; goal: string }) {
+  const payload = ctx?.payload || master!.payload
+  const user = ctx?.user || master!.user
+  const session = await getSession()
+  const actor = session.actor?.id ? session.actor : user
+  if (actor.role !== 'master' && actor.role !== 'portal-admin') {
+    return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-edit-denied"><p>Only the master or a portal admin can start an experiment.</p></Frame>
+  }
+  const experiment = await loadExperiment(payload, Number(id))
+  if (!experiment) return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-missing"><p>That setup was not found.</p></Frame>
+  if (actor.role === 'portal-admin' && idOfPortal(experiment) !== portalIdOf(actor)) {
+    return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-missing"><p>That setup is not for your portal.</p></Frame>
+  }
+  if (experiment.status !== 'draft') {
+    return <Frame ctx={ctx} master={master} title={experiment.name} intro="" testId="experiment-preview"><p>That setup has already started.</p><p><Link href={`${base}/${experiment.id}`}>Open it</Link></p></Frame>
+  }
+  const { explanation, who } = splitWho(experiment.description || '')
+  const safety = (experiment.secondaryMetrics || []).find((item) => item === 'care_alert' || item === 'drop_off')
+  const fromAi = experiment.variants.some((row) => row.source === 'ai')
+  return (
+    <Frame ctx={ctx} master={master} title="Start a new experiment" intro="Read the setup. Change the lines if you want, then start it." testId="experiment-start-page">
+      <form className={`panel ${styles.start}`} action="/api/experiments" method="post" data-testid="experiment-preview">
+        <header><h2>Check this, then start</h2></header>
+        <div className="body">
+          <Hidden fields={{ action: 'launch', id: String(experiment.id), next: `${base}/new?draft=${experiment.id}`, goal }} />
+          <article className={styles.fact} data-testid="experiment-explanation">
+            <b>In plain words</b>
+            <p>{explanation}</p>
+          </article>
+          <p className={styles.quiet} data-testid="experiment-design-source">{fromAi ? 'This setup came from this portal’s own AI account.' : 'Matched from your words. No model was called.'}</p>
+          <label className="stack">Name
+            <input name="name" required minLength={3} maxLength={80} defaultValue={experiment.name} data-testid="experiment-preview-name" />
+          </label>
+          {experiment.variants.map((row, index) => (
+            <label className="stack" key={row.key}>Version {index + 1}
+              <input name={`label_${row.key}`} required maxLength={80} defaultValue={variantCopy(row.payload, row.label)} data-testid="experiment-preview-version" />
+            </label>
+          ))}
+          <label className="stack">Who is in it
+            <input name="who" required maxLength={160} defaultValue={who || 'Learners in this portal'} data-testid="experiment-preview-who" />
+          </label>
+          <p className={styles.quiet} data-testid="experiment-preview-metric">Deciding metric: {metricLabel(experiment.primaryMetric)}. At least 100 learners see each version before the split moves.</p>
+          <p className={styles.quiet} data-testid="experiment-preview-safety">Safety: {safetyLabel(safety || 'drop_off')} must not rise. If they do, the test pauses and the admin is told.</p>
+          <p className={styles.quiet} data-testid="experiment-defaults">Thompson-sampling bandit after a 50/50 warm-up of 100 learners per version. Stop at a 95% probability of best, or after 4 weeks.</p>
+          <div className="actions" style={{ justifyContent: 'flex-start' }}>
+            <button className="btn" type="submit" data-testid="experiment-start-save">Start</button>
             <Link className="btn ghost" href={base}>Cancel</Link>
           </div>
         </div>

@@ -221,6 +221,8 @@ export const TRACKED_EVENTS = [
   'install_card_accept',
   'lanes_tab_tap',
   'lanes_course_start',
+  'care_alert',
+  'drop_off',
 ] as const
 
 export type TrackedEvent = (typeof TRACKED_EVENTS)[number]
@@ -321,6 +323,10 @@ export function experimentAuditLine(
       return 'Test held back'
     case 'experiment.finish':
       return 'Test stopped'
+    case 'experiment.safety':
+      return 'Paused: the safety metric dropped'
+    case 'experiment.bandit':
+      return detail?.reason === 'time' ? 'Stopped: four weeks are up' : 'Stopped: one version is likely best'
     case 'experiment.promote':
       return 'Used the winner'
     case 'experiment.create':

@@ -1,6 +1,8 @@
 import type { Payload, Where } from 'payload'
 import { assignByHash, subjectKey, type WeightRow } from '@/lib/experiment-assign'
-import { autoWeights, conversionRate, verdictFor, versionLetter, type Arm, type Verdict } from '@/lib/experiment-bandit'
+import { autoWeights, banditStop, conversionRate, mulberry32, verdictFor, versionLetter, type Arm, type Verdict } from '@/lib/experiment-bandit'
+import { designExperiment, type ExperimentSetup } from '@/lib/experiment-designer'
+import { isSafetyMetric, safetyGuard, safetyLabel } from '@/lib/experiment-guard'
 import { suggestWording, type DraftVariant } from '@/lib/experiment-copy'
 import {
   EXPERIMENT_RULE,
@@ -24,6 +26,8 @@ import { now } from '@/lib/clock'
 import { contextAt, resolveContextLabel } from '@/server/calendar'
 import { isProduction, isRemoteDatabase } from '@/lib/env'
 import { idOf, portalIdOf } from '@/lib/ids'
+import { clientFromConnection, portalAiGate, type LlmClient } from '@/lib/portal-ai'
+import { storedForPortal } from '@/server/portal-ai'
 import { audit } from './viewas'
 import type { SessionUser } from './context'
 
@@ -78,12 +82,20 @@ export function canEditExperiments(actor: Actor | null | undefined) {
   return actor?.role === 'master'
 }
 
+export function canDesignExperiments(actor: Actor | null | undefined) {
+  return actor?.role === 'master' || actor?.role === 'portal-admin'
+}
+
 function assertView(actor: Actor) {
   if (!canViewExperiments(actor)) throw new Error('Experiments are for the master desk and portal admins.')
 }
 
 function assertEdit(actor: Actor) {
   if (!canEditExperiments(actor)) throw new Error('Only the master can create or change an experiment.')
+}
+
+function assertDesign(actor: Actor) {
+  if (!canDesignExperiments(actor)) throw new Error('Only the master or a portal admin can start an experiment.')
 }
 
 function asDoc(row: Record<string, unknown>): ExperimentDoc {
@@ -302,8 +314,9 @@ export async function createExperiment(payload: Payload, actor: Actor, input: {
   secondaryMetrics?: string[]
   variants: ExperimentVariant[]
   durationDays?: number
-}): Promise<ExperimentDoc> {
-  assertEdit(actor)
+}, options?: { designed?: boolean }): Promise<ExperimentDoc> {
+  if (options?.designed) assertDesign(actor)
+  else assertEdit(actor)
   const slot = slotOf(input.slot)
   const problems = experimentProblems(input)
   if (problems.length) throw new Error(problems[0])
@@ -403,6 +416,97 @@ export async function createFromPreset(payload: Payload, actor: Actor, presetKey
   return startExperiment(payload, actor, created.id)
 }
 
+/**
+ * Turn a goal into a draft setup.
+ * A portal admin with that portal’s own key, and a confirmed call, may use the designer.
+ * Everyone else, including the master desk, gets a keyword preset. No platform key is read.
+ */
+export async function proposeExperiment(payload: Payload, actor: Actor, goal: string, portalId?: number | null, confirmed = false) {
+  assertDesign(actor)
+  const text = goal.trim()
+  if (text.length < 3) throw new Error('Say what you are trying to solve, in a sentence.')
+  const scoped = actor.role === 'portal-admin' ? portalIdOf(actor) : portalId || null
+  const portal = scoped
+    ? await payload.findByID({ collection: 'portals', id: scoped, depth: 0, overrideAccess: true }).catch(() => null) as { name?: string } | null
+    : null
+  let client: LlmClient | null = null
+  if (actor.role === 'portal-admin' && scoped) {
+    const stored = await storedForPortal(payload, scoped)
+    if (stored) {
+      const gate = portalAiGate({ role: 'portal-admin', realRole: actor.role, usePortalAi: true, confirmed })
+      if (!gate.spend) throw new Error(gate.error || 'Confirm the call before it is sent.')
+      client = clientFromConnection(stored)
+    }
+  }
+  const setup = await designExperiment(text, { client, portalName: portal?.name || '' })
+  return createFromDesign(payload, actor, setup, scoped)
+}
+
+/** Save a goal’s setup as a draft. It does not run until Start. */
+export async function createFromDesign(payload: Payload, actor: Actor, setup: ExperimentSetup, portalId?: number | null) {
+  assertDesign(actor)
+  const scoped = actor.role === 'portal-admin' ? portalIdOf(actor) : portalId || null
+  if (actor.role === 'portal-admin' && !scoped) throw new Error('This portal could not be found.')
+  const created = await createExperiment(payload, actor, {
+    key: presetExperimentKey(setup.presetKey || setup.slot),
+    name: setup.name,
+    description: `${setup.explanation}\n\nWho: ${setup.who}`,
+    slot: setup.slot,
+    portalId: scoped,
+    allocation: 'auto',
+    primaryMetric: setup.decidingMetric,
+    secondaryMetrics: [setup.safetyMetric],
+    durationDays: setup.durationDays,
+    variants: setup.versions.map((row) => ({
+      key: row.key,
+      label: row.label,
+      payload: row.payload,
+      weight: 1,
+      approved: true,
+      source: setup.source === 'portal-ai' ? 'ai' as const : 'staff' as const,
+    })),
+  }, { designed: true })
+  const note = `${EXPERIMENT_RULE} If ${safetyLabel(setup.safetyMetric).toLowerCase()} rise above the first version, the test pauses and the admin is told.`
+  const updated = await payload.update({
+    collection: col('experiments'),
+    id: created.id,
+    overrideAccess: true,
+    data: { guardrailNote: note } as never,
+  })
+  return asDoc(updated as never)
+}
+
+export async function launchDesigned(payload: Payload, actor: Actor, id: number, edits: { name?: string; who?: string; labels?: Record<string, string> }) {
+  assertDesign(actor)
+  const current = await loadExperiment(payload, id)
+  if (!current) throw new Error('That experiment was not found.')
+  if (current.status !== 'draft') throw new Error('That setup has already been started.')
+  if (actor.role === 'portal-admin') {
+    const portal = portalIdOf(actor)
+    if (!portal || idOf(current.portal) !== portal) throw new Error('That experiment is not for your portal.')
+  }
+  const labels = edits.labels || {}
+  const variants = current.variants.map((row) => {
+    const label = String(labels[row.key] || row.label).trim()
+    const payloadValue = { ...row.payload }
+    if (typeof payloadValue.label === 'string' || slotOf(current.slot)?.fields.some((field) => field.name === 'label')) payloadValue.label = label
+    return { ...row, label, payload: payloadValue }
+  })
+  const who = String(edits.who || '').trim()
+  const marker = '\n\nWho: '
+  const held = String(current.description || '')
+  const at = held.lastIndexOf(marker)
+  const explanation = at === -1 ? held : held.slice(0, at)
+  const description = who ? `${explanation}${marker}${who}` : held
+  const name = String(edits.name || current.name).trim()
+  await updateExperiment(payload, actor, id, {
+    name,
+    description,
+    variants,
+  }, { designed: true })
+  return runExperiment(payload, actor, id)
+}
+
 export type ExperimentBrief = {
   tested: string
   portalName: string
@@ -490,8 +594,9 @@ export async function updateExperiment(payload: Payload, actor: Actor, id: numbe
   secondaryMetrics: string[]
   variants: ExperimentVariant[]
   portalId: number | null
-}>): Promise<ExperimentDoc> {
-  assertEdit(actor)
+}>, options?: { designed?: boolean }): Promise<ExperimentDoc> {
+  if (options?.designed) assertDesign(actor)
+  else assertEdit(actor)
   const current = await loadExperiment(payload, id)
   if (!current) throw new Error('That experiment was not found.')
   if (current.status === 'finished') throw new Error('A finished experiment cannot be edited. Start a new one if you want another test.')
@@ -587,6 +692,10 @@ export async function addSuggestedVariants(payload: Payload, actor: Actor, id: n
 
 export async function startExperiment(payload: Payload, actor: Actor, id: number) {
   assertEdit(actor)
+  return runExperiment(payload, actor, id)
+}
+
+async function runExperiment(payload: Payload, actor: Actor, id: number) {
   if (await experimentsKilled(payload)) throw new Error('The kill switch is on. No experiment can run until it is turned off.')
   const current = await loadExperiment(payload, id)
   if (!current) throw new Error('That experiment was not found.')
@@ -720,8 +829,9 @@ export type ExperimentResults = {
 
 export async function resultsFor(payload: Payload, actor: Actor, id: number): Promise<ExperimentResults> {
   assertView(actor)
-  const experiment = await loadExperiment(payload, id)
-  if (!experiment) throw new Error('That experiment was not found.')
+  const loaded = await loadExperiment(payload, id)
+  if (!loaded) throw new Error('That experiment was not found.')
+  const experiment = await enforceRunningPolicy(payload, loaded)
   if (actor.role !== 'master') {
     const portal = portalIdOf(actor)
     const scoped = idOf(experiment.portal)
@@ -836,6 +946,102 @@ async function saveAssignment(payload: Payload, experiment: ExperimentDoc, subje
   })
 }
 
+async function alertSafety(payload: Payload, experiment: ExperimentDoc, metric: string) {
+  const portalId = idOf(experiment.portal)
+  const portal = portalId
+    ? await payload.findByID({ collection: 'portals', id: portalId, depth: 0, overrideAccess: true }).catch(() => null) as { id?: number; slug?: string } | null
+    : null
+  const found = portalId
+    ? await payload.find({ collection: 'users', overrideAccess: true, depth: 0, limit: 20, where: { and: [{ role: { equals: 'portal-admin' } }, { 'tenants.tenant': { equals: portalId } }] } })
+    : await payload.find({ collection: 'users', overrideAccess: true, depth: 0, limit: 20, where: { role: { equals: 'master' } } })
+  let people = found.docs as { id: number }[]
+  if (!people.length && portalId) {
+    const masters = await payload.find({ collection: 'users', overrideAccess: true, depth: 0, limit: 10, where: { role: { equals: 'master' } } })
+    people = masters.docs as { id: number }[]
+  }
+  const href = portal?.slug ? `/p/${portal.slug}/admin/experiments/${experiment.id}` : `/master/experiments/${experiment.id}`
+  const title = 'An experiment paused itself'
+  const body = `${experiment.name} is paused. ${safetyLabel(metric)} rose above the first version, so the test stopped on its own.`
+  for (const person of people) {
+    const key = `experiment-safety-${experiment.id}-${person.id}`
+    const data = { user: person.id, portal: portalId || undefined, title, body, href, channel: 'in-app', key, read: false }
+    const existing = await payload.find({ collection: 'notifications', overrideAccess: true, depth: 0, limit: 1, where: { and: [{ user: { equals: person.id } }, { key: { equals: key } }] } })
+    if (existing.docs[0]) await payload.update({ collection: 'notifications', id: existing.docs[0].id, overrideAccess: true, data })
+    else await payload.create({ collection: 'notifications', overrideAccess: true, data })
+  }
+}
+
+/**
+ * The running engine. An automatic experiment stops at 95% or at 4 weeks,
+ * and pauses itself when the safety metric rises above the first version.
+ */
+export async function enforceRunningPolicy(payload: Payload, experiment: ExperimentDoc): Promise<ExperimentDoc> {
+  if (experiment.status !== 'running' || experiment.allocation !== 'auto') return experiment
+  const counts = await eventCounts(payload, experiment.id)
+  const arms: Arm[] = experiment.variants.map((variant) => ({
+    key: variant.key,
+    label: variant.label,
+    exposures: counts.filter((row) => row.variantKey === variant.key && row.kind === 'exposure').reduce((sum, row) => sum + row.n, 0),
+    conversions: counts.filter((row) => row.variantKey === variant.key && row.kind === 'conversion' && row.event === experiment.primaryMetric).reduce((sum, row) => sum + row.n, 0),
+  }))
+  const seed = experiment.id * 97 + arms.reduce((sum, arm) => sum + arm.exposures * 13 + arm.conversions * 7, 0)
+  const decision = banditStop(arms, {
+    rng: mulberry32(seed),
+    draws: 1200,
+    startedAt: experiment.startedAt,
+    now: now().getTime(),
+    maxWeeks: 4,
+  })
+  if (decision.stop) {
+    const updated = await payload.update({
+      collection: col('experiments'),
+      id: experiment.id,
+      overrideAccess: true,
+      data: {
+        status: 'finished',
+        finishedAt: now().toISOString(),
+        winnerKey: decision.reason === 'best' ? decision.leaderKey : experiment.winnerKey,
+      } as never,
+    })
+    await audit(payload, 'experiment.bandit', {
+      actor: idOf(experiment.createdBy) || undefined,
+      actorRole: 'desk',
+      portal: idOf(experiment.portal) || undefined,
+      detail: { id: experiment.id, key: experiment.key, reason: decision.reason, variantKey: decision.leaderKey },
+    })
+    return asDoc(updated as never)
+  }
+  const metric = (experiment.secondaryMetrics || []).find((item) => isSafetyMetric(item))
+  const control = experiment.variants[0]
+  if (!metric || !control) return experiment
+  const baseline = {
+    exposures: arms.find((arm) => arm.key === control.key)?.exposures || 0,
+    harms: counts.filter((row) => row.variantKey === control.key && row.event === metric).reduce((sum, row) => sum + row.n, 0),
+  }
+  const tripped = experiment.variants.slice(1).some((variant) => {
+    const current = {
+      exposures: arms.find((arm) => arm.key === variant.key)?.exposures || 0,
+      harms: counts.filter((row) => row.variantKey === variant.key && row.event === metric).reduce((sum, row) => sum + row.n, 0),
+    }
+    return safetyGuard(baseline, current).dropped
+  })
+  if (!tripped) return experiment
+  const updated = await payload.update({
+    collection: col('experiments'),
+    id: experiment.id,
+    overrideAccess: true,
+    data: { status: 'paused' } as never,
+  })
+  await audit(payload, 'experiment.safety', {
+    actor: idOf(experiment.createdBy) || undefined,
+    actorRole: 'desk',
+    portal: idOf(experiment.portal) || undefined,
+    detail: { id: experiment.id, key: experiment.key, metric },
+  })
+  await alertSafety(payload, experiment, metric)
+  return asDoc(updated as never)
+}
+
 export async function assignVariant(payload: Payload, slot: string, subject: Subject | null): Promise<VariantView> {
   const fallback = fallbackPayload(slot)
   const promoted = await promotedDefault(payload, slot)
@@ -850,8 +1056,10 @@ export async function assignVariant(payload: Payload, slot: string, subject: Sub
   }
   try {
     if (!subject) return safe
-    const experiment = await runningForSlot(payload, slot, subject.portalId)
-    if (!experiment) return safe
+    const found = await runningForSlot(payload, slot, subject.portalId)
+    if (!found) return safe
+    const experiment = await enforceRunningPolicy(payload, found)
+    if (experiment.status !== 'running') return safe
     const held = await storedAssignment(payload, experiment, subject)
     let variantKey = held?.variantKey || null
     if (!variantKey) {
@@ -1018,6 +1226,7 @@ export async function recordLearnerEvent(payload: Payload, input: {
       if (!watches && input.event !== 'clip_watch_seconds') continue
       if (input.event === 'lanes_course_start' && !withinFirstWeek(assigned.createdAt, now())) continue
       await writeEvent(payload, { experiment, variantKey: assigned.variantKey, kind: 'conversion', event: input.event, subject, sessionId: input.sessionId, props: input.props })
+      await enforceRunningPolicy(payload, experiment)
     }
     if (input.event !== 'return_next_day') await maybeReturnNextDay(payload, subject)
   } catch {
