@@ -1,82 +1,38 @@
 'use client'
 
-import { useEffect, useId, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { seeHowCaptionAt, seeHowFor, type SeeHowPage } from '@/lib/see-how'
-import styles from './see-how.module.css'
+import { useEffect, useState, type ComponentType, type CSSProperties } from 'react'
+import { seeHowFor, type SeeHowPage } from '@/lib/see-how'
 
-function filmedSrc(page: SeeHowPage, src: string) {
-  return src === page.video || (Boolean(page.overrideVideo) && src === page.overrideVideo)
+const rowStyle: CSSProperties = { marginTop: 10 }
+const linkStyle: CSSProperties = {
+  display: 'inline-block',
+  margin: 0,
+  padding: 0,
+  border: 0,
+  background: 'none',
+  color: 'inherit',
+  font: 'inherit',
+  fontWeight: 750,
+  textDecoration: 'underline',
+  textUnderlineOffset: '3px',
+  cursor: 'pointer',
 }
 
-function Player({ page, helpKey, onClose }: { page: SeeHowPage & { id: string }; helpKey: string; onClose: () => void }) {
-  const titleId = useId()
-  const [src, setSrc] = useState(page.overrideVideo || page.video)
-  const [caption, setCaption] = useState(page.captions[0]?.text || '')
+type PlayerProps = { page: SeeHowPage & { id: string }; helpKey: string; onClose: () => void }
 
+function LazyPlayer(props: PlayerProps) {
+  const [View, setView] = useState<ComponentType<PlayerProps> | null>(null)
   useEffect(() => {
-    let cancel = false
-    Promise.all([
-      fetch('/api/see-how').then((response) => (response.ok ? response.json() : {})).catch(() => ({})),
-      fetch('/see-how/overrides.json').then((response) => (response.ok ? response.json() : {})).catch(() => ({})),
-    ]).then(([stored, file]) => {
-      if (cancel) return
-      const fromDesk = (stored as { clips?: Record<string, unknown> })?.clips?.[page.id]
-      if (typeof fromDesk === 'string' && fromDesk) {
-        setSrc(fromDesk)
-        setCaption('')
-        return
-      }
-      const data = file as Record<string, unknown>
-      const custom = data?.[page.id] ?? data?.[helpKey]
-      if (typeof custom === 'string' && custom && !custom.startsWith('_')) setSrc(custom)
+    let live = true
+    import('./see-how-player').then((mod) => {
+      if (live) setView(() => mod.SeeHowPlayer)
     })
     return () => {
-      cancel = true
+      live = false
     }
-  }, [page.id, helpKey])
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
-
-  return createPortal(
-    <div className={styles.back} data-testid="see-how-player" data-see-how={helpKey} onClick={onClose}>
-      <div
-        className={styles.sheet}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className={styles.head}>
-          <h2 id={titleId}>See how · {page.title}</h2>
-          <button type="button" className={styles.close} data-testid="see-how-close" onClick={onClose}>
-            Close
-          </button>
-        </div>
-        <video
-          className={styles.video}
-          data-testid="see-how-video"
-          src={src}
-          poster={page.poster || undefined}
-          controls
-          muted
-          playsInline
-          autoPlay
-          onTimeUpdate={(event) => {
-            if (filmedSrc(page, src)) setCaption(seeHowCaptionAt(page, event.currentTarget.currentTime))
-          }}
-        />
-        {caption && filmedSrc(page, src) ? <p className={styles.caption} data-testid="see-how-caption">{caption}</p> : null}
-      </div>
-    </div>,
-    document.body,
-  )
+  }, [])
+  if (!View) return null
+  return <View {...props} />
 }
 
 /** Optional link at the end of a help tip. Renders nothing when this key has no demo. */
@@ -85,10 +41,10 @@ export function SeeHowLink({ helpKey }: { helpKey?: string }) {
   const [open, setOpen] = useState(false)
   if (!page || !helpKey) return null
   return (
-    <div className={styles.row}>
+    <div style={rowStyle}>
       <button
         type="button"
-        className={styles.link}
+        style={linkStyle}
         data-testid="see-how"
         data-see-how={helpKey}
         onClick={(event) => {
@@ -99,7 +55,7 @@ export function SeeHowLink({ helpKey }: { helpKey?: string }) {
       >
         See how
       </button>
-      {open ? <Player page={page} helpKey={helpKey} onClose={() => setOpen(false)} /> : null}
+      {open ? <LazyPlayer page={page} helpKey={helpKey} onClose={() => setOpen(false)} /> : null}
     </div>
   )
 }
@@ -124,7 +80,7 @@ export function SeeHowPlay({ pageId }: { pageId: string }) {
       >
         Play
       </button>
-      {open ? <Player page={page} helpKey={pageId} onClose={() => setOpen(false)} /> : null}
+      {open ? <LazyPlayer page={page} helpKey={pageId} onClose={() => setOpen(false)} /> : null}
     </>
   )
 }

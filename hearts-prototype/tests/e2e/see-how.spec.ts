@@ -1,9 +1,11 @@
 import { expect, test, type Page } from '@playwright/test'
-import { copyFileSync, mkdirSync } from 'node:fs'
+import { mkdirSync } from 'node:fs'
 import path from 'node:path'
 
-const dir = path.resolve('artifacts/see-how')
-const share = '/opt/cursor/artifacts/see-how'
+/** HEARTS_ARTIFACTS collects shots for review. Otherwise they stay in test-results/see-how. */
+const dir = process.env.HEARTS_ARTIFACTS
+  ? path.join(process.env.HEARTS_ARTIFACTS, 'see-how')
+  : path.resolve('test-results/see-how')
 
 async function signIn(page: Page, email: string, password: string, next: string) {
   await page.goto(`/login?next=${encodeURIComponent(next)}`)
@@ -15,10 +17,7 @@ async function signIn(page: Page, email: string, password: string, next: string)
 
 async function shot(page: Page, name: string) {
   mkdirSync(dir, { recursive: true })
-  mkdirSync(share, { recursive: true })
-  const file = path.join(dir, `${name}.png`)
-  await page.screenshot({ path: file, animations: 'disabled' })
-  copyFileSync(file, path.join(share, `${name}.png`))
+  await page.screenshot({ path: path.join(dir, `${name}.png`), animations: 'disabled' })
 }
 
 test.describe.configure({ timeout: 120_000 })
