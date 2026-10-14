@@ -153,7 +153,7 @@ async function flowEdits(payload: Payload, lessonId: number, before: Cue[], afte
   let flowed = 0
   let approved = 0
   let skipped = 0
-  const note = async (status: string, changed: boolean, run: () => Promise<void>) => {
+  const note = async (status: string, changed: boolean, run: () => Promise<unknown>) => {
     if (!changed) return
     try {
       await run()
