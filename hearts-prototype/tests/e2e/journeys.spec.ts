@@ -78,6 +78,24 @@ async function masterRequest() {
   return master
 }
 
+/** A portal opened from the short form starts without in-person nights. This journey needs them. */
+async function enableGather(portalSlug: string) {
+  const master = await masterRequest()
+  const body = new URLSearchParams()
+  body.set('action', 'portal-features')
+  body.set('portalSlug', portalSlug)
+  body.set('featuresForm', 'yes')
+  body.set('next', '/master')
+  for (const key of ['garden', 'workbook', 'planner', 'announcements', 'circle', 'compass', 'feedback', 'gather']) body.append('feature', key)
+  const response = await master.post('/api/hearts', {
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    data: body.toString(),
+    maxRedirects: 0,
+  })
+  expect(response.status()).toBe(303)
+  await master.dispose()
+}
+
 async function post(page: Page, form: Record<string, string>) {
   const response = await page.request.post('/api/hearts', { form, maxRedirects: 0 })
   expect(response.status()).toBe(303)
@@ -118,6 +136,7 @@ test.describe.serial('HEARTS journeys', () => {
     await page.getByTestId('create-portal-submit').click()
     await expect(page.getByTestId('notice')).toBeVisible()
     await expect(page.getByTestId('portal-card').filter({ hasText: `/p/${slug}` })).toContainText('Active')
+    await enableGather(slug)
     await page.getByTestId('pack-portal').selectOption(slug)
     await page.getByTestId('portal-pack-title').fill('Harbour sittings')
     await page.getByTestId('portal-pack-save').click()

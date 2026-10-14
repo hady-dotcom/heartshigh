@@ -1254,13 +1254,12 @@ async function handleForm(req: Request, form: FormData, session: Session) {
             overrideAccess: true,
             data: {
               sourceUrl: url,
-              transcriptSource: 'pending',
-              transcriptNote: bringInNote('waiting', CAPTION_QUEUE_DETAIL, lang),
+              transcriptNote: bringInNote('failed', 'The link is saved. This server did not fetch the file. Upload a transcript, or paste a YouTube link.', lang),
               ...draftPatch,
             },
           })
-          outcomes.push(CAPTION_QUEUE_DETAIL)
-          waiting++
+          outcomes.push('A share link was saved without a film file.')
+          failed++
           continue
         }
         if (!result.id) {
