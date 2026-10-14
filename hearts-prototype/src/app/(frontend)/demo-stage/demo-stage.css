@@ -1,0 +1,284 @@
+.demo-stage {
+  --demo-bar: 64px;
+  --demo-ticker: 42px;
+  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(1200px 280px at 10% -10%, rgba(31, 138, 120, 0.16), transparent 60%),
+    radial-gradient(900px 240px at 90% 0%, rgba(122, 79, 168, 0.12), transparent 55%),
+    #f3eee4;
+  color: #1f1d36;
+  font-family: Inter, 'Segoe UI', system-ui, sans-serif;
+}
+
+.demo-bar {
+  height: var(--demo-bar);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 18px;
+  background: #17151f;
+  color: #f6f0e4;
+  flex: none;
+}
+
+.demo-title { min-width: 9rem; }
+.demo-kicker {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #dca643;
+}
+.demo-title h1 {
+  margin: 0;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.demo-presets, .demo-actions { display: flex; gap: 8px; align-items: center; }
+.demo-presets { flex: 1; }
+.demo-bar button, .demo-steps button {
+  border: 1px solid rgba(246, 240, 228, 0.28);
+  background: transparent;
+  color: inherit;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.demo-bar button.on, .demo-bar button:hover { background: #f6f0e4; color: #17151f; }
+.demo-bar button.danger { border-color: #e7a3ad; color: #ffd5db; }
+.demo-bar button.danger:hover { background: #d94f68; color: white; border-color: #d94f68; }
+.demo-actions form { margin: 0; }
+
+.demo-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  position: relative;
+}
+
+.demo-board {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  gap: 0;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.layout-grid .demo-board {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.layout-phone .demo-board {
+  background: linear-gradient(90deg, transparent calc(100% - 446px), rgba(23, 21, 31, 0.06) calc(100% - 446px));
+}
+
+.demo-cell {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  position: relative;
+}
+
+.demo-panel {
+  --tint: #25214a;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(31, 29, 54, 0.08);
+  border: 1px solid rgba(31, 29, 54, 0.06);
+}
+
+.demo-panel.is-glow {
+  animation: demo-glow 1.6s ease;
+  box-shadow: 0 0 0 3px var(--tint), 0 12px 32px rgba(31, 29, 54, 0.16);
+}
+
+@keyframes demo-glow {
+  0% { box-shadow: 0 0 0 0 var(--tint); }
+  30% { box-shadow: 0 0 0 4px var(--tint), 0 0 24px var(--tint); }
+  100% { box-shadow: 0 0 0 3px var(--tint), 0 12px 32px rgba(31, 29, 54, 0.16); }
+}
+
+.demo-strip {
+  background: var(--tint);
+  color: #f6f0e4;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 8px 12px;
+  flex: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.demo-panel[data-testid='demo-panel-teacher'] .demo-strip { color: #2a2414; }
+
+.demo-view {
+  flex: 1;
+  min-height: 0;
+  background: #ece7dc;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.demo-frame {
+  border: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  display: block;
+}
+
+.demo-phone {
+  width: 390px;
+  max-width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 8px 0;
+  box-sizing: border-box;
+}
+
+.demo-bezel {
+  width: 390px;
+  max-width: 100%;
+  height: 100%;
+  background: #111018;
+  border-radius: 28px;
+  padding: 12px 8px 10px;
+  box-sizing: border-box;
+  position: relative;
+  box-shadow: inset 0 0 0 2px #2a2836, 0 16px 30px rgba(17, 16, 24, 0.28);
+}
+
+.demo-notch {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 92px;
+  height: 14px;
+  transform: translateX(-50%);
+  background: #111018;
+  border-radius: 0 0 10px 10px;
+  z-index: 2;
+}
+
+.demo-phone .demo-frame {
+  border-radius: 18px;
+  height: 100%;
+}
+
+.demo-resize {
+  position: absolute;
+  left: -6px;
+  top: 18px;
+  bottom: 8px;
+  width: 12px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  background: transparent;
+  cursor: col-resize;
+  z-index: 3;
+}
+.demo-resize:hover, .demo-resize:focus-visible {
+  background: rgba(31, 138, 120, 0.35);
+}
+
+.demo-steps {
+  width: 280px;
+  flex: none;
+  margin: 10px 10px 10px 0;
+  background: #fffdf8;
+  border-radius: 14px;
+  padding: 16px 16px 12px;
+  box-shadow: 0 10px 30px rgba(31, 29, 54, 0.08);
+  overflow: auto;
+}
+.demo-steps h2 {
+  margin: 0 0 6px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 28px;
+  font-weight: 600;
+}
+.demo-steps p { margin: 0 0 12px; color: #48455e; font-size: 13px; line-height: 1.45; }
+.demo-steps ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.demo-steps li { display: grid; gap: 4px; }
+.demo-steps button {
+  justify-self: start;
+  background: #1f4d3a;
+  color: #f6f0e4;
+  border-color: #1f4d3a;
+}
+.demo-steps button:disabled { opacity: 0.6; cursor: wait; }
+.demo-steps li span { font-size: 12.5px; color: #48455e; line-height: 1.4; }
+.demo-note { color: #8f2f2a; }
+
+.demo-ticker {
+  height: var(--demo-ticker);
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 16px;
+  background: #17151f;
+  color: #f6f0e4;
+  overflow: hidden;
+}
+.demo-ticker > span {
+  flex: none;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #dca643;
+}
+.demo-ticker p, .demo-ticker ul { margin: 0; font-size: 13px; }
+.demo-ticker ul {
+  display: flex;
+  gap: 18px;
+  list-style: none;
+  padding: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.demo-ticker li { color: #f6f0e4; }
+.demo-ticker li:first-child { color: #fff; font-weight: 600; }
+
+.demo-boot {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #17151f;
+  color: #f6f0e4;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+@media (max-width: 1500px) {
+  .demo-steps {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    bottom: 8px;
+    z-index: 4;
+    margin: 0;
+  }
+}

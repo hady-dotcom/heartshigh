@@ -61,6 +61,8 @@ export type PortalDoc = {
   timeZone?: string | null
   /** Null or missing: every switch uses its registry default (shipped features on). */
   features?: Record<string, boolean> | null
+  /** Demo stage sandbox. Its people stay out of metrics, insights and swarm counts. */
+  isDemo?: boolean | null
   /** Encrypted portal AI account. Absent means the desk uses the built-in path. */
   aiConnection?: unknown
 }

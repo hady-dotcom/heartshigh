@@ -10,6 +10,7 @@ import './gather.css'
 import './live.css'
 import './framing.css'
 import { themeBootScript } from '@/lib/daypart'
+import { demoFrameBootScript } from '@/lib/demo-frame'
 import { installBootScript } from '@/lib/install-prompt'
 import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
@@ -48,6 +49,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     <html lang="en-GB" data-theme="evening" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript() }} />
+        <script dangerouslySetInnerHTML={{ __html: demoFrameBootScript() }} />
         <script dangerouslySetInnerHTML={{ __html: installBootScript() }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />

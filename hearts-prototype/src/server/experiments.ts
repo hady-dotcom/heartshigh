@@ -20,6 +20,8 @@ import {
   withinFirstWeek,
 } from '@/lib/experiment-slots'
 import type { VariantView } from '@/lib/experiment-slots'
+import { isDemoStageEmail } from '@/lib/demo-stage'
+import { portalIsDemo } from './demo-activity'
 import { clipStepUpLabel, talkStepUpLabel } from '@/lib/feed-copy'
 import { DEFAULT_EXPERIMENT_DAYS, experimentEndsAt, presetExperimentKey, presetOf } from '@/lib/experiment-presets'
 import { now } from '@/lib/clock'
@@ -907,6 +909,7 @@ async function runningForSlot(payload: Payload, slot: string, portalId?: number 
 }
 
 export function subjectFrom(user: SessionUser | null | undefined, deviceId?: string | null, portalId?: number | null): Subject | null {
+  if (isDemoStageEmail(user?.email)) return null
   if (user && (user.role === 'learner' || user.role === 'teacher' || user.role === 'portal-admin' || user.role === 'master')) {
     if (user.role === 'learner') {
       return { kind: 'learner', id: subjectKey('learner', user.id), learnerId: user.id, deviceId: deviceId || undefined, portalId: portalId ?? portalIdOf(user) }
@@ -1212,6 +1215,9 @@ export async function recordLearnerEvent(payload: Payload, input: {
 }) {
   try {
     if (!isTrackedEvent(input.event) && input.event !== 'exposure') return
+    if (isDemoStageEmail(input.user?.email)) return
+    const portalForEvent = input.portalId ?? (input.user ? portalIdOf(input.user) : null)
+    if (portalForEvent && (await portalIsDemo(payload, portalForEvent))) return
     const subject = subjectFrom(input.user, input.deviceId, input.portalId ?? (input.user ? portalIdOf(input.user) : null))
     if (!subject) return
     if (await experimentsKilled(payload)) return

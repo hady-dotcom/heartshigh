@@ -35,6 +35,7 @@ import { emptySwarmFill, mixSwarm } from '@/lib/circle'
 import { circleCoverage, circleForPoints, circleSettings } from '@/server/circle'
 import { initialsOf } from '@/lib/swarm-sort'
 import { featureOn } from '@/lib/features'
+import { includeInSwarmCount } from '@/lib/demo-stage'
 import { hiddenIds } from '@/server/safety'
 import { ReportButton } from '@/components/app/report-sheet'
 import { parseTrack } from '@/lib/framing/validate'
@@ -285,7 +286,8 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
       if (answer.keepPrivate === true || answer.shareWithLearners !== true || answer.swarmHidden === true || ref(answer.user) === user.id) continue
       const pointId = ref(answer.point)
       if (!pointId) continue
-      const author = answer.user as { name?: string; shareWithLearners?: boolean } | null
+      const author = answer.user as { name?: string; email?: string; shareWithLearners?: boolean } | null
+      if (!includeInSwarmCount({ email: author?.email, portalIsDemo: Boolean(portal.isDemo) })) continue
       if (!author?.shareWithLearners) continue
       const image = answer.image as { url?: string; id?: number } | null
       const imageSrc = image?.id ? `/api/hearts/file/${image.id}` : image?.url || null

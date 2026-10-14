@@ -3,7 +3,7 @@
  * even as an encrypted blob. Server code can still read them on the object returned
  * by presentPortal; Object.keys, JSON, and the React client payload omit them.
  */
-export const SERVER_ONLY_PORTAL_FIELDS = ['aiConnection', 'notificationEmails'] as const
+export const SERVER_ONLY_PORTAL_FIELDS = ['aiConnection', 'notificationEmails', 'demoActivity'] as const
 
 export function portalForClient<T>(portal: T): T {
   if (!portal || typeof portal !== 'object') return portal
