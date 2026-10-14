@@ -102,7 +102,7 @@ export function CreatorForm({ courses, endpoint, next }: { courses: Course[]; en
 
   return (
     <div data-testid="sheet-creator">
-      <section className="panel">
+      <section className="panel" id="creator-search">
         <header><div><h2>What should the sheet be about? <HelpTip topic="creator-search">{TOOL.creatorSearch}</HelpTip></h2><p>Search, tick the talks you want, and the desk builds a draft. Nothing goes live until you apply the preview.</p></div></header>
         <div className="body form">
           <label className="stack">Topic

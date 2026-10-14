@@ -70,7 +70,7 @@ export async function PortalQuestionsScreen(ctx: Ctx) {
             </form>
           ) : <p className="body hint" style={{ marginBottom: 0 }}>The extra bank is already on {showPortalName(portal.name)}.</p>}
         </section>
-        <section className="panel" data-testid="placing-own">
+        <section className="panel" id="new-question" data-testid="placing-own">
           <header className="light"><h2>Add your own</h2><span className="hint">Stays on this portal</span></header>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'placing-question', portalSlug: portal.slug, next: here }} />

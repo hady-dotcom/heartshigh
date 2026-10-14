@@ -19,7 +19,7 @@ export async function TranscriptFilesScreen({ payload, user, query }: { payload:
   const waiting = lessons.filter((lesson) => isAwaitingTranscript(str(lesson.transcriptNote)))
   return (
     <DeskFrame payload={payload} user={user} title="Transcript files" intro="Store the timed transcript files a master sheet points at, and attach one to a talk that is waiting." active="transcripts" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="transcript-files">
-      <section className="panel">
+      <section className="panel" id="transcript-file">
         <header>
           <div>
             <h2>Upload a transcript file <HelpTip topic="transcript-files">{TOOL.transcriptFiles}</HelpTip></h2>

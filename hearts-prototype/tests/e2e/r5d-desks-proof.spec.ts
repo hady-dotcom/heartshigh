@@ -310,8 +310,9 @@ test('r5d desk proof shots', async ({ page, browser }) => {
 
   await page.setViewportSize(PHONE)
   await page.goto('/p/east-london/admin/teach')
-  await expect(page.getByTestId('desk-narrow')).toBeVisible()
-  await shot(page, 'phone-desk-narrow')
+  await expect(page.getByTestId('admin-teach')).toBeVisible()
+  await expect(page.getByTestId('nav-teach')).toBeVisible()
+  await shot(page, 'phone-desk-nav')
 
   await page.addInitScript(() => {
     localStorage.setItem('hearts.saved.v1', JSON.stringify(['cut-12', 'cut-9', 'cut-41']))

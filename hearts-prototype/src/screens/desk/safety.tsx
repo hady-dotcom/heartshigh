@@ -44,7 +44,7 @@ export async function CareSafetyBody({
     : null
   const showAlert = (alert: Record<string, unknown>) => canSeeAlertContent(user, leadUser?.id || null)
   return (
-    <>
+    <div id="care-queue">
       {portalId && !lead ? (
         <div className="flash notice" data-testid="add-safeguarding-lead">
           Name the person who will reach out when someone may need support. Until then, portal admins and the master are told. <a href={slug ? `/p/${slug}/admin/settings` : here}>Open portal settings</a>
@@ -165,7 +165,7 @@ export async function CareSafetyBody({
           ) : null}
         </div>
       </section>
-    </>
+    </div>
   )
 }
 

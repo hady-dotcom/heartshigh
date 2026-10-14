@@ -158,7 +158,7 @@ export async function ContentScreen(ctx: Ctx) {
             </div>
           )}
         </section>
-        <section className="panel">
+        <section className="panel" id="new-course">
           <header><div><h2>New subject <HelpTip topic="local-course">{TOOL.localCourse}</HelpTip></h2><p>Subject, then topic, then film. Questions are added in the editor.</p></div></header>
           <form id="new-subject" className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-course', origin: 'local', portalSlug: portal.slug, next: `${base}/admin/content` }} />
@@ -757,7 +757,7 @@ export async function AccessScreen(ctx: Ctx) {
         </div>
       </section>
       <div className="grid two" style={{ alignItems: 'start' }}>
-        <section className="panel">
+        <section className="panel" id="new-code">
           <header><div><h2>New access code</h2><p>Learner and parent codes need a teacher code, so someone sees their progress</p></div></header>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-code', portalSlug: portal.slug, next: here }} />

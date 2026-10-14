@@ -169,8 +169,9 @@ export async function LiveDeskScreen(ctx: Ctx) {
 export async function MasterLiveScreen({ payload, user, query }: { payload: Payload; user: SessionUser; query: { error?: string; notice?: string } }) {
   const portals = await rows(payload, 'portals', undefined, { sort: 'name', limit: 80 })
   const sessions = await rows(payload, 'live-sessions', undefined, { sort: '-createdAt', limit: 80 })
+  const first = portals[0]
   return (
-    <DeskFrame payload={payload} user={user} title="Live" intro="Every portal’s live sessions. Open a portal desk to start or end one." active="live" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="master-live">
+    <DeskFrame payload={payload} user={user} title="Live" intro="Every portal’s live sessions. Open a portal desk to start or end one." active="live" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="master-live" primary={first ? { label: 'Open a live desk', href: `/p/${str(first.slug)}/admin/live` } : undefined}>
       <section className="panel">
         <header><h2>All portals</h2></header>
         <div className="body">

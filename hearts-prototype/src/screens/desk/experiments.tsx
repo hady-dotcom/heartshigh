@@ -161,7 +161,7 @@ async function ListPage({ ctx, master, base }: { ctx: Ctx | null; master: { payl
             <button className="btn ghost" type="submit">{killed ? 'Turn the kill switch off' : 'Turn the kill switch on'}</button>
           </form>
         ) : null}
-        <div className={styles.groups}>
+        <div className={styles.groups} id="experiment-list">
           {groups.map((group) => {
             const rows = items.filter((item) => item.status === group.key)
             if (!rows.length) return null

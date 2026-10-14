@@ -346,12 +346,12 @@ test.describe('round 3 screens', () => {
     expect(taps).toBe(1)
   })
 
-  test('Bug 18: a narrow screen gets a laptop note instead of the desk', async ({ page }) => {
+  test('Bug 18: a narrow screen still shows the desk nav', async ({ page }) => {
     await page.setViewportSize({ width: 600, height: 900 })
     await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `/p/${PORTAL}/admin`)
-    await expect(page.getByTestId('desk-narrow')).toBeVisible()
-    await expect(page.getByTestId('desk-narrow')).toContainText('Open this on a laptop or desktop')
-    await expect(page.getByTestId('admin-overview')).toBeHidden()
+    await expect(page.getByTestId('desk-narrow')).toBeHidden()
+    await expect(page.getByTestId('admin-overview')).toBeVisible()
+    await expect(page.getByTestId('nav-teach')).toBeVisible()
     await page.setViewportSize(DESK)
     await expect(page.getByTestId('desk-narrow')).toBeHidden()
     await expect(page.getByTestId('admin-overview')).toBeVisible()

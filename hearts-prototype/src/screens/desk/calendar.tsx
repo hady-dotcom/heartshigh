@@ -85,7 +85,7 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
           <div className={styles.tile}><b>{copy.filter((row) => row.approved).length}</b><span>Approved lines</span></div>
         </section>
         <div className={styles.layout}>
-          <section className="panel" data-testid="calendar-preview">
+          <section className="panel" id="calendar-preview" data-testid="calendar-preview">
             <header><h2>See the app on a date</h2></header>
             <div className="body">
               <form action={base} method="get" className="form">

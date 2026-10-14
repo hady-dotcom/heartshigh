@@ -232,10 +232,10 @@ test('the portal desk names the portal, never its slug, in the sidebar and on a 
   const name = ((await side.locator('b').textContent()) || '').trim()
   expect(name.length).toBeGreaterThan(2)
   await page.setViewportSize(PHONE)
-  const narrow = page.getByTestId('desk-narrow')
-  await expect(narrow).toBeVisible()
-  await expect(narrow).toContainText(`The ${name} portal desk needs a wider screen`)
-  await expect(narrow).not.toContainText('east-london')
+  const sidePhone = page.locator('.side-brand')
+  await expect(sidePhone).toBeVisible()
+  await expect(sidePhone).toContainText(name)
+  await expect(sidePhone).not.toContainText('east-london')
 })
 
 test('until a clip actually plays, our poster and a gold play button cover the player, never YouTube’s own', async ({ page }) => {

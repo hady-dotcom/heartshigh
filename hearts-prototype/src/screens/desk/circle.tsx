@@ -83,7 +83,7 @@ function Bulk({ lesson, scope, enabled, here, label }: { lesson: number; scope: 
 async function Index(ctx: CircleCtx) {
   const talks = await talksInScope(ctx)
   return (
-    <section className="panel" data-testid="circle-index">
+    <section className="panel" id="circle-index" data-testid="circle-index">
       <header className="light"><h2>Talks with questions ({talks.length})</h2><span className="hint">Open a talk to draft, write, edit or switch off its circle answers</span></header>
       <div className="table-wrap">
         <table className="data">

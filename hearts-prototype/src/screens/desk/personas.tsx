@@ -75,7 +75,7 @@ export async function MasterPersonas(ctx: MasterCtx) {
       </section>
       {copy ? <CopyEditor copy={copy} /> : null}
 
-      <section className="panel" style={{ marginBottom: 18 }} data-testid="scale-list">
+      <section className="panel" id="scale-list" style={{ marginBottom: 18 }} data-testid="scale-list">
         <header className="light"><h2>Heart scales</h2><span className="hint">Season is blank until the pairing table is in</span></header>
         <div className="body" style={{ display: 'grid', gap: 16 }}>
           {scaleRows.map((scale) => (

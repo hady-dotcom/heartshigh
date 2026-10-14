@@ -31,7 +31,7 @@ export async function GatherDeskScreen(ctx: Ctx) {
   const proposed = cards.filter((card) => card.status === 'proposed')
   const preview = cards.filter((card) => card.status === 'published' && !card.past).sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0]
   return (
-    <AdminFrame ctx={ctx} active="gather" tone="evening" title="Gather" intro="Upcoming and past gatherings at this masjid." testId="desk-gather">
+    <AdminFrame ctx={ctx} active="gather" tone="evening" title="Gatherings" intro="Upcoming and past gatherings at this masjid." testId="desk-gather">
       <div className="stats-strip" data-testid="gather-summary">
         <div className="stat-chip"><b>{cards.filter((card) => !card.past && card.status === 'published').length}</b><span>Upcoming</span></div>
         <div className="stat-chip"><b>{cards.reduce((sum, card) => sum + card.going, 0)}</b><span>Places said yes</span></div>
