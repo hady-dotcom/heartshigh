@@ -67,6 +67,16 @@ test('desk help tip and See how player on a laptop', async ({ page }) => {
   await shot(page, 'desk-player-phone-sheet')
 })
 
+async function playRow(page: Page, row: ReturnType<Page['locator']>) {
+  const button = row.getByTestId('see-how-play')
+  await button.scrollIntoViewIfNeeded()
+  await expect.poll(async () => button.evaluate((el) => Object.keys(el).some((key) => key.startsWith('__react')))).toBe(true)
+  await button.click()
+  const player = page.getByTestId('see-how-player')
+  await expect(player).toBeVisible()
+  return player
+}
+
 async function openTip(page: Page, topic: string) {
   const tip = page.locator(`[data-testid=desk-help][data-help=${topic}]`)
   await tip.getByRole('button', { name: 'What is this?' }).click()
@@ -92,8 +102,7 @@ test('master desk can replace a See how clip, and Live recordings and Framing in
   await expect(page.getByText('Your video is the one people will see.')).toBeVisible()
   const replaced = page.locator('[data-testid=see-how-row][data-page=home]')
   await expect(replaced).toHaveAttribute('data-custom', 'yes')
-  await replaced.getByTestId('see-how-play').click()
-  const player = page.getByTestId('see-how-player')
+  const player = await playRow(page, replaced)
   await expect(player.getByTestId('see-how-video')).toHaveAttribute('src', /see-how-clips/)
   await shot(page, 'see-how-replaced-laptop')
   await player.getByTestId('see-how-close').click()
@@ -102,8 +111,8 @@ test('master desk can replace a See how clip, and Live recordings and Framing in
   await expect(page.getByText('Back to the recorded one.')).toBeVisible()
   const recorded = page.locator('[data-testid=see-how-row][data-page=home]')
   await expect(recorded).toHaveAttribute('data-custom', 'no')
-  await recorded.getByTestId('see-how-play').click()
-  await expect(page.getByTestId('see-how-video')).toHaveAttribute('src', /\/see-how\/home\.webm/)
+  const again = await playRow(page, recorded)
+  await expect(again.getByTestId('see-how-video')).toHaveAttribute('src', /\/see-how\/home\.webm/)
   await page.getByTestId('see-how-close').click()
 
   await page.goto('/master/framing')
@@ -130,12 +139,24 @@ test('master desk can replace a See how clip, and Live recordings and Framing in
 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/master/see-how')
-  await expect(page.getByTestId('desk-narrow')).toBeVisible()
+  await expect(page.getByTestId('see-how-desk')).toBeVisible()
+  const phoneHome = page.locator('[data-testid=see-how-row][data-page=home]')
+  await phoneHome.scrollIntoViewIfNeeded()
+  await expect(phoneHome.getByTestId('see-how-play')).toBeVisible()
+  await expect(phoneHome.getByTestId('see-how-replace')).toBeVisible()
+  await expect(phoneHome.getByTestId('see-how-reset')).toBeVisible()
   await shot(page, 'see-how-desk-phone')
+  const phonePlayer = await playRow(page, phoneHome)
+  await shot(page, 'see-how-player-phone')
+  await phonePlayer.getByTestId('see-how-close').click()
+
   await page.goto('/master/framing')
-  await expect(page.getByTestId('desk-narrow')).toBeVisible()
-  await shot(page, 'framing-desk-phone')
+  await expect(page.getByTestId('master-framing')).toBeVisible()
+  await openTip(page, 'master-framing')
+  await shot(page, 'framing-tip-phone')
+
   await page.goto('/p/east-london/admin/live')
-  await expect(page.getByTestId('desk-narrow')).toBeVisible()
-  await shot(page, 'live-desk-phone')
+  await expect(page.getByTestId('desk-live')).toBeVisible()
+  await openTip(page, 'desk-live')
+  await shot(page, 'live-tip-phone')
 })

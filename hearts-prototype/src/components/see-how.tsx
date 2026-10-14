@@ -111,7 +111,17 @@ export function SeeHowPlay({ pageId }: { pageId: string }) {
   if (!page) return null
   return (
     <>
-      <button type="button" className="btn ghost small" data-testid="see-how-play" data-page={pageId} onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        className="btn ghost small"
+        data-testid="see-how-play"
+        data-page={pageId}
+        onClick={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          setOpen(true)
+        }}
+      >
         Play
       </button>
       {open ? <Player page={page} helpKey={pageId} onClose={() => setOpen(false)} /> : null}
