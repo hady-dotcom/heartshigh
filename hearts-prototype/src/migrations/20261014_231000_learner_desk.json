@@ -2230,6 +2230,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "transcript_edits": {
+          "name": "transcript_edits",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "source_url": {
           "name": "source_url",
           "type": "varchar",

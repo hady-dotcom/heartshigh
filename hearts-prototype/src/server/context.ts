@@ -4,6 +4,7 @@ import { cache } from 'react'
 import { getPayload, type Payload } from 'payload'
 import config from '@payload-config'
 import { idOf, portalIdOf } from '@/lib/ids'
+import { forcedPasswordDestination } from '@/lib/password-gate'
 import { presentPortal } from '@/lib/portal-public'
 import { cookieValue, loadViewAs, type EndReason, type ViewAs } from './viewas'
 
@@ -275,7 +276,8 @@ export async function requireUser() {
   const path = (await headers()).get('x-hearts-path') || '/'
   if (!session.user) redirect(`/login?next=${encodeURIComponent(path)}`)
   if (!session.actor) redirect(`/login?next=${encodeURIComponent(path)}`)
-  if (session.actor.mustChangePassword && !path.startsWith('/change-password')) redirect('/change-password')
+  const change = forcedPasswordDestination(session.actor, path)
+  if (change) redirect(change)
   return session as Session & { user: SessionUser; actor: SessionUser }
 }
 
