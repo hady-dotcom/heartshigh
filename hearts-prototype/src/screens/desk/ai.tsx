@@ -133,7 +133,7 @@ async function Registry({ ctx, master, base, desk }: { ctx: Ctx | null; master: 
               <p data-testid="ai-step-line">{stepPlainLine(str(step.slug)) || str(step.description)}</p>
             </span>
             <span className={styles.meta}>
-              <span className={styles.mark}>{forkByStep.get(step.id) ? `Your v${str(forkByStep.get(step.id)?.number)}` : `v${str(step.liveVersion) || '1'} live`}</span>
+              {forkByStep.get(step.id) ? <span className={styles.mark}>{`Your v${str(forkByStep.get(step.id)?.number)}`}</span> : null}
               <span className={styles.mark} data-testid="ai-step-state">{stepListBadge({ inPipeline: Boolean(step.inPipeline), connected: desk.connected, master: desk.master })}</span>
             </span>
           </Link>
@@ -195,7 +195,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
         <summary>{STEP_PAGE_COPY.techies}</summary>
         <div className={styles.layout}>
         <section className="panel">
-          <header className="light"><h2>{STEP_PAGE_COPY.instructions} <HelpTip topic="ai-prompt">{TOOL.aiPrompt}</HelpTip></h2><span className={styles.mark}>{portalLive ? `Your portal’s version ${str(portalLive.number)}` : `Live version ${str(step.liveVersion) || '1'}`}</span></header>
+          <header className="light"><h2>{STEP_PAGE_COPY.instructions} <HelpTip topic="ai-prompt">{TOOL.aiPrompt}</HelpTip></h2>{portalLive ? <span className={styles.mark}>{`Your portal’s version ${str(portalLive.number)}`}</span> : null}</header>
           <div className="body">
             {!desk.master && canEdit ? <p className={styles.quiet}>Saving this only changes the step for your portal. Other portals, and the HEARTS wording, stay as they are.</p> : null}
             {canEdit ? (
@@ -254,7 +254,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
             <tbody>
               {versions.map((version) => (
                 <tr key={version.id} data-testid="ai-version" data-number={version.number} data-live={version.live ? 'yes' : 'no'}>
-                  <td>{version.live ? <b>v{str(version.number)} live</b> : `v${str(version.number)}`}</td>
+                  <td>{version.live ? <b>v{str(version.number)}</b> : `v${str(version.number)}`}</td>
                   <td>{str(version.authorName) || '—'}{version.authorRole ? ` · ${roleWords(str(version.authorRole))}` : ''}</td>
                   <td>{when(version.createdAt)}</td>
                   <td>{str(version.note)}</td>
