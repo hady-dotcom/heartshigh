@@ -20,6 +20,7 @@ import { clockEnabled, setTestNow } from '@/lib/clock'
 import { authCookie } from '@/lib/cookies'
 import { logError } from '@/lib/log'
 import { gateAuth, tooManyAnswers } from '@/lib/auth-gate'
+import { loginFailurePath } from '@/lib/demo-stage-gate'
 import { clientIp, hit, hitAnswer, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
 import { slugProblem } from '@/lib/text-safety'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
@@ -181,19 +182,20 @@ async function landingPath(payload: Awaited<ReturnType<typeof getSession>>['payl
 
 async function loginResponse(req: Request, email: string, password: string, next: string) {
   const { payload } = await getSession()
+  const back = loginFailurePath(next)
   try {
     const result = await payload.login({ collection: 'users', data: { email, password } })
-    if (!result.token || !result.user) return redirectTo(req, '/login', 'That email or password did not match.')
+    if (!result.token || !result.user) return redirectTo(req, back, 'That email or password did not match.')
     const full = (await payload.findByID({ collection: 'users', id: result.user.id, overrideAccess: true, depth: 0 })) as SessionUser
-    if (full.paused) return redirectTo(req, '/login', 'This account is paused. Ask your portal to let you back in.')
-    if (full.role === 'learner' && (full.removed || !portalIdOf(full))) return redirectTo(req, '/login', 'This account is not in a portal. Ask your portal to add you again.')
+    if (full.paused) return redirectTo(req, back, 'This account is paused. Ask your portal to let you back in.')
+    if (full.role === 'learner' && (full.removed || !portalIdOf(full))) return redirectTo(req, back, 'This account is not in a portal. Ask your portal to add you again.')
     await payload.update({ collection: 'users', id: full.id, overrideAccess: true, data: { lastSeenAt: now().toISOString() } as never })
     const dest = full.mustChangePassword ? '/change-password' : await landingPath(payload, full, next)
     const response = redirectTo(req, dest)
     response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, result.token, 7200))
     return response
   } catch {
-    return redirectTo(req, '/login', 'That email or password did not match.')
+    return redirectTo(req, back, 'That email or password did not match.')
   }
 }
 
@@ -571,7 +573,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   if (action === 'login') {
     const next = text(form, 'next') || '/'
     const email = text(form, 'email').toLowerCase()
-    const blocked = await gateAuth(req, form, 'login', email, '/login')
+    const blocked = await gateAuth(req, form, 'login', email, loginFailurePath(next))
     if (blocked) return blocked
     return loginResponse(req, email, text(form, 'password'), next)
   }
