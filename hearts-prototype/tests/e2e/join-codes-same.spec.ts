@@ -1,13 +1,13 @@
-import Database from 'better-sqlite3'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
+import { DatabaseSync } from 'node:sqlite'
 import { expect, test } from '@playwright/test'
 import { E2E_DATABASE } from '../env'
 
 /** The server on 3100 has already copied pack courses onto each code. This reads that database. */
 test('existing join codes still open the same courses, and the code letters are unchanged', () => {
   const file = path.resolve(process.cwd(), E2E_DATABASE.replace(/^file:/, ''))
-  const db = new Database(file, { readonly: true, fileMustExist: true })
+  const db = new DatabaseSync(file, { readOnly: true })
   try {
     const codes = db.prepare('SELECT id, code, label FROM access_codes').all() as { id: number; code: string; label: string | null }[]
     const seed = JSON.parse(readFileSync(path.join(process.cwd(), 'data/seed-codes-test.json'), 'utf8')) as Record<string, string>
