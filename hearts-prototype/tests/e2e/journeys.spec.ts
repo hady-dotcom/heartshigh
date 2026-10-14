@@ -166,7 +166,7 @@ test.describe.serial('HEARTS journeys', () => {
 
     await page.getByTestId('nav-content').click()
     await page.getByTestId('local-course-title').fill('Night class')
-    await page.getByTestId('local-course-duration').fill('8')
+    await page.getByTestId('local-course-duration').fill('8:00')
     await page.getByTestId('local-course-pack').selectOption({ label: 'Harbour sittings' })
     await page.getByTestId('local-course-submit').click()
     await expect(page.getByTestId('notice')).toBeVisible()

@@ -1,5 +1,8 @@
+import path from 'node:path'
 import { defineConfig, devices } from '@playwright/test'
 import { E2E_BASE, E2E_DATABASE, E2E_PORT } from './tests/env'
+
+const bringInFixture = path.join(process.cwd(), 'tests/fixtures/bring-in/yt-dlp.mjs')
 
 // The suite seeds and serves its own database file, so `npm run go` data and the codes it printed stay as they were.
 process.env.DATABASE_URL = E2E_DATABASE
@@ -38,6 +41,10 @@ export default defineConfig({
       HEARTS_TRUSTED_PROXY_HOPS: '1',
       HEARTS_SEARCH_FIXTURE: 'tests/fixtures/youtube-search.json',
       HEARTS_TRANSCRIPT_FIXTURE: 'tests/fixtures/transcripts.json',
+      YT_DLP_PATH: bringInFixture,
+      YT_DLP_ROLE: 'server',
+      HEARTS_CAPTION_BOT_WALL: '1',
+      HEARTS_YT_FIXTURE: '1',
     } as Record<string, string>,
   },
 })
