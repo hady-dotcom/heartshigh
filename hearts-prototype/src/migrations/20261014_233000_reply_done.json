@@ -1829,6 +1829,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "hidden_note": {
+          "name": "hidden_note",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -2261,6 +2267,20 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "too_short": {
+          "name": "too_short",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "short_waived": {
+          "name": "short_waived",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {
@@ -3062,6 +3082,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "too_short": {
+          "name": "too_short",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {
@@ -3262,6 +3289,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "too_short": {
+          "name": "too_short",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {
@@ -23740,6 +23774,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "a47f55e4-2330-4f62-b155-4f625e000006",
+  "id": "b58066f5-2330-4062-c266-50636f000007",
   "prevId": "d4a7e2b1-2100-4c18-9a44-0c14e2100001"
 }
