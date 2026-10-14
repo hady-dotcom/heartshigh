@@ -64,6 +64,12 @@ export const AiStepVersions: CollectionConfig = {
     { name: 'authorName', type: 'text' },
     { name: 'authorRole', type: 'text' },
     { name: 'live', type: 'checkbox', defaultValue: false, index: true },
+    /** Set on a portal fork. Empty means this is the HEARTS version, shared until a portal forks. */
+    { name: 'portal', type: 'relationship', relationTo: 'portals', index: true },
+    { name: 'forkedFrom', type: 'number' },
+    { name: 'beforePrompt', type: 'textarea' },
+    { name: 'kept', type: 'checkbox', defaultValue: false },
+    { name: 'rolledBack', type: 'checkbox', defaultValue: false },
   ],
 }
 
@@ -106,6 +112,8 @@ export const AiStepOutputs: CollectionConfig = {
     { name: 'protectsId', type: 'number' },
     { name: 'protectsReason', type: 'text' },
     { name: 'mock', type: 'checkbox', defaultValue: false },
+    { name: 'portal', type: 'relationship', relationTo: 'portals', index: true },
+    { name: 'actorName', type: 'text' },
   ],
 }
 
@@ -149,6 +157,7 @@ export const AiStepJobs: CollectionConfig = {
     { name: 'actorName', type: 'text' },
     { name: 'note', type: 'text' },
     { name: 'error', type: 'textarea' },
+    { name: 'portal', type: 'relationship', relationTo: 'portals', index: true },
   ],
 }
 
@@ -160,6 +169,7 @@ export const AiDesk: CollectionConfig = {
   fields: [
     { name: 'key', type: 'text', required: true, unique: true },
     { name: 'portalMayEdit', type: 'checkbox', defaultValue: false },
+    { name: 'activitySeenAt', type: 'date' },
   ],
 }
 

@@ -1135,3 +1135,219 @@ export function defaultModel(provider: ProviderName) {
   if (provider === 'openai') return 'gpt-4o-mini'
   return 'claude-sonnet-4-5'
 }
+
+export function roleWords(role: string | null | undefined) {
+  if (role === 'portal-admin') return 'portal admin'
+  if (role === 'master') return 'master'
+  if (role === 'teacher') return 'teacher'
+  if (role === 'learner') return 'learner'
+  if (!role) return ''
+  return role.replace(/-/g, ' ')
+}
+
+/** Calendar day in London, as YYYY-MM-DD. The bell groups a portal’s changes by this day. */
+export function londonDay(date: Date) {
+  if (Number.isNaN(date.getTime())) return ''
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
+}
+
+export function sameVersions(left: VersionState[], right: VersionState[]) {
+  if (left.length !== right.length) return false
+  return left.every((version, index) => version.number === right[index].number && version.prompt === right[index].prompt && version.live === right[index].live)
+}
+
+/**
+ * A portal save adds a version only on that portal’s list, and makes it the one that portal uses.
+ * The HEARTS list is copied through unchanged.
+ */
+export function forkSave(master: VersionState[], portal: VersionState[], draft: Omit<VersionState, 'number' | 'live'>) {
+  const next = nextVersion(portal, draft)
+  const created = next[next.length - 1]
+  return { master: master.map((version) => ({ ...version })), portal: markLive(next, created.number) }
+}
+
+/** Keep means this portal version is the one that portal uses. HEARTS is not written. */
+export function forkKeep(master: VersionState[], portal: VersionState[], number: number) {
+  return { master: master.map((version) => ({ ...version })), portal: markLive(portal, number) }
+}
+
+/**
+ * Roll back the version the portal is using now.
+ * An older saved version comes back. If this was their only change, the portal uses HEARTS again.
+ * Rolling back a version that is not the one in use only records the decision. HEARTS is not written.
+ */
+export function forkRollback(master: VersionState[], portal: VersionState[], number: number) {
+  const target = portal.find((version) => version.number === number)
+  if (!target) throw new Error('That version is not in the history.')
+  const untouched = master.map((version) => ({ ...version }))
+  if (!target.live) return { master: untouched, portal: portal.map((version) => ({ ...version })), fellBackToMaster: false, changedLive: false }
+  const older = portal.filter((version) => version.number < number)
+  if (!older.length) {
+    return { master: untouched, portal: portal.map((version) => ({ ...version, live: false })), fellBackToMaster: true, changedLive: true }
+  }
+  const previous = older.reduce((best, version) => (version.number > best.number ? version : best))
+  return { master: untouched, portal: markLive(portal, previous.number), fellBackToMaster: false, changedLive: true }
+}
+
+/** The instructions a portal run should read. Their live fork wins. Otherwise HEARTS. */
+export function promptForPortal(master: VersionState[], portal: VersionState[]) {
+  return liveVersion(portal) || liveVersion(master)
+}
+
+export function bellKey(portalId: number, day: string) {
+  return `ai-portal-change:${portalId}:${day}`
+}
+
+/** One bell line per portal per day, however many steps they changed. */
+export function bellText(portalName: string, count: number) {
+  const name = portalName.trim() || 'A portal'
+  const label = /portal$/i.test(name) ? name : `${name} portal`
+  const total = Math.max(0, Math.round(count))
+  const steps = total === 1 ? '1 step' : `${total} steps`
+  return {
+    title: `${label} changed ${steps} today`,
+    body:
+      total === 1
+        ? 'A portal admin changed one AI step. Open AI steps to read what it said before and what it says now.'
+        : `A portal admin changed ${total} AI steps today. They are grouped into this one note so the bell does not fill up.`,
+  }
+}
+
+export function countNewSince(times: Array<string | null | undefined>, seenAt: string | null | undefined) {
+  const seen = seenAt ? new Date(seenAt).getTime() : null
+  return times.filter((time) => {
+    if (!time) return false
+    const at = new Date(time).getTime()
+    if (Number.isNaN(at)) return false
+    if (seen == null || Number.isNaN(seen)) return true
+    return at > seen
+  }).length
+}
+
+export function filterActivity<T extends { portalId: number; stepSlug: string; at: string }>(
+  rows: T[],
+  filter: { portalId?: number | null; stepSlug?: string | null; day?: string | null },
+) {
+  return rows.filter((row) => {
+    if (filter.portalId && row.portalId !== filter.portalId) return false
+    if (filter.stepSlug && row.stepSlug !== filter.stepSlug) return false
+    if (filter.day && londonDay(new Date(row.at)) !== filter.day) return false
+    return true
+  })
+}
+
+export function groupPortalChanges<T extends { portalId: number; portalName: string; at: string }>(rows: T[]) {
+  const map = new Map<number, T[]>()
+  for (const row of rows) {
+    const list = map.get(row.portalId) || []
+    list.push(row)
+    map.set(row.portalId, list)
+  }
+  return [...map.entries()]
+    .map(([portalId, items]) => {
+      const sorted = [...items].sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0))
+      return { portalId, portalName: sorted[0]?.portalName || 'A portal', count: sorted.length, lastAt: sorted[0]?.at || '', items: sorted }
+    })
+    .sort((a, b) => (a.lastAt < b.lastAt ? 1 : a.lastAt > b.lastAt ? -1 : 0))
+}
+
+export type SideLine = { kind: 'same' | 'add' | 'del' | 'gap' | 'skip'; text: string }
+
+/** Before on the left, after on the right. A changed line is highlighted on the side it belongs to. */
+export function sideBySide(before: string, after: string): { before: SideLine[]; after: SideLine[] } {
+  const diff = diffLines(before, after)
+  const left: SideLine[] = []
+  const right: SideLine[] = []
+  for (const line of diff) {
+    if (line.kind === 'same') {
+      left.push({ kind: 'same', text: line.text })
+      right.push({ kind: 'same', text: line.text })
+    } else if (line.kind === 'del') {
+      left.push({ kind: 'del', text: line.text })
+      right.push({ kind: 'gap', text: '' })
+    } else {
+      left.push({ kind: 'gap', text: '' })
+      right.push({ kind: 'add', text: line.text })
+    }
+  }
+  return { before: left, after: right }
+}
+
+/** Changed lines, plus a little context. Long stretches that did not change collapse to one skip. */
+export function compactSide(before: string, after: string, context = 1) {
+  const full = sideBySide(before, after)
+  const interesting = new Set<number>()
+  full.before.forEach((line, index) => {
+    if (line.kind === 'same' && full.after[index]?.kind === 'same') return
+    for (let cursor = Math.max(0, index - context); cursor <= Math.min(full.before.length - 1, index + context); cursor++) interesting.add(cursor)
+  })
+  if (!interesting.size) {
+    const sample = full.before.slice(0, 2)
+    return { before: sample, after: full.after.slice(0, 2), omitted: Math.max(0, full.before.length - sample.length) }
+  }
+  const left: SideLine[] = []
+  const right: SideLine[] = []
+  let omitted = 0
+  let skipping = false
+  for (let index = 0; index < full.before.length; index++) {
+    if (!interesting.has(index)) {
+      omitted += 1
+      skipping = true
+      continue
+    }
+    if (skipping) {
+      left.push({ kind: 'skip', text: '…' })
+      right.push({ kind: 'skip', text: '…' })
+      skipping = false
+    }
+    left.push(full.before[index])
+    right.push(full.after[index])
+  }
+  return { before: left, after: right, omitted }
+}
+
+export function editAudit(input: { actorId: number; actorRole: string; portalId: number | null; slug: string; version: number; note: string; authorName: string }) {
+  return {
+    event: 'ai.step.version',
+    fields: {
+      actor: input.actorId,
+      actorRole: input.actorRole,
+      portal: input.portalId || undefined,
+      reason: input.note,
+      detail: {
+        slug: input.slug,
+        version: input.version,
+        authorName: input.authorName,
+        authorRole: input.actorRole,
+        portalId: input.portalId,
+        forked: Boolean(input.portalId),
+      },
+    },
+  }
+}
+
+export function deniedAudit(input: { actorId: number; actorRole: string; portalId?: number | null; reason: string }) {
+  return {
+    event: 'ai.step.denied',
+    fields: {
+      actor: input.actorId,
+      actorRole: input.actorRole,
+      portal: input.portalId || undefined,
+      reason: input.reason,
+      detail: { role: input.actorRole, portalId: input.portalId || null },
+    },
+  }
+}
+
+export function runAudit(input: { actorId: number; actorRole: string; portalId: number | null; slug: string; lessonId: number; ok: boolean; error?: string }) {
+  return {
+    event: 'ai.step.run',
+    fields: {
+      actor: input.actorId,
+      actorRole: input.actorRole,
+      portal: input.portalId || undefined,
+      reason: input.ok ? `Ran ${input.slug}.` : input.error || `The run of ${input.slug} did not work.`,
+      detail: { slug: input.slug, lessonId: input.lessonId, ok: input.ok, portalId: input.portalId },
+    },
+  }
+}

@@ -2,12 +2,13 @@ import Link from 'next/link'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { JobPoll } from '@/components/desk/job-poll'
-import { STEP_PAGE_COPY, diffLines, stepBySlug, stepDoes, stepListBadge, stepPlainLine, type Placeholder } from '@/lib/ai-steps'
+import { STEP_PAGE_COPY, diffLines, roleWords, stepBySlug, stepDoes, stepListBadge, stepPlainLine, type Placeholder } from '@/lib/ai-steps'
 import type { SessionUser } from '@/server/context'
-import { loadDesk, pendingForLesson } from '@/server/ai-desk'
+import { loadDesk, loadPortalActivity, pendingForLesson, touchActivitySeen } from '@/server/ai-desk'
 import type { Ctx } from '../common'
 import { partTitle } from '@/lib/talk-title'
-import { rows, str } from '../common'
+import { ref, rows, str } from '../common'
+import { PortalActivity } from './ai-activity'
 import { HelpTip } from '@/components/desk/help'
 import { PortalAiConfirm } from '@/components/desk/paid-ai'
 import { TOOL } from '@/lib/desk-help'
@@ -43,6 +44,7 @@ async function Frame({
   title,
   intro,
   testId,
+  showOnPhone,
   children,
 }: {
   ctx: Ctx | null
@@ -50,12 +52,13 @@ async function Frame({
   title: string
   intro: string
   testId: string
+  showOnPhone?: boolean
   children: React.ReactNode
 }) {
   if (ctx) return <AdminFrame ctx={ctx} active="ai" title={title} intro={intro} testId={testId}>{children}</AdminFrame>
   const desk = master!
   return (
-    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="ai" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId}>
+    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="ai" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} showOnPhone={showOnPhone}>
       {children}
     </DeskFrame>
   )
@@ -104,9 +107,19 @@ function Grant({ base, desk, master }: { base: string; desk: Awaited<ReturnType<
 
 async function Registry({ ctx, master, base, desk }: { ctx: Ctx | null; master: { payload: Payload; user: SessionUser; query: Query } | null; base: string; desk: Awaited<ReturnType<typeof loadDesk>> }) {
   const payload = ctx?.payload || master!.payload
+  const query = queryOf(ctx, master)
+  const user = ctx?.user || master?.user
+  const isMaster = user?.role === 'master'
+  const portalId = ctx?.portal?.id || null
   const steps = await rows(payload, 'ai-steps', undefined, { limit: 30, sort: 'pipelineOrder' })
+  const forks = !isMaster && portalId ? await rows(payload, 'ai-step-versions', { and: [{ portal: { equals: portalId } }, { live: { equals: true } }] }, { limit: 30 }) : []
+  const forkByStep = new Map(forks.map((fork) => [ref(fork.step), fork]))
+  const seenAt = isMaster ? await touchActivitySeen(payload) : null
+  const activity = isMaster
+    ? await loadPortalActivity(payload, { portalId: Number(query.portal) || null, stepSlug: query.step || null, day: query.on || null }, seenAt)
+    : null
   return (
-    <Frame ctx={ctx} master={master} title="AI steps" intro="Each row is one job that runs after a talk comes in. Open it to see what it does, try one talk, then mark a version live." testId="ai-registry">
+    <Frame ctx={ctx} master={master} title="AI steps" intro="Each row is one job that runs after a talk comes in. Open it to see what it does, try one talk, then mark a version live." testId="ai-registry" showOnPhone={isMaster}>
       <Banner desk={desk} />
       <Grant base={base} desk={desk} master={(ctx?.user || master?.user)?.role === 'master'} />
       <div className="actions" style={{ marginBottom: 14 }}>
@@ -120,12 +133,15 @@ async function Registry({ ctx, master, base, desk }: { ctx: Ctx | null; master: 
               <p data-testid="ai-step-line">{stepPlainLine(str(step.slug)) || str(step.description)}</p>
             </span>
             <span className={styles.meta}>
-              <span className={styles.mark}>v{str(step.liveVersion) || '1'} live</span>
+              <span className={styles.mark}>{forkByStep.get(step.id) ? `Your v${str(forkByStep.get(step.id)?.number)}` : `v${str(step.liveVersion) || '1'} live`}</span>
               <span className={styles.mark} data-testid="ai-step-state">{stepListBadge({ inPipeline: Boolean(step.inPipeline), connected: desk.connected, master: desk.master })}</span>
             </span>
           </Link>
         ))}
       </div>
+      {activity ? (
+        <PortalActivity base={base} query={query} fresh={activity.fresh} hasAny={activity.hasAny} groups={activity.groups} portals={activity.portals} steps={activity.steps} />
+      ) : null}
       {(ctx?.user || master?.user)?.role === 'master' ? (
         <details style={{ marginTop: 18 }}>
           <summary className={styles.quiet}>Who pays</summary>
@@ -141,7 +157,11 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
   const query = queryOf(ctx, master)
   const step = (await rows(payload, 'ai-steps', { slug: { equals: slug } }, { limit: 1 }))[0]
   if (!step) return <Frame ctx={ctx} master={master} title="AI steps" intro="" testId="ai-missing"><p>That step is not in the registry. <Link href={base}>Back to the list</Link>.</p></Frame>
-  const versions = await rows(payload, 'ai-step-versions', { step: { equals: step.id } }, { limit: 100, sort: 'number' })
+  const allVersions = await rows(payload, 'ai-step-versions', { step: { equals: step.id } }, { limit: 100, sort: 'number' })
+  const portalId = ctx?.portal?.id || null
+  const versions = allVersions.filter((version) => (desk.master || !portalId ? ref(version.portal) == null : ref(version.portal) === portalId))
+  const portalLive = !desk.master && portalId ? allVersions.find((version) => ref(version.portal) === portalId && version.live) : null
+  const promptValue = portalLive ? str(portalLive.prompt) : str(step.prompt)
   const lessons = await rows(payload, 'lessons', undefined, { limit: 80, sort: 'title' })
   const courses = await rows(payload, 'courses', undefined, { limit: 40, sort: 'title' })
   const from = versions.find((version) => String(version.number) === query.from) || versions[0]
@@ -175,13 +195,14 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
         <summary>{STEP_PAGE_COPY.techies}</summary>
         <div className={styles.layout}>
         <section className="panel">
-          <header className="light"><h2>{STEP_PAGE_COPY.instructions} <HelpTip topic="ai-prompt">{TOOL.aiPrompt}</HelpTip></h2><span className={styles.mark}>Live version {str(step.liveVersion) || '1'}</span></header>
+          <header className="light"><h2>{STEP_PAGE_COPY.instructions} <HelpTip topic="ai-prompt">{TOOL.aiPrompt}</HelpTip></h2><span className={styles.mark}>{portalLive ? `Your portal’s version ${str(portalLive.number)}` : `Live version ${str(step.liveVersion) || '1'}`}</span></header>
           <div className="body">
+            {!desk.master && canEdit ? <p className={styles.quiet}>Saving this only changes the step for your portal. Other portals, and the HEARTS wording, stay as they are.</p> : null}
             {canEdit ? (
               <form action="/api/ai-steps" method="post" className="form" data-testid="ai-prompt-form">
                 <Hidden fields={{ action: 'save-version', slug, next: here }} />
                 <label className="stack">{STEP_PAGE_COPY.instructions}
-                  <textarea name="prompt" rows={16} defaultValue={str(step.prompt)} data-testid="ai-prompt" />
+                  <textarea name="prompt" rows={16} defaultValue={promptValue} data-testid="ai-prompt" />
                 </label>
                 <div className="actions">
                   <label className="stack">{STEP_PAGE_COPY.who}
@@ -196,11 +217,17 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
                 </div>
                 <p className="hint">{STEP_PAGE_COPY.stickHint} {STEP_PAGE_COPY.runHint}</p>
                 <label className="stack">Note for this version<input name="note" placeholder="What changed, and why" data-testid="ai-note" /></label>
-                <button className="btn teal" type="submit" data-testid="ai-save">Save as a new version</button>
+                <button className="btn teal" type="submit" data-testid="ai-save">{desk.master ? 'Save as a new version' : 'Save for this portal'}</button>
               </form>
             ) : (
-              <pre className={styles.schema} data-testid="ai-prompt-readonly">{str(step.prompt)}</pre>
+              <pre className={styles.schema} data-testid="ai-prompt-readonly">{promptValue}</pre>
             )}
+            {!desk.master && portalLive && canEdit ? (
+              <form action="/api/ai-steps" method="post" style={{ marginTop: 10 }}>
+                <Hidden fields={{ action: 'use-hearts', slug, next: here }} />
+                <button className="btn ghost small" type="submit" data-testid="ai-use-hearts">Use the HEARTS version</button>
+              </form>
+            ) : null}
           </div>
         </section>
         <div>
@@ -228,7 +255,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
               {versions.map((version) => (
                 <tr key={version.id} data-testid="ai-version" data-number={version.number} data-live={version.live ? 'yes' : 'no'}>
                   <td>{version.live ? <b>v{str(version.number)} live</b> : `v${str(version.number)}`}</td>
-                  <td>{str(version.authorName) || '—'}</td>
+                  <td>{str(version.authorName) || '—'}{version.authorRole ? ` · ${roleWords(str(version.authorRole))}` : ''}</td>
                   <td>{when(version.createdAt)}</td>
                   <td>{str(version.note)}</td>
                   <td>
@@ -275,7 +302,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
                 </select>
               </label>
               <label className="stack">Draft prompt
-                <textarea name="prompt" rows={8} defaultValue={str(step.prompt)} data-testid="ai-try-prompt" />
+                <textarea name="prompt" rows={8} defaultValue={promptValue} data-testid="ai-try-prompt" />
               </label>
               <PortalAiConfirm connected={desk.connected} master={desk.master} calls={2} />
               <button className="btn ink" type="submit" data-testid="ai-try-submit">Compare with the live output</button>

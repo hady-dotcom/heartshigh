@@ -27,6 +27,7 @@ import * as migration_20261005_161000_portal_extra_scenes from './20261005_16100
 import * as migration_20261009_191000_portal_ai_connection from './20261009_191000_portal_ai_connection';
 import * as migration_20261011_120000_bring_in_round2 from './20261011_120000_bring_in_round2';
 import * as migration_20261013_190000_teach_seen from './20261013_190000_teach_seen';
+import * as migration_20261014_120000_portal_ai_forks from './20261014_120000_portal_ai_forks';
 
 export const migrations = [
   {
@@ -173,5 +174,10 @@ export const migrations = [
     up: migration_20261013_190000_teach_seen.up,
     down: migration_20261013_190000_teach_seen.down,
     name: '20261013_190000_teach_seen',
+  },
+  {
+    up: migration_20261014_120000_portal_ai_forks.up,
+    down: migration_20261014_120000_portal_ai_forks.down,
+    name: '20261014_120000_portal_ai_forks',
   },
 ];

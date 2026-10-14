@@ -276,7 +276,7 @@ export async function draftQuestionSummary(payload: Payload, actor: FeedbackActo
   } else {
     await ensureSteps(payload)
     try {
-      ran = await runPreparedStep(payload, 'feedback-summary', talk, client)
+      ran = await runPreparedStep(payload, 'feedback-summary', talk, client, portalId)
     } catch (error) {
       ran = { output: {}, problems: ['portal call failed'], versionNumber: 1, mock: true }
       paidFallback = `This portal’s AI account did not answer (${error instanceof Error ? error.message : 'unknown'}), so the built-in summary was used.`
@@ -369,8 +369,8 @@ export async function questionChecksPending(payload: Payload) {
 }
 
 /** Runs the question-value step over imported questions and stores suggested rewrites as drafts only. */
-export async function checkQuestions(payload: Payload, actor: FeedbackActor, client: LlmClient | null = null) {
-  const live = client ? await (async () => { await ensureSteps(payload); return loadLiveStep(payload, 'question-value', client) })() : null
+export async function checkQuestions(payload: Payload, actor: FeedbackActor, client: LlmClient | null = null, portalId: number | null = null) {
+  const live = client ? await (async () => { await ensureSteps(payload); return loadLiveStep(payload, 'question-value', client, portalId) })() : null
   const points = await many(payload, 'engagement-points', { status: { not_equals: 'rejected' } }, 800)
   const lessonIds = [...new Set(points.map((point) => idOf(point.lesson)).filter((id): id is number => Boolean(id)))]
   const lessons = lessonIds.length ? await many(payload, 'lessons', { id: { in: lessonIds } }) : []

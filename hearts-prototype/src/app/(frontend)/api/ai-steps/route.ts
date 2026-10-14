@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 const col = (name: string) => name as 'users'
 import { portalIdOf } from '@/lib/ids'
 import { getSession } from '@/server/context'
-import { actorOf, ensureSteps, publishVersion, saveVersion, setGrant, startJob, tryStep } from '@/server/ai-desk'
+import { actorOf, decidePortalChange, ensureSteps, publishVersion, saveVersion, setGrant, startJob, tryStep, useHeartsVersion } from '@/server/ai-desk'
 import { clientForPortal } from '@/server/portal-ai'
 
 export const dynamic = 'force-dynamic'
@@ -60,21 +60,43 @@ export async function POST(req: Request) {
   try {
     await ensureSteps(payload)
     if (action === 'save-version') {
-      const saved = await saveVersion(payload, actor, {
-        slug: text(form, 'slug'),
-        prompt: text(form, 'prompt'),
-        provider: text(form, 'provider'),
-        model: text(form, 'model'),
-        temperature: Number(text(form, 'temperature')),
-        maxTokens: Number(text(form, 'maxTokens')),
-        note: text(form, 'note'),
-      })
-      return redirectTo(req, next, undefined, `Version ${saved.version.number} saved. It is not live until you mark it.`)
+      const saved = await saveVersion(
+        payload,
+        actor,
+        {
+          slug: text(form, 'slug'),
+          prompt: text(form, 'prompt'),
+          provider: text(form, 'provider'),
+          model: text(form, 'model'),
+          temperature: Number(text(form, 'temperature')),
+          maxTokens: Number(text(form, 'maxTokens')),
+          note: text(form, 'note'),
+        },
+        portalId,
+      )
+      const notice = saved.forked
+        ? `Saved for your portal only. Your portal is using version ${saved.version.number}. HEARTS stays the same for everyone else.`
+        : `Version ${saved.version.number} saved. It is not live until you mark it.`
+      return redirectTo(req, next, undefined, notice)
     }
     if (action === 'mark-live' || action === 'rollback') {
       const number = Number(text(form, 'version'))
-      await publishVersion(payload, actor, text(form, 'slug'), number, action === 'rollback')
+      await publishVersion(payload, actor, text(form, 'slug'), number, action === 'rollback', portalId)
+      if (actor.role === 'portal-admin') {
+        return redirectTo(req, next, undefined, action === 'rollback' ? `Your portal is back on version ${number}. Other portals are unchanged.` : `Your portal is using version ${number}. Other portals are unchanged.`)
+      }
       return redirectTo(req, next, undefined, action === 'rollback' ? `Rolled back to version ${number}.` : `Version ${number} is live.`)
+    }
+    if (action === 'use-hearts') {
+      await useHeartsVersion(payload, actor, text(form, 'slug'), portalId)
+      return redirectTo(req, next, undefined, 'Your portal is using the HEARTS version again.')
+    }
+    if (action === 'portal-keep' || action === 'portal-rollback') {
+      const notice = await decidePortalChange(payload, actor, Number(text(form, 'version')), action === 'portal-keep' ? 'keep' : 'rollback')
+      return redirectTo(req, next, undefined, notice)
+    }
+    if (action === 'portal-example') {
+      return redirectTo(req, next, undefined, 'That was the example. No step was changed.')
     }
     if (action === 'grant') {
       const allowed = text(form, 'value') === 'on'
@@ -84,7 +106,7 @@ export async function POST(req: Request) {
     if (action === 'try') {
       const lesson = Number(text(form, 'lesson'))
       const slug = text(form, 'slug')
-      await tryStep(payload, actor, slug, lesson, text(form, 'prompt'), client)
+      await tryStep(payload, actor, slug, lesson, text(form, 'prompt'), client, portalId)
       const url = new URL(next, 'http://localhost')
       url.searchParams.set('tried', String(lesson))
       return redirectTo(req, `${url.pathname}${url.search}`, undefined, 'Compared with the live version. Nothing was saved for learners.')
@@ -94,7 +116,7 @@ export async function POST(req: Request) {
       const scope = text(form, 'scope') || 'talk'
       const lessonIds = ids(form)
       const courseId = Number(text(form, 'course')) || undefined
-      const { job, run } = await startJob(payload, actor, { slug, scope, lessonIds, courseId, gapMs: Number(text(form, 'gap')) || 0, portalId: client ? portalId : null })
+      const { job, run } = await startJob(payload, actor, { slug, scope, lessonIds, courseId, gapMs: Number(text(form, 'gap')) || 0, portalId })
       if (text(form, 'wait') === '1') await run()
       else {
         void run().catch(async (error: unknown) => {

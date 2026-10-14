@@ -2,9 +2,20 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   STEP_SPECS,
+  bellKey,
+  bellText,
   canEditSteps,
   canViewSteps,
+  compactSide,
+  countNewSince,
+  deniedAudit,
   diffLines,
+  editAudit,
+  filterActivity,
+  forkKeep,
+  forkRollback,
+  forkSave,
+  groupPortalChanges,
   liveVersion,
   markLive,
   mockBanner,
@@ -13,8 +24,12 @@ import {
   placeholderProblems,
   pointProtect,
   portalRun,
+  promptForPortal,
+  runAudit,
   runQueue,
+  sameVersions,
   schemaProblems,
+  sideBySide,
   stepBySlug,
   stepListBadge,
   STEP_PAGE_COPY,
@@ -166,6 +181,131 @@ test('a job reports progress after each talk and keeps the error', async () => {
   assert.equal(result.failed, 1)
   assert.match(result.results[1].error || '', /no transcript/)
   assert.equal(result.results[0].ok, true)
+})
+
+const hearts = (prompt: string, live = true): VersionState => ({
+  number: 1,
+  prompt,
+  provider: 'anthropic',
+  model: 'm',
+  temperature: 0,
+  maxTokens: 100,
+  note: 'First version, from the HEARTS prompt set.',
+  authorName: 'HEARTS',
+  live,
+})
+
+const draft = (prompt: string, note: string): Omit<VersionState, 'number' | 'live'> => ({
+  prompt,
+  provider: 'anthropic',
+  model: 'm',
+  temperature: 0,
+  maxTokens: 100,
+  note,
+  authorName: 'Amina Yusuf',
+})
+
+test('a portal fork does not change the HEARTS version, and a run reads the fork', () => {
+  const master = [hearts('Copy the speaker’s words.')]
+  const first = forkSave(master, [], draft('Copy the speaker’s words.\nPrefer a line a stranger would repeat.', 'Asked for a line a stranger would repeat'))
+  assert.equal(sameVersions(master, first.master), true)
+  assert.equal(liveVersion(first.master)?.prompt, 'Copy the speaker’s words.')
+  assert.equal(liveVersion(first.portal)?.authorName, 'Amina Yusuf')
+  assert.equal(liveVersion(first.portal)?.note, 'Asked for a line a stranger would repeat')
+  assert.equal(liveVersion(first.portal)?.number, 1)
+  assert.equal(promptForPortal(first.master, first.portal)?.prompt, liveVersion(first.portal)?.prompt)
+  assert.notEqual(promptForPortal(first.master, first.portal)?.prompt, liveVersion(first.master)?.prompt)
+
+  const second = forkSave(first.master, first.portal, draft('Shorter still.', 'Cut it down'))
+  assert.equal(sameVersions(master, second.master), true)
+  assert.equal(liveVersion(second.portal)?.number, 2)
+  assert.equal(second.portal.find((version) => version.number === 1)?.live, false)
+
+  const kept = forkKeep(second.master, second.portal, 1)
+  assert.equal(sameVersions(master, kept.master), true)
+  assert.equal(liveVersion(kept.portal)?.number, 1)
+  assert.equal(liveVersion(kept.master)?.prompt, 'Copy the speaker’s words.')
+})
+
+test('rolling back the only portal fork returns that portal to HEARTS', () => {
+  const master = [hearts('HEARTS wording')]
+  const saved = forkSave(master, [], draft('Portal wording', 'A local change'))
+  const rolled = forkRollback(saved.master, saved.portal, 1)
+  assert.equal(rolled.fellBackToMaster, true)
+  assert.equal(liveVersion(rolled.portal), null)
+  assert.equal(sameVersions(master, rolled.master), true)
+  assert.equal(promptForPortal(rolled.master, rolled.portal)?.prompt, 'HEARTS wording')
+  assert.throws(() => forkRollback(master, saved.portal, 9), /not in the history/)
+})
+
+test('rolling back the latest portal fork restores the previous portal wording', () => {
+  const master = [hearts('HEARTS wording')]
+  const first = forkSave(master, [], draft('First local wording', 'First')).portal
+  const second = forkSave(master, first, draft('Second local wording', 'Second')).portal
+  const rolled = forkRollback(master, second, 2)
+  assert.equal(rolled.fellBackToMaster, false)
+  assert.equal(rolled.changedLive, true)
+  assert.equal(liveVersion(rolled.portal)?.prompt, 'First local wording')
+  assert.equal(liveVersion(rolled.master)?.prompt, 'HEARTS wording')
+  const untouched = forkRollback(master, second, 1)
+  assert.equal(untouched.changedLive, false)
+  assert.equal(liveVersion(untouched.portal)?.prompt, 'Second local wording')
+})
+
+test('edits, runs and denied edits are ai. audit entries, and a portal edit records who and the note', () => {
+  const edit = editAudit({ actorId: 4, actorRole: 'portal-admin', portalId: 2, slug: 'hors-doeuvre', version: 1, note: 'Asked for a shorter opening', authorName: 'Amina Yusuf' })
+  assert.equal(edit.event, 'ai.step.version')
+  assert.equal(edit.fields.actorRole, 'portal-admin')
+  assert.equal(edit.fields.portal, 2)
+  assert.equal(edit.fields.reason, 'Asked for a shorter opening')
+  const detail = edit.fields.detail as { authorName: string; authorRole: string; forked: boolean }
+  assert.equal(detail.authorName, 'Amina Yusuf')
+  assert.equal(detail.authorRole, 'portal-admin')
+  assert.equal(detail.forked, true)
+
+  const denied = deniedAudit({ actorId: 4, actorRole: 'portal-admin', portalId: 2, reason: 'The master has not granted editing.' })
+  assert.equal(denied.event, 'ai.step.denied')
+  assert.match(denied.fields.reason, /not granted/)
+
+  const run = runAudit({ actorId: 4, actorRole: 'portal-admin', portalId: 2, slug: 'hors-doeuvre', lessonId: 9, ok: false, error: 'This talk has no transcript yet.' })
+  assert.equal(run.event, 'ai.step.run')
+  assert.equal((run.fields.detail as { ok: boolean }).ok, false)
+  assert.match(run.fields.reason, /no transcript/)
+  assert.equal([edit.event, denied.event, run.event].every((event) => event.startsWith('ai.')), true)
+})
+
+test('portal changes group by portal, and one hundred edits share one bell for that day', () => {
+  const rows = [
+    { portalId: 2, portalName: 'Leeds', stepSlug: 'rubric', at: '2026-10-14T09:00:00.000Z' },
+    { portalId: 1, portalName: 'East London Mosque', stepSlug: 'rubric', at: '2026-10-14T08:00:00.000Z' },
+    { portalId: 2, portalName: 'Leeds', stepSlug: 'hors-doeuvre', at: '2026-10-14T12:00:00.000Z' },
+  ]
+  const groups = groupPortalChanges(rows)
+  assert.equal(groups[0].portalName, 'Leeds')
+  assert.equal(groups[0].count, 2)
+  assert.deepEqual(groups[0].items.map((item) => item.stepSlug), ['hors-doeuvre', 'rubric'])
+  const leedsOnly = filterActivity(rows, { portalId: 2, stepSlug: 'hors-doeuvre', day: '2026-10-14' })
+  assert.equal(leedsOnly.length, 1)
+  assert.equal(filterActivity(rows, { day: '2026-10-15' }).length, 0)
+  assert.equal(countNewSince(rows.map((row) => row.at), '2026-10-14T10:00:00.000Z'), 1)
+  assert.equal(countNewSince(rows.map((row) => row.at), null), 3)
+
+  const keys = new Set(Array.from({ length: 100 }, () => bellKey(2, '2026-10-14')))
+  assert.equal(keys.size, 1)
+  assert.equal(bellText('Leeds', 12).title, 'Leeds portal changed 12 steps today')
+  assert.match(bellText('Leeds', 12).body, /grouped/)
+  assert.equal(bellText('East London Mosque', 1).title, 'East London Mosque portal changed 1 step today')
+})
+
+test('a side by side diff highlights the added and removed lines', () => {
+  const pair = sideBySide('keep\nold line\nstay', 'keep\nnew line\nstay')
+  assert.equal(pair.before.find((line) => line.kind === 'del')?.text, 'old line')
+  assert.equal(pair.after.find((line) => line.kind === 'add')?.text, 'new line')
+  const compact = compactSide(`${'same\n'.repeat(30)}old`, `${'same\n'.repeat(30)}new`)
+  assert.equal(compact.before.some((line) => line.kind === 'del'), true)
+  assert.equal(compact.after.some((line) => line.kind === 'add'), true)
+  assert.equal(compact.before.filter((line) => line.kind === 'same').length < 10, true)
+  assert.ok(compact.omitted > 10)
 })
 
 test('portal admins can read, and can edit only after the master grants it', () => {
