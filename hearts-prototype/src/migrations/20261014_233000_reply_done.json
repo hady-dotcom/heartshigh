@@ -2210,6 +2210,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "transcript_edits": {
+          "name": "transcript_edits",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "source_url": {
           "name": "source_url",
           "type": "varchar",
@@ -23774,6 +23780,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "b58066f5-2330-4062-c266-50636f000007",
+  "id": "c69177a6-2330-4173-d377-61747a000008",
   "prevId": "d4a7e2b1-2100-4c18-9a44-0c14e2100001"
 }
