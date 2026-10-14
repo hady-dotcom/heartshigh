@@ -1,6 +1,7 @@
 'use client'
 
 import { useId, useState, type ReactNode } from 'react'
+import { EXPERIMENT_HELP } from '@/lib/desk-help'
 import styles from './help.module.css'
 
 export { HelpTip, type HelpTipProps } from '@/components/help-tip'
@@ -35,12 +36,13 @@ export function DeskHelp({
 export function ExperimentHelp() {
   return (
     <DeskHelp>
-      <p>A test shows some learners one wording or layout and others another, then counts what they do. Learners are never told they are in a test.</p>
-      <p><b>Start</b> turns a draft on. From then on, learners see one of the versions.</p>
-      <p><b>Hold back</b> keeps a version from running. Use it when a suggested line is not ready.</p>
-      <p><b>Make the winner the default</b> puts the winning words in place for everyone, once you are sure.</p>
-      <p><b>Kill switch</b> stops every running test at once. Everyone sees the usual words again.</p>
-      <p>A sheikh’s words are never tested. Talk content, Qur’an, hadith, and the meaning of a question stay as they are.</p>
+      {EXPERIMENT_HELP.map((line) => (
+        <p key={line.body}>
+          {line.title ? <b>{line.title}</b> : null}
+          {line.title ? ' ' : null}
+          {line.body}
+        </p>
+      ))}
     </DeskHelp>
   )
 }

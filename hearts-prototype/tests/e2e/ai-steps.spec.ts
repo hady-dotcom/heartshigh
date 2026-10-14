@@ -81,6 +81,8 @@ test.describe('AI steps', () => {
     await page.screenshot({ path: `${SHOTS}/ai-registry.png`, fullPage: true })
 
     await page.getByTestId('ai-step').filter({ hasText: "Hors d'oeuvre picker" }).click()
+    await expect(page.getByTestId('ai-what')).toContainText('What this does')
+    await page.getByTestId('ai-for-techies').locator('summary').click()
     await expect(page.getByTestId('ai-placeholders')).toContainText('{{TRANSCRIPT}}')
     const prompt = page.getByTestId('ai-prompt')
     const original = await prompt.inputValue()
@@ -191,6 +193,7 @@ test.describe('AI steps', () => {
     await expect(page.getByTestId('ai-registry')).toBeVisible()
     await expect(page.getByTestId('ai-step')).toHaveCount(13)
     await page.getByTestId('ai-step').first().click()
+    await page.getByTestId('ai-for-techies').locator('summary').click()
     await expect(page.getByTestId('ai-prompt-readonly')).toBeVisible()
     await expect(page.getByTestId('ai-save')).toHaveCount(0)
     const denied = await ai(admin, { action: 'save-version', slug: 'rubric', prompt: 'no', note: 'should fail', provider: 'anthropic', model: 'x', temperature: '0', maxTokens: '200', next: '/p/east-london/admin/ai/rubric' })

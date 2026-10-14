@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { JobPoll } from '@/components/desk/job-poll'
-import { diffLines, stepListBadge, stepPlainLine, type Placeholder } from '@/lib/ai-steps'
+import { STEP_PAGE_COPY, diffLines, stepBySlug, stepDoes, stepListBadge, stepPlainLine, type Placeholder } from '@/lib/ai-steps'
 import type { SessionUser } from '@/server/context'
 import { loadDesk, pendingForLesson } from '@/server/ai-desk'
 import type { Ctx } from '../common'
@@ -106,11 +106,11 @@ async function Registry({ ctx, master, base, desk }: { ctx: Ctx | null; master: 
   const payload = ctx?.payload || master!.payload
   const steps = await rows(payload, 'ai-steps', undefined, { limit: 30, sort: 'pipelineOrder' })
   return (
-    <Frame ctx={ctx} master={master} title="AI steps" intro="Each step is one job after a talk is brought in. Edit the prompt, try it on a single talk, then mark a version live. A run uses your portal’s own AI account when one is connected. Otherwise the built-in drafts are used." testId="ai-registry">
+    <Frame ctx={ctx} master={master} title="AI steps" intro="Each row is one job that runs after a talk comes in. Open it to see what it does, try one talk, then mark a version live." testId="ai-registry">
       <Banner desk={desk} />
       <Grant base={base} desk={desk} master={(ctx?.user || master?.user)?.role === 'master'} />
       <div className="actions" style={{ marginBottom: 14 }}>
-        <Link className="btn ghost small" href={`${base}/ingest`} data-testid="ai-ingest-link">Ingest view</Link>
+        <Link className="btn ghost small" href={`${base}/ingest`} data-testid="ai-ingest-link">Each talk</Link>
       </div>
       <div className={styles.list}>
         {steps.map((step) => (
@@ -128,8 +128,8 @@ async function Registry({ ctx, master, base, desk }: { ctx: Ctx | null; master: 
       </div>
       {(ctx?.user || master?.user)?.role === 'master' ? (
         <details style={{ marginTop: 18 }}>
-          <summary className={styles.quiet}>Where a model call is billed</summary>
-          <p className={styles.quiet} data-testid="ai-env">A key in the server environment is ignored. A portal admin connects this portal’s own AI account in Settings. The master desk never calls a model.</p>
+          <summary className={styles.quiet}>Who pays</summary>
+          <p className={styles.quiet} data-testid="ai-env">A key in the server environment is ignored. A portal admin connects this portal’s own AI account in Settings. The master desk never sends a talk out.</p>
         </details>
       ) : null}
     </Frame>
@@ -150,35 +150,51 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
   const triedLesson = Number(query.tried)
   const attempt = triedLesson ? (await rows(payload, 'ai-step-outputs', { and: [{ stepSlug: { equals: slug } }, { lesson: { equals: triedLesson } }, { mode: { equals: 'try' } }] }, { limit: 1, sort: '-createdAt' }))[0] : null
   const compared = (attempt?.output || null) as { draft?: unknown; live?: unknown; draftProblems?: string[]; liveProblems?: string[] } | null
-  const placeholders = (step.placeholders as Placeholder[]) || []
+  const spec = stepBySlug(slug)
+  const placeholders = (spec ? spec.placeholders : (step.placeholders as Placeholder[])) || []
+  const fills = spec?.fills || str(step.fills)
+  const order = spec?.pipelineOrder ?? Number(step.pipelineOrder || 0)
+  const does = stepDoes(slug)
   const canEdit = desk.canEdit
   const here = `${base}/${slug}`
   return (
     <Frame ctx={ctx} master={master} title={str(step.name)} intro={stepPlainLine(slug) || str(step.description)} testId="ai-step-page">
       <Banner desk={desk} />
       <p style={{ marginTop: 0 }}><Link href={base}>‹ All steps</Link></p>
-      <div className={styles.layout}>
+      <section className="panel" data-testid="ai-what">
+        <header className="light"><h2>{STEP_PAGE_COPY.doesTitle}</h2></header>
+        <div className="body">
+          <ul className={styles.doesList}>
+            {does.map((line) => <li key={line}>{line}</li>)}
+          </ul>
+          <h3 style={{ fontSize: 14, margin: '14px 0 6px' }}>{STEP_PAGE_COPY.lands}</h3>
+          <p className={styles.quiet} data-testid="ai-fills">{fills}</p>
+        </div>
+      </section>
+      <details className={styles.techies} data-testid="ai-for-techies">
+        <summary>{STEP_PAGE_COPY.techies}</summary>
+        <div className={styles.layout}>
         <section className="panel">
-          <header className="light"><h2>Prompt <HelpTip topic="ai-prompt">{TOOL.aiPrompt}</HelpTip></h2><span className={styles.mark}>Live version {str(step.liveVersion) || '1'}</span></header>
+          <header className="light"><h2>{STEP_PAGE_COPY.instructions} <HelpTip topic="ai-prompt">{TOOL.aiPrompt}</HelpTip></h2><span className={styles.mark}>Live version {str(step.liveVersion) || '1'}</span></header>
           <div className="body">
             {canEdit ? (
               <form action="/api/ai-steps" method="post" className="form" data-testid="ai-prompt-form">
                 <Hidden fields={{ action: 'save-version', slug, next: here }} />
-                <label className="stack">Prompt
+                <label className="stack">{STEP_PAGE_COPY.instructions}
                   <textarea name="prompt" rows={16} defaultValue={str(step.prompt)} data-testid="ai-prompt" />
                 </label>
                 <div className="actions">
-                  <label className="stack">Provider
+                  <label className="stack">{STEP_PAGE_COPY.who}
                     <select name="provider" defaultValue={str(step.provider) || 'anthropic'} data-testid="ai-provider">
                       <option value="anthropic">Anthropic</option>
                       <option value="openai">OpenAI</option>
                     </select>
                   </label>
-                  <label className="stack">Model<input name="model" defaultValue={str(step.model)} data-testid="ai-model" /></label>
-                  <label className="stack">Temperature<input name="temperature" type="number" step="0.1" min="0" max="1" defaultValue={String(step.temperature ?? 0)} /></label>
-                  <label className="stack">Max tokens<input name="maxTokens" type="number" min="64" max="8000" defaultValue={String(step.maxTokens ?? 1200)} /></label>
+                  <label className="stack">{STEP_PAGE_COPY.helper}<input name="model" defaultValue={str(step.model)} data-testid="ai-model" /></label>
+                  <label className="stack">{STEP_PAGE_COPY.stick}<input name="temperature" type="number" step="0.1" min="0" max="1" defaultValue={String(step.temperature ?? 0)} /></label>
+                  <label className="stack">{STEP_PAGE_COPY.length}<input name="maxTokens" type="number" min="64" max="8000" defaultValue={String(step.maxTokens ?? 1200)} /></label>
                 </div>
-                <p className="hint">A live run uses the model saved with this portal’s own AI account. The names above are only labels on the prompt card. The master desk does not call a model.</p>
+                <p className="hint">{STEP_PAGE_COPY.stickHint} {STEP_PAGE_COPY.runHint}</p>
                 <label className="stack">Note for this version<input name="note" placeholder="What changed, and why" data-testid="ai-note" /></label>
                 <button className="btn teal" type="submit" data-testid="ai-save">Save as a new version</button>
               </form>
@@ -189,19 +205,19 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
         </section>
         <div>
           <section className="panel">
-            <header className="light"><h2>Where it goes</h2></header>
+            <header className="light"><h2>{STEP_PAGE_COPY.blanks}</h2></header>
             <div className="body">
-              <p className={styles.quiet} data-testid="ai-fills">{str(step.fills)}</p>
-              <h3 style={{ fontSize: 14, margin: '14px 0 6px' }}>Placeholders</h3>
+              <p className={styles.quiet} data-testid="ai-order">{STEP_PAGE_COPY.order}: {order}. {STEP_PAGE_COPY.orderNote}</p>
               <ul className={styles.quiet} data-testid="ai-placeholders">
-                {placeholders.length ? placeholders.map((item) => <li key={item.token}><code>{`{{${item.token}}}`}</code>{item.required ? '' : ' (optional)'} — {item.meaning}</li>) : <li>This step has no placeholders.</li>}
+                {placeholders.length ? placeholders.map((item) => <li key={item.token}><code>{`{{${item.token}}}`}</code>{item.required ? '' : ' (optional)'} — {item.meaning}</li>) : <li>{STEP_PAGE_COPY.noBlanks}</li>}
               </ul>
-              <h3 style={{ fontSize: 14, margin: '14px 0 6px' }}>Output it must return</h3>
+              <h3 style={{ fontSize: 14, margin: '14px 0 6px' }}>{STEP_PAGE_COPY.shape}</h3>
               <pre className={styles.schema} data-testid="ai-schema">{pretty(step.outputSchema)}</pre>
             </div>
           </section>
         </div>
-      </div>
+        </div>
+      </details>
 
       <section className="panel" style={{ marginTop: 18 }} data-testid="ai-versions">
         <header className="light"><h2>Versions</h2></header>
@@ -250,7 +266,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
         <section className="panel" style={{ marginTop: 18 }} data-testid="ai-try">
           <header className="light"><h2>Try it on one talk</h2></header>
           <div className="body">
-            <p className="hint">Runs the draft below beside the live version. Nothing is written to a tier, a pop-up, or a learner. Saving a version is separate, and does not make it live.</p>
+            <p className="hint">Runs the draft below beside the live version. Nothing is written onto a clip, a question, or a learner’s page. Saving a version is separate, and does not make it live.</p>
             <form action="/api/ai-steps" method="post" className="form" data-testid="ai-try-draft">
               <Hidden fields={{ action: 'try', slug, next: here }} />
               <label className="stack">Talk
@@ -387,7 +403,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
   const lessons = await rows(payload, 'lessons', undefined, { limit: 200, sort: 'title' })
   if (!lessonId) {
     return (
-      <Frame ctx={ctx} master={master} title="Ingest" intro="One row per talk. Open it to see each step, then run it or send the draft to Review." testId="ai-ingest">
+      <Frame ctx={ctx} master={master} title="Each talk" intro="One row per talk. Open it to see each job, then run it or send the draft to Review." testId="ai-ingest">
         <Banner desk={desk} />
         <p style={{ marginTop: 0 }}><Link href={base}>‹ AI steps</Link></p>
         <div className={styles.list}>
@@ -405,7 +421,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
     )
   }
   const lesson = lessons.find((row) => row.id === lessonId) || (await rows(payload, 'lessons', { id: { equals: lessonId } }, { limit: 1 }))[0]
-  if (!lesson) return <Frame ctx={ctx} master={master} title="Ingest" intro="" testId="ai-ingest-missing"><p>That talk was not found.</p></Frame>
+  if (!lesson) return <Frame ctx={ctx} master={master} title="Each talk" intro="" testId="ai-ingest-missing"><p>That talk was not found.</p></Frame>
   const [outputs, tierRows, points, jobs] = await Promise.all([
     rows(payload, 'ai-step-outputs', { lesson: { equals: lesson.id } }, { limit: 200, sort: '-createdAt' }),
     rows(payload, 'talk-tiers', { lesson: { equals: lesson.id } }, { limit: 1 }),
@@ -416,7 +432,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
   const courses = await rows(payload, 'courses', undefined, { limit: 40 })
   const pending = await pendingForLesson(payload, lesson.id)
   return (
-    <Frame ctx={ctx} master={master} title={partTitle(lesson)} intro="Each step in the order it runs. A draft waits for a person. A failed step stays on this card with its error, and the rest of the talk is left alone." testId="ai-ingest-talk">
+    <Frame ctx={ctx} master={master} title={partTitle(lesson)} intro="Each job in the order it runs. A draft waits for a person. If one job fails, the error stays on this card and the rest of the talk is left alone." testId="ai-ingest-talk">
       <Banner desk={desk} />
       <p style={{ marginTop: 0 }}><Link href={`${base}/ingest`}>‹ All talks</Link></p>
       {pending.length ? <p className="hint" data-testid="new-draft-available">New draft available. Approved and hand-edited work on this talk was not overwritten.</p> : null}
@@ -424,7 +440,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
         <form action="/api/ai-steps" method="post" className="actions" style={{ marginBottom: 14 }}>
           <Hidden fields={{ action: 'start-job', slug: 'pipeline', scope: 'talk', lesson: lesson.id, jobBase: base, next: `${base}/ingest/${lesson.id}` }} />
           <PortalAiConfirm connected={desk.connected} master={desk.master} calls={steps.length} />
-          <button className="btn ink" type="submit" data-testid="ai-run-pipeline">Run the whole pipeline</button>
+          <button className="btn ink" type="submit" data-testid="ai-run-pipeline">Run every job on this talk</button>
         </form>
       ) : null}
       <div className={styles.pipe}>
@@ -443,7 +459,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
               <span className={styles.mark} data-tone={tone} data-testid="ingest-status">{label}</span>
               <span>
                 <b>{str(step.name)}</b>
-                <div className={styles.note}>{str(step.fills)}</div>
+                <div className={styles.note}>{stepBySlug(str(step.slug))?.fills || str(step.fills)}</div>
                 {latest?.error ? <div className={styles.note} data-testid="ingest-error">{str(latest.error)}</div> : null}
                 {latest?.disposition === 'pending' ? <div className={styles.note}>New draft available.</div> : null}
               </span>
@@ -462,7 +478,7 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
         })}
       </div>
       {desk.canEdit ? <div style={{ marginTop: 18 }}><RerunForm base={base} slug="pipeline" lessons={[lesson, ...lessons.filter((row) => row.id !== lesson.id)].slice(0, 40)} courses={courses} lessonId={lesson.id} connected={desk.connected} master={desk.master} perTalk={steps.length} /></div> : null}
-      <p className="hint" style={{ marginTop: 8 }}>The form under the list runs the whole pipeline on a wider scope. This talk is already selected in it.</p>
+      <p className="hint" style={{ marginTop: 8 }}>The form under the list runs every job on a wider set. This talk is already selected in it.</p>
     </Frame>
   )
 }
