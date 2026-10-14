@@ -119,6 +119,8 @@
 .btn.line-light { background: transparent; color: #fff; border-color: rgba(255,255,255,0.5); }
 .btn.danger { background: #fff; color: #b3354a; border-color: #f0c3cb; }
 .btn.small { min-height: 32px; padding: 0 12px; font-size: 13px; border-radius: 10px; }
+.journal-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 14px; }
+.journal-waiting { flex-basis: 100%; margin: 0; }
 .btn[disabled] { opacity: 0.5; }
 .kv { display: grid; grid-template-columns: 1fr auto; gap: 10px 14px; align-items: center; }
 .count-tile { display: flex; align-items: center; justify-content: space-between; background: var(--field); border-radius: 12px; padding: 12px 14px; font-weight: 600; font-size: 14px; }

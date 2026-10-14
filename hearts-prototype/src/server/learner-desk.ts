@@ -1,5 +1,6 @@
 import type { Payload, Where } from 'payload'
 import { idOf } from '@/lib/ids'
+import { JOURNAL_LABEL } from '@/lib/journal-copy'
 import { flattenSlots, planAcrossDays, studyDates } from '@/lib/schedule'
 import { lessonsByCourseOrder } from '@/lib/slot-course'
 import { sortParts } from '@/lib/part-order'
@@ -308,7 +309,7 @@ export async function deleteLearnerAccount(payload: Payload, actor: DeskActor, l
     detail: { learnerId: learner.id, name, email: learner.email },
   })
   await payload.delete({ collection: 'users', id: learner.id, overrideAccess: true })
-  return { notice: `${name} is deleted. Their diary, study plans and answers are gone. Charts keep the numbers, without their name.` }
+  return { notice: `${name} is deleted. Their ${JOURNAL_LABEL.one.toLowerCase()}, study plans and answers are gone. Charts keep the numbers, without their name.` }
 }
 
 async function eachAllowed(payload: Payload, actor: DeskActor, learnerIds: number[], action: LearnerAction) {
@@ -363,7 +364,7 @@ export async function bulkLearnerAction(
     const result = await deleteLearnerAccount(payload, actor, learner.id, String(learner.name || ''))
     if (result.error) return result
   }
-  return { notice: `${people.length} ${people.length === 1 ? 'account is' : 'accounts are'} deleted, with their diary, plans and answers.` }
+  return { notice: `${people.length} ${people.length === 1 ? 'account is' : 'accounts are'} deleted, with their ${JOURNAL_LABEL.one.toLowerCase()}, plans and answers.` }
 }
 
 async function loadPlan(payload: Payload, id: number) {
@@ -468,7 +469,7 @@ export async function deleteDiary(payload: Payload, actor: DeskActor, entryId: n
   const entry = entryId
     ? ((await payload.findByID({ collection: 'workbook-entries', id: entryId, overrideAccess: true, depth: 0 }).catch(() => null)) as Doc | null)
     : null
-  if (!entry) return { error: 'That diary entry could not be found.' }
+  if (!entry) return { error: `That ${JOURNAL_LABEL.one.toLowerCase()} entry could not be found.` }
   const portal = idOf(entry.portal)
   const reason = diaryDeleteRefusal(actorScope(actor), portal)
   if (reason) {
@@ -481,7 +482,7 @@ export async function deleteDiary(payload: Payload, actor: DeskActor, entryId: n
     portal,
     detail: { entryId: entry.id, learnerId: idOf(entry.user) },
   })
-  return { notice: 'The diary entry is deleted.' }
+  return { notice: `The ${JOURNAL_LABEL.one.toLowerCase()} entry is deleted.` }
 }
 
 export function diaryWords(entry: { consent?: boolean | null; body?: unknown }, answer?: { keepPrivate?: boolean | null } | null) {

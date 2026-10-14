@@ -207,11 +207,53 @@ test('a nav change reaches the phone and a learner note comes back up', async ({
   await page.getByTestId('demo-nav-teacher-diaries').click()
   await expect(page.getByTestId('demo-live-teacher-diaries')).toContainText('I wrote this on the phone.')
   await page.getByTestId('demo-nav-portal-overview').click()
-  await expect(page.getByTestId('demo-activity')).toContainText('Abdallah wrote in the diary.')
+  await expect(page.getByTestId('demo-activity')).toContainText('Abdallah wrote in the journal.')
   await page.getByTestId('demo-nav-master-library').click()
   await expect(page.getByTestId('demo-course-title')).toBeVisible()
   await expect(page.getByTestId('demo-num-courses')).toHaveText('3')
 })
+
+async function press(page: Page, testId: string) {
+  const button = page.getByTestId(testId)
+  if (await button.isVisible()) await button.click()
+  else await button.evaluate((node: HTMLElement) => node.click())
+}
+
+test('journal lines on the demo show a time, and staff can sort them', async ({ page }) => {
+  test.setTimeout(180_000)
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 800 })
+    await signIn(page, 'master@hearts.test', 'hearts-master', '/demo-stage')
+    await showCast(page)
+    await expect(page.getByTestId('demo-diary-body')).toHaveAttribute('aria-label', 'Journal')
+    await expect(page.getByTestId('demo-diary-body')).toHaveAttribute('placeholder', 'Write a journal line')
+    await expect(page.getByTestId('demo-add-diary')).toHaveText('Save journal line')
+    await expect(page.getByTestId('demo-journal-when')).toHaveText('Sun 11 Oct, 10:00 AM')
+    await expect(page.getByTestId('demo-nav-teacher-diaries')).toHaveText('Journals')
+    await press(page, 'demo-nav-teacher-diaries')
+    const list = page.getByTestId('demo-live-teacher-diaries')
+    await expect(list.getByTestId('journal-when')).toHaveText('Sun 11 Oct, 10:00 AM')
+    await expect(list.getByTestId('journal-newest')).toHaveAttribute('aria-pressed', 'true')
+    await expect(list.getByTestId('journal-oldest')).toHaveCount(1)
+    await expect(list.getByTestId('journal-jump-top')).toHaveCount(1)
+    await expect(list.getByTestId('journal-jump-bottom')).toHaveCount(1)
+    await expect(list.getByTestId('journal-unanswered')).toHaveCount(0)
+    await press(page, 'journal-oldest')
+    await expect(list.getByTestId('journal-list')).toHaveAttribute('data-order', 'oldest')
+    await press(page, 'journal-jump-bottom')
+    await press(page, 'journal-jump-top')
+    await press(page, 'demo-nav-master-diaries')
+    await expect(page.getByTestId('demo-nav-master-diaries')).toHaveText('Journals')
+    await expect(page.getByTestId('demo-live-master-diaries').getByTestId('journal-when')).toHaveText('Sun 11 Oct, 10:00 AM')
+    await press(page, 'demo-nav-portal-diaries')
+    await expect(page.getByTestId('demo-nav-portal-diaries')).toHaveText('Journals')
+    await signOutDemo(page)
+  }
+})
+
+async function signOutDemo(page: Page) {
+  await page.request.post('/api/hearts', { form: { action: 'logout', next: '/login' } })
+}
 
 test('a learner cannot open the demo stage', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })

@@ -1,3 +1,5 @@
+import { JOURNAL_LABEL } from './journal-copy'
+
 /** One plain line per desk page: what it is for, and who sees the result, plus the main action. */
 
 export type DeskPrimary = { label: string; href: string }
@@ -16,7 +18,7 @@ const MASTER: Record<string, Lead> = {
     href: '/master/create',
   },
   diaries: {
-    line: 'Workbook entries across the portals. Learners see their own words. A private entry stays hidden here.',
+    line: `${JOURNAL_LABEL.many} across the portals. Learners see their own words. A private entry stays hidden here.`,
     label: 'Open learners',
     href: '/master/learners',
   },
@@ -165,7 +167,7 @@ const PORTAL: Record<string, { line: string; label: string; path: string }> = {
     path: '#learner-list',
   },
   diaries: {
-    line: 'Workbook entries in this portal. Learners see their own words. A private entry stays hidden here.',
+    line: `${JOURNAL_LABEL.many} in this portal. Learners see their own words. A private entry stays hidden here.`,
     label: 'Open learners',
     path: 'teach',
   },

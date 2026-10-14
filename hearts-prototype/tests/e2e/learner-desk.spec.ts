@@ -40,6 +40,7 @@ test.describe('learner, plan and diary desk actions', () => {
       await expect(page.getByTestId('learner-progress')).toBeVisible()
       await expect(page.getByTestId('learner-plans')).toBeVisible()
       await expect(page.getByTestId('learner-diaries')).toBeVisible()
+      await expect(page.getByTestId('learner-facts')).toContainText('Journal entries')
       await expect(page.getByTestId('move-portal')).toHaveCount(0)
       await expect(page.getByTestId('reset-password')).toBeVisible()
 
@@ -48,6 +49,27 @@ test.describe('learner, plan and diary desk actions', () => {
       await expect(page.getByTestId('plan-bulk')).toBeVisible()
 
       await page.goto('/p/east-london/admin/diaries')
+      await expect(page.getByRole('heading', { level: 1, name: 'Journals' })).toBeVisible()
+      await expect(page.getByTestId('side-nav').getByRole('link', { name: 'Journals', exact: true })).toBeVisible()
+      await expect(page.getByTestId('journal-newest')).toHaveAttribute('aria-pressed', 'true')
+      await expect(page.getByTestId('journal-oldest')).toBeVisible()
+      await expect(page.getByTestId('journal-jump-top')).toBeVisible()
+      await expect(page.getByTestId('journal-jump-bottom')).toBeVisible()
+      await expect(page.getByTestId('journal-when').first()).toHaveText(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec), \d{1,2}:\d{2} (AM|PM)$/)
+      await expect(page.getByTestId('journal-unanswered')).toBeVisible()
+      const newest = await page.getByTestId('diary-open').allTextContents()
+      expect(newest.length).toBeGreaterThan(1)
+      await page.getByTestId('journal-oldest').click()
+      await expect(page.getByTestId('journal-list')).toHaveAttribute('data-order', 'oldest')
+      await expect(page.getByTestId('journal-oldest')).toHaveAttribute('aria-pressed', 'true')
+      expect(await page.getByTestId('diary-open').allTextContents()).toEqual([...newest].reverse())
+      await page.getByTestId('journal-jump-bottom').click()
+      await page.getByTestId('journal-jump-top').click()
+      await page.getByTestId('journal-newest').click()
+      await expect(page.getByTestId('diary-open')).toHaveText(newest)
+      await page.getByTestId('desk-help').getByRole('button', { name: 'What is this?' }).click()
+      await expect(page.getByTestId('desk-help-pop')).toContainText('journal entry')
+      await page.keyboard.press('Escape')
       await expect(page.getByTestId('diary-row').filter({ hasText: 'Maryam' }).first()).toBeVisible()
       await expect(page.getByTestId('diary-portal').first()).toContainText('East London')
       await page.getByTestId('diary-row').filter({ hasText: 'Maryam' }).first().getByTestId('diary-open').click()
@@ -147,6 +169,26 @@ test.describe('learner, plan and diary desk actions', () => {
     await page.getByTestId('plan-delete').click()
     await expect(page.getByTestId('notice')).toContainText('deleted')
     await expect(page.getByTestId('schedule-plan').filter({ hasText: 'Desk proof plan' })).toHaveCount(0)
+  })
+
+  test('master and teacher desks say Journals', async ({ page }) => {
+    await signIn(page, 'master@hearts.test', 'hearts-master', '/master/diaries')
+    for (const view of VIEWS) {
+      await page.setViewportSize({ width: view.width, height: view.height })
+      await page.goto('/master/diaries')
+      await expect(page.getByRole('heading', { level: 1, name: 'Journals' })).toBeVisible()
+      await expect(page.getByTestId('side-nav').getByRole('link', { name: 'Journals', exact: true })).toBeVisible()
+      await expect(page.getByTestId('journal-when').first()).toBeVisible()
+    }
+    await signOut(page)
+    await signIn(page, 'elm-teacher@hearts.test', 'portal-teacher', '/p/east-london/admin/diaries')
+    for (const view of VIEWS) {
+      await page.setViewportSize({ width: view.width, height: view.height })
+      await page.goto('/p/east-london/admin/diaries')
+      await expect(page.getByRole('heading', { level: 1, name: 'Journals' })).toBeVisible()
+      await expect(page.getByTestId('side-nav').getByRole('link', { name: 'Journals', exact: true })).toBeVisible()
+      await expect(page.getByTestId('journal-unanswered')).toBeVisible()
+    }
   })
 
   test('a teacher can look and can change a plan, and cannot reset an account', async ({ page }) => {

@@ -1901,14 +1901,14 @@
       "seconds": 2.2
     },
     "master-diaries": {
-      "title": "Diaries",
+      "title": "Journals",
       "video": "/see-how/master-diaries.webm",
       "poster": "/see-how/master-diaries.jpg",
       "captions": [
         {
           "start": 0,
           "end": 3,
-          "text": "Each row is a workbook entry. You see who wrote it, which portal, and when."
+          "text": "Each row is a journal entry. You see who wrote it, which portal, and when."
         },
         {
           "start": 3,
@@ -1920,7 +1920,7 @@
       "seconds": 6.4
     },
     "master-diary": {
-      "title": "One diary entry",
+      "title": "One journal entry",
       "video": "/see-how/master-diary.webm",
       "poster": "/see-how/master-diary.jpg",
       "captions": [

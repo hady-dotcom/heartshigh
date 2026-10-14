@@ -1,3 +1,5 @@
+import { JOURNAL_LABEL } from './journal-copy'
+
 /** Plain British English for the desk “?” tips. Two to four short sentences each. */
 
 export const PAGE: Record<string, string> = {
@@ -12,7 +14,7 @@ export const PAGE: Record<string, string> = {
   plans:
     'A study plan spreads one course across the days you tick. Talks stay in order and are shared out evenly, so the last day is not empty. It is a guide. People can still watch at their own pace.',
   diaries:
-    'Each row is a workbook entry. You see who wrote it, which portal, and when. The words show only when the learner shared them and did not keep the answer private. You can still delete an entry.',
+    `Each row is a ${JOURNAL_LABEL.one.toLowerCase()} entry. You see who wrote it, which portal, and when. The words show only when the learner shared them and did not keep the answer private. You can still delete an entry.`,
   nights:
     'Live in person is evenings in person. Someone who watched a part this week has their own ticket. Everyone else has a place held, and you welcome them in at the door. Check-in is on this page.',
   gather:
