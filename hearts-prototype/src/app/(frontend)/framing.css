@@ -82,6 +82,21 @@
   background: #000;
   transition: object-position var(--fr-ms, 360ms) ease;
 }
+/* Centre crop and face track slide this still inside the film window. A video element does not show that shift in a screenshot. */
+.fr-still {
+  position: absolute;
+  inset: auto;
+  z-index: 2;
+  max-width: none;
+  object-fit: fill;
+}
+.fr-media-src {
+  position: absolute;
+  width: 320px;
+  height: 180px;
+  opacity: 0;
+  pointer-events: none;
+}
 .fr-face-hit {
   position: absolute;
   z-index: 4;
@@ -209,7 +224,7 @@
 .fr-phone-slot {
   container-type: inline-size;
   width: min(390px, 100%);
-  height: calc(100cqi * 844 / 390);
+  aspect-ratio: 390 / 844;
   position: relative;
 }
 .fr-phone-slot .fr-phone {

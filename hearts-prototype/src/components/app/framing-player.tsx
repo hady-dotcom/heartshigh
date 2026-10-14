@@ -14,6 +14,7 @@ import { createPlayer, destroyPlayer, getPlayer, playOnly, soundOn, STATE, type 
 export type FramingClock = { now(): number }
 
 export const PLACEHOLDER_SRC = '/framing/placeholder.mp4'
+export const PLACEHOLDER_POSTER = '/framing/placeholder.jpg'
 
 type Props = {
   youtubeId: string
@@ -190,17 +191,28 @@ export function FramingPlayer({
       <div className="fr-film" data-testid="framing-film">
         <div className="fr-crop">
           {placeholder ? (
-            <video
-              ref={video}
-              className="fr-media"
-              data-testid="framing-media"
-              src={PLACEHOLDER_SRC}
-              playsInline
-              muted={!sound}
-              loop
-              autoPlay={autoplay}
-              onLoadedData={() => setReady(true)}
-            />
+            <>
+              {iframeCover ? (
+                <img
+                  className="fr-still"
+                  data-testid="framing-still"
+                  alt=""
+                  src={PLACEHOLDER_POSTER}
+                  style={{ width: iframeCover.width, height: iframeCover.height, left: iframeCover.left, top: iframeCover.top }}
+                />
+              ) : null}
+              <video
+                ref={video}
+                className={iframeCover ? 'fr-media-src' : 'fr-media'}
+                data-testid="framing-media"
+                src={PLACEHOLDER_SRC}
+                playsInline
+                muted={!sound}
+                loop
+                autoPlay={autoplay}
+                onLoadedData={() => setReady(true)}
+              />
+            </>
           ) : (
             <div
               ref={host}

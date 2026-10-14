@@ -176,6 +176,18 @@ test('letterbox and split film stay inside the 390×844 stage', () => {
   assert.ok(split.film.top < letter.film.top)
 })
 
+test('centre crop stays in the middle when a face box is stored', () => {
+  const centre = layoutFor('A', 390, 844, PLACEHOLDER_FACE, PLACEHOLDER_FACE_FOCUS)
+  const face = layoutFor('D', 390, 844, PLACEHOLDER_FACE, PLACEHOLDER_FACE_FOCUS)
+  const letter = layoutFor('B', 390, 844)
+  assert.ok(Math.abs(centre.objectX - 0.5) < 0.02, `centre objectX ${centre.objectX}`)
+  assert.ok(Math.abs(face.objectX - centre.objectX) > 0.25, `face objectX ${face.objectX}`)
+  assert.equal(centre.film.height, 844)
+  assert.equal(face.film.height, 844)
+  assert.ok(letter.film.height < 400)
+  assert.ok(letter.film.top > 100)
+})
+
 test('D cover crop keeps the placeholder FACE box on the 390×844 stage', () => {
   const layout = layoutFor('D', 390, 844, PLACEHOLDER_FACE, PLACEHOLDER_FACE_FOCUS)
   const vars = cssVars(layout)

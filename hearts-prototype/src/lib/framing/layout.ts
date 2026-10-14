@@ -136,6 +136,11 @@ export function layoutFor(mode: FramingMode, stageW: number, stageH: number, cro
     const film = { top, left, width: cardW, height: cardH }
     return { mode, chromePad: 0, scale: 1, tx: 0, ty: 0, film, ...pin(focusX, focusY, film, crop) }
   }
+  if (mode === 'A') {
+    // Centre crop is the middle of the picture. A stored face box must not pull it sideways.
+    const film = stageFilm(stageW, stageH)
+    return { mode, chromePad: CHROME, ...film, ...pin(0.5, 0.42, film.film) }
+  }
   const film = stageFilm(stageW, stageH)
   return { mode, chromePad: CHROME, ...film, ...pin(focusX, focusY, film.film, crop) }
 }
