@@ -2703,7 +2703,7 @@ export interface GatherPhoto {
   createdAt: string;
 }
 /**
- * A video session for the learners of one portal.
+ * A teacher going live for the learners of one portal.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "live-sessions".
