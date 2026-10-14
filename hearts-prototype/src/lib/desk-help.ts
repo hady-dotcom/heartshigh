@@ -12,7 +12,7 @@ export const PAGE: Record<string, string> = {
   plans:
     'A study plan spreads one course across the days you tick. Talks stay in order and are shared out evenly, so the last day is not empty. It is a guide. People can still watch at their own pace.',
   nights:
-    'Nights are evenings in person. Someone who watched a part this week has their own ticket. Everyone else has a place held, and you welcome them in at the door. Check-in is on this page.',
+    'Live in person is evenings in person. Someone who watched a part this week has their own ticket. Everyone else has a place held, and you welcome them in at the door. Check-in is on this page.',
   gather:
     'Gather is for meetings at the masjid: classes, circles and open evenings. Put a date up, share the link, and take the register from Attendance. Ideas from learners wait here until you open them.',
   content:
@@ -70,7 +70,9 @@ export const PAGE: Record<string, string> = {
   insights:
     'Insights shows how people move through HEARTS: taps, scrolls and clips they watch. The counts stay in our database. We never store what someone typed, or an answer.',
   calendar:
-    'The calendar knows Friday, Ramadan, Dhul Hijjah, the two Eids and seasons you add. The Islamic day changes at Maghrib. A suggested line never reaches a learner until you approve it.',
+    'Event Calendar knows Friday, Ramadan, Dhul Hijjah, the two Eids and seasons you add. The Islamic day changes at Maghrib. A suggested line never reaches a learner until you approve it.',
+  live:
+    'Live recordings are video sessions for this portal, including ones already held. Learners see a session while it is on, and a replay afterwards if you keep one. Paste a YouTube or Vimeo link, or use Mux when it is configured.',
   missions:
     'A mission is a warm ask, never a scolding. Write what you are asking, why it matters, how many minutes, the dates, a target, and which portals. Ask for help is the thread inside the app, so nobody needs a support email.',
   safety:
@@ -223,6 +225,9 @@ const TEST_IDS: Record<string, string> = {
   'compass-portal': 'compass',
   'admin-plans': 'plans',
   'admin-nights': 'nights',
+  'master-nights': 'nights',
+  'desk-live': 'live',
+  'master-live': 'live',
   'desk-gather': 'gather',
   'admin-content': 'content',
   'admin-course': 'course',

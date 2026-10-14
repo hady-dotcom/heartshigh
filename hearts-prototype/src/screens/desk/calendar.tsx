@@ -51,7 +51,7 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
   const query = (ctx?.query || master?.query || {}) as Query
   const base = ctx ? `${ctx.base}/admin/calendar` : '/master/calendar'
   if (!canViewCalendar(user)) {
-    return <Frame ctx={ctx || null} master={master || null} title="Calendar" intro="" testId="calendar-denied"><p>The calendar desk is for the master and portal admins.</p></Frame>
+    return <Frame ctx={ctx || null} master={master || null} title="Event Calendar" intro="" testId="calendar-denied"><p>Event Calendar is for the master and portal admins.</p></Frame>
   }
   await seedDefaultCopy(payload, user)
   const previewDay = dateValue(query.date)
@@ -73,7 +73,7 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
     <Frame
       ctx={ctx || null}
       master={master || null}
-      title="Calendar wording"
+      title="Event Calendar"
       intro="Seasonal lines for buttons and the order of talks. A sheikh’s words are never touched."
       testId="calendar-desk"
     >
@@ -134,7 +134,7 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
               </div>
               {masterUser ? (
                 <form action="/api/experiments" method="post" style={{ marginTop: 12 }}>
-                  <Hidden fields={{ action: 'from-label', slot: 'feed-cta-label', label: cta, reason: `Calendar ${context.hijriLabel}`, next: '/master/experiments' }} />
+                  <Hidden fields={{ action: 'from-label', slot: 'feed-cta-label', label: cta, reason: `Event Calendar ${context.hijriLabel}`, next: '/master/experiments' }} />
                   <button className="btn" type="submit" data-testid="make-experiment">Make this an experiment</button>
                 </form>
               ) : null}

@@ -7,7 +7,7 @@ test('Me ends its option list with Log out on the existing session path', () => 
   const me = source.slice(source.indexOf('export async function MeScreen'), source.indexOf('export async function PlanScreen'))
   const list = me.indexOf('links.map')
   const logout = me.indexOf('data-testid="logout"')
-  const circle = me.indexOf('Circle and nights')
+  const circle = me.indexOf('Circle and Live in person')
   assert.ok(list > 0 && list < logout && logout < circle, 'Log out follows the Me options')
   const form = me.slice(me.lastIndexOf('<form', logout), logout + 80)
   assert.match(form, /action="\/api\/hearts"/)

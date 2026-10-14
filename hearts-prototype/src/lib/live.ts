@@ -1,4 +1,4 @@
-// Live sessions: a teacher in a portal goes live, and that portal’s learners can watch.
+// Live recordings: a teacher in a portal shares a video session, and that portal’s learners can watch.
 // Pure rules. No database. YouTube and Vimeo are the primary path; Mux is a stub adapter.
 
 import { isProduction, isRemoteDatabase, type Env } from './env'

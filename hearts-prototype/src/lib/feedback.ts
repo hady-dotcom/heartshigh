@@ -301,7 +301,7 @@ function doorKeyOf(row: { family: Family; doorNumber: number | null }) {
 
 function doorTitle(row: { family: Family; door: string }) {
   if (row.family === 'circle') return 'Circle'
-  if (row.family === 'live') return row.door || 'Live'
+  if (row.family === 'live') return row.door || 'Live recordings'
   return row.door || 'No door yet'
 }
 

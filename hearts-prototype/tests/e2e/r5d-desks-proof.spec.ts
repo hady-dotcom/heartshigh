@@ -147,7 +147,7 @@ test('r5d desk proof shots', async ({ page, browser }) => {
   if (await ticketTips.count()) {
     await expect(ticketTips).toHaveCount(1)
     await ticketTips.click()
-    await assertPopFits(page, page.getByTestId('desk-help-pop'), 'Nights Kind ?')
+    await assertPopFits(page, page.getByTestId('desk-help-pop'), 'Live in person ticket kind ?')
     await shot(page, 'help-nights-kind')
   }
 

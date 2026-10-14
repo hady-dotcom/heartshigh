@@ -28,7 +28,7 @@ export function HomeLive({
     <>
       <LiveNowBanner href={`${base}/live`} session={live} portal={portal} />
       <ComingUp cards={upcoming} portal={portal} base={base} />
-      <Link className="pill outline small" href={`${base}/live`} data-testid="open-live" style={{ margin: '8px 0 14px' }}>Live</Link>
+      <Link className="pill outline small" href={`${base}/live`} data-testid="open-live" style={{ margin: '8px 0 14px' }}>Live recordings</Link>
     </>
   )
 }
@@ -47,7 +47,7 @@ export async function LiveIndexScreen(ctx: Ctx) {
       <div className="app-scroll">
         <div className="app-head">
           <Link className="back" href={base}>Home</Link>
-          <h1>Live</h1>
+          <h1>Live recordings</h1>
         </div>
         <Flash error={query.error} notice={query.notice} />
         {live ? <LiveNowBanner href={`${base}/live`} session={live} portal={slug} /> : null}
@@ -91,8 +91,8 @@ export async function LiveWatchScreen(ctx: Ctx, id: number) {
     <AppFrame testId="live-screen">
       <div className="app-scroll live-shell">
         <div className="app-head">
-          <Link className="back" href={`${base}/live`}>Live</Link>
-          <h1>{card.status === 'live' ? 'Live' : card.status === 'ended' ? 'Replay' : 'Coming up'}</h1>
+          <Link className="back" href={`${base}/live`}>Live recordings</Link>
+          <h1>{card.status === 'live' ? 'Live recordings' : card.status === 'ended' ? 'Replay' : 'Coming up'}</h1>
         </div>
         <Flash error={query.error} notice={query.notice} />
         {card.status === 'scheduled' ? (
