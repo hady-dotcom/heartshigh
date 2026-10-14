@@ -46,6 +46,7 @@ export async function MasterPortals(ctx: MasterCtx) {
   const inPortal = (person: Record<string, unknown>, id: number) => ((person.tenants as { tenant?: unknown }[]) || []).some((row) => ref(row.tenant) === id)
   return (
     <MasterFrame ctx={ctx} active="portals" title="Portals" intro="Each mosque or community has its own portal, with its own admin, codes and people. You open portals here; each portal admin runs their own." testId="master">
+      <p className="hint" style={{ marginTop: 0 }}><Link href="/demo-stage" data-testid="open-demo-stage">Open the demo stage</Link> — four desks on one page, driven by sample data. Nothing is saved.</p>
       <section className="panel" style={{ marginBottom: 18 }}>
         <div className="table-wrap">
           <table className="data">
