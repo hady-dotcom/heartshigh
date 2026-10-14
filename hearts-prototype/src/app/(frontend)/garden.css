@@ -191,7 +191,7 @@
   box-sizing: border-box;
   min-width: 44px;
   min-height: 28px;
-  max-width: 72px;
+  max-width: 96px;
   margin: 0;
   padding: 2px 6px;
   border-radius: 999px;
@@ -202,10 +202,13 @@
   font-weight: 750;
   line-height: 1.15;
   text-align: center;
+  white-space: nowrap;
   text-decoration: none;
   pointer-events: auto;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
 }
+.branch-bud[data-align='end'] { transform: translate(-100%, -50%); }
+.branch-bud[data-align='start'] { transform: translate(0, -50%); }
 .tree-sheet {
   position: absolute;
   z-index: 8;

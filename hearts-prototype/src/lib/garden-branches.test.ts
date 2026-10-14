@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { TREE_PADS } from './garden-art'
 import { GARDEN_AREAS } from './garden-areas'
-import { branchFill, doorNamesForArea, gardenBranches } from './garden-branches'
+import { branchFill, branchLabelBounds, doorNamesForArea, gardenBranches } from './garden-branches'
 import { LANES } from './opening-data'
 
 test('every open lane is one branch on the tree of its best door, linked to /lanes/[id]', async () => {
@@ -37,4 +38,19 @@ test('a branch fills from done and total, and every tree still lists its doors',
     assert.ok(names.every((row) => row.title.length > 0))
   }
   assert.deepEqual(doorNamesForArea('hour').map((row) => row.number), [17, 18])
+})
+
+test('every branch label stays inside a 360-wide and a 390-wide phone', async () => {
+  const branches = await gardenBranches('/p/east-london')
+  const labelWidth = 96
+  for (const sceneWidth of [360, 390]) {
+    for (const branch of branches) {
+      const area = GARDEN_AREAS.find((row) => row.id === branch.areaId)
+      assert.ok(area, branch.id)
+      const padX = Number.parseFloat(TREE_PADS[area.art].x)
+      const box = branchLabelBounds({ padX, tipX: branch.tipX, align: branch.align, sceneWidth, labelWidth })
+      assert.ok(box.left >= 4, `${branch.label} starts at ${box.left.toFixed(1)} on ${sceneWidth}`)
+      assert.ok(box.right <= sceneWidth - 4, `${branch.label} ends at ${box.right.toFixed(1)} on ${sceneWidth}`)
+    }
+  }
 })

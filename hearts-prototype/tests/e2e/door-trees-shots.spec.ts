@@ -11,6 +11,7 @@ const NOTES = [
   'The Sitting: how Jibril came to teach',
 ]
 const SIZES = [
+  { name: '360x844', width: 360, height: 844 },
   { name: '390x844', width: 390, height: 844 },
   { name: '1280x800', width: 1280, height: 800 },
 ] as const
@@ -49,6 +50,12 @@ test('garden plaques and lane doors at phone and wide size', async ({ page }) =>
       expect(box).toBeTruthy()
       expect(box!.x).toBeGreaterThanOrEqual(sceneBox!.x - 2)
       expect(box!.x + box!.width).toBeLessThanOrEqual(sceneBox!.x + sceneBox!.width + 2)
+    }
+    for (const bud of await branches.all()) {
+      const box = await bud.boundingBox()
+      expect(box, await bud.getAttribute('data-lane')).toBeTruthy()
+      expect(box!.x, await bud.innerText()).toBeGreaterThanOrEqual(sceneBox!.x - 1)
+      expect(box!.x + box!.width, await bud.innerText()).toBeLessThanOrEqual(sceneBox!.x + sceneBox!.width + 1)
     }
     await page.screenshot({ path: `${SHOTS}/garden-${size.name}.png`, caret: 'initial' })
     if (size.name === '390x844') {

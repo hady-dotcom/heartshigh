@@ -96,6 +96,7 @@ function Tree({ area, branches, onPlaque }: { area: AreaView; branches: GardenBr
             data-testid="garden-branch"
             data-lane={branch.id}
             data-fill={branch.fill}
+            data-align={branch.align}
             style={{ left: `${branch.tipX}%`, top: `${branch.tipY}%` }}
             aria-label={`${branch.title}. ${branch.done} of ${branch.total} done`}
           >{branch.label}</Link>
