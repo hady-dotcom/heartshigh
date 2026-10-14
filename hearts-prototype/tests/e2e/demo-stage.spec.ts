@@ -195,6 +195,43 @@ test('a nav change reaches the phone and a learner note comes back up', async ({
   await expect(page.getByTestId('demo-num-courses')).toHaveText('3')
 })
 
+test('a faded panel still takes a click, and Escape or a click outside leaves focus', async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 })
+  await openDemo(page)
+  await showCast(page)
+
+  await page.getByTestId('demo-loop-note').click()
+  await expect(page.getByTestId('demo-board')).toHaveAttribute('data-focus', 'portal learner')
+  const dim = page.locator('.demo-cell.is-dim').first()
+  await expect(dim).toHaveCSS('pointer-events', 'auto')
+  await page.getByTestId('demo-course-title').fill('Still clickable')
+  await page.getByTestId('demo-add-course').click()
+  await expect(page.getByTestId('demo-library')).toContainText('Still clickable')
+
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('demo-board')).toHaveAttribute('data-focus', 'off')
+  await expect(page.locator('.demo-cell.is-dim')).toHaveCount(0)
+
+  await page.getByTestId('demo-loop-note').click()
+  await expect(page.getByTestId('demo-board')).toHaveAttribute('data-focus', 'portal learner')
+  await page.getByTestId('demo-header-title').click()
+  await expect(page.getByTestId('demo-board')).toHaveAttribute('data-focus', 'off')
+
+  const frame = page.frameLocator('[data-testid="demo-learner-frame"]')
+  await expect(frame.getByTestId('journey')).toBeVisible({ timeout: 60_000 })
+  await page.getByTestId('demo-learner-frame').click({ position: { x: 30, y: 40 } })
+  const teacher = await page.getByTestId('demo-panel-teacher').boundingBox()
+  expect(teacher).toBeTruthy()
+  const hit = await page.evaluate(({ x, y }) => {
+    const el = document.elementFromPoint(x, y)
+    return el?.closest('[data-testid="demo-panel-teacher"]') ? 'teacher' : 'miss'
+  }, { x: (teacher?.x || 0) + (teacher?.width || 0) / 2, y: (teacher?.y || 0) + 120 })
+  expect(hit).toBe('teacher')
+  await page.getByTestId('demo-prompt-text').fill('A click after the phone')
+  await page.getByTestId('demo-set-question').click()
+  await expect(page.getByTestId('demo-phone-toasts')).toContainText('A click after the phone')
+})
+
 test('a signed-out person gets the demo door, not the app login', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/demo-stage')
