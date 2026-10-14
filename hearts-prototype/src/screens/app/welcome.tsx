@@ -40,8 +40,8 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
           <Journey at={0} />
           <div className="app-head"><h1>Before you begin</h1></div>
           <div data-testid="welcome-film">
-            {welcome ? <iframe className="film-frame" title="Welcome" src={embedUrl(welcome)} allow="encrypted-media" /> : null}
-            {intro ? <iframe className="film-frame" style={{ marginTop: 12 }} title="Introduction" src={embedUrl(intro)} allow="encrypted-media" /> : null}
+            {intro ? <WelcomeFilm url={intro} title="Introduction" /> : null}
+            {welcome ? <WelcomeFilm url={welcome} title="Welcome" second={Boolean(intro)} /> : null}
           </div>
           <form action="/api/hearts" method="post" style={{ marginTop: 18 }}>
             <Hidden fields={{ action: 'seen-welcome', next: staff && user.onboarded ? `${base}/admin` : `${base}/start` }} />
@@ -111,6 +111,19 @@ export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx)
       </div>
     </AppFrame>
   )
+}
+
+export function isVideoFile(url: string) {
+  const p = url.split(/[?#]/)[0].toLowerCase()
+  return /\.(mp4|m4v|webm|mov)$/.test(p) || /\/api\/(hearts|media)\/file\//.test(p)
+}
+
+function WelcomeFilm({ url, title, second }: { url: string; title: string; second?: boolean }) {
+  const style = second ? { marginTop: 12 } : undefined
+  if (isVideoFile(url)) {
+    return <video className="film-video" src={url} controls playsInline preload="metadata" data-testid="welcome-video" aria-label={title} style={style} />
+  }
+  return <iframe className="film-frame" title={title} src={embedUrl(url)} allow="encrypted-media" style={style} />
 }
 
 function Journey({ at }: { at: number }) {
