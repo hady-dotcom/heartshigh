@@ -24,7 +24,9 @@ async function main() {
     if (!headers.get(name)) fail(`missing header ${name}`)
   }
   if (headers.get('x-powered-by')) fail('X-Powered-By is present')
-  if (!/frame-ancestors 'none'/.test(headers.get('content-security-policy') || '')) fail('CSP does not lock framing')
+  const csp = headers.get('content-security-policy') || ''
+  if (!/frame-ancestors 'self'/.test(csp) || /frame-ancestors \*/.test(csp)) fail('CSP does not lock framing to this site')
+  if ((headers.get('x-frame-options') || '').toUpperCase() === 'DENY') fail('same-origin framing is denied')
 
   const demo = await fetch(`${base}/api/users/login`, {
     method: 'POST',

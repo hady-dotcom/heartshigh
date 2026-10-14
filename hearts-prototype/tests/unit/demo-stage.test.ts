@@ -39,6 +39,7 @@ import {
   coverageMarkdown,
   coverageWorks,
   learnerVisible,
+  phoneToasts,
 } from '../../src/lib/demo-stage'
 
 const JARGON = ['payload', 'toggle', 'draft', 'publish', 'contingent', 'scenario', 'imported']
@@ -206,6 +207,20 @@ describe('cast your demo', () => {
 const MASTER_NAV = ['portals', 'learners', 'diaries', 'codes', 'safety', 'announcements', 'library', 'bring-in', 'packs', 'plans', 'live', 'nights', 'circle', 'missions', 'opening', 'lanes', 'insights', 'trends', 'simulator', 'personas', 'experiments', 'calendar', 'review', 'tiers', 'questions', 'ai', 'framing', 'see-how', 'sheet', 'transcripts', 'create']
 const PORTAL_NAV = ['overview', 'teach', 'diaries', 'access', 'feedback', 'safety', 'announcements', 'library', 'content', 'bring-in', 'plans', 'gather', 'nights', 'live', 'circle', 'missions', 'insights', 'compass', 'experiments', 'calendar', 'ai', 'opening', 'questions', 'sheet', 'create', 'settings']
 const TEACHER_NAV = ['overview', 'teach', 'diaries', 'feedback', 'compass', 'plans', 'gather', 'nights', 'live', 'safety', 'announcements']
+
+describe('the real phone overlay', () => {
+  it('puts a new announcement and a new event on top of the learner app', () => {
+    const noted = reduceDemo(seedDemo(), { type: 'post-note', body: 'Bring a notebook.' })
+    assert.equal(phoneToasts(noted).some((row) => row.text === 'Bring a notebook.'), true)
+    const dated = reduceDemo(seedDemo(), { type: 'add-event', kind: 'calendar', title: 'Open evening' })
+    assert.equal(phoneToasts(dated).some((row) => row.text === 'Open evening'), true)
+    const planned = reduceDemo(seedDemo(), { type: 'add-plan', text: 'Sit for five minutes' })
+    assert.equal(phoneToasts(planned).some((row) => row.text === 'Sit for five minutes'), true)
+    const garden = reduceDemo(seedDemo(), { type: 'toggle-garden' })
+    assert.equal(phoneToasts(garden).some((row) => row.text === 'Garden path is off'), true)
+    assert.equal(phoneToasts(seedDemo())[0]?.text, SEED_NOTE)
+  })
+})
 
 describe('every left-nav item is covered', () => {
   it('lists the master, portal and teacher menus in the same order as the desks', () => {
