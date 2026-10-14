@@ -4,21 +4,25 @@ import { useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import {
   DEMO_SCENARIOS,
+  castHeader,
+  fillCast,
   isViewCommand,
   runDemoCommand,
   scenarioById,
   seedDemo,
   stageFor,
+  tidyCast,
   type DemoPanel,
 } from '@/lib/demo-stage'
+import { CastScreen } from './cast'
 import { Board } from './panels'
 import { DemoProvider, useDemo, type DemoViews } from './store'
 
-const PANELS: { slot: DemoPanel; label: string; phone?: boolean }[] = [
-  { slot: 'master', label: "Used as if you're the Master" },
-  { slot: 'portal', label: "Used as if you're the Portal admin (HEARTS Demo)" },
-  { slot: 'teacher', label: "Used as if you're a Teacher" },
-  { slot: 'learner', label: "Used as if you're a Learner", phone: true },
+const PANELS: { slot: DemoPanel; phone?: boolean }[] = [
+  { slot: 'master' },
+  { slot: 'portal' },
+  { slot: 'teacher' },
+  { slot: 'learner', phone: true },
 ]
 
 const START: DemoViews = { master: 'portals', portal: 'overview', teacher: 'queue', learner: 'home' }
@@ -58,7 +62,9 @@ export function DemoStage() {
 }
 
 function Stage() {
-  const { state, glow, replace, setViews, resetViews } = useDemo()
+  const { state, cast, setCast, glow, replace, setViews, resetViews } = useDemo()
+  const [casting, setCasting] = useState(true)
+  const [reveal, setReveal] = useState(false)
   const [layout, setLayout] = useState<Layout>('row')
   const [flex, setFlex] = useState([1, 1, 1])
   const [gridSplit, setGridSplit] = useState(1)
@@ -127,6 +133,14 @@ function Stage() {
     setIndex(0)
   }
 
+  if (casting) {
+    return (
+      <div className="demo-stage" data-testid="demo-stage">
+        <CastScreen initial={cast} onShow={(next) => { setCast(tidyCast(next)); setCasting(false); setReveal(true) }} />
+      </div>
+    )
+  }
+
   return (
     <div className={`demo-stage layout-${layout}${stepsOpen ? ' steps-open' : ''}`} data-testid="demo-stage">
       <header className="demo-bar">
@@ -140,23 +154,24 @@ function Stage() {
           <button type="button" className={layout === 'phone' ? 'on' : ''} data-testid="demo-layout-phone" onClick={() => setLayout('phone')}>3 + phone</button>
         </div>
         <div className="demo-actions">
+          <button type="button" data-testid="demo-edit-cast" onClick={() => { setReveal(false); setCasting(true) }}>Edit cast</button>
           <button type="button" data-testid="demo-steps-toggle" onClick={() => setStepsOpen((open) => !open)}>{stepsOpen ? 'Hide steps' : 'Demo steps'}</button>
           <button type="button" className="danger" data-testid="demo-reset" onClick={reset}>Reset demo</button>
         </div>
       </header>
       <div className="demo-body">
-        <div className="demo-board" data-testid="demo-board" style={{ gridTemplateColumns: columns }}>
+        <div className={`demo-board${reveal ? ' is-reveal' : ''}`} data-testid="demo-board" style={{ gridTemplateColumns: columns }}>
           {PANELS.map((panel, at) => (
             <div className="demo-cell" key={panel.slot}>
               {at > 0 && (layout !== 'grid' || at === 1) ? (
-                <button type="button" className="demo-resize" aria-label={`Resize ${panel.label}`} onPointerDown={(event) => drag(at - 1, event)} />
+                <button type="button" className="demo-resize" aria-label={`Resize ${castHeader(cast, panel.slot)}`} onPointerDown={(event) => drag(at - 1, event)} />
               ) : null}
               <section
                 className={`demo-panel${glow.includes(panel.slot) ? ' is-glow' : ''}${panel.phone ? ' is-phone' : ''}`}
                 data-testid={`demo-panel-${panel.slot}`}
                 data-slot={panel.slot}
               >
-                <header className="demo-strip">{panel.label}</header>
+                <header className="demo-strip">{castHeader(cast, panel.slot)}</header>
                 <div className="demo-view">
                   {panel.phone ? (
                     <div className="demo-phone" data-testid="demo-phone">
@@ -183,11 +198,11 @@ function Stage() {
                   <button type="button" data-testid={`demo-scenario-${item.id}`} className={scenarioId === item.id ? 'on' : ''} onClick={() => start(item.id)}>
                     {item.title}
                   </button>
-                  <span>{item.blurb}</span>
+                  <span>{fillCast(item.blurb, cast)}</span>
                 </li>
               ))}
             </ol>
-            {step ? <p className="demo-say" data-testid="demo-step-say">{step.say}</p> : scenario ? <p className="demo-say">That beat is done. Pick another, or press Reset demo.</p> : null}
+            {step ? <p className="demo-say" data-testid="demo-step-say">{fillCast(step.say, cast)}</p> : scenario ? <p className="demo-say">That beat is done. Pick another, or press Reset demo.</p> : null}
           </aside>
         ) : null}
       </div>
@@ -195,7 +210,7 @@ function Stage() {
         <span>Activity</span>
         {state.ticker.length ? (
           <ul>
-            {state.ticker.map((row) => <li key={row.id}>{row.text}</li>)}
+            {state.ticker.map((row) => <li key={row.id}>{fillCast(row.text, cast)}</li>)}
           </ul>
         ) : <p>Waiting for a change in the sample.</p>}
       </footer>

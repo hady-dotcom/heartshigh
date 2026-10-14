@@ -12,17 +12,25 @@ import {
   DEMO_SCENARIOS,
   DEMO_THUMB,
   DEMO_VIDEO,
+  CAST_FLOW,
+  castHeader,
+  castPrompt,
+  castReady,
   clock,
+  defaultCast,
   demoChannelMessage,
+  fillCast,
   learnerSeesCourse,
   ownStats,
   readChannelMessage,
+  rollCast,
   reduceDemo,
   runDemoCommand,
   scenarioPlays,
   seedDemo,
   stageFor,
   teacherQueue,
+  welcomeLine,
   workbookEntries,
 } from '../../src/lib/demo-stage'
 
@@ -79,12 +87,12 @@ describe('the school-demo flow', () => {
     assert.equal(learnerSeesCourse(state), true)
     assert.equal(teacherQueue(state).length, 0)
     state = runDemoCommand(state, 'send-answer')
-    assert.equal(state.ticker[0]?.text, `Learner answered: ${DEMO_ANSWER}`)
+    assert.equal(fillCast(state.ticker[0]?.text || '', defaultCast()), `Abdallah answered: ${DEMO_ANSWER}`)
     assert.equal(teacherQueue(state).length, 1)
     assert.equal(ownStats(state).answers, 1)
     assert.equal(workbookEntries(state)[0]?.reply, '')
     state = runDemoCommand(state, 'send-reply')
-    assert.equal(state.ticker[0]?.text, 'Teacher replied')
+    assert.equal(fillCast(state.ticker[0]?.text || '', defaultCast()), 'Sami replied')
     assert.equal(teacherQueue(state).length, 0)
     assert.equal(workbookEntries(state)[0]?.reply, DEMO_REPLY)
     assert.equal(workbookEntries(reduceDemo(state, { type: 'toggle', feature: 'workbook' })).length, 0)
@@ -108,6 +116,32 @@ describe('the school-demo flow', () => {
     state = reduceDemo(state, { type: 'publish' })
     assert.equal(state.ticker[0]?.text, `Course published: ${DEMO_COURSE}`)
     assert.notEqual(reduceDemo(state, { type: 'answer' }), state)
+  })
+})
+
+describe('cast your demo', () => {
+  it('asks for exactly one of each, and the kind of place changes the wording', () => {
+    const cast = defaultCast()
+    assert.deepEqual([...CAST_FLOW], ['master', 'portal', 'teacher', 'learner'])
+    assert.equal(cast.master, 'Leon (HEARTS)')
+    assert.equal(castPrompt('master', 'mosque'), 'Who runs the whole system?')
+    assert.equal(castPrompt('portal', 'mosque'), 'Who would look after your mosque?')
+    assert.equal(castPrompt('portal', 'school'), 'Who would look after your school?')
+    assert.equal(castPrompt('portal', 'company'), 'Who would look after your company?')
+    assert.equal(castPrompt('teacher', 'mosque'), 'Who would guide the learners and reply to them?')
+    assert.equal(castPrompt('learner', 'mosque'), 'Pick one learner from your community')
+    assert.equal(castHeader(cast, 'portal'), 'Rafiq, looking after Al-Noor Mosque')
+    assert.equal(castHeader(cast, 'teacher'), 'Sami, guiding the learners')
+    assert.equal(welcomeLine(cast), 'Salaam Abdallah')
+    assert.equal(welcomeLine({ ...cast, kind: 'school' }), 'Hello Abdallah')
+    assert.equal(welcomeLine({ ...cast, kind: 'company' }), 'Hello Abdallah')
+    assert.equal(castReady({ ...cast, learner: '   ' }, 'learner'), false)
+    const made = rollCast(cast, 'learner', 0)
+    assert.equal(made.learner, 'Yusuf')
+    assert.equal(made.teacher, cast.teacher)
+    const place = rollCast({ ...cast, kind: 'school' }, 'portal', 0)
+    assert.equal(place.portalName, 'Willow Academy')
+    assert.equal(fillCast('{learner} answered. {teacher} replied at {portal}.', cast), 'Abdallah answered. Sami replied at Al-Noor Mosque.')
   })
 })
 

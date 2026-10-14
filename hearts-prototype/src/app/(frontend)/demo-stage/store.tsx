@@ -3,8 +3,10 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   DEMO_CHANNEL,
+  type DemoCast,
   type DemoPanel,
   type DemoState,
+  defaultCast,
   demoChannelMessage,
   readChannelMessage,
   seedDemo,
@@ -14,6 +16,8 @@ export type DemoViews = { master: string; portal: string; teacher: string; learn
 
 type DemoApi = {
   state: DemoState
+  cast: DemoCast
+  setCast: (next: DemoCast) => void
   views: DemoViews
   glow: DemoPanel[]
   replace: (next: DemoState, slot?: DemoPanel) => void
@@ -27,6 +31,7 @@ const Ctx = createContext<DemoApi | null>(null)
 
 export function DemoProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DemoState>(seedDemo)
+  const [cast, setCast] = useState<DemoCast>(defaultCast)
   const [views, setViews] = useState<DemoViews>(START_VIEWS)
   const [glow, setGlow] = useState<DemoPanel[]>([])
   const channel = useRef<BroadcastChannel | null>(null)
@@ -55,7 +60,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
 
   const resetViews = useCallback(() => setViews(START_VIEWS), [])
 
-  return <Ctx.Provider value={{ state, views, glow, replace, setViews, resetViews }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ state, cast, setCast, views, glow, replace, setViews, resetViews }}>{children}</Ctx.Provider>
 }
 
 export function useDemo() {

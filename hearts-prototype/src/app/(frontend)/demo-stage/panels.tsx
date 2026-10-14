@@ -6,14 +6,11 @@ import {
   DEMO_ANSWER,
   DEMO_COURSE,
   DEMO_LATER,
-  DEMO_LEARNER,
-  DEMO_PORTAL,
-  DEMO_PORTAL_ADMIN,
   DEMO_REPLY,
   DEMO_QUESTION,
-  DEMO_TEACHER,
   DEMO_UNIT,
   DEMO_VIDEO,
+  welcomeLine,
   clock,
   learnerSeesCourse,
   ownStats,
@@ -62,13 +59,14 @@ function Desk({
   children: ReactNode
   nav: ReactNode
 }) {
-  const initial = who.slice(0, 1)
+  const { cast } = useDemo()
+  const initial = who.trim().slice(0, 1) || '?'
   return (
     <div className="desk demo-desk">
       <aside className="side">
         <div className="side-brand">
           <span>
-            <b>{DEMO_PORTAL}</b>
+            <b>{cast.portalName}</b>
             <small>{role}</small>
           </span>
         </div>
@@ -114,13 +112,13 @@ export function Board({ hot, press, only }: { hot: string; press: (id: string) =
 }
 
 function Master({ hot, press }: { hot: string; press: (id: string) => void }) {
-  const { state, views, setViews } = useDemo()
+  const { state, cast, views, setViews } = useDemo()
   const stats = ownStats(state)
   const view = views.master
   return (
     <Desk
-      who="Master"
-      role="Master desk"
+      who={cast.master}
+      role="Runs the whole system"
       nav={
         <>
           <button type="button" className={`nav${view === 'portals' ? ' on' : ''}`} onClick={() => setViews((current) => ({ ...current, master: 'portals' }))}>Portals</button>
@@ -140,7 +138,7 @@ function Master({ hot, press }: { hot: string; press: (id: string) => void }) {
         </section>
       ) : (
         <section className="panel">
-          <header><h2>{DEMO_PORTAL}</h2></header>
+          <header><h2>{cast.portalName}</h2></header>
           <div className="body">
             <p className="hint">Own content is counted here. The library is not.</p>
             <div className="demo-counts">
@@ -157,7 +155,7 @@ function Master({ hot, press }: { hot: string; press: (id: string) => void }) {
 }
 
 function Portal({ hot, press }: { hot: string; press: (id: string) => void }) {
-  const { state, views, setViews } = useDemo()
+  const { state, cast, views, setViews } = useDemo()
   const view = views.portal
   const video = state.videos[0]
   const now = state.questions.find((question) => question.when === 'now')
@@ -170,8 +168,8 @@ function Portal({ hot, press }: { hot: string; press: (id: string) => void }) {
     )
   return (
     <Desk
-      who={DEMO_PORTAL_ADMIN}
-      role="Portal admin"
+      who={cast.portalAdmin}
+      role="Looks after the portal"
       nav={
         <>
           <button type="button" className={`nav${view === 'overview' ? ' on' : ''}`} onClick={() => setViews((current) => ({ ...current, portal: 'overview' }))}>Overview</button>
@@ -186,7 +184,7 @@ function Portal({ hot, press }: { hot: string; press: (id: string) => void }) {
       <Stats />
       {view === 'overview' ? (
         <section className="panel">
-          <header><div><h2>{DEMO_PORTAL}</h2><p>Your own courses, kept apart from the library.</p></div></header>
+          <header><div><h2>{cast.portalName}</h2><p>Your own courses, kept apart from the library.</p></div></header>
           <div className="body">
             <p>{DEMO_COURSE} is {state.visibility === 'published' ? 'published' : 'still a draft'}.</p>
             <p className="hint">People only see a course after you publish it and their code includes it.</p>
@@ -277,30 +275,30 @@ function Portal({ hot, press }: { hot: string; press: (id: string) => void }) {
 }
 
 function Teacher({ hot, press }: { hot: string; press: (id: string) => void }) {
-  const { state } = useDemo()
+  const { state, cast } = useDemo()
   const waiting = teacherQueue(state)
   const answered = state.answers
   return (
     <Desk
-      who={DEMO_TEACHER}
-      role="Teacher"
+      who={cast.teacher}
+      role="Guides the learners"
       nav={<Go id="open-queue" hot={hot} press={press} className="nav on">Reply queue</Go>}
     >
       <section className="panel" data-testid="demo-teacher-queue">
         <header>
           <div>
             <h2>Waiting ({waiting.length})</h2>
-            <p>{DEMO_LEARNER}</p>
+            <p data-testid="demo-queue-line">{answered.length ? `${cast.learner} answered` : cast.learner}</p>
           </div>
         </header>
         <div className="body demo-stack">
-          {!answered.length ? <p className="hint">Nothing is waiting. When a learner answers, it lands here.</p> : null}
+          {!answered.length ? <p className="hint">Nothing is waiting. When {cast.learner} answers, it lands here.</p> : null}
           {answered.map((row) => {
             const prompt = state.questions.find((question) => question.id === row.questionId)?.prompt
             return (
               <article key={row.id} className="demo-queue">
                 <p className="hint">{prompt}</p>
-                <p><b>{DEMO_LEARNER}:</b> {row.body}</p>
+                <p><b>{cast.learner}:</b> {row.body}</p>
                 {row.reply ? <p data-testid="demo-teacher-reply"><b>You:</b> {row.reply}</p> : (
                   <>
                     <p className="demo-prompt">{DEMO_REPLY}</p>
@@ -317,7 +315,7 @@ function Teacher({ hot, press }: { hot: string; press: (id: string) => void }) {
 }
 
 function Learner({ hot, press }: { hot: string; press: (id: string) => void }) {
-  const { state, views } = useDemo()
+  const { state, cast, views } = useDemo()
   const view = views.learner
   const course = learnerSeesCourse(state)
   const now = state.questions.find((question) => question.when === 'now')
@@ -328,8 +326,8 @@ function Learner({ hot, press }: { hot: string; press: (id: string) => void }) {
   return (
     <div className={`app evening demo-app${state.features.live ? ' is-live' : ''}`} data-testid="demo-learner-app">
       <header className="app-head">
-        <p className="eyebrow">HEARTS Demo</p>
-        <h1>{view === 'workbook' ? 'Workbook' : view === 'player' || view === 'course' ? DEMO_COURSE : 'Home'}</h1>
+        <p className="eyebrow">{cast.portalName}</p>
+        <h1 data-testid={view === 'home' ? 'demo-welcome' : undefined}>{view === 'workbook' ? 'Workbook' : view === 'player' || view === 'course' ? DEMO_COURSE : welcomeLine(cast)}</h1>
       </header>
       <div className="app-scroll">
         {view === 'home' ? (
@@ -393,7 +391,7 @@ function Learner({ hot, press }: { hot: string; press: (id: string) => void }) {
               <article className="card" key={row.prompt}>
                 <p className="hint">{row.prompt}</p>
                 <p>{row.body}</p>
-                {row.reply ? <p data-testid="demo-workbook-reply"><b>{DEMO_TEACHER}:</b> {row.reply}</p> : null}
+                {row.reply ? <p data-testid="demo-workbook-reply"><b>{cast.teacher}:</b> {row.reply}</p> : null}
               </article>
             ))}
           </div>

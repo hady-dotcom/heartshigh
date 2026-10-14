@@ -15,10 +15,123 @@ export const DEMO_REPLY = 'Keep that hour after Maghrib. I will look for it in y
 export const DEMO_ANNOUNCE = 'Circle meets after Maghrib tonight.'
 export const DEMO_PAUSE_AT = 64
 export const DEMO_VIDEO_SECONDS = 132
-export const DEMO_LEARNER = 'Layla Khan'
-export const DEMO_TEACHER = 'Yusuf Rahman'
-export const DEMO_PORTAL_ADMIN = 'Nabil Hassan'
-export const DEMO_PORTAL = 'HEARTS Demo'
+export const CAST_FLOW = ['master', 'portal', 'teacher', 'learner'] as const
+export type CastStep = (typeof CAST_FLOW)[number]
+export type PortalKind = 'mosque' | 'school' | 'company'
+
+export type DemoCast = {
+  master: string
+  portalAdmin: string
+  portalName: string
+  kind: PortalKind
+  teacher: string
+  learner: string
+}
+
+export function defaultCast(): DemoCast {
+  return {
+    master: 'Leon (HEARTS)',
+    portalAdmin: 'Rafiq',
+    portalName: 'Al-Noor Mosque',
+    kind: 'mosque',
+    teacher: 'Sami',
+    learner: 'Abdallah',
+  }
+}
+
+export const CAST_QUICK = {
+  master: ['Leon (HEARTS)', 'Hana (HEARTS)', 'Yusuf (HEARTS)'],
+  teacher: ['Sami', 'Sheikh Yusuf', 'Amina'],
+  learner: ['Abdallah', 'Maryam', 'Idris', 'Layla'],
+  portal: {
+    mosque: [
+      { person: 'Rafiq', place: 'Al-Noor Mosque' },
+      { person: 'Yusuf', place: 'East London Mosque' },
+      { person: 'Maryam', place: 'Green Lane Masjid' },
+    ],
+    school: [
+      { person: 'Amira', place: 'Riverside School' },
+      { person: 'Ken', place: 'Oakfield School' },
+      { person: 'Sandra', place: 'Harbour School' },
+    ],
+    company: [
+      { person: 'Noor', place: 'Crescent Studio' },
+      { person: 'Idris', place: 'Baraka Co' },
+      { person: 'Hana', place: 'Qiblah Ltd' },
+    ],
+  },
+} as const
+
+const MADE_UP = {
+  master: ['Noor (HEARTS)', 'Idris (HEARTS)', 'Safiya (HEARTS)', 'Hamza (HEARTS)'],
+  admin: ['Khalid', 'Zaynab', 'Imran', 'Aisha'],
+  teacher: ['Sheikh Omar', 'Ustadh Bilal', 'Hana', 'Maryam'],
+  learner: ['Yusuf', 'Aisha', 'Hamza', 'Safiya'],
+  place: {
+    mosque: ['Masjid An-Nur', 'The Crescent Mosque', 'Masjid Al-Huda', 'Quba Mosque'],
+    school: ['Willow Academy', 'Northbridge School', 'Horizon School', 'Meadow School'],
+    company: ['Amana Studio', 'Sakinah Ltd', 'Barakah Works', 'Nur & Co'],
+  },
+} as const
+
+export function castPrompt(step: CastStep, kind: PortalKind) {
+  if (step === 'master') return 'Who runs the whole system?'
+  if (step === 'portal') {
+    if (kind === 'school') return 'Who would look after your school?'
+    if (kind === 'company') return 'Who would look after your company?'
+    return 'Who would look after your mosque?'
+  }
+  if (step === 'teacher') return 'Who would guide the learners and reply to them?'
+  return 'Pick one learner from your community'
+}
+
+export function castHeader(cast: DemoCast, panel: DemoPanel) {
+  if (panel === 'master') return `${cast.master}, running the whole system`
+  if (panel === 'portal') return `${cast.portalAdmin}, looking after ${cast.portalName}`
+  if (panel === 'teacher') return `${cast.teacher}, guiding the learners`
+  return `${cast.learner}, a learner at ${cast.portalName}`
+}
+
+export function welcomeLine(cast: DemoCast) {
+  const name = cast.learner.trim() || defaultCast().learner
+  return cast.kind === 'mosque' ? `Salaam ${name}` : `Hello ${name}`
+}
+
+export function fillCast(text: string, cast: DemoCast) {
+  return text
+    .replaceAll('{master}', cast.master)
+    .replaceAll('{admin}', cast.portalAdmin)
+    .replaceAll('{portal}', cast.portalName)
+    .replaceAll('{teacher}', cast.teacher)
+    .replaceAll('{learner}', cast.learner)
+}
+
+export function rollCast(cast: DemoCast, step: CastStep, roll: number): DemoCast {
+  const at = Math.abs(roll) % 4
+  if (step === 'master') return { ...cast, master: MADE_UP.master[at] }
+  if (step === 'portal') return { ...cast, portalAdmin: MADE_UP.admin[at], portalName: MADE_UP.place[cast.kind][at] }
+  if (step === 'teacher') return { ...cast, teacher: MADE_UP.teacher[at] }
+  return { ...cast, learner: MADE_UP.learner[at] }
+}
+
+export function castReady(cast: DemoCast, step: CastStep) {
+  if (step === 'master') return Boolean(cast.master.trim())
+  if (step === 'portal') return Boolean(cast.portalAdmin.trim() && cast.portalName.trim())
+  if (step === 'teacher') return Boolean(cast.teacher.trim())
+  return Boolean(cast.learner.trim())
+}
+
+export function tidyCast(cast: DemoCast): DemoCast {
+  const base = defaultCast()
+  return {
+    master: cast.master.trim() || base.master,
+    portalAdmin: cast.portalAdmin.trim() || base.portalAdmin,
+    portalName: cast.portalName.trim() || base.portalName,
+    kind: cast.kind,
+    teacher: cast.teacher.trim() || base.teacher,
+    learner: cast.learner.trim() || base.learner,
+  }
+}
 
 export const DEMO_LIBRARY = [
   'Preparing for the circle',
@@ -193,14 +306,14 @@ export function reduceDemo(state: DemoState, action: DemoAction): DemoState {
     const question = state.questions.find((row) => row.when === 'now')
     if (!question || state.visibility !== 'published') return state
     if (state.answers.some((row) => row.questionId === question.id)) return state
-    return note(state, 'learner', `Learner answered: ${DEMO_ANSWER}`, {
+    return note(state, 'learner', `{learner} answered: ${DEMO_ANSWER}`, {
       answers: [...state.answers, { id: 'ans-1', questionId: question.id, body: DEMO_ANSWER }],
     })
   }
   if (action.type === 'reply') {
     const waiting = state.answers.find((row) => !row.reply)
     if (!waiting) return state
-    return note(state, 'teacher', 'Teacher replied', {
+    return note(state, 'teacher', '{teacher} replied', {
       answers: state.answers.map((row) => (row.id === waiting.id ? { ...row, reply: DEMO_REPLY } : row)),
     })
   }
@@ -321,7 +434,7 @@ export const DEMO_SCENARIOS: DemoScenario[] = [
   {
     id: 'library',
     title: 'The library is already here',
-    blurb: 'The master has already put the HEARTS courses on this portal. The school picks what people see.',
+    blurb: '{master} has already put the HEARTS courses on {portal}. The community picks what people see.',
     steps: [
       { id: 'lib-1', say: 'Open the shared library on the master desk.', target: 'show-library', panel: 'master', view: 'portals' },
       { id: 'lib-2', say: 'On the portal, these stay read-only. Your own course is separate.', target: 'show-imported', panel: 'portal', view: 'overview' },
@@ -333,7 +446,7 @@ export const DEMO_SCENARIOS: DemoScenario[] = [
     blurb: 'Build it in private. Staff do not see a course while you are still making it.',
     steps: [
       { id: 'hold-1', say: 'Open the draft. A quiet hour is not published yet.', target: 'open-content', panel: 'portal', view: 'overview' },
-      { id: 'hold-2', say: 'Look at the learner’s phone. The course is not there.', target: 'open-home', panel: 'learner', view: 'home' },
+      { id: 'hold-2', say: 'Look at {learner}’s phone. The course is not there.', target: 'open-home', panel: 'learner', view: 'home' },
     ],
   },
   {
@@ -366,28 +479,28 @@ export const DEMO_SCENARIOS: DemoScenario[] = [
   {
     id: 'publish',
     title: 'Publish, and the phone shows it',
-    blurb: 'When the course is ready, publish it. The learner’s phone gains it straight away.',
+    blurb: 'When the course is ready, publish it. {learner}’s phone gains it straight away.',
     steps: [
       { id: 'pub-1', say: 'Publish A quiet hour.', target: 'publish', panel: 'portal', view: 'content' },
-      { id: 'pub-2', say: 'Open it on the phone.', target: 'open-course', panel: 'learner', view: 'home' },
+      { id: 'pub-2', say: 'Open it on {learner}’s phone.', target: 'open-course', panel: 'learner', view: 'home' },
     ],
   },
   {
     id: 'workbook',
     title: 'Follow the answer into the workbook',
-    blurb: 'The learner answers, the teacher’s queue lights up, the reply lands in the workbook.',
+    blurb: '{learner} answers, {teacher}’s queue lights up, and the reply lands in the workbook.',
     steps: [
-      { id: 'wb-1', say: 'Open the film on the phone.', target: 'open-player', panel: 'learner', view: 'course' },
-      { id: 'wb-2', say: 'Send the answer.', target: 'send-answer', panel: 'learner', view: 'player' },
-      { id: 'wb-3', say: 'Open the teacher’s queue. The answer is waiting.', target: 'open-queue', panel: 'teacher', view: 'queue' },
-      { id: 'wb-4', say: 'Reply.', target: 'send-reply', panel: 'teacher', view: 'queue' },
-      { id: 'wb-5', say: 'Open the workbook on the phone.', target: 'open-workbook', panel: 'learner', view: 'player' },
+      { id: 'wb-1', say: 'Open the film on {learner}’s phone.', target: 'open-player', panel: 'learner', view: 'course' },
+      { id: 'wb-2', say: '{learner} sends the answer.', target: 'send-answer', panel: 'learner', view: 'player' },
+      { id: 'wb-3', say: 'Open {teacher}’s queue. {learner} answered.', target: 'open-queue', panel: 'teacher', view: 'queue' },
+      { id: 'wb-4', say: '{teacher} replies.', target: 'send-reply', panel: 'teacher', view: 'queue' },
+      { id: 'wb-5', say: 'Open {learner}’s workbook.', target: 'open-workbook', panel: 'learner', view: 'player' },
     ],
   },
   {
     id: 'announce',
     title: 'Post an announcement',
-    blurb: 'A note from the portal admin shows on the learner’s home.',
+    blurb: 'A note from {admin} shows on {learner}’s home.',
     steps: [
       { id: 'an-1', say: 'Open announcements.', target: 'open-announce', panel: 'portal', view: 'overview' },
       { id: 'an-2', say: 'Post the circle note.', target: 'post-announce', panel: 'portal', view: 'announce' },

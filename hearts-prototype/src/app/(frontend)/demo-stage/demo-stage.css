@@ -55,6 +55,74 @@
 .demo-bar button.danger:hover { background: #d94f68; color: white; border-color: #d94f68; }
 
 .demo-body { flex: 1; min-height: 0; display: flex; }
+.demo-board.is-reveal .demo-cell {
+  animation: demo-rise 0.7s cubic-bezier(.2, .7, .2, 1) both;
+}
+.demo-board.is-reveal .demo-cell:nth-child(2) { animation-delay: 0.08s; }
+.demo-board.is-reveal .demo-cell:nth-child(3) { animation-delay: 0.16s; }
+.demo-board.is-reveal .demo-cell:nth-child(4) { animation-delay: 0.24s; }
+@keyframes demo-rise {
+  from { opacity: 0; transform: translateY(36px); }
+  to { opacity: 1; transform: none; }
+}
+
+.demo-cast {
+  min-height: 100vh;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 18px;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 48px 28px 64px;
+  color: #1f1d36;
+}
+.demo-cast .demo-kicker { font-size: 13px; letter-spacing: 0.18em; }
+.demo-cast-count { margin: 0; color: #6b6578; font-size: 15px; }
+.demo-cast h2 {
+  margin: 0;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(40px, 5vw, 68px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.demo-cast-kinds, .demo-cast-picks, .demo-cast-nav { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.demo-cast button {
+  border: 1px solid rgba(31, 29, 54, 0.18);
+  background: white;
+  color: #1f1d36;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+.demo-cast button.on, .demo-cast button:hover { background: #1f4d3a; color: #f6f0e4; border-color: #1f4d3a; }
+.demo-cast button.dice { background: transparent; }
+.demo-cast button.go {
+  background: #d4a84b;
+  color: #1a1408;
+  border-color: #d4a84b;
+  font-size: 18px;
+  padding: 12px 22px;
+}
+.demo-cast button:disabled { opacity: 0.45; cursor: not-allowed; }
+.demo-cast-field { display: grid; gap: 8px; width: min(640px, 100%); }
+.demo-cast-field span { font-size: 14px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #6b6578; }
+.demo-cast-field input {
+  width: 100%;
+  border: 0;
+  border-bottom: 2px solid #1f1d36;
+  background: transparent;
+  color: #1f1d36;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(32px, 4vw, 48px);
+  padding: 4px 0 8px;
+  outline: none;
+}
+.demo-cast-nav { width: min(640px, 100%); justify-content: space-between; margin-top: 8px; }
+
 .demo-board {
   flex: 1;
   min-width: 0;
