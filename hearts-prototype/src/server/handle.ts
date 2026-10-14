@@ -57,7 +57,7 @@ import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCooki
 import { isTimeZone } from '@/lib/zone-time'
 import { parseLengthInput } from '@/lib/length'
 import { screenAnswerSafe } from '@/lib/answer-moderation'
-import { FEATURE_UNAVAILABLE, featuresFromForm } from '@/lib/features'
+import { FEATURE_UNAVAILABLE, defaultFeatures, featuresFromForm } from '@/lib/features'
 import { adoptLibraryCourses, loadPortalById, refuseFeature } from './features'
 import { ensurePackAdopted } from './pack-adopt'
 
@@ -684,7 +684,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (slugIssue) return redirectTo(req, '/master', slugIssue)
     const clash = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: slug } } })
     if (clash.docs.length) return redirectTo(req, '/master', 'That address is already in use.')
-    const features = form.get('featuresForm') === 'yes' ? featuresFromForm(form) : undefined
+    const features = form.get('featuresForm') === 'yes' ? featuresFromForm(form) : defaultFeatures()
     const created = await payload.create({
       collection: 'portals',
       overrideAccess: true,

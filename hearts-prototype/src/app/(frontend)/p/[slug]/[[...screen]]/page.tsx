@@ -160,7 +160,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         return gated(ctx, 'circle', true) || PortalCircle(ctx)
       case 'ai':
         guardAdmin(ctx)
-        return AiPages({ ctx, path: screen.slice(2) })
+        return gated(ctx, 'ai', true) || AiPages({ ctx, path: screen.slice(2) })
       case 'experiments':
         guardAdmin(ctx)
         return gated(ctx, 'experiments', true) || ExperimentPages({ ctx, path: screen.slice(2) })
@@ -169,14 +169,14 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         return gated(ctx, 'insights', true) || InsightPages({ ctx, path: screen.slice(2) })
       case 'calendar':
         guardAdmin(ctx)
-        return CalendarPages({ ctx })
+        return gated(ctx, 'calendar', true) || CalendarPages({ ctx })
       case 'missions':
         guardAdmin(ctx)
         return gated(ctx, 'missions', true) || MissionPages({ ctx, path: screen.slice(2) })
       case 'safety':
         return PortalSafetyScreen(ctx)
       case 'announcements':
-        return PortalAnnounceScreen(ctx)
+        return gated(ctx, 'announcements', true) || PortalAnnounceScreen(ctx)
       case 'sheet':
         guardAdmin(ctx)
         if (b === 'create') return PortalCreatorScreen(ctx)

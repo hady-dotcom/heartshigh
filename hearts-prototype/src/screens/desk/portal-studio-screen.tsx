@@ -15,7 +15,7 @@ async function libraryCourses(payload: MasterCtx['payload']) {
 export async function PortalCreateScreen(ctx: MasterCtx) {
   const courses = await libraryCourses(ctx.payload)
   return (
-    <MasterFrame ctx={ctx} active="portals" title="Open a portal" intro="Choose the name, the courses from the library, and which features this community will have." testId="portal-create">
+    <MasterFrame ctx={ctx} active="portals" title="Open a portal" intro="Choose the name, the courses, and which parts this place will have." testId="portal-create">
       <PortalStudio mode="create" action="create-portal" next="/master" courses={courses} features={defaultFeatures()} />
     </MasterFrame>
   )
@@ -30,7 +30,7 @@ export async function PortalEditScreen(ctx: MasterCtx, slug: string) {
       ctx={ctx}
       active="portals"
       title={`Features for ${portalDisplayName(portal)}`}
-      intro="Switch parts on in stages. Saving takes effect at once for learners and for the desk."
+      intro="The first group stays on. The next ones are on until you switch them off. Extras start off. Saving happens straight away."
       testId="portal-edit"
     >
       <PortalStudio

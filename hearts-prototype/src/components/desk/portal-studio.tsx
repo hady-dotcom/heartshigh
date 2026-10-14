@@ -4,14 +4,16 @@ import { useMemo, useState } from 'react'
 import { HelpTip } from '@/components/desk/help'
 import { Hidden } from '@/components/app/shell'
 import {
-  DEPTH_LABEL,
   DEPTH_ORDER,
+  DEPTH_SECTION,
   FEATURES,
   PRESETS,
   type FeatureKey,
   type FeatureMap,
   type PresetKey,
   defaultFeatures,
+  featureLocked,
+  lockBeginner,
   matchingPreset,
   presetFeatures,
 } from '@/lib/features'
@@ -54,11 +56,14 @@ export function PortalStudio({
 }: Props) {
   const [step, setStep] = useState<Step>(mode === 'edit' ? 'features' : 'details')
   const [picked, setPicked] = useState<number[]>(selectedCourses)
-  const [on, setOn] = useState<FeatureMap>(features || defaultFeatures())
+  const [on, setOn] = useState<FeatureMap>(lockBeginner(features || defaultFeatures()))
 
   const preset = matchingPreset(on)
   const applyPreset = (key: PresetKey) => setOn(presetFeatures(key))
-  const toggle = (key: FeatureKey) => setOn((current) => ({ ...current, [key]: !current[key] }))
+  const toggle = (key: FeatureKey) => {
+    if (featureLocked(key)) return
+    setOn((current) => ({ ...current, [key]: !current[key] }))
+  }
   const toggleCourse = (id: number) => {
     setPicked((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]))
   }
@@ -150,7 +155,7 @@ export function PortalStudio({
         <header>
           <div>
             <h2>Features <HelpTip topic="portal-features">{TOOL.portalFeatures}</HelpTip></h2>
-            <p>Switch parts on in stages. Some pools never need the in-person work. Saving takes effect at once.</p>
+            <p>Three groups. The first stays on. The next ones are on until you switch them off. The last ones you pick.</p>
           </div>
         </header>
         <div className="body">
@@ -171,18 +176,23 @@ export function PortalStudio({
           <div className="feature-board">
             {grouped.map((group) => (
               <div key={group.depth} className="feature-depth" data-testid={`feature-depth-${group.depth}`}>
-                <h3>{DEPTH_LABEL[group.depth]}</h3>
-                {group.rows.map((feature) => (
-                  <div key={feature.key} className={`feature-row${on[feature.key] ? ' on' : ''}`} data-testid={`feature-row-${feature.key}`}>
+                <h3>{DEPTH_SECTION[group.depth].title}</h3>
+                <p className="hint depth-line" data-testid={`feature-depth-line-${group.depth}`}>{DEPTH_SECTION[group.depth].line}</p>
+                {group.rows.map((feature) => {
+                  const locked = featureLocked(feature.key)
+                  return (
+                  <div key={feature.key} className={`feature-row${on[feature.key] ? ' on' : ''}${locked ? ' locked' : ''}`} data-testid={`feature-row-${feature.key}`}>
                     <label className="feature-switch">
                       <input
                         type="checkbox"
-                        name="feature"
+                        name={locked ? undefined : 'feature'}
                         value={feature.key}
-                        checked={on[feature.key]}
+                        checked={locked || on[feature.key]}
+                        disabled={locked}
                         onChange={() => toggle(feature.key)}
                         data-testid={`feature-${feature.key}`}
                       />
+                      {locked ? <input type="hidden" name="feature" value={feature.key} /> : null}
                       <span>
                         <b>{feature.name}</b>
                         <small>{feature.what}</small>
@@ -190,7 +200,8 @@ export function PortalStudio({
                     </label>
                     <HelpTip topic={`feature-${feature.key}`} place="end">{feature.help}</HelpTip>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             ))}
           </div>

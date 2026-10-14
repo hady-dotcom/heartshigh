@@ -119,7 +119,7 @@ export const Portals: CollectionConfig = {
       type: 'json',
       admin: {
         description:
-          'Per-portal feature switches. Empty means every feature that exists today stays on, so live portals do not change.',
+          'Per-portal feature switches. Empty means the portal keeps every part it already had. A new portal is saved with an explicit map: beginner stays on, intermediate starts on, extras start off.',
       },
     },
     {

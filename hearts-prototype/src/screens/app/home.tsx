@@ -103,6 +103,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
     : null
   const days = dayNumber(user)
   const clips = items.slice(0, 3)
+  const notes = featureOn(portal, 'announcements') ? await openAnnouncements(payload, user, portal.id) : []
   return (
     <AppFrame testId="home">
       <div className="app-scroll">
@@ -117,7 +118,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         <SavedToast />
         <span className="sr-only">{portalName(portal)}</span>
         <Flash error={query.error} notice={query.notice} />
-        {(await openAnnouncements(payload, user, portal.id)).map((note) => (
+        {notes.map((note) => (
           <AnnounceCard key={note.id} id={note.id} body={str(note.body)} next={base} />
         ))}
         {featureOn(portal, 'garden') ? (
