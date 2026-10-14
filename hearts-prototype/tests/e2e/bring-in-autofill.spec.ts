@@ -14,11 +14,17 @@ async function signIn(page: import('@playwright/test').Page) {
   await expect(page.getByTestId('bring-in')).toBeVisible()
 }
 
-test('a blank new course takes the playlist title and the channel, and the examples stay faint', async ({ page }) => {
+test('a blank new course takes the playlist title and the channel, and the examples stay pale grey', async ({ page }) => {
   await signIn(page)
-  const placeholder = await page.getByTestId('bring-in-urls').evaluate((el) => getComputedStyle(el, '::placeholder').color)
-  expect(placeholder).toBe('rgb(168, 152, 120)')
+  const placeholder = await page.getByTestId('bring-in-urls').evaluate((el) => {
+    const style = getComputedStyle(el, '::placeholder')
+    return { color: style.color, opacity: style.opacity }
+  })
+  expect(placeholder.color === 'rgb(183, 192, 190)' || placeholder.color === 'rgba(183, 192, 190, 0.45)').toBeTruthy()
+  expect(Number(placeholder.opacity)).toBeCloseTo(0.45, 1)
+  await expect(page.getByTestId('bring-in-urls')).toHaveAttribute('placeholder', /^e\.g\./)
   await page.getByTestId('bring-in-urls').fill(PLAYLIST)
+  await page.getByTestId('bring-in-more').locator('summary').click()
   await page.getByTestId('bring-in-course').selectOption('new')
   await page.getByTestId('bring-in-lookup').click()
   await expect(page.getByTestId('bring-in-preview')).toBeVisible()
@@ -37,9 +43,10 @@ test('a loose link takes the film title, and the review boxes can be changed bef
   const title = `Autofill ${Date.now().toString().slice(-6)}`
   await signIn(page)
   await page.getByTestId('bring-in-urls').fill(LOOSE)
+  await page.getByTestId('bring-in-more').locator('summary').click()
   await page.getByTestId('bring-in-course').selectOption('new')
   await page.getByTestId('bring-in-lookup').click()
-  await expect(page.getByTestId('bring-in-review-title')).toHaveValue('Goals for the month')
+  await expect(page.getByTestId('bring-in-review-title')).toHaveValue(/^Brought in \d{1,2} \w{3} \d{4}$/)
   await expect(page.getByTestId('bring-in-review-speaker')).toHaveValue('HEARTS channel')
   await page.getByTestId('bring-in-review-title').fill(title)
   await page.getByTestId('bring-in-review-speaker').fill('Shaykh Test')

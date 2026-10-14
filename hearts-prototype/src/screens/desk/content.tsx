@@ -33,6 +33,7 @@ import { BusyForm } from '@/components/desk/busy-form'
 import { listShortTalks } from '@/server/short-talks'
 import { TooShortFilter, TooShortTable } from './short-talks'
 import { bringInLang, bringInStatus, CAPTION_LANGUAGES } from '@/lib/youtube'
+import { CodeRoleFields } from '@/components/desk/code-role'
 import { AdminFrame } from './overview'
 import { CourseOnCodes } from './course-offer'
 
@@ -101,6 +102,7 @@ export async function ContentScreen(ctx: Ctx) {
   }
   return (
     <AdminFrame ctx={ctx} active="content" title="Content" intro="Build courses here: a subject, its topics, the films in each topic, and the questions that pause the film." testId="admin-content">
+      <p data-testid="content-overview">Your courses: {local.length} · From the library: {linked.length} · Add your own → <Link className="btn ink small" href={`${base}/admin/bring-in`} data-testid="content-bring-in">Bring in</Link></p>
       <div className="stats-strip">
         {stat(filtered.length, 'Subjects')}
         {stat(listedUnits.length, 'Topics')}
@@ -308,7 +310,9 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
             {!locked ? (
               <form id="add-film" className="body form" action="/api/hearts" method="post" style={{ borderTop: '1px solid var(--line)' }}>
                 <Hidden fields={{ action: 'add-lesson', course: courseId, next: editorHref }} />
-                <label className="stack">Add a film<input type="text" name="title" placeholder="Part 2" required /></label>
+                <label className="stack">Add a film<input type="text" name="title" placeholder="Part 2" data-testid="add-film-title" /></label>
+                <label className="stack">YouTube link<input type="text" name="youtube" placeholder="https://www.youtube.com/watch?v=…" data-testid="add-film-youtube" /></label>
+                <p className="hint">Leave the title blank and the film takes its name from YouTube. You can still type a title.</p>
                 <div className="actions"><button className="btn ghost small" type="submit">Add film</button></div>
               </form>
             ) : null}
@@ -775,12 +779,31 @@ export async function AccessScreen(ctx: Ctx) {
   const usable = packs.filter((pack) => pack.owner === 'master' || ref(pack.portal) === portal.id)
   const teachers = codes.filter((code) => code.role === 'teacher')
   const here = `${base}/admin/access`
+  const packCount = (pack: Row) => ((pack.courses as unknown[]) || []).length
+  const everything = [...usable].sort((a, b) => packCount(b) - packCount(a) || str(a.title).localeCompare(str(b.title)))[0]
+  const teacherOptions = teachers.map((code) => {
+    const person = people.find((row) => row.role === 'teacher' && ref(row.accessCode) === code.id)
+    return { id: code.id, name: str(person?.name) || str(code.label) || str(code.code) }
+  })
+  const freshCode = codes.find((code) => str(code.code) === String(ctx.query.fresh || ''))
+  const freshShare = freshCode ? `${origin}/join?code=${encodeURIComponent(str(freshCode.code))}` : ''
   const roleBadge: Record<string, string> = { admin: 'ink', teacher: 'purple', learner: 'teal', parent: 'gold' }
   const courseIds = [...new Set(usable.flatMap((pack) => ((pack.courses as unknown[]) || []).map((item) => ref(item)).filter((id): id is number => Boolean(id))))]
   const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }, { limit: 500, sort: 'title' }) : []
   const requiredGroups = await groupThese(payload, courses.map((course) => ({ id: course.id, title: str(course.title), summary: str(course.summary) })))
   return (
-    <AdminFrame ctx={ctx} active="access" title="Access codes" intro="A code says who someone is in the portal and which course pack they see. Send the link rather than the code, so nobody has to type it." testId="admin-access">
+    <AdminFrame ctx={ctx} active="access" title="Access codes" intro="A code says who someone is in the portal and which course pack they see. Send the link rather than the code, so nobody has to type it." testId="admin-access" showOnPhone>
+      <section className="panel" style={{ marginBottom: 18 }} data-testid="quick-links">
+        <header><div><h2>A link for someone new</h2><p>One tap makes a join link. The full address, Copy, WhatsApp and the QR appear on the row.</p></div></header>
+        <div className="body actions" style={{ justifyContent: 'flex-start' }}>
+          {(['teacher', 'learner', 'admin'] as const).map((role) => (
+            <form key={role} action="/api/hearts" method="post">
+              <Hidden fields={{ action: 'quick-join-link', portalSlug: portal.slug, role, next: here }} />
+              <button className="btn ink" type="submit" data-testid={`quick-link-${role}`}>New {role} link</button>
+            </form>
+          ))}
+        </div>
+      </section>
       <section className="panel" style={{ marginBottom: 18 }}>
         <div className="table-wrap">
           <table className="data">
@@ -826,30 +849,45 @@ export async function AccessScreen(ctx: Ctx) {
           </table>
         </div>
       </section>
+      {freshShare ? (
+        <section className="panel" data-testid="fresh-code" style={{ marginBottom: 18 }}>
+          <header><div><h2>Your new link</h2><p>Send this. Nobody has to type the code.</p></div></header>
+          <div className="body" style={{ display: 'grid', gap: 12 }}>
+            <div className="address" data-testid="fresh-url" style={{ whiteSpace: 'normal', overflow: 'visible', textOverflow: 'unset' }}>{freshShare}</div>
+            <ShareLinks value={freshShare} testId="fresh-copy" />
+            <Qr value={freshShare} testId="fresh-qr" />
+          </div>
+        </section>
+      ) : null}
+      <div className="actions" style={{ marginBottom: 18 }}>
+        {everything ? (
+          <>
+            <form action="/api/hearts" method="post">
+              <Hidden fields={{ action: 'create-code', quick: 'yes', role: 'teacher', pack: everything.id, portalSlug: portal.slug, next: here }} />
+              <button className="btn teal" type="submit" data-testid="quick-teacher">New teacher link</button>
+            </form>
+            <form action="/api/hearts" method="post">
+              <Hidden fields={{ action: 'create-code', quick: 'yes', role: 'learner', pack: everything.id, linkedTeacherCode: teacherOptions[0]?.id || '', portalSlug: portal.slug, next: here }} />
+              <button className="btn teal" type="submit" data-testid="quick-learner">New learner link</button>
+            </form>
+            <form action="/api/hearts" method="post">
+              <Hidden fields={{ action: 'create-code', quick: 'yes', role: 'admin', pack: everything.id, portalSlug: portal.slug, next: here }} />
+              <button className="btn teal" type="submit" data-testid="quick-admin">New admin link</button>
+            </form>
+          </>
+        ) : null}
+      </div>
       <div className="grid two" style={{ alignItems: 'start' }}>
-        <section className="panel" id="new-code">
-          <header><div><h2>New access code</h2><p>Learner and parent codes need a teacher code, so someone sees their progress</p></div></header>
+        <details className="panel" id="new-code" open data-testid="custom-code">
+          <summary><h2 style={{ display: 'inline' }}>Custom code…</h2></summary>
+          <p className="hint" style={{ margin: '12px 16px 0' }}>Learner and parent codes need a teacher code, so someone sees their progress</p>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-code', portalSlug: portal.slug, next: here }} />
-            <div className="cols">
-              <label className="stack">Code<input type="text" data-testid="new-code" name="code" placeholder="Leave empty for a random code" /></label>
-              <label className="stack">For
-                <select data-testid="new-code-role" name="role" defaultValue="learner">
-                  <option value="learner">Learner</option><option value="teacher">Teacher</option><option value="admin">Admin</option><option value="parent">Parent (one course)</option>
-                </select>
-              </label>
-            </div>
-            <div className="cols">
-              <label className="stack">Courses they can open
-                <select data-testid="new-code-pack" name="pack">{usable.map((pack) => <option key={pack.id} value={pack.id}>{str(pack.title)}</option>)}</select>
-              </label>
-              <label className="stack">Teacher code
-                <select data-testid="new-code-teacher" name="linkedTeacherCode">
-                  <option value="">None</option>
-                  {teachers.map((code) => <option key={code.id} value={code.id}>{str(code.code)}</option>)}
-                </select>
-              </label>
-            </div>
+            <CodeRoleFields
+              teachers={teacherOptions}
+              packs={usable.map((pack) => ({ id: pack.id, title: str(pack.title) }))}
+              defaultPack={everything ? String(everything.id) : ''}
+            />
             <CodeLimits />
             {requiredGroups.length ? (
               <div data-testid="required-courses">
@@ -860,15 +898,18 @@ export async function AccessScreen(ctx: Ctx) {
             <p className="hint" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Limits and a teacher code <HelpTip topic="code-limits">{TOOL.codeLimits}</HelpTip><HelpTip topic="teacher-code">{TOOL.teacherCode}</HelpTip></p>
             <div className="actions"><button className="btn ink" data-testid="new-code-submit" type="submit">Create access code</button></div>
           </form>
-        </section>
-        <section className="panel">
-          <header><div><h2>New set of courses</h2><p>A set of courses a code can open</p></div></header>
-          <form className="body form" action="/api/hearts" method="post">
-            <Hidden fields={{ action: 'create-pack', portalSlug: portal.slug, next: here }} />
-            <label className="stack">Name<input type="text" data-testid="portal-pack-title" name="title" required /></label>
-            <div className="actions"><button className="btn ghost" data-testid="portal-pack-submit" type="submit">Save this set</button></div>
-          </form>
-        </section>
+        </details>
+        <details className="panel" data-testid="codes-advanced">
+          <summary>Advanced</summary>
+          <section>
+            <header><div><h2>New set of courses</h2><p>A set of courses a code can open</p></div></header>
+            <form className="body form" action="/api/hearts" method="post">
+              <Hidden fields={{ action: 'create-pack', portalSlug: portal.slug, next: here }} />
+              <label className="stack">Name<input type="text" data-testid="portal-pack-title" name="title" required /></label>
+              <div className="actions"><button className="btn ghost" data-testid="portal-pack-submit" type="submit">Save this set</button></div>
+            </form>
+          </section>
+        </details>
       </div>
     </AdminFrame>
   )

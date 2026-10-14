@@ -14,7 +14,8 @@ import { sharedAnswerText } from '@/lib/shared-answers'
 import { markTeachVisit, newSharedAnswers, seenFor } from '@/server/teach-seen'
 import { DeskFrame, portalNav, type NavGroup } from './shell'
 import { PORTAL_TIME_ZONES, portalTimeZone, zoneCity } from '@/lib/zone-time'
-import { displayPortalAddress } from '@/lib/portal-address'
+import { humanDate } from '@/lib/human-date'
+import { ConfirmDeactivate } from '@/components/desk/confirm-deactivate'
 import { mcpConnectorStatus, publicAi } from '@/lib/portal-ai'
 
 function withAnswerBadge(groups: NavGroup[], count: number, href?: string | null): NavGroup[] {
@@ -25,14 +26,14 @@ function withAnswerBadge(groups: NavGroup[], count: number, href?: string | null
   }))
 }
 
-export async function AdminFrame({ ctx, active, title, intro, tools, help, children, testId, tone, primary }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; help?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening'; primary?: { label: string; href: string } }) {
+export async function AdminFrame({ ctx, active, title, intro, tools, help, children, testId, tone, showOnPhone, primary }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; help?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening'; showOnPhone?: boolean; primary?: { label: string; href: string } }) {
   const { payload, user, portal, base, query } = ctx
   const seenAt = active === 'teach' ? await markTeachVisit(payload, user, portal.id) : seenFor(user, portal.id)
   const fresh = await newSharedAnswers(payload, portal.id, seenAt, 1)
   const freshAnswers = fresh.total
   const newestHref = fresh.docs[0] ? `${base}/admin/answers/${fresh.docs[0].id}` : null
-  const extra = [{ label: user.role === 'teacher' ? 'See it as a learner' : 'Open the learner app', href: base }]
-  if (user.role === 'master') extra.push({ label: 'Back to the master desk', href: '/master' })
+  const extra = [{ label: 'See what a learner sees', href: base }]
+  if (user.role === 'master') extra.push({ label: 'Back to master desk', href: '/master' })
   return (
     <DeskFrame
       payload={payload}
@@ -47,18 +48,18 @@ export async function AdminFrame({ ctx, active, title, intro, tools, help, child
       brandHref={`${base}/admin`}
       extraLinks={extra}
       tools={
-        user.role === 'teacher' || tools ? (
-          <>
-            {user.role === 'teacher' ? <Link className="btn ghost small" href={base} data-testid="see-as-learner">See it as a learner</Link> : null}
-            {tools}
-          </>
-        ) : undefined
+        <>
+          <Link className="btn ghost small" href={base} data-testid="see-as-learner">See what a learner sees</Link>
+          {user.role === 'master' ? <Link className="btn ghost small" href="/master" data-testid="back-master">Back to master desk</Link> : null}
+          {tools}
+        </>
       }
       help={help}
       query={query}
       testId={testId}
       primary={primary}
       evening
+      showOnPhone={showOnPhone}
       logoUrl={portal.logoUrl}
       gatherDesk={tone === 'evening'}
     >
@@ -91,7 +92,7 @@ export async function OverviewScreen(ctx: Ctx) {
   ])
   const bars = days.map((day) => {
     const key = day.toISOString().slice(0, 10)
-    return { key, label: day.toLocaleDateString('en-GB', { day: 'numeric', timeZone: 'UTC' }), value: [...completions, ...answers].filter((row) => str(row.createdAt).slice(0, 10) === key).length }
+    return { key, label: humanDate(key), value: [...completions, ...answers].filter((row) => str(row.createdAt).slice(0, 10) === key).length }
   })
   const max = Math.max(1, ...bars.map((bar) => bar.value))
   const learners = people.filter((person) => person.role === 'learner').length
@@ -131,13 +132,6 @@ export async function OverviewScreen(ctx: Ctx) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span className={`status${portal.closed ? ' off' : ''}`} data-testid="portal-status"><i />{portal.closed ? 'Deactivated' : 'Active'}</span>
-          {user.role === 'master' ? (
-            <form action="/api/hearts" method="post">
-              <Hidden fields={{ action: 'deactivate', portalSlug: portal.slug, closed: portal.closed ? 'no' : 'yes', next: `${base}/admin` }} />
-              <button className="btn line-light" data-testid="deactivate" type="submit">{portal.closed ? 'Activate' : 'Deactivate'}</button>
-              <HelpTip topic="deactivate">{TOOL.deactivate}</HelpTip>
-            </form>
-          ) : null}
         </div>
       </section>
       <div className="grid over">
@@ -147,7 +141,7 @@ export async function OverviewScreen(ctx: Ctx) {
             <div>
               <div className="hint" style={{ marginBottom: 6 }}>Portal address</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <div className="address" style={{ flex: '1 1 12rem', minWidth: '11rem' }} data-testid="portal-address" title={address.replace(/^https?:\/\//, '')}>{displayPortalAddress(address)}</div>
+                <div className="address address-full" data-testid="portal-address">{address}</div>
                 <Link className="btn ink" href={base}>Go</Link>
                 <ShareLinks value={address} testId="portal-copy" />
               </div>
@@ -184,9 +178,9 @@ export async function OverviewScreen(ctx: Ctx) {
       </div>
       <div className="grid two" style={{ marginTop: 18 }}>
         <section className="panel" data-testid="own-content">
-          <header><div><h2>Content</h2><p>Made in this portal. Courses linked from the library are counted separately.</p></div></header>
+          <header><div><h2>Content</h2><p>Courses you made here, plus courses linked from the library.</p></div></header>
           <div className="body" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
-            <div className="count-tile"><span>Course</span><b data-testid="own-courses">{local.length}</b></div>
+            <div className="count-tile"><span>Course</span><b data-testid="own-courses">{local.length + adopted.length}</b></div>
             <div className="count-tile"><span>Topic</span><b data-testid="own-topics">{units.length}</b></div>
             <div className="count-tile"><span>Video</span><b data-testid="own-videos">{lessons.length}</b></div>
             <div className="count-tile"><span>Resource</span><b data-testid="own-resources">{resources.length}</b></div>
@@ -205,7 +199,7 @@ export async function OverviewScreen(ctx: Ctx) {
                 </div>
               ))}
             </div>
-            <div className="chart-legend"><span>{bars[0].key}</span><span>{bars.reduce((sum, bar) => sum + bar.value, 0)} in total</span><span>{bars[13].key}</span></div>
+            <div className="chart-legend"><span>{humanDate(bars[0].key)}</span><span>{bars.reduce((sum, bar) => sum + bar.value, 0)} in total</span><span>{humanDate(bars[13].key)}</span></div>
           </div>
         </section>
       </div>
@@ -265,6 +259,16 @@ export async function PortalSettingsScreen(ctx: Ctx) {
             <Link className="btn ghost" href={`${base}/admin/wizard`}>Run the short setup again</Link>
           </div>
         </section>
+        {user.role === 'master' ? (
+          <section className="panel" data-testid="danger-zone" style={{ gridColumn: '1 / -1' }}>
+            <header className="light"><h2>Danger zone</h2></header>
+            <div className="body" style={{ display: 'grid', gap: 10 }}>
+              <p>Deactivate stops learners signing in. Their work stays here. You will be asked to confirm.</p>
+              <ConfirmDeactivate closed={Boolean(portal.closed)} portalSlug={portal.slug} next={`${base}/admin/settings`} />
+              <HelpTip topic="deactivate">{TOOL.deactivate}</HelpTip>
+            </div>
+          </section>
+        ) : null}
         {user.role === 'portal-admin' ? (
           <section className="panel" data-testid="portal-ai-settings" style={{ gridColumn: '1 / -1' }}>
             <header className="light"><h2>This portal’s AI account <HelpTip topic="portal-ai">{TOOL.portalAi}</HelpTip></h2></header>
