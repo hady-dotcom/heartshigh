@@ -51,8 +51,6 @@ export const PAGE: Record<string, string> = {
     'Review is where drafts wait for a person. Approve what reads true, and send back what does not. Approved work is what learners see.',
   tiers:
     'These are the short, medium and longer ways into the same talk. Check the times and the lines before you mark a talk as checked. Learners only see work you have checked.',
-  packs:
-    'A pack is the set of courses an access code opens. Library packs can be linked by any portal. A portal pack belongs to one community.',
   questions:
     'Joining questions are asked once, when someone joins. Each answer points to a door of Hadith Jibril, and the door with the most answers chooses the first course. The default set is already on every portal. You can attach more, or add your own.',
   lanes:
