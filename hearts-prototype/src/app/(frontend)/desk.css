@@ -358,7 +358,10 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 @media (max-width: 899px) {
   .desk.desk-phone .main { padding: 16px 12px; min-width: 0; }
   .desk.desk-phone .desk-split { grid-template-columns: 1fr; }
-  .desk.desk-phone .table-wrap { overflow-x: visible; }
+  .desk.desk-phone .panel { overflow-x: auto; max-width: 100%; }
+  .desk.desk-phone .table-wrap { overflow-x: auto; max-width: 100%; }
+  .desk.desk-phone table.data { width: 100%; table-layout: fixed; }
+  .desk.desk-phone table.data td { white-space: normal; overflow-wrap: anywhere; }
   .desk.desk-phone table.master-codes-table { display: block; }
   .desk.desk-phone table.master-codes-table thead { display: none; }
   .desk.desk-phone table.master-codes-table tbody,
@@ -403,8 +406,8 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .learner-filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 12px; }
 .learner-filters label { display: grid; gap: 4px; font-size: 13px; font-weight: 700; }
 .learner-filters input, .learner-filters select { min-height: 40px; min-width: 10rem; }
-.desk-delete { display: grid; gap: 6px; justify-items: start; margin-top: 8px; }
-.desk-delete p { margin: 0; max-width: 36rem; }
+.desk-delete { display: grid; gap: 6px; justify-items: start; margin-top: 8px; white-space: normal; max-width: 100%; min-width: 0; }
+.desk-delete p { margin: 0; max-width: min(36rem, 100%); }
 .bulk-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0 12px; }
 .bulk-bar input { min-height: 40px; }
 .fact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }

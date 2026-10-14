@@ -726,7 +726,7 @@ export async function LibraryScreen(ctx: Ctx) {
           <div className="body"><PackContents key={openPack.id} groups={subsetGroups(grouped, packIds(openPack))} doors={doors} /></div>
         </section>
       ) : null}
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.45fr) minmax(380px, 1fr)', alignItems: 'start' }}>
+      <div className="grid two" style={{ alignItems: 'start' }}>
         <div style={{ display: 'grid', gap: 18 }}>
           <section className="panel">
             <header><h2>Library courses</h2></header>
@@ -744,16 +744,17 @@ export async function LibraryScreen(ctx: Ctx) {
                           <b>{str(course.title)}</b>
                           {course.summary ? <div className="hint">{str(course.summary).slice(0, 140)}</div> : null}
                           {course.hidden && course.hiddenNote ? <div className="hint" data-testid="course-hidden-note">{str(course.hiddenNote)}</div> : null}
-                        </td>
-                        <td>{str(course.speaker)}</td>
-                        <td>{direct ? <span className="badge teal">In this portal</span> : viaPack ? <span className="badge purple">Comes with a pack</span> : <span className="badge grey">Not added yet</span>}</td>
-                        <td style={{ whiteSpace: 'nowrap' }}>
                           {direct ? (
                             <>
                               <DeletePick formId="bulk-adoption" id={direct.id} label={str(course.title)} />
                               <DeleteInline kind="adoption" id={direct.id} next={here} portalSlug={portal.slug} testId="remove-link" label="Remove from this portal" />
                             </>
-                          ) : !viaPack && course.importable !== false ? (
+                          ) : null}
+                        </td>
+                        <td>{str(course.speaker)}</td>
+                        <td>{direct ? <span className="badge teal">In this portal</span> : viaPack ? <span className="badge purple">Comes with a pack</span> : <span className="badge grey">Not added yet</span>}</td>
+                        <td>
+                          {!direct && !viaPack && course.importable !== false ? (
                             <form action="/api/hearts" method="post">
                               <Hidden fields={{ action: 'adopt', kind: 'course', course: course.id, portalSlug: portal.slug, next: here }} />
                               <button className="btn small" data-testid="adopt-course" type="submit">Add this course (stays in sync)</button>

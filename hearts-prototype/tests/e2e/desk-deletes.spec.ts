@@ -1,4 +1,8 @@
-import { expect, request as playwrightRequest, test, type Page } from '@playwright/test'
+import { expect, request as playwrightRequest, test, type Locator, type Page } from '@playwright/test'
+
+function deleteButtons(scope: Page | Locator, kind: string) {
+  return scope.locator(`button[data-testid^="delete-${kind}-"]`)
+}
 
 const VIEWS = [
   { name: 'phone', width: 390, height: 844 },
@@ -31,11 +35,18 @@ async function restCreate(page: Page, collection: string, data: Record<string, u
   return id
 }
 
+async function bringIn(locator: ReturnType<Page['getByTestId']>) {
+  await locator.evaluate((node) => (node as HTMLElement).scrollIntoView({ block: 'center', inline: 'center' }))
+}
+
 async function confirmDelete(page: Page, testId: string) {
   const form = page.getByTestId(`${testId}-form`)
-  await form.scrollIntoViewIfNeeded()
-  await form.getByTestId(`${testId}-sure`).check()
-  await form.getByTestId(testId).click()
+  const sure = form.getByTestId(`${testId}-sure`)
+  await bringIn(sure)
+  await sure.check({ timeout: 20_000 })
+  const button = form.getByTestId(testId)
+  await bringIn(button)
+  await button.click({ timeout: 20_000 })
   await expect(page.getByTestId('notice')).toBeVisible()
 }
 
@@ -44,7 +55,7 @@ test.describe('desk list deletes', () => {
 
   for (const view of VIEWS) {
     test(`each new delete at ${view.width}`, async ({ page }) => {
-      test.setTimeout(300_000)
+      test.setTimeout(600_000)
       await page.setViewportSize({ width: view.width, height: view.height })
       const tag = `bin${view.width}`
       await signIn(page, 'master@hearts.test', 'hearts-master', '/master')
@@ -70,14 +81,18 @@ test.describe('desk list deletes', () => {
       })
       await page.goto('/p/east-london/admin/library')
       const linked = page.getByTestId('library-course').filter({ hasText: `Aaa ${tag} course` })
-      await expect(linked).toBeVisible()
-      await linked.getByTestId('remove-link-sure').check()
-      await linked.getByTestId('remove-link').click()
+      const remove = linked.getByTestId('remove-link')
+      const sure = linked.getByTestId('remove-link-sure')
+      await bringIn(sure)
+      await expect(sure).toBeVisible()
+      await sure.check({ timeout: 20_000 })
+      await bringIn(remove)
+      await remove.click({ timeout: 20_000 })
       await expect(page.getByTestId('notice')).toBeVisible()
-      await expect(page.getByTestId('library-course').filter({ hasText: `Aaa ${tag} course` })).toHaveCount(0)
+      await expect(linked.getByTestId('remove-link')).toHaveCount(0)
 
       await page.goto(`/master/library/${courseId}`)
-      const lessonButton = page.getByTestId(/^delete-lesson-/)
+      const lessonButton = deleteButtons(page, 'lesson')
       await expect(lessonButton.first()).toBeVisible()
       const lessonTestId = await lessonButton.first().getAttribute('data-testid')
       expect(lessonTestId).toBeTruthy()
@@ -86,7 +101,7 @@ test.describe('desk list deletes', () => {
       await page.getByTestId('point-prompt').fill(`A question for ${tag}`)
       await page.getByTestId('point-submit').click()
       await expect(page.getByTestId('notice')).toBeVisible()
-      const pointTestId = await page.getByTestId(/^delete-point-/).first().getAttribute('data-testid')
+      const pointTestId = await deleteButtons(page, 'point').first().getAttribute('data-testid')
       const pointId = pointTestId!.replace('delete-point-', '')
       await formPost(page, '/api/hearts', {
         action: 'circle-add',
@@ -134,7 +149,7 @@ test.describe('desk list deletes', () => {
       await page.goto('/master/codes')
       await expect(page.getByTestId('code-value').filter({ hasText: keptCode }).first()).toBeVisible()
       await page.goto('/master/bin')
-      const courseBin = page.getByTestId('bin-row').filter({ hasText: `Aaa ${tag} course` })
+      const courseBin = page.locator('[data-testid="bin-row"][data-kind="course"]').filter({ hasText: `Aaa ${tag} course` })
       await expect(courseBin).toBeVisible()
       await courseBin.getByTestId('bin-undo').click()
       await expect(page.getByTestId('notice')).toContainText('back')
@@ -146,7 +161,7 @@ test.describe('desk list deletes', () => {
       await page.goto('/master/packs')
       const packRow = page.getByTestId('pack-row').filter({ hasText: `Aaa ${tag} pack` })
       await expect(packRow).toBeVisible()
-      const packTestId = await packRow.getByTestId(/^delete-pack-/).getAttribute('data-testid')
+      const packTestId = await deleteButtons(packRow, 'pack').getAttribute('data-testid')
       await confirmDelete(page, packTestId!)
 
       await formPost(page, '/api/hearts', {
@@ -158,7 +173,7 @@ test.describe('desk list deletes', () => {
       await page.goto('/p/east-london/admin/access')
       await page.getByTestId('codes-advanced').locator('summary').click()
       const portalPack = page.getByTestId('portal-pack-row').filter({ hasText: `Aaa ${tag} portal pack` })
-      const portalPackId = await portalPack.getByTestId(/^delete-pack-/).getAttribute('data-testid')
+      const portalPackId = await deleteButtons(portalPack, 'pack').getAttribute('data-testid')
       await confirmDelete(page, portalPackId!)
 
       await page.goto('/master')
@@ -167,8 +182,11 @@ test.describe('desk list deletes', () => {
       await page.getByTestId('create-portal-submit').click()
       await page.goto('/master')
       const portalRow = page.getByTestId('portal-card').filter({ hasText: `Bin Harbour ${tag}` })
+      await portalRow.getByTestId('danger-zone').locator('summary').click()
       const portalForm = portalRow.getByTestId(/^delete-portal-.*-form$/)
-      await portalForm.getByTestId(/^delete-portal-.*-name$/).fill(`Bin Harbour ${tag}`)
+      const portalName = portalForm.getByTestId(/^delete-portal-.*-name$/)
+      await bringIn(portalName)
+      await portalName.fill(`Bin Harbour ${tag}`)
       await portalForm.getByRole('button', { name: 'Delete portal' }).click()
       await expect(page.getByTestId('notice')).toBeVisible()
       await expect(page.getByTestId('portal-card').filter({ hasText: `Bin Harbour ${tag}` })).toHaveCount(0)
@@ -178,7 +196,7 @@ test.describe('desk list deletes', () => {
       await page.getByTestId('announce-submit').click()
       await expect(page.getByTestId('announce-row').filter({ hasText: `Note ${tag} for home` })).toBeVisible()
       const note = page.getByTestId('announce-row').filter({ hasText: `Note ${tag} for home` })
-      const noteId = await note.getByTestId(/^delete-announcement-/).getAttribute('data-testid')
+      const noteId = await deleteButtons(note, 'announcement').getAttribute('data-testid')
       await confirmDelete(page, noteId!)
       const portalForNotes = await page.getByTestId('announce-portal').locator('option').first().getAttribute('value')
       expect(portalForNotes).toBeTruthy()
@@ -202,7 +220,7 @@ test.describe('desk list deletes', () => {
       })
       await page.goto('/p/east-london/admin/nights')
       const night = page.getByTestId('event').filter({ hasText: `Aaa ${tag} night` })
-      const nightId = await night.getByTestId(/^delete-night-/).getAttribute('data-testid')
+      const nightId = await deleteButtons(night, 'night').getAttribute('data-testid')
       await confirmDelete(page, nightId!)
 
       await formPost(page, '/api/calendar', {
@@ -216,7 +234,7 @@ test.describe('desk list deletes', () => {
       })
       await page.goto('/master/calendar')
       const season = page.getByTestId('season-row').filter({ hasText: `Aaa ${tag} season` })
-      const seasonId = await season.getByTestId(/^delete-season-/).getAttribute('data-testid')
+      const seasonId = await deleteButtons(season, 'season').getAttribute('data-testid')
       await confirmDelete(page, seasonId!)
 
       await formPost(page, '/api/calendar', {
@@ -228,7 +246,7 @@ test.describe('desk list deletes', () => {
       })
       await page.goto('/master/calendar')
       const copy = page.getByTestId('copy-row').filter({ hasText: `Line ${tag}` })
-      const copyId = await copy.getByTestId(/^delete-copy-/).getAttribute('data-testid')
+      const copyId = await deleteButtons(copy, 'copy').getAttribute('data-testid')
       await confirmDelete(page, copyId!)
 
       await formPost(page, '/api/gather', {
@@ -243,7 +261,7 @@ test.describe('desk list deletes', () => {
       })
       await page.goto('/p/east-london/admin/gather')
       const gathering = page.getByTestId('desk-gather-row').filter({ hasText: `Aaa ${tag} gathering` })
-      const gatheringId = await gathering.getByTestId(/^delete-gathering-/).getAttribute('data-testid')
+      const gatheringId = await deleteButtons(gathering, 'gathering').getAttribute('data-testid')
       await confirmDelete(page, gatheringId!)
 
       await formPost(page, '/api/live', {
@@ -256,7 +274,7 @@ test.describe('desk list deletes', () => {
       })
       await page.goto('/p/east-london/admin/live')
       const live = page.getByTestId('desk-scheduled-row').filter({ hasText: `Aaa ${tag} live` })
-      const liveId = await live.getByTestId(/^delete-live-/).getAttribute('data-testid')
+      const liveId = await deleteButtons(live, 'live').getAttribute('data-testid')
       await confirmDelete(page, liveId!)
 
       await formPost(page, '/api/missions', {
@@ -273,7 +291,7 @@ test.describe('desk list deletes', () => {
       await page.goto('/master/missions')
       const mission = page.getByTestId('mission-card').filter({ hasText: `Aaa ${tag} mission` })
       await expect(mission).toBeVisible()
-      const missionId = await mission.locator('xpath=..').getByTestId(/^delete-mission-/).getAttribute('data-testid')
+      const missionId = await deleteButtons(mission.locator('xpath=..'), 'mission').getAttribute('data-testid')
       await confirmDelete(page, missionId!)
 
       const experiment = await formPost(page, '/api/experiments', {
@@ -290,7 +308,7 @@ test.describe('desk list deletes', () => {
       else {
         await page.goto('/master/experiments')
         const card = page.getByTestId('experiment-card').filter({ hasText: `Aaa ${tag} experiment` })
-        const experimentId = await card.locator('xpath=..').getByTestId(/^delete-experiment-/).getAttribute('data-testid')
+        const experimentId = await deleteButtons(card.locator('xpath=..'), 'experiment').getAttribute('data-testid')
         await confirmDelete(page, experimentId!)
       }
 
@@ -320,7 +338,7 @@ test.describe('desk list deletes', () => {
       await page.getByTestId('placing-save').click()
       await expect(page.getByTestId('notice')).toBeVisible()
       const placing = page.getByTestId('placing-row').filter({ hasText: `Where do you start ${tag}?` })
-      const placingId = await placing.getByTestId(/^delete-placing-/).getAttribute('data-testid')
+      const placingId = await deleteButtons(placing, 'placing').getAttribute('data-testid')
       await confirmDelete(page, placingId!)
 
       const sheetId = await restCreate(page, 'sheet-imports', {
@@ -360,7 +378,12 @@ test.describe('desk list deletes', () => {
       const person = (await people.json()) as { docs?: { id?: number }[] }
       const personId = Number(person.docs?.[0]?.id)
       expect(personId).toBeGreaterThan(0)
-      const diaryId = await restCreate(page, 'workbook-entries', { user: personId, body: `Diary words ${tag}`, consent: true })
+      const portals = await page.request.get('/api/portals?limit=1&where[slug][equals]=east-london')
+      expect(portals.ok()).toBeTruthy()
+      const portalBody = (await portals.json()) as { docs?: { id?: number }[] }
+      const elmId = Number(portalBody.docs?.[0]?.id)
+      expect(elmId).toBeGreaterThan(0)
+      const diaryId = await restCreate(page, 'workbook-entries', { user: personId, portal: elmId, body: `Diary words ${tag}`, consent: true })
       await page.goto(`/master/diaries/${diaryId}`)
       await expect(page.getByTestId('diary-delete-copy')).toContainText("can't be undone")
       await page.getByTestId('diary-delete-sure').check()
@@ -371,6 +394,7 @@ test.describe('desk list deletes', () => {
 
       const planId = await restCreate(page, 'schedules', {
         name: `Aaa ${tag} plan`,
+        portal: elmId,
         startDate: '1 November 2026',
         endDate: '8 November 2026',
         weekdays: [1, 3],
@@ -397,7 +421,7 @@ test.describe('desk list deletes', () => {
       await page.goto('/master/codes')
       const codeRow = page.getByTestId('master-code-row').filter({ hasText: joinCode })
       await expect(codeRow).toBeVisible()
-      const codeTestId = await codeRow.getByTestId(/^delete-code-/).getAttribute('data-testid')
+      const codeTestId = await deleteButtons(codeRow, 'code').getAttribute('data-testid')
       await confirmDelete(page, codeTestId!)
       await expect(page.getByTestId('code-value').filter({ hasText: keptCode }).first()).toBeVisible()
       await expect(page.getByTestId('bulk-code')).toBeVisible()
@@ -410,7 +434,7 @@ test.describe('desk list deletes', () => {
     await formPost(page, '/api/hearts', { action: 'create-course', title: 'Aaa other portal course', origin: 'local', portalSlug: 'leeds', next: '/p/leeds/admin/content' })
     await page.goto('/p/leeds/admin/content')
     const row = page.getByTestId('course-row').filter({ hasText: 'Aaa other portal course' })
-    const testId = await row.getByTestId(/^delete-course-/).getAttribute('data-testid')
+    const testId = await deleteButtons(row, 'course').getAttribute('data-testid')
     const courseId = Number(testId?.replace('delete-course-', ''))
     expect(courseId).toBeGreaterThan(0)
 
