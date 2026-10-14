@@ -28,7 +28,7 @@ export type StepSpec = {
   temperature: number
   maxTokens: number
   outputSchema: Record<string, unknown>
-  /** Plain English: which tier or field the output fills. */
+  /** Plain English: where the result is kept. */
   fills: string
   pipelineOrder: number
   /** Rubric is shared text the critic reads. It is not run once per talk. */
@@ -160,25 +160,130 @@ export function mockBanner(input: { connected: boolean; master: boolean }) {
   return 'AI is off. A portal admin connects this portal’s own account in Settings. Until then every step uses the built-in drafts, and nothing is sent out.'
 }
 
-/** One plain sentence for the steps list. The longer description stays on the step page. */
+/** One plain sentence for the steps list. */
 const STEP_LINES: Record<string, string> = {
-  'language-inference': 'Names the language the speaker uses to explain.',
-  'hors-doeuvre': 'Picks a short opening clip from the first sitting.',
-  'appetiser-cut': 'Cuts the first sitting into a hook, a turn and a land.',
-  'popup-drafter': 'Drafts the questions that pause the main talk.',
-  'tidy-caption-line': 'Turns raw captions into lines a learner can read.',
-  'jibril-seat': 'Tags the Hadith Jibril clause this talk is teaching.',
-  'quran-harvest': 'Finds the Qur’an the speaker actually quotes.',
-  'hadith-extraction': 'Finds the hadith the speaker quotes.',
-  'reflection-prompts': 'Drafts open reflections tied to lines in the talk.',
-  'clip-critic': 'Scores the short clips against the live rubric.',
-  rubric: 'Holds the shared standard the clip critic reads.',
-  'feedback-summary': 'Drafts the themes in answers people chose to share.',
-  'question-value': 'Flags a question whose answers would not help a teacher.',
+  'language-inference': 'Works out which language the speaker is teaching in.',
+  'hors-doeuvre': 'Picks a short clip you can hear with no setup.',
+  'appetiser-cut': 'Cuts a first sitting into a hook, a turn and a land.',
+  'popup-drafter': 'Writes the questions that pause the full talk.',
+  'tidy-caption-line': 'Adds capitals and stops so captions are easy to read.',
+  'jibril-seat': 'Says which Hadith Jibril teaching this talk is about.',
+  'quran-harvest': 'Finds every Qur’an quote and keeps the exact words.',
+  'hadith-extraction': 'Finds the hadith the speaker quotes, in their words.',
+  'reflection-prompts': 'Writes open questions with no right answer.',
+  'clip-critic': 'Marks the short clips so you can see if they hold.',
+  rubric: 'Holds the checklist the clip marker reads.',
+  'feedback-summary': 'Jots the themes in answers people chose to share.',
+  'question-value': 'Spots a question whose answers would not help a teacher.',
+}
+
+/** Three or four plain bullets for the step page. Say what it does, and why you would care. */
+const STEP_DOES: Record<string, string[]> = {
+  'language-inference': [
+    'Listens to the words the speaker uses to explain.',
+    'Ignores a verse in Arabic when the talk itself is in English.',
+    'Writes the language down so later jobs can skip a muddled talk.',
+    'Learners never see this.',
+  ],
+  'hors-doeuvre': [
+    'Picks one clip of 15 to 30 seconds.',
+    'It has to make sense if you hear it with no setup.',
+    'It sits inside the longer first cut.',
+    'A person checks it before anyone else sees it.',
+  ],
+  'appetiser-cut': [
+    'Cuts a first sitting of about three minutes.',
+    'Picks a hook, a turn and a landing line the speaker actually said.',
+    'Writes down the minute each line is said.',
+    'A person can approve it, change it, or throw it out.',
+  ],
+  'popup-drafter': [
+    'Writes the questions and small tasks that pause the full talk.',
+    'Each one waits until the line it is about has been said.',
+    'They sit as drafts until a person says yes.',
+    'A question someone already approved is left alone.',
+  ],
+  'tidy-caption-line': [
+    'Takes captions that arrive in lowercase, with no full stops.',
+    'Keeps the speaker’s words and adds capitals and punctuation.',
+    'Uses British spelling, and capitalises Allah, the Prophet and the Qur’an.',
+    'With no AI account, the same tidy-up runs here and nothing is sent out.',
+  ],
+  'jibril-seat': [
+    'Says which of the 41 Hadith Jibril teachings this talk is about.',
+    'Matches the teaching, not a word that happens to show up.',
+    'Adds a Ghunya seat only when that teaching already prints one.',
+    'It does not change what learners play on its own.',
+  ],
+  'quran-harvest': [
+    'Finds every Qur’an quote in a talk and copies the exact words.',
+    'Notes the minute.',
+    'Adds the surah only if the sheikh says it.',
+    'Waits as a draft for a person to check.',
+  ],
+  'hadith-extraction': [
+    'Finds hadith the speaker quotes and copies their words.',
+    'Notes the minute.',
+    'Adds a book name only if the speaker says it.',
+    'Waits as a draft, and does not invent a page or a chain of narrators.',
+  ],
+  'reflection-prompts': [
+    'Writes two or three open questions.',
+    'Each one hangs on a different line, and shows up after that line.',
+    'There is no right answer, and it is not a quiz.',
+    'They wait as drafts until a person checks them.',
+  ],
+  'clip-critic': [
+    'Marks the short clip and the first sitting.',
+    'It listens to the clip itself, not the title we stuck on it.',
+    'An ordinary clip gets a 3.',
+    'It does not rewrite the cut. The marks wait for a person.',
+  ],
+  rubric: [
+    'This is the checklist the clip marker uses.',
+    'It does not run on a talk by itself.',
+    'When you make a new version live, the next marks use it.',
+    'Older marks keep the checklist that made them.',
+  ],
+  'feedback-summary': [
+    'Reads answers people chose to share on one question.',
+    'Jots the main themes and copies a few of their words.',
+    'It does not name anyone.',
+    'It stays off the download until a person includes it.',
+  ],
+  'question-value': [
+    'Spots a question that would only get yes or no.',
+    'Suggests a rewrite that asks about the person’s own week.',
+    'The rewrite is a draft.',
+    'The question learners see stays as it is.',
+  ],
+}
+
+/** Labels on the step page. Everyday words, including the collapsed technical card. */
+export const STEP_PAGE_COPY = {
+  doesTitle: 'What this does',
+  lands: 'Where it lands',
+  techies: 'For techies',
+  instructions: 'Instructions',
+  who: 'Who answers',
+  helper: 'Which helper',
+  stick: 'How closely it sticks to one answer',
+  stickHint: '0 means the same answer every time. 1 lets it vary more.',
+  length: 'How long the answer can be',
+  blanks: 'Blanks the talk fills in',
+  noBlanks: 'This step has no blanks.',
+  shape: 'What the answer has to look like',
+  order: 'When this job runs',
+  orderNote: 'Smaller numbers go first.',
+  runHint: 'A real run uses the helper saved with this portal’s own AI account. The boxes above are labels on this card. The master desk does not send the talk out.',
 }
 
 export function stepPlainLine(slug: string) {
   return STEP_LINES[slug] || ''
+}
+
+export function stepDoes(slug: string) {
+  return STEP_DOES[slug] || []
 }
 
 /**
@@ -354,8 +459,8 @@ export const STEP_SPECS: StepSpec[] = [
   {
     slug: 'language-inference',
     name: 'Language inference',
-    description: 'Reads the transcript and names the language the speaker uses to explain, not the language of a quoted verse. The code is kept on this talk’s ingest card so later steps can skip a garbled or unexpected language. Learners never see it.',
-    placeholders: [{ token: 'TRANSCRIPT', meaning: 'The talk transcript, with timestamps.', required: true }],
+    description: 'Reads the words and names the language the speaker uses to explain, not the language of a quoted verse. That note stays on this talk so later jobs can skip a garbled or unexpected language. Learners never see it.',
+    placeholders: [{ token: 'TRANSCRIPT', meaning: 'The words of the talk, with the minutes marked.', required: true }],
     provider: 'anthropic',
     model: 'claude-sonnet-4-5',
     temperature: 0,
@@ -364,7 +469,7 @@ export const STEP_SPECS: StepSpec[] = [
     inPipeline: true,
     fillsTier: null,
     fillsPoints: null,
-    fills: 'Ingest card only. It does not fill a tier or a pop-up.',
+    fills: 'Kept on this talk’s notes. It does not fill a clip or a question.',
     outputSchema: obj({ language: { type: ['string', 'null'] } }, ['language']),
     prompt: `You determine the PRIMARY spoken language of a talk from its transcript. The user message is the transcript, with timestamps.
 
@@ -378,12 +483,12 @@ Return a single JSON object: {"language": "en"}
   {
     slug: 'hors-doeuvre',
     name: "Hors d'oeuvre picker",
-    description: 'Picks one 15 to 30 second clip that can be heard cold, from inside the appetiser: the short first rung of the ladder, before any longer sitting. It fills the hors d’oeuvre in-point, out-point, quote and caption lines on the talk’s tier. A person still approves it on Review before learners see it.',
+    description: 'Picks one clip of 15 to 30 seconds that can be heard with no setup, from inside the first sitting. It fills the start, the end, the quote and the caption lines. A person still approves it on Review before learners see it.',
     placeholders: [
-      { token: 'TITLE', meaning: 'The talk title.', required: true },
-      { token: 'DURATION', meaning: 'The talk length in seconds.', required: true },
-      { token: 'APPETISER', meaning: 'The appetiser’s in and out points. The hors d’oeuvre has to sit inside them.', required: false },
-      { token: 'TRANSCRIPT', meaning: 'The talk transcript.', required: true },
+      { token: 'TITLE', meaning: 'The name of the talk.', required: true },
+      { token: 'DURATION', meaning: 'How long the talk is, in seconds.', required: true },
+      { token: 'APPETISER', meaning: 'Where the first sitting starts and ends. The short clip has to sit inside it.', required: false },
+      { token: 'TRANSCRIPT', meaning: 'The words of the talk.', required: true },
     ],
     provider: 'anthropic',
     model: 'claude-sonnet-4-5',
@@ -393,7 +498,7 @@ Return a single JSON object: {"language": "en"}
     inPipeline: true,
     fillsTier: 'hors',
     fillsPoints: null,
-    fills: "Talk tier: hors d'oeuvre start, end, quote and caption lines. Review, talk tiers.",
+    fills: 'The short clip: when it starts, when it ends, the quote and the caption lines. A person checks it on Review.',
     outputSchema: horsSchema,
     prompt: `You pick a single hors d'oeuvre from this talk: one clip of 15 to 30 seconds that a stranger can hear with no setup.
 
@@ -412,11 +517,11 @@ start and end are seconds inside the appetiser, and end - start is between 15 an
   {
     slug: 'appetiser-cut',
     name: 'Appetiser cutter',
-    description: 'Cuts the appetiser: up to about three minutes, with a hook, a turn and a land, each a sentence the speaker actually said. It fills those lines and their times on the talk’s tier. Review still has to approve, adjust or reject it.',
+    description: 'Cuts the first sitting: up to about three minutes, with a hook, a turn and a landing line, each a sentence the speaker actually said. It writes those lines and the minute each is said. Review still has to approve it, change it, or reject it.',
     placeholders: [
-      { token: 'TITLE', meaning: 'The talk title.', required: true },
-      { token: 'DURATION', meaning: 'The talk length in seconds.', required: true },
-      { token: 'TRANSCRIPT', meaning: 'The talk transcript.', required: true },
+      { token: 'TITLE', meaning: 'The name of the talk.', required: true },
+      { token: 'DURATION', meaning: 'How long the talk is, in seconds.', required: true },
+      { token: 'TRANSCRIPT', meaning: 'The words of the talk.', required: true },
     ],
     provider: 'anthropic',
     model: 'claude-sonnet-4-5',
@@ -426,7 +531,7 @@ start and end are seconds inside the appetiser, and end - start is between 15 an
     inPipeline: true,
     fillsTier: 'appetiser',
     fillsPoints: null,
-    fills: 'Talk tier: appetiser start and end, hook, turn, land, and the time each is said. Review, talk tiers.',
+    fills: 'The first sitting: start, end, hook, turn, landing line, and the minute each is said. A person checks it on Review.',
     outputSchema: appetiserSchema,
     prompt: `You cut one appetiser from this talk. It is at most about three minutes. It has three lines, each spoken in the talk, in this order:
 
@@ -447,11 +552,11 @@ end - start is at most 195. hookAt, turnAt and landAt sit inside the cut, in tha
   {
     slug: 'popup-drafter',
     name: 'Pop-up question drafter',
-    description: 'Drafts the questions and small tasks that pause the main talk. Each one is timed to a moment after the line it draws on. They are saved as draft pop-ups and wait on Review. Approved or hand-edited pop-ups are left as they are, and the new draft is flagged beside them.',
+    description: 'Writes the questions and small tasks that pause the full talk. Each one is timed to a moment after the line it draws on. They wait on Review. A question someone already approved is left as it is, and the new draft is flagged beside it.',
     placeholders: [
-      { token: 'LAND', meaning: 'The appetiser land line, when there is one.', required: true },
-      { token: 'LAND_AT', meaning: 'When the land is said, in seconds.', required: true },
-      { token: 'TRANSCRIPT', meaning: 'The talk transcript.', required: true },
+      { token: 'LAND', meaning: 'The last line of the first sitting, when there is one.', required: true },
+      { token: 'LAND_AT', meaning: 'The second that last line is said.', required: true },
+      { token: 'TRANSCRIPT', meaning: 'The words of the talk.', required: true },
     ],
     provider: 'anthropic',
     model: 'claude-sonnet-4-5',
@@ -461,7 +566,7 @@ end - start is at most 195. hookAt, turnAt and landAt sit inside the cut, in tha
     inPipeline: true,
     fillsTier: null,
     fillsPoints: 'popup',
-    fills: 'Pop-ups on the main: draft engagement points (an open question or a small task). Review, pop-ups.',
+    fills: 'Questions and small tasks on the full talk. They wait on Review.',
     outputSchema: obj({ points: { type: 'array', items: pointSchema } }, ['points']),
     prompt: `You draft pop-up questions for the main sitting of a talk. Each pop-up pauses the film at one moment and asks one thing. The user message is the transcript.
 
@@ -481,10 +586,10 @@ Two or three points, each prompt a sentence the listener can answer from their o
   {
     slug: 'tidy-caption-line',
     name: 'Tidy caption line',
-    description: 'Turns each hors d’oeuvre and appetiser caption, which arrives from YouTube in lowercase and without punctuation, into a line a learner can read. It keeps the speaker’s words, adds sentence case and punctuation, and capitalises Allah, the Prophet, Qur’an, hadith names, names of Allah, the Day of Judgement, the speaker and I. British spelling. The raw caption stays for timing. With no portal AI account connected, the same rules run in code, and nothing is sent out.',
+    description: 'Takes each short-clip and first-sitting caption, which arrives from YouTube in lowercase and without punctuation, and turns it into a line a learner can read. It keeps the speaker’s words, adds capitals and punctuation, and capitalises Allah, the Prophet, Qur’an, hadith names, names of Allah, the Day of Judgement, the speaker and I. British spelling. The original caption stays for timing. With no AI account connected, the same rules run here, and nothing is sent out.',
     placeholders: [
-      { token: 'LINES', meaning: 'The caption lines to tidy, one per line, still in the speaker’s words.', required: true },
-      { token: 'SPEAKER', meaning: 'The speaker’s name, capitalised when it appears in a line.', required: false },
+      { token: 'LINES', meaning: 'The caption lines to clean up, one per line, still in the speaker’s words.', required: true },
+      { token: 'SPEAKER', meaning: 'The speaker’s name. It gets a capital when it shows up in a line.', required: false },
     ],
     provider: 'openai',
     model: 'gpt-4o-mini',
@@ -494,7 +599,7 @@ Two or three points, each prompt a sentence the listener can answer from their o
     inPipeline: true,
     fillsTier: null,
     fillsPoints: null,
-    fills: 'Talk tier: the tidied hors d’oeuvre lines and the tidied hook, turn and land. The raw captions and their times stay as they are.',
+    fills: 'The cleaned short-clip lines, and the cleaned hook, turn and landing line. The original captions and their times stay as they are.',
     outputSchema: obj(
       {
         lines: {
@@ -518,13 +623,13 @@ role is hors, hook, turn, land or quote. raw is the line exactly as given. text 
   {
     slug: 'jibril-seat',
     name: 'Jibril and Ghunya tagger',
-    description: 'Says which of the 41 Hadith Jibril clauses this talk is teaching, and which Ghunya seat that clause already prints. It hangs by the teaching, not by a shared word. It never invents a page. The tag is kept on the ingest card for the reviewer; it does not by itself change what learners play.',
+    description: 'Says which of the 41 Hadith Jibril teachings this talk is about, and which Ghunya seat that teaching already prints. It matches the teaching, not a shared word. It never invents a page. The note stays on this talk for the reviewer, and it does not by itself change what learners play.',
     placeholders: [
-      { token: 'HOOK', meaning: 'The appetiser hook.', required: true },
-      { token: 'TURN', meaning: 'The appetiser turn.', required: true },
-      { token: 'LAND', meaning: 'The appetiser land.', required: true },
-      { token: 'CLAUSE_CARDS', meaning: 'The 41 clauses, each with its teaching line and printed seats.', required: true },
-      { token: 'TRANSCRIPT', meaning: 'The talk transcript.', required: true },
+      { token: 'HOOK', meaning: 'The opening line of the first sitting.', required: true },
+      { token: 'TURN', meaning: 'The line where the first sitting shifts.', required: true },
+      { token: 'LAND', meaning: 'The last line of the first sitting.', required: true },
+      { token: 'CLAUSE_CARDS', meaning: 'The 41 teachings, each with its line and the seats already printed.', required: true },
+      { token: 'TRANSCRIPT', meaning: 'The words of the talk.', required: true },
     ],
     provider: 'anthropic',
     model: 'claude-sonnet-4-5',
@@ -534,7 +639,7 @@ role is hors, hook, turn, land or quote. raw is the line exactly as given. text 
     inPipeline: true,
     fillsTier: null,
     fillsPoints: null,
-    fills: 'Ingest card: clause number, hang strength, a one-line reason, and a seat only when the clause card prints one.',
+    fills: 'A note on this talk: which teaching, how strong the match is, a one-line reason, and a seat only when the card already prints one.',
     outputSchema: obj(
       {
         clause: intOrNull,
@@ -565,8 +670,8 @@ clause is 1 to 41 or null. hangStrength is strong, medium, stretch or no_clean_h
   {
     slug: 'quran-harvest',
     name: "Qur'an harvest",
-    description: 'Finds the Qur’an the speaker actually quotes, with the timestamp of that line and a reference only when the speaker names one. The rows stay on the ingest card as a draft for a person to read. They are not written into a learner’s own harvest.',
-    placeholders: [{ token: 'TRANSCRIPT', meaning: 'The talk transcript.', required: true }],
+    description: 'Finds the Qur’an the speaker actually quotes, with the minute of that line and a surah only when the speaker names one. The rows stay on this talk as a draft for a person to read. They are not written into a learner’s own harvest.',
+    placeholders: [{ token: 'TRANSCRIPT', meaning: 'The words of the talk.', required: true }],
     provider: 'anthropic',
     model: 'claude-sonnet-4-5',
     temperature: 0,
@@ -575,7 +680,7 @@ clause is 1 to 41 or null. hangStrength is strong, medium, stretch or no_clean_h
     inPipeline: true,
     fillsTier: null,
     fillsPoints: null,
-    fills: "Ingest card: Qur'an mentions (the speaker's words, a reference only if they named one, the timestamp, the surrounding line). Not the learner harvest.",
+    fills: 'A list on this talk: the speaker’s words, a surah only if they named one, the minute, and the line around it. Not the learner’s own harvest.',
     outputSchema: obj({ mentions: { type: 'array', items: mentionSchema } }, ['mentions']),
     prompt: `You catalogue Qur'an the speaker quotes in this talk. The user message is the transcript, with timestamps.
 
@@ -591,8 +696,8 @@ reference is "" when the speaker did not name one. context is one or two sentenc
   {
     slug: 'hadith-extraction',
     name: 'Hadith extraction',
-    description: 'Finds hadith the speaker quotes, copied from the transcript, with a collection or grading only when the speaker states it. A Hadith Jibril identification may be noted when the wording is unmistakable. The rows stay on the ingest card. No chain and no page is invented.',
-    placeholders: [{ token: 'TRANSCRIPT', meaning: 'The talk transcript.', required: true }],
+    description: 'Finds hadith the speaker quotes, copied from the words of the talk, with a book name or a grade only when the speaker states it. A Hadith Jibril match is noted when the wording is unmistakable. The rows stay on this talk. No chain and no page is invented.',
+    placeholders: [{ token: 'TRANSCRIPT', meaning: 'The words of the talk.', required: true }],
     provider: 'anthropic',
     model: 'claude-sonnet-4-5',
     temperature: 0,
@@ -601,7 +706,7 @@ reference is "" when the speaker did not name one. context is one or two sentenc
     inPipeline: true,
     fillsTier: null,
     fillsPoints: null,
-    fills: 'Ingest card: hadith mentions (the speaker’s words, a reference only if they named a collection, the timestamp, the surrounding line).',
+    fills: 'A list on this talk: the speaker’s words, a book name only if they named one, the minute, and the line around it.',
     outputSchema: obj({ mentions: { type: 'array', items: mentionSchema } }, ['mentions']),
     prompt: `You catalogue hadith the speaker quotes in this talk. The user message is the transcript, with timestamps.
 
@@ -617,11 +722,11 @@ If there is no such quotation, return {"mentions": []}. No text outside the JSON
   {
     slug: 'reflection-prompts',
     name: 'Reflection prompts',
-    description: 'Drafts two or three open reflections, each anchored on a different line and timed to appear after that line has been said. They are saved as draft pop-ups of the reflection kind and wait on Review. They are not a quiz and they have no right answer.',
+    description: 'Writes two or three open questions. Each one hangs on a different line and shows up after that line has been said. They wait on Review. They are not a quiz and they have no right answer.',
     placeholders: [
-      { token: 'LAND', meaning: 'The appetiser land line.', required: true },
-      { token: 'LAND_AT', meaning: 'When the land is said, in seconds.', required: true },
-      { token: 'TRANSCRIPT', meaning: 'The talk transcript.', required: true },
+      { token: 'LAND', meaning: 'The last line of the first sitting.', required: true },
+      { token: 'LAND_AT', meaning: 'The second that last line is said.', required: true },
+      { token: 'TRANSCRIPT', meaning: 'The words of the talk.', required: true },
     ],
     provider: 'anthropic',
     model: 'claude-sonnet-4-5',
@@ -631,7 +736,7 @@ If there is no such quotation, return {"mentions": []}. No text outside the JSON
     inPipeline: true,
     fillsTier: null,
     fillsPoints: 'reflection',
-    fills: 'Pop-ups on the main: draft engagement points of the reflection kind. Review, pop-ups.',
+    fills: 'Open questions on the full talk. They wait on Review.',
     outputSchema: obj(
       {
         questions: {
@@ -657,11 +762,11 @@ Two or three prompts. If the talk supports none, return {"questions": []}. No te
   {
     slug: 'clip-critic',
     name: 'Clip critic',
-    description: 'Scores the hors d’oeuvre and the appetiser against the live rubric. It checks the clip as heard, not the title we attached to it, and it is calibrated to call an ordinary clip a 3. The scores stay on the ingest card. The critic does not rewrite the cut.',
+    description: 'Marks the short clip and the first sitting against the live checklist. It checks the clip as heard, not the title we attached to it, and an ordinary clip is a 3. The marks stay on this talk. The marker does not rewrite the cut.',
     placeholders: [
-      { token: 'RUBRIC', meaning: 'The live rubric text.', required: true },
-      { token: 'CLIP', meaning: 'The hors d’oeuvre and the appetiser, with sentence ids.', required: true },
-      { token: 'TRANSCRIPT', meaning: 'The talk transcript, so the critic can check the words.', required: true },
+      { token: 'RUBRIC', meaning: 'The live checklist the marker reads.', required: true },
+      { token: 'CLIP', meaning: 'The short clip and the first sitting, with each sentence numbered.', required: true },
+      { token: 'TRANSCRIPT', meaning: 'The words of the talk, so the marker can check them.', required: true },
     ],
     provider: 'anthropic',
     model: 'claude-sonnet-4-5',
@@ -671,7 +776,7 @@ Two or three prompts. If the talk supports none, return {"questions": []}. No te
     inPipeline: true,
     fillsTier: null,
     fillsPoints: null,
-    fills: 'Ingest card: four scores for the cut already drafted. It does not change the tier.',
+    fills: 'Four marks for the cut already drafted. The cut itself stays as it is.',
     outputSchema: obj(
       {
         axes: {
@@ -710,7 +815,7 @@ Every evidence id is one of the clip's sentence ids. No text outside the JSON.`,
   {
     slug: 'rubric',
     name: 'Clip rubric',
-    description: 'The shared standard the clip critic is judged by. It is not run on a talk. When you edit it and mark a version live, the critic’s next run reads that version through its {{RUBRIC}} placeholder. Older critic scores keep the version that produced them.',
+    description: 'The shared checklist the clip marker reads. It is not run on a talk. When you edit it and mark a version live, the marker’s next run reads that version. Older marks keep the checklist that produced them.',
     placeholders: [],
     provider: 'anthropic',
     model: 'claude-sonnet-4-5',
@@ -720,7 +825,7 @@ Every evidence id is one of the clip's sentence ids. No text outside the JSON.`,
     inPipeline: false,
     fillsTier: null,
     fillsPoints: null,
-    fills: 'No tier and no pop-up. The live text is inserted into the clip critic.',
+    fills: 'No clip and no question. The live checklist is read by the clip marker.',
     outputSchema: obj({ note: str }, ['note']),
     prompt: `# Clip rubric
 
@@ -758,11 +863,11 @@ Score each axis on its own. Do not average as you go. Most clips are 3s. The cla
   {
     slug: 'feedback-summary',
     name: 'Feedback summary',
-    description: 'Reads the answers a community chose to share on one question and drafts the top themes, with a few quotes copied from those answers. The draft is labelled as an AI summary and stays off the digest until a person includes it. It does not name learners.',
+    description: 'Reads the answers a community chose to share on one question and drafts the top themes, with a few quotes copied from those answers. The draft is labelled as a summary and stays off the download until a person includes it. It does not name learners.',
     placeholders: [
-      { token: 'TALK', meaning: 'The talk title.', required: true },
-      { token: 'QUESTION', meaning: 'The question learners answered.', required: true },
-      { token: 'ANSWERS', meaning: 'The shared answers, one on each line. Private answers are never included.', required: true },
+      { token: 'TALK', meaning: 'The name of the talk.', required: true },
+      { token: 'QUESTION', meaning: 'The question people answered.', required: true },
+      { token: 'ANSWERS', meaning: 'The answers people chose to share, one on each line. Private answers are left out.', required: true },
     ],
     provider: 'anthropic',
     model: 'claude-sonnet-4-5',
@@ -772,7 +877,7 @@ Score each axis on its own. Do not average as you go. Most clips are 3s. The cla
     inPipeline: false,
     fillsTier: null,
     fillsPoints: null,
-    fills: 'Feedback desk: a draft summary under one question. It is not included in a download until a person includes it.',
+    fills: 'A draft summary under one question on the feedback desk. It stays out of a download until a person includes it.',
     outputSchema: obj({ themes: { type: 'array', items: str }, quotes: { type: 'array', items: str } }, ['themes', 'quotes']),
     prompt: `You jot what a sheikh would notice in answers learners chose to share. Do not invent answers. Do not name people. Do not add advice. ${ANSWER_VOICE}
 
@@ -787,10 +892,10 @@ themes has 3 to 5 items when there are answers, or one item saying there is noth
   {
     slug: 'question-value',
     name: 'Check question for teacher value',
-    description: 'Flags a question whose answers would be yes or no, generic, or unhelpful to a sheikh, and suggests a rewrite that asks for a specific, personal, reflective answer tied to the talk. The rewrite is a draft on the weak-questions report. The question learners see is left as it is.',
+    description: 'Flags a question whose answers would be yes or no, vague, or of little use to a teacher, and suggests a rewrite that asks for something specific from the person’s own week. The rewrite is a draft on the weak-questions list. The question learners see is left as it is.',
     placeholders: [
-      { token: 'TALK', meaning: 'The talk the question belongs to.', required: true },
-      { token: 'FAMILY', meaning: 'Pop-up, reflection, or activation task.', required: true },
+      { token: 'TALK', meaning: 'The talk this question belongs to.', required: true },
+      { token: 'FAMILY', meaning: 'A question, a reflection, or a small task.', required: true },
       { token: 'QUESTION', meaning: 'The question as it is written now.', required: true },
     ],
     provider: 'anthropic',
@@ -801,7 +906,7 @@ themes has 3 to 5 items when there are answers, or one item saying there is noth
     inPipeline: false,
     fillsTier: null,
     fillsPoints: null,
-    fills: 'Weak-questions report: a draft rewrite. It is never published over the live question.',
+    fills: 'A draft rewrite on the weak-questions list. It never replaces the live question.',
     outputSchema: obj(
       { weak: { type: 'boolean' }, reasons: { type: 'array', items: str }, rewrite: str },
       ['weak', 'reasons', 'rewrite'],

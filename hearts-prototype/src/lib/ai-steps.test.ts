@@ -17,6 +17,8 @@ import {
   schemaProblems,
   stepBySlug,
   stepListBadge,
+  STEP_PAGE_COPY,
+  stepDoes,
   stepPlainLine,
   tierProtect,
   type TalkContext,
@@ -70,6 +72,25 @@ test('the steps list names each step in one line and an honest state', () => {
   assert.equal(stepListBadge({ inPipeline: true, connected: false, master: false }), 'Switch on by connecting your AI account')
   assert.equal(stepListBadge({ inPipeline: false, connected: false, master: false }), 'Shared text')
   assert.equal(stepPlainLine('missing'), '')
+})
+
+test('each step page says what it does in three or four plain bullets', () => {
+  const banned = /\b(ingest|pipelines?|schemas?|tiers?|tokens?|temperature|providers?|might|perhaps|could|seems|generally|typically|usually|leverage|seamless|robust)\b/i
+  for (const step of STEP_SPECS) {
+    const does = stepDoes(step.slug)
+    assert.ok(does.length >= 3 && does.length <= 4, `${step.slug} has ${does.length} bullets`)
+    const shown = [step.description, step.fills, stepPlainLine(step.slug), ...does, ...step.placeholders.map((item) => item.meaning)].join(' ')
+    assert.equal(banned.test(shown), false, `${step.slug}: ${shown.match(banned)?.[0]}`)
+  }
+  const quran = stepDoes('quran-harvest').join(' ')
+  assert.match(quran, /exact words/)
+  assert.match(quran, /minute/)
+  assert.match(quran, /surah/)
+  assert.match(quran, /draft/)
+  const labels = Object.values(STEP_PAGE_COPY).join(' ')
+  assert.equal(banned.test(labels), false, labels.match(banned)?.[0])
+  assert.match(labels, /What this does/)
+  assert.match(labels, /For techies/)
 })
 
 test('a prompt edit adds a version, and rollback marks an older one live', () => {

@@ -65,7 +65,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     depth: 'beginner',
     shipped: true,
     dependsOn: [],
-    help: 'The Garden is where growth shows: rings, the course path, harvest and the doors of Hadith Jibril. Switch it off if this portal is only for films and questions. The bottom bar still looks complete without it.',
+    help: 'The Garden shows time someone has given: rings, this course, harvest and the doors of Hadith Jibril. Switch it off if this portal is only for films and questions. The bottom bar still looks complete without it.',
     plugIn: [
       'Learner /p/:slug/garden and garden/* (except workbook, which is its own switch)',
       'Home grow banner, rings and “See what you have sown”',
@@ -82,7 +82,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     depth: 'beginner',
     shipped: true,
     dependsOn: [],
-    help: 'The workbook holds answers and reflections. Teachers can still teach without it; they just will not open a learner’s written work from the desk.',
+    help: 'The workbook keeps answers and reflections in one place. Teachers can still teach without it. They will not open a learner’s written work from the desk.',
     plugIn: [
       'Learner /p/:slug/garden/workbook and the Me workbook link',
       'Garden rings Workbook tile',
@@ -98,7 +98,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     depth: 'intermediate',
     shipped: true,
     dependsOn: [],
-    help: 'Circle answers sit beside real shared answers on a talk, so the first people in are not staring at a blank page. They are never counted as progress. The portal desk writes and switches them.',
+    help: 'Circle answers sit beside real shared answers, so the first people in are not staring at a blank page. They never count as progress. The desk writes them and can switch them off.',
     plugIn: [
       'Course player swarm / “What others said”',
       'Portal desk /admin/circle',
@@ -114,7 +114,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     depth: 'intermediate',
     shipped: true,
     dependsOn: [],
-    help: 'My week is the study plan: pick a course, tick days, and the parts are shared out evenly. It always sits on the learner bar. Gather never takes its place.',
+    help: 'My week is the study plan. Pick a course, tick the days, and the talks are shared out evenly. It always sits on the learner bar, and Gather never takes its place.',
     plugIn: [
       'Learner /p/:slug/week, /me/plan and Home “Your plan” card',
       'Course “Plan the rest of this course”',
@@ -132,7 +132,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     depth: 'intermediate',
     shipped: true,
     dependsOn: [],
-    help: 'Compass is a gentle monthly check-in. Learners never see a number — only a line about what to focus on. Teachers see the scales on the desk.',
+    help: 'Compass is a gentle check-in once a month. Learners never see a number, only a line about what to focus on. Teachers see the detail on the desk.',
     plugIn: [
       'Learner /p/:slug/recalibrate and /me/path',
       'Home recalibrate card',
@@ -149,7 +149,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     depth: 'intermediate',
     shipped: true,
     dependsOn: [],
-    help: 'When a learner shares an answer, a teacher can reply or leave a mark on the film. Switch this off if the portal is self-guided. Private answers stay private either way.',
+    help: 'When a learner shares an answer, a teacher can reply or leave a mark on the film. Switch this off if people study on their own. Private answers stay private either way.',
     plugIn: [
       'Learner in-video feedback on the course page and workbook replies',
       'Desk /admin/feedback and Teach reply forms',
@@ -165,7 +165,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     depth: 'in-depth',
     shipped: true,
     dependsOn: [],
-    help: 'Gather is for evenings at the masjid — classes, circles and open nights. Learners pick up a ticket; the desk takes the register. Some pools never meet in person, so you can leave this off.',
+    help: 'Gather is for evenings at the masjid: classes, circles and open nights. Learners say if they are coming, and the desk takes the register. Leave it off if this group never meets in person.',
     plugIn: [
       'Learner /p/:slug/gather and public /gather/:event',
       'Home gather cards, course gather notices, nights on Circle',
@@ -184,7 +184,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     depth: 'in-depth',
     shipped: true,
     dependsOn: [],
-    help: 'Live is a teacher going live for this portal only. Learners see a Live now banner under the Home title. Switch it off to hide the banner, watch page and desk tools.',
+    help: 'Live is a teacher speaking live for this portal only. Learners see a Live now banner under the Home title. Switch it off to hide the banner, the watch page and the desk tools.',
     plugIn: [
       'PR #20 — Learner Home Live now / Coming up banner (src/screens/app/home.tsx)',
       'Learner live page /p/:slug/live and watch page /p/:slug/live/:id',
@@ -201,7 +201,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     depth: 'in-depth',
     shipped: true,
     dependsOn: [],
-    help: 'Missions let people help shape what HEARTS works on next. Turning it off hides the learner card and the desk tools.',
+    help: 'Missions let people help choose what HEARTS works on next. Turning it off hides the card learners see, and the tools on the desk.',
     plugIn: [
       'PR #27 — Learner missions surfaces (Home / Me card and /p/:slug/missions)',
       'PR #27 — Master desk /master/missions',
@@ -217,7 +217,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     depth: 'in-depth',
     shipped: true,
     dependsOn: [],
-    help: 'Insights are counts and patterns for the portal team, never a named learner. The switch hides the desk tools.',
+    help: 'Insights are counts for the portal team. A learner’s name is never shown. The switch hides the desk tools.',
     plugIn: [
       'PR #27 — Desk /admin/insights and /master/insights',
       'PR #27 — GET/POST /api/insights (src/app/(frontend)/api/insights/route.ts)',
@@ -232,7 +232,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     depth: 'in-depth',
     shipped: true,
     dependsOn: [],
-    help: 'Experiments try two wordings of a button or label. Learners never see that they are in a test. Only the master desk starts one; a portal can switch the whole thing off.',
+    help: 'Experiments try two wordings of a button or a label. Learners never see that they are in a test. Only the master desk starts one, and a portal can switch the whole thing off.',
     plugIn: [
       'PR #22 — useVariant / track() in the learner app (src/lib/use-variant.ts, experiment-track.ts)',
       'PR #22 — Desk /master/experiments and portal results',
