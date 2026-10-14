@@ -106,8 +106,8 @@ const MASTER: Record<string, Lead> = {
     href: '#transcript-file',
   },
   simulator: {
-    line: 'Walk the opening as a newcomer would. Nothing here is saved against a real person.',
-    label: 'Pick the taps',
+    line: 'Answer the opening the way a new person would. Nothing on this page is saved.',
+    label: 'Try it as a newcomer',
     href: '#simulator',
   },
   personas: {

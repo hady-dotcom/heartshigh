@@ -230,7 +230,7 @@ export const Users: CollectionConfig = {
     { name: 'nightAlerts', type: 'checkbox', defaultValue: false },
     { name: 'shareOpening', type: 'checkbox', defaultValue: false, label: 'Share my opening answers with my mentor' },
     { name: 'keepPlace', type: 'checkbox', defaultValue: false, label: 'Start where I left off' },
-    { name: 'trendsOptIn', type: 'checkbox', defaultValue: false, label: 'Add my taps to the chapter’s trends' },
+    { name: 'trendsOptIn', type: 'checkbox', defaultValue: false, label: 'Add my answers to the chapter’s trends' },
     { name: 'shareWithLearners', type: 'checkbox', defaultValue: false, label: 'Share answers with other learners, and see the answers they share' },
     { name: 'haptics', type: 'checkbox', defaultValue: true },
     { name: 'teachSeen', type: 'json', admin: { description: 'When this person last opened Teach, per portal id. Used to count shared answers that arrived after that visit.' } },

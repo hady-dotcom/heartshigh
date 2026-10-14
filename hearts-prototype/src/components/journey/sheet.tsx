@@ -53,9 +53,9 @@ export function KeepPlaceSheet({ reason, loginHref, offline, onClose, onSubmit }
       <span className="handle" aria-hidden />
       <h2 id="keep-title" data-testid="keep-title">{SHEET_TITLES[reason]}</h2>
       {offline ? (
-        <p data-testid="sheet-offline">Connect to keep your place. Your taps stay on this phone until then.</p>
+        <p data-testid="sheet-offline">Connect to keep your place. Your answers stay on this phone until then.</p>
       ) : (
-        <p>{reason === 'place' ? <>Make an account to open this, and we&apos;ll remember where you got to and what you liked. Your taps stay on this phone until you make one.</> : <>Make an account and we&apos;ll remember what you liked, so the next clips fit you better. Your taps stay on this phone until you make one.</>}</p>
+        <p>{reason === 'place' ? <>Make an account to open this, and we&apos;ll remember where you got to and what you liked. Your answers stay on this phone until you make one.</> : <>Make an account and we&apos;ll remember what you liked, so the next clips fit you better. Your answers stay on this phone until you make one.</>}</p>
       )}
       {form && !offline ? (
         <form className="j-sheet-form" onSubmit={submit} data-testid="keep-form">

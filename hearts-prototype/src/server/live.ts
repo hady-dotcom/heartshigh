@@ -542,7 +542,7 @@ export async function setReminder(
     user: user.id,
     portal: portal.id,
     title: 'We’ll remind you',
-    body: `${text(session.title)} is coming up. We’ll tap you when it starts.`,
+    body: `${text(session.title)} is coming up. We’ll let you know when it starts.`,
     href: `/p/${text(portal.slug)}/live/${sessionId}`,
     key: `live-remind-${sessionId}-${user.id}`,
   })
