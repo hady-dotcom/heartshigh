@@ -1,11 +1,29 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { Flash, Hidden } from '@/components/app/shell'
 import { PageHelp } from '@/components/app/page-help'
 import { TurnstileField } from '@/components/app/turnstile-field'
 import { BrandLockup } from '@/components/brand'
+import { isDemoStageLogin } from '@/lib/demo-stage-gate'
+import { DemoStageLogin } from '../demo-stage/entry'
 
-export default async function Login({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string; next?: string }> }) {
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ next?: string; demo?: string }> }): Promise<Metadata> {
   const query = await searchParams
+  if (!isDemoStageLogin(query.next, query.demo)) {
+    return {
+      title: 'HEARTS',
+      description: 'Short clips from real talks, full courses, and a circle that meets in person.',
+    }
+  }
+  return {
+    title: 'Demo stage sign-in',
+    description: 'Master login for the demo. It returns you to the Demo stage.',
+  }
+}
+
+export default async function Login({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string; next?: string; demo?: string }> }) {
+  const query = await searchParams
+  if (isDemoStageLogin(query.next, query.demo)) return <DemoStageLogin error={query.error} notice={query.notice} />
   const next = query.next && query.next.startsWith('/') && !query.next.startsWith('//') ? query.next : '/'
   return (
     <main className="door garden-door" data-testid="login">
