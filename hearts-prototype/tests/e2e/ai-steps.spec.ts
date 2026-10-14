@@ -203,6 +203,7 @@ test.describe('AI steps', () => {
 
     expect(loc(await ai(master, { action: 'grant', value: 'on', next: '/master/ai' }))).toContain('can edit')
     await page.goto('/p/east-london/admin/ai/rubric')
+    await page.getByTestId('ai-for-techies').locator('summary').click()
     await expect(page.getByTestId('ai-save')).toBeVisible()
     expect(loc(await ai(master, { action: 'grant', value: 'off', next: '/master/ai' }))).toContain('no longer edit')
     await page.reload()
