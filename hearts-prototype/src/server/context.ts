@@ -31,6 +31,9 @@ export type SessionUser = {
   shareWithLearners?: boolean | null
   haptics?: boolean | null
   removed?: boolean | null
+  paused?: boolean | null
+  mustChangePassword?: boolean | null
+  lastSeenAt?: string | null
   /** Portal id to ISO time of the last Teach visit. */
   teachSeen?: unknown
 }
@@ -97,6 +100,9 @@ async function readSession(touch: boolean): Promise<Session> {
     overrideAccess: true,
     depth: 0,
   })) as unknown as SessionUser
+  if (full.paused || (full.role === 'learner' && (full.removed || !portalIdOf(full)))) {
+    return { payload, user: null, actor: null, viewAs: null, viewAsEnded: null }
+  }
   const token = cookieValue(reqHeaders.get('cookie'))
   const { viewAs, ended } = await loadViewAs(payload, full, token, touch)
   let viewAsEnded = ended
@@ -266,7 +272,9 @@ export async function adoptedCourseIds(payload: Payload, portalId: number) {
 
 export async function requireUser() {
   const session = await getSession()
-  if (!session.user) redirect(`/login?next=${encodeURIComponent((await headers()).get('x-hearts-path') || '/')}`)
+  const path = (await headers()).get('x-hearts-path') || '/'
+  if (!session.user || !session.actor) redirect(`/login?next=${encodeURIComponent(path)}`)
+  if (session.actor.mustChangePassword && !path.startsWith('/change-password')) redirect('/change-password')
   return session as Session & { user: SessionUser; actor: SessionUser }
 }
 

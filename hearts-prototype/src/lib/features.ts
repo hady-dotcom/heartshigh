@@ -95,7 +95,9 @@ export const FEATURES: readonly FeatureRecord[] = [
       'Garden rings Workbook tile',
       'GET /api/workbook and /api/workbook/:learnerId',
       'Teach desk workbook inbox and download',
+      'Desk diaries list',
     ],
+    deskNav: ['diaries'],
   },
   {
     key: 'planner',

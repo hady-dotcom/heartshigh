@@ -55,6 +55,7 @@ import { SLOW_DOWN } from '@/lib/safety'
 import { randomUUID } from 'node:crypto'
 import { adoptedCourseIds, coursesInPacks, getSession, loadPortal, visibleCourseIds, type Session, type SessionUser } from './context'
 import { NEVER_ACTIONS, READ_ONLY, blocked, cookieValue, endSession, viewAsCookie, wrote } from './viewas'
+import { changeOwnPassword, dispatchLearnerDesk } from './learner-desk'
 import { isTimeZone } from '@/lib/zone-time'
 import { parseLengthInput } from '@/lib/length'
 import { refusalForTalk, sourceTalkSeconds } from '@/lib/talk-length'
@@ -150,7 +151,12 @@ async function loginResponse(req: Request, email: string, password: string, next
   try {
     const result = await payload.login({ collection: 'users', data: { email, password } })
     if (!result.token || !result.user) return redirectTo(req, '/login', 'That email or password did not match.')
-    const response = redirectTo(req, await landingPath(payload, result.user as SessionUser, next))
+    const full = (await payload.findByID({ collection: 'users', id: result.user.id, overrideAccess: true, depth: 0 })) as SessionUser
+    if (full.paused) return redirectTo(req, '/login', 'This account is paused. Ask your portal to let you back in.')
+    if (full.role === 'learner' && (full.removed || !portalIdOf(full))) return redirectTo(req, '/login', 'This account is not in a portal. Ask your portal to add you again.')
+    await payload.update({ collection: 'users', id: full.id, overrideAccess: true, data: { lastSeenAt: now().toISOString() } as never })
+    const dest = full.mustChangePassword ? '/change-password' : await landingPath(payload, full, next)
+    const response = redirectTo(req, dest)
     response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, result.token, 7200))
     return response
   } catch {
@@ -652,7 +658,17 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return loginResponse(req, email, password, next)
   }
 
-  if (!user) return redirectTo(req, '/login', 'Please sign in first.')
+  if (!user || !session.actor) return redirectTo(req, '/login', 'Please sign in first.')
+
+  if (session.actor.mustChangePassword && action !== 'change-password' && action !== 'logout') {
+    return redirectTo(req, '/change-password', 'Choose a new password before you carry on.')
+  }
+
+  if (action === 'change-password') {
+    const changed = await changeOwnPassword(payload, session.actor, text(form, 'password'), text(form, 'again'))
+    if (changed.error) return redirectTo(req, '/change-password', changed.error)
+    return redirectTo(req, text(form, 'next') || (await landingPath(payload, session.actor, '/')), undefined, changed.notice)
+  }
 
   const safety = await handleSafetyAction(action, form, payload, user, req, (path, error, notice) => redirectTo(req, path, error, notice))
   if (safety) return safety
@@ -675,6 +691,23 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const home = mine ? await findDoc(payload, 'portals', mine) : null
     if (!home) return redirectTo(req, '/', 'Your account is not in a portal.')
     if (home.closed) return redirectTo(req, '/', 'This portal has been paused by the master desk, so changes cannot be saved at the moment.')
+  }
+
+  if (
+    action === 'learner-reset' ||
+    action === 'learner-move' ||
+    action === 'learner-pause' ||
+    action === 'learner-unpause' ||
+    action === 'learner-remove' ||
+    action === 'learner-delete' ||
+    action === 'learner-bulk' ||
+    action === 'plan-edit' ||
+    action === 'plan-delete' ||
+    action === 'plan-bulk-delete' ||
+    action === 'diary-delete'
+  ) {
+    const result = await dispatchLearnerDesk(payload, user, form)
+    return redirectTo(req, text(form, 'next') || '/', result.error, result.notice)
   }
 
   if (action === 'create-portal') {

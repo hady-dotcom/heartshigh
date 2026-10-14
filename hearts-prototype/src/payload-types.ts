@@ -406,6 +406,9 @@ export interface User {
     | boolean
     | null;
   removed?: boolean | null;
+  paused?: boolean | null;
+  mustChangePassword?: boolean | null;
+  lastSeenAt?: string | null;
   updatedBy?: (number | null) | User;
   onBehalfOf?: (number | null) | User;
   tenants?:
@@ -3410,6 +3413,9 @@ export interface UsersSelect<T extends boolean = true> {
   haptics?: T;
   teachSeen?: T;
   removed?: T;
+  paused?: T;
+  mustChangePassword?: T;
+  lastSeenAt?: T;
   updatedBy?: T;
   onBehalfOf?: T;
   tenants?:

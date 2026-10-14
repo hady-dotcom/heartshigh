@@ -25,7 +25,7 @@ function withAnswerBadge(groups: NavGroup[], count: number, href?: string | null
   }))
 }
 
-export async function AdminFrame({ ctx, active, title, intro, tools, help, children, testId, tone }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; help?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening' }) {
+export async function AdminFrame({ ctx, active, title, intro, tools, help, children, testId, tone, primary }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; help?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening'; primary?: { label: string; href: string } }) {
   const { payload, user, portal, base, query } = ctx
   const seenAt = active === 'teach' ? await markTeachVisit(payload, user, portal.id) : seenFor(user, portal.id)
   const fresh = await newSharedAnswers(payload, portal.id, seenAt, 1)
@@ -57,6 +57,7 @@ export async function AdminFrame({ ctx, active, title, intro, tools, help, child
       help={help}
       query={query}
       testId={testId}
+      primary={primary}
       evening
       logoUrl={portal.logoUrl}
       gatherDesk={tone === 'evening'}
